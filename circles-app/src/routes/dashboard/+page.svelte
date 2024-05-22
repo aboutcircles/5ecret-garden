@@ -14,7 +14,7 @@
     });
 
     async function mintCircles() {
-        // TODO: Mint more of your personal Circles tokens.
+        await $avatar?.personalMint();
     }
 </script>
 
