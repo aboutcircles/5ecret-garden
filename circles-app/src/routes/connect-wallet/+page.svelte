@@ -2,9 +2,11 @@
     import ActionButton from "$lib/components/ActionButton.svelte";
     import {goto} from "$app/navigation";
     import {wallet} from "$lib/stores/wallet";
-    import {circles, type Sdk} from "$lib/stores/circles";
+    import {circles} from "$lib/stores/circles";
     import {BrowserProvider, JsonRpcProvider} from "ethers";
     import {avatar} from "$lib/stores/avatar";
+    import {Sdk} from "@circles-sdk/sdk";
+    import {chainConfig} from "$lib/chainConfig";
 
     //
     // Gets the browser provider from the window object.
@@ -17,18 +19,18 @@
         return new BrowserProvider(w.ethereum);
     }
 
-    //
-    // TODO: Initialize the SDK.
-    //
     async function initializeSdk(): Sdk {
-        return {};
+        // The circles sdk must be initialized with the
+        // contract addresses and endpoints for the chain.
+        // It takes a signer as the second argument.
+        return new Sdk(chainConfig, $wallet);
     }
 
-    //
-    // TODO: Use the SDK to check if the connected wallet is a Circles wallet.
-    //
     async function isCirclesWallet(address: string) {
-        return false;
+        // Use the data object from the circles sdk to check if the address
+        // is a registered Circles wallet.
+        const avatarRow = await $circles?.data.getAvatarInfo(address);
+        return !!avatarRow;
     }
 
     //
@@ -48,8 +50,7 @@
 
         // If the signer address is already a registered Circles wallet, go straight to the dashboard.
         if (alreadyRegistered) {
-            // TODO: Set the exiting $avatar globally.
-            $avatar = {};
+            $avatar = await $circles.getAvatar(walletAddress);
             goto("/dashboard");
         } else {
             goto("/register");
