@@ -1,23 +1,16 @@
-<script lang="ts" context="module">
-    // TODO: Remove this mock data and fetch the actual trust relations.
-    export type TrustRelationRow = {
-        subjectAvatar: string;
-        relation: TrustRelation;
-        objectAvatar: string;
-        timestamp: number;
-    }
-</script>
 <script lang="ts">
-    import TransactionRow from "../dashboard/components/TransactionRow.svelte";
     import ActionButton from "$lib/components/ActionButton.svelte";
     import {goto} from "$app/navigation";
     import List from "$lib/components/List.svelte";
     import {onMount} from "svelte";
+    import {avatar} from "$lib/stores/avatar";
+    import type {TrustRelationRow} from "@circles-sdk/sdk";
+    import ContactRow from "./components/ContactRow.svelte";
 
-    $: rows = [];
+    $: rows = <TrustRelationRow[]>[];
 
     onMount(async () => {
-        // TODO: Get the list of trust relations for the account.
+        rows = await $avatar?.getTrustRelations() ?? [];
     });
 
     async function addContact() {
@@ -31,4 +24,4 @@
     </ActionButton>
 </div>
 
-<List rows={rows} rowComponent={TransactionRow}/>
+<List rows={rows} rowComponent={ContactRow}/>
