@@ -3,6 +3,8 @@
     import {page} from "$app/stores";
     import {ethers} from "ethers";
     import {avatar} from "$lib/stores/avatar";
+    import {tcToCrc} from "@circles-sdk/utils";
+    import {goto} from "$app/navigation";
 
     let recipient: string = $page.params.to ?? "";
     let valueString: string = "";
@@ -14,7 +16,8 @@
         : Promise.resolve(BigInt(0));
 
     async function send() {
-        // TODO: Send the amount to the recipient.
+        await $avatar?.transfer(recipient, tcToCrc(new Date(), parseFloat(valueString)));
+        goto("/dashboard");
     }
 
     async function setMax() {
