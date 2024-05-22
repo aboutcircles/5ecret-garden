@@ -2,21 +2,23 @@
     import ActionButton from "$lib/components/ActionButton.svelte";
     import {page} from "$app/stores";
     import {ethers} from "ethers";
+    import {avatar} from "$lib/stores/avatar";
 
     let recipient: string = $page.params.to ?? "";
     let valueString: string = "";
 
     $: recipientIsValid = ethers.isAddress(recipient);
 
-    // TODO: Find the max. transferable amount between the avatar and the recipient.
-    $: maxTransferableAmount = Promise.resolve(BigInt(0));
+    $: maxTransferableAmount = recipientIsValid
+        ? $avatar?.getMaxTransferableAmount(recipient)
+        : Promise.resolve(BigInt(0));
 
     async function send() {
         // TODO: Send the amount to the recipient.
     }
 
     async function setMax() {
-        valueString = ethers.formatEther(maxTransferableAmount ?? "0");
+        valueString = ethers.formatEther(await maxTransferableAmount ?? "0");
     }
 </script>
 
