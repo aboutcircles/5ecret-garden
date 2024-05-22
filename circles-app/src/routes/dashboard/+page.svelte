@@ -1,25 +1,16 @@
-<script lang="ts" context="module">
-    // TODO: Remove this mock data and fetch the actual transaction history.
-    export type TransactionHistoryRow = {
-        timestamp: number;
-        transactionHash: string;
-        from: string;
-        to: string;
-        id: string;
-        value: string;
-        timeCircles: number;
-    }
-</script>
-<script>
+<script lang="ts">
     import ActionButton from "$lib/components/ActionButton.svelte";
     import List from "$lib/components/List.svelte";
     import TransactionRow from "./components/TransactionRow.svelte";
     import {onMount} from "svelte";
+    import {avatar} from "$lib/stores/avatar.js";
+    import type {TransactionHistoryRow} from "@circles-sdk/data";
 
-    $: rows = [];
+    $: rows = <TransactionHistoryRow[]>[];
 
     onMount(async () => {
-        // TODO: Get the list of transactions for the account.
+        const result = await $avatar?.getTransactionHistory(25);
+        rows = result?.currentPage?.results ?? [];
     });
 
     async function mintCircles() {

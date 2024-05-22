@@ -1,16 +1,16 @@
 <script lang="ts">
-    import type {TransactionHistoryRow} from "../+page.svelte";
     import {avatar} from "$lib/stores/avatar";
     import {ZeroAddress} from "ethers";
+    import type {TransactionHistoryRow} from "@circles-sdk/data";
 
     export let row: TransactionHistoryRow;
 
     $: date = new Date(row.timestamp * 1000);
-    $: sign = row.from === $avatar.address ? "-" : "+";
+    $: sign = row.from === $avatar?.address ? "-" : "+";
 
-    $: isIncoming = row.to === $avatar.address;
-    $: isOutgoing = row.from === $avatar.address;
-    $: isMinting = row.from === ZeroAddress && row.to === $avatar.address;
+    $: isIncoming = row.to === $avatar?.address;
+    $: isOutgoing = row.from === $avatar?.address;
+    $: isMinting = row.from === ZeroAddress && row.to === $avatar?.address;
 
     $: contactAddress = isOutgoing ? row.to : row.from;
 </script>
