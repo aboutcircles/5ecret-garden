@@ -9,8 +9,7 @@
             throw new Error('Wallet not connected ($circles is undefined)');
         }
 
-        // TODO: Register the wallet as a person and set the avatar to the $avatar store.
-        $avatar = {};
+        $avatar = await $circles.registerHuman();
 
         // After signup, go to the dashboard
         goto("/dashboard");
