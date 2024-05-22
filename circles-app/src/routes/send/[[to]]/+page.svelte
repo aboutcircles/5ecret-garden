@@ -3,7 +3,7 @@
     import {page} from "$app/stores";
     import {ethers} from "ethers";
     import {avatar} from "$lib/stores/avatar";
-    import {tcToCrc} from "@circles-sdk/utils";
+    import {crcToTc, tcToCrc} from "@circles-sdk/utils";
     import {goto} from "$app/navigation";
 
     let recipient: string = $page.params.to ?? "";
@@ -21,7 +21,7 @@
     }
 
     async function setMax() {
-        valueString = ethers.formatEther(await maxTransferableAmount ?? "0");
+        valueString = crcToTc(new Date(), await maxTransferableAmount ?? BigInt(0)).toFixed(2);
     }
 </script>
 
@@ -55,7 +55,7 @@
             {#await maxTransferableAmount}
                 <span>Loading ...</span>
             {:then maxAmount}
-                {parseFloat(ethers.formatEther(maxAmount ?? "0")).toFixed(2)}
+                {crcToTc(new Date(), maxAmount ?? BigInt(0)).toFixed(2)}
             {/await}
         </span></p>
 </div>
