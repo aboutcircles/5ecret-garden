@@ -3,7 +3,7 @@
     import {goto} from "$app/navigation";
     import {wallet} from "$lib/stores/wallet";
     import {circles} from "$lib/stores/circles";
-    import {BrowserProvider, JsonRpcProvider} from "ethers";
+    import {BrowserProvider} from "ethers";
     import {avatar} from "$lib/stores/avatar";
     import {Sdk} from "@circles-sdk/sdk";
     import {chainConfig} from "$lib/chainConfig";
@@ -11,7 +11,7 @@
     //
     // Gets the browser provider from the window object.
     //
-    function getBrowserProvider(): JsonRpcProvider {
+    function getBrowserProvider() {
         const w: any = window;
         if (!w.ethereum) {
             throw new Error('No browser wallet found (window.ethereum is undefined)');
@@ -19,11 +19,11 @@
         return new BrowserProvider(w.ethereum);
     }
 
-    async function initializeSdk(): Sdk {
+    async function initializeSdk() {
         // The circles sdk must be initialized with the
         // contract addresses and endpoints for the chain.
         // It takes a signer as the second argument.
-        return new Sdk(chainConfig, $wallet);
+        return new Sdk(chainConfig, $wallet!);
     }
 
     async function isCirclesWallet(address: string) {
