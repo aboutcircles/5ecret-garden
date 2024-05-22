@@ -2,11 +2,12 @@
     import {goto} from "$app/navigation";
     import ActionButton from "$lib/components/ActionButton.svelte";
     import {ethers} from "ethers";
+    import {avatar} from "$lib/stores/avatar";
 
     let trustAddress = "";
 
     async function trust() {
-        // TODO: Add trust and navigate to contacts page
+        await $avatar?.trust(trustAddress);
         await goto("/contacts");
     }
 
