@@ -1,16 +1,17 @@
 <script lang="ts">
-    import type {TrustRelationRow} from "../+page.svelte";
     import ActionButton from "$lib/components/ActionButton.svelte";
     import {goto} from "$app/navigation";
+    import type {TrustRelationRow} from "@circles-sdk/sdk";
+    import {avatar} from "$lib/stores/avatar";
 
     export let row: TrustRelationRow;
 
     async function addTrust() {
-        // TODO: Add trust to the row.objectAvatar.
+        await $avatar?.trust(row.objectAvatar);
     }
 
     async function removeTrust() {
-        // TODO: Remove the trust from the row.objectAvatar.
+        await $avatar?.untrust(row.objectAvatar);
     }
 
     async function send() {
