@@ -4,6 +4,6 @@ export const chainConfig: ChainConfig = {
     pathfinderUrl: 'https://pathfinder.aboutcircles.com',
     circlesRpcUrl: "https://rpc.helsinki.aboutcircles.com",
     v1HubAddress: "0x29b9a7fBb8995b2423a71cC17cf9810798F6C543",
-    v2HubAddress: "0xFFfbD3E62203B888bb8E09c1fcAcE58242674964",
-    migrationAddress: "0x0A1D308a39A6dF8972A972E586E4b4b3Dc73520f"
+    v2HubAddress: "0x466D13BF31a19cF4d42C6D396905AC82653dAFC4",
+    migrationAddress: "0x98c25c0619e63ba58ffC4489790a2df957Cd048B"
 };

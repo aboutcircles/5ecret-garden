@@ -4,7 +4,7 @@
     import List from "$lib/components/List.svelte";
     import {onMount} from "svelte";
     import {avatar} from "$lib/stores/avatar";
-    import type {TrustRelationRow} from "@circles-sdk/sdk";
+    import type {TrustRelationRow} from "@circles-sdk/data";
     import ContactRow from "./components/ContactRow.svelte";
 
     $: rows = <TrustRelationRow[]>[];
