@@ -9,12 +9,24 @@
 
     $: rows = <TrustRelationRow[]>[];
 
-    onMount(async () => {
+
+    async function refresh() {
         rows = await $avatar?.getTrustRelations() ?? [];
+    }
+
+    onMount(() => {
+        refresh();
+        return $avatar?.events.subscribe(async event => {
+            if (event.$event !== "CrcV1_Trust"
+                && event.$event !== "CrcV2_Trust") {
+                return;
+            }
+            await refresh();
+        });
     });
 
     async function addContact() {
-        goto('/contacts/add');
+        await goto('/contacts/add');
     }
 </script>
 
