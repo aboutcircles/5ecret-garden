@@ -14,6 +14,7 @@
     import {createEventDispatcher} from "svelte";
 
     export let action: () => Promise<any>;
+    export let title: string = '';
     export let doneStateDuration: number = 2000;
     export let errorTransitory: boolean = true;
     export let disabled: boolean = false;
@@ -68,7 +69,7 @@
 </script>
 
 <button on:click={executeAction}
-        title="{errorMessage}"
+        title="{errorMessage ?? title}"
         class="ml-2 p-2 px-4 rounded-md {theme[state]} focus:outline-none transition">
     {#if state === 'Working'}
         <div class="loading-spinner inline-block border-t-2 border-b-2 border-gray-900 rounded-full w-4 h-4 animate-spin"></div>

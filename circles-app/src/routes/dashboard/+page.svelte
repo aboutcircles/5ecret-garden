@@ -8,9 +8,23 @@
 
     $: rows = <TransactionHistoryRow[]>[];
 
-    onMount(async () => {
-        const result = await $avatar?.getTransactionHistory(25);
+    async function refresh() {
+        const result = await $avatar?.getTransactionHistory(25)
         rows = result?.currentPage?.results ?? [];
+    }
+
+    onMount(() => {
+        refresh();
+
+        return $avatar?.events.subscribe(async event => {
+            if (event.$event !== "CrcV1_Transfer"
+                && event.$event !== "CrcV2_TransferSingle"
+                && event.$event !== "CrcV2_TransferBatch") {
+                return;
+            }
+            // TODO: Debounce. Once CrcV1_HubTransfer can come with many CrcV1_Transfer events and we don't want to refresh the list for each one.
+            await refresh();
+        });
     });
 
     async function mintCircles() {
