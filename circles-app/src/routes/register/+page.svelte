@@ -3,13 +3,14 @@
     import {goto} from "$app/navigation";
     import {circles} from "$lib/stores/circles";
     import {avatar} from "$lib/stores/avatar";
+    import type {Avatar} from "@circles-sdk/sdk";
 
     async function registerPerson() {
         if (!$circles) {
             throw new Error('Wallet not connected ($circles is undefined)');
         }
 
-        $avatar = await $circles.registerHuman();
+        $avatar = <Avatar>await $circles.registerHuman();
 
         // After signup, go to the dashboard
         goto("/dashboard");

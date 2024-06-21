@@ -1,10 +1,10 @@
 <script lang="ts">
     import ActionButton from "$lib/components/ActionButton.svelte";
     import {goto} from "$app/navigation";
-    import type {TrustRelationRow} from "@circles-sdk/sdk";
     import {avatar} from "$lib/stores/avatar";
+    import type {TrustRelationRowWithInvitationFlag} from "../+page.svelte";
 
-    export let row: TrustRelationRow;
+    export let row: TrustRelationRowWithInvitationFlag;
 
     async function addTrust() {
         await $avatar?.trust(row.objectAvatar);
@@ -22,15 +22,37 @@
     $: isIncoming = row.relation === "trustedBy";
     $: isOutgoing = row.relation === "trusts";
     $: isMutual = row.relation === "mutuallyTrusts";
+    $: isInvitedByMe = row.invitedByMe;
 </script>
 
-{#if isMutual}
-    <img src="mutual.svg" alt="Mutual trust" class="w-12 h-12 rounded-full">
-{:else if isIncoming}
-    <img src="incoming.svg" alt="Is trusting you" class="w-12 h-12 rounded-full">
-{:else if isOutgoing}
-    <img src="outgoing.svg" alt="You are trusting" class="w-12 h-12 rounded-full">
-{/if}
+<style>
+    .icon-container {
+        position: relative;
+        display: inline-block;
+    }
+
+    .envelope-icon {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 16px;
+        height: 16px;
+    }
+</style>
+
+<div class="icon-container">
+    {#if isMutual}
+        <img src="mutual.svg" alt="Mutual trust" class="w-12 h-12 rounded-full">
+    {:else if isIncoming}
+        <img src="incoming.svg" alt="Is trusting you" class="w-12 h-12 rounded-full">
+    {:else if isOutgoing}
+        <img src="outgoing.svg" alt="You are trusting" class="w-12 h-12 rounded-full">
+    {/if}
+
+    {#if isInvitedByMe}
+        <img src="envelope.svg" alt="Invited by me" class="envelope-icon">
+    {/if}
+</div>
 
 <div class="ml-4 flex-grow">
     <p class="text-sm font-medium">{row.objectAvatar}</p>

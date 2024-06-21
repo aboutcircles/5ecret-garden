@@ -26,13 +26,6 @@
         return new Sdk(chainConfig, $wallet!);
     }
 
-    async function isCirclesWallet(address: string) {
-        // Use the data object from the circles sdk to check if the address
-        // is a registered Circles wallet.
-        const avatarRow = await $circles?.data.getAvatarInfo(address);
-        return !!avatarRow;
-    }
-
     //
     // Connects the wallet and initializes the Circles SDK.
     //
@@ -46,14 +39,14 @@
         $circles = await initializeSdk();
 
         const walletAddress = await $wallet.getAddress();
-        const alreadyRegistered = await isCirclesWallet(walletAddress);
+        const avatarInfo = await $circles.data.getAvatarInfo(walletAddress);
 
         // If the signer address is already a registered Circles wallet, go straight to the dashboard.
-        if (alreadyRegistered) {
+        if (avatarInfo) {
             $avatar = await $circles.getAvatar(walletAddress);
-            goto("/dashboard");
+            await goto("/dashboard");
         } else {
-            goto("/register");
+            await goto("/register");
         }
     }
 </script>
