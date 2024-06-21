@@ -6,7 +6,10 @@ It implements a simple wallet for Circles and demonstrates all features of the S
 _This is a fork of the [circles-code-quest](https://github.com/aboutcircles/circles-code-quest) repository adapted for
 Circles Version 2.0._
 
-## Run
+## Test online
+The app is installed at https://lionfish-app-eypqs.ondigitalocean.app
+
+## Run local
 
 Checkout the repository and install the dependencies:
 
