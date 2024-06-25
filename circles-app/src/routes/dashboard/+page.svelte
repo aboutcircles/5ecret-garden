@@ -33,9 +33,11 @@
 </script>
 
 <div class="flex justify-between items-center mb-4">
-    <ActionButton action={mintCircles}>
-        Mint Circles
-    </ActionButton>
+    {#if $avatar?.avatarInfo?.type === "human"}
+        <ActionButton action={mintCircles}>
+            Mint Circles
+        </ActionButton>
+    {/if}
 </div>
 
 <List rows={rows} rowComponent={TransactionRow}/>

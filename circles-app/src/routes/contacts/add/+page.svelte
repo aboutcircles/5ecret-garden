@@ -49,9 +49,12 @@
             <ActionButton action={trust} disabled={!contactAddressIsValid || !contactAvatarInfo}>
                 Trust
             </ActionButton>
-            <ActionButton action={invite} disabled={!contactAddressIsValid || contactAvatarInfo?.version === 2}>
-                Invite
-            </ActionButton>
+            {#if $avatar?.avatarInfo?.version === 2 && $avatar?.avatarInfo?.type === "human"}
+                <ActionButton action={invite}
+                              disabled={!contactAddressIsValid}>
+                    Invite
+                </ActionButton>
+            {/if}
         </div>
     </div>
 </div>
