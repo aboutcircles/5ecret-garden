@@ -1,23 +1,31 @@
 <script lang="ts">
-    import ActionButton from "$lib/components/ActionButton.svelte";
-    import {goto} from "$app/navigation";
     import List from "$lib/components/List.svelte";
     import {onMount} from "svelte";
     import {avatar} from "$lib/stores/avatar";
-    import type {InvitationRow} from "@circles-sdk/data";
-    import InvitationRowView from "./components/GroupRow.svelte";
+    import type {GroupRow} from "@circles-sdk/data";
+    import GroupRowView from "./components/GroupRow.svelte";
     import {circles} from "$lib/stores/circles";
-    import {canInvite} from "$lib/guards/canInvite";
 
-    $: rows = <InvitationRow[]>[];
+    $: rows = <GroupRow[]>[];
 
     async function refresh() {
-        // const result = $circles?.data?.getGroups($avatar!.address, 25);
-        // if (await result?.queryNextPage()) {
-        //     rows = result?.currentPage?.results ?? [];
-        // } else {
-        //     rows = [];
-        // }
+        if(!$circles?.data) {
+            return;
+        }
+        const getMemberships = $circles.data.getGroupMemberships($avatar?.address ?? "", 25);
+        const getGroups = $circles.data.findGroups(25);
+        const [membershipsHasRows, groupsHasRows] = await Promise.all([getMemberships.queryNextPage(), getGroups.queryNextPage()]);
+
+        if (groupsHasRows && getGroups.currentPage) {
+            rows = getGroups.currentPage.results;
+        }
+        if (membershipsHasRows && getMemberships.currentPage) {
+            const memberships = getMemberships.currentPage.results;
+            rows = rows.map(row => {
+                row.isMember = memberships.some(membership => membership.group === row.group);
+                return row;
+            });
+        }
     }
 
     onMount(() => {
@@ -31,14 +39,6 @@
     });
 </script>
 
-<div class="flex justify-between items-center mb-4">
-    <!-- TODO: Can I invite someone if I myself was invited but am still minting in v1? -->
-    <ActionButton disabled={!canInvite($avatar?.avatarInfo)}
-                  action={() => goto("/contacts/add")}>
-        Create group
-    </ActionButton>
-</div>
-
 <!-- Invited by: -->
 
-<List rows={rows} rowComponent={InvitationRowView}/>
+<List rows={rows} rowComponent={GroupRowView}/>
