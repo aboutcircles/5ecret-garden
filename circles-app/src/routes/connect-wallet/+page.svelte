@@ -31,19 +31,26 @@
     //
     async function connectWallet() {
         const provider = getBrowserProvider();
+        const signer = await provider.getSigner();
 
         // Set the signer as $connectedWallet to make it globally available.
-        $wallet = await provider.getSigner();
+        $wallet = {
+            runner: signer,
+            address: await signer.getAddress()
+        };
+
+        if (!$wallet) {
+            throw new Error('$wallet.address is undefined');
+        }
 
         // Initialize the Circles SDK and set it as $circles to make it globally available.
         $circles = await initializeSdk();
 
-        const walletAddress = await $wallet.getAddress();
-        const avatarInfo = await $circles.data.getAvatarInfo(walletAddress);
+        const avatarInfo = await $circles.data.getAvatarInfo($wallet.address);
 
         // If the signer address is already a registered Circles wallet, go straight to the dashboard.
         if (avatarInfo) {
-            $avatar = await $circles.getAvatar(walletAddress);
+            $avatar = await $circles.getAvatar($wallet.address);
             await goto("/dashboard");
         } else {
             await goto("/register");
