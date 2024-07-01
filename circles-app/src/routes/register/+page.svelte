@@ -13,7 +13,11 @@
         $avatar = <Avatar>await $circles.registerHuman();
 
         // After signup, go to the dashboard
-        goto("/dashboard");
+        await goto("/dashboard");
+    }
+
+    async function registerAsGroup() {
+        await goto("/register/group");
     }
 </script>
 
@@ -23,5 +27,9 @@
 
     <ActionButton action={registerPerson}>
         Register as person
+    </ActionButton>
+
+    <ActionButton action={registerAsGroup}>
+        Register as group
     </ActionButton>
 </div>
