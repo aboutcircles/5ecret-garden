@@ -5,9 +5,16 @@
     import {avatar} from "$lib/stores/avatar";
     import {crcToTc, tcToCrc} from "@circles-sdk/utils";
     import {goto} from "$app/navigation";
+    import AssetPicker from "$lib/components/AssetPicker.svelte";
+    import type {TokenBalanceRow} from "../../../../../../../circlesubi/circles-sdk/packages/data";
+    import {onMount} from "svelte";
+    import {circles} from "$lib/stores/circles";
 
     let recipient: string = $page.params.to ?? "";
     let valueString: string = "";
+
+    let balances: TokenBalanceRow[] = [];
+    let selectedCollateral: string | undefined;
 
     $: recipientIsValid = ethers.isAddress(recipient);
 
@@ -15,13 +22,28 @@
         ? $avatar?.getMaxTransferableAmount(recipient)
         : Promise.resolve(BigInt(0));
 
+    onMount(async () => {
+        if ($avatar?.address && $circles) {
+            balances = await $circles.data.getTokenBalancesV2($avatar?.address);
+        }
+        selectedCollateral = balances.find(b => b.tokenOwner === $avatar?.address)?.tokenOwner;
+    });
+
     async function send() {
-        await $avatar?.transfer(recipient, tcToCrc(new Date(), parseFloat(valueString)));
-        goto("/dashboard");
+        const sendValue = $avatar?.avatarInfo?.version === 1
+            ? tcToCrc(new Date(), parseFloat(valueString))
+            : ethers.parseEther(valueString.toString());
+
+        await $avatar?.transfer(recipient, sendValue);
+        await goto("/dashboard");
     }
 
     async function setMax() {
-        valueString = crcToTc(new Date(), await maxTransferableAmount ?? BigInt(0)).toFixed(2);
+        if ($avatar?.avatarInfo?.version === 1) {
+            valueString = crcToTc(new Date(), await maxTransferableAmount ?? BigInt(0)).toFixed(2);
+        } else {
+            valueString = ethers.formatEther(await maxTransferableAmount ?? BigInt(0));
+        }
     }
 </script>
 
@@ -33,6 +55,13 @@
                type="text"
                id="recipient"
                placeholder="0x123...">
+    </div>
+</div>
+
+<div class="mt-4">
+    <label for="asset" class="block text-sm font-medium text-gray-700">Asset</label>
+    <div id="asset">
+        <AssetPicker {balances} bind:selectedCollateral/>
     </div>
 </div>
 

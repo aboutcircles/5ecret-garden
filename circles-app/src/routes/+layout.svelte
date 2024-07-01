@@ -24,5 +24,7 @@
 </main>
 
 {#if $avatar}
-    <Footer />
+    <div class="mt-12">
+        <Footer />
+    </div>
 {/if}

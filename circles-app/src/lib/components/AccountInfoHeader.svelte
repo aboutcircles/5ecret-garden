@@ -9,8 +9,6 @@
     let timeout: NodeJS.Timeout | undefined;
     let unsubscribe: (() => void) | undefined;
 
-    $:console.log("AccountInfoHeader.svelte: $avatar", $avatar?.avatarInfo);
-
     onMount(() => {
         timeout = setTimeout(() => {
             mintableAmount = $avatar?.getMintableAmount();

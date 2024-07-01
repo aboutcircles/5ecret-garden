@@ -1,8 +1,11 @@
 <script context="module" lang="ts">
     import type {TrustRelationRow} from "@circles-sdk/sdk";
 
-    export type TrustRelationRowWithInvitationFlag = TrustRelationRow & {
+    export type ExtendedTrustRelationRow = TrustRelationRow & {
+        contactName?: string;
         invitedByMe?: boolean;
+        isGroup?: boolean;
+        invitedMe?: boolean;
     };
 </script>
 <script lang="ts">
@@ -15,11 +18,25 @@
     import ContactRow from "./components/ContactRow.svelte";
     import {circles} from "$lib/stores/circles";
 
-    $: rows = <TrustRelationRowWithInvitationFlag[]>[];
+    $: rows = <ExtendedTrustRelationRow[]>[];
 
     async function refresh() {
         rows = await $avatar?.getTrustRelations() ?? [];
 
+        let groupLookup: Record<string, any> = {};
+        const getGroups = $circles?.data.findGroups(1000, {
+            groupAddressIn: rows.map(row => row.objectAvatar)
+        });
+
+        if (await getGroups?.queryNextPage()) {
+            const groupsResult = getGroups?.currentPage?.results ?? [];
+            groupLookup = groupsResult.reduce((p, c) => {
+                p[c.group] = c;
+                return p;
+            }, <Record<string, any>>{});
+        }
+
+        const invitedBy = await $circles?.data.getInvitedBy($avatar!.address);
         const invitationsQuery = $circles?.data?.getInvitations($avatar!.address, 1000);
         let invitations: Record<string, InvitationRow> = {};
         if (await invitationsQuery?.queryNextPage()) {
@@ -32,6 +49,11 @@
 
         for (const row of rows) {
             row.invitedByMe = !!invitations[row.objectAvatar];
+            row.invitedMe = invitedBy === row.objectAvatar;
+            row.isGroup = groupLookup[row.objectAvatar];
+            if (row.isGroup) {
+                row.contactName = groupLookup[row.objectAvatar].name;
+            }
         }
         rows = rows;
     }
