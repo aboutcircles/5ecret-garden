@@ -9,7 +9,6 @@
 <script lang="ts">
     import {avatar} from "$lib/stores/avatar";
     import {ZeroAddress} from "ethers";
-    import type {TransactionHistoryRow} from "@circles-sdk/data";
 
     export let row: ExtendedTransactionHistoryRow;
 
@@ -18,7 +17,12 @@
 
     $: isIncoming = row.to === $avatar?.address;
     $: isOutgoing = row.from === $avatar?.address;
-    $: isPersonalMinting = row.from === ZeroAddress && row.to === $avatar?.address && (row.tokenAddress === $avatar.avatarInfo?.tokenId || row.tokenAddress === $avatar.avatarInfo?.v1Token);
+    $: isPersonalMinting =
+        row.from === ZeroAddress
+        && row.to === $avatar?.address
+        && (row.tokenAddress === $avatar.avatarInfo?.tokenId
+            || row.tokenAddress === $avatar.avatarInfo?.v1Token);
+
     $: isGroupMinting = row.from === ZeroAddress && row.to === $avatar?.address && !isPersonalMinting;
 
     $: contactAddress = isOutgoing ? row.to : row.from;

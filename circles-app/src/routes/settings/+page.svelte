@@ -36,7 +36,7 @@
                        class="mt-1 block w-full p-2 border border-gray-300 rounded-md"
                        placeholder="0x.....">
             </div>
-            {#if $avatar?.avatarInfo?.v1Token && $avatar?.avatarInfo?.v1Stopped === false}
+            {#if $avatar?.avatarInfo?.v1Token && !$avatar?.avatarInfo?.v1Stopped}
                 <div>
                     <label for="tokenAddress" class="block text-sm font-medium text-gray-700">Token address</label>
                     <input type="text" id="tokenAddress" class="mt-1 block w-full p-2 border border-gray-300 rounded-md"
