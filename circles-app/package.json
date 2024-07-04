@@ -14,9 +14,9 @@
     "npm": ">=10"
   },
   "devDependencies": {
-    "@circles-sdk/data": "^0.3.3",
-    "@circles-sdk/sdk": "^0.3.3",
-    "@circles-sdk/utils": "^0.3.3",
+    "@circles-sdk/data": "../../../circlesubi/circles-sdk/packages/data",
+    "@circles-sdk/sdk": "../../../circlesubi/circles-sdk/packages/sdk",
+    "@circles-sdk/utils": "../../../circlesubi/circles-sdk/packages/utils",
     "kubo-rpc-client": "^4.1.1",
     "@sveltejs/adapter-auto": "^3.0.0",
     "@sveltejs/adapter-node": "^5.2.0",
