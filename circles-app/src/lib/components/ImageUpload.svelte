@@ -3,10 +3,10 @@
 
     export let cropWidth: number = 256;
     export let cropHeight: number = 256;
+    export let imageDataUrl: string | undefined;
 
     const dispatch = createEventDispatcher();
 
-    let previewImageUrl = "";
     let imageFile: File | null = null;
     let fileUpload: HTMLInputElement;
 
@@ -42,8 +42,13 @@
                     canvas.width = cropWidth;
                     canvas.height = cropHeight;
                     ctx.drawImage(img, 0, 0, cropWidth, cropHeight);
-                    previewImageUrl = canvas.toDataURL('image/png');
-                    dispatch('newImage', {dataUrl: previewImageUrl});
+                    imageDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+                    if (imageDataUrl.length > 150 * 1024) {
+                        console.warn("Image size exceeds 150 KB after compression");
+                    }
+
+                    dispatch('newImage', {dataUrl: imageDataUrl});
                 }
             };
         };
@@ -52,7 +57,7 @@
 
     function clearImage() {
         imageFile = null;
-        previewImageUrl = "";
+        imageDataUrl = "";
         dispatch('cleared');
     }
 
@@ -68,12 +73,12 @@
      on:drop={handleDrop}>
     <input bind:this={fileUpload} type="file" id="imageUpload" accept="image/*" on:change={handleFileInput}
            class="hidden"/>
-    {#if !previewImageUrl}
+    {#if !imageDataUrl}
         <p>
-            Drag and drop an image here.
+            Drag and drop an image here or click to select.
         </p>
     {:else}
-        <img src={previewImageUrl} alt="Image preview" class="mt-4 max-w-full rounded-lg shadow-md"/>
+        <img src={imageDataUrl} alt="Image preview" class="mt-4 max-w-full rounded-lg shadow-md"/>
         <button type="button"
                 class="mt-2 px-3 py-1 border border-transparent rounded-md text-sm font-medium text-white bg-red-500 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                 on:click={clearImage}>Clear Image

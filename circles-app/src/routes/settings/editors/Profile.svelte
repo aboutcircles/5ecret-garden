@@ -1,35 +1,26 @@
 <script lang="ts" context="module">
     export async function createProfile(profile: any): Promise<string> {
-        try {
-            const response = await fetch("http://localhost:3000/pin", {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(profile),
-            });
+        const response = await fetch("http://localhost:3000/pin", {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(profile),
+        });
 
-            if (!response.ok) {
-                throw new Error('Failed to create profile');
-            }
-
-            const data = await response.json();
-            return data.cid;
-        } catch (error) {
-            throw new Error(`Error creating profile: ${(error as Error).message}`);
+        if (!response.ok) {
+            throw new Error('Failed to create profile');
         }
+
+        const data = await response.json();
+        return data.cid;
     }
 
     export async function retrieveProfile(cid: string): Promise<any> {
-        try {
-            const response = await fetch(`http://localhost:3000/get?cid=${cid}`);
-            if (!response.ok) {
-                throw new Error('Failed to retrieve profile');
-            }
-
-            const profileData = await response.json();
-            return profileData;
-        } catch (error) {
-            throw new Error(`Error retrieving profile: ${(error as Error).message}`);
+        const response = await fetch(`http://localhost:3000/get?cid=${cid}`);
+        if (!response.ok) {
+            throw new Error('Failed to retrieve profile');
         }
+
+        return await response.json();
     }
 </script>
 
@@ -39,6 +30,7 @@
     import ImageUpload from "$lib/components/ImageUpload.svelte";
     import {onMount} from "svelte";
     import {circles} from "$lib/stores/circles";
+    import {cidV0ToUint8Array} from "@circles-sdk/utils/src";
 
     let name = "";
     let bio = "";
@@ -67,7 +59,7 @@
     async function createOrUpdateProfile() {
         cid = await createProfile(profile());
 
-        const receipt = await $circles?.nameRegistry?.updateMetadataDigest($circles?.cidV0Digest(cid));
+        const receipt = await $circles?.nameRegistry?.updateMetadataDigest(cidV0ToUint8Array(cid));
         if (!receipt) {
             throw new Error('Failed to update metadata digest');
         }
@@ -137,7 +129,8 @@
                 <label for="imageUrl" class="block text-sm font-medium text-gray-700">Image</label>
             </div>
             <div>
-                <ImageUpload cropHeight={256} cropWidth={256}
+                <ImageUpload imageDataUrl={previewImageUrl}
+                             cropHeight={256} cropWidth={256}
                              on:newImage={onNewImage}
                              on:cleared={onImageCleared}></ImageUpload>
             </div>
