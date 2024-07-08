@@ -3,10 +3,10 @@
     import {goto} from "$app/navigation";
     import {wallet} from "$lib/stores/wallet";
     import {circles} from "$lib/stores/circles";
-    import {BrowserProvider} from "ethers";
+    import {AbstractProvider, BrowserProvider} from "ethers";
     import {avatar} from "$lib/stores/avatar";
-    import {Sdk} from "@circles-sdk/sdk";
-    import {chainConfig} from "$lib/chainConfig";
+    import {type CirclesConfig, Sdk, type SdkContractRunner} from "@circles-sdk/sdk";
+    import {circlesConfig, gnosisConfig} from "$lib/circlesConfig";
 
     //
     // Gets the browser provider from the window object.
@@ -19,18 +19,13 @@
         return new BrowserProvider(w.ethereum);
     }
 
-    async function initializeSdk() {
-        // The circles sdk must be initialized with the
-        // contract addresses and endpoints for the chain.
-        // It takes a signer as the second argument.
-        return new Sdk(chainConfig, $wallet!);
-    }
-
     //
     // Connects the wallet and initializes the Circles SDK.
     //
     async function connectWallet() {
         const provider = getBrowserProvider();
+        const circlesConfig = await getCirclesConfig(provider);
+
         const signer = await provider.getSigner();
 
         // Set the signer as $connectedWallet to make it globally available.
@@ -44,7 +39,7 @@
         }
 
         // Initialize the Circles SDK and set it as $circles to make it globally available.
-        $circles = await initializeSdk();
+        $circles = new Sdk(circlesConfig, $wallet!);
 
         const avatarInfo = await $circles.data.getAvatarInfo($wallet.address);
 
@@ -54,6 +49,22 @@
             await goto("/dashboard");
         } else {
             await goto("/register");
+        }
+    }
+
+    async function getCirclesConfig(provider: AbstractProvider): Promise<CirclesConfig> {
+        // Check if the chain-id is either 100 (0x64 - Gnosis) or 10200 (0x27D8 - Chiado).
+        // These are the only two supported chains.
+        const chainId = await provider.getNetwork().then(network => network.chainId);
+        if (chainId !== 100n && chainId !== 10200n) {
+            throw new Error(`Unsupported chain-id: ${chainId}`);
+        }
+
+        switch (chainId) {
+            case 100n:
+                return gnosisConfig;
+            case 10200n:
+                return circlesConfig;
         }
     }
 </script>
