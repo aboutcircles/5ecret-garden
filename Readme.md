@@ -13,14 +13,10 @@ The app is installed at https://lionfish-app-eypqs.ondigitalocean.app
 
 Checkout the repository and install the dependencies:
 
-```bash
-git clone https://github.com/aboutcircles/5ecret-garden.git
-cd 5ecret-garden
-npm install
 ```
-
-Run the application in development mode:
-
-```bash
-npm run dev
+1. git clone git@github.com:aboutcircles/5ecret-garden.git
+2. cd 5ecret-garden/circles-app
+3. git checkout dev
+4. npm i
+5. npm run dev
 ```
