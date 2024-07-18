@@ -5,7 +5,7 @@
     import {onMount} from "svelte";
     import {avatar} from "$lib/stores/avatar.js";
     import {circles} from "$lib/stores/circles";
-    import type {GroupRow} from "@circles-sdk/data";
+    import {type GroupRow} from "@circles-sdk/data";
 
     $: rows = <ExtendedTransactionHistoryRow[]>[];
 
@@ -57,7 +57,7 @@
                 && event.$event !== "CrcV2_TransferBatch") {
                 return;
             }
-            // TODO: Debounce. Once CrcV1_HubTransfer can come with many CrcV1_Transfer events and we don't want to refresh the list for each one.
+            // TODO: Debounce. One CrcV1_HubTransfer can come with many CrcV1_Transfer events and we don't want to refresh the list for each one.
             await refresh();
         });
     });

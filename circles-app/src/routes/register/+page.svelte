@@ -29,7 +29,9 @@
         Register as person
     </ActionButton>
 
-    <ActionButton action={registerAsGroup}>
-        Register as group
-    </ActionButton>
+    {#if $circles?.v2Hub}
+        <ActionButton action={registerAsGroup}>
+            Register as group
+        </ActionButton>
+    {/if}
 </div>

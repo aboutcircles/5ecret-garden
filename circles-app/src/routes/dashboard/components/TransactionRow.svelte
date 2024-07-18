@@ -22,8 +22,10 @@
     $: isPersonalMinting =
         row.from === ZeroAddress
         && row.to === $avatar?.address
-        && (row.tokenAddress === $avatar.avatarInfo?.tokenId
-            || row.tokenAddress === $avatar.avatarInfo?.v1Token);
+        && (row.tokenAddress === $avatar?.avatarInfo?.tokenId
+            || row.tokenAddress === $avatar?.avatarInfo?.v1Token);
+
+    $: console.log(`row.tokenAddress: ${row.tokenAddress}`);
 
     $: isGroupMinting = row.from === ZeroAddress && row.to === $avatar?.address && !isPersonalMinting;
 
