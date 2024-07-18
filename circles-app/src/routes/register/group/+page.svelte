@@ -18,6 +18,7 @@
             throw new Error('Wallet not connected ($circles is undefined)');
         }
 
+        // TODO: Implement profiles
         $avatar = <Avatar>await $circles.registerGroupV2(
             mintPolicyAddress,
             name,

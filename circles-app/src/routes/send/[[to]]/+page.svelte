@@ -6,9 +6,9 @@
     import {crcToTc, tcToCrc} from "@circles-sdk/utils";
     import {goto} from "$app/navigation";
     import AssetPicker from "$lib/components/AssetPicker.svelte";
-    import type {TokenBalanceRow} from "../../../../../../../circlesubi/circles-sdk/packages/data";
     import {onMount} from "svelte";
     import {circles} from "$lib/stores/circles";
+    import type {TokenBalanceRow} from "@circles-sdk/data";
 
     let recipient: string = $page.params.to ?? "";
     let valueString: string = "";

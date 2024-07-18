@@ -1,4 +1,6 @@
 <script lang="ts" context="module">
+    import type {TransactionHistoryRow} from "@circles-sdk/data";
+
     export type ExtendedTransactionHistoryRow = TransactionHistoryRow & {
         isGroupMinting?: boolean;
         isPersonalMinting?: boolean;

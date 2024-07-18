@@ -8,7 +8,6 @@
     import type {GroupRow} from "@circles-sdk/data";
 
     $: rows = <ExtendedTransactionHistoryRow[]>[];
-    $: personalTokenId = $avatar?.avatarInfo?.tokenId;
 
     async function refresh() {
         const result = await $avatar?.getTransactionHistory(1000);

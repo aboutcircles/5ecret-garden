@@ -51,7 +51,7 @@
             </ActionButton>
             {#if $avatar?.avatarInfo?.version === 2 && $avatar?.avatarInfo?.type === "human"}
                 <ActionButton action={invite}
-                              disabled={!contactAddressIsValid || contactAvatarInfo}>
+                              disabled={!contactAddressIsValid || !!contactAvatarInfo}>
                     Invite
                 </ActionButton>
             {/if}

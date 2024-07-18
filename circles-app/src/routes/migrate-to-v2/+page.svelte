@@ -10,6 +10,7 @@
         if (!avatarAddress) {
             throw new Error('Avatar not found ($avatar is undefined)');
         }
+        // TODO: Implement profiles
         await $circles?.migrateAvatar(avatarAddress, "QmPK1s3pNYLi9ERiq3BDxKa4XosgWwFRQUydHUtz4YgpqB");
 
         await goto("/dashboard");
