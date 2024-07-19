@@ -4,17 +4,22 @@
     import {avatar} from "$lib/stores/avatar";
     import {goto} from "$app/navigation";
     import {canMigrate} from "$lib/guards/canMigrate";
-    import type {Profile} from "@circles-sdk/profiles";
+    import {type Profile as ProfileType} from "@circles-sdk/profiles";
+    import Profile from "../settings/editors/Profile.svelte";
 
-    let profile: Profile;
+    let profile: ProfileType = {
+        name: "",
+        description: "",
+        previewImageUrl: "",
+        imageUrl: undefined
+    };
 
     async function migrateToV2() {
         const avatarAddress = $avatar?.address;
         if (!avatarAddress) {
             throw new Error('Avatar not found ($avatar is undefined)');
         }
-        // TODO: Implement profiles
-        await $circles?.migrateAvatar(avatarAddress, "QmPK1s3pNYLi9ERiq3BDxKa4XosgWwFRQUydHUtz4YgpqB");
+        await $circles?.migrateAvatar(avatarAddress, profile);
 
         await goto("/dashboard");
     }
@@ -23,7 +28,7 @@
     <h1 class="text-2xl font-bold mb-4">Migrate to v2</h1>
     <p class="text-gray-700 mb-6 text-center">You can migrate your avatar to Circles V2.</p>
 
-
+    <Profile bind:profile={profile}/>
 
     <ActionButton disabled={!canMigrate($avatar?.avatarInfo)} action={migrateToV2}>
         Migrate

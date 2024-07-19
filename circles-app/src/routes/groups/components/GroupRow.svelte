@@ -1,16 +1,20 @@
 <script lang="ts">
-    import type {GroupRow} from "@circles-sdk/data";
     import ActionButton from "$lib/components/ActionButton.svelte";
     import {goto} from "$app/navigation";
+    import type {ExtendedGroupRow} from "../+page.svelte";
 
-    export let row: GroupRow;
+    export let row: ExtendedGroupRow;
 
     async function groupMint() {
         await goto(`groups/${row.group}/mint`);
     }
 </script>
 
-<img src="group.svg" alt="You are trusting" class="w-12 h-12 rounded-full">
+{#if row.contactImageUrl}
+    <img src={row.contactImageUrl} alt="Avatar" class="w-12 h-12 rounded-full">
+{:else}
+    <img src="group.svg" alt="You are trusting" class="w-12 h-12 rounded-full">
+{/if}
 
 <div class="ml-4 flex-grow">
     <p class="text-sm font-medium">{row.name}</p>

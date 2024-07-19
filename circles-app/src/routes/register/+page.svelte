@@ -6,14 +6,7 @@
     import type {Avatar} from "@circles-sdk/sdk";
 
     async function registerPerson() {
-        if (!$circles) {
-            throw new Error('Wallet not connected ($circles is undefined)');
-        }
-
-        $avatar = <Avatar>await $circles.registerHuman();
-
-        // After signup, go to the dashboard
-        await goto("/dashboard");
+        await goto("/register/person");
     }
 
     async function registerAsGroup() {

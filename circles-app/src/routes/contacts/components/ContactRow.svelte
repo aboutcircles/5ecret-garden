@@ -30,6 +30,7 @@
     $: invitedMe = row.invitedMe;
     $: contactName = row.contactName;
     $: isGroup = row.isGroup;
+    $: imageUrl = row.contactImageUrl;
 
     $: title = contactName ? `${contactName} (${row.objectAvatar})` : row.objectAvatar;
 </script>
@@ -47,15 +48,34 @@
         width: 16px;
         height: 16px;
     }
+
+    .direction-icon {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 16px;
+        height: 16px;
+    }
 </style>
 
 <div class="icon-container">
-    {#if isMutual}
-        <img src="mutual.svg" alt="Mutual trust" class="w-12 h-12 rounded-full">
-    {:else if isIncoming}
-        <img src="incoming.svg" alt="Is trusting you" class="w-12 h-12 rounded-full">
-    {:else if isOutgoing}
-        <img src="outgoing.svg" alt="You are trusting" class="w-12 h-12 rounded-full">
+    {#if imageUrl}
+        <img src={imageUrl} alt="Avatar" class="w-12 h-12 rounded-full">
+        {#if isMutual}
+            <img src="mutual.svg" alt="Mutual trust" class="direction-icon">
+        {:else if isIncoming}
+            <img src="incoming.svg" alt="Is trusting you" class="direction-icon">
+        {:else if isOutgoing}
+            <img src="outgoing.svg" alt="You are trusting" class="direction-icon">
+        {/if}
+    {:else}
+        {#if isMutual}
+            <img src="mutual.svg" alt="Mutual trust" class="w-12 h-12 rounded-full">
+        {:else if isIncoming}
+            <img src="incoming.svg" alt="Is trusting you" class="w-12 h-12 rounded-full">
+        {:else if isOutgoing}
+            <img src="outgoing.svg" alt="You are trusting" class="w-12 h-12 rounded-full">
+        {/if}
     {/if}
 
     {#if isInvitedByMe || invitedMe}

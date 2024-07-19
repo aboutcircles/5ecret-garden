@@ -36,10 +36,6 @@
 
     let profile: Profile;
 
-    $: {
-        console.log(profile);
-    }
-
     onMount(async () => {
         const cid = $avatar?.avatarInfo?.cidV0;
         profile = cid
@@ -59,12 +55,17 @@
     async function saveProfile() {
         const cid = await saveProfileData(profile);
         const digest = cidV0ToUint8Array(cid);
-        const receipt = await $circles?.nameRegistry?.updateMetadataDigest(digest);
+        const tx = await $circles?.nameRegistry?.updateMetadataDigest(digest);
+        const receipt = await tx?.wait();
         if (!receipt) {
             throw new Error('Failed to update metadata digest');
         }
 
-        console.log(`Profile updated with CID: ${cid}`);
+        if ($wallet?.address) {
+            $avatar = await $circles?.getAvatar($wallet.address);
+        }
+
+        return receipt;
     }
 </script>
 
@@ -73,7 +74,16 @@
     <div class="space-y-6">
         <div class="bg-white p-4 rounded shadow">
             <h2 class="text-lg font-medium">Personal Profile</h2>
-            <ProfileEditor bind:profile={profile}/>
+            <ProfileEditor bind:profile={profile} showCustomizableFields={$avatar?.avatarInfo?.version === 2}/>
+            {#if $avatar?.avatarInfo?.version === 2}
+                <div class="mt-3 space-y-2">
+                    <div>
+                        <ActionButton action={saveProfile}>
+                            Save
+                        </ActionButton>
+                    </div>
+                </div>
+            {/if}
         </div>
     </div>
 
