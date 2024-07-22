@@ -5,7 +5,7 @@
     import {circles} from "$lib/stores/circles";
     import {AbstractProvider, BrowserProvider} from "ethers";
     import {avatar} from "$lib/stores/avatar";
-    import {type CirclesConfig, Sdk, type SdkContractRunner} from "@circles-sdk/sdk";
+    import {type CirclesConfig, Sdk} from "@circles-sdk/sdk";
     import {circlesConfig, gnosisConfig} from "$lib/circlesConfig";
 
     //
