@@ -18,7 +18,7 @@
         await goto("/connect-wallet");
     }
 
-    async function loadProfileData(cid: string): Promise<Profile> {
+    async function loadProfileData(cid: string): Promise<Profile|undefined> {
         if (!$circles?.profiles) {
             throw new Error('Profiles not available');
         }
@@ -34,18 +34,21 @@
         return await $circles.profiles.create(profile);
     }
 
-    let profile: Profile;
+    let profile: Profile|undefined;
 
     onMount(async () => {
         const cid = $avatar?.avatarInfo?.cidV0;
-        profile = cid
-            ? await loadProfileData(cid)
-            : {
+        if (cid) {
+            profile = await loadProfileData(cid);
+        }
+        if (!profile) {
+            profile = {
                 name: "",
                 description: "",
                 previewImageUrl: "",
                 imageUrl: undefined
             };
+        }
     });
 
     async function migrateToV2() {
@@ -53,7 +56,7 @@
     }
 
     async function saveProfile() {
-        const cid = await saveProfileData(profile);
+        const cid = await saveProfileData(profile!);
         const digest = cidV0ToUint8Array(cid);
         const tx = await $circles?.nameRegistry?.updateMetadataDigest(digest);
         const receipt = await tx?.wait();
@@ -78,7 +81,7 @@
             {#if $avatar?.avatarInfo?.version === 2}
                 <div class="mt-3 space-y-2">
                     <div>
-                        <ActionButton action={saveProfile}>
+                        <ActionButton action={saveProfile} disabled={!profile}>
                             Save
                         </ActionButton>
                     </div>
