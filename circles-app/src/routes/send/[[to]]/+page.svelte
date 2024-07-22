@@ -38,12 +38,20 @@
         await goto("/dashboard");
     }
 
-    async function setMax() {
+    function formatAmount(amount: bigint) {
         if ($avatar?.avatarInfo?.version === 1) {
-            valueString = crcToTc(new Date(), await maxTransferableAmount ?? BigInt(0)).toFixed(2);
+            return crcToTc(new Date(), amount ?? BigInt(0)).toFixed(2);
         } else {
-            valueString = ethers.formatEther(await maxTransferableAmount ?? BigInt(0));
+            return ethers.formatEther(amount ?? BigInt(0));
         }
+    }
+
+    async function setMax() {
+        if (!maxTransferableAmount) {
+            valueString = "0";
+            return;
+        }
+        valueString = formatAmount(await maxTransferableAmount);
     }
 </script>
 
@@ -84,7 +92,11 @@
             {#await maxTransferableAmount}
                 <span>Loading ...</span>
             {:then maxAmount}
-                {crcToTc(new Date(), maxAmount ?? BigInt(0)).toFixed(2)}
+                {#if maxAmount}
+                    {formatAmount(maxAmount)}
+                {:else}
+                    0
+                {/if}
             {/await}
         </span></p>
 </div>
