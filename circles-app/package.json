@@ -14,10 +14,10 @@
     "npm": ">=10"
   },
   "devDependencies": {
-    "@circles-sdk/data": "0.5.0-preview-1",
-    "@circles-sdk/sdk": "0.5.0-preview-1",
-    "@circles-sdk/utils": "0.5.0-preview-1",
-    "@circles-sdk/profiles": "0.5.0-preview-1",
+    "@circles-sdk/data": "0.5.0-preview-2",
+    "@circles-sdk/sdk": "0.5.0-preview-2",
+    "@circles-sdk/utils": "0.5.0-preview-2",
+    "@circles-sdk/profiles": "0.5.0-preview-2",
     "@sveltejs/adapter-auto": "^3.0.0",
     "@sveltejs/adapter-node": "^5.2.0",
     "@sveltejs/adapter-static": "^3.0.2",
