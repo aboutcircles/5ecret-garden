@@ -2,10 +2,8 @@ import type {CirclesConfig} from "@circles-sdk/sdk";
 
 export const circlesConfig: CirclesConfig = {
     circlesRpcUrl: "https://chiado-rpc.aboutcircles.com",
-    //circlesRpcUrl: "http://localhost:8545",
     pathfinderUrl: "https://chiado-pathfinder.aboutcircles.com",
-    v2PathfinderUrl: "http://0.0.0.0:8080",
-    //profileServiceUrl: "http://localhost:3000/",
+    v2PathfinderUrl: "http://chiado-rpc.aboutcircles.com:8080",
     profileServiceUrl: "http://chiado-rpc.aboutcircles.com:3000/",
     v1HubAddress: "0xdbf22d4e8962db3b2f1d9ff55be728a887e47710",
     v2HubAddress: "0x2066CDA98F98397185483aaB26A89445addD6740",
