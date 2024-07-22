@@ -1,6 +1,7 @@
 <script lang="ts">
     import {avatar} from "$lib/stores/avatar";
     import {onDestroy, onMount} from "svelte";
+    import {profile} from "$lib/stores/profile";
 
     $: address = $avatar?.address;
     $: balance = $avatar?.getTotalBalance();
@@ -33,15 +34,23 @@
 </script>
 
 <header class="bg-blue-500 text-white p-4 flex items-center">
-    <img src="/logo.svg" alt="User Icon" class="w-12 h-12 rounded-full">
+    {#if !$profile?.previewImageUrl || $profile.previewImageUrl.trim() === ""}
+        <img src="/logo.svg" alt="User Icon" class="w-12 h-12 rounded-full">
+    {:else}
+        <img src={$profile.previewImageUrl} alt="User Icon" class="w-12 h-12 rounded-full">
+    {/if}
     <div class="ml-4">
-        <h1 class="text-xl font-semibold">{address}</h1>
+        {#if !$profile}
+            <h1 class="text-xl font-semibold">{address}</h1>
+        {:else}
+            <h1 class="text-xl font-semibold">{$profile.name} ({address})</h1>
+        {/if}
         <p class="text-sm">
             {#await balance}
                 ----.-- Circles
             {:then balance}
                 {balance?.toFixed(2) ?? 0} Circles
-            {:catch error}
+            {:catch _}
                 (Error loading balance)
             {/await}
 
