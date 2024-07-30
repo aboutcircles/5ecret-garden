@@ -5,7 +5,6 @@
     import {avatar} from "$lib/stores/avatar";
     import {circles} from "$lib/stores/circles";
     import type {AvatarRow} from "@circles-sdk/data";
-    import {inviteHuman} from "$lib/actions/inviteHuman";
 
     let contactAddress = "";
 
@@ -15,7 +14,7 @@
     }
 
     async function invite() {
-        await inviteHuman(contactAddress);
+        await $avatar?.inviteHuman(contactAddress);
         await goto("/contacts");
     }
 
@@ -51,7 +50,7 @@
             </ActionButton>
             {#if $avatar?.avatarInfo?.version === 2 && $avatar?.avatarInfo?.type === "human"}
                 <ActionButton action={invite}
-                              disabled={!contactAddressIsValid || contactAvatarInfo}>
+                              disabled={!contactAddressIsValid || !!contactAvatarInfo}>
                     Invite
                 </ActionButton>
             {/if}

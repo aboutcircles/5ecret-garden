@@ -5,6 +5,10 @@
     import {goto} from "$app/navigation";
     import ActionButton from "$lib/components/ActionButton.svelte";
     import {canMigrate} from "$lib/guards/canMigrate";
+    import ProfileEditor from "./editors/Profile.svelte";
+    import {type Profile} from "@circles-sdk/profiles";
+    import {cidV0ToUint8Array} from "@circles-sdk/utils";
+    import {onMount} from "svelte";
 
     async function changeWallet() {
         $avatar = undefined;
@@ -14,41 +18,79 @@
         await goto("/connect-wallet");
     }
 
+    async function loadProfileData(cid: string): Promise<Profile|undefined> {
+        if (!$circles?.profiles) {
+            throw new Error('Profiles not available');
+        }
+
+        return await $circles?.profiles?.get(cid);
+    }
+
+    async function saveProfileData(profile: Profile): Promise<string> {
+        if (!$circles?.profiles) {
+            throw new Error('Profiles not available');
+        }
+
+        return await $circles.profiles.create(profile);
+    }
+
+    let profile: Profile|undefined;
+
+    onMount(async () => {
+        const cid = $avatar?.avatarInfo?.cidV0;
+        if (cid) {
+            profile = await loadProfileData(cid);
+        }
+        if (!profile) {
+            profile = {
+                name: "",
+                description: "",
+                previewImageUrl: "",
+                imageUrl: undefined
+            };
+        }
+    });
+
     async function migrateToV2() {
         await goto("/migrate-to-v2");
     }
 
-    $: avatarInfo = {
-        address: $avatar?.address,
-        tokenId: $avatar?.avatarInfo?.tokenId
+    async function saveProfile() {
+        const cid = await saveProfileData(profile!);
+        const digest = cidV0ToUint8Array(cid);
+        const tx = await $circles?.nameRegistry?.updateMetadataDigest(digest);
+        const receipt = await tx?.wait();
+        if (!receipt) {
+            throw new Error('Failed to update metadata digest');
+        }
+
+        if ($wallet?.address) {
+            $avatar = await $circles?.getAvatar($wallet.address);
+        }
+
+        return receipt;
     }
 </script>
 
 <div class="space-y-6">
-    <div class="bg-white p-4 rounded shadow">
-        <h2 class="text-lg font-medium">Profile</h2>
-        <div class="mt-3 space-y-2">
-            <div>
-                <label for="circlesAddress" class="block text-sm font-medium text-gray-700">Circles address</label>
-                <input type="text" id="circlesAddress"
-                       readonly
-                       value={avatarInfo.address}
-                       class="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-                       placeholder="0x.....">
-            </div>
-            {#if $avatar?.avatarInfo?.v1Token && !$avatar?.avatarInfo?.v1Stopped}
-                <div>
-                    <label for="tokenAddress" class="block text-sm font-medium text-gray-700">Token address</label>
-                    <input type="text" id="tokenAddress" class="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-                           readonly
-                           value={$avatar.avatarInfo.v1Token}
-                           placeholder="0x.....">
+
+    <div class="space-y-6">
+        <div class="bg-white p-4 rounded shadow">
+            <h2 class="text-lg font-medium">Personal Profile</h2>
+            <ProfileEditor bind:profile={profile} showCustomizableFields={$avatar?.avatarInfo?.version === 2}/>
+            {#if $avatar?.avatarInfo?.version === 2}
+                <div class="mt-3 space-y-2">
+                    <div>
+                        <ActionButton action={saveProfile} disabled={!profile}>
+                            Save
+                        </ActionButton>
+                    </div>
                 </div>
             {/if}
         </div>
     </div>
 
-    {#if canMigrate($avatar?.avatarInfo)}
+    {#if canMigrate($avatar?.avatarInfo ?? undefined)}
         <div class="bg-white p-4 rounded shadow">
             <h2 class="text-lg font-medium">Circles V2</h2>
             <div class="mt-3 space-y-2">
@@ -71,4 +113,5 @@
             </div>
         </div>
     </div>
+
 </div>
