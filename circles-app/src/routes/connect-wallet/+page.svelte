@@ -67,6 +67,10 @@
                 return circlesConfig;
         }
     }
+
+    async function connectCometh() {
+        await goto("/connect-wallet/cometh");
+    }
 </script>
 <div class="flex flex-col items-center justify-center h-full p-6 space-y-4">
     <h1 class="text-2xl font-bold mb-4">Connect Your Wallet</h1>
@@ -74,5 +78,9 @@
 
     <ActionButton action={connectWallet}>
         Connect Metamask
+    </ActionButton>
+
+    <ActionButton action={connectCometh}>
+        Connect via Cometh
     </ActionButton>
 </div>
