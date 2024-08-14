@@ -8,6 +8,7 @@
     import {canMigrate} from "$lib/guards/canMigrate";
     import UpdateBanner from "$lib/components/UpdateBanner.svelte";
     import {page} from "$app/stores";
+    import Tools from "$lib/Tools.svelte";
 
     // if ('serviceWorker' in navigator) {
     //     window.addEventListener('load', () => {
@@ -19,7 +20,7 @@
     //     });
     // }
 </script>
-
+<!--<Tools></Tools>-->
 {#if $avatar}
     <AvatarInfoHeader/>
 {:else}

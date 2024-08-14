@@ -13,7 +13,6 @@
 <script lang="ts">
     import {createEventDispatcher} from "svelte";
     import {parseError} from "@circles-sdk/sdk";
-    import {ErrorDescription} from "ethers";
 
     export let action: () => Promise<any>;
     export let title: string = '';
@@ -35,7 +34,7 @@
     let state: ActionButtonState = 'Ready';
     let errorMessage: string = '';
 
-    function handleReverted(err: any): ErrorDescription | undefined {
+    function handleReverted(err: any): any {
         if (!err?.info?.error?.data?.message) {
             return undefined;
         }

@@ -14,7 +14,7 @@
 </script>
 <script lang="ts">
     import {avatar} from "$lib/stores/avatar";
-    import {ZeroAddress} from "ethers";
+    import {ZeroAddress} from "ethers6";
 
     export let row: ExtendedTransactionHistoryRow;
 
@@ -39,20 +39,22 @@
         display: inline-block;
     }
 
-    .envelope-icon {
+    .envelope-icon-large {
         position: absolute;
         bottom: 0;
         right: 0;
-        width: 16px;
-        height: 16px;
+        width: 32px;
+        height: 32px;
+        border-radius: 9999px;
     }
 
-    .type-icon {
-        position: absolute;
-        top: 0;
+    .main-icon {
+        position: relative;
         left: 0;
-        width: 16px;
-        height: 16px;
+        top: 0;
+        width: 3rem;
+        height: 3rem;
+        border-radius: 9999px;
     }
 </style>
 
@@ -60,27 +62,28 @@
 <div class="icon-container">
 
     {#if isPersonalMinting}
-        <img src="/logo.svg" alt="Personal token minting" class="w-12 h-12 rounded-full">
-        <img src="/incoming.svg" alt="Invited by me" class="envelope-icon">
+        <img src="/logo.svg" alt="Personal token minting" class="envelope-icon-large">
+        <img src="/incoming.svg" alt="Invited by me" class="main-icon">
     {:else if isGroupMinting}
         {#if contactProfile?.previewImageUrl}
-            <img src={contactProfile.previewImageUrl} alt="Group token minting" class="w-12 h-12 rounded-full">
+            <img src={contactProfile.previewImageUrl} alt="Group token minting" class="envelope-icon-large">
+            <img src="incoming.svg" alt="Invited by me" class="main-icon">
         {:else}
-            <img src="/group.svg" alt="Group token minting" class="w-12 h-12 rounded-full">
+            <img src="/group.svg" alt="Group token minting" class="main-icon">
         {/if}
     {:else if isIncoming}
         {#if contactProfile?.previewImageUrl}
-            <img src={contactProfile.previewImageUrl} alt="Incoming transaction" class="w-12 h-12 rounded-full">
-            <img src="incoming.svg" alt="Invited by me" class="envelope-icon">
+            <img src={contactProfile.previewImageUrl} alt="Incoming transaction" class="envelope-icon-large">
+            <img src="incoming.svg" alt="Invited by me" class="main-icon">
         {:else}
-            <img src="/incoming.svg" alt="Incoming transaction" class="w-12 h-12 rounded-full">
+            <img src="/incoming.svg" alt="Incoming transaction" class="main-icon">
         {/if}
     {:else if isOutgoing}
         {#if contactProfile?.previewImageUrl}
-            <img src={contactProfile.previewImageUrl} alt="Outgoing transaction" class="w-12 h-12 rounded-full">
-            <img src="outgoing.svg" alt="Group" class="envelope-icon">
+            <img src={contactProfile.previewImageUrl} alt="Outgoing transaction" class="envelope-icon-large">
+            <img src="outgoing.svg" alt="Group" class="main-icon">
         {:else}
-            <img src="/outgoing.svg" alt="Outgoing transaction" class="w-12 h-12 rounded-full">
+            <img src="/outgoing.svg" alt="Outgoing transaction" class="main-icon">
         {/if}
     {/if}
 </div>
@@ -91,7 +94,7 @@
     {:else if isGroupMinting}
         <p class="text-sm">{row.groupSymbol ? `${row.groupSymbol} (${row.groupName})` : "Group token"} minted</p>
     {:else}
-        <p class="text-sm">{contactAddress}</p>
+        <p class="text-sm">{contactProfile?.name ?? contactAddress}{contactProfile ? " (" + contactAddress + ")" : ""}</p>
     {/if}
     <p class="text-xs text-gray-500">{date.toLocaleDateString()} - {date.toLocaleTimeString()}</p>
 </div>

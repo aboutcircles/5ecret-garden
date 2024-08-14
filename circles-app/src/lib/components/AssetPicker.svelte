@@ -20,6 +20,7 @@
 
 <div>
     <select id="collateral" bind:value={selectedCollateral} class="form-select">
+        <option value={undefined} title="Transitive">All available tokens (transitive)</option>
         {#each balances ?? [] as balance}
             <option value={balance.tokenOwner} title="{balance.tokenOwner}: {balance.balance}">
                 {shortenAddress(balance.tokenOwner)}

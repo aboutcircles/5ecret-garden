@@ -1,7 +1,7 @@
 <script lang="ts">
     import ActionButton from "$lib/components/ActionButton.svelte";
     import {page} from "$app/stores";
-    import {ethers} from "ethers";
+    import {ethers} from "ethers6";
     import {avatar} from "$lib/stores/avatar";
     import {crcToTc, tcToCrc} from "@circles-sdk/utils";
     import {goto} from "$app/navigation";
@@ -19,7 +19,7 @@
     $: recipientIsValid = ethers.isAddress(recipient);
 
     $: maxTransferableAmount = recipientIsValid
-        ? $avatar?.getMaxTransferableAmount(recipient)
+        ? $avatar?.getMaxTransferableAmount(recipient, selectedCollateral)
         : Promise.resolve(BigInt(0));
 
     onMount(async () => {
@@ -29,12 +29,14 @@
         selectedCollateral = balances.find(b => b.tokenOwner === $avatar?.address)?.tokenOwner;
     });
 
+    $: console.log(`Selected collateral: ${selectedCollateral}`);
+
     async function send() {
         const sendValue = $avatar?.avatarInfo?.version === 1
             ? tcToCrc(new Date(), parseFloat(valueString))
             : ethers.parseEther(valueString.toString());
 
-        await $avatar?.transfer(recipient, sendValue);
+        await $avatar?.transfer(recipient, sendValue, selectedCollateral);
         await goto("/dashboard");
     }
 

@@ -6,7 +6,7 @@
     import {avatar} from "$lib/stores/avatar";
     import {circles} from "$lib/stores/circles";
     import {page} from "$app/stores";
-    import {ethers} from "ethers";
+    import {ethers} from "ethers6";
 
     let group: GroupRow;
     let balances: TokenBalanceRow[] = [];
