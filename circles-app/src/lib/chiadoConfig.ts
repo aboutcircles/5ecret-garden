@@ -10,9 +10,9 @@ export const chiadoConfig: CirclesConfig = {
     // v2PathfinderUrl: "http://localhost:8080",
     // profileServiceUrl: "http://localhost:3000",
     v1HubAddress: "0xdbf22d4e8962db3b2f1d9ff55be728a887e47710",
-    v2HubAddress: "0x7bC1F123089Bc1f384b6379d0587968d1CD5830a",
-    migrationAddress: "0xEaBa6046103C3A2f5A681fD4323f78C647Fb4292",
-    nameRegistryAddress: "0xb95eF3f3E693531d9588815bcA954dC8dce30937"
+    v2HubAddress: "0xEddc960D3c78692BF38577054cb0a35114AE35e0",
+    migrationAddress: "0x8C9BeAccb6b7DBd3AeffB5D77cab36b62Fe98882",
+    nameRegistryAddress: "0x5525cbF9ad01a4E805ed1b40723D6377b336eCcf"
 };
 
 export const gnosisConfig: CirclesConfig = {
