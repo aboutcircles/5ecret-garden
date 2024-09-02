@@ -8,7 +8,7 @@
     import type {GroupProfile} from "@circles-sdk/profiles";
     import Profile from "../../settings/editors/Profile.svelte";
 
-    let mintPolicyAddress: string = "0xdcCDfdB91067807898477876e5670CC7Edd68a78";
+    let mintPolicyAddress: string = $circles?.circlesConfig.baseGroupMintPolicy ?? "";
     $: mintPolicyAddressIsValid = ethers.isAddress(mintPolicyAddress);
 
     let profile: GroupProfile = {
