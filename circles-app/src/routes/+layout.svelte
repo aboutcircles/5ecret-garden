@@ -8,19 +8,7 @@
     import {canMigrate} from "$lib/guards/canMigrate";
     import UpdateBanner from "$lib/components/UpdateBanner.svelte";
     import {page} from "$app/stores";
-    import Tools from "$lib/Tools.svelte";
-
-    // if ('serviceWorker' in navigator) {
-    //     window.addEventListener('load', () => {
-    //         navigator.serviceWorker.register('/service-worker.js').then(registration => {
-    //             console.log('ServiceWorker registration successful with scope: ', registration.scope);
-    //         }, err => {
-    //             console.log('ServiceWorker registration failed: ', err);
-    //         });
-    //     });
-    // }
 </script>
-<!--<Tools></Tools>-->
 {#if $avatar}
     <AvatarInfoHeader/>
 {:else}

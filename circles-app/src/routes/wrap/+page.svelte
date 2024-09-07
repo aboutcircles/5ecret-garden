@@ -13,7 +13,7 @@
 
     onMount(async () => {
         if ($avatar?.address && $circles) {
-            balances = await $circles.data.getTokenBalancesV2($avatar?.address);
+            balances = await $circles.data.getTokenBalances($avatar?.address);
         }
         selectedCollateral = balances.find(b => b.tokenOwner === $avatar?.address)?.tokenOwner;
     });
@@ -67,4 +67,14 @@
     <ActionButton action={wrapDemurraged} disabled={!selectedCollateral}>
         Wrap as demurrage ERC20
     </ActionButton>
+</div>
+
+<!-- balance of wrapped tokens I hold -->
+<div class="mt-4">
+    <h2 class="text-lg font-semibold">Wrapped token balances</h2>
+    <ul>
+        <!--{#each balances as balance}-->
+        <!--    <li>{balance.tokenOwner} - {balance.balance}</li>-->
+        <!--{/each}-->
+    </ul>
 </div>

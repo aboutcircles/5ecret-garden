@@ -2,10 +2,11 @@
     import ActionButton from "$lib/components/ActionButton.svelte";
     import List from "$lib/components/List.svelte";
     import TransactionRow, {type ExtendedTransactionHistoryRow} from "./components/TransactionRow.svelte";
-    import { onMount } from "svelte";
-    import { avatar } from "$lib/stores/avatar.js";
-    import { circles } from "$lib/stores/circles";
-    import { type GroupRow } from "@circles-sdk/data";
+    import {onMount} from "svelte";
+    import {avatar} from "$lib/stores/avatar.js";
+    import {circles} from "$lib/stores/circles";
+    import {type GroupRow} from "@circles-sdk/data";
+    import BalanceOverview from "./components/BalanceOverview.svelte";
 
     let rows: ExtendedTransactionHistoryRow[] = [];
 
@@ -25,7 +26,7 @@
     }
 
     async function getGroupLookup(potentialGroupAddresses: string[]) {
-        const groupQuery = $circles?.data.findGroups(1000, { groupAddressIn: potentialGroupAddresses });
+        const groupQuery = $circles?.data.findGroups(1000, {groupAddressIn: potentialGroupAddresses});
         const hasData = await groupQuery?.queryNextPage();
         if (!hasData) return {};
 
@@ -124,11 +125,12 @@
 </script>
 
 <div class="flex justify-between items-center mb-4">
-    {#if $avatar?.avatarInfo?.type === "human"}
+    {#if $avatar?.avatarInfo?.isHuman}
         <ActionButton action={mintCircles}>
             Mint Circles
         </ActionButton>
     {/if}
 </div>
 
-<List rows={rows} rowComponent={TransactionRow} />
+<BalanceOverview></BalanceOverview>
+<List rows={rows} rowComponent={TransactionRow}/>

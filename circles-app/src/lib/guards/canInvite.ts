@@ -7,9 +7,5 @@ export function canInvite(avatar: AvatarRow | undefined): boolean {
         return false;
     }
 
-    return avatar.version === 2
-        && avatar.type === "human"
-        && (avatar.hasV1
-            ? avatar.v1Stopped === true
-            : true);
+    return avatar.version === 2 && avatar.isHuman;
 }

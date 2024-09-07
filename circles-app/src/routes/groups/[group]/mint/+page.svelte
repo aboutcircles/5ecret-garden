@@ -22,7 +22,7 @@
             group = groupResult;
         }
         if ($avatar?.address && $circles) {
-            balances = await $circles.data.getTokenBalancesV2($avatar?.address);
+            balances = await $circles.data.getTokenBalances($avatar?.address);
         }
         selectedCollateral = balances.find(b => b.tokenOwner === $avatar?.address)?.tokenOwner;
     });
