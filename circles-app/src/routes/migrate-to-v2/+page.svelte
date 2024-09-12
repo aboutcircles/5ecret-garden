@@ -21,7 +21,7 @@
         }
         await $circles?.migrateAvatar(avatarAddress, profile);
 
-        await goto("/dashboard");
+        await goto("/_new/dashboard");
     }
 </script>
 <div class="flex flex-col items-center justify-center h-full p-6 space-y-4">

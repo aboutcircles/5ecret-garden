@@ -71,10 +71,5 @@
 
 <!-- balance of wrapped tokens I hold -->
 <div class="mt-4">
-    <h2 class="text-lg font-semibold">Wrapped token balances</h2>
-    <ul>
-        <!--{#each balances as balance}-->
-        <!--    <li>{balance.tokenOwner} - {balance.balance}</li>-->
-        <!--{/each}-->
-    </ul>
+    <h2 class="text-lg">Wrapped token balances</h2>
 </div>

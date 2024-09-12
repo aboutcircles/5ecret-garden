@@ -30,7 +30,7 @@
             profile
         );
 
-        await goto("/dashboard");
+        await goto("/_new/dashboard");
     }
 </script>
 

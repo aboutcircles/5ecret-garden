@@ -4,7 +4,7 @@
 
 <nav class="fixed bottom-0 left-0 right-0 bg-white shadow-lg">
     <div class="flex justify-around p-3">
-        <a href="/dashboard" class="btn bg-blue-500 text-white p-3 rounded-full">
+        <a href="/_new/dashboard" class="btn bg-blue-500 text-white p-3 rounded-full">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                  stroke="currentColor" class="w-6 h-6">
                 <path stroke-linecap="round" stroke-linejoin="round"

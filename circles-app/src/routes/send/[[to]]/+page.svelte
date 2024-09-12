@@ -37,7 +37,7 @@
             : ethers.parseEther(valueString.toString());
 
         await $avatar?.transfer(recipient, sendValue, selectedCollateral);
-        await goto("/dashboard");
+        await goto("/_new/dashboard");
     }
 
     function formatAmount(amount: bigint) {

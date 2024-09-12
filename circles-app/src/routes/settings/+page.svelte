@@ -15,7 +15,7 @@
         $circles = undefined;
         $wallet = undefined;
 
-        await goto("/connect-wallet");
+        await goto("/_new/connect-wallet");
     }
 
     async function loadProfileData(cid: string): Promise<Profile|undefined> {

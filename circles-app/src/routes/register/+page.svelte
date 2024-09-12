@@ -18,11 +18,11 @@
     });
 
     async function registerPerson() {
-        await goto("/register/person");
+        await goto("/_new/register/person");
     }
 
     async function registerAsGroup() {
-        await goto("/register/group");
+        await goto("/_new/register/group");
     }
 
     async function acceptInvitation(inviter: string) {

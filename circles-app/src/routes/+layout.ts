@@ -4,9 +4,11 @@ import {get} from "svelte/store";
 
 export const load = (params): void => {
     // Redirect to 'connect wallet' if not connected
-    if (params.route.id !== '/connect-wallet'
+    if (params.route.id !== '/_new/connect-wallet'
+        && params.route.id !== '/_new/connect-wallet/connect-cometh'
+        && params.route.id !== '/_new/connect-wallet/connect-metamask'
         && params.route.id !== '/'
         && get(wallet) === undefined) {
-        redirect(302, '/connect-wallet');
+        redirect(302, '/_new/connect-wallet');
     }
 };
