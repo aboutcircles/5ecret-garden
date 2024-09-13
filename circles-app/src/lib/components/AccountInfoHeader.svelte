@@ -2,6 +2,7 @@
     import {avatar} from "$lib/stores/avatar";
     import {onDestroy, onMount} from "svelte";
     import {profile} from "$lib/stores/profile";
+    import {floorToDecimals} from "$lib/utils/shared";
 
     $: address = $avatar?.address;
     $: balance = $avatar?.getTotalBalance();
@@ -49,7 +50,7 @@
             {#await balance}
                 ----.-- Circles
             {:then balance}
-                {balance?.toFixed(2) ?? 0} Circles
+                {floorToDecimals(balance) ?? 0} Circles
             {:catch _}
                 (Error loading balance)
             {/await}

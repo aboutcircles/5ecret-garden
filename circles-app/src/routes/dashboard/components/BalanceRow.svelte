@@ -1,6 +1,7 @@
 <script lang="ts">
     import type {TokenBalanceRow} from "@circles-sdk/data";
     import {avatar} from "$lib/stores/avatar";
+    import {floorToDecimals} from "$lib/utils/shared";
 
     export let row: TokenBalanceRow;
 
@@ -71,5 +72,5 @@
 </div>
 <div class="ml-auto">
     <p class:text-green-500={true}
-       class="text-lg">{row.circles.toFixed(2)}</p>
+       class="text-lg">{floorToDecimals(row.circles)}</p>
 </div>

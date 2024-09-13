@@ -9,6 +9,7 @@
     import {onMount} from "svelte";
     import {circles} from "$lib/stores/circles";
     import type {TokenBalanceRow} from "@circles-sdk/data";
+    import {floorToDecimals} from "$lib/utils/shared";
 
     let recipient: string = $page.params.to ?? "";
     let valueString: string = "";
@@ -42,7 +43,7 @@
 
     function formatAmount(amount: bigint) {
         if ($avatar?.avatarInfo?.version === 1) {
-            return crcToTc(new Date(), amount ?? BigInt(0)).toFixed(2);
+            return floorToDecimals(crcToTc(new Date(), amount ?? BigInt(0)));
         } else {
             return ethers.formatEther(amount ?? BigInt(0));
         }

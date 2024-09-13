@@ -15,6 +15,7 @@
 <script lang="ts">
     import {avatar} from "$lib/stores/avatar";
     import {ZeroAddress} from "ethers6";
+    import {floorToDecimals} from "$lib/utils/shared";
 
     export let row: ExtendedTransactionHistoryRow;
 
@@ -100,11 +101,11 @@
 </div>
 <div class="ml-auto">
     <p class:text-red-500={isOutgoing} class:text-green-500={isIncoming}
-       class="text-lg">{sign} {row.circles?.toFixed(2)}</p>
+       class="text-lg">{sign} {floorToDecimals(row.circles)}</p>
     <p class:text-red-500={isOutgoing} class:text-green-500={isIncoming}
-       class="text-lg">{sign} {(row.staticCircles * 3)?.toFixed(2)}</p>
+       class="text-lg">{sign} {floorToDecimals(row.staticCircles * 3)}</p>
     <p class:text-red-500={isOutgoing} class:text-green-500={isIncoming}
-       class="text-lg">{sign} {row.staticCircles.toFixed(2)}</p>
+       class="text-lg">{sign} {floorToDecimals(row.staticCircles)}</p>
 </div>
 <!--<pre>-->
 <!--    {JSON.stringify(row ?? {}, (key, value) => {-->

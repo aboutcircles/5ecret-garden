@@ -3,7 +3,7 @@
     import {onMount} from "svelte";
     import {totalBalance} from "$lib/stores/totalBalance";
     import {balances} from "$lib/stores/balances";
-    import {getTimeAgo} from "$lib/utils/shared";
+    import {floorToDecimals, getTimeAgo} from "$lib/utils/shared";
     import {contactList} from "$lib/stores/contactList";
 
     onMount(async () => {
@@ -17,7 +17,7 @@
     <div class="stats text-center">
         <div class="stat">
             <a href="/_new/dashboard/balances">
-                <div class="stat-value">{$totalBalance?.toFixed(2)} CRC</div>
+                <div class="stat-value">{floorToDecimals($totalBalance)} CRC</div>
                 <div class="stat-desc">{$balances?.length} individual tokens</div>
             </a>
         </div>

@@ -2,14 +2,19 @@ import {get, derived} from "svelte/store";
 import type {CirclesEvent, CirclesEventType, TransactionHistoryRow} from "@circles-sdk/data";
 import {avatar} from "$lib/stores/avatar";
 
-const triggerEventTypes: CirclesEventType[] = [
-    "CrcV1_Transfer",
+const transferEvents: CirclesEventType[] = [
     "CrcV1_HubTransfer",
-    "CrcV2_TransferBatch",
+    "CrcV1_Transfer",
     "CrcV2_TransferSingle",
-    "CrcV2_Erc20WrapperTransfer"
+    "CrcV2_TransferBatch",
+    "CrcV2_Erc20WrapperTransfer",
+    "CrcV2_DepositInflationary",
+    "CrcV2_DepositDemurraged",
+    "CrcV2_WithdrawInflationary",
+    "CrcV2_WithdrawDemurraged"
 ];
 let setTransactionHistory: (txHistory: TransactionHistoryRow[]) => void;
+let timeout: any;
 
 /**
  * A store that contains the transaction history of the current avatar.
@@ -25,15 +30,23 @@ export const transactionHistory = derived<typeof avatar, TransactionHistoryRow[]
         }
 
         const handleEvent = async (event: CirclesEvent) => {
-            if (triggerEventTypes.indexOf(event.$event) === -1) {
+            if (transferEvents.indexOf(event.$event) === -1) {
                 return;
             }
 
-            try {
-                await updateTransactions();
-            } catch (e) {
-                console.error(`Failed to update the transaction history on event ${event.$event}`, e);
+            if (timeout) {
+                return;
             }
+
+            timeout = setTimeout(async () => {
+                try {
+                    await updateTransactions();
+                } catch (e) {
+                    console.error(`Failed to update the transaction history on event ${event.$event}`, e);
+                } finally {
+                    timeout = null;
+                }
+            }, 100);
         };
 
         updateTransactions()
@@ -60,7 +73,9 @@ export async function updateTransactions() {
         const newItemsOnPage = updateQuery?.currentPage?.results.filter((tx) => !txHashes.has(tx.transactionHash));
         if (newItemsOnPage && newItemsOnPage.length > 0) {
             newItems = newItems.concat(newItemsOnPage);
-            await updateQuery?.queryNextPage();
+            if (!await updateQuery?.queryNextPage()){
+                break;
+            }
         } else {
             break;
         }

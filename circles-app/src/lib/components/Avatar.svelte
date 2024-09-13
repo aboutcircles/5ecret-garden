@@ -14,7 +14,13 @@
             return profileCache.get(address)!;
         }
         try {
-            const avatar = await get(circles)?.getAvatar(address, false);
+            const sdk = await get(circles);
+            if (address?.toLowerCase() == sdk?.circlesConfig?.migrationAddress?.toLowerCase()){
+                return {
+                    name: "Migration contract"
+                }
+            }
+            const avatar = await sdk?.getAvatar(address, false);
             let profile = await avatar?.getProfile();
             if (!profile) {
                 profile = {name: address};

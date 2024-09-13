@@ -1,6 +1,7 @@
 <script lang="ts">
     import {avatar} from "$lib/stores/avatar";
     import {type TokenBalanceRow} from "@circles-sdk/data";
+    import {floorToDecimals} from "$lib/utils/shared";
 
     export let balances: TokenBalanceRow[] = [];
     export let selectedCollateral: string | undefined = undefined;
@@ -12,7 +13,7 @@
     function balanceToString(balance: TokenBalanceRow) {
         let assetName = "";
 
-        assetName += balance.circles.toFixed(2) + " ";
+        assetName += floorToDecimals(balance.circles) + " ";
         if (balance.tokenOwner === $avatar?.address) {
             assetName += " Own";
         }

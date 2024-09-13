@@ -1,8 +1,29 @@
+<script lang="ts" context="module">
+    import type {TokenType} from "@circles-sdk/data";
+
+    export function tokenTypeToString(tokenType: TokenType) {
+        switch (tokenType) {
+            case "CrcV2_RegisterHuman":
+                return "Personal Circles";
+            case "CrcV1_Signup":
+                return "Personal Circles (v1)";
+            case "CrcV2_ERC20WrapperDeployed_Demurraged":
+                return "ERC20 Wrapper (Demurraged)";
+            case "CrcV2_ERC20WrapperDeployed_Inflationary":
+                return "ERC20 Wrapper (Inflationary)";
+            case "CrcV2_RegisterGroup":
+                return "Group Circles";
+            default:
+                return tokenType;
+        }
+    }
+</script>
 <script lang="ts">
-    import type {TokenBalanceRow} from "../../../../../../../temp/circles-sdk/packages/data/src";
+    import type {TokenBalanceRow} from "@circles-sdk/data";
     import {createEventDispatcher} from "svelte";
     import {balances} from "$lib/stores/balances";
     import Avatar from "$lib/components/Avatar.svelte";
+    import {floorToDecimals} from "$lib/utils/shared";
 
     export let selectedAsset: TokenBalanceRow | undefined = undefined;
 
@@ -24,20 +45,8 @@
                     <div class="flex items-center justify-between">
                         <div>
                             <p>
-                                <span class="text-lg font-semibold">{balance.circles.toFixed(2)}</span>
-                                <span class="text-sm text-gray-600">
-                                    {#if balance.tokenType === "CrcV2_RegisterHuman"}
-                                        Personal Circles
-                                    {:else if balance.tokenType === "CrcV1_Signup"}
-                                        Personal Circles (v1)
-                                    {:else if balance.tokenType === "CrcV2_ERC20WrapperDeployed_Demurraged"}
-                                        ERC20 Wrapper (Demurraged)
-                                    {:else if balance.tokenType === "CrcV2_ERC20WrapperDeployed_Inflationary"}
-                                        ERC20 Wrapper (Inflationary)
-                                    {:else if balance.tokenType === "CrcV2_RegisterGroup"}
-                                        Group Circles
-                                    {/if}
-                                </span>
+                                <span class="text-lg font-semibold">{floorToDecimals(balance.circles)}</span>
+                                <span class="text-sm text-gray-600">{tokenTypeToString(balance.tokenType)}</span>
                             </p>
                             <p class="text-gray-500 truncate">
                                 <Avatar address={balance.tokenOwner}/>

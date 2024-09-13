@@ -1,11 +1,12 @@
-import { get, derived } from "svelte/store";
-import { avatar } from "$lib/stores/avatar"; // Avatar store
-import type { CirclesEvent } from "@circles-sdk/data";
-import type { ExtendedTrustRelationRow } from "../../routes/contacts/+page.svelte";
-import { getProfile } from "$lib/components/Avatar.svelte"; // Circles SDK store
-import type { Profile } from "@circles-sdk/profiles"; // Assuming Profile type exists
+import {get, derived} from "svelte/store";
+import {avatar} from "$lib/stores/avatar"; // Avatar store
+import type {CirclesEvent, CirclesEventType} from "@circles-sdk/data";
+import type {ExtendedTrustRelationRow} from "../../routes/contacts/+page.svelte";
+import {getProfile} from "$lib/components/Avatar.svelte"; // Circles SDK store
+import type {Profile} from "@circles-sdk/profiles"; // Assuming Profile type exists
 
 let setContactList: (contactList: Record<string, Profile>) => void;
+const trustEvents: CirclesEventType[] = ["CrcV1_Trust", "CrcV2_Trust", "CrcV2_InviteHuman"];
 
 /**
  * A store that contains the contact list (trust relations) for the current avatar.
@@ -22,7 +23,6 @@ export const contactList = derived<typeof avatar, Record<string, Profile>>(
         }
 
         const handleEvent = async (event: CirclesEvent) => {
-            const trustEvents = ["CrcV1_Trust", "CrcV2_Trust", "CrcV2_InviteHuman"];
             if (!trustEvents.includes(event.$event)) {
                 return;
             }

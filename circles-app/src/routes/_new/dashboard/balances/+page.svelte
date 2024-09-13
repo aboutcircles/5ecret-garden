@@ -7,11 +7,15 @@
     import WrapCircles from "$lib/dialogs/WrapCircles.svelte";
     import type {TokenBalanceRow} from "@circles-sdk/data";
     import UnwrapCircles from "$lib/dialogs/UnwrapCircles.svelte";
-    import SendFlow from "$lib/flows/SendFlow.svelte";
     import Send from "$lib/dialogs/Send.svelte";
+    import {circles} from "$lib/stores/circles";
+    import {floorToDecimals} from "$lib/utils/shared";
+
+    let mintableAmount: number = 0;
 
     onMount(async () => {
         $totalBalance = await $avatar!.getTotalBalance();
+        mintableAmount = await $avatar!.getMintableAmount();
     });
 
     let selectedRow: TokenBalanceRow | undefined;
@@ -21,7 +25,7 @@
     <div class="stats text-center">
         <div class="stat">
             <a href="/_new/dashboard/balances">
-                <div class="stat-value">{$totalBalance.toFixed(2)} CRC</div>
+                <div class="stat-value">{floorToDecimals($totalBalance)} CRC</div>
                 <div class="stat-desc">{$balances?.length} individual tokens</div>
             </a>
         </div>
@@ -43,6 +47,24 @@
             </tr>
             </thead>
             <tbody>
+                <tr>
+                    <td>
+                        <p class="font-semibold">
+                            Mintable amount:
+                        </p>
+                    </td>
+                    <td class="text-lg text-green-500">
+                        {floorToDecimals(mintableAmount)}
+                    </td>
+                    <td colspan="3"></td>
+                    <td>
+                        <button class="btn"
+                                on:click={() => $avatar?.personalMint()}
+                                disabled={mintableAmount === 0}>
+                            Mint
+                        </button>
+                    </td>
+                </tr>
             {#each $balances as balance}
                 <tr>
                     <td>
@@ -53,9 +75,9 @@
                             {balance.tokenAddress}
                         </p>
                     </td>
-                    <td class:text-xl={!balance.isInflationary && balance.version !== 1}>{balance.circles.toFixed(2)}</td>
-                    <td class:text-xl={balance.isInflationary && balance.version !== 1}>{balance.staticCircles.toFixed(2)}</td>
-                    <td class:text-xl={balance.isInflationary && balance.isErc20 && balance.version === 1}>{balance.crc.toFixed(2)}</td>
+                    <td class:text-xl={!balance.isInflationary && balance.version !== 1}>{floorToDecimals(balance.circles)}</td>
+                    <td class:text-xl={balance.isInflationary && balance.version !== 1}>{floorToDecimals(balance.staticCircles)}</td>
+                    <td class:text-xl={balance.isInflationary && balance.isErc20 && balance.version === 1}>{floorToDecimals(balance.crc)}</td>
                     <td>
                         <span class="badge badge-outline">{balance.tokenType}</span>
                     </td>
@@ -71,6 +93,14 @@
                             <button class="btn"
                                     on:click={() => selectedRow = balance}
                                     onclick="unwrapModal.showModal()">Unwrap
+                            </button>
+                        {/if}
+                        {#if $avatar?.avatarInfo?.version === 2 && (($avatar.avatarInfo.hasV1 && $avatar.avatarInfo.v1Stopped) || !$avatar.avatarInfo.hasV1) && balance.version === 1}
+                            <button class="btn"
+                                    on:click={() => {
+                                        selectedRow = balance;
+                                        $circles?.migrateV1Tokens($avatar.address, [balance?.tokenAddress]);
+                                    }}>Migrate
                             </button>
                         {/if}
                         <button class="btn"

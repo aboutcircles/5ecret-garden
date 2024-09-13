@@ -5,11 +5,27 @@
     import {balances} from "$lib/stores/balances";
     import {transactionHistory, updateTransactions} from "$lib/stores/transactionHistory";
     import Avatar from "$lib/components/Avatar.svelte";
-    import {getTimeAgo} from "$lib/utils/shared";
+    import {floorToDecimals, getTimeAgo} from "$lib/utils/shared";
+    import type {CirclesEventType} from "../../../../../../../temp/circles-sdk/packages/data";
+    import type {TokenType} from "@circles-sdk/data";
 
     onMount(async () => {
         $totalBalance = await $avatar!.getTotalBalance();
     });
+
+    const staticTypes: Set<TokenType> = new Set([
+        "CrcV2_ERC20WrapperDeployed_Inflationary"
+    ]);
+
+    const crcTypes: Set<TokenType> = new Set([
+        "CrcV1_Signup"
+    ]);
+
+    const demurragedType: Set<TokenType> = new Set([
+        "CrcV2_ERC20WrapperDeployed_Demurraged",
+        "CrcV2_RegisterGroup",
+        "CrcV2_RegisterHuman"
+    ]);
 </script>
 
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -17,7 +33,7 @@
     <div class="stats text-center">
         <div class="stat">
             <a href="/_new/dashboard/balances">
-                <div class="stat-value">{$totalBalance?.toFixed(2)} CRC</div>
+                <div class="stat-value">{floorToDecimals($totalBalance)} CRC</div>
                 <div class="stat-desc">{$balances?.length} individual tokens</div>
             </a>
         </div>
@@ -33,8 +49,9 @@
             <tr>
                 <th>Date</th>
                 <th>From/to</th>
-                <th>Amount (demurrage)</th>
-                <th>Amount (inflation)</th>
+                <th>Circles</th>
+                <th>Static Circles</th>
+                <th>CRC</th>
                 <th>Type</th>
             </tr>
             </thead>
@@ -64,20 +81,20 @@
                             </a>
                         </p>
                     </td>
-                    <td class="text-lg"
-                        class:text-red-500={tx.from === $avatar.address}
-                        class:text-green-500={tx.to === $avatar.address}>
-                        {#if tx.from === $avatar.address}
-                            -
-                        {/if}
-                        {tx.circles?.toFixed(2)}
+                    <td class:text-lg={demurragedType.has(tx.tokenType)}
+                        class:text-red-500={demurragedType.has(tx.tokenType) && tx.from === $avatar.address}
+                        class:text-green-500={demurragedType.has(tx.tokenType) && tx.to === $avatar.address}>
+                        {floorToDecimals(tx.circles)}
                     </td>
-                    <td class:text-red-500={tx.from === $avatar.address}
-                        class:text-green-500={tx.to === $avatar.address}>
-                        {#if tx.from === $avatar.address}
-                            -
-                        {/if}
-                        {tx.staticCircles?.toFixed(2)}
+                    <td class:text-lg={staticTypes.has(tx.tokenType)}
+                        class:text-red-500={staticTypes.has(tx.tokenType) && tx.from === $avatar.address}
+                        class:text-green-500={staticTypes.has(tx.tokenType) && tx.to === $avatar.address}>
+                        {floorToDecimals(tx.staticCircles)}
+                    </td>
+                    <td class:text-lg={crcTypes.has(tx.tokenType)}
+                        class:text-red-500={crcTypes.has(tx.tokenType) && tx.from === $avatar.address}
+                        class:text-green-500={crcTypes.has(tx.tokenType) && tx.to === $avatar.address}>
+                        {floorToDecimals(tx.crc)}
                     </td>
                     <td>
                         <span class="badge badge-outline">{tx.type}</span>

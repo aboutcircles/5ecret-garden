@@ -5,8 +5,7 @@
     import {onMount} from "svelte";
     import {avatar} from "$lib/stores/avatar.js";
     import {circles} from "$lib/stores/circles";
-    import {type GroupRow} from "@circles-sdk/data";
-    import BalanceOverview from "./components/BalanceOverview.svelte";
+    import {type CirclesEventType, type GroupRow} from "@circles-sdk/data";
 
     let rows: ExtendedTransactionHistoryRow[] = [];
 
@@ -111,7 +110,17 @@
         refresh();
 
         return $avatar?.events.subscribe(async event => {
-            const transferEvents = ["CrcV1_Transfer", "CrcV2_TransferSingle", "CrcV2_TransferBatch"];
+            const transferEvents: CirclesEventType[] = [
+                "CrcV1_HubTransfer",
+                "CrcV1_Transfer",
+                "CrcV2_TransferSingle",
+                "CrcV2_TransferBatch",
+                "CrcV2_Erc20WrapperTransfer",
+                "CrcV2_DepositInflationary",
+                "CrcV2_DepositDemurraged",
+                "CrcV2_WithdrawInflationary",
+                "CrcV2_WithdrawDemurraged"
+            ];
             if (!transferEvents.includes(event.$event)) {
                 return;
             }
