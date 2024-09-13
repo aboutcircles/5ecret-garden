@@ -7,9 +7,21 @@
     import {canMigrate} from "$lib/guards/canMigrate";
     import UpdateBanner from "$lib/components/UpdateBanner.svelte";
     import {page} from "$app/stores";
+
+    async function getProfile() {
+        if ($avatar?.avatarInfo?.version === 2) {
+            return await $avatar.getProfile();
+        } else if ($avatar?.avatarInfo?.version === 1) {
+            return Promise.resolve({
+                name: $avatar.address
+            });
+        } else {
+            throw new Error(`Unknown avatar version: ${$avatar?.avatarInfo?.version}`);
+        }
+    }
 </script>
 {#if $avatar}
-    {#await $avatar.getProfile()}
+    {#await getProfile()}
         <DefaultHeader menuItems={[]} quickActions={[]}/>
     {:then profile}
         <DefaultHeader text={profile?.name ?? $avatar.address} menuItems={[{
@@ -28,11 +40,9 @@
     {:catch error}
         <DefaultHeader menuItems={[]} quickActions={[]}/>
     {/await}
-
-<!--    <AvatarInfoHeader/>-->
 {:else if $wallet}
     <DefaultHeader menuItems={[]} quickActions={[{
-        name: "Disconnect " + $wallet.address?.toString().substring(0,12) + "..." ?? "",
+        name: "Disconnect " + ($wallet?.address?.toString().substring(0,12) ?? "") + "..." ?? "",
         link: "/_new/connect-wallet",
         icon: "/disconnect.svg",
         action: () => {

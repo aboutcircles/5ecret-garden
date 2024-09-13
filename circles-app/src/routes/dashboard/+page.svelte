@@ -132,5 +132,5 @@
     {/if}
 </div>
 
-<BalanceOverview></BalanceOverview>
+<!--<BalanceOverview></BalanceOverview>-->
 <List rows={rows} rowComponent={TransactionRow}/>

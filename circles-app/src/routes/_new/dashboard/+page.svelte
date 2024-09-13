@@ -3,15 +3,12 @@
     import {onMount} from "svelte";
     import {totalBalance} from "$lib/stores/totalBalance";
     import {balances} from "$lib/stores/balances";
-    import {recentTransactions} from "$lib/stores/recentTransactions";
+    import {transactionHistory, updateTransactions} from "$lib/stores/transactionHistory";
     import Avatar from "$lib/components/Avatar.svelte";
     import {getTimeAgo} from "$lib/utils/shared";
 
     onMount(async () => {
         $totalBalance = await $avatar!.getTotalBalance();
-        $balances = await $avatar!.getBalances();
-        const txHistoryQuery = await $avatar!.getTransactionHistory(100);
-        $recentTransactions = txHistoryQuery.currentPage!.results;
     });
 </script>
 
@@ -42,7 +39,7 @@
             </tr>
             </thead>
             <tbody>
-            {#each ($recentTransactions ?? []) as tx}
+            {#each ($transactionHistory ?? []) as tx(`${tx.blockNumber}-${tx.transactionIndex}-${tx.logIndex}-${tx.batchIndex ?? "0"}`)}
                 <tr>
                     <td>{getTimeAgo(tx.timestamp)}</td>
                     <td>
@@ -82,8 +79,10 @@
                         {/if}
                         {tx.staticCircles?.toFixed(2)}
                     </td>
-                    <td><span class="badge badge-outline">{tx.type}</span><span
-                            class="badge badge-outline">{tx.tokenType}</span></td>
+                    <td>
+                        <span class="badge badge-outline">{tx.type}</span>
+                        <span class="badge badge-outline">{tx.tokenType}</span>
+                    </td>
                 </tr>
             {/each}
             </tbody>

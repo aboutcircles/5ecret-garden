@@ -100,5 +100,18 @@
 </div>
 <div class="ml-auto">
     <p class:text-red-500={isOutgoing} class:text-green-500={isIncoming}
-       class="text-lg">{sign} {row.timeCircles}</p>
+       class="text-lg">{sign} {row.circles?.toFixed(2)}</p>
+    <p class:text-red-500={isOutgoing} class:text-green-500={isIncoming}
+       class="text-lg">{sign} {(row.staticCircles * 3)?.toFixed(2)}</p>
+    <p class:text-red-500={isOutgoing} class:text-green-500={isIncoming}
+       class="text-lg">{sign} {row.staticCircles.toFixed(2)}</p>
 </div>
+<!--<pre>-->
+<!--    {JSON.stringify(row ?? {}, (key, value) => {-->
+<!--        // BigInt replacer:-->
+<!--        if (typeof value === "bigint") {-->
+<!--            return value.toString();-->
+<!--        }-->
+<!--        return value;-->
+<!--    }, 2)}-->
+<!--</pre>-->

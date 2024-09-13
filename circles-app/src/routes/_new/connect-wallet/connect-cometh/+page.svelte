@@ -1,5 +1,4 @@
 <script lang="ts">
-    import ActionButton from "$lib/components/ActionButton.svelte";
     import {goto} from "$app/navigation";
     import {wallet} from "$lib/stores/wallet";
     import {circles} from "$lib/stores/circles";

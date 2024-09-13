@@ -14,8 +14,10 @@
     // Connects the wallet and initializes the Circles SDK.
     //
     async function connectWallet() {
-        $wallet = new BrowserProviderContractRunner();
-        await $wallet.init();
+        const wallet = new BrowserProviderContractRunner();
+        await wallet.init();
+
+        $wallet = wallet;
 
         const network = await $wallet.provider?.getNetwork();
         if (!network) {

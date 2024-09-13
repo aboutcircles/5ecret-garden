@@ -12,12 +12,12 @@
     </div>
 </div>
 <div class="hero">
-    <div class="hero-content flex-col lg:flex-row-reverse">
+    <div class="hero-content flex-col lg:flex-row">
 
         <div class="card bg-base-100 w-96 shadow-xl">
             <figure class="px-10 pt-10">
                 <img src="/person.svg"
-                     alt="Shoes"
+                     alt="Person"
                      class="w-16 h-16 rounded-xl"/>
             </figure>
             <div class="card-body items-center text-center">
@@ -32,7 +32,7 @@
         <div class="card bg-base-100 w-96 shadow-xl">
             <figure class="px-10 pt-10">
                 <img src="/group.svg"
-                     alt="Shoes"
+                     alt="Group"
                      class="w-16 h-16 rounded-xl"/>
             </figure>
             <div class="card-body items-center text-center">
@@ -47,7 +47,7 @@
         <div class="card bg-base-100 w-96 shadow-xl">
             <figure class="px-10 pt-10">
                 <img src="/organization.svg"
-                     alt="Shoes"
+                     alt="Organization"
                      class="w-16 h-16 rounded-xl"/>
             </figure>
             <div class="card-body items-center text-center">
@@ -56,6 +56,32 @@
                 <div class="card-actions">
                     <a href="/_new/register/register-organization" class="btn btn-primary">Register Organization</a>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="hero">
+    <div class="hero-content flex-col lg:flex-row">
+        <div class="collapse w-96">
+            <input type="checkbox" />
+            <div class="collapse-title text-xl text-center font-medium w-full">Legacy</div>
+            <div class="collapse-content">
+
+                <div class="card bg-base-100 w-full shadow-xl">
+                    <figure class="px-10 pt-10">
+                        <img src="/person.svg"
+                             alt="Person"
+                             class="w-16 h-16 rounded-xl"/>
+                    </figure>
+                    <div class="card-body items-center text-center">
+                        <h2 class="card-title">Person (v1)</h2>
+                        <p>Register at the Circles v1 hub</p>
+                        <div class="card-actions">
+                            <a href="/_new/register/register-v1-person" class="btn btn-primary">Register v1 Person</a>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>

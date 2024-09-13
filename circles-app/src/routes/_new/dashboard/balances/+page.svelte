@@ -7,29 +7,11 @@
     import WrapCircles from "$lib/dialogs/WrapCircles.svelte";
     import type {TokenBalanceRow} from "@circles-sdk/data";
     import UnwrapCircles from "$lib/dialogs/UnwrapCircles.svelte";
-    import {ethers} from "ethers6";
-
-    let balancesFromRpc: bigint[] = []
+    import SendFlow from "$lib/flows/SendFlow.svelte";
+    import Send from "$lib/dialogs/Send.svelte";
 
     onMount(async () => {
         $totalBalance = await $avatar!.getTotalBalance();
-        $balances = await $avatar!.getBalances();
-
-        const jsonRpcProvider = new ethers.JsonRpcProvider("http://localhost:8545");
-
-        balancesFromRpc = await Promise.all($balances.map(async o => {
-            try {
-                // fetch the balance of the $avatar at the tokenAddress (ERC20)
-                const erc20Interface = new ethers.Interface(["function balanceOf(address) view returns (uint256)"]);
-                const balance = await jsonRpcProvider.call({
-                    to: o.tokenAddress,
-                    data: erc20Interface.encodeFunctionData("balanceOf", [$avatar!.address])
-                });
-                return BigInt(erc20Interface.decodeFunctionResult("balanceOf", balance).toString());
-            } catch (e) {
-                return -1n;
-            }
-        }));
     });
 
     let selectedRow: TokenBalanceRow | undefined;
@@ -53,14 +35,15 @@
             <thead>
             <tr>
                 <th>Name</th>
-                <th>Balance (Demurrage)</th>
-                <th>Balance (Inflation)</th>
+                <th>Circles</th>
+                <th>Static Circles</th>
+                <th>CRC</th>
                 <th>Type</th>
                 <th>Actions</th>
             </tr>
             </thead>
             <tbody>
-            {#each $balances as balance, i}
+            {#each $balances as balance}
                 <tr>
                     <td>
                         <p class="font-semibold">
@@ -70,31 +53,31 @@
                             {balance.tokenAddress}
                         </p>
                     </td>
-                    <td class:text-xl={!balance.isInflationary}>{balance.circles.toFixed(2)}</td>
-                    <td class:text-xl={balance.isInflationary}>{balance.staticCircles.toFixed(2)}</td>
+                    <td class:text-xl={!balance.isInflationary && balance.version !== 1}>{balance.circles.toFixed(2)}</td>
+                    <td class:text-xl={balance.isInflationary && balance.version !== 1}>{balance.staticCircles.toFixed(2)}</td>
+                    <td class:text-xl={balance.isInflationary && balance.isErc20 && balance.version === 1}>{balance.crc.toFixed(2)}</td>
                     <td>
-                        {#if balance.isErc20}
-                            <span class="badge badge-outline">ERC 20</span>
-                        {:else if balance.isErc1155}
-                            <span class="badge badge-outline">ERC 1155</span>
-                        {/if}
-                        {#if balance.isInflationary}
-                            <span class="badge badge-outline">Inflation</span>
-                        {:else}
-                            <span class="badge badge-outline">Demurrage</span>
-                        {/if}
+                        <span class="badge badge-outline">{balance.tokenType}</span>
                     </td>
                     <td>
                         {#if balance.isErc1155}
-                            <button class="btn" on:click={() => selectedRow = balance} onclick="wrapModal.showModal()">
+                            <button class="btn"
+                                    on:click={() => selectedRow = balance}
+                                    onclick="wrapModal.showModal()">
                                 Wrap
                             </button>
                         {/if}
                         {#if balance.isErc20 && balance.version !== 1}
-                            <button class="btn" on:click={() => selectedRow = balance}
+                            <button class="btn"
+                                    on:click={() => selectedRow = balance}
                                     onclick="unwrapModal.showModal()">Unwrap
                             </button>
                         {/if}
+                        <button class="btn"
+                                on:click={() => selectedRow = balance}
+                                onclick="sendModal.showModal()">
+                            Send
+                        </button>
                     </td>
                 </tr>
             {/each}
@@ -105,3 +88,4 @@
 
 <WrapCircles tokenAddress={selectedRow?.tokenAddress}></WrapCircles>
 <UnwrapCircles tokenAddress={selectedRow?.tokenAddress}></UnwrapCircles>
+<Send></Send>

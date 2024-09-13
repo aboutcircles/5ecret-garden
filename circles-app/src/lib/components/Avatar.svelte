@@ -1,19 +1,51 @@
-<script lang="ts">
+<script lang="ts" context="module">
+    import type {Profile} from "@circles-sdk/profiles";
+    import {get} from "svelte/store";
     import {circles} from "$lib/stores/circles";
 
-    export let address: string;
+    const profileCache = new Map<string, Profile>();
+
+    function addProfile(address: string, profile: Profile) {
+        profileCache.set(address, profile);
+    }
+
+    export async function getProfile(address: string): Promise<Profile> {
+        if (profileCache.has(address)) {
+            return profileCache.get(address)!;
+        }
+        try {
+            const avatar = await get(circles)?.getAvatar(address, false);
+            let profile = await avatar?.getProfile();
+            if (!profile) {
+                profile = {name: address};
+            }
+            addProfile(address, profile);
+            return profile;
+        } catch (e) {
+            const defaultProfile = {name: address};
+            addProfile(address, defaultProfile);
+            return defaultProfile;
+        }
+    }
 </script>
 
-{#await $circles?.getAvatar(address)}
+<script lang="ts">
+    import {onMount} from "svelte";
+
+    export let address: string;
+
+    let profile: Profile;
+
+    onMount(async () => {
+        if (!address) {
+            throw new Error("address is required");
+        }
+        profile = await getProfile(address);
+    })
+</script>
+
+{#if !profile}
     <p>...</p>
-{:then avatar}
-    {#await avatar?.getProfile()}
-        <p>...</p>
-    {:then profile}
-        {profile?.name ?? address}
-    {:catch error}
-        error loading profile
-    {/await}
-{:catch e}
-    error loading avatar {address}
-{/await}
+{:else}
+    {profile?.name ?? address}
+{/if}
