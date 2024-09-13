@@ -60,8 +60,3 @@
         {/if}
     </ul>
 </div>
-
-<!-- Actions -->
-<div class="modal-action">
-    <button class="btn btn-outline">Cancel</button>
-</div>

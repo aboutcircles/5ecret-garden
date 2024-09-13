@@ -3,11 +3,11 @@
     import {onMount} from "svelte";
     import {totalBalance} from "$lib/stores/totalBalance";
     import {balances} from "$lib/stores/balances";
-    import {transactionHistory, updateTransactions} from "$lib/stores/transactionHistory";
+    import {transactionHistory} from "$lib/stores/transactionHistory";
     import Avatar from "$lib/components/Avatar.svelte";
     import {floorToDecimals, getTimeAgo} from "$lib/utils/shared";
-    import type {CirclesEventType} from "../../../../../../../temp/circles-sdk/packages/data";
     import type {TokenType} from "@circles-sdk/data";
+    import {tokenTypeToString} from "$lib/flows/sendFlow/SelectAsset.svelte";
 
     onMount(async () => {
         $totalBalance = await $avatar!.getTotalBalance();
@@ -62,7 +62,7 @@
                     <td>
                         <p class="font-semibold">
                             {#if tx.from === "0x0000000000000000000000000000000000000000"}
-                                Mint
+                                Mint {tokenTypeToString(tx.tokenType)}
                             {:else if tx.to === "0x0000000000000000000000000000000000000000"}
                                 Burn
                             {:else if tx.from === $avatar.address}

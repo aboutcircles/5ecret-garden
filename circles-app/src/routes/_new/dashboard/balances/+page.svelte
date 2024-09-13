@@ -103,11 +103,6 @@
                                     }}>Migrate
                             </button>
                         {/if}
-                        <button class="btn"
-                                on:click={() => selectedRow = balance}
-                                onclick="sendModal.showModal()">
-                            Send
-                        </button>
                     </td>
                 </tr>
             {/each}
@@ -118,4 +113,3 @@
 
 <WrapCircles tokenAddress={selectedRow?.tokenAddress}></WrapCircles>
 <UnwrapCircles tokenAddress={selectedRow?.tokenAddress}></UnwrapCircles>
-<Send></Send>

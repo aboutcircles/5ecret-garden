@@ -7,6 +7,7 @@
     import {canMigrate} from "$lib/guards/canMigrate";
     import UpdateBanner from "$lib/components/UpdateBanner.svelte";
     import {page} from "$app/stores";
+    import Send from "$lib/dialogs/Send.svelte";
 
     async function getProfile() {
         if ($avatar?.avatarInfo?.version === 2) {
@@ -29,14 +30,21 @@
             link: "/_new/dashboard"
         }, {
             name: "Contacts",
-            link: "/contacts"
+            link: "/_new/contacts"
         }, {
             name: "Groups",
             link: "/groups"
         }, {
             name: "Settings",
             link: "/settings"
-        }]} quickActions={[]}/>
+        }]} quickActions={[{
+        name: "Send",
+        link: "",
+        icon: "/send.svg",
+        action: () => {
+            sendModal.showModal();
+        }
+    }]}/>
     {:catch error}
         <DefaultHeader menuItems={[]} quickActions={[]}/>
     {/await}
@@ -65,6 +73,7 @@
         <UpdateBanner></UpdateBanner>
     {/if}
     <slot></slot>
+    <Send></Send>
 </main>
 
 <!--{#if $avatar}-->

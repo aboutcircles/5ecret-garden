@@ -26,22 +26,29 @@
 </div>
 
 <div class="card bg-base-100 shadow-lg p-6">
-    <div class="card-title text-2xl mb-4">Recent Transactions</div>
+    <div class="card-title text-2xl mb-4">Contacts</div>
     <div class="overflow-x-auto">
         <table class="table w-full">
             <thead>
             <tr>
-                <th>Date</th>
-                <th>From/to</th>
-                <th>Amount (demurrage)</th>
-                <th>Amount (inflation)</th>
-                <th>Type</th>
+                <th>Name</th>
             </tr>
             </thead>
             <tbody>
-            {#each $contactList as tx}
+            {#each Object.keys($contactList) as address}
                 <tr>
-                    <td>{getTimeAgo(tx.timestamp)}</td>
+                    <td>
+                        <p class="font-semibold">
+                            {#if $contactList[address].name}
+                                {$contactList[address].name}
+                            {:else}
+                                {address}
+                            {/if}
+                        </p>
+                        {#if $contactList[address].name}
+                            <p class="text-xs text-gray-500">{address}</p>
+                        {/if}
+                    </td>
                 </tr>
             {/each}
             </tbody>

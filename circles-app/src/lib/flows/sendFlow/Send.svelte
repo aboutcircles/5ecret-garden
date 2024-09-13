@@ -56,9 +56,6 @@
 
 <!-- Action Buttons -->
 <div class="flex justify-end space-x-2 mt-6">
-    <button type="button" class="btn btn-outline px-6 py-2 rounded-md text-gray-600" onclick="wrapModal.close()">
-        Cancel
-    </button>
     <button type="submit" class="btn btn-primary px-6 py-2 rounded-md text-white bg-blue-500 hover:bg-blue-600"
             on:click={send}>
         Send
