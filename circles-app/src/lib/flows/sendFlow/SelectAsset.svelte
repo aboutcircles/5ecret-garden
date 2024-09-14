@@ -39,8 +39,8 @@
 
 <div class="mt-4">
     <ul class="menu bg-base-100 rounded-box w-full">
-        {#if $balances.length > 0}
-            {#each $balances as balance (balance.tokenAddress)}
+        {#if $balances.rows.length > 0}
+            {#each $balances.rows as balance (balance.tokenAddress)}
                 <li class="hover:bg-base-200" on:click={() => handleSelect(balance)}>
                     <div class="flex items-center justify-between">
                         <div>

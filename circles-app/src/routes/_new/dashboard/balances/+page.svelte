@@ -1,20 +1,17 @@
 <script lang="ts">
     import {avatar} from "$lib/stores/avatar";
     import {onMount} from "svelte";
-    import {totalBalance} from "$lib/stores/totalBalance";
     import {balances} from "$lib/stores/balances";
     import Avatar from "$lib/components/Avatar.svelte";
     import WrapCircles from "$lib/dialogs/WrapCircles.svelte";
     import type {TokenBalanceRow} from "@circles-sdk/data";
     import UnwrapCircles from "$lib/dialogs/UnwrapCircles.svelte";
-    import Send from "$lib/dialogs/Send.svelte";
     import {circles} from "$lib/stores/circles";
     import {floorToDecimals} from "$lib/utils/shared";
 
     let mintableAmount: number = 0;
 
     onMount(async () => {
-        $totalBalance = await $avatar!.getTotalBalance();
         mintableAmount = await $avatar!.getMintableAmount();
     });
 
@@ -25,8 +22,8 @@
     <div class="stats text-center">
         <div class="stat">
             <a href="/_new/dashboard/balances">
-                <div class="stat-value">{floorToDecimals($totalBalance)} CRC</div>
-                <div class="stat-desc">{$balances?.length} individual tokens</div>
+                <div class="stat-value">{floorToDecimals($balances.total.circles)} Circles</div>
+                <div class="stat-desc">{$balances?.rows.length} individual tokens</div>
             </a>
         </div>
     </div>
@@ -47,25 +44,25 @@
             </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>
-                        <p class="font-semibold">
-                            Mintable amount:
-                        </p>
-                    </td>
-                    <td class="text-lg text-green-500">
-                        {floorToDecimals(mintableAmount)}
-                    </td>
-                    <td colspan="3"></td>
-                    <td>
-                        <button class="btn"
-                                on:click={() => $avatar?.personalMint()}
-                                disabled={mintableAmount === 0}>
-                            Mint
-                        </button>
-                    </td>
-                </tr>
-            {#each $balances as balance}
+            <tr>
+                <td>
+                    <p class="font-semibold">
+                        Mintable amount:
+                    </p>
+                </td>
+                <td class="text-lg text-green-500">
+                    {floorToDecimals(mintableAmount)}
+                </td>
+                <td colspan="3"></td>
+                <td>
+                    <button class="btn"
+                            on:click={() => $avatar?.personalMint()}
+                            disabled={mintableAmount === 0}>
+                        Mint
+                    </button>
+                </td>
+            </tr>
+            {#each $balances.rows as balance}
                 <tr>
                     <td>
                         <p class="font-semibold">

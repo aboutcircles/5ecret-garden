@@ -1,7 +1,7 @@
 import {avatar} from "$lib/stores/avatar";
-import {createEventStore} from "$lib/stores/eventStores/eventStoreFactory"; // Import the generic store creator
-import type {CirclesEventType, TransactionHistoryRow, CirclesEvent} from "@circles-sdk/data";
+import {type CirclesEventType, type TransactionHistoryRow} from "@circles-sdk/data";
 import {get} from "svelte/store";
+import {createCirclesQueryStore} from "$lib/stores/query/circlesQueryStore";
 
 const transferEvents: Set<CirclesEventType> = new Set([
     "CrcV1_HubTransfer",
@@ -15,57 +15,14 @@ const transferEvents: Set<CirclesEventType> = new Set([
     "CrcV2_WithdrawDemurraged"
 ]);
 
-export function getKeyFromCirclesEvent(event: CirclesEvent): string {
-    return `${event.blockNumber}-${event.transactionIndex}-${event.logIndex}`;
-}
-
-export function getKeyFromTransaction(tx: TransactionHistoryRow): string {
-    return `${tx.blockNumber}-${tx.transactionIndex}-${tx.logIndex}`;
+const _avatar = get(avatar);
+if (!_avatar) {
+    throw new Error("Avatar instance not found");
 }
 
 /**
- * Event handler for processing new transactions
- * @param event - Circles event
- * @param currentData - Current transaction history
- * @returns Updated transaction history
+ * Transaction history store, updated when relevant events occur.
  */
-async function handleTransactionEvent(event: CirclesEvent, currentData: TransactionHistoryRow[]): Promise<TransactionHistoryRow[]> {
-    // Get the avatar instance
-    const avatarInstance = get(avatar);
-    if (!avatarInstance) return currentData;
-
-    // Fetch new transactions
-    const updateQuery = await avatarInstance.getTransactionHistory(100);
-    const transactionKeys = new Set(currentData.map((tx) => getKeyFromTransaction(tx)));
-
-    const newItemsOnPage = updateQuery?.currentPage?.results.filter((tx) => !transactionKeys.has(getKeyFromTransaction(tx)));
-    if (newItemsOnPage && newItemsOnPage.length > 0) {
-        return currentData.concat(newItemsOnPage);
-    } else {
-        console.log("No new items on page");
-    }
-
-    return currentData;
-}
-
-/**
- * Transaction history store, updated when relevant events occur
- */
-export const transactionHistory = createEventStore<TransactionHistoryRow[]>(
-    avatar,
-    transferEvents,
-    // Initial load function
-    async () => {
-        const avatarInstance = get(avatar);
-        if (!avatarInstance) return [];
-
-        // Fetch initial transactions
-        const updateQuery = await avatarInstance.getTransactionHistory(100);
-        return updateQuery?.currentPage?.results || [];
-    },
-    // Event handler (reducer-like)
-    handleTransactionEvent,
-    // Comparator for sorting by timestamp (most recent first)
-    [], // Initial empty array for transaction history
-    (a, b) => b.timestamp - a.timestamp // sort desc by timestamp
-);
+export const createTransactionHistory = async () => await createCirclesQueryStore<TransactionHistoryRow>(
+    () => _avatar.getTransactionHistory(25),
+    transferEvents);

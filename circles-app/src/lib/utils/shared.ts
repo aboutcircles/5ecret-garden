@@ -12,6 +12,6 @@ export function getTimeAgo(unixTimestamp: number): string {
     return 'Just now';
 }
 
-export function floorToDecimals(value: number, decimals: number = 2): number {
-    return Math.floor(value * Math.pow(10, decimals)) / Math.pow(10, decimals);
+export function floorToDecimals(value?: number, decimals: number = 2): number {
+    return Math.floor((value ?? 0) * Math.pow(10, decimals)) / Math.pow(10, decimals);
 }
