@@ -64,19 +64,15 @@
 </script>
 
 <div class="overflow-x-auto">
-    <ul class="menu bg-base-100 shadow-lg rounded-box p-4 w-full">
-        {#each ($store?.data ?? []) as tx (getKeyFromItem(tx))}
-            <li class="hover:bg-base-200 rounded-lg">
-                <svelte:component this={row} item={tx}/>
-            </li>
-        {/each}
-        <li class="text-center py-4" bind:this={anchor}>
-            {#if !$store?.ended}
-                <span class="loading loading-spinner text-primary"></span>
-                <span class="ml-2 text-gray-500">Loading more...</span>
-            {:else}
-                <span class="text-gray-500">End of list</span>
-            {/if}
-        </li>
-    </ul>
+    {#each ($store?.data ?? []) as tx (getKeyFromItem(tx))}
+        <svelte:component this={row} item={tx}/>
+    {/each}
+    <div class="text-center py-4" bind:this={anchor}>
+        {#if !$store?.ended}
+            <span class="loading loading-spinner text-primary"></span>
+            <span class="ml-2 text-gray-500">Loading more...</span>
+        {:else}
+            <span class="text-gray-500">End of list</span>
+        {/if}
+    </div>
 </div>

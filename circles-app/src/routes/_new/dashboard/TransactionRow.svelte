@@ -23,45 +23,52 @@
     ]);
 </script>
 
-<tr>
-    <td>{getTimeAgo(item.timestamp)}</td>
-    <td>
+<div class="grid grid-cols-12 gap-4 p-4 bg-base-100 hover:bg-base-200 rounded-lg items-center">
+    <!-- Timestamp -->
+    <div class="col-span-2 text-sm text-gray-500">
+        {getTimeAgo(item.timestamp)}
+    </div>
+
+    <!-- Avatar and Transaction Details -->
+    <div class="col-span-4">
         <p class="font-semibold">
             {#if item.from === "0x0000000000000000000000000000000000000000"}
                 Mint {tokenTypeToString(item.tokenType)}
             {:else if item.to === "0x0000000000000000000000000000000000000000"}
                 Burn
             {:else if item.from === $avatar.address}
-                <!-- from me -->
-                <Avatar address={item.to}/>
+                <Avatar address={item.to} />
             {:else if item.to === $avatar.address}
-                <!-- to me -->
-                <Avatar address={item.from}/>
+                <Avatar address={item.from} />
             {/if}
         </p>
-        <p class="text-xs text-gray-500">
-            <a href={"https://gnosisscan.io/tx/" + item.transactionHash}>
-                {item.transactionHash}
+        <p class="text-xs text-gray-500 truncate">
+            <a href={"https://gnosisscan.io/tx/" + item.transactionHash} class="underline">
+                {item.transactionHash.slice(0, 6)}...{item.transactionHash.slice(-4)}
             </a>
         </p>
-    </td>
-    <td class:text-lg={demurragedType.has(item.tokenType)}
-        class:text-red-500={demurragedType.has(item.tokenType) && item.from === $avatar.address}
-        class:text-green-500={demurragedType.has(item.tokenType) && item.to === $avatar.address}>
-        {floorToDecimals(item.circles)}
-    </td>
-    <td class:text-lg={staticTypes.has(item.tokenType)}
-        class:text-red-500={staticTypes.has(item.tokenType) && item.from === $avatar.address}
-        class:text-green-500={staticTypes.has(item.tokenType) && item.to === $avatar.address}>
-        {floorToDecimals(item.staticCircles)}
-    </td>
-    <td class:text-lg={crcTypes.has(item.tokenType)}
-        class:text-red-500={crcTypes.has(item.tokenType) && item.from === $avatar.address}
-        class:text-green-500={crcTypes.has(item.tokenType) && item.to === $avatar.address}>
-        {floorToDecimals(item.crc)}
-    </td>
-    <td>
+    </div>
+
+    <!-- Circles -->
+    <div class="col-span-2 text-right">
+        <span class="text-lg {demurragedType.has(item.tokenType) ? 'text-red-500' : 'text-green-500'}">
+            {floorToDecimals(item.circles)} Circles
+        </span>
+        <p class="text-xs text-gray-500">
+            {floorToDecimals(item.staticCircles)} Static Circles
+        </p>
+    </div>
+
+    <!-- CRC -->
+    <div class="col-span-2 text-right">
+        <span class="text-lg {crcTypes.has(item.tokenType) ? 'text-red-500' : 'text-green-500'}">
+            {floorToDecimals(item.crc)} CRC
+        </span>
+    </div>
+
+    <!-- Badges -->
+    <div class="col-span-2 text-right">
         <span class="badge badge-outline">{item.type}</span>
         <span class="badge badge-outline">{item.tokenType}</span>
-    </td>
-</tr>
+    </div>
+</div>

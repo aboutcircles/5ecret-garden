@@ -1,8 +1,7 @@
 <script lang="ts">
     import {balances} from "$lib/stores/balances";
     import {floorToDecimals} from "$lib/utils/shared";
-    import type {EventRow, TokenType, TransactionHistoryRow} from "@circles-sdk/data";
-    import TransactionList from "./TransactionList.svelte";
+    import type {EventRow} from "@circles-sdk/data";
     import GenericList from "./GenericList.svelte";
     import {createTransactionHistory} from "$lib/stores/transactionHistory";
     import {onMount} from "svelte";
@@ -38,6 +37,6 @@
                      store={txHistory}/>
     {/if}
 
-<!--    <TransactionList />-->
+    <!--    <TransactionList />-->
 
 </div>
