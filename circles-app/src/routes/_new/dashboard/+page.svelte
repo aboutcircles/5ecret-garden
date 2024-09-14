@@ -1,22 +1,20 @@
 <script lang="ts">
     import {balances} from "$lib/stores/balances";
     import {floorToDecimals} from "$lib/utils/shared";
-    import type {TokenType} from "@circles-sdk/data";
+    import type {EventRow, TokenType, TransactionHistoryRow} from "@circles-sdk/data";
     import TransactionList from "./TransactionList.svelte";
+    import GenericList from "./GenericList.svelte";
+    import {createTransactionHistory} from "$lib/stores/transactionHistory";
+    import {onMount} from "svelte";
+    import type {Readable} from "svelte/store";
+    import TransactionRow from "./TransactionRow.svelte";
 
-    const staticTypes: Set<TokenType> = new Set([
-        "CrcV2_ERC20WrapperDeployed_Inflationary"
-    ]);
+    let txHistory: Readable<{ data: EventRow[], next: () => Promise<boolean>, ended: boolean }>
 
-    const crcTypes: Set<TokenType> = new Set([
-        "CrcV1_Signup"
-    ]);
+    onMount(async () => {
+        txHistory = await createTransactionHistory();
+    });
 
-    const demurragedType: Set<TokenType> = new Set([
-        "CrcV2_ERC20WrapperDeployed_Demurraged",
-        "CrcV2_RegisterGroup",
-        "CrcV2_RegisterHuman"
-    ]);
 </script>
 
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -35,10 +33,11 @@
 <div class="card bg-base-100 shadow-lg p-6">
     <div class="card-title text-2xl mb-4">Recent Transactions</div>
 
-    <TransactionList
-            demurragedType={demurragedType}
-            staticTypes={staticTypes}
-            crcTypes={crcTypes}
-    />
+    {#if txHistory}
+        <GenericList row={TransactionRow}
+                     store={txHistory}/>
+    {/if}
+
+<!--    <TransactionList />-->
 
 </div>

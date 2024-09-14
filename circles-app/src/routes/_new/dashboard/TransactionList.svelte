@@ -2,13 +2,9 @@
     import {onMount, onDestroy} from "svelte";
     import {createTransactionHistory} from "$lib/stores/transactionHistory";
     import TransactionRow from "./TransactionRow.svelte";
-    import type {TokenType, TransactionHistoryRow} from "@circles-sdk/data";
+    import type {TransactionHistoryRow} from "@circles-sdk/data";
     import {getKeyFromItem} from "$lib/stores/query/circlesQueryStore";
     import type {Readable} from "svelte/store";
-
-    export let demurragedType: Set<TokenType>;
-    export let staticTypes: Set<TokenType>;
-    export let crcTypes: Set<TokenType>;
 
     let observer: IntersectionObserver | null = null;
 
@@ -56,9 +52,6 @@
             );
         };
 
-        // Delay function for creating a short wait before the next action
-        const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
         // Repeatedly load data while the target is in the viewport and more data is available
         while (isInViewport(anchor) && !ended) {
             ended = await $transactionHistory.next(); // Load the next page of transactions
@@ -88,11 +81,7 @@
         </thead>
         <tbody>
         {#each ($transactionHistory?.data ?? []) as tx (getKeyFromItem(tx))}
-            <TransactionRow
-                    tx={tx}
-                    demurragedType={demurragedType}
-                    staticTypes={staticTypes}
-                    crcTypes={crcTypes}
+            <TransactionRow item={tx}
             />
         {/each}
         <tr bind:this={anchor}>
