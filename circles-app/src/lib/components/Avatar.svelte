@@ -3,9 +3,9 @@
     import {get} from "svelte/store";
     import {circles} from "$lib/stores/circles";
 
-    const profileCache = new Map<string, Profile>();
+    const profileCache = new Map<string, Promise<Profile>>();
 
-    function addProfile(address: string, profile: Profile) {
+    function addProfile(address: string, profile: Promise<Profile>) {
         profileCache.set(address, profile);
     }
 
@@ -13,25 +13,27 @@
         if (profileCache.has(address)) {
             return profileCache.get(address)!;
         }
-        try {
-            const sdk = await get(circles);
-            if (address?.toLowerCase() == sdk?.circlesConfig?.migrationAddress?.toLowerCase()){
-                return {
-                    name: "Migration contract"
+        const profilePromise = new Promise<Profile>(async (resolve) => {
+            try {
+                const sdk = get(circles);
+                if (address?.toLowerCase() == sdk?.circlesConfig?.migrationAddress?.toLowerCase()){
+                    return {
+                        name: "Migration contract"
+                    }
                 }
+                const avatar = await sdk?.getAvatar(address, false);
+                let profile = await avatar?.getProfile();
+                if (!profile) {
+                    profile = {name: address};
+                }
+                resolve(profile);
+            } catch (e) {
+                const defaultProfile = {name: address};
+                resolve(defaultProfile);
             }
-            const avatar = await sdk?.getAvatar(address, false);
-            let profile = await avatar?.getProfile();
-            if (!profile) {
-                profile = {name: address};
-            }
-            addProfile(address, profile);
-            return profile;
-        } catch (e) {
-            const defaultProfile = {name: address};
-            addProfile(address, defaultProfile);
-            return defaultProfile;
-        }
+        });
+        addProfile(address, profilePromise);
+        return profilePromise;
     }
 </script>
 

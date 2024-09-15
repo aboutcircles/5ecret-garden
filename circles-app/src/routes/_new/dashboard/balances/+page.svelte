@@ -8,6 +8,7 @@
     import UnwrapCircles from "$lib/dialogs/UnwrapCircles.svelte";
     import {circles} from "$lib/stores/circles";
     import {floorToDecimals} from "$lib/utils/shared";
+    import TotalBalance from "$lib/components/TotalBalance.svelte";
 
     let mintableAmount: number = 0;
 
@@ -19,14 +20,7 @@
 </script>
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
     <div></div>
-    <div class="stats text-center">
-        <div class="stat">
-            <a href="/_new/dashboard/balances">
-                <div class="stat-value">{floorToDecimals($balances.total.circles)} Circles</div>
-                <div class="stat-desc">{$balances?.rows.length} individual tokens</div>
-            </a>
-        </div>
-    </div>
+    <TotalBalance/>
     <div></div>
 </div>
 <div class="card bg-base-100 shadow-lg p-6">
@@ -62,7 +56,7 @@
                     </button>
                 </td>
             </tr>
-            {#each $balances.rows as balance}
+            {#each $balances.data as balance}
                 <tr>
                     <td>
                         <p class="font-semibold">

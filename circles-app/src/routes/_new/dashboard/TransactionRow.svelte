@@ -50,7 +50,7 @@
     </div>
 
     <!-- Circles -->
-    <div class="col-span-2 text-right">
+    <div class="col-span-4 text-right">
         <span class="text-lg {demurragedType.has(item.tokenType) ? 'text-red-500' : 'text-green-500'}">
             {floorToDecimals(item.circles)} Circles
         </span>
@@ -59,12 +59,12 @@
         </p>
     </div>
 
-    <!-- CRC -->
-    <div class="col-span-2 text-right">
-        <span class="text-lg {crcTypes.has(item.tokenType) ? 'text-red-500' : 'text-green-500'}">
-            {floorToDecimals(item.crc)} CRC
-        </span>
-    </div>
+<!--    &lt;!&ndash; CRC &ndash;&gt;-->
+<!--    <div class="col-span-2 text-right">-->
+<!--        <span class="text-lg {crcTypes.has(item.tokenType) ? 'text-red-500' : 'text-green-500'}">-->
+<!--            {floorToDecimals(item.crc)} CRC-->
+<!--        </span>-->
+<!--    </div>-->
 
     <!-- Badges -->
     <div class="col-span-2 text-right">

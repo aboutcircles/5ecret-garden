@@ -1,94 +1,57 @@
-import {get, derived} from "svelte/store";
+import {get} from "svelte/store";
 import {avatar} from "$lib/stores/avatar";
 import type {CirclesEvent, CirclesEventType, TokenBalanceRow} from "@circles-sdk/data";
+import {createEventStore} from "$lib/stores/eventStores/eventStoreFactory";
 
-let setBalances: (balances: {
-    total: {
-        attoCircles: string;
-        circles: number;
-    },
-    rows: TokenBalanceRow[]
-}) => void;
+const refreshOnEvents: Set<CirclesEventType> = new Set([
+    "CrcV2_TransferBatch",
+    "CrcV2_TransferSingle",
+    "CrcV1_HubTransfer",
+    "CrcV2_Erc20WrapperTransfer",
+    "CrcV1_Transfer"
+]);
 
-/**
- * A store that contains the token balances of the current avatar.
- * The balances are updated whenever relevant balance-related events occur.
- */
-export const balances = derived<typeof avatar, {
-    total: {
-        attoCircles: string;
-        circles: number;
-    },
-    rows: TokenBalanceRow[]
-}>(
-    avatar,
-    ($avatar, set) => {
-        setBalances = set;
-        set({
-            total: {
-                attoCircles: "0",
-                circles: 0
-            },
-            rows: []
-        });
-
-        if (!$avatar) {
-            return;
-        }
-
-        const handleEvent = async (event: CirclesEvent) => {
-            const balanceEvents: CirclesEventType[] = [
-                "CrcV2_TransferBatch",
-                "CrcV2_TransferSingle",
-                "CrcV1_HubTransfer",
-                "CrcV2_Erc20WrapperTransfer",
-                "CrcV1_Transfer"
-            ];
-            if (!balanceEvents.includes(event.$event)) {
-                return;
-            }
-
-            try {
-                await updateBalances();
-            } catch (e) {
-                console.error(`Failed to update balances on event ${event.$event}`, e);
-            }
-        };
-
-        updateBalances()
-            .then(() => $avatar.events.subscribe(handleEvent))
-            .catch(e => console.error("Failed to initialize balances store", e));
-
-        return () => {
-            $avatar.unsubscribeFromEvents();
-        };
-    }
-);
-
-async function updateBalances() {
+const _initialLoad = async () => {
     const avatarInstance = get(avatar);
     if (!avatarInstance) {
-        return;
+        return [];
     }
 
-    try {
-        // Fetch the token balances
-        const balanceData: TokenBalanceRow[] = await avatarInstance.getBalances();
-        setBalances({
-            total: {
-                circles: balanceData.reduce((total, row) => total + row.circles, 0),
-                attoCircles: balanceData.reduce((total, row) => total + BigInt(row.attoCircles), BigInt(0)).toString()
-            },
-            rows: balanceData
-        });
-    } catch (error) {
-        console.error("Error fetching balances:", error);
-        setBalances({
-            total: {
-                attoCircles: "0",
-                circles: 0
-            },
-            rows: []
-        });
-    }
+    return await avatarInstance.getBalances();
 }
+
+const _handleEvent = async (event: CirclesEvent, currentData: TokenBalanceRow[]) => {
+    if (!refreshOnEvents.has(event.$event)) {
+        return currentData;
+    }
+
+    const avatarInstance = get(avatar);
+    if (!avatarInstance) {
+        return [];
+    }
+
+    return await avatarInstance.getBalances();
+}
+
+const _handleNextPage = async (currentData: TokenBalanceRow[]) => {
+    return {data: currentData, ended: true};
+}
+
+export const balances = createEventStore<TokenBalanceRow[]>(
+    avatar,
+    refreshOnEvents, // Use the provided events or an empty set
+    _initialLoad,                // Function to load the initial data
+    _handleEvent,                // Function to handle event-based updates
+    _handleNextPage,             // Function to handle loading the next page of data
+    [],                          // Initial empty data
+    (a, b) => {                  // Comparator to sort the data by blockNumber, transactionIndex, and logIndex
+        // Order by balance desc and return 1,0,-1
+        if (a.circles > b.circles) {
+            return -1;
+        }
+        if (a.circles < b.circles) {
+            return 1;
+        }
+        return 0;
+    }
+);

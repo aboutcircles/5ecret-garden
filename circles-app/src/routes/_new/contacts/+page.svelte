@@ -1,27 +1,11 @@
 <script lang="ts">
-    import {avatar} from "$lib/stores/avatar";
-    import {onMount} from "svelte";
-    import {totalBalance} from "$lib/stores/totalBalance";
-    import {balances} from "$lib/stores/balances";
-    import {floorToDecimals, getTimeAgo} from "$lib/utils/shared";
     import {contactList} from "$lib/stores/contactList";
-
-    onMount(async () => {
-        $totalBalance = await $avatar!.getTotalBalance();
-        $balances = await $avatar!.getBalances();
-    });
+    import TotalBalance from "$lib/components/TotalBalance.svelte";
 </script>
 
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
     <div></div>
-    <div class="stats text-center">
-        <div class="stat">
-            <a href="/_new/dashboard/balances">
-                <div class="stat-value">{floorToDecimals($totalBalance)} CRC</div>
-                <div class="stat-desc">{$balances?.length} individual tokens</div>
-            </a>
-        </div>
-    </div>
+    <TotalBalance/>
     <div></div>
 </div>
 
