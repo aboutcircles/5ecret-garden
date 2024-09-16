@@ -1,7 +1,4 @@
 <script lang="ts">
-    import SendFlow from "$lib/flows/SendFlow.svelte";
-    import {page} from "$app/stores";
-    import SelectContact from "$lib/flows/sendFlow/SelectContact.svelte";
     import Avatar from "$lib/components/Avatar.svelte";
     import type {Profile} from "../../../../../../temp/circles-sdk/packages/profiles/src";
     import {ethers} from "ethers6";

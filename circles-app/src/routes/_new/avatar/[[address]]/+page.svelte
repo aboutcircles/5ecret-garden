@@ -95,53 +95,60 @@
         return $contacts.data[address]?.row;
     }
 </script>
-<div class="card bg-base-100 shadow-lg p-6">
-    <div class="card-title text-2xl mb-4">
-        <Avatar view="vertical" clickable={false} address={otherAvatar?.avatar}>
-            <span>{getTypeString(otherAvatar?.type)}</span> -
-            <a class="underline font-normal" target="_blank"
-               href={"https://gnosisscan.io/address/" + otherAvatar?.avatar}>
-                {shortenAddress(otherAvatar?.avatar)}
-            </a>
-        </Avatar>
+<div>
+    <div class="bg-base-200 p-6">
+        <div class="card-title text-2xl">
+            <Avatar view="vertical" imageStyle="square" clickable={false} address={otherAvatar?.avatar}>
+                <div class="mt-2">
+                    <span>{getTypeString(otherAvatar?.type)}</span> -
+                    <a class="underline font-normal" target="_blank"
+                       href={"https://gnosisscan.io/address/" + otherAvatar?.avatar}>
+                        {shortenAddress(otherAvatar?.avatar)}
+                    </a>
+                </div>
+            </Avatar>
+        </div>
+
+        <!-- Updated Button Layout: Flex Row for Horizontal Alignment -->
+        <div class="w-full flex flex-row justify-center space-x-4 p-4">
+            {#if getTrustRow(otherAvatar?.avatar)?.relation === "trustedBy"
+            && otherAvatar.type === "CrcV2_RegisterGroup"}
+                <button class="btn btn-sm btn-round btn-outline">
+                    <img src="/banknotes.svg" alt="Incoming trust" class="w-6 h-6 inline"/>
+                    Mint
+                </button>
+            {/if}
+            <button class="btn btn-sm btn-round btn-outline">
+                <img src="/send.svg" alt="Send" class="w-6 h-6 inline"/> Send
+            </button>
+            {#if getTrustRow(otherAvatar?.avatar)?.relation === "trusts"}
+                <button class="btn btn-sm btn-round bg-red-400 text-white">
+                    <img src="/trash.svg" alt="Untrust" class="w-6 h-6 inline"/>
+                    Untrust
+                </button>
+            {:else if getTrustRow(otherAvatar?.avatar)?.relation === "mutuallyTrusts"}
+                <button class="btn btn-sm btn-round bg-red-400 text-white">
+                    <img src="/trash.svg" alt="Untrust" class="w-6 h-6 inline"/>
+                    Untrust
+                </button>
+            {:else if getTrustRow(otherAvatar?.avatar)?.relation === "trustedBy"}
+                <button class="btn btn-sm btn-round bg-red-400 text-white">
+                    <img src="/shield-check.svg" alt="Trust back" class="w-6 h-6 inline"/>
+                    Trust back
+                </button>
+            {:else}
+                <button class="btn btn-sm btn-round bg-red-400 text-white">
+                    <img src="/shield-check.svg" alt="Trust" class="w-6 h-6 inline"/>
+                    Trust
+                </button>
+            {/if}
+        </div>
     </div>
-    <div class="flex flex-row space-x-4 overflow-auto">
-        {#if getTrustRow(otherAvatar?.avatar)?.relation === "trustedBy"
-             && otherAvatar.type === "CrcV2_RegisterGroup"}
-            <button class="btn btn-round">
-                <img src="/banknotes.svg" alt="Incoming trust" class="w-6 h-6 inline"/>
-                Mint
-            </button>
-        {/if}
-        <button class="btn btn-round">
-            <img src="/send.svg" alt="Send" class="w-6 h-6 inline"/> Send
-        </button>
-        {#if getTrustRow(otherAvatar?.avatar)?.relation === "trusts"}
-            <button class="btn btn-round bg-red-400 text-white">
-                <img src="/trash.svg" alt="Send" class="w-6 h-6 inline"/>
-                Untrust
-            </button>
-        {:else if getTrustRow(otherAvatar?.avatar)?.relation === "mutuallyTrusts"}
-            <button class="btn btn-round bg-red-400 text-white">
-                <img src="/trash.svg" alt="Send" class="w-6 h-6 inline"/>
-                Untrust
-            </button>
-        {:else if getTrustRow(otherAvatar?.avatar)?.relation === "trustedBy"}
-            <button class="btn btn-round bg-red-400 text-white">
-                <img src="/shield-check.svg" alt="Incoming trust" class="w-6 h-6 inline"/>
-                Trust back
-            </button>
-        {:else}
-            <button class="btn btn-round bg-red-400 text-white">
-                <img src="/shield-check.svg" alt="Incoming trust" class="w-6 h-6 inline"/>
-                Trust
-            </button>
-        {/if}
-    </div>
-    <p class="menu-title pl-0">
-        Trust:
-    </p>
-    <p>
+    <div class="p-6">
+        <p class="menu-title pl-0">
+            Trust:
+        </p>
+        <p>
         <span class="inline">
             {#if getTrustRow(otherAvatar?.avatar)?.relation === "trusts"}
                 <img src="/outgoing.svg" alt="Outgoing trust" class="w-3 h-3 inline"/>
@@ -150,18 +157,21 @@
             {:else if getTrustRow(otherAvatar?.avatar)?.relation === "mutuallyTrusts"}
                 <img src="/mutual.svg" alt="Mutual trust" class="w-3 h-3 inline"/>
             {:else}
-                <img src="/no-trust.svg" alt="Mutual trust" class="w-3 h-3 inline"/>
+                <img src="/no-trust.svg" alt="No trust" class="w-3 h-3 inline"/>
             {/if}
             <span class:text-green-700={getTrustRow(otherAvatar?.avatar)?.relation === "mutuallyTrusts"}>{getRelationText(getTrustRow(otherAvatar?.avatar), profile)}</span>
         </span>
-    </p>
-    {#if profile?.description}
-        <p class="menu-title pl-0">
-            Description:
         </p>
-        <p class="font-normal text-lg">
-            {@html newLineToBr(profile?.description)}
-        </p>
-    {/if}
-    <CommonConnections otherAvatarAddress={otherAvatar?.avatar}/>
+
+        {#if profile?.description}
+            <p class="menu-title pl-0">
+                Description:
+            </p>
+            <p class="font-normal text-lg">
+                {@html newLineToBr(profile?.description)}
+            </p>
+        {/if}
+
+        <CommonConnections otherAvatarAddress={otherAvatar?.avatar}/>
+    </div>
 </div>

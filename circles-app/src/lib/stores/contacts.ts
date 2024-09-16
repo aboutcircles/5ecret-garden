@@ -1,4 +1,4 @@
-import {get, type Readable, writable} from "svelte/store";
+import {get} from "svelte/store";
 import {avatar} from "$lib/stores/avatar";
 import type {CirclesEvent, CirclesEventType} from "@circles-sdk/data";
 import type {Profile} from "@circles-sdk/profiles";

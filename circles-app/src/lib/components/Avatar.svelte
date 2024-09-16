@@ -86,6 +86,7 @@
     export let address: string;
     export let clickable: boolean = true;
     export let view: "horizontal" | "vertical" = "horizontal";
+    export let imageStyle: "square" | "circle" = "circle";
 
     let profile: Profile | undefined;
 
@@ -108,11 +109,11 @@
     </div>
 {:else}
     {#if view === "vertical"}
-        <VerticalAvatarLayout address={address} clickable={clickable} profile={profile}>
+        <VerticalAvatarLayout imageStyle={imageStyle} address={address} clickable={clickable} profile={profile}>
             <slot></slot>
         </VerticalAvatarLayout>
     {:else}
-        <HorizontalAvatarLayout address={address} clickable={clickable} profile={profile}>
+        <HorizontalAvatarLayout imageStyle={imageStyle}  address={address} clickable={clickable} profile={profile}>
             <slot></slot>
         </HorizontalAvatarLayout>
     {/if}
