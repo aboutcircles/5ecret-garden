@@ -1,14 +1,25 @@
 <script lang="ts">
     import type {Profile} from "@circles-sdk/profiles";
+    import {popupControls} from "$lib/components/PopUp.svelte";
+    import ProfilePage from "$lib/components/ProfilePage.svelte";
 
     export let profile: Profile | undefined;
     export let clickable: boolean = true;
     export let address: string;
     export let imageStyle: "square" | "circle" = "circle";
+
+    function openAvatar() {
+        $popupControls.open?.({
+            component: ProfilePage,
+            props: {
+                address: address
+            }
+        });
+    }
 </script>
 
 {#if clickable}
-    <a class="w-full flex flex-col items-center space-y-4 p-4 text-center" href={"/_new/avatar/" + address}>
+    <a class="w-full flex flex-col items-center space-y-4 p-4 text-center" on:click={openAvatar}>
         <img src={profile?.previewImageUrl ?? "/default-avatar.png"}
              alt="User Icon"
              class="w-64 h-64"
