@@ -1,5 +1,6 @@
 <script lang="ts">
     export let text = "Circles";
+    export let logo = "/logo.svg";
 
     export let homeLink = "/";
 
@@ -10,13 +11,12 @@
         {name: "Settings", link: "/settings"},
     ];
 
-    export let quickActions = [
-        {
-            name: "Send", link: "/_new/send", icon: "/send.svg", action: () => {
-            }
-        },
-        {name: "Receive", link: "/_new/receive", icon: "/send.svg", action: undefined}
-    ];
+    export let quickActions: {
+        name: string;
+        link: string;
+        icon?: string;
+        action?: () => void;
+    }[] = [];
 </script>
 
 <div class="navbar bg-base-100">
@@ -37,8 +37,8 @@
                 {/each}
             </ul>
         </div>
-        <a class="btn btn-ghost text-xl" href="/">
-            <img src="/logo.svg" alt="User Icon" class="w-8 h-8 rounded-full">
+        <a class="btn btn-ghost text-xl" href={homeLink}>
+            <img src={logo} alt="User Icon" class="w-8 h-8 rounded-full">
             {text}
         </a>
     </div>
@@ -55,7 +55,6 @@
         {#each quickActions as action}
             <a class="btn mr-2" href={action.link}
                on:click={() => {
-                console.log("icon clicked");
                 if (action.action) {
                     action.action();
                 }

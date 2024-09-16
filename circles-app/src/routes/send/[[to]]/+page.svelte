@@ -30,8 +30,6 @@
         selectedCollateral = balances.find(b => b.tokenOwner === $avatar?.address)?.tokenOwner;
     });
 
-    $: console.log(`Selected collateral: ${selectedCollateral}`);
-
     async function send() {
         const sendValue = $avatar?.avatarInfo?.version === 1
             ? tcToCrc(new Date(), parseFloat(valueString))

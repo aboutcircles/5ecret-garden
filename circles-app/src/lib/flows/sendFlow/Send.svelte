@@ -1,47 +1,60 @@
 <script lang="ts">
-    import type {Profile} from "../../../../../../../temp/circles-sdk/packages/profiles/src";
-    import {avatar} from "$lib/stores/avatar";
-    import {ethers} from "ethers6";
+    import Avatar from "$lib/components/Avatar.svelte";
+    import {tokenTypeToString} from "$lib/flows/sendFlow/SelectAsset.svelte";
+    import {createEventDispatcher} from "svelte";
+    import {floorToDecimals, shortenAddress} from "$lib/utils/shared";
 
     export let tokenAddress: string | undefined;
+    export let tokenOwner: string | undefined;
+    export let tokenType: string | undefined;
+    export let circlesBalance: number = 0;
     export let receiverAddress: string | undefined;
-    export let receiverProfile: Profile | undefined;
     export let amount: number = 0;
     export let maxValue: number = Number.MAX_VALUE;
 
-    async function send() {
-        if (!$avatar) {
-            return;
-        }
-        if (!ethers.isAddress(receiverAddress)) {
-            throw new Error(`Invalid receiver address: ${receiverAddress}`);
-        }
-        if (!ethers.isAddress(tokenAddress)) {
-            throw new Error(`Invalid token address: ${tokenAddress}`);
-        }
-
-        if (tokenAddress) {
-            await $avatar.transfer(receiverAddress!, amount, tokenAddress);
-        } else {
-            await $avatar.transfer(receiverAddress!, amount);
-        }
-    }
+    const eventDispatcher = createEventDispatcher();
 </script>
 
 <!-- Header -->
-<h3 class="text-xl font-semibold mb-4">Send Circles</h3>
+<h3 class="text-xl font-semibold mb-4">
+    <button class="btn inline p-2" on:click={() => {
+        eventDispatcher("back");
+    }}>
+        &lt; Back
+    </button>
+    Send Circles
+</h3>
 
 <!-- Receiver Information -->
 <div class="form-control mb-4">
-    <label class="label">
-        <span class="label-text font-medium text-gray-600">To</span>
-    </label>
-    {#if receiverProfile}
-        <p class="font-bold text-gray-800">{receiverProfile.name}</p>
-        <p class="text-sm text-gray-500">{receiverAddress}</p>
-    {:else}
-        <p class="font-medium text-gray-800">{receiverAddress}</p>
-    {/if}
+    <p class="menu-title pl-0">
+        Asset:
+    </p>
+
+    <div class="flex items-center justify-between p-2 rounded-lg">
+        <div class="col">
+            <Avatar address={tokenOwner} clickable={false}>
+                <span>
+                    {tokenTypeToString(tokenType)}
+                </span>
+                {#if tokenAddress !== "0x0000000000000000000000000000000000000000"}
+                    <a class="block underline" target="_blank"  href={"https://gnosisscan.io/address/" + tokenAddress}>{shortenAddress(tokenAddress)}</a>
+                {/if}
+            </Avatar>
+        </div>
+
+        <div class="col text-right">
+            <span class="text-lg">{floorToDecimals(circlesBalance)}</span> Circles
+        </div>
+    </div>
+</div>
+<p class="menu-title pl-0">
+    To:
+</p>
+<div class="flex items-center justify-between p-2 rounded-lg">
+    <Avatar address={receiverAddress} clickable={false}>
+        <a class="block underline" target="_blank" href={"https://gnosisscan.io/address/" + receiverAddress}>{shortenAddress(receiverAddress)}</a>
+    </Avatar>
 </div>
 
 <!-- Amount Input -->
@@ -57,7 +70,7 @@
 <!-- Action Buttons -->
 <div class="flex justify-end space-x-2 mt-6">
     <button type="submit" class="btn btn-primary px-6 py-2 rounded-md text-white bg-blue-500 hover:bg-blue-600"
-            on:click={send}>
+            on:click={() => eventDispatcher("send", {amount: amount})}>
         Send
     </button>
 </div>

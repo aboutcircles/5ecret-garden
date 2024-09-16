@@ -1,3 +1,30 @@
+<script lang="ts" context="module">
+    import {get, type Readable} from "svelte/store";
+    import {type ContactList} from "$lib/stores/contacts";
+
+    export type QuickAction = {
+        name: string;
+        link: string;
+        icon: string;
+        action: () => void;
+    }
+
+    export let contacts: Readable<{
+        data: ContactList
+        next: () => Promise<boolean>
+        ended: boolean
+    }> | undefined = undefined;
+
+    export function ensureContacts() {
+        if (!get(avatar)) {
+            throw new Error("Avatar store is not available");
+        }
+        if (!contacts) {
+            contacts = createContacts();
+        }
+        return contacts;
+    }
+</script>
 <script lang="ts">
     import "../app.css";
 
@@ -8,43 +35,88 @@
     import UpdateBanner from "$lib/components/UpdateBanner.svelte";
     import {page} from "$app/stores";
     import Send from "$lib/dialogs/Send.svelte";
+    import {createContacts} from "$lib/stores/contacts";
+    import Trust from "$lib/dialogs/Trust.svelte";
 
     async function getProfile() {
         if ($avatar?.avatarInfo?.version === 2) {
             return await $avatar.getProfile();
         } else if ($avatar?.avatarInfo?.version === 1) {
             return Promise.resolve({
+                previewImageUrl: "/logo.svg",
                 name: $avatar.address
             });
         } else {
             throw new Error(`Unknown avatar version: ${$avatar?.avatarInfo?.version}`);
         }
     }
+
+    let quickActions: QuickAction[] = [];
+    $: {
+        if ($page.route.id === "/_new/dashboard") {
+            quickActions = [{
+                name: "Send",
+                link: "",
+                icon: "/send.svg",
+                action: () => {
+                    sendModal.showModal();
+                }
+            }];
+        } else if ($page.route.id === "/_new/trust-relations") {
+            quickActions = [{
+                name: "Add Contact",
+                link: "",
+                icon: "/add-contact.svg",
+                action: () => {
+                    trustModal.showModal();
+                }
+            }];
+        } else if ($page.route.id === "/_new/dashboard/balances") {
+            quickActions = [{
+                name: "Send",
+                link: "",
+                icon: "/send.svg",
+                action: () => {
+                    sendModal.showModal();
+                }
+            }];
+        } else {
+            quickActions = [];
+        }
+    }
+
+    $: {
+        if ($avatar) {
+            contacts = createContacts();
+        }
+    }
+
 </script>
 {#if $avatar}
     {#await getProfile()}
         <DefaultHeader menuItems={[]} quickActions={[]}/>
     {:then profile}
-        <DefaultHeader text={profile?.name ?? $avatar.address} menuItems={[{
-            name: "Dashboard",
-            link: "/_new/dashboard"
-        }, {
-            name: "Contacts",
-            link: "/_new/contacts"
-        }, {
-            name: "Groups",
-            link: "/groups"
-        }, {
-            name: "Settings",
-            link: "/settings"
-        }]} quickActions={[{
-        name: "Send",
-        link: "",
-        icon: "/send.svg",
-        action: () => {
-            sendModal.showModal();
-        }
-    }]}/>
+        <DefaultHeader
+                text={profile?.name ?? $avatar.address}
+                logo={(profile?.previewImageUrl ?? "").trim() === "" ? "/logo.svg" : profile?.previewImageUrl}
+                homeLink="/_new/dashboard"
+                menuItems={[{
+                    name: "Dashboard",
+                    link: "/_new/dashboard"
+                }, {
+                    name: "Contacts",
+                    link: "/_new/trust-relations"
+                }, {
+                    name: "Groups",
+                    link: "/_new/groups"
+                }, {
+                    name: "Settings",
+                    link: "/settings"
+                }]}
+                quickActions={quickActions}
+        />
+        <Send></Send>
+        <Trust></Trust>
     {:catch error}
         <DefaultHeader menuItems={[]} quickActions={[]}/>
     {/await}
@@ -73,7 +145,6 @@
         <UpdateBanner></UpdateBanner>
     {/if}
     <slot></slot>
-    <Send></Send>
 </main>
 
 <!--{#if $avatar}-->

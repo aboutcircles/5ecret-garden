@@ -1,5 +1,6 @@
 <script lang="ts">
     import SendFlow from "$lib/flows/SendFlow.svelte";
+    import {page} from "$app/stores";
 </script>
 
 <dialog id="sendModal" class="modal">

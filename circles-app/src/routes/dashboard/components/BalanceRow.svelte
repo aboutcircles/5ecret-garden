@@ -71,6 +71,6 @@
     <p class="text-xs text-gray-500">{row.tokenAddress}</p>
 </div>
 <div class="ml-auto">
-    <p class:text-green-500={true}
+    <p class:text-green-700={true}
        class="text-lg">{floorToDecimals(row.circles)}</p>
 </div>

@@ -64,8 +64,8 @@
 </script>
 
 <div class="overflow-x-auto">
-    {#each ($store?.data ?? []) as tx (getKeyFromItem(tx))}
-        <svelte:component this={row} item={tx}/>
+    {#each ($store?.data ?? []) as item (getKeyFromItem(item))}
+        <svelte:component this={row} item={item}/>
     {/each}
     <div class="text-center py-4" bind:this={anchor}>
         {#if !$store?.ended}

@@ -37,7 +37,7 @@ const _handleNextPage = async (currentData: TokenBalanceRow[]) => {
     return {data: currentData, ended: true};
 }
 
-export const balances = createEventStore<TokenBalanceRow[]>(
+export const circlesBalances = createEventStore<TokenBalanceRow[]>(
     avatar,
     refreshOnEvents, // Use the provided events or an empty set
     _initialLoad,                // Function to load the initial data

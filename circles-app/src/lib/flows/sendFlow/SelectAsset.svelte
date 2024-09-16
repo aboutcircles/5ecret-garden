@@ -1,5 +1,7 @@
 <script lang="ts" context="module">
     import type {TokenType} from "@circles-sdk/data";
+    import {get} from "svelte/store";
+    import {totalCirclesBalance} from "$lib/stores/totalCirclesBalance";
 
     export function tokenTypeToString(tokenType: TokenType) {
         switch (tokenType) {
@@ -13,17 +15,39 @@
                 return "ERC20 Wrapper (Inflationary)";
             case "CrcV2_RegisterGroup":
                 return "Group Circles";
+            case "TransitiveTransfer":
+                return "Use all Circles";
             default:
                 return tokenType;
         }
     }
+
+    export const transitiveTransfer = () => {
+        return <TokenBalanceRow>{
+            tokenOwner: "0x0000000000000000000000000000000000000001",
+            tokenType: "TransitiveTransfer",
+            circles: get(totalCirclesBalance),
+            staticCircles: 0,
+            crc: 0,
+            tokenAddress: "0x0000000000000000000000000000000000000000",
+            tokenId: "0",
+            isWrapped: false,
+            isGroup: false,
+            isInflationary: false,
+            staticAttoCircles: "0",
+            version: 0,
+            attoCrc: "0",
+            attoCircles: "0",
+            isErc20: false,
+            isErc1155: false
+        };
+    };
 </script>
 <script lang="ts">
     import type {TokenBalanceRow} from "@circles-sdk/data";
     import {createEventDispatcher} from "svelte";
-    import {balances} from "$lib/stores/balances";
-    import Avatar from "$lib/components/Avatar.svelte";
-    import {floorToDecimals} from "$lib/utils/shared";
+    import {circlesBalances} from "$lib/stores/circlesBalances";
+    import BalanceRow from "$lib/components/BalanceRow.svelte";
 
     export let selectedAsset: TokenBalanceRow | undefined = undefined;
 
@@ -35,28 +59,33 @@
     };
 </script>
 
-<h3 class="font-bold text-lg">Select Asset</h3>
+<h3 class="font-bold text-lg">
+    <button class="btn inline p-2" on:click={() => {
+        eventDispatcher("back");
+    }}>
+        &lt; Back
+    </button>
+    Select Asset
+</h3>
 
 <div class="mt-4">
-    <ul class="menu bg-base-100 rounded-box w-full">
-        {#if $balances.rows.length > 0}
-            {#each $balances.rows as balance (balance.tokenAddress)}
-                <li class="hover:bg-base-200" on:click={() => handleSelect(balance)}>
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p>
-                                <span class="text-lg font-semibold">{floorToDecimals(balance.circles)}</span>
-                                <span class="text-sm text-gray-600">{tokenTypeToString(balance.tokenType)}</span>
-                            </p>
-                            <p class="text-gray-500 truncate">
-                                <Avatar address={balance.tokenOwner}/>
-                            </p>
-                        </div>
-                    </div>
-                </li>
-            {/each}
-        {:else}
-            <li class="text-center py-4">No assets found</li>
-        {/if}
-    </ul>
+    <p class="menu-title pl-0">
+        Transitive transfer
+    </p>
+    <div on:click={() => handleSelect(transitiveTransfer())}>
+        <BalanceRow balance={transitiveTransfer()}/>
+    </div>
+    <p class="menu-title pl-0">
+        Indivitual tokens
+    </p>
+
+    {#if $circlesBalances.data.length > 0}
+        {#each $circlesBalances.data as balance (balance.tokenAddress)}
+            <div on:click={() => handleSelect(balance)}>
+                <BalanceRow balance={balance}/>
+            </div>
+        {/each}
+    {:else}
+        <li class="text-center py-4">No assets found</li>
+    {/if}
 </div>

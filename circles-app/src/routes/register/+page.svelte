@@ -12,7 +12,6 @@
         if ($wallet?.address && $circles) {
             const trustRelationsQuery = $circles.data.getIncomingTrustEvents($wallet.address, 100);
             await trustRelationsQuery.queryNextPage();
-            console.log("trustRelations", trustRelationsQuery.currentPage?.results);
             trustRelations = trustRelationsQuery.currentPage?.results ?? [];
         }
     });

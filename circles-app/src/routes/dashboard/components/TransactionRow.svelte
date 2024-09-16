@@ -100,11 +100,11 @@
     <p class="text-xs text-gray-500">{date.toLocaleDateString()} - {date.toLocaleTimeString()}</p>
 </div>
 <div class="ml-auto">
-    <p class:text-red-500={isOutgoing} class:text-green-500={isIncoming}
+    <p class:text-red-500={isOutgoing} class:text-green-700={isIncoming}
        class="text-lg">{sign} {floorToDecimals(row.circles)}</p>
-    <p class:text-red-500={isOutgoing} class:text-green-500={isIncoming}
+    <p class:text-red-500={isOutgoing} class:text-green-700={isIncoming}
        class="text-lg">{sign} {floorToDecimals(row.staticCircles * 3)}</p>
-    <p class:text-red-500={isOutgoing} class:text-green-500={isIncoming}
+    <p class:text-red-500={isOutgoing} class:text-green-700={isIncoming}
        class="text-lg">{sign} {floorToDecimals(row.staticCircles)}</p>
 </div>
 <!--<pre>-->

@@ -25,7 +25,7 @@
         ['Working']: 'bg-gray-200 text-black',
         ['Error']: 'bg-yellow-500 text-white',
         ['Retry']: 'bg-yellow-500 text-white',
-        ['Done']: 'bg-green-500 text-white',
+        ['Done']: 'bg-green-700 text-white',
         ['Disabled']: 'bg-gray-400 text-white',
     };
 

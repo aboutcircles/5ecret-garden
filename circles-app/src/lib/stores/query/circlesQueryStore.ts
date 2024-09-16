@@ -57,7 +57,6 @@ export async function createCirclesQueryStore<T extends EventRow>(
      * @returns {Promise<T[]>} - A promise that resolves to the initial set of event rows.
      */
     async function _initialLoad(): Promise<T[]> {
-        console.log(`_initialLoad(); fetching initial data...`);
         const avatarInstance = get(avatar);
         if (!avatarInstance) return [];
 
@@ -74,7 +73,6 @@ export async function createCirclesQueryStore<T extends EventRow>(
      * @returns {Promise<NextPageData<T[]>>} - A promise that resolves to the merged data and an indication if there are more pages.
      */
     async function _handleNextPage(currentData: T[]): Promise<NextPageData<T[]>> {
-        console.log(`_handleNextPage(); fetching next page...`);
         await circlesQuery?.queryNextPage();
         const mergedData = _mergeData(currentData, circlesQuery.currentPage?.results || []);
 

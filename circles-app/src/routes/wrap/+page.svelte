@@ -9,7 +9,7 @@
 
     let valueString: string = "";
     let selectedCollateral: string | undefined;
-    let balances: TokenBalanceRow[] = [];
+    let circlesBalances: TokenBalanceRow[] = [];
 
     onMount(async () => {
         if ($avatar?.address && $circles) {
@@ -27,7 +27,6 @@
         }
         const sendValue = ethers.parseEther(valueString.toString());
         const receipt = await $avatar?.wrapInflationErc20(selectedCollateral, sendValue);
-        console.log("Wrap receipt:", receipt);
     }
 
     async function wrapDemurraged() {
@@ -39,7 +38,6 @@
         }
         const sendValue = ethers.parseEther(valueString.toString());
         const receipt = await $avatar?.wrapDemurrageErc20(selectedCollateral, sendValue);
-        console.log("Wrap receipt:", receipt);
     }
 </script>
 
@@ -71,5 +69,5 @@
 
 <!-- balance of wrapped tokens I hold -->
 <div class="mt-4">
-    <h2 class="text-lg">Wrapped token balances</h2>
+    <h2 class="text-lg">Wrapped token circlesBalances</h2>
 </div>

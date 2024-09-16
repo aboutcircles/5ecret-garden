@@ -24,7 +24,6 @@
             return;
         }
         const receipt = await $avatar?.wrapInflationErc20(tokenAddress, sendValue);
-        console.log("Wrap receipt:", receipt);
     }
 
     async function wrapDemurraged(sendValue: bigint) {
@@ -35,10 +34,7 @@
             return;
         }
         const receipt = await $avatar?.wrapDemurrageErc20(tokenAddress, sendValue);
-        console.log("Wrap receipt:", receipt);
     }
-
-    $: console.log("wrapType", wrapType);
 </script>
 
 <dialog id="wrapModal" class="modal">

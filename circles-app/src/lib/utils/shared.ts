@@ -1,3 +1,6 @@
+import {ethers} from "ethers6";
+import type {TokenType} from "../../../../../../temp/circles-sdk/packages/data";
+
 export function getTimeAgo(unixTimestamp: number): string {
     const now = Math.floor(Date.now() / 1000); // Current time in seconds
     const secondsAgo = now - unixTimestamp;
@@ -15,3 +18,25 @@ export function getTimeAgo(unixTimestamp: number): string {
 export function floorToDecimals(value?: number, decimals: number = 2): number {
     return Math.floor((value ?? 0) * Math.pow(10, decimals)) / Math.pow(10, decimals);
 }
+
+export function shortenAddress(address:string | undefined): string {
+    if (!ethers.isAddress(address)) {
+        return "";
+    }
+    const a = ethers.getAddress(address);
+    return `${a.slice(0, 6)}...${a.slice(-6)}`;
+}
+
+export const staticTypes: Set<TokenType> = new Set([
+    "CrcV2_ERC20WrapperDeployed_Inflationary"
+]);
+
+export const crcTypes: Set<TokenType> = new Set([
+    "CrcV1_Signup"
+]);
+
+export const demurragedType: Set<TokenType> = new Set([
+    "CrcV2_ERC20WrapperDeployed_Demurraged",
+    "CrcV2_RegisterGroup",
+    "CrcV2_RegisterHuman"
+]);

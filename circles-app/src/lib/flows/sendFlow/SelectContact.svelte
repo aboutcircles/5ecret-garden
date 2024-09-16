@@ -5,11 +5,13 @@
     };
 </script>
 <script lang="ts">
-    import type {Profile} from "../../../../../../../temp/circles-sdk/packages/profiles/src";
+    import type {Profile} from "@circles-sdk/profiles";
     import {ethers} from "ethers6";
     import {createEventDispatcher} from "svelte";
+    import Avatar from "$lib/components/Avatar.svelte";
+    import type {ContactList} from "$lib/stores/contacts";
 
-    export let recentAddresses: { [address: string]: Profile } = {};
+    export let recentAddresses: ContactList = {};
 
     export let selectedAddress: string | undefined = undefined;
     export let selectedProfile: Profile | undefined = undefined;
@@ -19,11 +21,10 @@
     const eventDispatcher = createEventDispatcher();
 
     $: filteredAddresses = Object.keys(recentAddresses).filter((address) => {
-        return address.toLowerCase().includes(editorText?.toLowerCase() ?? "") || selectedAddress || recentAddresses[address].name?.toLowerCase()?.includes(editorText?.toLowerCase() ?? "");
+        return address.toLowerCase().includes(editorText?.toLowerCase() ?? "") || selectedAddress || recentAddresses[address].contactProfile.name?.toLowerCase()?.includes(editorText?.toLowerCase() ?? "");
     });
 
     function selected(address: string, profile: Profile | undefined) {
-        console.log("Selected address:", address, profile);
         eventDispatcher("select", <SelectedEvent>{
             address: address,
             profile: profile
@@ -34,8 +35,8 @@
         editorText = (e.target as HTMLInputElement).value;
         if (ethers.isAddress(editorText)) {
             selectedAddress = editorText;
-            selectedProfile = recentAddresses[editorText];
-            selected(editorText, recentAddresses[editorText]);
+            selectedProfile = recentAddresses[editorText].contactProfile;
+            selected(editorText, recentAddresses[editorText].contactProfile);
         } else {
             selectedAddress = undefined;
             selectedProfile = undefined;
@@ -56,20 +57,24 @@
 </div>
 
 <div class="mt-4">
-    <h4 class="font-semibold mb-2">Recent Addresses</h4>
-    <ul class="menu bg-base-100 rounded-box w-full">
+    <p class="menu-title pl-0">
+        Recent Addresses
+    </p>
         {#if Object.keys(filteredAddresses).length > 0}
-            {#each filteredAddresses as address}
-                <li on:click={() => {
-                            selectedProfile = recentAddresses[address];
+            {#each filteredAddresses as address(address)}
+                <div class="flex items-center justify-between p-2 bg-base-100 hover:bg-base-200 rounded-lg" on:click={() => {
+                            selectedProfile = recentAddresses[address].contactProfile;
                             selectedAddress = address;
-                            selected(address, recentAddresses[address]);
+                            selected(address, recentAddresses[address].contactProfile);
                         }}>
-                    <p>{recentAddresses[address].name} {recentAddresses[address].name == address ? "" : " (" + address + ")"}</p>
-                </li>
+                    <div class="col">
+                        <Avatar address={address} clickable={false}>
+                            {address}
+                        </Avatar>
+                    </div>
+                </div>
             {/each}
         {:else}
-            <li>No recent addresses found</li>
+            <div class="flex items-center justify-between p-2 bg-base-100 hover:bg-base-200 rounded-lg">No recent addresses found</div>
         {/if}
-    </ul>
 </div>
