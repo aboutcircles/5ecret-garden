@@ -1,27 +1,28 @@
 <script lang="ts">
-    import {page} from "$app/stores";
     import {circles} from "$lib/stores/circles";
     import type {Profile} from "@circles-sdk/profiles";
     import Avatar, {getProfile} from "$lib/components/Avatar.svelte";
     import {avatar} from "$lib/stores/avatar";
     import CommonConnections from "$lib/components/CommonConnections.svelte";
     import {shortenAddress} from "$lib/utils/shared";
-    import type {ExtendedTrustRelationRow} from "../../../contacts/+page.svelte";
     import type {Readable} from "svelte/store";
     import type {ContactList} from "$lib/stores/contacts";
     import {onMount} from "svelte";
-    import {ensureContacts} from "../../../+layout.svelte";
     import type {AvatarRow} from "@circles-sdk/data";
+    import {ensureContacts} from "../../routes/+layout.svelte";
+    import type {ExtendedTrustRelationRow} from "../../routes/contacts/+page.svelte";
 
     let contacts: Readable<{ data: ContactList, next: () => Promise<boolean>, ended: boolean }> | undefined = undefined;
+
+    export let address: string | undefined;
 
     onMount(() => {
         contacts = ensureContacts();
     })
 
     $: {
-        if ($page.params.address) {
-            initialize($page.params.address);
+        if (address) {
+            initialize(address);
         }
     }
 
@@ -149,19 +150,28 @@
             Trust:
         </p>
         <p>
-            <span class="inline">
-                {#if getTrustRow(otherAvatar?.avatar)?.relation === "trusts"}
-                    <img src="/outgoing.svg" alt="Outgoing trust" class="w-3 h-3 inline"/>
-                {:else if getTrustRow(otherAvatar?.avatar)?.relation === "trustedBy"}
-                    <img src="/incoming.svg" alt="Incoming trust" class="w-3 h-3 inline"/>
-                {:else if getTrustRow(otherAvatar?.avatar)?.relation === "mutuallyTrusts"}
-                    <img src="/mutual.svg" alt="Mutual trust" class="w-3 h-3 inline"/>
-                {:else}
-                    <img src="/no-trust.svg" alt="No trust" class="w-3 h-3 inline"/>
-                {/if}
-                <span class:text-green-700={getTrustRow(otherAvatar?.avatar)?.relation === "mutuallyTrusts"}>{getRelationText(getTrustRow(otherAvatar?.avatar), profile)}</span>
-            </span>
+        <span class="inline">
+            {#if getTrustRow(otherAvatar?.avatar)?.relation === "trusts"}
+                <img src="/outgoing.svg" alt="Outgoing trust" class="w-3 h-3 inline"/>
+            {:else if getTrustRow(otherAvatar?.avatar)?.relation === "trustedBy"}
+                <img src="/incoming.svg" alt="Incoming trust" class="w-3 h-3 inline"/>
+            {:else if getTrustRow(otherAvatar?.avatar)?.relation === "mutuallyTrusts"}
+                <img src="/mutual.svg" alt="Mutual trust" class="w-3 h-3 inline"/>
+            {:else}
+                <img src="/no-trust.svg" alt="No trust" class="w-3 h-3 inline"/>
+            {/if}
+            <span class:text-green-700={getTrustRow(otherAvatar?.avatar)?.relation === "mutuallyTrusts"}>{getRelationText(getTrustRow(otherAvatar?.avatar), profile)}</span>
+        </span>
         </p>
+
+        {#if profile?.description}
+            <p class="menu-title pl-0">
+                Description:
+            </p>
+            <p class="font-normal text-lg">
+                {@html newLineToBr(profile?.description)}
+            </p>
+        {/if}
 
         <CommonConnections otherAvatarAddress={otherAvatar?.avatar}/>
     </div>

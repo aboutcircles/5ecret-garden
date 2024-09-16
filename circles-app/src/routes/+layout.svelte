@@ -1,6 +1,7 @@
 <script lang="ts" context="module">
     import {get, type Readable} from "svelte/store";
     import {type ContactList} from "$lib/stores/contacts";
+    import {popupControls} from "$lib/components/PopUp.svelte";
 
     export type QuickAction = {
         name: string;
@@ -34,8 +35,9 @@
     import {canMigrate} from "$lib/guards/canMigrate";
     import UpdateBanner from "$lib/components/UpdateBanner.svelte";
     import {page} from "$app/stores";
-    import Send from "$lib/dialogs/Send.svelte";
     import {createContacts} from "$lib/stores/contacts";
+    import PopUp from "$lib/components/PopUp.svelte";
+    import SendFlow from "$lib/flows/SendFlow.svelte";
     import Trust from "$lib/dialogs/Trust.svelte";
 
     async function getProfile() {
@@ -59,7 +61,10 @@
                 link: "",
                 icon: "/send.svg",
                 action: () => {
-                    sendModal.showModal();
+                    $popupControls.open?.({
+                        component: SendFlow,
+                        props: {}
+                    });
                 }
             }];
         } else if ($page.route.id === "/_new/trust-relations") {
@@ -68,7 +73,10 @@
                 link: "",
                 icon: "/add-contact.svg",
                 action: () => {
-                    trustModal.showModal();
+                    $popupControls.open?.({
+                        component: Trust,
+                        props: {}
+                    });
                 }
             }];
         } else if ($page.route.id === "/_new/dashboard/balances") {
@@ -77,7 +85,10 @@
                 link: "",
                 icon: "/send.svg",
                 action: () => {
-                    sendModal.showModal();
+                    $popupControls.open?.({
+                        component: SendFlow,
+                        props: {}
+                    });
                 }
             }];
         } else {
@@ -91,7 +102,29 @@
         }
     }
 
+    let showPopUp = false;
+    let overlayOpacity = 0;
+
 </script>
+<style>
+    .baseLayer {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        background-color: white;
+        overflow: hidden;
+    }
+
+    .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1;
+    }
+</style>
 {#if $avatar}
     {#await getProfile()}
         <DefaultHeader menuItems={[]} quickActions={[]}/>
@@ -115,8 +148,6 @@
                 }]}
                 quickActions={quickActions}
         />
-        <Send></Send>
-        <Trust></Trust>
     {:catch error}
         <DefaultHeader menuItems={[]} quickActions={[]}/>
     {/await}
@@ -140,15 +171,27 @@
     }]}/>
 {/if}
 
-<main>
+<main class="baseLayer">
     {#if $avatar && canMigrate($avatar.avatarInfo) && $page.route.id !== "/migrate-to-v2"}
         <UpdateBanner></UpdateBanner>
     {/if}
-    <slot></slot>
-</main>
 
-<!--{#if $avatar}-->
-<!--    <div class="mt-12">-->
-<!--        <Footer/>-->
-<!--    </div>-->
-<!--{/if}-->
+    <slot></slot>
+
+    {#if showPopUp}
+        <div class="overlay" style="opacity: {overlayOpacity}"
+             on:mousedown={ () => $popupControls.close?.call(undefined) }
+             on:touchstart={ () => $popupControls.close?.call(undefined) }>
+        </div>
+    {/if}
+    <PopUp on:openingStart={() => {
+                showPopUp = true;
+            }}
+           on:close={() =>{
+                console.log("close");
+                showPopUp = false;
+           }}
+           on:overlayOpacity={(event) => {
+                overlayOpacity = event.detail.opacity;
+           }}/>
+</main>
