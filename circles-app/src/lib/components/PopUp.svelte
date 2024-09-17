@@ -8,6 +8,7 @@
     };
 
     export type PopupContentDefinition = {
+        title: string;
         component: typeof SvelteComponent;
         props: Record<string, any>;
     };
@@ -122,7 +123,8 @@
         bottom: 0;
         left: 0;
         width: 100%;
-        max-height: 100%;
+        max-height: 80%;
+        min-height: 80%;
         display: flex;
         flex-direction: column;
         background-color: white;
@@ -134,7 +136,6 @@
     .pull-bar {
         width: 100%;
         height: 40px;
-        background-color: #ccc;
         cursor: pointer;
     }
 
@@ -152,10 +153,11 @@
     }
 </style>
 
-<div class="popup" bind:this={popup} style="--y: { $y }px">
-    <div class="pull-bar" on:mousedown={handleStart} on:touchstart={handleStart}></div>
+<div class="popup card" bind:this={popup} style="--y: { $y }px">
+    <div class="pull-bar card-title p-6" on:mousedown={handleStart} on:touchstart={handleStart}>
+        {popupContent?.title ?? " - "}
+    </div>
     <div class="content">
-        <!--        Lorem ipsum dolor-->
         {#if popupContent}
             <svelte:component this={popupContent.component} {...popupContent.props}/>
         {/if}

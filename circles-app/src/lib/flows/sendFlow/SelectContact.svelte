@@ -10,6 +10,7 @@
     import {createEventDispatcher} from "svelte";
     import Avatar from "$lib/components/Avatar.svelte";
     import type {ContactList} from "$lib/stores/contacts";
+    import {shortenAddress} from "$lib/utils/shared";
 
     export let recentAddresses: ContactList = {};
 
@@ -44,8 +45,6 @@
     };
 </script>
 
-<h3 class="font-bold text-lg">Select Address</h3>
-
 <div class="form-control my-4">
     <input
             type="text"
@@ -69,7 +68,7 @@
                         }}>
                     <div class="col">
                         <Avatar address={address} clickable={false}>
-                            {address}
+                            {shortenAddress(address)}
                         </Avatar>
                     </div>
                 </div>

@@ -62,6 +62,7 @@
                 icon: "/send.svg",
                 action: () => {
                     $popupControls.open?.({
+                        title: "Send Circles",
                         component: SendFlow,
                         props: {}
                     });
@@ -74,6 +75,7 @@
                 icon: "/add-contact.svg",
                 action: () => {
                     $popupControls.open?.({
+                        title: "Add Contact",
                         component: Trust,
                         props: {}
                     });
@@ -86,6 +88,7 @@
                 icon: "/send.svg",
                 action: () => {
                     $popupControls.open?.({
+                        title: "Send Circles",
                         component: SendFlow,
                         props: {}
                     });

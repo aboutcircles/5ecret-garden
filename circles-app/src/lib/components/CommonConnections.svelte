@@ -65,7 +65,7 @@
 <ul>
     {#each commonContacts as contact(contact)}
         <li class="p-2">
-            <Avatar clickable={false} address={contact}>
+            <Avatar address={contact}>
                 {contact}
             </Avatar>
         </li>

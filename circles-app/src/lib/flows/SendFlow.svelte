@@ -58,7 +58,7 @@
 
     }
 </script>
-<div>
+<div class="p-6 pt-0">
     {#if currentStep === "SelectContact"}
         <SelectContact recentAddresses={$contacts?.data}
                        on:select={(e) => {

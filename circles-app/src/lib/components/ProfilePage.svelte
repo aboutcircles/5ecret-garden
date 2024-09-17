@@ -11,6 +11,11 @@
     import type {AvatarRow} from "@circles-sdk/data";
     import {ensureContacts} from "../../routes/+layout.svelte";
     import type {ExtendedTrustRelationRow} from "../../routes/contacts/+page.svelte";
+    import SendFlow from "$lib/flows/SendFlow.svelte";
+    import {popupControls} from "$lib/components/PopUp.svelte";
+    import MintGroupTokens from "$lib/flows/MintGroupTokens.svelte";
+    import Untrust from "$lib/flows/Untrust.svelte";
+    import Trust from "$lib/flows/Trust.svelte";
 
     let contacts: Readable<{ data: ContactList, next: () => Promise<boolean>, ended: boolean }> | undefined = undefined;
 
@@ -82,9 +87,9 @@
         throw new Error(`Unknown relation: ${row.relation}`);
     }
 
-    function newLineToBr(text: string) {
-        return text.replace(/\n/g, "<br>");
-    }
+    // function newLineToBr(text: string) {
+    //     return text.replace(/\n/g, "<br>");
+    // }
 
     function getTrustRow(address: string | undefined) {
         if (!address) {
@@ -114,31 +119,79 @@
         <div class="w-full flex flex-row justify-center space-x-4 p-4">
             {#if getTrustRow(otherAvatar?.avatar)?.relation === "trustedBy"
             && otherAvatar.type === "CrcV2_RegisterGroup"}
-                <button class="btn btn-sm btn-round btn-outline">
+                <button class="btn btn-sm btn-round btn-outline" on:click={() => {
+                    $popupControls.open?.({
+                        title: "Mint group tokens",
+                        component: MintGroupTokens,
+                        props: {
+                            address: address
+                        }
+                    });
+                }}>
                     <img src="/banknotes.svg" alt="Incoming trust" class="w-6 h-6 inline"/>
                     Mint
                 </button>
             {/if}
-            <button class="btn btn-sm btn-round btn-outline">
+            <button class="btn btn-sm btn-round btn-outline" on:click={() => {
+                $popupControls.open?.({
+                    title: "Send Circles",
+                    component: SendFlow,
+                    props: {
+                        address: address
+                    }
+                });
+            }}>
                 <img src="/send.svg" alt="Send" class="w-6 h-6 inline"/> Send
             </button>
             {#if getTrustRow(otherAvatar?.avatar)?.relation === "trusts"}
-                <button class="btn btn-sm btn-round bg-red-400 text-white">
+                <button class="btn btn-sm btn-round bg-red-400 text-white" on:click={() => {
+                    $popupControls.open?.({
+                        title: "Untrust",
+                        component: Untrust,
+                        props: {
+                            address: address
+                        }
+                    });
+                }}>
                     <img src="/trash.svg" alt="Untrust" class="w-6 h-6 inline"/>
                     Untrust
                 </button>
             {:else if getTrustRow(otherAvatar?.avatar)?.relation === "mutuallyTrusts"}
-                <button class="btn btn-sm btn-round bg-red-400 text-white">
+                <button class="btn btn-sm btn-round bg-red-400 text-white" on:click={() => {
+                    $popupControls.open?.({
+                        title: "Untrust",
+                        component: Untrust,
+                        props: {
+                            address: address
+                        }
+                    });
+                }}>
                     <img src="/trash.svg" alt="Untrust" class="w-6 h-6 inline"/>
                     Untrust
                 </button>
             {:else if getTrustRow(otherAvatar?.avatar)?.relation === "trustedBy"}
-                <button class="btn btn-sm btn-round bg-red-400 text-white">
+                <button class="btn btn-sm btn-round bg-red-400 text-white" on:click={() => {
+                    $popupControls.open?.({
+                        title: "Trust",
+                        component: Trust,
+                        props: {
+                            address: address
+                        }
+                    });
+                }}>
                     <img src="/shield-check.svg" alt="Trust back" class="w-6 h-6 inline"/>
                     Trust back
                 </button>
             {:else}
-                <button class="btn btn-sm btn-round bg-red-400 text-white">
+                <button class="btn btn-sm btn-round bg-red-400 text-white" on:click={() => {
+                    $popupControls.open?.({
+                        title: "Trust",
+                        component: Trust,
+                        props: {
+                            address: address
+                        }
+                    });
+                }}>
                     <img src="/shield-check.svg" alt="Trust" class="w-6 h-6 inline"/>
                     Trust
                 </button>
@@ -164,14 +217,14 @@
         </span>
         </p>
 
-        {#if profile?.description}
-            <p class="menu-title pl-0">
-                Description:
-            </p>
-            <p class="font-normal text-lg">
-                {@html newLineToBr(profile?.description)}
-            </p>
-        {/if}
+        <!--{#if profile?.description}-->
+        <!--    <p class="menu-title pl-0">-->
+        <!--        Description:-->
+        <!--    </p>-->
+        <!--    <p class="font-normal text-lg">-->
+        <!--        {@html newLineToBr(profile?.description)}-->
+        <!--    </p>-->
+        <!--{/if}-->
 
         <CommonConnections otherAvatarAddress={otherAvatar?.avatar}/>
     </div>

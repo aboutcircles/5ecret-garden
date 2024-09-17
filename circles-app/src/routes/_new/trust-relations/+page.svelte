@@ -5,6 +5,8 @@
     import {onMount} from "svelte";
     import type {Readable} from "svelte/store";
     import type {ContactList} from "$lib/stores/contacts";
+    import ProfilePage from "$lib/components/ProfilePage.svelte";
+    import {popupControls} from "$lib/components/PopUp.svelte";
 
     let contacts: Readable<{ data: ContactList, next: () => Promise<boolean>, ended: boolean }> | undefined = undefined;
 
@@ -32,7 +34,17 @@
     <div class="card-title text-2xl mb-4">Contacts</div>
     <div class="overflow-x-auto">
         {#each Object.keys($contacts?.data ?? {}) as address}
-            <a class="p-2 bg-base-100 hover:bg-base-200 rounded-lg items-center block" href={"/_new/avatar/" + address}>
+            <a class="p-2 bg-base-100 hover:bg-base-200 rounded-lg items-center block" 
+                on:click={(e) => {
+                    $popupControls.open?.({
+                        component: ProfilePage,
+                        props: {
+                            address: address
+                        }
+                    });
+                    e.preventDefault();
+                    return true;
+                }}>
                 <Avatar address={address}>
                     <div>
                         {#if $contacts?.data[address].row.relation === "trusts"}
