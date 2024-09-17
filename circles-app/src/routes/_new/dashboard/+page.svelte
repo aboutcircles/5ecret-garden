@@ -6,12 +6,21 @@
     import type {Readable} from "svelte/store";
     import TransactionRow from "./TransactionRow.svelte";
     import TotalBalance from "$lib/components/TotalBalance.svelte";
+    import {avatar} from "$lib/stores/avatar";
+    import {floorToDecimals} from "$lib/utils/shared";
 
     let txHistory: Readable<{ data: EventRow[], next: () => Promise<boolean>, ended: boolean }>
+    let mintableAmount: number = 0;
 
     onMount(async () => {
         txHistory = await createTransactionHistory();
+        mintableAmount = await $avatar?.getMintableAmount() ?? 0;
     });
+
+    async function mintPersonalCircles() {
+        await $avatar?.personalMint();
+        mintableAmount = await $avatar?.getMintableAmount() ?? 0;
+    }
 
 </script>
 
@@ -20,6 +29,15 @@
 </div>
 
 <div class="card bg-base-100 shadow-lg p-6">
+    {#if mintableAmount >= 1}
+        <div role="alert" class="alert mb-6 max-w-96">
+            <span>You can mint {floorToDecimals(mintableAmount)} new Circles.</span>
+            <div>
+                <button class="btn btn-sm">Hide</button>
+                <button class="btn btn-sm btn-primary" on:click={mintPersonalCircles}>Mint</button>
+            </div>
+        </div>
+    {/if}
     {#if txHistory}
         <GenericList row={TransactionRow}
                      store={txHistory}/>
