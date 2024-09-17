@@ -34,7 +34,9 @@
                         $popupControls.open?.({
                                 title: "Wrap Circles",
                                 component: WrapTokens,
-                                props: {}
+                                props: {
+                                    asset: balance
+                                }
                             });
                         }}>
                         <img src="/banknotes.svg" alt="Wrap" class="w-6 h-6 inline"/>
@@ -46,7 +48,9 @@
                         $popupControls.open?.({
                                 title: "Migrate Tokens to V2",
                                 component: MigrateTokens,
-                                props: {}
+                                props: {
+                                    asset: balance
+                                }
                             });
                         }}>
                         <img src="/banknotes.svg" alt="Incoming trust" class="w-6 h-6 inline"/>
@@ -58,7 +62,9 @@
                         $popupControls.open?.({
                                 title: "Unwrap Circles",
                                 component: UnwrapTokens,
-                                props: {}
+                                props: {
+                                    asset: balance
+                                }
                             });
                         }}>
                         <img src="/banknotes.svg" alt="Wrap" class="w-6 h-6 inline"/>
@@ -70,7 +76,9 @@
                         $popupControls.open?.({
                                 title: "Unwrap Static Circles",
                                 component: UnwrapTokens,
-                                props: {}
+                                props: {
+                                    asset: balance
+                                }
                             });
                         }}>
                         <img src="/banknotes.svg" alt="Wrap" class="w-6 h-6 inline"/>

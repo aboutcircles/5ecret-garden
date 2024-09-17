@@ -8,7 +8,7 @@
 </script>
 <div class="flex items-center justify-between p-2 hover:bg-base-200 rounded-lg">
     <div class="col">
-        <Avatar address={balance.tokenOwner} clickable={false}>
+        <Avatar address={balance.tokenOwner}>
             <span>
                 {tokenTypeToString(balance.tokenType)}
             </span>

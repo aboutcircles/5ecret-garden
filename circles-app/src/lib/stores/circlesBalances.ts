@@ -8,7 +8,12 @@ const refreshOnEvents: Set<CirclesEventType> = new Set([
     "CrcV2_TransferSingle",
     "CrcV1_HubTransfer",
     "CrcV2_Erc20WrapperTransfer",
-    "CrcV1_Transfer"
+    "CrcV1_Transfer",
+    "CrcV2_GroupMintSingle",
+    "CrcV2_GroupMintBatch",
+    "CrcV2_GroupRedeem",
+    "CrcV2_GroupRedeemCollateralReturn",
+    "CrcV2_GroupRedeemCollateralBurn"
 ]);
 
 const _initialLoad = async () => {
