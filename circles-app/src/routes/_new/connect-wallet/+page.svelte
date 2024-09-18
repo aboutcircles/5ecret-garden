@@ -1,12 +1,26 @@
 <script lang="ts">
-    import {circles} from "$lib/stores/circles";
     import {onMount} from "svelte";
 
     onMount(async () => {
     });
 </script>
 <div class="hero bg-base-200 min-h-screen">
-    <div class="hero-content flex-col lg:flex-row-reverse">
+    <div class="hero-content flex-col lg:flex-row">
+
+        <div class="card bg-base-100 w-96 shadow-xl">
+            <figure class="px-10 pt-10">
+                <img src="/fox.png"
+                     alt="Shoes"
+                     class="w-16 h-16 rounded-xl"/>
+            </figure>
+            <div class="card-body items-center text-center">
+                <h2 class="card-title">Use MetaMask</h2>
+                <p>Use Circles with MetaMask or any compatible browser wallet</p>
+                <div class="card-actions">
+                    <a href="/_new/connect-wallet/connect-metamask" class="btn btn-primary">Connect</a>
+                </div>
+            </div>
+        </div>
 
         <div class="card bg-base-100 w-96 shadow-xl">
             <figure class="px-10 pt-10">
@@ -25,15 +39,15 @@
 
         <div class="card bg-base-100 w-96 shadow-xl">
             <figure class="px-10 pt-10">
-                <img src="/fox.png"
+                <img src="/safe.svg"
                      alt="Shoes"
                      class="w-16 h-16 rounded-xl"/>
             </figure>
             <div class="card-body items-center text-center">
-                <h2 class="card-title">Use MetaMask</h2>
-                <p>Use Circles with MetaMask or any compatible browser wallet</p>
+                <h2 class="card-title">Use Safe</h2>
+                <p>Use Circles with Safe and MetaMask or any compatible browser wallet</p>
                 <div class="card-actions">
-                    <a href="/_new/connect-wallet/connect-metamask" class="btn btn-primary">Connect</a>
+                    <a href="/_new/connect-wallet/connect-safe" class="btn btn-primary">Connect</a>
                 </div>
             </div>
         </div>

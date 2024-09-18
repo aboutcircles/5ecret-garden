@@ -16,31 +16,39 @@
     const apiKey = "dBtmwl3iT790iItpLSjeo3D06Rd4jCt7";
 
     async function connectCometh() {
-        const localStorageAddress = window.localStorage.getItem("walletAddress");
-        console.log("localStorageAddress:", localStorageAddress);
+        try {
+            const localStorageAddress = window.localStorage.getItem("walletAddress");
+            console.log("localStorageAddress:", localStorageAddress);
 
-        const jsonRpcProvider = new JsonRpcProvider(chiadoConfig.circlesRpcUrl);
-        const comethSdkContractRunner = new ComethSdkContractRunner(apiKey, SupportedNetworks.CHIADO, localStorageAddress ?? undefined);
-        const walletAddress = await comethSdkContractRunner.address;
-        const ethersContractRunner = new SdkContractRunnerWrapper(jsonRpcProvider, walletAddress, comethSdkContractRunner);
-        await ethersContractRunner.init();
+            const jsonRpcProvider = new JsonRpcProvider(chiadoConfig.circlesRpcUrl);
+            const comethSdkContractRunner = new ComethSdkContractRunner(apiKey, SupportedNetworks.CHIADO, localStorageAddress ?? undefined);
+            await comethSdkContractRunner.init();
+            if (!comethSdkContractRunner.address) {
+                throw new Error("No wallet address found");
+            }
+            const walletAddress = comethSdkContractRunner.address;
+            const ethersContractRunner = new SdkContractRunnerWrapper(jsonRpcProvider, walletAddress, comethSdkContractRunner);
+            await ethersContractRunner.init();
 
-        window.localStorage.setItem("walletAddress", walletAddress);
-        console.log("Connected wallet address:", walletAddress);
+            window.localStorage.setItem("walletAddress", walletAddress);
+            console.log("Connected wallet address:", walletAddress);
 
-        $wallet = ethersContractRunner;
+            $wallet = ethersContractRunner;
 
-        // Initialize the Circles SDK and set it as $circles to make it globally available.
-        $circles = new Sdk(chiadoConfig, $wallet!);
+            // Initialize the Circles SDK and set it as $circles to make it globally available.
+            $circles = new Sdk(chiadoConfig, $wallet!);
 
-        const avatarInfo = await $circles.data.getAvatarInfo(walletAddress);
+            const avatarInfo = await $circles.data.getAvatarInfo(walletAddress);
 
-        // If the signer address is already a registered Circles wallet, go straight to the dashboard.
-        if (avatarInfo) {
-            $avatar = await $circles.getAvatar(walletAddress);
-            await goto("/_new/dashboard");
-        } else {
-            await goto("/_new/register");
+            // If the signer address is already a registered Circles wallet, go straight to the dashboard.
+            if (avatarInfo) {
+                $avatar = await $circles.getAvatar(walletAddress);
+                await goto("/_new/dashboard");
+            } else {
+                await goto("/_new/register");
+            }
+        } catch (e) {
+            console.error("Error connecting to Cometh:", e);
         }
     }
 

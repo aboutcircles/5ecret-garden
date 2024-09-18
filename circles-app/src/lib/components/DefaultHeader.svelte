@@ -39,7 +39,8 @@
         </div>
         <a class="btn btn-ghost text-xl" href={homeLink}>
             <img src={logo} alt="User Icon" class="w-8 h-8 rounded-full">
-            {text}
+            <!-- TODO: Handle the sizing and ellipsis for the header text properly. This will do for now. -->
+            <span class="inline-block overflow-hidden max-w-[7em] md:max-w-full">{text}</span>
         </a>
     </div>
     <div class="navbar-center hidden lg:flex">

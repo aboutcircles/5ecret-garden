@@ -104,7 +104,6 @@
     import PopUp from "$lib/components/PopUp.svelte";
     import Trust from "$lib/pages/AddContact.svelte";
     import Send from "$lib/flows/sendFlow/1_To.svelte";
-    import type {SendFlowContext} from "$lib/flows/sendFlow/context";
 
     async function getProfile() {
         if ($avatar?.avatarInfo?.version === 2) {
@@ -194,7 +193,6 @@
         z-index: 1;
     }
 </style>
-
 <!--<div class="popup card">-->
 <!--    <div class="pull-bar card-title b-12" >-->
 <!--            <button class="w-12 h-24 bg-blue-100 cursor-pointer" on:click={() => {-->

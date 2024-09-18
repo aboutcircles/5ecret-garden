@@ -41,7 +41,7 @@
                         Wrap
                     </button>
                 {/if}
-                {#if balance.tokenType == "CrcV1_Signup"}
+                {#if balance.tokenType == "CrcV1_Signup" && $avatar?.avatarInfo?.version > 1}
                     <button class="btn btn-round" on:click={() => {
                         $popupControls.open?.({
                                 title: "Migrate Tokens to V2",

@@ -57,8 +57,8 @@
 
         if (ethers.isAddress(editorText)) {
             selectedAddress = editorText;
-            selectedProfile = recentAddresses[editorText].contactProfile;
-            selected(editorText, recentAddresses[editorText].contactProfile);
+            selectedProfile = recentAddresses[editorText]?.contactProfile;
+            selected(editorText, recentAddresses[editorText]?.contactProfile);
         } else {
             selectedAddress = undefined;
             selectedProfile = undefined;

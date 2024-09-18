@@ -7,6 +7,7 @@ export const load = (params): void => {
     if (params.route.id !== '/_new/connect-wallet'
         && params.route.id !== '/_new/connect-wallet/connect-cometh'
         && params.route.id !== '/_new/connect-wallet/connect-metamask'
+        && params.route.id !== '/_new/connect-wallet/connect-safe'
         && params.route.id !== '/'
         && get(wallet) === undefined) {
         redirect(302, '/_new/connect-wallet');
