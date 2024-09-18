@@ -11,6 +11,14 @@
         title: string;
         component: typeof SvelteComponent;
         props: Record<string, any>;
+        submit: (data: any) => Promise<void>;
+    };
+
+    export type PopupContentApi = {
+        close: () => void;
+        open: (content: PopupContentDefinition) => void;
+        submit: (data: any) => void;
+        back: () => void;
     };
 
     export const popupControls = writable<PopupControls>({
@@ -52,6 +60,13 @@
         }
 
         popupContent = content;
+        if (!popupContent.props) {
+            popupContent.props = {};
+        }
+        if (!popupContent.props.context) {
+            popupContent.props.context = {};
+        }
+
         dispatch('openingStart'); // Event when opening starts
         y.set(0, {duration: 300, easing: expoOut}).then(() => {
             dispatch('openingComplete'); // Event when opening completes
@@ -61,6 +76,8 @@
     $popupControls.close = async () => {
         popupHeight = popup.offsetHeight;
         await y.set(popupHeight, {duration: 300, easing: expoOut});
+        popupContent = undefined;
+        stack.length = 0;
         dispatch('close');
     };
 
@@ -92,6 +109,8 @@
 
         if (velocity > 0.05) {
             y.set(popupHeight, {duration: 300, easing: expoOut}).then(() => {
+                stack.length = 0;
+                popupContent = undefined;
                 dispatch('close');
             });
         } else {
@@ -115,6 +134,36 @@
 
     const getY = (event: MouseEvent | TouchEvent) => {
         return event instanceof MouseEvent ? event.clientY : event.touches[0].clientY;
+    };
+
+    const stack: PopupContentDefinition[] = [];
+
+    const contentApi: PopupContentApi = {
+        close: () => {
+            $popupControls.close?.();
+        },
+        open: (content: PopupContentDefinition) => {
+            if (popupContent) {
+                stack.push(popupContent);
+            }
+            $popupControls.open?.(content);
+        },
+        submit: (data: any) => {
+            // Handle submission logic here
+            if (!popupContent) {
+                throw new Error("No popup content set.");
+            }
+            popupContent.submit?.(data);
+        },
+        back: () => {
+            if (stack.length === 0) {
+                throw new Error("No previous content to go back to.");
+            }
+            const previousContent = stack.pop();
+            if (previousContent) {
+                $popupControls.open?.(previousContent);
+            }
+        }
     };
 </script>
 <style>
@@ -154,12 +203,24 @@
 </style>
 
 <div class="popup card" bind:this={popup} style="--y: { $y }px">
-    <div class="pull-bar card-title p-6" on:mousedown={handleStart} on:touchstart={handleStart}>
-        {popupContent?.title ?? " - "}
+    <div class="pull-bar card-title pt-12 b-12" on:mousedown={handleStart} on:touchstart={handleStart}>
+        <div class="p-6">
+            {#if stack.length > 0}
+                <button class="w-6 h-12 cursor-pointer" on:click={() => {
+                    contentApi.back();
+                }}>
+                    <img src="/chevron-left.svg" class="w-6 h-6"/>
+                </button>
+            {/if}
+            <span>
+                {popupContent?.title ?? " - "}
+            </span>
+        </div>
     </div>
-    <div class="content">
+    <div class="content mt-2">
         {#if popupContent}
-            <svelte:component this={popupContent.component} {...popupContent.props}/>
+            <svelte:component this={popupContent.component} contentApi={contentApi} context={popupContent.props.context}
+                              {...popupContent.props}/>
         {/if}
     </div>
     <!--    <div class="action-bar">-->

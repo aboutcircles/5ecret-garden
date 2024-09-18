@@ -1,19 +1,22 @@
 <script lang="ts" context="module">
-    import type {Profile} from "@circles-sdk/profiles";
+    import type {Profile} from "../../../../../../temp/circles-sdk/packages/profiles/src";
 
     export type SendFlowSteps = "SelectContact" | "SelectAsset" | "Send";
 </script>
 <script lang="ts">
-    import SelectContact from "$lib/flows/sendFlow/SelectContact.svelte";
-    import SelectAsset from "$lib/flows/sendFlow/SelectAsset.svelte";
-    import Send from "$lib/flows/sendFlow/Send.svelte";
-    import {ensureContacts} from "../../routes/+layout.svelte";
+    import SelectContact from "$lib/pages/SelectContact.svelte";
+    import SelectAsset from "$lib/pages/SelectAsset.svelte";
+    import Send from "$lib/pages/SelectAmount.svelte";
     import type {Readable} from "svelte/store";
     import {type ContactList} from "$lib/stores/contacts";
     import {onMount} from "svelte";
     import {ethers} from "ethers6";
     import {avatar} from "$lib/stores/avatar";
-    import {transitiveTransfer} from "$lib/flows/sendFlow/SelectAsset.svelte";
+    import {transitiveTransfer} from "$lib/pages/SelectAsset.svelte";
+    import type {PopupContentApi} from "$lib/components/PopUp.svelte";
+    import {ensureContacts} from "../../routes/+layout.svelte";
+
+    export let contentApi: PopupContentApi;
 
     let currentStep: SendFlowSteps = "SelectContact";
 
@@ -28,8 +31,6 @@
     let recipient: string;
     let recipientProfile: Profile;
     let assetAddress: string;
-
-    let stack: SendFlowSteps[] = [];
 
     let contacts: Readable<{ data: ContactList, next: () => Promise<boolean>, ended: boolean }> | undefined = undefined;
     onMount(() => {
@@ -62,8 +63,6 @@
     {#if currentStep === "SelectContact"}
         <SelectContact recentAddresses={$contacts?.data}
                        on:select={(e) => {
-            stack.push(currentStep);
-            stack = stack;
             selectedAddress = e.detail.address;
             selectedProfile = e.detail.profile;
             currentStep = "SelectAsset"
@@ -71,11 +70,8 @@
     {:else if currentStep === "SelectAsset"}
         <SelectAsset
                 on:back={() => {
-                    currentStep = stack.pop() || "SelectContact";
                 }}
                 on:select={(e) => {
-                    stack.push(currentStep);
-                    stack = stack;
                     tokenOwner = e.detail.tokenOwner;
                     tokenAddress = e.detail.tokenAddress;
                     tokenType = e.detail.tokenType;
@@ -86,10 +82,7 @@
                     currentStep = "Send";
                 }}/>
     {:else if currentStep === "Send"}
-        <Send on:back={() => {
-                currentStep = stack.pop() || "SelectAsset";
-              }}
-              on:send={send}
+        <Send on:send={send}
               receiverAddress={recipient}
               receiverProfile={recipientProfile}
               circlesBalance={circlesBalance}

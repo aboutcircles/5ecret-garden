@@ -1,20 +1,27 @@
 <script lang="ts">
     import Avatar from "$lib/components/Avatar.svelte";
     import {avatar} from "$lib/stores/avatar";
+    import {runTask} from "../../routes/+layout.svelte";
+    import type {PopupContentApi} from "$lib/components/PopUp.svelte";
 
     export let address: string;
+    export let contentApi: PopupContentApi;
 
     async function trust() {
         if (!$avatar) {
             throw new Error("Avatar store not available");
         }
-        await $avatar?.trust(address);
+        runTask({
+            name: `Trusting ${address} ...`,
+            promise: $avatar!.trust(address)
+        });
+        contentApi.close();
     }
 </script>
 
 <div class="p-6 pt-0">
     <p class="mb-4">
-        You're about to trust the following group or person.
+        You're about to trust the following group or person:
     </p>
     <Avatar address={address}>
         {address}

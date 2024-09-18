@@ -10,12 +10,11 @@
     let observer: IntersectionObserver | null = null;
     let anchor: HTMLElement | undefined;
 
-    onMount(async () => {
-        if (!store) {
-            throw new Error("Store is required");
+    $: {
+        if (store) {
+            setupObserver();
         }
-        await setupObserver();
-    });
+    }
 
     const setupObserver = async () => {
         if (!anchor) return;

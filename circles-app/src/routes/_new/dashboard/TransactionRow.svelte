@@ -3,7 +3,7 @@
     import {crcTypes, getTimeAgo, staticTypes} from "$lib/utils/shared";
     import {floorToDecimals} from "$lib/utils/shared";
     import type {TransactionHistoryRow} from "@circles-sdk/data";
-    import {tokenTypeToString} from "$lib/flows/sendFlow/SelectAsset.svelte";
+    import {tokenTypeToString} from "$lib/pages/SelectAsset.svelte";
     import {avatar} from "$lib/stores/avatar";
 
     export let item: TransactionHistoryRow;

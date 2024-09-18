@@ -1,5 +1,5 @@
 <script lang="ts" context="module">
-    import type {TokenType} from "@circles-sdk/data";
+    import type {TokenType} from "../../../../../../temp/circles-sdk/packages/data/src";
     import {get} from "svelte/store";
     import {totalCirclesBalance} from "$lib/stores/totalCirclesBalance";
 
@@ -44,7 +44,7 @@
     };
 </script>
 <script lang="ts">
-    import type {TokenBalanceRow} from "@circles-sdk/data";
+    import type {TokenBalanceRow} from "../../../../../../temp/circles-sdk/packages/data/src";
     import {createEventDispatcher} from "svelte";
     import {circlesBalances} from "$lib/stores/circlesBalances";
     import BalanceRow from "$lib/components/BalanceRow.svelte";
@@ -59,15 +59,6 @@
     };
 </script>
 
-<h3 class="font-bold text-lg">
-    <button class="btn inline p-2" on:click={() => {
-        eventDispatcher("back");
-    }}>
-        &lt; Back
-    </button>
-    Select Asset
-</h3>
-
 <div class="mt-4">
     <p class="menu-title pl-0">
         Transitive transfer
@@ -76,7 +67,7 @@
         <BalanceRow balance={transitiveTransfer()}/>
     </div>
     <p class="menu-title pl-0">
-        Indivitual tokens
+        Individual tokens
     </p>
 
     {#if $circlesBalances.data.length > 0}

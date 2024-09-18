@@ -1,6 +1,6 @@
 <script lang="ts">
     import Avatar from "$lib/components/Avatar.svelte";
-    import {tokenTypeToString} from "$lib/flows/sendFlow/SelectAsset.svelte";
+    import {tokenTypeToString} from "$lib/pages/SelectAsset.svelte";
     import {crcTypes, floorToDecimals, staticTypes} from "$lib/utils/shared";
     import type {TokenBalanceRow} from "@circles-sdk/data";
 

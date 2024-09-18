@@ -2,7 +2,7 @@
     import {circles} from "$lib/stores/circles";
     import BalanceRow from "$lib/components/BalanceRow.svelte";
     import {avatar} from "$lib/stores/avatar";
-    import type {TokenBalanceRow} from "@circles-sdk/data";
+    import type {TokenBalanceRow} from "../../../../../../temp/circles-sdk/packages/data/src";
 
     export let asset: TokenBalanceRow;
 

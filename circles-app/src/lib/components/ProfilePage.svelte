@@ -11,11 +11,12 @@
     import type {AvatarRow} from "@circles-sdk/data";
     import {ensureContacts} from "../../routes/+layout.svelte";
     import type {ExtendedTrustRelationRow} from "../../routes/contacts/+page.svelte";
-    import SendFlow from "$lib/flows/SendFlow.svelte";
     import {popupControls} from "$lib/components/PopUp.svelte";
-    import MintGroupTokens from "$lib/flows/MintGroupTokens.svelte";
-    import Untrust from "$lib/flows/Untrust.svelte";
-    import Trust from "$lib/flows/Trust.svelte";
+    import MintGroupTokens from "$lib/pages/MintGroupTokens.svelte";
+    import Untrust from "$lib/pages/Untrust.svelte";
+    import Trust from "$lib/pages/Trust.svelte";
+    import Send from "$lib/flows/sendFlow/1_To.svelte"
+    import SelectAsset from "$lib/flows/sendFlow/2_Asset.svelte";
 
     let contacts: Readable<{ data: ContactList, next: () => Promise<boolean>, ended: boolean }> | undefined = undefined;
 
@@ -77,11 +78,11 @@
             return `You and ${profile?.name} don't trust each other`;
         }
         if (row.relation === "mutuallyTrusts") {
-            return `You and ${profile?.name} trust each other`;
+            return `You and ${profile?.name} accept each others tokens`;
         } else if (row.relation === "trustedBy") {
-            return `${profile?.name} trusts you`;
+            return `${profile?.name} accepts your tokens`;
         } else if (row.relation === "trusts") {
-            return `You trust ${profile?.name}`;
+            return `You accept ${profile?.name}'s tokens`;
         }
 
         throw new Error(`Unknown relation: ${row.relation}`);
@@ -102,7 +103,7 @@
     }
 </script>
 <div>
-    <div class="bg-base-200 p-6">
+    <div class="p-6">
         <div class="card-title text-2xl">
             <Avatar view="vertical" imageStyle="square" clickable={false} address={otherAvatar?.avatar}>
                 <div class="mt-2">
@@ -135,9 +136,11 @@
             <button class="btn btn-sm btn-round btn-outline" on:click={() => {
                 $popupControls.open?.({
                     title: "Send Circles",
-                    component: SendFlow,
+                    component: SelectAsset,
                     props: {
-                        address: address
+                        context: {
+                            selectedAddress: otherAvatar?.avatar
+                        }
                     }
                 });
             }}>

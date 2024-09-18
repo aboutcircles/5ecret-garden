@@ -17,25 +17,46 @@
     function formatTrustRelation(row: ExtendedTrustRelationRow) {
         switch (row.relation) {
             case "trusts":
-                return "You trust";
+                return "You accept their tokens";
             case "trustedBy":
-                return "Trusts you";
+                return "They accept your tokens";
             case "mutuallyTrusts":
-                return "Mutually trusted";
+                return "You accept each others tokens";
             case "selfTrusts":
                 return "Self-trusted";
             default:
                 return row.relation;
         }
     }
+
+    $: orderedContacts = Object.keys($contacts?.data ?? {}).sort((a, b) => {
+        const aRelation = $contacts?.data[a].row.relation;
+        const bRelation = $contacts?.data[b].row.relation;
+        if (aRelation === "mutuallyTrusts" && bRelation !== "mutuallyTrusts") {
+            return -1;
+        }
+        if (aRelation === "trusts" && bRelation === "trustedBy") {
+            return -1;
+        }
+        if (aRelation === bRelation) {
+            return 0;
+        }
+        if (bRelation === "mutuallyTrusts" && aRelation !== "mutuallyTrusts") {
+            return 1;
+        }
+        if (bRelation === "trusts" && aRelation === "trustedBy") {
+            return 1;
+        }
+        return 0;
+    });
 </script>
 
 <div class="card bg-base-100 shadow-lg p-6">
     <div class="card-title text-2xl mb-4">Contacts</div>
     <div class="overflow-x-auto">
-        {#each Object.keys($contacts?.data ?? {}) as address}
-            <a class="p-2 bg-base-100 hover:bg-base-200 rounded-lg items-center block" 
-                on:click={(e) => {
+        {#each orderedContacts as address}
+            <a class="p-2 bg-base-100 hover:bg-base-200 rounded-lg items-center block"
+               on:click={(e) => {
                     $popupControls.open?.({
                         component: ProfilePage,
                         props: {
@@ -48,10 +69,10 @@
                 <Avatar address={address}>
                     <div>
                         {#if $contacts?.data[address].row.relation === "trusts"}
-                            <img src="/outgoing.svg" alt="Outgoing trust" class="w-3 h-3 inline"/>
+                            <img src="/incoming.svg" alt="Incoming trust" class="w-3 h-3 inline"/>
                         {/if}
                         {#if $contacts?.data[address].row.relation === "trustedBy"}
-                            <img src="/incoming.svg" alt="Incoming trust" class="w-3 h-3 inline"/>
+                            <img src="/outgoing.svg" alt="Outgoing trust" class="w-3 h-3 inline"/>
                         {/if}
                         {#if $contacts?.data[address].row.relation === "mutuallyTrusts"}
                             <img src="/mutual.svg" alt="Mutual trust" class="w-3 h-3 inline"/>

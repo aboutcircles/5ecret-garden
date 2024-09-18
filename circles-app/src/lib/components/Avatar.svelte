@@ -82,12 +82,16 @@
 <script lang="ts">
     import HorizontalAvatarLayout from "$lib/components/avatar/HorizontalAvatarLayout.svelte";
     import VerticalAvatarLayout from "$lib/components/avatar/VerticalAvatarLayout.svelte";
+    import {createEventDispatcher} from "svelte";
+    import VerticalSmallAvatarLayout from "$lib/components/avatar/VerticalSmallAvatarLayout.svelte";
 
     export let address: string;
     export let clickable: boolean = true;
-    export let view: "horizontal" | "vertical" = "horizontal";
+    export let view: "horizontal" | "vertical" | "vertical_small" = "horizontal";
     export let imageStyle: "square" | "circle" = "circle";
     export let showName: boolean = true;
+
+    const eventDispatcher = createEventDispatcher();
 
     let profile: Profile | undefined;
 
@@ -110,11 +114,18 @@
     </div>
 {:else}
     {#if view === "vertical"}
-        <VerticalAvatarLayout showName={showName} imageStyle={imageStyle} address={address} clickable={clickable} profile={profile}>
+        <VerticalAvatarLayout showName={showName} imageStyle={imageStyle} address={address} clickable={clickable}
+                              profile={profile}>
             <slot></slot>
         </VerticalAvatarLayout>
+    {:else if view === "vertical_small"}
+        <VerticalSmallAvatarLayout showName={showName} imageStyle={imageStyle} address={address} clickable={clickable}
+                                   profile={profile}>
+            <slot></slot>
+        </VerticalSmallAvatarLayout>
     {:else}
-        <HorizontalAvatarLayout showName={showName} imageStyle={imageStyle}  address={address} clickable={clickable} profile={profile}>
+        <HorizontalAvatarLayout showName={showName} imageStyle={imageStyle} address={address} clickable={clickable}
+                                profile={profile}>
             <slot></slot>
         </HorizontalAvatarLayout>
     {/if}

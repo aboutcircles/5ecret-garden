@@ -3,8 +3,12 @@
     import {avatar} from "$lib/stores/avatar";
     import type {TokenBalanceRow} from "@circles-sdk/data";
     import BalanceRow from "$lib/components/BalanceRow.svelte";
+    import {floorToDecimals} from "$lib/utils/shared";
+    import {runTask} from "../../routes/+layout.svelte";
+    import type {PopupContentApi} from "$lib/components/PopUp.svelte";
 
     export let asset: TokenBalanceRow;
+    export let contentApi: PopupContentApi;
 
     let wrapType: 'Static' | 'Demurraged' = 'Static';
     let amount: number = 0;
@@ -12,10 +16,17 @@
     async function wrap() {
         const sendValue = ethers.parseEther(amount.toString());
         if (wrapType == 'Demurraged') {
-            await wrapDemurraged(sendValue);
+            runTask({
+                name: `Wrap ${floorToDecimals(amount)} ${asset.tokenType} as Demurraged ERC20...`,
+                promise: wrapDemurraged(sendValue)
+            });
         } else {
-            await wrapInflationary(sendValue);
+            runTask({
+                name: `Wrap ${floorToDecimals(amount)} ${asset.tokenType} as Inflationary ERC20...`,
+                promise: wrapInflationary(sendValue)
+            });
         }
+        contentApi.close();
     }
 
     async function wrapInflationary(sendValue: bigint) {

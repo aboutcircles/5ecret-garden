@@ -6,10 +6,12 @@ import {createEventStore} from "$lib/stores/eventStores/eventStoreFactory";
 import {getProfile} from "$lib/components/Avatar.svelte";
 import type {ExtendedTrustRelationRow} from "../../routes/contacts/+page.svelte";
 
-export type ContactList = Record<string, {
+export type ContactListItem = {
     contactProfile: Profile;
-    row: ExtendedTrustRelationRow
-}>;
+    row: ExtendedTrustRelationRow;
+};
+
+export type ContactList = Record<string, ContactListItem>;
 
 const refreshOnEvents: Set<CirclesEventType> = new Set([
     "CrcV1_Trust",
