@@ -28,27 +28,34 @@
     const eventDispatcher = createEventDispatcher();
 
     $: data = $store?.data;
-    $: filteredAddresses = data ? Object.keys(data) : [];
+    $: filteredAddresses = filter(data ?? {});
 
-    onMount(() => {
-        console.log(`SelectContact.svelte: Selected address: ${selectedAddress}`);
-        console.log("$store?.data", data);
-
-        if (!data) {
-            throw new Error("No data available");
-        }
+    function filter(contactList: ContactList) {
+        let filteredAddresses: string[] = [];
 
         if (selectedAddress && inputElement) {
             editorText = selectedAddress;
             inputElement.value = editorText;
-            filteredAddresses = Object.keys(data).filter((address) => {
+
+            console.log(`onMount: Unfiltered addresses (${Object.keys(contactList).length})`, Object.keys(contactList));
+
+            filteredAddresses = Object.keys(contactList).filter((address) => {
                 return address.toLowerCase().includes(editorText?.toLowerCase() ?? "")
                     || address == selectedAddress
-                    || data[address].contactProfile.name?.toLowerCase()?.includes(editorText?.toLowerCase() ?? "");
+                    || contactList[address].contactProfile.name?.toLowerCase()?.includes(editorText?.toLowerCase() ?? "");
             });
+
+            console.log(`onMount: Filtered addresses (${filteredAddresses.length})`, filteredAddresses);
         } else {
-            filteredAddresses = Object.keys(data);
+            filteredAddresses = Object.keys(contactList);
         }
+
+        return filteredAddresses;
+    }
+
+    onMount(() => {
+        console.log(`SelectContact.svelte: Selected address: ${selectedAddress}`);
+        filter(data ?? {});
     });
 
     function selected(address: string, profile: Profile | undefined) {
