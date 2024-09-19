@@ -3,7 +3,7 @@
     import {circles} from "$lib/stores/circles";
     import {ethers} from "ethers6";
     import BalanceRow from "$lib/components/BalanceRow.svelte";
-    import type {TokenBalanceRow} from "../../../../../../temp/circles-sdk/packages/data/src";
+    import type {TokenBalanceRow} from "@circles-sdk/data";
 
     export let asset: TokenBalanceRow;
 

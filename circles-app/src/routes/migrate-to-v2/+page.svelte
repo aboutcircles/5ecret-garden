@@ -6,6 +6,8 @@
     import {canMigrate} from "$lib/guards/canMigrate";
     import {type Profile as ProfileType} from "@circles-sdk/profiles";
     import Profile from "../settings/editors/Profile.svelte";
+    import {runTask} from "../+layout.svelte";
+    import {removeProfileFromCache} from "$lib/components/Avatar.svelte";
 
     let profile: ProfileType = {
         name: "",
@@ -15,11 +17,20 @@
     };
 
     async function migrateToV2() {
-        const avatarAddress = $avatar?.address;
-        if (!avatarAddress) {
-            throw new Error('Avatar not found ($avatar is undefined)');
+        if (!$circles || !$avatar?.address) {
+            throw new Error("Sdk or Avatar store not initialized");
         }
-        await $circles?.migrateAvatar(avatarAddress, profile);
+
+        runTask({
+            name: `Migrating your Avatar ...`,
+            promise: $circles.migrateAvatar($avatar.address, profile)
+        })
+            .finally(async () => {
+                removeProfileFromCache($avatar!.address);
+                $avatar!.avatarInfo!.version = 2;
+                $avatar!.avatarInfo!.v1Stopped = true;
+                $avatar = $avatar;
+            });
 
         await goto("/_new/dashboard");
     }

@@ -48,7 +48,7 @@
     };
 </script>
 <script lang="ts">
-    import type {TokenBalanceRow} from "../../../../../../temp/circles-sdk/packages/data/src";
+    import type {TokenBalanceRow} from "@circles-sdk/data";
     import {createEventDispatcher} from "svelte";
     import {circlesBalances} from "$lib/stores/circlesBalances";
     import BalanceRow from "$lib/components/BalanceRow.svelte";

@@ -11,6 +11,10 @@
         profileCache.set(address, profile);
     }
 
+    export function removeProfileFromCache(address: string) {
+        profileCache.delete(address);
+    }
+
     function setFallbackValues(address: string, avatar: AvatarRow | undefined, profile: Profile | undefined): Profile {
         const fallbackProfile: Profile = {
             name: shortenAddress(address),

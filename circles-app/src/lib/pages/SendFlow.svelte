@@ -1,5 +1,5 @@
 <script lang="ts" context="module">
-    import type {Profile} from "../../../../../../temp/circles-sdk/packages/profiles/src";
+    import type {Profile} from "@circles-sdk/profiles";
 
     export type SendFlowSteps = "SelectContact" | "SelectAsset" | "Send";
 </script>
