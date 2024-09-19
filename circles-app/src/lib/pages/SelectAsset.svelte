@@ -4,6 +4,10 @@
     import {totalCirclesBalance} from "$lib/stores/totalCirclesBalance";
 
     export function tokenTypeToString(tokenType: TokenType) {
+        if (!tokenType) {
+            // "CrcV1_HubTransfer";
+            return "Transitive Transfer (v1)"
+        }
         switch (tokenType) {
             case "CrcV2_RegisterHuman":
                 return "Personal Circles";
