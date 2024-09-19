@@ -2,7 +2,7 @@
     import {circles} from "$lib/stores/circles";
     import BalanceRow from "$lib/components/BalanceRow.svelte";
     import {avatar} from "$lib/stores/avatar";
-    import type {TokenBalanceRow} from "../../../../../../temp/circles-sdk/packages/data/src";
+    import type {TokenBalanceRow} from "@circles-sdk/data";
 
     export let asset: TokenBalanceRow;
 
@@ -19,7 +19,7 @@
             throw new Error(`Token ${tokenInfo.token} is not a v1 token and can't be migrated.`)
         }
 
-        const receipt = await $circles.migrateV1Tokens($avatar.address, [asset.tokenAddress]);
+        const receipt = await $circles.migrateV1TokensBatch($avatar.address, [asset.tokenAddress]);
     }
 </script>
 

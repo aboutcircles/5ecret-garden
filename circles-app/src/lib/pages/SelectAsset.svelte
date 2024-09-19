@@ -1,5 +1,5 @@
 <script lang="ts" context="module">
-    import type {TokenType} from "../../../../../../temp/circles-sdk/packages/data/src";
+    import type {TokenType} from "@circles-sdk/data";
     import {get} from "svelte/store";
     import {totalCirclesBalance} from "$lib/stores/totalCirclesBalance";
 
@@ -70,6 +70,7 @@
     <div on:click={() => handleSelect(transitiveTransfer())}>
         <BalanceRow balance={transitiveTransfer()}/>
     </div>
+
     <p class="menu-title pl-0">
         Individual tokens
     </p>

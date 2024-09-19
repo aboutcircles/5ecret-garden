@@ -5,7 +5,7 @@
     };
 </script>
 <script lang="ts">
-    import type {Profile} from "../../../../../../temp/circles-sdk/packages/profiles/src";
+    import type {Profile} from "@circles-sdk/profiles";
     import {ethers} from "ethers6";
     import {createEventDispatcher, onMount} from "svelte";
     import Avatar from "$lib/components/Avatar.svelte";
