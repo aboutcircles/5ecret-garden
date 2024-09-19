@@ -1,36 +1,99 @@
 <script lang="ts">
-    import Avatar from "$lib/components/Avatar.svelte";
-    import type {Profile} from "@circles-sdk/profiles";
     import {ethers} from "ethers6";
+    import {createEventDispatcher, onMount} from "svelte";
+    import {type AvatarRow, CirclesQuery} from "@circles-sdk/data";
+    import {circles} from "$lib/stores/circles";
+    import {createCirclesQueryStore} from "$lib/stores/query/circlesQueryStore";
+    import type {Readable} from "svelte/store";
+    import type {PopupContentApi} from "$lib/components/PopUp.svelte";
+    import Trust from "$lib/pages/Trust.svelte";
+    import GenericList from "$lib/components/GenericList.svelte";
+    import AvatarRowView from "$lib/components/AvatarRow.svelte";
 
+    export let contentApi: PopupContentApi;
     export let selectedAddress: string | undefined = undefined;
-    export let selectedProfile: Profile | undefined = undefined;
 
+    let input: HTMLInputElement | undefined;
     let editorText: string | undefined = undefined;
 
-    const filteredAddresses: string[] = [];
-    const profiles: Record<string, Profile> = {};
+    let store: Readable<{ data: AvatarRow[], next: () => Promise<boolean>, ended: boolean }> | undefined = undefined;
 
-    const handleInput = (e: any) => {
+    onMount(async () => {
+        if (selectedAddress && input) {
+            editorText = selectedAddress;
+            input.value = editorText;
+        }
+        store = await createStore();
+    })
+
+    const handleInput = async (e: any) => {
         editorText = (e.target as HTMLInputElement).value;
         if (ethers.isAddress(editorText)) {
             selectedAddress = editorText;
-        } else {
         }
+        console.log("Input", editorText);
+        store = await createStore();
     };
 
-    function selected(address: string, profile: Profile | undefined) {
-        console.log("Selected", address, profile);
+    async function createQuery(): Promise<CirclesQuery<AvatarRow>> {
+        if (!$circles) {
+            throw new Error("Circles not loaded")
+        }
+        return new CirclesQuery($circles.circlesRpc, {
+            namespace: "V_Crc",
+            table: "Avatars",
+            columns: [],
+            filter: [{
+                Type: "Conjunction",
+                ConjunctionType: "Or",
+                Predicates: [{
+                    Type: "FilterPredicate",
+                    FilterType: "Like",
+                    Column: "avatar",
+                    Value: (editorText?.toLowerCase() ?? "") + "%"
+                }, {
+                    Type: "FilterPredicate",
+                    FilterType: "ILike",
+                    Column: "name",
+                    Value: (editorText ?? "") + "%"
+                }]
+            }],
+            sortOrder: "ASC",
+            limit: 25
+        });
+    }
+
+    function createStore() {
+        return createCirclesQueryStore<AvatarRow>(createQuery);
+    }
+
+    async function selected(address: string) {
+        if (!$circles) {
+            throw new Error("Circles not loaded")
+        }
+        const avatarInfo = await $circles.data.getAvatarInfo(address);
+        if (!avatarInfo) {
+            // Not a Circles user. Invite to Circles
+        } else {
+            // Trust
+            contentApi.open({
+                title: "Trust",
+                component: Trust,
+                props: {
+                    address: address
+                }
+            });
+        }
+
     }
 </script>
 
 <div class="form-control my-4">
-    <input
-            type="text"
-            class="input input-bordered"
-            placeholder="Enter or search Ethereum address"
-            bind:value={editorText}
-            on:input={handleInput}
+    <input bind:this={input}
+           type="text"
+           class="input input-bordered"
+           placeholder="Enter or search Ethereum address"
+           on:input={handleInput}
     />
 </div>
 
@@ -38,23 +101,5 @@
     <p class="menu-title pl-0">
         Found avatars
     </p>
-    {#if filteredAddresses.length > 0}
-        {#each filteredAddresses as address(address)}
-            <div class="flex items-center justify-between p-2 bg-base-100 hover:bg-base-200 rounded-lg" on:click={() => {
-                            selectedProfile = profiles[address];
-                            selectedAddress = address;
-                            selected(address, profiles[address]);
-                        }}>
-                <div class="col">
-                    <Avatar address={address} clickable={false}>
-                        {address}
-                    </Avatar>
-                </div>
-            </div>
-        {/each}
-    {:else}
-        <div class="flex items-center justify-between p-2 bg-base-100 hover:bg-base-200 rounded-lg">No recent addresses
-            found
-        </div>
-    {/if}
+    <GenericList store={store} row={AvatarRowView}/>
 </div>

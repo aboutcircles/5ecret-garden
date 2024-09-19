@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {onMount, onDestroy, type SvelteComponent} from "svelte";
+    import {onDestroy, type SvelteComponent, createEventDispatcher} from "svelte";
     import type {EventRow} from "@circles-sdk/data";
     import {getKeyFromItem} from "$lib/stores/query/circlesQueryStore";
     import type {Readable} from "svelte/store";
@@ -9,6 +9,8 @@
 
     let observer: IntersectionObserver | null = null;
     let anchor: HTMLElement | undefined;
+
+    const eventDispatcher = createEventDispatcher();
 
     $: {
         if (store) {
@@ -64,7 +66,9 @@
 
 <div class="overflow-x-auto">
     {#each ($store?.data ?? []) as item (getKeyFromItem(item))}
-        <svelte:component this={row} item={item}/>
+        <div on:click={() => eventDispatcher("select", item)}>
+            <svelte:component this={row} item={item}/>
+        </div>
     {/each}
     <div class="text-center py-4" bind:this={anchor}>
         {#if !$store?.ended}

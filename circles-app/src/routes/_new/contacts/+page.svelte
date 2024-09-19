@@ -10,8 +10,8 @@
 
     let contacts: Readable<{ data: ContactList, next: () => Promise<boolean>, ended: boolean }> | undefined = undefined;
 
-    onMount(() => {
-        contacts = ensureContacts();
+    onMount(async () => {
+        contacts = await ensureContacts();
     })
 
     function formatTrustRelation(row: ExtendedTrustRelationRow) {

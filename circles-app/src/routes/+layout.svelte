@@ -17,16 +17,18 @@
         ended: boolean
     }> | undefined = undefined;
 
-    export function ensureContacts(): Readable<{
+    export async function ensureContacts(): Promise<Readable<{
         data: ContactList
         next: () => Promise<boolean>
         ended: boolean
-    }> {
+    }>> {
         if (!get(avatar)) {
             throw new Error("Avatar store is not available");
         }
         if (!contacts) {
             contacts = createContacts();
+            const c = get(contacts);
+            await c.next();
         }
         return contacts;
     }
@@ -103,7 +105,7 @@
     import {createContacts} from "$lib/stores/contacts";
     import PopUp from "$lib/components/PopUp.svelte";
     import Trust from "$lib/pages/AddContact.svelte";
-    import Send from "$lib/flows/sendFlow/1_To.svelte";
+    import Send from "$lib/flows/send/1_To.svelte";
 
     async function getProfile() {
         if ($avatar?.avatarInfo?.version === 2) {

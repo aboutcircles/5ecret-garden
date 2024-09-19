@@ -1,5 +1,5 @@
 import {avatar} from "$lib/stores/avatar";
-import {createEventStore, type NextPageData} from "$lib/stores/eventStores/eventStoreFactory"; // Import the generic store creator
+import {createEventStore, type NextPageData} from "$lib/stores/eventStores/eventStoreFactory";
 import {
     type CirclesEventType,
     type CirclesEvent,

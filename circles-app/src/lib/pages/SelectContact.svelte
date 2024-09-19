@@ -11,8 +11,13 @@
     import Avatar from "$lib/components/Avatar.svelte";
     import type {ContactList} from "$lib/stores/contacts";
     import {shortenAddress} from "$lib/utils/shared";
+    import type {Readable} from "svelte/store";
 
-    export let recentAddresses: ContactList = {};
+    export let store: Readable<{
+        data: ContactList,
+        next: () => Promise<boolean>,
+        ended: boolean
+    }> | undefined = undefined;
 
     export let selectedAddress: string | undefined = undefined;
     export let selectedProfile: Profile | undefined = undefined;
@@ -22,22 +27,29 @@
 
     const eventDispatcher = createEventDispatcher();
 
+    $: data = $store?.data;
+    $: filteredAddresses = data ? Object.keys(data) : [];
+
     onMount(() => {
         console.log(`SelectContact.svelte: Selected address: ${selectedAddress}`);
+        console.log("$store?.data", data);
+
+        if (!data) {
+            throw new Error("No data available");
+        }
+
         if (selectedAddress && inputElement) {
             editorText = selectedAddress;
             inputElement.value = editorText;
-            filteredAddresses = Object.keys(recentAddresses).filter((address) => {
+            filteredAddresses = Object.keys(data).filter((address) => {
                 return address.toLowerCase().includes(editorText?.toLowerCase() ?? "")
                     || address == selectedAddress
-                    || recentAddresses[address].contactProfile.name?.toLowerCase()?.includes(editorText?.toLowerCase() ?? "");
+                    || data[address].contactProfile.name?.toLowerCase()?.includes(editorText?.toLowerCase() ?? "");
             });
         } else {
-            filteredAddresses = Object.keys(recentAddresses);
+            filteredAddresses = Object.keys(data);
         }
     });
-
-    let filteredAddresses = Object.keys(recentAddresses) ?? [];
 
     function selected(address: string, profile: Profile | undefined) {
         eventDispatcher("select", <SelectedEvent>{
@@ -49,16 +61,20 @@
     const handleInput = (e: any) => {
         editorText = (e.target as HTMLInputElement).value;
 
-        filteredAddresses = Object.keys(recentAddresses).filter((address) => {
+        if (!data) {
+            throw new Error("No data available");
+        }
+
+        filteredAddresses = Object.keys(data).filter((address) => {
             return address.toLowerCase().includes(editorText?.toLowerCase() ?? "")
                 || address == selectedAddress
-                || recentAddresses[address].contactProfile.name?.toLowerCase()?.includes(editorText?.toLowerCase() ?? "");
+                || $store?.data[address].contactProfile.name?.toLowerCase()?.includes(editorText?.toLowerCase() ?? "");
         })
 
         if (ethers.isAddress(editorText)) {
             selectedAddress = editorText;
-            selectedProfile = recentAddresses[editorText]?.contactProfile;
-            selected(editorText, recentAddresses[editorText]?.contactProfile);
+            selectedProfile = $store?.data[editorText]?.contactProfile;
+            selected(editorText, $store?.data[editorText]?.contactProfile);
         } else {
             selectedAddress = undefined;
             selectedProfile = undefined;
@@ -85,9 +101,9 @@
     {#if Object.keys(filteredAddresses).length > 0}
         {#each filteredAddresses as address(address)}
             <div class="flex items-center justify-between p-2 bg-base-100 hover:bg-base-200 rounded-lg" on:click={() => {
-                            selectedProfile = recentAddresses[address].contactProfile;
+                            selectedProfile = $store?.data[address].contactProfile;
                             selectedAddress = address;
-                            selected(address, recentAddresses[address].contactProfile);
+                            selected(address, $store?.data[address].contactProfile);
                         }}>
                 <div class="col">
                     <Avatar address={address} clickable={false}>

@@ -1,7 +1,7 @@
 <script lang="ts">
     import type {PopupContentApi} from "$lib/components/PopUp.svelte";
     import Send from "$lib/pages/Send.svelte";
-    import type {SendFlowContext} from "$lib/flows/sendFlow/context";
+    import type {SendFlowContext} from "$lib/flows/send/context";
     import FlowDecoration from "$lib/flows/FlowDecoration.svelte";
     import {runTask} from "../../../routes/+layout.svelte";
     import {floorToDecimals} from "$lib/utils/shared";

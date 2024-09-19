@@ -1,7 +1,7 @@
 <script lang="ts">
     import type {PopupContentApi} from "$lib/components/PopUp.svelte";
     import type {TokenBalanceRow} from "@circles-sdk/data";
-    import type {SendFlowContext} from "$lib/flows/sendFlow/context";
+    import type {SendFlowContext} from "$lib/flows/send/context";
     import SelectAsset from "$lib/pages/SelectAsset.svelte";
     import SelectAmount from "./3_Amount.svelte";
     import {onMount} from "svelte";

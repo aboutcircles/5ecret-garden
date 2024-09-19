@@ -1,13 +1,15 @@
 import {get} from "svelte/store";
 import {avatar} from "$lib/stores/avatar";
-import type {CirclesEvent, CirclesEventType} from "@circles-sdk/data";
+import type {AvatarRow, CirclesEvent, CirclesEventType} from "@circles-sdk/data";
 import type {Profile} from "@circles-sdk/profiles";
 import {createEventStore} from "$lib/stores/eventStores/eventStoreFactory";
 import {getProfile} from "$lib/components/Avatar.svelte";
 import type {ExtendedTrustRelationRow} from "../../routes/contacts/+page.svelte";
+import {circles} from "$lib/stores/circles";
 
 export type ContactListItem = {
     contactProfile: Profile;
+    avatarInfo?: AvatarRow;
     row: ExtendedTrustRelationRow;
 };
 
@@ -74,6 +76,19 @@ async function enrichContactData(rows: ExtendedTrustRelationRow[]): Promise<Cont
     });
 
     await Promise.all(promises);
+
+    const avatarInfos: AvatarRow[] = await get(circles)?.data.getAvatarInfos(Object.keys(profileRecord)) ?? [];
+    const avatarInfoRecord: Record<string, AvatarRow> = {};
+    avatarInfos.forEach(info => {
+        avatarInfoRecord[info.avatar] = info;
+    });
+
+    Object.values(profileRecord).forEach(item => {
+        const info = avatarInfoRecord[item.row.objectAvatar];
+        if (info) {
+            item.avatarInfo = info;
+        }
+    });
 
     return profileRecord;
 }

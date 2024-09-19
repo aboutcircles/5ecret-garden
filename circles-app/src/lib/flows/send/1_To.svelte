@@ -5,18 +5,18 @@
     import type {Profile} from "@circles-sdk/profiles";
     import {onMount} from "svelte";
     import {ensureContacts} from "../../../routes/+layout.svelte";
-    import type {Readable} from "svelte/store";
+    import {type Readable} from "svelte/store";
     import SelectAsset from "./2_Asset.svelte";
-    import type {SendFlowContext} from "$lib/flows/sendFlow/context";
+    import type {SendFlowContext} from "$lib/flows/send/context";
     import FlowDecoration from "$lib/flows/FlowDecoration.svelte";
 
     export let contentApi: PopupContentApi;
     export let context: SendFlowContext;
 
-    let recentAddresses: Readable<{ data: ContactList, next: () => Promise<boolean>, ended: boolean }>;
+    let contacts: Readable<{ data: ContactList, next: () => Promise<boolean>, ended: boolean }> | undefined = undefined;
 
-    onMount(() => {
-        recentAddresses = ensureContacts();
+    onMount(async () => {
+        contacts = await ensureContacts();
     });
 
     function handleSelect(event: CustomEvent<{ address: string, profile: Profile }>) {
@@ -32,8 +32,8 @@
     }
 </script>
 <FlowDecoration>
-    {#if recentAddresses}
-        <SelectContact recentAddresses={$recentAddresses.data}
+    {#if $contacts}
+        <SelectContact store={contacts}
                        selectedAddress={context?.selectedAddress}
                        on:select={handleSelect}
         />

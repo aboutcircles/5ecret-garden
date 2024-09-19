@@ -17,12 +17,12 @@
         const sendValue = ethers.parseEther(amount.toString());
         if (wrapType == 'Demurraged') {
             runTask({
-                name: `Wrap ${floorToDecimals(amount)} ${asset.tokenType} as Demurraged ERC20...`,
+                name: `Wrap ${floorToDecimals(amount)} Circles as Demurraged ERC20...`,
                 promise: wrapDemurraged(sendValue)
             });
         } else {
             runTask({
-                name: `Wrap ${floorToDecimals(amount)} ${asset.tokenType} as Inflationary ERC20...`,
+                name: `Wrap ${floorToDecimals(amount)} Circles as Inflationary ERC20...`,
                 promise: wrapInflationary(sendValue)
             });
         }

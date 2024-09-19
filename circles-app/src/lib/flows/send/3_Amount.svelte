@@ -1,6 +1,6 @@
 <script lang="ts">
     import type {PopupContentApi} from "$lib/components/PopUp.svelte";
-    import type {SendFlowContext} from "$lib/flows/sendFlow/context";
+    import type {SendFlowContext} from "$lib/flows/send/context";
     import SelectAmount from "$lib/pages/SelectAmount.svelte";
     import Send from "./4_Send.svelte";
     import FlowDecoration from "$lib/flows/FlowDecoration.svelte";

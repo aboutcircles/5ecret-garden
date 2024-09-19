@@ -4,7 +4,11 @@
     import {ethers} from "ethers6";
     import BalanceRow from "$lib/components/BalanceRow.svelte";
     import type {TokenBalanceRow} from "@circles-sdk/data";
+    import {floorToDecimals} from "$lib/utils/shared";
+    import {runTask} from "../../routes/+layout.svelte";
+    import type {PopupContentApi} from "$lib/components/PopUp.svelte";
 
+    export let contentApi: PopupContentApi;
     export let asset: TokenBalanceRow;
 
     let amount: number = 0;
@@ -14,14 +18,24 @@
         if (!tokenInfo) {
             return;
         }
+        if (!$avatar) {
+            throw new Error("Avatar not loaded");
+        }
 
         if (tokenInfo.type === "CrcV2_ERC20WrapperDeployed_Inflationary") {
-            await $avatar?.unwrapInflationErc20(asset.tokenAddress, BigInt(ethers.parseEther(amount.toString())));
+            runTask({
+                name: `Unwrap ${floorToDecimals(amount)} static tokens ...`,
+                promise: $avatar.unwrapInflationErc20(asset.tokenAddress, BigInt(ethers.parseEther(amount.toString())))
+            });
         } else if (tokenInfo.type === "CrcV2_ERC20WrapperDeployed_Demurraged") {
-            await $avatar?.unwrapDemurrageErc20(asset.tokenAddress, BigInt(ethers.parseEther(amount.toString())));
+            runTask({
+                name: `Unwrap ${floorToDecimals(amount)} tokens ...`,
+                promise: $avatar.unwrapDemurrageErc20(asset.tokenAddress, BigInt(ethers.parseEther(amount.toString())))
+            });
         } else {
             throw new Error("Unsupported token type");
         }
+        contentApi.close();
     }
 </script>
 

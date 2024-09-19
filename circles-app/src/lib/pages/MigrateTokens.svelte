@@ -3,7 +3,11 @@
     import BalanceRow from "$lib/components/BalanceRow.svelte";
     import {avatar} from "$lib/stores/avatar";
     import type {TokenBalanceRow} from "@circles-sdk/data";
+    import type {PopupContentApi} from "$lib/components/PopUp.svelte";
+    import {runTask} from "../../routes/+layout.svelte";
+    import {tokenTypeToString} from "$lib/pages/SelectAsset.svelte";
 
+    export let contentApi: PopupContentApi;
     export let asset: TokenBalanceRow;
 
     async function migrate() {
@@ -19,7 +23,12 @@
             throw new Error(`Token ${tokenInfo.token} is not a v1 token and can't be migrated.`)
         }
 
-        const receipt = await $circles.migrateV1TokensBatch($avatar.address, [asset.tokenAddress]);
+        runTask({
+            name: `Migrate ${tokenTypeToString(asset.tokenType)} to v2...`,
+            promise: $circles.migrateV1TokensBatch($avatar.address, [asset.tokenAddress])
+        });
+
+        contentApi.close();
     }
 </script>
 

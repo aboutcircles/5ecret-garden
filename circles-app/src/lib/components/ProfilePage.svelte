@@ -11,19 +11,18 @@
     import type {AvatarRow} from "@circles-sdk/data";
     import {ensureContacts} from "../../routes/+layout.svelte";
     import type {ExtendedTrustRelationRow} from "../../routes/contacts/+page.svelte";
-    import {popupControls} from "$lib/components/PopUp.svelte";
-    import MintGroupTokens from "$lib/pages/MintGroupTokens.svelte";
     import Untrust from "$lib/pages/Untrust.svelte";
     import Trust from "$lib/pages/Trust.svelte";
-    import Send from "$lib/flows/sendFlow/1_To.svelte"
-    import SelectAsset from "$lib/flows/sendFlow/2_Asset.svelte";
+    import SelectAsset from "$lib/flows/send/2_Asset.svelte";
+    import { popupControls } from "./PopUp.svelte";
+    import MintGroupTokens from "$lib/flows/mintGroupTokens/1_To.svelte";
 
     let contacts: Readable<{ data: ContactList, next: () => Promise<boolean>, ended: boolean }> | undefined = undefined;
 
     export let address: string | undefined;
 
-    onMount(() => {
-        contacts = ensureContacts();
+    onMount(async () => {
+        contacts = await ensureContacts();
     })
 
     $: {

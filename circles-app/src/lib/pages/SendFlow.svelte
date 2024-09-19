@@ -33,8 +33,8 @@
     let assetAddress: string;
 
     let contacts: Readable<{ data: ContactList, next: () => Promise<boolean>, ended: boolean }> | undefined = undefined;
-    onMount(() => {
-        contacts = ensureContacts();
+    onMount(async () => {
+        contacts = await ensureContacts();
     });
 
     async function send(e:CustomEvent<{amount: number}>) {
