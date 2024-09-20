@@ -3,6 +3,7 @@
     import {type ContactList} from "$lib/stores/contacts";
     import {popupControls} from "$lib/components/PopUp.svelte";
     import {type CirclesEventType} from "@circles-sdk/data";
+    import ErrorPage from "$lib/pages/Error.svelte";
 
     export type QuickAction = {
         name: string;
@@ -86,11 +87,23 @@
 
     export async function runTask<T>(task: Task<T>): Promise<T> {
         tasks.update((current) => [...current, task]);
+        e: Error
         try {
             return await task.promise;
+        } catch (e) {
+            console.log(`Task errored: ${task.name}`, e);
+            get(popupControls).open?.({
+                title: "Error",
+                component: ErrorPage,
+                props: {
+                    errorMessage: e.message,
+                    stackTrace: e.stack
+                }
+            });
         } finally {
             tasks.update((current) => current.filter(t => t !== task));
         }
+        throw new Error("Task failed");
     }
 </script>
 <script lang="ts">
@@ -106,18 +119,14 @@
     import PopUp from "$lib/components/PopUp.svelte";
     import Trust from "$lib/pages/AddContact.svelte";
     import Send from "$lib/flows/send/1_To.svelte";
+    import {getProfile} from "$lib/components/Avatar.svelte";
+    import MintGroupTokens from "$lib/flows/mintGroupTokens/1_To.svelte";
 
-    async function getProfile() {
-        if ($avatar?.avatarInfo?.version === 2) {
-            return await $avatar.getProfile();
-        } else if ($avatar?.avatarInfo?.version === 1) {
-            return Promise.resolve({
-                previewImageUrl: "/logo.svg",
-                name: $avatar.address
-            });
-        } else {
-            throw new Error(`Unknown avatar version: ${$avatar?.avatarInfo?.version}`);
+    async function getOwnProfile() {
+        if (!$avatar) {
+            throw new Error("Avatar store is not available");
         }
+        return await getProfile($avatar.address);
     }
 
     let quickActions: QuickAction[] = [];
@@ -161,6 +170,19 @@
                     });
                 }
             }];
+        } else if ($page.route.id === "/_new/groups") {
+            quickActions = [{
+                name: "Group mint",
+                link: "",
+                icon: "/banknotes.svg",
+                action: () => {
+                    $popupControls.open?.({
+                        title: "Mint group tokens",
+                        component: MintGroupTokens,
+                        props: {}
+                    });
+                }
+            }];
         } else {
             quickActions = [];
         }
@@ -196,7 +218,7 @@
     }
 </style>
 {#if $avatar}
-    {#await getProfile()}
+    {#await getOwnProfile()}
         <DefaultHeader menuItems={[]} quickActions={[]}/>
     {:then profile}
         <DefaultHeader
@@ -268,9 +290,20 @@
 {#if $tasks.length > 0}
     <div class="toast toast-bottom toast-end">
         {#each $tasks as task}
-            <div class="alert">
-                <span class="loading loading-spinner loading-md"></span> {task.name}
-            </div>
+            {#if task.name == "Error"}
+                <div class="alert alert-error">
+                    {#await task.promise}
+                        <span class="loading loading-spinner loading-md"></span>
+                    {:then error}
+                        <p>{error.message}</p>
+                        <pre>{error.stackTrace}</pre>
+                    {/await}
+                </div>
+            {:else}
+                <div class="alert">
+                    <span class="loading loading-spinner loading-md"></span> {task.name}
+                </div>
+            {/if}
         {/each}
     </div>
 {/if}

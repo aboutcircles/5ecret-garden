@@ -7,7 +7,7 @@
 <script lang="ts">
     import type {Profile} from "@circles-sdk/profiles";
     import {ethers} from "ethers6";
-    import {createEventDispatcher, onMount} from "svelte";
+    import {createEventDispatcher} from "svelte";
     import Avatar from "$lib/components/Avatar.svelte";
     import type {ContactList} from "$lib/stores/contacts";
     import {shortenAddress} from "$lib/utils/shared";
@@ -21,6 +21,7 @@
 
     export let selectedAddress: string | undefined = undefined;
     export let selectedProfile: Profile | undefined = undefined;
+    export let addressListTitle: string = "Recent Addresses";
 
     let editorText: string | undefined = undefined;
     let inputElement: HTMLInputElement | undefined = undefined;
@@ -94,7 +95,7 @@
 
 <div class="mt-4">
     <p class="menu-title pl-0">
-        Recent Addresses
+        {addressListTitle}
     </p>
     {#if Object.keys(filteredAddresses).length > 0}
         {#each filteredAddresses as address(address)}

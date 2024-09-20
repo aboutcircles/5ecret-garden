@@ -8,6 +8,7 @@
     import WrapTokens from "$lib/pages/WrapTokens.svelte";
     import MigrateTokens from "$lib/pages/MigrateTokens.svelte";
     import UnwrapTokens from "$lib/pages/UnwrapTokens.svelte";
+    import ExitGroup from "$lib/pages/ExitGroup.svelte";
 
     let mintableAmount: number = 0;
 
@@ -39,6 +40,20 @@
                         }}>
                         <img src="/banknotes.svg" alt="Wrap" class="w-6 h-6 inline"/>
                         Wrap
+                    </button>
+                {/if}
+                {#if balance.tokenType == "CrcV2_RegisterGroup"}
+                    <button class="btn btn-round" on:click={() => {
+                        $popupControls.open?.({
+                                title: "Exit group",
+                                component: ExitGroup,
+                                props: {
+                                    asset: balance
+                                }
+                            });
+                        }}>
+                        <img src="/exit.svg" alt="Wrap" class="w-6 h-6 inline"/>
+                        Exit
                     </button>
                 {/if}
                 {#if balance.tokenType == "CrcV1_Signup" && $avatar?.avatarInfo?.version > 1}

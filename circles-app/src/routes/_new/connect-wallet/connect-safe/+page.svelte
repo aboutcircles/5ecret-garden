@@ -9,7 +9,8 @@
     import {avatar} from "$lib/stores/avatar";
     import {wallet} from "$lib/stores/wallet";
     import Avatar from "$lib/components/Avatar.svelte";
-    import {BrowserProviderContractRunner} from "../../../../../../../../temp/circles-sdk/packages/adapter-ethers/src";
+    import {BrowserProviderContractRunner} from "@circles-sdk/adapter-ethers";
+    import {shortenAddress} from "$lib/utils/shared";
 
     //
     // Connects the wallet and initializes the Circles SDK.
@@ -100,8 +101,13 @@
                 </div>
             {:else}
                 {#each safes as safe}
-                    <div on:click={() => connectWallet(safe)}>
-                        <Avatar address={safe.toLowerCase()} clickable={false}/>
+                    <div class="flex items-center justify-between p-2 bg-base-100 hover:bg-base-200 rounded-lg"
+                         on:click={() => connectWallet(safe)}>
+                        <div class="col">
+                            <Avatar address={safe.toLowerCase()} clickable={false}>
+                                {shortenAddress(safe.toLowerCase())}
+                            </Avatar>
+                        </div>
                     </div>
                 {/each}
             {/if}

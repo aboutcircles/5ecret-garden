@@ -6,12 +6,12 @@
     import {onMount} from "svelte";
     import {ensureContacts} from "../../../routes/+layout.svelte";
     import {derived, type Readable} from "svelte/store";
-    import type {SendFlowContext} from "$lib/flows/send/context";
+    import type {GroupMintFlowContext} from "$lib/flows/mintGroupTokens/context";
     import FlowDecoration from "$lib/flows/FlowDecoration.svelte";
-    import SelectAsset from "$lib/flows/send/2_Asset.svelte";
+    import SelectAsset from "$lib/flows/mintGroupTokens/2_Asset.svelte";
 
     export let contentApi: PopupContentApi;
-    export let context: SendFlowContext;
+    export let context: GroupMintFlowContext;
 
     // Original contacts store
     let contacts: Readable<{
@@ -63,6 +63,7 @@
     {#if groupContacts}
         <SelectContact
                 store={groupContacts}
+                addressListTitle="Groups"
                 selectedAddress={context?.selectedAddress}
                 on:select={handleSelect}
         />

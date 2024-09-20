@@ -53,10 +53,12 @@
 <script lang="ts">
     import type {TokenBalanceRow} from "@circles-sdk/data";
     import {createEventDispatcher} from "svelte";
-    import {circlesBalances} from "$lib/stores/circlesBalances";
     import BalanceRow from "$lib/components/BalanceRow.svelte";
+    import type {Readable} from "svelte/store";
 
+    export let balances: Readable<{ data: TokenBalanceRow[], next: () => Promise<boolean>, ended: boolean }>;
     export let selectedAsset: TokenBalanceRow | undefined = undefined;
+    export let showTransitive: boolean = true;
 
     const eventDispatcher = createEventDispatcher();
 
@@ -67,19 +69,21 @@
 </script>
 
 <div class="mt-4">
-    <p class="menu-title pl-0">
-        Transitive transfer
-    </p>
-    <div class="bg-base-200" on:click={() => handleSelect(transitiveTransfer())}>
-        <BalanceRow balance={transitiveTransfer()}/>
-    </div>
+    {#if showTransitive}
+        <p class="menu-title pl-0">
+            Transitive transfer
+        </p>
+        <div class="bg-base-200" on:click={() => handleSelect(transitiveTransfer())}>
+            <BalanceRow balance={transitiveTransfer()}/>
+        </div>
+    {/if}
 
     <p class="menu-title pl-0">
         Individual tokens
     </p>
 
-    {#if $circlesBalances.data.length > 0}
-        {#each $circlesBalances.data as balance (balance.tokenAddress)}
+    {#if $balances?.data?.length > 0}
+        {#each $balances.data as balance (balance.tokenAddress)}
             <div on:click={() => handleSelect(balance)}>
                 <BalanceRow balance={balance}/>
             </div>
