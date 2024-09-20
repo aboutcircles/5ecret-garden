@@ -25,7 +25,7 @@
             name: `Migrating your Avatar ...`,
             promise: $circles.migrateAvatar($avatar.address, profile)
         })
-            .finally(async () => {
+            .then(async () => {
                 removeProfileFromCache($avatar!.address);
                 $avatar!.avatarInfo!.version = 2;
                 $avatar!.avatarInfo!.v1Stopped = true;
