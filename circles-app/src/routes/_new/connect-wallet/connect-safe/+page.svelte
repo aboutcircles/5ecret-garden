@@ -98,6 +98,7 @@
                 <div class="card-body items-center text-center">
                     <h2 class="card-title">Connecting your MetaMask wallet ...</h2>
                     <p>Please wait while we're loading your safes</p>
+                    <a href="/_new/connect-wallet" class="btn btn-warning">Cancel</a>
                 </div>
             {:else}
                 {#each safes as safe}
