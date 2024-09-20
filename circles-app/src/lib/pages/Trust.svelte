@@ -19,7 +19,7 @@
     }
 </script>
 
-<div class="p-6 pt-0">
+<div class="p-6 pt-0 mt-4">
     <p class="mb-4">
         You're about to trust the following group or person:
     </p>

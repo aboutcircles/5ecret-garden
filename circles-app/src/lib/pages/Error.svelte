@@ -18,11 +18,5 @@
                 <pre class="whitespace-pre-wrap break-words text-sm mt-2 p-2 bg-neutral text-neutral-content rounded-md">{stackTrace}</pre>
             </details>
         {/if}
-
-        <div class="text-right">
-            <button class="btn btn-primary" on:click={() => window.location.reload()}>
-                Refresh Page
-            </button>
-        </div>
     </div>
 </div>

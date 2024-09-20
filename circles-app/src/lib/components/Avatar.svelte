@@ -151,6 +151,7 @@
     import VerticalAvatarLayout from "$lib/components/avatar/VerticalAvatarLayout.svelte";
     import {createEventDispatcher} from "svelte";
     import VerticalSmallAvatarLayout from "$lib/components/avatar/VerticalSmallAvatarLayout.svelte";
+    import type {PopupContentApi} from "$lib/components/PopUp.svelte";
 
     export let address: string;
     export let clickable: boolean = true;

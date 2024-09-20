@@ -161,7 +161,13 @@
             }
             const previousContent = stack.pop();
             if (previousContent) {
-                $popupControls.open?.(previousContent);
+                $popupControls.open?.({
+                    ...previousContent,
+                    props: {
+                        ...previousContent.props,
+                        contentApi: contentApi
+                    }
+                });
             }
         }
     };

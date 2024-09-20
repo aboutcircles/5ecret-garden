@@ -70,6 +70,11 @@
             <svelte:component this={row} item={item}/>
         </div>
     {/each}
+    {#if ($store?.data ?? []).length === 0}
+        <div class="text-center">
+            <slot></slot>
+        </div>
+    {/if}
     <div class="text-center py-4" bind:this={anchor}>
         {#if !$store?.ended}
             <span class="loading loading-spinner text-primary"></span>

@@ -117,7 +117,7 @@
     import {page} from "$app/stores";
     import {createContacts} from "$lib/stores/contacts";
     import PopUp from "$lib/components/PopUp.svelte";
-    import Trust from "$lib/pages/AddContact.svelte";
+    import SearchAvatar from "$lib/flows/addContact/1_Search.svelte";
     import Send from "$lib/flows/send/1_To.svelte";
     import {getProfile} from "$lib/components/Avatar.svelte";
     import MintGroupTokens from "$lib/flows/mintGroupTokens/1_To.svelte";
@@ -152,7 +152,7 @@
                 action: () => {
                     $popupControls.open?.({
                         title: "Add Contact",
-                        component: Trust,
+                        component: SearchAvatar,
                         props: {}
                     });
                 }

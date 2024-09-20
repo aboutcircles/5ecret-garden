@@ -5,18 +5,17 @@
     import {circles} from "$lib/stores/circles";
     import {createCirclesQueryStore} from "$lib/stores/query/circlesQueryStore";
     import type {Readable} from "svelte/store";
-    import type {PopupContentApi} from "$lib/components/PopUp.svelte";
-    import Trust from "$lib/pages/Trust.svelte";
     import GenericList from "$lib/components/GenericList.svelte";
     import AvatarRowView from "$lib/components/AvatarRow.svelte";
 
-    export let contentApi: PopupContentApi;
     export let selectedAddress: string | undefined = undefined;
 
     let input: HTMLInputElement | undefined;
     let editorText: string | undefined = undefined;
 
     let store: Readable<{ data: AvatarRow[], next: () => Promise<boolean>, ended: boolean }> | undefined = undefined;
+
+    const eventDispatcher = createEventDispatcher();
 
     onMount(async () => {
         if (selectedAddress && input) {
@@ -67,24 +66,8 @@
         return createCirclesQueryStore<AvatarRow>(createQuery);
     }
 
-    async function selected(address: string) {
-        if (!$circles) {
-            throw new Error("Circles not loaded")
-        }
-        const avatarInfo = await $circles.data.getAvatarInfo(address);
-        if (!avatarInfo) {
-            // Not a Circles user. Invite to Circles
-        } else {
-            // Trust
-            contentApi.open({
-                title: "Trust",
-                component: Trust,
-                props: {
-                    address: address
-                }
-            });
-        }
-
+    function handleInvite() {
+        eventDispatcher("invite", {avatar: editorText});
     }
 </script>
 
@@ -101,5 +84,20 @@
     <p class="menu-title pl-0">
         Found avatars
     </p>
-    <GenericList store={store} row={AvatarRowView}/>
+
+    {#if $store?.data?.length > 0}
+        <GenericList store={store} row={AvatarRowView} on:select/>
+    {:else}
+        <div class="text-center">
+            <div>
+                {#if ethers.isAddress(editorText)}
+                    <button class="btn mt-6" on:click={handleInvite}>Invite {editorText}</button>
+                {:else if editorText}
+                    <p class="text-error mt-6">Invalid address</p>
+                {:else}
+                    <p>No avatars found.</p>
+                {/if}
+            </div>
+        </div>
+    {/if}
 </div>

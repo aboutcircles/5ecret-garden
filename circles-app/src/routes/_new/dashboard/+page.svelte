@@ -45,7 +45,7 @@
         <div role="alert" class="alert mb-6 max-w-96">
             <span>You can mint {floorToDecimals(mintableAmount)} new Circles.</span>
             <div>
-                <button class="btn btn-sm">Hide</button>
+<!--                <button class="btn btn-sm">Hide</button>-->
                 <button class="btn btn-sm btn-primary" on:click={mintPersonalCircles}>Mint</button>
             </div>
         </div>
