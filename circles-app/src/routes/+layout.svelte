@@ -195,27 +195,6 @@
         z-index: 1;
     }
 </style>
-<!--<div class="popup card">-->
-<!--    <div class="pull-bar card-title b-12" >-->
-<!--            <button class="w-12 h-24 bg-blue-100 cursor-pointer" on:click={() => {-->
-<!--            }}>-->
-<!--                <img src="/chevron-left.svg" class="w-6 h-6" />-->
-<!--            </button>-->
-<!--        Title-->
-<!--    </div>-->
-<!--    <div class="content mt-2">-->
-<!--        <p>-->
-<!--            Lorem ipsum dolor sit amet consectetur adipisicing elit. Nisi aliquam perspiciatis reprehenderit assumenda illo fuga dicta qui? Consequuntur expedita maxime, iure ad nemo architecto provident, odit fugit dolorum cupiditate quisquam.-->
-<!--        </p>-->
-<!--        <p>-->
-<!--            Lorem ipsum, dolor sit amet consectetur adipisicing elit. Necessitatibus ex molestias tempore est itaque exercitationem alias numquam et architecto eaque, iure nisi repellendus animi nam, veniam maxime deserunt temporibus ad.-->
-<!--        </p>-->
-<!--    </div>-->
-<!--    &lt;!&ndash;    <div class="action-bar">&ndash;&gt;-->
-<!--    &lt;!&ndash;        <button>&lt; Previous</button>&ndash;&gt;-->
-<!--    &lt;!&ndash;        <button>Next &gt;</button>&ndash;&gt;-->
-<!--    &lt;!&ndash;    </div>&ndash;&gt;-->
-<!--</div>-->
 {#if $avatar}
     {#await getProfile()}
         <DefaultHeader menuItems={[]} quickActions={[]}/>

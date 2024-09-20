@@ -3,6 +3,9 @@
     import {get} from "svelte/store";
     import {totalCirclesBalance} from "$lib/stores/totalCirclesBalance";
 
+    export const TransitiveTransferTokenOwner = "0x0000000000000000000000000000000000000001";
+    export const TransitiveTransferTokenAddress = "0x0000000000000000000000000000000000000002";
+
     export function tokenTypeToString(tokenType: TokenType) {
         if (!tokenType) {
             // "CrcV1_HubTransfer";
@@ -20,7 +23,7 @@
             case "CrcV2_RegisterGroup":
                 return "Group Circles";
             case "TransitiveTransfer":
-                return "Use all Circles";
+                return "Send Circles along a trust path";
             default:
                 return tokenType;
         }
@@ -28,12 +31,12 @@
 
     export const transitiveTransfer = () => {
         return <TokenBalanceRow>{
-            tokenOwner: "0x0000000000000000000000000000000000000001",
+            tokenOwner: TransitiveTransferTokenOwner,
             tokenType: "TransitiveTransfer",
             circles: get(totalCirclesBalance),
             staticCircles: 0,
             crc: 0,
-            tokenAddress: "0x0000000000000000000000000000000000000000",
+            tokenAddress: TransitiveTransferTokenAddress,
             tokenId: "0",
             isWrapped: false,
             isGroup: false,
@@ -67,7 +70,7 @@
     <p class="menu-title pl-0">
         Transitive transfer
     </p>
-    <div on:click={() => handleSelect(transitiveTransfer())}>
+    <div class="bg-base-200" on:click={() => handleSelect(transitiveTransfer())}>
         <BalanceRow balance={transitiveTransfer()}/>
     </div>
 

@@ -4,6 +4,7 @@
     import {circles} from "$lib/stores/circles";
     import type {AvatarRow} from "@circles-sdk/data";
     import {shortenAddress} from "$lib/utils/shared";
+    import {ethers} from "ethers";
 
     const profileCache = new Map<string, Promise<Profile>>();
 
@@ -50,6 +51,48 @@
         return profile;
     }
 
+    export type CirclesSafeMap = { [safeAddress: string]: Profile };
+    export const CirclesGardenApi = `https://api.circles.garden/`;
+
+    async function queryCirclesGarden(safeAddresses: string[]): Promise<CirclesSafeMap> {
+        const safeAddressCopy = JSON.parse(JSON.stringify(safeAddresses));
+        const batches: string[][] = [];
+
+        while (safeAddressCopy.length) {
+            batches.push(safeAddressCopy.splice(0, 50));
+        }
+
+        const circlesSafeMap: CirclesSafeMap = {};
+
+        if (batches.length == 0) {
+            return circlesSafeMap;
+        }
+
+        for (let batch of batches) {
+            const query = batch.reduce((p, c) => p + `address[]=${ethers.getAddress(c)}&`, "");
+            const requestUrl = `${CirclesGardenApi}api/users/?${query}`;
+
+            const requestResult = await fetch(requestUrl);
+            const requestResultJson = await requestResult.json();
+
+            const profiles: (Profile & {safeAddress: string})[] =
+                requestResultJson.data.map((o: any) => {
+                    return <Profile & {safeAddress: string}>{
+                        name: o.username,
+                        previewImageUrl: o.avatarUrl,
+                        safeAddress: o.safeAddress.toLowerCase()
+                    };
+                }) ?? [];
+
+            profiles.forEach((o) => {
+                if (!o.safeAddress) return;
+                circlesSafeMap[o.safeAddress] = o;
+            }, circlesSafeMap);
+        }
+
+        return circlesSafeMap;
+    }
+
     export async function getProfile(address: string): Promise<Profile> {
         if (address === "0x0000000000000000000000000000000000000001") {
             return {
@@ -57,6 +100,21 @@
                 previewImageUrl: "/logo.svg"
             };
         }
+
+        const $circles = get(circles);
+        if (address === $circles?.circlesConfig.v2HubAddress?.toLowerCase()) {
+            return {
+                name: "Circles V2 Hub Contract",
+                previewImageUrl: "/logo.svg"
+            };
+        }
+        if (address === $circles?.circlesConfig.migrationAddress?.toLowerCase()) {
+            return {
+                name: "Circles V2 Migration Contract",
+                previewImageUrl: "/logo.svg"
+            };
+        }
+
         if (profileCache.has(address)) {
             return profileCache.get(address)!;
         }
@@ -72,6 +130,11 @@
 
             if (avatar?.version === 2 && avatar.cidV0) {
                 profile = await sdk.profiles?.get(avatar.cidV0);
+            }
+            if (avatar?.version === 1) {
+                // TODO: Get the profile from the circles.garden api
+                const circlesGardenResults = await queryCirclesGarden([address]);
+                profile = circlesGardenResults[address] ?? {};
             }
             profile = setFallbackValues(address, avatar, profile);
             resolve(profile);

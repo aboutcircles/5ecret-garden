@@ -37,26 +37,17 @@
             editorText = selectedAddress;
             inputElement.value = editorText;
 
-            console.log(`onMount: Unfiltered addresses (${Object.keys(contactList).length})`, Object.keys(contactList));
-
             filteredAddresses = Object.keys(contactList).filter((address) => {
                 return address.toLowerCase().includes(editorText?.toLowerCase() ?? "")
                     || address == selectedAddress
                     || contactList[address].contactProfile.name?.toLowerCase()?.includes(editorText?.toLowerCase() ?? "");
             });
-
-            console.log(`onMount: Filtered addresses (${filteredAddresses.length})`, filteredAddresses);
         } else {
             filteredAddresses = Object.keys(contactList);
         }
 
         return filteredAddresses;
     }
-
-    onMount(() => {
-        console.log(`SelectContact.svelte: Selected address: ${selectedAddress}`);
-        filter(data ?? {});
-    });
 
     function selected(address: string, profile: Profile | undefined) {
         eventDispatcher("select", <SelectedEvent>{

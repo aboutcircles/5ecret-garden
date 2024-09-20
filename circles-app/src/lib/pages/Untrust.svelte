@@ -12,7 +12,7 @@
             throw new Error("Avatar store not available");
         }
         runTask({
-            name: `Trusting ${address} ...`,
+            name: `Untrusting ${address} ...`,
             promise: $avatar!.untrust(address)
         });
         contentApi.close();

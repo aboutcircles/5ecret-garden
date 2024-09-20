@@ -8,6 +8,8 @@
     import {circles} from "$lib/stores/circles";
     import {avatar} from "$lib/stores/avatar";
     import {wallet} from "$lib/stores/wallet";
+    import Avatar from "$lib/components/Avatar.svelte";
+    import {BrowserProviderContractRunner} from "../../../../../../../../temp/circles-sdk/packages/adapter-ethers/src";
 
     //
     // Connects the wallet and initializes the Circles SDK.
@@ -66,9 +68,21 @@
     let safes: string[] | undefined = undefined;
 
     onMount(async () => {
-        const safeContractRunner = new SafeSdkBrowserContractRunner();
-        const signerAddress = (await safeContractRunner.browserProvider.getSigner()).address;
-        safes = await querySafeTransactionService(signerAddress);
+        const wallet = new BrowserProviderContractRunner();
+        await wallet.init();
+
+        $wallet = wallet;
+
+        const network = await $wallet.provider?.getNetwork();
+        if (!network) {
+            throw new Error('Failed to get network');
+        }
+        const circlesConfig = await getCirclesConfig(network.chainId);
+
+        // Initialize the Circles SDK and set it as $circles to make it globally available.
+        $circles = new Sdk(circlesConfig, $wallet!);
+
+        safes = await querySafeTransactionService($wallet.address!);
     });
 </script>
 
@@ -76,17 +90,19 @@
     <div class="hero-content flex-col lg:flex-row-reverse">
 
         <div class="card bg-base-100 w-96 shadow-xl">
-            <figure class="px-10 pt-10">
-                <span class="loading loading-spinner loading-lg"></span>
-            </figure>
             {#if !safes}
+                <figure class="px-10 pt-10">
+                    <span class="loading loading-spinner loading-lg"></span>
+                </figure>
                 <div class="card-body items-center text-center">
                     <h2 class="card-title">Connecting your MetaMask wallet ...</h2>
                     <p>Please wait while we're loading your safes</p>
                 </div>
             {:else}
                 {#each safes as safe}
-                    <div class="btn btn-outline" on:click={() => connectWallet(safe)}>{safe}</div>
+                    <div on:click={() => connectWallet(safe)}>
+                        <Avatar address={safe.toLowerCase()} clickable={false}/>
+                    </div>
                 {/each}
             {/if}
         </div>
