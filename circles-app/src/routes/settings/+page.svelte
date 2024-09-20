@@ -9,16 +9,18 @@
     import {type Profile} from "@circles-sdk/profiles";
     import {cidV0ToUint8Array} from "@circles-sdk/utils";
     import {onMount} from "svelte";
+    import {runTask} from "../+layout.svelte";
+    import {ContractTransactionReceipt, TransactionReceipt} from "ethers6";
 
     async function changeWallet() {
         $avatar = undefined;
         $circles = undefined;
         $wallet = undefined;
 
-        await goto("/connect-wallet");
+        await goto("/_new/connect-wallet");
     }
 
-    async function loadProfileData(cid: string): Promise<Profile|undefined> {
+    async function loadProfileData(cid: string): Promise<Profile | undefined> {
         if (!$circles?.profiles) {
             throw new Error('Profiles not available');
         }
@@ -34,7 +36,7 @@
         return await $circles.profiles.create(profile);
     }
 
-    let profile: Profile|undefined;
+    let profile: Profile | undefined;
 
     onMount(async () => {
         const cid = $avatar?.avatarInfo?.cidV0;
@@ -58,17 +60,22 @@
     async function saveProfile() {
         const cid = await saveProfileData(profile!);
         const digest = cidV0ToUint8Array(cid);
-        const tx = await $circles?.nameRegistry?.updateMetadataDigest(digest);
-        const receipt = await tx?.wait();
-        if (!receipt) {
-            throw new Error('Failed to update metadata digest');
-        }
+
+
+        const tx = await runTask({
+            name: "Updating profile ...",
+            promise: (async () => {
+                if (!$circles?.nameRegistry) {
+                    throw new Error('Name registry not available');
+                }
+                const tx = await $circles.nameRegistry.updateMetadataDigest(digest);
+                return await tx.wait();
+            })()
+        });
 
         if ($wallet?.address) {
             $avatar = await $circles?.getAvatar($wallet.address);
         }
-
-        return receipt;
     }
 </script>
 

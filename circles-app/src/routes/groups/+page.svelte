@@ -36,7 +36,6 @@
 
     async function fetchProfiles(rows: ExtendedGroupRow[]) {
         const addresses = rows.map(row => row.group);
-        console.log("fetchProfiles", addresses);
         const profiles: Record<string, ProfileType> = await $circles?.profiles?.getMany(addresses) ?? {};
         return profiles;
     }
@@ -49,7 +48,6 @@
     }
 
     function enrichRowsWithProfiles(rows: ExtendedGroupRow[], profileLookup: Record<string, any>) {
-        console.log("enrichRowsWithProfiles", rows, profileLookup);
         return rows.map(row => {
             const profile = profileLookup[row.group];
             if (profile) {

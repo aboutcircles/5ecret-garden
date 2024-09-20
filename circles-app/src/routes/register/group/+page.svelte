@@ -1,14 +1,14 @@
 <script lang="ts">
     import {goto} from "$app/navigation";
     import ActionButton from "$lib/components/ActionButton.svelte";
-    import {ethers} from "ethers";
+    import {ethers} from "ethers6";
     import {avatar} from "$lib/stores/avatar";
     import {circles} from "$lib/stores/circles";
     import type {Avatar} from "@circles-sdk/sdk";
     import type {GroupProfile} from "@circles-sdk/profiles";
     import Profile from "../../settings/editors/Profile.svelte";
 
-    let mintPolicyAddress: string = "0xdcCDfdB91067807898477876e5670CC7Edd68a78";
+    let mintPolicyAddress: string = $circles?.circlesConfig.baseGroupMintPolicy ?? "";
     $: mintPolicyAddressIsValid = ethers.isAddress(mintPolicyAddress);
 
     let profile: GroupProfile = {
@@ -30,7 +30,7 @@
             profile
         );
 
-        await goto("/dashboard");
+        await goto("/_new/dashboard");
     }
 </script>
 

@@ -1,7 +1,7 @@
 <script lang="ts">
     import ActionButton from "$lib/components/ActionButton.svelte";
     import {page} from "$app/stores";
-    import {ethers} from "ethers";
+    import {ethers} from "ethers6";
     import {avatar} from "$lib/stores/avatar";
     import {crcToTc, tcToCrc} from "@circles-sdk/utils";
     import {goto} from "$app/navigation";
@@ -9,6 +9,7 @@
     import {onMount} from "svelte";
     import {circles} from "$lib/stores/circles";
     import type {TokenBalanceRow} from "@circles-sdk/data";
+    import {floorToDecimals} from "$lib/utils/shared";
 
     let recipient: string = $page.params.to ?? "";
     let valueString: string = "";
@@ -19,12 +20,12 @@
     $: recipientIsValid = ethers.isAddress(recipient);
 
     $: maxTransferableAmount = recipientIsValid
-        ? $avatar?.getMaxTransferableAmount(recipient)
+        ? $avatar?.getMaxTransferableAmount(recipient, selectedCollateral)
         : Promise.resolve(BigInt(0));
 
     onMount(async () => {
         if ($avatar?.address && $circles) {
-            balances = await $circles.data.getTokenBalancesV2($avatar?.address);
+            balances = await $circles.data.getTokenBalances($avatar?.address);
         }
         selectedCollateral = balances.find(b => b.tokenOwner === $avatar?.address)?.tokenOwner;
     });
@@ -34,13 +35,13 @@
             ? tcToCrc(new Date(), parseFloat(valueString))
             : ethers.parseEther(valueString.toString());
 
-        await $avatar?.transfer(recipient, sendValue);
-        await goto("/dashboard");
+        await $avatar?.transfer(recipient, sendValue, selectedCollateral);
+        await goto("/_new/dashboard");
     }
 
     function formatAmount(amount: bigint) {
         if ($avatar?.avatarInfo?.version === 1) {
-            return crcToTc(new Date(), amount ?? BigInt(0)).toFixed(2);
+            return floorToDecimals(crcToTc(new Date(), amount ?? BigInt(0)));
         } else {
             return ethers.formatEther(amount ?? BigInt(0));
         }
