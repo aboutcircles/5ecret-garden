@@ -75,9 +75,9 @@
             const requestResult = await fetch(requestUrl);
             const requestResultJson = await requestResult.json();
 
-            const profiles: (Profile & {safeAddress: string})[] =
+            const profiles: (Profile & { safeAddress: string })[] =
                 requestResultJson.data.map((o: any) => {
-                    return <Profile & {safeAddress: string}>{
+                    return <Profile & { safeAddress: string }>{
                         name: o.username,
                         previewImageUrl: o.avatarUrl,
                         safeAddress: o.safeAddress.toLowerCase()
@@ -92,6 +92,33 @@
 
         return circlesSafeMap;
     }
+
+    // Implementing the batching mechanism
+    const getProfileQueue: { address: string, resolve: (data: Profile | undefined) => void }[] = [];
+
+    setInterval(async () => {
+        if (getProfileQueue.length === 0) {
+            return;
+        }
+
+        const queueCopy = getProfileQueue.slice();
+        const profilesToQuery = queueCopy.map((o) => o.address);
+        getProfileQueue.splice(0, getProfileQueue.length); // Clear the queue
+
+        try {
+            const circlesGardenResults = await queryCirclesGarden(profilesToQuery);
+
+            queueCopy.forEach((o) => {
+                const profile = circlesGardenResults[o.address] ?? {};
+                o.resolve(profile);
+            });
+        } catch (error) {
+            // Handle errors if needed
+            queueCopy.forEach((o) => {
+                o.resolve(undefined); // You can modify this to reject or handle errors differently
+            });
+        }
+    }, 20);
 
     export async function getProfile(address: string): Promise<Profile> {
         if (address === "0x0000000000000000000000000000000000000001") {
@@ -132,10 +159,18 @@
                 profile = await sdk.profiles?.get(avatar.cidV0);
             }
             if (avatar?.version === 1) {
-                // TODO: Get the profile from the circles.garden api
-                const circlesGardenResults = await queryCirclesGarden([address]);
-                profile = circlesGardenResults[address] ?? {};
+                // Use the batching mechanism
+                let resolveFunction: ((data: Profile | undefined) => void) | undefined = undefined;
+                const profilePromise = new Promise<Profile | undefined>((resolve) => resolveFunction = resolve);
+
+                if (!resolveFunction) {
+                    throw new Error("resolveFunction is required");
+                }
+
+                getProfileQueue.push({address: address, resolve: resolveFunction});
+                profile = await profilePromise;
             }
+
             profile = setFallbackValues(address, avatar, profile);
             resolve(profile);
         });
@@ -149,17 +184,13 @@
 <script lang="ts">
     import HorizontalAvatarLayout from "$lib/components/avatar/HorizontalAvatarLayout.svelte";
     import VerticalAvatarLayout from "$lib/components/avatar/VerticalAvatarLayout.svelte";
-    import {createEventDispatcher} from "svelte";
     import VerticalSmallAvatarLayout from "$lib/components/avatar/VerticalSmallAvatarLayout.svelte";
-    import type {PopupContentApi} from "$lib/components/PopUp.svelte";
 
     export let address: string;
     export let clickable: boolean = true;
     export let view: "horizontal" | "vertical" | "vertical_small" = "horizontal";
     export let imageStyle: "square" | "circle" = "circle";
     export let showName: boolean = true;
-
-    const eventDispatcher = createEventDispatcher();
 
     let profile: Profile | undefined;
 

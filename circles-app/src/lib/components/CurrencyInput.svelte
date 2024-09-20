@@ -8,6 +8,7 @@
 
     export let balanceRow: TokenBalanceRow;
     export let amount: number = 0;
+    export let maxAmountCircles: number = -1;
 
     let inputElement: HTMLInputElement;
     let avatarWidth: string = "12rem";
@@ -83,6 +84,11 @@
         inputElement.value = floorToDecimals(balanceRow?.circles);
         set();
     }}>
-        Max <span class="font-medium">{floorToDecimals(balanceRow?.circles)}</span>
+        {#if maxAmountCircles == -1}
+            <span class="loading loading-spinner text-primary"></span>
+        {:else if maxAmountCircles == -2}
+            ⚠️
+        {/if}
+        Max <span class="font-medium">{maxAmountCircles >= 0 ? floorToDecimals(maxAmountCircles) : floorToDecimals(balanceRow?.circles)}</span>
     </button>
 </div>

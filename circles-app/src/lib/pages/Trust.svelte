@@ -3,6 +3,7 @@
     import {avatar} from "$lib/stores/avatar";
     import {runTask} from "../../routes/+layout.svelte";
     import type {PopupContentApi} from "$lib/components/PopUp.svelte";
+    import {shortenAddress} from "$lib/utils/shared";
 
     export let address: string;
     export let contentApi: PopupContentApi;
@@ -12,7 +13,7 @@
             throw new Error("Avatar store not available");
         }
         runTask({
-            name: `Trusting ${address} ...`,
+            name: `Trusting ${shortenAddress(address)} ...`,
             promise: $avatar!.trust(address)
         });
         contentApi.close();

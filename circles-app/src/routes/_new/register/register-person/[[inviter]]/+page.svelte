@@ -5,6 +5,7 @@
     import {circles} from "$lib/stores/circles";
     import type {Avatar} from "@circles-sdk/sdk";
     import type {Profile} from "@circles-sdk/profiles";
+    import {page} from "$app/stores";
 
     let profile: Profile = {
         name: "",
@@ -13,12 +14,17 @@
         imageUrl: undefined,
     };
 
+    $: inviter = $page.params.inviter;
+
     async function registerHuman() {
         if (!$circles) {
             throw new Error('Wallet not connected ($circles is undefined)');
         }
+        if (!inviter) {
+            throw new Error('Inviter not set');
+        }
 
-        $avatar = <Avatar>await $circles.registerHumanV2(profile);
+        $avatar = <Avatar>await $circles.acceptInvitation(inviter, profile);
 
         await goto("/_new/dashboard");
     }
@@ -35,6 +41,16 @@
             </figure>
             <div class="card-body items-center text-center">
                 <h2 class="card-title">Register person</h2>
+                <div class="form-control">
+                    <label for="name" class="label">
+                        <span class="label-text">Inviter</span>
+                    </label>
+                    <input bind:value={inviter}
+                           type="text"
+                           id="name"
+                           class="input input-bordered w-full"
+                           placeholder="">
+                </div>
                 <div class="form-control">
                     <label for="name" class="label">
                         <span class="label-text">Name</span>

@@ -5,13 +5,14 @@
     import {avatar} from "$lib/stores/avatar";
     import {TransitiveTransferTokenAddress} from "./SelectAsset.svelte";
     import {attoCirclesToCircles} from "@circles-sdk/data";
+    import {crcToTc} from "@circles-sdk/utils";
 
     const eventDispatcher = createEventDispatcher();
 
     export let receiverAddress: string | undefined;
     export let asset: TokenBalanceRow | undefined;
     export let amount: number = 0;
-    let maxAmountCircles: number = 0;
+    let maxAmountCircles: number = -1;
 
     onMount(async () => {
         if (!receiverAddress) {
@@ -24,19 +25,21 @@
             throw new Error("Avatar store is not available");
         }
 
-        let maxAmountAttoCircles: bigint;
-        if (asset.tokenAddress === TransitiveTransferTokenAddress) {
-            maxAmountAttoCircles = await $avatar.getMaxTransferableAmount(receiverAddress);
-        } else {
-            maxAmountAttoCircles = await $avatar.getMaxTransferableAmount(receiverAddress, asset.tokenAddress);
+        try {
+            if (asset.tokenAddress === TransitiveTransferTokenAddress) {
+                maxAmountCircles = await $avatar.getMaxTransferableAmount(receiverAddress);
+            } else {
+                maxAmountCircles = await $avatar.getMaxTransferableAmount(receiverAddress, asset.tokenAddress);
+            }
+        } catch (e) {
+            console.log("Failed to get max transferable amount", e);
+            maxAmountCircles = -2;
         }
-
-        maxAmountCircles = attoCirclesToCircles(maxAmountAttoCircles);
     });
 </script>
 
 <div class="mb-4">
-    <CurrencyInput balanceRow={asset} bind:amount></CurrencyInput>
+    <CurrencyInput balanceRow={asset} bind:amount maxAmountCircles={maxAmountCircles}></CurrencyInput>
 </div>
 
 <!-- Action Buttons -->
