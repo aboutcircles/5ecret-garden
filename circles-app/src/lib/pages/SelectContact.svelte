@@ -22,6 +22,7 @@
     export let selectedAddress: string | undefined = undefined;
     export let selectedProfile: Profile | undefined = undefined;
     export let addressListTitle: string = "Recent Addresses";
+    export let noResultsMessage: string = "No recent addresses found";
 
     let editorText: string | undefined = undefined;
     let inputElement: HTMLInputElement | undefined = undefined;
@@ -112,8 +113,8 @@
             </div>
         {/each}
     {:else}
-        <div class="flex items-center justify-between p-2 bg-base-100 hover:bg-base-200 rounded-lg">No recent addresses
-            found
+        <div class="p-2 hover:bg-base-200 rounded-lg">
+            {@html noResultsMessage}
         </div>
     {/if}
 </div>

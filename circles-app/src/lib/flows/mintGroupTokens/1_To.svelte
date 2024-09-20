@@ -64,6 +64,7 @@
         <SelectContact
                 store={groupContacts}
                 addressListTitle="Groups"
+                noResultsMessage="You have no groups in your contacts."
                 selectedAddress={context?.selectedAddress}
                 on:select={handleSelect}
         />
