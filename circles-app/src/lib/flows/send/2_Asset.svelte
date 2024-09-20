@@ -6,6 +6,7 @@
     import SelectAmount from "./3_Amount.svelte";
     import {onMount} from "svelte";
     import FlowDecoration from "$lib/flows/FlowDecoration.svelte";
+    import {circlesBalances} from "$lib/stores/circlesBalances";
 
     export let contentApi: PopupContentApi;
     export let context: SendFlowContext;
@@ -33,5 +34,6 @@
 </script>
 <FlowDecoration>
     <SelectAsset selectedAsset={selectedAsset}
+                 balances={circlesBalances}
                  on:select={handleSelect}/>
 </FlowDecoration>
