@@ -25,9 +25,10 @@
     <div class="col">
         <Avatar address={item.avatar} clickable={false}>
             {avatarTypeToString(item.type)} -
-            <a class="underline" href="https://gnosisscan.io/address/{item.avatar}" target="_blank" rel="noopener noreferrer">
-                {shortenAddress(item.avatar)}
-            </a>
+            {shortenAddress(item.avatar)}
+<!--            TODO: Doesn't work well on mobile-->
+<!--            <a class="underline" href="https://gnosisscan.io/address/{item.avatar}" target="_blank" rel="noopener noreferrer">-->
+<!--            </a>-->
         </Avatar>
     </div>
 </div>

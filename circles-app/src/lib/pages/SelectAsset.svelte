@@ -89,6 +89,6 @@
             </div>
         {/each}
     {:else}
-        <li class="text-center py-4">No assets found</li>
+        <li class="text-center py-4">You don't have any trusted assets</li>
     {/if}
 </div>

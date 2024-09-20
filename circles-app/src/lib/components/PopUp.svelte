@@ -146,7 +146,13 @@
             if (popupContent) {
                 stack.push(popupContent);
             }
-            $popupControls.open?.(content);
+            $popupControls.open?.({
+                ...content,
+                props: {
+                    ...content.props,
+                    contentApi: contentApi
+                }
+            });
         },
         submit: (data: any) => {
             // Handle submission logic here
