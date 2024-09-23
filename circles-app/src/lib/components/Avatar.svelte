@@ -185,7 +185,9 @@
     import HorizontalAvatarLayout from "$lib/components/avatar/HorizontalAvatarLayout.svelte";
     import VerticalAvatarLayout from "$lib/components/avatar/VerticalAvatarLayout.svelte";
     import VerticalSmallAvatarLayout from "$lib/components/avatar/VerticalSmallAvatarLayout.svelte";
-    import type {PopupContentApi} from "$lib/components/PopUp.svelte";
+    import type {PopupContentApi, PopupContentDefinition} from "$lib/components/PopUp.svelte";
+    import ProfilePage from "$lib/pages/Profile.svelte";
+    import {popupControls} from "$lib/components/PopUp.svelte";
 
     export let address: string;
     export let clickable: boolean = true;
@@ -193,12 +195,31 @@
     export let imageStyle: "square" | "circle" = "circle";
     export let showName: boolean = true;
     export let contentApi: PopupContentApi | undefined;
+    export let pictureOverlayUrl: string | undefined = undefined;
 
     let profile: Profile | undefined;
 
     $: {
         if (address) {
             initialize();
+        }
+    }
+
+    function openAvatar() {
+        if (!clickable) {
+            return;
+        }
+        const nextPage: PopupContentDefinition = {
+            title: shortenAddress(address),
+            component: ProfilePage,
+            props: {
+                address: address
+            }
+        };
+        if (contentApi) {
+            contentApi.open(nextPage);
+        } else {
+            $popupControls.open?.(nextPage);
         }
     }
 
@@ -215,20 +236,23 @@
     </div>
 {:else}
     {#if view === "vertical"}
-        <VerticalAvatarLayout contentApi={contentApi} showName={showName} imageStyle={imageStyle} address={address}
-                              clickable={clickable}
+        <VerticalAvatarLayout showName={showName} imageStyle={imageStyle}
+                              pictureOverlayUrl={pictureOverlayUrl}
+                              on:click={openAvatar}
                               profile={profile}>
             <slot></slot>
         </VerticalAvatarLayout>
     {:else if view === "vertical_small"}
-        <VerticalSmallAvatarLayout contentApi={contentApi} showName={showName} imageStyle={imageStyle} address={address}
-                                   clickable={clickable}
+        <VerticalSmallAvatarLayout showName={showName} imageStyle={imageStyle}
+                                   pictureOverlayUrl={pictureOverlayUrl}
+                                   on:click={openAvatar}
                                    profile={profile}>
             <slot></slot>
         </VerticalSmallAvatarLayout>
     {:else}
-        <HorizontalAvatarLayout contentApi={contentApi} showName={showName} imageStyle={imageStyle} address={address}
-                                clickable={clickable}
+        <HorizontalAvatarLayout showName={showName} imageStyle={imageStyle}
+                                pictureOverlayUrl={pictureOverlayUrl}
+                                on:click={openAvatar}
                                 profile={profile}>
             <slot></slot>
         </HorizontalAvatarLayout>

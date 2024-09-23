@@ -1,41 +1,32 @@
 <script lang="ts">
     import type {Profile} from "@circles-sdk/profiles";
-    import ProfilePage from "$lib/pages/Profile.svelte";
-    import {type PopupContentApi, type PopupContentDefinition, popupControls} from "$lib/components/PopUp.svelte";
-    import {shortenAddress} from "$lib/utils/shared";
 
     export let profile: Profile | undefined;
-    export let clickable: boolean = true;
-    export let address: string;
     export let imageStyle: "square" | "circle" = "circle";
     export let showName: boolean = true;
-    export let contentApi: PopupContentApi | undefined;
-
-    function openAvatar() {
-        if (!clickable) {
-            return;
-        }
-        const nextPage: PopupContentDefinition = {
-            title: shortenAddress(address),
-            component: ProfilePage,
-            props: {
-                address: address
-            }
-        };
-        if (contentApi) {
-            contentApi.open(nextPage);
-        } else {
-            $popupControls.open?.(nextPage);
-        }
-    }
+    export let pictureOverlayUrl: string | undefined = undefined;
 </script>
 
 <div class="inline-flex items-center space-x-2">
-    <a class="cursor-pointer" on:click={openAvatar}>
-        <img src={profile?.previewImageUrl}
-             alt="User Icon"
-             class="w-8 h-8"
-             class:rounded-full={imageStyle === "circle"}>
+    <a class="cursor-pointer" on:click>
+        {#if pictureOverlayUrl}
+            <div class="indicator">
+                <span class="indicator-item badge bg-blue-100">
+                    <img src={pictureOverlayUrl}
+                         class="h-6"
+                         class:rounded-full={imageStyle === "circle"}>
+                </span>
+                <img src={profile?.previewImageUrl}
+                     alt="User Icon"
+                     class="w-8 h-8"
+                     class:rounded-full={imageStyle === "circle"}>
+            </div>
+        {:else}
+            <img src={profile?.previewImageUrl}
+                 alt="User Icon"
+                 class="w-8 h-8"
+                 class:rounded-full={imageStyle === "circle"}>
+        {/if}
     </a>
     <div>
         {#if showName}

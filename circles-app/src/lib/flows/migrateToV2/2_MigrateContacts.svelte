@@ -1,18 +1,36 @@
 <script lang="ts">
-    import Avatar from "$lib/components/Avatar.svelte";
-    import type {ExtendedTrustRelationRow} from "../../contacts/+page.svelte";
-    import {ensureContacts} from "../../+layout.svelte";
+    import type {PopupContentApi} from "$lib/components/PopUp.svelte";
     import {onMount} from "svelte";
+    import FlowDecoration from "$lib/flows/FlowDecoration.svelte";
+    import type {MigrateToV2Context} from "$lib/flows/migrateToV2/context";
+    import Avatar from "$lib/components/Avatar.svelte";
+    import {ensureContacts} from "../../../routes/+layout.svelte";
     import type {Readable} from "svelte/store";
     import type {ContactList} from "$lib/stores/contacts";
-    import ProfilePage from "$lib/pages/Profile.svelte";
-    import {popupControls} from "$lib/components/PopUp.svelte";
+    import type {ExtendedTrustRelationRow} from "../../../routes/contacts/+page.svelte";
+    import Migrate from "./3_Migrate.svelte";
+
+    export let contentApi: PopupContentApi;
+    export let context: MigrateToV2Context;
 
     let contacts: Readable<{ data: ContactList, next: () => Promise<boolean>, ended: boolean }> | undefined = undefined;
+    let selectedAddresses: string[] = [];
 
     onMount(async () => {
         contacts = await ensureContacts();
-    })
+        selectedAddresses = context.trustList ?? Object.keys($contacts?.data ?? {});
+        console.log("Selected addresses", selectedAddresses);
+    });
+
+    async function next() {
+        contentApi.open({
+            title: "Run Migration",
+            component: Migrate,
+            props: {
+                context: context
+            }
+        });
+    }
 
     function formatTrustRelation(row: ExtendedTrustRelationRow) {
         switch (row.relation) {
@@ -57,23 +75,27 @@
     });
 </script>
 
-<div class="card bg-base-100 shadow-lg p-6">
-    <div class="card-title text-2xl mb-4">Contacts</div>
-    <div class="overflow-x-auto">
+<FlowDecoration>
+    <p>
+        Select the contacts you want to keep in your new Circles V2 profile. By default, all your contacts are selected.
+    </p>
+    <div class="mt-6">
         {#each orderedContacts as address}
             <a class="p-2 bg-base-100 hover:bg-base-200 rounded-lg items-center block"
                on:click={(e) => {
-                    $popupControls.open?.({
-                        component: ProfilePage,
-                        title: "",
-                        props: {
-                            address: address
-                        }
-                    });
-                    e.preventDefault();
-                    return true;
-                }}>
-                <Avatar address={address}>
+                   console.log("Selected address", address);
+                   // Toggle selection
+                    if (selectedAddresses.includes(address)) {
+                         selectedAddresses = selectedAddresses.filter((a) => a !== address);
+                    } else {
+                         selectedAddresses = [...selectedAddresses, address];
+                    }
+                    context.trustList = selectedAddresses;
+               }}>
+                <Avatar contentApi={undefined}
+                        pictureOverlayUrl={selectedAddresses.includes(address) ? "/check.svg" : undefined}
+                        address={address}
+                        clickable={false}>
                     <div>
                         {#if $contacts?.data[address].row.relation === "trusts"}
                             <img src="/incoming.svg" alt="Incoming trust" class="w-3 h-3 inline"/>
@@ -91,8 +113,14 @@
                 </Avatar>
             </a>
         {/each}
-        <div class="text-center py-4">
-            <span class="text-gray-500">End of list</span>
-        </div>
+        {#if orderedContacts.length === 0}
+            <p class="text-center mt-4">No contacts to migrate</p>
+        {/if}
     </div>
-</div>
+    <div class="flex justify-end space-x-2 mt-6">
+        <button type="submit" class="btn btn-primary px-6 py-2 rounded-md text-white bg-blue-500 hover:bg-blue-600"
+                on:click={() => next()}>
+            Next
+        </button>
+    </div>
+</FlowDecoration>

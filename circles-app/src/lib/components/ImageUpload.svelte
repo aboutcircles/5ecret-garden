@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {createEventDispatcher} from 'svelte';
+    import {createEventDispatcher, onMount} from 'svelte';
 
     export let cropWidth: number = 256;
     export let cropHeight: number = 256;
@@ -9,6 +9,23 @@
 
     let imageFile: File | null = null;
     let fileUpload: HTMLInputElement;
+
+    onMount(async () => {
+    });
+
+    $: {
+        console.log("ImageUpload mounted. Image data URL:", imageDataUrl);
+        if (imageDataUrl?.startsWith("http")) {
+            getImageAsDataUrl(imageDataUrl);
+        }
+    }
+
+    async function getImageAsDataUrl(imageUrl: string) {
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        const file = new File([blob], "image.jpg", {type: blob.type});
+        createImagePreview(file);
+    }
 
     function handleFileInput(event: Event) {
         const target = event.target as HTMLInputElement;
