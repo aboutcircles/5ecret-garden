@@ -5,7 +5,7 @@
     import {onMount} from "svelte";
     import type {Readable} from "svelte/store";
     import type {ContactList} from "$lib/stores/contacts";
-    import ProfilePage from "$lib/components/ProfilePage.svelte";
+    import ProfilePage from "$lib/pages/Profile.svelte";
     import {popupControls} from "$lib/components/PopUp.svelte";
 
     let contacts: Readable<{ data: ContactList, next: () => Promise<boolean>, ended: boolean }> | undefined = undefined;

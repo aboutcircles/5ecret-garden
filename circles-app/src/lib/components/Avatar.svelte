@@ -185,12 +185,14 @@
     import HorizontalAvatarLayout from "$lib/components/avatar/HorizontalAvatarLayout.svelte";
     import VerticalAvatarLayout from "$lib/components/avatar/VerticalAvatarLayout.svelte";
     import VerticalSmallAvatarLayout from "$lib/components/avatar/VerticalSmallAvatarLayout.svelte";
+    import type {PopupContentApi} from "$lib/components/PopUp.svelte";
 
     export let address: string;
     export let clickable: boolean = true;
     export let view: "horizontal" | "vertical" | "vertical_small" = "horizontal";
     export let imageStyle: "square" | "circle" = "circle";
     export let showName: boolean = true;
+    export let contentApi: PopupContentApi | undefined;
 
     let profile: Profile | undefined;
 
@@ -213,17 +215,20 @@
     </div>
 {:else}
     {#if view === "vertical"}
-        <VerticalAvatarLayout showName={showName} imageStyle={imageStyle} address={address} clickable={clickable}
+        <VerticalAvatarLayout contentApi={contentApi} showName={showName} imageStyle={imageStyle} address={address}
+                              clickable={clickable}
                               profile={profile}>
             <slot></slot>
         </VerticalAvatarLayout>
     {:else if view === "vertical_small"}
-        <VerticalSmallAvatarLayout showName={showName} imageStyle={imageStyle} address={address} clickable={clickable}
+        <VerticalSmallAvatarLayout contentApi={contentApi} showName={showName} imageStyle={imageStyle} address={address}
+                                   clickable={clickable}
                                    profile={profile}>
             <slot></slot>
         </VerticalSmallAvatarLayout>
     {:else}
-        <HorizontalAvatarLayout showName={showName} imageStyle={imageStyle} address={address} clickable={clickable}
+        <HorizontalAvatarLayout contentApi={contentApi} showName={showName} imageStyle={imageStyle} address={address}
+                                clickable={clickable}
                                 profile={profile}>
             <slot></slot>
         </HorizontalAvatarLayout>

@@ -24,7 +24,7 @@
     <p class="mb-4">
         You're about to trust the following group or person:
     </p>
-    <Avatar address={address}>
+    <Avatar address={address} clickable={false}>
         {address}
     </Avatar>
     <div role="alert" class="mt-4 alert alert-warning">

@@ -14,12 +14,14 @@
     import Untrust from "$lib/pages/Untrust.svelte";
     import Trust from "$lib/pages/Trust.svelte";
     import SelectAsset from "$lib/flows/send/2_Asset.svelte";
-    import { popupControls } from "./PopUp.svelte";
     import MintGroupTokens from "$lib/flows/mintGroupTokens/1_To.svelte";
+    import type {PopupContentApi} from "$lib/components/PopUp.svelte";
+    import ProfilePage from "$lib/pages/Profile.svelte";
 
     let contacts: Readable<{ data: ContactList, next: () => Promise<boolean>, ended: boolean }> | undefined = undefined;
 
     export let address: string | undefined;
+    export let contentApi: PopupContentApi | undefined;
 
     onMount(async () => {
         contacts = await ensureContacts();
@@ -33,6 +35,7 @@
 
     let otherAvatar: AvatarRow | undefined;
     let profile: Profile | undefined;
+    let members: string[] | undefined = undefined;
 
     async function initialize(address?: string) {
         if (!address) {
@@ -48,6 +51,14 @@
         otherAvatar = await $circles.data.getAvatarInfo(address);
         if (otherAvatar?.version === 2) {
             profile = await getProfile(otherAvatar.avatar);
+        }
+
+        if (otherAvatar?.type === "CrcV2_RegisterGroup") {
+            // load the members
+            const groupTrustRelations = await $circles.data.getAggregatedTrustRelations(otherAvatar.avatar);
+            members = groupTrustRelations.filter((row) => row.relation === "trusts").map(o => o.objectAvatar);
+        } else {
+            members = undefined;
         }
 
         if (!profile) {
@@ -70,6 +81,7 @@
         } else if (type === "CrcV1_Signup") {
             return "Human (v1)";
         }
+        return "";
     }
 
     function getRelationText(row: ExtendedTrustRelationRow, profile?: Profile) {
@@ -100,6 +112,19 @@
         }
         return $contacts.data[address]?.row;
     }
+
+    function nextProfile(address: string) {
+        contentApi?.open?.({
+            title: shortenAddress(address),
+            component: ProfilePage,
+            props: {
+                address: address,
+                contentApi: contentApi
+            }
+        });
+    }
+
+    let commonConnectionsCount = 0;
 </script>
 <div>
     <div class="p-6">
@@ -120,7 +145,7 @@
             {#if getTrustRow(otherAvatar?.avatar)?.relation === "trustedBy"
             && otherAvatar.type === "CrcV2_RegisterGroup"}
                 <button class="btn btn-sm btn-round btn-outline" on:click={() => {
-                    $popupControls.open?.({
+                    contentApi?.open?.({
                         title: "Mint group tokens",
                         component: MintGroupTokens,
                         props: {
@@ -133,7 +158,7 @@
                 </button>
             {/if}
             <button class="btn btn-sm btn-round btn-outline" on:click={() => {
-                $popupControls.open?.({
+                contentApi?.open?.({
                     title: "Send Circles",
                     component: SelectAsset,
                     props: {
@@ -147,7 +172,7 @@
             </button>
             {#if getTrustRow(otherAvatar?.avatar)?.relation === "trusts"}
                 <button class="btn btn-sm btn-round bg-red-400 text-white" on:click={() => {
-                    $popupControls.open?.({
+                    contentApi?.open?.({
                         title: "Untrust",
                         component: Untrust,
                         props: {
@@ -160,7 +185,7 @@
                 </button>
             {:else if getTrustRow(otherAvatar?.avatar)?.relation === "mutuallyTrusts"}
                 <button class="btn btn-sm btn-round bg-red-400 text-white" on:click={() => {
-                    $popupControls.open?.({
+                    contentApi?.open?.({
                         title: "Untrust",
                         component: Untrust,
                         props: {
@@ -173,7 +198,7 @@
                 </button>
             {:else if getTrustRow(otherAvatar?.avatar)?.relation === "trustedBy"}
                 <button class="btn btn-sm btn-round bg-red-400 text-white" on:click={() => {
-                    $popupControls.open?.({
+                    contentApi?.open?.({
                         title: "Trust",
                         component: Trust,
                         props: {
@@ -186,7 +211,7 @@
                 </button>
             {:else}
                 <button class="btn btn-sm btn-round bg-red-400 text-white" on:click={() => {
-                    $popupControls.open?.({
+                    contentApi?.open?.({
                         title: "Trust",
                         component: Trust,
                         props: {
@@ -227,7 +252,43 @@
         <!--        {@html newLineToBr(profile?.description)}-->
         <!--    </p>-->
         <!--{/if}-->
-
-        <CommonConnections otherAvatarAddress={otherAvatar?.avatar}/>
+        <div role="tablist" class="tabs tabs-lifted mt-6">
+            <input type="radio" name="my_tabs_2" role="tab" class="tab"
+                   aria-label={`Common connections (${commonConnectionsCount})`}
+                   checked="checked"/>
+            <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-6">
+                <CommonConnections contentApi={contentApi}
+                                   otherAvatarAddress={otherAvatar?.avatar}
+                                   bind:commonConnectionsCount={commonConnectionsCount}
+                />
+            </div>
+            {#if members}
+                <input
+                        type="radio"
+                        name="my_tabs_2"
+                        role="tab"
+                        class="tab"
+                        aria-label={`Members (${members.length})`}/>
+                <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-6">
+                    <p class="menu-title pl-0">
+                        Members:
+                    </p>
+                    <ul>
+                        {#each members as member(member)}
+                            <li>
+                                <Avatar contentApi={contentApi} address={member}>
+                                    {member}
+                                </Avatar>
+                            </li>
+                        {/each}
+                        {#if members.length === 0}
+                            <li>
+                                No members
+                            </li>
+                        {/if}
+                    </ul>
+                </div>
+            {/if}
+        </div>
     </div>
 </div>

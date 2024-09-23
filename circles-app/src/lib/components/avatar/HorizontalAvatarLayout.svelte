@@ -1,7 +1,7 @@
 <script lang="ts">
     import type {Profile} from "@circles-sdk/profiles";
-    import ProfilePage from "$lib/components/ProfilePage.svelte";
-    import {popupControls} from "$lib/components/PopUp.svelte";
+    import ProfilePage from "$lib/pages/Profile.svelte";
+    import {type PopupContentApi, type PopupContentDefinition, popupControls} from "$lib/components/PopUp.svelte";
     import {shortenAddress} from "$lib/utils/shared";
 
     export let profile: Profile | undefined;
@@ -9,18 +9,24 @@
     export let address: string;
     export let imageStyle: "square" | "circle" = "circle";
     export let showName: boolean = true;
+    export let contentApi: PopupContentApi | undefined;
 
     function openAvatar() {
         if (!clickable) {
             return;
         }
-        $popupControls.open?.({
+        const nextPage: PopupContentDefinition = {
             title: shortenAddress(address),
             component: ProfilePage,
             props: {
                 address: address
             }
-        });
+        };
+        if (contentApi) {
+            contentApi.open(nextPage);
+        } else {
+            $popupControls.open?.(nextPage);
+        }
     }
 </script>
 

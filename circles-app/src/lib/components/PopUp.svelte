@@ -11,13 +11,11 @@
         title: string;
         component: typeof SvelteComponent;
         props: Record<string, any>;
-        submit: (data: any) => Promise<void>;
     };
 
     export type PopupContentApi = {
         close: () => void;
         open: (content: PopupContentDefinition) => void;
-        submit: (data: any) => void;
         back: () => void;
     };
 
@@ -153,13 +151,6 @@
                     contentApi: contentApi
                 }
             });
-        },
-        submit: (data: any) => {
-            // Handle submission logic here
-            if (!popupContent) {
-                throw new Error("No popup content set.");
-            }
-            popupContent.submit?.(data);
         },
         back: () => {
             if (stack.length === 0) {
