@@ -205,16 +205,18 @@
     }
 </style>
 
-<div class="popup card" bind:this={popup} style="--y: { $y }px">
-    <div class="pull-bar card-title pt-12 b-12" on:mousedown={handleStart} on:touchstart={handleStart}>
-        <div class="p-6">
-            {#if stack.length > 0}
-                <button class="w-6 h-12 cursor-pointer" on:click={() => {
+<div class="popup card relative" bind:this={popup} style="--y: { $y }px">
+    <div class="absolute left-0 top-0 mt-6">
+        {#if stack.length > 0}
+            <button class="w-12 h-12 cursor-pointer" on:click={() => {
                     contentApi.back();
                 }}>
-                    <img src="/chevron-left.svg" class="w-6 h-6"/>
-                </button>
-            {/if}
+                <img src="/chevron-left.svg" class="w-6 h-6"/>
+            </button>
+        {/if}
+    </div>
+    <div class="pull-bar card-title pt-12 b-12" on:mousedown={handleStart} on:touchstart={handleStart}>
+        <div class="p-6">
             <span>
                 {popupContent?.title ?? " - "}
             </span>
