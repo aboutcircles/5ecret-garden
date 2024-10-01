@@ -33,7 +33,11 @@
         // If the signer address is already a registered Circles wallet, go straight to the dashboard.
         if (avatarInfo) {
             $avatar = await $circles.getAvatar($wallet.address!);
-            await goto("/_new/dashboard");
+            if (!$avatar.avatarInfo?.hasV1) {
+                await goto("/_new/register");
+            } else {
+                await goto("/_new/dashboard");
+            }
         } else {
             await goto("/_new/register");
         }

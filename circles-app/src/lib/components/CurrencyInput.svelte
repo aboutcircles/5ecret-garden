@@ -81,7 +81,7 @@
              style="margin-right: 0.1rem;"></div>
     </div>
     <button class="btn btn-sm mt-4 font-normal" on:click={() => {
-        inputElement.value = floorToDecimals(balanceRow?.circles);
+        inputElement.value = (maxAmountCircles >= 0 ? floorToDecimals(maxAmountCircles) : floorToDecimals(balanceRow?.circles)).toString();
         set();
     }}>
         {#if maxAmountCircles == -1}
