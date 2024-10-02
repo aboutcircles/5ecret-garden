@@ -23,7 +23,7 @@
             case "CrcV2_RegisterGroup":
                 return "Group Circles";
             case "TransitiveTransfer":
-                return "Send Circles along a trust path";
+                return "Circles along a trust path";
             default:
                 return tokenType;
         }

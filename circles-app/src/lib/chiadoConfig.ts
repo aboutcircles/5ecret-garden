@@ -24,6 +24,6 @@ export const gnosisConfig: CirclesConfig = {
     v2HubAddress: "0xa5c7ADAE2fd3844f12D52266Cb7926f8649869Da",
     nameRegistryAddress: "0x738fFee24770d0DE1f912adf2B48b0194780E9AD",
     migrationAddress: "0xe1dCE89512bE1AeDf94faAb7115A1Ba6AEff4201",
-    profileServiceUrl: "https://static.174.163.76.144.clients.your-server.de/profiles/",
+    profileServiceUrl: "https://chiado-pathfinder.aboutcircles.com/profiles/",
     baseGroupMintPolicy: "0x5Ea08c967C69255d82a4d26e36823a720E7D0317"
 }
