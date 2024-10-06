@@ -8,21 +8,25 @@
   import { circles } from '$lib/stores/circles';
 
   export let address: string;
+  export let trustVersion: number;
   export let contentApi: PopupContentApi;
 
   async function untrust() {
     if (!$avatar) {
       throw new Error('Avatar store not available');
     }
-    const v1Avatar = new V1Avatar($circles!, $avatar.avatarInfo!);
-    runTask({
-      name: `Untrusting V2 ${shortenAddress(address)} ...`,
-      promise: $avatar!.untrust(address),
-    });
-    runTask({
-      name: `Untrusting V1 ${shortenAddress(address)} ...`,
-      promise: v1Avatar.untrust(address),
-    });
+    if (trustVersion == 1) {
+      const v1Avatar = new V1Avatar($circles!, $avatar.avatarInfo!);
+      runTask({
+        name: `Untrusting V1 ${shortenAddress(address)} ...`,
+        promise: v1Avatar.untrust(address),
+      });
+    } else {
+      runTask({
+        name: `Untrusting V2 ${shortenAddress(address)} ...`,
+        promise: $avatar!.untrust(address),
+      });
+    }
     contentApi.close();
   }
 </script>

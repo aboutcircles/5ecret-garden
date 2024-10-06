@@ -1,11 +1,11 @@
-import {get} from "svelte/store";
-import {avatar} from "$lib/stores/avatar";
-import type {AvatarRow, CirclesEvent, CirclesEventType} from "@circles-sdk/data";
-import type {Profile} from "@circles-sdk/profiles";
-import {createEventStore} from "$lib/stores/eventStores/eventStoreFactory";
-import {getProfile} from "$lib/components/Avatar.svelte";
-import type {ExtendedTrustRelationRow} from "../../routes/contacts/+page.svelte";
-import {circles} from "$lib/stores/circles";
+import { get } from "svelte/store";
+import { avatar } from "$lib/stores/avatar";
+import type { AvatarRow, CirclesEvent, CirclesEventType, CirclesQuery, TrustListRow, TrustRelation, TrustRelationRow } from "@circles-sdk/data";
+import type { Profile } from "@circles-sdk/profiles";
+import { createEventStore } from "$lib/stores/eventStores/eventStoreFactory";
+import { getProfile } from "$lib/components/Avatar.svelte";
+import type { ExtendedTrustRelationRow } from "../../routes/_new/contacts/+page.svelte";
+import { circles } from "$lib/stores/circles";
 
 export type ContactListItem = {
     contactProfile: Profile;
@@ -27,7 +27,14 @@ const _initialLoad = async () => {
         return {};
     }
 
-    const contacts = await avatarInstance.getTrustRelations();
+    // const contacts = await avatarInstance.getTrustRelations();
+    const sdk = get(circles);
+    const trustsQuery = sdk?.data.getTrustRelations(avatarInstance.address, 1000);
+    if (!trustsQuery) {
+        return {};
+    }
+    const contacts = await getAggregatedTrustRelations(avatarInstance.address, trustsQuery);
+
     if (contacts && contacts.length > 0) {
         return await enrichContactData(contacts);
     }
@@ -59,8 +66,62 @@ const _handleEvent = async (event: CirclesEvent, currentData: ContactList) => {
 };
 
 const _handleNextPage = async (currentData: ContactList) => {
-    return {data: currentData, ended: true};
+    return { data: currentData, ended: true };
 };
+
+async function getAggregatedTrustRelations(avatarAddress: string, trustsQuery: CirclesQuery<TrustListRow>): Promise<ExtendedTrustRelationRow[]> {
+    const pageSize = 1000;
+    const trustListRows: TrustListRow[] = [];
+
+    // Fetch all trust relations
+    while (await trustsQuery.queryNextPage()) {
+      const resultRows = trustsQuery.currentPage?.results ?? [];
+      if (resultRows.length === 0) break;
+      trustListRows.push(...resultRows);
+      if (resultRows.length < pageSize) break;
+    }
+
+    // Group trust list rows by truster and trustee
+    const trustBucket: { [avatar: string]: TrustListRow[] } = {};
+    trustListRows.forEach(row => {
+      if (row.truster !== avatarAddress) {
+        trustBucket[row.truster] = trustBucket[row.truster] || [];
+        trustBucket[row.truster].push(row);
+      }
+      if (row.trustee !== avatarAddress) {
+        trustBucket[row.trustee] = trustBucket[row.trustee] || [];
+        trustBucket[row.trustee].push(row);
+      }
+    });
+
+    // Determine trust relations
+    return Object.entries(trustBucket)
+      .filter(([avatar]) => avatar !== avatarAddress)
+      .map(([avatar, rows]) => {
+        const maxTimestamp = Math.max(...rows.map(o => o.timestamp));
+        let relation: TrustRelation;
+        let trustVersion: number = rows[0].version;
+
+        if (rows.length === 2) {
+          relation = 'mutuallyTrusts';
+        } else if (rows[0].trustee === avatarAddress) {
+          relation = 'trustedBy';
+        } else if (rows[0].truster === avatarAddress) {
+          relation = 'trusts';
+        } else {
+          throw new Error('Unexpected trust list row. Couldnt determine trust relation.');
+        }
+
+        return {
+          subjectAvatar: avatarAddress,
+          relation: relation,
+          objectAvatar: avatar,
+          timestamp: maxTimestamp,
+          trustVersion: trustVersion
+        };
+      });
+}
+
 
 async function enrichContactData(rows: ExtendedTrustRelationRow[]): Promise<ContactList> {
     const profileRecord: ContactList = {};
