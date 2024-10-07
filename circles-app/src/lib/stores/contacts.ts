@@ -53,7 +53,13 @@ const _handleEvent = async (event: CirclesEvent, currentData: ContactList) => {
             return currentData;
         }
 
-        const contacts = await avatarInstance.getTrustRelations();
+        // const contacts = await avatarInstance.getTrustRelations();
+        const sdk = get(circles);
+        const trustsQuery = sdk?.data.getTrustRelations(avatarInstance.address, 1000);
+        if (!trustsQuery) {
+            return {};
+        }
+        const contacts = await getAggregatedTrustRelations(avatarInstance.address, trustsQuery);
         if (contacts && contacts.length > 0) {
             return await enrichContactData(contacts);
         }
@@ -75,51 +81,51 @@ async function getAggregatedTrustRelations(avatarAddress: string, trustsQuery: C
 
     // Fetch all trust relations
     while (await trustsQuery.queryNextPage()) {
-      const resultRows = trustsQuery.currentPage?.results ?? [];
-      if (resultRows.length === 0) break;
-      trustListRows.push(...resultRows);
-      if (resultRows.length < pageSize) break;
+        const resultRows = trustsQuery.currentPage?.results ?? [];
+        if (resultRows.length === 0) break;
+        trustListRows.push(...resultRows);
+        if (resultRows.length < pageSize) break;
     }
 
     // Group trust list rows by truster and trustee
     const trustBucket: { [avatar: string]: TrustListRow[] } = {};
     trustListRows.forEach(row => {
-      if (row.truster !== avatarAddress) {
-        trustBucket[row.truster] = trustBucket[row.truster] || [];
-        trustBucket[row.truster].push(row);
-      }
-      if (row.trustee !== avatarAddress) {
-        trustBucket[row.trustee] = trustBucket[row.trustee] || [];
-        trustBucket[row.trustee].push(row);
-      }
+        if (row.truster !== avatarAddress) {
+            trustBucket[row.truster] = trustBucket[row.truster] || [];
+            trustBucket[row.truster].push(row);
+        }
+        if (row.trustee !== avatarAddress) {
+            trustBucket[row.trustee] = trustBucket[row.trustee] || [];
+            trustBucket[row.trustee].push(row);
+        }
     });
 
     // Determine trust relations
     return Object.entries(trustBucket)
-      .filter(([avatar]) => avatar !== avatarAddress)
-      .map(([avatar, rows]) => {
-        const maxTimestamp = Math.max(...rows.map(o => o.timestamp));
-        let relation: TrustRelation;
-        let trustVersion: number = rows[0].version;
+        .filter(([avatar]) => avatar !== avatarAddress)
+        .map(([avatar, rows]) => {
+            const maxTimestamp = Math.max(...rows.map(o => o.timestamp));
+            let relation: TrustRelation;
+            let trustVersion: number = rows[0].version;
 
-        if (rows.length === 2) {
-          relation = 'mutuallyTrusts';
-        } else if (rows[0].trustee === avatarAddress) {
-          relation = 'trustedBy';
-        } else if (rows[0].truster === avatarAddress) {
-          relation = 'trusts';
-        } else {
-          throw new Error('Unexpected trust list row. Couldnt determine trust relation.');
-        }
+            if (rows.length === 2) {
+                relation = 'mutuallyTrusts';
+            } else if (rows[0].trustee === avatarAddress) {
+                relation = 'trustedBy';
+            } else if (rows[0].truster === avatarAddress) {
+                relation = 'trusts';
+            } else {
+                throw new Error('Unexpected trust list row. Couldnt determine trust relation.');
+            }
 
-        return {
-          subjectAvatar: avatarAddress,
-          relation: relation,
-          objectAvatar: avatar,
-          timestamp: maxTimestamp,
-          trustVersion: trustVersion
-        };
-      });
+            return {
+                subjectAvatar: avatarAddress,
+                relation: relation,
+                objectAvatar: avatar,
+                timestamp: maxTimestamp,
+                trustVersion: trustVersion
+            };
+        });
 }
 
 
