@@ -61,7 +61,7 @@
     <div class="card-title text-2xl mb-4">Contacts</div>
     <div class="overflow-x-auto">
         {#each orderedContacts as address}
-            <a class="p-2 bg-base-100 hover:bg-base-200 rounded-lg items-center block"
+            <button class="p-2 bg-base-100 hover:bg-base-200 rounded-lg items-center block"
                on:click={(e) => {
                     $popupControls.open?.({
                         component: ProfilePage,
@@ -89,7 +89,7 @@
                         {/if}
                     </div>
                 </Avatar>
-            </a>
+            </button>
         {/each}
         <div class="text-center py-4">
             <span class="text-gray-500">End of list</span>
