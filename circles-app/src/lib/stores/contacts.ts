@@ -88,22 +88,27 @@ async function getAggregatedTrustRelations(avatarAddress: string, trustsQuery: C
     }
 
     // Group trust list rows by truster and trustee
-    const trustBucket: { [avatar: string]: TrustListRow[] } = {};
+    const trustBucket: { [key: string]: TrustListRow[] } = {};
     trustListRows.forEach(row => {
+        const trusterKey = `${row.truster}-${row.version}`;
+        const trusteeKey = `${row.trustee}-${row.version}`;
         if (row.truster !== avatarAddress) {
-            trustBucket[row.truster] = trustBucket[row.truster] || [];
-            trustBucket[row.truster].push(row);
+            trustBucket[trusterKey] = trustBucket[trusterKey] || [];
+            trustBucket[trusterKey].push(row);
         }
         if (row.trustee !== avatarAddress) {
-            trustBucket[row.trustee] = trustBucket[row.trustee] || [];
-            trustBucket[row.trustee].push(row);
+            trustBucket[trusteeKey] = trustBucket[trusteeKey] || [];
+            trustBucket[trusteeKey].push(row);
         }
     });
 
     // Determine trust relations
     return Object.entries(trustBucket)
-        .filter(([avatar]) => avatar !== avatarAddress)
-        .map(([avatar, rows]) => {
+        .filter(([key]) => {
+            const [address] = key.split('-');
+            return address !== avatarAddress;
+        })
+        .map(([key, rows]) => {
             const maxTimestamp = Math.max(...rows.map(o => o.timestamp));
             let relation: TrustRelation;
             let trustVersion: number = rows[0].version;
@@ -118,10 +123,12 @@ async function getAggregatedTrustRelations(avatarAddress: string, trustsQuery: C
                 throw new Error('Unexpected trust list row. Couldnt determine trust relation.');
             }
 
+            const [address] = key.split('-');
+
             return {
                 subjectAvatar: avatarAddress,
                 relation: relation,
-                objectAvatar: avatar,
+                objectAvatar: address,
                 timestamp: maxTimestamp,
                 trustVersion: trustVersion
             };
