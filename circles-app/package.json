@@ -14,13 +14,13 @@
     "npm": ">=10"
   },
   "devDependencies": {
-    "@circles-sdk/adapter-cometh": "^0.11.2",
-    "@circles-sdk/adapter-ethers": "^0.11.2",
-    "@circles-sdk/adapter-safe": "^0.11.2",
-    "@circles-sdk/data": "^0.11.2",
-    "@circles-sdk/profiles": "^0.11.2",
-    "@circles-sdk/sdk": "^0.11.2",
-    "@circles-sdk/utils": "^0.11.2",
+    "@circles-sdk/adapter-cometh": "/home/daniel/src/aboutcircles/circles-sdk/packages/adapter-cometh",
+    "@circles-sdk/adapter-ethers": "/home/daniel/src/aboutcircles/circles-sdk/packages/adapter-ethers",
+    "@circles-sdk/adapter-safe": "/home/daniel/src/aboutcircles/circles-sdk/packages/adapter-safe",
+    "@circles-sdk/data": "/home/daniel/src/aboutcircles/circles-sdk/packages/data",
+    "@circles-sdk/profiles": "/home/daniel/src/aboutcircles/circles-sdk/packages/profiles",
+    "@circles-sdk/sdk": "/home/daniel/src/aboutcircles/circles-sdk/packages/sdk",
+    "@circles-sdk/utils": "/home/daniel/src/aboutcircles/circles-sdk/packages/utils",
     "@cometh/connect-sdk": "^1.2.29",
     "@safe-global/protocol-kit": "^4.1.0",
     "@sveltejs/adapter-auto": "^3.0.0",
@@ -39,7 +39,8 @@
     "tslib": "^2.4.1",
     "typescript": "^5.0.0",
     "vite": "^5.0.3",
-    "vite-plugin-node-polyfills": "^0.22.0"
+    "vite-plugin-node-polyfills": "^0.22.0",
+    "bip39": "^3.1.0"
   },
   "type": "module",
   "dependencies": {

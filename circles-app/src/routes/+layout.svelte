@@ -121,6 +121,9 @@
     import Send from "$lib/flows/send/1_To.svelte";
     import {getProfile} from "$lib/components/Avatar.svelte";
     import MintGroupTokens from "$lib/flows/mintGroupTokens/1_To.svelte";
+    import {onMount} from "svelte";
+    import {CirclesData, CirclesRpc} from "../../../../circles-sdk/packages/data";
+    import {Profiles} from "../../../../circles-sdk/packages/profiles";
 
     async function getOwnProfile() {
         if (!$avatar) {
@@ -196,7 +199,6 @@
 
     let showPopUp = false;
     let overlayOpacity = 0;
-
 </script>
 <style>
     .baseLayer {
@@ -237,6 +239,9 @@
                 }, {
                     name: "Settings",
                     link: "/settings"
+                }, {
+                    name: "Tools",
+                    link: "/_new/tools"
                 }]}
                 quickActions={quickActions}
         />
