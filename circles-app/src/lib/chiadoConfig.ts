@@ -19,7 +19,7 @@ export const chiadoConfig: CirclesConfig = {
 export const gnosisConfig: CirclesConfig = {
     circlesRpcUrl: "https://rpc.helsinki.aboutcircles.com/",
     pathfinderUrl: "https://pathfinder.aboutcircles.com",
-    v2PathfinderUrl: "http://localhost:8545/",
+    v2PathfinderUrl: "https://static.174.163.76.144.clients.your-server.de/pathfinder/",
     v1HubAddress: "0x29b9a7fbb8995b2423a71cc17cf9810798f6c543",
     v2HubAddress: "0x3a0F7848071f067c25b0747eC5bEdc77cb3778eb",
     nameRegistryAddress: "0x6192069E85afBD09D03f7e85eB6c35982A847e16",
