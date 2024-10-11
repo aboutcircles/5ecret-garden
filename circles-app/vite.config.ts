@@ -3,6 +3,20 @@ import {defineConfig} from 'vite';
 import {nodePolyfills} from 'vite-plugin-node-polyfills';
 
 export default defineConfig({
+    build: {
+        rollupOptions: {
+            external: ['vite-plugin-node-polyfills/shims/global',
+                'vite-plugin-node-polyfills/shims/process',
+                'vite-plugin-node-polyfills/shims/buffer',
+                'process'], // Externalize the shim directly
+        },
+    },
+    resolve: {
+        alias: {
+            buffer: 'buffer',
+            process: 'process/browser',  // Alias process to the browser polyfill
+        },
+    },
     plugins: [
         nodePolyfills({
             exclude: ['fs'],
