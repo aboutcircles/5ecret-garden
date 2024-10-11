@@ -8,12 +8,21 @@ export default {
       },
     },
   },
-  plugins: [
-    require('daisyui'),
-  ],
+  plugins: [require('daisyui')],
   daisyui: {
-    themes: false,
-    darkTheme: "light"
-  }
-}
-
+    themes: [
+      {
+        mytheme: {
+          primary: '#38318b',
+          secondary: '#27183e',
+          accent: '#37cdbe',
+          neutral: '#3d4451',
+          'base-100': '#ffffff',
+        },
+      },
+      'dark',
+      'cupcake',
+    ],
+    darkTheme: 'light',
+  },
+};
