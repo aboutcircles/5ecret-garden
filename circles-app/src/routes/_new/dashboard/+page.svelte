@@ -47,7 +47,7 @@
 </div>
 
 <div class="card bg-base-100 shadow-lg p-6">
-    {#if mintableAmount >= 1}
+    {#if mintableAmount >= 0.01}
         <div role="alert" class="alert mb-6 max-w-96">
             <span>You can mint {floorToDecimals(mintableAmount)} new Circles.</span>
             <div>

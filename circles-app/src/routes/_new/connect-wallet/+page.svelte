@@ -17,7 +17,7 @@
                      class="w-16 h-16 rounded-xl"/>
             </figure>
             <div class="card-body items-center text-center">
-                <h2 class="card-title">Import account</h2>
+                <h2 class="card-title">circles.garden</h2>
                 <p>Use your circles.garden key in 5eecret-garden</p>
                 {#if hasBrowserWallet}
                     <div class="card-actions">

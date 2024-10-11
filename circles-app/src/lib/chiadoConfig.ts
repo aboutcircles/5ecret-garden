@@ -17,13 +17,13 @@ export const chiadoConfig: CirclesConfig = {
 };
 
 export const gnosisConfig: CirclesConfig = {
-    circlesRpcUrl: "http://localhost:8545/",
+    circlesRpcUrl: "https://rpc.helsinki.aboutcircles.com:8545/",
     pathfinderUrl: "https://pathfinder.aboutcircles.com",
     v2PathfinderUrl: "http://localhost:8545/",
     v1HubAddress: "0x29b9a7fbb8995b2423a71cc17cf9810798f6c543",
-    v2HubAddress: "0xa5c7ADAE2fd3844f12D52266Cb7926f8649869Da",
-    nameRegistryAddress: "0x738fFee24770d0DE1f912adf2B48b0194780E9AD",
-    migrationAddress: "0xe1dCE89512bE1AeDf94faAb7115A1Ba6AEff4201",
+    v2HubAddress: "0x3a0F7848071f067c25b0747eC5bEdc77cb3778eb",
+    nameRegistryAddress: "0x6192069E85afBD09D03f7e85eB6c35982A847e16",
+    migrationAddress: "0x3483cE5904413bc4Fb83DA2E43540eD769752C88",
     profileServiceUrl: "https://chiado-pathfinder.aboutcircles.com/profiles/",
-    baseGroupMintPolicy: "0x5Ea08c967C69255d82a4d26e36823a720E7D0317"
+    baseGroupMintPolicy: "0x48F6B0aa3Ca905C9DbE41717c7664639107257da"
 }

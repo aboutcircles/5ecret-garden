@@ -7,12 +7,14 @@
     import {PrivateKeyContractRunner} from '@circles-sdk/adapter-ethers';
     import SeedphraseInput from "$lib/components/SeedphraseInput.svelte";
     import {ethers} from "ethers";
+    import {onMount} from "svelte";
 
     let mnemonicPhrase: string = "";
     let hasValidKey = false;
     let privateKey = "";
     let address = "";
 
+    const provider = new ethers.JsonRpcProvider(gnosisConfig.circlesRpcUrl);
 
     //
     // Connects the wallet and initializes the Circles SDK.
@@ -22,9 +24,10 @@
             return;
         }
 
-        const provider = new ethers.JsonRpcProvider(gnosisConfig.circlesRpcUrl);
         const wallet = new PrivateKeyContractRunner(provider, privateKey);
         await wallet.init();
+
+        localStorage.setItem('privateKey', privateKey);
 
         $wallet = wallet;
 
@@ -33,24 +36,41 @@
 
         await goto('/_new/connect-wallet/select-safe');
     }
+
+    onMount(async () => {
+        if (localStorage.getItem('privateKey')) {
+            privateKey = localStorage.getItem('privateKey')!;
+            const wallet = new PrivateKeyContractRunner(provider, privateKey);
+            await wallet.init();
+
+            $wallet = wallet;
+
+            $circles = new Sdk(gnosisConfig, $wallet!);
+
+            await goto('/_new/connect-wallet/select-safe');
+        }
+    });
+
 </script>
 
 <div class="hero bg-base-200 min-h-screen">
-    <div class="hero-content flex-col lg:flex-row-reverse">
-        <div class="card bg-base-100 w-full shadow-xl">
-            <div class="card-body items-center text-center">
-                <h2 class="card-title">Import circles.garden keyphrase</h2>
-                <p>Please enter or paste your keyphrase from circles.garden below.</p>
-                <SeedphraseInput
-                        bind:isValidMnemonic={hasValidKey}
-                        bind:privateKey
-                        bind:mnemonicPhrase
-                        bind:address
-                />
-                <div class="card-actions">
-                    <a on:click={() => connectWallet()} class="btn" class:btn-disabled={!hasValidKey}>Import</a>
+    {#if !localStorage.getItem('privateKey')}
+        <div class="hero-content flex-col lg:flex-row-reverse">
+            <div class="card bg-base-100 w-full shadow-xl">
+                <div class="card-body items-center text-center">
+                    <h2 class="card-title">Import circles.garden keyphrase</h2>
+                    <p>Please enter or paste your keyphrase from circles.garden below.</p>
+                    <SeedphraseInput
+                            bind:isValidMnemonic={hasValidKey}
+                            bind:privateKey
+                            bind:mnemonicPhrase
+                            bind:address
+                    />
+                    <div class="card-actions">
+                        <a on:click={() => connectWallet()} class="btn" class:btn-disabled={!hasValidKey}>Import</a>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    {/if}
 </div>
