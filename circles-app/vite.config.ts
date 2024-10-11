@@ -11,12 +11,6 @@ export default defineConfig({
                 'process'], // Externalize the shim directly
         },
     },
-    resolve: {
-        alias: {
-            buffer: 'buffer',
-            process: 'process/browser',  // Alias process to the browser polyfill
-        },
-    },
     plugins: [
         nodePolyfills({
             exclude: ['fs'],
