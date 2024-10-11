@@ -19,7 +19,7 @@
     }[] = [];
 </script>
 
-<div class="navbar bg-base-100">
+<div class="navbar bg-base-100 font-dmSans">
     <div class="navbar-start">
         <div class="dropdown">
             <div tabindex="0" role="button" class="btn btn-ghost lg:hidden">
@@ -31,9 +31,9 @@
             <ul tabindex="0"
                 class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow">
                 {#each menuItems as item}
-                    <li>
+                    <!-- <li>
                         <a href={item.link}>{item.name}</a>
-                    </li>
+                    </li> -->
                 {/each}
             </ul>
         </div>

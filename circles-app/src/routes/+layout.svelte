@@ -121,7 +121,6 @@
     import Send from "$lib/flows/send/1_To.svelte";
     import {getProfile} from "$lib/components/Avatar.svelte";
     import MintGroupTokens from "$lib/flows/mintGroupTokens/1_To.svelte";
-    import {onMount} from "svelte";
 
     async function getOwnProfile() {
         if (!$avatar) {
@@ -266,7 +265,7 @@
     }]}/>
 {/if}
 
-<main class="baseLayer">
+<main class="baseLayer font-dmSans">
     {#if $avatar && canMigrate($avatar.avatarInfo) && $page.route.id !== "/migrate-to-v2"}
         <UpdateBanner></UpdateBanner>
     {/if}
