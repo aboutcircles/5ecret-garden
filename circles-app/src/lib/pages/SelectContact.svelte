@@ -91,6 +91,28 @@
       selectedProfile = undefined;
     }
   };
+
+  // TODO: DRY
+  function avatarTypeToString(
+    type:
+      | 'CrcV2_RegisterHuman'
+      | 'CrcV2_RegisterGroup'
+      | 'CrcV2_RegisterOrganization'
+      | 'CrcV1_Signup'
+  ): string {
+    switch (type) {
+      case 'CrcV2_RegisterHuman':
+        return 'Human';
+      case 'CrcV2_RegisterGroup':
+        return 'Group';
+      case 'CrcV2_RegisterOrganization':
+        return 'Organization';
+      case 'CrcV1_Signup':
+        return 'Human (v1)';
+      default:
+        return 'Unknown';
+    }
+  }
 </script>
 
 <div class="form-control my-4">
@@ -112,20 +134,20 @@
   <div class="divide-y">
     {#if Object.keys(filteredAddresses).length > 0}
       {#each filteredAddresses as address (address)}
-        <div
-          class="flex items-center justify-between p-2 bg-base-100 hover:bg-base-200 rounded-lg"
+        <button
+          class="flex w-full items-center justify-between p-2 bg-base-100 hover:bg-base-200 rounded-lg"
           on:click={() => {
             selectedProfile = $store?.data[address].contactProfile;
             selectedAddress = address;
             selected(address, $store?.data[address].contactProfile);
           }}
         >
-          <div class="col">
-            <Avatar {address} clickable={false}>
-              {shortenAddress(address)}
-            </Avatar>
-          </div>
-        </div>
+          <Avatar {address} clickable={false}>
+            {#if $store?.data[address].avatarInfo?.type}
+              {avatarTypeToString($store?.data[address].avatarInfo?.type)} -
+            {/if} {shortenAddress(address)}
+          </Avatar>
+        </button>
       {/each}
     {:else}
       <div class="p-2 hover:bg-base-200 rounded-lg">

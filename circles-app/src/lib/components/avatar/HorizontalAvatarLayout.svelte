@@ -36,7 +36,7 @@
       />
     {/if}
   </button>
-  <div>
+  <div class="flex flex-col items-start">
     {#if showName}
       <span class="font-semibold">{profile?.name}</span>
       <p class="text-xs text-gray-500">
