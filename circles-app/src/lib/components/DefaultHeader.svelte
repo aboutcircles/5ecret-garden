@@ -1,6 +1,6 @@
 <script lang="ts">
-  export let text = 'Circles';
-  export let logo = '/logo.svg';
+  export let text;
+  export let logo;
 
   export let homeLink = '/';
 
@@ -63,7 +63,9 @@
       {#each menuItems as item}
         <li>
           <a
-            class={item.name === activePage ? 'font-bold text-primary' : 'font-medium'}
+            class={item.name === activePage
+              ? 'font-bold text-primary'
+              : 'font-medium'}
             href={item.link}>{item.name}</a
           >
         </li>
@@ -71,6 +73,16 @@
     </ul>
   </div>
   <div class="navbar-end">
+    {#if text}
+      <div class="hidden lg:flex items-center">
+        <div class="bg-black/10 rounded-full mr-2 h-7 w-7 p-1">
+          {#if logo}
+            <img src={logo} alt="Avatar" class="h-full w-full" />
+          {/if}
+        </div>
+        <p class="mr-5">{text}</p>
+      </div>
+    {/if}
     {#each quickActions as action}
       <a
         class="btn btn-primary text-white"
