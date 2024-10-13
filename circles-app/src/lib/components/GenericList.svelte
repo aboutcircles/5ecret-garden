@@ -64,7 +64,7 @@
     });
 </script>
 
-<div class="overflow-x-auto">
+<div class="w-full flex flex-col divide-y border rounded-lg p-4 overflow-x-auto">
     {#each ($store?.data ?? []) as item (getKeyFromItem(item))}
         <div on:click={() => eventDispatcher("select", item)}>
             <svelte:component this={row} item={item}/>

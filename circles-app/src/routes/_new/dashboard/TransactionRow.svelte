@@ -47,9 +47,9 @@
 
     <div class="col text-right">
         {#if item.from === $avatar.address}
-            <span class="text-lg text-red-500">-{floorToDecimals(item.circles)}</span> Circles
+            <span class="text-red-500 font-bold">-{floorToDecimals(item.circles)}</span> Circles
         {:else}
-            <span class="text-lg text-green-700">+{floorToDecimals(item.circles)}</span> Circles
+            <span class="text-green-700 font-bold">+{floorToDecimals(item.circles)}</span> Circles
         {/if}
         <p class="text-xs text-gray-500">
             {#if staticTypes.has(item.tokenType)}

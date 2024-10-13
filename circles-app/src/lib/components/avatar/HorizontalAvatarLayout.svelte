@@ -37,7 +37,7 @@
   </a>
   <div>
     {#if showName}
-      <span>{profile?.name}</span>
+      <span class="font-semibold">{profile?.name}</span>
       <p class="text-xs text-gray-500">
         <slot></slot>
       </p>
