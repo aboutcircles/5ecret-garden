@@ -13,7 +13,7 @@
     const eventDispatcher = createEventDispatcher();
 
     $: {
-        if (store) {
+        if (store && anchor) {
             setupObserver();
         }
     }

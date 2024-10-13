@@ -57,7 +57,7 @@
                     Value: (editorText ?? "") + "%"
                 }]
             }],
-            sortOrder: "ASC",
+            sortOrder: "DESC",
             limit: 25
         });
     }
