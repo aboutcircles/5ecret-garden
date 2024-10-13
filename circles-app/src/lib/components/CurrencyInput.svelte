@@ -9,6 +9,7 @@
     export let balanceRow: TokenBalanceRow;
     export let amount: number = 0;
     export let maxAmountCircles: number = -1;
+    export let staticCircles: number = 0;
 
     let inputElement: HTMLInputElement;
     let avatarWidth: string = "12rem";
@@ -31,11 +32,17 @@
         console.log("Amount set to:", amount);
     }
 
+    function setMaxAmount() {
+        amount = maxAmountCircles >= 0 ? roundToDecimals(maxAmountCircles) : roundToDecimals(balanceRow.circles);
+        inputElement.value = amount.toString();
+        set();
+    }
+
     onMount(() => {
         if (amount > 0) {
             setTimeout(() => {
                 if (amount > balanceRow.circles) {
-                    amount = Number.parseFloat(roundToDecimals(balanceRow.circles));
+                    amount = roundToDecimals(balanceRow.circles);
                 }
                 inputElement.value = amount.toString();
                 set();
@@ -68,28 +75,29 @@
                bind:this={inputElement}
                style="letter-spacing: 0.1em;"
         />
-        <!-- Adjust the wrapper to include the fade-out gradient -->
+
         <div class="absolute inset-y-0 right-0 flex items-center overflow-hidden" style="width:{avatarWidth}">
             <div class="min-w-96 relative flex items-center">
                 <Avatar address={balanceRow?.tokenOwner} clickable={false}>
                     {tokenTypeToString(balanceRow?.tokenType)}
                 </Avatar>
             </div>
-            <!-- The fading effect inside the input area -->
         </div>
         <div class="absolute top-0 right-0 bottom-0 w-12 m-1 pointer-events-none fade-out-gradient rounded"
              style="margin-right: 0.1rem;"></div>
     </div>
-    <button class="btn btn-sm mt-4 font-normal" on:click={() => {
-        inputElement.value = (maxAmountCircles >= 0 ? roundToDecimals(maxAmountCircles) : roundToDecimals(balanceRow?.circles)).toString();
-        set();
-    }}>
-        {#if maxAmountCircles === -1}
-            <span class="loading loading-spinner text-primary"></span>
-        {:else if maxAmountCircles === -2}
-            ⚠️
-        {/if}
-        Max <span
-            class="font-medium">{maxAmountCircles >= 0 ? roundToDecimals(maxAmountCircles) : roundToDecimals(balanceRow?.circles)}</span>
-    </button>
+    {#if balanceRow.isInflationary}
+<!--        <div class="ml-6 text-gray-400">10.00 static Circles</div>-->
+    {/if}
+    <p class="ml-6">
+        <button class="btn btn-sm mt-4 font-normal" on:click={setMaxAmount}>
+            {#if maxAmountCircles == -1}
+                <span class="loading loading-spinner text-primary"></span>
+            {:else if maxAmountCircles == -2}
+                ⚠️
+            {/if}
+            Max <span
+                class="font-medium">{maxAmountCircles >= 0 ? roundToDecimals(maxAmountCircles) : roundToDecimals(balanceRow?.circles)}</span>
+        </button>
+    </p>
 </div>

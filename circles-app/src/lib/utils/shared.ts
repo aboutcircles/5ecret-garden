@@ -16,7 +16,7 @@ export function getTimeAgo(unixTimestamp: number): string {
 }
 
 export function roundToDecimals(value?: number, decimals: number = 2): number {
-    return Math.round((value ?? 0) * Math.pow(10, decimals)) / Math.pow(10, decimals);
+    return Math.floor((value ?? 0) * Math.pow(10, decimals)) / Math.pow(10, decimals);
 }
 
 export function shortenAddress(address: string | undefined): string {
@@ -33,10 +33,4 @@ export const staticTypes: Set<TokenType> = new Set([
 
 export const crcTypes: Set<TokenType> = new Set([
     "CrcV1_Signup"
-]);
-
-export const demurragedType: Set<TokenType> = new Set([
-    "CrcV2_ERC20WrapperDeployed_Demurraged",
-    "CrcV2_RegisterGroup",
-    "CrcV2_RegisterHuman"
 ]);
