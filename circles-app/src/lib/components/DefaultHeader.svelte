@@ -23,7 +23,7 @@
   console.log(activePage);
 </script>
 
-<div class="navbar font-dmSans font-medium">
+<div class="navbar font-dmSans font-medium border-b">
   <div class="navbar-start">
     <div class="dropdown">
       <div tabindex="0" role="button" class="btn btn-ghost lg:hidden">
