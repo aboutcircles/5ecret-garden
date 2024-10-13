@@ -2,12 +2,11 @@
     import type {EventRow} from "@circles-sdk/data";
     import GenericList from "$lib/components/GenericList.svelte";
     import {createTransactionHistory} from "$lib/stores/transactionHistory";
-    import {onMount} from "svelte";
     import type {Readable} from "svelte/store";
     import TransactionRow from "./TransactionRow.svelte";
     import TotalBalance from "$lib/components/TotalBalance.svelte";
     import {avatar} from "$lib/stores/avatar";
-    import {floorToDecimals} from "$lib/utils/shared";
+    import {roundToDecimals} from "$lib/utils/shared";
     import {runTask} from "../../+layout.svelte";
 
     let txHistory: Readable<{ data: EventRow[], next: () => Promise<boolean>, ended: boolean }>
@@ -49,7 +48,7 @@
 <div class="card bg-base-100 shadow-lg p-6">
     {#if mintableAmount >= 0.01}
         <div role="alert" class="alert mb-6 max-w-96">
-            <span>You can mint {floorToDecimals(mintableAmount)} new Circles.</span>
+            <span>You can mint {roundToDecimals(mintableAmount)} new Circles.</span>
             <div>
                 <!--                <button class="btn btn-sm">Hide</button>-->
                 <button class="btn btn-sm btn-primary" on:click={mintPersonalCircles}>Mint</button>
