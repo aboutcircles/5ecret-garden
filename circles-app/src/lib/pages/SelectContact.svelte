@@ -147,6 +147,7 @@
               {avatarTypeToString($store?.data[address].avatarInfo?.type)} -
             {/if} {shortenAddress(address)}
           </Avatar>
+          <div class="font-medium underline flex gap-x-2">See details <img src="/chevron-right.svg" alt="Chevron Right" class="w-4"/></div>
         </button>
       {/each}
     {:else}
