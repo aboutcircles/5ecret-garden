@@ -4,7 +4,7 @@
     import type {TokenBalanceRow} from "@circles-sdk/data";
     import Avatar from "$lib/components/Avatar.svelte";
     import {tokenTypeToString} from "$lib/pages/SelectAsset.svelte";
-    import {floorToDecimals} from "$lib/utils/shared";
+    import {roundToDecimals} from "$lib/utils/shared";
 
     export let balanceRow: TokenBalanceRow;
     export let amount: number = 0;
@@ -35,7 +35,7 @@
         if (amount > 0) {
             setTimeout(() => {
                 if (amount > balanceRow.circles) {
-                    amount = Number.parseFloat(floorToDecimals(balanceRow.circles));
+                    amount = Number.parseFloat(roundToDecimals(balanceRow.circles));
                 }
                 inputElement.value = amount.toString();
                 set();
@@ -81,14 +81,15 @@
              style="margin-right: 0.1rem;"></div>
     </div>
     <button class="btn btn-sm mt-4 font-normal" on:click={() => {
-        inputElement.value = (maxAmountCircles >= 0 ? floorToDecimals(maxAmountCircles) : floorToDecimals(balanceRow?.circles)).toString();
+        inputElement.value = (maxAmountCircles >= 0 ? roundToDecimals(maxAmountCircles) : roundToDecimals(balanceRow?.circles)).toString();
         set();
     }}>
-        {#if maxAmountCircles == -1}
+        {#if maxAmountCircles === -1}
             <span class="loading loading-spinner text-primary"></span>
-        {:else if maxAmountCircles == -2}
+        {:else if maxAmountCircles === -2}
             ⚠️
         {/if}
-        Max <span class="font-medium">{maxAmountCircles >= 0 ? floorToDecimals(maxAmountCircles) : floorToDecimals(balanceRow?.circles)}</span>
+        Max <span
+            class="font-medium">{maxAmountCircles >= 0 ? roundToDecimals(maxAmountCircles) : roundToDecimals(balanceRow?.circles)}</span>
     </button>
 </div>
