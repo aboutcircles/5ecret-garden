@@ -127,33 +127,38 @@
   />
 </div>
 
-<div class="mt-4">
-  <p class="menu-title pl-0">
-    {addressListTitle}
-  </p>
-  <div class="divide-y">
-    {#if Object.keys(filteredAddresses).length > 0}
-      {#each filteredAddresses as address (address)}
-        <button
-          class="flex w-full items-center justify-between p-2 bg-base-100 hover:bg-base-200 rounded-lg"
-          on:click={() => {
-            selectedProfile = $store?.data[address].contactProfile;
-            selectedAddress = address;
-            selected(address, $store?.data[address].contactProfile);
-          }}
-        >
-          <Avatar {address} clickable={false}>
-            {#if $store?.data[address].avatarInfo?.type}
-              {avatarTypeToString($store?.data[address].avatarInfo?.type)} -
-            {/if} {shortenAddress(address)}
-          </Avatar>
-          <div class="font-medium underline flex gap-x-2">See details <img src="/chevron-right.svg" alt="Chevron Right" class="w-4"/></div>
-        </button>
-      {/each}
-    {:else}
-      <div class="p-2 hover:bg-base-200 rounded-lg">
-        {@html noResultsMessage}
-      </div>
-    {/if}
-  </div>
+<p class="menu-title pl-0">
+  {addressListTitle}
+</p>
+<div class="divide-y">
+  {#if Object.keys(filteredAddresses).length > 0}
+    {#each filteredAddresses as address (address)}
+      <button
+        class="flex w-full items-center justify-between p-2 bg-base-100 hover:bg-base-200 rounded-lg"
+        on:click={() => {
+          selectedProfile = $store?.data[address].contactProfile;
+          selectedAddress = address;
+          selected(address, $store?.data[address].contactProfile);
+        }}
+      >
+        <Avatar {address} clickable={false}>
+          {#if $store?.data[address].avatarInfo?.type}
+            {avatarTypeToString($store?.data[address].avatarInfo?.type)} -
+          {/if}
+          {shortenAddress(address)}
+        </Avatar>
+        <div class="font-medium underline flex gap-x-2">
+          See details <img
+            src="/chevron-right.svg"
+            alt="Chevron Right"
+            class="w-4"
+          />
+        </div>
+      </button>
+    {/each}
+  {:else}
+    <div class="p-2 hover:bg-base-200 rounded-lg">
+      {@html noResultsMessage}
+    </div>
+  {/if}
 </div>
