@@ -21,7 +21,7 @@
     export let disabled: boolean = false;
 
     export let theme: ActionButtonTheme = {
-        ['Ready']: 'bg-blue-500 text-white',
+        ['Ready']: 'bg-primary text-white',
         ['Working']: 'bg-gray-200 text-black',
         ['Error']: 'bg-yellow-500 text-white',
         ['Retry']: 'bg-yellow-500 text-white',
@@ -100,7 +100,7 @@
 
 <button on:click={executeAction}
         title="{errorMessage ?? title}"
-        class="ml-2 p-2 px-4 rounded-md {theme[state]} focus:outline-none transition">
+        class="text-sm p-2 px-4 rounded-lg {theme[state]} focus:outline-none transition">
     {#if state === 'Working'}
         <div class="loading-spinner inline-block border-t-2 border-b-2 border-gray-900 rounded-full w-4 h-4 animate-spin"></div>
     {/if}
