@@ -18,20 +18,12 @@
       <div class="card-body items-center text-center">
         <h2 class="card-title">circles.garden</h2>
         <p>Use your circles.garden key in 5eecret-garden</p>
-        {#if hasBrowserWallet}
-          <div class="card-actions">
-            <a
-              href="/_new/connect-wallet/import-circles-garden"
-              class="btn btn-primary">Connect</a
-            >
-          </div>
-        {:else}
-          <div class="card-actions">
-            <a href="/_new/connect-wallet" class="btn btn-disabled"
-              >Not available</a
-            >
-          </div>
-        {/if}
+        <div class="card-actions">
+          <a
+            href="/_new/connect-wallet/import-circles-garden"
+            class="btn btn-primary">Connect</a
+          >
+        </div>
       </div>
     </div>
 
