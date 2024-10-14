@@ -5,7 +5,7 @@
     import {avatar} from '$lib/stores/avatar';
     import {circles} from '$lib/stores/circles';
     import {shortenAddress} from '$lib/utils/shared';
-    import {SafeSdkBrowserContractRunner} from '@circles-sdk/adapter-safe';
+    import {SafeSdkBrowserContractRunner, SafeSdkPrivateKeyContractRunner} from '@circles-sdk/adapter-safe';
     import {Sdk, type CirclesConfig} from '@circles-sdk/sdk';
     import {createEventDispatcher, onMount} from "svelte";
     import {ethers} from "ethers6";
@@ -58,7 +58,14 @@
     // Connects the wallet and initializes the Circles SDK.
     //
     async function connectWallet(safeAddress: string) {
-        const safeContractRunner = new SafeSdkBrowserContractRunner();
+        // const safeContractRunner = new SafeSdkPrivateKeyContractRunner();
+
+        const key = localStorage.getItem('privateKey');
+
+        const safeContractRunner = (<any>window).ethereum
+            ? new SafeSdkBrowserContractRunner()
+            : new SafeSdkPrivateKeyContractRunner(key!, gnosisConfig.circlesRpcUrl);
+
         await safeContractRunner.init(safeAddress);
 
         $wallet = safeContractRunner;

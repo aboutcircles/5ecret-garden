@@ -54,7 +54,7 @@
 </script>
 
 <div class="hero bg-base-200 min-h-screen">
-    {#if !localStorage.getItem('privateKey')}
+    {#if !privateKey}
         <div class="hero-content flex-col lg:flex-row-reverse">
             <div class="card bg-base-100 w-full shadow-xl">
                 <div class="card-body items-center text-center">
