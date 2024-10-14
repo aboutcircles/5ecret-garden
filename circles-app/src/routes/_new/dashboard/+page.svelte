@@ -17,44 +17,59 @@
         mintableAmount = await $avatar?.getMintableAmount() ?? 0;
     }
 
-    $: {
-        if ($avatar) {
-            init();
-        }
+  let txHistory: Readable<{
+    data: EventRow[];
+    next: () => Promise<boolean>;
+    ended: boolean;
+  }>;
+  let mintableAmount: number = 0;
+
+  async function init() {
+    txHistory = await createTransactionHistory();
+    mintableAmount = (await $avatar?.getMintableAmount()) ?? 0;
+  }
+
+  $: {
+    if ($avatar) {
+      init();
+    }
+  }
+
+  async function mintPersonalCircles() {
+    if (!$avatar) {
+      throw new Error('Avatar store is not available');
     }
 
-    async function mintPersonalCircles() {
-        if (!$avatar) {
-            throw new Error("Avatar store is not available");
-        }
+    runTask({
+      name: 'Minting Circles ...',
+      promise: $avatar.personalMint(),
+    }).finally(async () => {
+      mintableAmount = (await $avatar?.getMintableAmount()) ?? 0;
+    });
 
-        runTask({
-            name: "Minting Circles ...",
-            promise: $avatar.personalMint()
-        })
-            .finally(async () => {
-                mintableAmount = await $avatar?.getMintableAmount() ?? 0;
-            });
-
-        mintableAmount = 0;
-    }
-
+    mintableAmount = 0;
+  }
 </script>
 
-<div class="grid grid-cols-1 mt-4">
-    <TotalBalance/>
-</div>
+<div class="w-[90%] lg:w-3/5 flex flex-col items-center gap-y-3">
+  <TotalBalance />
 
-<div class="card bg-base-100 shadow-lg p-6">
-    {#if mintableAmount >= 0.01}
-        <div role="alert" class="alert mb-6 max-w-96">
-            <span>You can mint {roundToDecimals(mintableAmount)} new Circles.</span>
-            <div>
-                <!--                <button class="btn btn-sm">Hide</button>-->
-                <button class="btn btn-sm btn-primary" on:click={mintPersonalCircles}>Mint</button>
-            </div>
-        </div>
-    {/if}
-    <GenericList row={TransactionRow}
-                 store={txHistory}/>
+  {#if mintableAmount >= 0.01}
+    <div
+      role="alert"
+      class="flex items-center justify-between w-full p-3 border rounded-lg"
+    >
+      <span class="font-semibold"
+        >You can mint {roundToDecimals(mintableAmount)} new Circles.</span
+      >
+      <div>
+        <button class="btn btn-sm btn-primary" on:click={mintPersonalCircles}
+          >Mint Circles</button
+        >
+      </div>
+    </div>
+  {/if}
+  <div class="w-full border rounded-lg p-4">
+    <GenericList row={TransactionRow} store={txHistory} />
+  </div>
 </div>

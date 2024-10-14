@@ -9,12 +9,13 @@
 </script>
 
 <div class="inline-flex items-center space-x-2">
-  <a class="cursor-pointer" on:click>
+  <button class="cursor-pointer" on:click>
     {#if pictureOverlayUrl}
       <div class="indicator">
         <span class="indicator-item badge bg-blue-100">
           <img
             src={pictureOverlayUrl}
+            alt="Overlay"
             class="h-6"
             class:rounded-full={imageStyle === 'circle'}
           />
@@ -34,11 +35,11 @@
         class:rounded-full={imageStyle === 'circle'}
       />
     {/if}
-  </a>
-  <div>
+  </button>
+  <div class="flex flex-col items-start">
     {#if showName}
-      <span>{profile?.name}</span>
-      <p class="text-xs text-gray-500">
+      <span class="font-semibold">{profile?.name}</span>
+      <p class="flex flex-col items-start text-xs text-gray-500">
         <slot></slot>
       </p>
     {/if}

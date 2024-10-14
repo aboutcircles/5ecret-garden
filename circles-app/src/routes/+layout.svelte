@@ -297,7 +297,9 @@
     <UpdateBanner></UpdateBanner>
   {/if}
 
-  <slot></slot>
+  <div class="w-full flex flex-col items-center">
+    <slot></slot>
+  </div>
 
   {#if showPopUp}
     <div

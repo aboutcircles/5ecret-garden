@@ -84,7 +84,7 @@
 
 </script>
 
-<div class="flex flex-col items-center border-2 border-dashed border-gray-300 rounded-lg p-6 bg-gray-50"
+<div class="flex flex-col items-center border border-dashed border-gray-300 rounded-lg px-6 py-10 bg-gray-50"
      on:click={openFilePicker}
      on:dragover={handleDragOver}
      on:drop={handleDrop}>
