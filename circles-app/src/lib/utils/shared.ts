@@ -15,11 +15,11 @@ export function getTimeAgo(unixTimestamp: number): string {
     return 'Just now';
 }
 
-export function floorToDecimals(value?: number, decimals: number = 2): number {
+export function roundToDecimals(value?: number, decimals: number = 2): number {
     return Math.floor((value ?? 0) * Math.pow(10, decimals)) / Math.pow(10, decimals);
 }
 
-export function shortenAddress(address:string | undefined): string {
+export function shortenAddress(address: string | undefined): string {
     if (!ethers.isAddress(address)) {
         return "";
     }
@@ -33,10 +33,4 @@ export const staticTypes: Set<TokenType> = new Set([
 
 export const crcTypes: Set<TokenType> = new Set([
     "CrcV1_Signup"
-]);
-
-export const demurragedType: Set<TokenType> = new Set([
-    "CrcV2_ERC20WrapperDeployed_Demurraged",
-    "CrcV2_RegisterGroup",
-    "CrcV2_RegisterHuman"
 ]);

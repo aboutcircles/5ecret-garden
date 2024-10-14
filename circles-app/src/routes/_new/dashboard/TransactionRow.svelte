@@ -1,10 +1,10 @@
 <script lang="ts">
-  import Avatar from '$lib/components/Avatar.svelte';
-  import { crcTypes, getTimeAgo, staticTypes } from '$lib/utils/shared';
-  import { floorToDecimals } from '$lib/utils/shared';
-  import type { TransactionHistoryRow } from '@circles-sdk/data';
-  import { tokenTypeToString } from '$lib/pages/SelectAsset.svelte';
-  import { avatar } from '$lib/stores/avatar';
+    import Avatar from "$lib/components/Avatar.svelte";
+    import {crcTypes, getTimeAgo, staticTypes} from "$lib/utils/shared";
+    import {roundToDecimals} from "$lib/utils/shared";
+    import type {TransactionHistoryRow} from "@circles-sdk/data";
+    import {tokenTypeToString} from "$lib/pages/SelectAsset.svelte";
+    import {avatar} from "$lib/stores/avatar";
 
   export let item: TransactionHistoryRow;
 </script>
@@ -74,19 +74,19 @@
   <div class="col text-right">
     {#if item.from === $avatar.address}
       <span class="text-red-500 font-bold"
-        >-{floorToDecimals(item.circles)}</span
+        >-{roundToDecimals(item.circles)}</span
       > Circles
     {:else}
       <span class="text-green-700 font-bold"
-        >+{floorToDecimals(item.circles)}</span
+        >+{roundToDecimals(item.circles)}</span
       > Circles
     {/if}
     <p class="text-xs text-gray-500">
       {#if staticTypes.has(item.tokenType)}
-        {floorToDecimals(item.staticCircles)} Static Circles
+        {roundToDecimals(item.staticCircles)} Static Circles
       {/if}
       {#if crcTypes.has(item.tokenType)}
-        {floorToDecimals(item.crc)} CRC
+        {roundToDecimals(item.crc)} CRC
       {/if}
     </p>
   </div>

@@ -1,14 +1,21 @@
 <script lang="ts">
-  import type { EventRow } from '@circles-sdk/data';
-  import GenericList from '$lib/components/GenericList.svelte';
-  import { createTransactionHistory } from '$lib/stores/transactionHistory';
-  import { onMount } from 'svelte';
-  import type { Readable } from 'svelte/store';
-  import TransactionRow from './TransactionRow.svelte';
-  import TotalBalance from '$lib/components/TotalBalance.svelte';
-  import { avatar } from '$lib/stores/avatar';
-  import { floorToDecimals } from '$lib/utils/shared';
-  import { runTask } from '../../+layout.svelte';
+    import type {EventRow} from "@circles-sdk/data";
+    import GenericList from "$lib/components/GenericList.svelte";
+    import {createTransactionHistory} from "$lib/stores/transactionHistory";
+    import type {Readable} from "svelte/store";
+    import TransactionRow from "./TransactionRow.svelte";
+    import TotalBalance from "$lib/components/TotalBalance.svelte";
+    import {avatar} from "$lib/stores/avatar";
+    import {roundToDecimals} from "$lib/utils/shared";
+    import {runTask} from "../../+layout.svelte";
+
+    let txHistory: Readable<{ data: EventRow[], next: () => Promise<boolean>, ended: boolean }>
+    let mintableAmount: number = 0;
+
+    async function init() {
+        txHistory = await createTransactionHistory();
+        mintableAmount = await $avatar?.getMintableAmount() ?? 0;
+    }
 
   let txHistory: Readable<{
     data: EventRow[];
@@ -53,7 +60,7 @@
       class="flex items-center justify-between w-full p-3 border rounded-lg"
     >
       <span class="font-semibold"
-        >You can mint {floorToDecimals(mintableAmount)} new Circles.</span
+        >You can mint {roundToDecimals(mintableAmount)} new Circles.</span
       >
       <div>
         <button class="btn btn-sm btn-primary" on:click={mintPersonalCircles}

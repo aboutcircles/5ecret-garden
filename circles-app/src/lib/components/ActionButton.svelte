@@ -12,7 +12,6 @@
 </script>
 <script lang="ts">
     import {createEventDispatcher} from "svelte";
-    import {parseError} from "@circles-sdk/sdk";
 
     export let action: () => Promise<any>;
     export let title: string = '';
@@ -33,25 +32,6 @@
 
     let state: ActionButtonState = 'Ready';
     let errorMessage: string = '';
-
-    function handleReverted(err: any): any {
-        if (!err?.info?.error?.data?.message) {
-            return undefined;
-        }
-        const errorMessage: string = err.info.error.data.message;
-        const errorDataStartIndex = errorMessage.indexOf("0x");
-        const errorData = errorMessage.substring(errorDataStartIndex);
-        if (errorData.length < 3) {
-            return undefined;
-        }
-
-        const decodedError = parseError(errorData);
-        if (!decodedError) {
-            return undefined;
-        }
-
-        return decodedError;
-    }
 
     const executeAction = () => {
         if (disabled || state === 'Done' || state == 'Working') {
@@ -76,16 +56,6 @@
                     setTimeout(() => {
                         state = 'Retry';
                     }, doneStateDuration); // Use the same duration for simplicity
-                }
-                const reverted = handleReverted(err);
-                if (reverted) {
-                    const errorArgs = reverted.fragment.inputs.map((input, i) => {
-                        const arg = reverted.args[i];
-                        return `${input.name}: ${arg}`;
-                    });
-
-                    errorMessage = reverted.name + ": " + errorArgs.join("; ");
-                    console.error(reverted);
                 }
                 console.error(err);
             });

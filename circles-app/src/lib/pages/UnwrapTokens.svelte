@@ -4,7 +4,7 @@
     import {ethers} from "ethers6";
     import BalanceRow from "$lib/components/BalanceRow.svelte";
     import type {TokenBalanceRow} from "@circles-sdk/data";
-    import {floorToDecimals} from "$lib/utils/shared";
+    import {roundToDecimals} from "$lib/utils/shared";
     import {runTask} from "../../routes/+layout.svelte";
     import type {PopupContentApi} from "$lib/components/PopUp.svelte";
 
@@ -24,12 +24,12 @@
 
         if (tokenInfo.type === "CrcV2_ERC20WrapperDeployed_Inflationary") {
             runTask({
-                name: `Unwrap ${floorToDecimals(amount)} static tokens ...`,
+                name: `Unwrap ${roundToDecimals(amount)} static tokens ...`,
                 promise: $avatar.unwrapInflationErc20(asset.tokenAddress, BigInt(ethers.parseEther(amount.toString())))
             });
         } else if (tokenInfo.type === "CrcV2_ERC20WrapperDeployed_Demurraged") {
             runTask({
-                name: `Unwrap ${floorToDecimals(amount)} tokens ...`,
+                name: `Unwrap ${roundToDecimals(amount)} tokens ...`,
                 promise: $avatar.unwrapDemurrageErc20(asset.tokenAddress, BigInt(ethers.parseEther(amount.toString())))
             });
         } else {
