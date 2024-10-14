@@ -130,9 +130,10 @@
 <p class="menu-title pl-0">
   {addressListTitle}
 </p>
-<div class="divide-y">
+<div class="flex flex-col w-full divide-y gap-y-2">
   {#if Object.keys(filteredAddresses).length > 0}
     {#each filteredAddresses as address (address)}
+    <div class="pt-2">
       <button
         class="flex w-full items-center justify-between p-2 bg-base-100 hover:bg-base-200 rounded-lg"
         on:click={() => {
@@ -155,6 +156,7 @@
           />
         </div>
       </button>
+    </div>
     {/each}
   {:else}
     <div class="p-2 hover:bg-base-200 rounded-lg">

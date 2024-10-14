@@ -26,37 +26,47 @@
     </Avatar>
   {:else if item.to === '0x0000000000000000000000000000000000000000'}
     <Avatar address={item.from}>
-      🔥 <a
-        target="_blank"
-        href={'https://gnosisscan.io/tx/' + item.transactionHash}
-        class="underline"
+      <span>
+        🔥 <a
+          target="_blank"
+          href={'https://gnosisscan.io/tx/' + item.transactionHash}
+          class="underline"
+        >
+          Burn {tokenTypeToString(item.tokenType)}
+        </a></span
       >
-        Burn {tokenTypeToString(item.tokenType)}
-      </a>
       <p>{getTimeAgo(item.timestamp)}</p>
     </Avatar>
   {:else if item.from === $avatar.address}
     <Avatar address={item.to}>
-      <img src="/outgoing.svg" alt="Outgoing tokens" class="w-3 h-3 inline" />
-      <a
-        target="_blank"
-        href={'https://gnosisscan.io/tx/' + item.transactionHash}
-        class="underline"
+      <span>
+        <img src="/outgoing.svg" alt="Outgoing tokens" class="w-3 h-3 inline" />
+        <a
+          target="_blank"
+          href={'https://gnosisscan.io/tx/' + item.transactionHash}
+          class="underline"
+        >
+          Send {tokenTypeToString(item.tokenType)}
+        </a></span
       >
-        Send {tokenTypeToString(item.tokenType)}
-      </a>
       <p>{getTimeAgo(item.timestamp)}</p>
     </Avatar>
   {:else if item.to === $avatar.address}
     <Avatar address={item.from}>
-      <img src="/incoming.svg" alt="Incoming tokens" class="w-3 h-3 inline" />
-      <a
-        target="_blank"
-        href={'https://gnosisscan.io/tx/' + item.transactionHash}
-        class="underline"
+      <span
+        ><img
+          src="/incoming.svg"
+          alt="Incoming tokens"
+          class="w-3 h-3 inline"
+        />
+        <a
+          target="_blank"
+          href={'https://gnosisscan.io/tx/' + item.transactionHash}
+          class="underline"
+        >
+          Receive {tokenTypeToString(item.tokenType)}
+        </a></span
       >
-        Receive {tokenTypeToString(item.tokenType)}
-      </a>
       <p>{getTimeAgo(item.timestamp)}</p>
     </Avatar>
   {/if}
