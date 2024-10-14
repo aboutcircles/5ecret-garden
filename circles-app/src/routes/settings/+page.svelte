@@ -79,7 +79,7 @@
 </script>
 
 <div
-  class="flex flex-col w-[90%] lg:w-3/5 border rounded-lg px-6 py-8 divide-y gap-y-4"
+  class="flex flex-col w-[90%] lg:w-3/5 border rounded-lg px-6 py-8 divide-y gap-y-4 mt-20"
 >
   <div class="flex flex-col w-full gap-y-4">
     <p class="text-lg font-bold">Personal Profile</p>

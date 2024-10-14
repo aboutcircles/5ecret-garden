@@ -24,8 +24,8 @@
     }
 </script>
 
-<div class="space-y-6">
-    <div class="bg-white p-4 rounded shadow">
+<div class="flex flex-col w-[90%] lg:w-3/5 border rounded-lg px-6 py-8 mt-20">
+    <div class="p-4">
         <h2 class="text-lg font-medium">Calculate path</h2>
         <div class="mt-3 space-y-2">
             <div>

@@ -43,7 +43,7 @@
   }
 </script>
 
-<div class="w-[90%] lg:w-3/5 flex flex-col items-center gap-y-3">
+<div class="w-[90%] lg:w-3/5 flex flex-col items-center gap-y-3 mt-20">
   <TotalBalance />
 
   {#if mintableAmount >= 0.01}

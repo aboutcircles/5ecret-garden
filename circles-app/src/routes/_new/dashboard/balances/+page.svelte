@@ -19,10 +19,10 @@
     let selectedRow: TokenBalanceRow | undefined;
 </script>
 
-<div class="card bg-base-100 shadow-lg p-6">
+<div class="flex flex-col w-[90%] lg:w-3/5 border rounded-lg px-4 py-8 gap-y-4 mt-20">
     <div class="card-title text-2xl mb-4">Balance breakdown</div>
     {#each $circlesBalances.data as balance, i}
-        <div class="collapse p-0 m-0 bg-base-100 hover:bg-base-200 rounded-lg">
+        <div class="collapse p-0 m-0 bg-base-100 rounded-lg">
             <input type="radio" name="balancesAccordeon" checked={i == 0}/>
             <summary class="collapse-title p-0 m-0">
                 <BalanceRow balance={balance}/>

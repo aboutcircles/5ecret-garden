@@ -17,7 +17,7 @@
 </script>
 
 <div
-  class="flex flex-col w-[90%] lg:w-3/5 border rounded-lg px-4 py-8 gap-y-4"
+  class="flex flex-col w-[90%] lg:w-3/5 border rounded-lg px-4 py-8 gap-y-4 mt-20"
 >
   <div class="text-xl font-bold">Groups</div>
   {#if groups}
