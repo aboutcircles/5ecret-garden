@@ -9,14 +9,13 @@
 </script>
 
 <div class="w-full flex flex-col items-center space-y-4 p-4 text-center">
-  <a class="cursor-pointer" on:click>
+  <button class="cursor-pointer" on:click>
     <img
       src={profile?.previewImageUrl ?? '/default-avatar.png'}
       alt="User Icon"
-      class="w-64 h-64"
-      class:rounded-full={imageStyle === 'circle'}
+      class="w-44 h-44 rounded-full"
     />
-  </a>
+  </button>
   <div class="flex flex-col items-center space-y-2">
     {#if showName}
       <span class="font-bold text-lg">{profile?.name}</span>
