@@ -24,7 +24,7 @@
         const circlesConfig = await getCirclesConfig(network.chainId);
 
         // Initialize the Circles SDK and set it as $circles to make it globally available.
-        $circles = new Sdk(circlesConfig, $wallet!);
+        $circles = new Sdk($wallet!, circlesConfig);
 
         const avatarInfo = await $circles.data.getAvatarInfo($wallet.address!);
         console.log(avatarInfo);

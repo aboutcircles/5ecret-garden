@@ -36,7 +36,7 @@
             $wallet = ethersContractRunner;
 
             // Initialize the Circles SDK and set it as $circles to make it globally available.
-            $circles = new Sdk(chiadoConfig, $wallet!);
+            $circles = new Sdk($wallet!, chiadoConfig);
 
             const avatarInfo = await $circles.data.getAvatarInfo(walletAddress);
 
