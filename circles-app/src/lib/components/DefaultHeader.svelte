@@ -94,7 +94,7 @@
         }}
       >
         {#if action.icon}
-          <img class="h-4 w-4" src={action.icon} alt={action.name} />
+          <img class="h-3.5 w-3.5" src={action.icon} alt={action.name} />
         {/if}
         {action.name}
       </a>
