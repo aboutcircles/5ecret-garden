@@ -248,10 +248,10 @@
           name: 'Settings',
           link: '/settings',
         },
-        {
-          name: 'Tools',
-          link: '/_new/tools',
-        },
+        // {
+        //   name: 'Tools',
+        //   link: '/_new/tools',
+        // },
       ]}
       {quickActions}
       {activePage}
