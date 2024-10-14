@@ -21,7 +21,7 @@ export const gnosisConfig: CirclesConfig = {
     pathfinderUrl: "https://pathfinder.aboutcircles.com",
     v2PathfinderUrl: "http://localhost:8082",
     v1HubAddress: "0x29b9a7fbb8995b2423a71cc17cf9810798f6c543",
-    v2HubAddress: "0xa5c7ADAE2fd3844f12D52266Cb7926f8649869Da",
+    v2HubAddress: "0xc12C1E50ABB450d6205Ea2C3Fa861b3B834d13e8",
     nameRegistryAddress: "0x738fFee24770d0DE1f912adf2B48b0194780E9AD",
     migrationAddress: "0xe1dCE89512bE1AeDf94faAb7115A1Ba6AEff4201",
     profileServiceUrl: "https://chiado-pathfinder.aboutcircles.com/profiles/",
