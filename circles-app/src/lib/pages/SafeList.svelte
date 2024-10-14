@@ -70,7 +70,7 @@
         circlesConfig = await getCirclesConfig(network.chainId);
 
         // Initialize the Circles SDK and set it as $circles to make it globally available.
-        $circles = new Sdk(circlesConfig, safeContractRunner!);
+        $circles = new Sdk(safeContractRunner!, circlesConfig);
 
         contentApi?.close();
 

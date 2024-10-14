@@ -4,8 +4,6 @@
     import CurrencyInput from "$lib/components/CurrencyInput.svelte";
     import {avatar} from "$lib/stores/avatar";
     import {TransitiveTransferTokenAddress} from "./SelectAsset.svelte";
-    import {attoCirclesToCircles} from "@circles-sdk/data";
-    import {crcToTc} from "@circles-sdk/utils";
 
     const eventDispatcher = createEventDispatcher();
 

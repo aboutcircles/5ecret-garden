@@ -32,7 +32,7 @@
         $wallet = wallet;
 
         // Initialize the Circles SDK and set it as $circles to make it globally available.
-        $circles = new Sdk(gnosisConfig, $wallet!);
+        $circles = new Sdk($wallet!, gnosisConfig);
 
         await goto('/_new/connect-wallet/select-safe');
     }
@@ -45,7 +45,7 @@
 
             $wallet = wallet;
 
-            $circles = new Sdk(gnosisConfig, $wallet!);
+            $circles = new Sdk($wallet!, gnosisConfig);
 
             await goto('/_new/connect-wallet/select-safe');
         }
