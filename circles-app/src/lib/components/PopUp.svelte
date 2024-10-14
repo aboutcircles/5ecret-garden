@@ -172,7 +172,7 @@
   };
 </script>
 
-<div class="popup card" bind:this={popup} style="--y: {$y}px">
+<div class="popup rounded-t-lg overflow-y-auto" bind:this={popup} style="--y: {$y}px">
   <div class="w-[90%] lg:w-3/5 relative">
     <div class="absolute left-0 top-0 mt-6">
       {#if stack.length > 0}

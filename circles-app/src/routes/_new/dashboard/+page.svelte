@@ -62,6 +62,7 @@
       </div>
     </div>
   {/if}
-
-  <GenericList row={TransactionRow} store={txHistory} />
+  <div class="w-full border rounded-lg  p-4">
+    <GenericList row={TransactionRow} store={txHistory} />
+  </div>
 </div>
