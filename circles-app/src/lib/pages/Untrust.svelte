@@ -6,6 +6,7 @@
   import { shortenAddress } from '$lib/utils/shared';
   import { V1Avatar } from '@circles-sdk/sdk';
   import { circles } from '$lib/stores/circles';
+  import ActionButton from '$lib/components/ActionButton.svelte';
 
   export let address: string;
   export let trustVersion: number;
@@ -53,11 +54,7 @@
     <span>Un-trusting means that you no longer accept their tokens.</span>
   </div>
 
-  <div class="modal-action">
-    <button
-      type="submit"
-      class="btn btn-primary"
-      on:click={async () => await untrust()}>Un-trust</button
-    >
+  <div>
+    <ActionButton action={untrust}>Untrust</ActionButton>
   </div>
 </div>

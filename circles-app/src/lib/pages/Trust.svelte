@@ -4,6 +4,7 @@
   import { runTask } from '../../routes/+layout.svelte';
   import type { PopupContentApi } from '$lib/components/PopUp.svelte';
   import { shortenAddress } from '$lib/utils/shared';
+  import ActionButton from '$lib/components/ActionButton.svelte';
 
   export let address: string;
   export let contentApi: PopupContentApi;
@@ -46,10 +47,6 @@
   </div>
 
   <div>
-    <button
-      type="submit"
-      class="btn btn-primary text-white"
-      on:click={async () => await trust()}>Trust</button
-    >
+    <ActionButton action={trust}>Trust</ActionButton>
   </div>
 </div>

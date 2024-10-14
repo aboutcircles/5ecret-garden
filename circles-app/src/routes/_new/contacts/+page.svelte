@@ -65,8 +65,10 @@
 
 <div class="flex flex-col w-[90%] lg:w-3/5 border rounded-lg px-4 py-8 gap-y-4">
   <div class="text-xl font-bold">Contacts</div>
-  <div class="w-full overflow-x-auto divide-y">
+  <div class="flex flex-col w-full overflow-x-auto divide-y gap-y-2">
     {#each orderedContacts as address}
+    <!-- TODO: use the generic list component -->
+    <div class="w-full pt-2">
       <button
         class="flex w-full items-center justify-between p-2 bg-base-100 hover:bg-base-200 rounded-lg"
         on:click={(e) => {
@@ -117,6 +119,7 @@
           />
         </div>
       </button>
+    </div>
     {/each}
     <div class="text-center py-4">
       <span class="text-gray-500">End of list</span>
