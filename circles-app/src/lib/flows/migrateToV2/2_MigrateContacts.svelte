@@ -6,8 +6,7 @@
     import Avatar from "$lib/components/Avatar.svelte";
     import {ensureContacts} from "../../../routes/+layout.svelte";
     import type {Readable} from "svelte/store";
-    import type {ContactList} from "$lib/stores/contacts";
-    import type {ExtendedTrustRelationRow} from "../../../routes/contacts/+page.svelte";
+    import type {ContactList, ExtendedTrustRelationRow} from "$lib/stores/contacts";
     import Migrate from "./3_Migrate.svelte";
 
     export let contentApi: PopupContentApi;

@@ -4,8 +4,15 @@ import type { AvatarRow, CirclesEvent, CirclesEventType, CirclesQuery, TrustList
 import type { Profile } from "@circles-sdk/profiles";
 import { createEventStore } from "$lib/stores/eventStores/eventStoreFactory";
 import { getProfile } from "$lib/components/Avatar.svelte";
-import type { ExtendedTrustRelationRow } from "../../routes/_new/contacts/+page.svelte";
 import { circles } from "$lib/stores/circles";
+
+export type ExtendedTrustRelationRow = TrustRelationRow & {
+    contactName?: string;
+    contactImageUrl?: string;
+    invitedByMe?: boolean;
+    isGroup?: boolean;
+    invitedMe?: boolean;
+};
 
 export type ContactListItem = {
     contactProfile: Profile;
