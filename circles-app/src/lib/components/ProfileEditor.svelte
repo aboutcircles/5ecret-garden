@@ -1,6 +1,7 @@
 <script lang="ts">
     import ImageUpload from "$lib/components/ImageUpload.svelte";
     import type {Profile} from "@circles-sdk/profiles";
+    import {onMount} from "svelte";
 
     export let profile: Profile = {
         name: '',
@@ -18,6 +19,12 @@
         profile.previewImageUrl = '';
         profile = profile;
     };
+
+    onMount(async () => {
+        if (profile && profile.previewImageUrl) {
+            console.log("profile && profile.previewImageUrl == true");
+        }
+    });
 </script>
 
 <div class="mt-3 space-y-2">

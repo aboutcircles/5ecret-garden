@@ -38,6 +38,9 @@
     }
 
     onMount(async () => {
+        localStorage.removeItem("useMM");
+        localStorage.setItem("usePK", "true");
+
         if (localStorage.getItem('privateKey')) {
             privateKey = localStorage.getItem('privateKey')!;
             const wallet = new PrivateKeyContractRunner(provider, privateKey);
