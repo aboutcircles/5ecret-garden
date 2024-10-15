@@ -56,6 +56,7 @@
       <img src="/logo.svg" alt="Circles" class="w-8 h-8" />
       <!-- TODO: Handle the sizing and ellipsis for the header text properly. This will do for now. -->
       <span class="inline-block overflow-hidden text-primary">Circles</span>
+      <span class="inline-block overflow-hidden text-primary text-sm"> (beta)</span>
     </a>
   </div>
   <div class="navbar-center hidden lg:flex">
