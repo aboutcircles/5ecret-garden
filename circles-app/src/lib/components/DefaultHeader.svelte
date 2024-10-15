@@ -55,7 +55,7 @@
     <a class="flex items-center text-xl font-bold" href={homeLink}>
       <img src="/logo.svg" alt="Circles" class="w-8 h-8" />
       <!-- TODO: Handle the sizing and ellipsis for the header text properly. This will do for now. -->
-      <span class="inline-block overflow-hidden text-primary">Circles <p class="text-sm text-red-500 ml-2"> (beta)</p></span>
+      <span class="inline-block overflow-hidden text-primary">Circles <p class="text-sm text-red-500"> (beta)</p></span>
     </a>
   </div>
   <div class="navbar-center hidden lg:flex">
