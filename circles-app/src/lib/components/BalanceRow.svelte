@@ -1,7 +1,7 @@
 <script lang="ts">
     import Avatar from "$lib/components/Avatar.svelte";
     import {tokenTypeToString} from "$lib/pages/SelectAsset.svelte";
-    import {crcTypes, floorToDecimals, staticTypes} from "$lib/utils/shared";
+    import {crcTypes, roundToDecimals, staticTypes} from "$lib/utils/shared";
     import type {TokenBalanceRow} from "@circles-sdk/data";
 
     export let balance: TokenBalanceRow;
@@ -16,13 +16,13 @@
     </div>
 
     <div class="col text-right">
-        <span class="text-lg">{floorToDecimals(balance.circles)}</span> Circles
+        <span class="text-lg">{roundToDecimals(balance.circles)}</span> Circles
         <p class="text-xs text-gray-500">
             {#if staticTypes.has(balance.tokenType)}
-                {floorToDecimals(balance.staticCircles)} Static Circles
+                {roundToDecimals(balance.staticCircles)} Static Circles
             {/if}
             {#if crcTypes.has(balance.tokenType)}
-                {floorToDecimals(balance.crc)} CRC
+                {roundToDecimals(balance.crc)} CRC
             {/if}
         </p>
     </div>

@@ -3,10 +3,12 @@
     import type {AvatarInterface} from "@circles-sdk/sdk";
     import {avatar} from "$lib/stores/avatar";
     import {circles} from "$lib/stores/circles";
-    import type {Profile} from "@circles-sdk/profiles/src";
+    import type {Profile} from "@circles-sdk/profiles";
     import Avatar, {getProfile} from "$lib/components/Avatar.svelte";
 
     export let otherAvatarAddress: string;
+    export let contentApi: any;
+    export let commonConnectionsCount: number = 0;
 
     let commonContacts: string[] = [];
     let profile: Profile | undefined;
@@ -57,6 +59,7 @@
             }, {} as Record<string, TrustRelationRow>);
 
         commonContacts = Object.keys(otherAvatarOutgoingTrust).filter(address => avatarContactsByAddress[address]);
+        commonConnectionsCount = commonContacts.length;
     }
 </script>
 <p class="menu-title pl-0">
@@ -64,14 +67,14 @@
 </p>
 <ul>
     {#each commonContacts as contact(contact)}
-        <li class="p-2">
-            <Avatar address={contact}>
+        <li>
+            <Avatar contentApi={contentApi} address={contact}>
                 {contact}
             </Avatar>
         </li>
     {/each}
     {#if commonContacts.length === 0}
-        <li class="p-2">
+        <li>
             No common connections
         </li>
     {/if}

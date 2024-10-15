@@ -1,14 +1,12 @@
 <script lang="ts">
-    import {goto} from "$app/navigation";
-    import {wallet} from "$lib/stores/wallet";
-    import {circles} from "$lib/stores/circles";
-    import {avatar} from "$lib/stores/avatar";
-    import {type CirclesConfig, Sdk} from "@circles-sdk/sdk";
-    import {chiadoConfig, gnosisConfig} from "$lib/chiadoConfig";
-    import {
-        BrowserProviderContractRunner
-    } from "@circles-sdk/adapter-ethers";
-    import {onMount} from "svelte";
+    import { goto } from '$app/navigation';
+    import { wallet } from '$lib/stores/wallet';
+    import { circles } from '$lib/stores/circles';
+    import { avatar } from '$lib/stores/avatar';
+    import { type CirclesConfig, Sdk } from '@circles-sdk/sdk';
+    import { chiadoConfig, gnosisConfig } from '$lib/chiadoConfig';
+    import { BrowserProviderContractRunner } from '@circles-sdk/adapter-ethers';
+    import { onMount } from 'svelte';
 
     //
     // Connects the wallet and initializes the Circles SDK.
@@ -26,16 +24,17 @@
         const circlesConfig = await getCirclesConfig(network.chainId);
 
         // Initialize the Circles SDK and set it as $circles to make it globally available.
-        $circles = new Sdk(circlesConfig, $wallet!);
+        $circles = new Sdk($wallet!, circlesConfig);
 
         const avatarInfo = await $circles.data.getAvatarInfo($wallet.address!);
+        console.log(avatarInfo);
 
         // If the signer address is already a registered Circles wallet, go straight to the dashboard.
         if (avatarInfo) {
             $avatar = await $circles.getAvatar($wallet.address!);
-            await goto("/_new/dashboard");
+            await goto('/_new/dashboard');
         } else {
-            await goto("/_new/register");
+            await goto('/_new/register');
         }
     }
 
@@ -57,7 +56,6 @@
 
 <div class="hero bg-base-200 min-h-screen">
     <div class="hero-content flex-col lg:flex-row-reverse">
-
         <div class="card bg-base-100 w-96 shadow-xl">
             <figure class="px-10 pt-10">
                 <span class="loading loading-spinner loading-lg"></span>

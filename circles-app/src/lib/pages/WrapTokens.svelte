@@ -3,7 +3,7 @@
     import {avatar} from "$lib/stores/avatar";
     import type {TokenBalanceRow} from "@circles-sdk/data";
     import BalanceRow from "$lib/components/BalanceRow.svelte";
-    import {floorToDecimals} from "$lib/utils/shared";
+    import {roundToDecimals} from "$lib/utils/shared";
     import {runTask} from "../../routes/+layout.svelte";
     import type {PopupContentApi} from "$lib/components/PopUp.svelte";
 
@@ -17,12 +17,12 @@
         const sendValue = ethers.parseEther(amount.toString());
         if (wrapType == 'Demurraged') {
             runTask({
-                name: `Wrap ${floorToDecimals(amount)} Circles as Demurraged ERC20...`,
+                name: `Wrap ${roundToDecimals(amount)} Circles as Demurraged ERC20...`,
                 promise: wrapDemurraged(sendValue)
             });
         } else {
             runTask({
-                name: `Wrap ${floorToDecimals(amount)} Circles as Inflationary ERC20...`,
+                name: `Wrap ${roundToDecimals(amount)} Circles as Inflationary ERC20...`,
                 promise: wrapInflationary(sendValue)
             });
         }
@@ -34,6 +34,9 @@
             throw new Error("Only supported for Avatar v2");
         }
         const receipt = await $avatar?.wrapInflationErc20(asset.tokenAddress, sendValue);
+        if (!receipt) {
+            throw new Error("Failed to wrap Circles");
+        }
     }
 
     async function wrapDemurraged(sendValue: bigint) {
@@ -41,6 +44,9 @@
             throw new Error("Only supported for Avatar v2");
         }
         const receipt = await $avatar?.wrapDemurrageErc20(asset.tokenAddress, sendValue);
+        if (!receipt) {
+            throw new Error("Failed to wrap Circles");
+        }
     }
 </script>
 

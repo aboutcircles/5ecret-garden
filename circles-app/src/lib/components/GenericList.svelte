@@ -13,7 +13,7 @@
     const eventDispatcher = createEventDispatcher();
 
     $: {
-        if (store) {
+        if (store && anchor) {
             setupObserver();
         }
     }
@@ -64,11 +64,11 @@
     });
 </script>
 
-<div class="overflow-x-auto">
+<div class="w-full flex flex-col divide-y gap-y-2 overflow-x-auto">
     {#each ($store?.data ?? []) as item (getKeyFromItem(item))}
-        <div on:click={() => eventDispatcher("select", item)}>
+        <button on:click={() => eventDispatcher("select", item)} class="pt-2">
             <svelte:component this={row} item={item}/>
-        </div>
+        </button>
     {/each}
     {#if ($store?.data ?? []).length === 0}
         <div class="text-center">

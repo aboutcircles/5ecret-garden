@@ -2,7 +2,7 @@
     import Avatar from "$lib/components/Avatar.svelte";
     import {tokenTypeToString} from "$lib/pages/SelectAsset.svelte";
     import {createEventDispatcher} from "svelte";
-    import {floorToDecimals, shortenAddress} from "$lib/utils/shared";
+    import {roundToDecimals, shortenAddress} from "$lib/utils/shared";
     import type {TokenBalanceRow} from "@circles-sdk/data";
 
     export let receiverAddress: string | undefined;
@@ -32,7 +32,7 @@
         </div>
 
         <div class="col text-right">
-            <span class="text-lg">{floorToDecimals(asset?.circles)}</span> Circles
+            <span class="text-lg">{roundToDecimals(asset?.circles)}</span> Circles
         </div>
     </div>
 </div>

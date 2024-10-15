@@ -4,7 +4,7 @@
     import type {SendFlowContext} from "$lib/flows/send/context";
     import FlowDecoration from "$lib/flows/FlowDecoration.svelte";
     import {runTask} from "../../../routes/+layout.svelte";
-    import {floorToDecimals} from "$lib/utils/shared";
+    import {roundToDecimals} from "$lib/utils/shared";
     import {avatar} from "$lib/stores/avatar";
     import {ethers} from "ethers6";
 
@@ -30,7 +30,7 @@
         const data = Uint8Array.of(0);
 
         runTask({
-            name: `Minting ${floorToDecimals(context.amount)} Group Circles ...`,
+            name: `Minting ${roundToDecimals(context.amount)} Group Circles ...`,
             promise: $avatar.groupMint(context.selectedAddress!, collateral, amounts, data)
         });
         contentApi.close();
