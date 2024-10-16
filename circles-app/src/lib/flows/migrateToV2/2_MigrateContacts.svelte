@@ -76,7 +76,7 @@
 
 <FlowDecoration>
     <p>
-        Select the contacts you want to keep in your new Circles V2 profile. By default, all your contacts are selected.
+        Select the contacts you want to keep in your new Circles V2 profile.
     </p>
     <div class="mt-6">
         {#each orderedContacts as address}
