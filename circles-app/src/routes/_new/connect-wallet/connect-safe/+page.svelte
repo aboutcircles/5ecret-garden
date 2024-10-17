@@ -21,6 +21,9 @@
     let circlesConfig: CirclesConfig | undefined = undefined
 
     onMount(async () => {
+        localStorage.removeItem("usePK");
+        localStorage.setItem("useMM", "true");
+
         const wallet = new BrowserProviderContractRunner();
         await wallet.init();
 

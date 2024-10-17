@@ -6,11 +6,10 @@
   import CommonConnections from '$lib/components/CommonConnections.svelte';
   import { shortenAddress } from '$lib/utils/shared';
   import type { Readable } from 'svelte/store';
-  import type { ContactList } from '$lib/stores/contacts';
+  import type {ContactList, ExtendedTrustRelationRow} from '$lib/stores/contacts';
   import { onMount } from 'svelte';
   import type { AvatarRow } from '@circles-sdk/data';
   import { ensureContacts } from '../../routes/+layout.svelte';
-  import type { ExtendedTrustRelationRow } from '../../routes/contacts/+page.svelte';
   import Untrust from '$lib/pages/Untrust.svelte';
   import Trust from '$lib/pages/Trust.svelte';
   import SelectAsset from '$lib/flows/send/2_Asset.svelte';

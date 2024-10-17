@@ -61,12 +61,18 @@
         // const safeContractRunner = new SafeSdkPrivateKeyContractRunner();
 
         const key = localStorage.getItem('privateKey');
-
-        const safeContractRunner = (<any>window).ethereum
-            ? new SafeSdkBrowserContractRunner()
-            : new SafeSdkPrivateKeyContractRunner(key!, gnosisConfig.circlesRpcUrl);
-
-        await safeContractRunner.init(safeAddress);
+        let safeContractRunner: any;
+        if (localStorage.getItem("useMM")) {
+            console.log(`Using MetaMAsk as signer`)
+            const runner = new SafeSdkBrowserContractRunner();
+            await runner.init(safeAddress);
+            safeContractRunner = runner;
+        } else {
+            console.log(`Using private key from localStorage`)
+            const runner = new SafeSdkPrivateKeyContractRunner(key!, gnosisConfig.circlesRpcUrl);
+            await runner.init(safeAddress);
+            safeContractRunner = runner;
+        }
 
         $wallet = safeContractRunner;
 

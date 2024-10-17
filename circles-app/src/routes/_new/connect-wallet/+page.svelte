@@ -17,7 +17,7 @@
       </figure>
       <div class="card-body items-center text-center">
         <h2 class="card-title">circles.garden</h2>
-        <p>Use your circles.garden key in 5eecret-garden</p>
+        <p>Use your circles.garden key in 5ecret-garden</p>
         <div class="card-actions">
           <a
             href="/_new/connect-wallet/import-circles-garden"

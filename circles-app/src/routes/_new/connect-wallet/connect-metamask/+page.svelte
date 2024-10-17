@@ -12,6 +12,9 @@
     // Connects the wallet and initializes the Circles SDK.
     //
     async function connectWallet() {
+        localStorage.removeItem("usePK");
+        localStorage.setItem("useMM", "true");
+
         const wallet = new BrowserProviderContractRunner();
         await wallet.init();
 
