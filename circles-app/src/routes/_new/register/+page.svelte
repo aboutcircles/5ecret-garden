@@ -105,23 +105,47 @@
 </div>
 <div class="hero">
     <div class="hero-content flex-col lg:flex-row">
-        <div class="collapse w-96">
+        <div class="collapse">
             <input type="checkbox"/>
-            <div class="collapse-title text-xl text-center font-medium w-full">Legacy</div>
+            <div class="collapse-title text-xl text-center font-medium w-full">Advanced</div>
             <div class="collapse-content">
 
-                <div class="card bg-base-100 w-full shadow-xl">
-                    <figure class="px-10 pt-10">
-                        <img src="/person.svg"
-                             alt="Person"
-                             class="w-16 h-16 rounded-xl"/>
-                    </figure>
-                    <div class="card-body items-center text-center">
-                        <h2 class="card-title">Person (v1)</h2>
-                        <p>Register at the Circles v1 hub</p>
-                        <div class="card-actions">
-                            <a href="/_new/register/register-v1-person" class="btn btn-primary">Register v1 Person</a>
+                <div class="hero">
+                    <div class="hero-content flex-col lg:flex-row">
+
+                        <div class="card bg-base-100 w-full shadow-xl">
+                            <figure class="px-10 pt-10">
+                                <img src="/person.svg"
+                                     alt="Person"
+                                     class="w-16 h-16 rounded-xl"/>
+                            </figure>
+                            <div class="card-body items-center text-center">
+                                <h2 class="card-title">Person (v1)</h2>
+                                <p>Register at the Circles v1 hub<br/>&nbsp;</p>
+                                <div class="card-actions">
+                                    <a href="/_new/register/register-v1-person" class="btn btn-primary">Register v1
+                                        Person</a>
+                                </div>
+                            </div>
                         </div>
+
+                        <div class="card bg-base-100 w-full shadow-xl">
+                            <figure class="px-10 pt-10">
+                                <img src="/person.svg"
+                                     alt="Person"
+                                     class="w-16 h-16 rounded-xl"/>
+                            </figure>
+                            <div class="card-body items-center text-center">
+                                <h2 class="card-title">Profile only</h2>
+                                <p>Create only a profile for the connected address, but no Circles account</p>
+                                <div class="card-actions">
+                                    <a href="/_new/register/register-profile" class="btn btn-primary">
+                                        Register Profile
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 

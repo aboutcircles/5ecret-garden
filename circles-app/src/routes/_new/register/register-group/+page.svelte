@@ -38,7 +38,7 @@
         <div class="card bg-base-100 w-96 shadow-xl">
             <figure class="px-10 pt-10">
                 <img src="/group.svg"
-                     alt="Shoes"
+                     alt="group"
                      class="w-16 h-16 rounded-xl"/>
             </figure>
             <div class="card-body items-center text-center">
