@@ -1,8 +1,10 @@
 <script lang="ts">
     import ActionButton from "$lib/components/ActionButton.svelte";
     import {circles} from "$lib/stores/circles";
+    import {wallet} from "$lib/stores/wallet";
     import type {Profile} from "@circles-sdk/profiles";
     import ProfileEditor from "$lib/components/ProfileEditor.svelte";
+    import {onMount} from "svelte";
 
     let profile: Profile = {
         name: "",
@@ -10,6 +12,15 @@
         previewImageUrl: "",
         imageUrl: undefined,
     };
+
+    onMount(async () => {
+        if ($wallet?.address) {
+            const profileCid = await $circles?.data?.getMetadataCidForAddress($wallet.address);
+            profile = profileCid
+                ? await $circles?.profiles?.get(profileCid) ?? profile
+                : profile;
+        }
+    });
 
     async function registerProfile() {
         await $circles?.createOrUpdateProfile(profile);
@@ -27,7 +38,7 @@
             </figure>
             <div class="card-body items-center text-center">
                 <h2 class="card-title">Register profile</h2>
-                <ProfileEditor bind:profile={profile} />
+                <ProfileEditor bind:profile={profile}/>
                 <div class="card-actions">
                     <ActionButton action={registerProfile}
                                   disabled={profile.name.trim().length < 1}>
