@@ -10,7 +10,7 @@
 <div
   class="flex w-full flex-col items-center justify-center bg-base-200 min-h-screen p-2 lg:p-10"
 >
-  <div class="w-full flex flex-col lg:flex-row justify-center gap-x-5">
+  <div class="w-full flex flex-col lg:flex-row justify-center items-center gap-x-5 gap-y-4">
     <div class="card bg-base-100 w-96 border rounded-lg">
       <figure class="px-10 pt-10">
         <img src="/logo.svg" alt="Shoes" class="w-16 h-16 rounded-xl" />
