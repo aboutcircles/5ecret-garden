@@ -10,30 +10,30 @@
     export let receiverAddress: string | undefined;
     export let asset: TokenBalanceRow | undefined;
     export let amount: number = 0;
-    let maxAmountCircles: number = -1;
+    export let maxAmountCircles: number = -1;
 
-    onMount(async () => {
-        if (!receiverAddress) {
-            throw new Error("Receiver address is required");
-        }
-        if (!asset) {
-            throw new Error("Asset is required");
-        }
-        if (!$avatar) {
-            throw new Error("Avatar store is not available");
-        }
-
-        try {
-            if (asset.tokenAddress === TransitiveTransferTokenAddress) {
-                maxAmountCircles = await $avatar.getMaxTransferableAmount(receiverAddress);
-            } else {
-                maxAmountCircles = await $avatar.getMaxTransferableAmount(receiverAddress, asset.tokenAddress);
-            }
-        } catch (e) {
-            console.log("Failed to get max transferable amount", e);
-            maxAmountCircles = -2;
-        }
-    });
+    // onMount(async () => {
+    //     if (!receiverAddress) {
+    //         throw new Error("Receiver address is required");
+    //     }
+    //     if (!asset) {
+    //         throw new Error("Asset is required");
+    //     }
+    //     if (!$avatar) {
+    //         throw new Error("Avatar store is not available");
+    //     }
+    //
+    //     try {
+    //         if (asset.tokenAddress === TransitiveTransferTokenAddress) {
+    //             maxAmountCircles = await $avatar.getMaxTransferableAmount(receiverAddress);
+    //         } else {
+    //             maxAmountCircles = await $avatar.getMaxTransferableAmount(receiverAddress, asset.tokenAddress);
+    //         }
+    //     } catch (e) {
+    //         console.log("Failed to get max transferable amount", e);
+    //         maxAmountCircles = -2;
+    //     }
+    // });
 </script>
 
 <div class="mb-4">

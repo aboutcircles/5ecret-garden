@@ -3,7 +3,6 @@ import type {CirclesConfig} from "@circles-sdk/sdk";
 export const chiadoConfig: CirclesConfig = {
     circlesRpcUrl: "https://chiado-rpc.aboutcircles.com",
     pathfinderUrl: "https://chiado-pathfinder.aboutcircles.com",
-    v2PathfinderUrl: "https://chiado-pathfinder.aboutcircles.com/pathfinder/",
     profileServiceUrl: "https://chiado-pathfinder.aboutcircles.com/profiles/",
     // circlesRpcUrl: "http://localhost:8545",
     // pathfinderUrl: "http://localhost:8080",
@@ -19,7 +18,6 @@ export const chiadoConfig: CirclesConfig = {
 export const gnosisConfig: CirclesConfig = {
     circlesRpcUrl: "https://rpc.aboutcircles.com/",
     pathfinderUrl: "https://pathfinder.aboutcircles.com",
-    v2PathfinderUrl: "https://rpc.aboutcircles.com/pathfinder/",
     v1HubAddress: "0x29b9a7fbb8995b2423a71cc17cf9810798f6c543",
     v2HubAddress: "0xc12C1E50ABB450d6205Ea2C3Fa861b3B834d13e8",
     nameRegistryAddress: "0xA27566fD89162cC3D40Cb59c87AAaA49B85F3474",

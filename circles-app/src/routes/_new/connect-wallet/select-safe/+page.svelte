@@ -7,5 +7,5 @@
         <h2 class="card-title">Select Circles Safe</h2>
         <p>Select the safe you want to use from the list below</p>
     </div>
-    <SafeList contentApi={undefined}/>
+    <SafeList/>
 </div>

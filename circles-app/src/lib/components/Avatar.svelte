@@ -215,7 +215,7 @@
   export let view: 'horizontal' | 'vertical' | 'vertical_small' = 'horizontal';
   export let imageStyle: 'square' | 'circle' = 'circle';
   export let showName: boolean = true;
-  export let contentApi: PopupContentApi | undefined;
+  export let contentApi: PopupContentApi | undefined = undefined;
   export let pictureOverlayUrl: string | undefined = undefined;
   export let trustVersion: number | undefined = undefined;
 
