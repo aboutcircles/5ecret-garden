@@ -91,7 +91,7 @@
                     }
                     context.trustList = selectedAddresses;
                }}>
-                <Avatar contentApi={undefined}
+                <Avatar
                         pictureOverlayUrl={selectedAddresses.includes(address) ? "/check.svg" : undefined}
                         address={address}
                         clickable={false}>

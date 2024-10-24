@@ -32,7 +32,7 @@
         </div>
 
         <div class="col text-right">
-            <span class="text-lg">{roundToDecimals(asset?.circles)}</span> Circles
+            <span class="text-2xl">{roundToDecimals(amount)}</span> Circles
         </div>
     </div>
 </div>
@@ -44,16 +44,6 @@
         <a class="block underline" target="_blank"
            href={"https://gnosisscan.io/address/" + receiverAddress}>{shortenAddress(receiverAddress)}</a>
     </Avatar>
-</div>
-
-<!-- Amount Input -->
-<div class="form-control mb-4">
-    <p class="menu-title pl-0">
-        Amount:
-    </p>
-    <span class="input w-full text-lg p-2">
-        {amount} Circles
-    </span>
 </div>
 
 <!-- Action Buttons -->
