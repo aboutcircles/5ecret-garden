@@ -38,7 +38,7 @@
       ? '/_new/connect-wallet/connect-safe'
       : '/_new/connect-wallet'}
   />
-  <p class="font-bold text-xl mt-4">Testnet only options</p>
+  <p class="font-bold text-xl mt-4">Available on Testnet only</p>
   <ConnectWallet
     imgUrl="/cometh-logo.svg"
     header="Use Cometh"
