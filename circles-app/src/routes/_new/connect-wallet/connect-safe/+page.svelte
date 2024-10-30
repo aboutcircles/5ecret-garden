@@ -42,7 +42,7 @@
     });
 </script>
 
-<div class="hero bg-base-200 min-h-screen">
+<div class="w-full flex flex-col items-center min-h-screen p-4 max-w-5xl gap-y-8 mt-20">
     <div class="hero-content flex-col lg:flex-row-reverse">
         <div class="card bg-base-100 w-96 shadow-xl">
             <figure class="px-10 pt-10">

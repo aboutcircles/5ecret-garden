@@ -267,11 +267,8 @@
     quickActions={[
       {
         name:
-          'Disconnect ' +
-            ($wallet?.address?.toString().substring(0, 12) ?? '') +
-            '...' ?? '',
+          'Disconnect' ,
         link: '/_new/connect-wallet',
-        icon: '/disconnect.svg',
         action: () => {
           $wallet = undefined;
         },

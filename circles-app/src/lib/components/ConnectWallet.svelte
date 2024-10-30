@@ -5,9 +5,11 @@
   export let route: string;
 </script>
 
+<!-- TODO: Use connect wallet and connect safe as a same component -->
+
 <a
   href={route}
-  class="w-full border rounded-lg flex justify-between items-center p-4 shadow-sm"
+  class="w-full border rounded-lg flex justify-between items-center p-4 shadow-sm hover:bg-black/5"
 >
   <div class="flex items-center gap-x-4">
     <img src={imgUrl} alt="Wallet Icon" class="w-12 h-12" />
