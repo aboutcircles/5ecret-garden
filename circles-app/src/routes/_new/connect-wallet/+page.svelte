@@ -9,7 +9,7 @@
 </script>
 
 <div
-  class="w-full flex flex-col min-h-screen p-4 max-w-xl gap-y-4 mt-8"
+  class="w-full flex flex-col min-h-screen p-4 max-w-xl gap-y-4 mt-20"
 >
   <p class="font-bold text-xl">Access Circles</p>
   <ConnectWallet

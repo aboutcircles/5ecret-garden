@@ -65,7 +65,7 @@
 </script>
 
 <div
-  class="w-full flex flex-col items-center min-h-screen p-4 max-w-4xl gap-y-4 mt-8"
+  class="w-full flex flex-col items-center min-h-screen p-4 max-w-4xl gap-y-4 mt-20"
 >
   <h2 class="font-bold text-[28px] md:text-[32px]">
     Import circles.garden keyphrase
