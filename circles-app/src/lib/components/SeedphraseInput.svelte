@@ -36,10 +36,10 @@
   }
 </script>
 
-<div class="w-full grid grid-cols-2 md:grid-cols-6 gap-x-6 gap-y-2">
+<div class="w-full grid grid-cols-2 md:grid-cols-6 gap-x-6 gap-y-8">
   {#each boxes as box, i}
     <div class="flex items-center justify-between gap-x-1">
-      <span class="text-sm font-bold w-1/5">{(i + 1).toString()}</span>
+      <span class="text-sm font-bold w-1/6">{(i + 1).toString()}</span>
       <input
         type="text"
         class="w-full input input-bordered input-sm"
