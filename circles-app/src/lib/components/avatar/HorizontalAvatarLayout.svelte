@@ -16,14 +16,14 @@
           <img
             src={pictureOverlayUrl}
             alt="Overlay"
-            class="h-6"
+            class="h-6 object-cover"
             class:rounded-full={imageStyle === 'circle'}
           />
         </span>
         <img
           src={profile?.previewImageUrl}
           alt="User Icon"
-          class="w-10 h-10"
+          class="w-10 h-10 object-cover"
           class:rounded-full={imageStyle === 'circle'}
         />
       </div>
@@ -31,7 +31,7 @@
       <img
         src={profile?.previewImageUrl}
         alt="User Icon"
-        class="w-10 h-10"
+        class="w-10 h-10 object-cover"
         class:rounded-full={imageStyle === 'circle'}
       />
     {/if}

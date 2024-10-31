@@ -34,35 +34,38 @@
         }
     }
 
-    $: orderedContacts = Object.keys($contacts?.data ?? {}).sort((a, b) => {
+    $: orderedContacts = Object.keys($contacts?.data ?? {})
+        .filter(a => $contacts?.data[a].avatarInfo?.isHuman || $contacts?.data[a].avatarInfo?.version === 1)
+        .sort((a, b) => {
         /*
-                // Alphabetical sorting by contact name
-                const aRelation = $contacts?.data[a]?.contactProfile?.name;
-                const bRelation = $contacts?.data[b]?.contactProfile?.name;
-                return aRelation.localeCompare(bRelation);
-             */
-        const aRelation = $contacts?.data[a].row.relation;
-        const bRelation = $contacts?.data[b].row.relation;
-        if (aRelation === 'mutuallyTrusts' && bRelation !== 'mutuallyTrusts') {
-            return -1;
-        }
-        if (aRelation === 'trusts' && bRelation === 'trustedBy') {
-            return -1;
-        }
-        if (aRelation === bRelation) {
+                    // Alphabetical sorting by contact name
+                    const aRelation = $contacts?.data[a]?.contactProfile?.name;
+                    const bRelation = $contacts?.data[b]?.contactProfile?.name;
+                    return aRelation.localeCompare(bRelation);
+                */
+            const aRelation = $contacts?.data[a].row.relation;
+            const bRelation = $contacts?.data[b].row.relation;
+            if (aRelation === 'mutuallyTrusts' && bRelation !== 'mutuallyTrusts') {
+                return -1;
+            }
+            if (aRelation === 'trusts' && bRelation === 'trustedBy') {
+                return -1;
+            }
+            if (aRelation === bRelation) {
+                return 0;
+            }
+            if (bRelation === 'mutuallyTrusts' && aRelation !== 'mutuallyTrusts') {
+                return 1;
+            }
+            if (bRelation === 'trusts' && aRelation === 'trustedBy') {
+                return 1;
+            }
             return 0;
-        }
-        if (bRelation === 'mutuallyTrusts' && aRelation !== 'mutuallyTrusts') {
-            return 1;
-        }
-        if (bRelation === 'trusts' && aRelation === 'trustedBy') {
-            return 1;
-        }
-        return 0;
-    });
+        });
+
 </script>
 
-<div class="flex flex-col w-full sm:w-[90%] lg:w-3/5 p-0 gap-y-5 mt-28 text-[#161616]">
+<div class="flex flex-col w-full sm:w-[90%] lg:w-3/5 p-0 gap-y-5 mt-28 mb-10 text-[#161616]">
     <div class="text-2xl font-bold leading-7 px-4 sm:px-0">Contacts</div>
     <div class="flex flex-col p-0 px-4 sm:py-4 w-full sm:border sm:rounded-lg overflow-x-auto divide-y">
         {#each orderedContacts as address}
