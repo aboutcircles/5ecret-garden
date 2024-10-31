@@ -51,7 +51,7 @@
       >Mint {roundToDecimals(mintableAmount)} Circles
     </button>
   {/if}
-  <div class="w-full border rounded-lg p-4">
+  <div class="w-full border rounded-lg px-4">
     <GenericList row={TransactionRow} store={txHistory} />
   </div>
 </div>
