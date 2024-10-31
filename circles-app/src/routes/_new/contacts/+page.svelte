@@ -62,9 +62,9 @@
     });
 </script>
 
-<div class="flex flex-col w-[90%] lg:w-3/5 border rounded-lg px-4 py-8 gap-y-4 mt-20">
-    <div class="text-xl font-bold">Contacts</div>
-    <div class="flex flex-col w-full overflow-x-auto divide-y gap-y-2">
+<div class="flex flex-col w-full sm:w-[90%] lg:w-3/5 p-0 gap-y-5 mt-28 text-[#161616]">
+    <div class="text-2xl font-bold leading-7 px-4 sm:px-0">Contacts</div>
+    <div class="flex flex-col p-0 sm:px-8 sm:py-4 w-full sm:border sm:rounded-lg overflow-x-auto divide-y">
         {#each orderedContacts as address}
             <!-- TODO: use the generic list component -->
             <div class="w-full pt-2">
@@ -111,7 +111,7 @@
                         </div>
                     </Avatar>
                     <div class="font-medium underline flex gap-x-2">
-                        See details <img
+                        <img
                             src="/chevron-right.svg"
                             alt="Chevron Right"
                             class="w-4"
@@ -120,8 +120,8 @@
                 </button>
             </div>
         {/each}
-        <div class="text-center py-4">
+        <!-- <div class="text-center py-4">
             <span class="text-gray-500">End of list</span>
-        </div>
+        </div> -->
     </div>
 </div>
