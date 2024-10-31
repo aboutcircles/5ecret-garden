@@ -223,6 +223,7 @@
   export let contentApi: PopupContentApi | undefined = undefined;
   export let pictureOverlayUrl: string | undefined = undefined;
   export let trustVersion: number | undefined = undefined;
+  export let date: number;
 
   let profile: Profile | undefined;
 
@@ -292,6 +293,7 @@
     {pictureOverlayUrl}
     on:click={openAvatar}
     {profile}
+    {date}
   >
     <slot></slot>
   </TransactionRowAvatarLayout>

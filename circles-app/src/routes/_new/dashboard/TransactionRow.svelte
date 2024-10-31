@@ -16,61 +16,61 @@
     <Avatar
       address={item.to}
       view="transaction_row"
-      pictureOverlayUrl="/logo.svg"
+      pictureOverlayUrl="/circles-badge.svg"
+      date={item.timestamp}
     >
       <a
         target="_blank"
         href={'https://gnosisscan.io/tx/' + item.transactionHash}
-        class="underline"
+        class="text-xs md:text-sm text-gray-500"
       >
         Minted {tokenTypeToString(item.tokenType)}
       </a>
-      <p>{getTimeAgo(item.timestamp)}</p>
     </Avatar>
   {:else if item.to === '0x0000000000000000000000000000000000000000'}
     <Avatar
       address={item.from}
       view="transaction_row"
       pictureOverlayUrl="/logo.svg"
+      date={item.timestamp}
     >
       <a
         target="_blank"
         href={'https://gnosisscan.io/tx/' + item.transactionHash}
-        class="underline"
+        class="text-xs md:text-sm text-gray-500"
       >
         Burn {tokenTypeToString(item.tokenType)}
       </a>
-      <p>{getTimeAgo(item.timestamp)}</p>
     </Avatar>
   {:else if item.from === $avatar.address}
     <Avatar
       address={item.to}
       view="transaction_row"
-      pictureOverlayUrl="/outgoing.svg"
+      pictureOverlayUrl="/sent-badge.svg"
+      date={item.timestamp}
     >
       <a
         target="_blank"
         href={'https://gnosisscan.io/tx/' + item.transactionHash}
-        class="underline"
+        class="text-xs md:text-sm text-gray-500"
       >
-        Send {tokenTypeToString(item.tokenType)}
+        Sent {tokenTypeToString(item.tokenType)}
       </a>
-      <p>{getTimeAgo(item.timestamp)}</p>
     </Avatar>
   {:else if item.to === $avatar.address}
     <Avatar
       address={item.from}
       view="transaction_row"
-      pictureOverlayUrl="/incoming.svg"
+      pictureOverlayUrl="/received-badge.svg"
+      date={item.timestamp}
     >
       <a
         target="_blank"
         href={'https://gnosisscan.io/tx/' + item.transactionHash}
-        class="underline"
+        class="text-xs md:text-sm text-gray-500"
       >
-        Receive {tokenTypeToString(item.tokenType)}
+        Received {tokenTypeToString(item.tokenType)}
       </a>
-      <p>{getTimeAgo(item.timestamp)}</p>
     </Avatar>
   {/if}
 
@@ -78,15 +78,15 @@
     {#if item.from === $avatar.address}
       <span class="text-red-500 font-bold"
         >-{roundToDecimals(item.circles)}</span
-      > Circles
+      > CRC
     {:else}
       <span class="text-green-700 font-bold"
         >+{roundToDecimals(item.circles)}</span
-      > Circles
+      > CRC
     {/if}
     <p class="text-xs text-gray-500">
       {#if staticTypes.has(item.tokenType)}
-        {roundToDecimals(item.staticCircles)} Static Circles
+        {roundToDecimals(item.staticCircles)} Static CRC
       {/if}
       {#if crcTypes.has(item.tokenType)}
         {roundToDecimals(item.crc)} CRC
