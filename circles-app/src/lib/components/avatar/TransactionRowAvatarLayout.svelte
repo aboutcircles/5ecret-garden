@@ -7,7 +7,7 @@
   export let date: number;
 </script>
 
-<div class="inline-flex items-center space-x-2">
+<div class="inline-flex items-center space-x-4">
   <button class="cursor-pointer" on:click>
     <div class="relative">
       <img
