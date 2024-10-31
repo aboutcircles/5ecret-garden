@@ -8,7 +8,7 @@
   export let trustVersion: number | undefined = undefined;
 </script>
 
-<div class="inline-flex items-center space-x-2">
+<div class="inline-flex items-center">
   <button class="cursor-pointer" on:click>
     {#if pictureOverlayUrl}
       <div class="indicator">
@@ -23,7 +23,7 @@
         <img
           src={profile?.previewImageUrl}
           alt="User Icon"
-          class="w-8 h-8"
+          class="w-10 h-10"
           class:rounded-full={imageStyle === 'circle'}
         />
       </div>
@@ -31,14 +31,14 @@
       <img
         src={profile?.previewImageUrl}
         alt="User Icon"
-        class="w-8 h-8"
+        class="w-10 h-10"
         class:rounded-full={imageStyle === 'circle'}
       />
     {/if}
   </button>
-  <div class="flex flex-col items-start">
+  <div class="flex flex-col items-start pl-4 gap-y-0.5">
     {#if showName}
-      <span class="font-semibold">{profile?.name}</span>
+      <span class="font-semibold text-[#161616]">{profile?.name}</span>
       <p class="flex flex-col items-start text-xs text-gray-500">
         <slot></slot>
       </p>

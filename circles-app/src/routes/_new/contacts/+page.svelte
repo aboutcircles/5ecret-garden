@@ -64,12 +64,12 @@
 
 <div class="flex flex-col w-full sm:w-[90%] lg:w-3/5 p-0 gap-y-5 mt-28 text-[#161616]">
     <div class="text-2xl font-bold leading-7 px-4 sm:px-0">Contacts</div>
-    <div class="flex flex-col p-0 sm:px-8 sm:py-4 w-full sm:border sm:rounded-lg overflow-x-auto divide-y">
+    <div class="flex flex-col p-0 px-4 sm:py-4 w-full sm:border sm:rounded-lg overflow-x-auto divide-y">
         {#each orderedContacts as address}
             <!-- TODO: use the generic list component -->
-            <div class="w-full pt-2">
+            <div class="divide-y -mx-4">
                 <button
-                        class="flex w-full items-center justify-between p-2 bg-base-100 hover:bg-base-200 rounded-lg"
+                        class="flex w-full items-center justify-between p-4 bg-base-100 hover:bg-base-200"
                         on:click={(e) => {
           $popupControls.open?.({
             component: ProfilePage,
@@ -84,7 +84,7 @@
                 >
                     <Avatar {address}>
                         <div>
-                            {#if $contacts?.data[address].row.relation === 'trusts'}
+                            <!-- {#if $contacts?.data[address].row.relation === 'trusts'}
                                 <img
                                         src="/incoming.svg"
                                         alt="Incoming trust"
@@ -104,9 +104,9 @@
                                         alt="Mutual trust"
                                         class="w-3 h-3 inline"
                                 />
-                            {/if}
+                            {/if} -->
                             {#if $contacts?.data[address]}
-                                <span>{formatTrustRelation($contacts.data[address].row)}</span>
+                                <span class="text-[#6B7280]">{formatTrustRelation($contacts.data[address].row)}</span>
                             {/if}
                         </div>
                     </Avatar>

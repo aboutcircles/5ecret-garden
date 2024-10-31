@@ -153,6 +153,7 @@
         {shortenAddress(otherAvatar?.avatar)}
       </a>
     </div>
+    <div>jdlsjljdfj</div>
   </Avatar>
 
   <span>
@@ -196,7 +197,7 @@
         }}
       >
         <img src="/banknotes.svg" alt="Incoming trust" class="w-6 h-6 inline" />
-        Mint
+        Mint nowoowo
       </button>
     {/if}
     <button
@@ -213,7 +214,7 @@
         });
       }}
     >
-      <img src="/send-fill.svg" alt="Send" class="w-3.5 h-3.5" /> Send
+      <img src="/send-fill.svg" alt="Send" class="w-3.5 h-3.5" /> Send slkdjflsjdfl
     </button>
     {#if getTrustRow(otherAvatar?.avatar)?.relation === 'trusts'}
       <button
