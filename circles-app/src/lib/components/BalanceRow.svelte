@@ -9,18 +9,6 @@
   import UnwrapTokens from '$lib/pages/UnwrapTokens.svelte';
   import ExitGroup from '$lib/pages/ExitGroup.svelte';
   import { popupControls } from './PopUp.svelte';
-  import { onMount } from 'svelte';
-
-  let isMediumScreen = false;
-
-  onMount(() => {
-    const updateScreenSize = () => {
-      isMediumScreen = window.innerWidth >= 768;
-    };
-    updateScreenSize();
-    window.addEventListener('resize', updateScreenSize);
-    return () => window.removeEventListener('resize', updateScreenSize);
-  });
 
   export let balance: TokenBalanceRow;
 </script>
@@ -47,7 +35,7 @@
       </p>
     </div>
 
-    <div class={`${isMediumScreen ? '' : 'dropdown dropdown-end'}`}>
+    <div class="max-sm:dropdown max-sm:dropdown-end">
       <div
         tabIndex={0}
         role="button"
@@ -57,11 +45,12 @@
       </div>
       <div
         tabIndex={0}
-        class="card compact dropdown-content bg-base-100 rounded-box shadow md:shadow-none"
+        class="dropdown-content bg-base-100 rounded-box shadow md:shadow-none"
       >
         {#if balance.tokenType == 'CrcV2_RegisterHuman' || balance.tokenType == 'CrcV2_RegisterGroup' || balance.tokenType == 'CrcV2_RegisterGroup'}
           <button
-            class="btn btn-xs btn-round text-xs font-medium"
+          tabIndex={0}
+            class="md:btn md:btn-xs md:btn-round text-xs font-medium w-44 md:w-auto h-12 md:h-auto flex md:block items-center max-sm:p-4 gap-x-2"
             on:click={() => {
               $popupControls.open?.({
                 title: 'Wrap Circles',
