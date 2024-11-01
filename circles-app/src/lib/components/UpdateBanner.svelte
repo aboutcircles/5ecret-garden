@@ -10,7 +10,7 @@
         });
     }
 </script>
-<div class="bg-blue-100 border-t-4 mb-4 border-blue-500 rounded-b text-blue-900 px-4 py-3 shadow-md cursor-pointer"
+<div class="w-full bg-blue-100 border-t-4 mb-4 border-blue-500 rounded-b text-blue-900 px-4 py-3 shadow-md cursor-pointer fixed top-16 z-10"
      on:click={() => migrateToV2()}
      role="alert">
     <div class="flex">

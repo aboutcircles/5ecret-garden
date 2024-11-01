@@ -282,6 +282,7 @@
 <main class="baseLayer font-dmSans">
   {#if $avatar && canMigrate($avatar.avatarInfo) && $page.route.id !== '/migrate-to-v2'}
     <UpdateBanner></UpdateBanner>
+    <div class="h-20"></div>
   {/if}
 
   <div class="w-full flex flex-col items-center">

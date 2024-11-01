@@ -134,16 +134,33 @@
   }
 
   let commonConnectionsCount = 0;
+  let activeTab = 'common_connections';
+
+  // $: {
+  //   console.log('members', members);
+  // }
 </script>
 
-<div class="flex flex-col items-center">
+<div class="flex flex-col items-center w-full sm:w-[90%] lg:w-3/5 mx-auto">
+  <!-- <button type="button"
+    class="ml-0 border border-transparent rounded-full place-self-start"
+    on:click={() => {
+      contentApi?.close?.();
+    }}
+  >
+    <img
+      src="/close.svg"
+      alt="Close"
+      class="w-1.25 h-1.25"
+    />
+  </button> -->
   <Avatar
     view="vertical"
     clickable={false}
     address={otherAvatar?.avatar}
     {trustVersion}
   >
-    <div class="mt-2">
+    <!-- <div class="mt-2">
       <span class="font-bold">{getTypeString(otherAvatar?.type)}</span> -
       <a
         class="font-medium"
@@ -152,11 +169,11 @@
       >
         {shortenAddress(otherAvatar?.avatar)}
       </a>
-    </div>
+    </div> -->
   </Avatar>
 
   <span>
-    {#if getTrustRow(otherAvatar?.avatar)?.relation === 'trusts'}
+    <!-- {#if getTrustRow(otherAvatar?.avatar)?.relation === 'trusts'}
       <img src="/outgoing.svg" alt="Outgoing trust" class="w-3 h-3 inline" />
     {:else if getTrustRow(otherAvatar?.avatar)?.relation === 'trustedBy'}
       <img src="/incoming.svg" alt="Incoming trust" class="w-3 h-3 inline" />
@@ -164,9 +181,9 @@
       <img src="/mutual.svg" alt="Mutual trust" class="w-3 h-3 inline" />
     {:else}
       <img src="/no-trust.svg" alt="No trust" class="w-3 h-3 inline" />
-    {/if}
+    {/if} -->
     <span
-      class="font-semibold"
+      class="text-sm"
       class:text-red-400={!(
         getTrustRow(otherAvatar?.avatar)?.relation === 'trusts' ||
         getTrustRow(otherAvatar?.avatar)?.relation === 'trustedBy' ||
@@ -180,27 +197,24 @@
     >
   </span>
 
+  <div class="my-6 flex flex-row gap-x-2">
+    <span class="bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm">{getTypeString(otherAvatar?.type)}</span>
+    <a
+      class="bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm flex flex-row items-center gap-x-1"
+      target="_blank"
+      href={'https://gnosisscan.io/address/' + otherAvatar?.avatar}
+    >
+      {shortenAddress(otherAvatar?.avatar)}
+      <img src="/copy.svg" alt="Copy" class="w-4 h-4 inline" />
+    </a>
+  </div>
+
+  <div class="w-[80%] sm:w-[60%] border-b border-[#E5E7EB]"></div>
+
   <!-- Updated Button Layout: Flex Row for Horizontal Alignment -->
-  <div class="w-full flex justify-center space-x-4 p-4">
-    {#if getTrustRow(otherAvatar?.avatar)?.relation === 'trustedBy' && otherAvatar.type === 'CrcV2_RegisterGroup'}
-      <button
-        class="btn btn-sm btn-round btn-outline"
-        on:click={() => {
-          contentApi?.open?.({
-            title: 'Mint group tokens',
-            component: MintGroupTokens,
-            props: {
-              address: address,
-            },
-          });
-        }}
-      >
-        <img src="/banknotes.svg" alt="Incoming trust" class="w-6 h-6 inline" />
-        Mint
-      </button>
-    {/if}
+  <div class="w-full flex justify-center mt-6 space-x-6">
     <button
-      class="btn btn-primary"
+      class="btn btn-primary text-white"
       on:click={() => {
         contentApi?.open?.({
           title: 'Send Circles',
@@ -213,11 +227,29 @@
         });
       }}
     >
-      <img src="/send-fill.svg" alt="Send" class="w-3.5 h-3.5" /> Send
+      <img src="/send-new.svg" alt="Send" class="w-5 h-5" />
+      Send
     </button>
+    {#if getTrustRow(otherAvatar?.avatar)?.relation === 'trustedBy' && otherAvatar.type === 'CrcV2_RegisterGroup'}
+      <button
+        class="btn bg-[#F3F4F6] border-none"
+        on:click={() => {
+          contentApi?.open?.({
+            title: 'Mint group tokens',
+            component: MintGroupTokens,
+            props: {
+              address: address,
+            },
+          });
+        }}
+      >
+        <!-- <img src="/banknotes.svg" alt="Incoming trust" class="w-6 h-6 inline" /> -->
+        Mint
+      </button>
+    {/if}
     {#if getTrustRow(otherAvatar?.avatar)?.relation === 'trusts'}
       <button
-        class="btn btn-primary btn-outline"
+        class="btn bg-[#F3F4F6] border-none"
         on:click={() => {
           contentApi?.open?.({
             title: 'Untrust',
@@ -229,12 +261,12 @@
           });
         }}
       >
-        <img src="/trash.svg" alt="Untrust" class="w-4 h-4" />
+        <!-- <img src="/trash.svg" alt="Untrust" class="w-4 h-4" /> -->
         Untrust
       </button>
     {:else if getTrustRow(otherAvatar?.avatar)?.relation === 'mutuallyTrusts'}
       <button
-        class="btn btn-primary btn-outline"
+        class="btn bg-[#F3F4F6] border-none"
         on:click={() => {
           contentApi?.open?.({
             title: 'Untrust',
@@ -245,12 +277,12 @@
           });
         }}
       >
-        <img src="/trash.svg" alt="Untrust" class="w-4 h-4" />
+        <!-- <img src="/trash.svg" alt="Untrust" class="w-4 h-4" /> -->
         Untrust
       </button>
     {:else if getTrustRow(otherAvatar?.avatar)?.relation === 'trustedBy'}
       <button
-        class="btn btn-primary btn-outline"
+        class="btn bg-[#F3F4F6] border-none"
         on:click={() => {
           contentApi?.open?.({
             title: 'Trust',
@@ -261,12 +293,12 @@
           });
         }}
       >
-        <img src="/shield-check.svg" alt="Trust back" class="w-4 h-4" />
+        <!-- <img src="/shield-check.svg" alt="Trust back" class="w-4 h-4" /> -->
         Trust back
       </button>
     {:else}
       <button
-        class="btn btn-primary btn-outline"
+        class="btn bg-[#F3F4F6] border-none"
         on:click={() => {
           contentApi?.open?.({
             title: 'Trust',
@@ -277,66 +309,85 @@
           });
         }}
       >
-        <img src="/shield-check.svg" alt="Trust" class="w-4 h-4" />
+        <!-- <img src="/shield-check.svg" alt="Trust" class="w-4 h-4" /> -->
         Trust
       </button>
     {/if}
   </div>
 </div>
-<div class="p-6">
-  <!--{#if profile?.description}-->
-  <!--    <p class="menu-title pl-0">-->
-  <!--        Description:-->
-  <!--    </p>-->
-  <!--    <p class="font-normal text-lg">-->
-  <!--        {@html newLineToBr(profile?.description)}-->
-  <!--    </p>-->
-  <!--{/if}-->
-  <div role="tablist" class="tabs tabs-lifted mt-6">
-    <input
-      type="radio"
-      name="my_tabs_2"
-      role="tab"
-      class="tab"
-      aria-label={`Common connections (${commonConnectionsCount})`}
-      checked="checked"
-    />
-    <div
-      role="tabpanel"
-      class="tab-content bg-base-100 border-base-300 rounded-box p-6"
-    >
+
+<div role="tablist" class="tabs tabs-bordered w-full p-0 my-10">
+  <input
+    type="radio"
+    name="tabs"
+    value="common_connections"
+    role="tab"
+    class="tab h-auto"
+    aria-label={`Common connections (${commonConnectionsCount})`}
+    bind:group={activeTab}
+  />
+  <div
+    role="tabpanel"
+    class="tab-content mt-8 bg-base-100 border-none"
+  >
+    <div class="w-full border-base-300 rounded-box border">
       <CommonConnections
         {contentApi}
-        otherAvatarAddress={otherAvatar?.avatar}
+        otherAvatarAddress={otherAvatar?.avatar ?? ''}
         bind:commonConnectionsCount
       />
     </div>
-    {#if members}
-      <input
-        type="radio"
-        name="my_tabs_2"
-        role="tab"
-        class="tab"
-        aria-label={`Members (${members.length})`}
-      />
-      <div
-        role="tabpanel"
-        class="tab-content bg-base-100 border-base-300 rounded-box p-6"
-      >
-        <p class="menu-title pl-0">Members:</p>
-        <ul>
-          {#each members as member (member)}
+  </div>
+
+  {#if members} 
+    <input
+      type="radio"
+      name="tabs"
+      value="members"
+      role="tab"
+      class="tab h-auto"
+      aria-label={`Members (${members.length})`}
+      bind:group={activeTab}
+    />
+    <div
+      role="tabpanel"
+      class="tab-content mt-8 p-4 bg-base-100 border-base-300 rounded-box divide-y"
+    >
+      <!-- <ul class="w-full overflow-x-scroll"> -->
+          <!-- {#each members as member (member)}
             <li>
               <Avatar {contentApi} address={member}>
                 {member}
               </Avatar>
             </li>
-          {/each}
-          {#if members.length === 0}
-            <li>No members</li>
-          {/if}
-        </ul>
-      </div>
-    {/if}
-  </div>
+          {/each} -->
+      {#each members as member (member)}
+        <!-- TODO: use the generic list component -->
+        <div class="-mx-4">
+          <button
+            class="flex w-full items-center justify-between p-4 bg-base-100 hover:bg-base-200"        
+          >
+            <Avatar address={member} {contentApi} >
+                <!-- <div>
+                    {#if $contacts?.data[address]}
+                        <span class="text-[#6B7280]">{formatTrustRelation($contacts.data[address].row)}</span>
+                    {/if}
+                </div> -->
+                
+            </Avatar>
+            <div class="font-medium underline flex gap-x-2">
+              <img
+                src="/chevron-right.svg"
+                alt="Chevron Right"
+                class="w-4"
+              />
+            </div>
+          </button>
+        </div>
+      {/each}
+      {#if members.length === 0}
+        <div>No members</div>
+      {/if}
+    </div>
+  {/if}
 </div>

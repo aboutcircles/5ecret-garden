@@ -43,25 +43,15 @@
   }
 </script>
 
-<div class="w-[90%] lg:w-3/5 flex flex-col items-center gap-y-3 mt-20">
+<div class="flex flex-col items-center p-4 w-full max-w-2xl gap-y-6 mt-20">
   <TotalBalance />
 
   {#if mintableAmount >= 0.01}
-    <div
-      role="alert"
-      class="flex items-center justify-between w-full p-3 border rounded-lg"
-    >
-      <span class="font-semibold"
-        >You can mint {roundToDecimals(mintableAmount)} new Circles.</span
-      >
-      <div>
-        <button class="btn btn-sm btn-primary" on:click={mintPersonalCircles}
-          >Mint Circles</button
-        >
-      </div>
-    </div>
+    <button class="btn btn-sm btn-primary" on:click={mintPersonalCircles}
+      >Mint {roundToDecimals(mintableAmount)} Circles
+    </button>
   {/if}
-  <div class="w-full border rounded-lg p-4">
+  <div class="w-full md:border rounded-lg md:px-4">
     <GenericList row={TransactionRow} store={txHistory} />
   </div>
 </div>

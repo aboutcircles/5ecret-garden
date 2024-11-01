@@ -62,14 +62,14 @@
         commonConnectionsCount = commonContacts.length;
     }
 </script>
-<p class="menu-title pl-0">
+<!-- <p class="menu-title pl-0">
     Common connections:
-</p>
-<ul>
+</p> -->
+<ul class="w-full divide-y p-4">
     {#each commonContacts as contact(contact)}
-        <li>
+        <li class="w-full flex items-center justify-between px-0 py-4">
             <Avatar contentApi={contentApi} address={contact}>
-                {contact}
+                <!-- {contact} -->
             </Avatar>
         </li>
     {/each}

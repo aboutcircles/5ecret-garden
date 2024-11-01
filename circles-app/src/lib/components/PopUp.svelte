@@ -173,8 +173,8 @@
 </script>
 
 <div class="popup rounded-t-lg overflow-y-auto" bind:this={popup} style="--y: {$y}px">
-  <div class="w-[90%] lg:w-3/5 relative">
-    <div class="absolute left-0 top-0 mt-6">
+  <div class="w-full p-4 sm:w-[90%] lg:w-3/5 relative">
+    <div class="absolute left-4 top-4">
       {#if stack.length > 0}
         <button
           class="w-12 h-12 cursor-pointer"
@@ -182,12 +182,26 @@
             contentApi.back();
           }}
         >
-          <img src="/chevron-left.svg" class="w-6 h-6" />
+          <img alt="Back" src="/chevron-left.svg" class="w-6 h-6" />
+        </button>
+      {:else}
+        <button
+          type="button"
+          class="w-12 h-12 cursor-pointer"
+          on:click={() => {
+            contentApi?.close?.();
+          }}
+        >
+          <img
+            src="/close.svg"
+            alt="Close"
+            class="w-6 h-6"
+          />
         </button>
       {/if}
     </div>
-    <div
-      class="pull-bar card-title pt-12 b-12"
+    <!-- <div
+      class="pull-bar card-title pt-6 b-12"
       on:mousedown={handleStart}
       on:touchstart={handleStart}
     >
@@ -196,8 +210,8 @@
           {popupContent?.title ?? ' - '}
         </span>
       </div>
-    </div>
-    <div class="content mt-2">
+    </div> -->
+    <div class="content mt-2 w-full">
       {#if popupContent}
         <svelte:component
           this={popupContent.component}
