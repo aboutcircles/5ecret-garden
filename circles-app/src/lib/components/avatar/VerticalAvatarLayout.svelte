@@ -13,15 +13,15 @@
     <img
       src={profile?.previewImageUrl ?? '/default-avatar.png'}
       alt="User Icon"
-      class="w-44 h-44 rounded-full"
+      class="w-20 h-20 rounded-full object-cover"
     />
   </button>
-  <div class="flex flex-col items-center space-y-2">
+  <div class="flex flex-col items-center">
     {#if showName}
       <span class="font-bold text-lg">{profile?.name}</span>
     {/if}
     {#if profile?.description}
-      <p class="text-sm text-gray-500">
+      <p class="text-sm text-gray-500 mt-0">
         {profile?.description}
         <slot></slot>
         <!-- For additional description -->

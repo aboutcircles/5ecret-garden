@@ -182,12 +182,26 @@
             contentApi.back();
           }}
         >
-          <img src="/chevron-left.svg" class="w-6 h-6" />
+          <img alt="Back" src="/chevron-left.svg" class="w-6 h-6" />
+        </button>
+      {:else}
+        <button
+          type="button"
+          class="w-12 h-12 cursor-pointer"
+          on:click={() => {
+            contentApi?.close?.();
+          }}
+        >
+          <img
+            src="/close.svg"
+            alt="Close"
+            class="w-6 h-6"
+          />
         </button>
       {/if}
     </div>
-    <div
-      class="pull-bar card-title pt-12 b-12"
+    <!-- <div
+      class="pull-bar card-title pt-6 b-12"
       on:mousedown={handleStart}
       on:touchstart={handleStart}
     >
@@ -196,7 +210,7 @@
           {popupContent?.title ?? ' - '}
         </span>
       </div>
-    </div>
+    </div> -->
     <div class="content mt-2">
       {#if popupContent}
         <svelte:component

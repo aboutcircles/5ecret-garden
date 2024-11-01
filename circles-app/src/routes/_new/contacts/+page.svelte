@@ -70,7 +70,7 @@
     <div class="flex flex-col p-0 px-4 sm:py-4 w-full sm:border sm:rounded-lg overflow-x-auto divide-y">
         {#each orderedContacts as address}
             <!-- TODO: use the generic list component -->
-            <div class="divide-y -mx-4">
+            <div class="-mx-4">
                 <button
                         class="flex w-full items-center justify-between p-4 bg-base-100 hover:bg-base-200"
                         on:click={(e) => {
