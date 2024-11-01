@@ -141,7 +141,7 @@
   // }
 </script>
 
-<div class="flex flex-col items-center w-full sm:w-[90%] lg:w-3/5">
+<div class="flex flex-col items-center w-full sm:w-[90%] lg:w-3/5 mx-auto">
   <!-- <button type="button"
     class="ml-0 border border-transparent rounded-full place-self-start"
     on:click={() => {
@@ -316,7 +316,7 @@
   </div>
 </div>
 
-<div role="tablist" class="tabs tabs-bordered w-full p-2 sm:p-6">
+<div role="tablist" class="tabs tabs-bordered w-full p-0 my-10">
   <input
     type="radio"
     name="tabs"
@@ -361,35 +361,33 @@
               </Avatar>
             </li>
           {/each} -->
-          {#each members as member (member)}
-            <!-- TODO: use the generic list component -->
-            <div class="w-full flex items-center justify-between px-0 py-4 ">
-                <!-- <button
-                        class="flex w-full items-center justify-between p-4 bg-base-100 hover:bg-base-200"
-                        
-                > -->
-                    <Avatar address={member} {contentApi} >
-                        <!-- <div>
-                            {#if $contacts?.data[address]}
-                                <span class="text-[#6B7280]">{formatTrustRelation($contacts.data[address].row)}</span>
-                            {/if}
-                        </div> -->
-                       
-                    </Avatar>
-                    <!-- <div class="font-medium underline flex gap-x-2">
-                      <img
-                        src="/chevron-right.svg"
-                        alt="Chevron Right"
-                        class="w-4"
-                      />
-                    </div> -->
-                <!-- </button> -->
+      {#each members as member (member)}
+        <!-- TODO: use the generic list component -->
+        <div class="-mx-4">
+          <button
+            class="flex w-full items-center justify-between p-4 bg-base-100 hover:bg-base-200"        
+          >
+            <Avatar address={member} {contentApi} >
+                <!-- <div>
+                    {#if $contacts?.data[address]}
+                        <span class="text-[#6B7280]">{formatTrustRelation($contacts.data[address].row)}</span>
+                    {/if}
+                </div> -->
+                
+            </Avatar>
+            <div class="font-medium underline flex gap-x-2">
+              <img
+                src="/chevron-right.svg"
+                alt="Chevron Right"
+                class="w-4"
+              />
             </div>
-        {/each}
-        {#if members.length === 0}
-          <li>No members</li>
-        {/if}
-      <!-- </ul> -->
+          </button>
+        </div>
+      {/each}
+      {#if members.length === 0}
+        <div>No members</div>
+      {/if}
     </div>
   {/if}
 </div>

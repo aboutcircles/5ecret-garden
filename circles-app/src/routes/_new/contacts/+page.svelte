@@ -72,18 +72,18 @@
             <!-- TODO: use the generic list component -->
             <div class="-mx-4">
                 <button
-                        class="flex w-full items-center justify-between p-4 bg-base-100 hover:bg-base-200"
-                        on:click={(e) => {
-          $popupControls.open?.({
-            component: ProfilePage,
-            title: '',
-            props: {
-              address: address,
-            },
-          });
-          e.preventDefault();
-          return true;
-        }}
+                    class="flex w-full items-center justify-between p-4 bg-base-100 hover:bg-base-200"
+                    on:click={(e) => {
+                        $popupControls.open?.({
+                            component: ProfilePage,
+                            title: '',
+                            props: {
+                                address: address,
+                            },
+                        });
+                        e.preventDefault();
+                        return true;
+                    }}
                 >
                     <Avatar {address}>
                         <div>

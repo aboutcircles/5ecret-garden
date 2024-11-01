@@ -9,7 +9,7 @@
 </script>
 
 <button
-  class="w-full flex items-center justify-between p-2 bg-base-100 hover:bg-base-200 rounded-lg"
+  class="w-full flex items-center justify-between p-4 bg-base-100 hover:bg-base-200"
   on:click={(e) => {
     $popupControls.open?.({
       component: ProfilePage,

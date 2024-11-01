@@ -173,8 +173,8 @@
 </script>
 
 <div class="popup rounded-t-lg overflow-y-auto" bind:this={popup} style="--y: {$y}px">
-  <div class="w-[90%] lg:w-3/5 relative">
-    <div class="absolute left-0 top-0 mt-6">
+  <div class="w-full p-4 sm:w-[90%] lg:w-3/5 relative">
+    <div class="absolute left-4 top-4">
       {#if stack.length > 0}
         <button
           class="w-12 h-12 cursor-pointer"
@@ -211,7 +211,7 @@
         </span>
       </div>
     </div> -->
-    <div class="content mt-2">
+    <div class="content mt-2 w-full">
       {#if popupContent}
         <svelte:component
           this={popupContent.component}
