@@ -55,7 +55,7 @@
     }
 
     otherAvatar = await $circles.data.getAvatarInfo(address);
-    if (otherAvatar?.version === 2) {
+    if (otherAvatar) {
       profile = await getProfile(otherAvatar.avatar);
     }
 
@@ -86,7 +86,7 @@
     } else if (type === 'CrcV2_RegisterGroup') {
       return 'Group';
     } else if (type === 'CrcV2_RegisterOrganization') {
-      return 'Organozation';
+      return 'Organization';
     } else if (type === 'CrcV1_Signup') {
       return 'Human (v1)';
     }

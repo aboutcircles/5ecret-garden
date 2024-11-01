@@ -150,7 +150,7 @@
               title: 'Send Circles',
               component: Send,
               props: {
-                allowAssetSelection: false
+                allowAssetSelection: false,
               },
             });
           },
@@ -267,31 +267,16 @@
     quickActions={[
       {
         name:
-          'Disconnect ' +
-            ($wallet?.address?.toString().substring(0, 12) ?? '') +
-            '...' ?? '',
+          'Disconnect' ,
         link: '/_new/connect-wallet',
-        icon: '/disconnect.svg',
         action: () => {
           $wallet = undefined;
         },
       },
     ]}
   />
-{:else if $page.route.id?.startsWith('/_new/connect-wallet')}
-  <DefaultHeader menuItems={[]} quickActions={[]} />
 {:else}
-  <DefaultHeader
-    menuItems={[]}
-    quickActions={[
-      {
-        name: 'Connect',
-        link: '/_new/connect-wallet',
-        icon: '/connect.svg',
-        action: undefined,
-      },
-    ]}
-  />
+  <DefaultHeader menuItems={[]} quickActions={[]} />
 {/if}
 
 <main class="baseLayer font-dmSans">

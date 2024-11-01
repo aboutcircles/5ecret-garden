@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ConnectWallet from '$lib/components/ConnectWallet.svelte';
   import { onMount } from 'svelte';
 
   let hasBrowserWallet = false;
@@ -8,100 +9,40 @@
 </script>
 
 <div
-  class="flex w-full flex-col items-center justify-center bg-base-200 min-h-screen p-2 lg:p-10"
+  class="w-full flex flex-col min-h-screen p-4 max-w-xl gap-y-4 mt-20"
 >
-  <div class="w-full flex flex-col lg:flex-row justify-center gap-x-5">
-    <div class="card bg-base-100 w-96 border rounded-lg">
-      <figure class="px-10 pt-10">
-        <img src="/logo.svg" alt="Shoes" class="w-16 h-16 rounded-xl" />
-      </figure>
-      <div class="card-body items-center text-center">
-        <h2 class="card-title">circles.garden</h2>
-        <p>Use your circles.garden key in 5ecret-garden</p>
-        <div class="card-actions">
-          <a
-            href="/_new/connect-wallet/import-circles-garden"
-            class="btn btn-primary">Connect</a
-          >
-        </div>
-      </div>
-    </div>
-
-    <div class="card bg-base-100 w-96 border rounded-lg">
-      <figure class="px-10 pt-10">
-        <img src="/fox.png" alt="Shoes" class="w-16 h-16 rounded-xl" />
-      </figure>
-      <div class="card-body items-center text-center">
-        <h2 class="card-title">Use MetaMask</h2>
-        <p>Use Circles with MetaMask or any compatible browser wallet</p>
-        {#if hasBrowserWallet}
-          <div class="card-actions">
-            <a
-              href="/_new/connect-wallet/connect-metamask"
-              class="btn btn-primary">Connect</a
-            >
-          </div>
-        {:else}
-          <div class="card-actions">
-            <a href="/_new/connect-wallet" class="btn btn-disabled"
-              >Not available</a
-            >
-          </div>
-        {/if}
-      </div>
-    </div>
-
-    <div class="card bg-base-100 w-96 border rounded-lg">
-      <figure class="px-10 pt-10">
-        <img src="/safe.svg" alt="Shoes" class="w-16 h-16 rounded-xl" />
-      </figure>
-      <div class="card-body items-center text-center">
-        <h2 class="card-title">Use Safe</h2>
-        <p>
-          Use Circles with Safe and MetaMask or any compatible browser wallet
-        </p>
-        {#if hasBrowserWallet}
-          <div class="card-actions">
-            <a href="/_new/connect-wallet/connect-safe" class="btn btn-primary"
-              >Connect</a
-            >
-          </div>
-        {:else}
-          <div class="card-actions">
-            <a href="/_new/connect-wallet" class="btn btn-disabled"
-              >Not available</a
-            >
-          </div>
-        {/if}
-      </div>
-    </div>
-  </div>
-
-  <div class="hero-content flex-col lg:flex-row">
-    <div class="collapse w-96">
-      <input type="checkbox" checked />
-      <div class="collapse-title text-xl text-center font-medium w-full">
-        Testnet only options
-      </div>
-      <div class="card bg-base-100 w-96 border rounded-lg">
-        <figure class="px-10 pt-10">
-          <img
-            src="/cometh-logo.svg"
-            alt="Shoes"
-            class="w-16 h-16 rounded-xl"
-          />
-        </figure>
-        <div class="card-body items-center text-center">
-          <h2 class="card-title">Use Cometh</h2>
-          <p>Use Circles with a Passkey that's stored on your device</p>
-          <div class="card-actions">
-            <a
-              href="/_new/connect-wallet/connect-cometh"
-              class="btn btn-primary">Connect</a
-            >
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <p class="font-bold text-xl">Access Circles</p>
+  <ConnectWallet
+    imgUrl="/logo.svg"
+    header="circles.garden"
+    desc="Use your circles.garden key in 5ecret-garden"
+    route="/_new/connect-wallet/import-circles-garden"
+  />
+  <ConnectWallet
+    imgUrl="/fox.png"
+    header="Use MetaMask"
+    desc={hasBrowserWallet
+      ? 'Use Circles with MetaMask or any compatible browser wallet'
+      : 'Not available'}
+    route={hasBrowserWallet
+      ? '/_new/connect-wallet/connect-metamask'
+      : '/_new/connect-wallet'}
+  />
+  <ConnectWallet
+    imgUrl="/safe.svg"
+    header="Use Safe"
+    desc={hasBrowserWallet
+      ? 'Use Circles with Safe and MetaMask or any compatible browser wallet'
+      : 'Not available'}
+    route={hasBrowserWallet
+      ? '/_new/connect-wallet/connect-safe'
+      : '/_new/connect-wallet'}
+  />
+  <p class="font-bold text-xl mt-4">Available on Testnet only</p>
+  <ConnectWallet
+    imgUrl="/cometh-logo.svg"
+    header="Use Cometh"
+    desc="Use Circles with a Passkey that's stored on your device"
+    route="/_new/connect-wallet/connect-cometh"
+  />
 </div>
