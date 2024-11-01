@@ -259,7 +259,7 @@
 {#if !profile}
   <div class="inline-flex items-center space-x-2">
     <img
-      src={'/sparkles.svg'}
+      src={'/person.svg'}
       alt="Loading user Icon"
       class="w-8 h-8 rounded-full"
     />

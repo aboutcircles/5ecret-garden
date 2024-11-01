@@ -64,11 +64,13 @@
     });
 </script>
 
-<div class="w-full flex flex-col divide-y gap-y-2 overflow-x-auto">
+<div class="w-full flex flex-col divide-y overflow-x-auto py-4">
     {#each ($store?.data ?? []) as item (getKeyFromItem(item))}
-        <button on:click={() => eventDispatcher("select", item)} class="pt-2">
-            <svelte:component this={row} item={item}/>
-        </button>
+        <div class="">
+            <button on:click={() => eventDispatcher("select", item)} class="w-full">
+                <svelte:component this={row} item={item}/>
+            </button>
+        </div>
     {/each}
     {#if ($store?.data ?? []).length === 0}
         <div class="text-center">
@@ -80,7 +82,7 @@
             <span class="loading loading-spinner text-primary"></span>
             <span class="ml-2 text-gray-500">Loading more...</span>
         {:else}
-            <span class="text-gray-500">End of list</span>
+            <!-- <span class="text-gray-500">End of list</span> -->
         {/if}
     </div>
 </div>
