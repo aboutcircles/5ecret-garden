@@ -1,7 +1,7 @@
 <script lang="ts">
   import Avatar from '$lib/components/Avatar.svelte';
   import type { GroupRow } from '@circles-sdk/data';
-  import { shortenAddress } from '$lib/utils/shared';
+  // import { shortenAddress } from '$lib/utils/shared';
   import {popupControls} from '$lib/components/PopUp.svelte';
   import ProfilePage from '$lib/pages/Profile.svelte';
 
@@ -23,10 +23,10 @@
   }}
 >
   <Avatar address={item.group}>
-    <span>{item.memberCount} Members</span>
-    <a class="underline" href={'https://gnosisscan.io/address/' + item.group}
+    <span>{item.memberCount} member{`${item.memberCount === 1 ? '' : 's'}`}</span>
+    <!-- <a class="underline" href={'https://gnosisscan.io/address/' + item.group}
       >({shortenAddress(item.group)})</a
-    >
+    > -->
   </Avatar>
   <div class="font-medium underline flex gap-x-2">
    <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
