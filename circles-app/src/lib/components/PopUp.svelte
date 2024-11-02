@@ -177,17 +177,17 @@
     <div class="absolute left-4 top-4">
       {#if stack.length > 0}
         <button
-          class="w-12 h-12 cursor-pointer"
+          class="flex w-fit rounded-lg p-2 bg-gray-100"
           on:click={() => {
             contentApi.back();
           }}
         >
-          <img alt="Back" src="/chevron-left.svg" class="w-6 h-6" />
+          <img alt="Back" src="/arrow-left.svg" class="w-4 h-4" />
         </button>
       {:else}
         <button
           type="button"
-          class="w-12 h-12 cursor-pointer"
+          class="flex w-fit rounded-lg p-2 bg-gray-100"
           on:click={() => {
             contentApi?.close?.();
           }}
@@ -195,7 +195,7 @@
           <img
             src="/close.svg"
             alt="Close"
-            class="w-6 h-6"
+            class="w-4 h-4"
           />
         </button>
       {/if}
