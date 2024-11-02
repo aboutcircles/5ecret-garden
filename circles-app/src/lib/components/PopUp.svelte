@@ -172,7 +172,11 @@
   };
 </script>
 
-<div class="popup rounded-t-lg overflow-y-auto" bind:this={popup} style="--y: {$y}px">
+<div
+  class="popup rounded-t-lg overflow-y-auto"
+  bind:this={popup}
+  style="--y: {$y}px"
+>
   <div class="w-full p-4 sm:w-[90%] lg:w-3/5 relative">
     <div class="absolute left-4 top-4">
       {#if stack.length > 0}
@@ -192,25 +196,17 @@
             contentApi?.close?.();
           }}
         >
-          <img
-            src="/close.svg"
-            alt="Close"
-            class="w-4 h-4"
-          />
+          <img src="/close.svg" alt="Close" class="w-4 h-4" />
         </button>
       {/if}
     </div>
-    <!-- <div
-      class="pull-bar card-title pt-6 b-12"
+    <!-- <button
+      class="pull-bar card-title mt-10"
       on:mousedown={handleStart}
       on:touchstart={handleStart}
     >
-      <div class="p-6">
-        <span>
-          {popupContent?.title ?? ' - '}
-        </span>
-      </div>
-    </div> -->
+      {popupContent?.title ?? ' - '}
+    </button> -->
     <div class="content mt-2 w-full">
       {#if popupContent}
         <svelte:component
