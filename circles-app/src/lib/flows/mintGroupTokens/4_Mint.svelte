@@ -37,9 +37,12 @@
     }
 </script>
 <FlowDecoration>
+    <p class="text-2xl font-bold mt-14">Confirm Transaction</p>
+    <p class="text-gray-500 mt-2">Following CRC will be converted to a groups CRC</p>
     <Send asset={context.selectedAsset}
           amount={context.amount}
           receiverAddress={context.selectedAddress}
+          textButton="Convert CRC"
           on:select={handleSend}
     />
 </FlowDecoration>
