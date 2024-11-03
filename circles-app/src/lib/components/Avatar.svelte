@@ -139,7 +139,7 @@
     if (address === '0x0000000000000000000000000000000000000001') {
       return {
         name: 'Transitive transfer',
-        previewImageUrl: '/logo.svg',
+        previewImageUrl: '/circles-token.svg',
       };
     }
 
@@ -302,10 +302,8 @@
   {:else if view === 'horizontal_small'}
   <HorizontalSmallAvatarLayout
     {imageStyle}
-    {pictureOverlayUrl}
     on:click={openAvatar}
     {profile}
-    {date}
   >
     <slot></slot>
   </HorizontalSmallAvatarLayout>

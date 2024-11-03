@@ -83,9 +83,8 @@
 </script>
 
 {#if showTransitive}
-  <p class="menu-title pl-0">Transitive transfer</p>
   <button
-    class="w-full py-3"
+    class="w-full md:p-3 mt-4 border-b md:border md:rounded-lg"
     on:click={() => handleSelect(transitiveTransfer())}
   >
     <BalanceRow balance={transitiveTransfer()} />

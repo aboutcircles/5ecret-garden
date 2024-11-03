@@ -24,7 +24,7 @@
 
   export let selectedAddress: string | undefined = undefined;
   export let selectedProfile: Profile | undefined = undefined;
-  export let addressListTitle: string = 'Recent Addresses';
+  export let addressListTitle: string = 'Recent';
   export let noResultsMessage: string = 'No recent addresses found';
 
   let editorText: string | undefined = undefined;
