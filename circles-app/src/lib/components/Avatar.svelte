@@ -210,11 +210,13 @@
   import ProfilePage from '$lib/pages/Profile.svelte';
   import { popupControls } from '$lib/components/PopUp.svelte';
   import TransactionRowAvatarLayout from './avatar/TransactionRowAvatarLayout.svelte';
+  import HorizontalSmallAvatarLayout from './avatar/HorizontalSmallAvatarLayout.svelte';
 
   export let address: string;
   export let clickable: boolean = true;
   export let view:
     | 'horizontal'
+    | 'horizontal_small'
     | 'vertical'
     | 'vertical_small'
     | 'transaction_row' = 'horizontal';
@@ -297,6 +299,16 @@
   >
     <slot></slot>
   </TransactionRowAvatarLayout>
+  {:else if view === 'horizontal_small'}
+  <HorizontalSmallAvatarLayout
+    {imageStyle}
+    {pictureOverlayUrl}
+    on:click={openAvatar}
+    {profile}
+    {date}
+  >
+    <slot></slot>
+  </HorizontalSmallAvatarLayout>
 {:else}
   <HorizontalAvatarLayout
     {showName}
