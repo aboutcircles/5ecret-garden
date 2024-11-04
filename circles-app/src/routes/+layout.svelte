@@ -229,6 +229,7 @@
   {:then profile}
     <DefaultHeader
       text={profile?.name ?? $avatar.address}
+      address={$avatar.address}
       logo={(profile?.previewImageUrl ?? '').trim() === ''
         ? '/logo.svg'
         : profile?.previewImageUrl}
@@ -266,8 +267,7 @@
     menuItems={[]}
     quickActions={[
       {
-        name:
-          'Disconnect' ,
+        name: 'Disconnect',
         link: '/_new/connect-wallet',
         action: () => {
           $wallet = undefined;

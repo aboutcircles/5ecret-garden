@@ -1,5 +1,9 @@
 <script lang="ts">
+  import { popupControls } from '$lib/components/PopUp.svelte';
+  import SettingProfile from '$lib/pages/SettingProfile.svelte';
+
   export let text: string | undefined = undefined;
+  export let address: string | undefined = undefined;
   export let logo: string | undefined = undefined;
 
   export let homeLink = '/';
@@ -76,7 +80,20 @@
   </div>
   <div class="navbar-end">
     {#if text}
-      <button class="hidden md:flex items-center hover:scale-105 transition-transform duration-300" on:click={() => {}}>
+      <button
+        class="hidden md:flex items-center hover:scale-105 transition-transform duration-300"
+        on:click={(e) => {
+          $popupControls.open?.({
+            component: SettingProfile,
+            title: '',
+            props: {
+              address: address,
+            },
+          });
+          e.preventDefault();
+          return true;
+        }}
+      >
         <div class="bg-black/10 rounded-full mr-2 h-7 w-7 p-1">
           {#if logo}
             <img src={logo} alt="Avatar" class="h-full w-full" />
