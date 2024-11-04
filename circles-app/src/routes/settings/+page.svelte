@@ -10,8 +10,8 @@
   import { cidV0ToUint8Array } from '@circles-sdk/utils';
   import { onMount } from 'svelte';
   import { runTask } from '../+layout.svelte';
-  import MigrateToV2 from "$lib/flows/migrateToV2/1_CreateProfile.svelte";
-  import {popupControls} from "$lib/components/PopUp.svelte";
+  import MigrateToV2 from '$lib/flows/migrateToV2/1_CreateProfile.svelte';
+  import { popupControls } from '$lib/components/PopUp.svelte';
 
   async function changeWallet() {
     $avatar = undefined;
@@ -55,11 +55,11 @@
   });
 
   async function migrateToV2() {
-      $popupControls?.open({
-          title: "Migrate to v2",
-          component: MigrateToV2,
-          props: {}
-      });
+    $popupControls?.open({
+      title: 'Migrate to v2',
+      component: MigrateToV2,
+      props: {},
+    });
   }
 
   async function saveProfile() {
@@ -83,42 +83,40 @@
   }
 </script>
 
-<div
-  class="flex flex-col w-[90%] lg:w-3/5 border rounded-lg px-6 py-8 divide-y gap-y-4 mt-20"
->
-  <div class="flex flex-col w-full gap-y-4">
-    <p class="text-lg font-bold">Personal Profile</p>
-    <ProfileEditor
-      bind:profile
-      showCustomizableFields={$avatar?.avatarInfo?.version === 2}
-    />
-    {#if $avatar?.avatarInfo?.version === 2}
-      <div>
-        <ActionButton action={saveProfile} disabled={!profile}
-          >Save</ActionButton
-        >
-      </div>
-    {/if}
-  </div>
-
-  {#if canMigrate($avatar?.avatarInfo ?? undefined)}
-    <div class="w-full pt-2">
-      <h2 class="text-lg font-medium">Circles V2</h2>
-      <div class="mt-3 space-y-2">
+<div class="flex flex-col p-4 w-full max-w-2xl gap-y-4 mt-20">
+  <p class="font-bold text-2xl">Settings</p>
+  <div class="flex flex-col items-center md:border rounded-lg md:px-6 md:py-8  gap-y-4">
+    <div class="flex flex-col w-full gap-y-4">
+      <ProfileEditor
+        bind:profile
+        showCustomizableFields={$avatar?.avatarInfo?.version === 2}
+      />
+      {#if $avatar?.avatarInfo?.version === 2}
         <div>
-          <ActionButton action={migrateToV2}>Update to Circles V2</ActionButton>
+          <ActionButton action={saveProfile} disabled={!profile}
+            >Save</ActionButton
+          >
+        </div>
+      {/if}
+    </div>
+
+    {#if canMigrate($avatar?.avatarInfo ?? undefined)}
+      <div class="w-full pt-2 border-t">
+        <h2 class="text-lg font-medium">Circles V2</h2>
+        <div class="mt-3">
+            <ActionButton action={migrateToV2}
+              >Update to Circles V2</ActionButton
+            >
         </div>
       </div>
-    </div>
-  {/if}
+    {/if}
 
-  <div class="w-full pt-2">
-    <h2 class="text-lg font-medium">Wallet</h2>
-    <div class="mt-3 space-y-2">
-      <div>
-        <ActionButton action={changeWallet}>
-          Connect to different wallet
-        </ActionButton>
+    <div class="w-full pt-2 border-t">
+      <h2 class="text-lg font-medium">Wallet</h2>
+      <div class="mt-3">
+          <ActionButton action={changeWallet}>
+            Connect to Different Wallet
+          </ActionButton>
       </div>
     </div>
   </div>
