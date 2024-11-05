@@ -29,11 +29,11 @@
 </script>
 
 <div class="navbar font-dmSans bg-white font-medium border-b fixed top-0 z-10">
-  <div class="navbar-start">
+  <div class="navbar-start gap-4">
     <div class="dropdown">
       <button
         tabindex="0"
-        class="btn btn-ghost lg:hidden"
+        class="btn btn-ghost btn-square lg:hidden"
         on:click={() => isDropdownOpen = true}
       >
         <svg
@@ -136,7 +136,7 @@
       {/each}
     </ul>
   </div>
-  <div class="navbar-end">
+  <div class="navbar-end gap-4">
     {#if text}
       <button
         class="hidden md:flex items-center hover:scale-105 transition-transform duration-300"
