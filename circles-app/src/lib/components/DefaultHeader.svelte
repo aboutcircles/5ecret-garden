@@ -25,7 +25,6 @@
 
   export let activePage: string;
   let isDropdownOpen = false;
-  console.log("activePage", activePage);
 </script>
 
 <div class="navbar font-dmSans bg-white font-medium border-b fixed top-0 z-10">
@@ -51,15 +50,6 @@
           />
         </svg>
       </button>
-      <!-- <ul
-        class="menu menu-lg dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
-      >
-        {#each menuItems as item}
-          <li>
-            <a class="font-medium" tabindex="0" href={item.link}>{item.name}</a>
-          </li>
-        {/each}
-      </ul> -->
       {#if isDropdownOpen}
         <div class="fixed -top-2 -left-2 dropdown-content transform-none w-screen h-screen bg-base-100 z-[100] py-2 px-5 scale-100 font-medium">
           <div class="flex flex-row justify-between items-center">
