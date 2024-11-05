@@ -16,7 +16,7 @@
           <img
             src={pictureOverlayUrl}
             alt="Overlay"
-            class="h-6 object-cover"
+            class="h-4"
             class:rounded-full={imageStyle === 'circle'}
           />
         </span>
