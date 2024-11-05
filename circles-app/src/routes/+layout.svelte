@@ -193,7 +193,7 @@
         {
           name: 'Group mint',
           link: '',
-          icon: '/banknotes.svg',
+          icon: '/banknotes-white.svg',
           action: () => {
             $popupControls.open?.({
               title: 'Mint group tokens',
@@ -206,6 +206,7 @@
       activePage = 'Groups';
     } else if ($page.route.id === '/settings') {
       activePage = 'Settings';
+      quickActions = [];
     } else if ($page.route.id === '/_new/tools') {
       activePage = 'Tools';
     } else {
