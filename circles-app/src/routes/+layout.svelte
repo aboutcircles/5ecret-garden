@@ -302,7 +302,7 @@
       showPopUp = true;
     }}
     on:close={() => {
-      console.log('close');
+      // console.log('close');
       showPopUp = false;
     }}
     on:overlayOpacity={(event) => {
