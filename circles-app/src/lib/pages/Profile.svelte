@@ -197,14 +197,21 @@
 
   <div class="my-6 flex flex-row gap-x-2">
     <span class="bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm">{getTypeString(otherAvatar?.type)}</span>
-    <a
+    <!-- <a
       class="bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm flex flex-row items-center gap-x-1"
       target="_blank"
       href={'https://gnosisscan.io/address/' + otherAvatar?.avatar}
     >
       {shortenAddress(otherAvatar?.avatar)}
       <img src="/copy.svg" alt="Copy" class="w-4 h-4 inline" />
-    </a>
+    </a> -->
+    <button
+      on:click={() => navigator.clipboard.writeText(otherAvatar?.avatar)}
+      class="bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm flex flex-row items-center gap-x-1 font-medium hover:text-black/70 hover:cursor-pointer"
+    >
+      {shortenAddress(otherAvatar?.avatar)}
+      <img src="/copy.svg" alt="Copy" class="w-4 h-4 inline" />
+    </button>
   </div>
 
   <div class="w-[80%] sm:w-[60%] border-b border-[#E5E7EB]"></div>
