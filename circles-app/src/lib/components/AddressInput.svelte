@@ -23,6 +23,10 @@
     editorText = (e.target as HTMLInputElement).value;
     if (ethers.isAddress(editorText)) {
       address = editorText;
+      console.log('event dispatcher', address);
+      eventDispatcher('addressChange', { address });
+    } else if (editorText == '') {
+      address = '';
       eventDispatcher('addressChange', { address });
     }
   };
@@ -60,9 +64,11 @@
   <input
     bind:this={input}
     type="text"
-    class="input input-bordered flex-1"
+    class="input input-bordered bg-gray-100 flex-1"
     placeholder="Enter or scan Ethereum address"
     on:input={handleInput}
+    on:paste={handleInput}
+    on:cut={handleInput}
   />
   <button on:click={openQrScanner} class="btn btn-square md:hidden"
     ><img src="/qr-code.svg" alt="QR Code" class="w-6" /></button

@@ -13,6 +13,7 @@
   import type { ContactList } from '$lib/stores/contacts';
   import { shortenAddress } from '$lib/utils/shared';
   import type { Readable } from 'svelte/store';
+  import AddressInput from '$lib/components/AddressInput.svelte';
 
   export let store:
     | Readable<{
@@ -27,7 +28,6 @@
   export let addressListTitle: string = 'Recent';
   export let noResultsMessage: string = 'No recent addresses found';
 
-  let editorText: string | undefined = undefined;
   let inputElement: HTMLInputElement | undefined = undefined;
 
   const eventDispatcher = createEventDispatcher();
@@ -39,16 +39,15 @@
     let filteredAddresses: string[] = [];
 
     if (selectedAddress && inputElement) {
-      editorText = selectedAddress;
-      inputElement.value = editorText;
-
       filteredAddresses = Object.keys(contactList).filter((address) => {
         return (
-          address.toLowerCase().includes(editorText?.toLowerCase() ?? '') ||
+          address
+            .toLowerCase()
+            .includes(selectedAddress?.toLowerCase() ?? '') ||
           address == selectedAddress ||
           contactList[address].contactProfile.name
             ?.toLowerCase()
-            ?.includes(editorText?.toLowerCase() ?? '')
+            ?.includes(selectedAddress?.toLowerCase() ?? '')
         );
       });
     } else {
@@ -68,88 +67,40 @@
   function updateSearchResults() {
     filteredAddresses = Object.keys(data).filter((address) => {
       return (
-        address.toLowerCase().includes(editorText?.toLowerCase() ?? '') ||
-        address == selectedAddress ||
+        address.toLowerCase().includes(selectedAddress?.toLowerCase() ?? '') ||
+        address == selectedAddress?.toLowerCase() ||
         $store?.data[address].contactProfile.name
           ?.toLowerCase()
-          ?.includes(editorText?.toLowerCase() ?? '')
+          ?.includes(selectedAddress?.toLowerCase() ?? '')
       );
     });
 
-    if (ethers.isAddress(editorText)) {
-      selectedAddress = editorText;
-      selectedProfile = $store?.data[editorText]?.contactProfile;
-      selected(editorText, $store?.data[editorText]?.contactProfile);
+    if (ethers.isAddress(selectedAddress)) {
+      console.log(selectedAddress);
+      selectedProfile = $store?.data[selectedAddress]?.contactProfile;
+      selected(selectedAddress, $store?.data[selectedAddress]?.contactProfile);
     } else {
       selectedAddress = undefined;
       selectedProfile = undefined;
     }
   }
 
-  const handleInput = (e: any) => {
-    editorText = (e.target as HTMLInputElement).value;
-
-    if (!data) {
-      throw new Error('No data available');
-    }
+  $: if (selectedAddress) {
+    console.log("update selected address");
     updateSearchResults();
-  };
-
-  // TODO: DRY
-  function avatarTypeToString(
-    type:
-      | 'CrcV2_RegisterHuman'
-      | 'CrcV2_RegisterGroup'
-      | 'CrcV2_RegisterOrganization'
-      | 'CrcV1_Signup'
-  ): string {
-    switch (type) {
-      case 'CrcV2_RegisterHuman':
-        return 'Human';
-      case 'CrcV2_RegisterGroup':
-        return 'Group';
-      case 'CrcV2_RegisterOrganization':
-        return 'Organization';
-      case 'CrcV1_Signup':
-        return 'Human (v1)';
-      default:
-        return 'Unknown';
-    }
   }
-
-  const clearInput = () => {
-    editorText = '';
-    if (inputElement) {
-      inputElement.value = '';
-    }
-    updateSearchResults();
-  };
 </script>
 
 <div class="form-control my-4 relative w-full">
-  <input
-    type="text"
-    class="input input-bordered bg-gray-100 w-full pr-10"
-    placeholder="Enter or search Ethereum address"
-    on:input={handleInput}
-    on:paste={handleInput}
-    on:cut={handleInput}
-    bind:this={inputElement}
-  />
-  {#if editorText}
-    <button
-      class="absolute right-2 top-2 bg-gray-300 rounded-full w-6 h-6 flex items-center justify-center"
-      on:click={clearInput}
-    >
-      &times;
-    </button>
-  {/if}
+  <AddressInput bind:address={selectedAddress} />
 </div>
 
 <p class="menu-title pl-0">
   {addressListTitle}
 </p>
-<div class="flex flex-col p-0 md:px-4 sm:py-4 w-full sm:border sm:rounded-lg overflow-x-auto divide-y">
+<div
+  class="flex flex-col p-0 md:px-4 sm:py-4 w-full sm:border sm:rounded-lg overflow-x-auto divide-y"
+>
   {#if Object.keys(filteredAddresses).length > 0}
     {#each filteredAddresses as address (address)}
       <button
