@@ -7,6 +7,7 @@
     import type {Readable} from "svelte/store";
     import GenericList from "$lib/components/GenericList.svelte";
     import AvatarRowView from "$lib/components/AvatarRow.svelte";
+  import AddressInput from "$lib/components/AddressInput.svelte";
 
     export let selectedAddress: string | undefined = undefined;
 
@@ -24,6 +25,10 @@
         }
         store = await createStore();
     })
+
+    function handleAddressChange(event: CustomEvent) {
+        selectedAddress = event.detail.address;
+    }
 
     const handleInput = async (e: any) => {
         editorText = (e.target as HTMLInputElement).value;
@@ -72,12 +77,7 @@
 </script>
 
 <div class="form-control my-4">
-    <input bind:this={input}
-           type="text"
-           class="input input-bordered"
-           placeholder="Enter or search Ethereum address"
-           on:input={handleInput}
-    />
+    <AddressInput bind:address={selectedAddress} on:addressChange={handleAddressChange} />
 </div>
 
 <div class="mt-4">
