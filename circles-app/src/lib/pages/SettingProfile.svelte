@@ -57,6 +57,16 @@
       };
     }
   }
+
+  let copyIcon = '/copy.svg';
+  function handleCopy() {
+    navigator.clipboard.writeText(address ?? '');
+    copyIcon = '/check.svg';
+    
+    setTimeout(() => {
+      copyIcon = '/copy.svg';
+    }, 1000);
+  }
 </script>
 
 <div
@@ -65,11 +75,11 @@
   <Avatar view="vertical" clickable={false} {address} />
 
   <button
-    on:click={() => navigator.clipboard.writeText(address)}
+    on:click={handleCopy}
     class="bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm flex flex-row items-center gap-x-1 font-medium hover:text-black/70 hover:cursor-pointer"
   >
     {address}
-    <img src="/copy.svg" alt="Copy" class="w-4 h-4 inline" />
+    <img src={copyIcon} alt="Copy" class="w-4 h-4 inline" />
   </button>
 
   <div class="p-2 shadow-lg rounded-lg my-8">

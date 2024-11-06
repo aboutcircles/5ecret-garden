@@ -111,10 +111,6 @@
     throw new Error(`Unknown relation: ${row.relation}`);
   }
 
-  // function newLineToBr(text: string) {
-  //     return text.replace(/\n/g, "<br>");
-  // }
-
   function getTrustRow(address: string | undefined) {
     if (!address) {
       return undefined;
@@ -125,61 +121,41 @@
     return $contacts.data[address]?.row;
   }
 
-  function nextProfile(address: string) {
-    contentApi?.open?.({
-      title: shortenAddress(address),
-      component: ProfilePage,
-      props: {
-        address: address,
-        contentApi: contentApi,
-      },
-    });
-  }
+  // function nextProfile(address: string) {
+  //   contentApi?.open?.({
+  //     title: shortenAddress(address),
+  //     component: ProfilePage,
+  //     props: {
+  //       address: address,
+  //       contentApi: contentApi,
+  //     },
+  //   });
+  // }
 
   let commonConnectionsCount = 0;
+
+  let copyIcon = '/copy.svg';
+  
+  function handleCopy() {
+    navigator.clipboard.writeText(otherAvatar?.avatar ?? '');
+    copyIcon = '/check.svg';
+    
+    setTimeout(() => {
+      copyIcon = '/copy.svg';
+    }, 1000);
+  }
 </script>
 
 <div class="flex flex-col items-center w-full sm:w-[90%] lg:w-3/5 mx-auto">
-  <!-- <button type="button"
-    class="ml-0 border border-transparent rounded-full place-self-start"
-    on:click={() => {
-      contentApi?.close?.();
-    }}
-  >
-    <img
-      src="/close.svg"
-      alt="Close"
-      class="w-1.25 h-1.25"
-    />
-  </button> -->
   <Avatar
     view="vertical"
     clickable={false}
     address={otherAvatar?.avatar}
     {trustVersion}
   >
-    <!-- <div class="mt-2">
-      <span class="font-bold">{getTypeString(otherAvatar?.type)}</span> -
-      <a
-        class="font-medium"
-        target="_blank"
-        href={'https://gnosisscan.io/address/' + otherAvatar?.avatar}
-      >
-        {shortenAddress(otherAvatar?.avatar)}
-      </a>
-    </div> -->
   </Avatar>
 
   <span>
-    <!-- {#if getTrustRow(otherAvatar?.avatar)?.relation === 'trusts'}
-      <img src="/outgoing.svg" alt="Outgoing trust" class="w-3 h-3 inline" />
-    {:else if getTrustRow(otherAvatar?.avatar)?.relation === 'trustedBy'}
-      <img src="/incoming.svg" alt="Incoming trust" class="w-3 h-3 inline" />
-    {:else if getTrustRow(otherAvatar?.avatar)?.relation === 'mutuallyTrusts'}
-      <img src="/mutual.svg" alt="Mutual trust" class="w-3 h-3 inline" />
-    {:else}
-      <img src="/no-trust.svg" alt="No trust" class="w-3 h-3 inline" />
-    {/if} -->
     <span
       class="text-sm"
       class:text-red-400={!(
@@ -197,14 +173,13 @@
 
   <div class="my-6 flex flex-row gap-x-2">
     <span class="bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm">{getTypeString(otherAvatar?.type)}</span>
-    <a
-      class="bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm flex flex-row items-center gap-x-1"
-      target="_blank"
-      href={'https://gnosisscan.io/address/' + otherAvatar?.avatar}
+    <button
+      on:click={handleCopy}
+      class="bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm flex flex-row items-center gap-x-1 font-medium hover:text-black/70 hover:cursor-pointer"
     >
       {shortenAddress(otherAvatar?.avatar)}
-      <img src="/copy.svg" alt="Copy" class="w-4 h-4 inline" />
-    </a>
+      <img src={copyIcon}  alt="Copy" class="w-4 h-4 inline" />
+    </button>
   </div>
 
   <div class="w-[80%] sm:w-[60%] border-b border-[#E5E7EB]"></div>
@@ -241,7 +216,6 @@
           });
         }}
       >
-        <!-- <img src="/banknotes.svg" alt="Incoming trust" class="w-6 h-6 inline" /> -->
         Mint
       </button>
     {/if}
@@ -259,7 +233,6 @@
           });
         }}
       >
-        <!-- <img src="/trash.svg" alt="Untrust" class="w-4 h-4" /> -->
         Untrust
       </button>
     {:else if getTrustRow(otherAvatar?.avatar)?.relation === 'mutuallyTrusts'}
@@ -275,7 +248,6 @@
           });
         }}
       >
-        <!-- <img src="/trash.svg" alt="Untrust" class="w-4 h-4" /> -->
         Untrust
       </button>
     {:else if getTrustRow(otherAvatar?.avatar)?.relation === 'trustedBy'}
@@ -291,7 +263,6 @@
           });
         }}
       >
-        <!-- <img src="/shield-check.svg" alt="Trust back" class="w-4 h-4" /> -->
         Trust back
       </button>
     {:else}
@@ -307,7 +278,6 @@
           });
         }}
       >
-        <!-- <img src="/shield-check.svg" alt="Trust" class="w-4 h-4" /> -->
         Trust
       </button>
     {/if}
@@ -351,14 +321,6 @@
       role="tabpanel"
       class="tab-content mt-8 p-4 bg-base-100 border-base-300 rounded-box divide-y"
     >
-      <!-- <ul class="w-full overflow-x-scroll"> -->
-          <!-- {#each members as member (member)}
-            <li>
-              <Avatar {contentApi} address={member}>
-                {member}
-              </Avatar>
-            </li>
-          {/each} -->
       {#each members as member (member)}
         <!-- TODO: use the generic list component -->
         <div class="-mx-4">
