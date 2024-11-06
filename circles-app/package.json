@@ -45,6 +45,7 @@
   "type": "module",
   "dependencies": {
     "buffer": "^6.0.3",
+    "ethers": "^6.13.4",
     "imask": "^7.6.1",
     "process": "^0.11.10",
     "qrcode": "^1.5.4"
