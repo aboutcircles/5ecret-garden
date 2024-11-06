@@ -139,7 +139,7 @@
     if (address === '0x0000000000000000000000000000000000000001') {
       return {
         name: 'Transitive transfer',
-        previewImageUrl: '/logo.svg',
+        previewImageUrl: '/circles-token.svg',
       };
     }
 
@@ -210,11 +210,13 @@
   import ProfilePage from '$lib/pages/Profile.svelte';
   import { popupControls } from '$lib/components/PopUp.svelte';
   import TransactionRowAvatarLayout from './avatar/TransactionRowAvatarLayout.svelte';
+  import HorizontalSmallAvatarLayout from './avatar/HorizontalSmallAvatarLayout.svelte';
 
   export let address: string;
   export let clickable: boolean = true;
   export let view:
     | 'horizontal'
+    | 'horizontal_small'
     | 'vertical'
     | 'vertical_small'
     | 'transaction_row' = 'horizontal';
@@ -297,6 +299,14 @@
   >
     <slot></slot>
   </TransactionRowAvatarLayout>
+  {:else if view === 'horizontal_small'}
+  <HorizontalSmallAvatarLayout
+    {imageStyle}
+    on:click={openAvatar}
+    {profile}
+  >
+    <slot></slot>
+  </HorizontalSmallAvatarLayout>
 {:else}
   <HorizontalAvatarLayout
     {showName}

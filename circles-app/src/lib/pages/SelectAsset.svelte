@@ -58,6 +58,13 @@
   import { createEventDispatcher } from 'svelte';
   import BalanceRow from '$lib/components/BalanceRow.svelte';
   import type { Readable } from 'svelte/store';
+  import Avatar from '$lib/components/Avatar.svelte';
+  import {
+    crcTypes,
+    roundToDecimals,
+    shortenAddress,
+    staticTypes,
+  } from '$lib/utils/shared';
 
   export let balances: Readable<{
     data: TokenBalanceRow[];
@@ -76,9 +83,8 @@
 </script>
 
 {#if showTransitive}
-  <p class="menu-title pl-0">Transitive transfer</p>
   <button
-    class="w-full py-3"
+    class="w-full md:p-3 mt-4 border-b md:border md:rounded-lg"
     on:click={() => handleSelect(transitiveTransfer())}
   >
     <BalanceRow balance={transitiveTransfer()} />
@@ -88,10 +94,29 @@
 <p class="menu-title pl-0 mt-4">Individual tokens</p>
 
 {#if $balances?.data?.length > 0}
-  <div class="flex flex-col divide-y">
+  <div
+    class="flex flex-col p-0 md:px-4 sm:py-4 w-full sm:border sm:rounded-lg overflow-x-auto divide-y"
+  >
     {#each $balances.data as balance (balance.tokenAddress)}
-      <button class="w-full" on:click={() => handleSelect(balance)}>
-        <BalanceRow {balance} />
+      <button
+        class="flex w-full items-center justify-between p-4 bg-base-100 hover:bg-base-200 rounded-lg"
+        on:click={() => handleSelect(balance)}
+      >
+        <Avatar address={balance.tokenOwner}
+          >{shortenAddress(balance.tokenOwner)}</Avatar
+        >
+        <div class="col text-right">
+          <span class="font-medium">{roundToDecimals(balance.circles)}</span>
+          CRC
+          <p class="text-xs text-gray-500">
+            {#if staticTypes.has(balance.tokenType)}
+              {roundToDecimals(balance.staticCircles)} Static Circles
+            {/if}
+            {#if crcTypes.has(balance.tokenType)}
+              {roundToDecimals(balance.crc)} CRC
+            {/if}
+          </p>
+        </div>
       </button>
     {/each}
   </div>

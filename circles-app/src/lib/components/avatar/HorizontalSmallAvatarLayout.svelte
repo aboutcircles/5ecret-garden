@@ -4,41 +4,21 @@
   export let profile: Profile | undefined;
   export let imageStyle: 'square' | 'circle' = 'circle';
   export let showName: boolean = true;
-  export let pictureOverlayUrl: string | undefined = undefined;
   export let trustVersion: number | undefined = undefined;
 </script>
 
 <div class="inline-flex items-center">
   <button class="cursor-pointer" on:click>
-    {#if pictureOverlayUrl}
-      <div class="indicator">
-        <span class="indicator-item badge bg-blue-100">
-          <img
-            src={pictureOverlayUrl}
-            alt="Overlay"
-            class="h-4"
-            class:rounded-full={imageStyle === 'circle'}
-          />
-        </span>
-        <img
-          src={profile?.previewImageUrl}
-          alt="User Icon"
-          class="w-10 h-10 object-cover"
-          class:rounded-full={imageStyle === 'circle'}
-        />
-      </div>
-    {:else}
       <img
         src={profile?.previewImageUrl}
         alt="User Icon"
-        class="w-10 h-10 object-cover"
+        class="w-6 h-6 object-cover"
         class:rounded-full={imageStyle === 'circle'}
       />
-    {/if}
   </button>
-  <div class="flex flex-col items-start pl-4 gap-y-0.5">
+  <div class="flex flex-col items-start pl-2 gap-y-0.5">
     {#if showName}
-      <span class="font-semibold text-[#161616]">{profile?.name}</span>
+      <span class="font-medium text-sm text-neutral-900">{profile?.name}</span>
       <p class="flex flex-col items-start text-xs text-gray-500">
         <slot></slot>
       </p>

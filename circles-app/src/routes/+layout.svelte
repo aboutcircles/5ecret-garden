@@ -193,7 +193,7 @@
         {
           name: 'Group mint',
           link: '',
-          icon: '/banknotes.svg',
+          icon: '/banknotes-white.svg',
           action: () => {
             $popupControls.open?.({
               title: 'Mint group tokens',
@@ -206,6 +206,7 @@
       activePage = 'Groups';
     } else if ($page.route.id === '/settings') {
       activePage = 'Settings';
+      quickActions = [];
     } else if ($page.route.id === '/_new/tools') {
       activePage = 'Tools';
     } else {
@@ -229,6 +230,7 @@
   {:then profile}
     <DefaultHeader
       text={profile?.name ?? $avatar.address}
+      address={$avatar.address}
       logo={(profile?.previewImageUrl ?? '').trim() === ''
         ? '/logo.svg'
         : profile?.previewImageUrl}
@@ -266,8 +268,7 @@
     menuItems={[]}
     quickActions={[
       {
-        name:
-          'Disconnect' ,
+        name: 'Disconnect',
         link: '/_new/connect-wallet',
         action: () => {
           $wallet = undefined;
@@ -302,7 +303,7 @@
       showPopUp = true;
     }}
     on:close={() => {
-      console.log('close');
+      // console.log('close');
       showPopUp = false;
     }}
     on:overlayOpacity={(event) => {

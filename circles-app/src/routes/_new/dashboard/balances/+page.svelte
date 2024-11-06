@@ -4,7 +4,6 @@
   import { circlesBalances } from '$lib/stores/circlesBalances';
   import { totalCirclesBalance } from '$lib/stores/totalCirclesBalance';
   import BalanceRow from '$lib/components/BalanceRow.svelte';
-  import PreviousButton from '$lib/components/PreviousButton.svelte';
   import { roundToDecimals } from '$lib/utils/shared';
 
   let mintableAmount: number = 0;
@@ -15,7 +14,11 @@
 </script>
 
 <div class="flex flex-col items-center p-4 w-full max-w-2xl gap-y-6 mt-20">
-  <div class="w-full"><PreviousButton route="/_new/dashboard" /></div>
+  <div class="w-full">
+    <a href="/_new/dashboard">
+      <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
+    </a>
+  </div>
   <div
     class="w-full flex flex-col md:flex-row justify-between md:items-end font-bold text-2xl mb-4 gap-y-1"
   >
@@ -24,9 +27,11 @@
       >{roundToDecimals($totalCirclesBalance)} CRC</span
     >
   </div>
-  <div class="w-full md:border rounded-lg md:px-4 md:py-2 flex flex-col divide-y gap-y-2 overflow-x-auto">
-      {#each $circlesBalances.data as balance}
-        <BalanceRow {balance} />
-      {/each}
+  <div
+    class="w-full md:border rounded-lg md:px-4 md:py-2 flex flex-col divide-y gap-y-2 overflow-x-auto"
+  >
+    {#each $circlesBalances.data as balance}
+      <BalanceRow {balance} />
+    {/each}
   </div>
 </div>

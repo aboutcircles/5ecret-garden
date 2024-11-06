@@ -42,8 +42,8 @@
 
 <!-- Action Buttons -->
 <div class="flex justify-end space-x-2 mt-6">
-    <button type="submit" class="btn btn-primary px-6 py-2 rounded-md text-white bg-blue-500 hover:bg-blue-600"
+    <button type="submit" class="btn btn-primary max-sm:w-full rounded-md text-white mt-8 md:mt-2"
             on:click={() => eventDispatcher("select", {amount: amount})}>
-        Send
+        Continue
     </button>
 </div>

@@ -6,7 +6,7 @@
 	let svg = '';
 
 	const generateQrCode = async () => {
-		svg = await QRCode.toString(value, { type: 'svg' });
+		svg = await QRCode.toString(value, { type: 'svg', width: "200" });
 		console.log(svg);
 	};
 

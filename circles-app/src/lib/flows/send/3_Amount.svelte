@@ -82,6 +82,7 @@
 </script>
 
 <FlowDecoration>
+    <p class="text-2xl font-bold mt-14">Enter Amount</p>
     <SelectAmount
             maxAmountCircles={maxAmountCircles}
             asset={context.selectedAsset}
@@ -90,7 +91,7 @@
             on:select={handleSelect}
     />
 
-    <div class="flex flex-col ">
+    <div class="flex flex-col mt-4">
         {#if showPathsSection && path}
             <div class="text-gray-500">
                 <h2 class="text-lg font-bold">Usable paths:</h2>

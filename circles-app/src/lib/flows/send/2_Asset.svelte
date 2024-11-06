@@ -33,6 +33,7 @@
     }
 </script>
 <FlowDecoration>
+    <p class="text-2xl font-bold mt-14">Select Asset</p>
     <SelectAsset selectedAsset={selectedAsset}
                  balances={circlesBalances}
                  on:select={handleSelect}/>

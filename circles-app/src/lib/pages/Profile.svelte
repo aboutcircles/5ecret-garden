@@ -42,6 +42,7 @@
   let otherAvatar: AvatarRow | undefined;
   let profile: Profile | undefined;
   let members: string[] | undefined = undefined;
+  let activeTab = 'common_connections';
 
   async function initialize(address?: string) {
     if (!address) {
@@ -75,6 +76,8 @@
         name: otherAvatar?.name ?? address,
       };
     }
+
+    activeTab = 'common_connections';
   }
 
   function getTypeString(type: string | undefined) {
@@ -134,11 +137,6 @@
   }
 
   let commonConnectionsCount = 0;
-  let activeTab = 'common_connections';
-
-  // $: {
-  //   console.log('members', members);
-  // }
 </script>
 
 <div class="flex flex-col items-center w-full sm:w-[90%] lg:w-3/5 mx-auto">
