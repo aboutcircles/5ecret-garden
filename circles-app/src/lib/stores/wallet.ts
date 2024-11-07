@@ -1,7 +1,7 @@
 import {writable} from "svelte/store";
-import type {SdkContractRunner} from "@circles-sdk/sdk";
+import type {EthersContractRunner} from "@circles-sdk/adapter-ethers";
 
 /**
  * A store that contains a signer instance or undefined
  */
-export const wallet = writable<SdkContractRunner | undefined>();
+export const wallet = writable<EthersContractRunner | undefined>();

@@ -1,29 +1,38 @@
 <script lang="ts">
     import {avatar} from "$lib/stores/avatar";
+    import {type TokenBalanceRow} from "@circles-sdk/data";
+    import {roundToDecimals, shortenAddress} from "$lib/utils/shared";
 
-    type Balance = {
-        tokenOwner: string;
-        balance: string;
-    };
-
-    export let balances: Balance[] = [];
+    export let balances: TokenBalanceRow[] = [];
     export let selectedCollateral: string | undefined = undefined;
 
-    function shortenAddress(address: string): string {
-        return `${address.slice(0, 6)}...${address.slice(-6)}`;
-    }
+    function balanceToString(balance: TokenBalanceRow) {
+        let assetName = "";
 
-    function isOwnToken(address: string): boolean {
-        return address === $avatar?.address || address === $avatar?.avatarInfo?.tokenId || address === $avatar?.avatarInfo?.v1Token;
+        assetName += roundToDecimals(balance.circles) + " ";
+        if (balance.tokenOwner === $avatar?.address) {
+            assetName += " Own";
+        }
+        if (balance.isInflationary) {
+            assetName += " Static";
+        }
+        if (balance.isWrapped) {
+            assetName += " Wrapped";
+        }
+        if (balance.isGroup) {
+            assetName += " Group";
+        }
+
+        return assetName + " Circles (" + shortenAddress(balance.tokenAddress) + ")"
     }
 </script>
 
 <div>
     <select id="collateral" bind:value={selectedCollateral} class="form-select">
+        <option value={undefined} title="Transitive">All available tokens (transitive)</option>
         {#each balances ?? [] as balance}
-            <option value={balance.tokenOwner} title="{balance.tokenOwner}: {balance.balance}">
-                {shortenAddress(balance.tokenOwner)}
-                : {parseFloat(balance.balance).toFixed(2)} {isOwnToken(balance.tokenOwner) ? "(Own)" : ""}
+            <option value={balance.tokenAddress} title="{balance.tokenOwner}: {balance.circles}">
+                {balanceToString(balance)}
             </option>
         {/each}
     </select>

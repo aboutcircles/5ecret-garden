@@ -1,11 +1,16 @@
 <script lang="ts">
-    import {goto} from "$app/navigation";
+    import {popupControls} from "$lib/components/PopUp.svelte";
+    import MigrateToV2 from "$lib/flows/migrateToV2/1_CreateProfile.svelte";
 
     async function migrateToV2() {
-        await goto("/migrate-to-v2");
+        $popupControls?.open({
+            title: "Migrate to v2",
+            component: MigrateToV2,
+            props: {}
+        });
     }
 </script>
-<div class="bg-blue-100 border-t-4 mb-4 border-blue-500 rounded-b text-blue-900 px-4 py-3 shadow-md cursor-pointer"
+<div class="w-full bg-blue-100 border-t-4 mb-4 border-blue-500 rounded-b text-blue-900 px-4 py-3 shadow-md cursor-pointer fixed top-16 z-10"
      on:click={() => migrateToV2()}
      role="alert">
     <div class="flex">
