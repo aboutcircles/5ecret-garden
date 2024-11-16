@@ -10,6 +10,7 @@
   import { ComethSdkContractRunner } from '@circles-sdk/adapter-cometh';
   import { SupportedNetworks } from '@cometh/connect-sdk';
   import { onMount } from 'svelte';
+  import WalletLoader from '$lib/components/WalletLoader.svelte';
 
   const apiKey = 'dBtmwl3iT790iItpLSjeo3D06Rd4jCt7';
 
@@ -64,17 +65,6 @@
   });
 </script>
 
-<div class="hero bg-base-200 min-h-screen">
-  <div class="hero-content flex-col lg:flex-row-reverse">
-    <div class="card bg-base-100 w-96 shadow-xl">
-      <figure class="px-10 pt-10">
-        <span class="loading loading-spinner loading-lg"></span>
-      </figure>
-      <div class="card-body items-center text-center">
-        <h2 class="card-title">Connecting your Cometh wallet ...</h2>
-        <p>Please wait while we're loading your wallet</p>
-        <a href="/_new/connect-wallet" class="btn btn-warning">Cancel</a>
-      </div>
-    </div>
-  </div>
+<div class="w-full flex flex-col min-h-screen p-4 max-w-xl gap-y-4 mt-20">
+  <WalletLoader name="Cometh" />
 </div>
