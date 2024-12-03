@@ -8,12 +8,18 @@ importers:
 
   .:
     dependencies:
+      '@zxing/library':
+        specifier: ^0.21.3
+        version: 0.21.3
       buffer:
         specifier: ^6.0.3
         version: 6.0.3
       ethers:
         specifier: ^6.13.4
         version: 6.13.4
+      html5-qrcode:
+        specifier: ^2.3.8
+        version: 2.3.8
       imask:
         specifier: ^7.6.1
         version: 7.6.1
@@ -25,26 +31,26 @@ importers:
         version: 1.5.4
     devDependencies:
       '@circles-sdk/adapter-cometh':
-        specifier: ^0.13.4
-        version: 0.13.4(typescript@5.6.3)
+        specifier: ^0.14.0
+        version: 0.14.0(typescript@5.6.3)
       '@circles-sdk/adapter-ethers':
-        specifier: ^0.13.4
-        version: 0.13.4
+        specifier: ^0.14.0
+        version: 0.14.0
       '@circles-sdk/adapter-safe':
-        specifier: ^0.13.4
-        version: 0.13.4(typescript@5.6.3)
+        specifier: ^0.14.0
+        version: 0.14.0(typescript@5.6.3)
       '@circles-sdk/data':
-        specifier: ^0.13.4
-        version: 0.13.4
+        specifier: ^0.14.0
+        version: 0.14.0
       '@circles-sdk/profiles':
-        specifier: ^0.13.4
-        version: 0.13.4
+        specifier: ^0.14.0
+        version: 0.14.0
       '@circles-sdk/sdk':
-        specifier: ^0.13.4
-        version: 0.13.4
+        specifier: ^0.14.0
+        version: 0.14.0
       '@circles-sdk/utils':
-        specifier: ^0.13.4
-        version: 0.13.4
+        specifier: ^0.14.0
+        version: 0.14.0
       '@cometh/connect-sdk':
         specifier: ^1.2.29
         version: 1.2.31(typescript@5.6.3)
@@ -66,6 +72,9 @@ importers:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.0
         version: 3.1.2(svelte@4.2.19)(vite@5.4.8(@types/node@22.7.5))
+      '@types/qrcode':
+        specifier: ^1.5.5
+        version: 1.5.5
       autoprefixer:
         specifier: ^10.4.19
         version: 10.4.20(postcss@8.4.47)
@@ -203,38 +212,38 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@circles-sdk/abi-v1@0.13.4':
-    resolution: {integrity: sha512-gkkWqstOXt8VPkF65I860CmuiINJT9DzZXagHMLpZKNMsqrXBiH+A32JB/L7o7NrVAhfPlrMtavC5cNIImtOKg==}
+  '@circles-sdk/abi-v1@0.14.0':
+    resolution: {integrity: sha512-IjhO1st9Av/j0lCAcm0J1XZq6Yj3+cpLDYESCIxDlrZnDwdHnSP43dKr4YZQBOLhcoMZH3ODEHdcK9VtcsK7Tg==}
 
-  '@circles-sdk/abi-v2@0.13.4':
-    resolution: {integrity: sha512-fEYwvMtlIEOVzSN0qS9YbPpIJONOQV2cTa7E69GhnYSjB3dwolp3Q3XoEAEe+Dn1Y39gjLrRQQtTOo3W2GHjRg==}
+  '@circles-sdk/abi-v2@0.14.0':
+    resolution: {integrity: sha512-4H1i+kYvj1mZ/l9FetuHg3EhunYRxpiicwxoHFx2F+rM8bvoTXUw0fa8xsB70hm/khwnOV3WFF9exsZ4BgQK8A==}
 
-  '@circles-sdk/adapter-cometh@0.13.4':
-    resolution: {integrity: sha512-8RJup+tAnC86F2uE5D0FLTiBtcS8P1KQx83kCwmBLE72Mizv/hs/DWDWMeX0fDSm3GTsgouSEaAzt6vC5xxLKw==}
+  '@circles-sdk/adapter-cometh@0.14.0':
+    resolution: {integrity: sha512-iM+S4//10JnHmRhJ1tdTGFENfNX6jENJJS0RLClDluYeqgvyfmMsuhlrhwUxh3BSbZ26b6iluT+gThRZD5ceHw==}
 
-  '@circles-sdk/adapter-ethers@0.13.4':
-    resolution: {integrity: sha512-mHT/DmTrsFkW20aYAVSwXqqt3PDGfzAhfmt/4uxS4RAtzyHihHu2YLLaPGvPgk666FM+8cYShWX9s9fl9ZuYiA==}
+  '@circles-sdk/adapter-ethers@0.14.0':
+    resolution: {integrity: sha512-pJcmPXfus9fAWgqQaceiJJkfvquheu+sym+aGfsQLgzHgFU35N74vl142z/Q1Fg4UD1+JKXN3MmxDi5eT/ls3w==}
 
-  '@circles-sdk/adapter-safe@0.13.4':
-    resolution: {integrity: sha512-GZfrXloQpFEzwgwkoXwsvLpEnmOxp8KDv5HuYyg73TTJNNlTr9nt1MdCEPpwfdEcYNSbKlTT6UNLWLL0BwVqFw==}
+  '@circles-sdk/adapter-safe@0.14.0':
+    resolution: {integrity: sha512-ukj4TeqJxLWskC2s4TCL+XuojYnJtWf/Jx1azE3LX0DC9CFRp/YGN/HeXXock1pkls3qOHxZN/GRBqud8YWQSg==}
 
   '@circles-sdk/adapter@0.10.2':
     resolution: {integrity: sha512-wsPSF6vnA8VTVO+WxQc9sEG2nP+OLO/aifctvdxpXNvtu4tkPOsmkDXvrViC6H593lGB2kcPxWKOAiIpH9NZXQ==}
 
-  '@circles-sdk/adapter@0.13.4':
-    resolution: {integrity: sha512-bMay4E7HuraJ1YnhncWmfg50ncRMbZbcpnx9fXbndB3EGqZ4IYkJSmxRBi5yVhJ2/tkq+Tk5juhfc92TKuTMOg==}
+  '@circles-sdk/adapter@0.14.0':
+    resolution: {integrity: sha512-wNshd5CD+YOE7vgr8q40ssFc1Jd8PeCGVpgsiBiy8Z9y5jFlOJze4lVHzj5jdi20vCloroopKWFne2BNJ0LNVA==}
 
-  '@circles-sdk/data@0.13.4':
-    resolution: {integrity: sha512-jUuHSqIIlSKb2yC6SKViApLYeSU1XKm35AZjbVG96GSdrPIg/DOCjbJLJjkIhB7oApiLQnFfCuMWCK5+7Fo12A==}
+  '@circles-sdk/data@0.14.0':
+    resolution: {integrity: sha512-xABJ3zJdSv7piMDj7PpL4G8lqgdcINX9cGkHnSHJuHTi1Zm9EZiuujZowMl2M4UwX4lnCxmo1RMXdcw5t6eVEQ==}
 
-  '@circles-sdk/profiles@0.13.4':
-    resolution: {integrity: sha512-Ecgx9Yv3XvsPwiKn9P70C4WBIckTq9swfvKRsC5zTBxD8IJPlCz2HTca7yneIeK6sZaAeIsYKpnIxNGwhsdSWw==}
+  '@circles-sdk/profiles@0.14.0':
+    resolution: {integrity: sha512-657rOiOnWh37QDCrPZ/hbbzoFEsPxmCmO2JRwkXfrozMNr39/JuuIigBk/U+KPccWxTtA5nxkOyQFlp5gC4Zmw==}
 
-  '@circles-sdk/sdk@0.13.4':
-    resolution: {integrity: sha512-WIk/hF9zNolE14LviT7bKqhKAK3T70HJGs7j40A6HRSOyOszkgtT4PB65pBPHwS9yfjyGTXY2YJs4qtgM6VptQ==}
+  '@circles-sdk/sdk@0.14.0':
+    resolution: {integrity: sha512-gz75Mb0m0HNNRK7vHwHb2f64Vsx1v6f7pwTttwboJB3qzbCbaZh65iC5PToYTgrshz8m03s831RqheF33bTWXA==}
 
-  '@circles-sdk/utils@0.13.4':
-    resolution: {integrity: sha512-hPQZZuRTGd0GmeWZndVVcm5NqeT1kt1SPJdvkHB7CoPXIGI886ZOdxt2XtCmPD1KFrNZfEKuObAiudtSnaIayA==}
+  '@circles-sdk/utils@0.14.0':
+    resolution: {integrity: sha512-4MbIwfeFsIgeErcO33FeqSX3L9uRN34hQHQ0HJTIa1/Nn6klHHZIosTlZtFOsWOYqjxdqKDWbdv3beHEHAr66Q==}
 
   '@cometh/connect-sdk@1.2.29':
     resolution: {integrity: sha512-qS5GHBflS6JPHg3yAbVJSgq7V3fnluJIZfSe/YSZ15vqmog97jYg7gcarITeFJ5AKnxgOgBtAAi+ZuQkSykkFg==}
@@ -821,6 +830,9 @@ packages:
   '@types/pug@2.0.10':
     resolution: {integrity: sha512-Sk/uYFOBAB7mb74XcpizmH0KOR2Pv3D2Hmrh1Dmy5BmK3MpdSa5kqZcg6EKBdklU0bFXX9gCfzvpnyUehrPIuA==}
 
+  '@types/qrcode@1.5.5':
+    resolution: {integrity: sha512-CdfBi/e3Qk+3Z/fXYShipBT13OJ2fDO2Q2w5CIP5anLTLIndQG9z6P1cnm+8zCWSpm5dnxMFd/uREtb0EXuQzg==}
+
   '@types/resolve@1.20.2':
     resolution: {integrity: sha512-60BCwRFOZCQhDncwQdxxeOEEkbc5dIMccYLwbxsS4TUNeVECQ/pBJ0j09mrHOl/JJvpRPGwO9SvE4nR2Nb/a4Q==}
 
@@ -835,6 +847,13 @@ packages:
 
   '@web3-onboard/common@2.4.2':
     resolution: {integrity: sha512-3+zkBru5W2jBYFBPPQsnqZ7tuN1GUyM5PzD9/MmhvjCLNhmjFtMQ0MkLzG4Yshodb4UW/DmZpjUVrpjdhEhj/Q==}
+
+  '@zxing/library@0.21.3':
+    resolution: {integrity: sha512-hZHqFe2JyH/ZxviJZosZjV+2s6EDSY0O24R+FQmlWZBZXP9IqMo7S3nb3+2LBWxodJQkSurdQGnqE7KXqrYgow==}
+    engines: {node: '>= 10.4.0'}
+
+  '@zxing/text-encoding@0.9.0':
+    resolution: {integrity: sha512-U/4aVJ2mxI0aDNI8Uq0wEhMgY+u4CNtEb0om3+y3+niDAsoTCOB33UF0sxpzqzdqXLqmvc+vZyAt4O8pPdfkwA==}
 
   abitype@1.0.0:
     resolution: {integrity: sha512-NMeMah//6bJ56H5XRj8QCV4AwuW6hB6zqz2LnhhLdcWVQOsXki6/Pn3APeqxCma62nXIcmZWdu1DlHWS74umVQ==}
@@ -1479,6 +1498,9 @@ packages:
 
   hmac-drbg@1.0.1:
     resolution: {integrity: sha512-Tti3gMqLdZfhOQY1Mzf/AanLiqh1WTiJgEj26ZuYQ9fbkLomzGchCws4FyrSd4VkpBfiNhaE1On+lOz894jvXg==}
+
+  html5-qrcode@2.3.8:
+    resolution: {integrity: sha512-jsr4vafJhwoLVEDW3n1KvPnCCXWaQfRng0/EEYk1vNcQGcG/htAdhJX0be8YyqMoSz7+hZvOZSTAepsabiuhiQ==}
 
   https-browserify@1.0.0:
     resolution: {integrity: sha512-J+FkSdyD+0mA0N+81tMotaRMfSL9SGi+xpD3T6YApKsc3bGSXJlfXri3VyFOeYkfLRQisDk1W+jIFFKBeUBbBg==}
@@ -2309,6 +2331,10 @@ packages:
   tr46@0.0.3:
     resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
 
+  ts-custom-error@3.3.1:
+    resolution: {integrity: sha512-5OX1tzOjxWEgsr/YEUWSuPrQ00deKLh6D7OTWcvNHm12/7QPyRh8SYpyWvA4IZv8H/+GQWQEh/kwo95Q9OVW1A==}
+    engines: {node: '>=14.0.0'}
+
   ts-interface-checker@0.1.13:
     resolution: {integrity: sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==}
 
@@ -2612,23 +2638,23 @@ snapshots:
   '@cbor-extract/cbor-extract-win32-x64@2.2.0':
     optional: true
 
-  '@circles-sdk/abi-v1@0.13.4':
+  '@circles-sdk/abi-v1@0.14.0':
     dependencies:
       ethers: 6.13.4
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@circles-sdk/abi-v2@0.13.4':
+  '@circles-sdk/abi-v2@0.14.0':
     dependencies:
       ethers: 6.13.4
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@circles-sdk/adapter-cometh@0.13.4(typescript@5.6.3)':
+  '@circles-sdk/adapter-cometh@0.14.0(typescript@5.6.3)':
     dependencies:
-      '@circles-sdk/adapter': 0.13.4
+      '@circles-sdk/adapter': 0.14.0
       '@cometh/connect-sdk': 1.2.29(typescript@5.6.3)
     transitivePeerDependencies:
       - bufferutil
@@ -2639,16 +2665,16 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@circles-sdk/adapter-ethers@0.13.4':
+  '@circles-sdk/adapter-ethers@0.14.0':
     dependencies:
-      '@circles-sdk/adapter': 0.13.4
-      '@circles-sdk/utils': 0.13.4
+      '@circles-sdk/adapter': 0.14.0
+      '@circles-sdk/utils': 0.14.0
       ethers: 6.13.4
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@circles-sdk/adapter-safe@0.13.4(typescript@5.6.3)':
+  '@circles-sdk/adapter-safe@0.14.0(typescript@5.6.3)':
     dependencies:
       '@circles-sdk/adapter': 0.10.2
       '@safe-global/protocol-kit': 4.1.1(typescript@5.6.3)
@@ -2660,36 +2686,36 @@ snapshots:
 
   '@circles-sdk/adapter@0.10.2': {}
 
-  '@circles-sdk/adapter@0.13.4': {}
+  '@circles-sdk/adapter@0.14.0': {}
 
-  '@circles-sdk/data@0.13.4':
+  '@circles-sdk/data@0.14.0':
     dependencies:
-      '@circles-sdk/utils': 0.13.4
+      '@circles-sdk/utils': 0.14.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@circles-sdk/profiles@0.13.4':
+  '@circles-sdk/profiles@0.14.0':
     dependencies:
-      '@circles-sdk/utils': 0.13.4
+      '@circles-sdk/utils': 0.14.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@circles-sdk/sdk@0.13.4':
+  '@circles-sdk/sdk@0.14.0':
     dependencies:
-      '@circles-sdk/abi-v1': 0.13.4
-      '@circles-sdk/abi-v2': 0.13.4
-      '@circles-sdk/adapter-ethers': 0.13.4
-      '@circles-sdk/data': 0.13.4
-      '@circles-sdk/profiles': 0.13.4
+      '@circles-sdk/abi-v1': 0.14.0
+      '@circles-sdk/abi-v2': 0.14.0
+      '@circles-sdk/adapter-ethers': 0.14.0
+      '@circles-sdk/data': 0.14.0
+      '@circles-sdk/profiles': 0.14.0
       ethers: 6.13.4
       multihashes: 4.0.3
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@circles-sdk/utils@0.13.4':
+  '@circles-sdk/utils@0.14.0':
     dependencies:
       bignumber.js: 9.1.2
       ethers: 6.13.4
@@ -3482,6 +3508,10 @@ snapshots:
 
   '@types/pug@2.0.10': {}
 
+  '@types/qrcode@1.5.5':
+    dependencies:
+      '@types/node': 22.7.5
+
   '@types/resolve@1.20.2': {}
 
   '@types/secp256k1@4.0.6':
@@ -3501,6 +3531,15 @@ snapshots:
       - typescript
       - utf-8-validate
       - zod
+
+  '@zxing/library@0.21.3':
+    dependencies:
+      ts-custom-error: 3.3.1
+    optionalDependencies:
+      '@zxing/text-encoding': 0.9.0
+
+  '@zxing/text-encoding@0.9.0':
+    optional: true
 
   abitype@1.0.0(typescript@5.6.3):
     optionalDependencies:
@@ -4286,6 +4325,8 @@ snapshots:
       hash.js: 1.1.7
       minimalistic-assert: 1.0.1
       minimalistic-crypto-utils: 1.0.1
+
+  html5-qrcode@2.3.8: {}
 
   https-browserify@1.0.0: {}
 
@@ -5171,6 +5212,8 @@ snapshots:
   totalist@3.0.1: {}
 
   tr46@0.0.3: {}
+
+  ts-custom-error@3.3.1: {}
 
   ts-interface-checker@0.1.13: {}
 
