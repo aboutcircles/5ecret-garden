@@ -7,7 +7,7 @@
   import TotalBalance from '$lib/components/TotalBalance.svelte';
   import { avatar } from '$lib/stores/avatar';
   import { roundToDecimals } from '$lib/utils/shared';
-  import { runTask } from '../../+layout.svelte';
+  import { runTask } from '../+layout.svelte';
 
   let txHistory: Readable<{
     data: EventRow[];

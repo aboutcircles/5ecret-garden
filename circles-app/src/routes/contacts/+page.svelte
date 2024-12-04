@@ -1,6 +1,6 @@
 <script lang="ts">
     import Avatar from '$lib/components/Avatar.svelte';
-    import {ensureContacts} from '../../+layout.svelte';
+    import {ensureContacts} from '../+layout.svelte';
     import {onMount} from 'svelte';
     import type {Readable} from 'svelte/store';
     import type {ContactList, ExtendedTrustRelationRow} from '$lib/stores/contacts';
