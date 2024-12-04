@@ -41,6 +41,7 @@
     $circles = new Sdk($wallet!, circlesConfig);
 
     const avatarInfo = await $circles.data.getAvatarInfo($wallet.address!);
+    localStorage.setItem('wallet', JSON.stringify($wallet.address!));
     console.log(avatarInfo);
 
     // If the signer address is already a registered Circles wallet, go straight to the dashboard.

@@ -128,6 +128,12 @@
   import Send from '$lib/flows/send/1_To.svelte';
   import { getProfile } from '$lib/components/Avatar.svelte';
   import MintGroupTokens from '$lib/flows/mintGroupTokens/1_To.svelte';
+  import { onMount } from 'svelte';
+
+  onMount(() => {
+    const savedWallet = localStorage.getItem('wallet');
+    console.log(savedWallet);
+  });
 
   async function getOwnProfile() {
     if (!$avatar) {

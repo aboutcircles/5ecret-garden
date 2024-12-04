@@ -11,6 +11,6 @@ export const load = (params): void => {
         && params.route.id !== '/connect-wallet/import-circles-garden'
         && params.route.id !== '/'
         && get(wallet) === undefined) {
-        redirect(302, '/connect-wallet');
+        // redirect(302, '/connect-wallet');
     }
 };
