@@ -51,9 +51,9 @@
       // If the signer address is already a registered Circles wallet, go straight to the dashboard.
       if (avatarInfo) {
         $avatar = await $circles.getAvatar(walletAddress);
-        await goto('/_new/dashboard');
+        await goto('/dashboard');
       } else {
-        await goto('/_new/register');
+        await goto('/register');
       }
     } catch (e) {
       console.error('Error connecting to Cometh:', e);

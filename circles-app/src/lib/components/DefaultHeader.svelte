@@ -9,11 +9,11 @@
   export let homeLink = '/';
 
   export let menuItems = [
-    { name: 'Dashboard', link: '/_new/dashboard' },
-    { name: 'Contacts', link: '/_new/contacts' },
-    { name: 'Groups', link: '/_new/groups' },
+    { name: 'Dashboard', link: '/dashboard' },
+    { name: 'Contacts', link: '/contacts' },
+    { name: 'Groups', link: '/groups' },
     { name: 'Settings', link: '/settings' },
-    { name: 'Tools', link: '/_new/tools' },
+    { name: 'Tools', link: '/tools' },
   ];
 
   export let quickActions: {

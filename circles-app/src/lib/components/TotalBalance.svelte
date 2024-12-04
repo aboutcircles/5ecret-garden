@@ -11,6 +11,6 @@
   </div>
   <p class="text-sm">
     {$circlesBalances?.data?.length} individual tokens •
-    <a href="/_new/dashboard/balances" class="underline"> See breakdown </a>
+    <a href="/dashboard/balances" class="underline"> See breakdown </a>
   </p>
 </div>

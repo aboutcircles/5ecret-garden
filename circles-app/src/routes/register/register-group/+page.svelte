@@ -28,7 +28,7 @@
             profile
         );
 
-        await goto("/_new/dashboard");
+        await goto("/dashboard");
     }
 </script>
 

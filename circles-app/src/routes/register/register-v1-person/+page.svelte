@@ -12,7 +12,7 @@
 
         $avatar = <Avatar>await $circles.registerHuman();
 
-        await goto("/_new/dashboard");
+        await goto("/dashboard");
     }
 </script>
 

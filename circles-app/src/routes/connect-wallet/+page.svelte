@@ -16,7 +16,7 @@
     imgUrl="/logo.svg"
     header="circles.garden"
     desc="Use your circles.garden key in 5ecret-garden"
-    route="/_new/connect-wallet/import-circles-garden"
+    route="/connect-wallet/import-circles-garden"
   />
   <ConnectWallet
     imgUrl="/fox.png"
@@ -25,8 +25,8 @@
       ? 'Use Circles with MetaMask or any compatible browser wallet'
       : 'Not available'}
     route={hasBrowserWallet
-      ? '/_new/connect-wallet/connect-metamask'
-      : '/_new/connect-wallet'}
+      ? '/connect-wallet/connect-metamask'
+      : '/connect-wallet'}
   />
   <ConnectWallet
     imgUrl="/safe.svg"
@@ -35,14 +35,14 @@
       ? 'Use Circles with Safe and MetaMask or any compatible browser wallet'
       : 'Not available'}
     route={hasBrowserWallet
-      ? '/_new/connect-wallet/connect-safe'
-      : '/_new/connect-wallet'}
+      ? '/connect-wallet/connect-safe'
+      : '/connect-wallet'}
   />
   <p class="font-bold text-xl mt-4">Available on Testnet only</p>
   <ConnectWallet
     imgUrl="/cometh-logo.svg"
     header="Use Cometh"
     desc="Use Circles with a Passkey that's stored on your device"
-    route="/_new/connect-wallet/connect-cometh"
+    route="/connect-wallet/connect-cometh"
   />
 </div>

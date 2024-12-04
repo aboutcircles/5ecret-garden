@@ -43,7 +43,7 @@
       console.error(`Couldn't fund address ${address}`, e);
     }
 
-    await goto('/_new/connect-wallet/select-safe');
+    await goto('/connect-wallet/select-safe');
   }
 
   onMount(async () => {
@@ -59,7 +59,7 @@
 
       $circles = new Sdk($wallet!, gnosisConfig);
 
-      await goto('/_new/connect-wallet/select-safe');
+      await goto('/connect-wallet/select-safe');
     }
   });
 </script>

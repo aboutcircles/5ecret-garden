@@ -5,7 +5,8 @@
     import {circles} from "$lib/stores/circles";
     import type {Avatar} from "@circles-sdk/sdk";
     import type {Profile} from "@circles-sdk/profiles";
-    
+    import {page} from "$app/stores";
+
     let profile: Profile = {
         name: "",
         description: "",
@@ -13,14 +14,19 @@
         imageUrl: undefined,
     };
 
-    async function registerOrganization() {
+    $: inviter = $page.params.inviter;
+
+    async function registerHuman() {
         if (!$circles) {
             throw new Error('Wallet not connected ($circles is undefined)');
         }
+        if (!inviter) {
+            throw new Error('Inviter not set');
+        }
 
-        $avatar = <Avatar>await $circles.registerOrganizationV2(profile);
+        $avatar = <Avatar>await $circles.acceptInvitation(inviter, profile);
 
-        await goto("/_new/dashboard");
+        await goto("/dashboard");
     }
 </script>
 
@@ -29,12 +35,22 @@
 
         <div class="card bg-base-100 w-96 shadow-xl">
             <figure class="px-10 pt-10">
-                <img src="/organization.svg"
-                     alt="organization"
+                <img src="/person.svg"
+                     alt="person"
                      class="w-16 h-16 rounded-xl"/>
             </figure>
             <div class="card-body items-center text-center">
-                <h2 class="card-title">Register organization</h2>
+                <h2 class="card-title">Register person</h2>
+                <div class="form-control">
+                    <label for="name" class="label">
+                        <span class="label-text">Inviter</span>
+                    </label>
+                    <input bind:value={inviter}
+                           type="text"
+                           id="name"
+                           class="input input-bordered w-full"
+                           placeholder="">
+                </div>
                 <div class="form-control">
                     <label for="name" class="label">
                         <span class="label-text">Name</span>
@@ -46,7 +62,7 @@
                            placeholder="">
                 </div>
                 <div class="card-actions">
-                    <ActionButton action={registerOrganization}
+                    <ActionButton action={registerHuman}
                                   disabled={profile.name.trim().length < 1}>
                         Create
                     </ActionButton>

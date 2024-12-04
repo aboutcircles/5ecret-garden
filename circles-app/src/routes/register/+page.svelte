@@ -27,7 +27,7 @@
   });
 
   function acceptInvitation(inviter: string) {
-    goto('/_new/register/register-person/' + inviter?.toLowerCase());
+    goto('/register/register-person/' + inviter?.toLowerCase());
   }
 </script>
 
@@ -87,7 +87,7 @@
           Create a group currency that's backed by individual personal Circles
         </p>
         <div class="card-actions">
-          <a href="/_new/register/register-group" class="btn btn-primary"
+          <a href="/register/register-group" class="btn btn-primary"
             >Register Group</a
           >
         </div>
@@ -106,7 +106,7 @@
         <h2 class="card-title">Organization</h2>
         <p>Register as an organization if you're a business</p>
         <div class="card-actions">
-          <a href="/_new/register/register-organization" class="btn btn-primary"
+          <a href="/register/register-organization" class="btn btn-primary"
             >Register Organization</a
           >
         </div>
@@ -137,7 +137,7 @@
                 <p>Register at the Circles v1 hub<br />&nbsp;</p>
                 <div class="card-actions">
                   <a
-                    href="/_new/register/register-v1-person"
+                    href="/register/register-v1-person"
                     class="btn btn-primary">Register v1 Person</a
                   >
                 </div>
@@ -160,7 +160,7 @@
                 </p>
                 <div class="card-actions">
                   <a
-                    href="/_new/register/register-profile"
+                    href="/register/register-profile"
                     class="btn btn-primary"
                   >
                     Register Profile

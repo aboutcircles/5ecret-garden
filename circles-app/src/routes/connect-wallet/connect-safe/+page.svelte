@@ -39,7 +39,7 @@
         // Initialize the Circles SDK and set it as $circles to make it globally available.
         $circles = new Sdk($wallet!, circlesConfig);
 
-        await goto('/_new/connect-wallet/select-safe');
+        await goto('/connect-wallet/select-safe');
     });
 </script>
 

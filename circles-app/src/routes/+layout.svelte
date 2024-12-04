@@ -139,7 +139,7 @@
   let quickActions: QuickAction[] = [];
   let activePage: string;
   $: {
-    if ($page.route.id === '/_new/dashboard') {
+    if ($page.route.id === '/dashboard') {
       quickActions = [
         {
           name: 'Send',
@@ -157,7 +157,7 @@
         },
       ];
       activePage = 'Dashboard';
-    } else if ($page.route.id === '/_new/contacts') {
+    } else if ($page.route.id === '/contacts') {
       quickActions = [
         {
           name: 'Add Contact',
@@ -173,7 +173,7 @@
         },
       ];
       activePage = 'Contacts';
-    } else if ($page.route.id === '/_new/dashboard/balances') {
+    } else if ($page.route.id === '/dashboard/balances') {
       quickActions = [
         {
           name: 'Send',
@@ -188,7 +188,7 @@
           },
         },
       ];
-    } else if ($page.route.id === '/_new/groups') {
+    } else if ($page.route.id === '/groups') {
       quickActions = [
         {
           name: 'Group mint',
@@ -207,7 +207,7 @@
     } else if ($page.route.id === '/settings') {
       activePage = 'Settings';
       quickActions = [];
-    } else if ($page.route.id === '/_new/tools') {
+    } else if ($page.route.id === '/tools') {
       activePage = 'Tools';
     } else {
       quickActions = [];
@@ -234,19 +234,19 @@
       logo={(profile?.previewImageUrl ?? '').trim() === ''
         ? '/logo.svg'
         : profile?.previewImageUrl}
-      homeLink="/_new/dashboard"
+      homeLink="/dashboard"
       menuItems={[
         {
           name: 'Dashboard',
-          link: '/_new/dashboard',
+          link: '/dashboard',
         },
         {
           name: 'Contacts',
-          link: '/_new/contacts',
+          link: '/contacts',
         },
         {
           name: 'Groups',
-          link: '/_new/groups',
+          link: '/groups',
         },
         {
           name: 'Settings',
@@ -254,7 +254,7 @@
         },
         // {
         //   name: 'Tools',
-        //   link: '/_new/tools',
+        //   link: '/tools',
         // },
       ]}
       {quickActions}
@@ -269,7 +269,7 @@
     quickActions={[
       {
         name: 'Disconnect',
-        link: '/_new/connect-wallet',
+        link: '/connect-wallet',
         action: () => {
           $wallet = undefined;
         },
