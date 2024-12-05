@@ -3,10 +3,10 @@
   import { onMount } from 'svelte';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import type { MigrateToV2Context } from '$lib/flows/migrateToV2/context';
-  import { runTask } from '../../../routes/+layout.svelte';
   import { circles } from '$lib/stores/circles';
   import { avatar } from '$lib/stores/avatar';
   import { removeProfileFromCache } from '$lib/components/Avatar.svelte';
+  import { runTask } from '$lib/utils/tasks';
 
   export let contentApi: PopupContentApi;
   export let context: MigrateToV2Context;

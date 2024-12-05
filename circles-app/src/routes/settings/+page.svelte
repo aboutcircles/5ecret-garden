@@ -9,7 +9,7 @@
   import { type Profile } from '@circles-sdk/profiles';
   import { cidV0ToUint8Array } from '@circles-sdk/utils';
   import { onMount } from 'svelte';
-  import { runTask } from '../+layout.svelte';
+  import { runTask } from '$lib/utils/tasks';
   import MigrateToV2 from '$lib/flows/migrateToV2/1_CreateProfile.svelte';
   import { popupControls } from '$lib/components/PopUp.svelte';
 

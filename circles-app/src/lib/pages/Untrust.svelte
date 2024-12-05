@@ -1,7 +1,7 @@
 <script lang="ts">
   import Avatar from '$lib/components/Avatar.svelte';
   import { avatar } from '$lib/stores/avatar';
-  import { runTask } from '../../routes/+layout.svelte';
+  import { runTask } from '$lib/utils/tasks';
   import type { PopupContentApi } from '$lib/components/PopUp.svelte';
   import { shortenAddress } from '$lib/utils/shared';
   import { V1Avatar } from '@circles-sdk/sdk';

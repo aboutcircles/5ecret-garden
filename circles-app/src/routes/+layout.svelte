@@ -36,34 +36,6 @@
     }
     return contacts;
   }
-
-  export type Task<T> = {
-    name: string;
-    promise: Promise<T>;
-  };
-
-  export const tasks = writable<Task<any>[]>([]);
-
-  export async function runTask<T>(task: Task<T>): Promise<T> {
-    tasks.update((current) => [...current, task]);
-    e: Error;
-    try {
-      return await task.promise;
-    } catch (e) {
-      console.log(`Task errored: ${task.name}`, e);
-      get(popupControls).open?.({
-        title: 'Error',
-        component: ErrorPage,
-        props: {
-          errorMessage: e.message,
-          stackTrace: e.stack,
-        },
-      });
-    } finally {
-      tasks.update((current) => current.filter((t) => t !== task));
-    }
-    throw new Error('Task failed');
-  }
 </script>
 
 <script lang="ts">
@@ -82,6 +54,7 @@
   import { getProfile } from '$lib/components/Avatar.svelte';
   import MintGroupTokens from '$lib/flows/mintGroupTokens/1_To.svelte';
   import { onMount } from 'svelte';
+  import { tasks } from '$lib/utils/tasks';
 
   onMount(() => {
     const savedWallet = localStorage.getItem('wallet');
