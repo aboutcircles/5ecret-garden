@@ -67,88 +67,57 @@
   }
 
   let quickAction: QuickAction | undefined;
-  let activePage: string;
+
+  const quickActionsMap: Record<string, QuickAction | undefined> = {
+    '/dashboard': {
+      name: 'Send',
+      icon: '/send.svg',
+      action: () => {
+        $popupControls.open?.({
+          title: 'Send Circles',
+          component: Send,
+          props: { allowAssetSelection: false },
+        });
+      },
+    },
+    '/contacts': {
+      name: 'Add Contact',
+      icon: '/add-contact.svg',
+      action: () => {
+        $popupControls.open?.({
+          title: 'Add Contact',
+          component: SearchAvatar,
+          props: {},
+        });
+      },
+    },
+    '/groups': {
+      name: 'Group mint',
+      icon: '/banknotes-white.svg',
+      action: () => {
+        $popupControls.open?.({
+          title: 'Mint group tokens',
+          component: MintGroupTokens,
+          props: {},
+        });
+      },
+    },
+    '/register': {
+      name: 'Disconnect',
+      icon: '',
+      action: () => {
+        $wallet = undefined;
+      },
+    },
+  };
+
   $: {
-    if ($page.route.id === '/dashboard') {
-      quickAction = 
-        {
-          name: 'Send',
-          icon: '/send.svg',
-          action: () => {
-            $popupControls.open?.({
-              title: 'Send Circles',
-              component: Send,
-              props: {
-                allowAssetSelection: false,
-              },
-            });
-          },
-        };
-      activePage = 'Dashboard';
-    } else if ($page.route.id === '/contacts') {
-      quickAction =
-        {
-          name: 'Add Contact',
-          icon: '/add-contact.svg',
-          action: () => {
-            $popupControls.open?.({
-              title: 'Add Contact',
-              component: SearchAvatar,
-              props: {},
-            });
-          },
-        };
-      activePage = 'Contacts';
-    } else if ($page.route.id === '/dashboard/balances') {
-      quickAction = 
-        {
-          name: 'Send',
-          icon: '/send.svg',
-          action: () => {
-            $popupControls.open?.({
-              title: 'Send Circles',
-              component: Send,
-              props: {},
-            });
-          },
-        };
-    } else if ($page.route.id === '/groups') {
-      quickAction = 
-        {
-          name: 'Group mint',
-          icon: '/banknotes-white.svg',
-          action: () => {
-            $popupControls.open?.({
-              title: 'Mint group tokens',
-              component: MintGroupTokens,
-              props: {},
-            });
-          },
-        };
-      activePage = 'Groups';
-    } else if ($page.route.id === '/settings') {
-      activePage = 'Settings';
-      quickAction = undefined;
-    } else if ($page.route.id === '/tools') {
-      activePage = 'Tools';
-    } else {
-      quickAction = undefined;
-    }
+    quickAction = quickActionsMap[$page.route.id ?? ''] || undefined;
   }
 
   $: {
     if ($avatar) {
       contacts = createContacts();
-    } else if($wallet) {
-      quickAction = 
-      {
-        name: 'Disconnect',
-        icon: '',
-        action: () => {
-          $wallet = undefined;
-        },
-      };
-
     }
   }
 
@@ -158,7 +127,7 @@
 
 {#if $avatar}
   {#await getOwnProfile()}
-    <DefaultHeader menuItems={[]} quickAction={undefined} />
+    <DefaultHeader menuItems={[]} quickAction={undefined} route={''} />
   {:then profile}
     <DefaultHeader
       text={profile?.name ?? $avatar.address}
@@ -168,17 +137,11 @@
         : profile?.previewImageUrl}
       homeLink="/dashboard"
       {quickAction}
-      {activePage}
+      route={$page.route.id}
     />
   {/await}
-{:else if $wallet}
-  <DefaultHeader
-    menuItems={[]}
-    {quickAction}
-    activePage=''
-  />
 {:else}
-  <DefaultHeader menuItems={[]} quickAction={undefined} />
+  <DefaultHeader menuItems={[]} quickAction={undefined} route={''} />
 {/if}
 
 <main class="baseLayer font-dmSans">

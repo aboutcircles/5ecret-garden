@@ -14,12 +14,11 @@
     { name: 'Contacts', link: '/contacts' },
     { name: 'Groups', link: '/groups' },
     { name: 'Settings', link: '/settings' },
-    { name: 'Tools', link: '/tools' },
   ];
 
   export let quickAction: QuickAction | undefined;
 
-  export let activePage: string;
+  export let route: string | null;
   let isDropdownOpen = false;
 </script>
 
@@ -70,7 +69,7 @@
             {#each menuItems as item}
               <li class="py-3">
                 <a
-                  class={`${item.name === activePage ? 'text-primary' : ''}`}
+                  class={`${item.link === route ? 'text-primary' : ''}`}
                   tabindex="0"
                   href={item.link}>{item.name}</a
                 >
@@ -121,7 +120,7 @@
       {#each menuItems as item}
         <li>
           <a
-            class={item.name === activePage
+            class={item.link === route
               ? 'font-bold text-primary'
               : 'font-medium'}
             href={item.link}>{item.name}</a
@@ -164,7 +163,11 @@
         }}
       >
         {#if quickAction.icon}
-          <img class="h-3.5 w-3.5" src={quickAction.icon} alt={quickAction.name} />
+          <img
+            class="h-3.5 w-3.5"
+            src={quickAction.icon}
+            alt={quickAction.name}
+          />
         {/if}
         {quickAction.name}
       </button>
