@@ -2,7 +2,6 @@
   import { get, type Readable, writable } from 'svelte/store';
   import { type ContactList } from '$lib/stores/contacts';
   import { popupControls } from '$lib/components/PopUp.svelte';
-  import { type CirclesEventType } from '@circles-sdk/data';
   import ErrorPage from '$lib/pages/Error.svelte';
 
   export type QuickAction = {
@@ -44,52 +43,6 @@
   };
 
   export const tasks = writable<Task<any>[]>([]);
-
-  /**
-   * Represents a task that waits for specified events or a timeout.
-   * Implements the Task interface with a void return type.
-   */
-  export class WaitForEventTask implements Task<any> {
-    name: string;
-    promise: Promise<any>;
-
-    constructor(events: Set<CirclesEventType>, timeout: number = 60) {
-      this.name = `Waiting for ${Array.from(events).join(' | ')}`;
-      this.promise = new Promise<void>((resolve) => {
-        let handler: (() => void) | undefined = undefined;
-        const a = get(avatar);
-
-        const unsub = a?.events.subscribe((event) => {
-          if (!events.has(event.$event)) {
-            return;
-          }
-          handler?.();
-        });
-
-        const timeoutHandle = setTimeout(() => {
-          handler?.();
-          unsub?.();
-        }, timeout * 1000);
-
-        handler = () => {
-          clearTimeout(timeoutHandle);
-          resolve();
-          unsub?.();
-        };
-      });
-    }
-  }
-
-  export function setLoadingUntilEvent(
-    events: CirclesEventType[],
-    timeout: number = 60
-  ) {
-    const task = new WaitForEventTask(new Set(events), timeout);
-    tasks.update((current) => [...current, task]);
-    runTask(task).finally(() => {
-      tasks.update((current) => current.filter((t) => t !== task));
-    });
-  }
 
   export async function runTask<T>(task: Task<T>): Promise<T> {
     tasks.update((current) => [...current, task]);

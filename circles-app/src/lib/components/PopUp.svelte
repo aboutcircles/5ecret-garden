@@ -242,22 +242,8 @@
     ); /* use the CSS variable to set the position */
   }
 
-  .pull-bar {
-    width: 100%;
-    height: 40px;
-    cursor: pointer;
-  }
-
   .content {
     overflow-y: auto;
     flex-grow: 1;
-  }
-
-  .action-bar {
-    display: flex;
-    justify-content: space-around;
-    padding: 10px;
-    background-color: #f9f9f9;
-    border-top: 1px solid #ccc;
   }
 </style>
