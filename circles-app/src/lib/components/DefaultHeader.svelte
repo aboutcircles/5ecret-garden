@@ -18,7 +18,6 @@
 
   export let quickActions: {
     name: string;
-    link: string;
     icon?: string;
     action?: () => void;
   }[] = [];
@@ -151,9 +150,8 @@
       </button>
     {/if}
     {#each quickActions as action}
-      <a
+      <button
         class="btn btn-primary text-white"
-        href={action.link}
         on:click={() => {
           if (action.action) {
             action.action();
@@ -164,7 +162,7 @@
           <img class="h-3.5 w-3.5" src={action.icon} alt={action.name} />
         {/if}
         {action.name}
-      </a>
+      </button>
     {/each}
   </div>
 </div>

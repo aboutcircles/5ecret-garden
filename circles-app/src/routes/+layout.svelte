@@ -2,7 +2,6 @@
   import { get, type Readable, writable } from 'svelte/store';
   import { type ContactList } from '$lib/stores/contacts';
   import { popupControls } from '$lib/components/PopUp.svelte';
-  import ErrorPage from '$lib/pages/Error.svelte';
 
   export type QuickAction = {
     name: string;
@@ -167,33 +166,9 @@
         ? '/logo.svg'
         : profile?.previewImageUrl}
       homeLink="/dashboard"
-      menuItems={[
-        {
-          name: 'Dashboard',
-          link: '/dashboard',
-        },
-        {
-          name: 'Contacts',
-          link: '/contacts',
-        },
-        {
-          name: 'Groups',
-          link: '/groups',
-        },
-        {
-          name: 'Settings',
-          link: '/settings',
-        },
-        // {
-        //   name: 'Tools',
-        //   link: '/tools',
-        // },
-      ]}
       {quickActions}
       {activePage}
     />
-  {:catch error}
-    <DefaultHeader menuItems={[]} quickActions={[]} />
   {/await}
 {:else if $wallet}
   <DefaultHeader
@@ -201,7 +176,6 @@
     quickActions={[
       {
         name: 'Disconnect',
-        link: '/connect-wallet',
         action: () => {
           $wallet = undefined;
         },
