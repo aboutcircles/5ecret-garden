@@ -5,7 +5,6 @@
 
   export type QuickAction = {
     name: string;
-    link: string;
     icon: string;
     action: () => void;
   };
@@ -67,14 +66,13 @@
     return await getProfile($avatar.address);
   }
 
-  let quickActions: QuickAction[] = [];
+  let quickAction: QuickAction | undefined;
   let activePage: string;
   $: {
     if ($page.route.id === '/dashboard') {
-      quickActions = [
+      quickAction = 
         {
           name: 'Send',
-          link: '',
           icon: '/send.svg',
           action: () => {
             $popupControls.open?.({
@@ -85,14 +83,12 @@
               },
             });
           },
-        },
-      ];
+        };
       activePage = 'Dashboard';
     } else if ($page.route.id === '/contacts') {
-      quickActions = [
+      quickAction =
         {
           name: 'Add Contact',
-          link: '',
           icon: '/add-contact.svg',
           action: () => {
             $popupControls.open?.({
@@ -101,14 +97,12 @@
               props: {},
             });
           },
-        },
-      ];
+        };
       activePage = 'Contacts';
     } else if ($page.route.id === '/dashboard/balances') {
-      quickActions = [
+      quickAction = 
         {
           name: 'Send',
-          link: '',
           icon: '/send.svg',
           action: () => {
             $popupControls.open?.({
@@ -117,13 +111,11 @@
               props: {},
             });
           },
-        },
-      ];
+        };
     } else if ($page.route.id === '/groups') {
-      quickActions = [
+      quickAction = 
         {
           name: 'Group mint',
-          link: '',
           icon: '/banknotes-white.svg',
           action: () => {
             $popupControls.open?.({
@@ -132,22 +124,31 @@
               props: {},
             });
           },
-        },
-      ];
+        };
       activePage = 'Groups';
     } else if ($page.route.id === '/settings') {
       activePage = 'Settings';
-      quickActions = [];
+      quickAction = undefined;
     } else if ($page.route.id === '/tools') {
       activePage = 'Tools';
     } else {
-      quickActions = [];
+      quickAction = undefined;
     }
   }
 
   $: {
     if ($avatar) {
       contacts = createContacts();
+    } else if($wallet) {
+      quickAction = 
+      {
+        name: 'Disconnect',
+        icon: '',
+        action: () => {
+          $wallet = undefined;
+        },
+      };
+
     }
   }
 
@@ -157,7 +158,7 @@
 
 {#if $avatar}
   {#await getOwnProfile()}
-    <DefaultHeader menuItems={[]} quickActions={[]} />
+    <DefaultHeader menuItems={[]} quickAction={undefined} />
   {:then profile}
     <DefaultHeader
       text={profile?.name ?? $avatar.address}
@@ -166,24 +167,18 @@
         ? '/logo.svg'
         : profile?.previewImageUrl}
       homeLink="/dashboard"
-      {quickActions}
+      {quickAction}
       {activePage}
     />
   {/await}
 {:else if $wallet}
   <DefaultHeader
     menuItems={[]}
-    quickActions={[
-      {
-        name: 'Disconnect',
-        action: () => {
-          $wallet = undefined;
-        },
-      },
-    ]}
+    {quickAction}
+    activePage=''
   />
 {:else}
-  <DefaultHeader menuItems={[]} quickActions={[]} />
+  <DefaultHeader menuItems={[]} quickAction={undefined} />
 {/if}
 
 <main class="baseLayer font-dmSans">
