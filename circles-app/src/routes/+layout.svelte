@@ -144,7 +144,7 @@
   <DefaultHeader menuItems={[]} quickAction={undefined} route={''} />
 {/if}
 
-<main class="baseLayer font-dmSans">
+<main class="relative w-full h-full bg-white overflow-hidden font-dmSans">
   {#if $avatar && canMigrate($avatar.avatarInfo) && $page.route.id !== '/migrate-to-v2'}
     <UpdateBanner></UpdateBanner>
     <div class="h-20"></div>
@@ -156,7 +156,7 @@
 
   {#if showPopUp}
     <div
-      class="overlay"
+      class="fixed t-0 l-0 w-full h-full bg-black/50 z-10"
       style="opacity: {overlayOpacity}"
       on:mousedown={() => $popupControls.close?.call(undefined)}
       on:touchstart={() => $popupControls.close?.call(undefined)}
@@ -196,23 +196,3 @@
     {/each}
   </div>
 {/if}
-
-<style>
-  .baseLayer {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    background-color: white;
-    overflow: hidden;
-  }
-
-  .overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1;
-  }
-</style>
