@@ -113,9 +113,6 @@
 
   $: {
     quickAction = quickActionsMap[$page.route.id ?? ''] || undefined;
-  }
-
-  $: {
     if ($avatar) {
       contacts = createContacts();
     }
@@ -156,7 +153,9 @@
 
   {#if showPopUp}
     <div
-      class="fixed t-0 l-0 w-full h-full bg-black/50 z-10"
+      role="button"
+      tabindex="0"
+      class="fixed top-0 left-0 w-full h-full bg-black/50 z-10"
       style="opacity: {overlayOpacity}"
       on:mousedown={() => $popupControls.close?.call(undefined)}
       on:touchstart={() => $popupControls.close?.call(undefined)}

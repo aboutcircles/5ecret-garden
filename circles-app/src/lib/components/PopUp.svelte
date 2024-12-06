@@ -236,7 +236,7 @@
     flex-direction: column;
     align-items: center;
     background-color: white;
-    z-index: 2; /* Ensure popup is above overlay */
+    z-index: 20; /* Ensure popup is above overlay */
     transform: translateY(
       var(--y)
     ); /* use the CSS variable to set the position */
