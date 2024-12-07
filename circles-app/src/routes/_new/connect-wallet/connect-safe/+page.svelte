@@ -6,6 +6,7 @@
     import {chiadoConfig, gnosisConfig} from '$lib/chiadoConfig';
     import {wallet} from "$lib/stores/wallet";
     import {goto} from "$app/navigation";
+  import WalletLoader from '$lib/components/WalletLoader.svelte';
 
     export async function getCirclesConfig(chainId: bigint): Promise<CirclesConfig> {
         switch (chainId) {
@@ -43,16 +44,5 @@
 </script>
 
 <div class="w-full flex flex-col items-center min-h-screen p-4 max-w-5xl gap-y-8 mt-20">
-    <div class="hero-content flex-col lg:flex-row-reverse">
-        <div class="card bg-base-100 w-96 shadow-xl">
-            <figure class="px-10 pt-10">
-                <span class="loading loading-spinner loading-lg"></span>
-            </figure>
-            <div class="card-body items-center text-center">
-                <h2 class="card-title">Connecting your MetaMask wallet ...</h2>
-                <p>Please wait while we're loading your wallet</p>
-                <a href="/_new/connect-wallet" class="btn btn-warning">Cancel</a>
-            </div>
-        </div>
-    </div>
+    <WalletLoader name="Safe" />
 </div>
