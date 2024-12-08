@@ -111,26 +111,18 @@
 >
   <div class="w-full p-4 sm:w-[90%] lg:w-3/5 relative">
     <div class="absolute left-4 top-4">
-      {#if stack.length > 0}
-        <button
-          class="flex w-fit rounded-lg p-2 bg-gray-100"
-          on:click={() => {
-            contentApi.back();
-          }}
-        >
-          <img alt="Back" src="/arrow-left.svg" class="w-4 h-4" />
-        </button>
-      {:else}
-        <button
-          type="button"
-          class="flex w-fit rounded-lg p-2 bg-gray-100"
-          on:click={() => {
-            contentApi?.close?.();
-          }}
-        >
-          <img src="/close.svg" alt="Close" class="w-4 h-4" />
-        </button>
-      {/if}
+      <button
+        class="flex w-fit rounded-lg p-2 bg-gray-100"
+        on:click={() => {
+          stack.length > 0 ? contentApi.back() : contentApi.close();
+        }}
+      >
+        <img
+          alt={stack.length > 0 ? 'Back' : 'Close'}
+          src={stack.length > 0 ? '/arrow-left.svg' : '/close.svg'}
+          class="w-4 h-4"
+        />
+      </button>
     </div>
     <div class="content mt-2 w-full">
       {#if popupContent}
