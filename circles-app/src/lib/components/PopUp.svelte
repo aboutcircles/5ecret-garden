@@ -32,8 +32,6 @@
 
   const dispatch = createEventDispatcher();
 
-  let initialY: number;
-  let currentY: number;
   let popupHeight: number = 4096;
 
   let popupContent: PopupContentDefinition | undefined;
@@ -68,34 +66,6 @@
     popupContent = undefined;
     stack.length = 0;
     dispatch('close');
-  };
-
-  const handleMove = (event: MouseEvent | TouchEvent) => {
-    currentY = getY(event);
-    const deltaY = currentY - initialY;
-    y.set(deltaY > 0 ? deltaY : 0, { duration: 0 }); // Update position without animation
-  };
-
-  const handleEnd = () => {
-    stopVelocityTracking();
-    document.removeEventListener('mousemove', handleMove);
-    document.removeEventListener('mouseup', handleEnd);
-    document.removeEventListener('touchmove', handleMove);
-    document.removeEventListener('touchend', handleEnd);
-    
-    y.set(0, { duration: 300, easing: expoOut });
-  };
-
-  let velocityInterval: NodeJS.Timeout;
-
-  const stopVelocityTracking = () => {
-    clearInterval(velocityInterval);
-  };
-
-  const getY = (event: MouseEvent | TouchEvent) => {
-    return event instanceof MouseEvent
-      ? event.clientY
-      : event.touches[0].clientY;
   };
 
   const stack: PopupContentDefinition[] = [];
@@ -162,13 +132,6 @@
         </button>
       {/if}
     </div>
-    <!-- <button
-      class="pull-bar card-title mt-10"
-      on:mousedown={handleStart}
-      on:touchstart={handleStart}
-    >
-      {popupContent?.title ?? ' - '}
-    </button> -->
     <div class="content mt-2 w-full">
       {#if popupContent}
         <svelte:component
@@ -179,10 +142,6 @@
         />
       {/if}
     </div>
-    <!--    <div class="action-bar">-->
-    <!--        <button>&lt; Previous</button>-->
-    <!--        <button>Next &gt;</button>-->
-    <!--    </div>-->
   </div>
 </div>
 
