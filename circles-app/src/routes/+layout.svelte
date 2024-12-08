@@ -119,7 +119,6 @@
   }
 
   let showPopUp = false;
-  let overlayOpacity = 0;
 </script>
 
 {#if $avatar}
@@ -151,26 +150,19 @@
     <slot></slot>
   </div>
 
-  {#if showPopUp}
-    <div
-      role="button"
-      tabindex="0"
-      class="fixed top-0 left-0 w-full h-full bg-black/50 z-10"
-      style="opacity: {overlayOpacity}"
-      on:mousedown={() => $popupControls.close?.call(undefined)}
-      on:touchstart={() => $popupControls.close?.call(undefined)}
-    ></div>
-  {/if}
+  <div
+    role="button"
+    tabindex="0"
+    class={`fixed top-0 left-0 w-full h-full bg-black/50 z-10 ${showPopUp ? 'opacity-100' : 'opacity-0 hidden'} transition duration-300 ease-in-out`}
+    on:mousedown={() => $popupControls.close?.call(undefined)}
+    on:touchstart={() => $popupControls.close?.call(undefined)}
+  ></div>
   <PopUp
     on:openingStart={() => {
       showPopUp = true;
     }}
     on:close={() => {
-      // console.log('close');
       showPopUp = false;
-    }}
-    on:overlayOpacity={(event) => {
-      overlayOpacity = event.detail.opacity;
     }}
   />
 </main>

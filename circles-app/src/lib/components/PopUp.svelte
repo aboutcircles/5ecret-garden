@@ -33,21 +33,12 @@
   const dispatch = createEventDispatcher();
 
   let initialY: number;
-  let lastY: number;
   let currentY: number;
-  let lastTime: number;
-  let velocity: number = 0;
   let popupHeight: number = 4096;
 
   let popupContent: PopupContentDefinition | undefined;
 
   const y = tweened(popupHeight, { duration: 300, easing: expoOut });
-
-  $: {
-    let opacityValue = 1 - $y / popupHeight;
-    opacityValue = opacityValue < 0 ? 0 : opacityValue > 1 ? 1 : opacityValue; // Clamping the value between 0 and 1
-    dispatch('overlayOpacity', { opacity: opacityValue });
-  }
 
   let popup: HTMLDivElement;
 
@@ -79,19 +70,6 @@
     dispatch('close');
   };
 
-  const handleStart = (event: MouseEvent | TouchEvent) => {
-    event.preventDefault();
-    initialY = lastY = currentY = getY(event);
-    lastTime = performance.now();
-    popupHeight = popup.offsetHeight;
-    startVelocityTracking();
-
-    document.addEventListener('mousemove', handleMove);
-    document.addEventListener('mouseup', handleEnd);
-    document.addEventListener('touchmove', handleMove);
-    document.addEventListener('touchend', handleEnd);
-  };
-
   const handleMove = (event: MouseEvent | TouchEvent) => {
     currentY = getY(event);
     const deltaY = currentY - initialY;
@@ -104,27 +82,11 @@
     document.removeEventListener('mouseup', handleEnd);
     document.removeEventListener('touchmove', handleMove);
     document.removeEventListener('touchend', handleEnd);
-
-    if (velocity > 0.05) {
-      y.set(popupHeight, { duration: 300, easing: expoOut }).then(() => {
-        stack.length = 0;
-        popupContent = undefined;
-        dispatch('close');
-      });
-    } else {
-      y.set(0, { duration: 300, easing: expoOut });
-    }
+    
+    y.set(0, { duration: 300, easing: expoOut });
   };
 
   let velocityInterval: NodeJS.Timeout;
-  const startVelocityTracking = () => {
-    velocityInterval = setInterval(() => {
-      const now = performance.now();
-      velocity = (currentY - lastY) / (now - lastTime);
-      lastY = currentY;
-      lastTime = now;
-    }, 50); // Update velocity every 50ms
-  };
 
   const stopVelocityTracking = () => {
     clearInterval(velocityInterval);
