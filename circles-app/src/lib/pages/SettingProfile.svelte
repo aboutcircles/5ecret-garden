@@ -3,10 +3,7 @@
   import type { Profile } from '@circles-sdk/profiles';
   import Avatar, { getProfile } from '$lib/components/Avatar.svelte';
   import { avatar } from '$lib/stores/avatar';
-  import { shortenAddress } from '$lib/utils/shared';
   import type { AvatarRow } from '@circles-sdk/data';
-  import Trust from '$lib/pages/Trust.svelte';
-  import SelectAsset from '$lib/flows/send/2_Asset.svelte';
   import type { PopupContentApi } from '$lib/components/PopUp.svelte';
   import QrCode from '$lib/components/QrCode.svelte';
 

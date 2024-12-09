@@ -202,7 +202,6 @@
 <script lang="ts">
   import HorizontalAvatarLayout from '$lib/components/avatar/HorizontalAvatarLayout.svelte';
   import VerticalAvatarLayout from '$lib/components/avatar/VerticalAvatarLayout.svelte';
-  import VerticalSmallAvatarLayout from '$lib/components/avatar/VerticalSmallAvatarLayout.svelte';
   import type {
     PopupContentApi,
     PopupContentDefinition,
@@ -218,7 +217,6 @@
     | 'horizontal'
     | 'horizontal_small'
     | 'vertical'
-    | 'vertical_small'
     | 'transaction_row' = 'horizontal';
   export let imageStyle: 'square' | 'circle' = 'circle';
   export let showName: boolean = true;
@@ -278,17 +276,6 @@
   >
     <slot></slot>
   </VerticalAvatarLayout>
-{:else if view === 'vertical_small'}
-  <VerticalSmallAvatarLayout
-    {showName}
-    {imageStyle}
-    {pictureOverlayUrl}
-    on:click={openAvatar}
-    {profile}
-    {trustVersion}
-  >
-    <slot></slot>
-  </VerticalSmallAvatarLayout>
 {:else if view === 'transaction_row'}
   <TransactionRowAvatarLayout
     {imageStyle}
