@@ -15,7 +15,6 @@
     import SelectAsset from '$lib/flows/send/2_Asset.svelte';
     import MintGroupTokens from '$lib/flows/mintGroupTokens/1_To.svelte';
     import type {PopupContentApi} from '$lib/components/PopUp.svelte';
-    import ProfilePage from '$lib/pages/Profile.svelte';
 
     let contacts:
         | Readable<{
