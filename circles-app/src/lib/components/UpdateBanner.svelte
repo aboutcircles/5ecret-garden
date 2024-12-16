@@ -1,6 +1,6 @@
 <script lang="ts">
     import {popupControls} from "$lib/components/PopUp.svelte";
-    import MigrateToV2 from "$lib/flows/migrateToV2/1_CreateProfile.svelte";
+    import MigrateToV2 from "$lib/flows/migrateToV2/0_GetInvited.svelte";
 
     async function migrateToV2() {
         $popupControls?.open({

@@ -10,7 +10,7 @@
   import { cidV0ToUint8Array } from '@circles-sdk/utils';
   import { onMount } from 'svelte';
   import { runTask } from '../+layout.svelte';
-  import MigrateToV2 from '$lib/flows/migrateToV2/1_CreateProfile.svelte';
+  import MigrateToV2 from '$lib/flows/migrateToV2/0_GetInvited.svelte';
   import { popupControls } from '$lib/components/PopUp.svelte';
 
   async function changeWallet() {
