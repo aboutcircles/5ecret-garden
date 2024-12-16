@@ -128,6 +128,8 @@
   import Send from '$lib/flows/send/1_To.svelte';
   import { getProfile } from '$lib/components/Avatar.svelte';
   import MintGroupTokens from '$lib/flows/mintGroupTokens/1_To.svelte';
+  import { Contract } from 'ethers';
+  import tokenV1ABI from '../abis/tokenV1';
 
   async function getOwnProfile() {
     if (!$avatar) {
@@ -136,8 +138,21 @@
     return await getProfile($avatar.address);
   }
 
+  async function getV1Data(contract: Contract) {
+    const isStopped: boolean = await contract.stopped();
+    const lastTouchedTimestamp: number = await contract.lastTouched();
+    return { isStopped, lastTouchedTimestamp };
+  }
+
   let quickActions: QuickAction[] = [];
   let activePage: string;
+  let tokenData: {
+    isStopped: boolean;
+    lastTouchedTimestamp: number;
+  } = {
+    isStopped: false,
+    lastTouchedTimestamp: 0,
+  };
   $: {
     if ($page.route.id === '/_new/dashboard') {
       quickActions = [
@@ -218,6 +233,26 @@
     if ($avatar) {
       contacts = createContacts();
     }
+    if (
+      $avatar &&
+      canMigrate($avatar.avatarInfo) &&
+      $avatar.avatarInfo?.v1Token &&
+      $page.route.id !== '/migrate-to-v2'
+    ) {
+      const hubV1 = new Contract(
+        $avatar.avatarInfo?.v1Token,
+        tokenV1ABI,
+        $wallet?.provider
+      );
+      getV1Data(hubV1)
+        .then((data) => {
+          tokenData = data;
+          console.log(data);
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    }
   }
 
   let showPopUp = false;
@@ -282,7 +317,12 @@
 
 <main class="baseLayer font-dmSans">
   {#if $avatar && canMigrate($avatar.avatarInfo) && $page.route.id !== '/migrate-to-v2'}
-    <UpdateBanner></UpdateBanner>
+    <UpdateBanner
+      canAutoMigrate={tokenData.isStopped &&
+      tokenData.lastTouchedTimestamp < 1731715208
+        ? true
+        : false}
+    ></UpdateBanner>
     <div class="h-20"></div>
   {/if}
 

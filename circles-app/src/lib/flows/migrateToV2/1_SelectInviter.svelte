@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { PopupContentApi } from '$lib/components/PopUp.svelte';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
-  import ProfileEditor from '$lib/components/ProfileEditor.svelte';
   import type { MigrateToV2Context } from '$lib/flows/migrateToV2/context';
   import CreateProfile from './2_CreateProfile.svelte';
   import { onMount } from 'svelte';
