@@ -41,7 +41,7 @@
     <div class="flex items-center justify-between gap-x-1">
       <span class="text-sm font-bold w-1/6">{(i + 1).toString()}</span>
       <input
-        type="text"
+        type="password"
         class="w-full input input-bordered input-sm"
         class:text-error={!isValidMnemonic}
         class:text-success={isValidMnemonic}
