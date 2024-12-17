@@ -138,6 +138,7 @@
 
   let quickActions: QuickAction[] = [];
   let activePage: string;
+
   $: {
     if ($page.route.id === '/_new/dashboard') {
       quickActions = [
