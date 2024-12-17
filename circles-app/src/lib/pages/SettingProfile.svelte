@@ -1,59 +1,10 @@
 <script lang="ts">
-  import { circles } from '$lib/stores/circles';
-  import type { Profile } from '@circles-sdk/profiles';
-  import Avatar, { getProfile } from '$lib/components/Avatar.svelte';
-  import { avatar } from '$lib/stores/avatar';
-  import type { AvatarRow } from '@circles-sdk/data';
+  import Avatar from '$lib/components/Avatar.svelte';
   import type { PopupContentApi } from '$lib/components/PopUp.svelte';
   import QrCode from '$lib/components/QrCode.svelte';
 
   export let address: string | undefined;
   export let contentApi: PopupContentApi | undefined;
-
-  $: {
-    if (address) {
-      initialize(address);
-    }
-  }
-
-  let otherAvatar: AvatarRow | undefined;
-  let profile: Profile | undefined;
-  let members: string[] | undefined = undefined;
-
-  async function initialize(address?: string) {
-    if (!address) {
-      return;
-    }
-    if (!$circles) {
-      return;
-    }
-    if (!$avatar) {
-      return;
-    }
-
-    otherAvatar = await $circles.data.getAvatarInfo(address);
-    if (otherAvatar) {
-      profile = await getProfile(otherAvatar.avatar);
-      console.log(profile);
-    }
-
-    if (otherAvatar?.type === 'CrcV2_RegisterGroup') {
-      // load the members
-      const groupTrustRelations =
-        await $circles.data.getAggregatedTrustRelations(otherAvatar.avatar);
-      members = groupTrustRelations
-        .filter((row) => row.relation === 'trusts')
-        .map((o) => o.objectAvatar);
-    } else {
-      members = undefined;
-    }
-
-    if (!profile) {
-      profile = {
-        name: otherAvatar?.name ?? address,
-      };
-    }
-  }
 
   let copyIcon = '/copy.svg';
   function handleCopy() {
