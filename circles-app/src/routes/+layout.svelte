@@ -53,20 +53,15 @@
   import MintGroupTokens from '$lib/flows/mintGroupTokens/1_To.svelte';
   import { onMount } from 'svelte';
   import { tasks } from '$lib/utils/tasks';
+  import type { Profile } from '@circles-sdk/profiles';
 
   onMount(() => {
     const savedWallet = localStorage.getItem('wallet');
     console.log(savedWallet);
   });
 
-  async function getOwnProfile() {
-    if (!$avatar) {
-      throw new Error('Avatar store is not available');
-    }
-    return await getProfile($avatar.address);
-  }
-
   let quickAction: QuickAction | undefined;
+  let profile: Profile;
 
   const quickActionsMap: Record<string, QuickAction | undefined> = {
     '/dashboard': {
@@ -111,31 +106,29 @@
     },
   };
 
-  $: {
-    quickAction = quickActionsMap[$page.route.id ?? ''] || undefined;
+  avatar.subscribe(async ($avatar) => {
     if ($avatar) {
       contacts = createContacts();
+      profile = await getProfile($avatar.address);
     }
-  }
+  });
+
+  $: quickAction = quickActionsMap[$page.route.id ?? ''] || undefined;
 
   let showPopUp = false;
 </script>
 
 {#if $avatar}
-  {#await getOwnProfile()}
-    <DefaultHeader menuItems={[]} quickAction={undefined} route={''} />
-  {:then profile}
-    <DefaultHeader
-      text={profile?.name ?? $avatar.address}
-      address={$avatar.address}
-      logo={(profile?.previewImageUrl ?? '').trim() === ''
-        ? '/logo.svg'
-        : profile?.previewImageUrl}
-      homeLink="/dashboard"
-      {quickAction}
-      route={$page.route.id}
-    />
-  {/await}
+  <DefaultHeader
+    text={profile?.name}
+    address={$avatar.address}
+    logo={(profile?.previewImageUrl ?? '').trim() === ''
+      ? '/logo.svg'
+      : profile?.previewImageUrl}
+    homeLink="/dashboard"
+    {quickAction}
+    route={$page.route.id}
+  />
 {:else}
   <DefaultHeader menuItems={[]} quickAction={undefined} route={''} />
 {/if}
