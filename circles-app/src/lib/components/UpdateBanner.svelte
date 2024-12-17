@@ -1,14 +1,11 @@
 <script lang="ts">
   import { popupControls } from '$lib/components/PopUp.svelte';
   import MigrateToV2 from '$lib/flows/migrateToV2/1_SelectInviter.svelte';
-  import CreateProfile from '$lib/flows/migrateToV2/2_CreateProfile.svelte';
-
-  export let canAutoMigrate: boolean;
 
   async function migrateToV2() {
     $popupControls?.open({
       title: 'Migrate to v2',
-      component: canAutoMigrate ? CreateProfile : MigrateToV2,
+      component: MigrateToV2,
       props: {},
     });
   }
