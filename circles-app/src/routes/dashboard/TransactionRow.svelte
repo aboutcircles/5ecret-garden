@@ -1,78 +1,61 @@
 <script lang="ts">
   import Avatar from '$lib/components/Avatar.svelte';
-  import { crcTypes, getTimeAgo, staticTypes } from '$lib/utils/shared';
+  import { crcTypes, staticTypes } from '$lib/utils/shared';
   import { roundToDecimals } from '$lib/utils/shared';
   import type { TransactionHistoryRow } from '@circles-sdk/data';
   import { tokenTypeToString } from '$lib/pages/SelectAsset.svelte';
   import { avatar } from '$lib/stores/avatar';
 
   export let item: TransactionHistoryRow;
+
+  const getBadge = () => {
+    if (!$avatar) return;
+    if (item.from === '0x0000000000000000000000000000000000000000')
+      return '/circles-badge.svg';
+    if (item.to === '0x0000000000000000000000000000000000000000')
+      return '/logo.svg';
+    if (item.from === $avatar.address) return '/sent-badge.svg';
+    if (item.to === $avatar.address) return '/received-badge.svg';
+  };
+
+  const getTransactionText = () => {
+    if (!$avatar) return;
+    if (item.from === '0x0000000000000000000000000000000000000000')
+      return `Minted ${tokenTypeToString(item.tokenType)}`;
+    if (item.to === '0x0000000000000000000000000000000000000000')
+      return `Burn ${tokenTypeToString(item.tokenType)}`;
+    if (item.from === $avatar.address)
+      return `Sent ${tokenTypeToString(item.tokenType)}`;
+    return `Received ${tokenTypeToString(item.tokenType)}`;
+  };
+
+  const counterpartyAddress =
+    item.from === '0x0000000000000000000000000000000000000000'
+      ? item.to
+      : item.to === '0x0000000000000000000000000000000000000000'
+        ? $avatar.address
+        : item.from === $avatar.address
+          ? item.to
+          : item.from;
 </script>
 
 <div
   class="flex items-center justify-between p-2 bg-base-100 hover:bg-base-200 rounded-lg"
 >
-  {#if item.from === '0x0000000000000000000000000000000000000000'}
-    <Avatar
-      address={item.to}
-      view="transaction_row"
-      pictureOverlayUrl="/circles-badge.svg"
-      date={item.timestamp}
+  <Avatar
+    address={counterpartyAddress}
+    view="transaction_row"
+    pictureOverlayUrl={getBadge()}
+    date={item.timestamp}
+  >
+    <a
+      target="_blank"
+      href={'https://gnosisscan.io/tx/' + item.transactionHash}
+      class="text-xs md:text-sm text-gray-500"
     >
-      <a
-        target="_blank"
-        href={'https://gnosisscan.io/tx/' + item.transactionHash}
-        class="text-xs md:text-sm text-gray-500"
-      >
-        Minted {tokenTypeToString(item.tokenType)}
-      </a>
-    </Avatar>
-  {:else if item.to === '0x0000000000000000000000000000000000000000'}
-    <Avatar
-      address={item.from}
-      view="transaction_row"
-      pictureOverlayUrl="/logo.svg"
-      date={item.timestamp}
-    >
-      <a
-        target="_blank"
-        href={'https://gnosisscan.io/tx/' + item.transactionHash}
-        class="text-xs md:text-sm text-gray-500"
-      >
-        Burn {tokenTypeToString(item.tokenType)}
-      </a>
-    </Avatar>
-  {:else if item.from === $avatar.address}
-    <Avatar
-      address={item.to}
-      view="transaction_row"
-      pictureOverlayUrl="/sent-badge.svg"
-      date={item.timestamp}
-    >
-      <a
-        target="_blank"
-        href={'https://gnosisscan.io/tx/' + item.transactionHash}
-        class="text-xs md:text-sm text-gray-500"
-      >
-        Sent {tokenTypeToString(item.tokenType)}
-      </a>
-    </Avatar>
-  {:else if item.to === $avatar.address}
-    <Avatar
-      address={item.from}
-      view="transaction_row"
-      pictureOverlayUrl="/received-badge.svg"
-      date={item.timestamp}
-    >
-      <a
-        target="_blank"
-        href={'https://gnosisscan.io/tx/' + item.transactionHash}
-        class="text-xs md:text-sm text-gray-500"
-      >
-        Received {tokenTypeToString(item.tokenType)}
-      </a>
-    </Avatar>
-  {/if}
+      {getTransactionText()}
+    </a>
+  </Avatar>
 
   <div class="col text-right">
     {#if item.from === $avatar.address}

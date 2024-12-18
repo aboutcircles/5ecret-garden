@@ -33,9 +33,6 @@
   <Avatar address={item.avatar} clickable={false}>
     {avatarTypeToString(item.type)} -
     {shortenAddress(item.avatar)}
-    <!--            TODO: Doesn't work well on mobile-->
-    <!--            <a class="underline" href="https://gnosisscan.io/address/{item.avatar}" target="_blank" rel="noopener noreferrer">-->
-    <!--            </a>-->
   </Avatar>
   <div class="font-medium underline flex gap-x-2">
     See details <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
