@@ -54,6 +54,7 @@
   import { onMount } from 'svelte';
   import { tasks } from '$lib/utils/tasks';
   import type { Profile } from '@circles-sdk/profiles';
+  import { restoreWallet } from '$lib/utils/wallet';
 
   onMount(() => {
     const savedWallet = localStorage.getItem('wallet');
@@ -113,6 +114,10 @@
     }
   });
 
+  onMount(() => {
+    restoreWallet();
+  });
+
   $: quickAction = quickActionsMap[$page.route.id ?? ''] || undefined;
 
   let showPopUp = false;
@@ -122,7 +127,9 @@
   <DefaultHeader
     text={profile?.name}
     address={$avatar.address}
-    logo={profile?.previewImageUrl?.trim() ? profile.previewImageUrl : '/logo.svg'}
+    logo={profile?.previewImageUrl?.trim()
+      ? profile.previewImageUrl
+      : '/logo.svg'}
     homeLink="/dashboard"
     {quickAction}
     route={$page.route.id}
