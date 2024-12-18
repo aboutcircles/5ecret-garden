@@ -218,7 +218,6 @@
     | 'horizontal_small'
     | 'vertical'
     | 'transaction_row' = 'horizontal';
-  export let showName: boolean = true;
   export let contentApi: PopupContentApi | undefined = undefined;
   export let pictureOverlayUrl: string | undefined = undefined;
   export let trustVersion: number | undefined = undefined;
@@ -266,7 +265,6 @@
   </div>
 {:else if view === 'vertical'}
   <VerticalAvatarLayout
-    {showName}
     on:click={openAvatar}
     {profile}
     {trustVersion}
@@ -291,7 +289,6 @@
   </HorizontalSmallAvatarLayout>
 {:else}
   <HorizontalAvatarLayout
-    {showName}
     {pictureOverlayUrl}
     on:click={openAvatar}
     {profile}

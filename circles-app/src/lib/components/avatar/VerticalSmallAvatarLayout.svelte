@@ -2,7 +2,6 @@
   import type { Profile } from '@circles-sdk/profiles';
 
   export let profile: Profile | undefined;
-  export let showName: boolean = true;
   export let trustVersion: number | undefined = undefined;
 </script>
 
@@ -15,9 +14,7 @@
     />
   </button>
   <div class="flex flex-col items-center">
-    {#if showName}
-      <span>{profile?.name}</span>
-    {/if}
+    <span>{profile?.name}</span>
     <span class="text-sm text-gray-500">
       <slot></slot>
     </span>
