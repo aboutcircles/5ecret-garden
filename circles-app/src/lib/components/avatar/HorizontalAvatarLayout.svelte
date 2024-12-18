@@ -2,7 +2,6 @@
   import type { Profile } from '@circles-sdk/profiles';
 
   export let profile: Profile | undefined;
-  export let imageStyle: 'square' | 'circle' = 'circle';
   export let showName: boolean = true;
   export let pictureOverlayUrl: string | undefined = undefined;
   export let trustVersion: number | undefined = undefined;
@@ -16,23 +15,20 @@
           <img
             src={pictureOverlayUrl}
             alt="Overlay"
-            class="h-4"
-            class:rounded-full={imageStyle === 'circle'}
+            class="h-4 rounded-full"
           />
         </span>
         <img
           src={profile?.previewImageUrl}
           alt="User Icon"
-          class="w-10 h-10 object-cover"
-          class:rounded-full={imageStyle === 'circle'}
+          class="w-10 h-10 object-cover rounded-full"
         />
       </div>
     {:else}
       <img
         src={profile?.previewImageUrl}
         alt="User Icon"
-        class="w-10 h-10 object-cover"
-        class:rounded-full={imageStyle === 'circle'}
+        class="w-10 h-10 object-cover rounded-full"
       />
     {/if}
   </button>

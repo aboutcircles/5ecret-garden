@@ -2,7 +2,6 @@
   import type { Profile } from '@circles-sdk/profiles';
 
   export let profile: Profile | undefined;
-  export let imageStyle: 'square' | 'circle' = 'circle';
   export let showName: boolean = true;
   export let trustVersion: number | undefined = undefined;
 </script>
@@ -12,8 +11,7 @@
       <img
         src={profile?.previewImageUrl}
         alt="User Icon"
-        class="w-6 h-6 object-cover"
-        class:rounded-full={imageStyle === 'circle'}
+        class="w-6 h-6 object-cover rounded-full"
       />
   </button>
   <div class="flex flex-col items-start pl-2 gap-y-0.5">

@@ -218,7 +218,6 @@
     | 'horizontal_small'
     | 'vertical'
     | 'transaction_row' = 'horizontal';
-  export let imageStyle: 'square' | 'circle' = 'circle';
   export let showName: boolean = true;
   export let contentApi: PopupContentApi | undefined = undefined;
   export let pictureOverlayUrl: string | undefined = undefined;
@@ -268,8 +267,6 @@
 {:else if view === 'vertical'}
   <VerticalAvatarLayout
     {showName}
-    {imageStyle}
-    {pictureOverlayUrl}
     on:click={openAvatar}
     {profile}
     {trustVersion}
@@ -278,7 +275,6 @@
   </VerticalAvatarLayout>
 {:else if view === 'transaction_row'}
   <TransactionRowAvatarLayout
-    {imageStyle}
     {pictureOverlayUrl}
     on:click={openAvatar}
     {profile}
@@ -288,7 +284,6 @@
   </TransactionRowAvatarLayout>
   {:else if view === 'horizontal_small'}
   <HorizontalSmallAvatarLayout
-    {imageStyle}
     on:click={openAvatar}
     {profile}
   >
@@ -297,7 +292,6 @@
 {:else}
   <HorizontalAvatarLayout
     {showName}
-    {imageStyle}
     {pictureOverlayUrl}
     on:click={openAvatar}
     {profile}
