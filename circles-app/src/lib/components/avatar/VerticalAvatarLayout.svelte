@@ -2,9 +2,7 @@
   import type { Profile } from '@circles-sdk/profiles';
 
   export let profile: Profile | undefined;
-  export let imageStyle: 'square' | 'circle' = 'circle';
   export let showName: boolean = true;
-  export let pictureOverlayUrl: string | undefined = undefined;
   export let trustVersion: number | undefined = undefined;
 </script>
 

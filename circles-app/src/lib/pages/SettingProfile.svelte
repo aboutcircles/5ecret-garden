@@ -1,10 +1,8 @@
 <script lang="ts">
   import Avatar from '$lib/components/Avatar.svelte';
-  import type { PopupContentApi } from '$lib/components/PopUp.svelte';
   import QrCode from '$lib/components/QrCode.svelte';
 
   export let address: string | undefined;
-  export let contentApi: PopupContentApi | undefined;
 
   let copyIcon = '/copy.svg';
   function handleCopy() {

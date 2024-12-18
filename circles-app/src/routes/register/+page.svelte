@@ -37,10 +37,10 @@
       <div class="max-w-md">
         <h1 class="text-5xl font-bold">You have been invited</h1>
         {#each invitations as inviter}
-          <p class="btn my-6" on:click={() => acceptInvitation(inviter)}>
+          <button class="btn my-6" on:click={() => acceptInvitation(inviter)}>
             by
             <Avatar clickable={false} address={inviter}></Avatar>
-          </p>
+          </button>
         {/each}
         <p class="font-semibold text-xl">
           Click on the invitation above to continue to the profile creation.

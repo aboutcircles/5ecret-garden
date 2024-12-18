@@ -9,7 +9,6 @@
   export let balanceRow: TokenBalanceRow;
   export let amount: number = 0;
   export let maxAmountCircles: number = -1;
-  export let staticCircles: number = 0;
 
   let inputElement: HTMLInputElement;
   let avatarWidth: string = '12rem';
