@@ -5,8 +5,8 @@
   import type { MigrateToV2Context } from '$lib/flows/migrateToV2/context';
   import MigrateContacts from './2_MigrateContacts.svelte';
   import { onMount } from 'svelte';
-  import { getProfile } from '$lib/components/Avatar.svelte';
   import { avatar } from '$lib/stores/avatar';
+  import { getProfile } from '$lib/utils/profile';
 
   export let contentApi: PopupContentApi;
   export let context: MigrateToV2Context;

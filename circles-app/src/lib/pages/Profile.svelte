@@ -1,7 +1,7 @@
 <script lang="ts">
   import { circles } from '$lib/stores/circles';
   import type { Profile } from '@circles-sdk/profiles';
-  import Avatar, { getProfile } from '$lib/components/Avatar.svelte';
+  import Avatar from '$lib/components/Avatar.svelte';
   import { avatar } from '$lib/stores/avatar';
   import CommonConnections from '$lib/components/CommonConnections.svelte';
   import { shortenAddress } from '$lib/utils/shared';
@@ -18,6 +18,7 @@
   import MintGroupTokens from '$lib/flows/mintGroupTokens/1_To.svelte';
   import type { PopupContentApi } from '$lib/components/PopUp.svelte';
   import { getRelationText, getTypeString } from '$lib/utils/helpers';
+  import { getProfile } from '$lib/utils/profile';
 
   let contacts:
     | Readable<{

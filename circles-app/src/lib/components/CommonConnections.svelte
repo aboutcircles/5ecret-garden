@@ -4,7 +4,8 @@
     import {avatar} from "$lib/stores/avatar";
     import {circles} from "$lib/stores/circles";
     import type {Profile} from "@circles-sdk/profiles";
-    import Avatar, {getProfile} from "$lib/components/Avatar.svelte";
+    import Avatar from "$lib/components/Avatar.svelte";
+  import { getProfile } from "$lib/utils/profile";
 
     export let otherAvatarAddress: string;
     export let contentApi: any;

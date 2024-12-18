@@ -5,8 +5,8 @@
   import type { MigrateToV2Context } from '$lib/flows/migrateToV2/context';
   import { circles } from '$lib/stores/circles';
   import { avatar } from '$lib/stores/avatar';
-  import { removeProfileFromCache } from '$lib/components/Avatar.svelte';
   import { runTask } from '$lib/utils/tasks';
+  import { removeProfileFromCache } from '$lib/utils/profile';
 
   export let contentApi: PopupContentApi;
   export let context: MigrateToV2Context;

@@ -49,12 +49,12 @@
   import PopUp from '$lib/components/PopUp.svelte';
   import SearchAvatar from '$lib/flows/addContact/1_Search.svelte';
   import Send from '$lib/flows/send/1_To.svelte';
-  import { getProfile } from '$lib/components/Avatar.svelte';
   import MintGroupTokens from '$lib/flows/mintGroupTokens/1_To.svelte';
   import { onMount } from 'svelte';
   import { tasks } from '$lib/utils/tasks';
   import type { Profile } from '@circles-sdk/profiles';
   import { restoreWallet } from '$lib/utils/wallet';
+  import { getProfile } from '$lib/utils/profile';
 
   onMount(() => {
     const savedWallet = localStorage.getItem('wallet');

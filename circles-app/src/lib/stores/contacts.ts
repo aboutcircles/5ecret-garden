@@ -3,8 +3,8 @@ import { avatar } from "$lib/stores/avatar";
 import type { AvatarRow, CirclesEvent, CirclesEventType, CirclesQuery, TrustListRow, TrustRelation, TrustRelationRow } from "@circles-sdk/data";
 import type { Profile } from "@circles-sdk/profiles";
 import { createEventStore } from "$lib/stores/eventStores/eventStoreFactory";
-import { getProfile } from "$lib/components/Avatar.svelte";
 import { circles } from "$lib/stores/circles";
+import { getProfile } from "$lib/utils/profile";
 
 export type ExtendedTrustRelationRow = TrustRelationRow & {
     contactName?: string;
