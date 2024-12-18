@@ -122,9 +122,7 @@
   <DefaultHeader
     text={profile?.name}
     address={$avatar.address}
-    logo={(profile?.previewImageUrl ?? '').trim() === ''
-      ? '/logo.svg'
-      : profile?.previewImageUrl}
+    logo={profile?.previewImageUrl?.trim() ? profile.previewImageUrl : '/logo.svg'}
     homeLink="/dashboard"
     {quickAction}
     route={$page.route.id}
