@@ -11,6 +11,7 @@
       | 'CrcV2_RegisterGroup'
       | 'CrcV2_RegisterOrganization'
       | 'CrcV1_Signup'
+      | 'CrcV1_OrganizationSignup'
   ): string {
     switch (type) {
       case 'CrcV2_RegisterHuman':

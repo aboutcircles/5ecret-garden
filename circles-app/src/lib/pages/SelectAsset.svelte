@@ -8,7 +8,7 @@
   export const TransitiveTransferTokenAddress =
     '0x0000000000000000000000000000000000000002';
 
-  export function tokenTypeToString(tokenType: TokenType) {
+  export function tokenTypeToString(tokenType: string) {
     if (!tokenType) {
       // "CrcV1_HubTransfer";
       return 'Transitive Transfer (v1)';
