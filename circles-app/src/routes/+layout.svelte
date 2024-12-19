@@ -72,7 +72,7 @@
         $popupControls.open?.({
           title: 'Send Circles',
           component: Send,
-          props: { allowAssetSelection: false },
+          props: {},
         });
       },
     },

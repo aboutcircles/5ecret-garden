@@ -9,8 +9,8 @@
 
   export type PopupContentDefinition = {
     title: string;
-    component: typeof SvelteComponent;
-    props: Record<string, any>;
+    component: typeof SvelteComponent<Record<string, any>>;
+    props?: Record<string, any>;
   };
 
   export type PopupContentApi = {
@@ -129,7 +129,7 @@
         <svelte:component
           this={popupContent.component}
           {contentApi}
-          context={popupContent.props.context}
+          context={popupContent.props?.context}
           {...popupContent.props}
         />
       {/if}
