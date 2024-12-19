@@ -87,27 +87,6 @@
                 >
                     <Avatar {address}>
                         <div>
-                            <!-- {#if $contacts?.data[address].row.relation === 'trusts'}
-                                <img
-                                        src="/incoming.svg"
-                                        alt="Incoming trust"
-                                        class="w-3 h-3 inline"
-                                />
-                            {/if}
-                            {#if $contacts?.data[address].row.relation === 'trustedBy'}
-                                <img
-                                        src="/outgoing.svg"
-                                        alt="Outgoing trust"
-                                        class="w-3 h-3 inline"
-                                />
-                            {/if}
-                            {#if $contacts?.data[address].row.relation === 'mutuallyTrusts'}
-                                <img
-                                        src="/mutual.svg"
-                                        alt="Mutual trust"
-                                        class="w-3 h-3 inline"
-                                />
-                            {/if} -->
                             {#if $contacts?.data[address]}
                                 <span class="text-[#6B7280]">{formatTrustRelation($contacts.data[address].row)}</span>
                             {/if}
