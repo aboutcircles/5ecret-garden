@@ -47,7 +47,7 @@
 
     $wallet = safeContractRunner;
 
-    const network = await $wallet.provider?.getNetwork();
+    const network = await $wallet?.provider?.getNetwork();
     if (!network) {
       throw new Error('Failed to get network');
     }
