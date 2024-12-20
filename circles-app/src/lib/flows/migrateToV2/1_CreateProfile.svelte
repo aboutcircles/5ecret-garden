@@ -20,15 +20,32 @@
     maxNameLength: parseInt('36'),
   };
 
+  const convertUrlToDataUrl = async (url: string): Promise<string> => {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  };
+
   onMount(async () => {
     if (!$avatar?.address) {
       throw new Error('Avatar store not initialized');
     }
     const currentProfile = await getProfile($avatar.address);
+
+    let previewImageUrl = currentProfile.previewImageUrl ?? '';
+
+    if (!previewImageUrl.startsWith('data:image')) {
+      previewImageUrl = await convertUrlToDataUrl(previewImageUrl);
+    }
     context.profile = {
       name: currentProfile.name ?? '',
       description: currentProfile.description ?? '',
-      previewImageUrl: currentProfile.previewImageUrl ?? '',
+      previewImageUrl,
     };
   });
 
@@ -78,9 +95,9 @@
   };
 
   const validateImage = async (dataUrl: string): Promise<boolean> => {
-    const dataUrlPattern = /^data:image\/(png|jpeg|jpg|gif);base64,/;
+    const dataUrlPattern = /^data:image\/(png|jpeg|jpg|gif|svg\+xml);base64,/;
     if (!dataUrlPattern.test(dataUrl)) {
-      console.error('Invalid data URL pattern');
+      console.error('Invalid data URL pattern', dataUrl);
       return false;
     }
 
