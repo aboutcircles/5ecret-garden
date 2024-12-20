@@ -31,7 +31,7 @@
     const key = localStorage.getItem('privateKey');
     let safeContractRunner: any;
     if (localStorage.getItem('useMM')) {
-      console.log(`Using MetaMAsk as signer`);
+      console.log(`Using MetaMask as signer`);
       const runner = new SafeSdkBrowserContractRunner();
       await runner.init(safeAddress);
       safeContractRunner = runner;
