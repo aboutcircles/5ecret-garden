@@ -95,7 +95,7 @@
   </div>
 </div>
 
-<!-- <div class="w-full flex flex-col items-center mt-16 p-4 gap-y-4">
+<div class="w-full flex flex-col items-center mt-16 p-4 gap-y-4">
   {#if invitations.length > 0}
 
     <div class="mt-16">
@@ -118,4 +118,4 @@
 
 
 
-</div> -->
+</div>
