@@ -94,6 +94,7 @@
   // import TransactionRowAvatarLayout from './avatar_/TransactionRowAvatarLayout.svelte';
   // import HorizontalSmallAvatarLayout from './avatar_/HorizontalSmallAvatarLayout.svelte';
   import { getProfile } from '$lib/utils/profile';
+  import type { SvelteComponent } from 'svelte';
 
   export let address: string;
   export let clickable: boolean = true;
@@ -105,7 +106,6 @@
   export let topInfo: string | undefined = undefined;
   export let bottomInfo: string | undefined = undefined;
   // export let trustVersion: number | undefined = undefined;
-  // export let date: number = 0;
 
   let profile: Profile | undefined;
 
@@ -121,7 +121,7 @@
     }
     const nextPage: PopupContentDefinition = {
       title: shortenAddress(address),
-      component: ProfilePage,
+      component: ProfilePage as typeof SvelteComponent,
       props: {
         address: address,
       },
