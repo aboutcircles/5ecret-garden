@@ -17,6 +17,7 @@ if (browser) {
 wallet.subscribe((value) => {
     if (browser) {
         if (value) {
+            console.log(value)
             localStorage.setItem('wallet', JSON.stringify(value));
         } else {
             localStorage.removeItem('wallet');

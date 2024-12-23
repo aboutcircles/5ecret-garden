@@ -13,10 +13,11 @@
   import MigrateToV2 from '$lib/flows/migrateToV2/1_CreateProfile.svelte';
   import { popupControls } from '$lib/components/PopUp.svelte';
 
-  async function changeWallet() {
+  async function disconnect() {
     $avatar = undefined;
     $circles = undefined;
     $wallet = undefined;
+    localStorage.removeItem('wallet');
 
     await goto('/connect-wallet');
   }
@@ -85,7 +86,9 @@
 
 <div class="flex flex-col p-4 w-full max-w-2xl gap-y-4 mt-20">
   <p class="font-bold text-2xl">Settings</p>
-  <div class="flex flex-col items-center md:border rounded-lg md:px-6 md:py-8  gap-y-4">
+  <div
+    class="flex flex-col items-center md:border rounded-lg md:px-6 md:py-8 gap-y-4"
+  >
     <div class="flex flex-col w-full gap-y-4">
       <ProfileEditor
         bind:profile
@@ -104,9 +107,7 @@
       <div class="w-full pt-2 border-t">
         <h2 class="text-lg font-medium">Circles V2</h2>
         <div class="mt-3">
-            <ActionButton action={migrateToV2}
-              >Update to Circles V2</ActionButton
-            >
+          <ActionButton action={migrateToV2}>Update to Circles V2</ActionButton>
         </div>
       </div>
     {/if}
@@ -114,9 +115,7 @@
     <div class="w-full pt-2 border-t">
       <h2 class="text-lg font-medium">Wallet</h2>
       <div class="mt-3">
-          <ActionButton action={changeWallet}>
-            Connect to Different Wallet
-          </ActionButton>
+        <ActionButton action={disconnect}>Disconnect</ActionButton>
       </div>
     </div>
   </div>

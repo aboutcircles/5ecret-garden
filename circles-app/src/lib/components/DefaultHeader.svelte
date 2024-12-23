@@ -22,7 +22,7 @@
   let isDropdownOpen = false;
 </script>
 
-<div class="navbar font-dmSans bg-white font-medium border-b fixed top-0 z-30">
+<div class="navbar font-dmSans bg-white font-medium border-b fixed top-0 z-30 h-16">
   <div class="navbar-start gap-4">
     <div class="dropdown">
       <button

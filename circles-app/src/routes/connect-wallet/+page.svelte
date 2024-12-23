@@ -9,14 +9,19 @@
 </script>
 
 <div
-  class="w-full flex flex-col min-h-screen p-4 max-w-xl gap-y-4 mt-20"
+  class="w-full flex flex-col min-h-screen p-4 max-w-xl gap-y-4 justify-center"
 >
   <p class="font-bold text-xl">Access Circles</p>
   <ConnectWallet
-    imgUrl="/logo.svg"
-    header="circles.garden"
-    desc="Use your circles.garden key in 5ecret-garden"
-    route="/connect-wallet/import-circles-garden"
+    imgUrl="/safe.png"
+    header="Use Safe"
+    desc={hasBrowserWallet
+      ? 'Use Circles with Safe and MetaMask or any compatible browser wallet'
+      : 'Not available'}
+    route={hasBrowserWallet
+      ? '/connect-wallet/connect-safe'
+      : '/connect-wallet'}
+      recommended={true}
   />
   <ConnectWallet
     imgUrl="/fox.png"
@@ -29,14 +34,10 @@
       : '/connect-wallet'}
   />
   <ConnectWallet
-    imgUrl="/safe.svg"
-    header="Use Safe"
-    desc={hasBrowserWallet
-      ? 'Use Circles with Safe and MetaMask or any compatible browser wallet'
-      : 'Not available'}
-    route={hasBrowserWallet
-      ? '/connect-wallet/connect-safe'
-      : '/connect-wallet'}
+    imgUrl="/logo.svg"
+    header="circles.garden"
+    desc="Use your circles.garden key in 5ecret-garden"
+    route="/connect-wallet/import-circles-garden"
   />
   <p class="font-bold text-xl mt-4">Available on Testnet only</p>
   <ConnectWallet
