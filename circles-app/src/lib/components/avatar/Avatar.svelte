@@ -136,6 +136,8 @@
   async function initialize() {
     profile = await getProfile(address);
   }
+
+  console.log('this avatar')
 </script>
 
 {#if !profile}

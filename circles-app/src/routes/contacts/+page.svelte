@@ -1,5 +1,5 @@
 <script lang="ts">
-    import Avatar from '$lib/components/Avatar.svelte';
+    import Avatar from '$lib/components/Avatar/Avatar.svelte';
     import {ensureContacts} from '../+layout.svelte';
     import {onMount} from 'svelte';
     import type {Readable} from 'svelte/store';
@@ -85,7 +85,12 @@
                         return true;
                     }}
                 >
-                    <Avatar {address}>
+                <Avatar
+                    address={address}
+                    view="horizontal"
+                    bottomInfo={$contacts ? formatTrustRelation($contacts.data[address].row) : ''}
+                />
+                    <!-- <Avatar {address}>
                         <div>
                             <!-- {#if $contacts?.data[address].row.relation === 'trusts'}
                                 <img
@@ -108,11 +113,11 @@
                                         class="w-3 h-3 inline"
                                 />
                             {/if} -->
-                            {#if $contacts?.data[address]}
+                            <!-- {#if $contacts?.data[address]}
                                 <span class="text-[#6B7280]">{formatTrustRelation($contacts.data[address].row)}</span>
                             {/if}
                         </div>
-                    </Avatar>
+                    </Avatar> --> 
                     <div class="font-medium underline flex gap-x-2">
                         <img
                             src="/chevron-right.svg"
