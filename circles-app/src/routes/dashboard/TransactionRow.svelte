@@ -1,21 +1,22 @@
 <script lang="ts">
-  import Avatar from '$lib/components/Avatar.svelte';
+  import Avatar from '$lib/components/Avatar/Avatar.svelte';
   import { crcTypes, staticTypes } from '$lib/utils/shared';
   import { roundToDecimals } from '$lib/utils/shared';
   import type { TransactionHistoryRow } from '@circles-sdk/data';
   import { tokenTypeToString } from '$lib/pages/SelectAsset.svelte';
   import { avatar } from '$lib/stores/avatar';
+  import { getTimeAgo } from '$lib/utils/shared';
 
   export let item: TransactionHistoryRow;
 
   const getBadge = () => {
     if (!$avatar) return;
     if (item.from === '0x0000000000000000000000000000000000000000')
-      return '/circles-badge.svg';
+      return '/badge-mint.svg';
     if (item.to === '0x0000000000000000000000000000000000000000')
-      return '/logo.svg';
-    if (item.from === $avatar.address) return '/sent-badge.svg';
-    if (item.to === $avatar.address) return '/received-badge.svg';
+      return '/badge-burn.svg';
+    if (item.from === $avatar.address) return '/badge-sent.svg';
+    if (item.to === $avatar.address) return '/badge-received.svg';
   };
 
   const getTransactionText = () => {
@@ -29,7 +30,7 @@
     return `Received ${tokenTypeToString(item.tokenType)}`;
   };
 
-  const counterpartyAddress =
+  const counterpartyAddress = !$avatar ? '' :
     item.from === '0x0000000000000000000000000000000000000000'
       ? item.to
       : item.to === '0x0000000000000000000000000000000000000000'
@@ -39,41 +40,40 @@
           : item.from;
 </script>
 
-<div
+<a
   class="flex items-center justify-between p-2 bg-base-100 hover:bg-base-200 rounded-lg"
+  target="_blank"
+  href={'https://gnosisscan.io/tx/' + item.transactionHash}
 >
   <Avatar
     address={counterpartyAddress}
-    view="transaction_row"
+    view="horizontal"
     pictureOverlayUrl={getBadge()}
-    date={item.timestamp}
-  >
-    <a
-      target="_blank"
-      href={'https://gnosisscan.io/tx/' + item.transactionHash}
-      class="text-xs md:text-sm text-gray-500"
-    >
-      {getTransactionText()}
-    </a>
-  </Avatar>
-
+    topInfo={getTransactionText()}
+    bottomInfo={getTimeAgo(item.timestamp)}
+  />
   <div class="col text-right">
-    {#if item.from === $avatar.address}
-      <span class="text-red-500 font-bold"
-        >-{roundToDecimals(item.circles)}</span
-      > CRC
+    {#if $avatar}
+      {#if item.from === $avatar.address}
+        <span class="text-red-500 font-bold"
+          >-{roundToDecimals(item.circles)}</span
+        > CRC
+      {:else}
+        <span class="text-green-700 font-bold"
+          >+{roundToDecimals(item.circles)}</span
+        > CRC
+      {/if}
+      <p class="text-xs text-gray-500">
+        {#if staticTypes.has(item.tokenType)}
+          {roundToDecimals(item.staticCircles)} Static CRC
+        {/if}
+        {#if crcTypes.has(item.tokenType)}
+          {roundToDecimals(item.crc)} CRC
+        {/if}
+      </p>
     {:else}
-      <span class="text-green-700 font-bold"
-        >+{roundToDecimals(item.circles)}</span
-      > CRC
+      <!-- TODO: add loading state -->
+      <p>loading</p>
     {/if}
-    <p class="text-xs text-gray-500">
-      {#if staticTypes.has(item.tokenType)}
-        {roundToDecimals(item.staticCircles)} Static CRC
-      {/if}
-      {#if crcTypes.has(item.tokenType)}
-        {roundToDecimals(item.crc)} CRC
-      {/if}
-    </p>
   </div>
-</div>
+</a>

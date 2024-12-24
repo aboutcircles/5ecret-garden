@@ -83,29 +83,29 @@
 </script>
 
 <script lang="ts">
-  import HorizontalAvatarLayout from '$lib/components/avatar_/HorizontalAvatarLayout.svelte';
-  import VerticalAvatarLayout from '$lib/components/avatar_/VerticalAvatarLayout.svelte';
+  import HorizontalAvatarLayout from '$lib/components/Avatar/HorizontalAvatarLayout.svelte';
+  // import VerticalAvatarLayout from '$lib/components/avatar_/VerticalAvatarLayout.svelte';
   import type {
     PopupContentApi,
     PopupContentDefinition,
   } from '$lib/components/PopUp.svelte';
   import ProfilePage from '$lib/pages/Profile.svelte';
   import { popupControls } from '$lib/components/PopUp.svelte';
-  import TransactionRowAvatarLayout from './avatar_/TransactionRowAvatarLayout.svelte';
-  import HorizontalSmallAvatarLayout from './avatar_/HorizontalSmallAvatarLayout.svelte';
+  // import TransactionRowAvatarLayout from './avatar_/TransactionRowAvatarLayout.svelte';
+  // import HorizontalSmallAvatarLayout from './avatar_/HorizontalSmallAvatarLayout.svelte';
   import { getProfile } from '$lib/utils/profile';
+  import type { SvelteComponent } from 'svelte';
 
   export let address: string;
   export let clickable: boolean = true;
   export let view:
     | 'horizontal'
-    | 'horizontal_small'
     | 'vertical'
-    | 'transaction_row' = 'horizontal';
   export let contentApi: PopupContentApi | undefined = undefined;
   export let pictureOverlayUrl: string | undefined = undefined;
-  export let trustVersion: number | undefined = undefined;
-  export let date: number = 0;
+  export let topInfo: string | undefined = undefined;
+  export let bottomInfo: string | undefined = undefined;
+  // export let trustVersion: number | undefined = undefined;
 
   let profile: Profile | undefined;
 
@@ -121,7 +121,7 @@
     }
     const nextPage: PopupContentDefinition = {
       title: shortenAddress(address),
-      component: ProfilePage,
+      component: ProfilePage as typeof SvelteComponent,
       props: {
         address: address,
       },
@@ -136,6 +136,8 @@
   async function initialize() {
     profile = await getProfile(address);
   }
+
+  console.log('this avatar')
 </script>
 
 {#if !profile}
@@ -147,15 +149,31 @@
     />
     <span>...</span>
   </div>
-{:else if view === 'vertical'}
-  <VerticalAvatarLayout
+{:else if view === 'horizontal'}
+  <HorizontalAvatarLayout
+    {pictureOverlayUrl}
+    on:click={openAvatar}
+    {profile}
+    {topInfo}
+    {bottomInfo}
+  />
+{:else}
+  <HorizontalAvatarLayout
+    {pictureOverlayUrl}
+    on:click={openAvatar}
+    {profile}
+    {topInfo}
+    {bottomInfo}
+  />
+{/if}
+  <!-- <VerticalAvatarLayout
     on:click={openAvatar}
     {profile}
     {trustVersion}
   >
     <slot></slot>
-  </VerticalAvatarLayout>
-{:else if view === 'transaction_row'}
+  </VerticalAvatarLayout> -->
+<!-- {:else if view === 'transaction_row'}
   <TransactionRowAvatarLayout
     {pictureOverlayUrl}
     on:click={openAvatar}
@@ -170,8 +188,8 @@
     {profile}
   >
     <slot></slot>
-  </HorizontalSmallAvatarLayout>
-{:else}
+  </HorizontalSmallAvatarLayout> -->
+<!-- {:else}
   <HorizontalAvatarLayout
     {pictureOverlayUrl}
     on:click={openAvatar}
@@ -179,5 +197,5 @@
     {trustVersion}
   >
     <slot></slot>
-  </HorizontalAvatarLayout>
-{/if}
+  </HorizontalAvatarLayout> -->
+<!-- {/if} -->

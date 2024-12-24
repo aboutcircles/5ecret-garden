@@ -1,12 +1,13 @@
 <script lang="ts">
-  import Avatar from '$lib/components/Avatar.svelte';
-  import { ensureContacts } from '../+layout.svelte';
-  import { onMount } from 'svelte';
-  import type { Readable } from 'svelte/store';
-  import type { ContactList } from '$lib/stores/contacts';
-  import ProfilePage from '$lib/pages/Profile.svelte';
-  import { popupControls } from '$lib/components/PopUp.svelte';
+    import Avatar from '$lib/components/Avatar/Avatar.svelte';
+    import {ensureContacts} from '../+layout.svelte';
+    import {onMount} from 'svelte';
+    import type {Readable} from 'svelte/store';
+    import type {ContactList, ExtendedTrustRelationRow} from '$lib/stores/contacts';
+    import ProfilePage from '$lib/pages/Profile.svelte';
+    import {popupControls} from '$lib/components/PopUp.svelte';
   import type { TrustRelationRow } from '@circles-sdk/data';
+
 
   let contacts:
     | Readable<{
@@ -121,15 +122,48 @@
             return true;
           }}
         >
-          <Avatar {address}>
-            <div>
-              {#if $contacts?.data[address]}
-                <span class="text-[#6B7280]"
-                  >{formatTrustRelation($contacts.data[address].row)}</span
-                >
-              {/if}
-            </div>
-          </Avatar>
+                <Avatar
+                    address={address}
+                    view="horizontal"
+                    bottomInfo={$contacts ? formatTrustRelation($contacts.data[address].row) : ''}
+                />
+                    <!-- <Avatar {address}>
+                        <div>
+                            <!-- {#if $contacts?.data[address].row.relation === 'trusts'}
+                                <img
+                                        src="/incoming.svg"
+                                        alt="Incoming trust"
+                                        class="w-3 h-3 inline"
+                                />
+                            {/if}
+                            {#if $contacts?.data[address].row.relation === 'trustedBy'}
+                                <img
+                                        src="/outgoing.svg"
+                                        alt="Outgoing trust"
+                                        class="w-3 h-3 inline"
+                                />
+                            {/if}
+                            {#if $contacts?.data[address].row.relation === 'mutuallyTrusts'}
+                                <img
+                                        src="/mutual.svg"
+                                        alt="Mutual trust"
+                                        class="w-3 h-3 inline"
+                                />
+                            {/if} -->
+                            <!-- {#if $contacts?.data[address]}
+                                <span class="text-[#6B7280]">{formatTrustRelation($contacts.data[address].row)}</span>
+                            {/if}
+                        </div>
+                    </Avatar> --> 
+<!--                     <div class="font-medium underline flex gap-x-2">
+                        <img
+                            src="/chevron-right.svg"
+                            alt="Chevron Right"
+                            class="w-4"
+                    />
+                    </div>
+                </button>
+            </div> -->
           <div class="font-medium underline flex gap-x-2">
             <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
           </div>
