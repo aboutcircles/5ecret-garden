@@ -1,16 +1,8 @@
 <script lang="ts">
-  import { avatar } from '$lib/stores/avatar';
-  import { onMount } from 'svelte';
   import { circlesBalances } from '$lib/stores/circlesBalances';
   import { totalCirclesBalance } from '$lib/stores/totalCirclesBalance';
   import BalanceRow from '$lib/components/BalanceRow.svelte';
   import { roundToDecimals } from '$lib/utils/shared';
-
-  let mintableAmount: number = 0;
-
-  onMount(async () => {
-    mintableAmount = await $avatar!.getMintableAmount();
-  });
 </script>
 
 <div class="flex flex-col items-center p-4 w-full max-w-2xl gap-y-6 mt-20">

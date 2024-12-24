@@ -82,7 +82,7 @@
             Exit
           </button>
         {/if}
-        {#if balance.tokenType == 'CrcV1_Signup' && $avatar?.avatarInfo?.version > 1}
+        {#if balance.tokenType == 'CrcV1_Signup' && $avatar?.avatarInfo && $avatar?.avatarInfo?.version > 1}
           <button
             class="btn btn-xs btn-round text-xs font-medium"
             on:click={() => {
