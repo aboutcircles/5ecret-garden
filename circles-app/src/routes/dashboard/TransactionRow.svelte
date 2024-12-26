@@ -1,11 +1,11 @@
 <script lang="ts">
-  import Avatar from '$lib/components/Avatar/Avatar.svelte';
   import { crcTypes, staticTypes } from '$lib/utils/shared';
   import { roundToDecimals } from '$lib/utils/shared';
   import type { TransactionHistoryRow } from '@circles-sdk/data';
   import { tokenTypeToString } from '$lib/pages/SelectAsset.svelte';
   import { avatar } from '$lib/stores/avatar';
   import { getTimeAgo } from '$lib/utils/shared';
+  import Avatar from '$lib/components/avatar/Avatar.svelte';
 
   export let item: TransactionHistoryRow;
 
