@@ -83,7 +83,6 @@
 </script>
 
 <script lang="ts">
-  import HorizontalAvatarLayout from '$lib/components/Avatar/HorizontalAvatarLayout.svelte';
   // import VerticalAvatarLayout from '$lib/components/avatar_/VerticalAvatarLayout.svelte';
   import type {
     PopupContentApi,
@@ -95,6 +94,7 @@
   // import HorizontalSmallAvatarLayout from './avatar_/HorizontalSmallAvatarLayout.svelte';
   import { getProfile } from '$lib/utils/profile';
   import type { SvelteComponent } from 'svelte';
+  import HorizontalAvatarLayout from './HorizontalAvatarLayout.svelte';
 
   export let address: string;
   export let clickable: boolean = true;

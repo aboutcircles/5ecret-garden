@@ -1,12 +1,12 @@
 <script lang="ts">
-    import Avatar from '$lib/components/Avatar/Avatar.svelte';
     import {ensureContacts} from '../+layout.svelte';
     import {onMount} from 'svelte';
     import type {Readable} from 'svelte/store';
-    import type {ContactList, ExtendedTrustRelationRow} from '$lib/stores/contacts';
+    import type {ContactList} from '$lib/stores/contacts';
     import ProfilePage from '$lib/pages/Profile.svelte';
     import {popupControls} from '$lib/components/PopUp.svelte';
   import type { TrustRelationRow } from '@circles-sdk/data';
+  import Avatar from '$lib/components/avatar/Avatar.svelte';
 
 
   let contacts:
