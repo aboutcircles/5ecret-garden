@@ -1,44 +1,23 @@
 <script lang="ts">
-    import {ensureContacts} from '../+layout.svelte';
-    import {onMount} from 'svelte';
-    import type {Readable} from 'svelte/store';
-    import type {ContactList} from '$lib/stores/contacts';
-    import ProfilePage from '$lib/pages/Profile.svelte';
-    import {popupControls} from '$lib/components/PopUp.svelte';
-  import type { TrustRelationRow } from '@circles-sdk/data';
-  import Avatar from '$lib/components/avatar/Avatar.svelte';
-
+  import { ensureContacts } from '../+layout.svelte';
+  import { onMount } from 'svelte';
+  import type { Readable } from 'svelte/store';
+  import type { ContactList } from '$lib/stores/contacts';
+  import { formatTrustRelation } from '$lib/utils/helpers';
+  import ContactGroupRow from './ContactGroupRow.svelte';
 
   let contacts:
     | Readable<{
         data: ContactList;
         next: () => Promise<boolean>;
         ended: boolean;
-      }>
-    | undefined = undefined;
+      }>;
 
   let filterVersion: number | undefined = undefined;
 
   onMount(async () => {
     contacts = await ensureContacts();
   });
-
-  function formatTrustRelation(row: TrustRelationRow) {
-    switch (row.relation) {
-      case 'trusts':
-        return 'You accept their tokens';
-      case 'trustedBy':
-        return 'They accept your tokens';
-      case 'mutuallyTrusts':
-        return 'You accept each other’s tokens';
-      case 'selfTrusts':
-        return 'Self-trusted';
-      case 'variesByVersion':
-        return 'Trust relationship varies by version';
-      default:
-        return row.relation;
-    }
-  }
 
   $: filteredContacts = Object.keys($contacts?.data ?? {}).filter((address) => {
     const contact = $contacts?.data[address];
@@ -103,75 +82,15 @@
   </div>
 
   <div
-    class="flex flex-col p-0 px-4 sm:py-4 w-full sm:border sm:rounded-lg overflow-x-auto divide-y"
+    class="w-full md:border rounded-lg md:px-4 flex flex-col divide-y gap-y-2 overflow-x-auto py-4"
   >
     {#each orderedContacts as address}
-      <!-- TODO: use the generic list component -->
-      <div class="-mx-4">
-        <button
-          class="flex w-full items-center justify-between p-4 bg-base-100 hover:bg-base-200"
-          on:click={(e) => {
-            $popupControls.open?.({
-              component: ProfilePage,
-              title: '',
-              props: {
-                address: address,
-              },
-            });
-            e.preventDefault();
-            return true;
-          }}
-        >
-                <Avatar
-                    address={address}
-                    view="horizontal"
-                    bottomInfo={$contacts ? formatTrustRelation($contacts.data[address].row) : ''}
-                />
-                    <!-- <Avatar {address}>
-                        <div>
-                            <!-- {#if $contacts?.data[address].row.relation === 'trusts'}
-                                <img
-                                        src="/incoming.svg"
-                                        alt="Incoming trust"
-                                        class="w-3 h-3 inline"
-                                />
-                            {/if}
-                            {#if $contacts?.data[address].row.relation === 'trustedBy'}
-                                <img
-                                        src="/outgoing.svg"
-                                        alt="Outgoing trust"
-                                        class="w-3 h-3 inline"
-                                />
-                            {/if}
-                            {#if $contacts?.data[address].row.relation === 'mutuallyTrusts'}
-                                <img
-                                        src="/mutual.svg"
-                                        alt="Mutual trust"
-                                        class="w-3 h-3 inline"
-                                />
-                            {/if} -->
-                            <!-- {#if $contacts?.data[address]}
-                                <span class="text-[#6B7280]">{formatTrustRelation($contacts.data[address].row)}</span>
-                            {/if}
-                        </div>
-                    </Avatar> --> 
-<!--                     <div class="font-medium underline flex gap-x-2">
-                        <img
-                            src="/chevron-right.svg"
-                            alt="Chevron Right"
-                            class="w-4"
-                    />
-                    </div>
-                </button>
-            </div> -->
-          <div class="font-medium underline flex gap-x-2">
-            <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
-          </div>
-        </button>
-      </div>
+      <ContactGroupRow
+        {address}
+        trustRelation={$contacts
+          ? formatTrustRelation($contacts.data[address].row)
+          : ''}
+      />
     {/each}
-    <!-- <div class="text-center py-4">
-            <span class="text-gray-500">End of list</span>
-        </div> -->
   </div>
 </div>

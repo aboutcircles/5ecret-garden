@@ -1,5 +1,5 @@
 import type { Profile } from '@circles-sdk/profiles';
-import type { ExtendedTrustRelationRow } from '$lib/stores/contacts';
+import type { TrustRelationRow } from '@circles-sdk/data';
 
 export function getTypeString(type: string): string {
   const typeMap: Record<string, string> = {
@@ -11,7 +11,10 @@ export function getTypeString(type: string): string {
   return typeMap[type ?? ''] || '';
 }
 
-export function getRelationText(row: ExtendedTrustRelationRow, profile?: Profile): string {
+
+//TODO: DRY
+
+export function getRelationText(row: TrustRelationRow, profile?: Profile): string {
   if (!row) return `You don't trust each other`;
 
   const relationMap: Record<string, string> = {
@@ -21,4 +24,21 @@ export function getRelationText(row: ExtendedTrustRelationRow, profile?: Profile
   };
 
   return relationMap[row.relation] || `Unknown relation: ${row.relation}`;
+}
+
+export function formatTrustRelation(row: TrustRelationRow) {
+  switch (row.relation) {
+    case 'trusts':
+      return 'You accept their tokens';
+    case 'trustedBy':
+      return 'They accept your tokens';
+    case 'mutuallyTrusts':
+      return 'You accept each other’s tokens';
+    case 'selfTrusts':
+      return 'Self-trusted';
+    case 'variesByVersion':
+      return 'Trust relationship varies by version';
+    default:
+      return row.relation;
+  }
 }

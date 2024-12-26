@@ -1,9 +1,5 @@
 <script lang="ts">
-  import {
-    onDestroy,
-    type SvelteComponent,
-    createEventDispatcher,
-  } from 'svelte';
+  import { onDestroy, type SvelteComponent, createEventDispatcher } from 'svelte';
   import type { EventRow } from '@circles-sdk/data';
   import { getKeyFromItem } from '$lib/stores/query/circlesQueryStore';
   import type { Readable } from 'svelte/store';
@@ -20,54 +16,30 @@
 
   const eventDispatcher = createEventDispatcher();
 
-  $: {
-    if (store && anchor) {
-      setupObserver();
-    }
-  }
+  const setupObserver = () => {
+    if (observer) observer.disconnect();
 
-  const setupObserver = async () => {
-    if (!anchor) return;
+    if (anchor && !$store?.ended) {
+      observer = new IntersectionObserver(async (entries) => {
+        if (entries[0]?.isIntersecting && !$store.ended) {
+          observer?.disconnect();
+          await $store.next();
+          setupObserver();
+        }
+      });
 
-    if (observer) {
-      observer.disconnect();
-    }
-
-    observer = new IntersectionObserver(async (entries) => {
-      if ($store.ended || !entries[0].isIntersecting) {
-        return;
-      }
-
-      await $store.next();
-
-      if ($store.ended) {
-        observer?.disconnect();
-      }
-    });
-
-    const isInViewport = (element: HTMLElement) => {
-      const rect = element.getBoundingClientRect();
-      return (
-        rect.top >= 0 &&
-        rect.left >= 0 &&
-        rect.bottom <=
-          (window.innerHeight || document.documentElement.clientHeight) &&
-        rect.right <=
-          (window.innerWidth || document.documentElement.clientWidth)
-      );
-    };
-
-    // Repeatedly load data while the target is in the viewport and more data is available
-    while (isInViewport(anchor) && !$store.ended) {
-      await $store.next(); // Load the next page of transactions
-    }
-
-    if (!$store.ended) {
       observer.observe(anchor);
     }
   };
 
-  onDestroy(() => observer?.disconnect());
+  $: {
+    if (store && anchor) setupObserver();
+  }
+
+  onDestroy(() => {
+    observer?.disconnect();
+    observer = null;
+  });
 </script>
 
 <div class="w-full flex flex-col divide-y gap-y-2 overflow-x-auto py-4">
@@ -75,12 +47,18 @@
     <button
       on:click={() => eventDispatcher('select', item)}
       class="w-full pt-2"
+      aria-label="Select item"
     >
       <svelte:component this={row} {item} />
     </button>
   {/each}
 
-  <div class="text-center py-4" bind:this={anchor}>
+  <div
+    class="text-center py-4"
+    bind:this={anchor}
+    aria-live="polite"
+    aria-busy={$store && !$store?.ended ? "true" : "false"}
+  >
     {#if ($store?.data ?? []).length === 0 || $store?.ended}
       <span class="text-gray-500">End of list</span>
     {:else}

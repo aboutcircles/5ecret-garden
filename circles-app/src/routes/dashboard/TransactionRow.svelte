@@ -41,7 +41,7 @@
 </script>
 
 <a
-  class="flex items-center justify-between p-2 bg-base-100 hover:bg-base-200 rounded-lg"
+  class="flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
   target="_blank"
   href={'https://gnosisscan.io/tx/' + item.transactionHash}
 >
@@ -69,6 +69,7 @@
         {/if}
         {#if crcTypes.has(item.tokenType)}
           {roundToDecimals(item.crc)} CRC
+          
         {/if}
       </p>
     {:else}
