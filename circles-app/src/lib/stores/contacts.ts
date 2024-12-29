@@ -1,4 +1,4 @@
-import { get } from "svelte/store";
+import { get, writable } from "svelte/store";
 import { avatar } from "$lib/stores/avatar";
 import type {
     AvatarRow,
@@ -10,6 +10,7 @@ import type { Profile } from "@circles-sdk/profiles";
 import { createEventStore } from "$lib/stores/eventStores/eventStoreFactory";
 import { circles } from "$lib/stores/circles";
 import { getProfile } from "$lib/utils/profile";
+import type { Avatar } from "@circles-sdk/sdk";
 
 export type ContactListItem = {
     contactProfile: Profile;
@@ -104,12 +105,21 @@ async function enrichContactData(rows: TrustRelationRow[]): Promise<ContactList>
     return profileRecord;
 }
 
-export const createContacts = () =>
-    createEventStore<ContactList>(
-        avatar,
-        refreshOnEvents,
-        _initialLoad,
-        _handleEvent,
-        _handleNextPage,
-        {}
-    );
+// export const createContacts = () =>
+//     createEventStore<ContactList>(
+//         avatar,
+//         refreshOnEvents,
+//         _initialLoad,
+//         _handleEvent,
+//         _handleNextPage,
+//         {}
+//     );
+
+export const contacts = createEventStore<ContactList>(
+    avatar,
+    refreshOnEvents,
+    _initialLoad,
+    _handleEvent,
+    async () => ({ data: {}, ended: true }),
+    {}
+);

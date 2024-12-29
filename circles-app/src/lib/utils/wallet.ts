@@ -40,6 +40,7 @@ export async function restoreWallet() {
         const avatarInfo = await sdk.data.getAvatarInfo(walletAddress);
 
         if (avatarInfo) {
+            console.log("wallet restored");
             avatar.set(await sdk.getAvatar(walletAddress));
             // await goto('/dashboard');
         } else {

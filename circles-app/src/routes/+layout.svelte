@@ -1,5 +1,5 @@
 <script lang="ts" context="module">
-  import { get, type Readable, writable } from 'svelte/store';
+  import { get, readable, type Readable } from 'svelte/store';
   import { type ContactList } from '$lib/stores/contacts';
   import { popupControls } from '$lib/components/PopUp.svelte';
 
@@ -24,15 +24,27 @@
       ended: boolean;
     }>
   > {
-    if (!get(avatar)) {
-      throw new Error('Avatar store is not available');
-    }
-    if (!contacts) {
-      contacts = createContacts();
-      const c = get(contacts);
-      await c.next();
-    }
-    return contacts;
+    // if (!get(avatar)) {
+    //   throw new Error('Avatar store is not available');
+    // }
+    // if (!contacts) {
+    //   contacts = createContacts();
+    //   const c = get(contacts);
+    //   await c.next();
+    // }
+    // return contacts;
+    const dummyContacts: ContactList = {};
+
+    const dummyStore = readable({
+      data: dummyContacts,
+      next: async () => {
+        console.log('Dummy next function called');
+        return true;
+      },
+      ended: true,
+    });
+
+    return dummyStore;
   }
 </script>
 
@@ -45,24 +57,17 @@
   import { canMigrate } from '$lib/guards/canMigrate';
   import UpdateBanner from '$lib/components/UpdateBanner.svelte';
   import { page } from '$app/stores';
-  import { createContacts } from '$lib/stores/contacts';
+  // import { createContacts } from '$lib/stores/contacts';
   import PopUp from '$lib/components/PopUp.svelte';
   import SearchAvatar from '$lib/flows/addContact/1_Search.svelte';
   import Send from '$lib/flows/send/1_To.svelte';
   import MintGroupTokens from '$lib/flows/mintGroupTokens/1_To.svelte';
   import { onMount } from 'svelte';
   import { tasks } from '$lib/utils/tasks';
-  import type { Profile } from '@circles-sdk/profiles';
   import { restoreWallet } from '$lib/utils/wallet';
-  import { getProfile } from '$lib/utils/profile';
-
-  onMount(() => {
-    const savedWallet = localStorage.getItem('wallet');
-    console.log(savedWallet);
-  });
+  import { loadProfile, profile } from '$lib/stores/profile';
 
   let quickAction: QuickAction | undefined;
-  let profile: Profile;
 
   const quickActionsMap: Record<string, QuickAction | undefined> = {
     '/dashboard': {
@@ -109,8 +114,10 @@
 
   avatar.subscribe(async ($avatar) => {
     if ($avatar) {
-      contacts = createContacts();
-      profile = await getProfile($avatar.address);
+      // contacts = createContacts();
+      // profile = await getProfile($avatar.address);
+
+      loadProfile($avatar);
     }
   });
 
@@ -125,10 +132,10 @@
 
 {#if $avatar}
   <DefaultHeader
-    text={profile?.name}
+    text={$profile?.name}
     address={$avatar.address}
-    logo={profile?.previewImageUrl?.trim()
-      ? profile.previewImageUrl
+    logo={$profile?.previewImageUrl?.trim()
+      ? $profile.previewImageUrl
       : '/logo.svg'}
     homeLink="/dashboard"
     {quickAction}

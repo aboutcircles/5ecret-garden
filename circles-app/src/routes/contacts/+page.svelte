@@ -1,31 +1,21 @@
 <script lang="ts">
-  import { ensureContacts } from '../+layout.svelte';
-  import { onMount } from 'svelte';
-  import type { Readable } from 'svelte/store';
-  import type { ContactList } from '$lib/stores/contacts';
+  import { contacts, type ContactListItem } from '$lib/stores/contacts';
   import { formatTrustRelation } from '$lib/utils/helpers';
   import ContactGroupRow from './ContactGroupRow.svelte';
 
-  let contacts:
-    | Readable<{
-        data: ContactList;
-        next: () => Promise<boolean>;
-        ended: boolean;
-      }>;
-
   let filterVersion: number | undefined = undefined;
 
-  onMount(async () => {
-    contacts = await ensureContacts();
-  });
 
-  $: filteredContacts = Object.keys($contacts?.data ?? {}).filter((address) => {
-    const contact = $contacts?.data[address];
-    return (
-      !filterVersion || // Show all if no filter is applied
-      contact?.avatarInfo?.version === filterVersion
-    );
-  });
+  $: filteredContacts = $contacts?.data
+    ? Object.entries($contacts.data)
+        .filter(([_, contact]) => {
+          return (
+            !filterVersion || contact?.avatarInfo?.version === filterVersion
+          );
+        })
+        .map(([address]) => address)
+    : [];
+  console.log(filteredContacts);
   $: orderedContacts = filteredContacts.sort((a, b) => {
     const aRelation = $contacts?.data[a].row.relation;
     const bRelation = $contacts?.data[b].row.relation;
