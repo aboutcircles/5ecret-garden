@@ -4,28 +4,17 @@
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import type { MigrateToV2Context } from '$lib/flows/migrateToV2/context';
   import Avatar from '$lib/components/Avatar.svelte';
-  import { ensureContacts } from '../../../routes/+layout.svelte';
-  import type { Readable } from 'svelte/store';
-  import type {
-    ContactList,
-    ExtendedTrustRelationRow,
+  import {
+    contacts,
   } from '$lib/stores/contacts';
   import Migrate from './3_Migrate.svelte';
+  import type { TrustRelationRow } from '@circles-sdk/data';
 
   export let contentApi: PopupContentApi;
   export let context: MigrateToV2Context;
-
-  let contacts:
-    | Readable<{
-        data: ContactList;
-        next: () => Promise<boolean>;
-        ended: boolean;
-      }>
-    | undefined = undefined;
   let selectedAddresses: string[] = [];
 
   onMount(async () => {
-    contacts = await ensureContacts();
     selectedAddresses = context.trustList ?? Object.keys($contacts?.data ?? {});
     console.log('Selected addresses', selectedAddresses);
   });
@@ -40,7 +29,7 @@
     });
   }
 
-  function formatTrustRelation(row: ExtendedTrustRelationRow) {
+  function formatTrustRelation(row: TrustRelationRow) {
     switch (row.relation) {
       case 'trusts':
         return 'You accept their tokens';

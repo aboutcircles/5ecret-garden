@@ -8,44 +8,6 @@
     icon: string;
     action: () => void;
   };
-
-  export let contacts:
-    | Readable<{
-        data: ContactList;
-        next: () => Promise<boolean>;
-        ended: boolean;
-      }>
-    | undefined = undefined;
-
-  export async function ensureContacts(): Promise<
-    Readable<{
-      data: ContactList;
-      next: () => Promise<boolean>;
-      ended: boolean;
-    }>
-  > {
-    // if (!get(avatar)) {
-    //   throw new Error('Avatar store is not available');
-    // }
-    // if (!contacts) {
-    //   contacts = createContacts();
-    //   const c = get(contacts);
-    //   await c.next();
-    // }
-    // return contacts;
-    const dummyContacts: ContactList = {};
-
-    const dummyStore = readable({
-      data: dummyContacts,
-      next: async () => {
-        console.log('Dummy next function called');
-        return true;
-      },
-      ended: true,
-    });
-
-    return dummyStore;
-  }
 </script>
 
 <script lang="ts">
@@ -57,7 +19,6 @@
   import { canMigrate } from '$lib/guards/canMigrate';
   import UpdateBanner from '$lib/components/UpdateBanner.svelte';
   import { page } from '$app/stores';
-  // import { createContacts } from '$lib/stores/contacts';
   import PopUp from '$lib/components/PopUp.svelte';
   import SearchAvatar from '$lib/flows/addContact/1_Search.svelte';
   import Send from '$lib/flows/send/1_To.svelte';
@@ -114,9 +75,6 @@
 
   avatar.subscribe(async ($avatar) => {
     if ($avatar) {
-      // contacts = createContacts();
-      // profile = await getProfile($avatar.address);
-
       loadProfile($avatar);
     }
   });

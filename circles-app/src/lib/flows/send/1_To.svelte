@@ -1,10 +1,9 @@
 <script lang="ts">
   import type { PopupContentApi } from '$lib/components/PopUp.svelte';
   import SelectContact from '$lib/pages/SelectContact.svelte';
-  import type { ContactList } from '$lib/stores/contacts';
+  import { contacts } from '$lib/stores/contacts';
   import type { Profile } from '@circles-sdk/profiles';
   import { onMount } from 'svelte';
-  import { ensureContacts } from '../../../routes/+layout.svelte';
   import { type Readable } from 'svelte/store';
   import SelectAsset from './2_Asset.svelte';
   import Amount from './3_Amount.svelte';
@@ -17,18 +16,6 @@
   let contentApi: PopupContentApi;
   let context: SendFlowContext;
   let allowAssetSelection: boolean = false;
-
-  let contacts:
-    | Readable<{
-        data: ContactList;
-        next: () => Promise<boolean>;
-        ended: boolean;
-      }>
-    | undefined = undefined;
-
-  onMount(async () => {
-    contacts = await ensureContacts();
-  });
 
   async function handleSelect(
     event: CustomEvent<{ address: string; profile: Profile }>
@@ -75,7 +62,7 @@
 
 <FlowDecoration>
   <p class="text-2xl font-bold mt-14">Send Circles</p>
-  {#if $contacts}
+  {#if contacts}
     <SelectContact
       store={contacts}
       selectedAddress={context?.selectedAddress}

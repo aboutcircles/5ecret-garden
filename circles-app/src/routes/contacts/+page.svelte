@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { contacts, type ContactListItem } from '$lib/stores/contacts';
+  import { contacts } from '$lib/stores/contacts';
   import { formatTrustRelation } from '$lib/utils/helpers';
   import ContactGroupRow from './ContactGroupRow.svelte';
 
