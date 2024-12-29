@@ -1,6 +1,4 @@
 <script lang="ts" context="module">
-  import { get, readable, type Readable } from 'svelte/store';
-  import { type ContactList } from '$lib/stores/contacts';
   import { popupControls } from '$lib/components/PopUp.svelte';
 
   export type QuickAction = {

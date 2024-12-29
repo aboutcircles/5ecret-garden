@@ -13,6 +13,7 @@
   import MintGroupTokens from '$lib/flows/mintGroupTokens/1_To.svelte';
   import type { PopupContentApi } from '$lib/components/PopUp.svelte';
   import { getProfile } from '$lib/utils/profile';
+  import { formatTrustRelation } from '$lib/utils/helpers';
 
   export let address: string | undefined;
   export let contentApi: PopupContentApi | undefined;
@@ -81,23 +82,6 @@
     return '';
   }
 
-  function getRelationText(row: TrustRelationRow, profile?: Profile) {
-    if (!row) {
-      return `You don't trust each other`;
-    }
-    if (row.relation === 'mutuallyTrusts') {
-      return `You accept each others tokens`;
-    } else if (row.relation === 'trustedBy') {
-      return `${profile?.name} accepts your tokens`;
-    } else if (row.relation === 'trusts') {
-      return `You accept ${profile?.name}'s tokens`;
-    } else if (row.relation === 'variesByVersion') {
-      return `Trust relationship varies by version`;
-    } else {
-      return row.relation;
-    }
-  }
-
   function getTrustRow(address: string | undefined) {
     if (!address) {
       return undefined;
@@ -150,7 +134,7 @@
         'trusts' ||
         getTrustRow(otherAvatar?.avatar)?.relation === 'trustedBy' ||
         getTrustRow(otherAvatar?.avatar)?.relation === 'mutuallyTrusts'}
-      >{getRelationText(getTrustRow(otherAvatar?.avatar), profile)}</span
+      >{formatTrustRelation(getTrustRow(otherAvatar?.avatar), profile)}</span
     >
   </span>
 

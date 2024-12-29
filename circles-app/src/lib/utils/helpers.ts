@@ -11,27 +11,12 @@ export function getTypeString(type: string): string {
   return typeMap[type ?? ''] || '';
 }
 
-
-//TODO: DRY
-
-export function getRelationText(row: TrustRelationRow, profile?: Profile): string {
-  if (!row) return `You don't trust each other`;
-
-  const relationMap: Record<string, string> = {
-    'mutuallyTrusts': `You accept each other's tokens`,
-    'trustedBy': `${profile?.name} accepts your tokens`,
-    'trusts': `You accept ${profile?.name}'s tokens`,
-  };
-
-  return relationMap[row.relation] || `Unknown relation: ${row.relation}`;
-}
-
-export function formatTrustRelation(row: TrustRelationRow) {
+export function formatTrustRelation(row: TrustRelationRow, profile?: Profile) {
   switch (row.relation) {
     case 'trusts':
-      return 'You accept their tokens';
+      return `You accept ${profile ? profile.name + "’s": "their"} tokens`;
     case 'trustedBy':
-      return 'They accept your tokens';
+      return `${profile ? profile.name : "They"} accept your tokens`;
     case 'mutuallyTrusts':
       return 'You accept each other’s tokens';
     case 'selfTrusts':
@@ -39,6 +24,6 @@ export function formatTrustRelation(row: TrustRelationRow) {
     case 'variesByVersion':
       return 'Trust relationship varies by version';
     default:
-      return row.relation;
+      return "You don't trust each other";
   }
 }

@@ -9,6 +9,7 @@
   } from '$lib/stores/contacts';
   import Migrate from './3_Migrate.svelte';
   import type { TrustRelationRow } from '@circles-sdk/data';
+  import { formatTrustRelation } from '$lib/utils/helpers';
 
   export let contentApi: PopupContentApi;
   export let context: MigrateToV2Context;
@@ -27,21 +28,6 @@
         context: context,
       },
     });
-  }
-
-  function formatTrustRelation(row: TrustRelationRow) {
-    switch (row.relation) {
-      case 'trusts':
-        return 'You accept their tokens';
-      case 'trustedBy':
-        return 'They accept your tokens';
-      case 'mutuallyTrusts':
-        return 'You accept each others tokens';
-      case 'selfTrusts':
-        return 'Self-trusted';
-      default:
-        return row.relation;
-    }
   }
 
   $: orderedContacts = Object.keys($contacts?.data ?? {}).sort((a, b) => {
