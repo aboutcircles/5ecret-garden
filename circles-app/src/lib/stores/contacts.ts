@@ -70,6 +70,7 @@ const _handleEvent = async (event: CirclesEvent, currentData: ContactList) => {
     }
 };
 
+//TODO: reimplement this function
 const _handleNextPage = async (currentData: ContactList) => {
     return { data: currentData, ended: true };
 };
