@@ -13,22 +13,25 @@
   import MintGroupTokens from '$lib/flows/mintGroupTokens/1_To.svelte';
   import type { PopupContentApi } from '$lib/components/PopUp.svelte';
   import { getProfile } from '$lib/utils/profile';
-  import { formatTrustRelation } from '$lib/utils/helpers';
+  import { formatTrustRelation, getTypeString } from '$lib/utils/helpers';
+  import { onMount } from 'svelte';
 
   export let address: string | undefined;
   export let contentApi: PopupContentApi | undefined;
   export let trustVersion: number | undefined;
 
-  $: {
+  onMount(() => {
     if (address) {
       initialize(address);
     }
-  }
+  });
 
   let otherAvatar: AvatarRow | undefined;
   let profile: Profile | undefined;
   let members: string[] | undefined = undefined;
   let activeTab = 'common_connections';
+  
+  let trustRow: TrustRelationRow | undefined;
 
   async function initialize(address?: string) {
     if (!address) {
@@ -42,8 +45,12 @@
     }
 
     otherAvatar = await $circles.data.getAvatarInfo(address);
-    if (otherAvatar) {
-      profile = await getProfile(otherAvatar.avatar);
+    profile = otherAvatar ? await getProfile(otherAvatar.avatar) : undefined;
+
+    if (otherAvatar?.avatar) {
+      trustRow = $contacts?.data[otherAvatar.avatar]?.row;
+    } else {
+      trustRow = undefined;
     }
 
     if (otherAvatar?.type === 'CrcV2_RegisterGroup') {
@@ -65,43 +72,6 @@
 
     activeTab = 'common_connections';
   }
-
-  function getTypeString(type: string | undefined) {
-    if (!type) {
-      return '';
-    }
-    if (type === 'CrcV2_RegisterHuman') {
-      return 'Human';
-    } else if (type === 'CrcV2_RegisterGroup') {
-      return 'Group';
-    } else if (type === 'CrcV2_RegisterOrganization') {
-      return 'Organization';
-    } else if (type === 'CrcV1_Signup') {
-      return 'Human (v1)';
-    }
-    return '';
-  }
-
-  function getTrustRow(address: string | undefined) {
-    if (!address) {
-      return undefined;
-    }
-    if (!$contacts) {
-      return undefined;
-    }
-    return $contacts.data[address]?.row;
-  }
-
-  // function nextProfile(address: string) {
-  //   contentApi?.open?.({
-  //     title: shortenAddress(address),
-  //     component: ProfilePage,
-  //     props: {
-  //       address: address,
-  //       contentApi: contentApi,
-  //     },
-  //   });
-  // }
 
   let commonConnectionsCount = 0;
 
@@ -125,18 +95,19 @@
     {trustVersion}
   ></Avatar>
 
-  <span>
+  {#if trustRow}
     <span
       class="text-sm"
-      class:text-red-500={getTrustRow(otherAvatar?.avatar)?.relation ===
-        'variesByVersion'}
-      class:text-green-600={getTrustRow(otherAvatar?.avatar)?.relation ===
-        'trusts' ||
-        getTrustRow(otherAvatar?.avatar)?.relation === 'trustedBy' ||
-        getTrustRow(otherAvatar?.avatar)?.relation === 'mutuallyTrusts'}
-      >{formatTrustRelation(getTrustRow(otherAvatar?.avatar), profile)}</span
+      class:text-red-500={trustRow.relation === 'variesByVersion'}
+      class:text-green-600={trustRow?.relation === 'trusts' ||
+        trustRow?.relation === 'trustedBy' ||
+        trustRow?.relation === 'mutuallyTrusts'}
     >
-  </span>
+      {formatTrustRelation(trustRow, profile)}
+    </span>
+  {:else}
+    <span class="text-sm text-gray-500">No relation available</span>
+  {/if}
 
   <div class="my-6 flex flex-row gap-x-2">
     <span class="bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm"
@@ -172,7 +143,7 @@
       <img src="/send-new.svg" alt="Send" class="w-5 h-5" />
       Send
     </button>
-    {#if getTrustRow(otherAvatar?.avatar)?.relation === 'trustedBy' && otherAvatar.type === 'CrcV2_RegisterGroup'}
+    {#if trustRow?.relation === 'trustedBy' && otherAvatar.type === 'CrcV2_RegisterGroup'}
       <button
         class="btn bg-[#F3F4F6] border-none"
         on:click={() => {
@@ -188,7 +159,7 @@
         Mint
       </button>
     {/if}
-    {#if getTrustRow(otherAvatar?.avatar)?.relation === 'trusts'}
+    {#if trustRow?.relation === 'trusts'}
       <button
         class="btn bg-[#F3F4F6] border-none"
         on:click={() => {
@@ -204,7 +175,7 @@
       >
         Untrust
       </button>
-    {:else if getTrustRow(otherAvatar?.avatar)?.relation === 'mutuallyTrusts'}
+    {:else if trustRow?.relation === 'mutuallyTrusts'}
       <button
         class="btn bg-[#F3F4F6] border-none"
         on:click={() => {
@@ -219,7 +190,7 @@
       >
         Untrust
       </button>
-    {:else if getTrustRow(otherAvatar?.avatar)?.relation === 'trustedBy'}
+    {:else if trustRow?.relation === 'trustedBy'}
       <button
         class="btn bg-[#F3F4F6] border-none"
         on:click={() => {
