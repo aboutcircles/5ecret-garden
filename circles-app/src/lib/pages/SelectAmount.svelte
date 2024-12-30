@@ -5,7 +5,7 @@
 
     const eventDispatcher = createEventDispatcher();
 
-    export let asset: TokenBalanceRow | undefined;
+    export let asset: TokenBalanceRow;
     export let amount: number = 0;
     export let maxAmountCircles: number = -1;
 

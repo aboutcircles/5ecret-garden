@@ -65,7 +65,7 @@
   }
 
   function updateSearchResults() {
-    filteredAddresses = Object.keys(data).filter((address) => {
+    filteredAddresses = Object.keys(data ?? {}).filter((address) => {
       return (
         address.toLowerCase().includes(selectedAddress?.toLowerCase() ?? '') ||
         address == selectedAddress?.toLowerCase() ||

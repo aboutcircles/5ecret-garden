@@ -1,5 +1,4 @@
 <script lang="ts" context="module">
-  import type { TokenType } from '@circles-sdk/data';
   import { get } from 'svelte/store';
   import { totalCirclesBalance } from '$lib/stores/totalCirclesBalance';
 

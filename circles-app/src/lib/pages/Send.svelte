@@ -5,8 +5,8 @@
   import { roundToDecimals, shortenAddress } from '$lib/utils/shared';
   import type { TokenBalanceRow } from '@circles-sdk/data';
 
-  export let receiverAddress: string | undefined;
-  export let asset: TokenBalanceRow | undefined;
+  export let receiverAddress: string;
+  export let asset: TokenBalanceRow;
   export let amount: number = 0;
   export let textButton: string;
 

@@ -4,9 +4,7 @@
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import type { MigrateToV2Context } from '$lib/flows/migrateToV2/context';
   import Avatar from '$lib/components/Avatar.svelte';
-  import {
-    contacts,
-  } from '$lib/stores/contacts';
+  import { contacts } from '$lib/stores/contacts';
   import Migrate from './3_Migrate.svelte';
   import type { TrustRelationRow } from '@circles-sdk/data';
   import { formatTrustRelation } from '$lib/utils/helpers';
@@ -65,11 +63,11 @@
   </p>
   <div class="mt-6">
     {#each orderedContacts as address}
-      <a
+      <button
+        type="button"
         class="p-2 bg-base-100 hover:bg-base-200 rounded-lg items-center block"
         on:click={(e) => {
           console.log('Selected address', address);
-          // Toggle selection
           if (selectedAddresses.includes(address)) {
             selectedAddresses = selectedAddresses.filter((a) => a !== address);
           } else {
@@ -112,7 +110,7 @@
             {/if}
           </div>
         </Avatar>
-      </a>
+      </button>
     {/each}
     {#if orderedContacts.length === 0}
       <p class="text-center mt-4">No contacts to migrate</p>
