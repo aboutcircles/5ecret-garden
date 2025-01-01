@@ -4,20 +4,22 @@ import { avatar } from '$lib/stores/avatar';
 import { BrowserProviderContractRunner } from '@circles-sdk/adapter-ethers';
 import { Sdk } from '@circles-sdk/sdk';
 import { goto } from '$app/navigation';
+import { SafeSdkBrowserContractRunner, SafeSdkPrivateKeyContractRunner } from '@circles-sdk/adapter-safe';
+import { gnosisConfig } from '$lib/chiadoConfig';
 
 const GNOSIS_CHAIN_ID_DEC = 100n;
 
 export async function restoreWallet() {
     try {
+        const walletType = localStorage.getItem('walletType');
         const savedWalletAddress = localStorage.getItem('wallet');
 
-        if (!savedWalletAddress) {
+        if (!walletType || !savedWalletAddress) {
             console.log('No wallet found in localStorage');
             return;
         }
 
-        const restoredWallet = new BrowserProviderContractRunner();
-        await restoredWallet.init();
+        const restoredWallet = await initializeWallet(walletType, savedWalletAddress);
 
         if (!restoredWallet || !restoredWallet.address) {
             console.log('Failed to restore wallet or wallet address is undefined');
@@ -36,23 +38,22 @@ export async function restoreWallet() {
         const sdk = new Sdk(restoredWallet, await getCirclesConfig(network.chainId));
         circles.set(sdk);
 
-        const walletAddress = restoredWallet.address;
-        const avatarInfo = await sdk.data.getAvatarInfo(walletAddress);
+        const avatarInfo = await sdk.data.getAvatarInfo(restoredWallet.address);
 
         if (avatarInfo) {
-            console.log("wallet restored");
-            avatar.set(await sdk.getAvatar(walletAddress));
-            // await goto('/dashboard');
+            console.log('Wallet restored');
+            avatar.set(await sdk.getAvatar(restoredWallet.address));
         } else {
             await goto('/register');
         }
-
     } catch (error) {
         console.error('Failed to restore wallet:', error);
         localStorage.removeItem('wallet');
+        localStorage.removeItem('walletType');
         await goto('/connect-wallet');
     }
 }
+
 
 async function getCirclesConfig(chainId: bigint) {
     if (chainId === 100n) {
@@ -62,3 +63,29 @@ async function getCirclesConfig(chainId: bigint) {
     }
     throw new Error(`Unsupported chain-id: ${chainId}`);
 }
+
+
+export async function initializeWallet(type: string, address?: string) {
+    localStorage.setItem('walletType', type);
+    if (type === 'metamask') {
+        const runner = new BrowserProviderContractRunner();
+        await runner.init();
+        localStorage.setItem('wallet', JSON.stringify(runner.address!));
+        return runner;
+    } else if (type === 'safe' && address) {
+        localStorage.setItem('wallet', address);
+        const useMM = localStorage.getItem('useMM') === 'true';
+        if (useMM) {
+            const runner = new SafeSdkBrowserContractRunner();
+            await runner.init(address);
+            return runner;
+        } else {
+            const privateKey = localStorage.getItem('privateKey');
+            const runner = new SafeSdkPrivateKeyContractRunner(privateKey!, gnosisConfig.circlesRpcUrl);
+            await runner.init(address);
+            return runner;
+        }
+    }
+    throw new Error(`Unsupported wallet type: ${type}`);
+}
+

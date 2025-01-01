@@ -9,6 +9,7 @@
   import { circles } from '$lib/stores/circles';
   import { Sdk, type CirclesConfig } from '@circles-sdk/sdk';
   import { goto } from '$app/navigation';
+  import { initializeWallet } from '$lib/utils/wallet';
 
   export let item: string;
 
@@ -26,26 +27,8 @@
   }
 
   async function connectWallet(safeAddress: string) {
-    // const safeContractRunner = new SafeSdkPrivateKeyContractRunner();
 
-    const key = localStorage.getItem('privateKey');
-    let safeContractRunner: any;
-    if (localStorage.getItem('useMM')) {
-      console.log(`Using MetaMask as signer`);
-      const runner = new SafeSdkBrowserContractRunner();
-      await runner.init(safeAddress);
-      safeContractRunner = runner;
-    } else {
-      console.log(`Using private key from localStorage`);
-      const runner = new SafeSdkPrivateKeyContractRunner(
-        key!,
-        gnosisConfig.circlesRpcUrl
-      );
-      await runner.init(safeAddress);
-      safeContractRunner = runner;
-    }
-
-    $wallet = safeContractRunner;
+    $wallet = await initializeWallet('safe', safeAddress);
 
     const network = await $wallet?.provider?.getNetwork();
     if (!network) {
@@ -54,15 +37,15 @@
     circlesConfig = await getCirclesConfig(network.chainId);
 
     // Initialize the Circles SDK and set it as $circles to make it globally available.
-    $circles = new Sdk(safeContractRunner!, circlesConfig);
+    $circles = new Sdk($wallet!, circlesConfig);
 
     const avatarInfo = await $circles.data.getAvatarInfo(
-      safeContractRunner.address!
+      $wallet.address!
     );
 
     // If the signer address is already a registered Circles wallet, go straight to the dashboard.
     if (avatarInfo) {
-      $avatar = await $circles.getAvatar(safeContractRunner.address!);
+      $avatar = await $circles.getAvatar($wallet.address!);
       await goto('/dashboard');
     } else {
       await goto('/register');

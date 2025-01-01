@@ -8,6 +8,7 @@
   import { BrowserProviderContractRunner } from '@circles-sdk/adapter-ethers';
   import { onMount } from 'svelte';
   import WalletLoader from '$lib/components/WalletLoader.svelte';
+  import { initializeWallet } from '$lib/utils/wallet';
 
   const GNOSIS_CHAIN_ID_HEX = '0x64'; // Hexadecimal format for MetaMask request
   const GNOSIS_CHAIN_ID_DEC = 100n; // Decimal format for BrowserProvider
@@ -19,11 +20,7 @@
     localStorage.removeItem('usePK');
     localStorage.setItem('useMM', 'true');
 
-    const wallet = new BrowserProviderContractRunner();
-    await wallet.init();
-
-    // Set wallet provider
-    $wallet = wallet;
+    $wallet = await initializeWallet('metamask');
 
     const network = await $wallet.provider?.getNetwork();
     if (!network) {
@@ -41,8 +38,6 @@
     $circles = new Sdk($wallet!, circlesConfig);
 
     const avatarInfo = await $circles.data.getAvatarInfo($wallet.address!);
-    localStorage.setItem('wallet', JSON.stringify($wallet.address!));
-    console.log(avatarInfo);
 
     // If the signer address is already a registered Circles wallet, go straight to the dashboard.
     if (avatarInfo) {
