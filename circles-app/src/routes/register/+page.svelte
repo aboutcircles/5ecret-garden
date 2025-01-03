@@ -1,12 +1,11 @@
 <script lang="ts">
-  import Avatar from '$lib/components/Avatar.svelte';
   import { onMount } from 'svelte';
   import { circles } from '$lib/stores/circles';
   import { wallet } from '$lib/stores/wallet';
   import { goto } from '$app/navigation';
   import QrCode from '$lib/components/QrCode.svelte';
-  import ConnectWallet from '$lib/components/ConnectWallet.svelte';
   import Register from '$lib/components/Register.svelte';
+  import Avatar from '$lib/components/avatar/Avatar.svelte';
 
   let invitations: string[] = [];
   let showAdvanced: boolean = false;
@@ -105,7 +104,7 @@
           {#each invitations as inviter}
             <button class="btn my-6" on:click={() => acceptInvitation(inviter)}>
               by
-              <Avatar clickable={false} address={inviter}></Avatar>
+              <Avatar clickable={false} address={inviter} view="horizontal" />
             </button>
           {/each}
           <p class="font-semibold text-xl">

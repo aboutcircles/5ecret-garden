@@ -51,14 +51,14 @@
                 <span> -&gt; </span>
             {/if}
         {/each}
-    </div>
+        </div>
 {/if}
 
 <!-- Edge List -->
 <div>
     {#each $currentEdges as edge}
-        <div class="flex items-center justify-between p-2 bg-base-100 hover:bg-base-200 rounded-lg cursor-pointer"
-             on:click={() => moveToNode(edge.to)}>
+        <button type="button" class="flex items-center justify-between p-2 bg-base-100 hover:bg-base-200 rounded-lg cursor-pointer"
+                on:click={() => moveToNode(edge.to)} aria-label="Move to node">
             <Avatar address={edge.tokenOwner} clickable={false} view="horizontal">
                 To: {shortenAddress(edge.to)}
             </Avatar>
@@ -68,7 +68,7 @@
                     <img src="/chevron-right.svg" alt="Chevron Right" class="w-4"/>
                 {/if}
             </div>
-        </div>
+        </button>
     {/each}
 
     {#if $currentEdges.length === 0}

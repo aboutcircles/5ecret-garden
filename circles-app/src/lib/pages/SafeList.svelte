@@ -1,20 +1,11 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
-  import Avatar from '$lib/components/Avatar.svelte';
-  import { avatar } from '$lib/stores/avatar';
-  import { circles } from '$lib/stores/circles';
   import { shortenAddress } from '$lib/utils/shared';
-  import {
-    SafeSdkBrowserContractRunner,
-    SafeSdkPrivateKeyContractRunner,
-  } from '@circles-sdk/adapter-safe';
-  import { Sdk, type CirclesConfig } from '@circles-sdk/sdk';
+  import { SafeSdkBrowserContractRunner } from '@circles-sdk/adapter-safe';
   import { onMount } from 'svelte';
   import { ethers } from 'ethers6';
-  import { chiadoConfig, gnosisConfig } from '$lib/chiadoConfig';
   import { wallet } from '$lib/stores/wallet';
-  import ConnectWallet from '$lib/components/ConnectWallet.svelte';
   import ConnectSafe from '$lib/components/ConnectSafe.svelte';
+  import Avatar from '$lib/components/avatar/Avatar.svelte';
 
   let safes: string[] = [];
 
@@ -51,10 +42,10 @@
 </script>
 
 {#each safes ?? [] as item (item)}
-  <ConnectSafe item={item}>
-        <Avatar address={item.toLowerCase()} clickable={false}>
-          {shortenAddress(item.toLowerCase())}
-        </Avatar>
+  <ConnectSafe {item}>
+    <Avatar address={item.toLowerCase()} clickable={false} view="horizontal">
+      {shortenAddress(item.toLowerCase())}
+    </Avatar>
   </ConnectSafe>
 {/each}
 {#if (safes ?? []).length === 0}
