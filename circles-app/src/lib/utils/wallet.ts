@@ -6,6 +6,7 @@ import { Sdk } from '@circles-sdk/sdk';
 import { goto } from '$app/navigation';
 import { SafeSdkBrowserContractRunner, SafeSdkPrivateKeyContractRunner } from '@circles-sdk/adapter-safe';
 import { gnosisConfig } from '$lib/chiadoConfig';
+import { getCirclesConfig } from './helpers';
 
 const GNOSIS_CHAIN_ID_DEC = 100n;
 
@@ -53,17 +54,6 @@ export async function restoreWallet() {
         await goto('/connect-wallet');
     }
 }
-
-
-async function getCirclesConfig(chainId: bigint) {
-    if (chainId === 100n) {
-        return (await import('$lib/chiadoConfig')).gnosisConfig;
-    } else if (chainId === 10200n) {
-        return (await import('$lib/chiadoConfig')).chiadoConfig;
-    }
-    throw new Error(`Unsupported chain-id: ${chainId}`);
-}
-
 
 export async function initializeWallet(type: string, address?: string) {
     localStorage.setItem('walletType', type);

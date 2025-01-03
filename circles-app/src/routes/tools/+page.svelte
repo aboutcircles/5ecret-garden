@@ -1,16 +1,10 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import { ethers, MaxUint256 } from 'ethers6';
-  import { avatar } from '$lib/stores/avatar';
   import { circles } from '$lib/stores/circles';
-  import type { Avatar } from '@circles-sdk/sdk';
-  import type { GroupProfile } from '@circles-sdk/profiles';
-  import Profile from '../settings/editors/Profile.svelte';
 
   let mintPolicyAddress: string =
     $circles?.circlesConfig.baseGroupMintPolicy ?? '';
-  $: mintPolicyAddressIsValid = ethers.isAddress(mintPolicyAddress);
 
   let fromAddress: string = '';
   let toAddress: string = '';

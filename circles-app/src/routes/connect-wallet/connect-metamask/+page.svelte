@@ -9,6 +9,7 @@
   import { onMount } from 'svelte';
   import WalletLoader from '$lib/components/WalletLoader.svelte';
   import { initializeWallet } from '$lib/utils/wallet';
+  import { getCirclesConfig } from '$lib/utils/helpers';
 
   const GNOSIS_CHAIN_ID_HEX = '0x64'; // Hexadecimal format for MetaMask request
   const GNOSIS_CHAIN_ID_DEC = 100n; // Decimal format for BrowserProvider
@@ -45,24 +46,6 @@
       await goto('/dashboard');
     } else {
       await goto('/register');
-    }
-  }
-
-  //
-  // Gets the Circles configuration based on the chain ID.
-  //
-  async function getCirclesConfig(chainId: bigint): Promise<CirclesConfig> {
-    console.log('Resolved chain ID:', chainId); // Debugging output
-
-    // Check for supported chain IDs
-    if (chainId === 100n) {
-      return gnosisConfig;
-    } else if (chainId === 10200n) {
-      return chiadoConfig;
-    } else {
-      // Call switchOrAddGnosisNetwork for unsupported chain IDs and then throw an error
-      await switchOrAddGnosisNetwork();
-      throw new Error(`Unsupported chain-id: ${chainId}`);
     }
   }
 

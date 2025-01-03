@@ -27,3 +27,12 @@ export function formatTrustRelation(row: TrustRelationRow, profile?: Profile) {
       return "You don't trust each other";
   }
 }
+
+export async function getCirclesConfig(chainId: bigint) {
+    if (chainId === 100n) {
+        return (await import('$lib/chiadoConfig')).gnosisConfig;
+    } else if (chainId === 10200n) {
+        return (await import('$lib/chiadoConfig')).chiadoConfig;
+    }
+    throw new Error(`Unsupported chain-id: ${chainId}`);
+}

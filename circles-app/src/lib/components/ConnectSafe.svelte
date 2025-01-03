@@ -1,30 +1,15 @@
 <script lang="ts">
-  import { chiadoConfig, gnosisConfig } from '$lib/chiadoConfig';
-  import {
-    SafeSdkBrowserContractRunner,
-    SafeSdkPrivateKeyContractRunner,
-  } from '@circles-sdk/adapter-safe';
   import { wallet } from '$lib/stores/wallet';
   import { avatar } from '$lib/stores/avatar';
   import { circles } from '$lib/stores/circles';
   import { Sdk, type CirclesConfig } from '@circles-sdk/sdk';
   import { goto } from '$app/navigation';
   import { initializeWallet } from '$lib/utils/wallet';
+  import { getCirclesConfig } from '$lib/utils/helpers';
 
   export let item: string;
 
   let circlesConfig: CirclesConfig;
-
-  async function getCirclesConfig(chainId: bigint): Promise<CirclesConfig> {
-    switch (chainId) {
-      case 100n:
-        return gnosisConfig;
-      case 10200n:
-        return chiadoConfig;
-      default:
-        throw new Error(`Unsupported chain-id: ${chainId}`);
-    }
-  }
 
   async function connectWallet(safeAddress: string) {
 
