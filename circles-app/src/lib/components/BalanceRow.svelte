@@ -1,5 +1,4 @@
 <script lang="ts">
-  import Avatar from '$lib/components/Avatar.svelte';
   import { tokenTypeToString } from '$lib/pages/SelectAsset.svelte';
   import { avatar } from '$lib/stores/avatar';
   import { crcTypes, roundToDecimals, staticTypes } from '$lib/utils/shared';
@@ -9,16 +8,15 @@
   import UnwrapTokens from '$lib/pages/UnwrapTokens.svelte';
   import ExitGroup from '$lib/pages/ExitGroup.svelte';
   import { popupControls } from './PopUp.svelte';
+  import Avatar from './avatar/Avatar.svelte';
 
   export let balance: TokenBalanceRow;
 </script>
 
 <div class="flex items-center justify-between p-2 rounded-lg">
   <div class="col">
-    <Avatar address={balance.tokenOwner}>
-      <span>
-        {tokenTypeToString(balance.tokenType)}
-      </span>
+    <Avatar address={balance.tokenOwner} view="horizontal" clickable={false}>
+      {tokenTypeToString(balance.tokenType)}
     </Avatar>
   </div>
 
@@ -49,7 +47,7 @@
       >
         {#if balance.tokenType == 'CrcV2_RegisterHuman' || balance.tokenType == 'CrcV2_RegisterGroup' || balance.tokenType == 'CrcV2_RegisterGroup'}
           <button
-          tabIndex={0}
+            tabIndex={0}
             class="md:btn md:btn-xs md:btn-round text-xs font-medium w-44 md:w-auto h-12 md:h-auto flex md:block items-center max-sm:p-4 gap-x-2"
             on:click={() => {
               $popupControls.open?.({

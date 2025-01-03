@@ -9,11 +9,11 @@
   import type { Profile } from '@circles-sdk/profiles';
   import { ethers } from 'ethers6';
   import { createEventDispatcher } from 'svelte';
-  import Avatar from '$lib/components/Avatar.svelte';
   import type { ContactList } from '$lib/stores/contacts';
   import { shortenAddress } from '$lib/utils/shared';
   import type { Readable } from 'svelte/store';
   import AddressInput from '$lib/components/AddressInput.svelte';
+  import Avatar from '$lib/components/avatar/Avatar.svelte';
 
   export let store:
     | Readable<{
@@ -111,7 +111,7 @@
           selected(address, $store?.data[address].contactProfile);
         }}
       >
-        <Avatar {address}>{shortenAddress(address)}</Avatar>
+        <Avatar {address} view="horizontal">{shortenAddress(address)}</Avatar>
         <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
       </button>
     {/each}

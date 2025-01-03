@@ -3,11 +3,11 @@
   import { onMount } from 'svelte';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import type { MigrateToV2Context } from '$lib/flows/migrateToV2/context';
-  import Avatar from '$lib/components/Avatar.svelte';
   import { contacts } from '$lib/stores/contacts';
   import Migrate from './3_Migrate.svelte';
   import type { TrustRelationRow } from '@circles-sdk/data';
   import { formatTrustRelation } from '$lib/utils/helpers';
+  import Avatar from '$lib/components/avatar/Avatar.svelte';
 
   export let contentApi: PopupContentApi;
   export let context: MigrateToV2Context;
@@ -82,7 +82,7 @@
             : undefined}
           {address}
           clickable={false}
-        >
+         view="horizontal">
           <div>
             {#if $contacts?.data[address].row.relation === 'trusts'}
               <img

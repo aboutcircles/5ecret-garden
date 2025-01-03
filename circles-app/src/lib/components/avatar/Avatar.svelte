@@ -79,7 +79,6 @@
       });
     }
   }, 20);
-
 </script>
 
 <script lang="ts">
@@ -98,9 +97,7 @@
 
   export let address: string;
   export let clickable: boolean = true;
-  export let view:
-    | 'horizontal'
-    | 'vertical'
+  export let view: 'horizontal' | 'vertical';
   export let contentApi: PopupContentApi | undefined = undefined;
   export let pictureOverlayUrl: string | undefined = undefined;
   export let topInfo: string | undefined = undefined;
@@ -137,7 +134,7 @@
     profile = await getProfile(address);
   }
 
-  console.log('this avatar')
+  console.log('this avatar');
 </script>
 
 {#if !profile}
@@ -166,7 +163,7 @@
     {bottomInfo}
   />
 {/if}
-  <!-- <VerticalAvatarLayout
+<!-- <VerticalAvatarLayout
     on:click={openAvatar}
     {profile}
     {trustVersion}

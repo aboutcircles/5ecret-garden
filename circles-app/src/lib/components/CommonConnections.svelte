@@ -4,8 +4,8 @@
     import {avatar} from "$lib/stores/avatar";
     import {circles} from "$lib/stores/circles";
     import type {Profile} from "@circles-sdk/profiles";
-    import Avatar from "$lib/components/Avatar.svelte";
   import { getProfile } from "$lib/utils/profile";
+  import Avatar from "./avatar/Avatar.svelte";
 
     export let otherAvatarAddress: string;
     export let contentApi: any;
@@ -69,7 +69,7 @@
 <ul class="w-full divide-y p-4">
     {#each commonContacts as contact(contact)}
         <li class="w-full flex items-center justify-between px-0 py-4">
-            <Avatar contentApi={contentApi} address={contact}>
+            <Avatar contentApi={contentApi} address={contact} view="horizontal">
                 <!-- {contact} -->
             </Avatar>
         </li>

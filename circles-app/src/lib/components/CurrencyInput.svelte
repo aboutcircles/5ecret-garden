@@ -2,9 +2,9 @@
   import { onMount } from 'svelte';
   import IMask from 'imask';
   import type { TokenBalanceRow } from '@circles-sdk/data';
-  import Avatar from '$lib/components/Avatar.svelte';
   import { tokenTypeToString } from '$lib/pages/SelectAsset.svelte';
   import { roundToDecimals } from '$lib/utils/shared';
+  import Avatar from './avatar/Avatar.svelte';
 
   export let balanceRow: TokenBalanceRow;
   export let amount: number = 0;
@@ -68,7 +68,7 @@
   <Avatar
     address={balanceRow?.tokenOwner}
     clickable={false}
-    view="horizontal_small"
+    view="horizontal"
   >
     {tokenTypeToString(balanceRow?.tokenType)}
   </Avatar>
@@ -91,7 +91,7 @@
     <Avatar
       address={balanceRow?.tokenOwner}
       clickable={false}
-      view="horizontal_small"
+      view="horizontal"
     >
       {tokenTypeToString(balanceRow?.tokenType)}
     </Avatar>

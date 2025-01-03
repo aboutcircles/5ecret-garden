@@ -1,9 +1,9 @@
 <script lang="ts">
     import { get, writable } from 'svelte/store';
-    import Avatar from '$lib/components/Avatar.svelte';
     import { shortenAddress } from '$lib/utils/shared';
     import { ethers } from 'ethers'; // Import ethers.js for wei to eth conversion
     import type { TransferPathStep } from "@circles-sdk/sdk/dist/v2/pathfinderV2";
+  import Avatar from './avatar/Avatar.svelte';
 
     export let graph: TransferPathStep[] = [];
     export let startNode = ""; // The starting node of the graph
@@ -59,7 +59,7 @@
     {#each $currentEdges as edge}
         <div class="flex items-center justify-between p-2 bg-base-100 hover:bg-base-200 rounded-lg cursor-pointer"
              on:click={() => moveToNode(edge.to)}>
-            <Avatar address={edge.tokenOwner} clickable={false}>
+            <Avatar address={edge.tokenOwner} clickable={false} view="horizontal">
                 To: {shortenAddress(edge.to)}
             </Avatar>
             <div class="flex items-center gap-2">

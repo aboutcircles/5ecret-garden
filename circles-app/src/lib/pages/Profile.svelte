@@ -1,7 +1,6 @@
 <script lang="ts">
   import { circles } from '$lib/stores/circles';
   import type { Profile } from '@circles-sdk/profiles';
-  import Avatar from '$lib/components/Avatar.svelte';
   import { avatar } from '$lib/stores/avatar';
   import CommonConnections from '$lib/components/CommonConnections.svelte';
   import { shortenAddress } from '$lib/utils/shared';
@@ -15,6 +14,7 @@
   import { getProfile } from '$lib/utils/profile';
   import { formatTrustRelation, getTypeString } from '$lib/utils/helpers';
   import { onMount } from 'svelte';
+  import Avatar from '$lib/components/avatar/Avatar.svelte';
 
   export let address: string | undefined;
   export let contentApi: PopupContentApi | undefined;
@@ -143,7 +143,7 @@
       <img src="/send-new.svg" alt="Send" class="w-5 h-5" />
       Send
     </button>
-    {#if trustRow?.relation === 'trustedBy' && otherAvatar.type === 'CrcV2_RegisterGroup'}
+    {#if trustRow?.relation === 'trustedBy' && otherAvatar?.type === 'CrcV2_RegisterGroup'}
       <button
         class="btn bg-[#F3F4F6] border-none"
         on:click={() => {
@@ -264,13 +264,7 @@
           <button
             class="flex w-full items-center justify-between p-4 bg-base-100 hover:bg-base-200"
           >
-            <Avatar address={member} {contentApi}>
-              <!-- <div>
-                              {#if $contacts?.data[address]}
-                                  <span class="text-[#6B7280]">{formatTrustRelation($contacts.data[address].row)}</span>
-                              {/if}
-                          </div> -->
-            </Avatar>
+            <Avatar address={member} {contentApi} view="horizontal" />
             <div class="font-medium underline flex gap-x-2">
               <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
             </div>
