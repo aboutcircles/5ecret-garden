@@ -91,14 +91,12 @@
   <Avatar
     view="vertical"
     clickable={false}
-    address={otherAvatar?.avatar}
-    {trustVersion}
+    address={otherAvatar?.avatar || ''}
   ></Avatar>
 
   {#if trustRow}
     <span
       class="text-sm"
-      class:text-red-500={trustRow.relation === 'variesByVersion'}
       class:text-green-600={trustRow?.relation === 'trusts' ||
         trustRow?.relation === 'trustedBy' ||
         trustRow?.relation === 'mutuallyTrusts'}
@@ -111,7 +109,7 @@
 
   <div class="my-6 flex flex-row gap-x-2">
     <span class="bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm"
-      >{getTypeString(otherAvatar?.type)}</span
+      >{getTypeString(otherAvatar?.type || '')}</span
     >
     <button
       on:click={handleCopy}
