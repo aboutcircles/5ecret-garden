@@ -16,9 +16,9 @@
   import { onMount } from 'svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
 
-    export let address: string | undefined;
-    export let contentApi: PopupContentApi | undefined;
-    export let trustVersion: number | undefined;
+  export let address: string | undefined;
+  export let contentApi: PopupContentApi | undefined;
+  export let trustVersion: number | undefined;
 
   onMount(() => {
     if (address) {
@@ -29,20 +29,19 @@
   let otherAvatar: AvatarRow | undefined;
   let profile: Profile | undefined;
   let members: string[] | undefined = undefined;
-  let activeTab = 'common_connections';
-  
+
   let trustRow: TrustRelationRow | undefined;
 
-    async function initialize(address?: string) {
-        if (!address) {
-            return;
-        }
-        if (!$circles) {
-            return;
-        }
-        if (!$avatar) {
-            return;
-        }
+  async function initialize(address?: string) {
+    if (!address) {
+      return;
+    }
+    if (!$circles) {
+      return;
+    }
+    if (!$avatar) {
+      return;
+    }
 
     otherAvatar = await $circles.data.getAvatarInfo(address);
     profile = otherAvatar ? await getProfile(otherAvatar.avatar) : undefined;
@@ -53,27 +52,25 @@
       trustRow = undefined;
     }
 
-        if (otherAvatar?.type === 'CrcV2_RegisterGroup') {
-            // load the members
-            const groupTrustRelations =
-                await $circles.data.getAggregatedTrustRelations(otherAvatar.avatar);
-            members = groupTrustRelations
-                .filter((row) => row.relation === 'trusts')
-                .map((o) => o.objectAvatar);
-        } else {
-            members = undefined;
-        }
+    if (otherAvatar?.type === 'CrcV2_RegisterGroup') {
+      // load the members
+      const groupTrustRelations =
+        await $circles.data.getAggregatedTrustRelations(otherAvatar.avatar);
+      members = groupTrustRelations
+        .filter((row) => row.relation === 'trusts')
+        .map((o) => o.objectAvatar);
+    } else {
+      members = undefined;
+    }
 
-        if (!profile) {
-            profile = {
-                name: otherAvatar?.name ?? address,
-            };
-        }
-
-    activeTab = 'common_connections';
+    if (!profile) {
+      profile = {
+        name: otherAvatar?.name ?? address,
+      };
+    }
   }
 
-    let commonConnectionsCount = 0;
+  let commonConnectionsCount = 0;
 
   let copyIcon = '/copy.svg';
 
@@ -88,10 +85,7 @@
 </script>
 
 <div class="flex flex-col items-center w-full sm:w-[90%] lg:w-3/5 mx-auto">
-  <Avatar
-    view="vertical"
-    clickable={false}
-    address={otherAvatar?.avatar || ''}
+  <Avatar view="vertical" clickable={false} address={otherAvatar?.avatar || ''}
   ></Avatar>
 
   {#if trustRow}
@@ -118,15 +112,16 @@
       {shortenAddress(otherAvatar?.avatar)}
       <img src={copyIcon} alt="Copy" class="w-4 h-4 inline" />
     </button>
+    <a href={"https://gnosisscan.io/address/" + otherAvatar?.avatar} target="_blank" class="bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm">#</a>
   </div>
 
-    <div class="w-[80%] sm:w-[60%] border-b border-[#E5E7EB]"></div>
+  <div class="w-[80%] sm:w-[60%] border-b border-[#E5E7EB]"></div>
 
-    <!-- Updated Button Layout: Flex Row for Horizontal Alignment -->
-    <div class="w-full flex justify-center mt-6 space-x-6">
-        <button
-                class="btn btn-primary text-white"
-                on:click={() => {
+  <!-- Updated Button Layout: Flex Row for Horizontal Alignment -->
+  <div class="w-full flex justify-center mt-6 space-x-6">
+    <button
+      class="btn btn-primary text-white"
+      on:click={() => {
         contentApi?.open?.({
           title: 'Send Circles',
           component: SelectAsset,
@@ -200,13 +195,13 @@
             },
           });
         }}
-            >
-                Trust back
-            </button>
-        {:else}
-            <button
-                    class="btn bg-[#F3F4F6] border-none"
-                    on:click={() => {
+      >
+        Trust back
+      </button>
+    {:else}
+      <button
+        class="btn bg-[#F3F4F6] border-none"
+        on:click={() => {
           contentApi?.open?.({
             title: 'Trust',
             component: Trust,
@@ -215,11 +210,11 @@
             },
           });
         }}
-            >
-                Trust
-            </button>
-        {/if}
-    </div>
+      >
+        Trust
+      </button>
+    {/if}
+  </div>
 </div>
 
 <div role="tablist" class="tabs tabs-bordered w-full p-0 my-10">
@@ -230,7 +225,6 @@
     role="tab"
     class="tab h-auto"
     aria-label={`Common connections (${commonConnectionsCount})`}
-    bind:group={activeTab}
   />
   <div role="tabpanel" class="tab-content mt-8 bg-base-100 border-none">
     <div class="w-full border-base-300 rounded-box border">
@@ -250,7 +244,6 @@
       role="tab"
       class="tab h-auto"
       aria-label={`Members (${members.length})`}
-      bind:group={activeTab}
     />
     <div
       role="tabpanel"
