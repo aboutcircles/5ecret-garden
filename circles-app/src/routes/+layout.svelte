@@ -102,8 +102,8 @@
 {/if}
 
 <main class="relative w-full h-full bg-white overflow-hidden font-dmSans">
-  {#if $avatar && canMigrate($avatar.avatarInfo) && $page.route.id !== '/migrate-to-v2'}
-    <UpdateBanner></UpdateBanner>
+  {#if $avatar?.avatarInfo && canMigrate($avatar.avatarInfo) && $page.route.id !== '/migrate-to-v2'}
+    <UpdateBanner />
     <div class="h-20"></div>
   {/if}
 

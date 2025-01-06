@@ -82,15 +82,12 @@
 </script>
 
 <script lang="ts">
-  // import VerticalAvatarLayout from '$lib/components/avatar_/VerticalAvatarLayout.svelte';
   import type {
     PopupContentApi,
     PopupContentDefinition,
   } from '$lib/components/PopUp.svelte';
   import ProfilePage from '$lib/pages/Profile.svelte';
   import { popupControls } from '$lib/components/PopUp.svelte';
-  // import TransactionRowAvatarLayout from './avatar_/TransactionRowAvatarLayout.svelte';
-  // import HorizontalSmallAvatarLayout from './avatar_/HorizontalSmallAvatarLayout.svelte';
   import { getProfile } from '$lib/utils/profile';
   import type { SvelteComponent } from 'svelte';
   import HorizontalAvatarLayout from './HorizontalAvatarLayout.svelte';
@@ -102,7 +99,6 @@
   export let pictureOverlayUrl: string | undefined = undefined;
   export let topInfo: string | undefined = undefined;
   export let bottomInfo: string | undefined = undefined;
-  // export let trustVersion: number | undefined = undefined;
 
   let profile: Profile | undefined;
 
@@ -163,36 +159,3 @@
     {bottomInfo}
   />
 {/if}
-<!-- <VerticalAvatarLayout
-    on:click={openAvatar}
-    {profile}
-    {trustVersion}
-  >
-    <slot></slot>
-  </VerticalAvatarLayout> -->
-<!-- {:else if view === 'transaction_row'}
-  <TransactionRowAvatarLayout
-    {pictureOverlayUrl}
-    on:click={openAvatar}
-    {profile}
-    {date}
-  >
-    <slot></slot>
-  </TransactionRowAvatarLayout>
-  {:else if view === 'horizontal_small'}
-  <HorizontalSmallAvatarLayout
-    on:click={openAvatar}
-    {profile}
-  >
-    <slot></slot>
-  </HorizontalSmallAvatarLayout> -->
-<!-- {:else}
-  <HorizontalAvatarLayout
-    {pictureOverlayUrl}
-    on:click={openAvatar}
-    {profile}
-    {trustVersion}
-  >
-    <slot></slot>
-  </HorizontalAvatarLayout> -->
-<!-- {/if} -->

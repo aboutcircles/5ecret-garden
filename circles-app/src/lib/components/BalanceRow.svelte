@@ -13,16 +13,17 @@
   export let balance: TokenBalanceRow;
 </script>
 
-<div class="flex items-center justify-between p-2 rounded-lg">
-  <div class="col">
-    <Avatar address={balance.tokenOwner} view="horizontal" clickable={false}>
-      {tokenTypeToString(balance.tokenType)}
-    </Avatar>
-  </div>
+<div class="flex items-center justify-between pt-2 rounded-lg">
+  <Avatar
+    address={balance.tokenOwner}
+    view="horizontal"
+    clickable={false}
+    bottomInfo={tokenTypeToString(balance.tokenType)}
+  ></Avatar>
 
   <div class="flex md:flex-row-reverse gap-x-2 md:gap-x-4">
-    <div class="col text-right">
-      <span class="font-medium">{roundToDecimals(balance.circles)}</span> CRC
+    <div class="font-medium flex flex-col">
+      {roundToDecimals(balance.circles)} CRC
       <p class="text-xs text-gray-500">
         {#if staticTypes.has(balance.tokenType)}
           {roundToDecimals(balance.staticCircles)} Static Circles
