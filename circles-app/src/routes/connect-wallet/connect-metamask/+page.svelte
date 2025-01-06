@@ -1,14 +1,11 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { wallet } from '$lib/stores/wallet';
+  import { initializeWallet, wallet } from '$lib/stores/wallet';
   import { circles } from '$lib/stores/circles';
   import { avatar } from '$lib/stores/avatar';
-  import { type CirclesConfig, Sdk } from '@circles-sdk/sdk';
-  import { chiadoConfig, gnosisConfig } from '$lib/chiadoConfig';
-  import { BrowserProviderContractRunner } from '@circles-sdk/adapter-ethers';
+  import { Sdk } from '@circles-sdk/sdk';
   import { onMount } from 'svelte';
   import WalletLoader from '$lib/components/WalletLoader.svelte';
-  import { initializeWallet } from '$lib/utils/wallet';
   import { getCirclesConfig } from '$lib/utils/helpers';
 
   const GNOSIS_CHAIN_ID_HEX = '0x64'; // Hexadecimal format for MetaMask request

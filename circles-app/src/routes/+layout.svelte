@@ -13,7 +13,7 @@
 
   import DefaultHeader from '$lib/components/DefaultHeader.svelte';
   import { avatar } from '$lib/stores/avatar';
-  import { wallet } from '$lib/stores/wallet';
+  import { clearSession, restoreWallet, wallet } from '$lib/stores/wallet';
   import { canMigrate } from '$lib/guards/canMigrate';
   import UpdateBanner from '$lib/components/UpdateBanner.svelte';
   import { page } from '$app/stores';
@@ -23,7 +23,6 @@
   import MintGroupTokens from '$lib/flows/mintGroupTokens/1_To.svelte';
   import { onMount } from 'svelte';
   import { tasks } from '$lib/utils/tasks';
-  import { clearSession, restoreWallet } from '$lib/utils/wallet';
   import { loadProfile, profile } from '$lib/stores/profile';
 
   let quickAction: QuickAction | undefined;

@@ -1,10 +1,9 @@
 <script lang="ts">
-  import { wallet } from '$lib/stores/wallet';
+  import { initializeWallet, wallet } from '$lib/stores/wallet';
   import { avatar } from '$lib/stores/avatar';
   import { circles } from '$lib/stores/circles';
   import { Sdk, type CirclesConfig } from '@circles-sdk/sdk';
   import { goto } from '$app/navigation';
-  import { initializeWallet } from '$lib/utils/wallet';
   import { getCirclesConfig } from '$lib/utils/helpers';
 
   export let item: string;
