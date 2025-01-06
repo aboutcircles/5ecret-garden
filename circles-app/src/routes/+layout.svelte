@@ -23,7 +23,7 @@
   import MintGroupTokens from '$lib/flows/mintGroupTokens/1_To.svelte';
   import { onMount } from 'svelte';
   import { tasks } from '$lib/utils/tasks';
-  import { restoreWallet } from '$lib/utils/wallet';
+  import { clearSession, restoreWallet } from '$lib/utils/wallet';
   import { loadProfile, profile } from '$lib/stores/profile';
 
   let quickAction: QuickAction | undefined;
@@ -78,7 +78,11 @@
   });
 
   onMount(() => {
-    restoreWallet();
+    if ($page.route.id === '/' || $page.route.id === '/connect-wallet') {
+      clearSession();
+    } else {
+      restoreWallet();
+    }
   });
 
   $: quickAction = quickActionsMap[$page.route.id ?? ''] || undefined;

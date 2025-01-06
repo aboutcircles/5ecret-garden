@@ -79,3 +79,12 @@ export async function initializeWallet(type: string, address?: string) {
     throw new Error(`Unsupported wallet type: ${type}`);
 }
 
+
+export function clearSession() {
+    localStorage.clear();
+
+    avatar.set(undefined);
+    wallet.set(undefined);
+    circles.set(undefined);
+}
+

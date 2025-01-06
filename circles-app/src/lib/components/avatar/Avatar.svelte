@@ -90,8 +90,8 @@
   import { popupControls } from '$lib/components/PopUp.svelte';
   import { getProfile } from '$lib/utils/profile';
   import type { SvelteComponent } from 'svelte';
-  import HorizontalAvatarLayout from '$lib/components/Avatar/HorizontalAvatarLayout.svelte';
-  import VerticalAvatarLayout from '$lib/components/Avatar/VerticalAvatarLayout.svelte';
+  import HorizontalAvatarLayout from './HorizontalAvatarLayout.svelte';
+  import VerticalAvatarLayout from './VerticalAvatarLayout.svelte';
 
   export let address: string;
   export let clickable: boolean = true;
