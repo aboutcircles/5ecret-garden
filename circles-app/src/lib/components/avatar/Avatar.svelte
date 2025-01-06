@@ -90,7 +90,8 @@
   import { popupControls } from '$lib/components/PopUp.svelte';
   import { getProfile } from '$lib/utils/profile';
   import type { SvelteComponent } from 'svelte';
-  import HorizontalAvatarLayout from './HorizontalAvatarLayout.svelte';
+  import HorizontalAvatarLayout from '$lib/components/Avatar/HorizontalAvatarLayout.svelte';
+  import VerticalAvatarLayout from '$lib/components/Avatar/VerticalAvatarLayout.svelte';
 
   export let address: string;
   export let clickable: boolean = true;
@@ -130,7 +131,7 @@
     profile = await getProfile(address);
   }
 
-  console.log('this avatar');
+  console.log('this avatar', view);
 </script>
 
 {#if !profile}
@@ -151,11 +152,8 @@
     {bottomInfo}
   />
 {:else}
-  <HorizontalAvatarLayout
-    {pictureOverlayUrl}
+  <VerticalAvatarLayout
     on:click={openAvatar}
     {profile}
-    {topInfo}
-    {bottomInfo}
   />
 {/if}
