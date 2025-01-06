@@ -10,7 +10,7 @@
     ContactList,
     ExtendedTrustRelationRow,
   } from '$lib/stores/contacts';
-  import Migrate from './3_Migrate.svelte';
+  import Migrate from './4_Migrate.svelte';
 
   export let contentApi: PopupContentApi;
   export let context: MigrateToV2Context;
