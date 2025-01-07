@@ -130,8 +130,6 @@
   async function initialize() {
     profile = await getProfile(address);
   }
-
-  console.log('this avatar', view);
 </script>
 
 {#if !profile}

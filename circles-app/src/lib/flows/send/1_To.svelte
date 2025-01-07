@@ -3,8 +3,6 @@
   import SelectContact from '$lib/pages/SelectContact.svelte';
   import { contacts } from '$lib/stores/contacts';
   import type { Profile } from '@circles-sdk/profiles';
-  import { onMount } from 'svelte';
-  import { type Readable } from 'svelte/store';
   import SelectAsset from './2_Asset.svelte';
   import Amount from './3_Amount.svelte';
   import type { SendFlowContext } from '$lib/flows/send/context';
@@ -13,15 +11,18 @@
   import { avatar } from '$lib/stores/avatar';
   import { circles } from '$lib/stores/circles';
 
-  let contentApi: PopupContentApi;
-  let context: SendFlowContext;
+  export let contentApi: PopupContentApi;
+  export let context: SendFlowContext;
   let allowAssetSelection: boolean = false;
 
   async function handleSelect(
     event: CustomEvent<{ address: string; profile: Profile }>
   ) {
+    console.log(context);
+
     context.selectedAddress = event.detail.address;
     context.selectedAsset = transitiveTransfer();
+    
 
     if (
       !$circles ||
@@ -65,7 +66,7 @@
   {#if contacts}
     <SelectContact
       store={contacts}
-      selectedAddress={context?.selectedAddress}
+      selectedAddress={context.selectedAddress}
       on:select={handleSelect}
     />
   {/if}

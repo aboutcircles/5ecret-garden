@@ -70,6 +70,7 @@
     },
   };
 
+  //TODO: the profile store is not useful yet, we should remove it or use it accross the app
   avatar.subscribe(async ($avatar) => {
     if ($avatar) {
       loadProfile($avatar);

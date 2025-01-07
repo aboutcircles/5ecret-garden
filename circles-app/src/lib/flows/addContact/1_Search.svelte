@@ -26,6 +26,7 @@
 
   async function handleSelect(event: CustomEvent<AvatarRow>) {
     context.selectedAddress = event.detail.avatar;
+    console.log(context);
     console.log('Selected Address', event.detail.avatar);
     const existingContact = $contacts.data[context.selectedAddress];
     console.log('Existing Contact', existingContact);

@@ -45,6 +45,7 @@ export async function restoreWallet() {
 
         if (!walletType || !savedWalletAddress) {
             console.log("No wallet found in localStorage");
+            await goto("/connect-wallet");
             return;
         }
 
