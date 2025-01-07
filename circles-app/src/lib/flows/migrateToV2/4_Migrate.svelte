@@ -23,7 +23,11 @@
 
     runTask({
       name: `Migrating your Avatar ...`,
-      promise: $circles.migrateAvatar($avatar.address, context.profile),
+      promise: $circles.migrateAvatar(
+        context.inviter ?? '0x0000000000000000000000000000000000000000',
+        $avatar.address,
+        context.profile
+      ),
     }).then(async () => {
       removeProfileFromCache($avatar!.address);
       $avatar!.avatarInfo!.version = 2;
