@@ -3,29 +3,17 @@
   import { onMount } from 'svelte';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import type { MigrateToV2Context } from '$lib/flows/migrateToV2/context';
-  import Avatar from '$lib/components/Avatar.svelte';
-  import { ensureContacts } from '../../../routes/+layout.svelte';
-  import type { Readable } from 'svelte/store';
-  import type {
-    ContactList,
-    ExtendedTrustRelationRow,
-  } from '$lib/stores/contacts';
   import Migrate from './4_Migrate.svelte';
+  import { contacts } from '$lib/stores/contacts';
+  import { formatTrustRelation } from '$lib/utils/helpers';
+  import Avatar from '$lib/components/avatar/Avatar.svelte';
 
   export let contentApi: PopupContentApi;
   export let context: MigrateToV2Context;
 
-  let contacts:
-    | Readable<{
-        data: ContactList;
-        next: () => Promise<boolean>;
-        ended: boolean;
-      }>
-    | undefined = undefined;
   let selectedAddresses: string[] = [];
 
   onMount(async () => {
-    contacts = await ensureContacts();
     selectedAddresses = context.trustList ?? Object.keys($contacts?.data ?? {});
     console.log('Selected addresses', selectedAddresses);
   });
@@ -38,21 +26,6 @@
         context: context,
       },
     });
-  }
-
-  function formatTrustRelation(row: ExtendedTrustRelationRow) {
-    switch (row.relation) {
-      case 'trusts':
-        return 'You accept their tokens';
-      case 'trustedBy':
-        return 'They accept your tokens';
-      case 'mutuallyTrusts':
-        return 'You accept each others tokens';
-      case 'selfTrusts':
-        return 'Self-trusted';
-      default:
-        return row.relation;
-    }
   }
 
   $: orderedContacts = Object.keys($contacts?.data ?? {}).sort((a, b) => {
@@ -90,7 +63,7 @@
   </p>
   <div class="mt-6">
     {#each orderedContacts as address}
-      <a
+      <button
         class="p-2 bg-base-100 hover:bg-base-200 rounded-lg items-center block"
         on:click={(e) => {
           console.log('Selected address', address);
@@ -109,6 +82,7 @@
             : undefined}
           {address}
           clickable={false}
+          view="horizontal"
         >
           <div>
             {#if $contacts?.data[address].row.relation === 'trusts'}
@@ -137,7 +111,7 @@
             {/if}
           </div>
         </Avatar>
-      </a>
+      </button>
     {/each}
     {#if orderedContacts.length === 0}
       <p class="text-center mt-4">No contacts to migrate</p>
