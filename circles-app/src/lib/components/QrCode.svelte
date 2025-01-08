@@ -1,22 +1,24 @@
 <script>
-	import { onMount } from 'svelte';
-	import QRCode from 'qrcode';
+  import { onMount } from 'svelte';
+  import QRCode from 'qrcode';
 
-	export let value = '';
-	let svg = '';
+  export let value = '';
+  let svg = '';
 
-	const generateQrCode = async () => {
-		svg = await QRCode.toString(value, { type: 'svg', width: "200" });
-		console.log(svg);
-	};
+  const generateQrCode = async () => {
+    svg = await QRCode.toString(value, { type: 'svg', width: 200 });
+    console.log(svg);
+  };
 
-	$: if (value) {
-		QRCode.toString(value, { type: 'svg' });
-	}
+  $: if (value) {
+    QRCode.toString(value, { type: 'svg' });
+  }
 
-	onMount(() => {
-		generateQrCode();
-	});
+  onMount(() => {
+    generateQrCode();
+  });
 </script>
 
-{@html svg}
+<div class="w-[200px]">
+  {@html svg}
+</div>

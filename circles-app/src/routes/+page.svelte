@@ -3,7 +3,7 @@
   import { goto } from '$app/navigation';
 
   async function connectWallet() {
-    goto('/_new/connect-wallet');
+    goto('/connect-wallet');
   }
 </script>
 

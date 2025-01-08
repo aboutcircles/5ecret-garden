@@ -86,7 +86,6 @@
     <SelectAmount
             maxAmountCircles={maxAmountCircles}
             asset={context.selectedAsset}
-            receiverAddress={context.selectedAddress}
             amount={context.amount}
             on:select={handleSelect}
     />

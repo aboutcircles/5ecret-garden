@@ -5,7 +5,7 @@
     import BalanceRow from "$lib/components/BalanceRow.svelte";
     import type {TokenBalanceRow} from "@circles-sdk/data";
     import {roundToDecimals} from "$lib/utils/shared";
-    import {runTask} from "../../routes/+layout.svelte";
+    import { runTask } from '$lib/utils/tasks';
     import type {PopupContentApi} from "$lib/components/PopUp.svelte";
 
     export let contentApi: PopupContentApi;

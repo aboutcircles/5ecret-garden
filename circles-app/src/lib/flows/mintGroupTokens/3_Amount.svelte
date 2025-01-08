@@ -25,7 +25,6 @@
     <p class="text-2xl font-bold mt-14">Enter Amount</p>
     <SelectAmount
             asset={context.selectedAsset}
-            receiverAddress={context.selectedAddress}
             amount={context.amount}
             on:select={handleSelect}/>
 </FlowDecoration>

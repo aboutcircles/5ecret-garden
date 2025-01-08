@@ -4,7 +4,7 @@
     import {avatar} from "$lib/stores/avatar";
     import type {TokenBalanceRow} from "@circles-sdk/data";
     import type {PopupContentApi} from "$lib/components/PopUp.svelte";
-    import {runTask} from "../../routes/+layout.svelte";
+    import { runTask } from '$lib/utils/tasks';
     import {tokenTypeToString} from "$lib/pages/SelectAsset.svelte";
 
     export let contentApi: PopupContentApi;

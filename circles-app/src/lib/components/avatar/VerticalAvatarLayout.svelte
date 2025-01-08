@@ -2,39 +2,21 @@
   import type { Profile } from '@circles-sdk/profiles';
 
   export let profile: Profile | undefined;
-  export let imageStyle: 'square' | 'circle' = 'circle';
-  export let showName: boolean = true;
-  export let pictureOverlayUrl: string | undefined = undefined;
-  export let trustVersion: number | undefined = undefined;
 </script>
 
-<div class="w-full flex flex-col items-center space-y-4 p-4 text-center">
+<div class="w-full flex flex-col items-center p-4 text-center">
   <button class="cursor-pointer" on:click>
     <img
-      src={profile?.previewImageUrl ?? '/default-avatar.png'}
+      src={profile?.previewImageUrl}
       alt="User Icon"
-      class="w-20 h-20 rounded-full object-cover"
+      class="w-20 h-20 object-cover rounded-full"
     />
   </button>
-  <div class="flex flex-col items-center">
-    {#if showName}
-      <span class="font-bold text-lg">{profile?.name}</span>
-    {/if}
+  <div class="flex flex-col items-center p-4 gap-y-0.5">
+    <span class="font-semibold text-[#161616]">{profile?.name}</span>
     {#if profile?.description}
       <p class="text-sm text-gray-500 mt-0">
         {profile?.description}
-        <slot></slot>
-        <!-- For additional description -->
-      </p>
-    {:else}
-      <p class="text-sm text-gray-500">
-        <slot></slot>
-        <!-- For additional description -->
-      </p>
-    {/if}
-    {#if trustVersion}
-      <p class="text-xs text-yellow-500">
-        {trustVersion == 1 ? 'This relation was made before migration' : ''}
       </p>
     {/if}
   </div>
