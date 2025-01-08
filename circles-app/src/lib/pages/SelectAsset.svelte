@@ -1,5 +1,4 @@
 <script lang="ts" context="module">
-  import type { TokenType } from '@circles-sdk/data';
   import { get } from 'svelte/store';
   import { totalCirclesBalance } from '$lib/stores/totalCirclesBalance';
 
@@ -8,7 +7,7 @@
   export const TransitiveTransferTokenAddress =
     '0x0000000000000000000000000000000000000002';
 
-  export function tokenTypeToString(tokenType: TokenType) {
+  export function tokenTypeToString(tokenType: string) {
     if (!tokenType) {
       // "CrcV1_HubTransfer";
       return 'Transitive Transfer (v1)';
@@ -58,13 +57,13 @@
   import { createEventDispatcher } from 'svelte';
   import BalanceRow from '$lib/components/BalanceRow.svelte';
   import type { Readable } from 'svelte/store';
-  import Avatar from '$lib/components/Avatar.svelte';
   import {
     crcTypes,
     roundToDecimals,
     shortenAddress,
     staticTypes,
   } from '$lib/utils/shared';
+  import Avatar from '$lib/components/avatar/Avatar.svelte';
 
   export let balances: Readable<{
     data: TokenBalanceRow[];
@@ -102,9 +101,9 @@
         class="flex w-full items-center justify-between p-4 bg-base-100 hover:bg-base-200 rounded-lg"
         on:click={() => handleSelect(balance)}
       >
-        <Avatar address={balance.tokenOwner}
-          >{shortenAddress(balance.tokenOwner)}</Avatar
-        >
+        <Avatar address={balance.tokenOwner} view="horizontal">
+          {shortenAddress(balance.tokenOwner)}
+        </Avatar>
         <div class="col text-right">
           <span class="font-medium">{roundToDecimals(balance.circles)}</span>
           CRC

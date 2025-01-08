@@ -3,7 +3,7 @@
   import Send from '$lib/pages/Send.svelte';
   import type { SendFlowContext } from '$lib/flows/send/context';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
-  import { runTask } from '../../../routes/+layout.svelte';
+  import { runTask } from '$lib/utils/tasks';
   import { roundToDecimals, shortenAddress } from '$lib/utils/shared';
   import { avatar } from '$lib/stores/avatar';
   import { tokenTypeToString } from '$lib/pages/SelectAsset.svelte';

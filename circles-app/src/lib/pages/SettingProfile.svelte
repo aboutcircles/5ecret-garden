@@ -1,8 +1,8 @@
 <script lang="ts">
-  import Avatar from '$lib/components/Avatar.svelte';
+  import Avatar from '$lib/components/avatar/Avatar.svelte';
   import QrCode from '$lib/components/QrCode.svelte';
 
-  export let address: string | undefined;
+  export let address: string = '';
 
   let copyIcon = '/copy.svg';
   function handleCopy() {

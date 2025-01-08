@@ -27,10 +27,10 @@ export function shortenAddress(address: string | undefined): string {
     return `${a.slice(0, 6)}...${a.slice(-6)}`;
 }
 
-export const staticTypes: Set<TokenType> = new Set([
+export const staticTypes: Set<string> = new Set([
     "CrcV2_ERC20WrapperDeployed_Inflationary"
 ]);
 
-export const crcTypes: Set<TokenType> = new Set([
+export const crcTypes: Set<string> = new Set([
     "CrcV1_Signup"
 ]);

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import Avatar from '$lib/components/Avatar.svelte';
   import { tokenTypeToString } from '$lib/pages/SelectAsset.svelte';
   import { avatar } from '$lib/stores/avatar';
   import { crcTypes, roundToDecimals, staticTypes } from '$lib/utils/shared';
@@ -9,22 +8,22 @@
   import UnwrapTokens from '$lib/pages/UnwrapTokens.svelte';
   import ExitGroup from '$lib/pages/ExitGroup.svelte';
   import { popupControls } from './PopUp.svelte';
+  import Avatar from './avatar/Avatar.svelte';
 
   export let balance: TokenBalanceRow;
 </script>
 
-<div class="flex items-center justify-between p-2 rounded-lg">
-  <div class="col">
-    <Avatar address={balance.tokenOwner}>
-      <span>
-        {tokenTypeToString(balance.tokenType)}
-      </span>
-    </Avatar>
-  </div>
+<div class="flex items-center justify-between pt-2 rounded-lg">
+  <Avatar
+    address={balance.tokenOwner}
+    view="horizontal"
+    clickable={false}
+    bottomInfo={tokenTypeToString(balance.tokenType)}
+  ></Avatar>
 
   <div class="flex md:flex-row-reverse gap-x-2 md:gap-x-4">
-    <div class="col text-right">
-      <span class="font-medium">{roundToDecimals(balance.circles)}</span> CRC
+    <div class="font-medium flex flex-col">
+      {roundToDecimals(balance.circles)} CRC
       <p class="text-xs text-gray-500">
         {#if staticTypes.has(balance.tokenType)}
           {roundToDecimals(balance.staticCircles)} Static Circles
@@ -49,7 +48,7 @@
       >
         {#if balance.tokenType == 'CrcV2_RegisterHuman' || balance.tokenType == 'CrcV2_RegisterGroup' || balance.tokenType == 'CrcV2_RegisterGroup'}
           <button
-          tabIndex={0}
+            tabIndex={0}
             class="md:btn md:btn-xs md:btn-round text-xs font-medium w-44 md:w-auto h-12 md:h-auto flex md:block items-center max-sm:p-4 gap-x-2"
             on:click={() => {
               $popupControls.open?.({
@@ -82,7 +81,7 @@
             Exit
           </button>
         {/if}
-        {#if balance.tokenType == 'CrcV1_Signup' && $avatar?.avatarInfo?.version > 1}
+        {#if balance.tokenType == 'CrcV1_Signup' && $avatar?.avatarInfo && $avatar?.avatarInfo?.version > 1}
           <button
             class="btn btn-xs btn-round text-xs font-medium"
             on:click={() => {

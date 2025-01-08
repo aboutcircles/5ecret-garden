@@ -1,6 +1,7 @@
 <script lang="ts">
   import { popupControls } from '$lib/components/PopUp.svelte';
   import SettingProfile from '$lib/pages/SettingProfile.svelte';
+  import type { QuickAction } from '../../routes/+layout.svelte';
 
   export let text: string | undefined = undefined;
   export let address: string | undefined = undefined;
@@ -9,31 +10,25 @@
   export let homeLink = '/';
 
   export let menuItems = [
-    { name: 'Dashboard', link: '/_new/dashboard' },
-    { name: 'Contacts', link: '/_new/contacts' },
-    { name: 'Groups', link: '/_new/groups' },
+    { name: 'Dashboard', link: '/dashboard' },
+    { name: 'Contacts', link: '/contacts' },
+    { name: 'Groups', link: '/groups' },
     { name: 'Settings', link: '/settings' },
-    { name: 'Tools', link: '/_new/tools' },
   ];
 
-  export let quickActions: {
-    name: string;
-    link: string;
-    icon?: string;
-    action?: () => void;
-  }[] = [];
+  export let quickAction: QuickAction | undefined;
 
-  export let activePage: string;
+  export let route: string | null;
   let isDropdownOpen = false;
 </script>
 
-<div class="navbar font-dmSans bg-white font-medium border-b fixed top-0 z-10">
+<div class="navbar font-dmSans bg-white font-medium border-b fixed top-0 z-30 h-16">
   <div class="navbar-start gap-4">
     <div class="dropdown">
       <button
         tabindex="0"
         class="btn btn-ghost btn-square lg:hidden"
-        on:click={() => isDropdownOpen = true}
+        on:click={() => (isDropdownOpen = true)}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -51,7 +46,9 @@
         </svg>
       </button>
       {#if isDropdownOpen}
-        <div class="fixed -top-2 -left-2 dropdown-content transform-none w-screen h-screen bg-base-100 z-[100] py-2 px-5 scale-100 font-medium">
+        <div
+          class="fixed -top-2 -left-2 dropdown-content transform-none w-screen h-screen bg-base-100 z-[100] py-2 px-5 scale-100 font-medium"
+        >
           <div class="flex flex-row justify-between items-center">
             <a class="flex items-center text-xl font-bold" href={homeLink}>
               <img src="/logo.svg" alt="Circles" class="w-8 h-8" />
@@ -63,19 +60,21 @@
             <button
               type="button"
               class="btn btn-ghost btn-square flex rounded-lg p-2"
-              on:click={() => isDropdownOpen = false}
+              on:click={() => (isDropdownOpen = false)}
             >
               <img src="/close.svg" alt="Close" class="w-4 h-4" />
             </button>
           </div>
-          <ul
-            class="text-xl py-4"
-          >
+          <ul class="text-xl py-4">
             {#each menuItems as item}
-                <li class="py-3">
-                  <a class={`${item.name === activePage ? 'text-primary' : ''}`} tabindex="0" href={item.link}>{item.name}</a>
-                </li>
-              {/each}
+              <li class="py-3">
+                <a
+                  class={`${item.link === route ? 'text-primary' : ''}`}
+                  tabindex="0"
+                  href={item.link}>{item.name}</a
+                >
+              </li>
+            {/each}
           </ul>
           {#if text}
             <button
@@ -95,7 +94,11 @@
             >
               <div class="bg-black/10 rounded-full mr-2 h-7 w-7">
                 {#if logo}
-                  <img src={logo} alt="Avatar" class="h-full w-full rounded-full" />
+                  <img
+                    src={logo}
+                    alt="Avatar"
+                    class="h-full w-full rounded-full"
+                  />
                 {/if}
               </div>
               <p class="mr-3 text-xl">{text}</p>
@@ -117,7 +120,7 @@
       {#each menuItems as item}
         <li>
           <a
-            class={item.name === activePage
+            class={item.link === route
               ? 'font-bold text-primary'
               : 'font-medium'}
             href={item.link}>{item.name}</a
@@ -150,21 +153,24 @@
         <p class="mr-3 font-medium">{text}</p>
       </button>
     {/if}
-    {#each quickActions as action}
-      <a
+    {#if quickAction}
+      <button
         class="btn btn-primary text-white"
-        href={action.link}
         on:click={() => {
-          if (action.action) {
-            action.action();
+          if (quickAction.action) {
+            quickAction.action();
           }
         }}
       >
-        {#if action.icon}
-          <img class="h-3.5 w-3.5" src={action.icon} alt={action.name} />
+        {#if quickAction.icon}
+          <img
+            class="h-3.5 w-3.5"
+            src={quickAction.icon}
+            alt={quickAction.name}
+          />
         {/if}
-        {action.name}
-      </a>
-    {/each}
+        {quickAction.name}
+      </button>
+    {/if}
   </div>
 </div>
