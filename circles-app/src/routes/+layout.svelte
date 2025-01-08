@@ -23,7 +23,8 @@
   import MintGroupTokens from '$lib/flows/mintGroupTokens/1_To.svelte';
   import { onMount } from 'svelte';
   import { tasks } from '$lib/utils/tasks';
-  import { loadProfile, profile } from '$lib/stores/profile';
+  import type { Profile } from '@circles-sdk/profiles';
+  import { getProfile } from '$lib/utils/profile';
 
   let quickAction: QuickAction | undefined;
 
@@ -70,12 +71,14 @@
     },
   };
 
-  //TODO: the profile store is not useful yet, we should remove it or use it accross the app
+  let profile: Profile;
+
   avatar.subscribe(async ($avatar) => {
     if ($avatar) {
-      loadProfile($avatar);
+      profile = await getProfile($avatar?.avatarInfo?.avatar ?? '');
     }
   });
+
 
   onMount(() => {
     if ($page.route.id === '/' || $page.route.id === '/connect-wallet') {
@@ -92,10 +95,10 @@
 
 {#if $avatar}
   <DefaultHeader
-    text={$profile?.name}
+    text={profile?.name}
     address={$avatar.address}
-    logo={$profile?.previewImageUrl?.trim()
-      ? $profile.previewImageUrl
+    logo={profile?.previewImageUrl?.trim()
+      ? profile.previewImageUrl
       : '/logo.svg'}
     homeLink="/dashboard"
     {quickAction}

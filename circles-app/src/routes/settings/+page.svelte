@@ -12,6 +12,7 @@
   import { runTask } from '$lib/utils/tasks';
   import MigrateToV2 from '$lib/flows/migrateToV2/1_GetInvited.svelte';
   import { popupControls } from '$lib/components/PopUp.svelte';
+  import { getProfile } from '$lib/utils/profile';
 
   async function disconnect() {
     $avatar = undefined;
@@ -20,14 +21,6 @@
     localStorage.removeItem('wallet');
 
     await goto('/connect-wallet');
-  }
-
-  async function loadProfileData(cid: string): Promise<Profile | undefined> {
-    if (!$circles?.profiles) {
-      throw new Error('Profiles not available');
-    }
-
-    return await $circles?.profiles?.get(cid);
   }
 
   async function saveProfileData(profile: Profile): Promise<string> {
@@ -41,26 +34,15 @@
   let profile: Profile | undefined;
 
   onMount(async () => {
-    const cid = $avatar?.avatarInfo?.cidV0;
-    if (cid) {
-      profile = await loadProfileData(cid);
-    }
-    if (!profile) {
-      profile = {
-        name: '',
-        description: '',
-        previewImageUrl: '',
-        imageUrl: undefined,
-      };
-    }
+    profile = await getProfile($avatar?.avatarInfo?.avatar ?? '');
   });
 
   async function migrateToV2() {
-    $popupControls?.open({
+    $popupControls?.open?.({
       title: 'Migrate to v2',
       component: MigrateToV2,
       props: {},
-    });
+    })
   }
 
   async function saveProfile() {
@@ -103,7 +85,7 @@
       {/if}
     </div>
 
-    {#if canMigrate($avatar?.avatarInfo ?? undefined)}
+    {#if $avatar?.avatarInfo && canMigrate($avatar.avatarInfo)}
       <div class="w-full pt-2 border-t">
         <h2 class="text-lg font-medium">Circles V2</h2>
         <div class="mt-3">
