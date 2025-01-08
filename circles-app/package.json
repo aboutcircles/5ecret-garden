@@ -10,9 +10,6 @@
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
   },
-  "engines": {
-    "npm": ">=11"
-  },
   "devDependencies": {
     "@circles-sdk/adapter-cometh": "^0.15.1",
     "@circles-sdk/adapter-ethers": "^0.15.1",
