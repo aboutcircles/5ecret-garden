@@ -8,7 +8,7 @@
   import UnwrapTokens from '$lib/pages/UnwrapTokens.svelte';
   import ExitGroup from '$lib/pages/ExitGroup.svelte';
   import Avatar from './avatar/Avatar.svelte';
-  import { popupControls } from '$lib/stores/popUpStore';
+  import { popupControls } from '$lib/stores/popUp';
 
   export let balance: TokenBalanceRow;
 </script>

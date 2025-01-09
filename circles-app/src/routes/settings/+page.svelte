@@ -12,7 +12,7 @@
   import { runTask } from '$lib/utils/tasks';
   import MigrateToV2 from '$lib/flows/migrateToV2/1_GetInvited.svelte';
   import { getProfile } from '$lib/utils/profile';
-  import { popupControls } from '$lib/stores/popUpStore';
+  import { popupControls } from '$lib/stores/popUp';
 
   async function disconnect() {
     $avatar = undefined;

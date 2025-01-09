@@ -1,6 +1,6 @@
 <script lang="ts">
   import SettingProfile from '$lib/pages/SettingProfile.svelte';
-  import { popupControls } from '$lib/stores/popUpStore';
+  import { popupControls } from '$lib/stores/popUp';
   import type { QuickAction } from '../../routes/+layout.svelte';
 
   export let text: string | undefined = undefined;

@@ -87,7 +87,7 @@
   import type { SvelteComponent } from 'svelte';
   import HorizontalAvatarLayout from './HorizontalAvatarLayout.svelte';
   import VerticalAvatarLayout from './VerticalAvatarLayout.svelte';
-  import { popupControls, type PopupContentDefinition } from '$lib/stores/popUpStore';
+  import { popupControls, type PopupContentDefinition } from '$lib/stores/popUp';
 
   export let address: string;
   export let clickable: boolean = true;

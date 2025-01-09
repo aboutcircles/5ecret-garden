@@ -2,7 +2,7 @@
   import type { GroupRow } from '@circles-sdk/data';
   import ProfilePage from '$lib/pages/Profile.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import { popupControls } from '$lib/stores/popUpStore';
+  import { popupControls } from '$lib/stores/popUp';
 
   export let item: GroupRow;
 </script>

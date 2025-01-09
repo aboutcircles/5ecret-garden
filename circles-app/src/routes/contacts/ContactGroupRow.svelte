@@ -1,7 +1,7 @@
 <script lang="ts">
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import ProfilePage from '$lib/pages/Profile.svelte';
-  import { popupControls } from '$lib/stores/popUpStore';
+  import { popupControls } from '$lib/stores/popUp';
 
   export let address = '';
   export let trustRelation = '';
