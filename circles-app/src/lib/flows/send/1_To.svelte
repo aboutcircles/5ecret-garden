@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type { PopupContentApi } from '$lib/components/PopUp.svelte';
   import SelectContact from '$lib/pages/SelectContact.svelte';
   import { contacts } from '$lib/stores/contacts';
   import type { Profile } from '@circles-sdk/profiles';
@@ -10,15 +9,20 @@
   import { transitiveTransfer } from '$lib/pages/SelectAsset.svelte';
   import { avatar } from '$lib/stores/avatar';
   import { circles } from '$lib/stores/circles';
+  import { popupControls } from '$lib/stores/popUpStore';
 
-  export let contentApi: PopupContentApi;
-  export let context: SendFlowContext;
+  export let context: SendFlowContext = {
+     selectedAddress: '',
+     transitiveOnly: false,
+     selectedAsset: undefined,
+     amount: undefined
+   };
   let allowAssetSelection: boolean = false;
 
   async function handleSelect(
     event: CustomEvent<{ address: string; profile: Profile }>
   ) {
-    console.log(context);
+    // console.log(context);
 
     context.selectedAddress = event.detail.address;
     context.selectedAsset = transitiveTransfer();
@@ -42,7 +46,7 @@
     }
 
     if (allowAssetSelection) {
-      contentApi.open({
+      popupControls.open({
         title: 'Select Asset',
         component: SelectAsset,
         props: {
@@ -50,7 +54,7 @@
         },
       });
     } else {
-      contentApi.open({
+      popupControls.open({
         title: 'Enter Amount',
         component: Amount,
         props: {

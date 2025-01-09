@@ -1,8 +1,7 @@
 <script lang="ts">
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-
-  import { popupControls } from '$lib/components/PopUp.svelte';
   import ProfilePage from '$lib/pages/Profile.svelte';
+  import { popupControls } from '$lib/stores/popUpStore';
 
   export let address = '';
   export let trustRelation = '';
@@ -12,7 +11,7 @@
   <button
     class=" w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
     on:click={(e) => {
-      $popupControls.open?.({
+      popupControls.open({
         component: ProfilePage,
         title: '',
         props: {

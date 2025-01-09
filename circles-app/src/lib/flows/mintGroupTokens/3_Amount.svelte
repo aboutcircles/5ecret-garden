@@ -1,18 +1,17 @@
 <script lang="ts">
-    import type {PopupContentApi} from "$lib/components/PopUp.svelte";
     import SelectAmount from "$lib/pages/SelectAmount.svelte";
     import Mint from "./4_Mint.svelte";
     import FlowDecoration from "$lib/flows/FlowDecoration.svelte";
     import type {GroupMintFlowContext} from "$lib/flows/mintGroupTokens/context";
+  import { popupControls } from "$lib/stores/popUpStore";
 
-    export let contentApi: PopupContentApi;
     export let context: GroupMintFlowContext;
 
     function handleSelect(event: CustomEvent<{ amount: number }>) {
         context.amount = event.detail.amount;
         console.log("Selected amount:", context.amount);
 
-        contentApi.open({
+        popupControls.open({
             title: "Mint",
             component: Mint,
             props: {

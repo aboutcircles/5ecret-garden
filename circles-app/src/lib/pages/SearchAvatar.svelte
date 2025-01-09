@@ -11,9 +11,6 @@
 
   export let selectedAddress: string | undefined = undefined;
 
-  //   let input: HTMLInputElement | undefined;
-  //   let editorText: string | undefined = undefined;
-
   let store:
     | Readable<{
         data: AvatarRow[];
@@ -31,15 +28,6 @@
     // }
     store = await createStore();
   });
-
-  //   const handleInput = async (e: any) => {
-  //     editorText = (e.target as HTMLInputElement).value;
-  //     if (ethers.isAddress(editorText)) {
-  //       selectedAddress = editorText;
-  //     }
-  //     console.log('Input', editorText);
-  //     store = await createStore();
-  //   };
 
   async function createQuery(): Promise<CirclesQuery<AvatarRow>> {
     if (!$circles) {
@@ -89,6 +77,7 @@
 
   $: if (selectedAddress) {
     updateStore();
+    console.log(selectedAddress, store)
   }
 </script>
 

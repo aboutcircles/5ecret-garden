@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type { PopupContentApi } from '$lib/components/PopUp.svelte';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import ProfileEditor from '$lib/components/ProfileEditor.svelte';
   import type { MigrateToV2Context } from '$lib/flows/migrateToV2/context';
@@ -7,8 +6,8 @@
   import { onMount } from 'svelte';
   import { avatar } from '$lib/stores/avatar';
   import { getProfile } from '$lib/utils/profile';
+  import { popupControls } from '$lib/stores/popUpStore';
 
-  export let contentApi: PopupContentApi;
   export let context: MigrateToV2Context;
 
   let errors: string[] | undefined = undefined;
@@ -117,7 +116,7 @@
       return;
     }
 
-    contentApi.open({
+    popupControls.open({
       title: 'Migrate Contacts',
       component: MigrateContacts,
       props: {

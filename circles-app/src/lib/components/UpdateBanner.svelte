@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { popupControls } from '$lib/components/PopUp.svelte';
   import MigrateToV2 from '$lib/flows/migrateToV2/1_GetInvited.svelte';
+  import { popupControls } from '$lib/stores/popUpStore';
 
   async function migrateToV2() {
-    $popupControls.open?.({
+    popupControls.open({
       title: 'Migrate to v2',
       component: MigrateToV2,
       props: {},

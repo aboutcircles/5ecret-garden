@@ -1,8 +1,8 @@
 <script lang="ts">
   import type { GroupRow } from '@circles-sdk/data';
-  import {popupControls} from '$lib/components/PopUp.svelte';
   import ProfilePage from '$lib/pages/Profile.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
+  import { popupControls } from '$lib/stores/popUpStore';
 
   export let item: GroupRow;
 </script>
@@ -10,7 +10,7 @@
 <button
   class="w-full flex items-center justify-between p-4 bg-base-100 hover:bg-base-200"
   on:click={(e) => {
-    $popupControls.open?.({
+    popupControls.open({
       component: ProfilePage,
       title: '',
       props: {

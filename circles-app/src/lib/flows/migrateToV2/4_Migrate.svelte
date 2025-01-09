@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type { PopupContentApi } from '$lib/components/PopUp.svelte';
   import { onMount } from 'svelte';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import type { MigrateToV2Context } from '$lib/flows/migrateToV2/context';
@@ -7,8 +6,8 @@
   import { avatar } from '$lib/stores/avatar';
   import { runTask } from '$lib/utils/tasks';
   import { removeProfileFromCache } from '$lib/utils/profile';
+  import { popupControls } from '$lib/stores/popUpStore';
 
-  export let contentApi: PopupContentApi;
   export let context: MigrateToV2Context;
 
   onMount(async () => {});
@@ -35,7 +34,7 @@
       $avatar = $avatar;
     });
 
-    contentApi.close();
+    popupControls.close();
   }
 </script>
 

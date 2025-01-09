@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type { PopupContentApi } from '$lib/components/PopUp.svelte';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import SearchAvatar from '$lib/pages/SearchAvatar.svelte';
   import type { AddContactFlowContext } from '$lib/flows/addContact/context';
@@ -8,18 +7,16 @@
   import Trust from '$lib/pages/Trust.svelte';
   import YouAlreadyTrust from './2_YouAlreadyTrust.svelte';
   import { contacts } from '$lib/stores/contacts';
-
-  export let contentApi: PopupContentApi;
+  import { popupControls } from '$lib/stores/popUpStore';
   export let context: AddContactFlowContext;
 
   function handleInvite(event: CustomEvent<{ avatar: string }>) {
     console.log('Invite');
-    contentApi.open({
+    popupControls.open({
       title: 'Invite someone',
       component: Invite,
       props: {
         address: event.detail.avatar,
-        contentApi: contentApi,
       },
     });
   }
@@ -37,21 +34,19 @@
         existingContact.row.relation === 'mutuallyTrusts')
     ) {
       // already trusting the account
-      contentApi.open({
+      popupControls.open({
         title: 'Untrust?',
         component: YouAlreadyTrust,
         props: {
           context: context,
-          contentApi: contentApi,
         },
       });
     } else {
-      contentApi.open({
+      popupControls.open({
         title: 'Trust',
         component: Trust,
         props: {
           address: event.detail.avatar,
-          contentApi: contentApi,
         },
       });
     }

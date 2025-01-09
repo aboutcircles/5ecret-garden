@@ -1,139 +1,27 @@
-<script context="module" lang="ts">
-  import { writable } from 'svelte/store';
-  import type { SvelteComponent } from 'svelte';
-
-  export type PopupControls = {
-    close: (() => void) | null;
-    open: ((content: PopupContentDefinition) => void) | null;
-  };
-
-  export type PopupContentDefinition = {
-    title: string;
-    component: typeof SvelteComponent<Record<string, any>>;
-    props?: Record<string, any>;
-  };
-
-  export type PopupContentApi = {
-    close: () => void;
-    open: (content: PopupContentDefinition) => void;
-    back: () => void;
-  };
-
-  export const popupControls = writable<PopupControls>({
-    close: null,
-    open: null,
-  });
-</script>
-
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
-  import { tweened } from 'svelte/motion';
-  import { expoOut } from 'svelte/easing';
+  import { popupControls, popupState } from '$lib/stores/popUpStore';
 
-  const dispatch = createEventDispatcher();
-
-  let popupHeight: number = 4096;
-
-  let popupContent: PopupContentDefinition | undefined;
-
-  const y = tweened(popupHeight, { duration: 300, easing: expoOut });
-
-  let popup: HTMLDivElement;
-
-  $popupControls.open = (content: PopupContentDefinition | undefined) => {
-    if (!content) {
-      $popupControls?.close?.();
-      return;
-    }
-
-    popupContent = content;
-    if (!popupContent.props) {
-      popupContent.props = {};
-    }
-    if (!popupContent.props.context) {
-      popupContent.props.context = {};
-    }
-
-    dispatch('openingStart'); // Event when opening starts
-    y.set(0, { duration: 300, easing: expoOut }).then(() => {
-      dispatch('openingComplete'); // Event when opening completes
-    });
-  };
-
-  $popupControls.close = async () => {
-    popupHeight = popup.offsetHeight;
-    await y.set(popupHeight, { duration: 300, easing: expoOut });
-    popupContent = undefined;
-    stack.length = 0;
-    dispatch('close');
-  };
-
-  const stack: PopupContentDefinition[] = [];
-
-  const contentApi: PopupContentApi = {
-    close: () => {
-      $popupControls.close?.();
-    },
-    open: (content: PopupContentDefinition) => {
-      if (popupContent) {
-        stack.push(popupContent);
-      }
-      $popupControls.open?.({
-        ...content,
-        props: {
-          ...content.props,
-          contentApi: contentApi,
-        },
-      });
-    },
-    back: () => {
-      if (stack.length === 0) {
-        throw new Error('No previous content to go back to.');
-      }
-      const previousContent = stack.pop();
-      if (previousContent) {
-        $popupControls.open?.({
-          ...previousContent,
-          props: {
-            ...previousContent.props,
-            contentApi: contentApi,
-          },
-        });
-      }
-    },
-  };
+  $: console.log('Popup content:', $popupState);
 </script>
 
 <div
-  class="popup rounded-t-lg overflow-y-auto"
-  bind:this={popup}
-  style="--y: {$y}px"
+  class="popup"
+  class:open={$popupState.content !== null}
+  role="dialog"
+  aria-modal="true"
 >
-  <div class="w-full p-4 sm:w-[90%] lg:w-3/5 relative">
-    <div class="absolute left-4 top-4">
-      <button
-        class="flex w-fit rounded-lg p-2 bg-gray-100"
-        on:click={() => {
-          stack.length > 0 ? contentApi.back() : contentApi.close();
-        }}
-      >
-        <img
-          alt={stack.length > 0 ? 'Back' : 'Close'}
-          src={stack.length > 0 ? '/arrow-left.svg' : '/close.svg'}
-          class="w-4 h-4"
-        />
-      </button>
-    </div>
-    <div class="content mt-2 w-full">
-      {#if popupContent}
-        <svelte:component
-          this={popupContent.component}
-          {contentApi}
-          context={popupContent.props?.context}
-          {...popupContent.props}
-        />
+  <div class="popup-content">
+    <button on:click={popupControls.back}>
+      {#if $popupState.stack.length > 0}
+        Back
+      {:else}
+        Close
       {/if}
-    </div>
+    </button>
+
+    {#if $popupState.content}
+      <svelte:component this={$popupState.content.component} {...$popupState.content.props} />
+    {/if}
   </div>
 </div>
 
@@ -143,20 +31,17 @@
     bottom: 0;
     left: 0;
     width: 100%;
-    max-height: 80%;
-    min-height: 80%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background-color: white;
-    z-index: 20; /* Ensure popup is above overlay */
-    transform: translateY(
-      var(--y)
-    ); /* use the CSS variable to set the position */
+    height: 80%;
+    background: white;
+    transition:
+      transform 0.3s ease,
+      opacity 0.3s ease;
+    transform: translateY(100%);
+    opacity: 0;
+    z-index: 20;
   }
-
-  .content {
-    overflow-y: auto;
-    flex-grow: 1;
+  .popup.open {
+    transform: translateY(0);
+    opacity: 1;
   }
 </style>

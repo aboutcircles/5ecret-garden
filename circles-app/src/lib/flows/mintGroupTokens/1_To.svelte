@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type { PopupContentApi } from '$lib/components/PopUp.svelte';
   import SelectContact from '$lib/pages/SelectContact.svelte';
   import type { ContactList } from '$lib/stores/contacts';
   import type { Profile } from '@circles-sdk/profiles';
@@ -9,8 +8,8 @@
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import SelectAsset from '$lib/flows/mintGroupTokens/2_Asset.svelte';
   import { contacts } from '$lib/stores/contacts';
-
-  export let contentApi: PopupContentApi;
+  import { popupControls } from '$lib/stores/popUpStore';
+  
   export let context: GroupMintFlowContext;
 
   // Derived store that includes only group contacts
@@ -40,9 +39,9 @@
     event: CustomEvent<{ address: string; profile: Profile }>
   ) {
     context.selectedAddress = event.detail.address;
-    console.log('Selected address', event.detail.address);
+    // console.log('Selected address', event.detail.address);
 
-    contentApi.open({
+    popupControls.open({
       title: 'Select Asset',
       component: SelectAsset,
       props: {

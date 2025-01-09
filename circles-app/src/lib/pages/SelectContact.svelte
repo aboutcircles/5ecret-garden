@@ -76,7 +76,7 @@
     });
 
     if (ethers.isAddress(selectedAddress)) {
-      console.log(selectedAddress);
+      // console.log(selectedAddress);
       selectedProfile = $store?.data[selectedAddress]?.contactProfile;
       selected(selectedAddress, $store?.data[selectedAddress]?.contactProfile);
     } else {
@@ -86,7 +86,7 @@
   }
 
   $: if (selectedAddress) {
-    console.log("update selected address");
+    // console.log("update selected address");
     updateSearchResults();
   }
 </script>

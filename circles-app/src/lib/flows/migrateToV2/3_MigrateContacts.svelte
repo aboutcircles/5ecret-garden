@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type { PopupContentApi } from '$lib/components/PopUp.svelte';
   import { onMount } from 'svelte';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import type { MigrateToV2Context } from '$lib/flows/migrateToV2/context';
@@ -7,8 +6,8 @@
   import { contacts } from '$lib/stores/contacts';
   import { formatTrustRelation } from '$lib/utils/helpers';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
+  import { popupControls } from '$lib/stores/popUpStore';
 
-  export let contentApi: PopupContentApi;
   export let context: MigrateToV2Context;
 
   let selectedAddresses: string[] = [];
@@ -19,7 +18,7 @@
   });
 
   async function next() {
-    contentApi.open({
+    popupControls.open({
       title: 'Run Migration',
       component: Migrate,
       props: {
