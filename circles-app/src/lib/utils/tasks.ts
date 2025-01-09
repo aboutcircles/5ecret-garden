@@ -1,6 +1,6 @@
 import { get, writable } from 'svelte/store';
 import ErrorPage from '$lib/pages/Error.svelte';
-import { popupControls } from '$lib/stores/popUpStore';
+import { popupControls } from '$lib/stores/popUp';
 
 export type Task<T> = {
   name: string;
@@ -16,14 +16,19 @@ export async function runTask<T>(task: Task<T>): Promise<T> {
     return await task.promise;
   } catch (e) {
     console.error(`Task errored: ${task.name}`, e);
-    get(popupControls).open?.({
-      title: 'Error',
-      component: ErrorPage,
-      props: {
-        errorMessage: e.message,
-        stackTrace: e.stack,
-      },
-    });
+    if (e instanceof Error) {
+      console.error(`Task errored: ${task.name}`, e);
+      popupControls.open({
+        title: 'Error',
+        component: ErrorPage,
+        props: {
+          errorMessage: e.message,
+          stackTrace: e.stack,
+        },
+      });
+    } else {
+      console.error(`Task errored with unknown error: ${task.name}`, e);
+    }
     throw e;
   } finally {
     tasks.update((current) => current.filter((t) => t !== task));

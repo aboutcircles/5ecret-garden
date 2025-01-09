@@ -6,7 +6,7 @@
   import { onMount } from 'svelte';
   import { avatar } from '$lib/stores/avatar';
   import { getProfile } from '$lib/utils/profile';
-  import { popupControls } from '$lib/stores/popUpStore';
+  import { popupControls } from '$lib/stores/popUp';
 
   export let context: MigrateToV2Context;
 

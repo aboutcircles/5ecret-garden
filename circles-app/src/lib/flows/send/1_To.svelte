@@ -9,7 +9,7 @@
   import { transitiveTransfer } from '$lib/pages/SelectAsset.svelte';
   import { avatar } from '$lib/stores/avatar';
   import { circles } from '$lib/stores/circles';
-  import { popupControls } from '$lib/stores/popUpStore';
+  import { popupControls } from '$lib/stores/popUp';
 
   export let context: SendFlowContext = {
      selectedAddress: '',

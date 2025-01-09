@@ -22,7 +22,7 @@
   import { tasks } from '$lib/utils/tasks';
   import type { Profile } from '@circles-sdk/profiles';
   import { getProfile } from '$lib/utils/profile';
-  import { popupControls, popupState } from '$lib/stores/popUpStore';
+  import { popupControls, popupState } from '$lib/stores/popUp';
   import PopUp from '$lib/components/PopUp.svelte';
 
   let quickAction: QuickAction | undefined;

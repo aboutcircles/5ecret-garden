@@ -8,7 +8,7 @@
   import { circlesBalances } from '$lib/stores/circlesBalances';
   import { circles } from '$lib/stores/circles';
   import { writable, derived, type Readable } from 'svelte/store';
-  import { popupControls } from '$lib/stores/popUpStore';
+  import { popupControls } from '$lib/stores/popUp';
 
   export let context: GroupMintFlowContext;
 

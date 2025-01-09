@@ -6,7 +6,7 @@
   import { avatar } from '$lib/stores/avatar';
   import { runTask } from '$lib/utils/tasks';
   import { removeProfileFromCache } from '$lib/utils/profile';
-  import { popupControls } from '$lib/stores/popUpStore';
+  import { popupControls } from '$lib/stores/popUp';
 
   export let context: MigrateToV2Context;
 

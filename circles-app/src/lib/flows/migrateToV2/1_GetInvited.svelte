@@ -7,7 +7,7 @@
   import { circles } from '$lib/stores/circles';
   import type { AvatarRow } from '@circles-sdk/data';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import { popupControls } from '$lib/stores/popUpStore';
+  import { popupControls } from '$lib/stores/popUp';
 
   export let context: MigrateToV2Context;
   let canSelfMigrate = false;

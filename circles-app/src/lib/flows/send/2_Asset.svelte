@@ -6,9 +6,7 @@
     import {onMount} from "svelte";
     import FlowDecoration from "$lib/flows/FlowDecoration.svelte";
     import {circlesBalances} from "$lib/stores/circlesBalances";
-  import type { PopupControls } from "$lib/components/PopUp.svelte";
-
-    export let contentApi: PopupControls;
+  import { popupControls } from "$lib/stores/popUp";
     export let context: SendFlowContext;
 
     let selectedAsset: TokenBalanceRow | undefined = undefined;
@@ -23,7 +21,7 @@
         selectedAsset = event.detail;
         context.selectedAsset = selectedAsset;
 
-        contentApi.open({
+        popupControls.open({
             title: "Enter Amount",
             component: SelectAmount,
             props: {

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type { PopupControls } from '$lib/components/PopUp.svelte';
   import type { SendFlowContext } from '$lib/flows/send/context';
   import SelectAmount from '$lib/pages/SelectAmount.svelte';
   import Send from './4_Send.svelte';
@@ -14,8 +13,7 @@
   import { writable } from 'svelte/store';
   import type { MaxFlowResponse } from '@circles-sdk/sdk/dist/v2/pathfinderV2';
   import { ethers } from 'ethers';
-
-  export let contentApi: PopupControls;
+  import { popupControls } from '$lib/stores/popUp';
   export let context: SendFlowContext;
 
   let deadBalances: TokenBalanceRow[] = [];
@@ -71,7 +69,7 @@
     context.amount = event.detail.amount;
     console.log('Selected amount:', context.amount);
 
-    contentApi.open({
+    popupControls.open({
       title: 'Send',
       component: Send,
       props: {

@@ -8,7 +8,7 @@
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import SelectAsset from '$lib/flows/mintGroupTokens/2_Asset.svelte';
   import { contacts } from '$lib/stores/contacts';
-  import { popupControls } from '$lib/stores/popUpStore';
+  import { popupControls } from '$lib/stores/popUp';
   
   export let context: GroupMintFlowContext;
 

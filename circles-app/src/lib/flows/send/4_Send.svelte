@@ -7,9 +7,8 @@
   import { avatar } from '$lib/stores/avatar';
   import { tokenTypeToString } from '$lib/pages/SelectAsset.svelte';
   import { TransitiveTransferTokenAddress } from '$lib/pages/SelectAsset.svelte';
-  import type { PopupControls } from '$lib/components/PopUp.svelte';
+  import { popupControls } from '$lib/stores/popUp';
 
-  export let contentApi: PopupControls;
   export let context: SendFlowContext;
 
   function handleSend() {
@@ -36,7 +35,7 @@
               context.selectedAsset.tokenAddress
             ),
     });
-    contentApi.close();
+    popupControls.close();
   }
 </script>
 

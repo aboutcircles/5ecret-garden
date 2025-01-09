@@ -3,7 +3,7 @@
     import Mint from "./4_Mint.svelte";
     import FlowDecoration from "$lib/flows/FlowDecoration.svelte";
     import type {GroupMintFlowContext} from "$lib/flows/mintGroupTokens/context";
-  import { popupControls } from "$lib/stores/popUpStore";
+  import { popupControls } from "$lib/stores/popUp";
 
     export let context: GroupMintFlowContext;
 

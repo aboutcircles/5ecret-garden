@@ -7,7 +7,7 @@
   import Trust from '$lib/pages/Trust.svelte';
   import YouAlreadyTrust from './2_YouAlreadyTrust.svelte';
   import { contacts } from '$lib/stores/contacts';
-  import { popupControls } from '$lib/stores/popUpStore';
+  import { popupControls } from '$lib/stores/popUp';
   export let context: AddContactFlowContext;
 
   function handleInvite(event: CustomEvent<{ avatar: string }>) {

@@ -6,7 +6,7 @@
     import {roundToDecimals} from "$lib/utils/shared";
     import {avatar} from "$lib/stores/avatar";
     import {ethers} from "ethers6";
-  import { popupControls } from "$lib/stores/popUpStore";
+  import { popupControls } from "$lib/stores/popUp";
 
     export let context: SendFlowContext;
 
