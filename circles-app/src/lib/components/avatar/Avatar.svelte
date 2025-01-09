@@ -115,7 +115,8 @@
         address: address,
       },
     };
-    popupControls.open?.(nextPage);
+    console.log('Opening avatar:', nextPage);
+    popupControls.open(nextPage);
   }
 
   async function initialize() {

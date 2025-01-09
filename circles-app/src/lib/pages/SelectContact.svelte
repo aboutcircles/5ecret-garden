@@ -108,10 +108,9 @@
         on:click={() => {
           selectedProfile = $store?.data[address].contactProfile;
           selectedAddress = address;
-          selected(address, $store?.data[address].contactProfile);
         }}
       >
-        <Avatar {address} view="horizontal">{shortenAddress(address)}</Avatar>
+        <Avatar {address} view="horizontal" clickable={false}>{shortenAddress(address)}</Avatar>
         <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
       </button>
     {/each}

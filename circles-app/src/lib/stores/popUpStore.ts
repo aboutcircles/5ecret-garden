@@ -17,15 +17,11 @@ export const popupState = writable<{
 
 export const popupControls = {
   open: (content: PopupContentDefinition) => {
-    console.log('Opening popup with content:', content);
     popupState.update((state) => {
-      console.log('Current state before update:', state);
       if (state.content) {
-        console.log('Pushing to stack:', state.content);
         state.stack.push(state.content);
       }
-      const updatedState = { ...state, content: content };
-      console.log('Updated state:', updatedState);
+      const updatedState = { ...state, content };
       return updatedState;
     });
   },

@@ -22,7 +22,7 @@
   import { tasks } from '$lib/utils/tasks';
   import type { Profile } from '@circles-sdk/profiles';
   import { getProfile } from '$lib/utils/profile';
-  import { popupControls } from '$lib/stores/popUpStore';
+  import { popupControls, popupState } from '$lib/stores/popUpStore';
   import PopUp from '$lib/components/PopUp.svelte';
 
   let quickAction: QuickAction | undefined;
@@ -87,8 +87,6 @@
   });
 
   $: quickAction = quickActionsMap[$page.route.id ?? ''] || undefined;
-
-  let showPopUp = false;
 </script>
 
 {#if $avatar}
@@ -119,7 +117,7 @@
   <div
     role="button"
     tabindex="0"
-    class={`fixed top-0 left-0 w-full h-full bg-black/50 z-10 ${showPopUp ? 'opacity-100' : 'opacity-0 hidden'} transition duration-300 ease-in-out`}
+    class={`fixed top-0 left-0 w-full h-full bg-black/50 z-10 ${$popupState.content ? 'opacity-100' : 'opacity-0 hidden'} transition duration-300 ease-in-out`}
     on:mousedown={() => popupControls.close()}
     on:touchstart={() => popupControls.close()}
   />

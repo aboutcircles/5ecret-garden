@@ -22,7 +22,7 @@
   async function handleSelect(
     event: CustomEvent<{ address: string; profile: Profile }>
   ) {
-    // console.log(context);
+    console.log('Selected:', event.detail.address);
 
     context.selectedAddress = event.detail.address;
     context.selectedAsset = transitiveTransfer();

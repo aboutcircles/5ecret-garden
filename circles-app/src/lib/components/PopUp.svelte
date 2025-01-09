@@ -5,23 +5,36 @@
 </script>
 
 <div
-  class="popup"
+  class="popup rounded-t-lg overflow-y-auto"
   class:open={$popupState.content !== null}
   role="dialog"
   aria-modal="true"
 >
-  <div class="popup-content">
-    <button on:click={popupControls.back}>
-      {#if $popupState.stack.length > 0}
-        Back
-      {:else}
-        Close
+  <div class="w-full p-4 sm:w-[90%] lg:w-3/5 relative">
+    <div class="absolute left-4 top-4">
+      <button
+        class="flex w-fit rounded-lg p-2 bg-gray-100"
+        on:click={() => {
+          $popupState.stack.length > 0
+            ? popupControls.back()
+            : popupControls.close();
+        }}
+      >
+        <img
+          alt={$popupState.stack.length > 0 ? 'Back' : 'Close'}
+          src={$popupState.stack.length > 0 ? '/arrow-left.svg' : '/close.svg'}
+          class="w-4 h-4"
+        />
+      </button>
+    </div>
+    <div class="content mt-2 w-full">
+      {#if $popupState.content}
+        <svelte:component
+          this={$popupState.content.component}
+          {...$popupState.content.props}
+        />
       {/if}
-    </button>
-
-    {#if $popupState.content}
-      <svelte:component this={$popupState.content.component} {...$popupState.content.props} />
-    {/if}
+    </div>
   </div>
 </div>
 
@@ -31,7 +44,11 @@
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 80%;
+    max-height: 80%;
+    min-height: 80%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     background: white;
     transition:
       transform 0.3s ease,
