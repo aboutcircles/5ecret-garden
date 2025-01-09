@@ -1,17 +1,12 @@
 <script lang="ts">
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import SearchAvatar from '$lib/pages/SearchAvatar.svelte';
-  import type { AddContactFlowContext } from '$lib/flows/addContact/context';
   import type { AvatarRow } from '@circles-sdk/data';
   import Invite from '$lib/pages/Invite.svelte';
   import Trust from '$lib/pages/Trust.svelte';
-  import YouAlreadyTrust from './2_YouAlreadyTrust.svelte';
   import { contacts } from '$lib/stores/contacts';
   import { popupControls } from '$lib/stores/popUp';
-  
-  export let context: AddContactFlowContext = {
-    selectedAddress: '',
-  };
+  import Untrust from '$lib/pages/Untrust.svelte';
 
   function handleInvite(event: CustomEvent<{ avatar: string }>) {
     console.log('Invite');
@@ -24,21 +19,22 @@
     });
   }
 
+  let selectedAddress: string = '';
+
   async function handleSelect(event: CustomEvent<AvatarRow>) {
-    context.selectedAddress = event.detail.avatar;
-    const existingContact = $contacts.data[context.selectedAddress];
+    const existingContact = $contacts.data[selectedAddress];
 
     if (
-      existingContact?.row?.objectAvatar === context.selectedAddress &&
+      existingContact?.row?.objectAvatar === selectedAddress &&
       (existingContact.row.relation === 'trusts' ||
         existingContact.row.relation === 'mutuallyTrusts')
     ) {
       // already trusting the account
       popupControls.open({
         title: 'Untrust?',
-        component: YouAlreadyTrust,
+        component: Untrust,
         props: {
-          context: context,
+          address: event.detail.avatar,
         },
       });
     } else {
@@ -56,7 +52,7 @@
 <FlowDecoration>
   <p class="text-2xl font-bold mt-14">Add Contact</p>
   <SearchAvatar
-    selectedAddress={context.selectedAddress}
+    {selectedAddress}
     on:invite={handleInvite}
     on:select={handleSelect}
   />
