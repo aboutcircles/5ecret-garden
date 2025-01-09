@@ -8,6 +8,7 @@
   import YouAlreadyTrust from './2_YouAlreadyTrust.svelte';
   import { contacts } from '$lib/stores/contacts';
   import { popupControls } from '$lib/stores/popUp';
+  
   export let context: AddContactFlowContext = {
     selectedAddress: '',
   };
@@ -25,10 +26,7 @@
 
   async function handleSelect(event: CustomEvent<AvatarRow>) {
     context.selectedAddress = event.detail.avatar;
-    console.log(context);
-    console.log('Selected Address', event.detail.avatar);
     const existingContact = $contacts.data[context.selectedAddress];
-    console.log('Existing Contact', existingContact);
 
     if (
       existingContact?.row?.objectAvatar === context.selectedAddress &&

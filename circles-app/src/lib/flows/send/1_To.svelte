@@ -12,11 +12,11 @@
   import { popupControls } from '$lib/stores/popUp';
 
   export let context: SendFlowContext = {
-     selectedAddress: '',
-     transitiveOnly: false,
-     selectedAsset: undefined,
-     amount: undefined
-   };
+    selectedAddress: '',
+    transitiveOnly: false,
+    selectedAsset: undefined,
+    amount: undefined,
+  };
   let allowAssetSelection: boolean = false;
 
   async function handleSelect(
@@ -26,7 +26,6 @@
 
     context.selectedAddress = event.detail.address;
     context.selectedAsset = transitiveTransfer();
-    
 
     if (
       !$circles ||
@@ -67,11 +66,9 @@
 
 <FlowDecoration>
   <p class="text-2xl font-bold mt-14">Send Circles</p>
-  {#if contacts}
-    <SelectContact
-      store={contacts}
-      selectedAddress={context.selectedAddress}
-      on:select={handleSelect}
-    />
-  {/if}
+  <SelectContact
+    store={contacts}
+    selectedAddress={context.selectedAddress}
+    on:select={handleSelect}
+  />
 </FlowDecoration>
