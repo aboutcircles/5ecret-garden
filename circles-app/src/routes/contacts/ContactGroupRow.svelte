@@ -22,7 +22,7 @@
       return true;
     }}
   >
-    <Avatar {address} view="horizontal" bottomInfo={trustRelation} />
+    <Avatar {address} view="horizontal" bottomInfo={trustRelation} clickable={false} />
     <div class="font-medium underline flex gap-x-2">
       <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
     </div>

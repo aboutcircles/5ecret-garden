@@ -8,7 +8,9 @@
   import YouAlreadyTrust from './2_YouAlreadyTrust.svelte';
   import { contacts } from '$lib/stores/contacts';
   import { popupControls } from '$lib/stores/popUp';
-  export let context: AddContactFlowContext;
+  export let context: AddContactFlowContext = {
+    selectedAddress: '',
+  };
 
   function handleInvite(event: CustomEvent<{ avatar: string }>) {
     console.log('Invite');

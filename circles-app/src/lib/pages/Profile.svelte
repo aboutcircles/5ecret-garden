@@ -10,14 +10,13 @@
   import Trust from '$lib/pages/Trust.svelte';
   import SelectAsset from '$lib/flows/send/2_Asset.svelte';
   import MintGroupTokens from '$lib/flows/mintGroupTokens/1_To.svelte';
-  import type { PopupContentApi } from '$lib/components/PopUp.svelte';
   import { getProfile } from '$lib/utils/profile';
   import { formatTrustRelation, getTypeString } from '$lib/utils/helpers';
   import { onMount } from 'svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
+  import { popupControls } from '$lib/stores/popUp';
 
   export let address: string | undefined;
-  export let contentApi: PopupContentApi | undefined;
   export let trustVersion: number | undefined;
 
   onMount(() => {
@@ -112,7 +111,11 @@
       {shortenAddress(otherAvatar?.avatar)}
       <img src={copyIcon} alt="Copy" class="w-4 h-4 inline" />
     </button>
-    <a href={"https://gnosisscan.io/address/" + otherAvatar?.avatar} target="_blank" class="bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm">#</a>
+    <a
+      href={'https://gnosisscan.io/address/' + otherAvatar?.avatar}
+      target="_blank"
+      class="bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm">#</a
+    >
   </div>
 
   <div class="w-[80%] sm:w-[60%] border-b border-[#E5E7EB]"></div>
@@ -122,7 +125,7 @@
     <button
       class="btn btn-primary text-white"
       on:click={() => {
-        contentApi?.open?.({
+        popupControls.open({
           title: 'Send Circles',
           component: SelectAsset,
           props: {
@@ -140,7 +143,7 @@
       <button
         class="btn bg-[#F3F4F6] border-none"
         on:click={() => {
-          contentApi?.open?.({
+          popupControls.open({
             title: 'Mint group tokens',
             component: MintGroupTokens,
             props: {
@@ -156,7 +159,7 @@
       <button
         class="btn bg-[#F3F4F6] border-none"
         on:click={() => {
-          contentApi?.open?.({
+          popupControls.open({
             title: 'Untrust',
             component: Untrust,
             props: {
@@ -172,7 +175,7 @@
       <button
         class="btn bg-[#F3F4F6] border-none"
         on:click={() => {
-          contentApi?.open?.({
+          popupControls.open({
             title: 'Untrust',
             component: Untrust,
             props: {
@@ -187,7 +190,7 @@
       <button
         class="btn bg-[#F3F4F6] border-none"
         on:click={() => {
-          contentApi?.open?.({
+          popupControls.open({
             title: 'Trust',
             component: Trust,
             props: {
@@ -202,7 +205,7 @@
       <button
         class="btn bg-[#F3F4F6] border-none"
         on:click={() => {
-          contentApi?.open?.({
+          popupControls.open({
             title: 'Trust',
             component: Trust,
             props: {
@@ -229,7 +232,6 @@
   <div role="tabpanel" class="tab-content mt-8 bg-base-100 border-none">
     <div class="w-full border-base-300 rounded-box border">
       <CommonConnections
-        {contentApi}
         otherAvatarAddress={otherAvatar?.avatar ?? ''}
         bind:commonConnectionsCount
       />
@@ -255,7 +257,7 @@
           <button
             class="flex w-full items-center justify-between p-4 bg-base-100 hover:bg-base-200"
           >
-            <Avatar address={member} {contentApi} view="horizontal" />
+            <Avatar address={member} view="horizontal" />
             <div class="font-medium underline flex gap-x-2">
               <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
             </div>
