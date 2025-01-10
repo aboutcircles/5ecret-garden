@@ -9,23 +9,17 @@
   import AvatarRowView from '$lib/components/AvatarRow.svelte';
   import AddressInput from '$lib/components/AddressInput.svelte';
 
-  export let selectedAddress: string | undefined = undefined;
+  export let selectedAddress: string = '';
 
-  let store:
-    | Readable<{
-        data: AvatarRow[];
-        next: () => Promise<boolean>;
-        ended: boolean;
-      }>
-    | undefined = undefined;
+  let store: Readable<{
+    data: AvatarRow[];
+    next: () => Promise<boolean>;
+    ended: boolean;
+  }>;
 
   const eventDispatcher = createEventDispatcher();
 
   onMount(async () => {
-    // if (selectedAddress && input) {
-    //   editorText = selectedAddress;
-    //   input.value = editorText;
-    // }
     store = await createStore();
   });
 
@@ -77,7 +71,8 @@
 
   $: if (selectedAddress) {
     updateStore();
-    console.log(selectedAddress, store)
+    selectedAddress = '';
+    console.log(selectedAddress, store);
   }
 </script>
 
@@ -88,7 +83,7 @@
 <div class="mt-4">
   <p class="menu-title pl-0">Found avatars</p>
 
-  {#if $store?.data?.length > 0}
+  {#if $store?.data.length > 0}
     <GenericList {store} row={AvatarRowView} on:select />
   {:else}
     <div class="text-center">

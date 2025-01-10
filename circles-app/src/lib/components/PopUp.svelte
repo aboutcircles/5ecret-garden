@@ -1,7 +1,5 @@
 <script lang="ts">
   import { popupControls, popupState } from '$lib/stores/popUp';
-
-  $: console.log('Popup content:', $popupState);
 </script>
 
 <div
