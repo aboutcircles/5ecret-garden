@@ -9,8 +9,13 @@
   import SelectAsset from '$lib/flows/mintGroupTokens/2_Asset.svelte';
   import { contacts } from '$lib/stores/contacts';
   import { popupControls } from '$lib/stores/popUp';
+  import type { TokenBalanceRow } from '@circles-sdk/data';
   
-  export let context: GroupMintFlowContext;
+  export let context: GroupMintFlowContext = {
+    selectedAddress: '',
+    selectedAsset: {} as TokenBalanceRow,
+    amount: undefined,
+  };
 
   // Derived store that includes only group contacts
   let groupContacts:
@@ -38,8 +43,8 @@
   function handleSelect(
     event: CustomEvent<{ address: string; profile: Profile }>
   ) {
+    console.log('Selected address', event.detail.address);
     context.selectedAddress = event.detail.address;
-    // console.log('Selected address', event.detail.address);
 
     popupControls.open({
       title: 'Select Asset',
@@ -60,8 +65,9 @@
     <SelectContact
       store={groupContacts}
       addressListTitle="Groups"
-      noResultsMessage="You have no groups in your contacts."
+      noResultsMessage="No groups found"
       selectedAddress={context?.selectedAddress}
+      group={true}
       on:select={handleSelect}
     />
   {:else}

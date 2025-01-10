@@ -24,10 +24,24 @@
   export let selectedAddress: string = '';
   export let addressListTitle: string = 'Recent';
   export let noResultsMessage: string = 'No recent addresses found';
+  export let group: boolean = false;
 
   const eventDispatcher = createEventDispatcher();
 
   $: data = $store?.data ?? {};
+  $: filteredAddresses = (() => {
+    if (selectedAddress) {
+      return Object.keys(data).filter(
+        (address) =>
+          address.toLowerCase().includes(selectedAddress.toLowerCase()) ||
+          data[address]?.contactProfile?.name
+            ?.toLowerCase()
+            ?.includes(selectedAddress.toLowerCase())
+      );
+    } else {
+      return Object.keys(data);
+    }
+  })();
 
   function handleSelect(address: string) {
     const profile = $store?.data[address]?.contactProfile;
@@ -39,7 +53,7 @@
   <AddressInput bind:address={selectedAddress} />
 </div>
 
-{#if selectedAddress}
+{#if selectedAddress && !group}
   <p class="menu-title p-0">Selected Address:</p>
   <button
     class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg mt-2"
@@ -50,25 +64,23 @@
   </button>
 {:else}
   <p class="menu-title pl-0">{addressListTitle}</p>
-  <div
-    class="w-full md:border rounded-lg md:px-4 flex flex-col divide-y gap-y-2 overflow-x-auto py-4"
-  >
-    {#if Object.keys(data).length > 0}
-      {#each Object.keys(data) as address (address)}
-      <div class="w-full pt-2">
-        <button
-          class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
-          on:click={() => handleSelect(address)}
-        >
-          <Avatar {address} view="horizontal" clickable={false} />
-          <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
-        </button>
-  </div>
+  {#if filteredAddresses.length > 0}
+    <div
+      class="w-full md:border rounded-lg md:px-4 flex flex-col divide-y gap-y-2 overflow-x-auto py-4"
+    >
+      {#each filteredAddresses as address (address)}
+        <div class="w-full pt-2">
+          <button
+            class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
+            on:click={() => handleSelect(address)}
+          >
+            <Avatar {address} view="horizontal" clickable={false} />
+            <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
+          </button>
+        </div>
       {/each}
-    {:else}
-      <div class="p-2 hover:bg-base-200 rounded-lg">
-        {@html noResultsMessage}
-      </div>
-    {/if}
-  </div>
+    </div>
+  {:else}
+    {@html noResultsMessage}
+  {/if}
 {/if}

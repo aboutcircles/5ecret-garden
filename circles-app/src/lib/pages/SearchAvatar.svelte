@@ -1,3 +1,5 @@
+<!-- TODO: Use selectContact component instead and pass this custom store to it -->
+
 <script lang="ts">
   import { ethers } from 'ethers6';
   import { createEventDispatcher, onMount } from 'svelte';
