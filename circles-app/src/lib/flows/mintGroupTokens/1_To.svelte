@@ -57,7 +57,7 @@
 </script>
 
 <FlowDecoration>
-  <p class="text-2xl font-bold mt-14">Mint Group Token</p>
+  <p class="text-2xl font-bold">Mint Group Token</p>
   <p class="text-gray-500 mt-2">
     You can convert any of your CRC to tokens of any group you are part of
   </p>

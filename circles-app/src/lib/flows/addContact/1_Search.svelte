@@ -54,7 +54,7 @@
 </script>
 
 <FlowDecoration>
-  <p class="text-2xl font-bold mt-14">Add Contact</p>
+  <p class="text-2xl font-bold">Add Contact</p>
   <SearchAvatar
     selectedAddress={context.selectedAddress}
     on:invite={handleInvite}

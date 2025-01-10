@@ -127,7 +127,7 @@
 </script>
 
 <FlowDecoration>
-  <p class="text-2xl font-bold mt-14">Profile</p>
+  <p class="text-2xl font-bold">Profile</p>
   <p class="text-gray-500 mt-2">
     Create a profile for your new Circles v2 avatar.
   </p>

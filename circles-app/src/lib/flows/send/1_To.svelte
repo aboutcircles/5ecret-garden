@@ -66,7 +66,7 @@
 </script>
 
 <FlowDecoration>
-  <p class="text-2xl font-bold mt-14">Send Circles</p>
+  <p class="text-2xl font-bold">Send Circles</p>
   <SelectContact
     store={contacts}
     selectedAddress={context.selectedAddress}

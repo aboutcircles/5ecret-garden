@@ -100,7 +100,7 @@
 </script>
 
 <FlowDecoration>
-  <p class="text-2xl font-bold mt-14">Select Asset</p>
+  <p class="text-2xl font-bold">Select Asset</p>
   <p class="text-gray-500 mt-2">Select asset to convert</p>
   {#if $filteredBalances}
     <SelectAsset

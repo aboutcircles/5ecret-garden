@@ -27,10 +27,12 @@
     </div>
     <div class="content mt-2 w-full">
       {#if $popupState.content}
-        <svelte:component
-          this={$popupState.content.component}
-          {...$popupState.content.props}
-        />
+        <div class="mt-14">
+          <svelte:component
+            this={$popupState.content.component}
+            {...$popupState.content.props}
+          />
+        </div>
       {/if}
     </div>
   </div>
