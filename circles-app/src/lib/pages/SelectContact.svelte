@@ -42,7 +42,7 @@
 {#if selectedAddress}
   <p class="menu-title p-0">Selected Address:</p>
   <button
-    class="flex w-full items-center justify-between p-4 bg-base-100 hover:bg-base-200 rounded-lg"
+    class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg mt-2"
     on:click={() => handleSelect(selectedAddress)}
   >
     <Avatar address={selectedAddress} clickable={false} view="horizontal" />
@@ -51,17 +51,19 @@
 {:else}
   <p class="menu-title pl-0">{addressListTitle}</p>
   <div
-    class="flex flex-col p-0 md:px-4 sm:py-4 w-full sm:border sm:rounded-lg overflow-x-auto divide-y"
+    class="w-full md:border rounded-lg md:px-4 flex flex-col divide-y gap-y-2 overflow-x-auto py-4"
   >
     {#if Object.keys(data).length > 0}
       {#each Object.keys(data) as address (address)}
+      <div class="w-full pt-2">
         <button
-          class="flex w-full items-center justify-between p-4 bg-base-100 hover:bg-base-200 rounded-lg"
+          class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
           on:click={() => handleSelect(address)}
         >
           <Avatar {address} view="horizontal" clickable={false} />
           <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
         </button>
+  </div>
       {/each}
     {:else}
       <div class="p-2 hover:bg-base-200 rounded-lg">
