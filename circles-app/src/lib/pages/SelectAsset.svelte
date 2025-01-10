@@ -101,9 +101,7 @@
         class="flex w-full items-center justify-between p-4 bg-base-100 hover:bg-base-200 rounded-lg"
         on:click={() => handleSelect(balance)}
       >
-        <Avatar address={balance.tokenOwner} view="horizontal">
-          {shortenAddress(balance.tokenOwner)}
-        </Avatar>
+        <Avatar address={balance.tokenOwner} view="horizontal" bottomInfo={shortenAddress(balance.tokenOwner)} />
         <div class="col text-right">
           <span class="font-medium">{roundToDecimals(balance.circles)}</span>
           CRC
