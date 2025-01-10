@@ -69,9 +69,8 @@
     address={balanceRow?.tokenOwner}
     clickable={false}
     view="horizontal"
-  >
-    {tokenTypeToString(balanceRow?.tokenType)}
-  </Avatar>
+    bottomInfo={tokenTypeToString(balanceRow?.tokenType)}
+  />
 </div>
 
 <div

@@ -10,7 +10,6 @@ import type { Profile } from "@circles-sdk/profiles";
 import { createEventStore } from "$lib/stores/eventStores/eventStoreFactory";
 import { circles } from "$lib/stores/circles";
 import { getProfile } from "$lib/utils/profile";
-import type { Avatar } from "@circles-sdk/sdk";
 
 export type ContactListItem = {
     contactProfile: Profile;

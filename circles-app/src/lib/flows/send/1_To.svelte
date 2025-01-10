@@ -10,11 +10,12 @@
   import { avatar } from '$lib/stores/avatar';
   import { circles } from '$lib/stores/circles';
   import { popupControls } from '$lib/stores/popUp';
+  import type { TokenBalanceRow } from '@circles-sdk/data';
 
   export let context: SendFlowContext = {
     selectedAddress: '',
     transitiveOnly: false,
-    selectedAsset: undefined,
+    selectedAsset: {} as TokenBalanceRow,
     amount: undefined,
   };
   let allowAssetSelection: boolean = false;
