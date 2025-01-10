@@ -9,15 +9,18 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { popupControls } from '$lib/stores/popUp';
 
-  export let context: MigrateToV2Context;
-  let canSelfMigrate = false;
+  export let context: MigrateToV2Context = {
+    inviter: undefined,
+    profile: undefined,
+    trustList: [],
+  };
   let invitations: AvatarRow[] | undefined;
   onMount(async () => {
     if (!$avatar?.avatarInfo || !$circles) {
       throw new Error('Avatar store or SDK not initialized');
     }
-    canSelfMigrate = await $circles.canSelfMigrate($avatar.avatarInfo);
     invitations = await $circles.data.getInvitations($avatar.avatarInfo.avatar);
+    console.log(invitations, $avatar.avatarInfo);
   });
   async function next() {
     popupControls.open({
@@ -61,21 +64,8 @@
     </ul>
   {:else}
     <p class="text-gray-500 mt-2">You have no invitations.</p>
-    {#if canSelfMigrate}
-      <p class="text-gray-500 mt-2">You can migrate to v2.</p>
-      <div class="flex justify-end space-x-2 mt-6">
-        <button
-          type="submit"
-          class="btn btn-primary text-white"
-          on:click={() => next()}
-        >
-          Next
-        </button>
-      </div>
-    {:else}
-      <p class="text-gray-500 mt-2">
-        You need to find someone who is already on Circles V2 to invite you.
-      </p>
-    {/if}
+    <p class="text-gray-500 mt-2">
+      You need to find someone who is already on Circles V2 to invite you.
+    </p>
   {/if}
 </FlowDecoration>

@@ -8,7 +8,11 @@
   import { getProfile } from '$lib/utils/profile';
   import { popupControls } from '$lib/stores/popUp';
 
-  export let context: MigrateToV2Context;
+  export let context: MigrateToV2Context = {
+    inviter: "0x0000000000000000000000000000000000000000",
+    profile: undefined,
+    trustList: [],
+  };
 
   let errors: string[] | undefined = undefined;
 

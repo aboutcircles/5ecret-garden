@@ -1,11 +1,24 @@
 <script lang="ts">
-  import MigrateToV2 from '$lib/flows/migrateToV2/1_GetInvited.svelte';
+  import GetInvited from '$lib/flows/migrateToV2/1_GetInvited.svelte';
   import { popupControls } from '$lib/stores/popUp';
+  import { onMount } from 'svelte';
+  import { avatar } from '$lib/stores/avatar';
+  import { circles } from '$lib/stores/circles';
+  import CreateProfile from '$lib/flows/migrateToV2/2_CreateProfile.svelte';
+
+  let canSelfMigrate: boolean = false;
+
+  onMount(async () => {
+    if (!$avatar?.avatarInfo || !$circles) {
+      throw new Error('Avatar store or SDK not initialized');
+    }
+    canSelfMigrate = await $circles.canSelfMigrate($avatar.avatarInfo);
+  });
 
   async function migrateToV2() {
     popupControls.open({
       title: 'Migrate to v2',
-      component: MigrateToV2,
+      component: canSelfMigrate ? CreateProfile : GetInvited,
       props: {},
     });
   }
