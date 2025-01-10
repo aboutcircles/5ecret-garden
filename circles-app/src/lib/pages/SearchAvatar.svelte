@@ -10,6 +10,7 @@
   import AddressInput from '$lib/components/AddressInput.svelte';
 
   export let selectedAddress: string = '';
+  let lastAddress: string = '';
 
   let store: Readable<{
     data: AvatarRow[];
@@ -69,9 +70,9 @@
     store = await createStore();
   }
 
-  $: if (selectedAddress) {
+  $: if (selectedAddress && selectedAddress !== lastAddress) {
+    lastAddress = selectedAddress;
     updateStore();
-    selectedAddress = '';
     console.log(selectedAddress, store);
   }
 </script>
