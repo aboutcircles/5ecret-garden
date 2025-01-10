@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type { PopupContentApi } from '$lib/components/PopUp.svelte';
   import { onMount } from 'svelte';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import type { MigrateToV2Context } from '$lib/flows/migrateToV2/context';
@@ -7,8 +6,8 @@
   import { avatar } from '$lib/stores/avatar';
   import { runTask } from '$lib/utils/tasks';
   import { removeProfileFromCache } from '$lib/utils/profile';
+  import { popupControls } from '$lib/stores/popUp';
 
-  export let contentApi: PopupContentApi;
   export let context: MigrateToV2Context;
 
   onMount(async () => {});
@@ -35,12 +34,12 @@
       $avatar = $avatar;
     });
 
-    contentApi.close();
+    popupControls.close();
   }
 </script>
 
 <FlowDecoration>
-  <p class="text-2xl font-bold mt-14">Migrate</p>
+  <p class="text-2xl font-bold">Migrate</p>
   <p class="text-gray-500 mt-2">
     You're ready to migrate to Circles V2! Click the button below to start the
     migration process.

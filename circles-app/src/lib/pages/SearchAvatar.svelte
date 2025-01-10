@@ -1,3 +1,5 @@
+<!-- TODO: Use selectContact component instead and pass this custom store to it -->
+
 <script lang="ts">
   import { ethers } from 'ethers6';
   import { createEventDispatcher, onMount } from 'svelte';
@@ -9,37 +11,20 @@
   import AvatarRowView from '$lib/components/AvatarRow.svelte';
   import AddressInput from '$lib/components/AddressInput.svelte';
 
-  export let selectedAddress: string | undefined = undefined;
+  export let selectedAddress: string = '';
+  let lastAddress: string = '';
 
-  //   let input: HTMLInputElement | undefined;
-  //   let editorText: string | undefined = undefined;
-
-  let store:
-    | Readable<{
-        data: AvatarRow[];
-        next: () => Promise<boolean>;
-        ended: boolean;
-      }>
-    | undefined = undefined;
+  let store: Readable<{
+    data: AvatarRow[];
+    next: () => Promise<boolean>;
+    ended: boolean;
+  }>;
 
   const eventDispatcher = createEventDispatcher();
 
   onMount(async () => {
-    // if (selectedAddress && input) {
-    //   editorText = selectedAddress;
-    //   input.value = editorText;
-    // }
     store = await createStore();
   });
-
-  //   const handleInput = async (e: any) => {
-  //     editorText = (e.target as HTMLInputElement).value;
-  //     if (ethers.isAddress(editorText)) {
-  //       selectedAddress = editorText;
-  //     }
-  //     console.log('Input', editorText);
-  //     store = await createStore();
-  //   };
 
   async function createQuery(): Promise<CirclesQuery<AvatarRow>> {
     if (!$circles) {
@@ -87,8 +72,10 @@
     store = await createStore();
   }
 
-  $: if (selectedAddress) {
+  $: if (selectedAddress && selectedAddress !== lastAddress) {
+    lastAddress = selectedAddress;
     updateStore();
+    console.log(selectedAddress, store);
   }
 </script>
 
@@ -99,7 +86,7 @@
 <div class="mt-4">
   <p class="menu-title pl-0">Found avatars</p>
 
-  {#if $store?.data?.length > 0}
+  {#if $store?.data.length > 0}
     <GenericList {store} row={AvatarRowView} on:select />
   {:else}
     <div class="text-center">

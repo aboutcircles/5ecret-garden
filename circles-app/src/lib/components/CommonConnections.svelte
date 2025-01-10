@@ -8,7 +8,6 @@
   import Avatar from "./avatar/Avatar.svelte";
 
     export let otherAvatarAddress: string;
-    export let contentApi: any;
     export let commonConnectionsCount: number = 0;
 
     let commonContacts: string[] = [];
@@ -69,7 +68,7 @@
 <ul class="w-full divide-y p-4">
     {#each commonContacts as contact(contact)}
         <li class="w-full flex items-center justify-between px-0 py-4">
-            <Avatar contentApi={contentApi} address={contact} view="horizontal">
+            <Avatar address={contact} view="horizontal">
                 <!-- {contact} -->
             </Avatar>
         </li>

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type { PopupContentApi } from '$lib/components/PopUp.svelte';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import type { MigrateToV2Context } from '$lib/flows/migrateToV2/context';
   import CreateProfile from './2_CreateProfile.svelte';
@@ -8,7 +7,8 @@
   import { circles } from '$lib/stores/circles';
   import type { AvatarRow } from '@circles-sdk/data';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-  export let contentApi: PopupContentApi;
+  import { popupControls } from '$lib/stores/popUp';
+
   export let context: MigrateToV2Context;
   let canSelfMigrate = false;
   let invitations: AvatarRow[] | undefined;
@@ -20,7 +20,7 @@
     invitations = await $circles.data.getInvitations($avatar.avatarInfo.avatar);
   });
   async function next() {
-    contentApi.open({
+    popupControls.open({
       title: 'Create Profile',
       component: CreateProfile,
       props: {
@@ -35,7 +35,7 @@
 </script>
 
 <FlowDecoration>
-  <p class="text-2xl font-bold mt-14">Find an invitation</p>
+  <p class="text-2xl font-bold">Find an invitation</p>
   {#if !invitations}
     <p class="text-gray-500 mt-2">Loading invitations...</p>
   {:else if invitations.length > 0}

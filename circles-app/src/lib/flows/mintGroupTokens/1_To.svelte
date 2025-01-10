@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type { PopupContentApi } from '$lib/components/PopUp.svelte';
   import SelectContact from '$lib/pages/SelectContact.svelte';
   import type { ContactList } from '$lib/stores/contacts';
   import type { Profile } from '@circles-sdk/profiles';
@@ -9,9 +8,14 @@
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import SelectAsset from '$lib/flows/mintGroupTokens/2_Asset.svelte';
   import { contacts } from '$lib/stores/contacts';
-
-  export let contentApi: PopupContentApi;
-  export let context: GroupMintFlowContext;
+  import { popupControls } from '$lib/stores/popUp';
+  import type { TokenBalanceRow } from '@circles-sdk/data';
+  
+  export let context: GroupMintFlowContext = {
+    selectedAddress: '',
+    selectedAsset: {} as TokenBalanceRow,
+    amount: undefined,
+  };
 
   // Derived store that includes only group contacts
   let groupContacts:
@@ -39,10 +43,10 @@
   function handleSelect(
     event: CustomEvent<{ address: string; profile: Profile }>
   ) {
-    context.selectedAddress = event.detail.address;
     console.log('Selected address', event.detail.address);
+    context.selectedAddress = event.detail.address;
 
-    contentApi.open({
+    popupControls.open({
       title: 'Select Asset',
       component: SelectAsset,
       props: {
@@ -53,7 +57,7 @@
 </script>
 
 <FlowDecoration>
-  <p class="text-2xl font-bold mt-14">Mint Group Token</p>
+  <p class="text-2xl font-bold">Mint Group Token</p>
   <p class="text-gray-500 mt-2">
     You can convert any of your CRC to tokens of any group you are part of
   </p>
@@ -61,8 +65,9 @@
     <SelectContact
       store={groupContacts}
       addressListTitle="Groups"
-      noResultsMessage="You have no groups in your contacts."
+      noResultsMessage="No groups found"
       selectedAddress={context?.selectedAddress}
+      group={true}
       on:select={handleSelect}
     />
   {:else}

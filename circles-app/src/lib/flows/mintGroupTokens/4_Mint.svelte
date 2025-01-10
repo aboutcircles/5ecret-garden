@@ -1,5 +1,4 @@
 <script lang="ts">
-    import type {PopupContentApi} from "$lib/components/PopUp.svelte";
     import Send from "$lib/pages/Send.svelte";
     import type {SendFlowContext} from "$lib/flows/send/context";
     import FlowDecoration from "$lib/flows/FlowDecoration.svelte";
@@ -7,8 +6,8 @@
     import {roundToDecimals} from "$lib/utils/shared";
     import {avatar} from "$lib/stores/avatar";
     import {ethers} from "ethers6";
+  import { popupControls } from "$lib/stores/popUp";
 
-    export let contentApi: PopupContentApi;
     export let context: SendFlowContext;
 
     function handleSend() {
@@ -33,11 +32,11 @@
             name: `Minting ${roundToDecimals(context.amount)} Group Circles ...`,
             promise: $avatar.groupMint(context.selectedAddress!, collateral, amounts, data)
         });
-        contentApi.close();
+        popupControls.close();
     }
 </script>
 <FlowDecoration>
-    <p class="text-2xl font-bold mt-14">Confirm Transaction</p>
+    <p class="text-2xl font-bold">Confirm Transaction</p>
     <p class="text-gray-500 mt-2">Following CRC will be converted to a groups CRC</p>
     <Send asset={context.selectedAsset}
           amount={context.amount}

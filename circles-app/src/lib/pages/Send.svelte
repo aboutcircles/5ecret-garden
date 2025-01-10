@@ -1,7 +1,7 @@
 <script lang="ts">
   import { tokenTypeToString } from '$lib/pages/SelectAsset.svelte';
   import { createEventDispatcher } from 'svelte';
-  import { roundToDecimals, shortenAddress } from '$lib/utils/shared';
+  import { roundToDecimals } from '$lib/utils/shared';
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
 
@@ -17,13 +17,16 @@
 <div class="mt-4 flex flex-col gap-y-4">
   <p class="menu-title p-0">Asset:</p>
 
-  <div class="flex items-center justify-between p-4 border-b md:border md:rounded-lg">
+  <div
+    class="flex items-center justify-between p-4 border-b md:border md:rounded-lg"
+  >
     <div class="col">
-      <Avatar address={asset?.tokenOwner} clickable={false} view="horizontal">
-        <span>
-          {tokenTypeToString(asset?.tokenType)}
-        </span>
-      </Avatar>
+      <Avatar
+        address={asset?.tokenOwner}
+        clickable={false}
+        bottomInfo={tokenTypeToString(asset?.tokenType)}
+        view="horizontal"
+      />
     </div>
 
     <div class="col text-right">
@@ -31,14 +34,10 @@
     </div>
   </div>
   <p class="menu-title mt-8 md:mt-4 p-0">To:</p>
-  <div class="flex items-center justify-between p-4 border-b md:border md:rounded-lg">
-    <Avatar address={receiverAddress} clickable={false} view="horizontal">
-      <a
-        target="_blank"
-        href={'https://gnosisscan.io/address/' + receiverAddress}
-        >{shortenAddress(receiverAddress)}</a
-      >
-    </Avatar>
+  <div
+    class="flex items-center justify-between p-4 border-b md:border md:rounded-lg"
+  >
+    <Avatar address={receiverAddress} clickable={false} view="horizontal" />
   </div>
 
   <!-- Action Buttons -->

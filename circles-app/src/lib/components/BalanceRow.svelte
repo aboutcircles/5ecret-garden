@@ -7,8 +7,8 @@
   import MigrateTokens from '$lib/pages/MigrateTokens.svelte';
   import UnwrapTokens from '$lib/pages/UnwrapTokens.svelte';
   import ExitGroup from '$lib/pages/ExitGroup.svelte';
-  import { popupControls } from './PopUp.svelte';
   import Avatar from './avatar/Avatar.svelte';
+  import { popupControls } from '$lib/stores/popUp';
 
   export let balance: TokenBalanceRow;
 </script>
@@ -51,7 +51,7 @@
             tabIndex={0}
             class="md:btn md:btn-xs md:btn-round text-xs font-medium w-44 md:w-auto h-12 md:h-auto flex md:block items-center max-sm:p-4 gap-x-2"
             on:click={() => {
-              $popupControls.open?.({
+              popupControls.open?.({
                 title: 'Wrap Circles',
                 component: WrapTokens,
                 props: {
@@ -68,7 +68,7 @@
           <button
             class="btn btn-xs btn-round text-xs font-medium"
             on:click={() => {
-              $popupControls.open?.({
+              popupControls.open?.({
                 title: 'Exit group',
                 component: ExitGroup,
                 props: {
@@ -85,7 +85,7 @@
           <button
             class="btn btn-xs btn-round text-xs font-medium"
             on:click={() => {
-              $popupControls.open?.({
+              popupControls.open?.({
                 title: 'Migrate Tokens to V2',
                 component: MigrateTokens,
                 props: {
@@ -106,7 +106,7 @@
           <button
             class="btn btn-xs btn-round text-xs font-medium"
             on:click={() => {
-              $popupControls.open?.({
+              popupControls.open?.({
                 title: 'Unwrap Circles',
                 component: UnwrapTokens,
                 props: {
@@ -123,7 +123,7 @@
           <button
             class="btn btn-xs btn-round text-xs font-medium"
             on:click={() => {
-              $popupControls.open?.({
+              popupControls.open?.({
                 title: 'Unwrap Static Circles',
                 component: UnwrapTokens,
                 props: {

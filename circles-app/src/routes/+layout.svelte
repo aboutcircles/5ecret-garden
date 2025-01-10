@@ -1,6 +1,4 @@
 <script lang="ts" context="module">
-  import { popupControls } from '$lib/components/PopUp.svelte';
-
   export type QuickAction = {
     name: string;
     icon: string;
@@ -17,7 +15,6 @@
   import { canMigrate } from '$lib/guards/canMigrate';
   import UpdateBanner from '$lib/components/UpdateBanner.svelte';
   import { page } from '$app/stores';
-  import PopUp from '$lib/components/PopUp.svelte';
   import SearchAvatar from '$lib/flows/addContact/1_Search.svelte';
   import Send from '$lib/flows/send/1_To.svelte';
   import MintGroupTokens from '$lib/flows/mintGroupTokens/1_To.svelte';
@@ -25,6 +22,8 @@
   import { tasks } from '$lib/utils/tasks';
   import type { Profile } from '@circles-sdk/profiles';
   import { getProfile } from '$lib/utils/profile';
+  import { popupControls, popupState } from '$lib/stores/popUp';
+  import PopUp from '$lib/components/PopUp.svelte';
 
   let quickAction: QuickAction | undefined;
 
@@ -33,7 +32,7 @@
       name: 'Send',
       icon: '/send.svg',
       action: () => {
-        $popupControls.open?.({
+        popupControls.open({
           title: 'Send Circles',
           component: Send,
           props: {},
@@ -44,7 +43,7 @@
       name: 'Add Contact',
       icon: '/add-contact.svg',
       action: () => {
-        $popupControls.open?.({
+        popupControls.open({
           title: 'Add Contact',
           component: SearchAvatar,
           props: {},
@@ -55,7 +54,7 @@
       name: 'Group mint',
       icon: '/banknotes-white.svg',
       action: () => {
-        $popupControls.open?.({
+        popupControls.open({
           title: 'Mint group tokens',
           component: MintGroupTokens,
           props: {},
@@ -79,7 +78,6 @@
     }
   });
 
-
   onMount(() => {
     if ($page.route.id === '/' || $page.route.id === '/connect-wallet') {
       clearSession();
@@ -89,8 +87,6 @@
   });
 
   $: quickAction = quickActionsMap[$page.route.id ?? ''] || undefined;
-
-  let showPopUp = false;
 </script>
 
 {#if $avatar}
@@ -121,18 +117,11 @@
   <div
     role="button"
     tabindex="0"
-    class={`fixed top-0 left-0 w-full h-full bg-black/50 z-10 ${showPopUp ? 'opacity-100' : 'opacity-0 hidden'} transition duration-300 ease-in-out`}
-    on:mousedown={() => $popupControls.close?.call(undefined)}
-    on:touchstart={() => $popupControls.close?.call(undefined)}
-  ></div>
-  <PopUp
-    on:openingStart={() => {
-      showPopUp = true;
-    }}
-    on:close={() => {
-      showPopUp = false;
-    }}
+    class={`fixed top-0 left-0 w-full h-full bg-black/50 z-10 ${$popupState.content ? 'opacity-100' : 'opacity-0 hidden'} transition duration-300 ease-in-out`}
+    on:mousedown={() => popupControls.close()}
+    on:touchstart={() => popupControls.close()}
   />
+  <PopUp />
 </main>
 {#if $tasks.length > 0}
   <div class="toast toast-bottom toast-end">
