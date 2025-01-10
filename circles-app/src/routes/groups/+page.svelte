@@ -16,11 +16,11 @@
   });
 </script>
 
-<div class="flex flex-col w-full sm:w-[90%] lg:w-3/5 p-0 gap-y-5 mt-28 mb-10 text-[#161616]">
-    <div class="text-2xl font-bold leading-7 px-4 sm:px-0">Groups</div>
-    <div class="flex flex-col p-0 w-full sm:border sm:rounded-lg overflow-x-auto divide-y">
-    {#if groups}
-      <GenericList store={groups} row={GroupRowView} />
-    {/if}
+<div
+  class="flex flex-col w-full sm:w-[90%] lg:w-3/5 p-0 gap-y-5 mt-28 mb-10 text-[#161616]"
+>
+  <div class="text-2xl font-bold leading-7 px-4 sm:px-0">Groups</div>
+  <div class="w-full md:border rounded-lg md:px-4">
+    <GenericList store={groups} row={GroupRowView} />
   </div>
 </div>

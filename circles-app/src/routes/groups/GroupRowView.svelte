@@ -8,7 +8,7 @@
 </script>
 
 <button
-  class="w-full flex items-center justify-between p-4 bg-base-100 hover:bg-base-200"
+  class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
   on:click={(e) => {
     popupControls.open({
       component: ProfilePage,
@@ -21,8 +21,13 @@
     return true;
   }}
 >
-  <Avatar address={item.group} view="horizontal" clickable={false} bottomInfo={`${item.memberCount} member${item.memberCount === 1 ? '' : 's'}`} />
+  <Avatar
+    address={item.group}
+    view="horizontal"
+    clickable={false}
+    bottomInfo={`${item.memberCount} member${item.memberCount === 1 ? '' : 's'}`}
+  />
   <div class="font-medium underline flex gap-x-2">
-   <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
+    <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
   </div>
 </button>
