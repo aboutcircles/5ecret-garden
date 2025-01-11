@@ -15,6 +15,7 @@
   import { onMount } from 'svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { popupControls } from '$lib/stores/popUp';
+  import Address from '$lib/components/Address.svelte';
 
   export let address: string | undefined;
   export let trustVersion: number | undefined;
@@ -70,17 +71,6 @@
   }
 
   let commonConnectionsCount = 0;
-
-  let copyIcon = '/copy.svg';
-
-  function handleCopy() {
-    navigator.clipboard.writeText(otherAvatar?.avatar ?? '');
-    copyIcon = '/check.svg';
-
-    setTimeout(() => {
-      copyIcon = '/copy.svg';
-    }, 1000);
-  }
 </script>
 
 <div class="flex flex-col items-center w-full sm:w-[90%] lg:w-3/5 mx-auto">
@@ -104,13 +94,7 @@
     <span class="bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm"
       >{getTypeString(otherAvatar?.type || '')}</span
     >
-    <button
-      on:click={handleCopy}
-      class="bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm flex flex-row items-center gap-x-1 font-medium hover:text-black/70 hover:cursor-pointer"
-    >
-      {shortenAddress(otherAvatar?.avatar)}
-      <img src={copyIcon} alt="Copy" class="w-4 h-4 inline" />
-    </button>
+    <Address address={otherAvatar?.avatar || ''}></Address>
     <a
       href={'https://gnosisscan.io/address/' + otherAvatar?.avatar}
       target="_blank"

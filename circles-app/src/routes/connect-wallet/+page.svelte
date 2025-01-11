@@ -21,7 +21,7 @@
     route={hasBrowserWallet
       ? '/connect-wallet/connect-safe'
       : '/connect-wallet'}
-      recommended={true}
+      recommended="Connect"
   />
   <ConnectWallet
     imgUrl="/fox.png"
