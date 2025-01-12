@@ -30,7 +30,7 @@
   }
 </script>
 
-<div class="w-full flex flex-col items-center mt-16 p-4 gap-y-4">
+<div class="w-full flex flex-col mt-16 p-4 gap-y-4">
   {#if invitations.length > 0}
     <div class="mt-16">
       <div class="text-center">
@@ -48,5 +48,9 @@
         </div>
       </div>
     </div>
+  {:else}
+    <p class="font-semibold text-xl">
+      You need to be invited in order to register your avatar
+    </p>
   {/if}
 </div>
