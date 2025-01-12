@@ -31,6 +31,11 @@
 </script>
 
 <div class="w-full flex flex-col mt-16 p-4 gap-y-4">
+  <div class="w-full">
+    <a href="/register">
+      <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
+    </a>
+  </div>
   {#if invitations.length > 0}
     <div class="mt-16">
       <div class="text-center">
@@ -49,8 +54,9 @@
       </div>
     </div>
   {:else}
-    <p class="font-semibold text-xl">
+    <p class="font-semibold text-lg">
       You need to be invited in order to register your avatar
     </p>
+    TODO: add context on how to get invited
   {/if}
 </div>
