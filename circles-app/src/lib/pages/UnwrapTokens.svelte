@@ -6,9 +6,8 @@
     import type {TokenBalanceRow} from "@circles-sdk/data";
     import {roundToDecimals} from "$lib/utils/shared";
     import { runTask } from '$lib/utils/tasks';
-    import type {PopupContentApi} from "$lib/components/PopUp.svelte";
+  import { popupControls } from "$lib/stores/popUp";
 
-    export let contentApi: PopupContentApi;
     export let asset: TokenBalanceRow;
 
     let amount: number = 0;
@@ -35,7 +34,7 @@
         } else {
             throw new Error("Unsupported token type");
         }
-        contentApi.close();
+        popupControls.close();
     }
 </script>
 
