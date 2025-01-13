@@ -1,11 +1,10 @@
 <script lang="ts">
     import {avatar} from "$lib/stores/avatar";
     import { runTask } from '$lib/utils/tasks';
-    import type {PopupContentApi} from "$lib/components/PopUp.svelte";
     import {shortenAddress} from "$lib/utils/shared";
+  import { popupControls } from "$lib/stores/popUp";
 
     export let address: string;
-    export let contentApi: PopupContentApi;
 
     async function invite() {
         if (!$avatar) {
@@ -15,7 +14,7 @@
             name: `Inviting ${shortenAddress(address)} ...`,
             promise: $avatar!.inviteHuman(address)
         });
-        contentApi.close();
+        popupControls.close();
     }
 </script>
 

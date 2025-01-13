@@ -30,33 +30,34 @@
   }
 </script>
 
-<div class="w-full flex flex-col mt-16 p-4 gap-y-4">
+<div
+  class="w-full flex flex-col p-4 max-w-xl gap-y-4 justify-center mt-28 md:mt-44"
+>
   <div class="w-full">
     <a href="/register">
       <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
     </a>
   </div>
-  {#if invitations.length > 0}
-    <div class="mt-16">
-      <div class="text-center">
-        <div class="max-w-md">
-          <h1 class="text-5xl font-bold">You have been invited</h1>
-          {#each invitations as inviter}
-            <button class="btn my-6" on:click={() => acceptInvitation(inviter)}>
-              by
-              <Avatar clickable={false} address={inviter} view="horizontal" />
-            </button>
-          {/each}
-          <p class="font-semibold text-xl">
-            Click on the invitation above to continue to the profile creation.
-          </p>
-        </div>
-      </div>
-    </div>
-  {:else}
-    <p class="font-semibold text-lg">
-      You need to be invited in order to register your avatar
-    </p>
-    TODO: add context on how to get invited
-  {/if}
+  <div class="border rounded-lg flex flex-col items-center p-4 w-full shadow-sm">
+    {#if invitations.length > 0}
+      <h1 class="text-3xl font-bold">You have been invited</h1>
+      {#each invitations as inviter}
+        <button
+          class="btn my-6 max-w-64 shadow-sm"
+          on:click={() => acceptInvitation(inviter)}
+        >
+          by
+          <Avatar clickable={false} address={inviter} view="horizontal" />
+        </button>
+      {/each}
+      <p class="font-semibold text-lg">
+        Click on the invitation above to continue to the profile creation.
+      </p>
+    {:else}
+      <p class="font-semibold text-lg">
+        You need to be invited in order to register your avatar
+      </p>
+      TODO: add context on how to get invited
+    {/if}
+  </div>
 </div>
