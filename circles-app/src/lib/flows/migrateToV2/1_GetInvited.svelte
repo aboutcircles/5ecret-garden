@@ -9,7 +9,11 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { popupControls } from '$lib/stores/popUp';
 
-  export let context: MigrateToV2Context;
+  export let context: MigrateToV2Context = {
+    inviter: '',
+    profile: undefined,
+    trustList: [],
+  };
   let canSelfMigrate = false;
   let invitations: AvatarRow[] | undefined;
   onMount(async () => {
@@ -40,25 +44,29 @@
     <p class="text-gray-500 mt-2">Loading invitations...</p>
   {:else if invitations.length > 0}
     <p class="text-gray-500 mt-2">You have been invited by:</p>
-    <ul class="mt-2">
+    <div
+      class="mt-2 flex flex-col gap-y-2 w-full divide-y rounded-lg p-4 border"
+    >
       {#each invitations as invitation}
-        <button
-          type="button"
-          class="text-gray-500"
-          on:click={(e) => selectInvitation(invitation.avatar)}
-          on:keydown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ')
-              selectInvitation(invitation.avatar);
-          }}
-        >
-          <Avatar
-            address={invitation.avatar}
-            clickable={false}
-            view="horizontal"
-          />
-        </button>
+        <div class="pt-2">
+          <button
+            type="button"
+            class="text-gray-500 hover:bg-black/5 w-full flex p-2 rounded-lg"
+            on:click={(e) => selectInvitation(invitation.avatar)}
+            on:keydown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ')
+                selectInvitation(invitation.avatar);
+            }}
+          >
+            <Avatar
+              address={invitation.avatar}
+              clickable={false}
+              view="horizontal"
+            />
+          </button>
+        </div>
       {/each}
-    </ul>
+    </div>
   {:else}
     <p class="text-gray-500 mt-2">You have no invitations.</p>
     {#if canSelfMigrate}

@@ -3,9 +3,10 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { circles } from '$lib/stores/circles';
   import { wallet } from '$lib/stores/wallet';
+  import type { AvatarRow } from '@circles-sdk/data';
   import { onMount } from 'svelte';
 
-  let invitations: string[] = [];
+  let invitations: AvatarRow[] = [];
 
   onMount(async () => {
     if (!$wallet?.address) {
@@ -14,15 +15,8 @@
     if (!$circles?.data) {
       throw new Error('Circles SDK not initialized');
     }
-    const trustRelations = $circles.data.getTrustRelations(
-      $wallet.address,
-      100
-    );
-    await trustRelations.queryNextPage();
 
-    invitations = (trustRelations.currentPage?.results ?? [])
-      .filter((o) => o.version == 2)
-      .map((o) => o.truster);
+    invitations = await $circles.data.getInvitations($wallet.address.toLowerCase());
   });
 
   function acceptInvitation(inviter: string) {
@@ -38,16 +32,22 @@
       <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
     </a>
   </div>
-  <div class="border rounded-lg flex flex-col items-center p-4 w-full shadow-sm">
+  <div
+    class="border rounded-lg flex flex-col items-center p-4 w-full shadow-sm"
+  >
     {#if invitations.length > 0}
       <h1 class="text-3xl font-bold">You have been invited</h1>
       {#each invitations as inviter}
         <button
           class="btn my-6 max-w-64 shadow-sm"
-          on:click={() => acceptInvitation(inviter)}
+          on:click={() => acceptInvitation(inviter.avatar)}
         >
           by
-          <Avatar clickable={false} address={inviter} view="horizontal" />
+          <Avatar
+            clickable={false}
+            address={inviter.avatar}
+            view="horizontal"
+          />
         </button>
       {/each}
       <p class="font-semibold text-lg">
