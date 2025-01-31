@@ -35,7 +35,7 @@
       return;
     }
 
-    otherAvatar = await $circles.getAvatar(otherAvatarAddress);
+    otherAvatar = await $circles.getAvatar(otherAvatarAddress, false);
     if (otherAvatar?.avatarInfo?.version === 2) {
       profile = await getProfile(otherAvatar.address);
     }
