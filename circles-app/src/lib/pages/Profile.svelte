@@ -211,6 +211,7 @@
     value="common_connections"
     role="tab"
     class="tab h-auto"
+    checked
     aria-label={`Common connections (${commonConnectionsCount})`}
   />
   <div role="tabpanel" class="tab-content mt-8 bg-base-100 border-none">
