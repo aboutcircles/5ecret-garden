@@ -4,7 +4,7 @@
   import { circles } from '$lib/stores/circles';
   import { avatar } from '$lib/stores/avatar';
   import { Sdk } from '@circles-sdk/sdk';
-  import { gnosisConfig } from '$lib/chiadoConfig';
+  import { gnosisConfig } from '$lib/circlesConfig';
   import { SdkContractRunnerWrapper } from '@circles-sdk/adapter-ethers';
   import { JsonRpcProvider } from 'ethers6';
   import { ComethSdkContractRunner } from '@circles-sdk/adapter-cometh';

@@ -26,7 +26,7 @@ export const createTransactionHistory = async () => {
     }
 
     return await createCirclesQueryStore<TransactionHistoryRow>(
-        () => _avatar.getTransactionHistory(25),
+        () => _avatar.getTransactionHistory2(25),
         transferEvents
     );
 };

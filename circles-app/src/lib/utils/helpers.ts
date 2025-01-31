@@ -30,9 +30,9 @@ export function formatTrustRelation(row: TrustRelationRow, profile?: Profile) {
 
 export async function getCirclesConfig(chainId: bigint) {
     if (chainId === 100n) {
-        return (await import('$lib/chiadoConfig')).gnosisConfig;
+        return (await import('$lib/circlesConfig')).gnosisConfig;
     } else if (chainId === 10200n) {
-        return (await import('$lib/chiadoConfig')).chiadoConfig;
+        return (await import('$lib/circlesConfig')).circlesConfig;
     }
     throw new Error(`Unsupported chain-id: ${chainId}`);
 }

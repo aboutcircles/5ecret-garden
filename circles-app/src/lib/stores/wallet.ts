@@ -5,7 +5,7 @@ import { circles } from "$lib/stores/circles";
 import { BrowserProviderContractRunner } from "@circles-sdk/adapter-ethers";
 import { SafeSdkBrowserContractRunner, SafeSdkPrivateKeyContractRunner } from "@circles-sdk/adapter-safe";
 import { Sdk } from "@circles-sdk/sdk";
-import { gnosisConfig } from "$lib/chiadoConfig";
+import { gnosisConfig } from "$lib/circlesConfig";
 import { getCirclesConfig } from "$lib/utils/helpers";
 
 type WalletRunner = BrowserProviderContractRunner | SafeSdkBrowserContractRunner | SafeSdkPrivateKeyContractRunner;

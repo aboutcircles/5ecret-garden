@@ -3,7 +3,7 @@
   import { type CirclesConfig, Sdk } from '@circles-sdk/sdk';
   import { circles } from '$lib/stores/circles';
   import { BrowserProviderContractRunner } from '@circles-sdk/adapter-ethers';
-  import { chiadoConfig, gnosisConfig } from '$lib/chiadoConfig';
+  import { circlesConfig, gnosisConfig } from '$lib/circlesConfig';
   import { wallet } from '$lib/stores/wallet';
   import { goto } from '$app/navigation';
   import WalletLoader from '$lib/components/WalletLoader.svelte';

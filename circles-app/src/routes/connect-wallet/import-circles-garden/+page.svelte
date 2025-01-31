@@ -3,7 +3,7 @@
   import { wallet } from '$lib/stores/wallet';
   import { circles } from '$lib/stores/circles';
   import { Sdk } from '@circles-sdk/sdk';
-  import { gnosisConfig } from '$lib/chiadoConfig';
+  import { gnosisConfig } from '$lib/circlesConfig';
   import { PrivateKeyContractRunner } from '@circles-sdk/adapter-ethers';
   import SeedphraseInput from '$lib/components/SeedphraseInput.svelte';
   import { ethers } from 'ethers';
