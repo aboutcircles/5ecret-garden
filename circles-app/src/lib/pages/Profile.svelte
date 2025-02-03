@@ -3,7 +3,6 @@
   import type { Profile } from '@circles-sdk/profiles';
   import { avatar } from '$lib/stores/avatar';
   import CommonConnections from '$lib/components/CommonConnections.svelte';
-  import { shortenAddress } from '$lib/utils/shared';
   import { contacts } from '$lib/stores/contacts';
   import type { AvatarRow, TrustRelationRow } from '@circles-sdk/data';
   import Untrust from '$lib/pages/Untrust.svelte';
@@ -74,8 +73,11 @@
 </script>
 
 <div class="flex flex-col items-center w-full sm:w-[90%] lg:w-3/5 mx-auto">
-  <Avatar view="vertical" clickable={false} address={otherAvatar?.avatar || ''}
-  ></Avatar>
+  <Avatar
+    view="vertical"
+    clickable={false}
+    address={otherAvatar?.avatar || ''}
+  />
 
   {#if trustRow}
     <span
@@ -94,7 +96,7 @@
     <span class="bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm"
       >{getTypeString(otherAvatar?.type || '')}</span
     >
-    <Address address={otherAvatar?.avatar || ''}></Address>
+    <Address address={otherAvatar?.avatar || ''} />
     <a
       href={'https://gnosisscan.io/address/' + otherAvatar?.avatar}
       target="_blank"
