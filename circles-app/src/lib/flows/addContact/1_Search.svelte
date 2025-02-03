@@ -24,7 +24,7 @@
     });
   }
 
-  async function handleSelect(event: CustomEvent<AvatarRow>) {
+  async function handleSelect(event: CustomEvent<{ avatar: string }>) {
     context.selectedAddress = event.detail.avatar;
     const existingContact = $contacts.data[context.selectedAddress];
 

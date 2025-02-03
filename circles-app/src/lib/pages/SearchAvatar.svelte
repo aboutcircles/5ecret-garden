@@ -20,10 +20,8 @@
 
       const nameResults = await profiles.searchByName(selectedAddress);
       if (nameResults) results = [...nameResults];
-      else {
-        const addressResult = await profiles.searchByAddress(selectedAddress);
-        if (addressResult) results = [...results, ...addressResult];
-      }
+      const addressResult = await profiles.searchByAddress(selectedAddress);
+      if (addressResult) results = [...results, ...addressResult];
 
       console.log('Updated results:', results);
 
@@ -57,7 +55,8 @@
       <div class="w-full pt-2">
         <button
           class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
-          on:click={() => handleInvite(profile.address)}
+          on:click={() =>
+            eventDispatcher('select', { avatar: profile.address })}
         >
           <Avatar
             address={profile.address}
@@ -75,7 +74,8 @@
         {#if ethers.isAddress(selectedAddress)}
           <button
             class="btn mt-6"
-            on:click={() => handleInvite(selectedAddress)}
+            on:click={() =>
+              eventDispatcher('invite', { avatar: selectedAddress })}
             >Invite {selectedAddress}</button
           >
         {:else if selectedAddress}
