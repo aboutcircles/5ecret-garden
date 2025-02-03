@@ -10,73 +10,36 @@
   import GenericList from '$lib/components/GenericList.svelte';
   import AvatarRowView from '$lib/components/AvatarRow.svelte';
   import AddressInput from '$lib/components/AddressInput.svelte';
+  import { Profiles } from '@circles-sdk/profiles';
 
   export let selectedAddress: string = '';
   let lastAddress: string = '';
+  let profiles = new Profiles('https://rpc.aboutcircles.com/profiles');
 
-  let store: Readable<{
-    data: AvatarRow[];
-    next: () => Promise<boolean>;
-    ended: boolean;
-  }>;
+  async function searchProfiles() {
+    try {
+      let results = [];
+      const addressResult = await profiles.searchByAddress(selectedAddress);
+      results = addressResult ? [addressResult] : [];
+      const nameResults = await profiles.searchByName(selectedAddress);
+      results = nameResults || [];
+      console.log(results);
+    } catch (error) {
+      console.error('Error searching profiles:', error);
+    }
+  }
 
   const eventDispatcher = createEventDispatcher();
-
-  onMount(async () => {
-    store = await createStore();
-  });
-
-  async function createQuery(): Promise<CirclesQuery<AvatarRow>> {
-    if (!$circles) {
-      throw new Error('Circles not loaded');
-    }
-    return new CirclesQuery($circles.circlesRpc, {
-      namespace: 'V_Crc',
-      table: 'Avatars',
-      columns: [],
-      filter: [
-        {
-          Type: 'Conjunction',
-          ConjunctionType: 'Or',
-          Predicates: [
-            {
-              Type: 'FilterPredicate',
-              FilterType: 'Like',
-              Column: 'avatar',
-              Value: (selectedAddress?.toLowerCase() ?? '') + '%',
-            },
-            {
-              Type: 'FilterPredicate',
-              FilterType: 'ILike',
-              Column: 'name',
-              Value: (selectedAddress ?? '') + '%',
-            },
-          ],
-        },
-      ],
-      sortOrder: 'DESC',
-      limit: 25,
-    });
-  }
-
-  function createStore() {
-    return createCirclesQueryStore<AvatarRow>(createQuery);
-  }
 
   function handleInvite() {
     eventDispatcher('invite', { avatar: selectedAddress });
   }
 
-  async function updateStore() {
-    console.log('update store', selectedAddress);
-    store = await createStore();
-  }
-
   $: if (selectedAddress && selectedAddress !== lastAddress) {
     lastAddress = selectedAddress;
-    updateStore();
-    console.log(selectedAddress, store);
+    searchProfiles();
   }
+
 </script>
 
 <div class="form-control my-4">
@@ -86,7 +49,7 @@
 <div class="mt-4">
   <p class="menu-title pl-0">Found avatars</p>
 
-  {#if $store?.data.length > 0}
+  <!-- {#if $store?.data.length > 0}
     <GenericList {store} row={AvatarRowView} on:select />
   {:else}
     <div class="text-center">
@@ -102,5 +65,5 @@
         {/if}
       </div>
     </div>
-  {/if}
+  {/if} -->
 </div>

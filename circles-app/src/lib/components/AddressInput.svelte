@@ -9,6 +9,7 @@
   let input: HTMLInputElement;
   let editorText: string | undefined = undefined;
   let isScanning = false;
+  let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
 
   const eventDispatcher = createEventDispatcher();
   const qrCodeRegionId = 'qr-scanner';
@@ -22,14 +23,13 @@
 
   const handleInput = (e: Event) => {
     editorText = (e.target as HTMLInputElement).value;
-    if (ethers.isAddress(editorText)) {
+
+    if (debounceTimeout) clearTimeout(debounceTimeout);
+    debounceTimeout = setTimeout(() => {
       address = editorText;
       console.log('event dispatcher', address);
       eventDispatcher('addressChange', { address });
-    } else if (editorText == '') {
-      address = '';
-      eventDispatcher('addressChange', { address });
-    }
+    }, 300);
   };
 
   async function openQrScanner() {

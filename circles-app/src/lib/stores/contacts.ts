@@ -1,4 +1,4 @@
-import { get, writable } from "svelte/store";
+import { get } from "svelte/store";
 import { avatar } from "$lib/stores/avatar";
 import type {
     AvatarRow,
