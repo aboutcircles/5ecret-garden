@@ -6,12 +6,13 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
 
   export let selectedAddress: string = '';
+  export let handleInvite: boolean = false;
   let lastAddress: string = '';
   let profiles = new Profiles('https://rpc.aboutcircles.com/profiles');
   let result: Profile[] = [];
 
   onMount(async () => {
-    result = await profiles.searchByName('a');
+    result = (await profiles.searchByName('a')).slice(0, 25);
   });
 
   async function searchProfiles() {
@@ -32,10 +33,6 @@
   }
 
   const eventDispatcher = createEventDispatcher();
-
-  function handleInvite(address: string) {
-    eventDispatcher('invite', { avatar: address });
-  }
 
   $: if (selectedAddress && selectedAddress !== lastAddress) {
     lastAddress = selectedAddress;
@@ -67,19 +64,16 @@
         </button>
       </div>
     {/each}
-    <!-- <GenericList {result} row={AvatarRowView} on:select /> -->
   {:else}
     <div class="text-center">
       <div>
-        {#if ethers.isAddress(selectedAddress)}
+        {#if ethers.isAddress(selectedAddress) && handleInvite}
           <button
             class="btn mt-6"
             on:click={() =>
               eventDispatcher('invite', { avatar: selectedAddress })}
             >Invite {selectedAddress}</button
           >
-        {:else if selectedAddress}
-          <p class="text-error mt-6">Invalid address</p>
         {:else}
           <p>No avatars found.</p>
         {/if}

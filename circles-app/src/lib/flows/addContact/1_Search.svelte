@@ -59,5 +59,6 @@
     selectedAddress={context.selectedAddress}
     on:invite={handleInvite}
     on:select={handleSelect}
+    handleInvite={true}
   />
 </FlowDecoration>
