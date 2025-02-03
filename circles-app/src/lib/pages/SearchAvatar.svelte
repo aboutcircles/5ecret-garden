@@ -1,29 +1,33 @@
-<!-- TODO: Use selectContact component instead and pass this custom store to it -->
-
 <script lang="ts">
   import { ethers } from 'ethers6';
   import { createEventDispatcher, onMount } from 'svelte';
-  import { type AvatarRow, CirclesQuery } from '@circles-sdk/data';
-  import { circles } from '$lib/stores/circles';
-  import { createCirclesQueryStore } from '$lib/stores/query/circlesQueryStore';
-  import type { Readable } from 'svelte/store';
-  import GenericList from '$lib/components/GenericList.svelte';
-  import AvatarRowView from '$lib/components/AvatarRow.svelte';
   import AddressInput from '$lib/components/AddressInput.svelte';
-  import { Profiles } from '@circles-sdk/profiles';
+  import { Profiles, type Profile } from '@circles-sdk/profiles';
+  import Avatar from '$lib/components/avatar/Avatar.svelte';
 
   export let selectedAddress: string = '';
   let lastAddress: string = '';
   let profiles = new Profiles('https://rpc.aboutcircles.com/profiles');
+  let result: Profile[] = [];
+
+  onMount(async () => {
+    result = await profiles.searchByName('a');
+  });
 
   async function searchProfiles() {
     try {
-      let results = [];
-      const addressResult = await profiles.searchByAddress(selectedAddress);
-      results = addressResult ? [addressResult] : [];
+      let results: Profile[] = [];
+
       const nameResults = await profiles.searchByName(selectedAddress);
-      results = nameResults || [];
-      console.log(results);
+      if (nameResults) results = [...nameResults];
+      else {
+        const addressResult = await profiles.searchByAddress(selectedAddress);
+        if (addressResult) results = [...results, ...addressResult];
+      }
+
+      console.log('Updated results:', results);
+
+      result = results;
     } catch (error) {
       console.error('Error searching profiles:', error);
     }
@@ -31,15 +35,14 @@
 
   const eventDispatcher = createEventDispatcher();
 
-  function handleInvite() {
-    eventDispatcher('invite', { avatar: selectedAddress });
+  function handleInvite(address: string) {
+    eventDispatcher('invite', { avatar: address });
   }
 
   $: if (selectedAddress && selectedAddress !== lastAddress) {
     lastAddress = selectedAddress;
     searchProfiles();
   }
-
 </script>
 
 <div class="form-control my-4">
@@ -49,13 +52,30 @@
 <div class="mt-4">
   <p class="menu-title pl-0">Found avatars</p>
 
-  <!-- {#if $store?.data.length > 0}
-    <GenericList {store} row={AvatarRowView} on:select />
+  {#if result.length > 0}
+    {#each result as profile}
+      <div class="w-full pt-2">
+        <button
+          class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
+          on:click={() => handleInvite(profile.address)}
+        >
+          <Avatar
+            address={profile.address}
+            view="horizontal"
+            clickable={false}
+          />
+          <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
+        </button>
+      </div>
+    {/each}
+    <!-- <GenericList {result} row={AvatarRowView} on:select /> -->
   {:else}
     <div class="text-center">
       <div>
         {#if ethers.isAddress(selectedAddress)}
-          <button class="btn mt-6" on:click={handleInvite}
+          <button
+            class="btn mt-6"
+            on:click={() => handleInvite(selectedAddress)}
             >Invite {selectedAddress}</button
           >
         {:else if selectedAddress}
@@ -65,5 +85,5 @@
         {/if}
       </div>
     </div>
-  {/if} -->
+  {/if}
 </div>
