@@ -1,7 +1,6 @@
 <script lang="ts">
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import SearchAvatar from '$lib/pages/SearchAvatar.svelte';
-  import type { AvatarRow } from '@circles-sdk/data';
   import Invite from '$lib/pages/Invite.svelte';
   import Trust from '$lib/pages/Trust.svelte';
   import { contacts } from '$lib/stores/contacts';
@@ -59,6 +58,6 @@
     selectedAddress={context.selectedAddress}
     on:invite={handleInvite}
     on:select={handleSelect}
-    handleInvite={true}
+    searchType="contact"
   />
 </FlowDecoration>

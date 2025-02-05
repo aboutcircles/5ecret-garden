@@ -68,6 +68,7 @@
   <SearchAvatar
     selectedAddress={context.selectedAddress}
     on:select={handleSelect}
+    searchType='send'
   />
   <!-- <SelectContact
     store={contacts}

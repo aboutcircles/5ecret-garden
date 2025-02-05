@@ -99,6 +99,7 @@
   let profile: Profile | undefined;
 
   $: {
+    //TODO: if we pass a profile directly, we don't have to initialize and call getProfile() from sdk
     if (address) {
       initialize();
     }
