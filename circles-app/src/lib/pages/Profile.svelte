@@ -100,7 +100,8 @@
     <a
       href={'https://gnosisscan.io/address/' + otherAvatar?.avatar}
       target="_blank"
-      class="bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm">#</a
+      class="flex items-center justify-center bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm"
+      ><img src="/external.svg" alt="External Link" class="w-4" /></a
     >
   </div>
 
