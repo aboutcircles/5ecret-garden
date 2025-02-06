@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type { PopupContentApi } from '$lib/components/PopUp.svelte';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import type { MigrateToV2Context } from '$lib/flows/migrateToV2/context';
   import CreateProfile from './2_CreateProfile.svelte';
@@ -8,8 +7,13 @@
   import { circles } from '$lib/stores/circles';
   import type { AvatarRow } from '@circles-sdk/data';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-  export let contentApi: PopupContentApi;
-  export let context: MigrateToV2Context;
+  import { popupControls } from '$lib/stores/popUp';
+
+  export let context: MigrateToV2Context = {
+    inviter: '',
+    profile: undefined,
+    trustList: [],
+  };
   let canSelfMigrate = false;
   let invitations: AvatarRow[] | undefined;
   onMount(async () => {
@@ -20,7 +24,7 @@
     invitations = await $circles.data.getInvitations($avatar.avatarInfo.avatar);
   });
   async function next() {
-    contentApi.open({
+    popupControls.open({
       title: 'Create Profile',
       component: CreateProfile,
       props: {
@@ -35,30 +39,34 @@
 </script>
 
 <FlowDecoration>
-  <p class="text-2xl font-bold mt-14">Find an invitation</p>
+  <p class="text-2xl font-bold">Find an invitation</p>
   {#if !invitations}
     <p class="text-gray-500 mt-2">Loading invitations...</p>
   {:else if invitations.length > 0}
     <p class="text-gray-500 mt-2">You have been invited by:</p>
-    <ul class="mt-2">
+    <div
+      class="mt-2 flex flex-col gap-y-2 w-full divide-y rounded-lg p-4 border"
+    >
       {#each invitations as invitation}
-        <button
-          type="button"
-          class="text-gray-500"
-          on:click={(e) => selectInvitation(invitation.avatar)}
-          on:keydown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ')
-              selectInvitation(invitation.avatar);
-          }}
-        >
-          <Avatar
-            address={invitation.avatar}
-            clickable={false}
-            view="horizontal"
-          />
-        </button>
+        <div class="pt-2">
+          <button
+            type="button"
+            class="text-gray-500 hover:bg-black/5 w-full flex p-2 rounded-lg"
+            on:click={(e) => selectInvitation(invitation.avatar)}
+            on:keydown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ')
+                selectInvitation(invitation.avatar);
+            }}
+          >
+            <Avatar
+              address={invitation.avatar}
+              clickable={false}
+              view="horizontal"
+            />
+          </button>
+        </div>
       {/each}
-    </ul>
+    </div>
   {:else}
     <p class="text-gray-500 mt-2">You have no invitations.</p>
     {#if canSelfMigrate}

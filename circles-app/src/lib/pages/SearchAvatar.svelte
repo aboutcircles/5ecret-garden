@@ -1,94 +1,52 @@
 <script lang="ts">
   import { ethers } from 'ethers6';
   import { createEventDispatcher, onMount } from 'svelte';
-  import { type AvatarRow, CirclesQuery } from '@circles-sdk/data';
-  import { circles } from '$lib/stores/circles';
-  import { createCirclesQueryStore } from '$lib/stores/query/circlesQueryStore';
-  import type { Readable } from 'svelte/store';
-  import GenericList from '$lib/components/GenericList.svelte';
-  import AvatarRowView from '$lib/components/AvatarRow.svelte';
   import AddressInput from '$lib/components/AddressInput.svelte';
+  import { Profiles, type Profile } from '@circles-sdk/profiles';
+  import Avatar from '$lib/components/avatar/Avatar.svelte';
+  import { contacts } from '$lib/stores/contacts';
 
-  export let selectedAddress: string | undefined = undefined;
+  export let selectedAddress: string = '';
+  export let searchType: 'send' | 'group' | 'contact' = 'send';
+  let lastAddress: string = '';
+  let profiles = new Profiles('https://rpc.aboutcircles.com/profiles');
+  let result: Profile[] = [];
 
-  //   let input: HTMLInputElement | undefined;
-  //   let editorText: string | undefined = undefined;
+  onMount(async () => {
+    if (searchType === 'send') {
+      // TODO: implement contact list here when get profile type and circles-sdk/profiles are unified
 
-  let store:
-    | Readable<{
-        data: AvatarRow[];
-        next: () => Promise<boolean>;
-        ended: boolean;
-      }>
-    | undefined = undefined;
+      // result = Object.values($contacts.data).map((item) => {
+      //   return item.contactProfile});
+
+      result = (await profiles.searchByName('a')).slice(0, 25);
+    } else {
+      result = (await profiles.searchByName('a')).slice(0, 25);
+    }
+  });
+
+  async function searchProfiles() {
+    try {
+      let results: Profile[] = [];
+
+      const nameResults = await profiles.searchByName(selectedAddress);
+      if (nameResults) results = [...nameResults];
+      const addressResult = await profiles.searchByAddress(selectedAddress);
+      if (addressResult) results = [...results, ...addressResult];
+
+      console.log('Updated results:', results);
+
+      result = results;
+    } catch (error) {
+      console.error('Error searching profiles:', error);
+    }
+  }
 
   const eventDispatcher = createEventDispatcher();
 
-  onMount(async () => {
-    // if (selectedAddress && input) {
-    //   editorText = selectedAddress;
-    //   input.value = editorText;
-    // }
-    store = await createStore();
-  });
-
-  //   const handleInput = async (e: any) => {
-  //     editorText = (e.target as HTMLInputElement).value;
-  //     if (ethers.isAddress(editorText)) {
-  //       selectedAddress = editorText;
-  //     }
-  //     console.log('Input', editorText);
-  //     store = await createStore();
-  //   };
-
-  async function createQuery(): Promise<CirclesQuery<AvatarRow>> {
-    if (!$circles) {
-      throw new Error('Circles not loaded');
-    }
-    return new CirclesQuery($circles.circlesRpc, {
-      namespace: 'V_Crc',
-      table: 'Avatars',
-      columns: [],
-      filter: [
-        {
-          Type: 'Conjunction',
-          ConjunctionType: 'Or',
-          Predicates: [
-            {
-              Type: 'FilterPredicate',
-              FilterType: 'Like',
-              Column: 'avatar',
-              Value: (selectedAddress?.toLowerCase() ?? '') + '%',
-            },
-            {
-              Type: 'FilterPredicate',
-              FilterType: 'ILike',
-              Column: 'name',
-              Value: (selectedAddress ?? '') + '%',
-            },
-          ],
-        },
-      ],
-      sortOrder: 'DESC',
-      limit: 25,
-    });
-  }
-
-  function createStore() {
-    return createCirclesQueryStore<AvatarRow>(createQuery);
-  }
-
-  function handleInvite() {
-    eventDispatcher('invite', { avatar: selectedAddress });
-  }
-
-  async function updateStore() {
-    console.log('update store', selectedAddress);
-    store = await createStore();
-  }
-
-  $: if (selectedAddress) {
-    updateStore();
+  $: if (selectedAddress && selectedAddress !== lastAddress) {
+    lastAddress = selectedAddress;
+    searchProfiles();
   }
 </script>
 
@@ -97,19 +55,47 @@
 </div>
 
 <div class="mt-4">
-  <p class="menu-title pl-0">Found avatars</p>
+  <p class="menu-title pl-0">
+    {#if searchType === 'send'}
+      Contacts
+    {:else if searchType === 'contact'}
+      Found Avatar
+    {:else}
+      Group
+    {/if}
+  </p>
 
-  {#if $store?.data?.length > 0}
-    <GenericList {store} row={AvatarRowView} on:select />
+  {#if result.length > 0}
+    <div
+      class="w-full md:border rounded-lg md:px-4 flex flex-col divide-y gap-y-2 overflow-x-auto py-4"
+    >
+      {#each result as profile}
+        <div class="w-full pt-2">
+          <button
+            class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
+            on:click={() =>
+              eventDispatcher('select', { avatar: profile.address })}
+          >
+            <Avatar
+              address={profile.address}
+              view="horizontal"
+              clickable={false}
+            />
+            <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
+          </button>
+        </div>
+      {/each}
+    </div>
   {:else}
     <div class="text-center">
       <div>
-        {#if ethers.isAddress(selectedAddress)}
-          <button class="btn mt-6" on:click={handleInvite}
+        {#if ethers.isAddress(selectedAddress) && searchType === 'contact'}
+          <button
+            class="btn mt-6"
+            on:click={() =>
+              eventDispatcher('invite', { avatar: selectedAddress })}
             >Invite {selectedAddress}</button
           >
-        {:else if selectedAddress}
-          <p class="text-error mt-6">Invalid address</p>
         {:else}
           <p>No avatars found.</p>
         {/if}

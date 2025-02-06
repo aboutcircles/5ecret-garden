@@ -7,13 +7,12 @@
 
 <script lang="ts">
   import type { Profile } from '@circles-sdk/profiles';
-  import { ethers } from 'ethers6';
   import { createEventDispatcher } from 'svelte';
   import type { ContactList } from '$lib/stores/contacts';
-  import { shortenAddress } from '$lib/utils/shared';
   import type { Readable } from 'svelte/store';
   import AddressInput from '$lib/components/AddressInput.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
+  import { shortenAddress } from '$lib/utils/shared';
 
   export let store:
     | Readable<{
@@ -23,71 +22,31 @@
       }>
     | undefined = undefined;
 
-  export let selectedAddress: string | undefined = undefined;
-  export let selectedProfile: Profile | undefined = undefined;
+  export let selectedAddress: string = '';
   export let addressListTitle: string = 'Recent';
   export let noResultsMessage: string = 'No recent addresses found';
-
-  let inputElement: HTMLInputElement | undefined = undefined;
+  export let group: boolean = false;
 
   const eventDispatcher = createEventDispatcher();
 
-  $: data = $store?.data;
-  $: filteredAddresses = filter(data ?? {});
-
-  function filter(contactList: ContactList) {
-    let filteredAddresses: string[] = [];
-
-    if (selectedAddress && inputElement) {
-      filteredAddresses = Object.keys(contactList).filter((address) => {
-        return (
-          address
-            .toLowerCase()
-            .includes(selectedAddress?.toLowerCase() ?? '') ||
-          address == selectedAddress ||
-          contactList[address].contactProfile.name
+  $: data = $store?.data ?? {};
+  $: filteredAddresses = (() => {
+    if (selectedAddress) {
+      return Object.keys(data).filter(
+        (address) =>
+          address.toLowerCase().includes(selectedAddress.toLowerCase()) ||
+          data[address]?.contactProfile?.name
             ?.toLowerCase()
-            ?.includes(selectedAddress?.toLowerCase() ?? '')
-        );
-      });
-    } else {
-      filteredAddresses = Object.keys(contactList);
-    }
-
-    return filteredAddresses;
-  }
-
-  function selected(address: string, profile: Profile | undefined) {
-    eventDispatcher('select', <SelectedEvent>{
-      address: address,
-      profile: profile,
-    });
-  }
-
-  function updateSearchResults() {
-    filteredAddresses = Object.keys(data ?? {}).filter((address) => {
-      return (
-        address.toLowerCase().includes(selectedAddress?.toLowerCase() ?? '') ||
-        address == selectedAddress?.toLowerCase() ||
-        $store?.data[address].contactProfile.name
-          ?.toLowerCase()
-          ?.includes(selectedAddress?.toLowerCase() ?? '')
+            ?.includes(selectedAddress.toLowerCase())
       );
-    });
-
-    if (ethers.isAddress(selectedAddress)) {
-      console.log(selectedAddress);
-      selectedProfile = $store?.data[selectedAddress]?.contactProfile;
-      selected(selectedAddress, $store?.data[selectedAddress]?.contactProfile);
     } else {
-      selectedAddress = undefined;
-      selectedProfile = undefined;
+      return Object.keys(data);
     }
-  }
+  })();
 
-  $: if (selectedAddress) {
-    console.log("update selected address");
-    updateSearchResults();
+  function handleSelect(address: string) {
+    const profile = $store?.data[address]?.contactProfile;
+    eventDispatcher('select', { address, profile });
   }
 </script>
 
@@ -95,29 +54,34 @@
   <AddressInput bind:address={selectedAddress} />
 </div>
 
-<p class="menu-title pl-0">
-  {addressListTitle}
-</p>
-<div
-  class="flex flex-col p-0 md:px-4 sm:py-4 w-full sm:border sm:rounded-lg overflow-x-auto divide-y"
->
-  {#if Object.keys(filteredAddresses).length > 0}
-    {#each filteredAddresses as address (address)}
-      <button
-        class="flex w-full items-center justify-between p-4 bg-base-100 hover:bg-base-200 rounded-lg"
-        on:click={() => {
-          selectedProfile = $store?.data[address].contactProfile;
-          selectedAddress = address;
-          selected(address, $store?.data[address].contactProfile);
-        }}
-      >
-        <Avatar {address} view="horizontal">{shortenAddress(address)}</Avatar>
-        <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
-      </button>
-    {/each}
-  {:else}
-    <div class="p-2 hover:bg-base-200 rounded-lg">
-      {@html noResultsMessage}
+{#if selectedAddress && !group}
+  <p class="menu-title p-0">Selected Address:</p>
+  <button
+    class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg mt-2"
+    on:click={() => handleSelect(selectedAddress)}
+  >
+    <Avatar address={selectedAddress} clickable={false} view="horizontal" bottomInfo={shortenAddress(selectedAddress)}  />
+    <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
+  </button>
+{:else}
+  <p class="menu-title pl-0">{addressListTitle}</p>
+  {#if filteredAddresses.length > 0}
+    <div
+      class="w-full md:border rounded-lg md:px-4 flex flex-col divide-y gap-y-2 overflow-x-auto py-4"
+    >
+      {#each filteredAddresses as address (address)}
+        <div class="w-full pt-2">
+          <button
+            class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
+            on:click={() => handleSelect(address)}
+          >
+            <Avatar {address} view="horizontal" clickable={false} bottomInfo={shortenAddress(address)} />
+            <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
+          </button>
+        </div>
+      {/each}
     </div>
+  {:else}
+    {@html noResultsMessage}
   {/if}
-</div>
+{/if}

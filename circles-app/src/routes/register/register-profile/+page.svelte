@@ -27,10 +27,11 @@
     }
 </script>
 
-<div class="hero">
-    <div class="hero-content flex-col lg:flex-row-reverse">
+<div
+  class="w-full flex flex-col min-h-screen p-4 max-w-xl gap-y-4 justify-center"
+>
 
-        <div class="card bg-base-100 w-96 shadow-xl">
+        <div class="card bg-base-100 w-96 border shadow-sm">
             <figure class="px-10 pt-10">
                 <img src="/person.svg"
                      alt="person"
@@ -47,5 +48,4 @@
                 </div>
             </div>
         </div>
-    </div>
 </div>

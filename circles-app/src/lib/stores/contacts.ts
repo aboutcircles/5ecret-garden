@@ -1,4 +1,4 @@
-import { get, writable } from "svelte/store";
+import { get } from "svelte/store";
 import { avatar } from "$lib/stores/avatar";
 import type {
     AvatarRow,
@@ -10,7 +10,6 @@ import type { Profile } from "@circles-sdk/profiles";
 import { createEventStore } from "$lib/stores/eventStores/eventStoreFactory";
 import { circles } from "$lib/stores/circles";
 import { getProfile } from "$lib/utils/profile";
-import type { Avatar } from "@circles-sdk/sdk";
 
 export type ContactListItem = {
     contactProfile: Profile;

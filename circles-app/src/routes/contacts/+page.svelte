@@ -5,7 +5,6 @@
 
   let filterVersion: number | undefined = undefined;
 
-
   $: filteredContacts = $contacts?.data
     ? Object.entries($contacts.data)
         .filter(([_, contact]) => {
@@ -15,7 +14,6 @@
         })
         .map(([address]) => address)
     : [];
-  console.log(filteredContacts);
   $: orderedContacts = filteredContacts.sort((a, b) => {
     const aRelation = $contacts?.data[a].row.relation;
     const bRelation = $contacts?.data[b].row.relation;

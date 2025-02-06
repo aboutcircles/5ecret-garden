@@ -1,5 +1,4 @@
 <script lang="ts">
-    import type {PopupContentApi} from "$lib/components/PopUp.svelte";
     import type {TokenBalanceRow} from "@circles-sdk/data";
     import type {SendFlowContext} from "$lib/flows/send/context";
     import SelectAsset from "$lib/pages/SelectAsset.svelte";
@@ -7,8 +6,7 @@
     import {onMount} from "svelte";
     import FlowDecoration from "$lib/flows/FlowDecoration.svelte";
     import {circlesBalances} from "$lib/stores/circlesBalances";
-
-    export let contentApi: PopupContentApi;
+  import { popupControls } from "$lib/stores/popUp";
     export let context: SendFlowContext;
 
     let selectedAsset: TokenBalanceRow | undefined = undefined;
@@ -23,7 +21,7 @@
         selectedAsset = event.detail;
         context.selectedAsset = selectedAsset;
 
-        contentApi.open({
+        popupControls.open({
             title: "Enter Amount",
             component: SelectAmount,
             props: {
@@ -33,7 +31,7 @@
     }
 </script>
 <FlowDecoration>
-    <p class="text-2xl font-bold mt-14">Select Asset</p>
+    <p class="text-2xl font-bold">Select Asset</p>
     <SelectAsset selectedAsset={selectedAsset}
                  balances={circlesBalances}
                  on:select={handleSelect}/>

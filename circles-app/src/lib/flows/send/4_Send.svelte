@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type { PopupContentApi } from '$lib/components/PopUp.svelte';
   import Send from '$lib/pages/Send.svelte';
   import type { SendFlowContext } from '$lib/flows/send/context';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
@@ -8,8 +7,8 @@
   import { avatar } from '$lib/stores/avatar';
   import { tokenTypeToString } from '$lib/pages/SelectAsset.svelte';
   import { TransitiveTransferTokenAddress } from '$lib/pages/SelectAsset.svelte';
+  import { popupControls } from '$lib/stores/popUp';
 
-  export let contentApi: PopupContentApi;
   export let context: SendFlowContext;
 
   function handleSend() {
@@ -36,12 +35,12 @@
               context.selectedAsset.tokenAddress
             ),
     });
-    contentApi.close();
+    popupControls.close();
   }
 </script>
 
 <FlowDecoration>
-  <p class="text-2xl font-bold mt-14">Confirm Transaction</p>
+  <p class="text-2xl font-bold">Confirm Transaction</p>
   <Send
     asset={context.selectedAsset}
     amount={context.amount}

@@ -20,7 +20,7 @@
     >
   </div>
   <div
-    class="w-full md:border rounded-lg md:px-4 md:py-2 flex flex-col divide-y gap-y-2 overflow-x-auto"
+    class="w-full md:border rounded-lg md:px-4 flex flex-col divide-y gap-y-2 py-4 overflow-y-visible mb-28"
   >
     {#each $circlesBalances.data as balance}
       <BalanceRow {balance} />

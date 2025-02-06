@@ -3,11 +3,9 @@
     import BalanceRow from "$lib/components/BalanceRow.svelte";
     import {avatar} from "$lib/stores/avatar";
     import type {TokenBalanceRow} from "@circles-sdk/data";
-    import type {PopupContentApi} from "$lib/components/PopUp.svelte";
     import { runTask } from '$lib/utils/tasks';
     import {tokenTypeToString} from "$lib/pages/SelectAsset.svelte";
-
-    export let contentApi: PopupContentApi;
+  import { popupControls } from "$lib/stores/popUp";
     export let asset: TokenBalanceRow;
 
     async function migrate() {
@@ -28,7 +26,7 @@
             promise: $circles.migrateV1TokensBatch($avatar.address, [asset.tokenAddress])
         });
 
-        contentApi.close();
+        popupControls.close();
     }
 </script>
 

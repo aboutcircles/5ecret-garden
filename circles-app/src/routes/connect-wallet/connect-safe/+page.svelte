@@ -21,7 +21,7 @@
     $wallet = wallet;
 
     const network = await $wallet.provider?.getNetwork();
-        
+
     if (!network) {
       throw new Error('Failed to get network');
     }
@@ -37,5 +37,10 @@
 <div
   class="w-full flex flex-col items-center min-h-screen p-4 max-w-5xl gap-y-8 mt-20"
 >
+  <div class="w-full">
+    <a href="/connect-wallet">
+      <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
+    </a>
+  </div>
   <WalletLoader name="Safe" />
 </div>

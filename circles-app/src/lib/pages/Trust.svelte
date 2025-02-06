@@ -1,13 +1,12 @@
 <script lang="ts">
   import { avatar } from '$lib/stores/avatar';
   import { runTask } from '$lib/utils/tasks';
-  import type { PopupContentApi } from '$lib/components/PopUp.svelte';
   import { shortenAddress } from '$lib/utils/shared';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
+  import { popupControls } from '$lib/stores/popUp';
 
   export let address: string;
-  export let contentApi: PopupContentApi;
 
   async function trust() {
     if (!$avatar) {
@@ -17,15 +16,13 @@
       name: `Trusting ${shortenAddress(address)} ...`,
       promise: $avatar!.trust(address),
     });
-    contentApi.close();
+    popupControls.close();
   }
 </script>
 
 <div class="flex flex-col gap-y-4 mt-8">
   <p>You're about to trust the following group or person:</p>
-  <Avatar {address} clickable={false} view="vertical">
-    {address}
-  </Avatar>
+  <Avatar {address} clickable={false} view="horizontal" bottomInfo={address} />
   <div role="alert" class="flex gap-x-2 bg-[#FDE8E8] p-2 rounded-lg">
     <svg
       class="h-6 w-6"

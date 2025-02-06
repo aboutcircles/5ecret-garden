@@ -82,21 +82,16 @@
 </script>
 
 <script lang="ts">
-  import type {
-    PopupContentApi,
-    PopupContentDefinition,
-  } from '$lib/components/PopUp.svelte';
   import ProfilePage from '$lib/pages/Profile.svelte';
-  import { popupControls } from '$lib/components/PopUp.svelte';
   import { getProfile } from '$lib/utils/profile';
   import type { SvelteComponent } from 'svelte';
   import HorizontalAvatarLayout from './HorizontalAvatarLayout.svelte';
   import VerticalAvatarLayout from './VerticalAvatarLayout.svelte';
+  import { popupControls, type PopupContentDefinition } from '$lib/stores/popUp';
 
   export let address: string;
   export let clickable: boolean = true;
   export let view: 'horizontal' | 'vertical';
-  export let contentApi: PopupContentApi | undefined = undefined;
   export let pictureOverlayUrl: string | undefined = undefined;
   export let topInfo: string | undefined = undefined;
   export let bottomInfo: string | undefined = undefined;
@@ -104,6 +99,7 @@
   let profile: Profile | undefined;
 
   $: {
+    //TODO: if we pass a profile directly, we don't have to initialize and call getProfile() from sdk
     if (address) {
       initialize();
     }
@@ -120,11 +116,8 @@
         address: address,
       },
     };
-    if (contentApi) {
-      contentApi.open(nextPage);
-    } else {
-      $popupControls.open?.(nextPage);
-    }
+    console.log('Opening avatar:', nextPage);
+    popupControls.open(nextPage);
   }
 
   async function initialize() {

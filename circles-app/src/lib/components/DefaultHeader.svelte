@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { popupControls } from '$lib/components/PopUp.svelte';
   import SettingProfile from '$lib/pages/SettingProfile.svelte';
+  import { popupControls } from '$lib/stores/popUp';
   import type { QuickAction } from '../../routes/+layout.svelte';
 
   export let text: string | undefined = undefined;
@@ -22,7 +22,9 @@
   let isDropdownOpen = false;
 </script>
 
-<div class="navbar font-dmSans bg-white font-medium border-b fixed top-0 z-30 h-16">
+<div
+  class="navbar font-dmSans bg-white font-medium border-b fixed top-0 z-30 h-16"
+>
   <div class="navbar-start gap-4">
     <div class="dropdown">
       <button
@@ -81,7 +83,7 @@
               class="flex items-center hover:scale-105 transition-transform duration-300"
               on:click={(e) => {
                 isDropdownOpen = false;
-                $popupControls.open?.({
+                popupControls.open({
                   component: SettingProfile,
                   title: '',
                   props: {
@@ -134,7 +136,7 @@
       <button
         class="hidden md:flex items-center hover:scale-105 transition-transform duration-300"
         on:click={(e) => {
-          $popupControls.open?.({
+          popupControls.open({
             component: SettingProfile,
             title: '',
             props: {

@@ -3,7 +3,7 @@ import {avatar} from "$lib/stores/avatar";
 import type {CirclesEvent, CirclesEventType, TokenBalanceRow} from "@circles-sdk/data";
 import {createEventStore} from "$lib/stores/eventStores/eventStoreFactory";
 
-const refreshOnEvents: Set<CirclesEventType> = new Set([
+const refreshOnEvents: Set<CirclesEventType> = new Set<CirclesEventType>([
     "CrcV2_TransferBatch",
     "CrcV2_TransferSingle",
     "CrcV1_HubTransfer",
@@ -14,7 +14,7 @@ const refreshOnEvents: Set<CirclesEventType> = new Set([
     "CrcV2_GroupRedeem",
     "CrcV2_GroupRedeemCollateralReturn",
     "CrcV2_GroupRedeemCollateralBurn"
-]);
+] as CirclesEventType[]);
 
 const _initialLoad = async () => {
     const avatarInstance = get(avatar);

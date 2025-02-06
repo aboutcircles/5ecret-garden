@@ -5,10 +5,9 @@
     import BalanceRow from "$lib/components/BalanceRow.svelte";
     import {roundToDecimals} from "$lib/utils/shared";
     import { runTask } from '$lib/utils/tasks';
-    import type {PopupContentApi} from "$lib/components/PopUp.svelte";
+  import { popupControls } from "$lib/stores/popUp";
 
     export let asset: TokenBalanceRow;
-    export let contentApi: PopupContentApi;
 
     let wrapType: 'Static' | 'Demurraged' = 'Static';
     let amount: number = 0;
@@ -26,7 +25,7 @@
                 promise: wrapInflationary(sendValue)
             });
         }
-        contentApi.close();
+        popupControls.close();
     }
 
     async function wrapInflationary(sendValue: bigint) {

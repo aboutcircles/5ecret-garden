@@ -11,6 +11,11 @@
 <div
   class="w-full flex flex-col min-h-screen p-4 max-w-xl gap-y-4 justify-center"
 >
+  <div class="w-full">
+    <a href="/">
+      <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
+    </a>
+  </div>
   <p class="font-bold text-xl">Access Circles</p>
   <ConnectWallet
     imgUrl="/safe.png"
@@ -21,7 +26,7 @@
     route={hasBrowserWallet
       ? '/connect-wallet/connect-safe'
       : '/connect-wallet'}
-      recommended={true}
+    recommended="Connect"
   />
   <ConnectWallet
     imgUrl="/fox.png"

@@ -15,7 +15,7 @@
       {
         mytheme: {
           primary: '#38318b',
-          secondary: '#27183e',
+          secondary: '#4052d6',
           accent: '#37cdbe',
           neutral: '#3d4451',
           'base-100': '#ffffff',
