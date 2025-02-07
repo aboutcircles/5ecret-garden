@@ -2,17 +2,28 @@
   import { ethers } from 'ethers6';
   import { createEventDispatcher, onMount } from 'svelte';
   import AddressInput from '$lib/components/AddressInput.svelte';
-  import { Profiles, type Profile } from '@circles-sdk/profiles';
+  import {type Profile, Profiles} from '@circles-sdk/profiles';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import { contacts } from '$lib/stores/contacts';
+  import {getCirclesConfig} from "$lib/utils/helpers";
+  import {wallet} from "$lib/stores/wallet";
 
   export let selectedAddress: string = '';
   export let searchType: 'send' | 'group' | 'contact' = 'send';
   let lastAddress: string = '';
-  let profiles = new Profiles('https://rpc.aboutcircles.com/profiles');
   let result: Profile[] = [];
+  let profiles:Profiles|undefined;
 
   onMount(async () => {
+    const network = await $wallet?.provider?.getNetwork();
+    if (!network) {
+      throw new Error('Failed to get network');
+    }
+    const circlesConfig = await getCirclesConfig(network.chainId);
+    if (!circlesConfig.profileServiceUrl) {
+      throw new Error('Profile service URL is not set');
+    }
+    profiles = new Profiles(circlesConfig.profileServiceUrl);
+
     if (searchType === 'send') {
       // TODO: implement contact list here when get profile type and circles-sdk/profiles are unified
 
@@ -29,9 +40,9 @@
     try {
       let results: Profile[] = [];
 
-      const nameResults = await profiles.searchByName(selectedAddress);
+      const nameResults = await profiles?.searchByName(selectedAddress);
       if (nameResults) results = [...nameResults];
-      const addressResult = await profiles.searchByAddress(selectedAddress);
+      const addressResult = await profiles?.searchByAddress(selectedAddress);
       if (addressResult) results = [...results, ...addressResult];
 
       console.log('Updated results:', results);
