@@ -19,12 +19,6 @@
         profile.previewImageUrl = '';
         profile = profile;
     };
-
-    onMount(async () => {
-        if (profile && profile.previewImageUrl) {
-            console.log("profile && profile.previewImageUrl == true");
-        }
-    });
 </script>
 
 <div class="mt-3 space-y-2">

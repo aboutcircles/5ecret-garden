@@ -6,6 +6,7 @@
   import { circles } from '$lib/stores/circles';
   import type { Avatar } from '@circles-sdk/sdk';
   import type { GroupProfile } from '@circles-sdk/profiles';
+  import RegisterGroup from '$lib/pages/RegisterGroup.svelte';
 
   let mintPolicyAddress: string =
     $circles?.circlesConfig.baseGroupMintPolicy ?? '';
@@ -33,14 +34,15 @@
 </script>
 
 <div
-  class="w-full flex flex-col min-h-screen p-4 max-w-xl gap-y-4 justify-center"
+  class="w-full flex flex-col min-h-screen p-4 max-w-4xl gap-y-4 justify-center"
 >
   <div class="w-full">
     <a href="/register">
       <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
     </a>
   </div>
-  <div class="card bg-base-100 w-96 border shadow-sm">
+  <RegisterGroup />
+  <!-- <div class="card bg-base-100 w-96 border shadow-sm">
     <figure class="px-10 pt-10">
       <img src="/group.svg" alt="group" class="w-16 h-16 rounded-xl" />
     </figure>
@@ -96,5 +98,5 @@
         </ActionButton>
       </div>
     </div>
-  </div>
+  </div> -->
 </div>
