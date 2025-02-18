@@ -30,7 +30,7 @@
   }
 
   onMount(async () => {
-    if (!$wallet.address) {
+    if (!$wallet) {
       throw new Error('Wallet address is not available');
     }
     if ($wallet instanceof SafeSdkBrowserContractRunner) {

@@ -1,0 +1,167 @@
+<script lang="ts">
+  import type { GroupProfile } from '@circles-sdk/profiles';
+  import { createEventDispatcher } from 'svelte';
+  import { isValidName, isValidSymbol } from '$lib/utils/isValid';
+  import MintPolicy from './MintPolicy.svelte';
+  import { mintPolicies } from '$lib/utils/mintPolicy';
+  import Tooltip from './Tooltip.svelte';
+  import { circles } from '$lib/stores/circles';
+  import { avatar } from '$lib/stores/avatar';
+  import type { Avatar } from '@circles-sdk/sdk';
+  import ImageUpload from './ImageUpload.svelte';
+
+  let isLoading = false;
+  let formData: GroupProfile = {
+    name: '',
+    symbol: '',
+    description: '',
+    previewImageUrl: '',
+    imageUrl: '',
+  };
+  let mintPolicy = mintPolicies[0];
+
+  const dispatch = createEventDispatcher();
+
+  $: validName = isValidName(formData.name) || formData.name.length === 0;
+  $: validSymbol =
+    isValidSymbol(formData.symbol) || formData.symbol.length === 0;
+
+  async function handleSubmit() {
+    if (!validName || !validSymbol) return;
+    isLoading = true;
+
+    if (!$circles) {
+      throw new Error('Wallet not connected ($circles is undefined)');
+    }
+    $avatar = <Avatar>(
+      await $circles.registerGroupV2(mintPolicy.address, formData)
+    );
+
+    if ($avatar) {
+      dispatch('stepChange', 'executed');
+    } else {
+      dispatch('stepChange', 'error');
+    }
+  }
+
+  const onNewImage = (e: any) => {
+    formData.previewImageUrl = e.detail.dataUrl;
+  };
+
+  const onImageCleared = (e: any) => {
+    formData.previewImageUrl = '';
+  };
+</script>
+
+<form
+  on:submit|preventDefault={handleSubmit}
+  class="w-full h-full flex flex-col gap-2 items-center justify-center text-xs md:text-sm/6 text-black"
+>
+  <h1 class="text-2xl text-center font-bold text-primary mb-2">
+    REGISTER GROUP
+  </h1>
+  <div class="flex flex-col-reverse gap-2 md:flex-row w-full gap-x-2">
+    <div class="flex flex-col w-full h-full justify-center md:w-2/3">
+      <div class="w-full">
+        <div class="label">
+          <span class="label-text"
+            >Name
+            <Tooltip content="Enter a name for your group." />
+          </span>
+        </div>
+        <input
+          required
+          type="text"
+          name="name"
+          placeholder="Group Name..."
+          class="input input-sm input-bordered w-full max-w-xs"
+          bind:value={formData.name}
+        />
+        <p class="text-xs text-error h-4 pl-1">
+          {#if !validName}
+            Invalid name
+          {/if}
+        </p>
+      </div>
+      <div class="w-full">
+        <div class="label">
+          <span class="label-text"
+            >Symbol
+            <Tooltip content="Add a short currency symbol (e.g., CRC)." /></span
+          >
+        </div>
+        <input
+          required
+          type="text"
+          name="symbol"
+          placeholder="CRC..."
+          class="input input-sm input-bordered w-full max-w-xs"
+          bind:value={formData.symbol}
+        />
+        <p class="text-xs text-error h-4 pl-1">
+          {#if !validSymbol}
+            Invalid symbol
+          {/if}
+        </p>
+      </div>
+    </div>
+    <div class="w-full md:w-1/3 flex flex-col items-center">
+      <div class="label font-bold mb-1 flex items-center gap-1">
+        Group Image
+        <Tooltip
+          content="Upload a logo or image for your group. Max size=2MB, 150x150 pixels."
+        />
+      </div>
+      <ImageUpload
+        imageDataUrl={formData.previewImageUrl}
+        cropHeight={256}
+        cropWidth={256}
+        on:newImage={onNewImage}
+        on:cleared={onImageCleared}
+      />
+    </div>
+  </div>
+  <div class="w-full mb-8">
+    <div class="label">
+      <span class="label-text"
+        >Description
+        <Tooltip content="Provide a brief description of your group." />
+      </span>
+    </div>
+    <textarea
+      name="description"
+      placeholder="Group Description..."
+      class="textarea textarea-bordered w-full"
+      bind:value={formData.description}
+    />
+  </div>
+  <div class="w-full flex flex-col mb-12 pt-8 border-t-1.5">
+    <div class="label">
+      <span class="label-text"
+        >Base Mint Policy
+        <Tooltip content="Select the minting policy for group currency." />
+      </span>
+    </div>
+    <a
+      class="flex mb-2 items-center font-bold text-xs text-primary"
+      href={'https://docs.aboutcircles.com/overview/circles-architecture'}
+      target="_blank"
+    >
+      Learn more
+      <img src="/external.svg" alt="external icon" class="h-3 w-3 ml-1" />
+    </a>
+    <MintPolicy {mintPolicy} on:update={(e) => (mintPolicy = e.detail)} />
+  </div>
+  <button
+    type="submit"
+    disabled={!validName || !validSymbol}
+    class="btn btn-sm btn-primary"
+  >
+    {#if isLoading}
+      <span class="loading loading-spinner"></span>
+      loading
+    {:else}
+      Register
+    {/if}
+  </button>
+</form>
