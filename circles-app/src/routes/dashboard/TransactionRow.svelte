@@ -15,62 +15,57 @@
       return '/badge-mint.svg';
     if (item.to === '0x0000000000000000000000000000000000000000')
       return '/badge-burn.svg';
-    if (item.from === $avatar.address) return '/badge-sent.svg';
-    if (item.to === $avatar.address) return '/badge-received.svg';
+    if (item.from === $avatar.address.toLowerCase()) return '/badge-sent.svg';
+    if (item.to === $avatar.address.toLowerCase()) return '/badge-received.svg';
   };
 
   const getTransactionText = () => {
     if (!$avatar) return;
-    if (item.from === '0x0000000000000000000000000000000000000000')
-      return `Minted ${tokenTypeToString(item.tokenType)}`;
-    if (item.to === '0x0000000000000000000000000000000000000000')
-      return `Burn ${tokenTypeToString(item.tokenType)}`;
-    if (item.from === $avatar.address)
-      return `Sent ${tokenTypeToString(item.tokenType)}`;
-    return `Received ${tokenTypeToString(item.tokenType)}`;
+
+    const parsedDetails = JSON.parse(item.events);
+    return parsedDetails.length.toString() + ' individual events in tx';
   };
 
   const counterpartyAddress = !$avatar ? '' :
     item.from === '0x0000000000000000000000000000000000000000'
       ? item.to
       : item.to === '0x0000000000000000000000000000000000000000'
-        ? $avatar.address
-        : item.from === $avatar.address
+        ? $avatar.address.toLowerCase()
+        : item.from === $avatar.address.toLowerCase()
           ? item.to
           : item.from;
 </script>
 
 <a
-  class="flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
-  target="_blank"
-  href={'https://gnosisscan.io/tx/' + item.transactionHash}
+    class="flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
+    target="_blank"
+    href={'https://gnosisscan.io/tx/' + item.transactionHash}
 >
   <Avatar
-    address={counterpartyAddress}
-    view="horizontal"
-    pictureOverlayUrl={getBadge()}
-    topInfo={getTransactionText()}
-    bottomInfo={getTimeAgo(item.timestamp)}
+      address={counterpartyAddress}
+      view="horizontal"
+      pictureOverlayUrl={getBadge()}
+      topInfo={getTransactionText()}
+      bottomInfo={getTimeAgo(item.timestamp)}
   />
   <div class="col text-right">
     {#if $avatar}
-      {#if item.from === $avatar.address}
+      {#if item.from === $avatar.address.toLowerCase()}
         <span class="text-red-500 font-bold"
-          >-{roundToDecimals(item.circles)}</span
+        >-{roundToDecimals(item.circles)}</span
         > CRC
       {:else}
         <span class="text-green-700 font-bold"
-          >+{roundToDecimals(item.circles)}</span
+        >+{roundToDecimals(item.circles)}</span
         > CRC
       {/if}
       <p class="text-xs text-gray-500">
-        {#if staticTypes.has(item.tokenType)}
-          {roundToDecimals(item.staticCircles)} Static CRC
-        {/if}
-        {#if crcTypes.has(item.tokenType)}
-          {roundToDecimals(item.crc)} CRC
-          
-        {/if}
+        <!--{#if staticTypes.has(item.tokenType)}-->
+        <!--  {roundToDecimals(item.staticCircles)} Static CRC-->
+        <!--{/if}-->
+        <!--{#if crcTypes.has(item.tokenType)}-->
+        <!--  {roundToDecimals(item.crc)} CRC-->
+        <!--{/if}-->
       </p>
     {:else}
       <!-- TODO: add loading state -->
