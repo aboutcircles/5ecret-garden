@@ -44,7 +44,7 @@
   {:else if step === 'error'}
     <div class="text-gray-900 w-full flex flex-col items-center">
       <div class="flex items-center">
-        <img src="x-mark.svg" alt="x mark icon" class="h-5 w-5" /> Something
+        <img src="/x-mark.svg" alt="x mark icon" class="h-5 w-5" /> Something
         went wrong with your transaction, try again or contact the support
         <a
           href="https://www.aboutcircles.com/community"

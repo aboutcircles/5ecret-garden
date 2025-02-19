@@ -9,22 +9,35 @@
   import { avatar } from '$lib/stores/avatar';
   import type { Avatar } from '@circles-sdk/sdk';
   import ImageUpload from './ImageUpload.svelte';
+  import { cidV0ToUint8Array } from '@circles-sdk/utils';
+  import { CMGContract } from '$lib/stores/contract';
 
-  let isLoading = false;
-  let formData: GroupProfile = {
+  interface CMGProfile {
+    service: string;
+    initialConditions: string[];
+  }
+
+  let groupProfile: GroupProfile = {
     name: '',
     symbol: '',
     description: '',
     previewImageUrl: '',
     imageUrl: '',
   };
+
+  let isLoading = false;
+  let formData: CMGProfile = {
+    service: '0x0000000000000000000000000000000000000000',
+    initialConditions: [],
+  };
   let mintPolicy = mintPolicies[0];
 
   const dispatch = createEventDispatcher();
 
-  $: validName = isValidName(formData.name) || formData.name.length === 0;
+  $: validName =
+    isValidName(groupProfile.name) || groupProfile.name.length === 0;
   $: validSymbol =
-    isValidSymbol(formData.symbol) || formData.symbol.length === 0;
+    isValidSymbol(groupProfile.symbol) || groupProfile.symbol.length === 0;
 
   async function handleSubmit() {
     if (!validName || !validSymbol) return;
@@ -33,23 +46,41 @@
     if (!$circles) {
       throw new Error('Wallet not connected ($circles is undefined)');
     }
-    $avatar = <Avatar>(
-      await $circles.registerGroupV2(mintPolicy.address, formData)
+    // $avatar = <Avatar>(
+    //   await $circles.registerGroupV2(mintPolicy.address, formData)
+    // );
+
+    const CID = await $circles.profiles?.create(groupProfile);
+
+    if (!CID) {
+      throw new Error('Failed to create profile CID');
+    }
+
+    if (!$CMGContract) {
+      throw new Error('$CMGContract is null');
+    }
+
+    const tx = await $CMGContract.createCMGroup(
+      formData.service,
+      formData.initialConditions,
+      groupProfile.name,
+      groupProfile.symbol,
+      cidV0ToUint8Array(CID)
     );
 
-    if ($avatar) {
-      dispatch('stepChange', 'executed');
-    } else {
-      dispatch('stepChange', 'error');
-    }
+    // if ($avatar) {
+    dispatch('stepChange', 'executed');
+    // } else {
+    //   dispatch('stepChange', 'error');
+    // }
   }
 
   const onNewImage = (e: any) => {
-    formData.previewImageUrl = e.detail.dataUrl;
+    groupProfile.previewImageUrl = e.detail.dataUrl;
   };
 
   const onImageCleared = (e: any) => {
-    formData.previewImageUrl = '';
+    groupProfile.previewImageUrl = '';
   };
 </script>
 
@@ -75,7 +106,7 @@
           name="name"
           placeholder="Group Name..."
           class="input input-sm input-bordered w-full max-w-xs"
-          bind:value={formData.name}
+          bind:value={groupProfile.name}
         />
         <p class="text-xs text-error h-4 pl-1">
           {#if !validName}
@@ -96,7 +127,7 @@
           name="symbol"
           placeholder="CRC..."
           class="input input-sm input-bordered w-full max-w-xs"
-          bind:value={formData.symbol}
+          bind:value={groupProfile.symbol}
         />
         <p class="text-xs text-error h-4 pl-1">
           {#if !validSymbol}
@@ -113,7 +144,7 @@
         />
       </div>
       <ImageUpload
-        imageDataUrl={formData.previewImageUrl}
+        imageDataUrl={groupProfile.previewImageUrl}
         cropHeight={256}
         cropWidth={256}
         on:newImage={onNewImage}
@@ -132,7 +163,7 @@
       name="description"
       placeholder="Group Description..."
       class="textarea textarea-bordered w-full"
-      bind:value={formData.description}
+      bind:value={groupProfile.description}
     />
   </div>
   <div class="w-full flex flex-col mb-12 pt-8 border-t-1.5">
