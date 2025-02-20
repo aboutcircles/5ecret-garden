@@ -14,7 +14,7 @@
 
   interface CMGProfile {
     service: string;
-    initialConditions: string[];
+    initialConditions: string;
   }
 
   let groupProfile: GroupProfile = {
@@ -28,7 +28,7 @@
   let isLoading = false;
   let formData: CMGProfile = {
     service: '0x0000000000000000000000000000000000000000',
-    initialConditions: [],
+    initialConditions: '',
   };
   let mintPolicy = mintPolicies[0];
 
@@ -60,9 +60,17 @@
       throw new Error('$CMGContract is null');
     }
 
+    let initialConditions: string[] = [];
+    if (formData.initialConditions.length > 0) {
+      initialConditions = formData.initialConditions
+        .split(',')
+        .map((addr) => addr.trim())
+        .filter((addr) => addr.length > 0);
+    }
+
     const tx = await $CMGContract.createCMGroup(
       formData.service,
-      formData.initialConditions,
+      initialConditions,
       groupProfile.name,
       groupProfile.symbol,
       cidV0ToUint8Array(CID)
@@ -88,9 +96,47 @@
   on:submit|preventDefault={handleSubmit}
   class="w-full h-full flex flex-col gap-2 items-center justify-center text-xs md:text-sm/6 text-black"
 >
-  <h1 class="text-2xl text-center font-bold text-primary mb-2">
-    REGISTER GROUP
-  </h1>
+  <div class="w-full flex justify-between">
+    <div></div>
+    <h1 class="text-2xl text-center font-bold text-primary mb-2">
+      DEPLOY GROUP
+    </h1>
+    <div class="dropdown dropdown-end">
+      <div tabIndex={0} role="button" class="btn btn-ghost btn-circle btn-xs">
+        <img src="/setting.svg" alt="setting" class="w-5 h-5 inline" />
+      </div>
+      <div
+        tabIndex={0}
+        class="dropdown-content bg-base-100 rounded-box z-[1] w-96 p-2 shadow"
+      >
+        <div class="label">
+          <span class="label-text"
+            >Service
+            <Tooltip content="Enter a service for your group." />
+          </span>
+        </div>
+        <input
+          required
+          type="text"
+          name="service"
+          class="input input-sm input-bordered w-full"
+          bind:value={formData.service}
+        />
+        <div class="label">
+          <span class="label-text"
+            >Initial Conditions
+            <Tooltip content="Enter the initial conditions for your group." />
+          </span>
+        </div>
+        <input
+          type="text"
+          name="initialConditions"
+          class="input input-sm input-bordered w-full"
+          bind:value={formData.initialConditions}
+        />
+      </div>
+    </div>
+  </div>
   <div class="flex flex-col-reverse gap-2 md:flex-row w-full gap-x-2">
     <div class="flex flex-col w-full h-full justify-center md:w-2/3">
       <div class="w-full">
@@ -105,7 +151,7 @@
           type="text"
           name="name"
           placeholder="Group Name..."
-          class="input input-sm input-bordered w-full max-w-xs"
+          class="input input-sm input-bordered w-full md:max-w-xs"
           bind:value={groupProfile.name}
         />
         <p class="text-xs text-error h-4 pl-1">
@@ -126,7 +172,7 @@
           type="text"
           name="symbol"
           placeholder="CRC..."
-          class="input input-sm input-bordered w-full max-w-xs"
+          class="input input-sm input-bordered w-full md:max-w-xs"
           bind:value={groupProfile.symbol}
         />
         <p class="text-xs text-error h-4 pl-1">
