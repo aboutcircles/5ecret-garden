@@ -1,10 +1,8 @@
 <script lang="ts">
-  import { crcTypes, staticTypes } from '$lib/utils/shared';
-  import { roundToDecimals } from '$lib/utils/shared';
-  import type { TransactionHistoryRow } from '@circles-sdk/data';
-  import { tokenTypeToString } from '$lib/pages/SelectAsset.svelte';
-  import { avatar } from '$lib/stores/avatar';
-  import { getTimeAgo } from '$lib/utils/shared';
+  import {roundToDecimals} from '$lib/utils/shared';
+  import type {TransactionHistoryRow} from '@circles-sdk/data';
+  import {avatar} from '$lib/stores/avatar';
+  import {getTimeAgo} from '$lib/utils/shared';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
 
   export let item: TransactionHistoryRow;
@@ -19,11 +17,23 @@
     if (item.to === $avatar.address.toLowerCase()) return '/badge-received.svg';
   };
 
-  const getTransactionText = () => {
+  const getTransactionTags = () => {
     if (!$avatar) return;
 
-    const parsedDetails = JSON.parse(item.events);
-    return parsedDetails.length.toString() + ' individual events in tx';
+    const parsedDetails: any[] = JSON.parse(item.events);
+    const tags = new Set(parsedDetails.map((e) => e.$type)
+      .filter((e) =>
+           e == 'CrcV1_Transfer'
+        || e == 'CrcV2_PersonalMint'
+        || e == 'CrcV2_DiscountCost'
+        || e == 'CrcV2_GroupMint'
+        || e == 'CrcV2_StreamCompleted'
+        || e == 'CrcV2_WithdrawDemurraged'
+        || e == 'CrcV2_WithdrawInflationary'
+        || e == 'CrcV2_DepositDemurraged'
+        || e == 'CrcV2_DepositInflationary'));
+
+    return Array.from(tags);
   };
 
   const counterpartyAddress = !$avatar ? '' :
@@ -45,7 +55,7 @@
       address={counterpartyAddress}
       view="horizontal"
       pictureOverlayUrl={getBadge()}
-      topInfo={getTransactionText()}
+      topInfo={getTransactionTags()}
       bottomInfo={getTimeAgo(item.timestamp)}
   />
   <div class="col text-right">

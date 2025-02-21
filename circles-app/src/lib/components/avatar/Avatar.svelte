@@ -93,7 +93,7 @@
   export let clickable: boolean = true;
   export let view: 'horizontal' | 'vertical';
   export let pictureOverlayUrl: string | undefined = undefined;
-  export let topInfo: string | undefined = undefined;
+  export let topInfo: string[] | undefined = undefined;
   export let bottomInfo: string | undefined = undefined;
 
   let profile: Profile | undefined;
