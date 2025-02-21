@@ -2,17 +2,18 @@
   import { initializeWallet, wallet } from '$lib/stores/wallet';
   import { avatar } from '$lib/stores/avatar';
   import { circles } from '$lib/stores/circles';
-  import { Sdk, type CirclesConfig } from '@circles-sdk/sdk';
+  import { Sdk, type AvatarRow, type CirclesConfig } from '@circles-sdk/sdk';
   import { goto } from '$app/navigation';
   import { getCirclesConfig } from '$lib/utils/helpers';
+  import { onMount } from 'svelte';
 
-  export let item: string;
+  export let address: string;
 
   let circlesConfig: CirclesConfig;
+  let avatarInfo: AvatarRow | undefined;
 
-  async function connectWallet(safeAddress: string) {
-
-    $wallet = await initializeWallet('safe', safeAddress);
+  onMount(async () => {
+    $wallet = await initializeWallet('safe', address);
 
     const network = await $wallet?.provider?.getNetwork();
     if (!network) {
@@ -23,12 +24,12 @@
     // Initialize the Circles SDK and set it as $circles to make it globally available.
     $circles = new Sdk($wallet!, circlesConfig);
 
-    const avatarInfo = await $circles.data.getAvatarInfo(
-      $wallet.address!
-    );
+    avatarInfo = await $circles.data.getAvatarInfo($wallet.address!);
+  });
 
+  async function connectWallet() {
     // If the signer address is already a registered Circles wallet, go straight to the dashboard.
-    if (avatarInfo) {
+    if (avatarInfo && $circles && $wallet) {
       $avatar = await $circles.getAvatar($wallet.address!);
       await goto('/dashboard');
     } else {
@@ -38,11 +39,15 @@
 </script>
 
 <button
-  on:click={() => connectWallet(item)}
+  on:click={() => connectWallet()}
   class="w-full border rounded-lg flex justify-between items-center p-4 shadow-sm hover:bg-black/5"
 >
   <div class="flex items-center gap-x-4">
     <slot></slot>
   </div>
+  {#if avatarInfo}
   <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
+  {:else}
+  <button class="btn btn-xs btn-outline btn-primary">register</button>
+  {/if}
 </button>
