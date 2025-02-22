@@ -1,11 +1,16 @@
 <script lang="ts">
-  import { shortenAddress } from '$lib/utils/shared';
-  import { SafeSdkBrowserContractRunner } from '@circles-sdk/adapter-safe';
-  import { onMount } from 'svelte';
-  import { ethers } from 'ethers6';
-  import { wallet } from '$lib/stores/wallet';
+  import {shortenAddress} from '$lib/utils/shared';
+  import {SafeSdkBrowserContractRunner} from '@circles-sdk/adapter-safe';
+  import {onMount} from 'svelte';
+  import {ethers} from 'ethers6';
   import ConnectSafe from '$lib/components/ConnectSafe.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
+  import { initializeWallet, wallet } from '$lib/stores/wallet';
+  import { avatar } from '$lib/stores/avatar';
+  import { circles } from '$lib/stores/circles';
+  import { Sdk } from '@circles-sdk/sdk';
+  import { goto } from '$app/navigation';
+  import { getCirclesConfig } from '$lib/utils/helpers';
 
   let safes: string[] = [];
 
@@ -39,8 +44,42 @@
   //
   // Connects the wallet and initializes the Circles SDK.
   //
+
+  let manualSafeAddress: string = localStorage.getItem('manualSafeAddress') ?? '';
+
+  async function connectWallet(safeAddress: string) {
+    $wallet = await initializeWallet('safe', safeAddress);
+
+    const network = await $wallet?.provider?.getNetwork();
+    if (!network) {
+      throw new Error('Failed to get network');
+    }
+    var circlesConfig = await getCirclesConfig(network.chainId);
+
+    // Initialize the Circles SDK and set it as $circles to make it globally available.
+    $circles = new Sdk($wallet!, circlesConfig);
+
+    const avatarInfo = await $circles.data.getAvatarInfo(
+      $wallet.address!
+    );
+
+    // If the signer address is already a registered Circles wallet, go straight to the dashboard.
+    if (avatarInfo) {
+      $avatar = await $circles.getAvatar($wallet.address!);
+      await goto('/dashboard');
+    } else {
+      await goto('/register');
+    }
+
+    localStorage.setItem('manualSafeAddress', safeAddress);
+  }
 </script>
 
+
+<div class="w-full border rounded-lg flex justify-between items-center p-4 shadow-sm">
+  <input type="text" placeholder="Enter safe address .." bind:value={manualSafeAddress} class="w-full"/>
+  <img src="/chevron-right.svg" alt="Chevron Right" class="w-4 cursor-pointer" on:click={() => connectWallet(manualSafeAddress)}/>
+</div>
 {#each safes ?? [] as item (item)}
   <ConnectSafe {item}>
     <Avatar address={item.toLowerCase()} clickable={false} view="horizontal">
