@@ -21,6 +21,7 @@
   </div>
   <p class="text-sm">
     {personalToken} individual tokens • {groupToken} group tokens •
-    <a href="/dashboard/balances" class="underline"> See breakdown </a>
+    <a href="/dashboard/balances" class="underline"> See breakdown </a> •
+    <a href="/dashboard/account-statement" class="underline"> See account statement </a>
   </p>
 </div>
