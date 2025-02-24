@@ -1,4 +1,5 @@
 <script lang="ts">
+
   import { initializeWallet, wallet } from '$lib/stores/wallet';
   import { avatar } from '$lib/stores/avatar';
   import { circles } from '$lib/stores/circles';
@@ -86,4 +87,3 @@
       <p class="text-sm">No groups available.</p>
     {/if}
   </div>
-</div>
