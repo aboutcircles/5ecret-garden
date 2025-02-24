@@ -1,18 +1,20 @@
-export async function fetchGroupsByOwner(ownerAddress: string): Promise<string[]> {
+export async function fetchGroupsByOwner(
+  ownerAddress: string,
+): Promise<string[]> {
   const payload = {
-    jsonrpc: '2.0',
+    jsonrpc: "2.0",
     id: 1,
-    method: 'circles_query',
+    method: "circles_query",
     params: [
       {
-        Namespace: 'CrcV2',
-        Table: 'CMGroupCreated',
-        Columns: ['proxy'],
+        Namespace: "CrcV2",
+        Table: "CMGroupCreated",
+        Columns: ["proxy"],
         Filter: [
           {
-            Type: 'FilterPredicate',
-            FilterType: 'Equals',
-            Column: 'owner',
+            Type: "FilterPredicate",
+            FilterType: "Equals",
+            Column: "owner",
             Value: ownerAddress.toLowerCase(),
           },
         ],
@@ -23,9 +25,9 @@ export async function fetchGroupsByOwner(ownerAddress: string): Promise<string[]
   };
 
   try {
-    const response = await fetch('https://rpc.circlesubi.network/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const response = await fetch("https://rpc.circlesubi.network/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
 
@@ -33,7 +35,8 @@ export async function fetchGroupsByOwner(ownerAddress: string): Promise<string[]
 
     return data.result?.rows?.flatMap((row: string[]) => row[0]) ?? [];
   } catch (error) {
-    console.error('Error fetching groups:', error);
+    console.error("Error fetching groups:", error);
+
     return [];
   }
 }
