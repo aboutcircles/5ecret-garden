@@ -11,9 +11,10 @@
   import { Sdk } from '@circles-sdk/sdk';
   import { goto } from '$app/navigation';
   import { getCirclesConfig } from '$lib/utils/helpers';
+  import { fetchGroupsByOwner } from '$lib/utils/groups';
 
   let safes: string[] = [];
-  let groupCounts: Record<string, number> = {};
+  let groupsByAddress: Record<string, string[]>;
 
   const getSafesByOwnerApiEndpoint = (checksumOwnerAddress: string): string =>
     `https://safe-transaction-gnosis-chain.safe.global/api/v1/owners/${checksumOwnerAddress}/safes/`;
@@ -28,40 +29,6 @@
     const safesByOwner = await safesByOwnerResult.json();
 
     return safesByOwner.safes ?? [];
-  }
-
-  async function fetchGroupsByOwner(ownerAddress: string): Promise<any> {
-    const payload = {
-      jsonrpc: '2.0',
-      id: 1,
-      method: 'circles_query',
-      params: [
-        {
-          Namespace: 'CrcV2',
-          Table: 'CMGroupCreated',
-          Columns: ['proxy'],
-          Filter: [
-            {
-              Type: 'FilterPredicate',
-              FilterType: 'Equals',
-              Column: 'owner',
-              Value: ownerAddress.toLowerCase(),
-            },
-          ],
-          Order: [],
-          Limit: 10,
-        },
-      ],
-    };
-
-    const response = await fetch('https://rpc.circlesubi.network/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    const data = await response.json();
-    return data.result.rows;
   }
 
   onMount(loadSafesAndGroups);
@@ -80,7 +47,8 @@
 
     const groupFetchPromises = safes.map(async (safe) => {
       const groups = await fetchGroupsByOwner(safe);
-      groupCounts = { ...groupCounts, [safe]: groups.length };
+      console.log(groups);
+      groupsByAddress = { ...groupsByAddress, [safe]: groups.flat() };
     });
 
     await Promise.all(groupFetchPromises);
@@ -89,6 +57,11 @@
   //
   // Connects the wallet and initializes the Circles SDK.
   //
+
+  // bottomInfo={shortenAddress(item.toLowerCase()) +
+  //       (groupsByAddress[item].length > 0
+  //         ? ' - owner ' + groupsByAddress[item].length + ' groups'
+  //         : '')}
 
   let manualSafeAddress: string = localStorage.getItem('manualSafeAddress') ?? '';
 
@@ -131,12 +104,9 @@
       address={item.toLowerCase()}
       clickable={false}
       view="horizontal"
-      bottomInfo={shortenAddress(item.toLowerCase()) +
-        (groupCounts[item] > 0
-          ? ' - owner ' + groupCounts[item] + ' groups'
-          : '')}
+
     />
-      </ConnectCircles>
+  </ConnectCircles>
 {/each}
 {#if (safes ?? []).length === 0}
   <div class="text-center">

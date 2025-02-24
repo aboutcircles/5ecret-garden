@@ -45,9 +45,9 @@
   <div class="flex items-center gap-x-4">
     <slot></slot>
   </div>
-  {#if avatarInfo}
-  <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
+  {#if avatarInfo === undefined}
+    <button class="btn btn-xs btn-outline btn-primary">register</button>
   {:else}
-  <button class="btn btn-xs btn-outline btn-primary">register</button>
+    <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
   {/if}
 </button>

@@ -84,10 +84,13 @@
 <script lang="ts">
   import ProfilePage from '$lib/pages/Profile.svelte';
   import { getProfile } from '$lib/utils/profile';
-  import type { SvelteComponent } from 'svelte';
+  import { onMount, type SvelteComponent } from 'svelte';
   import HorizontalAvatarLayout from './HorizontalAvatarLayout.svelte';
   import VerticalAvatarLayout from './VerticalAvatarLayout.svelte';
-  import { popupControls, type PopupContentDefinition } from '$lib/stores/popUp';
+  import {
+    popupControls,
+    type PopupContentDefinition,
+  } from '$lib/stores/popUp';
 
   export let address: string;
   export let clickable: boolean = true;
@@ -98,12 +101,12 @@
 
   let profile: Profile | undefined;
 
-  $: {
+  onMount(async () => {
     //TODO: if we pass a profile directly, we don't have to initialize and call getProfile() from sdk
     if (address) {
-      initialize();
+      profile = await getProfile(address);
     }
-  }
+  });
 
   function openAvatar() {
     if (!clickable) {
@@ -118,10 +121,6 @@
     };
     console.log('Opening avatar:', nextPage);
     popupControls.open(nextPage);
-  }
-
-  async function initialize() {
-    profile = await getProfile(address);
   }
 </script>
 
@@ -143,8 +142,5 @@
     {bottomInfo}
   />
 {:else}
-  <VerticalAvatarLayout
-    on:click={openAvatar}
-    {profile}
-  />
+  <VerticalAvatarLayout on:click={openAvatar} {profile} />
 {/if}
