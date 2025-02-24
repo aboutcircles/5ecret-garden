@@ -1,9 +1,7 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
   import { initializeWallet, wallet } from '$lib/stores/wallet';
   import { circles } from '$lib/stores/circles';
-  import { avatar } from '$lib/stores/avatar';
-  import { Sdk, type AvatarRow } from '@circles-sdk/sdk';
+  import { Sdk} from '@circles-sdk/sdk';
   import { onMount } from 'svelte';
   import WalletLoader from '$lib/components/WalletLoader.svelte';
   import { getCirclesConfig } from '$lib/utils/helpers';
@@ -45,8 +43,12 @@
   class="w-full flex flex-col justify-center min-h-screen p-4 max-w-xl gap-y-4 mt-20"
 >
   {#if $wallet?.address && $circles}
-    <ConnectCircles address={$wallet.address.toLowerCase()} walletType="metamask">
+    <ConnectCircles
+      address={$wallet.address.toLowerCase()}
+      walletType="metamask"
+    >
       <Avatar
+        topInfo="Personal Account"
         address={$wallet.address.toLowerCase()}
         clickable={false}
         view="horizontal"
