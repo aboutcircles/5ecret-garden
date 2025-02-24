@@ -11,6 +11,7 @@
     import { goto } from '$app/navigation';
     import { getCirclesConfig } from '$lib/utils/helpers';
     import { fetchGroupsByOwner } from '$lib/utils/groups';
+    import CreateSafe from "$lib/pages/CreateSafe.svelte";
 
     let safes: string[] = [];
     let groupsByAddress: Record<string, string[]>;
@@ -30,32 +31,32 @@
         return safesByOwner.safes ?? [];
     }
 
-    onMount(loadSafesAndGroups);
+  onMount(loadSafesAndGroups);
 
-    async function loadSafesAndGroups() {
-        if (!$wallet) {
-            throw new Error('Wallet address is not available');
-        }
-
-        const ownerAddress =
-            $wallet instanceof SafeSdkBrowserContractRunner
-                ? await $wallet.browserProvider.getSigner().then((s) => s.address)
-                : $wallet.address!;
-
-        safes = await querySafeTransactionService(ownerAddress);
-
-        const groupFetchPromises = safes.map(async (safe) => {
-            const groups = await fetchGroupsByOwner(safe);
-            console.log(groups);
-            groupsByAddress = { ...groupsByAddress, [safe]: groups.flat() };
-        });
-
-        await Promise.all(groupFetchPromises);
+  async function loadSafesAndGroups() {
+    if (!$wallet) {
+      throw new Error('Wallet address is not available');
     }
 
-    //
-    // Connects the wallet and initializes the Circles SDK.
-    //
+    const ownerAddress =
+      $wallet instanceof SafeSdkBrowserContractRunner
+        ? await $wallet.browserProvider.getSigner().then((s) => s.address)
+        : $wallet.address!;
+
+    safes = await querySafeTransactionService(ownerAddress);
+
+    const groupFetchPromises = safes.map(async (safe) => {
+      const groups = await fetchGroupsByOwner(safe);
+      console.log(groups);
+      groupsByAddress = { ...groupsByAddress, [safe]: groups.flat() };
+    });
+
+    await Promise.all(groupFetchPromises);
+  }
+
+  //
+  // Connects the wallet and initializes the Circles SDK.
+  //
 
     // bottomInfo={shortenAddress(item.toLowerCase()) +
     //       (groupsByAddress[item].length > 0
@@ -110,5 +111,6 @@
 {#if (safes ?? []).length === 0}
     <div class="text-center">
         <p>No safes available.</p>
+        <CreateSafe on:safecreated={handleSafeCreated} />
     </div>
 {/if}
