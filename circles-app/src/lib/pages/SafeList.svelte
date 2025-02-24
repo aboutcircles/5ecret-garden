@@ -1,17 +1,19 @@
 <script lang="ts">
-    import { SafeSdkBrowserContractRunner } from '@circles-sdk/adapter-safe';
-    import { onMount } from 'svelte';
-    import { ethers } from 'ethers6';
-    import ConnectCircles from '$lib/components/ConnectCircles.svelte';
-    import Avatar from '$lib/components/avatar/Avatar.svelte';
-    import { initializeWallet, wallet } from '$lib/stores/wallet';
-    import { avatar } from '$lib/stores/avatar';
-    import { circles } from '$lib/stores/circles';
-    import { Sdk } from '@circles-sdk/sdk';
-    import { goto } from '$app/navigation';
-    import { getCirclesConfig } from '$lib/utils/helpers';
-    import { fetchGroupsByOwner } from '$lib/utils/groups';
+
+    import { shortenAddress } from "$lib/utils/shared";
+    import { SafeSdkBrowserContractRunner } from "@circles-sdk/adapter-safe";
+    import { onMount } from "svelte";
+    import { ethers } from "ethers6";
+    import {initializeWallet, wallet} from "$lib/stores/wallet";
     import CreateSafe from "$lib/pages/CreateSafe.svelte";
+    import Avatar from "$lib/components/avatar/Avatar.svelte";
+    import { fetchGroupsByOwner } from '$lib/utils/groups';
+    import ConnectCircles from "$lib/components/ConnectCircles.svelte";
+    import {goto} from "$app/navigation";
+    import { circles } from "$lib/stores/circles";
+    import {getCirclesConfig} from "$lib/utils/helpers";
+    import {Sdk} from "@circles-sdk/sdk";
+    import {avatar} from "$lib/stores/avatar";
 
     let safes: string[] = [];
     let groupsByAddress: Record<string, string[]>;
@@ -19,11 +21,11 @@
     const getSafesByOwnerApiEndpoint = (checksumOwnerAddress: string): string =>
         `https://safe-transaction-gnosis-chain.safe.global/api/v1/owners/${checksumOwnerAddress}/safes/`;
 
-    async function querySafeTransactionService(
-        ownerAddress: string
-    ): Promise<string[]> {
-        const checksumAddress = ethers.getAddress(ownerAddress);
-        const requestUrl = getSafesByOwnerApiEndpoint(checksumAddress);
+  async function querySafeTransactionService(
+    ownerAddress: string
+  ): Promise<string[]> {
+    const checksumAddress = ethers.getAddress(ownerAddress);
+    const requestUrl = getSafesByOwnerApiEndpoint(checksumAddress);
 
         const safesByOwnerResult = await fetch(requestUrl);
         const safesByOwner = await safesByOwnerResult.json();
@@ -52,6 +54,12 @@
     });
 
     await Promise.all(groupFetchPromises);
+  }
+
+  async function handleSafeCreated(event: CustomEvent) {
+    console.log('handleSafeCreated triggered!', event.detail);
+    const newSafeAddress = event.detail.address;
+    safes = [...safes, newSafeAddress];
   }
 
   //
