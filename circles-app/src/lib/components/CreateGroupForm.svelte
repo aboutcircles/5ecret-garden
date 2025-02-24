@@ -99,7 +99,7 @@
   <div class="w-full flex justify-between">
     <div></div>
     <h1 class="text-2xl text-center font-bold text-primary mb-2">
-      DEPLOY GROUP
+      CREATE GROUP
     </h1>
     <div class="dropdown dropdown-end">
       <div tabIndex={0} role="button" class="btn btn-ghost btn-circle btn-xs">
