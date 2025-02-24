@@ -82,10 +82,12 @@ export async function restoreWallet() {
     }
 }
 
-export function clearSession() {
+export async function clearSession() {
     localStorage.clear();
     avatar.set(undefined);
     wallet.set(undefined);
     circles.set(undefined);
+    localStorage.removeItem('wallet');
+    await goto("/connect-wallet");
     console.log("User session cleared");
 }

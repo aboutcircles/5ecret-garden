@@ -44,8 +44,8 @@
 <div
   class="w-full flex flex-col justify-center min-h-screen p-4 max-w-xl gap-y-4 mt-20"
 >
-  {#if $wallet?.address}
-    <ConnectCircles address={$wallet.address} walletType="metamask">
+  {#if $wallet?.address && $circles}
+    <ConnectCircles address={$wallet.address.toLowerCase()} walletType="metamask">
       <Avatar
         address={$wallet.address.toLowerCase()}
         clickable={false}
