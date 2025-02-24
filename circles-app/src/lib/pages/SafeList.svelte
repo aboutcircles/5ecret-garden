@@ -8,6 +8,7 @@
     import CreateSafe from "$lib/pages/CreateSafe.svelte";
     import ConnectSafe from "$lib/components/ConnectSafe.svelte";
     import Avatar from "$lib/components/avatar/Avatar.svelte";
+    import { fetchGroupsByOwner } from '$lib/utils/groups';
 
     let safes: string[] = [];
 
