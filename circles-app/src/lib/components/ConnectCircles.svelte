@@ -8,12 +8,13 @@
   import { onMount } from 'svelte';
 
   export let address: string;
+  export let walletType: 'safe' | 'metamask' = 'safe';
 
   let circlesConfig: CirclesConfig;
   let avatarInfo: AvatarRow | undefined;
 
   onMount(async () => {
-    $wallet = await initializeWallet('safe', address);
+    $wallet = await initializeWallet(walletType, address);
 
     const network = await $wallet?.provider?.getNetwork();
     if (!network) {
