@@ -1,6 +1,6 @@
 <script lang="ts">
   import {avatar} from '$lib/stores/avatar';
-  import {wallet} from '$lib/stores/wallet';
+  import {clearSession, wallet} from '$lib/stores/wallet';
   import {circles} from '$lib/stores/circles';
   import {goto} from '$app/navigation';
   import ActionButton from '$lib/components/ActionButton.svelte';
@@ -14,15 +14,6 @@
   import {getProfile} from '$lib/utils/profile';
   import {popupControls} from '$lib/stores/popUp';
   import {ethers} from 'ethers';
-
-  async function disconnect() {
-    $avatar = undefined;
-    $circles = undefined;
-    $wallet = undefined;
-    localStorage.removeItem('wallet');
-
-    await goto('/connect-wallet');
-  }
 
   async function saveProfileData(profile: Profile): Promise<string> {
     if (!$circles?.profiles) {
@@ -130,7 +121,7 @@
         <div class="w-full pt-2 border-t">
             <h2 class="text-lg font-medium">Wallet</h2>
             <div class="mt-3">
-                <ActionButton action={disconnect}>Disconnect</ActionButton>
+                <ActionButton action={clearSession}>Disconnect</ActionButton>
             </div>
         </div>
     </div>
