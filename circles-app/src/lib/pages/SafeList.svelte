@@ -1,28 +1,27 @@
 <script lang="ts">
+  import { SafeSdkBrowserContractRunner } from '@circles-sdk/adapter-safe';
+  import { onMount } from 'svelte';
+  import { ethers } from 'ethers6';
+  import { wallet } from '$lib/stores/wallet';
+  import ConnectCircles from '$lib/components/ConnectCircles.svelte';
+  import Avatar from '$lib/components/avatar/Avatar.svelte';
+  import { fetchGroupsByOwner } from '$lib/utils/groups';
+  import CreateSafe from './CreateSafe.svelte';
 
-    import { shortenAddress } from "$lib/utils/shared";
-    import { SafeSdkBrowserContractRunner } from "@circles-sdk/adapter-safe";
-    import { onMount } from "svelte";
-    import { ethers } from "ethers6";
-    import { wallet } from "$lib/stores/wallet";
-    import CreateSafe from "$lib/pages/CreateSafe.svelte";
-    import ConnectSafe from "$lib/components/ConnectSafe.svelte";
-    import Avatar from "$lib/components/avatar/Avatar.svelte";
-    import { fetchGroupsByOwner } from '$lib/utils/groups';
+  let safes: string[] = [];
+  let groupsByAddress: Record<string, string[]>;
 
-    let safes: string[] = [];
+  const getSafesByOwnerApiEndpoint = (checksumOwnerAddress: string): string =>
+    `https://safe-transaction-gnosis-chain.safe.global/api/v1/owners/${checksumOwnerAddress}/safes/`;
 
-    const getSafesByOwnerApiEndpoint = (checksumOwnerAddress: string): string =>
-        `https://safe-transaction-gnosis-chain.safe.global/api/v1/owners/${checksumOwnerAddress}/safes/`;
+  async function querySafeTransactionService(
+    ownerAddress: string
+  ): Promise<string[]> {
+    const checksumAddress = ethers.getAddress(ownerAddress);
+    const requestUrl = getSafesByOwnerApiEndpoint(checksumAddress);
 
-    async function querySafeTransactionService(
-        ownerAddress: string,
-    ): Promise<string[]> {
-        const checksumAddress = ethers.getAddress(ownerAddress);
-        const requestUrl = getSafesByOwnerApiEndpoint(checksumAddress);
-
-        const safesByOwnerResult = await fetch(requestUrl);
-        const safesByOwner = await safesByOwnerResult.json();
+    const safesByOwnerResult = await fetch(requestUrl);
+    const safesByOwner = await safesByOwnerResult.json();
 
     return safesByOwner.safes ?? [];
   }
@@ -50,6 +49,12 @@
     await Promise.all(groupFetchPromises);
   }
 
+  async function handleSafeCreated(event: CustomEvent) {
+    console.log('handleSafeCreated triggered!', event.detail);
+    const newSafeAddress = event.detail.address;
+    safes = [...safes, newSafeAddress];
+  }
+
   //
   // Connects the wallet and initializes the Circles SDK.
   //
@@ -62,55 +67,12 @@
 
 {#each safes ?? [] as item (item)}
   <ConnectCircles address={item}>
-    <Avatar
-      address={item.toLowerCase()}
-      clickable={false}
-      view="horizontal"
-
-    />
+    <Avatar address={item.toLowerCase()} clickable={false} view="horizontal" />
   </ConnectCircles>
-
-        return safesByOwner.safes ?? [];
-    }
-
-    async function handleSafeCreated(event: CustomEvent) {
-        console.log("handleSafeCreated triggered!", event.detail);
-        const newSafeAddress = event.detail.address;
-        safes = [...safes, newSafeAddress];
-    }
-
-    onMount(async () => {
-        if (!$wallet) {
-            throw new Error("Wallet address is not available");
-        }
-        if ($wallet instanceof SafeSdkBrowserContractRunner) {
-            const signer = await $wallet.browserProvider.getSigner();
-            safes = await querySafeTransactionService(signer.address);
-        } else {
-            safes = await querySafeTransactionService($wallet.address!);
-        }
-    });
-
-    //
-    // Connects the wallet and initializes the Circles SDK.
-    //
-</script>
-
-{#each safes ?? [] as item (item)}
-    <ConnectSafe {item}>
-        <Avatar
-            address={item.toLowerCase()}
-            clickable={false}
-            view="horizontal"
-        >
-            {shortenAddress(item.toLowerCase())}
-        </Avatar>
-    </ConnectSafe>
-
 {/each}
 {#if (safes ?? []).length === 0}
-    <div class="text-center">
-        <p>No safes available.</p>
-        <CreateSafe on:safecreated={handleSafeCreated} />
-    </div>
+  <div class="text-center">
+    <p>No safes available.</p>
+    <CreateSafe on:safecreated={handleSafeCreated} />
+  </div>
 {/if}
