@@ -6,7 +6,7 @@
   import { popupControls } from '$lib/stores/popUp';
   import type { AddContactFlowContext } from './context';
   import ActionButton from '$lib/components/ActionButton.svelte';
-  import { addMembers } from '$lib/stores/groupAvatar';
+  import { addMembers, removeMembers } from '$lib/stores/groupAvatar';
 
   let context: AddContactFlowContext = {
     selectedAddress: '',
@@ -29,18 +29,18 @@
     const address = event.detail.avatar;
     const existingContact = $contacts.data[address];
 
-    if (!(
-      existingContact?.row?.objectAvatar === address &&
-      (existingContact.row.relation === 'trusts' ||
-        existingContact.row.relation === 'mutuallyTrusts')
-    )) {
+    // if (!(
+    //   existingContact?.row?.objectAvatar === address &&
+    //   (existingContact.row.relation === 'trusts' ||
+    //     existingContact.row.relation === 'mutuallyTrusts')
+    // )) {
       const newAddress = event.detail.avatar;
       const addressList = selectedAddresses.split(',').map(addr => addr.trim());
       if (!addressList.includes(newAddress)) {
         selectedAddresses = selectedAddresses
           ? `${selectedAddresses}, ${newAddress}`
           : newAddress;
-      }
+      // }
 
       context.selectedAddress = '';
     }
@@ -54,17 +54,27 @@
       console.error('Failed to add contacts:', error);
     }
   }
+
+  async function handleRemoveMembers() {
+    try {
+      await removeMembers(selectedAddresses);
+      selectedAddresses = '';
+    } catch (error) {
+      console.error('Failed to remove contacts:', error);
+    }
+  }
 </script>
 
 <FlowDecoration>
-  <p class="text-2xl font-bold">Add Members (batch)</p>
+  <p class="text-2xl font-bold">Add or Remove Members</p>
   <textarea
     bind:value={selectedAddresses}
     placeholder="Enter addresses separated by commas"
     rows="3"
     class="w-full p-2 mb-4 border rounded resize-y"
   />
-  <ActionButton action={handleAddMembers}> Add </ActionButton>
+  <ActionButton action={handleAddMembers}>Add</ActionButton>
+  <ActionButton action={handleRemoveMembers}>Remove</ActionButton>
   <p class="text-xl font-bold mt-4">Search for members</p>
   <SearchAvatar
     selectedAddress={context.selectedAddress}
