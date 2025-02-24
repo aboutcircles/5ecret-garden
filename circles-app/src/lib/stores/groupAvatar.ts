@@ -9,10 +9,10 @@ export const groupAvatarContract = derived(
   ([$avatar, $wallet]) =>
     $avatar && $wallet
       ? new ethers.Contract(
-          $avatar.address,
-          groupABI,
-          $wallet as ContractRunner
-        )
+        $avatar.address,
+        groupABI,
+        $wallet as ContractRunner
+      )
       : null
 );
 
@@ -58,6 +58,48 @@ export async function removeMembers(addrStr: string) {
     return tx;
   } catch (error) {
     console.error('Error adding member:', error);
+    throw error;
+  }
+}
+
+export async function setService(addrStr: string) {
+  const contract = get(groupAvatarContract);
+  if (!contract) throw new Error('Contract not initialized');
+
+  try {
+    const tx = await contract.setService(addrStr);
+    await tx.wait();
+    return tx;
+  } catch (error) {
+    console.error('Error setting service:', error);
+    throw error;
+  }
+}
+
+export async function setMintHandler(addrStr: string) {
+  const contract = get(groupAvatarContract);
+  if (!contract) throw new Error('Contract not initialized');
+
+  try {
+    const tx = await contract.setMintHandler(addrStr);
+    await tx.wait();
+    return tx;
+  } catch (error) {
+    console.error('Error setting minter:', error);
+    throw error;
+  }
+}
+
+export async function setRedemptionHandler(addrStr: string) {
+  const contract = get(groupAvatarContract);
+  if (!contract) throw new Error('Contract not initialized');
+
+  try {
+    const tx = await contract.setRedemptionHandler(addrStr);
+    await tx.wait();
+    return tx;
+  } catch (error) {
+    console.error('Error setting redemption:', error);
     throw error;
   }
 }

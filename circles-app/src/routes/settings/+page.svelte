@@ -91,12 +91,6 @@
         showCustomizableFields={$avatar?.avatarInfo?.version === 2}
       />
 
-      {#if $avatar?.avatarInfo?.type === 'CrcV2_RegisterGroup'}
-        <div class="w-full">
-          <h2 class="font-bold">Advanced Group Settings</h2>
-          <GroupSetting />
-        </div>
-      {/if}
       {#if $avatar?.avatarInfo?.version === 2}
         <div>
           <ActionButton action={saveProfile} disabled={!profile}
@@ -105,6 +99,13 @@
         </div>
       {/if}
     </div>
+
+    {#if $avatar?.avatarInfo?.type === 'CrcV2_RegisterGroup'}
+      <div class="w-full pt-2 border-t">
+        <h2 class="font-bold">Advanced Group Settings</h2>
+        <GroupSetting />
+      </div>
+    {/if}
 
     {#if $avatar?.avatarInfo && canMigrate($avatar.avatarInfo)}
       {#if $avatar?.avatarInfo?.version === 1}

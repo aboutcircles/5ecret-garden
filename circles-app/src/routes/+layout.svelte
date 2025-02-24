@@ -16,7 +16,7 @@
   import UpdateBanner from '$lib/components/UpdateBanner.svelte';
   import { page } from '$app/stores';
   import SearchAvatar from '$lib/flows/addContact/1_Search.svelte';
-  import AddContactsBatch from '$lib/flows/groupAddContactsBatch/1_AddContactsBatch.svelte';
+  // import AddContactsBatch from '$lib/flows/groupAddContactsBatch/1_AddContactsBatch.svelte';
   import Send from '$lib/flows/send/1_To.svelte';
   import MintGroupTokens from '$lib/flows/mintGroupTokens/1_To.svelte';
   import { onMount } from 'svelte';
