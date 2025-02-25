@@ -28,7 +28,9 @@
 
   let quickAction: QuickAction | undefined;
 
-  const quickActionsMap: Record<string, QuickAction | undefined> = {
+  let quickActionsMap: Record<string, QuickAction | undefined>;
+
+  $: quickActionsMap = {
     '/dashboard': {
       name: 'Send',
       icon: '/send.svg',
