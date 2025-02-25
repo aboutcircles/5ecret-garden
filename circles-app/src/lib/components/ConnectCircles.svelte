@@ -33,17 +33,20 @@
     $circles = new Sdk($wallet!, circlesConfig);
 
     avatarInfo = await $circles.data.getAvatarInfo($wallet.address);
-    if (avatarInfo) {
-      groups = await fetchGroupsByOwner($wallet.address);
-      console.log(groups);
-    }
+    groups = await fetchGroupsByOwner($wallet.address);
   });
 
   async function connectWallet(address: string) {
-    // If the signer address is already a registered Circles wallet, go straight to the dashboard.
-    if (avatarInfo && $circles && $wallet) {
-      $avatar = await $circles.getAvatar(address.toLowerCase());
-      localStorage.setItem('avatar', address.toLowerCase());
+    const lowerCaseAddress = address.toLowerCase();
+
+    if (lowerCaseAddress === $wallet?.address?.toLowerCase() && !avatarInfo) {
+      await goto('/register');
+      return;
+    }
+
+    if ($circles && $wallet) {
+      $avatar = await $circles.getAvatar(lowerCaseAddress);
+      localStorage.setItem('avatar', lowerCaseAddress);
       await goto('/dashboard');
     } else {
       await goto('/register');
