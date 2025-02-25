@@ -54,7 +54,7 @@
   }
 </script>
 
-<div class="w-full flex flex-col border rounded-lg flex flex-col p-4 shadow-sm">
+<div class="w-full border rounded-lg flex flex-col p-4 shadow-sm">
   <button
     on:click={() => connectWallet(address)}
     class="flex justify-between items-center hover:bg-black/5 rounded-lg p-2"
