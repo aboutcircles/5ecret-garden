@@ -42,6 +42,7 @@ export async function restoreWallet() {
     try {
         const walletType = localStorage.getItem("walletType");
         const savedWalletAddress = localStorage.getItem("wallet");
+        const savedAvatar = localStorage.getItem("avatar");
 
         if (!walletType || !savedWalletAddress) {
             console.log("No wallet found in localStorage");
@@ -68,11 +69,11 @@ export async function restoreWallet() {
         const sdk = new Sdk(restoredWallet, await getCirclesConfig(network.chainId));
         circles.set(sdk);
 
-        const avatarInfo = await sdk.data.getAvatarInfo(restoredWallet.address);
+        const avatarInfo = await sdk.data.getAvatarInfo(savedAvatar !== null ? savedAvatar : restoredWallet.address);
 
         if (avatarInfo) {
             console.log("Wallet restored");
-            avatar.set(await sdk.getAvatar(restoredWallet.address));
+            avatar.set(await sdk.getAvatar(savedAvatar !== null ? savedAvatar : restoredWallet.address));
         } else {
             await goto("/register");
         }
@@ -88,6 +89,7 @@ export async function clearSession() {
     wallet.set(undefined);
     circles.set(undefined);
     localStorage.removeItem('wallet');
+    localStorage.removeItem('avatar');
     await goto("/connect-wallet");
     console.log("User session cleared");
 }
