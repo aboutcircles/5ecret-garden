@@ -7,6 +7,7 @@
   import { getCirclesConfig } from '$lib/utils/helpers';
   import { onMount } from 'svelte';
   import { fetchGroupsByOwner } from '$lib/utils/groups';
+  import Avatar from './avatar/Avatar.svelte';
 
   export let address: string;
   export let walletType: 'safe' | 'metamask' = 'safe';
@@ -42,7 +43,7 @@
     // If the signer address is already a registered Circles wallet, go straight to the dashboard.
     if (avatarInfo && $circles && $wallet) {
       $avatar = await $circles.getAvatar(address.toLowerCase());
-      localStorage.setItem("avatar", address.toLowerCase());
+      localStorage.setItem('avatar', address.toLowerCase());
       await goto('/dashboard');
     } else {
       await goto('/register');
@@ -50,37 +51,36 @@
   }
 </script>
 
-<div
-  class="w-full flex flex-col gap-y-2 border rounded-lg flex flex-col p-4 shadow-sm"
->
+<div class="w-full flex flex-col border rounded-lg flex flex-col p-4 shadow-sm">
   <button
     on:click={() => connectWallet(address)}
-    class="flex justify-between items-center hover:bg-black/5 p-2"
+    class="flex justify-between items-center hover:bg-black/5 rounded-lg p-2"
   >
-    <div class="flex items-center gap-x-4">
-      <slot></slot>
-    </div>
+    <slot></slot>
     {#if avatarInfo === undefined}
       <button class="btn btn-xs btn-outline btn-primary">register</button>
     {:else}
       <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
     {/if}
   </button>
-  <div class="w-full flex gap-x-2">
+  <div class="w-full flex gap-x-2 items-center mt-6">
     <p class="font-bold text-primary">My groups</p>
-    <a
-      href="/register/register-group"
-      class="btn btn-xs btn-outline btn-primary btn-circle"
-      ><img src="/plus.svg" alt="Plus" class="w-3" /></a
+    <a href="/register/register-group" class="btn btn-xs btn-ghost btn-circle"
+      ><img src="/plus.svg" alt="Plus" class="w-5" /></a
     >
   </div>
-  <div class="pl-4">
+  <div class="w-full pl-6 flex flex-col gap-y-2 mt-2">
     {#each groups as group}
-      <div class="flex items">
-        <button class="text-sm" on:click={() => connectWallet(group)}
-          >{group}</button
-        >
-      </div>
+      <button
+        class="flex w-full hover:bg-black/5 rounded-lg p-2"
+        on:click={() => connectWallet(group)}
+        ><Avatar
+          address={group}
+          clickable={false}
+          view="horizontal"
+          topInfo={group}
+        /></button
+      >
     {/each}
     {#if groups.length === 0}
       <p class="text-sm">No groups available.</p>
