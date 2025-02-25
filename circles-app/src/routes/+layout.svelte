@@ -10,13 +10,12 @@
   import '../app.css';
 
   import DefaultHeader from '$lib/components/DefaultHeader.svelte';
-  import { avatar } from '$lib/stores/avatar';
+  import { avatar, isGroup } from '$lib/stores/avatar';
   import { clearSession, restoreWallet, wallet } from '$lib/stores/wallet';
   import { canMigrate } from '$lib/guards/canMigrate';
   import UpdateBanner from '$lib/components/UpdateBanner.svelte';
   import { page } from '$app/stores';
   import SearchAvatar from '$lib/flows/addContact/1_Search.svelte';
-  // import AddContactsBatch from '$lib/flows/groupAddContactsBatch/1_AddContactsBatch.svelte';
   import Send from '$lib/flows/send/1_To.svelte';
   import MintGroupTokens from '$lib/flows/mintGroupTokens/1_To.svelte';
   import { onMount } from 'svelte';
@@ -25,6 +24,7 @@
   import { getProfile } from '$lib/utils/profile';
   import { popupControls, popupState } from '$lib/stores/popUp';
   import PopUp from '$lib/components/PopUp.svelte';
+  import ManageGroupMembers from '$lib/flows/manageGroupMembers/1_manageGroupMembers.svelte';
 
   let quickAction: QuickAction | undefined;
 
@@ -41,24 +41,22 @@
       },
     },
     '/contacts': {
-      // TODO: distinguish between human avatar and group avatar
-      name: 'Add Contact',
+      name: $isGroup ? 'Manage members' : 'Add Contact',
       icon: '/add-contact.svg',
       action: () => {
-        // TODO: distinguish between human avatar and group avatar
-
-        // popupControls.open({
-        //   title: 'Add Members',
-        //   component: AddContactsBatch,
-        //   props: {},
-        // });
-
-        // this is only for human avatars
-        popupControls.open({
-          title: 'Add Contact',
-          component: SearchAvatar,
-          props: {},
-        });
+        if ($isGroup) {
+          popupControls.open({
+            title: 'Manage members',
+            component: ManageGroupMembers,
+            props: {},
+          });
+        } else {
+          popupControls.open({
+            title: 'Add Contact',
+            component: SearchAvatar,
+            props: {},
+          });
+        }
       },
     },
     '/groups': {
