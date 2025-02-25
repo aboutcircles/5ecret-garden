@@ -4,7 +4,7 @@
   export let profile: Profile | undefined;
 </script>
 
-<div class="w-full flex flex-col items-center p-4 text-center">
+<div class="w-full flex flex-col items-center text-center">
   <button class="cursor-pointer" on:click>
     <img
       src={profile?.previewImageUrl}

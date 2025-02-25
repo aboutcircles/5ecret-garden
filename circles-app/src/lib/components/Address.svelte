@@ -16,7 +16,7 @@
 
 <button
   on:click={handleCopy}
-  class="bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm flex flex-row items-center gap-x-1 font-medium hover:text-black/70 hover:cursor-pointer"
+  class="btn btn-sm"
 >
   {shortenAddress(address)}
   <img src={copyIcon} alt="Copy" class="w-4 h-4 inline" />
