@@ -101,12 +101,13 @@
 
   let profile: Profile | undefined;
 
-  onMount(async () => {
-    //TODO: if we pass a profile directly, we don't have to initialize and call getProfile() from sdk
+  $: {
     if (address) {
-      profile = await getProfile(address);
+      getProfile(address).then(newProfile => {
+        profile = newProfile;
+      });
     }
-  });
+  }
 
   function openAvatar() {
     if (!clickable) {
