@@ -2,7 +2,7 @@
   import { contacts } from '$lib/stores/contacts';
   import { formatTrustRelation } from '$lib/utils/helpers';
   import ContactGroupRow from './ContactGroupRow.svelte';
-
+  import { onMount } from 'svelte';
   let filterVersion: number | undefined = undefined;
 
   $: filteredContacts = $contacts?.data
@@ -34,6 +34,12 @@
     }
     return 0;
   });
+
+  onMount(() => {
+    const unsubscribe = contacts.subscribe(() => {});
+    return unsubscribe;
+  });
+
 </script>
 
 <div
