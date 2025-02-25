@@ -7,12 +7,13 @@
   import type { AddContactFlowContext } from './context';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import { addMembers, removeMembers } from '$lib/stores/groupAvatar';
+  import Papa from 'papaparse';
 
   let context: AddContactFlowContext = {
     selectedAddress: '',
   };
 
-  // TODO: Remove this?
+  // TODO: Remove this? 
   function handleInvite(event: CustomEvent<{ avatar: string }>) {
     console.log('Invite');
     popupControls.open({
@@ -63,6 +64,28 @@
       console.error('Failed to remove contacts:', error);
     }
   }
+
+  async function handleImportCSV(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const csv = e.target?.result as string;
+      const results = Papa.parse(csv, { header: true });
+      if (results.data && Array.isArray(results.data)) {
+        const addresses = results.data
+          .map((row: any) => row.address)
+          .filter(Boolean)
+          .join(', ');
+        selectedAddresses = selectedAddresses
+          ? `${selectedAddresses}, ${addresses}`
+          : addresses;
+      }
+    };
+    reader.readAsText(file);
+  }
 </script>
 
 <FlowDecoration>
@@ -73,8 +96,22 @@
     rows="3"
     class="w-full p-2 mb-4 border rounded resize-y"
   />
-  <ActionButton action={handleAddMembers}>Add</ActionButton>
-  <ActionButton action={handleRemoveMembers}>Remove</ActionButton>
+  <div class="flex flex-row gap-x-2">
+    <ActionButton action={handleAddMembers}>Add</ActionButton>
+    <ActionButton action={handleRemoveMembers}>Remove</ActionButton>
+
+    <div class="flex-grow"></div>
+    <label class="cursor-pointer">
+      Import CSV
+      <input
+        type="file"
+        accept=".csv"
+        class="hidden"
+        on:change={handleImportCSV}
+      />
+    </label>
+  </div>
+
   <p class="text-xl font-bold mt-4">Search for members</p>
   <SearchAvatar
     selectedAddress={context.selectedAddress}
