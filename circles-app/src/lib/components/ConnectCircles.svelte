@@ -41,8 +41,8 @@
   async function connectWallet(address: string) {
     // If the signer address is already a registered Circles wallet, go straight to the dashboard.
     if (avatarInfo && $circles && $wallet) {
-      console.log('avatarInfo', avatarInfo, address);
       $avatar = await $circles.getAvatar(address.toLowerCase());
+      localStorage.setItem("avatar", address.toLowerCase());
       await goto('/dashboard');
     } else {
       await goto('/register');
