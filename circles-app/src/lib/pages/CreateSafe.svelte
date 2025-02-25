@@ -1,6 +1,6 @@
 <script lang="ts">
     import { wallet } from "$lib/stores/wallet";
-    import Safe from "@safe-global/protocol-kit";
+    import Safe, { PREDETERMINED_SALT_NONCE } from "@safe-global/protocol-kit";
     import type {
         PredictedSafeProps,
         SafeAccountConfig,
@@ -17,8 +17,6 @@
     let isWalletReady = false;
 
     onMount(() => {
-        console.log("Wallet on mount:", $wallet?.provider);
-        console.log("Wallet type:", $wallet?.constructor?.name);
         isWalletReady = !!$wallet;
     });
 
@@ -31,8 +29,6 @@
             isCreating = false;
             return;
         }
-        // const provider = $wallet.provider as ethers.BrowserProvider;
-        // const signer = await provider.getSigner();
 
         const provider = new ethers.BrowserProvider(window.ethereum);
         const signer = await provider.getSigner();
@@ -44,23 +40,24 @@
         }
 
         try {
-            const ownerAddress = $wallet.address;
-
+            const ownerAddress = await signer.getAddress();
             if (!ownerAddress) throw new Error("No wallet address available");
 
             const safeAccountConfig: SafeAccountConfig = {
                 owners: [ownerAddress],
                 threshold: 1,
             };
+            console.log(safeAccountConfig);
 
             const predictedSafe: PredictedSafeProps = {
                 safeAccountConfig,
             };
+            console.log(predictedSafe);
 
             const protocolKit = await Safe.init({
-                provider: provider, // Use browserProvider
+                provider: window.ethereum, // Use browserProvider
                 predictedSafe,
-                signer: signer,
+                signer: ownerAddress,
             });
 
             const safeAddress = await protocolKit.getAddress();
@@ -72,6 +69,7 @@
             const client = await protocolKit
                 .getSafeProvider()
                 .getExternalSigner();
+            console.log(client, "this is client value");
 
             if (!client) {
                 throw new Error("Failed to get external signer");
