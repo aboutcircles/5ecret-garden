@@ -21,11 +21,11 @@
     const getSafesByOwnerApiEndpoint = (checksumOwnerAddress: string): string =>
         `https://safe-transaction-gnosis-chain.safe.global/api/v1/owners/${checksumOwnerAddress}/safes/`;
 
-  async function querySafeTransactionService(
-    ownerAddress: string
-  ): Promise<string[]> {
-    const checksumAddress = ethers.getAddress(ownerAddress);
-    const requestUrl = getSafesByOwnerApiEndpoint(checksumAddress);
+    async function querySafeTransactionService(
+        ownerAddress: string
+    ): Promise<string[]> {
+        const checksumAddress = ethers.getAddress(ownerAddress);
+        const requestUrl = getSafesByOwnerApiEndpoint(checksumAddress);
 
         const safesByOwnerResult = await fetch(requestUrl);
         const safesByOwner = await safesByOwnerResult.json();
@@ -33,38 +33,38 @@
         return safesByOwner.safes ?? [];
     }
 
-  onMount(loadSafesAndGroups);
+    onMount(loadSafesAndGroups);
 
-  async function loadSafesAndGroups() {
-    if (!$wallet) {
-      throw new Error('Wallet address is not available');
+    async function loadSafesAndGroups() {
+        if (!$wallet) {
+            throw new Error('Wallet address is not available');
+        }
+
+        const ownerAddress =
+            $wallet instanceof SafeSdkBrowserContractRunner
+                ? await $wallet.browserProvider.getSigner().then((s) => s.address)
+                : $wallet.address!;
+
+        safes = await querySafeTransactionService(ownerAddress);
+
+        const groupFetchPromises = safes.map(async (safe) => {
+            const groups = await fetchGroupsByOwner(safe);
+            console.log(groups);
+            groupsByAddress = { ...groupsByAddress, [safe]: groups.flat() };
+        });
+
+        await Promise.all(groupFetchPromises);
     }
 
-    const ownerAddress =
-      $wallet instanceof SafeSdkBrowserContractRunner
-        ? await $wallet.browserProvider.getSigner().then((s) => s.address)
-        : $wallet.address!;
+    async function handleSafeCreated(event: CustomEvent) {
+        console.log('handleSafeCreated triggered!', event.detail);
+        const newSafeAddress = event.detail.address;
+        safes = [...safes, newSafeAddress];
+    }
 
-    safes = await querySafeTransactionService(ownerAddress);
-
-    const groupFetchPromises = safes.map(async (safe) => {
-      const groups = await fetchGroupsByOwner(safe);
-      console.log(groups);
-      groupsByAddress = { ...groupsByAddress, [safe]: groups.flat() };
-    });
-
-    await Promise.all(groupFetchPromises);
-  }
-
-  async function handleSafeCreated(event: CustomEvent) {
-    console.log('handleSafeCreated triggered!', event.detail);
-    const newSafeAddress = event.detail.address;
-    safes = [...safes, newSafeAddress];
-  }
-
-  //
-  // Connects the wallet and initializes the Circles SDK.
-  //
+    //
+    // Connects the wallet and initializes the Circles SDK.
+    //
 
     // bottomInfo={shortenAddress(item.toLowerCase()) +
     //       (groupsByAddress[item].length > 0

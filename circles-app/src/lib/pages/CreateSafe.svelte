@@ -1,96 +1,111 @@
 <script lang="ts">
     import { wallet } from "$lib/stores/wallet";
-    import { SafeSdkBrowserContractRunner } from "@circles-sdk/adapter-safe";
-    import Safe, {
+    import Safe from "@safe-global/protocol-kit";
+    import type {
         PredictedSafeProps,
         SafeAccountConfig,
-        SafeDeploymentConfig,
     } from "@safe-global/protocol-kit";
     import { gnosis } from "viem/chains";
     import { createEventDispatcher } from "svelte";
     import { onMount } from "svelte";
+    import { BrowserProviderContractRunner } from "@circles-sdk/adapter-ethers";
+    import { ethers } from "ethers";
 
     const dispatch = createEventDispatcher();
     let isCreating = false;
     let error: string | null = null;
+    let isWalletReady = false;
 
-    onMount(async () => {
-        if (!$wallet) {
-            throw new Error("Wallet address is not available");
-        }
+    onMount(() => {
+        console.log("Wallet on mount:", $wallet?.provider);
+        console.log("Wallet type:", $wallet?.constructor?.name);
+        isWalletReady = !!$wallet;
     });
 
     async function createSafe() {
         isCreating = true;
         error = null;
 
-        if ($wallet instanceof SafeSdkBrowserContractRunner) {
-            try {
-                const signer = await $wallet.browserProvider.getSigner();
-                console.log(signer);
-                const provider = $wallet.browserProvider.provider;
-                console.log(provider);
+        if (!$wallet || !($wallet instanceof BrowserProviderContractRunner)) {
+            error = "Wallet not connected or invalid type";
+            isCreating = false;
+            return;
+        }
+        // const provider = $wallet.provider as ethers.BrowserProvider;
+        // const signer = await provider.getSigner();
 
-                const ownerAddress = await signer.getAddress();
-                if (!ownerAddress)
-                    throw new Error("No wallet address available");
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
 
-                const safeAccountConfig: SafeAccountConfig = {
-                    owners: [ownerAddress],
-                    threshold: 1,
-                };
+        if (!$wallet.provider) {
+            error = "Wallet provider is not available";
+            isCreating = false;
+            return;
+        }
 
-                const predictedSafe: PredictedSafeProps = {
-                    safeAccountConfig,
-                    // More optional properties
-                };
+        try {
+            const ownerAddress = $wallet.address;
 
-                const protocolKit = await Safe.init({
-                    provider: $wallet.browserProvider,
-                    predictedSafe,
-                    signer,
-                });
+            if (!ownerAddress) throw new Error("No wallet address available");
 
-                const safeAddress = await protocolKit.getAddress();
-                console.log(safeAddress);
+            const safeAccountConfig: SafeAccountConfig = {
+                owners: [ownerAddress],
+                threshold: 1,
+            };
 
-                const deploymentTransaction =
-                    await protocolKit.createSafeDeploymentTransaction();
+            const predictedSafe: PredictedSafeProps = {
+                safeAccountConfig,
+            };
 
-                const client = protocolKit
-                    .getSafeProvider()
-                    .getExternalSigner();
+            const protocolKit = await Safe.init({
+                provider: provider, // Use browserProvider
+                predictedSafe,
+                signer: signer,
+            });
 
-                const transactionHash = await client.sendTransaction({
-                    to: deploymentTransaction.to,
-                    value: BigInt(deploymentTransaction.value),
-                    data: deploymentTransaction.data as `0x${string}`,
-                    chain: gnosis,
-                });
+            const safeAddress = await protocolKit.getAddress();
+            console.log("Safe address:", safeAddress);
 
-                console.log("Transaction hash:", transactionHash);
+            const deploymentTransaction =
+                await protocolKit.createSafeDeploymentTransaction();
 
-                await $wallet.provider.waitForTransaction(transactionHash.hash);
+            const client = await protocolKit
+                .getSafeProvider()
+                .getExternalSigner();
 
-                const isSafeDeployed = await protocolKit.connect({
-                    safeAddress,
-                });
-
-                if (isSafeDeployed) {
-                    dispatch("safecreated", { address: safeAddress });
-                    console.log("Safe created event dispatched:", safeAddress);
-                } else {
-                    throw new Error("Safe deployment failed");
-                }
-            } catch (err) {
-                error =
-                    err instanceof Error
-                        ? err.message
-                        : "An unknown error occurred";
-                console.error("Error creating safe:", err);
-            } finally {
-                isCreating = false;
+            if (!client) {
+                throw new Error("Failed to get external signer");
             }
+
+            const transactionHash = await client.sendTransaction({
+                to: deploymentTransaction.to,
+                value: BigInt(deploymentTransaction.value),
+                data: deploymentTransaction.data as `0x${string}`,
+                chain: gnosis, // Use chain instead of chainId
+            });
+
+            console.log("Transaction hash:", transactionHash);
+
+            await $wallet.provider.waitForTransaction(transactionHash.hash);
+
+            const isSafeDeployed = await protocolKit.connect({
+                safeAddress,
+            });
+
+            if (isSafeDeployed) {
+                dispatch("safecreated", { address: safeAddress });
+                console.log("Safe created event dispatched:", safeAddress);
+            } else {
+                throw new Error("Safe deployment failed");
+            }
+        } catch (err) {
+            error =
+                err instanceof Error
+                    ? err.message
+                    : "An unknown error occurred";
+            console.error("Error creating safe:", err);
+        } finally {
+            isCreating = false;
         }
     }
 </script>
@@ -99,7 +114,7 @@
     <div class="error">{error}</div>
 {/if}
 
-<button on:click={createSafe} disabled={isCreating}>
+<button on:click={createSafe} disabled={isCreating || !isWalletReady}>
     {#if isCreating}
         Creating Safe...
     {:else}
