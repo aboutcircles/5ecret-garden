@@ -1,8 +1,11 @@
 <script lang="ts">
+  import ActionButton from '$lib/components/ActionButton.svelte';
   import { contacts } from '$lib/stores/contacts';
   import { formatTrustRelation } from '$lib/utils/helpers';
   import ContactGroupRow from './ContactGroupRow.svelte';
   import { onMount } from 'svelte';
+  import Papa from 'papaparse';
+
   let filterVersion: number | undefined = undefined;
 
   $: filteredContacts = $contacts?.data
@@ -40,6 +43,20 @@
     return unsubscribe;
   });
 
+  async function handleExportCSV() {
+    const csvData = Object.keys($contacts.data);
+
+    const csv = Papa.unparse(csvData.map(address => ({ address })));
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'members.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
 </script>
 
 <div
@@ -73,6 +90,9 @@
     >
       Version 2
     </button>
+
+    <div class="flex-grow"></div>
+    <button on:click={handleExportCSV}>Export CSV</button>
   </div>
 
   <div
