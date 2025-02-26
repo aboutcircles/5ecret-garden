@@ -119,7 +119,12 @@
     <div class="error">{error}</div>
 {/if}
 
-<button on:click={createSafe} disabled={isCreating || !isWalletReady}>
+<button
+    class="btn btm-nav-xs btn-outline btn-primary"
+    class:loading={isCreating}
+    disabled={isCreating || !isWalletReady || error}
+    on:click={createSafe}
+>
     {#if isCreating}
         Creating Safe...
     {:else}
