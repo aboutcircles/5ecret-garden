@@ -118,12 +118,7 @@
           .map((row: any) => row.address)
           .filter(Boolean)
         ]
-        addressesArray = [...addressesArray, ...addressesArray, ...addressesArray]
         const addressesStr = addressesArray.join(', ');
-        // const addresses = results.data
-        //   .map((row: any) => row.address)
-        //   .filter(Boolean)
-        //   .join(', ');
         selectedAddresses = addressesStr;
       }
       input.value = '';
