@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { avatar } from '$lib/stores/avatar';
+  import { avatar, isGroup } from '$lib/stores/avatar';
   import { clearSession, wallet } from '$lib/stores/wallet';
   import { circles } from '$lib/stores/circles';
   import ActionButton from '$lib/components/ActionButton.svelte';
@@ -100,7 +100,7 @@
       {/if}
     </div>
 
-    {#if $avatar?.avatarInfo?.type === 'CrcV2_RegisterGroup'}
+    {#if $isGroup}
       <div class="w-full pt-2 border-t">
         <h2 class="font-bold">Advanced Group Settings</h2>
         <GroupSetting />
