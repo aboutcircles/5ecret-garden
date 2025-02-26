@@ -13,6 +13,8 @@
     selectedAddress: '',
   };
 
+  let addressesArray: string[] = [];
+  let errorMessage = '';
   // TODO: Remove this? 
   function handleInvite(event: CustomEvent<{ avatar: string }>) {
     console.log('Invite');
@@ -28,7 +30,7 @@
   let selectedAddresses = '';
   async function handleSelect(event: CustomEvent<{ avatar: string }>) {
     const address = event.detail.avatar;
-    const existingContact = $contacts.data[address];
+    // const existingContact = $contacts.data[address];
 
     // if (!(
     //   existingContact?.row?.objectAvatar === address &&
@@ -42,30 +44,67 @@
           ? `${selectedAddresses}, ${newAddress}`
           : newAddress;
       // }
-
+      addressesArray = [...addressesArray, newAddress];
       context.selectedAddress = '';
     }
   }
 
+  function handleErrors(error: any) {
+    if (error?.info?.error?.code === 4001 || 
+        error?.message?.includes('user rejected') ||
+        error?.message?.includes('User denied transaction')) {
+      errorMessage = 'Transaction was rejected';
+      throw new Error('Transaction was rejected');
+    }
+
+    if (error?.message?.includes('No valid addresses provided')) {
+      errorMessage = 'No valid addresses provided';
+      throw error;
+    }
+
+    if (error?.message?.includes('Contract not initialized')) {
+      errorMessage = 'Contract not initialized';
+      throw error;
+    }
+
+    errorMessage = 'Tx failed, try passing less addresses';
+    throw new Error('Tx failed, try passing less addresses');
+  }
+
   async function handleAddMembers() {
+    errorMessage = '';
     try {
       await addMembers(selectedAddresses);
       selectedAddresses = '';
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to add contacts:', error);
+      handleErrors(error);
     }
   }
 
   async function handleRemoveMembers() {
+    errorMessage = '';
     try {
       await removeMembers(selectedAddresses);
       selectedAddresses = '';
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to remove contacts:', error);
+      handleErrors(error);
     }
   }
 
+  function handleAddressesChange(event: Event) {
+    const textarea = event.target as HTMLTextAreaElement;
+    const addresses = textarea.value
+      .split(',')
+      .map(addr => addr.trim())
+      .filter(addr => addr);
+    
+    addressesArray = addresses;
+  }
+
   async function handleImportCSV(event: Event) {
+    errorMessage = '';
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
@@ -75,30 +114,42 @@
       const csv = e.target?.result as string;
       const results = Papa.parse(csv, { header: true });
       if (results.data && Array.isArray(results.data)) {
-        const addresses = results.data
+        addressesArray = [...addressesArray, ...results.data
           .map((row: any) => row.address)
           .filter(Boolean)
-          .join(', ');
-        selectedAddresses = selectedAddresses
-          ? `${selectedAddresses}, ${addresses}`
-          : addresses;
+        ]
+        addressesArray = [...addressesArray, ...addressesArray, ...addressesArray]
+        const addressesStr = addressesArray.join(', ');
+        // const addresses = results.data
+        //   .map((row: any) => row.address)
+        //   .filter(Boolean)
+        //   .join(', ');
+        selectedAddresses = addressesStr;
       }
+      input.value = '';
     };
     reader.readAsText(file);
   }
 </script>
 
 <FlowDecoration>
-  <p class="text-2xl font-bold">Add or Remove Members</p>
+  <h2 class="text-2xl font-bold">Add or Remove Members</h2>
+  <p class="text-sm text-gray-500 text-right">{addressesArray.length} {addressesArray.length === 1 ? 'address' : 'addresses'}</p>
   <textarea
     bind:value={selectedAddresses}
     placeholder="Enter addresses separated by commas"
     rows="3"
     class="w-full p-2 mb-4 border rounded resize-y"
+    on:input={handleAddressesChange}
   />
   <div class="flex flex-row gap-x-2">
-    <ActionButton action={handleAddMembers}>Add</ActionButton>
-    <ActionButton action={handleRemoveMembers}>Remove</ActionButton>
+    <div class="flex flex-col gap-x-2">
+      <div class="flex flex-row gap-x-2">
+        <ActionButton action={handleAddMembers}>Add</ActionButton>
+        <ActionButton action={handleRemoveMembers}>Remove</ActionButton>
+      </div>
+      <p class="text-sm text-red-500 h-6">{errorMessage}</p>
+    </div>
 
     <div class="flex-grow"></div>
     <label class="cursor-pointer">
