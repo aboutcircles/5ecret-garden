@@ -75,8 +75,13 @@
 
   $: if (selectedAddress && selectedAddress !== lastAddress) {
     lastAddress = selectedAddress;
-    console.log('selectedAddress:', selectedAddress);
     searchProfiles();
+  } else if (selectedAddress.trim() === '') {
+    if (profiles) {
+      profiles.searchByName('a').then(results => {
+        result = results.slice(0, 25);
+      });
+    }
   }
 </script>
 
