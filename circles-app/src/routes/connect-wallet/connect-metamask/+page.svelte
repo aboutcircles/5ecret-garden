@@ -1,13 +1,14 @@
 <script lang="ts">
   import { initializeWallet, wallet } from '$lib/stores/wallet';
   import { circles } from '$lib/stores/circles';
-  import { Sdk} from '@circles-sdk/sdk';
+  import { Sdk } from '@circles-sdk/sdk';
   import { onMount } from 'svelte';
   import WalletLoader from '$lib/components/WalletLoader.svelte';
   import { getCirclesConfig } from '$lib/utils/helpers';
   import ConnectCircles from '$lib/components/ConnectCircles.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { switchOrAddGnosisNetwork } from '$lib/utils/network';
+  import { avatar } from '$lib/stores/avatar';
 
   const GNOSIS_CHAIN_ID_DEC = 100n; // Decimal format for BrowserProvider
 
@@ -36,12 +37,25 @@
     $circles = new Sdk($wallet!, circlesConfig);
   }
 
-  onMount(connectWallet);
+  onMount(() => {
+    if (!$avatar) {
+      connectWallet();
+    }
+  });
 </script>
 
 <div
-  class="w-full flex flex-col justify-center min-h-screen p-4 max-w-xl gap-y-4 mt-20"
+  class="w-full flex flex-col items-center min-h-screen p-4 max-w-xl gap-y-4 mt-20"
 >
+  <div class="w-full">
+    <a href={$avatar ? "/dashboard" : "/connect-wallet"} >
+      <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
+    </a>
+  </div>
+  <h2 class="font-bold text-[28px] md:text-[32px]">Select Avatar</h2>
+  <p class="font-normal text-black/60 text-base">
+    Please select the avatar you want to use from the list below.
+  </p>
   {#if $wallet?.address && $circles}
     <ConnectCircles
       address={$wallet.address.toLowerCase()}
