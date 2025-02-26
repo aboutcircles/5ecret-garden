@@ -118,7 +118,9 @@
 {/each}
 {#if (safes ?? []).length === 0}
     <div class="text-center">
-        <p>No safes available.</p>
+        <p class="font-normal text-base mb-5">
+            No safes available. Create new safe.
+        </p>
         <CreateSafe on:safecreated={handleSafeCreated} />
     </div>
 {/if}
