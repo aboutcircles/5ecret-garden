@@ -107,14 +107,14 @@
     <img src="/chevron-right.svg" alt="Chevron Right" class="w-4 cursor-pointer" on:click={() => connectWallet(manualSafeAddress)}/>
 </div>
 {#each safes ?? [] as item (item)}
-    <ConnectCircles address={item}>
+    <!-- <ConnectCircles address={item}>
         <Avatar
                 address={item.toLowerCase()}
                 clickable={false}
                 view="horizontal"
 
         />
-    </ConnectCircles>
+    </ConnectCircles> -->
 {/each}
 {#if (safes ?? []).length === 0}
     <div class="text-center">
