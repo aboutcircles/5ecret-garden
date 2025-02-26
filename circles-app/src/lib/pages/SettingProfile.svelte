@@ -12,10 +12,8 @@
   function changeWallet() {
     popupControls.close();
     if ($wallet instanceof SafeSdkBrowserContractRunner) {
-      clearSession();
       goto('/connect-wallet/connect-safe');
     } else {
-      clearSession();
       goto('/connect-wallet/connect-metamask');
     }
   }
@@ -30,7 +28,7 @@
     <button
       on:click={changeWallet}
       class="btn btn-sm btn-outline btn-primary text-primary hover:text-white"
-      >Change Wallet</button
+      >Change Avatar</button
     >
   </div>
 
