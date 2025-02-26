@@ -12,7 +12,7 @@ type WalletRunner = BrowserProviderContractRunner | SafeSdkBrowserContractRunner
 
 export const wallet = writable<WalletRunner | undefined>();
 
-const GNOSIS_CHAIN_ID_DEC = 100n;
+export const GNOSIS_CHAIN_ID_DEC = 100n;
 
 export async function initializeWallet(type: string, address?: string) {
     localStorage.setItem("walletType", type);

@@ -68,13 +68,13 @@
 </script>
 
 {#each safes ?? [] as item (item)}
-    <ConnectCircles address={item}>
+    <!-- <ConnectCircles address={item}>
         <Avatar
             address={item.toLowerCase()}
             clickable={false}
             view="horizontal"
         />
-    </ConnectCircles>
+    </ConnectCircles> -->
 {/each}
 {#if (safes ?? []).length === 0}
     <div class="text-center">
