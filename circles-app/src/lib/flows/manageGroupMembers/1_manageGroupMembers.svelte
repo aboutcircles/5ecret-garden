@@ -129,7 +129,19 @@
 
 <FlowDecoration>
   <h2 class="text-2xl font-bold">Add or Remove Members</h2>
-  <p class="text-sm text-gray-500 text-right">{addressesArray.length} {addressesArray.length === 1 ? 'address' : 'addresses'}</p>
+  <div class="flex flex-row gap-x-1 justify-end items-center pb-1">
+    <p class="text-sm text-gray-500 text-right">{addressesArray.length} {addressesArray.length === 1 ? 'address' : 'addresses'}</p>
+    <button 
+      class="p-2 hover:bg-gray-100 rounded-full"
+      on:click={() => {
+        selectedAddresses = '';
+        addressesArray = [];
+      }}
+    >
+      <img class="w-2 h-2" src="/x-mark.svg" alt="Clear addresses" />
+    </button>
+  </div>
+  
   <textarea
     bind:value={selectedAddresses}
     placeholder="Enter addresses separated by commas"
