@@ -29,6 +29,8 @@
   let quickAction: QuickAction | undefined;
 
   let quickActionsMap: Record<string, QuickAction | undefined>;
+  let menuItems: { name: string; link: string }[] = [];
+  let profile: Profile;
 
   $: quickActionsMap = {
     '/dashboard': {
@@ -81,11 +83,18 @@
     },
   };
 
-  let profile: Profile;
-
   avatar.subscribe(async ($avatar) => {
     if ($avatar) {
       profile = await getProfile($avatar?.avatarInfo?.avatar ?? '');
+      menuItems = [
+        { name: 'Dashboard', link: '/dashboard' },
+        { name: 'Contacts', link: '/contacts' },
+        { name: 'Settings', link: '/settings' },
+      ];
+
+      if (!$isGroup) {
+        menuItems.splice(2, 0, { name: 'Groups', link: '/groups' });
+      }
     }
   });
 
@@ -110,9 +119,10 @@
     homeLink="/dashboard"
     {quickAction}
     route={$page.route.id}
+    {menuItems}
   />
 {:else}
-  <DefaultHeader menuItems={[]} quickAction={undefined} route={''} />
+  <DefaultHeader quickAction={undefined} route={''} />
 {/if}
 
 <main class="relative w-full h-full bg-white overflow-hidden font-dmSans">
