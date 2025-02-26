@@ -1,9 +1,10 @@
 <script lang="ts">
     import { wallet } from "$lib/stores/wallet";
-    import Safe, { PREDETERMINED_SALT_NONCE } from "@safe-global/protocol-kit";
+    import Safe from "@safe-global/protocol-kit";
     import type {
         PredictedSafeProps,
         SafeAccountConfig,
+        SafeDeploymentConfig,
     } from "@safe-global/protocol-kit";
     import { gnosis } from "viem/chains";
     import { createEventDispatcher } from "svelte";
@@ -49,8 +50,14 @@
             };
             console.log(safeAccountConfig);
 
+            const randomSalt = ethers.hexlify(ethers.randomBytes(32));
+            const safeDeploymentConfig: SafeDeploymentConfig = {
+                saltNonce: randomSalt,
+            };
+
             const predictedSafe: PredictedSafeProps = {
                 safeAccountConfig,
+                safeDeploymentConfig,
             };
             console.log(predictedSafe);
 
