@@ -42,10 +42,8 @@
     avatarInfo = await $circles.data.getAvatarInfo($wallet.address);
   }
 
-  onMount(() => {
-    if (!$avatar) {
-      setup();
-    }
+  onMount(async () => {
+      await setup();
   });
 </script>
 
