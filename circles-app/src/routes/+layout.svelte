@@ -2,7 +2,7 @@
   export type QuickAction = {
     name: string;
     icon: string;
-    action: () => void;
+    action?: () => void | undefined;
   };
 </script>
 
@@ -36,13 +36,15 @@
     '/dashboard': {
       name: 'Send',
       icon: '/send.svg',
-      action: () => {
-        popupControls.open({
-          title: 'Send Circles',
-          component: Send,
-          props: {},
-        });
-      },
+      action: $isGroup
+        ? undefined
+        : () => {
+            popupControls.open({
+              title: 'Send Circles',
+              component: Send,
+              props: {},
+            });
+          },
     },
     '/contacts': {
       name: $isGroup ? 'Manage members' : 'Add Contact',
@@ -78,7 +80,14 @@
       name: 'Disconnect',
       icon: '',
       action: () => {
-        $wallet = undefined;
+        clearSession();
+      },
+    },
+    '/settings': {
+      name: 'Disconnect',
+      icon: '',
+      action: () => {
+        clearSession();
       },
     },
   };

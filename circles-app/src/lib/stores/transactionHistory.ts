@@ -12,8 +12,13 @@ const transferEvents: Set<CirclesEventType> = new Set([
     "CrcV2_DepositInflationary",
     "CrcV2_DepositDemurraged",
     "CrcV2_WithdrawInflationary",
-    "CrcV2_WithdrawDemurraged"
-]);
+    "CrcV2_WithdrawDemurraged",
+    "CrcV2_GroupMintSingle",
+    "CrcV2_GroupMintBatch",
+    "CrcV2_GroupRedeem",
+    "CrcV2_GroupRedeemCollateralReturn",
+    "CrcV2_GroupRedeemCollateralBurn"
+] as CirclesEventType[]);
 
 /**
  * Transaction history store, updated when relevant events occur.
