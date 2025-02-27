@@ -59,7 +59,7 @@
     class="flex justify-between items-center hover:bg-black/5 rounded-lg p-2"
   >
     <Avatar
-      topInfo="Personal Account"
+      topInfo={walletType === 'safe' ? 'Safe' : 'Connected Wallet'}
       address={address.toLowerCase()}
       clickable={false}
       view="horizontal"
