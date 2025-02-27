@@ -36,9 +36,9 @@
       </div>
       <a
         class="text-accent flex items-center px-4 py-1 rounded-full mt-4 text-base font-semibold"
-        href={'/setting'}
+        href={'/'}
       >
-        View group
+        Back home
       </a>
     </div>
   {:else if step === 'error'}

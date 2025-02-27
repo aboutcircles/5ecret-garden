@@ -25,20 +25,30 @@
   async function connectWallet(selectedAddress: string) {
     const lowerCaseAddress = selectedAddress.toLowerCase();
 
+    $wallet = await initializeWallet(walletType, lowerCaseAddress);
+    circlesConfig = await getCirclesConfig(network.chainId);
+    $circles = new Sdk($wallet!, circlesConfig);
+
     if (lowerCaseAddress === address && !isRegistered) {
       await goto('/register');
       return;
     }
 
     if ($circles && $wallet) {
-      $wallet = await initializeWallet(walletType, lowerCaseAddress);
-      circlesConfig = await getCirclesConfig(network.chainId);
-      $circles = new Sdk($wallet!, circlesConfig);
       $avatar = await $circles.getAvatar(lowerCaseAddress);
       localStorage.setItem('avatar', lowerCaseAddress);
       await goto('/dashboard');
-    } else {
-      await goto('/register');
+    }
+  }
+
+  async function deployGroup() {
+    if ($circles && $wallet) {
+      $wallet = await initializeWallet(walletType, address);
+      console.log('wallet', $wallet);
+      circlesConfig = await getCirclesConfig(network.chainId);
+      $circles = new Sdk($wallet!, circlesConfig);
+
+      await goto('/register/register-group');
     }
   }
 </script>
@@ -62,8 +72,10 @@
   </button>
   <div class="w-full flex gap-x-2 items-center mt-6">
     <p class="font-bold text-primary">My groups</p>
-    <a href="/register/register-group" class="btn btn-xs btn-ghost btn-circle"
-      ><img src="/plus.svg" alt="Plus" class="w-5" /></a
+    <button
+      on:click={() => deployGroup()}
+      class="btn btn-xs btn-ghost btn-circle"
+      ><img src="/plus.svg" alt="Plus" class="w-5" /></button
     >
   </div>
   <div class="w-full pl-6 flex flex-col gap-y-2 mt-2">

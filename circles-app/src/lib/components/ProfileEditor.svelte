@@ -1,7 +1,6 @@
 <script lang="ts">
     import ImageUpload from "$lib/components/ImageUpload.svelte";
     import type {Profile} from "@circles-sdk/profiles";
-    import {onMount} from "svelte";
 
     export let profile: Profile = {
         name: '',
