@@ -1,6 +1,6 @@
 <script lang="ts">
   import { tokenTypeToString } from '$lib/pages/SelectAsset.svelte';
-  import { avatar } from '$lib/stores/avatar';
+  import { avatar, isGroup } from '$lib/stores/avatar';
   import { crcTypes, roundToDecimals, staticTypes } from '$lib/utils/shared';
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import WrapTokens from '$lib/pages/WrapTokens.svelte';
@@ -69,9 +69,7 @@
 </script>
 
 <div class="w-full pt-2">
-  <div
-    class="w-full flex items-center justify-between p-2 rounded-lg"
-  >
+  <div class="w-full flex items-center justify-between p-2 rounded-lg">
     <Avatar
       address={balance.tokenOwner}
       view="horizontal"
@@ -92,35 +90,37 @@
         </p>
       </div>
 
-      <div class="dropdown dropdown-end">
-        <div
-          tabIndex={0}
-          role="button"
-          class="btn btn-circle btn-ghost btn-xs text-info"
-        >
-          <img src="/union.svg" alt="Union" class="w-4 h-4" />
+      {#if !$isGroup}
+        <div class="dropdown dropdown-end">
+          <div
+            tabIndex={0}
+            role="button"
+            class="btn btn-circle btn-ghost btn-xs text-info"
+          >
+            <img src="/union.svg" alt="Union" class="w-4 h-4" />
+          </div>
+          <div
+            tabIndex={0}
+            class="dropdown-content bg-base-100 rounded-box shadow"
+          >
+            {#each actions as action (action.title)}
+              {#if action.condition(balance)}
+                <button
+                  class="text-xs font-medium w-44 h-12 flex items-center p-4 gap-x-2"
+                  on:click={() => executeAction(action)}
+                >
+                  <img
+                    src={action.icon}
+                    alt={action.title}
+                    class="w-4 h-4 inline"
+                  />
+                  {action.title}
+                </button>
+              {/if}
+            {/each}
+          </div>
         </div>
-        <div
-          tabIndex={0}
-          class="dropdown-content bg-base-100 rounded-box shadow"
-        >
-          {#each actions as action (action.title)}
-            {#if action.condition(balance)}
-              <button
-                class="text-xs font-medium w-44 h-12 flex items-center p-4 gap-x-2"
-                on:click={() => executeAction(action)}
-              >
-                <img
-                  src={action.icon}
-                  alt={action.title}
-                  class="w-4 h-4 inline"
-                />
-                {action.title}
-              </button>
-            {/if}
-          {/each}
-        </div>
-      </div>
+      {/if}
     </div>
   </div>
 </div>
