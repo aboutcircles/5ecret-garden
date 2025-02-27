@@ -23,17 +23,18 @@ export async function initializeWallet(type: string, address?: string) {
         return runner;
     } else if (type === "safe" && address) {
         localStorage.setItem("wallet", address);
-        const useMM = localStorage.getItem("useMM") === "true";
-        if (useMM) {
-            const runner = new SafeSdkBrowserContractRunner();
-            await runner.init(address);
-            return runner;
-        } else {
-            const privateKey = localStorage.getItem("privateKey");
-            const runner = new SafeSdkPrivateKeyContractRunner(privateKey!, gnosisConfig.circlesRpcUrl);
-            await runner.init(address);
-            return runner;
-        }
+        // const useMM = localStorage.getItem("useMM") === "true";
+        // if (useMM) {
+        const runner = new SafeSdkBrowserContractRunner();
+        await runner.init(address);
+        return runner;
+        // } 
+        // else {
+        //     const privateKey = localStorage.getItem("privateKey");
+        //     const runner = new SafeSdkPrivateKeyContractRunner(privateKey!, gnosisConfig.circlesRpcUrl);
+        //     await runner.init(address);
+        //     return runner;
+        // }
     }
     throw new Error(`Unsupported wallet type: ${type}`);
 }
