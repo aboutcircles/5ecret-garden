@@ -1,9 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { type AvatarRow, type CirclesConfig, Sdk } from '@circles-sdk/sdk';
+  import { type AvatarRow, Sdk } from '@circles-sdk/sdk';
   import { circles } from '$lib/stores/circles';
   import { BrowserProviderContractRunner } from '@circles-sdk/adapter-ethers';
-  import { wallet } from '$lib/stores/wallet';
+  import { initializeWallet, wallet } from '$lib/stores/wallet';
   import WalletLoader from '$lib/components/WalletLoader.svelte';
   import { getCirclesConfig } from '$lib/utils/helpers';
   import { avatar } from '$lib/stores/avatar';
@@ -11,6 +11,7 @@
   import CreateSafe from '$lib/pages/CreateSafe.svelte';
   import { SafeSdkBrowserContractRunner } from '@circles-sdk/adapter-safe';
   import { ethers, Network } from 'ethers6';
+  import {goto} from "$app/navigation";
 
   let network: Network;
   let safes: string[] = [];
@@ -82,6 +83,36 @@
     console.log('New safe created:', newSafeAddress);
     safes = [...safes, newSafeAddress];
   }
+
+
+  let manualSafeAddress: string = localStorage.getItem('manualSafeAddress') ?? '';
+
+  async function connectWallet(safeAddress: string) {
+    $wallet = await initializeWallet('safe', safeAddress);
+
+    const network = await $wallet?.provider?.getNetwork();
+    if (!network) {
+      throw new Error('Failed to get network');
+    }
+    var circlesConfig = await getCirclesConfig(network.chainId);
+
+    // Initialize the Circles SDK and set it as $circles to make it globally available.
+    $circles = new Sdk($wallet!, circlesConfig);
+
+    const avatarInfo = await $circles.data.getAvatarInfo(
+            $wallet.address!
+    );
+
+    // If the signer address is already a registered Circles wallet, go straight to the dashboard.
+    if (avatarInfo) {
+      $avatar = await $circles.getAvatar($wallet.address!);
+      await goto('/dashboard');
+    } else {
+      await goto('/register');
+    }
+
+    localStorage.setItem('manualSafeAddress', safeAddress);
+  }
 </script>
 
 <div
@@ -93,9 +124,14 @@
     </a>
   </div>
   <h2 class="font-bold text-[28px] md:text-[32px]">Select Avatar</h2>
-  <p class="font-normal text-black/60 text-base">
-    Please select the avatar you want to use from the list below.
+  <p class="font-normal text-black/60 text-base text-center">
+    Please select the avatar you want to use from the list below or enter a Safe address to connect to a Safe.
   </p>
+  <div class="w-full border rounded-lg flex justify-between items-center p-4 shadow-sm">
+    <input type="text" placeholder="Enter safe address .." bind:value={manualSafeAddress} class="w-full"/>
+    <img src="/chevron-right.svg" alt="Chevron Right" class="w-4 cursor-pointer" on:click={() => connectWallet(manualSafeAddress)}/>
+  </div>
+
   {#if $wallet?.address && $circles}
     {#each safes ?? [] as item (item)}
       <ConnectCircles

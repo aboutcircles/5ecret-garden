@@ -5,7 +5,6 @@ import { circles } from "$lib/stores/circles";
 import { BrowserProviderContractRunner } from "@circles-sdk/adapter-ethers";
 import { SafeSdkBrowserContractRunner, SafeSdkPrivateKeyContractRunner } from "@circles-sdk/adapter-safe";
 import { Sdk } from "@circles-sdk/sdk";
-import { gnosisConfig } from "$lib/chiadoConfig";
 import { getCirclesConfig } from "$lib/utils/helpers";
 
 type WalletRunner = BrowserProviderContractRunner | SafeSdkBrowserContractRunner | SafeSdkPrivateKeyContractRunner;
@@ -85,12 +84,14 @@ export async function restoreWallet() {
 }
 
 export async function clearSession() {
+    var manualSafeAddress = localStorage.getItem("manualSafeAddress");
     localStorage.clear();
     avatar.set(undefined);
     wallet.set(undefined);
     circles.set(undefined);
     localStorage.removeItem('wallet');
     localStorage.removeItem('avatar');
+    localStorage.setItem('manualSafeAddress', manualSafeAddress);
     await goto("/connect-wallet");
     console.log("User session cleared");
 }
