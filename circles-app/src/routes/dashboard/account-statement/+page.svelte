@@ -1,260 +1,256 @@
 <script lang="ts">
-  import {avatar} from '$lib/stores/avatar';
-  import {totalCirclesBalance} from '$lib/stores/totalCirclesBalance';
-  import {roundToDecimals} from '$lib/utils/shared';
-  import {onMount} from "svelte";
+  import { avatar } from '$lib/stores/avatar';
 
-  // ------------ Types ------------
-  type AccountStatementRow = {
-    monthStart: string;
-    tokenAddress: string;
-    rawBalance: number;
-    demurragedBalance: number;
-    totalDemurrageSoFar: number;
-    demurrageThisMonth: number;
-  };
+  // --- Interfaces ---
+  interface DailyLedgerRow {
+    UtcDate: string; // e.g. "2025-02-15T00:00:00Z"
+    DayIndex: number;
+    V1Balance: number;
+    V2InflationaryBalance: number;
+    V2DemurragedBalance: number;
+    V2DemurrageBurned: number;
+  }
 
-  type AggregatedData = {
-    rows: AccountStatementRow[];
-    rawBalanceSum: number;
-    demurragedBalanceSum: number;
-    totalDemurrageSoFarSum: number;
-    demurrageThisMonthSum: number;
-  };
+  // For holding both the sign-formatted string & a CSS class
+  interface DeltaProps {
+    formatted: string;
+    cssClass: string;
+  }
 
-  type YearTotals = Omit<AggregatedData, 'rows'>;
-
-  type YearData = {
+  interface MonthlyGroup {
     year: number;
-    totals: YearTotals;
-    months: {
-      month: number;
-      agg: AggregatedData;
-    }[];
-  };
+    month: number;
+    daily: DailyLedgerRow[];
+    totalDemurrageBurned: number;
+    endV1: number;
+    endV2Infl: number;
+    endV2Dem: number;
+    startV1: number;
+    startV2Infl: number;
+    startV2Dem: number;
 
-  // ------------ Component State ------------
-  let accountStatement: AccountStatementRow[] = [];
-  let groupedData: Map<number, Map<number, AggregatedData>> = new Map();
-  let yearsData: YearData[] = [];
-
-  onMount(getAccountStatement);
-
-  // ------------ Fetch Logic ------------
-  async function getAccountStatement() {
-    if (!$avatar) return;
-
-    const response = await fetch('http://localhost:8545/', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        id: 1,
-        method: 'circles_getAccountStatement',
-        params: [$avatar.address]
-      })
-    });
-    const responseJson = await response.json();
-
-    // Raw data in Wei
-    accountStatement = responseJson.result ?? [];
-
-    // Group, aggregate, and convert Wei -> ETH
-    groupAndAggregate(accountStatement);
-    // Build final array for easy rendering
-    buildYearsData();
+    // We'll attach these computed properties:
+    v1Delta?: DeltaProps;
+    v2InflDelta?: DeltaProps;
+    v2DemDelta?: DeltaProps;
   }
 
-  // ------------ Wei -> ETH Conversion ------------
-  function fromWei(value: number | string): number {
-    // If the value is a string, parse it; if it's a number, just use it directly.
-    // This will lose precision for very large values, but is fine for normal UI display.
-    const num = (typeof value === 'string')
-      ? parseFloat(value)
-      : value;
-    return num / 1e18;
+  // This is our user-selected address
+  let address = $avatar?.address ?? "";
+
+  // --- Utility functions ---
+
+  function parseDateString(dateStr: string): Date {
+    return new Date(dateStr);
   }
 
-  // ------------ Aggregation Logic ------------
-  function groupAndAggregate(statements: AccountStatementRow[]) {
-    // Clear old data
-    groupedData = new Map();
-
-    for (const row of statements) {
-      const date = new Date(row.monthStart);
-      const year = date.getUTCFullYear();
-      const month = date.getUTCMonth() + 1; // 1-based
-
-      // Convert row from Wei to ETH
-      const raw = fromWei(row.rawBalance);
-      const dem = fromWei(row.demurragedBalance);
-      const soFar = fromWei(row.totalDemurrageSoFar);
-      const thisMonth = fromWei(row.demurrageThisMonth);
-
-      if (!groupedData.has(year)) {
-        groupedData.set(year, new Map());
-      }
-      const monthlyMap = groupedData.get(year)!;
-
-      if (!monthlyMap.has(month)) {
-        monthlyMap.set(month, {
-          rows: [],
-          rawBalanceSum: 0,
-          demurragedBalanceSum: 0,
-          totalDemurrageSoFarSum: 0,
-          demurrageThisMonthSum: 0,
-        });
-      }
-
-      const agg = monthlyMap.get(month)!;
-
-      // Push a modified row, now in ETH
-      agg.rows.push({
-        ...row,
-        rawBalance: raw,
-        demurragedBalance: dem,
-        totalDemurrageSoFar: soFar,
-        demurrageThisMonth: thisMonth
-      });
-
-      // Also sum the ETH amounts
-      agg.rawBalanceSum += raw;
-      agg.demurragedBalanceSum += dem;
-      agg.totalDemurrageSoFarSum += soFar;
-      agg.demurrageThisMonthSum += thisMonth;
-    }
+  // Returns a CSS class for positive/negative/zero
+  function colorClass(num: number): string {
+    if (num > 0) return "text-green-500";
+    if (num < 0) return "text-red-500";
+    return "text-gray-500";
   }
 
-  // For a given year, sum all months to get year-level totals
-  function getYearTotals(year: number): YearTotals {
-    const months = groupedData.get(year);
-    if (!months) {
-      return {
-        rawBalanceSum: 0,
-        demurragedBalanceSum: 0,
-        totalDemurrageSoFarSum: 0,
-        demurrageThisMonthSum: 0,
-      };
-    }
-    let raw = 0;
-    let demurraged = 0;
-    let soFar = 0;
-    let thisMonth = 0;
+  // Returns a string like "+1.2345" or "-0.9876"
+  function formatDelta(num: number): string {
+    const sign = num >= 0 ? "+" : "";
+    return `${sign}${num.toFixed(4)}`;
+  }
 
-    for (const agg of months.values()) {
-      raw += agg.rawBalanceSum;
-      demurraged += agg.demurragedBalanceSum;
-      soFar += agg.totalDemurrageSoFarSum;
-      thisMonth += agg.demurrageThisMonthSum;
-    }
+  // Combines both of the above, so you only call this once
+  function getDeltaProps(end: number, start: number): DeltaProps {
+    const delta = end - start;
     return {
-      rawBalanceSum: raw,
-      demurragedBalanceSum: demurraged,
-      totalDemurrageSoFarSum: soFar,
-      demurrageThisMonthSum: thisMonth,
+      formatted: formatDelta(delta),
+      cssClass: colorClass(delta),
     };
   }
 
-  // Build the final array for easy rendering in the <template>
-  function buildYearsData() {
-    yearsData = Array
-      .from(groupedData.keys())
-      .sort((a, b) => b - a) // descending
-      .map(year => {
-        const totals = getYearTotals(year);
-        const monthsMap = groupedData.get(year)!;
+  // --- Data fetching + grouping ---
 
-        const months = Array
-          .from(monthsMap.keys())
-          .sort((a, b) => b - a) // descending
-          .map(month => ({
-            month,
-            agg: monthsMap.get(month)!
-          }));
+  async function groupedByMonth(addr: string): Promise<MonthlyGroup[]> {
+    // 1. Fetch daily rows
+    const dailyRows: DailyLedgerRow[] = await fetch(
+      `http://localhost:8080/account-statement/${addr}`
+    )
+      .then(resp => resp.json())
+      .then(data => data as DailyLedgerRow[]);
 
-        return {year, totals, months};
+    // 2. Sort by date
+    const sorted = [...dailyRows].sort((a, b) => {
+      return parseDateString(a.UtcDate).getTime() - parseDateString(b.UtcDate).getTime();
+    });
+
+    // 3. Group into year-month
+    const map = new Map<string, DailyLedgerRow[]>();
+    for (const row of sorted) {
+      const d = parseDateString(row.UtcDate);
+      const y = d.getUTCFullYear();
+      const m = d.getUTCMonth() + 1;
+      const key = `${y}-${m}`;
+      if (!map.has(key)) {
+        map.set(key, []);
+      }
+      map.get(key)!.push(row);
+    }
+
+    // 4. Build MonthlyGroup objects
+    const result: MonthlyGroup[] = [];
+    for (const [key, daily] of map.entries()) {
+      const [yStr, mStr] = key.split("-");
+      const year = parseInt(yStr, 10);
+      const month = parseInt(mStr, 10);
+
+      // Sum demurrage
+      let totalDemurrage = 0;
+      daily.forEach(d => {
+        totalDemurrage += d.V2DemurrageBurned;
       });
-  }
 
-  // ------------ Utility ------------
-  // Use a simple numeric formatter for the UI
-  function fmt(value: number) {
-    return value.toFixed(4); // e.g. 4 decimals for ETH
+      // Start and end-of-month
+      const firstDay = daily[0];
+      const lastDay = daily[daily.length - 1];
+
+      const group: MonthlyGroup = {
+        year,
+        month,
+        daily,
+        totalDemurrageBurned: totalDemurrage,
+
+        endV1: lastDay.V1Balance,
+        endV2Infl: lastDay.V2InflationaryBalance,
+        endV2Dem: lastDay.V2DemurragedBalance,
+
+        startV1: firstDay.V1Balance,
+        startV2Infl: firstDay.V2InflationaryBalance,
+        startV2Dem: firstDay.V2DemurragedBalance,
+      };
+
+      // Precompute deltas (v1Delta, v2InflDelta, v2DemDelta)
+      group.v1Delta = getDeltaProps(group.endV1, group.startV1);
+      group.v2InflDelta = getDeltaProps(group.endV2Infl, group.startV2Infl);
+      group.v2DemDelta = getDeltaProps(group.endV2Dem, group.startV2Dem);
+
+      result.push(group);
+    }
+
+    // 5. Sort final array by year, then month
+    result.sort((a, b) => {
+      if (a.year === b.year) {
+        return a.month - b.month;
+      }
+      return a.year - b.year;
+    });
+
+    return result;
   }
 </script>
 
-<!-- Page Layout -->
-<div class="w-full mb-4">
-  <a href="/dashboard" class="inline-flex items-center gap-1">
-    <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4"/>
-    <span class="text-sm">Back</span>
-  </a>
+<!-- Address input -->
+<div class="p-4 mt-24">
+  <label for="addressInput" class="mr-2">Enter Address:</label>
+  <input
+      id="addressInput"
+      type="text"
+      bind:value={address}
+      class="border rounded px-2 py-1"
+  />
 </div>
 
-<div class="w-full flex flex-col md:flex-row justify-between md:items-end font-bold text-2xl mb-4 gap-y-1">
-  <span>Account statement</span>
-  <span class="text-sm font-medium text-gray-500 md:mr-8">
-    {roundToDecimals($totalCirclesBalance)} CRC
-  </span>
-</div>
+<!-- Render fetched data -->
+<div class="p-4 space-y-4 mt-4">
+  {#await groupedByMonth(address) then groups}
+    {#each groups as group}
+      <div class="collapse collapse-arrow bg-base-200 rounded-box">
+        <input type="checkbox" />
 
-{#if accountStatement.length > 0}
-  <!-- Loop over each year. All amounts are now in ETH. -->
-  {#each yearsData as y}
-    <details class="collapse collapse-arrow border border-base-300 bg-base-100 rounded-box mb-2">
-      <summary class="collapse-title text-lg font-bold flex flex-col sm:flex-row items-start sm:items-center gap-2">
-        <span>Year {y.year}</span>
-        <span class="text-sm font-normal text-gray-600">
-          | Raw: {fmt(y.totals.rawBalanceSum)}
-          | Demurraged: {fmt(y.totals.demurragedBalanceSum)}
-          | So Far: {fmt(y.totals.totalDemurrageSoFarSum)}
-          | This Month: {fmt(y.totals.demurrageThisMonthSum)}
-        </span>
-      </summary>
-      <div class="collapse-content px-4 py-2">
-        {#each y.months as m}
-          <details class="collapse collapse-arrow border border-base-200 bg-base-100 rounded-box my-2 ml-4">
-            <summary class="collapse-title font-semibold flex flex-col sm:flex-row items-start sm:items-center gap-2">
-              <span>Month {m.month}</span>
-              <span class="text-sm font-normal text-gray-600">
-                | Raw: {fmt(m.agg.rawBalanceSum)}
-                | Demurraged: {fmt(m.agg.demurragedBalanceSum)}
-                | So Far: {fmt(m.agg.totalDemurrageSoFarSum)}
-                | This Month: {fmt(m.agg.demurrageThisMonthSum)}
-              </span>
-            </summary>
-            <div class="collapse-content p-2">
-              <div class="overflow-x-auto w-full mt-2 ml-4 max-h-80 overflow-y-auto">
-                <table class="table table-zebra table-compact w-full relative">
-                  <!-- Sticky table header -->
-                  <thead class="sticky top-0 z-10 bg-base-100">
-                  <tr>
-                    <th>Token Address</th>
-                    <th>Raw Bal (ETH)</th>
-                    <th>Demurraged Bal (ETH)</th>
-                    <th>Demurrage This Month (ETH)</th>
-                    <th>Total Demurrage So Far (ETH)</th>
-                    <th>Month Start</th>
-                  </tr>
-                  </thead>
-                  <tbody>
-                  {#each m.agg.rows as detailRow}
-                    <tr>
-                      <td>{detailRow.tokenAddress}</td>
-                      <td>{fmt(detailRow.rawBalance)}</td>
-                      <td>{fmt(detailRow.demurragedBalance)}</td>
-                      <td>{fmt(detailRow.demurrageThisMonth)}</td>
-                      <td>{fmt(detailRow.totalDemurrageSoFar)}</td>
-                      <td>{detailRow.monthStart}</td>
-                    </tr>
-                  {/each}
-                  </tbody>
-                </table>
+        <!-- Collapsible header -->
+        <div class="collapse-title text-lg font-medium">
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-2 text-xl font-semibold">
+              {group.year}-{group.month.toString().padStart(2, "0")}
+            </div>
+
+            <!-- Aggregated stats -->
+            <div class="flex flex-wrap gap-4 text-sm">
+              <div>
+                <span class="text-gray-500">Total Demurrage Burned:</span>
+                <span class="font-semibold">{group.totalDemurrageBurned.toFixed(4)}</span>
+              </div>
+              <div>
+                <span class="text-gray-500">End-of-month V1:</span>
+                <span class="font-semibold">{group.endV1.toFixed(4)}</span>
+              </div>
+              <div>
+                <span class="text-gray-500">End-of-month V2 Infl:</span>
+                <span class="font-semibold">{group.endV2Infl.toFixed(4)}</span>
+              </div>
+              <div>
+                <span class="text-gray-500">End-of-month V2 Dem:</span>
+                <span class="font-semibold">{group.endV2Dem.toFixed(4)}</span>
               </div>
             </div>
-          </details>
-        {/each}
+
+            <!-- Net change block -->
+            <div class="flex flex-wrap gap-4 text-sm">
+              <div>
+                <span class="text-gray-500">V1 Change:</span>
+                <span class={group.v1Delta.cssClass}>
+                  {group.v1Delta.formatted}
+                </span>
+              </div>
+
+              <div>
+                <span class="text-gray-500">V2 Infl Change:</span>
+                <span class={group.v2InflDelta.cssClass}>
+                  {group.v2InflDelta.formatted}
+                </span>
+              </div>
+
+              <div>
+                <span class="text-gray-500">V2 Dem Change:</span>
+                <span class={group.v2DemDelta.cssClass}>
+                  {group.v2DemDelta.formatted}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Collapsible content (the daily table) -->
+        <div class="collapse-content">
+          <div class="overflow-x-auto">
+            <table class="table table-zebra w-full">
+              <thead>
+              <tr>
+                <th class="text-left">Date (UTC)</th>
+                <th class="text-right">V1 Balance</th>
+                <th class="text-right">V2 Infl. Balance</th>
+                <th class="text-right">V2 Dem. Balance</th>
+                <th class="text-right">Demurrage Burned</th>
+              </tr>
+              </thead>
+              <tbody>
+              {#each group.daily as d}
+                <tr>
+                  <td class="text-left">
+                    {new Date(d.UtcDate).toISOString().slice(0, 10)}
+                  </td>
+                  <td class="text-right">{d.V1Balance.toFixed(6)}</td>
+                  <td class="text-right">{d.V2InflationaryBalance.toFixed(6)}</td>
+                  <td class="text-right">{d.V2DemurragedBalance.toFixed(6)}</td>
+                  <td class="text-right">{d.V2DemurrageBurned.toFixed(6)}</td>
+                </tr>
+              {/each}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
-    </details>
-  {/each}
-{/if}
+    {/each}
+  {:catch error}
+    <div class="text-red-500">
+      Error fetching data: {error.message}
+    </div>
+  {/await}
+</div>
