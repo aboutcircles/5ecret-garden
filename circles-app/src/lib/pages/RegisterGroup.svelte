@@ -36,9 +36,9 @@
       </div>
       <a
         class="text-accent flex items-center px-4 py-1 rounded-full mt-4 text-base font-semibold"
-        href={'/'}
+        href={'/dashboard'}
       >
-        Back home
+        Access to dashboard
       </a>
     </div>
   {:else if step === 'error'}

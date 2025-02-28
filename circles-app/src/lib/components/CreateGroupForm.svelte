@@ -11,6 +11,8 @@
   import ImageUpload from './ImageUpload.svelte';
   import { cidV0ToUint8Array } from '@circles-sdk/utils';
   import { CMGContract } from '$lib/stores/contract';
+  import { wallet } from '$lib/stores/wallet';
+  import { ethers } from 'ethers6';
 
   interface CMGProfile {
     service: string;
@@ -76,11 +78,16 @@
       cidV0ToUint8Array(CID)
     );
 
-    // if ($avatar) {
+    const result = await tx.wait();
+    console.log('transaction events', result.logs);
+    const groupAddress: string = ethers.stripZerosLeft(
+      result.logs[12].topics[1]
+    );
+
+    $avatar = await $circles.getAvatar(groupAddress.toLowerCase());
+    localStorage.setItem('avatar', groupAddress);
+
     dispatch('stepChange', 'executed');
-    // } else {
-    //   dispatch('stepChange', 'error');
-    // }
   }
 
   const onNewImage = (e: any) => {

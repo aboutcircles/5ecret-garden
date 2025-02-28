@@ -44,7 +44,6 @@
   async function deployGroup() {
     if ($circles && $wallet) {
       $wallet = await initializeWallet(walletType, address);
-      console.log('wallet', $wallet);
       circlesConfig = await getCirclesConfig(network.chainId);
       $circles = new Sdk($wallet!, circlesConfig);
 
