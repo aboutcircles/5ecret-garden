@@ -9,17 +9,16 @@
 
   export let homeLink = '/';
 
-  export let menuItems = [
-    { name: 'Dashboard', link: '/dashboard' },
-    { name: 'Contacts', link: '/contacts' },
-    { name: 'Groups', link: '/groups' },
-    { name: 'Settings', link: '/settings' },
-  ];
+  export let menuItems: {
+    name: string;
+    link: string;
+  }[] = [];
 
   export let quickAction: QuickAction | undefined;
 
   export let route: string | null;
   let isDropdownOpen = false;
+  console.log(quickAction);
 </script>
 
 <div
@@ -158,6 +157,7 @@
     {#if quickAction}
       <button
         class="btn btn-primary text-white"
+        disabled={quickAction.action === undefined}
         on:click={() => {
           if (quickAction.action) {
             quickAction.action();

@@ -2,7 +2,7 @@
   export type QuickAction = {
     name: string;
     icon: string;
-    action: () => void;
+    action?: () => void | undefined;
   };
 </script>
 
@@ -10,7 +10,7 @@
   import '../app.css';
 
   import DefaultHeader from '$lib/components/DefaultHeader.svelte';
-  import { avatar } from '$lib/stores/avatar';
+  import { avatar, isGroup } from '$lib/stores/avatar';
   import { clearSession, restoreWallet, wallet } from '$lib/stores/wallet';
   import { canMigrate } from '$lib/guards/canMigrate';
   import UpdateBanner from '$lib/components/UpdateBanner.svelte';
@@ -24,30 +24,45 @@
   import { getProfile } from '$lib/utils/profile';
   import { popupControls, popupState } from '$lib/stores/popUp';
   import PopUp from '$lib/components/PopUp.svelte';
+  import ManageGroupMembers from '$lib/flows/manageGroupMembers/1_manageGroupMembers.svelte';
 
   let quickAction: QuickAction | undefined;
 
-  const quickActionsMap: Record<string, QuickAction | undefined> = {
+  let quickActionsMap: Record<string, QuickAction | undefined>;
+  let menuItems: { name: string; link: string }[] = [];
+  let profile: Profile;
+
+  $: quickActionsMap = {
     '/dashboard': {
       name: 'Send',
       icon: '/send.svg',
-      action: () => {
-        popupControls.open({
-          title: 'Send Circles',
-          component: Send,
-          props: {},
-        });
-      },
+      action: $isGroup
+        ? undefined
+        : () => {
+            popupControls.open({
+              title: 'Send Circles',
+              component: Send,
+              props: {},
+            });
+          },
     },
     '/contacts': {
-      name: 'Add Contact',
+      name: $isGroup ? 'Manage members' : 'Add Contact',
       icon: '/add-contact.svg',
       action: () => {
-        popupControls.open({
-          title: 'Add Contact',
-          component: SearchAvatar,
-          props: {},
-        });
+        if ($isGroup) {
+          popupControls.open({
+            title: 'Manage members',
+            component: ManageGroupMembers,
+            props: {},
+          });
+        } else {
+          popupControls.open({
+            title: 'Add Contact',
+            component: SearchAvatar,
+            props: {},
+          });
+        }
       },
     },
     '/groups': {
@@ -65,16 +80,30 @@
       name: 'Disconnect',
       icon: '',
       action: () => {
-        $wallet = undefined;
+        clearSession();
+      },
+    },
+    '/settings': {
+      name: 'Disconnect',
+      icon: '',
+      action: () => {
+        clearSession();
       },
     },
   };
 
-  let profile: Profile;
-
   avatar.subscribe(async ($avatar) => {
     if ($avatar) {
       profile = await getProfile($avatar?.avatarInfo?.avatar ?? '');
+      menuItems = [
+        { name: 'Dashboard', link: '/dashboard' },
+        { name: 'Contacts', link: '/contacts' },
+        { name: 'Settings', link: '/settings' },
+      ];
+
+      if (!$isGroup) {
+        menuItems.splice(2, 0, { name: 'Groups', link: '/groups' });
+      }
     }
   });
 
@@ -99,9 +128,10 @@
     homeLink="/dashboard"
     {quickAction}
     route={$page.route.id}
+    {menuItems}
   />
 {:else}
-  <DefaultHeader menuItems={[]} quickAction={undefined} route={''} />
+  <DefaultHeader quickAction={undefined} route={''} />
 {/if}
 
 <main class="relative w-full h-full bg-white overflow-hidden font-dmSans">
