@@ -95,19 +95,17 @@
       await clearSession();
     } else {
       await restoreWallet();
-      if ($avatar) {
-        menuItems = [
-          { name: 'Dashboard', link: '/dashboard' },
-          { name: 'Contacts', link: '/contacts' },
-          { name: 'Settings', link: '/settings' },
-        ];
-
-        if (!$isGroup) {
-          menuItems.splice(2, 0, { name: 'Groups', link: '/groups' });
-        }
-      }
     }
   });
+
+  $: menuItems = $avatar
+    ? [
+        { name: 'Dashboard', link: '/dashboard' },
+        { name: 'Contacts', link: '/contacts' },
+        ...(!$isGroup ? [{ name: 'Groups', link: '/groups' }] : []),
+        { name: 'Settings', link: '/settings' },
+      ]
+    : [];
 
   $: quickAction = quickActionsMap[$page.route.id ?? ''] || undefined;
 </script>
