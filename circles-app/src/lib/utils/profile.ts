@@ -56,7 +56,7 @@ function setFallbackValues(
   return profile;
 }
 
-export async function getProfile(address: string): Promise<Profile> {
+export async function getProfile(address: `0x${string}`): Promise<Profile> {
   if (address === '0x0000000000000000000000000000000000000001') {
     return {
       name: 'Transitive transfer',

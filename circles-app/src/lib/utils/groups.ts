@@ -1,6 +1,6 @@
 export async function fetchGroupsByOwner(
   ownerAddress: string,
-): Promise<string[]> {
+): Promise<`0x${string}`[]> {
   const payload = {
     jsonrpc: "2.0",
     id: 1,

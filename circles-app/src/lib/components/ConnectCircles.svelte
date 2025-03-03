@@ -10,20 +10,20 @@
   import Avatar from './avatar/Avatar.svelte';
   import type { Network } from 'ethers';
 
-  export let address: string;
+  export let address: `0x${string}`;
   export let isRegistered: boolean;
   export let network: Network;
   export let walletType: 'safe' | 'metamask' = 'safe';
 
   let circlesConfig: CirclesConfig;
-  let groups: string[] = [];
+  let groups: `0x${string}`[] = [];
 
   onMount(async () => {
     groups = await fetchGroupsByOwner(address);
   });
 
-  async function connectWallet(selectedAddress: string) {
-    const lowerCaseAddress = selectedAddress.toLowerCase();
+  async function connectWallet(selectedAddress: `0x${string}`) {
+    const lowerCaseAddress = selectedAddress.toLowerCase() as `0x${string}`;
 
     $wallet = await initializeWallet(walletType, lowerCaseAddress);
     circlesConfig = await getCirclesConfig(network.chainId);

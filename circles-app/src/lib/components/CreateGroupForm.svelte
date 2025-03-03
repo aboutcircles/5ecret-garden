@@ -7,11 +7,9 @@
   import Tooltip from './Tooltip.svelte';
   import { circles } from '$lib/stores/circles';
   import { avatar } from '$lib/stores/avatar';
-  import type { Avatar } from '@circles-sdk/sdk';
   import ImageUpload from './ImageUpload.svelte';
   import { cidV0ToUint8Array } from '@circles-sdk/utils';
   import { CMGContract } from '$lib/stores/contract';
-  import { wallet } from '$lib/stores/wallet';
   import { ethers } from 'ethers6';
 
   interface CMGProfile {
@@ -84,7 +82,7 @@
       result.logs[12].topics[1]
     );
 
-    $avatar = await $circles.getAvatar(groupAddress.toLowerCase());
+    $avatar = await $circles.getAvatar(groupAddress.toLowerCase() as `0x${string}`);
     localStorage.setItem('avatar', groupAddress);
 
     dispatch('stepChange', 'executed');

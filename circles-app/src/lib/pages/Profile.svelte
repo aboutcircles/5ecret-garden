@@ -16,7 +16,7 @@
   import { popupControls } from '$lib/stores/popUp';
   import Address from '$lib/components/Address.svelte';
 
-  export let address: string | undefined;
+  export let address: `0x${string}` | undefined;
   export let trustVersion: number | undefined;
 
   onMount(() => {
@@ -31,7 +31,7 @@
 
   let trustRow: TrustRelationRow | undefined;
 
-  async function initialize(address?: string) {
+  async function initialize(address?: `0x${string}`) {
     if (!address) {
       return;
     }
@@ -220,7 +220,7 @@
   <div role="tabpanel" class="tab-content mt-8 bg-base-100 border-none">
     <div class="w-full border-base-300 rounded-box border">
       <CommonConnections
-        otherAvatarAddress={otherAvatar?.avatar ?? ''}
+        otherAvatarAddress={otherAvatar?.avatar ?? '0x0'}
         bind:commonConnectionsCount
       />
     </div>
