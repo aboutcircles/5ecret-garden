@@ -7,13 +7,12 @@
   import ProfileEditor from './editors/Profile.svelte';
   import { type Profile } from '@circles-sdk/profiles';
   import { cidV0ToUint8Array } from '@circles-sdk/utils';
-  import { onMount } from 'svelte';
+  import { profile } from '$lib/stores/profile';
   import { runTask } from '$lib/utils/tasks';
   import MigrateToV2 from '$lib/flows/migrateToV2/1_GetInvited.svelte';
-  import { getProfile } from '$lib/utils/profile';
   import { popupControls } from '$lib/stores/popUp';
-  import { ethers } from 'ethers';
   import GroupSetting from './editors/GroupSetting.svelte';
+  import { ethers } from 'ethers6';
 
   async function saveProfileData(profile: Profile): Promise<string> {
     if (!$circles?.profiles) {
@@ -23,11 +22,7 @@
     return await $circles.profiles.create(profile);
   }
 
-  let profile: Profile | undefined;
-
-  onMount(async () => {
-    profile = await getProfile($avatar?.avatarInfo?.avatar ?? '');
-  });
+  $: newProfile = $profile;
 
   async function migrateToV2() {
     popupControls.open({
@@ -60,7 +55,7 @@
   }
 
   async function saveProfile() {
-    const cid = await saveProfileData(profile!);
+    const cid = await saveProfileData(newProfile!);
     const digest = cidV0ToUint8Array(cid);
 
     const tx = await runTask({
@@ -87,13 +82,13 @@
   >
     <div class="flex flex-col w-full gap-y-4">
       <ProfileEditor
-        bind:profile
+        bind:profile={newProfile}
         showCustomizableFields={$avatar?.avatarInfo?.version === 2}
       />
 
       {#if $avatar?.avatarInfo?.version === 2}
         <div>
-          <ActionButton action={saveProfile} disabled={!profile}
+          <ActionButton action={saveProfile} disabled={!newProfile}
             >Save
           </ActionButton>
         </div>

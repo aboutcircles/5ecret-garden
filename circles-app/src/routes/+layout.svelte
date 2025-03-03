@@ -20,8 +20,7 @@
   import MintGroupTokens from '$lib/flows/mintGroupTokens/1_To.svelte';
   import { onMount } from 'svelte';
   import { tasks } from '$lib/utils/tasks';
-  import type { Profile } from '@circles-sdk/profiles';
-  import { getProfile } from '$lib/utils/profile';
+  import { profile } from '$lib/stores/profile';
   import { popupControls, popupState } from '$lib/stores/popUp';
   import PopUp from '$lib/components/PopUp.svelte';
   import ManageGroupMembers from '$lib/flows/manageGroupMembers/1_manageGroupMembers.svelte';
@@ -30,7 +29,6 @@
 
   let quickActionsMap: Record<string, QuickAction | undefined>;
   let menuItems: { name: string; link: string }[] = [];
-  let profile: Profile;
 
   $: quickActionsMap = {
     '/dashboard': {
@@ -92,26 +90,22 @@
     },
   };
 
-  avatar.subscribe(async ($avatar) => {
-    if ($avatar) {
-      profile = await getProfile($avatar?.avatarInfo?.avatar ?? '');
-      menuItems = [
-        { name: 'Dashboard', link: '/dashboard' },
-        { name: 'Contacts', link: '/contacts' },
-        { name: 'Settings', link: '/settings' },
-      ];
-
-      if (!$isGroup) {
-        menuItems.splice(2, 0, { name: 'Groups', link: '/groups' });
-      }
-    }
-  });
-
-  onMount(() => {
+  onMount(async () => {
     if ($page.route.id === '/' || $page.route.id === '/connect-wallet') {
-      clearSession();
+      await clearSession();
     } else {
-      restoreWallet();
+      await restoreWallet();
+      if ($avatar) {
+        menuItems = [
+          { name: 'Dashboard', link: '/dashboard' },
+          { name: 'Contacts', link: '/contacts' },
+          { name: 'Settings', link: '/settings' },
+        ];
+
+        if (!$isGroup) {
+          menuItems.splice(2, 0, { name: 'Groups', link: '/groups' });
+        }
+      }
     }
   });
 
@@ -120,10 +114,10 @@
 
 {#if $avatar}
   <DefaultHeader
-    text={profile?.name}
+    text={$profile?.name}
     address={$avatar.address}
-    logo={profile?.previewImageUrl?.trim()
-      ? profile.previewImageUrl
+    logo={$profile?.previewImageUrl?.trim()
+      ? $profile.previewImageUrl
       : '/logo.svg'}
     homeLink="/dashboard"
     {quickAction}

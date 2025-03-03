@@ -1,5 +1,4 @@
 <script lang="ts">
-  import ActionButton from '$lib/components/ActionButton.svelte';
   import { contacts } from '$lib/stores/contacts';
   import { formatTrustRelation } from '$lib/utils/helpers';
   import ContactGroupRow from './ContactGroupRow.svelte';
