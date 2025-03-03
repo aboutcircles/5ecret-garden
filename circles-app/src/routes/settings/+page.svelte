@@ -4,7 +4,6 @@
   import { circles } from '$lib/stores/circles';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import { canMigrate } from '$lib/guards/canMigrate';
-  import ProfileEditor from './editors/Profile.svelte';
   import { type Profile } from '@circles-sdk/profiles';
   import { cidV0ToUint8Array } from '@circles-sdk/utils';
   import { profile } from '$lib/stores/profile';
@@ -13,6 +12,7 @@
   import { popupControls } from '$lib/stores/popUp';
   import GroupSetting from './editors/GroupSetting.svelte';
   import { ethers } from 'ethers6';
+  import ProfileEditor from '$lib/components/ProfileEditor.svelte';
 
   async function saveProfileData(profile: Profile): Promise<string> {
     if (!$circles?.profiles) {
