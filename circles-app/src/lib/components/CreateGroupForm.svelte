@@ -9,7 +9,6 @@
   import { avatar } from '$lib/stores/avatar';
   import ImageUpload from './ImageUpload.svelte';
   import { cidV0ToUint8Array } from '@circles-sdk/utils';
-  import { CMGContract } from '$lib/stores/contract';
   import { ethers } from 'ethers6';
 
   interface CMGProfile {
@@ -46,18 +45,11 @@
     if (!$circles) {
       throw new Error('Wallet not connected ($circles is undefined)');
     }
-    // $avatar = <Avatar>(
-    //   await $circles.registerGroupV2(mintPolicy.address, formData)
-    // );
 
     const CID = await $circles.profiles?.create(groupProfile);
 
     if (!CID) {
       throw new Error('Failed to create profile CID');
-    }
-
-    if (!$CMGContract) {
-      throw new Error('$CMGContract is null');
     }
 
     let initialConditions: string[] = [];
@@ -68,7 +60,7 @@
         .filter((addr) => addr.length > 0);
     }
 
-    const tx = await $CMGContract.createCMGroup(
+    const tx = await $circles.coreMembersGroupDeployer?.createCMGroup(
       formData.service,
       initialConditions,
       groupProfile.name,
@@ -76,10 +68,13 @@
       cidV0ToUint8Array(CID)
     );
 
-    const result = await tx.wait();
-    console.log('transaction events', result.logs);
+    const result = await tx?.wait();
+    console.log(result);
+    if (!result) {
+      throw new Error('Transaction result is null or undefined');
+    }
     const groupAddress: string = ethers.stripZerosLeft(
-      result.logs[12].topics[1]
+      result.logs[9].topics[1]
     );
 
     $avatar = await $circles.getAvatar(groupAddress.toLowerCase() as `0x${string}`);
