@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { type AvatarRow, type CirclesConfig, Sdk } from '@circles-sdk/sdk';
+  import { type AvatarRow, Sdk } from '@circles-sdk/sdk';
   import { circles } from '$lib/stores/circles';
   import { BrowserProviderContractRunner } from '@circles-sdk/adapter-ethers';
   import { wallet } from '$lib/stores/wallet';
@@ -10,25 +10,36 @@
   import ConnectCircles from '$lib/components/ConnectCircles.svelte';
   import CreateSafe from '$lib/pages/CreateSafe.svelte';
   import { SafeSdkBrowserContractRunner } from '@circles-sdk/adapter-safe';
-  import { ethers, Network } from 'ethers6';
+  import { Network } from 'ethers6';
+  import {CirclesQuery, type EventRow} from "@circles-sdk/data";
 
   let network: Network;
   let safes: string[] = [];
   let profileBySafe: Record<string, AvatarRow | undefined> = {};
 
-  const getSafesByOwnerApiEndpoint = (checksumOwnerAddress: string): string =>
-    `https://safe-transaction-gnosis-chain.safe.global/api/v1/owners/${checksumOwnerAddress}/safes/`;
-
   async function querySafeTransactionService(
     ownerAddress: string
   ): Promise<string[]> {
-    const checksumAddress = ethers.getAddress(ownerAddress);
-    const requestUrl = getSafesByOwnerApiEndpoint(checksumAddress);
 
-    const safesByOwnerResult = await fetch(requestUrl);
-    const safesByOwner = await safesByOwnerResult.json();
+    if (!$circles)
+      throw new Error('Circles SDK not initialized');
 
-    return safesByOwner.safes ?? [];
+    const safesByOwnerQuery = new CirclesQuery<EventRow & {safeAddress: string, owner: string}>($circles.circlesRpc, {
+      namespace: <any>"V_Safe",
+      table: <any>"Owners",
+      columns: [],
+      filter: [{
+        FilterType: "Equals",
+        Column: "owner",
+        Type: "FilterPredicate",
+        Value: ownerAddress.toLowerCase()
+      }],
+      limit: 1000,
+      sortOrder: "ASC"
+    });
+
+    await safesByOwnerQuery.queryNextPage();
+    return safesByOwnerQuery.currentPage?.results.map((row) => row.safeAddress) ?? [];
   }
 
   async function setup() {

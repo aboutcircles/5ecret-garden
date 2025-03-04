@@ -8,11 +8,9 @@
   import { onMount } from 'svelte';
   import { fetchGroupsByOwner } from '$lib/utils/groups';
   import Avatar from './avatar/Avatar.svelte';
-  import type { Network } from 'ethers';
 
   export let address: `0x${string}`;
   export let isRegistered: boolean;
-  export let network: Network;
   export let walletType: 'safe' | 'metamask' = 'safe';
 
   let circlesConfig: CirclesConfig;
@@ -25,9 +23,18 @@
   async function connectWallet(selectedAddress: `0x${string}`) {
     const lowerCaseAddress = selectedAddress.toLowerCase() as `0x${string}`;
 
+    if (!$wallet) {
+      return;
+    }
+
+    const network = await $wallet.provider?.getNetwork();
+    if (!network) {
+      throw new Error('Failed to get network');
+    }
+
     $wallet = await initializeWallet(walletType, lowerCaseAddress);
     circlesConfig = await getCirclesConfig(network.chainId);
-    $circles = new Sdk($wallet!, circlesConfig);
+    $circles = new Sdk($wallet, circlesConfig);
 
     if (lowerCaseAddress === address.toLowerCase() && !isRegistered) {
       await goto('/register');
