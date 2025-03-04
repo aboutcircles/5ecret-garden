@@ -62,7 +62,7 @@ export async function removeMembers(addrStr: string) {
   }
 }
 
-export async function setService(addrStr: string) {
+export async function setService(addrStr: `0x${string}`) {
   const contract = get(groupAvatarContract);
   if (!contract) throw new Error('Contract not initialized');
 
@@ -76,7 +76,7 @@ export async function setService(addrStr: string) {
   }
 }
 
-export async function setMintHandler(addrStr: string) {
+export async function setMintHandler(addrStr: `0x${string}`) {
   const contract = get(groupAvatarContract);
   if (!contract) throw new Error('Contract not initialized');
 
@@ -90,7 +90,7 @@ export async function setMintHandler(addrStr: string) {
   }
 }
 
-export async function setRedemptionHandler(addrStr: string) {
+export async function setRedemptionHandler(addrStr: `0x${string}`) {
   const contract = get(groupAvatarContract);
   if (!contract) throw new Error('Contract not initialized');
 
