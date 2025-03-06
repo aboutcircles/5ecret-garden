@@ -6,7 +6,6 @@
   import { goto } from '$app/navigation';
   import { getCirclesConfig } from '$lib/utils/helpers';
   import { onMount } from 'svelte';
-  import { fetchGroupsByOwner } from '$lib/utils/groups';
   import Avatar from './avatar/Avatar.svelte';
   import type { Network } from 'ethers';
 
@@ -19,7 +18,10 @@
   let groups: `0x${string}`[] = [];
 
   onMount(async () => {
-    groups = await fetchGroupsByOwner(address);
+    groups =
+      (
+        await $circles?.data.getCreatedCMGroups(100, { ownerEquals: address })
+      )?.map((group) => group.proxy) || [];
   });
 
   async function connectWallet(selectedAddress: `0x${string}`) {
