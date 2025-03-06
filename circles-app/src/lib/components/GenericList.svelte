@@ -1,11 +1,11 @@
 <script lang="ts">
   import { onDestroy, type SvelteComponent, createEventDispatcher } from 'svelte';
-  import type { EventRow } from '@circles-sdk/data';
+  import type { EventRow, TransactionHistoryRow } from '@circles-sdk/data';
   import { getKeyFromItem } from '$lib/stores/query/circlesQueryStore';
   import type { Readable } from 'svelte/store';
 
   export let store: Readable<{
-    data: EventRow[];
+    data: EventRow[] | TransactionHistoryRow[];
     next: () => Promise<boolean>;
     ended: boolean;
   }>;
