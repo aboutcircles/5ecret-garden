@@ -1,42 +1,45 @@
 <script lang="ts">
-  import ActionButton from '$lib/components/ActionButton.svelte';
   import { contacts } from '$lib/stores/contacts';
-  import { formatTrustRelation } from '$lib/utils/helpers';
-  import ContactGroupRow from './ContactGroupRow.svelte';
   import { onMount } from 'svelte';
   import Papa from 'papaparse';
+  import GenericList from '$lib/components/GenericList.svelte';
+  import ContactRow from './ContactRow.svelte';
+  import { derived } from 'svelte/store';
 
   let filterVersion: number | undefined = undefined;
 
-  $: filteredContacts = $contacts?.data
-    ? Object.entries($contacts.data)
-        .filter(([_, contact]) => {
-          return (
-            !filterVersion || contact?.avatarInfo?.version === filterVersion
-          );
+  $: filteredStore = derived(
+    contacts,
+    ($contacts) => {
+      const filteredData = Object.entries($contacts.data)
+        .filter(([_, contact]) => 
+          !filterVersion || contact?.avatarInfo?.version === filterVersion
+        )
+        .sort((a, b) => {
+          const aRelation = a[1].row.relation;
+          const bRelation = b[1].row.relation;
+          if (aRelation === 'mutuallyTrusts' && bRelation !== 'mutuallyTrusts') return -1;
+          if (aRelation === 'trusts' && bRelation === 'trustedBy') return -1;
+          if (aRelation === bRelation) return 0;
+          if (bRelation === 'mutuallyTrusts' && aRelation !== 'mutuallyTrusts') return 1;
+          if (bRelation === 'trusts' && aRelation === 'trustedBy') return 1;
+          return 0;
         })
-        .map(([address]) => address)
-    : [];
-  $: orderedContacts = filteredContacts.sort((a, b) => {
-    const aRelation = $contacts?.data[a].row.relation;
-    const bRelation = $contacts?.data[b].row.relation;
-    if (aRelation === 'mutuallyTrusts' && bRelation !== 'mutuallyTrusts') {
-      return -1;
+        .map(([address, contact]) => ({
+          blockNumber: Date.now(),
+          transactionIndex: 0,
+          logIndex: 0,
+          address,
+          contact
+        }));
+
+      return {
+        data: filteredData,
+        next: $contacts.next,
+        ended: $contacts.ended
+      };
     }
-    if (aRelation === 'trusts' && bRelation === 'trustedBy') {
-      return -1;
-    }
-    if (aRelation === bRelation) {
-      return 0;
-    }
-    if (bRelation === 'mutuallyTrusts' && aRelation !== 'mutuallyTrusts') {
-      return 1;
-    }
-    if (bRelation === 'trusts' && aRelation === 'trustedBy') {
-      return 1;
-    }
-    return 0;
-  });
+  );
 
   onMount(() => {
     const unsubscribe = contacts.subscribe(() => {});
@@ -45,7 +48,6 @@
 
   async function handleExportCSV() {
     const csvData = Object.keys($contacts.data);
-
     const csv = Papa.unparse(csvData.map(address => ({ address })));
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -95,16 +97,7 @@
     <button on:click={handleExportCSV}>Export CSV</button>
   </div>
 
-  <div
-    class="w-full md:border rounded-lg md:px-4 flex flex-col divide-y gap-y-2 overflow-x-auto py-4"
-  >
-    {#each orderedContacts as address}
-      <ContactGroupRow
-        {address}
-        trustRelation={$contacts
-          ? formatTrustRelation($contacts.data[address].row)
-          : ''}
-      />
-    {/each}
+  <div class="w-full md:border rounded-lg md:px-4">
+    <GenericList store={filteredStore} row={ContactRow} />
   </div>
 </div>
