@@ -27,9 +27,6 @@
     if (searchType === 'send') {
       // TODO: implement contact list here when get profile type and circles-sdk/profiles are unified
 
-      // result = Object.values($contacts.data).map((item) => {
-      //   return item.contactProfile});
-
       result = (await profiles.searchByName('a')).slice(0, 25);
     } else {
       result = (await profiles.searchByName('a')).slice(0, 25);
