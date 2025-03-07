@@ -8,10 +8,12 @@
   import { onMount } from 'svelte';
   import { fetchGroupsByOwner } from '$lib/utils/groups';
   import Avatar from './avatar/Avatar.svelte';
+  import type { Network } from 'ethers6';
 
   export let address: `0x${string}`;
   export let isRegistered: boolean;
   export let walletType: 'safe' | 'metamask' = 'safe';
+  export let network: Network;
 
   let circlesConfig: CirclesConfig;
   let groups: `0x${string}`[] = [];
@@ -32,7 +34,7 @@
       throw new Error('Failed to get network');
     }
 
-    $wallet = await initializeWallet(walletType, lowerCaseAddress);
+    $wallet = await initializeWallet(walletType, address);
     circlesConfig = await getCirclesConfig(network.chainId);
     $circles = new Sdk($wallet, circlesConfig);
 

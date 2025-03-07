@@ -10,21 +10,21 @@
   import ConnectCircles from '$lib/components/ConnectCircles.svelte';
   import CreateSafe from '$lib/pages/CreateSafe.svelte';
   import { SafeSdkBrowserContractRunner } from '@circles-sdk/adapter-safe';
-  import { Network } from 'ethers6';
   import {CirclesQuery, type EventRow} from "@circles-sdk/data";
+  import type { Network } from 'ethers6';
 
   let network: Network;
-  let safes: string[] = [];
+  let safes: `0x${string}`[] = [];
   let profileBySafe: Record<string, AvatarRow | undefined> = {};
 
   async function querySafeTransactionService(
     ownerAddress: string
-  ): Promise<string[]> {
+  ): Promise<`0x${string}`[]> {
 
     if (!$circles)
       throw new Error('Circles SDK not initialized');
 
-    const safesByOwnerQuery = new CirclesQuery<EventRow & {safeAddress: string, owner: string}>($circles.circlesRpc, {
+    const safesByOwnerQuery = new CirclesQuery<EventRow & {safeAddress: `0x${string}`, owner: `0x${string}`}>($circles.circlesRpc, {
       namespace: <any>"V_Safe",
       table: <any>"Owners",
       columns: [],
@@ -74,7 +74,7 @@
       if (!$circles || !$wallet?.address) {
         throw new Error('Circles SDK or wallet not initialized');
       }
-      const avatarInfo = await $circles.data.getAvatarInfo($wallet.address);
+      const avatarInfo = await $circles.data.getAvatarInfo(safe);
       profileBySafe = { ...profileBySafe, [safe]: avatarInfo };
     });
 
