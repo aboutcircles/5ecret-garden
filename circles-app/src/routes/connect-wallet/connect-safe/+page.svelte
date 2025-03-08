@@ -13,7 +13,7 @@
   import { ethers, Network } from 'ethers6';
 
   let network: Network;
-  let safes: string[] = [];
+  let safes: `0x${string}`[] = [];
   let profileBySafe: Record<string, AvatarRow | undefined> = {};
 
   const getSafesByOwnerApiEndpoint = (checksumOwnerAddress: string): string =>
@@ -21,7 +21,7 @@
 
   async function querySafeTransactionService(
     ownerAddress: string
-  ): Promise<string[]> {
+  ): Promise<`0x${string}`[]> {
     const checksumAddress = ethers.getAddress(ownerAddress);
     const requestUrl = getSafesByOwnerApiEndpoint(checksumAddress);
 
@@ -63,7 +63,7 @@
       if (!$circles || !$wallet?.address) {
         throw new Error('Circles SDK or wallet not initialized');
       }
-      const avatarInfo = await $circles.data.getAvatarInfo($wallet.address);
+      const avatarInfo = await $circles.data.getAvatarInfo(safe);
       profileBySafe = { ...profileBySafe, [safe]: avatarInfo };
     });
 

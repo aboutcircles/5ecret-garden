@@ -7,7 +7,7 @@
   import { getCirclesConfig } from '$lib/utils/helpers';
   import { onMount } from 'svelte';
   import Avatar from './avatar/Avatar.svelte';
-  import type { Network } from 'ethers';
+  import type { Network } from 'ethers6';
 
   export let address: `0x${string}`;
   export let isRegistered: boolean;
@@ -27,7 +27,7 @@
   async function connectWallet(selectedAddress: `0x${string}`) {
     const lowerCaseAddress = selectedAddress.toLowerCase() as `0x${string}`;
 
-    $wallet = await initializeWallet(walletType, lowerCaseAddress);
+    $wallet = await initializeWallet(walletType, address);
     circlesConfig = await getCirclesConfig(network.chainId);
     $circles = new Sdk($wallet!, circlesConfig);
 
