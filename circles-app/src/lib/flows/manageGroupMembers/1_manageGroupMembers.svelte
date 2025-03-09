@@ -2,12 +2,12 @@
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import SearchAvatar from '$lib/pages/SearchAvatar.svelte';
   import Invite from '$lib/pages/Invite.svelte';
-  import { contacts } from '$lib/stores/contacts';
   import { popupControls } from '$lib/stores/popUp';
   import type { AddContactFlowContext } from './context';
   import ActionButton from '$lib/components/ActionButton.svelte';
-  import { addMembers, removeMembers } from '$lib/stores/groupAvatar';
   import Papa from 'papaparse';
+  import { avatar } from '$lib/stores/avatar';
+  import { ethers } from 'ethers6';
 
   let context: AddContactFlowContext = {
     selectedAddress: '',
@@ -15,7 +15,7 @@
 
   let addressesArray: string[] = [];
   let errorMessage = '';
-  // TODO: Remove this? 
+  // TODO: Remove this?
   function handleInvite(event: CustomEvent<{ avatar: string }>) {
     console.log('Invite');
     popupControls.open({
@@ -30,19 +30,12 @@
   let selectedAddresses = '';
   async function handleSelect(event: CustomEvent<{ avatar: string }>) {
     const address = event.detail.avatar;
-    // const existingContact = $contacts.data[address];
-
-    // if (!(
-    //   existingContact?.row?.objectAvatar === address &&
-    //   (existingContact.row.relation === 'trusts' ||
-    //     existingContact.row.relation === 'mutuallyTrusts')
-    // )) {
-      const newAddress = event.detail.avatar;
-      const addressList = selectedAddresses.split(',').map(addr => addr.trim());
-      if (!addressList.includes(newAddress)) {
-        selectedAddresses = selectedAddresses
-          ? `${selectedAddresses}, ${newAddress}`
-          : newAddress;
+    const newAddress = event.detail.avatar;
+    const addressList = selectedAddresses.split(',').map((addr) => addr.trim());
+    if (!addressList.includes(newAddress)) {
+      selectedAddresses = selectedAddresses
+        ? `${selectedAddresses}, ${newAddress}`
+        : newAddress;
       // }
       addressesArray = [...addressesArray, newAddress];
       context.selectedAddress = '';
@@ -50,9 +43,11 @@
   }
 
   function handleErrors(error: any) {
-    if (error?.info?.error?.code === 4001 || 
-        error?.message?.includes('user rejected') ||
-        error?.message?.includes('User denied transaction')) {
+    if (
+      error?.info?.error?.code === 4001 ||
+      error?.message?.includes('user rejected') ||
+      error?.message?.includes('User denied transaction')
+    ) {
       errorMessage = 'Transaction was rejected';
       throw new Error('Transaction was rejected');
     }
@@ -71,24 +66,26 @@
     throw new Error('Tx failed, try passing less addresses');
   }
 
-  async function handleAddMembers() {
-    errorMessage = '';
-    try {
-      await addMembers(selectedAddresses);
-      selectedAddresses = '';
-    } catch (error: any) {
-      console.error('Failed to add contacts:', error);
-      handleErrors(error);
-    }
-  }
+  const sanitizeAddresses = (addrStr: string): `0x${string}`[] => {
+    const addresses = addrStr
+      .split(',')
+      .map((addr) => addr.trim())
+      .filter((addr) => ethers.isAddress(addr));
+    return addresses as `0x${string}`[];
+  };
 
-  async function handleRemoveMembers() {
-    errorMessage = '';
+  export async function handleAddMembers(addrStr: string, untrust: boolean) {
+    const addresses = sanitizeAddresses(addrStr);
+    if (addresses.length === 0) {
+      throw new Error('No valid addresses provided');
+    }
+
     try {
-      await removeMembers(selectedAddresses);
+      untrust
+        ? await $avatar?.untrust(addresses)
+        : await $avatar?.trust(addresses);
       selectedAddresses = '';
     } catch (error: any) {
-      console.error('Failed to remove contacts:', error);
       handleErrors(error);
     }
   }
@@ -97,9 +94,9 @@
     const textarea = event.target as HTMLTextAreaElement;
     const addresses = textarea.value
       .split(',')
-      .map(addr => addr.trim())
-      .filter(addr => addr);
-    
+      .map((addr) => addr.trim())
+      .filter((addr) => addr);
+
     addressesArray = addresses;
   }
 
@@ -114,10 +111,10 @@
       const csv = e.target?.result as string;
       const results = Papa.parse(csv, { header: true });
       if (results.data && Array.isArray(results.data)) {
-        addressesArray = [...addressesArray, ...results.data
-          .map((row: any) => row.address)
-          .filter(Boolean)
-        ]
+        addressesArray = [
+          ...addressesArray,
+          ...results.data.map((row: any) => row.address).filter(Boolean),
+        ];
         const addressesStr = addressesArray.join(', ');
         selectedAddresses = addressesStr;
       }
@@ -130,8 +127,11 @@
 <FlowDecoration>
   <h2 class="text-2xl font-bold">Add or Remove Members</h2>
   <div class="flex flex-row gap-x-1 justify-end items-center pb-1">
-    <p class="text-sm text-gray-500 text-right">{addressesArray.length} {addressesArray.length === 1 ? 'address' : 'addresses'}</p>
-    <button 
+    <p class="text-sm text-gray-500 text-right">
+      {addressesArray.length}
+      {addressesArray.length === 1 ? 'address' : 'addresses'}
+    </p>
+    <button
       class="p-2 hover:bg-gray-100 rounded-full"
       on:click={() => {
         selectedAddresses = '';
@@ -141,7 +141,7 @@
       <img class="w-2 h-2" src="/x-mark.svg" alt="Clear addresses" />
     </button>
   </div>
-  
+
   <textarea
     bind:value={selectedAddresses}
     placeholder="Enter addresses separated by commas"
@@ -152,8 +152,8 @@
   <div class="flex flex-row gap-x-2">
     <div class="flex flex-col gap-x-2">
       <div class="flex flex-row gap-x-2">
-        <ActionButton action={handleAddMembers}>Add</ActionButton>
-        <ActionButton action={handleRemoveMembers}>Remove</ActionButton>
+        <ActionButton action={() => handleAddMembers(selectedAddresses, false)}>Add</ActionButton>
+        <ActionButton action={() => handleAddMembers(selectedAddresses, true)}>Remove</ActionButton>
       </div>
       <p class="text-sm text-red-500 h-6">{errorMessage}</p>
     </div>

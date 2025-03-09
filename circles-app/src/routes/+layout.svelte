@@ -57,7 +57,7 @@
         } else {
           popupControls.open({
             title: 'Add Contact',
-            component: SearchAvatar,
+            component: ManageGroupMembers,
             props: {},
           });
         }
