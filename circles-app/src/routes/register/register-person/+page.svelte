@@ -16,7 +16,9 @@
       throw new Error('Circles SDK not initialized');
     }
 
-    invitations = await $circles.data.getInvitations($wallet.address.toLowerCase());
+    invitations = await $circles.data.getInvitations(
+      $wallet.address.toLowerCase()
+    );
   });
 
   function acceptInvitation(inviter: string) {

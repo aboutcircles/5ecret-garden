@@ -43,7 +43,7 @@
   }
 
   onMount(async () => {
-      await setup();
+    await setup();
   });
 </script>
 

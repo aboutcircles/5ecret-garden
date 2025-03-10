@@ -18,9 +18,7 @@
   };
   let allowAssetSelection: boolean = false;
 
-  async function handleSelect(
-    event: CustomEvent<{ avatar: string }>
-  ) {
+  async function handleSelect(event: CustomEvent<{ avatar: string }>) {
     console.log('Selected:', event.detail.avatar);
 
     context.selectedAddress = event.detail.avatar;
@@ -68,7 +66,7 @@
   <SearchAvatar
     selectedAddress={context.selectedAddress}
     on:select={handleSelect}
-    searchType='send'
+    searchType="send"
   />
   <!-- <SelectContact
     store={contacts}

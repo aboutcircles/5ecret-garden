@@ -1,11 +1,11 @@
 <script lang="ts">
-  import {ethers} from 'ethers6';
-  import {createEventDispatcher, onMount} from 'svelte';
+  import { ethers } from 'ethers6';
+  import { createEventDispatcher, onMount } from 'svelte';
   import AddressInput from '$lib/components/AddressInput.svelte';
-  import {type Profile, Profiles} from '@circles-sdk/profiles';
+  import { type Profile, Profiles } from '@circles-sdk/profiles';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import {getCirclesConfig} from "$lib/utils/helpers";
-  import {wallet} from "$lib/stores/wallet";
+  import { getCirclesConfig } from '$lib/utils/helpers';
+  import { wallet } from '$lib/stores/wallet';
 
   export let selectedAddress: string = '';
   export let searchType: 'send' | 'group' | 'contact' = 'send';
@@ -44,7 +44,7 @@
         address: selectedAddress,
         name: selectedAddress,
         avatar: '',
-        bio: ''
+        bio: '',
       };
 
       const nameResults = await profiles?.searchByName(selectedAddress);
@@ -54,7 +54,9 @@
 
       // TODO: Properly type the profile. The returned values from above have an 'address' field.
       if (searchType === 'send') {
-        const addressInResults = !!results.find((profile: any) => profile.address === selectedAddress);
+        const addressInResults = !!results.find(
+          (profile: any) => profile.address === selectedAddress
+        );
         if (!addressInResults && ethers.isAddress(selectedAddress)) {
           results.unshift(syntheticProfile);
         }
@@ -75,7 +77,7 @@
     searchProfiles();
   } else if (selectedAddress.trim() === '') {
     if (profiles) {
-      profiles.searchByName('a').then(results => {
+      profiles.searchByName('a').then((results) => {
         result = results.slice(0, 25);
       });
     }
@@ -83,7 +85,7 @@
 </script>
 
 <div class="form-control my-4">
-  <AddressInput bind:address={selectedAddress}/>
+  <AddressInput bind:address={selectedAddress} />
 </div>
 
 <div class="mt-4">
@@ -99,21 +101,21 @@
 
   {#if result.length > 0}
     <div
-        class="w-full md:border rounded-lg md:px-4 flex flex-col divide-y gap-y-2 overflow-x-auto py-4"
+      class="w-full md:border rounded-lg md:px-4 flex flex-col divide-y gap-y-2 overflow-x-auto py-4"
     >
       {#each result as profile}
         <div class="w-full pt-2">
           <button
-              class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
-              on:click={() =>
+            class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
+            on:click={() =>
               eventDispatcher('select', { avatar: profile.address })}
           >
             <Avatar
-                address={profile.address}
-                view="horizontal"
-                clickable={false}
+              address={profile.address}
+              view="horizontal"
+              clickable={false}
             />
-            <img src="/chevron-right.svg" alt="Chevron Right" class="w-4"/>
+            <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
           </button>
         </div>
       {/each}
@@ -123,10 +125,10 @@
       <div>
         {#if ethers.isAddress(selectedAddress) && searchType === 'contact'}
           <button
-              class="btn mt-6"
-              on:click={() =>
+            class="btn mt-6"
+            on:click={() =>
               eventDispatcher('invite', { avatar: selectedAddress })}
-          >Invite {selectedAddress}</button
+            >Invite {selectedAddress}</button
           >
         {:else}
           <p>No avatars found.</p>
