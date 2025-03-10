@@ -9,10 +9,10 @@ export const groupAvatarContract = derived(
   ([$avatar, $wallet]) =>
     $avatar && $wallet
       ? new ethers.Contract(
-        $avatar.address,
-        groupABI,
-        $wallet as ContractRunner
-      )
+          $avatar.address,
+          groupABI,
+          $wallet as ContractRunner
+        )
       : null
 );
 

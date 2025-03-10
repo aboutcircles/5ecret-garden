@@ -15,7 +15,7 @@
 
   let addressesArray: string[] = [];
   let errorMessage = '';
-  // TODO: Remove this? 
+  // TODO: Remove this?
   function handleInvite(event: CustomEvent<{ avatar: string }>) {
     console.log('Invite');
     popupControls.open({
@@ -37,12 +37,12 @@
     //   (existingContact.row.relation === 'trusts' ||
     //     existingContact.row.relation === 'mutuallyTrusts')
     // )) {
-      const newAddress = event.detail.avatar;
-      const addressList = selectedAddresses.split(',').map(addr => addr.trim());
-      if (!addressList.includes(newAddress)) {
-        selectedAddresses = selectedAddresses
-          ? `${selectedAddresses}, ${newAddress}`
-          : newAddress;
+    const newAddress = event.detail.avatar;
+    const addressList = selectedAddresses.split(',').map((addr) => addr.trim());
+    if (!addressList.includes(newAddress)) {
+      selectedAddresses = selectedAddresses
+        ? `${selectedAddresses}, ${newAddress}`
+        : newAddress;
       // }
       addressesArray = [...addressesArray, newAddress];
       context.selectedAddress = '';
@@ -50,9 +50,11 @@
   }
 
   function handleErrors(error: any) {
-    if (error?.info?.error?.code === 4001 || 
-        error?.message?.includes('user rejected') ||
-        error?.message?.includes('User denied transaction')) {
+    if (
+      error?.info?.error?.code === 4001 ||
+      error?.message?.includes('user rejected') ||
+      error?.message?.includes('User denied transaction')
+    ) {
       errorMessage = 'Transaction was rejected';
       throw new Error('Transaction was rejected');
     }
@@ -97,9 +99,9 @@
     const textarea = event.target as HTMLTextAreaElement;
     const addresses = textarea.value
       .split(',')
-      .map(addr => addr.trim())
-      .filter(addr => addr);
-    
+      .map((addr) => addr.trim())
+      .filter((addr) => addr);
+
     addressesArray = addresses;
   }
 
@@ -114,10 +116,10 @@
       const csv = e.target?.result as string;
       const results = Papa.parse(csv, { header: true });
       if (results.data && Array.isArray(results.data)) {
-        addressesArray = [...addressesArray, ...results.data
-          .map((row: any) => row.address)
-          .filter(Boolean)
-        ]
+        addressesArray = [
+          ...addressesArray,
+          ...results.data.map((row: any) => row.address).filter(Boolean),
+        ];
         const addressesStr = addressesArray.join(', ');
         selectedAddresses = addressesStr;
       }
@@ -130,8 +132,11 @@
 <FlowDecoration>
   <h2 class="text-2xl font-bold">Add or Remove Members</h2>
   <div class="flex flex-row gap-x-1 justify-end items-center pb-1">
-    <p class="text-sm text-gray-500 text-right">{addressesArray.length} {addressesArray.length === 1 ? 'address' : 'addresses'}</p>
-    <button 
+    <p class="text-sm text-gray-500 text-right">
+      {addressesArray.length}
+      {addressesArray.length === 1 ? 'address' : 'addresses'}
+    </p>
+    <button
       class="p-2 hover:bg-gray-100 rounded-full"
       on:click={() => {
         selectedAddresses = '';
@@ -141,7 +146,7 @@
       <img class="w-2 h-2" src="/x-mark.svg" alt="Clear addresses" />
     </button>
   </div>
-  
+
   <textarea
     bind:value={selectedAddresses}
     placeholder="Enter addresses separated by commas"

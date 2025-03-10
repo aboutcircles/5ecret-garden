@@ -16,7 +16,11 @@
           alt="User Icon"
           class="w-10 h-10 object-cover rounded-full"
         />
-        <img src={pictureOverlayUrl} alt="Overlay" class="indicator-item indicator-bottom h-5 w-5 rounded-full border border-white translate-y-[8%] translate-x-[10%] bg-white" />
+        <img
+          src={pictureOverlayUrl}
+          alt="Overlay"
+          class="indicator-item indicator-bottom h-5 w-5 rounded-full border border-white translate-y-[8%] translate-x-[10%] bg-white"
+        />
       </div>
     {:else}
       <img

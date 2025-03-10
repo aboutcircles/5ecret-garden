@@ -103,7 +103,7 @@
 
   $: {
     if (address) {
-      getProfile(address).then(newProfile => {
+      getProfile(address).then((newProfile) => {
         profile = newProfile;
       });
     }

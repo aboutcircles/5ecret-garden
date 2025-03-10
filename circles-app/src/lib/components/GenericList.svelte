@@ -1,5 +1,9 @@
 <script lang="ts">
-  import { onDestroy, type SvelteComponent, createEventDispatcher } from 'svelte';
+  import {
+    onDestroy,
+    type SvelteComponent,
+    createEventDispatcher,
+  } from 'svelte';
   import type { EventRow, TransactionHistoryRow } from '@circles-sdk/data';
   import { getKeyFromItem } from '$lib/stores/query/circlesQueryStore';
   import type { Readable } from 'svelte/store';
@@ -74,16 +78,13 @@
     class="text-center py-4"
     bind:this={anchor}
     aria-live="polite"
-    aria-busy={$store && !$store?.ended && !hasError ? "true" : "false"}
+    aria-busy={$store && !$store?.ended && !hasError ? 'true' : 'false'}
   >
     {#if ($store?.data ?? []).length === 0 || $store?.ended}
       <span class="text-gray-500">End of list</span>
     {:else if hasError}
       <span class="text-red-500">Error loading items</span>
-      <button
-        class="ml-2 text-primary hover:underline"
-        on:click={handleRetry}
-      >
+      <button class="ml-2 text-primary hover:underline" on:click={handleRetry}>
         Retry
       </button>
     {:else}

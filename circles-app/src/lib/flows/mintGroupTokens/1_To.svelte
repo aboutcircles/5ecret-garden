@@ -10,7 +10,7 @@
   import { contacts } from '$lib/stores/contacts';
   import { popupControls } from '$lib/stores/popUp';
   import type { TokenBalanceRow } from '@circles-sdk/data';
-  
+
   export let context: GroupMintFlowContext = {
     selectedAddress: '0x0',
     selectedAsset: {} as TokenBalanceRow,

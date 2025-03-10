@@ -8,38 +8,38 @@
 
   let filterVersion: number | undefined = undefined;
 
-  $: filteredStore = derived(
-    contacts,
-    ($contacts) => {
-      const filteredData = Object.entries($contacts.data)
-        .filter(([_, contact]) => 
+  $: filteredStore = derived(contacts, ($contacts) => {
+    const filteredData = Object.entries($contacts.data)
+      .filter(
+        ([_, contact]) =>
           !filterVersion || contact?.avatarInfo?.version === filterVersion
-        )
-        .sort((a, b) => {
-          const aRelation = a[1].row.relation;
-          const bRelation = b[1].row.relation;
-          if (aRelation === 'mutuallyTrusts' && bRelation !== 'mutuallyTrusts') return -1;
-          if (aRelation === 'trusts' && bRelation === 'trustedBy') return -1;
-          if (aRelation === bRelation) return 0;
-          if (bRelation === 'mutuallyTrusts' && aRelation !== 'mutuallyTrusts') return 1;
-          if (bRelation === 'trusts' && aRelation === 'trustedBy') return 1;
-          return 0;
-        })
-        .map(([address, contact]) => ({
-          blockNumber: Date.now(),
-          transactionIndex: 0,
-          logIndex: 0,
-          address,
-          contact
-        }));
+      )
+      .sort((a, b) => {
+        const aRelation = a[1].row.relation;
+        const bRelation = b[1].row.relation;
+        if (aRelation === 'mutuallyTrusts' && bRelation !== 'mutuallyTrusts')
+          return -1;
+        if (aRelation === 'trusts' && bRelation === 'trustedBy') return -1;
+        if (aRelation === bRelation) return 0;
+        if (bRelation === 'mutuallyTrusts' && aRelation !== 'mutuallyTrusts')
+          return 1;
+        if (bRelation === 'trusts' && aRelation === 'trustedBy') return 1;
+        return 0;
+      })
+      .map(([address, contact]) => ({
+        blockNumber: Date.now(),
+        transactionIndex: 0,
+        logIndex: 0,
+        address,
+        contact,
+      }));
 
-      return {
-        data: filteredData,
-        next: $contacts.next,
-        ended: $contacts.ended
-      };
-    }
-  );
+    return {
+      data: filteredData,
+      next: $contacts.next,
+      ended: $contacts.ended,
+    };
+  });
 
   onMount(() => {
     const unsubscribe = contacts.subscribe(() => {});
@@ -48,7 +48,7 @@
 
   async function handleExportCSV() {
     const csvData = Object.keys($contacts.data);
-    const csv = Papa.unparse(csvData.map(address => ({ address })));
+    const csv = Papa.unparse(csvData.map((address) => ({ address })));
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -58,7 +58,6 @@
     link.click();
     document.body.removeChild(link);
   }
-
 </script>
 
 <div

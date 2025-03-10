@@ -8,14 +8,18 @@ const CMG_ADDRESS = '0x55785b41703728f1F1F05E77e22B13c3FCc9ce65';
 export const contract = writable<Contract | null>(null);
 
 export const CMGContract = derived(
-    wallet,
-    ($wallet, set) => {
-        if ($wallet) {
-            const cmgContract = new ethers.Contract(CMG_ADDRESS, coreMemberGroupABI, $wallet as ContractRunner);
-            set(cmgContract);
-        } else {
-            set(null);
-        }
-    },
-    null as Contract | null
+  wallet,
+  ($wallet, set) => {
+    if ($wallet) {
+      const cmgContract = new ethers.Contract(
+        CMG_ADDRESS,
+        coreMemberGroupABI,
+        $wallet as ContractRunner
+      );
+      set(cmgContract);
+    } else {
+      set(null);
+    }
+  },
+  null as Contract | null
 );
