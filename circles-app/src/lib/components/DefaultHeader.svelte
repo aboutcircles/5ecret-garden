@@ -18,9 +18,6 @@
 
   export let route: string | null;
   let isDropdownOpen = false;
-  $: console.log(quickAction);
-  $: console.log(text);
-  $: console.log('menuItems', menuItems);
 </script>
 
 <div
