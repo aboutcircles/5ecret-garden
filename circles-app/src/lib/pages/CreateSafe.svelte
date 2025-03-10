@@ -6,7 +6,6 @@
         SafeAccountConfig,
         SafeDeploymentConfig,
     } from "@safe-global/protocol-kit";
-    import { gnosis } from "viem/chains";
     import { createEventDispatcher } from "svelte";
     import { onMount } from "svelte";
     import { BrowserProviderContractRunner } from "@circles-sdk/adapter-ethers";
@@ -86,7 +85,7 @@
                 to: deploymentTransaction.to,
                 value: BigInt(deploymentTransaction.value),
                 data: deploymentTransaction.data as `0x${string}`,
-                chain: gnosis, // Use chain instead of chainId
+                chainId: (await $wallet.provider.getNetwork()).chainId,
             });
 
             console.log("Transaction hash:", transactionHash);
@@ -116,7 +115,7 @@
 </script>
 
 {#if error}
-    <div class="error">{error}</div>
+    <div class="text-red-500 m-1">{error}</div>
 {/if}
 
 <button
@@ -131,10 +130,3 @@
         Create New Safe
     {/if}
 </button>
-
-<style>
-    .error {
-        color: red;
-        margin: 1em 0;
-    }
-</style>

@@ -10,7 +10,7 @@
   import { popupControls } from '$lib/stores/popUp';
 
   export let context: MigrateToV2Context = {
-    inviter: '',
+    inviter: '0x0',
     profile: undefined,
     trustList: [],
   };
@@ -32,7 +32,7 @@
       },
     });
   }
-  function selectInvitation(inviter: string) {
+  function selectInvitation(inviter: `0x${string}`) {
     context.inviter = inviter;
     next();
   }

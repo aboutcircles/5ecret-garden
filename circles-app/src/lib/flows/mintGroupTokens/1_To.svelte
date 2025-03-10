@@ -12,7 +12,7 @@
   import type { TokenBalanceRow } from '@circles-sdk/data';
   
   export let context: GroupMintFlowContext = {
-    selectedAddress: '',
+    selectedAddress: '0x0',
     selectedAsset: {} as TokenBalanceRow,
     amount: undefined,
   };
@@ -41,7 +41,7 @@
   });
 
   function handleSelect(
-    event: CustomEvent<{ address: string; profile: Profile }>
+    event: CustomEvent<{ address: `0x${string}`; profile: Profile }>
   ) {
     console.log('Selected address', event.detail.address);
     context.selectedAddress = event.detail.address;

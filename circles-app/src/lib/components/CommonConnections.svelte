@@ -9,7 +9,7 @@
   import Avatar from './avatar/Avatar.svelte';
   import { popupControls } from '$lib/stores/popUp';
 
-  export let otherAvatarAddress: string;
+  export let otherAvatarAddress: `0x${string}`;
   export let commonConnectionsCount: number = 0;
 
   let commonContacts: string[] = [];

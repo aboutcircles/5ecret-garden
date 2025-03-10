@@ -39,7 +39,7 @@ avatar.subscribe(($avatar) => {
     if (currentStoreUnsubscribe) {
       currentStoreUnsubscribe();
     }
-
+    
     currentQuery = createContactsQueryStore($avatar.address, refreshOnEvents);
     currentQuery.then((store) => {
       currentStoreUnsubscribe = store.subscribe(_contacts.set);

@@ -8,26 +8,35 @@
   import { onMount } from 'svelte';
   import { fetchGroupsByOwner } from '$lib/utils/groups';
   import Avatar from './avatar/Avatar.svelte';
-  import type { Network } from 'ethers';
+  import type { Network } from 'ethers6';
 
-  export let address: string;
+  export let address: `0x${string}`;
   export let isRegistered: boolean;
-  export let network: Network;
   export let walletType: 'safe' | 'metamask' = 'safe';
+  export let network: Network;
 
   let circlesConfig: CirclesConfig;
-  let groups: string[] = [];
+  let groups: `0x${string}`[] = [];
 
   onMount(async () => {
     groups = await fetchGroupsByOwner(address);
   });
 
-  async function connectWallet(selectedAddress: string) {
-    const lowerCaseAddress = selectedAddress.toLowerCase();
+  async function connectWallet(selectedAddress: `0x${string}`) {
+    const lowerCaseAddress = selectedAddress.toLowerCase() as `0x${string}`;
 
-    $wallet = await initializeWallet(walletType, lowerCaseAddress);
+    if (!$wallet) {
+      return;
+    }
+
+    const network = await $wallet.provider?.getNetwork();
+    if (!network) {
+      throw new Error('Failed to get network');
+    }
+
+    $wallet = await initializeWallet(walletType, address);
     circlesConfig = await getCirclesConfig(network.chainId);
-    $circles = new Sdk($wallet!, circlesConfig);
+    $circles = new Sdk($wallet, circlesConfig);
 
     if (lowerCaseAddress === address.toLowerCase() && !isRegistered) {
       await goto('/register');
@@ -44,7 +53,6 @@
   async function deployGroup() {
     if ($circles && $wallet) {
       $wallet = await initializeWallet(walletType, address);
-      console.log('wallet', $wallet);
       circlesConfig = await getCirclesConfig(network.chainId);
       $circles = new Sdk($wallet!, circlesConfig);
 

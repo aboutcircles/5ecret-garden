@@ -6,7 +6,7 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { popupControls } from '$lib/stores/popUp';
 
-  export let address: string;
+  export let address: `0x${string}`;
 
   async function trust() {
     if (!$avatar) {

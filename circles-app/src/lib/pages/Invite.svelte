@@ -4,7 +4,7 @@
     import {shortenAddress} from "$lib/utils/shared";
   import { popupControls } from "$lib/stores/popUp";
 
-    export let address: string;
+    export let address: `0x${string}`;
 
     async function invite() {
         if (!$avatar) {

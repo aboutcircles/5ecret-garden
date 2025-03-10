@@ -1,5 +1,5 @@
+import type { Avatar } from '@circles-sdk/sdk';
 import { derived, writable } from 'svelte/store';
-import { Avatar } from '@circles-sdk/sdk';
 
 /**
  * A store that contains an Avatar instance or undefined.

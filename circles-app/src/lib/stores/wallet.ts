@@ -5,7 +5,6 @@ import { circles } from "$lib/stores/circles";
 import { BrowserProviderContractRunner } from "@circles-sdk/adapter-ethers";
 import { SafeSdkBrowserContractRunner, SafeSdkPrivateKeyContractRunner } from "@circles-sdk/adapter-safe";
 import { Sdk } from "@circles-sdk/sdk";
-import { gnosisConfig } from "$lib/chiadoConfig";
 import { getCirclesConfig } from "$lib/utils/helpers";
 
 type WalletRunner = BrowserProviderContractRunner | SafeSdkBrowserContractRunner | SafeSdkPrivateKeyContractRunner;
@@ -14,7 +13,7 @@ export const wallet = writable<WalletRunner | undefined>();
 
 export const GNOSIS_CHAIN_ID_DEC = 100n;
 
-export async function initializeWallet(type: string, address?: string) {
+export async function initializeWallet(type: string, address?: `0x${string}`) {
     localStorage.setItem("walletType", type);
     if (type === "metamask") {
         const runner = new BrowserProviderContractRunner();
@@ -23,18 +22,9 @@ export async function initializeWallet(type: string, address?: string) {
         return runner;
     } else if (type === "safe" && address) {
         localStorage.setItem("wallet", address);
-        // const useMM = localStorage.getItem("useMM") === "true";
-        // if (useMM) {
         const runner = new SafeSdkBrowserContractRunner();
         await runner.init(address);
         return runner;
-        // } 
-        // else {
-        //     const privateKey = localStorage.getItem("privateKey");
-        //     const runner = new SafeSdkPrivateKeyContractRunner(privateKey!, gnosisConfig.circlesRpcUrl);
-        //     await runner.init(address);
-        //     return runner;
-        // }
     }
     throw new Error(`Unsupported wallet type: ${type}`);
 }
@@ -42,8 +32,8 @@ export async function initializeWallet(type: string, address?: string) {
 export async function restoreWallet() {
     try {
         const walletType = localStorage.getItem("walletType");
-        const savedWalletAddress = localStorage.getItem("wallet");
-        const savedAvatar = localStorage.getItem("avatar");
+        const savedWalletAddress = localStorage.getItem("wallet") as `0x${string}`;
+        const savedAvatar = localStorage.getItem("avatar") as `0x${string}`;
 
         if (!walletType || !savedWalletAddress) {
             console.log("No wallet found in localStorage");
