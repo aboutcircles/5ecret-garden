@@ -1,3 +1,3 @@
 export type AddContactFlowContext = {
-    selectedAddress: string;
+  selectedAddress: string;
 };

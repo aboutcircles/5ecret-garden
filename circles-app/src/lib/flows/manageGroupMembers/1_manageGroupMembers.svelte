@@ -30,6 +30,13 @@
   let selectedAddresses = '';
   async function handleSelect(event: CustomEvent<{ avatar: string }>) {
     const address = event.detail.avatar;
+    // const existingContact = $contacts.data[address];
+
+    // if (!(
+    //   existingContact?.row?.objectAvatar === address &&
+    //   (existingContact.row.relation === 'trusts' ||
+    //     existingContact.row.relation === 'mutuallyTrusts')
+    // )) {
     const newAddress = event.detail.avatar;
     const addressList = selectedAddresses.split(',').map((addr) => addr.trim());
     if (!addressList.includes(newAddress)) {

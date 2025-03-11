@@ -8,11 +8,12 @@
   import { onMount } from 'svelte';
   import Avatar from './avatar/Avatar.svelte';
   import type { Network } from 'ethers6';
+  import type { Network } from 'ethers6';
 
   export let address: `0x${string}`;
   export let isRegistered: boolean;
-  export let network: Network;
   export let walletType: 'safe' | 'metamask' = 'safe';
+  export let network: Network;
 
   let circlesConfig: CirclesConfig;
   let groups: `0x${string}`[] = [];
@@ -29,7 +30,7 @@
 
     $wallet = await initializeWallet(walletType, address);
     circlesConfig = await getCirclesConfig(network.chainId);
-    $circles = new Sdk($wallet!, circlesConfig);
+    $circles = new Sdk($wallet, circlesConfig);
 
     if (lowerCaseAddress === address.toLowerCase() && !isRegistered) {
       await goto('/register');

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { type AvatarRow, type CirclesConfig, Sdk } from '@circles-sdk/sdk';
+  import { type AvatarRow, Sdk } from '@circles-sdk/sdk';
   import { circles } from '$lib/stores/circles';
   import { BrowserProviderContractRunner } from '@circles-sdk/adapter-ethers';
   import { wallet } from '$lib/stores/wallet';
@@ -10,14 +10,12 @@
   import ConnectCircles from '$lib/components/ConnectCircles.svelte';
   import CreateSafe from '$lib/pages/CreateSafe.svelte';
   import { SafeSdkBrowserContractRunner } from '@circles-sdk/adapter-safe';
-  import { ethers, Network } from 'ethers6';
+  import { CirclesQuery, type EventRow } from '@circles-sdk/data';
+  import type { Network } from 'ethers6';
 
   let network: Network;
   let safes: `0x${string}`[] = [];
   let profileBySafe: Record<string, AvatarRow | undefined> = {};
-
-  const getSafesByOwnerApiEndpoint = (checksumOwnerAddress: string): string =>
-    `https://safe-transaction-gnosis-chain.safe.global/api/v1/owners/${checksumOwnerAddress}/safes/`;
 
   async function querySafeTransactionService(
     ownerAddress: string

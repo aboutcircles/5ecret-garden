@@ -43,7 +43,7 @@
   }
 
   onMount(async () => {
-      await setup();
+    await setup();
   });
 </script>
 
@@ -64,7 +64,6 @@
       address={$wallet.address.toLowerCase()}
       walletType="metamask"
       isRegistered={avatarInfo !== undefined}
-      network={network}
     />
   {:else}
     <WalletLoader name="Metamask" />

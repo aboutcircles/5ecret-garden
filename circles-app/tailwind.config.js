@@ -1,6 +1,6 @@
-  import daisyui from "daisyui";
+import daisyui from 'daisyui';
 
-  export default {
+export default {
   content: ['./src/**/*.{html,js,svelte,ts}'],
   theme: {
     extend: {

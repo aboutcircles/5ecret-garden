@@ -1,23 +1,15 @@
 <script lang="ts">
-  import type { EventRow } from '@circles-sdk/data';
   import GenericList from '$lib/components/GenericList.svelte';
-  import { createTransactionHistory } from '$lib/stores/transactionHistory';
-  import type { Readable } from 'svelte/store';
   import TransactionRow from './TransactionRow.svelte';
   import TotalBalance from '$lib/components/TotalBalance.svelte';
   import { avatar } from '$lib/stores/avatar';
   import { roundToDecimals } from '$lib/utils/shared';
   import { runTask } from '$lib/utils/tasks';
+  import { transactionHistory } from '$lib/stores/transactionHistory';
 
-  let txHistory: Readable<{
-    data: EventRow[];
-    next: () => Promise<boolean>;
-    ended: boolean;
-  }>;
   let mintableAmount: number = 0;
 
   async function init() {
-    txHistory = await createTransactionHistory();
     mintableAmount = (await $avatar?.getMintableAmount()) ?? 0;
   }
 
@@ -47,11 +39,11 @@
   <TotalBalance />
 
   {#if mintableAmount >= 0.01}
-    <button class="btn btn-sm btn-primary" on:click={mintPersonalCircles}
-      >Mint {roundToDecimals(mintableAmount)} Circles
+    <button class="btn btn-sm btn-primary" on:click={mintPersonalCircles}>
+      Mint {roundToDecimals(mintableAmount)} Circles
     </button>
   {/if}
   <div class="w-full md:border rounded-lg md:px-4">
-    <GenericList row={TransactionRow} store={txHistory} />
+    <GenericList row={TransactionRow} store={transactionHistory} />
   </div>
 </div>

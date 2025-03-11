@@ -60,7 +60,12 @@
     class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg mt-2"
     on:click={() => handleSelect(selectedAddress)}
   >
-    <Avatar address={selectedAddress} clickable={false} view="horizontal" bottomInfo={shortenAddress(selectedAddress)}  />
+    <Avatar
+      address={selectedAddress}
+      clickable={false}
+      view="horizontal"
+      bottomInfo={shortenAddress(selectedAddress)}
+    />
     <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
   </button>
 {:else}
@@ -75,7 +80,12 @@
             class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
             on:click={() => handleSelect(address)}
           >
-            <Avatar {address} view="horizontal" clickable={false} bottomInfo={shortenAddress(address)} />
+            <Avatar
+              {address}
+              view="horizontal"
+              clickable={false}
+              bottomInfo={shortenAddress(address)}
+            />
             <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
           </button>
         </div>

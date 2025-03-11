@@ -14,10 +14,7 @@
   }
 </script>
 
-<button
-  on:click={handleCopy}
-  class="btn btn-sm"
->
+<button on:click={handleCopy} class="btn btn-sm">
   {shortenAddress(address)}
   <img src={copyIcon} alt="Copy" class="w-4 h-4 inline" />
 </button>

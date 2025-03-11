@@ -30,8 +30,9 @@
     return `Received ${tokenTypeToString(item.tokenType)}`;
   };
 
-  const counterpartyAddress = !$avatar ? '' :
-    item.from === '0x0000000000000000000000000000000000000000'
+  const counterpartyAddress = !$avatar
+    ? ''
+    : item.from === '0x0000000000000000000000000000000000000000'
       ? item.to
       : item.to === '0x0000000000000000000000000000000000000000'
         ? $avatar.address
@@ -69,7 +70,6 @@
         {/if}
         {#if crcTypes.has(item.tokenType)}
           {roundToDecimals(item.crc)} CRC
-          
         {/if}
       </p>
     {:else}

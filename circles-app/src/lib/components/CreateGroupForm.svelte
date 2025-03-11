@@ -77,7 +77,9 @@
       result.logs[9].topics[1]
     );
 
-    $avatar = await $circles.getAvatar(groupAddress.toLowerCase() as `0x${string}`);
+    $avatar = await $circles.getAvatar(
+      groupAddress.toLowerCase() as `0x${string}`
+    );
     localStorage.setItem('avatar', groupAddress);
 
     dispatch('stepChange', 'executed');
