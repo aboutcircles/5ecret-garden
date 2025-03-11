@@ -9,5 +9,14 @@ export const avatar = writable<Avatar | undefined>();
 
 export const isGroup = derived(
   [avatar, circles],
-  ([$avatar, $circles]) => $avatar?.address ? $circles?.isCoreMembersGroup($avatar.address) : false
+  ([$avatar, $circles], set) => {
+    if ($avatar?.address) {
+      $circles?.isCoreMembersGroup($avatar.address).then(isGroup => {
+        set(isGroup);
+      });
+    } else {
+      set(false);
+    }
+  },
+  false
 );
