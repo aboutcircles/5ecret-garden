@@ -1,7 +1,6 @@
 <script lang="ts">
-  import SelectContact from '$lib/pages/SelectContact.svelte';
+  import SelectContact, { type SelectedEvent } from '$lib/pages/SelectContact.svelte';
   import type { ContactList } from '$lib/stores/contacts';
-  import type { Profile } from '@circles-sdk/profiles';
   import { onMount } from 'svelte';
   import { derived, type Readable } from 'svelte/store';
   import type { GroupMintFlowContext } from '$lib/flows/mintGroupTokens/context';
@@ -12,7 +11,7 @@
   import type { TokenBalanceRow } from '@circles-sdk/data';
 
   export let context: GroupMintFlowContext = {
-    selectedAddress: '0x0',
+    selectedAddress: undefined,
     selectedAsset: {} as TokenBalanceRow,
     amount: undefined,
   };
@@ -41,7 +40,7 @@
   });
 
   function handleSelect(
-    event: CustomEvent<{ address: `0x${string}`; profile: Profile }>
+    event: CustomEvent<SelectedEvent>
   ) {
     console.log('Selected address', event.detail.address);
     context.selectedAddress = event.detail.address;
