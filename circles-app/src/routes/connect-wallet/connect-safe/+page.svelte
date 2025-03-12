@@ -10,40 +10,26 @@
   import ConnectCircles from '$lib/components/ConnectCircles.svelte';
   import CreateSafe from '$lib/pages/CreateSafe.svelte';
   import { SafeSdkBrowserContractRunner } from '@circles-sdk/adapter-safe';
-  import { CirclesQuery, type EventRow } from '@circles-sdk/data';
-  import type { Network } from 'ethers6';
+  import { ethers, Network } from 'ethers6';
+  import type { Address } from '@circles-sdk/utils';
 
   let network: Network;
-  let safes: `0x${string}`[] = [];
+  let safes: Address[] = [];
   let profileBySafe: Record<string, AvatarRow | undefined> = {};
+
+  const getSafesByOwnerApiEndpoint = (checksumOwnerAddress: string): string =>
+    `https://safe-transaction-gnosis-chain.safe.global/api/v1/owners/${checksumOwnerAddress}/safes/`;
 
   async function querySafeTransactionService(
     ownerAddress: string
-  ): Promise<`0x${string}`[]> {
-    if (!$circles) throw new Error('Circles SDK not initialized');
+  ): Promise<Address[]> {
+    const checksumAddress = ethers.getAddress(ownerAddress);
+    const requestUrl = getSafesByOwnerApiEndpoint(checksumAddress);
 
-    const safesByOwnerQuery = new CirclesQuery<
-      EventRow & { safeAddress: `0x${string}`; owner: `0x${string}` }
-    >($circles.circlesRpc, {
-      namespace: <any>'V_Safe',
-      table: <any>'Owners',
-      columns: [],
-      filter: [
-        {
-          FilterType: 'Equals',
-          Column: 'owner',
-          Type: 'FilterPredicate',
-          Value: ownerAddress.toLowerCase(),
-        },
-      ],
-      limit: 1000,
-      sortOrder: 'ASC',
-    });
+    const safesByOwnerResult = await fetch(requestUrl);
+    const safesByOwner = await safesByOwnerResult.json();
 
-    await safesByOwnerQuery.queryNextPage();
-    return (
-      safesByOwnerQuery.currentPage?.results.map((row) => row.safeAddress) ?? []
-    );
+    return safesByOwner.safes ?? [];
   }
 
   async function setup() {

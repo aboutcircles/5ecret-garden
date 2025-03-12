@@ -1,25 +1,18 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { get } from 'svelte/store';
-  import {
-    groupAvatarContract,
-    setMintHandler,
-    setRedemptionHandler,
-  } from '$lib/stores/groupAvatar';
-  import { setService } from '$lib/stores/groupAvatar';
+  import { avatar } from '$lib/stores/avatar';
 
-  let serviceAddress = '';
-  let mintHandlerAddress = '';
-  let redemptionHandlerAddress = '';
+  let serviceAddress: `0x${string}` = '0x0';
+  let mintHandlerAddress: `0x${string}` = '0x0';
+  let redemptionHandlerAddress: `0x${string}` = '0x0';
 
   onMount(async () => {
     try {
-      const contract = get(groupAvatarContract);
-      if (!contract) throw new Error('Contract not initialized');
+      if ($avatar === undefined) throw new Error('Avatar not initialized');
 
-      serviceAddress = await contract.service();
-      mintHandlerAddress = await contract.mintHandler();
-      redemptionHandlerAddress = await contract.redemptionHandler();
+      serviceAddress = await $avatar?.service();
+      mintHandlerAddress = await $avatar?.mintHandler();
+      redemptionHandlerAddress = await $avatar?.redemptionHandler();
     } catch (error) {
       console.error('Error fetching contract data:', error);
     }
@@ -27,7 +20,7 @@
 
   async function handleSetService() {
     try {
-      await setService(serviceAddress);
+      await $avatar?.setService(serviceAddress);
     } catch (error) {
       console.error('Failed to set service address:', error);
     }
@@ -35,7 +28,7 @@
 
   async function handleSetMintHandler() {
     try {
-      await setMintHandler(serviceAddress);
+      await $avatar?.setMintHandler(mintHandlerAddress);
     } catch (error) {
       console.error('Failed to set mint handler address:', error);
     }
@@ -43,7 +36,7 @@
 
   async function handleSetRedemptionHandler() {
     try {
-      await setRedemptionHandler(serviceAddress);
+      await $avatar?.setRedemptionHandler(redemptionHandlerAddress);
     } catch (error) {
       console.error('Failed to set redemption handler address:', error);
     }

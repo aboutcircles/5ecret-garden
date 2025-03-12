@@ -1,5 +1,6 @@
 import type { Avatar } from '@circles-sdk/sdk';
 import { derived, writable } from 'svelte/store';
+import { circles } from './circles';
 
 /**
  * A store that contains an Avatar instance or undefined.
@@ -7,6 +8,15 @@ import { derived, writable } from 'svelte/store';
 export const avatar = writable<Avatar | undefined>();
 
 export const isGroup = derived(
-  avatar,
-  ($avatar) => $avatar?.avatarInfo?.type === 'CrcV2_RegisterGroup'
+  [avatar, circles],
+  ([$avatar, $circles], set) => {
+    if ($avatar?.address) {
+      $circles?.isCoreMembersGroup($avatar.address).then(isGroup => {
+        set(isGroup);
+      });
+    } else {
+      set(false);
+    }
+  },
+  false
 );

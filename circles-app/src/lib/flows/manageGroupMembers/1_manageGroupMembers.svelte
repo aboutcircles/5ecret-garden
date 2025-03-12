@@ -2,12 +2,12 @@
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import SearchAvatar from '$lib/pages/SearchAvatar.svelte';
   import Invite from '$lib/pages/Invite.svelte';
-  import { contacts } from '$lib/stores/contacts';
   import { popupControls } from '$lib/stores/popUp';
   import type { AddContactFlowContext } from './context';
   import ActionButton from '$lib/components/ActionButton.svelte';
-  import { addMembers, removeMembers } from '$lib/stores/groupAvatar';
   import Papa from 'papaparse';
+  import { avatar } from '$lib/stores/avatar';
+  import { ethers } from 'ethers6';
 
   let context: AddContactFlowContext = {
     selectedAddress: '',
@@ -73,24 +73,26 @@
     throw new Error('Tx failed, try passing less addresses');
   }
 
-  async function handleAddMembers() {
-    errorMessage = '';
-    try {
-      await addMembers(selectedAddresses);
-      selectedAddresses = '';
-    } catch (error: any) {
-      console.error('Failed to add contacts:', error);
-      handleErrors(error);
-    }
-  }
+  const sanitizeAddresses = (addrStr: string): `0x${string}`[] => {
+    const addresses = addrStr
+      .split(',')
+      .map((addr) => addr.trim())
+      .filter((addr) => ethers.isAddress(addr));
+    return addresses as `0x${string}`[];
+  };
 
-  async function handleRemoveMembers() {
-    errorMessage = '';
+  export async function handleAddMembers(addrStr: string, untrust: boolean) {
+    const addresses = sanitizeAddresses(addrStr);
+    if (addresses.length === 0) {
+      throw new Error('No valid addresses provided');
+    }
+
     try {
-      await removeMembers(selectedAddresses);
+      untrust
+        ? await $avatar?.untrust(addresses)
+        : await $avatar?.trust(addresses);
       selectedAddresses = '';
     } catch (error: any) {
-      console.error('Failed to remove contacts:', error);
       handleErrors(error);
     }
   }
@@ -157,8 +159,8 @@
   <div class="flex flex-row gap-x-2">
     <div class="flex flex-col gap-x-2">
       <div class="flex flex-row gap-x-2">
-        <ActionButton action={handleAddMembers}>Add</ActionButton>
-        <ActionButton action={handleRemoveMembers}>Remove</ActionButton>
+        <ActionButton action={() => handleAddMembers(selectedAddresses, false)}>Add</ActionButton>
+        <ActionButton action={() => handleAddMembers(selectedAddresses, true)}>Remove</ActionButton>
       </div>
       <p class="text-sm text-red-500 h-6">{errorMessage}</p>
     </div>

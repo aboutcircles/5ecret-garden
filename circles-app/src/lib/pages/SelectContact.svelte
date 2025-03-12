@@ -1,12 +1,14 @@
 <script lang="ts" context="module">
+  import type { Profile } from '@circles-sdk/profiles';
+  import type { Address } from '@circles-sdk/utils';
+
   export type SelectedEvent = {
-    address: string;
+    address: Address;
     profile: Profile;
   };
 </script>
 
 <script lang="ts">
-  import type { Profile } from '@circles-sdk/profiles';
   import { createEventDispatcher } from 'svelte';
   import type { ContactList } from '$lib/stores/contacts';
   import type { Readable } from 'svelte/store';
@@ -46,7 +48,7 @@
 
   function handleSelect(address: string) {
     const profile = $store?.data[address]?.contactProfile;
-    eventDispatcher('select', { address, profile });
+    eventDispatcher('select', <SelectedEvent>{ address, profile });
   }
 </script>
 

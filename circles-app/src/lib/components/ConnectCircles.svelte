@@ -6,8 +6,8 @@
   import { goto } from '$app/navigation';
   import { getCirclesConfig } from '$lib/utils/helpers';
   import { onMount } from 'svelte';
-  import { fetchGroupsByOwner } from '$lib/utils/groups';
   import Avatar from './avatar/Avatar.svelte';
+  import type { Network } from 'ethers6';
   import type { Network } from 'ethers6';
 
   export let address: `0x${string}`;
@@ -19,20 +19,14 @@
   let groups: `0x${string}`[] = [];
 
   onMount(async () => {
-    groups = await fetchGroupsByOwner(address);
+    groups =
+      (
+        await $circles?.data.getCreatedCMGroups(100, { ownerEquals: address })
+      )?.map((group) => group.proxy) || [];
   });
 
   async function connectWallet(selectedAddress: `0x${string}`) {
     const lowerCaseAddress = selectedAddress.toLowerCase() as `0x${string}`;
-
-    if (!$wallet) {
-      return;
-    }
-
-    const network = await $wallet.provider?.getNetwork();
-    if (!network) {
-      throw new Error('Failed to get network');
-    }
 
     $wallet = await initializeWallet(walletType, address);
     circlesConfig = await getCirclesConfig(network.chainId);
