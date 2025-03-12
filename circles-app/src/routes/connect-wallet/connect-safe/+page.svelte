@@ -108,9 +108,6 @@
     {/each}
 
     <div class="text-center">
-      <p class="font-normal text-base mb-5">
-        Create new safe.
-      </p>
       <CreateSafe on:safecreated={handleSafeCreated} />
     </div>
   {:else}
