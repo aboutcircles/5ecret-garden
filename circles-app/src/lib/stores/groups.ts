@@ -16,17 +16,9 @@ if (!c) {
   throw new Error('Circles instance not found');
 }
 
-// Create a singleton store that persists across component mounts
-let groupsStore:
-  | ReturnType<typeof createCirclesQueryStore<GroupRow>>
-  | undefined;
-
 export const createGroups = () => {
-  if (!groupsStore) {
-    groupsStore = createCirclesQueryStore<GroupRow>(
-      async () => c.data.findGroups(25),
-      groupEvents
-    );
-  }
-  return groupsStore;
+  return createCirclesQueryStore<GroupRow>(
+    async () => c.data.findGroups(25),
+    groupEvents
+  );
 };
