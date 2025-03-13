@@ -6,7 +6,7 @@
 
   export let item: TransactionHistoryRow;
 
-  let tags: string[] = [];
+  let tags: string = "";
   let netCircles = 0;
   let counterpartyAddress = '';
   let badgeUrl: string | null = null;
