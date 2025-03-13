@@ -64,6 +64,7 @@
       address={$wallet.address.toLowerCase()}
       walletType="metamask"
       isRegistered={avatarInfo !== undefined}
+      chainId={network.chainId}
     />
   {:else}
     <WalletLoader name="Metamask" />

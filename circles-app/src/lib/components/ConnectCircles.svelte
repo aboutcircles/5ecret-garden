@@ -7,13 +7,11 @@
   import { getCirclesConfig } from '$lib/utils/helpers';
   import { onMount } from 'svelte';
   import Avatar from './avatar/Avatar.svelte';
-  import type { Network } from 'ethers6';
-  import type { Network } from 'ethers6';
 
   export let address: `0x${string}`;
   export let isRegistered: boolean;
   export let walletType: 'safe' | 'metamask' = 'safe';
-  export let network: Network;
+  export let chainId: bigint;
 
   let circlesConfig: CirclesConfig;
   let groups: `0x${string}`[] = [];
@@ -29,7 +27,7 @@
     const lowerCaseAddress = selectedAddress.toLowerCase() as `0x${string}`;
 
     $wallet = await initializeWallet(walletType, address);
-    circlesConfig = await getCirclesConfig(network.chainId);
+    circlesConfig = await getCirclesConfig(chainId);
     $circles = new Sdk($wallet, circlesConfig);
 
     if (lowerCaseAddress === address.toLowerCase() && !isRegistered) {
@@ -47,7 +45,7 @@
   async function deployGroup() {
     if ($circles && $wallet) {
       $wallet = await initializeWallet(walletType, address);
-      circlesConfig = await getCirclesConfig(network.chainId);
+      circlesConfig = await getCirclesConfig(chainId);
       $circles = new Sdk($wallet!, circlesConfig);
 
       await goto('/register/register-group');

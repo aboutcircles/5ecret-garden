@@ -103,7 +103,7 @@
         address={item}
         walletType="safe"
         isRegistered={profileBySafe[item] !== undefined}
-        {network}
+        chainId={network.chainId}
       />
     {/each}
 
