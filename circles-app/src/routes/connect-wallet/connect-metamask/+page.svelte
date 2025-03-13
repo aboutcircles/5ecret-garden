@@ -59,7 +59,7 @@
   <p class="font-normal text-black/60 text-base">
     Please select the avatar you want to use from the list below.
   </p>
-  {#if $wallet?.address && $circles}
+  {#if $wallet?.address && $circles && network}
     <ConnectCircles
       address={$wallet.address.toLowerCase()}
       walletType="metamask"
