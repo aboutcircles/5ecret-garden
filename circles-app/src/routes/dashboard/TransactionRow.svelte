@@ -16,7 +16,7 @@
     tags = result.tags.join(", ");
     netCircles = item.circles;
 
-    counterpartyAddress = getCounterpartyAddress($avatar.address);
+    counterpartyAddress = getCounterpartyAddress($avatar.address).toLowerCase();
     badgeUrl = getBadge($avatar.address);
   }
 
@@ -39,6 +39,10 @@
       'CrcV2_WithdrawInflationary',
       'CrcV2_DepositDemurraged',
       'CrcV2_DepositInflationary',
+
+      'CrcV2_CollateralLockedBatch',
+      'CrcV2_CollateralLockedSingle',
+      'CrcV2_GroupRedeem'
     ]);
 
     // let demurrageAmount = 0n;
@@ -58,10 +62,10 @@
   }
 
   function getCounterpartyAddress(avatarAddress: string) {
-    if (item.from === '0x0000000000000000000000000000000000000000') return item.to;
-    if (item.to === '0x0000000000000000000000000000000000000000') return avatarAddress;
-    if (item.from.toLowerCase() === avatarAddress) return item.to;
-    return item.from;
+    if (item.from === '0x0000000000000000000000000000000000000000') return item.to.toLowerCase();
+    if (item.to === '0x0000000000000000000000000000000000000000') return avatarAddress.toLowerCase();
+    if (item.from.toLowerCase() === avatarAddress) return item.to.toLowerCase();
+    return item.from.toLowerCase();
   }
 
   function getBadge(avatarAddress: string) {
@@ -90,7 +94,11 @@
     <div class="col text-right">
       {#if item.from.toLowerCase() === $avatar.address.toLowerCase()}
         <span class="text-red-500 font-bold">
+          {#if netCircles.toFixed(2) === "0.00"}
+                    &lt; 0.01
+          {:else}
                     -{netCircles.toFixed(2)}
+          {/if}
                 </span> CRC
       {:else}
                 <span class="text-green-700 font-bold">
