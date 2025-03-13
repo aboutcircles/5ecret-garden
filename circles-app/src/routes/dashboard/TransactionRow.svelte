@@ -1,44 +1,78 @@
 <script lang="ts">
-  import { crcTypes, staticTypes } from '$lib/utils/shared';
-  import { roundToDecimals } from '$lib/utils/shared';
-  import type { TransactionHistoryRow } from '@circles-sdk/data';
-  import { tokenTypeToString } from '$lib/pages/SelectAsset.svelte';
-  import { avatar } from '$lib/stores/avatar';
   import { getTimeAgo } from '$lib/utils/shared';
+  import type { TransactionHistoryRow } from '@circles-sdk/data';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
+  import { avatar } from '$lib/stores/avatar';
 
   export let item: TransactionHistoryRow;
 
-  const getBadge = () => {
-    if (!$avatar) return;
-    if (item.from === '0x0000000000000000000000000000000000000000')
-      return '/badge-mint.svg';
-    if (item.to === '0x0000000000000000000000000000000000000000')
-      return '/badge-burn.svg';
-    if (item.from === $avatar.address) return '/badge-sent.svg';
-    if (item.to === $avatar.address) return '/badge-received.svg';
-  };
+  let tags: string[] = [];
+  let demurrageAmount: bigint = 0n;
+  let netCircles = 0;
+  let counterpartyAddress = '';
+  let badgeUrl: string | null = null;
 
-  const getTransactionText = () => {
-    if (!$avatar) return;
-    if (item.from === '0x0000000000000000000000000000000000000000')
-      return `Minted ${tokenTypeToString(item.tokenType)}`;
-    if (item.to === '0x0000000000000000000000000000000000000000')
-      return `Burn ${tokenTypeToString(item.tokenType)}`;
-    if (item.from === $avatar.address)
-      return `Sent ${tokenTypeToString(item.tokenType)}`;
-    return `Received ${tokenTypeToString(item.tokenType)}`;
-  };
+  $: if ($avatar) {
+    const result = parseEventDetails(item.events, $avatar.address.toLowerCase());
+    tags = result.tags;
+    demurrageAmount = result.demurrageAmount;
+    netCircles = item.circles;
 
-  const counterpartyAddress = !$avatar
-    ? ''
-    : item.from === '0x0000000000000000000000000000000000000000'
-      ? item.to
-      : item.to === '0x0000000000000000000000000000000000000000'
-        ? $avatar.address
-        : item.from === $avatar.address
-          ? item.to
-          : item.from;
+    counterpartyAddress = getCounterpartyAddress($avatar.address);
+    badgeUrl = getBadge($avatar.address);
+  }
+
+  function parseEventDetails(eventsJson: string, avatarAddress: string) {
+    let parsed: any[];
+    try {
+      parsed = JSON.parse(eventsJson) || [];
+    } catch (err) {
+      console.error('Failed to parse item.events:', err);
+      parsed = [];
+    }
+
+    const relevantTypes = new Set([
+      'CrcV1_Transfer',
+      'CrcV2_PersonalMint',
+      'CrcV2_DiscountCost',
+      'CrcV2_GroupMint',
+      'CrcV2_StreamCompleted',
+      'CrcV2_WithdrawDemurraged',
+      'CrcV2_WithdrawInflationary',
+      'CrcV2_DepositDemurraged',
+      'CrcV2_DepositInflationary'
+    ]);
+
+    let demurrageAmount = 0n;
+    const tags: string[] = [];
+
+    for (const e of parsed) {
+      if (relevantTypes.has(e.$type) && !tags.includes(e.$type)) {
+        tags.push(e.$type);
+      }
+
+      if (e.$type === 'CrcV2_DiscountCost' && e.Account === avatarAddress) {
+        demurrageAmount += BigInt(e.Cost);
+      }
+    }
+
+    return { tags, demurrageAmount };
+  }
+
+  function getCounterpartyAddress(avatarAddress: string) {
+    if (item.from === '0x0000000000000000000000000000000000000000') return item.to;
+    if (item.to === '0x0000000000000000000000000000000000000000') return avatarAddress;
+    if (item.from.toLowerCase() === avatarAddress) return item.to;
+    return item.from;
+  }
+
+  function getBadge(avatarAddress: string) {
+    if (item.from === '0x0000000000000000000000000000000000000000') return '/badge-mint.svg';
+    if (item.to === '0x0000000000000000000000000000000000000000') return '/badge-burn.svg';
+    if (item.from.toLowerCase() === avatarAddress) return '/badge-sent.svg';
+    if (item.to.toLowerCase() === avatarAddress) return '/badge-received.svg';
+    return null;
+  }
 </script>
 
 <a
@@ -46,35 +80,31 @@
   target="_blank"
   href={'https://gnosisscan.io/tx/' + item.transactionHash}
 >
-  <Avatar
-    address={counterpartyAddress}
-    view="horizontal"
-    pictureOverlayUrl={getBadge()}
-    topInfo={getTransactionText()}
-    bottomInfo={getTimeAgo(item.timestamp)}
-  />
-  <div class="col text-right">
-    {#if $avatar}
-      {#if item.from === $avatar.address}
-        <span class="text-red-500 font-bold"
-          >-{roundToDecimals(item.circles)}</span
-        > CRC
+  {#if $avatar}
+    <Avatar
+      address={counterpartyAddress}
+      view="horizontal"
+      pictureOverlayUrl={badgeUrl}
+      topInfo={tags}
+      bottomInfo={getTimeAgo(item.timestamp)}
+    />
+
+    <div class="col text-right">
+      {#if item.from.toLowerCase() === $avatar.address.toLowerCase()}
+        <!-- Format to exactly three decimals -->
+        <span class="text-red-500 font-bold">
+                    -{netCircles.toFixed(3)}
+                </span> CRC
       {:else}
-        <span class="text-green-700 font-bold"
-          >+{roundToDecimals(item.circles)}</span
-        > CRC
+                <span class="text-green-700 font-bold">
+                    +{netCircles.toFixed(3)}
+                </span> CRC
       {/if}
       <p class="text-xs text-gray-500">
-        {#if staticTypes.has(item.tokenType)}
-          {roundToDecimals(item.staticCircles)} Static CRC
-        {/if}
-        {#if crcTypes.has(item.tokenType)}
-          {roundToDecimals(item.crc)} CRC
-        {/if}
+        <!-- Additional info ... -->
       </p>
-    {:else}
-      <!-- TODO: add loading state -->
-      <p>loading</p>
-    {/if}
-  </div>
+    </div>
+  {:else}
+    <p>Loading avatar info...</p>
+  {/if}
 </a>
