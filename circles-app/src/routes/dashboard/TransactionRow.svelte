@@ -7,15 +7,13 @@
   export let item: TransactionHistoryRow;
 
   let tags: string[] = [];
-  let demurrageAmount: bigint = 0n;
   let netCircles = 0;
   let counterpartyAddress = '';
   let badgeUrl: string | null = null;
 
   $: if ($avatar) {
     const result = parseEventDetails(item.events, $avatar.address.toLowerCase());
-    tags = result.tags;
-    demurrageAmount = result.demurrageAmount;
+    tags = result.tags.join(", ");
     netCircles = item.circles;
 
     counterpartyAddress = getCounterpartyAddress($avatar.address);
@@ -40,23 +38,23 @@
       'CrcV2_WithdrawDemurraged',
       'CrcV2_WithdrawInflationary',
       'CrcV2_DepositDemurraged',
-      'CrcV2_DepositInflationary'
+      'CrcV2_DepositInflationary',
     ]);
 
-    let demurrageAmount = 0n;
+    // let demurrageAmount = 0n;
     const tags: string[] = [];
 
     for (const e of parsed) {
       if (relevantTypes.has(e.$type) && !tags.includes(e.$type)) {
         tags.push(e.$type);
       }
-
-      if (e.$type === 'CrcV2_DiscountCost' && e.Account === avatarAddress) {
-        demurrageAmount += BigInt(e.Cost);
-      }
+    //
+    //   if (e.$type === 'CrcV2_DiscountCost' && e.Account === avatarAddress) {
+    //     demurrageAmount += BigInt(e.Cost);
+    //   }
     }
 
-    return { tags, demurrageAmount };
+    return { tags /*, demurrageAmount*/ };
   }
 
   function getCounterpartyAddress(avatarAddress: string) {
@@ -91,13 +89,12 @@
 
     <div class="col text-right">
       {#if item.from.toLowerCase() === $avatar.address.toLowerCase()}
-        <!-- Format to exactly three decimals -->
         <span class="text-red-500 font-bold">
-                    -{netCircles.toFixed(3)}
+                    -{netCircles.toFixed(2)}
                 </span> CRC
       {:else}
                 <span class="text-green-700 font-bold">
-                    +{netCircles.toFixed(3)}
+                    +{netCircles.toFixed(2)}
                 </span> CRC
       {/if}
       <p class="text-xs text-gray-500">
