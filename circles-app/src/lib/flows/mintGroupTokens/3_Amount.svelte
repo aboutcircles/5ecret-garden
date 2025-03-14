@@ -7,8 +7,7 @@
 
   export let context: GroupMintFlowContext;
 
-  function handleSelect(event: CustomEvent<{ amount: number }>) {
-    context.amount = event.detail.amount;
+  function handleSelect() {
     console.log('Selected amount:', context.amount);
 
     popupControls.open({
@@ -25,7 +24,17 @@
   <p class="text-2xl font-bold">Enter Amount</p>
   <SelectAmount
     asset={context.selectedAsset}
-    amount={context.amount}
+    bind:amount={context.amount}
     on:select={handleSelect}
   />
+  <!-- Action Buttons -->
+  <div class="flex justify-end space-x-2 mt-6">
+    <button
+      type="submit"
+      class="btn btn-primary max-sm:w-full rounded-md text-white mt-8 md:mt-2"
+      on:click={handleSelect}
+    >
+      Continue
+    </button>
+  </div>
 </FlowDecoration>

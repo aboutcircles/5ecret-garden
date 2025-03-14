@@ -46,6 +46,8 @@
     amount={context.amount}
     receiverAddress={context.selectedAddress}
     textButton="Send CRC"
+    data={context.data}
+    dataType={context.dataType}
     on:select={handleSend}
   />
 </FlowDecoration>
