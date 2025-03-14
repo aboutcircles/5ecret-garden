@@ -24,17 +24,44 @@
     if (!context.amount) {
       throw new Error('No amount specified');
     }
+
+    let dataUInt8Arr: Uint8Array<ArrayBufferLike> = new Uint8Array(0);
+
+    // If user provided data
+    if (context.data && context.data.trim().length > 0) {
+      if (context.dataType === 'hex') {
+        // Trim it, remove optional "0x", and validate
+        let hexString = context.data.trim();
+        if (hexString.startsWith('0x')) {
+          hexString = hexString.slice(2);
+        }
+        if (!/^[0-9A-Fa-f]*$/.test(hexString)) {
+          throw new Error('Invalid hex string provided');
+        }
+        // Convert to Uint8Array
+        const pairs = hexString.match(/.{1,2}/g) ?? [];
+        dataUInt8Arr = new Uint8Array(
+          pairs.map((byte) => parseInt(byte, 16)),
+        );
+      } else {
+        // Default to UTF-8
+        dataUInt8Arr = new TextEncoder().encode(context.data);
+      }
+    }
+
     runTask({
-      name: `Send ${roundToDecimals(context.amount)} ${tokenTypeToString(context.selectedAsset.tokenType)} to ${shortenAddress(context.selectedAddress)} ...`,
+      name: `Send ${roundToDecimals(context.amount)} ${tokenTypeToString(context.selectedAsset.tokenType)} to ${shortenAddress(context.selectedAddress)}...`,
       promise:
-        context.selectedAsset.tokenAddress == TransitiveTransferTokenAddress
+        context.selectedAsset.tokenAddress === TransitiveTransferTokenAddress
           ? $avatar.transfer(context.selectedAddress, context.amount)
           : $avatar.transfer(
-              context.selectedAddress,
-              context.amount,
-              context.selectedAsset.tokenAddress
-            ),
+            context.selectedAddress,
+            context.amount,
+            context.selectedAsset.tokenAddress,
+            dataUInt8Arr,
+          ),
     });
+
     popupControls.close();
   }
 </script>
@@ -46,6 +73,8 @@
     amount={context.amount}
     receiverAddress={context.selectedAddress}
     textButton="Send CRC"
+    data={context.data}
+    dataType={context.dataType}
     on:select={handleSend}
   />
 </FlowDecoration>

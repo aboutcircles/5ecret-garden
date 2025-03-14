@@ -4,13 +4,19 @@
   import { roundToDecimals } from '$lib/utils/shared';
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
+  import { TransitiveTransferTokenAddress } from './SelectAsset.svelte'
 
   export let receiverAddress: string;
   export let asset: TokenBalanceRow;
   export let amount: number = 0;
   export let textButton: string;
+  export let data: string | undefined;
+  export let dataType: 'hex' | 'utf-8' | undefined;
 
   const eventDispatcher = createEventDispatcher();
+
+  // Helper: are we using the transitive-transfer token?
+  $: usesTTT = asset.tokenAddress === TransitiveTransferTokenAddress;
 </script>
 
 <!-- Receiver Information -->
@@ -39,6 +45,21 @@
   >
     <Avatar address={receiverAddress} clickable={false} view="horizontal" />
   </div>
+
+  <!-- If there's user-supplied data, display it -->
+  {#if data && !usesTTT}
+    <p class="menu-title mt-8 md:mt-4 p-0">Data:</p>
+    <div class="flex items-center justify-between p-4 border-b md:border md:rounded-lg">
+      {#if dataType === 'hex'}
+        <!-- Show hex data in a code block -->
+        <code class="break-all">{data}</code>
+      {:else}
+        <!-- Show UTF-8 or anything else as text -->
+        <span>{data}</span>
+      {/if}
+    </div>
+  {/if}
+
 
   <!-- Action Buttons -->
   <div class="flex justify-end space-x-2 mt-6">
