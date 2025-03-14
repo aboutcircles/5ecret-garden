@@ -36,12 +36,12 @@
 
   onMount(async () => {
     // If context.data is already set, expand the "Attach data" area by default
-    if (context.data) {
+    if (context.data && !usesTTT) {
       showDataInput = true;
       // If user didn't specify a dataType, default to UTF-8
-      if (!context.dataType) {
-        context.dataType = 'utf-8';
-      }
+    }
+    if (!context.dataType) {
+      context.dataType = 'utf-8';
     }
 
     // If not using TTT or missing info, skip pathfinding
