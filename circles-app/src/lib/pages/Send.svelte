@@ -4,7 +4,6 @@
   import { roundToDecimals } from '$lib/utils/shared';
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import { TransitiveTransferTokenAddress } from './SelectAsset.svelte'
 
   export let receiverAddress: string;
   export let asset: TokenBalanceRow;
@@ -14,9 +13,6 @@
   export let dataType: 'hex' | 'utf-8' | undefined;
 
   const eventDispatcher = createEventDispatcher();
-
-  // Helper: are we using the transitive-transfer token?
-  $: usesTTT = asset.tokenAddress === TransitiveTransferTokenAddress;
 </script>
 
 <!-- Receiver Information -->
@@ -47,7 +43,7 @@
   </div>
 
   <!-- If there's user-supplied data, display it -->
-  {#if data && !usesTTT}
+  {#if data}
     <p class="menu-title mt-8 md:mt-4 p-0">Data:</p>
     <div class="flex items-center justify-between p-4 border-b md:border md:rounded-lg">
       {#if dataType === 'hex'}
