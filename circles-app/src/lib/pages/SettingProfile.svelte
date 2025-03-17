@@ -7,7 +7,11 @@
   import { clearSession, wallet } from '$lib/stores/wallet';
   import { SafeSdkBrowserContractRunner } from '@circles-sdk/adapter-safe';
 
-  export let address: string = '';
+  interface Props {
+    address?: string;
+  }
+
+  let { address = '' }: Props = $props();
 
   function changeWallet() {
     popupControls.close();
@@ -26,7 +30,7 @@
   <div class="flex gap-x-2">
     <Address {address} />
     <button
-      on:click={changeWallet}
+      onclick={changeWallet}
       class="btn btn-sm btn-outline btn-primary text-primary hover:text-white"
       >Change Avatar</button
     >

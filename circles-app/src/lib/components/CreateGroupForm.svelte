@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { preventDefault } from 'svelte/legacy';
+
   import type { GroupProfile } from '@circles-sdk/profiles';
   import { createEventDispatcher } from 'svelte';
   import { isValidName, isValidSymbol } from '$lib/utils/isValid';
@@ -16,27 +18,27 @@
     initialConditions: string;
   }
 
-  let groupProfile: GroupProfile = {
+  let groupProfile: GroupProfile = $state({
     name: '',
     symbol: '',
     description: '',
     previewImageUrl: '',
     imageUrl: '',
-  };
+  });
 
-  let isLoading = false;
-  let formData: CMGProfile = {
+  let isLoading = $state(false);
+  let formData: CMGProfile = $state({
     service: '0x0000000000000000000000000000000000000000',
     initialConditions: '',
-  };
-  let mintPolicy = mintPolicies[0];
+  });
+  let mintPolicy = $state(mintPolicies[0]);
 
   const dispatch = createEventDispatcher();
 
-  $: validName =
-    isValidName(groupProfile.name) || groupProfile.name.length === 0;
-  $: validSymbol =
-    isValidSymbol(groupProfile.symbol) || groupProfile.symbol.length === 0;
+  let validName =
+    $derived(isValidName(groupProfile.name) || groupProfile.name.length === 0);
+  let validSymbol =
+    $derived(isValidSymbol(groupProfile.symbol) || groupProfile.symbol.length === 0);
 
   async function handleSubmit() {
     if (!validName || !validSymbol) return;
@@ -95,7 +97,7 @@
 </script>
 
 <form
-  on:submit|preventDefault={handleSubmit}
+  onsubmit={preventDefault(handleSubmit)}
   class="w-full h-full flex flex-col gap-2 items-center justify-center text-xs md:text-sm/6 text-black"
 >
   <div class="w-full flex justify-between">
@@ -212,7 +214,7 @@
       placeholder="Group Description..."
       class="textarea textarea-bordered w-full"
       bind:value={groupProfile.description}
-    />
+></textarea>
   </div>
   <div class="w-full flex flex-col mb-12 pt-8 border-t-1.5">
     <div class="label">

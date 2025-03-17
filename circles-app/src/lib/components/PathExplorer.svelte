@@ -5,8 +5,12 @@
   import type { TransferPathStep } from '@circles-sdk/sdk/dist/v2/pathfinderV2';
   import Avatar from './avatar/Avatar.svelte';
 
-  export let graph: TransferPathStep[] = [];
-  export let startNode = ''; // The starting node of the graph
+  interface Props {
+    graph?: TransferPathStep[];
+    startNode?: string; // The starting node of the graph
+  }
+
+  let { graph = [], startNode = '' }: Props = $props();
 
   // Stores to track current breadcrumbs and edges
   const breadcrumbs = writable([{ node: startNode, label: 'Source' }]);
@@ -50,7 +54,7 @@
   <div class="breadcrumbs">
     {#each $breadcrumbs as crumb, index}
       <button
-        on:click={() => navigateBackTo(index)}
+        onclick={() => navigateBackTo(index)}
         class="btn btn-link text-blue-500"
       >
         {crumb.label}
@@ -68,7 +72,7 @@
     <button
       type="button"
       class="flex w-full items-center justify-between p-2 bg-base-100 hover:bg-base-200 rounded-lg cursor-pointer"
-      on:click={() => moveToNode(edge.to)}
+      onclick={() => moveToNode(edge.to)}
       aria-label="Move to node"
     >
       <Avatar address={edge.tokenOwner} clickable={false} view="horizontal">

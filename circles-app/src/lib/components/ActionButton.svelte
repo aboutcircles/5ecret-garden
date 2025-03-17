@@ -1,3 +1,5 @@
+<!-- @migration-task Error while migrating Svelte code: can't migrate `let state: ActionButtonState = 'Ready';` to `$state` because there's a variable named state.
+     Rename the variable and try again or migrate by hand. -->
 <script lang="ts" context="module">
   export type ActionButtonState =
     | 'Ready'

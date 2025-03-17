@@ -12,9 +12,9 @@
   import { ethers } from 'ethers';
 
   const dispatch = createEventDispatcher();
-  let isCreating = false;
-  let error: string | null = null;
-  let isWalletReady = false;
+  let isCreating = $state(false);
+  let error: string | null = $state(null);
+  let isWalletReady = $state(false);
 
   onMount(() => {
     isWalletReady = !!$wallet;
@@ -117,7 +117,7 @@
   class="btn btm-nav-xs btn-outline btn-primary"
   class:loading={isCreating}
   disabled={isCreating || !isWalletReady || error}
-  on:click={createSafe}
+  onclick={createSafe}
 >
   {#if isCreating}
     Creating Safe...

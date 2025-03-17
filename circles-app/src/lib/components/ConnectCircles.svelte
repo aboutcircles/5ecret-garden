@@ -8,13 +8,22 @@
   import { onMount } from 'svelte';
   import Avatar from './avatar/Avatar.svelte';
 
-  export let address: `0x${string}`;
-  export let isRegistered: boolean;
-  export let walletType: 'safe' | 'metamask' = 'safe';
-  export let chainId: bigint;
+  interface Props {
+    address: `0x${string}`;
+    isRegistered: boolean;
+    walletType?: 'safe' | 'metamask';
+    chainId: bigint;
+  }
+
+  let {
+    address,
+    isRegistered,
+    walletType = 'safe',
+    chainId
+  }: Props = $props();
 
   let circlesConfig: CirclesConfig;
-  let groups: `0x${string}`[] = [];
+  let groups: `0x${string}`[] = $state([]);
 
   onMount(async () => {
     groups =
@@ -55,7 +64,7 @@
 
 <div class="w-full border rounded-lg flex flex-col p-4 shadow-sm">
   <button
-    on:click={() => connectWallet(address)}
+    onclick={() => connectWallet(address)}
     class="flex justify-between items-center hover:bg-black/5 rounded-lg p-2"
   >
     <Avatar
@@ -73,7 +82,7 @@
   <div class="w-full flex gap-x-2 items-center mt-6">
     <p class="font-bold text-primary">My groups</p>
     <button
-      on:click={() => deployGroup()}
+      onclick={() => deployGroup()}
       class="btn btn-xs btn-ghost btn-circle"
       ><img src="/plus.svg" alt="Plus" class="w-5" /></button
     >
@@ -82,7 +91,7 @@
     {#each groups as group}
       <button
         class="flex w-full hover:bg-black/5 rounded-lg p-2"
-        on:click={() => connectWallet(group)}
+        onclick={() => connectWallet(group)}
         ><Avatar
           address={group}
           clickable={false}

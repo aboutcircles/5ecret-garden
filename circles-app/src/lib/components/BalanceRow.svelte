@@ -10,7 +10,11 @@
   import Avatar from './avatar/Avatar.svelte';
   import { popupControls } from '$lib/stores/popUp';
 
-  export let balance: TokenBalanceRow;
+  interface Props {
+    balance: TokenBalanceRow;
+  }
+
+  let { balance }: Props = $props();
 
   const actions = [
     {
@@ -107,7 +111,7 @@
               {#if action.condition(balance)}
                 <button
                   class="text-xs font-medium w-44 h-12 flex items-center p-4 gap-x-2"
-                  on:click={() => executeAction(action)}
+                  onclick={() => executeAction(action)}
                 >
                   <img
                     src={action.icon}

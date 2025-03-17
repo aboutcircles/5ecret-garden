@@ -9,12 +9,12 @@
   import { avatar } from '$lib/stores/avatar';
   import { ethers } from 'ethers6';
 
-  let context: AddContactFlowContext = {
+  let context: AddContactFlowContext = $state({
     selectedAddress: '',
-  };
+  });
 
-  let addressesArray: string[] = [];
-  let errorMessage = '';
+  let addressesArray: string[] = $state([]);
+  let errorMessage = $state('');
   // TODO: Remove this?
   function handleInvite(event: CustomEvent<{ avatar: string }>) {
     console.log('Invite');
@@ -27,7 +27,7 @@
     });
   }
 
-  let selectedAddresses = '';
+  let selectedAddresses = $state('');
   async function handleSelect(event: CustomEvent<{ avatar: string }>) {
     const address = event.detail.avatar;
     // const existingContact = $contacts.data[address];
@@ -140,7 +140,7 @@
     </p>
     <button
       class="p-2 hover:bg-gray-100 rounded-full"
-      on:click={() => {
+      onclick={() => {
         selectedAddresses = '';
         addressesArray = [];
       }}
@@ -154,8 +154,8 @@
     placeholder="Enter addresses separated by commas"
     rows="3"
     class="w-full p-2 mb-4 border rounded resize-y"
-    on:input={handleAddressesChange}
-  />
+    oninput={handleAddressesChange}
+></textarea>
   <div class="flex flex-row gap-x-2">
     <div class="flex flex-col gap-x-2">
       <div class="flex flex-row gap-x-2">
@@ -172,7 +172,7 @@
         type="file"
         accept=".csv"
         class="hidden"
-        on:change={handleImportCSV}
+        onchange={handleImportCSV}
       />
     </label>
   </div>

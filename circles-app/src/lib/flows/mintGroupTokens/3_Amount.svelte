@@ -5,7 +5,11 @@
   import type { GroupMintFlowContext } from '$lib/flows/mintGroupTokens/context';
   import { popupControls } from '$lib/stores/popUp';
 
-  export let context: GroupMintFlowContext;
+  interface Props {
+    context: GroupMintFlowContext;
+  }
+
+  let { context = $bindable() }: Props = $props();
 
   function handleSelect() {
     console.log('Selected amount:', context.amount);
@@ -32,7 +36,7 @@
     <button
       type="submit"
       class="btn btn-primary max-sm:w-full rounded-md text-white mt-8 md:mt-2"
-      on:click={handleSelect}
+      onclick={handleSelect}
     >
       Continue
     </button>

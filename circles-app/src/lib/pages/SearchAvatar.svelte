@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import { ethers } from 'ethers6';
   import { createEventDispatcher, onMount } from 'svelte';
   import AddressInput from '$lib/components/AddressInput.svelte';
@@ -7,11 +9,15 @@
   import { getCirclesConfig } from '$lib/utils/helpers';
   import { wallet } from '$lib/stores/wallet';
 
-  export let selectedAddress: string = '';
-  export let searchType: 'send' | 'group' | 'contact' = 'send';
-  let lastAddress: string = '';
-  let result: Profile[] = [];
-  let profiles: Profiles | undefined;
+  interface Props {
+    selectedAddress?: string;
+    searchType?: 'send' | 'group' | 'contact';
+  }
+
+  let { selectedAddress = $bindable(''), searchType = 'send' }: Props = $props();
+  let lastAddress: string = $state('');
+  let result: Profile[] = $state([]);
+  let profiles: Profiles | undefined = $state();
 
   onMount(async () => {
     const network = await $wallet?.provider?.getNetwork();
@@ -72,16 +78,18 @@
 
   const eventDispatcher = createEventDispatcher();
 
-  $: if (selectedAddress && selectedAddress !== lastAddress) {
-    lastAddress = selectedAddress;
-    searchProfiles();
-  } else if (selectedAddress.trim() === '') {
-    if (profiles) {
-      profiles.searchByName('a').then((results) => {
-        result = results.slice(0, 25);
-      });
+  run(() => {
+    if (selectedAddress && selectedAddress !== lastAddress) {
+      lastAddress = selectedAddress;
+      searchProfiles();
+    } else if (selectedAddress.trim() === '') {
+      if (profiles) {
+        profiles.searchByName('a').then((results) => {
+          result = results.slice(0, 25);
+        });
+      }
     }
-  }
+  });
 </script>
 
 <div class="form-control my-4">
@@ -107,7 +115,7 @@
         <div class="w-full pt-2">
           <button
             class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
-            on:click={() =>
+            onclick={() =>
               eventDispatcher('select', { avatar: profile.address })}
           >
             <Avatar
@@ -126,7 +134,7 @@
         {#if ethers.isAddress(selectedAddress) && searchType === 'contact'}
           <button
             class="btn mt-6"
-            on:click={() =>
+            onclick={() =>
               eventDispatcher('invite', { avatar: selectedAddress })}
             >Invite {selectedAddress}</button
           >

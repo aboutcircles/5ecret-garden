@@ -2,12 +2,21 @@
   import { mnemonicToEntropy, validateMnemonic } from 'bip39';
   import { ethers } from 'ethers';
 
-  export let isValidMnemonic: boolean = false;
-  export let mnemonicPhrase: string = '';
-  export let privateKey: string = '';
-  export let address: string = '';
+  interface Props {
+    isValidMnemonic?: boolean;
+    mnemonicPhrase?: string;
+    privateKey?: string;
+    address?: string;
+  }
 
-  let boxes: string[] = Array(24).fill('');
+  let {
+    isValidMnemonic = $bindable(false),
+    mnemonicPhrase = $bindable(''),
+    privateKey = $bindable(''),
+    address = $bindable('')
+  }: Props = $props();
+
+  let boxes: string[] = $state(Array(24).fill(''));
 
   function onInput() {
     if (validateMnemonic(boxes[0].trim())) {
@@ -46,8 +55,8 @@
         class:text-error={!isValidMnemonic}
         class:text-success={isValidMnemonic}
         bind:value={boxes[i]}
-        on:change={onInput}
-        on:keyup={onInput}
+        onchange={onInput}
+        onkeyup={onInput}
       />
     </div>
   {/each}

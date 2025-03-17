@@ -6,11 +6,15 @@
   import { roundToDecimals } from '$lib/utils/shared';
   import Avatar from './avatar/Avatar.svelte';
 
-  export let balanceRow: TokenBalanceRow;
-  export let amount: number = 0;
-  export let maxAmountCircles: number = -1;
+  interface Props {
+    balanceRow: TokenBalanceRow;
+    amount?: number;
+    maxAmountCircles?: number;
+  }
 
-  let inputElement: HTMLInputElement;
+  let { balanceRow, amount = $bindable(0), maxAmountCircles = -1 }: Props = $props();
+
+  let inputElement: HTMLInputElement = $state();
   let avatarWidth: string = '12rem';
 
   const maskOptions = {
@@ -103,7 +107,7 @@
   Balance: {maxAmountCircles >= 0
     ? roundToDecimals(maxAmountCircles)
     : roundToDecimals(balanceRow?.circles)}
-  <button class="btn btn-sm ml-4 font-normal" on:click={setMaxAmount}>
+  <button class="btn btn-sm ml-4 font-normal" onclick={setMaxAmount}>
     Use Max
   </button>
 </p>

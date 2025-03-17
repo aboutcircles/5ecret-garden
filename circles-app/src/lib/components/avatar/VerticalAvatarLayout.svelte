@@ -1,11 +1,18 @@
 <script lang="ts">
+  import { createBubbler } from 'svelte/legacy';
+
+  const bubble = createBubbler();
   import type { Profile } from '@circles-sdk/profiles';
 
-  export let profile: Profile | undefined;
+  interface Props {
+    profile: Profile | undefined;
+  }
+
+  let { profile }: Props = $props();
 </script>
 
 <div class="w-full flex flex-col items-center text-center">
-  <button class="cursor-pointer" on:click>
+  <button class="cursor-pointer" onclick={bubble('click')}>
     <img
       src={profile?.previewImageUrl}
       alt="User Icon"

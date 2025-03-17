@@ -10,7 +10,7 @@
     data: GroupRow[];
     next: () => Promise<boolean>;
     ended: boolean;
-  }>;
+  }> = $state();
   onMount(async () => {
     groups = await createGroups();
   });

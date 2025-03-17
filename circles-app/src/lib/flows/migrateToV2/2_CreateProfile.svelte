@@ -8,9 +8,13 @@
   import { getProfile } from '$lib/utils/profile';
   import { popupControls } from '$lib/stores/popUp';
 
-  export let context: MigrateToV2Context;
+  interface Props {
+    context: MigrateToV2Context;
+  }
 
-  let errors: string[] | undefined = undefined;
+  let { context = $bindable() }: Props = $props();
+
+  let errors: string[] | undefined = $state(undefined);
 
   const config = {
     maxImageSizeKB: parseInt('150'),
@@ -150,7 +154,7 @@
     <button
       type="submit"
       class="btn btn-primary text-white"
-      on:click={() => next()}
+      onclick={() => next()}
     >
       Next
     </button>

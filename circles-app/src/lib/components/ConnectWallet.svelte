@@ -1,10 +1,20 @@
 <script lang="ts">
-  export let imgUrl: string;
-  export let header: string;
-  export let desc: string;
-  export let route: string;
 
-  export let recommended: 'Connect' | 'Register' | undefined = undefined;
+  interface Props {
+    imgUrl: string;
+    header: string;
+    desc: string;
+    route: string;
+    recommended?: 'Connect' | 'Register' | undefined;
+  }
+
+  let {
+    imgUrl,
+    header,
+    desc,
+    route,
+    recommended = undefined
+  }: Props = $props();
 </script>
 
 <!-- TODO: Use connect wallet and connect safe as a same component -->

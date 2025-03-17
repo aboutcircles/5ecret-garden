@@ -10,11 +10,15 @@
   import { popupControls } from '$lib/stores/popUp';
   import type { TokenBalanceRow } from '@circles-sdk/data';
 
-  export let context: GroupMintFlowContext = {
+  interface Props {
+    context?: GroupMintFlowContext;
+  }
+
+  let { context = $bindable({
     selectedAddress: undefined,
     selectedAsset: {} as TokenBalanceRow,
     amount: undefined,
-  };
+  }) }: Props = $props();
 
   // Derived store that includes only group contacts
   let groupContacts:
@@ -23,7 +27,7 @@
         next: () => Promise<boolean>;
         ended: boolean;
       }>
-    | undefined = undefined;
+    | undefined = $state(undefined);
 
   onMount(async () => {
     // Create a derived store that filters contacts to only groups

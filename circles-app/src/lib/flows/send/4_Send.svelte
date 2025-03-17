@@ -9,7 +9,11 @@
   import { TransitiveTransferTokenAddress } from '$lib/pages/SelectAsset.svelte';
   import { popupControls } from '$lib/stores/popUp';
 
-  export let context: SendFlowContext;
+  interface Props {
+    context: SendFlowContext;
+  }
+
+  let { context }: Props = $props();
 
   function handleSend() {
     if (!$avatar) {

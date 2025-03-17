@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script lang="ts" module>
   import type { Profile } from '@circles-sdk/profiles';
   import type { Address } from '@circles-sdk/utils';
 
@@ -16,23 +16,33 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { shortenAddress } from '$lib/utils/shared';
 
-  export let store:
+
+  interface Props {
+    store?: 
     | Readable<{
         data: ContactList;
         next: () => Promise<boolean>;
         ended: boolean;
       }>
-    | undefined = undefined;
+    | undefined;
+    selectedAddress?: string;
+    addressListTitle?: string;
+    noResultsMessage?: string;
+    group?: boolean;
+  }
 
-  export let selectedAddress: string = '';
-  export let addressListTitle: string = 'Recent';
-  export let noResultsMessage: string = 'No recent addresses found';
-  export let group: boolean = false;
+  let {
+    store = undefined,
+    selectedAddress = $bindable(''),
+    addressListTitle = 'Recent',
+    noResultsMessage = 'No recent addresses found',
+    group = false
+  }: Props = $props();
 
   const eventDispatcher = createEventDispatcher();
 
-  $: data = $store?.data ?? {};
-  $: filteredAddresses = (() => {
+  let data = $derived($store?.data ?? {});
+  let filteredAddresses = $derived((() => {
     if (selectedAddress) {
       return Object.keys(data).filter(
         (address) =>
@@ -44,7 +54,7 @@
     } else {
       return Object.keys(data);
     }
-  })();
+  })());
 
   function handleSelect(address: string) {
     const profile = $store?.data[address]?.contactProfile;
@@ -60,7 +70,7 @@
   <p class="menu-title p-0">Selected Address:</p>
   <button
     class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg mt-2"
-    on:click={() => handleSelect(selectedAddress)}
+    onclick={() => handleSelect(selectedAddress)}
   >
     <Avatar
       address={selectedAddress}
@@ -80,7 +90,7 @@
         <div class="w-full pt-2">
           <button
             class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
-            on:click={() => handleSelect(address)}
+            onclick={() => handleSelect(address)}
           >
             <Avatar
               {address}

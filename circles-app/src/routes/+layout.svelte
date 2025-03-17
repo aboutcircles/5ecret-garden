@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script lang="ts" module>
   export type QuickAction = {
     name: string;
     icon: string;
@@ -7,6 +7,8 @@
 </script>
 
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import '../app.css';
 
   import DefaultHeader from '$lib/components/DefaultHeader.svelte';
@@ -24,13 +26,15 @@
   import { popupControls, popupState } from '$lib/stores/popUp';
   import PopUp from '$lib/components/PopUp.svelte';
   import ManageGroupMembers from '$lib/flows/manageGroupMembers/1_manageGroupMembers.svelte';
+  interface Props {
+    children?: import('svelte').Snippet;
+  }
 
-  let quickAction: QuickAction | undefined;
+  let { children }: Props = $props();
 
-  let quickActionsMap: Record<string, QuickAction | undefined>;
-  let menuItems: { name: string; link: string }[] = [];
+  let quickAction: QuickAction | undefined = $derived(quickActionsMap[$page.route.id ?? ''] || undefined);
 
-  $: quickActionsMap = {
+  let quickActionsMap: Record<string, QuickAction | undefined> = $derived({
     '/dashboard': {
       name: 'Send',
       icon: '/send.svg',
@@ -88,7 +92,10 @@
         clearSession();
       },
     },
-  };
+  });
+  let menuItems: { name: string; link: string }[] = $state([]);
+
+  
 
   onMount(async () => {
     if ($page.route.id === '/' || $page.route.id === '/connect-wallet') {
@@ -98,16 +105,18 @@
     }
   });
 
-  $: menuItems = $avatar
-    ? [
-        { name: 'Dashboard', link: '/dashboard' },
-        { name: 'Contacts', link: '/contacts' },
-        ...(!$isGroup ? [{ name: 'Groups', link: '/groups' }] : []),
-        { name: 'Settings', link: '/settings' },
-      ]
-    : [];
+  run(() => {
+    menuItems = $avatar
+      ? [
+          { name: 'Dashboard', link: '/dashboard' },
+          { name: 'Contacts', link: '/contacts' },
+          ...(!$isGroup ? [{ name: 'Groups', link: '/groups' }] : []),
+          { name: 'Settings', link: '/settings' },
+        ]
+      : [];
+  });
 
-  $: quickAction = quickActionsMap[$page.route.id ?? ''] || undefined;
+  
 </script>
 
 {#if $avatar}
@@ -133,16 +142,16 @@
   {/if}
 
   <div class="w-full flex flex-col items-center">
-    <slot></slot>
+    {@render children?.()}
   </div>
 
   <div
     role="button"
     tabindex="0"
     class={`fixed top-0 left-0 w-full h-full bg-black/50 z-10 ${$popupState.content ? 'opacity-100' : 'opacity-0 hidden'} transition duration-300 ease-in-out`}
-    on:mousedown={() => popupControls.close()}
-    on:touchstart={() => popupControls.close()}
-  />
+    onmousedown={() => popupControls.close()}
+    ontouchstart={() => popupControls.close()}
+></div>
   <PopUp />
 </main>
 {#if $tasks.length > 0}

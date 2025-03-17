@@ -1,14 +1,26 @@
 <script lang="ts">
+  import { createBubbler } from 'svelte/legacy';
+
+  const bubble = createBubbler();
   import type { Profile } from '@circles-sdk/profiles';
 
-  export let profile: Profile | undefined;
-  export let pictureOverlayUrl: string | undefined = undefined;
-  export let topInfo: string | undefined = undefined;
-  export let bottomInfo: string | undefined = undefined;
+  interface Props {
+    profile: Profile | undefined;
+    pictureOverlayUrl?: string | undefined;
+    topInfo?: string | undefined;
+    bottomInfo?: string | undefined;
+  }
+
+  let {
+    profile,
+    pictureOverlayUrl = undefined,
+    topInfo = undefined,
+    bottomInfo = undefined
+  }: Props = $props();
 </script>
 
 <div class="inline-flex items-center">
-  <button class="cursor-pointer" on:click>
+  <button class="cursor-pointer" onclick={bubble('click')}>
     {#if pictureOverlayUrl}
       <div class="indicator">
         <img

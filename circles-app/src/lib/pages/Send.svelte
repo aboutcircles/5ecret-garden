@@ -6,17 +6,28 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { TransitiveTransferTokenAddress } from './SelectAsset.svelte'
 
-  export let receiverAddress: string;
-  export let asset: TokenBalanceRow;
-  export let amount: number = 0;
-  export let textButton: string;
-  export let data: string | undefined;
-  export let dataType: 'hex' | 'utf-8' | undefined;
+  interface Props {
+    receiverAddress: string;
+    asset: TokenBalanceRow;
+    amount?: number;
+    textButton: string;
+    data: string | undefined;
+    dataType: 'hex' | 'utf-8' | undefined;
+  }
+
+  let {
+    receiverAddress,
+    asset,
+    amount = 0,
+    textButton,
+    data,
+    dataType
+  }: Props = $props();
 
   const eventDispatcher = createEventDispatcher();
 
   // Helper: are we using the transitive-transfer token?
-  $: usesTTT = asset.tokenAddress === TransitiveTransferTokenAddress;
+  let usesTTT = $derived(asset.tokenAddress === TransitiveTransferTokenAddress);
 </script>
 
 <!-- Receiver Information -->
@@ -66,7 +77,7 @@
     <button
       type="submit"
       class="btn btn-primary text-white max-sm:w-full"
-      on:click={() => eventDispatcher('select', { amount: amount })}
+      onclick={() => eventDispatcher('select', { amount: amount })}
     >
       {textButton}
     </button>

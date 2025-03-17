@@ -15,24 +15,28 @@
   import { ethers } from 'ethers';
   import { popupControls } from '$lib/stores/popUp';
 
-  export let context: SendFlowContext;
+  interface Props {
+    context: SendFlowContext;
+  }
 
-  let deadBalances: TokenBalanceRow[] = [];
-  let path: MaxFlowResponse;
+  let { context = $bindable() }: Props = $props();
+
+  let deadBalances: TokenBalanceRow[] = $state([]);
+  let path: MaxFlowResponse = $state();
 
   let showUnusedBalances = writable(false);
-  let showPathsSection = false;    // True if pathfinding succeeds
-  let pathfindingFailed = false;   // True if pathfinding fails
-  let maxAmountCircles = -1;
+  let showPathsSection = $state(false);    // True if pathfinding succeeds
+  let pathfindingFailed = $state(false);   // True if pathfinding fails
+  let maxAmountCircles = $state(-1);
 
   // Controls displaying the data interface.
   // We'll override this in onMount if context.data is present.
-  let showDataInput = false;
+  let showDataInput = $state(false);
 
-  let isLoadingPathfinding = false; // Indicates pathfinding is in progress
+  let isLoadingPathfinding = $state(false); // Indicates pathfinding is in progress
 
   // Helper: are we using the transitive-transfer token?
-  $: usesTTT = context.selectedAsset?.tokenAddress === TransitiveTransferTokenAddress;
+  let usesTTT = $derived(context.selectedAsset?.tokenAddress === TransitiveTransferTokenAddress);
 
   onMount(async () => {
     // If context.data is already set, expand the "Attach data" area by default
@@ -155,14 +159,14 @@
         <button
           type="button"
           class="btn btn-outline max-sm:w-full rounded-md mt-8 md:mt-2"
-          on:click={toggleDataInput}
+          onclick={toggleDataInput}
         >
           Attach data
         </button>
         <button
           type="submit"
           class="btn btn-primary max-sm:w-full rounded-md text-white mt-8 md:mt-2"
-          on:click={handleSelect}
+          onclick={handleSelect}
         >
           Continue
         </button>
@@ -203,7 +207,7 @@
           rows="4"
           placeholder="Enter data here"
           bind:value={context.data}
-        />
+></textarea>
       </div>
     {/if}
   {/if}
@@ -214,7 +218,7 @@
       <button
         type="submit"
         class="btn btn-primary max-sm:w-full rounded-md text-white mt-8 md:mt-2"
-        on:click={handleSelect}
+        onclick={handleSelect}
       >
         Continue
       </button>
@@ -235,7 +239,7 @@
       <div class="mt-4 mb-4">
         <h2 class="text-lg font-bold flex justify-between items-center">
           Unused balances:
-          <button on:click={toggleUnusedBalances} class="btn btn-sm btn-outline">
+          <button onclick={toggleUnusedBalances} class="btn btn-sm btn-outline">
             {#if $showUnusedBalances}
               Hide
             {:else}

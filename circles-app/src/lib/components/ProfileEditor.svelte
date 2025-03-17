@@ -3,14 +3,18 @@
   import ImageUpload from '$lib/components/ImageUpload.svelte';
   import type { Profile } from '@circles-sdk/profiles';
 
-  export let profile: Profile = {
+
+  interface Props {
+    profile?: Profile;
+    showCustomizableFields?: boolean;
+  }
+
+  let { profile = $bindable({
     name: '',
     description: '',
     previewImageUrl: '',
     imageUrl: '',
-  };
-
-  export let showCustomizableFields: boolean = true;
+  }), showCustomizableFields = true }: Props = $props();
 
   const onNewImage = (e: any) => {
     profile.previewImageUrl = e.detail.dataUrl;

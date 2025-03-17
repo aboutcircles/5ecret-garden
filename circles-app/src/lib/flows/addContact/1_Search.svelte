@@ -8,9 +8,9 @@
   import YouAlreadyTrust from './2_YouAlreadyTrust.svelte';
   import type { AddContactFlowContext } from './context';
 
-  let context: AddContactFlowContext = {
+  let context: AddContactFlowContext = $state({
     selectedAddress: '',
-  };
+  });
 
   function handleInvite(event: CustomEvent<{ avatar: string }>) {
     console.log('Invite');

@@ -2,7 +2,7 @@
   import ConnectWallet from '$lib/components/ConnectWallet.svelte';
   import { onMount } from 'svelte';
 
-  let hasBrowserWallet = false;
+  let hasBrowserWallet = $state(false);
   onMount(() => {
     hasBrowserWallet = typeof (<any>window).ethereum !== 'undefined';
   });

@@ -1,3 +1,36 @@
+<!-- @migration-task Error while migrating Svelte code: can't migrate `$: filteredStore = derived(contacts, ($contacts) => {
+    const filteredData = Object.entries($contacts.data)
+      .filter(
+        ([_, contact]) =>
+          !filterVersion || contact?.avatarInfo?.version === filterVersion
+      )
+      .sort((a, b) => {
+        const aRelation = a[1].row.relation;
+        const bRelation = b[1].row.relation;
+        if (aRelation === 'mutuallyTrusts' && bRelation !== 'mutuallyTrusts')
+          return -1;
+        if (aRelation === 'trusts' && bRelation === 'trustedBy') return -1;
+        if (aRelation === bRelation) return 0;
+        if (bRelation === 'mutuallyTrusts' && aRelation !== 'mutuallyTrusts')
+          return 1;
+        if (bRelation === 'trusts' && aRelation === 'trustedBy') return 1;
+        return 0;
+      })
+      .map(([address, contact]) => ({
+        blockNumber: Date.now(),
+        transactionIndex: 0,
+        logIndex: 0,
+        address,
+        contact,
+      }));
+
+    return {
+      data: filteredData,
+      next: $contacts.next,
+      ended: $contacts.ended,
+    };
+  });` to `$derived` because there's a variable named derived.
+     Rename the variable and try again or migrate by hand. -->
 <script lang="ts">
   import { contacts } from '$lib/stores/contacts';
   import { onMount } from 'svelte';

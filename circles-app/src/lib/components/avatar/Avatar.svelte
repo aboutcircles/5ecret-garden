@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script lang="ts" module>
   import type { Profile } from '@circles-sdk/profiles';
   import { shortenAddress } from '$lib/utils/shared';
   import { ethers } from 'ethers';
@@ -82,6 +82,8 @@
 </script>
 
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import ProfilePage from '$lib/pages/Profile.svelte';
   import { getProfile } from '$lib/utils/profile';
   import { onMount, type SvelteComponent } from 'svelte';
@@ -92,22 +94,33 @@
     type PopupContentDefinition,
   } from '$lib/stores/popUp';
 
-  export let address: string;
-  export let clickable: boolean = true;
-  export let view: 'horizontal' | 'vertical';
-  export let pictureOverlayUrl: string | undefined = undefined;
-  export let topInfo: string | undefined = undefined;
-  export let bottomInfo: string | undefined = undefined;
+  interface Props {
+    address: string;
+    clickable?: boolean;
+    view: 'horizontal' | 'vertical';
+    pictureOverlayUrl?: string | undefined;
+    topInfo?: string | undefined;
+    bottomInfo?: string | undefined;
+  }
 
-  let profile: Profile | undefined;
+  let {
+    address,
+    clickable = true,
+    view,
+    pictureOverlayUrl = undefined,
+    topInfo = undefined,
+    bottomInfo = undefined
+  }: Props = $props();
 
-  $: {
+  let profile: Profile | undefined = $state();
+
+  run(() => {
     if (address) {
       getProfile(address).then((newProfile) => {
         profile = newProfile;
       });
     }
-  }
+  });
 
   function openAvatar() {
     if (!clickable) {

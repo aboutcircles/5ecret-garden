@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script lang="ts" module>
   import { get } from 'svelte/store';
   import { totalCirclesBalance } from '$lib/stores/totalCirclesBalance';
 
@@ -65,13 +65,17 @@
   } from '$lib/utils/shared';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
 
-  export let balances: Readable<{
+  interface Props {
+    balances: Readable<{
     data: TokenBalanceRow[];
     next: () => Promise<boolean>;
     ended: boolean;
   }>;
-  export let selectedAsset: TokenBalanceRow | undefined = undefined;
-  export let showTransitive: boolean = true;
+    selectedAsset?: TokenBalanceRow | undefined;
+    showTransitive?: boolean;
+  }
+
+  let { balances, selectedAsset = $bindable(undefined), showTransitive = true }: Props = $props();
 
   const eventDispatcher = createEventDispatcher();
 
@@ -84,7 +88,7 @@
 {#if showTransitive}
   <button
     class="w-full md:p-3 mt-4 border-b md:border md:rounded-lg"
-    on:click={() => handleSelect(transitiveTransfer())}
+    onclick={() => handleSelect(transitiveTransfer())}
   >
     <BalanceRow balance={transitiveTransfer()} />
   </button>
@@ -99,7 +103,7 @@
     {#each $balances.data as balance (balance.tokenAddress)}
       <button
         class="flex w-full items-center justify-between p-4 bg-base-100 hover:bg-base-200 rounded-lg"
-        on:click={() => handleSelect(balance)}
+        onclick={() => handleSelect(balance)}
       >
         <Avatar
           address={balance.tokenOwner}

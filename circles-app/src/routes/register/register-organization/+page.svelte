@@ -6,12 +6,12 @@
   import type { Avatar } from '@circles-sdk/sdk';
   import type { Profile } from '@circles-sdk/profiles';
 
-  let profile: Profile = {
+  let profile: Profile = $state({
     name: '',
     description: '',
     previewImageUrl: '',
     imageUrl: undefined,
-  };
+  });
 
   async function registerOrganization() {
     if (!$circles) {

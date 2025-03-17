@@ -3,21 +3,33 @@
   import { popupControls } from '$lib/stores/popUp';
   import type { QuickAction } from '../../routes/+layout.svelte';
 
-  export let text: string | undefined = undefined;
-  export let address: string | undefined = undefined;
-  export let logo: string | undefined = undefined;
 
-  export let homeLink = '/';
 
-  export let menuItems: {
+
+
+  interface Props {
+    text?: string | undefined;
+    address?: string | undefined;
+    logo?: string | undefined;
+    homeLink?: string;
+    menuItems?: {
     name: string;
     link: string;
-  }[] = [];
+  }[];
+    quickAction: QuickAction | undefined;
+    route: string | null;
+  }
 
-  export let quickAction: QuickAction | undefined;
-
-  export let route: string | null;
-  let isDropdownOpen = false;
+  let {
+    text = undefined,
+    address = undefined,
+    logo = undefined,
+    homeLink = '/',
+    menuItems = [],
+    quickAction,
+    route
+  }: Props = $props();
+  let isDropdownOpen = $state(false);
 </script>
 
 <div
@@ -29,7 +41,7 @@
         <button
           tabindex="0"
           class="btn btn-ghost btn-square lg:hidden -ml-4"
-          on:click={() => (isDropdownOpen = true)}
+          onclick={() => (isDropdownOpen = true)}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -61,7 +73,7 @@
               <button
                 type="button"
                 class="btn btn-ghost btn-square flex rounded-lg p-0"
-                on:click={() => (isDropdownOpen = false)}
+                onclick={() => (isDropdownOpen = false)}
               >
                 <img src="/close.svg" alt="Close" class="w-4 h-4" />
               </button>
@@ -80,7 +92,7 @@
             {#if text}
               <button
                 class="flex items-center hover:scale-105 transition-transform duration-300"
-                on:click={(e) => {
+                onclick={(e) => {
                   isDropdownOpen = false;
                   popupControls.open({
                     component: SettingProfile,
@@ -135,7 +147,7 @@
     {#if text}
       <button
         class="hidden md:flex items-center hover:scale-105 transition-transform duration-300"
-        on:click={(e) => {
+        onclick={(e) => {
           popupControls.open({
             component: SettingProfile,
             title: '',
@@ -159,7 +171,7 @@
       <button
         class="btn btn-primary text-white"
         disabled={quickAction.action === undefined}
-        on:click={() => {
+        onclick={() => {
           if (quickAction.action) {
             quickAction.action();
           }

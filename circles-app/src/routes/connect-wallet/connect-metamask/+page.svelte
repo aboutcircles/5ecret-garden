@@ -12,8 +12,8 @@
 
   const GNOSIS_CHAIN_ID_DEC = 100n; // Decimal format for BrowserProvider
 
-  let avatarInfo: AvatarRow | undefined;
-  let network: Network;
+  let avatarInfo: AvatarRow | undefined = $state();
+  let network: Network = $state();
 
   //
   // Connects the wallet and initializes the Circles SDK.

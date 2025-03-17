@@ -7,9 +7,13 @@
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import { circlesBalances } from '$lib/stores/circlesBalances';
   import { popupControls } from '$lib/stores/popUp';
-  export let context: SendFlowContext;
+  interface Props {
+    context: SendFlowContext;
+  }
 
-  let selectedAsset: TokenBalanceRow | undefined = undefined;
+  let { context = $bindable() }: Props = $props();
+
+  let selectedAsset: TokenBalanceRow | undefined = $state(undefined);
 
   onMount(() => {
     if (context?.selectedAsset) {

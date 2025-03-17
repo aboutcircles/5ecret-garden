@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import { goto } from '$app/navigation';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import { avatar } from '$lib/stores/avatar';
@@ -7,14 +9,17 @@
   import type { Profile } from '@circles-sdk/profiles';
   import { page } from '$app/stores';
 
-  let profile: Profile = {
+  let profile: Profile = $state({
     name: '',
     description: '',
     previewImageUrl: '',
     imageUrl: undefined,
-  };
+  });
 
-  $: inviter = $page.params.inviter;
+  let inviter;
+  run(() => {
+    inviter = $page.params.inviter;
+  });
 
   async function registerHuman() {
     if (!$circles) {

@@ -10,12 +10,16 @@
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import SearchAvatar from '$lib/pages/SearchAvatar.svelte';
 
-  export let context: SendFlowContext = {
+  interface Props {
+    context?: SendFlowContext;
+  }
+
+  let { context = $bindable({
     selectedAddress: '',
     transitiveOnly: false,
     selectedAsset: {} as TokenBalanceRow,
     amount: undefined,
-  };
+  }) }: Props = $props();
   let allowAssetSelection: boolean = false;
 
   async function handleSelect(event: CustomEvent<{ avatar: string }>) {

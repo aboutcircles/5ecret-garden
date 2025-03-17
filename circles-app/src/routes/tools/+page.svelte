@@ -6,9 +6,9 @@
   let mintPolicyAddress: string =
     $circles?.circlesConfig.baseGroupMintPolicy ?? '';
 
-  let fromAddress: string = '';
-  let toAddress: string = '';
-  let result: any;
+  let fromAddress: string = $state('');
+  let toAddress: string = $state('');
+  let result: any = $state();
 
   async function calculatePath() {
     if (!$circles) {
