@@ -10,7 +10,7 @@
       throw new Error('Wallet not connected ($circles is undefined)');
     }
 
-    $avatar = <Avatar>await $circles.registerHuman();
+    $avatar = await $circles.registerHuman() as Avatar;
 
     await goto('/dashboard');
   }

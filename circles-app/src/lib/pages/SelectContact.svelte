@@ -58,7 +58,7 @@
 
   function handleSelect(address: string) {
     const profile = $store?.data[address]?.contactProfile;
-    eventDispatcher('select', <SelectedEvent>{ address, profile });
+    eventDispatcher('select', { address, profile });
   }
 </script>
 

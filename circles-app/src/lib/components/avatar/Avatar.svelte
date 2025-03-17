@@ -34,7 +34,7 @@
 
       const profiles: (Profile & { safeAddress: string })[] =
         requestResultJson.data.map((o: any) => {
-          return <Profile & { safeAddress: string }>{
+          return {
             name: o.username,
             previewImageUrl: o.avatarUrl,
             safeAddress: o.safeAddress.toLowerCase(),
@@ -86,7 +86,7 @@
 
   import ProfilePage from '$lib/pages/Profile.svelte';
   import { getProfile } from '$lib/utils/profile';
-  import { onMount, type SvelteComponent } from 'svelte';
+  import { type SvelteComponent } from 'svelte';
   import HorizontalAvatarLayout from './HorizontalAvatarLayout.svelte';
   import VerticalAvatarLayout from './VerticalAvatarLayout.svelte';
   import {

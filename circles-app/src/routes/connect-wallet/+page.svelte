@@ -4,7 +4,7 @@
 
   let hasBrowserWallet = $state(false);
   onMount(() => {
-    hasBrowserWallet = typeof (<any>window).ethereum !== 'undefined';
+    hasBrowserWallet = typeof (window as any).ethereum !== 'undefined';
   });
 </script>
 

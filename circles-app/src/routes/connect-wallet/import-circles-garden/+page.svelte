@@ -26,12 +26,12 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
       return;
     }
 
-    const wallet = new PrivateKeyContractRunner(provider, privateKey);
-    await wallet.init();
+    const walletRunner = new PrivateKeyContractRunner(provider, privateKey);
+    await walletRunner.init();
 
     localStorage.setItem('privateKey', privateKey);
 
-    $wallet = wallet;
+    $wallet = walletRunner;
 
     // Initialize the Circles SDK and set it as $circles to make it globally available.
     $circles = new Sdk($wallet!, gnosisConfig);
@@ -54,10 +54,10 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
 
     if (localStorage.getItem('privateKey')) {
       privateKey = localStorage.getItem('privateKey')!;
-      const wallet = new PrivateKeyContractRunner(provider, privateKey);
-      await wallet.init();
+      const walletRunner = new PrivateKeyContractRunner(provider, privateKey);
+      await walletRunner.init();
 
-      $wallet = wallet;
+      $wallet = walletRunner;
 
       $circles = new Sdk($wallet!, gnosisConfig);
 

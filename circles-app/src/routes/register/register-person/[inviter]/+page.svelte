@@ -29,7 +29,7 @@
       throw new Error('Inviter not set');
     }
 
-    $avatar = <Avatar>await $circles.acceptInvitation(inviter, profile);
+    $avatar = await $circles.acceptInvitation(inviter, profile) as Avatar;
 
     await goto('/dashboard');
   }

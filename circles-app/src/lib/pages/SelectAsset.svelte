@@ -31,7 +31,7 @@
   }
 
   export const transitiveTransfer = () => {
-    return <TokenBalanceRow>{
+    return {
       tokenOwner: TransitiveTransferTokenOwner,
       tokenType: 'TransitiveTransfer',
       circles: get(totalCirclesBalance),

@@ -35,10 +35,10 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
   }
 
   async function setup() {
-    const wallet = new BrowserProviderContractRunner();
-    await wallet.init();
+    const walletRunner = new BrowserProviderContractRunner();
+    await walletRunner.init();
 
-    $wallet = wallet;
+    $wallet = walletRunner;
 
     network = await $wallet.provider?.getNetwork();
 

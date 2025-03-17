@@ -39,8 +39,7 @@
 
   async function stopV1() {
     const v1TokenAddress = $avatar?.avatarInfo?.v1Token;
-    const wallet = $wallet!;
-    if (!wallet || !v1TokenAddress) {
+    if (!$wallet || !v1TokenAddress) {
       throw new Error('Wallet or v1 token not available');
     }
 
@@ -48,7 +47,7 @@
       const selector = ethers
         .keccak256(ethers.toUtf8Bytes('stop()'))
         .slice(0, 10);
-      const tx = await wallet.sendTransaction!({
+      const tx = await $wallet.sendTransaction!({
         to: v1TokenAddress,
         data: selector,
         value: 0n,
