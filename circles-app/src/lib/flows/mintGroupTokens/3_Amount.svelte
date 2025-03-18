@@ -12,8 +12,6 @@
   let { context = $bindable() }: Props = $props();
 
   function handleSelect() {
-    console.log('Selected amount:', context.amount);
-
     popupControls.open({
       title: 'Mint',
       component: Mint,
@@ -29,7 +27,6 @@
   <SelectAmount
     asset={context.selectedAsset}
     bind:amount={context.amount}
-    on:select={handleSelect}
   />
   <!-- Action Buttons -->
   <div class="flex justify-end space-x-2 mt-6">

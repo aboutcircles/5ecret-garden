@@ -133,7 +133,6 @@
     {maxAmountCircles}
     asset={context.selectedAsset}
     bind:amount={context.amount}
-    on:select={handleSelect}
   />
 
   <!-- Loading indicator while pathfinding is in progress -->
