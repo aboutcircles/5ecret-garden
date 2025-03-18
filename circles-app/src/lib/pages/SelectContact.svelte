@@ -25,7 +25,7 @@
         ended: boolean;
       }>
     | undefined;
-    selectedAddress?: string;
+    selectedAddress?: Address;
     addressListTitle?: string;
     noResultsMessage?: string;
     group?: boolean;
@@ -33,7 +33,7 @@
 
   let {
     store = undefined,
-    selectedAddress = $bindable(''),
+    selectedAddress = $bindable('0x0'),
     addressListTitle = 'Recent',
     noResultsMessage = 'No recent addresses found',
     group = false

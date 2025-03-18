@@ -1,18 +1,21 @@
 <script lang="ts">
   import { ethers } from 'ethers6';
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { onMount } from 'svelte';
   import AddressInput from '$lib/components/AddressInput.svelte';
   import { type Profile, Profiles } from '@circles-sdk/profiles';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { getCirclesConfig } from '$lib/utils/helpers';
   import { wallet } from '$lib/stores/wallet';
+  import type { Address } from '@circles-sdk/utils';
 
   interface Props {
-    selectedAddress?: string;
+    selectedAddress?: Address;
     searchType?: 'send' | 'group' | 'contact';
+    oninvite?: (avatar: `0x${string}`) => void;
+    onselect?: (avatar: `0x${string}`) => void;
   }
 
-  let { selectedAddress = $bindable(''), searchType = 'send' }: Props = $props();
+  let { selectedAddress = $bindable(''), searchType = 'send', oninvite, onselect }: Props = $props();
   let lastAddress: string = $state('');
   let result: Profile[] = $state([]);
   let profiles: Profiles | undefined = $state();
@@ -74,8 +77,6 @@
     }
   }
 
-  const eventDispatcher = createEventDispatcher();
-
   $effect(() => {
     if (selectedAddress && selectedAddress !== lastAddress) {
       lastAddress = selectedAddress;
@@ -113,8 +114,7 @@
         <div class="w-full pt-2">
           <button
             class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
-            onclick={() =>
-              eventDispatcher('select', { avatar: profile.address })}
+            onclick={() => onselect?.(profile.address)}
           >
             <Avatar
               address={profile.address}
@@ -132,8 +132,7 @@
         {#if ethers.isAddress(selectedAddress) && searchType === 'contact'}
           <button
             class="btn mt-6"
-            onclick={() =>
-              eventDispatcher('invite', { avatar: selectedAddress })}
+            onclick={() => oninvite?.(selectedAddress)}
             >Invite {selectedAddress}</button
           >
         {:else}
