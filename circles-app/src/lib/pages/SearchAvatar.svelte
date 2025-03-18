@@ -15,7 +15,7 @@
     onselect?: (avatar: `0x${string}`) => void;
   }
 
-  let { selectedAddress = $bindable(''), searchType = 'send', oninvite, onselect }: Props = $props();
+  let { selectedAddress = $bindable('0x0'), searchType = 'send', oninvite, onselect }: Props = $props();
   let lastAddress: string = $state('');
   let result: Profile[] = $state([]);
   let profiles: Profiles | undefined = $state();

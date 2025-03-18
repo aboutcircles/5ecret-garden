@@ -78,9 +78,8 @@
     loadSafesAndProfile();
   });
 
-  async function handleSafeCreated(event: CustomEvent) {
-    const newSafeAddress = event.detail.address;
-    console.log('New safe created:', newSafeAddress);
+  async function onsafecreated(address: Address) {
+    const newSafeAddress = address;
     safes = [...safes, newSafeAddress];
   }
 </script>
@@ -108,7 +107,7 @@
     {/each}
 
     <div class="text-center">
-      <CreateSafe on:safecreated={handleSafeCreated} />
+      <CreateSafe {onsafecreated} />
     </div>
   {:else}
     <WalletLoader name="Safe" />

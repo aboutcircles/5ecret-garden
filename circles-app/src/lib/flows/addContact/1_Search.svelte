@@ -10,11 +10,10 @@
   import type { Address } from '@circles-sdk/utils';
 
   let context: AddContactFlowContext = $state({
-    selectedAddress: '',
+    selectedAddress: '0x0',
   });
 
-  function handleInvite(avatar: Address) {
-    console.log('Invite');
+  function oninvite(avatar: Address) {
     popupControls.open({
       title: 'Invite someone',
       component: Invite,
@@ -24,7 +23,7 @@
     });
   }
 
-  async function handleSelect(avatar: Address) {
+  async function onselect(avatar: Address) {
     context.selectedAddress = avatar;
     const existingContact = $contacts.data[context.selectedAddress];
 
@@ -46,7 +45,7 @@
         title: 'Trust',
         component: Trust,
         props: {
-          address: event.detail.avatar,
+          address: avatar,
         },
       });
     }
@@ -57,8 +56,8 @@
   <p class="text-2xl font-bold">Add Contact</p>
   <SearchAvatar
     selectedAddress={context.selectedAddress}
-    oninvite={handleInvite}
-    onselect={handleSelect}
+    {oninvite}
+    {onselect}
     searchType="contact"
   />
 </FlowDecoration>

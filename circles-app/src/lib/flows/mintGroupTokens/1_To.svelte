@@ -1,5 +1,7 @@
 <script lang="ts">
-  import SelectContact, { type SelectedEvent } from '$lib/pages/SelectContact.svelte';
+  import SelectContact, {
+    type SelectedEvent,
+  } from '$lib/pages/SelectContact.svelte';
   import type { ContactList } from '$lib/stores/contacts';
   import { onMount } from 'svelte';
   import { derived, type Readable } from 'svelte/store';
@@ -9,16 +11,19 @@
   import { contacts } from '$lib/stores/contacts';
   import { popupControls } from '$lib/stores/popUp';
   import type { TokenBalanceRow } from '@circles-sdk/data';
+  import type { Address } from '@circles-sdk/utils';
 
   interface Props {
     context?: GroupMintFlowContext;
   }
 
-  let { context = $bindable({
-    selectedAddress: undefined,
-    selectedAsset: {} as TokenBalanceRow,
-    amount: undefined,
-  }) }: Props = $props();
+  let {
+    context = $bindable({
+      selectedAddress: undefined,
+      selectedAsset: {} as TokenBalanceRow,
+      amount: undefined,
+    }),
+  }: Props = $props();
 
   // Derived store that includes only group contacts
   let groupContacts:
@@ -43,11 +48,9 @@
     }));
   });
 
-  function handleSelect(
-    event: CustomEvent<SelectedEvent>
-  ) {
-    console.log('Selected address', event.detail.address);
-    context.selectedAddress = event.detail.address;
+  function onselect(address: Address) {
+    console.log('Selected address', address);
+    context.selectedAddress = address;
 
     popupControls.open({
       title: 'Select Asset',
@@ -71,7 +74,7 @@
       noResultsMessage="No groups found"
       selectedAddress={context?.selectedAddress}
       group={true}
-      on:select={handleSelect}
+      {onselect}
     />
   {:else}
     <p>Loading contacts...</p>

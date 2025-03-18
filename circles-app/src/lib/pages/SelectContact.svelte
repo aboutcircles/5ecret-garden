@@ -9,7 +9,6 @@
 </script>
 
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
   import type { ContactList } from '$lib/stores/contacts';
   import type { Readable } from 'svelte/store';
   import AddressInput from '$lib/components/AddressInput.svelte';
@@ -29,6 +28,7 @@
     addressListTitle?: string;
     noResultsMessage?: string;
     group?: boolean;
+    onselect?: (address: Address) => void;
   }
 
   let {
@@ -36,10 +36,9 @@
     selectedAddress = $bindable('0x0'),
     addressListTitle = 'Recent',
     noResultsMessage = 'No recent addresses found',
-    group = false
+    group = false,
+    onselect
   }: Props = $props();
-
-  const eventDispatcher = createEventDispatcher();
 
   let data = $derived($store?.data ?? {});
   let filteredAddresses = $derived((() => {
@@ -56,9 +55,9 @@
     }
   })());
 
-  function handleSelect(address: string) {
+  function handleSelect(address: Address) {
     const profile = $store?.data[address]?.contactProfile;
-    eventDispatcher('select', { address, profile });
+    onselect?.(address);
   }
 </script>
 

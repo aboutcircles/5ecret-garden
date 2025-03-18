@@ -8,28 +8,27 @@
   import Papa from 'papaparse';
   import { avatar } from '$lib/stores/avatar';
   import { ethers } from 'ethers6';
+  import type { Address } from '@circles-sdk/utils';
 
   let context: AddContactFlowContext = $state({
-    selectedAddress: '',
+    selectedAddress: '0x0',
   });
 
   let addressesArray: string[] = $state([]);
   let errorMessage = $state('');
   // TODO: Remove this?
-  function handleInvite(event: CustomEvent<{ avatar: string }>) {
-    console.log('Invite');
+  function oninvite(avatar: Address) {
     popupControls.open({
       title: 'Invite someone',
       component: Invite,
       props: {
-        address: event.detail.avatar,
+        address: avatar,
       },
     });
   }
 
   let selectedAddresses = $state('');
-  async function handleSelect(event: CustomEvent<{ avatar: string }>) {
-    const address = event.detail.avatar;
+  async function onselect(avatar: Address) {
     // const existingContact = $contacts.data[address];
 
     // if (!(
@@ -37,7 +36,7 @@
     //   (existingContact.row.relation === 'trusts' ||
     //     existingContact.row.relation === 'mutuallyTrusts')
     // )) {
-    const newAddress = event.detail.avatar;
+    const newAddress = avatar;
     const addressList = selectedAddresses.split(',').map((addr) => addr.trim());
     if (!addressList.includes(newAddress)) {
       selectedAddresses = selectedAddresses
@@ -45,7 +44,7 @@
         : newAddress;
       // }
       addressesArray = [...addressesArray, newAddress];
-      context.selectedAddress = '';
+      context.selectedAddress = '0x0';
     }
   }
 
@@ -155,12 +154,16 @@
     rows="3"
     class="w-full p-2 mb-4 border rounded resize-y"
     oninput={handleAddressesChange}
-></textarea>
+  ></textarea>
   <div class="flex flex-row gap-x-2">
     <div class="flex flex-col gap-x-2">
       <div class="flex flex-row gap-x-2">
-        <ActionButton action={() => handleAddMembers(selectedAddresses, false)}>Add</ActionButton>
-        <ActionButton action={() => handleAddMembers(selectedAddresses, true)}>Remove</ActionButton>
+        <ActionButton action={() => handleAddMembers(selectedAddresses, false)}
+          >Add</ActionButton
+        >
+        <ActionButton action={() => handleAddMembers(selectedAddresses, true)}
+          >Remove</ActionButton
+        >
       </div>
       <p class="text-sm text-red-500 h-6">{errorMessage}</p>
     </div>
@@ -180,8 +183,8 @@
   <p class="text-xl font-bold mt-4">Search for members</p>
   <SearchAvatar
     selectedAddress={context.selectedAddress}
-    on:invite={handleInvite}
-    on:select={handleSelect}
+    {oninvite}
+    {onselect}
     searchType="contact"
   />
 </FlowDecoration>
