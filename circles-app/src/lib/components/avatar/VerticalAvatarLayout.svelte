@@ -6,13 +6,14 @@
 
   interface Props {
     profile: Profile | undefined;
+    onclick?: () => void | undefined;
   }
 
-  let { profile }: Props = $props();
+  let { profile, onclick }: Props = $props();
 </script>
 
 <div class="w-full flex flex-col items-center text-center">
-  <button class="cursor-pointer" onclick={bubble('click')}>
+  <button class="cursor-pointer" {onclick}>
     <img
       src={profile?.previewImageUrl}
       alt="User Icon"

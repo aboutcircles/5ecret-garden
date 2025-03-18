@@ -148,11 +148,11 @@
 {:else if view === 'horizontal'}
   <HorizontalAvatarLayout
     {pictureOverlayUrl}
-    on:click={openAvatar}
+    onclick={openAvatar}
     {profile}
     {topInfo}
     {bottomInfo}
   />
 {:else}
-  <VerticalAvatarLayout on:click={openAvatar} {profile} />
+  <VerticalAvatarLayout onclick={openAvatar} {profile} />
 {/if}

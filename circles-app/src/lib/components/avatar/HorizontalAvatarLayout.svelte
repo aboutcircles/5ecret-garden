@@ -9,18 +9,20 @@
     pictureOverlayUrl?: string | undefined;
     topInfo?: string | undefined;
     bottomInfo?: string | undefined;
+    onclick?: () => void | undefined;
   }
 
   let {
     profile,
     pictureOverlayUrl = undefined,
     topInfo = undefined,
-    bottomInfo = undefined
+    bottomInfo = undefined,
+    onclick = undefined,
   }: Props = $props();
 </script>
 
 <div class="inline-flex items-center">
-  <button class="cursor-pointer" onclick={bubble('click')}>
+  <button class="cursor-pointer" {onclick}>
     {#if pictureOverlayUrl}
       <div class="indicator">
         <img
