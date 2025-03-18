@@ -126,7 +126,7 @@
     }
     const nextPage: PopupContentDefinition = {
       title: shortenAddress(address),
-      component: ProfilePage as typeof SvelteComponent,
+      component: ProfilePage,
       props: {
         address: address,
       },

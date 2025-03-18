@@ -1,9 +1,9 @@
 import { writable } from 'svelte/store';
-import type { SvelteComponent } from 'svelte';
+import type { Component } from 'svelte';
 
-export type PopupContentDefinition = {
+export type PopupContentDefinition<T extends Record<string, any> = any> = {
   title: string;
-  component: typeof SvelteComponent<any>;
+  component: Component<T>;
   props?: Record<string, any>;
 };
 

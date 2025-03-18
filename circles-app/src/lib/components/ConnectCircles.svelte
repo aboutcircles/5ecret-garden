@@ -15,12 +15,7 @@
     chainId: bigint;
   }
 
-  let {
-    address,
-    isRegistered,
-    walletType = 'safe',
-    chainId
-  }: Props = $props();
+  let { address, isRegistered, walletType = 'safe', chainId }: Props = $props();
 
   let circlesConfig: CirclesConfig;
   let groups: `0x${string}`[] = $state([]);
@@ -69,7 +64,7 @@
   >
     <Avatar
       topInfo={walletType === 'safe' ? 'Safe' : 'Connected Wallet'}
-      address={address.toLowerCase()}
+      {address}
       clickable={false}
       view="horizontal"
     />

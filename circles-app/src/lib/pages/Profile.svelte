@@ -31,7 +31,7 @@
 
   let otherAvatar: AvatarRow | undefined = $state();
   let profile: Profile | undefined = $state();
-  let members: string[] | undefined = $state(undefined);
+  let members: `0x${string}`[] | undefined = $state(undefined);
 
   let trustRow: TrustRelationRow | undefined = $state();
 
@@ -80,7 +80,7 @@
   <Avatar
     view="vertical"
     clickable={false}
-    address={otherAvatar?.avatar || ''}
+    address={otherAvatar?.avatar || '0x0'}
   />
 
   {#if trustRow}
