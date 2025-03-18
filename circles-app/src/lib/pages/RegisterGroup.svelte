@@ -4,8 +4,8 @@
   type Step = 'start' | 'form' | 'executed' | 'error';
   let step: Step = $state('start');
 
-  function handleStepChange(event: CustomEvent<Step>) {
-    step = event.detail;
+  function onstepchange(step: Step) {
+    step = step;
   }
 </script>
 
@@ -27,7 +27,7 @@
       Get Started
     </button>
   {:else if step === 'form'}
-    <CreateGroupForm on:stepChange={handleStepChange} />
+    <CreateGroupForm {onstepchange} />
   {:else if step === 'executed'}
     <div class="w-full flex flex-col items-center">
       <div class="flex items-center">

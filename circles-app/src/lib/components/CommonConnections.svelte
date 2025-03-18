@@ -8,6 +8,7 @@
   import ProfilePage from '$lib/pages/Profile.svelte';
   import Avatar from './avatar/Avatar.svelte';
   import { popupControls } from '$lib/stores/popUp';
+  import type { Address } from '@circles-sdk/utils';
 
   interface Props {
     otherAvatarAddress: `0x${string}`;
@@ -17,7 +18,7 @@
   let { otherAvatarAddress, commonConnectionsCount = $bindable(0) }: Props =
     $props();
 
-  let commonContacts: string[] = $state([]);
+  let commonContacts: Address[] = $state([]);
   let profile: Profile | undefined;
   let otherAvatar: AvatarInterface | undefined;
   let otherAvatarOutgoingTrust: Record<string, TrustRelationRow> = {};

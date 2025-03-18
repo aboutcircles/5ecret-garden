@@ -116,7 +116,7 @@
 <button
   class="btn btm-nav-xs btn-outline btn-primary"
   class:loading={isCreating}
-  disabled={isCreating || !isWalletReady || error}
+  disabled={isCreating || !isWalletReady}
   onclick={createSafe}
 >
   {#if isCreating}

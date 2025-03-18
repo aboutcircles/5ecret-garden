@@ -15,7 +15,7 @@
 
   let { context }: Props = $props();
 
-  function handleSend() {
+  function onselect() {
     if (!$avatar) {
       throw new Error('Avatar not found');
     }
@@ -79,6 +79,6 @@
     textButton="Send CRC"
     data={context.data}
     dataType={context.dataType}
-    on:select={handleSend}
+    {onselect}
   />
 </FlowDecoration>

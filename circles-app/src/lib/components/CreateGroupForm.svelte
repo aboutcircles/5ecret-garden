@@ -2,7 +2,6 @@
   import { preventDefault } from 'svelte/legacy';
 
   import type { GroupProfile } from '@circles-sdk/profiles';
-  import { createEventDispatcher } from 'svelte';
   import { isValidName, isValidSymbol } from '$lib/utils/isValid';
   import MintPolicy from './MintPolicy.svelte';
   import { mintPolicies } from '$lib/utils/mintPolicy';
@@ -17,6 +16,8 @@
     service: string;
     initialConditions: string;
   }
+
+  let { onstepchange } = $props();
 
   let groupProfile: GroupProfile = $state({
     name: '',
@@ -33,12 +34,12 @@
   });
   let mintPolicy = $state(mintPolicies[0]);
 
-  const dispatch = createEventDispatcher();
-
-  let validName =
-    $derived(isValidName(groupProfile.name) || groupProfile.name.length === 0);
-  let validSymbol =
-    $derived(isValidSymbol(groupProfile.symbol) || groupProfile.symbol.length === 0);
+  let validName = $derived(
+    isValidName(groupProfile.name) || groupProfile.name.length === 0
+  );
+  let validSymbol = $derived(
+    isValidSymbol(groupProfile.symbol) || groupProfile.symbol.length === 0
+  );
 
   async function handleSubmit() {
     if (!validName || !validSymbol) return;
@@ -84,7 +85,7 @@
     );
     localStorage.setItem('avatar', groupAddress);
 
-    dispatch('stepChange', 'executed');
+    onstepchange('executed');
   }
 
   const onNewImage = (e: any) => {
@@ -214,7 +215,7 @@
       placeholder="Group Description..."
       class="textarea textarea-bordered w-full"
       bind:value={groupProfile.description}
-></textarea>
+    ></textarea>
   </div>
   <div class="w-full flex flex-col mb-12 pt-8 border-t-1.5">
     <div class="label">

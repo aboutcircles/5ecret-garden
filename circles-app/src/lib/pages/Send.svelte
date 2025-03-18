@@ -1,18 +1,19 @@
 <script lang="ts">
   import { tokenTypeToString } from '$lib/pages/SelectAsset.svelte';
-  import { createEventDispatcher } from 'svelte';
   import { roundToDecimals } from '$lib/utils/shared';
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { TransitiveTransferTokenAddress } from './SelectAsset.svelte'
+  import type { Address } from '@circles-sdk/utils';
 
   interface Props {
-    receiverAddress: string;
+    receiverAddress: Address;
     asset: TokenBalanceRow;
     amount?: number;
     textButton: string;
     data: string | undefined;
     dataType: 'hex' | 'utf-8' | undefined;
+    onselect: () => void;
   }
 
   let {
@@ -21,10 +22,9 @@
     amount = 0,
     textButton,
     data,
-    dataType
+    dataType,
+    onselect
   }: Props = $props();
-
-  const eventDispatcher = createEventDispatcher();
 
   // Helper: are we using the transitive-transfer token?
   let usesTTT = $derived(asset.tokenAddress === TransitiveTransferTokenAddress);
@@ -77,7 +77,7 @@
     <button
       type="submit"
       class="btn btn-primary text-white max-sm:w-full"
-      onclick={() => eventDispatcher('select', { amount: amount })}
+      onclick={() => onselect()}
     >
       {textButton}
     </button>

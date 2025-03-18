@@ -2,7 +2,7 @@
 <script lang="ts">
   import { ethers } from 'ethers6';
   import { Html5Qrcode } from 'html5-qrcode';
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { onMount } from 'svelte';
 
   interface Props {
     address?: string | undefined;
@@ -10,12 +10,11 @@
 
   let { address = $bindable(undefined) }: Props = $props();
 
-  let input: HTMLInputElement = $state();
+  let input: HTMLInputElement | undefined = $state();
   let editorText: string | undefined = undefined;
   let isScanning = $state(false);
   let debounceTimeout: ReturnType<typeof setTimeout> | null = null;
 
-  const eventDispatcher = createEventDispatcher();
   const qrCodeRegionId = 'qr-scanner';
 
   onMount(() => {
@@ -31,8 +30,6 @@
     if (debounceTimeout) clearTimeout(debounceTimeout);
     debounceTimeout = setTimeout(() => {
       address = editorText;
-      console.log('event dispatcher', address);
-      eventDispatcher('addressChange', { address });
     }, 300);
   };
 
@@ -65,10 +62,11 @@
                 console.log('decodedText', decodedText);
                 if (ethers.isAddress(decodedText)) {
                   editorText = decodedText;
-                  input.value = decodedText;
+                  if (input) {
+                    input.value = decodedText;
+                  }
                   address = decodedText;
                   await html5QrCode.stop();
-                  eventDispatcher('addressChange', { address });
                   // html5QrCode.clear();
                   isScanning = false;
                 } else {
