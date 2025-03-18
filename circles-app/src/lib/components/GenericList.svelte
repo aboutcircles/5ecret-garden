@@ -2,7 +2,6 @@
   import {
     onDestroy,
     type SvelteComponent,
-    createEventDispatcher,
   } from 'svelte';
   import type { EventRow, TransactionHistoryRow } from '@circles-sdk/data';
   import { getKeyFromItem } from '$lib/stores/query/circlesQueryStore';
@@ -23,7 +22,6 @@
   let anchor: HTMLElement | undefined = $state();
 
   let hasError = $state(false);
-  const eventDispatcher = createEventDispatcher();
 
   const setupObserver = () => {
     if (observer) observer.disconnect();
@@ -71,7 +69,7 @@
   {#each $store?.data ?? [] as item (getKeyFromItem(item))}
     {@const SvelteComponent_1 = row}
     <button
-      onclick={() => eventDispatcher('select', item)}
+      onclick={() => {}}
       class="w-full pt-2"
       aria-label="Select item"
     >
