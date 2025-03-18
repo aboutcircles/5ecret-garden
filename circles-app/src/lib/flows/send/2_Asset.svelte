@@ -21,8 +21,8 @@
     }
   });
 
-  function handleSelect(event: CustomEvent<TokenBalanceRow>) {
-    selectedAsset = event.detail;
+  function onselect(tokenBalanceRow: TokenBalanceRow) {
+    selectedAsset = tokenBalanceRow;
     context.selectedAsset = selectedAsset;
 
     popupControls.open({
@@ -37,9 +37,5 @@
 
 <FlowDecoration>
   <p class="text-2xl font-bold">Select Asset</p>
-  <SelectAsset
-    {selectedAsset}
-    balances={circlesBalances}
-    on:select={handleSelect}
-  />
+  <SelectAsset {selectedAsset} balances={circlesBalances} {onselect} />
 </FlowDecoration>

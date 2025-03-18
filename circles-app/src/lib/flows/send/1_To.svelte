@@ -9,23 +9,24 @@
   import { popupControls } from '$lib/stores/popUp';
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import SearchAvatar from '$lib/pages/SearchAvatar.svelte';
+  import type { Address } from '@circles-sdk/utils';
 
   interface Props {
     context?: SendFlowContext;
   }
 
-  let { context = $bindable({
-    selectedAddress: '',
-    transitiveOnly: false,
-    selectedAsset: {} as TokenBalanceRow,
-    amount: undefined,
-  }) }: Props = $props();
+  let {
+    context = $bindable({
+      selectedAddress: '',
+      transitiveOnly: false,
+      selectedAsset: {} as TokenBalanceRow,
+      amount: undefined,
+    }),
+  }: Props = $props();
   let allowAssetSelection: boolean = false;
 
-  async function handleSelect(event: CustomEvent<{ avatar: string }>) {
-    console.log('Selected:', event.detail.avatar);
-
-    context.selectedAddress = event.detail.avatar;
+  async function onselect(selectedAvatar: Address) {
+    context.selectedAddress = selectedAvatar;
     context.selectedAsset = transitiveTransfer();
 
     if (
@@ -69,12 +70,7 @@
   <p class="text-2xl font-bold">Send Circles</p>
   <SearchAvatar
     selectedAddress={context.selectedAddress}
-    on:select={handleSelect}
+    {onselect}
     searchType="send"
   />
-  <!-- <SelectContact
-    store={contacts}
-    selectedAddress={context.selectedAddress}
-    on:select={handleSelect}
-  /> -->
 </FlowDecoration>

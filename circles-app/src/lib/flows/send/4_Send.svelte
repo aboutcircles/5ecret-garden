@@ -5,8 +5,7 @@
   import { runTask } from '$lib/utils/tasks';
   import { roundToDecimals, shortenAddress } from '$lib/utils/shared';
   import { avatar } from '$lib/stores/avatar';
-  import { tokenTypeToString } from '$lib/pages/SelectAsset.svelte';
-  import { TransitiveTransferTokenAddress } from '$lib/pages/SelectAsset.svelte';
+  import { tokenTypeToString, TransitiveTransferTokenAddress } from '$lib/pages/SelectAsset.svelte';
   import { popupControls } from '$lib/stores/popUp';
 
   interface Props {

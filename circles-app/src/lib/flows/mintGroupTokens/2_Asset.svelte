@@ -89,8 +89,8 @@
     }
   );
 
-  function handleSelect(event: CustomEvent<TokenBalanceRow>) {
-    selectedAsset = event.detail;
+  function onselect(tokenBalanceRow: TokenBalanceRow) {
+    selectedAsset = tokenBalanceRow;
     context.selectedAsset = selectedAsset;
 
     popupControls.open({
@@ -111,7 +111,7 @@
       {selectedAsset}
       balances={filteredBalances}
       showTransitive={false}
-      on:select={handleSelect}
+      {onselect}
     />
   {:else}
     <p>Loading balances...</p>

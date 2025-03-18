@@ -54,7 +54,6 @@
 
 <script lang="ts">
   import type { TokenBalanceRow } from '@circles-sdk/data';
-  import { createEventDispatcher } from 'svelte';
   import BalanceRow from '$lib/components/BalanceRow.svelte';
   import type { Readable } from 'svelte/store';
   import {
@@ -73,15 +72,14 @@
   }>;
     selectedAsset?: TokenBalanceRow | undefined;
     showTransitive?: boolean;
+    onselect: (tokenBalanceRow: TokenBalanceRow) => void;
   }
 
-  let { balances, selectedAsset = $bindable(undefined), showTransitive = true }: Props = $props();
-
-  const eventDispatcher = createEventDispatcher();
+  let { balances, selectedAsset = $bindable(undefined), showTransitive = true, onselect }: Props = $props();
 
   const handleSelect = (tokenBalanceRow: TokenBalanceRow) => {
     selectedAsset = tokenBalanceRow;
-    eventDispatcher('select', tokenBalanceRow);
+    onselect(tokenBalanceRow);
   };
 </script>
 
