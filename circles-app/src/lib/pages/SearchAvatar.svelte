@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import { ethers } from 'ethers6';
   import { createEventDispatcher, onMount } from 'svelte';
   import AddressInput from '$lib/components/AddressInput.svelte';
@@ -78,7 +76,7 @@
 
   const eventDispatcher = createEventDispatcher();
 
-  run(() => {
+  $effect(() => {
     if (selectedAddress && selectedAddress !== lastAddress) {
       lastAddress = selectedAddress;
       searchProfiles();

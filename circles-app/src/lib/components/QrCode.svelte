@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import { onMount } from 'svelte';
   import QRCode from 'qrcode';
 
@@ -15,7 +13,7 @@
     svg = await QRCode.toString(value, { type: 'svg', width: 200 });
   };
 
-  run(() => {
+  $effect(() => {
     if (value) {
       QRCode.toString(value, { type: 'svg' });
     }

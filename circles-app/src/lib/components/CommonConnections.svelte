@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import type { TrustRelationRow } from '@circles-sdk/data';
   import type { AvatarInterface } from '@circles-sdk/sdk';
   import { avatar } from '$lib/stores/avatar';
@@ -16,14 +14,14 @@
     commonConnectionsCount?: number;
   }
 
-  let { otherAvatarAddress, commonConnectionsCount = $bindable(0) }: Props = $props();
+  let { otherAvatarAddress, commonConnectionsCount = $bindable(0) }: Props =
+    $props();
 
   let commonContacts: string[] = $state([]);
   let profile: Profile | undefined;
   let otherAvatar: AvatarInterface | undefined;
   let otherAvatarOutgoingTrust: Record<string, TrustRelationRow> = {};
   let avatarContactsByAddress: Record<string, TrustRelationRow> = {};
-
 
   async function initialize() {
     if (!otherAvatarAddress) {
@@ -72,16 +70,13 @@
     );
     commonConnectionsCount = commonContacts.length;
   }
-  run(() => {
+  $effect(() => {
     if (otherAvatarAddress) {
       initialize();
     }
   });
 </script>
 
-<!-- <p class="menu-title pl-0">
-    Common connections:
-</p> -->
 <div class="w-full divide-y p-4">
   {#each commonContacts as contact (contact)}
     <button

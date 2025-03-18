@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import { avatar, isGroup } from '$lib/stores/avatar';
   import { clearSession, wallet } from '$lib/stores/wallet';
   import { circles } from '$lib/stores/circles';
@@ -24,10 +22,7 @@
     return await $circles.profiles.create(profile);
   }
 
-  let newProfile;
-  run(() => {
-    newProfile = $profile;
-  });
+  let newProfile = $state($profile)
 
   async function migrateToV2() {
     popupControls.open({

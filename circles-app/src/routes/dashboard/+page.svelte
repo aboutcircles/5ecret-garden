@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import GenericList from '$lib/components/GenericList.svelte';
   import TransactionRow from './TransactionRow.svelte';
   import TotalBalance from '$lib/components/TotalBalance.svelte';
@@ -15,7 +13,7 @@
     mintableAmount = (await $avatar?.getMintableAmount()) ?? 0;
   }
 
-  run(() => {
+  $effect(() => {
     if ($avatar) {
       init();
     }

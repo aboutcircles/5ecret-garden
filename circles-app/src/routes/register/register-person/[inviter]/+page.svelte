@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import { goto } from '$app/navigation';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import { avatar } from '$lib/stores/avatar';

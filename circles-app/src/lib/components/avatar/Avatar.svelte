@@ -82,8 +82,6 @@
 </script>
 
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import ProfilePage from '$lib/pages/Profile.svelte';
   import { getProfile } from '$lib/utils/profile';
   import { type SvelteComponent } from 'svelte';
@@ -95,7 +93,7 @@
   } from '$lib/stores/popUp';
 
   interface Props {
-    address: string;
+    address: `0x${string}`;
     clickable?: boolean;
     view: 'horizontal' | 'vertical';
     pictureOverlayUrl?: string | undefined;
@@ -114,7 +112,7 @@
 
   let profile: Profile | undefined = $state();
 
-  run(() => {
+  $effect(() => {
     if (address) {
       getProfile(address).then((newProfile) => {
         profile = newProfile;

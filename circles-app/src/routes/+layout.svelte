@@ -7,8 +7,6 @@
 </script>
 
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import '../app.css';
 
   import DefaultHeader from '$lib/components/DefaultHeader.svelte';
@@ -31,8 +29,6 @@
   }
 
   let { children }: Props = $props();
-
-  let quickAction: QuickAction | undefined = $derived(quickActionsMap[$page.route.id ?? ''] || undefined);
 
   let quickActionsMap: Record<string, QuickAction | undefined> = $derived({
     '/dashboard': {
@@ -95,7 +91,9 @@
   });
   let menuItems: { name: string; link: string }[] = $state([]);
 
-  
+  let quickAction: QuickAction | undefined = $derived(
+    quickActionsMap[$page.route.id ?? ''] || undefined
+  );
 
   onMount(async () => {
     if ($page.route.id === '/' || $page.route.id === '/connect-wallet') {
@@ -105,18 +103,16 @@
     }
   });
 
-  run(() => {
-    menuItems = $avatar
-      ? [
-          { name: 'Dashboard', link: '/dashboard' },
-          { name: 'Contacts', link: '/contacts' },
-          ...(!$isGroup ? [{ name: 'Groups', link: '/groups' }] : []),
-          { name: 'Settings', link: '/settings' },
-        ]
-      : [];
+  $effect(() => {
+    if ($avatar) {
+      menuItems = [
+        { name: 'Dashboard', link: '/dashboard' },
+        { name: 'Contacts', link: '/contacts' },
+        ...(!$isGroup ? [{ name: 'Groups', link: '/groups' }] : []),
+        { name: 'Settings', link: '/settings' },
+      ];
+    }
   });
-
-  
 </script>
 
 {#if $avatar}
@@ -151,7 +147,7 @@
     class={`fixed top-0 left-0 w-full h-full bg-black/50 z-10 ${$popupState.content ? 'opacity-100' : 'opacity-0 hidden'} transition duration-300 ease-in-out`}
     onmousedown={() => popupControls.close()}
     ontouchstart={() => popupControls.close()}
-></div>
+  ></div>
   <PopUp />
 </main>
 {#if $tasks.length > 0}

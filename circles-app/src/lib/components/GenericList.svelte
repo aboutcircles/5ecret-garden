@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import {
     onDestroy,
     type SvelteComponent,
@@ -12,10 +10,10 @@
 
   interface Props {
     store: Readable<{
-    data: EventRow[] | TransactionHistoryRow[];
-    next: () => Promise<boolean>;
-    ended: boolean;
-  }>;
+      data: EventRow[] | TransactionHistoryRow[];
+      next: () => Promise<boolean>;
+      ended: boolean;
+    }>;
     row: typeof SvelteComponent<Record<string, any>>;
   }
 
@@ -59,7 +57,7 @@
     }
   };
 
-  run(() => {
+  $effect(() => {
     if (store && anchor) setupObserver();
   });
 
