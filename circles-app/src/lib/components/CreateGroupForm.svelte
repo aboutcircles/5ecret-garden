@@ -88,11 +88,11 @@
     onstepchange('executed');
   }
 
-  const onNewImage = (e: any) => {
-    groupProfile.previewImageUrl = e.detail.dataUrl;
+  const onnewimage = (dataUrl: string) => {
+    groupProfile.previewImageUrl = dataUrl;
   };
 
-  const onImageCleared = (e: any) => {
+  const oncleared = () => {
     groupProfile.previewImageUrl = '';
   };
 </script>
@@ -198,8 +198,8 @@
         imageDataUrl={groupProfile.previewImageUrl}
         cropHeight={256}
         cropWidth={256}
-        on:newImage={onNewImage}
-        on:cleared={onImageCleared}
+        {onnewimage}
+        {oncleared}
       />
     </div>
   </div>

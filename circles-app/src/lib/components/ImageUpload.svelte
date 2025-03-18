@@ -1,19 +1,22 @@
 <script lang="ts">
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { on } from 'process';
+  import { onMount } from 'svelte';
 
   interface Props {
     cropWidth?: number;
     cropHeight?: number;
     imageDataUrl: string | undefined;
+    onnewimage: (dataUrl: string) => void;
+    oncleared: () => void;
   }
 
   let {
     cropWidth = 256,
     cropHeight = 256,
     imageDataUrl = $bindable(),
+    onnewimage,
+    oncleared,
   }: Props = $props();
-
-  const dispatch = createEventDispatcher();
 
   let imageFile: File | null = null;
   let fileUpload: HTMLInputElement | undefined = $state();
@@ -68,8 +71,7 @@
           if (imageDataUrl.length > 150 * 1024) {
             console.warn('Image size exceeds 150 KB after compression');
           }
-
-          dispatch('newImage', { dataUrl: imageDataUrl });
+          onnewimage(imageDataUrl);
         }
       };
     };
@@ -79,7 +81,7 @@
   function clearImage() {
     imageFile = null;
     imageDataUrl = '';
-    dispatch('cleared');
+    oncleared();
   }
 
   function openFilePicker() {
