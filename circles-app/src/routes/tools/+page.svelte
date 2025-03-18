@@ -1,6 +1,6 @@
 <script lang="ts">
   import ActionButton from '$lib/components/ActionButton.svelte';
-  import { ethers, MaxUint256 } from 'ethers6';
+  import { MaxUint256 } from 'ethers6';
   import { circles } from '$lib/stores/circles';
 
   let mintPolicyAddress: string =

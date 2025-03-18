@@ -10,7 +10,8 @@
       throw new Error('Wallet not connected ($circles is undefined)');
     }
 
-    $avatar = await $circles.registerHuman() as Avatar;
+    //TODO: why need to bind it as Avatar
+    $avatar = await $circles.registerOrganizationV2(profile) as Avatar;
 
     await goto('/dashboard');
   }

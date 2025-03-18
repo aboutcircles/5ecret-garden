@@ -3,19 +3,15 @@
   import { popupControls } from '$lib/stores/popUp';
   import type { QuickAction } from '../../routes/+layout.svelte';
 
-
-
-
-
   interface Props {
     text?: string | undefined;
     address?: string | undefined;
     logo?: string | undefined;
     homeLink?: string;
     menuItems?: {
-    name: string;
-    link: string;
-  }[];
+      name: string;
+      link: string;
+    }[];
     quickAction: QuickAction | undefined;
     route: string | null;
   }
@@ -27,7 +23,7 @@
     homeLink = '/',
     menuItems = [],
     quickAction,
-    route
+    route,
   }: Props = $props();
   let isDropdownOpen = $state(false);
 </script>
@@ -42,6 +38,7 @@
           tabindex="0"
           class="btn btn-ghost btn-square lg:hidden -ml-4"
           onclick={() => (isDropdownOpen = true)}
+          aria-label="Open menu"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -69,14 +66,15 @@
                 <span class="inline-block overflow-hidden text-primary"
                   >Circles <p class="text-sm text-red-500">(beta)</p></span
                 >
+                <button
+                  type="button"
+                  class="btn btn-ghost btn-square flex rounded-lg p-0"
+                  onclick={() => (isDropdownOpen = false)}
+                  aria-label="Close menu"
+                >
+                  <img src="/close.svg" alt="Close" class="w-4 h-4" />
+                </button>
               </a>
-              <button
-                type="button"
-                class="btn btn-ghost btn-square flex rounded-lg p-0"
-                onclick={() => (isDropdownOpen = false)}
-              >
-                <img src="/close.svg" alt="Close" class="w-4 h-4" />
-              </button>
             </div>
             <ul class="text-xl py-4">
               {#each menuItems as item}

@@ -74,7 +74,7 @@
       view="horizontal"
     />
     {#if !isRegistered}
-      <button class="btn btn-xs btn-outline btn-primary">register</button>
+      <div class="btn btn-xs btn-outline btn-primary">register</div>
     {:else}
       <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
     {/if}

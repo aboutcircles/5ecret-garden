@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import { createEventDispatcher, onMount } from 'svelte';
 
   interface Props {
@@ -9,15 +7,18 @@
     imageDataUrl: string | undefined;
   }
 
-  let { cropWidth = 256, cropHeight = 256, imageDataUrl = $bindable() }: Props = $props();
+  let {
+    cropWidth = 256,
+    cropHeight = 256,
+    imageDataUrl = $bindable(),
+  }: Props = $props();
 
   const dispatch = createEventDispatcher();
 
   let imageFile: File | null = null;
-  let fileUpload: HTMLInputElement = $state();
+  let fileUpload: HTMLInputElement | undefined = $state();
 
   onMount(async () => {});
-
 
   async function getImageAsDataUrl(imageUrl: string) {
     const response = await fetch(imageUrl);
@@ -82,10 +83,12 @@
   }
 
   function openFilePicker() {
-    fileUpload.click();
+    if (fileUpload) {
+      fileUpload.click();
+    }
   }
-  run(() => {
-    console.log('ImageUpload mounted. Image data URL:', imageDataUrl);
+
+  $effect(() => {
     if (imageDataUrl?.startsWith('http')) {
       getImageAsDataUrl(imageDataUrl);
     }
@@ -114,11 +117,13 @@
       alt="Preview"
       class="mt-4 max-w-full rounded-lg shadow-sm"
     />
-    <button
-      type="button"
-      class="mt-2 px-3 py-1 border border-transparent rounded-md text-sm font-medium text-white bg-red-500 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-      onclick={clearImage}
-      >Clear Image
-    </button>
   {/if}
 </button>
+{#if imageDataUrl}
+  <button
+    type="button"
+    class="mt-2 px-3 py-1 border border-transparent rounded-md text-sm font-medium text-white bg-red-500 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+    onclick={clearImage}
+    >Clear Image
+  </button>
+{/if}

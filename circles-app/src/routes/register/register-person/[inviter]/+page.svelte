@@ -16,10 +16,7 @@
     imageUrl: undefined,
   });
 
-  let inviter;
-  run(() => {
-    inviter = $page.params.inviter;
-  });
+  let inviter = $state($page.params.inviter) as `0x${string}`;
 
   async function registerHuman() {
     if (!$circles) {
@@ -29,7 +26,8 @@
       throw new Error('Inviter not set');
     }
 
-    $avatar = await $circles.acceptInvitation(inviter, profile) as Avatar;
+    //TODO: why need to bind it as Avatar
+    $avatar = await $circles.registerOrganizationV2(profile) as Avatar;
 
     await goto('/dashboard');
   }

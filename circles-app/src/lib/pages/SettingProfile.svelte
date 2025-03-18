@@ -4,7 +4,7 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import QrCode from '$lib/components/QrCode.svelte';
   import { popupControls } from '$lib/stores/popUp';
-  import { clearSession, wallet } from '$lib/stores/wallet';
+  import { wallet } from '$lib/stores/wallet';
   import { SafeSdkBrowserContractRunner } from '@circles-sdk/adapter-safe';
 
   interface Props {

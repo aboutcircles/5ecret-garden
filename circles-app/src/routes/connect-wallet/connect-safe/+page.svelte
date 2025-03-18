@@ -1,5 +1,3 @@
-<!-- @migration-task Error while migrating Svelte code: Cannot subscribe to stores that are not declared at the top level of the component
-https://svelte.dev/e/store_invalid_scoped_subscription -->
 <script lang="ts">
   import { onMount } from 'svelte';
   import { type AvatarRow, Sdk } from '@circles-sdk/sdk';
