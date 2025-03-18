@@ -1,13 +1,12 @@
 <script lang="ts">
   import { mintPolicies, type MintPolicy } from '$lib/utils/mintPolicy';
-  import { createEventDispatcher } from 'svelte';
 
   interface Props {
     mintPolicy: MintPolicy;
+    onupdate: (policy: MintPolicy) => void;
   }
 
-  let { mintPolicy = $bindable() }: Props = $props();
-  const dispatch = createEventDispatcher();
+  let { mintPolicy = $bindable(), onupdate }: Props = $props();
 
   function handleChange(event: Event) {
     const selectedAddress = (event.target as HTMLSelectElement).value;
@@ -15,7 +14,7 @@
       (p) => p.address === selectedAddress
     );
     if (selectedPolicy) {
-      dispatch('update', selectedPolicy);
+      onupdate(selectedPolicy);
     }
   }
 </script>

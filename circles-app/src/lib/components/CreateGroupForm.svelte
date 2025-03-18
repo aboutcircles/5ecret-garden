@@ -232,7 +232,7 @@
       Learn more
       <img src="/external.svg" alt="external icon" class="h-3 w-3 ml-1" />
     </a>
-    <MintPolicy {mintPolicy} on:update={(e) => (mintPolicy = e.detail)} />
+    <MintPolicy {mintPolicy} onupdate={(selectedMintPolicy) => (mintPolicy = selectedMintPolicy)} />
   </div>
   <button
     type="submit"
