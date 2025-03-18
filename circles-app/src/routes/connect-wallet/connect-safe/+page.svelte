@@ -10,8 +10,8 @@
   import ConnectCircles from '$lib/components/ConnectCircles.svelte';
   import CreateSafe from '$lib/pages/CreateSafe.svelte';
   import { SafeSdkBrowserContractRunner } from '@circles-sdk/adapter-safe';
-  import { ethers, Network } from 'ethers6';
   import type { Address } from '@circles-sdk/utils';
+  import { ethers, type Network } from 'ethers6';
 
   let network: Network;
   let safes: Address[] = [];

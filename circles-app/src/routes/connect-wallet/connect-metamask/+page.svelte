@@ -12,8 +12,8 @@
 
   const GNOSIS_CHAIN_ID_DEC = 100n; // Decimal format for BrowserProvider
 
-  let avatarInfo: AvatarRow | undefined = $state();
-  let network: Network = $state();
+  let avatarInfo: AvatarRow | undefined;
+  let network: Network;
 
   //
   // Connects the wallet and initializes the Circles SDK.
@@ -61,7 +61,7 @@
   </p>
   {#if $wallet?.address && $circles && network}
     <ConnectCircles
-      address={$wallet.address.toLowerCase()}
+      address={$wallet.address}
       walletType="metamask"
       isRegistered={avatarInfo !== undefined}
       chainId={network.chainId}
