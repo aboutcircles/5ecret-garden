@@ -72,9 +72,7 @@
   }
 
   onMount(async () => {
-    if (!$avatar) {
-      await setup();
-    }
+    await setup();
     loadSafesAndProfile();
   });
 
