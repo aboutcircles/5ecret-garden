@@ -11,10 +11,10 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
   import { ethers } from 'ethers';
   import { onMount } from 'svelte';
 
-  let mnemonicPhrase: string = '';
-  let hasValidKey = false;
-  let privateKey = '';
-  let address = '';
+  let mnemonicPhrase: string = $state('');
+  let hasValidKey = $state(false);
+  let privateKey = $state('');
+  let address = $state('');
 
   const provider = new ethers.JsonRpcProvider(gnosisConfig.circlesRpcUrl);
 
@@ -82,7 +82,7 @@ https://svelte.dev/e/store_invalid_scoped_subscription -->
     bind:address
   />
   <button
-    on:click={() => connectWallet()}
+    onclick={() => connectWallet()}
     class="btn btn-sm"
     class:btn-disabled={!hasValidKey}>Import</button
   >

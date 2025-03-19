@@ -13,9 +13,9 @@
   import type { Address } from '@circles-sdk/utils';
   import { ethers, type Network } from 'ethers';
 
-  let network: Network;
-  let safes: Address[] = [];
-  let profileBySafe: Record<string, AvatarRow | undefined> = {};
+  let network: Network | undefined = $state();
+  let safes: Address[] = $state([]);
+  let profileBySafe: Record<string, AvatarRow | undefined> = $state({});
 
   const getSafesByOwnerApiEndpoint = (checksumOwnerAddress: string): string =>
     `https://safe-transaction-gnosis-chain.safe.global/api/v1/owners/${checksumOwnerAddress}/safes/`;

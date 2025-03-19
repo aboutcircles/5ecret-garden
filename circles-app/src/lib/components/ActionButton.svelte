@@ -39,41 +39,41 @@
 
   const eventDispatcher = createEventDispatcher();
 
-  let state: ActionButtonState = 'Ready';
+  let buttonState: ActionButtonState = 'Ready';
   let errorMessage: string = '';
 
   const executeAction = () => {
-    if (disabled || state === 'Done' || state == 'Working') {
+    if (disabled || buttonState === 'Done' || buttonState == 'Working') {
       return;
     }
-    state = 'Working';
+    buttonState = 'Working';
     action()
       .then((result) => {
         result = result;
-        state = 'Done';
+        buttonState = 'Done';
         eventDispatcher('done', { result });
         setTimeout(() => {
           // Transition from Done to either Ready or Disabled
-          state = disabled ? 'Disabled' : 'Ready';
+          buttonState = disabled ? 'Disabled' : 'Ready';
         }, doneStateDuration);
       })
       .catch((err) => {
         errorMessage = err.message;
-        state = errorTransitory ? 'Error' : 'Retry';
+        buttonState = errorTransitory ? 'Error' : 'Retry';
         eventDispatcher('error', { err });
         if (errorTransitory) {
           setTimeout(() => {
-            state = 'Retry';
+            buttonState = 'Retry';
           }, doneStateDuration); // Use the same duration for simplicity
         }
         console.error(err);
       });
   };
 
-  $: if (disabled && state !== 'Done') {
-    state = 'Disabled';
-  } else if (!disabled && state === 'Disabled') {
-    state = 'Ready';
+  $: if (disabled && buttonState !== 'Done') {
+    buttonState = 'Disabled';
+  } else if (!disabled && buttonState === 'Disabled') {
+    buttonState = 'Ready';
   }
 </script>
 
