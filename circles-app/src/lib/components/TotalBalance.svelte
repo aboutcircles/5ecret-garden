@@ -3,10 +3,10 @@
   import { totalCirclesBalance } from '$lib/stores/totalCirclesBalance';
   import { roundToDecimals } from '$lib/utils/shared';
 
-  let personalToken: number = $state(
+  let personalToken: number = $derived(
     $circlesBalances?.data?.filter((balance) => !balance.isGroup).length
   );
-  let groupToken: number = $state(
+  let groupToken: number = $derived(
     $circlesBalances?.data?.filter((balance) => balance.isGroup).length
   );
 </script>
