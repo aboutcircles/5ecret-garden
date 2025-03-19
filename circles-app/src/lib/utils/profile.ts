@@ -77,7 +77,12 @@ export async function getProfile(address: `0x${string}`): Promise<Profile> {
       previewImageUrl: '/logo.svg',
     };
   }
-
+  if (address === "0x9944Ce8e27CE1f16C4003f108b1C09e5Ae011bA0".toLowerCase()) {
+    return {
+      name: 'Circles Relayer Fee',
+      previewImageUrl: '/logo.svg',
+    };
+  }
   if (profileCache.has(address)) {
     return profileCache.get(address)!;
   }

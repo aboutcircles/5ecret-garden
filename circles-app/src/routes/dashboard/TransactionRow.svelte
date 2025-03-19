@@ -39,26 +39,24 @@
       'CrcV2_WithdrawInflationary',
       'CrcV2_DepositDemurraged',
       'CrcV2_DepositInflationary',
-
       'CrcV2_CollateralLockedBatch',
       'CrcV2_CollateralLockedSingle',
-      'CrcV2_GroupRedeem'
+      'CrcV2_GroupRedeem',
+      'CrcV2_Trust',
+      'CrcV2_RegisterHuman',
+      'CrcV2_RegisterOrganization'
     ]);
 
     // let demurrageAmount = 0n;
     const tags: string[] = [];
 
     for (const e of parsed) {
-      if (relevantTypes.has(e.$type) && !tags.includes(e.$type)) {
+      if (/*relevantTypes.has(e.$type) &&*/ !tags.includes(e.$type)) {
         tags.push(e.$type);
       }
-    //
-    //   if (e.$type === 'CrcV2_DiscountCost' && e.Account === avatarAddress) {
-    //     demurrageAmount += BigInt(e.Cost);
-    //   }
     }
 
-    return { tags /*, demurrageAmount*/ };
+    return { tags };
   }
 
   function getCounterpartyAddress(avatarAddress: string) {
