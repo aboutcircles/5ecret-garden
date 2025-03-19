@@ -8,7 +8,7 @@
   import ConnectCircles from '$lib/components/ConnectCircles.svelte';
   import { switchOrAddGnosisNetwork } from '$lib/utils/network';
   import { avatar } from '$lib/stores/avatar';
-  import type { Network } from 'ethers6';
+  import type { Network } from 'ethers';
 
   const GNOSIS_CHAIN_ID_DEC = 100n; // Decimal format for BrowserProvider
 

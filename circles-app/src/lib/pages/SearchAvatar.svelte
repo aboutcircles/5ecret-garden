@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ethers } from 'ethers6';
+  import { ethers } from 'ethers';
   import { onMount } from 'svelte';
   import AddressInput from '$lib/components/AddressInput.svelte';
   import { type Profile, Profiles } from '@circles-sdk/profiles';

@@ -11,7 +11,7 @@
   import CreateSafe from '$lib/pages/CreateSafe.svelte';
   import { SafeSdkBrowserContractRunner } from '@circles-sdk/adapter-safe';
   import type { Address } from '@circles-sdk/utils';
-  import { ethers, type Network } from 'ethers6';
+  import { ethers, type Network } from 'ethers';
 
   let network: Network;
   let safes: Address[] = [];

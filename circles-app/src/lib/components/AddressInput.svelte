@@ -1,6 +1,6 @@
 <!-- AddressInput.svelte -->
 <script lang="ts">
-  import { ethers } from 'ethers6';
+  import { ethers } from 'ethers';
   import { Html5Qrcode } from 'html5-qrcode';
   import { onMount } from 'svelte';
 

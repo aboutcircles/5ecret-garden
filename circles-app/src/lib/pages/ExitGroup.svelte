@@ -7,7 +7,7 @@
   import { type Address, uint256ToAddress } from '@circles-sdk/utils';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import { onMount } from 'svelte';
-  import { formatUnits, parseUnits } from 'ethers6';
+  import { formatUnits, parseUnits } from 'ethers';
   import type { TokenBalanceRow } from '@circles-sdk/data';
 
   interface Props {

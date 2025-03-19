@@ -7,7 +7,7 @@
   import ActionButton from '$lib/components/ActionButton.svelte';
   import Papa from 'papaparse';
   import { avatar } from '$lib/stores/avatar';
-  import { ethers } from 'ethers6';
+  import { ethers } from 'ethers';
   import type { Address } from '@circles-sdk/utils';
 
   let context: AddContactFlowContext = $state({

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ethers } from 'ethers6';
+  import { ethers } from 'ethers';
   import { avatar } from '$lib/stores/avatar';
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import BalanceRow from '$lib/components/BalanceRow.svelte';

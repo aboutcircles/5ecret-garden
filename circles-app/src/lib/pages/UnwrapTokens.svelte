@@ -1,7 +1,7 @@
 <script lang="ts">
   import { avatar } from '$lib/stores/avatar';
   import { circles } from '$lib/stores/circles';
-  import { ethers } from 'ethers6';
+  import { ethers } from 'ethers';
   import BalanceRow from '$lib/components/BalanceRow.svelte';
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import { roundToDecimals } from '$lib/utils/shared';

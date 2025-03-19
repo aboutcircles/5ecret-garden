@@ -10,7 +10,7 @@
   import { avatar } from '$lib/stores/avatar';
   import ImageUpload from './ImageUpload.svelte';
   import { cidV0ToUint8Array } from '@circles-sdk/utils';
-  import { ethers } from 'ethers6';
+  import { ethers } from 'ethers';
 
   interface CMGProfile {
     service: string;

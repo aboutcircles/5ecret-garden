@@ -1,6 +1,6 @@
 <script lang="ts">
   import ActionButton from '$lib/components/ActionButton.svelte';
-  import { MaxUint256 } from 'ethers6';
+  import { MaxUint256 } from 'ethers';
   import { circles } from '$lib/stores/circles';
   import type { Address } from '@circles-sdk/utils';
 

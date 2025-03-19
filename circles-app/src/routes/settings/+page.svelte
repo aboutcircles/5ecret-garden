@@ -11,7 +11,7 @@
   import MigrateToV2 from '$lib/flows/migrateToV2/1_GetInvited.svelte';
   import { popupControls } from '$lib/stores/popUp';
   import GroupSetting from './editors/GroupSetting.svelte';
-  import { ethers } from 'ethers6';
+  import { ethers } from 'ethers';
   import ProfileEditor from '$lib/components/ProfileEditor.svelte';
 
   async function saveProfileData(profile: Profile): Promise<string> {

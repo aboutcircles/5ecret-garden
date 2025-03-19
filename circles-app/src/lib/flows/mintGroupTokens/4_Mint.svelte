@@ -5,7 +5,7 @@
   import { runTask } from '$lib/utils/tasks';
   import { roundToDecimals } from '$lib/utils/shared';
   import { avatar } from '$lib/stores/avatar';
-  import { ethers } from 'ethers6';
+  import { ethers } from 'ethers';
   import { popupControls } from '$lib/stores/popUp';
 
   interface Props {
