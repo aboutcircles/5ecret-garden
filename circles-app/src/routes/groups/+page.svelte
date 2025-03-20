@@ -1,7 +1,6 @@
 <script lang="ts">
   import GenericList from '$lib/components/GenericList.svelte';
   import { createGroups } from '$lib/stores/groups';
-  import { onMount } from 'svelte';
   import type { Readable } from 'svelte/store';
   import type { GroupRow } from '@circles-sdk/data';
   import GroupRowView from './GroupRowView.svelte';
