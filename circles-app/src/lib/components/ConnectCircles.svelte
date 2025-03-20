@@ -23,7 +23,7 @@
   onMount(async () => {
     groups =
       (
-        await $circles?.data.getCreatedCMGroups(100, { ownerEquals: address })
+        await $circles?.data.getCreatedCMGroups(100, { ownerEquals: address.toLowerCase() })
       )?.map((group) => group.proxy) || [];
   });
 

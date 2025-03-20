@@ -2,7 +2,7 @@
   import { ethers } from 'ethers';
   import { onMount } from 'svelte';
   import AddressInput from '$lib/components/AddressInput.svelte';
-  import { type Profile, Profiles } from '@circles-sdk/profiles';
+  import { Profiles, type SearchResultProfile } from '@circles-sdk/profiles';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { getCirclesConfig } from '$lib/utils/helpers';
   import { wallet } from '$lib/stores/wallet';
@@ -17,7 +17,7 @@
 
   let { selectedAddress = $bindable('0x0'), searchType = 'send', oninvite, onselect }: Props = $props();
   let lastAddress: string = $state('');
-  let result: Profile[] = $state([]);
+  let result: SearchResultProfile[] = $state([]);
   let profiles: Profiles | undefined = $state();
 
   onMount(async () => {
@@ -33,7 +33,6 @@
 
     if (searchType === 'send') {
       // TODO: implement contact list here when get profile type and circles-sdk/profiles are unified
-
       result = (await profiles.searchByName('a')).slice(0, 25);
     } else {
       result = (await profiles.searchByName('a')).slice(0, 25);
@@ -42,16 +41,17 @@
 
   async function searchProfiles() {
     try {
-      let results: Profile[] = [];
+      let results: SearchResultProfile[] = [];
 
       // if selectedAddress is an address, add it to the results
       // as synthetic profile and prepend that profile if it's not found
       // in the search results.
-      const syntheticProfile = {
+      const syntheticProfile: SearchResultProfile = {
         address: selectedAddress,
         name: selectedAddress,
-        avatar: '',
-        bio: '',
+        CID: '',
+        lastUpdatedAt: 0,
+        registeredName: null
       };
 
       const nameResults = await profiles?.searchByName(selectedAddress);
@@ -114,10 +114,10 @@
         <div class="w-full pt-2">
           <button
             class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
-            onclick={() => onselect?.(profile.address)}
+            onclick={() => onselect?.(profile.address as Address)}
           >
             <Avatar
-              address={profile.address}
+              address={profile.address as Address}
               view="horizontal"
               clickable={false}
             />
