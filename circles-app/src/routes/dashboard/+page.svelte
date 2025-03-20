@@ -11,7 +11,7 @@
 
 
   avatar.subscribe(async () => {
-    if($avatar && $isGroup){
+    if($avatar && !$isGroup){
       mintableAmount = (await $avatar?.getMintableAmount()) ?? 0;
     }
   });

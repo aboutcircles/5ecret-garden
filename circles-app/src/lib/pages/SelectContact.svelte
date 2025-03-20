@@ -33,7 +33,7 @@
 
   let {
     store = undefined,
-    selectedAddress = $bindable('0x0'),
+    selectedAddress = $bindable(''),
     addressListTitle = 'Recent',
     noResultsMessage = 'No recent addresses found',
     group = false,

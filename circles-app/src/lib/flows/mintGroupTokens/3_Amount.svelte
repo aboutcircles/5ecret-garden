@@ -11,6 +11,10 @@
 
   let { context = $bindable() }: Props = $props();
 
+  if (context.amount === undefined) {
+    context.amount = 0;
+  }
+
   function handleSelect() {
     popupControls.open({
       title: 'Mint',
@@ -24,10 +28,7 @@
 
 <FlowDecoration>
   <p class="text-2xl font-bold">Enter Amount</p>
-  <SelectAmount
-    asset={context.selectedAsset}
-    bind:amount={context.amount}
-  />
+  <SelectAmount asset={context.selectedAsset} bind:amount={context.amount} />
   <!-- Action Buttons -->
   <div class="flex justify-end space-x-2 mt-6">
     <button

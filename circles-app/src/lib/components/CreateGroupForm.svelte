@@ -7,7 +7,7 @@
   import { mintPolicies } from '$lib/utils/mintPolicy';
   import Tooltip from './Tooltip.svelte';
   import { circles } from '$lib/stores/circles';
-  import { avatar } from '$lib/stores/avatar';
+  import { avatar, isGroup } from '$lib/stores/avatar';
   import ImageUpload from './ImageUpload.svelte';
   import { cidV0ToUint8Array } from '@circles-sdk/utils';
   import { ethers } from 'ethers';
@@ -89,6 +89,7 @@
     $avatar = await $circles.getAvatar(
       groupAddress.toLowerCase() as `0x${string}`
     );
+    $isGroup = true;
     localStorage.setItem('avatar', groupAddress);
 
     onstepchange('executed');

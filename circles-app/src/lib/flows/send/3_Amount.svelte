@@ -21,12 +21,16 @@
 
   let { context = $bindable() }: Props = $props();
 
+  if (context.amount === undefined) {
+    context.amount = 0;
+  }
+
   let deadBalances: TokenBalanceRow[] = $state([]);
   let path: MaxFlowResponse = $state();
 
   let showUnusedBalances = writable(false);
-  let showPathsSection = $state(false);    // True if pathfinding succeeds
-  let pathfindingFailed = $state(false);   // True if pathfinding fails
+  let showPathsSection = $state(false); // True if pathfinding succeeds
+  let pathfindingFailed = $state(false); // True if pathfinding fails
   let maxAmountCircles = $state(-1);
 
   // Controls displaying the data interface.
@@ -36,7 +40,9 @@
   let isLoadingPathfinding = $state(false); // Indicates pathfinding is in progress
 
   // Helper: are we using the transitive-transfer token?
-  let usesTTT = $derived(context.selectedAsset?.tokenAddress === TransitiveTransferTokenAddress);
+  let usesTTT = $derived(
+    context.selectedAsset?.tokenAddress === TransitiveTransferTokenAddress
+  );
 
   onMount(async () => {
     // If context.data is already set, expand the "Attach data" area by default
@@ -68,7 +74,7 @@
         (await $circles.v2Pathfinder?.getPath(
           $avatar.address,
           context.selectedAddress,
-          bigNumber,
+          bigNumber
         )) ?? [];
 
       maxAmountCircles = parseFloat(ethers.formatEther(path.maxFlow));
@@ -84,13 +90,13 @@
 
       const balances = await $avatar.getBalances();
       const sourceEdges = path.transfers.filter(
-        (edge) => edge.from === $avatar.address,
+        (edge) => edge.from === $avatar.address
       );
 
       // Identify "dead" balances not used in the path
       deadBalances = balances.filter(
         (balance) =>
-          !sourceEdges.some((edge) => edge.tokenOwner === balance.tokenAddress),
+          !sourceEdges.some((edge) => edge.tokenOwner === balance.tokenAddress)
       );
     } catch (err) {
       console.error('Error fetching path:', err);
@@ -206,7 +212,7 @@
           rows="4"
           placeholder="Enter data here"
           bind:value={context.data}
-></textarea>
+        ></textarea>
       </div>
     {/if}
   {/if}
@@ -227,7 +233,10 @@
     <div class="mt-4 text-gray-500">
       <h2 class="text-lg font-bold">Usable paths:</h2>
       {#if path.transfers?.length > 0}
-        <PathExplorer graph={path.transfers} startNode={path.transfers[0].from} />
+        <PathExplorer
+          graph={path.transfers}
+          startNode={path.transfers[0].from}
+        />
       {:else}
         <div class="p-4 text-center text-gray-500">
           <div class="spinner spinner-circle spinner-4xl"></div>
