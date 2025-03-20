@@ -5,15 +5,19 @@
   import type { Readable } from 'svelte/store';
   import type { GroupRow } from '@circles-sdk/data';
   import GroupRowView from './GroupRowView.svelte';
+  import { avatar } from '$lib/stores/avatar';
 
   let groups: Readable<{
     data: GroupRow[];
     next: () => Promise<boolean>;
     ended: boolean;
   }> = $state();
-  onMount(async () => {
-    groups = await createGroups();
-  });
+
+  avatar.subscribe(async ($avatar) => {
+    if ($avatar) {
+      groups = await createGroups();
+    }
+  }); 
 </script>
 
 <div
