@@ -73,9 +73,9 @@
     ([$circlesBalances, $trustedTokenOwners]) => {
       if ($trustedTokenOwners) {
         return {
-          data: $circlesBalances.data.filter((o) =>
+          data: $circlesBalances.data, /*.filter((o) =>
             $trustedTokenOwners.has(o.tokenOwner)
-          ),
+          ),*/
           next: $circlesBalances.next,
           ended: $circlesBalances.ended,
         };
