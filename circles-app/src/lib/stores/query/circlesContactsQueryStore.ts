@@ -10,13 +10,14 @@ import type {
 import type { ContactList } from '../contacts';
 import { getProfile } from '$lib/utils/profile';
 import { get } from 'svelte/store';
+import type { Address } from '@circles-sdk/utils';
 
 interface ContactEventRow extends EventRow {
   data: ContactList;
 }
 
 export async function createContactsQueryStore(
-  address: string,
+  address: Address,
   refreshOnEvents?: Set<CirclesEventType>
 ) {
   const sdk = get(circles);
@@ -112,7 +113,7 @@ async function enrichContactData(
   await Promise.all(promises);
 
   const avatarInfos =
-    (await get(circles)?.data.getAvatarInfoBatch(Object.keys(profileRecord))) ??
+    (await get(circles)?.data.getAvatarInfoBatch(Object.keys(profileRecord) as Address[])) ??
     [];
   const avatarInfoRecord: Record<string, AvatarRow> = {};
   avatarInfos.forEach((info) => {
