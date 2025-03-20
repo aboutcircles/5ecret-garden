@@ -22,7 +22,18 @@
     return await $circles.profiles.create(profile);
   }
 
-  let newProfile = $state($profile)
+  let newProfile: Profile = $state({
+    name: '',
+    description: '',
+    previewImageUrl: '',
+    imageUrl: '',
+  });
+
+  $effect(() => {
+    if ($profile) {
+      newProfile = $profile;
+    }
+  });
 
   async function migrateToV2() {
     popupControls.open({

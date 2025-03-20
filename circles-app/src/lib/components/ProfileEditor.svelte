@@ -5,16 +5,11 @@
 
 
   interface Props {
-    profile?: Profile;
+    profile: Profile;
     showCustomizableFields?: boolean;
   }
 
-  let { profile = $bindable({
-    name: '',
-    description: '',
-    previewImageUrl: '',
-    imageUrl: '',
-  }), showCustomizableFields = true }: Props = $props();
+  let { profile = $bindable(), showCustomizableFields = true }: Props = $props();
 
   const onnewimage = (dataUrl: string) => {
     profile.previewImageUrl = dataUrl;

@@ -6,12 +6,12 @@
   import type { AddContactFlowContext } from './context';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import Papa from 'papaparse';
-  import { avatar } from '$lib/stores/avatar';
+  import { avatar, isGroup } from '$lib/stores/avatar';
   import { ethers } from 'ethers';
   import type { Address } from '@circles-sdk/utils';
 
   let context: AddContactFlowContext = $state({
-    selectedAddress: '0x0',
+    selectedAddress: '',
   });
 
   let addressesArray: string[] = $state([]);
@@ -131,7 +131,9 @@
 </script>
 
 <FlowDecoration>
-  <h2 class="text-2xl font-bold">Add or Remove Members</h2>
+  <h2 class="text-2xl font-bold">
+    Add or remove {$isGroup ? 'members' : 'contacts'}
+  </h2>
   <div class="flex flex-row gap-x-1 justify-end items-center pb-1">
     <p class="text-sm text-gray-500 text-right">
       {addressesArray.length}
