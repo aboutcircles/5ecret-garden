@@ -4,8 +4,8 @@
   type Step = 'start' | 'form' | 'executed' | 'error';
   let step: Step = $state('start');
 
-  function onstepchange(step: Step) {
-    step = step;
+  function onstepchange(newStep: Step) {
+    step = newStep;
   }
 </script>
 

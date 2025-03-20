@@ -17,7 +17,13 @@
     initialConditions: string;
   }
 
-  let { onstepchange } = $props();
+  type Step = 'start' | 'form' | 'executed' | 'error';
+
+  interface Props {
+    onstepchange: (step: Step) => void;
+  }
+
+  let { onstepchange }: Props = $props();
 
   let groupProfile: GroupProfile = $state({
     name: '',
