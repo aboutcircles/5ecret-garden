@@ -2,7 +2,7 @@
   import { ethers } from 'ethers6';
   import { createEventDispatcher, onMount } from 'svelte';
   import AddressInput from '$lib/components/AddressInput.svelte';
-  import { type Profile, Profiles } from '@circles-sdk/profiles';
+  import { type Profile, Profiles, type SearchResultProfile } from '@circles-sdk/profiles';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { getCirclesConfig } from '$lib/utils/helpers';
   import { wallet } from '$lib/stores/wallet';
@@ -10,7 +10,7 @@
   export let selectedAddress: string = '';
   export let searchType: 'send' | 'group' | 'contact' = 'send';
   let lastAddress: string = '';
-  let result: Profile[] = [];
+  let result: SearchResultProfile[] = [];
   let profiles: Profiles | undefined;
 
   onMount(async () => {
@@ -35,16 +35,17 @@
 
   async function searchProfiles() {
     try {
-      let results: Profile[] = [];
+      let results: SearchResultProfile[] = [];
 
       // if selectedAddress is an address, add it to the results
       // as synthetic profile and prepend that profile if it's not found
       // in the search results.
-      const syntheticProfile = {
+      const syntheticProfile: SearchResultProfile = {
         address: selectedAddress,
         name: selectedAddress,
-        avatar: '',
-        bio: '',
+        CID: '',
+        lastUpdatedAt: 0,
+        registeredName: null
       };
 
       const nameResults = await profiles?.searchByName(selectedAddress);
@@ -55,14 +56,12 @@
       // TODO: Properly type the profile. The returned values from above have an 'address' field.
       if (searchType === 'send') {
         const addressInResults = !!results.find(
-          (profile: any) => profile.address === selectedAddress
+          (profile: any) => profile.address === selectedAddress.toLowerCase()
         );
         if (!addressInResults && ethers.isAddress(selectedAddress)) {
           results.unshift(syntheticProfile);
         }
       }
-
-      console.log('Updated results:', results);
 
       result = results;
     } catch (error) {

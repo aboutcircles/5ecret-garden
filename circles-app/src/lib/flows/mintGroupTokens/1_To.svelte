@@ -1,11 +1,12 @@
 <script lang="ts">
-  import { type SelectedEvent } from '$lib/pages/SelectContact.svelte';
   import type { GroupMintFlowContext } from '$lib/flows/mintGroupTokens/context';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import SelectAsset from '$lib/flows/mintGroupTokens/2_Asset.svelte';
   import { popupControls } from '$lib/stores/popUp';
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import SearchAvatar from '$lib/pages/SearchAvatar.svelte';
+  import type { Address } from '@circles-sdk/utils';
+  import type { Profile } from '@circles-sdk/profiles';
 
   export let context: GroupMintFlowContext = {
     selectedAddress: undefined,
@@ -13,11 +14,15 @@
     amount: undefined,
   };
 
+   type SelectedEvent = {
+    avatar: Address;
+    profile: Profile;
+  };
+
   function handleSelect(
     event: CustomEvent<SelectedEvent>
   ) {
-    console.log('Selected address', event.detail.address);
-    context.selectedAddress = event.detail.address;
+    context.selectedAddress = event.detail.avatar;
 
     popupControls.open({
       title: 'Select Asset',
