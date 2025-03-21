@@ -36,7 +36,7 @@
   </p>
   <SearchAvatar
     selectedAddress={context.selectedAddress}
-    {onselect}
+    on:select={handleSelect}
     searchType="send"
   />
 </FlowDecoration>
