@@ -8,7 +8,7 @@
   import Untrust from '$lib/pages/Untrust.svelte';
   import Trust from '$lib/pages/Trust.svelte';
   import SelectAsset from '$lib/flows/send/2_Asset.svelte';
-  import MintGroupTokens from '$lib/flows/mintGroupTokens/1_To.svelte';
+  import MintGroupTokens from '$lib/flows/mintGroupTokens/2_Asset.svelte';
   import { getProfile } from '$lib/utils/profile';
   import { formatTrustRelation, getTypeString } from '$lib/utils/helpers';
   import { onMount } from 'svelte';
@@ -138,7 +138,9 @@
             title: 'Mint group tokens',
             component: MintGroupTokens,
             props: {
-              address: address,
+              context: {
+                selectedAddress: address
+              }
             },
           });
         }}
