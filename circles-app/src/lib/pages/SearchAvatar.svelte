@@ -62,14 +62,12 @@
       // TODO: Properly type the profile. The returned values from above have an 'address' field.
       if (searchType === 'send') {
         const addressInResults = !!results.find(
-          (profile: any) => profile.address === selectedAddress
+          (profile: any) => profile.address === selectedAddress.toLowerCase()
         );
         if (!addressInResults && ethers.isAddress(selectedAddress)) {
           results.unshift(syntheticProfile);
         }
       }
-
-      console.log('Updated results:', results);
 
       result = results;
     } catch (error) {
