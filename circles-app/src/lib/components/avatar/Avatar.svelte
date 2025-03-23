@@ -7,7 +7,7 @@
   export const CirclesGardenApi = `https://api.circles.garden/`;
 
   async function queryCirclesGarden(
-    safeAddresses: string[]
+    safeAddresses: string[],
   ): Promise<CirclesSafeMap> {
     const safeAddressCopy = JSON.parse(JSON.stringify(safeAddresses));
     const batches: string[][] = [];
@@ -25,7 +25,7 @@
     for (let batch of batches) {
       const query = batch.reduce(
         (p, c) => p + `address[]=${ethers.getAddress(c)}&`,
-        ''
+        '',
       );
       const requestUrl = `${CirclesGardenApi}api/users/?${query}`;
 
@@ -84,16 +84,16 @@
 <script lang="ts">
   import ProfilePage from '$lib/pages/Profile.svelte';
   import { getProfile } from '$lib/utils/profile';
-  import { type SvelteComponent } from 'svelte';
   import HorizontalAvatarLayout from './HorizontalAvatarLayout.svelte';
   import VerticalAvatarLayout from './VerticalAvatarLayout.svelte';
   import {
     popupControls,
     type PopupContentDefinition,
   } from '$lib/stores/popUp';
+  import type { Address } from '@circles-sdk/utils';
 
   interface Props {
-    address: `0x${string}`;
+    address: Address | undefined;
     clickable?: boolean;
     view: 'horizontal' | 'vertical';
     pictureOverlayUrl?: string | undefined;
@@ -107,7 +107,7 @@
     view,
     pictureOverlayUrl = undefined,
     topInfo = undefined,
-    bottomInfo = undefined
+    bottomInfo = undefined,
   }: Props = $props();
 
   let profile: Profile | undefined = $state();
