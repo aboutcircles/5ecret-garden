@@ -1,9 +1,7 @@
 <script lang="ts">
   import SelectAsset from './2_Asset.svelte';
-  import Amount from './3_Amount.svelte';
   import type { SendFlowContext } from '$lib/flows/send/context';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
-  import { transitiveTransfer } from '$lib/pages/SelectAsset.svelte';
   import { avatar } from '$lib/stores/avatar';
   import { circles } from '$lib/stores/circles';
   import { popupControls } from '$lib/stores/popUp';
@@ -17,17 +15,15 @@
 
   let {
     context = $bindable({
-      selectedAddress: '',
+      selectedAddress: undefined,
       transitiveOnly: false,
       selectedAsset: {} as TokenBalanceRow,
       amount: undefined,
     }),
   }: Props = $props();
-  let allowAssetSelection: boolean = false;
 
   async function onselect(selectedAvatar: Address) {
     context.selectedAddress = selectedAvatar;
-    context.selectedAsset = transitiveTransfer();
 
     if (
       !$circles ||
@@ -38,31 +34,13 @@
       return;
     }
 
-    // If the avatars are on different versions, we need to allow asset selection
-    const selectedAddressInfo = await $circles.data.getAvatarInfo(
-      context.selectedAddress
-    );
-    if ($avatar.avatarInfo.version !== selectedAddressInfo?.version) {
-      allowAssetSelection = true;
-    }
-
-    if (allowAssetSelection) {
-      popupControls.open({
-        title: 'Select Asset',
-        component: SelectAsset,
-        props: {
-          context: context,
-        },
-      });
-    } else {
-      popupControls.open({
-        title: 'Enter Amount',
-        component: Amount,
-        props: {
-          context: context,
-        },
-      });
-    }
+    popupControls.open({
+      title: 'Select Asset',
+      component: SelectAsset,
+      props: {
+        context: context,
+      },
+    });
   }
 </script>
 
