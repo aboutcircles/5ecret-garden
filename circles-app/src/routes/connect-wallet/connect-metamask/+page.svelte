@@ -8,12 +8,12 @@
   import ConnectCircles from '$lib/components/ConnectCircles.svelte';
   import { switchOrAddGnosisNetwork } from '$lib/utils/network';
   import { avatar } from '$lib/stores/avatar';
-  import type { Network } from 'ethers6';
+  import type { Network } from 'ethers';
 
   const GNOSIS_CHAIN_ID_DEC = 100n; // Decimal format for BrowserProvider
 
-  let avatarInfo: AvatarRow | undefined;
-  let network: Network;
+  let avatarInfo: AvatarRow | undefined = $state();;
+  let network: Network | undefined = $state();
 
   //
   // Connects the wallet and initializes the Circles SDK.
@@ -61,7 +61,7 @@
   </p>
   {#if $wallet?.address && $circles && network}
     <ConnectCircles
-      address={$wallet.address.toLowerCase()}
+      address={$wallet.address}
       walletType="metamask"
       isRegistered={avatarInfo !== undefined}
       chainId={network.chainId}

@@ -1,6 +1,10 @@
-<script>
-  export let errorMessage = 'An unexpected error occurred.';
-  export let stackTrace = '';
+<script lang="ts">
+  interface Props {
+    errorMessage?: string;
+    stackTrace?: string;
+  }
+
+  let { errorMessage = 'An unexpected error occurred.', stackTrace = '' }: Props = $props();
 </script>
 
 <!-- Modal Content -->

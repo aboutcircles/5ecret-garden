@@ -4,25 +4,24 @@
   import SelectAsset from '$lib/flows/mintGroupTokens/2_Asset.svelte';
   import { popupControls } from '$lib/stores/popUp';
   import type { TokenBalanceRow } from '@circles-sdk/data';
-  import SearchAvatar from '$lib/pages/SearchAvatar.svelte';
   import type { Address } from '@circles-sdk/utils';
-  import type { Profile } from '@circles-sdk/profiles';
+  import SearchAvatar from '$lib/pages/SearchAvatar.svelte';
 
-  export let context: GroupMintFlowContext = {
-    selectedAddress: undefined,
-    selectedAsset: {} as TokenBalanceRow,
-    amount: undefined,
-  };
+  interface Props {
+    context?: GroupMintFlowContext;
+  }
 
-   type SelectedEvent = {
-    avatar: Address;
-    profile: Profile;
-  };
+  let {
+    context = $bindable({
+      selectedAddress: undefined,
+      selectedAsset: {} as TokenBalanceRow,
+      amount: undefined,
+    }),
+  }: Props = $props();
 
-  function handleSelect(
-    event: CustomEvent<SelectedEvent>
-  ) {
-    context.selectedAddress = event.detail.avatar;
+  function onselect(address: Address) {
+    console.log('Selected address', address);
+    context.selectedAddress = address;
 
     popupControls.open({
       title: 'Select Asset',
@@ -41,7 +40,7 @@
   </p>
   <SearchAvatar
     selectedAddress={context.selectedAddress}
-    on:select={handleSelect}
+    {onselect}
     searchType="send"
   />
 </FlowDecoration>

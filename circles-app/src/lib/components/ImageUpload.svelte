@@ -1,23 +1,26 @@
 <script lang="ts">
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { onMount } from 'svelte';
 
-  export let cropWidth: number = 256;
-  export let cropHeight: number = 256;
-  export let imageDataUrl: string | undefined;
+  interface Props {
+    cropWidth?: number;
+    cropHeight?: number;
+    imageDataUrl: string | undefined;
+    onnewimage: (dataUrl: string) => void;
+    oncleared: () => void;
+  }
 
-  const dispatch = createEventDispatcher();
+  let {
+    cropWidth = 256,
+    cropHeight = 256,
+    imageDataUrl = $bindable(),
+    onnewimage,
+    oncleared,
+  }: Props = $props();
 
   let imageFile: File | null = null;
-  let fileUpload: HTMLInputElement;
+  let fileUpload: HTMLInputElement | undefined = $state();
 
   onMount(async () => {});
-
-  $: {
-    console.log('ImageUpload mounted. Image data URL:', imageDataUrl);
-    if (imageDataUrl?.startsWith('http')) {
-      getImageAsDataUrl(imageDataUrl);
-    }
-  }
 
   async function getImageAsDataUrl(imageUrl: string) {
     const response = await fetch(imageUrl);
@@ -67,8 +70,7 @@
           if (imageDataUrl.length > 150 * 1024) {
             console.warn('Image size exceeds 150 KB after compression');
           }
-
-          dispatch('newImage', { dataUrl: imageDataUrl });
+          onnewimage(imageDataUrl);
         }
       };
     };
@@ -78,26 +80,34 @@
   function clearImage() {
     imageFile = null;
     imageDataUrl = '';
-    dispatch('cleared');
+    oncleared();
   }
 
   function openFilePicker() {
-    fileUpload.click();
+    if (fileUpload) {
+      fileUpload.click();
+    }
   }
+
+  $effect(() => {
+    if (imageDataUrl?.startsWith('http')) {
+      getImageAsDataUrl(imageDataUrl);
+    }
+  });
 </script>
 
 <button
   class="w-full flex flex-col items-center border border-dashed border-gray-300 rounded-lg px-6 py-10 bg-gray-50"
-  on:click={openFilePicker}
-  on:dragover={handleDragOver}
-  on:drop={handleDrop}
+  onclick={openFilePicker}
+  ondragover={handleDragOver}
+  ondrop={handleDrop}
 >
   <input
     bind:this={fileUpload}
     type="file"
     id="imageUpload"
     accept="image/*"
-    on:change={handleFileInput}
+    onchange={handleFileInput}
     class="hidden"
   />
   {#if !imageDataUrl}
@@ -108,11 +118,13 @@
       alt="Preview"
       class="mt-4 max-w-full rounded-lg shadow-sm"
     />
-    <button
-      type="button"
-      class="mt-2 px-3 py-1 border border-transparent rounded-md text-sm font-medium text-white bg-red-500 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-      on:click={clearImage}
-      >Clear Image
-    </button>
   {/if}
 </button>
+{#if imageDataUrl}
+  <button
+    type="button"
+    class="mt-2 px-3 py-1 border border-transparent rounded-md text-sm font-medium text-white bg-red-500 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+    onclick={clearImage}
+    >Clear Image
+  </button>
+{/if}

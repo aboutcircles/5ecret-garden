@@ -6,7 +6,7 @@
   import type { AvatarRow } from '@circles-sdk/data';
   import { onMount } from 'svelte';
 
-  let invitations: AvatarRow[] = [];
+  let invitations: AvatarRow[] = $state([]);
 
   onMount(async () => {
     if (!$wallet?.address) {
@@ -42,7 +42,7 @@
       {#each invitations as inviter}
         <button
           class="btn my-6 max-w-64 shadow-sm"
-          on:click={() => acceptInvitation(inviter.avatar)}
+          onclick={() => acceptInvitation(inviter.avatar)}
         >
           by
           <Avatar

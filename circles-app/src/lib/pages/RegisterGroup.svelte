@@ -2,10 +2,10 @@
   import CreateGroupForm from '$lib/components/CreateGroupForm.svelte';
 
   type Step = 'start' | 'form' | 'executed' | 'error';
-  let step: Step = 'start';
+  let step: Step = $state('start');
 
-  function handleStepChange(event: CustomEvent<Step>) {
-    step = event.detail;
+  function onstepchange(newStep: Step) {
+    step = newStep;
   }
 </script>
 
@@ -22,12 +22,12 @@
     <button
       type="button"
       class="btn btn-sm btn-primary"
-      on:click={() => (step = 'form')}
+      onclick={() => (step = 'form')}
     >
       Get Started
     </button>
   {:else if step === 'form'}
-    <CreateGroupForm on:stepChange={handleStepChange} />
+    <CreateGroupForm {onstepchange} />
   {:else if step === 'executed'}
     <div class="w-full flex flex-col items-center">
       <div class="flex items-center">
@@ -57,7 +57,7 @@
       </div>
       <button
         class="text-[#DD7143] flex items-center px-4 py-1 rounded-full mt-4 text-base font-semibold"
-        on:click={() => (step = 'start')}
+        onclick={() => (step = 'start')}
       >
         Back <img
           src="/arrow-uturn-left.svg"

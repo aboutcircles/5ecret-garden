@@ -4,7 +4,11 @@
   import { shortenAddress } from '$lib/utils/shared';
   import { popupControls } from '$lib/stores/popUp';
 
-  export let address: `0x${string}`;
+  interface Props {
+    address: `0x${string}`;
+  }
+
+  let { address }: Props = $props();
 
   async function invite() {
     if (!$avatar) {
@@ -45,7 +49,7 @@
     <button
       type="submit"
       class="btn btn-primary"
-      on:click={async () => await invite()}>Invite</button
+      onclick={async () => await invite()}>Invite</button
     >
   </div>
 </div>

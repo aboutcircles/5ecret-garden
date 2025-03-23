@@ -1,93 +1,147 @@
 <script lang="ts">
-  import { get, writable } from 'svelte/store';
-  import { shortenAddress } from '$lib/utils/shared';
-  import { ethers } from 'ethers'; // Import ethers.js for wei to eth conversion
-  import type { TransferPathStep } from '@circles-sdk/sdk/dist/v2/pathfinderV2';
-  import Avatar from './avatar/Avatar.svelte';
+  import { onMount } from 'svelte';
+  import { select } from 'd3-selection';
+  import { sankey, sankeyLinkHorizontal, type SankeyNode, type SankeyLink } from 'd3-sankey';
+  import { scaleOrdinal } from 'd3-scale';
+  import { schemeCategory10 } from 'd3-scale-chromatic';
+  import { formatEther } from 'ethers';
 
-  export let graph: TransferPathStep[] = [];
-  export let startNode = ''; // The starting node of the graph
+  // Pull in Sankey data from props; default height to 400
+  let { graph, startNode, height = 400 } = $props();
 
-  // Stores to track current breadcrumbs and edges
-  const breadcrumbs = writable([{ node: startNode, label: 'Source' }]);
-  const currentEdges = writable(
-    graph.filter((edge) => edge.from === startNode)
-  );
-
-  // Convert wei to eth for display purposes
-  function formatEth(wei: any) {
-    return ethers.formatEther(wei);
+  interface TransferPathStep {
+    from: string;
+    to: string;
+    value: string; // or BigInt, etc.
+    [key: string]: any;
   }
 
-  // Move to the selected node and update the breadcrumb
-  function moveToNode(target: any) {
-    const targetEdges = graph.filter((edge) => edge.from === target);
-    if (targetEdges.length > 0) {
-      breadcrumbs.update((bc) => [
-        ...bc,
-        { node: target, label: shortenAddress(target) },
-      ]);
-      currentEdges.set(targetEdges);
+  interface SankeyNodeExtra extends SankeyNode<{ name: string }, {}> {
+    name: string;
+  }
+
+  interface SankeyLinkExtra extends SankeyLink<SankeyNodeExtra, { value: number }> {
+    value: number;
+  }
+
+  // Reference to our SVG element
+  let svgEl: SVGSVGElement;
+  let width = 0; // Determined at runtime
+
+  // Helper: shorten an Ethereum address
+  function shortenAddress(addr: string): string {
+    // If it looks like a hex address of typical length, do the usual "0x1234...ABCD"
+    if (addr.startsWith('0x') && addr.length >= 10) {
+      return addr.slice(0, 6) + '...' + addr.slice(-4);
     }
+    // Otherwise, just return the original
+    return addr;
   }
 
-  // Navigate back in the breadcrumb to a previous node
-  function navigateBackTo(index: number) {
-    breadcrumbs.update((bc) => bc.slice(0, index + 1));
-    const previousNode = get(breadcrumbs)[index].node;
-    const targetEdges = graph.filter((edge) => edge.from === previousNode);
-    currentEdges.set(targetEdges);
+  // Build node/link data for d3-sankey
+  function buildSankeyData(graphData: TransferPathStep[]) {
+    const nodeNames = new Set<string>();
+    for (const edge of graphData) {
+      nodeNames.add(edge.from);
+      nodeNames.add(edge.to);
+    }
+
+    const nodes = Array.from(nodeNames).map((name) => ({ name }));
+
+    const links = graphData.map((edge) => {
+      const sourceIndex = nodes.findIndex((n) => n.name === edge.from);
+      const targetIndex = nodes.findIndex((n) => n.name === edge.to);
+      // Convert from wei to ETH, if you wish:
+      const linkValue = parseFloat(formatEther(edge.value));
+
+      return {
+        source: sourceIndex,
+        target: targetIndex,
+        value: linkValue,
+      };
+    });
+
+    return { nodes, links };
   }
 
-  // Check if a node has further outgoing edges
-  function hasNextEdges(node: any) {
-    return graph.some((edge) => edge.from === node);
-  }
+  onMount(() => {
+    if (!graph || graph.length === 0) return;
+
+    // Measure container width
+    width = svgEl.getBoundingClientRect().width;
+
+    const { nodes, links } = buildSankeyData(graph);
+
+    const sankeyGenerator = sankey<SankeyNodeExtra, SankeyLinkExtra>()
+      .nodeWidth(15)
+      .nodePadding(10)
+      .extent([
+        [0, 0],
+        [width, height],
+      ]);
+
+    // Compute layout
+    const sankeyData = sankeyGenerator({
+      nodes: nodes.map((d) => Object.assign({}, d)),
+      links: links.map((d) => Object.assign({}, d)),
+    });
+
+    // Clear any existing contents
+    select(svgEl).selectAll('*').remove();
+
+    // Create main svg
+    const svg = select(svgEl)
+      .attr('width', '100%')
+      .attr('height', height);
+
+    const color = scaleOrdinal(schemeCategory10);
+
+    // Draw links
+    svg
+      .append('g')
+      .selectAll('path')
+      .data(sankeyData.links)
+      .enter()
+      .append('path')
+      .attr('d', sankeyLinkHorizontal())
+      .attr('fill', 'none')
+      .attr('stroke', '#888')
+      .attr('stroke-opacity', 0.5)
+      .attr('stroke-width', (d) => Math.max(1, d.width || 1));
+
+    // Draw nodes
+    svg
+      .append('g')
+      .selectAll('rect')
+      .data(sankeyData.nodes)
+      .enter()
+      .append('rect')
+      .attr('x', (d) => d.x0 || 0)
+      .attr('y', (d) => d.y0 || 0)
+      .attr('width', (d) => (d.x1 || 0) - (d.x0 || 0))
+      .attr('height', (d) => Math.max(1, (d.y1 || 0) - (d.y0 || 0)))
+      .attr('fill', (d) => color(d.name));
+
+    // Node labels with in/out flow and shortened addresses
+    svg
+      .append('g')
+      .selectAll('text')
+      .data(sankeyData.nodes)
+      .enter()
+      .append('text')
+      .attr('x', (d) => (d.x0 || 0) - 6)
+      .attr('y', (d) => ((d.y1 || 0) + (d.y0 || 0)) / 2)
+      .attr('dy', '0.35em')
+      .attr('text-anchor', 'end')
+      .text((d) => {
+        const inflow = (d.targetLinks || []).reduce((acc, l) => acc + l.value, 0);
+        const outflow = (d.sourceLinks || []).reduce((acc, l) => acc + l.value, 0);
+        return `${shortenAddress(d.name)} (in=${inflow.toFixed(2)}, out=${outflow.toFixed(2)})`;
+      })
+      .filter((d) => (d.x0 || 0) < width / 2)
+      .attr('x', (d) => (d.x1 || 0) + 6)
+      .attr('text-anchor', 'start');
+  });
 </script>
 
-<!-- Breadcrumb Navigation -->
-{#if $breadcrumbs.length > 1}
-  <div class="breadcrumbs">
-    {#each $breadcrumbs as crumb, index}
-      <button
-        on:click={() => navigateBackTo(index)}
-        class="btn btn-link text-blue-500"
-      >
-        {crumb.label}
-      </button>
-      {#if index < $breadcrumbs.length - 1}
-        <span> -&gt; </span>
-      {/if}
-    {/each}
-  </div>
-{/if}
-
-<!-- Edge List -->
-<div>
-  {#each $currentEdges as edge}
-    <button
-      type="button"
-      class="flex w-full items-center justify-between p-2 bg-base-100 hover:bg-base-200 rounded-lg cursor-pointer"
-      on:click={() => moveToNode(edge.to)}
-      aria-label="Move to node"
-    >
-      <Avatar address={edge.tokenOwner} clickable={false} view="horizontal">
-        To: {shortenAddress(edge.to)}
-      </Avatar>
-      <div class="flex items-center gap-2">
-        <div class="font-medium">
-          {parseFloat(formatEth(edge.value)).toFixed(2)} Circles
-        </div>
-        {#if hasNextEdges(edge.to)}
-          <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
-        {/if}
-      </div>
-    </button>
-  {/each}
-
-  {#if $currentEdges.length === 0}
-    <div class="text-center">
-      <p>No further edges from this node.</p>
-    </div>
-  {/if}
-</div>
+<svg class="w-full" bind:this={svgEl} />

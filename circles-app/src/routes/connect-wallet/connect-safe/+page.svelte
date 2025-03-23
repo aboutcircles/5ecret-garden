@@ -10,12 +10,12 @@
   import ConnectCircles from '$lib/components/ConnectCircles.svelte';
   import CreateSafe from '$lib/pages/CreateSafe.svelte';
   import { SafeSdkBrowserContractRunner } from '@circles-sdk/adapter-safe';
-  import { ethers, Network } from 'ethers6';
   import type { Address } from '@circles-sdk/utils';
+  import { ethers, type Network } from 'ethers';
 
-  let network: Network;
-  let safes: Address[] = [];
-  let profileBySafe: Record<string, AvatarRow | undefined> = {};
+  let network: Network | undefined = $state();
+  let safes: Address[] = $state([]);
+  let profileBySafe: Record<string, AvatarRow | undefined> = $state({});
 
   const getSafesByOwnerApiEndpoint = (checksumOwnerAddress: string): string =>
     `https://safe-transaction-gnosis-chain.safe.global/api/v1/owners/${checksumOwnerAddress}/safes/`;
@@ -33,10 +33,10 @@
   }
 
   async function setup() {
-    const wallet = new BrowserProviderContractRunner();
-    await wallet.init();
+    const walletRunner = new BrowserProviderContractRunner();
+    await walletRunner.init();
 
-    $wallet = wallet;
+    $wallet = walletRunner;
 
     network = await $wallet.provider?.getNetwork();
 
@@ -72,15 +72,12 @@
   }
 
   onMount(async () => {
-    if (!$avatar) {
-      await setup();
-    }
+    await setup();
     loadSafesAndProfile();
   });
 
-  async function handleSafeCreated(event: CustomEvent) {
-    const newSafeAddress = event.detail.address;
-    console.log('New safe created:', newSafeAddress);
+  async function onsafecreated(address: Address) {
+    const newSafeAddress = address;
     safes = [...safes, newSafeAddress];
   }
 </script>
@@ -108,7 +105,7 @@
     {/each}
 
     <div class="text-center">
-      <CreateSafe on:safecreated={handleSafeCreated} />
+      <CreateSafe {onsafecreated} />
     </div>
   {:else}
     <WalletLoader name="Safe" />

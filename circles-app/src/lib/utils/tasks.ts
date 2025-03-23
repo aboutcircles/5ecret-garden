@@ -1,4 +1,4 @@
-import { get, writable } from 'svelte/store';
+import { writable } from 'svelte/store';
 import ErrorPage from '$lib/pages/Error.svelte';
 import { popupControls } from '$lib/stores/popUp';
 

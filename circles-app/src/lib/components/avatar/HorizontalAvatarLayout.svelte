@@ -1,14 +1,25 @@
 <script lang="ts">
   import type { Profile } from '@circles-sdk/profiles';
 
-  export let profile: Profile | undefined;
-  export let pictureOverlayUrl: string | undefined = undefined;
-  export let topInfo: string | undefined = undefined;
-  export let bottomInfo: string | undefined = undefined;
+  interface Props {
+    profile: Profile | undefined;
+    pictureOverlayUrl?: string | undefined;
+    topInfo?: string | undefined;
+    bottomInfo?: string | undefined;
+    onclick?: () => void | undefined;
+  }
+
+  let {
+    profile,
+    pictureOverlayUrl = undefined,
+    topInfo = undefined,
+    bottomInfo = undefined,
+    onclick = undefined,
+  }: Props = $props();
 </script>
 
 <div class="inline-flex items-center">
-  <button class="cursor-pointer" on:click>
+  <button class="cursor-pointer" {onclick}>
     {#if pictureOverlayUrl}
       <div class="indicator">
         <img

@@ -1,42 +1,51 @@
 <script lang="ts">
+  import { preventDefault } from 'svelte/legacy';
+
   import type { GroupProfile } from '@circles-sdk/profiles';
-  import { createEventDispatcher } from 'svelte';
   import { isValidName, isValidSymbol } from '$lib/utils/isValid';
   import MintPolicy from './MintPolicy.svelte';
   import { mintPolicies } from '$lib/utils/mintPolicy';
   import Tooltip from './Tooltip.svelte';
   import { circles } from '$lib/stores/circles';
-  import { avatar } from '$lib/stores/avatar';
+  import { avatar, isGroup } from '$lib/stores/avatar';
   import ImageUpload from './ImageUpload.svelte';
   import { cidV0ToUint8Array } from '@circles-sdk/utils';
-  import { ethers } from 'ethers6';
+  import { ethers } from 'ethers';
 
   interface CMGProfile {
     service: string;
     initialConditions: string;
   }
 
-  let groupProfile: GroupProfile = {
+  type Step = 'start' | 'form' | 'executed' | 'error';
+
+  interface Props {
+    onstepchange: (step: Step) => void;
+  }
+
+  let { onstepchange }: Props = $props();
+
+  let groupProfile: GroupProfile = $state({
     name: '',
     symbol: '',
     description: '',
     previewImageUrl: '',
     imageUrl: '',
-  };
+  });
 
-  let isLoading = false;
-  let formData: CMGProfile = {
+  let isLoading = $state(false);
+  let formData: CMGProfile = $state({
     service: '0x0000000000000000000000000000000000000000',
     initialConditions: '',
-  };
-  let mintPolicy = mintPolicies[0];
+  });
+  let mintPolicy = $state(mintPolicies[0]);
 
-  const dispatch = createEventDispatcher();
-
-  $: validName =
-    isValidName(groupProfile.name) || groupProfile.name.length === 0;
-  $: validSymbol =
-    isValidSymbol(groupProfile.symbol) || groupProfile.symbol.length === 0;
+  let validName = $derived(
+    isValidName(groupProfile.name) || groupProfile.name.length === 0
+  );
+  let validSymbol = $derived(
+    isValidSymbol(groupProfile.symbol) || groupProfile.symbol.length === 0
+  );
 
   async function handleSubmit() {
     if (!validName || !validSymbol) return;
@@ -80,22 +89,23 @@
     $avatar = await $circles.getAvatar(
       groupAddress.toLowerCase() as `0x${string}`
     );
+    $isGroup = true;
     localStorage.setItem('avatar', groupAddress);
 
-    dispatch('stepChange', 'executed');
+    onstepchange('executed');
   }
 
-  const onNewImage = (e: any) => {
-    groupProfile.previewImageUrl = e.detail.dataUrl;
+  const onnewimage = (dataUrl: string) => {
+    groupProfile.previewImageUrl = dataUrl;
   };
 
-  const onImageCleared = (e: any) => {
+  const oncleared = () => {
     groupProfile.previewImageUrl = '';
   };
 </script>
 
 <form
-  on:submit|preventDefault={handleSubmit}
+  onsubmit={preventDefault(handleSubmit)}
   class="w-full h-full flex flex-col gap-2 items-center justify-center text-xs md:text-sm/6 text-black"
 >
   <div class="w-full flex justify-between">
@@ -195,8 +205,8 @@
         imageDataUrl={groupProfile.previewImageUrl}
         cropHeight={256}
         cropWidth={256}
-        on:newImage={onNewImage}
-        on:cleared={onImageCleared}
+        {onnewimage}
+        {oncleared}
       />
     </div>
   </div>
@@ -212,7 +222,7 @@
       placeholder="Group Description..."
       class="textarea textarea-bordered w-full"
       bind:value={groupProfile.description}
-    />
+    ></textarea>
   </div>
   <div class="w-full flex flex-col mb-12 pt-8 border-t-1.5">
     <div class="label">
@@ -229,7 +239,7 @@
       Learn more
       <img src="/external.svg" alt="external icon" class="h-3 w-3 ml-1" />
     </a>
-    <MintPolicy {mintPolicy} on:update={(e) => (mintPolicy = e.detail)} />
+    <MintPolicy {mintPolicy} onupdate={(selectedMintPolicy) => (mintPolicy = selectedMintPolicy)} />
   </div>
   <button
     type="submit"

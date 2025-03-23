@@ -8,7 +8,11 @@
     contact: any; // Type this properly based on your ContactListItem type
   }
 
-  export let item: ContactEventRow;
+  interface Props {
+    item: ContactEventRow;
+  }
+
+  let { item }: Props = $props();
 </script>
 
 <ContactGroupRow

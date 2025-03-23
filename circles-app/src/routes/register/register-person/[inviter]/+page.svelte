@@ -7,14 +7,14 @@
   import type { Profile } from '@circles-sdk/profiles';
   import { page } from '$app/stores';
 
-  let profile: Profile = {
+  let profile: Profile = $state({
     name: '',
     description: '',
     previewImageUrl: '',
     imageUrl: undefined,
-  };
+  });
 
-  $: inviter = $page.params.inviter;
+  let inviter = $state($page.params.inviter) as `0x${string}`;
 
   async function registerHuman() {
     if (!$circles) {
@@ -24,7 +24,8 @@
       throw new Error('Inviter not set');
     }
 
-    $avatar = <Avatar>await $circles.acceptInvitation(inviter, profile);
+    //TODO: why need to bind it as Avatar
+    $avatar = await $circles.registerOrganizationV2(profile) as Avatar;
 
     await goto('/dashboard');
   }

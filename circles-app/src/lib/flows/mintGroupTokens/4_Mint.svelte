@@ -5,12 +5,16 @@
   import { runTask } from '$lib/utils/tasks';
   import { roundToDecimals } from '$lib/utils/shared';
   import { avatar } from '$lib/stores/avatar';
-  import { ethers } from 'ethers6';
+  import { ethers } from 'ethers';
   import { popupControls } from '$lib/stores/popUp';
 
-  export let context: SendFlowContext;
+  interface Props {
+    context: SendFlowContext;
+  }
 
-  function handleSend() {
+  let { context }: Props = $props();
+
+  function onselect() {
     if (!$avatar) {
       throw new Error('Avatar not found');
     }
@@ -51,6 +55,6 @@
     amount={context.amount}
     receiverAddress={context.selectedAddress}
     textButton="Convert CRC"
-    on:select={handleSend}
+    {onselect}
   />
 </FlowDecoration>

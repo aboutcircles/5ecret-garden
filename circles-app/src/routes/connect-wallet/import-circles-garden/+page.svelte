@@ -9,10 +9,10 @@
   import { ethers } from 'ethers';
   import { onMount } from 'svelte';
 
-  let mnemonicPhrase: string = '';
-  let hasValidKey = false;
-  let privateKey = '';
-  let address = '';
+  let mnemonicPhrase: string = $state('');
+  let hasValidKey = $state(false);
+  let privateKey = $state('');
+  let address = $state('');
 
   const provider = new ethers.JsonRpcProvider(gnosisConfig.circlesRpcUrl);
 
@@ -24,12 +24,12 @@
       return;
     }
 
-    const wallet = new PrivateKeyContractRunner(provider, privateKey);
-    await wallet.init();
+    const walletRunner = new PrivateKeyContractRunner(provider, privateKey);
+    await walletRunner.init();
 
     localStorage.setItem('privateKey', privateKey);
 
-    $wallet = wallet;
+    $wallet = walletRunner;
 
     // Initialize the Circles SDK and set it as $circles to make it globally available.
     $circles = new Sdk($wallet!, gnosisConfig);
@@ -52,10 +52,10 @@
 
     if (localStorage.getItem('privateKey')) {
       privateKey = localStorage.getItem('privateKey')!;
-      const wallet = new PrivateKeyContractRunner(provider, privateKey);
-      await wallet.init();
+      const walletRunner = new PrivateKeyContractRunner(provider, privateKey);
+      await walletRunner.init();
 
-      $wallet = wallet;
+      $wallet = walletRunner;
 
       $circles = new Sdk($wallet!, gnosisConfig);
 
@@ -80,7 +80,7 @@
     bind:address
   />
   <button
-    on:click={() => connectWallet()}
+    onclick={() => connectWallet()}
     class="btn btn-sm"
     class:btn-disabled={!hasValidKey}>Import</button
   >

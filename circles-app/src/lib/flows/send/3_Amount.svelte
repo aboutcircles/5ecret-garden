@@ -15,28 +15,38 @@
   import { ethers } from 'ethers';
   import { popupControls } from '$lib/stores/popUp';
 
-  export let context: SendFlowContext;
+  interface Props {
+    context: SendFlowContext;
+  }
 
-  let deadBalances: TokenBalanceRow[] = [];
-  let path: MaxFlowResponse;
+  let { context = $bindable() }: Props = $props();
+
+  if (context.amount === undefined) {
+    context.amount = 0;
+  }
+
+  let deadBalances: TokenBalanceRow[] = $state([]);
+  let path: MaxFlowResponse = $state();
 
   let showUnusedBalances = writable(false);
-  let showPathsSection = false;    // True if pathfinding succeeds
-  let pathfindingFailed = false;   // True if pathfinding fails
-  let maxAmountCircles = -1;
+  let showPathsSection = $state(false); // True if pathfinding succeeds
+  let pathfindingFailed = $state(false); // True if pathfinding fails
+  let maxAmountCircles = $state(-1);
 
   // Controls displaying the data interface.
   // We'll override this in onMount if context.data is present.
-  let showDataInput = false;
+  let showDataInput = $state(false);
 
-  let isLoadingPathfinding = false; // Indicates pathfinding is in progress
+  let calculatingPath = $state(false); // Indicates pathfinding is in progress
 
   // Helper: are we using the transitive-transfer token?
-  $: usesTTT = context.selectedAsset?.tokenAddress === TransitiveTransferTokenAddress;
+  // let usesTTT = $derived(
+  //   context.selectedAsset?.tokenAddress === TransitiveTransferTokenAddress
+  // );
 
   onMount(async () => {
     // If context.data is already set, expand the "Attach data" area by default
-    if (context.data && !usesTTT) {
+    if (context.data) {
       showDataInput = true;
       // If user didn't specify a dataType, default to UTF-8
     }
@@ -46,7 +56,7 @@
 
     // If not using TTT or missing info, skip pathfinding
     if (
-      !usesTTT ||
+      context.selectedAsset?.tokenAddress != TransitiveTransferTokenAddress ||
       !$circles ||
       !$avatar ||
       !context.selectedAddress ||
@@ -56,7 +66,7 @@
     }
 
     // Start loading
-    isLoadingPathfinding = true;
+    calculatingPath = true;
 
     try {
       const bigNumber = '99999999999999999999999999999999999';
@@ -94,7 +104,7 @@
       maxAmountCircles = -2;
     } finally {
       // End loading
-      isLoadingPathfinding = false;
+      calculatingPath = false;
     }
   });
 
@@ -129,23 +139,17 @@
     {maxAmountCircles}
     asset={context.selectedAsset}
     bind:amount={context.amount}
-    on:select={handleSelect}
   />
 
   <!-- Loading indicator while pathfinding is in progress -->
-  {#if isLoadingPathfinding}
+  {#if calculatingPath}
     <div class="flex items-center mt-4 space-x-2">
       <div class="spinner spinner-circle spinner-4xl"></div>
       <p class="text-gray-500">Calculating path…</p>
     </div>
-  {/if}
-
-  <!-- Condition 1 & 2: Show "Attach data" if not using TTT OR if pathfinding failed,
-       and the spinner is NOT up.
-  -->
-  {#if (!usesTTT || pathfindingFailed) && !isLoadingPathfinding}
+  {:else}
     <!-- Show a short message if pathfinding actually failed -->
-    {#if usesTTT && pathfindingFailed}
+    {#if pathfindingFailed}
       <div class="mt-4 p-2 text-red-600">
         <p>Pathfinding failed. No usable path was found.</p>
       </div>
@@ -155,76 +159,70 @@
         <button
           type="button"
           class="btn btn-outline max-sm:w-full rounded-md mt-8 md:mt-2"
-          on:click={toggleDataInput}
+          onclick={toggleDataInput}
         >
           Attach data
         </button>
         <button
           type="submit"
           class="btn btn-primary max-sm:w-full rounded-md text-white mt-8 md:mt-2"
-          on:click={handleSelect}
+          onclick={handleSelect}
         >
           Continue
         </button>
       </div>
     {/if}
+  {/if}
 
-    {#if showDataInput}
-      <div class="mt-4">
-        <!-- One line for label + radio group -->
-        <div class="flex items-center mb-2">
-          <label for="dataInput" class="font-medium mr-4">Data</label>
+  {#if showDataInput}
+    <div class="mt-4">
+      <!-- One line for label + radio group -->
+      <div class="flex items-center mb-2">
+        <label for="dataInput" class="font-medium mr-4">Data</label>
 
-          <label class="inline-flex items-center space-x-1 mr-4">
-            <input
-              type="radio"
-              name="dataType"
-              value="utf-8"
-              bind:group={context.dataType}
-            />
-            <span>UTF-8</span>
-          </label>
+        <label class="inline-flex items-center space-x-1 mr-4">
+          <input
+            type="radio"
+            name="dataType"
+            value="utf-8"
+            bind:group={context.dataType}
+          />
+          <span>UTF-8</span>
+        </label>
 
-          <label class="inline-flex items-center space-x-1">
-            <input
-              type="radio"
-              name="dataType"
-              value="hex"
-              bind:group={context.dataType}
-            />
-            <span>Hex</span>
-          </label>
-        </div>
-
-        <!-- Textarea on its own line -->
-        <textarea
-          id="dataInput"
-          class="w-full p-2 border rounded-md"
-          rows="4"
-          placeholder="Enter data here"
-          bind:value={context.data}
-        />
+        <label class="inline-flex items-center space-x-1">
+          <input
+            type="radio"
+            name="dataType"
+            value="hex"
+            bind:group={context.dataType}
+          />
+          <span>Hex</span>
+        </label>
       </div>
-    {/if}
+
+      <!-- Textarea on its own line -->
+      <textarea
+        id="dataInput"
+        class="w-full p-2 border rounded-md"
+        rows="4"
+        placeholder="Enter data here"
+        bind:value={context.data}
+      ></textarea>
+    </div>
   {/if}
 
   <!-- Condition 3: If pathfinding succeeded, show path-based UI -->
-  {#if showPathsSection && path && !isLoadingPathfinding}
-    <div class="flex justify-end space-x-2 mt-6">
-      <button
-        type="submit"
-        class="btn btn-primary max-sm:w-full rounded-md text-white mt-8 md:mt-2"
-        on:click={handleSelect}
-      >
-        Continue
-      </button>
-    </div>
+  {#if showPathsSection && path && !calculatingPath}
 
     <!-- Path UI -->
     <div class="mt-4 text-gray-500">
       <h2 class="text-lg font-bold">Usable paths:</h2>
       {#if path.transfers?.length > 0}
-        <PathExplorer graph={path.transfers} startNode={path.transfers[0].from} />
+        <PathExplorer
+          graph={path.transfers}
+          startNode={path.transfers[0].from}
+        />
       {:else}
         <div class="p-4 text-center text-gray-500">
           <div class="spinner spinner-circle spinner-4xl"></div>
@@ -235,7 +233,7 @@
       <div class="mt-4 mb-4">
         <h2 class="text-lg font-bold flex justify-between items-center">
           Unused balances:
-          <button on:click={toggleUnusedBalances} class="btn btn-sm btn-outline">
+          <button onclick={toggleUnusedBalances} class="btn btn-sm btn-outline">
             {#if $showUnusedBalances}
               Hide
             {:else}

@@ -8,7 +8,11 @@
   import { removeProfileFromCache } from '$lib/utils/profile';
   import { popupControls } from '$lib/stores/popUp';
 
-  export let context: MigrateToV2Context;
+  interface Props {
+    context: MigrateToV2Context;
+  }
+
+  let { context }: Props = $props();
 
   onMount(async () => {});
 
@@ -48,7 +52,7 @@
     <button
       type="submit"
       class="btn btn-primary text-white"
-      on:click={() => migrate()}
+      onclick={() => migrate()}
     >
       Migrate to V2
     </button>

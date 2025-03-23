@@ -4,12 +4,16 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { popupControls } from '$lib/stores/popUp';
 
-  export let item: GroupRow;
+  interface Props {
+    item: GroupRow;
+  }
+
+  let { item }: Props = $props();
 </script>
 
 <button
   class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
-  on:click={(e) => {
+  onclick={(e) => {
     popupControls.open({
       component: ProfilePage,
       title: '',

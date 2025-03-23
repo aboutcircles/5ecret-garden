@@ -12,7 +12,7 @@
     <div class="absolute left-4 top-4">
       <button
         class="flex w-fit rounded-lg p-2 bg-gray-100"
-        on:click={() => {
+        onclick={() => {
           $popupState.stack.length > 0
             ? popupControls.back()
             : popupControls.close();
@@ -27,9 +27,9 @@
     </div>
     <div class="content mt-2 w-full">
       {#if $popupState.content}
+        {@const SvelteComponent = $popupState.content.component}
         <div class="mt-14">
-          <svelte:component
-            this={$popupState.content.component}
+          <SvelteComponent
             {...$popupState.content.props}
           />
         </div>

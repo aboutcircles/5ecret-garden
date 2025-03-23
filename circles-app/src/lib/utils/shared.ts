@@ -1,4 +1,4 @@
-import { ethers } from 'ethers6';
+import { ethers } from 'ethers';
 
 export function getTimeAgo(unixTimestamp: number): string {
   const now = Math.floor(Date.now() / 1000); // Current time in seconds

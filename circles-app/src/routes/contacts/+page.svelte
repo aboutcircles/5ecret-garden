@@ -4,11 +4,11 @@
   import Papa from 'papaparse';
   import GenericList from '$lib/components/GenericList.svelte';
   import ContactRow from './ContactRow.svelte';
-  import { derived } from 'svelte/store';
+  import { derived, writable } from 'svelte/store';
 
-  let filterVersion: number | undefined = undefined;
+  let filterVersion = writable<number | undefined>(undefined);
 
-  $: filteredStore = derived(contacts, ($contacts) => {
+  let filteredStore = derived([contacts, filterVersion], ([$contacts, filterVersion]) => {
     const filteredData = Object.entries($contacts.data)
       .filter(
         ([_, contact]) =>
@@ -69,31 +69,31 @@
   <div class="flex flex-row gap-x-2">
     <button
       class={`bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm flex flex-row items-center gap-x-1 font-medium hover:text-black/70 hover:cursor-pointer ${
-        filterVersion === undefined ? 'text-black' : 'text-gray-400'
+        $filterVersion === undefined ? 'text-black' : 'text-gray-400'
       }`}
-      on:click={() => (filterVersion = undefined)}
+      onclick={() => filterVersion.set(undefined)}
     >
       All
     </button>
     <button
       class={`bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm flex flex-row items-center gap-x-1 font-medium hover:text-black/70 hover:cursor-pointer ${
-        filterVersion === 1 ? 'text-black' : 'text-gray-400'
+        $filterVersion === 1 ? 'text-black' : 'text-gray-400'
       }`}
-      on:click={() => (filterVersion = 1)}
+      onclick={() => filterVersion.set(1)}
     >
       Version 1
     </button>
     <button
       class={`bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm flex flex-row items-center gap-x-1 font-medium hover:text-black/70 hover:cursor-pointer ${
-        filterVersion === 2 ? 'text-black' : 'text-gray-400'
+        $filterVersion === 2 ? 'text-black' : 'text-gray-400'
       }`}
-      on:click={() => (filterVersion = 2)}
+      onclick={() => filterVersion.set(2)}
     >
       Version 2
     </button>
 
     <div class="flex-grow"></div>
-    <button on:click={handleExportCSV}>Export CSV</button>
+    <button onclick={handleExportCSV}>Export CSV</button>
   </div>
 
   <div class="w-full md:border rounded-lg md:px-4">

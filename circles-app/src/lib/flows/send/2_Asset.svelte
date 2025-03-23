@@ -7,9 +7,13 @@
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import { circlesBalances } from '$lib/stores/circlesBalances';
   import { popupControls } from '$lib/stores/popUp';
-  export let context: SendFlowContext;
+  interface Props {
+    context: SendFlowContext;
+  }
 
-  let selectedAsset: TokenBalanceRow | undefined = undefined;
+  let { context = $bindable() }: Props = $props();
+
+  let selectedAsset: TokenBalanceRow | undefined = $state(undefined);
 
   onMount(() => {
     if (context?.selectedAsset) {
@@ -17,8 +21,8 @@
     }
   });
 
-  function handleSelect(event: CustomEvent<TokenBalanceRow>) {
-    selectedAsset = event.detail;
+  function onselect(tokenBalanceRow: TokenBalanceRow) {
+    selectedAsset = tokenBalanceRow;
     context.selectedAsset = selectedAsset;
 
     popupControls.open({
@@ -33,9 +37,5 @@
 
 <FlowDecoration>
   <p class="text-2xl font-bold">Select Asset</p>
-  <SelectAsset
-    {selectedAsset}
-    balances={circlesBalances}
-    on:select={handleSelect}
-  />
+  <SelectAsset {selectedAsset} balances={circlesBalances} {onselect} />
 </FlowDecoration>

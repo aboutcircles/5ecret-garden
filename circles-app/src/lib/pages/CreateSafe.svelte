@@ -6,15 +6,15 @@
     SafeAccountConfig,
     SafeDeploymentConfig,
   } from '@safe-global/protocol-kit';
-  import { createEventDispatcher } from 'svelte';
   import { onMount } from 'svelte';
   import { BrowserProviderContractRunner } from '@circles-sdk/adapter-ethers';
   import { ethers } from 'ethers';
 
-  const dispatch = createEventDispatcher();
-  let isCreating = false;
-  let error: string | null = null;
-  let isWalletReady = false;
+  let isCreating = $state(false);
+  let error: string | null = $state(null);
+  let isWalletReady = $state(false);
+
+  let {onsafecreated} = $props();
 
   onMount(() => {
     isWalletReady = !!$wallet;
@@ -95,7 +95,7 @@
       });
 
       if (isSafeDeployed) {
-        dispatch('safecreated', { address: safeAddress });
+        onsafecreated(safeAddress);
         console.log('Safe created event dispatched:', safeAddress);
       } else {
         throw new Error('Safe deployment failed');
@@ -116,8 +116,8 @@
 <button
   class="btn btm-nav-xs btn-outline btn-primary"
   class:loading={isCreating}
-  disabled={isCreating || !isWalletReady || error}
-  on:click={createSafe}
+  disabled={isCreating || !isWalletReady}
+  onclick={createSafe}
 >
   {#if isCreating}
     Creating Safe...

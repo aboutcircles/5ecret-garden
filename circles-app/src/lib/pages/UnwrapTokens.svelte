@@ -1,16 +1,20 @@
 <script lang="ts">
   import { avatar } from '$lib/stores/avatar';
   import { circles } from '$lib/stores/circles';
-  import { ethers } from 'ethers6';
+  import { ethers } from 'ethers';
   import BalanceRow from '$lib/components/BalanceRow.svelte';
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import { roundToDecimals } from '$lib/utils/shared';
   import { runTask } from '$lib/utils/tasks';
   import { popupControls } from '$lib/stores/popUp';
 
-  export let asset: TokenBalanceRow;
+  interface Props {
+    asset: TokenBalanceRow;
+  }
 
-  let amount: number = 0;
+  let { asset }: Props = $props();
+
+  let amount: number = $state(0);
 
   async function unwrap() {
     const tokenInfo = await $circles?.data?.getTokenInfo(asset.tokenAddress);
@@ -64,7 +68,7 @@
   </div>
 
   <div class="modal-action">
-    <button type="submit" class="btn btn-primary" on:click={unwrap}
+    <button type="submit" class="btn btn-primary" onclick={unwrap}
       >Unwrap</button
     >
   </div>

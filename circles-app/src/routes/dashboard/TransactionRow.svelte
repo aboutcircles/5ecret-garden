@@ -1,24 +1,22 @@
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import { getTimeAgo } from '$lib/utils/shared';
   import type { TransactionHistoryRow } from '@circles-sdk/data';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { avatar } from '$lib/stores/avatar';
 
-  export let item: TransactionHistoryRow;
-
-  let tags: string = "";
-  let netCircles = 0;
-  let counterpartyAddress = '';
-  let badgeUrl: string | null = null;
-
-  $: if ($avatar) {
-    const result = parseEventDetails(item.events, $avatar.address.toLowerCase());
-    tags = result.tags.join(", ");
-    netCircles = item.circles;
-
-    counterpartyAddress = getCounterpartyAddress($avatar.address).toLowerCase();
-    badgeUrl = getBadge($avatar.address);
+  interface Props {
+    item: TransactionHistoryRow;
   }
+
+  let { item }: Props = $props();
+
+  let tags: string = $state("");
+  let netCircles = $state(0);
+  let counterpartyAddress = $state('');
+  let badgeUrl: string | null = $state(null);
+
 
   function parseEventDetails(eventsJson: string, avatarAddress: string) {
     let parsed: any[];
@@ -75,6 +73,16 @@
     if (item.to.toLowerCase() === avatarAddress) return '/badge-received.svg';
     return null;
   }
+  run(() => {
+    if ($avatar) {
+      const result = parseEventDetails(item.events, $avatar.address.toLowerCase());
+      tags = result.tags.join(", ");
+      netCircles = item.circles;
+
+      counterpartyAddress = getCounterpartyAddress($avatar.address).toLowerCase();
+      badgeUrl = getBadge($avatar.address);
+    }
+  });
 </script>
 
 <a

@@ -6,7 +6,11 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { popupControls } from '$lib/stores/popUp';
 
-  export let address: `0x${string}`;
+  interface Props {
+    address: `0x${string}`;
+  }
+
+  let { address }: Props = $props();
 
   async function trust() {
     if (!$avatar) {

@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script lang="ts" module>
   export type ActionButtonState =
     | 'Ready'
     | 'Working'
@@ -18,80 +18,84 @@
 </script>
 
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
+  interface Props {
+    action: () => Promise<any>;
+    title?: string;
+    disabled?: boolean;
+    theme?: ActionButtonTheme;
+  }
 
-  export let action: () => Promise<any>;
-  export let title: string = '';
-  export let doneStateDuration: number = 2000;
-  export let errorTransitory: boolean = true;
-  export let disabled: boolean = false;
+  let {
+    action,
+    title = '',
+    disabled = false,
+    theme = {
+      ['Ready']: 'bg-primary text-white',
+      ['Working']: 'bg-gray-200 text-black',
+      ['Error']: 'bg-yellow-500 text-white',
+      ['Retry']: 'bg-yellow-500 text-white',
+      ['Done']: 'bg-green-700 text-white',
+      ['Disabled']: 'bg-gray-400 text-white',
+    },
+  }: Props = $props();
+  const doneStateDuration: number = 2000;
+  const errorTransitory: boolean = true;
 
-  export let theme: ActionButtonTheme = {
-    ['Ready']: 'bg-primary text-white',
-    ['Working']: 'bg-gray-200 text-black',
-    ['Error']: 'bg-yellow-500 text-white',
-    ['Retry']: 'bg-yellow-500 text-white',
-    ['Done']: 'bg-green-700 text-white',
-    ['Disabled']: 'bg-gray-400 text-white',
-  };
-
-  const eventDispatcher = createEventDispatcher();
-
-  let state: ActionButtonState = 'Ready';
-  let errorMessage: string = '';
+  let buttonState: ActionButtonState = $state('Ready');
+  let errorMessage: string = $state('');
 
   const executeAction = () => {
-    if (disabled || state === 'Done' || state == 'Working') {
+    if (disabled || buttonState === 'Done' || buttonState == 'Working') {
       return;
     }
-    state = 'Working';
+    buttonState = 'Working';
     action()
       .then((result) => {
         result = result;
-        state = 'Done';
-        eventDispatcher('done', { result });
+        buttonState = 'Done';
         setTimeout(() => {
           // Transition from Done to either Ready or Disabled
-          state = disabled ? 'Disabled' : 'Ready';
+          buttonState = disabled ? 'Disabled' : 'Ready';
         }, doneStateDuration);
       })
       .catch((err) => {
         errorMessage = err.message;
-        state = errorTransitory ? 'Error' : 'Retry';
-        eventDispatcher('error', { err });
+        buttonState = errorTransitory ? 'Error' : 'Retry';
         if (errorTransitory) {
           setTimeout(() => {
-            state = 'Retry';
+            buttonState = 'Retry';
           }, doneStateDuration); // Use the same duration for simplicity
         }
         console.error(err);
       });
   };
 
-  $: if (disabled && state !== 'Done') {
-    state = 'Disabled';
-  } else if (!disabled && state === 'Disabled') {
-    state = 'Ready';
-  }
+  $effect(() => {
+    if (disabled && buttonState !== 'Done') {
+      buttonState = 'Disabled';
+    } else if (!disabled && buttonState === 'Disabled') {
+      buttonState = 'Ready';
+    }
+  });
 </script>
 
 <button
-  on:click={executeAction}
+  onclick={executeAction}
   title={errorMessage ?? title}
   class="text-sm p-2 px-4 rounded-lg {theme[
-    state
+    buttonState
   ]} focus:outline-none transition"
 >
-  {#if state === 'Working'}
+  {#if buttonState === 'Working'}
     <div
       class="loading-spinner inline-block border-t-2 border-b-2 border-gray-900 rounded-full w-4 h-4 animate-spin"
     ></div>
   {/if}
-  {#if state === 'Retry'}
+  {#if buttonState === 'Retry'}
     <div class="inline-block">⟳</div>
-  {:else if state === 'Error'}
+  {:else if buttonState === 'Error'}
     <div class="inline-block">⚠</div>
-  {:else if state === 'Done'}
+  {:else if buttonState === 'Done'}
     <div class="inline-block">✓</div>
   {/if}
   <slot />

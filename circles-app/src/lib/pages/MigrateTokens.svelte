@@ -6,7 +6,11 @@
   import { runTask } from '$lib/utils/tasks';
   import { tokenTypeToString } from '$lib/pages/SelectAsset.svelte';
   import { popupControls } from '$lib/stores/popUp';
-  export let asset: TokenBalanceRow;
+  interface Props {
+    asset: TokenBalanceRow;
+  }
+
+  let { asset }: Props = $props();
 
   async function migrate() {
     if (!$circles || !$avatar) {
@@ -41,7 +45,7 @@
   </div>
 
   <div class="modal-action">
-    <button type="submit" class="btn btn-primary" on:click={migrate}
+    <button type="submit" class="btn btn-primary" onclick={migrate}
       >Migrate</button
     >
   </div>

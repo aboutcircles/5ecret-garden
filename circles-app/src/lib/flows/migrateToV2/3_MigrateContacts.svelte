@@ -8,9 +8,13 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { popupControls } from '$lib/stores/popUp';
 
-  export let context: MigrateToV2Context;
+  interface Props {
+    context: MigrateToV2Context;
+  }
 
-  let selectedAddresses: string[] = [];
+  let { context = $bindable() }: Props = $props();
+
+  let selectedAddresses: string[] = $state([]);
 
   onMount(async () => {
     selectedAddresses = context.trustList ?? Object.keys($contacts?.data ?? {});
@@ -27,7 +31,7 @@
     });
   }
 
-  $: orderedContacts = Object.keys($contacts?.data ?? {}).sort((a, b) => {
+  let orderedContacts = $derived(Object.keys($contacts?.data ?? {}).sort((a, b) => {
     /*
             // Alphabetical sorting by contact name
             const aRelation = $contacts?.data[a]?.contactProfile?.name;
@@ -52,7 +56,7 @@
       return 1;
     }
     return 0;
-  });
+  }));
 </script>
 
 <FlowDecoration>
@@ -64,7 +68,7 @@
     {#each orderedContacts as address}
       <button
         class="p-2 bg-base-100 hover:bg-base-200 rounded-lg items-center block"
-        on:click={(e) => {
+        onclick={(e) => {
           console.log('Selected address', address);
           // Toggle selection
           if (selectedAddresses.includes(address)) {
@@ -120,7 +124,7 @@
     <button
       type="submit"
       class="btn btn-primary text-white"
-      on:click={() => next()}
+      onclick={() => next()}
     >
       Next
     </button>

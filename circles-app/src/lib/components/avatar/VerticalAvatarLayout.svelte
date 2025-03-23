@@ -1,11 +1,16 @@
 <script lang="ts">
   import type { Profile } from '@circles-sdk/profiles';
 
-  export let profile: Profile | undefined;
+  interface Props {
+    profile: Profile | undefined;
+    onclick?: () => void | undefined;
+  }
+
+  let { profile, onclick }: Props = $props();
 </script>
 
 <div class="w-full flex flex-col items-center text-center">
-  <button class="cursor-pointer" on:click>
+  <button class="cursor-pointer" {onclick}>
     <img
       src={profile?.previewImageUrl}
       alt="User Icon"

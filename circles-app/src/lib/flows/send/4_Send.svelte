@@ -5,13 +5,16 @@
   import { runTask } from '$lib/utils/tasks';
   import { roundToDecimals, shortenAddress } from '$lib/utils/shared';
   import { avatar } from '$lib/stores/avatar';
-  import { tokenTypeToString } from '$lib/pages/SelectAsset.svelte';
-  import { TransitiveTransferTokenAddress } from '$lib/pages/SelectAsset.svelte';
+  import { tokenTypeToString, TransitiveTransferTokenAddress } from '$lib/pages/SelectAsset.svelte';
   import { popupControls } from '$lib/stores/popUp';
 
-  export let context: SendFlowContext;
+  interface Props {
+    context: SendFlowContext;
+  }
 
-  function handleSend() {
+  let { context }: Props = $props();
+
+  function onselect() {
     if (!$avatar) {
       throw new Error('Avatar not found');
     }
@@ -53,7 +56,7 @@
       name: `Send ${roundToDecimals(context.amount)} ${tokenTypeToString(context.selectedAsset.tokenType)} to ${shortenAddress(context.selectedAddress)}...`,
       promise:
         context.selectedAsset.tokenAddress === TransitiveTransferTokenAddress
-          ? $avatar.transfer(context.selectedAddress, context.amount)
+          ? $avatar.transfer(context.selectedAddress, context.amount, undefined, dataUInt8Arr)
           : $avatar.transfer(
             context.selectedAddress,
             context.amount,
@@ -75,6 +78,6 @@
     textButton="Send CRC"
     data={context.data}
     dataType={context.dataType}
-    on:select={handleSend}
+    {onselect}
   />
 </FlowDecoration>

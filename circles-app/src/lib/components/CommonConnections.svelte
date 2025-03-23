@@ -8,21 +8,21 @@
   import ProfilePage from '$lib/pages/Profile.svelte';
   import Avatar from './avatar/Avatar.svelte';
   import { popupControls } from '$lib/stores/popUp';
+  import type { Address } from '@circles-sdk/utils';
 
-  export let otherAvatarAddress: `0x${string}`;
-  export let commonConnectionsCount: number = 0;
+  interface Props {
+    otherAvatarAddress: `0x${string}`;
+    commonConnectionsCount?: number;
+  }
 
-  let commonContacts: string[] = [];
+  let { otherAvatarAddress, commonConnectionsCount = $bindable(0) }: Props =
+    $props();
+
+  let commonContacts: Address[] = $state([]);
   let profile: Profile | undefined;
   let otherAvatar: AvatarInterface | undefined;
   let otherAvatarOutgoingTrust: Record<string, TrustRelationRow> = {};
   let avatarContactsByAddress: Record<string, TrustRelationRow> = {};
-
-  $: {
-    if (otherAvatarAddress) {
-      initialize();
-    }
-  }
 
   async function initialize() {
     if (!otherAvatarAddress) {
@@ -71,16 +71,18 @@
     );
     commonConnectionsCount = commonContacts.length;
   }
+  $effect(() => {
+    if (otherAvatarAddress) {
+      initialize();
+    }
+  });
 </script>
 
-<!-- <p class="menu-title pl-0">
-    Common connections:
-</p> -->
 <div class="w-full divide-y p-4">
   {#each commonContacts as contact (contact)}
     <button
       class="w-full flex items-center justify-between px-0 py-4 hover:bg-black/5 rounded-lg"
-      on:click={(e) => {
+      onclick={(e) => {
         popupControls.open({
           component: ProfilePage,
           title: '',

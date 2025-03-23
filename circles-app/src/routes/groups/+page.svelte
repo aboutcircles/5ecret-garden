@@ -1,19 +1,22 @@
 <script lang="ts">
   import GenericList from '$lib/components/GenericList.svelte';
   import { createGroups } from '$lib/stores/groups';
-  import { onMount } from 'svelte';
   import type { Readable } from 'svelte/store';
   import type { GroupRow } from '@circles-sdk/data';
   import GroupRowView from './GroupRowView.svelte';
+  import { avatar } from '$lib/stores/avatar';
 
   let groups: Readable<{
     data: GroupRow[];
     next: () => Promise<boolean>;
     ended: boolean;
-  }>;
-  onMount(async () => {
-    groups = await createGroups();
-  });
+  }> = $state();
+
+  avatar.subscribe(async ($avatar) => {
+    if ($avatar) {
+      groups = await createGroups();
+    }
+  }); 
 </script>
 
 <div

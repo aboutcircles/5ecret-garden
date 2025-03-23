@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script lang="ts" module>
   import type { Profile } from '@circles-sdk/profiles';
   import { shortenAddress } from '$lib/utils/shared';
   import { ethers } from 'ethers';
@@ -7,7 +7,7 @@
   export const CirclesGardenApi = `https://api.circles.garden/`;
 
   async function queryCirclesGarden(
-    safeAddresses: string[]
+    safeAddresses: string[],
   ): Promise<CirclesSafeMap> {
     const safeAddressCopy = JSON.parse(JSON.stringify(safeAddresses));
     const batches: string[][] = [];
@@ -25,7 +25,7 @@
     for (let batch of batches) {
       const query = batch.reduce(
         (p, c) => p + `address[]=${ethers.getAddress(c)}&`,
-        ''
+        '',
       );
       const requestUrl = `${CirclesGardenApi}api/users/?${query}`;
 
@@ -34,7 +34,7 @@
 
       const profiles: (Profile & { safeAddress: string })[] =
         requestResultJson.data.map((o: any) => {
-          return <Profile & { safeAddress: string }>{
+          return {
             name: o.username,
             previewImageUrl: o.avatarUrl,
             safeAddress: o.safeAddress.toLowerCase(),
@@ -84,30 +84,41 @@
 <script lang="ts">
   import ProfilePage from '$lib/pages/Profile.svelte';
   import { getProfile } from '$lib/utils/profile';
-  import { onMount, type SvelteComponent } from 'svelte';
   import HorizontalAvatarLayout from './HorizontalAvatarLayout.svelte';
   import VerticalAvatarLayout from './VerticalAvatarLayout.svelte';
   import {
     popupControls,
     type PopupContentDefinition,
   } from '$lib/stores/popUp';
+  import type { Address } from '@circles-sdk/utils';
 
-  export let address: string;
-  export let clickable: boolean = true;
-  export let view: 'horizontal' | 'vertical';
-  export let pictureOverlayUrl: string | undefined = undefined;
-  export let topInfo: string | undefined = undefined;
-  export let bottomInfo: string | undefined = undefined;
+  interface Props {
+    address: Address | undefined;
+    clickable?: boolean;
+    view: 'horizontal' | 'vertical';
+    pictureOverlayUrl?: string | undefined;
+    topInfo?: string | undefined;
+    bottomInfo?: string | undefined;
+  }
 
-  let profile: Profile | undefined;
+  let {
+    address,
+    clickable = true,
+    view,
+    pictureOverlayUrl = undefined,
+    topInfo = undefined,
+    bottomInfo = undefined,
+  }: Props = $props();
 
-  $: {
+  let profile: Profile | undefined = $state();
+
+  $effect(() => {
     if (address) {
       getProfile(address).then((newProfile) => {
         profile = newProfile;
       });
     }
-  }
+  });
 
   function openAvatar() {
     if (!clickable) {
@@ -115,7 +126,7 @@
     }
     const nextPage: PopupContentDefinition = {
       title: shortenAddress(address),
-      component: ProfilePage as typeof SvelteComponent,
+      component: ProfilePage,
       props: {
         address: address,
       },
@@ -137,11 +148,11 @@
 {:else if view === 'horizontal'}
   <HorizontalAvatarLayout
     {pictureOverlayUrl}
-    on:click={openAvatar}
+    onclick={openAvatar}
     {profile}
     {topInfo}
     {bottomInfo}
   />
 {:else}
-  <VerticalAvatarLayout on:click={openAvatar} {profile} />
+  <VerticalAvatarLayout onclick={openAvatar} {profile} />
 {/if}

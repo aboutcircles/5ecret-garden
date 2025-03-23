@@ -8,7 +8,7 @@
   import Untrust from '$lib/pages/Untrust.svelte';
   import Trust from '$lib/pages/Trust.svelte';
   import SelectAsset from '$lib/flows/send/2_Asset.svelte';
-  import MintGroupTokens from '$lib/flows/mintGroupTokens/1_To.svelte';
+  import MintGroupTokens from '$lib/flows/mintGroupTokens/2_Asset.svelte';
   import { getProfile } from '$lib/utils/profile';
   import { formatTrustRelation, getTypeString } from '$lib/utils/helpers';
   import { onMount } from 'svelte';
@@ -16,8 +16,12 @@
   import { popupControls } from '$lib/stores/popUp';
   import Address from '$lib/components/Address.svelte';
 
-  export let address: `0x${string}` | undefined;
-  export let trustVersion: number | undefined;
+  interface Props {
+    address: `0x${string}` | undefined;
+    trustVersion: number | undefined;
+  }
+
+  let { address, trustVersion }: Props = $props();
 
   onMount(() => {
     if (address) {
@@ -25,11 +29,11 @@
     }
   });
 
-  let otherAvatar: AvatarRow | undefined;
-  let profile: Profile | undefined;
-  let members: string[] | undefined = undefined;
+  let otherAvatar: AvatarRow | undefined = $state();
+  let profile: Profile | undefined = $state();
+  let members: `0x${string}`[] | undefined = $state(undefined);
 
-  let trustRow: TrustRelationRow | undefined;
+  let trustRow: TrustRelationRow | undefined = $state();
 
   async function initialize(address?: `0x${string}`) {
     if (!address) {
@@ -69,14 +73,14 @@
     }
   }
 
-  let commonConnectionsCount = 0;
+  let commonConnectionsCount = $state(0);
 </script>
 
 <div class="flex flex-col items-center w-full sm:w-[90%] lg:w-3/5 mx-auto">
   <Avatar
     view="vertical"
     clickable={false}
-    address={otherAvatar?.avatar || ''}
+    address={otherAvatar?.avatar || '0x0'}
   />
 
   {#if trustRow}
@@ -111,7 +115,7 @@
   <div class="w-full flex justify-center mt-6 space-x-6">
     <button
       class="btn btn-primary text-white"
-      on:click={() => {
+      onclick={() => {
         popupControls.open({
           title: 'Send Circles',
           component: SelectAsset,
@@ -129,12 +133,14 @@
     {#if trustRow?.relation === 'trustedBy' && otherAvatar?.type === 'CrcV2_RegisterGroup'}
       <button
         class="btn bg-[#F3F4F6] border-none"
-        on:click={() => {
+        onclick={() => {
           popupControls.open({
             title: 'Mint group tokens',
             component: MintGroupTokens,
             props: {
-              address: address,
+              context: {
+                selectedAddress: address
+              }
             },
           });
         }}
@@ -145,7 +151,7 @@
     {#if trustRow?.relation === 'trusts'}
       <button
         class="btn bg-[#F3F4F6] border-none"
-        on:click={() => {
+        onclick={() => {
           popupControls.open({
             title: 'Untrust',
             component: Untrust,
@@ -161,7 +167,7 @@
     {:else if trustRow?.relation === 'mutuallyTrusts'}
       <button
         class="btn bg-[#F3F4F6] border-none"
-        on:click={() => {
+        onclick={() => {
           popupControls.open({
             title: 'Untrust',
             component: Untrust,
@@ -176,7 +182,7 @@
     {:else if trustRow?.relation === 'trustedBy'}
       <button
         class="btn bg-[#F3F4F6] border-none"
-        on:click={() => {
+        onclick={() => {
           popupControls.open({
             title: 'Trust',
             component: Trust,
@@ -191,7 +197,7 @@
     {:else}
       <button
         class="btn bg-[#F3F4F6] border-none"
-        on:click={() => {
+        onclick={() => {
           popupControls.open({
             title: 'Trust',
             component: Trust,

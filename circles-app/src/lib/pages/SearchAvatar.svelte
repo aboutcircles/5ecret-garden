@@ -1,17 +1,24 @@
 <script lang="ts">
-  import { ethers } from 'ethers6';
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { ethers } from 'ethers';
+  import { onMount } from 'svelte';
   import AddressInput from '$lib/components/AddressInput.svelte';
-  import { type Profile, Profiles, type SearchResultProfile } from '@circles-sdk/profiles';
+  import { Profiles, type SearchResultProfile } from '@circles-sdk/profiles';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { getCirclesConfig } from '$lib/utils/helpers';
   import { wallet } from '$lib/stores/wallet';
+  import type { Address } from '@circles-sdk/utils';
 
-  export let selectedAddress: string = '';
-  export let searchType: 'send' | 'group' | 'contact' = 'send';
-  let lastAddress: string = '';
-  let result: SearchResultProfile[] = [];
-  let profiles: Profiles | undefined;
+  interface Props {
+    selectedAddress?: Address;
+    searchType?: 'send' | 'group' | 'contact';
+    oninvite?: (avatar: `0x${string}`) => void;
+    onselect?: (avatar: `0x${string}`) => void;
+  }
+
+  let { selectedAddress = $bindable('0x0'), searchType = 'send', oninvite, onselect }: Props = $props();
+  let lastAddress: string = $state('');
+  let result: SearchResultProfile[] = $state([]);
+  let profiles: Profiles | undefined = $state();
 
   onMount(async () => {
     const network = await $wallet?.provider?.getNetwork();
@@ -26,7 +33,6 @@
 
     if (searchType === 'send') {
       // TODO: implement contact list here when get profile type and circles-sdk/profiles are unified
-
       result = (await profiles.searchByName('a')).slice(0, 25);
     } else {
       result = (await profiles.searchByName('a')).slice(0, 25);
@@ -69,18 +75,18 @@
     }
   }
 
-  const eventDispatcher = createEventDispatcher();
-
-  $: if (selectedAddress && selectedAddress !== lastAddress) {
-    lastAddress = selectedAddress;
-    searchProfiles();
-  } else if (selectedAddress.trim() === '') {
-    if (profiles) {
-      profiles.searchByName('a').then((results) => {
-        result = results.slice(0, 25);
-      });
+  $effect(() => {
+    if (selectedAddress && selectedAddress !== lastAddress) {
+      lastAddress = selectedAddress;
+      searchProfiles();
+    } else if (selectedAddress.trim() === '') {
+      if (profiles) {
+        profiles.searchByName('a').then((results) => {
+          result = results.slice(0, 25);
+        });
+      }
     }
-  }
+  });
 </script>
 
 <div class="form-control my-4">
@@ -106,11 +112,10 @@
         <div class="w-full pt-2">
           <button
             class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
-            on:click={() =>
-              eventDispatcher('select', { avatar: profile.address })}
+            onclick={() => onselect?.(profile.address as Address)}
           >
             <Avatar
-              address={profile.address}
+              address={profile.address as Address}
               view="horizontal"
               clickable={false}
             />
@@ -125,8 +130,7 @@
         {#if ethers.isAddress(selectedAddress) && searchType === 'contact'}
           <button
             class="btn mt-6"
-            on:click={() =>
-              eventDispatcher('invite', { avatar: selectedAddress })}
+            onclick={() => oninvite?.(selectedAddress)}
             >Invite {selectedAddress}</button
           >
         {:else}

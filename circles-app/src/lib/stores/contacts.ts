@@ -10,6 +10,7 @@ import { circles } from '$lib/stores/circles';
 import { getProfile } from '$lib/utils/profile';
 import { writable } from 'svelte/store';
 import { createContactsQueryStore } from './query/circlesContactsQueryStore';
+import type { Address } from '@circles-sdk/utils';
 
 export type ContactListItem = {
   contactProfile: Profile;
@@ -28,7 +29,7 @@ const refreshOnEvents: Set<CirclesEventType> = new Set([
 let currentStoreUnsubscribe: (() => void) | undefined;
 let currentQuery: Promise<any> | undefined;
 
-const _contacts = writable<{
+export const contacts = writable<{
   data: ContactList;
   next: () => Promise<boolean>;
   ended: boolean;
@@ -42,7 +43,7 @@ avatar.subscribe(($avatar) => {
 
     currentQuery = createContactsQueryStore($avatar.address, refreshOnEvents);
     currentQuery.then((store) => {
-      currentStoreUnsubscribe = store.subscribe(_contacts.set);
+      currentStoreUnsubscribe = store.subscribe(contacts.set);
     });
   } else {
     if (currentStoreUnsubscribe) {
@@ -50,15 +51,13 @@ avatar.subscribe(($avatar) => {
       currentStoreUnsubscribe = undefined;
     }
     currentQuery = undefined;
-    _contacts.set({
+    contacts.set({
       data: {},
       next: async () => false,
       ended: true,
     });
   }
 });
-
-export const contacts = _contacts;
 
 async function enrichContactData(
   rows: TrustRelationRow[]
@@ -78,7 +77,7 @@ async function enrichContactData(
   await Promise.all(promises);
 
   const avatarInfos: AvatarRow[] =
-    (await get(circles)?.data.getAvatarInfoBatch(Object.keys(profileRecord))) ??
+    (await get(circles)?.data.getAvatarInfoBatch(Object.keys(profileRecord) as Address[])) ??
     [];
   const avatarInfoRecord: Record<string, AvatarRow> = {};
   avatarInfos.forEach((info) => {

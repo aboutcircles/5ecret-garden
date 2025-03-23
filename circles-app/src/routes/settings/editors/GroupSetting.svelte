@@ -2,9 +2,9 @@
   import { onMount } from 'svelte';
   import { avatar } from '$lib/stores/avatar';
 
-  let serviceAddress: `0x${string}` = '0x0';
-  let mintHandlerAddress: `0x${string}` = '0x0';
-  let redemptionHandlerAddress: `0x${string}` = '0x0';
+  let serviceAddress: `0x${string}` = $state('0x0');
+  let mintHandlerAddress: `0x${string}` = $state('0x0');
+  let redemptionHandlerAddress: `0x${string}` = $state('0x0');
 
   onMount(async () => {
     try {
@@ -59,7 +59,7 @@
       <button
         type="button"
         class="btn btn-square btn-xs btn-primary btn-outline"
-        on:click={handleSetService}
+        onclick={handleSetService}
         ><img src="/update.svg" alt="Update" class="w-4" /></button
       >
     </div>
@@ -79,7 +79,7 @@
       /><button
         type="button"
         class="btn btn-square btn-xs btn-primary btn-outline"
-        on:click={handleSetMintHandler}
+        onclick={handleSetMintHandler}
         ><img src="/update.svg" alt="Update" class="w-4" /></button
       >
     </div>
@@ -99,7 +99,7 @@
       /><button
         type="button"
         class="btn btn-square btn-xs btn-primary btn-outline"
-        on:click={handleSetRedemptionHandler}
+        onclick={handleSetRedemptionHandler}
         ><img src="/update.svg" alt="Update" class="w-4" /></button
       >
     </div>

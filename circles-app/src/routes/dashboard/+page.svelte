@@ -2,22 +2,19 @@
   import GenericList from '$lib/components/GenericList.svelte';
   import TransactionRow from './TransactionRow.svelte';
   import TotalBalance from '$lib/components/TotalBalance.svelte';
-  import { avatar } from '$lib/stores/avatar';
+  import { avatar, isGroup } from '$lib/stores/avatar';
   import { roundToDecimals } from '$lib/utils/shared';
   import { runTask } from '$lib/utils/tasks';
   import { transactionHistory } from '$lib/stores/transactionHistory';
 
-  let mintableAmount: number = 0;
+  let mintableAmount: number = $state(0);
 
-  async function init() {
-    mintableAmount = (await $avatar?.getMintableAmount()) ?? 0;
-  }
 
-  $: {
-    if ($avatar) {
-      init();
+  avatar.subscribe(async () => {
+    if($avatar && !$isGroup){
+      mintableAmount = (await $avatar?.getMintableAmount()) ?? 0;
     }
-  }
+  });
 
   async function mintPersonalCircles() {
     if (!$avatar) {
@@ -39,7 +36,7 @@
   <TotalBalance />
 
   {#if mintableAmount >= 0.01}
-    <button class="btn btn-sm btn-primary" on:click={mintPersonalCircles}>
+    <button class="btn btn-sm btn-primary" onclick={mintPersonalCircles}>
       Mint {roundToDecimals(mintableAmount)} Circles
     </button>
   {/if}

@@ -6,7 +6,7 @@ export type SendFlowDataType = 'hex' | 'utf-8';
 export type SendFlowContext = {
   dataType?: SendFlowDataType;
   data?: string;
-  selectedAddress: Address;
+  selectedAddress: Address | undefined;
   transitiveOnly: boolean;
   selectedAsset: TokenBalanceRow;
   amount: number | undefined;

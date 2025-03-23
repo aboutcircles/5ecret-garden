@@ -1,14 +1,15 @@
 <script lang="ts">
   import ActionButton from '$lib/components/ActionButton.svelte';
-  import { ethers, MaxUint256 } from 'ethers6';
+  import { MaxUint256 } from 'ethers';
   import { circles } from '$lib/stores/circles';
+  import type { Address } from '@circles-sdk/utils';
 
   let mintPolicyAddress: string =
     $circles?.circlesConfig.baseGroupMintPolicy ?? '';
 
-  let fromAddress: string = '';
-  let toAddress: string = '';
-  let result: any;
+  let fromAddress: Address = $state('0x0');
+  let toAddress: Address = $state('0x0');
+  let result: any = $state();
 
   async function calculatePath() {
     if (!$circles) {

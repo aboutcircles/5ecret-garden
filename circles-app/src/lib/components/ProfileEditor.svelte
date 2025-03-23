@@ -3,21 +3,19 @@
   import ImageUpload from '$lib/components/ImageUpload.svelte';
   import type { Profile } from '@circles-sdk/profiles';
 
-  export let profile: Profile = {
-    name: '',
-    description: '',
-    previewImageUrl: '',
-    imageUrl: '',
+
+  interface Props {
+    profile: Profile;
+    showCustomizableFields?: boolean;
+  }
+
+  let { profile = $bindable(), showCustomizableFields = true }: Props = $props();
+
+  const onnewimage = (dataUrl: string) => {
+    profile.previewImageUrl = dataUrl;
   };
 
-  export let showCustomizableFields: boolean = true;
-
-  const onNewImage = (e: any) => {
-    profile.previewImageUrl = e.detail.dataUrl;
-    profile = profile;
-  };
-
-  const onImageCleared = (e: any) => {
+  const oncleared = () => {
     profile.previewImageUrl = '';
     profile = profile;
   };
@@ -87,8 +85,8 @@
         imageDataUrl={profile.previewImageUrl}
         cropHeight={256}
         cropWidth={256}
-        on:newImage={onNewImage}
-        on:cleared={onImageCleared}
+        onnewimage={onnewimage}
+        oncleared={oncleared}
       />
     </div>
   {/if}

@@ -3,15 +3,12 @@
   import { totalCirclesBalance } from '$lib/stores/totalCirclesBalance';
   import { roundToDecimals } from '$lib/utils/shared';
 
-  let personalToken: number;
-  let groupToken: number;
-
-  $: {
-    personalToken =
-      $circlesBalances?.data?.filter((balance) => !balance.isGroup).length ?? 0;
-    groupToken =
-      $circlesBalances?.data?.filter((balance) => balance.isGroup).length ?? 0;
-  }
+  let personalToken: number = $derived(
+    $circlesBalances?.data?.filter((balance) => !balance.isGroup).length
+  );
+  let groupToken: number = $derived(
+    $circlesBalances?.data?.filter((balance) => balance.isGroup).length
+  );
 </script>
 
 <div class="flex flex-col items-center gap-y-4 w-full mt-10">

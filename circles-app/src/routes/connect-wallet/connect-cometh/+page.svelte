@@ -6,7 +6,7 @@
   import { Sdk } from '@circles-sdk/sdk';
   import { gnosisConfig } from '$lib/chiadoConfig';
   import { SdkContractRunnerWrapper } from '@circles-sdk/adapter-ethers';
-  import { JsonRpcProvider } from 'ethers6';
+  import { JsonRpcProvider } from 'ethers';
   import { ComethSdkContractRunner } from '@circles-sdk/adapter-cometh';
   import { SupportedNetworks } from '@cometh/connect-sdk';
   import { onMount } from 'svelte';

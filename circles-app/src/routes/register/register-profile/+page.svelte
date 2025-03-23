@@ -6,12 +6,12 @@
   import ProfileEditor from '$lib/components/ProfileEditor.svelte';
   import { onMount } from 'svelte';
 
-  let profile: Profile = {
+  let profile: Profile = $state({
     name: '',
     description: '',
     previewImageUrl: '',
     imageUrl: undefined,
-  };
+  });
 
   onMount(async () => {
     if ($wallet?.address) {

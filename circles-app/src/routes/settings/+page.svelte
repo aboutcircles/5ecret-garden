@@ -11,7 +11,7 @@
   import MigrateToV2 from '$lib/flows/migrateToV2/1_GetInvited.svelte';
   import { popupControls } from '$lib/stores/popUp';
   import GroupSetting from './editors/GroupSetting.svelte';
-  import { ethers } from 'ethers6';
+  import { ethers } from 'ethers';
   import ProfileEditor from '$lib/components/ProfileEditor.svelte';
 
   async function saveProfileData(profile: Profile): Promise<string> {
@@ -22,7 +22,18 @@
     return await $circles.profiles.create(profile);
   }
 
-  $: newProfile = $profile;
+  let newProfile: Profile = $state({
+    name: '',
+    description: '',
+    previewImageUrl: '',
+    imageUrl: '',
+  });
+
+  $effect(() => {
+    if ($profile) {
+      newProfile = $profile;
+    }
+  });
 
   async function migrateToV2() {
     popupControls.open({
@@ -34,8 +45,7 @@
 
   async function stopV1() {
     const v1TokenAddress = $avatar?.avatarInfo?.v1Token;
-    const wallet = $wallet!;
-    if (!wallet || !v1TokenAddress) {
+    if (!$wallet || !v1TokenAddress) {
       throw new Error('Wallet or v1 token not available');
     }
 
@@ -43,7 +53,7 @@
       const selector = ethers
         .keccak256(ethers.toUtf8Bytes('stop()'))
         .slice(0, 10);
-      const tx = await wallet.sendTransaction!({
+      const tx = await $wallet.sendTransaction!({
         to: v1TokenAddress,
         data: selector,
         value: 0n,

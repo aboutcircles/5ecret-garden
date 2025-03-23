@@ -1,30 +1,36 @@
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { avatar } from '$lib/stores/avatar';
   import { circles } from '$lib/stores/circles';
   import { type Address, uint256ToAddress } from '@circles-sdk/utils';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import { onMount } from 'svelte';
-  import { formatUnits, parseUnits } from 'ethers6';
+  import { formatUnits, parseUnits } from 'ethers';
   import type { TokenBalanceRow } from '@circles-sdk/data';
 
-  export let asset: TokenBalanceRow;
+  interface Props {
+    asset: TokenBalanceRow;
+  }
+
+  let { asset }: Props = $props();
 
   let collateralInTreasury: Array<{
     avatar: Address;
     amount: bigint;        // raw wei from chain
     amountToRedeem: number;
-  }> = [];
+  }> = $state([]);
 
   // We'll keep track of the total to redeem and whether it's valid.
-  let totalToRedeem = 0;
-  let remainingToAllocate = 0;
-  let canRedeem = false;
-  let isModified = false;
+  let totalToRedeem = $state(0);
+  let remainingToAllocate = $state(0);
+  let canRedeem = $state(false);
+  let isModified = $state(false);
 
   // This runs whenever collateralInTreasury changes or user input changes.
   // It re-calculates the sums and validity for the UI.
-  $: {
+  run(() => {
     // 1) Convert the user's total redeemable (asset.circles) from wei to a floating number.
     //    If asset.circles is already a string or BigInt, adapt accordingly.
     //    Example assumes it's a BigInt or numeric string in wei:
@@ -53,7 +59,7 @@
 
     // If any item.amountToRedeem != 0, this is “modified”
     isModified = collateralInTreasury.some((item) => item.amountToRedeem !== 0);
-  }
+  });
 
   onMount(async () => {
     if (!$circles) return;

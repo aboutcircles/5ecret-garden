@@ -2,9 +2,13 @@
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import CurrencyInput from '$lib/components/CurrencyInput.svelte';
 
-  export let asset: TokenBalanceRow;
-  export let amount: number = 0;
-  export let maxAmountCircles: number = -1;
+  interface Props {
+    asset: TokenBalanceRow;
+    amount?: number;
+    maxAmountCircles?: number;
+  }
+
+  let { asset, amount = $bindable(0), maxAmountCircles = -1 }: Props = $props();
 </script>
 
 <div class="mb-4">

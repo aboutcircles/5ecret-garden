@@ -4,7 +4,11 @@
   import Avatar from './avatar/Avatar.svelte';
   import { getTypeString } from '$lib/utils/helpers';
 
-  export let item: AvatarRow;
+  interface Props {
+    item: AvatarRow;
+  }
+
+  let { item }: Props = $props();
 </script>
 
 <div

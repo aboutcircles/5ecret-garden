@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ethers } from 'ethers6';
+  import { ethers } from 'ethers';
   import { avatar } from '$lib/stores/avatar';
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import BalanceRow from '$lib/components/BalanceRow.svelte';
@@ -7,10 +7,14 @@
   import { runTask } from '$lib/utils/tasks';
   import { popupControls } from '$lib/stores/popUp';
 
-  export let asset: TokenBalanceRow;
+  interface Props {
+    asset: TokenBalanceRow;
+  }
 
-  let wrapType: 'Static' | 'Demurraged' = 'Static';
-  let amount: number = 0;
+  let { asset }: Props = $props();
+
+  let wrapType: 'Static' | 'Demurraged' = $state('Static');
+  let amount: number = $state(0);
 
   async function wrap() {
     const sendValue = ethers.parseEther(amount.toString());
@@ -103,6 +107,6 @@
   </div>
 
   <div class="modal-action">
-    <button type="submit" class="btn btn-primary" on:click={wrap}>Wrap</button>
+    <button type="submit" class="btn btn-primary" onclick={wrap}>Wrap</button>
   </div>
 </div>

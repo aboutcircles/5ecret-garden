@@ -2,24 +2,26 @@
   import {
     onDestroy,
     type SvelteComponent,
-    createEventDispatcher,
   } from 'svelte';
   import type { EventRow, TransactionHistoryRow } from '@circles-sdk/data';
   import { getKeyFromItem } from '$lib/stores/query/circlesQueryStore';
   import type { Readable } from 'svelte/store';
 
-  export let store: Readable<{
-    data: EventRow[] | TransactionHistoryRow[];
-    next: () => Promise<boolean>;
-    ended: boolean;
-  }>;
-  export let row: typeof SvelteComponent<Record<string, any>>;
+  interface Props {
+    store: Readable<{
+      data: EventRow[] | TransactionHistoryRow[];
+      next: () => Promise<boolean>;
+      ended: boolean;
+    }>;
+    row: typeof SvelteComponent<Record<string, any>>;
+  }
+
+  let { store, row }: Props = $props();
 
   let observer: IntersectionObserver | null = null;
-  let anchor: HTMLElement | undefined;
+  let anchor: HTMLElement | undefined = $state();
 
-  let hasError = false;
-  const eventDispatcher = createEventDispatcher();
+  let hasError = $state(false);
 
   const setupObserver = () => {
     if (observer) observer.disconnect();
@@ -53,9 +55,9 @@
     }
   };
 
-  $: {
+  $effect(() => {
     if (store && anchor) setupObserver();
-  }
+  });
 
   onDestroy(() => {
     observer?.disconnect();
@@ -65,12 +67,13 @@
 
 <div class="w-full flex flex-col divide-y gap-y-2 overflow-x-auto py-4">
   {#each $store?.data ?? [] as item (getKeyFromItem(item))}
+    {@const SvelteComponent_1 = row}
     <button
-      on:click={() => eventDispatcher('select', item)}
+      onclick={() => {}}
       class="w-full pt-2"
       aria-label="Select item"
     >
-      <svelte:component this={row} {item} />
+      <SvelteComponent_1 {item} />
     </button>
   {/each}
 
@@ -84,7 +87,7 @@
       <span class="text-gray-500">End of list</span>
     {:else if hasError}
       <span class="text-red-500">Error loading items</span>
-      <button class="ml-2 text-primary hover:underline" on:click={handleRetry}>
+      <button class="ml-2 text-primary hover:underline" onclick={handleRetry}>
         Retry
       </button>
     {:else}
