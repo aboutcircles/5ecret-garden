@@ -161,10 +161,10 @@
     <div class="flex flex-col gap-x-2">
       <div class="flex flex-row gap-x-2">
         <ActionButton action={() => handleAddMembers(selectedAddresses, false)}
-          >Add</ActionButton
+          >{$isGroup ? 'Add' : 'Trust'}</ActionButton
         >
         <ActionButton action={() => handleAddMembers(selectedAddresses, true)}
-          >Remove</ActionButton
+          >{$isGroup ? 'Remove' : 'Untrust'}</ActionButton
         >
       </div>
       <p class="text-sm text-red-500 h-6">{errorMessage}</p>
@@ -182,7 +182,7 @@
     </label>
   </div>
 
-  <p class="text-xl font-bold mt-4">Search for members</p>
+  <p class="text-xl font-bold mt-4">Search for {$isGroup ? 'members' : 'contacts'}</p>
   <SearchAvatar
     selectedAddress={context.selectedAddress}
     {oninvite}
