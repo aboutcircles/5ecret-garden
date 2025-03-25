@@ -89,7 +89,6 @@
     $avatar = await $circles.getAvatar(
       groupAddress.toLowerCase() as `0x${string}`
     );
-    $isGroup = true;
     localStorage.setItem('avatar', groupAddress);
 
     onstepchange('executed');
