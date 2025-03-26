@@ -7,11 +7,12 @@
   import { getCirclesConfig } from '$lib/utils/helpers';
   import { onMount } from 'svelte';
   import Avatar from './avatar/Avatar.svelte';
+  import type { SdkContractRunnerWrapper } from '@circles-sdk/adapter-ethers';
 
   interface Props {
     address: `0x${string}`;
     isRegistered: boolean;
-    walletType?: 'safe' | 'metamask';
+    walletType?: 'safe' | 'metamask' | 'circles';
     chainId: bigint;
   }
 
@@ -23,7 +24,9 @@
   onMount(async () => {
     groups =
       (
-        await $circles?.data.getCreatedCMGroups(100, { ownerEquals: address.toLowerCase() })
+        await $circles?.data.getCreatedCMGroups(100, {
+          ownerEquals: address.toLowerCase(),
+        })
       )?.map((group) => group.proxy) || [];
   });
 
@@ -32,7 +35,7 @@
 
     $wallet = await initializeWallet(walletType, address);
     circlesConfig = await getCirclesConfig(chainId);
-    $circles = new Sdk($wallet, circlesConfig);
+    $circles = new Sdk($wallet! as SdkContractRunnerWrapper, circlesConfig);
 
     if (lowerCaseAddress === address.toLowerCase() && !isRegistered) {
       await goto('/register');
@@ -50,7 +53,7 @@
     if ($circles && $wallet) {
       $wallet = await initializeWallet(walletType, address);
       circlesConfig = await getCirclesConfig(chainId);
-      $circles = new Sdk($wallet!, circlesConfig);
+      $circles = new Sdk($wallet! as SdkContractRunnerWrapper, circlesConfig);
 
       await goto('/register/register-group');
     }
@@ -74,29 +77,31 @@
       <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
     {/if}
   </button>
-  <div class="w-full flex gap-x-2 items-center mt-6">
-    <p class="font-bold text-primary">My groups</p>
-    <button
-      onclick={() => deployGroup()}
-      class="btn btn-xs btn-ghost btn-circle"
-      ><img src="/plus.svg" alt="Plus" class="w-5" /></button
-    >
-  </div>
-  <div class="w-full pl-6 flex flex-col gap-y-2 mt-2">
-    {#each groups as group}
+  {#if walletType !== 'circles'}
+    <div class="w-full flex gap-x-2 items-center mt-6">
+      <p class="font-bold text-primary">My groups</p>
       <button
-        class="flex w-full hover:bg-black/5 rounded-lg p-2"
-        onclick={() => connectWallet(group)}
-        ><Avatar
-          address={group}
-          clickable={false}
-          view="horizontal"
-          topInfo={group}
-        /></button
+        onclick={() => deployGroup()}
+        class="btn btn-xs btn-ghost btn-circle"
+        ><img src="/plus.svg" alt="Plus" class="w-5" /></button
       >
-    {/each}
-    {#if groups.length === 0}
-      <p class="text-sm">No groups available.</p>
-    {/if}
-  </div>
+    </div>
+    <div class="w-full pl-6 flex flex-col gap-y-2 mt-2">
+      {#each groups as group}
+        <button
+          class="flex w-full hover:bg-black/5 rounded-lg p-2"
+          onclick={() => connectWallet(group)}
+          ><Avatar
+            address={group}
+            clickable={false}
+            view="horizontal"
+            topInfo={group}
+          /></button
+        >
+      {/each}
+      {#if groups.length === 0}
+        <p class="text-sm">No groups available.</p>
+      {/if}
+    </div>
+  {/if}
 </div>

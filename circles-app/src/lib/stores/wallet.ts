@@ -2,13 +2,19 @@ import { writable } from 'svelte/store';
 import { goto } from '$app/navigation';
 import { avatar } from '$lib/stores/avatar';
 import { circles } from '$lib/stores/circles';
-import { BrowserProviderContractRunner } from '@circles-sdk/adapter-ethers';
+import {
+  BrowserProviderContractRunner,
+  PrivateKeyContractRunner,
+  SdkContractRunnerWrapper,
+} from '@circles-sdk/adapter-ethers';
 import {
   SafeSdkBrowserContractRunner,
   SafeSdkPrivateKeyContractRunner,
 } from '@circles-sdk/adapter-safe';
 import { Sdk } from '@circles-sdk/sdk';
 import { getCirclesConfig } from '$lib/utils/helpers';
+import { gnosisConfig } from '$lib/chiadoConfig';
+import { ethers } from 'ethers';
 
 type WalletRunner =
   | BrowserProviderContractRunner
@@ -30,6 +36,17 @@ export async function initializeWallet(type: string, address?: `0x${string}`) {
     localStorage.setItem('wallet', address);
     const runner = new SafeSdkBrowserContractRunner();
     await runner.init(address);
+    return runner;
+  } else if (type === 'circles' && address) {
+    const privateKey = localStorage.getItem('privateKey');
+    if (!privateKey) {
+      throw new Error('Private key not found in localStorage');
+    }
+
+    localStorage.setItem('wallet', new ethers.Wallet(privateKey).address);
+    const provider = new ethers.JsonRpcProvider(gnosisConfig.circlesRpcUrl);
+    const runner = new PrivateKeyContractRunner(provider, privateKey);
+    await runner.init();
     return runner;
   }
   throw new Error(`Unsupported wallet type: ${type}`);
@@ -67,7 +84,7 @@ export async function restoreWallet() {
     }
 
     const sdk = new Sdk(
-      restoredWallet,
+      restoredWallet as SdkContractRunnerWrapper,
       await getCirclesConfig(network.chainId)
     );
     circles.set(sdk);
@@ -77,7 +94,6 @@ export async function restoreWallet() {
     );
 
     if (avatarInfo) {
-      console.log('Wallet restored');
       avatar.set(
         await sdk.getAvatar(
           savedAvatar !== null ? savedAvatar : restoredWallet.address
