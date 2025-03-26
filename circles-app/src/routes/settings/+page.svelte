@@ -66,7 +66,6 @@
 
   async function saveProfile() {
     const cid = await saveProfileData(newProfile!);
-    const digest = cidV0ToUint8Array(cid);
 
     const tx = await runTask({
       name: 'Updating profile ...',
@@ -74,14 +73,11 @@
         if (!$circles?.nameRegistry) {
           throw new Error('Name registry not available');
         }
-        const tx = await $circles.nameRegistry.updateMetadataDigest(digest);
-        return await tx.wait();
-      })(),
+        await $avatar!.updateMetadata(cid);
+      })().then(() => {
+        window.location.reload();
+      }),
     });
-
-    if ($wallet?.address) {
-      $avatar = await $circles?.getAvatar($wallet.address);
-    }
   }
 </script>
 
@@ -99,7 +95,7 @@
       {#if $avatar?.avatarInfo?.version === 2}
         <div>
           <ActionButton action={saveProfile} disabled={!newProfile}
-            >Save
+          >Save
           </ActionButton>
         </div>
       {/if}
@@ -118,7 +114,8 @@
           <h2 class="text-lg font-medium">Circles V2</h2>
           <div class="mt-3">
             <ActionButton action={migrateToV2}
-              >Update to Circles V2</ActionButton
+            >Update to Circles V2
+            </ActionButton
             >
           </div>
         </div>
@@ -128,7 +125,7 @@
           <h2 class="text-lg font-medium">Circles V1</h2>
           <div class="mt-3">
             <ActionButton action={stopV1}
-              ><span class="text-orange-400">Stop V1 account permanently</span>
+            ><span class="text-orange-400">Stop V1 account permanently</span>
             </ActionButton>
           </div>
         </div>
