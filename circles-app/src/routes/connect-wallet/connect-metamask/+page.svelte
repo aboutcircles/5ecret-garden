@@ -9,10 +9,10 @@
   import { switchOrAddGnosisNetwork } from '$lib/utils/network';
   import { avatar } from '$lib/stores/avatar';
   import type { Network } from 'ethers';
-
+  import type { SdkContractRunnerWrapper } from '@circles-sdk/adapter-ethers';
   const GNOSIS_CHAIN_ID_DEC = 100n; // Decimal format for BrowserProvider
 
-  let avatarInfo: AvatarRow | undefined = $state();;
+  let avatarInfo: AvatarRow | undefined = $state();
   let network: Network | undefined = $state();
 
   //
@@ -38,7 +38,7 @@
     const circlesConfig = await getCirclesConfig(network.chainId);
 
     // Initialize the Circles SDK and set it as $circles to make it globally available.
-    $circles = new Sdk($wallet!, circlesConfig);
+    $circles = new Sdk($wallet! as SdkContractRunnerWrapper, circlesConfig);
     avatarInfo = await $circles.data.getAvatarInfo($wallet.address);
   }
 
