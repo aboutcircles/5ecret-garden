@@ -44,9 +44,12 @@ export async function initializeWallet(type: string, address?: `0x${string}`) {
     }
 
     localStorage.setItem('wallet', new ethers.Wallet(privateKey).address);
-    const provider = new ethers.JsonRpcProvider(gnosisConfig.circlesRpcUrl);
-    const runner = new PrivateKeyContractRunner(provider, privateKey);
-    await runner.init();
+    const runner = new SafeSdkPrivateKeyContractRunner(
+      privateKey,
+      gnosisConfig.circlesRpcUrl
+    );
+    await runner.init(address);
+    console.log(runner);
     return runner;
   }
   throw new Error(`Unsupported wallet type: ${type}`);
