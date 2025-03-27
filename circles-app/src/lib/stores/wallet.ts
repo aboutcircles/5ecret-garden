@@ -30,7 +30,7 @@ export async function initializeWallet(type: string, address?: `0x${string}`) {
   if (type === 'metamask') {
     const runner = new BrowserProviderContractRunner();
     await runner.init();
-    localStorage.setItem('wallet', JSON.stringify(runner.address!));
+    localStorage.setItem('wallet', runner.address || '');
     return runner;
   } else if (type === 'safe' && address) {
     localStorage.setItem('wallet', address);
@@ -113,12 +113,12 @@ export async function restoreWallet() {
 }
 
 export async function clearSession() {
-  localStorage.clear();
+  // localStorage.clear();
   avatar.set(undefined);
   wallet.set(undefined);
   circles.set(undefined);
-  localStorage.removeItem('wallet');
-  localStorage.removeItem('avatar');
+  // localStorage.removeItem('wallet');
+  // localStorage.removeItem('avatar');
   await goto('/connect-wallet');
   console.log('User session cleared');
 }
