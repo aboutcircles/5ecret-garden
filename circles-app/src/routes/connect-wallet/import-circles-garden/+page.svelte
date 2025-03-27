@@ -1,24 +1,21 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { Sdk, type AvatarRow } from '@circles-sdk/sdk';
-  import { circles } from '$lib/stores/circles';
+  import { goto } from '$app/navigation';
   import { wallet } from '$lib/stores/wallet';
-  import { PrivateKeyContractRunner } from '@circles-sdk/adapter-ethers';
-  import { getCirclesConfig } from '$lib/utils/helpers';
+  import { circles } from '$lib/stores/circles';
+  import { Sdk, type AvatarRow } from '@circles-sdk/sdk';
   import { gnosisConfig } from '$lib/chiadoConfig';
+  import { PrivateKeyContractRunner } from '@circles-sdk/adapter-ethers';
   import SeedphraseInput from '$lib/components/SeedphraseInput.svelte';
   import ConnectCircles from '$lib/components/ConnectCircles.svelte';
   import CreateSafe from '$lib/pages/CreateSafe.svelte';
-  import WalletLoader from '$lib/components/WalletLoader.svelte';
-  import { avatar } from '$lib/stores/avatar';
+  import { ethers } from 'ethers';
   import type { Address } from '@circles-sdk/utils';
-  import { ethers, type Network } from 'ethers';
+  import { onMount } from 'svelte';
 
   let mnemonicPhrase: string = $state('');
   let hasValidKey = $state(false);
   let privateKey = $state('');
   let address = $state('');
-  let network: Network | undefined = $state();
   let safes: Address[] = $state([]);
   let profileBySafe: Record<string, AvatarRow | undefined> = $state({});
 
@@ -56,34 +53,31 @@
     await Promise.all(profileFetchPromises);
   }
 
-  async function setup() {
-    try {
-      const request = await fetch(
-        `https://static.174.163.76.144.clients.your-server.de/faucet/fund-me/${address}`
-      );
-      await request.text();
-    } catch (e) {
-      console.error(`Couldn't fund address ${address}`, e);
+  async function connectWallet() {
+    if (!hasValidKey || address === '') {
+      return;
     }
 
     const walletRunner = new PrivateKeyContractRunner(provider, privateKey);
     await walletRunner.init();
 
+    localStorage.setItem('privateKey', privateKey);
+
     $wallet = walletRunner;
+    const network = await $wallet.provider?.getNetwork();
 
-    network = await $wallet.provider?.getNetwork();
+    $circles = new Sdk($wallet!, gnosisConfig);
 
-    if (!network) {
-      throw new Error('Failed to get network');
+    try {
+      const request = await fetch(
+        `https://static.174.163.76.144.clients.your-server.de/faucet/fund-me/${address}`
+      );
+      const response = await request.text();
+    } catch (e) {
+      console.error(`Couldn't fund address ${address}`, e);
     }
-    const circlesConfig = await getCirclesConfig(network.chainId);
 
-    $circles = new Sdk($wallet!, circlesConfig);
     await loadSafesAndProfile();
-  }
-
-  async function connectWallet() {
-    await setup();
   }
 
   async function onsafecreated(address: Address) {
@@ -97,20 +91,20 @@
 
     if (localStorage.getItem('privateKey')) {
       privateKey = localStorage.getItem('privateKey')!;
-      await setup();
+      const walletRunner = new PrivateKeyContractRunner(provider, privateKey);
+      await walletRunner.init();
+
+      $wallet = walletRunner;
+      $circles = new Sdk($wallet!, gnosisConfig);
+
+      await loadSafesAndProfile();
     }
   });
 </script>
 
 <div
-  class="w-full flex flex-col items-center min-h-screen p-4 max-w-xl gap-y-4 mt-20"
+  class="w-full flex flex-col items-center min-h-screen p-4 max-w-5xl gap-y-8 mt-20"
 >
-  <div class="w-full">
-    <a href={$avatar ? '/dashboard' : '/connect-wallet'}>
-      <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
-    </a>
-  </div>
-
   {#if !$wallet?.address}
     <h2 class="font-bold text-[28px] md:text-[32px]">
       Import circles.garden keyphrase
@@ -129,12 +123,7 @@
       class="btn btn-sm"
       class:btn-disabled={!hasValidKey}>Import</button
     >
-  {:else if $wallet?.address && $circles && network}
-    <h2 class="font-bold text-[28px] md:text-[32px]">Select Avatar</h2>
-    <p class="font-normal text-black/60 text-base">
-      Please select the avatar you want to use from the list below.
-    </p>
-
+  {:else}
     {#each safes ?? [] as item (item)}
       <ConnectCircles
         address={item}
@@ -147,7 +136,5 @@
     <div class="text-center">
       <CreateSafe {onsafecreated} />
     </div>
-  {:else}
-    <WalletLoader name="Safe" />
   {/if}
 </div>
