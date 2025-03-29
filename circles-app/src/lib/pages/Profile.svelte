@@ -226,7 +226,7 @@
   <div role="tabpanel" class="tab-content mt-8 bg-base-100 border-none">
     <div class="w-full border-base-300 rounded-box border">
       <CommonConnections
-        otherAvatarAddress={otherAvatar?.avatar ?? '0x0'}
+        otherAvatarAddress={otherAvatar?.avatar}
         bind:commonConnectionsCount
       />
     </div>
