@@ -75,6 +75,9 @@
 <div class="w-full pt-2">
   <div class="w-full flex items-center justify-between p-2 rounded-lg">
     <Avatar
+      placeholderBottom={true}
+      placeholderTop={false}
+      placeholderAvatar={false}
       address={balance.tokenOwner}
       view="horizontal"
       clickable={false}
