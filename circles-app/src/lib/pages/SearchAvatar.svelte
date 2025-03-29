@@ -6,16 +6,15 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { getCirclesConfig } from '$lib/utils/helpers';
   import { wallet } from '$lib/stores/wallet';
-  import type { Address } from '@circles-sdk/utils';
 
   interface Props {
-    selectedAddress?: Address;
+    selectedAddress?: any;
     searchType?: 'send' | 'group' | 'contact';
-    oninvite?: (avatar: `0x${string}`) => void;
-    onselect?: (avatar: `0x${string}`) => void;
+    oninvite?: (avatar: any) => void;
+    onselect?: (avatar: any) => void;
   }
 
-  let { selectedAddress = $bindable('0x0'), searchType = 'send', oninvite, onselect }: Props = $props();
+  let { selectedAddress = $bindable(undefined), searchType = 'send', oninvite, onselect }: Props = $props();
   let lastAddress: string = $state('');
   let result: SearchResultProfile[] = $state([]);
   let profiles: Profiles | undefined = $state();
@@ -48,21 +47,21 @@
       // in the search results.
       const syntheticProfile: SearchResultProfile = {
         address: selectedAddress,
-        name: selectedAddress,
+        name: selectedAddress!.toString(),
         CID: '',
         lastUpdatedAt: 0,
         registeredName: null
       };
 
-      const nameResults = await profiles?.searchByName(selectedAddress);
+      const nameResults = await profiles?.searchByName(selectedAddress!.toString());
       if (nameResults) results = [...nameResults];
-      const addressResult = await profiles?.searchByAddress(selectedAddress);
+      const addressResult = await profiles?.searchByAddress(selectedAddress!.toString());
       if (addressResult) results = [...results, ...addressResult];
 
       // TODO: Properly type the profile. The returned values from above have an 'address' field.
       if (searchType === 'send') {
         const addressInResults = !!results.find(
-          (profile: any) => profile.address === selectedAddress.toLowerCase()
+          (profile: any) => profile.address === selectedAddress!.toString().toLowerCase()
         );
         if (!addressInResults && ethers.isAddress(selectedAddress)) {
           results.unshift(syntheticProfile);
@@ -79,7 +78,7 @@
     if (selectedAddress && selectedAddress !== lastAddress) {
       lastAddress = selectedAddress;
       searchProfiles();
-    } else if (selectedAddress.trim() === '') {
+    } else if (selectedAddress?.toString().trim() === '') {
       if (profiles) {
         profiles.searchByName('a').then((results) => {
           result = results.slice(0, 25);
@@ -130,7 +129,7 @@
         {#if ethers.isAddress(selectedAddress) && searchType === 'contact'}
           <button
             class="btn mt-6"
-            onclick={() => oninvite?.(selectedAddress)}
+            onclick={() => oninvite?.(selectedAddress as Address)}
             >Invite {selectedAddress}</button
           >
         {:else}

@@ -136,6 +136,13 @@ const profileAggregator = new BatchAggregator<Address, Profile>({
  */
 export async function getProfile(address: Address): Promise<Profile> {
   // Some special-case addresses we handle immediately
+  if (address === '0x0000000000000000000000000000000000000001') {
+    return {
+      name: 'Transitive transfer',
+      previewImageUrl: '/circles-token.svg',
+    };
+  }
+
   const $circles = get(circles);
   if (address === $circles?.circlesConfig.v2HubAddress?.toLowerCase()) {
     return {
