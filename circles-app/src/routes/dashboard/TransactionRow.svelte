@@ -5,6 +5,9 @@
   import type { TransactionHistoryRow } from '@circles-sdk/data';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { avatar } from '$lib/stores/avatar';
+  import { popupControls } from '$lib/stores/popUp';
+  import ProfilePage from '$lib/pages/Profile.svelte';
+
 
   interface Props {
     item: TransactionHistoryRow;
@@ -12,13 +15,13 @@
 
   let { item }: Props = $props();
 
-  let tags: string = $state("");
+  let tags: string = $state('');
   let netCircles = $state(0);
   let counterpartyAddress = $state('');
   let badgeUrl: string | null = $state(null);
 
 
-  function parseEventDetails(eventsJson: string, avatarAddress: string) {
+  function parseEventDetails(eventsJson: string) {
     let parsed: any[];
     try {
       parsed = JSON.parse(eventsJson) || [];
@@ -40,7 +43,7 @@
 
       'CrcV2_CollateralLockedBatch',
       'CrcV2_CollateralLockedSingle',
-      'CrcV2_GroupRedeem'
+      'CrcV2_GroupRedeem',
     ]);
 
     // let demurrageAmount = 0n;
@@ -50,13 +53,9 @@
       if (relevantTypes.has(e.$type) && !tags.includes(e.$type)) {
         tags.push(e.$type);
       }
-    //
-    //   if (e.$type === 'CrcV2_DiscountCost' && e.Account === avatarAddress) {
-    //     demurrageAmount += BigInt(e.Cost);
-    //   }
     }
 
-    return { tags /*, demurrageAmount*/ };
+    return { tags };
   }
 
   function getCounterpartyAddress(avatarAddress: string) {
@@ -73,10 +72,11 @@
     if (item.to.toLowerCase() === avatarAddress) return '/badge-received.svg';
     return null;
   }
+
   run(() => {
     if ($avatar) {
-      const result = parseEventDetails(item.events, $avatar.address.toLowerCase());
-      tags = result.tags.join(", ");
+      const result = parseEventDetails(item.events);
+      tags = result.tags.join(', ');
       netCircles = item.circles;
 
       counterpartyAddress = getCounterpartyAddress($avatar.address).toLowerCase();
@@ -91,14 +91,25 @@
   href={'https://gnosisscan.io/tx/' + item.transactionHash}
 >
   {#if $avatar}
-    <Avatar
-      address={counterpartyAddress}
-      view="horizontal"
-      pictureOverlayUrl={badgeUrl}
-      topInfo={tags}
-      bottomInfo={getTimeAgo(item.timestamp)}
-    />
-
+    <div on:click={(e) => {
+      popupControls.open({
+        component: ProfilePage,
+        title: '',
+        props: {
+          address: counterpartyAddress,
+        },
+      });
+      e.preventDefault();
+      return true;
+    }}>
+      <Avatar
+        address={counterpartyAddress}
+        view="horizontal"
+        pictureOverlayUrl={badgeUrl}
+        topInfo={tags}
+        bottomInfo={getTimeAgo(item.timestamp)}
+      />
+    </div>
     <div class="col text-right">
       {#if item.from.toLowerCase() === $avatar.address.toLowerCase()}
         <span class="text-red-500 font-bold">
