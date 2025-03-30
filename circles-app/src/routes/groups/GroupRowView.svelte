@@ -26,6 +26,9 @@
   }}
 >
   <Avatar
+    placeholderBottom={true}
+    placeholderTop={false}
+    placeholderAvatar={true}
     address={item.group}
     view="horizontal"
     clickable={false}
