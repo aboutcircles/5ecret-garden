@@ -131,7 +131,7 @@
     }
   });
 
-  function openAvatar() {
+  function openAvatar(e:any) {
     if (!clickable) return;
 
     const nextPage: PopupContentDefinition = {
@@ -140,6 +140,8 @@
       props: { address },
     };
     popupControls.open(nextPage);
+
+    e?.preventDefault();
   }
 </script>
 

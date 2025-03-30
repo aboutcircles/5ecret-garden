@@ -5,9 +5,6 @@
   import type { TransactionHistoryRow } from '@circles-sdk/data';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { avatar } from '$lib/stores/avatar';
-  import { popupControls } from '$lib/stores/popUp';
-  import ProfilePage from '$lib/pages/Profile.svelte';
-
 
   interface Props {
     item: TransactionHistoryRow;
@@ -91,17 +88,7 @@
   href={'https://gnosisscan.io/tx/' + item.transactionHash}
 >
   {#if $avatar}
-    <div on:click={(e) => {
-      popupControls.open({
-        component: ProfilePage,
-        title: '',
-        props: {
-          address: counterpartyAddress,
-        },
-      });
-      e.preventDefault();
-      return true;
-    }}>
+    <div>
       <Avatar
         address={counterpartyAddress}
         view="horizontal"
