@@ -14,10 +14,12 @@
   import { onMount } from 'svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { popupControls } from '$lib/stores/popUp';
-  import Address from '$lib/components/Address.svelte';
+  import AddressComponent from '$lib/components/Address.svelte';
+  import type { Address } from '@circles-sdk/utils';
+  import { shortenAddress } from '$lib/utils/shared';
 
   interface Props {
-    address: `0x${string}` | undefined;
+    address: Address | undefined;
     trustVersion: number | undefined;
   }
 
@@ -31,11 +33,11 @@
 
   let otherAvatar: AvatarRow | undefined = $state();
   let profile: Profile | undefined = $state();
-  let members: `0x${string}`[] | undefined = $state(undefined);
+  let members: Address[] | undefined = $state(undefined);
 
   let trustRow: TrustRelationRow | undefined = $state();
 
-  async function initialize(address?: `0x${string}`) {
+  async function initialize(address?: Address) {
     if (!address) {
       return;
     }
@@ -47,7 +49,17 @@
     }
 
     otherAvatar = await $circles.data.getAvatarInfo(address);
-    profile = otherAvatar ? await getProfile(otherAvatar.avatar) : undefined;
+
+    if (!otherAvatar) {
+      profile = {
+        name: shortenAddress(address),
+        description: address
+      };
+      trustRow = undefined;
+      return;
+    }
+
+    profile = await getProfile(otherAvatar.avatar);
 
     if (otherAvatar?.avatar) {
       trustRow = $contacts?.data[otherAvatar.avatar]?.row;
@@ -80,7 +92,7 @@
   <Avatar
     view="vertical"
     clickable={false}
-    address={otherAvatar?.avatar || '0x0'}
+    address={otherAvatar?.avatar}
   />
 
   {#if trustRow}
@@ -98,14 +110,14 @@
 
   <div class="my-6 flex flex-row gap-x-2">
     <span class="bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm"
-      >{getTypeString(otherAvatar?.type || '')}</span
+    >{getTypeString(otherAvatar?.type || '')}</span
     >
-    <Address address={otherAvatar?.avatar || ''} />
+    <AddressComponent address={otherAvatar?.avatar || ''} />
     <a
       href={'https://gnosisscan.io/address/' + otherAvatar?.avatar}
       target="_blank"
       class="flex items-center justify-center bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm"
-      ><img src="/external.svg" alt="External Link" class="w-4" /></a
+    ><img src="/external.svg" alt="External Link" class="w-4" /></a
     >
   </div>
 

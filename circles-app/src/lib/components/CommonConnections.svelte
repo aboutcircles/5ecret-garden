@@ -46,7 +46,7 @@
   {#each commonContacts as contact (contact)}
     <button
       class="w-full flex items-center justify-between px-0 py-4 hover:bg-black/5 rounded-lg"
-      on:click={(e) => {
+      onclick={(e) => {
         popupControls.open({
           component: ProfilePage,
           title: '',
