@@ -11,7 +11,6 @@
   import MintGroupTokens from '$lib/flows/mintGroupTokens/2_Asset.svelte';
   import { getProfile } from '$lib/utils/profile';
   import { formatTrustRelation, getTypeString } from '$lib/utils/helpers';
-  import { onMount } from 'svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { popupControls } from '$lib/stores/popUp';
   import AddressComponent from '$lib/components/Address.svelte';
@@ -25,11 +24,11 @@
 
   let { address, trustVersion }: Props = $props();
 
-  onMount(() => {
+  $effect(() => {
     if (address) {
       initialize(address);
     }
-  });
+  })
 
   let otherAvatar: AvatarRow | undefined = $state();
   let profile: Profile | undefined = $state();
@@ -53,7 +52,7 @@
     if (!otherAvatar) {
       profile = {
         name: shortenAddress(address),
-        description: address
+        description: address,
       };
       trustRow = undefined;
       return;
