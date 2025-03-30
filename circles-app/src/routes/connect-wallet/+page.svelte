@@ -44,11 +44,4 @@
     desc="Use your circles.garden key in 5ecret-garden"
     route="/connect-wallet/import-circles-garden"
   />
-  <p class="font-bold text-xl mt-4">Available on Testnet only</p>
-  <ConnectWallet
-    imgUrl="/cometh-logo.svg"
-    header="Use Cometh"
-    desc="Use Circles with a Passkey that's stored on your device"
-    route="/connect-wallet/connect-cometh"
-  />
 </div>

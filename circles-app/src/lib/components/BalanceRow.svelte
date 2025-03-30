@@ -80,7 +80,7 @@
       placeholderAvatar={false}
       address={balance.tokenOwner}
       view="horizontal"
-      clickable={false}
+      clickable={true}
       bottomInfo={tokenTypeToString(balance.tokenType)}
     />
 
