@@ -31,6 +31,7 @@
 
       $wallet = walletRunner;
       $circles = new Sdk($wallet!, gnosisConfig);
+      localStorage.setItem('walletType', 'circles');
     }
   });
 </script>

@@ -10,10 +10,15 @@
   import { avatar } from '$lib/stores/avatar';
   import type { Network } from 'ethers';
   import type { SdkContractRunnerWrapper } from '@circles-sdk/adapter-ethers';
-  const GNOSIS_CHAIN_ID_DEC = 100n; // Decimal format for BrowserProvider
+  import type { Address } from '@circles-sdk/utils';
+  import type { CoreMembersGroupRow } from '@circles-sdk/data/dist/rows/coreMembersGroupRow';
+  import { getCmGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
+
+  const GNOSIS_CHAIN_ID_DEC = 100n;
 
   let avatarInfo: AvatarRow | undefined = $state();
   let network: Network | undefined = $state();
+  let groupsByOwner: Record<Address, CoreMembersGroupRow[]> | undefined = $state();
 
   //
   // Connects the wallet and initializes the Circles SDK.
@@ -25,7 +30,7 @@
       throw new Error('Failed to get wallet address');
     }
 
-    network = await $wallet.provider?.getNetwork();
+    network = await ($wallet as any).provider?.getNetwork();
     if (!network) {
       throw new Error('Failed to get network');
     }
@@ -40,6 +45,12 @@
     // Initialize the Circles SDK and set it as $circles to make it globally available.
     $circles = new Sdk($wallet! as SdkContractRunnerWrapper, circlesConfig);
     avatarInfo = await $circles.data.getAvatarInfo($wallet.address);
+    if (!avatarInfo) {
+      return;
+    }
+    groupsByOwner = await getCmGroupsByOwnerBatch($circles, [avatarInfo.avatar]);
+
+    localStorage.setItem('walletType', 'metamask');
   }
 
   onMount(async () => {
@@ -60,11 +71,12 @@
   <p class="font-normal text-black/60 text-base">
     Please select the avatar you want to use from the list below.
   </p>
-  {#if $wallet?.address && $circles && network}
+  {#if $wallet?.address && $circles && network && groupsByOwner}
     <ConnectCircles
       address={$wallet.address}
       walletType="metamask"
       isRegistered={avatarInfo !== undefined}
+      groups={groupsByOwner[$wallet.address.toLowerCase()]}
       chainId={network.chainId}
     />
   {:else}

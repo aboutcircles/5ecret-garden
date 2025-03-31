@@ -11,7 +11,7 @@
   async function setup() {
     $wallet = await initializeWallet('safe');
 
-    const network = await $wallet.provider?.getNetwork();
+    const network = await ($wallet as any).provider?.getNetwork();
 
     if (!network) {
       throw new Error('Failed to get network');
@@ -20,6 +20,8 @@
 
     // Initialize the Circles SDK and set it as $circles to make it globally available.
     $circles = new Sdk($wallet!, circlesConfig);
+
+    localStorage.setItem('walletType', 'safe');
   }
 
   onMount(async () => {

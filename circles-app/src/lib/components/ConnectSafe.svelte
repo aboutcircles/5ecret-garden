@@ -10,9 +10,12 @@
   import { ethers } from 'ethers';
   import { onMount } from 'svelte';
   import type { WalletType } from '$lib/utils/walletType';
+  import { getCmGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
+  import type { CoreMembersGroupRow } from '@circles-sdk/data/dist/rows/coreMembersGroupRow';
 
   let safes: Address[] = $state([]);
   let profileBySafe: Record<string, AvatarRow | undefined> = $state({});
+  let groupsByOwner: Record<Address, CoreMembersGroupRow[]> = $state({});
 
   interface Props {
     safeOwnerAddress?: Address;
@@ -51,12 +54,16 @@
     }
 
     safes = await querySafeTransactionService(safeOwnerAddress);
-    const avatarInfo = await $circles.data.getAvatarInfoBatch(safes);
+    const [avatarInfo, groupInfo] = await Promise.all([
+      $circles.data.getAvatarInfoBatch(safes),
+      getCmGroupsByOwnerBatch($circles, safes),
+    ]);
     const profileBySafeNew: Record<string, AvatarRow | undefined> = {};
     avatarInfo.forEach((info) => {
       profileBySafeNew[ethers.getAddress(info.avatar)] = info;
     });
     profileBySafe = profileBySafeNew;
+    groupsByOwner = groupInfo;
   }
 
   onMount(async () => {
@@ -86,6 +93,7 @@
         address={item}
         walletType={walletType}
         isRegistered={profileBySafe[item] !== undefined}
+        groups={groupsByOwner[item.toLowerCase()] ?? []}
         chainId={chainId}
       />
     {/each}
