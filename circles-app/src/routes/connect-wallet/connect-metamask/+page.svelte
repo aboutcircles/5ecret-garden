@@ -22,7 +22,7 @@
   //
   // Connects the wallet and initializes the Circles SDK.
   //
-  async function setup() {
+  async function setup(callNo: number = 0) {
     $wallet = await initializeWallet('metamask');
 
     if (!$wallet.address) {
@@ -34,9 +34,15 @@
       throw new Error('Failed to get network');
     }
 
+    if (callNo > 2) {
+      return;
+    }
+
     // If we're on the wrong network, attempt to switch
     if (![GNOSIS_CHAIN_ID_DEC].includes(network.chainId)) {
       await switchOrAddGnosisNetwork();
+      await setup(callNo++);
+      return;
     }
 
     const circlesConfig = await getCirclesConfig(network.chainId);
