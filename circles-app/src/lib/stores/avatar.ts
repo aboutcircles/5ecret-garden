@@ -7,6 +7,7 @@ import { circles } from './circles';
  */
 export const avatar = writable<Avatar | undefined>();
 
+// TODO: Find another way that doesn't issue an additional request whenever the `avatar` changes.
 export const isGroup = derived(
   [avatar, circles],
   ([$avatar, $circles], set) => {
@@ -18,5 +19,5 @@ export const isGroup = derived(
       set(false);
     }
   },
-  false
+  false,
 );

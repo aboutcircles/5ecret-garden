@@ -87,15 +87,9 @@ export async function restoreWallet() {
 
     wallet.set(restoredWallet);
 
-    const network = await restoredWallet.provider?.getNetwork();
-    if (!network || network.chainId !== GNOSIS_CHAIN_ID_DEC) {
-      console.log('Wrong network or failed to get network');
-      return;
-    }
-
     const sdk = new Sdk(
       restoredWallet as SdkContractRunnerWrapper,
-      await getCirclesConfig(network.chainId),
+      await getCirclesConfig(100n),
     );
     circles.set(sdk);
 
@@ -123,5 +117,4 @@ export async function clearSession() {
   wallet.set(undefined);
   circles.set(undefined);
   await goto('/connect-wallet');
-  console.log('User session cleared');
 }

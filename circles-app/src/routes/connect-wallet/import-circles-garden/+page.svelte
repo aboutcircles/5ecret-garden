@@ -3,9 +3,7 @@
   import { circles } from '$lib/stores/circles';
   import { Sdk } from '@circles-sdk/sdk';
   import { gnosisConfig } from '$lib/chiadoConfig';
-  import { PrivateKeyContractRunner } from '@circles-sdk/adapter-ethers';
   import SeedphraseInput from '$lib/components/SeedphraseInput.svelte';
-  import { ethers } from 'ethers';
   import { onMount } from 'svelte';
   import ConnectSafe from '$lib/components/ConnectSafe.svelte';
 
@@ -13,8 +11,6 @@
   let hasValidKey = $state(false);
   let privateKey = $state('');
   let address = $state('');
-
-  const provider = new ethers.JsonRpcProvider(gnosisConfig.circlesRpcUrl);
 
   async function connectWallet() {
     localStorage.setItem('privateKey', privateKey);
@@ -24,12 +20,9 @@
 
   onMount(async () => {
     $wallet = undefined;
-    if (localStorage.getItem('privateKey')) {
-      privateKey = localStorage.getItem('privateKey')!;
-      const walletRunner = new PrivateKeyContractRunner(provider, privateKey);
-      await walletRunner.init();
-
-      $wallet = walletRunner;
+    privateKey = localStorage.getItem('privateKey')!;
+    if (privateKey) {
+      $wallet = await initializeWallet('circles');
       $circles = new Sdk($wallet!, gnosisConfig);
     }
   });
@@ -55,8 +48,7 @@
       onclick={connectWallet}
       class="btn btn-sm"
       class:btn-disabled={!hasValidKey}>Import
-    </button
-    >
+    </button>
   {:else}
     <ConnectSafe safeOwnerAddress={$wallet?.address} chainId={100n} walletType="circles" />
   {/if}

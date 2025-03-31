@@ -3,16 +3,18 @@
   import { circles } from '$lib/stores/circles';
   import { wallet } from '$lib/stores/wallet';
   import WalletLoader from '$lib/components/WalletLoader.svelte';
-  import { avatar } from '$lib/stores/avatar';
   import ConnectCircles from '$lib/components/ConnectCircles.svelte';
   import CreateSafe from '$lib/pages/CreateSafe.svelte';
   import type { Address } from '@circles-sdk/utils';
   import { ethers } from 'ethers';
   import { onMount } from 'svelte';
   import type { WalletType } from '$lib/utils/walletType';
+  import { getCmGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
+  import type { CoreMembersGroupRow } from '@circles-sdk/data/dist/rows/coreMembersGroupRow';
 
   let safes: Address[] = $state([]);
   let profileBySafe: Record<string, AvatarRow | undefined> = $state({});
+  let groupsByOwner: Record<Address, CoreMembersGroupRow[]> = $state({});
 
   interface Props {
     safeOwnerAddress?: Address;
@@ -51,12 +53,16 @@
     }
 
     safes = await querySafeTransactionService(safeOwnerAddress);
-    const avatarInfo = await $circles.data.getAvatarInfoBatch(safes);
+    const [avatarInfo, groupInfo] = await Promise.all([
+      $circles.data.getAvatarInfoBatch(safes),
+      getCmGroupsByOwnerBatch($circles, safes),
+    ]);
     const profileBySafeNew: Record<string, AvatarRow | undefined> = {};
     avatarInfo.forEach((info) => {
       profileBySafeNew[ethers.getAddress(info.avatar)] = info;
     });
     profileBySafe = profileBySafeNew;
+    groupsByOwner = groupInfo;
   }
 
   onMount(async () => {
@@ -72,7 +78,7 @@
   class="w-full flex flex-col items-center min-h-screen p-4 max-w-xl gap-y-4 mt-20"
 >
   <div class="w-full">
-    <a href={$avatar ? '/dashboard' : '/connect-wallet'}>
+    <a onclick="{() => history.back()}">
       <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
     </a>
   </div>
@@ -86,6 +92,7 @@
         address={item}
         walletType={walletType}
         isRegistered={profileBySafe[item] !== undefined}
+        groups={groupsByOwner[item.toLowerCase()] ?? []}
         chainId={chainId}
       />
     {/each}
