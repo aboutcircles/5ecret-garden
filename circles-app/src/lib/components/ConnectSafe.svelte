@@ -3,7 +3,6 @@
   import { circles } from '$lib/stores/circles';
   import { wallet } from '$lib/stores/wallet';
   import WalletLoader from '$lib/components/WalletLoader.svelte';
-  import { avatar } from '$lib/stores/avatar';
   import ConnectCircles from '$lib/components/ConnectCircles.svelte';
   import CreateSafe from '$lib/pages/CreateSafe.svelte';
   import type { Address } from '@circles-sdk/utils';
@@ -79,7 +78,7 @@
   class="w-full flex flex-col items-center min-h-screen p-4 max-w-xl gap-y-4 mt-20"
 >
   <div class="w-full">
-    <a href={$avatar ? '/dashboard' : '/connect-wallet'}>
+    <a onclick="{() => history.back()}">
       <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
     </a>
   </div>
