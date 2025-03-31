@@ -1,0 +1,1 @@
+export type WalletType = 'safe' | 'metamask' | 'circles';

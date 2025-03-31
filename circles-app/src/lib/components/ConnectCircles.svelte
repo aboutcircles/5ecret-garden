@@ -7,19 +7,21 @@
   import { getCirclesConfig } from '$lib/utils/helpers';
   import { onMount } from 'svelte';
   import Avatar from './avatar/Avatar.svelte';
-  import type { SdkContractRunnerWrapper } from '@circles-sdk/adapter-ethers';
+  import type { WalletType } from '$lib/utils/walletType';
+  import type { Address } from '@circles-sdk/utils';
+  import type { SdkContractRunner } from '@circles-sdk/adapter';
 
   interface Props {
-    address: `0x${string}`;
+    address: Address;
     isRegistered: boolean;
-    walletType?: 'safe' | 'metamask' | 'circles';
+    walletType: WalletType;
     chainId: bigint;
   }
 
-  let { address, isRegistered, walletType = 'safe', chainId }: Props = $props();
+  let { address, isRegistered, walletType, chainId }: Props = $props();
 
   let circlesConfig: CirclesConfig;
-  let groups: `0x${string}`[] = $state([]);
+  let groups: Address[] = $state([]);
 
   onMount(async () => {
     groups =
@@ -30,12 +32,12 @@
       )?.map((group) => group.proxy) || [];
   });
 
-  async function connectWallet(selectedAddress: `0x${string}`) {
-    const lowerCaseAddress = selectedAddress.toLowerCase() as `0x${string}`;
+  async function connectWallet(selectedAddress: Address) {
+    const lowerCaseAddress = selectedAddress.toLowerCase() as Address;
 
     $wallet = await initializeWallet(walletType, address);
     circlesConfig = await getCirclesConfig(chainId);
-    $circles = new Sdk($wallet! as SdkContractRunnerWrapper, circlesConfig);
+    $circles = new Sdk($wallet! as SdkContractRunner, circlesConfig);
 
     if (lowerCaseAddress === address.toLowerCase() && !isRegistered) {
       await goto('/register');
@@ -45,6 +47,7 @@
     if ($circles && $wallet) {
       $avatar = await $circles.getAvatar(lowerCaseAddress);
       localStorage.setItem('avatar', lowerCaseAddress);
+      localStorage.setItem('walletType', walletType);
       await goto('/dashboard');
     }
   }
@@ -53,7 +56,7 @@
     if ($circles && $wallet) {
       $wallet = await initializeWallet(walletType, address);
       circlesConfig = await getCirclesConfig(chainId);
-      $circles = new Sdk($wallet! as SdkContractRunnerWrapper, circlesConfig);
+      $circles = new Sdk($wallet! as SdkContractRunner, circlesConfig);
 
       await goto('/register/register-group');
     }
@@ -77,13 +80,13 @@
       <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
     {/if}
   </button>
-  {#if walletType !== 'circles'}
+  <!--{#if walletType !== 'circles'}-->
     <div class="w-full flex gap-x-2 items-center mt-6">
       <p class="font-bold text-primary">My groups</p>
       <button
         onclick={() => deployGroup()}
         class="btn btn-xs btn-ghost btn-circle"
-        ><img src="/plus.svg" alt="Plus" class="w-5" /></button
+      ><img src="/plus.svg" alt="Plus" class="w-5" /></button
       >
     </div>
     <div class="w-full pl-6 flex flex-col gap-y-2 mt-2">
@@ -91,17 +94,19 @@
         <button
           class="flex w-full hover:bg-black/5 rounded-lg p-2"
           onclick={() => connectWallet(group)}
-          ><Avatar
+        >
+          <Avatar
             address={group}
             clickable={false}
             view="horizontal"
             topInfo={group}
-          /></button
+          />
+        </button
         >
       {/each}
       {#if groups.length === 0}
         <p class="text-sm">No groups available.</p>
       {/if}
     </div>
-  {/if}
+  <!--{/if}-->
 </div>

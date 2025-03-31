@@ -43,6 +43,7 @@
   }
 
   onMount(async () => {
+    $wallet = undefined;
     await setup();
   });
 </script>

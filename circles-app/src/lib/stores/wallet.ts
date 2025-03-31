@@ -3,8 +3,7 @@ import { goto } from '$app/navigation';
 import { avatar } from '$lib/stores/avatar';
 import { circles } from '$lib/stores/circles';
 import {
-  BrowserProviderContractRunner,
-  PrivateKeyContractRunner,
+  BrowserProviderContractRunner, PrivateKeyContractRunner,
   SdkContractRunnerWrapper,
 } from '@circles-sdk/adapter-ethers';
 import {
@@ -14,63 +13,70 @@ import {
 import { Sdk } from '@circles-sdk/sdk';
 import { getCirclesConfig } from '$lib/utils/helpers';
 import { gnosisConfig } from '$lib/chiadoConfig';
-import { ethers } from 'ethers';
+import { JsonRpcProvider } from 'ethers';
+import { type SdkContractRunner } from '@circles-sdk/adapter';
+import type { WalletType } from '$lib/utils/walletType';
+import type { Address } from '@circles-sdk/utils';
 
-type WalletRunner =
-  | BrowserProviderContractRunner
-  | SafeSdkBrowserContractRunner
-  | SafeSdkPrivateKeyContractRunner;
-
-export const wallet = writable<WalletRunner | undefined>();
+export const wallet = writable<SdkContractRunner | undefined>();
 
 export const GNOSIS_CHAIN_ID_DEC = 100n;
 
-export async function initializeWallet(type: string, address?: `0x${string}`) {
-  localStorage.setItem('walletType', type);
+export async function initializeWallet(type: WalletType, address?: Address): Promise<SdkContractRunner> {
   if (type === 'metamask') {
     const runner = new BrowserProviderContractRunner();
     await runner.init();
-    localStorage.setItem('wallet', runner.address || '');
+    return runner;
+  } else if (type === 'safe' && !address) {
+    const runner = new BrowserProviderContractRunner();
+    await runner.init();
     return runner;
   } else if (type === 'safe' && address) {
-    localStorage.setItem('wallet', address);
     const runner = new SafeSdkBrowserContractRunner();
     await runner.init(address);
+    return runner as SdkContractRunner;
+  } else if (type === 'circles' && !address) {
+    const privateKey = localStorage.getItem('privateKey');
+    if (!privateKey) {
+      throw new Error('Private key not found in localStorage');
+    }
+    const rpcProvider = new JsonRpcProvider(gnosisConfig.circlesRpcUrl);
+    const runner = new PrivateKeyContractRunner(rpcProvider, privateKey);
+    await runner.init();
     return runner;
   } else if (type === 'circles' && address) {
     const privateKey = localStorage.getItem('privateKey');
     if (!privateKey) {
       throw new Error('Private key not found in localStorage');
     }
-
-    localStorage.setItem('wallet', new ethers.Wallet(privateKey).address);
-    // const provider = new ethers.JsonRpcProvider(gnosisConfig.circlesRpcUrl);
     const runner = new SafeSdkPrivateKeyContractRunner(
       privateKey,
-      gnosisConfig.circlesRpcUrl
+      gnosisConfig.circlesRpcUrl,
     );
     await runner.init(address);
-    console.log(runner);
-    return runner;
+    return runner as SdkContractRunner;
   }
   throw new Error(`Unsupported wallet type: ${type}`);
 }
 
 export async function restoreWallet() {
   try {
-    const walletType = localStorage.getItem('walletType');
-    const savedWalletAddress = localStorage.getItem('wallet') as `0x${string}`;
-    const savedAvatar = localStorage.getItem('avatar') as `0x${string}`;
-
-    if (!walletType || !savedWalletAddress) {
-      console.log('No wallet found in localStorage');
-      await goto('/connect-wallet');
-      return;
+    let walletType: WalletType = localStorage.getItem('walletType') as WalletType;
+    switch (walletType) {
+      case 'metamask':
+      case 'safe':
+      case 'circles':
+        break;
+      default:
+        console.log('No "walletType" found in localStorage');
+        await goto('/connect-wallet');
+        break;
     }
 
+    const savedAvatar = localStorage.getItem('avatar') as `0x${string}`;
     const restoredWallet = await initializeWallet(
-      walletType,
-      savedWalletAddress
+      walletType!,
+      savedAvatar
     );
 
     if (!restoredWallet || !restoredWallet.address) {
@@ -89,19 +95,19 @@ export async function restoreWallet() {
 
     const sdk = new Sdk(
       restoredWallet as SdkContractRunnerWrapper,
-      await getCirclesConfig(network.chainId)
+      await getCirclesConfig(network.chainId),
     );
     circles.set(sdk);
 
     const avatarInfo = await sdk.data.getAvatarInfo(
-      savedAvatar !== null ? savedAvatar : restoredWallet.address
+      savedAvatar !== null ? savedAvatar : restoredWallet.address,
     );
 
     if (avatarInfo) {
       avatar.set(
         await sdk.getAvatar(
-          savedAvatar !== null ? savedAvatar : restoredWallet.address
-        )
+          savedAvatar !== null ? savedAvatar : restoredWallet.address,
+        ),
       );
     } else {
       await goto('/register');
@@ -113,12 +119,9 @@ export async function restoreWallet() {
 }
 
 export async function clearSession() {
-  // localStorage.clear();
   avatar.set(undefined);
   wallet.set(undefined);
   circles.set(undefined);
-  // localStorage.removeItem('wallet');
-  // localStorage.removeItem('avatar');
   await goto('/connect-wallet');
   console.log('User session cleared');
 }
