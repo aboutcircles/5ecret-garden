@@ -7,7 +7,6 @@
     SafeDeploymentConfig,
   } from '@safe-global/protocol-kit';
   import { onMount } from 'svelte';
-  import { BrowserProviderContractRunner } from '@circles-sdk/adapter-ethers';
   import { ethers } from 'ethers';
 
   let isCreating = $state(false);
@@ -24,27 +23,15 @@
     isCreating = true;
     error = null;
 
-    if (!$wallet || !($wallet instanceof BrowserProviderContractRunner)) {
+    if (!$wallet?.address) {
       error = 'Wallet not connected or invalid type';
       isCreating = false;
       return;
     }
 
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    const signer = await provider.getSigner();
-
-    if (!$wallet.provider) {
-      error = 'Wallet provider is not available';
-      isCreating = false;
-      return;
-    }
-
     try {
-      const ownerAddress = await signer.getAddress();
-      if (!ownerAddress) throw new Error('No wallet address available');
-
       const safeAccountConfig: SafeAccountConfig = {
-        owners: [ownerAddress],
+        owners: [$wallet.address],
         threshold: 1,
       };
       console.log(safeAccountConfig);
@@ -63,7 +50,7 @@
       const protocolKit = await Safe.init({
         provider: window.ethereum, // Use browserProvider
         predictedSafe,
-        signer: ownerAddress,
+        signer: $wallet.address,
       });
 
       const safeAddress = await protocolKit.getAddress();

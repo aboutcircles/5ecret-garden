@@ -1,9 +1,10 @@
 <script lang="ts">
   import { shortenAddress } from '$lib/utils/shared';
+  import type { Address } from '@circles-sdk/utils';
 
   let copyIcon = $state('/copy.svg');
   interface Props {
-    address: string;
+    address: Address;
   }
 
   let { address }: Props = $props();

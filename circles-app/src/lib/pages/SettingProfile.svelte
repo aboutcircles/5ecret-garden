@@ -4,21 +4,27 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import QrCode from '$lib/components/QrCode.svelte';
   import { popupControls } from '$lib/stores/popUp';
-  import { wallet } from '$lib/stores/wallet';
-  import { SafeSdkBrowserContractRunner } from '@circles-sdk/adapter-safe';
+  import type { WalletType } from '$lib/utils/walletType';
 
   interface Props {
-    address?: string;
+    address: Address | undefined;
   }
 
-  let { address = '' }: Props = $props();
+  let { address = undefined }: Props = $props();
 
   function changeWallet() {
     popupControls.close();
-    if ($wallet instanceof SafeSdkBrowserContractRunner) {
-      goto('/connect-wallet/connect-safe');
-    } else {
-      goto('/connect-wallet/connect-metamask');
+    const walletType: WalletType | null = localStorage.getItem('walletType') as WalletType | null;
+    switch (walletType) {
+      case 'metamask':
+        goto('/connect-wallet/connect-metamask');
+        break;
+      case 'safe':
+        goto('/connect-wallet/connect-safe');
+        break;
+      case 'circles':
+        goto('/connect-wallet/import-circles-garden');
+        break;
     }
   }
 </script>
@@ -32,7 +38,8 @@
     <button
       onclick={changeWallet}
       class="btn btn-sm btn-outline btn-primary text-primary hover:text-white"
-      >Change Avatar</button
+    >Change Avatar
+    </button
     >
   </div>
 

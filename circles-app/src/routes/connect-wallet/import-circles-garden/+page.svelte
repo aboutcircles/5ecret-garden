@@ -1,6 +1,5 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
-  import { wallet } from '$lib/stores/wallet';
+  import { initializeWallet, wallet } from '$lib/stores/wallet';
   import { circles } from '$lib/stores/circles';
   import { Sdk } from '@circles-sdk/sdk';
   import { gnosisConfig } from '$lib/chiadoConfig';
@@ -8,6 +7,7 @@
   import SeedphraseInput from '$lib/components/SeedphraseInput.svelte';
   import { ethers } from 'ethers';
   import { onMount } from 'svelte';
+  import ConnectSafe from '$lib/components/ConnectSafe.svelte';
 
   let mnemonicPhrase: string = $state('');
   let hasValidKey = $state(false);
@@ -16,52 +16,21 @@
 
   const provider = new ethers.JsonRpcProvider(gnosisConfig.circlesRpcUrl);
 
-  //
-  // Connects the wallet and initializes the Circles SDK.
-  //
   async function connectWallet() {
-    if (!hasValidKey || address === '') {
-      return;
-    }
-
-    const walletRunner = new PrivateKeyContractRunner(provider, privateKey);
-    await walletRunner.init();
-
     localStorage.setItem('privateKey', privateKey);
-
-    $wallet = walletRunner;
-
-    // Initialize the Circles SDK and set it as $circles to make it globally available.
+    $wallet = await initializeWallet('circles');
     $circles = new Sdk($wallet!, gnosisConfig);
-
-    try {
-      const request = await fetch(
-        `https://static.174.163.76.144.clients.your-server.de/faucet/fund-me/${address}`
-      );
-      const response = await request.text();
-    } catch (e) {
-      console.error(`Couldn't fund address ${address}`, e);
-    }
-
-    await goto('/connect-wallet/select-circles');
-    // await goto('/connect-wallet/connect-safe');
   }
 
   onMount(async () => {
-    localStorage.removeItem('useMM');
-    localStorage.setItem('usePK', 'true');
-
+    $wallet = undefined;
     if (localStorage.getItem('privateKey')) {
       privateKey = localStorage.getItem('privateKey')!;
       const walletRunner = new PrivateKeyContractRunner(provider, privateKey);
       await walletRunner.init();
 
       $wallet = walletRunner;
-      console.log('onMount import-circles-garden page', $wallet);
       $circles = new Sdk($wallet!, gnosisConfig);
-
-      await goto('/connect-wallet/select-circles');
-      // await goto('/connect-wallet/connect-safe');
     }
   });
 </script>
@@ -69,21 +38,26 @@
 <div
   class="w-full flex flex-col items-center min-h-screen p-4 max-w-5xl gap-y-8 mt-20"
 >
-  <h2 class="font-bold text-[28px] md:text-[32px]">
-    Import circles.garden keyphrase
-  </h2>
-  <p class="font-normal text-black/60 text-base">
-    Please enter or paste your keyphrase from circles.garden below.
-  </p>
-  <SeedphraseInput
-    bind:isValidMnemonic={hasValidKey}
-    bind:privateKey
-    bind:mnemonicPhrase
-    bind:address
-  />
-  <button
-    onclick={() => connectWallet()}
-    class="btn btn-sm"
-    class:btn-disabled={!hasValidKey}>Import</button
-  >
+  {#if !$wallet?.address || !$circles}
+    <h2 class="font-bold text-[28px] md:text-[32px]">
+      Import circles.garden keyphrase
+    </h2>
+    <p class="font-normal text-black/60 text-base">
+      Please enter or paste your keyphrase from circles.garden below.
+    </p>
+    <SeedphraseInput
+      bind:isValidMnemonic={hasValidKey}
+      bind:privateKey
+      bind:mnemonicPhrase
+      bind:address
+    />
+    <button
+      onclick={connectWallet}
+      class="btn btn-sm"
+      class:btn-disabled={!hasValidKey}>Import
+    </button
+    >
+  {:else}
+    <ConnectSafe safeOwnerAddress={$wallet?.address} chainId={100n} walletType="circles" />
+  {/if}
 </div>
