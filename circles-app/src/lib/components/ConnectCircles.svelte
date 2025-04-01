@@ -17,9 +17,10 @@
     walletType: WalletType;
     chainId: bigint;
     groups?: CoreMembersGroupRow[]
+    isV1?: boolean;
   }
 
-  let { address, isRegistered, walletType, chainId, groups }: Props = $props();
+  let { address, isRegistered, walletType, chainId, groups, isV1 }: Props = $props();
 
   let circlesConfig: CirclesConfig;
 
@@ -68,7 +69,11 @@
     {#if !isRegistered}
       <div class="btn btn-xs btn-outline btn-primary">register</div>
     {:else}
-      <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
+      {#if isV1}
+        <div class="btn btn-xs btn-outline btn-primary">V1</div>
+      {:else}
+        <div class="btn btn-xs btn-outline btn-primary">V2</div>
+      {/if}
     {/if}
   </button>
   <!--{#if walletType !== 'circles'}-->
