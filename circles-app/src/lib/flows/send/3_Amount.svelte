@@ -11,7 +11,7 @@
   import PathExplorer from '$lib/components/PathExplorer.svelte';
   import BalanceRow from '$lib/components/BalanceRow.svelte';
   import { writable } from 'svelte/store';
-  import type { MaxFlowResponse } from '@circles-sdk/sdk/dist/v2/pathfinderV2';
+  import type { MaxFlowResponse } from '@circles-sdk/sdk';
   import { ethers } from 'ethers';
   import { popupControls } from '$lib/stores/popUp';
 
@@ -59,8 +59,7 @@
       context.selectedAsset?.tokenAddress != TransitiveTransferTokenAddress ||
       !$circles ||
       !$avatar ||
-      !context.selectedAddress ||
-      $avatar?.avatarInfo?.version !== 2
+      !context.selectedAddress
     ) {
       return;
     }
@@ -70,14 +69,26 @@
 
     try {
       const bigNumber = '99999999999999999999999999999999999';
-      path =
-        (await $circles.v2Pathfinder?.getPath(
+      const p = $avatar?.avatarInfo?.version === 1
+        ? await $circles.v1Pathfinder?.getPath(
           $avatar.address,
           context.selectedAddress,
           bigNumber,
-        )) ?? [];
+        )
+        : await $circles.v2Pathfinder?.getPath(
+          $avatar.address,
+          context.selectedAddress,
+          bigNumber,
+        );
 
-      maxAmountCircles = parseFloat(ethers.formatEther(path.maxFlow));
+      if (!p || !p.transfers?.length) {
+        pathfindingFailed = true;
+        return;
+      }
+
+      path = p;
+
+      maxAmountCircles = parseFloat(ethers.formatEther(path.maxFlow.toString()));
 
       // If pathfinding returned maxFlow = 0 or no meaningful transfers, treat as failure
       if (!path.transfers?.length || maxAmountCircles === 0) {
@@ -156,13 +167,15 @@
     {:else}
       <!-- Attach data UI -->
       <div class="flex justify-end space-x-2 mt-6">
-        <button
-          type="button"
-          class="btn btn-outline max-sm:w-full rounded-md mt-8 md:mt-2"
-          onclick={toggleDataInput}
-        >
-          Attach data
-        </button>
+        {#if $avatar?.avatarInfo?.version === 2 && !context.selectedAsset.isErc20}
+          <button
+            type="button"
+            class="btn btn-outline max-sm:w-full rounded-md mt-8 md:mt-2"
+            onclick={toggleDataInput}
+          >
+            Attach data
+          </button>
+        {/if}
         <button
           type="submit"
           class="btn btn-primary max-sm:w-full rounded-md text-white mt-8 md:mt-2"
