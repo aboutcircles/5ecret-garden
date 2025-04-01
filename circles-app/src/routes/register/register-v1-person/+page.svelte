@@ -11,7 +11,7 @@
     }
 
     //TODO: why need to bind it as Avatar
-    $avatar = await $circles.registerOrganizationV2(profile) as Avatar;
+    $avatar = await $circles.registerHuman() as Avatar;
 
     await goto('/dashboard');
   }
