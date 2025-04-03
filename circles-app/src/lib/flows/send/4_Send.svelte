@@ -7,6 +7,8 @@
   import { avatar } from '$lib/stores/avatar';
   import { tokenTypeToString, TransitiveTransferTokenAddress } from '$lib/pages/SelectAsset.svelte';
   import { popupControls } from '$lib/stores/popUp';
+  import { tcToCrc } from '@circles-sdk/utils';
+  import { parseEther } from 'ethers';
 
   interface Props {
     context: SendFlowContext;
@@ -52,6 +54,10 @@
       }
     }
 
+    let amountToSend: bigint = context.selectedAsset.version === 1
+      ? tcToCrc(new Date(), context.amount)
+      : parseEther(context.amount.toString());
+
     runTask({
       name: `Send ${roundToDecimals(context.amount)} ${tokenTypeToString(context.selectedAsset.tokenType)} to ${shortenAddress(context.selectedAddress)}...`,
       promise:
@@ -59,7 +65,7 @@
           ? $avatar.transfer(context.selectedAddress, context.amount, undefined, dataUInt8Arr)
           : $avatar.transfer(
             context.selectedAddress,
-            context.amount,
+            amountToSend,
             context.selectedAsset.tokenAddress,
             dataUInt8Arr,
           ),

@@ -92,6 +92,7 @@
         address={item}
         walletType={walletType}
         isRegistered={profileBySafe[item] !== undefined}
+        isV1={profileBySafe[item]?.version === 1}
         groups={groupsByOwner[item.toLowerCase()] ?? []}
         chainId={chainId}
       />

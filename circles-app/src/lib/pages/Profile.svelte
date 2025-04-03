@@ -4,11 +4,10 @@
   import { avatar } from '$lib/stores/avatar';
   import CommonConnections from '$lib/components/CommonConnections.svelte';
   import { contacts } from '$lib/stores/contacts';
-  import type { AvatarRow, TrustRelationRow } from '@circles-sdk/data';
+  import { type AvatarRow, CirclesQuery, type TrustRelationRow } from '@circles-sdk/data';
   import Untrust from '$lib/pages/Untrust.svelte';
   import Trust from '$lib/pages/Trust.svelte';
   import SelectAsset from '$lib/flows/send/2_Asset.svelte';
-  import MintGroupTokens from '$lib/flows/mintGroupTokens/2_Asset.svelte';
   import { getProfile } from '$lib/utils/profile';
   import { formatTrustRelation, getTypeString } from '$lib/utils/helpers';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
@@ -16,6 +15,8 @@
   import AddressComponent from '$lib/components/Address.svelte';
   import type { Address } from '@circles-sdk/utils';
   import { shortenAddress } from '$lib/utils/shared';
+  import SelectAmount from '$lib/flows/send/3_Amount.svelte';
+  import { transitiveTransfer } from '$lib/pages/SelectAsset.svelte';
 
   interface Props {
     address: Address | undefined;
@@ -28,11 +29,12 @@
     if (address) {
       initialize(address);
     }
-  })
+  });
 
   let otherAvatar: AvatarRow | undefined = $state();
   let profile: Profile | undefined = $state();
   let members: Address[] | undefined = $state(undefined);
+  let mintHandler: Address | undefined = $state();
 
   let trustRow: TrustRelationRow | undefined = $state();
 
@@ -73,6 +75,25 @@
       members = groupTrustRelations
         .filter((row) => row.relation === 'trusts')
         .map((o) => o.objectAvatar);
+
+      // TODO: Find mint handler
+      var findMintHandlerQuery = new CirclesQuery($circles.circlesRpc, {
+        namespace: 'CrcV2',
+        table: 'CMGroupCreated',
+        columns: ['mintHandler'],
+        filter: [{
+          Type: 'FilterPredicate',
+          FilterType: 'Equals',
+          Column: 'proxy',
+          Value: address
+        }],
+        sortOrder: 'DESC',
+        limit: 1,
+      });
+
+      await findMintHandlerQuery.queryNextPage();
+      mintHandler = findMintHandlerQuery.currentPage?.results[0]?.mintHandler;
+      console.log("mintHandler", mintHandler);
     } else {
       members = undefined;
     }
@@ -141,17 +162,25 @@
       <img src="/send-new.svg" alt="Send" class="w-5 h-5" />
       Send
     </button>
-    {#if trustRow?.relation === 'trustedBy' && otherAvatar?.type === 'CrcV2_RegisterGroup'}
+    {#if otherAvatar?.type === 'CrcV2_RegisterGroup' && !!mintHandler}
       <button
         class="btn bg-[#F3F4F6] border-none"
         onclick={() => {
+          // TODO: Get the group mint handler
           popupControls.open({
-            title: 'Mint group tokens',
-            component: MintGroupTokens,
+            title: 'Enter Amount',
+            component: SelectAmount,
             props: {
+              asset: transitiveTransfer(),
+              selectedAddress: mintHandler,
+              transitiveOnly: true,
+              amount: 0,
               context: {
-                selectedAddress: address
-              }
+                selectedAddress: mintHandler,
+                transitiveOnly: true,
+                selectedAsset: transitiveTransfer(),
+                amount: 0
+              },
             },
           });
         }}
