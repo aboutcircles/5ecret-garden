@@ -6,6 +6,7 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { getCirclesConfig } from '$lib/utils/helpers';
   import { wallet } from '$lib/stores/wallet';
+  import type { Address } from '@circles-sdk/utils';
 
   interface Props {
     selectedAddress?: any;

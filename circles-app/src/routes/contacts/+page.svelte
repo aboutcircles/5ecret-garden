@@ -6,8 +6,10 @@
   import ContactRow from './ContactRow.svelte';
   import { derived, writable } from 'svelte/store';
   import Filter from '$lib/components/Filter.svelte';
+  import AddressInput from '$lib/components/AddressInput.svelte';
 
   let filterVersion = writable<number | undefined>(undefined);
+  let searchQuery = writable<string>('');
 
   let filteredStore = derived(
     [contacts, filterVersion],
@@ -45,6 +47,29 @@
     }
   );
 
+  let searchedStore = derived(
+    [filteredStore, searchQuery],
+    ([$filteredStore, searchQuery]) => {
+      let results = $filteredStore.data.filter((item) => {
+        const name = item.contact?.contactProfile.name || '';
+        return (
+          item.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          name.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+      });
+
+      if (results.length === 0) {
+        results = [];
+      }
+
+      return {
+        data: results,
+        next: $filteredStore.next,
+        ended: $filteredStore.ended,
+      };
+    }
+  );
+
   onMount(() => {
     const unsubscribe = contacts.subscribe(() => {});
     return unsubscribe;
@@ -77,8 +102,10 @@
     <div class="flex-grow"></div>
     <button onclick={handleExportCSV}>Export CSV</button>
   </div>
+  
+  <AddressInput bind:address={$searchQuery} />
 
   <div class="w-full md:border rounded-lg md:px-4">
-    <GenericList store={filteredStore} row={ContactRow} />
+    <GenericList store={searchedStore} row={ContactRow} />
   </div>
 </div>
