@@ -1,20 +1,20 @@
 <script lang="ts">
   import GenericList from '$lib/components/GenericList.svelte';
-  import { createGroups } from '$lib/stores/groups';
+  import { createCMGroups } from '$lib/stores/groups';
   import type { Readable } from 'svelte/store';
-  import type { GroupRow } from '@circles-sdk/data';
+  import type { EventRow, GroupRow } from '@circles-sdk/data';
   import GroupRowView from './GroupRowView.svelte';
   import { avatar } from '$lib/stores/avatar';
 
   let groups: Readable<{
-    data: GroupRow[];
+    data: EventRow[];
     next: () => Promise<boolean>;
     ended: boolean;
   }> = $state();
 
   avatar.subscribe(async ($avatar) => {
     if ($avatar) {
-      groups = await createGroups();
+      groups = await createCMGroups();
     }
   }); 
 </script>
