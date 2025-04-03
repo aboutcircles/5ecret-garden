@@ -44,11 +44,11 @@ export const createCMGroups = () => {
     async () => new CirclesQuery<GroupRow>($circles.circlesRpc, queryDefinition, [
       new CalculatedColumn('group', (o: any) =>  (<any>o).proxy),
       new CalculatedColumn('mint', (o: any) => (<any>o).mint),
-      new CalculatedColumn('treasury', () => ''),
-      new CalculatedColumn('symbol', () => ''),
-      new CalculatedColumn('cidV0Digest', () => ''),
-      new CalculatedColumn('memberCount', () => 0),
-      new CalculatedColumn('trustedCount', () => 0),
+      new CalculatedColumn('treasury', async () => ''),
+      new CalculatedColumn('symbol', async () => ''),
+      new CalculatedColumn('cidV0Digest', async () => ''),
+      new CalculatedColumn('memberCount', async () => 0),
+      new CalculatedColumn('trustedCount', async () => 0),
     ]),
     groupEvents,
   );
