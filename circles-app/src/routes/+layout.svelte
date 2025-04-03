@@ -64,15 +64,17 @@
       },
     },
     '/groups': {
-      name: 'Group mint',
-      icon: '/banknotes-white.svg',
-      action: () => {
-        popupControls.open({
-          title: 'Mint group tokens',
-          component: MintGroupTokens,
-          props: {},
-        });
-      },
+      name: 'Send',
+      icon: '/send.svg',
+      action: $isGroup
+        ? undefined
+        : () => {
+          popupControls.open({
+            title: 'Send Circles',
+            component: Send,
+            props: {},
+          });
+        },
     },
     '/register': {
       name: 'Disconnect',
