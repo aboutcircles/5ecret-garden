@@ -8,7 +8,7 @@ export function getTypeString(type: string): string {
     CrcV2_RegisterOrganization: 'Organization',
     CrcV1_Signup: 'Human (v1)',
   };
-  return typeMap[type ?? ''] || '';
+  return typeMap[type ?? ''] || 'None';
 }
 
 export function formatTrustRelation(row: TrustRelationRow, profile?: Profile) {
