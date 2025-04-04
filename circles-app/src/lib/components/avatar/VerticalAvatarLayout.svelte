@@ -3,7 +3,7 @@
 
   interface Props {
     profile: Profile | undefined;
-    onclick?: () => void | undefined;
+    onclick?: (e: MouseEvent) => void | undefined;
   }
 
   let { profile, onclick }: Props = $props();

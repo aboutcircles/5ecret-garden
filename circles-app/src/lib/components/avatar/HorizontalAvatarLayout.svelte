@@ -6,7 +6,7 @@
     pictureOverlayUrl?: string | undefined;
     topInfo?: string | undefined;
     bottomInfo?: string | undefined;
-    onclick?: () => void | undefined;
+    onclick?: (e: MouseEvent) => void | undefined;
   }
 
   let {
