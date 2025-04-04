@@ -131,7 +131,7 @@
     }
   });
 
-  function openAvatar(e:any) {
+  function openAvatar(e: MouseEvent) {
     if (!clickable) return;
 
     const nextPage: PopupContentDefinition = {

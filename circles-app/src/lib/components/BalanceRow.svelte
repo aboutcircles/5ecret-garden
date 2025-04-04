@@ -70,6 +70,17 @@
       props: { asset: balance },
     });
   };
+
+  let copyIcon = $state('/copy.svg');
+
+  function handleCopy() {
+    navigator.clipboard.writeText(balance.isWrapped ? balance.tokenAddress : balance.tokenId);
+    copyIcon = '/check.svg';
+
+    setTimeout(() => {
+      copyIcon = '/copy.svg';
+    }, 1000);
+  }
 </script>
 
 <div class="w-full pt-2">
@@ -108,7 +119,7 @@
           </div>
           <div
             tabIndex={0}
-            class="dropdown-content bg-base-100 rounded-box shadow"
+            class="dropdown-content bg-base-100 rounded-box shadow z-10"
           >
             {#each actions as action (action.title)}
               {#if action.condition(balance)}
@@ -125,6 +136,13 @@
                 </button>
               {/if}
             {/each}
+            <button
+              class="text-xs font-medium w-44 h-12 flex items-center p-4 gap-x-2"
+              onclick={handleCopy}
+            >
+              <img src={copyIcon} alt="Copy" class="w-4 h-4 inline" />
+              Copy
+            </button>
           </div>
         </div>
       {/if}

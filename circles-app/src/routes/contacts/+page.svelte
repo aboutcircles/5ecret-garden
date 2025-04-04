@@ -5,41 +5,70 @@
   import GenericList from '$lib/components/GenericList.svelte';
   import ContactRow from './ContactRow.svelte';
   import { derived, writable } from 'svelte/store';
+  import Filter from '$lib/components/Filter.svelte';
+  import AddressInput from '$lib/components/AddressInput.svelte';
 
   let filterVersion = writable<number | undefined>(undefined);
+  let searchQuery = writable<string>('');
 
-  let filteredStore = derived([contacts, filterVersion], ([$contacts, filterVersion]) => {
-    const filteredData = Object.entries($contacts.data)
-      .filter(
-        ([_, contact]) =>
-          !filterVersion || contact?.avatarInfo?.version === filterVersion
-      )
-      .sort((a, b) => {
-        const aRelation = a[1].row.relation;
-        const bRelation = b[1].row.relation;
-        if (aRelation === 'mutuallyTrusts' && bRelation !== 'mutuallyTrusts')
-          return -1;
-        if (aRelation === 'trusts' && bRelation === 'trustedBy') return -1;
-        if (aRelation === bRelation) return 0;
-        if (bRelation === 'mutuallyTrusts' && aRelation !== 'mutuallyTrusts')
-          return 1;
-        if (bRelation === 'trusts' && aRelation === 'trustedBy') return 1;
-        return 0;
-      })
-      .map(([address, contact]) => ({
-        blockNumber: Date.now(),
-        transactionIndex: 0,
-        logIndex: 0,
-        address,
-        contact,
-      }));
+  let filteredStore = derived(
+    [contacts, filterVersion],
+    ([$contacts, filterVersion]) => {
+      const filteredData = Object.entries($contacts.data)
+        .filter(
+          ([_, contact]) =>
+            !filterVersion || contact?.avatarInfo?.version === filterVersion
+        )
+        .sort((a, b) => {
+          const aRelation = a[1].row.relation;
+          const bRelation = b[1].row.relation;
+          if (aRelation === 'mutuallyTrusts' && bRelation !== 'mutuallyTrusts')
+            return -1;
+          if (aRelation === 'trusts' && bRelation === 'trustedBy') return -1;
+          if (aRelation === bRelation) return 0;
+          if (bRelation === 'mutuallyTrusts' && aRelation !== 'mutuallyTrusts')
+            return 1;
+          if (bRelation === 'trusts' && aRelation === 'trustedBy') return 1;
+          return 0;
+        })
+        .map(([address, contact]) => ({
+          blockNumber: Date.now(),
+          transactionIndex: 0,
+          logIndex: 0,
+          address,
+          contact,
+        }));
 
-    return {
-      data: filteredData,
-      next: $contacts.next,
-      ended: $contacts.ended,
-    };
-  });
+      return {
+        data: filteredData,
+        next: $contacts.next,
+        ended: $contacts.ended,
+      };
+    }
+  );
+
+  let searchedStore = derived(
+    [filteredStore, searchQuery],
+    ([$filteredStore, searchQuery]) => {
+      let results = $filteredStore.data.filter((item) => {
+        const name = item.contact?.contactProfile.name || '';
+        return (
+          item.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          name.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+      });
+
+      if (results.length === 0) {
+        results = [];
+      }
+
+      return {
+        data: results,
+        next: $filteredStore.next,
+        ended: $filteredStore.ended,
+      };
+    }
+  );
 
   onMount(() => {
     const unsubscribe = contacts.subscribe(() => {});
@@ -67,36 +96,16 @@
 
   <!-- Filter -->
   <div class="flex flex-row gap-x-2">
-    <button
-      class={`bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm flex flex-row items-center gap-x-1 font-medium hover:text-black/70 hover:cursor-pointer ${
-        $filterVersion === undefined ? 'text-black' : 'text-gray-400'
-      }`}
-      onclick={() => filterVersion.set(undefined)}
-    >
-      All
-    </button>
-    <button
-      class={`bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm flex flex-row items-center gap-x-1 font-medium hover:text-black/70 hover:cursor-pointer ${
-        $filterVersion === 1 ? 'text-black' : 'text-gray-400'
-      }`}
-      onclick={() => filterVersion.set(1)}
-    >
-      Version 1
-    </button>
-    <button
-      class={`bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm flex flex-row items-center gap-x-1 font-medium hover:text-black/70 hover:cursor-pointer ${
-        $filterVersion === 2 ? 'text-black' : 'text-gray-400'
-      }`}
-      onclick={() => filterVersion.set(2)}
-    >
-      Version 2
-    </button>
-
+    <Filter text="All" filter={filterVersion} value={undefined} />
+    <Filter text="Version 1" filter={filterVersion} value={1} />
+    <Filter text="Version 2" filter={filterVersion} value={2} />
     <div class="flex-grow"></div>
     <button onclick={handleExportCSV}>Export CSV</button>
   </div>
+  
+  <AddressInput bind:address={$searchQuery} />
 
   <div class="w-full md:border rounded-lg md:px-4">
-    <GenericList store={filteredStore} row={ContactRow} />
+    <GenericList store={searchedStore} row={ContactRow} />
   </div>
 </div>

@@ -106,7 +106,7 @@
         <Avatar
           address={balance.tokenOwner}
           view="horizontal"
-          bottomInfo={shortenAddress(balance.tokenOwner)}
+          bottomInfo={tokenTypeToString(balance.tokenType) + ' - ' + shortenAddress(balance.tokenOwner)}
         />
         <div class="col text-right">
           <span class="font-medium">{roundToDecimals(balance.circles)}</span>
