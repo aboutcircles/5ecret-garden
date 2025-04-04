@@ -58,38 +58,3 @@ avatar.subscribe(($avatar) => {
     });
   }
 });
-
-async function enrichContactData(
-  rows: TrustRelationRow[]
-): Promise<ContactList> {
-  const profileRecord: ContactList = {};
-
-  const promises = rows.map(async (row) => {
-    const profile = await getProfile(row.objectAvatar);
-    if (profile) {
-      profileRecord[row.objectAvatar] = {
-        contactProfile: profile,
-        row: row,
-      };
-    }
-  });
-
-  await Promise.all(promises);
-
-  const avatarInfos: AvatarRow[] =
-    (await get(circles)?.data.getAvatarInfoBatch(Object.keys(profileRecord) as Address[])) ??
-    [];
-  const avatarInfoRecord: Record<string, AvatarRow> = {};
-  avatarInfos.forEach((info) => {
-    avatarInfoRecord[info.avatar] = info;
-  });
-
-  Object.values(profileRecord).forEach((item) => {
-    const info = avatarInfoRecord[item.row.objectAvatar];
-    if (info) {
-      item.avatarInfo = info;
-    }
-  });
-
-  return profileRecord;
-}

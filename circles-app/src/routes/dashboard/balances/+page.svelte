@@ -36,12 +36,6 @@
       };
     }
   );
-
-  console.log(
-    'filteredStore',
-    filteredStore.subscribe,
-    circlesBalances.subscribe
-  );
 </script>
 
 <div class="flex flex-col items-center p-4 w-full max-w-2xl gap-y-6 mt-20">

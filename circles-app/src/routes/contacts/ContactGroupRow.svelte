@@ -2,13 +2,14 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import ProfilePage from '$lib/pages/Profile.svelte';
   import { popupControls } from '$lib/stores/popUp';
+  import type { Address } from '@circles-sdk/utils';
 
   interface Props {
-    address?: string;
+    address?: Address | undefined;
     trustRelation?: string;
   }
 
-  let { address = '', trustRelation = '' }: Props = $props();
+  let { address, trustRelation = '' }: Props = $props();
 </script>
 
 <div class="w-full pt-2">
