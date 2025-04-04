@@ -18,8 +18,6 @@
   let commonContacts: Address[] = $state([]);
 
   async function initialize() {
-    if (!otherAvatarAddress) return;
-
     if (!$circles || !$avatar) return;
 
     // Use the RPC call to get the array of common trust addresses

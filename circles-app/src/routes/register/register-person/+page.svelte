@@ -3,10 +3,17 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { circles } from '$lib/stores/circles';
   import { wallet } from '$lib/stores/wallet';
+  import { getProfile } from '$lib/utils/profile';
   import type { AvatarRow } from '@circles-sdk/data';
+  import type { Profile } from '@circles-sdk/profiles';
+  import type { Address } from '@circles-sdk/utils';
   import { onMount } from 'svelte';
 
-  let invitations: AvatarRow[] = $state([]);
+  interface Invitation extends AvatarRow {
+    profile: Profile;
+  }
+
+  let invitations: Invitation[] = $state([]);
 
   onMount(async () => {
     if (!$wallet?.address) {
@@ -16,8 +23,14 @@
       throw new Error('Circles SDK not initialized');
     }
 
-    invitations = await $circles.data.getInvitations(
-      $wallet.address.toLowerCase()
+    const rawInvitations = await $circles.data.getInvitations(
+      $wallet.address.toLowerCase() as Address
+    );
+    invitations = await Promise.all(
+      rawInvitations.map(async (inviter) => {
+        const profile = await getProfile(inviter.avatar);
+        return { ...inviter, profile };
+      })
     );
   });
 
@@ -48,6 +61,7 @@
           <Avatar
             clickable={false}
             address={inviter.avatar}
+            profile={inviter.profile}
             view="horizontal"
           />
         </button>

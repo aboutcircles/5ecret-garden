@@ -92,6 +92,7 @@
 
   interface Props {
     address: Address | undefined;
+    profile?: Profile | undefined;
     clickable?: boolean;
     view: 'horizontal' | 'vertical';
     pictureOverlayUrl?: string | undefined;
@@ -109,6 +110,7 @@
 
   let {
     address,
+    profile = undefined,
     clickable = true,
     view,
     pictureOverlayUrl,
@@ -121,10 +123,8 @@
     placeholderBottom = true,
   }: Props = $props();
 
-  let profile: Profile | undefined = $state();
-
   $effect(() => {
-    if (address) {
+    if (address && !profile) {
       getProfile(address).then((newProfile) => {
         profile = newProfile;
       });
