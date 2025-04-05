@@ -30,7 +30,7 @@ function setFallbackValues(
   };
 
   // Assign the correct fallback image
-  if (avatar?.type === 'CrcV2_RegisterHuman' || avatar?.type === 'CrcV1_Signup') {
+  if (!profile?.previewImageUrl && (avatar?.type === 'CrcV2_RegisterHuman' || avatar?.type === 'CrcV1_Signup')) {
     fallbackProfile.previewImageUrl = '/person.svg';
   }
   if (avatar?.type === 'CrcV2_RegisterGroup') {
@@ -86,7 +86,7 @@ async function fetchProfiles(addresses: Address[]): Promise<Map<Address, Profile
   // 3) Gather all CIDs
   const cids: string[] = [];
   for (const avatar of avatars) {
-    if (avatar.version === 2 && avatar.cidV0) {
+    if (avatar.cidV0) {
       cids.push(avatar.cidV0);
     }
   }
@@ -108,7 +108,7 @@ async function fetchProfiles(addresses: Address[]): Promise<Map<Address, Profile
   for (const address of addresses) {
     const avatar = addressToAvatar.get(address.toLowerCase());
     let profile: Profile | undefined;
-    if (avatar && avatar.version === 2 && avatar.cidV0) {
+    if (avatar && avatar.cidV0) {
       profile = cidToProfile[avatar.cidV0];
     }
     const finalProfile = setFallbackValues(address, avatar, profile);
