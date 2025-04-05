@@ -4,7 +4,11 @@
   import { avatar } from '$lib/stores/avatar';
   import CommonConnections from '$lib/components/CommonConnections.svelte';
   import { contacts } from '$lib/stores/contacts';
-  import { type AvatarRow, CirclesQuery, type TrustRelationRow } from '@circles-sdk/data';
+  import {
+    type AvatarRow,
+    CirclesQuery,
+    type TrustRelationRow,
+  } from '@circles-sdk/data';
   import Untrust from '$lib/pages/Untrust.svelte';
   import Trust from '$lib/pages/Trust.svelte';
   import SelectAsset from '$lib/flows/send/2_Asset.svelte';
@@ -38,10 +42,7 @@
 
   let trustRow: TrustRelationRow | undefined = $state();
 
-  async function initialize(address?: Address) {
-    if (!address) {
-      return;
-    }
+  async function initialize(address: Address) {
     if (!$circles) {
       return;
     }
@@ -51,22 +52,9 @@
 
     otherAvatar = await $circles.data.getAvatarInfo(address);
 
-    if (!otherAvatar) {
-      profile = {
-        name: shortenAddress(address),
-        description: address,
-      };
-      trustRow = undefined;
-      return;
-    }
+    profile = await getProfile(address);
 
-    profile = await getProfile(otherAvatar.avatar);
-
-    if (otherAvatar?.avatar) {
-      trustRow = $contacts?.data[otherAvatar.avatar]?.row;
-    } else {
-      trustRow = undefined;
-    }
+      trustRow = $contacts?.data[address]?.row;
 
     if (otherAvatar?.type === 'CrcV2_RegisterGroup') {
       // load the members
@@ -81,27 +69,23 @@
         namespace: 'CrcV2',
         table: 'CMGroupCreated',
         columns: ['mintHandler'],
-        filter: [{
-          Type: 'FilterPredicate',
-          FilterType: 'Equals',
-          Column: 'proxy',
-          Value: address
-        }],
+        filter: [
+          {
+            Type: 'FilterPredicate',
+            FilterType: 'Equals',
+            Column: 'proxy',
+            Value: address,
+          },
+        ],
         sortOrder: 'DESC',
         limit: 1,
       });
 
       await findMintHandlerQuery.queryNextPage();
       mintHandler = findMintHandlerQuery.currentPage?.results[0]?.mintHandler;
-      console.log("mintHandler", mintHandler);
+      console.log('mintHandler', mintHandler);
     } else {
       members = undefined;
-    }
-
-    if (!profile) {
-      profile = {
-        name: otherAvatar?.name ?? address,
-      };
     }
   }
 
@@ -109,11 +93,7 @@
 </script>
 
 <div class="flex flex-col items-center w-full sm:w-[90%] lg:w-3/5 mx-auto">
-  <Avatar
-    view="vertical"
-    clickable={false}
-    address={otherAvatar?.avatar}
-  />
+  <Avatar view="vertical" clickable={false} {address} />
 
   {#if trustRow}
     <span
@@ -130,14 +110,14 @@
 
   <div class="my-6 flex flex-row gap-x-2">
     <span class="bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm"
-    >{getTypeString(otherAvatar?.type || '')}</span
+      >{getTypeString(otherAvatar?.type || '')}</span
     >
-    <AddressComponent address={otherAvatar?.avatar || ''} />
+    <AddressComponent address={address ?? '0x0'} />
     <a
       href={'https://gnosisscan.io/address/' + otherAvatar?.avatar}
       target="_blank"
       class="flex items-center justify-center bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm"
-    ><img src="/external.svg" alt="External Link" class="w-4" /></a
+      ><img src="/external.svg" alt="External Link" class="w-4" /></a
     >
   </div>
 
@@ -179,7 +159,7 @@
                 selectedAddress: mintHandler,
                 transitiveOnly: true,
                 selectedAsset: transitiveTransfer(),
-                amount: 0
+                amount: 0,
               },
             },
           });
