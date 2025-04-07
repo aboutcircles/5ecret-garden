@@ -110,7 +110,7 @@
               />
             {/if}
             {#if $contacts?.data[address]}
-              <span>{formatTrustRelation($contacts.data[address].row)}</span>
+              <span>{formatTrustRelation($contacts.data[address].row.relation)}</span>
             {/if}
           </div>
         </Avatar>
