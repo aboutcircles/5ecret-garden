@@ -9,6 +9,7 @@
   import AddressInput from '$lib/components/AddressInput.svelte';
 
   let filterVersion = writable<number | undefined>(undefined);
+  let filterRelation = writable<number | undefined>(undefined);
   let searchQuery = writable<string>('');
 
   let filteredStore = derived(
@@ -77,6 +78,7 @@
 
   async function handleExportCSV() {
     const csvData = Object.keys($contacts.data);
+    console.log('$contacts.data', $contacts.data);
     const csv = Papa.unparse(csvData.map((address) => ({ address })));
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -90,19 +92,31 @@
 </script>
 
 <div
-  class="flex flex-col w-full sm:w-[90%] lg:w-3/5 p-0 gap-y-5 mt-28 mb-10 text-[#161616]"
+  class="flex flex-col w-full sm:w-[90%] lg:w-3/5 p-0 gap-y-5 mt-28 mb-10 text-[#161616] px-2"
 >
   <div class="text-2xl font-bold leading-7 px-4 sm:px-0">Contacts</div>
 
   <!-- Filter -->
-  <div class="flex flex-row gap-x-2">
+  <div class="flex flex-row gap-x-2 items-center">
+    <p class="text-sm">Version</p>
     <Filter text="All" filter={filterVersion} value={undefined} />
     <Filter text="Version 1" filter={filterVersion} value={1} />
     <Filter text="Version 2" filter={filterVersion} value={2} />
-    <div class="flex-grow"></div>
-    <button onclick={handleExportCSV}>Export CSV</button>
   </div>
-  
+
+  <div class="flex flex-row justify-between items-center flex-wrap gap-y-4">
+    <div class="flex flex-row gap-x-2 items-center">
+      <p class="text-sm">Relation</p>
+      <Filter text="All" filter={filterRelation} value={undefined} />
+      <Filter text="Mutual" filter={filterRelation} value={'mutuallyTrusts'} />
+      <Filter text="Trusted" filter={filterRelation} value={'trusts'} />
+      <Filter text="Trust you" filter={filterRelation} value={'trustedBy'} />
+    </div>
+    <div class="flex-grow flex justify-end">
+      <button class="mt-4 sm:mt-0" onclick={handleExportCSV}>Export CSV</button>
+    </div>
+  </div>
+
   <AddressInput bind:address={$searchQuery} />
 
   <div class="w-full md:border rounded-lg md:px-4">
