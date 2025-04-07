@@ -1,7 +1,6 @@
 <script lang="ts">
   import { run } from 'svelte/legacy';
 
-  import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { avatar } from '$lib/stores/avatar';
   import { circles } from '$lib/stores/circles';
   import { type Address, uint256ToAddress } from '@circles-sdk/utils';
@@ -10,7 +9,8 @@
   import { formatUnits, parseUnits } from 'ethers';
   import type { TokenBalanceRow, TrustRelation } from '@circles-sdk/data';
   import { contacts } from '$lib/stores/contacts';
-  import { formatTrustRelation } from '$lib/utils/helpers';
+  import { getVaultAddress, getVaultBalances } from '$lib/utils/vault';
+  import CollateralTable from '$lib/components/CollateralTable.svelte';
 
   interface Props {
     asset: TokenBalanceRow;
@@ -89,64 +89,25 @@
   async function load() {
     if (!$circles) return;
 
-    // 1) Query the vault address from your table
-    const vaultResult = await $circles.circlesRpc.call<{
-      columns: string[];
-      rows: any[][];
-    }>('circles_query', [
-      {
-        Namespace: 'CrcV2',
-        Table: 'CreateVault',
-        Columns: ['vault'],
-        Filter: [
-          {
-            Type: 'FilterPredicate',
-            FilterType: 'Equals',
-            Column: 'group',
-            Value: asset.tokenOwner.toLowerCase(),
-          },
-        ],
-        Order: [],
-      },
-    ]);
-
-    if (!vaultResult?.result.rows || vaultResult.result.rows.length === 0) {
+    const vaultAddress = await getVaultAddress(
+      $circles.circlesRpc,
+      asset.tokenOwner
+    );
+    if (!vaultAddress) {
       collateralInTreasury = [];
       return;
     }
 
-    const vaultAddress = vaultResult.result.rows[0][0];
-
-    // 2) Use that vault to fetch balances
-    const balancesResult = await $circles.circlesRpc.call<{
-      columns: string[];
-      rows: any[][];
-    }>('circles_query', [
-      {
-        Namespace: 'V_CrcV2',
-        Table: 'GroupVaultBalancesByToken',
-        Columns: ['id', 'balance'],
-        Filter: [
-          {
-            Type: 'FilterPredicate',
-            FilterType: 'Equals',
-            Column: 'vault',
-            Value: vaultAddress.toLowerCase(),
-          },
-        ],
-        Order: [],
-      },
-    ]);
-
-    if (
-      !balancesResult?.result.rows ||
-      balancesResult.result.rows.length === 0
-    ) {
+    const balancesResult = await getVaultBalances(
+      $circles.circlesRpc,
+      vaultAddress
+    );
+    if (!balancesResult) {
       collateralInTreasury = [];
       return;
     }
 
-    const { columns, rows } = balancesResult.result;
+    const { columns, rows } = balancesResult;
     const colId = columns.indexOf('id');
     const colBal = columns.indexOf('balance');
 
@@ -175,11 +136,6 @@
     if (item) {
       item.trustRelation = 'selfTrusts';
     }
-  }
-
-  function formatEtherTwoDecimals(value: bigint): string {
-    const etherString = formatUnits(value.toString(), 18);
-    return parseFloat(etherString).toFixed(2);
   }
 
   async function redeem() {
@@ -275,44 +231,7 @@
   </div>
 </div>
 
-<table class="table table-zebra w-full">
-  <thead>
-    <tr>
-      <th>Collateral</th>
-      <th>Available amount</th>
-      <th>Amount to redeem</th>
-    </tr>
-  </thead>
-  <tbody>
-    {#each collateralInTreasury as item}
-      <tr>
-        <td>
-          <Avatar
-            address={item.avatar}
-            clickable={false}
-            view="horizontal"
-            bottomInfo={formatTrustRelation(item.trustRelation)}
-          />
-        </td>
-        <td>
-          {formatEtherTwoDecimals(item.amount)}
-        </td>
-        <td>
-          <input
-            type="number"
-            class="input input-bordered w-36"
-            value={item.amountToRedeem.toFixed(2)}
-            oninput={(e) => {
-              const newValue = parseFloat((e.target as HTMLInputElement)?.value);
-              item.amountToRedeem = isNaN(newValue) ? 0 : newValue;
-            }}
-            min="0"
-          />
-        </td>
-      </tr>
-    {/each}
-  </tbody>
-</table>
+<CollateralTable {collateralInTreasury} redeemable={true} />
 
 <div class="mt-4 flex justify-end">
   <ActionButton action={redeem} disabled={!canRedeem}>Redeem</ActionButton>
