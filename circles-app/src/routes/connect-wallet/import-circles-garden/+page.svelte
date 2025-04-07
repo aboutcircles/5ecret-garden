@@ -29,7 +29,7 @@
 </script>
 
 <div
-  class="w-full flex flex-col items-center min-h-screen p-4 max-w-5xl gap-y-8 mt-20"
+  class="w-full flex flex-col items-center min-h-screen max-w-5xl gap-y-8 mt-20"
 >
   {#if !$wallet?.address || !$circles}
     <h2 class="font-bold text-[28px] md:text-[32px]">
