@@ -221,22 +221,22 @@
   }
 
   function distribute() {
-    const userMaxRedeem = asset.circles;
-    let remaining = userMaxRedeem;
-
-    const sortedCollateral = collateralInTreasury.slice().sort(
-      (a, b) => getTrustPriority(a) - getTrustPriority(b)
-    );
+    const sortedCollateral = collateralInTreasury
+      .slice()
+      .sort((a, b) => getTrustPriority(a) - getTrustPriority(b));
 
     for (const item of sortedCollateral) {
-      if (remaining <= 0) break;
+      if (item.amountToRedeem > 0) {
+        continue;
+      }
+      if (remainingToAllocate <= 0) break;
 
       const available = Number(formatUnits(item.amount.toString(), 18));
 
       if (available > 0) {
-        const allocation = Math.min(available, remaining);
+        const allocation = Math.min(available, remainingToAllocate);
         item.amountToRedeem = allocation;
-        remaining -= allocation;
+        remainingToAllocate -= allocation;
       }
     }
   }
@@ -265,8 +265,10 @@
     {/if}
   </p>
 
-  <div class="gap-x-2">
-    <button class="text-primary underline" onclick={distribute}>Distribute</button>
+  <div class="flex gap-x-2">
+    <button class="text-primary font-semibold" onclick={distribute}
+      >Distribute</button
+    >
     <ActionButton action={resetFields} disabled={!isModified}>
       Reset
     </ActionButton>
@@ -299,7 +301,11 @@
           <input
             type="number"
             class="input input-bordered w-36"
-            bind:value={item.amountToRedeem}
+            value={item.amountToRedeem.toFixed(2)}
+            oninput={(e) => {
+              const newValue = parseFloat((e.target as HTMLInputElement)?.value);
+              item.amountToRedeem = isNaN(newValue) ? 0 : newValue;
+            }}
             min="0"
           />
         </td>
