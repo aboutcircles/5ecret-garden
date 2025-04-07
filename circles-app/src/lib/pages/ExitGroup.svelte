@@ -11,6 +11,7 @@
   import type { TokenBalanceRow, TrustRelation } from '@circles-sdk/data';
   import { contacts } from '$lib/stores/contacts';
   import { formatTrustRelation } from '$lib/utils/helpers';
+  import { getVaultAddress, getVaultBalances } from '$lib/utils/vault';
 
   interface Props {
     asset: TokenBalanceRow;
@@ -89,64 +90,22 @@
   async function load() {
     if (!$circles) return;
 
-    // 1) Query the vault address from your table
-    const vaultResult = await $circles.circlesRpc.call<{
-      columns: string[];
-      rows: any[][];
-    }>('circles_query', [
-      {
-        Namespace: 'CrcV2',
-        Table: 'CreateVault',
-        Columns: ['vault'],
-        Filter: [
-          {
-            Type: 'FilterPredicate',
-            FilterType: 'Equals',
-            Column: 'group',
-            Value: asset.tokenOwner.toLowerCase(),
-          },
-        ],
-        Order: [],
-      },
-    ]);
-
-    if (!vaultResult?.result.rows || vaultResult.result.rows.length === 0) {
+    const vaultAddress = await getVaultAddress(
+      $circles.circlesRpc,
+      asset.tokenOwner
+    );
+    if (!vaultAddress) {
       collateralInTreasury = [];
       return;
     }
 
-    const vaultAddress = vaultResult.result.rows[0][0];
-
-    // 2) Use that vault to fetch balances
-    const balancesResult = await $circles.circlesRpc.call<{
-      columns: string[];
-      rows: any[][];
-    }>('circles_query', [
-      {
-        Namespace: 'V_CrcV2',
-        Table: 'GroupVaultBalancesByToken',
-        Columns: ['id', 'balance'],
-        Filter: [
-          {
-            Type: 'FilterPredicate',
-            FilterType: 'Equals',
-            Column: 'vault',
-            Value: vaultAddress.toLowerCase(),
-          },
-        ],
-        Order: [],
-      },
-    ]);
-
-    if (
-      !balancesResult?.result.rows ||
-      balancesResult.result.rows.length === 0
-    ) {
+    const balancesResult = await getVaultBalances($circles.circlesRpc, vaultAddress);
+    if (!balancesResult) {
       collateralInTreasury = [];
       return;
     }
 
-    const { columns, rows } = balancesResult.result;
+    const { columns, rows } = balancesResult;
     const colId = columns.indexOf('id');
     const colBal = columns.indexOf('balance');
 
@@ -303,7 +262,9 @@
             class="input input-bordered w-36"
             value={item.amountToRedeem.toFixed(2)}
             oninput={(e) => {
-              const newValue = parseFloat((e.target as HTMLInputElement)?.value);
+              const newValue = parseFloat(
+                (e.target as HTMLInputElement)?.value
+              );
               item.amountToRedeem = isNaN(newValue) ? 0 : newValue;
             }}
             min="0"
