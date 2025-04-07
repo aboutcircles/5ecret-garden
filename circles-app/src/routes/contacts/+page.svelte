@@ -81,14 +81,16 @@
   });
 
   async function handleExportCSV() {
-    const csvData = Object.keys($contacts.data);
-    console.log('$contacts.data', $contacts.data);
-    const csv = Papa.unparse(csvData.map((address) => ({ address })));
+    const csvData = $filteredStore.data.map((item) => ({
+      address: item.address,
+      name: item.contact?.contactProfile.name,
+    }));
+    const csv = Papa.unparse(csvData);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', 'members.csv');
+    link.setAttribute('download', `members-${$filterRelation || 'all'}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
