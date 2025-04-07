@@ -65,12 +65,12 @@
 </script>
 
 <div
-  class="w-full flex flex-col items-center min-h-screen p-4 max-w-xl gap-y-4 mt-20"
+  class="w-full flex flex-col items-center min-h-screen max-w-xl gap-y-4 mt-20"
 >
   <div class="w-full">
-    <a onclick="{() => history.back()}">
+    <button onclick="{() => history.back()}">
       <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
-    </a>
+    </button>
   </div>
   <h2 class="font-bold text-[28px] md:text-[32px]">Select Avatar</h2>
   <p class="font-normal text-black/60 text-base">

@@ -1,5 +1,5 @@
 import type { Profile } from '@circles-sdk/profiles';
-import type { TrustRelationRow } from '@circles-sdk/data';
+import type { TrustRelation, TrustRelationRow } from '@circles-sdk/data';
 
 export function getTypeString(type: string): string {
   const typeMap: Record<string, string> = {
@@ -11,8 +11,8 @@ export function getTypeString(type: string): string {
   return typeMap[type ?? ''] || 'None';
 }
 
-export function formatTrustRelation(row: TrustRelationRow, profile?: Profile) {
-  switch (row.relation) {
+export function formatTrustRelation(relation: TrustRelation | undefined, profile?: Profile) {
+  switch (relation) {
     case 'trusts':
       return `You accept ${profile ? profile.name + '’s' : 'their'} tokens`;
     case 'trustedBy':

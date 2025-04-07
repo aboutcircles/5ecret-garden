@@ -102,7 +102,7 @@
         trustRow?.relation === 'trustedBy' ||
         trustRow?.relation === 'mutuallyTrusts'}
     >
-      {formatTrustRelation(trustRow, profile)}
+      {formatTrustRelation(trustRow.relation, profile)}
     </span>
   {:else}
     <span class="text-sm text-gray-500">No relation available</span>

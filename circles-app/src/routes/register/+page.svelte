@@ -6,7 +6,7 @@
 </script>
 
 <div
-  class="w-full flex flex-col p-4 max-w-xl gap-y-4 justify-center mt-28 md:mt-44"
+  class="w-full flex flex-col max-w-xl gap-y-4 justify-center mt-28 md:mt-44"
 >
   <div class="w-full flex flex-col">
     <p class="font-bold text-xl">Register</p>
@@ -50,7 +50,7 @@
     route="/register/register-profile"
   />
   <div class="w-full flex flex-col items-center">
-    <Address address={$wallet?.address ?? ''} />
+    <Address address={$wallet?.address ?? '0x0'} />
     <QrCode value={$wallet?.address} />
   </div>
 </div>

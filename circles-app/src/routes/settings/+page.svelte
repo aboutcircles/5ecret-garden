@@ -5,7 +5,6 @@
   import ActionButton from '$lib/components/ActionButton.svelte';
   import { canMigrate } from '$lib/guards/canMigrate';
   import { type Profile } from '@circles-sdk/profiles';
-  import { cidV0ToUint8Array } from '@circles-sdk/utils';
   import { profile } from '$lib/stores/profile';
   import { runTask } from '$lib/utils/tasks';
   import MigrateToV2 from '$lib/flows/migrateToV2/1_GetInvited.svelte';
@@ -13,6 +12,7 @@
   import GroupSetting from './editors/GroupSetting.svelte';
   import { ethers } from 'ethers';
   import ProfileEditor from '$lib/components/ProfileEditor.svelte';
+  import { onMount } from 'svelte';
 
   async function saveProfileData(profile: Profile): Promise<string> {
     if (!$circles?.profiles) {
@@ -27,12 +27,6 @@
     description: '',
     previewImageUrl: '',
     imageUrl: '',
-  });
-
-  $effect(() => {
-    if ($profile) {
-      newProfile = $profile;
-    }
   });
 
   async function migrateToV2() {
@@ -64,6 +58,12 @@
     }
   }
 
+  $effect(() => {
+    if ($profile) {
+      newProfile = $profile;
+    }
+  });
+
   async function saveProfile() {
     const cid = await saveProfileData(newProfile!);
 
@@ -79,9 +79,24 @@
       }),
     });
   }
+
+  function profilesEqual(
+    a: Profile | undefined,
+    b: Profile | undefined
+  ): boolean {
+    if (!a || !b) {
+      return false;
+    }
+    return (
+      a.name === b.name &&
+      a.description === b.description &&
+      a.previewImageUrl === b.previewImageUrl &&
+      a.imageUrl === b.imageUrl
+    );
+  }
 </script>
 
-<div class="flex flex-col p-4 w-full max-w-2xl gap-y-4 mt-20">
+<div class="flex flex-col w-full max-w-2xl gap-y-4 mt-20">
   <p class="font-bold text-2xl">Settings</p>
   <div
     class="flex flex-col items-center md:border rounded-lg md:px-6 md:py-8 gap-y-4"
@@ -94,8 +109,10 @@
 
       {#if $avatar?.avatarInfo?.version === 2}
         <div>
-          <ActionButton action={saveProfile} disabled={!newProfile}
-          >Save
+          <ActionButton
+            action={saveProfile}
+            disabled={profilesEqual(newProfile, $profile)}
+            >Save
           </ActionButton>
         </div>
       {/if}
@@ -114,9 +131,8 @@
           <h2 class="text-lg font-medium">Circles V2</h2>
           <div class="mt-3">
             <ActionButton action={migrateToV2}
-            >Update to Circles V2
-            </ActionButton
-            >
+              >Update to Circles V2
+            </ActionButton>
           </div>
         </div>
       {/if}
@@ -125,7 +141,7 @@
           <h2 class="text-lg font-medium">Circles V1</h2>
           <div class="mt-3">
             <ActionButton action={stopV1}
-            ><span class="text-orange-400">Stop V1 account permanently</span>
+              ><span class="text-orange-400">Stop V1 account permanently</span>
             </ActionButton>
           </div>
         </div>
