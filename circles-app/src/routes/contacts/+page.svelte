@@ -9,16 +9,20 @@
   import AddressInput from '$lib/components/AddressInput.svelte';
 
   let filterVersion = writable<number | undefined>(undefined);
-  let filterRelation = writable<number | undefined>(undefined);
+  let filterRelation = writable<
+    'mutuallyTrusts' | 'trusts' | 'trustedBy' | 'variesByVersion' | undefined
+  >(undefined);
   let searchQuery = writable<string>('');
 
   let filteredStore = derived(
-    [contacts, filterVersion],
-    ([$contacts, filterVersion]) => {
+    [contacts, filterVersion, filterRelation],
+    ([$contacts, filterVersion, filterRelation]) => {
       const filteredData = Object.entries($contacts.data)
         .filter(
           ([_, contact]) =>
-            !filterVersion || contact?.avatarInfo?.version === filterVersion
+            (!filterVersion ||
+              contact?.avatarInfo?.version === filterVersion) &&
+            (!filterRelation || contact?.row?.relation === filterRelation)
         )
         .sort((a, b) => {
           const aRelation = a[1].row.relation;
@@ -105,12 +109,17 @@
   </div>
 
   <div class="flex flex-row justify-between items-center flex-wrap gap-y-4">
-    <div class="flex flex-row gap-x-2 items-center">
+    <div class="flex flex-row gap-2 items-center flex-wrap">
       <p class="text-sm">Relation</p>
       <Filter text="All" filter={filterRelation} value={undefined} />
       <Filter text="Mutual" filter={filterRelation} value={'mutuallyTrusts'} />
       <Filter text="Trusted" filter={filterRelation} value={'trusts'} />
       <Filter text="Trust you" filter={filterRelation} value={'trustedBy'} />
+      <Filter
+        text="Varies by version"
+        filter={filterRelation}
+        value={'variesByVersion'}
+      />
     </div>
     <div class="flex-grow flex justify-end">
       <button class="mt-4 sm:mt-0" onclick={handleExportCSV}>Export CSV</button>
