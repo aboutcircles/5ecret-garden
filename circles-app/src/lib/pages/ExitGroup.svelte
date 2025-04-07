@@ -31,6 +31,22 @@
   let canRedeem = $state(false);
   let isModified = $state(false);
 
+  const trustPriorityMap: {
+    [K in TrustRelation]: number;
+  } = {
+    selfTrusts: 1,
+    mutuallyTrusts: 2,
+    trusts: 3,
+    trustedBy: 4,
+    variesByVersion: 5,
+  };
+
+  function getTrustPriority(item: { trustRelation?: TrustRelation }): number {
+    return item.trustRelation && trustPriorityMap[item.trustRelation]
+      ? trustPriorityMap[item.trustRelation]
+      : 6;
+  }
+
   // This runs whenever collateralInTreasury changes or user input changes.
   // It re-calculates the sums and validity for the UI.
   run(() => {
@@ -156,7 +172,7 @@
       (item) => item.avatar === $avatar?.address
     );
 
-    if(item) {
+    if (item) {
       item.trustRelation = 'selfTrusts';
     }
   }
@@ -203,6 +219,27 @@
       amountToRedeem: 0,
     }));
   }
+
+  function distribute() {
+    const userMaxRedeem = asset.circles;
+    let remaining = userMaxRedeem;
+
+    const sortedCollateral = collateralInTreasury.slice().sort(
+      (a, b) => getTrustPriority(a) - getTrustPriority(b)
+    );
+
+    for (const item of sortedCollateral) {
+      if (remaining <= 0) break;
+
+      const available = Number(formatUnits(item.amount.toString(), 18));
+
+      if (available > 0) {
+        const allocation = Math.min(available, remaining);
+        item.amountToRedeem = allocation;
+        remaining -= allocation;
+      }
+    }
+  }
 </script>
 
 <p>
@@ -229,7 +266,7 @@
   </p>
 
   <div class="gap-x-2">
-    <ActionButton action={async () => {}}>Distribute</ActionButton>
+    <button class="text-primary underline" onclick={distribute}>Distribute</button>
     <ActionButton action={resetFields} disabled={!isModified}>
       Reset
     </ActionButton>
