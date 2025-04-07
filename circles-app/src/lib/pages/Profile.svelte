@@ -21,6 +21,7 @@
   import SelectAmount from '$lib/flows/send/3_Amount.svelte';
   import { transitiveTransfer } from '$lib/pages/SelectAsset.svelte';
   import { getVaultAddress, getVaultBalances } from '$lib/utils/vault';
+  import CollateralTable from '$lib/components/CollateralTable.svelte';
 
   interface Props {
     address: Address | undefined;
@@ -120,7 +121,6 @@
         amount: BigInt(row[colBal]),
         amountToRedeem: 0, // default 0
       }));
-      console.log(collateralInTreasury);
     } else {
       members = undefined;
     }
@@ -318,6 +318,22 @@
       {#if members.length === 0}
         <div>No members</div>
       {/if}
+    </div>
+  {/if}
+  {#if otherAvatar?.type === 'CrcV2_RegisterGroup'}
+    <input
+      type="radio"
+      name="tabs"
+      value="collateral"
+      role="tab"
+      class="tab h-auto"
+      checked
+      aria-label={`Collateral (${collateralInTreasury.length})`}
+    />
+    <div role="tabpanel" class="tab-content mt-8 bg-base-100 border-none">
+      <div class="w-full border-base-300 rounded-box border">
+        <CollateralTable {collateralInTreasury} />
+      </div>
     </div>
   {/if}
 </div>
