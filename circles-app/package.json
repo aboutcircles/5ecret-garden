@@ -12,9 +12,9 @@
     "format": "prettier --write ."
   },
   "devDependencies": {
+    "@circles-sdk/adapter": "0.22.0",
     "@circles-sdk/adapter-ethers": "0.22.0",
     "@circles-sdk/adapter-safe": "0.22.0",
-    "@circles-sdk/adapter": "0.22.0",
     "@circles-sdk/data": "0.22.0",
     "@circles-sdk/profiles": "0.22.0",
     "@circles-sdk/sdk": "0.22.0",
@@ -49,6 +49,7 @@
   "dependencies": {
     "@zxing/library": "^0.21.3",
     "buffer": "^6.0.3",
+    "chart.js": "^4.4.8",
     "d3-sankey": "^0.12.3",
     "d3-scale": "^4.0.2",
     "d3-scale-chromatic": "^3.1.0",

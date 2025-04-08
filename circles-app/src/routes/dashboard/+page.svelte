@@ -6,13 +6,18 @@
   import { roundToDecimals } from '$lib/utils/shared';
   import { runTask } from '$lib/utils/tasks';
   import { transactionHistory } from '$lib/stores/transactionHistory';
+  import { getDailyCmGroupsDataOverTheMonth } from '$lib/utils/getGroupData';
+  import { circles } from '$lib/stores/circles';
 
   let mintableAmount: number = $state(0);
 
-
   avatar.subscribe(async () => {
-    if($avatar && !$isGroup){
+    if ($avatar && !$isGroup) {
       mintableAmount = (await $avatar?.getMintableAmount()) ?? 0;
+    }
+    if($isGroup && $circles && $avatar) {
+      const groupMember = await getDailyCmGroupsDataOverTheMonth($circles, $avatar.address);
+      console.log('groupMember', groupMember);
     }
   });
 
@@ -40,7 +45,34 @@
       Mint {roundToDecimals(mintableAmount)} Circles
     </button>
   {/if}
-  <div class="w-full md:border rounded-lg md:px-4">
-    <GenericList row={TransactionRow} store={transactionHistory} />
+  <div role="tablist" class="tabs tabs-bordered w-full p-0 my-10">
+    {#if $isGroup}<input
+        type="radio"
+        name="tabs"
+        value="overview"
+        role="tab"
+        class="tab h-auto"
+        checked
+        aria-label="Overview"
+      />
+      <div
+        role="tabpanel"
+        class="tab-content mt-8 bg-base-100 border-none"
+      ></div>
+    {/if}
+    <input
+      type="radio"
+      name="tabs"
+      value="transaction-history"
+      role="tab"
+      class="tab h-auto"
+      checked
+      aria-label="Transaction History"
+    />
+    <div role="tabpanel" class="tab-content mt-8 bg-base-100 border-none">
+      <div class="w-full md:border rounded-lg md:px-4">
+        <GenericList row={TransactionRow} store={transactionHistory} />
+      </div>
+    </div>
   </div>
 </div>
