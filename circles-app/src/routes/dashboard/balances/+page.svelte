@@ -36,15 +36,9 @@
       };
     }
   );
-
-  console.log(
-    'filteredStore',
-    filteredStore.subscribe,
-    circlesBalances.subscribe
-  );
 </script>
 
-<div class="flex flex-col items-center p-4 w-full max-w-2xl gap-y-6 mt-20">
+<div class="flex flex-col items-center w-full max-w-2xl gap-y-6 mt-20">
   <div class="w-full">
     <a href="/dashboard">
       <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />

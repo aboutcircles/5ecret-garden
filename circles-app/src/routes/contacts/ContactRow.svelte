@@ -17,5 +17,5 @@
 
 <ContactGroupRow
   address={item.address}
-  trustRelation={formatTrustRelation(item.contact.row)}
+  trustRelation={formatTrustRelation(item.contact.row.relation)}
 />

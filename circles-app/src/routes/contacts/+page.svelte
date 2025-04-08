@@ -9,15 +9,20 @@
   import AddressInput from '$lib/components/AddressInput.svelte';
 
   let filterVersion = writable<number | undefined>(undefined);
+  let filterRelation = writable<
+    'mutuallyTrusts' | 'trusts' | 'trustedBy' | 'variesByVersion' | undefined
+  >(undefined);
   let searchQuery = writable<string>('');
 
   let filteredStore = derived(
-    [contacts, filterVersion],
-    ([$contacts, filterVersion]) => {
+    [contacts, filterVersion, filterRelation],
+    ([$contacts, filterVersion, filterRelation]) => {
       const filteredData = Object.entries($contacts.data)
         .filter(
           ([_, contact]) =>
-            !filterVersion || contact?.avatarInfo?.version === filterVersion
+            (!filterVersion ||
+              contact?.avatarInfo?.version === filterVersion) &&
+            (!filterRelation || contact?.row?.relation === filterRelation)
         )
         .sort((a, b) => {
           const aRelation = a[1].row.relation;
@@ -76,13 +81,16 @@
   });
 
   async function handleExportCSV() {
-    const csvData = Object.keys($contacts.data);
-    const csv = Papa.unparse(csvData.map((address) => ({ address })));
+    const csvData = $filteredStore.data.map((item) => ({
+      address: item.address,
+      name: item.contact?.contactProfile.name,
+    }));
+    const csv = Papa.unparse(csvData);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', 'members.csv');
+    link.setAttribute('download', `members-${$filterRelation || 'all'}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -90,19 +98,36 @@
 </script>
 
 <div
-  class="flex flex-col w-full sm:w-[90%] lg:w-3/5 p-0 gap-y-5 mt-28 mb-10 text-[#161616]"
+  class="flex flex-col w-full sm:w-[90%] lg:w-3/5 gap-y-5 mt-28 mb-10 text-[#161616]"
 >
   <div class="text-2xl font-bold leading-7 px-4 sm:px-0">Contacts</div>
 
   <!-- Filter -->
-  <div class="flex flex-row gap-x-2">
+  <div class="flex flex-row gap-x-2 items-center">
+    <p class="text-sm">Version</p>
     <Filter text="All" filter={filterVersion} value={undefined} />
     <Filter text="Version 1" filter={filterVersion} value={1} />
     <Filter text="Version 2" filter={filterVersion} value={2} />
-    <div class="flex-grow"></div>
-    <button onclick={handleExportCSV}>Export CSV</button>
   </div>
-  
+
+  <div class="flex flex-row justify-between items-center flex-wrap gap-y-4">
+    <div class="flex flex-row gap-2 items-center flex-wrap">
+      <p class="text-sm">Relation</p>
+      <Filter text="All" filter={filterRelation} value={undefined} />
+      <Filter text="Mutual" filter={filterRelation} value={'mutuallyTrusts'} />
+      <Filter text="Trusted" filter={filterRelation} value={'trusts'} />
+      <Filter text="Trust you" filter={filterRelation} value={'trustedBy'} />
+      <Filter
+        text="Varies by version"
+        filter={filterRelation}
+        value={'variesByVersion'}
+      />
+    </div>
+    <div class="flex-grow flex justify-end">
+      <button class="mt-4 sm:mt-0" onclick={handleExportCSV}>Export CSV</button>
+    </div>
+  </div>
+
   <AddressInput bind:address={$searchQuery} />
 
   <div class="w-full md:border rounded-lg md:px-4">

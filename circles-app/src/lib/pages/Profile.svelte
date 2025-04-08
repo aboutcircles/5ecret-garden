@@ -17,10 +17,11 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { popupControls } from '$lib/stores/popUp';
   import AddressComponent from '$lib/components/Address.svelte';
-  import type { Address } from '@circles-sdk/utils';
-  import { shortenAddress } from '$lib/utils/shared';
+  import { uint256ToAddress, type Address } from '@circles-sdk/utils';
   import SelectAmount from '$lib/flows/send/3_Amount.svelte';
   import { transitiveTransfer } from '$lib/pages/SelectAsset.svelte';
+  import { getVaultAddress, getVaultBalances } from '$lib/utils/vault';
+  import CollateralTable from '$lib/components/CollateralTable.svelte';
 
   interface Props {
     address: Address | undefined;
@@ -41,6 +42,11 @@
   let mintHandler: Address | undefined = $state();
 
   let trustRow: TrustRelationRow | undefined = $state();
+  let collateralInTreasury: Array<{
+    avatar: Address;
+    amount: bigint; // raw wei from chain
+    amountToRedeem: number;
+  }> = $state([]);
 
   async function initialize(address: Address) {
     if (!$circles) {
@@ -54,7 +60,7 @@
 
     profile = await getProfile(address);
 
-      trustRow = $contacts?.data[address]?.row;
+    trustRow = $contacts?.data[address]?.row;
 
     if (otherAvatar?.type === 'CrcV2_RegisterGroup') {
       // load the members
@@ -84,6 +90,37 @@
       await findMintHandlerQuery.queryNextPage();
       mintHandler = findMintHandlerQuery.currentPage?.results[0]?.mintHandler;
       console.log('mintHandler', mintHandler);
+
+      if (!$circles) return;
+
+      const vaultAddress = await getVaultAddress(
+        $circles.circlesRpc,
+        otherAvatar.avatar
+      );
+      if (!vaultAddress) {
+        collateralInTreasury = [];
+        return;
+      }
+
+      const balancesResult = await getVaultBalances(
+        $circles.circlesRpc,
+        vaultAddress
+      );
+      if (!balancesResult) {
+        collateralInTreasury = [];
+        return;
+      }
+
+      const { columns, rows } = balancesResult;
+      const colId = columns.indexOf('id');
+      const colBal = columns.indexOf('balance');
+
+      // Build up the table data
+      collateralInTreasury = rows.map((row) => ({
+        avatar: uint256ToAddress(BigInt(row[colId])),
+        amount: BigInt(row[colBal]),
+        amountToRedeem: 0, // default 0
+      }));
     } else {
       members = undefined;
     }
@@ -102,7 +139,7 @@
         trustRow?.relation === 'trustedBy' ||
         trustRow?.relation === 'mutuallyTrusts'}
     >
-      {formatTrustRelation(trustRow, profile)}
+      {formatTrustRelation(trustRow.relation, profile)}
     </span>
   {:else}
     <span class="text-sm text-gray-500">No relation available</span>
@@ -281,6 +318,22 @@
       {#if members.length === 0}
         <div>No members</div>
       {/if}
+    </div>
+  {/if}
+  {#if otherAvatar?.type === 'CrcV2_RegisterGroup'}
+    <input
+      type="radio"
+      name="tabs"
+      value="collateral"
+      role="tab"
+      class="tab h-auto"
+      checked
+      aria-label={`Collateral (${collateralInTreasury.length})`}
+    />
+    <div role="tabpanel" class="tab-content mt-8 bg-base-100 border-none">
+      <div class="w-full border-base-300 rounded-box border">
+        <CollateralTable {collateralInTreasury} />
+      </div>
     </div>
   {/if}
 </div>

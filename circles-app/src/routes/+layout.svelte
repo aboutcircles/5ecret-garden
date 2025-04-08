@@ -139,7 +139,7 @@
     <div class="h-20"></div>
   {/if}
 
-  <div class="w-full flex flex-col items-center">
+  <div class="w-full flex flex-col items-center p-4 md:p-0">
     {@render children?.()}
   </div>
 
