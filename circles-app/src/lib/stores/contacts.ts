@@ -1,125 +1,95 @@
-import { get } from "svelte/store";
-import { avatar } from "$lib/stores/avatar";
+import { get } from 'svelte/store';
+import { avatar } from '$lib/stores/avatar';
 import type {
-    AvatarRow,
-    CirclesEvent,
-    CirclesEventType,
-    TrustRelationRow
-} from "@circles-sdk/data";
-import type { Profile } from "@circles-sdk/profiles";
-import { createEventStore } from "$lib/stores/eventStores/eventStoreFactory";
-import { circles } from "$lib/stores/circles";
-import { getProfile } from "$lib/utils/profile";
+  AvatarRow,
+  CirclesEventType,
+  TrustRelationRow,
+} from '@circles-sdk/data';
+import type { Profile } from '@circles-sdk/profiles';
+import { circles } from '$lib/stores/circles';
+import { getProfile } from '$lib/utils/profile';
+import { writable } from 'svelte/store';
+import { createContactsQueryStore } from './query/circlesContactsQueryStore';
+import type { Address } from '@circles-sdk/utils';
 
 export type ContactListItem = {
-    contactProfile: Profile;
-    avatarInfo?: AvatarRow;
-    row: TrustRelationRow;
+  contactProfile: Profile;
+  avatarInfo?: AvatarRow;
+  row: TrustRelationRow;
 };
 
 export type ContactList = Record<string, ContactListItem>;
 
 const refreshOnEvents: Set<CirclesEventType> = new Set([
-    "CrcV1_Trust",
-    "CrcV2_Trust",
-    "CrcV2_InviteHuman"
+  'CrcV1_Trust',
+  'CrcV2_Trust',
+  'CrcV2_InviteHuman',
 ]);
 
-const _initialLoad = async () => {
-    const avatarInstance = get(avatar);
-    if (!avatarInstance) {
-        return {};
+let currentStoreUnsubscribe: (() => void) | undefined;
+let currentQuery: Promise<any> | undefined;
+
+export const contacts = writable<{
+  data: ContactList;
+  next: () => Promise<boolean>;
+  ended: boolean;
+}>({ data: {}, next: async () => false, ended: false });
+
+avatar.subscribe(($avatar) => {
+  if ($avatar) {
+    if (currentStoreUnsubscribe) {
+      currentStoreUnsubscribe();
     }
 
-    const sdk = get(circles);
-    const contacts = await sdk?.data.getAggregatedTrustRelations(avatarInstance.address);
-
-    if (contacts && contacts.length > 0) {
-        return await enrichContactData(contacts);
-    }
-
-    return {};
-};
-
-const _handleEvent = async (event: CirclesEvent, currentData: ContactList) => {
-    if (!refreshOnEvents.has(event.$event)) {
-        return currentData;
-    }
-
-    try {
-        const avatarInstance = get(avatar);
-        if (!avatarInstance) {
-            return currentData;
-        }
-
-        const sdk = get(circles);
-        if (!sdk) {
-            return currentData;
-        }
-
-        const contacts = await sdk.data.getAggregatedTrustRelations(avatarInstance.address);
-        if (contacts && contacts.length > 0) {
-            return await enrichContactData(contacts);
-        }
-
-        return currentData;
-    } catch (e) {
-        console.error(`Failed to update contacts on event ${event.$event}`, e);
-        return currentData;
-    }
-};
-
-//TODO: reimplement this function
-const _handleNextPage = async (currentData: ContactList) => {
-    return {data: currentData, ended: true};
-};
-
-async function enrichContactData(rows: TrustRelationRow[]): Promise<ContactList> {
-    const profileRecord: ContactList = {};
-
-    const promises = rows.map(async row => {
-        const profile = await getProfile(row.objectAvatar);
-        if (profile) {
-            profileRecord[row.objectAvatar] = {
-                contactProfile: profile,
-                row: row
-            };
-        }
+    currentQuery = createContactsQueryStore($avatar.address, refreshOnEvents);
+    currentQuery.then((store) => {
+      currentStoreUnsubscribe = store.subscribe(contacts.set);
     });
-
-    await Promise.all(promises);
-
-    const avatarInfos: AvatarRow[] = await get(circles)?.data.getAvatarInfoBatch(Object.keys(profileRecord)) ?? [];
-    const avatarInfoRecord: Record<string, AvatarRow> = {};
-    avatarInfos.forEach(info => {
-        avatarInfoRecord[info.avatar] = info;
+  } else {
+    if (currentStoreUnsubscribe) {
+      currentStoreUnsubscribe();
+      currentStoreUnsubscribe = undefined;
+    }
+    currentQuery = undefined;
+    contacts.set({
+      data: {},
+      next: async () => false,
+      ended: true,
     });
+  }
+});
 
-    Object.values(profileRecord).forEach(item => {
-        const info = avatarInfoRecord[item.row.objectAvatar];
-        if (info) {
-            item.avatarInfo = info;
-        }
-    });
+async function enrichContactData(
+  rows: TrustRelationRow[]
+): Promise<ContactList> {
+  const profileRecord: ContactList = {};
 
-    return profileRecord;
+  const promises = rows.map(async (row) => {
+    const profile = await getProfile(row.objectAvatar);
+    if (profile) {
+      profileRecord[row.objectAvatar] = {
+        contactProfile: profile,
+        row: row,
+      };
+    }
+  });
+
+  await Promise.all(promises);
+
+  const avatarInfos: AvatarRow[] =
+    (await get(circles)?.data.getAvatarInfoBatch(Object.keys(profileRecord) as Address[])) ??
+    [];
+  const avatarInfoRecord: Record<string, AvatarRow> = {};
+  avatarInfos.forEach((info) => {
+    avatarInfoRecord[info.avatar] = info;
+  });
+
+  Object.values(profileRecord).forEach((item) => {
+    const info = avatarInfoRecord[item.row.objectAvatar];
+    if (info) {
+      item.avatarInfo = info;
+    }
+  });
+
+  return profileRecord;
 }
-
-// export const createContacts = () =>
-//     createEventStore<ContactList>(
-//         avatar,
-//         refreshOnEvents,
-//         _initialLoad,
-//         _handleEvent,
-//         _handleNextPage,
-//         {}
-//     );
-
-export const contacts = createEventStore<ContactList>(
-    avatar,
-    refreshOnEvents,
-    _initialLoad,
-    _handleEvent,
-    async () => ({ data: {}, ended: true }),
-    {}
-);

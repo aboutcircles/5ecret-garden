@@ -1,8 +1,8 @@
-<script lang="ts" context="module">
+<script lang="ts" module>
   export type QuickAction = {
     name: string;
     icon: string;
-    action: () => void;
+    action?: () => void | undefined;
   };
 </script>
 
@@ -10,7 +10,7 @@
   import '../app.css';
 
   import DefaultHeader from '$lib/components/DefaultHeader.svelte';
-  import { avatar } from '$lib/stores/avatar';
+  import { avatar, isGroup } from '$lib/stores/avatar';
   import { clearSession, restoreWallet, wallet } from '$lib/stores/wallet';
   import { canMigrate } from '$lib/guards/canMigrate';
   import UpdateBanner from '$lib/components/UpdateBanner.svelte';
@@ -20,88 +20,117 @@
   import MintGroupTokens from '$lib/flows/mintGroupTokens/1_To.svelte';
   import { onMount } from 'svelte';
   import { tasks } from '$lib/utils/tasks';
-  import type { Profile } from '@circles-sdk/profiles';
-  import { getProfile } from '$lib/utils/profile';
+  import { profile } from '$lib/stores/profile';
   import { popupControls, popupState } from '$lib/stores/popUp';
   import PopUp from '$lib/components/PopUp.svelte';
+  import ManageGroupMembers from '$lib/flows/manageGroupMembers/1_manageGroupMembers.svelte';
+  interface Props {
+    children?: import('svelte').Snippet;
+  }
 
-  let quickAction: QuickAction | undefined;
+  let { children }: Props = $props();
 
-  const quickActionsMap: Record<string, QuickAction | undefined> = {
+  let quickActionsMap: Record<string, QuickAction | undefined> = $derived({
     '/dashboard': {
       name: 'Send',
       icon: '/send.svg',
-      action: () => {
-        popupControls.open({
-          title: 'Send Circles',
-          component: Send,
-          props: {},
-        });
-      },
+      action: $isGroup
+        ? undefined
+        : () => {
+            popupControls.open({
+              title: 'Send Circles',
+              component: Send,
+              props: {},
+            });
+          },
     },
     '/contacts': {
-      name: 'Add Contact',
+      name: $isGroup ? 'Manage members' : 'Add Contact',
       icon: '/add-contact.svg',
       action: () => {
-        popupControls.open({
-          title: 'Add Contact',
-          component: SearchAvatar,
-          props: {},
-        });
+        if ($isGroup) {
+          popupControls.open({
+            title: 'Manage members',
+            component: ManageGroupMembers,
+            props: {},
+          });
+        } else {
+          popupControls.open({
+            title: 'Add Contact',
+            component: ManageGroupMembers,
+            props: {},
+          });
+        }
       },
     },
     '/groups': {
-      name: 'Group mint',
-      icon: '/banknotes-white.svg',
-      action: () => {
-        popupControls.open({
-          title: 'Mint group tokens',
-          component: MintGroupTokens,
-          props: {},
-        });
-      },
+      name: 'Send',
+      icon: '/send.svg',
+      action: $isGroup
+        ? undefined
+        : () => {
+          popupControls.open({
+            title: 'Send Circles',
+            component: Send,
+            props: {},
+          });
+        },
     },
     '/register': {
       name: 'Disconnect',
       icon: '',
       action: () => {
-        $wallet = undefined;
+        clearSession();
       },
     },
-  };
-
-  let profile: Profile;
-
-  avatar.subscribe(async ($avatar) => {
-    if ($avatar) {
-      profile = await getProfile($avatar?.avatarInfo?.avatar ?? '');
-    }
+    '/settings': {
+      name: 'Disconnect',
+      icon: '',
+      action: () => {
+        clearSession();
+      },
+    },
   });
+  let menuItems: { name: string; link: string }[] = $state([]);
 
-  onMount(() => {
+  let quickAction: QuickAction | undefined = $derived(
+    quickActionsMap[$page.route.id ?? ''] || undefined
+  );
+
+  onMount(async () => {
     if ($page.route.id === '/' || $page.route.id === '/connect-wallet') {
-      clearSession();
+      await clearSession();
     } else {
-      restoreWallet();
+      await restoreWallet();
     }
   });
 
-  $: quickAction = quickActionsMap[$page.route.id ?? ''] || undefined;
+  $effect(() => {
+    if ($avatar) {
+      menuItems = [
+        { name: 'Dashboard', link: '/dashboard' },
+        { name: 'Contacts', link: '/contacts' },
+        ...(!$isGroup ? [{ name: 'Groups', link: '/groups' }] : []),
+        { name: 'Settings', link: '/settings' },
+      ];
+    }
+  });
 </script>
 
 {#if $avatar}
   <DefaultHeader
-    text={profile?.name}
+    text={$profile?.name}
     address={$avatar.address}
-    logo={profile?.previewImageUrl?.trim()
-      ? profile.previewImageUrl
+    logo={$profile?.previewImageUrl?.trim()
+      ? $profile.previewImageUrl
       : '/logo.svg'}
     homeLink="/dashboard"
     {quickAction}
     route={$page.route.id}
+    {menuItems}
   />
 {:else}
-  <DefaultHeader menuItems={[]} quickAction={undefined} route={''} />
+  <DefaultHeader quickAction={undefined} route={''} />
 {/if}
 
 <main class="relative w-full h-full bg-white overflow-hidden font-dmSans">
@@ -110,17 +139,17 @@
     <div class="h-20"></div>
   {/if}
 
-  <div class="w-full flex flex-col items-center">
-    <slot></slot>
+  <div class="w-full flex flex-col items-center p-4 md:p-0">
+    {@render children?.()}
   </div>
 
   <div
     role="button"
     tabindex="0"
     class={`fixed top-0 left-0 w-full h-full bg-black/50 z-10 ${$popupState.content ? 'opacity-100' : 'opacity-0 hidden'} transition duration-300 ease-in-out`}
-    on:mousedown={() => popupControls.close()}
-    on:touchstart={() => popupControls.close()}
-  />
+    onmousedown={() => popupControls.close()}
+    ontouchstart={() => popupControls.close()}
+  ></div>
   <PopUp />
 </main>
 {#if $tasks.length > 0}

@@ -4,14 +4,18 @@
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import { popupControls } from '$lib/stores/popUp';
 
-  export let context: AddContactFlowContext;
+  interface Props {
+    context: AddContactFlowContext;
+  }
+
+  let { context }: Props = $props();
 </script>
 
 <FlowDecoration>
   <p>You already trust this account. Do you want to untrust it?</p>
   <button
     class="btn btn-error mt-6"
-    on:click={() => {
+    onclick={() => {
       popupControls.close();
       popupControls.open({
         title: 'Untrust',

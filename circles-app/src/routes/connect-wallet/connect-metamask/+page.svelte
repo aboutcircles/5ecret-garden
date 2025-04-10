@@ -1,103 +1,91 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
   import { initializeWallet, wallet } from '$lib/stores/wallet';
   import { circles } from '$lib/stores/circles';
-  import { avatar } from '$lib/stores/avatar';
-  import { Sdk } from '@circles-sdk/sdk';
+  import { Sdk, type AvatarRow } from '@circles-sdk/sdk';
   import { onMount } from 'svelte';
   import WalletLoader from '$lib/components/WalletLoader.svelte';
   import { getCirclesConfig } from '$lib/utils/helpers';
+  import ConnectCircles from '$lib/components/ConnectCircles.svelte';
+  import { switchOrAddGnosisNetwork } from '$lib/utils/network';
+  import type { Network } from 'ethers';
+  import type { SdkContractRunnerWrapper } from '@circles-sdk/adapter-ethers';
+  import type { Address } from '@circles-sdk/utils';
+  import type { CoreMembersGroupRow } from '@circles-sdk/data/dist/rows/coreMembersGroupRow';
+  import { getCmGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
 
-  const GNOSIS_CHAIN_ID_HEX = '0x64'; // Hexadecimal format for MetaMask request
-  const GNOSIS_CHAIN_ID_DEC = 100n; // Decimal format for BrowserProvider
+  const GNOSIS_CHAIN_ID_DEC = 100n;
+
+  let avatarInfo: AvatarRow | undefined = $state();
+  let network: Network | undefined = $state();
+  let groupsByOwner: Record<Address, CoreMembersGroupRow[]> | undefined = $state();
 
   //
   // Connects the wallet and initializes the Circles SDK.
   //
-  async function connectWallet() {
-    localStorage.removeItem('usePK');
-    localStorage.setItem('useMM', 'true');
+  async function setup(callNo: number = 0) {
+    if (localStorage.getItem('walletType') != "metamask") {
+      localStorage.removeItem('avatar');
+    }
 
     $wallet = await initializeWallet('metamask');
 
-    const network = await $wallet.provider?.getNetwork();
+    if (!$wallet.address) {
+      throw new Error('Failed to get wallet address');
+    }
+
+    network = await ($wallet as any).provider?.getNetwork();
     if (!network) {
       throw new Error('Failed to get network');
+    }
+
+    if (callNo > 2) {
+      return;
     }
 
     // If we're on the wrong network, attempt to switch
     if (![GNOSIS_CHAIN_ID_DEC].includes(network.chainId)) {
       await switchOrAddGnosisNetwork();
+      await setup(callNo++);
+      return;
     }
 
     const circlesConfig = await getCirclesConfig(network.chainId);
 
     // Initialize the Circles SDK and set it as $circles to make it globally available.
-    $circles = new Sdk($wallet!, circlesConfig);
+    $circles = new Sdk($wallet! as SdkContractRunnerWrapper, circlesConfig);
+    groupsByOwner = await getCmGroupsByOwnerBatch($circles, [$wallet.address]);
+    avatarInfo = await $circles.data.getAvatarInfo($wallet.address);
 
-    const avatarInfo = await $circles.data.getAvatarInfo($wallet.address!);
-
-    // If the signer address is already a registered Circles wallet, go straight to the dashboard.
-    if (avatarInfo) {
-      $avatar = await $circles.getAvatar($wallet.address!);
-      await goto('/dashboard');
-    } else {
-      await goto('/register');
-    }
+    localStorage.setItem('walletType', 'metamask');
   }
 
-  //
-  // Switches to the Gnosis network if not already connected.
-  //
-  async function switchOrAddGnosisNetwork() {
-    if (typeof window.ethereum !== 'undefined') {
-      try {
-        // Attempt to switch to the Gnosis network
-        await window.ethereum.request({
-          method: 'wallet_switchEthereumChain',
-          params: [{ chainId: GNOSIS_CHAIN_ID_HEX }],
-        });
-      } catch (switchError: any) {
-        // If the network is not added yet, error code 4902 indicates adding it is necessary
-        if (switchError.code === 4902) {
-          try {
-            await window.ethereum.request({
-              method: 'wallet_addEthereumChain',
-              params: [
-                {
-                  chainId: GNOSIS_CHAIN_ID_HEX,
-                  chainName: 'Gnosis',
-                  rpcUrls: ['https://rpc.gnosischain.com'],
-                  nativeCurrency: {
-                    name: 'XDAI',
-                    symbol: 'XDAI',
-                    decimals: 18,
-                  },
-                  blockExplorerUrls: ['https://blockscout.com/poa/xdai/'],
-                },
-              ],
-            });
-          } catch (addError) {
-            console.error('Failed to add the Gnosis network:', addError);
-          }
-        } else {
-          console.error('Failed to switch to the Gnosis network:', switchError);
-        }
-      }
-    } else {
-      console.error(
-        'window.ethereum is not available. Ensure MetaMask is installed.'
-      );
-    }
-  }
-
-  onMount(() => {
-    connectWallet();
+  onMount(async () => {
+    $wallet = undefined;
+    await setup();
   });
 </script>
 
 <div
-  class="w-full flex flex-col justify-center min-h-screen p-4 max-w-xl gap-y-4 mt-20"
+  class="w-full flex flex-col items-center min-h-screen max-w-xl gap-y-4 mt-20"
 >
-  <WalletLoader name="Metamask" />
+  <div class="w-full">
+    <button onclick="{() => history.back()}">
+      <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
+    </button>
+  </div>
+  <h2 class="font-bold text-[28px] md:text-[32px]">Select Avatar</h2>
+  <p class="font-normal text-black/60 text-base">
+    Please select the avatar you want to use from the list below.
+  </p>
+  {#if $wallet?.address && $circles && network && groupsByOwner}
+    <ConnectCircles
+      address={$wallet.address}
+      walletType="metamask"
+      isRegistered={avatarInfo !== undefined}
+      groups={groupsByOwner[$wallet.address.toLowerCase()]}
+      chainId={network.chainId}
+    />
+  {:else}
+    <WalletLoader name="Metamask" />
+  {/if}
 </div>

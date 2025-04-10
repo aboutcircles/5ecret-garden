@@ -6,26 +6,27 @@
   import type { Avatar } from '@circles-sdk/sdk';
   import type { Profile } from '@circles-sdk/profiles';
 
-  let profile: Profile = {
+  let profile: Profile = $state({
     name: '',
     description: '',
     previewImageUrl: '',
     imageUrl: undefined,
-  };
+  });
 
   async function registerOrganization() {
     if (!$circles) {
       throw new Error('Wallet not connected ($circles is undefined)');
     }
 
-    $avatar = <Avatar>await $circles.registerOrganizationV2(profile);
+    //TODO: why need to bind it as Avatar
+    $avatar = await $circles.registerOrganizationV2(profile) as Avatar;
 
     await goto('/dashboard');
   }
 </script>
 
 <div
-  class="w-full flex flex-col min-h-screen p-4 max-w-xl gap-y-4 justify-center"
+  class="w-full flex flex-col min-h-screen max-w-xl gap-y-4 justify-center"
 >
   <div class="w-full">
     <a href="/register">

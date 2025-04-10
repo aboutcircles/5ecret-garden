@@ -1,8 +1,13 @@
 <script lang="ts">
   import { shortenAddress } from '$lib/utils/shared';
+  import type { Address } from '@circles-sdk/utils';
 
-  let copyIcon = '/copy.svg';
-  export let address: string;
+  let copyIcon = $state('/copy.svg');
+  interface Props {
+    address: Address;
+  }
+
+  let { address }: Props = $props();
 
   function handleCopy() {
     navigator.clipboard.writeText(address);
@@ -14,10 +19,7 @@
   }
 </script>
 
-<button
-  on:click={handleCopy}
-  class="bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm flex flex-row items-center gap-x-1 font-medium hover:text-black/70 hover:cursor-pointer"
->
+<button onclick={handleCopy} class="btn btn-sm">
   {shortenAddress(address)}
   <img src={copyIcon} alt="Copy" class="w-4 h-4 inline" />
 </button>

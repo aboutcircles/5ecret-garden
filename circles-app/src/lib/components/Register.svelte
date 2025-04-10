@@ -1,8 +1,17 @@
 <script lang="ts">
-  export let imgUrl: string;
-  export let header: string;
-  export let desc: string;
-  export let route: string;
+  interface Props {
+    imgUrl: string;
+    header: string;
+    desc: string;
+    route: string;
+  }
+
+  let {
+    imgUrl,
+    header,
+    desc,
+    route
+  }: Props = $props();
 </script>
 
 <div

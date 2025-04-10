@@ -1,29 +1,42 @@
 <script lang="ts">
-  import { onDestroy, type SvelteComponent, createEventDispatcher } from 'svelte';
-  import type { EventRow } from '@circles-sdk/data';
+  import {
+    onDestroy,
+    type SvelteComponent,
+  } from 'svelte';
+  import type { EventRow, TransactionHistoryRow } from '@circles-sdk/data';
   import { getKeyFromItem } from '$lib/stores/query/circlesQueryStore';
   import type { Readable } from 'svelte/store';
 
-  export let store: Readable<{
-    data: EventRow[];
-    next: () => Promise<boolean>;
-    ended: boolean;
-  }>;
-  export let row: typeof SvelteComponent<Record<string, any>>;
+  interface Props {
+    store: Readable<{
+      data: EventRow[] | TransactionHistoryRow[];
+      next: () => Promise<boolean>;
+      ended: boolean;
+    }>;
+    row: typeof SvelteComponent<Record<string, any>>;
+  }
+
+  let { store, row }: Props = $props();
 
   let observer: IntersectionObserver | null = null;
-  let anchor: HTMLElement | undefined;
+  let anchor: HTMLElement | undefined = $state();
 
-  const eventDispatcher = createEventDispatcher();
+  let hasError = $state(false);
 
   const setupObserver = () => {
     if (observer) observer.disconnect();
 
-    if (anchor && !$store?.ended) {
+    if (anchor && !$store?.ended && !hasError) {
       observer = new IntersectionObserver(async (entries) => {
         if (entries[0]?.isIntersecting && !$store.ended) {
           observer?.disconnect();
-          await $store.next();
+          try {
+            await $store.next();
+            hasError = false;
+          } catch (error) {
+            hasError = true;
+            console.error('Error loading more items:', error);
+          }
           setupObserver();
         }
       });
@@ -32,9 +45,19 @@
     }
   };
 
-  $: {
+  const handleRetry = async () => {
+    try {
+      await $store.next();
+      hasError = false;
+      setupObserver();
+    } catch (error) {
+      console.error('Error retrying load:', error);
+    }
+  };
+
+  $effect(() => {
     if (store && anchor) setupObserver();
-  }
+  });
 
   onDestroy(() => {
     observer?.disconnect();
@@ -44,12 +67,13 @@
 
 <div class="w-full flex flex-col divide-y gap-y-2 overflow-x-auto py-4">
   {#each $store?.data ?? [] as item (getKeyFromItem(item))}
+    {@const SvelteComponent_1 = row}
     <button
-      on:click={() => eventDispatcher('select', item)}
+      onclick={() => {}}
       class="w-full pt-2"
       aria-label="Select item"
     >
-      <svelte:component this={row} {item} />
+      <SvelteComponent_1 {item} />
     </button>
   {/each}
 
@@ -57,10 +81,15 @@
     class="text-center py-4"
     bind:this={anchor}
     aria-live="polite"
-    aria-busy={$store && !$store?.ended ? "true" : "false"}
+    aria-busy={$store && !$store?.ended && !hasError ? 'true' : 'false'}
   >
     {#if ($store?.data ?? []).length === 0 || $store?.ended}
       <span class="text-gray-500">End of list</span>
+    {:else if hasError}
+      <span class="text-red-500">Error loading items</span>
+      <button class="ml-2 text-primary hover:underline" onclick={handleRetry}>
+        Retry
+      </button>
     {:else}
       <span class="loading loading-spinner text-primary"></span>
       <span class="ml-2 text-gray-500">Loading more...</span>

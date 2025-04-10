@@ -6,7 +6,7 @@
   import type { AvatarRow } from '@circles-sdk/data';
   import { onMount } from 'svelte';
 
-  let invitations: AvatarRow[] = [];
+  let invitations: AvatarRow[] = $state([]);
 
   onMount(async () => {
     if (!$wallet?.address) {
@@ -16,7 +16,9 @@
       throw new Error('Circles SDK not initialized');
     }
 
-    invitations = await $circles.data.getInvitations($wallet.address.toLowerCase());
+    invitations = await $circles.data.getInvitations(
+      $wallet.address.toLowerCase()
+    );
   });
 
   function acceptInvitation(inviter: string) {
@@ -25,7 +27,7 @@
 </script>
 
 <div
-  class="w-full flex flex-col p-4 max-w-xl gap-y-4 justify-center mt-28 md:mt-44"
+  class="w-full flex flex-col max-w-xl gap-y-4 justify-center mt-28 md:mt-44"
 >
   <div class="w-full">
     <a href="/register">
@@ -40,7 +42,7 @@
       {#each invitations as inviter}
         <button
           class="btn my-6 max-w-64 shadow-sm"
-          on:click={() => acceptInvitation(inviter.avatar)}
+          onclick={() => acceptInvitation(inviter.avatar)}
         >
           by
           <Avatar

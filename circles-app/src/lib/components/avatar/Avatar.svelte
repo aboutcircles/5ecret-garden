@@ -1,14 +1,10 @@
-<script lang="ts" context="module">
-  import type { Profile } from '@circles-sdk/profiles';
-  import { shortenAddress } from '$lib/utils/shared';
+<script lang="ts" module>
   import { ethers } from 'ethers';
 
   export type CirclesSafeMap = { [safeAddress: string]: Profile };
   export const CirclesGardenApi = `https://api.circles.garden/`;
 
-  async function queryCirclesGarden(
-    safeAddresses: string[]
-  ): Promise<CirclesSafeMap> {
+  async function queryCirclesGarden(safeAddresses: string[]): Promise<CirclesSafeMap> {
     const safeAddressCopy = JSON.parse(JSON.stringify(safeAddresses));
     const batches: string[][] = [];
 
@@ -22,10 +18,10 @@
       return circlesSafeMap;
     }
 
-    for (let batch of batches) {
+    for (const batch of batches) {
       const query = batch.reduce(
         (p, c) => p + `address[]=${ethers.getAddress(c)}&`,
-        ''
+        '',
       );
       const requestUrl = `${CirclesGardenApi}api/users/?${query}`;
 
@@ -34,10 +30,10 @@
 
       const profiles: (Profile & { safeAddress: string })[] =
         requestResultJson.data.map((o: any) => {
-          return <Profile & { safeAddress: string }>{
+          return {
             name: o.username,
             previewImageUrl: o.avatarUrl,
-            safeAddress: o.safeAddress.toLowerCase(),
+            safeAddress: o.safeAddress?.toLowerCase(),
           };
         }) ?? [];
 
@@ -75,7 +71,7 @@
     } catch (error) {
       // Handle errors if needed
       queueCopy.forEach((o) => {
-        o.resolve(undefined); // You can modify this to reject or handle errors differently
+        o.resolve(undefined); // Or reject(...) if preferred
       });
     }
   }, 20);
@@ -84,67 +80,129 @@
 <script lang="ts">
   import ProfilePage from '$lib/pages/Profile.svelte';
   import { getProfile } from '$lib/utils/profile';
-  import type { SvelteComponent } from 'svelte';
   import HorizontalAvatarLayout from './HorizontalAvatarLayout.svelte';
   import VerticalAvatarLayout from './VerticalAvatarLayout.svelte';
   import { popupControls, type PopupContentDefinition } from '$lib/stores/popUp';
+  import type { Address } from '@circles-sdk/utils';
+  import type { Profile } from '@circles-sdk/profiles';
+  import { shortenAddress } from '$lib/utils/shared';
 
-  export let address: string;
-  export let clickable: boolean = true;
-  export let view: 'horizontal' | 'vertical';
-  export let pictureOverlayUrl: string | undefined = undefined;
-  export let topInfo: string | undefined = undefined;
-  export let bottomInfo: string | undefined = undefined;
+  // Import the "fade" transition
+  import { fade } from 'svelte/transition';
 
-  let profile: Profile | undefined;
+  interface Props {
+    address: Address | undefined;
+    clickable?: boolean;
+    view: 'horizontal' | 'vertical';
+    pictureOverlayUrl?: string | undefined;
+    topInfo?: string | undefined;
+    bottomInfo?: string | undefined;
 
-  $: {
-    //TODO: if we pass a profile directly, we don't have to initialize and call getProfile() from sdk
-    if (address) {
-      initialize();
-    }
+    /**
+     * Control whether to show placeholders for each position
+     * so the layout doesn’t shift if you sometimes use them.
+     */
+    placeholderAvatar?: boolean;
+    placeholderTop?: boolean;
+    placeholderBottom?: boolean;
   }
 
-  function openAvatar() {
-    if (!clickable) {
-      return;
+  let {
+    address,
+    clickable = true,
+    view,
+    pictureOverlayUrl,
+    topInfo,
+    bottomInfo,
+
+    // Default placeholders to true
+    placeholderAvatar = true,
+    placeholderTop = true,
+    placeholderBottom = true,
+  }: Props = $props();
+
+  let profile: Profile | undefined = $state();
+
+  $effect(() => {
+    if (address) {
+      getProfile(address).then((newProfile) => {
+        profile = newProfile;
+      });
     }
+  });
+
+  function openAvatar(e: MouseEvent) {
+    if (!clickable) return;
+
     const nextPage: PopupContentDefinition = {
       title: shortenAddress(address),
-      component: ProfilePage as typeof SvelteComponent,
-      props: {
-        address: address,
-      },
+      component: ProfilePage,
+      props: { address },
     };
-    console.log('Opening avatar:', nextPage);
     popupControls.open(nextPage);
-  }
 
-  async function initialize() {
-    profile = await getProfile(address);
+    e?.preventDefault();
   }
 </script>
 
+<!-- If no profile, show placeholders; otherwise fade in final layout. -->
+
 {#if !profile}
-  <div class="inline-flex items-center space-x-2">
-    <img
-      src={'/person.svg'}
-      alt="Loading user Icon"
-      class="w-8 h-8 rounded-full"
-    />
-    <span>...</span>
-  </div>
+  <!--
+    Blank placeholders, keeping the same approximate width/height as
+    the final layouts. This prevents layout shifting.
+  -->
+  {#if view === 'horizontal'}
+    <div
+      class="flex items-center gap-2 p-2 rounded-lg w-full"
+      style="min-height: 3rem;"
+    >
+      <!-- Placeholder for avatar -->
+      {#if placeholderAvatar}
+        <div class="w-8 h-8 rounded-full bg-transparent">&nbsp;</div>
+      {/if}
+
+      <div class="flex flex-col justify-center">
+        {#if placeholderTop}
+          <div class="text-base font-semibold">&nbsp;</div>
+        {/if}
+        {#if placeholderBottom}
+          <div class="text-sm opacity-75">&nbsp;</div>
+        {/if}
+      </div>
+    </div>
+  {:else}
+    <div
+      class="flex flex-col items-center gap-2 p-2 rounded-lg w-full"
+      style="min-height: 6rem;"
+    >
+      {#if placeholderAvatar}
+        <div class="w-12 h-12 rounded-full bg-transparent">&nbsp;</div>
+      {/if}
+      {#if placeholderTop}
+        <div class="text-base font-semibold w-full text-center">&nbsp;</div>
+      {/if}
+      {#if placeholderBottom}
+        <div class="text-sm opacity-75 w-full text-center">&nbsp;</div>
+      {/if}
+    </div>
+  {/if}
 {:else if view === 'horizontal'}
-  <HorizontalAvatarLayout
-    {pictureOverlayUrl}
-    on:click={openAvatar}
-    {profile}
-    {topInfo}
-    {bottomInfo}
-  />
+  <!-- Fade in the final layout once profile is loaded -->
+  <div transition:fade>
+    <HorizontalAvatarLayout
+      {pictureOverlayUrl}
+      onclick={openAvatar}
+      {profile}
+      {topInfo}
+      {bottomInfo}
+    />
+  </div>
 {:else}
-  <VerticalAvatarLayout
-    on:click={openAvatar}
-    {profile}
-  />
+  <div transition:fade>
+    <VerticalAvatarLayout
+      onclick={openAvatar}
+      {profile}
+    />
+  </div>
 {/if}

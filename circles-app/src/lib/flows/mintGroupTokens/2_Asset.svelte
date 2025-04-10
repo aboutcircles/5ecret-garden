@@ -10,9 +10,13 @@
   import { writable, derived, type Readable } from 'svelte/store';
   import { popupControls } from '$lib/stores/popUp';
 
-  export let context: GroupMintFlowContext;
+  interface Props {
+    context: GroupMintFlowContext;
+  }
 
-  let selectedAsset: TokenBalanceRow | undefined = undefined;
+  let { context = $bindable() }: Props = $props();
+
+  let selectedAsset: TokenBalanceRow | undefined = $state(undefined);
 
   // Writable store to hold the set of trusted token owners
   const trustedTokenOwners = writable<Set<string> | null>(null);
@@ -22,7 +26,7 @@
     data: TokenBalanceRow[];
     next: () => Promise<boolean>;
     ended: boolean;
-  }>;
+  }> = $state();
 
   onMount(async () => {
     if (context?.selectedAsset) {
@@ -69,9 +73,9 @@
     ([$circlesBalances, $trustedTokenOwners]) => {
       if ($trustedTokenOwners) {
         return {
-          data: $circlesBalances.data.filter((o) =>
+          data: $circlesBalances.data, /*.filter((o) =>
             $trustedTokenOwners.has(o.tokenOwner)
-          ),
+          ),*/
           next: $circlesBalances.next,
           ended: $circlesBalances.ended,
         };
@@ -85,8 +89,8 @@
     }
   );
 
-  function handleSelect(event: CustomEvent<TokenBalanceRow>) {
-    selectedAsset = event.detail;
+  function onselect(tokenBalanceRow: TokenBalanceRow) {
+    selectedAsset = tokenBalanceRow;
     context.selectedAsset = selectedAsset;
 
     popupControls.open({
@@ -107,7 +111,7 @@
       {selectedAsset}
       balances={filteredBalances}
       showTransitive={false}
-      on:select={handleSelect}
+      {onselect}
     />
   {:else}
     <p>Loading balances...</p>

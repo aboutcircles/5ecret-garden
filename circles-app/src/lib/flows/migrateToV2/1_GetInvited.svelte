@@ -9,13 +9,17 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { popupControls } from '$lib/stores/popUp';
 
-  export let context: MigrateToV2Context = {
-    inviter: '',
+  interface Props {
+    context?: MigrateToV2Context;
+  }
+
+  let { context = $bindable({
+    inviter: '0x0',
     profile: undefined,
     trustList: [],
-  };
-  let canSelfMigrate = false;
-  let invitations: AvatarRow[] | undefined;
+  }) }: Props = $props();
+  let canSelfMigrate = $state(false);
+  let invitations: AvatarRow[] | undefined = $state();
   onMount(async () => {
     if (!$avatar?.avatarInfo || !$circles) {
       throw new Error('Avatar store or SDK not initialized');
@@ -32,7 +36,7 @@
       },
     });
   }
-  function selectInvitation(inviter: string) {
+  function selectInvitation(inviter: `0x${string}`) {
     context.inviter = inviter;
     next();
   }
@@ -52,8 +56,8 @@
           <button
             type="button"
             class="text-gray-500 hover:bg-black/5 w-full flex p-2 rounded-lg"
-            on:click={(e) => selectInvitation(invitation.avatar)}
-            on:keydown={(e) => {
+            onclick={(e) => selectInvitation(invitation.avatar)}
+            onkeydown={(e) => {
               if (e.key === 'Enter' || e.key === ' ')
                 selectInvitation(invitation.avatar);
             }}
@@ -75,7 +79,7 @@
         <button
           type="submit"
           class="btn btn-primary text-white"
-          on:click={() => next()}
+          onclick={() => next()}
         >
           Next
         </button>

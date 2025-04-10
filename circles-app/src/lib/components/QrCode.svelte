@@ -1,17 +1,23 @@
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
   import QRCode from 'qrcode';
 
-  export let value = '';
-  let svg = '';
+  interface Props {
+    value?: string;
+  }
+
+  let { value = '' }: Props = $props();
+  let svg = $state('');
 
   const generateQrCode = async () => {
     svg = await QRCode.toString(value, { type: 'svg', width: 200 });
   };
 
-  $: if (value) {
-    QRCode.toString(value, { type: 'svg' });
-  }
+  $effect(() => {
+    if (value) {
+      QRCode.toString(value, { type: 'svg' });
+    }
+  });
 
   onMount(() => {
     generateQrCode();

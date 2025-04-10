@@ -10,14 +10,15 @@
       throw new Error('Wallet not connected ($circles is undefined)');
     }
 
-    $avatar = <Avatar>await $circles.registerHuman();
+    //TODO: why need to bind it as Avatar
+    $avatar = await $circles.registerHuman() as Avatar;
 
     await goto('/dashboard');
   }
 </script>
 
 <div
-  class="w-full flex flex-col min-h-screen p-4 max-w-xl gap-y-4 justify-center"
+  class="w-full flex flex-col min-h-screen max-w-xl gap-y-4 justify-center"
 >
   <div class="card bg-base-100 w-96 border shadow-sm">
     <figure class="px-10 pt-10">

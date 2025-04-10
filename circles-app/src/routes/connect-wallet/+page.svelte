@@ -2,14 +2,14 @@
   import ConnectWallet from '$lib/components/ConnectWallet.svelte';
   import { onMount } from 'svelte';
 
-  let hasBrowserWallet = false;
+  let hasBrowserWallet = $state(false);
   onMount(() => {
-    hasBrowserWallet = typeof (<any>window).ethereum !== 'undefined';
+    hasBrowserWallet = typeof (window as any).ethereum !== 'undefined';
   });
 </script>
 
 <div
-  class="w-full flex flex-col min-h-screen p-4 max-w-xl gap-y-4 justify-center"
+  class="w-full flex flex-col min-h-screen max-w-xl gap-y-4 justify-center"
 >
   <div class="w-full">
     <a href="/">
@@ -43,12 +43,5 @@
     header="circles.garden"
     desc="Use your circles.garden key in 5ecret-garden"
     route="/connect-wallet/import-circles-garden"
-  />
-  <p class="font-bold text-xl mt-4">Available on Testnet only</p>
-  <ConnectWallet
-    imgUrl="/cometh-logo.svg"
-    header="Use Cometh"
-    desc="Use Circles with a Passkey that's stored on your device"
-    route="/connect-wallet/connect-cometh"
   />
 </div>

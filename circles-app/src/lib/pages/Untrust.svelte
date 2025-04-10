@@ -8,8 +8,12 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { popupControls } from '$lib/stores/popUp';
 
-  export let address: string;
-  export let trustVersion: number;
+  interface Props {
+    address: `0x${string}`;
+    trustVersion: number;
+  }
+
+  let { address, trustVersion }: Props = $props();
 
   async function untrust() {
     if (!$avatar) {

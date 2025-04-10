@@ -1,48 +1,108 @@
 <script lang="ts">
-  import { initializeWallet, wallet } from '$lib/stores/wallet';
-  import { avatar } from '$lib/stores/avatar';
+  import { type AvatarRow } from '@circles-sdk/sdk';
   import { circles } from '$lib/stores/circles';
-  import { Sdk, type CirclesConfig } from '@circles-sdk/sdk';
-  import { goto } from '$app/navigation';
-  import { getCirclesConfig } from '$lib/utils/helpers';
+  import { wallet } from '$lib/stores/wallet';
+  import WalletLoader from '$lib/components/WalletLoader.svelte';
+  import ConnectCircles from '$lib/components/ConnectCircles.svelte';
+  import CreateSafe from '$lib/pages/CreateSafe.svelte';
+  import type { Address } from '@circles-sdk/utils';
+  import { ethers } from 'ethers';
+  import { onMount } from 'svelte';
+  import type { WalletType } from '$lib/utils/walletType';
+  import { getCmGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
+  import type { CoreMembersGroupRow } from '@circles-sdk/data/dist/rows/coreMembersGroupRow';
 
-  export let item: string;
+  let safes: Address[] = $state([]);
+  let profileBySafe: Record<string, AvatarRow | undefined> = $state({});
+  let groupsByOwner: Record<Address, CoreMembersGroupRow[]> = $state({});
 
-  let circlesConfig: CirclesConfig;
+  interface Props {
+    safeOwnerAddress?: Address;
+    chainId: bigint;
+    walletType: WalletType;
+  }
 
-  async function connectWallet(safeAddress: string) {
+  let { safeOwnerAddress, chainId, walletType }: Props = $props();
 
-    $wallet = await initializeWallet('safe', safeAddress);
+  const getSafesByOwnerApiEndpoint = (checksumOwnerAddress: string): string =>
+    `https://safe-transaction-gnosis-chain.safe.global/api/v1/owners/${checksumOwnerAddress}/safes/`;
 
-    const network = await $wallet?.provider?.getNetwork();
-    if (!network) {
-      throw new Error('Failed to get network');
+  async function querySafeTransactionService(
+    ownerAddress: string,
+  ): Promise<Address[]> {
+    const checksumAddress = ethers.getAddress(ownerAddress);
+    const requestUrl = getSafesByOwnerApiEndpoint(checksumAddress);
+
+    const safesByOwnerResult = await fetch(requestUrl);
+    const safesByOwner = await safesByOwnerResult.json();
+
+    return safesByOwner.safes ?? [];
+  }
+
+  async function loadSafesAndProfile() {
+    if (!safeOwnerAddress) {
+      throw new Error('Safe owner address is not provided');
     }
-    circlesConfig = await getCirclesConfig(network.chainId);
 
-    // Initialize the Circles SDK and set it as $circles to make it globally available.
-    $circles = new Sdk($wallet!, circlesConfig);
-
-    const avatarInfo = await $circles.data.getAvatarInfo(
-      $wallet.address!
-    );
-
-    // If the signer address is already a registered Circles wallet, go straight to the dashboard.
-    if (avatarInfo) {
-      $avatar = await $circles.getAvatar($wallet.address!);
-      await goto('/dashboard');
-    } else {
-      await goto('/register');
+    if (!$wallet?.address) {
+      throw new Error('Wallet address is not available');
     }
+
+    if (!$circles || !$wallet?.address) {
+      throw new Error('Circles SDK or wallet not initialized');
+    }
+    safes = await querySafeTransactionService(safeOwnerAddress);
+    const [avatarInfo, groupInfo] = await Promise.all([
+      $circles.data.getAvatarInfoBatch(safes),
+      getCmGroupsByOwnerBatch($circles, safes),
+    ]);
+    const profileBySafeNew: Record<string, AvatarRow | undefined> = {};
+    avatarInfo.forEach((info) => {
+      profileBySafeNew[ethers.getAddress(info.avatar)] = info;
+    });
+    profileBySafe = profileBySafeNew;
+    groupsByOwner = groupInfo;
+  }
+
+  onMount(async () => {
+    await loadSafesAndProfile();
+  });
+
+  async function onsafecreated(address: Address) {
+    safes = [...safes, address];
   }
 </script>
 
-<button
-  on:click={() => connectWallet(item)}
-  class="w-full border rounded-lg flex justify-between items-center p-4 shadow-sm hover:bg-black/5"
+<div
+  class="w-full flex flex-col items-center min-h-screen max-w-xl gap-y-4 mt-20"
 >
-  <div class="flex items-center gap-x-4">
-    <slot></slot>
+  <div class="w-full">
+    <button onclick="{() => history.back()}">
+      <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
+    </button>
   </div>
-  <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
-</button>
+  <h2 class="font-bold text-[28px] md:text-[32px]">Select Avatar</h2>
+  <p class="font-normal text-black/60 text-base">
+    Please select the avatar you want to use from the list below.
+  </p>
+  {#if $wallet?.address && $circles}
+    {#each safes ?? [] as item (item)}
+      <ConnectCircles
+        address={item}
+        walletType={walletType}
+        isRegistered={profileBySafe[item] !== undefined}
+        isV1={profileBySafe[item]?.version === 1}
+        groups={groupsByOwner[item.toLowerCase()] ?? []}
+        chainId={chainId}
+      />
+    {/each}
+
+    {#if walletType === 'safe'}
+      <div class="text-center">
+        <CreateSafe {onsafecreated} />
+      </div>
+    {/if}
+  {:else}
+    <WalletLoader name="Safe" />
+  {/if}
+</div>

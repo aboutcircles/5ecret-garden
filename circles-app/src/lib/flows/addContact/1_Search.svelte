@@ -7,24 +7,24 @@
   import { popupControls } from '$lib/stores/popUp';
   import YouAlreadyTrust from './2_YouAlreadyTrust.svelte';
   import type { AddContactFlowContext } from './context';
+  import type { Address } from '@circles-sdk/utils';
 
-  let context: AddContactFlowContext = {
-    selectedAddress: '',
-  };
+  let context: AddContactFlowContext = $state({
+    selectedAddress: '0x0',
+  });
 
-  function handleInvite(event: CustomEvent<{ avatar: string }>) {
-    console.log('Invite');
+  function oninvite(avatar: Address) {
     popupControls.open({
       title: 'Invite someone',
       component: Invite,
       props: {
-        address: event.detail.avatar,
+        address: avatar,
       },
     });
   }
 
-  async function handleSelect(event: CustomEvent<{ avatar: string }>) {
-    context.selectedAddress = event.detail.avatar;
+  async function onselect(avatar: Address) {
+    context.selectedAddress = avatar;
     const existingContact = $contacts.data[context.selectedAddress];
 
     if (
@@ -45,7 +45,7 @@
         title: 'Trust',
         component: Trust,
         props: {
-          address: event.detail.avatar,
+          address: avatar,
         },
       });
     }
@@ -56,8 +56,8 @@
   <p class="text-2xl font-bold">Add Contact</p>
   <SearchAvatar
     selectedAddress={context.selectedAddress}
-    on:invite={handleInvite}
-    on:select={handleSelect}
+    {oninvite}
+    {onselect}
     searchType="contact"
   />
 </FlowDecoration>
