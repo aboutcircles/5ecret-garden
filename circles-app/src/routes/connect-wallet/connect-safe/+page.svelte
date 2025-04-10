@@ -6,10 +6,14 @@
   import { getCirclesConfig } from '$lib/utils/helpers.js';
   import { Sdk } from '@circles-sdk/sdk';
   import { switchOrAddGnosisNetwork } from '$lib/utils/network';
+  import { local } from 'd3-selection';
 
   let initialized: boolean | undefined = $state();
 
   async function setup(callNo = 0) {
+    if (localStorage.getItem('walletType') != "safe") {
+      localStorage.removeItem('avatar');
+    }
     $wallet = await initializeWallet('safe');
 
     const network = await ($wallet as any).provider?.getNetwork();
@@ -28,9 +32,8 @@
       return;
     }
 
-    const circlesConfig = await getCirclesConfig(network.chainId);
-
     // Initialize the Circles SDK and set it as $circles to make it globally available.
+    const circlesConfig = await getCirclesConfig(network.chainId);
     $circles = new Sdk($wallet!, circlesConfig);
 
     localStorage.setItem('walletType', 'safe');

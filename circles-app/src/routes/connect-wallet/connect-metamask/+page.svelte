@@ -23,6 +23,10 @@
   // Connects the wallet and initializes the Circles SDK.
   //
   async function setup(callNo: number = 0) {
+    if (localStorage.getItem('walletType') != "metamask") {
+      localStorage.removeItem('avatar');
+    }
+
     $wallet = await initializeWallet('metamask');
 
     if (!$wallet.address) {
