@@ -16,7 +16,7 @@
     isRegistered: boolean;
     walletType: WalletType;
     chainId: bigint;
-    groups?: CoreMembersGroupRow[]
+    groups?: CoreMembersGroupRow[];
     isV1?: boolean;
   }
 
@@ -24,22 +24,30 @@
 
   let circlesConfig: CirclesConfig;
 
-  async function connectWallet(selectedAddress: Address) {
-    const lowerCaseAddress = selectedAddress.toLowerCase() as Address;
+  async function connectWallet(avatarAddress: Address, groupAddress?: Address) {
+    const lowerCaseAvatarAddress = avatarAddress.toLowerCase() as Address;
+    const lowerCaseGroupAddress = groupAddress?.toLowerCase() as Address;
 
     $wallet = await initializeWallet(walletType, address);
     circlesConfig = await getCirclesConfig(chainId);
     $circles = new Sdk($wallet! as SdkContractRunner, circlesConfig);
 
-    if (lowerCaseAddress === address.toLowerCase() && !isRegistered) {
+    if (lowerCaseAvatarAddress === address.toLowerCase() && !isRegistered) {
       await goto('/register');
       return;
     }
 
+    const avatarToLoad = lowerCaseGroupAddress ?? lowerCaseAvatarAddress;
+
     if ($circles && $wallet) {
-      $avatar = await $circles.getAvatar(lowerCaseAddress);
-      localStorage.setItem('avatar', lowerCaseAddress);
-      localStorage.setItem('walletType', walletType);
+      $avatar = await $circles.getAvatar(avatarToLoad);
+      localStorage.setItem('avatar', lowerCaseAvatarAddress);
+      if (lowerCaseGroupAddress) {
+        localStorage.setItem('walletType', walletType + '+group');
+        localStorage.setItem('group', lowerCaseGroupAddress);
+      } else {
+        localStorage.setItem('walletType', walletType);
+      }
       await goto('/dashboard');
     }
   }
@@ -89,7 +97,7 @@
     {#each (groups ?? []) as group}
       <button
         class="flex w-full hover:bg-black/5 rounded-lg p-2"
-        onclick={() => connectWallet(group.proxy)}
+        onclick={() => connectWallet(address, group.proxy)}
       >
         <Avatar
           address={group.proxy}

@@ -6,13 +6,13 @@
   import { getCirclesConfig } from '$lib/utils/helpers.js';
   import { Sdk } from '@circles-sdk/sdk';
   import { switchOrAddGnosisNetwork } from '$lib/utils/network';
-  import { local } from 'd3-selection';
 
   let initialized: boolean | undefined = $state();
 
   async function setup(callNo = 0) {
     if (localStorage.getItem('walletType') != "safe") {
       localStorage.removeItem('avatar');
+      localStorage.removeItem('group');
     }
     $wallet = await initializeWallet('safe');
 
