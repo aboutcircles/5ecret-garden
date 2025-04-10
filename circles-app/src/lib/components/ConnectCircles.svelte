@@ -10,6 +10,7 @@
   import type { Address } from '@circles-sdk/utils';
   import type { SdkContractRunner } from '@circles-sdk/adapter';
   import type { CoreMembersGroupRow } from '@circles-sdk/data/dist/rows/coreMembersGroupRow';
+  import { CirclesStorage } from '$lib/utils/storage';
 
   interface Props {
     address: Address;
@@ -37,16 +38,21 @@
       return;
     }
 
-    const avatarToLoad = lowerCaseGroupAddress ?? lowerCaseAvatarAddress;
-
     if ($circles && $wallet) {
+      const avatarToLoad = lowerCaseGroupAddress ?? lowerCaseAvatarAddress;
       $avatar = await $circles.getAvatar(avatarToLoad);
-      localStorage.setItem('avatar', lowerCaseAvatarAddress);
+
       if (lowerCaseGroupAddress) {
-        localStorage.setItem('walletType', walletType + '+group');
-        localStorage.setItem('group', lowerCaseGroupAddress);
+        CirclesStorage.getInstance().data = {
+          walletType: walletType + '+group' as WalletType,
+          avatar: lowerCaseAvatarAddress,
+          group: lowerCaseGroupAddress,
+        };
       } else {
-        localStorage.setItem('walletType', walletType);
+        CirclesStorage.getInstance().data = {
+          walletType: walletType,
+          avatar: lowerCaseAvatarAddress,
+        };
       }
       await goto('/dashboard');
     }
@@ -54,6 +60,9 @@
 
   async function deployGroup() {
     if ($circles && $wallet) {
+      CirclesStorage.getInstance().data = {
+        avatar: address,
+      };
       $wallet = await initializeWallet(walletType, address);
       circlesConfig = await getCirclesConfig(chainId);
       $circles = new Sdk($wallet! as SdkContractRunner, circlesConfig);
