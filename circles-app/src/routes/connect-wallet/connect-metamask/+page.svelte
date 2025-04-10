@@ -25,6 +25,7 @@
   async function setup(callNo: number = 0) {
     if (localStorage.getItem('walletType') != "metamask") {
       localStorage.removeItem('avatar');
+      localStorage.removeItem('group');
     }
 
     $wallet = await initializeWallet('metamask');

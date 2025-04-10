@@ -17,12 +17,15 @@
     const walletType: WalletType | null = localStorage.getItem('walletType') as WalletType | null;
     switch (walletType) {
       case 'metamask':
+      case 'metamask+group':
         goto('/connect-wallet/connect-metamask');
         break;
       case 'safe':
+      case 'safe+group':
         goto('/connect-wallet/connect-safe');
         break;
       case 'circles':
+      case 'circles+group':
         goto('/connect-wallet/import-circles-garden');
         break;
     }
