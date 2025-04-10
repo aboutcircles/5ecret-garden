@@ -12,6 +12,7 @@
   import type { Address } from '@circles-sdk/utils';
   import type { CoreMembersGroupRow } from '@circles-sdk/data/dist/rows/coreMembersGroupRow';
   import { getCmGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
+  import { CirclesStorage } from '$lib/utils/storage';
 
   const GNOSIS_CHAIN_ID_DEC = 100n;
 
@@ -23,9 +24,12 @@
   // Connects the wallet and initializes the Circles SDK.
   //
   async function setup(callNo: number = 0) {
-    if (localStorage.getItem('walletType') != "metamask") {
-      localStorage.removeItem('avatar');
-      localStorage.removeItem('group');
+    const walletType = CirclesStorage.getInstance().walletType;
+    if (walletType != "metamask") {
+      CirclesStorage.getInstance().data = {
+        avatar: undefined,
+        group: undefined
+      };
     }
 
     $wallet = await initializeWallet('metamask');
@@ -57,7 +61,9 @@
     groupsByOwner = await getCmGroupsByOwnerBatch($circles, [$wallet.address]);
     avatarInfo = await $circles.data.getAvatarInfo($wallet.address);
 
-    localStorage.setItem('walletType', 'metamask');
+    CirclesStorage.getInstance().data = {
+      walletType: 'metamask'
+    };
   }
 
   onMount(async () => {

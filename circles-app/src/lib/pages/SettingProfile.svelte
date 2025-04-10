@@ -4,7 +4,7 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import QrCode from '$lib/components/QrCode.svelte';
   import { popupControls } from '$lib/stores/popUp';
-  import type { WalletType } from '$lib/utils/walletType';
+  import { CirclesStorage } from '$lib/utils/storage';
 
   interface Props {
     address: Address | undefined;
@@ -14,7 +14,8 @@
 
   function changeWallet() {
     popupControls.close();
-    const walletType: WalletType | null = localStorage.getItem('walletType') as WalletType | null;
+
+    const walletType = CirclesStorage.getInstance().walletType;
     switch (walletType) {
       case 'metamask':
       case 'metamask+group':

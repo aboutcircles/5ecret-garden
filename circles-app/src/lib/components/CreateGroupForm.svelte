@@ -7,10 +7,12 @@
   import { mintPolicies } from '$lib/utils/mintPolicy';
   import Tooltip from './Tooltip.svelte';
   import { circles } from '$lib/stores/circles';
-  import { avatar, isGroup } from '$lib/stores/avatar';
+  import { avatar } from '$lib/stores/avatar';
   import ImageUpload from './ImageUpload.svelte';
-  import { cidV0ToUint8Array } from '@circles-sdk/utils';
+  import { type Address, cidV0ToUint8Array } from '@circles-sdk/utils';
   import { ethers } from 'ethers';
+  import { CirclesStorage } from '$lib/utils/storage';
+  import type { WalletType } from '$lib/utils/walletType';
 
   interface CMGProfile {
     service: string;
@@ -86,10 +88,14 @@
       result.logs[9].topics[1]
     );
 
+    CirclesStorage.getInstance().data = {
+      walletType: CirclesStorage.getInstance().walletType + "+group" as WalletType,
+      group: groupAddress as Address
+    };
+
     $avatar = await $circles.getAvatar(
-      groupAddress.toLowerCase() as `0x${string}`
+      groupAddress.toLowerCase() as Address
     );
-    localStorage.setItem('avatar', groupAddress);
 
     onstepchange('executed');
   }

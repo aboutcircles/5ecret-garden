@@ -16,6 +16,7 @@ import { JsonRpcProvider } from 'ethers';
 import { type SdkContractRunner } from '@circles-sdk/adapter';
 import type { WalletType } from '$lib/utils/walletType';
 import type { Address } from '@circles-sdk/utils';
+import { CirclesStorage } from '$lib/utils/storage';
 
 export const wallet = writable<SdkContractRunner | undefined>();
 
@@ -35,7 +36,7 @@ export async function initializeWallet(type: WalletType, avatarAddress?: Address
     await runner.init(avatarAddress);
     return runner as SdkContractRunner;
   } else if (type === 'circles' && !avatarAddress) {
-    const privateKey = localStorage.getItem('privateKey');
+    const privateKey = CirclesStorage.getInstance().privateKey;
     if (!privateKey) {
       throw new Error('Private key not found in localStorage');
     }
@@ -44,7 +45,7 @@ export async function initializeWallet(type: WalletType, avatarAddress?: Address
     await runner.init();
     return runner;
   } else if ((type === 'circles' || type === 'circles+group') && avatarAddress) {
-    const privateKey = localStorage.getItem('privateKey');
+    const privateKey = CirclesStorage.getInstance().privateKey;
     if (!privateKey) {
       throw new Error('Private key not found in localStorage');
     }
@@ -69,7 +70,7 @@ export async function restoreWallet() {
     // * metamask+group
     // * safe+group
     // * circles+group
-    const walletTypeString: string = localStorage.getItem('walletType') ?? '';
+    const walletTypeString = CirclesStorage.getInstance().walletType ?? '';
     const walletType = walletTypeString.split('+')[0] as WalletType;
     switch (walletType) {
       case 'metamask':
@@ -85,10 +86,13 @@ export async function restoreWallet() {
         break;
     }
 
-    const savedAvatar = localStorage.getItem('avatar') as Address;
-    const savedGroup = walletTypeString.includes('+group')
-      ? localStorage.getItem('group')
-      : localStorage.removeItem('group');
+    const savedAvatar = CirclesStorage.getInstance().avatar;
+    let savedGroup: Address | undefined;
+    if (walletTypeString.includes('+group')) {
+      savedGroup = CirclesStorage.getInstance().group;
+    } else {
+      CirclesStorage.getInstance().data = { group: undefined };
+    }
 
     const restoredWallet = await initializeWallet(
       walletType,
