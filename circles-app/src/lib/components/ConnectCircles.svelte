@@ -60,14 +60,11 @@
 
   async function deployGroup() {
     if ($circles && $wallet) {
-      CirclesStorage.getInstance().data = {
-        avatar: address,
-      };
       $wallet = await initializeWallet(walletType, address);
       circlesConfig = await getCirclesConfig(chainId);
       $circles = new Sdk($wallet! as SdkContractRunner, circlesConfig);
 
-      await goto('/register/register-group');
+      await goto('/register/register-group/' + address);
     }
   }
 </script>

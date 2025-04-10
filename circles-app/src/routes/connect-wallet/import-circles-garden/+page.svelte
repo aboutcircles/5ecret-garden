@@ -10,7 +10,7 @@
 
   let mnemonicPhrase: string = $state('');
   let hasValidKey = $state(false);
-  let privateKey: string | undefined = $state('');
+  let privateKey: string = $state('');
   let address = $state('');
 
   async function connectWallet() {
@@ -24,7 +24,7 @@
 
   onMount(async () => {
     $wallet = undefined;
-    privateKey = CirclesStorage.getInstance().privateKey;
+    privateKey = CirclesStorage.getInstance().privateKey ?? "";
     if (privateKey) {
       CirclesStorage.getInstance().data = {
         walletType: 'circles'
