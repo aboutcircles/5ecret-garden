@@ -50,6 +50,7 @@
     // Initialize the Circles SDK and set it as $circles to make it globally available.
     $circles = new Sdk($wallet! as SdkContractRunnerWrapper, circlesConfig);
     groupsByOwner = await getCmGroupsByOwnerBatch($circles, [$wallet.address]);
+    avatarInfo = await $circles.data.getAvatarInfo($wallet.address);
 
     localStorage.setItem('walletType', 'metamask');
   }
