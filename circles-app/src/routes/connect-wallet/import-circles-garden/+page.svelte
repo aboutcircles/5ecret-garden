@@ -14,6 +14,7 @@
 
   async function connectWallet() {
     localStorage.setItem('privateKey', privateKey);
+    localStorage.setItem('walletType', 'circles');
     $wallet = await initializeWallet('circles');
     $circles = new Sdk($wallet!, gnosisConfig);
   }
@@ -22,6 +23,7 @@
     $wallet = undefined;
     privateKey = localStorage.getItem('privateKey')!;
     if (privateKey) {
+      localStorage.setItem('walletType', 'circles');
       $wallet = await initializeWallet('circles');
       $circles = new Sdk($wallet!, gnosisConfig);
     }
