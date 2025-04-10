@@ -12,7 +12,7 @@ import {
 } from '@circles-sdk/adapter-safe';
 import { Sdk } from '@circles-sdk/sdk';
 import { getCirclesConfig } from '$lib/utils/helpers';
-import { gnosisConfig } from '$lib/chiadoConfig';
+import { gnosisConfig } from '$lib/circlesConfig';
 import { JsonRpcProvider } from 'ethers';
 import { type SdkContractRunner } from '@circles-sdk/adapter';
 import type { WalletType } from '$lib/utils/walletType';
