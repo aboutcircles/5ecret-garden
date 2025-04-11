@@ -6,7 +6,7 @@
   import WrapTokens from '$lib/pages/WrapTokens.svelte';
   import MigrateTokens from '$lib/pages/MigrateTokens.svelte';
   import UnwrapTokens from '$lib/pages/UnwrapTokens.svelte';
-  import ExitGroup from '$lib/pages/ExitGroup.svelte';
+  import RedeemGroup from '$lib/pages/RedeemGroup.svelte';
   import Avatar from './avatar/Avatar.svelte';
   import { popupControls } from '$lib/stores/popUp';
 
@@ -29,9 +29,9 @@
     {
       condition: (balance: TokenBalanceRow) =>
         balance.tokenType === 'CrcV2_RegisterGroup',
-      title: 'Exit group',
-      icon: '/exit.svg',
-      component: ExitGroup,
+      title: 'Redeem',
+      icon: '/redeem.svg',
+      component: RedeemGroup,
     },
     {
       condition: (balance: TokenBalanceRow) =>
