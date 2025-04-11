@@ -10,13 +10,14 @@
   import type { Address } from '@circles-sdk/utils';
   import type { SdkContractRunner } from '@circles-sdk/adapter';
   import type { CoreMembersGroupRow } from '@circles-sdk/data/dist/rows/coreMembersGroupRow';
+  import { CirclesStorage } from '$lib/utils/storage';
 
   interface Props {
     address: Address;
     isRegistered: boolean;
     walletType: WalletType;
     chainId: bigint;
-    groups?: CoreMembersGroupRow[]
+    groups?: CoreMembersGroupRow[];
     isV1?: boolean;
   }
 
@@ -24,22 +25,35 @@
 
   let circlesConfig: CirclesConfig;
 
-  async function connectWallet(selectedAddress: Address) {
-    const lowerCaseAddress = selectedAddress.toLowerCase() as Address;
+  async function connectWallet(avatarAddress: Address, groupAddress?: Address) {
+    const lowerCaseAvatarAddress = avatarAddress.toLowerCase() as Address;
+    const lowerCaseGroupAddress = groupAddress?.toLowerCase() as Address;
 
     $wallet = await initializeWallet(walletType, address);
     circlesConfig = await getCirclesConfig(chainId);
     $circles = new Sdk($wallet! as SdkContractRunner, circlesConfig);
 
-    if (lowerCaseAddress === address.toLowerCase() && !isRegistered) {
+    if (lowerCaseAvatarAddress === address.toLowerCase() && !isRegistered) {
       await goto('/register');
       return;
     }
 
     if ($circles && $wallet) {
-      $avatar = await $circles.getAvatar(lowerCaseAddress);
-      localStorage.setItem('avatar', lowerCaseAddress);
-      localStorage.setItem('walletType', walletType);
+      const avatarToLoad = lowerCaseGroupAddress ?? lowerCaseAvatarAddress;
+      $avatar = await $circles.getAvatar(avatarToLoad);
+
+      if (lowerCaseGroupAddress) {
+        CirclesStorage.getInstance().data = {
+          walletType: walletType + '+group' as WalletType,
+          avatar: lowerCaseAvatarAddress,
+          group: lowerCaseGroupAddress,
+        };
+      } else {
+        CirclesStorage.getInstance().data = {
+          walletType: walletType,
+          avatar: lowerCaseAvatarAddress,
+        };
+      }
       await goto('/dashboard');
     }
   }
@@ -50,7 +64,7 @@
       circlesConfig = await getCirclesConfig(chainId);
       $circles = new Sdk($wallet! as SdkContractRunner, circlesConfig);
 
-      await goto('/register/register-group');
+      await goto('/register/register-group/' + address);
     }
   }
 </script>
@@ -89,7 +103,7 @@
     {#each (groups ?? []) as group}
       <button
         class="flex w-full hover:bg-black/5 rounded-lg p-2"
-        onclick={() => connectWallet(group.proxy)}
+        onclick={() => connectWallet(address, group.proxy)}
       >
         <Avatar
           address={group.proxy}

@@ -77,19 +77,14 @@ async function fetchProfiles(addresses: Address[]): Promise<Map<Address, Profile
   // 2) Build a map address->avatar for convenience
   const addressToAvatar = new Map<string, AvatarRow>();
   for (const avatar of avatars) {
-    // Note: I'm assuming the field for the address is `avatar.avatar`,
-    // but in your snippet it might be `avatar.address`.
-    // Adjust if needed. I'll use "avatar.avatar" as you did previously.
     addressToAvatar.set(avatar.avatar.toLowerCase(), avatar);
   }
 
   // 3) Gather all CIDs
-  const cids: string[] = [];
-  for (const avatar of avatars) {
-    if (avatar.cidV0) {
-      cids.push(avatar.cidV0);
-    }
-  }
+  const cids: string[] = avatars
+    .filter((a) => a.cidV0)
+    .map((a) => a.cidV0!);
+
   const uniqueCids = [...new Set(cids)];
 
   // 4) Because `profiles.getMany` is limited to 50, we chunk it if needed
