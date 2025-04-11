@@ -33,7 +33,7 @@
       labels: collateralInTreasury.map((item) => item.avatar),
       datasets: [
         {
-          label: '# of Votes',
+          label: 'tokens',
           data: collateralInTreasury.map((item) =>
             Number(formatEther(item.amount))
           ),

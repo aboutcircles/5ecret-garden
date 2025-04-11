@@ -50,7 +50,7 @@
             <input
               type="number"
               class="input input-bordered w-36"
-              value={item.amountToRedeem.toFixed(2)}
+              value={item.amountToRedeem}
               oninput={(e) => {
                 const newValue = parseFloat(
                   (e.target as HTMLInputElement)?.value
