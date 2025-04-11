@@ -1,19 +1,19 @@
 <script lang="ts">
   import {
     onDestroy,
-    type SvelteComponent,
+    type Component,
   } from 'svelte';
   import type { EventRow, TransactionHistoryRow } from '@circles-sdk/data';
   import { getKeyFromItem } from '$lib/stores/query/circlesQueryStore';
   import type { Readable } from 'svelte/store';
 
-  interface Props {
+  interface Props<T extends Record<string, any> = any> {
     store: Readable<{
       data: EventRow[] | TransactionHistoryRow[];
       next: () => Promise<boolean>;
       ended: boolean;
     }>;
-    row: typeof SvelteComponent<Record<string, any>>;
+    row: Component<T>;
   }
 
   let { store, row }: Props = $props();
