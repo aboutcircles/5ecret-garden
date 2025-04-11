@@ -12,6 +12,7 @@
   import type { Address } from '@circles-sdk/utils';
   import type { CoreMembersGroupRow } from '@circles-sdk/data/dist/rows/coreMembersGroupRow';
   import { getCmGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
+  import { CirclesStorage } from '$lib/utils/storage';
 
   const GNOSIS_CHAIN_ID_DEC = 100n;
 
@@ -23,6 +24,14 @@
   // Connects the wallet and initializes the Circles SDK.
   //
   async function setup(callNo: number = 0) {
+    const walletType = CirclesStorage.getInstance().walletType;
+    if (walletType != "metamask") {
+      CirclesStorage.getInstance().data = {
+        avatar: undefined,
+        group: undefined
+      };
+    }
+
     $wallet = await initializeWallet('metamask');
 
     if (!$wallet.address) {
@@ -49,13 +58,12 @@
 
     // Initialize the Circles SDK and set it as $circles to make it globally available.
     $circles = new Sdk($wallet! as SdkContractRunnerWrapper, circlesConfig);
+    groupsByOwner = await getCmGroupsByOwnerBatch($circles, [$wallet.address]);
     avatarInfo = await $circles.data.getAvatarInfo($wallet.address);
-    if (!avatarInfo) {
-      return;
-    }
-    groupsByOwner = await getCmGroupsByOwnerBatch($circles, [avatarInfo.avatar]);
 
-    localStorage.setItem('walletType', 'metamask');
+    CirclesStorage.getInstance().data = {
+      walletType: 'metamask'
+    };
   }
 
   onMount(async () => {
@@ -65,7 +73,7 @@
 </script>
 
 <div
-  class="w-full flex flex-col items-center min-h-screen p-4 max-w-xl gap-y-4 mt-20"
+  class="w-full flex flex-col items-center min-h-screen max-w-xl gap-y-4 mt-20"
 >
   <div class="w-full">
     <button onclick="{() => history.back()}">

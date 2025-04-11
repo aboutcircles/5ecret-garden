@@ -69,12 +69,13 @@
         ? await $circles.v1Pathfinder?.getPath(
           $avatar.address,
           context.selectedAddress,
-          bigNumber,
+          bigNumber
         )
         : await $circles.v2Pathfinder?.getPath(
           $avatar.address,
           context.selectedAddress,
           bigNumber,
+          true
         );
 
       if (!p || !p.transfers?.length) {

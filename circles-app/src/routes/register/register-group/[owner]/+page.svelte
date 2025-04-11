@@ -3,7 +3,7 @@
 </script>
 
 <div
-  class="w-full flex flex-col min-h-screen p-4 max-w-4xl gap-y-4 justify-center"
+  class="w-full flex flex-col min-h-screen max-w-4xl gap-y-4 justify-center"
 >
   <div class="w-full">
     <a href="/register">

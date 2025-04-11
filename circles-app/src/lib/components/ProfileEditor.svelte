@@ -66,7 +66,7 @@
     </div>
     <div>
       <label for="description" class="block text-sm font-medium text-black"
-        >Description</label
+      >Description</label
       >
       <textarea
         bind:value={profile.description}
@@ -74,6 +74,17 @@
         class="mt-2 block w-full p-2 border border-gray-300 bg-gray-50 rounded-md"
         placeholder="Description"
       ></textarea>
+    </div>
+    <div>
+      <label for="description" class="block text-sm font-medium text-black"
+      >Location</label
+      >
+      <input
+        bind:value={profile.location}
+        type="text"
+        id="name"
+        class="mt-2 block w-full p-2 border border-gray-300 bg-gray-50 rounded-md"
+        placeholder="Location" />
     </div>
     <div>
       <label for="imageUrl" class="block text-sm font-medium text-black"

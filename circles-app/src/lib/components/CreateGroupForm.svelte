@@ -7,10 +7,13 @@
   import { mintPolicies } from '$lib/utils/mintPolicy';
   import Tooltip from './Tooltip.svelte';
   import { circles } from '$lib/stores/circles';
-  import { avatar, isGroup } from '$lib/stores/avatar';
+  import { avatar } from '$lib/stores/avatar';
   import ImageUpload from './ImageUpload.svelte';
-  import { cidV0ToUint8Array } from '@circles-sdk/utils';
+  import { type Address, cidV0ToUint8Array } from '@circles-sdk/utils';
   import { ethers } from 'ethers';
+  import { CirclesStorage } from '$lib/utils/storage';
+  import type { WalletType } from '$lib/utils/walletType';
+  import { page } from '$app/state';
 
   interface CMGProfile {
     service: string;
@@ -41,10 +44,10 @@
   let mintPolicy = $state(mintPolicies[0]);
 
   let validName = $derived(
-    isValidName(groupProfile.name) || groupProfile.name.length === 0
+    isValidName(groupProfile.name) || groupProfile.name.length === 0,
   );
   let validSymbol = $derived(
-    isValidSymbol(groupProfile.symbol) || groupProfile.symbol.length === 0
+    isValidSymbol(groupProfile.symbol) || groupProfile.symbol.length === 0,
   );
 
   async function handleSubmit() {
@@ -74,7 +77,7 @@
       initialConditions,
       groupProfile.name,
       groupProfile.symbol,
-      cidV0ToUint8Array(CID)
+      cidV0ToUint8Array(CID),
     );
 
     const result = await tx?.wait();
@@ -83,13 +86,18 @@
       throw new Error('Transaction result is null or undefined');
     }
     const groupAddress: string = ethers.stripZerosLeft(
-      result.logs[9].topics[1]
+      result.logs[9].topics[1],
     );
 
+    CirclesStorage.getInstance().data = {
+      walletType: CirclesStorage.getInstance().walletType + '+group' as WalletType,
+      avatar: page.params.owner as Address,
+      group: groupAddress as Address,
+    };
+
     $avatar = await $circles.getAvatar(
-      groupAddress.toLowerCase() as `0x${string}`
+      groupAddress.toLowerCase() as Address,
     );
-    localStorage.setItem('avatar', groupAddress);
 
     onstepchange('executed');
   }
@@ -122,7 +130,7 @@
       >
         <div class="label">
           <span class="label-text"
-            >Service
+          >Service
             <Tooltip content="Enter a service for your group." />
           </span>
         </div>
@@ -135,7 +143,7 @@
         />
         <div class="label">
           <span class="label-text"
-            >Initial Conditions
+          >Initial Conditions
             <Tooltip content="Enter the initial conditions for your group." />
           </span>
         </div>
@@ -153,7 +161,7 @@
       <div class="w-full">
         <div class="label">
           <span class="label-text"
-            >Name
+          >Name
             <Tooltip content="Enter a name for your group." />
           </span>
         </div>
@@ -174,7 +182,7 @@
       <div class="w-full">
         <div class="label">
           <span class="label-text"
-            >Symbol
+          >Symbol
             <Tooltip content="Add a short currency symbol (e.g., CRC)." /></span
           >
         </div>
@@ -212,7 +220,7 @@
   <div class="w-full mb-8">
     <div class="label">
       <span class="label-text"
-        >Description
+      >Description
         <Tooltip content="Provide a brief description of your group." />
       </span>
     </div>
@@ -226,7 +234,7 @@
   <div class="w-full flex flex-col mb-12 pt-8 border-t-1.5">
     <div class="label">
       <span class="label-text"
-        >Base Mint Policy
+      >Base Mint Policy
         <Tooltip content="Select the minting policy for group currency." />
       </span>
     </div>

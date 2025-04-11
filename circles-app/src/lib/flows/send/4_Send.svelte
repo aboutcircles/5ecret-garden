@@ -62,12 +62,13 @@
       name: `Send ${roundToDecimals(context.amount)} ${tokenTypeToString(context.selectedAsset.tokenType)} to ${shortenAddress(context.selectedAddress)}...`,
       promise:
         context.selectedAsset.tokenAddress === TransitiveTransferTokenAddress
-          ? $avatar.transfer(context.selectedAddress, context.amount, undefined, dataUInt8Arr)
+          ? $avatar.transfer(context.selectedAddress, context.amount, undefined, dataUInt8Arr, true)
           : $avatar.transfer(
             context.selectedAddress,
             amountToSend,
             context.selectedAsset.tokenAddress,
             dataUInt8Arr,
+            true
           ),
     });
 

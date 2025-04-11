@@ -11,19 +11,18 @@
 
   import DefaultHeader from '$lib/components/DefaultHeader.svelte';
   import { avatar, isGroup } from '$lib/stores/avatar';
-  import { clearSession, restoreWallet, wallet } from '$lib/stores/wallet';
+  import { clearSession, restoreWallet } from '$lib/stores/wallet';
   import { canMigrate } from '$lib/guards/canMigrate';
   import UpdateBanner from '$lib/components/UpdateBanner.svelte';
   import { page } from '$app/stores';
-  import SearchAvatar from '$lib/flows/addContact/1_Search.svelte';
   import Send from '$lib/flows/send/1_To.svelte';
-  import MintGroupTokens from '$lib/flows/mintGroupTokens/1_To.svelte';
   import { onMount } from 'svelte';
   import { tasks } from '$lib/utils/tasks';
   import { profile } from '$lib/stores/profile';
   import { popupControls, popupState } from '$lib/stores/popUp';
   import PopUp from '$lib/components/PopUp.svelte';
   import ManageGroupMembers from '$lib/flows/manageGroupMembers/1_manageGroupMembers.svelte';
+
   interface Props {
     children?: import('svelte').Snippet;
   }
@@ -139,7 +138,7 @@
     <div class="h-20"></div>
   {/if}
 
-  <div class="w-full flex flex-col items-center">
+  <div class="w-full flex flex-col items-center p-4 md:p-0">
     {@render children?.()}
   </div>
 

@@ -2,26 +2,33 @@
   import { initializeWallet, wallet } from '$lib/stores/wallet';
   import { circles } from '$lib/stores/circles';
   import { Sdk } from '@circles-sdk/sdk';
-  import { gnosisConfig } from '$lib/chiadoConfig';
+  import { gnosisConfig } from '$lib/circlesConfig';
   import SeedphraseInput from '$lib/components/SeedphraseInput.svelte';
   import { onMount } from 'svelte';
   import ConnectSafe from '$lib/components/ConnectSafe.svelte';
+  import { CirclesStorage } from '$lib/utils/storage';
 
   let mnemonicPhrase: string = $state('');
   let hasValidKey = $state(false);
-  let privateKey = $state('');
+  let privateKey: string = $state('');
   let address = $state('');
 
   async function connectWallet() {
-    localStorage.setItem('privateKey', privateKey);
+    CirclesStorage.getInstance().data = {
+      privateKey: privateKey,
+      walletType: 'circles'
+    };
     $wallet = await initializeWallet('circles');
     $circles = new Sdk($wallet!, gnosisConfig);
   }
 
   onMount(async () => {
     $wallet = undefined;
-    privateKey = localStorage.getItem('privateKey')!;
+    privateKey = CirclesStorage.getInstance().privateKey ?? "";
     if (privateKey) {
+      CirclesStorage.getInstance().data = {
+        walletType: 'circles'
+      };
       $wallet = await initializeWallet('circles');
       $circles = new Sdk($wallet!, gnosisConfig);
     }
@@ -29,7 +36,7 @@
 </script>
 
 <div
-  class="w-full flex flex-col items-center min-h-screen p-4 max-w-5xl gap-y-8 mt-20"
+  class="w-full flex flex-col items-center min-h-screen max-w-5xl gap-y-8 mt-20"
 >
   {#if !$wallet?.address || !$circles}
     <h2 class="font-bold text-[28px] md:text-[32px]">

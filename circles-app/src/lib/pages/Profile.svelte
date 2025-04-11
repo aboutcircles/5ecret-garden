@@ -4,7 +4,11 @@
   import { avatar } from '$lib/stores/avatar';
   import CommonConnections from '$lib/components/CommonConnections.svelte';
   import { contacts } from '$lib/stores/contacts';
-  import { type AvatarRow, CirclesQuery, type TrustRelationRow } from '@circles-sdk/data';
+  import {
+    type AvatarRow,
+    CirclesQuery,
+    type TrustRelationRow,
+  } from '@circles-sdk/data';
   import Untrust from '$lib/pages/Untrust.svelte';
   import Trust from '$lib/pages/Trust.svelte';
   import SelectAsset from '$lib/flows/send/2_Asset.svelte';
@@ -13,10 +17,11 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { popupControls } from '$lib/stores/popUp';
   import AddressComponent from '$lib/components/Address.svelte';
-  import type { Address } from '@circles-sdk/utils';
-  import { shortenAddress } from '$lib/utils/shared';
+  import { uint256ToAddress, type Address } from '@circles-sdk/utils';
   import SelectAmount from '$lib/flows/send/3_Amount.svelte';
   import { transitiveTransfer } from '$lib/pages/SelectAsset.svelte';
+  import { getVaultAddress, getVaultBalances } from '$lib/utils/vault';
+  import CollateralTable from '$lib/components/CollateralTable.svelte';
 
   interface Props {
     address: Address | undefined;
@@ -37,11 +42,13 @@
   let mintHandler: Address | undefined = $state();
 
   let trustRow: TrustRelationRow | undefined = $state();
+  let collateralInTreasury: Array<{
+    avatar: Address;
+    amount: bigint; // raw wei from chain
+    amountToRedeem: number;
+  }> = $state([]);
 
-  async function initialize(address?: Address) {
-    if (!address) {
-      return;
-    }
+  async function initialize(address: Address) {
     if (!$circles) {
       return;
     }
@@ -51,22 +58,9 @@
 
     otherAvatar = await $circles.data.getAvatarInfo(address);
 
-    if (!otherAvatar) {
-      profile = {
-        name: shortenAddress(address),
-        description: address,
-      };
-      trustRow = undefined;
-      return;
-    }
+    profile = await getProfile(address);
 
-    profile = await getProfile(otherAvatar.avatar);
-
-    if (otherAvatar?.avatar) {
-      trustRow = $contacts?.data[otherAvatar.avatar]?.row;
-    } else {
-      trustRow = undefined;
-    }
+    trustRow = $contacts?.data[address]?.row;
 
     if (otherAvatar?.type === 'CrcV2_RegisterGroup') {
       // load the members
@@ -81,27 +75,54 @@
         namespace: 'CrcV2',
         table: 'CMGroupCreated',
         columns: ['mintHandler'],
-        filter: [{
-          Type: 'FilterPredicate',
-          FilterType: 'Equals',
-          Column: 'proxy',
-          Value: address
-        }],
+        filter: [
+          {
+            Type: 'FilterPredicate',
+            FilterType: 'Equals',
+            Column: 'proxy',
+            Value: address,
+          },
+        ],
         sortOrder: 'DESC',
         limit: 1,
       });
 
       await findMintHandlerQuery.queryNextPage();
       mintHandler = findMintHandlerQuery.currentPage?.results[0]?.mintHandler;
-      console.log("mintHandler", mintHandler);
+      console.log('mintHandler', mintHandler);
+
+      if (!$circles) return;
+
+      const vaultAddress = await getVaultAddress(
+        $circles.circlesRpc,
+        otherAvatar.avatar
+      );
+      if (!vaultAddress) {
+        collateralInTreasury = [];
+        return;
+      }
+
+      const balancesResult = await getVaultBalances(
+        $circles.circlesRpc,
+        vaultAddress
+      );
+      if (!balancesResult) {
+        collateralInTreasury = [];
+        return;
+      }
+
+      const { columns, rows } = balancesResult;
+      const colId = columns.indexOf('id');
+      const colBal = columns.indexOf('balance');
+
+      // Build up the table data
+      collateralInTreasury = rows.map((row) => ({
+        avatar: uint256ToAddress(BigInt(row[colId])),
+        amount: BigInt(row[colBal]),
+        amountToRedeem: 0, // default 0
+      }));
     } else {
       members = undefined;
-    }
-
-    if (!profile) {
-      profile = {
-        name: otherAvatar?.name ?? address,
-      };
     }
   }
 
@@ -109,11 +130,7 @@
 </script>
 
 <div class="flex flex-col items-center w-full sm:w-[90%] lg:w-3/5 mx-auto">
-  <Avatar
-    view="vertical"
-    clickable={false}
-    address={otherAvatar?.avatar}
-  />
+  <Avatar view="vertical" clickable={false} {address} />
 
   {#if trustRow}
     <span
@@ -122,7 +139,7 @@
         trustRow?.relation === 'trustedBy' ||
         trustRow?.relation === 'mutuallyTrusts'}
     >
-      {formatTrustRelation(trustRow, profile)}
+      {formatTrustRelation(trustRow.relation, profile)}
     </span>
   {:else}
     <span class="text-sm text-gray-500">No relation available</span>
@@ -130,14 +147,14 @@
 
   <div class="my-6 flex flex-row gap-x-2">
     <span class="bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm"
-    >{getTypeString(otherAvatar?.type || '')}</span
+      >{getTypeString(otherAvatar?.type || '')}</span
     >
-    <AddressComponent address={otherAvatar?.avatar || ''} />
+    <AddressComponent address={address ?? '0x0'} />
     <a
       href={'https://gnosisscan.io/address/' + otherAvatar?.avatar}
       target="_blank"
       class="flex items-center justify-center bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm"
-    ><img src="/external.svg" alt="External Link" class="w-4" /></a
+      ><img src="/external.svg" alt="External Link" class="w-4" /></a
     >
   </div>
 
@@ -179,7 +196,7 @@
                 selectedAddress: mintHandler,
                 transitiveOnly: true,
                 selectedAsset: transitiveTransfer(),
-                amount: 0
+                amount: 0,
               },
             },
           });
@@ -301,6 +318,22 @@
       {#if members.length === 0}
         <div>No members</div>
       {/if}
+    </div>
+  {/if}
+  {#if otherAvatar?.type === 'CrcV2_RegisterGroup'}
+    <input
+      type="radio"
+      name="tabs"
+      value="collateral"
+      role="tab"
+      class="tab h-auto"
+      checked
+      aria-label={`Collateral (${collateralInTreasury.length})`}
+    />
+    <div role="tabpanel" class="tab-content mt-8 bg-base-100 border-none">
+      <div class="w-full border-base-300 rounded-box border">
+        <CollateralTable {collateralInTreasury} />
+      </div>
     </div>
   {/if}
 </div>

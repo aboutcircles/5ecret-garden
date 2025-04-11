@@ -51,7 +51,6 @@
     if (!$circles || !$wallet?.address) {
       throw new Error('Circles SDK or wallet not initialized');
     }
-
     safes = await querySafeTransactionService(safeOwnerAddress);
     const [avatarInfo, groupInfo] = await Promise.all([
       $circles.data.getAvatarInfoBatch(safes),
@@ -75,7 +74,7 @@
 </script>
 
 <div
-  class="w-full flex flex-col items-center min-h-screen p-4 max-w-xl gap-y-4 mt-20"
+  class="w-full flex flex-col items-center min-h-screen max-w-xl gap-y-4 mt-20"
 >
   <div class="w-full">
     <button onclick="{() => history.back()}">
@@ -86,7 +85,7 @@
   <p class="font-normal text-black/60 text-base">
     Please select the avatar you want to use from the list below.
   </p>
-  {#if $wallet?.address && $circles && Object.keys(profileBySafe).length > 0}
+  {#if $wallet?.address && $circles}
     {#each safes ?? [] as item (item)}
       <ConnectCircles
         address={item}

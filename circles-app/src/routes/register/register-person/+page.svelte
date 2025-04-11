@@ -40,7 +40,7 @@
 </script>
 
 <div
-  class="w-full flex flex-col p-4 max-w-xl gap-y-4 justify-center mt-28 md:mt-44"
+  class="w-full flex flex-col max-w-xl gap-y-4 justify-center mt-28 md:mt-44"
 >
   <div class="w-full">
     <a href="/register">
