@@ -4,7 +4,7 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import QrCode from '$lib/components/QrCode.svelte';
   import { popupControls } from '$lib/stores/popUp';
-  import type { WalletType } from '$lib/utils/walletType';
+  import { CirclesStorage } from '$lib/utils/storage';
 
   interface Props {
     address: Address | undefined;
@@ -14,15 +14,19 @@
 
   function changeWallet() {
     popupControls.close();
-    const walletType: WalletType | null = localStorage.getItem('walletType') as WalletType | null;
+
+    const walletType = CirclesStorage.getInstance().walletType;
     switch (walletType) {
       case 'metamask':
+      case 'metamask+group':
         goto('/connect-wallet/connect-metamask');
         break;
       case 'safe':
+      case 'safe+group':
         goto('/connect-wallet/connect-safe');
         break;
       case 'circles':
+      case 'circles+group':
         goto('/connect-wallet/import-circles-garden');
         break;
     }

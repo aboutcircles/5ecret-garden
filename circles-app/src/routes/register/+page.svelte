@@ -23,12 +23,6 @@
     recommended="Register"
   />
   <ConnectWallet
-    imgUrl="/group.svg"
-    header="Group"
-    desc="Create a group currency that's backed by individual personal Circles"
-    route="/register/register-group"
-  />
-  <ConnectWallet
     imgUrl="/organization.svg"
     header="Organization"
     desc="Register as an organization if you're a business"
