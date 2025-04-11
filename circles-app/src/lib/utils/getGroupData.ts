@@ -3,9 +3,6 @@ import { CirclesQuery, type PagedQueryParams } from '@circles-sdk/data';
 import type { Sdk } from '@circles-sdk/sdk';
 
 export async function getDailyCmGroupsDataOverTheMonth(sdk: Sdk, group: Address): Promise<{ [date: string]: { memberCount: number, trustedCount: number, timestamp: number } }> {
-    if (!sdk) {
-        return {};
-    }
 
     const oneMonthAgo = new Date();
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
