@@ -22,66 +22,76 @@ export const wallet = writable<SdkContractRunner | undefined>();
 
 export const GNOSIS_CHAIN_ID_DEC = 100n;
 
-export async function initializeWallet(type: WalletType, address?: Address): Promise<SdkContractRunner> {
-  if (type === 'metamask') {
-    const runner = new BrowserProviderContractRunner();
-    await runner.init();
-    return runner;
-  } else if (type === 'safe' && !address) {
-    const runner = new BrowserProviderContractRunner();
-    await runner.init();
-    return runner;
-  } else if (type === 'safe' && address) {
-    const runner = new SafeSdkBrowserContractRunner();
-    await runner.init(address);
-    return runner as SdkContractRunner;
-  } else if (type === 'circles' && !address) {
-    const privateKey = localStorage.getItem('privateKey');
-    if (!privateKey) {
-      throw new Error('Private key not found in localStorage');
-    }
-    const rpcProvider = new JsonRpcProvider(gnosisConfig.circlesRpcUrl);
-    const runner = new PrivateKeyContractRunner(rpcProvider, privateKey);
-    await runner.init();
-    return runner;
-  } else if (type === 'circles' && address) {
-    const privateKey = localStorage.getItem('privateKey');
-    if (!privateKey) {
-      throw new Error('Private key not found in localStorage');
-    }
-    const runner = new SafeSdkPrivateKeyContractRunner(
-      privateKey,
-      gnosisConfig.circlesRpcUrl,
-    );
-    await runner.init(address);
-    return runner as SdkContractRunner;
-  }
-  throw new Error(`Unsupported wallet type: ${type}`);
+export async function initializeWallet(type: WalletType, address: Address = '0x0'): Promise<SdkContractRunner> {
+  localStorage.setItem('walletType', type);
+  console.log('Initializing wallet of type:', type);
+  let runner;
+  switch (type) {
+    case 'injected':
+      runner = new BrowserProviderContractRunner();
+      await runner.init();
+      if (runner.address) {
+        localStorage.setItem('wallet', runner.address);
+      } else {
+        throw new Error('Runner address is undefined');
+      }
+      break;
+    case 'safe':
+      runner = new SafeSdkBrowserContractRunner();
+      await runner.init(address);
+      localStorage.setItem('wallet', address);
+      break;
+    case 'circles':
+      console.log('Initializing Circles wallet');
+      if (address != '0x0') {
+        const privateKey = localStorage.getItem('privateKey');
+        if (!privateKey) {
+          throw new Error('Private key not found in localStorage');
+        }
+        runner = new SafeSdkPrivateKeyContractRunner(
+          privateKey,
+          gnosisConfig.circlesRpcUrl,
+        );
+        await runner.init(address);
+      } else {
+        const privateKey = localStorage.getItem('privateKey');
+        if (!privateKey) {
+          throw new Error('Private key not found in localStorage');
+        }
+        const rpcProvider = new JsonRpcProvider(gnosisConfig.circlesRpcUrl);
+        runner = new PrivateKeyContractRunner(rpcProvider, privateKey);
+        await runner.init();
+      }
+      break;
+    default:
+  } 
+  return runner as SdkContractRunner;
 }
 
 export async function restoreWallet() {
   try {
     let walletType: WalletType = localStorage.getItem('walletType') as WalletType;
     switch (walletType) {
-      case 'metamask':
+      case 'injected':
       case 'safe':
       case 'circles':
         break;
       default:
         console.log('No "walletType" found in localStorage');
-        await goto('/connect-wallet');
+        await clearSession();
         break;
     }
 
+    const savedWalletAddress = localStorage.getItem('wallet') as `0x${string}`;
     const savedAvatar = localStorage.getItem('avatar') as `0x${string}`;
     const restoredWallet = await initializeWallet(
       walletType!,
-      savedAvatar
+      savedWalletAddress
     );
 
     if (!restoredWallet || !restoredWallet.address) {
       console.log('Failed to restore wallet or wallet address is undefined');
-      await goto('/connect-wallet');
+      await clearSession();
       return;
     }
 
@@ -113,6 +123,7 @@ export async function restoreWallet() {
 }
 
 export async function clearSession() {
+  localStorage.clear();
   avatar.set(undefined);
   wallet.set(undefined);
   circles.set(undefined);

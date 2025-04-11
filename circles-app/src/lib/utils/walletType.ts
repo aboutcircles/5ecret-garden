@@ -1,1 +1,1 @@
-export type WalletType = 'safe' | 'metamask' | 'circles';
+export type WalletType = 'safe' | 'injected' | 'circles';

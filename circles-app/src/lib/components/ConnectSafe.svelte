@@ -28,7 +28,7 @@
     `https://safe-transaction-gnosis-chain.safe.global/api/v1/owners/${checksumOwnerAddress}/safes/`;
 
   async function querySafeTransactionService(
-    ownerAddress: string,
+    ownerAddress: string
   ): Promise<Address[]> {
     const checksumAddress = ethers.getAddress(ownerAddress);
     const requestUrl = getSafesByOwnerApiEndpoint(checksumAddress);
@@ -77,7 +77,7 @@
   class="w-full flex flex-col items-center min-h-screen max-w-xl gap-y-4 mt-20"
 >
   <div class="w-full">
-    <button onclick="{() => history.back()}">
+    <button onclick={() => history.back()}>
       <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
     </button>
   </div>
@@ -89,19 +89,17 @@
     {#each safes ?? [] as item (item)}
       <ConnectCircles
         address={item}
-        walletType={walletType}
+        {walletType}
         isRegistered={profileBySafe[item] !== undefined}
         isV1={profileBySafe[item]?.version === 1}
         groups={groupsByOwner[item.toLowerCase()] ?? []}
-        chainId={chainId}
+        {chainId}
       />
     {/each}
 
-    {#if walletType === 'safe'}
-      <div class="text-center">
-        <CreateSafe {onsafecreated} />
-      </div>
-    {/if}
+    <div class="text-center">
+      <CreateSafe {onsafecreated} />
+    </div>
   {:else}
     <WalletLoader name="Safe" />
   {/if}

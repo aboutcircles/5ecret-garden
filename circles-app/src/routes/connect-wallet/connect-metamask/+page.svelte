@@ -23,17 +23,13 @@
   // Connects the wallet and initializes the Circles SDK.
   //
   async function setup(callNo: number = 0) {
-    if (localStorage.getItem('walletType') != "metamask") {
-      localStorage.removeItem('avatar');
-    }
-
-    $wallet = await initializeWallet('metamask');
+    $wallet = await initializeWallet('injected');
 
     if (!$wallet.address) {
       throw new Error('Failed to get wallet address');
     }
 
-    network = await ($wallet as any).provider?.getNetwork();
+    network = await $wallet.provider?.getNetwork();
     if (!network) {
       throw new Error('Failed to get network');
     }
@@ -55,12 +51,9 @@
     $circles = new Sdk($wallet! as SdkContractRunnerWrapper, circlesConfig);
     groupsByOwner = await getCmGroupsByOwnerBatch($circles, [$wallet.address]);
     avatarInfo = await $circles.data.getAvatarInfo($wallet.address);
-
-    localStorage.setItem('walletType', 'metamask');
   }
 
   onMount(async () => {
-    $wallet = undefined;
     await setup();
   });
 </script>

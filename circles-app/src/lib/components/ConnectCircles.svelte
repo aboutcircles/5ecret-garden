@@ -39,7 +39,6 @@
     if ($circles && $wallet) {
       $avatar = await $circles.getAvatar(lowerCaseAddress);
       localStorage.setItem('avatar', lowerCaseAddress);
-      localStorage.setItem('walletType', walletType);
       await goto('/dashboard');
     }
   }
