@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store';
 import { goto } from '$app/navigation';
-import { avatar } from '$lib/stores/avatar';
+import { avatar, isGroup } from '$lib/stores/avatar';
 import { circles } from '$lib/stores/circles';
 import {
   BrowserProviderContractRunner, PrivateKeyContractRunner,
@@ -90,8 +90,10 @@ export async function restoreWallet() {
     let savedGroup: Address | undefined;
     if (walletTypeString.includes('+group')) {
       savedGroup = CirclesStorage.getInstance().group;
+      isGroup.set(true);
     } else {
       CirclesStorage.getInstance().data = { group: undefined };
+      isGroup.set(false);
     }
 
     const restoredWallet = await initializeWallet(
