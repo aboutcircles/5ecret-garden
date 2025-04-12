@@ -1,4 +1,4 @@
-import { avatarState, avatarStore } from '$lib/stores/avatar.svelte';
+import { avatarState } from '$lib/stores/avatar.svelte';
 import {
   createEventStore,
   type NextPageData,
@@ -9,6 +9,7 @@ import {
   CirclesQuery,
   type EventRow,
 } from '@circles-sdk/data';
+import type { Avatar } from '@circles-sdk/sdk';
 import { get, type Readable } from 'svelte/store';
 
 /**
@@ -36,6 +37,7 @@ export function getKeyFromItem<T extends EventRow & { address?: string }>(
  *          a next function for pagination, and an indicator of whether the data stream has ended.
  */
 export async function createCirclesQueryStore<T extends EventRow>(
+  avatar: Avatar,
   circlesQueryFactory: () => Promise<CirclesQuery<T>>,
   refreshOnEvents?: Set<CirclesEventType>
 ): Promise<
@@ -123,7 +125,7 @@ export async function createCirclesQueryStore<T extends EventRow>(
    * This store supports infinite scrolling (pagination) and merges new data with existing data.
    */
   return createEventStore<T[]>(
-    avatarStore,
+    avatar,
     refreshOnEvents || new Set(), // Use the provided events or an empty set
     _initialLoad, // Function to load the initial data
     _handleEvent, // Function to handle event-based updates

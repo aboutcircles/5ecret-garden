@@ -9,9 +9,9 @@ import {
 import { get } from 'svelte/store';
 import { createCirclesQueryStore } from '$lib/stores/query/circlesQueryStore';
 import { circles } from '$lib/stores/circles';
+import type { Avatar } from '@circles-sdk/sdk';
 
 const groupEvents: Set<CirclesEventType> = new Set([]);
-
 export interface CMGroupRow extends EventRow {
   group: string;
   mint: string;
@@ -24,10 +24,10 @@ export interface CMGroupRow extends EventRow {
   trustedCount?: number;
 }
 
-export const createCMGroups = () => {
+export const createCMGroups = (avatar: Avatar) => {
 
-  const $circles = get(circles);
-  if (!$circles) {
+  const circlesInstance = get(circles);
+  if (!circlesInstance) {
     throw new Error('Circles instance not found');
   }
 
@@ -41,8 +41,9 @@ export const createCMGroups = () => {
   };
 
   return createCirclesQueryStore<GroupRow>(
-    async () => new CirclesQuery<GroupRow>($circles.circlesRpc, queryDefinition, [
-      new CalculatedColumn('group', (o: any) =>  (<any>o).proxy),
+    avatar,
+    async () => new CirclesQuery<GroupRow>(circlesInstance.circlesRpc, queryDefinition, [
+      new CalculatedColumn('group', (o: any) => (<any>o).proxy),
       new CalculatedColumn('mint', (o: any) => (<any>o).mint),
       new CalculatedColumn('treasury', async () => ''),
       new CalculatedColumn('symbol', async () => ''),
