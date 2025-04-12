@@ -8,15 +8,18 @@
   import type { AvatarRow } from '@circles-sdk/data';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { popupControls } from '$lib/stores/popUp';
+  import type { Profile } from '@circles-sdk/profiles';
 
   interface Props {
     context?: MigrateToV2Context;
   }
 
   let { context = $bindable({
-    inviter: '0x0',
-    profile: undefined,
-    trustList: [],
+    inviter: undefined,
+    profile: <Profile>{
+      name: ''
+    },
+    trustList: []
   }) }: Props = $props();
   let canSelfMigrate = $state(false);
   let invitations: AvatarRow[] | undefined = $state();
@@ -56,7 +59,7 @@
           <button
             type="button"
             class="text-gray-500 hover:bg-black/5 w-full flex p-2 rounded-lg"
-            onclick={(e) => selectInvitation(invitation.avatar)}
+            onclick={() => selectInvitation(invitation.avatar)}
             onkeydown={(e) => {
               if (e.key === 'Enter' || e.key === ' ')
                 selectInvitation(invitation.avatar);
