@@ -5,7 +5,7 @@ import type {
   CirclesEventType,
   TokenBalanceRow,
 } from '@circles-sdk/data';
-import { createEventStore } from '$lib/stores/eventStores/eventStoreFactory';
+import { createEventStore } from '$lib/stores/eventStores/eventStoreFactory.svelte';
 
 const refreshOnEvents: Set<CirclesEventType> = new Set<CirclesEventType>([
   'CrcV2_TransferBatch',
@@ -50,7 +50,7 @@ const _handleNextPage = async (currentData: TokenBalanceRow[]) => {
 };
 
 export const circlesBalances = createEventStore<TokenBalanceRow[]>(
-  avatarState.avatar,
+  { avatar: avatarState.avatar },
   refreshOnEvents, // Use the provided events or an empty set
   _initialLoad, // Function to load the initial data
   _handleEvent, // Function to handle event-based updates

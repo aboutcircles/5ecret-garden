@@ -1,11 +1,11 @@
 import type { Readable } from 'svelte/store';
-import { derived } from 'svelte/store';
+import { derived, readable } from 'svelte/store';
 import type {
   CirclesEvent,
   CirclesEventType,
   TransactionHistoryRow,
 } from '@circles-sdk/data';
-import type { avatar } from '$lib/stores/avatar';
+import type { Avatar } from '@circles-sdk/sdk';
 
 // Type Definitions
 
@@ -62,15 +62,13 @@ export type NextPageFunction<T> = (currentData: T) => Promise<NextPageData<T>>;
  * @returns A Svelte-readable store that holds the data, supports paginated data loading, and updates on events.
  */
 export function createEventStore<T>(
-  avatarStore: typeof avatar,
+  avatarState: { avatar: Avatar | undefined },
   eventTypes: Set<CirclesEventType>,
   initialLoad: LoadFunction<T>,
   handleEvent: EventHandler<T>,
   handleNextPage: NextPageFunction<T>,
   initialData: T,
-  dataComparator?: T extends Array<infer U>
-    ? (a: U, b: U) => number
-    : undefined,
+  dataComparator?: T extends Array<infer U> ? (a: U, b: U) => number : undefined,
   debounceDelay: number = 50
 ): Readable<{ data: T; next: () => Promise<boolean>; ended: boolean }> {
   let timeout: any;
@@ -78,19 +76,18 @@ export function createEventStore<T>(
   let finished: boolean = false;
   let storeData: T = initialData; // External variable to store data
 
-  return derived<
-    typeof avatarStore,
-    {
-      data: T;
-      next: () => Promise<boolean>;
-      ended: boolean;
-    }
-  >(avatarStore, ($avatar, set) => {
-    // TODO: The 'initialPromise' feels like a hack to ensure the initial data is loaded before someone calls next()
-    let resolveInitialLoad: ((value?: unknown) => void) | undefined = undefined;
-    const initialPromise = new Promise(
-      (resolve) => (resolveInitialLoad = resolve)
-    );
+  const avatarReadable = readable(avatarState.avatar, (set) => {
+    const interval = setInterval(() => {
+      set(avatarState.avatar!);
+    }, 50);
+    return () => clearInterval(interval);
+  });
+
+  return derived(avatarReadable, ($avatar, set) => {
+    let resolveInitialLoad: (() => void) | undefined;
+    const initialPromise = new Promise<void>((resolve) => {
+      resolveInitialLoad = resolve;
+    });
 
     function setData(data: T) {
       storeData = data;
@@ -99,7 +96,6 @@ export function createEventStore<T>(
       if (Array.isArray(storeData) && dataComparator) {
         storeData = storeData.sort(dataComparator);
       }
-
       set({ data: storeData, next: next, ended: finished });
     }
 
@@ -127,7 +123,6 @@ export function createEventStore<T>(
      */
     const processEvents = async () => {
       if (!lastEvent) return;
-
       const data = await handleEvent(lastEvent, storeData);
       setData(data);
       lastEvent = null; // Clear the last event
@@ -140,9 +135,7 @@ export function createEventStore<T>(
      */
     const eventHandler = (event: CirclesEvent) => {
       if (!eventTypes.has(event.$event)) return;
-
       lastEvent = event;
-
       if (timeout) {
         clearTimeout(timeout);
       }
@@ -164,11 +157,12 @@ export function createEventStore<T>(
     initialLoad()
       .then((data) => setData(data))
       .then(() => resolveInitialLoad?.())
-      .then(() => $avatar.events.subscribe(eventHandler))
+      .then(() => $avatar?.events?.subscribe(eventHandler))
       .catch((e) => console.error('Failed to initialize store', e));
 
     return () => {
-      $avatar.unsubscribeFromEvents();
+      $avatar?.unsubscribeFromEvents?.();
     };
   });
 }
+

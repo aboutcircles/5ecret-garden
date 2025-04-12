@@ -18,10 +18,10 @@
   import Send from '$lib/flows/send/1_To.svelte';
   import { onMount } from 'svelte';
   import { tasks } from '$lib/utils/tasks';
-  import { profile } from '$lib/stores/profile';
   import { popupControls, popupState } from '$lib/stores/popUp';
   import PopUp from '$lib/components/PopUp.svelte';
   import ManageGroupMembers from '$lib/flows/manageGroupMembers/1_manageGroupMembers.svelte';
+  import { getProfile } from '$lib/utils/profile';
 
   interface Props {
     children?: import('svelte').Snippet;
@@ -114,14 +114,25 @@
       ];
     }
   });
+
+  $effect(() => {
+		const address = avatarState.avatar?.avatarInfo?.avatar;
+		if (address) {
+			getProfile(address).then((newProfile) => {
+				avatarState.profile = newProfile;
+			});
+		} else {
+			avatarState.profile = undefined;
+		}
+	});
 </script>
 
 {#if avatarState.avatar}
   <DefaultHeader
-    text={profile?.name}
+    text={avatarState.profile?.name}
     address={avatarState.avatar.address}
-    logo={profile?.previewImageUrl?.trim()
-      ? profile.previewImageUrl
+    logo={avatarState.profile?.previewImageUrl?.trim()
+      ? avatarState.profile.previewImageUrl
       : '/logo.svg'}
     homeLink="/dashboard"
     {quickAction}

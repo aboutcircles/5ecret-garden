@@ -5,14 +5,12 @@
   import ActionButton from '$lib/components/ActionButton.svelte';
   import { canMigrate } from '$lib/guards/canMigrate';
   import { type Profile } from '@circles-sdk/profiles';
-  import { profile } from '$lib/stores/profile';
   import { runTask } from '$lib/utils/tasks';
   import MigrateToV2 from '$lib/flows/migrateToV2/1_GetInvited.svelte';
   import { popupControls } from '$lib/stores/popUp';
   import GroupSetting from './editors/GroupSetting.svelte';
   import { ethers } from 'ethers';
   import ProfileEditor from '$lib/components/ProfileEditor.svelte';
-  import { onMount } from 'svelte';
 
   async function saveProfileData(profile: Profile): Promise<string> {
     if (!$circles?.profiles) {
@@ -59,8 +57,8 @@
   }
 
   $effect(() => {
-    if ($profile) {
-      newProfile = $profile;
+    if (avatarState.profile) {
+      newProfile = avatarState.profile;
     }
   });
 
@@ -111,7 +109,7 @@
         <div>
           <ActionButton
             action={saveProfile}
-            disabled={profilesEqual(newProfile, $profile)}
+            disabled={profilesEqual(newProfile, avatarState.profile)}
             >Save
           </ActionButton>
         </div>
