@@ -5,6 +5,7 @@ import {
 } from '@circles-sdk/data';
 import { createCirclesQueryStore } from '$lib/stores/query/circlesQueryStore';
 import { writable } from 'svelte/store';
+import type { Avatar } from '@circles-sdk/sdk';
 
 const transferEvents: Set<CirclesEventType> = new Set([
   'CrcV1_HubTransfer',
@@ -60,34 +61,50 @@ const _transactionHistory = writable<{
   ended: boolean;
 }>({ data: [], next: async () => false, ended: false });
 
-$effect(() => {
-  const $avatar = avatarState.avatar;
+export const initTransactionHistoryStore = ($avatar: Avatar) => {
+	if (currentStoreUnsubscribe) {
+		currentStoreUnsubscribe();
+		currentStoreUnsubscribe = undefined;
+	}
 
-  if ($avatar) {
-    initStore($avatar);
+	currentQuery = undefined;
+	transactionHistoryStore = undefined;
 
-    const thisQuery = currentQuery;
-    thisQuery?.then((store) => {
-      if (thisQuery === currentQuery) {
-        const unsubscribe = store.subscribe((value: { data: TransactionHistoryRow[]; next: () => Promise<boolean>; ended: boolean; }) => {
-          _transactionHistory.set(value);
-        });
-        currentStoreUnsubscribe = unsubscribe;
-      }
-    });
-  } else {
-    if (currentStoreUnsubscribe) {
-      currentStoreUnsubscribe();
-      currentStoreUnsubscribe = undefined;
-    }
-    currentQuery = undefined;
-    transactionHistoryStore = undefined;
-    _transactionHistory.set({
-      data: [],
-      next: async () => false,
-      ended: true,
-    });
-  }
-});
+	if ($avatar) {
+		currentQuery = createCirclesQueryStore<TransactionHistoryRow>(
+			() => $avatar.getTransactionHistory(25),
+			transferEvents
+		);
+		transactionHistoryStore = currentQuery;
+
+		_transactionHistory.set({
+			data: [],
+			next: async () => false,
+			ended: false,
+		});
+
+		const thisQuery = currentQuery;
+		thisQuery?.then((store) => {
+			if (thisQuery === currentQuery) {
+				const unsubscribe = store.subscribe(
+					(value: {
+						data: TransactionHistoryRow[];
+						next: () => Promise<boolean>;
+						ended: boolean;
+					}) => {
+						_transactionHistory.set(value);
+					}
+				);
+				currentStoreUnsubscribe = unsubscribe;
+			}
+		});
+	} else {
+		_transactionHistory.set({
+			data: [],
+			next: async () => false,
+			ended: true,
+		});
+	}
+};
 
 export const transactionHistory = _transactionHistory;

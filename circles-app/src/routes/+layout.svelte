@@ -22,6 +22,7 @@
   import PopUp from '$lib/components/PopUp.svelte';
   import ManageGroupMembers from '$lib/flows/manageGroupMembers/1_manageGroupMembers.svelte';
   import { getProfile } from '$lib/utils/profile';
+  import { initTransactionHistoryStore } from '$lib/stores/transactionHistory';
 
   interface Props {
     children?: import('svelte').Snippet;
@@ -115,6 +116,7 @@
     }
   });
 
+  // init profile state
   $effect(() => {
 		const address = avatarState.avatar?.avatarInfo?.avatar;
 		if (address) {
@@ -124,6 +126,13 @@
 		} else {
 			avatarState.profile = undefined;
 		}
+	});
+
+  // init transaction history store
+  $effect(() => {
+    if (avatarState.avatar) {
+      initTransactionHistoryStore(avatarState.avatar);
+    }
 	});
 </script>
 
