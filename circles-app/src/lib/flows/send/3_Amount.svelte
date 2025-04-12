@@ -5,7 +5,7 @@
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import { onMount } from 'svelte';
   import { circles } from '$lib/stores/circles';
-  import { avatar } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import { TransitiveTransferTokenAddress } from '$lib/pages/SelectAsset.svelte';
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import PathExplorer from '$lib/components/PathExplorer.svelte';
@@ -54,7 +54,7 @@
     if (
       context.selectedAsset?.tokenAddress != TransitiveTransferTokenAddress ||
       !$circles ||
-      !$avatar ||
+      !avatarState.avatar ||
       !context.selectedAddress
     ) {
       return;
@@ -65,14 +65,14 @@
 
     try {
       const bigNumber = '99999999999999999999999999999999999';
-      const p = $avatar?.avatarInfo?.version === 1
+      const p = avatarState.avatar?.avatarInfo?.version === 1
         ? await $circles.v1Pathfinder?.getPath(
-          $avatar.address,
+          avatarState.avatar.address,
           context.selectedAddress,
           bigNumber
         )
         : await $circles.v2Pathfinder?.getPath(
-          $avatar.address,
+          avatarState.avatar.address,
           context.selectedAddress,
           bigNumber,
           true
@@ -86,7 +86,7 @@
       path = p;
 
       maxAmountCircles = parseFloat(ethers.formatEther(path.maxFlow.toString()));
-      if ($avatar?.avatarInfo?.version === 1) {
+      if (avatarState.avatar?.avatarInfo?.version === 1) {
         maxAmountCircles = crcToTc(new Date(), BigInt(path.maxFlow));
       }
 
@@ -99,9 +99,9 @@
       // Otherwise, pathfinding succeeded
       showPathsSection = true;
 
-      const balances = await $avatar.getBalances();
+      const balances = await avatarState.avatar.getBalances();
       const sourceEdges = path.transfers.filter(
-        (edge) => edge.from === $avatar.address,
+        (edge) => edge.from === avatarState.avatar?.address,
       );
 
       // Identify "dead" balances not used in the path
@@ -167,7 +167,7 @@
     {:else}
       <!-- Attach data UI -->
       <div class="flex justify-end space-x-2 mt-6">
-        {#if $avatar?.avatarInfo?.version === 2 && !context.selectedAsset.isErc20}
+        {#if avatarState.avatar?.avatarInfo?.version === 2 && !context.selectedAsset.isErc20}
           <button
             type="button"
             class="btn btn-outline max-sm:w-full rounded-md mt-8 md:mt-2"

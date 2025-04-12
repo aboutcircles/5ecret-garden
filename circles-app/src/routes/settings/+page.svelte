@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { avatar, isGroup } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import { clearSession, wallet } from '$lib/stores/wallet';
   import { circles } from '$lib/stores/circles';
   import ActionButton from '$lib/components/ActionButton.svelte';
@@ -38,7 +38,7 @@
   }
 
   async function stopV1() {
-    const v1TokenAddress = $avatar?.avatarInfo?.v1Token;
+    const v1TokenAddress = avatarState.avatar?.avatarInfo?.v1Token;
     if (!$wallet || !v1TokenAddress) {
       throw new Error('Wallet or v1 token not available');
     }
@@ -73,7 +73,7 @@
         if (!$circles?.nameRegistry) {
           throw new Error('Name registry not available');
         }
-        await $avatar!.updateMetadata(cid);
+        await avatarState.avatar!.updateMetadata(cid);
       })().then(() => {
         window.location.reload();
       }),
@@ -104,10 +104,10 @@
     <div class="flex flex-col w-full gap-y-4">
       <ProfileEditor
         bind:profile={newProfile}
-        showCustomizableFields={$avatar?.avatarInfo?.version === 2}
+        showCustomizableFields={avatarState.avatar?.avatarInfo?.version === 2}
       />
 
-      {#if $avatar?.avatarInfo?.version === 2}
+      {#if avatarState.avatar?.avatarInfo?.version === 2}
         <div>
           <ActionButton
             action={saveProfile}
@@ -118,15 +118,15 @@
       {/if}
     </div>
 
-    {#if $isGroup}
+    {#if avatarState.isGroup}
       <div class="w-full pt-2 border-t">
         <h2 class="font-bold">Advanced Group Settings</h2>
         <GroupSetting />
       </div>
     {/if}
 
-    {#if $avatar?.avatarInfo && canMigrate($avatar.avatarInfo)}
-      {#if $avatar?.avatarInfo?.version === 1}
+    {#if avatarState.avatar?.avatarInfo && canMigrate(avatarState.avatar.avatarInfo)}
+      {#if avatarState.avatar?.avatarInfo?.version === 1}
         <div class="w-full pt-2 border-t">
           <h2 class="text-lg font-medium">Circles V2</h2>
           <div class="mt-3">
@@ -136,7 +136,7 @@
           </div>
         </div>
       {/if}
-      {#if $avatar?.avatarInfo?.v1Token && !$avatar?.avatarInfo?.v1Stopped}
+      {#if avatarState.avatar?.avatarInfo?.v1Token && !avatarState.avatar?.avatarInfo?.v1Stopped}
         <div class="w-full pt-2 border-t">
           <h2 class="text-lg font-medium">Circles V1</h2>
           <div class="mt-3">

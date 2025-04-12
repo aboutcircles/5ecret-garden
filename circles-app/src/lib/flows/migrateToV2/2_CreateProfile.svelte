@@ -4,7 +4,7 @@
   import type { MigrateToV2Context } from '$lib/flows/migrateToV2/context';
   import MigrateContacts from './3_MigrateContacts.svelte';
   import { onMount } from 'svelte';
-  import { avatar } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import { getProfile } from '$lib/utils/profile';
   import { popupControls } from '$lib/stores/popUp';
 
@@ -35,10 +35,10 @@
   };
 
   onMount(async () => {
-    if (!$avatar?.address) {
+    if (!avatarState.avatar?.address) {
       throw new Error('Avatar store not initialized');
     }
-    const currentProfile = await getProfile($avatar.address);
+    const currentProfile = await getProfile(avatarState.avatar.address);
 
     let previewImageUrl = currentProfile.previewImageUrl ?? '';
 

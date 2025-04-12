@@ -4,7 +4,7 @@
   import { getTimeAgo } from '$lib/utils/shared';
   import type { TransactionHistoryRow } from '@circles-sdk/data';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import { avatar } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
 
   interface Props {
     item: TransactionHistoryRow;
@@ -71,13 +71,13 @@
   }
 
   run(() => {
-    if ($avatar) {
+    if (avatarState.avatar) {
       const result = parseEventDetails(item.events);
       tags = result.tags.join(', ');
       netCircles = item.circles;
 
-      counterpartyAddress = getCounterpartyAddress($avatar.address).toLowerCase();
-      badgeUrl = getBadge($avatar.address);
+      counterpartyAddress = getCounterpartyAddress(avatarState.avatar.address).toLowerCase();
+      badgeUrl = getBadge(avatarState.avatar.address);
     }
   });
 </script>
@@ -87,7 +87,7 @@
   target="_blank"
   href={'https://gnosisscan.io/tx/' + item.transactionHash}
 >
-  {#if $avatar}
+  {#if avatarState.avatar}
     <div>
       <Avatar
         address={counterpartyAddress}
@@ -98,7 +98,7 @@
       />
     </div>
     <div class="col text-right">
-      {#if item.from.toLowerCase() === $avatar.address.toLowerCase()}
+      {#if item.from.toLowerCase() === avatarState.avatar.address.toLowerCase()}
         <span class="text-red-500 font-bold">
           {#if netCircles.toFixed(2) === "0.00"}
                     &lt; 0.01

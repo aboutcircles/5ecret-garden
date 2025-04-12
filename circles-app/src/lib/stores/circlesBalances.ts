@@ -1,5 +1,5 @@
 import { get } from 'svelte/store';
-import { avatar } from '$lib/stores/avatar';
+import { avatarState } from '$lib/stores/avatar.svelte';
 import type {
   CirclesEvent,
   CirclesEventType,
@@ -21,7 +21,7 @@ const refreshOnEvents: Set<CirclesEventType> = new Set<CirclesEventType>([
 ] as CirclesEventType[]);
 
 const _initialLoad = async () => {
-  const avatarInstance = get(avatar);
+  const avatarInstance = avatarState.avatar;
   if (!avatarInstance) {
     return [];
   }
@@ -37,7 +37,7 @@ const _handleEvent = async (
     return currentData;
   }
 
-  const avatarInstance = get(avatar);
+  const avatarInstance = avatarState.avatar;
   if (!avatarInstance) {
     return [];
   }
@@ -50,7 +50,7 @@ const _handleNextPage = async (currentData: TokenBalanceRow[]) => {
 };
 
 export const circlesBalances = createEventStore<TokenBalanceRow[]>(
-  avatar,
+  avatarState.avatar,
   refreshOnEvents, // Use the provided events or an empty set
   _initialLoad, // Function to load the initial data
   _handleEvent, // Function to handle event-based updates

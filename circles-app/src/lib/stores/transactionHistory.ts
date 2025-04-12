@@ -1,4 +1,4 @@
-import { avatar } from '$lib/stores/avatar';
+import { avatarState } from '$lib/stores/avatar.svelte';
 import {
   type CirclesEventType,
   type TransactionHistoryRow,
@@ -60,22 +60,18 @@ const _transactionHistory = writable<{
   ended: boolean;
 }>({ data: [], next: async () => false, ended: false });
 
-avatar.subscribe(($avatar) => {
+$effect(() => {
+  const $avatar = avatarState.avatar;
+
   if ($avatar) {
     initStore($avatar);
 
     const thisQuery = currentQuery;
     thisQuery?.then((store) => {
       if (thisQuery === currentQuery) {
-        const unsubscribe = store.subscribe(
-          (value: {
-            data: TransactionHistoryRow[];
-            next: () => Promise<boolean>;
-            ended: boolean;
-          }) => {
-            _transactionHistory.set(value);
-          }
-        );
+        const unsubscribe = store.subscribe((value: { data: TransactionHistoryRow[]; next: () => Promise<boolean>; ended: boolean; }) => {
+          _transactionHistory.set(value);
+        });
         currentStoreUnsubscribe = unsubscribe;
       }
     });

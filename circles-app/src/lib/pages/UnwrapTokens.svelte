@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { avatar } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import { circles } from '$lib/stores/circles';
   import { ethers } from 'ethers';
   import BalanceRow from '$lib/components/BalanceRow.svelte';
@@ -21,14 +21,14 @@
     if (!tokenInfo) {
       return;
     }
-    if (!$avatar) {
+    if (!avatarState.avatar) {
       throw new Error('Avatar not loaded');
     }
 
     if (tokenInfo.type === 'CrcV2_ERC20WrapperDeployed_Inflationary') {
       runTask({
         name: `Unwrap ${roundToDecimals(amount)} static tokens ...`,
-        promise: $avatar.unwrapInflationErc20(
+        promise: avatarState.avatar.unwrapInflationErc20(
           asset.tokenAddress,
           BigInt(ethers.parseEther(amount.toString()))
         ),
@@ -36,7 +36,7 @@
     } else if (tokenInfo.type === 'CrcV2_ERC20WrapperDeployed_Demurraged') {
       runTask({
         name: `Unwrap ${roundToDecimals(amount)} tokens ...`,
-        promise: $avatar.unwrapDemurrageErc20(
+        promise: avatarState.avatar.unwrapDemurrageErc20(
           asset.tokenAddress,
           BigInt(ethers.parseEther(amount.toString()))
         ),

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { run } from 'svelte/legacy';
 
-  import { avatar } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import { circles } from '$lib/stores/circles';
   import { type Address, uint256ToAddress } from '@circles-sdk/utils';
   import ActionButton from '$lib/components/ActionButton.svelte';
@@ -130,7 +130,7 @@
     });
 
     const item = collateralInTreasury.find(
-      (item) => item.avatar === $avatar?.address
+      (item) => item.avatar === avatarState.avatar?.address
     );
 
     if (item) {
@@ -139,7 +139,7 @@
   }
 
   async function redeem() {
-    if (!$avatar) return;
+    if (!avatarState.avatar) return;
 
     // Build the arrays:
     //   1) All collateral addresses
@@ -162,7 +162,7 @@
     );
 
     // Now call groupRedeem with those arrays
-    await $avatar.groupRedeem(
+    await avatarState.avatar.groupRedeem(
       asset.tokenOwner,
       collateralAddresses,
       redeemAmounts

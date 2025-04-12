@@ -1,13 +1,14 @@
 import { derived, type Readable } from 'svelte/store';
-import { avatar } from '$lib/stores/avatar';
+import { avatarState } from '$lib/stores/avatar.svelte';
 import { getProfile } from '$lib/utils/profile';
 import type { Profile } from '@circles-sdk/profiles';
 
-export const profile: Readable<Profile | undefined> = derived(
-  avatar,
-  ($avatar, set) => {
-    if ($avatar) {
-      getProfile($avatar?.avatarInfo?.avatar ?? '0x0').then(set);
-    }
+export let profile: Profile | undefined = $state();
+
+$effect(() => {
+  if (avatarState.avatar) {
+    getProfile(avatarState.avatar?.avatarInfo?.avatar ?? '0x0').then((newProfile) => {
+      profile = newProfile;
+    });
   }
-);
+});

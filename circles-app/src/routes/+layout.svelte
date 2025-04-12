@@ -10,7 +10,7 @@
   import '../app.css';
 
   import DefaultHeader from '$lib/components/DefaultHeader.svelte';
-  import { avatar, isGroup } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import { clearSession, restoreWallet } from '$lib/stores/wallet';
   import { canMigrate } from '$lib/guards/canMigrate';
   import UpdateBanner from '$lib/components/UpdateBanner.svelte';
@@ -33,7 +33,7 @@
     '/dashboard': {
       name: 'Send',
       icon: '/send.svg',
-      action: $isGroup
+      action: avatarState.isGroup
         ? undefined
         : () => {
             popupControls.open({
@@ -44,10 +44,10 @@
           },
     },
     '/contacts': {
-      name: $isGroup ? 'Manage members' : 'Add Contact',
+      name: avatarState.isGroup ? 'Manage members' : 'Add Contact',
       icon: '/add-contact.svg',
       action: () => {
-        if ($isGroup) {
+        if (avatarState.isGroup) {
           popupControls.open({
             title: 'Manage members',
             component: ManageGroupMembers,
@@ -65,7 +65,7 @@
     '/groups': {
       name: 'Send',
       icon: '/send.svg',
-      action: $isGroup
+      action: avatarState.isGroup
         ? undefined
         : () => {
           popupControls.open({
@@ -105,23 +105,23 @@
   });
 
   $effect(() => {
-    if ($avatar) {
+    if (avatarState.avatar) {
       menuItems = [
         { name: 'Dashboard', link: '/dashboard' },
         { name: 'Contacts', link: '/contacts' },
-        ...(!$isGroup ? [{ name: 'Groups', link: '/groups' }] : []),
+        ...(!avatarState.isGroup ? [{ name: 'Groups', link: '/groups' }] : []),
         { name: 'Settings', link: '/settings' },
       ];
     }
   });
 </script>
 
-{#if $avatar}
+{#if avatarState.avatar}
   <DefaultHeader
-    text={$profile?.name}
-    address={$avatar.address}
-    logo={$profile?.previewImageUrl?.trim()
-      ? $profile.previewImageUrl
+    text={profile?.name}
+    address={avatarState.avatar.address}
+    logo={profile?.previewImageUrl?.trim()
+      ? profile.previewImageUrl
       : '/logo.svg'}
     homeLink="/dashboard"
     {quickAction}
@@ -133,7 +133,7 @@
 {/if}
 
 <main class="relative w-full h-full bg-white overflow-hidden font-dmSans">
-  {#if $avatar?.avatarInfo && canMigrate($avatar.avatarInfo) && $page.route.id !== '/migrate-to-v2'}
+  {#if avatarState.avatar?.avatarInfo && canMigrate(avatarState.avatar.avatarInfo) && $page.route.id !== '/migrate-to-v2'}
     <UpdateBanner />
     <div class="h-20"></div>
   {/if}

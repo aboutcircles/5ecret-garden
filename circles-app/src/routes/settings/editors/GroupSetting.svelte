@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { avatar } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
 
   let serviceAddress: `0x${string}` = $state('0x0');
   let mintHandlerAddress: `0x${string}` = $state('0x0');
@@ -8,11 +8,11 @@
 
   onMount(async () => {
     try {
-      if ($avatar === undefined) throw new Error('Avatar not initialized');
+      if (avatarState.avatar === undefined) throw new Error('Avatar not initialized');
 
-      serviceAddress = await $avatar?.service();
-      mintHandlerAddress = await $avatar?.mintHandler();
-      redemptionHandlerAddress = await $avatar?.redemptionHandler();
+      serviceAddress = await avatarState.avatar?.service();
+      mintHandlerAddress = await avatarState.avatar?.mintHandler();
+      redemptionHandlerAddress = await avatarState.avatar?.redemptionHandler();
     } catch (error) {
       console.error('Error fetching contract data:', error);
     }
@@ -20,7 +20,7 @@
 
   async function handleSetService() {
     try {
-      await $avatar?.setService(serviceAddress);
+      await avatarState.avatar?.setService(serviceAddress);
     } catch (error) {
       console.error('Failed to set service address:', error);
     }
@@ -28,7 +28,7 @@
 
   async function handleSetMintHandler() {
     try {
-      await $avatar?.setMintHandler(mintHandlerAddress);
+      await avatarState.avatar?.setMintHandler(mintHandlerAddress);
     } catch (error) {
       console.error('Failed to set mint handler address:', error);
     }
@@ -36,7 +36,7 @@
 
   async function handleSetRedemptionHandler() {
     try {
-      await $avatar?.setRedemptionHandler(redemptionHandlerAddress);
+      await avatarState.avatar?.setRedemptionHandler(redemptionHandlerAddress);
     } catch (error) {
       console.error('Failed to set redemption handler address:', error);
     }

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { avatar } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import { runTask } from '$lib/utils/tasks';
   import { shortenAddress } from '$lib/utils/shared';
   import { popupControls } from '$lib/stores/popUp';
@@ -11,12 +11,12 @@
   let { address }: Props = $props();
 
   async function invite() {
-    if (!$avatar) {
+    if (!avatarState.avatar) {
       throw new Error('Avatar store not available');
     }
     runTask({
       name: `Inviting ${shortenAddress(address)} ...`,
-      promise: $avatar!.inviteHuman(address),
+      promise: avatarState.avatar!.inviteHuman(address),
     });
     popupControls.close();
   }

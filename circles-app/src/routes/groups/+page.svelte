@@ -4,7 +4,6 @@
   import type { Readable } from 'svelte/store';
   import type { EventRow, GroupRow } from '@circles-sdk/data';
   import GroupRowView from './GroupRowView.svelte';
-  import { avatar } from '$lib/stores/avatar';
 
   let groups: Readable<{
     data: EventRow[];
@@ -12,11 +11,11 @@
     ended: boolean;
   }> = $state();
 
-  avatar.subscribe(async ($avatar) => {
-    if ($avatar) {
-      groups = await createCMGroups();
-    }
-  }); 
+  $effect(() => {
+    createCMGroups().then((result) => {
+      groups = result;
+    });
+  });
 </script>
 
 <div

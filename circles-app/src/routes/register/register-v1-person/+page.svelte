@@ -1,7 +1,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import ActionButton from '$lib/components/ActionButton.svelte';
-  import { avatar } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import { circles } from '$lib/stores/circles';
   import type { Avatar } from '@circles-sdk/sdk';
 
@@ -11,7 +11,7 @@
     }
 
     //TODO: why need to bind it as Avatar
-    $avatar = await $circles.registerHuman() as Avatar;
+    avatarState.avatar = await $circles.registerHuman() as Avatar;
 
     await goto('/dashboard');
   }

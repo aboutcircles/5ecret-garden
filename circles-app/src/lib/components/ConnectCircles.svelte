@@ -1,6 +1,6 @@
 <script lang="ts">
   import { initializeWallet, wallet } from '$lib/stores/wallet';
-  import { avatar, isGroup } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import { circles } from '$lib/stores/circles';
   import { Sdk, type CirclesConfig } from '@circles-sdk/sdk';
   import { goto } from '$app/navigation';
@@ -40,7 +40,7 @@
 
     if ($circles && $wallet) {
       const avatarToLoad = lowerCaseGroupAddress ?? lowerCaseAvatarAddress;
-      $avatar = await $circles.getAvatar(avatarToLoad);
+      avatarState.avatar = await $circles.getAvatar(avatarToLoad);
 
       if (lowerCaseGroupAddress) {
         CirclesStorage.getInstance().data = {
@@ -48,13 +48,13 @@
           avatar: lowerCaseAvatarAddress,
           group: lowerCaseGroupAddress,
         };
-        $isGroup = true;
+        avatarState.isGroup = true;
       } else {
         CirclesStorage.getInstance().data = {
           walletType: walletType,
           avatar: lowerCaseAvatarAddress,
         };
-        $isGroup = false;
+        avatarState.isGroup = false;
       }
       await goto('/dashboard');
     }

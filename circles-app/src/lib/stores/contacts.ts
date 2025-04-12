@@ -1,5 +1,5 @@
 import { get } from 'svelte/store';
-import { avatar } from '$lib/stores/avatar';
+import { avatarState } from '$lib/stores/avatar.svelte';
 import type {
   AvatarRow,
   CirclesEventType,
@@ -34,30 +34,27 @@ export const contacts = writable<{
   next: () => Promise<boolean>;
   ended: boolean;
 }>({ data: {}, next: async () => false, ended: false });
-
-avatar.subscribe(($avatar) => {
-  if ($avatar) {
-    if (currentStoreUnsubscribe) {
-      currentStoreUnsubscribe();
-    }
-
-    currentQuery = createContactsQueryStore($avatar.address, refreshOnEvents);
-    currentQuery.then((store) => {
-      currentStoreUnsubscribe = store.subscribe(contacts.set);
-    });
-  } else {
-    if (currentStoreUnsubscribe) {
-      currentStoreUnsubscribe();
-      currentStoreUnsubscribe = undefined;
-    }
-    currentQuery = undefined;
-    contacts.set({
-      data: {},
-      next: async () => false,
-      ended: true,
-    });
+if (avatarState.avatar) {
+  if (currentStoreUnsubscribe) {
+    currentStoreUnsubscribe();
   }
-});
+
+  currentQuery = createContactsQueryStore(avatarState.avatar.address, refreshOnEvents);
+  currentQuery.then((store) => {
+    currentStoreUnsubscribe = store.subscribe(contacts.set);
+  });
+} else {
+  if (currentStoreUnsubscribe) {
+    currentStoreUnsubscribe();
+    currentStoreUnsubscribe = undefined;
+  }
+  currentQuery = undefined;
+  contacts.set({
+    data: {},
+    next: async () => false,
+    ended: true,
+  });
+}
 
 async function enrichContactData(
   rows: TrustRelationRow[]
