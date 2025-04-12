@@ -23,6 +23,8 @@
   import ManageGroupMembers from '$lib/flows/manageGroupMembers/1_manageGroupMembers.svelte';
   import { getProfile } from '$lib/utils/profile';
   import { initTransactionHistoryStore } from '$lib/stores/transactionHistory';
+  import { initContactStore } from '$lib/stores/contacts';
+  import { initBalanceStore } from '$lib/stores/circlesBalances';
 
   interface Props {
     children?: import('svelte').Snippet;
@@ -69,12 +71,12 @@
       action: avatarState.isGroup
         ? undefined
         : () => {
-          popupControls.open({
-            title: 'Send Circles',
-            component: Send,
-            props: {},
-          });
-        },
+            popupControls.open({
+              title: 'Send Circles',
+              component: Send,
+              props: {},
+            });
+          },
     },
     '/register': {
       name: 'Disconnect',
@@ -118,22 +120,24 @@
 
   // init profile state
   $effect(() => {
-		const address = avatarState.avatar?.avatarInfo?.avatar;
-		if (address) {
-			getProfile(address).then((newProfile) => {
-				avatarState.profile = newProfile;
-			});
-		} else {
-			avatarState.profile = undefined;
-		}
-	});
+    const address = avatarState.avatar?.avatarInfo?.avatar;
+    if (address) {
+      getProfile(address).then((newProfile) => {
+        avatarState.profile = newProfile;
+      });
+    } else {
+      avatarState.profile = undefined;
+    }
+  });
 
   // init transaction history store
   $effect(() => {
     if (avatarState.avatar) {
       initTransactionHistoryStore(avatarState.avatar);
+      initContactStore(avatarState.avatar);
+      initBalanceStore(avatarState.avatar);
     }
-	});
+  });
 </script>
 
 {#if avatarState.avatar}
