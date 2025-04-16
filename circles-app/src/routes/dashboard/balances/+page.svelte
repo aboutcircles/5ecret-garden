@@ -14,10 +14,10 @@
       const filteredData = Object.entries($circlesBalances.data).filter(
         ([_, balance]) => {
           if (filter == 'personal') {
-            return !filter || !balance.isGroup;
+            return !filter || !balance.isGroup && !balance.isErc20;
           }
           if (filter == 'group') {
-            return !filter || balance.isGroup;
+            return !filter || balance.isGroup && !balance.isErc20;
           }
           if (filter == 'erc20') {
             return !filter || balance.isErc20;
