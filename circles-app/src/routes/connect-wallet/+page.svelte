@@ -20,6 +20,7 @@
     <div class="flex items-center gap-x-2">
       <input
         type="checkbox"
+        value={environment.ring}
         class="toggle toggle-sm checked:bg-orange-400 checked:text-orange-800"
         onchange={() => (environment.ring = !environment.ring)}
       />
