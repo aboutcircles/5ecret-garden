@@ -1,6 +1,6 @@
 <script lang="ts">
   import { avatar, isGroup } from '$lib/stores/avatar';
-  import { clearSession, wallet } from '$lib/stores/wallet';
+  import { clearSession, wallet } from '$lib/stores/wallet.svelte';
   import { circles } from '$lib/stores/circles';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import { canMigrate } from '$lib/guards/canMigrate';

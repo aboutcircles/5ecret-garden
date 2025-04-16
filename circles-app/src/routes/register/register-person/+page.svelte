@@ -2,7 +2,7 @@
   import { goto } from '$app/navigation';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { circles } from '$lib/stores/circles';
-  import { wallet } from '$lib/stores/wallet';
+  import { wallet } from '$lib/stores/wallet.svelte';
   import type { AvatarRow } from '@circles-sdk/data';
   import { onMount } from 'svelte';
 
