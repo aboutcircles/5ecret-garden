@@ -1,5 +1,6 @@
 <script lang="ts">
   import SettingProfile from '$lib/pages/SettingProfile.svelte';
+  import { environment } from '$lib/stores/environment.svelte';
   import { popupControls } from '$lib/stores/popUp';
   import type { QuickAction } from '../../routes/+layout.svelte';
 
@@ -64,7 +65,11 @@
                 <img src="/logo.svg" alt="Circles" class="w-8 h-8" />
                 <!-- TODO: Handle the sizing and ellipsis for the header text properly. This will do for now. -->
                 <span class="inline-block overflow-hidden text-primary"
-                  >Circles <p class="text-sm text-red-500">(beta)</p></span
+                  >Circles <p class="text-sm text-red-500">
+                    {#if environment.ring}
+                      (ring)
+                    {:else}(beta){/if}
+                  </p></span
                 >
                 <button
                   type="button"
@@ -123,7 +128,11 @@
       <img src="/logo.svg" alt="Circles" class="w-8 h-8" />
       <!-- TODO: Handle the sizing and ellipsis for the header text properly. This will do for now. -->
       <span class="inline-block overflow-hidden text-primary"
-        >Circles <p class="text-sm text-red-500">(beta)</p></span
+        >Circles <p class="text-sm text-red-500">
+          {#if environment.ring}
+            (ring)
+          {:else}(beta){/if}
+        </p></span
       >
     </a>
   </div>
