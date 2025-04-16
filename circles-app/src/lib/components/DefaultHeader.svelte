@@ -30,7 +30,9 @@
 </script>
 
 <div
-  class="navbar font-dmSans bg-white font-medium border-b fixed top-0 z-30 h-16"
+  class={`navbar font-dmSans ${environment.ring ? 'bg-secondary/80' : 'bg-white'} font-medium border-b fixed top-0 z-30 h-16 transition-color duration-300 ease-in-out ${
+    isDropdownOpen ? 'shadow-lg' : ''
+  }`}
 >
   <div class="navbar-start pl-4">
     {#if menuItems.length > 0}

@@ -26,7 +26,7 @@
       />
       <a
         href="https://docs.aboutcircles.com/developer-docs/getting-started-with-the-sdk#using-the-sandbox-version-of-circles-sdk-for-builders" target="_blank"
-        class={`flex font-semibold items-center text-sm text-nowrap ${
+        class={`flex font-semibold items-center text-sm text-nowrap  transition-color duration-300 ease-in-out ${
           environment.ring
             ? 'text-orange-700'
             : 'text-primary hover:text-primary/80'
