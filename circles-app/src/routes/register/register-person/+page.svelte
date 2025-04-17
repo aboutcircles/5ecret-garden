@@ -98,6 +98,7 @@
                 name="radio-7"
                 class="radio radio-success radio-sm"
                 checked={inviterSelected === inviter.avatar}
+                onclick={() => inviterSelected = inviter.avatar}
               /><Avatar
                 topInfo="Inviter"
                 clickable={false}
@@ -127,16 +128,21 @@
           Register
         </li>
       </ul>
-      <div class="flex flex-col gap-y-4 pl-10">
-        <ProfileEditor bind:profile />
-        <div class="mx-auto">
-          <ActionButton
-            action={registerHuman}
-            disabled={profile.name.trim().length < 1}
-          >
-            Create
-          </ActionButton>
-        </div>
+      <div class="flex flex-col items-center gap-y-4 pl-10">
+        {#if inviterSelected}
+          <ProfileEditor bind:profile />
+          <div class="mx-auto">
+            <ActionButton
+              action={registerHuman}
+              disabled={profile.name.trim().length < 1}
+            >
+              Create
+            </ActionButton>
+          </div>
+        {:else}
+          <img src="/lock.svg" alt="lock icon" class="h-7 w-7" />
+          <p>Select an inviter to continue</p>
+        {/if}
       </div>
     </div>
   </div>
