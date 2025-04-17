@@ -10,11 +10,11 @@
   import { onMount } from 'svelte';
   import type { WalletType } from '$lib/utils/walletType';
   import { getCmGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
-  import type { CoreMembersGroupRow } from '@circles-sdk/data/dist/rows/coreMembersGroupRow';
+  import type { GroupRow } from '@circles-sdk/data';
 
   let safes: Address[] = $state([]);
   let profileBySafe: Record<string, AvatarRow | undefined> = $state({});
-  let groupsByOwner: Record<Address, CoreMembersGroupRow[]> = $state({});
+  let groupsByOwner: Record<Address, GroupRow[]> = $state({});
 
   interface Props {
     safeOwnerAddress?: Address;
@@ -92,7 +92,7 @@
         walletType={walletType}
         isRegistered={profileBySafe[item] !== undefined}
         isV1={profileBySafe[item]?.version === 1}
-        groups={groupsByOwner[item.toLowerCase()] ?? []}
+        groups={groupsByOwner[item.toLowerCase() as Address] ?? []}
         chainId={chainId}
       />
     {/each}

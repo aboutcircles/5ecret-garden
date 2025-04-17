@@ -9,16 +9,16 @@
   import type { WalletType } from '$lib/utils/walletType';
   import type { Address } from '@circles-sdk/utils';
   import type { SdkContractRunner } from '@circles-sdk/adapter';
-  import type { CoreMembersGroupRow } from '@circles-sdk/data/dist/rows/coreMembersGroupRow';
   import { CirclesStorage } from '$lib/utils/storage';
   import { environment } from '$lib/stores/environment.svelte';
+  import type { GroupRow } from '@circles-sdk/data';
 
   interface Props {
     address: Address;
     isRegistered: boolean;
     walletType: WalletType;
     chainId: bigint;
-    groups?: CoreMembersGroupRow[];
+    groups?: GroupRow[];
     isV1?: boolean;
   }
 
@@ -109,13 +109,13 @@
     {#each groups ?? [] as group}
       <button
         class="flex w-full hover:bg-black/5 rounded-lg p-2"
-        onclick={() => connectWallet(address, group.proxy)}
+        onclick={() => connectWallet(address, group.group as Address)}
       >
         <Avatar
-          address={group.proxy}
+          address={group.group as Address}
           clickable={false}
           view="horizontal"
-          topInfo={group.proxy}
+          topInfo={group.group as Address}
         />
       </button>
     {/each}

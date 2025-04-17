@@ -10,16 +10,16 @@
   import type { Network } from 'ethers';
   import type { SdkContractRunnerWrapper } from '@circles-sdk/adapter-ethers';
   import type { Address } from '@circles-sdk/utils';
-  import type { CoreMembersGroupRow } from '@circles-sdk/data/dist/rows/coreMembersGroupRow';
   import { getCmGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
   import { CirclesStorage } from '$lib/utils/storage';
   import { environment } from '$lib/stores/environment.svelte';
+  import type { GroupRow } from '@circles-sdk/data';
 
   const GNOSIS_CHAIN_ID_DEC = 100n;
 
   let avatarInfo: AvatarRow | undefined = $state();
   let network: Network | undefined = $state();
-  let groupsByOwner: Record<Address, CoreMembersGroupRow[]> | undefined = $state();
+  let groupsByOwner: Record<Address, GroupRow[]> | undefined = $state();
 
   //
   // Connects the wallet and initializes the Circles SDK.
@@ -90,7 +90,7 @@
       address={$wallet.address}
       walletType="metamask"
       isRegistered={avatarInfo !== undefined}
-      groups={groupsByOwner[$wallet.address.toLowerCase()]}
+      groups={groupsByOwner[$wallet.address.toLowerCase() as Address]}
       chainId={network.chainId}
     />
   {:else}
