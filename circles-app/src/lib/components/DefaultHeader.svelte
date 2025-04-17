@@ -69,7 +69,7 @@
                 <span class="inline-block overflow-hidden text-primary"
                   >Circles <p class="text-sm text-red-500">
                     {#if environment.ring}
-                      (ring)
+                      (sandbox)
                     {:else}(beta){/if}
                   </p></span
                 >
@@ -132,7 +132,7 @@
       <span class="inline-block overflow-hidden text-primary"
         >Circles <p class="text-sm text-red-500">
           {#if environment.ring}
-            (ring)
+            (sandbox)
           {:else}(beta){/if}
         </p></span
       >
