@@ -33,7 +33,7 @@
     circlesConfig = await getCirclesConfig(chainId);
     $circles = new Sdk($wallet! as SdkContractRunner, circlesConfig);
 
-    if (lowerCaseAvatarAddress === address.toLowerCase() && !isRegistered) {
+    if (lowerCaseAvatarAddress === address.toLowerCase() && !isRegistered && (lowerCaseGroupAddress?.trim() ?? "") == "") {
       await goto('/register');
       return;
     }

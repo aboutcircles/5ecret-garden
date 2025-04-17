@@ -72,12 +72,12 @@
     throw new Error('Tx failed, try passing less addresses');
   }
 
-  const sanitizeAddresses = (addrStr: string): `0x${string}`[] => {
+  const sanitizeAddresses = (addrStr: string): Address[] => {
     const addresses = addrStr
       .split(',')
       .map((addr) => addr.trim())
       .filter((addr) => ethers.isAddress(addr));
-    return addresses as `0x${string}`[];
+    return addresses as Address[];
   };
 
   export async function handleAddMembers(addrStr: string, untrust: boolean) {
