@@ -32,24 +32,21 @@ export const createCMGroups = () => {
   }
 
   const queryDefinition: PagedQueryParams = {
-    table: 'CMGroupCreated',
-    namespace: 'CrcV2',
+    table: 'Groups',
+    namespace: 'V_CrcV2',
     limit: 25,
     columns: [],
     sortOrder: 'DESC',
-    filter: [],
+    filter: [{
+      Type: 'FilterPredicate',
+      FilterType: 'In',
+      Column: 'type',
+      Value: ['CrcV2_BaseGroupCreated', 'CrcV2_CMGroupCreated'],
+    }],
   };
 
   return createCirclesQueryStore<GroupRow>(
-    async () => new CirclesQuery<GroupRow>($circles.circlesRpc, queryDefinition, [
-      new CalculatedColumn('group', (o: any) =>  (<any>o).proxy),
-      new CalculatedColumn('mint', (o: any) => (<any>o).mint),
-      new CalculatedColumn('treasury', async () => ''),
-      new CalculatedColumn('symbol', async () => ''),
-      new CalculatedColumn('cidV0Digest', async () => ''),
-      new CalculatedColumn('memberCount', async () => 0),
-      new CalculatedColumn('trustedCount', async () => 0),
-    ]),
+    async () => new CirclesQuery<GroupRow>($circles.circlesRpc, queryDefinition),
     groupEvents,
   );
 };
