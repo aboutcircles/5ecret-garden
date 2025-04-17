@@ -1,5 +1,6 @@
 import type { Profile } from '@circles-sdk/profiles';
 import type { TrustRelation } from '@circles-sdk/data';
+import type { CirclesConfig } from '@circles-sdk/sdk';
 
 export function getTypeString(type: string): string {
   const typeMap: Record<string, string> = {
@@ -28,11 +29,14 @@ export function formatTrustRelation(relation: TrustRelation | undefined, profile
   }
 }
 
-export async function getCirclesConfig(chainId: bigint) {
+export async function getCirclesConfig(chainId: bigint, rings: boolean) {
+  let circlesConfig: CirclesConfig
   if (chainId === 100n) {
-    return (await import('$lib/circlesConfig')).gnosisConfig;
+    rings ? circlesConfig = (await import('$lib/circlesConfig')).gnosisConfig.rings : circlesConfig = (await import('$lib/circlesConfig')).gnosisConfig.production;
+    return circlesConfig;
   } else if (chainId === 10200n) {
-    return (await import('$lib/circlesConfig')).chiadoConfig;
+    rings ? circlesConfig = (await import('$lib/circlesConfig')).chiadoConfig.rings : circlesConfig = (await import('$lib/circlesConfig')).chiadoConfig.production;
+    return circlesConfig;
   }
   throw new Error(`Unsupported chain-id: ${chainId}`);
 }

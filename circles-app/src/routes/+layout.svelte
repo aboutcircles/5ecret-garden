@@ -11,7 +11,7 @@
 
   import DefaultHeader from '$lib/components/DefaultHeader.svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
-  import { clearSession, restoreWallet } from '$lib/stores/wallet';
+  import { clearSession, restoreWallet } from '$lib/stores/wallet.svelte';
   import { canMigrate } from '$lib/guards/canMigrate';
   import UpdateBanner from '$lib/components/UpdateBanner.svelte';
   import { page } from '$app/stores';

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { wallet } from '$lib/stores/wallet';
+  import { wallet } from '$lib/stores/wallet.svelte';
   import Safe from '@safe-global/protocol-kit';
   import type {
     PredictedSafeProps,

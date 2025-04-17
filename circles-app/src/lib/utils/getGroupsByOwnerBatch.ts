@@ -1,9 +1,8 @@
 import type { Address } from '@circles-sdk/utils';
-import type { CoreMembersGroupRow } from '@circles-sdk/data/dist/rows/coreMembersGroupRow';
-import { CirclesQuery, type PagedQueryParams } from '@circles-sdk/data';
+import { CirclesQuery, type GroupRow, type PagedQueryParams } from '@circles-sdk/data';
 import type { Sdk } from '@circles-sdk/sdk';
 
-export async function getCmGroupsByOwnerBatch(sdk: Sdk, owners: Address[]): Promise<Record<Address, CoreMembersGroupRow[]>> {
+export async function getCmGroupsByOwnerBatch(sdk: Sdk, owners: Address[]): Promise<Record<Address, GroupRow[]>> {
   if (owners.length === 0 || !sdk) {
     return {};
   }
@@ -41,8 +40,14 @@ export async function getCmGroupsByOwnerBatch(sdk: Sdk, owners: Address[]): Prom
     results.push(...resultRows);
   }
 
-  const acc: Record<Address, CoreMembersGroupRow[]> = {};
-  for (const row of results) {
+  //TODO we need this because proxy attribute not exist on GroupRow
+  const normalized: (any)[] = results.map(row => ({
+    ...row,
+    group: row.proxy
+  }));
+
+  const acc: Record<Address, GroupRow[]> = {};
+  for (const row of normalized) {
     const owner = row.owner.toLowerCase() as Address;
     if (!acc[owner]) {
       acc[owner] = [];
