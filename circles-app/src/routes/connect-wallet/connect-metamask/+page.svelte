@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { initializeWallet, wallet } from '$lib/stores/wallet';
+  import { initializeWallet, wallet } from '$lib/stores/wallet.svelte';
   import { circles } from '$lib/stores/circles';
   import { Sdk, type AvatarRow } from '@circles-sdk/sdk';
   import { onMount } from 'svelte';
@@ -13,6 +13,7 @@
   import type { CoreMembersGroupRow } from '@circles-sdk/data/dist/rows/coreMembersGroupRow';
   import { getCmGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
   import { CirclesStorage } from '$lib/utils/storage';
+  import { environment } from '$lib/stores/environment.svelte';
 
   const GNOSIS_CHAIN_ID_DEC = 100n;
 
@@ -54,7 +55,7 @@
       return;
     }
 
-    const circlesConfig = await getCirclesConfig(network.chainId);
+    const circlesConfig = await getCirclesConfig(network.chainId, environment.ring);
 
     // Initialize the Circles SDK and set it as $circles to make it globally available.
     $circles = new Sdk($wallet! as SdkContractRunnerWrapper, circlesConfig);

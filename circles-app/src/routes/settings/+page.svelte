@@ -1,6 +1,6 @@
 <script lang="ts">
   import { avatar, isGroup } from '$lib/stores/avatar';
-  import { clearSession, wallet } from '$lib/stores/wallet';
+  import { clearSession, wallet } from '$lib/stores/wallet.svelte';
   import { circles } from '$lib/stores/circles';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import { canMigrate } from '$lib/guards/canMigrate';
@@ -12,7 +12,7 @@
   import GroupSetting from './editors/GroupSetting.svelte';
   import { ethers } from 'ethers';
   import ProfileEditor from '$lib/components/ProfileEditor.svelte';
-  import { onMount } from 'svelte';
+  import { profilesEqual } from '$lib/utils/profile';
 
   async function saveProfileData(profile: Profile): Promise<string> {
     if (!$circles?.profiles) {
@@ -78,21 +78,6 @@
         window.location.reload();
       }),
     });
-  }
-
-  function profilesEqual(
-    a: Profile | undefined,
-    b: Profile | undefined
-  ): boolean {
-    if (!a || !b) {
-      return false;
-    }
-    return (
-      a.name === b.name &&
-      a.description === b.description &&
-      a.previewImageUrl === b.previewImageUrl &&
-      a.imageUrl === b.imageUrl
-    );
   }
 </script>
 

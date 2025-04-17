@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { wallet } from '$lib/stores/wallet';
+  import { wallet } from '$lib/stores/wallet.svelte';
   import QrCode from '$lib/components/QrCode.svelte';
   import Address from '$lib/components/Address.svelte';
   import ConnectWallet from '$lib/components/ConnectWallet.svelte';

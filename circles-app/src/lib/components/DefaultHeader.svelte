@@ -1,5 +1,6 @@
 <script lang="ts">
   import SettingProfile from '$lib/pages/SettingProfile.svelte';
+  import { environment } from '$lib/stores/environment.svelte';
   import { popupControls } from '$lib/stores/popUp';
   import type { QuickAction } from '../../routes/+layout.svelte';
 
@@ -29,7 +30,9 @@
 </script>
 
 <div
-  class="navbar font-dmSans bg-white font-medium border-b fixed top-0 z-30 h-16"
+  class={`navbar font-dmSans ${environment.ring ? 'bg-secondary/80' : 'bg-white'} font-medium border-b fixed top-0 z-30 h-16 transition-color duration-300 ease-in-out ${
+    isDropdownOpen ? 'shadow-lg' : ''
+  }`}
 >
   <div class="navbar-start pl-4">
     {#if menuItems.length > 0}
@@ -64,7 +67,11 @@
                 <img src="/logo.svg" alt="Circles" class="w-8 h-8" />
                 <!-- TODO: Handle the sizing and ellipsis for the header text properly. This will do for now. -->
                 <span class="inline-block overflow-hidden text-primary"
-                  >Circles <p class="text-sm text-red-500">(beta)</p></span
+                  >Circles <p class="text-sm text-red-500">
+                    {#if environment.ring}
+                      (sandbox)
+                    {:else}(beta){/if}
+                  </p></span
                 >
                 <button
                   type="button"
@@ -123,7 +130,11 @@
       <img src="/logo.svg" alt="Circles" class="w-8 h-8" />
       <!-- TODO: Handle the sizing and ellipsis for the header text properly. This will do for now. -->
       <span class="inline-block overflow-hidden text-primary"
-        >Circles <p class="text-sm text-red-500">(beta)</p></span
+        >Circles <p class="text-sm text-red-500">
+          {#if environment.ring}
+            (sandbox)
+          {:else}(beta){/if}
+        </p></span
       >
     </a>
   </div>

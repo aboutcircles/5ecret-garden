@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { initializeWallet, wallet } from '$lib/stores/wallet';
+  import { initializeWallet, wallet } from '$lib/stores/wallet.svelte';
   import { circles } from '$lib/stores/circles';
   import { Sdk } from '@circles-sdk/sdk';
   import { gnosisConfig } from '$lib/circlesConfig';
@@ -7,6 +7,8 @@
   import { onMount } from 'svelte';
   import ConnectSafe from '$lib/components/ConnectSafe.svelte';
   import { CirclesStorage } from '$lib/utils/storage';
+  import { getCirclesConfig } from '$lib/utils/helpers';
+  import { environment } from '$lib/stores/environment.svelte';
 
   let mnemonicPhrase: string = $state('');
   let hasValidKey = $state(false);
@@ -19,7 +21,9 @@
       walletType: 'circles'
     };
     $wallet = await initializeWallet('circles');
-    $circles = new Sdk($wallet!, gnosisConfig);
+    const network = await ($wallet as any).provider?.getNetwork();
+    const circlesConfig = await getCirclesConfig(network.chainId, environment.ring);
+    $circles = new Sdk($wallet!, circlesConfig);
   }
 
   onMount(async () => {
@@ -30,7 +34,9 @@
         walletType: 'circles'
       };
       $wallet = await initializeWallet('circles');
-      $circles = new Sdk($wallet!, gnosisConfig);
+    const network = await ($wallet as any).provider?.getNetwork();
+    const circlesConfig = await getCirclesConfig(network.chainId, environment.ring);
+      $circles = new Sdk($wallet!, circlesConfig);
     }
   });
 </script>

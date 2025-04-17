@@ -1,7 +1,7 @@
 <script lang="ts">
   import { type AvatarRow } from '@circles-sdk/sdk';
   import { circles } from '$lib/stores/circles';
-  import { wallet } from '$lib/stores/wallet';
+  import { wallet } from '$lib/stores/wallet.svelte';
   import WalletLoader from '$lib/components/WalletLoader.svelte';
   import ConnectCircles from '$lib/components/ConnectCircles.svelte';
   import CreateSafe from '$lib/pages/CreateSafe.svelte';

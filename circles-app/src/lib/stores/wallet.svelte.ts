@@ -17,6 +17,7 @@ import { type SdkContractRunner } from '@circles-sdk/adapter';
 import type { WalletType } from '$lib/utils/walletType';
 import type { Address } from '@circles-sdk/utils';
 import { CirclesStorage } from '$lib/utils/storage';
+import { environment } from './environment.svelte';
 
 export const wallet = writable<SdkContractRunner | undefined>();
 
@@ -40,7 +41,7 @@ export async function initializeWallet(type: WalletType, avatarAddress?: Address
     if (!privateKey) {
       throw new Error('Private key not found in localStorage');
     }
-    const rpcProvider = new JsonRpcProvider(gnosisConfig.circlesRpcUrl);
+    const rpcProvider = new JsonRpcProvider(environment.ring ? gnosisConfig.rings.circlesRpcUrl : gnosisConfig.production.circlesRpcUrl);
     const runner = new PrivateKeyContractRunner(rpcProvider, privateKey);
     await runner.init();
     return runner;
@@ -51,7 +52,7 @@ export async function initializeWallet(type: WalletType, avatarAddress?: Address
     }
     const runner = new SafeSdkPrivateKeyContractRunner(
       privateKey,
-      gnosisConfig.circlesRpcUrl,
+      environment.ring ? gnosisConfig.rings.circlesRpcUrl : gnosisConfig.production.circlesRpcUrl,
     );
     await runner.init(avatarAddress);
     return runner as SdkContractRunner;
@@ -109,9 +110,10 @@ export async function restoreWallet() {
 
     wallet.set(restoredWallet);
 
+    //TODO: cache environment on local storage
     const sdk = new Sdk(
       restoredWallet as SdkContractRunner,
-      await getCirclesConfig(100n),
+      await getCirclesConfig(100n, environment.ring),
     );
     circles.set(sdk);
 

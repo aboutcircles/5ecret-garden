@@ -1,5 +1,6 @@
 <script lang="ts">
   import ConnectWallet from '$lib/components/ConnectWallet.svelte';
+  import { environment } from '$lib/stores/environment.svelte';
   import { onMount } from 'svelte';
 
   let hasBrowserWallet = $state(false);
@@ -8,15 +9,37 @@
   });
 </script>
 
-<div
-  class="w-full flex flex-col min-h-screen max-w-xl gap-y-4 justify-center"
->
+<div class="w-full flex flex-col min-h-screen max-w-xl gap-y-4 justify-center">
   <div class="w-full">
     <a href="/">
       <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
     </a>
   </div>
-  <p class="font-bold text-xl">Access Circles</p>
+  <div class="flex items-center justify-between gap-x-2">
+    <p class="font-bold text-xl">Access Circles</p>
+    <div class="flex items-center gap-x-2">
+      <input
+        type="checkbox"
+        checked={environment.ring}
+        class="toggle toggle-sm checked:bg-orange-400 checked:text-orange-800"
+        onchange={() => (environment.ring = !environment.ring)}
+      />
+      <a
+        href="https://docs.aboutcircles.com/developer-docs/getting-started-with-the-sdk#using-the-sandbox-version-of-circles-sdk-for-builders" target="_blank"
+        class={`flex font-semibold items-center text-sm text-nowrap  transition-color duration-300 ease-in-out ${
+          environment.ring
+            ? 'text-orange-700'
+            : 'text-primary hover:text-primary/80'
+        }`}
+      >
+        RINGS<img
+          src="/external.svg"
+          alt="external icon"
+          class="h-3 w-3 ml-1"
+        />
+      </a>
+    </div>
+  </div>
   <ConnectWallet
     imgUrl="/safe.png"
     header="Use Safe"
