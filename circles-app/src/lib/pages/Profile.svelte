@@ -70,7 +70,6 @@
         .filter((row) => row.relation === 'trusts')
         .map((o) => o.objectAvatar);
 
-      // TODO: Find mint handler
       const findMintHandlerQuery = new CirclesQuery<any>($circles.circlesRpc, {
         namespace: 'V_CrcV2',
         table: 'Groups',
@@ -87,8 +86,7 @@
         limit: 1,
       });
 
-      await findMintHandlerQuery.queryNextPage();
-      mintHandler = findMintHandlerQuery.currentPage?.results[0]?.mintHandler;
+      mintHandler = (await findMintHandlerQuery.getSingleRow())?.mintHandler;
       console.log('mintHandler', mintHandler);
 
       if (!$circles) return;
