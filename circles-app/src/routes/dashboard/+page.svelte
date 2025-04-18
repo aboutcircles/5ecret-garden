@@ -2,7 +2,7 @@
   import GenericList from '$lib/components/GenericList.svelte';
   import TransactionRow from './TransactionRow.svelte';
   import TotalBalance from '$lib/components/TotalBalance.svelte';
-  import { avatar, isGroup } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import { roundToDecimals } from '$lib/utils/shared';
   import { runTask } from '$lib/utils/tasks';
   import { transactionHistory } from '$lib/stores/transactionHistory';
@@ -22,12 +22,12 @@
 
   $effect(() => {
     (async () => {
-      if ($avatar && !$isGroup) {
-        mintableAmount = (await $avatar.getMintableAmount()) ?? 0;
+      if (avatarState.avatar && !avatarState.isGroup) {
+        mintableAmount = (await avatarState.avatar.getMintableAmount()) ?? 0;
       }
 
-      if ($isGroup && $circles && $avatar) {
-        await initializeGroup($circles, $avatar.address);
+      if (avatarState.isGroup && $circles && avatarState.avatar) {
+        await initializeGroup($circles, avatarState.avatar.address);
         // const groupMember = await getDailyCmGroupsDataOverTheMonth(
         //   $circles,
         //   $avatar.address
@@ -63,15 +63,15 @@
   }
 
   async function mintPersonalCircles() {
-    if (!$avatar) {
+    if (!avatarState.avatar) {
       throw new Error('Avatar store is not available');
     }
 
     runTask({
       name: 'Minting Circles ...',
-      promise: $avatar.personalMint(),
+      promise: avatarState.avatar.personalMint(),
     }).finally(async () => {
-      mintableAmount = (await $avatar?.getMintableAmount()) ?? 0;
+      mintableAmount = (await avatarState.avatar?.getMintableAmount()) ?? 0;
     });
 
     mintableAmount = 0;
@@ -87,7 +87,7 @@
     </button>
   {/if}
   <div role="tablist" class="tabs tabs-bordered w-full p-0 my-10">
-    {#if $isGroup}
+    {#if avatarState.isGroup}
       <input
         type="radio"
         name="tabs"

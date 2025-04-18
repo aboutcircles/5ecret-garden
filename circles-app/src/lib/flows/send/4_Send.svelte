@@ -4,7 +4,7 @@
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import { runTask } from '$lib/utils/tasks';
   import { roundToDecimals, shortenAddress } from '$lib/utils/shared';
-  import { avatar } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import { tokenTypeToString, TransitiveTransferTokenAddress } from '$lib/pages/SelectAsset.svelte';
   import { popupControls } from '$lib/stores/popUp';
   import { tcToCrc } from '@circles-sdk/utils';
@@ -17,7 +17,7 @@
   let { context }: Props = $props();
 
   function onselect() {
-    if (!$avatar) {
+    if (!avatarState.avatar) {
       throw new Error('Avatar not found');
     }
     if (!context.selectedAddress) {
@@ -62,8 +62,8 @@
       name: `Send ${roundToDecimals(context.amount)} ${tokenTypeToString(context.selectedAsset.tokenType)} to ${shortenAddress(context.selectedAddress)}...`,
       promise:
         context.selectedAsset.tokenAddress === TransitiveTransferTokenAddress
-          ? $avatar.transfer(context.selectedAddress, context.amount, undefined, dataUInt8Arr, true)
-          : $avatar.transfer(
+          ? avatarState.avatar.transfer(context.selectedAddress, context.amount, undefined, dataUInt8Arr, true)
+          : avatarState.avatar.transfer(
             context.selectedAddress,
             amountToSend,
             context.selectedAsset.tokenAddress,

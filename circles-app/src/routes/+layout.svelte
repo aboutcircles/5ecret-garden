@@ -10,7 +10,7 @@
   import '../app.css';
 
   import DefaultHeader from '$lib/components/DefaultHeader.svelte';
-  import { avatar, isGroup } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import { clearSession, restoreWallet } from '$lib/stores/wallet.svelte';
   import { canMigrate } from '$lib/guards/canMigrate';
   import UpdateBanner from '$lib/components/UpdateBanner.svelte';
@@ -18,10 +18,13 @@
   import Send from '$lib/flows/send/1_To.svelte';
   import { onMount } from 'svelte';
   import { tasks } from '$lib/utils/tasks';
-  import { profile } from '$lib/stores/profile';
   import { popupControls, popupState } from '$lib/stores/popUp';
   import PopUp from '$lib/components/PopUp.svelte';
   import ManageGroupMembers from '$lib/flows/manageGroupMembers/1_manageGroupMembers.svelte';
+  import { getProfile } from '$lib/utils/profile';
+  import { initTransactionHistoryStore } from '$lib/stores/transactionHistory';
+  import { initContactStore } from '$lib/stores/contacts';
+  import { initBalanceStore } from '$lib/stores/circlesBalances';
 
   interface Props {
     children?: import('svelte').Snippet;
@@ -33,7 +36,7 @@
     '/dashboard': {
       name: 'Send',
       icon: '/send.svg',
-      action: $isGroup
+      action: avatarState.isGroup
         ? undefined
         : () => {
             popupControls.open({
@@ -44,10 +47,10 @@
           },
     },
     '/contacts': {
-      name: $isGroup ? 'Manage members' : 'Add Contact',
+      name: avatarState.isGroup ? 'Manage members' : 'Add Contact',
       icon: '/add-contact.svg',
       action: () => {
-        if ($isGroup) {
+        if (avatarState.isGroup) {
           popupControls.open({
             title: 'Manage members',
             component: ManageGroupMembers,
@@ -65,15 +68,15 @@
     '/groups': {
       name: 'Send',
       icon: '/send.svg',
-      action: $isGroup
+      action: avatarState.isGroup
         ? undefined
         : () => {
-          popupControls.open({
-            title: 'Send Circles',
-            component: Send,
-            props: {},
-          });
-        },
+            popupControls.open({
+              title: 'Send Circles',
+              component: Send,
+              props: {},
+            });
+          },
     },
     '/register': {
       name: 'Disconnect',
@@ -105,23 +108,44 @@
   });
 
   $effect(() => {
-    if ($avatar) {
+    if (avatarState.avatar) {
       menuItems = [
         { name: 'Dashboard', link: '/dashboard' },
         { name: 'Contacts', link: '/contacts' },
-        ...(!$isGroup ? [{ name: 'Groups', link: '/groups' }] : []),
+        ...(!avatarState.isGroup ? [{ name: 'Groups', link: '/groups' }] : []),
         { name: 'Settings', link: '/settings' },
       ];
     }
   });
+
+  // init profile state
+  $effect(() => {
+    const address = avatarState.avatar?.avatarInfo?.avatar;
+    if (address) {
+      getProfile(address).then((newProfile) => {
+        avatarState.profile = newProfile;
+      });
+    } else {
+      avatarState.profile = undefined;
+    }
+  });
+
+  // init transaction history store
+  $effect(() => {
+    if (avatarState.avatar) {
+      initTransactionHistoryStore(avatarState.avatar);
+      initContactStore(avatarState.avatar);
+      initBalanceStore(avatarState.avatar);
+    }
+  });
 </script>
 
-{#if $avatar}
+{#if avatarState.avatar}
   <DefaultHeader
-    text={$profile?.name}
-    address={$avatar.address}
-    logo={$profile?.previewImageUrl?.trim()
-      ? $profile.previewImageUrl
+    text={avatarState.profile?.name}
+    address={avatarState.avatar.address}
+    logo={avatarState.profile?.previewImageUrl?.trim()
+      ? avatarState.profile.previewImageUrl
       : '/logo.svg'}
     homeLink="/dashboard"
     {quickAction}
@@ -133,7 +157,7 @@
 {/if}
 
 <main class="relative w-full h-full bg-white overflow-hidden font-dmSans">
-  {#if $avatar?.avatarInfo && canMigrate($avatar.avatarInfo) && $page.route.id !== '/migrate-to-v2'}
+  {#if avatarState.avatar?.avatarInfo && canMigrate(avatarState.avatar.avatarInfo) && $page.route.id !== '/migrate-to-v2'}
     <UpdateBanner />
     <div class="h-20"></div>
   {/if}

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { tokenTypeToString } from '$lib/pages/SelectAsset.svelte';
-  import { avatar, isGroup } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import { crcTypes, roundToDecimals, staticTypes } from '$lib/utils/shared';
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import WrapTokens from '$lib/pages/WrapTokens.svelte';
@@ -36,8 +36,8 @@
     {
       condition: (balance: TokenBalanceRow) =>
         balance.tokenType === 'CrcV1_Signup' &&
-        !!$avatar?.avatarInfo &&
-        $avatar?.avatarInfo?.version > 1,
+        !!avatarState.avatar?.avatarInfo &&
+        avatarState.avatar?.avatarInfo?.version > 1,
       title: 'Migrate Tokens to V2',
       icon: '/banknotes.svg',
       component: MigrateTokens,
@@ -108,7 +108,7 @@
         </p>
       </div>
 
-      {#if !$isGroup}
+      {#if !avatarState.isGroup}
         <div class="dropdown dropdown-end">
           <div
             tabIndex={0}

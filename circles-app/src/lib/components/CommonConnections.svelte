@@ -3,7 +3,7 @@
   import Avatar from './avatar/Avatar.svelte';
   import type { Address } from '@circles-sdk/utils';
   import { circles } from '$lib/stores/circles';
-  import { avatar } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import { popupControls } from '$lib/stores/popUp';
 
   interface Props {
@@ -20,13 +20,13 @@
   async function initialize() {
     if (!otherAvatarAddress) return;
 
-    if (!$circles || !$avatar) return;
+    if (!$circles || !avatarState.avatar) return;
 
     // Use the RPC call to get the array of common trust addresses
     // The plugin will return an array of addresses both trust or mutually trust.
     // Exactly which relationships count as "common trust" is up to the node’s RPC logic,
     // but presumably it’s all addresses that appear in both trust sets.
-    const common = await $circles.data.rpc.call<Address[]>('circles_getCommonTrust', [$avatar.address, otherAvatarAddress]);
+    const common = await $circles.data.rpc.call<Address[]>('circles_getCommonTrust', [avatarState.avatar.address, otherAvatarAddress]);
     // ^ This returns something like an array of addresses: ["0xabc...", "0x123..."]
 
     // 3) Set them to local state

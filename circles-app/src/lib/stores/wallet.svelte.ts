@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store';
 import { goto } from '$app/navigation';
-import { avatar, isGroup } from '$lib/stores/avatar';
+import { avatarState } from '$lib/stores/avatar.svelte';
 import { circles } from '$lib/stores/circles';
 import {
   BrowserProviderContractRunner, PrivateKeyContractRunner,
@@ -91,10 +91,10 @@ export async function restoreWallet() {
     let savedGroup: Address | undefined;
     if (walletTypeString.includes('+group')) {
       savedGroup = CirclesStorage.getInstance().group;
-      isGroup.set(true);
+      avatarState.isGroup = true;
     } else {
       CirclesStorage.getInstance().data = { group: undefined };
-      isGroup.set(false);
+      avatarState.isGroup = false;
     }
 
     const restoredWallet = await initializeWallet(
@@ -131,7 +131,7 @@ export async function restoreWallet() {
     const avatarInfo = await sdk.data.getAvatarInfo(avatarToRestore);
 
     if (avatarInfo) {
-      avatar.set(await sdk.getAvatar(avatarToRestore));
+      avatarState.avatar = await sdk.getAvatar(avatarToRestore);
     } else {
       await goto('/register');
     }
@@ -142,7 +142,7 @@ export async function restoreWallet() {
 }
 
 export async function clearSession() {
-  avatar.set(undefined);
+  avatarState.avatar = undefined;
   wallet.set(undefined);
   circles.set(undefined);
   await goto('/connect-wallet');

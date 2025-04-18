@@ -7,7 +7,7 @@
   import { mintPolicies } from '$lib/utils/mintPolicy';
   import Tooltip from './Tooltip.svelte';
   import { circles } from '$lib/stores/circles';
-  import { avatar, isGroup } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import ImageUpload from './ImageUpload.svelte';
   import { type Address, cidV0ToUint8Array } from '@circles-sdk/utils';
   import { ethers } from 'ethers';
@@ -95,11 +95,11 @@
       group: groupAddress as Address,
     };
 
-    $avatar = await $circles.getAvatar(
+    avatarState.avatar = await $circles.getAvatar(
       groupAddress.toLowerCase() as Address,
     );
 
-    $isGroup = true;
+    avatarState.isGroup = true;
 
     onstepchange('executed');
   }

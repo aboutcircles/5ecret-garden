@@ -3,7 +3,7 @@
   import type { MigrateToV2Context } from '$lib/flows/migrateToV2/context';
   import CreateProfile from './2_CreateProfile.svelte';
   import { onMount } from 'svelte';
-  import { avatar } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import { circles } from '$lib/stores/circles';
   import type { AvatarRow } from '@circles-sdk/data';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
@@ -25,11 +25,11 @@
   let canSelfMigrate = $state(false);
   let invitations: AvatarRow[] | undefined = $state();
   onMount(async () => {
-    if (!$avatar?.avatarInfo || !$circles) {
+    if (!avatarState.avatar?.avatarInfo || !$circles) {
       throw new Error('Avatar store or SDK not initialized');
     }
-    canSelfMigrate = environment.ring ? true : await $circles.canSelfMigrate($avatar.avatarInfo);
-    invitations = await $circles.data.getInvitations($avatar.avatarInfo.avatar);
+    canSelfMigrate = environment.ring ? true : await $circles.canSelfMigrate(avatarState.avatar.avatarInfo);
+    invitations = await $circles.data.getInvitations(avatarState.avatar.avatarInfo.avatar);
   });
   async function next() {
     popupControls.open({

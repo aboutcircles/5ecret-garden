@@ -4,7 +4,7 @@
   import type { MigrateToV2Context } from '$lib/flows/migrateToV2/context';
   import MigrateContacts from './3_MigrateContacts.svelte';
   import { onMount } from 'svelte';
-  import { avatar } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import {
     FallbackImageUrl,
     getProfile,
@@ -12,7 +12,6 @@
   } from '$lib/utils/profile';
   import { popupControls } from '$lib/stores/popUp';
   import type { Profile } from '@circles-sdk/profiles';
-  import { profile } from '$lib/stores/profile';
 
   interface Props {
     context: MigrateToV2Context;
@@ -37,8 +36,8 @@
   });
 
   $effect(() => {
-    if ($profile) {
-      newProfile = $profile;
+    if (avatarState.profile) {
+      newProfile = avatarState.profile;
     }
   });
 
@@ -54,14 +53,14 @@
   // };
 
   onMount(async () => {
-    if (!$avatar?.address) {
+    if (!avatarState.avatar?.address) {
       throw new Error('Avatar store not initialized');
     }
 
     // if (!previewImageUrl.startsWith('data:image')) {
     //   previewImageUrl = await convertUrlToDataUrl(previewImageUrl);
     // }
-    context.profile = $profile;
+    context.profile = avatarState.profile;
   });
 
   const validateProfile = async (profile: Profile) => {

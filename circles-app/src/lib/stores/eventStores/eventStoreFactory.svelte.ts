@@ -1,11 +1,6 @@
-import type { Readable } from 'svelte/store';
-import { derived } from 'svelte/store';
-import type {
-  CirclesEvent,
-  CirclesEventType,
-  TransactionHistoryRow,
-} from '@circles-sdk/data';
-import type { avatar } from '$lib/stores/avatar';
+import type { CirclesEvent, CirclesEventType } from '@circles-sdk/data';
+import type { Avatar } from '@circles-sdk/sdk';
+import { readable, type Readable } from 'svelte/store';
 
 // Type Definitions
 
@@ -51,7 +46,7 @@ export type NextPageFunction<T> = (currentData: T) => Promise<NextPageData<T>>;
  * This store uses debouncing to manage incoming events and includes support for sorting data.
  *
  * @template T - The type of data in the store.
- * @param avatarStore - A store representing the avatar instance that manages events and subscriptions.
+ * @param avatar - A state representing the avatar instance that manages events and subscriptions.
  * @param eventTypes - A set of event types that the store subscribes to.
  * @param initialLoad - Function to load the initial data when the store is first created.
  * @param handleEvent - Function to handle incoming events and update the store's data.
@@ -62,113 +57,104 @@ export type NextPageFunction<T> = (currentData: T) => Promise<NextPageData<T>>;
  * @returns A Svelte-readable store that holds the data, supports paginated data loading, and updates on events.
  */
 export function createEventStore<T>(
-  avatarStore: typeof avatar,
+  avatar: Avatar,
   eventTypes: Set<CirclesEventType>,
   initialLoad: LoadFunction<T>,
   handleEvent: EventHandler<T>,
   handleNextPage: NextPageFunction<T>,
   initialData: T,
-  dataComparator?: T extends Array<infer U>
-    ? (a: U, b: U) => number
-    : undefined,
-  debounceDelay: number = 50
+  dataComparator?: T extends Array<infer U> ? (a: U, b: U) => number : undefined,
+  debounceDelay = 50
 ): Readable<{ data: T; next: () => Promise<boolean>; ended: boolean }> {
   let timeout: any;
-  let lastEvent: any;
-  let finished: boolean = false;
-  let storeData: T = initialData; // External variable to store data
+  let lastEvent: CirclesEvent | null = null;
+  let finished = false;
+  let storeData = initialData;
 
-  return derived<
-    typeof avatarStore,
+  return readable<{ data: T; next: () => Promise<boolean>; ended: boolean }>(
     {
-      data: T;
-      next: () => Promise<boolean>;
-      ended: boolean;
-    }
-  >(avatarStore, ($avatar, set) => {
-    // TODO: The 'initialPromise' feels like a hack to ensure the initial data is loaded before someone calls next()
-    let resolveInitialLoad: ((value?: unknown) => void) | undefined = undefined;
-    const initialPromise = new Promise(
-      (resolve) => (resolveInitialLoad = resolve)
-    );
+      data: storeData,
+      next: async () => false,
+      ended: finished,
+    },
+    (set) => {
+      let resolveInitialLoad: (() => void) | undefined;
+      const initialPromise = new Promise<void>((resolve) => {
+        resolveInitialLoad = resolve;
+      });
 
-    function setData(data: T) {
-      storeData = data;
+      function setData(data: T) {
+        storeData = data;
 
-      // Sort the data if a comparator is provided and the data is an array
-      if (Array.isArray(storeData) && dataComparator) {
-        storeData = storeData.sort(dataComparator);
+        // Sort the data if a comparator is provided and the data is an array
+        if (Array.isArray(storeData) && dataComparator) {
+          storeData = storeData.sort(dataComparator);
+        }
+
+        set({ data: storeData, next: next, ended: finished });
       }
 
-      set({ data: storeData, next: next, ended: finished });
-    }
-
-    /**
+      /**
      * Loads the next page of data by calling `handleNextPage` and updates the store.
      *
      * @returns {Promise<boolean>} - A promise resolving to whether pagination has ended.
      */
-    async function next() {
-      await initialPromise;
-      const { data, ended } = await handleNextPage(storeData);
-      finished = ended;
-      setData(data);
-      return finished;
-    }
+      async function next(): Promise<boolean> {
+        await initialPromise;
+        const { data, ended } = await handleNextPage(storeData);
+        finished = ended;
+        setData(data);
+        return finished;
+      }
 
-    setData(storeData); // Initialize the store with the initial data
+      setData(storeData); // Initialize the store with the initial data
 
-    if (!$avatar) {
-      return;
-    }
-
-    /**
+      /**
      * Processes debounced events and updates the store's data.
      */
-    const processEvents = async () => {
-      if (!lastEvent) return;
+      const processEvents = async () => {
+        if (!lastEvent) return;
+        const data = await handleEvent(lastEvent, storeData);
+        setData(data);
+        lastEvent = null; // Clear the last event
+      };
 
-      const data = await handleEvent(lastEvent, storeData);
-      setData(data);
-      lastEvent = null; // Clear the last event
-    };
-
-    /**
+      /**
      * Handles incoming events by debouncing their processing.
      *
      * @param {CirclesEvent} event - The event to process.
      */
-    const eventHandler = (event: CirclesEvent) => {
-      if (!eventTypes.has(event.$event)) return;
+      const eventHandler = (event: CirclesEvent) => {
+        if (!eventTypes.has(event.$event)) return;
+        lastEvent = event;
 
-      lastEvent = event;
-
-      if (timeout) {
-        clearTimeout(timeout);
-      }
-
-      // Debounce event processing
-      timeout = setTimeout(async () => {
-        try {
-          await processEvents();
-        } catch (e) {
-          console.error(
-            `Failed to update the store on event ${event.$event}`,
-            e
-          );
+        if (timeout) {
+          clearTimeout(timeout);
         }
-      }, debounceDelay);
-    };
 
-    // Load the initial data and subscribe to events
-    initialLoad()
-      .then((data) => setData(data))
-      .then(() => resolveInitialLoad?.())
-      .then(() => $avatar.events.subscribe(eventHandler))
-      .catch((e) => console.error('Failed to initialize store', e));
+        // Debounce event processing
+        timeout = setTimeout(async () => {
+          try {
+            await processEvents();
+          } catch (e) {
+            console.error(
+              `Failed to update the store on event ${event.$event}`,
+              e
+            );
+          }
+        }, debounceDelay);
+      };
 
-    return () => {
-      $avatar.unsubscribeFromEvents();
-    };
-  });
+      // Load the initial data and subscribe to events
+      initialLoad()
+        .then((data) => setData(data))
+        .then(() => resolveInitialLoad?.())
+        .then(() => avatar.events.subscribe(eventHandler))
+        .catch((e) => console.error('Failed to initialize store', e));
+
+      return () => {
+        avatar.unsubscribeFromEvents();
+      };
+    }
+  );
 }

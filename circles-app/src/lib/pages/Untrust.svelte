@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { avatar } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import { runTask } from '$lib/utils/tasks';
   import { shortenAddress } from '$lib/utils/shared';
   import { V1Avatar } from '@circles-sdk/sdk';
@@ -16,11 +16,11 @@
   let { address, trustVersion }: Props = $props();
 
   async function untrust() {
-    if (!$avatar) {
+    if (!avatarState.avatar) {
       throw new Error('Avatar store not available');
     }
     if (trustVersion == 1) {
-      const v1Avatar = new V1Avatar($circles!, $avatar.avatarInfo!);
+      const v1Avatar = new V1Avatar($circles!, avatarState.avatar.avatarInfo!);
       runTask({
         name: `Untrusting V1 ${shortenAddress(address)} ...`,
         promise: v1Avatar.untrust(address),
@@ -28,7 +28,7 @@
     } else {
       runTask({
         name: `Untrusting V2 ${shortenAddress(address)} ...`,
-        promise: $avatar!.untrust(address),
+        promise: avatarState.avatar!.untrust(address),
       });
     }
     popupControls.close();

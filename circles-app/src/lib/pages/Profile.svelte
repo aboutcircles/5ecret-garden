@@ -1,7 +1,6 @@
 <script lang="ts">
   import { circles } from '$lib/stores/circles';
   import type { Profile } from '@circles-sdk/profiles';
-  import { avatar } from '$lib/stores/avatar';
   import CommonConnections from '$lib/components/CommonConnections.svelte';
   import { contacts } from '$lib/stores/contacts';
   import {
@@ -50,9 +49,6 @@
 
   async function initialize(address: Address) {
     if (!$circles) {
-      return;
-    }
-    if (!$avatar) {
       return;
     }
 
