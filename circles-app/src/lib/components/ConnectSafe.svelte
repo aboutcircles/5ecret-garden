@@ -52,6 +52,7 @@
       throw new Error('Circles SDK or wallet not initialized');
     }
     safes = await querySafeTransactionService(safeOwnerAddress);
+    safes = safes.map((safe) => safe.toLowerCase() as Address);
     const [avatarInfo, groupInfo] = await Promise.all([
       $circles.data.getAvatarInfoBatch(safes),
       getBaseGroupsByOwnerBatch($circles, safes),
