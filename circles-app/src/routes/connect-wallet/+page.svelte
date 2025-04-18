@@ -11,9 +11,9 @@
 
 <div class="w-full flex flex-col min-h-screen max-w-xl gap-y-4 justify-center">
   <div class="w-full">
-    <a href="/">
+    <button onclick={() => history.back()}>
       <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
-    </a>
+    </button>
   </div>
   <div class="flex items-center justify-between gap-x-2">
     <p class="font-bold text-xl">Access Circles</p>

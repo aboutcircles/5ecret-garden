@@ -3,7 +3,6 @@
   import ActionButton from '$lib/components/ActionButton.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import type { Avatar as AvatarType } from '@circles-sdk/sdk';
-  import { avatar } from '$lib/stores/avatar';
   import { circles } from '$lib/stores/circles';
   import { wallet } from '$lib/stores/wallet.svelte';
   import type { AvatarRow } from '@circles-sdk/data';
@@ -12,6 +11,7 @@
   import type { Address } from '@circles-sdk/utils';
   import ProfileEditor from '$lib/components/ProfileEditor.svelte';
   import { environment } from '$lib/stores/environment.svelte';
+  import { avatarState } from '$lib/stores/avatar.svelte';
 
   let invitations: AvatarRow[] = $state([]);
   let inviterSelected: Address | undefined = $state(
@@ -64,7 +64,7 @@
     }
 
     //TODO: why need to bind it as Avatar
-    $avatar = (await $circles.acceptInvitation(
+    avatarState.avatar = (await $circles.acceptInvitation(
       inviterSelected.toLowerCase() as Address,
       profile
     )) as AvatarType;
@@ -77,9 +77,9 @@
   class="w-full flex flex-col max-w-xl gap-y-4 justify-center mt-28 md:mt-44"
 >
   <div class="w-full">
-    <a href="/register">
+    <button onclick={() => history.back()}>
       <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
-    </a>
+    </button>
   </div>
   <div
     class="border rounded-lg flex flex-col items-center p-4 w-full shadow-sm"

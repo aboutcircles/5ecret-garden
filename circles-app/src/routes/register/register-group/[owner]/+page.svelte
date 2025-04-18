@@ -6,9 +6,9 @@
   class="w-full flex flex-col min-h-screen max-w-4xl gap-y-4 justify-center"
 >
   <div class="w-full">
-    <a href="/register">
+    <button onclick={() => history.back()}>
       <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
-    </a>
+    </button>
   </div>
   <RegisterGroup />
 </div>

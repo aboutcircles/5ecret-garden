@@ -29,9 +29,9 @@
   class="w-full flex flex-col min-h-screen max-w-xl gap-y-4 justify-center"
 >
   <div class="w-full">
-    <a href="/register">
+    <button onclick={() => history.back()}>
       <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
-    </a>
+    </button>
   </div>
   <div class="card bg-base-100 w-96 border shadow-sm">
     <figure class="px-10 pt-10">
