@@ -55,6 +55,7 @@
           group: lowerCaseGroupAddress,
         };
         avatarState.isGroup = true;
+        avatarState.groupType = await $circles.getGroupType(lowerCaseGroupAddress);
       } else {
         CirclesStorage.getInstance().data = {
           walletType: walletType,

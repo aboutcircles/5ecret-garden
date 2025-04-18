@@ -117,6 +117,10 @@ export async function restoreWallet() {
     );
     circles.set(sdk);
 
+    if (avatarState.isGroup && savedGroup) {
+      avatarState.groupType = await sdk.getGroupType(savedGroup);
+    }
+
     const avatarToRestore =
       (savedGroup
         ?? savedAvatar
