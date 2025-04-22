@@ -59,7 +59,7 @@
 
   $effect(() => {
     if (avatarState.profile) {
-      newProfile = avatarState.profile;
+      newProfile = { ...avatarState.profile };
     }
   });
 
