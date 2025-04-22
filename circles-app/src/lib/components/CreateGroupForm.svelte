@@ -77,7 +77,7 @@
       return;
     }
 
-    const tx = await $circles.baseGroupDeployer?.createBaseGroup(
+    const tx = await $circles.baseGroupFactory?.createBaseGroup(
       $wallet?.address,
       formData.service,
       formData.feeCollection,
@@ -86,6 +86,8 @@
       groupProfile.symbol,
       cidV0ToUint8Array(CID)
     );
+
+    console.log('Transaction:', tx);
 
     const result = await tx?.wait();
     console.log(result);
