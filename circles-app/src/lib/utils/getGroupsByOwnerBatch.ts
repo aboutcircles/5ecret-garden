@@ -19,7 +19,6 @@ export async function getBaseAndCmgGroupsByOwnerBatch(
 
     const rows: GroupRow[] = []
     while (await query.queryNextPage()) {
-      console.log(owner, query.currentPage?.results)
       rows.push(...(query.currentPage?.results ?? []))
     }
 

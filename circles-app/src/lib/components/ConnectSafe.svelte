@@ -59,7 +59,7 @@
     ]);
     const profileBySafeNew: Record<string, AvatarRow | undefined> = {};
     avatarInfo.forEach((info) => {
-      profileBySafeNew[ethers.getAddress(info.avatar)] = info;
+      profileBySafeNew[info.avatar] = info;
     });
     profileBySafe = profileBySafeNew;
     groupsByOwner = groupInfo;
@@ -91,7 +91,7 @@
       <ConnectCircles
         address={item}
         {walletType}
-        isRegistered={profileBySafe[item] !== undefined}
+        isRegistered={profileBySafe[item.toLowerCase()] !== undefined}
         isV1={profileBySafe[item]?.version === 1}
         groups={groupsByOwner[item.toLowerCase() as Address] ?? []}
         {chainId}
