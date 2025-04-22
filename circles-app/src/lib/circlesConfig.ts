@@ -36,6 +36,7 @@ export const gnosisConfig: { production: CirclesConfig, rings: CirclesConfig } =
     baseGroupMintPolicy: '0xcCa27c26CF7BAC2a9928f42201d48220F0e3a549',
     standardTreasury: '0x08F90aB73A515308f03A718257ff9887ED330C6e',
     coreMembersGroupDeployer: '0xFEca40Eb02FB1f4F5F795fC7a03c1A27819B1Ded',
+    baseGroupDeployer: '0xD0B5Bd9962197BEaC4cbA24244ec3587f19Bd06d'
   },
   rings: {
     circlesRpcUrl: 'https://static.94.138.251.148.clients.your-server.de/rpc/',

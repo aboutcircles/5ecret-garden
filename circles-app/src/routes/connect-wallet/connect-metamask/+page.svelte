@@ -10,10 +10,10 @@
   import type { Network } from 'ethers';
   import type { SdkContractRunnerWrapper } from '@circles-sdk/adapter-ethers';
   import type { Address } from '@circles-sdk/utils';
-  import { getCmGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
   import { CirclesStorage } from '$lib/utils/storage';
   import { environment } from '$lib/stores/environment.svelte';
   import type { GroupRow } from '@circles-sdk/data';
+  import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
 
   const GNOSIS_CHAIN_ID_DEC = 100n;
 
@@ -59,7 +59,9 @@
 
     // Initialize the Circles SDK and set it as $circles to make it globally available.
     $circles = new Sdk($wallet! as SdkContractRunnerWrapper, circlesConfig);
-    groupsByOwner = await getCmGroupsByOwnerBatch($circles, [$wallet.address]);
+    groupsByOwner = await getBaseAndCmgGroupsByOwnerBatch($circles, [
+       $wallet.address.toLowerCase() as Address,
+     ]);;
     avatarInfo = await $circles.data.getAvatarInfo($wallet.address);
 
     CirclesStorage.getInstance().data = {

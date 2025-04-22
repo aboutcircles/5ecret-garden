@@ -8,11 +8,13 @@
 
   onMount(async () => {
     try {
-      if (avatarState.avatar === undefined) throw new Error('Avatar not initialized');
+      if (avatarState.avatar === undefined) return;
 
       serviceAddress = await avatarState.avatar?.service();
       mintHandlerAddress = await avatarState.avatar?.mintHandler();
-      redemptionHandlerAddress = await avatarState.avatar?.redemptionHandler();
+      if (avatarState.groupType === 'CrcV2_CMGroupCreated')
+        redemptionHandlerAddress =
+          await avatarState.avatar?.redemptionHandler();
     } catch (error) {
       console.error('Error fetching contract data:', error);
     }
@@ -85,23 +87,25 @@
     </div>
   </div>
 
-  <div>
-    <label for="name" class="block text-sm font-medium text-black">
-      Redemption Handler address
-    </label>
-    <div class="flex items-center space-x-2">
-      <input
-        type="text"
-        id="name"
-        bind:value={redemptionHandlerAddress}
-        class="mt-2 block w-full p-2 border border-gray-300 rounded-md"
-        placeholder="0x..."
-      /><button
-        type="button"
-        class="btn btn-square btn-xs btn-primary btn-outline"
-        onclick={handleSetRedemptionHandler}
-        ><img src="/update.svg" alt="Update" class="w-4" /></button
-      >
+  {#if avatarState.groupType === 'CrcV2_CMGroupCreated'}
+    <div>
+      <label for="name" class="block text-sm font-medium text-black">
+        Redemption Handler address
+      </label>
+      <div class="flex items-center space-x-2">
+        <input
+          type="text"
+          id="name"
+          bind:value={redemptionHandlerAddress}
+          class="mt-2 block w-full p-2 border border-gray-300 rounded-md"
+          placeholder="0x..."
+        /><button
+          type="button"
+          class="btn btn-square btn-xs btn-primary btn-outline"
+          onclick={handleSetRedemptionHandler}
+          ><img src="/update.svg" alt="Update" class="w-4" /></button
+        >
+      </div>
     </div>
-  </div>
+  {/if}
 </div>

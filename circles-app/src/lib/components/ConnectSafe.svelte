@@ -9,8 +9,8 @@
   import { ethers } from 'ethers';
   import { onMount } from 'svelte';
   import type { WalletType } from '$lib/utils/walletType';
-  import { getCmGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
   import type { GroupRow } from '@circles-sdk/data';
+  import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
 
   let safes: Address[] = $state([]);
   let profileBySafe: Record<string, AvatarRow | undefined> = $state({});
@@ -28,7 +28,7 @@
     `https://safe-transaction-gnosis-chain.safe.global/api/v1/owners/${checksumOwnerAddress}/safes/`;
 
   async function querySafeTransactionService(
-    ownerAddress: string,
+    ownerAddress: string
   ): Promise<Address[]> {
     const checksumAddress = ethers.getAddress(ownerAddress);
     const requestUrl = getSafesByOwnerApiEndpoint(checksumAddress);
@@ -52,9 +52,10 @@
       throw new Error('Circles SDK or wallet not initialized');
     }
     safes = await querySafeTransactionService(safeOwnerAddress);
+    safes = safes.map((safe) => safe.toLowerCase() as Address);
     const [avatarInfo, groupInfo] = await Promise.all([
       $circles.data.getAvatarInfoBatch(safes),
-      getCmGroupsByOwnerBatch($circles, safes),
+      getBaseAndCmgGroupsByOwnerBatch($circles, safes),
     ]);
     const profileBySafeNew: Record<string, AvatarRow | undefined> = {};
     avatarInfo.forEach((info) => {
@@ -77,7 +78,7 @@
   class="w-full flex flex-col items-center min-h-screen max-w-xl gap-y-4 mt-20"
 >
   <div class="w-full">
-    <button onclick="{() => history.back()}">
+    <button onclick={() => history.back()}>
       <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
     </button>
   </div>
@@ -89,11 +90,11 @@
     {#each safes ?? [] as item (item)}
       <ConnectCircles
         address={item}
-        walletType={walletType}
+        {walletType}
         isRegistered={profileBySafe[item] !== undefined}
         isV1={profileBySafe[item]?.version === 1}
         groups={groupsByOwner[item.toLowerCase() as Address] ?? []}
-        chainId={chainId}
+        {chainId}
       />
     {/each}
 
