@@ -13,7 +13,7 @@
   import { CirclesStorage } from '$lib/utils/storage';
   import { environment } from '$lib/stores/environment.svelte';
   import type { GroupRow } from '@circles-sdk/data';
-  import { getBaseGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
+  import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
 
   const GNOSIS_CHAIN_ID_DEC = 100n;
 
@@ -59,7 +59,7 @@
 
     // Initialize the Circles SDK and set it as $circles to make it globally available.
     $circles = new Sdk($wallet! as SdkContractRunnerWrapper, circlesConfig);
-    groupsByOwner = await getBaseGroupsByOwnerBatch($circles, [
+    groupsByOwner = await getBaseAndCmgGroupsByOwnerBatch($circles, [
        $wallet.address.toLowerCase() as Address,
      ]);;
     avatarInfo = await $circles.data.getAvatarInfo($wallet.address);

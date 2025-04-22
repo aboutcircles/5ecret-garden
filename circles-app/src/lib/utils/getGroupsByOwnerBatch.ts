@@ -2,7 +2,7 @@ import type { Address } from '@circles-sdk/utils';
 import type { Sdk } from '@circles-sdk/sdk';
 import type { GroupRow } from '@circles-sdk/data';
 
-export async function getBaseGroupsByOwnerBatch(
+export async function getBaseAndCmgGroupsByOwnerBatch(
   sdk: Sdk,
   owners: Address[]
 ): Promise<Record<Address, GroupRow[]>> {
@@ -13,7 +13,7 @@ export async function getBaseGroupsByOwnerBatch(
       1000,
       {
         ownerEquals: owner.toLowerCase(),
-        groupTypeIn: ['CrcV2_BaseGroupCreated']
+        groupTypeIn: ['CrcV2_BaseGroupCreated', 'CrcV2_CMGroupCreated']
       }
     )
 

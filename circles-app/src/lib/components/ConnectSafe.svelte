@@ -10,7 +10,7 @@
   import { onMount } from 'svelte';
   import type { WalletType } from '$lib/utils/walletType';
   import type { GroupRow } from '@circles-sdk/data';
-  import { getBaseGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
+  import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
 
   let safes: Address[] = $state([]);
   let profileBySafe: Record<string, AvatarRow | undefined> = $state({});
@@ -55,7 +55,7 @@
     safes = safes.map((safe) => safe.toLowerCase() as Address);
     const [avatarInfo, groupInfo] = await Promise.all([
       $circles.data.getAvatarInfoBatch(safes),
-      getBaseGroupsByOwnerBatch($circles, safes),
+      getBaseAndCmgGroupsByOwnerBatch($circles, safes),
     ]);
     const profileBySafeNew: Record<string, AvatarRow | undefined> = {};
     avatarInfo.forEach((info) => {
