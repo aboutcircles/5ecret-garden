@@ -6,7 +6,7 @@
   import type { AddContactFlowContext } from './context';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import Papa from 'papaparse';
-  import { avatar, isGroup } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import { ethers } from 'ethers';
   import type { Address } from '@circles-sdk/utils';
 
@@ -72,12 +72,12 @@
     throw new Error('Tx failed, try passing less addresses');
   }
 
-  const sanitizeAddresses = (addrStr: string): `0x${string}`[] => {
+  const sanitizeAddresses = (addrStr: string): Address[] => {
     const addresses = addrStr
       .split(',')
       .map((addr) => addr.trim())
       .filter((addr) => ethers.isAddress(addr));
-    return addresses as `0x${string}`[];
+    return addresses as Address[];
   };
 
   export async function handleAddMembers(addrStr: string, untrust: boolean) {
@@ -88,8 +88,8 @@
 
     try {
       untrust
-        ? await $avatar?.untrust(addresses)
-        : await $avatar?.trust(addresses);
+        ? await avatarState.avatar?.untrust(addresses)
+        : await avatarState.avatar?.trust(addresses);
       selectedAddresses = '';
     } catch (error: any) {
       handleErrors(error);
@@ -132,7 +132,7 @@
 
 <FlowDecoration>
   <h2 class="text-2xl font-bold">
-    Add or remove {$isGroup ? 'members' : 'contacts'}
+    Add or remove {avatarState.isGroup ? 'members' : 'contacts'}
   </h2>
   <div class="flex flex-row gap-x-1 justify-end items-center pb-1">
     <p class="text-sm text-gray-500 text-right">
@@ -161,10 +161,10 @@
     <div class="flex flex-col gap-x-2">
       <div class="flex flex-row gap-x-2">
         <ActionButton action={() => handleAddMembers(selectedAddresses, false)}
-          >{$isGroup ? 'Add' : 'Trust'}</ActionButton
+          >{avatarState.isGroup ? 'Add' : 'Trust'}</ActionButton
         >
         <ActionButton action={() => handleAddMembers(selectedAddresses, true)}
-          >{$isGroup ? 'Remove' : 'Untrust'}</ActionButton
+          >{avatarState.isGroup ? 'Remove' : 'Untrust'}</ActionButton
         >
       </div>
       <p class="text-sm text-red-500 h-6">{errorMessage}</p>
@@ -182,7 +182,7 @@
     </label>
   </div>
 
-  <p class="text-xl font-bold mt-4">Search for {$isGroup ? 'members' : 'contacts'}</p>
+  <p class="text-xl font-bold mt-4">Search for {avatarState.isGroup ? 'members' : 'contacts'}</p>
   <SearchAvatar
     selectedAddress={context.selectedAddress}
     {oninvite}

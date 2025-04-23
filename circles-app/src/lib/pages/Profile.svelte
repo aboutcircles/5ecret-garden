@@ -1,7 +1,6 @@
 <script lang="ts">
   import { circles } from '$lib/stores/circles';
   import type { Profile } from '@circles-sdk/profiles';
-  import { avatar } from '$lib/stores/avatar';
   import CommonConnections from '$lib/components/CommonConnections.svelte';
   import { contacts } from '$lib/stores/contacts';
   import {
@@ -52,9 +51,6 @@
     if (!$circles) {
       return;
     }
-    if (!$avatar) {
-      return;
-    }
 
     otherAvatar = await $circles.data.getAvatarInfo(address);
 
@@ -70,16 +66,15 @@
         .filter((row) => row.relation === 'trusts')
         .map((o) => o.objectAvatar);
 
-      // TODO: Find mint handler
-      var findMintHandlerQuery = new CirclesQuery($circles.circlesRpc, {
-        namespace: 'CrcV2',
-        table: 'CMGroupCreated',
+      const findMintHandlerQuery = new CirclesQuery<any>($circles.circlesRpc, {
+        namespace: 'V_CrcV2',
+        table: 'Groups',
         columns: ['mintHandler'],
         filter: [
           {
             Type: 'FilterPredicate',
             FilterType: 'Equals',
-            Column: 'proxy',
+            Column: 'group',
             Value: address,
           },
         ],
@@ -87,8 +82,7 @@
         limit: 1,
       });
 
-      await findMintHandlerQuery.queryNextPage();
-      mintHandler = findMintHandlerQuery.currentPage?.results[0]?.mintHandler;
+      mintHandler = (await findMintHandlerQuery.getSingleRow())?.mintHandler;
       console.log('mintHandler', mintHandler);
 
       if (!$circles) return;

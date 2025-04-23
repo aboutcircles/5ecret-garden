@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { avatar } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import ImageUpload from '$lib/components/ImageUpload.svelte';
   import type { Profile } from '@circles-sdk/profiles';
 
@@ -22,7 +22,7 @@
 </script>
 
 <div class="space-y-2">
-  {#if $avatar}
+  {#if avatarState.avatar}
     <div>
       <label for="circlesAddress" class="block text-sm font-medium text-black"
         >Circles address</label
@@ -31,12 +31,12 @@
         type="text"
         id="circlesAddress"
         readonly
-        value={$avatar?.avatarInfo?.avatar}
+        value={avatarState.avatar?.avatarInfo?.avatar}
         class="mt-2 block w-full p-2 border border-gray-300 rounded-md"
         placeholder="0x....."
       />
     </div>
-    {#if $avatar?.avatarInfo?.v1Token && !$avatar?.avatarInfo?.v1Stopped}
+    {#if avatarState.avatar?.avatarInfo?.v1Token && !avatarState.avatar?.avatarInfo?.v1Stopped}
       <div>
         <label for="tokenAddress" class="block text-sm font-medium text-black"
           >Token address</label
@@ -46,7 +46,7 @@
           id="tokenAddress"
           class="mt-2 block w-full p-2 border border-gray-300 rounded-md"
           readonly
-          value={$avatar.avatarInfo.v1Token}
+          value={avatarState.avatar.avatarInfo.v1Token}
           placeholder="0x....."
         />
       </div>

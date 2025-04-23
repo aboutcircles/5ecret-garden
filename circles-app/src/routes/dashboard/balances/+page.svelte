@@ -14,10 +14,10 @@
       const filteredData = Object.entries($circlesBalances.data).filter(
         ([_, balance]) => {
           if (filter == 'personal') {
-            return !filter || !balance.isGroup;
+            return !filter || !balance.isGroup && !balance.isErc20;
           }
           if (filter == 'group') {
-            return !filter || balance.isGroup;
+            return !filter || balance.isGroup && !balance.isErc20;
           }
           if (filter == 'erc20') {
             return !filter || balance.isErc20;
@@ -40,9 +40,9 @@
 
 <div class="flex flex-col items-center w-full max-w-2xl gap-y-6 mt-20">
   <div class="w-full">
-    <a href="/dashboard">
+    <button onclick={() => history.back()}>
       <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
-    </a>
+    </button>
   </div>
   <div
     class="w-full flex flex-col md:flex-row justify-between md:items-end font-bold text-2xl mb-4 gap-y-1"

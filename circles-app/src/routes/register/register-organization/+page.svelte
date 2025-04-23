@@ -1,7 +1,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import ActionButton from '$lib/components/ActionButton.svelte';
-  import { avatar } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import { circles } from '$lib/stores/circles';
   import type { Avatar } from '@circles-sdk/sdk';
   import type { Profile } from '@circles-sdk/profiles';
@@ -19,7 +19,7 @@
     }
 
     //TODO: why need to bind it as Avatar
-    $avatar = await $circles.registerOrganizationV2(profile) as Avatar;
+    avatarState.avatar = await $circles.registerOrganizationV2(profile) as Avatar;
 
     await goto('/dashboard');
   }
@@ -29,9 +29,9 @@
   class="w-full flex flex-col min-h-screen max-w-xl gap-y-4 justify-center"
 >
   <div class="w-full">
-    <a href="/register">
+    <button onclick={() => history.back()}>
       <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
-    </a>
+    </button>
   </div>
   <div class="card bg-base-100 w-96 border shadow-sm">
     <figure class="px-10 pt-10">

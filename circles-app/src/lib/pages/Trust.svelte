@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { avatar } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import { runTask } from '$lib/utils/tasks';
   import { shortenAddress } from '$lib/utils/shared';
   import ActionButton from '$lib/components/ActionButton.svelte';
@@ -13,12 +13,12 @@
   let { address }: Props = $props();
 
   async function trust() {
-    if (!$avatar) {
+    if (!avatarState.avatar) {
       throw new Error('Avatar store not available');
     }
     runTask({
       name: `Trusting ${shortenAddress(address)} ...`,
-      promise: $avatar!.trust(address),
+      promise: avatarState.avatar!.trust(address),
     });
     popupControls.close();
   }

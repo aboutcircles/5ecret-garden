@@ -11,12 +11,14 @@ import type { ContactList } from '../contacts';
 import { getProfile } from '$lib/utils/profile';
 import { get } from 'svelte/store';
 import type { Address } from '@circles-sdk/utils';
+import type { Avatar } from '@circles-sdk/sdk';
 
 interface ContactEventRow extends EventRow {
   data: ContactList;
 }
 
 export async function createContactsQueryStore(
+  avatar: Avatar,
   address: Address,
   refreshOnEvents?: Set<CirclesEventType>
 ) {
@@ -72,6 +74,7 @@ export async function createContactsQueryStore(
   };
 
   const store = await createCirclesQueryStore<ContactEventRow>(
+    avatar,
     createContactsQuery,
     refreshOnEvents
   );

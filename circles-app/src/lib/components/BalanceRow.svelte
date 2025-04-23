@@ -1,12 +1,12 @@
 <script lang="ts">
   import { tokenTypeToString } from '$lib/pages/SelectAsset.svelte';
-  import { avatar, isGroup } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import { crcTypes, roundToDecimals, staticTypes } from '$lib/utils/shared';
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import WrapTokens from '$lib/pages/WrapTokens.svelte';
   import MigrateTokens from '$lib/pages/MigrateTokens.svelte';
   import UnwrapTokens from '$lib/pages/UnwrapTokens.svelte';
-  import ExitGroup from '$lib/pages/ExitGroup.svelte';
+  import RedeemGroup from '$lib/pages/RedeemGroup.svelte';
   import Avatar from './avatar/Avatar.svelte';
   import { popupControls } from '$lib/stores/popUp';
 
@@ -29,15 +29,15 @@
     {
       condition: (balance: TokenBalanceRow) =>
         balance.tokenType === 'CrcV2_RegisterGroup',
-      title: 'Exit group',
-      icon: '/exit.svg',
-      component: ExitGroup,
+      title: 'Redeem',
+      icon: '/redeem.svg',
+      component: RedeemGroup,
     },
     {
       condition: (balance: TokenBalanceRow) =>
         balance.tokenType === 'CrcV1_Signup' &&
-        !!$avatar?.avatarInfo &&
-        $avatar?.avatarInfo?.version > 1,
+        !!avatarState.avatar?.avatarInfo &&
+        avatarState.avatar?.avatarInfo?.version > 1,
       title: 'Migrate Tokens to V2',
       icon: '/banknotes.svg',
       component: MigrateTokens,
@@ -108,7 +108,7 @@
         </p>
       </div>
 
-      {#if !$isGroup}
+      {#if !avatarState.isGroup}
         <div class="dropdown dropdown-end">
           <div
             tabIndex={0}

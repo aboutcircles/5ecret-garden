@@ -4,7 +4,7 @@
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import { runTask } from '$lib/utils/tasks';
   import { roundToDecimals } from '$lib/utils/shared';
-  import { avatar } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import { ethers } from 'ethers';
   import { popupControls } from '$lib/stores/popUp';
 
@@ -15,7 +15,7 @@
   let { context }: Props = $props();
 
   function onselect() {
-    if (!$avatar) {
+    if (!avatarState.avatar) {
       throw new Error('Avatar not found');
     }
     if (!context.selectedAddress) {
@@ -34,7 +34,7 @@
 
     runTask({
       name: `Minting ${roundToDecimals(context.amount)} Group Circles ...`,
-      promise: $avatar.groupMint(
+      promise: avatarState.avatar.groupMint(
         context.selectedAddress!,
         collateral,
         amounts,

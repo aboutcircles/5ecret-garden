@@ -1,12 +1,13 @@
 <script lang="ts">
   import ConnectSafe from '$lib/components/ConnectSafe.svelte';
-  import { GNOSIS_CHAIN_ID_DEC, initializeWallet, wallet } from '$lib/stores/wallet';
+  import { GNOSIS_CHAIN_ID_DEC, initializeWallet, wallet } from '$lib/stores/wallet.svelte';
   import { circles } from '$lib/stores/circles';
   import { onMount } from 'svelte';
   import { getCirclesConfig } from '$lib/utils/helpers.js';
   import { Sdk } from '@circles-sdk/sdk';
   import { switchOrAddGnosisNetwork } from '$lib/utils/network';
   import { CirclesStorage } from '$lib/utils/storage';
+  import { environment } from '$lib/stores/environment.svelte';
 
   let initialized: boolean | undefined = $state();
 
@@ -36,7 +37,7 @@
     }
 
     // Initialize the Circles SDK and set it as $circles to make it globally available.
-    const circlesConfig = await getCirclesConfig(network.chainId);
+    const circlesConfig = await getCirclesConfig(network.chainId, environment.ring);
     $circles = new Sdk($wallet!, circlesConfig);
 
     CirclesStorage.getInstance().data = {

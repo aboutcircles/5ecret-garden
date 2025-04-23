@@ -3,7 +3,7 @@
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import type { MigrateToV2Context } from '$lib/flows/migrateToV2/context';
   import { circles } from '$lib/stores/circles';
-  import { avatar } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import { runTask } from '$lib/utils/tasks';
   import { removeProfileFromCache } from '$lib/utils/profile';
   import { popupControls } from '$lib/stores/popUp';
@@ -17,7 +17,7 @@
   onMount(async () => {});
 
   async function migrate() {
-    if (!$circles || !$avatar?.address) {
+    if (!$circles || !avatarState.avatar?.address) {
       throw new Error('Sdk or Avatar store not initialized');
     }
     if (!context.profile) {
@@ -28,14 +28,13 @@
       name: `Migrating your Avatar ...`,
       promise: $circles.migrateAvatar(
         context.inviter ?? '0x0000000000000000000000000000000000000000',
-        $avatar.address,
+        avatarState.avatar.address,
         context.profile
       ),
     }).then(async () => {
-      removeProfileFromCache($avatar!.address);
-      $avatar!.avatarInfo!.version = 2;
-      $avatar!.avatarInfo!.v1Stopped = true;
-      $avatar = $avatar;
+      removeProfileFromCache(avatarState.avatar!.address);
+      avatarState.avatar!.avatarInfo!.version = 2;
+      avatarState.avatar!.avatarInfo!.v1Stopped = true;
     });
 
     popupControls.close();

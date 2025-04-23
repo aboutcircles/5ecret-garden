@@ -4,9 +4,14 @@
   import type { MigrateToV2Context } from '$lib/flows/migrateToV2/context';
   import MigrateContacts from './3_MigrateContacts.svelte';
   import { onMount } from 'svelte';
-  import { avatar } from '$lib/stores/avatar';
-  import { getProfile } from '$lib/utils/profile';
+  import { avatarState } from '$lib/stores/avatar.svelte';
+  import {
+    FallbackImageUrl,
+    getProfile,
+    profilesEqual,
+  } from '$lib/utils/profile';
   import { popupControls } from '$lib/stores/popUp';
+  import type { Profile } from '@circles-sdk/profiles';
 
   interface Props {
     context: MigrateToV2Context;
@@ -23,36 +28,42 @@
     maxNameLength: parseInt('36'),
   };
 
-  const convertUrlToDataUrl = async (url: string): Promise<string> => {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  };
-
-  onMount(async () => {
-    if (!$avatar?.address) {
-      throw new Error('Avatar store not initialized');
-    }
-    const currentProfile = await getProfile($avatar.address);
-
-    let previewImageUrl = currentProfile.previewImageUrl ?? '';
-
-    if (!previewImageUrl.startsWith('data:image')) {
-      previewImageUrl = await convertUrlToDataUrl(previewImageUrl);
-    }
-    context.profile = {
-      name: currentProfile.name ?? '',
-      description: currentProfile.description ?? '',
-      previewImageUrl,
-    };
+  let newProfile: Profile = $state({
+    name: '',
+    description: '',
+    previewImageUrl: '',
+    imageUrl: '',
   });
 
-  const validateProfile = async (profile: any) => {
+  $effect(() => {
+    if (avatarState.profile) {
+      newProfile = avatarState.profile;
+    }
+  });
+
+  // const convertUrlToDataUrl = async (url: string): Promise<string> => {
+  //   const response = await fetch(url);
+  //   const blob = await response.blob();
+  //   return new Promise((resolve, reject) => {
+  //     const reader = new FileReader();
+  //     reader.onloadend = () => resolve(reader.result as string);
+  //     reader.onerror = reject;
+  //     reader.readAsDataURL(blob);
+  //   });
+  // };
+
+  onMount(async () => {
+    if (!avatarState.avatar?.address) {
+      throw new Error('Avatar store not initialized');
+    }
+
+    // if (!previewImageUrl.startsWith('data:image')) {
+    //   previewImageUrl = await convertUrlToDataUrl(previewImageUrl);
+    // }
+    context.profile = avatarState.profile;
+  });
+
+  const validateProfile = async (profile: Profile) => {
     const errors: string[] = [];
 
     if (
@@ -115,9 +126,21 @@
   };
 
   async function next() {
-    errors = await validateProfile(context.profile);
-    if (errors.length > 0) {
-      return;
+    if (!profilesEqual(context.profile, newProfile)) {
+      errors = await validateProfile(newProfile);
+      if (errors.length > 0) {
+        return;
+      }
+      context.profile = newProfile;
+    }
+
+    if (
+      context.profile?.previewImageUrl &&
+      Object.values(FallbackImageUrl).includes(
+        context.profile.previewImageUrl as FallbackImageUrl
+      )
+    ) {
+      context.profile.previewImageUrl = undefined;
     }
 
     popupControls.open({
@@ -149,7 +172,7 @@
       </ul>
     </div>
   {/if}
-  <ProfileEditor bind:profile={context.profile} />
+  <ProfileEditor bind:profile={newProfile} />
   <div class="flex justify-end space-x-2 mt-6">
     <button
       type="submit"

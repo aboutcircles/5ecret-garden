@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { clearSession } from '$lib/stores/wallet';
+  import { clearSession } from '$lib/stores/wallet.svelte';
 
   interface Props {
     name: string;

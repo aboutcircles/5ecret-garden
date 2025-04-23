@@ -34,12 +34,7 @@
         <img src="/check.svg" alt="check icon" class="h-5 w-5" /> Your group was
         sucessfully created !
       </div>
-      <a
-        class="text-accent flex items-center px-4 py-1 rounded-full mt-4 text-base font-semibold"
-        href={'/dashboard'}
-      >
-        Access to dashboard
-      </a>
+      <a class="btn btn-sm btn-primary mt-4" href={'/dashboard'}> Continue </a>
     </div>
   {:else if step === 'error'}
     <div class="text-gray-900 w-full flex flex-col items-center">

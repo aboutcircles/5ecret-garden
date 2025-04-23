@@ -1,7 +1,7 @@
 <script lang="ts">
   import { circles } from '$lib/stores/circles';
   import BalanceRow from '$lib/components/BalanceRow.svelte';
-  import { avatar } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import { runTask } from '$lib/utils/tasks';
   import { tokenTypeToString } from '$lib/pages/SelectAsset.svelte';
@@ -13,7 +13,7 @@
   let { asset }: Props = $props();
 
   async function migrate() {
-    if (!$circles || !$avatar) {
+    if (!$circles || !avatarState.avatar) {
       return;
     }
 
@@ -29,7 +29,7 @@
 
     runTask({
       name: `Migrate ${tokenTypeToString(asset.tokenType)} to v2...`,
-      promise: $circles.migrateV1TokensBatch($avatar.address, [
+      promise: $circles.migrateV1TokensBatch(avatarState.avatar.address, [
         asset.tokenAddress,
       ]),
     });

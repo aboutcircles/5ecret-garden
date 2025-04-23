@@ -2,7 +2,7 @@
   import SelectAsset from './2_Asset.svelte';
   import type { SendFlowContext } from '$lib/flows/send/context';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
-  import { avatar } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import { circles } from '$lib/stores/circles';
   import { popupControls } from '$lib/stores/popUp';
   import type { TokenBalanceRow } from '@circles-sdk/data';
@@ -27,8 +27,8 @@
 
     if (
       !$circles ||
-      !$avatar ||
-      !$avatar.avatarInfo ||
+      !avatarState.avatar ||
+      !avatarState.avatar.avatarInfo ||
       !context.selectedAddress
     ) {
       return;

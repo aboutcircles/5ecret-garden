@@ -1,18 +1,17 @@
 <script lang="ts">
-  import { avatar, isGroup } from '$lib/stores/avatar';
-  import { clearSession, wallet } from '$lib/stores/wallet';
+  import { avatarState } from '$lib/stores/avatar.svelte';
+  import { clearSession, wallet } from '$lib/stores/wallet.svelte';
   import { circles } from '$lib/stores/circles';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import { canMigrate } from '$lib/guards/canMigrate';
   import { type Profile } from '@circles-sdk/profiles';
-  import { profile } from '$lib/stores/profile';
   import { runTask } from '$lib/utils/tasks';
   import MigrateToV2 from '$lib/flows/migrateToV2/1_GetInvited.svelte';
   import { popupControls } from '$lib/stores/popUp';
   import GroupSetting from './editors/GroupSetting.svelte';
   import { ethers } from 'ethers';
   import ProfileEditor from '$lib/components/ProfileEditor.svelte';
-  import { onMount } from 'svelte';
+  import { profilesEqual } from '$lib/utils/profile';
 
   async function saveProfileData(profile: Profile): Promise<string> {
     if (!$circles?.profiles) {
@@ -38,7 +37,7 @@
   }
 
   async function stopV1() {
-    const v1TokenAddress = $avatar?.avatarInfo?.v1Token;
+    const v1TokenAddress = avatarState.avatar?.avatarInfo?.v1Token;
     if (!$wallet || !v1TokenAddress) {
       throw new Error('Wallet or v1 token not available');
     }
@@ -59,8 +58,8 @@
   }
 
   $effect(() => {
-    if ($profile) {
-      newProfile = $profile;
+    if (avatarState.profile) {
+      newProfile = { ...avatarState.profile };
     }
   });
 
@@ -73,26 +72,11 @@
         if (!$circles?.nameRegistry) {
           throw new Error('Name registry not available');
         }
-        await $avatar!.updateMetadata(cid);
+        await avatarState.avatar!.updateMetadata(cid);
       })().then(() => {
         window.location.reload();
       }),
     });
-  }
-
-  function profilesEqual(
-    a: Profile | undefined,
-    b: Profile | undefined
-  ): boolean {
-    if (!a || !b) {
-      return false;
-    }
-    return (
-      a.name === b.name &&
-      a.description === b.description &&
-      a.previewImageUrl === b.previewImageUrl &&
-      a.imageUrl === b.imageUrl
-    );
   }
 </script>
 
@@ -104,29 +88,29 @@
     <div class="flex flex-col w-full gap-y-4">
       <ProfileEditor
         bind:profile={newProfile}
-        showCustomizableFields={$avatar?.avatarInfo?.version === 2}
+        showCustomizableFields={avatarState.avatar?.avatarInfo?.version === 2}
       />
 
-      {#if $avatar?.avatarInfo?.version === 2}
+      {#if avatarState.avatar?.avatarInfo?.version === 2}
         <div>
           <ActionButton
             action={saveProfile}
-            disabled={profilesEqual(newProfile, $profile)}
+            disabled={profilesEqual(newProfile, avatarState.profile)}
             >Save
           </ActionButton>
         </div>
       {/if}
     </div>
 
-    {#if $isGroup}
+    {#if avatarState.isGroup}
       <div class="w-full pt-2 border-t">
         <h2 class="font-bold">Advanced Group Settings</h2>
         <GroupSetting />
       </div>
     {/if}
 
-    {#if $avatar?.avatarInfo && canMigrate($avatar.avatarInfo)}
-      {#if $avatar?.avatarInfo?.version === 1}
+    {#if avatarState.avatar?.avatarInfo && canMigrate(avatarState.avatar.avatarInfo)}
+      {#if avatarState.avatar?.avatarInfo?.version === 1}
         <div class="w-full pt-2 border-t">
           <h2 class="text-lg font-medium">Circles V2</h2>
           <div class="mt-3">
@@ -136,7 +120,7 @@
           </div>
         </div>
       {/if}
-      {#if $avatar?.avatarInfo?.v1Token && !$avatar?.avatarInfo?.v1Stopped}
+      {#if avatarState.avatar?.avatarInfo?.v1Token && !avatarState.avatar?.avatarInfo?.v1Stopped}
         <div class="w-full pt-2 border-t">
           <h2 class="text-lg font-medium">Circles V1</h2>
           <div class="mt-3">

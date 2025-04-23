@@ -1,6 +1,6 @@
 <script lang="ts">
   import { ethers } from 'ethers';
-  import { avatar } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import BalanceRow from '$lib/components/BalanceRow.svelte';
   import { roundToDecimals } from '$lib/utils/shared';
@@ -33,10 +33,10 @@
   }
 
   async function wrapInflationary(sendValue: bigint) {
-    if ($avatar?.avatarInfo?.version !== 2) {
+    if (avatarState.avatar?.avatarInfo?.version !== 2) {
       throw new Error('Only supported for Avatar v2');
     }
-    const receipt = await $avatar?.wrapInflationErc20(
+    const receipt = await avatarState.avatar?.wrapInflationErc20(
       asset.tokenAddress,
       sendValue
     );
@@ -46,10 +46,10 @@
   }
 
   async function wrapDemurraged(sendValue: bigint) {
-    if ($avatar?.avatarInfo?.version !== 2) {
+    if (avatarState.avatar?.avatarInfo?.version !== 2) {
       throw new Error('Only supported for Avatar v2');
     }
-    const receipt = await $avatar?.wrapDemurrageErc20(
+    const receipt = await avatarState.avatar?.wrapDemurrageErc20(
       asset.tokenAddress,
       sendValue
     );

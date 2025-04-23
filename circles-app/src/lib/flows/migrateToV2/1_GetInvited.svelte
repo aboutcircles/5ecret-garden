@@ -3,29 +3,33 @@
   import type { MigrateToV2Context } from '$lib/flows/migrateToV2/context';
   import CreateProfile from './2_CreateProfile.svelte';
   import { onMount } from 'svelte';
-  import { avatar } from '$lib/stores/avatar';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import { circles } from '$lib/stores/circles';
   import type { AvatarRow } from '@circles-sdk/data';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { popupControls } from '$lib/stores/popUp';
+  import type { Profile } from '@circles-sdk/profiles';
+  import { environment } from '$lib/stores/environment.svelte';
 
   interface Props {
     context?: MigrateToV2Context;
   }
 
   let { context = $bindable({
-    inviter: '0x0',
-    profile: undefined,
-    trustList: [],
+    inviter: undefined,
+    profile: <Profile>{
+      name: ''
+    },
+    trustList: []
   }) }: Props = $props();
   let canSelfMigrate = $state(false);
   let invitations: AvatarRow[] | undefined = $state();
   onMount(async () => {
-    if (!$avatar?.avatarInfo || !$circles) {
+    if (!avatarState.avatar?.avatarInfo || !$circles) {
       throw new Error('Avatar store or SDK not initialized');
     }
-    canSelfMigrate = await $circles.canSelfMigrate($avatar.avatarInfo);
-    invitations = await $circles.data.getInvitations($avatar.avatarInfo.avatar);
+    canSelfMigrate = environment.ring ? true : await $circles.canSelfMigrate(avatarState.avatar.avatarInfo);
+    invitations = await $circles.data.getInvitations(avatarState.avatar.avatarInfo.avatar);
   });
   async function next() {
     popupControls.open({
@@ -56,7 +60,7 @@
           <button
             type="button"
             class="text-gray-500 hover:bg-black/5 w-full flex p-2 rounded-lg"
-            onclick={(e) => selectInvitation(invitation.avatar)}
+            onclick={() => selectInvitation(invitation.avatar)}
             onkeydown={(e) => {
               if (e.key === 'Enter' || e.key === ' ')
                 selectInvitation(invitation.avatar);

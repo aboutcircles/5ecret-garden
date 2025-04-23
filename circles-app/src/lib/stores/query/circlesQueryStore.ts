@@ -1,14 +1,15 @@
-import { avatar } from '$lib/stores/avatar';
+import { avatarState } from '$lib/stores/avatar.svelte';
 import {
   createEventStore,
   type NextPageData,
-} from '$lib/stores/eventStores/eventStoreFactory';
+} from '$lib/stores/eventStores/eventStoreFactory.svelte';
 import {
   type CirclesEventType,
   type CirclesEvent,
   CirclesQuery,
   type EventRow,
 } from '@circles-sdk/data';
+import type { Avatar } from '@circles-sdk/sdk';
 import { get, type Readable } from 'svelte/store';
 
 /**
@@ -36,6 +37,7 @@ export function getKeyFromItem<T extends EventRow & { address?: string }>(
  *          a next function for pagination, and an indicator of whether the data stream has ended.
  */
 export async function createCirclesQueryStore<T extends EventRow>(
+  avatar: Avatar,
   circlesQueryFactory: () => Promise<CirclesQuery<T>>,
   refreshOnEvents?: Set<CirclesEventType>
 ): Promise<
@@ -70,7 +72,7 @@ export async function createCirclesQueryStore<T extends EventRow>(
    * @returns {Promise<T[]>} - A promise that resolves to the initial set of event rows.
    */
   async function _initialLoad(): Promise<T[]> {
-    const avatarInstance = get(avatar);
+    const avatarInstance = avatarState.avatar;
     if (!avatarInstance) return [];
 
     if (!circlesQuery.currentPage?.results) {

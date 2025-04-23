@@ -19,6 +19,13 @@ export function removeProfileFromCache(address: string) {
 /**
  * Our fallback logic for building a profile if IPFS data is empty or partial.
  */
+export enum FallbackImageUrl {
+  Person = '/person.svg',
+  Group = '/group.svg',
+  Organization = '/organization.svg',
+  Logo = '/logo.svg',
+}
+
 function setFallbackValues(
   address: string,
   avatar: AvatarRow | undefined,
@@ -26,18 +33,18 @@ function setFallbackValues(
 ): Profile {
   const fallbackProfile: Profile = {
     name: shortenAddress(address),
-    previewImageUrl: '/logo.svg',
+    previewImageUrl: FallbackImageUrl.Logo,
   };
 
   // Assign the correct fallback image
   if (!profile?.previewImageUrl && (avatar?.type === 'CrcV2_RegisterHuman' || avatar?.type === 'CrcV1_Signup')) {
-    fallbackProfile.previewImageUrl = '/person.svg';
+    fallbackProfile.previewImageUrl = FallbackImageUrl.Person;
   }
   if (avatar?.type === 'CrcV2_RegisterGroup') {
-    fallbackProfile.previewImageUrl = '/group.svg';
+    fallbackProfile.previewImageUrl = FallbackImageUrl.Group;
   }
   if (avatar?.type === 'CrcV2_RegisterOrganization') {
-    fallbackProfile.previewImageUrl = '/organization.svg';
+    fallbackProfile.previewImageUrl = FallbackImageUrl.Organization;
   }
 
   // Use avatar's name if set
@@ -165,4 +172,19 @@ export async function getProfile(address: Address): Promise<Profile> {
   profileCache.set(address, profilePromise);
 
   return profilePromise;
+}
+
+export function profilesEqual(
+  a: Profile | undefined,
+  b: Profile | undefined
+): boolean {
+  if (!a || !b) {
+    return false;
+  }
+  return (
+    a.name === b.name &&
+    a.description === b.description &&
+    a.previewImageUrl === b.previewImageUrl &&
+    a.imageUrl === b.imageUrl
+  );
 }
