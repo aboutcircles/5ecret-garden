@@ -37,9 +37,9 @@
   });
 
   let isLoading = $state(false);
-  let formData: BaseGroupProfile = $state({
+  let formData: BaseGroupProfile = $derived({
     service: '0x0000000000000000000000000000000000000000',
-    feeCollection: '0x0000000000000000000000000000000000000000',
+    feeCollection: $wallet?.address || '0x0000000000000000000000000000000000000000',
     initialConditions: '',
   });
   let mintPolicy = $state(mintPolicies[0]);
