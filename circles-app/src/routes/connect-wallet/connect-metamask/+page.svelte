@@ -83,9 +83,9 @@
       <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
     </button>
   </div>
-  <h2 class="font-bold text-[28px] md:text-[32px]">Select Avatar</h2>
+  <h2 class="font-bold text-[28px] md:text-[32px]">Select Account</h2>
   <p class="font-normal text-black/60 text-base">
-    Please select the avatar you want to use from the list below.
+    Please select the account you want to use from the list below.
   </p>
   {#if $wallet?.address && $circles && network && groupsByOwner}
     <ConnectCircles

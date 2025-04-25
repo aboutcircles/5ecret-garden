@@ -100,7 +100,7 @@
     {#if searchType === 'send'}
       Recipient
     {:else if searchType === 'contact'}
-      Found Avatar
+      Found Account
     {:else}
       Group
     {/if}
@@ -136,7 +136,7 @@
             >Invite {selectedAddress}</button
           >
         {:else}
-          <p>No avatars found.</p>
+          <p>No accounts found.</p>
         {/if}
       </div>
     </div>
