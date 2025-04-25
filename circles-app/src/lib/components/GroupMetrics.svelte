@@ -4,6 +4,12 @@
   import Chart, { type ChartItem } from 'chart.js/auto';
   import type { Address } from '@circles-sdk/utils';
   import { formatEther } from 'ethers/utils';
+  import {
+    getMemberCountHour,
+    groupMetrics,
+  } from '$lib/stores/groupMetrics.svelte';
+  import { avatarState } from '$lib/stores/avatar.svelte';
+  import { circles } from '$lib/stores/circles';
 
   interface Props {
     collateralInTreasury: Array<{
@@ -15,7 +21,7 @@
   let { collateralInTreasury }: Props = $props();
 
   let canvas: ChartItem;
-  let chart: Chart<"doughnut", number[], string>;
+  let chart: Chart<'doughnut', number[], string>;
   let data: {
     labels: string[];
     datasets: {
@@ -28,7 +34,22 @@
   };
 
   $effect(() => {
-    console.log('collateralInTreasury', collateralInTreasury);
+    const fetchMetrics = async () => {
+      if ($circles === undefined) return;
+
+      if (!avatarState.isGroup) return;
+
+      if (!avatarState.avatar) return;
+      const hour = getMemberCountHour(
+        $circles.circlesRpc,
+        avatarState.avatar?.address
+      );
+    };
+
+    fetchMetrics();
+  });
+
+  $effect(() => {
     data = {
       labels: collateralInTreasury.map((item) => item.avatar),
       datasets: [
