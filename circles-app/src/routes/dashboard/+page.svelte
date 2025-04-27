@@ -53,8 +53,8 @@
     }
 
     const { columns, rows } = balancesResult;
-    const colId = columns.indexOf('id');
-    const colBal = columns.indexOf('balance');
+    const colId = columns.indexOf('tokenId');
+    const colBal = columns.indexOf('demurragedTotalBalance');
 
     collateralInTreasury = rows.map((row) => ({
       avatar: uint256ToAddress(BigInt(row[colId])),

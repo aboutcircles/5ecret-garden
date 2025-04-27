@@ -108,8 +108,8 @@
     }
 
     const { columns, rows } = balancesResult;
-    const colId = columns.indexOf('id');
-    const colBal = columns.indexOf('balance');
+    const colId = columns.indexOf('tokenId');
+    const colBal = columns.indexOf('demurragedTotalBalance');
 
     // Build up the table data
     collateralInTreasury = rows.map((row) => ({
