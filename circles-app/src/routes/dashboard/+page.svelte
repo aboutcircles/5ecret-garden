@@ -98,7 +98,8 @@
         aria-label="Overview"
       />
       <div role="tabpanel" class="tab-content mt-8 bg-base-100 border-none">
-        <GroupMetrics {collateralInTreasury} />
+         <!-- Disabled GroupMetrics -->
+         <!-- <GroupMetrics {collateralInTreasury} /> --
       </div>
     {/if}
     <input
