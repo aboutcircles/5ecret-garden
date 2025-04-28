@@ -6,7 +6,7 @@
   import { type Address, uint256ToAddress } from '@circles-sdk/utils';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import { onMount } from 'svelte';
-  import { formatUnits, parseUnits } from 'ethers';
+  import {ethers, formatUnits} from 'ethers';
   import type { TokenBalanceRow, TrustRelation } from '@circles-sdk/data';
   import { contacts } from '$lib/stores/contacts';
   import { getVaultAddress, getVaultBalances } from '$lib/utils/vault';
@@ -21,13 +21,14 @@
   let collateralInTreasury: Array<{
     avatar: Address;
     amount: bigint; // raw wei from chain
-    amountToRedeem: number;
+    amountToRedeem: bigint;
+    amountToRedeemInCircles: number;
     trustRelation?: TrustRelation;
   }> = $state([]);
 
   // We'll keep track of the total to redeem and whether it's valid.
-  let totalToRedeem = $state(0);
-  let remainingToAllocate = $state(0);
+  let totalToRedeem: bigint = $state(0n);
+  let remainingToAllocate:bigint = $state(0n);
   let canRedeem = $state(false);
   let isModified = $state(false);
 
@@ -53,33 +54,42 @@
     // 1) Convert the user's total redeemable (asset.circles) from wei to a floating number.
     //    If asset.circles is already a string or BigInt, adapt accordingly.
     //    Example assumes it's a BigInt or numeric string in wei:
-    const userMaxRedeem = asset.circles;
+    const userMaxRedeem = BigInt(asset.attoCircles);
 
     // 2) Sum the amounts the user wants to redeem.
     totalToRedeem = collateralInTreasury.reduce(
-      (acc, item) => acc + (item.amountToRedeem || 0),
-      0
+      (acc, item) => acc + (BigInt(item.amountToRedeem) || 0n),
+      0n
     );
 
     // 3) Check that no user input exceeds its available collateral,
     //    and that totalToRedeem doesn't exceed the user’s own max.
     const allWithinCollateral = collateralInTreasury.every((item) => {
-      const maxForThisToken = Number(formatUnits(item.amount.toString(), 18));
-      return item.amountToRedeem >= 0 && item.amountToRedeem <= maxForThisToken;
+      return item.amountToRedeem >= 0n && item.amountToRedeem <= item.amount;
     });
+    console.log("allWithinCollateral", allWithinCollateral);
 
-    const withinUserBalance =
-      totalToRedeem <= userMaxRedeem && totalToRedeem >= 0;
+    const withinUserBalance = totalToRedeem <= userMaxRedeem && totalToRedeem >= 0n;
+    console.log("withinUserBalance", withinUserBalance);
 
     // 4) The user can still allocate up to this many tokens
     remainingToAllocate = userMaxRedeem - totalToRedeem;
+    console.log("remainingToAllocate", remainingToAllocate);
 
     // 5) Only enable redeem if everything checks out
     canRedeem = allWithinCollateral && withinUserBalance && totalToRedeem > 0;
 
     // If any item.amountToRedeem != 0, this is “modified”
-    isModified = collateralInTreasury.some((item) => item.amountToRedeem !== 0);
+    isModified = collateralInTreasury.some((item) => item.amountToRedeem !== 0n);
+
+    convertAmountToRedeem();
   });
+
+  function convertAmountToRedeem() {
+    for (const item of collateralInTreasury) {
+      item.amountToRedeemInCircles = Number(formatUnits(item.amountToRedeem, 18));
+    }
+  }
 
   onMount(async () => {
     if (!$circles) return;
@@ -115,7 +125,8 @@
     collateralInTreasury = rows.map((row) => ({
       avatar: uint256ToAddress(BigInt(row[colId])),
       amount: BigInt(row[colBal]),
-      amountToRedeem: 0, // default 0
+      amountToRedeemInCircles: 0,
+      amountToRedeem: 0n, // default 0
     }));
 
     Object.entries($contacts.data).map(([_, contact]) => {
@@ -150,8 +161,7 @@
     for (const item of collateralInTreasury) {
       if (item.amountToRedeem > 0) {
         collateralAddresses.push(item.avatar);
-        // Convert user input from Ether to wei
-        redeemAmounts.push(parseUnits(item.amountToRedeem.toString(), 18));
+        redeemAmounts.push(item.amountToRedeem);
       }
     }
 
@@ -172,8 +182,10 @@
   async function resetFields() {
     collateralInTreasury = collateralInTreasury.map((item) => ({
       ...item,
-      amountToRedeem: 0,
+      amountToRedeem: 0n,
+      amountToRedeemInCircles: 0,
     }));
+    convertAmountToRedeem();
   }
 
   function distribute() {
@@ -187,10 +199,18 @@
       }
       if (remainingToAllocate <= 0) break;
 
-      const available = Number(formatUnits(item.amount.toString(), 18));
+      const available = item.amount;
 
-      if (available > 0) {
-        const allocation = Math.min(available, remainingToAllocate);
+      if (available > 0n) {
+
+        let minBigInt = BigInt(0);
+        if (available < remainingToAllocate) {
+          minBigInt = available;
+        } else {
+          minBigInt = remainingToAllocate;
+        }
+
+        const allocation = minBigInt;
         item.amountToRedeem = allocation;
         remainingToAllocate -= allocation;
       }
@@ -215,7 +235,7 @@
   <p>
     You can still allocate:
     {#if remainingToAllocate >= 0}
-      {remainingToAllocate.toFixed(2)}
+      {Number(ethers.formatEther(remainingToAllocate)).toFixed(2)}
     {:else}
       0
     {/if}
