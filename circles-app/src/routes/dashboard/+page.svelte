@@ -6,12 +6,13 @@
   import { roundToDecimals } from '$lib/utils/shared';
   import { runTask } from '$lib/utils/tasks';
   import { transactionHistory } from '$lib/stores/transactionHistory';
-  import { getDailyCmGroupsDataOverTheMonth } from '$lib/utils/getGroupData';
   import { circles } from '$lib/stores/circles';
   import { uint256ToAddress, type Address } from '@circles-sdk/utils';
   import { getVaultAddress, getVaultBalances } from '$lib/utils/vault';
   import type { Sdk } from '@circles-sdk/sdk';
   import GroupMetrics from '$lib/components/GroupMetrics.svelte';
+  import { getMemberCountPerDay, getMemberCountPerHour } from '$lib/stores/groupMetrics.svelte';
+  import Chart from '$lib/components/Chart.svelte';
 
   let mintableAmount: number = $state(0);
 
@@ -20,6 +21,9 @@
     amount: bigint;
   }> = $state([]);
 
+  let memberCountPerHour: { timestamp: Date; count: number }[] = $state([]);
+  let memberCountPerDay: { timestamp: Date; count: number }[] = $state([]);
+
   $effect(() => {
     (async () => {
       if (avatarState.avatar && !avatarState.isGroup) {
@@ -27,16 +31,12 @@
       }
 
       if (avatarState.isGroup && $circles && avatarState.avatar) {
-        await initializeGroup($circles, avatarState.avatar.address);
-        // const groupMember = await getDailyCmGroupsDataOverTheMonth(
-        //   $circles,
-        //   $avatar.address
-        // );
+        await initializeGroupMetrics($circles, avatarState.avatar.address);
       }
     })();
   });
 
-  async function initializeGroup(circles: Sdk, group: Address) {
+  async function initializeGroupMetrics(circles: Sdk, group: Address) {
     const vaultAddress = await getVaultAddress(circles.circlesRpc, group);
     if (!vaultAddress) {
       collateralInTreasury = [];
@@ -60,6 +60,16 @@
       avatar: uint256ToAddress(BigInt(row[colId])),
       amount: BigInt(row[colBal]),
     }));
+
+    memberCountPerHour = await getMemberCountPerHour(
+      circles.circlesRpc,
+      group
+    );
+
+    memberCountPerDay = await getMemberCountPerDay(
+      circles.circlesRpc,
+      group
+    );
   }
 
   async function mintPersonalCircles() {
@@ -98,7 +108,8 @@
         aria-label="Overview"
       />
       <div role="tabpanel" class="tab-content mt-8 bg-base-100 border-none">
-        <GroupMetrics {collateralInTreasury} />
+        <GroupMetrics {collateralInTreasury} {memberCountPerHour} {memberCountPerDay} />
+        <Chart {memberCountPerDay} {memberCountPerHour} />
       </div>
     {/if}
     <input

@@ -1,7 +1,4 @@
-import { CirclesQuery, CirclesRpc, type EventRow, type PagedQueryParams } from "@circles-sdk/data";
-import { get } from "svelte/store";
-import { circles } from "./circles";
-import { avatarState } from "./avatar.svelte";
+import { CirclesRpc } from "@circles-sdk/data";
 import type { Address } from "@circles-sdk/utils";
 
 type GroupMetrics = {
@@ -19,10 +16,10 @@ export let groupMetrics: GroupMetrics = $state({
     collateralBalanceByToken: undefined,
 });
 
-export async function getMemberCountHour(
+export async function getMemberCountPerHour(
     circlesRpc: CirclesRpc,
     groupAddress: Address
-): Promise<string | null> {
+): Promise<Array<{ timestamp: Date; count: number }>> {
     const result = await circlesRpc.call<{
         columns: string[];
         rows: any[][];
@@ -39,13 +36,42 @@ export async function getMemberCountHour(
                     Value: groupAddress.toLowerCase(),
                 },
             ],
-            Order: [],
+            Order: [{ Column: 'timestamp', Direction: 'Asc' }],
         },
     ]);
 
-    console.log(result)
-    if (!result?.result.rows || result.result.rows.length === 0) {
-        return null;
-    }
-    return result.result.rows[0][0];
+    return result.result.rows.map(([_, ts, v]) => ({
+        timestamp: new Date(ts),
+        count: Number(v),
+    }));
+}
+
+export async function getMemberCountPerDay(
+    circlesRpc: CirclesRpc,
+    groupAddress: Address
+): Promise<Array<{ timestamp: Date; count: number }>> {
+    const result = await circlesRpc.call<{
+        columns: string[];
+        rows: any[][];
+    }>('circles_query', [
+        {
+            Namespace: 'V_CrcV2',
+            Table: 'GroupMembersCount_1d',
+            Columns: [],
+            Filter: [
+                {
+                    Type: 'FilterPredicate',
+                    FilterType: 'Equals',
+                    Column: 'group',
+                    Value: groupAddress.toLowerCase(),
+                },
+            ],
+            Order: [{ Column: 'timestamp', Direction: 'Asc' }],
+        },
+    ]);
+
+    return result.result.rows.map(([_, ts, v]) => ({
+        timestamp: new Date(ts),
+        count: Number(v),
+    }));
 }

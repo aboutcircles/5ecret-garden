@@ -1,28 +1,31 @@
-<!-- Chart.svelte -->
 <script lang="ts">
   import { onMount } from 'svelte';
   import Chart, { type ChartItem } from 'chart.js/auto';
   import type { Address } from '@circles-sdk/utils';
   import { formatEther } from 'ethers/utils';
-  import {
-    getMemberCountHour,
-    groupMetrics,
-  } from '$lib/stores/groupMetrics.svelte';
-  import { avatarState } from '$lib/stores/avatar.svelte';
-  import { circles } from '$lib/stores/circles';
 
   interface Props {
     collateralInTreasury: Array<{
       avatar: Address;
       amount: bigint;
     }>;
+    memberCountPerHour: {
+      timestamp: Date;
+      count: number;
+    }[];
+    memberCountPerDay: {
+      timestamp: Date;
+      count: number;
+    }[];
   }
 
-  let { collateralInTreasury }: Props = $props();
+  let { collateralInTreasury, memberCountPerHour, memberCountPerDay }: Props = $props();
 
-  let canvas: ChartItem;
-  let chart: Chart<'doughnut', number[], string>;
-  let data: {
+  let collateralCanvas: ChartItem;
+  let memberPerHourCanvas: ChartItem;
+  let collateralChart: Chart<'doughnut', number[], string>;
+  let memberPerHourChart: Chart<'line', number[], string>;
+  let collateralData: {
     labels: string[];
     datasets: {
       label: string;
@@ -32,25 +35,19 @@
       borderWidth: number;
     }[];
   };
+  let memberPerHourData: {
+    labels: string[];
+    datasets: {
+      label: string;
+      data: number[];
+      backgroundColor: string;
+      borderColor: string;
+      borderWidth: number;
+    }[];
+  };
 
   $effect(() => {
-    const fetchMetrics = async () => {
-      if ($circles === undefined) return;
-
-      if (!avatarState.isGroup) return;
-
-      if (!avatarState.avatar) return;
-      const hour = getMemberCountHour(
-        $circles.circlesRpc,
-        avatarState.avatar?.address
-      );
-    };
-
-    fetchMetrics();
-  });
-
-  $effect(() => {
-    data = {
+    collateralData = {
       labels: collateralInTreasury.map((item) => item.avatar),
       datasets: [
         {
@@ -78,17 +75,33 @@
         },
       ],
     };
+    memberPerHourData = {
+      labels: memberCountPerHour.map((item) => item.timestamp.toString()),
+      datasets: [
+        {
+          label: 'Members per hour',
+          data: memberCountPerHour.map((item) => item.count),
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1,
+        },
+      ],
+    };
 
-    if (chart) {
-      chart.data = data;
-      chart.update();
+    if (collateralChart) {
+      collateralChart.data = collateralData;
+      collateralChart.update();
+    }
+    if (memberPerHourChart) {
+      memberPerHourChart.data = memberPerHourData;
+      memberPerHourChart.update();
     }
   });
 
   onMount(() => {
-    chart = new Chart(canvas, {
+    collateralChart = new Chart(collateralCanvas, {
       type: 'doughnut',
-      data,
+      data: collateralData,
       options: {
         responsive: true,
         plugins: {
@@ -98,7 +111,21 @@
         },
       },
     });
+
+    memberPerHourChart = new Chart(memberPerHourCanvas, {
+      type: 'line',
+      data: memberPerHourData,
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'top',
+          },
+        },
+      },
+    });
   });
 </script>
 
-<canvas bind:this={canvas}></canvas>
+<canvas bind:this={collateralCanvas}></canvas>
+<canvas bind:this={memberPerHourCanvas}></canvas>
