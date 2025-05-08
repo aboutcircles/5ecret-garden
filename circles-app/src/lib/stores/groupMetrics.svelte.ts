@@ -2,16 +2,32 @@ import { getVaultAddress, getVaultBalances } from "$lib/utils/vault";
 import { CirclesRpc } from "@circles-sdk/data";
 import { uint256ToAddress, type Address } from "@circles-sdk/utils";
 
+type memberCount = {
+    timestamp: Date;
+    count: number;
+}
+
+type mintRedeem = {
+    timestamp: Date;
+    minted: number;
+    redeemed: number;
+    supply: number;
+}
+
 type GroupMetrics = {
-    memberCountPerHour: Array<{ timestamp: Date; count: number }>;
-    memberCountPerDay: Array<{ timestamp: Date; count: number }>;
+    memberCountPerHour: Array<memberCount>;
+    memberCountPerDay: Array<memberCount>;
     collateralInTreasury: Array<{ avatar: Address; amount: bigint }>;
+    mintRedeemPerHour: Array<mintRedeem>;
+    mintRedeemPerDay: Array<mintRedeem>;
 }
 
 export let groupMetrics: GroupMetrics = $state({
     memberCountPerHour: [],
     memberCountPerDay: [],
     collateralInTreasury: [],
+    mintRedeemPerHour: [],
+    mintRedeemPerDay: [],
 });
 
 export async function initGroupMetricsStore(
@@ -21,12 +37,15 @@ export async function initGroupMetricsStore(
     groupMetrics.memberCountPerHour = await getMemberCountPerHour(circlesRpc, groupAddress);
     groupMetrics.memberCountPerDay = await getMemberCountPerDay(circlesRpc, groupAddress);
     groupMetrics.collateralInTreasury = await getCollateralInTreasury(circlesRpc, groupAddress);
+    groupMetrics.mintRedeemPerHour = await getMintRedeemPerHour(circlesRpc, groupAddress);
+    groupMetrics.mintRedeemPerDay = await getMintRedeemPerDay(circlesRpc, groupAddress);
+    console.log('groupMetrics', groupMetrics.mintRedeemPerHour);
 }
 
 async function getMemberCountPerHour(
     circlesRpc: CirclesRpc,
     groupAddress: Address
-): Promise<Array<{ timestamp: Date; count: number }>> {
+): Promise<Array<memberCount>> {
     const result = await circlesRpc.call<{
         columns: string[];
         rows: any[][];
@@ -55,7 +74,7 @@ async function getMemberCountPerHour(
 async function getMemberCountPerDay(
     circlesRpc: CirclesRpc,
     groupAddress: Address
-): Promise<Array<{ timestamp: Date; count: number }>> {
+): Promise<Array<memberCount>> {
     const result = await circlesRpc.call<{
         columns: string[];
         rows: any[][];
@@ -106,5 +125,69 @@ async function getCollateralInTreasury(
     return rows.map((row) => ({
         avatar: uint256ToAddress(BigInt(row[colId])),
         amount: BigInt(row[colBal]),
+    }));
+}
+
+async function getMintRedeemPerDay(
+    circlesRpc: CirclesRpc,
+    groupAddress: Address
+): Promise<Array<mintRedeem>> {
+    const result = await circlesRpc.call<{
+        columns: string[];
+        rows: any[][];
+    }>('circles_query', [
+        {
+            Namespace: 'V_CrcV2',
+            Table: 'GroupMintRedeem_1d',
+            Columns: [],
+            Filter: [
+                {
+                    Type: 'FilterPredicate',
+                    FilterType: 'Equals',
+                    Column: 'group',
+                    Value: groupAddress.toLowerCase(),
+                },
+            ],
+        },
+    ]);
+
+    console.log('getMintRedeemPerDay', result);
+
+    return result.result.rows.map(([_, ts, m, r, s]) => ({
+        timestamp: new Date(ts),
+        minted: Number(m),
+        redeemed: Number(r),
+        supply: Number(s),
+    }));
+}
+
+async function getMintRedeemPerHour(
+    circlesRpc: CirclesRpc,
+    groupAddress: Address
+): Promise<Array<mintRedeem>> {
+    const result = await circlesRpc.call<{
+        columns: string[];
+        rows: any[][];
+    }>('circles_query', [
+        {
+            Namespace: 'V_CrcV2',
+            Table: 'GroupMintRedeem_1h',
+            Columns: [],
+            Filter: [
+                {
+                    Type: 'FilterPredicate',
+                    FilterType: 'Equals',
+                    Column: 'group',
+                    Value: groupAddress.toLowerCase(),
+                },
+            ],
+        },
+    ]);
+
+    return result.result.rows.map(([_, ts, v, m, r, s]) => ({
+        timestamp: new Date(ts),
+        minted: Number(m),
+        redeemed: Number(r),
+        supply: Number(s),
     }));
 }

@@ -62,9 +62,15 @@
           memberCountPerDay={groupMetrics.memberCountPerDay}
         />
         <Chart
-          memberCountPerHour={groupMetrics.memberCountPerHour}
-          memberCountPerDay={groupMetrics.memberCountPerDay}
+          dataHour={groupMetrics.memberCountPerHour}
+          dataDay={groupMetrics.memberCountPerDay}
         />
+        <Chart
+          dataHour={groupMetrics.mintRedeemPerHour}
+          dataDay={groupMetrics.mintRedeemPerDay}
+        />
+
+        
       </div>
     {/if}
     <input

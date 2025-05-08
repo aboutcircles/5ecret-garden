@@ -2,9 +2,9 @@
   import { onMount } from 'svelte';
   import Chart from 'chart.js/auto';
 
-  const { memberCountPerHour, memberCountPerDay } = $props<{
-    memberCountPerHour: { timestamp: Date; count: number }[];
-    memberCountPerDay: { timestamp: Date; count: number }[];
+  const { dataHour, dataDay } = $props<{
+    dataHour: Array<Record<string, any> & { timestamp: Date }>;
+    dataDay:  Array<Record<string, any> & { timestamp: Date }>;
   }>();
 
   let view = $state<'hour' | 'day'>('hour');
@@ -12,25 +12,26 @@
   let canvas: HTMLCanvasElement;
   let chart: Chart<'line', { x: number; y: number }[]>;
 
+  const colors = [
+    'rgba(54,162,235,0.2)', 'rgba(255,99,132,0.2)',
+    'rgba(255,206,86,0.2)',  'rgba(75,192,192,0.2)',
+    'rgba(153,102,255,0.2)','rgba(255,159,64,0.2)',
+  ];
+
   function updateChart() {
-    const source = view === 'hour' ? memberCountPerHour : memberCountPerDay;
-    const dataPoints = source.map(
-      (d: { timestamp: { getTime: () => any }; count: any }) => ({
-        x: d.timestamp.getTime(),
-        y: d.count,
-      })
+    const source = view === 'hour' ? dataHour : dataDay;
+
+    const numericKeys = Object.keys(source[0]).filter(k => 
+      k !== 'timestamp' && typeof source[0][k] === 'number'
     );
 
-    chart.data.datasets = [
-      {
-        label: view === 'hour' ? 'Members per hour' : 'Members per day',
-        data: dataPoints,
-        tension: 0.3,
-        borderWidth: 2,
-        backgroundColor: 'rgba(75,192,192,0.2)',
-        borderColor: 'rgba(75,192,192,1)',
-      },
-    ];
+    chart.data.datasets = numericKeys.map((key, i) => ({
+      label: key,
+      data: source.map((d: { [x: string]: any; timestamp: { getTime: () => any; }; }) => ({ x: d.timestamp.getTime(), y: d[key] })),
+      tension: 0.3,
+      borderWidth: 2,
+      backgroundColor: colors[i % colors.length],
+    }));
 
     const xScale: any = chart.options.scales!.x!;
     xScale.type = 'linear';
