@@ -40,13 +40,13 @@ export async function getVaultBalances(
   }>('circles_query', [
     {
       Namespace: 'V_CrcV2',
-      Table: 'GroupVaultBalancesByToken',
-      Columns: ['id', 'balance'],
+      Table: 'BalancesByAccountAndToken',
+      Columns: ['tokenId', 'demurragedTotalBalance'],
       Filter: [
         {
           Type: 'FilterPredicate',
           FilterType: 'Equals',
-          Column: 'vault',
+          Column: 'account',
           Value: vaultAddress.toLowerCase(),
         },
       ],

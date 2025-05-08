@@ -53,8 +53,8 @@
     }
 
     const { columns, rows } = balancesResult;
-    const colId = columns.indexOf('id');
-    const colBal = columns.indexOf('balance');
+    const colId = columns.indexOf('tokenId');
+    const colBal = columns.indexOf('demurragedTotalBalance');
 
     collateralInTreasury = rows.map((row) => ({
       avatar: uint256ToAddress(BigInt(row[colId])),
@@ -98,7 +98,8 @@
         aria-label="Overview"
       />
       <div role="tabpanel" class="tab-content mt-8 bg-base-100 border-none">
-        <GroupMetrics {collateralInTreasury} />
+         <!-- Disabled GroupMetrics -->
+         <!-- <GroupMetrics {collateralInTreasury} /> --
       </div>
     {/if}
     <input

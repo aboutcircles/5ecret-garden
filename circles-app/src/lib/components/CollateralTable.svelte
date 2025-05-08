@@ -1,6 +1,6 @@
 <script lang="ts">
   import { formatTrustRelation } from '$lib/utils/helpers';
-  import { formatUnits } from 'ethers';
+  import {formatUnits, parseEther} from 'ethers';
   import Avatar from './avatar/Avatar.svelte';
   import type { Address } from '@circles-sdk/utils';
   import type { TrustRelation } from '@circles-sdk/data';
@@ -14,7 +14,8 @@
     collateralInTreasury: Array<{
       avatar: Address;
       amount: bigint; // raw wei from chain
-      amountToRedeem: number;
+      amountToRedeem: bigint;
+      amountToRedeemInCircles: number;
       trustRelation?: TrustRelation;
     }>;
     redeemable?: boolean;
@@ -50,12 +51,13 @@
             <input
               type="number"
               class="input input-bordered w-36"
-              value={item.amountToRedeem}
+              value={item.amountToRedeemInCircles}
               oninput={(e) => {
                 const newValue = parseFloat(
                   (e.target as HTMLInputElement)?.value
                 );
-                item.amountToRedeem = isNaN(newValue) ? 0 : newValue;
+                item.amountToRedeemInCircles = isNaN(newValue) ? 0 : newValue;
+                item.amountToRedeem = parseEther(newValue.toString());
               }}
               min="0"
             />
