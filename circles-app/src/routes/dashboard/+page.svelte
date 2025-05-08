@@ -6,71 +6,19 @@
   import { roundToDecimals } from '$lib/utils/shared';
   import { runTask } from '$lib/utils/tasks';
   import { transactionHistory } from '$lib/stores/transactionHistory';
-  import { circles } from '$lib/stores/circles';
-  import { uint256ToAddress, type Address } from '@circles-sdk/utils';
-  import { getVaultAddress, getVaultBalances } from '$lib/utils/vault';
-  import type { Sdk } from '@circles-sdk/sdk';
   import GroupMetrics from '$lib/components/GroupMetrics.svelte';
-  import { getMemberCountPerDay, getMemberCountPerHour } from '$lib/stores/groupMetrics.svelte';
   import Chart from '$lib/components/Chart.svelte';
+  import { groupMetrics } from '$lib/stores/groupMetrics.svelte';
 
   let mintableAmount: number = $state(0);
-
-  let collateralInTreasury: Array<{
-    avatar: Address;
-    amount: bigint;
-  }> = $state([]);
-
-  let memberCountPerHour: { timestamp: Date; count: number }[] = $state([]);
-  let memberCountPerDay: { timestamp: Date; count: number }[] = $state([]);
 
   $effect(() => {
     (async () => {
       if (avatarState.avatar && !avatarState.isGroup) {
         mintableAmount = (await avatarState.avatar.getMintableAmount()) ?? 0;
       }
-
-      if (avatarState.isGroup && $circles && avatarState.avatar) {
-        await initializeGroupMetrics($circles, avatarState.avatar.address);
-      }
     })();
   });
-
-  async function initializeGroupMetrics(circles: Sdk, group: Address) {
-    const vaultAddress = await getVaultAddress(circles.circlesRpc, group);
-    if (!vaultAddress) {
-      collateralInTreasury = [];
-      return;
-    }
-
-    const balancesResult = await getVaultBalances(
-      circles.circlesRpc,
-      vaultAddress
-    );
-    if (!balancesResult) {
-      collateralInTreasury = [];
-      return;
-    }
-
-    const { columns, rows } = balancesResult;
-    const colId = columns.indexOf('id');
-    const colBal = columns.indexOf('balance');
-
-    collateralInTreasury = rows.map((row) => ({
-      avatar: uint256ToAddress(BigInt(row[colId])),
-      amount: BigInt(row[colBal]),
-    }));
-
-    memberCountPerHour = await getMemberCountPerHour(
-      circles.circlesRpc,
-      group
-    );
-
-    memberCountPerDay = await getMemberCountPerDay(
-      circles.circlesRpc,
-      group
-    );
-  }
 
   async function mintPersonalCircles() {
     if (!avatarState.avatar) {
@@ -108,8 +56,15 @@
         aria-label="Overview"
       />
       <div role="tabpanel" class="tab-content mt-8 bg-base-100 border-none">
-        <GroupMetrics {collateralInTreasury} {memberCountPerHour} {memberCountPerDay} />
-        <Chart {memberCountPerDay} {memberCountPerHour} />
+        <GroupMetrics
+          collateralInTreasury={groupMetrics.collateralInTreasury}
+          memberCountPerHour={groupMetrics.memberCountPerHour}
+          memberCountPerDay={groupMetrics.memberCountPerDay}
+        />
+        <Chart
+          memberCountPerHour={groupMetrics.memberCountPerHour}
+          memberCountPerDay={groupMetrics.memberCountPerDay}
+        />
       </div>
     {/if}
     <input

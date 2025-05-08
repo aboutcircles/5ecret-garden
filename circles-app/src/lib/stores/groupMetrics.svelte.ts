@@ -1,22 +1,29 @@
+import { getVaultAddress, getVaultBalances } from "$lib/utils/vault";
 import { CirclesRpc } from "@circles-sdk/data";
-import type { Address } from "@circles-sdk/utils";
+import { uint256ToAddress, type Address } from "@circles-sdk/utils";
 
 type GroupMetrics = {
-    memberCount: {
-        hour: any | undefined;
-        day: any | undefined;
-    }
-    tokenHoldersBalance: any | undefined;
-    collateralBalanceByToken: any | undefined;
+    memberCountPerHour: Array<{ timestamp: Date; count: number }>;
+    memberCountPerDay: Array<{ timestamp: Date; count: number }>;
+    collateralInTreasury: Array<{ avatar: Address; amount: bigint }>;
 }
 
 export let groupMetrics: GroupMetrics = $state({
-    memberCount: { hour: undefined, day: undefined },
-    tokenHoldersBalance: undefined,
-    collateralBalanceByToken: undefined,
+    memberCountPerHour: [],
+    memberCountPerDay: [],
+    collateralInTreasury: [],
 });
 
-export async function getMemberCountPerHour(
+export async function initGroupMetricsStore(
+    circlesRpc: CirclesRpc,
+    groupAddress: Address
+): Promise<void> {
+    groupMetrics.memberCountPerHour = await getMemberCountPerHour(circlesRpc, groupAddress);
+    groupMetrics.memberCountPerDay = await getMemberCountPerDay(circlesRpc, groupAddress);
+    groupMetrics.collateralInTreasury = await getCollateralInTreasury(circlesRpc, groupAddress);
+}
+
+async function getMemberCountPerHour(
     circlesRpc: CirclesRpc,
     groupAddress: Address
 ): Promise<Array<{ timestamp: Date; count: number }>> {
@@ -36,7 +43,6 @@ export async function getMemberCountPerHour(
                     Value: groupAddress.toLowerCase(),
                 },
             ],
-            Order: [{ Column: 'timestamp', Direction: 'Asc' }],
         },
     ]);
 
@@ -46,7 +52,7 @@ export async function getMemberCountPerHour(
     }));
 }
 
-export async function getMemberCountPerDay(
+async function getMemberCountPerDay(
     circlesRpc: CirclesRpc,
     groupAddress: Address
 ): Promise<Array<{ timestamp: Date; count: number }>> {
@@ -66,12 +72,39 @@ export async function getMemberCountPerDay(
                     Value: groupAddress.toLowerCase(),
                 },
             ],
-            Order: [{ Column: 'timestamp', Direction: 'Asc' }],
         },
     ]);
 
     return result.result.rows.map(([_, ts, v]) => ({
         timestamp: new Date(ts),
         count: Number(v),
+    }));
+}
+
+async function getCollateralInTreasury(
+    circlesRpc: CirclesRpc,
+    groupAddress: Address
+): Promise<Array<{ avatar: Address; amount: bigint }>> {
+    const vaultAddress = await getVaultAddress(circlesRpc, groupAddress);
+    if (!vaultAddress) {
+        return [];
+    }
+
+    const balancesResult = await getVaultBalances(
+        circlesRpc,
+        vaultAddress
+    );
+    if (!balancesResult) {
+        ;
+        return [];
+    }
+
+    const { columns, rows } = balancesResult;
+    const colId = columns.indexOf('id');
+    const colBal = columns.indexOf('balance');
+
+    return rows.map((row) => ({
+        avatar: uint256ToAddress(BigInt(row[colId])),
+        amount: BigInt(row[colBal]),
     }));
 }

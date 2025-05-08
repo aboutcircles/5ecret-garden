@@ -25,6 +25,8 @@
   import { initTransactionHistoryStore } from '$lib/stores/transactionHistory';
   import { initContactStore } from '$lib/stores/contacts';
   import { initBalanceStore } from '$lib/stores/circlesBalances';
+  import { initGroupMetricsStore } from '$lib/stores/groupMetrics.svelte';
+  import { circles } from '$lib/stores/circles';
 
   interface Props {
     children?: import('svelte').Snippet;
@@ -120,7 +122,7 @@
 
   // init profile state
   $effect(() => {
-    const address = avatarState.avatar?.avatarInfo?.avatar;
+    const address = avatarState.avatar?.address;
     if (address) {
       getProfile(address).then((newProfile) => {
         avatarState.profile = newProfile;
@@ -136,6 +138,9 @@
       initTransactionHistoryStore(avatarState.avatar);
       initContactStore(avatarState.avatar);
       initBalanceStore(avatarState.avatar);
+      if(avatarState.groupType === 'CrcV2_BaseGroupCreated' && $circles) {
+        initGroupMetricsStore($circles.circlesRpc, avatarState.avatar.address);
+      }
     }
   });
 </script>

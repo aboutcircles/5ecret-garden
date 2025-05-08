@@ -22,9 +22,7 @@
   let { collateralInTreasury, memberCountPerHour, memberCountPerDay }: Props = $props();
 
   let collateralCanvas: ChartItem;
-  let memberPerHourCanvas: ChartItem;
   let collateralChart: Chart<'doughnut', number[], string>;
-  let memberPerHourChart: Chart<'line', number[], string>;
   let collateralData: {
     labels: string[];
     datasets: {
@@ -32,16 +30,6 @@
       data: number[];
       backgroundColor: string[];
       borderColor: string[];
-      borderWidth: number;
-    }[];
-  };
-  let memberPerHourData: {
-    labels: string[];
-    datasets: {
-      label: string;
-      data: number[];
-      backgroundColor: string;
-      borderColor: string;
       borderWidth: number;
     }[];
   };
@@ -75,26 +63,10 @@
         },
       ],
     };
-    memberPerHourData = {
-      labels: memberCountPerHour.map((item) => item.timestamp.toString()),
-      datasets: [
-        {
-          label: 'Members per hour',
-          data: memberCountPerHour.map((item) => item.count),
-          backgroundColor: 'rgba(75, 192, 192, 0.2)',
-          borderColor: 'rgba(75, 192, 192, 1)',
-          borderWidth: 1,
-        },
-      ],
-    };
 
     if (collateralChart) {
       collateralChart.data = collateralData;
       collateralChart.update();
-    }
-    if (memberPerHourChart) {
-      memberPerHourChart.data = memberPerHourData;
-      memberPerHourChart.update();
     }
   });
 
@@ -111,21 +83,7 @@
         },
       },
     });
-
-    memberPerHourChart = new Chart(memberPerHourCanvas, {
-      type: 'line',
-      data: memberPerHourData,
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: 'top',
-          },
-        },
-      },
-    });
   });
 </script>
 
 <canvas bind:this={collateralCanvas}></canvas>
-<canvas bind:this={memberPerHourCanvas}></canvas>
