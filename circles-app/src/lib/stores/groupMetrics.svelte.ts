@@ -39,7 +39,7 @@ export async function initGroupMetricsStore(
     groupMetrics.collateralInTreasury = await getCollateralInTreasury(circlesRpc, groupAddress);
     groupMetrics.mintRedeemPerHour = await getMintRedeemPerHour(circlesRpc, groupAddress);
     groupMetrics.mintRedeemPerDay = await getMintRedeemPerDay(circlesRpc, groupAddress);
-    console.log(groupMetrics.collateralInTreasury);
+    console.log(groupMetrics.memberCountPerHour);
     // await getGroupTokenHoldersBalance(circlesRpc, groupAddress);
 }
 
@@ -63,6 +63,7 @@ async function getMemberCountPerHour(
                     Value: groupAddress.toLowerCase(),
                 },
             ],
+            Limit: 24
         },
     ]);
 
@@ -92,6 +93,7 @@ async function getMemberCountPerDay(
                     Value: groupAddress.toLowerCase(),
                 },
             ],
+            Limit: 30,
         },
     ]);
 
@@ -149,14 +151,15 @@ async function getMintRedeemPerDay(
                     Value: groupAddress.toLowerCase(),
                 },
             ],
+            Limit: 30,
         },
     ]);
 
     return result.result.rows.map(([_, ts, m, r, s]) => ({
         timestamp: new Date(ts),
-        minted: Number(m),
-        redeemed: Number(r),
-        supply: Number(s),
+        minted: Number(m / 10 ** 18),
+        redeemed: Number(r / 10 ** 18),
+        supply: Number(s / 10 ** 18),
     }));
 }
 
@@ -180,14 +183,15 @@ async function getMintRedeemPerHour(
                     Value: groupAddress.toLowerCase(),
                 },
             ],
+            Limit: 24,
         },
     ]);
 
     return result.result.rows.map(([_, ts, v, m, r, s]) => ({
         timestamp: new Date(ts),
-        minted: Number(m),
-        redeemed: Number(r),
-        supply: Number(s),
+        minted: Number(m / 10 ** 18),
+        redeemed: Number(r / 10 ** 18),
+        supply: Number(s / 10 ** 18),
     }));
 }
 

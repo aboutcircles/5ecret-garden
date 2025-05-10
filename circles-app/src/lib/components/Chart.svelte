@@ -33,11 +33,13 @@
       backgroundColor: colors[i % colors.length],
     }));
 
-    const xScale: any = chart.options.scales!.x!;
+    const xScale = chart.options.scales!.x!;
     xScale.type = 'linear';
+    xScale.reverse = false;
     xScale.ticks = {
-      callback: (value: number) => {
-        const d = new Date(value);
+      callback: (tickValue: string | number) => {
+        const numValue = typeof tickValue === 'number' ? tickValue : Number(tickValue);
+        const d = new Date(numValue);
         if (view === 'hour') {
           // HH:mm
           return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
@@ -48,7 +50,9 @@
       },
       maxTicksLimit: view === 'hour' ? 12 : 10,
     };
-    xScale.title.text = view === 'hour' ? 'Hour' : 'Day';
+    if (xScale.title) {
+      xScale.title.text = view === 'hour' ? 'Hour' : 'Day';
+    }
 
     const allT = source.map((d: { timestamp: { getTime: () => any } }) =>
       d.timestamp.getTime()
