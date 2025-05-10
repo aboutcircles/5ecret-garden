@@ -72,7 +72,7 @@
           },
           y: {
             beginAtZero: true,
-            title: { display: true, text: 'Members' },
+            title: { display: true, text: 'Number' },
           },
         },
         plugins: {

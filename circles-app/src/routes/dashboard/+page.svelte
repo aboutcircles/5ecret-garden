@@ -56,21 +56,28 @@
         aria-label="Overview"
       />
       <div role="tabpanel" class="tab-content mt-8 bg-base-100 border-none">
-        <GroupMetrics
-          collateralInTreasury={groupMetrics.collateralInTreasury}
-          memberCountPerHour={groupMetrics.memberCountPerHour}
-          memberCountPerDay={groupMetrics.memberCountPerDay}
-        />
-        <Chart
-          dataHour={groupMetrics.memberCountPerHour}
-          dataDay={groupMetrics.memberCountPerDay}
-        />
-        <Chart
-          dataHour={groupMetrics.mintRedeemPerHour}
-          dataDay={groupMetrics.mintRedeemPerDay}
-        />
+        {#if groupMetrics?.collateralInTreasury && groupMetrics.collateralInTreasury.length > 0}
+          <GroupMetrics
+            collateralInTreasury={groupMetrics.collateralInTreasury}
+          />
+        {/if}
 
-        
+        {#if groupMetrics?.memberCountPerHour && groupMetrics.memberCountPerHour.length > 0 && groupMetrics.memberCountPerDay && groupMetrics.memberCountPerDay.length > 0}
+          <div class="divider"></div>
+          <h2 class="text-lg font-bold">Member Count</h2>
+          <Chart
+            dataHour={groupMetrics.memberCountPerHour}
+            dataDay={groupMetrics.memberCountPerDay}
+          />
+        {/if}
+        {#if groupMetrics?.mintRedeemPerHour && groupMetrics.mintRedeemPerHour.length > 0 && groupMetrics.mintRedeemPerDay && groupMetrics.mintRedeemPerDay.length > 0}
+          <div class="divider"></div>
+          <h2 class="text-lg font-bold">Mint/Redeem</h2>
+          <Chart
+            dataHour={groupMetrics.mintRedeemPerHour}
+            dataDay={groupMetrics.mintRedeemPerDay}
+          />
+        {/if}
       </div>
     {/if}
     <input

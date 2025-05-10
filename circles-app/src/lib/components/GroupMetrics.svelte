@@ -9,17 +9,9 @@
       avatar: Address;
       amount: bigint;
     }>;
-    memberCountPerHour: {
-      timestamp: Date;
-      count: number;
-    }[];
-    memberCountPerDay: {
-      timestamp: Date;
-      count: number;
-    }[];
   }
 
-  let { collateralInTreasury, memberCountPerHour, memberCountPerDay }: Props = $props();
+  let { collateralInTreasury }: Props = $props();
 
   let collateralCanvas: ChartItem;
   let collateralChart: Chart<'doughnut', number[], string>;

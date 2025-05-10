@@ -15,19 +15,19 @@ type mintRedeem = {
 }
 
 type GroupMetrics = {
-    memberCountPerHour: Array<memberCount>;
-    memberCountPerDay: Array<memberCount>;
-    collateralInTreasury: Array<{ avatar: Address; amount: bigint }>;
-    mintRedeemPerHour: Array<mintRedeem>;
-    mintRedeemPerDay: Array<mintRedeem>;
+    memberCountPerHour: Array<memberCount> | undefined;
+    memberCountPerDay: Array<memberCount> | undefined;
+    collateralInTreasury: Array<{ avatar: Address; amount: bigint }> | undefined;
+    mintRedeemPerHour: Array<mintRedeem> | undefined;
+    mintRedeemPerDay: Array<mintRedeem> | undefined;
 }
 
 export let groupMetrics: GroupMetrics = $state({
-    memberCountPerHour: [],
-    memberCountPerDay: [],
-    collateralInTreasury: [],
-    mintRedeemPerHour: [],
-    mintRedeemPerDay: [],
+    memberCountPerHour: undefined,
+    memberCountPerDay: undefined,
+    collateralInTreasury: undefined,
+    mintRedeemPerHour: undefined,
+    mintRedeemPerDay: undefined,
 });
 
 export async function initGroupMetricsStore(
@@ -39,7 +39,8 @@ export async function initGroupMetricsStore(
     groupMetrics.collateralInTreasury = await getCollateralInTreasury(circlesRpc, groupAddress);
     groupMetrics.mintRedeemPerHour = await getMintRedeemPerHour(circlesRpc, groupAddress);
     groupMetrics.mintRedeemPerDay = await getMintRedeemPerDay(circlesRpc, groupAddress);
-    console.log('groupMetrics', groupMetrics.mintRedeemPerHour);
+    console.log(groupMetrics.collateralInTreasury);
+    // await getGroupTokenHoldersBalance(circlesRpc, groupAddress);
 }
 
 async function getMemberCountPerHour(
@@ -151,8 +152,6 @@ async function getMintRedeemPerDay(
         },
     ]);
 
-    console.log('getMintRedeemPerDay', result);
-
     return result.result.rows.map(([_, ts, m, r, s]) => ({
         timestamp: new Date(ts),
         minted: Number(m),
@@ -190,4 +189,37 @@ async function getMintRedeemPerHour(
         redeemed: Number(r),
         supply: Number(s),
     }));
+}
+
+async function getGroupTokenHoldersBalance(
+    circlesRpc: CirclesRpc,
+    groupAddress: Address
+) {
+    const result = await circlesRpc.call<{
+        columns: string[];
+        rows: any[][];
+    }>('circles_query', [
+        {
+            Namespace: 'V_CrcV2',
+            Table: 'GroupTokenHoldersBalance',
+            Columns: [],
+            Filter: [
+                {
+                    Type: 'FilterPredicate',
+                    FilterType: 'Equals',
+                    Column: 'group',
+                    Value: groupAddress.toLowerCase(),
+                },
+            ],
+        },
+    ]);
+
+    console.log('getGroupTokenHoldersBalance', result);
+
+    // return result.result.rows.map(([_, ts, v, m, r, s]) => ({
+    //     timestamp: new Date(ts),
+    //     minted: Number(m),
+    //     redeemed: Number(r),
+    //     supply: Number(s),
+    // }));
 }
