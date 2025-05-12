@@ -39,8 +39,9 @@ export async function initGroupMetricsStore(
     groupMetrics.collateralInTreasury = await getCollateralInTreasury(circlesRpc, groupAddress);
     groupMetrics.mintRedeemPerHour = await getMintRedeemPerHour(circlesRpc, groupAddress);
     groupMetrics.mintRedeemPerDay = await getMintRedeemPerDay(circlesRpc, groupAddress);
-    console.log(groupMetrics.memberCountPerHour);
     // await getGroupTokenHoldersBalance(circlesRpc, groupAddress);
+    const res = await fetch('/api/price');
+    if (res.ok) console.log(await res.json());
 }
 
 async function getMemberCountPerHour(
