@@ -20,6 +20,9 @@ type GroupMetrics = {
     collateralInTreasury: Array<{ avatar: Address; amount: bigint }> | undefined;
     mintRedeemPerHour: Array<mintRedeem> | undefined;
     mintRedeemPerDay: Array<mintRedeem> | undefined;
+    erc20Token: Address | undefined;
+    priceHistoryWeek?: Array<{ bucket: Date; price: number }>;
+    priceHistoryMonth?: Array<{ bucket: Date; price: number }>;
 }
 
 export let groupMetrics: GroupMetrics = $state({
@@ -28,6 +31,7 @@ export let groupMetrics: GroupMetrics = $state({
     collateralInTreasury: undefined,
     mintRedeemPerHour: undefined,
     mintRedeemPerDay: undefined,
+    erc20Token: undefined,
 });
 
 export async function initGroupMetricsStore(
@@ -40,8 +44,19 @@ export async function initGroupMetricsStore(
     groupMetrics.mintRedeemPerHour = await getMintRedeemPerHour(circlesRpc, groupAddress);
     groupMetrics.mintRedeemPerDay = await getMintRedeemPerDay(circlesRpc, groupAddress);
     // await getGroupTokenHoldersBalance(circlesRpc, groupAddress);
-    const res = await fetch('/api/price');
-    if (res.ok) console.log(await res.json());
+    groupMetrics.erc20Token = await getERC20Token(circlesRpc, groupAddress);
+
+    const base = '/api/price/' + '?group=' + encodeURIComponent(groupMetrics.erc20Token ?? "")
+
+    const [weekRes, monthRes] = await Promise.all([
+        fetch(`${base}&period=7 days&resolution=hour`),
+        fetch(`${base}&period=30 days&resolution=day`)
+    ]);
+
+    if (weekRes.ok) groupMetrics.priceHistoryWeek = await weekRes.json();
+    if (monthRes.ok) groupMetrics.priceHistoryMonth = await monthRes.json();
+
+    console.log('groupMetrics', groupMetrics.priceHistoryMonth);
 }
 
 async function getMemberCountPerHour(
@@ -227,4 +242,30 @@ async function getGroupTokenHoldersBalance(
     //     redeemed: Number(r),
     //     supply: Number(s),
     // }));
+}
+
+async function getERC20Token(
+    circlesRpc: CirclesRpc,
+    groupAddress: Address
+): Promise<Address | undefined> {
+    const result = await circlesRpc.call<{
+        columns: string[];
+        rows: any[][];
+    }>('circles_query', [
+        {
+            Namespace: 'V_Crc',
+            Table: 'Tokens',
+            Columns: [],
+            Filter: [
+                {
+                    Type: 'FilterPredicate',
+                    FilterType: 'Equals',
+                    Column: 'tokenOwner',
+                    Value: groupAddress.toLowerCase(),
+                },
+            ],
+        },
+    ]);
+
+    return result.result.rows[1][7];
 }
