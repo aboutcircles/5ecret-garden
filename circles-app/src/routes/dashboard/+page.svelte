@@ -9,6 +9,7 @@
   import GroupMetrics from '$lib/components/GroupMetrics.svelte';
   import Chart from '$lib/components/Chart.svelte';
   import { groupMetrics } from '$lib/stores/groupMetrics.svelte';
+  import HistoryChart from '$lib/components/HistoryChart.svelte';
 
   let mintableAmount: number = $state(0);
 
@@ -56,6 +57,15 @@
         aria-label="Overview"
       />
       <div role="tabpanel" class="tab-content mt-8 bg-base-100 border-none">
+        {#if groupMetrics.priceHistoryWeek && groupMetrics.priceHistoryMonth}
+          <div class="divider"></div>
+          <h2 class="text-lg text-primary font-bold">Price</h2>
+          <HistoryChart
+            dataSet1={groupMetrics.priceHistoryWeek}
+            dataSet2={groupMetrics.priceHistoryMonth}
+            title="Price per hour"
+          />
+        {/if}
         {#if groupMetrics?.collateralInTreasury && groupMetrics.collateralInTreasury.length > 0}
           <GroupMetrics
             collateralInTreasury={groupMetrics.collateralInTreasury}
@@ -64,7 +74,7 @@
 
         {#if groupMetrics?.memberCountPerHour && groupMetrics.memberCountPerHour.length > 0 && groupMetrics.memberCountPerDay && groupMetrics.memberCountPerDay.length > 0}
           <div class="divider"></div>
-          <h2 class="text-lg font-bold">Member Count</h2>
+          <h2 class="text-lg text-primary font-bold">Member Count</h2>
           <Chart
             dataHour={groupMetrics.memberCountPerHour}
             dataDay={groupMetrics.memberCountPerDay}
@@ -72,7 +82,7 @@
         {/if}
         {#if groupMetrics?.mintRedeemPerHour && groupMetrics.mintRedeemPerHour.length > 0 && groupMetrics.mintRedeemPerDay && groupMetrics.mintRedeemPerDay.length > 0}
           <div class="divider"></div>
-          <h2 class="text-lg font-bold">Mint/Redeem</h2>
+          <h2 class="text-lg text-primary font-bold">Mint/Redeem</h2>
           <Chart
             dataHour={groupMetrics.mintRedeemPerHour}
             dataDay={groupMetrics.mintRedeemPerDay}

@@ -53,8 +53,17 @@ export async function initGroupMetricsStore(
         fetch(`${base}&period=30 days&resolution=day`)
     ]);
 
-    if (weekRes.ok) groupMetrics.priceHistoryWeek = await weekRes.json();
-    if (monthRes.ok) groupMetrics.priceHistoryMonth = await monthRes.json();
+    const rawWeek = await weekRes.json();
+    groupMetrics.priceHistoryWeek = rawWeek.map((p: { bucket: string; price: string; }) => ({
+        bucket: new Date(p.bucket),
+        price: p.price
+    }));
+
+    const rawMonth = await monthRes.json();
+    groupMetrics.priceHistoryMonth = rawMonth.map((p: { bucket: string; price: string; }) => ({
+        bucket: new Date(p.bucket),
+        price: p.price
+    }));
 
     console.log('groupMetrics', groupMetrics.priceHistoryMonth);
 }
