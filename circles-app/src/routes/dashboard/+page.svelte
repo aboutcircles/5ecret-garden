@@ -7,7 +7,6 @@
   import { runTask } from '$lib/utils/tasks';
   import { transactionHistory } from '$lib/stores/transactionHistory';
   import GroupMetrics from '$lib/components/GroupMetrics.svelte';
-  import Chart from '$lib/components/Chart.svelte';
   import { groupMetrics } from '$lib/stores/groupMetrics.svelte';
   import HistoryChart from '$lib/components/HistoryChart.svelte';
 

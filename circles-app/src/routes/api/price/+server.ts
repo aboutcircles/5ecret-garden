@@ -4,6 +4,7 @@ import {
   DB_USER, DB_PW, DB_HOST, DB_PORT,
   DB_DATABASE, DB_SSL_MODE
 } from '$env/static/private';
+import { staticCirclesToCircles } from '@circles-sdk/utils';
 const { Client } = pkg;
 
 export const GET: RequestHandler = async ({ url }) => {
@@ -55,7 +56,7 @@ export const GET: RequestHandler = async ({ url }) => {
 
     const history = rows.map(r => ({
       timestamp: new Date(r.bucket),
-      price: parseFloat(r.price)
+      price: staticCirclesToCircles(parseFloat(r.price))
     }));
 
     return new Response(JSON.stringify(history), {

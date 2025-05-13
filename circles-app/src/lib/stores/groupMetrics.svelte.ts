@@ -43,7 +43,7 @@ export async function initGroupMetricsStore(
     groupMetrics.collateralInTreasury = await getCollateralInTreasury(circlesRpc, groupAddress);
     groupMetrics.mintRedeemPerHour = await getMintRedeemPerHour(circlesRpc, groupAddress);
     groupMetrics.mintRedeemPerDay = await getMintRedeemPerDay(circlesRpc, groupAddress);
-    // await getGroupTokenHoldersBalance(circlesRpc, groupAddress);
+    await getGroupTokenHoldersBalance(circlesRpc, groupAddress);
     groupMetrics.erc20Token = await getERC20Token(circlesRpc, groupAddress);
 
     const base = '/api/price/' + '?group=' + encodeURIComponent(groupMetrics.erc20Token ?? "")
@@ -68,8 +68,6 @@ export async function initGroupMetricsStore(
             price: Number(p.price),
         }))
         .filter((p: { price: number; }) => typeof p.price === 'number' && !isNaN(p.price));
-
-    console.log('groupMetrics', groupMetrics.priceHistoryMonth);
 }
 
 async function getMemberCountPerHour(

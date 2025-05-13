@@ -21,7 +21,6 @@
 
   function updateChart() {
     const src = resolution === 'hour' ? dataSet1 : dataSet2;
-    console.log(src);
 
     const keys = src.length
       ? Object.keys(src[0]).filter(
