@@ -99,7 +99,7 @@
       />
       <div role="tabpanel" class="tab-content mt-8 bg-base-100 border-none">
          <!-- Disabled GroupMetrics -->
-         <!-- <GroupMetrics {collateralInTreasury} /> --
+         <!-- <GroupMetrics {collateralInTreasury} /> -->
       </div>
     {/if}
     <input
