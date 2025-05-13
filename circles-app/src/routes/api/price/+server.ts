@@ -54,7 +54,7 @@ export const GET: RequestHandler = async ({ url }) => {
     );
 
     const history = rows.map(r => ({
-      bucket: new Date(r.bucket),
+      timestamp: new Date(r.bucket),
       price: parseFloat(r.price)
     }));
 

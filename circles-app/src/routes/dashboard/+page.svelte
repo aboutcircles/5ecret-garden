@@ -75,17 +75,19 @@
         {#if groupMetrics?.memberCountPerHour && groupMetrics.memberCountPerHour.length > 0 && groupMetrics.memberCountPerDay && groupMetrics.memberCountPerDay.length > 0}
           <div class="divider"></div>
           <h2 class="text-lg text-primary font-bold">Member Count</h2>
-          <Chart
-            dataHour={groupMetrics.memberCountPerHour}
-            dataDay={groupMetrics.memberCountPerDay}
+          <HistoryChart
+            dataSet1={groupMetrics.memberCountPerHour}
+            dataSet2={groupMetrics.memberCountPerDay}
+            title="Member Count"
           />
         {/if}
         {#if groupMetrics?.mintRedeemPerHour && groupMetrics.mintRedeemPerHour.length > 0 && groupMetrics.mintRedeemPerDay && groupMetrics.mintRedeemPerDay.length > 0}
           <div class="divider"></div>
           <h2 class="text-lg text-primary font-bold">Mint/Redeem</h2>
-          <Chart
-            dataHour={groupMetrics.mintRedeemPerHour}
-            dataDay={groupMetrics.mintRedeemPerDay}
+          <HistoryChart
+            dataSet1={groupMetrics.mintRedeemPerHour}
+            dataSet2={groupMetrics.mintRedeemPerDay}
+            title="Mint/Redeem"
           />
         {/if}
       </div>

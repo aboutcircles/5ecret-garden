@@ -3,13 +3,12 @@
   import Chart from 'chart.js/auto';
 
   interface Props {
-    dataSet1: Array<{ bucket: Date; price: number }>;
-    dataSet2: Array<{ bucket: Date; price: number }>;
+    dataSet1: Array<Record<string, any> & { timestamp: Date }>;
+    dataSet2: Array<Record<string, any> & { timestamp: Date }>;
     title: string;
   }
 
   let { dataSet1, dataSet2, title }: Props = $props();
-  let data: Array<{ bucket: Date; price: number }> = $state(dataSet1);
 
   let resolution: 'hour' | 'day' = $state('hour');
 
@@ -17,45 +16,54 @@
   let chart: Chart<'line', { x: number; y: number }[]>;
 
   $effect(() => {
-    resolution === 'hour' ? (data = dataSet1) : (data = dataSet2);
     if (chart) updateChart();
   });
 
   function updateChart() {
-    const points = data.map((d) => ({
-      x: d.bucket.getTime(),
-      y: d.price,
-    }));
+    const src = resolution === 'hour' ? dataSet1 : dataSet2;
+    console.log(src);
 
-    chart.data = {
-      datasets: [
-        {
-          label: title,
-          data: points,
-          borderWidth: 2,
-          tension: 0.3,
-          pointRadius: 0,
-          backgroundColor: 'rgba(54,162,235,0.2)',
-          borderColor: 'rgba(54,162,235,1)',
-        },
-      ],
-    };
+    const keys = src.length
+      ? Object.keys(src[0]).filter(
+          (k) => k !== 'timestamp' && typeof src[0][k] === 'number'
+        )
+      : [];
 
-    const xScale: any = chart.options.scales!.x!;
-    const allTs = points.map((p) => p.x);
-    xScale.type = 'linear';
-    xScale.min = Math.min(...allTs);
-    xScale.max = Math.max(...allTs);
-    xScale.ticks = {
+    let allTs: number[] = [];
+
+    chart.data.datasets = keys.map((key, i) => {
+      const pts = src.map((d) => ({
+        x: d.timestamp.getTime(),
+        y: d[key],
+      }));
+      allTs.push(...pts.map((p) => p.x));
+      return {
+        label: title ? `${title} – ${key}` : key,
+        data: pts,
+        tension: 0.3,
+        borderWidth: 2,
+        pointRadius: 0,
+        backgroundColor: `rgba(${(i * 60) % 255}, ${(i * 120) % 255}, ${(i * 180) % 255},0.2)`,
+        borderColor: `rgba(${(i * 60) % 255}, ${(i * 120) % 255}, ${(i * 180) % 255},1)`,
+      };
+    });
+
+    const x: any = chart.options.scales!.x!;
+    x.type = 'linear';
+    if (allTs.length) {
+      x.min = Math.min(...allTs);
+      x.max = Math.max(...allTs);
+    }
+    x.ticks = {
       stepSize: resolution === 'hour' ? 60 * 60 * 1000 : 24 * 60 * 60 * 1000,
-      callback: (v: number) => {
-        const d = new Date(v);
+      callback: (val: number) => {
+        const d = new Date(val);
         return resolution === 'hour'
           ? `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
           : `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`;
       },
     };
-    xScale.title.text = resolution === 'hour' ? 'Hour' : 'Day';
+    x.title.text = resolution === 'hour' ? 'Hour' : 'Day';
 
     chart.update();
   }
@@ -93,8 +101,10 @@
     defaultChecked
     class="toggle toggle-sm"
     checked={resolution === 'hour'}
-    onclick={({ currentTarget }) =>
-      (resolution = currentTarget.checked ? 'hour' : 'day')}
+    onclick={({ currentTarget }) => {
+      resolution = currentTarget.checked ? 'hour' : 'day';
+      updateChart();
+    }}
   />
 </div>
 

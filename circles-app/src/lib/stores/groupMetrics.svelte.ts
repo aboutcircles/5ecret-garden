@@ -15,14 +15,14 @@ type mintRedeem = {
 }
 
 type GroupMetrics = {
-    memberCountPerHour: Array<memberCount> | undefined;
-    memberCountPerDay: Array<memberCount> | undefined;
+    memberCountPerHour?: Array<memberCount>;
+    memberCountPerDay?: Array<memberCount>;
     collateralInTreasury: Array<{ avatar: Address; amount: bigint }> | undefined;
     mintRedeemPerHour: Array<mintRedeem> | undefined;
     mintRedeemPerDay: Array<mintRedeem> | undefined;
     erc20Token: Address | undefined;
-    priceHistoryWeek?: Array<{ bucket: Date; price: number }>;
-    priceHistoryMonth?: Array<{ bucket: Date; price: number }>;
+    priceHistoryWeek?: Array<{ timestamp: Date; price: number }>;
+    priceHistoryMonth?: Array<{ timestamp: Date; price: number }>;
 }
 
 export let groupMetrics: GroupMetrics = $state({
@@ -54,16 +54,20 @@ export async function initGroupMetricsStore(
     ]);
 
     const rawWeek = await weekRes.json();
-    groupMetrics.priceHistoryWeek = rawWeek.map((p: { bucket: string; price: string; }) => ({
-        bucket: new Date(p.bucket),
-        price: p.price
-    }));
+    groupMetrics.priceHistoryWeek = rawWeek
+        .map((p: { timestamp: string; price: string }) => ({
+            timestamp: new Date(p.timestamp),
+            price: Number(p.price),
+        }))
+        .filter((p: { price: number; }) => typeof p.price === 'number' && !isNaN(p.price));
 
     const rawMonth = await monthRes.json();
-    groupMetrics.priceHistoryMonth = rawMonth.map((p: { bucket: string; price: string; }) => ({
-        bucket: new Date(p.bucket),
-        price: p.price
-    }));
+    groupMetrics.priceHistoryMonth = rawMonth
+        .map((p: { timestamp: string; price: string }) => ({
+            timestamp: new Date(p.timestamp),
+            price: Number(p.price),
+        }))
+        .filter((p: { price: number; }) => typeof p.price === 'number' && !isNaN(p.price));
 
     console.log('groupMetrics', groupMetrics.priceHistoryMonth);
 }
