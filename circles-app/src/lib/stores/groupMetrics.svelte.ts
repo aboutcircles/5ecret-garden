@@ -18,6 +18,7 @@ type GroupMetrics = {
     memberCountPerHour?: Array<memberCount>;
     memberCountPerDay?: Array<memberCount>;
     collateralInTreasury: Array<{ avatar: Address; amount: bigint }> | undefined;
+    tokenHolderBalance?: Array<{holder: Address, demurragedTotalBalance: bigint; fractionalOwnership: bigint}>;
     mintRedeemPerHour: Array<mintRedeem> | undefined;
     mintRedeemPerDay: Array<mintRedeem> | undefined;
     erc20Token: Address | undefined;
@@ -43,7 +44,7 @@ export async function initGroupMetricsStore(
     groupMetrics.collateralInTreasury = await getCollateralInTreasury(circlesRpc, groupAddress);
     groupMetrics.mintRedeemPerHour = await getMintRedeemPerHour(circlesRpc, groupAddress);
     groupMetrics.mintRedeemPerDay = await getMintRedeemPerDay(circlesRpc, groupAddress);
-    await getGroupTokenHoldersBalance(circlesRpc, groupAddress);
+    groupMetrics.tokenHolderBalance = await getGroupTokenHoldersBalance(circlesRpc, groupAddress);
     groupMetrics.erc20Token = await getERC20Token(circlesRpc, groupAddress);
 
     const base = '/api/price/' + '?group=' + encodeURIComponent(groupMetrics.erc20Token ?? "")
@@ -245,14 +246,11 @@ async function getGroupTokenHoldersBalance(
         },
     ]);
 
-    console.log('getGroupTokenHoldersBalance', result);
-
-    // return result.result.rows.map(([_, ts, v, m, r, s]) => ({
-    //     timestamp: new Date(ts),
-    //     minted: Number(m),
-    //     redeemed: Number(r),
-    //     supply: Number(s),
-    // }));
+    return result.result.rows.map(([_, h, t, d, f]) => ({
+        holder: h as Address,
+        demurragedTotalBalance: BigInt(d),
+        fractionalOwnership: BigInt(f),
+    }));
 }
 
 async function getERC20Token(
