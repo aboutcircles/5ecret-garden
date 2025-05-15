@@ -39,7 +39,7 @@
       return {
         label: title ? `${title} – ${key}` : key,
         data: pts,
-        tension: 0.3,
+        tension: 0.05,
         borderWidth: 2,
         pointRadius: 0,
         backgroundColor: `rgba(${(i * 60) % 255}, ${(i * 120) % 255}, ${(i * 180) % 255},0.2)`,

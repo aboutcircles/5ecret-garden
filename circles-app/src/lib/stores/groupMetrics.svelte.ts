@@ -139,8 +139,8 @@ async function getWrapUnwrapPerHour(
 
     return result.result.rows.map(([_, ts, ta, tt, w, u]) => ({
         timestamp: new Date(ts),
-        wrapAmount: Number(w),
-        unwrapAmount: Number(u)
+        wrapAmount: Number(formatEther(w)),
+        unwrapAmount: Number(formatEther(u))
     }));
 }
 
@@ -170,8 +170,8 @@ async function getWrapUnwrapPerDay(
 
     return result.result.rows.map(([_, ts, ta, tt, w, u]) => ({
         timestamp: new Date(ts),
-        wrapAmount: Number(w),
-        unwrapAmount: Number(u)
+        wrapAmount: Number(formatEther(w)),
+        unwrapAmount: Number(formatEther(u))
     }));
 }
 
@@ -232,7 +232,6 @@ async function getCollateralInTreasury(
     const colId = columns.indexOf('tokenId');
     const colBal = columns.indexOf('demurragedTotalBalance');
 
-    // Build up the table data
     return rows.map((row) => ({
         avatar: uint256ToAddress(BigInt(row[colId])),
         amount: Number(formatEther(row[colBal])),
@@ -267,9 +266,9 @@ async function getMintRedeemPerDay(
 
     return result.result.rows.map(([_, ts, m, r, s]) => ({
         timestamp: new Date(ts),
-        minted: Number(m / 10 ** 18),
-        redeemed: Number(r / 10 ** 18),
-        supply: Number(s / 10 ** 18),
+        minted: Number(formatEther(m)),
+        redeemed: Number(formatEther(r)),
+        supply: Number(formatEther(s)),
     }));
 }
 
@@ -299,9 +298,9 @@ async function getMintRedeemPerHour(
 
     return result.result.rows.map(([_, ts, v, m, r, s]) => ({
         timestamp: new Date(ts),
-        minted: Number(m / 10 ** 18),
-        redeemed: Number(r / 10 ** 18),
-        supply: Number(s / 10 ** 18),
+        minted: Number(formatEther(m)),
+        redeemed: Number(formatEther(r)),
+        supply: Number(formatEther(s)),
     }));
 }
 
