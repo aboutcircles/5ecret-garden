@@ -48,6 +48,7 @@ export const gnosisConfig: { production: CirclesConfig, rings: CirclesConfig } =
     migrationAddress: '0x28141b6743c8569Ad8B20Ac09046Ba26F9Fb1c90',
     baseGroupMintPolicy: '0x79Cbc9C7077dF161b92a745345A6Ade3fC626A60',
     standardTreasury: '0x3545955Bc3900bda704261e4991f239BBd99ecE5',
-    coreMembersGroupDeployer: '0x7aD59c08A065738e34f13Ac94542867528a1D328'
+    coreMembersGroupDeployer: '0x7aD59c08A065738e34f13Ac94542867528a1D328',
+    baseGroupFactory: '0x452C116060cBB484eeDD70F32F08aD4F0685B5D2'
   }
 };

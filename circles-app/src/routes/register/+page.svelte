@@ -11,7 +11,7 @@
   <div class="w-full flex flex-col">
     <p class="font-bold text-xl">Register</p>
     <p class="text-md text-black/60">
-      You're not yet signed up to Circles. Choose an avatar type that matches
+      You're not yet signed up to Circles. Choose an account type that matches
       your needs.
     </p>
   </div>

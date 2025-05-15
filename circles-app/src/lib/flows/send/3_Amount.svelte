@@ -64,6 +64,8 @@
     calculatingPath = true;
 
     try {
+      const excludedTokens = await $circles.getDefaultTokenExcludeList(context.selectedAddress)
+
       const bigNumber = '99999999999999999999999999999999999';
       const p = avatarState.avatar?.avatarInfo?.version === 1
         ? await $circles.v1Pathfinder?.getPath(
@@ -75,7 +77,10 @@
           avatarState.avatar.address,
           context.selectedAddress,
           bigNumber,
-          true
+          true,
+          undefined,
+          undefined,
+          excludedTokens
         );
 
       if (!p || !p.transfers?.length) {

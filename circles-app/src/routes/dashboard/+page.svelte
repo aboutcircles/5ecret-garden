@@ -6,19 +6,57 @@
   import { roundToDecimals } from '$lib/utils/shared';
   import { runTask } from '$lib/utils/tasks';
   import { transactionHistory } from '$lib/stores/transactionHistory';
+  import { uint256ToAddress, type Address } from '@circles-sdk/utils';
+  import {
+    getGroupCollateral,
+    getTreasuryAddress,
+    getVaultAddress,
+  } from '$lib/utils/vault';
+  import type { Sdk } from '@circles-sdk/sdk';
   import GroupMetrics from '$lib/components/GroupMetrics.svelte';
   import { groupMetrics } from '$lib/stores/groupMetrics.svelte';
   import HistoryChart from '$lib/components/HistoryChart.svelte';
+  import { circles } from '$lib/stores/circles';
 
   let mintableAmount: number = $state(0);
 
+  let collateralInTreasury: Array<{
+    avatar: Address;
+    amount: bigint;
+  }> = $state([]);
   $effect(() => {
     (async () => {
       if (avatarState.avatar && !avatarState.isGroup) {
         mintableAmount = (await avatarState.avatar.getMintableAmount()) ?? 0;
       }
+      if (avatarState.isGroup && $circles && avatarState.avatar) {
+        await initializeGroup($circles, avatarState.avatar.address);
+      }
     })();
   });
+
+  async function initializeGroup(circles: Sdk, group: Address) {
+    const vaultAddress = await getVaultAddress(circles.circlesRpc, group);
+    const treasuryAddress = await getTreasuryAddress(circles.circlesRpc, group);
+
+    const balancesResult = await getGroupCollateral(
+      circles.circlesRpc,
+      vaultAddress ?? treasuryAddress ?? ''
+    );
+    if (!balancesResult) {
+      collateralInTreasury = [];
+      return;
+    }
+
+    const { columns, rows } = balancesResult;
+    const colId = columns.indexOf('tokenId');
+    const colBal = columns.indexOf('demurragedTotalBalance');
+
+    collateralInTreasury = rows.map((row) => ({
+      avatar: uint256ToAddress(BigInt(row[colId])),
+      amount: BigInt(row[colBal]),
+    }));
+  }
 
   async function mintPersonalCircles() {
     if (!avatarState.avatar) {

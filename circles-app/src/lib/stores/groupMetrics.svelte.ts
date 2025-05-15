@@ -1,4 +1,4 @@
-import { getVaultAddress, getVaultBalances } from "$lib/utils/vault";
+import { getGroupCollateral, getTreasuryAddress, getVaultAddress } from "$lib/utils/vault";
 import { CirclesRpc } from "@circles-sdk/data";
 import { uint256ToAddress, type Address } from "@circles-sdk/utils";
 
@@ -18,7 +18,7 @@ type GroupMetrics = {
     memberCountPerHour?: Array<memberCount>;
     memberCountPerDay?: Array<memberCount>;
     collateralInTreasury: Array<{ avatar: Address; amount: bigint }> | undefined;
-    tokenHolderBalance?: Array<{holder: Address, demurragedTotalBalance: bigint; fractionalOwnership: bigint}>;
+    tokenHolderBalance?: Array<{ holder: Address, demurragedTotalBalance: number; fractionalOwnership: number }>;
     mintRedeemPerHour: Array<mintRedeem> | undefined;
     mintRedeemPerDay: Array<mintRedeem> | undefined;
     erc20Token: Address | undefined;
@@ -135,27 +135,36 @@ async function getCollateralInTreasury(
     circlesRpc: CirclesRpc,
     groupAddress: Address
 ): Promise<Array<{ avatar: Address; amount: bigint }>> {
-    const vaultAddress = await getVaultAddress(circlesRpc, groupAddress);
-    if (!vaultAddress) {
-        return [];
-    }
-
-    const balancesResult = await getVaultBalances(
+    const vaultAddress = await getVaultAddress(
         circlesRpc,
-        vaultAddress
+        groupAddress
     );
+
+    const treasuryAddress = await getTreasuryAddress(
+        circlesRpc,
+        groupAddress
+    );
+
+    const balancesResult = await getGroupCollateral(
+        circlesRpc,
+        vaultAddress ?? treasuryAddress ?? ''
+    );
+
     if (!balancesResult) {
         ;
         return [];
     }
 
     const { columns, rows } = balancesResult;
-    const colId = columns.indexOf('id');
-    const colBal = columns.indexOf('balance');
+    const colId = columns.indexOf('tokenId');
+    const colBal = columns.indexOf('demurragedTotalBalance');
 
+    // Build up the table data
     return rows.map((row) => ({
         avatar: uint256ToAddress(BigInt(row[colId])),
         amount: BigInt(row[colBal]),
+        amountToRedeemInCircles: 0,
+        amountToRedeem: 0n,
     }));
 }
 
@@ -248,8 +257,8 @@ async function getGroupTokenHoldersBalance(
 
     return result.result.rows.map(([_, h, t, d, f]) => ({
         holder: h as Address,
-        demurragedTotalBalance: BigInt(d),
-        fractionalOwnership: BigInt(f),
+        demurragedTotalBalance: Number(d),
+        fractionalOwnership: Number(f),
     }));
 }
 

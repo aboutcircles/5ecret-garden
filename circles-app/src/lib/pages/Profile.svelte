@@ -6,6 +6,7 @@
   import {
     type AvatarRow,
     CirclesQuery,
+    type TrustRelation,
     type TrustRelationRow,
   } from '@circles-sdk/data';
   import Untrust from '$lib/pages/Untrust.svelte';
@@ -19,7 +20,11 @@
   import { uint256ToAddress, type Address } from '@circles-sdk/utils';
   import SelectAmount from '$lib/flows/send/3_Amount.svelte';
   import { transitiveTransfer } from '$lib/pages/SelectAsset.svelte';
-  import { getVaultAddress, getVaultBalances } from '$lib/utils/vault';
+  import {
+    getGroupCollateral,
+    getTreasuryAddress,
+    getVaultAddress,
+  } from '$lib/utils/vault';
   import CollateralTable from '$lib/components/CollateralTable.svelte';
 
   interface Props {
@@ -43,8 +48,10 @@
   let trustRow: TrustRelationRow | undefined = $state();
   let collateralInTreasury: Array<{
     avatar: Address;
-    amount: bigint; // raw wei from chain
-    amountToRedeem: number;
+    amount: bigint;
+    amountToRedeem: bigint;
+    amountToRedeemInCircles: number;
+    trustRelation?: TrustRelation;
   }> = $state([]);
 
   async function initialize(address: Address) {
@@ -66,6 +73,7 @@
         .filter((row) => row.relation === 'trusts')
         .map((o) => o.objectAvatar);
 
+      //TODO: find mint handler and treasury in the same query
       const findMintHandlerQuery = new CirclesQuery<any>($circles.circlesRpc, {
         namespace: 'V_CrcV2',
         table: 'Groups',
@@ -91,14 +99,14 @@
         $circles.circlesRpc,
         otherAvatar.avatar
       );
-      if (!vaultAddress) {
-        collateralInTreasury = [];
-        return;
-      }
-
-      const balancesResult = await getVaultBalances(
+      const treasuryAddress = await getTreasuryAddress(
         $circles.circlesRpc,
-        vaultAddress
+        otherAvatar.avatar
+      );
+
+      const balancesResult = await getGroupCollateral(
+        $circles.circlesRpc,
+        vaultAddress ?? treasuryAddress ?? ''
       );
       if (!balancesResult) {
         collateralInTreasury = [];
@@ -106,14 +114,15 @@
       }
 
       const { columns, rows } = balancesResult;
-      const colId = columns.indexOf('id');
-      const colBal = columns.indexOf('balance');
+      const colId = columns.indexOf('tokenId');
+      const colBal = columns.indexOf('demurragedTotalBalance');
 
       // Build up the table data
       collateralInTreasury = rows.map((row) => ({
         avatar: uint256ToAddress(BigInt(row[colId])),
         amount: BigInt(row[colBal]),
-        amountToRedeem: 0, // default 0
+        amountToRedeemInCircles: 0,
+        amountToRedeem: 0n,
       }));
     } else {
       members = undefined;
