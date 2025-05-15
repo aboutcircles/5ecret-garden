@@ -15,6 +15,12 @@ type mintRedeem = {
     supply: number;
 }
 
+type wrapUnwrap = {
+    timestamp: Date;
+    wrapAmount: number;
+    unwrapAmount: number;
+}
+
 type GroupMetrics = {
     memberCountPerHour?: Array<memberCount>;
     memberCountPerDay?: Array<memberCount>;
@@ -22,6 +28,8 @@ type GroupMetrics = {
     tokenHolderBalance?: Array<{ holder: Address, demurragedTotalBalance: number; fractionalOwnership: number }>;
     mintRedeemPerHour: Array<mintRedeem> | undefined;
     mintRedeemPerDay: Array<mintRedeem> | undefined;
+    wrapUnwrapPerHour?: Array<wrapUnwrap>;
+    wrapUnwrapPerDay?: Array<wrapUnwrap>;
     erc20Token: Address | undefined;
     priceHistoryWeek?: Array<{ timestamp: Date; price: number }>;
     priceHistoryMonth?: Array<{ timestamp: Date; price: number }>;
@@ -47,6 +55,9 @@ export async function initGroupMetricsStore(
     groupMetrics.mintRedeemPerDay = await getMintRedeemPerDay(circlesRpc, groupAddress);
     groupMetrics.tokenHolderBalance = await getGroupTokenHoldersBalance(circlesRpc, groupAddress);
     groupMetrics.erc20Token = await getERC20Token(circlesRpc, groupAddress);
+    groupMetrics.wrapUnwrapPerHour = await getWrapUnwrapPerHour(circlesRpc, groupAddress);
+    groupMetrics.wrapUnwrapPerDay = await getWrapUnwrapPerDay(circlesRpc, groupAddress);
+    await getWrapUnwrapPerHour(circlesRpc, groupAddress);
 
     const base = '/api/price/' + '?group=' + encodeURIComponent(groupMetrics.erc20Token ?? "")
 
@@ -99,6 +110,68 @@ async function getMemberCountPerHour(
     return result.result.rows.map(([_, ts, v]) => ({
         timestamp: new Date(ts),
         count: Number(v),
+    }));
+}
+
+async function getWrapUnwrapPerHour(
+    circlesRpc: CirclesRpc,
+    groupAddress: Address
+): Promise<Array<wrapUnwrap>> {
+    const result = await circlesRpc.call<{
+        columns: string[];
+        rows: any[][];
+    }>('circles_query', [
+        {
+            Namespace: 'V_CrcV2',
+            Table: 'GroupWrapUnWrap_1h',
+            Columns: [],
+            Filter: [
+                {
+                    Type: 'FilterPredicate',
+                    FilterType: 'Equals',
+                    Column: 'group',
+                    Value: groupAddress.toLowerCase(),
+                },
+            ],
+            Limit: 24
+        },
+    ]);
+
+    return result.result.rows.map(([_, ts, ta, tt, w, u]) => ({
+        timestamp: new Date(ts),
+        wrapAmount: Number(w),
+        unwrapAmount: Number(u)
+    }));
+}
+
+async function getWrapUnwrapPerDay(
+    circlesRpc: CirclesRpc,
+    groupAddress: Address
+): Promise<Array<wrapUnwrap>> {
+    const result = await circlesRpc.call<{
+        columns: string[];
+        rows: any[][];
+    }>('circles_query', [
+        {
+            Namespace: 'V_CrcV2',
+            Table: 'GroupWrapUnWrap_1d',
+            Columns: [],
+            Filter: [
+                {
+                    Type: 'FilterPredicate',
+                    FilterType: 'Equals',
+                    Column: 'group',
+                    Value: groupAddress.toLowerCase(),
+                },
+            ],
+            Limit: 24
+        },
+    ]);
+
+    return result.result.rows.map(([_, ts, ta, tt, w, u]) => ({
+        timestamp: new Date(ts),
+        wrapAmount: Number(w),
+        unwrapAmount: Number(u)
     }));
 }
 
@@ -229,6 +302,38 @@ async function getMintRedeemPerHour(
         minted: Number(m / 10 ** 18),
         redeemed: Number(r / 10 ** 18),
         supply: Number(s / 10 ** 18),
+    }));
+}
+
+async function getGroupCollateralByToken(
+    circlesRpc: CirclesRpc,
+    groupAddress: Address
+) {
+    const result = await circlesRpc.call<{
+        columns: string[];
+        rows: any[][];
+    }>('circles_query', [
+        {
+            Namespace: 'V_CrcV2',
+            Table: 'GroupCollateralByToken',
+            Columns: [],
+            Filter: [
+                {
+                    Type: 'FilterPredicate',
+                    FilterType: 'Equals',
+                    Column: 'group',
+                    Value: groupAddress.toLowerCase(),
+                },
+            ],
+        },
+    ]);
+
+    console.log(result);
+
+    return result.result.rows.map(([_, h, t, d, f]) => ({
+        holder: h as Address,
+        demurragedTotalBalance: Number(d),
+        fractionalOwnership: Number(f),
     }));
 }
 

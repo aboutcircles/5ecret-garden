@@ -75,7 +75,16 @@
             title="Treasury breakdown"
           />
         {/if}
-
+        {#if groupMetrics?.tokenHolderBalance && groupMetrics.tokenHolderBalance.length > 0}
+          <div class="divider"></div>
+          <h2 class="text-lg text-primary font-bold">Token Holder Balance</h2>
+          <PieChart
+            data={groupMetrics.tokenHolderBalance}
+            labelKey="holder"
+            valueKey="fractionalOwnership"
+            title="Token Distribution"
+          />
+        {/if}
         {#if groupMetrics?.memberCountPerHour && groupMetrics.memberCountPerHour.length > 0 && groupMetrics.memberCountPerDay && groupMetrics.memberCountPerDay.length > 0}
           <div class="divider"></div>
           <h2 class="text-lg text-primary font-bold">Member Count</h2>
@@ -91,6 +100,15 @@
           <HistoryChart
             dataSet1={groupMetrics.mintRedeemPerHour}
             dataSet2={groupMetrics.mintRedeemPerDay}
+            title="Mint/Redeem"
+          />
+        {/if}
+        {#if groupMetrics?.wrapUnwrapPerHour && groupMetrics.wrapUnwrapPerHour.length > 0 && groupMetrics.wrapUnwrapPerDay && groupMetrics.wrapUnwrapPerDay.length > 0}
+          <div class="divider"></div>
+          <h2 class="text-lg text-primary font-bold">Wrap/Unwrap</h2>
+          <HistoryChart
+            dataSet1={groupMetrics.wrapUnwrapPerHour}
+            dataSet2={groupMetrics.wrapUnwrapPerDay}
             title="Mint/Redeem"
           />
         {/if}

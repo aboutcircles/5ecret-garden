@@ -54,8 +54,6 @@ export async function getTreasuryAddress(
     },
   ]);
 
-  console.log(treasuryResult)
-
   if (!treasuryResult?.result.rows || treasuryResult.result.rows.length === 0) {
     return null;
   }
