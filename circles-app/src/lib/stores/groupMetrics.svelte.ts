@@ -89,6 +89,7 @@ async function getMemberCount(
     period: string = '7 days'
 ): Promise<Array<memberCount>> {
     const table = resolution === 'hour' ? 'GroupMembersCount_1h' : 'GroupMembersCount_1d';
+    const limit = resolution === 'hour' ? 24 * 7 : 30;
     const result = await circlesRpc.call<{
         columns: string[];
         rows: any[][];
@@ -103,9 +104,9 @@ async function getMemberCount(
                     FilterType: 'Equals',
                     Column: 'group',
                     Value: groupAddress.toLowerCase(),
-                },
+                }
             ],
-            Limit: 24
+            Limit: limit
         },
     ]);
 
@@ -115,8 +116,6 @@ async function getMemberCount(
     }));
 }
 
-
-
 async function getMintRedeem(
     circlesRpc: CirclesRpc,
     groupAddress: Address,
@@ -124,6 +123,7 @@ async function getMintRedeem(
     period: string = '7 days'
 ): Promise<Array<mintRedeem>> {
     const table = resolution === 'hour' ? 'GroupMintRedeem_1h' : 'GroupMintRedeem_1d';
+    const limit = resolution === 'hour' ? 24 * 7 : 30;
     const result = await circlesRpc.call<{
         columns: string[];
         rows: any[][];
@@ -138,9 +138,9 @@ async function getMintRedeem(
                     FilterType: 'Equals',
                     Column: 'group',
                     Value: groupAddress.toLowerCase(),
-                },
+                }
             ],
-            Limit: 30,
+            Limit: limit
         },
     ]);
 
@@ -159,6 +159,7 @@ async function getWrapUnwrap(
     period: string = '7 days'
 ): Promise<Array<wrapUnwrap>> {
     const table = resolution === 'hour' ? 'GroupWrapUnWrap_1h' : 'GroupWrapUnWrap_1d';
+    const limit = resolution === 'hour' ? 24 * 7 : 30;
     const result = await circlesRpc.call<{
         columns: string[];
         rows: any[][];
@@ -173,9 +174,9 @@ async function getWrapUnwrap(
                     FilterType: 'Equals',
                     Column: 'group',
                     Value: groupAddress.toLowerCase(),
-                },
+                }
             ],
-            Limit: 24
+            Limit: limit,
         },
     ]);
 
@@ -307,4 +308,14 @@ async function getERC20Token(
     ]);
 
     return result.result.rows[1][7];
+}
+
+function parsePeriodToMs(period: string): number {
+    const [amount, unit] = period.split(' ');
+    const n = parseInt(amount);
+    switch (unit) {
+        case 'days': return n * 24 * 60 * 60 * 1000;
+        case 'hours': return n * 60 * 60 * 1000;
+        default: throw new Error('Unsupported period: ' + period);
+    }
 }
