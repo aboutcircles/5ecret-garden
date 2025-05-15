@@ -1,6 +1,7 @@
 import { getGroupCollateral, getTreasuryAddress, getVaultAddress } from "$lib/utils/vault";
 import { CirclesRpc } from "@circles-sdk/data";
 import { uint256ToAddress, type Address } from "@circles-sdk/utils";
+import { formatEther } from "ethers";
 
 type memberCount = {
     timestamp: Date;
@@ -17,7 +18,7 @@ type mintRedeem = {
 type GroupMetrics = {
     memberCountPerHour?: Array<memberCount>;
     memberCountPerDay?: Array<memberCount>;
-    collateralInTreasury: Array<{ avatar: Address; amount: bigint }> | undefined;
+    collateralInTreasury: Array<{ avatar: Address; amount: number }> | undefined;
     tokenHolderBalance?: Array<{ holder: Address, demurragedTotalBalance: number; fractionalOwnership: number }>;
     mintRedeemPerHour: Array<mintRedeem> | undefined;
     mintRedeemPerDay: Array<mintRedeem> | undefined;
@@ -134,7 +135,7 @@ async function getMemberCountPerDay(
 async function getCollateralInTreasury(
     circlesRpc: CirclesRpc,
     groupAddress: Address
-): Promise<Array<{ avatar: Address; amount: bigint }>> {
+): Promise<Array<{ avatar: Address; amount: number }>> {
     const vaultAddress = await getVaultAddress(
         circlesRpc,
         groupAddress
@@ -151,7 +152,6 @@ async function getCollateralInTreasury(
     );
 
     if (!balancesResult) {
-        ;
         return [];
     }
 
@@ -162,7 +162,7 @@ async function getCollateralInTreasury(
     // Build up the table data
     return rows.map((row) => ({
         avatar: uint256ToAddress(BigInt(row[colId])),
-        amount: BigInt(row[colBal]),
+        amount: Number(formatEther(row[colBal])),
         amountToRedeemInCircles: 0,
         amountToRedeem: 0n,
     }));
