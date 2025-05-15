@@ -6,10 +6,14 @@
   import { type Address, uint256ToAddress } from '@circles-sdk/utils';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import { onMount } from 'svelte';
-  import {ethers, formatUnits} from 'ethers';
+  import { ethers, formatUnits } from 'ethers';
   import type { TokenBalanceRow, TrustRelation } from '@circles-sdk/data';
   import { contacts } from '$lib/stores/contacts';
-  import { getVaultAddress, getVaultBalances } from '$lib/utils/vault';
+  import {
+  getGroupCollateral,
+    getTreasuryAddress,
+    getVaultAddress,
+  } from '$lib/utils/vault';
   import CollateralTable from '$lib/components/CollateralTable.svelte';
 
   interface Props {
@@ -28,7 +32,7 @@
 
   // We'll keep track of the total to redeem and whether it's valid.
   let totalToRedeem: bigint = $state(0n);
-  let remainingToAllocate:bigint = $state(0n);
+  let remainingToAllocate: bigint = $state(0n);
   let canRedeem = $state(false);
   let isModified = $state(false);
 
@@ -67,27 +71,29 @@
     const allWithinCollateral = collateralInTreasury.every((item) => {
       return item.amountToRedeem >= 0n && item.amountToRedeem <= item.amount;
     });
-    console.log("allWithinCollateral", allWithinCollateral);
 
-    const withinUserBalance = totalToRedeem <= userMaxRedeem && totalToRedeem >= 0n;
-    console.log("withinUserBalance", withinUserBalance);
+    const withinUserBalance =
+      totalToRedeem <= userMaxRedeem && totalToRedeem >= 0n;
 
     // 4) The user can still allocate up to this many tokens
     remainingToAllocate = userMaxRedeem - totalToRedeem;
-    console.log("remainingToAllocate", remainingToAllocate);
 
     // 5) Only enable redeem if everything checks out
     canRedeem = allWithinCollateral && withinUserBalance && totalToRedeem > 0;
 
     // If any item.amountToRedeem != 0, this is “modified”
-    isModified = collateralInTreasury.some((item) => item.amountToRedeem !== 0n);
+    isModified = collateralInTreasury.some(
+      (item) => item.amountToRedeem !== 0n
+    );
 
     convertAmountToRedeem();
   });
 
   function convertAmountToRedeem() {
     for (const item of collateralInTreasury) {
-      item.amountToRedeemInCircles = Number(formatUnits(item.amountToRedeem, 18));
+      item.amountToRedeemInCircles = Number(
+        formatUnits(item.amountToRedeem, 18)
+      );
     }
   }
 
@@ -98,20 +104,22 @@
 
   async function load() {
     if (!$circles) return;
-
+    
     const vaultAddress = await getVaultAddress(
       $circles.circlesRpc,
       asset.tokenOwner
     );
-    if (!vaultAddress) {
-      collateralInTreasury = [];
-      return;
-    }
 
-    const balancesResult = await getVaultBalances(
+    const treasuryAddress = await getTreasuryAddress(
       $circles.circlesRpc,
-      vaultAddress
+      asset.tokenOwner
     );
+
+    const balancesResult = await getGroupCollateral(
+      $circles.circlesRpc,
+      vaultAddress ?? treasuryAddress ?? ''
+    );
+
     if (!balancesResult) {
       collateralInTreasury = [];
       return;
@@ -202,7 +210,6 @@
       const available = item.amount;
 
       if (available > 0n) {
-
         let minBigInt = BigInt(0);
         if (available < remainingToAllocate) {
           minBigInt = available;

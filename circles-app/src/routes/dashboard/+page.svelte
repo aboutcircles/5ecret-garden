@@ -9,7 +9,11 @@
   import { getDailyCmGroupsDataOverTheMonth } from '$lib/utils/getGroupData';
   import { circles } from '$lib/stores/circles';
   import { uint256ToAddress, type Address } from '@circles-sdk/utils';
-  import { getVaultAddress, getVaultBalances } from '$lib/utils/vault';
+  import {
+    getGroupCollateral,
+    getTreasuryAddress,
+    getVaultAddress,
+  } from '$lib/utils/vault';
   import type { Sdk } from '@circles-sdk/sdk';
   import GroupMetrics from '$lib/components/GroupMetrics.svelte';
 
@@ -38,14 +42,11 @@
 
   async function initializeGroup(circles: Sdk, group: Address) {
     const vaultAddress = await getVaultAddress(circles.circlesRpc, group);
-    if (!vaultAddress) {
-      collateralInTreasury = [];
-      return;
-    }
+    const treasuryAddress = await getTreasuryAddress(circles.circlesRpc, group);
 
-    const balancesResult = await getVaultBalances(
+    const balancesResult = await getGroupCollateral(
       circles.circlesRpc,
-      vaultAddress
+      vaultAddress ?? treasuryAddress ?? ''
     );
     if (!balancesResult) {
       collateralInTreasury = [];
@@ -98,8 +99,8 @@
         aria-label="Overview"
       />
       <div role="tabpanel" class="tab-content mt-8 bg-base-100 border-none">
-         <!-- Disabled GroupMetrics -->
-         <!-- <GroupMetrics {collateralInTreasury} /> -->
+        <!-- Disabled GroupMetrics -->
+        <!-- <GroupMetrics {collateralInTreasury} /> -->
       </div>
     {/if}
     <input
