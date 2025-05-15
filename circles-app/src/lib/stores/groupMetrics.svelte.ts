@@ -48,16 +48,15 @@ export async function initGroupMetricsStore(
     circlesRpc: CirclesRpc,
     groupAddress: Address
 ): Promise<void> {
-    groupMetrics.memberCountPerHour = await getMemberCountPerHour(circlesRpc, groupAddress);
-    groupMetrics.memberCountPerDay = await getMemberCountPerDay(circlesRpc, groupAddress);
+    groupMetrics.memberCountPerHour = await getMemberCount(circlesRpc, groupAddress, 'hour', '7 days');
+    groupMetrics.memberCountPerDay = await getMemberCount(circlesRpc, groupAddress, 'day', '30 days');
+    groupMetrics.mintRedeemPerHour = await getMintRedeem(circlesRpc, groupAddress, 'hour', '7 days');
+    groupMetrics.mintRedeemPerDay = await getMintRedeem(circlesRpc, groupAddress, 'day', '30 days');
+    groupMetrics.wrapUnwrapPerHour = await getWrapUnwrap(circlesRpc, groupAddress, 'hour', '7 days');
+    groupMetrics.wrapUnwrapPerDay = await getWrapUnwrap(circlesRpc, groupAddress, 'day', '30 days');
     groupMetrics.collateralInTreasury = await getCollateralInTreasury(circlesRpc, groupAddress);
-    groupMetrics.mintRedeemPerHour = await getMintRedeemPerHour(circlesRpc, groupAddress);
-    groupMetrics.mintRedeemPerDay = await getMintRedeemPerDay(circlesRpc, groupAddress);
     groupMetrics.tokenHolderBalance = await getGroupTokenHoldersBalance(circlesRpc, groupAddress);
     groupMetrics.erc20Token = await getERC20Token(circlesRpc, groupAddress);
-    groupMetrics.wrapUnwrapPerHour = await getWrapUnwrapPerHour(circlesRpc, groupAddress);
-    groupMetrics.wrapUnwrapPerDay = await getWrapUnwrapPerDay(circlesRpc, groupAddress);
-    await getWrapUnwrapPerHour(circlesRpc, groupAddress);
 
     const base = '/api/price/' + '?group=' + encodeURIComponent(groupMetrics.erc20Token ?? "")
 
@@ -83,17 +82,20 @@ export async function initGroupMetricsStore(
         .filter((p: { price: number; }) => typeof p.price === 'number' && !isNaN(p.price));
 }
 
-async function getMemberCountPerHour(
+async function getMemberCount(
     circlesRpc: CirclesRpc,
-    groupAddress: Address
+    groupAddress: Address,
+    resolution: 'hour' | 'day' = 'hour',
+    period: string = '7 days'
 ): Promise<Array<memberCount>> {
+    const table = resolution === 'hour' ? 'GroupMembersCount_1h' : 'GroupMembersCount_1d';
     const result = await circlesRpc.call<{
         columns: string[];
         rows: any[][];
     }>('circles_query', [
         {
             Namespace: 'V_CrcV2',
-            Table: 'GroupMembersCount_1h',
+            Table: table,
             Columns: [],
             Filter: [
                 {
@@ -113,79 +115,22 @@ async function getMemberCountPerHour(
     }));
 }
 
-async function getWrapUnwrapPerHour(
+
+
+async function getMintRedeem(
     circlesRpc: CirclesRpc,
-    groupAddress: Address
-): Promise<Array<wrapUnwrap>> {
+    groupAddress: Address,
+    resolution: 'hour' | 'day' = 'hour',
+    period: string = '7 days'
+): Promise<Array<mintRedeem>> {
+    const table = resolution === 'hour' ? 'GroupMintRedeem_1h' : 'GroupMintRedeem_1d';
     const result = await circlesRpc.call<{
         columns: string[];
         rows: any[][];
     }>('circles_query', [
         {
             Namespace: 'V_CrcV2',
-            Table: 'GroupWrapUnWrap_1h',
-            Columns: [],
-            Filter: [
-                {
-                    Type: 'FilterPredicate',
-                    FilterType: 'Equals',
-                    Column: 'group',
-                    Value: groupAddress.toLowerCase(),
-                },
-            ],
-            Limit: 24
-        },
-    ]);
-
-    return result.result.rows.map(([_, ts, ta, tt, w, u]) => ({
-        timestamp: new Date(ts),
-        wrapAmount: Number(formatEther(w)),
-        unwrapAmount: Number(formatEther(u))
-    }));
-}
-
-async function getWrapUnwrapPerDay(
-    circlesRpc: CirclesRpc,
-    groupAddress: Address
-): Promise<Array<wrapUnwrap>> {
-    const result = await circlesRpc.call<{
-        columns: string[];
-        rows: any[][];
-    }>('circles_query', [
-        {
-            Namespace: 'V_CrcV2',
-            Table: 'GroupWrapUnWrap_1d',
-            Columns: [],
-            Filter: [
-                {
-                    Type: 'FilterPredicate',
-                    FilterType: 'Equals',
-                    Column: 'group',
-                    Value: groupAddress.toLowerCase(),
-                },
-            ],
-            Limit: 24
-        },
-    ]);
-
-    return result.result.rows.map(([_, ts, ta, tt, w, u]) => ({
-        timestamp: new Date(ts),
-        wrapAmount: Number(formatEther(w)),
-        unwrapAmount: Number(formatEther(u))
-    }));
-}
-
-async function getMemberCountPerDay(
-    circlesRpc: CirclesRpc,
-    groupAddress: Address
-): Promise<Array<memberCount>> {
-    const result = await circlesRpc.call<{
-        columns: string[];
-        rows: any[][];
-    }>('circles_query', [
-        {
-            Namespace: 'V_CrcV2',
-            Table: 'GroupMembersCount_1d',
+            Table: table,
             Columns: [],
             Filter: [
                 {
@@ -199,9 +144,45 @@ async function getMemberCountPerDay(
         },
     ]);
 
-    return result.result.rows.map(([_, ts, v]) => ({
+    return result.result.rows.map(([_, ts, m, r, s]) => ({
         timestamp: new Date(ts),
-        count: Number(v),
+        minted: Number(formatEther(m)),
+        redeemed: Number(formatEther(r)),
+        supply: Number(formatEther(s)),
+    }));
+}
+
+async function getWrapUnwrap(
+    circlesRpc: CirclesRpc,
+    groupAddress: Address,
+    resolution: 'hour' | 'day' = 'hour',
+    period: string = '7 days'
+): Promise<Array<wrapUnwrap>> {
+    const table = resolution === 'hour' ? 'GroupWrapUnWrap_1h' : 'GroupWrapUnWrap_1d';
+    const result = await circlesRpc.call<{
+        columns: string[];
+        rows: any[][];
+    }>('circles_query', [
+        {
+            Namespace: 'V_CrcV2',
+            Table: table,
+            Columns: [],
+            Filter: [
+                {
+                    Type: 'FilterPredicate',
+                    FilterType: 'Equals',
+                    Column: 'group',
+                    Value: groupAddress.toLowerCase(),
+                },
+            ],
+            Limit: 24
+        },
+    ]);
+
+    return result.result.rows.map(([_, ts, ta, tt, w, u]) => ({
+        timestamp: new Date(ts),
+        wrapAmount: Number(formatEther(w)),
+        unwrapAmount: Number(formatEther(u))
     }));
 }
 
@@ -237,70 +218,6 @@ async function getCollateralInTreasury(
         amount: Number(formatEther(row[colBal])),
         amountToRedeemInCircles: 0,
         amountToRedeem: 0n,
-    }));
-}
-
-async function getMintRedeemPerDay(
-    circlesRpc: CirclesRpc,
-    groupAddress: Address
-): Promise<Array<mintRedeem>> {
-    const result = await circlesRpc.call<{
-        columns: string[];
-        rows: any[][];
-    }>('circles_query', [
-        {
-            Namespace: 'V_CrcV2',
-            Table: 'GroupMintRedeem_1d',
-            Columns: [],
-            Filter: [
-                {
-                    Type: 'FilterPredicate',
-                    FilterType: 'Equals',
-                    Column: 'group',
-                    Value: groupAddress.toLowerCase(),
-                },
-            ],
-            Limit: 30,
-        },
-    ]);
-
-    return result.result.rows.map(([_, ts, m, r, s]) => ({
-        timestamp: new Date(ts),
-        minted: Number(formatEther(m)),
-        redeemed: Number(formatEther(r)),
-        supply: Number(formatEther(s)),
-    }));
-}
-
-async function getMintRedeemPerHour(
-    circlesRpc: CirclesRpc,
-    groupAddress: Address
-): Promise<Array<mintRedeem>> {
-    const result = await circlesRpc.call<{
-        columns: string[];
-        rows: any[][];
-    }>('circles_query', [
-        {
-            Namespace: 'V_CrcV2',
-            Table: 'GroupMintRedeem_1h',
-            Columns: [],
-            Filter: [
-                {
-                    Type: 'FilterPredicate',
-                    FilterType: 'Equals',
-                    Column: 'group',
-                    Value: groupAddress.toLowerCase(),
-                },
-            ],
-            Limit: 24,
-        },
-    ]);
-
-    return result.result.rows.map(([_, ts, v, m, r, s]) => ({
-        timestamp: new Date(ts),
-        minted: Number(formatEther(m)),
-        redeemed: Number(formatEther(r)),
-        supply: Number(formatEther(s)),
     }));
 }
 
