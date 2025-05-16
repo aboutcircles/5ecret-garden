@@ -37,7 +37,7 @@
   }
 </script>
 
-<div class="flex flex-col items-center w-full max-w-2xl gap-y-6 mt-20">
+<div class="flex flex-col items-center w-full max-w-4xl gap-y-6 mt-20">
   <TotalBalance />
 
   {#if mintableAmount >= 0.01}
@@ -47,11 +47,6 @@
   {/if}
   <div role="tablist" class="tabs tabs-bordered w-full p-0 my-10">
     {#if avatarState.isGroup}
-      <div class="w-full mb-6">
-        <div class="flex justify-between items-center">
-          <h2 class="text-xl font-bold text-primary">Group Overview</h2>
-        </div>
-      </div>
       <input
         type="radio"
         name="tabs"
@@ -62,9 +57,14 @@
         aria-label="Overview"
       />
       <div role="tabpanel" class="tab-content mt-8 bg-base-100 border-none">
+        <div class="w-full mb-6">
+          <div class="flex justify-between items-center">
+            <h2 class="text-xl font-bold text-primary">Group Overview</h2>
+          </div>
+        </div>
         <!-- Stats Overview -->
-        <GroupMetricsStats />
-        
+        <GroupMetricsStats {groupMetrics} />
+
         <!-- Charts Grid -->
         <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10 mt-6">
           {#if groupMetrics.priceHistoryWeek && groupMetrics.priceHistoryMonth}
@@ -112,7 +112,9 @@
         <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
           {#if groupMetrics?.collateralInTreasury && groupMetrics.collateralInTreasury.length > 0}
             <div class="bg-white p-6 rounded-xl border shadow-sm">
-              <h2 class="text-lg font-semibold text-gray-800 mb-4">Treasury Collateral</h2>
+              <h2 class="text-lg font-semibold text-gray-800 mb-4">
+                Treasury Collateral
+              </h2>
               <ModernPieChart
                 data={groupMetrics.collateralInTreasury}
                 labelKey="avatar"
@@ -124,7 +126,9 @@
 
           {#if groupMetrics?.tokenHolderBalance && groupMetrics.tokenHolderBalance.length > 0}
             <div class="bg-white p-6 rounded-xl border shadow-sm">
-              <h2 class="text-lg font-semibold text-gray-800 mb-4">Token Distribution</h2>
+              <h2 class="text-lg font-semibold text-gray-800 mb-4">
+                Token Distribution
+              </h2>
               <ModernPieChart
                 data={groupMetrics.tokenHolderBalance}
                 labelKey="holder"
@@ -138,10 +142,11 @@
     {/if}
     <input
       type="radio"
-      name="tabs"
+      name="tab"
       value="transaction-history"
       role="tab"
       class="tab h-auto"
+      defaultChecked={!avatarState.isGroup}
       aria-label="Transaction History"
     />
     <div role="tabpanel" class="tab-content mt-8 bg-base-100 border-none">

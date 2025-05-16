@@ -1,6 +1,6 @@
 <script lang="ts">
   import {
-    initGroupMetrics,
+    fetchGroupMetrics,
     type GroupMetrics,
   } from '$lib/stores/groupMetrics.svelte';
   import { goto } from '$app/navigation';
@@ -18,12 +18,12 @@
 
   $effect(() => {
     if ($circles?.circlesRpc) {
-      console.log("init group metrics for group :", data.group)
-      initGroupMetrics(
-        groupMetrics,
-        $circles.circlesRpc,
-        data.group as Address
-      );
+      (async () => {
+        groupMetrics = await fetchGroupMetrics(
+          $circles.circlesRpc,
+          data.group as Address
+        );
+      })();
     }
   });
 </script>
@@ -31,18 +31,20 @@
 <div
   class="flex flex-col items-center w-full max-w-6xl mx-auto gap-y-6 mt-20 px-4"
 >
-  {#if $circles?.circlesRpc}
+  {#if Object.keys(groupMetrics).length > 0}
     <div
       class="w-full flex flex-col md:flex-row justify-between items-start md:items-center mb-6"
     >
-      <div class="flex items-center gap-4">
-        <Avatar address={data.group as Address} view="horizontal" />
-        <div>
-          <h1 class="text-2xl font-bold text-gray-800">
-            Group Metrics Dashboard
-          </h1>
-          <p class="text-gray-500">Analytics and insights for your group</p>
+      <div class="flex flex-col md:flex-row gap-x-8">
+        <div class="flex items-center gap-4">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-800">
+              Group Metrics Dashboard
+            </h1>
+            <p class="text-gray-500">Analytics and insights for your group</p>
+          </div>
         </div>
+        <Avatar address={data.group as Address} view="horizontal" />
       </div>
       <div class="mt-4 md:mt-0">
         <button
@@ -55,7 +57,7 @@
     </div>
 
     <!-- Stats Overview -->
-    <GroupMetricsStats />
+    <GroupMetricsStats {groupMetrics} />
 
     <!-- Charts Grid -->
     <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">

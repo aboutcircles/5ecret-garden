@@ -37,21 +37,33 @@ export type GroupMetrics = {
 
 export let groupMetrics: GroupMetrics = $state({});
 
-export async function initGroupMetrics(groupMetrics: GroupMetrics, circlesRpc: CirclesRpc,
-    groupAddress: Address): Promise<void> {
-    console.log(groupMetrics, groupAddress);
+export async function fetchGroupMetrics(
+    circlesRpc: CirclesRpc,
+    groupAddress: Address
+): Promise<GroupMetrics> {
+    const [
+        memberCountPerHour,
+        memberCountPerDay,
+        mintRedeemPerHour,
+        mintRedeemPerDay,
+        wrapUnwrapPerHour,
+        wrapUnwrapPerDay,
+        collateralInTreasury,
+        tokenHolderBalance,
+        erc20Token,
+    ] = await Promise.all([
+        getMemberCount(circlesRpc, groupAddress, 'hour', '7 days'),
+        getMemberCount(circlesRpc, groupAddress, 'day', '30 days'),
+        getMintRedeem(circlesRpc, groupAddress, 'hour', '7 days'),
+        getMintRedeem(circlesRpc, groupAddress, 'day', '30 days'),
+        getWrapUnwrap(circlesRpc, groupAddress, 'hour', '7 days'),
+        getWrapUnwrap(circlesRpc, groupAddress, 'day', '30 days'),
+        getCollateralInTreasury(circlesRpc, groupAddress),
+        getGroupTokenHoldersBalance(circlesRpc, groupAddress),
+        getERC20Token(circlesRpc, groupAddress),
+    ]);
 
-    groupMetrics.memberCountPerHour = await getMemberCount(circlesRpc, groupAddress, 'hour', '7 days');
-    groupMetrics.memberCountPerDay = await getMemberCount(circlesRpc, groupAddress, 'day', '30 days');
-    groupMetrics.mintRedeemPerHour = await getMintRedeem(circlesRpc, groupAddress, 'hour', '7 days');
-    groupMetrics.mintRedeemPerDay = await getMintRedeem(circlesRpc, groupAddress, 'day', '30 days');
-    groupMetrics.wrapUnwrapPerHour = await getWrapUnwrap(circlesRpc, groupAddress, 'hour', '7 days');
-    groupMetrics.wrapUnwrapPerDay = await getWrapUnwrap(circlesRpc, groupAddress, 'day', '30 days');
-    groupMetrics.collateralInTreasury = await getCollateralInTreasury(circlesRpc, groupAddress);
-    groupMetrics.tokenHolderBalance = await getGroupTokenHoldersBalance(circlesRpc, groupAddress);
-    groupMetrics.erc20Token = await getERC20Token(circlesRpc, groupAddress);
-
-    const base = '/api/price/' + '?group=' + encodeURIComponent(groupMetrics.erc20Token ?? "")
+    const base = '/api/price/' + '?group=' + encodeURIComponent(erc20Token ?? "")
 
     const [weekRes, monthRes] = await Promise.all([
         fetch(`${base}&period=7 days&resolution=hour`),
@@ -59,7 +71,7 @@ export async function initGroupMetrics(groupMetrics: GroupMetrics, circlesRpc: C
     ]);
 
     const rawWeek = await weekRes.json();
-    groupMetrics.priceHistoryWeek = rawWeek
+    const priceHistoryWeek = rawWeek
         .map((p: { timestamp: string; price: string }) => ({
             timestamp: new Date(p.timestamp),
             price: Number(p.price),
@@ -67,19 +79,34 @@ export async function initGroupMetrics(groupMetrics: GroupMetrics, circlesRpc: C
         .filter((p: { price: number; }) => typeof p.price === 'number' && !isNaN(p.price));
 
     const rawMonth = await monthRes.json();
-    groupMetrics.priceHistoryMonth = rawMonth
+    const priceHistoryMonth = rawMonth
         .map((p: { timestamp: string; price: string }) => ({
             timestamp: new Date(p.timestamp),
             price: Number(p.price),
         }))
         .filter((p: { price: number; }) => typeof p.price === 'number' && !isNaN(p.price));
+
+    return {
+        memberCountPerHour,
+        memberCountPerDay,
+        mintRedeemPerHour,
+        mintRedeemPerDay,
+        wrapUnwrapPerHour,
+        wrapUnwrapPerDay,
+        collateralInTreasury,
+        tokenHolderBalance,
+        erc20Token,
+        priceHistoryWeek,
+        priceHistoryMonth,
+    };
 }
 
 export async function initGroupMetricsStore(
     circlesRpc: CirclesRpc,
     groupAddress: Address
 ): Promise<void> {
-    await initGroupMetrics(groupMetrics, circlesRpc, groupAddress)
+    const data = await fetchGroupMetrics(circlesRpc, groupAddress);
+    Object.assign(groupMetrics, data);
 }
 
 async function getMemberCount(

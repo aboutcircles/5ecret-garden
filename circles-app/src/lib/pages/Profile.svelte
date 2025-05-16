@@ -15,7 +15,7 @@
   import { getProfile } from '$lib/utils/profile';
   import { formatTrustRelation, getTypeString } from '$lib/utils/helpers';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls, popupState } from '$lib/stores/popUp';
   import AddressComponent from '$lib/components/Address.svelte';
   import { uint256ToAddress, type Address } from '@circles-sdk/utils';
   import SelectAmount from '$lib/flows/send/3_Amount.svelte';
@@ -26,6 +26,7 @@
     getVaultAddress,
   } from '$lib/utils/vault';
   import CollateralTable from '$lib/components/CollateralTable.svelte';
+  import { goto } from '$app/navigation';
 
   interface Props {
     address: Address | undefined;
@@ -153,6 +154,16 @@
       >{getTypeString(otherAvatar?.type || '')}</span
     >
     <AddressComponent address={address ?? '0x0'} />
+    {#if otherAvatar?.type === 'CrcV2_RegisterGroup'}
+      <button
+        onclick={() => {
+          goto('/groups/metrics/' + address);
+          popupControls.close();
+        }}
+        class="flex items-center justify-center bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm"
+        ><img src="/chart.svg" alt="Chart" class="w-4" /></button
+      >
+    {/if}
     <a
       href={'https://gnosisscan.io/address/' + otherAvatar?.avatar}
       target="_blank"
