@@ -56,9 +56,9 @@
       allTs.push(...pts.map((p) => p.x));
       const colors = generateColors(i);
       return {
-        label: title ? `${title} – ${key}` : key,
+        label: key,
         data: pts,
-        tension: 0.3,
+        tension: 0.05,
         borderWidth: 2,
         pointRadius: 0,
         pointHoverRadius: 6,
@@ -102,7 +102,6 @@
             grid: {
               display: true,
               color: 'rgba(229, 231, 235, 0.5)',
-              drawBorder: false,
             },
             ticks: {
               padding: 10,
@@ -115,7 +114,6 @@
             grid: {
               display: true,
               color: 'rgba(229, 231, 235, 0.5)',
-              drawBorder: false,
             },
             ticks: {
               padding: 10,

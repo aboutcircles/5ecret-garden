@@ -1,33 +1,52 @@
 <script lang="ts">
-  import { groupMetrics } from '$lib/stores/groupMetrics.svelte';
-  import { avatarState } from '$lib/stores/avatar.svelte';
-  import { onMount } from 'svelte';
+  import {
+    initGroupMetrics,
+    type GroupMetrics,
+  } from '$lib/stores/groupMetrics.svelte';
   import { goto } from '$app/navigation';
   import ModernHistoryChart from '$lib/components/ModernHistoryChart.svelte';
   import ModernPieChart from '$lib/components/ModernPieChart.svelte';
   import GroupMetricsStats from '$lib/components/GroupMetricsStats.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
+  import type { PageProps } from './$types';
+  import { circles } from '$lib/stores/circles';
+  import type { Address } from '@circles-sdk/utils';
 
-  onMount(() => {
-    if (!avatarState.isGroup) {
-      goto('/dashboard');
+  let groupMetrics: GroupMetrics = $state({});
+
+  let { data }: PageProps = $props();
+
+  $effect(() => {
+    if ($circles?.circlesRpc) {
+      console.log("init group metrics for group :", data.group)
+      initGroupMetrics(
+        groupMetrics,
+        $circles.circlesRpc,
+        data.group as Address
+      );
     }
   });
 </script>
 
-<div class="flex flex-col items-center w-full max-w-6xl mx-auto gap-y-6 mt-20 px-4">
-  {#if avatarState.isGroup && avatarState.avatar}
-    <div class="w-full flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+<div
+  class="flex flex-col items-center w-full max-w-6xl mx-auto gap-y-6 mt-20 px-4"
+>
+  {#if $circles?.circlesRpc}
+    <div
+      class="w-full flex flex-col md:flex-row justify-between items-start md:items-center mb-6"
+    >
       <div class="flex items-center gap-4">
-        <Avatar address={avatarState.avatar.address} view="horizontal" />
+        <Avatar address={data.group as Address} view="horizontal" />
         <div>
-          <h1 class="text-2xl font-bold text-gray-800">Group Metrics Dashboard</h1>
+          <h1 class="text-2xl font-bold text-gray-800">
+            Group Metrics Dashboard
+          </h1>
           <p class="text-gray-500">Analytics and insights for your group</p>
         </div>
       </div>
       <div class="mt-4 md:mt-0">
-        <button 
-          class="btn btn-sm btn-outline" 
+        <button
+          class="btn btn-sm btn-outline"
           onclick={() => goto('/dashboard')}
         >
           Back to Dashboard
@@ -85,7 +104,9 @@
     <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
       {#if groupMetrics?.collateralInTreasury && groupMetrics.collateralInTreasury.length > 0}
         <div class="bg-white p-6 rounded-xl border shadow-sm">
-          <h2 class="text-lg font-semibold text-gray-800 mb-4">Treasury Collateral</h2>
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">
+            Treasury Collateral
+          </h2>
           <ModernPieChart
             data={groupMetrics.collateralInTreasury}
             labelKey="avatar"
@@ -97,11 +118,13 @@
 
       {#if groupMetrics?.tokenHolderBalance && groupMetrics.tokenHolderBalance.length > 0}
         <div class="bg-white p-6 rounded-xl border shadow-sm">
-          <h2 class="text-lg font-semibold text-gray-800 mb-4">Token Distribution</h2>
+          <h2 class="text-lg font-semibold text-gray-800 mb-4">
+            Token Distribution
+          </h2>
           <ModernPieChart
             data={groupMetrics.tokenHolderBalance}
             labelKey="holder"
-            valueKey="fractionalOwnership"
+            valueKey="demurragedTotalBalance"
             title="Token Holder Distribution"
           />
         </div>
@@ -109,7 +132,9 @@
     </div>
   {:else}
     <div class="flex flex-col items-center justify-center h-[50vh]">
-      <div class="text-2xl font-bold text-gray-400">Loading group metrics...</div>
+      <div class="text-2xl font-bold text-gray-400">
+        Loading group metrics...
+      </div>
     </div>
   {/if}
 </div>

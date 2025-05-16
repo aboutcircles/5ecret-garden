@@ -99,7 +99,7 @@
                 const value = context.formattedValue;
                 const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
                 const percentage = Math.round((context.parsed / total) * 100);
-                return `${label}: ${value} (${percentage}%)`;
+                return `${value} (${percentage}%)`;
               }
             }
           }

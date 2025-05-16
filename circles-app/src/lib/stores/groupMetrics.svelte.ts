@@ -21,33 +21,26 @@ type wrapUnwrap = {
     unwrapAmount: number;
 }
 
-type GroupMetrics = {
+export type GroupMetrics = {
     memberCountPerHour?: Array<memberCount>;
     memberCountPerDay?: Array<memberCount>;
-    collateralInTreasury: Array<{ avatar: Address; amount: number }> | undefined;
+    collateralInTreasury?: Array<{ avatar: Address; amount: number }>;
     tokenHolderBalance?: Array<{ holder: Address, demurragedTotalBalance: number; fractionalOwnership: number }>;
-    mintRedeemPerHour: Array<mintRedeem> | undefined;
-    mintRedeemPerDay: Array<mintRedeem> | undefined;
+    mintRedeemPerHour?: Array<mintRedeem>;
+    mintRedeemPerDay?: Array<mintRedeem>;
     wrapUnwrapPerHour?: Array<wrapUnwrap>;
     wrapUnwrapPerDay?: Array<wrapUnwrap>;
-    erc20Token: Address | undefined;
+    erc20Token?: Address;
     priceHistoryWeek?: Array<{ timestamp: Date; price: number }>;
     priceHistoryMonth?: Array<{ timestamp: Date; price: number }>;
 }
 
-export let groupMetrics: GroupMetrics = $state({
-    memberCountPerHour: undefined,
-    memberCountPerDay: undefined,
-    collateralInTreasury: undefined,
-    mintRedeemPerHour: undefined,
-    mintRedeemPerDay: undefined,
-    erc20Token: undefined,
-});
+export let groupMetrics: GroupMetrics = $state({});
 
-export async function initGroupMetricsStore(
-    circlesRpc: CirclesRpc,
-    groupAddress: Address
-): Promise<void> {
+export async function initGroupMetrics(groupMetrics: GroupMetrics, circlesRpc: CirclesRpc,
+    groupAddress: Address): Promise<void> {
+    console.log(groupMetrics, groupAddress);
+
     groupMetrics.memberCountPerHour = await getMemberCount(circlesRpc, groupAddress, 'hour', '7 days');
     groupMetrics.memberCountPerDay = await getMemberCount(circlesRpc, groupAddress, 'day', '30 days');
     groupMetrics.mintRedeemPerHour = await getMintRedeem(circlesRpc, groupAddress, 'hour', '7 days');
@@ -80,6 +73,13 @@ export async function initGroupMetricsStore(
             price: Number(p.price),
         }))
         .filter((p: { price: number; }) => typeof p.price === 'number' && !isNaN(p.price));
+}
+
+export async function initGroupMetricsStore(
+    circlesRpc: CirclesRpc,
+    groupAddress: Address
+): Promise<void> {
+    await initGroupMetrics(groupMetrics, circlesRpc, groupAddress)
 }
 
 async function getMemberCount(
@@ -245,8 +245,6 @@ async function getGroupCollateralByToken(
         },
     ]);
 
-    console.log(result);
-
     return result.result.rows.map(([_, h, t, d, f]) => ({
         holder: h as Address,
         demurragedTotalBalance: Number(d),
@@ -279,7 +277,7 @@ async function getGroupTokenHoldersBalance(
 
     return result.result.rows.map(([_, h, t, d, f]) => ({
         holder: h as Address,
-        demurragedTotalBalance: Number(d),
+        demurragedTotalBalance: Number(formatEther(d)),
         fractionalOwnership: Number(f),
     }));
 }
@@ -308,14 +306,4 @@ async function getERC20Token(
     ]);
 
     return result.result.rows[1][7];
-}
-
-function parsePeriodToMs(period: string): number {
-    const [amount, unit] = period.split(' ');
-    const n = parseInt(amount);
-    switch (unit) {
-        case 'days': return n * 24 * 60 * 60 * 1000;
-        case 'hours': return n * 60 * 60 * 1000;
-        default: throw new Error('Unsupported period: ' + period);
-    }
 }

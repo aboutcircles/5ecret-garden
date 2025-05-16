@@ -7,8 +7,6 @@
   import { runTask } from '$lib/utils/tasks';
   import { transactionHistory } from '$lib/stores/transactionHistory';
   import { groupMetrics } from '$lib/stores/groupMetrics.svelte';
-  import HistoryChart from '$lib/components/HistoryChart.svelte';
-  import PieChart from '$lib/components/PieChart.svelte';
   import ModernHistoryChart from '$lib/components/ModernHistoryChart.svelte';
   import ModernPieChart from '$lib/components/ModernPieChart.svelte';
   import GroupMetricsStats from '$lib/components/GroupMetricsStats.svelte';
@@ -130,7 +128,7 @@
               <ModernPieChart
                 data={groupMetrics.tokenHolderBalance}
                 labelKey="holder"
-                valueKey="fractionalOwnership"
+                valueKey="demurragedTotalBalance"
                 title="Token Holder Distribution"
               />
             </div>
