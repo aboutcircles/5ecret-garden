@@ -21,44 +21,49 @@ type wrapUnwrap = {
     unwrapAmount: number;
 }
 
-type GroupMetrics = {
+export type GroupMetrics = {
     memberCountPerHour?: Array<memberCount>;
     memberCountPerDay?: Array<memberCount>;
-    collateralInTreasury: Array<{ avatar: Address; amount: number }> | undefined;
+    collateralInTreasury?: Array<{ avatar: Address; amount: number }>;
     tokenHolderBalance?: Array<{ holder: Address, demurragedTotalBalance: number; fractionalOwnership: number }>;
-    mintRedeemPerHour: Array<mintRedeem> | undefined;
-    mintRedeemPerDay: Array<mintRedeem> | undefined;
+    mintRedeemPerHour?: Array<mintRedeem>;
+    mintRedeemPerDay?: Array<mintRedeem>;
     wrapUnwrapPerHour?: Array<wrapUnwrap>;
     wrapUnwrapPerDay?: Array<wrapUnwrap>;
-    erc20Token: Address | undefined;
+    erc20Token?: Address;
     priceHistoryWeek?: Array<{ timestamp: Date; price: number }>;
     priceHistoryMonth?: Array<{ timestamp: Date; price: number }>;
 }
 
-export let groupMetrics: GroupMetrics = $state({
-    memberCountPerHour: undefined,
-    memberCountPerDay: undefined,
-    collateralInTreasury: undefined,
-    mintRedeemPerHour: undefined,
-    mintRedeemPerDay: undefined,
-    erc20Token: undefined,
-});
+export let groupMetrics: GroupMetrics = $state({});
 
-export async function initGroupMetricsStore(
+export async function fetchGroupMetrics(
     circlesRpc: CirclesRpc,
     groupAddress: Address
-): Promise<void> {
-    groupMetrics.memberCountPerHour = await getMemberCount(circlesRpc, groupAddress, 'hour', '7 days');
-    groupMetrics.memberCountPerDay = await getMemberCount(circlesRpc, groupAddress, 'day', '30 days');
-    groupMetrics.mintRedeemPerHour = await getMintRedeem(circlesRpc, groupAddress, 'hour', '7 days');
-    groupMetrics.mintRedeemPerDay = await getMintRedeem(circlesRpc, groupAddress, 'day', '30 days');
-    groupMetrics.wrapUnwrapPerHour = await getWrapUnwrap(circlesRpc, groupAddress, 'hour', '7 days');
-    groupMetrics.wrapUnwrapPerDay = await getWrapUnwrap(circlesRpc, groupAddress, 'day', '30 days');
-    groupMetrics.collateralInTreasury = await getCollateralInTreasury(circlesRpc, groupAddress);
-    groupMetrics.tokenHolderBalance = await getGroupTokenHoldersBalance(circlesRpc, groupAddress);
-    groupMetrics.erc20Token = await getERC20Token(circlesRpc, groupAddress);
+): Promise<GroupMetrics> {
+    const [
+        memberCountPerHour,
+        memberCountPerDay,
+        mintRedeemPerHour,
+        mintRedeemPerDay,
+        wrapUnwrapPerHour,
+        wrapUnwrapPerDay,
+        collateralInTreasury,
+        tokenHolderBalance,
+        erc20Token,
+    ] = await Promise.all([
+        getMemberCount(circlesRpc, groupAddress, 'hour', '7 days'),
+        getMemberCount(circlesRpc, groupAddress, 'day', '30 days'),
+        getMintRedeem(circlesRpc, groupAddress, 'hour', '7 days'),
+        getMintRedeem(circlesRpc, groupAddress, 'day', '30 days'),
+        getWrapUnwrap(circlesRpc, groupAddress, 'hour', '7 days'),
+        getWrapUnwrap(circlesRpc, groupAddress, 'day', '30 days'),
+        getCollateralInTreasury(circlesRpc, groupAddress),
+        getGroupTokenHoldersBalance(circlesRpc, groupAddress),
+        getERC20Token(circlesRpc, groupAddress),
+    ]);
 
-    const base = '/api/price/' + '?group=' + encodeURIComponent(groupMetrics.erc20Token ?? "")
+    const base = '/api/price/' + '?group=' + encodeURIComponent(erc20Token ?? "")
 
     const [weekRes, monthRes] = await Promise.all([
         fetch(`${base}&period=7 days&resolution=hour`),
@@ -66,7 +71,7 @@ export async function initGroupMetricsStore(
     ]);
 
     const rawWeek = await weekRes.json();
-    groupMetrics.priceHistoryWeek = rawWeek
+    const priceHistoryWeek = rawWeek
         .map((p: { timestamp: string; price: string }) => ({
             timestamp: new Date(p.timestamp),
             price: Number(p.price),
@@ -74,12 +79,34 @@ export async function initGroupMetricsStore(
         .filter((p: { price: number; }) => typeof p.price === 'number' && !isNaN(p.price));
 
     const rawMonth = await monthRes.json();
-    groupMetrics.priceHistoryMonth = rawMonth
+    const priceHistoryMonth = rawMonth
         .map((p: { timestamp: string; price: string }) => ({
             timestamp: new Date(p.timestamp),
             price: Number(p.price),
         }))
         .filter((p: { price: number; }) => typeof p.price === 'number' && !isNaN(p.price));
+
+    return {
+        memberCountPerHour,
+        memberCountPerDay,
+        mintRedeemPerHour,
+        mintRedeemPerDay,
+        wrapUnwrapPerHour,
+        wrapUnwrapPerDay,
+        collateralInTreasury,
+        tokenHolderBalance,
+        erc20Token,
+        priceHistoryWeek,
+        priceHistoryMonth,
+    };
+}
+
+export async function initGroupMetricsStore(
+    circlesRpc: CirclesRpc,
+    groupAddress: Address
+): Promise<void> {
+    const data = await fetchGroupMetrics(circlesRpc, groupAddress);
+    Object.assign(groupMetrics, data);
 }
 
 async function getMemberCount(
@@ -245,8 +272,6 @@ async function getGroupCollateralByToken(
         },
     ]);
 
-    console.log(result);
-
     return result.result.rows.map(([_, h, t, d, f]) => ({
         holder: h as Address,
         demurragedTotalBalance: Number(d),
@@ -279,7 +304,7 @@ async function getGroupTokenHoldersBalance(
 
     return result.result.rows.map(([_, h, t, d, f]) => ({
         holder: h as Address,
-        demurragedTotalBalance: Number(d),
+        demurragedTotalBalance: Number(formatEther(d)),
         fractionalOwnership: Number(f),
     }));
 }
@@ -308,14 +333,4 @@ async function getERC20Token(
     ]);
 
     return result.result.rows[1][7];
-}
-
-function parsePeriodToMs(period: string): number {
-    const [amount, unit] = period.split(' ');
-    const n = parseInt(amount);
-    switch (unit) {
-        case 'days': return n * 24 * 60 * 60 * 1000;
-        case 'hours': return n * 60 * 60 * 1000;
-        default: throw new Error('Unsupported period: ' + period);
-    }
 }
