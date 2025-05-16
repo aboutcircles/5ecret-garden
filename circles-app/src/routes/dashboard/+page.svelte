@@ -9,6 +9,9 @@
   import { groupMetrics } from '$lib/stores/groupMetrics.svelte';
   import HistoryChart from '$lib/components/HistoryChart.svelte';
   import PieChart from '$lib/components/PieChart.svelte';
+  import ModernHistoryChart from '$lib/components/ModernHistoryChart.svelte';
+  import ModernPieChart from '$lib/components/ModernPieChart.svelte';
+  import GroupMetricsStats from '$lib/components/GroupMetricsStats.svelte';
 
   let mintableAmount: number = $state(0);
 
@@ -46,6 +49,11 @@
   {/if}
   <div role="tablist" class="tabs tabs-bordered w-full p-0 my-10">
     {#if avatarState.isGroup}
+      <div class="w-full mb-6">
+        <div class="flex justify-between items-center">
+          <h2 class="text-xl font-bold text-primary">Group Overview</h2>
+        </div>
+      </div>
       <input
         type="radio"
         name="tabs"
@@ -56,62 +64,78 @@
         aria-label="Overview"
       />
       <div role="tabpanel" class="tab-content mt-8 bg-base-100 border-none">
-        {#if groupMetrics.priceHistoryWeek && groupMetrics.priceHistoryMonth}
-          <div class="divider"></div>
-          <h2 class="text-lg text-primary font-bold">Price</h2>
-          <HistoryChart
-            dataSet1={groupMetrics.priceHistoryWeek}
-            dataSet2={groupMetrics.priceHistoryMonth}
-            title="Price per hour"
-          />
-        {/if}
-        {#if groupMetrics?.collateralInTreasury && groupMetrics.collateralInTreasury.length > 0}
-          <div class="divider"></div>
-          <h2 class="text-lg text-primary font-bold">Collaterals</h2>
-          <PieChart
-            data={groupMetrics.collateralInTreasury}
-            labelKey="avatar"
-            valueKey="amount"
-            title="Treasury breakdown"
-          />
-        {/if}
-        {#if groupMetrics?.tokenHolderBalance && groupMetrics.tokenHolderBalance.length > 0}
-          <div class="divider"></div>
-          <h2 class="text-lg text-primary font-bold">Token Holder Balance</h2>
-          <PieChart
-            data={groupMetrics.tokenHolderBalance}
-            labelKey="holder"
-            valueKey="fractionalOwnership"
-            title="Token Distribution"
-          />
-        {/if}
-        {#if groupMetrics?.memberCountPerHour && groupMetrics.memberCountPerHour.length > 0 && groupMetrics.memberCountPerDay && groupMetrics.memberCountPerDay.length > 0}
-          <div class="divider"></div>
-          <h2 class="text-lg text-primary font-bold">Member Count</h2>
-          <HistoryChart
-            dataSet1={groupMetrics.memberCountPerHour}
-            dataSet2={groupMetrics.memberCountPerDay}
-            title="Member Count"
-          />
-        {/if}
-        {#if groupMetrics?.mintRedeemPerHour && groupMetrics.mintRedeemPerHour.length > 0 && groupMetrics.mintRedeemPerDay && groupMetrics.mintRedeemPerDay.length > 0}
-          <div class="divider"></div>
-          <h2 class="text-lg text-primary font-bold">Mint/Redeem</h2>
-          <HistoryChart
-            dataSet1={groupMetrics.mintRedeemPerHour}
-            dataSet2={groupMetrics.mintRedeemPerDay}
-            title="Mint/Redeem"
-          />
-        {/if}
-        {#if groupMetrics?.wrapUnwrapPerHour && groupMetrics.wrapUnwrapPerHour.length > 0 && groupMetrics.wrapUnwrapPerDay && groupMetrics.wrapUnwrapPerDay.length > 0}
-          <div class="divider"></div>
-          <h2 class="text-lg text-primary font-bold">Wrap/Unwrap</h2>
-          <HistoryChart
-            dataSet1={groupMetrics.wrapUnwrapPerHour}
-            dataSet2={groupMetrics.wrapUnwrapPerDay}
-            title="Mint/Redeem"
-          />
-        {/if}
+        <!-- Stats Overview -->
+        <GroupMetricsStats />
+        
+        <!-- Charts Grid -->
+        <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10 mt-6">
+          {#if groupMetrics.priceHistoryWeek && groupMetrics.priceHistoryMonth}
+            <div class="bg-white p-6 rounded-xl border shadow-sm">
+              <ModernHistoryChart
+                dataSet1={groupMetrics.priceHistoryWeek}
+                dataSet2={groupMetrics.priceHistoryMonth}
+                title="Price History"
+              />
+            </div>
+          {/if}
+
+          {#if groupMetrics?.memberCountPerHour && groupMetrics.memberCountPerHour.length > 0 && groupMetrics.memberCountPerDay && groupMetrics.memberCountPerDay.length > 0}
+            <div class="bg-white p-6 rounded-xl border shadow-sm">
+              <ModernHistoryChart
+                dataSet1={groupMetrics.memberCountPerHour}
+                dataSet2={groupMetrics.memberCountPerDay}
+                title="Member Growth"
+              />
+            </div>
+          {/if}
+
+          {#if groupMetrics?.mintRedeemPerHour && groupMetrics.mintRedeemPerHour.length > 0 && groupMetrics.mintRedeemPerDay && groupMetrics.mintRedeemPerDay.length > 0}
+            <div class="bg-white p-6 rounded-xl border shadow-sm">
+              <ModernHistoryChart
+                dataSet1={groupMetrics.mintRedeemPerHour}
+                dataSet2={groupMetrics.mintRedeemPerDay}
+                title="Mint/Redeem Activity"
+              />
+            </div>
+          {/if}
+
+          {#if groupMetrics?.wrapUnwrapPerHour && groupMetrics.wrapUnwrapPerHour.length > 0 && groupMetrics.wrapUnwrapPerDay && groupMetrics.wrapUnwrapPerDay.length > 0}
+            <div class="bg-white p-6 rounded-xl border shadow-sm">
+              <ModernHistoryChart
+                dataSet1={groupMetrics.wrapUnwrapPerHour}
+                dataSet2={groupMetrics.wrapUnwrapPerDay}
+                title="Wrap/Unwrap Activity"
+              />
+            </div>
+          {/if}
+        </div>
+
+        <!-- Distribution Charts -->
+        <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+          {#if groupMetrics?.collateralInTreasury && groupMetrics.collateralInTreasury.length > 0}
+            <div class="bg-white p-6 rounded-xl border shadow-sm">
+              <h2 class="text-lg font-semibold text-gray-800 mb-4">Treasury Collateral</h2>
+              <ModernPieChart
+                data={groupMetrics.collateralInTreasury}
+                labelKey="avatar"
+                valueKey="amount"
+                title="Treasury Breakdown"
+              />
+            </div>
+          {/if}
+
+          {#if groupMetrics?.tokenHolderBalance && groupMetrics.tokenHolderBalance.length > 0}
+            <div class="bg-white p-6 rounded-xl border shadow-sm">
+              <h2 class="text-lg font-semibold text-gray-800 mb-4">Token Distribution</h2>
+              <ModernPieChart
+                data={groupMetrics.tokenHolderBalance}
+                labelKey="holder"
+                valueKey="fractionalOwnership"
+                title="Token Holder Distribution"
+              />
+            </div>
+          {/if}
+        </div>
       </div>
     {/if}
     <input
@@ -120,7 +144,6 @@
       value="transaction-history"
       role="tab"
       class="tab h-auto"
-      checked
       aria-label="Transaction History"
     />
     <div role="tabpanel" class="tab-content mt-8 bg-base-100 border-none">
