@@ -62,6 +62,7 @@
     groupsByOwner = await getBaseAndCmgGroupsByOwnerBatch($circles, [
        $wallet.address.toLowerCase() as Address,
      ]);;
+     console.log(groupsByOwner);
     avatarInfo = await $circles.data.getAvatarInfo($wallet.address);
 
     CirclesStorage.getInstance().data = {
