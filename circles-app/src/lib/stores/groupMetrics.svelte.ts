@@ -69,22 +69,33 @@ export async function fetchGroupMetrics(
         fetch(`${base}&period=7 days&resolution=hour`),
         fetch(`${base}&period=30 days&resolution=day`)
     ]);
+    let priceHistoryWeek: {
+        timestamp: Date;
+        price: number;
+    }[] = [];
+    let priceHistoryMonth: {
+        timestamp: Date;
+        price: number;
+    }[] = [];
 
-    const rawWeek = await weekRes.json();
-    const priceHistoryWeek = rawWeek
-        .map((p: { timestamp: string; price: string }) => ({
-            timestamp: new Date(p.timestamp),
-            price: Number(p.price),
-        }))
-        .filter((p: { price: number; }) => typeof p.price === 'number' && !isNaN(p.price));
+    if (weekRes.status != 500 && monthRes.status != 500) {
+        const rawWeek = await weekRes.json();
+        priceHistoryWeek = rawWeek
+            .map((p: { timestamp: string; price: string }) => ({
+                timestamp: new Date(p.timestamp),
+                price: Number(p.price),
+            }))
+            .filter((p: { price: number; }) => typeof p.price === 'number' && !isNaN(p.price));
 
-    const rawMonth = await monthRes.json();
-    const priceHistoryMonth = rawMonth
-        .map((p: { timestamp: string; price: string }) => ({
-            timestamp: new Date(p.timestamp),
-            price: Number(p.price),
-        }))
-        .filter((p: { price: number; }) => typeof p.price === 'number' && !isNaN(p.price));
+        const rawMonth = await monthRes.json();
+        priceHistoryMonth = rawMonth
+            .map((p: { timestamp: string; price: string }) => ({
+                timestamp: new Date(p.timestamp),
+                price: Number(p.price),
+            }))
+            .filter((p: { price: number; }) => typeof p.price === 'number' && !isNaN(p.price));
+    }
+
 
     return {
         memberCountPerHour,
