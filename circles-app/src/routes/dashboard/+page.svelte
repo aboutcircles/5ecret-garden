@@ -53,7 +53,7 @@
         value="overview"
         role="tab"
         class="tab h-auto"
-        checked
+        defaultChecked="true"
         aria-label="Overview"
       />
       <div role="tabpanel" class="tab-content mt-8 bg-base-100 border-none">
@@ -151,7 +151,7 @@
     {/if}
     <input
       type="radio"
-      name="tab"
+      name="tabs"
       value="transaction-history"
       role="tab"
       class="tab h-auto"
