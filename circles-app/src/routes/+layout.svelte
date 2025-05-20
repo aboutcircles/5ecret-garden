@@ -27,6 +27,7 @@
   import { initBalanceStore } from '$lib/stores/circlesBalances';
   import { initGroupMetricsStore } from '$lib/stores/groupMetrics.svelte';
   import { circles } from '$lib/stores/circles';
+  import Footer from '$lib/components/Footer.svelte';
 
   interface Props {
     children?: import('svelte').Snippet;
@@ -138,7 +139,7 @@
       initTransactionHistoryStore(avatarState.avatar);
       initContactStore(avatarState.avatar);
       initBalanceStore(avatarState.avatar);
-      if(avatarState.groupType === 'CrcV2_BaseGroupCreated' && $circles) {
+      if (avatarState.groupType === 'CrcV2_BaseGroupCreated' && $circles) {
         initGroupMetricsStore($circles.circlesRpc, avatarState.avatar.address);
       }
     }

@@ -1,0 +1,1 @@
+<div class="mt-28 font-bold">PRIVACY POLICY</div>
