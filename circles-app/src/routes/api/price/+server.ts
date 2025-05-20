@@ -2,7 +2,7 @@ import type { RequestHandler } from '@sveltejs/kit';
 import pkg from 'pg';
 import {
   DB_USER, DB_PW, DB_HOST, DB_PORT,
-  DB_DATABASE, DB_SSL_MODE
+  DB_DATABASE
 } from '$env/static/private';
 import { staticCirclesToCircles } from '@circles-sdk/utils';
 const { Client } = pkg;
@@ -41,9 +41,7 @@ export const GET: RequestHandler = async ({ url }) => {
     host: DB_HOST,
     port: Number(DB_PORT),
     database: DB_DATABASE,
-    ssl: DB_SSL_MODE === 'require'
-      ? { rejectUnauthorized: false }
-      : undefined,
+    ssl: { rejectUnauthorized: true },
     connectionTimeoutMillis: 5_000
   });
 
