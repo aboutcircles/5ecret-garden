@@ -6,9 +6,10 @@
     dataSet1: Array<Record<string, any> & { timestamp: Date }>;
     dataSet2: Array<Record<string, any> & { timestamp: Date }>;
     title: string;
+    label: string;
   }
 
-  let { dataSet1, dataSet2, title }: Props = $props();
+  let { dataSet1, dataSet2, title, label }: Props = $props();
 
   let resolution: 'hour' | 'day' = $state('hour');
 
@@ -110,7 +111,7 @@
           },
           y: {
             beginAtZero: true,
-            title: { display: true, text: 'Value' },
+            title: { display: true, text: label },
             grid: {
               display: true,
               color: 'rgba(229, 231, 235, 0.5)',

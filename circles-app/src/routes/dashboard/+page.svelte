@@ -75,6 +75,7 @@
                   dataSet1={groupMetrics.priceHistoryWeek}
                   dataSet2={groupMetrics.priceHistoryMonth}
                   title="Price History"
+                  label="xDAI"
                 />
               </div>
             {/if}
@@ -85,6 +86,7 @@
                   dataSet1={groupMetrics.memberCountPerHour}
                   dataSet2={groupMetrics.memberCountPerDay}
                   title="Member Growth"
+                  label="Members"
                 />
               </div>
             {/if}
@@ -95,6 +97,7 @@
                   dataSet1={groupMetrics.mintRedeemPerHour}
                   dataSet2={groupMetrics.mintRedeemPerDay}
                   title="Mint/Redeem Activity"
+                  label="Circles"
                 />
               </div>
             {/if}
@@ -105,6 +108,7 @@
                   dataSet1={groupMetrics.wrapUnwrapPerHour}
                   dataSet2={groupMetrics.wrapUnwrapPerDay}
                   title="Wrap/Unwrap Activity"
+                  label="Circles"
                 />
               </div>
             {/if}
