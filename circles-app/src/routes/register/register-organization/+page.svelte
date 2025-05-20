@@ -5,6 +5,7 @@
   import { circles } from '$lib/stores/circles';
   import type { Avatar } from '@circles-sdk/sdk';
   import type { Profile } from '@circles-sdk/profiles';
+  import Disclaimer from '$lib/components/Disclaimer.svelte';
 
   let profile: Profile = $state({
     name: '',
@@ -33,6 +34,7 @@
       <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
     </button>
   </div>
+  <Disclaimer />
   <div class="card bg-base-100 w-96 border shadow-sm">
     <figure class="px-10 pt-10">
       <img
