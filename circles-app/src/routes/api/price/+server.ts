@@ -22,18 +22,26 @@ export const GET: RequestHandler = async ({ url }) => {
   }
 
   const sql = `
-    SELECT
-      date_trunc('${resolution}', timestamp) AS bucket,
-      avg((outputamountraw::double precision) / (inputamountraw::double precision)) AS price
-    FROM quotes
-    WHERE
-      (inputtoken  = $1 AND outputtoken = $2)
+  SELECT
+    date_trunc('${resolution}', timestamp) AS bucket,
+    avg(
+      CASE
+        WHEN inputtoken = $1 AND outputtoken = $2 THEN (outputamountraw::double precision) / (inputamountraw::double precision)
+        WHEN inputtoken = $2 AND outputtoken = $1 THEN (inputamountraw::double precision) / (outputamountraw::double precision)
+        ELSE NULL
+      END
+    ) AS price
+  FROM quotes
+  WHERE
+    (
+      (inputtoken = $1 AND outputtoken = $2)
       OR
-      (inputtoken  = $2 AND outputtoken = $1)
-      AND timestamp >= now() - interval '${period}'
-    GROUP BY bucket
-    ORDER BY bucket
-  `;
+      (inputtoken = $2 AND outputtoken = $1)
+    )
+    AND timestamp >= now() - interval '${period}'
+  GROUP BY bucket
+  ORDER BY bucket
+`;
 
   const client = new Client({
     user: DB_USER,
