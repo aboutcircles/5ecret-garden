@@ -41,7 +41,7 @@ export const GET: RequestHandler = async ({ url }) => {
     host: DB_HOST,
     port: Number(DB_PORT),
     database: DB_DATABASE,
-    ssl: { rejectUnauthorized: true },
+    ssl: { rejectUnauthorized: false },
     connectionTimeoutMillis: 5_000
   });
 
