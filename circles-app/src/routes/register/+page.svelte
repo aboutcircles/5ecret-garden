@@ -3,11 +3,13 @@
   import QrCode from '$lib/components/QrCode.svelte';
   import Address from '$lib/components/Address.svelte';
   import ConnectWallet from '$lib/components/ConnectWallet.svelte';
+  import Disclaimer from '$lib/components/Disclaimer.svelte';
 </script>
 
 <div
   class="w-full flex flex-col max-w-xl gap-y-4 justify-center mt-28 md:mt-44"
 >
+  <Disclaimer />
   <div class="w-full flex flex-col">
     <p class="font-bold text-xl">Register</p>
     <p class="text-md text-black/60">

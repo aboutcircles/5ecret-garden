@@ -1,0 +1,472 @@
+**Terms of Use**
+
+Beta Version 1.0 
+
+Dated: 20th May 2025
+
+**BETA VERSION DISCLAIMER**
+
+**Circles Core is provided as a beta version and is still under development. Accordingly, there is a risk that it may contain bugs, Vulnerabilities or other issues that could result in interruptions in availability or functionality, data loss, or other unintended consequences. Features, functionality, and performance may change during the beta phase without prior notice. By using the beta version of the App, you accept and acknowledge that such risks may be present and that you are solely responsible for your access and use of our Services.**
+
+**Notices:** 
+
+**You are responsible for checking our Website periodically in order to review the current version of these Terms of Use that apply at that time.** 
+
+**These Terms of Use contain provisions which affect your legal rights. For example, section 14 (Dispute Resolution) contains a binding arbitration clause and class action waiver, which affect your rights with respect to how disputes are resolved.**  
+
+**About Us**
+
+Gnosis Ltd offers a web-based application ("**App**" or "**Circles Core**") which is an interface that allows users to access and interact with the Circles Protocol v2 (“**Circles**” or the “**Protocol**”). 
+
+Gnosis Ltd is registered in Gibraltar under company number 115571 and with its registered office at World Trade Center, 6 Bayside Road, GX11 1AA, Gibraltar ("**Gnosis**", "**we**", "**us**," or "**our**").
+
+**About the Protocol & the App**
+
+1) The Protocol consists of a series of open-source smart contracts deployed on the Gnosis Chain blockchain network (“**Gnosis Chain**”) that creates a general framework through which users can mint and transact personal tokens, establish trusted connections, and engage in online communities. Please refer to the [Circles Protocol v2 Whitepaper](https://files.gitbook.com/v0/b/gitbook-x-prod.appspot.com/o/spaces%2Fs76GmMOXUUWWi7YK8Ugp%2Fuploads%2FeugvhtIIqA6IUW0aJKsw%2FCircles_Whitepaper_v220.pdf?alt=media&token=0ab0f75c-2121-4b47-a2e1-a2bd0eabd53f) for further information about the Protocol’s features and functionalities. The Circles Protocol v2 Whitepaper is referred to herein for information purposes only and does not form part of these Terms of Use. 
+
+2) The App is available free of charge and can be accessed and used via our website: \[[https://app.aboutcircles.com/](https://app.aboutcircles.com/)\] (“**Website**”). Please note that although the App is made available free of charge, there is a fee mechanism built into the Protocol which applies when interacting with certain features of the Protocol. Additionally, blockchain transactions require the payment of transaction fees to the network (also referred to as gas fees). Please refer to section 6 (Fees) below for further information about fees that apply when interacting with the Protocol and executing transactions on-chain. 
+
+3) The App is one of several interfaces through which users can interact with the Protocol to: create a Circles Account, send invites to others to join Circles, establish trusted connections with other Circles users, mint and manage personal CRC-tokens ("**CRC**"), as well as send and receive CRC within your trusted network. Additionally, the App provides users with the ability to interact with the Protocol to create online communities of Circles users (which we refer to as “**Groups**”), define Group membership eligibility, set a mint and redeem policy for Group CRC-tokens (“**gCRC**”) and administer and manage Groups (including shared Group wallets), each as further described in section 3 (Services) of these Terms below.
+
+4) The App is designed solely as a front-end tool for interacting with the decentralized Circles Protocol v2. We do not operate or control the Protocol or the Gnosis Chain blockchain network, and we are not responsible for the actions of other users or the behavior of underlying smart contracts. Users must exercise caution, use appropriate security measures and understand the risks of engaging with blockchain-based systems. 
+
+**Scope of these Terms**
+
+1) These Terms of Use (the "**Terms**", "**Terms of Use**" or "**Agreement**") govern how you may access and use the App, and contain the terms and conditions on which the App and related services (as described in section 3 below) are provided by us to you (“**Services**”). These Terms of Use together with any other documents referred to and incorporated herein by reference form a legally binding agreement between us and you or the entity you represent ("**you**" or "**your**"). 
+
+2) When certain words and phrases are used in these Terms, they have specific meanings (these are known as ”defined terms”). You can identify these defined terms because they start with capital letters (even if they are not at the start of a sentence). Where a defined term is used, it has the meaning given to it in the Section of the Agreement where it was defined (you can find these meanings by looking at the sentence where the defined term is included either in brackets and speech marks). All defined terms are listed in Schedule 1\.
+
+3) Please read these Terms carefully before accessing or using our Services. By using the App or otherwise accessing the Services, you confirm that you: (1) have read, understand and agree to these Terms, and (2) consent to the collection, use, disclosure and other handling of information as described in our [Privacy Policy](https://www.gnosis.io/legal/privacy-policy). If you do not agree to these Terms, you may not access or use our Services.
+
+**Important Notice regarding Regulatory Status**
+
+1) A Circles Account is not a regulated product or service under applicable laws and regulations. Accordingly, none of the Services are subject to the protection or the rules of any applicable regulatory authority. Gnosis is not regulated, licensed or authorised by any regulatory authority, it does not at any time enter into the possession or control of Digital Assets stored in a Circles Account, or transacted on Gnosis Chain and does not provide any regulated payment or crypto services. 
+
+1. **Eligibility**
+
+1) You may access and use the Services only in accordance with this Agreement. You agree to comply with the terms of this Agreement and all laws, rules and regulations applicable to your access and use of the Services.
+
+2) You represent and warrant to us that:
+
+   (a) where you are acting in your personal capacity, you are at least 18 years of age and you are lawfully able to enter into a legally binding agreement with us; or
+
+   (b) Where you are acting on behalf of a legal entity, the legal entity is duly registered and validly existing under the laws of the jurisdiction in which it is incorporated and that you are duly authorised by the legal entity to act on its behalf and enter into a legally binding agreement with us.
+
+3) In addition, you represent and warrant to us that you are not:
+
+   (a) subject to sanctions or otherwise designated on any list of prohibited or restricted parties, including but not limited to the lists maintained by the United Nations Security Council, the U.S. Government (i.e. the Specially Designated Nationals List and Foreign Sanctions Evaders List of the U.S. Department of Treasury and the Entity List of the U.S. Department of Commerce), the European Union or its Member States, the United Kingdom, or other applicable government authority; 
+
+   (b) located in any country subject to a comprehensive sanctions programme implemented by any of the foregoing bodies; and 
+
+   (c) a citizen or resident of a state where your use of the Service would be illegal or otherwise violate any applicable law.
+
+4) We reserve the right to limit or prevent you from accessing or using the App and/or the Service in our sole discretion for any or no reason, including (without limitation) if, in our opinion:
+
+   (a) You have violated any provision of this Agreement;
+
+   (b) Your use of the App and/or the Services poses a security risk or could adversely impact our systems or Services;
+
+   (c) Your use of the Services could expose us or any third party to liability;
+
+   (d) Your use of the Services could be unlawful; or
+
+   (e) Your use of the Services could expose us to regulatory risks.
+
+2. **Changes**
+
+   1. **To the Services**
+
+We may change or discontinue any or all of the Services or change or remove functionality of any or all of the Services from time to time. Although we will use commercially reasonable efforts to communicate to you any discontinuation of a Service through the App or public communication channels in advance, we are under no obligation to do so.
+
+2. **To this Agreement**
+
+We may amend this Agreement at any time and without notice, at our sole discretion and without liability to you as a result. We will post the updated version of this Agreement on the Website and it shall take effect immediately on being posted. It is your responsibility to check the Agreement regularly for any changes. Every time you wish to use the Services, please check the Agreement to ensure you understand the terms and conditions that apply at that time. You agree that your continued use of or access to the Services after we have made and posted any such changes to this Agreement on the Website shall constitute your acceptance of the updated Agreement, whether or not you have checked the changes or actually read them. If you do not agree with any changes that we make to the Agreement, you should cease accessing and using the Services. You agree that we shall not be liable to you in the event that you decide to cease accessing and using the Services as a result of any changes to this Agreement.
+
+3. **Services**
+
+We grant you a limited, revocable, non-exclusive, non-transferable, non-sublicensable right to access and use the App on a software-as-a-service basis in order to use and/or receive the Services. The App provides an interface that allows you to interact with the Protocol to carry out the activities listed in this section 3 below (“**Services**”).
+
+1. **Register a Circles Profile** 
+
+1) To interact with the Protocol and create a Circles Account, you are required to first register a profile (“**Circles Profile**”). In order to do so, you must register a unique username through the App, which will be linked to the Safe wallet you designate as your Circles Account. Your username is a mandatory requirement for registering your Circles Profile and interacting with the Protocol. 
+
+2) You may optionally choose to submit additional profile information, such as a profile picture, your location or other descriptive metadata. All information submitted during the profile creation process (including your username and any optional data) is uploaded to the InterPlanetary File System (IPFS), a decentralized storage network, from which it is made available to the Protocol for use in interactions and discovery across the network.
+
+Important Notice Regarding Data Permanence
+
+3) “**InterPlanetary File System**” or “**IPFS**” refers to a decentralized, peer-to-peer file storage and sharing protocol that allows data to be stored and accessed using content-based addressing. IPFS is not controlled by a single entity and is designed to ensure data persistence and integrity by distributing content across a distributed network of nodes. Once data is uploaded to IPFS, it is effectively permanent and cannot be modified or deleted by the user or any centralized authority. 
+
+4) Due to the decentralized and immutable nature of IPFS and the underlying blockchain technology, any information you upload through the App in connection with your Circles Profile will become **permanently stored** on IPFS and cannot be deleted, modified, or erased by us or any other party. This includes your username and any optional data you choose to include. 
+
+5) By creating a profile, you: (a) acknowledge and accept that you are solely responsible for the content you upload; (b) confirm that you understand and accept that such content will be publicly accessible and permanently stored; (c) confirm that you understand and accept that this may affect your rights under applicable data protection and privacy laws, including your ability to exercise rights such as the right to erasure or data rectification; and (d) warrant that any data you provide does not infringe upon the rights of third parties and complies with all applicable laws and regulations. 
+
+6) If you do not wish for certain personal data to be made permanently accessible on a public and decentralized network, do not submit such information through the App when registering a Circles Profile. 
+
+   2. **Create a Circles Account**
+
+1) A “**Circles Account**” serves as the user’s on-chain identity when interacting with the Protocol to mint, hold and transact CRC and/or gCRC tokens, manage trust connections and participate in Groups. Each Circles Account is implemented as a Safe wallet deployed on Gnosis Chain that is registered with the Protocol and associated with a Circles Profile. You use an EOA wallet to control your Safe and to access your Circles Account on the App. You must therefore already have an EOA wallet that you control in order to set up a Circles Account and manage your Safe wallet. 
+
+2) You may only create a Circles Account: (a) by invitation from an existing Circles Account holder; and (b) after you have registered a Circles Profile, so that it may then be associated with the Safe wallet you wish to designate as your Circles Account. 
+
+3) Through the App, you may (a) accept an invitation to join Circles and establish a trusted connection with an existing Circles Account holder; and (b) create a Circles Account (either as a human/individual or as an organisation) by associating your Circles Profile with a Safe wallet. 
+
+4) Via the App, you may choose to: (a) designate an existing Safe wallet that you control as your Circles Account; (b) deploy a new Safe wallet and designate it as your Circles Account; or (c) import your Circles Account from version 1 of the Protocol by entering your 24 recovery keywords as directed in the App (the account import option is only available if you were a user of Circles Protocol v1, you already have a Circles Account and you have access to the recovery keywords that were given to you when creating a Circles Account on Circles Protocol v1). 
+
+5) You authorise us to act on any instruction received from you via your Circles Account. Where we receive any instruction from a person using your Security Credentials to access your Circles Account, we shall be entitled to treat such instructions as having been received by you. We are under no obligation to check the authenticity or accuracy of instructions received via your Circles Account.
+
+Important Notice regarding the Safe wallet you designate as your Circles Account
+
+6) Please note that you may not change the Safe wallet associated with your Circles Profile after completing the Circles Account set up. If you lose access to or control over the Safe wallet that you have designated as your Circles Account, you may irretrievably lose access to your Circles Account and we will not be able to recover access to your Circles Account, or any assets stored in your Circles Account. Additionally, you will lose access to your Circles Profile and you will not be able to create a new Circles Account using the same Circles Profile. We do not host, store, administer or control any user wallets and cannot access or recover lost credentials. 
+
+7) A Safe wallet is an open-source self-custodial wallet that requires one or more Externally Owned Accounts (or “**EOA wallets**”) to act as signers in order to authorise and execute transactions. To interact with the Safe wallet that you designate as your Circles Account, you must control at least one EOA wallet which will act as the owner and controller of your Circles Account, and is required to authorise and sign all transactions initiated through the App. You will have a separate agreement in place with the EOA wallet software provider. That separate agreement will describe, amongst other things, your ability to use the EOA wallet to interact with blockchain applications and smart contract protocols (such as the App and Circles) to (amongst other things) store, receive and transfer Digital Assets. You are responsible for reviewing the agreement, technology and security protocols associated with your EOA wallet.
+
+8) You use your Security Credentials to access and use your EOA wallet. It is solely your responsibility to take reasonable steps to safeguard and keep your Security Credentials secure and confidential and you must not disclose them to any third party or lose them. We are not responsible if you lose your Security Credentials or share them with anyone else, in which case, you will be responsible for any loss or damage you may suffer (whether in contract, tort (including negligence), breach of statutory duty or otherwise) as a result of any resulting inability to access, or any unauthorised use of your Circles Account, Safe wallet or EOA wallet. If you lose your Security Credentials you will be unable to access your EOA Wallet which will mean you will be unable to access your Circles Account on the App or your Safe wallet. In addition, if any third party gains access to your Security Credentials, they will be able to access your Circles Account on the App and will also be able to access your EOA wallet to sign transactions, including in respect of your Safe wallet, which may result in you losing any Digital Assets in your Safe wallet or any other Digital Assets associated with your EOA wallet.
+
+9) To the maximum extent permitted by law, we shall have no liability to you for any loss or damage that you may suffer (whether in contract, tort (including negligence), breach of statutory duty or otherwise) arising in connection with any mistaken or unauthorised use of your Safe wallet, Circles Account, EOA wallet or Security Credentials.
+
+   3. **Establish & Manage Trusted Connections**
+
+1) The App provides an interface to interact with the Protocol to establish and manage trusted connections with other Circles Account holders. Establishing and managing trusted connections is a core feature of the Protocol and is necessary to transact CRC within your network. 
+
+2) Through the App, you can interact with the Protocol to: (a) accept invitations to join Circles from existing Circles Account holders; (b) send invitations to others to join Circles and create a Circles Account; (c) search for registered Circles Account holders; and (d) add or remove Circles Account holders from your network of trusted connections.
+
+   4. **View and Manage CRC/gCRC in your Circles Account**
+
+1) CRC and gCRC are the only Digital Assets supported by the App. Through the App, you may: (a) view the balance of CRC and gCRC held in your Circles Account; (b) mint your personal CRC or gCRC in accordance with the applicable minting policies; and (c) send and receive CRC and gCRC to and from other Circles Account holders or Groups, subject to the rules of the Protocol.  
+
+Important Notice regarding transactions you perform from your Circles Account
+
+2) While the Circles Account is a Safe wallet (i.e. a smart contract wallet deployed on Gnosis Chain), all transactions initiated through the App (e.g. to send CRC to another Circles Account) must be authorised and signed using the EOA wallet which controls your Circles Account. Upon authorisation and signature, transactions are broadcast to the network and settled on Gnosis Chain according to its consensus mechanism. 
+
+3) We do not guarantee that transactions initiated via the App will be successfully completed and settled on-chain, and we disclaim any liability or responsibility for any loss, delay or failure arising from: (a) user error or mismanagement of wallet access credentials; (b) gas or transaction fee issues; (c) network congestion or blockchain performance issues; (d) smart contract failures or Vulnerabilities; or (e) the use of third party wallets, interfaces, platforms or other services in connection with the App and/or the Protocol.
+
+4) Before signing any transaction via your EOA wallet, please always check if the transaction is correct, including the transaction amount and recipient address. The nature of Digital Assets and blockchain transactions is that they are irreversible. This means accidental or fraudulent transactions in respect of Digital Assets may not be recoverable. We are not responsible and disclaim all liability for any loss or damage you may suffer (whether in contract, tort (including negligence), breach of statutory duty or otherwise) as a result of you entering incorrect amounts or recipient information
+
+Important Notice regarding Digital Assets supported by the App
+
+5) Since the App is an interface to interact with Circles, it only supports the display and management of CRC and gCRC. The App does not support the display or management of any other Digital Assets, even if they are held in the same Safe wallet that you have designated as your Circles Account. You may choose to interact with other Digital Assets held in the Safe wallet that you have designated as your Circles Account via third-party interfaces. Such third party services do not form part of the App, the Services or these Terms, and will be subject to separate terms and conditions with the relevant third party service provider. We are not responsible for any actions you take when engaging with third party service providers. 
+
+   5. **Create,  Manage, View and Interact with Groups**
+
+1) A Group is an on-chain community of Circles users who typically share some commonality. A Group can be created by anyone (whether or not a Circles Account holder), but to interact with a Group, a user must have a registered Circles Account. In these Terms, “**Group Admin**” refers to the person or persons who control the Wallet that is designated as the owner and administrator of the Group. 
+
+2) Through the App, you may: 
+
+(a) create a new Group, including:
+
+(i) set a name for the Group;
+
+(ii) designate your wallet or another wallet as the Group Admin;
+
+(iii) set eligibility requirements for Group membership; 
+
+(iv) implement fees for interacting with the Group; 
+
+(v) specify a fee collection wallet address to receive any fees imposed by the Group (by default, a Group’s fee collection address is set to be the Group Admin’s Safe wallet that deployed the Group); and
+
+(vi) implement a gCRC mint and redeem policy, which governs how gCRC are issued and redeemed.  Please note that by default, the App offers a standard gCRC mint and redeem policy under which Group members may mint 1 gCRC for every CRC (that is minted by a member of Group) they transfer to the Group’s wallet. Only Group Members’ may interact with the Group to mint/redeem gCRC; 
+
+(b) as a Group Admin, manage Group membership by adding and removing Group members; 
+
+(c) search for registered Circles Groups, including details about Group members and Group wallet balances;
+
+(d) interact with Groups to: 
+
+(i) add or remove Groups from your network of trusted connections; and
+
+(ii)  mint and redeem gCRC in accordance with the Group’s mint/redeem policy as set by the Group Admin. 
+
+Important Notice regarding Groups
+
+3) Except for the fee collection wallet address (as referred to in section 3.5(2)(v)) which can be changed by the Group Admin at any time, please note that you may not make changes to a Group after it has been created and deployed on-chain. When you create a Group on the Protocol via the App, you deploy a smart contract on the blockchain defining the Group’s mint/redeem policy, eligibility conditions and fee structure. The properties of the smart contract you deploy are immutable and cannot be varied. 
+
+4) We do not control or manage any Groups, nor do we intervene in their governance or the functionality of any custom smart contracts used by Group Admins when implementing the rules for joining or interacting with the Group, and we are not responsible for any actions of the Group or any Group member. It is the Group Admin’s responsibility to ensure that Group activities comply with applicable laws and regulations. 
+
+5) You are solely responsible for the Groups that you create, join or participate in, and should exercise diligence when interacting with a Group or participating in any Group activity. 
+
+   6. **Other Services**
+
+We may from time to time introduce or offer additional services and functionalities through the App. Such additional services and functionalities shall be considered part of our Services as described in this Agreement, regardless of whether the specific service or functionality is expressly defined or referred to in this Agreement. 
+
+4. **What we do not offer**
+
+1) An activity regulated by any regulatory agency in any jurisdiction;  
+2) Custody or administration of your assets or of the Security Credentials relating to any of your wallets.   
+3) Storage or transmission of fiat currencies or Digital Assets;  
+4) Back-up or recovery services. You are solely responsible for keeping your Security Credentials safe and secure; if you lose access to your Security Credentials, we have no means to restore your Circles Account and/or your wallets;  
+5) Operating a centralised or decentralised Digital Asset exchange, trading platform, or facilitating the exchange/trading of Digital Assets; or  
+6) Any form of legal, financial, investment, accounting, tax, or other professional advice.
+
+5. **Your Responsibilities**
+
+   1. **Use of the Services generally**
+
+1) You are responsible for all activities occurring with respect to your use of the Services, whether authorised by you or undertaken by you, your employees, or a third party with access to your Circles Account.  
+2) You must ensure that your use of the Services does not violate any applicable law.  
+3) You are responsible for configuring your devices, information technology, software, network connections and other platforms in order to access and use the Services and we recommend that you use your own virus protection software.
+
+   2. **Group Management**
+
+1) If you create a Group, or manage a Group as a Group Admin through the App, you are responsible for ensuring that the Group’s structure, membership criteria, minting policies, fee arrangements, and any activities conducted in connection with the Group comply with all applicable laws and regulations and do not violate these Terms or infringe the rights of third parties. 
+
+2) As a Group Admin, you are responsible for:
+
+1) accurately configuring and deploying any custom smart contracts (including gCRC mint and redeem policies) associated with the Group; 
+
+2) ensuring that the content, conduct and membership of the Group adhere to principles of fairness, transparency and legal compliance; and
+
+3) managing the Group in a way that does not expose us, other users, the App, or the Protocol to legal risk or harm. 
+
+4) We do not monitor or oversee the creation or operation of Groups and accept no responsibility for the conduct of any Group or its members. You acknowledge and agree that any Group you create or administer is your sole responsibility.
+
+5) We reserve the right to restrict, suspend, or remove access to any Group-related functionality made available through the App if we reasonably believe that a Group, its configuration, or its activities violates these Terms, applicable law, or presents a risk to us, the App, the Protocol, or other users.
+
+6. **Fees      **
+
+   1. **Fees for using the Services, interacting with the Protocol and carrying out blockchain transaction**s
+
+1) We do not charge any fees for accessing the App or using the Services. However, certain fees may apply when you interact with the Protocol or execute transactions on Gnosis Chain via your Circles Account on the App. In particular:
+
+1) Protocol Fees: There are various fees that apply when interacting with the Protocol which are encoded into its smart contracts, such as a fee for inviting new users to join Circles and other Protocol defined charges. Protocol fees are payable exclusively in CRC. These fees are not set or controlled by us nor are they payable to us. It is your responsibility to do your own research about the Protocol and to understand any Protocol fees that may apply when interacting with certain features or functionalities of the Protocol 
+
+2) Blockchain Transaction or Gas Fees: All on-chain transactions (e.g. sending CRC/gCRC to others) require the payment of blockchain transaction fees (also referred to as gas fees), which are paid to network validators on Gnosis Chain. These fees must be paid in xDAI, the Digital Asset that is native to Gnosis Chain and used to pay for gas. 
+
+2) You are solely responsible for any and all fees incurred when interacting with the Protocol or executing on-chain transactions from your Circles Account through the App. You must ensure that your Circles Account has a sufficient balance of CRC or xDAI (as applicable) to cover such fees. Failure to maintain adequate CRC or xDAI balances to cover such fees may result in failed or delayed transactions, for which we bear no responsibility. 
+
+3) We do not receive, retain, or benefit from any Protocol or blockchain transaction fees.
+
+   2. **Fee Sponsorship**
+
+1) From time to time, we may, at our sole and absolute discretion, choose to subsidize or sponsor certain fees associated with the use of the Protocol or the execution of on-chain transactions in order to support ecosystem growth or for other reasons.
+
+2) Any decision to sponsor fees shall be made entirely at our discretion and may be subject to limitations or conditions, including but not limited to: sponsorship amount, duration of sponsorship program, and scope of fee coverage. We reserve the right to modify, suspend, or terminate any fee sponsorship program at any time, without prior notice and without incurring any liability to you or a third party.
+
+3) You should not rely on any fee sponsorship when using the App or interacting with the Protocol. You remain ultimately responsible for ensuring that your Circles Account has sufficient CRC, xDAI or other necessary resources to complete any transaction or interaction.
+
+7. **Taxes     **
+
+The tax treatment of Digital Assets may vary amongst jurisdictions. You shall bear sole responsibility for identifying, declaring, reporting and paying all applicable taxes and complying with any tax laws that apply to you. If you are unsure about the tax implications of any activities you undertake in connection with our Services, you should seek independent professional advice before engaging in such activities. We do not and will not provide you with any financial, tax, accounting, legal or any other professional advice. 
+
+8. **Prohibited Uses**
+
+1) You agree not to (nor attempt to):
+
+1) Use the App or the Services in any way that breaches these Terms or any applicable laws; 
+
+2) Copy, or otherwise reproduce or re-sell, or decompile, reverse engineer, or otherwise attempt to obtain the source code or underlying ideas or information relating to any part of the App unless expressly permitted to do so under these Terms;
+
+3) Engage in activity that infringes on or violates any copyright, trademark, service mark, patent, or other proprietary or intellectual property rights under applicable law; 
+
+4) Violate the integrity, security or proper functioning of any computer network, server, device or other information technology system, or crack any passwords or security encryption codes;
+
+5) Do any act or thing that might damage, disrupt or otherwise interfere with the operation of the App or any equipment, network or software used in operating the App; 
+
+6) Engage in other activities that are deemed inappropriate by us or which might damage our reputation, including (without limitation): (i) activities intended to defraud us or others, (ii) activities that violate applicable laws concerning the integrity of trading markets (e.g. pump and dump schemes, rug pulls), (iii) activity that involves data mining, scraping or similar data gathering or extraction methods of content or information available via the App or our Services, (iv) activity that involves soliciting information from anyone under the age of 18 or that is otherwise harmful, threatening, abusive, harassing, tortious, excessively violent, defamatory, vulgar, obscene, pornographic, libelous, invasive of another’s privacy, hateful, discriminatory or otherwise objectionable. 
+
+7) Misuse the App by knowingly or negligently introducing viruses, trojans, worms, logic bombs or other material which is malicious or technologically harmful. You must not attempt to gain unauthorised access to the App, the server on which the App is stored or any server, computer or database connected to the App. You must not attack the App via a denial-of-service attack or distributed denial-of service attack. By breaching this section, you would be committing a criminal offence and we will report any such breach to the relevant law enforcement authorities and we will co-operate with those authorities with regards to any information they request. 
+
+9. **Termination & Suspension**
+
+1) You may stop using the Services at any time. We reserve the right to restrict, suspend or terminate (with or without notice) your access to the Services, or any functionality made available via the App in relation to your Circles Account at our sole discretion for any or no reason, including (without limitation) if: 
+
+   (a) You have violated any provision of this Agreement;
+
+   (b) Your use of the App and/or the Services poses a security risk or could adversely impact our systems or Services;
+
+   (c) Your use of the Services could expose us or any third party to liability;
+
+   (d) Your use of the Services could be unlawful; or
+
+   (e) Your use of the Services could expose us to regulatory risks.
+
+2) Upon termination, all rights or licences granted to you under this Agreement shall cease immediately, and you must stop accessing and using the Services.
+
+3) Termination of this Agreement shall not affect either of our or your accrued rights, indemnities, existing commitments or any contractual provision intended to continue in effect beyond termination of this Agreement. 
+
+10. **Intellectual Property**
+
+1) The Services—including the App, its contents, features, and functionality (such as software, text, images, video, audio, and design arrangements) and any subsequent copies of and modifications, adaptations, amendments and additions to the same, regardless of who made them—are owned by us, our Affiliates and licensors. These works are protected by laws and treaties around the world relating to copyright, trademark and other intellectual property or proprietary rights. All such rights are reserved and you acknowledge that nothing in this Agreement grants you any ownership rights in our intellectual property.
+
+2) You agree not to modify, distribute, tamper with, reverse engineer, decompile, disassemble, modify or otherwise use any part of the Services in any way for any non-personal, commercial purpose without our prior written consent. 
+
+3) You are not granted any right to use, and may not use, any of our intellectual property rights other than as set out in this Agreement. You may not misuse the App/our Services and may only use it as permitted under this Agreement and applicable law.
+
+4) If you breach our intellectual property rights or the intellectual property rights of our Aﬃliates or licensors in violation of this Agreement, we may revoke your licence to use the Services with immediate eﬀect and you shall, at our option, return or destroy any copies of the materials you have made.
+
+5) The Services allow you to interact with Open-Source Software protocols (such as Safe wallet & Circles) which are distributed under specific licence terms (“**Open Source Licence Terms**”). Your access and your use of any Open-Source Software via our Services is subject to the applicable Open Source Licence Terms, and not the terms of this Agreement.
+
+6) Any communication or materials you send to us by electronic mail or other means will be treated as non-proprietary and non-confidential. We are free to publish, display, post, distribute and otherwise use any ideas, suggestions, concepts, designs, know-how and other information contained in such communications or material ("**User Generated Content**") in any manner and for any purpose, including, but not limited to, developing, manufacturing, advertising and marketing us and our products and services. We shall have no obligation to provide you with attribution for any User Generated Content you provide to us.   
+
+11.  **Indemnification**
+
+1) You agree to defend, indemnify, and hold us, our Affiliates, licensors, and service providers—as well as our officers, directors, employees, contractors, agents, and successors—harmless from any claims, liabilities, damages, losses, costs, or fees (including reasonable attorneys' fees) arising from: (a) your breach of this Agreement; (b) any infringement or misappropriation of a third party’s intellectual property rights; or (c)  any violation of applicable law.
+
+2) If a third party brings a claim against us due to your actions, you agree to cooperate with us in defending against that claim.
+
+3) The indemnity set out here is in addition to, and not instead of, any other remedies that may be available to us under applicable law.
+
+**12\. Disclaimers**
+
+1) Except as expressly provided in the Agreement and to the extent permitted by applicable law, the Services are provided on an "as is" and “as available” basis and we disclaim all other conditions, warranties representations undertakings or other terms (whether express, implied, statutory or otherwise) regarding the Services. We do not warrant anything in relation to systems or software that do not make up our Services. 
+
+2) We do not guarantee that the App or any content or services related to it, will always be available, uninterrupted, error free or free of technologically harmful components. The App may be vulnerable to exploitation of Vulnerabilities in the code, as well as human error. You are responsible for making all necessary arrangements (including configuring any information technology systems, software and networks) in order to access the App and use the Services. We recommend that you use your own virus protection software. 
+
+3) The App relies on the internet to function, and the public nature of the internet means that either parts of the internet or the entire internet may be unreliable or unavailable at any given time. Furthermore, interruption, delay, corruption or loss of data, the loss of confidentiality in the transmission of data, or the transmission of malware may occur when transmitting data via the internet and/or other technologies. The internet or other electronic media (including without limitation electronic devices, services of third-party telecom service providers such as mobile phones or other handheld trading devices or interactive voice response systems) are an inherently unreliable form of communication, and such unreliability may be beyond our control. The result of the above may be that a transaction you initiate is not executed according to your instructions, at the desired time, or not at all.
+
+4) You acknowledge and agree that you have not relied and are not relying upon any representation or warranty from us that is not expressly set out in this Agreement or in a separate written agreement between us, and you agree you will not take a position in any proceeding that is inconsistent with this section.
+
+5) You are solely in control of and responsible for storing and securing your Security Credentials for accessing and interacting with your Circles Account. We do not store a backup of, and will not be able to recover, your Security Credentials. If you lose your Security Credentials, then you may lose access to your Circles Account and any assets you have stored in your Circles Account. 
+
+6) The App and the content available on it are provided for general information purposes only. They are not intended to amount to financial or investment advice or a recommendation or endorsement of any products or services on which you should rely.
+
+7) We disclaim all liability and responsibility for any transaction that you authorise and execute using the EOA wallet that is the owner and controller of the Safe wallet that you designated to be your Circles Account, or any other actions that you take via your EOA wallet, Safe wallet or Circles Account.
+
+8) Under no circumstances shall we have any liability for any loss or damage you may suffer (whether in contract, tort (including negligence), breach of statutory duty or otherwise) caused by errors or omissions in any information, instructions or scripts provided to us by you or on your behalf in connection with the Services.  
+
+**13\. Disclosure of Risks**
+
+You acknowledge that:
+
+1) We do not operate any blockchain network, blockchain protocol, communicate or execute protocol upgrades, or any blockchain transactions on your behalf.  
+2) Blockchain protocols have inherent risks, and participation may result in losses.  
+3) Blockchain-based transactions are irreversible; always verify transaction details before signing as losses due to fraudulent or accidental transactions may not be recoverable.  
+4) You are financially and technically sophisticated enough to understand the risks involved in using cryptographic and blockchain-based systems.  
+5) There are inherent technical, regulatory, and cybersecurity risks associated with Digital Assets and blockchain-based systems which you should familiarise yourself with and you should take appropriate measures to manage and/or mitigate such risks. You assume full responsibility for all risks associated with accessing and using the Services.  
+6) Trusting someone in Circles Core means verifying their humanity within your network and accepting their personal CRC.Trusting a Group poses risks due to the unlimited potential supply of gCRC and the impact on market equilibrium compared to personal CRC. Therefore, select trusted connections thoughtfully. 
+
+12. **Limitation and Exclusion of Liability**
+
+1) Nothing in the Agreement excludes or limits our liability for: 
+
+1) death or personal injury caused by our negligence;  
+2) our fraud or fraudulent misrepresentation; and  
+3) any matter in respect of which it would be unlawful for us to exclude or restrict our liability.
+
+2) In no event shall we be liable to you for any loss of data or for any indirect or consequential loss, whether arising from tort (including negligence), breach of contract, breach of statutory duty or otherwise.
+
+3) You agree not to use the Services, or any content on the App, for any commercial or business purposes and we have no liability to you for any loss of profit, loss of business, business interruption, or loss of business opportunity.
+
+4) To the maximum extent permitted by law, we and our Affiliates shall not be liable for any damages (direct or indirect) related to your use or inability to use the Services, including:
+
+1) compromise or loss of Security Credentials or Digital Assets;  
+2) inability to access your wallets or your Circles Account;  
+3) errors in the initiation, authorisation or transmission of blockchain transactions;  
+4) failure to keep your access devices secure;  
+5) diminution of Digital Asset value.
+
+5) In no event shall our total liability exceed the amount of one hundred USD (or its local currency equivalent), except for liabilities that cannot be limited or excluded under applicable law. 
+
+6) You agree to reimburse us and our Affiliates for any losses, costs, liabilities and expenses we or our Affiliates incur as a result of your breach of the Agreement.
+
+13. **How to Resolve Complaints and Disputes**
+
+If an alleged breach, controversy, claim, dispute or diﬀerence arises out of or in connection with these Terms (a "**Dispute**"), you agree to seek to resolve the matter with us amicably by referring the matter to  [support@aboutcircles.com](mailto:support@aboutcircles.com) with  a detailed description, the date and time the issue arose, your contact information to contact you on and the outcome you are seeking.
+
+14. **Dispute Resolution**
+
+1) YOU AGREE AND UNDERSTAND THAT BY ENTERING INTO THIS AGREEMENT, YOU EXPRESSLY WAIVE ANY RIGHT, IF ANY, TO A TRIAL BY JURY AND RIGHT TO PARTICIPATE IN A CLASS ACTION LAWSUIT.
+
+2) In the event a Dispute cannot be resolved amicably in accordance with section 18, within a period of sixty (60) days, then any such Dispute, controversy or claim arising out of or in connection with these Terms, including any question regarding its existence, validity or termination, shall be referred to and ﬁnally resolved by arbitration under the rules of the London Court of International Arbitration ("**LCIA Rules**"). The seat of the arbitration shall be Gibraltar. The arbitration will be conducted conﬁdentially by a single arbitrator appointed in accordance with the LCIA Rules. The language to be used in the arbitral proceedings shall be English. The governing law of these Terms shall be the substantive law of Gibraltar.
+
+15. **Governing Law**
+
+This Agreement, any dispute or claim arising under or in connection with this Agreement, shall be governed by and construed and interpreted in accordance with the laws of Gibraltar.
+
+16. **Miscellaneous**
+
+1) **Assignment**
+
+This Agreement is personal to you and may not be assigned, transferred, or otherwise dealt with without our prior written consent. We may, however, assign or transfer our rights under this Agreement without your consent.
+
+2) **Waiver**
+
+A failure by us to enforce any provision of this Agreement shall not constitute a waiver of our right to enforce that provision later. Any waiver must be in writing.
+
+3) **Severability**
+
+If any part of this Agreement is found to be unlawful or unenforceable, that section shall be amended only to the extent necessary, and the remainder of the Agreement will remain in full effect.
+
+4) **Entire Agreement**
+
+This Agreement constitutes the entire understanding between you and us regarding its subject matter, superseding all prior agreements, arrangements, or understandings.
+
+5) **Reliance and Representations**
+
+Each party acknowledges that it has not relied on any statement or representation not expressly set out in this Agreement and waives any claim for misrepresentation, except in cases of fraud.
+
+6) **Third-Party Beneficiaries**
+
+This Agreement does not create any third-party beneficiary rights.
+
+7) **Force Majeure**
+
+Neither party shall be liable for delays or failure to perform caused by circumstances beyond its reasonable control (including acts of God, telecommunications failures, cyber-attacks, natural disasters, pandemics, governmental acts, terrorism, or war).
+
+8) **Notices**
+
+**TO YOU:**
+
+We may provide notice under this Agreement via commercially reasonable means, such as posting on  Circles Core or using public communication channels. Notices posted publicly are effective upon posting.
+
+**TO US:**
+
+You are encouraged to provide feedback about your experience with Circles Core, especially during its beta phase by submitting suggestions or Vulnerabilities. Any feedback provided may be used by us without obligation or compensation. All Confidential Information and any Derivatives are the sole and exclusive property of Gnosis and no licence or other rights to such Confidential Information, Derivatives or any intellectual property rights of Gnosis are granted or hereby implied.
+
+To contact us regarding this Agreement or to provide any feedback, please email [**support@aboutcircles.com**](mailto:support@aboutcircles.com).
+
+**Schedule 1**
+
+**Definitions & Interpretation     **
+
+The definitions and rules of interpretation set out in this Schedule apply to the Agreement:
+
+"**Affiliates**" mean, in relation to a person, any entity that directly or indirectly Controls, is Controlled by, or is under common Control with that person from time to time. For the purposes of this definition, “**Control**” means the direct or indirect ownership of more than 50% of the voting rights of that entity or the power to direct or cause the direction of the management policies of that entity, whether through the ownership of shares, by contract or otherwise.  
+
+“**App**” or “**Circles Core**” has the meaning given to it in the “About us” section of these Terms. 
+
+“**Circles**” or “**Protocol**” means the Circles Protocol v2, as further described in the “About the Protocol & the App” section of these Terms. 
+
+“**Circles Account**” has the meaning given to it in paragraph (1) of section 3.2 (Create a Circles Account) of these Terms. 
+
+“**Circles Profile**” has the meaning given to it in paragraph (1) of section 3.1 (Register a Circles Profile) of these Terms. 
+
+"**CRC**" means a type of Digital Asset native to the Protocol. CRC is a personal currency that can be minted by each Circles Account holder based on the minting policy encoded into the Protocol. CRC are intended for use as a medium of exchange, they are non-sovereign (not recognised as legal tender by any government), and may be transferable, exchanged or redeemed as permitted by Protocol and other Circles Account holders. CRC does not confer any interest in the Protocol, or any form of equity, debt, security, financial interest or participation in profits of the Protocol and/or Gnosis. 
+
+"**Derivatives**" shall mean: (a) for copyrightable or copyrighted material, any translation, abridgment, condensation, revision, modification, enhancement, expansion or other form in which an existing work may be recast, transformed or adapted; (b) for patentable or patented material, any improvement thereon; and (c) for material that is protected by trade secret, any new material derived from such existing trade secret material, including new material which may be protected under copyright, patent and/or trade secret laws. 
+
+"**Digital Asset**" means a digital representation of a value or a right that is able to be transferred and stored electronically using distributed ledger technology or similar technology.
+
+“**Dispute**” has the meaning given to it in section 13 (How to Resolve Complaints and Disputes) of these Terms.
+
+“**Externally Owned Account**” or “**EOA wallet**” \- means a type of blockchain Wallet deployed on Gnosis Chain that is controlled by a private key and not by a smart contract. The EOA wallet is used to sign and authorise transactions on-chain and must be capable of controlling a Safe wallet (i.e. which can be designated as a user’s Circles Account for interacting with the Protocol). The EOA wallet enables authentication, authorisation, and transaction execution in relation to a Safe wallet that has been designated as a user’s Circles Account. 
+
+"**gCRC** " means a type of Digital Asset native to the Protocol, which is minted and issued by a Group in accordance with the mint / redeem policy set by the Group Admin. The minting of gCRC is not based on a periodic time issuance (as is the case with CRC) but instead on personal collateral (in the form of personal CRC) contributed by Group members who have been invited and accepted into the Group by the Group Admin. gCRC are intended for use as a medium of exchange and to express and facilitate socio-economic value among Group members. gCRC neither purport to be legal tender, nor do they confer any ownership, debt or security interests in the Protocol or in Gnosis. The utility and transferability of gCRC are governed exclusively by the technical rules of the Protocol and Group specific policies. 
+
+“**Gnosis Chain**” means the Gnosis chain blockchain network. 
+
+“**Group**” an online community of Circles users, as further described in paragraph (3) of the “About the Protocol & the App” section, and section 3.5 (Create, Manage, View and Interact with Groups) of these Terms. 
+
+“**Group Admin**” has the meaning given to it in paragraph 1 of section 3.5 (Create, Manage, View and Interact with Groups) of these Terms. 
+
+“**InterPlanetary File System**” or “**IPFS**” has the meaning given to it in paragraph (3) of section 3.1 (Register a Circles Profile) of these Terms. 
+
+“**LCIA Rules**” has the meaning given to it in paragraph (2) of section 14 (Dispute Resolution) of these Terms. 
+
+“**Open Source Licence Terms**” has the meaning given to it paragraph (5) of section 10 (Intellectual Property) of these Terms. 
+
+"**Open Source Software**" means (a) open source software as defined by the Open Source Initiative (http://opensource.org), or (b) any other software which, as a condition of its use, development or redistribution, requires that such software, any modifications to that software and/or any other software with which it is combined or distributed be disclosed or distributed in source code form.
+
+“**Safe wallet**” means a self-custodial smart contract-based Wallet deployed on Gnosis Chain that is solely owned and controlled by you via your EOA wallet and that you may designate as your Circles Account. Please refer to section 3.2 (Create a Circles Account) for further information about Safe wallets. 
+
+"**Security Credentials**" means your private key, seed phrase, password, passkey or any other credentials owned and controlled by you and which you use to access, control and otherwise interact with your EOA wallet, Safe wallet and/or Circles Account.
+
+“**Services**” means the provision of the App and related services, as further described in section 3 (Services) of these Terms.
+
+“**User Generated Content**” has the meaning given to it in paragraph (6) of section 10 (Intellectual Property) of these Terms. 
+
+"**Vulnerability**" means a weakness in the computational logic (for example, code) found in software and hardware components that, when exploited, results in a negative impact to confidentiality, integrity, or availability of the App and/or Services, and the term Vulnerabilities shall be construed accordingly.
+
+"**Wallet**" means any digital solution owned and controlled by you that enables you to send instructions to perform transactions on blockchain networks and store Digital Assets.
+
+“**Website**” means our website, accessible at [https://app.aboutcircles.com/](https://app.aboutcircles.com/). 
+
