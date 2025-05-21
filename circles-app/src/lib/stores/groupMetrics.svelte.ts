@@ -39,85 +39,46 @@ export let groupMetrics: GroupMetrics = $state({});
 
 export async function fetchGroupMetrics(
     circlesRpc: CirclesRpc,
-    groupAddress: Address
-): Promise<GroupMetrics> {
-    const [
-        memberCountPerHour,
-        memberCountPerDay,
-        mintRedeemPerHour,
-        mintRedeemPerDay,
-        wrapUnwrapPerHour,
-        wrapUnwrapPerDay,
-        collateralInTreasury,
-        tokenHolderBalance,
-        erc20Token,
-    ] = await Promise.all([
-        getMemberCount(circlesRpc, groupAddress, 'hour', '7 days'),
-        getMemberCount(circlesRpc, groupAddress, 'day', '30 days'),
-        getMintRedeem(circlesRpc, groupAddress, 'hour', '7 days'),
-        getMintRedeem(circlesRpc, groupAddress, 'day', '30 days'),
-        getWrapUnwrap(circlesRpc, groupAddress, 'hour', '7 days'),
-        getWrapUnwrap(circlesRpc, groupAddress, 'day', '30 days'),
-        getCollateralInTreasury(circlesRpc, groupAddress),
-        getGroupTokenHoldersBalance(circlesRpc, groupAddress),
-        getERC20Token(circlesRpc, groupAddress),
-    ]);
+    groupAddress: Address,
+    target: GroupMetrics
+): Promise<void> {
+    getMemberCount(circlesRpc, groupAddress, 'hour', '7 days').then(r => target.memberCountPerHour = r);
+    getMemberCount(circlesRpc, groupAddress, 'day', '30 days').then(r => target.memberCountPerDay = r);
+    getMintRedeem(circlesRpc, groupAddress, 'hour', '7 days').then(r => target.mintRedeemPerHour = r);
+    getMintRedeem(circlesRpc, groupAddress, 'day', '30 days').then(r => target.mintRedeemPerDay = r);
+    getWrapUnwrap(circlesRpc, groupAddress, 'hour', '7 days').then(r => target.wrapUnwrapPerHour = r);
+    getWrapUnwrap(circlesRpc, groupAddress, 'day', '30 days').then(r => target.wrapUnwrapPerDay = r);
+    getCollateralInTreasury(circlesRpc, groupAddress).then(r => target.collateralInTreasury = r);
+    getGroupTokenHoldersBalance(circlesRpc, groupAddress).then(r => target.tokenHolderBalance = r);
 
-    const base = '/api/price/' + '?group=' + encodeURIComponent(erc20Token ?? "")
+    const token = await getERC20Token(circlesRpc, groupAddress);
+    target.erc20Token = token;
 
-    const [weekRes, monthRes] = await Promise.all([
-        fetch(`${base}&period=7 days&resolution=hour`),
-        fetch(`${base}&period=30 days&resolution=day`)
-    ]);
-    let priceHistoryWeek: {
-        timestamp: Date;
-        price: number;
-    }[] = [];
-    let priceHistoryMonth: {
-        timestamp: Date;
-        price: number;
-    }[] = [];
+    if (token) {
+        const base = `/api/price/?group=${encodeURIComponent(token)}`;
+        const [week, month] = await Promise.all([
+            fetch(`${base}&period=7 days&resolution=hour`).then(r => r.ok ? r.json() : []),
+            fetch(`${base}&period=30 days&resolution=day`).then(r => r.ok ? r.json() : []),
+        ]);
 
-    if (weekRes.status != 500 && monthRes.status != 500) {
-        const rawWeek = await weekRes.json();
-        priceHistoryWeek = rawWeek
-            .map((p: { timestamp: string; price: string }) => ({
-                timestamp: new Date(p.timestamp),
-                price: Number(p.price),
-            }))
-            .filter((p: { price: number; }) => typeof p.price === 'number' && !isNaN(p.price));
+        target.priceHistoryWeek = week.map((p: { timestamp: string; price: string }) => ({
+            timestamp: new Date(p.timestamp),
+            price: Number(p.price)
+        }));
 
-        const rawMonth = await monthRes.json();
-        priceHistoryMonth = rawMonth
-            .map((p: { timestamp: string; price: string }) => ({
-                timestamp: new Date(p.timestamp),
-                price: Number(p.price),
-            }))
-            .filter((p: { price: number; }) => typeof p.price === 'number' && !isNaN(p.price));
+        target.priceHistoryMonth = month.map((p: { timestamp: string; price: string }) => ({
+            timestamp: new Date(p.timestamp),
+            price: Number(p.price)
+        }));
     }
-
-
-    return {
-        memberCountPerHour,
-        memberCountPerDay,
-        mintRedeemPerHour,
-        mintRedeemPerDay,
-        wrapUnwrapPerHour,
-        wrapUnwrapPerDay,
-        collateralInTreasury,
-        tokenHolderBalance,
-        erc20Token,
-        priceHistoryWeek,
-        priceHistoryMonth,
-    };
 }
+
 
 export async function initGroupMetricsStore(
     circlesRpc: CirclesRpc,
     groupAddress: Address
 ): Promise<void> {
-    const data = await fetchGroupMetrics(circlesRpc, groupAddress);
-    Object.assign(groupMetrics, data);
+    fetchGroupMetrics(circlesRpc, groupAddress, groupMetrics);
 }
 
 async function getMemberCount(
