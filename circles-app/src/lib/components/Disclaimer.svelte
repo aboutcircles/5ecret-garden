@@ -11,8 +11,12 @@
       PERMANENTLY STORED ON THE PUBLIC AND DECENTRALISED INTERPLANETARY FILE
       SYSTEM (IPFS) AND BLOCKCHAIN, AND CANNOT BE DELETED OR MODIFIED. IF YOU DO
       NOT WANT CERTAIN PERSONAL DATA OR INFORMATION TO BE PERMANENTLY PUBLIC, DO
-      NOT SUBMIT IT THROUGH THE APP. FOR MORE DETAILS, PLEASE REVIEW THE PRIVACY
-      NOTICE AND TERMS OF USE.
+      NOT SUBMIT IT THROUGH THE APP. FOR MORE DETAILS, PLEASE REVIEW THE <a
+        href="/privacy-policy"
+        target="_blank"
+        class="underline">PRIVACY NOTICE</a
+      >
+      AND <a href="/terms" target="_blank" class="underline">TERMS OF USE</a>.
     </span>
     <button
       onclick={() => (visible = false)}
