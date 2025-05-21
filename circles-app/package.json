@@ -12,9 +12,9 @@
     "format": "prettier --write ."
   },
   "devDependencies": {
+    "@circles-sdk/adapter": "0.25.1",
     "@circles-sdk/adapter-ethers": "0.25.1",
     "@circles-sdk/adapter-safe": "0.25.1",
-    "@circles-sdk/adapter": "0.25.1",
     "@circles-sdk/data": "0.25.1",
     "@circles-sdk/profiles": "0.25.1",
     "@circles-sdk/sdk": "0.25.1",
@@ -35,6 +35,7 @@
     "autoprefixer": "^10.4.21",
     "bip39": "^3.1.0",
     "daisyui": "^4.12.10",
+    "mdsvex": "^0.12.6",
     "postcss": "^8.5.3",
     "prettier": "^3.5.3",
     "prettier-plugin-svelte": "^3.3.3",
