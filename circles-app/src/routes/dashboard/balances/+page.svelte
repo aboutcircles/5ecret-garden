@@ -3,49 +3,36 @@
   import { totalCirclesBalance } from '$lib/stores/totalCirclesBalance';
   import BalanceRow from '$lib/components/BalanceRow.svelte';
   import { roundToDecimals } from '$lib/utils/shared';
-  import { derived, writable } from 'svelte/store';
   import Filter from '$lib/components/Filter.svelte';
 
-  let filterVersion = writable<number | undefined>(undefined);
-  let filterType = writable<'personal' | 'group' | undefined>(undefined);
-  let filterToken = writable<'erc20' | 'erc1155' | undefined>(undefined);
+  let filterVersion = $state<number | undefined>();
+  let filterType = $state<'personal' | 'group' | undefined>();
+  let filterToken = $state<'erc20' | 'erc1155' | undefined>();
 
-  let filteredStore = derived(
-    [circlesBalances, filterVersion, filterType, filterToken],
-    ([$circlesBalances, filterVersion, filterType, filterToken]) => {
-      const filteredData = Object.entries($circlesBalances.data).filter(
-      ([_, balance]) => {
-        const byVersion =
-          filterVersion === undefined ||
-          balance.version === filterVersion;
+  let filtered = $derived.by(() => {
+    const allBalances = $circlesBalances.data;
 
-        const byType =
-          filterType === undefined ||
-          (filterType === 'personal'
-            ? !balance.isGroup
-            : filterType === 'group'
-            ? balance.isGroup
-            : true);
+    const filteredData = Object.entries(allBalances).filter(([_, balance]) => {
+      const byVersion =
+        filterVersion === undefined || balance.version === filterVersion;
 
-        const byToken =
-          filterToken === undefined ||
-          (filterToken === 'erc20'
-            ? balance.isErc20
-            : filterToken === 'erc1155'
-            ? balance.isErc1155
-            : true);
+      const byType =
+        filterType === undefined ||
+        (filterType === 'personal' ? !balance.isGroup : balance.isGroup);
 
-        return byVersion && byType && byToken;
-      }
-    );
+      const byToken =
+        filterToken === undefined ||
+        (filterToken === 'erc20' ? balance.isErc20 : balance.isErc1155);
 
-      return {
-        data: filteredData,
-        next: $circlesBalances.next,
-        ended: $circlesBalances.ended,
-      };
-    }
-  );
+      return byVersion && byType && byToken;
+    });
+
+    return {
+      data: filteredData,
+      next: $circlesBalances.next,
+      ended: $circlesBalances.ended,
+    };
+  });
 </script>
 
 <div class="flex flex-col items-center w-full max-w-2xl gap-y-4 mt-20">
@@ -66,26 +53,71 @@
   <!-- Filter -->
   <div class="flex gap-x-2 items-center w-full">
     <p class="text-sm">Version</p>
-    <Filter text="All" filter={filterVersion} value={undefined} />
-    <Filter text="Version 1" filter={filterVersion} value={1} />
-    <Filter text="Version 2" filter={filterVersion} value={2} />
+    <Filter
+      text="All"
+      filter={filterVersion}
+      value={undefined}
+      set={(v) => (filterVersion = v)}
+    />
+    <Filter
+      text="Version 1"
+      filter={filterVersion}
+      value={1}
+      set={(v) => (filterVersion = v)}
+    />
+    <Filter
+      text="Version 2"
+      filter={filterVersion}
+      value={2}
+      set={(v) => (filterVersion = v)}
+    />
   </div>
   <div class="flex gap-x-2 items-center w-full">
     <p class="text-sm">Type</p>
-    <Filter text="All" filter={filterType} value={undefined} />
-    <Filter text="Personal" filter={filterType} value={'personal'} />
-    <Filter text="Group" filter={filterType} value={'group'} />
+    <Filter
+      text="All"
+      filter={filterType}
+      value={undefined}
+      set={(v) => (filterType = v)}
+    />
+    <Filter
+      text="Personal"
+      filter={filterType}
+      value={'personal'}
+      set={(v) => (filterType = v)}
+    />
+    <Filter
+      text="Group"
+      filter={filterType}
+      value={'group'}
+      set={(v) => (filterType = v)}
+    />
   </div>
   <div class="flex gap-x-2 items-center w-full">
     <p class="text-sm">Token</p>
-    <Filter text="All" filter={filterToken} value={undefined} />
-    <Filter text="ERC20" filter={filterToken} value={'erc20'} />
-    <Filter text="ERC1155" filter={filterToken} value={'erc1155'} />
+    <Filter
+      text="All"
+      filter={filterToken}
+      value={undefined}
+      set={(v) => (filterToken = v)}
+    />
+    <Filter
+      text="ERC20"
+      filter={filterToken}
+      value={'erc20'}
+      set={(v) => (filterToken = v)}
+    />
+    <Filter
+      text="ERC1155"
+      filter={filterToken}
+      value={'erc1155'}
+      set={(v) => (filterToken = v)}
+    />
   </div>
   <div
     class="w-full md:border rounded-lg md:px-4 flex flex-col divide-y gap-y-2 py-4 overflow-y-visible mb-28"
   >
-    {#each $filteredStore.data as [, balance]}
+    {#each filtered.data as [, balance]}
       <BalanceRow {balance} />
     {/each}
   </div>
