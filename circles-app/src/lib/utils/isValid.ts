@@ -19,3 +19,10 @@ export function isValidSymbol(symbol: string): boolean {
   const validChars = /^[0-9A-Za-z\-_]+$/;
   return validChars.test(symbol);
 }
+
+export function sanitizeText(input: string): string {
+  return input
+    .replace(/\\/g, '')         // Remove backslashes
+    .replace(/'/g, '’')         // Replace single quotes with curly version
+    .replace(/"/g, '”');        // Replace double quotes with curly version
+}
