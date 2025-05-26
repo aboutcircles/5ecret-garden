@@ -55,7 +55,9 @@
           group: lowerCaseGroupAddress,
         };
         avatarState.isGroup = true;
-        avatarState.groupType = await $circles.getGroupType(lowerCaseGroupAddress);
+        avatarState.groupType = await $circles.getGroupType(
+          lowerCaseGroupAddress
+        );
       } else {
         CirclesStorage.getInstance().data = {
           walletType: walletType,
@@ -89,21 +91,22 @@
       clickable={false}
       view="horizontal"
     />
-    {#if !isRegistered}
-      <div class="btn btn-xs btn-outline btn-primary">register</div>
-    {:else if isV1}
-      <div class="btn btn-xs btn-outline btn-primary">V1</div>
-    {:else}
-      <div class="btn btn-xs btn-outline btn-primary">V2</div>
-    {/if}
-  </button>
+    <div class="btn btn-xs btn-outline btn-primary">
+      {#if !isRegistered}
+        register
+      {:else if isV1}
+        V1
+      {:else}
+        V2
+      {/if}
+    </div></button
+  >
   <!--{#if walletType !== 'circles'}-->
-  <div class="w-full flex gap-x-2 items-center mt-6">
+  <div class="w-full flex gap-x-2 items-center justify-between mt-6 px-2">
     <p class="font-bold text-primary">My groups</p>
     <button
       onclick={() => deployGroup()}
-      class="btn btn-xs btn-ghost btn-circle"
-      ><img src="/plus.svg" alt="Plus" class="w-5" /></button
+      class="btn btn-xs btn-outline btn-primary">Create a group</button
     >
   </div>
   <div class="w-full pl-6 flex flex-col gap-y-2 mt-2">
