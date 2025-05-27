@@ -11,6 +11,6 @@
   {#if children}
     {@render children?.()}
   {:else}
-    <img src="/question-mark.svg" alt="question mark icon" class="w-3 h-3" />
+    <img src="/question-mark.svg" alt="question mark icon" class="w-4 h-4" />
   {/if}
 </div>
