@@ -1,9 +1,16 @@
 <script lang="ts">
   import ActionButton from '$lib/components/ActionButton.svelte';
   import { goto } from '$app/navigation';
+  import { popupControls } from '$lib/stores/popUp';
+  import Connectors from '$lib/components/Connectors.svelte';
 
   async function connectWallet() {
-    goto('/connect-wallet');
+    popupControls.open({
+      component: Connectors,
+      title: 'Connect Wallet',
+      props: {},
+    });
+    // goto('/connect-wallet');
   }
 </script>
 
