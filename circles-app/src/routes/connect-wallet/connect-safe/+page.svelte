@@ -8,7 +8,6 @@
   import { CirclesStorage } from '$lib/utils/storage';
   import { environment } from '$lib/stores/environment.svelte';
   import {
-    connect,
     getAccount,
     getConnectors,
     reconnect,
@@ -16,6 +15,7 @@
   } from '@wagmi/core';
   import { config } from '../../../config';
   import type { Address } from '@circles-sdk/utils';
+  import { shortenAddress } from '$lib/utils/shared';
   let initialized: boolean | undefined = $state();
 
   let account: GetAccountReturnType | undefined = $state();
@@ -29,21 +29,16 @@
     // }
     // $wallet = await initializeWallet('safe');
 
-    account = getAccount(config);
-    console.log(account);
-    if (!account.chainId) {
-      const connectorId = localStorage.getItem('connectorId');
-      const connector = getConnectors(config).find((c) => c.id == connectorId);
-      if (!connector) {
-        throw new Error('Connector not found');
-      }
-      const result = await connect(config, {
-        chainId: 100,
-        connector: connector,
-      });
-
-      account = getAccount(config);
+    const connectorId = localStorage.getItem('connectorId');
+    const connector = getConnectors(config).find((c) => c.id == connectorId);
+    if (!connector) {
+      throw new Error('Connector not found');
     }
+    await reconnect(config, {
+      connectors: [connector],
+    });
+
+    account = getAccount(config);
 
     if (callNo > 2) {
       return;
@@ -76,9 +71,29 @@
 {#if !initialized || !account}
   Loading...
 {:else}
-  <ConnectSafe
-    safeOwnerAddress={account.address as Address}
-    chainId={100n}
-    walletType="safe"
-  />
+  <div
+    class="w-full flex flex-col items-center min-h-screen max-w-xl gap-y-4 mt-20"
+  >
+    <div class="w-full">
+      <button onclick={() => history.back()}>
+        <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
+      </button>
+    </div>
+    <h2 class="font-bold text-[28px] md:text-[32px]">Select Account</h2>
+    <p class="font-normal text-black/60 text-base">
+      Please select the account you want to use from the list below.
+    </p>
+    <div class="flex w-full justify-end">
+      <select class="select select-sm select-bordered">
+        <option disabled={true}>Safe signer {shortenAddress(account.address)}</option>
+        <option>import circles.garden keyphrase</option>
+        <option>use without safe</option>
+      </select>
+    </div>
+    <ConnectSafe
+      safeOwnerAddress={account.address as Address}
+      chainId={100n}
+      walletType="safe"
+    />
+  </div>
 {/if}

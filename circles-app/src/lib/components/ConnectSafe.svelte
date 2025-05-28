@@ -74,36 +74,23 @@
   }
 </script>
 
-<div
-  class="w-full flex flex-col items-center min-h-screen max-w-xl gap-y-4 mt-20"
->
-  <div class="w-full">
-    <button onclick={() => history.back()}>
-      <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
-    </button>
-  </div>
-  <h2 class="font-bold text-[28px] md:text-[32px]">Select Account</h2>
-  <p class="font-normal text-black/60 text-base">
-    Please select the account you want to use from the list below.
-  </p>
-  {#if $wallet?.address && $circles}
-    {#each safes ?? [] as item (item)}
-      <ConnectCircles
-        address={item}
-        {walletType}
-        isRegistered={profileBySafe[item.toLowerCase()] !== undefined}
-        isV1={profileBySafe[item]?.version === 1}
-        groups={groupsByOwner[item.toLowerCase() as Address] ?? []}
-        {chainId}
-      />
-    {/each}
+{#if $wallet?.address && $circles}
+  {#each safes ?? [] as item (item)}
+    <ConnectCircles
+      address={item}
+      {walletType}
+      isRegistered={profileBySafe[item.toLowerCase()] !== undefined}
+      isV1={profileBySafe[item]?.version === 1}
+      groups={groupsByOwner[item.toLowerCase() as Address] ?? []}
+      {chainId}
+    />
+  {/each}
 
-    {#if walletType === 'safe'}
-      <div class="text-center">
-        <CreateSafe {onsafecreated} />
-      </div>
-    {/if}
-  {:else}
-    <WalletLoader name="Safe" />
+  {#if walletType === 'safe'}
+    <div class="text-center">
+      <CreateSafe {onsafecreated} />
+    </div>
   {/if}
-</div>
+{:else}
+  <WalletLoader name="Safe" />
+{/if}

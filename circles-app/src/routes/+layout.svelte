@@ -102,13 +102,13 @@
     quickActionsMap[$page.route.id ?? ''] || undefined
   );
 
-  // onMount(async () => {
-  //   if ($page.route.id === '/' || $page.route.id === '/connect-wallet') {
-  //     await clearSession();
-  //   } else {
-  //     await restoreWallet();
-  //   }
-  // });
+  onMount(async () => {
+    if ($page.route.id === '/') {
+      await clearSession();
+    } else {
+      await restoreWallet();
+    }
+  });
 
   $effect(() => {
     if (avatarState.avatar) {
