@@ -19,6 +19,8 @@ import type { Address } from '@circles-sdk/utils';
 import { CirclesStorage } from '$lib/utils/storage';
 import { environment } from './environment.svelte';
 import { groupMetrics } from './groupMetrics.svelte';
+import { disconnect, getAccount, getConnectors, reconnect } from '@wagmi/core';
+import { config } from '../../config';
 
 export const wallet = writable<SdkContractRunner | undefined>();
 
@@ -83,9 +85,7 @@ export async function restoreWallet() {
       case 'circles+group':
         break;
       default:
-        console.log('No "walletType" found in localStorage');
-        await goto('/connect-wallet');
-        break;
+        throw new Error('No "walletType" found in localStorage');
     }
 
     const savedAvatar = CirclesStorage.getInstance().avatar;
@@ -104,9 +104,7 @@ export async function restoreWallet() {
     );
 
     if (!restoredWallet || !restoredWallet.address) {
-      console.log('Failed to restore wallet or wallet address is undefined');
-      await goto('/connect-wallet');
-      return;
+      throw new Error('Failed to restore wallet or wallet address is undefined');
     }
 
     wallet.set(restoredWallet);
@@ -147,6 +145,10 @@ export async function restoreWallet() {
 }
 
 export async function clearSession() {
+  //TODO: create a state for the connector
+  const connectorId = localStorage.getItem('connectorId');
+  const connector = getConnectors(config).find((c) => c.id == connectorId);
+  await disconnect(config, { connector: connector });
   Object.assign(groupMetrics, {
     memberCountPerHour: undefined,
     memberCountPerDay: undefined,
@@ -168,5 +170,5 @@ export async function clearSession() {
   });
   wallet.set(undefined);
   circles.set(undefined);
-  await goto('/connect-wallet');
+  await goto('/');
 }

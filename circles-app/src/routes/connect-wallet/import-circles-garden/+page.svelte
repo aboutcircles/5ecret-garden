@@ -2,7 +2,6 @@
   import { initializeWallet, wallet } from '$lib/stores/wallet.svelte';
   import { circles } from '$lib/stores/circles';
   import { Sdk } from '@circles-sdk/sdk';
-  import { gnosisConfig } from '$lib/circlesConfig';
   import SeedphraseInput from '$lib/components/SeedphraseInput.svelte';
   import { onMount } from 'svelte';
   import ConnectSafe from '$lib/components/ConnectSafe.svelte';
