@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { initializeWallet, wallet } from '$lib/stores/wallet.svelte';
+  import { initializeContractRunner, wallet } from '$lib/stores/wallet.svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { circles } from '$lib/stores/circles';
   import { Sdk, type CirclesConfig } from '@circles-sdk/sdk';
@@ -31,7 +31,7 @@
     const lowerCaseAvatarAddress = avatarAddress.toLowerCase() as Address;
     const lowerCaseGroupAddress = groupAddress?.toLowerCase() as Address;
 
-    $wallet = await initializeWallet(walletType, address);
+    $wallet = await initializeContractRunner(walletType, address);
     circlesConfig = await getCirclesConfig(chainId, environment.ring);
     $circles = new Sdk($wallet! as SdkContractRunner, circlesConfig);
 
@@ -71,7 +71,7 @@
 
   async function deployGroup() {
     if ($circles && $wallet) {
-      $wallet = await initializeWallet(walletType, address);
+      $wallet = await initializeContractRunner(walletType, address);
       circlesConfig = await getCirclesConfig(chainId, environment.ring);
       $circles = new Sdk($wallet! as SdkContractRunner, circlesConfig);
 
@@ -101,7 +101,6 @@
       {/if}
     </div></button
   >
-  <!--{#if walletType !== 'circles'}-->
   <div class="w-full flex gap-x-2 items-center justify-between mt-6 px-2">
     <p class="font-bold text-primary">My groups</p>
     <button
@@ -127,5 +126,4 @@
       <p class="text-sm">No groups available.</p>
     {/if}
   </div>
-  <!--{/if}-->
 </div>

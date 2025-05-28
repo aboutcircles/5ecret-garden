@@ -15,7 +15,7 @@
       class="list-row flex w-full justify-between items-center btn btn-sm my-2"
       id={connector.id}
       onclick={async () => {
-        const result = await connect(config, { connector: connector });
+        const result = await connect(config, { connector: connector, chainId: 100 });
         localStorage.setItem('connectorId', connector.id);
         signer.address = result.accounts[0].toLowerCase() as Address;
         popupControls.close();
