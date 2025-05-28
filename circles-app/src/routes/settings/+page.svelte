@@ -11,7 +11,7 @@
   import GroupSetting from './editors/GroupSetting.svelte';
   import { ethers } from 'ethers';
   import ProfileEditor from '$lib/components/ProfileEditor.svelte';
-  import { profilesEqual } from '$lib/utils/profile';
+  import { FallbackImageUrl, profilesEqual } from '$lib/utils/profile';
 
   async function saveProfileData(profile: Profile): Promise<string> {
     if (!$circles?.profiles) {
@@ -64,6 +64,12 @@
   });
 
   async function saveProfile() {
+    if (!newProfile) {
+      return;
+    }
+    if (newProfile.previewImageUrl && Object.values(FallbackImageUrl).includes(newProfile.previewImageUrl as FallbackImageUrl)) {
+      newProfile.previewImageUrl = '';
+    }
     const cid = await saveProfileData(newProfile!);
 
     const tx = await runTask({
