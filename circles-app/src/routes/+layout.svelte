@@ -11,7 +11,7 @@
 
   import DefaultHeader from '$lib/components/DefaultHeader.svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
-  import { clearSession, restoreWallet } from '$lib/stores/wallet.svelte';
+  import { clearSession, restoreWallet, signer } from '$lib/stores/wallet.svelte';
   import { canMigrate } from '$lib/guards/canMigrate';
   import UpdateBanner from '$lib/components/UpdateBanner.svelte';
   import { page } from '$app/stores';
@@ -35,7 +35,7 @@
 
   const unwatch = watchAccount(config, {
     onChange(account) {
-      if (account.chainId !== 100) {
+      if (account.chainId !== 100 && signer.address) {
         popupControls.open({
           title: 'Wrong Network',
           component: WrongNetwork,
