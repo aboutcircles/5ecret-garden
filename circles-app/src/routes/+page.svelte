@@ -1,17 +1,16 @@
 <script lang="ts">
   import ActionButton from '$lib/components/ActionButton.svelte';
-  import { goto } from '$app/navigation';
   import { popupControls } from '$lib/stores/popUp';
-  import Connectors from '$lib/components/Connectors.svelte';
+  import SelectWallet from '$lib/components/SelectWallet.svelte';
 
   async function connectWallet() {
     popupControls.open({
-      component: Connectors,
-      title: 'Connect Wallet',
+      component: SelectWallet,
+      title: 'Select Wallet',
       props: {},
     });
-    // goto('/connect-wallet');
   }
+  
 </script>
 
 <div
@@ -25,5 +24,5 @@
     monetary system. Tying the currency to time, Circles allows for a new way of
     valuing labour, skill and contribution.
   </p>
-  <ActionButton action={connectWallet}>Get started</ActionButton>
+  <ActionButton action={connectWallet}>Connect Wallet</ActionButton>
 </div>

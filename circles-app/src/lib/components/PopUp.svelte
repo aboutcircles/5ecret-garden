@@ -29,6 +29,7 @@
       {#if $popupState.content}
         {@const SvelteComponent = $popupState.content.component}
         <div class="mt-14">
+          <p class="text-xl font-bold mb-4">{$popupState.content.title}</p>
           <SvelteComponent
             {...$popupState.content.props}
           />
