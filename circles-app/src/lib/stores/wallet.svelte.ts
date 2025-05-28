@@ -25,6 +25,21 @@ import { config } from '../../config';
 export const wallet = writable<SdkContractRunner | undefined>();
 
 export const GNOSIS_CHAIN_ID_DEC = 100n;
+export let signer: {address: Address | undefined} = $state({address: undefined});
+
+export async function getSigner() {
+  const connectorId = localStorage.getItem('connectorId');
+  const connector = getConnectors(config).find((c) => c.id == connectorId);
+  if (!connector) {
+    throw new Error('Connector not found');
+  }
+  await reconnect(config, {
+    connectors: [connector],
+  });
+
+  const account = getAccount(config);
+  return account.address as Address;
+}
 
 export async function initializeWallet(type: WalletType, avatarAddress?: Address): Promise<SdkContractRunner> {
   if (type === 'metamask') {
@@ -64,6 +79,7 @@ export async function initializeWallet(type: WalletType, avatarAddress?: Address
 }
 
 export async function restoreWallet() {
+  signer.address = await getSigner();
   try {
     // The localstorage has a wallet type in one of the following formats:
     // * metamask

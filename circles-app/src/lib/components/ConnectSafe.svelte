@@ -17,7 +17,7 @@
   let groupsByOwner: Record<Address, GroupRow[]> = $state({});
 
   interface Props {
-    safeOwnerAddress?: Address;
+    safeOwnerAddress: Address;
     chainId: bigint;
     walletType: WalletType;
   }
@@ -40,16 +40,9 @@
   }
 
   async function loadSafesAndProfile() {
-    if (!safeOwnerAddress) {
-      throw new Error('Safe owner address is not provided');
-    }
 
-    if (!$wallet?.address) {
-      throw new Error('Wallet address is not available');
-    }
-
-    if (!$circles || !$wallet?.address) {
-      throw new Error('Circles SDK or wallet not initialized');
+    if (!$circles ) {
+      throw new Error('Circles SDK not initialized');
     }
     safes = await querySafeTransactionService(safeOwnerAddress);
     safes = safes.map((safe) => safe.toLowerCase() as Address);
