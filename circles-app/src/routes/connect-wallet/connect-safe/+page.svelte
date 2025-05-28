@@ -1,6 +1,6 @@
 <script lang="ts">
   import ConnectSafe from '$lib/components/ConnectSafe.svelte';
-  import { initializeWallet, signer, wallet } from '$lib/stores/wallet.svelte';
+  import { initializeContractRunner, signer, wallet } from '$lib/stores/wallet.svelte';
   import { circles } from '$lib/stores/circles';
   import { onMount } from 'svelte';
   import { getCirclesConfig } from '$lib/utils/helpers.js';
@@ -17,7 +17,7 @@
       BigInt(100),
       environment.ring
     );
-    $wallet = await initializeWallet('safe');
+    $wallet = await initializeContractRunner('safe');
     $circles = new Sdk($wallet!, circlesConfig);
 
     CirclesStorage.getInstance().data = {

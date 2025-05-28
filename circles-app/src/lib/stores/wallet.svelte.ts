@@ -25,7 +25,7 @@ import { config } from '../../config';
 export const wallet = writable<SdkContractRunner | undefined>();
 
 export const GNOSIS_CHAIN_ID_DEC = 100n;
-export let signer: {address: Address | undefined} = $state({address: undefined});
+export let signer: { address: Address | undefined } = $state({ address: undefined });
 
 export async function getSigner() {
   const connectorId = localStorage.getItem('connectorId');
@@ -41,12 +41,8 @@ export async function getSigner() {
   return account.address as Address;
 }
 
-export async function initializeWallet(type: WalletType, avatarAddress?: Address): Promise<SdkContractRunner> {
-  if (type === 'metamask') {
-    const runner = new BrowserProviderContractRunner();
-    await runner.init();
-    return runner;
-  } else if (type === 'safe' && !avatarAddress) {
+export async function initializeContractRunner(type: WalletType, avatarAddress?: Address): Promise<SdkContractRunner> {
+  if (type === 'metamask' || (type === 'safe' && !avatarAddress)) {
     const runner = new BrowserProviderContractRunner();
     await runner.init();
     return runner;
@@ -114,7 +110,7 @@ export async function restoreWallet() {
       avatarState.isGroup = false;
     }
 
-    const restoredWallet = await initializeWallet(
+    const restoredWallet = await initializeContractRunner(
       walletType,
       savedAvatar,
     );

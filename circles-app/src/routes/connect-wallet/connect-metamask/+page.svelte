@@ -1,12 +1,11 @@
 <script lang="ts">
-  import { initializeWallet, wallet } from '$lib/stores/wallet.svelte';
+  import {  initializeContractRunner, wallet } from '$lib/stores/wallet.svelte';
   import { circles } from '$lib/stores/circles';
   import { Sdk, type AvatarRow } from '@circles-sdk/sdk';
   import { onMount } from 'svelte';
   import WalletLoader from '$lib/components/WalletLoader.svelte';
   import { getCirclesConfig } from '$lib/utils/helpers';
   import ConnectCircles from '$lib/components/ConnectCircles.svelte';
-  import { switchOrAddGnosisNetwork } from '$lib/utils/network';
   import type { Network } from 'ethers';
   import type { SdkContractRunnerWrapper } from '@circles-sdk/adapter-ethers';
   import type { Address } from '@circles-sdk/utils';
@@ -33,7 +32,7 @@
       };
     }
 
-    $wallet = await initializeWallet('metamask');
+    $wallet = await initializeContractRunner('metamask');
 
     if (!$wallet.address) {
       throw new Error('Failed to get wallet address');
@@ -45,13 +44,6 @@
     }
 
     if (callNo > 2) {
-      return;
-    }
-
-    // If we're on the wrong network, attempt to switch
-    if (![GNOSIS_CHAIN_ID_DEC].includes(network.chainId)) {
-      await switchOrAddGnosisNetwork();
-      await setup(callNo++);
       return;
     }
 

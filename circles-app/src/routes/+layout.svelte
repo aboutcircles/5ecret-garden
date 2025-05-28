@@ -29,6 +29,22 @@
   import { circles } from '$lib/stores/circles';
   import Footer from '$lib/components/Footer.svelte';
 
+  import { watchAccount } from '@wagmi/core';
+  import { config } from '../config';
+  import WrongNetwork from '$lib/components/WrongNetwork.svelte';
+
+  const unwatch = watchAccount(config, {
+    onChange(account) {
+      if (account.chainId !== 100) {
+        popupControls.open({
+          title: 'Wrong Network',
+          component: WrongNetwork,
+          props: {},
+        });
+      }
+    },
+  });
+
   interface Props {
     children?: import('svelte').Snippet;
   }
