@@ -14,8 +14,6 @@
   import type { GroupRow } from '@circles-sdk/data';
   import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
 
-  const GNOSIS_CHAIN_ID_DEC = 100n;
-
   let avatarInfo: AvatarRow | undefined = $state();
   let network: Network | undefined = $state();
   let groupsByOwner: Record<Address, GroupRow[]> | undefined = $state();
