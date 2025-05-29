@@ -38,11 +38,11 @@ export async function getSigner() {
   });
 
   const account = getAccount(config);
-  return account.address as Address;
+  return account.address?.toLowerCase() as Address;
 }
 
 export async function initializeContractRunner(type: WalletType, avatarAddress?: Address): Promise<SdkContractRunner> {
-  if (type === 'metamask' || (type === 'safe' && !avatarAddress)) {
+  if ((type === 'injected') || (type === 'safe' && !avatarAddress)) {
     const runner = new BrowserProviderContractRunner();
     await runner.init();
     return runner;
@@ -89,8 +89,8 @@ export async function restoreWallet() {
     const walletTypeString = CirclesStorage.getInstance().walletType ?? '';
     const walletType = walletTypeString.split('+')[0] as WalletType;
     switch (walletType) {
-      case 'metamask':
-      case 'metamask+group':
+      case 'injected':
+      case 'injected+group':
       case 'safe':
       case 'safe+group':
       case 'circles':

@@ -31,9 +31,11 @@
     const lowerCaseAvatarAddress = avatarAddress.toLowerCase() as Address;
     const lowerCaseGroupAddress = groupAddress?.toLowerCase() as Address;
 
-    $wallet = await initializeContractRunner(walletType, address);
-    circlesConfig = await getCirclesConfig(chainId, environment.ring);
-    $circles = new Sdk($wallet! as SdkContractRunner, circlesConfig);
+    if (walletType !== 'injected') {
+      $wallet = await initializeContractRunner(walletType, address);
+      circlesConfig = await getCirclesConfig(chainId, environment.ring);
+      $circles = new Sdk($wallet! as SdkContractRunner, circlesConfig);
+    }
 
     if (
       lowerCaseAvatarAddress === address.toLowerCase() &&

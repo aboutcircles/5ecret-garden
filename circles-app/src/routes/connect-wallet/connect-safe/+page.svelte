@@ -1,62 +1,76 @@
 <script lang="ts">
   import ConnectSafe from '$lib/components/ConnectSafe.svelte';
-  import { initializeContractRunner, signer, wallet } from '$lib/stores/wallet.svelte';
-  import { circles } from '$lib/stores/circles';
+  import {
+    initializeContractRunner,
+    signer,
+    wallet,
+  } from '$lib/stores/wallet.svelte';
   import { onMount } from 'svelte';
   import { getCirclesConfig } from '$lib/utils/helpers.js';
   import { Sdk } from '@circles-sdk/sdk';
-  import { CirclesStorage } from '$lib/utils/storage';
   import { environment } from '$lib/stores/environment.svelte';
   import type { Address } from '@circles-sdk/utils';
-  import { shortenAddress } from '$lib/utils/shared';
-  let initialized: boolean | undefined = $state();
+  import { goto } from '$app/navigation';
+  import WalletLoader from '$lib/components/WalletLoader.svelte';
+  import { circles } from '$lib/stores/circles';
+  import type { AvatarRow, GroupRow } from '@circles-sdk/data';
+  import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
+  import ConnectCircles from '$lib/components/ConnectCircles.svelte';
+  import SettingsDropdown from '$lib/components/SettingsDropdown.svelte';
 
-  async function setup() {
-    // Initialize the Circles SDK and set it as $circles to make it globally available.
-    const circlesConfig = await getCirclesConfig(
-      BigInt(100),
-      environment.ring
-    );
-    $wallet = await initializeContractRunner('safe');
-    $circles = new Sdk($wallet!, circlesConfig);
-
-    CirclesStorage.getInstance().data = {
-      walletType: 'safe',
-    };
-  }
+  let groupsByOwner: Record<Address, GroupRow[]> | undefined = $state();
+  let avatarInfo: AvatarRow | undefined = $state();
+  let useEoa = $state(false);
 
   onMount(async () => {
-    $wallet = undefined;
-    await setup();
-    initialized = true;
+    const circlesConfig = await getCirclesConfig(BigInt(100), environment.ring);
+    $wallet = await initializeContractRunner('injected');
+    $circles = new Sdk($wallet, circlesConfig);
+
+    if (!signer.address || !$circles) {
+      goto('/');
+      return;
+    }
+
+    groupsByOwner = await getBaseAndCmgGroupsByOwnerBatch($circles, [
+      signer.address,
+    ]);
+    console.log(groupsByOwner);
+    avatarInfo = await $circles.data.getAvatarInfo(signer.address);
   });
 </script>
 
-{#if !initialized || !signer.address}
-  Loading...
-{:else}
-  <div
-    class="w-full flex flex-col items-center min-h-screen max-w-xl gap-y-4 mt-20"
-  >
-    <div class="w-full">
-      <button onclick={() => history.back()}>
-        <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
-      </button>
-    </div>
-    <h2 class="font-bold text-[28px] md:text-[32px]">Select Account</h2>
-    <p class="font-normal text-black/60 text-base">
-      Please select the account you want to use from the list below.
-    </p>
-    <div class="flex w-full justify-end">
-      <select class="select select-sm select-bordered">
-        <option>Signer {shortenAddress(signer.address)}</option>
-        <option class="text-warning">use EOA</option>
-      </select>
-    </div>
+<div
+  class="w-full flex flex-col items-center min-h-screen max-w-xl gap-y-4 mt-20"
+>
+  <div class="w-full">
+    <button onclick={() => history.back()}>
+      <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
+    </button>
+  </div>
+  <h2 class="font-bold text-[28px] md:text-[32px]">Select Account</h2>
+  <p class="font-normal text-black/60 text-base">
+    Please select the account you want to use from the list below.
+  </p>
+  <div class="flex w-full justify-end">
+    <SettingsDropdown {useEoa} onEoaChange={(value) => useEoa = value} />
+  </div>
+  {#if !$circles || !signer.address}
+    <WalletLoader />
+  {:else if useEoa}
+    <ConnectCircles
+      address={signer.address}
+      walletType="injected"
+      isRegistered={avatarInfo !== undefined}
+      groups={groupsByOwner?.[signer.address] ?? []}
+      chainId={100n}
+    />
+  {:else}
     <ConnectSafe
-      safeOwnerAddress={signer.address as Address}
+      safeOwnerAddress={signer.address}
       chainId={100n}
       walletType="safe"
+      sdk={$circles}
     />
-  </div>
-{/if}
+  {/if}
+</div>
