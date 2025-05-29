@@ -9,7 +9,7 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { popupControls } from '$lib/stores/popUp';
   import type { Profile } from '@circles-sdk/profiles';
-  import { environment } from '$lib/stores/environment.svelte';
+  import { settings } from '$lib/stores/settings.svelte';
 
   interface Props {
     context?: MigrateToV2Context;
@@ -28,7 +28,7 @@
     if (!avatarState.avatar?.avatarInfo || !$circles) {
       throw new Error('Avatar store or SDK not initialized');
     }
-    canSelfMigrate = environment.ring ? true : await $circles.canSelfMigrate(avatarState.avatar.avatarInfo);
+    canSelfMigrate = settings.ring ? true : await $circles.canSelfMigrate(avatarState.avatar.avatarInfo);
     invitations = await $circles.data.getInvitations(avatarState.avatar.avatarInfo.avatar);
   });
   async function next() {

@@ -10,8 +10,8 @@
   import type { Address } from '@circles-sdk/utils';
   import type { SdkContractRunner } from '@circles-sdk/adapter';
   import { CirclesStorage } from '$lib/utils/storage';
-  import { environment } from '$lib/stores/environment.svelte';
   import type { GroupRow } from '@circles-sdk/data';
+  import { settings } from '$lib/stores/settings.svelte';
 
   interface Props {
     address: Address;
@@ -33,7 +33,7 @@
 
     if (walletType !== 'injected') {
       $wallet = await initializeContractRunner(walletType, address);
-      circlesConfig = await getCirclesConfig(chainId, environment.ring);
+      circlesConfig = await getCirclesConfig(chainId, settings.ring);
       $circles = new Sdk($wallet! as SdkContractRunner, circlesConfig);
     }
 
@@ -74,7 +74,7 @@
   async function deployGroup() {
     if ($circles && $wallet) {
       $wallet = await initializeContractRunner(walletType, address);
-      circlesConfig = await getCirclesConfig(chainId, environment.ring);
+      circlesConfig = await getCirclesConfig(chainId, settings.ring);
       $circles = new Sdk($wallet! as SdkContractRunner, circlesConfig);
 
       await goto('/register/register-group/' + address);

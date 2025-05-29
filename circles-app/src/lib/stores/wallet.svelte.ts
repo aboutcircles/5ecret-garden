@@ -17,10 +17,10 @@ import { type SdkContractRunner } from '@circles-sdk/adapter';
 import type { WalletType } from '$lib/utils/walletType';
 import type { Address } from '@circles-sdk/utils';
 import { CirclesStorage } from '$lib/utils/storage';
-import { environment } from './environment.svelte';
 import { groupMetrics } from './groupMetrics.svelte';
 import { disconnect, getAccount, getConnectors, reconnect } from '@wagmi/core';
 import { config } from '../../config';
+import { settings } from './settings.svelte';
 
 export const wallet = writable<SdkContractRunner | undefined>();
 
@@ -41,11 +41,15 @@ export async function getSigner() {
   return account.address?.toLowerCase() as Address;
 }
 
+export async function initBrowserProviderContractRunner() {
+  const runner = new BrowserProviderContractRunner();
+  await runner.init();
+  return runner;
+}
+
 export async function initializeContractRunner(type: WalletType, avatarAddress?: Address): Promise<SdkContractRunner> {
   if ((type === 'injected') || (type === 'safe' && !avatarAddress)) {
-    const runner = new BrowserProviderContractRunner();
-    await runner.init();
-    return runner;
+    return initBrowserProviderContractRunner();
   } else if ((type === 'safe' || type === 'safe+group') && avatarAddress) {
     const runner = new SafeSdkBrowserContractRunner();
     await runner.init(avatarAddress);
@@ -55,7 +59,7 @@ export async function initializeContractRunner(type: WalletType, avatarAddress?:
     if (!privateKey) {
       throw new Error('Private key not found in localStorage');
     }
-    const rpcProvider = new JsonRpcProvider(environment.ring ? gnosisConfig.rings.circlesRpcUrl : gnosisConfig.production.circlesRpcUrl);
+    const rpcProvider = new JsonRpcProvider(settings.ring ? gnosisConfig.rings.circlesRpcUrl : gnosisConfig.production.circlesRpcUrl);
     const runner = new PrivateKeyContractRunner(rpcProvider, privateKey);
     await runner.init();
     return runner;
@@ -66,7 +70,7 @@ export async function initializeContractRunner(type: WalletType, avatarAddress?:
     }
     const runner = new SafeSdkPrivateKeyContractRunner(
       privateKey,
-      environment.ring ? gnosisConfig.rings.circlesRpcUrl : gnosisConfig.production.circlesRpcUrl,
+      settings.ring ? gnosisConfig.rings.circlesRpcUrl : gnosisConfig.production.circlesRpcUrl,
     );
     await runner.init(avatarAddress);
     return runner as SdkContractRunner;
@@ -124,7 +128,7 @@ export async function restoreWallet() {
     //TODO: cache environment on local storage
     const sdk = new Sdk(
       restoredWallet as SdkContractRunner,
-      await getCirclesConfig(100n, environment.ring),
+      await getCirclesConfig(100n, settings.ring),
     );
     circles.set(sdk);
 
