@@ -1,0 +1,1300 @@
+# LBP Starter Documentation
+
+## I. Introduction
+
+`lbpStarter.html` is a web application that provides a user interface for creating and managing Liquidity Bootstrapping Pools (LBPs) via a specific LBP Starter smart contract system. The application allows users to:
+
+1. Connect to their Ethereum wallet (MetaMask)
+2. Create new LBP Starter instances
+3. Interact with and manage existing LBP Starter instances
+
+## II. Core Functionalities
+
+### 1. Connecting to an Ethereum Wallet (MetaMask)
+
+The application connects to the user's MetaMask wallet to interact with the Ethereum blockchain. It handles:
+- Checking if MetaMask is installed
+- Requesting account access
+- Handling account changes
+
+### 2. Creating New LBP Starter Instances
+
+Users can create new LBP Starter instances by:
+- Selecting a group address (from a dropdown or custom input)
+- Selecting an asset address (from a dropdown or custom input)
+- Setting the group amount and price
+- Setting the asset amount (which is dynamically calculated or editable)
+- Optionally setting advanced parameters (group initial/final weight, swap fee, update weight duration)
+
+### 3. Interacting with Existing LBP Starter Instances
+
+Users can:
+- Input an existing LBP Starter address
+- Check its status (asset/asset amount, group/group amount, balances)
+- Send missing assets or group tokens
+- Create the LBP (if all requirements are met)
+
+## III. User Interface Breakdown
+
+### 1. Connection Status Area
+
+Displays the current connection status with MetaMask.
+
+### 2. "Continue with Existing LBP Starter" Section
+
+Allows users to input an existing LBP Starter address and check/manage its status.
+
+### 3. "Create LBP Starter" Form
+
+#### Group Address Selection/Input
+
+Users can select a group address from a dropdown (populated with default groups) or input a custom address.
+
+#### Asset Address Selection/Input
+
+Users can select an asset address from a dropdown (with predefined options like sDAI, GNO, WETH, WBTC, or custom) or input a custom ERC20 address.
+
+#### Group Amount and Group Price Inputs
+
+Users set the group amount (in CRC) and group price (in USD).
+
+#### Asset Amount Input
+
+The asset amount is dynamically calculated based on the group amount and price, but can also be manually edited.
+
+#### Advanced Parameters (Toggleable)
+
+Users can show/hide advanced parameters:
+- Group Initial Weight (0-100)
+- Group Final Weight (0-100)
+- Swap Fee (0-100)
+- Update Weight Duration (in seconds)
+
+### 4. Status Display Areas
+
+Displays transaction progress, errors, and LBP status.
+
+## IV. JavaScript Logic Deep Dive
+
+### 1. Initialization (`window.onload`)
+
+Sets up event listeners and performs an initial connection check.
+
+### 2. Wallet Connection (`checkConnection`, `accountsChanged`)
+
+Manages MetaMask connectivity, including:
+- Checking if MetaMask is installed
+- Requesting account access
+- Handling account changes
+
+### 3. Form Submission Handlers
+
+#### `existingStarterForm`
+
+Handles checking the status of an existing LBP starter.
+
+#### `lbpForm`
+
+Handles creating a new LBP starter.
+
+### 4. Smart Contract Interaction Details
+
+#### LBP Starter Factory (`LBP_STARTER_ADDRESS`)
+
+Interacts with the main LBP Starter factory contract at `0x3b36d73506c3e75fcacb27340faa38ade1cbaf0a`:
+- `createLBPStarter` function (overloaded for basic/advanced params)
+
+#### LBP Starter Instance (`LBP_STARTER_INSTANCE_ABI`)
+
+Interacts with individual LBP Starter instances:
+- Reading state (`ASSET`, `ASSET_AMOUNT`, `GROUP`, `GROUP_AMOUNT`, `balanceAsset`, `balanceGroup`, `groupLBP`)
+- Triggering actions (`createGroupLBP`)
+
+#### ERC20 Interactions
+
+- `transfer` for sending assets/group tokens
+- `name()` and `symbol()` for display
+
+### 5. Dynamic Data & Calculations
+
+#### `fetchDefaultGroups`
+
+Uses Circles RPC to fetch default group addresses.
+
+#### `getGroupTokenName`, `fetchAndShowGroupTokenName`
+
+Uses Lift contract and ERC20 calls to fetch and display group token names.
+
+#### `fetchAndShowAssetName`
+
+Uses standard ERC20 calls to fetch and display asset token names.
+
+#### `fetchWxDAIPriceUSD`
+
+Uses Coingecko API to fetch the wxDAI price in USD.
+
+#### `fetchAssetPriceInWxDAI`
+
+Uses Balancer API to fetch the asset price in wxDAI.
+
+#### Input Synchronization
+
+Logic that links `groupAmount`, `groupPrice`, and `assetAmount` fields.
+
+### 6. UI Helper Functions
+
+- `toggleAdvanced`: Toggles visibility of advanced parameters
+- `formatEther`: Formats ether values for display
+- `getCowSwapLink`: Generates a CowSwap link for trading
+
+## V. Key Technologies & External Dependencies
+
+### 1. `ethers.js`
+
+Used for Ethereum blockchain interaction.
+
+### 2. MetaMask
+
+Used as the wallet provider.
+
+### 3. External APIs
+
+- Coingecko (for wxDAI price)
+- Balancer API (for asset prices)
+- Circles RPC (for default group data)
+
+### 4. Smart Contracts
+
+- LBP Starter Factory (`0x3b36d73506c3e75fcacb27340faa38ade1cbaf0a`)
+- Dynamically deployed LBP Starter instances
+- Lift Contract (`0x5F99a795dD2743C36D63511f0D4bc667e6d3cDB5`)
+- Various ERC20 token contracts
+
+## VI. Typical User Workflows
+
+### 1. Connecting Wallet
+
+Users connect their MetaMask wallet to interact with the application.
+
+### 2. Scenario 1: Creating a New LBP Starter
+
+1. Select a group address
+2. Select an asset address
+3. Set group amount and price
+4. (Optional) Set advanced parameters
+5. Submit the form to create the LBP Starter
+
+### 3. Scenario 2: Interacting with an Existing LBP Starter
+
+1. Input the existing LBP Starter address
+2. Check its status
+3. (If needed) Send missing assets or group tokens
+4. Create the LBP (if all requirements are met)
+
+## VII. Full HTML Code
+
+```html
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>LBP Starter - Circles Tools</title>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            body {
+                margin: 0;
+                font-family: "Inter", Helvetica, Arial, sans-serif;
+                background: #ffffff;
+                color: #333;
+                line-height: 1.3;
+            }
+            header {
+                background: #5c49e4;
+                color: #fff;
+                padding: 20px;
+                text-align: center;
+            }
+            h1 {
+                margin: 0;
+                font-weight: 600;
+                font-size: 1.5rem;
+            }
+            p {
+                margin: 0.5rem 0 0;
+                font-weight: 400;
+            }
+            .container {
+                max-width: 800px;
+                margin: 40px auto;
+                padding: 0 20px;
+            }
+            .form-group {
+                margin-bottom: 20px;
+            }
+            label {
+                display: block;
+                margin-bottom: 5px;
+                font-weight: 600;
+            }
+            input {
+                width: 100%;
+                padding: 8px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                font-family: inherit;
+            }
+            button {
+                background: #5c49e4;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-weight: 600;
+            }
+            button:hover {
+                background: #4a3bc4;
+            }
+            .status {
+                margin-top: 20px;
+                padding: 10px;
+                border-radius: 4px;
+                display: none;
+            }
+            .status.success {
+                background: #e6ffe6;
+                color: #006600;
+                display: block;
+            }
+            .status.error {
+                background: #ffe6e6;
+                color: #cc0000;
+                display: block;
+            }
+            .connection-status {
+                margin: 20px 0;
+                padding: 10px;
+                border-radius: 4px;
+                background: #f0f0f0;
+            }
+            .connection-status.connected {
+                background: #e6ffe6;
+                color: #006600;
+            }
+            .connection-status.disconnected {
+                background: #ffe6e6;
+                color: #cc0000;
+            }
+            .advanced-toggle {
+                margin: 20px 0;
+                text-align: center;
+            }
+            .advanced-toggle button {
+                background: none;
+                color: #5c49e4;
+                border: 1px solid #5c49e4;
+                padding: 5px 15px;
+            }
+            .advanced-toggle button:hover {
+                background: #f0f0f0;
+            }
+            .advanced-params {
+                display: none;
+                border-top: 1px solid #ddd;
+                padding-top: 20px;
+                margin-top: 20px;
+            }
+            .advanced-params.visible {
+                display: block;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1>LBP Starter</h1>
+            <p>Create and manage Liquidity Bootstrapping Pools</p>
+        </header>
+
+        <div class="container">
+            <div id="connectionStatus" class="connection-status disconnected">
+                Not connected to MetaMask
+            </div>
+
+            <!-- Continue with existing LBP Starter -->
+            <div style="margin-bottom: 30px; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+                <h3>Continue with Existing LBP Starter</h3>
+                <form id="existingStarterForm" style="display: flex; gap: 10px; align-items: flex-end;">
+                    <div style="flex: 1;">
+                        <label for="existingStarterAddress">LBP Starter Address:</label>
+                        <input type="text" id="existingStarterAddress" placeholder="0x..." style="width: 100%;">
+                    </div>
+                    <button type="submit">Check Status</button>
+                </form>
+                <div id="existingStarterStatus"></div>
+            </div>
+
+            <form id="lbpForm">
+                <div class="form-group">
+                    <label for="groupAddress">Group Address:</label>
+                    <select id="groupSelect" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; font-family:inherit;"></select>
+                    <input type="text" id="groupAddress" style="display:none; margin-top:8px;" placeholder="Paste group address" />
+                    <div id="groupTokenName" style="margin-top:4px; color:#666; font-size:0.95em;"></div>
+                </div>
+                <div class="form-group">
+                    <label for="assetAddress">Asset Address:</label>
+                    <select id="assetSelect" style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px; font-family:inherit;">
+                        <option value="0xaf204776c7245bf4147c2612bf6e5972ee483701">sDAI</option>
+                        <option value="0x9c58bacc331c9aa871afd802db6379a98e80cedb">GNO</option>
+                        <option value="0x6a023ccd1ff6f2045c3309768ead9e68f978f6e1">WETH</option>
+                        <option value="0x8e5bbbb09ed1ebde8674cda39a0c169401db4252">WBTC</option>
+                        <option value="custom">Custom...</option>
+                    </select>
+                    <input type="text" id="assetAddress" style="display:none; margin-top:8px;" placeholder="Paste ERC20 address" />
+                    <div id="assetName" style="margin-top:4px; color:#666; font-size:0.95em;"></div>
+                    <div id="assetPrice" style="margin-top:4px; color:#666; font-size:0.95em;"></div>
+                </div>
+                <div class="form-group">
+                    <label for="groupAmount">Group Amount (CRC):</label>
+                    <input type="number" id="groupAmount" required step="any" value="480">
+                </div>
+                <div class="form-group">
+                    <label for="groupPrice">Group Price (USD):</label>
+                    <input type="number" id="groupPrice" required step="any" value="0.02">
+                </div>
+                <div class="form-group">
+                    <label for="assetAmount" id="assetAmountLabel">Asset Amount (sDAI):</label>
+                    <input type="number" id="assetAmount" required step="any" value="1000">
+                </div>
+
+                <div class="advanced-toggle">
+                    <button type="button" id="toggleAdvanced">Show Advanced Parameters</button>
+                </div>
+
+                <div class="advanced-params" id="advancedParams">
+                    <div class="form-group">
+                        <label for="groupInitWeight">Group Initial Weight (0-100):</label>
+                        <input type="number" id="groupInitWeight" min="0" max="100" value="80">
+                    </div>
+                    <div class="form-group">
+                        <label for="groupFinalWeight">Group Final Weight (0-100):</label>
+                        <input type="number" id="groupFinalWeight" min="0" max="100" value="20">
+                    </div>
+                    <div class="form-group">
+                        <label for="swapFee">Swap Fee (0-100):</label>
+                        <input type="number" id="swapFee" min="0" max="100" value="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="updateWeightDuration">Update Weight Duration (in seconds):</label>
+                        <input type="number" id="updateWeightDuration" value="86400">
+                    </div>
+                </div>
+
+                <button type="submit">Create LBP Starter</button>
+            </form>
+            <div id="status" class="status"></div>
+            <div id="starterStatus"></div>
+        </div>
+
+        <script src="https://unpkg.com/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+        <script>
+            // Wait for ethers to be available
+            window.addEventListener('load', async function() {
+                if (typeof ethers === 'undefined') {
+                    console.error('ethers.js failed to load');
+                    return;
+                }
+
+                const LBP_STARTER_ADDRESS = '0x3b36d73506c3e75fcacb27340faa38ade1cbaf0a';
+                const SDAI_ADDRESS = '0xaf204776c7245bf4147c2612bf6e5972ee483701';
+                
+                // Connection status handling
+                const connectionStatus = document.getElementById('connectionStatus');
+                
+                async function checkConnection() {
+                    if (typeof window.ethereum === 'undefined') {
+                        connectionStatus.textContent = 'MetaMask is not installed';
+                        connectionStatus.className = 'connection-status disconnected';
+                        return false;
+                    }
+
+                    try {
+                        // Request account access
+                        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                        const account = accounts[0];
+                        connectionStatus.textContent = `Connected: ${account}`;
+                        connectionStatus.className = 'connection-status connected';
+                        return true;
+                    } catch (error) {
+                        connectionStatus.textContent = 'Failed to connect to MetaMask';
+                        connectionStatus.className = 'connection-status disconnected';
+                        return false;
+                    }
+                }
+
+                // Check connection on page load
+                await checkConnection();
+
+                // Handle account changes
+                if (window.ethereum) {
+                    window.ethereum.on('accountsChanged', function (accounts) {
+                        if (accounts.length === 0) {
+                            connectionStatus.textContent = 'Not connected to MetaMask';
+                            connectionStatus.className = 'connection-status disconnected';
+                        } else {
+                            connectionStatus.textContent = `Connected: ${accounts[0]}`;
+                            connectionStatus.className = 'connection-status connected';
+                        }
+                    });
+                }
+                
+                // Toggle advanced parameters
+                document.getElementById('toggleAdvanced').addEventListener('click', function() {
+                    const advancedParams = document.getElementById('advancedParams');
+                    const button = this;
+                    if (advancedParams.classList.contains('visible')) {
+                        advancedParams.classList.remove('visible');
+                        button.textContent = 'Show Advanced Parameters';
+                    } else {
+                        advancedParams.classList.add('visible');
+                        button.textContent = 'Hide Advanced Parameters';
+                    }
+                });
+                
+                // Helper: format ether
+                function formatEther(val) {
+                    try { return ethers.utils.formatEther(val); } catch { return val; }
+                }
+
+                // Helper: open CowSwap link
+                function getCowSwapLink(token, to, amount) {
+                    // sDAI on Gnosis: 0xaf204776c7245bf4147c2612bf6e5972ee483701
+                    // CowSwap: https://swap.cow.fi/#/1/swap
+                    // We'll use Gnosis chain (chainId=100)
+                    // CowSwap expects amount in wei
+                    return `https://swap.cow.fi/#/100/swap/${token}-${to}?sellAmountBeforeFee=${amount}`;
+                }
+
+                // ABI for LBP Starter instance
+                const LBP_STARTER_INSTANCE_ABI = [
+                    {"inputs":[],"name":"ASSET","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},
+                    {"inputs":[],"name":"ASSET_AMOUNT","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+                    {"inputs":[],"name":"GROUP","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},
+                    {"inputs":[],"name":"GROUP_AMOUNT","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+                    {"inputs":[],"name":"balanceAsset","outputs":[{"internalType":"uint256","name":"balance","type":"uint256"}],"stateMutability":"view","type":"function"},
+                    {"inputs":[],"name":"balanceGroup","outputs":[{"internalType":"uint256","name":"balance","type":"uint256"}],"stateMutability":"view","type":"function"},
+                    {"inputs":[],"name":"groupLBP","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},
+                    {"inputs":[],"name":"createGroupLBP","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"nonpayable","type":"function"}
+                ];
+
+                async function checkStarterStatus(starterAddress) {
+                    const statusDiv = document.getElementById('starterStatus') || document.getElementById('existingStarterStatus');
+                    statusDiv.innerHTML = 'Loading...';
+                    try {
+                        const provider = new ethers.providers.Web3Provider(window.ethereum);
+                        const signer = provider.getSigner();
+                        const contract = new ethers.Contract(starterAddress, LBP_STARTER_INSTANCE_ABI, signer);
+                        // Fetch all relevant info
+                        const [asset, assetAmount, group, groupAmount, balanceAsset, balanceGroup, groupLBP] = await Promise.all([
+                            contract.ASSET(),
+                            contract.ASSET_AMOUNT(),
+                            contract.GROUP(),
+                            contract.GROUP_AMOUNT(),
+                            contract.balanceAsset(),
+                            contract.balanceGroup(),
+                            contract.groupLBP()
+                        ]);
+                        // Update asset dropdown to match the asset in the starter (if present in options)
+                        if (assetSelect) {
+                            let found = false;
+                            for (let i = 0; i < assetSelect.options.length; i++) {
+                                if (assetSelect.options[i].value.toLowerCase() === asset.toLowerCase()) {
+                                    assetSelect.value = asset;
+                                    assetAddressInput.style.display = 'none';
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if (!found) {
+                                assetSelect.value = 'custom';
+                                assetAddressInput.value = asset;
+                                assetAddressInput.style.display = '';
+                            }
+                            updateAssetName();
+                        }
+                        let html = `<b>LBP Starter Status</b><br>`;
+                        html += `<b>Asset:</b> ${asset} <span id='statusAssetName' style='color:#666;'></span><br>`;
+                        html += `<b>Asset Required:</b> ${formatEther(assetAmount)}<br>`;
+                        html += `<b>Asset Sent:</b> ${formatEther(balanceAsset)}<br>`;
+                        html += `<b>Group:</b> ${group}<br>`;
+                        html += `<b>Group Required:</b> ${formatEther(groupAmount)}<br>`;
+                        html += `<b>Group Sent:</b> ${formatEther(balanceGroup)}<br>`;
+                        if (groupLBP && groupLBP !== ethers.constants.AddressZero) {
+                            html += `<div style='margin-top:10px; color:green;'><b>LBP Created!</b><br>LBP Address: ${groupLBP}</div>`;
+                            statusDiv.innerHTML = html;
+                            // Show asset name in status
+                            fetchAndShowAssetName(asset, 'statusAssetName', false);
+                            return;
+                        }
+                        // What is missing?
+                        let missing = [];
+                        if (balanceAsset.lt(assetAmount)) missing.push('asset');
+                        if (balanceGroup.lt(groupAmount)) missing.push('group');
+                        if (missing.length === 0) {
+                            html += `<div style='margin-top:10px;'><button id='createLBPBtn'>Create LBP</button></div>`;
+                        } else {
+                            if (missing.includes('asset')) {
+                                html += `<div style='margin-top:10px;'><b>Send Asset (e.g. sDAI):</b><br>`;
+                                html += `<button id='sendAssetBtn'>Send from Wallet</button></div>`;
+                            }
+                            if (missing.includes('group')) {
+                                // Calculate missing CRC in whole units
+                                const missingCRC = groupAmount.sub(balanceGroup);
+                                const missingCRCWhole = ethers.utils.formatUnits(missingCRC, 18).replace(/\.0+$/, '');
+                                html += `<div style='margin-top:10px;'><b>Send Group Token:</b><br>`;
+                                html += `<a href='https://app.metri.xyz/transfer/${starterAddress}/crc/${missingCRCWhole}' target='_blank'>Send via Metri</a>`;
+                                html += `</div>`;
+                            }
+                        }
+                        statusDiv.innerHTML = html;
+                        // Show asset name in status
+                        fetchAndShowAssetName(asset, 'statusAssetName', false);
+                        // Add event listeners for buttons
+                        const createLBPBtn = document.getElementById('createLBPBtn');
+                        if (createLBPBtn) {
+                            createLBPBtn.onclick = async function() {
+                                statusDiv.innerHTML += '<br>Sending transaction...';
+                                try {
+                                    const tx = await contract.createGroupLBP();
+                                    await tx.wait();
+                                    statusDiv.innerHTML += '<br>LBP created! Reload status.';
+                                } catch (e) {
+                                    statusDiv.innerHTML += `<br>Error: ${e.message}`;
+                                }
+                            };
+                        }
+                        const sendAssetBtn = document.getElementById('sendAssetBtn');
+                        if (sendAssetBtn) {
+                            sendAssetBtn.onclick = async function() {
+                                statusDiv.innerHTML += '<br>Sending asset...';
+                                try {
+                                    // ERC20 ABI
+                                    const erc20 = new ethers.Contract(asset, ["function transfer(address to, uint256 amount) public returns (bool)"], signer);
+                                    const tx = await erc20.transfer(starterAddress, assetAmount.sub(balanceAsset));
+                                    await tx.wait();
+                                    statusDiv.innerHTML += '<br>Asset sent! Reload status.';
+                                } catch (e) {
+                                    statusDiv.innerHTML += `<br>Error: ${e.message}`;
+                                }
+                            };
+                        }
+                        const sendGroupBtn = document.getElementById('sendGroupBtn');
+                        if (sendGroupBtn) {
+                            sendGroupBtn.onclick = async function() {
+                                statusDiv.innerHTML += '<br>Sending group token...';
+                                try {
+                                    // ERC20 ABI
+                                    const erc20 = new ethers.Contract(group, ["function transfer(address to, uint256 amount) public returns (bool)"], signer);
+                                    const tx = await erc20.transfer(starterAddress, groupAmount.sub(balanceGroup));
+                                    await tx.wait();
+                                    statusDiv.innerHTML += '<br>Group token sent! Reload status.';
+                                } catch (e) {
+                                    statusDiv.innerHTML += `<br>Error: ${e.message}`;
+                                }
+                            };
+                        }
+                    } catch (e) {
+                        statusDiv.innerHTML = `<span style='color:red;'>Error: ${e.message}</span>`;
+                    }
+                }
+
+                // Existing starter form
+                document.getElementById('existingStarterForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const addr = document.getElementById('existingStarterAddress').value.trim();
+                    if (!ethers.utils.isAddress(addr)) {
+                        document.getElementById('existingStarterStatus').innerHTML = '<span style="color:red;">Invalid address</span>';
+                        return;
+                    }
+                    await checkStarterStatus(addr);
+                });
+
+                // After creation, show starter status
+                async function showNewStarterStatus(newStarterAddress) {
+                    document.getElementById('starterStatus').innerHTML = '';
+                    await checkStarterStatus(newStarterAddress);
+                }
+
+                document.getElementById('lbpForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const status = document.getElementById('status');
+                    document.getElementById('starterStatus').innerHTML = '';
+                    try {
+                        // Check if MetaMask is installed
+                        if (typeof window.ethereum === 'undefined') {
+                            throw new Error('Please install MetaMask to use this feature');
+                        }
+
+                        // Get form values
+                        const groupAddress = getCurrentGroupAddress();
+                        const assetAddress = getCurrentAssetAddress();
+                        const groupAmount = document.getElementById('groupAmount').value;
+                        const assetAmount = document.getElementById('assetAmount').value;
+                        
+                        // Create contract instance
+                        const contractABI = [
+                            {
+                                "inputs": [],
+                                "stateMutability": "nonpayable",
+                                "type": "constructor"
+                            },
+                            {
+                                "inputs": [],
+                                "name": "InvalidAmount",
+                                "type": "error"
+                            },
+                            {
+                                "inputs": [],
+                                "name": "InvalidFinalWeight",
+                                "type": "error"
+                            },
+                            {
+                                "inputs": [],
+                                "name": "InvalidInitWeight",
+                                "type": "error"
+                            },
+                            {
+                                "inputs": [],
+                                "name": "InvalidSwapFee",
+                                "type": "error"
+                            },
+                            {
+                                "inputs": [],
+                                "name": "OnlyBaseGroupsAreSupported",
+                                "type": "error"
+                            },
+                            {
+                                "inputs": [],
+                                "name": "OnlyStarter",
+                                "type": "error"
+                            },
+                            {
+                                "inputs": [],
+                                "name": "OnlyTwoTokenLBPSupported",
+                                "type": "error"
+                            },
+                            {
+                                "anonymous": false,
+                                "inputs": [
+                                    {
+                                        "indexed": true,
+                                        "internalType": "address",
+                                        "name": "creator",
+                                        "type": "address"
+                                    },
+                                    {
+                                        "indexed": true,
+                                        "internalType": "address",
+                                        "name": "group",
+                                        "type": "address"
+                                    },
+                                    {
+                                        "indexed": true,
+                                        "internalType": "address",
+                                        "name": "lbp",
+                                        "type": "address"
+                                    }
+                                ],
+                                "name": "GroupLBPCreated",
+                                "type": "event"
+                            },
+                            {
+                                "anonymous": false,
+                                "inputs": [
+                                    {
+                                        "indexed": true,
+                                        "internalType": "address",
+                                        "name": "creator",
+                                        "type": "address"
+                                    },
+                                    {
+                                        "indexed": true,
+                                        "internalType": "address",
+                                        "name": "group",
+                                        "type": "address"
+                                    },
+                                    {
+                                        "indexed": true,
+                                        "internalType": "address",
+                                        "name": "asset",
+                                        "type": "address"
+                                    },
+                                    {
+                                        "indexed": false,
+                                        "internalType": "address",
+                                        "name": "lbpStarter",
+                                        "type": "address"
+                                    },
+                                    {
+                                        "indexed": false,
+                                        "internalType": "uint256",
+                                        "name": "groupAmount",
+                                        "type": "uint256"
+                                    },
+                                    {
+                                        "indexed": false,
+                                        "internalType": "uint256",
+                                        "name": "assetAmount",
+                                        "type": "uint256"
+                                    },
+                                    {
+                                        "indexed": false,
+                                        "internalType": "uint256",
+                                        "name": "groupInitWeight",
+                                        "type": "uint256"
+                                    },
+                                    {
+                                        "indexed": false,
+                                        "internalType": "uint256",
+                                        "name": "groupFinalWeight",
+                                        "type": "uint256"
+                                    },
+                                    {
+                                        "indexed": false,
+                                        "internalType": "uint256",
+                                        "name": "swapFee",
+                                        "type": "uint256"
+                                    },
+                                    {
+                                        "indexed": false,
+                                        "internalType": "uint256",
+                                        "name": "updateWeightDuration",
+                                        "type": "uint256"
+                                    }
+                                ],
+                                "name": "LBPStarterCreated",
+                                "type": "event"
+                            },
+                            {
+                                "inputs": [],
+                                "name": "BALANCER_WEIGHTED_MATH",
+                                "outputs": [
+                                    {
+                                        "internalType": "contract IExternalWeightedMath",
+                                        "name": "",
+                                        "type": "address"
+                                    }
+                                ],
+                                "stateMutability": "view",
+                                "type": "function"
+                            },
+                            {
+                                "inputs": [],
+                                "name": "BASE_GROUP_FACTORY",
+                                "outputs": [
+                                    {
+                                        "internalType": "contract IBaseGroupFactory",
+                                        "name": "",
+                                        "type": "address"
+                                    }
+                                ],
+                                "stateMutability": "view",
+                                "type": "function"
+                            },
+                            {
+                                "inputs": [],
+                                "name": "HUB_V2",
+                                "outputs": [
+                                    {
+                                        "internalType": "contract IHub",
+                                        "name": "",
+                                        "type": "address"
+                                    }
+                                ],
+                                "stateMutability": "view",
+                                "type": "function"
+                            },
+                            {
+                                "inputs": [],
+                                "name": "LBP_FACTORY",
+                                "outputs": [
+                                    {
+                                        "internalType": "contract INoProtocolFeeLiquidityBootstrappingPoolFactory",
+                                        "name": "",
+                                        "type": "address"
+                                    }
+                                ],
+                                "stateMutability": "view",
+                                "type": "function"
+                            },
+                            {
+                                "inputs": [],
+                                "name": "VAULT",
+                                "outputs": [
+                                    {
+                                        "internalType": "address",
+                                        "name": "",
+                                        "type": "address"
+                                    }
+                                ],
+                                "stateMutability": "view",
+                                "type": "function"
+                            },
+                            {
+                                "inputs": [
+                                    {
+                                        "internalType": "address",
+                                        "name": "group",
+                                        "type": "address"
+                                    },
+                                    {
+                                        "internalType": "address",
+                                        "name": "asset",
+                                        "type": "address"
+                                    },
+                                    {
+                                        "internalType": "uint256",
+                                        "name": "groupAmount",
+                                        "type": "uint256"
+                                    },
+                                    {
+                                        "internalType": "uint256",
+                                        "name": "assetAmount",
+                                        "type": "uint256"
+                                    }
+                                ],
+                                "name": "createLBPStarter",
+                                "outputs": [
+                                    {
+                                        "internalType": "address",
+                                        "name": "lbpStarter",
+                                        "type": "address"
+                                    }
+                                ],
+                                "stateMutability": "nonpayable",
+                                "type": "function"
+                            },
+                            {
+                                "inputs": [
+                                    {
+                                        "internalType": "address",
+                                        "name": "group",
+                                        "type": "address"
+                                    },
+                                    {
+                                        "internalType": "address",
+                                        "name": "asset",
+                                        "type": "address"
+                                    },
+                                    {
+                                        "internalType": "uint256",
+                                        "name": "groupAmount",
+                                        "type": "uint256"
+                                    },
+                                    {
+                                        "internalType": "uint256",
+                                        "name": "assetAmount",
+                                        "type": "uint256"
+                                    },
+                                    {
+                                        "internalType": "uint256",
+                                        "name": "groupInitWeight",
+                                        "type": "uint256"
+                                    },
+                                    {
+                                        "internalType": "uint256",
+                                        "name": "groupFinalWeight",
+                                        "type": "uint256"
+                                    },
+                                    {
+                                        "internalType": "uint256",
+                                        "name": "swapFee",
+                                        "type": "uint256"
+                                    },
+                                    {
+                                        "internalType": "uint256",
+                                        "name": "updateWeightDuration",
+                                        "type": "uint256"
+                                    }
+                                ],
+                                "name": "createLBPStarter",
+                                "outputs": [
+                                    {
+                                        "internalType": "address",
+                                        "name": "lbpStarter",
+                                        "type": "address"
+                                    }
+                                ],
+                                "stateMutability": "nonpayable",
+                                "type": "function"
+                            }
+                        ];
+
+                        console.log('Creating contract instance...');
+                        const provider = new ethers.providers.Web3Provider(window.ethereum);
+                        const signer = provider.getSigner();
+                        console.log('Provider and signer created');
+                        
+                        const contract = new ethers.Contract(LBP_STARTER_ADDRESS, contractABI, signer);
+                        console.log('Contract instance created:', contract);
+                        console.log('Available functions:', Object.keys(contract.functions));
+
+                        let tx;
+                        if (document.getElementById('advancedParams').classList.contains('visible')) {
+                            // Advanced parameters
+                            const groupInitWeight = document.getElementById('groupInitWeight').value;
+                            const groupFinalWeight = document.getElementById('groupFinalWeight').value;
+                            const swapFee = document.getElementById('swapFee').value;
+                            const updateWeightDuration = document.getElementById('updateWeightDuration').value;
+
+                            console.log('Calling createLBPStarter with advanced parameters...');
+                            tx = await contract['createLBPStarter(address,address,uint256,uint256,uint256,uint256,uint256,uint256)'](
+                                groupAddress,
+                                assetAddress,
+                                ethers.utils.parseEther(groupAmount),
+                                ethers.utils.parseEther(assetAmount),
+                                groupInitWeight,
+                                groupFinalWeight,
+                                swapFee,
+                                updateWeightDuration
+                            );
+                        } else {
+                            // Simple parameters
+                            console.log('Calling createLBPStarter with simple parameters...');
+                            tx = await contract['createLBPStarter(address,address,uint256,uint256)'](
+                                groupAddress,
+                                assetAddress,
+                                ethers.utils.parseEther(groupAmount),
+                                ethers.utils.parseEther(assetAmount)
+                            );
+                        }
+
+                        status.textContent = 'Transaction sent! Waiting for confirmation...';
+                        status.className = 'status success';
+
+                        const receipt = await tx.wait();
+                        
+                        // Find the LBPStarterCreated event
+                        const event = receipt.events.find(e => e.event === 'LBPStarterCreated');
+                        if (event) {
+                            const lbpStarterAddress = event.args.lbpStarter;
+                            status.textContent = `LBP Starter created successfully! Address: ${lbpStarterAddress}`;
+                            status.className = 'status success';
+                            await showNewStarterStatus(lbpStarterAddress);
+                        } else {
+                            status.textContent = 'Transaction successful but no LBPStarterCreated event found';
+                        }
+                    } catch (error) {
+                        status.textContent = `Error: ${error.message}`;
+                        status.className = 'status error';
+                    }
+                });
+
+                // --- Group Price and Asset Amount Sync Logic ---
+                const groupAmountInput = document.getElementById('groupAmount');
+                const groupPriceInput = document.getElementById('groupPrice');
+                const assetAmountInput = document.getElementById('assetAmount');
+                let lastEdited = null; // 'groupPrice' or 'assetAmount'
+                let assetPriceInWxDAI = null; // in wxDAI
+                let wxDAIPriceUSD = null; // in USD
+
+                // Fetch wxDAI price in USD from Coingecko
+                async function fetchWxDAIPriceUSD() {
+                    try {
+                        const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=wrapped-xdai&vs_currencies=usd');
+                        const data = await res.json();
+                        wxDAIPriceUSD = data['wrapped-xdai']?.usd || 0;
+                    } catch (e) {
+                        wxDAIPriceUSD = 0;
+                    }
+                }
+                await fetchWxDAIPriceUSD();
+
+                // Helper: get asset price in USD
+                function getAssetPriceUSD() {
+                    if (!assetPriceInWxDAI || !wxDAIPriceUSD) return null;
+                    return assetPriceInWxDAI * wxDAIPriceUSD;
+                }
+
+                // Update asset amount based on group amount and group price
+                function updateAssetAmountFromGroupPrice() {
+                    const groupAmount = parseFloat(groupAmountInput.value) || 0;
+                    const groupPrice = parseFloat(groupPriceInput.value) || 0;
+                    const assetPriceUSD = getAssetPriceUSD();
+                    if (!assetPriceUSD || assetPriceUSD === 0) return;
+                    // 1% of asset value = groupAmount * groupPrice
+                    // assetAmount * assetPriceUSD * 0.01 = groupAmount * groupPrice
+                    // assetAmount = (groupAmount * groupPrice) / (assetPriceUSD * 0.01)
+                    const assetAmount = (groupAmount * groupPrice) / (assetPriceUSD * 0.01);
+                    assetAmountInput.value = assetAmount ? assetAmount.toFixed(6) : '';
+                }
+
+                // Update group price based on asset amount
+                function updateGroupPriceFromAssetAmount() {
+                    const groupAmount = parseFloat(groupAmountInput.value) || 0;
+                    const assetAmount = parseFloat(assetAmountInput.value) || 0;
+                    const assetPriceUSD = getAssetPriceUSD();
+                    if (!assetPriceUSD || assetPriceUSD === 0 || groupAmount === 0) return;
+                    // assetAmount * assetPriceUSD * 0.01 = groupAmount * groupPrice
+                    // groupPrice = (assetAmount * assetPriceUSD * 0.01) / groupAmount
+                    const groupPrice = (assetAmount * assetPriceUSD * 0.01) / groupAmount;
+                    groupPriceInput.value = groupPrice ? groupPrice.toFixed(6) : '';
+                }
+
+                // When group price changes
+                groupPriceInput.addEventListener('input', function() {
+                    lastEdited = 'groupPrice';
+                    updateAssetAmountFromGroupPrice();
+                });
+                // When asset amount changes
+                assetAmountInput.addEventListener('input', function() {
+                    lastEdited = 'assetAmount';
+                    updateGroupPriceFromAssetAmount();
+                });
+                // When group amount changes
+                groupAmountInput.addEventListener('input', function() {
+                    if (lastEdited === 'assetAmount') {
+                        updateGroupPriceFromAssetAmount();
+                    } else {
+                        updateAssetAmountFromGroupPrice();
+                    }
+                });
+
+                // When asset price or wxDAI price changes, recalculate
+                async function recalcOnPriceUpdate() {
+                    await fetchWxDAIPriceUSD();
+                    if (lastEdited === 'assetAmount') {
+                        updateGroupPriceFromAssetAmount();
+                    } else {
+                        updateAssetAmountFromGroupPrice();
+                    }
+                }
+
+                // Patch fetchAssetPriceInWxDAI to update assetPriceInWxDAI and recalc
+                fetchAssetPriceInWxDAI = async function(assetAddress) {
+                    const wxDAI = '0xe91d153e0b41518a2ce8dd3d7944fa863463a97d';
+                    if (!ethers.utils.isAddress(assetAddress)) {
+                        document.getElementById('assetPrice').textContent = '';
+                        assetPriceInWxDAI = null;
+                        return;
+                    }
+                    if (assetAddress.toLowerCase() === wxDAI.toLowerCase()) {
+                        document.getElementById('assetPrice').textContent = '1 wxDAI = 1 wxDAI';
+                        assetPriceInWxDAI = 1;
+                        await recalcOnPriceUpdate();
+                        return;
+                    }
+                    try {
+                        const query = `{ sorGetSwapPaths( chain: GNOSIS, swapAmount: "0.1", swapType: EXACT_IN, tokenIn: "${assetAddress}", tokenOut: "${wxDAI}" ) { returnAmount } }`;
+                        const response = await fetch("https://api-v3.balancer.fi/graphql", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ query })
+                        });
+                        const data = await response.json();
+                        if (data.data?.sorGetSwapPaths?.returnAmount) {
+                            // The API returns the price for 0.1 asset, so multiply by 10 for 1 asset
+                            const price = Number(data.data.sorGetSwapPaths.returnAmount) * 10;
+                            assetPriceInWxDAI = price;
+                            document.getElementById('assetPrice').textContent = `1 asset ≈ ${price.toFixed(6)} wxDAI`;
+                            await recalcOnPriceUpdate();
+                            return;
+                        }
+                        document.getElementById('assetPrice').textContent = 'Price not available.';
+                        assetPriceInWxDAI = null;
+                        await recalcOnPriceUpdate();
+                    } catch (e) {
+                        document.getElementById('assetPrice').textContent = 'Price not available.';
+                        assetPriceInWxDAI = null;
+                        await recalcOnPriceUpdate();
+                    }
+                };
+
+                // Asset dropdown logic
+                const assetSelect = document.getElementById('assetSelect');
+                const assetAddressInput = document.getElementById('assetAddress');
+                function getCurrentAssetAddress() {
+                    if (assetSelect.value === 'custom') {
+                        return assetAddressInput.value;
+                    } else {
+                        return assetSelect.value;
+                    }
+                }
+                function updateAssetName() {
+                    const assetAddr = getCurrentAssetAddress();
+                    fetchAndShowAssetName(assetAddr, 'assetName', true);
+                    fetchAssetPriceInWxDAI(assetAddr);
+                }
+                // Show/hide custom input
+                assetSelect.addEventListener('change', function() {
+                    if (assetSelect.value === 'custom') {
+                        assetAddressInput.style.display = '';
+                        assetAddressInput.required = true;
+                    } else {
+                        assetAddressInput.style.display = 'none';
+                        assetAddressInput.required = false;
+                    }
+                    updateAssetName();
+                });
+                assetAddressInput.addEventListener('input', updateAssetName);
+                assetSelect.value = '0xaf204776c7245bf4147c2612bf6e5972ee483701'; // default to sDAI
+                updateAssetName();
+
+                // GROUP DROPDOWN LOGIC
+                const groupSelect = document.getElementById('groupSelect');
+                const groupAddressInput = document.getElementById('groupAddress');
+                function getCurrentGroupAddress() {
+                    if (groupSelect.value === 'custom') {
+                        return groupAddressInput.value;
+                    } else {
+                        return groupSelect.value;
+                    }
+                }
+                function updateGroupTokenName() {
+                    fetchAndShowGroupTokenName(getCurrentGroupAddress());
+                }
+                groupSelect.addEventListener('change', function() {
+                    if (groupSelect.value === 'custom') {
+                        groupAddressInput.style.display = '';
+                        groupAddressInput.required = true;
+                    } else {
+                        groupAddressInput.style.display = 'none';
+                        groupAddressInput.required = false;
+                    }
+                    updateGroupTokenName();
+                });
+                groupAddressInput.addEventListener('input', updateGroupTokenName);
+
+                // Fetch default groups (like in groupChecker.html)
+                async function fetchDefaultGroups() {
+                    const rpcEndpoint = "https://rpc.aboutcircles.com/";
+                    const requestBody = {
+                        jsonrpc: "2.0",
+                        id: 1,
+                        method: "circles_query",
+                        params: [
+                            {
+                                Namespace: "V_CrcV2",
+                                Table: "TrustRelations",
+                                Columns: [],
+                                Filter: [
+                                    {
+                                        Type: "FilterPredicate",
+                                        FilterType: "Equals",
+                                        Column: "truster",
+                                        Value: "0x0afd8899bca011bb95611409f09c8efbf6b169cf",
+                                    },
+                                ],
+                            },
+                        ],
+                    };
+                    try {
+                        const response = await fetch(rpcEndpoint, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(requestBody),
+                        });
+                        const data = await response.json();
+                        if (data.result && data.result.rows) {
+                            // Extract unique trustee addresses from the rows (trustee is at index 5)
+                            const addresses = Array.from(new Set(data.result.rows.map(row => row[5])));
+                            return addresses;
+                        }
+                    } catch (e) { /* ignore */ }
+                    return [];
+                }
+
+                // Helper: get group token name (static ERC20 name)
+                async function getGroupTokenName(address) {
+                    if (!ethers.utils.isAddress(address)) return null;
+                    const LIFT_ADDRESS = '0x5F99a795dD2743C36D63511f0D4bc667e6d3cDB5';
+                    const liftAbi = ["function erc20Circles(uint8 circlesType, address avatar) view returns (address)"];
+                    const erc20Abi = ["function name() view returns (string)"];
+                    try {
+                        const provider = new ethers.providers.Web3Provider(window.ethereum);
+                        const lift = new ethers.Contract(LIFT_ADDRESS, liftAbi, provider);
+                        const erc20 = await lift.erc20Circles(0, address);
+                        if (erc20 && erc20 !== ethers.constants.AddressZero) {
+                            const token = new ethers.Contract(erc20, erc20Abi, provider);
+                            const name = await token.name();
+                            if (name && name.length > 0) return name;
+                        }
+                    } catch (e) {}
+                    return null;
+                }
+
+                // Populate group dropdown
+                async function populateGroupDropdown() {
+                    groupSelect.innerHTML = '';
+                    const defaultGroups = await fetchDefaultGroups();
+                    // Fetch token names in parallel
+                    const namePromises = defaultGroups.map(addr => getGroupTokenName(addr));
+                    const names = await Promise.all(namePromises);
+                    defaultGroups.forEach((addr, i) => {
+                        const opt = document.createElement('option');
+                        opt.value = addr;
+                        opt.textContent = names[i] && names[i].length > 0 ? names[i] : addr;
+                        groupSelect.appendChild(opt);
+                    });
+                    const customOpt = document.createElement('option');
+                    customOpt.value = 'custom';
+                    customOpt.textContent = 'Custom...';
+                    groupSelect.appendChild(customOpt);
+                    groupSelect.value = defaultGroups.length > 0 ? defaultGroups[0] : 'custom';
+                    updateGroupTokenName();
+                }
+                // Fetch and show group token name
+                async function fetchAndShowGroupTokenName(groupAddress) {
+                    if (!ethers.utils.isAddress(groupAddress)) {
+                        document.getElementById('groupTokenName').textContent = '';
+                        return;
+                    }
+                    // Use the lift contract to get the static ERC20 for the group
+                    const LIFT_ADDRESS = '0x5F99a795dD2743C36D63511f0D4bc667e6d3cDB5';
+                    const liftAbi = ["function erc20Circles(uint8 circlesType, address avatar) view returns (address)"];
+                    const erc20Abi = ["function name() view returns (string)", "function symbol() view returns (string)"];
+                    try {
+                        const provider = new ethers.providers.Web3Provider(window.ethereum);
+                        const lift = new ethers.Contract(LIFT_ADDRESS, liftAbi, provider);
+                        const erc20 = await lift.erc20Circles(0, groupAddress);
+                        if (erc20 && erc20 !== ethers.constants.AddressZero) {
+                            const token = new ethers.Contract(erc20, erc20Abi, provider);
+                            const name = await token.name();
+                            const symbol = await token.symbol();
+                            document.getElementById('groupTokenName').textContent = `Token: ${name} (${symbol})`;
+                        } else {
+                            document.getElementById('groupTokenName').textContent = '';
+                        }
+                    } catch (e) {
+                        document.getElementById('groupTokenName').textContent = '';
+                    }
+                }
+                // Populate on load
+                populateGroupDropdown();
+
+                // Fetch and display asset token name
+                async function fetchAndShowAssetName(address, targetId = 'assetName', updateAmountLabel = true) {
+                    if (!ethers.utils.isAddress(address)) {
+                        document.getElementById(targetId).textContent = '';
+                        if (updateAmountLabel) document.getElementById('assetAmountLabel').textContent = 'Asset Amount:';
+                        return;
+                    }
+                    try {
+                        const provider = new ethers.providers.Web3Provider(window.ethereum);
+                        const erc20 = new ethers.Contract(address, ["function name() view returns (string)", "function symbol() view returns (string)"] , provider);
+                        const name = await erc20.name();
+                        const symbol = await erc20.symbol();
+                        document.getElementById(targetId).textContent = `Token: ${name} (${symbol})`;
+                        if (updateAmountLabel) document.getElementById('assetAmountLabel').textContent = `Asset Amount (${symbol}):`;
+                    } catch (e) {
+                        document.getElementById(targetId).textContent = '';
+                        if (updateAmountLabel) document.getElementById('assetAmountLabel').textContent = 'Asset Amount:';
+                    }
+                }
+            });
+        </script>
+    </body>
+</html>

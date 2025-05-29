@@ -115,8 +115,9 @@
       menuItems = [
         { name: 'Dashboard', link: '/dashboard' },
         { name: 'Contacts', link: '/contacts' },
-        ...(!avatarState.isGroup ? [{ name: 'Groups', link: '/groups' }] : []),
-        { name: 'Settings', link: '/settings' },
+      ...(!avatarState.isGroup ? [{ name: 'Groups', link: '/groups' }] : []),
+      ...(avatarState.isGroup ? [{ name: 'Liquidity', link: '/liquidity' }] : []),
+      { name: 'Settings', link: '/settings' },
       ];
     }
   });
