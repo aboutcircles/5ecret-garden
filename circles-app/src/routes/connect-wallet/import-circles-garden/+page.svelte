@@ -7,7 +7,7 @@
   import ConnectSafe from '$lib/components/ConnectSafe.svelte';
   import { CirclesStorage } from '$lib/utils/storage';
   import { getCirclesConfig } from '$lib/utils/helpers';
-  import { environment } from '$lib/stores/environment.svelte';
+  import { settings } from '$lib/stores/settings.svelte';
 
   let mnemonicPhrase: string = $state('');
   let hasValidKey = $state(false);
@@ -23,7 +23,7 @@
     const network = await ($wallet as any).provider?.getNetwork();
     const circlesConfig = await getCirclesConfig(
       network.chainId,
-      environment.ring
+      settings.ring
     );
     $circles = new Sdk($wallet, circlesConfig);
   }
@@ -39,7 +39,7 @@
       const network = await ($wallet as any).provider?.getNetwork();
       const circlesConfig = await getCirclesConfig(
         network.chainId,
-        environment.ring
+        settings.ring
       );
       $circles = new Sdk($wallet!, circlesConfig);
     }

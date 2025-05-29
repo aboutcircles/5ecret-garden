@@ -1,11 +1,6 @@
 <script lang="ts">
+  import { settings } from '$lib/stores/settings.svelte';
   import Tooltip from './Tooltip.svelte';
-  import { environment } from '$lib/stores/environment.svelte';
-
-  const { useEoa, onEoaChange } = $props<{
-    useEoa: boolean;
-    onEoaChange: (value: boolean) => void;
-  }>();
 </script>
 
 <div class="dropdown dropdown-end">
@@ -19,15 +14,15 @@
     <div class="flex items-center gap-x-2">
       <input
         type="checkbox"
-        checked={environment.ring}
         class="toggle toggle-sm checked:bg-orange-400 checked:text-orange-800"
-        onchange={() => (environment.ring = !environment.ring)}
+        checked={settings.ring}
+        onchange={() => (settings.ring = !settings.ring)}
       />
       <a
         href="https://docs.aboutcircles.com/developer-docs/getting-started-with-the-sdk#using-the-sandbox-version-of-circles-sdk-for-builders"
         target="_blank"
         class={`flex font-semibold items-center text-sm text-nowrap  transition-color duration-300 ease-in-out ${
-          environment.ring
+          settings.ring
             ? 'text-orange-700'
             : 'text-primary hover:text-primary/80'
         }`}
@@ -43,14 +38,10 @@
       <input
         type="checkbox"
         class="toggle toggle-sm"
-        checked={useEoa}
-        onchange={() => onEoaChange(!useEoa)}
+        checked={settings.legacy}
+        onchange={() => (settings.legacy = !settings.legacy)}
       />
-      <p class="text-sm"
-        >LEGACY <Tooltip
-          content="Use your EOA to control your avatar."
-        /></p
-      >
+      <p class="text-sm">LEGACY <Tooltip content="Use your EOA to control your avatar." /></p>
     </div>
   </div>
-</div> 
+</div>
