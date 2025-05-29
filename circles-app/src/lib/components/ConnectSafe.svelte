@@ -38,6 +38,7 @@
   }
 
   async function loadSafesAndProfile() {
+    console.log('safes', safeOwnerAddress);
     safes = await querySafeTransactionService(safeOwnerAddress);
     safes = safes.map((safe) => safe.toLowerCase() as Address);
     const [avatarInfo, groupInfo] = await Promise.all([

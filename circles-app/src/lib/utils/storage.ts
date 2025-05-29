@@ -74,6 +74,10 @@ export class CirclesStorage {
     return this.data.privateKey;
   }
 
+  clear() {
+    localStorage.removeItem(STORAGE_KEY);
+  }
+
   private write(data: StorageSchema) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }

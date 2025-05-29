@@ -25,7 +25,7 @@ import { settings } from './settings.svelte';
 export const wallet = writable<SdkContractRunner | undefined>();
 
 export const GNOSIS_CHAIN_ID_DEC = 100n;
-export let signer: { address: Address | undefined } = $state({ address: undefined });
+export let signer: { address: Address | undefined, privateKey: string | undefined } = $state({ address: undefined, privateKey: undefined });
 
 export async function getSigner() {
   const connectorId = localStorage.getItem('connectorId');
@@ -78,8 +78,11 @@ export async function initializeContractRunner(type: WalletType, avatarAddress?:
   throw new Error(`Unsupported wallet type: ${type}`);
 }
 
-export async function restoreWallet() {
+export async function restoreSigner() {
   signer.address = await getSigner();
+}
+
+export async function restoreWallet() {
   try {
     // The localstorage has a wallet type in one of the following formats:
     // * metamask
@@ -186,5 +189,6 @@ export async function clearSession() {
   });
   wallet.set(undefined);
   circles.set(undefined);
+  CirclesStorage.getInstance().clear();
   await goto('/');
 }
