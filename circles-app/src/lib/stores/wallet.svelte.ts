@@ -47,6 +47,13 @@ export async function initBrowserProviderContractRunner() {
   return runner;
 }
 
+export async function initPrivateKeyContractRunner(privateKey: string) {
+  const rpcProvider = new JsonRpcProvider(settings.ring ? gnosisConfig.rings.circlesRpcUrl : gnosisConfig.production.circlesRpcUrl);
+  const runner = new PrivateKeyContractRunner(rpcProvider, privateKey);
+  await runner.init();
+  return runner;
+}
+
 export async function initializeContractRunner(type: WalletType, avatarAddress?: Address): Promise<SdkContractRunner> {
   if ((type === 'injected') || (type === 'safe' && !avatarAddress)) {
     return initBrowserProviderContractRunner();

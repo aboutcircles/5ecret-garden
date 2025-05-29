@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { initializeContractRunner, wallet } from '$lib/stores/wallet.svelte';
+  import {
+    initPrivateKeyContractRunner,
+    signer,
+  } from '$lib/stores/wallet.svelte';
   import { circles } from '$lib/stores/circles';
   import { Sdk } from '@circles-sdk/sdk';
   import SeedphraseInput from '$lib/components/SeedphraseInput.svelte';
@@ -8,40 +11,48 @@
   import { CirclesStorage } from '$lib/utils/storage';
   import { getCirclesConfig } from '$lib/utils/helpers';
   import { settings } from '$lib/stores/settings.svelte';
+  import { gnosisConfig } from '$lib/circlesConfig';
+  import type { SdkContractRunner } from '@circles-sdk/adapter';
 
+  let runner: SdkContractRunner | undefined = $state();
   let mnemonicPhrase: string = $state('');
   let hasValidKey = $state(false);
   let privateKey: string = $state('');
   let address = $state('');
+
+  $effect(() => {
+    circles.set(
+      runner
+        ? new Sdk(
+            runner,
+            settings.ring ? gnosisConfig.rings : gnosisConfig.production
+          )
+        : undefined
+    );
+  });
 
   async function connectWallet() {
     CirclesStorage.getInstance().data = {
       privateKey: privateKey,
       walletType: 'circles',
     };
-    $wallet = await initializeContractRunner('circles');
-    const network = await ($wallet as any).provider?.getNetwork();
-    const circlesConfig = await getCirclesConfig(
-      network.chainId,
-      settings.ring
-    );
-    $circles = new Sdk($wallet, circlesConfig);
+    runner = await initPrivateKeyContractRunner(privateKey);
   }
 
   onMount(async () => {
-    $wallet = undefined;
     privateKey = CirclesStorage.getInstance().privateKey ?? '';
     if (privateKey) {
       CirclesStorage.getInstance().data = {
         walletType: 'circles',
       };
-      $wallet = await initializeContractRunner('circles');
-      const network = await ($wallet as any).provider?.getNetwork();
+      runner = await initPrivateKeyContractRunner(privateKey);
+      const network = await (runner as any).provider?.getNetwork();
       const circlesConfig = await getCirclesConfig(
         network.chainId,
         settings.ring
       );
-      $circles = new Sdk($wallet!, circlesConfig);
+      $circles = new Sdk(runner, circlesConfig);
+      signer.address = runner.address;
     }
   });
 </script>
@@ -49,7 +60,7 @@
 <div
   class="w-full flex flex-col items-center min-h-screen max-w-5xl gap-y-8 mt-20"
 >
-  {#if !$wallet?.address || !$circles}
+  {#if !signer.address || !$circles}
     <h2 class="font-bold text-[28px] md:text-[32px]">
       Import circles.garden keyphrase
     </h2>
@@ -70,7 +81,7 @@
     </button>
   {:else}
     <ConnectSafe
-      safeOwnerAddress={$wallet.address}
+      safeOwnerAddress={signer.address}
       chainId={100n}
       walletType="circles"
       sdk={$circles}
