@@ -1,38 +1,48 @@
 <script lang="ts">
   import ConnectSafe from '$lib/components/ConnectSafe.svelte';
   import {
-  clearSession,
+    clearSession,
+    getSigner,
     initBrowserProviderContractRunner,
     signer,
-    wallet,
   } from '$lib/stores/wallet.svelte';
-  import { getCirclesConfig } from '$lib/utils/helpers.js';
-  import { Sdk } from '@circles-sdk/sdk';
   import type { Address } from '@circles-sdk/utils';
   import WalletLoader from '$lib/components/WalletLoader.svelte';
-  import { circles } from '$lib/stores/circles';
-  import type { AvatarRow, GroupRow } from '@circles-sdk/data';
+  import { type AvatarRow, type GroupRow } from '@circles-sdk/data';
   import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
   import ConnectCircles from '$lib/components/ConnectCircles.svelte';
   import SettingsDropdown from '$lib/components/SettingsDropdown.svelte';
   import { settings } from '$lib/stores/settings.svelte';
-
+  import { onMount } from 'svelte';
+  import { gnosisConfig } from '$lib/circlesConfig';
+  import { Sdk } from '@circles-sdk/sdk';
+  import type { SdkContractRunner } from '@circles-sdk/adapter';
+  import { circles } from '$lib/stores/circles';
   let groupsByOwner: Record<Address, GroupRow[]> | undefined = $state();
   let avatarInfo: AvatarRow | undefined = $state();
+  let runner: SdkContractRunner | undefined = $state();
+  onMount(async () => {
+    signer.address = await getSigner();
+    if (!signer.address) {
+      await clearSession();
+    }
+    runner = await initBrowserProviderContractRunner();
+  });
+
+  $effect(() => {
+    circles.set(
+      runner
+        ? new Sdk(
+            runner,
+            settings.ring ? gnosisConfig.rings : gnosisConfig.production
+          )
+        : undefined
+    );
+  });
 
   $effect(() => {
     (async () => {
-      const circlesConfig = await getCirclesConfig(BigInt(100), settings.ring);
-      if (!$wallet) {
-        $wallet = await initBrowserProviderContractRunner();
-      }
-      $circles = new Sdk($wallet, circlesConfig);
-
-      if (!signer.address || !$circles) {
-        clearSession();
-        return;
-      }
-
+      if (!signer.address || !$circles) return;
       groupsByOwner = await getBaseAndCmgGroupsByOwnerBatch($circles, [
         signer.address,
       ]);
@@ -56,7 +66,7 @@
   <div class="flex w-full justify-end">
     <SettingsDropdown />
   </div>
-  {#if !$circles || !signer.address}
+  {#if !signer.address || !$circles}
     <WalletLoader />
   {:else if settings.legacy}
     <ConnectCircles

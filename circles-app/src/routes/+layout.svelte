@@ -13,6 +13,7 @@
   import { avatarState } from '$lib/stores/avatar.svelte';
   import {
     clearSession,
+    restoreSigner,
     restoreWallet,
     signer,
   } from '$lib/stores/wallet.svelte';
@@ -39,12 +40,20 @@
 
   const unwatch = watchAccount(config, {
     onChange(account) {
-      if (account.chainId !== 100 && account.address) {
-        popupControls.open({
-          title: 'Wrong Network',
-          component: WrongNetwork,
-          props: {},
-        });
+      //handler for injected wallet
+      if (signer.privateKey === undefined) {
+        //if the account is not on the correct network, show the wrong network popup
+        if (account.chainId !== 100 && account.address) {
+          popupControls.open({
+            title: 'Wrong Network',
+            component: WrongNetwork,
+            props: {},
+          });
+        }
+        //if the account is not the same as the signer, clear the session
+        if (signer.address && account.address && account.address.toLowerCase() !== signer.address.toLowerCase()) {
+          clearSession();
+        }
       }
     },
   });
@@ -127,8 +136,8 @@
   );
 
   onMount(async () => {
-    if ($page.route.id === '/') {
-      await clearSession();
+    if ($page.route.id === '/' || $page.route.id === '/connect-wallet/connect-safe' || $page.route.id === '/connect-wallet/import-circles-garden') {
+      // await clearSession();
     } else {
       await restoreWallet();
     }
