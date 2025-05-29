@@ -1,8 +1,5 @@
 <script lang="ts">
-  import { type AvatarRow } from '@circles-sdk/sdk';
-  import { circles } from '$lib/stores/circles';
-  import { wallet } from '$lib/stores/wallet.svelte';
-  import WalletLoader from '$lib/components/WalletLoader.svelte';
+  import { Sdk, type AvatarRow } from '@circles-sdk/sdk';
   import ConnectCircles from '$lib/components/ConnectCircles.svelte';
   import CreateSafe from '$lib/pages/CreateSafe.svelte';
   import type { Address } from '@circles-sdk/utils';
@@ -20,9 +17,10 @@
     safeOwnerAddress: Address;
     chainId: bigint;
     walletType: WalletType;
+    sdk: Sdk;
   }
 
-  let { safeOwnerAddress, chainId, walletType }: Props = $props();
+  let { safeOwnerAddress, chainId, walletType, sdk }: Props = $props();
 
   const getSafesByOwnerApiEndpoint = (checksumOwnerAddress: string): string =>
     `https://safe-transaction-gnosis-chain.safe.global/api/v1/owners/${checksumOwnerAddress}/safes/`;
@@ -40,15 +38,11 @@
   }
 
   async function loadSafesAndProfile() {
-
-    if (!$circles ) {
-      throw new Error('Circles SDK not initialized');
-    }
     safes = await querySafeTransactionService(safeOwnerAddress);
     safes = safes.map((safe) => safe.toLowerCase() as Address);
     const [avatarInfo, groupInfo] = await Promise.all([
-      $circles.data.getAvatarInfoBatch(safes),
-      getBaseAndCmgGroupsByOwnerBatch($circles, safes),
+      sdk.data.getAvatarInfoBatch(safes),
+      getBaseAndCmgGroupsByOwnerBatch(sdk, safes),
     ]);
     const profileBySafeNew: Record<string, AvatarRow | undefined> = {};
     avatarInfo.forEach((info) => {
@@ -67,23 +61,19 @@
   }
 </script>
 
-{#if $wallet?.address && $circles}
-  {#each safes ?? [] as item (item)}
-    <ConnectCircles
-      address={item}
-      {walletType}
-      isRegistered={profileBySafe[item.toLowerCase()] !== undefined}
-      isV1={profileBySafe[item]?.version === 1}
-      groups={groupsByOwner[item.toLowerCase() as Address] ?? []}
-      {chainId}
-    />
-  {/each}
+{#each safes ?? [] as item (item)}
+  <ConnectCircles
+    address={item}
+    {walletType}
+    isRegistered={profileBySafe[item.toLowerCase()] !== undefined}
+    isV1={profileBySafe[item]?.version === 1}
+    groups={groupsByOwner[item.toLowerCase() as Address] ?? []}
+    {chainId}
+  />
+{/each}
 
-  {#if walletType === 'safe'}
-    <div class="text-center">
-      <CreateSafe {onsafecreated} />
-    </div>
-  {/if}
-{:else}
-  <WalletLoader name="Safe" />
+{#if walletType === 'safe'}
+  <div class="text-center">
+    <CreateSafe {onsafecreated} />
+  </div>
 {/if}

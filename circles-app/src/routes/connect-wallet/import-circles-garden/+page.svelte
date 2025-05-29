@@ -25,7 +25,7 @@
       network.chainId,
       environment.ring
     );
-    $circles = new Sdk($wallet!, circlesConfig);
+    $circles = new Sdk($wallet, circlesConfig);
   }
 
   onMount(async () => {
@@ -73,6 +73,7 @@
       safeOwnerAddress={$wallet.address}
       chainId={100n}
       walletType="circles"
+      sdk={$circles}
     />
   {/if}
 </div>
