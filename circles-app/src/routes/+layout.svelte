@@ -11,12 +11,16 @@
 
   import DefaultHeader from '$lib/components/DefaultHeader.svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
-  import { clearSession, restoreWallet, signer } from '$lib/stores/wallet.svelte';
+  import {
+    clearSession,
+    restoreWallet,
+    signer,
+  } from '$lib/stores/wallet.svelte';
   import { canMigrate } from '$lib/guards/canMigrate';
   import UpdateBanner from '$lib/components/UpdateBanner.svelte';
   import { page } from '$app/stores';
   import Send from '$lib/flows/send/1_To.svelte';
-  import { onMount } from 'svelte';
+  import { onDestroy, onMount } from 'svelte';
   import { tasks } from '$lib/utils/tasks';
   import { popupControls, popupState } from '$lib/stores/popUp';
   import PopUp from '$lib/components/PopUp.svelte';
@@ -35,7 +39,7 @@
 
   const unwatch = watchAccount(config, {
     onChange(account) {
-      if (account.chainId !== 100 && signer.address) {
+      if (account.chainId !== 100 && account.address) {
         popupControls.open({
           title: 'Wrong Network',
           component: WrongNetwork,
@@ -43,6 +47,10 @@
         });
       }
     },
+  });
+
+  onDestroy(() => {
+    unwatch();
   });
 
   interface Props {
