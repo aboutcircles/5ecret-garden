@@ -161,6 +161,10 @@ export async function clearSession() {
     groupType: undefined,
     profile: undefined,
   });
+  Object.assign(signer, {
+    address: undefined,
+    privateKey: undefined,
+  });
   circles.set(undefined);
   CirclesStorage.getInstance().clear();
   await goto('/');

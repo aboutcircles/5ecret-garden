@@ -1,21 +1,16 @@
 <script lang="ts">
   import {
-    initSafeSdkBrowserContractRunner,
-    initSafeSdkPrivateKeyContractRunner,
     wallet,
   } from '$lib/stores/wallet.svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { circles } from '$lib/stores/circles';
-  import { Sdk, type CirclesConfig } from '@circles-sdk/sdk';
+  import { Sdk } from '@circles-sdk/sdk';
   import { goto } from '$app/navigation';
   import Avatar from './avatar/Avatar.svelte';
-  import type { WalletType } from '$lib/utils/walletType';
   import type { Address } from '@circles-sdk/utils';
-  import type { SdkContractRunner } from '@circles-sdk/adapter';
   import { CirclesStorage } from '$lib/utils/storage';
   import type { GroupRow } from '@circles-sdk/data';
   import { settings } from '$lib/stores/settings.svelte';
-  import { gnosisConfig } from '$lib/circlesConfig';
 
   interface Props {
     address: Address;
@@ -29,6 +24,12 @@
 
   async function connectAvatar(ownerAddress: Address, groupAddress?: Address) {
     const sdk = await initSdk(ownerAddress);
+    $circles = sdk;
+
+    if (ownerAddress === address && !isRegistered) {
+      await goto('/register');
+      return;
+    }
     avatarState.avatar = await sdk.getAvatar(groupAddress ?? ownerAddress);
     avatarState.isGroup = groupAddress ? true : false;
     avatarState.groupType = groupAddress
@@ -43,12 +44,6 @@
       legacy: settings.legacy,
     };
 
-    $circles = sdk;
-
-    if (ownerAddress === address && !isRegistered) {
-      await goto('/register');
-      return;
-    }
 
     await goto('/dashboard');
   }
