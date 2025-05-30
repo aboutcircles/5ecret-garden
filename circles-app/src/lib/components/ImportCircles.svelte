@@ -28,7 +28,7 @@
 />
 <button
   onclick={savePrivateKey}
-  class="btn btn-sm"
+  class="btn btn-sm mt-4"
   class:btn-disabled={!hasValidKey}
   >Import
 </button>

@@ -7,6 +7,7 @@
   import { signer } from '$lib/stores/wallet.svelte';
   import type { Address } from '@circles-sdk/utils';
   import ImportCircles from './ImportCircles.svelte';
+  import { clearSession } from '$lib/stores/wallet.svelte';
   const connectors = getConnectors(config);
 </script>
 
@@ -16,6 +17,7 @@
       class="list-row flex w-full justify-between items-center btn btn-sm my-2"
       id={connector.id}
       onclick={async () => {
+        await clearSession();
         const result = await connect(config, { connector: connector, chainId: 100 });
         localStorage.setItem('connectorId', connector.id);
         signer.address = result.accounts[0].toLowerCase() as Address;
@@ -29,7 +31,8 @@
 
   <button
     class="list-row flex w-full justify-between items-center btn btn-sm my-2"
-    onclick={() => {
+    onclick={async () => {
+      await clearSession();
       popupControls.open({
       component: ImportCircles,
       title: 'Import Circles',
