@@ -11,6 +11,8 @@
   import { CirclesStorage } from '$lib/utils/storage';
   import type { GroupRow } from '@circles-sdk/data';
   import { settings } from '$lib/stores/settings.svelte';
+  import { popupControls } from '$lib/stores/popUp';
+  import CreateGroupForm from './CreateGroupForm.svelte';
 
   interface Props {
     address: Address;
@@ -23,7 +25,7 @@
   let { address, isRegistered, groups, isV1, initSdk }: Props = $props();
 
   async function connectAvatar(ownerAddress: Address, groupAddress?: Address) {
-    const sdk = await initSdk(ownerAddress);
+    const sdk = await initSdk(address);
     $circles = sdk;
 
     if (ownerAddress === address && !isRegistered) {
@@ -49,12 +51,14 @@
   }
 
   async function deployGroup() {
-    if ($circles && $wallet) {
-      // $wallet = await initializeContractRunner(walletType, address);
-      // $circles = new Sdk($wallet! as SdkContractRunner, circlesConfig);
-
-      await goto('/register/register-group/' + address);
-    }
+    
+    const sdk = await initSdk(address);
+    $circles = sdk;
+    popupControls.open({
+      component: CreateGroupForm,
+      title: 'Create group',
+      props: {},
+    });
   }
 </script>
 
