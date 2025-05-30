@@ -16,13 +16,10 @@
 <div
   class="min-h-screen flex flex-col items-center justify-center max-w-md text-center"
 >
-  <img src="./illustration.png" alt="illustration" />
-  <h1 class="text-5xl font-bold">Fair Money For All</h1>
+  <img src="./illustration.png" alt="illustration" class="max-w-[340px]" />
+  <h1 class="text-5xl font-medium">Money, Reimagined</h1>
   <p class="py-6 px-2">
-    Circles is an unconditional, universal and unique system that consists of
-    individual personal currencies that function together to create a unified
-    monetary system. Tying the currency to time, Circles allows for a new way of
-    valuing labour, skill and contribution.
+    Mint personal Circles, build trust, and manage your community groups with the Circles Core app
   </p>
   <ActionButton action={connectWallet}>Connect Wallet</ActionButton>
 </div>
