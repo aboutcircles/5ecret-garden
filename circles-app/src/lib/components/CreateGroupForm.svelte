@@ -5,28 +5,16 @@
   import { mintPolicies } from '$lib/utils/mintPolicy';
   import Tooltip from './Tooltip.svelte';
   import { circles } from '$lib/stores/circles';
-  import { avatarState } from '$lib/stores/avatar.svelte';
   import ImageUpload from './ImageUpload.svelte';
-  import { type Address, cidV0ToUint8Array } from '@circles-sdk/utils';
-  import { ethers } from 'ethers';
-  import { CirclesStorage } from '$lib/utils/storage';
-  import type { WalletType } from '$lib/utils/walletType';
-  import { page } from '$app/state';
+  import { cidV0ToUint8Array } from '@circles-sdk/utils';
   import { wallet } from '$lib/stores/wallet.svelte';
+  import { popupControls } from '$lib/stores/popUp';
 
   interface BaseGroupProfile {
     service: string;
     feeCollection: string;
     initialConditions: string;
   }
-
-  type Step = 'start' | 'form' | 'executed' | 'error';
-
-  interface Props {
-    onstepchange: (step: Step) => void;
-  }
-
-  let { onstepchange }: Props = $props();
 
   let groupProfile: GroupProfile = $state({
     name: '',
@@ -39,7 +27,8 @@
   let isLoading = $state(false);
   let formData: BaseGroupProfile = $derived({
     service: '0x0000000000000000000000000000000000000000',
-    feeCollection: $wallet?.address || '0x0000000000000000000000000000000000000000',
+    feeCollection:
+      $wallet?.address || '0x0000000000000000000000000000000000000000',
     initialConditions: '',
   });
   let mintPolicy = $state(mintPolicies[0]);
@@ -94,25 +83,7 @@
     if (!result) {
       throw new Error('Transaction result is null or undefined');
     }
-    const groupAddress: string = ethers.stripZerosLeft(
-      result.logs[9].topics[1]
-    );
-
-    CirclesStorage.getInstance().data = {
-      walletType: (CirclesStorage.getInstance().walletType +
-        '+group') as WalletType,
-      avatar: page.params.owner as Address,
-      group: groupAddress as Address,
-    };
-
-    avatarState.avatar = await $circles.getAvatar(
-      groupAddress.toLowerCase() as Address
-    );
-
-    avatarState.isGroup = true;
-    avatarState.groupType = "CrcV2_BaseGroupCreated";
-
-    onstepchange('executed');
+    popupControls.close();
   }
 
   const onnewimage = (dataUrl: string) => {
