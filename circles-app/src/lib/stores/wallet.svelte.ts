@@ -97,6 +97,8 @@ export async function restoreSession() {
       throw new Error('Failed to restore contract runner');
     }
 
+    wallet.set(runner);
+
     signer.address = runner.address;
 
     const sdk = new Sdk(

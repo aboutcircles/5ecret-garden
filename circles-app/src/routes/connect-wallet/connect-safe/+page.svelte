@@ -6,6 +6,7 @@
     initBrowserProviderContractRunner,
     initSafeSdkBrowserContractRunner,
     signer,
+    wallet,
   } from '$lib/stores/wallet.svelte';
   import type { Address } from '@circles-sdk/utils';
   import WalletLoader from '$lib/components/WalletLoader.svelte';
@@ -33,6 +34,7 @@
 
   async function connectLegacy(address: Address) {
     runner = await initBrowserProviderContractRunner();
+    wallet.set(runner);
     return new Sdk(
       runner,
       settings.ring ? gnosisConfig.rings : gnosisConfig.production
@@ -41,6 +43,7 @@
 
   async function connectSafe(address: Address) {
     runner = await initSafeSdkBrowserContractRunner(address);
+    wallet.set(runner);
     return new Sdk(
       runner,
       settings.ring ? gnosisConfig.rings : gnosisConfig.production

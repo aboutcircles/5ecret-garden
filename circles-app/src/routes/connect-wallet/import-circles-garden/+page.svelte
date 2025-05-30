@@ -5,6 +5,7 @@
     initPrivateKeyContractRunner,
     initSafeSdkPrivateKeyContractRunner,
     signer,
+    wallet,
   } from '$lib/stores/wallet.svelte';
   import { circles } from '$lib/stores/circles';
   import { Sdk } from '@circles-sdk/sdk';
@@ -38,6 +39,7 @@
       signer.privateKey,
       address
     );
+    wallet.set(runner);
 
     return new Sdk(
       runner,
