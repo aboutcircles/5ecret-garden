@@ -1,6 +1,7 @@
 <script lang="ts">
   import {
     initPrivateKeyContractRunner,
+    initSafeSdkPrivateKeyContractRunner,
     signer,
   } from '$lib/stores/wallet.svelte';
   import { circles } from '$lib/stores/circles';
@@ -13,6 +14,7 @@
   import { settings } from '$lib/stores/settings.svelte';
   import { gnosisConfig } from '$lib/circlesConfig';
   import type { SdkContractRunner } from '@circles-sdk/adapter';
+  import type { Address } from '@circles-sdk/utils';
 
   let runner: SdkContractRunner | undefined = $state();
   let mnemonicPhrase: string = $state('');
@@ -31,12 +33,20 @@
     );
   });
 
-  async function connectWallet() {
+  async function connectWallet(address?: Address) {
     CirclesStorage.getInstance().data = {
       privateKey: privateKey,
-      walletType: 'circles',
     };
-    runner = await initPrivateKeyContractRunner(privateKey);
+    if (address) {
+      runner = await initSafeSdkPrivateKeyContractRunner(privateKey, address);
+    } else {
+      runner = await initPrivateKeyContractRunner(privateKey);
+    }
+
+    return new Sdk(
+      runner,
+      settings.ring ? gnosisConfig.rings : gnosisConfig.production
+    );
   }
 
   onMount(async () => {
@@ -74,7 +84,7 @@
       bind:address
     />
     <button
-      onclick={connectWallet}
+      onclick={async () =>  {$circles = await connectWallet()}}
       class="btn btn-sm"
       class:btn-disabled={!hasValidKey}
       >Import
@@ -82,8 +92,7 @@
   {:else}
     <ConnectSafe
       safeOwnerAddress={signer.address}
-      chainId={100n}
-      walletType="circles"
+      initSdk={connectWallet}
       sdk={$circles}
     />
   {/if}

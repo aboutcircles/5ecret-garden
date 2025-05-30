@@ -5,7 +5,6 @@
   import type { Address } from '@circles-sdk/utils';
   import { ethers } from 'ethers';
   import { onMount } from 'svelte';
-  import type { WalletType } from '$lib/utils/walletType';
   import type { GroupRow } from '@circles-sdk/data';
   import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
 
@@ -15,12 +14,11 @@
 
   interface Props {
     safeOwnerAddress: Address;
-    chainId: bigint;
-    walletType: WalletType;
+    initSdk: (ownerAddress: Address) => Promise<Sdk>;
     sdk: Sdk;
   }
 
-  let { safeOwnerAddress, chainId, walletType, sdk }: Props = $props();
+  let { safeOwnerAddress, initSdk, sdk }: Props = $props();
 
   const getSafesByOwnerApiEndpoint = (checksumOwnerAddress: string): string =>
     `https://safe-transaction-gnosis-chain.safe.global/api/v1/owners/${checksumOwnerAddress}/safes/`;
@@ -38,7 +36,6 @@
   }
 
   async function loadSafesAndProfile() {
-    console.log('safes', safeOwnerAddress);
     safes = await querySafeTransactionService(safeOwnerAddress);
     safes = safes.map((safe) => safe.toLowerCase() as Address);
     const [avatarInfo, groupInfo] = await Promise.all([
@@ -65,16 +62,13 @@
 {#each safes ?? [] as item (item)}
   <ConnectCircles
     address={item}
-    {walletType}
     isRegistered={profileBySafe[item.toLowerCase()] !== undefined}
     isV1={profileBySafe[item]?.version === 1}
     groups={groupsByOwner[item.toLowerCase() as Address] ?? []}
-    {chainId}
+    initSdk={initSdk}
   />
 {/each}
 
-{#if walletType === 'safe'}
-  <div class="text-center">
-    <CreateSafe {onsafecreated} />
-  </div>
-{/if}
+<div class="text-center">
+  <CreateSafe {onsafecreated} />
+</div>
