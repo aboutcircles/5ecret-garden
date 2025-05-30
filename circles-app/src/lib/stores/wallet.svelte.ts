@@ -14,13 +14,13 @@ import { getCirclesConfig } from '$lib/utils/helpers';
 import { gnosisConfig } from '$lib/circlesConfig';
 import { JsonRpcProvider } from 'ethers';
 import { type SdkContractRunner } from '@circles-sdk/adapter';
-import type { WalletType } from '$lib/utils/walletType';
 import type { Address } from '@circles-sdk/utils';
 import { CirclesStorage } from '$lib/utils/storage';
 import { groupMetrics } from './groupMetrics.svelte';
 import { disconnect, getAccount, getConnectors, reconnect } from '@wagmi/core';
 import { config } from '../../config';
 import { settings } from './settings.svelte';
+import type { GroupType } from '@circles-sdk/data';
 
 export const wallet = writable<SdkContractRunner | undefined>();
 
@@ -54,107 +54,64 @@ export async function initPrivateKeyContractRunner(privateKey: string) {
   return runner;
 }
 
-export async function initializeContractRunner(type: WalletType, avatarAddress?: Address): Promise<SdkContractRunner> {
-  if ((type === 'injected') || (type === 'safe' && !avatarAddress)) {
-    return initBrowserProviderContractRunner();
-  } else if ((type === 'safe' || type === 'safe+group') && avatarAddress) {
-    const runner = new SafeSdkBrowserContractRunner();
-    await runner.init(avatarAddress);
-    return runner as SdkContractRunner;
-  } else if (type === 'circles' && !avatarAddress) {
-    const privateKey = CirclesStorage.getInstance().privateKey;
-    if (!privateKey) {
-      throw new Error('Private key not found in localStorage');
-    }
-    const rpcProvider = new JsonRpcProvider(settings.ring ? gnosisConfig.rings.circlesRpcUrl : gnosisConfig.production.circlesRpcUrl);
-    const runner = new PrivateKeyContractRunner(rpcProvider, privateKey);
-    await runner.init();
-    return runner;
-  } else if ((type === 'circles' || type === 'circles+group') && avatarAddress) {
-    const privateKey = CirclesStorage.getInstance().privateKey;
-    if (!privateKey) {
-      throw new Error('Private key not found in localStorage');
-    }
-    const runner = new SafeSdkPrivateKeyContractRunner(
-      privateKey,
-      settings.ring ? gnosisConfig.rings.circlesRpcUrl : gnosisConfig.production.circlesRpcUrl,
-    );
-    await runner.init(avatarAddress);
-    return runner as SdkContractRunner;
-  }
-  throw new Error(`Unsupported wallet type: ${type}`);
+export async function initSafeSdkPrivateKeyContractRunner(privateKey: string, address: Address) {
+  const runner = new SafeSdkPrivateKeyContractRunner(privateKey, settings.ring ? gnosisConfig.rings.circlesRpcUrl : gnosisConfig.production.circlesRpcUrl);
+  await runner.init(address);
+  return runner as SdkContractRunner;
 }
 
-export async function restoreSigner() {
-  signer.address = await getSigner();
+export async function initSafeSdkBrowserContractRunner(address: Address) {
+  const runner = new SafeSdkBrowserContractRunner();
+  await runner.init(address);
+  return runner as SdkContractRunner;
 }
 
-export async function restoreWallet() {
+export async function restoreSession() {
   try {
-    // The localstorage has a wallet type in one of the following formats:
-    // * metamask
-    // * safe
-    // * circles
-    //
-    // If the user used the wallet to connect to a group. The format becomes:
-    // * metamask+group
-    // * safe+group
-    // * circles+group
-    const walletTypeString = CirclesStorage.getInstance().walletType ?? '';
-    const walletType = walletTypeString.split('+')[0] as WalletType;
-    switch (walletType) {
-      case 'injected':
-      case 'injected+group':
-      case 'safe':
-      case 'safe+group':
-      case 'circles':
-      case 'circles+group':
-        break;
-      default:
-        throw new Error('No "walletType" found in localStorage');
-    }
-
+    const privateKey = CirclesStorage.getInstance().privateKey;
     const savedAvatar = CirclesStorage.getInstance().avatar;
-    let savedGroup: Address | undefined;
-    if (walletTypeString.includes('+group')) {
-      savedGroup = CirclesStorage.getInstance().group;
-      avatarState.isGroup = true;
+    const rings: boolean = CirclesStorage.getInstance().rings ? true : false;
+    const legacy = CirclesStorage.getInstance().legacy;
+    let runner: SdkContractRunner | undefined;
+    if (privateKey && savedAvatar) {
+      runner = await initSafeSdkPrivateKeyContractRunner(privateKey, savedAvatar);
+    } else if (legacy) {
+      runner = await initBrowserProviderContractRunner();
+    } else if (savedAvatar) {
+      runner = await initSafeSdkBrowserContractRunner(savedAvatar);
     } else {
-      CirclesStorage.getInstance().data = { group: undefined };
-      avatarState.isGroup = false;
+      throw new Error('No private key, rings, legacy or saved avatar found in localStorage');
     }
 
-    const restoredWallet = await initializeContractRunner(
-      walletType,
-      savedAvatar,
-    );
-
-    if (!restoredWallet || !restoredWallet.address) {
-      throw new Error('Failed to restore wallet or wallet address is undefined');
+    if (!runner) {
+      throw new Error('Failed to restore contract runner');
     }
 
-    wallet.set(restoredWallet);
+    signer.address = runner.address;
 
-    //TODO: cache environment on local storage
     const sdk = new Sdk(
-      restoredWallet as SdkContractRunner,
-      await getCirclesConfig(100n, settings.ring),
+      runner,
+      await getCirclesConfig(100n, rings),
     );
     circles.set(sdk);
+    let savedGroup = CirclesStorage.getInstance().group;
+   
 
-    if (avatarState.isGroup && savedGroup) {
-      avatarState.groupType = await sdk.getGroupType(savedGroup);
+    if (savedGroup) {
+      let groupType = CirclesStorage.getInstance().groupType;
+      avatarState.isGroup = true;
+      avatarState.groupType = groupType as GroupType;
     }
 
     const avatarToRestore =
       (savedGroup
         ?? savedAvatar
-        ?? restoredWallet.address) as Address;
+        ?? runner.address) as Address;
 
 
     console.log('savedAvatar', savedAvatar);
     console.log('savedGroup', savedGroup);
-    console.log('restoredWallet.address', restoredWallet.address);
+    console.log('restoredWallet.address', runner.address);
     console.log('-> avatarToRestore is: ', avatarToRestore);
 
     const avatarInfo = await sdk.data.getAvatarInfo(avatarToRestore);
@@ -194,7 +151,6 @@ export async function clearSession() {
     groupType: undefined,
     profile: undefined,
   });
-  wallet.set(undefined);
   circles.set(undefined);
   CirclesStorage.getInstance().clear();
   await goto('/');

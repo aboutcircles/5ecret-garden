@@ -4,6 +4,7 @@
     clearSession,
     getSigner,
     initBrowserProviderContractRunner,
+    initSafeSdkBrowserContractRunner,
     signer,
   } from '$lib/stores/wallet.svelte';
   import type { Address } from '@circles-sdk/utils';
@@ -18,6 +19,9 @@
   import { Sdk } from '@circles-sdk/sdk';
   import type { SdkContractRunner } from '@circles-sdk/adapter';
   import { circles } from '$lib/stores/circles';
+  import { avatarState } from '$lib/stores/avatar.svelte';
+  import { goto } from '$app/navigation';
+  import { CirclesStorage } from '$lib/utils/storage';
   let groupsByOwner: Record<Address, GroupRow[]> | undefined = $state();
   let avatarInfo: AvatarRow | undefined = $state();
   let runner: SdkContractRunner | undefined = $state();
@@ -28,6 +32,22 @@
     }
     runner = await initBrowserProviderContractRunner();
   });
+
+  async function connectLegacy(address: Address) {
+    runner = await initBrowserProviderContractRunner();
+    return new Sdk(
+      runner,
+      settings.ring ? gnosisConfig.rings : gnosisConfig.production
+    );
+  }
+
+  async function connectSafe(address: Address) {
+    runner = await initSafeSdkBrowserContractRunner(address);
+    return new Sdk(
+      runner,
+      settings.ring ? gnosisConfig.rings : gnosisConfig.production
+    );
+  }
 
   $effect(() => {
     circles.set(
@@ -71,16 +91,14 @@
   {:else if settings.legacy}
     <ConnectCircles
       address={signer.address}
-      walletType="injected"
       isRegistered={avatarInfo !== undefined}
       groups={groupsByOwner?.[signer.address] ?? []}
-      chainId={100n}
+      initSdk={connectLegacy}
     />
   {:else}
     <ConnectSafe
       safeOwnerAddress={signer.address}
-      chainId={100n}
-      walletType="safe"
+      initSdk={connectSafe}
       sdk={$circles}
     />
   {/if}
