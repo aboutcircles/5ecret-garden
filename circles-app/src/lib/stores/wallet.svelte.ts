@@ -21,6 +21,7 @@ import { disconnect, getAccount, getConnectors, reconnect } from '@wagmi/core';
 import { config } from '../../config';
 import { settings } from './settings.svelte';
 import type { GroupType } from '@circles-sdk/data';
+import { privateKeyToAccount } from 'viem/accounts';
 
 export const wallet = writable<SdkContractRunner | undefined>();
 
@@ -39,6 +40,15 @@ export async function getSigner() {
 
   const account = getAccount(config);
   return account.address?.toLowerCase() as Address;
+}
+
+export async function getSignerFromPk() {
+  const privateKey = CirclesStorage.getInstance().privateKey;
+  if (!privateKey) {
+    return undefined;
+  }
+  const account = privateKeyToAccount(privateKey as `0x${string}`);
+  return { address: account.address?.toLowerCase() as Address, privateKey: privateKey };
 }
 
 export async function initBrowserProviderContractRunner() {

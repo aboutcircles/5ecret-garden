@@ -6,6 +6,7 @@
   import { popupControls } from '$lib/stores/popUp';
   import { signer } from '$lib/stores/wallet.svelte';
   import type { Address } from '@circles-sdk/utils';
+  import ImportCircles from './ImportCircles.svelte';
   const connectors = getConnectors(config);
 </script>
 
@@ -29,8 +30,11 @@
   <button
     class="list-row flex w-full justify-between items-center btn btn-sm my-2"
     onclick={() => {
-      goto('/connect-wallet/import-circles-garden');
-      popupControls.close();
+      popupControls.open({
+      component: ImportCircles,
+      title: 'Import Circles',
+      props: {},
+    });
     }}
   >
     Circles.garden

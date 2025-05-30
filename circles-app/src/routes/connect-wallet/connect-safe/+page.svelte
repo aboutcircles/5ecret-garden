@@ -19,9 +19,6 @@
   import { Sdk } from '@circles-sdk/sdk';
   import type { SdkContractRunner } from '@circles-sdk/adapter';
   import { circles } from '$lib/stores/circles';
-  import { avatarState } from '$lib/stores/avatar.svelte';
-  import { goto } from '$app/navigation';
-  import { CirclesStorage } from '$lib/utils/storage';
   let groupsByOwner: Record<Address, GroupRow[]> | undefined = $state();
   let avatarInfo: AvatarRow | undefined = $state();
   let runner: SdkContractRunner | undefined = $state();
@@ -29,6 +26,7 @@
     signer.address = await getSigner();
     if (!signer.address) {
       await clearSession();
+      return;
     }
     runner = await initBrowserProviderContractRunner();
   });
