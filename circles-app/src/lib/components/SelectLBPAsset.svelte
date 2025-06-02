@@ -1,7 +1,10 @@
 <script lang="ts">
   let {
-    asset = '0xaf204776c7245bf4147c2612bf6e5972ee483701',
-  }: { asset: string } = $props();
+    asset = {
+      address: '0xaf204776c7245bf4147c2612bf6e5972ee483701',
+      name: 'sDAI',
+    },
+  }: { asset?: { address: string; name: string } } = $props();
   let modal: HTMLDialogElement;
 
   const tokens = [
@@ -21,27 +24,48 @@
       address: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
       name: 'USDC',
     },
-    
   ];
+
+  function selectToken(token: any) {
+    asset = token;
+    modal.close();
+  }
+
+  function handleTokenSearch(event: Event) {
+    const searchValue = (event.target as HTMLInputElement).value;
+    asset = {
+      address: searchValue,
+      name: 'Custom',
+    };
+  }
 </script>
 
-<div class="flex items-center w-full px-2">
-  <input type="text" placeholder="Amount" class="input" />
-  <button class="btn" onclick={() => modal.showModal()}>{asset}</button>
+<div class="flex items-center w-full px-2 gap-x-2">
+  <input type="text" placeholder="Amount" class="input input-sm" />
+  <button class="btn btn-sm" onclick={() => modal.showModal()}
+    >{asset.name}</button
+  >
   <dialog bind:this={modal} class="modal">
     <div class="modal-box">
       <h3 class="text-lg font-bold">Select a token</h3>
-      <input type="text" placeholder="Search" class="input w-full" />
-      <div class="list">
+      <input
+        type="text"
+        placeholder="Token Address"
+        class="input validator w-full mb-4"
+        pattern="0x[a-fA-F0-9]{40}"
+        title="Invalid token address"
+        oninput={handleTokenSearch}
+      />
+      <div class="space-y-2">
         {#each tokens as token}
-          <div class="list-row">
-            <!-- <img src={token.address} alt={token.name} class="w-10 h-10" /> -->
-            <span>{token.name}</span>
-          </div>
+          <button
+            class="flex items-center gap-3 p-3 w-full hover:bg-base-200 rounded-lg"
+            onclick={() => selectToken(token)}
+          >
+            <span class="font-medium">{token.name}</span>
+          </button>
         {/each}
+      </div>
     </div>
-    <form method="dialog" class="modal-backdrop">
-      <button>close</button>
-    </form>
   </dialog>
 </div>

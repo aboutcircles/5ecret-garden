@@ -4,7 +4,6 @@
 
   let groupSelectValue = $state('');
   let groupAddressInput = $state('');
-  let groupTokenName = $state('');
 
   let assetSelectValue = $state('0xaf204776c7245bf4147c2612bf6e5972ee483701'); // Default to sDAI placeholder
   let assetAddressInput = $state('');
@@ -25,8 +24,6 @@
   let statusMessage = $state('Status messages will appear here...');
   let statusType = $state<'success' | 'error' | ''>(''); // '', 'success', or 'error'
   let starterStatusDisplay = $state('LBP Starter status will appear here...');
-
-  let defaultGroups = $state<{ address: string; name: string }[]>([]); // Placeholder for default groups
 
   // For price sync logic (using mock/placeholder values)
   let lastEditedField: 'groupPrice' | 'assetAmount' | 'groupAmount' | null =
@@ -185,33 +182,12 @@
     await fetchAssetPriceInWxDAI_local(assetAddr); // Fetch mock price
   }
 
-  function handleAssetSelectChange() {
-    if (assetSelectEl) {
-      // Check if element is bound
-      assetAddressInputEl.style.display =
-        assetSelectValue === 'custom' ? '' : 'none';
-      assetAddressInputEl.required = assetSelectValue === 'custom';
-    }
-    updateAssetNameUI();
-  }
-
   function getCurrentGroupAddress() {
     if (groupSelectValue === 'custom') {
       return groupAddressInput;
     } else {
       return groupSelectValue;
     }
-  }
-
-  async function updateGroupTokenNameUI() {
-    const groupAddr = getCurrentGroupAddress();
-    if (!groupAddr) {
-      groupTokenName = '';
-      return;
-    }
-    // Placeholder: Simulate fetching group token name
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    groupTokenName = `Token: Mock Group Token (${groupAddr.substring(0, 6)}...)`;
   }
 
   async function fetchAndShowAssetName(
@@ -349,35 +325,7 @@
 
   <form onsubmit={handleLbpFormSubmit} class="w-full">
     <div class="form-group mb-6">
-      <SelectLbpAsset asset="0xaf204776c7245bf4147c2612bf6e5972ee483701" />
-      <label
-        for="assetSelectSvelte"
-        class="block mb-1 text-sm font-medium text-gray-700"
-        >Asset Address:</label
-      >
-      <select
-        id="assetSelectSvelte"
-        class="select select-bordered w-full"
-        bind:value={assetSelectValue}
-        onchange={handleAssetSelectChange}
-      >
-        <option value="0xaf204776c7245bf4147c2612bf6e5972ee483701"
-          >sDAI (Placeholder)</option
-        >
-        <option value="0x9c58bacc331c9aa871afd802db6379a98e80cedb"
-          >GNO (Placeholder)</option
-        >
-        <option value="custom">Custom...</option>
-      </select>
-      <input
-        type="text"
-        id="assetAddressSvelte"
-        class="input input-bordered w-full mt-2"
-        placeholder="Paste ERC20 address"
-        bind:value={assetAddressInput}
-        oninput={updateAssetNameUI}
-        required={assetSelectValue === 'custom'}
-      />
+      <SelectLbpAsset />
       <div id="assetNameSvelte" class="mt-2 text-xs text-gray-500">
         {assetName}
       </div>
