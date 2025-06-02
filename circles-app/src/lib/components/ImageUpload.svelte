@@ -116,14 +116,14 @@
     <img
       src={imageDataUrl}
       alt="Preview"
-      class="mt-4 max-w-full rounded-lg shadow-sm"
+      class="mt-4 max-w-full rounded-lg shadow-xs"
     />
   {/if}
 </button>
 {#if imageDataUrl}
   <button
     type="button"
-    class="mt-2 px-3 py-1 border border-transparent rounded-md text-sm font-medium text-white bg-red-500 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+    class="mt-2 px-3 py-1 border border-transparent rounded-md text-sm font-medium text-white bg-red-500 hover:bg-red-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
     onclick={clearImage}
     >Clear Image
   </button>

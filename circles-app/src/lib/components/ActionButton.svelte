@@ -84,7 +84,7 @@
   title={errorMessage ?? title}
   class="text-sm p-2 px-4 rounded-lg {theme[
     buttonState
-  ]} focus:outline-none transition"
+  ]} focus:outline-hidden transition"
 >
   {#if buttonState === 'Working'}
     <div

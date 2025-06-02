@@ -161,7 +161,7 @@
   <!-- list of errors (if errors.length > 0) -->
   {#if errors && errors.length > 0}
     <div
-      class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-6"
+      class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-sm relative mt-6"
       role="alert"
     >
       <strong class="font-bold">Error</strong>

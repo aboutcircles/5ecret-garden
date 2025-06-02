@@ -154,7 +154,7 @@
     bind:value={selectedAddresses}
     placeholder="Enter addresses separated by commas"
     rows="3"
-    class="w-full p-2 mb-4 border rounded resize-y"
+    class="w-full p-2 mb-4 border border-base-300 rounded-sm resize-y"
     oninput={handleAddressesChange}
   ></textarea>
   <div class="flex flex-row gap-x-2">
@@ -170,7 +170,7 @@
       <p class="text-sm text-red-500 h-6">{errorMessage}</p>
     </div>
 
-    <div class="flex-grow"></div>
+    <div class="grow"></div>
     <label class="cursor-pointer">
       Import CSV
       <input

@@ -189,7 +189,7 @@
     </div>
   </div>
   
-  <div class="rounded-lg overflow-hidden bg-gradient-to-br from-transparent via-gray-50/50 to-transparent p-px min-h-[250px]">
+  <div class="rounded-lg overflow-hidden bg-linear-to-br from-transparent via-gray-50/50 to-transparent p-px min-h-[250px]">
     <canvas bind:this={canvas} class="w-full h-full"></canvas>
   </div>
 </div>

@@ -108,7 +108,7 @@
 
   {#if result.length > 0}
     <div
-      class="w-full md:border rounded-lg md:px-4 flex flex-col divide-y gap-y-2 overflow-x-auto py-4"
+      class="w-full md:border border-base-300 rounded-lg md:px-4 flex flex-col divide-y gap-y-2 overflow-x-auto py-4"
     >
       {#each result as profile}
         <div class="w-full pt-2">

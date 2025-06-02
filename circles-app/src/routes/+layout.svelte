@@ -203,7 +203,7 @@
   <DefaultHeader quickAction={undefined} route={''} />
 {/if}
 
-<main class="relative w-full h-full bg-white overflow-hidden font-dmSans">
+<main class="relative w-full h-full bg-white overflow-hidden font-dm-sans">
   {#if avatarState.avatar?.avatarInfo && canMigrate(avatarState.avatar.avatarInfo) && $page.route.id !== '/migrate-to-v2'}
     <UpdateBanner />
     <div class="h-20"></div>

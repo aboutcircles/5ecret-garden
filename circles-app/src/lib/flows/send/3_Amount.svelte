@@ -229,7 +229,7 @@
       <!-- Textarea on its own line -->
       <textarea
         id="dataInput"
-        class="w-full p-2 border rounded-md"
+        class="w-full p-2 border border-base-300 rounded-md"
         rows="4"
         placeholder="Enter data here"
         bind:value={context.data}

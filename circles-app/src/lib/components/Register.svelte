@@ -15,7 +15,7 @@
 </script>
 
 <div
-  class="w-72 border rounded-lg flex flex-col gap-y-4 justify-between items-center p-4 shadow-sm"
+  class="w-72 border border-base-300 rounded-lg flex flex-col gap-y-4 justify-between items-center p-4 shadow-xs"
 >
   <img src={imgUrl} alt="Wallet Icon" class="w-12 h-12" />
   <div class="flex flex-col">

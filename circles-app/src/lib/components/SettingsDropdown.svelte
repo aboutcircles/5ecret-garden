@@ -9,7 +9,7 @@
   </div>
   <div
     tabIndex={0}
-    class="dropdown-content bg-base-100 rounded-box z-[1] w-40 p-2 shadow flex flex-col gap-y-2"
+    class="dropdown-content bg-base-100 rounded-box z-1 w-40 p-2 shadow-sm flex flex-col gap-y-2"
   >
     <div class="flex items-center gap-x-2">
       <input

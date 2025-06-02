@@ -21,7 +21,7 @@
 
 <a
   href={route}
-  class={`w-full border rounded-lg flex justify-between items-center p-4 shadow-sm hover:bg-black/5 ${recommended === 'Connect' ? 'bg-emerald-50/50 border-emerald-100 hover:bg-emerald-50' : recommended === 'Register' ? 'bg-blue-50/50 border-blue-100 hover:bg-blue-50' : ''}`}
+  class={`w-full border border-base-300 rounded-lg flex justify-between items-center p-4 shadow-xs hover:bg-black/5 ${recommended === 'Connect' ? 'bg-emerald-50/50 border-emerald-100 hover:bg-emerald-50' : recommended === 'Register' ? 'bg-blue-50/50 border-blue-100 hover:bg-blue-50' : ''}`}
 >
   <div class="flex items-center gap-x-4">
     <img src={imgUrl} alt="Wallet Icon" class="w-12 h-12" />

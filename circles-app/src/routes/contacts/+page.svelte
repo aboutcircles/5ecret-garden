@@ -123,7 +123,7 @@
         value={'variesByVersion'}
       />
     </div>
-    <div class="flex-grow flex justify-end">
+    <div class="grow flex justify-end">
       <button class="mt-4 sm:mt-0" onclick={handleExportCSV}>Export CSV</button>
     </div>
   </div>

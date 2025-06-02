@@ -26,7 +26,7 @@
   <p class="mb-4">You're about to invite the following address to Circles:</p>
 
   <div
-    class="inline-flex items-center space-x-2 border-2 p-6 rounded-2xl w-full"
+    class="inline-flex items-center space-x-2 border-2 border-base-300 p-6 rounded-2xl w-full"
   >
     <div>
       <span>{shortenAddress(address)}</span>
