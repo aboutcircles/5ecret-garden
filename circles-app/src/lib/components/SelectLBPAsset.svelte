@@ -4,7 +4,10 @@
       address: '0xaf204776c7245bf4147c2612bf6e5972ee483701',
       name: 'sDAI',
     },
-  }: { asset?: { address: string; name: string } } = $props();
+    disabled = false,
+    amount = $bindable(0),
+  }: { asset?: { address: string; name: string }; disabled?: boolean; amount?: number } =
+    $props();
   let modal: HTMLDialogElement;
 
   const tokens = [
@@ -41,8 +44,8 @@
 </script>
 
 <div class="flex items-center w-full px-2 gap-x-2">
-  <input type="text" placeholder="Amount" class="input input-sm" />
-  <button class="btn btn-sm" onclick={() => modal.showModal()}
+  <input type="number" placeholder="Amount" class="input input-sm" bind:value={amount} />
+  <button class="btn btn-sm" onclick={() => modal.showModal()} {disabled}
     >{asset.name}</button
   >
   <dialog bind:this={modal} class="modal">

@@ -1,5 +1,6 @@
 <script lang="ts">
   import SelectLbpAsset from '$lib/components/SelectLBPAsset.svelte';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import { onMount } from 'svelte';
 
   let groupSelectValue = $state('');
@@ -324,31 +325,16 @@
   </p>
 
   <form onsubmit={handleLbpFormSubmit} class="w-full">
-    <div class="form-group mb-6">
-      <SelectLbpAsset />
-      <div id="assetNameSvelte" class="mt-2 text-xs text-gray-500">
-        {assetName}
-      </div>
-      <div id="assetPriceSvelte" class="mt-2 text-xs text-gray-500">
-        {assetPrice}
-      </div>
-    </div>
-
-    <div class="form-group mb-6">
-      <label
-        for="groupAmountSvelte"
-        class="block mb-1 text-sm font-medium text-gray-700"
-        >Group Amount (CRC):</label
-      >
-      <input
-        type="number"
-        id="groupAmountSvelte"
-        class="input input-bordered w-full"
-        required
-        step="any"
-        bind:value={groupAmount}
-        oninput={() => (lastEditedField = 'groupAmount')}
+    <div class="form-group mb-6 flex flex-col gap-y-2">
+      <SelectLbpAsset
+        asset={{
+          address: avatarState.avatar?.avatarInfo?.tokenId ?? '',
+          name: avatarState.avatar?.avatarInfo?.name ?? '',
+        }}
+        disabled={true}
+        bind:amount={groupAmount}
       />
+      <SelectLbpAsset bind:amount={assetAmount} />
     </div>
 
     <div class="form-group mb-6">
@@ -365,24 +351,6 @@
         step="any"
         bind:value={groupPrice}
         oninput={() => (lastEditedField = 'groupPrice')}
-      />
-    </div>
-
-    <div class="form-group mb-6">
-      <label
-        for="assetAmountSvelte"
-        id="assetAmountLabelSvelte"
-        class="block mb-1 text-sm font-medium text-gray-700"
-        >{assetAmountLabel}</label
-      >
-      <input
-        type="number"
-        id="assetAmountSvelte"
-        class="input input-bordered w-full"
-        required
-        step="any"
-        bind:value={assetAmount}
-        oninput={() => (lastEditedField = 'assetAmount')}
       />
     </div>
 
