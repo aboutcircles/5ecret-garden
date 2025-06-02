@@ -30,7 +30,6 @@
   let updateWeightDuration = $state(86400);
   let lastEdited: 'group' | 'asset' | 'price' | null = $state(null);
 
-  let assetPriceInWxDAI: number | null = $state(null); // Placeholder
   let wxDAIPriceUSD: number | null = $state(null); // Placeholder
 
   // Reactive state for dynamic buttons (controlled by UI logic)
