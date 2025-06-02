@@ -83,7 +83,7 @@
 <div class="flex flex-col w-full max-w-2xl gap-y-4 mt-20">
   <p class="font-bold text-2xl">Settings</p>
   <div
-    class="flex flex-col items-center md:border rounded-lg md:px-6 md:py-8 gap-y-4"
+    class="flex flex-col items-center md:border border-base-300 rounded-lg md:px-6 md:py-8 gap-y-4"
   >
     <div class="flex flex-col w-full gap-y-4">
       <ProfileEditor
@@ -103,7 +103,7 @@
     </div>
 
     {#if avatarState.isGroup}
-      <div class="w-full pt-2 border-t">
+      <div class="w-full pt-2 border-t border-base-300">
         <h2 class="font-bold">Advanced Group Settings</h2>
         <GroupSetting />
       </div>
@@ -111,7 +111,7 @@
 
     {#if avatarState.avatar?.avatarInfo && canMigrate(avatarState.avatar.avatarInfo)}
       {#if avatarState.avatar?.avatarInfo?.version === 1}
-        <div class="w-full pt-2 border-t">
+        <div class="w-full pt-2 border-t border-base-300">
           <h2 class="text-lg font-medium">Circles V2</h2>
           <div class="mt-3">
             <ActionButton action={migrateToV2}
@@ -121,7 +121,7 @@
         </div>
       {/if}
       {#if avatarState.avatar?.avatarInfo?.v1Token && !avatarState.avatar?.avatarInfo?.v1Stopped}
-        <div class="w-full pt-2 border-t">
+        <div class="w-full pt-2 border-t border-base-300">
           <h2 class="text-lg font-medium">Circles V1</h2>
           <div class="mt-3">
             <ActionButton action={stopV1}
@@ -132,7 +132,7 @@
       {/if}
     {/if}
 
-    <div class="w-full pt-2 border-t">
+    <div class="w-full pt-2 border-t border-base-300">
       <h2 class="text-lg font-medium">Wallet</h2>
       <div class="mt-3">
         <ActionButton action={clearSession}>Disconnect</ActionButton>

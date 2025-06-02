@@ -30,7 +30,7 @@
 </script>
 
 <div
-  class={`navbar font-dmSans ${settings.ring ? 'bg-secondary/80' : 'bg-white'} font-medium border-b fixed top-0 z-30 h-16 transition-color duration-300 ease-in-out ${
+  class={`navbar font-dm-sans ${settings.ring ? 'bg-secondary/80' : 'bg-white'} font-medium border-b border-base-300 fixed top-0 z-30 h-16 transition-color duration-300 ease-in-out ${
     isDropdownOpen ? 'shadow-lg' : ''
   }`}
 >
@@ -60,7 +60,7 @@
         </button>
         {#if isDropdownOpen}
           <div
-            class="fixed -top-2 -left-6 dropdown-content transform-none w-screen h-screen bg-base-100 z-[100] py-2 pl-10 px-5 scale-100 font-medium"
+            class="fixed -top-2 -left-6 dropdown-content transform-none w-screen h-screen bg-base-100 z-100 py-2 pl-10 px-5 scale-100 font-medium"
           >
             <div class="flex flex-row justify-between items-center">
               <a class="flex items-center text-xl font-bold" href={homeLink}>

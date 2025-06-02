@@ -3,7 +3,7 @@
 </script>
 
 <div
-  class="w-full border rounded-lg flex flex-col justify-center items-center p-8 gap-y-2 shadow-sm"
+  class="w-full border border-base-300 rounded-lg flex flex-col justify-center items-center p-8 gap-y-2 shadow-xs"
 >
   <span class="loading loading-spinner loading-lg"></span>
   <h2 class="card-title mt-4">Connecting your wallet ...</h2>

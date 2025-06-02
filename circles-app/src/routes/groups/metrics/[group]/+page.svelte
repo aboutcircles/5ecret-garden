@@ -61,7 +61,7 @@
     <!-- Charts Grid -->
     <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
       {#if groupMetrics.priceHistoryWeek && groupMetrics.priceHistoryMonth}
-        <div class="bg-white p-6 rounded-xl border shadow-sm">
+        <div class="bg-white p-6 rounded-xl border shadow-xs">
           <ModernHistoryChart
             dataSet1={groupMetrics.priceHistoryWeek}
             dataSet2={groupMetrics.priceHistoryMonth}
@@ -72,7 +72,7 @@
       {/if}
 
       {#if groupMetrics?.memberCountPerHour && groupMetrics.memberCountPerHour.length > 0 && groupMetrics.memberCountPerDay && groupMetrics.memberCountPerDay.length > 0}
-        <div class="bg-white p-6 rounded-xl border shadow-sm">
+        <div class="bg-white p-6 rounded-xl border shadow-xs">
           <ModernHistoryChart
             dataSet1={groupMetrics.memberCountPerHour}
             dataSet2={groupMetrics.memberCountPerDay}
@@ -83,7 +83,7 @@
       {/if}
 
       {#if groupMetrics?.mintRedeemPerHour && groupMetrics.mintRedeemPerHour.length > 0 && groupMetrics.mintRedeemPerDay && groupMetrics.mintRedeemPerDay.length > 0}
-        <div class="bg-white p-6 rounded-xl border shadow-sm">
+        <div class="bg-white p-6 rounded-xl border shadow-xs">
           <ModernHistoryChart
             dataSet1={groupMetrics.mintRedeemPerHour}
             dataSet2={groupMetrics.mintRedeemPerDay}
@@ -94,7 +94,7 @@
       {/if}
 
       {#if groupMetrics?.wrapUnwrapPerHour && groupMetrics.wrapUnwrapPerHour.length > 0 && groupMetrics.wrapUnwrapPerDay && groupMetrics.wrapUnwrapPerDay.length > 0}
-        <div class="bg-white p-6 rounded-xl border shadow-sm">
+        <div class="bg-white p-6 rounded-xl border shadow-xs">
           <ModernHistoryChart
             dataSet1={groupMetrics.wrapUnwrapPerHour}
             dataSet2={groupMetrics.wrapUnwrapPerDay}
@@ -108,7 +108,7 @@
     <!-- Distribution Charts -->
     <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
       {#if groupMetrics?.collateralInTreasury && groupMetrics.collateralInTreasury.length > 0}
-        <div class="bg-white p-6 rounded-xl border shadow-sm">
+        <div class="bg-white p-6 rounded-xl border shadow-xs">
           <h2 class="text-lg font-semibold text-gray-800 mb-4">
             Treasury Collateral
           </h2>
@@ -122,7 +122,7 @@
       {/if}
 
       {#if groupMetrics?.tokenHolderBalance && groupMetrics.tokenHolderBalance.length > 0}
-        <div class="bg-white p-6 rounded-xl border shadow-sm">
+        <div class="bg-white p-6 rounded-xl border shadow-xs">
           <h2 class="text-lg font-semibold text-gray-800 mb-4">
             Token Distribution
           </h2>

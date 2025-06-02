@@ -20,7 +20,7 @@
     </span>
     <button
       onclick={() => (visible = false)}
-      class="ml-4 px-2 py-1 bg-yellow-200 hover:bg-yellow-300 rounded"
+      class="ml-4 px-2 py-1 bg-yellow-200 hover:bg-yellow-300 rounded-sm"
     >
       Dismiss
     </button>

@@ -117,7 +117,7 @@
       </div>
       <div
         tabIndex={0}
-        class="dropdown-content bg-base-100 rounded-box z-[1] w-96 p-2 shadow"
+        class="dropdown-content bg-base-100 rounded-box z-1 w-96 p-2 shadow-sm"
       >
         <div class="label">
           <span class="label-text"

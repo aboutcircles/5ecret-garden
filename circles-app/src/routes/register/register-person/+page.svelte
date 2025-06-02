@@ -84,7 +84,7 @@
   </div>
   <Disclaimer />
   <div
-    class="border rounded-lg flex flex-col items-center p-4 w-full shadow-sm"
+    class="border rounded-lg flex flex-col items-center p-4 w-full shadow-xs"
   >
     <p class="text-lg">Register person</p>
     <div class="w-full">

@@ -35,7 +35,7 @@
     </button>
   </div>
   <Disclaimer />
-  <div class="card bg-base-100 w-96 border shadow-sm">
+  <div class="card bg-base-100 w-96 border shadow-xs">
     <figure class="px-10 pt-10">
       <img
         src="/organization.svg"

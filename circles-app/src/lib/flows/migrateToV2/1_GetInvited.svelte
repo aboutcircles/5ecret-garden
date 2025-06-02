@@ -53,7 +53,7 @@
   {:else if invitations.length > 0}
     <p class="text-gray-500 mt-2">You have been invited by:</p>
     <div
-      class="mt-2 flex flex-col gap-y-2 w-full divide-y rounded-lg p-4 border"
+      class="mt-2 flex flex-col gap-y-2 w-full divide-y rounded-lg p-4 border border-base-300"
     >
       {#each invitations as invitation}
         <div class="pt-2">

@@ -20,7 +20,7 @@
 
 <div class="w-full flex flex-col min-h-screen max-w-xl mt-28 gap-y-4 justify-center">
   <Disclaimer />
-  <div class="card bg-base-100 w-96 border shadow-sm">
+  <div class="card bg-base-100 w-96 border shadow-xs">
     <figure class="px-10 pt-10">
       <img src="/person.svg" alt="Shoes" class="w-16 h-16 rounded-xl" />
     </figure>

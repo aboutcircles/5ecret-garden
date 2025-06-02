@@ -119,7 +119,7 @@
           </div>
           <div
             tabIndex={0}
-            class="dropdown-content bg-base-100 rounded-box shadow z-10"
+            class="dropdown-content bg-base-100 rounded-box shadow-sm z-10"
           >
             {#each actions as action (action.title)}
               {#if action.condition(balance)}

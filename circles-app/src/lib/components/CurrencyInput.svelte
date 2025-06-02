@@ -85,7 +85,7 @@
       type="text"
       placeholder="0.00"
       maxlength="7"
-      class="input input-lg p-0 text-3xl w-44 placeholder-gray-400 focus:outline-none focus-visible:outline-none focus:ring-0 focus:border-none tracking-wider"
+      class="input input-lg p-0 text-3xl w-44 placeholder-gray-400 focus:outline-hidden focus-visible:outline-hidden focus:ring-0 focus:border-none tracking-wider"
       bind:this={inputElement}
     />
     <p class="text-3xl text-neutral-900 opacity-25">CRC</p>
