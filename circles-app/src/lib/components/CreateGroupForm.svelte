@@ -9,6 +9,7 @@
   import { cidV0ToUint8Array } from '@circles-sdk/utils';
   import { wallet } from '$lib/stores/wallet.svelte';
   import { popupControls } from '$lib/stores/popUp';
+  import { trim } from 'viem';
 
   interface BaseGroupProfile {
     service: string;
@@ -23,6 +24,8 @@
     previewImageUrl: '',
     imageUrl: '',
   });
+
+  let { setGroup }: { setGroup: (address: string, name: string, symbol: string, mintPolicy: string, treasury: string, cidV0Digest: string) => void } = $props();
 
   let isLoading = $state(false);
   let formData: BaseGroupProfile = $derived({
@@ -83,6 +86,10 @@
     if (!result) {
       throw new Error('Transaction result is null or undefined');
     }
+    const groupAddress: string = trim(
+      result.logs[9].topics[1] as `0x${string}`
+    );
+    setGroup(groupAddress, groupProfile.name, groupProfile.symbol, mintPolicy.name, $wallet?.address, CID);
     popupControls.close();
   }
 
