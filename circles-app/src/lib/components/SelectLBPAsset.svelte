@@ -1,12 +1,13 @@
 <script lang="ts">
   let {
-    asset = {
+    asset = $bindable({
       address: '0xaf204776c7245bf4147c2612bf6e5972ee483701',
       name: 'sDAI',
-    },
+      amount: 0,
+    }),
     disabled = false,
-    amount = $bindable(0),
-  }: { asset?: { address: string; name: string }; disabled?: boolean; amount?: number } =
+    setLastEdited = () => {},
+  }: { asset: { address: string; name: string; amount: number }; disabled?: boolean; setLastEdited: (lastEdited: 'group' | 'asset') => void } =
     $props();
   let modal: HTMLDialogElement;
 
@@ -39,12 +40,19 @@
     asset = {
       address: searchValue,
       name: 'Custom',
+      amount: 0,
     };
+  }
+
+  function handleAmountChange(event: Event) {
+    const amount = (event.target as HTMLInputElement).value;
+    asset.amount = parseFloat(amount);
+    setLastEdited(disabled ? 'group' : 'asset');
   }
 </script>
 
 <div class="flex items-center w-full px-2 gap-x-2">
-  <input type="number" placeholder="Amount" class="input input-sm" bind:value={amount} />
+  <input type="number" placeholder="Amount" class="input input-sm" value={asset.amount} oninput={handleAmountChange} />
   <button class="btn btn-sm" onclick={() => modal.showModal()} {disabled}
     >{asset.name}</button
   >
