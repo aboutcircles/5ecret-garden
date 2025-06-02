@@ -22,10 +22,6 @@
   let swapFee = $state(1);
   let updateWeightDuration = $state(86400);
 
-  let statusMessage = $state('Status messages will appear here...');
-  let statusType = $state<'success' | 'error' | ''>(''); // '', 'success', or 'error'
-  let starterStatusDisplay = $state('LBP Starter status will appear here...');
-
   // For price sync logic (using mock/placeholder values)
   let lastEditedField: 'groupPrice' | 'assetAmount' | 'groupAmount' | null =
     $state(null);
@@ -34,8 +30,6 @@
 
   // Reactive state for dynamic buttons (controlled by UI logic)
   let showCreateLBPButton = $state(false);
-  let showSendAssetButton = $state(false);
-  let showSendGroupButton = $state(false);
 
   // Placeholder variables for button handlers (will hold mock data or be unused in UI phase)
   let currentAssetAddressForButtons: string = $state('');
@@ -56,28 +50,18 @@
     assetAmountResult: number,
     balanceAsset: number
   ) {
-    statusMessage = 'STUB: Sending asset (blockchain interaction disabled)...';
-    statusType = 'success';
-    console.log(`STUB: Sending asset ${asset} to ${starterAddress}`);
     // --- STUB: Replace with actual blockchain call to send asset ---
-    await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate transaction time
-    statusMessage = 'STUB: Asset sent simulated!';
-    statusType = 'success';
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     // Simulate successful send and update status
     await checkStarterStatus(starterAddress); // Re-check status with mock data
   }
 
   async function showNewStarterStatus(newStarterAddress: string) {
-    starterStatusDisplay = ''; // Clear previous
     await checkStarterStatus(newStarterAddress); // Call stubbed status check
   }
 
   async function handleLbpFormSubmit(e: Event) {
     e.preventDefault();
-    starterStatusDisplay = ''; // Clear previous starter status
-    statusMessage =
-      'STUB: Creating LBP Starter (blockchain interaction disabled)...';
-    statusType = 'success';
 
     // Get form values (using current state variables)
     const currentGroupAddr = getCurrentGroupAddress();
@@ -109,8 +93,6 @@
 
     // Simulate successful creation
     const simulatedNewStarterAddress = '0x...SimulatedNewStarter';
-    statusMessage = `STUB: LBP Starter creation simulated! Address: ${simulatedNewStarterAddress}`;
-    statusType = 'success';
     await showNewStarterStatus(simulatedNewStarterAddress); // Show status with mock data
   }
 
@@ -228,31 +210,15 @@
 
     // Simulate different statuses based on address
     if (address === '0xDeadDeadDeadDeadDeadDeadDeadDeadDeadDeadDead') {
-      starterStatusDisplay =
-        '<span style="color:red;">No LBP Starter found at this address</span>';
       showCreateLBPButton = true;
-      showSendAssetButton = false;
-      showSendGroupButton = false;
       return;
     }
 
     // Simulate a successful status with mock data
-    await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate API call
-
-    starterStatusDisplay = `
-        <div>
-          <h4>LBP Starter Status:</h4>
-          <p><strong>Address:</strong> ${address}</p>
-          <p><strong>Status:</strong> Active</p>
-          <p><strong>Group Token:</strong> CRC (Mock)</p>
-          <p><strong>Asset:</strong> sDAI (Mock)</p>
-        </div>
-      `;
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     // Enable appropriate buttons based on mock data
     showCreateLBPButton = false;
-    showSendAssetButton = true;
-    showSendGroupButton = true;
 
     // Set values for send buttons (these would be real data in production)
     currentAssetAddressForButtons =
@@ -357,7 +323,7 @@
     <div class="advanced-toggle mb-6 text-center">
       <button
         type="button"
-        class="btn btn-ghost"
+        class="btn btn-outline btn-primary btn-sm"
         onclick={() => (advancedParamsVisible = !advancedParamsVisible)}
       >
         {advancedParamsVisible ? 'Hide' : 'Show'} Advanced Parameters
@@ -432,45 +398,11 @@
     >
   </form>
 
-  <div
-    class="status mt-6 p-4 rounded-md"
-    class:success={statusType === 'success'}
-    class:error={statusType === 'error'}
-  >
-    {statusMessage}
-  </div>
-
   <div id="starterStatusSvelte" class="mt-6">
-    {@html starterStatusDisplay}
     {#if showCreateLBPButton}
       <div class="mt-4">
         <button class="btn btn-secondary" onclick={() => {}}
           >Create LBP (UI Only)</button
-        >
-      </div>
-    {/if}
-    {#if showSendAssetButton}
-      <div class="mt-4">
-        <b>Send Asset (e.g. sDAI):</b><br />
-        <button
-          class="btn btn-secondary mt-2"
-          onclick={() =>
-            handleSendAssetClick(
-              '',
-              currentAssetAddressForButtons,
-              currentAssetAmountResultForButtons,
-              currentBalanceAssetForButtons
-            )}>Send from Wallet (UI Only)</button
-        >
-      </div>
-    {/if}
-    {#if showSendGroupButton}
-      <div class="mt-4">
-        <b>Send Group Token:</b><br />
-        <button
-          class="link link-primary mt-2"
-          onclick={() => console.log('STUB: Send via Metri link clicked')}
-          >Send via Metri (UI Only)</button
         >
       </div>
     {/if}
