@@ -57,7 +57,24 @@
     popupControls.open({
       component: CreateGroupForm,
       title: 'Create group',
-      props: {},
+      props: {
+        setGroup: (address: string, name: string, symbol: string, mintPolicy: string, treasury: string, cidV0Digest: string) => {
+          groups?.push({
+            group: address,
+            name: name,
+            symbol: symbol,
+            type: 'CrcV2_CMGroupCreated',
+            mintPolicy: mintPolicy,
+            treasury: treasury,
+            cidV0Digest: cidV0Digest,
+            blockNumber: 0,
+            timestamp: 0,
+            transactionIndex: 0,
+            logIndex: 0,
+            memberCount: 0,
+          });
+        },
+      },
     });
   }
 </script>
