@@ -107,7 +107,7 @@ export async function restoreSession() {
     );
     circles.set(sdk);
     let savedGroup = CirclesStorage.getInstance().group;
-   
+
 
     if (savedGroup) {
       let groupType = CirclesStorage.getInstance().groupType;
@@ -143,7 +143,10 @@ export async function clearSession() {
   //TODO: create a state for the connector
   const connectorId = localStorage.getItem('connectorId');
   const connector = getConnectors(config).find((c) => c.id == connectorId);
-  await disconnect(config, { connector: connector });
+  if (connector) {
+    await disconnect(config, { connector: connector });
+    localStorage.removeItem('connectorId');
+  }
   Object.assign(groupMetrics, {
     memberCountPerHour: undefined,
     memberCountPerDay: undefined,
