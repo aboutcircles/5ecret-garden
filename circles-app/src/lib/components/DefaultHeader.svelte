@@ -94,7 +94,7 @@
                 </li>
               {/each}
             </ul>
-            {#if text}
+            {#if text && address}
               <button
                 class="flex items-center hover:scale-105 transition-transform duration-300"
                 onclick={(e) => {
@@ -170,7 +170,7 @@
     </ul>
   </div>
   <div class="navbar-end gap-4">
-    {#if text}
+    {#if text && address}
       <button
         class="hidden md:flex items-center hover:scale-105 transition-transform duration-300"
         onclick={(e) => {
