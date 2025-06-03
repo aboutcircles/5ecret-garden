@@ -105,11 +105,17 @@ async function getMemberCount(
                     Value: groupAddress.toLowerCase(),
                 }
             ],
+            Order: [
+                {
+                    Column: 'timestamp',
+                    SortOrder: 'DESC'
+                },
+            ],
             Limit: limit
         },
     ]);
 
-    return result.result.rows.map(([_, ts, v]) => ({
+    return result.result.rows.reverse().map(([_, ts, v]) => ({
         timestamp: new Date(ts),
         count: Number(v),
     }));
@@ -139,11 +145,17 @@ async function getMintRedeem(
                     Value: groupAddress.toLowerCase(),
                 }
             ],
+            Order: [
+                {
+                    Column: 'timestamp',
+                    SortOrder: 'DESC'
+                },
+            ],
             Limit: limit
         },
     ]);
 
-    return result.result.rows.map(([_, ts, m, r, s]) => ({
+    return result.result.rows.reverse().map(([_, ts, m, r, s]) => ({
         timestamp: new Date(ts),
         minted: Number(formatEther(m)),
         redeemed: Number(formatEther(r)),
@@ -175,11 +187,17 @@ async function getWrapUnwrap(
                     Value: groupAddress.toLowerCase(),
                 }
             ],
+            Order: [
+                {
+                    Column: 'timestamp',
+                    SortOrder: 'DESC'
+                },
+            ],
             Limit: limit,
         },
     ]);
 
-    return result.result.rows.map(([_, ts, ta, tt, w, u]) => ({
+    return result.result.rows.reverse().map(([_, ts, ta, tt, w, u]) => ({
         timestamp: new Date(ts),
         wrapAmount: Number(formatEther(w)),
         unwrapAmount: Number(formatEther(u))
