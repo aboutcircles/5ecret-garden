@@ -3,7 +3,6 @@
   import { avatarState } from '$lib/stores/avatar.svelte';
   import LBP_STARTER_ABI from '$lib/utils/abi/LBP_STARTER';
   import { writeContract } from '@wagmi/core';
-  import { onMount } from 'svelte';
   import { config } from '../../config';
   import { parseEther } from 'viem';
 
@@ -30,11 +29,6 @@
   let updateWeightDuration = $state(86400);
   let lastEdited: 'group' | 'asset' | 'price' | null = $state(null);
 
-  let wxDAIPriceUSD: number | null = $state(null); // Placeholder
-
-  // Reactive state for dynamic buttons (controlled by UI logic)
-  let showCreateLBPButton = $state(false);
-
   async function handleLbpFormSubmit(e: Event) {
     e.preventDefault();
 
@@ -54,14 +48,6 @@
         parseEther(assetSetting.amount.toString()),
       ],
     });
-  }
-
-  // --- Placeholder/Mock Data Fetching Functions ---
-
-  async function fetchWxDAIPriceUSD() {
-    // Placeholder: Simulate fetching price
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    wxDAIPriceUSD = 1.0; // Mock price
   }
 
   $effect(() => {
@@ -86,10 +72,6 @@
     } else if (lastEdited === 'price') {
       assetSetting.amount = groupPrice * groupSetting.amount;
     }
-  });
-
-  onMount(async () => {
-    await fetchWxDAIPriceUSD();
   });
 </script>
 
@@ -199,14 +181,4 @@
       >Create LBP Starter (UI Only)</button
     >
   </form>
-
-  <div id="starterStatusSvelte" class="mt-6">
-    {#if showCreateLBPButton}
-      <div class="mt-4">
-        <button class="btn btn-secondary" onclick={() => {}}
-          >Create LBP (UI Only)</button
-        >
-      </div>
-    {/if}
-  </div>
 </div>
