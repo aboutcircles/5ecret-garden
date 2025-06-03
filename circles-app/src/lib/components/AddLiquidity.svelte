@@ -1,5 +1,5 @@
 <script lang="ts">
-  import SelectLbpAsset from '$lib/components/SelectLBPAsset.svelte';
+  import SelectLbpAsset from './SelectLBPAsset.svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import LBP_STARTER_ABI from '$lib/utils/abi/LBP_STARTER';
   import { parseEther } from 'viem';
@@ -28,9 +28,28 @@
   let groupFinalWeight = $state(20);
   let swapFee = $state(1);
   let updateWeightDuration = $state(86400);
-  let lastEdited: 'group' | 'asset' | 'price' | null = $state(null);
   let lbpStarterContract: ethers.Contract | null = $state(null);
-  let filter: ethers.DeferredTopicFilter | null = $state(null);
+
+  function updateGroupAmount(amount: number) {
+    groupSetting.amount = amount;
+    if (amount > 0) {
+      groupPrice = assetSetting.amount / amount;
+    }
+  }
+
+  function updateAssetAmount(amount: number) {
+    assetSetting.amount = amount;
+    if (groupSetting.amount > 0) {
+      groupPrice = amount / groupSetting.amount;
+    }
+  }
+
+  function updateGroupPrice(price: number) {
+    groupPrice = price;
+    if (price > 0) {
+      assetSetting.amount = price * groupSetting.amount;
+    }
+  }
 
   async function handleLbpFormSubmit(e: Event) {
     e.preventDefault();
@@ -50,63 +69,27 @@
     console.log(tx);
   }
 
-  async function fetchLbpStarterCreatedEvents() {
-    const fromBlock = 0;
-    const toBlock = 'latest';
-
-    if (!filter) {
-      return [];
-    }
-
-    const events = await lbpStarterContract?.queryFilter(
-      filter,
-      fromBlock,
-      toBlock
-    );
-    console.log(events);
-    return events;
-  }
-
   $effect(() => {
-    groupSetting = {
-      address: avatarState.avatar?.avatarInfo?.tokenId ?? '',
-      name: avatarState.avatar?.avatarInfo?.name ?? '',
-      amount: 480,
-    };
-  });
-
-  $effect(() => {
-    lbpStarterContract = new ethers.Contract(
-      LBP_STARTER_ADDRESS,
-      LBP_STARTER_ABI,
-      $wallet as ContractRunner
-    );
-    filter = lbpStarterContract?.filters.LBPStarterCreated(
-      null,
-      null,
-      groupSetting.address,
-      null
-    );
-  });
-
-  $effect(() => {
-    if (lastEdited === 'group') {
-      groupPrice =
-        groupSetting.amount === 0
-          ? 0
-          : assetSetting.amount / groupSetting.amount;
-    } else if (lastEdited === 'asset') {
-      groupPrice =
-        groupSetting.amount === 0
-          ? 0
-          : assetSetting.amount / groupSetting.amount;
-    } else if (lastEdited === 'price') {
-      assetSetting.amount = groupPrice * groupSetting.amount;
+    const avatarTokenId = avatarState.avatar?.avatarInfo?.tokenId;
+    const avatarName = avatarState.avatar?.avatarInfo?.name;
+    
+    if (avatarTokenId && avatarTokenId !== groupSetting.address) {
+      groupSetting = {
+        address: avatarTokenId,
+        name: avatarName ?? '',
+        amount: 480,
+      };
     }
   });
 
   $effect(() => {
-    fetchLbpStarterCreatedEvents();
+    if ($wallet) {
+      lbpStarterContract = new ethers.Contract(
+        LBP_STARTER_ADDRESS,
+        LBP_STARTER_ABI,
+        $wallet as ContractRunner
+      );
+    }
   });
 </script>
 
@@ -121,11 +104,11 @@
       <SelectLbpAsset
         bind:asset={groupSetting}
         disabled={true}
-        setLastEdited={() => (lastEdited = 'group')}
+        setLastEdited={() => updateGroupAmount(groupSetting.amount)}
       />
       <SelectLbpAsset
         bind:asset={assetSetting}
-        setLastEdited={() => (lastEdited = 'asset')}
+        setLastEdited={() => updateAssetAmount(assetSetting.amount)}
       />
     </div>
 
@@ -142,7 +125,10 @@
         required
         step="any"
         bind:value={groupPrice}
-        oninput={() => (lastEdited = 'price')}
+        oninput={(e) => {
+          const target = e.target as HTMLInputElement;
+          updateGroupPrice(Number(target.value));
+        }}
       />
     </div>
 
@@ -223,4 +209,4 @@
       >Create LBP Starter (UI Only)</button
     >
   </form>
-</div>
+</div> 
