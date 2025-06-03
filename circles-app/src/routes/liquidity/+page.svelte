@@ -3,8 +3,8 @@
   import { avatarState } from '$lib/stores/avatar.svelte';
   import LBP_STARTER_ABI from '$lib/utils/abi/LBP_STARTER';
   import { writeContract } from '@wagmi/core';
-  import { config } from '../../config';
-  import { parseEther } from 'viem';
+  import { config, publicClient } from '../../config';
+  import { parseAbiItem, parseEther } from 'viem';
 
   const LBP_STARTER_ADDRESS = '0x3b36d73506c3e75fcacb27340faa38ade1cbaf0a';
 
@@ -73,6 +73,21 @@
       assetSetting.amount = groupPrice * groupSetting.amount;
     }
   });
+
+  async function fetchPastTransferEvents() {
+    const logs = await publicClient.getLogs({
+      address: LBP_STARTER_ADDRESS,
+      event: parseAbiItem(
+        'event LBPStarterCreated(address indexed group, address indexed asset, uint256 groupAmount, uint256 assetAmount)'
+      ),
+      args: {
+        group: avatarState.avatar?.address,
+      },
+      fromBlock: 0n,
+      toBlock: 'latest',
+    });
+    return logs;
+  }
 </script>
 
 <div class="flex flex-col items-center w-full max-w-4xl gap-y-6 mt-20">
@@ -83,8 +98,15 @@
 
   <form onsubmit={handleLbpFormSubmit} class="w-full">
     <div class="form-group mb-6 flex flex-col gap-y-2">
-      <SelectLbpAsset bind:asset={groupSetting} disabled={true} setLastEdited={() => lastEdited = 'group'}/>
-      <SelectLbpAsset bind:asset={assetSetting} setLastEdited={() => lastEdited = 'asset'}/>
+      <SelectLbpAsset
+        bind:asset={groupSetting}
+        disabled={true}
+        setLastEdited={() => (lastEdited = 'group')}
+      />
+      <SelectLbpAsset
+        bind:asset={assetSetting}
+        setLastEdited={() => (lastEdited = 'asset')}
+      />
     </div>
 
     <div class="form-group mb-6">

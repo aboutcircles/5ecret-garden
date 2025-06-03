@@ -1,6 +1,5 @@
-import { http, createConfig } from '@wagmi/core';
+import { http, createConfig, getPublicClient } from '@wagmi/core';
 import { gnosis } from '@wagmi/core/chains';
-import { injected } from '@wagmi/connectors';
 
 export const config = createConfig({
     chains: [gnosis],
@@ -8,3 +7,5 @@ export const config = createConfig({
         [gnosis.id]: http(),
     },
 })
+
+export const publicClient = getPublicClient(config)
