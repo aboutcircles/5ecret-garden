@@ -100,6 +100,7 @@
             dataSet2={groupMetrics.wrapUnwrapPerDay}
             title="Wrap/Unwrap Activity"
             label="Circles"
+            type="bar"
           />
         </div>
       {/if}
