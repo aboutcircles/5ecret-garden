@@ -69,7 +69,7 @@
         0
       );
       totalRedeemed = groupMetrics.mintRedeemPerDay.reduce(
-        (sum, item) => sum + item.redeemed,
+        (sum, item) => sum + item.burned,
         0
       );
     }
@@ -110,7 +110,7 @@
     <h2
       class="text-3xl tracking-tight font-medium flex flex-row gap-2 items-end"
     >
-      {formatNumber(memberCount)}
+      {memberCount}
       <span class="text-gray-500 text-sm"
         >{memberGrowth > 0 ? '+' : ''}{memberGrowth.toFixed(1)}%</span
       >
@@ -174,7 +174,7 @@
     >
       {formatNumber(totalMinted)}
     </h2>
-    <p class="text-sm text-gray-500">Minted this month</p>
+    <p class="text-sm text-gray-500">Minted last 30 days</p>
   </div>
 
   <!-- Total Redeemed -->
@@ -184,22 +184,22 @@
     <div class="w-4 h-4 mb-4 text-primary">
       <svg
         xmlns="http://www.w3.org/2000/svg"
+        width="18"
+        height="18"
         viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        ><!-- Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ --><path
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          d="M12 21c4.418 0 8-3.356 8-7.496c0-3.741-2.035-6.666-3.438-8.06c-.26-.258-.694-.144-.84.189c-.748 1.69-2.304 4.123-4.293 4.123c-1.232.165-3.112-.888-1.594-6.107c.137-.47-.365-.848-.749-.534C6.905 4.905 4 8.511 4 13.504C4 17.644 7.582 21 12 21Z"
+        /></svg
       >
-        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
-        ></path>
-      </svg>
     </div>
     <h2
       class="text-3xl tracking-tight font-medium flex flex-row gap-2 items-end"
     >
       {formatNumber(totalRedeemed)}
     </h2>
-    <p class="text-sm text-gray-500">Redeemed this month</p>
+    <p class="text-sm text-gray-500">Burned last 30 days</p>
   </div>
 </div>
