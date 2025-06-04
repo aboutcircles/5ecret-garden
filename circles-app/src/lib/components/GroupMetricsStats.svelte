@@ -1,9 +1,9 @@
 <script lang="ts">
-  import type { GroupMetrics } from "$lib/stores/groupMetrics.svelte";
+  import type { GroupMetrics } from '$lib/stores/groupMetrics.svelte';
 
   type Props = {
-    groupMetrics: GroupMetrics
-  }
+    groupMetrics: GroupMetrics;
+  };
 
   let { groupMetrics }: Props = $props();
 
@@ -174,7 +174,7 @@
     >
       {formatNumber(totalMinted)}
     </h2>
-    <p class="text-sm text-gray-500">Total Minted</p>
+    <p class="text-sm text-gray-500">Minted this month</p>
   </div>
 
   <!-- Total Redeemed -->
@@ -200,6 +200,6 @@
     >
       {formatNumber(totalRedeemed)}
     </h2>
-    <p class="text-sm text-gray-500">Total Redeemed</p>
+    <p class="text-sm text-gray-500">Redeemed this month</p>
   </div>
 </div>
