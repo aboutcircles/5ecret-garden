@@ -11,7 +11,7 @@ type memberCount = {
 type mintRedeem = {
     timestamp: Date;
     minted: number;
-    redeemed: number;
+    burned: number;
     supply: number;
 }
 
@@ -158,7 +158,7 @@ async function getMintRedeem(
     return result.result.rows.reverse().map(([_, ts, m, r, s]) => ({
         timestamp: new Date(ts),
         minted: Number(formatEther(m)),
-        redeemed: Number(-formatEther(r)),
+        burned: Number(-formatEther(r)),
         supply: Number(formatEther(s)),
     }));
 }
