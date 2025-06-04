@@ -200,7 +200,7 @@ async function getWrapUnwrap(
     return result.result.rows.reverse().map(([_, ts, ta, tt, w, u]) => ({
         timestamp: new Date(ts),
         wrapAmount: Number(formatEther(w)),
-        unwrapAmount: Number(formatEther(u))
+        unwrapAmount: Number(-formatEther(u))
     }));
 }
 
