@@ -82,7 +82,7 @@
 <button
   onclick={executeAction}
   title={errorMessage ?? title}
-  class="text-sm p-2 px-4 rounded-lg {theme[
+  class="btn btn-sm {theme[
     buttonState
   ]} focus:outline-hidden transition"
 >

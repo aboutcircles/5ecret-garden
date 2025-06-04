@@ -1,55 +1,25 @@
 <script lang="ts">
-  import SelectLbpAsset from '$lib/components/SelectLBPAsset.svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import LBP_STARTER_ABI from '$lib/utils/abi/LBP_STARTER';
-  import { parseEther } from 'viem';
   import { wallet } from '$lib/stores/wallet.svelte';
   import { ethers } from 'ethers';
-  import type { ContractRunner } from 'ethers';
+  import type { ContractRunner, EventLog } from 'ethers';
+  import AddLiquidity from '$lib/components/AddLiquidity.svelte';
+  import type { Address } from '@circles-sdk/utils';
+  import { popupControls } from '$lib/stores/popUp';
 
   const LBP_STARTER_ADDRESS = '0x3b36d73506c3e75fcacb27340faa38ade1cbaf0a';
 
-  let groupPrice = $state(0.02);
-
-  let groupSetting = $state({
-    address: '',
-    name: '',
-    amount: 480,
-  });
-
-  let assetSetting = $state({
-    address: '0xaf204776c7245bf4147c2612bf6e5972ee483701',
-    name: 'sDAI',
-    amount: 1000,
-  });
-
-  let advancedParamsVisible = $state(false);
-  let groupInitWeight = $state(80);
-  let groupFinalWeight = $state(20);
-  let swapFee = $state(1);
-  let updateWeightDuration = $state(86400);
-  let lastEdited: 'group' | 'asset' | 'price' | null = $state(null);
-  let lbpStarterContract: ethers.Contract | null = $state(null);
-  let filter: ethers.DeferredTopicFilter | null = $state(null);
-
-  async function handleLbpFormSubmit(e: Event) {
-    e.preventDefault();
-
-    if (!groupSetting?.amount || !assetSetting?.amount) {
-      console.error('Invalid amounts:', { groupSetting, assetSetting });
-      return;
-    }
-
-    const tx = await lbpStarterContract?.createLBPStarter(
-      groupSetting.address,
-      assetSetting.address,
-      parseEther(groupSetting.amount.toString()),
-      parseEther(assetSetting.amount.toString())
-    );
-
-    console.log(tx);
+  interface LBPStarterCreatedEvent {
+    creator: Address;
+    group: Address;
+    asset: Address;
+    contract: Address;
   }
 
+  let lbpStarterContract: ethers.Contract | null = $state(null);
+  let filter: ethers.DeferredTopicFilter | null = $state(null);
+  let lbpStarterCreatedEvents: LBPStarterCreatedEvent[] = $state([]);
   async function fetchLbpStarterCreatedEvents() {
     const fromBlock = 0;
     const toBlock = 'latest';
@@ -63,50 +33,44 @@
       fromBlock,
       toBlock
     );
-    console.log(events);
-    return events;
+    if (!events) {
+      return [];
+    }
+    lbpStarterCreatedEvents = events.map((event) => {
+      const eventLog = event as EventLog;
+      return {
+        creator: eventLog.args[0],
+        group: eventLog.args[1],
+        asset: eventLog.args[2],
+        contract: eventLog.args[3],
+      };
+    });
   }
 
   $effect(() => {
-    groupSetting = {
-      address: avatarState.avatar?.avatarInfo?.tokenId ?? '',
-      name: avatarState.avatar?.avatarInfo?.name ?? '',
-      amount: 480,
-    };
-  });
+    const tokenId = avatarState.avatar?.avatarInfo?.tokenId;
+    if ($wallet && tokenId && !lbpStarterContract) {
+      const contract = new ethers.Contract(
+        LBP_STARTER_ADDRESS,
+        LBP_STARTER_ABI,
+        $wallet as ContractRunner
+      );
 
-  $effect(() => {
-    lbpStarterContract = new ethers.Contract(
-      LBP_STARTER_ADDRESS,
-      LBP_STARTER_ABI,
-      $wallet as ContractRunner
-    );
-    filter = lbpStarterContract?.filters.LBPStarterCreated(
-      null,
-      null,
-      groupSetting.address,
-      null
-    );
-  });
-
-  $effect(() => {
-    if (lastEdited === 'group') {
-      groupPrice =
-        groupSetting.amount === 0
-          ? 0
-          : assetSetting.amount / groupSetting.amount;
-    } else if (lastEdited === 'asset') {
-      groupPrice =
-        groupSetting.amount === 0
-          ? 0
-          : assetSetting.amount / groupSetting.amount;
-    } else if (lastEdited === 'price') {
-      assetSetting.amount = groupPrice * groupSetting.amount;
+      const topicFilter = contract.filters.LBPStarterCreated(
+        null,
+        tokenId,
+        null,
+        null
+      );
+      lbpStarterContract = contract;
+      filter = topicFilter;
     }
   });
 
   $effect(() => {
-    fetchLbpStarterCreatedEvents();
+    if (lbpStarterContract && filter) {
+      fetchLbpStarterCreatedEvents();
+    }
   });
 </script>
 
@@ -115,112 +79,39 @@
   <p class="text-gray-600 mb-6">
     Create and manage Liquidity Bootstrapping Pools
   </p>
-
-  <form onsubmit={handleLbpFormSubmit} class="w-full">
-    <div class="form-group mb-6 flex flex-col gap-y-2">
-      <SelectLbpAsset
-        bind:asset={groupSetting}
-        disabled={true}
-        setLastEdited={() => (lastEdited = 'group')}
-      />
-      <SelectLbpAsset
-        bind:asset={assetSetting}
-        setLastEdited={() => (lastEdited = 'asset')}
-      />
-    </div>
-
-    <div class="form-group mb-6">
-      <label
-        for="groupPriceSvelte"
-        class="block mb-1 text-sm font-medium text-gray-700"
-        >Group Price (USD):</label
-      >
-      <input
-        type="number"
-        id="groupPriceSvelte"
-        class="input input-bordered w-full"
-        required
-        step="any"
-        bind:value={groupPrice}
-        oninput={() => (lastEdited = 'price')}
-      />
-    </div>
-
-    <div class="advanced-toggle mb-6 text-center">
+  <div class="flex flex-col items-center w-full">
+    <div class="flex justify-between w-full">
+      <p>LBPs created for this group</p>
       <button
-        type="button"
-        class="btn btn-outline btn-primary btn-sm"
-        onclick={() => (advancedParamsVisible = !advancedParamsVisible)}
+        disabled={!lbpStarterContract}
+        class="btn btn-sm btn-primary"
+        onclick={() => {
+          popupControls.open?.({
+            title: 'Create LBP Starter',
+            component: AddLiquidity,
+            props: { lbpStarterContract },
+          });
+        }}>Create LBP Starter</button
       >
-        {advancedParamsVisible ? 'Hide' : 'Show'} Advanced Parameters
-      </button>
     </div>
-
-    {#if advancedParamsVisible}
-      <div class="advanced-params border-t pt-6 mt-6">
-        <div class="form-group mb-6">
-          <label
-            for="groupInitWeightSvelte"
-            class="block mb-1 text-sm font-medium text-gray-700"
-            >Group Initial Weight (0-100):</label
-          >
-          <input
-            type="number"
-            id="groupInitWeightSvelte"
-            class="input input-bordered w-full"
-            min="0"
-            max="100"
-            bind:value={groupInitWeight}
-          />
-        </div>
-        <div class="form-group mb-6">
-          <label
-            for="groupFinalWeightSvelte"
-            class="block mb-1 text-sm font-medium text-gray-700"
-            >Group Final Weight (0-100):</label
-          >
-          <input
-            type="number"
-            id="groupFinalWeightSvelte"
-            class="input input-bordered w-full"
-            min="0"
-            max="100"
-            bind:value={groupFinalWeight}
-          />
-        </div>
-        <div class="form-group mb-6">
-          <label
-            for="swapFeeSvelte"
-            class="block mb-1 text-sm font-medium text-gray-700"
-            >Swap Fee (0-100):</label
-          >
-          <input
-            type="number"
-            id="swapFeeSvelte"
-            class="input input-bordered w-full"
-            min="0"
-            max="100"
-            bind:value={swapFee}
-          />
-        </div>
-        <div class="form-group mb-6">
-          <label
-            for="updateWeightDurationSvelte"
-            class="block mb-1 text-sm font-medium text-gray-700"
-            >Update Weight Duration (in seconds):</label
-          >
-          <input
-            type="number"
-            id="updateWeightDurationSvelte"
-            class="input input-bordered w-full"
-            bind:value={updateWeightDuration}
-          />
-        </div>
-      </div>
-    {/if}
-
-    <button type="submit" class="btn btn-primary"
-      >Create LBP Starter (UI Only)</button
-    >
-  </form>
+    <table class="table mt-4 table-zebra">
+      <!-- head -->
+      <thead>
+        <tr>
+          <th></th>
+          <th>Address</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {#each lbpStarterCreatedEvents as event}
+          <tr>
+            <th></th>
+            <td>{event.contract}</td>
+            <td></td>
+          </tr>
+        {/each}
+      </tbody>
+    </table>
+  </div>
 </div>
