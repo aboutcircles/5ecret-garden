@@ -22,7 +22,9 @@ export function isValidSymbol(symbol: string): boolean {
 
 export function sanitizeText(input: string): string {
   return input
-    .replace(/\\/g, '')         // Remove backslashes
-    .replace(/'/g, '’')         // Replace single quotes with curly version
-    .replace(/"/g, '”');        // Replace double quotes with curly version
+    .replace(/\\n/g, '\n')
+    .replace(/\\r/g, '\r')
+    .replace(/\\/g, '')
+    .replace(/'/g, '’')
+    .replace(/"/g, '”');
 }
