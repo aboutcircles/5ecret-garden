@@ -7,19 +7,28 @@
   import AddLiquidity from '$lib/components/AddLiquidity.svelte';
   import type { Address } from '@circles-sdk/utils';
   import { popupControls } from '$lib/stores/popUp';
+  import { formatEther } from 'viem';
 
   const LBP_STARTER_ADDRESS = '0x3b36d73506c3e75fcacb27340faa38ade1cbaf0a';
 
-  interface LBPStarterCreatedEvent {
+  interface LBPStarterCreated {
     creator: Address;
     group: Address;
     asset: Address;
     contract: Address;
+    groupAmountInit: bigint;
+    groupAmountCurrent: bigint;
+    assetAmountInit: bigint;
+    assetAmountCurrent: bigint;
+    groupInitWeight: bigint;
+    groupFinalWeight: bigint;
+    swapFee: bigint;
+    updateWeightDuration: bigint;
   }
 
   let lbpStarterContract: ethers.Contract | null = $state(null);
   let filter: ethers.DeferredTopicFilter | null = $state(null);
-  let lbpStarterCreatedEvents: LBPStarterCreatedEvent[] = $state([]);
+  let lbpStarterCreated: LBPStarterCreated[] = $state([]);
   async function fetchLbpStarterCreatedEvents() {
     const fromBlock = 0;
     const toBlock = 'latest';
@@ -36,15 +45,27 @@
     if (!events) {
       return [];
     }
-    lbpStarterCreatedEvents = events.map((event) => {
+    lbpStarterCreated = await Promise.all(events.map(async (event) => {
       const eventLog = event as EventLog;
+      const contractAddress = eventLog.args[3];
+      const LBPContract = new ethers.Contract(contractAddress, LBP_STARTER_ABI, $wallet as ContractRunner);
+      const groupAmountCurrent = await LBPContract.groupAmountCurrent();
+      const assetAmountCurrent = await LBPContract.assetAmountCurrent();
       return {
         creator: eventLog.args[0],
         group: eventLog.args[1],
         asset: eventLog.args[2],
-        contract: eventLog.args[3],
+        contract: contractAddress,
+        groupAmountInit: formatEther(eventLog.args[4]),
+        groupAmountCurrent: formatEther(groupAmountCurrent),
+        assetAmountInit: formatEther(eventLog.args[5]),
+        assetAmountCurrent: formatEther(assetAmountCurrent),
+        groupInitWeight: eventLog.args[6],
+        groupFinalWeight: eventLog.args[7],
+        swapFee: eventLog.args[8],
+        updateWeightDuration: eventLog.args[9],
       };
-    });
+    }));
   }
 
   $effect(() => {
@@ -94,21 +115,25 @@
         }}>Create LBP Starter</button
       >
     </div>
-    <table class="table mt-4 table-zebra">
+    <table class="table mt-4">
       <!-- head -->
       <thead>
         <tr>
           <th></th>
           <th>Address</th>
           <th>Status</th>
+          <th>Group Balance</th>
+          <th>Asset Balance</th>
         </tr>
       </thead>
       <tbody>
-        {#each lbpStarterCreatedEvents as event}
+        {#each lbpStarterCreated as lbp}
           <tr>
             <th></th>
-            <td>{event.contract}</td>
+            <td>{lbp.contract}</td>
             <td></td>
+            <td>{lbp.groupAmountCurrent} / {lbp.groupAmountInit}</td>
+            <td>{lbp.assetAmountCurrent} / {lbp.assetAmountInit}</td>
           </tr>
         {/each}
       </tbody>
