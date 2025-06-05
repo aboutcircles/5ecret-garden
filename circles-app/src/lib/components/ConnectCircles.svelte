@@ -1,7 +1,4 @@
 <script lang="ts">
-  import {
-    wallet,
-  } from '$lib/stores/wallet.svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { circles } from '$lib/stores/circles';
   import { Sdk } from '@circles-sdk/sdk';
@@ -58,13 +55,12 @@
       component: CreateGroupForm,
       title: 'Create group',
       props: {
-        setGroup: (address: string, name: string, symbol: string, mintPolicy: string, treasury: string, cidV0Digest: string) => {
+        setGroup: (address: string, name: string, symbol: string, treasury: string, cidV0Digest: string) => {
           groups?.push({
             group: address,
             name: name,
             symbol: symbol,
             type: 'CrcV2_CMGroupCreated',
-            mintPolicy: mintPolicy,
             treasury: treasury,
             cidV0Digest: cidV0Digest,
             blockNumber: 0,
@@ -72,6 +68,7 @@
             transactionIndex: 0,
             logIndex: 0,
             memberCount: 0,
+            mintPolicy: '0xcCa27c26CF7BAC2a9928f42201d48220F0e3a549',
           });
         },
       },
