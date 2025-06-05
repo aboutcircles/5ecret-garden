@@ -25,6 +25,8 @@
   import { initTransactionHistoryStore } from '$lib/stores/transactionHistory';
   import { initContactStore } from '$lib/stores/contacts';
   import { initBalanceStore } from '$lib/stores/circlesBalances';
+  import { browser } from '$app/environment';
+  import { PUBLIC_PLAUSIBLE_DOMAIN } from '$env/static/public';
   import { initGroupMetricsStore } from '$lib/stores/groupMetrics.svelte';
   import { circles } from '$lib/stores/circles';
   import Footer from '$lib/components/Footer.svelte';
@@ -161,6 +163,16 @@
 {:else}
   <DefaultHeader quickAction={undefined} route={''} />
 {/if}
+
+<svelte:head>
+  {#if browser && PUBLIC_PLAUSIBLE_DOMAIN}
+    <script
+      defer
+      data-domain={PUBLIC_PLAUSIBLE_DOMAIN}
+      src="https://plausible.io/js/script.js"
+    ></script>
+  {/if}
+</svelte:head>
 
 <main class="relative w-full h-full bg-white overflow-hidden font-dmSans">
   {#if avatarState.avatar?.avatarInfo && canMigrate(avatarState.avatar.avatarInfo) && $page.route.id !== '/migrate-to-v2'}
