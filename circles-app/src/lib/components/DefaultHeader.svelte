@@ -137,6 +137,23 @@
         </p></span
       >
     </a>
+    <ul class="menu menu-horizontal">
+      <li>
+        <details>
+          <summary></summary>
+          <ul class="bg-base-100 rounded-t-none p-2 w-40">
+            <li>
+              <a class="link link-hover" href="/terms">Terms of use</a>
+            </li>
+            <li>
+              <a class="link link-hover" href="/privacy-policy"
+                >Privacy policy</a
+              >
+            </li>
+          </ul>
+        </details>
+      </li>
+    </ul>
   </div>
   <div class="navbar-center hidden lg:flex">
     <ul class="menu menu-horizontal px-1">

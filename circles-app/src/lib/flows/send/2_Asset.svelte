@@ -22,8 +22,7 @@
   });
 
   function onselect(tokenBalanceRow: TokenBalanceRow) {
-    selectedAsset = tokenBalanceRow;
-    context.selectedAsset = selectedAsset;
+    context.selectedAsset = tokenBalanceRow;
 
     popupControls.open({
       title: 'Enter Amount',

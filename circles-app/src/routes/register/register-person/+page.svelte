@@ -12,6 +12,7 @@
   import ProfileEditor from '$lib/components/ProfileEditor.svelte';
   import { environment } from '$lib/stores/environment.svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
+  import Disclaimer from '$lib/components/Disclaimer.svelte';
 
   let invitations: AvatarRow[] = $state([]);
   let inviterSelected: Address | undefined = $state(
@@ -81,6 +82,7 @@
       <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
     </button>
   </div>
+  <Disclaimer />
   <div
     class="border rounded-lg flex flex-col items-center p-4 w-full shadow-sm"
   >

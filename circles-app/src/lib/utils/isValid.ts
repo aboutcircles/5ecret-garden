@@ -19,3 +19,13 @@ export function isValidSymbol(symbol: string): boolean {
   const validChars = /^[0-9A-Za-z\-_]+$/;
   return validChars.test(symbol);
 }
+
+export function sanitizeText(input: string): string {
+  return input
+    .replace(/\\n/g, '\n')
+    .replace(/\\r/g, '\r')
+    .replace(/\\t/g, '\t')
+    .replace(/\\/g, '')
+    .replace(/'/g, '’')
+    .replace(/"/g, '”');
+}

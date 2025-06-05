@@ -103,15 +103,15 @@
   <div class="text-2xl font-bold leading-7 px-4 sm:px-0">Contacts</div>
 
   <!-- Filter -->
-  <div class="flex flex-row gap-x-2 items-center">
+  <div class="flex gap-x-2 items-center">
     <p class="text-sm">Version</p>
     <Filter text="All" filter={filterVersion} value={undefined} />
     <Filter text="Version 1" filter={filterVersion} value={1} />
     <Filter text="Version 2" filter={filterVersion} value={2} />
   </div>
 
-  <div class="flex flex-row justify-between items-center flex-wrap gap-y-4">
-    <div class="flex flex-row gap-2 items-center flex-wrap">
+  <div class="flex justify-between items-center flex-wrap gap-y-4">
+    <div class="flex gap-2 items-center flex-wrap">
       <p class="text-sm">Relation</p>
       <Filter text="All" filter={filterRelation} value={undefined} />
       <Filter text="Mutual" filter={filterRelation} value={'mutuallyTrusts'} />

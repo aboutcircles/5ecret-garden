@@ -18,6 +18,7 @@ import type { WalletType } from '$lib/utils/walletType';
 import type { Address } from '@circles-sdk/utils';
 import { CirclesStorage } from '$lib/utils/storage';
 import { environment } from './environment.svelte';
+import { groupMetrics } from './groupMetrics.svelte';
 
 export const wallet = writable<SdkContractRunner | undefined>();
 
@@ -146,7 +147,25 @@ export async function restoreWallet() {
 }
 
 export async function clearSession() {
-  avatarState.avatar = undefined;
+  Object.assign(groupMetrics, {
+    memberCountPerHour: undefined,
+    memberCountPerDay: undefined,
+    mintRedeemPerHour: undefined,
+    mintRedeemPerDay: undefined,
+    wrapUnwrapPerHour: undefined,
+    wrapUnwrapPerDay: undefined,
+    collateralInTreasury: undefined,
+    tokenHolderBalance: undefined,
+    erc20Token: undefined,
+    priceHistoryWeek: undefined,
+    priceHistoryMonth: undefined
+  });
+  Object.assign(avatarState, {
+    avatar: undefined,
+    isGroup: undefined,
+    groupType: undefined,
+    profile: undefined,
+  });
   wallet.set(undefined);
   circles.set(undefined);
   await goto('/connect-wallet');

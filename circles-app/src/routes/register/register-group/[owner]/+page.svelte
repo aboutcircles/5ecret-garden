@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Disclaimer from '$lib/components/Disclaimer.svelte';
   import RegisterGroup from '$lib/pages/RegisterGroup.svelte';
 </script>
 
@@ -10,5 +11,6 @@
       <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
     </button>
   </div>
+  <Disclaimer />
   <RegisterGroup />
 </div>

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import ActionButton from '$lib/components/ActionButton.svelte';
+  import Disclaimer from '$lib/components/Disclaimer.svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { circles } from '$lib/stores/circles';
   import type { Avatar } from '@circles-sdk/sdk';
@@ -11,15 +12,14 @@
     }
 
     //TODO: why need to bind it as Avatar
-    avatarState.avatar = await $circles.registerHuman() as Avatar;
+    avatarState.avatar = (await $circles.registerHuman()) as Avatar;
 
     await goto('/dashboard');
   }
 </script>
 
-<div
-  class="w-full flex flex-col min-h-screen max-w-xl gap-y-4 justify-center"
->
+<div class="w-full flex flex-col min-h-screen max-w-xl mt-28 gap-y-4 justify-center">
+  <Disclaimer />
   <div class="card bg-base-100 w-96 border shadow-sm">
     <figure class="px-10 pt-10">
       <img src="/person.svg" alt="Shoes" class="w-16 h-16 rounded-xl" />

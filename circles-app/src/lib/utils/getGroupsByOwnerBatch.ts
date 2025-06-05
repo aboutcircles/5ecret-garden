@@ -33,58 +33,9 @@ export async function getBaseAndCmgGroupsByOwnerBatch(sdk: Sdk, owners: Address[
     return {};
   }
 
-  const CMGQueryDefintion: PagedQueryParams = {
-    namespace: 'CrcV2',
-    table: 'CMGroupCreated',
-    columns: [
-      'blockNumber',
-      'timestamp',
-      'transactionIndex',
-      'logIndex',
-      'transactionHash',
-      'proxy',
-      'owner',
-      'mintHandler',
-      'redemptionHandler',
-    ],
-    filter: [{
-      Type: 'FilterPredicate',
-      FilterType: 'In',
-      Column: 'owner',
-      Value: owners.map(o => o.toLowerCase() as Address),
-    }],
-    sortOrder: 'DESC',
-    limit: 1000,
-  };
-  
-
-  let query = new CirclesQuery(sdk.circlesRpc, CMGQueryDefintion);
-  let results: any[] = [];
-
-  while (await query.queryNextPage()) {
-    const resultRows = query.currentPage?.results ?? [];
-    if (resultRows.length === 0) break;
-    results.push(...resultRows);
-  }
-
-  //TODO we need this because proxy attribute not exist on GroupRow
-  const normalized: (any)[] = results.map(row => ({
-    ...row,
-    group: row.proxy
-  }));
-
-  const acc: Record<Address, GroupRow[]> = {};
-  for (const row of normalized) {
-    const owner = row.owner.toLowerCase() as Address;
-    if (!acc[owner]) {
-      acc[owner] = [];
-    }
-    acc[owner].push(row);
-  }
-
   const BaseQueryDefintion: PagedQueryParams = {
-    namespace: 'CrcV2',
-    table: 'BaseGroupCreated',
+    namespace: 'V_CrcV2',
+    table: 'Groups',
     columns: [
       'blockNumber',
       'timestamp',
@@ -104,8 +55,9 @@ export async function getBaseAndCmgGroupsByOwnerBatch(sdk: Sdk, owners: Address[
     limit: 1000,
   };
 
-  query = new CirclesQuery(sdk.circlesRpc, BaseQueryDefintion);
-  results = [];
+  const query = new CirclesQuery(sdk.circlesRpc, BaseQueryDefintion);
+  const results = [];
+  const acc: Record<Address, GroupRow[]>= {};
 
   while (await query.queryNextPage()) {
     const resultRows = query.currentPage?.results ?? [];
@@ -114,11 +66,11 @@ export async function getBaseAndCmgGroupsByOwnerBatch(sdk: Sdk, owners: Address[
   }
 
   for (const row of results) {
-    const owner = row.owner.toLowerCase() as Address;
+    const owner = (<any>row).owner.toLowerCase() as Address;
     if (!acc[owner]) {
       acc[owner] = [];
     }
-    acc[owner].push(row);
+    acc[owner].push(<GroupRow>row);
   }
 
   return acc;

@@ -64,19 +64,27 @@
     calculatingPath = true;
 
     try {
+      const excludedTokens = await $circles.getDefaultTokenExcludeList(
+        context.selectedAddress
+      );
+
       const bigNumber = '99999999999999999999999999999999999';
-      const p = avatarState.avatar?.avatarInfo?.version === 1
-        ? await $circles.v1Pathfinder?.getPath(
-          avatarState.avatar.address,
-          context.selectedAddress,
-          bigNumber
-        )
-        : await $circles.v2Pathfinder?.getPath(
-          avatarState.avatar.address,
-          context.selectedAddress,
-          bigNumber,
-          true
-        );
+      const p =
+        avatarState.avatar?.avatarInfo?.version === 1
+          ? await $circles.v1Pathfinder?.getPath(
+              avatarState.avatar.address,
+              context.selectedAddress,
+              bigNumber
+            )
+          : await $circles.v2Pathfinder?.getPath(
+              avatarState.avatar.address,
+              context.selectedAddress,
+              bigNumber,
+              true,
+              undefined,
+              undefined,
+              excludedTokens
+            );
 
       if (!p || !p.transfers?.length) {
         pathfindingFailed = true;
@@ -85,7 +93,9 @@
 
       path = p;
 
-      maxAmountCircles = parseFloat(ethers.formatEther(path.maxFlow.toString()));
+      maxAmountCircles = parseFloat(
+        ethers.formatEther(path.maxFlow.toString())
+      );
       if (avatarState.avatar?.avatarInfo?.version === 1) {
         maxAmountCircles = crcToTc(new Date(), BigInt(path.maxFlow));
       }
@@ -101,13 +111,13 @@
 
       const balances = await avatarState.avatar.getBalances();
       const sourceEdges = path.transfers.filter(
-        (edge) => edge.from === avatarState.avatar?.address,
+        (edge) => edge.from === avatarState.avatar?.address
       );
 
       // Identify "dead" balances not used in the path
       deadBalances = balances.filter(
         (balance) =>
-          !sourceEdges.some((edge) => edge.tokenOwner === balance.tokenAddress),
+          !sourceEdges.some((edge) => edge.tokenOwner === balance.tokenAddress)
       );
     } catch (err) {
       console.error('Error fetching path:', err);
@@ -147,7 +157,9 @@
 
   <!-- Always show the amount selection -->
   <SelectAmount
-    {maxAmountCircles}
+    maxAmountCircles={context.selectedAsset.isErc20
+      ? context.selectedAsset.staticCircles
+      : maxAmountCircles}
     asset={context.selectedAsset}
     bind:amount={context.amount}
   />
@@ -227,7 +239,6 @@
 
   <!-- Condition 3: If pathfinding succeeded, show path-based UI -->
   {#if showPathsSection && path && !calculatingPath}
-
     <!-- Path UI -->
     <div class="mt-4 text-gray-500">
       <h2 class="text-lg font-bold">Usable paths:</h2>

@@ -2,7 +2,7 @@
   import { avatarState } from '$lib/stores/avatar.svelte';
   import ImageUpload from '$lib/components/ImageUpload.svelte';
   import type { Profile } from '@circles-sdk/profiles';
-
+  import { sanitizeText } from '$lib/utils/isValid';
 
   interface Props {
     profile: Profile;
@@ -19,6 +19,13 @@
     profile.previewImageUrl = '';
     profile = profile;
   };
+
+  $effect(() => {
+    profile.name = sanitizeText(profile.name);
+    if (profile.description) {
+      profile.description = sanitizeText(profile.description);
+    }
+  });
 </script>
 
 <div class="space-y-2">

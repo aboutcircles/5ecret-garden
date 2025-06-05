@@ -5,6 +5,7 @@
   import type { Profile } from '@circles-sdk/profiles';
   import ProfileEditor from '$lib/components/ProfileEditor.svelte';
   import { onMount } from 'svelte';
+  import Disclaimer from '$lib/components/Disclaimer.svelte';
 
   let profile: Profile = $state({
     name: '',
@@ -29,9 +30,8 @@
   }
 </script>
 
-<div
-  class="w-full flex flex-col min-h-screen max-w-xl gap-y-4 justify-center"
->
+<div class="w-full flex flex-col min-h-screen max-w-xl mt-28 gap-y-4 justify-center">
+  <Disclaimer />
   <div class="card bg-base-100 w-96 border shadow-sm">
     <figure class="px-10 pt-10">
       <img src="/person.svg" alt="person" class="w-16 h-16 rounded-xl" />
