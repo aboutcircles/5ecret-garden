@@ -21,21 +21,21 @@
 
   let { address, isRegistered, groups, isV1, initSdk }: Props = $props();
 
-  async function connectAvatar(ownerAddress: Address, groupAddress?: Address) {
+  async function connectAvatar(groupAddress?: Address) {
     const sdk = await initSdk(address);
     $circles = sdk;
 
-    if (ownerAddress === address && !isRegistered) {
+    if (groupAddress === undefined && !isRegistered) {
       await goto('/register');
       return;
     }
-    avatarState.avatar = await sdk.getAvatar(groupAddress ?? ownerAddress);
+    avatarState.avatar = await sdk.getAvatar(groupAddress ?? address);
     avatarState.isGroup = groupAddress ? true : false;
     avatarState.groupType = groupAddress
       ? await sdk.getGroupType(groupAddress)
       : undefined;
     CirclesStorage.getInstance().data = {
-      avatar: ownerAddress,
+      avatar: address,
       group: groupAddress,
       isGroup: avatarState.isGroup,
       groupType: avatarState.groupType,
@@ -78,7 +78,7 @@
 
 <div class="w-full border rounded-lg flex flex-col p-4 shadow-sm">
   <button
-    onclick={() => connectAvatar(address)}
+    onclick={() => connectAvatar()}
     class="flex justify-between items-center hover:bg-black/5 rounded-lg p-2"
   >
     <Avatar
@@ -108,7 +108,7 @@
     {#each groups ?? [] as group}
       <button
         class="flex w-full hover:bg-black/5 rounded-lg p-2"
-        onclick={() => connectAvatar(address, group.group as Address)}
+        onclick={() => connectAvatar(group.group as Address)}
       >
         <Avatar
           address={group.group as Address}
