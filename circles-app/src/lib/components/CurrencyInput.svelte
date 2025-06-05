@@ -100,9 +100,6 @@
   </div>
 </div>
 
-{#if balanceRow.isInflationary}
-  <!--        <div class="ml-6 text-gray-400">10.00 static Circles</div>-->
-{/if}
 <p class="font-medium text-sm mt-4">
   Balance: {maxAmountCircles >= 0
     ? roundToDecimals(maxAmountCircles)

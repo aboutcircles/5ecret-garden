@@ -12,6 +12,6 @@
 </script>
 
 <div class="mb-4">
-  <CurrencyInput balanceRow={asset} bind:amount {maxAmountCircles}></CurrencyInput>
+  <CurrencyInput balanceRow={asset} bind:amount {maxAmountCircles} />
 </div>
 
