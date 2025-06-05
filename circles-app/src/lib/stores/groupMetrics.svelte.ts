@@ -329,51 +329,76 @@ async function getERC20Token(
 export async function countCurrentAffiliateMembers(
     circlesRpc: CirclesRpc,
     groupAddress: Address
-  ): Promise<number> {
+): Promise<number> {
     const seen = new Set<string>();
     let count = 0;
-  
+
     let cursor: string | undefined = undefined;
     let hasMore = true;
-  
-    while (hasMore) {
-      const queryPayload: any = {
-        Namespace: 'CrcV2',
-        Table: 'AffiliateGroupChanged',
-        Columns: ['human', 'newGroup'],
-        Filter: [],
-        SortOrder: 'DESC',
-        Limit: 1000,
-      };
-      if (cursor) {
-        queryPayload.Cursor = cursor;
-      }
-  
-      const resp = await circlesRpc.call<{
-        columns: string[];
-        rows: any[][];
-        cursor?: string;
-        hasMore?: boolean;
-      }>('circles_query', [queryPayload]);
-  
-      const { columns, rows, cursor: nextCursor, hasMore: more } = resp.result;
-      for (const row of rows) {
-        const human = (row[0] as string).toLowerCase();
-  
-        if (seen.has(human)) continue;
-  
-        seen.add(human);
-  
-        const rowNewGroup = (row[1] as string).toLowerCase();
-        if (rowNewGroup === groupAddress.toLowerCase()) {
-          count++;
-        }
-      }
-  
-      hasMore = Boolean(more);
-      cursor = nextCursor;
-    }
-  
-    return count;
-  }
 
+    while (hasMore) {
+
+        const queryPayload: any = {
+            Namespace: 'CrcV2',
+            Table: 'AffiliateGroupChanged',
+            Columns: ['human', 'newGroup', 'oldGroup', 'timestamp'],
+            Filter: [{
+                Type: 'Conjunction',
+                ConjunctionType: 'Or',
+                Predicates: [
+                    {
+                        Type: 'FilterPredicate',
+                        FilterType: 'Equals',
+                        Column: 'oldGroup',
+                        Value: groupAddress.toLowerCase(),
+                    },
+                    {
+                        Type: 'FilterPredicate',
+                        FilterType: 'Equals',
+                        Column: 'newGroup',
+                        Value: groupAddress.toLowerCase(),
+                    },
+                ],
+            }],
+            Order: [
+                {
+                    Column: 'timestamp',
+                    SortOrder: 'DESC'
+                },
+            ],
+            Limit: 1000,
+        };
+
+        if (cursor) {
+            queryPayload.Cursor = cursor;
+        }
+
+        const resp = await circlesRpc.call<{
+            columns: string[];
+            rows: any[][];
+            cursor?: string;
+            hasMore?: boolean;
+        }>('circles_query', [queryPayload]);
+
+        const { rows, cursor: nextCursor, hasMore: more } = resp.result;
+
+        for (const row of rows) {
+            const human = (row[0] as string).toLowerCase();
+            if (seen.has(human)) continue;
+
+            seen.add(human);
+
+            const rowNewGroup = (row[1] as string).toLowerCase();
+            const rowOldGroup = (row[2] as string).toLowerCase();
+            if (rowNewGroup === groupAddress.toLowerCase() && rowOldGroup !== groupAddress.toLowerCase()) {
+                console.log("latest event", row)
+                count++;
+            }
+        }
+
+        hasMore = Boolean(more);
+        cursor = nextCursor;
+    }
+
+    return count;
+}
