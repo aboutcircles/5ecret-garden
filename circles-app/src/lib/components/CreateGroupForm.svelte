@@ -1,8 +1,6 @@
 <script lang="ts">
   import type { GroupProfile } from '@circles-sdk/profiles';
   import { isValidName, isValidSymbol } from '$lib/utils/isValid';
-  import MintPolicy from './MintPolicy.svelte';
-  import { mintPolicies } from '$lib/utils/mintPolicy';
   import Tooltip from './Tooltip.svelte';
   import { circles } from '$lib/stores/circles';
   import ImageUpload from './ImageUpload.svelte';
@@ -25,7 +23,7 @@
     imageUrl: '',
   });
 
-  let { setGroup }: { setGroup: (address: string, name: string, symbol: string, mintPolicy: string, treasury: string, cidV0Digest: string) => void } = $props();
+  let { setGroup }: { setGroup: (address: string, name: string, symbol: string, treasury: string, cidV0Digest: string) => void } = $props();
 
   let isLoading = $state(false);
   let formData: BaseGroupProfile = $derived({
@@ -34,7 +32,6 @@
       $wallet?.address || '0x0000000000000000000000000000000000000000',
     initialConditions: '',
   });
-  let mintPolicy = $state(mintPolicies[0]);
 
   let validName = $derived(
     isValidName(groupProfile.name) || groupProfile.name.length === 0
@@ -89,7 +86,7 @@
     const groupAddress: string = trim(
       result.logs[9].topics[1] as `0x${string}`
     );
-    setGroup(groupAddress, groupProfile.name, groupProfile.symbol, mintPolicy.name, $wallet?.address, CID);
+    setGroup(groupAddress, groupProfile.name, groupProfile.symbol, $wallet?.address, CID);
     popupControls.close();
   }
 
@@ -234,26 +231,6 @@
       class="textarea textarea-bordered w-full"
       bind:value={groupProfile.description}
     ></textarea>
-  </div>
-  <div class="w-full flex flex-col mb-12 pt-8 border-t-1.5">
-    <div class="label">
-      <span class="label-text"
-        >Base Mint Policy
-        <Tooltip content="Select the minting policy for group currency." />
-      </span>
-    </div>
-    <a
-      class="flex mb-2 items-center font-bold text-xs text-primary"
-      href={'https://docs.aboutcircles.com/overview/circles-architecture'}
-      target="_blank"
-    >
-      Learn more
-      <img src="/external.svg" alt="external icon" class="h-3 w-3 ml-1" />
-    </a>
-    <MintPolicy
-      {mintPolicy}
-      onupdate={(selectedMintPolicy) => (mintPolicy = selectedMintPolicy)}
-    />
   </div>
   <button
     type="submit"
