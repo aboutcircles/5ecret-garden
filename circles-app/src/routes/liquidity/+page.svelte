@@ -8,7 +8,7 @@
   import type { Address } from '@circles-sdk/utils';
   import { popupControls } from '$lib/stores/popUp';
   import { formatEther } from 'viem';
-
+  import LBP_STARTER_INSTANCE_ABI from '$lib/utils/abi/LBP_STARTER_INSTANCE';
   const LBP_STARTER_ADDRESS = '0x3b36d73506c3e75fcacb27340faa38ade1cbaf0a';
 
   interface LBPStarterCreated {
@@ -16,10 +16,10 @@
     group: Address;
     asset: Address;
     contract: Address;
-    groupAmountInit: bigint;
-    groupAmountCurrent: bigint;
-    assetAmountInit: bigint;
-    assetAmountCurrent: bigint;
+    groupAmountInit: string;
+    groupAmountCurrent: string;
+    assetAmountInit: string;
+    assetAmountCurrent: string;
     groupInitWeight: bigint;
     groupFinalWeight: bigint;
     swapFee: bigint;
@@ -48,9 +48,9 @@
     lbpStarterCreated = await Promise.all(events.map(async (event) => {
       const eventLog = event as EventLog;
       const contractAddress = eventLog.args[3];
-      const LBPContract = new ethers.Contract(contractAddress, LBP_STARTER_ABI, $wallet as ContractRunner);
-      const groupAmountCurrent = await LBPContract.groupAmountCurrent();
-      const assetAmountCurrent = await LBPContract.assetAmountCurrent();
+      const LBPContract = new ethers.Contract(contractAddress, LBP_STARTER_INSTANCE_ABI, $wallet as ContractRunner);
+      const groupAmountCurrent = await LBPContract.balanceGroup();
+      const assetAmountCurrent = await LBPContract.balanceAsset();
       return {
         creator: eventLog.args[0],
         group: eventLog.args[1],
