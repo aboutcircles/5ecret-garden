@@ -7,7 +7,7 @@
   import { getCirclesConfig } from '$lib/utils/helpers';
   import { wallet } from '$lib/stores/wallet.svelte';
   import type { Address } from '@circles-sdk/utils';
-  import { environment } from '$lib/stores/environment.svelte';
+  import { settings } from '$lib/stores/settings.svelte';
 
   interface Props {
     selectedAddress?: any;
@@ -27,7 +27,7 @@
     if (!network) {
       throw new Error('Failed to get network');
     }
-    const circlesConfig = await getCirclesConfig(network.chainId, environment.ring);
+    const circlesConfig = await getCirclesConfig(network.chainId, settings.ring);
     if (!circlesConfig.profileServiceUrl) {
       throw new Error('Profile service URL is not set');
     }

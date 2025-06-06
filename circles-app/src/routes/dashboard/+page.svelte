@@ -15,6 +15,8 @@
 
   $effect(() => {
     (async () => {
+      console.log('avatarState.avatar', avatarState.avatar);
+      console.log('avatarState.isGroup', avatarState.isGroup);
       if (avatarState.avatar && !avatarState.isGroup) {
         mintableAmount = (await avatarState.avatar.getMintableAmount()) ?? 0;
       }
