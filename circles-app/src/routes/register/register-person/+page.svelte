@@ -10,13 +10,13 @@
   import { onMount } from 'svelte';
   import type { Address } from '@circles-sdk/utils';
   import ProfileEditor from '$lib/components/ProfileEditor.svelte';
-  import { environment } from '$lib/stores/environment.svelte';
+  import { settings } from '$lib/stores/settings.svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import Disclaimer from '$lib/components/Disclaimer.svelte';
 
   let invitations: AvatarRow[] = $state([]);
   let inviterSelected: Address | undefined = $state(
-    environment.ring ? '0x0000000000000000000000000000000000000000' : undefined
+    settings.ring ? '0x0000000000000000000000000000000000000000' : undefined
   );
 
   let profile: Profile = $state({
@@ -37,7 +37,7 @@
     invitations = await $circles.data.getInvitations(
       $wallet.address.toLowerCase() as Address
     );
-    if (environment.ring) {
+    if (settings.ring) {
       invitations = [
         ...invitations,
         {

@@ -1,92 +1,88 @@
 <script lang="ts">
-  import { initializeWallet, wallet } from '$lib/stores/wallet.svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { circles } from '$lib/stores/circles';
-  import { Sdk, type CirclesConfig } from '@circles-sdk/sdk';
+  import { Sdk } from '@circles-sdk/sdk';
   import { goto } from '$app/navigation';
-  import { getCirclesConfig } from '$lib/utils/helpers';
   import Avatar from './avatar/Avatar.svelte';
-  import type { WalletType } from '$lib/utils/walletType';
   import type { Address } from '@circles-sdk/utils';
-  import type { SdkContractRunner } from '@circles-sdk/adapter';
   import { CirclesStorage } from '$lib/utils/storage';
-  import { environment } from '$lib/stores/environment.svelte';
   import type { GroupRow } from '@circles-sdk/data';
+  import { settings } from '$lib/stores/settings.svelte';
+  import { popupControls } from '$lib/stores/popUp';
+  import CreateGroupForm from './CreateGroupForm.svelte';
 
   interface Props {
     address: Address;
     isRegistered: boolean;
-    walletType: WalletType;
-    chainId: bigint;
     groups?: GroupRow[];
     isV1?: boolean;
+    initSdk: (address: Address) => Promise<Sdk>;
   }
 
-  let { address, isRegistered, walletType, chainId, groups, isV1 }: Props =
-    $props();
+  let { address, isRegistered, groups, isV1, initSdk }: Props = $props();
 
-  let circlesConfig: CirclesConfig;
+  async function connectAvatar(groupAddress?: Address) {
+    const sdk = await initSdk(address);
+    $circles = sdk;
 
-  async function connectWallet(avatarAddress: Address, groupAddress?: Address) {
-    const lowerCaseAvatarAddress = avatarAddress.toLowerCase() as Address;
-    const lowerCaseGroupAddress = groupAddress?.toLowerCase() as Address;
-
-    $wallet = await initializeWallet(walletType, address);
-    circlesConfig = await getCirclesConfig(chainId, environment.ring);
-    $circles = new Sdk($wallet! as SdkContractRunner, circlesConfig);
-
-    if (
-      lowerCaseAvatarAddress === address.toLowerCase() &&
-      !isRegistered &&
-      (lowerCaseGroupAddress?.trim() ?? '') == ''
-    ) {
+    if (groupAddress === undefined && !isRegistered) {
       await goto('/register');
       return;
     }
+    avatarState.avatar = await sdk.getAvatar(groupAddress ?? address);
+    avatarState.isGroup = groupAddress ? true : false;
+    avatarState.groupType = groupAddress
+      ? await sdk.getGroupType(groupAddress)
+      : undefined;
+    CirclesStorage.getInstance().data = {
+      avatar: address,
+      group: groupAddress,
+      isGroup: avatarState.isGroup,
+      groupType: avatarState.groupType,
+      rings: settings.ring,
+      legacy: settings.legacy,
+    };
 
-    if ($circles && $wallet) {
-      const avatarToLoad = lowerCaseGroupAddress ?? lowerCaseAvatarAddress;
-      avatarState.avatar = await $circles.getAvatar(avatarToLoad);
 
-      if (lowerCaseGroupAddress) {
-        CirclesStorage.getInstance().data = {
-          walletType: (walletType + '+group') as WalletType,
-          avatar: lowerCaseAvatarAddress,
-          group: lowerCaseGroupAddress,
-        };
-        avatarState.isGroup = true;
-        avatarState.groupType = await $circles.getGroupType(
-          lowerCaseGroupAddress
-        );
-      } else {
-        CirclesStorage.getInstance().data = {
-          walletType: walletType,
-          avatar: lowerCaseAvatarAddress,
-        };
-        avatarState.isGroup = false;
-      }
-      await goto('/dashboard');
-    }
+    await goto('/dashboard');
   }
 
   async function deployGroup() {
-    if ($circles && $wallet) {
-      $wallet = await initializeWallet(walletType, address);
-      circlesConfig = await getCirclesConfig(chainId, environment.ring);
-      $circles = new Sdk($wallet! as SdkContractRunner, circlesConfig);
-
-      await goto('/register/register-group/' + address);
-    }
+    
+    const sdk = await initSdk(address);
+    $circles = sdk;
+    popupControls.open({
+      component: CreateGroupForm,
+      title: 'Create group',
+      props: {
+        setGroup: (address: string, name: string, symbol: string, treasury: string, cidV0Digest: string) => {
+          groups?.push({
+            group: address,
+            name: name,
+            symbol: symbol,
+            type: 'CrcV2_CMGroupCreated',
+            treasury: treasury,
+            cidV0Digest: cidV0Digest,
+            blockNumber: 0,
+            timestamp: 0,
+            transactionIndex: 0,
+            logIndex: 0,
+            memberCount: 0,
+            mintPolicy: '0xcCa27c26CF7BAC2a9928f42201d48220F0e3a549',
+          });
+        },
+      },
+    });
   }
 </script>
 
 <div class="w-full border rounded-lg flex flex-col p-4 shadow-sm">
   <button
-    onclick={() => connectWallet(address)}
+    onclick={() => connectAvatar()}
     class="flex justify-between items-center hover:bg-black/5 rounded-lg p-2"
   >
     <Avatar
-      topInfo={walletType === 'safe' ? 'Safe' : 'Connected Wallet'}
+      topInfo={settings.legacy ? 'Connected Wallet' : 'Safe'}
       {address}
       clickable={false}
       view="horizontal"
@@ -101,7 +97,6 @@
       {/if}
     </div></button
   >
-  <!--{#if walletType !== 'circles'}-->
   <div class="w-full flex gap-x-2 items-center justify-between mt-6 px-2">
     <p class="font-bold text-primary">My groups</p>
     <button
@@ -113,7 +108,7 @@
     {#each groups ?? [] as group}
       <button
         class="flex w-full hover:bg-black/5 rounded-lg p-2"
-        onclick={() => connectWallet(address, group.group as Address)}
+        onclick={() => connectAvatar(group.group as Address)}
       >
         <Avatar
           address={group.group as Address}
@@ -127,5 +122,4 @@
       <p class="text-sm">No groups available.</p>
     {/if}
   </div>
-  <!--{/if}-->
 </div>

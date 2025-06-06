@@ -1,32 +1,19 @@
 <script lang="ts">
   import type { GroupProfile } from '@circles-sdk/profiles';
   import { isValidName, isValidSymbol } from '$lib/utils/isValid';
-  import MintPolicy from './MintPolicy.svelte';
-  import { mintPolicies } from '$lib/utils/mintPolicy';
   import Tooltip from './Tooltip.svelte';
   import { circles } from '$lib/stores/circles';
-  import { avatarState } from '$lib/stores/avatar.svelte';
   import ImageUpload from './ImageUpload.svelte';
-  import { type Address, cidV0ToUint8Array } from '@circles-sdk/utils';
-  import { ethers } from 'ethers';
-  import { CirclesStorage } from '$lib/utils/storage';
-  import type { WalletType } from '$lib/utils/walletType';
-  import { page } from '$app/state';
+  import { cidV0ToUint8Array } from '@circles-sdk/utils';
   import { wallet } from '$lib/stores/wallet.svelte';
+  import { popupControls } from '$lib/stores/popUp';
+  import { trim } from 'viem';
 
   interface BaseGroupProfile {
     service: string;
     feeCollection: string;
     initialConditions: string;
   }
-
-  type Step = 'start' | 'form' | 'executed' | 'error';
-
-  interface Props {
-    onstepchange: (step: Step) => void;
-  }
-
-  let { onstepchange }: Props = $props();
 
   let groupProfile: GroupProfile = $state({
     name: '',
@@ -36,13 +23,15 @@
     imageUrl: '',
   });
 
+  let { setGroup }: { setGroup: (address: string, name: string, symbol: string, treasury: string, cidV0Digest: string) => void } = $props();
+
   let isLoading = $state(false);
   let formData: BaseGroupProfile = $derived({
     service: '0x0000000000000000000000000000000000000000',
-    feeCollection: $wallet?.address || '0x0000000000000000000000000000000000000000',
+    feeCollection:
+      $wallet?.address || '0x0000000000000000000000000000000000000000',
     initialConditions: '',
   });
-  let mintPolicy = $state(mintPolicies[0]);
 
   let validName = $derived(
     isValidName(groupProfile.name) || groupProfile.name.length === 0
@@ -94,25 +83,11 @@
     if (!result) {
       throw new Error('Transaction result is null or undefined');
     }
-    const groupAddress: string = ethers.stripZerosLeft(
-      result.logs[9].topics[1]
+    const groupAddress: string = trim(
+      result.logs[9].topics[1] as `0x${string}`
     );
-
-    CirclesStorage.getInstance().data = {
-      walletType: (CirclesStorage.getInstance().walletType +
-        '+group') as WalletType,
-      avatar: page.params.owner as Address,
-      group: groupAddress as Address,
-    };
-
-    avatarState.avatar = await $circles.getAvatar(
-      groupAddress.toLowerCase() as Address
-    );
-
-    avatarState.isGroup = true;
-    avatarState.groupType = "CrcV2_BaseGroupCreated";
-
-    onstepchange('executed');
+    setGroup(groupAddress, groupProfile.name, groupProfile.symbol, $wallet?.address, CID);
+    popupControls.close();
   }
 
   const onnewimage = (dataUrl: string) => {
@@ -256,26 +231,6 @@
       class="textarea textarea-bordered w-full"
       bind:value={groupProfile.description}
     ></textarea>
-  </div>
-  <div class="w-full flex flex-col mb-12 pt-8 border-t-1.5">
-    <div class="label">
-      <span class="label-text"
-        >Base Mint Policy
-        <Tooltip content="Select the minting policy for group currency." />
-      </span>
-    </div>
-    <a
-      class="flex mb-2 items-center font-bold text-xs text-primary"
-      href={'https://docs.aboutcircles.com/overview/circles-architecture'}
-      target="_blank"
-    >
-      Learn more
-      <img src="/external.svg" alt="external icon" class="h-3 w-3 ml-1" />
-    </a>
-    <MintPolicy
-      {mintPolicy}
-      onupdate={(selectedMintPolicy) => (mintPolicy = selectedMintPolicy)}
-    />
   </div>
   <button
     type="submit"
