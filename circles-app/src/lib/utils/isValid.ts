@@ -2,7 +2,7 @@
 
 export function isValidName(name: string): boolean {
   // Check length (max 32 bytes, and at least 1 character)
-  if (Buffer.byteLength(name, 'utf8') > 32) {
+  if (Buffer.byteLength(name, 'utf8') > 19) {
     return false;
   }
 
