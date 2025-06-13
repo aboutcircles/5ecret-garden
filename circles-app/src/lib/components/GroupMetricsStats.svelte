@@ -1,9 +1,9 @@
 <script lang="ts">
-  import type { GroupMetrics } from "$lib/stores/groupMetrics.svelte";
+  import type { GroupMetrics } from '$lib/stores/groupMetrics.svelte';
 
   type Props = {
-    groupMetrics: GroupMetrics
-  }
+    groupMetrics: GroupMetrics;
+  };
 
   let { groupMetrics }: Props = $props();
 
@@ -69,7 +69,7 @@
         0
       );
       totalRedeemed = groupMetrics.mintRedeemPerDay.reduce(
-        (sum, item) => sum + item.redeemed,
+        (sum, item) => sum + item.burned,
         0
       );
     }
@@ -86,7 +86,7 @@
   }
 </script>
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 w-full gap-4 mb-8">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 w-full gap-4 mb-8">
   <!-- Member Count -->
   <div
     class="flex flex-col justify-between p-6 border rounded-xl bg-white hover:shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all duration-300 hover:-translate-y-0.5"
@@ -110,7 +110,7 @@
     <h2
       class="text-3xl tracking-tight font-medium flex flex-row gap-2 items-end"
     >
-      {formatNumber(memberCount)}
+      {memberCount}
       <span class="text-gray-500 text-sm"
         >{memberGrowth > 0 ? '+' : ''}{memberGrowth.toFixed(1)}%</span
       >
@@ -174,7 +174,7 @@
     >
       {formatNumber(totalMinted)}
     </h2>
-    <p class="text-sm text-gray-500">Total Minted</p>
+    <p class="text-sm text-gray-500">Minted last 30 days</p>
   </div>
 
   <!-- Total Redeemed -->
@@ -184,22 +184,50 @@
     <div class="w-4 h-4 mb-4 text-primary">
       <svg
         xmlns="http://www.w3.org/2000/svg"
+        width="18"
+        height="18"
         viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
+        ><!-- Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ --><path
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          d="M12 21c4.418 0 8-3.356 8-7.496c0-3.741-2.035-6.666-3.438-8.06c-.26-.258-.694-.144-.84.189c-.748 1.69-2.304 4.123-4.293 4.123c-1.232.165-3.112-.888-1.594-6.107c.137-.47-.365-.848-.749-.534C6.905 4.905 4 8.511 4 13.504C4 17.644 7.582 21 12 21Z"
+        /></svg
       >
-        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
-        ></path>
-      </svg>
     </div>
     <h2
       class="text-3xl tracking-tight font-medium flex flex-row gap-2 items-end"
     >
       {formatNumber(totalRedeemed)}
     </h2>
-    <p class="text-sm text-gray-500">Total Redeemed</p>
+    <p class="text-sm text-gray-500">Burned last 30 days</p>
+  </div>
+
+  <!-- Affiliate Members Count -->
+  <div
+    class="flex flex-col justify-between p-6 border rounded-xl bg-white hover:shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all duration-300 hover:-translate-y-0.5"
+  >
+    <div class="w-4 h-4 mb-4 text-primary">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke-width="1.5"
+        stroke="currentColor"
+        class="size-5"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .321-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z"
+        />
+      </svg>
+    </div>
+    <h2
+      class="text-3xl tracking-tight font-medium flex flex-row gap-2 items-end"
+    >
+      {groupMetrics.affiliateMembersCount}
+    </h2>
+    <p class="text-sm text-gray-500">Affiliate Members</p>
   </div>
 </div>
