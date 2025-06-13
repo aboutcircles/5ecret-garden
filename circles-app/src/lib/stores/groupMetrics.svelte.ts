@@ -38,6 +38,14 @@ export type GroupMetrics = {
 
 export let groupMetrics: GroupMetrics = $state({});
 
+/**
+ * Fetches and populates various group metrics for a given group address into the provided target object.
+ *
+ * Retrieves member counts, mint/redeem data, wrap/unwrap data, collateral in treasury, token holder balances, affiliate member count, ERC20 token address, and price history (if applicable) using the CirclesRpc API and external price API.
+ *
+ * @param groupAddress - The address of the group whose metrics are being fetched.
+ * @param target - The object to populate with the fetched group metrics.
+ */
 export async function fetchGroupMetrics(
     circlesRpc: CirclesRpc,
     groupAddress: Address,
@@ -82,6 +90,14 @@ export async function initGroupMetricsStore(
     fetchGroupMetrics(circlesRpc, groupAddress, groupMetrics);
 }
 
+/**
+ * Retrieves historical member counts for a group at hourly or daily resolution.
+ *
+ * @param groupAddress - The address of the group to query.
+ * @param resolution - The time resolution for the data ('hour' or 'day'). Defaults to 'hour'.
+ * @param period - The period to cover (e.g., '7 days'). Defaults to '7 days'.
+ * @returns An array of member count records, each with a timestamp and count, ordered chronologically.
+ */
 async function getMemberCount(
     circlesRpc: CirclesRpc,
     groupAddress: Address,
@@ -122,6 +138,14 @@ async function getMemberCount(
     }));
 }
 
+/**
+ * Retrieves and processes mint and burn (redeem) metrics for a group over a specified period and resolution.
+ *
+ * @param groupAddress - The address of the group to query metrics for.
+ * @param resolution - The time resolution for metrics, either 'hour' or 'day'. Defaults to 'hour'.
+ * @param period - The period to cover, as a string (e.g., '7 days'). Defaults to '7 days'.
+ * @returns An array of mint and burn metric objects, each containing a timestamp, minted amount, burned amount (as a negative value), and total supply.
+ */
 async function getMintRedeem(
     circlesRpc: CirclesRpc,
     groupAddress: Address,
@@ -164,6 +188,14 @@ async function getMintRedeem(
     }));
 }
 
+/**
+ * Retrieves historical wrap and unwrap amounts for a group over a specified period and resolution.
+ *
+ * @param groupAddress - The address of the group to query.
+ * @param resolution - The time resolution for data aggregation ('hour' or 'day').
+ * @param period - The period to cover (default is '7 days').
+ * @returns An array of objects containing timestamps, wrap amounts, and unwrap amounts (unwrap amounts are negative).
+ */
 async function getWrapUnwrap(
     circlesRpc: CirclesRpc,
     groupAddress: Address,
@@ -300,6 +332,11 @@ async function getGroupTokenHoldersBalance(
     }));
 }
 
+/**
+ * Retrieves the ERC20 token address associated with a given group, if one exists.
+ *
+ * @returns The ERC20 token address for the group, or `undefined` if not found.
+ */
 async function getERC20Token(
     circlesRpc: CirclesRpc,
     groupAddress: Address
@@ -326,6 +363,14 @@ async function getERC20Token(
     return result.result.rows[1][7];
 }
 
+/**
+ * Counts the number of unique affiliate members currently associated with a group.
+ *
+ * Iterates through all affiliate group change events for the specified group, tracking the latest event for each human. Increments the count if a human's most recent event indicates they joined the group.
+ *
+ * @param groupAddress - The address of the group to check for current affiliate members.
+ * @returns The total number of unique affiliate members currently in the group.
+ */
 export async function countCurrentAffiliateMembers(
     circlesRpc: CirclesRpc,
     groupAddress: Address
