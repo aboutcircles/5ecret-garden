@@ -5,15 +5,16 @@
   import { ethers } from 'ethers';
   import type { ContractRunner, EventLog } from 'ethers';
   import AddLiquidity from '$lib/components/AddLiquidity.svelte';
-  import type { Address } from '@circles-sdk/utils';
   import { popupControls } from '$lib/stores/popUp';
-  import { formatEther } from 'viem';
+  import { erc20Abi, formatEther } from 'viem';
   import LBP_STARTER_INSTANCE_ABI from '$lib/utils/abi/LBP_STARTER_INSTANCE';
   import { shortenAddress } from '$lib/utils/shared';
   import type { LBPStarterInstance } from '../../types/LbpStarter';
+  import type { Address } from '@circles-sdk/utils';
   const LBP_STARTER_ADDRESS = '0x3b36d73506c3e75fcacb27340faa38ade1cbaf0a';
 
   let lbpStarterContract: ethers.Contract | null = $state(null);
+  let assetTokenContract: ethers.Contract | null = $state(null);
   let filter: ethers.DeferredTopicFilter | null = $state(null);
   let lbpStarterCreated: LBPStarterInstance[] = $state([]);
   async function fetchLbpStarterCreatedEvents() {
@@ -76,19 +77,18 @@
   $effect(() => {
     const tokenId = avatarState.avatar?.avatarInfo?.tokenId;
     if ($wallet && tokenId && !lbpStarterContract) {
-      const contract = new ethers.Contract(
+      lbpStarterContract = new ethers.Contract(
         LBP_STARTER_ADDRESS,
         LBP_STARTER_ABI,
         $wallet as ContractRunner
       );
 
-      const topicFilter = contract.filters.LBPStarterCreated(
+      const topicFilter = lbpStarterContract.filters.LBPStarterCreated(
         null,
         tokenId,
         null,
         null
       );
-      lbpStarterContract = contract;
       filter = topicFilter;
     }
   });
@@ -98,6 +98,13 @@
       fetchLbpStarterCreatedEvents();
     }
   });
+
+  async function handleAddLiquidity(address: string) {
+    console.log(address);
+    const tokenContract = new ethers.Contract(address, erc20Abi, $wallet as ContractRunner);
+    await tokenContract.approve(address, 1);
+    await tokenContract.transferFrom($wallet?.address, address, 1);
+  }
 </script>
 
 <div class="flex flex-col items-center w-full max-w-4xl gap-y-6 mt-20">
@@ -155,8 +162,8 @@
               </div>
               {lbp.status}</td
             >
-            <td>{lbp.groupAmountCurrent} / {lbp.groupAmountInit}</td>
-            <td>{lbp.assetAmountCurrent} / {lbp.assetAmountInit}</td>
+            <td>{lbp.groupAmountCurrent} / {lbp.groupAmountInit} <button class="btn btn-ghost btn-xs p-1 ml-1" onclick={() => handleAddLiquidity(lbp.group)}><img src="/plus.svg" alt="plus" class="w-4 h-4" /></button></td>
+            <td>{lbp.assetAmountCurrent} / {lbp.assetAmountInit} <button class="btn btn-ghost btn-xs p-1 ml-1" onclick={() => handleAddLiquidity(lbp.asset)}><img src="/plus.svg" alt="plus" class="w-4 h-4" /></button></td>
           </tr>
         {/each}
       </tbody>
