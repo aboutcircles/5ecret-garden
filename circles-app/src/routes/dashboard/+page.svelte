@@ -10,6 +10,10 @@
   import ModernHistoryChart from '$lib/components/ModernHistoryChart.svelte';
   import ModernPieChart from '$lib/components/ModernPieChart.svelte';
   import GroupMetricsStats from '$lib/components/GroupMetricsStats.svelte';
+  import { popupControls } from '$lib/stores/popUp';
+  import Send from '$lib/flows/send/1_To.svelte';
+  import SendIcon from '$lib/components/icons/SendIcon.svelte';
+  import MintIcon from '$lib/components/icons/MintIcon.svelte';
 
   let mintableAmount: number = $state(0);
 
@@ -39,14 +43,39 @@
   }
 </script>
 
-<div class="flex flex-col items-center w-full max-w-4xl gap-y-6 mt-20">
-  <TotalBalance />
-
-  {#if mintableAmount >= 0.01}
-    <button class="btn btn-sm btn-primary" onclick={mintPersonalCircles}>
-      Mint {roundToDecimals(mintableAmount)} Circles
-    </button>
-  {/if}
+<div class="flex flex-col items-center w-full max-w-3xl gap-y-4 mt-20 mb-20">
+  <div class="w-full flex flex-col items-center gap-y-4">
+    <TotalBalance />
+    
+    <!-- Action buttons row -->
+    <div class="flex gap-4 items-center">
+      {#if mintableAmount >= 0.01}
+        <button 
+          class="flex items-center gap-2 px-4 py-2 btn btn-orange font-medium transition-colors duration-200"
+          onclick={mintPersonalCircles}
+        >
+          <MintIcon size="sm" />
+          Mint {roundToDecimals(mintableAmount)} Circles
+        </button>
+      {/if}
+      
+      {#if !avatarState.isGroup}
+        <button 
+          class="flex items-center gap-2 px-4 py-2 btn btn-primary font-medium transition-colors duration-200"
+          onclick={() => {
+            popupControls.open({
+              title: 'Send Circles',
+              component: Send,
+              props: {},
+            });
+          }}
+        >
+          <SendIcon size="sm" />
+          Send
+        </button>
+      {/if}
+    </div>
+  </div>
   <div role="tablist" class="tabs tabs-bordered w-full p-0 my-10">
     {#if avatarState.isGroup}
       <input

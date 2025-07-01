@@ -9,13 +9,21 @@
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { ethers } from 'ethers';
   import type { Address } from '@circles-sdk/utils';
+  import DownloadIcon from '$lib/components/icons/DownloadIcon.svelte';
+  import UploadIcon from '$lib/components/icons/UploadIcon.svelte';
+  import { contacts } from '$lib/stores/contacts';
 
   let context: AddContactFlowContext = $state({
-    selectedAddress: '',
+    selectedAddress: '' as `0x${string}`,
   });
 
   let addressesArray: string[] = $state([]);
   let errorMessage = $state('');
+  let selectedAddresses = $state('');
+  
+  // Reactive state to check if buttons should be disabled
+  let hasValidAddresses = $derived(selectedAddresses.trim().length > 0 && addressesArray.length > 0);
+  
   // TODO: Remove this?
   function oninvite(avatar: Address) {
     popupControls.open({
@@ -26,8 +34,6 @@
       },
     });
   }
-
-  let selectedAddresses = $state('');
   async function onselect(avatar: Address) {
     // const existingContact = $contacts.data[address];
 
@@ -44,7 +50,7 @@
         : newAddress;
       // }
       addressesArray = [...addressesArray, newAddress];
-      context.selectedAddress = '0x0';
+      context.selectedAddress = '' as `0x${string}`;
     }
   }
 
@@ -128,12 +134,29 @@
     };
     reader.readAsText(file);
   }
+
+  async function handleExportCSV() {
+    const contactsData = Object.entries($contacts.data);
+    const csvData = contactsData.map(([address, contact]) => ({
+      address: address,
+      name: contact?.contactProfile?.name || '',
+      relation: contact?.row?.relation || ''
+    }));
+    
+    const csv = Papa.unparse(csvData);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `contacts-export.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
 </script>
 
 <FlowDecoration>
-  <h2 class="text-2xl font-bold">
-    Add or remove {avatarState.isGroup ? 'members' : 'contacts'}
-  </h2>
   <div class="flex flex-row gap-x-1 justify-end items-center pb-1">
     <p class="text-sm text-gray-500 text-right">
       {addressesArray.length}
@@ -160,26 +183,42 @@
   <div class="flex flex-row gap-x-2">
     <div class="flex flex-col gap-x-2">
       <div class="flex flex-row gap-x-2">
-        <ActionButton action={() => handleAddMembers(selectedAddresses, false)}
-          >{avatarState.isGroup ? 'Add' : 'Trust'}</ActionButton
+        <ActionButton 
+          action={() => handleAddMembers(selectedAddresses, false)}
+          disabled={!hasValidAddresses}
         >
-        <ActionButton action={() => handleAddMembers(selectedAddresses, true)}
-          >{avatarState.isGroup ? 'Remove' : 'Untrust'}</ActionButton
+          {avatarState.isGroup ? 'Add' : 'Trust'}
+        </ActionButton>
+        <ActionButton 
+          action={() => handleAddMembers(selectedAddresses, true)}
+          disabled={!hasValidAddresses}
         >
+          {avatarState.isGroup ? 'Remove' : 'Untrust'}
+        </ActionButton>
       </div>
       <p class="text-sm text-red-500 h-6">{errorMessage}</p>
     </div>
 
     <div class="flex-grow"></div>
-    <label class="cursor-pointer">
-      Import CSV
-      <input
-        type="file"
-        accept=".csv"
-        class="hidden"
-        onchange={handleImportCSV}
-      />
-    </label>
+    <div class="flex flex-col gap-2">
+      <label class="flex items-center gap-2 cursor-pointer text-sm hover:text-primary transition-colors">
+        <UploadIcon size="sm" />
+        Import CSV
+        <input
+          type="file"
+          accept=".csv"
+          class="hidden"
+          onchange={handleImportCSV}
+        />
+      </label>
+      <button 
+        class="flex items-center gap-2 text-sm hover:text-primary transition-colors"
+        onclick={handleExportCSV}
+      >
+        <DownloadIcon size="sm" />
+        Export CSV
+      </button>
+    </div>
   </div>
 
   <p class="text-xl font-bold mt-4">Search for {avatarState.isGroup ? 'members' : 'contacts'}</p>

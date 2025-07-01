@@ -10,7 +10,7 @@
     data: EventRow[];
     next: () => Promise<boolean>;
     ended: boolean;
-  }> = $state();
+  }> | undefined = $state();
 
   $effect(() => {
     if (avatarState.avatar) {
@@ -22,10 +22,12 @@
 </script>
 
 <div
-  class="flex flex-col w-full sm:w-[90%] lg:w-3/5 gap-y-5 mt-28 mb-10 text-[#161616]"
+  class="flex flex-col items-start w-full max-w-3xl gap-y-4 mt-32"
 >
   <div class="text-2xl font-bold leading-7 px-4 sm:px-0">Groups</div>
-  <div class="w-full md:border rounded-lg md:px-4">
-    <GenericList store={groups} row={GroupRowView} />
+  <div class="w-full bg-white border rounded-lg px-4 flex flex-col divide-y py-4">
+    {#if groups}
+      <GenericList store={groups} row={GroupRowView} />
+    {/if}
   </div>
 </div>

@@ -153,8 +153,6 @@
 </script>
 
 <FlowDecoration>
-  <p class="text-2xl font-bold">Enter Amount</p>
-
   <!-- Always show the amount selection -->
   <SelectAmount
     maxAmountCircles={context.selectedAsset.isErc20

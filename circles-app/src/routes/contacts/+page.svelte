@@ -3,10 +3,14 @@
   import { onMount } from 'svelte';
   import Papa from 'papaparse';
   import GenericList from '$lib/components/GenericList.svelte';
-  import ContactRow from './ContactRow.svelte';
+  import ModernContactRow from './ModernContactRow.svelte';
   import { derived, writable } from 'svelte/store';
   import Filter from '$lib/components/Filter.svelte';
   import AddressInput from '$lib/components/AddressInput.svelte';
+  import { popupControls } from '$lib/stores/popUp';
+  import ManageGroupMembers from '$lib/flows/manageGroupMembers/1_manageGroupMembers.svelte';
+  import { avatarState } from '$lib/stores/avatar.svelte';
+  import ManageContactsIcon from '$lib/components/icons/ManageContactsIcon.svelte';
 
   let filterVersion = writable<number | undefined>(undefined);
   let filterRelation = writable<
@@ -79,28 +83,27 @@
     const unsubscribe = contacts.subscribe(() => {});
     return unsubscribe;
   });
-
-  async function handleExportCSV() {
-    const csvData = $filteredStore.data.map((item) => ({
-      address: item.address,
-      name: item.contact?.contactProfile.name,
-    }));
-    const csv = Papa.unparse(csvData);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `members-${$filterRelation || 'all'}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
 </script>
 
 <div
-  class="flex flex-col w-full sm:w-[90%] lg:w-3/5 gap-y-5 mt-28 mb-10 text-[#161616]"
+  class="flex flex-col items-start w-full max-w-3xl gap-y-4 mt-32"
 >
-  <div class="text-2xl font-bold leading-7 px-4 sm:px-0">Contacts</div>
+  <div class="w-full flex justify-between items-center px-4 sm:px-0">
+    <div class="text-2xl font-bold leading-7">Contacts</div>
+    <button 
+      class="flex items-center gap-2 px-4 py-2 btn btn-primary font-medium transition-colors duration-200"
+      onclick={() => {
+        popupControls.open({
+          title: avatarState.isGroup ? 'Manage members' : 'Manage contacts',
+          component: ManageGroupMembers,
+          props: {},
+        });
+      }}
+    >
+      <ManageContactsIcon size="sm" />
+      {avatarState.isGroup ? 'Manage members' : 'Manage contacts'}
+    </button>
+  </div>
 
   <!-- Filter -->
   <div class="flex gap-x-2 items-center">
@@ -110,27 +113,22 @@
     <Filter text="Version 2" filter={filterVersion} value={2} />
   </div>
 
-  <div class="flex justify-between items-center flex-wrap gap-y-4">
-    <div class="flex gap-2 items-center flex-wrap">
-      <p class="text-sm">Relation</p>
-      <Filter text="All" filter={filterRelation} value={undefined} />
-      <Filter text="Mutual" filter={filterRelation} value={'mutuallyTrusts'} />
-      <Filter text="Trusted" filter={filterRelation} value={'trusts'} />
-      <Filter text="Trust you" filter={filterRelation} value={'trustedBy'} />
-      <Filter
-        text="Varies by version"
-        filter={filterRelation}
-        value={'variesByVersion'}
-      />
-    </div>
-    <div class="flex-grow flex justify-end">
-      <button class="mt-4 sm:mt-0" onclick={handleExportCSV}>Export CSV</button>
-    </div>
+  <div class="flex gap-2 items-center flex-wrap">
+    <p class="text-sm">Relation</p>
+    <Filter text="All" filter={filterRelation} value={undefined} />
+    <Filter text="Mutual" filter={filterRelation} value={'mutuallyTrusts'} />
+    <Filter text="Trusted" filter={filterRelation} value={'trusts'} />
+    <Filter text="Trust you" filter={filterRelation} value={'trustedBy'} />
+    <Filter
+      text="Varies by version"
+      filter={filterRelation}
+      value={'variesByVersion'}
+    />
   </div>
 
   <AddressInput bind:address={$searchQuery} />
 
-  <div class="w-full md:border rounded-lg md:px-4">
-    <GenericList store={searchedStore} row={ContactRow} />
+  <div class="w-full bg-white border rounded-lg px-4 flex flex-col divide-y py-4">
+    <GenericList store={searchedStore} row={ModernContactRow} />
   </div>
 </div>

@@ -2,7 +2,11 @@
   import SettingProfile from '$lib/pages/SettingProfile.svelte';
   import { settings } from '$lib/stores/settings.svelte';
   import { popupControls } from '$lib/stores/popUp';
-  import type { QuickAction } from '../../routes/+layout.svelte';
+  import HomeIcon from './icons/HomeIcon.svelte';
+  import AddressBookIcon from './icons/AddressBookIcon.svelte';
+  import UserGroupIcon from './icons/UserGroupIcon.svelte';
+  import SettingsIcon from './icons/SettingsIcon.svelte';
+  import LogoutIcon from './icons/LogoutIcon.svelte';
 
   interface Props {
     text?: string | undefined;
@@ -13,7 +17,6 @@
       name: string;
       link: string;
     }[];
-    quickAction: QuickAction | undefined;
     route: string | null;
   }
 
@@ -23,195 +26,167 @@
     logo = undefined,
     homeLink = '/',
     menuItems = [],
-    quickAction,
     route,
   }: Props = $props();
   let isDropdownOpen = $state(false);
 </script>
 
+<!-- Modern Header with Horizontal Navigation -->
 <div
-  class={`navbar font-dmSans ${settings.ring ? 'bg-secondary/80' : 'bg-white'} font-medium border-b fixed top-0 z-30 h-16 transition-color duration-300 ease-in-out ${
-    isDropdownOpen ? 'shadow-lg' : ''
+  class={`w-full font-dmSans ${settings.ring ? 'bg-secondary/80' : 'bg-white'} border-b fixed top-0 z-30 h-16 transition-colors duration-300 ease-in-out ${
+    isDropdownOpen ? 'shadow-lg' : 'shadow-sm'
   }`}
 >
-  <div class="navbar-start pl-4">
-    {#if menuItems.length > 0}
-      <div class="dropdown">
-        <button
-          tabindex="0"
-          class="btn btn-ghost btn-square lg:hidden -ml-4"
-          onclick={() => (isDropdownOpen = true)}
-          aria-label="Open menu"
+  <div class="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
+    <!-- Left: Logo -->
+    <div class="flex items-center">
+      <a class="flex items-center space-x-2" href={homeLink}>
+        <img src="/logo.svg" alt="Circles" class="w-8 h-8" />
+        <span class="text-xl font-bold text-primary">
+          Circles
+          <span class="text-xs text-red-500 ml-1">
+            {#if settings.ring}(sandbox){:else}(beta){/if}
+          </span>
+        </span>
+      </a>
+    </div>
+
+    <!-- Center: Navigation (Desktop) -->
+    <div class="hidden md:flex items-center space-x-2">
+      {#each menuItems as item}
+        {@const isActive = item.link === route}
+        <a
+          href={item.link}
+          class={`flex items-center space-x-3 px-3 py-3 rounded-circles-button transition-colors duration-200 ${
+            isActive 
+              ? 'text-circles-orange font-medium bg-circles-card' 
+              : 'text-circles-text-muted hover:text-circles-text hover:bg-gray-50'
+          }`}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M4 6h16M4 12h8m-8 6h16"
-            />
-          </svg>
-        </button>
-        {#if isDropdownOpen}
-          <div
-            class="fixed -top-2 -left-6 dropdown-content transform-none w-screen h-screen bg-base-100 z-[100] py-2 pl-10 px-5 scale-100 font-medium"
-          >
-            <div class="flex flex-row justify-between items-center">
-              <a class="flex items-center text-xl font-bold" href={homeLink}>
-                <img src="/logo.svg" alt="Circles" class="w-8 h-8" />
-                <!-- TODO: Handle the sizing and ellipsis for the header text properly. This will do for now. -->
-                <span class="inline-block overflow-hidden text-primary"
-                  >Circles <p class="text-sm text-red-500">
-                    {#if settings.ring}
-                      (sandbox)
-                    {:else}(beta){/if}
-                  </p></span
-                >
-                <button
-                  type="button"
-                  class="btn btn-ghost btn-square flex rounded-lg p-0"
-                  onclick={() => (isDropdownOpen = false)}
-                  aria-label="Close menu"
-                >
-                  <img src="/close.svg" alt="Close" class="w-4 h-4" />
-                </button>
-              </a>
-            </div>
-            <ul class="text-xl py-4">
-              {#each menuItems as item}
-                <li class="py-3">
-                  <a
-                    class={`${item.link === route ? 'text-primary' : ''}`}
-                    tabindex="0"
-                    href={item.link}>{item.name}</a
-                  >
-                </li>
-              {/each}
-            </ul>
-            {#if text}
-              <button
-                class="flex items-center hover:scale-105 transition-transform duration-300"
-                onclick={(e) => {
-                  isDropdownOpen = false;
-                  popupControls.open({
-                    component: SettingProfile,
-                    title: '',
-                    props: {
-                      address: address,
-                    },
-                  });
-                  e.preventDefault();
-                  return true;
-                }}
-              >
-                <div class="bg-black/10 rounded-full mr-2 h-7 w-7">
-                  {#if logo}
-                    <img
-                      src={logo}
-                      alt="Avatar"
-                      class="h-full w-full rounded-full"
-                    />
-                  {/if}
-                </div>
-                <p class="mr-3 text-xl">{text}</p>
-              </button>
+          {#if item.name === 'Dashboard' || item.name === 'Home'}
+            <HomeIcon class={isActive ? 'text-circles-orange' : 'text-circles-text-muted'} />
+          {:else if item.name === 'Contacts'}
+            <AddressBookIcon class={isActive ? 'text-circles-orange' : 'text-circles-text-muted'} />
+          {:else if item.name === 'Groups'}
+            <UserGroupIcon class={isActive ? 'text-circles-orange' : 'text-circles-text-muted'} />
+          {:else if item.name === 'Settings'}
+            <SettingsIcon class={isActive ? 'text-circles-orange' : 'text-circles-text-muted'} />
+          {/if}
+          <span class="font-medium">{item.name}</span>
+        </a>
+      {/each}
+    </div>
+
+    <!-- Right: User Profile & Quick Action -->
+    <div class="flex items-center space-x-4">
+      <!-- User Profile (Desktop) -->
+      {#if text}
+        <button
+          class="hidden md:flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+          onclick={(e) => {
+            popupControls.open({
+              component: SettingProfile,
+              title: '',
+              props: {
+                address: address,
+              },
+            });
+            e.preventDefault();
+          }}
+        >
+          <div class="w-8 h-8 rounded-full bg-gray-200 overflow-hidden">
+            {#if logo}
+              <img src={logo} alt="Avatar" class="w-full h-full object-cover" />
+            {:else}
+              <div class="w-full h-full bg-primary/20 flex items-center justify-center">
+                <span class="text-primary font-semibold text-sm">
+                  {text.charAt(0).toUpperCase()}
+                </span>
+              </div>
             {/if}
           </div>
+          <span class="font-medium text-gray-700 max-w-24 truncate">{text}</span>
+        </button>
+      {/if}
+
+
+      <!-- Mobile Menu Button -->
+      {#if menuItems.length > 0}
+        <button
+          class="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+          onclick={() => (isDropdownOpen = !isDropdownOpen)}
+          aria-label="Toggle menu"
+        >
+          <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      {/if}
+    </div>
+  </div>
+
+  <!-- Mobile Navigation Overlay -->
+  {#if isDropdownOpen}
+    <div class="md:hidden fixed inset-0 top-16 bg-white z-50 border-t">
+      <div class="p-4 space-y-2">
+        {#each menuItems as item}
+          {@const isActive = item.link === route}
+          <a
+            href={item.link}
+            class={`flex items-center space-x-3 px-4 py-3 rounded-circles-button transition-colors duration-200 ${
+              isActive 
+                ? 'text-circles-orange font-medium bg-circles-card' 
+                : 'text-circles-text-muted hover:text-circles-text hover:bg-gray-50'
+            }`}
+            onclick={() => (isDropdownOpen = false)}
+          >
+            {#if item.name === 'Dashboard' || item.name === 'Home'}
+              <HomeIcon size="lg" class={isActive ? 'text-circles-orange' : 'text-circles-text-muted'} />
+            {:else if item.name === 'Contacts'}
+              <AddressBookIcon size="lg" class={isActive ? 'text-circles-orange' : 'text-circles-text-muted'} />
+            {:else if item.name === 'Groups'}
+              <UserGroupIcon size="lg" class={isActive ? 'text-circles-orange' : 'text-circles-text-muted'} />
+            {:else if item.name === 'Settings'}
+              <SettingsIcon size="lg" class={isActive ? 'text-circles-orange' : 'text-circles-text-muted'} />
+            {/if}
+            <span class="font-medium">{item.name}</span>
+          </a>
+        {/each}
+
+        <!-- Mobile User Profile -->
+        {#if text}
+          <button
+            class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors duration-200 mt-4 border-t pt-4"
+            onclick={(e) => {
+              isDropdownOpen = false;
+              popupControls.open({
+                component: SettingProfile,
+                title: '',
+                props: {
+                  address: address,
+                },
+              });
+              e.preventDefault();
+            }}
+          >
+            <div class="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
+              {#if logo}
+                <img src={logo} alt="Avatar" class="w-full h-full object-cover" />
+              {:else}
+                <div class="w-full h-full bg-primary/20 flex items-center justify-center">
+                  <span class="text-primary font-semibold">
+                    {text.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              {/if}
+            </div>
+            <div class="text-left">
+              <div class="font-medium text-gray-700">{text}</div>
+              <div class="text-sm text-gray-500">View Profile</div>
+            </div>
+          </button>
         {/if}
       </div>
-    {/if}
-    <a class="flex items-center text-xl font-bold" href={homeLink}>
-      <img src="/logo.svg" alt="Circles" class="w-8 h-8" />
-      <!-- TODO: Handle the sizing and ellipsis for the header text properly. This will do for now. -->
-      <span class="inline-block overflow-hidden text-primary"
-        >Circles <p class="text-sm text-red-500">
-          {#if settings.ring}
-            (sandbox)
-          {:else}(beta){/if}
-        </p></span
-      >
-    </a>
-    <ul class="menu menu-horizontal">
-      <li>
-        <details>
-          <summary></summary>
-          <ul class="bg-base-100 rounded-t-none p-2 w-40">
-            <li>
-              <a class="link link-hover" href="/terms">Terms of use</a>
-            </li>
-            <li>
-              <a class="link link-hover" href="/privacy-policy"
-                >Privacy policy</a
-              >
-            </li>
-          </ul>
-        </details>
-      </li>
-    </ul>
-  </div>
-  <div class="navbar-center hidden lg:flex">
-    <ul class="menu menu-horizontal px-1">
-      {#each menuItems as item}
-        <li>
-          <a
-            class={item.link === route
-              ? 'font-bold text-primary'
-              : 'font-medium'}
-            href={item.link}>{item.name}</a
-          >
-        </li>
-      {/each}
-    </ul>
-  </div>
-  <div class="navbar-end gap-4">
-    {#if text}
-      <button
-        class="hidden md:flex items-center hover:scale-105 transition-transform duration-300"
-        onclick={(e) => {
-          popupControls.open({
-            component: SettingProfile,
-            title: '',
-            props: {
-              address: address,
-            },
-          });
-          e.preventDefault();
-          return true;
-        }}
-      >
-        <div class="bg-black/10 rounded-full mr-2 h-7 w-7">
-          {#if logo}
-            <img src={logo} alt="Avatar" class="h-full w-full rounded-full" />
-          {/if}
-        </div>
-        <p class="mr-3 font-medium">{text}</p>
-      </button>
-    {/if}
-    {#if quickAction}
-      <button
-        class="btn btn-primary text-white"
-        disabled={quickAction.action === undefined}
-        onclick={() => {
-          if (quickAction.action) {
-            quickAction.action();
-          }
-        }}
-      >
-        {#if quickAction.icon}
-          <img
-            class="h-3.5 w-3.5"
-            src={quickAction.icon}
-            alt={quickAction.name}
-          />
-        {/if}
-        {quickAction.name}
-      </button>
-    {/if}
-  </div>
+    </div>
+  {/if}
 </div>

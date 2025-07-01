@@ -30,12 +30,12 @@
     title = '',
     disabled = false,
     theme = {
-      ['Ready']: 'bg-primary text-white',
-      ['Working']: 'bg-gray-200 text-black',
-      ['Error']: 'bg-yellow-500 text-white',
-      ['Retry']: 'bg-yellow-500 text-white',
-      ['Done']: 'bg-green-700 text-white',
-      ['Disabled']: 'bg-gray-400 text-white',
+      ['Ready']: 'btn-primary',
+      ['Working']: 'btn-disabled bg-gray-200 text-gray-600',
+      ['Error']: 'btn-warning',
+      ['Retry']: 'btn-warning',
+      ['Done']: 'btn-success',
+      ['Disabled']: 'btn-disabled',
     },
   }: Props = $props();
   const doneStateDuration: number = 2000;
@@ -82,21 +82,17 @@
 <button
   onclick={executeAction}
   title={errorMessage ?? title}
-  class="text-sm p-2 px-4 rounded-lg {theme[
-    buttonState
-  ]} focus:outline-none transition"
+  class="btn btn-sm font-medium transition-all duration-200 {theme[buttonState]} {buttonState === 'Working' ? 'loading' : ''}"
+  disabled={disabled || buttonState === 'Working' || buttonState === 'Done'}
 >
   {#if buttonState === 'Working'}
-    <div
-      class="loading-spinner inline-block border-t-2 border-b-2 border-gray-900 rounded-full w-4 h-4 animate-spin"
-    ></div>
-  {/if}
-  {#if buttonState === 'Retry'}
-    <div class="inline-block">⟳</div>
+    <span class="loading loading-spinner loading-xs"></span>
+  {:else if buttonState === 'Retry'}
+    <span class="text-base">⟳</span>
   {:else if buttonState === 'Error'}
-    <div class="inline-block">⚠</div>
+    <span class="text-base">⚠</span>
   {:else if buttonState === 'Done'}
-    <div class="inline-block">✓</div>
+    <span class="text-base">✓</span>
   {/if}
   <slot />
 </button>

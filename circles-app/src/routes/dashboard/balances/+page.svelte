@@ -1,7 +1,7 @@
 <script lang="ts">
   import { circlesBalances } from '$lib/stores/circlesBalances';
   import { totalCirclesBalance } from '$lib/stores/totalCirclesBalance';
-  import BalanceRow from '$lib/components/BalanceRow.svelte';
+  import ModernBalanceRow from '$lib/components/ModernBalanceRow.svelte';
   import { roundToDecimals } from '$lib/utils/shared';
   import { derived, writable } from 'svelte/store';
   import Filter from '$lib/components/Filter.svelte';
@@ -86,7 +86,7 @@
     class="w-full md:border rounded-lg md:px-4 flex flex-col divide-y gap-y-2 py-4 overflow-y-visible mb-28"
   >
     {#each $filteredStore.data as [, balance]}
-      <BalanceRow {balance} />
+      <ModernBalanceRow {balance} />
     {/each}
   </div>
 </div>

@@ -1,10 +1,3 @@
-<script lang="ts" module>
-  export type QuickAction = {
-    name: string;
-    icon: string;
-    action?: () => void | undefined;
-  };
-</script>
 
 <script lang="ts">
   import '../app.css';
@@ -34,6 +27,7 @@
   import { initGroupMetricsStore } from '$lib/stores/groupMetrics.svelte';
   import { circles } from '$lib/stores/circles';
   import Footer from '$lib/components/Footer.svelte';
+  import DecorativeBackground from '$lib/components/DecorativeBackground.svelte';
 
   import { watchAccount } from '@wagmi/core';
   import { config } from '../config';
@@ -73,72 +67,7 @@
 
   let { children }: Props = $props();
 
-  let quickActionsMap: Record<string, QuickAction | undefined> = $derived({
-    '/dashboard': {
-      name: 'Send',
-      icon: '/send.svg',
-      action: avatarState.isGroup
-        ? undefined
-        : () => {
-            popupControls.open({
-              title: 'Send Circles',
-              component: Send,
-              props: {},
-            });
-          },
-    },
-    '/contacts': {
-      name: avatarState.isGroup ? 'Manage members' : 'Add Contact',
-      icon: '/add-contact.svg',
-      action: () => {
-        if (avatarState.isGroup) {
-          popupControls.open({
-            title: 'Manage members',
-            component: ManageGroupMembers,
-            props: {},
-          });
-        } else {
-          popupControls.open({
-            title: 'Add Contact',
-            component: ManageGroupMembers,
-            props: {},
-          });
-        }
-      },
-    },
-    '/groups': {
-      name: 'Send',
-      icon: '/send.svg',
-      action: avatarState.isGroup
-        ? undefined
-        : () => {
-            popupControls.open({
-              title: 'Send Circles',
-              component: Send,
-              props: {},
-            });
-          },
-    },
-    '/register': {
-      name: 'Disconnect',
-      icon: '',
-      action: () => {
-        clearSession();
-      },
-    },
-    '/settings': {
-      name: 'Disconnect',
-      icon: '',
-      action: () => {
-        clearSession();
-      },
-    },
-  });
   let menuItems: { name: string; link: string }[] = $state([]);
-
-  let quickAction: QuickAction | undefined = $derived(
-    quickActionsMap[$page.route.id ?? ''] || undefined
-  );
 
   onMount(async () => {
     if (
@@ -193,13 +122,12 @@
     logo={avatarState.profile?.previewImageUrl?.trim()
       ? avatarState.profile.previewImageUrl
       : '/logo.svg'}
-    homeLink="/dashboard"
-    {quickAction}
+    homeLink="/connect-wallet/connect-safe"
     route={$page.route.id}
     {menuItems}
   />
 {:else}
-  <DefaultHeader quickAction={undefined} route={''} />
+  <DefaultHeader route={''} />
 {/if}
 
 <svelte:head>
@@ -212,23 +140,19 @@
   {/if}
 </svelte:head>
 
-<main class="relative w-full h-full bg-white overflow-hidden font-dmSans">
+<main class="relative w-full min-h-screen bg-circles-bg overflow-hidden font-dmSans">
+  <!-- Decorative Background -->
+  <DecorativeBackground variant="default" />
+  
   {#if avatarState.avatar?.avatarInfo && canMigrate(avatarState.avatar.avatarInfo) && $page.route.id !== '/migrate-to-v2'}
     <UpdateBanner />
     <div class="h-20"></div>
   {/if}
 
-  <div class="w-full flex flex-col items-center p-4 md:p-0">
+  <div class="relative z-10 w-full flex flex-col items-center p-4 md:p-0">
     {@render children?.()}
   </div>
 
-  <div
-    role="button"
-    tabindex="0"
-    class={`fixed top-0 left-0 w-full h-full bg-black/50 z-10 ${$popupState.content ? 'opacity-100' : 'opacity-0 hidden'} transition duration-300 ease-in-out`}
-    onmousedown={() => popupControls.close()}
-    ontouchstart={() => popupControls.close()}
-  ></div>
   <PopUp />
 </main>
 {#if $tasks.length > 0}

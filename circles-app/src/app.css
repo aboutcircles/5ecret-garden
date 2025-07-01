@@ -2,3 +2,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Override DaisyUI button height to 40px */
+.btn {
+  height: 2.5rem; /* 40px */
+  min-height: 2.5rem; /* 40px */
+}
+
+/* Custom orange button variant */
+.btn-orange {
+  background-color: #FF491B;
+  border-color: #FF491B;
+  color: white;
+}
+
+.btn-orange:hover {
+  background-color: rgba(255, 73, 27, 0.9);
+  border-color: rgba(255, 73, 27, 0.9);
+}

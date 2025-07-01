@@ -86,10 +86,10 @@
   }
 </script>
 
-<div class="flex flex-col w-full max-w-2xl gap-y-4 mt-20">
+<div class="flex flex-col items-start w-full max-w-3xl gap-y-4 mt-32">
   <p class="font-bold text-2xl">Settings</p>
   <div
-    class="flex flex-col items-center md:border rounded-lg md:px-6 md:py-8 gap-y-4"
+    class="flex flex-col items-center w-full bg-white border rounded-lg px-6 py-8 gap-y-4"
   >
     <div class="flex flex-col w-full gap-y-4">
       <ProfileEditor
