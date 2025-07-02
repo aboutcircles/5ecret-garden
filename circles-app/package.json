@@ -16,6 +16,7 @@
     "@circles-sdk/adapter-ethers": "^0.29.0",
     "@circles-sdk/adapter-safe": "^0.29.0",
     "@circles-sdk/data": "^0.29.0",
+    "@circles-sdk/pathfinder": "^0.29.0",
     "@circles-sdk/profiles": "^0.29.0",
     "@circles-sdk/sdk": "^0.29.0",
     "@circles-sdk/utils": "^0.29.0",
