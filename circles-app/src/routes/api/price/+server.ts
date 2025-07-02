@@ -62,7 +62,7 @@ export const GET: RequestHandler = async ({ url }) => {
 
     const history = rows.map(r => ({
       timestamp: new Date(r.bucket),
-      price: CirclesConverter.attoStaticCirclesToAttoCircles(BigInt(r.price))
+      price: CirclesConverter.attoStaticCirclesToAttoCircles(CirclesConverter.circlesToAttoCircles(parseFloat(r.price)))
     }));
 
     return new Response(JSON.stringify(history), {
