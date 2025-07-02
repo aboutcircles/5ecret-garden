@@ -14,7 +14,7 @@
   import type { MaxFlowResponse } from '@circles-sdk/sdk';
   import { ethers } from 'ethers';
   import { popupControls } from '$lib/stores/popUp';
-  import { crcToTc } from '@circles-sdk/utils';
+  import { CirclesConverter } from '@circles-sdk/utils';
 
   interface Props {
     context: SendFlowContext;
@@ -97,7 +97,9 @@
         ethers.formatEther(path.maxFlow.toString())
       );
       if (avatarState.avatar?.avatarInfo?.version === 1) {
-        maxAmountCircles = crcToTc(new Date(), BigInt(path.maxFlow));
+        const attoCircles = CirclesConverter.attoCrcToAttoCircles(BigInt(path.maxFlow), BigInt(Date.now() / 1000));
+        maxAmountCircles = CirclesConverter.attoCirclesToCircles(attoCircles);
+        // maxAmountCircles = crcToTc(new Date(), BigInt(path.maxFlow));
       }
 
       // If pathfinding returned maxFlow = 0 or no meaningful transfers, treat as failure
