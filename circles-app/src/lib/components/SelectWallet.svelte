@@ -67,8 +67,8 @@
         <KeyIcon size="lg" class="text-white" />
       </div>
       <div class="text-left">
-        <div class="font-medium text-gray-900">circles.garden</div>
-        <div class="text-sm text-gray-500">Use your circles.garden key in Secret-garden</div>
+        <div class="font-medium text-gray-900">Circles Garden</div>
+        <div class="text-sm text-gray-500">Use your circles.garden key phrase</div>
       </div>
     </div>
     <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
