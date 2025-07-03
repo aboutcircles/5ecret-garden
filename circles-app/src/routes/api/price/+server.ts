@@ -4,7 +4,7 @@ import {
   DB_USER, DB_PW, DB_HOST, DB_PORT,
   DB_DATABASE
 } from '$env/static/private';
-import { staticCirclesToCircles } from '@circles-sdk/utils';
+import { CirclesConverter } from '@circles-sdk/utils';
 const { Client } = pkg;
 
 export const GET: RequestHandler = async ({ url }) => {
@@ -62,7 +62,7 @@ export const GET: RequestHandler = async ({ url }) => {
 
     const history = rows.map(r => ({
       timestamp: new Date(r.bucket),
-      price: staticCirclesToCircles(parseFloat(r.price))
+      price: CirclesConverter.attoStaticCirclesToAttoCircles(CirclesConverter.circlesToAttoCircles(parseFloat(r.price)))
     }));
 
     return new Response(JSON.stringify(history), {
