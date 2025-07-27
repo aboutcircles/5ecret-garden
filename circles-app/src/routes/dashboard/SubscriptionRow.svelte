@@ -47,9 +47,11 @@
         promise: unsubscribe(item.sub_id),
       });
 
-      // Optionally refresh the subscriptions list
-      // Might want to emit an event or call a parent function here
-      window.location.reload(); // Simple refresh for now
+      // Dispatch custom event to notify parent component
+      const event = new CustomEvent('unsubscribed', {
+        detail: { subscriptionId: item.sub_id }
+      });
+      e.target?.dispatchEvent(event);
     } catch (error) {
       console.error('Failed to unsubscribe:', error);
     } finally {
