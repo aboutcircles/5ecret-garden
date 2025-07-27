@@ -1,0 +1,20 @@
+modules = ["nodejs-20", "web", "svelte-kit-node-20"]
+run = "bun run dev"
+
+[nix]
+channel = "stable-25_05"
+
+[deployment]
+run = ["sh", "-c", "bun run dev"]
+
+[workflows]
+runButton = "Run"
+
+[[workflows.workflow]]
+name = "Run"
+author = 1983045
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd circles-app && bun run dev"
