@@ -18,3 +18,12 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cd circles-app && bun run dev"
+
+[[workflows.workflow]]
+name = "Install"
+mode = "sequential"
+author = 1983045
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd circles-app && bun install"
