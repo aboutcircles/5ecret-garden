@@ -1,7 +1,5 @@
 <script lang="ts">
-  import {
-    wallet,
-  } from '$lib/stores/wallet.svelte';
+  import { wallet } from '$lib/stores/wallet.svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { circles } from '$lib/stores/circles';
   import { Sdk } from '@circles-sdk/sdk';
@@ -13,6 +11,8 @@
   import { settings } from '$lib/stores/settings.svelte';
   import { popupControls } from '$lib/stores/popUp';
   import CreateGroupForm from './CreateGroupForm.svelte';
+  import { circlesConfig } from '$lib/stores/config.svelte';
+  import { gnosisConfig } from '$lib/circlesConfig';
 
   interface Props {
     address: Address;
@@ -37,6 +37,9 @@
     avatarState.groupType = groupAddress
       ? await sdk.getGroupType(groupAddress)
       : undefined;
+    circlesConfig.config = settings.ring
+      ? gnosisConfig.rings
+      : gnosisConfig.production;
     CirclesStorage.getInstance().data = {
       avatar: ownerAddress,
       group: groupAddress,
@@ -46,19 +49,24 @@
       legacy: settings.legacy,
     };
 
-
     await goto('/dashboard');
   }
 
   async function deployGroup() {
-    
     const sdk = await initSdk(address);
     $circles = sdk;
     popupControls.open({
       component: CreateGroupForm,
       title: 'Create group',
       props: {
-        setGroup: (address: string, name: string, symbol: string, mintPolicy: string, treasury: string, cidV0Digest: string) => {
+        setGroup: (
+          address: string,
+          name: string,
+          symbol: string,
+          mintPolicy: string,
+          treasury: string,
+          cidV0Digest: string
+        ) => {
           groups?.push({
             group: address,
             name: name,
@@ -79,7 +87,9 @@
   }
 </script>
 
-<div class="w-full border border-base-300 rounded-lg flex flex-col p-4 shadow-xs">
+<div
+  class="w-full border border-base-300 rounded-lg flex flex-col p-4 shadow-xs"
+>
   <button
     onclick={() => connectAvatar(address)}
     class="flex justify-between items-center hover:bg-black/5 rounded-lg p-2"

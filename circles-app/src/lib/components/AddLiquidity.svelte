@@ -172,6 +172,6 @@
   {/if}
 
   <button type="submit" class="btn btn-primary"
-    >Create LBP Starter (UI Only)</button
+    >Create Pool</button
   >
 </form>

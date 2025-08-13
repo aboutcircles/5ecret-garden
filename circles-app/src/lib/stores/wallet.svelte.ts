@@ -10,8 +10,6 @@ import {
   SafeSdkPrivateKeyContractRunner,
 } from '@circles-sdk/adapter-safe';
 import { Sdk } from '@circles-sdk/sdk';
-import { getCirclesConfig } from '$lib/utils/helpers';
-import { gnosisConfig } from '$lib/circlesConfig';
 import { JsonRpcProvider } from 'ethers';
 import { type SdkContractRunner } from '@circles-sdk/adapter';
 import type { Address } from '@circles-sdk/utils';
@@ -22,6 +20,8 @@ import { config } from '../../config';
 import { settings } from './settings.svelte';
 import type { GroupType } from '@circles-sdk/data';
 import { privateKeyToAccount } from 'viem/accounts';
+import { circlesConfig } from './config.svelte';
+import { gnosisConfig } from '$lib/circlesConfig';
 
 export const wallet = writable<SdkContractRunner | undefined>();
 
@@ -57,15 +57,15 @@ export async function initBrowserProviderContractRunner() {
   return runner;
 }
 
-export async function initPrivateKeyContractRunner(privateKey: string) {
-  const rpcProvider = new JsonRpcProvider(settings.ring ? gnosisConfig.rings.circlesRpcUrl : gnosisConfig.production.circlesRpcUrl);
+export async function initPrivateKeyContractRunner(privateKey: string, circlesRpcUrl: string) {
+  const rpcProvider = new JsonRpcProvider(circlesRpcUrl);
   const runner = new PrivateKeyContractRunner(rpcProvider, privateKey);
   await runner.init();
   return runner;
 }
 
-export async function initSafeSdkPrivateKeyContractRunner(privateKey: string, address: Address) {
-  const runner = new SafeSdkPrivateKeyContractRunner(privateKey, settings.ring ? gnosisConfig.rings.circlesRpcUrl : gnosisConfig.production.circlesRpcUrl);
+export async function initSafeSdkPrivateKeyContractRunner(privateKey: string, address: Address, circlesRpcUrl: string) {
+  const runner = new SafeSdkPrivateKeyContractRunner(privateKey, circlesRpcUrl);
   await runner.init(address);
   return runner as SdkContractRunner;
 }
@@ -81,10 +81,12 @@ export async function restoreSession() {
     const privateKey = CirclesStorage.getInstance().privateKey;
     const savedAvatar = CirclesStorage.getInstance().avatar;
     const rings: boolean = CirclesStorage.getInstance().rings ? true : false;
+    settings.ring = rings;
+    circlesConfig.config = settings.ring ? gnosisConfig.rings : gnosisConfig.production;
     const legacy = CirclesStorage.getInstance().legacy;
     let runner: SdkContractRunner | undefined;
     if (privateKey && savedAvatar) {
-      runner = await initSafeSdkPrivateKeyContractRunner(privateKey, savedAvatar);
+      runner = await initSafeSdkPrivateKeyContractRunner(privateKey, savedAvatar, circlesConfig.config.circlesRpcUrl);
     } else if (legacy) {
       runner = await initBrowserProviderContractRunner();
     } else if (savedAvatar) {
@@ -103,7 +105,7 @@ export async function restoreSession() {
 
     const sdk = new Sdk(
       runner,
-      await getCirclesConfig(100n, rings),
+      circlesConfig.config
     );
     circles.set(sdk);
     let savedGroup = CirclesStorage.getInstance().group;

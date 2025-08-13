@@ -16,10 +16,11 @@
   import SettingsDropdown from '$lib/components/SettingsDropdown.svelte';
   import { settings } from '$lib/stores/settings.svelte';
   import { onMount } from 'svelte';
-  import { gnosisConfig } from '$lib/circlesConfig';
   import { Sdk } from '@circles-sdk/sdk';
   import type { SdkContractRunner } from '@circles-sdk/adapter';
   import { circles } from '$lib/stores/circles';
+  import { circlesConfig } from '$lib/stores/config.svelte';
+
   let groupsByOwner: Record<Address, GroupRow[]> | undefined = $state();
   let avatarInfo: AvatarRow | undefined = $state();
   let runner: SdkContractRunner | undefined = $state();
@@ -37,7 +38,7 @@
     wallet.set(runner);
     return new Sdk(
       runner,
-      settings.ring ? gnosisConfig.rings : gnosisConfig.production
+      circlesConfig.config
     );
   }
 
@@ -46,7 +47,7 @@
     wallet.set(runner);
     return new Sdk(
       runner,
-      settings.ring ? gnosisConfig.rings : gnosisConfig.production
+      circlesConfig.config
     );
   }
 
@@ -55,7 +56,7 @@
       runner
         ? new Sdk(
             runner,
-            settings.ring ? gnosisConfig.rings : gnosisConfig.production
+            circlesConfig.config
           )
         : undefined
     );

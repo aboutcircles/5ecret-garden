@@ -4,10 +4,9 @@
   import AddressInput from '$lib/components/AddressInput.svelte';
   import { Profiles, type SearchResultProfile } from '@circles-sdk/profiles';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import { getCirclesConfig } from '$lib/utils/helpers';
   import { wallet } from '$lib/stores/wallet.svelte';
   import type { Address } from '@circles-sdk/utils';
-  import { settings } from '$lib/stores/settings.svelte';
+  import { circlesConfig } from '$lib/stores/config.svelte';
 
   interface Props {
     selectedAddress?: any;
@@ -23,15 +22,10 @@
 
   //TODO: initialize profiles service at connect or restore time
   onMount(async () => {
-    const network = await $wallet?.provider?.getNetwork();
-    if (!network) {
-      throw new Error('Failed to get network');
-    }
-    const circlesConfig = await getCirclesConfig(network.chainId, settings.ring);
-    if (!circlesConfig.profileServiceUrl) {
+    if (!circlesConfig.config.profileServiceUrl) {
       throw new Error('Profile service URL is not set');
     }
-    profiles = new Profiles(circlesConfig.profileServiceUrl);
+    profiles = new Profiles(circlesConfig.config.profileServiceUrl);
 
     if (searchType === 'send') {
       // TODO: implement contact list here when get profile type and circles-sdk/profiles are unified

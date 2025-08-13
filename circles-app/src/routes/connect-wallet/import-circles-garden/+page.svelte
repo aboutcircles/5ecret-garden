@@ -11,12 +11,11 @@
   import { Sdk } from '@circles-sdk/sdk';
   import { onMount } from 'svelte';
   import ConnectSafe from '$lib/components/ConnectSafe.svelte';
-  import { settings } from '$lib/stores/settings.svelte';
-  import { gnosisConfig } from '$lib/circlesConfig';
   import type { SdkContractRunner } from '@circles-sdk/adapter';
   import type { Address } from '@circles-sdk/utils';
   import WalletLoader from '$lib/components/WalletLoader.svelte';
   import SettingsDropdown from '$lib/components/SettingsDropdown.svelte';
+  import { circlesConfig } from '$lib/stores/config.svelte';
 
   let runner: SdkContractRunner | undefined = $state();
 
@@ -25,7 +24,7 @@
       runner
         ? new Sdk(
             runner,
-            settings.ring ? gnosisConfig.rings : gnosisConfig.production
+            circlesConfig.config
           )
         : undefined
     );
@@ -37,13 +36,14 @@
     }
     runner = await initSafeSdkPrivateKeyContractRunner(
       signer.privateKey,
-      address
+      address,
+      circlesConfig.config.circlesRpcUrl
     );
     wallet.set(runner);
 
     return new Sdk(
       runner,
-      settings.ring ? gnosisConfig.rings : gnosisConfig.production
+      circlesConfig.config
     );
   }
 
@@ -56,7 +56,7 @@
 
     signer.address = address;
     signer.privateKey = privateKey;
-    runner = await initPrivateKeyContractRunner(privateKey);
+    runner = await initPrivateKeyContractRunner(privateKey, circlesConfig.config.circlesRpcUrl);
   });
 
   $effect(() => {
@@ -64,7 +64,7 @@
       runner
         ? new Sdk(
             runner,
-            settings.ring ? gnosisConfig.rings : gnosisConfig.production
+            circlesConfig.config
           )
         : undefined
     );

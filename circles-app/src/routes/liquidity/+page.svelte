@@ -10,8 +10,7 @@
   import LBP_STARTER_INSTANCE_ABI from '$lib/utils/abi/LBP_STARTER_INSTANCE';
   import { shortenAddress } from '$lib/utils/shared';
   import type { LBPStarterInstance } from '../../types/LbpStarter';
-  import type { Address } from '@circles-sdk/utils';
-  const LBP_STARTER_ADDRESS = '0x3b36d73506c3e75fcacb27340faa38ade1cbaf0a';
+  import { circlesConfig } from '$lib/stores/config.svelte';
 
   let lbpStarterContract: ethers.Contract | null = $state(null);
   let assetTokenContract: ethers.Contract | null = $state(null);
@@ -78,7 +77,7 @@
     const tokenId = avatarState.avatar?.avatarInfo?.tokenId;
     if ($wallet && tokenId && !lbpStarterContract) {
       lbpStarterContract = new ethers.Contract(
-        LBP_STARTER_ADDRESS,
+        circlesConfig.config.lbpFactory,
         LBP_STARTER_ABI,
         $wallet as ContractRunner
       );
@@ -124,7 +123,7 @@
             component: AddLiquidity,
             props: { lbpStarterContract },
           });
-        }}>Create LBP Starter</button
+        }}>Create Pool</button
       >
     </div>
     <table class="table mt-4">

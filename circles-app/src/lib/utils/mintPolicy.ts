@@ -1,17 +1,15 @@
-type Address = `0x${string}`;
+import { circlesConfig } from '$lib/stores/config.svelte';
 
 export type MintPolicy = {
   id: number;
-  address: Address;
+  address: string;
   name: string;
 };
-
-const baseGroupMintPolicy = '0xcCa27c26CF7BAC2a9928f42201d48220F0e3a549';
 
 export const mintPolicies: MintPolicy[] = [
   {
     id: 0,
-    address: baseGroupMintPolicy as Address,
-    name: `Standard Mint Policy - ${baseGroupMintPolicy}`,
+    address: circlesConfig.config.baseGroupMintPolicy,
+    name: `Standard Mint Policy - ${circlesConfig.config.baseGroupMintPolicy}`,
   },
 ];
