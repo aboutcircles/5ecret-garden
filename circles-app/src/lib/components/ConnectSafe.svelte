@@ -4,7 +4,6 @@
   import CreateSafe from '$lib/pages/CreateSafe.svelte';
   import type { Address } from '@circles-sdk/utils';
   import { ethers } from 'ethers';
-  import { onMount } from 'svelte';
   import type { GroupRow } from '@circles-sdk/data';
   import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
 
@@ -50,8 +49,14 @@
     groupsByOwner = groupInfo;
   }
 
-  onMount(async () => {
-    await loadSafesAndProfile();
+  $effect(() => {
+    if (safeOwnerAddress && sdk) {
+      safes = [];
+      profileBySafe = {};
+      groupsByOwner = {};
+      
+      loadSafesAndProfile();
+    }
   });
 
   async function onsafecreated(address: Address) {
