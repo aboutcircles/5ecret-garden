@@ -36,6 +36,7 @@
       events.map(async (event) => {
         const eventLog = event as EventLog;
         const contractAddress = eventLog.args[3];
+        console.log(contractAddress);
         const LBPContract = new ethers.Contract(
           contractAddress,
           LBP_STARTER_INSTANCE_ABI,
@@ -99,10 +100,10 @@
   });
 
   async function handleAddLiquidity(address: string) {
-    console.log(address);
     const tokenContract = new ethers.Contract(address, erc20Abi, $wallet as ContractRunner);
+    console.log(tokenContract);
     await tokenContract.approve(address, 1);
-    await tokenContract.transferFrom($wallet?.address, address, 1);
+    // await tokenContract.transferFrom($wallet?.address, address, 1);
   }
 </script>
 

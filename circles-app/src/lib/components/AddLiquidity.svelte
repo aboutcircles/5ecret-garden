@@ -33,7 +33,7 @@
       return;
     }
 
-    const tx = await lbpStarterContract?.createLBPStarter(
+    const tx = await lbpStarterContract.createLBPStarter(
       groupSetting.address,
       assetSetting.address,
       parseEther(groupSetting.amount.toString()),
