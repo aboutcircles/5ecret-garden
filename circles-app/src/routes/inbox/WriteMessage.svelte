@@ -2,12 +2,15 @@
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { circles } from '$lib/stores/circles';
   import { popupControls } from '$lib/stores/popUp';
+  import { wallet } from '$lib/stores/wallet.svelte';
+
   import ActionButton from '$lib/components/ActionButton.svelte';
   import AddressInput from '$lib/components/AddressInput.svelte';
-  import { runTask } from '$lib/utils/tasks';
   import type { Address } from '@circles-sdk/utils';
   import { ethers } from 'ethers';
-  import { fetchFromIpfs } from '$lib/utils/ipfs';
+  import { fetchFromIpfs, uploadToIpfs } from '$lib/utils/ipfs';
+  import { CirclesStorage } from '$lib/utils/storage';
+  import Safe, { SigningMethod, hashSafeMessage } from '@safe-global/protocol-kit';
 
   interface Props {
     recipientAddress?: Address;
@@ -18,6 +21,181 @@
 
   let messageText = $state('');
   let isEncrypted = $state(false);
+
+  const DOMAIN = {
+    chainId: 100
+  };
+  // EIP-712 Types for the message structure
+  const TYPES = {
+    CirclesMessage: [
+      { name: 'cid', type: 'string' },
+      { name: 'encrypted', type: 'bool' },
+      { name: 'encryptionAlgorithm', type: 'string' },
+      { name: 'encryptionKeyFingerprint', type: 'string' },
+      { name: 'chainId', type: 'uint256' },
+      { name: 'signerAddress', type: 'address' },
+      { name: 'signedAt', type: 'uint256' },
+      { name: 'nonce', type: 'uint256' }
+    ]
+  };
+
+  async function signMessageWithSafe(messageData: any): Promise<string> {
+    try {
+      if (!avatarState.avatar?.address) {
+        throw new Error('Avatar address not available');
+      }
+
+      const provider = ($wallet as any).provider;
+      if (!provider) {
+        throw new Error('No provider available');
+      }
+
+      const signer = await provider.getSigner();
+      if (!signer) {
+        throw new Error('No signer available');
+      }
+
+      // Initialize Safe SDK
+      let protocolKit = await Safe.init({
+        provider: window.ethereum,
+        signer: signer.address,
+        safeAddress: avatarState.avatar.address
+      });
+
+      // For Safe SDK, we need to create the EIP-712 structured data properly
+      // The Safe SDK expects the full EIP712 structure with domain, types, and primaryType
+
+      /*
+      protocolKit = await protocolKit.connect({
+        provider: window.ethereum,
+        signer: signer.address,
+        safeAddress: avatarState.avatar.address
+      })
+      */
+
+      console.log('Safe Protocol Kit initialized')
+      const safeAddress = await protocolKit.getAddress();
+      console.log('Safe address:', safeAddress)
+      const safeContractVersion = await protocolKit.getContractVersion();
+      console.log('Safe version:', safeContractVersion)
+
+      // EIP-712 Domain for Circles messaging
+      // @todo make it shared
+
+      const eip712Data = {
+        domain: DOMAIN,
+        types: {
+          ...TYPES,
+          EIP712Domain: [
+            { name: 'chainId', type: 'uint256' },
+          ]
+        },
+        primaryType: 'CirclesMessage',
+        message: messageData
+      };
+
+      console.log('EIP712 Data:', eip712Data);
+      const initialSafeMessage = await protocolKit.createMessage(eip712Data);
+      console.log(initialSafeMessage)
+
+      console.log({
+        provider: window.ethereum,
+        signer: signer.address,
+        safeAddress: avatarState.avatar.address
+      })
+
+      // Sign the safeMessage with OWNER_1_ADDRESS
+      // After this, the safeMessage contains the signature from OWNER_1_ADDRESS
+      
+      const signedSafeMessage = await protocolKit.signMessage(
+        initialSafeMessage,
+        SigningMethod.ETH_SIGN_TYPED_DATA_V4,
+        safeAddress
+      )
+
+      const encodedSignatures = signedSafeMessage.encodedSignatures()
+      console.log("encoded signature:", encodedSignatures)
+
+      const safeMessageHash = await protocolKit.getSafeMessageHash(
+        hashSafeMessage(eip712Data) // or STRING_MESSAGE
+      )
+      console.log("safe hash: ", safeMessageHash);
+      //Check the validity of the sigature
+      const isValid = await protocolKit.isValidSignature(
+        hashSafeMessage(eip712Data),//safeMessageHash,
+        encodedSignatures
+      )
+      console.log("is valid: ", isValid)
+      // Sign the typed data using Safe SDK
+      
+      console.log('Signed message:', encodedSignatures);
+      throw new Error();
+      return encodedSignatures;
+      
+    } catch (error) {
+      console.error('Error signing message with Safe:', error);
+      throw new Error(`Failed to sign message with Safe wallet: ${error.message}`);
+    }
+  }
+
+  async function signMessageWithEOA(messageData: any): Promise<string> {
+    try {
+      // Get the BrowserProvider and then the signer
+      const provider = ($wallet as any).provider;
+      if (!provider) {
+        throw new Error('No provider available');
+      }
+
+      const signer = await provider.getSigner();
+      if (!signer) {
+        throw new Error('No signer available');
+      }
+
+      console.log('Signer type:', signer.constructor.name);
+
+      // Sign using EIP-712 typed data - use _signTypedData for ethers v6
+      let signature: string;
+      try {
+        if (typeof signer._signTypedData === 'function') {
+          signature = await signer._signTypedData(DOMAIN, TYPES, messageData);
+        } else if (typeof signer.signTypedData === 'function') {
+          signature = await signer.signTypedData(DOMAIN, TYPES, messageData);
+        } else {
+          // Fallback: create the hash manually and sign it as a message
+          const hash = ethers.TypedDataEncoder.hash(DOMAIN, TYPES, messageData);
+          signature = await signer.signMessage(ethers.getBytes(hash));
+        }
+      } catch (signingError) {
+        console.error('Signing error:', signingError);
+        // Final fallback: create the hash and sign as message
+        const hash = ethers.TypedDataEncoder.hash(DOMAIN, TYPES, messageData);
+        signature = await signer.signMessage(ethers.getBytes(hash));
+      }
+      
+      return signature;
+    } catch (error) {
+      console.error('Error signing message with EOA:', error);
+      throw new Error(`Failed to sign message with EOA wallet: ${error.message}`);
+    }
+  }
+
+  async function createMessageSignature(messageData: any): Promise<string> {
+    // Get wallet type from storage (most reliable method)
+    const storedWalletType = CirclesStorage.getInstance().walletType;
+    const isSafeWallet = storedWalletType?.includes('safe') || false;
+    const isCirclesWallet = storedWalletType?.includes('circles') || false;
+    
+    // Check if the avatar address differs from wallet address (indicates Safe usage)
+    const isDifferentAddress = avatarState.avatar?.address !== $wallet?.address?.toLowerCase();
+
+    if (isSafeWallet || isCirclesWallet || isDifferentAddress) {
+      // This is a Safe wallet (either directly or through circles wallet acting as safe)
+      return await signMessageWithSafe(messageData);
+    } else {
+      // This is a direct EOA wallet
+      return await signMessageWithEOA(messageData);
+    }
+  }
 
   async function sendMessage() {
     if (!$circles || !avatarState.avatar?.address || !recipientAddress || !messageText.trim()) {
@@ -34,31 +212,35 @@
         txt: messageText.trim()
       };
 
-      // Upload message content directly to IPFS
-      const messageBuffer = new TextEncoder().encode(JSON.stringify(messageContent));
-      const messageAddResult = await fetch('http://127.0.0.1:5001/api/v0/add', {
-        method: 'POST',
-        body: (() => {
-          const formData = new FormData();
-          formData.append('file', new Blob([messageBuffer]), 'message.json');
-          return formData;
-        })()
-      });
+      // Upload message content to IPFS
+      const messageCid = await uploadToIpfs(messageContent);
+
+      // Create the message data structure for signing
+      const currentTime = Math.floor(Date.now() / 1000);
+      const nonce = isEncrypted ? BigInt(ethers.hexlify(ethers.randomBytes(16))) : BigInt(0);
       
-      if (!messageAddResult.ok) {
-        throw new Error('Failed to upload message to IPFS');
-      }
-      
-      const messageResult = await messageAddResult.json();
-      const messageCid = messageResult.Hash;
+      const messageData = {
+        cid: messageCid,
+        encrypted: isEncrypted,
+        encryptionAlgorithm: isEncrypted ? "AES-256-GCM" : "",
+        encryptionKeyFingerprint: isEncrypted ? "placeholder-fingerprint" : "",
+        chainId: BigInt(100),
+        signerAddress: avatarState.avatar.address.toLowerCase(),
+        signedAt: BigInt(currentTime),
+        nonce: nonce
+      };
+
+      // Create signature for the message
+      const signature = await createMessageSignature(messageData);
 
       // Get current profile
       const currentProfileCid = await $circles.data.getMetadataCidForAddress(avatarState.avatar.address);
       let currentProfile: any = {};
       
-        // Fetch profile directly from IPFS
-      currentProfile = await fetchFromIpfs(currentProfileCid, 1000);
-
+      // Fetch profile directly from IPFS
+      if (currentProfileCid) {
+        currentProfile = await fetchFromIpfs(currentProfileCid, 1000) || {};
+      }
 
       // Initialize namespaces if they don't exist
       if (!currentProfile.namespaces) {
@@ -75,60 +257,30 @@
         linksData = await fetchFromIpfs(recipientNamespaceCid, 1000) || { links: [] };
       }
 
-      // Create new message link
+      // Create new message link with signature
       const newLink = {
         cid: messageCid,
         encrypted: isEncrypted,
-        encryptionAlgorithm: null,
-        encryptionKeyFingerprint: null,
+        encryptionAlgorithm: messageData.encryptionAlgorithm,
+        encryptionKeyFingerprint: messageData.encryptionKeyFingerprint,
         chainId: 100,
         signerAddress: avatarState.avatar.address.toLowerCase(),
-        signedAt: Math.floor(Date.now() / 1000),
-        nonce: isEncrypted ? ethers.hexlify(ethers.randomBytes(16)) : "",
-        signature: "" // Could implement signing here
+        signedAt: currentTime,
+        nonce: isEncrypted ? ethers.toBeHex(nonce) : "0x0",
+        signature: signature
       };
 
       // Add new message to links
       linksData.links.push(newLink);
 
-      // Upload updated links directly to IPFS
-      const linksBuffer = new TextEncoder().encode(JSON.stringify(linksData));
-      const linksAddResult = await fetch('http://127.0.0.1:5001/api/v0/add', {
-        method: 'POST',
-        body: (() => {
-          const formData = new FormData();
-          formData.append('file', new Blob([linksBuffer]), 'links.json');
-          return formData;
-        })()
-      });
-
-      if (!linksAddResult.ok) {
-        throw new Error('Failed to upload updated links to IPFS');
-      }
-
-      const linksResult = await linksAddResult.json();
-      const newNamespaceCid = linksResult.Hash;
+      // Upload updated links to IPFS
+      const newNamespaceCid = await uploadToIpfs(linksData, "links.json");
 
       // Update profile with new namespace CID
       currentProfile.namespaces[recipientKey] = newNamespaceCid;
 
-      // Upload updated profile directly to IPFS
-      const profileBuffer = new TextEncoder().encode(JSON.stringify(currentProfile));
-      const profileAddResult = await fetch('http://127.0.0.1:5001/api/v0/add', {
-        method: 'POST',
-        body: (() => {
-          const formData = new FormData();
-          formData.append('file', new Blob([profileBuffer]), 'profile.json');
-          return formData;
-        })()
-      });
-
-      if (!profileAddResult.ok) {
-        throw new Error('Failed to upload updated profile to IPFS');
-      }
-
-      const profileResult = await profileAddResult.json();
-      const newProfileCid = profileResult.Hash;
+      // Upload updated profile to IPFS
+      const newProfileCid = await uploadToIpfs(currentProfile, "profile.json");
 
       // Update metadata on-chain
       await avatarState.avatar.updateMetadata(newProfileCid);
