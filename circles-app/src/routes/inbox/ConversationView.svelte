@@ -3,7 +3,7 @@
   import { getTimeAgo } from '$lib/utils/shared';
   import { popupControls } from '$lib/stores/popUp';
   import WriteMessage from './WriteMessage.svelte';
-  import { deduplicateAndSortMessages } from '$lib/utils/messageUtils';
+  import { sortMessages } from '$lib/utils/messageUtils';
   import type { Message } from '$lib/utils/messageTypes';
   import type { Address } from '@circles-sdk/utils';
 
@@ -16,7 +16,7 @@
   let { contactAddress, messages, currentUserAddress }: Props = $props();
 
   // Sort messages chronologically (oldest first for conversation view) and ensure uniqueness by CID
-  let sortedMessages = $derived(deduplicateAndSortMessages(messages));
+  let sortedMessages = $derived(sortMessages(messages));
 
   // Count unverified messages
   let unverifiedCount = $derived(messages.filter(msg => !msg.isVerified).length);
