@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 import type { Address } from '@circles-sdk/utils';
-import type { Message, MessageGroup, MessageLink } from './messageTypes';
-import { verifyMessageSignature, createMessageSignature, type MessageData } from './messageSignature';
+import type { Message, MessageData, MessageGroup, MessageLink } from './messageTypes';
+import { verifyMessageSignature, createMessageSignature } from './messageSignature';
 import { uploadToIpfs, fetchFromIpfs } from './ipfs';
 import { circles } from '$lib/stores/circles';
 import { avatarState } from '$lib/stores/avatar.svelte';
@@ -56,7 +56,7 @@ export async function fetchMessagesFromContacts(
       if (!profileCid) continue;
 
       // Fetch profile from IPFS
-      const profile = await fetchFromIpfs(profileCid, 2000);
+      const profile = await fetchFromIpfs(profileCid);
       if (!profile?.namespaces) continue;
 
       // Check if this contact has messages for us
@@ -64,14 +64,14 @@ export async function fetchMessagesFromContacts(
       if (!ourNamespace) continue;
 
       // Fetch the links from the namespace
-      const linksData = await fetchFromIpfs(ourNamespace, 2000);
+      const linksData = await fetchFromIpfs(ourNamespace);
       if (!linksData?.links) continue;
 
       // Process each message link
       for (const link of linksData.links) {
         try {
           // Fetch message content from IPFS
-          const messageContent = await fetchFromIpfs(link.cid, 2000);
+          const messageContent = await fetchFromIpfs(link.cid);
           if (messageContent?.txt) {
             const message: Message = {
               txt: messageContent.txt,
@@ -115,7 +115,7 @@ export async function fetchSentMessages(
     if (!ourProfileCid) return sentMessages;
 
     // Fetch our profile from IPFS
-    const ourProfile = await fetchFromIpfs(ourProfileCid, 2000);
+    const ourProfile = await fetchFromIpfs(ourProfileCid);
     if (!ourProfile?.namespaces) return sentMessages;
 
     // Check each contact's namespace in our profile for sent messages
@@ -125,14 +125,14 @@ export async function fetchSentMessages(
 
       try {
         // Fetch the links from our namespace for this contact
-        const sentLinksData = await fetchFromIpfs(contactNamespace, 2000);
+        const sentLinksData = await fetchFromIpfs(contactNamespace);
         if (!sentLinksData?.links) continue;
 
         // Process each sent message link
         for (const link of sentLinksData.links) {
           try {
             // Fetch message content from IPFS
-            const messageContent = await fetchFromIpfs(link.cid, 2000);
+            const messageContent = await fetchFromIpfs(link.cid);
             if (messageContent?.txt) {
               const message: Message = {
                 txt: messageContent.txt,
@@ -185,7 +185,7 @@ export async function uploadMessageAndUpdateProfile(
     let currentProfile: any = {};
     
     if (currentProfileCid) {
-      currentProfile = await fetchFromIpfs(currentProfileCid, 2000) || {};
+      currentProfile = await fetchFromIpfs(currentProfileCid) || {};
     }
 
     // Step 3: Initialize namespaces if they don't exist
@@ -199,7 +199,7 @@ export async function uploadMessageAndUpdateProfile(
     let linksData: any = { links: [] };
 
     if (recipientNamespaceCid) {
-      linksData = await fetchFromIpfs(recipientNamespaceCid, 2000) || { links: [] };
+      linksData = await fetchFromIpfs(recipientNamespaceCid) || { links: [] };
       if (!linksData.links) {
         linksData.links = [];
       }

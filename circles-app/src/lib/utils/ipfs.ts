@@ -1,5 +1,8 @@
 import type { Address } from '@circles-sdk/utils';
 import type { Sdk } from '@circles-sdk/sdk';
+import type { UserProfile, MessageNamespace, MessageLink, MessageContent } from './messageTypes';
+
+import { PUBLIC_IPFS_GATEWAY, PUBLIC_IPFS_API  } from '$env/static/public';
 
 /**
  * Fetches data from IPFS using the gateway endpoint with timeout support
@@ -7,27 +10,23 @@ import type { Sdk } from '@circles-sdk/sdk';
  * @param timeoutMs - Timeout in milliseconds (default: 5000ms)
  * @returns Promise that resolves to the parsed JSON data or null on error
  */
-export async function fetchFromIpfs(cid: string, timeoutMs: number = 5000): Promise<any> {
+export async function fetchFromIpfs(cid: string, timeoutMs: number = 1000): Promise<any> {
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-    
-    const response = await fetch(`http://127.0.0.1:8080/ipfs/${cid}`, {
+
+    const response = await fetch(`${PUBLIC_IPFS_GATEWAY}/ipfs/${cid}`, {
       signal: controller.signal
     });
-    
+
     clearTimeout(timeoutId);
-    
+
     if (!response.ok) {
       throw new Error(`Failed to fetch CID ${cid}: ${response.statusText}`);
     }
     return await response.json();
   } catch (error) {
-    if (error.name === 'AbortError') {
-      console.warn(`IPFS fetch timeout for CID ${cid} after ${timeoutMs}ms`);
-    } else {
-      console.warn(`Failed to fetch from IPFS: ${cid}`, error);
-    }
+    console.warn(`Failed to fetch from IPFS: ${cid}`, error);
     return null;
   }
 }
@@ -42,43 +41,18 @@ export async function uploadToIpfs(data: any, filename: string = 'data.json'): P
   const buffer = new TextEncoder().encode(JSON.stringify(data));
   const formData = new FormData();
   formData.append('file', new Blob([buffer]), filename);
-  
-  const response = await fetch('http://127.0.0.1:5001/api/v0/add', {
+
+  const response = await fetch(`${PUBLIC_IPFS_API}/api/v0/add`, {
     method: 'POST',
     body: formData
   });
-  
+
   if (!response.ok) {
     throw new Error(`Failed to upload to IPFS: ${response.statusText}`);
   }
-  
+
   const result = await response.json();
   return result.Hash;
-}
-
-export interface MessageContent {
-  txt: string;
-}
-
-export interface MessageNamespace {
-  links: MessageLink[];
-}
-
-export interface MessageLink {
-  cid: string;
-  encrypted: boolean;
-  encryptionAlgorithm?: string;
-  encryptionKeyFingerprint?: string;
-  chainId: number;
-  signerAddress: string;
-  signedAt: number;
-  nonce: string;
-  signature: string;
-}
-
-export interface UserProfile {
-  namespaces?: Record<string, string>;
-  [key: string]: any;
 }
 
 /**
@@ -99,7 +73,7 @@ export async function fetchMessagesFromContacts(
       if (!profileCid) continue;
 
       // Fetch profile directly from IPFS
-      const profile = await fetchFromIpfs(profileCid, 1000);
+      const profile = await fetchFromIpfs(profileCid);
       if (!profile?.namespaces) continue;
 
       // Check if this contact has messages for us
@@ -107,14 +81,14 @@ export async function fetchMessagesFromContacts(
       if (!ourNamespace) continue;
 
       // Fetch the links from the namespace directly from IPFS
-      const linksData = await fetchFromIpfs(ourNamespace, 1000);
+      const linksData = await fetchFromIpfs(ourNamespace);
       if (!linksData?.links) continue;
 
       // Process each message link (received messages)
       for (const link of linksData.links) {
         try {
           // Fetch message content directly from IPFS
-          const messageContent = await fetchFromIpfs(link.cid, 1000);
+          const messageContent = await fetchFromIpfs(link.cid);
           if (messageContent?.txt) {
             allMessages.push({
               txt: messageContent.txt,
@@ -156,7 +130,7 @@ export async function fetchSentMessages(
     const ourProfileCid = await circles.data.getMetadataCidForAddress(avatarAddress);
     if (!ourProfileCid) return sentMessages;
 
-    const ourProfile = await fetchFromIpfs(ourProfileCid, 2000);
+    const ourProfile = await fetchFromIpfs(ourProfileCid);
     if (!ourProfile?.namespaces) return sentMessages;
 
     // Check each contact's namespace in our profile for sent messages
@@ -165,14 +139,14 @@ export async function fetchSentMessages(
       if (!contactNamespace) continue;
 
       // Fetch the links from our namespace for this contact
-      const sentLinksData = await fetchFromIpfs(contactNamespace, 2000);
+      const sentLinksData = await fetchFromIpfs(contactNamespace);
       if (!sentLinksData?.links) continue;
 
       // Process each sent message link
       for (const link of sentLinksData.links) {
         try {
           // Fetch message content directly from IPFS
-          const messageContent = await fetchFromIpfs(link.cid, 2000);
+          const messageContent = await fetchFromIpfs(link.cid);
           if (messageContent?.txt) {
             sentMessages.push({
               txt: messageContent.txt,
@@ -219,7 +193,7 @@ export async function uploadMessageAndUpdateProfile(
   
   // Fetch profile directly from IPFS
   if (currentProfileCid) {
-    currentProfile = await fetchFromIpfs(currentProfileCid, 1000) || {};
+    currentProfile = await fetchFromIpfs(currentProfileCid) || {};
   }
 
   // Initialize namespaces if they don't exist
@@ -234,7 +208,7 @@ export async function uploadMessageAndUpdateProfile(
 
   if (recipientNamespaceCid) {
     // Load existing links
-    const existingLinks = await fetchFromIpfs(recipientNamespaceCid, 1000);
+    const existingLinks = await fetchFromIpfs(recipientNamespaceCid);
     linksData = existingLinks || { links: [] };
   }
 
