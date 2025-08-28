@@ -4,6 +4,7 @@ import { CirclesStorage } from '$lib/utils/storage';
 import { wallet } from '$lib/stores/wallet.svelte';
 import { get } from 'svelte/store';
 import type { WalletType } from '$lib/utils/walletType';
+import type { MessageData, MessageLink } from './messageTypes';
 
 // EIP-712 Domain for signature verification
 export const MESSAGE_DOMAIN = {
@@ -24,29 +25,6 @@ export const MESSAGE_TYPES = {
   ]
 };
 
-export interface MessageData {
-  cid: string;
-  encrypted: boolean;
-  encryptionAlgorithm: string;
-  encryptionKeyFingerprint: string;
-  chainId: bigint;
-  signerAddress: string;
-  signedAt: bigint;
-  nonce: bigint;
-}
-
-export interface MessageLink {
-  cid: string;
-  encrypted: boolean;
-  encryptionAlgorithm?: string;
-  encryptionKeyFingerprint?: string;
-  chainId: number;
-  signerAddress: string;
-  signedAt: number;
-  nonce: string;
-  signature: string;
-}
-
 /**
  * Verifies a message signature using multiple methods (Safe SDK, EOA typed data, message hash)
  */
@@ -54,7 +32,6 @@ export async function verifyMessageSignature(
   link: MessageLink,
   senderAddress: string
 ): Promise<boolean> {
-  // @todo rework try statement tree
   try {
     // Reconstruct the message data that should have been signed
     const messageData: MessageData = {
@@ -67,78 +44,77 @@ export async function verifyMessageSignature(
       signedAt: BigInt(link.signedAt),
       nonce: BigInt(link.nonce || 0)
     };
-    console.log(messageData)
 
-    // Create the EIP-712 hash
+    const expectedAddress = messageData.signerAddress;
     const hash = ethers.TypedDataEncoder.hash(MESSAGE_DOMAIN, MESSAGE_TYPES, messageData);
-    const expectedAddress = link.signerAddress?.toLowerCase() || senderAddress.toLowerCase();
-    
-    try {
-      // Method 1: Try Safe signature verification first
-      if (window.ethereum) {
+
+    // Method 1: Try Safe signature verification
+    if (window.ethereum) {
+      try {
         const protocolKit = await Safe.init({
           provider: window.ethereum,
           safeAddress: expectedAddress
         });
 
-        // For Safe SDK, we need to create the EIP712 structure
         const eip712Data = {
-          domain: {
-            chainId: 100,
-          },
+          domain: { chainId: 100 },
           types: {
             ...MESSAGE_TYPES,
-            EIP712Domain: [
-              { name: 'chainId', type: 'uint256' },
-            ]
+            EIP712Domain: [{ name: 'chainId', type: 'uint256' }]
           },
           primaryType: 'CirclesMessage',
           message: messageData
         };
         
-        // Verify using Safe SDK
         const isValidSafeSignature = await protocolKit.isValidSignature(
           hashSafeMessage(eip712Data),
           link.signature
         );
-
-        console.log("is signature valid: ", isValidSafeSignature)
         
         if (isValidSafeSignature) {
           console.log('Signature verified using Safe SDK');
           return true;
         }
+      } catch (safeError) {
+        console.log('Safe signature verification failed:', safeError);
       }
-
-      // Method 2: Try EOA signature verification (fallback for EOA wallets)
-      try {
-        const recoveredFromTypedData = ethers.verifyTypedData(MESSAGE_DOMAIN, MESSAGE_TYPES, messageData, link.signature);
-        if (recoveredFromTypedData.toLowerCase() === expectedAddress) {
-          console.log('Signature verified using EOA typed data method');
-          return true;
-        }
-      } catch (typedDataError) {
-        console.log('EOA typed data verification failed:', typedDataError);
-      }
-
-      // Method 3: Try message hash recovery (for direct message signatures)
-      try {
-        const recoveredFromMessage = ethers.verifyMessage(ethers.getBytes(hash), link.signature);
-        if (recoveredFromMessage.toLowerCase() === expectedAddress) {
-          console.log('Signature verified using message hash recovery');
-          return true;
-        }
-      } catch (messageVerifyError) {
-        console.log('Message hash verification failed:', messageVerifyError);
-      }
-
-      console.warn(`All verification methods failed for message ${link.cid}`);
-      return false;
-      
-    } catch (verificationError) {
-      console.warn(`Signature verification error for message ${link.cid}:`, verificationError);
-      return false;
     }
+
+    // Method 2: Try EOA typed data verification
+    try {
+      const recoveredFromTypedData = ethers.verifyTypedData(
+        MESSAGE_DOMAIN, 
+        MESSAGE_TYPES, 
+        messageData, 
+        link.signature
+      );
+      
+      if (recoveredFromTypedData.toLowerCase() === expectedAddress) {
+        console.log('Signature verified using EOA typed data method');
+        return true;
+      }
+    } catch (typedDataError) {
+      console.log('EOA typed data verification failed:', typedDataError);
+    }
+
+    // Method 3: Try message hash recovery
+    try {
+      const recoveredFromMessage = ethers.verifyMessage(
+        ethers.getBytes(hash), 
+        link.signature
+      );
+      
+      if (recoveredFromMessage.toLowerCase() === expectedAddress) {
+        console.log('Signature verified using message hash recovery');
+        return true;
+      }
+    } catch (messageVerifyError) {
+      console.log('Message hash verification failed:', messageVerifyError);
+    }
+
+    // All verification methods failed
+    console.warn(`All verification methods failed for message ${link.cid}`);
+    return false;
     
   } catch (error) {
     console.warn(`Signature verification failed for message ${link.cid}:`, error);
