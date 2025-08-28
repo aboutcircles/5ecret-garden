@@ -197,6 +197,7 @@ async function signMessageWithSafe(messageData: MessageData): Promise<string> {
     };
 
     console.log('EIP712 Data:', eip712Data);
+    // @todo check the types
     const initialSafeMessage = await protocolKit.createMessage(eip712Data);
     console.log(initialSafeMessage);
 
@@ -286,12 +287,11 @@ export async function createMessageSignature(messageData: MessageData): Promise<
   // Get wallet type from storage (most reliable method)
   const storedWalletType = CirclesStorage.getInstance().walletType;
   const isSafeWallet = storedWalletType?.includes('safe') || false;
+  // @todo check circles wallet flow
   const isCirclesWallet = storedWalletType?.includes('circles') || false;
   
   // Check if the avatar address differs from wallet address (indicates Safe usage)
-  const isDifferentAddress = $wallet?.address !== $wallet?.address?.toLowerCase();
-
-  if (isSafeWallet || isCirclesWallet || isDifferentAddress) {
+  if (isSafeWallet || isCirclesWallet) {
     // This is a Safe wallet (either directly or through circles wallet acting as safe)
     return await signMessageWithSafe(messageData);
   } else {
