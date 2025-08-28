@@ -1,6 +1,18 @@
 import type { Address } from '@circles-sdk/utils';
 
-// @todo prettify
+export interface UserProfile {
+  namespaces?: Record<string, string>;
+  [key: string]: any;
+}
+
+export interface MessageNamespace {
+  links: MessageLink[];
+}
+
+export interface MessageContent {
+  txt: string;
+}
+
 export interface MessageData {
   cid: string;
   encrypted: boolean;
