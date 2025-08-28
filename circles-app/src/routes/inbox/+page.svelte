@@ -106,7 +106,7 @@
       <p class="text-sm text-gray-400">Messages from your trusted connections will appear here</p>
     </div>
   {:else}
-    <div class="w-full md:border rounded-lg md:px-4 flex flex-col divide-y">
+    <div class="w-full md:border rounded-lg flex flex-col divide-y">
       {#each groupedMessages as group (group.senderAddress)}
         <button
           class="w-full flex items-center justify-between p-4 hover:bg-black/5 rounded-lg"

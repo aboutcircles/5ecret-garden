@@ -272,6 +272,7 @@ async function signMessageWithEOA(messageData: MessageData): Promise<string> {
     return signature;
   } catch (error) {
     console.error('Error signing message with EOA:', error);
+    //@todo unknown type
     throw new Error(`Failed to sign message with EOA wallet: ${error.message}`);
   }
 }

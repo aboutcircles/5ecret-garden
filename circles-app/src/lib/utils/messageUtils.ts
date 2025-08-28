@@ -379,17 +379,10 @@ export function getConversationMessages(
 }
 
 /**
- * Removes duplicate messages by CID and sorts chronologically
+ * Sorts messages chronologically
  */
-export function deduplicateAndSortMessages(messages: Message[]): Message[] {
-  // Remove duplicates by CID first
-  const uniqueMessages = messages.reduce((acc, message) => {
-    if (!acc.find(m => m.cid === message.cid)) {
-      acc.push(message);
-    }
-    return acc;
-  }, [] as Message[]);
+export function sortMessages(messages: Message[]): Message[] {
   
   // Then sort chronologically (oldest first for conversation view)
-  return uniqueMessages.sort((a, b) => a.signedAt - b.signedAt);
+  return messages.sort((a, b) => a.signedAt - b.signedAt);
 }
