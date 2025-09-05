@@ -11,12 +11,16 @@
 
   import DefaultHeader from '$lib/components/DefaultHeader.svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
-  import { clearSession, restoreWallet } from '$lib/stores/wallet.svelte';
+  import {
+    clearSession,
+    restoreSession,
+    signer,
+  } from '$lib/stores/wallet.svelte';
   import { canMigrate } from '$lib/guards/canMigrate';
   import UpdateBanner from '$lib/components/UpdateBanner.svelte';
   import { page } from '$app/stores';
   import Send from '$lib/flows/send/1_To.svelte';
-  import { onMount } from 'svelte';
+  import { onDestroy, onMount } from 'svelte';
   import { tasks } from '$lib/utils/tasks';
   import { popupControls, popupState } from '$lib/stores/popUp';
   import PopUp from '$lib/components/PopUp.svelte';
@@ -25,9 +29,43 @@
   import { initTransactionHistoryStore } from '$lib/stores/transactionHistory';
   import { initContactStore } from '$lib/stores/contacts';
   import { initBalanceStore } from '$lib/stores/circlesBalances';
+  import { browser } from '$app/environment';
+  import { PUBLIC_PLAUSIBLE_DOMAIN } from '$env/static/public';
   import { initGroupMetricsStore } from '$lib/stores/groupMetrics.svelte';
   import { circles } from '$lib/stores/circles';
   import Footer from '$lib/components/Footer.svelte';
+
+  import { watchAccount } from '@wagmi/core';
+  import { config } from '../config';
+  import WrongNetwork from '$lib/components/WrongNetwork.svelte';
+
+  const unwatch = watchAccount(config, {
+    onChange(account) {
+      //handler for injected wallet
+      if (signer.privateKey === undefined) {
+        //if the account is not on the correct network, show the wrong network popup
+        if (account.chainId !== 100 && account.address) {
+          popupControls.open({
+            title: 'Wrong Network',
+            component: WrongNetwork,
+            props: {},
+          });
+        }
+        //if the account is not the same as the signer, clear the session
+        if (
+          signer.address &&
+          account.address &&
+          account.address.toLowerCase() !== signer.address.toLowerCase()
+        ) {
+          clearSession();
+        }
+      }
+    },
+  });
+
+  onDestroy(() => {
+    unwatch();
+  });
 
   interface Props {
     children?: import('svelte').Snippet;
@@ -103,10 +141,12 @@
   );
 
   onMount(async () => {
-    if ($page.route.id === '/' || $page.route.id === '/connect-wallet') {
-      await clearSession();
-    } else {
-      await restoreWallet();
+    if (
+      $page.route.id !== '/' &&
+      $page.route.id !== '/connect-wallet/connect-safe' &&
+      $page.route.id !== '/connect-wallet/import-circles-garden'
+    ) {
+      await restoreSession();
     }
   });
 
@@ -161,6 +201,16 @@
 {:else}
   <DefaultHeader quickAction={undefined} route={''} />
 {/if}
+
+<svelte:head>
+  {#if browser && PUBLIC_PLAUSIBLE_DOMAIN}
+    <script
+      defer
+      data-domain={PUBLIC_PLAUSIBLE_DOMAIN}
+      src="https://plausible.io/js/script.js"
+    ></script>
+  {/if}
+</svelte:head>
 
 <main class="relative w-full h-full bg-white overflow-hidden font-dmSans">
   {#if avatarState.avatar?.avatarInfo && canMigrate(avatarState.avatar.avatarInfo) && $page.route.id !== '/migrate-to-v2'}

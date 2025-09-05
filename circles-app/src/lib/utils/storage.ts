@@ -6,7 +6,11 @@ export interface StorageSchema {
   walletType?: WalletType;
   avatar?: Address;
   group?: Address;
+  isGroup?: boolean;
+  groupType?: string;
   privateKey?: string;
+  rings?: boolean;
+  legacy?: boolean;
 }
 
 const STORAGE_KEY = 'Circles.Storage';
@@ -35,6 +39,8 @@ export class CirclesStorage {
       walletType: localStorage.getItem('walletType') as WalletType,
       avatar: localStorage.getItem('avatar') as Address,
       group: localStorage.getItem('group') as Address,
+      isGroup: localStorage.getItem('isGroup') === 'true',
+      groupType: localStorage.getItem('groupType') || undefined,
       privateKey: localStorage.getItem('privateKey') || undefined,
       ...data,
       version: CURRENT_VERSION
@@ -42,7 +48,7 @@ export class CirclesStorage {
 
     this.write(migratedData);
 
-    ['walletType', 'avatar', 'group', 'privateKey'].forEach(key => {
+    ['walletType', 'avatar', 'group', 'isGroup', 'groupType', 'privateKey'].forEach(key => {
       localStorage.removeItem(key);
     });
   }
@@ -70,8 +76,28 @@ export class CirclesStorage {
     return this.data.group;
   }
 
+  get isGroup(): boolean | undefined {
+    return this.data.isGroup;
+  }
+
+  get groupType(): string | undefined {
+    return this.data.groupType;
+  }
+
   get privateKey(): string | undefined {
     return this.data.privateKey;
+  }
+
+  get rings(): boolean | undefined {
+    return this.data.rings;
+  }
+
+  get legacy(): boolean | undefined {
+    return this.data.legacy;
+  }
+
+  clear() {
+    localStorage.removeItem(STORAGE_KEY);
   }
 
   private write(data: StorageSchema) {

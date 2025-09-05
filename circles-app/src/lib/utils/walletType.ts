@@ -1,7 +1,7 @@
 export type WalletType =
   'safe'
   | 'safe+group'
-  | 'metamask'
-  | 'metamask+group'
+  | 'injected'
+  | 'injected+group'
   | 'circles'
   | 'circles+group';
