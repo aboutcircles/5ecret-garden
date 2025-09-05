@@ -9,6 +9,7 @@
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { ethers } from 'ethers';
   import type { Address } from '@circles-sdk/utils';
+  import Trust from "$lib/pages/Trust.svelte";
 
   let context: AddContactFlowContext = $state({
     selectedAddress: '',
@@ -21,6 +22,15 @@
     popupControls.open({
       title: 'Invite someone',
       component: Invite,
+      props: {
+        address: avatar,
+      },
+    });
+  }
+  function ontrust(avatar: Address) {
+    popupControls.open({
+      title: 'Trust',
+      component: Trust,
       props: {
         address: avatar,
       },
@@ -187,6 +197,7 @@
     selectedAddress={context.selectedAddress}
     {oninvite}
     {onselect}
+    {ontrust}
     searchType="contact"
   />
 </FlowDecoration>

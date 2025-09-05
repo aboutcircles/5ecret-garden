@@ -13,10 +13,11 @@
     selectedAddress?: any;
     searchType?: 'send' | 'group' | 'contact';
     oninvite?: (avatar: any) => void;
+    ontrust?: (avatar: any) => void;
     onselect?: (avatar: any) => void;
   }
 
-  let { selectedAddress = $bindable(undefined), searchType = 'send', oninvite, onselect }: Props = $props();
+  let {selectedAddress = $bindable(undefined), searchType = 'send', oninvite, ontrust, onselect}: Props = $props();
   let lastAddress: string = $state('');
   let result: SearchResultProfile[] = $state([]);
   let profiles: Profiles | undefined = $state();
@@ -131,10 +132,16 @@
       <div>
         {#if ethers.isAddress(selectedAddress) && searchType === 'contact'}
           <button
-            class="btn mt-6"
-            onclick={() => oninvite?.(selectedAddress as Address)}
-            >Invite {selectedAddress}</button
-          >
+              class="btn mt-6"
+              onclick={() => oninvite?.(selectedAddress as Address)}
+          >Invite {selectedAddress}</button>
+          {#if ontrust}
+            <br/>
+            <button
+                class="btn mt-6"
+                onclick={() => ontrust?.(selectedAddress as Address)}
+            >Trust {selectedAddress}</button>
+          {/if}
         {:else}
           <p>No accounts found.</p>
         {/if}
