@@ -1,22 +1,23 @@
 <script lang="ts">
-  import { ethers } from 'ethers';
-  import { onMount } from 'svelte';
+  import {ethers} from 'ethers';
+  import {onMount} from 'svelte';
   import AddressInput from '$lib/components/AddressInput.svelte';
-  import { Profiles, type SearchResultProfile } from '@circles-sdk/profiles';
+  import {Profiles, type SearchResultProfile} from '@circles-sdk/profiles';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import { getCirclesConfig } from '$lib/utils/helpers';
-  import { wallet } from '$lib/stores/wallet.svelte';
-  import type { Address } from '@circles-sdk/utils';
-  import { environment } from '$lib/stores/environment.svelte';
+  import {getCirclesConfig} from '$lib/utils/helpers';
+  import {wallet} from '$lib/stores/wallet.svelte';
+  import type {Address} from '@circles-sdk/utils';
+  import {environment} from '$lib/stores/environment.svelte';
 
   interface Props {
     selectedAddress?: any;
     searchType?: 'send' | 'group' | 'contact';
     oninvite?: (avatar: any) => void;
+    ontrust?: (avatar: any) => void;
     onselect?: (avatar: any) => void;
   }
 
-  let { selectedAddress = $bindable(undefined), searchType = 'send', oninvite, onselect }: Props = $props();
+  let {selectedAddress = $bindable(undefined), searchType = 'send', oninvite, ontrust, onselect}: Props = $props();
   let lastAddress: string = $state('');
   let result: SearchResultProfile[] = $state([]);
   let profiles: Profiles | undefined = $state();
@@ -92,7 +93,7 @@
 </script>
 
 <div class="form-control my-4">
-  <AddressInput bind:address={selectedAddress} />
+  <AddressInput bind:address={selectedAddress}/>
 </div>
 
 <div class="mt-4">
@@ -108,20 +109,20 @@
 
   {#if result.length > 0}
     <div
-      class="w-full md:border rounded-lg md:px-4 flex flex-col divide-y gap-y-2 overflow-x-auto py-4"
+        class="w-full md:border rounded-lg md:px-4 flex flex-col divide-y gap-y-2 overflow-x-auto py-4"
     >
       {#each result as profile}
         <div class="w-full pt-2">
           <button
-            class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
-            onclick={() => onselect?.(profile.address as Address)}
+              class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
+              onclick={() => onselect?.(profile.address as Address)}
           >
             <Avatar
-              address={profile.address as Address}
-              view="horizontal"
-              clickable={false}
+                address={profile.address as Address}
+                view="horizontal"
+                clickable={false}
             />
-            <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
+            <img src="/chevron-right.svg" alt="Chevron Right" class="w-4"/>
           </button>
         </div>
       {/each}
@@ -131,10 +132,16 @@
       <div>
         {#if ethers.isAddress(selectedAddress) && searchType === 'contact'}
           <button
-            class="btn mt-6"
-            onclick={() => oninvite?.(selectedAddress as Address)}
-            >Invite {selectedAddress}</button
-          >
+              class="btn mt-6"
+              onclick={() => oninvite?.(selectedAddress as Address)}
+          >Invite {selectedAddress}</button>
+          {#if ontrust}
+            <br/>
+            <button
+                class="btn mt-6"
+                onclick={() => ontrust?.(selectedAddress as Address)}
+            >Trust {selectedAddress}</button>
+          {/if}
         {:else}
           <p>No accounts found.</p>
         {/if}
