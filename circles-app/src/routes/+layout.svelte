@@ -213,7 +213,7 @@
 </svelte:head>
 
 <main class="relative w-full h-full bg-white overflow-hidden font-dmSans">
-  {#if avatarState.avatar?.avatarInfo && canMigrate(avatarState.avatar.avatarInfo) && $page.route.id !== '/migrate-to-v2'}
+  {#if avatarState.avatar?.avatarInfo && canMigrate(avatarState.avatar.avatarInfo)}
     <UpdateBanner />
     <div class="h-20"></div>
   {/if}
