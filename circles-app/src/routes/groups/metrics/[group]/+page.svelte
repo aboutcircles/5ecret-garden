@@ -87,7 +87,7 @@
           <ModernHistoryChart
             dataSet1={groupMetrics.mintRedeemPerHour}
             dataSet2={groupMetrics.mintRedeemPerDay}
-            title="Mint/Redeem Activity"
+            title="Mint/Burn Activity"
             label="Circles"
           />
         </div>
@@ -100,6 +100,7 @@
             dataSet2={groupMetrics.wrapUnwrapPerDay}
             title="Wrap/Unwrap Activity"
             label="Circles"
+            type="bar"
           />
         </div>
       {/if}
