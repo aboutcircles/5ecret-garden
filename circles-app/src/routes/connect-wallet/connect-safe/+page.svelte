@@ -20,9 +20,13 @@
   import { Sdk } from '@circles-sdk/sdk';
   import type { SdkContractRunner } from '@circles-sdk/adapter';
   import { circles } from '$lib/stores/circles';
+  import { isAddress } from 'viem';
   let groupsByOwner: Record<Address, GroupRow[]> | undefined = $state();
   let avatarInfo: AvatarRow | undefined = $state();
   let runner: SdkContractRunner | undefined = $state();
+  let isReadOnlyMode: boolean = $state(false);
+  let readOnlyAddress: Address | undefined = $state(undefined);
+  let effectiveAddr: Address | undefined = $state(undefined);
   onMount(async () => {
     signer.address = await getSigner();
     if (!signer.address) {
@@ -50,6 +54,12 @@
     );
   }
 
+  function getEffectiveAddress(): Address | undefined {
+    return isReadOnlyMode && readOnlyAddress && isAddress(readOnlyAddress)
+      ? readOnlyAddress
+      : signer.address;
+  }
+
   $effect(() => {
     circles.set(
       runner
@@ -63,11 +73,12 @@
 
   $effect(() => {
     (async () => {
-      if (!signer.address || !$circles) return;
+      effectiveAddr = getEffectiveAddress();
+      if (!effectiveAddr || !$circles) return;
       groupsByOwner = await getBaseAndCmgGroupsByOwnerBatch($circles, [
-        signer.address,
+        effectiveAddr,
       ]);
-      avatarInfo = await $circles.data.getAvatarInfo(signer.address);
+      avatarInfo = await $circles.data.getAvatarInfo(effectiveAddr);
     })();
   });
 </script>
@@ -84,23 +95,63 @@
   <p class="font-normal text-black/60 text-base">
     Please select the account you want to use from the list below.
   </p>
-  <div class="flex w-full justify-end">
+  <div class="flex w-full justify-between items-center">
+    <div class="flex items-center gap-x-3">
+      <label class="flex items-center gap-x-2 cursor-pointer">
+        <input
+          type="checkbox"
+          bind:checked={isReadOnlyMode}
+          class="checkbox checkbox-primary checkbox-sm"
+        />
+        <span class="text-sm font-medium">Read-Only mode</span>
+      </label>
+    </div>
     <SettingsDropdown />
   </div>
-  {#if !signer.address || !$circles}
+
+  {#if isReadOnlyMode}
+    <div class="w-full">
+      <label class="form-control w-full">
+        <div class="label">
+          <span class="label-text font-medium">Read address</span>
+        </div>
+        <input
+          type="text"
+          placeholder="0x..."
+          bind:value={readOnlyAddress}
+          class="input input-bordered w-full {!readOnlyAddress ||
+          !isAddress(readOnlyAddress)
+            ? 'input-error'
+            : ''}"
+        />
+        {#if readOnlyAddress && !isAddress(readOnlyAddress)}
+          <div class="label">
+            <span class="label-text-alt text-error">Invalid address</span>
+          </div>
+        {/if}
+      </label>
+    </div>
+  {/if}
+  {#if !effectiveAddr || !$circles}
     <WalletLoader />
-  {:else if settings.legacy}
-    <ConnectCircles
-      address={signer.address}
-      isRegistered={avatarInfo !== undefined}
-      groups={groupsByOwner?.[signer.address] ?? []}
-      initSdk={connectLegacy}
-    />
+  {:else if isReadOnlyMode && (!readOnlyAddress || !isAddress(readOnlyAddress))}
+    <div class="w-full text-center p-4">
+      <p class="text-gray-500">Please enter a valid address to continue.</p>
+    </div>
   {:else}
-    <ConnectSafe
-      safeOwnerAddress={signer.address}
-      initSdk={connectSafe}
-      sdk={$circles}
-    />
+    {#if settings.legacy}
+      <ConnectCircles
+        address={effectiveAddr}
+        isRegistered={avatarInfo !== undefined}
+        groups={groupsByOwner?.[effectiveAddr] ?? []}
+        initSdk={connectLegacy}
+      />
+         {:else}
+       <ConnectSafe
+         safeOwnerAddress={effectiveAddr}
+         initSdk={connectSafe}
+         sdk={$circles}
+       />
+     {/if}
   {/if}
 </div>

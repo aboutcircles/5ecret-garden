@@ -120,12 +120,6 @@ export async function restoreSession() {
         ?? savedAvatar
         ?? runner.address) as Address;
 
-
-    console.log('savedAvatar', savedAvatar);
-    console.log('savedGroup', savedGroup);
-    console.log('restoredWallet.address', runner.address);
-    console.log('-> avatarToRestore is: ', avatarToRestore);
-
     const avatarInfo = await sdk.data.getAvatarInfo(avatarToRestore);
 
     if (avatarInfo) {
