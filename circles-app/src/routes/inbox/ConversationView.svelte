@@ -28,14 +28,14 @@
       props: {
         recipientAddress: contactAddress,
         onMessageSent: () => {
-          // Could refresh conversation here
+          // @todo refresh conversation here
         }
       }
     });
   }
 
   function isMessageFromCurrentUser(message: Message): boolean {
-    return currentUserAddress && message.senderAddress === currentUserAddress;
+    return message.senderAddress.toLowerCase() === currentUserAddress?.toLowerCase();
   }
 </script>
 
