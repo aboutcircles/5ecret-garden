@@ -81,7 +81,7 @@ export async function fetchMessagesFromContacts(
               encrypted: link.encrypted || false,
               signedAt: link.signedAt || 0,
               signature: link.signature || '',
-              nonce: link.nonce || '0x0',
+              nonce: link.nonce,
               chainId: link.chainId || 100,
               isVerified: false // Will be verified later
             };
@@ -246,8 +246,8 @@ export async function fetchAllMessages(): Promise<Message[]> {
     
     // Fetch received and sent messages
     const [receivedMessages, sentMessages] = await Promise.all([
-      fetchMessagesFromContacts($circles, avatarState.avatar.address, trustedAddresses),
-      fetchSentMessages($circles, avatarState.avatar.address, trustedAddresses)
+      fetchMessagesFromContacts($circles, avatarState.avatar.address, trustedAddresses as Address[]),
+      fetchSentMessages($circles, avatarState.avatar.address, trustedAddresses as Address[])
     ]);
 
     // Combine all messages
@@ -272,9 +272,6 @@ export async function fetchAllMessages(): Promise<Message[]> {
         message.isVerified = false;
       }
     }
-
-    // Sort messages by signedAt (newest first)
-    allMessages.sort((a, b) => b.signedAt - a.signedAt);
 
     return allMessages;
   } catch (error) {
@@ -312,8 +309,8 @@ export async function sendMessage(
 
     // Step 3: Create the message data structure for signing
     const currentTime = Math.floor(Date.now() / 1000);
-    const nonce = isEncrypted ? BigInt(ethers.hexlify(ethers.randomBytes(16))) : BigInt(0);
-    
+    const nonceHex = ethers.hexlify(ethers.randomBytes(16)); // 32 hex chars after 0x
+
     const messageData: MessageData = {
       cid: messageCid, // Now we have the actual CID from IPFS
       encrypted: isEncrypted,
@@ -322,7 +319,7 @@ export async function sendMessage(
       chainId: BigInt(100),
       signerAddress: avatarState.avatar.address.toLowerCase(),
       signedAt: BigInt(currentTime),
-      nonce: nonce
+      nonce: nonceHex
     };
 
     // Step 4: Create signature for the message
@@ -337,7 +334,7 @@ export async function sendMessage(
       chainId: 100,
       signerAddress: avatarState.avatar.address.toLowerCase(),
       signedAt: currentTime,
-      nonce: isEncrypted ? ethers.toBeHex(nonce) : "0x0",
+      nonce: nonceHex,
       signature: signature
     };
 

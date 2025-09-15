@@ -21,7 +21,7 @@ export const MESSAGE_TYPES = {
     { name: 'chainId', type: 'uint256' },
     { name: 'signerAddress', type: 'address' },
     { name: 'signedAt', type: 'uint256' },
-    { name: 'nonce', type: 'uint256' }
+    { name: 'nonce', type: 'string' }
   ]
 };
 
@@ -42,7 +42,7 @@ export async function verifyMessageSignature(
       chainId: BigInt(link.chainId || 100),
       signerAddress: link.signerAddress?.toLowerCase() || senderAddress.toLowerCase(),
       signedAt: BigInt(link.signedAt),
-      nonce: BigInt(link.nonce || 0)
+      nonce: link.nonce || '0x0'
     };
 
     const expectedAddress = messageData.signerAddress;
@@ -57,6 +57,7 @@ export async function verifyMessageSignature(
         });
 
         const eip712Data = {
+          // @todo do not hardcode the chain
           domain: { chainId: 100 },
           types: {
             ...MESSAGE_TYPES,

@@ -21,7 +21,7 @@ export interface MessageData {
   chainId: bigint;
   signerAddress: string;
   signedAt: bigint;
-  nonce: bigint;
+  nonce: string;
 }
 
 export interface MessageLink {
