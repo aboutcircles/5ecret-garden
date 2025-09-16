@@ -65,16 +65,12 @@
   });
 </script>
 
-<div class="w-full flex flex-col divide-y gap-y-2 overflow-x-auto py-4">
+<div class="w-full flex flex-col divide-y gap-y-2 overflow-x-auto py-4" role="list">
   {#each $store?.data ?? [] as item (getKeyFromItem(item))}
     {@const SvelteComponent_1 = row}
-    <button
-      onclick={() => {}}
-      class="w-full pt-2"
-      aria-label="Select item"
-    >
+    <div class="w-full pt-2" role="listitem">
       <SvelteComponent_1 {item} />
-    </button>
+    </div>
   {/each}
 
   <div
@@ -84,15 +80,13 @@
     aria-busy={$store && !$store?.ended && !hasError ? 'true' : 'false'}
   >
     {#if ($store?.data ?? []).length === 0 || $store?.ended}
-      <span class="text-gray-500">End of list</span>
+      <span class="text-base-content/70">End of list</span>
     {:else if hasError}
-      <span class="text-red-500">Error loading items</span>
-      <button class="ml-2 text-primary hover:underline" onclick={handleRetry}>
-        Retry
-      </button>
+      <span class="text-error">Error loading items</span>
+      <button class="ml-2 link link-primary" onclick={handleRetry}>Retry</button>
     {:else}
       <span class="loading loading-spinner text-primary"></span>
-      <span class="ml-2 text-gray-500">Loading more...</span>
+      <span class="ml-2 text-base-content/70">Loading more...</span>
     {/if}
   </div>
 </div>

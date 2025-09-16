@@ -59,33 +59,23 @@
     runner = await initPrivateKeyContractRunner(privateKey);
   });
 
-  $effect(() => {
-    circles.set(
-      runner
-        ? new Sdk(
-            runner,
-            settings.ring ? gnosisConfig.rings : gnosisConfig.production
-          )
-        : undefined
-    );
-  });
+  function goBack(): void {
+    history.back();
+  }
 </script>
 
-<div
-  class="w-full flex flex-col items-center min-h-screen max-w-xl gap-y-4 mt-20"
->
-  <div class="w-full">
-    <button onclick={() => history.back()}>
-      <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
+<div class="page page-pt page-stack page--md">
+  <div class="toolbar">
+    <button type="button" class="back-btn" aria-label="Back" onclick={goBack}>
+      <img src="/arrow-left.svg" alt="Back" class="icon" />
     </button>
-  </div>
-  <h2 class="font-bold text-[28px] md:text-[32px]">Select Account</h2>
-  <p class="font-normal text-black/60 text-base">
-    Please select the account you want to use from the list below.
-  </p>
-  <div class="flex w-full justify-end">
+    <div class="flex-grow"></div>
     <SettingsDropdown />
   </div>
+
+  <h1 class="h2">Select Account</h1>
+  <p class="muted">Please select the account you want to use from the list below.</p>
+
   {#if !signer.address || !$circles}
     <WalletLoader />
   {:else}

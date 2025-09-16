@@ -12,8 +12,7 @@
 </script>
 
 <div class="flex flex-col items-center gap-y-4 w-full mt-10">
-  <p class="text-sm text-black/50">Your Balance</p>
-  <div class="stat-value">
+  <div class="h2">
     {roundToDecimals($totalCirclesBalance)} Circles
   </div>
   <p class="text-sm">

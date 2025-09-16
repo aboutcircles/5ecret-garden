@@ -10,81 +10,36 @@
   import Avatar from './avatar/Avatar.svelte';
   import { popupControls } from '$lib/stores/popUp';
 
-  interface Props {
-    balance: TokenBalanceRow;
-  }
-
+  interface Props { balance: TokenBalanceRow; }
   let { balance }: Props = $props();
 
   const actions = [
-    {
-      condition: (balance: TokenBalanceRow) =>
-        ['CrcV2_RegisterHuman', 'CrcV2_RegisterGroup'].includes(
-          balance.tokenType
-        ),
-      title: 'Wrap',
-      icon: '/banknotes.svg',
-      component: WrapTokens,
-    },
-    {
-      condition: (balance: TokenBalanceRow) =>
-        balance.tokenType === 'CrcV2_RegisterGroup',
-      title: 'Redeem',
-      icon: '/redeem.svg',
-      component: RedeemGroup,
-    },
-    {
-      condition: (balance: TokenBalanceRow) =>
-        balance.tokenType === 'CrcV1_Signup' &&
-        !!avatarState.avatar?.avatarInfo &&
-        avatarState.avatar?.avatarInfo?.version > 1,
-      title: 'Migrate Tokens to V2',
-      icon: '/banknotes.svg',
-      component: MigrateTokens,
-    },
-    {
-      condition: (balance: TokenBalanceRow) =>
-        balance.tokenType === 'CrcV2_ERC20WrapperDeployed_Demurraged',
-      title: 'Unwrap',
-      icon: '/banknotes.svg',
-      component: UnwrapTokens,
-    },
-    {
-      condition: (balance: TokenBalanceRow) =>
-        balance.tokenType === 'CrcV2_ERC20WrapperDeployed_Inflationary',
-      title: 'Unwrap Static Circles',
-      icon: '/banknotes.svg',
-      component: UnwrapTokens,
-    },
+    { condition: (b: TokenBalanceRow) => ['CrcV2_RegisterHuman','CrcV2_RegisterGroup'].includes(b.tokenType),
+      title: 'Wrap', icon: '/banknotes.svg', component: WrapTokens },
+    { condition: (b: TokenBalanceRow) => b.tokenType === 'CrcV2_RegisterGroup',
+      title: 'Redeem', icon: '/redeem.svg', component: RedeemGroup },
+    { condition: (b: TokenBalanceRow) => b.tokenType === 'CrcV1_Signup' && !!avatarState.avatar?.avatarInfo && avatarState.avatar?.avatarInfo?.version > 1,
+      title: 'Migrate Tokens to V2', icon: '/banknotes.svg', component: MigrateTokens },
+    { condition: (b: TokenBalanceRow) => b.tokenType === 'CrcV2_ERC20WrapperDeployed_Demurraged',
+      title: 'Unwrap', icon: '/banknotes.svg', component: UnwrapTokens },
+    { condition: (b: TokenBalanceRow) => b.tokenType === 'CrcV2_ERC20WrapperDeployed_Inflationary',
+      title: 'Unwrap Static Circles', icon: '/banknotes.svg', component: UnwrapTokens },
   ];
 
-  const executeAction = (action: {
-    condition: (balance: TokenBalanceRow) => boolean;
-    title: string;
-    icon: string;
-    component: any;
-  }) => {
-    popupControls.open?.({
-      title: action.title,
-      component: action.component,
-      props: { asset: balance },
-    });
-  };
+  function executeAction(action: { condition: (b: TokenBalanceRow)=>boolean; title: string; icon: string; component: any; }) {
+    popupControls.open?.({ title: action.title, component: action.component, props: { asset: balance } });
+  }
 
   let copyIcon = $state('/copy.svg');
-
   function handleCopy() {
     navigator.clipboard.writeText(balance.isWrapped ? balance.tokenAddress : balance.tokenId);
     copyIcon = '/check.svg';
-
-    setTimeout(() => {
-      copyIcon = '/copy.svg';
-    }, 1000);
+    setTimeout(() => { copyIcon = '/copy.svg'; }, 1000);
   }
 </script>
 
-<div class="w-full pt-2">
-  <div class="w-full flex items-center justify-between p-2 rounded-lg">
+<div class="w-full">
+  <div class="flex items-center justify-between px-3 py-2 hover:bg-base-200 rounded-lg">
     <Avatar
       placeholderBottom={true}
       placeholderTop={false}
@@ -95,10 +50,10 @@
       bottomInfo={tokenTypeToString(balance.tokenType)}
     />
 
-    <div class="flex gap-x-2 md:gap-x-4">
-      <div class="font-medium flex flex-col">
-        {roundToDecimals(balance.circles)} CRC
-        <p class="text-xs text-gray-500">
+    <div class="flex items-center gap-3 md:gap-4">
+      <div class="text-right tabular-nums">
+        <div class="font-medium">{roundToDecimals(balance.circles)} CRC</div>
+        <p class="text-xs text-base-content/70">
           {#if staticTypes.has(balance.tokenType)}
             {roundToDecimals(balance.staticCircles)} Static Circles
           {/if}
@@ -110,40 +65,27 @@
 
       {#if !avatarState.isGroup}
         <div class="dropdown dropdown-end">
-          <div
-            tabIndex={0}
-            role="button"
-            class="btn btn-circle btn-ghost btn-xs text-info"
-          >
-            <img src="/union.svg" alt="Union" class="w-4 h-4" />
-          </div>
-          <div
-            tabIndex={0}
-            class="dropdown-content bg-base-100 rounded-box shadow z-10"
-          >
+          <button tabindex="0" class="btn btn-ghost btn-xs" aria-label="Row actions">
+            <img src="/union.svg" alt="" class="icon" aria-hidden="true" />
+          </button>
+          <ul tabindex="0" class="dropdown-content menu menu-sm bg-base-100 rounded-box shadow z-10 w-56 p-2">
             {#each actions as action (action.title)}
               {#if action.condition(balance)}
-                <button
-                  class="text-xs font-medium w-44 h-12 flex items-center p-4 gap-x-2"
-                  onclick={() => executeAction(action)}
-                >
-                  <img
-                    src={action.icon}
-                    alt={action.title}
-                    class="w-4 h-4 inline"
-                  />
-                  {action.title}
-                </button>
+                <li>
+                  <button onclick={() => executeAction(action)}>
+                    <img src={action.icon} alt="" class="icon" aria-hidden="true" />
+                    {action.title}
+                  </button>
+                </li>
               {/if}
             {/each}
-            <button
-              class="text-xs font-medium w-44 h-12 flex items-center p-4 gap-x-2"
-              onclick={handleCopy}
-            >
-              <img src={copyIcon} alt="Copy" class="w-4 h-4 inline" />
-              Copy
-            </button>
-          </div>
+            <li>
+              <button onclick={handleCopy}>
+                <img src={copyIcon} alt="" class="icon" aria-hidden="true" />
+                Copy
+              </button>
+            </li>
+          </ul>
         </div>
       {/if}
     </div>

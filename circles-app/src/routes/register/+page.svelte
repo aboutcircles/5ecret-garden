@@ -6,9 +6,8 @@
   import Disclaimer from '$lib/components/Disclaimer.svelte';
 </script>
 
-<div
-  class="w-full flex flex-col max-w-xl gap-y-4 justify-center mt-28 md:mt-44"
->
+
+<div class="page page-pt page-stack page--lg">
   <Disclaimer />
   <div class="w-full flex flex-col">
     <p class="font-bold text-xl">Register</p>

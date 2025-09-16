@@ -75,10 +75,6 @@
     }
   );
 
-  onMount(() => {
-    const unsubscribe = contacts.subscribe(() => {});
-    return unsubscribe;
-  });
 
   async function handleExportCSV() {
     const csvData = $filteredStore.data.map((item) => ({
@@ -97,10 +93,8 @@
   }
 </script>
 
-<div
-  class="flex flex-col w-full sm:w-[90%] lg:w-3/5 gap-y-5 mt-28 mb-10 text-[#161616]"
->
-  <div class="text-2xl font-bold leading-7 px-4 sm:px-0">Contacts</div>
+<div class="page page-pt page-stack page--lg">
+  <h1 class="h2">Contacts</h1>
 
   <!-- Filter -->
   <div class="flex gap-x-2 items-center">
@@ -130,7 +124,7 @@
 
   <AddressInput bind:address={$searchQuery} />
 
-  <div class="w-full md:border rounded-lg md:px-4">
+  <div class="section--list">
     <GenericList store={searchedStore} row={ContactRow} />
   </div>
 </div>

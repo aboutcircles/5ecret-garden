@@ -1,22 +1,17 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import { getTimeAgo } from '$lib/utils/shared';
   import type { TransactionHistoryRow } from '@circles-sdk/data';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
 
-  interface Props {
-    item: TransactionHistoryRow;
-  }
-
+  interface Props { item: TransactionHistoryRow; }
   let { item }: Props = $props();
 
   let tags: string = $state('');
   let netCircles = $state(0);
   let counterpartyAddress = $state('');
   let badgeUrl: string | null = $state(null);
-
+  let displayAmount = $state(''); // NEW
 
   function parseEventDetails(eventsJson: string) {
     let parsed: any[];
@@ -26,64 +21,73 @@
       console.error('Failed to parse item.events:', err);
       parsed = [];
     }
-
     const relevantTypes = new Set([
-      'CrcV1_Transfer',
-      'CrcV2_PersonalMint',
-      'CrcV2_DiscountCost',
-      'CrcV2_GroupMint',
-      'CrcV2_StreamCompleted',
-      'CrcV2_WithdrawDemurraged',
-      'CrcV2_WithdrawInflationary',
-      'CrcV2_DepositDemurraged',
-      'CrcV2_DepositInflationary',
-
-      'CrcV2_CollateralLockedBatch',
-      'CrcV2_CollateralLockedSingle',
-      'CrcV2_GroupRedeem',
+      'CrcV1_Transfer','CrcV2_PersonalMint','CrcV2_DiscountCost','CrcV2_GroupMint',
+      'CrcV2_StreamCompleted','CrcV2_WithdrawDemurraged','CrcV2_WithdrawInflationary',
+      'CrcV2_DepositDemurraged','CrcV2_DepositInflationary',
+      'CrcV2_CollateralLockedBatch','CrcV2_CollateralLockedSingle','CrcV2_GroupRedeem',
     ]);
-
-    // let demurrageAmount = 0n;
     const tags: string[] = [];
-
     for (const e of parsed) {
       if (relevantTypes.has(e.$type) && !tags.includes(e.$type)) {
         tags.push(e.$type);
       }
     }
-
     return { tags };
   }
 
   function getCounterpartyAddress(avatarAddress: string) {
-    if (item.from === '0x0000000000000000000000000000000000000000') return item.to.toLowerCase();
-    if (item.to === '0x0000000000000000000000000000000000000000') return avatarAddress.toLowerCase();
-    if (item.from.toLowerCase() === avatarAddress) return item.to.toLowerCase();
-    return item.from.toLowerCase();
+    const zero = '0x0000000000000000000000000000000000000000';
+    const lowerFrom = item.from.toLowerCase();
+    const lowerTo = item.to.toLowerCase();
+    const lowerAvatar = avatarAddress.toLowerCase();
+
+    const isMint = item.from === zero;
+    const isBurn = item.to === zero;
+    if (isMint) { return lowerTo; }
+    if (isBurn) { return lowerAvatar; }
+    if (lowerFrom === lowerAvatar) { return lowerTo; }
+    return lowerFrom;
   }
 
   function getBadge(avatarAddress: string) {
-    if (item.from === '0x0000000000000000000000000000000000000000') return '/badge-mint.svg';
-    if (item.to === '0x0000000000000000000000000000000000000000') return '/badge-burn.svg';
-    if (item.from.toLowerCase() === avatarAddress) return '/badge-sent.svg';
-    if (item.to.toLowerCase() === avatarAddress) return '/badge-received.svg';
+    const zero = '0x0000000000000000000000000000000000000000';
+    const lowerFrom = item.from.toLowerCase();
+    const lowerTo = item.to.toLowerCase();
+    const lowerAvatar = avatarAddress.toLowerCase();
+
+    if (item.from === zero) { return '/badge-mint.svg'; }
+    if (item.to === zero) { return '/badge-burn.svg'; }
+    if (lowerFrom === lowerAvatar) { return '/badge-sent.svg'; }
+    if (lowerTo === lowerAvatar) { return '/badge-received.svg'; }
     return null;
   }
 
-  run(() => {
-    if (avatarState.avatar) {
-      const result = parseEventDetails(item.events);
-      tags = result.tags.join(', ');
-      netCircles = item.circles;
-
-      counterpartyAddress = getCounterpartyAddress(avatarState.avatar.address).toLowerCase();
-      badgeUrl = getBadge(avatarState.avatar.address);
+  function formatNetCircles(amount: number): string {
+    const abs = Math.abs(amount);
+    if (abs < 0.01) {
+      return '< 0.01';
     }
+    return abs.toFixed(2);
+  }
+
+  $effect(() => {
+    if (!avatarState.avatar) { return; }
+    const result = parseEventDetails(item.events);
+    tags = result.tags.join(', ');
+    netCircles = item.circles;
+
+    counterpartyAddress = getCounterpartyAddress(avatarState.avatar.address);
+    badgeUrl = getBadge(avatarState.avatar.address);
+
+    const sent = item.from.toLowerCase() === avatarState.avatar.address.toLowerCase();
+    const prefix = sent ? '-' : '+';
+    displayAmount = `${prefix}${formatNetCircles(netCircles)}`;
   });
 </script>
 
 <a
-  class="flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
+  class="flex items-center justify-between p-2 hover:bg-base-200 rounded-lg"
   target="_blank"
   href={'https://gnosisscan.io/tx/' + item.transactionHash}
 >
@@ -97,23 +101,12 @@
         bottomInfo={getTimeAgo(item.timestamp)}
       />
     </div>
-    <div class="col text-right">
+    <div class="text-right">
       {#if item.from.toLowerCase() === avatarState.avatar.address.toLowerCase()}
-        <span class="text-red-500 font-bold">
-          {#if netCircles.toFixed(2) === "0.00"}
-                    &lt; 0.01
-          {:else}
-                    -{netCircles.toFixed(2)}
-          {/if}
-                </span> CRC
+        <span class="text-red-500 font-bold">{displayAmount}</span> CRC
       {:else}
-                <span class="text-green-700 font-bold">
-                    +{netCircles.toFixed(2)}
-                </span> CRC
+        <span class="text-green-700 font-bold">{displayAmount}</span> CRC
       {/if}
-      <p class="text-xs text-gray-500">
-        <!-- Additional info ... -->
-      </p>
     </div>
   {:else}
     <p>Loading avatar info...</p>

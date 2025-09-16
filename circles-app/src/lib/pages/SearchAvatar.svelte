@@ -109,20 +109,20 @@
 
   {#if result.length > 0}
     <div
-      class="w-full md:border rounded-lg md:px-4 flex flex-col divide-y gap-y-2 overflow-x-auto py-4"
+      class="w-full border border-base-300 rounded-lg md:px-4 flex flex-col divide-y gap-y-2 overflow-x-auto py-4"
     >
       {#each result as profile}
         <div class="w-full pt-2">
           <button
-            class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
-            onclick={() => onselect?.(profile.address as Address)}
+            class="w-full flex items-center justify-between p-2 hover:bg-base-200 rounded-lg"
+            onclick={() => onselect && onselect(profile.address)}
           >
             <Avatar
-              address={profile.address as Address}
+              address={profile.address}
               view="horizontal"
               clickable={false}
             />
-            <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
+            <img src="/chevron-right.svg" alt="" class="icon" aria-hidden="true" />
           </button>
         </div>
       {/each}
@@ -133,13 +133,13 @@
         {#if ethers.isAddress(selectedAddress) && searchType === 'contact'}
           <button
               class="btn mt-6"
-              onclick={() => oninvite?.(selectedAddress as Address)}
+              onclick={() => oninvite && oninvite(selectedAddress)}
           >Invite {selectedAddress}</button>
           {#if ontrust}
             <br/>
             <button
                 class="btn mt-6"
-                onclick={() => ontrust?.(selectedAddress as Address)}
+                onclick={() => ontrust && ontrust(selectedAddress)}
             >Trust {selectedAddress}</button>
           {/if}
         {:else}

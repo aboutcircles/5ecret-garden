@@ -86,8 +86,8 @@
   }
 </script>
 
-<div class="flex flex-col w-full max-w-2xl gap-y-4 mt-20">
-  <p class="font-bold text-2xl">Settings</p>
+<div class="page page-pt page-stack page--lg">
+    <h1 class="h2">Settings</h1>
   <div
     class="flex flex-col items-center md:border rounded-lg md:px-6 md:py-8 gap-y-4"
   >

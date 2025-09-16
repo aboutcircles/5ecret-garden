@@ -27,9 +27,7 @@
   });
 </script>
 
-<div
-  class="flex flex-col items-center w-full max-w-6xl mx-auto gap-y-6 mt-20 px-4"
->
+<div class="page page-pt page-stack page--lg">
   {#if Object.keys(groupMetrics).length > 0}
     <div
       class="w-full flex flex-col md:flex-row justify-between items-start md:items-center mb-6"
@@ -37,7 +35,7 @@
       <div class="flex flex-col md:flex-row gap-x-8">
         <div class="flex items-center gap-4">
           <div>
-            <h1 class="text-2xl font-bold text-gray-800">
+            <h1 class="h2 font-bold text-gray-800">
               Group Metrics Dashboard
             </h1>
             <p class="text-gray-500">Analytics and insights for your group</p>

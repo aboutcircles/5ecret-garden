@@ -39,7 +39,12 @@
   }
 </script>
 
-<div class="flex flex-col items-center w-full max-w-4xl gap-y-6 mt-20">
+<div class="page page-pt page-stack page--lg">
+<!--  <h1 class="text-4xl font-semibold">88363.57 Circles</h1>-->
+<!--    <p class="text-sm">-->
+<!--        {350} individual tokens • {40} group tokens •-->
+<!--        <a href="/dashboard/balances" class="underline"> See breakdown </a>-->
+<!--    </p>-->
   <TotalBalance />
 
   {#if mintableAmount >= 0.01}
@@ -165,7 +170,7 @@
       aria-label="Transaction History"
     />
     <div role="tabpanel" class="tab-content mt-8 bg-base-100 border-none">
-      <div class="w-full md:border rounded-lg md:px-4">
+      <div class="section--list">
         <GenericList row={TransactionRow} store={transactionHistory} />
       </div>
     </div>

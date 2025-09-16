@@ -74,9 +74,8 @@
   }
 </script>
 
-<div
-  class="w-full flex flex-col max-w-xl gap-y-4 justify-center mt-28 md:mt-44"
->
+
+<div class="page page-pt page-stack page--lg">
   <div class="w-full">
     <button onclick={() => history.back()}>
       <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />

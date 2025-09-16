@@ -79,7 +79,7 @@
 <div class="w-full border rounded-lg flex flex-col p-4 shadow-sm">
   <button
     onclick={() => connectAvatar()}
-    class="flex justify-between items-center hover:bg-black/5 rounded-lg p-2"
+    class="flex justify-between items-center hover:bg-base-200 rounded-lg p-2"
   >
     <Avatar
       topInfo={settings.legacy ? 'Connected Wallet' : 'Safe'}
@@ -107,14 +107,14 @@
   <div class="w-full pl-6 flex flex-col gap-y-2 mt-2">
     {#each groups ?? [] as group}
       <button
-        class="flex w-full hover:bg-black/5 rounded-lg p-2"
-        onclick={() => connectAvatar(group.group as Address)}
+        class="flex w-full hover:bg-base-200 rounded-lg p-2"
+        onclick={() => connectAvatar(group.group)}
       >
         <Avatar
-          address={group.group as Address}
+          address={group.group}
           clickable={false}
           view="horizontal"
-          topInfo={group.group as Address}
+          topInfo={group.group}
         />
       </button>
     {/each}
