@@ -105,7 +105,7 @@
 
 <FlowDecoration>
   <p class="text-2xl font-bold">Select Asset</p>
-  <p class="text-gray-500 mt-2">Select asset to convert</p>
+  <p class="text-base-content/70 mt-2">Select asset to convert</p>
   {#if $filteredBalances}
     <SelectAsset
       {selectedAsset}
@@ -114,6 +114,8 @@
       {onselect}
     />
   {:else}
-    <p>Loading balances...</p>
+    <div class="p-4 text-center text-base-content/70">
+      <span class="loading loading-spinner"></span>
+    </div>
   {/if}
 </FlowDecoration>

@@ -47,7 +47,7 @@
 
 <FlowDecoration>
   <p class="text-2xl font-bold">Confirm Transaction</p>
-  <p class="text-gray-500 mt-2">
+  <p class="text-base-content/70 mt-2">
     Following CRC will be converted to a groups CRC
   </p>
   <Send
