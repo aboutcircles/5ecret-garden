@@ -1,12 +1,163 @@
 import { ethers } from 'ethers';
 import type { Address } from '@circles-sdk/utils';
-import type { Message, MessageData, MessageGroup, MessageLink } from './messageTypes';
+import type { Message, MessageData, MessageGroup, MessageLink, NameIndexDoc, NamespaceChunk } from './messageTypes';
 import { verifyMessageSignature, createMessageSignature } from './messageSignature';
 import { uploadToIpfs, fetchFromIpfs } from './ipfs';
 import { circles } from '$lib/stores/circles';
 import { avatarState } from '$lib/stores/avatar.svelte';
 import { contacts } from '$lib/stores/contacts';
 import { get } from 'svelte/store';
+
+/**
+ * Helper function to traverse namespace chunks and collect all message links
+ * According to spec: head always points to the latest chunk, traverse via prev links
+ */
+async function traverseNamespaceChunks(nameIndexDoc: NameIndexDoc): Promise<MessageLink[]> {
+  const allLinks: MessageLink[] = [];
+
+  // Always start from head (latest chunk) as per spec
+  let currentChunkCid = nameIndexDoc.head;
+
+  // Traverse the entire chunk chain from latest to oldest
+  while (currentChunkCid) {
+    try {
+      const chunk = await fetchFromIpfs(currentChunkCid) as NamespaceChunk;
+      if (!chunk?.links) break;
+
+      // Add all links from this chunk
+      allLinks.push(...chunk.links);
+
+      // Move to previous chunk via prev link
+      currentChunkCid = chunk.prev || null;
+    } catch (err) {
+      console.warn(`Failed to fetch chunk ${currentChunkCid}:`, err);
+      break;
+    }
+  }
+
+  return allLinks;
+}
+
+/**
+ * Helper function to process message links and create Message objects
+ */
+async function processMessageLinks(
+  links: MessageLink[],
+  senderAddress: Address,
+  conversationWith?: Address
+): Promise<Message[]> {
+  const messages: Message[] = [];
+
+  for (const link of links) {
+    try {
+      // Fetch message content from IPFS
+      const messageContent = await fetchFromIpfs(link.cid);
+      if (messageContent?.txt) {
+        const message: Message = {
+          name: link.name,
+          txt: messageContent.txt,
+          cid: link.cid,
+          senderAddress,
+          conversationWith,
+          encrypted: link.encrypted || false,
+          signedAt: link.signedAt || 0,
+          signature: link.signature || '',
+          nonce: link.nonce || '0x0',
+          chainId: link.chainId || 100,
+          isVerified: false // Will be verified later
+        };
+        messages.push(message);
+      }
+    } catch (err) {
+      console.warn(`Failed to fetch message content for CID ${link.cid}:`, err);
+    }
+  }
+
+  return messages;
+}
+
+/**
+ * Helper function to fetch messages from a single contact's namespace
+ */
+async function fetchMessagesFromContact(
+  circlesInstance: any,
+  profileOwner: Address,
+  namespaceKey: Address
+): Promise<Message[]> {
+  try {
+    // Get the profile CID for the profile owner
+    const profileCid = await circlesInstance.data.getMetadataCidForAddress(profileOwner);
+    if (!profileCid) return [];
+
+    // Fetch profile from IPFS
+    const profile = await fetchFromIpfs(profileCid);
+    if (!profile?.namespaces) return [];
+
+    // Get the namespace for the specified key
+    const namespaceIndexCid = profile.namespaces[namespaceKey.toLowerCase()];
+    if (!namespaceIndexCid) return [];
+
+    // Fetch the namespace index (spec format - only head and entries)
+    const nameIndexDoc = await fetchFromIpfs(namespaceIndexCid) as NameIndexDoc;
+    if (!nameIndexDoc?.head) return [];
+
+    // Traverse namespace chunks to get all message links (links are ONLY in chunks, never in index)
+    const allLinks = await traverseNamespaceChunks(nameIndexDoc);
+
+    // Process message links into Message objects
+    // For received messages: profileOwner (contact) is sender, namespaceKey (our address) is conversation partner
+    // For sent messages: profileOwner (our address) is sender, namespaceKey (contact) is conversation partner
+    const senderAddr = profileOwner;
+    const conversationAddr = namespaceKey;
+
+    return await processMessageLinks(allLinks, senderAddr, conversationAddr);
+  } catch (err) {
+    console.warn(`Failed to fetch messages from ${profileOwner} for ${namespaceKey}:`, err);
+    return [];
+  }
+}
+
+/**
+ * Helper function to determine next message number for a recipient based on the largest message index
+ */
+async function getNextMessageNumber(
+  circlesInstance: any,
+  senderAddress: Address,
+  recipientAddress: Address
+): Promise<number> {
+  try {
+    const currentProfileCid = await circlesInstance.data.getMetadataCidForAddress(senderAddress);
+    if (currentProfileCid) {
+      const currentProfile = await fetchFromIpfs(currentProfileCid) || {};
+      if (currentProfile.namespaces) {
+        const recipientKey = recipientAddress.toLowerCase();
+        const oldNameIndexCid = currentProfile.namespaces[recipientKey];
+
+        if (oldNameIndexCid) {
+          const oldNamespaceData = await fetchFromIpfs(oldNameIndexCid);
+          if (oldNamespaceData?.entries) {
+            const existingMsgKeys = Object.keys(oldNamespaceData.entries).filter(key => key.startsWith('msg-'));
+            if (existingMsgKeys.length > 0) {
+              const msgNumbers = existingMsgKeys
+                .map(key => {
+                  const match = key.match(/^msg-(\d+)$/);
+                  return match ? parseInt(match[1], 10) : 0;
+                })
+                .filter(num => num > 0);
+
+              if (msgNumbers.length > 0) {
+                return Math.max(...msgNumbers) + 1;
+              }
+            }
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to determine next message number, using 1:', err);
+  }
+  return 1;
+}
 
 /**
  * Groups messages by conversation partner
@@ -16,13 +167,13 @@ export function groupMessagesByConversation(
   currentUserAddress: Address
 ): MessageGroup[] {
   const grouped = new Map<Address, Message[]>();
-  
+
   for (const message of messages) {
     // Determine the conversation partner
-    const conversationPartner = message.senderAddress === currentUserAddress 
+    const conversationPartner = message.senderAddress === currentUserAddress
       ? message.conversationWith!
       : message.senderAddress;
-    
+
     if (!grouped.has(conversationPartner)) {
       grouped.set(conversationPartner, []);
     }
@@ -50,50 +201,12 @@ export async function fetchMessagesFromContacts(
   const receivedMessages: Message[] = [];
 
   for (const contactAddress of trustedAddresses) {
-    try {
-      // Get the profile CID for this contact
-      const profileCid = await circlesInstance.data.getMetadataCidForAddress(contactAddress);
-      if (!profileCid) continue;
-
-      // Fetch profile from IPFS
-      const profile = await fetchFromIpfs(profileCid);
-      if (!profile?.namespaces) continue;
-
-      // Check if this contact has messages for us
-      const ourNamespace = profile.namespaces[avatarAddress.toLowerCase()];
-      if (!ourNamespace) continue;
-
-      // Fetch the links from the namespace
-      const linksData = await fetchFromIpfs(ourNamespace);
-      if (!linksData?.links) continue;
-
-      // Process each message link
-      for (const link of linksData.links) {
-        try {
-          // Fetch message content from IPFS
-          const messageContent = await fetchFromIpfs(link.cid);
-          if (messageContent?.txt) {
-            const message: Message = {
-              txt: messageContent.txt,
-              cid: link.cid,
-              senderAddress: contactAddress,
-              conversationWith: avatarAddress,
-              encrypted: link.encrypted || false,
-              signedAt: link.signedAt || 0,
-              signature: link.signature || '',
-              nonce: link.nonce,
-              chainId: link.chainId || 100,
-              isVerified: false // Will be verified later
-            };
-            receivedMessages.push(message);
-          }
-        } catch (err) {
-          console.warn(`Failed to fetch message content for CID ${link.cid}:`, err);
-        }
-      }
-    } catch (err) {
-      console.warn(`Failed to fetch messages from ${contactAddress}:`, err);
-    }
+    const messages = await fetchMessagesFromContact(
+      circlesInstance,
+      contactAddress, // Profile owner (contact)
+      avatarAddress   // Namespace key (our address in their profile)
+    );
+    receivedMessages.push(...messages);
   }
 
   return receivedMessages;
@@ -109,55 +222,13 @@ export async function fetchSentMessages(
 ): Promise<Message[]> {
   const sentMessages: Message[] = [];
 
-  try {
-    // Get our own profile CID
-    const ourProfileCid = await circlesInstance.data.getMetadataCidForAddress(avatarAddress);
-    if (!ourProfileCid) return sentMessages;
-
-    // Fetch our profile from IPFS
-    const ourProfile = await fetchFromIpfs(ourProfileCid);
-    if (!ourProfile?.namespaces) return sentMessages;
-
-    // Check each contact's namespace in our profile for sent messages
-    for (const contactAddress of trustedAddresses) {
-      const contactNamespace = ourProfile.namespaces[contactAddress.toLowerCase()];
-      if (!contactNamespace) continue;
-
-      try {
-        // Fetch the links from our namespace for this contact
-        const sentLinksData = await fetchFromIpfs(contactNamespace);
-        if (!sentLinksData?.links) continue;
-
-        // Process each sent message link
-        for (const link of sentLinksData.links) {
-          try {
-            // Fetch message content from IPFS
-            const messageContent = await fetchFromIpfs(link.cid);
-            if (messageContent?.txt) {
-              const message: Message = {
-                txt: messageContent.txt,
-                cid: link.cid,
-                senderAddress: avatarAddress, // We are the sender
-                conversationWith: contactAddress,
-                encrypted: link.encrypted || false,
-                signedAt: link.signedAt || 0,
-                signature: link.signature || '',
-                nonce: link.nonce || '0x0',
-                chainId: link.chainId || 100,
-                isVerified: false // Will be verified later
-              };
-              sentMessages.push(message);
-            }
-          } catch (err) {
-            console.warn(`Failed to fetch sent message content for CID ${link.cid}:`, err);
-          }
-        }
-      } catch (err) {
-        console.warn(`Failed to fetch sent messages for contact ${contactAddress}:`, err);
-      }
-    }
-  } catch (err) {
-    console.warn('Failed to fetch sent messages:', err);
+  for (const contactAddress of trustedAddresses) {
+    const messages = await fetchMessagesFromContact(
+      circlesInstance,
+      avatarAddress, // Profile owner (our profile)
+      contactAddress // Namespace key (contact's address in our profile)
+    );
+    sentMessages.push(...messages);
   }
 
   return sentMessages;
@@ -182,6 +253,7 @@ export async function uploadMessageAndUpdateProfile(
 
     // Step 2: Get current profile
     const currentProfileCid = await circlesInstance.data.getMetadataCidForAddress(senderAddress);
+    console.log("Current profile CID:", currentProfileCid);
     let currentProfile: any = {};
     
     if (currentProfileCid) {
@@ -193,31 +265,104 @@ export async function uploadMessageAndUpdateProfile(
       currentProfile.namespaces = {};
     }
 
-    // Step 4: Get the recipient's namespace or create it
+    // Step 4: Reconstruct namespace index from scratch (erase old format completely)
     const recipientKey = recipientAddress.toLowerCase();
-    let recipientNamespaceCid = currentProfile.namespaces[recipientKey];
-    let linksData: any = { links: [] };
+    const oldNameIndexCid = currentProfile.namespaces[recipientKey];
 
-    if (recipientNamespaceCid) {
-      linksData = await fetchFromIpfs(recipientNamespaceCid) || { links: [] };
-      if (!linksData.links) {
-        linksData.links = [];
+    // Start with a completely fresh namespace index - only head and entries as per spec
+    const newNameIndexDoc: NameIndexDoc = {
+      head: "",
+      entries: {}
+    };
+
+    let currentTailChunk: NamespaceChunk | null = null;
+    let currentTailCid: string | null = null;
+
+    // If there's an existing namespace, preserve only the valid entries and head
+    if (oldNameIndexCid) {
+      const oldNamespaceData = await fetchFromIpfs(oldNameIndexCid);
+
+      if (oldNamespaceData) {
+        // Only preserve head and entries, ignore any other legacy fields
+        if (oldNamespaceData.head) {
+          newNameIndexDoc.head = oldNamespaceData.head;
+        }
+        if (oldNamespaceData.entries && typeof oldNamespaceData.entries === 'object') {
+          // Only preserve valid entries (no links or other legacy fields)
+          newNameIndexDoc.entries = { ...oldNamespaceData.entries };
+        }
+
+        // Head always points to the newest chunk - this is where we add new messages
+        if (newNameIndexDoc.head) {
+          try {
+            currentTailChunk = await fetchFromIpfs(newNameIndexDoc.head) as NamespaceChunk;
+            currentTailCid = newNameIndexDoc.head;
+          } catch (err) {
+            console.warn(`Failed to fetch head chunk ${newNameIndexDoc.head}:`, err);
+          }
+        }
       }
     }
 
-    // Step 5: Add new message link
-    linksData.links.push(messageLink);
+    // Step 5: Handle chunk rotation (max 100 links per chunk)
+    let activeChunk: NamespaceChunk;
+    let activeChunkCid: string;
 
-    // Step 6: Upload updated links to IPFS
-    const newNamespaceCid = await uploadToIpfs(linksData, 'links.json');
+    if (!currentTailChunk || currentTailChunk.links.length >= 100) {
+      // Need to create a new chunk (either first chunk or current one is full)
+      activeChunk = {
+        prev: currentTailCid, // Points to the previous head (or null for first chunk)
+        links: [messageLink]
+      };
 
-    // Step 7: Update profile with new namespace CID
-    currentProfile.namespaces[recipientKey] = newNamespaceCid;
+      // Upload the new chunk
+      activeChunkCid = await uploadToIpfs(activeChunk, 'chunk.json');
 
-    // Step 8: Upload updated profile to IPFS
+      // Update head to point to the new chunk (head always points to newest)
+      newNameIndexDoc.head = activeChunkCid;
+    } else {
+      // Current chunk has space - add message to existing chunk
+      activeChunk = {
+        ...currentTailChunk,
+        links: [...currentTailChunk.links, messageLink]
+      };
+
+      // Upload the updated chunk (same CID reference in head)
+      activeChunkCid = await uploadToIpfs(activeChunk, 'chunk.json');
+
+      // Head stays the same since we're just updating the current head chunk
+      newNameIndexDoc.head = activeChunkCid;
+    }
+
+    // Step 6: Use the pre-determined name from the message link (already set in sendMessage)
+    const uniqueMsgName = messageLink.name;
+
+    // Step 7: Update entry for this specific message to point to the chunk containing it
+    newNameIndexDoc.entries[uniqueMsgName] = activeChunkCid;
+
+    // Step 8: Update entries for ALL messages in the current active chunk
+    // (since the chunk CID changed, all messages in it need updated entries)
+    if (activeChunk && activeChunk.links) {
+      for (const link of activeChunk.links) {
+        if (link.name) {
+          newNameIndexDoc.entries[link.name] = activeChunkCid;
+        }
+      }
+    }
+
+    // Step 7: Upload completely reconstructed namespace index to IPFS
+    const newNamespaceIndexCid = await uploadToIpfs(newNameIndexDoc, 'namespace-index.json');
+
+    // Step 9: Update profile with new namespace index CID and ensure schema version
+    currentProfile.namespaces[recipientKey] = newNamespaceIndexCid;
+
+    // Ensure profile has correct schema version as per spec
+    currentProfile.schemaVersion = "1.2";
+
+    // Step 10: Upload updated profile to IPFS
     const newProfileCid = await uploadToIpfs(currentProfile, 'profile.json');
-
-    // Step 9: Update metadata on-chain
+    console.log("New profile CID:", newProfileCid);
+    // Step 11: Update metadata on-chain
     const avatar = await circlesInstance.getAvatar(senderAddress);
     await avatar.updateMetadata(newProfileCid);
 
@@ -257,6 +402,7 @@ export async function fetchAllMessages(): Promise<Message[]> {
     for (const message of allMessages) {
       if (message.signature) {
         const link: MessageLink = {
+          name: message.name,
           cid: message.cid,
           encrypted: message.encrypted,
           encryptionAlgorithm: message.encrypted ? "AES-256-GCM" : "",
@@ -307,11 +453,16 @@ export async function sendMessage(
     // Step 2: Upload message content to IPFS first
     const messageCid = await uploadToIpfs(messageContent, 'message.json');
 
-    // Step 3: Create the message data structure for signing
+    // Step 3: Determine message name for signing
+    const nextMsgNumber = await getNextMessageNumber($circles, avatarState.avatar.address, recipientAddress);
+    const uniqueMsgName = `msg-${nextMsgNumber}`;
+
+    // Step 4: Create the message data structure for signing (including name)
     const currentTime = Math.floor(Date.now() / 1000);
     const nonceHex = ethers.hexlify(ethers.randomBytes(16)); // 32 hex chars after 0x
 
     const messageData: MessageData = {
+      name: uniqueMsgName,
       cid: messageCid, // Now we have the actual CID from IPFS
       encrypted: isEncrypted,
       encryptionAlgorithm: isEncrypted ? "AES-256-GCM" : "",
@@ -325,8 +476,9 @@ export async function sendMessage(
     // Step 4: Create signature for the message
     const signature = await createMessageSignature(messageData);
 
-    // Step 5: Create new message link with signature
+    // Step 5: Create new message link with signature and determined name
     const newLink: MessageLink = {
+      name: uniqueMsgName,
       cid: messageCid,
       encrypted: isEncrypted,
       encryptionAlgorithm: messageData.encryptionAlgorithm,
@@ -379,7 +531,57 @@ export function getConversationMessages(
  * Sorts messages chronologically
  */
 export function sortMessages(messages: Message[]): Message[] {
-  
+
   // Then sort chronologically (oldest first for conversation view)
   return messages.sort((a, b) => a.signedAt - b.signedAt);
+}
+
+/**
+ * DEBUG HELPER: Removes all sent messages by clearing all namespaces from user's profile
+ * WARNING: This will permanently delete all message history for this user!
+ */
+export async function debugClearAllSentMessages(): Promise<void> {
+  const $circles = get(circles);
+
+  if (!$circles || !avatarState.avatar?.address) {
+    throw new Error('No circles instance or avatar address available');
+  }
+
+  try {
+    console.warn('🚨 DEBUG: Clearing all sent messages for user:', avatarState.avatar.address);
+
+    // Step 1: Get current profile
+    const currentProfileCid = await $circles.data.getMetadataCidForAddress(avatarState.avatar.address);
+    let currentProfile: any = {};
+
+    if (currentProfileCid) {
+      currentProfile = await fetchFromIpfs(currentProfileCid) || {};
+    }
+
+    // Step 2: Clear all namespaces but keep other profile data
+    const clearedProfile = {
+      ...currentProfile,
+      namespaces: {}, // Clear all namespaces (removes all sent messages)
+      schemaVersion: "1.2" // Ensure correct schema version
+    };
+
+    console.warn('🚨 DEBUG: Profile before clearing:', {
+      namespacesCount: Object.keys(currentProfile.namespaces || {}).length,
+      namespaces: Object.keys(currentProfile.namespaces || {})
+    });
+
+    // Step 3: Upload cleared profile to IPFS
+    const newProfileCid = await uploadToIpfs(clearedProfile, 'profile.json');
+    console.warn('🚨 DEBUG: Cleared profile uploaded with CID:', newProfileCid);
+
+    // Step 4: Update metadata on-chain
+    const avatar = await $circles.getAvatar(avatarState.avatar.address);
+    await avatar.updateMetadata(newProfileCid);
+
+    console.warn('✅ DEBUG: All sent messages cleared successfully!');
+
+  } catch (error) {
+    console.error('❌ DEBUG: Failed to clear sent messages:', error);
+    throw error;
+  }
 }

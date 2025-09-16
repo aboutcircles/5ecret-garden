@@ -14,6 +14,7 @@ export const MESSAGE_DOMAIN = {
 // EIP-712 Types for the message structure
 export const MESSAGE_TYPES = {
   CirclesMessage: [
+    { name: 'name', type: 'string' },
     { name: 'cid', type: 'string' },
     { name: 'encrypted', type: 'bool' },
     { name: 'encryptionAlgorithm', type: 'string' },
@@ -35,6 +36,7 @@ export async function verifyMessageSignature(
   try {
     // Reconstruct the message data that should have been signed
     const messageData: MessageData = {
+      name: link.name || "",
       cid: link.cid,
       encrypted: link.encrypted || false,
       encryptionAlgorithm: link.encryptionAlgorithm || "",
@@ -178,7 +180,9 @@ async function signMessageWithSafe(messageData: MessageData): Promise<string> {
     const initialSafeMessage = await protocolKit.createMessage(eip712Data);
     console.log(initialSafeMessage);
 
-    // Sign the safeMessage with OWNER_1_ADDRESS
+    // Sign the safeMessage with the current signer
+    
+    console.log("signer wallet:", safeAddress)
     const signedSafeMessage = await protocolKit.signMessage(
       initialSafeMessage,
       SigningMethod.ETH_SIGN_TYPED_DATA_V4,
@@ -250,7 +254,6 @@ async function signMessageWithEOA(messageData: MessageData): Promise<string> {
     return signature;
   } catch (error) {
     console.error('Error signing message with EOA:', error);
-    //@todo unknown type
     throw new Error(`Failed to sign message with EOA wallet: ${error.message}`);
   }
 }
