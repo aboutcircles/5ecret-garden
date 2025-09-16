@@ -13,7 +13,7 @@
 
 <div class="w-full pt-2">
   <button
-    class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
+    class="w-full flex items-center justify-between p-2 hover:bg-base-200 rounded-lg"
     onclick={(e) => {
       popupControls.open({
         component: ProfilePage,
@@ -32,8 +32,6 @@
       bottomInfo={trustRelation}
       clickable={false}
     />
-    <div class="font-medium underline flex gap-x-2">
-      <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
-    </div>
+    <img src="/chevron-right.svg" alt="" class="icon" aria-hidden="true" />
   </button>
 </div>

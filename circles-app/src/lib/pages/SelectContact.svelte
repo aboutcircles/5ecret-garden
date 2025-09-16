@@ -68,7 +68,7 @@
 {#if selectedAddress && !group}
   <p class="menu-title p-0">Selected Address:</p>
   <button
-    class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg mt-2"
+    class="w-full flex items-center justify-between p-2 hover:bg-base-200 rounded-lg mt-2"
     onclick={() => handleSelect(selectedAddress)}
   >
     <Avatar
@@ -77,18 +77,18 @@
       view="horizontal"
       bottomInfo={shortenAddress(selectedAddress)}
     />
-    <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
+    <img src="/chevron-right.svg" alt="" class="icon" aria-hidden="true" />
   </button>
 {:else}
   <p class="menu-title pl-0">{addressListTitle}</p>
   {#if filteredAddresses.length > 0}
     <div
-      class="w-full md:border rounded-lg md:px-4 flex flex-col divide-y gap-y-2 overflow-x-auto py-4"
+      class="w-full border border-base-300 rounded-lg md:px-4 flex flex-col divide-y gap-y-2 overflow-x-auto py-4"
     >
       {#each filteredAddresses as address (address)}
         <div class="w-full pt-2">
           <button
-            class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
+            class="w-full flex items-center justify-between p-2 hover:bg-base-200 rounded-lg"
             onclick={() => handleSelect(address)}
           >
             <Avatar
@@ -97,7 +97,7 @@
               clickable={false}
               bottomInfo={shortenAddress(address)}
             />
-            <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
+            <img src="/chevron-right.svg" alt="" class="icon" aria-hidden="true" />
           </button>
         </div>
       {/each}

@@ -212,13 +212,13 @@
   {/if}
 </svelte:head>
 
-<main class="relative w-full h-full bg-white overflow-hidden font-dmSans">
+<main class="relative w-full h-full bg-base-100 overflow-hidden font-dmSans">
   {#if avatarState.avatar?.avatarInfo && canMigrate(avatarState.avatar.avatarInfo) && $page.route.id !== '/migrate-to-v2'}
     <UpdateBanner />
     <div class="h-20"></div>
   {/if}
 
-  <div class="w-full flex flex-col items-center p-4 md:p-0">
+  <div class="w-full flex flex-col items-center">
     {@render children?.()}
   </div>
 
