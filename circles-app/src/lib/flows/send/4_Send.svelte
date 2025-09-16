@@ -78,7 +78,6 @@
 </script>
 
 <FlowDecoration>
-  <p class="text-2xl font-bold">Confirm Transaction</p>
   <Send
     asset={context.selectedAsset}
     amount={context.amount}

@@ -17,7 +17,6 @@
     onclick={(e) => {
       popupControls.open({
         component: ProfilePage,
-        title: '',
         props: {
           address: address,
         },

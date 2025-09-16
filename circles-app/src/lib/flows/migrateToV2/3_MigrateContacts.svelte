@@ -60,7 +60,6 @@
 </script>
 
 <FlowDecoration>
-  <p class="text-2xl font-bold">Contact</p>
   <p class="text-base-content/70 mt-2">
     Select the contacts you want to keep in your new Circles V2 profile.
   </p>

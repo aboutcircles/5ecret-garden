@@ -101,7 +101,6 @@
                   isDropdownOpen = false;
                   popupControls.open({
                     component: SettingProfile,
-                    title: '',
                     props: {
                       address: address,
                     },
@@ -176,7 +175,6 @@
         onclick={(e) => {
           popupControls.open({
             component: SettingProfile,
-            title: '',
             props: {
               address: address,
             },

@@ -34,7 +34,6 @@
 </script>
 
 <FlowDecoration>
-  <p class="text-2xl font-bold">Mint Group Token</p>
   <p class="text-base-content/70 mt-2">
     If you hold CRC created by members of a group, you can turn them into tokens of that group
   </p>
