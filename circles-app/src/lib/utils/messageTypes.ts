@@ -5,7 +5,13 @@ export interface UserProfile {
   [key: string]: any;
 }
 
-export interface MessageNamespace {
+export interface NameIndexDoc {
+  head: string;
+  entries: Record<string, string>;
+}
+
+export interface NamespaceChunk {
+  prev: string | null;
   links: MessageLink[];
 }
 
@@ -14,6 +20,7 @@ export interface MessageContent {
 }
 
 export interface MessageData {
+  name: string;
   cid: string;
   encrypted: boolean;
   encryptionAlgorithm: string;
@@ -22,9 +29,11 @@ export interface MessageData {
   signerAddress: string;
   signedAt: bigint;
   nonce: string;
+  [key: string]: unknown; // For EIP-712 compatibility
 }
 
 export interface MessageLink {
+  name: string;
   cid: string;
   encrypted: boolean;
   encryptionAlgorithm?: string;
@@ -37,6 +46,7 @@ export interface MessageLink {
 }
 
 export interface Message {
+  name: string;
   txt: string;
   cid: string;
   senderAddress: Address;

@@ -6,10 +6,11 @@
   import WriteMessage from './WriteMessage.svelte';
   import ConversationView from './ConversationView.svelte';
   import { getTimeAgo } from '$lib/utils/shared';
-  import { 
-    fetchAllMessages, 
-    groupMessagesByConversation, 
-    getConversationMessages 
+  import {
+    fetchAllMessages,
+    groupMessagesByConversation,
+    getConversationMessages,
+    debugClearAllSentMessages
   } from '$lib/utils/messageUtils';
   import type { Message, MessageGroup } from '$lib/utils/messageTypes';
   import { avatarState } from '$lib/stores/avatar.svelte';
@@ -55,8 +56,8 @@
   function openConversation(contactAddress: Address) {
     // Get all messages for this conversation (both sent and received)
     const conversationMessages = getConversationMessages(
-      messages, 
-      contactAddress, 
+      messages,
+      contactAddress,
       avatarState.avatar?.address!
     );
 
@@ -69,6 +70,27 @@
         currentUserAddress: avatarState.avatar?.address
       }
     });
+  }
+
+  async function handleDebugClearMessages() {
+    if (!confirm('🚨 WARNING: This will permanently delete ALL your sent messages! Are you sure?')) {
+      return;
+    }
+
+    try {
+      isLoading = true;
+      await debugClearAllSentMessages();
+
+      // Refresh messages after clearing
+      await fetchMessages();
+
+      alert('✅ All sent messages cleared successfully!');
+    } catch (error) {
+      console.error('Failed to clear messages:', error);
+      alert('❌ Failed to clear messages. Check console for details.');
+    } finally {
+      isLoading = false;
+    }
   }
 
   onMount(() => {
@@ -88,6 +110,14 @@
         {/if}
         Refresh
       </ActionButton>
+
+      <!-- Debug button (only in development) -->
+      {#if import.meta.env.DEV}
+        <button class="btn btn-error btn-sm text-white" onclick={handleDebugClearMessages} disabled={isLoading}>
+          🗑️ Debug: Clear All
+        </button>
+      {/if}
+
       <button class="btn btn-primary text-white" onclick={openWriteMessage}>
         <img src="/envelope.svg" alt="Write" class="w-4 h-4 inline invert" />
         Write Message
