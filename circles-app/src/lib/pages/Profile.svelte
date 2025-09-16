@@ -21,7 +21,7 @@
     import SelectAmount from '$lib/flows/send/3_Amount.svelte';
     import {transitiveTransfer} from '$lib/pages/SelectAsset.svelte';
     import {
-        getGroupCollateral,
+        getGroupCollateral, getGroupTokenHolders,
         getTreasuryAddress,
         getVaultAddress,
     } from '$lib/utils/vault';
@@ -55,81 +55,139 @@
         trustRelation?: TrustRelation;
     }> = $state([]);
 
+    let tokenHolders: Array<{
+        avatar: Address;
+        amount: bigint;
+        amountToRedeem: bigint;
+        amountToRedeemInCircles: number;
+        trustRelation?: TrustRelation;
+    }> = $state([]);
+
     async function initialize(address: Address) {
-        if (!$circles) {
-            return;
-        }
+        if (!$circles) return;
 
-        otherAvatar = await $circles.data.getAvatarInfo(address);
+        // Load avatar and profile in parallel
+        const [other, prof] = await Promise.all([
+            $circles.data.getAvatarInfo(address),
+            getProfile(address),
+        ]);
+        otherAvatar = other;
+        profile = prof;
 
-        profile = await getProfile(address);
-
+        // Local trust info
         trustRow = $contacts?.data[address]?.row;
 
         if (otherAvatar?.type === 'CrcV2_RegisterGroup') {
-            // load the members
-            const groupTrustRelations =
-                await $circles.data.getAggregatedTrustRelations(otherAvatar.avatar);
-            members = groupTrustRelations
-                .filter((row) => row.relation === 'trusts')
-                .map((o) => o.objectAvatar);
+            // Parallelize members, mintHandler, vault/treasury, and token holders
+            const membersP = (async () => {
+                const groupTrustRelations = await $circles.data.getAggregatedTrustRelations(otherAvatar.avatar);
+                return groupTrustRelations
+                    .filter((row) => row.relation === 'trusts')
+                    .map((o) => o.objectAvatar);
+            })();
 
-            //TODO: find mint handler and treasury in the same query
-            const findMintHandlerQuery = new CirclesQuery<any>($circles.circlesRpc, {
-                namespace: 'V_CrcV2',
-                table: 'Groups',
-                columns: ['mintHandler'],
-                filter: [
-                    {
-                        Type: 'FilterPredicate',
-                        FilterType: 'Equals',
-                        Column: 'group',
-                        Value: address,
-                    },
-                ],
-                sortOrder: 'DESC',
-                limit: 1,
-            });
+            const mintHandlerP = (async () => {
+                const findMintHandlerQuery = new CirclesQuery<any>($circles.circlesRpc, {
+                    namespace: 'V_CrcV2',
+                    table: 'Groups',
+                    columns: ['mintHandler'],
+                    filter: [
+                        {
+                            Type: 'FilterPredicate',
+                            FilterType: 'Equals',
+                            Column: 'group',
+                            Value: address,
+                        },
+                    ],
+                    sortOrder: 'DESC',
+                    limit: 1,
+                });
+                return (await findMintHandlerQuery.getSingleRow())?.mintHandler as Address | undefined;
+            })();
 
-            mintHandler = (await findMintHandlerQuery.getSingleRow())?.mintHandler;
-            console.log('mintHandler', mintHandler);
+            const vaultAndTreasuryP = Promise.allSettled([
+                getVaultAddress($circles.circlesRpc, otherAvatar.avatar),
+                getTreasuryAddress($circles.circlesRpc, otherAvatar.avatar),
+            ]);
 
-            if (!$circles) return;
+            const tokenHoldersP = getGroupTokenHolders($circles.circlesRpc, address);
 
-            const vaultAddress = await getVaultAddress(
-                $circles.circlesRpc,
-                otherAvatar.avatar
-            );
-            const treasuryAddress = await getTreasuryAddress(
-                $circles.circlesRpc,
-                otherAvatar.avatar
-            );
+            // Resolve immediate needs
+            [members, mintHandler] = await Promise.all([membersP, mintHandlerP]);
 
-            const balancesResult = await getGroupCollateral(
-                $circles.circlesRpc,
-                vaultAddress ?? treasuryAddress ?? ''
-            );
-            if (!balancesResult) {
+            // Resolve vault/treasury and then collateral
+            const [vaultRes, treasuryRes] = await vaultAndTreasuryP as [
+                PromiseSettledResult<string | null>,
+                PromiseSettledResult<string | null>
+            ];
+            const vaultAddress = vaultRes.status === 'fulfilled' ? vaultRes.value : null;
+            const treasuryAddress = treasuryRes.status === 'fulfilled' ? treasuryRes.value : null;
+            const balanceOwner = vaultAddress ?? treasuryAddress ?? '';
+
+            if (balanceOwner) {
+                const balancesResult = await getGroupCollateral($circles.circlesRpc, balanceOwner);
+                if (balancesResult) {
+                    const { columns, rows } = balancesResult;
+                    const colId = columns.indexOf('tokenId');
+                    const colBal = columns.indexOf('demurragedTotalBalance');
+                    collateralInTreasury = rows
+                        .map((row) => ({
+                            avatar: uint256ToAddress(BigInt(row[colId])),
+                            amount: BigInt(row[colBal]),
+                            amountToRedeemInCircles: 0,
+                            amountToRedeem: 0n,
+                        }))
+                        .sort((a, b) => (a.amount > b.amount ? -1 : a.amount === b.amount ? 0 : 1));
+                } else {
+                    collateralInTreasury = [];
+                }
+            } else {
                 collateralInTreasury = [];
-                return;
             }
 
-            const {columns, rows} = balancesResult;
-            const colId = columns.indexOf('tokenId');
-            const colBal = columns.indexOf('demurragedTotalBalance');
-
-            // Build up the table data
-            collateralInTreasury = rows.map((row) => ({
-                avatar: uint256ToAddress(BigInt(row[colId])),
-                amount: BigInt(row[colBal]),
-                amountToRedeemInCircles: 0,
-                amountToRedeem: 0n,
-            })).sort((a, b) => a.amount > b.amount ? -1 : a.amount == b.amount ? 0 : 1)
+            // Token holders for group
+            const tokenHodlers = await tokenHoldersP;
+            if (tokenHodlers) {
+                const { columns, rows } = tokenHodlers;
+                const avatarIdx = columns.indexOf('account');
+                const colBal = columns.indexOf('demurragedTotalBalance');
+                tokenHolders = rows
+                    .map((row) => ({
+                        avatar: row[avatarIdx],
+                        amount: BigInt(row[colBal]),
+                        amountToRedeemInCircles: 0,
+                        amountToRedeem: 0n,
+                    }))
+                    .sort((a, b) => (a.amount > b.amount ? -1 : a.amount === b.amount ? 0 : 1));
+            } else {
+                tokenHolders = [];
+            }
         } else {
             members = undefined;
+
+            // For humans, only token holders are relevant
+            if (otherAvatar?.type === 'CrcV2_RegisterHuman') {
+                const tokenHodlers = await getGroupTokenHolders($circles.circlesRpc, address);
+                if (tokenHodlers) {
+                    const { columns, rows } = tokenHodlers;
+                    const avatarIdx = columns.indexOf('account');
+                    const colBal = columns.indexOf('demurragedTotalBalance');
+                    tokenHolders = rows
+                        .map((row) => ({
+                            avatar: row[avatarIdx],
+                            amount: BigInt(row[colBal]),
+                            amountToRedeemInCircles: 0,
+                            amountToRedeem: 0n,
+                        }))
+                        .sort((a, b) => (a.amount > b.amount ? -1 : a.amount === b.amount ? 0 : 1));
+                } else {
+                    tokenHolders = [];
+                }
+            }
         }
     }
 
+    let selectedTab: string = 'common_connections';
     let commonConnectionsCount = $state(0);
 </script>
 
@@ -284,17 +342,23 @@
     </div>
 </div>
 
-<div role="tablist" class="tabs tabs-bordered w-full p-0 my-10">
+<div role="tablist" aria-label="Profile sections" class="tabs tabs-bordered w-full p-0 my-10">
     <input
             type="radio"
             name="tabs"
-            value="common_connections"
             role="tab"
             class="tab h-auto"
-            checked
+            value="common_connections"
+            bind:group={selectedTab}
+            aria-controls="panel-common-connections"
             aria-label={`Common connections (${commonConnectionsCount})`}
     />
-    <div role="tabpanel" class="tab-content mt-8 bg-base-100 border-none">
+    <div
+            id="panel-common-connections"
+            role="tabpanel"
+            class="tab-content mt-8 bg-base-100 border-none"
+            aria-hidden={selectedTab !== 'common_connections'}
+    >
         <div class="w-full border-base-300 rounded-box border">
             <CommonConnections
                     otherAvatarAddress={otherAvatar?.avatar}
@@ -307,17 +371,20 @@
         <input
                 type="radio"
                 name="tabs"
-                value="members"
                 role="tab"
                 class="tab h-auto"
+                value="members"
+                bind:group={selectedTab}
+                aria-controls="panel-members"
                 aria-label={`Members (${members.length})`}
         />
         <div
+                id="panel-members"
                 role="tabpanel"
                 class="tab-content mt-8 p-4 bg-base-100 border-base-300 rounded-box divide-y"
+                aria-hidden={selectedTab !== 'members'}
         >
             {#each members as member (member)}
-                <!-- TODO: use the generic list component -->
                 <div class="-mx-4">
                     <button
                             class="flex w-full items-center justify-between p-4 bg-base-100 hover:bg-base-200"
@@ -334,19 +401,49 @@
             {/if}
         </div>
     {/if}
+
     {#if otherAvatar?.type === 'CrcV2_RegisterGroup'}
         <input
                 type="radio"
                 name="tabs"
-                value="collateral"
                 role="tab"
                 class="tab h-auto"
-                checked
+                value="collateral"
+                bind:group={selectedTab}
+                aria-controls="panel-collateral"
                 aria-label={`Collateral (${collateralInTreasury.length})`}
         />
-        <div role="tabpanel" class="tab-content mt-8 bg-base-100 border-none">
+        <div
+                id="panel-collateral"
+                role="tabpanel"
+                class="tab-content mt-8 bg-base-100 border-none"
+                aria-hidden={selectedTab !== 'collateral'}
+        >
             <div class="w-full border-base-300 rounded-box border">
                 <CollateralTable {collateralInTreasury}/>
+            </div>
+        </div>
+    {/if}
+
+    {#if otherAvatar?.type === 'CrcV2_RegisterGroup' || otherAvatar?.type === 'CrcV2_RegisterHuman'}
+        <input
+                type="radio"
+                name="tabs"
+                role="tab"
+                class="tab h-auto"
+                value="holders"
+                bind:group={selectedTab}
+                aria-controls="panel-holders"
+                aria-label={`Holder (${tokenHolders.length})`}
+        />
+        <div
+                id="panel-holders"
+                role="tabpanel"
+                class="tab-content mt-8 bg-base-100 border-none"
+                aria-hidden={selectedTab !== 'holders'}
+        >
+            <div class="w-full border-base-300 rounded-box border">
+                <CollateralTable collateralInTreasury={tokenHolders}/>
             </div>
         </div>
     {/if}
