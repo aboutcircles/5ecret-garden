@@ -135,7 +135,7 @@
     if (!clickable) return;
 
     const nextPage: PopupContentDefinition = {
-      title: shortenAddress(address),
+      title: "",
       component: ProfilePage,
       props: { address },
     };

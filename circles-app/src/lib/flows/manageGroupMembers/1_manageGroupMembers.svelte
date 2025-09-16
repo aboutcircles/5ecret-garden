@@ -132,10 +132,6 @@
 </script>
 
 <FlowDecoration>
-  <h2 class="text-2xl font-bold">
-    Add or remove {avatarState.isGroup ? 'members' : 'contacts'}
-  </h2>
-
   <div class="flex items-center justify-end gap-2 pb-1">
     <div class="badge badge-ghost badge-sm">
       {addressesArray.length}

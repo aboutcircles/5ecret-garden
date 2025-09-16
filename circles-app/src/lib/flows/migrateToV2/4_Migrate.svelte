@@ -42,7 +42,6 @@
 </script>
 
 <FlowDecoration>
-  <p class="text-2xl font-bold">Migrate</p>
   <p class="text-gray-500 mt-2">
     You're ready to migrate to Circles V2! Click the button below to start the
     migration process.

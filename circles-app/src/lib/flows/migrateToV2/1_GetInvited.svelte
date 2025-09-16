@@ -47,7 +47,6 @@
 </script>
 
 <FlowDecoration>
-  <p class="text-2xl font-bold">Find an invitation</p>
   {#if !invitations}
     <p class="text-base-content/70 mt-2">Loading invitations...</p>
   {:else if invitations.length > 0}

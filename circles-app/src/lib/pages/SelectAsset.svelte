@@ -88,7 +88,7 @@
     class="w-full md:p-3 mt-4 border-b md:border md:rounded-lg"
     onclick={() => handleSelect(transitiveTransfer())}
   >
-    <BalanceRow balance={transitiveTransfer()} />
+    <BalanceRow item={transitiveTransfer()} />
   </button>
 {/if}
 

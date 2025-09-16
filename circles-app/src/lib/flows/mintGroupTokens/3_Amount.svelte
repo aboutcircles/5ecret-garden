@@ -27,7 +27,6 @@
 </script>
 
 <FlowDecoration>
-  <p class="text-2xl font-bold">Enter Amount</p>
   <SelectAmount asset={context.selectedAsset} bind:amount={context.amount} />
   <!-- Action Buttons -->
   <div class="flex justify-end space-x-2 mt-6">

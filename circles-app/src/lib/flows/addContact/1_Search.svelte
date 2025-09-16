@@ -53,7 +53,6 @@
 </script>
 
 <FlowDecoration>
-  <p class="text-2xl font-bold">Add Contact</p>
   <SearchAvatar
     selectedAddress={context.selectedAddress}
     {oninvite}
