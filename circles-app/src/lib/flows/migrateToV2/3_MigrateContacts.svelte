@@ -61,13 +61,13 @@
 
 <FlowDecoration>
   <p class="text-2xl font-bold">Contact</p>
-  <p class="text-gray-500 mt-2">
+  <p class="text-base-content/70 mt-2">
     Select the contacts you want to keep in your new Circles V2 profile.
   </p>
   <div class="mt-6">
     {#each orderedContacts as address}
       <button
-        class="p-2 bg-base-100 hover:bg-base-200 rounded-lg items-center block"
+        class="btn btn-ghost justify-start w-full"
         onclick={(e) => {
           console.log('Selected address', address);
           // Toggle selection

@@ -169,13 +169,13 @@
   <!-- Loading indicator while pathfinding is in progress -->
   {#if calculatingPath}
     <div class="flex items-center mt-4 space-x-2">
-      <div class="spinner spinner-circle spinner-4xl"></div>
-      <p class="text-gray-500">Calculating path…</p>
+      <span class="loading loading-spinner"></span>
+      <p class="text-base-content/70">Calculating path…</p>
     </div>
   {:else}
     <!-- Show a short message if pathfinding actually failed -->
     {#if pathfindingFailed}
-      <div class="mt-4 p-2 text-red-600">
+      <div class="mt-4 p-2 text-error">
         <p>Pathfinding failed. No usable path was found.</p>
       </div>
     {:else}
@@ -242,16 +242,13 @@
   <!-- Condition 3: If pathfinding succeeded, show path-based UI -->
   {#if showPathsSection && path && !calculatingPath}
     <!-- Path UI -->
-    <div class="mt-4 text-gray-500">
+    <div class="mt-4 text-base-content/70">
       <h2 class="text-lg font-bold">Usable paths:</h2>
       {#if path.transfers?.length > 0}
-        <PathExplorer
-          graph={path.transfers}
-          startNode={path.transfers[0].from}
-        />
+        <PathExplorer graph={path.transfers} startNode={path.transfers[0].from} />
       {:else}
-        <div class="p-4 text-center text-gray-500">
-          <div class="spinner spinner-circle spinner-4xl"></div>
+        <div class="p-4 text-center text-base-content/70">
+          <span class="loading loading-spinner"></span>
         </div>
       {/if}
 
@@ -275,8 +272,8 @@
             <BalanceRow {balance} />
           {/each}
         {:else}
-          <div class="p-4 text-center text-gray-500">
-            <div class="spinner spinner-circle spinner-4xl"></div>
+          <div class="p-4 text-center text-base-content/70">
+            <span class="loading loading-spinner"></span>
           </div>
         {/if}
       {/if}

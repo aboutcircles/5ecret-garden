@@ -41,68 +41,33 @@
     }
   });
 
-  // const convertUrlToDataUrl = async (url: string): Promise<string> => {
-  //   const response = await fetch(url);
-  //   const blob = await response.blob();
-  //   return new Promise((resolve, reject) => {
-  //     const reader = new FileReader();
-  //     reader.onloadend = () => resolve(reader.result as string);
-  //     reader.onerror = reject;
-  //     reader.readAsDataURL(blob);
-  //   });
-  // };
-
   onMount(async () => {
     if (!avatarState.avatar?.address) {
       throw new Error('Avatar store not initialized');
     }
-
-    // if (!previewImageUrl.startsWith('data:image')) {
-    //   previewImageUrl = await convertUrlToDataUrl(previewImageUrl);
-    // }
     context.profile = avatarState.profile;
   });
 
   const validateProfile = async (profile: Profile) => {
     const errors: string[] = [];
 
-    if (
-      !profile.name ||
-      typeof profile.name !== 'string' ||
-      profile.name.length > config.maxNameLength
-    ) {
-      errors.push(
-        `Name is required and must be a string with a maximum length of ${config.maxNameLength} characters.`
-      );
+    if (!profile.name || typeof profile.name !== 'string' || profile.name.length > config.maxNameLength) {
+      errors.push(`Name is required and must be a string with a maximum length of ${config.maxNameLength} characters.`);
     }
 
-    if (
-      profile.description &&
-      (typeof profile.description !== 'string' ||
-        profile.description.length > config.descriptionLength)
-    ) {
-      errors.push(
-        `Description must be a string and cannot exceed ${config.descriptionLength} characters.`
-      );
+    if (profile.description && (typeof profile.description !== 'string' || profile.description.length > config.descriptionLength)) {
+      errors.push(`Description must be a string and cannot exceed ${config.descriptionLength} characters.`);
     }
 
     if (profile.previewImageUrl) {
       const isValidImage = await validateImage(profile.previewImageUrl);
       if (!isValidImage) {
-        errors.push(
-          `Invalid preview image data URL, or size exceeds ${config.maxImageSizeKB}KB.`
-        );
+        errors.push(`Invalid preview image data URL, or size exceeds ${config.maxImageSizeKB}KB.`);
       }
     }
 
-    if (
-      profile.imageUrl &&
-      (typeof profile.imageUrl !== 'string' ||
-        profile.imageUrl.length > config.imageUrlLength)
-    ) {
-      errors.push(
-        `Image URL must be a string and cannot exceed ${config.imageUrlLength} characters.`
-      );
+    if (profile.imageUrl && (typeof profile.imageUrl !== 'string' || profile.imageUrl.length > config.imageUrlLength)) {
+      errors.push(`Image URL must be a string and cannot exceed ${config.imageUrlLength} characters.`);
     }
 
     return errors;
@@ -146,39 +111,32 @@
     popupControls.open({
       title: 'Migrate Contacts',
       component: MigrateContacts,
-      props: {
-        context: context,
-      },
+      props: { context },
     });
   }
 </script>
 
 <FlowDecoration>
   <p class="text-2xl font-bold">Profile</p>
-  <p class="text-gray-500 mt-2">
+  <p class="text-base-content/70 mt-2">
     Create a profile for your new Circles v2 avatar.
   </p>
-  <!-- list of errors (if errors.length > 0) -->
+
   {#if errors && errors.length > 0}
-    <div
-      class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-6"
-      role="alert"
-    >
-      <strong class="font-bold">Error</strong>
-      <ul class="list-disc list-inside">
+    <div class="alert alert-error mt-6">
+      <span class="font-bold">Error</span>
+      <ul class="list-disc ml-4">
         {#each errors as error}
           <li>{error}</li>
         {/each}
       </ul>
     </div>
   {/if}
+
   <ProfileEditor bind:profile={newProfile} />
+
   <div class="flex justify-end space-x-2 mt-6">
-    <button
-      type="submit"
-      class="btn btn-primary text-white"
-      onclick={() => next()}
-    >
+    <button type="submit" class="btn btn-primary text-white" onclick={() => next()}>
       Next
     </button>
   </div>
