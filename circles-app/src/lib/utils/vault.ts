@@ -79,6 +79,12 @@ export async function getGroupCollateral(
           Column: 'account',
           Value: address.toLowerCase(),
         },
+          {
+              Type: 'FilterPredicate',
+              FilterType: 'GreaterThanOrEquals',
+              Column: 'demurragedTotalBalance',
+              Value: 10000000000000000
+          }
       ],
       Order: [],
     },
@@ -88,4 +94,40 @@ export async function getGroupCollateral(
     return null;
   }
   return balancesResult.result;
+}
+
+export async function getGroupTokenHolders(
+    circlesRpc: CirclesRpc,
+    address: string
+): Promise<{columns: string[], rows: any[][]} | null> {
+    const balancesResult = await circlesRpc.call<{
+        columns: string[];
+        rows: any[][];
+    }>('circles_query', [
+        {
+            Namespace: 'V_CrcV2',
+            Table: 'BalancesByAccountAndToken',
+            Columns: ['account', 'demurragedTotalBalance'],
+            Filter: [
+                {
+                    Type: 'FilterPredicate',
+                    FilterType: 'Equals',
+                    Column: 'tokenAddress',
+                    Value: address.toLowerCase(),
+                },
+                {
+                    Type: 'FilterPredicate',
+                    FilterType: 'GreaterThanOrEquals',
+                    Column: 'demurragedTotalBalance',
+                    Value: 10000000000000000
+                }
+            ],
+            Order: [],
+        },
+    ]);
+
+    if (!balancesResult?.result.rows || balancesResult.result.rows.length === 0) {
+        return null;
+    }
+    return balancesResult.result;
 }
