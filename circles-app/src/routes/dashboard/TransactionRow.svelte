@@ -77,7 +77,7 @@
 </script>
 
 <a
-        class="flex items-center justify-between p-2 hover:bg-base-200 rounded-lg"
+        class="flex w-full items-center justify-between p-2 hover:bg-base-200 rounded-lg"
         target="_blank"
         href={'https://gnosisscan.io/tx/' + item.transactionHash}
 >
