@@ -1,18 +1,20 @@
 <script lang="ts">
-    import TotalBalance from '$lib/components/TotalBalance.svelte';
-    import {avatarState} from '$lib/stores/avatar.svelte';
-    import {roundToDecimals} from '$lib/utils/shared';
-    import {runTask} from '$lib/utils/tasks';
+    import { avatarState } from '$lib/stores/avatar.svelte';
+    import { roundToDecimals } from '$lib/utils/shared';
+    import { runTask } from '$lib/utils/tasks';
 
     import Tabs from '$lib/components/tabs/Tabs.svelte';
     import Tab from '$lib/components/tabs/Tab.svelte';
-
     import OverviewPanel from './OverviewPanel.svelte';
     import TransactionHistoryPanel from './TransactionHistoryPanel.svelte';
-    import {popupControls} from "$lib/stores/popUp";
-    import Balances from "$lib/pages/Balances.svelte";
-    import {circlesBalances} from '$lib/stores/circlesBalances';
-    import {totalCirclesBalance} from '$lib/stores/totalCirclesBalance';
+
+    import { popupControls } from '$lib/stores/popUp';
+    import Balances from '$lib/pages/Balances.svelte';
+    import { circlesBalances } from '$lib/stores/circlesBalances';
+    import { totalCirclesBalance } from '$lib/stores/totalCirclesBalance';
+
+    import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
+    import Send from '$lib/flows/send/1_To.svelte';
 
     let mintableAmount: number = $state(0);
 
@@ -60,27 +62,98 @@
             title: "",
             component: Balances,
             props: {}
-        })
+        });
+    }
+
+    function openSend() {
+        popupControls.open({
+            title: 'Send Circles',
+            component: Send,
+            props: {},
+        });
     }
 </script>
 
-<div class="page page-pt page-stack page--lg">
-    <div>
-        <a class="h2 cursor-pointer" onclick={openBalances}>{roundToDecimals($totalCirclesBalance)} Circles</a>
-        <p>
-            <a onclick={openBalances} class="text-sm cursor-pointer text-gray-500">
-                {personalToken} individual tokens • {groupToken} group tokens
-            </a>
-        </p>
-    </div>
-
-
-    {#if mintableAmount >= 0.01}
-        <button class="btn btn-sm btn-primary" onclick={mintPersonalCircles}>
-            Mint {roundToDecimals(mintableAmount)} Circles
+<!-- Align to the same page width used by the Groups screen -->
+<PageScaffold
+        highlight="soft"
+        maxWidthClass="page page--lg"
+        contentWidthClass="page page--lg"
+        usePagePadding={true}
+>
+    <!-- Header title -->
+    <svelte:fragment slot="title">
+        <button class="text-left" onclick={openBalances} aria-label="Open balances breakdown">
+            <h2 class="text-3xl md:text-4xl font-semibold tracking-tight text-base-content">
+                {roundToDecimals($totalCirclesBalance)} Circles
+            </h2>
         </button>
-    {/if}
+    </svelte:fragment>
 
+    <!-- Header meta -->
+    <svelte:fragment slot="meta">
+        <span class="hover:underline cursor-pointer" onclick={openBalances}>
+            {personalToken} individual tokens
+        </span>
+        <span class="mx-1.5">•</span>
+        <span class="hover:underline cursor-pointer" onclick={openBalances}>
+            {groupToken} group tokens
+        </span>
+        <span class="mx-1.5">•</span>
+        <span class="hover:underline cursor-pointer" onclick={openBalances}>
+            See breakdown
+        </span>
+    </svelte:fragment>
+
+    <!-- Full-size quick actions -->
+    <svelte:fragment slot="actions">
+        {#if !avatarState.isGroup}
+            <button type="button" class="btn btn-ghost btn-sm" onclick={openSend}>
+                <img class="h-4 w-4" src="/send.svg" alt="" aria-hidden="true" />
+                Send
+            </button>
+        {/if}
+
+        {#if mintableAmount >= 0.01}
+            <button type="button" class="btn btn-primary btn-sm" onclick={mintPersonalCircles}>
+                Mint {roundToDecimals(mintableAmount)} Circles
+            </button>
+        {/if}
+    </svelte:fragment>
+
+    <!-- Label shown on the fixed, collapsed actions pill -->
+    <svelte:fragment slot="collapsed-label">
+        {roundToDecimals($totalCirclesBalance)} CRC
+    </svelte:fragment>
+
+    <!-- Collapsed dropdown items (one <li> per action) -->
+    <svelte:fragment slot="actions-collapsed">
+        {#if !avatarState.isGroup}
+            <li>
+                <button onclick={openSend}>
+                    <img class="icon" src="/send.svg" alt="" aria-hidden="true" />
+                    Send
+                </button>
+            </li>
+        {/if}
+
+        {#if mintableAmount >= 0.01}
+            <li>
+                <button onclick={mintPersonalCircles}>
+                    <img class="icon" src="/banknotes.svg" alt="" aria-hidden="true" />
+                    Mint {roundToDecimals(mintableAmount)}
+                </button>
+            </li>
+        {/if}
+        <li>
+            <button onclick={openBalances}>
+                <img class="icon" src="/chart.svg" alt="" aria-hidden="true" />
+                See breakdown
+            </button>
+        </li>
+    </svelte:fragment>
+
+    <!-- Content -->
     {#if avatarState.isGroup}
         <Tabs
                 id="dashboard-tabs"
@@ -99,7 +172,6 @@
             </Tab>
         </Tabs>
     {:else}
-        <!-- No tabs for non-group: embed the shared panel directly -->
         <TransactionHistoryPanel/>
     {/if}
-</div>
+</PageScaffold>
