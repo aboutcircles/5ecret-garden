@@ -1,6 +1,7 @@
 <script lang="ts">
     import { page } from '$app/stores';
     import { popupState } from '$lib/stores/popUp';
+    import { headerDropdownOpen } from '../stores/headerDropdown.ts';
 
     type Icon = 'dashboard' | 'contacts' | 'groups' | 'settings' | 'default';
     type Item = { name: string; link: string; icon?: Icon };
@@ -34,13 +35,15 @@
 
     // runes-friendly
     let isPopupOpen: boolean = $derived($popupState.content !== null);
+    let isHeaderDropdownOpen: boolean = $derived($headerDropdownOpen === true);
+    let shouldHide: boolean = $derived(isPopupOpen || isHeaderDropdownOpen);
 </script>
 
 <nav
         class={`fixed inset-x-0 z-20 transition-all duration-200
-            ${isPopupOpen ? 'translate-y-8 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}
+            ${shouldHide ? 'translate-y-8 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}
         style="bottom: calc(env(safe-area-inset-bottom) + 16px);"
-        aria-hidden={isPopupOpen ? 'true' : 'false'}
+        aria-hidden={shouldHide ? 'true' : 'false'}
 >
     <div class={`mx-auto ${maxWidthClass} pointer-events-none flex justify-center`}>
         <div class="pointer-events-auto max-w-full">
@@ -93,10 +96,10 @@
 <style>
     /* Neutralize DaisyUI's fixed, full-width defaults for the floating variant. */
     :global(.btm-nav.btm-nav--float) {
-        position: static;          /* instead of fixed */
-        left: auto; right: auto;   /* kill stretch */
+        position: static;
+        left: auto; right: auto;
         bottom: auto;
-        width: max-content;        /* shrink-to-content */
+        width: max-content;
         grid-auto-columns: max-content;
     }
     :global(.btm-nav.btm-nav--float > *),

@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { popupState } from '$lib/stores/popUp';
+    import {headerDropdownOpen} from "$lib/stores/headerDropdown";
 
     type Highlight = 'soft' | 'tint';
     type CollapsedMode = 'dropdown' | 'bar';
@@ -61,7 +62,10 @@
 
     const isPopupOpen: boolean = $derived($popupState.content !== null);
 
-    // Close the collapsed tray when the popup opens or when we uncollapse
+    // Sync flag for other components (BottomNav)
+    $effect(() => { headerDropdownOpen.set(collapsedMenuOpen); });
+
+    // Close the tray when popup opens or when header un-collapses
     $effect(() => {
         const mustClose: boolean = isPopupOpen || !collapsed;
         if (mustClose) { collapsedMenuOpen = false; }
@@ -73,9 +77,8 @@
     function toggleCollapsedMenu() { collapsedMenuOpen = !collapsedMenuOpen; }
     function onMenuClick(e: MouseEvent) {
         const target = e.target as HTMLElement | null;
-        if (target?.closest('button, a, [data-close-dropdown]')) {
-            collapsedMenuOpen = false;
-        }
+        const shouldClose: boolean = !!target?.closest('button, a, [data-close-dropdown]');
+        if (shouldClose) { collapsedMenuOpen = false; }
     }
 </script>
 
@@ -109,7 +112,8 @@
 </header>
 
 {#if hasAnyCollapsedUI}
-    <div class={`fixed top-0 left-1/2 -translate-x-1/2 w-full ${maxWidthClass} z-20 pointer-events-none`}>
+    <!-- Fixed host for the collapsed control -->
+    <div class={`fixed top-0 left-1/2 -translate-x-1/2 w-full ${maxWidthClass} z-50 pointer-events-none`}>
         <div class={`${fixedPaddingClass} transition-all duration-200
             ${collapsed && !isPopupOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}`}>
 
@@ -133,9 +137,8 @@
                     </button>
 
                     {#if collapsedMenuOpen}
-                        <div class="fixed inset-0 pointer-events-auto" onclick={() => (collapsedMenuOpen = false)} aria-hidden="true"></div>
-
-                        <div class="absolute left-0 right-0 mt-2 pointer-events-auto z-10">
+                        <!-- The dropdown panel -->
+                        <div class="absolute left-0 right-0 mt-2 pointer-events-auto z-50">
                             <div
                                     class="bg-base-100 border shadow-xl rounded-xl p-2"
                                     style={`--collapsed-h:${collapsedHeight}; --collapsed-h-md:${collapsedHeightMd};`}
@@ -163,6 +166,19 @@
             {/if}
         </div>
     </div>
+
+    {#if collapsedMode === 'bar' && collapsedMenuOpen}
+        <!-- Full-viewport backdrop (outside the width-limited host) -->
+        <div
+                class="fixed inset-0 bg-black/50 transition-opacity duration-300 z-40"
+                role="button"
+                tabindex="0"
+                aria-label="Close menu"
+                onmousedown={() => (collapsedMenuOpen = false)}
+                ontouchstart={() => (collapsedMenuOpen = false)}
+                aria-hidden="true"
+        ></div>
+    {/if}
 {/if}
 
 <section class={`mx-auto ${contentWidthClass} ${contentPaddingClass}`}>
