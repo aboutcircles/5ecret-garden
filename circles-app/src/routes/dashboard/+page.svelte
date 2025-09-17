@@ -16,6 +16,10 @@
     import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
     import Send from '$lib/flows/send/1_To.svelte';
 
+    // lucide (standalone) icon nodes
+    import { Send as LSend, Banknote as LBanknote, BarChart3 as LBarChart3 } from 'lucide';
+    import Lucide from '$lib/icons/Lucide.svelte';
+
     let mintableAmount: number = $state(0);
 
     const defaultTab: string = avatarState.isGroup ? 'overview' : 'transaction-history';
@@ -72,6 +76,10 @@
             props: {},
         });
     }
+
+    // Stroke policy
+    const ghostIconStrokeClass: string = 'stroke-black';
+    const primaryIconStrokeClass: string = 'stroke-white';
 </script>
 
 <PageScaffold
@@ -102,23 +110,20 @@
         <span class="hover:underline cursor-pointer" onclick={openBalances}>
             {groupToken} group tokens
         </span>
-        <span class="mx-1.5">•</span>
-        <span class="hover:underline cursor-pointer" onclick={openBalances}>
-            See breakdown
-        </span>
     </svelte:fragment>
 
     <!-- Full-size quick actions -->
     <svelte:fragment slot="actions">
         {#if !avatarState.isGroup}
             <button type="button" class="btn btn-ghost btn-sm" onclick={openSend}>
-                <img class="h-4 w-4" src="/send.svg" alt="" aria-hidden="true" />
+                <Lucide icon={LSend} size={16} class={`shrink-0 ${ghostIconStrokeClass}`} />
                 Send
             </button>
         {/if}
 
         {#if mintableAmount >= 0.01}
             <button type="button" class="btn btn-primary btn-sm" onclick={mintPersonalCircles}>
+                <Lucide icon={LBanknote} size={16} class={`shrink-0 ${primaryIconStrokeClass}`} />
                 Mint {roundToDecimals(mintableAmount)} Circles
             </button>
         {/if}
@@ -131,19 +136,9 @@
     </span>
     </svelte:fragment>
 
-    <!-- Collapsed dropdown content: buttons match the bar height and auto-close on click -->
+    <!-- Collapsed dropdown content -->
     <svelte:fragment slot="collapsed-menu">
         <div class="grid grid-cols-1 gap-2">
-            {#if !avatarState.isGroup}
-                <button
-                        type="button"
-                        class="btn btn-ghost min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] justify-start px-3"
-                        onclick={openSend}
-                >
-                    <img class="h-5 w-5" src="/send.svg" alt="" aria-hidden="true" />
-                    Send
-                </button>
-            {/if}
 
             {#if mintableAmount >= 0.01}
                 <button
@@ -151,8 +146,19 @@
                         class="btn btn-primary min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] justify-start px-3"
                         onclick={mintPersonalCircles}
                 >
-                    <img class="h-5 w-5" src="/banknotes.svg" alt="" aria-hidden="true" />
+                    <Lucide icon={LBanknote} size={20} class={`shrink-0 ${primaryIconStrokeClass}`} />
                     Mint {roundToDecimals(mintableAmount)} Circles
+                </button>
+            {/if}
+
+            {#if !avatarState.isGroup}
+                <button
+                        type="button"
+                        class="btn btn-ghost min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] justify-start px-3"
+                        onclick={openSend}
+                >
+                    <Lucide icon={LSend} size={20} class={`shrink-0 ${ghostIconStrokeClass}`} />
+                    Send
                 </button>
             {/if}
 
@@ -161,7 +167,7 @@
                     class="btn btn-ghost min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] justify-start px-3"
                     onclick={openBalances}
             >
-                <img class="h-5 w-5" src="/chart.svg" alt="" aria-hidden="true" />
+                <Lucide icon={LBarChart3} size={20} class={`shrink-0 ${ghostIconStrokeClass}`} />
                 See breakdown
             </button>
         </div>
