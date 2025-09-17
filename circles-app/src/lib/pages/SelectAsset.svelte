@@ -96,7 +96,7 @@
 
 {#if $balances?.data?.length > 0}
   <div
-    class="flex flex-col p-0 md:px-4 sm:py-4 w-full sm:border sm:rounded-lg overflow-x-auto divide-y"
+    class="flex flex-col p-0 w-full overflow-x-auto divide-y"
   >
     {#each $balances.data as balance (balance.tokenAddress)}
       <button

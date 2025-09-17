@@ -38,7 +38,7 @@
   import { watchAccount } from '@wagmi/core';
   import { config } from '../config';
   import WrongNetwork from '$lib/components/WrongNetwork.svelte';
-
+  import BottomNav from '$lib/components/BottomNav.svelte';
   const unwatch = watchAccount(config, {
     onChange(account) {
       //handler for injected wallet
@@ -212,24 +212,28 @@
   {/if}
 </svelte:head>
 
-<main class="relative w-full h-full bg-base-100 overflow-hidden font-dmSans">
-  {#if avatarState.avatar?.avatarInfo && canMigrate(avatarState.avatar.avatarInfo) && $page.route.id !== '/migrate-to-v2'}
-    <UpdateBanner />
-    <div class="h-20"></div>
-  {/if}
+<main class="relative w-full h-full bg-base-100 overflow-hidden font-dmSans pb-16">
+    {#if avatarState.avatar?.avatarInfo && canMigrate(avatarState.avatar.avatarInfo) && $page.route.id !== '/migrate-to-v2'}
+        <UpdateBanner />
+        <div class="h-20"></div>
+    {/if}
 
-  <div class="w-full flex flex-col items-center">
-    {@render children?.()}
-  </div>
+    <div class="w-full flex flex-col items-center">
+        {@render children?.()}
+    </div>
 
-  <div
-    role="button"
-    tabindex="0"
-    class={`fixed top-0 left-0 w-full h-full bg-black/50 z-10 ${$popupState.content ? 'opacity-100' : 'opacity-0 hidden'} transition duration-300 ease-in-out`}
-    onmousedown={() => popupControls.close()}
-    ontouchstart={() => popupControls.close()}
-  ></div>
-  <PopUp />
+    {#if avatarState.avatar}
+        <BottomNav items={menuItems} />
+    {/if}
+
+    <div
+            role="button"
+            tabindex="0"
+            class={`fixed top-0 left-0 w-full h-full bg-black/50 z-10 ${$popupState.content ? 'opacity-100' : 'opacity-0 hidden'} transition duration-300 ease-in-out`}
+            onmousedown={() => popupControls.close()}
+            ontouchstart={() => popupControls.close()}
+    />
+    <PopUp />
 </main>
 {#if $tasks.length > 0}
   <div class="toast toast-bottom toast-end">

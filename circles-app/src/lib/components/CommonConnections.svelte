@@ -58,6 +58,6 @@
     </button>
   {/each}
   {#if commonContacts.length === 0}
-    <li>No common connections</li>
+    <p>No common connections</p>
   {/if}
 </div>
