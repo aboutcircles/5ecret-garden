@@ -127,7 +127,7 @@
     <!-- Collapsed summary (balance only) -->
     <svelte:fragment slot="collapsed-left">
     <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">
-        {roundToDecimals($totalCirclesBalance)} CRC
+        {roundToDecimals($totalCirclesBalance)} Circles
     </span>
     </svelte:fragment>
 
