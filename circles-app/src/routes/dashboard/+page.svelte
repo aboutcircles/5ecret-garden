@@ -74,14 +74,17 @@
     }
 </script>
 
-<!-- Align to the same page width used by the Groups screen -->
 <PageScaffold
         highlight="soft"
         maxWidthClass="page page--lg"
         contentWidthClass="page page--lg"
         usePagePadding={true}
+        collapsedMode="bar"
+        collapsedHeightClass="h-12"
+        headerTopGapClass="mt-4 md:mt-6"
+        collapsedTopGapClass="mt-3 md:mt-4"
 >
-    <!-- Header title -->
+    <!-- Title -->
     <svelte:fragment slot="title">
         <button class="text-left" onclick={openBalances} aria-label="Open balances breakdown">
             <h2 class="text-3xl md:text-4xl font-semibold tracking-tight text-base-content">
@@ -90,7 +93,7 @@
         </button>
     </svelte:fragment>
 
-    <!-- Header meta -->
+    <!-- Meta -->
     <svelte:fragment slot="meta">
         <span class="hover:underline cursor-pointer" onclick={openBalances}>
             {personalToken} individual tokens
@@ -121,36 +124,47 @@
         {/if}
     </svelte:fragment>
 
-    <!-- Label shown on the fixed, collapsed actions pill -->
-    <svelte:fragment slot="collapsed-label">
+    <!-- Collapsed summary (balance only) -->
+    <svelte:fragment slot="collapsed-left">
+    <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">
         {roundToDecimals($totalCirclesBalance)} CRC
+    </span>
     </svelte:fragment>
 
-    <!-- Collapsed dropdown items (one <li> per action) -->
-    <svelte:fragment slot="actions-collapsed">
-        {#if !avatarState.isGroup}
-            <li>
-                <button onclick={openSend}>
-                    <img class="icon" src="/send.svg" alt="" aria-hidden="true" />
+    <!-- Collapsed dropdown content: buttons match the bar height and auto-close on click -->
+    <svelte:fragment slot="collapsed-menu">
+        <div class="grid grid-cols-1 gap-2">
+            {#if !avatarState.isGroup}
+                <button
+                        type="button"
+                        class="btn btn-ghost min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] justify-start px-3"
+                        onclick={openSend}
+                >
+                    <img class="h-5 w-5" src="/send.svg" alt="" aria-hidden="true" />
                     Send
                 </button>
-            </li>
-        {/if}
+            {/if}
 
-        {#if mintableAmount >= 0.01}
-            <li>
-                <button onclick={mintPersonalCircles}>
-                    <img class="icon" src="/banknotes.svg" alt="" aria-hidden="true" />
-                    Mint {roundToDecimals(mintableAmount)}
+            {#if mintableAmount >= 0.01}
+                <button
+                        type="button"
+                        class="btn btn-primary min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] justify-start px-3"
+                        onclick={mintPersonalCircles}
+                >
+                    <img class="h-5 w-5" src="/banknotes.svg" alt="" aria-hidden="true" />
+                    Mint {roundToDecimals(mintableAmount)} Circles
                 </button>
-            </li>
-        {/if}
-        <li>
-            <button onclick={openBalances}>
-                <img class="icon" src="/chart.svg" alt="" aria-hidden="true" />
+            {/if}
+
+            <button
+                    type="button"
+                    class="btn btn-ghost min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] justify-start px-3"
+                    onclick={openBalances}
+            >
+                <img class="h-5 w-5" src="/chart.svg" alt="" aria-hidden="true" />
                 See breakdown
             </button>
-        </li>
+        </div>
     </svelte:fragment>
 
     <!-- Content -->
