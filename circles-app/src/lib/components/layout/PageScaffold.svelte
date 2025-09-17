@@ -2,23 +2,35 @@
     import { onMount } from 'svelte';
 
     type Highlight = 'soft' | 'tint';
+    type CollapsedMode = 'dropdown' | 'bar';
 
     let {
         maxWidthClass = 'max-w-4xl',
-        // Content width can differ from header; defaults to header width.
         contentWidthClass = maxWidthClass,
         highlight = 'soft' as Highlight,
-        // When true, skip the internal px paddings and rely on external `.page` classes.
-        usePagePadding = false
+        usePagePadding = false,
+
+        // Collapse behavior. Use "bar" on dashboard.
+        collapsedMode = 'dropdown' as CollapsedMode,
+
+        // Compact bar sizing / spacing
+        collapsedHeightClass = 'h-12 md:h-14', // visual height classes for the bar itself
+        // CSS lengths used for the dropdown items so they match bar height exactly
+        collapsedHeight = '3rem',      // ~ h-12
+        collapsedHeightMd = '3.5rem',  // ~ md:h-14
+
+        headerTopGapClass = 'mt-4 md:mt-6',
+        collapsedTopGapClass = 'mt-3 md:mt-4'
     } = $props();
 
     let collapsed = $state(false);
     let hasActions = $state(false);
+    let collapsedMenuOpen = $state(false);
 
     let headerSentinel: HTMLDivElement | null = $state(null);
     let actionsHost: HTMLDivElement | null = $state(null);
 
-    function computeHasActions(node: HTMLElement | null): boolean {
+    function computeHasChildren(node: HTMLElement | null): boolean {
         if (!node) return false;
         for (const el of Array.from(node.children)) {
             if (el.tagName.toLowerCase() !== 'slot') return true;
@@ -27,10 +39,10 @@
     }
 
     function updateHasActions() {
-        hasActions = computeHasActions(actionsHost);
+        hasActions = computeHasChildren(actionsHost);
     }
 
-    function observeSlot(node: HTMLElement) {
+    function observeActions(node: HTMLElement) {
         const mo = new MutationObserver(updateHasActions);
         mo.observe(node, { childList: true });
         updateHasActions();
@@ -38,26 +50,64 @@
     }
 
     onMount(() => {
-        if (headerSentinel) {
-            const io = new IntersectionObserver((entries) => {
-                const entry = entries[0];
-                collapsed = !(entry && entry.isIntersecting);
-            });
-            io.observe(headerSentinel);
+        if (!headerSentinel) return;
+        const io = new IntersectionObserver((entries) => {
+            const entry = entries[0];
+            const isVisible = !!(entry && entry.isIntersecting);
+            collapsed = !isVisible;
+        });
+        io.observe(headerSentinel);
+        return () => io.disconnect();
+    });
+
+    // Close the menu as soon as the bar is not collapsed
+    $effect(() => {
+        const shouldCloseMenu: boolean = !collapsed;
+        if (shouldCloseMenu) {
+            collapsedMenuOpen = false;
         }
     });
 
     const headerPaddingClass = usePagePadding ? '' : 'px-4 md:px-6';
     const contentPaddingClass = usePagePadding ? '' : 'px-4 md:px-6';
     const fixedPaddingClass = usePagePadding ? '' : 'px-4 md:px-6';
+
+    // Render collapsed UI if: dropdown has actions OR bar mode is enabled
+    let hasAnyCollapsedUI: boolean = $derived(
+        collapsedMode === 'bar' || hasActions
+    );
+
+    function toggleCollapsedMenu() {
+        const willOpen: boolean = !collapsedMenuOpen;
+        collapsedMenuOpen = willOpen;
+    }
+
+    function onMenuClick(e: MouseEvent) {
+        const target = e.target as HTMLElement | null;
+        const actionable = target?.closest('button, a, [data-close-dropdown]');
+        const shouldClose: boolean = !!actionable;
+        if (shouldClose) {
+            collapsedMenuOpen = false;
+        }
+    }
 </script>
 
+<svelte:window on:keydown={(e) => {
+    const isEscape: boolean = e.key === 'Escape';
+    if (isEscape && collapsedMenuOpen) {
+        collapsedMenuOpen = false;
+    }
+}} />
+
 <header class="w-full">
+    <!-- safe-area shim for notched devices -->
+    <div class="safe-top" aria-hidden="true"></div>
+
     <div class={`mx-auto ${maxWidthClass} ${headerPaddingClass}`}>
         <div class={`rounded-2xl ${highlight === 'soft'
-      ? 'bg-base-100 border shadow-sm'
-      : 'bg-base-100 ring-1 ring-base-300'}
-      px-5 md:px-6 py-4 md:py-5 mt-1`}>
+            ? 'bg-base-100 border shadow-sm'
+            : 'bg-base-100 ring-1 ring-base-300'}
+            px-5 md:px-6 py-4 md:py-5 ${headerTopGapClass}`}>
             <div class="flex items-start md:items-end justify-between gap-4 flex-wrap">
                 <div class="min-w-0">
                     <div class="leading-tight">
@@ -71,7 +121,7 @@
                 <div
                         class="flex items-center gap-2 flex-wrap"
                         bind:this={actionsHost}
-                        use:observeSlot
+                        use:observeActions
                 >
                     <slot name="actions" />
                 </div>
@@ -82,24 +132,64 @@
     <div class="h-2" bind:this={headerSentinel}></div>
 </header>
 
-{#if hasActions}
-    <!-- FIXED & CENTERED. Wrapper ignores pointer events so it won't block the avatar. -->
+{#if hasAnyCollapsedUI}
     <div class={`fixed top-0 left-1/2 -translate-x-1/2 w-full ${maxWidthClass} z-20 pointer-events-none`}>
         <div class={`${fixedPaddingClass} transition-all duration-200
-                 ${collapsed ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}`}>
-            <div class="mt-2 mb-3 flex justify-center">
-                <div class="dropdown">
-                    <button type="button" class="btn btn-primary btn-md rounded-full shadow-md pointer-events-auto">
-                        <slot name="collapsed-label" />
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            ${collapsed ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}`}>
+
+            {#if collapsedMode === 'bar'}
+                <!-- Clickable compact bar (shows only summary; opens dropdown on click) -->
+                <div class={`${collapsedTopGapClass} mb-2 relative`}>
+                    <button
+                            type="button"
+                            class={`w-full bg-base-100 border shadow-sm rounded-xl px-3 md:px-4 ${collapsedHeightClass}
+                                flex items-center justify-between gap-3 pointer-events-auto`}
+                            aria-expanded={collapsedMenuOpen}
+                            onclick={toggleCollapsedMenu}
+                    >
+                        <div class="min-w-0 flex items-center gap-2">
+                            <slot name="collapsed-left" />
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             class={`h-4 w-4 shrink-0 transition-transform ${collapsedMenuOpen ? 'rotate-180' : ''}`}
+                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" />
                         </svg>
                     </button>
-                    <ul class="dropdown-content menu menu-sm bg-base-100 rounded-box shadow z-30 w-56 p-2 pointer-events-auto">
-                        <slot name="actions-collapsed" />
-                    </ul>
+
+                    {#if collapsedMenuOpen}
+                        <!-- Click-catcher -->
+                        <div class="fixed inset-0 pointer-events-auto" onclick={() => collapsedMenuOpen = false} aria-hidden="true"></div>
+
+                        <!-- Dropdown tray anchored to the bar, same width as header -->
+                        <div class="absolute left-0 right-0 mt-2 pointer-events-auto z-10">
+                            <!-- expose bar heights to children via CSS vars so buttons can match exactly -->
+                            <div
+                                    class="bg-base-100 border shadow-xl rounded-xl p-2"
+                                    style={`--collapsed-h:${collapsedHeight}; --collapsed-h-md:${collapsedHeightMd};`}
+                                    onclick={onMenuClick}
+                            >
+                                <slot name="collapsed-menu" />
+                            </div>
+                        </div>
+                    {/if}
                 </div>
-            </div>
+            {:else}
+                <!-- Legacy centered pill -->
+                <div class="mt-3 md:mt-4 mb-3 flex justify-center">
+                    <div class="dropdown">
+                        <button type="button" class="btn btn-primary btn-md rounded-full shadow-md pointer-events-auto">
+                            <slot name="collapsed-label" />
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" />
+                            </svg>
+                        </button>
+                        <ul class="dropdown-content menu menu-sm bg-base-100 rounded-box shadow z-30 w-56 p-2 pointer-events-auto">
+                            <slot name="actions-collapsed" />
+                        </ul>
+                    </div>
+                </div>
+            {/if}
         </div>
     </div>
 {/if}
@@ -107,3 +197,7 @@
 <section class={`mx-auto ${contentWidthClass} ${contentPaddingClass}`}>
     <slot />
 </section>
+
+<style>
+    .safe-top { height: env(safe-area-inset-top); }
+</style>
