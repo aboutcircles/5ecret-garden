@@ -95,13 +95,14 @@
             ? 'bg-base-100 border shadow-sm'
             : 'bg-base-100 ring-1 ring-base-300'}
             px-5 md:px-6 py-4 md:py-5 ${headerTopGapClass}`}>
-            <div class="flex items-start md:items-end justify-between gap-4 flex-wrap">
+            <!-- Always stack title/meta and actions into separate rows -->
+            <div class="flex flex-col gap-3">
                 <div class="min-w-0">
                     <div class="leading-tight"><slot name="title" /></div>
                     <div class="mt-1 text-sm text-base-content/60"><slot name="meta" /></div>
                 </div>
 
-                <div class="flex items-center gap-2 flex-wrap" bind:this={actionsHost} use:observeActions>
+                <div class="flex items-center gap-2 flex-wrap mt-4" bind:this={actionsHost} use:observeActions>
                     <slot name="actions" />
                 </div>
             </div>
@@ -124,7 +125,7 @@
                             class={`w-full bg-base-100 border shadow-sm rounded-xl px-3 md:px-4 ${collapsedHeightClass}
                                 flex items-center justify-between gap-3 pointer-events-auto`}
                             aria-expanded={collapsedMenuOpen}
-                            onclick={toggleCollapsedMenu}
+                            on:click={toggleCollapsedMenu}
                     >
                         <div class="min-w-0 flex items-center gap-2">
                             <slot name="collapsed-left" />
@@ -142,7 +143,7 @@
                             <div
                                     class="bg-base-100 border shadow-xl rounded-xl p-2"
                                     style={`--collapsed-h:${collapsedHeight}; --collapsed-h-md:${collapsedHeightMd};`}
-                                    onclick={onMenuClick}
+                                    on:click={onMenuClick}
                             >
                                 <slot name="collapsed-menu" />
                             </div>
@@ -170,12 +171,11 @@
     {#if collapsedMode === 'bar' && collapsedMenuOpen}
         <!-- Full-viewport backdrop (outside the width-limited host) -->
         <div
-                class="fixed inset-0 bg-black/50 transition-opacity duration-300 z-40"
+                class="fixed inset-0 bg-black/50 transition-opacity duration-300 z-40 pointer-events-auto"
                 role="button"
                 tabindex="0"
                 aria-label="Close menu"
-                onmousedown={() => (collapsedMenuOpen = false)}
-                ontouchstart={() => (collapsedMenuOpen = false)}
+                on:pointerdown={() => (collapsedMenuOpen = false)}
                 aria-hidden="true"
         ></div>
     {/if}

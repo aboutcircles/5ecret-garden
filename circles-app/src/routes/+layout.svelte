@@ -44,7 +44,6 @@
         onChange(account) {
             //handler for injected wallet
             if (signer.privateKey === undefined) {
-                //if the account is not on the correct network, show the wrong network popup
                 if (account.chainId !== 100 && account.address) {
                     popupControls.open({
                         title: 'Wrong Network',
@@ -52,7 +51,6 @@
                         props: {},
                     });
                 }
-                //if the account is not the same as the signer, clear the session
                 if (
                     signer.address &&
                     account.address &&
@@ -223,7 +221,6 @@
         <div class="h-20"></div>
     {/if}
 
-    <!-- stretch page children so inner containers can use full content width -->
     <div class="w-full flex flex-col items-stretch">
         {@render children?.()}
     </div>
@@ -232,12 +229,13 @@
         <BottomNav items={menuItems} />
     {/if}
 
+    <!-- Popup backdrop with pointer events -->
     <div
             role="button"
             tabindex="0"
-            class={`fixed top-0 left-0 w-full h-full bg-black/50 z-10 ${$popupState.content ? 'opacity-100' : 'opacity-0 hidden'} transition duration-300 ease-in-out`}
-            onmousedown={() => popupControls.close()}
-            ontouchstart={() => popupControls.close()}
+            class={`fixed top-0 left-0 w-full h-full bg-black/50 z-10 ${$popupState.content ? 'opacity-100' : 'opacity-0 hidden'} transition duration-300 ease-in-out pointer-events-auto`}
+            on:pointerdown={() => popupControls.close()}
+            aria-hidden={$popupState.content ? 'false' : 'true'}
     ></div>
     <PopUp />
 </main>
