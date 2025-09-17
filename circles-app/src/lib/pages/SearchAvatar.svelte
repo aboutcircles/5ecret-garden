@@ -109,7 +109,7 @@
 
   {#if result.length > 0}
     <div
-      class="w-full border border-base-300 rounded-lg md:px-4 flex flex-col divide-y gap-y-2 overflow-x-auto py-4"
+      class="w-full divide-y"
     >
       {#each result as profile}
         <div class="w-full pt-2">
@@ -118,7 +118,7 @@
             onclick={() => onselect && onselect(profile.address)}
           >
             <Avatar
-              address={profile.address}
+              address={profile.address as Address}
               view="horizontal"
               clickable={false}
             />

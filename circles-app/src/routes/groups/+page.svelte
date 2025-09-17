@@ -23,7 +23,5 @@
 
 <div class="page page-pt page-stack page--lg">
   <h1 class="h2">Groups</h1>
-  <div class="section--list">
-    <GenericList store={groups} row={GroupRowView} />
-  </div>
+  <GenericList store={groups} row={GroupRowView} />
 </div>

@@ -9,12 +9,11 @@
 .page--lg { @apply max-w-4xl; }   /* dashboard */
 .page--xl { @apply max-w-6xl; }   /* analytics/metrics */
 
-.page-pt { @apply pt-24; }        /* consistent top space below header/banner */
+.page-pt { @apply pt-6; }        /* consistent top space below header/banner */
 .page-stack { @apply flex flex-col gap-y-6; }
 
 /* Sections */
 .section { @apply w-full bg-base-100 border border-base-300 rounded-lg p-4 md:p-6 shadow-sm; }
-.section--list { @apply w-full bg-base-100 border border-base-300 rounded-lg p-0 shadow-sm; }
 
 /* Typography */
 .h2 { @apply text-2xl md:text-3xl font-bold; }
