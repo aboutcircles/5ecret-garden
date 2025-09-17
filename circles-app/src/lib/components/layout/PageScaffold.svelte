@@ -83,7 +83,7 @@
 </script>
 
 <svelte:window on:keydown={(e) => {
-    const isEscape: boolean = e.key === 'Escape';
+    const isEscape = e.key === 'Escape';
     if (isEscape && collapsedMenuOpen) { collapsedMenuOpen = false; }
 }} />
 

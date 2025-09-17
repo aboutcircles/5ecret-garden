@@ -26,12 +26,6 @@
         route = null
     }: Props = $props();
 
-    function openSend() {
-        popupControls.open({ title: 'Send Circles', component: Send, props: {} });
-    }
-    function openAddContact() {
-        popupControls.open({ title: 'Add Contact', component: ManageGroupMembers, props: {} });
-    }
     function openSwitchProfile() {
         popupControls.open({ title: '', component: SettingProfile, props: { address } });
     }
@@ -42,33 +36,13 @@
 
 <!-- Overlay-only avatar button; no full-width navbar, no reserved height -->
 <div class="fixed top-3 right-3 z-30">
-    <div class="dropdown dropdown-end">
-        <button tabIndex={0} role="button" aria-label="Open user menu" class="btn btn-ghost btn-circle">
+    <div class="">
+        <button role="button" aria-label="Open user menu" class="btn btn-ghost btn-circle" onclick={openSwitchProfile}>
             <div class="avatar">
                 <div class="w-9 rounded-full ring ring-base-300">
                     <img src={logo || '/person.svg'} alt="Avatar" />
                 </div>
             </div>
         </button>
-        <ul tabIndex={0} class="dropdown-content menu bg-base-100 rounded-box z-[60] w-56 p-2 shadow">
-            <li>
-                <button disabled={!canSend} onclick={openSend}>
-                    <img src="/send.svg" alt="" class="icon" aria-hidden="true" />
-                    Send
-                </button>
-            </li>
-            <li>
-                <button disabled={!canAddContact} onclick={openAddContact}>
-                    <img src="/add-contact.svg" alt="" class="icon" aria-hidden="true" />
-                    Add Contact
-                </button>
-            </li>
-            <li>
-                <button onclick={openSwitchProfile}>
-                    <img src="/setting.svg" alt="" class="icon" aria-hidden="true" />
-                    Switch Profile
-                </button>
-            </li>
-        </ul>
     </div>
 </div>

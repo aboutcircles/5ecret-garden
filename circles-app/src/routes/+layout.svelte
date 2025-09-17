@@ -188,19 +188,23 @@
 </script>
 
 {#if avatarState.avatar}
-    <DefaultHeader
-            text={avatarState.profile?.name}
-            address={avatarState.avatar.address}
-            logo={avatarState.profile?.previewImageUrl?.trim()
+    <div class="relative z-[60]">
+        <DefaultHeader
+                text={avatarState.profile?.name}
+                address={avatarState.avatar.address}
+                logo={avatarState.profile?.previewImageUrl?.trim()
       ? avatarState.profile.previewImageUrl
       : '/logo.svg'}
-            homeLink="/dashboard"
-            {quickAction}
-            route={$page.route.id}
-            {menuItems}
-    />
+                homeLink="/dashboard"
+                {quickAction}
+                route={$page.route.id}
+                {menuItems}
+        />
+    </div>
 {:else}
-    <DefaultHeader quickAction={undefined} route={''} />
+    <div class="relative z-[60]">
+        <DefaultHeader quickAction={undefined} route={''} />
+    </div>
 {/if}
 
 <svelte:head>
