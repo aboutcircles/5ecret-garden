@@ -103,7 +103,7 @@
         const sdk = get(circles);
         if (!sdk?.circlesRpc) throw new Error('No circles RPC available');
 
-        const raw = await sdk.circlesRpc.call<any | null>('circles_getProfileByAddress', [addr]);
+        const raw = await sdk.circlesRpc.call<any | null>('circles_searchProfileByAddress', [addr]);
         const one = toSearchResult(raw);
         return one ? [one] : [];
     }
@@ -119,18 +119,6 @@
             if (q.trim() !== '') {
                 const nameResults = await rpcSearchByText(q, limit);
                 results = [...nameResults];
-
-                // Also try exact address lookup
-                if (q.startsWith("0x")) {
-                    const addressResults = await rpcGetByAddress(q);
-                    if (addressResults.length > 0) {
-                        // avoid dupes by address
-                        const have = new Set(results.map(r => (r.address ?? '').toLowerCase()));
-                        for (const r of addressResults) {
-                            if (!have.has((r.address ?? '').toLowerCase())) results.push(r);
-                        }
-                    }
-                }
 
                 // If sending and it's a valid address not present, prepend a synthetic entry
                 if (searchType === 'send') {

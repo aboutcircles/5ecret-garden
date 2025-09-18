@@ -1,11 +1,11 @@
 <script lang="ts">
-  import type { GroupProfile } from '@circles-sdk/profiles';
+  import type { GroupProfile } from '../../../../../circles-sdk/packages/profiles/src';
   import { isValidName, isValidSymbol } from '$lib/utils/isValid';
-  import Tooltip from './Tooltip.svelte';
+  import Tooltip from '../components/Tooltip.svelte';
   import { circles } from '$lib/stores/circles';
-  import ImageUpload from './ImageUpload.svelte';
-  import { cidV0ToUint8Array } from '@circles-sdk/utils';
-  import { wallet } from '$lib/stores/wallet.svelte';
+  import ImageUpload from '../components/ImageUpload.svelte';
+  import { cidV0ToUint8Array } from '../../../../../circles-sdk/packages/utils/src';
+  import { wallet } from '$lib/stores/wallet.svelte.js';
   import { popupControls } from '$lib/stores/popUp';
   import { trim } from 'viem';
 

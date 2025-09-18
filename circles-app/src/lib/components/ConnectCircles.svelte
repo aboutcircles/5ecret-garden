@@ -9,7 +9,7 @@
   import type { GroupRow } from '@circles-sdk/data';
   import { settings } from '$lib/stores/settings.svelte';
   import { popupControls } from '$lib/stores/popUp';
-  import CreateGroupForm from './CreateGroupForm.svelte';
+  import CreateGroupForm from '../pages/CreateGroupForm.svelte';
 
   interface Props {
     address: Address;
