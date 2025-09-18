@@ -13,6 +13,9 @@
   import { settings } from '$lib/stores/settings.svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import Disclaimer from '$lib/components/Disclaimer.svelte';
+  import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
+  import Lucide from '$lib/icons/Lucide.svelte';
+  import { ArrowLeft as LArrowLeft, ExternalLink as LExternalLink, Lock as LLock } from 'lucide';
 
   let invitations: AvatarRow[] = $state([]);
   let inviterSelected: Address | undefined = $state(
@@ -75,76 +78,103 @@
 </script>
 
 
-<div class="page page-pt page-stack page--lg">
-  <div class="w-full">
-    <button onclick={() => history.back()}>
-      <img src="/arrow-left.svg" alt="Arrow Left" class="w-4 h-4" />
+<PageScaffold highlight="soft" collapsedMode="bar" collapsedHeightClass="h-12" maxWidthClass="page page--lg" contentWidthClass="page page--lg" usePagePadding={true} headerTopGapClass="mt-4 md:mt-6" collapsedTopGapClass="mt-3 md:mt-4">
+  <svelte:fragment slot="title">
+    <h1 class="h2 m-0">Register Person</h1>
+  </svelte:fragment>
+  <svelte:fragment slot="meta">
+    Step 1 of 2
+  </svelte:fragment>
+  <svelte:fragment slot="actions">
+    <button type="button" class="btn btn-ghost btn-sm" onclick={() => history.back()} aria-label="Back">
+      <Lucide icon={LArrowLeft} size={16} class="shrink-0 stroke-black" />
+      <span>Back</span>
     </button>
+  </svelte:fragment>
+  <svelte:fragment slot="collapsed-left">
+    <div class="truncate flex items-center gap-2">
+      <span class="font-medium">Register Person</span>
+      <span class="text-sm text-base-content/60">Step 1 of 2</span>
+    </div>
+  </svelte:fragment>
+  <svelte:fragment slot="collapsed-menu">
+    <button type="button" class="btn btn-ghost min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3" onclick={() => history.back()} aria-label="Back">
+      <Lucide icon={LArrowLeft} size={20} class="shrink-0 stroke-black" />
+      <span>Back</span>
+    </button>
+  </svelte:fragment>
+
+  <!-- Warning/banner spacing -->
+  <div class="mt-3">
+    <Disclaimer />
   </div>
-  <Disclaimer />
-  <div
-    class="border rounded-lg flex flex-col items-center p-4 w-full shadow-sm"
-  >
-    <p class="text-lg">Register person</p>
-    <div class="w-full">
-      <ul class="steps steps-vertical">
-        <li class="step step-primary">Select Inviter</li>
-      </ul>
-      <div class="flex gap-y-2 gap-x-2 pl-10 text-sm">
-        {#if invitations.length > 0}
-          {#each invitations as inviter}
-            <div class="flex items-center gap-x-2 border rounded-md p-2">
-              <input
-                type="radio"
-                name="radio-7"
-                class="radio radio-success radio-sm"
-                checked={inviterSelected === inviter.avatar}
-                onclick={() => inviterSelected = inviter.avatar}
-              /><Avatar
-                topInfo="Inviter"
-                clickable={false}
-                address={inviter.avatar}
-                view="horizontal"
-              />
-            </div>
-          {/each}
-        {:else}
-          No invitations pending. <a
-            href="/link-to-telegram"
-            class="underline flex items-center"
-            >Get help
-            <img
-              src="/external.svg"
-              alt="external icon"
-              class="h-3 w-3 ml-1"
-            /></a
-          >
-        {/if}
-      </div>
-      <ul class="steps steps-vertical mt-4">
-        <li
-          data-content="2"
-          class={`step ${inviterSelected ? 'step-primary' : ''}`}
-        >
-          Register
-        </li>
-      </ul>
-      <div class="flex flex-col items-center gap-y-4 pl-10">
-        {#if inviterSelected}
-          <ProfileEditor bind:profile />
-          <div class="mx-auto">
-            <ActionButton
-              action={registerHuman}
-              disabled={profile.name.trim().length < 1}
-            >
-              Create
-            </ActionButton>
+
+  <!-- Register section -->
+  <section class="mt-4">
+    <h2 class="text-sm font-semibold text-base-content/70 tracking-wide uppercase">Register</h2>
+    <div class="mt-2 space-y-2">
+      <div
+        class="bg-base-100 border rounded-xl px-4 py-3 shadow-sm flex flex-col items-center w-full"
+      >
+        <p class="text-lg">Register person</p>
+        <div class="w-full">
+          <ul class="steps steps-vertical">
+            <li class="step step-primary">Select Inviter</li>
+          </ul>
+          <div class="flex gap-y-2 gap-x-2 pl-10 text-sm">
+            {#if invitations.length > 0}
+              {#each invitations as inviter}
+                <div class="flex items-center gap-x-2 border rounded-md p-2">
+                  <input
+                    type="radio"
+                    name="radio-7"
+                    class="radio radio-success radio-sm"
+                    checked={inviterSelected === inviter.avatar}
+                    onclick={() => inviterSelected = inviter.avatar}
+                  />
+                  <Avatar
+                    topInfo="Inviter"
+                    clickable={false}
+                    address={inviter.avatar}
+                    view="horizontal"
+                  />
+                </div>
+              {/each}
+            {:else}
+              No invitations pending. <a
+                href="/link-to-telegram"
+                class="underline flex items-center"
+                >Get help
+                <Lucide icon={LExternalLink} size={12} class="shrink-0 stroke-black ml-1" ariaLabel="" /></a
+              >
+            {/if}
           </div>
-        {:else}
-          <img src="/lock.svg" alt="lock icon" class="h-7 w-7" />
-          <p>Select an inviter to continue</p>
-        {/if}
+          <ul class="steps steps-vertical mt-4">
+            <li
+              data-content="2"
+              class={`step ${inviterSelected ? 'step-primary' : ''}`}
+            >
+              Register
+            </li>
+          </ul>
+          <div class="flex flex-col items-center gap-y-4 pl-10">
+            {#if inviterSelected}
+              <ProfileEditor bind:profile />
+              <div class="mx-auto">
+                <ActionButton
+                  action={registerHuman}
+                  disabled={profile.name.trim().length < 1}
+                >
+                  Create
+                </ActionButton>
+              </div>
+            {:else}
+              <Lucide icon={LLock} size={28} class="shrink-0 stroke-black" ariaLabel="" />
+              <p>Select an inviter to continue</p>
+            {/if}
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</div>
+  </section>
+</PageScaffold>

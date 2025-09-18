@@ -1,11 +1,13 @@
 <script lang="ts">
     import { popupControls, popupState } from '$lib/stores/popUp';
+    import Lucide from '$lib/icons/Lucide.svelte';
+    import { ArrowLeft as LArrowLeft, X as LX } from 'lucide';
     function handleKeydown(e: KeyboardEvent) {
         if (e.key === 'Escape' && $popupState.content) popupControls.close();
     }
 </script>
 
-<svelte:window on:keydown={handleKeydown} />
+<svelte:window onkeydown={handleKeydown} />
 
 <div
         class="popup rounded-t-lg overflow-y-auto"
@@ -23,12 +25,7 @@
                     aria-label={$popupState.stack.length > 0 ? 'Back' : 'Close'}
                     title={$popupState.stack.length > 0 ? 'Back' : 'Close'}
             >
-                <img
-                        alt=""
-                        aria-hidden="true"
-                        src={$popupState.stack.length > 0 ? '/arrow-left.svg' : '/close.svg'}
-                        class="icon"
-                />
+                <Lucide icon={$popupState.stack.length > 0 ? LArrowLeft : LX} size={16} class="shrink-0 stroke-black" ariaLabel="" />
             </button>
         </div>
 
