@@ -28,7 +28,6 @@
     let filteredStore = derived(
         [contacts, filterVersion, filterRelation],
         ([$contacts, filterVersion, filterRelation]) => {
-            // TODO: If avatarState.isGroup === true, then only ever output outgoing trusts
             const filteredData = Object.entries($contacts.data)
                 .filter(([_, contact]) => {
                     if (avatarState.isGroup) {
