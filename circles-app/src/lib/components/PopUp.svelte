@@ -57,7 +57,7 @@
         background: white;
         transition: transform .3s ease, opacity .3s ease;
         transform: translateY(100%); opacity: 0;
-        z-index: 20;
+        z-index: 100;
     }
     .popup.open { transform: translateY(0); opacity: 1; }
 </style>

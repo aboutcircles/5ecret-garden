@@ -6,6 +6,11 @@
     import { derived, writable, type Writable } from 'svelte/store';
     import Filter from '$lib/components/Filter.svelte';
     import AddressInput from '$lib/components/AddressInput.svelte';
+    import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
+    import Lucide from '$lib/icons/Lucide.svelte';
+    import { Filter as LFilter, Download as LDownload, Plus as LPlus } from 'lucide';
+    import { popupControls } from '$lib/stores/popUp';
+    import ManageGroupMembers from '$lib/flows/manageGroupMembers/1_manageGroupMembers.svelte';
 
     let filterVersion = writable<number | undefined>(undefined);
     let filterRelation = writable<'mutuallyTrusts' | 'trusts' | 'trustedBy' | 'variesByVersion' | undefined>(undefined);
@@ -91,26 +96,51 @@
         link.click();
         document.body.removeChild(link);
     }
+
+    function openAddContact() {
+        popupControls.open({ title: 'Add Contact', component: ManageGroupMembers, props: {} });
+    }
+
+    type Action = { id: string; label: string; iconNode: any; onClick: () => void; variant: 'primary'|'ghost'; disabled?: boolean };
+
+    const actions: Action[] = [
+        { id: 'add', label: 'Add Contact', iconNode: LPlus, onClick: openAddContact, variant: 'primary' },
+        { id: 'filter', label: 'Filter', iconNode: LFilter, onClick: toggleFilters, variant: 'ghost' },
+        { id: 'export', label: 'Export CSV', iconNode: LDownload, onClick: handleExportCSV, variant: 'ghost' },
+    ];
 </script>
 
-<div class="page page-pt page-stack page--lg">
-    <div class="w-full flex items-center gap-2">
+<PageScaffold highlight="soft" collapsedMode="bar" collapsedHeightClass="h-12" maxWidthClass="page page--lg" contentWidthClass="page page--lg" usePagePadding={true} headerTopGapClass="mt-4 md:mt-6" collapsedTopGapClass="mt-3 md:mt-4">
+    <svelte:fragment slot="title">
         <h1 class="h2 m-0">Contacts</h1>
-        <button
-                type="button"
-                class="btn btn-ghost btn-xs p-1"
-                aria-label={$showFilters ? 'Hide filters' : 'Show filters'}
-                aria-expanded={$showFilters}
-                aria-controls={FILTER_PANEL_ID}
-                on:click={toggleFilters}
-                title="Filter"
-        >
-            <!-- funnel icon -->
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
-                <path d="M3 4h18v2l-7 7v5l-4 2v-7L3 6V4z"></path>
-            </svg>
-        </button>
-    </div>
+    </svelte:fragment>
+    <svelte:fragment slot="meta">
+        {$filteredStore.data.length} entries
+    </svelte:fragment>
+    <svelte:fragment slot="actions">
+        {#each actions as a (a.id)}
+            <button type="button" class={`btn btn-sm ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'}`} on:click={a.onClick} aria-label={a.label}>
+                <Lucide icon={a.iconNode} size={16} class={a.variant === 'primary' ? 'shrink-0 stroke-white' : 'shrink-0 stroke-black'} />
+                <span>{a.label}</span>
+            </button>
+        {/each}
+    </svelte:fragment>
+
+    <svelte:fragment slot="collapsed-left">
+        <div class="truncate flex items-center gap-2">
+            <span class="font-medium">Contacts</span>
+            <span class="text-sm text-base-content/60">{$filteredStore.data.length} entries</span>
+        </div>
+    </svelte:fragment>
+
+    <svelte:fragment slot="collapsed-menu">
+        {#each actions as a (a.id)}
+            <button type="button" class={`btn btn-ghost btn-sm w-full justify-start`} on:click={a.onClick} aria-label={a.label}>
+                <Lucide icon={a.iconNode} size={16} class="shrink-0 stroke-black" />
+                <span>{a.label}</span>
+            </button>
+        {/each}
+    </svelte:fragment>
 
     {#if $showFilters}
         <div id={FILTER_PANEL_ID} class="mt-3 space-y-3">
@@ -140,4 +170,4 @@
     <AddressInput bind:address={$searchQuery} />
 
     <GenericList store={searchedStore} row={ContactRow} />
-</div>
+</PageScaffold>
