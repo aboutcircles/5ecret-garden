@@ -3,6 +3,12 @@
     import { popupState } from '$lib/stores/popUp';
     import {headerDropdownOpen} from "$lib/stores/headerDropdown";
 
+    /* NEW: bring avatar + profile popup context here so the avatar lives inside the scaffold */
+    import { avatarState } from '$lib/stores/avatar.svelte';
+    import { popupControls } from '$lib/stores/popUp';
+    import ProfilePage from '$lib/pages/Profile.svelte';
+    import SettingProfile from "$lib/pages/SettingProfile.svelte";
+
     type Highlight = 'soft' | 'tint';
     type CollapsedMode = 'dropdown' | 'bar';
 
@@ -80,6 +86,20 @@
         const shouldClose: boolean = !!target?.closest('button, a, [data-close-dropdown]');
         if (shouldClose) { collapsedMenuOpen = false; }
     }
+
+    /* NEW: minimal avatar state + open behavior */
+    const hasAvatar: boolean = $derived(!!avatarState.avatar);
+    const avatarImgUrl: string = $derived(
+        avatarState.profile?.previewImageUrl?.trim()
+            ? avatarState.profile!.previewImageUrl!
+            : '/logo.svg'
+    );
+    const avatarAlt: string = $derived(avatarState.profile?.name ? `${avatarState.profile.name} avatar` : 'Avatar');
+
+    function openProfile() {
+        if (!avatarState.avatar) { return; }
+        popupControls.open({ title: '', component: SettingProfile, props: { address: avatarState.avatar.address } });
+    }
 </script>
 
 <svelte:window onkeydown={(e) => {
@@ -94,7 +114,7 @@
         <div class={`rounded-2xl ${highlight === 'soft'
             ? 'bg-base-100 border shadow-sm'
             : 'bg-base-100 ring-1 ring-base-300'}
-            px-5 md:px-6 py-4 md:py-5 ${headerTopGapClass}`}>
+            px-5 md:px-6 py-4 md:py-5 ${headerTopGapClass} relative`}><!-- NOTE: relative for absolute avatar -->
             <!-- Always stack title/meta and actions into separate rows -->
             <div class="flex flex-col gap-3">
                 <div class="min-w-0">
@@ -106,6 +126,25 @@
                     <slot name="actions" />
                 </div>
             </div>
+
+            <!-- NEW: avatar inside expanded header (top-right of the card) -->
+            {#if hasAvatar}
+                <button
+                        type="button"
+                        class="absolute right-4 top-4 md:right-5 md:top-5 rounded-full outline-none ring-0 pointer-events-auto"
+                        onclick={openProfile}
+                        aria-label="Open profile"
+                        title="Open profile"
+                >
+                    <img
+                            src={avatarImgUrl}
+                            alt={avatarAlt}
+                            class="w-9 h-9 md:w-10 md:h-10 rounded-full border shadow-sm object-cover"
+                            loading="eager"
+                            decoding="async"
+                    />
+                </button>
+            {/if}
         </div>
     </div>
 
@@ -118,12 +157,12 @@
         <div class={`${fixedPaddingClass}`}>
 
             {#if collapsedMode === 'bar'}
-                <div class={`${collapsedTopGapClass} mb-2 relative`}>
+                <div class={`${collapsedTopGapClass} mb-2 relative`}><!-- NOTE: relative to anchor avatar -->
                     {#if hasActions}
                         <!-- Entire bar is clickable when actions exist -->
                         <button
                                 type="button"
-                                class={`w-full bg-base-100 border shadow-sm rounded-xl px-3 md:px-4 ${collapsedHeightClass}
+                                class={`w-full bg-base-100 border shadow-sm rounded-xl pl-3 md:pl-4 pr-14 md:pr-16 ${collapsedHeightClass}
                                 flex items-center justify-between gap-3 pointer-events-auto cursor-pointer`}
                                 aria-expanded={collapsedMenuOpen}
                                 aria-label="Toggle quick actions"
@@ -145,7 +184,7 @@
                     {:else}
                         <!-- Non-interactive bar when there are no actions -->
                         <div
-                                class={`w-full bg-base-100 border shadow-sm rounded-xl px-3 md:px-4 ${collapsedHeightClass}
+                                class={`w-full bg-base-100 border shadow-sm rounded-xl pl-3 md:pl-4 pr-14 md:pr-16 ${collapsedHeightClass}
                                 flex items-center justify-between gap-3 pointer-events-auto cursor-default`}
                                 aria-hidden="true"
                         >
@@ -157,6 +196,25 @@
                                 </slot>
                             </div>
                         </div>
+                    {/if}
+
+                    <!-- NEW: avatar inside collapsed header bar (pinned top-right) -->
+                    {#if hasAvatar}
+                        <button
+                                type="button"
+                                class="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 rounded-full pointer-events-auto"
+                                onclick={openProfile}
+                                aria-label="Open profile"
+                                title="Open profile"
+                        >
+                            <img
+                                    src={avatarImgUrl}
+                                    alt={avatarAlt}
+                                    class="w-8 h-8 md:w-9 md:h-9 rounded-full border shadow-sm object-cover"
+                                    loading="eager"
+                                    decoding="async"
+                            />
+                        </button>
                     {/if}
 
                     {#if collapsedMenuOpen && hasActions}

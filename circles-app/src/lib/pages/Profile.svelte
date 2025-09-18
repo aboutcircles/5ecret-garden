@@ -15,7 +15,7 @@
     import {getProfile} from '$lib/utils/profile';
     import {formatTrustRelation, getTypeString} from '$lib/utils/helpers';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
-    import {popupControls, popupState} from '$lib/stores/popUp';
+    import {popupControls} from '$lib/stores/popUp';
     import AddressComponent from '$lib/components/Address.svelte';
     import {uint256ToAddress, type Address} from '@circles-sdk/utils';
     import SelectAmount from '$lib/flows/send/3_Amount.svelte';
@@ -27,6 +27,7 @@
     } from '$lib/utils/vault';
     import CollateralTable from '$lib/components/CollateralTable.svelte';
     import {goto} from '$app/navigation';
+    import { avatarState } from '$lib/stores/avatar.svelte';
 
     /* NEW: tabs */
     import Tabs from '$lib/components/tabs/Tabs.svelte';
@@ -239,6 +240,7 @@
     <div class="w-[80%] sm:w-[60%] border-b border-[#E5E7EB]"></div>
 
     <div class="w-full flex justify-center mt-6 space-x-6">
+        {#if !avatarState.isGroup}
         <button
                 class="btn btn-primary text-white"
                 onclick={() => {
@@ -256,7 +258,8 @@
             <img src="/send-new.svg" alt="Send" class="w-5 h-5"/>
             Send
         </button>
-        {#if otherAvatar?.type === 'CrcV2_RegisterGroup' && !!mintHandler}
+        {/if}
+        {#if otherAvatar?.type === 'CrcV2_RegisterGroup' && !!mintHandler && !avatarState.isGroup}
             <button
                     class="btn bg-[#F3F4F6] border-none"
                     onclick={() => {
@@ -286,7 +289,7 @@
                     class="btn bg-[#F3F4F6] border-none"
                     onclick={() => {
                     popupControls.open({
-                        title: 'Untrust',
+                        title: !avatarState.isGroup ? "Untrust" : "Remove member",
                         component: Untrust,
                         props: {
                             address: address,
@@ -295,14 +298,14 @@
                     });
                 }}
             >
-                Untrust
+                {!avatarState.isGroup ? "Untrust" : "Remove member"}
             </button>
         {:else if trustRow?.relation === 'mutuallyTrusts'}
             <button
                     class="btn bg-[#F3F4F6] border-none"
                     onclick={() => {
                     popupControls.open({
-                        title: 'Untrust',
+                        title: !avatarState.isGroup ? "Untrust" : "Remove member",
                         component: Untrust,
                         props: {
                             address: address,
@@ -310,14 +313,14 @@
                     });
                 }}
             >
-                Untrust
+                {!avatarState.isGroup ? "Untrust" : "Remove member"}
             </button>
         {:else if trustRow?.relation === 'trustedBy'}
             <button
                     class="btn bg-[#F3F4F6] border-none"
                     onclick={() => {
                     popupControls.open({
-                        title: 'Trust',
+                        title: !avatarState.isGroup ? "Trust back" : "Add member",
                         component: Trust,
                         props: {
                             address: address,
@@ -325,14 +328,14 @@
                     });
                 }}
             >
-                Trust back
+                {!avatarState.isGroup ? "Trust back" : "Add as member"}
             </button>
         {:else}
             <button
                     class="btn bg-[#F3F4F6] border-none"
                     onclick={() => {
                     popupControls.open({
-                        title: 'Trust',
+                        title: !avatarState.isGroup ? "Trust" : "Add as member",
                         component: Trust,
                         props: {
                             address: address,
@@ -340,7 +343,7 @@
                     });
                 }}
             >
-                Trust
+                {!avatarState.isGroup ? "Trust" : "Add as member"}
             </button>
         {/if}
     </div>

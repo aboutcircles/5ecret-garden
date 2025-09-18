@@ -1,7 +1,7 @@
 <script lang="ts">
     import { page } from '$app/stores';
     import { popupState } from '$lib/stores/popUp';
-    import { headerDropdownOpen } from '../stores/headerDropdown.ts';
+    import { headerDropdownOpen } from '../stores/headerDropdown';
     import Lucide from '$lib/icons/Lucide.svelte';
     import { Home as LHome, Users as LUsers, Layers as LLayers, Settings as LSettings, Circle as LCircle } from 'lucide';
 
@@ -35,6 +35,15 @@
         return 'default';
     }
 
+    // Lucide icon map to remove if/else chains.
+    const ICONS: Record<Icon, any> = {
+        dashboard: LHome,
+        contacts: LUsers,
+        groups: LLayers,
+        settings: LSettings,
+        default: LCircle
+    };
+
     // runes-friendly
     let isPopupOpen: boolean = $derived($popupState.content !== null);
     let isHeaderDropdownOpen: boolean = $derived($headerDropdownOpen === true);
@@ -52,26 +61,24 @@
             <!-- Use DaisyUI's look, but kill its full-width/fixed behavior -->
             <div class="btm-nav btm-nav--float bg-base-100/90 backdrop-blur-md border shadow-lg rounded-full px-2 py-1 max-w-full overflow-hidden">
                 {#each items as item (item.link)}
-                    {@const icon = item.icon ?? guessIcon(item.name, item.link)}
+                    {@const iconKind = item.icon ?? guessIcon(item.name, item.link)}
+                    {@const iconDef = ICONS[iconKind] ?? LCircle}
+                    {@const active = isActive(item.link)}
+                    {@const baseClasses = 'inline-flex items-center gap-3 rounded-full px-4 py-2 whitespace-nowrap transition-colors'}
+                    {@const focusClasses = 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 focus-visible:outline-offset-2'}
+                    {@const stateClasses = active
+                        ? 'bg-primary text-primary-content'
+                        : 'text-base-content/90 hover:text-base-content hover:bg-base-200'
+                    }
+
                     <a
                             href={item.link}
-                            class:active={isActive(item.link)}
-                            aria-current={isActive(item.link) ? 'page' : undefined}
+                            aria-current={active ? 'page' : undefined}
                             aria-label={item.name}
-                            class={`rounded-full ${isActive(item.link) ? 'bg-primary text-primary-content px-3 py-1.5' : 'text-base-content hover:bg-base-200 px-3 py-1.5'} focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 focus-visible:outline-offset-2`}
+                            class={`${baseClasses} ${stateClasses} ${focusClasses}`}
                     >
-                        {#if icon === 'dashboard'}
-                            <Lucide icon={LHome} size={20} class={isActive(item.link) ? 'shrink-0 stroke-white' : 'shrink-0 stroke-black'} />
-                        {:else if icon === 'contacts'}
-                            <Lucide icon={LUsers} size={20} class={isActive(item.link) ? 'shrink-0 stroke-white' : 'shrink-0 stroke-black'} />
-                        {:else if icon === 'groups'}
-                            <Lucide icon={LLayers} size={20} class={isActive(item.link) ? 'shrink-0 stroke-white' : 'shrink-0 stroke-black'} />
-                        {:else if icon === 'settings'}
-                            <Lucide icon={LSettings} size={20} class={isActive(item.link) ? 'shrink-0 stroke-white' : 'shrink-0 stroke-black'} />
-                        {:else}
-                            <Lucide icon={LCircle} size={20} class={isActive(item.link) ? 'shrink-0 stroke-white' : 'shrink-0 stroke-black'} />
-                        {/if}
-                        <span class={`btm-nav-label ${isActive(item.link) ? '' : 'text-base-content/80'}`}>{item.name}</span>
+                        <Lucide icon={iconDef} size={28} class="shrink-0 stroke-current pt-2" />
+                        <span class="leading-none -mt-2">{item.name}</span>
                     </a>
                 {/each}
             </div>

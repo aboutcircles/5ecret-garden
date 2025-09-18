@@ -63,7 +63,7 @@
 
     function openBalances() {
         popupControls.open({
-            title: "",
+            title: 'Balance breakdown',
             component: Balances,
             props: {}
         });
@@ -139,9 +139,15 @@
 
     <!-- Collapsed summary (balance only) -->
     <svelte:fragment slot="collapsed-left">
-    <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">
-        {roundToDecimals($totalCirclesBalance)} Circles
-    </span>
+        {#if !avatarState.isGroup}
+        <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">
+            {roundToDecimals($totalCirclesBalance)} Circles
+        </span>
+        {:else}
+            <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">
+                Group overview
+            </span>
+        {/if}
     </svelte:fragment>
 
     <!-- Collapsed dropdown content -->
