@@ -258,7 +258,7 @@
                     {/await}
                 </div>
             {:else}
-                <div class="alert">
+                <div class="alert bg-primary-content opacity-85">
                     <span class="loading loading-spinner loading-md"></span>
                     {task.name}
                 </div>
