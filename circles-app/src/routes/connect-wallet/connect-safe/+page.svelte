@@ -96,7 +96,7 @@
       groups={groupsByOwner?.[signer.address] ?? []}
       initSdk={connectLegacy}
     />
-  {:else}
+  {:else if $circles}
     <ConnectSafe
       safeOwnerAddress={signer.address}
       initSdk={connectSafe}

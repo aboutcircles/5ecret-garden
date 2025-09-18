@@ -78,7 +78,7 @@
 
   {#if !signer.address || !$circles}
     <WalletLoader />
-  {:else}
+  {:else if $circles}
     <ConnectSafe
       safeOwnerAddress={signer.address}
       initSdk={connectCirclesGarden}

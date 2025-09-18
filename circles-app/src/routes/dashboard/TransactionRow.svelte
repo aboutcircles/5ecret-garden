@@ -64,7 +64,7 @@
     $effect(() => {
         if (!avatarState.avatar) return;
         const result = parseEventDetails(item.events);
-        tags = result.tags.join(', ');
+        tags = ""; // result.tags.join(', ');
         netCircles = item.circles;
 
         counterpartyAddress = getCounterpartyAddress(avatarState.avatar.address);

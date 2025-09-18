@@ -2,8 +2,14 @@
     import { popupControls, popupState } from '$lib/stores/popUp';
     import Lucide from '$lib/icons/Lucide.svelte';
     import { ArrowLeft as LArrowLeft, X as LX } from 'lucide';
+
     function handleKeydown(e: KeyboardEvent) {
         if (e.key === 'Escape' && $popupState.content) popupControls.close();
+    }
+
+    function onClose() {
+        if ($popupState.stack.length > 0) popupControls.back();
+        else popupControls.close();
     }
 </script>
 
@@ -17,29 +23,34 @@
         aria-labelledby="popup-title"
 >
     <!-- widen to match page--lg -->
-    <div class="w-full max-w-4xl mx-auto p-6 relative">
-        <div class="absolute left-4 top-4">
+    <div class="w-full max-w-4xl mx-auto p-6">
+        <!-- Header row: close/back button aligned left of title -->
+        <div class="flex items-center gap-3 mb-4">
             <button
                     class="btn btn-ghost btn-circle btn-sm"
-                    onclick={() => $popupState.stack.length > 0 ? popupControls.back() : popupControls.close()}
+                    onclick={onClose}
                     aria-label={$popupState.stack.length > 0 ? 'Back' : 'Close'}
                     title={$popupState.stack.length > 0 ? 'Back' : 'Close'}
             >
-                <Lucide icon={$popupState.stack.length > 0 ? LArrowLeft : LX} size={16} class="shrink-0 stroke-black" ariaLabel="" />
+                <Lucide
+                        icon={$popupState.stack.length > 0 ? LArrowLeft : LX}
+                        size={16}
+                        class="shrink-0 stroke-black"
+                        ariaLabel=""
+                />
             </button>
+
+            {#if $popupState.content?.title}
+                <h2 id="popup-title" class="text-xl font-bold">
+                    {$popupState.content.title}
+                </h2>
+            {/if}
         </div>
 
-        <div class="content mt-2 w-full">
+        <div class="content w-full">
             {#if $popupState.content}
                 {@const SvelteComponent = $popupState.content.component}
-                <div class="mt-14">
-                    {#if $popupState.content.title}
-                        <p id="popup-title" class="text-xl font-bold mb-4">
-                            {$popupState.content.title}
-                        </p>
-                    {/if}
-                    <SvelteComponent {...$popupState.content.props} />
-                </div>
+                <SvelteComponent {...$popupState.content.props} />
             {/if}
         </div>
     </div>

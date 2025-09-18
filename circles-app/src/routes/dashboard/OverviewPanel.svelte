@@ -6,9 +6,6 @@
 </script>
 
 <div class="w-full mb-6">
-    <div class="flex justify-between items-center">
-        <h2 class="text-xl font-bold text-primary">Group Overview</h2>
-    </div>
 </div>
 
 {#if Object.keys(groupMetrics).length > 0}

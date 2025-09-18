@@ -39,7 +39,7 @@
     safes = await querySafeTransactionService(safeOwnerAddress);
     safes = safes.map((safe) => safe.toLowerCase() as Address);
     const [avatarInfo, groupInfo] = await Promise.all([
-      sdk.data.getAvatarInfoBatch(safes),
+      sdk?.data?.getAvatarInfoBatch(safes) ?? [],
       getBaseAndCmgGroupsByOwnerBatch(sdk, safes),
     ]);
     const profileBySafeNew: Record<string, AvatarRow | undefined> = {};
