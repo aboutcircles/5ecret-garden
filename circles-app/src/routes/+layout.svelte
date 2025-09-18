@@ -182,6 +182,9 @@
             }
         }
     });
+
+    // Toasts
+    let hasToasts: boolean = $derived($tasks.length > 0);
 </script>
 
 {#if avatarState.avatar}
@@ -239,8 +242,11 @@
     ></div>
     <PopUp />
 </main>
-{#if $tasks.length > 0}
-    <div class="toast toast-bottom toast-end">
+{#if hasToasts}
+    <div
+            class="toast toast-bottom toast-end z-[60]"
+            class:layout-toast={!!avatarState.avatar}
+    >
         {#each $tasks as task}
             {#if task.name == 'Error'}
                 <div class="alert alert-error">
@@ -260,3 +266,14 @@
         {/each}
     </div>
 {/if}
+
+<style>
+    /* Lift toasts above BottomNav only on small screens; keep original position on md+ */
+    @media (max-width: 767px) {
+        :global(.layout-toast) {
+            /* BottomNav uses bottom: calc(safe-area + 16px) and has a tall pill.
+               96px keeps toasts comfortably above it. */
+            bottom: calc(env(safe-area-inset-bottom) + 96px) !important;
+        }
+    }
+</style>
