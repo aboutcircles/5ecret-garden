@@ -95,7 +95,7 @@
     <!-- Title -->
     <svelte:fragment slot="title">
         <button class="text-left" onclick={openBalances} aria-label="Open balances breakdown">
-            <h2 class="text-3xl md:text-4xl font-semibold tracking-tight text-base-content">
+            <h2 class="h2 m-0">
                 {roundToDecimals($totalCirclesBalance)} Circles
             </h2>
         </button>

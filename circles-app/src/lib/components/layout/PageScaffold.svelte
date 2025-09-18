@@ -175,7 +175,8 @@
                 role="button"
                 tabindex="0"
                 aria-label="Close menu"
-                on:pointerdown={() => (collapsedMenuOpen = false)}
+                on:pointerdown|stopPropagation|preventDefault={() => (collapsedMenuOpen = false)}
+                on:click|stopPropagation|preventDefault={() => (collapsedMenuOpen = false)}
                 aria-hidden="true"
         ></div>
     {/if}

@@ -12,6 +12,9 @@
   import { ethers } from 'ethers';
   import ProfileEditor from '$lib/components/ProfileEditor.svelte';
   import { FallbackImageUrl, profilesEqual } from '$lib/utils/profile';
+  import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
+  import Lucide from '$lib/icons/Lucide.svelte';
+  import { Save as LSave, LogOut as LLogOut } from 'lucide';
 
   async function saveProfileData(profile: Profile): Promise<string> {
     if (!$circles?.profiles) {
@@ -84,10 +87,40 @@
       }),
     });
   }
+
+  let saveDisabled: boolean = $derived(avatarState.avatar?.avatarInfo?.version !== 2 || profilesEqual(newProfile, avatarState.profile));
+
+  type Action = { id: string; label: string; iconNode: any; onClick: () => void; variant: 'primary'|'ghost' };
+  const actions: Action[] = [
+    { id: 'save', label: 'Save', iconNode: LSave, onClick: saveProfile, variant: 'primary' },
+    { id: 'disconnect', label: 'Disconnect', iconNode: LLogOut, onClick: clearSession, variant: 'ghost' },
+  ];
 </script>
 
-<div class="page page-pt page-stack page--lg">
+<PageScaffold highlight="soft" collapsedMode="bar" collapsedHeightClass="h-12" maxWidthClass="page page--lg" contentWidthClass="page page--lg" usePagePadding={true} headerTopGapClass="mt-4 md:mt-6" collapsedTopGapClass="mt-3 md:mt-4">
+  <svelte:fragment slot="title">
     <h1 class="h2">Settings</h1>
+  </svelte:fragment>
+  <svelte:fragment slot="meta">
+    Profile, wallet, migration
+  </svelte:fragment>
+  <svelte:fragment slot="actions">
+    {#each actions as a (a.id)}
+      <button type="button" class={`btn btn-sm ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'}`} on:click={a.onClick} aria-label={a.label} disabled={a.id === 'save' ? saveDisabled : false}>
+        <Lucide icon={a.iconNode} size={16} class={a.variant === 'primary' ? 'shrink-0 stroke-white' : 'shrink-0 stroke-black'} />
+        <span>{a.label}</span>
+      </button>
+    {/each}
+  </svelte:fragment>
+  <svelte:fragment slot="collapsed-menu">
+    {#each actions as a (a.id)}
+      <button type="button" class={`btn ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'} btn-sm w-full justify-start`} on:click={a.onClick} aria-label={a.label} disabled={a.id === 'save' ? saveDisabled : false}>
+        <Lucide icon={a.iconNode} size={16} class={a.variant === 'primary' ? 'shrink-0 stroke-white' : 'shrink-0 stroke-black'} />
+        <span>{a.label}</span>
+      </button>
+    {/each}
+  </svelte:fragment>
+
   <div
     class="flex flex-col items-center md:border rounded-lg md:px-6 md:py-8 gap-y-4"
   >
@@ -145,4 +178,4 @@
       </div>
     </div>
   </div>
-</div>
+</PageScaffold>
