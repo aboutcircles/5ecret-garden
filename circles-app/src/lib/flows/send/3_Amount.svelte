@@ -8,8 +8,6 @@
     import { avatarState } from '$lib/stores/avatar.svelte';
     import { TransitiveTransferTokenAddress } from '$lib/pages/SelectAsset.svelte';
     import type { TokenBalanceRow } from '@circles-sdk/data';
-    import PathExplorer from '$lib/components/PathExplorer.svelte';
-    import BalanceRow from '$lib/components/BalanceRow.svelte';
     import { writable } from 'svelte/store';
     import type { MaxFlowResponse } from '@circles-sdk/sdk';
     import { ethers } from 'ethers';
