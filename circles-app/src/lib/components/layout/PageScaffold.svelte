@@ -3,10 +3,8 @@
     import { popupState } from '$lib/stores/popUp';
     import {headerDropdownOpen} from "$lib/stores/headerDropdown";
 
-    /* NEW: bring avatar + profile popup context here so the avatar lives inside the scaffold */
     import { avatarState } from '$lib/stores/avatar.svelte';
     import { popupControls } from '$lib/stores/popUp';
-    import ProfilePage from '$lib/pages/Profile.svelte';
     import SettingProfile from "$lib/pages/SettingProfile.svelte";
 
     type Highlight = 'soft' | 'tint';
