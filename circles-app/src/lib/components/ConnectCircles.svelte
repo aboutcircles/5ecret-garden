@@ -9,7 +9,7 @@
   import type { GroupRow } from '@circles-sdk/data';
   import { settings } from '$lib/stores/settings.svelte';
   import { popupControls } from '$lib/stores/popUp';
-  import CreateGroupForm from '../pages/CreateGroupForm.svelte';
+  import CreateGroup from "$lib/flows/createGroup/1_CreateGroup.svelte";
 
   interface Props {
     address: Address;
@@ -47,33 +47,50 @@
     await goto('/dashboard');
   }
 
-  async function deployGroup() {
-    
+
+  async function openCreateGroup() {
     const sdk = await initSdk(address);
     $circles = sdk;
-    popupControls.open({
-      component: CreateGroupForm,
-      title: 'Create group',
-      props: {
-        setGroup: (address: string, name: string, symbol: string, treasury: string, cidV0Digest: string) => {
-          groups?.push({
-            group: address,
-            name: name,
-            symbol: symbol,
-            type: 'CrcV2_CMGroupCreated',
-            treasury: treasury,
-            cidV0Digest: cidV0Digest,
-            blockNumber: 0,
-            timestamp: 0,
-            transactionIndex: 0,
-            logIndex: 0,
-            memberCount: 0,
-            mintPolicy: '0xcCa27c26CF7BAC2a9928f42201d48220F0e3a549',
-          });
-        },
-      },
-    });
+      popupControls.open({
+          title: "Create group",
+          component: CreateGroup,
+          props: {
+              setGroup: async (address: string, name: string, symbol: string, treasury: string, cidV0Digest: string) => {
+                  // TODO: Open the new group's dashboard
+                  connectAvatar(address as Address);
+                  await goto('/dashboard');
+              }
+          }
+      });
   }
+
+  // async function deployGroup() {
+  //
+  //   const sdk = await initSdk(address);
+  //   $circles = sdk;
+  //   popupControls.open({
+  //     component: CreateGroupForm,
+  //     title: 'Create group',
+  //     props: {
+  //       setGroup: (address: string, name: string, symbol: string, treasury: string, cidV0Digest: string) => {
+  //         groups?.push({
+  //           group: address,
+  //           name: name,
+  //           symbol: symbol,
+  //           type: 'CrcV2_CMGroupCreated',
+  //           treasury: treasury,
+  //           cidV0Digest: cidV0Digest,
+  //           blockNumber: 0,
+  //           timestamp: 0,
+  //           transactionIndex: 0,
+  //           logIndex: 0,
+  //           memberCount: 0,
+  //           mintPolicy: '0xcCa27c26CF7BAC2a9928f42201d48220F0e3a549',
+  //         });
+  //       },
+  //     },
+  //   });
+  // }
 </script>
 
 <div class="w-full border rounded-lg flex flex-col p-4 shadow-sm">
@@ -100,7 +117,7 @@
   <div class="w-full flex gap-x-2 items-center justify-between mt-6 px-2">
     <p class="font-bold text-primary">My groups</p>
     <button
-      onclick={() => deployGroup()}
+      onclick={() => openCreateGroup()}
       class="btn btn-xs btn-outline btn-primary">Create a group</button
     >
   </div>

@@ -43,15 +43,33 @@ export async function fetchGroupMetrics(
     groupAddress: Address,
     target: GroupMetrics
 ): Promise<void> {
-    getMemberCount(circlesRpc, groupAddress, 'hour', '7 days').then(r => target.memberCountPerHour = r);
-    getMemberCount(circlesRpc, groupAddress, 'day', '30 days').then(r => target.memberCountPerDay = r);
-    getMintRedeem(circlesRpc, groupAddress, 'hour', '7 days').then(r => target.mintRedeemPerHour = r);
-    getMintRedeem(circlesRpc, groupAddress, 'day', '30 days').then(r => target.mintRedeemPerDay = r);
-    getWrapUnwrap(circlesRpc, groupAddress, 'hour', '7 days').then(r => target.wrapUnwrapPerHour = r);
-    getWrapUnwrap(circlesRpc, groupAddress, 'day', '30 days').then(r => target.wrapUnwrapPerDay = r);
-    getCollateralInTreasury(circlesRpc, groupAddress).then(r => target.collateralInTreasury = r);
-    getGroupTokenHoldersBalance(circlesRpc, groupAddress).then(r => target.tokenHolderBalance = r);
-    countCurrentAffiliateMembers(circlesRpc, groupAddress).then(r => target.affiliateMembersCount = r);
+    getMemberCount(circlesRpc, groupAddress, 'hour', '7 days').then(r => {
+        target.memberCountPerHour = r
+    });
+    getMemberCount(circlesRpc, groupAddress, 'day', '30 days').then(r => {
+        target.memberCountPerDay = r
+    });
+    getMintRedeem(circlesRpc, groupAddress, 'hour', '7 days').then(r => {
+        target.mintRedeemPerHour = r
+    });
+    getMintRedeem(circlesRpc, groupAddress, 'day', '30 days').then(r => {
+        target.mintRedeemPerDay = r
+    });
+    getWrapUnwrap(circlesRpc, groupAddress, 'hour', '7 days').then(r => {
+        target.wrapUnwrapPerHour = r
+    });
+    getWrapUnwrap(circlesRpc, groupAddress, 'day', '30 days').then(r => {
+        target.wrapUnwrapPerDay = r
+    });
+    getCollateralInTreasury(circlesRpc, groupAddress).then(r => {
+        target.collateralInTreasury = r
+    });
+    getGroupTokenHoldersBalance(circlesRpc, groupAddress).then(r => {
+        target.tokenHolderBalance = r
+    });
+    countCurrentAffiliateMembers(circlesRpc, groupAddress).then(r => {
+        target.affiliateMembersCount = r
+    });
     const token = await getERC20Token(circlesRpc, groupAddress);
     target.erc20Token = token;
 
@@ -62,12 +80,12 @@ export async function fetchGroupMetrics(
             fetch(`${base}&period=30 days&resolution=day`).then(r => r.ok ? r.json() : []),
         ]);
 
-        target.priceHistoryWeek = week.map((p: { timestamp: string; price: string }) => ({
+        target.priceHistoryWeek = week?.map((p: { timestamp: string; price: string }) => ({
             timestamp: new Date(p.timestamp),
             price: Number(p.price)
         }));
 
-        target.priceHistoryMonth = month.map((p: { timestamp: string; price: string }) => ({
+        target.priceHistoryMonth = month?.map((p: { timestamp: string; price: string }) => ({
             timestamp: new Date(p.timestamp),
             price: Number(p.price)
         }));
@@ -219,7 +237,7 @@ async function getCollateralInTreasury(
         groupAddress
     );
 
-    const balancesResult = await getGroupCollateral(
+    let balancesResult = await getGroupCollateral(
         circlesRpc,
         vaultAddress ?? treasuryAddress ?? ''
     );

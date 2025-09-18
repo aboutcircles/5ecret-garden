@@ -33,7 +33,6 @@
     import { PUBLIC_PLAUSIBLE_DOMAIN } from '$env/static/public';
     import { initGroupMetricsStore } from '$lib/stores/groupMetrics.svelte';
     import { circles } from '$lib/stores/circles';
-    import Footer from '$lib/components/Footer.svelte';
 
     import { watchAccount } from '@wagmi/core';
     import { config } from '../config';

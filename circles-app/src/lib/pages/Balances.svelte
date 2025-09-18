@@ -6,7 +6,7 @@
     import Filter from '$lib/components/Filter.svelte';
     import GenericList from '$lib/components/GenericList.svelte';
     import BalanceRow from '$lib/components/BalanceRow.svelte';
-    import type {EventRow} from '../../../../../circles-sdk/packages/data/src';
+    import type {EventRow} from '@circles-sdk/data/src';
 
     let filterVersion = writable<number | undefined>(undefined);
     let filterType = writable<'personal' | 'group' | undefined>(undefined);
