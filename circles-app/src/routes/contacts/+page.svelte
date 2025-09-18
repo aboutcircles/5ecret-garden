@@ -11,6 +11,7 @@
     import { Filter as LFilter, Download as LDownload, Plus as LPlus } from 'lucide';
     import { popupControls } from '$lib/stores/popUp';
     import ManageGroupMembers from '$lib/flows/manageGroupMembers/1_manageGroupMembers.svelte';
+    import { avatarState } from '$lib/stores/avatar.svelte';
 
     let filterVersion = writable<number | undefined>(undefined);
     let filterRelation = writable<'mutuallyTrusts' | 'trusts' | 'trustedBy' | 'variesByVersion' | undefined>(undefined);
@@ -98,25 +99,54 @@
     }
 
     function openAddContact() {
-        popupControls.open({ title: 'Add Contact', component: ManageGroupMembers, props: {} });
+        popupControls.open({ title: avatarState.isGroup ? 'Add Member' : 'Add Contact', component: ManageGroupMembers, props: {} });
     }
+
+    // Dynamic labels for group context
+    let titleText: string = $derived(avatarState.isGroup ? 'Members' : 'Contacts');
+    let countLabel: string = $derived(avatarState.isGroup ? 'members' : 'entries');
+    let addLabel: string = $derived(avatarState.isGroup ? 'Add Member' : 'Add Contact');
 
     type Action = { id: string; label: string; iconNode: any; onClick: () => void; variant: 'primary'|'ghost'; disabled?: boolean };
 
+    // Keep actions lean: filter moved next to the title
     const actions: Action[] = [
-        { id: 'add', label: 'Add Contact', iconNode: LPlus, onClick: openAddContact, variant: 'primary' },
-        { id: 'filter', label: 'Filter', iconNode: LFilter, onClick: toggleFilters, variant: 'ghost' },
+        { id: 'add', label: addLabel, iconNode: LPlus, onClick: openAddContact, variant: 'primary' },
         { id: 'export', label: 'Export CSV', iconNode: LDownload, onClick: handleExportCSV, variant: 'ghost' },
     ];
 </script>
 
-<PageScaffold highlight="soft" collapsedMode="bar" collapsedHeightClass="h-12" maxWidthClass="page page--lg" contentWidthClass="page page--lg" usePagePadding={true} headerTopGapClass="mt-4 md:mt-6" collapsedTopGapClass="mt-3 md:mt-4">
+<PageScaffold
+        highlight="soft"
+        collapsedMode="bar"
+        collapsedHeightClass="h-12"
+        maxWidthClass="page page--lg"
+        contentWidthClass="page page--lg"
+        usePagePadding={true}
+        headerTopGapClass="mt-4 md:mt-6"
+        collapsedTopGapClass="mt-3 md:mt-4"
+>
     <svelte:fragment slot="title">
-        <h1 class="h2 m-0">Contacts</h1>
+        <div class="flex items-center gap-2">
+            <h1 class="h2 m-0">{titleText}</h1>
+            <button
+                    type="button"
+                    class="btn btn-ghost btn-xs p-1"
+                    aria-label={$showFilters ? 'Hide filters' : 'Show filters'}
+                    aria-expanded={$showFilters}
+                    aria-controls={FILTER_PANEL_ID}
+                    onclick={toggleFilters}
+                    title="Filter"
+            >
+                <Lucide icon={LFilter} size={16} class="shrink-0 stroke-black" ariaLabel="" />
+            </button>
+        </div>
     </svelte:fragment>
+
     <svelte:fragment slot="meta">
-        {$filteredStore.data.length} entries
+        {$filteredStore.data.length} {countLabel}
     </svelte:fragment>
+
     <svelte:fragment slot="actions">
         {#each actions as a (a.id)}
             <button type="button" class={`btn btn-sm ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'}`} onclick={a.onClick} aria-label={a.label}>
@@ -128,18 +158,18 @@
 
     <svelte:fragment slot="collapsed-left">
         <div class="truncate flex items-center gap-2">
-            <span class="font-medium">Contacts</span>
-            <span class="text-sm text-base-content/60">{$filteredStore.data.length} entries</span>
+            <span class="font-medium">{titleText}</span>
+            <span class="text-sm text-base-content/60">{$filteredStore.data.length} {countLabel}</span>
         </div>
     </svelte:fragment>
 
     <svelte:fragment slot="collapsed-menu">
         {#each actions as a (a.id)}
             <button
-                type="button"
-                class={`btn ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'} min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3`}
-                onclick={a.onClick}
-                aria-label={a.label}
+                    type="button"
+                    class={`btn ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'} min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3`}
+                    onclick={a.onClick}
+                    aria-label={a.label}
             >
                 <Lucide icon={a.iconNode} size={20} class={a.variant === 'primary' ? 'shrink-0 stroke-white' : 'shrink-0 stroke-black'} />
                 <span>{a.label}</span>

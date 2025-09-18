@@ -112,6 +112,11 @@
       </button>
     {/each}
   </svelte:fragment>
+    <svelte:fragment slot="collapsed-left">
+  <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">
+      Settings
+  </span>
+    </svelte:fragment>
   <svelte:fragment slot="collapsed-menu">
     {#each actions as a (a.id)}
       <button type="button" class={`btn ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'} min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3`} onclick={a.onClick} aria-label={a.label} disabled={a.id === 'save' ? saveDisabled : false}>
@@ -130,15 +135,6 @@
         showCustomizableFields={avatarState.avatar?.avatarInfo?.version === 2}
       />
 
-      {#if avatarState.avatar?.avatarInfo?.version === 2}
-        <div>
-          <ActionButton
-            action={saveProfile}
-            disabled={profilesEqual(newProfile, avatarState.profile)}
-            >Save
-          </ActionButton>
-        </div>
-      {/if}
     </div>
 
     {#if avatarState.isGroup}
@@ -170,12 +166,5 @@
         </div>
       {/if}
     {/if}
-
-    <div class="w-full pt-2 border-t">
-      <h2 class="text-lg font-medium">Wallet</h2>
-      <div class="mt-3">
-        <ActionButton action={clearSession}>Disconnect</ActionButton>
-      </div>
-    </div>
   </div>
 </PageScaffold>

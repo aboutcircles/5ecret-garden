@@ -6,6 +6,7 @@
   import GroupRowView from './GroupRowView.svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
+  import {roundToDecimals} from "$lib/utils/shared";
 
   let groups: Readable<{
     data: EventRow[];
@@ -38,6 +39,11 @@
         <span>{a.label}</span>
       </button>
     {/each}
+  </svelte:fragment>
+  <svelte:fragment slot="collapsed-left">
+  <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">
+      Groups
+  </span>
   </svelte:fragment>
   <svelte:fragment slot="collapsed-menu">
     {#each actions as a (a.id)}

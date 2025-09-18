@@ -94,22 +94,30 @@
 >
     <!-- Title -->
     <svelte:fragment slot="title">
-        <button class="text-left" onclick={openBalances} aria-label="Open balances breakdown">
+        {#if !avatarState.isGroup}
+            <button class="text-left" onclick={openBalances} aria-label="Open balances breakdown">
+                <h2 class="h2 m-0">
+                    {roundToDecimals($totalCirclesBalance)} Circles
+                </h2>
+            </button>
+        {:else}
             <h2 class="h2 m-0">
-                {roundToDecimals($totalCirclesBalance)} Circles
+                Group overview
             </h2>
-        </button>
+        {/if}
     </svelte:fragment>
 
     <!-- Meta -->
     <svelte:fragment slot="meta">
-        <span class="hover:underline cursor-pointer" onclick={openBalances}>
-            {personalToken} individual tokens
-        </span>
-        <span class="mx-1.5">•</span>
-        <span class="hover:underline cursor-pointer" onclick={openBalances}>
-            {groupToken} group tokens
-        </span>
+        {#if !avatarState.isGroup}
+            <span class="hover:underline cursor-pointer" onclick={openBalances}>
+                {personalToken} individual tokens
+            </span>
+            <span class="mx-1.5">•</span>
+            <span class="hover:underline cursor-pointer" onclick={openBalances}>
+                {groupToken} group tokens
+            </span>
+        {/if}
     </svelte:fragment>
 
     <!-- Full-size quick actions -->
@@ -175,22 +183,7 @@
 
     <!-- Content -->
     {#if avatarState.isGroup}
-        <Tabs
-                id="dashboard-tabs"
-                bind:selected={selectedTab}
-                defaultValue={defaultTab}
-                variant="bordered"
-                size="md"
-                class="w-full p-0"
-        >
-            <Tab id="overview" title="Overview" panelClass="p-0 bg-base-100 border-none">
-                <OverviewPanel/>
-            </Tab>
-
-            <Tab id="transaction-history" title="Transaction History" panelClass="p-0 bg-base-100 border-none">
-                <TransactionHistoryPanel/>
-            </Tab>
-        </Tabs>
+        <OverviewPanel/>
     {:else}
         <TransactionHistoryPanel/>
     {/if}
