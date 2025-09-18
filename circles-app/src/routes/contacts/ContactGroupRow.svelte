@@ -2,6 +2,8 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import ProfilePage from '$lib/pages/Profile.svelte';
   import { popupControls } from '$lib/stores/popUp';
+  import Lucide from '$lib/icons/Lucide.svelte';
+  import { ChevronRight as LChevronRight } from 'lucide';
 
   interface Props {
     address?: string;
@@ -31,6 +33,6 @@
       bottomInfo={trustRelation}
       clickable={false}
     />
-    <img src="/chevron-right.svg" alt="" class="icon" aria-hidden="true" />
+    <Lucide icon={LChevronRight} size={20} class="shrink-0 stroke-black" ariaLabel="" />
   </button>
 </div>

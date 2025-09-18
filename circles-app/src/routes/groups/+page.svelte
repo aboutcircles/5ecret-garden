@@ -34,14 +34,19 @@
   </svelte:fragment>
   <svelte:fragment slot="actions">
     {#each actions as a (a.id)}
-      <button type="button" class={`btn btn-sm ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'}`} on:click={a.onClick} aria-label={a.label}>
+      <button type="button" class={`btn btn-sm ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'}`} onclick={a.onClick} aria-label={a.label}>
         <span>{a.label}</span>
       </button>
     {/each}
   </svelte:fragment>
   <svelte:fragment slot="collapsed-menu">
     {#each actions as a (a.id)}
-      <button type="button" class={`btn ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'} btn-sm w-full justify-start`} on:click={a.onClick} aria-label={a.label}>
+      <button
+        type="button"
+        class={`btn ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'} min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3`}
+        onclick={a.onClick}
+        aria-label={a.label}
+      >
         <span>{a.label}</span>
       </button>
     {/each}

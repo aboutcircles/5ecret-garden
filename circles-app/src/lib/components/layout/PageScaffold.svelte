@@ -82,7 +82,7 @@
     }
 </script>
 
-<svelte:window on:keydown={(e) => {
+<svelte:window onkeydown={(e) => {
     const isEscape = e.key === 'Escape';
     if (isEscape && collapsedMenuOpen) { collapsedMenuOpen = false; }
 }} />
@@ -125,7 +125,7 @@
                             class={`w-full bg-base-100 border shadow-sm rounded-xl px-3 md:px-4 ${collapsedHeightClass}
                                 flex items-center justify-between gap-3 pointer-events-auto`}
                             aria-expanded={collapsedMenuOpen}
-                            on:click={toggleCollapsedMenu}
+                            onclick={toggleCollapsedMenu}
                     >
                         <div class="min-w-0 flex items-center gap-2">
                             <slot name="collapsed-left" />
@@ -143,7 +143,7 @@
                             <div
                                     class="bg-base-100 border shadow-xl rounded-xl p-2"
                                     style={`--collapsed-h:${collapsedHeight}; --collapsed-h-md:${collapsedHeightMd};`}
-                                    on:click={onMenuClick}
+                                    onclick={onMenuClick}
                             >
                                 <slot name="collapsed-menu" />
                             </div>
@@ -175,8 +175,8 @@
                 role="button"
                 tabindex="0"
                 aria-label="Close menu"
-                on:pointerdown|stopPropagation|preventDefault={() => (collapsedMenuOpen = false)}
-                on:click|stopPropagation|preventDefault={() => (collapsedMenuOpen = false)}
+                onpointerdown={(e) => { e.stopPropagation(); e.preventDefault(); collapsedMenuOpen = false; }}
+                onclick={(e) => { e.stopPropagation(); e.preventDefault(); collapsedMenuOpen = false; }}
                 aria-hidden="true"
         ></div>
     {/if}

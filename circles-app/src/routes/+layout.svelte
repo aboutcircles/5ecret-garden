@@ -42,7 +42,6 @@
 
     const unwatch = watchAccount(config, {
         onChange(account) {
-            //handler for injected wallet
             if (signer.privateKey === undefined) {
                 if (account.chainId !== 100 && account.address) {
                     popupControls.open({
@@ -234,8 +233,8 @@
             role="button"
             tabindex="0"
             class={`fixed top-0 left-0 w-full h-full bg-black/50 z-[90] ${$popupState.content ? 'opacity-100' : 'opacity-0 hidden'} transition duration-300 ease-in-out pointer-events-auto`}
-            on:pointerdown|stopPropagation|preventDefault={() => popupControls.close()}
-            on:click|stopPropagation|preventDefault={() => popupControls.close()}
+            onpointerdown={(e) => { e.stopPropagation(); e.preventDefault(); popupControls.close(); }}
+            onclick={(e) => { e.stopPropagation(); e.preventDefault(); popupControls.close(); }}
             aria-hidden={$popupState.content ? 'false' : 'true'}
     ></div>
     <PopUp />
