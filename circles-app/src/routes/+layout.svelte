@@ -152,7 +152,7 @@
         if (avatarState.avatar) {
             menuItems = [
                 { name: 'Dashboard', link: '/dashboard' },
-                { name: 'Contacts', link: '/contacts' },
+                { name: avatarState.isGroup ? 'Members' : 'Contacts', link: '/contacts' },
                 ...(!avatarState.isGroup ? [{ name: 'Groups', link: '/groups' }] : []),
                 { name: 'Settings', link: '/settings' },
             ];

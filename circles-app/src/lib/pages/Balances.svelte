@@ -58,7 +58,6 @@
 
 <div class="w-full flex items-start gap-2">
     <div class="w-full flex items-center gap-2">
-        <h1 class="text-xl font-bold mb-4">Balance breakdown</h1>
         <button
                 type="button"
                 class="btn btn-ghost btn-xs p-1 self-start"
