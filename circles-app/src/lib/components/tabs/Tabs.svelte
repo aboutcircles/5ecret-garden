@@ -98,6 +98,16 @@
         return active === id_;
     }
 
+    function centerOnTabId(id_: string, behavior: ScrollBehavior = 'smooth') {
+        if (!scroller) return;
+        const el = document.querySelector<HTMLElement>(`#${id}-tab-${CSS.escape(id_)}`);
+        if (!el) return;
+        const elCenter = el.offsetLeft + el.offsetWidth / 2;
+        const containerCenter = scroller.clientWidth / 2;
+        const target = Math.max(0, Math.min(elCenter - containerCenter, scroller.scrollWidth - scroller.clientWidth));
+        scroller.scrollTo({ left: target, behavior });
+    }
+
     function select(id_: string, focus = false): void {
         const tgt = tabs.find((t) => t.id === id_ && !t.disabled);
         if (!tgt) return;
@@ -110,12 +120,13 @@
             dispatch('change', id_);
         }
 
-        if (focus) {
-            void tick().then(() => {
+        void tick().then(() => {
+            centerOnTabId(id_);
+            if (focus) {
                 const el = document.querySelector<HTMLElement>(`#${id}-tab-${CSS.escape(id_)}`);
                 el?.focus();
-            });
-        }
+            }
+        });
     }
 
     function onKeydown(e: KeyboardEvent): void {
@@ -139,6 +150,15 @@
     const selectedStore = writable<string | null>(active);
     $effect(() => {
         selectedStore.set(active);
+    });
+
+    // Center the active tab whenever it changes (also covers external controlled `selected` changes)
+    $effect(() => {
+        const id_ = active;
+        if (!id_) return;
+        void tick().then(() => {
+            centerOnTabId(id_);
+        });
     });
 
     const ctx: TabsContext = {
