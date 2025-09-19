@@ -4,14 +4,13 @@
     import { wallet } from '$lib/stores/wallet.svelte';
     import { runTask } from '$lib/utils/tasks';
     import { popupControls } from '$lib/stores/popUp';
-    import { cidV0ToUint8Array } from '@circles-sdk/utils/src';
+    import { cidV0ToUint8Array } from '@circles-sdk/utils';
     import { isValidName, isValidSymbol } from '$lib/utils/isValid';
     import {
         createGroupContext,
         defaultCreateGroupContext,
         type CreateGroupFlowContext
     } from './context';
-    import {ZeroAddress} from "ethers";
 
     interface Props {
         context?: CreateGroupFlowContext;

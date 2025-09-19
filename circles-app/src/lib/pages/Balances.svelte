@@ -1,12 +1,10 @@
 <script lang="ts">
     import {circlesBalances} from '$lib/stores/circlesBalances';
-    import {totalCirclesBalance} from '$lib/stores/totalCirclesBalance';
-    import {roundToDecimals} from '$lib/utils/shared';
     import {derived, writable, type Writable} from 'svelte/store';
-    import Filter from '$lib/components/Filter.svelte';
-    import GenericList from '$lib/components/GenericList.svelte';
     import BalanceRow from '$lib/components/BalanceRow.svelte';
-    import type {EventRow} from '@circles-sdk/data/src';
+    import type {EventRow} from '@circles-sdk/data';
+    import Filter from "../components/Filter.svelte";
+    import GenericList from "../components/GenericList.svelte";
 
     let filterVersion = writable<number | undefined>(undefined);
     let filterType = writable<'personal' | 'group' | undefined>(undefined);
