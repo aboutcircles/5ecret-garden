@@ -46,6 +46,7 @@
 
 <FlowDecoration>
   <SearchAvatar
+    avatarTypes={["CrcV2_RegisterHuman","CrcV2_RegisterOrganization"]}
     selectedAddress={context.selectedAddress}
     {onselect}
     searchType="send"
