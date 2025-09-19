@@ -28,84 +28,40 @@
   });
 </script>
 
-<div class="space-y-2">
+<div class="space-y-4">
   {#if avatarState.avatar}
-    <div>
-      <label for="circlesAddress" class="block text-sm font-medium text-black"
-        >Circles address</label
-      >
-      <input
-        type="text"
-        id="circlesAddress"
-        readonly
-        value={avatarState.avatar?.avatarInfo?.avatar}
-        class="mt-2 block w-full p-2 border border-gray-300 rounded-md"
-        placeholder="0x....."
-      />
-    </div>
+    <label class="form-control">
+      <span class="label-text">Circles address</span>
+      <input type="text" readonly class="input input-bordered w-full" value={avatarState.avatar?.avatarInfo?.avatar} />
+    </label>
+
     {#if avatarState.avatar?.avatarInfo?.v1Token && !avatarState.avatar?.avatarInfo?.v1Stopped}
-      <div>
-        <label for="tokenAddress" class="block text-sm font-medium text-black"
-          >Token address</label
-        >
-        <input
-          type="text"
-          id="tokenAddress"
-          class="mt-2 block w-full p-2 border border-gray-300 rounded-md"
-          readonly
-          value={avatarState.avatar.avatarInfo.v1Token}
-          placeholder="0x....."
-        />
-      </div>
+      <label class="form-control">
+        <span class="label-text">Token address</span>
+        <input type="text" readonly class="input input-bordered w-full" value={avatarState.avatar.avatarInfo.v1Token} />
+      </label>
     {/if}
   {/if}
+
   {#if showCustomizableFields}
+    <label class="form-control">
+      <span class="label-text">Name</span>
+      <input id="name" type="text" class="input input-bordered w-full" bind:value={profile.name} placeholder="Name" />
+    </label>
+
+    <label class="form-control">
+      <span class="label-text">Description</span>
+      <textarea id="description" class="textarea textarea-bordered w-full" bind:value={profile.description} placeholder="Description"></textarea>
+    </label>
+
+    <label class="form-control">
+      <span class="label-text">Location</span>
+      <input type="text" class="input input-bordered w-full" bind:value={profile.location} placeholder="Location" />
+    </label>
+
     <div>
-      <label for="name" class="block text-sm font-medium text-black">Name</label
-      >
-      <input
-        bind:value={profile.name}
-        type="text"
-        id="name"
-        class="mt-2 block w-full p-2 border border-gray-300 bg-gray-50 rounded-md"
-        placeholder="Name"
-      />
-    </div>
-    <div>
-      <label for="description" class="block text-sm font-medium text-black"
-      >Description</label
-      >
-      <textarea
-        bind:value={profile.description}
-        id="description"
-        class="mt-2 block w-full p-2 border border-gray-300 bg-gray-50 rounded-md"
-        placeholder="Description"
-      ></textarea>
-    </div>
-    <div>
-      <label for="description" class="block text-sm font-medium text-black"
-      >Location</label
-      >
-      <input
-        bind:value={profile.location}
-        type="text"
-        id="name"
-        class="mt-2 block w-full p-2 border border-gray-300 bg-gray-50 rounded-md"
-        placeholder="Location" />
-    </div>
-    <div>
-      <label for="imageUrl" class="block text-sm font-medium text-black"
-        >Image</label
-      >
-    </div>
-    <div>
-      <ImageUpload
-        imageDataUrl={profile.previewImageUrl}
-        cropHeight={256}
-        cropWidth={256}
-        onnewimage={onnewimage}
-        oncleared={oncleared}
-      />
+      <span class="label-text">Image</span>
+      <ImageUpload imageDataUrl={profile.previewImageUrl} cropHeight={256} cropWidth={256} onnewimage={onnewimage} oncleared={oncleared} />
     </div>
   {/if}
 </div>

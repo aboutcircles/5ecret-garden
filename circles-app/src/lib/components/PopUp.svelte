@@ -1,65 +1,71 @@
 <script lang="ts">
-  import { popupControls, popupState } from '$lib/stores/popUp';
+    import { popupControls, popupState } from '$lib/stores/popUp';
+    import Lucide from '$lib/icons/Lucide.svelte';
+    import { ArrowLeft as LArrowLeft, X as LX } from 'lucide';
+
+    function handleKeydown(e: KeyboardEvent) {
+        if (e.key === 'Escape' && $popupState.content) popupControls.close();
+    }
+
+    function onClose() {
+        if ($popupState.stack.length > 0) popupControls.back();
+        else popupControls.close();
+    }
 </script>
 
+<svelte:window onkeydown={handleKeydown} />
+
 <div
-  class="popup rounded-t-lg overflow-y-auto"
-  class:open={$popupState.content !== null}
-  role="dialog"
-  aria-modal="true"
+        class="popup rounded-t-lg overflow-y-auto"
+        class:open={$popupState.content !== null}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="popup-title"
 >
-  <div class="w-full p-4 sm:w-[90%] lg:w-3/5 relative">
-    <div class="absolute left-4 top-4">
-      <button
-        class="flex w-fit rounded-lg p-2 bg-gray-100"
-        onclick={() => {
-          $popupState.stack.length > 0
-            ? popupControls.back()
-            : popupControls.close();
-        }}
-      >
-        <img
-          alt={$popupState.stack.length > 0 ? 'Back' : 'Close'}
-          src={$popupState.stack.length > 0 ? '/arrow-left.svg' : '/close.svg'}
-          class="w-4 h-4"
-        />
-      </button>
-    </div>
-    <div class="content mt-2 w-full">
-      {#if $popupState.content}
-        {@const SvelteComponent = $popupState.content.component}
-        <div class="mt-14">
-          <p class="text-xl font-bold mb-4">{$popupState.content.title}</p>
-          <SvelteComponent
-            {...$popupState.content.props}
-          />
+    <!-- widen to match page--lg -->
+    <div class="w-full max-w-4xl mx-auto p-6">
+        <!-- Header row: close/back button aligned left of title -->
+        <div class="flex items-center gap-3 mb-4">
+            <button
+                    class="btn btn-ghost btn-circle btn-sm"
+                    onclick={onClose}
+                    aria-label={$popupState.stack.length > 0 ? 'Back' : 'Close'}
+                    title={$popupState.stack.length > 0 ? 'Back' : 'Close'}
+            >
+                <Lucide
+                        icon={$popupState.stack.length > 0 ? LArrowLeft : LX}
+                        size={16}
+                        class="shrink-0 stroke-black"
+                        ariaLabel=""
+                />
+            </button>
+
+            {#if $popupState.content?.title}
+                <h2 id="popup-title" class="text-xl font-bold">
+                    {$popupState.content.title}
+                </h2>
+            {/if}
         </div>
-      {/if}
+
+        <div class="content w-full">
+            {#if $popupState.content}
+                {@const SvelteComponent = $popupState.content.component}
+                <SvelteComponent {...$popupState.content.props} />
+            {/if}
+        </div>
     </div>
-  </div>
 </div>
 
 <style>
-  .popup {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    max-height: 80%;
-    min-height: 80%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: white;
-    transition:
-      transform 0.3s ease,
-      opacity 0.3s ease;
-    transform: translateY(100%);
-    opacity: 0;
-    z-index: 20;
-  }
-  .popup.open {
-    transform: translateY(0);
-    opacity: 1;
-  }
+    .popup {
+        position: fixed;
+        bottom: 0; left: 0; width: 100%;
+        max-height: 80%; min-height: 80%;
+        display: flex; flex-direction: column; align-items: center;
+        background: white;
+        transition: transform .3s ease, opacity .3s ease;
+        transform: translateY(100%); opacity: 0;
+        z-index: 100;
+    }
+    .popup.open { transform: translateY(0); opacity: 1; }
 </style>

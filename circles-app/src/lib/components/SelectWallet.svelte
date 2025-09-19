@@ -35,7 +35,7 @@
       await clearSession();
       popupControls.open({
       component: ImportCircles,
-      title: 'Import Circles',
+      title: 'Use circles magic words',
       props: {},
     });
     }}

@@ -3,6 +3,8 @@
   import ProfilePage from '$lib/pages/Profile.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { popupControls } from '$lib/stores/popUp';
+  import Lucide from '$lib/icons/Lucide.svelte';
+  import { ChevronRight as LChevronRight } from 'lucide';
 
   interface Props {
     item: GroupRow;
@@ -12,11 +14,10 @@
 </script>
 
 <button
-  class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
+  class="w-full flex items-center justify-between p-2 hover:bg-base-200 rounded-lg"
   onclick={(e) => {
     popupControls.open({
       component: ProfilePage,
-      title: '',
       props: {
         address: item.group,
       },
@@ -34,7 +35,5 @@
     clickable={false}
     bottomInfo={`${item.memberCount} member${item.memberCount === 1 ? '' : 's'}`}
   />
-  <div class="font-medium underline flex gap-x-2">
-    <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
-  </div>
+  <Lucide icon={LChevronRight} size={20} class="shrink-0 stroke-black" ariaLabel="" />
 </button>

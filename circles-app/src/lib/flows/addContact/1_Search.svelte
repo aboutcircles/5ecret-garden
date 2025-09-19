@@ -53,8 +53,8 @@
 </script>
 
 <FlowDecoration>
-  <p class="text-2xl font-bold">Add Contact</p>
   <SearchAvatar
+    avatarTypes={["CrcV2_RegisterHuman","CrcV2_RegisterOrganization","CrcV2_RegisterGroup"]}
     selectedAddress={context.selectedAddress}
     {oninvite}
     {onselect}
