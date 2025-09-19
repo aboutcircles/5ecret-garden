@@ -37,27 +37,41 @@
     import { config } from '../config';
     import WrongNetwork from '$lib/components/WrongNetwork.svelte';
     import BottomNav from '$lib/components/BottomNav.svelte';
+    import type {Address} from "@circles-sdk/utils";
 
     const unwatch = watchAccount(config, {
         onChange(account) {
-            if (signer.privateKey === undefined) {
-                if (account.chainId !== 100 && account.address) {
-                    popupControls.open({
-                        title: 'Wrong Network',
-                        component: WrongNetwork,
-                        props: {},
-                    });
-                }
-                if (
-                    signer.address &&
-                    account.address &&
-                    account.address.toLowerCase() !== signer.address.toLowerCase()
-                ) {
-                    clearSession();
-                }
+            const isPrivateKeySession = signer.privateKey !== undefined;
+
+            // Wrong network guard (only when an EOA is actually present)
+            if (account.chainId !== 100 && account.address) {
+                popupControls.open({
+                    title: 'Wrong Network',
+                    component: WrongNetwork,
+                    props: {},
+                });
+                return;
+            }
+
+            // Keep signer.address in sync with the current EOA for browser sessions
+            // (EOA != Safe; this is expected and NOT a reason to clear the session)
+            if (!isPrivateKeySession && account.address) {
+                signer.address = account.address.toLowerCase() as Address;
+                return;
+            }
+
+            // For private-key sessions, mismatch means "user switched account in wallet UI"
+            if (
+                isPrivateKeySession &&
+                signer.address &&
+                account.address &&
+                account.address.toLowerCase() !== signer.address.toLowerCase()
+            ) {
+                clearSession();
             }
         },
     });
+
 
     onDestroy(() => {
         unwatch();

@@ -180,9 +180,8 @@
             size === 'xs' ? 'tabs-xs' : size === 'sm' ? 'tabs-sm' : size === 'lg' ? 'tabs-lg' : '',
             // make tabs horizontally scrollable when there are many
             'overflow-x-auto whitespace-nowrap',
-            // prevent wrapping in flex variant; ignored by grid when fitted=true
-            'flex-nowrap',
-            fitted ? 'grid grid-flow-col auto-cols-fr' : '',
+            // Layout: use grid only when fitted, otherwise a left-aligned flex row
+            fitted ? 'grid grid-flow-col auto-cols-fr' : 'flex flex-nowrap justify-start',
             className
         ].filter(Boolean).join(' ')
     );
@@ -274,7 +273,7 @@
                     type="button"
                     role="tab"
                     id={`${id}-tab-${t.id}`}
-                    class={`tab ${buttonSizeClass} flex-none whitespace-nowrap min-w-max`}
+                    class={`tab ${buttonSizeClass} flex-none whitespace-nowrap min-w-max max-w-[calc(100%-4rem)] overflow-hidden`}
                     class:tab-active={active === t.id}
                     class:tab-disabled={t.disabled}
                     aria-selected={active === t.id}
@@ -285,10 +284,10 @@
                     data-tab-id={t.id}
                     aria-label={t.badge !== undefined ? `${t.title} (${t.badge})` : t.title}
             >
-          <span class="inline-flex items-center gap-2">
-            {t.title}
+          <span class="inline-flex items-center gap-2 max-w-full">
+            <span class="truncate">{t.title}</span>
               {#if t.badge !== undefined}
-              <span class="badge badge-sm">{t.badge}</span>
+              <span class="badge badge-sm flex-none">{t.badge}</span>
             {/if}
           </span>
             </button>
