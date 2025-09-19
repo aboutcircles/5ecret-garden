@@ -99,8 +99,18 @@ async function fetchProfiles(addresses: Address[]): Promise<Map<Address, Profile
   const chunkSize = 50;
   for (let i = 0; i < uniqueCids.length; i += chunkSize) {
     const chunk = uniqueCids.slice(i, i + chunkSize);
-    const chunkProfiles = await sdk.profiles.getMany(chunk);
-    for (const [cid, prof] of Object.entries(chunkProfiles)) {
+
+    // console.log(`chunk:`, chunk);
+    const chunkProfiles = await sdk.circlesRpc.call<Profile[]>("circles_getProfileByCidBatch", [chunk]);
+    // console.log(`newApiResults:`, newApiResults);
+
+      const profilesMap = chunk.reduce((p,c, i) => {
+          p[c] = chunkProfiles.result[i];
+          return p;
+      }, <Record<string, Profile>>{});
+
+    // const chunkProfiles = await sdk.profiles.getMany(chunk);
+    for (const [cid, prof] of Object.entries(profilesMap)) {
       cidToProfile[cid] = prof;
     }
   }

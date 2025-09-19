@@ -1,6 +1,6 @@
 <script lang="ts">
   import { formatTrustRelation } from '$lib/utils/helpers';
-  import {formatUnits, parseEther} from 'ethers';
+  import { formatUnits, parseEther } from 'ethers';
   import Avatar from './avatar/Avatar.svelte';
   import type { Address } from '@circles-sdk/utils';
   import type { TrustRelation } from '@circles-sdk/data';
@@ -22,6 +22,20 @@
   }
 
   let { collateralInTreasury, redeemable = false }: Props = $props();
+
+  function onRedeemInput(item: {
+    avatar: Address;
+    amount: bigint;
+    amountToRedeem: bigint;
+    amountToRedeemInCircles: number;
+    trustRelation?: TrustRelation;
+  }, e: Event) {
+    const input = e.target as HTMLInputElement | null;
+    const newValue = parseFloat(input?.value ?? '0');
+    const safeValue = isNaN(newValue) ? 0 : newValue;
+    item.amountToRedeemInCircles = safeValue;
+    item.amountToRedeem = parseEther(safeValue.toString());
+  }
 </script>
 
 <table class="table table-zebra w-full">
@@ -38,7 +52,7 @@
         <td>
           <Avatar
             address={item.avatar}
-            clickable={false}
+            clickable={true}
             view="horizontal"
             bottomInfo={formatTrustRelation(item.trustRelation)}
           />
@@ -52,13 +66,7 @@
               type="number"
               class="input input-bordered w-36"
               value={item.amountToRedeemInCircles}
-              oninput={(e) => {
-                const newValue = parseFloat(
-                  (e.target as HTMLInputElement)?.value
-                );
-                item.amountToRedeemInCircles = isNaN(newValue) ? 0 : newValue;
-                item.amountToRedeem = parseEther(newValue.toString());
-              }}
+              on:input={(e) => onRedeemInput(item, e)}
               min="0"
             />
           </td>

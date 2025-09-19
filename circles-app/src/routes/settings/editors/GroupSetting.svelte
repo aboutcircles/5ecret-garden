@@ -1,6 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
+  import Lucide from '$lib/icons/Lucide.svelte';
+  import { Check as LCheck } from 'lucide';
 
   let serviceAddress: `0x${string}` = $state('0x0');
   let mintHandlerAddress: `0x${string}` = $state('0x0');
@@ -45,67 +47,36 @@
   }
 </script>
 
-<div class="space-y-2">
-  <div>
-    <label for="circlesAddress" class="block text-sm font-medium text-black">
-      Service address
-    </label>
-    <div class="flex items-center space-x-2">
-      <input
-        type="text"
-        id="circlesAddress"
-        bind:value={serviceAddress}
-        class="mt-2 block w-full p-2 border border-gray-300 rounded-md"
-        placeholder="0x..."
-      />
-      <button
-        type="button"
-        class="btn btn-square btn-xs btn-primary btn-outline"
-        onclick={handleSetService}
-        ><img src="/update.svg" alt="Update" class="w-4" /></button
-      >
+<div class="space-y-4">
+  <label class="form-control">
+    <span class="label-text">Service address</span>
+    <div class="join">
+      <input id="circlesAddress" type="text" class="input input-bordered join-item w-full" bind:value={serviceAddress} placeholder="0x…" />
+      <button type="button" class="btn btn-outline btn-primary join-item btn-xs" onclick={handleSetService}>
+        <Lucide icon={LCheck} size={16} class="shrink-0 stroke-black" ariaLabel="" />
+      </button>
     </div>
-  </div>
+  </label>
 
-  <div>
-    <label for="tokenAddress" class="block text-sm font-medium text-black">
-      Mint Handler address
-    </label>
-    <div class="flex items-center space-x-2">
-      <input
-        type="text"
-        id="tokenAddress"
-        bind:value={mintHandlerAddress}
-        class="mt-2 block w-full p-2 border border-gray-300 rounded-md"
-        placeholder="0x..."
-      /><button
-        type="button"
-        class="btn btn-square btn-xs btn-primary btn-outline"
-        onclick={handleSetMintHandler}
-        ><img src="/update.svg" alt="Update" class="w-4" /></button
-      >
+  <label class="form-control">
+    <span class="label-text">Mint handler address</span>
+    <div class="join">
+      <input id="tokenAddress" type="text" class="input input-bordered join-item w-full" bind:value={mintHandlerAddress} placeholder="0x…" />
+      <button type="button" class="btn btn-outline btn-primary join-item btn-xs" onclick={handleSetMintHandler}>
+        <Lucide icon={LCheck} size={16} class="shrink-0 stroke-black" ariaLabel="" />
+      </button>
     </div>
-  </div>
+  </label>
 
   {#if avatarState.groupType === 'CrcV2_CMGroupCreated'}
-    <div>
-      <label for="name" class="block text-sm font-medium text-black">
-        Redemption Handler address
-      </label>
-      <div class="flex items-center space-x-2">
-        <input
-          type="text"
-          id="name"
-          bind:value={redemptionHandlerAddress}
-          class="mt-2 block w-full p-2 border border-gray-300 rounded-md"
-          placeholder="0x..."
-        /><button
-          type="button"
-          class="btn btn-square btn-xs btn-primary btn-outline"
-          onclick={handleSetRedemptionHandler}
-          ><img src="/update.svg" alt="Update" class="w-4" /></button
-        >
+    <label class="form-control">
+      <span class="label-text">Redemption handler address</span>
+      <div class="join">
+        <input id="redemption" type="text" class="input input-bordered join-item w-full" bind:value={redemptionHandlerAddress} placeholder="0x…" />
+        <button type="button" class="btn btn-outline btn-primary join-item btn-xs" onclick={handleSetRedemptionHandler}>
+          <Lucide icon={LCheck} size={16} class="shrink-0 stroke-black" ariaLabel="" />
+        </button>
       </div>
-    </div>
+    </label>
   {/if}
 </div>
