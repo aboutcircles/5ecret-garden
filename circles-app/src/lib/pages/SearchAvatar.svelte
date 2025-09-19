@@ -24,7 +24,6 @@
     function toSearchResult(raw: any | null | undefined): SearchResultProfile | undefined {
         if (!raw || typeof raw !== 'object') return undefined;
 
-        console.log("raw:", raw);
         const base = raw ?? {name: ''};
         const CID =
             typeof raw.CID === 'string' ? raw.CID :

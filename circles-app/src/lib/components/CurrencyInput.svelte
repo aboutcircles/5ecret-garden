@@ -5,6 +5,7 @@
   import { tokenTypeToString } from '$lib/pages/SelectAsset.svelte';
   import { roundToDecimals } from '$lib/utils/shared';
   import Avatar from './avatar/Avatar.svelte';
+  import Tooltip from "$lib/components/Tooltip.svelte";
 
   interface Props {
     balanceRow: TokenBalanceRow;
@@ -101,9 +102,9 @@
 </div>
 
 <p class="font-medium text-sm mt-4">
-  Balance: {maxAmountCircles >= 0
+  {maxAmountCircles >= 0
     ? roundToDecimals(maxAmountCircles)
-    : roundToDecimals(balanceRow?.circles)}
+      : '?'} <span class="text-gray-500" >/ {roundToDecimals(balanceRow.circles)} CRC <Tooltip content="The max. amount depends on your trust network and blockchain limits. Try to chunk large transfers if you experience issues." /></span>
   <button class="btn btn-sm ml-4 font-normal" onclick={setMaxAmount}>
     Use Max
   </button>
