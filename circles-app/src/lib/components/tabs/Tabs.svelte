@@ -169,7 +169,7 @@
         id={id}
         aria-orientation="horizontal"
         class={tablistClasses}
-        on:keydown={onKeydown}
+        onkeydown={onKeydown}
 >
     {#each tabs as t (t.id)}
         <button
@@ -183,7 +183,7 @@
                 aria-controls={`${id}-panel-${t.id}`}
                 tabindex={active === t.id ? 0 : -1}
                 disabled={t.disabled}
-                on:click={() => { select(t.id); }}
+                onclick={() => { select(t.id); }}
                 data-tab-id={t.id}
                 aria-label={t.badge !== undefined ? `${t.title} (${t.badge})` : t.title}
         >
