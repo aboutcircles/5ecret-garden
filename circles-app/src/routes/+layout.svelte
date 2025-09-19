@@ -9,7 +9,6 @@
 <script lang="ts">
     import '../app.css';
 
-    import DefaultHeader from '$lib/components/DefaultHeader.svelte';
     import { avatarState } from '$lib/stores/avatar.svelte';
     import {
         clearSession,
@@ -185,26 +184,6 @@
     // Toasts
     let hasToasts: boolean = $derived($tasks.length > 0);
 </script>
-
-{#if avatarState.avatar}
-    <div class="relative z-[60]">
-        <DefaultHeader
-                text={avatarState.profile?.name}
-                address={avatarState.avatar.address}
-                logo={avatarState.profile?.previewImageUrl?.trim()
-      ? avatarState.profile.previewImageUrl
-      : '/logo.svg'}
-                homeLink="/dashboard"
-                {quickAction}
-                route={$page.route.id}
-                {menuItems}
-        />
-    </div>
-{:else}
-    <div class="relative z-[60]">
-        <DefaultHeader quickAction={undefined} route={''} />
-    </div>
-{/if}
 
 <svelte:head>
     {#if browser && PUBLIC_PLAUSIBLE_DOMAIN}

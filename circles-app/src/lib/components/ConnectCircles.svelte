@@ -47,7 +47,6 @@
     await goto('/dashboard');
   }
 
-
   async function openCreateGroup() {
     const sdk = await initSdk(address);
     $circles = sdk;
@@ -57,8 +56,7 @@
           props: {
               setGroup: async (address: string, name: string, symbol: string, treasury: string, cidV0Digest: string) => {
                   // TODO: Open the new group's dashboard
-                  connectAvatar(address as Address);
-                  await goto('/dashboard');
+                  await connectAvatar(address as Address);
               }
           }
       });

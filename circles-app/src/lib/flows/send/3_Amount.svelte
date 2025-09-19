@@ -182,7 +182,7 @@
                     <button
                             type="button"
                             class="btn btn-outline w-full md:w-auto rounded-md"
-                            on:click={toggleDataInput}
+                            onclick={toggleDataInput}
                     >
                         Attach data
                     </button>
@@ -190,7 +190,7 @@
                 <button
                         type="submit"
                         class="btn btn-primary w-full md:w-auto rounded-md text-white"
-                        on:click={handleSelect}
+                        onclick={handleSelect}
                 >
                     Continue
                 </button>

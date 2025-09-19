@@ -1,7 +1,7 @@
 <script lang="ts">
     import {tokenTypeToString} from '$lib/pages/SelectAsset.svelte';
     import {avatarState} from '$lib/stores/avatar.svelte';
-    import {crcTypes, getTimeAgo, roundToDecimals, staticTypes} from '$lib/utils/shared';
+    import {crcTypes, roundToDecimals, staticTypes} from '$lib/utils/shared';
     import type {TokenBalanceRow} from '@circles-sdk/data';
     import WrapTokens from '$lib/pages/WrapTokens.svelte';
     import MigrateTokens from '$lib/pages/MigrateTokens.svelte';
@@ -11,33 +11,41 @@
     import {popupControls} from '$lib/stores/popUp';
 
     interface Props {
-        item: TokenBalanceRow;
+        item: TokenBalanceRow
     }
 
     let {item}: Props = $props();
 
-    interface Props { item: TokenBalanceRow }
-
     const actions = [
         {
             condition: (b: TokenBalanceRow) => ['CrcV2_RegisterHuman', 'CrcV2_RegisterGroup'].includes(b.tokenType),
-            title: 'Wrap', icon: '/banknotes.svg', component: WrapTokens
+            title: 'Wrap',
+            icon: '/banknotes.svg',
+            component: WrapTokens
         },
         {
             condition: (b: TokenBalanceRow) => b.tokenType === 'CrcV2_RegisterGroup',
-            title: 'Redeem', icon: '/redeem.svg', component: RedeemGroup
+            title: 'Redeem',
+            icon: '/redeem.svg',
+            component: RedeemGroup
         },
         {
             condition: (b: TokenBalanceRow) => b.tokenType === 'CrcV1_Signup' && !!avatarState.avatar?.avatarInfo && avatarState.avatar?.avatarInfo?.version > 1,
-            title: 'Migrate Tokens to V2', icon: '/banknotes.svg', component: MigrateTokens
+            title: 'Migrate Tokens to V2',
+            icon: '/banknotes.svg',
+            component: MigrateTokens
         },
         {
             condition: (b: TokenBalanceRow) => b.tokenType === 'CrcV2_ERC20WrapperDeployed_Demurraged',
-            title: 'Unwrap', icon: '/banknotes.svg', component: UnwrapTokens
+            title: 'Unwrap',
+            icon: '/banknotes.svg',
+            component: UnwrapTokens
         },
         {
             condition: (b: TokenBalanceRow) => b.tokenType === 'CrcV2_ERC20WrapperDeployed_Inflationary',
-            title: 'Unwrap Static Circles', icon: '/banknotes.svg', component: UnwrapTokens
+            title: 'Unwrap Static Circles',
+            icon: '/banknotes.svg',
+            component: UnwrapTokens
         },
     ];
 
