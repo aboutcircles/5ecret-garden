@@ -3,7 +3,7 @@
     import SelectAmount from '$lib/pages/SelectAmount.svelte';
     import Send from './4_Send.svelte';
     import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
-    import { onMount } from 'svelte';
+    import {onMount, tick} from 'svelte';
     import { circles } from '$lib/stores/circles';
     import { avatarState } from '$lib/stores/avatar.svelte';
     import { TransitiveTransferTokenAddress } from '$lib/pages/SelectAsset.svelte';
@@ -129,17 +129,19 @@
         }
     });
 
-    function handleSelect() {
-        console.log('Selected amount:', context.amount);
-        console.log('Attached data:', context.data);
-        console.log('Data type:', context.dataType);
+    async function handleSelect() {
+        // Ensure all two-way bindings from CurrencyInput → SelectAmount → context are flushed
+        await tick();
+
+        // Normalize to a number (defensive)
+        context.amount = Number(context.amount ?? 0);
 
         popupControls.open({
             title: 'Send',
             component: Send,
-            props: {
-                context,
-            },
+            props: { context },
+            // Optional but helpful: stable key so the same transaction step reuses the instance
+            key: `send:${context.selectedAddress ?? 'na'}:${context.selectedAsset?.tokenAddress ?? 'transitive'}`
         });
     }
 
@@ -188,7 +190,7 @@
                     </button>
                 {/if}
                 <button
-                        type="submit"
+                        type="button"
                         class="btn btn-primary w-full md:w-auto rounded-md text-white"
                         onclick={handleSelect}
                 >
