@@ -34,21 +34,15 @@
   };
 
   async function openQrScanner() {
-    console.log('openQrScanner');
     isScanning = true;
 
     Html5Qrcode.getCameras()
       .then((devices) => {
-        console.log('devices', devices);
         /**
          * devices would be an array of objects of type:
          * { id: "id", label: "label" }
          */
         if (devices && devices.length) {
-          const cameraId = devices[0].id;
-
-          console.log('cameraId', cameraId);
-
           // .. use this to start scanning.
           const html5QrCode = new Html5Qrcode(qrCodeRegionId);
           html5QrCode
@@ -59,7 +53,6 @@
                 qrbox: { width: 250, height: 250 }, // Optional, if you want bounded box UI
               },
               async (decodedText, decodedResult) => {
-                console.log('decodedText', decodedText);
                 if (ethers.isAddress(decodedText)) {
                   editorText = decodedText;
                   if (input) {

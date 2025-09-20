@@ -3,44 +3,24 @@
     import type { TransactionHistoryRow } from '@circles-sdk/data';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
     import { avatarState } from '$lib/stores/avatar.svelte';
+    import RowFrame from '$lib/ui/RowFrame.svelte';
 
     interface Props { item: TransactionHistoryRow; }
     let { item }: Props = $props();
 
-    let tags: string = $state('');
-    let netCircles = $state(0);
     let counterpartyAddress = $state('');
     let badgeUrl: string | null = $state(null);
     let displayAmount = $state('');
-
-    function parseEventDetails(eventsJson: string) {
-        let parsed: any[];
-        try { parsed = JSON.parse(eventsJson) || []; }
-        catch (err) { console.error('Failed to parse item.events:', err); parsed = []; }
-        const relevantTypes = new Set([
-            'CrcV1_Transfer','CrcV2_PersonalMint','CrcV2_DiscountCost','CrcV2_GroupMint',
-            'CrcV2_StreamCompleted','CrcV2_WithdrawDemurraged','CrcV2_WithdrawInflationary',
-            'CrcV2_DepositDemurraged','CrcV2_DepositInflationary',
-            'CrcV2_CollateralLockedBatch','CrcV2_CollateralLockedSingle','CrcV2_GroupRedeem',
-        ]);
-        const tags: string[] = [];
-        for (const e of parsed) {
-            if (relevantTypes.has(e.$type) && !tags.includes(e.$type)) tags.push(e.$type);
-        }
-        return { tags };
-    }
+    let sent = $state(false);
 
     function getCounterpartyAddress(avatarAddress: string) {
         const zero = '0x0000000000000000000000000000000000000000';
         const lowerFrom = item.from.toLowerCase();
         const lowerTo = item.to.toLowerCase();
         const lowerAvatar = avatarAddress.toLowerCase();
-        const isMint = item.from === zero;
-        const isBurn = item.to === zero;
-        if (isMint) return lowerTo;
-        if (isBurn) return lowerAvatar;
-        if (lowerFrom === lowerAvatar) return lowerTo;
-        return lowerFrom;
+        if (item.from === zero) return lowerTo;     // mint
+        if (item.to === zero) return lowerAvatar;   // burn
+        return lowerFrom === lowerAvatar ? lowerTo : lowerFrom;
     }
 
     function getBadge(avatarAddress: string) {
@@ -57,48 +37,45 @@
 
     function formatNetCircles(amount: number): string {
         const abs = Math.abs(amount);
-        if (abs < 0.01) return '< 0.01';
-        return abs.toFixed(2);
+        return abs < 0.01 ? '< 0.01' : abs.toFixed(2);
+    }
+
+    function openTx() {
+        const url = 'https://gnosisscan.io/tx/' + item.transactionHash;
+        window.open(url, '_blank', 'noopener,noreferrer');
     }
 
     $effect(() => {
         if (!avatarState.avatar) return;
-        const result = parseEventDetails(item.events);
-        tags = ""; // result.tags.join(', ');
-        netCircles = item.circles;
-
         counterpartyAddress = getCounterpartyAddress(avatarState.avatar.address);
         badgeUrl = getBadge(avatarState.avatar.address);
-
-        const sent = item.from.toLowerCase() === avatarState.avatar.address.toLowerCase();
+        sent = item.from.toLowerCase() === avatarState.avatar.address.toLowerCase();
         const prefix = sent ? '-' : '+';
-        displayAmount = `${prefix}${formatNetCircles(netCircles)}`;
+        displayAmount = `${prefix}${formatNetCircles(item.circles)}`;
     });
 </script>
 
-<a
-        class="flex w-full items-center justify-between p-2 hover:bg-base-200 rounded-lg"
-        target="_blank"
-        href={'https://gnosisscan.io/tx/' + item.transactionHash}
->
-    {#if avatarState.avatar}
-        <div>
+<!-- One cohesive horizontal block inside content; collapse RowFrame leading -->
+<RowFrame clickable={false} dense={true} noLeading={true}>
+    <div class="w-full flex items-center justify-between">
+        <div class="min-w-0">
             <Avatar
                     address={counterpartyAddress}
                     view="horizontal"
-                    pictureOverlayUrl={badgeUrl}
-                    topInfo={tags}
+                    clickable={true}
+                    pictureOverlayUrl={badgeUrl ?? undefined}
+                    topInfo={''}
                     bottomInfo={getTimeAgo(item.timestamp)}
             />
         </div>
-        <div class="text-right">
-            {#if item.from.toLowerCase() === avatarState.avatar.address.toLowerCase()}
-                <span class="text-error font-bold">{displayAmount}</span> CRC
+
+        <div class="text-right shrink-0">
+            {#if sent}
+                <span class="text-error font-bold">{displayAmount}</span>
             {:else}
-                <span class="text-success font-bold">{displayAmount}</span> CRC
+                <span class="text-success font-bold">{displayAmount}</span>
             {/if}
+            <span> CRC</span>
         </div>
-    {:else}
-        <p>Loading avatar info...</p>
-    {/if}
-</a>
+    </div>
+</RowFrame>

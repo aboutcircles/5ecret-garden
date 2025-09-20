@@ -1,3 +1,4 @@
+<!-- src/lib/components/PopUp.svelte -->
 <script lang="ts">
     import { popupControls, popupState } from '$lib/stores/popUp';
     import Lucide from '$lib/icons/Lucide.svelte';
@@ -11,6 +12,27 @@
         if ($popupState.stack.length > 0) popupControls.back();
         else popupControls.close();
     }
+
+    // Keep *all* pages mounted: stack + current
+    let pages = $derived([
+        ...($popupState.stack ?? []),
+        ...($popupState.content ? [$popupState.content] : [])
+    ]);
+
+    let top = $derived(Math.max(0, pages.length - 1));
+
+    // Guarantee keys are unique and stable per page object
+    const _ids = new WeakMap<any, string>();
+    let _seq = 0;
+    function keyFor(page: any): string {
+        if (page?.key != null) return String(page.key);
+        if (page?.id != null) return String(page.id);
+        const got = _ids.get(page);
+        if (got) return got;
+        const id = `pg-auto-${++_seq}`;
+        _ids.set(page, id);
+        return id;
+    }
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -22,9 +44,8 @@
         aria-modal="true"
         aria-labelledby="popup-title"
 >
-    <!-- widen to match page--lg -->
     <div class="w-full max-w-4xl mx-auto p-6">
-        <!-- Header row: close/back button aligned left of title -->
+        <!-- Header -->
         <div class="flex items-center gap-3 mb-4">
             <button
                     class="btn btn-ghost btn-circle btn-sm"
@@ -47,11 +68,17 @@
             {/if}
         </div>
 
-        <div class="content w-full">
-            {#if $popupState.content}
-                {@const SvelteComponent = $popupState.content.component}
-                <SvelteComponent {...$popupState.content.props} />
-            {/if}
+        <!-- Content: render the whole stack; only top is visible -->
+        <div class="content w-full relative">
+            {#each pages as page, i (keyFor(page))}
+                <div
+                        class={`popup-page ${i === top ? 'is-top' : 'is-hidden'}`}
+                        aria-hidden={i === top ? 'false' : 'true'}
+                        inert={i !== top}
+                >
+                    <svelte:component this={page.component} {...page.props} />
+                </div>
+            {/each}
         </div>
     </div>
 </div>
@@ -68,4 +95,9 @@
         z-index: 100;
     }
     .popup.open { transform: translateY(0); opacity: 1; }
+
+    /* Keep instances mounted; hide non-top pages */
+    .popup-page { position: relative; }
+    .popup-page.is-hidden { display: none; }
+    .popup-page.is-top { display: block; }
 </style>

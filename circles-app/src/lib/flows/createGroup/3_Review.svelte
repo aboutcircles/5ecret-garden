@@ -24,7 +24,10 @@
         popupControls.open({
             title: 'Create Group',
             component: CreateStep,
-            props: { context: ctx, setGroup }
+            props: { context: ctx, setGroup },
+            onClose: () => {
+                import('./context').then(m => m.resetCreateGroupContext());
+            }
         });
     }
 </script>

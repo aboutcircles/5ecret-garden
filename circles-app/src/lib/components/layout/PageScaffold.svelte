@@ -252,7 +252,11 @@
                 role="button"
                 tabindex="0"
                 aria-label="Close menu"
+                style="touch-action: none;"
                 onpointerdown={(e) => { e.stopPropagation(); e.preventDefault(); collapsedMenuOpen = false; }}
+                onmousedown={(e) => { e.stopPropagation(); e.preventDefault(); collapsedMenuOpen = false; }}
+                ontouchstart={(e) => { e.stopPropagation(); e.preventDefault(); collapsedMenuOpen = false; }}
+                ontouchend={(e) => { e.stopPropagation(); e.preventDefault(); collapsedMenuOpen = false; }}
                 onclick={(e) => { e.stopPropagation(); e.preventDefault(); collapsedMenuOpen = false; }}
                 aria-hidden="true"
         ></div>

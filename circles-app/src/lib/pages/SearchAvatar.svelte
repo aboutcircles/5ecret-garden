@@ -7,6 +7,7 @@
     import {circles} from '$lib/stores/circles';
     import {get} from 'svelte/store';
     import {onMount} from "svelte";
+    import RowFrame from '$lib/ui/RowFrame.svelte';
 
     interface Props {
         selectedAddress?: any;
@@ -24,16 +25,9 @@
     function toSearchResult(raw: any | null | undefined): SearchResultProfile | undefined {
         if (!raw || typeof raw !== 'object') return undefined;
 
-        console.log("raw:", raw);
         const base = raw ?? {name: ''};
-        const CID =
-            typeof raw.CID === 'string' ? raw.CID :
-                (typeof raw.cid === 'string' ? raw.cid : '');
-
-        const address =
-            typeof raw.address === 'string' ? raw.address :
-                (typeof raw.owner === 'string' ? raw.owner : '');
-
+        const CID = typeof raw.CID === 'string' ? raw.CID : (typeof raw.cid === 'string' ? raw.cid : '');
+        const address = typeof raw.address === 'string' ? raw.address : (typeof raw.owner === 'string' ? raw.owner : '');
         const lastUpdatedAt = typeof raw.lastUpdatedAt === 'number' ? raw.lastUpdatedAt : 0;
         const registeredName = typeof raw.registeredName === 'string' ? raw.registeredName : null;
 
@@ -52,28 +46,23 @@
         };
     }
 
-    // ---------- RPC search ----------
     async function rpcSearchByText(query: string, limit: number, offset = 0, avatarTypes:string[]|undefined = undefined): Promise<SearchResultProfile[]> {
         const sdk = get(circles);
         if (!sdk?.circlesRpc) throw new Error('No circles RPC available');
-
         const raw = await sdk.circlesRpc.call<Profile[]>('circles_searchProfiles', [query, limit, offset, avatarTypes]);
         return (raw.result ?? []).map(toSearchResult).filter(Boolean) as SearchResultProfile[];
     }
 
-    // ---------- UI search flow ----------
     async function searchProfiles() {
         try {
             const q = selectedAddress?.toString() ?? '';
             const limit = 50;
-
             let results: SearchResultProfile[] = [];
 
             if (q.trim() !== '') {
                 const nameResults = await rpcSearchByText(q, limit, undefined, avatarTypes);
                 results = [...nameResults];
 
-                // If sending and it's a valid address not present, prepend a synthetic entry
                 if (searchType === 'send') {
                     const needle = q.toLowerCase();
                     const found = results.some(r => (r.address ?? '').toLowerCase() === needle);
@@ -89,7 +78,6 @@
                     }
                 }
             }
-
             result = results;
         } catch (error) {
             console.error('Error searching profiles:', error);
@@ -97,7 +85,6 @@
         }
     }
 
-    // initial suggestions
     $effect(() => {
         if (!selectedAddress || selectedAddress.toString().trim() === '') {
             rpcSearchByText('a', 25, 0).then(r => (result = r.slice(0, 25))).catch(err => {
@@ -107,7 +94,6 @@
         }
     });
 
-    // react to input changes
     $effect(() => {
         if (selectedAddress && selectedAddress !== lastAddress) {
             lastAddress = selectedAddress;
@@ -120,13 +106,9 @@
     });
 
     function avatarTypeToReadable(type:string) : string {
-        if (type === "CrcV2_RegisterHuman")
-            return "Human";
-        if (type === "CrcV2_RegisterGroup")
-            return "Group";
-        if (type === "CrcV2_RegisterOrganization")
-            return "Organization";
-
+        if (type === "CrcV2_RegisterHuman") return "Human";
+        if (type === "CrcV2_RegisterGroup") return "Group";
+        if (type === "CrcV2_RegisterOrganization") return "Organization";
         return "";
     }
 </script>
@@ -137,31 +119,25 @@
 
 <div class="mt-4">
     <p class="menu-title pl-0">
-        {#if searchType === 'send'}
-            Recipient
-        {:else if searchType === 'contact'}
-            Found Account
-        {:else}
-            Group
-        {/if}
+        {#if searchType === 'send'}Recipient{:else if searchType === 'contact'}Found Account{:else}Group{/if}
     </p>
 
     {#if result.length > 0}
-        <div class="w-full divide-y">
+        <div class="w-full flex flex-col gap-y-1.5">
             {#each result as profile}
-                <div class="w-full pt-2">
-                    <button
-                            class="w-full flex items-center justify-between p-2 hover:bg-base-200 rounded-lg"
-                            onclick={() => onselect && onselect(profile.address)}
-                    >
+                <RowFrame clickable={true} dense={true} noLeading={true} on:click={() => onselect && onselect(profile.address)}>
+                    <div class="min-w-0">
                         <Avatar
                                 address={profile.address as Address}
                                 view="horizontal"
-                                topInfo={avatarTypeToReadable(profile.avatarType)}
+                                bottomInfo={avatarTypeToReadable(profile.avatarType)}
+                                clickable={false}
                         />
-                        <img src="/chevron-right.svg" alt="" class="icon" aria-hidden="true"/>
-                    </button>
-                </div>
+                    </div>
+                    <div slot="trailing" aria-hidden="true">
+                        <img src="/chevron-right.svg" alt="" class="icon" />
+                    </div>
+                </RowFrame>
             {/each}
         </div>
     {:else}
