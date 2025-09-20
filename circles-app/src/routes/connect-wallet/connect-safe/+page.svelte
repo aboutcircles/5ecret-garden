@@ -76,8 +76,16 @@
       avatarInfo = await $circles.data.getAvatarInfo(signer.address);
     })();
   });
+
   function goBack(): void {
     history.back();
+  }
+
+  async function refreshGroups() {
+      if (!signer.address || !$circles) return;
+      groupsByOwner = await getBaseAndCmgGroupsByOwnerBatch($circles, [
+          signer.address,
+      ]);
   }
 </script>
 
@@ -101,12 +109,14 @@
       isRegistered={avatarInfo !== undefined}
       groups={groupsByOwner?.[signer.address] ?? []}
       initSdk={connectLegacy}
+      refreshGroupsCallback={refreshGroups}
     />
   {:else if $circles}
     <ConnectSafe
       safeOwnerAddress={signer.address}
       initSdk={connectSafe}
       sdk={$circles}
+      refreshGroupsCallback={refreshGroups}
     />
   {/if}
 </div>
