@@ -32,6 +32,7 @@
     /* NEW: tabs */
     import Tabs from '$lib/components/tabs/Tabs.svelte';
     import Tab from '$lib/components/tabs/Tab.svelte';
+    import RowFrame from '$lib/ui/RowFrame.svelte';
 
     interface Props {
         address: Address | undefined;
@@ -376,17 +377,17 @@
                 id="members"
                 title="Members"
                 badge={members.length}
-                panelClass="p-4 bg-base-100 border-base-300 rounded-box divide-y"
+                panelClass="p-4 bg-base-100 border-none"
         >
             {#each members as member (member)}
-                <div class="-mx-4">
-                    <button class="flex w-full items-center justify-between p-4 bg-base-100 hover:bg-base-200">
-                        <Avatar address={member} view="horizontal"/>
-                        <div class="font-medium underline flex gap-x-2">
-                            <img src="/chevron-right.svg" alt="Chevron Right" class="w-4"/>
-                        </div>
-                    </button>
-                </div>
+                <RowFrame clickable={true} noLeading on:click={() => { goto('/profiles/' + member); popupControls.close?.(); }}>
+                    <div class="min-w-0">
+                        <Avatar address={member} view="horizontal" clickable={false} />
+                    </div>
+                    <div slot="trailing" class="font-medium underline flex gap-x-2">
+                        <img src="/chevron-right.svg" alt="Chevron Right" class="w-4"/>
+                    </div>
+                </RowFrame>
             {/each}
             {#if members.length === 0}
                 <div>No members</div>
@@ -399,7 +400,7 @@
                 id="collateral"
                 title="Collateral"
                 badge={collateralInTreasury.length}
-                panelClass="bg-base-100 border-none"
+                panelClass="p-4 bg-base-100 border-none"
         >
             <div class="w-full">
                 <CollateralTable {collateralInTreasury}/>
@@ -412,7 +413,7 @@
                 id="holders"
                 title="Holders"
                 badge={tokenHolders.length}
-                panelClass="bg-base-100 border-none"
+                panelClass="p-4 bg-base-100 border-none"
         >
             <div class="w-full">
                 <CollateralTable collateralInTreasury={tokenHolders}/>

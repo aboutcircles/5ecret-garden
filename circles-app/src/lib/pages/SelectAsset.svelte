@@ -84,43 +84,15 @@
 </script>
 
 {#if showTransitive}
-  <button
-    class="w-full md:p-3 mt-4 border-b md:border md:rounded-lg"
-    onclick={() => handleSelect(transitiveTransfer())}
-  >
-    <BalanceRow item={transitiveTransfer()} />
-  </button>
+  <BalanceRow item={transitiveTransfer()} on:click={() => handleSelect(transitiveTransfer())} />
 {/if}
 
 <p class="menu-title pl-0 mt-4">Individual tokens</p>
 
 {#if $balances?.data?.length > 0}
-  <div
-    class="flex flex-col p-0 w-full overflow-x-auto divide-y"
-  >
+  <div class="flex flex-col p-0 w-full overflow-x-auto gap-y-2">
     {#each $balances.data as balance (balance.tokenAddress)}
-      <button
-        class="flex w-full items-center justify-between p-4 bg-base-100 hover:bg-base-200 rounded-lg"
-        onclick={() => handleSelect(balance)}
-      >
-        <Avatar
-          address={balance.tokenOwner}
-          view="horizontal"
-          bottomInfo={tokenTypeToString(balance.tokenType) + ' - ' + shortenAddress(balance.tokenOwner)}
-        />
-        <div class="col text-right">
-          <span class="font-medium">{roundToDecimals(balance.circles)}</span>
-          CRC
-          <p class="text-xs text-gray-500">
-            {#if staticTypes.has(balance.tokenType)}
-              {roundToDecimals(balance.staticCircles)} Static Circles
-            {/if}
-            {#if crcTypes.has(balance.tokenType)}
-              {roundToDecimals(balance.crc)} CRC
-            {/if}
-          </p>
-        </div>
-      </button>
+      <BalanceRow item={balance} on:click={() => handleSelect(balance)} />
     {/each}
   </div>
 {:else}

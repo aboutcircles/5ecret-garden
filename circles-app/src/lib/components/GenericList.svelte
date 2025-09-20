@@ -36,17 +36,10 @@
     onDestroy(() => { observer?.disconnect(); observer = null; });
 </script>
 
-<div class="w-full flex flex-col gap-y-2 py-4" role="list">
+<div class="w-full flex flex-col gap-y-1.5 py-2" role="list">
     {#each $store?.data ?? [] as item (getKeyFromItem(item))}
         {@const SvelteComponent_1 = row}
-        <div
-                class="w-full pt-2 rounded-xl transition
-             hover:-translate-y-0.5 hover:shadow-md
-             ring-1 ring-transparent hover:ring-primary/10"
-                role="listitem"
-        >
-            <SvelteComponent_1 {item} />
-        </div>
+        <SvelteComponent_1 {item} />
     {/each}
 
     <div
