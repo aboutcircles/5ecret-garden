@@ -362,7 +362,7 @@
             id="common_connections"
             title="Common connections"
             badge={commonConnectionsCount}
-            panelClass="bg-base-100 border-none"
+            panelClass="p-4 bg-base-100 border-none"
     >
         <div class="w-full">
             <CommonConnections
@@ -380,9 +380,17 @@
                 panelClass="p-4 bg-base-100 border-none"
         >
             {#each members as member (member)}
-                <RowFrame clickable={true} noLeading on:click={() => { goto('/profiles/' + member); popupControls.close?.(); }}>
+                <RowFrame
+                        clickable={true}
+                        noLeading
+                        on:click={async () => {
+                    // Open another Profile instance in a popup (same UX as groups/contacts lists)
+                    const ProfilePage = (await import('$lib/pages/Profile.svelte')).default;
+                    popupControls.open({ component: ProfilePage, props: { address: member } });
+                  }}
+                >
                     <div class="min-w-0">
-                        <Avatar address={member} view="horizontal" clickable={false} />
+                        <Avatar address={member} view="horizontal" clickable={false}/>
                     </div>
                     <div slot="trailing" class="font-medium underline flex gap-x-2">
                         <img src="/chevron-right.svg" alt="Chevron Right" class="w-4"/>
@@ -421,4 +429,3 @@
         </Tab>
     {/if}
 </Tabs>
-

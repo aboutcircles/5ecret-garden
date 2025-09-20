@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { createEventDispatcher } from 'svelte';
+
     interface Props {
         clickable?: boolean;
         selected?: boolean;
@@ -18,15 +20,28 @@
         noLeading = false
     }: Props = $props();
 
+    const dispatch = createEventDispatcher();
     let el: HTMLElement;
 
     function handleKeydown(e: KeyboardEvent): void {
-        if (!clickable || disabled) return;
-        const isActivate = e.key === 'Enter' || e.key === ' ';
+        const isInteractive: boolean = clickable && !disabled;
+        const isActivate: boolean = e.key === 'Enter' || e.key === ' ';
+        if (!isInteractive) {
+            return;
+        }
         if (isActivate) {
             e.preventDefault();
             el?.click();
         }
+    }
+
+    function handleClick(e: MouseEvent): void {
+        const isInteractive: boolean = clickable && !disabled;
+        if (!isInteractive) {
+            return;
+        }
+        // Re-dispatch as a component event so parents can use on:click on <RowFrame>
+        dispatch('click', { originalEvent: e });
     }
 </script>
 
@@ -43,6 +58,7 @@
         tabindex={clickable && !disabled ? 0 : undefined}
         aria-disabled={disabled ? 'true' : 'false'}
         on:keydown={handleKeydown}
+        on:click={handleClick}
 >
     {#if !noLeading}
         <div class="ui-row__leading">

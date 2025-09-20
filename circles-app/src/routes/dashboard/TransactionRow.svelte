@@ -56,13 +56,13 @@
 </script>
 
 <!-- One cohesive horizontal block inside content; collapse RowFrame leading -->
-<RowFrame clickable={true} dense={true} noLeading={true} on:click={openTx}>
+<RowFrame clickable={false} dense={true} noLeading={true}>
     <div class="w-full flex items-center justify-between">
         <div class="min-w-0">
             <Avatar
                     address={counterpartyAddress}
                     view="horizontal"
-                    clickable={false}
+                    clickable={true}
                     pictureOverlayUrl={badgeUrl ?? undefined}
                     topInfo={''}
                     bottomInfo={getTimeAgo(item.timestamp)}

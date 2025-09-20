@@ -1,10 +1,11 @@
 <script lang="ts">
-  import { formatTrustRelation } from '$lib/utils/helpers';
-  import { formatUnits, parseEther } from 'ethers';
+    import { formatUnits, parseEther } from 'ethers';
   import Avatar from './avatar/Avatar.svelte';
   import type { Address } from '@circles-sdk/utils';
   import type { TrustRelation } from '@circles-sdk/data';
   import RowFrame from '$lib/ui/RowFrame.svelte';
+    import {popupControls} from "$lib/stores/popUp";
+    import ProfilePage from "$lib/pages/Profile.svelte";
 
   function formatEtherTwoDecimals(value: bigint): string {
     const etherString = formatUnits(value.toString(), 18);
@@ -37,17 +38,20 @@
     item.amountToRedeemInCircles = safeValue;
     item.amountToRedeem = parseEther(safeValue.toString());
   }
+
+    function openProfile(addr: Address): void {
+        popupControls.open({ component: ProfilePage, props: { address: addr } });
+    }
 </script>
 
 <div class="w-full">
   {#each collateralInTreasury as item}
-    <RowFrame noLeading clickable={false}>
+      <RowFrame clickable={true} dense={true} noLeading={true} on:click={() => openProfile(item.avatar)}>
       <div class="min-w-0">
         <Avatar
           address={item.avatar}
-          clickable={false}
+          clickable={true}
           view="horizontal"
-          bottomInfo={formatTrustRelation(item.trustRelation)}
         />
       </div>
 
@@ -61,7 +65,7 @@
             type="number"
             class="input input-bordered w-36"
             value={item.amountToRedeemInCircles}
-            on:input={(e) => onRedeemInput(item, e)}
+            oninput={(e) => onRedeemInput(item, e)}
             min="0"
           />
         {/if}
