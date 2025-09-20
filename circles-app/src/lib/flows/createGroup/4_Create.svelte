@@ -8,8 +8,8 @@
     import { isValidName, isValidSymbol } from '$lib/utils/isValid';
     import {
         createGroupContext,
-        defaultCreateGroupContext,
-        type CreateGroupFlowContext
+        type CreateGroupFlowContext,
+        resetCreateGroupContext
     } from './context';
 
     interface Props {
@@ -74,7 +74,7 @@
                 // TODO: Reload the connect-safe page (or underlying store)
 
                 // Reset context so a new flow starts clean next time
-                context = defaultCreateGroupContext($wallet.address as `0x${string}`);
+                resetCreateGroupContext($wallet.address as `0x${string}`);
 
                 return groupAddress;
             })()

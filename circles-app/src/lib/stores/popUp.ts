@@ -5,6 +5,7 @@ export type PopupContentDefinition<T extends Record<string, any> = any> = {
   title: string;
   component: Component<T>;
   props?: Record<string, any>;
+  onClose?: () => void;
 };
 
 export const popupState = writable<{
@@ -26,11 +27,19 @@ export const popupControls = {
     });
   },
   close: () => {
-    popupState.update((state) => ({
-      ...state,
-      content: null,
-      stack: [],
-    }));
+    popupState.update((state) => {
+      // fire onClose of the top-level content if provided
+      try {
+        state.content?.onClose?.();
+      } catch (e) {
+        console.error('Popup onClose handler threw', e);
+      }
+      return {
+        ...state,
+        content: null,
+        stack: [],
+      };
+    });
   },
   back: () => {
     popupState.update((state) => {
