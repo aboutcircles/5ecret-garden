@@ -10,6 +10,7 @@
   import { settings } from '$lib/stores/settings.svelte';
   import { popupControls } from '$lib/stores/popUp';
   import CreateGroup from "$lib/flows/createGroup/1_CreateGroup.svelte";
+  import { resetCreateGroupContext } from '$lib/flows/createGroup/context';
 
   interface Props {
     address: Address;
@@ -50,16 +51,22 @@
   async function openCreateGroup() {
     const sdk = await initSdk(address);
     $circles = sdk;
-      popupControls.open({
-          title: "Create group",
-          component: CreateGroup,
-          props: {
-              setGroup: async (address: string, name: string, symbol: string, treasury: string, cidV0Digest: string) => {
-                  // TODO: Open the new group's dashboard
-                  await connectAvatar(address as Address);
-              }
-          }
-      });
+
+    // Initialize a fresh context with feeCollection defaulted to this safe address
+    resetCreateGroupContext(address as `0x${string}`);
+
+    popupControls.open({
+      title: "Create group",
+      component: CreateGroup,
+      props: {
+        setGroup: async (address: string, name: string, symbol: string, treasury: string, cidV0Digest: string) => {
+          // On success, navigate into the new group
+          await connectAvatar(address as Address);
+        }
+      },
+      // Ensure state is cleared if the user closes the flow
+      onClose: () => resetCreateGroupContext()
+    });
   }
 
   // async function deployGroup() {

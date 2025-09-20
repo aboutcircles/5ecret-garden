@@ -68,7 +68,10 @@
         popupControls.open({
             title: 'Review',
             component: Review,
-            props: { context: ctx, setGroup }
+            props: { context: ctx, setGroup },
+            onClose: () => {
+                import('./context').then(m => m.resetCreateGroupContext());
+            }
         });
     }
 </script>
