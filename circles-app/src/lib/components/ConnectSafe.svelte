@@ -16,9 +16,10 @@
     safeOwnerAddress: Address;
     initSdk: (ownerAddress: Address) => Promise<Sdk>;
     sdk: Sdk;
+    refreshGroupsCallback?: () => void;
   }
 
-  let { safeOwnerAddress, initSdk, sdk }: Props = $props();
+  let { safeOwnerAddress, initSdk, sdk, refreshGroupsCallback }: Props = $props();
 
   const getSafesByOwnerApiEndpoint = (checksumOwnerAddress: string): string =>
     `https://safe-transaction-gnosis-chain.safe.global/api/v1/owners/${checksumOwnerAddress}/safes/`;
@@ -36,8 +37,22 @@
   }
 
   async function loadSafesAndProfile() {
-    safes = await querySafeTransactionService(safeOwnerAddress);
-    safes = safes.map((safe) => safe.toLowerCase() as Address);
+    const fetchedSafes = (await querySafeTransactionService(safeOwnerAddress)).map(
+      (safe) => safe.toLowerCase() as Address
+    );
+
+    // Preserve existing order to avoid list items jumping; append any new safes.
+    if (safes.length === 0) {
+      safes = fetchedSafes;
+    } else {
+      const existing = new Set(safes);
+      const merged = [...safes];
+      for (const s of fetchedSafes) {
+        if (!existing.has(s)) merged.push(s);
+      }
+      safes = merged;
+    }
+
     const [avatarInfo, groupInfo] = await Promise.all([
       sdk?.data?.getAvatarInfoBatch(safes) ?? [],
       getBaseAndCmgGroupsByOwnerBatch(sdk, safes),
@@ -57,6 +72,11 @@
   async function onsafecreated(address: Address) {
     safes = [...safes, address];
   }
+
+  // Refresh groups for all safes owned by this account
+  async function refreshGroupsLocal() {
+    await loadSafesAndProfile();
+  }
 </script>
 
 {#each safes ?? [] as item (item)}
@@ -64,8 +84,9 @@
     address={item}
     isRegistered={profileBySafe[item.toLowerCase()] !== undefined}
     isV1={profileBySafe[item]?.version === 1}
-    groups={groupsByOwner[item.toLowerCase() as Address] ?? []}
+    groups={groupsByOwner[item.toLowerCase()] ?? []}
     initSdk={initSdk}
+    refreshGroupsCallback={refreshGroupsLocal}
   />
 {/each}
 

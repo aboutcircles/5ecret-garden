@@ -62,7 +62,11 @@
         popupControls.open({
             title: 'Group Settings',
             component: Settings,
-            props: { context: ctx, setGroup }
+            props: { context: ctx, setGroup },
+            onClose: () => {
+                // ensure flow state is cleared when closing at any step
+                import('./context').then(m => m.resetCreateGroupContext());
+            }
         });
     }
 </script>

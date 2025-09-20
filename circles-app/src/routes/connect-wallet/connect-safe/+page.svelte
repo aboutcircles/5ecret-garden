@@ -23,13 +23,19 @@
   let groupsByOwner: Record<Address, GroupRow[]> | undefined = $state();
   let avatarInfo: AvatarRow | undefined = $state();
   let runner: SdkContractRunner | undefined = $state();
+
   onMount(async () => {
-    signer.address = await getSigner();
-    if (!signer.address) {
-      await clearSession();
-      return;
-    }
-    runner = await initBrowserProviderContractRunner();
+      try {
+          // Try to recover an EOA if wagmi already has one
+          signer.address = await getSigner();
+
+          // Always prepare a browser runner; it will trigger the wallet when needed
+          runner = await initBrowserProviderContractRunner();
+      } catch (err) {
+          // Do not clear/redirect here; let the user continue to the connect UI
+          console.error('connect-safe onMount init failed:', err);
+          runner = undefined;
+      }
   });
 
   async function connectLegacy(address: Address) {
@@ -70,21 +76,29 @@
       avatarInfo = await $circles.data.getAvatarInfo(signer.address);
     })();
   });
+
   function goBack(): void {
     history.back();
+  }
+
+  async function refreshGroups() {
+      if (!signer.address || !$circles) return;
+      groupsByOwner = await getBaseAndCmgGroupsByOwnerBatch($circles, [
+          signer.address,
+      ]);
   }
 </script>
 
 <div class="page page-pt page-stack page--lg">
   <div class="toolbar">
     <button type="button" class="back-btn" aria-label="Back" onclick={goBack}>
-      <img src="/arrow-left.svg" alt="Back" class="icon" />
+      <img src="/arrow-left.svg" alt="Back" class="icon mr-4" />
+        <h1 class="h2">Select Account</h1>
     </button>
     <div class="flex-grow"></div>
-    <SettingsDropdown />
+<!--    <SettingsDropdown />-->
   </div>
 
-  <h1 class="h2">Select Account</h1>
   <p class="muted">Please select the account you want to use from the list below.</p>
 
   {#if !signer.address || !$circles}
@@ -95,12 +109,14 @@
       isRegistered={avatarInfo !== undefined}
       groups={groupsByOwner?.[signer.address] ?? []}
       initSdk={connectLegacy}
+      refreshGroupsCallback={refreshGroups}
     />
   {:else if $circles}
     <ConnectSafe
       safeOwnerAddress={signer.address}
       initSdk={connectSafe}
       sdk={$circles}
+      refreshGroupsCallback={refreshGroups}
     />
   {/if}
 </div>

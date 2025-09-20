@@ -62,7 +62,7 @@
                 aria-label={$showFilters ? 'Hide filters' : 'Show filters'}
                 aria-expanded={$showFilters}
                 aria-controls={FILTER_PANEL_ID}
-                on:click={toggleFilters}
+                onclick={toggleFilters}
                 title="Filter"
         >
             <!-- funnel icon -->

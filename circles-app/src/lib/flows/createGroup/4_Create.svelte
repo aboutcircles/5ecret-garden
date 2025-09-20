@@ -8,8 +8,8 @@
     import { isValidName, isValidSymbol } from '$lib/utils/isValid';
     import {
         createGroupContext,
-        defaultCreateGroupContext,
-        type CreateGroupFlowContext
+        type CreateGroupFlowContext,
+        resetCreateGroupContext
     } from './context';
 
     interface Props {
@@ -71,10 +71,15 @@
 
                 if (!groupAddress) { throw new Error('Could not extract group address from receipt'); }
 
-                // TODO: Reload the connect-safe page (or underlying store)
+                // Notify caller (e.g., ConnectCircles) so it can connect the new group and navigate
+                try {
+                    setGroup?.(groupAddress);
+                } catch (e) {
+                    console.error('setGroup callback failed', e);
+                }
 
                 // Reset context so a new flow starts clean next time
-                context = defaultCreateGroupContext($wallet.address as `0x${string}`);
+                resetCreateGroupContext($wallet.address as `0x${string}`);
 
                 return groupAddress;
             })()

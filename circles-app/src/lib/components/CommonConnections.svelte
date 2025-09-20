@@ -1,63 +1,72 @@
 <script lang="ts">
-  import ProfilePage from '$lib/pages/Profile.svelte';
-  import Avatar from './avatar/Avatar.svelte';
-  import type { Address } from '@circles-sdk/utils';
-  import { circles } from '$lib/stores/circles';
-  import { avatarState } from '$lib/stores/avatar.svelte';
-  import { popupControls } from '$lib/stores/popUp';
+    import RowFrame from '$lib/ui/RowFrame.svelte';
+    import Avatar from '$lib/components/avatar/Avatar.svelte';
+    import { popupControls } from '$lib/stores/popUp';
+    import ProfilePage from '$lib/pages/Profile.svelte';
+    import { avatarState } from '$lib/stores/avatar.svelte';
+    import { circles } from '$lib/stores/circles';
+    import type { Address } from '@circles-sdk/utils';
 
-  interface Props {
-    otherAvatarAddress: Address | undefined;
-    commonConnectionsCount?: number;
-  }
-
-  // Props with default
-  let { otherAvatarAddress, commonConnectionsCount = $bindable(0) }: Props = $props();
-
-  // Local state
-  let commonContacts: Address[] = $state([]);
-
-  async function initialize() {
-    if (!otherAvatarAddress) return;
-
-    if (!$circles || !avatarState.avatar) return;
-
-    // Use the RPC call to get the array of common trust addresses
-    // The plugin will return an array of addresses both trust or mutually trust.
-    // Exactly which relationships count as "common trust" is up to the node’s RPC logic,
-    // but presumably it’s all addresses that appear in both trust sets.
-    const common = await $circles.data.rpc.call<Address[]>('circles_getCommonTrust', [avatarState.avatar.address, otherAvatarAddress]);
-    // ^ This returns something like an array of addresses: ["0xabc...", "0x123..."]
-
-    // 3) Set them to local state
-    commonContacts = common.result;
-    commonConnectionsCount = commonContacts.length;
-  }
-
-  // Re-run initialize() whenever otherAvatarAddress changes
-  $effect(() => {
-    if (otherAvatarAddress) {
-      initialize();
+    interface Props {
+        otherAvatarAddress?: Address;
+        commonConnectionsCount?: number;
     }
-  });
+    let { otherAvatarAddress, commonConnectionsCount = $bindable(0) }: Props = $props();
+
+    let loading = $state(true);
+    let error: string | null = $state(null);
+    let rows: Address[] = $state([]);
+
+    async function loadCommon(): Promise<void> {
+        loading = true; error = null; rows = [];
+        try {
+            const me = avatarState.avatar?.address as Address | undefined;
+            const other = otherAvatarAddress;
+            if (!$circles || !me || !other) { loading = false; commonConnectionsCount = 0; return; }
+
+            const good = new Set(['trusts', 'mutuallyTrusts']);
+            const [mine, theirs] = await Promise.all([
+                $circles.data.getAggregatedTrustRelations(me),
+                $circles.data.getAggregatedTrustRelations(other)
+            ]);
+            const mySet = new Set(mine.filter(r => good.has(r.relation)).map(r => r.objectAvatar));
+            const theirSet = new Set(theirs.filter(r => good.has(r.relation)).map(r => r.objectAvatar));
+
+            const list: Address[] = [];
+            for (const a of mySet) { if (theirSet.has(a) && a !== me && a !== other) list.push(a as Address); }
+            list.sort((a, b) => a.localeCompare(b));
+
+            rows = list;
+            commonConnectionsCount = rows.length;
+        } catch (e) {
+            error = e instanceof Error ? e.message : 'Failed to load connections';
+            rows = []; commonConnectionsCount = 0;
+        } finally { loading = false; }
+    }
+    $effect(() => { void loadCommon(); });
+
+    function openProfile(addr: Address): void {
+        popupControls.open({ component: ProfilePage, props: { address: addr } });
+    }
 </script>
 
-<div class="w-full divide-y p-4">
-  {#each commonContacts as contact (contact)}
-    <button
-      class="w-full flex items-center justify-between px-0 py-4 hover:bg-base-200 rounded-lg"
-      onclick={(e) => {
-        popupControls.open({
-          component: ProfilePage,
-          props: { address: contact },
-        });
-        e.preventDefault();
-      }}
-    >
-      <Avatar address={contact} view="horizontal" clickable={false} />
-    </button>
-  {/each}
-  {#if commonContacts.length === 0}
-    <p>No common connections</p>
-  {/if}
-</div>
+{#if loading}
+    <div class="w-full py-6 text-center text-base-content/60">Loading…</div>
+{:else if error}
+    <div class="w-full py-6 text-center text-error">{error}</div>
+{:else if rows.length === 0}
+    <div class="w-full py-6 text-center text-base-content/60">No common connections</div>
+{:else}
+    <div class="w-full flex flex-col gap-y-1.5">
+        {#each rows as addr (addr)}
+            <RowFrame clickable={true} dense={true} noLeading={true} on:click={() => openProfile(addr)}>
+                <div class="min-w-0">
+                    <Avatar address={addr} view="horizontal" clickable={false} />
+                </div>
+                <div slot="trailing" aria-hidden="true">
+                    <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" />
+                </div>
+            </RowFrame>
+        {/each}
+    </div>
+{/if}

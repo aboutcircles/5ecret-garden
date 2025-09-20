@@ -409,7 +409,6 @@ export async function countCurrentAffiliateMembers(
             const rowNewGroup = (row[1] as string).toLowerCase();
             const rowOldGroup = (row[2] as string).toLowerCase();
             if (rowNewGroup === groupAddress.toLowerCase() && rowOldGroup !== groupAddress.toLowerCase()) {
-                console.log("latest event", row)
                 count++;
             }
         }

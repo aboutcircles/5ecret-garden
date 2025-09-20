@@ -27,11 +27,12 @@
     } from '$lib/utils/vault';
     import CollateralTable from '$lib/components/CollateralTable.svelte';
     import {goto} from '$app/navigation';
-    import { avatarState } from '$lib/stores/avatar.svelte';
+    import {avatarState} from '$lib/stores/avatar.svelte';
 
     /* NEW: tabs */
     import Tabs from '$lib/components/tabs/Tabs.svelte';
     import Tab from '$lib/components/tabs/Tab.svelte';
+    import RowFrame from '$lib/ui/RowFrame.svelte';
 
     interface Props {
         address: Address | undefined;
@@ -241,9 +242,9 @@
 
     <div class="w-full flex justify-center mt-6 space-x-6">
         {#if !avatarState.isGroup}
-        <button
-                class="btn btn-primary text-white"
-                onclick={() => {
+            <button
+                    class="btn btn-primary text-white"
+                    onclick={() => {
                 popupControls.open({
                     title: 'Send Circles',
                     component: SelectAsset,
@@ -254,10 +255,10 @@
                     },
                 });
             }}
-        >
-            <img src="/send-new.svg" alt="Send" class="w-5 h-5"/>
-            Send
-        </button>
+            >
+                <img src="/send-new.svg" alt="Send" class="w-5 h-5"/>
+                Send
+            </button>
         {/if}
         {#if otherAvatar?.type === 'CrcV2_RegisterGroup' && !!mintHandler && !avatarState.isGroup}
             <button
@@ -352,7 +353,7 @@
 <Tabs
         id="profile-tabs"
         bind:selected={selectedTab}
-        variant="bordered"
+        variant="lifted"
         size="md"
         class="w-full p-0 mt-8"
         fitted={false}
@@ -361,7 +362,7 @@
             id="common_connections"
             title="Common connections"
             badge={commonConnectionsCount}
-            panelClass="bg-base-100 border-none"
+            panelClass="p-4 bg-base-100 border-none"
     >
         <div class="w-full">
             <CommonConnections
@@ -376,17 +377,25 @@
                 id="members"
                 title="Members"
                 badge={members.length}
-                panelClass="p-4 bg-base-100 border-base-300 rounded-box divide-y"
+                panelClass="p-4 bg-base-100 border-none"
         >
             {#each members as member (member)}
-                <div class="-mx-4">
-                    <button class="flex w-full items-center justify-between p-4 bg-base-100 hover:bg-base-200">
-                        <Avatar address={member} view="horizontal"/>
-                        <div class="font-medium underline flex gap-x-2">
-                            <img src="/chevron-right.svg" alt="Chevron Right" class="w-4"/>
-                        </div>
-                    </button>
-                </div>
+                <RowFrame
+                        clickable={true}
+                        noLeading
+                        on:click={async () => {
+                    // Open another Profile instance in a popup (same UX as groups/contacts lists)
+                    const ProfilePage = (await import('$lib/pages/Profile.svelte')).default;
+                    popupControls.open({ component: ProfilePage, props: { address: member } });
+                  }}
+                >
+                    <div class="min-w-0">
+                        <Avatar address={member} view="horizontal" clickable={false}/>
+                    </div>
+                    <div slot="trailing" class="font-medium underline flex gap-x-2">
+                        <img src="/chevron-right.svg" alt="Chevron Right" class="w-4"/>
+                    </div>
+                </RowFrame>
             {/each}
             {#if members.length === 0}
                 <div>No members</div>
@@ -399,7 +408,7 @@
                 id="collateral"
                 title="Collateral"
                 badge={collateralInTreasury.length}
-                panelClass="bg-base-100 border-none"
+                panelClass="p-4 bg-base-100 border-none"
         >
             <div class="w-full">
                 <CollateralTable {collateralInTreasury}/>
@@ -412,7 +421,7 @@
                 id="holders"
                 title="Holders"
                 badge={tokenHolders.length}
-                panelClass="bg-base-100 border-none"
+                panelClass="p-4 bg-base-100 border-none"
         >
             <div class="w-full">
                 <CollateralTable collateralInTreasury={tokenHolders}/>
@@ -420,4 +429,3 @@
         </Tab>
     {/if}
 </Tabs>
-

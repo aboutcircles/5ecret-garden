@@ -22,3 +22,86 @@
 /* Icons & buttons */
 .icon { @apply w-4 h-4 shrink-0; }
 .back-btn { @apply btn btn-ghost btn-sm; }
+
+:root {
+    /* sizing */
+    --row-height-sm: 44px;
+    --row-height-md: 56px;
+
+    --row-pad-x-sm: 12px;
+    --row-pad-y-sm: 8px;
+
+    --row-pad-x-md: 16px;
+    --row-pad-y-md: 12px;
+
+    --row-gap: 12px;
+    --row-radius: 12px;
+
+    /* colors (mapped to DaisyUI/Tailwind palette via current theme) */
+    --row-bg: hsl(var(--b1));             /* base-100 */
+    --row-bg-hover: hsl(var(--b2));       /* base-200 */
+    --row-bg-selected: hsl(var(--b2));
+    --row-border: hsl(var(--bc) / 0.12);  /* border muted */
+    --row-border-hover: hsl(var(--bc) / 0.2);
+    --row-border-selected: hsl(var(--p)); /* primary */
+    --row-focus-ring: hsl(var(--p) / 0.35);
+
+    --row-fg-strong: hsl(var(--bc));      /* base-content */
+    --row-fg-muted: hsl(var(--bc) / 0.7);
+    --row-fg-muted-2: hsl(var(--bc) / 0.6);
+}
+
+/* Optional: make any <tr data-row> adopt the same visuals (CollateralTable) */
+:root .ui-row, :root tr[data-row] {
+    /* keep vars in sync if you want table rows styled identically */
+}
+
+
+/* Row tokens (correct root selector override) */
+:root {
+    --row-height-sm: 44px;
+    --row-height-md: 56px;
+    --row-pad-x-sm: 12px;
+    --row-pad-y-sm: 8px;
+    --row-pad-x-md: 16px;
+    --row-pad-y-md: 12px;
+    --row-gap: 12px;
+    --row-radius: 12px;
+    --row-bg: hsl(var(--b1));
+    --row-bg-hover: hsl(var(--b2));
+    --row-bg-selected: hsl(var(--b2));
+    --row-border: hsl(var(--bc) / 0.12);
+    --row-border-hover: hsl(var(--bc) / 0.2);
+    --row-border-selected: hsl(var(--p));
+    --row-focus-ring: hsl(var(--p) / 0.35);
+    --row-fg-strong: hsl(var(--bc));
+    --row-fg-muted: hsl(var(--bc) / 0.7);
+    --row-fg-muted-2: hsl(var(--bc) / 0.6);
+}
+
+:root .ui-row, :root tr[data-row] {
+    /* keep vars in sync if you want table rows styled identically */
+}
+
+
+/* Fallback for environments where :root fails */
+html {
+    --row-height-sm: 44px;
+    --row-height-md: 56px;
+    --row-pad-x-sm: 12px;
+    --row-pad-y-sm: 8px;
+    --row-pad-x-md: 16px;
+    --row-pad-y-md: 12px;
+    --row-gap: 12px;
+    --row-radius: 12px;
+    --row-bg: hsl(var(--b1));
+    --row-bg-hover: hsl(var(--b2));
+    --row-bg-selected: hsl(var(--b2));
+    --row-border: hsl(var(--bc) / 0.12);
+    --row-border-hover: hsl(var(--bc) / 0.2);
+    --row-border-selected: hsl(var(--p));
+    --row-focus-ring: hsl(var(--p) / 0.35);
+    --row-fg-strong: hsl(var(--bc));
+    --row-fg-muted: hsl(var(--bc) / 0.7);
+    --row-fg-muted-2: hsl(var(--bc) / 0.6);
+}

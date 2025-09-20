@@ -9,7 +9,6 @@
 <script lang="ts">
     import '../app.css';
 
-    import DefaultHeader from '$lib/components/DefaultHeader.svelte';
     import { avatarState } from '$lib/stores/avatar.svelte';
     import {
         clearSession,
@@ -38,27 +37,41 @@
     import { config } from '../config';
     import WrongNetwork from '$lib/components/WrongNetwork.svelte';
     import BottomNav from '$lib/components/BottomNav.svelte';
+    import type {Address} from "@circles-sdk/utils";
 
     const unwatch = watchAccount(config, {
         onChange(account) {
-            if (signer.privateKey === undefined) {
-                if (account.chainId !== 100 && account.address) {
-                    popupControls.open({
-                        title: 'Wrong Network',
-                        component: WrongNetwork,
-                        props: {},
-                    });
-                }
-                if (
-                    signer.address &&
-                    account.address &&
-                    account.address.toLowerCase() !== signer.address.toLowerCase()
-                ) {
-                    clearSession();
-                }
+            const isPrivateKeySession = signer.privateKey !== undefined;
+
+            // Wrong network guard (only when an EOA is actually present)
+            if (account.chainId !== 100 && account.address) {
+                popupControls.open({
+                    title: 'Wrong Network',
+                    component: WrongNetwork,
+                    props: {},
+                });
+                return;
+            }
+
+            // Keep signer.address in sync with the current EOA for browser sessions
+            // (EOA != Safe; this is expected and NOT a reason to clear the session)
+            if (!isPrivateKeySession && account.address) {
+                signer.address = account.address.toLowerCase() as Address;
+                return;
+            }
+
+            // For private-key sessions, mismatch means "user switched account in wallet UI"
+            if (
+                isPrivateKeySession &&
+                signer.address &&
+                account.address &&
+                account.address.toLowerCase() !== signer.address.toLowerCase()
+            ) {
+                clearSession();
             }
         },
     });
+
 
     onDestroy(() => {
         unwatch();
@@ -186,26 +199,6 @@
     let hasToasts: boolean = $derived($tasks.length > 0);
 </script>
 
-{#if avatarState.avatar}
-    <div class="relative z-[60]">
-        <DefaultHeader
-                text={avatarState.profile?.name}
-                address={avatarState.avatar.address}
-                logo={avatarState.profile?.previewImageUrl?.trim()
-      ? avatarState.profile.previewImageUrl
-      : '/logo.svg'}
-                homeLink="/dashboard"
-                {quickAction}
-                route={$page.route.id}
-                {menuItems}
-        />
-    </div>
-{:else}
-    <div class="relative z-[60]">
-        <DefaultHeader quickAction={undefined} route={''} />
-    </div>
-{/if}
-
 <svelte:head>
     {#if browser && PUBLIC_PLAUSIBLE_DOMAIN}
         <script
@@ -235,7 +228,11 @@
             role="button"
             tabindex="0"
             class={`fixed top-0 left-0 w-full h-full bg-black/50 z-[90] ${$popupState.content ? 'opacity-100' : 'opacity-0 hidden'} transition duration-300 ease-in-out pointer-events-auto`}
+            style="touch-action: none;"
             onpointerdown={(e) => { e.stopPropagation(); e.preventDefault(); popupControls.close(); }}
+            onmousedown={(e) => { e.stopPropagation(); e.preventDefault(); popupControls.close(); }}
+            ontouchstart={(e) => { e.stopPropagation(); e.preventDefault(); popupControls.close(); }}
+            ontouchend={(e) => { e.stopPropagation(); e.preventDefault(); popupControls.close(); }}
             onclick={(e) => { e.stopPropagation(); e.preventDefault(); popupControls.close(); }}
             aria-hidden={$popupState.content ? 'false' : 'true'}
     ></div>
