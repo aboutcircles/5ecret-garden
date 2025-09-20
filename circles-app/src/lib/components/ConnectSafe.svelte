@@ -37,8 +37,22 @@
   }
 
   async function loadSafesAndProfile() {
-    safes = await querySafeTransactionService(safeOwnerAddress);
-    safes = safes.map((safe) => safe.toLowerCase() as Address);
+    const fetchedSafes = (await querySafeTransactionService(safeOwnerAddress)).map(
+      (safe) => safe.toLowerCase() as Address
+    );
+
+    // Preserve existing order to avoid list items jumping; append any new safes.
+    if (safes.length === 0) {
+      safes = fetchedSafes;
+    } else {
+      const existing = new Set(safes);
+      const merged = [...safes];
+      for (const s of fetchedSafes) {
+        if (!existing.has(s)) merged.push(s);
+      }
+      safes = merged;
+    }
+
     const [avatarInfo, groupInfo] = await Promise.all([
       sdk?.data?.getAvatarInfoBatch(safes) ?? [],
       getBaseAndCmgGroupsByOwnerBatch(sdk, safes),
@@ -70,7 +84,7 @@
     address={item}
     isRegistered={profileBySafe[item.toLowerCase()] !== undefined}
     isV1={profileBySafe[item]?.version === 1}
-    groups={groupsByOwner[item.toLowerCase() as Address] ?? []}
+    groups={groupsByOwner[item.toLowerCase()] ?? []}
     initSdk={initSdk}
     refreshGroupsCallback={refreshGroupsLocal}
   />
