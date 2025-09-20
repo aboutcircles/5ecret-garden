@@ -27,7 +27,7 @@
     } from '$lib/utils/vault';
     import CollateralTable from '$lib/components/CollateralTable.svelte';
     import {goto} from '$app/navigation';
-    import { avatarState } from '$lib/stores/avatar.svelte';
+    import {avatarState} from '$lib/stores/avatar.svelte';
 
     /* NEW: tabs */
     import Tabs from '$lib/components/tabs/Tabs.svelte';
@@ -241,9 +241,9 @@
 
     <div class="w-full flex justify-center mt-6 space-x-6">
         {#if !avatarState.isGroup}
-        <button
-                class="btn btn-primary text-white"
-                onclick={() => {
+            <button
+                    class="btn btn-primary text-white"
+                    onclick={() => {
                 popupControls.open({
                     title: 'Send Circles',
                     component: SelectAsset,
@@ -254,10 +254,10 @@
                     },
                 });
             }}
-        >
-            <img src="/send-new.svg" alt="Send" class="w-5 h-5"/>
-            Send
-        </button>
+            >
+                <img src="/send-new.svg" alt="Send" class="w-5 h-5"/>
+                Send
+            </button>
         {/if}
         {#if otherAvatar?.type === 'CrcV2_RegisterGroup' && !!mintHandler && !avatarState.isGroup}
             <button
@@ -352,7 +352,7 @@
 <Tabs
         id="profile-tabs"
         bind:selected={selectedTab}
-        variant="bordered"
+        variant="lifted"
         size="md"
         class="w-full p-0 mt-8"
         fitted={false}

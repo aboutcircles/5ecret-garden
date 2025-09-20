@@ -230,6 +230,9 @@
 </script>
 
 <div class="relative">
+    <!-- Full-width baseline under tabs -->
+    <div class="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-base-300 z-0"></div>
+
     <!-- Left gradient and scroll button -->
     <div class={`pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-base-100 to-transparent transition-opacity duration-150 ${canScrollLeft ? 'opacity-100' : 'opacity-0'}`}></div>
     <!-- Small bottom gradient under left glyph to avoid mixing with content below -->
