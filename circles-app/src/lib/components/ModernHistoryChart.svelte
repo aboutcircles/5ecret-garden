@@ -7,14 +7,15 @@
     dataSet2: Array<Record<string, any> & { timestamp: Date }>;
     title: string;
     label: string;
+    type?: 'line' | 'bar';
   }
 
-  let { dataSet1, dataSet2, title, label }: Props = $props();
+  let { dataSet1, dataSet2, title, label, type = 'line' }: Props = $props();
 
   let resolution: 'hour' | 'day' = $state('hour');
 
   let canvas: HTMLCanvasElement;
-  let chart: Chart<'line', { x: number; y: number }[]>;
+  let chart: Chart<'line' | 'bar', { x: number; y: number }[]>;
 
   $effect(() => {
     if (chart) updateChart();
@@ -91,7 +92,7 @@
 
   onMount(() => {
     chart = new Chart(canvas, {
-      type: 'line',
+      type: type,
       data: { datasets: [] },
       options: {
         responsive: true,

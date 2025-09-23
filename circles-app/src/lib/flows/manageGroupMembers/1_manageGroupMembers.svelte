@@ -9,6 +9,7 @@
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { ethers } from 'ethers';
   import type { Address } from '@circles-sdk/utils';
+  import Trust from "$lib/pages/Trust.svelte";
 
   let context: AddContactFlowContext = $state({
     selectedAddress: '',
@@ -16,44 +17,43 @@
 
   let addressesArray: string[] = $state([]);
   let errorMessage = $state('');
-  // TODO: Remove this?
+
   function oninvite(avatar: Address) {
     popupControls.open({
       title: 'Invite someone',
       component: Invite,
-      props: {
-        address: avatar,
-      },
+      props: { address: avatar },
+    });
+  }
+
+  function ontrust(avatar: Address) {
+    popupControls.open({
+      title: 'Trust',
+      component: Trust,
+      props: { address: avatar },
     });
   }
 
   let selectedAddresses = $state('');
   async function onselect(avatar: Address) {
-    // const existingContact = $contacts.data[address];
-
-    // if (!(
-    //   existingContact?.row?.objectAvatar === address &&
-    //   (existingContact.row.relation === 'trusts' ||
-    //     existingContact.row.relation === 'mutuallyTrusts')
-    // )) {
     const newAddress = avatar;
     const addressList = selectedAddresses.split(',').map((addr) => addr.trim());
-    if (!addressList.includes(newAddress)) {
-      selectedAddresses = selectedAddresses
-        ? `${selectedAddresses}, ${newAddress}`
-        : newAddress;
-      // }
+    const alreadySelected = addressList.includes(newAddress);
+
+    if (!alreadySelected) {
+      selectedAddresses = selectedAddresses ? `${selectedAddresses}, ${newAddress}` : newAddress;
       addressesArray = [...addressesArray, newAddress];
       context.selectedAddress = '0x0';
     }
   }
 
   function handleErrors(error: any) {
-    if (
+    const userRejected =
       error?.info?.error?.code === 4001 ||
       error?.message?.includes('user rejected') ||
-      error?.message?.includes('User denied transaction')
-    ) {
+      error?.message?.includes('User denied transaction');
+
+    if (userRejected) {
       errorMessage = 'Transaction was rejected';
       throw new Error('Transaction was rejected');
     }
@@ -87,9 +87,11 @@
     }
 
     try {
-      untrust
-        ? await avatarState.avatar?.untrust(addresses)
-        : await avatarState.avatar?.trust(addresses);
+      if (untrust) {
+        await avatarState.avatar?.untrust(addresses);
+      } else {
+        await avatarState.avatar?.trust(addresses);
+      }
       selectedAddresses = '';
     } catch (error: any) {
       handleErrors(error);
@@ -102,7 +104,6 @@
       .split(',')
       .map((addr) => addr.trim())
       .filter((addr) => addr);
-
     addressesArray = addresses;
   }
 
@@ -131,22 +132,22 @@
 </script>
 
 <FlowDecoration>
-  <h2 class="text-2xl font-bold">
-    Add or remove {avatarState.isGroup ? 'members' : 'contacts'}
-  </h2>
-  <div class="flex flex-row gap-x-1 justify-end items-center pb-1">
-    <p class="text-sm text-gray-500 text-right">
+  <div class="flex items-center justify-end gap-2 pb-1">
+    <div class="badge badge-ghost badge-sm">
       {addressesArray.length}
-      {addressesArray.length === 1 ? 'address' : 'addresses'}
-    </p>
+      {addressesArray.length === 1 ? ' address' : ' addresses'}
+    </div>
+
     <button
-      class="p-2 hover:bg-gray-100 rounded-full"
+      class="btn btn-ghost btn-circle btn-sm"
       onclick={() => {
         selectedAddresses = '';
         addressesArray = [];
       }}
+      aria-label="Clear addresses"
+      title="Clear addresses"
     >
-      <img class="w-2 h-2" src="/x-mark.svg" alt="Clear addresses" />
+      <img class="w-3 h-3" src="/x-mark.svg" alt="Clear" />
     </button>
   </div>
 
@@ -154,24 +155,28 @@
     bind:value={selectedAddresses}
     placeholder="Enter addresses separated by commas"
     rows="3"
-    class="w-full p-2 mb-4 border rounded resize-y"
+    class="textarea textarea-bordered w-full mb-4 resize-y"
     oninput={handleAddressesChange}
   ></textarea>
+
   <div class="flex flex-row gap-x-2">
     <div class="flex flex-col gap-x-2">
       <div class="flex flex-row gap-x-2">
-        <ActionButton action={() => handleAddMembers(selectedAddresses, false)}
-          >{avatarState.isGroup ? 'Add' : 'Trust'}</ActionButton
-        >
-        <ActionButton action={() => handleAddMembers(selectedAddresses, true)}
-          >{avatarState.isGroup ? 'Remove' : 'Untrust'}</ActionButton
-        >
+        <ActionButton action={() => handleAddMembers(selectedAddresses, false)}>
+          {avatarState.isGroup ? 'Add' : 'Trust'}
+        </ActionButton>
+
+        <ActionButton action={() => handleAddMembers(selectedAddresses, true)}>
+          {avatarState.isGroup ? 'Remove' : 'Untrust'}
+        </ActionButton>
       </div>
-      <p class="text-sm text-red-500 h-6">{errorMessage}</p>
+
+      <p class="text-sm text-error h-6">{errorMessage}</p>
     </div>
 
     <div class="flex-grow"></div>
-    <label class="cursor-pointer">
+
+    <label class="btn btn-outline btn-sm cursor-pointer">
       Import CSV
       <input
         type="file"
@@ -182,11 +187,15 @@
     </label>
   </div>
 
-  <p class="text-xl font-bold mt-4">Search for {avatarState.isGroup ? 'members' : 'contacts'}</p>
+  <p class="text-xl font-bold mt-4">
+    Search for {avatarState.isGroup ? 'members' : 'contacts'}
+  </p>
+
   <SearchAvatar
     selectedAddress={context.selectedAddress}
     {oninvite}
     {onselect}
+    {ontrust}
     searchType="contact"
   />
 </FlowDecoration>

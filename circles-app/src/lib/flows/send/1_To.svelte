@@ -45,8 +45,8 @@
 </script>
 
 <FlowDecoration>
-  <p class="text-2xl font-bold">Send Circles</p>
   <SearchAvatar
+    avatarTypes={["CrcV2_RegisterHuman","CrcV2_RegisterOrganization"]}
     selectedAddress={context.selectedAddress}
     {onselect}
     searchType="send"

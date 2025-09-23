@@ -4,7 +4,7 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import QrCode from '$lib/components/QrCode.svelte';
   import { popupControls } from '$lib/stores/popUp';
-  import { CirclesStorage } from '$lib/utils/storage';
+  import { signer } from '$lib/stores/wallet.svelte';
 
   interface Props {
     address: Address | undefined;
@@ -15,21 +15,9 @@
   function changeWallet() {
     popupControls.close();
 
-    const walletType = CirclesStorage.getInstance().walletType;
-    switch (walletType) {
-      case 'metamask':
-      case 'metamask+group':
-        goto('/connect-wallet/connect-metamask');
-        break;
-      case 'safe':
-      case 'safe+group':
-        goto('/connect-wallet/connect-safe');
-        break;
-      case 'circles':
-      case 'circles+group':
-        goto('/connect-wallet/import-circles-garden');
-        break;
-    }
+    signer.privateKey
+      ? goto('/connect-wallet/import-circles-garden')
+      : goto('/connect-wallet/connect-safe');
   }
 </script>
 
@@ -42,9 +30,8 @@
     <button
       onclick={changeWallet}
       class="btn btn-sm btn-outline btn-primary text-primary hover:text-white"
-    >Change Avatar
-    </button
-    >
+      >Change Avatar
+    </button>
   </div>
 
   <div class="shadow-lg rounded-lg">

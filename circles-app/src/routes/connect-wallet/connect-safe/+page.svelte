@@ -1,60 +1,122 @@
 <script lang="ts">
   import ConnectSafe from '$lib/components/ConnectSafe.svelte';
-  import { GNOSIS_CHAIN_ID_DEC, initializeWallet, wallet } from '$lib/stores/wallet.svelte';
-  import { circles } from '$lib/stores/circles';
+  import {
+    clearSession,
+    getSigner,
+    initBrowserProviderContractRunner,
+    initSafeSdkBrowserContractRunner,
+    signer,
+    wallet,
+  } from '$lib/stores/wallet.svelte';
+  import type { Address } from '@circles-sdk/utils';
+  import WalletLoader from '$lib/components/WalletLoader.svelte';
+  import { type AvatarRow, type GroupRow } from '@circles-sdk/data';
+  import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
+  import ConnectCircles from '$lib/components/ConnectCircles.svelte';
+  import SettingsDropdown from '$lib/components/SettingsDropdown.svelte';
+  import { settings } from '$lib/stores/settings.svelte';
   import { onMount } from 'svelte';
-  import { getCirclesConfig } from '$lib/utils/helpers.js';
+  import { gnosisConfig } from '$lib/circlesConfig';
   import { Sdk } from '@circles-sdk/sdk';
-  import { switchOrAddGnosisNetwork } from '$lib/utils/network';
-  import { CirclesStorage } from '$lib/utils/storage';
-  import { environment } from '$lib/stores/environment.svelte';
-
-  let initialized: boolean | undefined = $state();
-
-  async function setup(callNo = 0) {
-    if (CirclesStorage.getInstance().walletType != 'safe') {
-      CirclesStorage.getInstance().data = {
-        avatar: undefined,
-        group: undefined,
-      };
-    }
-    $wallet = await initializeWallet('safe');
-
-    const network = await ($wallet as any).provider?.getNetwork();
-    if (!network) {
-      throw new Error('Failed to get network');
-    }
-
-    if (callNo > 2) {
-      return;
-    }
-
-    // If we're on the wrong network, attempt to switch
-    if (![GNOSIS_CHAIN_ID_DEC].includes(network.chainId)) {
-      await switchOrAddGnosisNetwork();
-      await setup(callNo++);
-      return;
-    }
-
-    // Initialize the Circles SDK and set it as $circles to make it globally available.
-    const circlesConfig = await getCirclesConfig(network.chainId, environment.ring);
-    $circles = new Sdk($wallet!, circlesConfig);
-
-    CirclesStorage.getInstance().data = {
-      walletType: 'safe',
-    };
-  }
+  import type { SdkContractRunner } from '@circles-sdk/adapter';
+  import { circles } from '$lib/stores/circles';
+  let groupsByOwner: Record<Address, GroupRow[]> | undefined = $state();
+  let avatarInfo: AvatarRow | undefined = $state();
+  let runner: SdkContractRunner | undefined = $state();
 
   onMount(async () => {
-    $wallet = undefined;
-    await setup();
-    initialized = true;
+      try {
+          // Try to recover an EOA if wagmi already has one
+          signer.address = await getSigner();
+
+          // Always prepare a browser runner; it will trigger the wallet when needed
+          runner = await initBrowserProviderContractRunner();
+      } catch (err) {
+          // Do not clear/redirect here; let the user continue to the connect UI
+          console.error('connect-safe onMount init failed:', err);
+          runner = undefined;
+      }
   });
 
+  async function connectLegacy(address: Address) {
+    runner = await initBrowserProviderContractRunner();
+    wallet.set(runner);
+    return new Sdk(
+      runner,
+      settings.ring ? gnosisConfig.rings : gnosisConfig.production
+    );
+  }
+
+  async function connectSafe(address: Address) {
+    runner = await initSafeSdkBrowserContractRunner(address);
+    wallet.set(runner);
+    return new Sdk(
+      runner,
+      settings.ring ? gnosisConfig.rings : gnosisConfig.production
+    );
+  }
+
+  $effect(() => {
+    circles.set(
+      runner
+        ? new Sdk(
+            runner,
+            settings.ring ? gnosisConfig.rings : gnosisConfig.production
+          )
+        : undefined
+    );
+  });
+
+  $effect(() => {
+    (async () => {
+      if (!signer.address || !$circles) return;
+      groupsByOwner = await getBaseAndCmgGroupsByOwnerBatch($circles, [
+        signer.address,
+      ]);
+      avatarInfo = await $circles.data.getAvatarInfo(signer.address);
+    })();
+  });
+
+  function goBack(): void {
+    history.back();
+  }
+
+  async function refreshGroups() {
+      if (!signer.address || !$circles) return;
+      groupsByOwner = await getBaseAndCmgGroupsByOwnerBatch($circles, [
+          signer.address,
+      ]);
+  }
 </script>
 
-{#if !initialized}
-  Loading...
-{:else}
-  <ConnectSafe safeOwnerAddress={$wallet?.address} chainId={100n} walletType="safe" />
-{/if}
+<div class="page page-pt page-stack page--lg">
+  <div class="toolbar">
+    <button type="button" class="back-btn" aria-label="Back" onclick={goBack}>
+      <img src="/arrow-left.svg" alt="Back" class="icon mr-4" />
+        <h1 class="h2">Select Account</h1>
+    </button>
+    <div class="flex-grow"></div>
+<!--    <SettingsDropdown />-->
+  </div>
+
+  <p class="muted">Please select the account you want to use from the list below.</p>
+
+  {#if !signer.address || !$circles}
+    <WalletLoader />
+  {:else if settings.legacy}
+    <ConnectCircles
+      address={signer.address}
+      isRegistered={avatarInfo !== undefined}
+      groups={groupsByOwner?.[signer.address] ?? []}
+      initSdk={connectLegacy}
+      refreshGroupsCallback={refreshGroups}
+    />
+  {:else if $circles}
+    <ConnectSafe
+      safeOwnerAddress={signer.address}
+      initSdk={connectSafe}
+      sdk={$circles}
+      refreshGroupsCallback={refreshGroups}
+    />
+  {/if}
+</div>
