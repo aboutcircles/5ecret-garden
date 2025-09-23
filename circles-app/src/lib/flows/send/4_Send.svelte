@@ -7,7 +7,7 @@
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { tokenTypeToString, TransitiveTransferTokenAddress } from '$lib/pages/SelectAsset.svelte';
   import { popupControls } from '$lib/stores/popUp';
-  import { tcToCrc } from '@circles-sdk/utils';
+  import { CirclesConverter } from '@circles-sdk/utils';
   import { parseEther } from 'ethers';
 
   interface Props {
@@ -54,9 +54,9 @@
       }
     }
 
-    let amountToSend: bigint = context.selectedAsset.version === 1
-      ? tcToCrc(new Date(), context.amount)
-      : parseEther(context.amount.toString());
+    // let amountToSend: bigint = context.selectedAsset.version === 1
+    //   ? tcToCrc(new Date(), context.amount)
+    //   : parseEther(context.amount.toString());
 
     runTask({
       name: `Send ${roundToDecimals(context.amount)} ${tokenTypeToString(context.selectedAsset.tokenType)} to ${shortenAddress(context.selectedAddress)}...`,
@@ -65,7 +65,8 @@
           ? avatarState.avatar.transfer(context.selectedAddress, context.amount, undefined, dataUInt8Arr, true)
           : avatarState.avatar.transfer(
             context.selectedAddress,
-            amountToSend,
+            context.amount,
+            // amountToSend,
             context.selectedAsset.tokenAddress,
             dataUInt8Arr,
             true
@@ -77,7 +78,6 @@
 </script>
 
 <FlowDecoration>
-  <p class="text-2xl font-bold">Confirm Transaction</p>
   <Send
     asset={context.selectedAsset}
     amount={context.amount}

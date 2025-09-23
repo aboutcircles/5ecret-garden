@@ -1,68 +1,88 @@
 <script lang="ts">
-  import { initializeWallet, wallet } from '$lib/stores/wallet.svelte';
+  import {
+    clearSession,
+    getSignerFromPk,
+    initPrivateKeyContractRunner,
+    initSafeSdkPrivateKeyContractRunner,
+    signer,
+    wallet,
+  } from '$lib/stores/wallet.svelte';
   import { circles } from '$lib/stores/circles';
   import { Sdk } from '@circles-sdk/sdk';
-  import { gnosisConfig } from '$lib/circlesConfig';
-  import SeedphraseInput from '$lib/components/SeedphraseInput.svelte';
   import { onMount } from 'svelte';
   import ConnectSafe from '$lib/components/ConnectSafe.svelte';
-  import { CirclesStorage } from '$lib/utils/storage';
-  import { getCirclesConfig } from '$lib/utils/helpers';
-  import { environment } from '$lib/stores/environment.svelte';
+  import { settings } from '$lib/stores/settings.svelte';
+  import { gnosisConfig } from '$lib/circlesConfig';
+  import type { SdkContractRunner } from '@circles-sdk/adapter';
+  import type { Address } from '@circles-sdk/utils';
+  import WalletLoader from '$lib/components/WalletLoader.svelte';
+  import SettingsDropdown from '$lib/components/SettingsDropdown.svelte';
 
-  let mnemonicPhrase: string = $state('');
-  let hasValidKey = $state(false);
-  let privateKey: string = $state('');
-  let address = $state('');
+  let runner: SdkContractRunner | undefined = $state();
 
-  async function connectWallet() {
-    CirclesStorage.getInstance().data = {
-      privateKey: privateKey,
-      walletType: 'circles'
-    };
-    $wallet = await initializeWallet('circles');
-    const network = await ($wallet as any).provider?.getNetwork();
-    const circlesConfig = await getCirclesConfig(network.chainId, environment.ring);
-    $circles = new Sdk($wallet!, circlesConfig);
+  $effect(() => {
+    circles.set(
+      runner
+        ? new Sdk(
+            runner,
+            settings.ring ? gnosisConfig.rings : gnosisConfig.production
+          )
+        : undefined
+    );
+  });
+
+  async function connectCirclesGarden(address: Address) {
+    if (!signer.privateKey) {
+      throw new Error('No private key found');
+    }
+    runner = await initSafeSdkPrivateKeyContractRunner(
+      signer.privateKey,
+      address
+    );
+    wallet.set(runner);
+
+    return new Sdk(
+      runner,
+      settings.ring ? gnosisConfig.rings : gnosisConfig.production
+    );
   }
 
   onMount(async () => {
-    $wallet = undefined;
-    privateKey = CirclesStorage.getInstance().privateKey ?? "";
-    if (privateKey) {
-      CirclesStorage.getInstance().data = {
-        walletType: 'circles'
-      };
-      $wallet = await initializeWallet('circles');
-    const network = await ($wallet as any).provider?.getNetwork();
-    const circlesConfig = await getCirclesConfig(network.chainId, environment.ring);
-      $circles = new Sdk($wallet!, circlesConfig);
+    const { address, privateKey } = (await getSignerFromPk()) ?? {};
+    if (!address || !privateKey) {
+      await clearSession();
+      return;
     }
+
+    signer.address = address;
+    signer.privateKey = privateKey;
+    runner = await initPrivateKeyContractRunner(privateKey);
   });
+
+  function goBack(): void {
+    history.back();
+  }
 </script>
 
-<div
-  class="w-full flex flex-col items-center min-h-screen max-w-5xl gap-y-8 mt-20"
->
-  {#if !$wallet?.address || !$circles}
-    <h2 class="font-bold text-[28px] md:text-[32px]">
-      Import circles.garden keyphrase
-    </h2>
-    <p class="font-normal text-black/60 text-base">
-      Please enter or paste your keyphrase from circles.garden below.
-    </p>
-    <SeedphraseInput
-      bind:isValidMnemonic={hasValidKey}
-      bind:privateKey
-      bind:mnemonicPhrase
-      bind:address
-    />
-    <button
-      onclick={connectWallet}
-      class="btn btn-sm"
-      class:btn-disabled={!hasValidKey}>Import
+<div class="page page-pt page-stack page--md">
+  <div class="toolbar">
+    <button type="button" class="back-btn" aria-label="Back" onclick={goBack}>
+      <img src="/arrow-left.svg" alt="Back" class="icon" />
     </button>
-  {:else}
-    <ConnectSafe safeOwnerAddress={$wallet?.address} chainId={100n} walletType="circles" />
+    <div class="flex-grow"></div>
+    <SettingsDropdown />
+  </div>
+
+  <h1 class="h2">Select Account</h1>
+  <p class="muted">Please select the account you want to use from the list below.</p>
+
+  {#if !signer.address || !$circles}
+    <WalletLoader />
+  {:else if $circles}
+    <ConnectSafe
+      safeOwnerAddress={signer.address}
+      initSdk={connectCirclesGarden}
+      sdk={$circles}
+    />
   {/if}
 </div>

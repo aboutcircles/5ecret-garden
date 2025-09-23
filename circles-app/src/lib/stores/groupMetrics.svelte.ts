@@ -11,7 +11,7 @@ type memberCount = {
 type mintRedeem = {
     timestamp: Date;
     minted: number;
-    redeemed: number;
+    burned: number;
     supply: number;
 }
 
@@ -33,6 +33,7 @@ export type GroupMetrics = {
     erc20Token?: Address;
     priceHistoryWeek?: Array<{ timestamp: Date; price: number }>;
     priceHistoryMonth?: Array<{ timestamp: Date; price: number }>;
+    affiliateMembersCount?: number;
 }
 
 export let groupMetrics: GroupMetrics = $state({});
@@ -42,15 +43,33 @@ export async function fetchGroupMetrics(
     groupAddress: Address,
     target: GroupMetrics
 ): Promise<void> {
-    getMemberCount(circlesRpc, groupAddress, 'hour', '7 days').then(r => target.memberCountPerHour = r);
-    getMemberCount(circlesRpc, groupAddress, 'day', '30 days').then(r => target.memberCountPerDay = r);
-    getMintRedeem(circlesRpc, groupAddress, 'hour', '7 days').then(r => target.mintRedeemPerHour = r);
-    getMintRedeem(circlesRpc, groupAddress, 'day', '30 days').then(r => target.mintRedeemPerDay = r);
-    getWrapUnwrap(circlesRpc, groupAddress, 'hour', '7 days').then(r => target.wrapUnwrapPerHour = r);
-    getWrapUnwrap(circlesRpc, groupAddress, 'day', '30 days').then(r => target.wrapUnwrapPerDay = r);
-    getCollateralInTreasury(circlesRpc, groupAddress).then(r => target.collateralInTreasury = r);
-    getGroupTokenHoldersBalance(circlesRpc, groupAddress).then(r => target.tokenHolderBalance = r);
-
+    getMemberCount(circlesRpc, groupAddress, 'hour', '7 days').then(r => {
+        target.memberCountPerHour = r
+    });
+    getMemberCount(circlesRpc, groupAddress, 'day', '30 days').then(r => {
+        target.memberCountPerDay = r
+    });
+    getMintRedeem(circlesRpc, groupAddress, 'hour', '7 days').then(r => {
+        target.mintRedeemPerHour = r
+    });
+    getMintRedeem(circlesRpc, groupAddress, 'day', '30 days').then(r => {
+        target.mintRedeemPerDay = r
+    });
+    getWrapUnwrap(circlesRpc, groupAddress, 'hour', '7 days').then(r => {
+        target.wrapUnwrapPerHour = r
+    });
+    getWrapUnwrap(circlesRpc, groupAddress, 'day', '30 days').then(r => {
+        target.wrapUnwrapPerDay = r
+    });
+    getCollateralInTreasury(circlesRpc, groupAddress).then(r => {
+        target.collateralInTreasury = r
+    });
+    getGroupTokenHoldersBalance(circlesRpc, groupAddress).then(r => {
+        target.tokenHolderBalance = r
+    });
+    countCurrentAffiliateMembers(circlesRpc, groupAddress).then(r => {
+        target.affiliateMembersCount = r
+    });
     const token = await getERC20Token(circlesRpc, groupAddress);
     target.erc20Token = token;
 
@@ -61,12 +80,12 @@ export async function fetchGroupMetrics(
             fetch(`${base}&period=30 days&resolution=day`).then(r => r.ok ? r.json() : []),
         ]);
 
-        target.priceHistoryWeek = week.map((p: { timestamp: string; price: string }) => ({
+        target.priceHistoryWeek = week?.map((p: { timestamp: string; price: string }) => ({
             timestamp: new Date(p.timestamp),
             price: Number(p.price)
         }));
 
-        target.priceHistoryMonth = month.map((p: { timestamp: string; price: string }) => ({
+        target.priceHistoryMonth = month?.map((p: { timestamp: string; price: string }) => ({
             timestamp: new Date(p.timestamp),
             price: Number(p.price)
         }));
@@ -105,11 +124,17 @@ async function getMemberCount(
                     Value: groupAddress.toLowerCase(),
                 }
             ],
+            Order: [
+                {
+                    Column: 'timestamp',
+                    SortOrder: 'DESC'
+                },
+            ],
             Limit: limit
         },
     ]);
 
-    return result.result.rows.map(([_, ts, v]) => ({
+    return result.result.rows.reverse().map(([_, ts, v]) => ({
         timestamp: new Date(ts),
         count: Number(v),
     }));
@@ -139,14 +164,20 @@ async function getMintRedeem(
                     Value: groupAddress.toLowerCase(),
                 }
             ],
+            Order: [
+                {
+                    Column: 'timestamp',
+                    SortOrder: 'DESC'
+                },
+            ],
             Limit: limit
         },
     ]);
 
-    return result.result.rows.map(([_, ts, m, r, s]) => ({
+    return result.result.rows.reverse().map(([_, ts, m, r, s]) => ({
         timestamp: new Date(ts),
         minted: Number(formatEther(m)),
-        redeemed: Number(formatEther(r)),
+        burned: Number(-formatEther(r)),
         supply: Number(formatEther(s)),
     }));
 }
@@ -175,14 +206,20 @@ async function getWrapUnwrap(
                     Value: groupAddress.toLowerCase(),
                 }
             ],
+            Order: [
+                {
+                    Column: 'timestamp',
+                    SortOrder: 'DESC'
+                },
+            ],
             Limit: limit,
         },
     ]);
 
-    return result.result.rows.map(([_, ts, ta, tt, w, u]) => ({
+    return result.result.rows.reverse().map(([_, ts, ta, tt, w, u]) => ({
         timestamp: new Date(ts),
         wrapAmount: Number(formatEther(w)),
-        unwrapAmount: Number(formatEther(u))
+        unwrapAmount: Number(-formatEther(u))
     }));
 }
 
@@ -200,7 +237,7 @@ async function getCollateralInTreasury(
         groupAddress
     );
 
-    const balancesResult = await getGroupCollateral(
+    let balancesResult = await getGroupCollateral(
         circlesRpc,
         vaultAddress ?? treasuryAddress ?? ''
     );
@@ -305,4 +342,80 @@ async function getERC20Token(
     ]);
 
     return result.result.rows[1][7];
+}
+
+export async function countCurrentAffiliateMembers(
+    circlesRpc: CirclesRpc,
+    groupAddress: Address
+): Promise<number> {
+    const seen = new Set<string>();
+    let count = 0;
+
+    let cursor: string | undefined = undefined;
+    let hasMore = true;
+
+    while (hasMore) {
+
+        const queryPayload: any = {
+            Namespace: 'CrcV2',
+            Table: 'AffiliateGroupChanged',
+            Columns: ['human', 'newGroup', 'oldGroup', 'timestamp'],
+            Filter: [{
+                Type: 'Conjunction',
+                ConjunctionType: 'Or',
+                Predicates: [
+                    {
+                        Type: 'FilterPredicate',
+                        FilterType: 'Equals',
+                        Column: 'oldGroup',
+                        Value: groupAddress.toLowerCase(),
+                    },
+                    {
+                        Type: 'FilterPredicate',
+                        FilterType: 'Equals',
+                        Column: 'newGroup',
+                        Value: groupAddress.toLowerCase(),
+                    },
+                ],
+            }],
+            Order: [
+                {
+                    Column: 'timestamp',
+                    SortOrder: 'DESC'
+                },
+            ],
+            Limit: 1000,
+        };
+
+        if (cursor) {
+            queryPayload.Cursor = cursor;
+        }
+
+        const resp = await circlesRpc.call<{
+            columns: string[];
+            rows: any[][];
+            cursor?: string;
+            hasMore?: boolean;
+        }>('circles_query', [queryPayload]);
+
+        const { rows, cursor: nextCursor, hasMore: more } = resp.result;
+
+        for (const row of rows) {
+            const human = (row[0] as string).toLowerCase();
+            if (seen.has(human)) continue;
+
+            seen.add(human);
+
+            const rowNewGroup = (row[1] as string).toLowerCase();
+            const rowOldGroup = (row[2] as string).toLowerCase();
+            if (rowNewGroup === groupAddress.toLowerCase() && rowOldGroup !== groupAddress.toLowerCase()) {
+                count++;
+            }
+        }
+
+        hasMore = Boolean(more);
+        cursor = nextCursor;
+    }
+
+    return count;
 }

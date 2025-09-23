@@ -11,7 +11,10 @@
   import GroupSetting from './editors/GroupSetting.svelte';
   import { ethers } from 'ethers';
   import ProfileEditor from '$lib/components/ProfileEditor.svelte';
-  import { profilesEqual } from '$lib/utils/profile';
+  import { FallbackImageUrl, profilesEqual } from '$lib/utils/profile';
+  import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
+  import Lucide from '$lib/icons/Lucide.svelte';
+  import { Save as LSave, LogOut as LLogOut } from 'lucide';
 
   async function saveProfileData(profile: Profile): Promise<string> {
     if (!$circles?.profiles) {
@@ -64,6 +67,12 @@
   });
 
   async function saveProfile() {
+    if (!newProfile) {
+      return;
+    }
+    if (newProfile.previewImageUrl && Object.values(FallbackImageUrl).includes(newProfile.previewImageUrl as FallbackImageUrl)) {
+      newProfile.previewImageUrl = '';
+    }
     const cid = await saveProfileData(newProfile!);
 
     const tx = await runTask({
@@ -78,10 +87,45 @@
       }),
     });
   }
+
+  let saveDisabled: boolean = $derived(avatarState.avatar?.avatarInfo?.version !== 2 || profilesEqual(newProfile, avatarState.profile));
+
+  type Action = { id: string; label: string; iconNode: any; onClick: () => void; variant: 'primary'|'ghost' };
+  const actions: Action[] = [
+    { id: 'save', label: 'Save', iconNode: LSave, onClick: saveProfile, variant: 'primary' },
+    { id: 'disconnect', label: 'Disconnect', iconNode: LLogOut, onClick: clearSession, variant: 'ghost' },
+  ];
 </script>
 
-<div class="flex flex-col w-full max-w-2xl gap-y-4 mt-20">
-  <p class="font-bold text-2xl">Settings</p>
+<PageScaffold highlight="soft" collapsedMode="bar" collapsedHeightClass="h-12" maxWidthClass="page page--lg" contentWidthClass="page page--lg" usePagePadding={true} headerTopGapClass="mt-4 md:mt-6" collapsedTopGapClass="mt-3 md:mt-4">
+  <svelte:fragment slot="title">
+    <h1 class="h2">Settings</h1>
+  </svelte:fragment>
+  <svelte:fragment slot="meta">
+    Profile, wallet, migration
+  </svelte:fragment>
+  <svelte:fragment slot="actions">
+    {#each actions as a (a.id)}
+      <button type="button" class={`btn btn-sm ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'}`} onclick={a.onClick} aria-label={a.label} disabled={a.id === 'save' ? saveDisabled : false}>
+        <Lucide icon={a.iconNode} size={16} class={a.variant === 'primary' ? 'shrink-0 stroke-white' : 'shrink-0 stroke-black'} />
+        <span>{a.label}</span>
+      </button>
+    {/each}
+  </svelte:fragment>
+    <svelte:fragment slot="collapsed-left">
+  <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">
+      Settings
+  </span>
+    </svelte:fragment>
+  <svelte:fragment slot="collapsed-menu">
+    {#each actions as a (a.id)}
+      <button type="button" class={`btn ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'} min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3`} onclick={a.onClick} aria-label={a.label} disabled={a.id === 'save' ? saveDisabled : false}>
+        <Lucide icon={a.iconNode} size={20} class={a.variant === 'primary' ? 'shrink-0 stroke-white' : 'shrink-0 stroke-black'} />
+        <span>{a.label}</span>
+      </button>
+    {/each}
+  </svelte:fragment>
+
   <div
     class="flex flex-col items-center md:border rounded-lg md:px-6 md:py-8 gap-y-4"
   >
@@ -91,15 +135,6 @@
         showCustomizableFields={avatarState.avatar?.avatarInfo?.version === 2}
       />
 
-      {#if avatarState.avatar?.avatarInfo?.version === 2}
-        <div>
-          <ActionButton
-            action={saveProfile}
-            disabled={profilesEqual(newProfile, avatarState.profile)}
-            >Save
-          </ActionButton>
-        </div>
-      {/if}
     </div>
 
     {#if avatarState.isGroup}
@@ -131,12 +166,5 @@
         </div>
       {/if}
     {/if}
-
-    <div class="w-full pt-2 border-t">
-      <h2 class="text-lg font-medium">Wallet</h2>
-      <div class="mt-3">
-        <ActionButton action={clearSession}>Disconnect</ActionButton>
-      </div>
-    </div>
   </div>
-</div>
+</PageScaffold>

@@ -35,6 +35,5 @@
 </script>
 
 <FlowDecoration>
-  <p class="text-2xl font-bold">Select Asset</p>
   <SelectAsset {selectedAsset} balances={circlesBalances} {onselect} />
 </FlowDecoration>

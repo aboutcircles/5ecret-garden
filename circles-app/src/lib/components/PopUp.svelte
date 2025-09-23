@@ -1,64 +1,103 @@
+<!-- src/lib/components/PopUp.svelte -->
 <script lang="ts">
-  import { popupControls, popupState } from '$lib/stores/popUp';
+    import { popupControls, popupState } from '$lib/stores/popUp';
+    import Lucide from '$lib/icons/Lucide.svelte';
+    import { ArrowLeft as LArrowLeft, X as LX } from 'lucide';
+
+    function handleKeydown(e: KeyboardEvent) {
+        if (e.key === 'Escape' && $popupState.content) popupControls.close();
+    }
+
+    function onClose() {
+        if ($popupState.stack.length > 0) popupControls.back();
+        else popupControls.close();
+    }
+
+    // Keep *all* pages mounted: stack + current
+    let pages = $derived([
+        ...($popupState.stack ?? []),
+        ...($popupState.content ? [$popupState.content] : [])
+    ]);
+
+    let top = $derived(Math.max(0, pages.length - 1));
+
+    // Guarantee keys are unique and stable per page object
+    const _ids = new WeakMap<any, string>();
+    let _seq = 0;
+    function keyFor(page: any): string {
+        if (page?.key != null) return String(page.key);
+        if (page?.id != null) return String(page.id);
+        const got = _ids.get(page);
+        if (got) return got;
+        const id = `pg-auto-${++_seq}`;
+        _ids.set(page, id);
+        return id;
+    }
 </script>
 
+<svelte:window onkeydown={handleKeydown} />
+
 <div
-  class="popup rounded-t-lg overflow-y-auto"
-  class:open={$popupState.content !== null}
-  role="dialog"
-  aria-modal="true"
+        class="popup rounded-t-lg overflow-y-auto"
+        class:open={$popupState.content !== null}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="popup-title"
 >
-  <div class="w-full p-4 sm:w-[90%] lg:w-3/5 relative">
-    <div class="absolute left-4 top-4">
-      <button
-        class="flex w-fit rounded-lg p-2 bg-gray-100"
-        onclick={() => {
-          $popupState.stack.length > 0
-            ? popupControls.back()
-            : popupControls.close();
-        }}
-      >
-        <img
-          alt={$popupState.stack.length > 0 ? 'Back' : 'Close'}
-          src={$popupState.stack.length > 0 ? '/arrow-left.svg' : '/close.svg'}
-          class="w-4 h-4"
-        />
-      </button>
-    </div>
-    <div class="content mt-2 w-full">
-      {#if $popupState.content}
-        {@const SvelteComponent = $popupState.content.component}
-        <div class="mt-14">
-          <SvelteComponent
-            {...$popupState.content.props}
-          />
+    <div class="w-full max-w-4xl mx-auto p-6">
+        <!-- Header -->
+        <div class="flex items-center gap-3 mb-4">
+            <button
+                    class="btn btn-ghost btn-circle btn-sm"
+                    onclick={onClose}
+                    aria-label={$popupState.stack.length > 0 ? 'Back' : 'Close'}
+                    title={$popupState.stack.length > 0 ? 'Back' : 'Close'}
+            >
+                <Lucide
+                        icon={$popupState.stack.length > 0 ? LArrowLeft : LX}
+                        size={16}
+                        class="shrink-0 stroke-black"
+                        ariaLabel=""
+                />
+            </button>
+
+            {#if $popupState.content?.title}
+                <h2 id="popup-title" class="text-xl font-bold">
+                    {$popupState.content.title}
+                </h2>
+            {/if}
         </div>
-      {/if}
+
+        <!-- Content: render the whole stack; only top is visible -->
+        <div class="content w-full relative">
+            {#each pages as page, i (keyFor(page))}
+                <div
+                        class={`popup-page ${i === top ? 'is-top' : 'is-hidden'}`}
+                        aria-hidden={i === top ? 'false' : 'true'}
+                        inert={i !== top}
+                >
+                    <svelte:component this={page.component} {...page.props} />
+                </div>
+            {/each}
+        </div>
     </div>
-  </div>
 </div>
 
 <style>
-  .popup {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    max-height: 80%;
-    min-height: 80%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: white;
-    transition:
-      transform 0.3s ease,
-      opacity 0.3s ease;
-    transform: translateY(100%);
-    opacity: 0;
-    z-index: 20;
-  }
-  .popup.open {
-    transform: translateY(0);
-    opacity: 1;
-  }
+    .popup {
+        position: fixed;
+        bottom: 0; left: 0; width: 100%;
+        max-height: 80%; min-height: 80%;
+        display: flex; flex-direction: column; align-items: center;
+        background: white;
+        transition: transform .3s ease, opacity .3s ease;
+        transform: translateY(100%); opacity: 0;
+        z-index: 100;
+    }
+    .popup.open { transform: translateY(0); opacity: 1; }
+
+    /* Keep instances mounted; hide non-top pages */
+    .popup-page { position: relative; }
+    .popup-page.is-hidden { display: none; }
+    .popup-page.is-top { display: block; }
 </style>
