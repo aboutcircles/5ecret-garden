@@ -38,7 +38,7 @@
   import WrongNetwork from '$lib/components/WrongNetwork.svelte';
   import BottomNav from '$lib/components/BottomNav.svelte';
   import type { Address } from '@circles-sdk/utils';
-  import Footer from '$lib/components/Footer.svelte';
+  import DefaultHeader from './DefaultHeader.svelte';
 
   const unwatch = watchAccount(config, {
     onChange(account) {
@@ -83,72 +83,7 @@
 
   let { children }: Props = $props();
 
-  let quickActionsMap: Record<string, QuickAction | undefined> = $derived({
-    '/dashboard': {
-      name: 'Send',
-      icon: '/send.svg',
-      action: avatarState.isGroup
-        ? undefined
-        : () => {
-            popupControls.open({
-              title: 'Send Circles',
-              component: Send,
-              props: {},
-            });
-          },
-    },
-    '/contacts': {
-      name: avatarState.isGroup ? 'Manage members' : 'Add Contact',
-      icon: '/add-contact.svg',
-      action: () => {
-        if (avatarState.isGroup) {
-          popupControls.open({
-            title: 'Manage members',
-            component: ManageGroupMembers,
-            props: {},
-          });
-        } else {
-          popupControls.open({
-            title: 'Add Contact',
-            component: ManageGroupMembers,
-            props: {},
-          });
-        }
-      },
-    },
-    '/groups': {
-      name: 'Send',
-      icon: '/send.svg',
-      action: avatarState.isGroup
-        ? undefined
-        : () => {
-            popupControls.open({
-              title: 'Send Circles',
-              component: Send,
-              props: {},
-            });
-          },
-    },
-    '/register': {
-      name: 'Disconnect',
-      icon: '',
-      action: () => {
-        clearSession();
-      },
-    },
-    '/settings': {
-      name: 'Disconnect',
-      icon: '',
-      action: () => {
-        clearSession();
-      },
-    },
-  });
   let menuItems: { name: string; link: string }[] = $state([]);
-
-  let quickAction: QuickAction | undefined = $derived(
-    quickActionsMap[$page.route.id ?? ''] || undefined
-  );
 
   onMount(async () => {
     if (
@@ -212,8 +147,14 @@
   {/if}
 </svelte:head>
 
+{#if avatarState.avatar}
+  <DefaultHeader homeLink="/dashboard" />
+{:else}
+  <DefaultHeader homeLink="/" />
+{/if}
+
 <main
-  class="relative w-full min-h-screen bg-base-200 border-gray-200 overflow-hidden font-dmSans"
+  class="relative w-full min-h-screen bg-base-200 border-gray-200 overflow-hidden font-dmSans pt-4"
 >
   {#if avatarState.avatar?.avatarInfo && canMigrate(avatarState.avatar.avatarInfo)}
     <UpdateBanner />
@@ -262,7 +203,6 @@
     aria-hidden={$popupState.content ? 'false' : 'true'}
   ></div>
   <PopUp />
-  <Footer />
 </main>
 {#if hasToasts}
   <div
