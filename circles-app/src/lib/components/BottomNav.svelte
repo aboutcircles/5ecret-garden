@@ -3,9 +3,9 @@
     import { popupState } from '$lib/stores/popUp';
     import { headerDropdownOpen } from '../stores/headerDropdown';
     import Lucide from '$lib/icons/Lucide.svelte';
-    import { Home as LHome, Users as LUsers, Layers as LLayers, Settings as LSettings, Circle as LCircle } from 'lucide';
+    import { Home as LHome, Users as LUsers, Layers as LLayers, Settings as LSettings, Circle as LCircle, Mail as LMail } from 'lucide';
 
-    type Icon = 'dashboard' | 'contacts' | 'groups' | 'settings' | 'default';
+    type Icon = 'dashboard' | 'contacts' | 'groups' | 'settings' | 'inbox' | 'default';
     type Item = { name: string; link: string; icon?: Icon };
 
     interface Props {
@@ -27,11 +27,13 @@
         const isContacts  = n.includes('contact')   || l.includes('/contacts');
         const isGroups    = n.includes('group')     || l.includes('/groups');
         const isSettings  = n.includes('setting')   || l.includes('/settings');
+        const isInbox     = n.includes('inbox')     || l.includes('/inbox');
 
         if (isDashboard) { return 'dashboard'; }
         if (isContacts)  { return 'contacts'; }
         if (isGroups)    { return 'groups'; }
         if (isSettings)  { return 'settings'; }
+        if (isInbox)     { return 'inbox'; }
         return 'default';
     }
 
@@ -41,6 +43,7 @@
         contacts: LUsers,
         groups: LLayers,
         settings: LSettings,
+        inbox: LMail,
         default: LCircle
     };
 

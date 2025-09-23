@@ -2,7 +2,6 @@
   import { onMount } from 'svelte';
   import { popupControls } from '$lib/stores/popUp';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import ActionButton from '$lib/components/ActionButton.svelte';
   import WriteMessage from './WriteMessage.svelte';
   import ConversationView from './ConversationView.svelte';
   import { getTimeAgo } from '$lib/utils/shared';
@@ -15,6 +14,9 @@
   import type { Message, MessageGroup } from '$lib/utils/messageTypes';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import type { Address } from '@circles-sdk/utils';
+  import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
+  import Lucide from '$lib/icons/Lucide.svelte';
+  import { RefreshCw as LRefresh, PenTool as LPen, Trash as LTrash } from 'lucide';
 
   let messages: Message[] = $state([]);
   let groupedMessages: MessageGroup[] = $state([]);
@@ -96,34 +98,113 @@
   onMount(() => {
     fetchMessages();
   });
+
+  type Action = {
+    id: string;
+    label: string;
+    iconNode: any;
+    onClick: () => void;
+    variant: 'primary' | 'ghost';
+    disabled?: boolean;
+  };
+
+  let actions: Action[] = $derived([
+    {
+      id: 'refresh',
+      label: 'Refresh',
+      iconNode: LRefresh,
+      onClick: fetchMessages,
+      variant: 'ghost',
+      disabled: isLoading
+    },
+    {
+      id: 'write',
+      label: 'Write Message',
+      iconNode: LPen,
+      onClick: openWriteMessage,
+      variant: 'primary'
+    },
+    ...(import.meta.env.DEV ? [{
+      id: 'debug-clear',
+      label: 'Debug: Clear All',
+      iconNode: LTrash,
+      onClick: handleDebugClearMessages,
+      variant: 'ghost' as const,
+      disabled: isLoading
+    }] : [])
+  ]);
 </script>
 
-<div class="flex flex-col w-full sm:w-[90%] lg:w-3/5 gap-y-5 mt-28 mb-10 text-[#161616]">
-  <div class="flex justify-between items-center">
-    <div class="text-2xl font-bold leading-7 px-4 sm:px-0">Inbox</div>
-    <div class="flex gap-x-2">
-      <ActionButton action={fetchMessages} disabled={isLoading}>
-        {#if isLoading}
+<PageScaffold
+  highlight="soft"
+  collapsedMode="bar"
+  collapsedHeightClass="h-12"
+  maxWidthClass="page page--lg"
+  contentWidthClass="page page--lg"
+  usePagePadding={true}
+  headerTopGapClass="mt-4 md:mt-6"
+  collapsedTopGapClass="mt-3 md:mt-4"
+>
+  <svelte:fragment slot="title">
+    <h1 class="h2 m-0">Inbox</h1>
+  </svelte:fragment>
+
+  <svelte:fragment slot="meta">
+    {groupedMessages.length} conversations
+  </svelte:fragment>
+
+  <svelte:fragment slot="actions">
+    {#each actions as action (action.id)}
+      <button
+        type="button"
+        class={`btn btn-sm ${action.variant === 'primary' ? 'btn-primary' : 'btn-ghost'}`}
+        onclick={action.onClick}
+        disabled={action.disabled}
+        aria-label={action.label}
+      >
+        {#if action.id === 'refresh' && isLoading}
           <span class="loading loading-spinner loading-sm"></span>
         {:else}
-          <img src="/update.svg" alt="Refresh" class="w-4 h-4 inline invert" />
+          <Lucide
+            icon={action.iconNode}
+            size={16}
+            class={action.variant === 'primary' ? 'shrink-0 stroke-white' : 'shrink-0 stroke-black'}
+          />
         {/if}
-        Refresh
-      </ActionButton>
-
-      <!-- Debug button (only in development) -->
-      {#if import.meta.env.DEV}
-        <button class="btn btn-error btn-sm text-white" onclick={handleDebugClearMessages} disabled={isLoading}>
-          🗑️ Debug: Clear All
-        </button>
-      {/if}
-
-      <button class="btn btn-primary text-white" onclick={openWriteMessage}>
-        <img src="/envelope.svg" alt="Write" class="w-4 h-4 inline invert" />
-        Write Message
+        <span>{action.label}</span>
       </button>
+    {/each}
+  </svelte:fragment>
+
+  <svelte:fragment slot="collapsed-left">
+    <div class="flex items-center gap-2">
+      <span class="font-medium">Inbox</span>
+      <span class="text-sm text-base-content/60">{groupedMessages.length} conversations</span>
     </div>
-  </div>
+  </svelte:fragment>
+
+  <svelte:fragment slot="collapsed-menu">
+    {#each actions as action (action.id)}
+      <button
+        type="button"
+        class={`btn ${action.variant === 'primary' ? 'btn-primary' : 'btn-ghost'} min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3`}
+        onclick={action.onClick}
+        disabled={action.disabled}
+        aria-label={action.label}
+      >
+        {#if action.id === 'refresh' && isLoading}
+          <span class="loading loading-spinner loading-sm"></span>
+        {:else}
+          <Lucide
+            icon={action.iconNode}
+            size={20}
+            class={action.variant === 'primary' ? 'shrink-0 stroke-white' : 'shrink-0 stroke-black'}
+          />
+        {/if}
+        <span>{action.label}</span>
+      </button>
+    {/each}
+  </svelte:fragment>
 
   {#if isLoading && messages.length === 0}
     <div class="flex justify-center items-center h-32">
@@ -165,4 +246,4 @@
       {/each}
     </div>
   {/if}
-</div>
+</PageScaffold>
