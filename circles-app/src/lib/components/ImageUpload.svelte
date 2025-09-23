@@ -20,8 +20,6 @@
   let imageFile: File | null = null;
   let fileUpload: HTMLInputElement | undefined = $state();
 
-  onMount(async () => {});
-
   async function getImageAsDataUrl(imageUrl: string) {
     const response = await fetch(imageUrl);
     const blob = await response.blob();

@@ -1,39 +1,22 @@
 <script lang="ts">
-  import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import ProfilePage from '$lib/pages/Profile.svelte';
-  import { popupControls } from '$lib/stores/popUp';
+    import Avatar from '$lib/components/avatar/Avatar.svelte';
+    import ProfilePage from '$lib/pages/Profile.svelte';
+    import { popupControls } from '$lib/stores/popUp';
+    import RowFrame from '$lib/ui/RowFrame.svelte';
 
-  interface Props {
-    address?: string;
-    trustRelation?: string;
-  }
+    interface Props { address?: string; trustRelation?: string; }
+    let { address = '', trustRelation = '' }: Props = $props();
 
-  let { address = '', trustRelation = '' }: Props = $props();
+    function openProfile() {
+        popupControls.open?.({ component: ProfilePage, props: { address } });
+    }
 </script>
 
-<div class="w-full pt-2">
-  <button
-    class="w-full flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
-    onclick={(e) => {
-      popupControls.open({
-        component: ProfilePage,
-        title: '',
-        props: {
-          address: address,
-        },
-      });
-      e.preventDefault();
-      return true;
-    }}
-  >
-    <Avatar
-      {address}
-      view="horizontal"
-      bottomInfo={trustRelation}
-      clickable={false}
-    />
-    <div class="font-medium underline flex gap-x-2">
-      <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
+<RowFrame clickable={true} dense={true} noLeading={true} on:click={openProfile}>
+    <div class="min-w-0">
+        <Avatar address={address} view="horizontal" bottomInfo={trustRelation} clickable={false} />
     </div>
-  </button>
-</div>
+    <div slot="trailing" aria-hidden="true">
+        <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" />
+    </div>
+</RowFrame>

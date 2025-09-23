@@ -41,7 +41,7 @@
 <div class="p-6 pt-0">
   <div class="form-control mb-4">
     <p class="menu-title pl-0">Token</p>
-    <BalanceRow balance={asset} />
+    <BalanceRow item={asset} />
   </div>
 
   <div class="modal-action">

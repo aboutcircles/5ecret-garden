@@ -10,6 +10,9 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import type { PageProps } from './$types';
   import { circles } from '$lib/stores/circles';
+  import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
+  import Lucide from '$lib/icons/Lucide.svelte';
+  import { ArrowLeft as LArrowLeft } from 'lucide';
   import type { Address } from '@circles-sdk/utils';
 
   let groupMetrics: GroupMetrics = $state({});
@@ -25,36 +28,80 @@
       );
     }
   });
+
+  function backToDashboard() {
+    goto('/dashboard');
+  }
+
+  type Action = {
+    id: string;
+    label: string;
+    iconNode: any;
+    onClick: () => void;
+    variant: 'primary' | 'ghost';
+    disabled?: boolean;
+  };
+  const actions: Action[] = [
+    {
+      id: 'back',
+      label: 'Back to Dashboard',
+      iconNode: LArrowLeft,
+      onClick: backToDashboard,
+      variant: 'ghost',
+    },
+  ];
 </script>
 
-<div
-  class="flex flex-col items-center w-full max-w-6xl mx-auto gap-y-6 mt-20 px-4"
+<PageScaffold
+  highlight="soft"
+  collapsedMode="bar"
+  collapsedHeightClass="h-12"
+  maxWidthClass="page page--lg"
+  contentWidthClass="page page--lg"
+  usePagePadding={true}
+  headerTopGapClass="mt-4 md:mt-6"
+  collapsedTopGapClass="mt-3 md:mt-4"
 >
+  <svelte:fragment slot="title">
+    <h1 class="h2 font-bold text-gray-800">Group Metrics</h1>
+    <p class="text-sm text-gray-500">Analytics and insights for your group</p>
+  </svelte:fragment>
+  <svelte:fragment slot="meta">
+    <Avatar address={data.group as Address} view="horizontal" />
+  </svelte:fragment>
+  <svelte:fragment slot="actions">
+    {#each actions as a (a.id)}
+      <button
+        type="button"
+        class={`btn btn-sm ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'}`}
+        onclick={a.onClick}
+        aria-label={a.label}
+      >
+        <Lucide icon={a.iconNode} size={16} class="shrink-0 stroke-black" />
+        <span>{a.label}</span>
+      </button>
+    {/each}
+  </svelte:fragment>
+  <svelte:fragment slot="collapsed-menu">
+    {#each actions as a (a.id)}
+      <button
+        type="button"
+        class={`btn ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'} min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3`}
+        onclick={a.onClick}
+        aria-label={a.label}
+      >
+        <Lucide
+          icon={a.iconNode}
+          size={20}
+          class={a.variant === 'primary'
+            ? 'shrink-0 stroke-white'
+            : 'shrink-0 stroke-black'}
+        />
+        <span>{a.label}</span>
+      </button>
+    {/each}
+  </svelte:fragment>
   {#if Object.keys(groupMetrics).length > 0}
-    <div
-      class="w-full flex flex-col md:flex-row justify-between items-start md:items-center mb-6"
-    >
-      <div class="flex flex-col md:flex-row gap-x-8">
-        <div class="flex items-center gap-4">
-          <div>
-            <h1 class="text-2xl font-bold text-gray-800">
-              Group Metrics Dashboard
-            </h1>
-            <p class="text-gray-500">Analytics and insights for your group</p>
-          </div>
-        </div>
-        <Avatar address={data.group as Address} view="horizontal" />
-      </div>
-      <div class="mt-4 md:mt-0">
-        <button
-          class="btn btn-sm btn-outline"
-          onclick={() => goto('/dashboard')}
-        >
-          Back to Dashboard
-        </button>
-      </div>
-    </div>
-
     <!-- Stats Overview -->
     <GroupMetricsStats {groupMetrics} />
 
@@ -87,7 +134,7 @@
           <ModernHistoryChart
             dataSet1={groupMetrics.mintRedeemPerHour}
             dataSet2={groupMetrics.mintRedeemPerDay}
-            title="Mint/Redeem Activity"
+            title="Mint/Burn Activity"
             label="Circles"
           />
         </div>
@@ -100,6 +147,7 @@
             dataSet2={groupMetrics.wrapUnwrapPerDay}
             title="Wrap/Unwrap Activity"
             label="Circles"
+            type="bar"
           />
         </div>
       {/if}
@@ -142,4 +190,4 @@
       </div>
     </div>
   {/if}
-</div>
+</PageScaffold>

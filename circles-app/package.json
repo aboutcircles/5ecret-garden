@@ -12,13 +12,6 @@
     "format": "prettier --write ."
   },
   "devDependencies": {
-    "@circles-sdk/adapter": "0.25.1",
-    "@circles-sdk/adapter-ethers": "0.25.1",
-    "@circles-sdk/adapter-safe": "0.25.1",
-    "@circles-sdk/data": "0.25.1",
-    "@circles-sdk/profiles": "0.25.1",
-    "@circles-sdk/sdk": "0.25.1",
-    "@circles-sdk/utils": "0.25.1",
     "@safe-global/protocol-kit": "^4.1.0",
     "@sveltejs/adapter-auto": "^4.0.0",
     "@sveltejs/adapter-node": "^5.2.12",
@@ -49,6 +42,16 @@
   },
   "type": "module",
   "dependencies": {
+    "@circles-sdk/adapter": "^0.29.1",
+    "@circles-sdk/adapter-ethers": "^0.29.1",
+    "@circles-sdk/adapter-safe": "^0.29.1",
+    "@circles-sdk/data": "^0.29.1",
+    "@circles-sdk/pathfinder": "^0.29.1",
+    "@circles-sdk/profiles": "^0.29.1",
+    "@circles-sdk/sdk": "^0.29.1",
+    "@circles-sdk/utils": "^0.29.1",
+    "@wagmi/connectors": "^5.8.3",
+    "@wagmi/core": "^2.17.2",
     "@zxing/library": "^0.21.3",
     "buffer": "^6.0.3",
     "chart.js": "^4.4.8",
@@ -59,9 +62,11 @@
     "ethers": "^6.13.5",
     "html5-qrcode": "^2.3.8",
     "imask": "^7.6.1",
+    "lucide": "^0.544.0",
     "papaparse": "^5.5.2",
     "pg": "^8.15.6",
     "process": "^0.11.10",
-    "qrcode": "^1.5.4"
+    "qrcode": "^1.5.4",
+    "viem": "^2.30.1"
   }
 }
