@@ -7,6 +7,7 @@
     import type {Address} from '@circles-sdk/utils';
     import type {Profile} from '@circles-sdk/profiles';
     import {fade} from 'svelte/transition';
+    import {circles} from '$lib/stores/circles';
 
     interface Props {
         address: Address | undefined;
@@ -39,12 +40,20 @@
         placeholderBottom = true,
     }: Props = $props();
 
+    
+
     let profile: Profile | undefined = $state();
 
     $effect(() => {
-        if (address) {
+        if (address && $circles) {
             getProfile(address).then((newProfile) => {
                 profile = newProfile;
+            }).catch((error) => {
+                console.error('Error getting profile for', address, ':', error);
+                profile = {
+                    name: address.slice(0, 6) + '...' + address.slice(-4),
+                    previewImageUrl: '/logo.svg'
+                };
             });
         }
     });
