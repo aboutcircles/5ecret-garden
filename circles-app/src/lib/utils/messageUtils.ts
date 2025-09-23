@@ -483,9 +483,9 @@ export async function sendMessage(
       encrypted: isEncrypted,
       encryptionAlgorithm: messageData.encryptionAlgorithm,
       encryptionKeyFingerprint: messageData.encryptionKeyFingerprint,
-      chainId: 100,
+      chainId: Number(messageData.chainId),
       signerAddress: avatarState.avatar.address.toLowerCase(),
-      signedAt: currentTime,
+      signedAt: Number(messageData.signedAt),
       nonce: nonceHex,
       signature: signature
     };

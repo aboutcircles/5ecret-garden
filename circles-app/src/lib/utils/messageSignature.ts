@@ -1,9 +1,7 @@
 import { ethers } from 'ethers';
 import Safe, { SigningMethod, hashSafeMessage } from '@safe-global/protocol-kit';
-import { CirclesStorage } from '$lib/utils/storage';
 import { wallet } from '$lib/stores/wallet.svelte';
 import { get } from 'svelte/store';
-import type { WalletType } from '$lib/utils/walletType';
 import type { MessageData, MessageLink } from './messageTypes';
 
 // EIP-712 Domain for signature verification
@@ -59,8 +57,7 @@ export async function verifyMessageSignature(
         });
 
         const eip712Data = {
-          // @todo do not hardcode the chain
-          domain: { chainId: 100 },
+          domain: MESSAGE_DOMAIN,
           types: {
             ...MESSAGE_TYPES,
             EIP712Domain: [{ name: 'chainId', type: 'uint256' }]
@@ -145,12 +142,6 @@ async function signMessageWithSafe(messageData: MessageData): Promise<string> {
       throw new Error('No signer available');
     }
 
-    // Initialize Safe SDK
-    console.log("safe sdk: ", {
-      provider: window.ethereum,
-      signer: signer.address,
-      safeAddress: $wallet.address
-    })
     let protocolKit = await Safe.init({
       provider: window.ethereum,
       signer: signer.address,
@@ -175,10 +166,8 @@ async function signMessageWithSafe(messageData: MessageData): Promise<string> {
       message: messageData
     };
 
-    console.log('EIP712 Data:', eip712Data);
     // @todo check the types
     const initialSafeMessage = await protocolKit.createMessage(eip712Data);
-    console.log(initialSafeMessage);
 
     // Sign the safeMessage with the current signer
     
@@ -202,7 +191,6 @@ async function signMessageWithSafe(messageData: MessageData): Promise<string> {
       hashSafeMessage(eip712Data),
       encodedSignatures
     );
-    console.log("is valid: ", isValid);
 
     console.log('Signed message:', encodedSignatures);
     return encodedSignatures;
@@ -263,19 +251,31 @@ async function signMessageWithEOA(messageData: MessageData): Promise<string> {
  */
 export async function createMessageSignature(messageData: MessageData): Promise<string> {
   const $wallet = get(wallet);
-  
-  // Get wallet type from storage (most reliable method)
-  const storedWalletType = CirclesStorage.getInstance().walletType;
-  const isSafeWallet = storedWalletType?.includes('safe') || false;
-  // @todo check circles wallet flow
-  const isCirclesWallet = storedWalletType?.includes('circles') || false;
-  
-  // Check if the avatar address differs from wallet address (indicates Safe usage)
-  if (isSafeWallet || isCirclesWallet) {
-    // This is a Safe wallet (either directly or through circles wallet acting as safe)
+
+  if (!$wallet?.address) {
+    throw new Error('No wallet address available');
+  }
+
+  // Get the actual signer address from the provider
+  let signerAddress: string | undefined;
+  try {
+    const provider = ($wallet as any).provider;
+    if (provider) {
+      const ethSigner = await provider.getSigner();
+      signerAddress = await ethSigner.getAddress();
+    }
+  } catch (error) {
+    console.warn('Could not get signer address from provider');
+  }
+
+  // Compare wallet address to signer address
+  // If they're different, it's a Safe wallet (avatar != EOA)
+  const isSafeWallet = signerAddress &&
+    $wallet.address.toLowerCase() !== signerAddress.toLowerCase();
+
+  if (isSafeWallet) {
     return await signMessageWithSafe(messageData);
   } else {
-    // This is a direct EOA wallet
     return await signMessageWithEOA(messageData);
   }
 }
