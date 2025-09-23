@@ -11,6 +11,7 @@
         type CreateGroupFlowContext,
         resetCreateGroupContext
     } from './context';
+  import type { AddressLike } from 'ethers';
 
     interface Props {
         context?: CreateGroupFlowContext;
@@ -43,12 +44,15 @@
         await runTask({
             name: `Creating ${ctx.profile.symbol} group …`,
             promise: (async () => {
+                if (!$circles) { throw new Error('SDK not initialized'); }
+                if (!$wallet) { throw new Error('Wallet not initialized'); }
                 const CID = await $circles.profiles?.create(ctx.profile);
                 if (!CID) { throw new Error('Failed to create profile CID'); }
                 ctx.cid = CID;
 
+                console.log($wallet.address, ctx);
                 const tx = await $circles.baseGroupFactory?.createBaseGroup(
-                    $wallet.address,
+                    $wallet.address as AddressLike,
                     ctx.service,
                     ctx.feeCollection,
                     ctx.initialConditions,
