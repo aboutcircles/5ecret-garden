@@ -80,13 +80,16 @@ async function processMessageLinks(
  * Helper function to fetch messages from a single contact's namespace
  */
 async function fetchMessagesFromContact(
-  circlesInstance: any,
   profileOwner: Address,
   namespaceKey: Address
 ): Promise<Message[]> {
+  const sdk = get(circles);
+  if (!sdk) throw new Error('No SDK instance found.');
+  if (!sdk.data) throw new Error('No sdk.data instance found. Is the data service url configured?');
+
   try {
     // Get the profile CID for the profile owner
-    const profileCid = await circlesInstance.data.getMetadataCidForAddress(profileOwner);
+    const profileCid = await sdk.data.getMetadataCidForAddress(profileOwner);
     if (!profileCid) return [];
 
     // Fetch profile from IPFS
@@ -121,12 +124,15 @@ async function fetchMessagesFromContact(
  * Helper function to determine next message number for a recipient based on the largest message index
  */
 async function getNextMessageNumber(
-  circlesInstance: any,
   senderAddress: Address,
   recipientAddress: Address
 ): Promise<number> {
+  const sdk = get(circles);
+  if (!sdk) throw new Error('No SDK instance found.');
+  if (!sdk.data) throw new Error('No sdk.data instance found. Is the data service url configured?');
+
   try {
-    const currentProfileCid = await circlesInstance.data.getMetadataCidForAddress(senderAddress);
+    const currentProfileCid = await sdk.data.getMetadataCidForAddress(senderAddress);
     if (currentProfileCid) {
       const currentProfile = await fetchFromIpfs(currentProfileCid) || {};
       if (currentProfile.namespaces) {
@@ -194,7 +200,6 @@ export function groupMessagesByConversation(
  * Fetches messages from contacts with signature verification
  */
 export async function fetchMessagesFromContacts(
-  circlesInstance: any,
   avatarAddress: Address,
   trustedAddresses: Address[]
 ): Promise<Message[]> {
@@ -202,7 +207,6 @@ export async function fetchMessagesFromContacts(
 
   for (const contactAddress of trustedAddresses) {
     const messages = await fetchMessagesFromContact(
-      circlesInstance,
       contactAddress, // Profile owner (contact)
       avatarAddress   // Namespace key (our address in their profile)
     );
@@ -216,7 +220,6 @@ export async function fetchMessagesFromContacts(
  * Fetches sent messages with signature verification
  */
 export async function fetchSentMessages(
-  circlesInstance: any,
   avatarAddress: Address,
   trustedAddresses: Address[]
 ): Promise<Message[]> {
@@ -224,7 +227,6 @@ export async function fetchSentMessages(
 
   for (const contactAddress of trustedAddresses) {
     const messages = await fetchMessagesFromContact(
-      circlesInstance,
       avatarAddress, // Profile owner (our profile)
       contactAddress // Namespace key (contact's address in our profile)
     );
@@ -238,12 +240,15 @@ export async function fetchSentMessages(
  * Uploads a message and updates the sender's profile
  */
 export async function uploadMessageAndUpdateProfile(
-  circlesInstance: any,
   senderAddress: Address,
   recipientAddress: Address,
   messageContent: any,
   messageLink: MessageLink
 ): Promise<void> {
+  const sdk = get(circles);
+  if (!sdk) throw new Error('No SDK instance found.');
+  if (!sdk.data) throw new Error('No sdk.data instance found. Is the data service url configured?');
+
   try {
     // Step 1: Upload message content to IPFS
     const messageCid = await uploadToIpfs(messageContent, 'message.json');
@@ -252,7 +257,7 @@ export async function uploadMessageAndUpdateProfile(
     messageLink.cid = messageCid;
 
     // Step 2: Get current profile
-    const currentProfileCid = await circlesInstance.data.getMetadataCidForAddress(senderAddress);
+    const currentProfileCid = await sdk.data.getMetadataCidForAddress(senderAddress);
     console.log("Current profile CID:", currentProfileCid);
     let currentProfile: any = {};
     
@@ -391,8 +396,8 @@ export async function fetchAllMessages(): Promise<Message[]> {
     
     // Fetch received and sent messages
     const [receivedMessages, sentMessages] = await Promise.all([
-      fetchMessagesFromContacts($circles, avatarState.avatar.address, trustedAddresses as Address[]),
-      fetchSentMessages($circles, avatarState.avatar.address, trustedAddresses as Address[])
+      fetchMessagesFromContacts(avatarState.avatar.address, trustedAddresses as Address[]),
+      fetchSentMessages(avatarState.avatar.address, trustedAddresses as Address[])
     ]);
 
     // Combine all messages
@@ -454,7 +459,7 @@ export async function sendMessage(
     const messageCid = await uploadToIpfs(messageContent, 'message.json');
 
     // Step 3: Determine message name for signing
-    const nextMsgNumber = await getNextMessageNumber($circles, avatarState.avatar.address, recipientAddress);
+    const nextMsgNumber = await getNextMessageNumber(avatarState.avatar.address, recipientAddress);
     const uniqueMsgName = `msg-${nextMsgNumber}`;
 
     // Step 4: Create the message data structure for signing (including name)
@@ -492,7 +497,6 @@ export async function sendMessage(
 
     // Step 6: Upload message and update profile (this will handle the rest)
     await uploadMessageAndUpdateProfile(
-      $circles,
       avatarState.avatar.address,
       recipientAddress,
       messageContent, // This will be uploaded again, but that's ok for consistency
