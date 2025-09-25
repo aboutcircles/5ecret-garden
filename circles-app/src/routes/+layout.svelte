@@ -103,6 +103,7 @@
           name: avatarState.isGroup ? 'Members' : 'Contacts',
           link: '/contacts',
         },
+        { name: 'Inbox', link: '/inbox' },
         ...(!avatarState.isGroup ? [{ name: 'Groups', link: '/groups' }] : []),
         { name: 'Settings', link: '/settings' },
       ];
