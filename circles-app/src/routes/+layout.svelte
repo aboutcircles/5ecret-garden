@@ -27,7 +27,8 @@
   import { initBalanceStore } from '$lib/stores/circlesBalances';
   import { initGroupMetricsStore } from '$lib/stores/groupMetrics.svelte';
   import { circles } from '$lib/stores/circles';
-  import Footer from '$lib/components/Footer.svelte';
+  import { browser } from '$app/environment';
+  import { PUBLIC_PLAUSIBLE_DOMAIN } from '$env/static/public';
 
   interface Props {
     children?: import('svelte').Snippet;
@@ -145,6 +146,16 @@
     }
   });
 </script>
+
+<svelte:head>
+  {#if browser && PUBLIC_PLAUSIBLE_DOMAIN}
+    <script
+      defer
+      data-domain={PUBLIC_PLAUSIBLE_DOMAIN}
+      src="https://plausible.io/js/script.js"
+    ></script>
+  {/if}
+</svelte:head>
 
 {#if avatarState.avatar}
   <DefaultHeader
