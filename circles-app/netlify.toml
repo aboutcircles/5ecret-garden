@@ -3,10 +3,10 @@
   command = "npm run build"
   
   # Output directory for built files
-  publish = "build"
+  publish = "circles-app/build"
   
   # Base directory (root of the app)
-  base = "."
+  base = "circles-app"
 
 [build.environment]
   # Node version
