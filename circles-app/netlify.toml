@@ -1,0 +1,95 @@
+[build]
+  # Build command for SvelteKit app
+  command = "npm run build"
+  
+  # Output directory for built files
+  publish = "build"
+  
+  # Base directory (root of the app)
+  base = "."
+
+[build.environment]
+  # Node version
+  NODE_VERSION = "22.20.0"
+  
+  # NPM version
+  NPM_VERSION = "10.8.2"
+
+# Production deployment settings
+[context.production]
+  command = "npm run build"
+  publish = "build"
+  
+  [context.production.environment]
+    # Production environment variables
+    PUBLIC_ENVIRONMENT = "production"
+    PUBLIC_CIRCLES_RPC_URL = "https://rpc.aboutcircles.com"
+    PUBLIC_PLAUSIBLE_DOMAIN = "app.aboutcircles.com"
+    DB_PW = ""
+    DB_USER = ""
+    DB_DATABASE = ""
+    DB_HOST = ""
+    DB_PORT = ""
+    DB_SSL_MODE = ""
+
+# Deploy Preview settings (for PRs)
+[context.deploy-preview]
+  command = "npm run build"
+  publish = "build"
+  
+  [context.deploy-preview.environment]
+    # Use RPC staging for preview deployments
+    PUBLIC_ENVIRONMENT = "staging"
+    PUBLIC_CIRCLES_RPC_URL = "https://rpc.circlesubi.network"
+    # Disable analytics for preview
+    PUBLIC_PLAUSIBLE_DOMAIN = ""
+    DB_PW = ""
+    DB_USER = ""
+    DB_DATABASE = ""
+    DB_HOST = ""
+    DB_PORT = ""
+    DB_SSL_MODE = ""
+
+# Branch deploy settings
+[context.branch-deploy]
+  command = "npm run build"
+  publish = "build"
+  
+  [context.branch-deploy.environment]
+    # Use RPC staging for feature branches
+    PUBLIC_ENVIRONMENT = "staging"
+    PUBLIC_CIRCLES_RPC_URL = "https://rpc.circlesubi.network"
+    PUBLIC_PLAUSIBLE_DOMAIN = ""
+    DB_PW = ""
+    DB_USER = ""
+    DB_DATABASE = ""
+    DB_HOST = ""
+    DB_PORT = ""
+    DB_SSL_MODE = ""
+
+# Redirect rules for SPA routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = false
+
+# Headers for security
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+
+# Cache static assets
+[[headers]]
+  for = "/build/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
