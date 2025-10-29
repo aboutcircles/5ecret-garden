@@ -1,4 +1,5 @@
-import adapter from '@sveltejs/adapter-netlify';
+import adapter from '@sveltejs/adapter-auto';
+import adapterNetlify from '@sveltejs/adapter-netlify';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import { mdsvex } from 'mdsvex';
 
@@ -10,10 +11,16 @@ const config = {
   },
   preprocess: [vitePreprocess(), mdsvex()],
   kit: {
-    adapter: adapter({
-      // No custom options needed; defaults are sufficient
-    })
-  }
+    adapter: process.env.NETLIFY_BUILD === 'true' 
+      ? adapterNetlify() 
+      : adapter({
+          pages: 'build',
+          assets: 'build',
+          fallback: 'index.html', 
+          precompress: false,
+          strict: true
+        }),
+  },
 };
 
 export default config;
