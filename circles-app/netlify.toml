@@ -3,7 +3,7 @@
   command = "npm run build"
   
   # Output directory for built files
-  publish = "circles-app/build"
+  publish = "build"
   
   # Base directory (root of the app)
   base = "circles-app"
@@ -66,13 +66,6 @@
     DB_HOST = ""
     DB_PORT = ""
     DB_SSL_MODE = ""
-
-# Redirect rules for SPA routing
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-  force = false
 
 # Headers for security
 [[headers]]

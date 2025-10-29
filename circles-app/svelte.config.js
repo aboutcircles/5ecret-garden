@@ -1,4 +1,4 @@
-import adapter from '@sveltejs/adapter-auto';
+import adapter from '@sveltejs/adapter-netlify';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import { mdsvex } from 'mdsvex';
 
@@ -8,19 +8,12 @@ const config = {
   compilerOptions: {
     runes: true,
   },
-  // Consult https://kit.svelte.dev/docs/integrations#preprocessors
-  // for more information about preprocessors
   preprocess: [vitePreprocess(), mdsvex()],
-
   kit: {
     adapter: adapter({
-      pages: 'build',
-      assets: 'build',
-      fallback: 'index.html',
-      precompress: false,
-      strict: true
-    }),
-  },
+      // No custom options needed; defaults are sufficient
+    })
+  }
 };
 
 export default config;
