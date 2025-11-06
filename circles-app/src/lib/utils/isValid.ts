@@ -1,8 +1,11 @@
 //TODO: after migrate to daisyui 5, we can use directly into validators field
 
+const utf8Len = (s: string) => new TextEncoder().encode(s).length;
+
 export function isValidName(name: string): boolean {
-  // Check length (max 32 bytes, and at least 1 character)
-  if (Buffer.byteLength(name, 'utf8') > 19) {
+  // Check length (max 19 UTF-8 bytes)
+  const maxBytes = 19;
+  if (utf8Len(name) > maxBytes) {
     return false;
   }
 
@@ -11,8 +14,9 @@ export function isValidName(name: string): boolean {
 }
 
 export function isValidSymbol(symbol: string): boolean {
-  // Check length (max 16 bytes, and at least 1 character)
-  if (Buffer.byteLength(symbol, 'utf8') > 16) {
+  // Check length (max 16 UTF-8 bytes)
+  const maxBytes = 16;
+  if (utf8Len(symbol) > maxBytes) {
     return false;
   }
 
