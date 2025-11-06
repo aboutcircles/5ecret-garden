@@ -21,7 +21,21 @@
       throw new Error('Profiles not available');
     }
 
-    return await $circles.profiles.create(profile);
+    // Preserve existing unknown fields (like namespaces, signingKeys, etc.) to avoid breaking legacy profiles
+    const current: any = avatarState.profile || {};
+    const incoming: any = profile || {};
+
+    // Shallow merge, but preserve nested namespaces map if present
+    const merged: any = {
+      ...current,
+      ...incoming,
+      namespaces: {
+        ...(current?.namespaces || {}),
+        ...(incoming?.namespaces || {}),
+      },
+    };
+
+    return await $circles.profiles.create(merged as Profile);
   }
 
   let newProfile: Profile = $state({
