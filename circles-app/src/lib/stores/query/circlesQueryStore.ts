@@ -14,13 +14,20 @@ import { get, type Readable } from 'svelte/store';
 
 /**
  * Generates a unique key for each event row based on the block number, transaction index, and log index.
+ * For transaction history rows with an 'id' field, uses that instead for guaranteed uniqueness.
  *
  * @param {T} tx - The event row for which to generate a key.
  * @returns {string} - A unique string identifier for the event row.
  */
-export function getKeyFromItem<T extends EventRow & { address?: string }>(
+export function getKeyFromItem<T extends EventRow & { address?: string; id?: string }>(
   tx: T
 ): string {
+  // Use the id field if available (for TransactionHistoryRow)
+  if ('id' in tx && tx.id) {
+    return tx.id;
+  }
+
+  // Fall back to composite key for other event types
   return `${tx.blockNumber}-${tx.transactionIndex}-${tx.logIndex}-${
     tx.address || ''
   }`;
@@ -104,12 +111,12 @@ export async function createCirclesQueryStore<T extends EventRow>(
    * Handles events and refreshes the data by reloading the current page of the CirclesQuery.
    * This function ensures the current data is merged with the new data to prevent duplication.
    *
-   * @param {CirclesEvent} event - The event that triggered the refresh.
+   * @param {CirclesEvent} _event - The event that triggered the refresh (unused, but required by interface).
    * @param {T[]} currentData - The current array of event rows.
    * @returns {Promise<T[]>} - A promise that resolves to the updated data after handling the event.
    */
   async function _handleEvent(
-    event: CirclesEvent,
+    _event: CirclesEvent,
     currentData: T[]
   ): Promise<T[]> {
     const circlesQuery = await circlesQueryFactory();

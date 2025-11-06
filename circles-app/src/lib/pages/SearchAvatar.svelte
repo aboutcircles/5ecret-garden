@@ -1,12 +1,11 @@
 <script lang="ts">
-    import {ethers} from 'ethers';
     import AddressInput from '$lib/components/AddressInput.svelte';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
     import type {Address} from '@circles-sdk/utils';
-    import type {Profile, SearchResultProfile} from '@circles-sdk/profiles';
-    import {circles} from '$lib/stores/circles';
-    import {get} from 'svelte/store';
+    import type {SearchResultProfile} from '@circles-sdk-v2/rpc';
+    import {avatarState} from '$lib/stores/avatar.svelte';
     import {onMount} from "svelte";
+    import {ethers} from 'ethers';
     import RowFrame from '$lib/ui/RowFrame.svelte';
 
     interface Props {
@@ -22,63 +21,31 @@
     let lastAddress: string = $state('');
     let result: SearchResultProfile[] = $state([]);
 
-    function toSearchResult(raw: any | null | undefined): SearchResultProfile | undefined {
-        if (!raw || typeof raw !== 'object') return undefined;
-
-        const base = raw ?? {name: ''};
-        const CID = typeof raw.CID === 'string' ? raw.CID : (typeof raw.cid === 'string' ? raw.cid : '');
-        const address = typeof raw.address === 'string' ? raw.address : (typeof raw.owner === 'string' ? raw.owner : '');
-        const lastUpdatedAt = typeof raw.lastUpdatedAt === 'number' ? raw.lastUpdatedAt : 0;
-        const registeredName = typeof raw.registeredName === 'string' ? raw.registeredName : null;
-
-        return {
-            ...base,
-            name: base.name,
-            description: base.description,
-            CID,
-            lastUpdatedAt,
-            address,
-            registeredName,
-            imageUrl: base.imageUrl,
-            previewImageUrl: base.previewImageUrl,
-            location: base.location,
-            geoLocation: base.geoLocation
-        };
-    }
-
     async function rpcSearchByText(query: string, limit: number, offset = 0, avatarTypes:string[]|undefined = undefined): Promise<SearchResultProfile[]> {
-        const sdk = get(circles);
-        if (!sdk?.circlesRpc) throw new Error('No circles RPC available');
-        const raw = await sdk.circlesRpc.call<Profile[]>('circles_searchProfiles', [query, limit, offset, avatarTypes]);
-        return (raw.result ?? []).map(toSearchResult).filter(Boolean) as SearchResultProfile[];
+        if (!avatarState.avatar) {
+            console.warn('No avatar available for search');
+            return [];
+        }
+        try {
+            return await avatarState.avatar.rpc.profile.searchByAddressOrName(query, limit, offset, avatarTypes);
+        } catch (error) {
+            console.error('Error searching profiles:', error);
+            return [];
+        }
     }
 
     async function searchProfiles() {
         try {
             const q = selectedAddress?.toString() ?? '';
             const limit = 50;
-            let results: SearchResultProfile[] = [];
 
             if (q.trim() !== '') {
-                const nameResults = await rpcSearchByText(q, limit, undefined, avatarTypes);
-                results = [...nameResults];
-
-                if (searchType === 'send') {
-                    const needle = q.toLowerCase();
-                    const found = results.some(r => (r.address ?? '').toLowerCase() === needle);
-                    if (!found && ethers.isAddress(q)) {
-                        const synthetic: SearchResultProfile = {
-                            address: q,
-                            name: q,
-                            CID: '',
-                            lastUpdatedAt: 0,
-                            registeredName: null
-                        };
-                        results.unshift(synthetic);
-                    }
-                }
+                // Use the new SDK's searchByAddressOrName which handles both address and name search
+                const results = await rpcSearchByText(q, limit, 0, avatarTypes);
+                result = results;
+            } else {
+                result = [];
             }
-            result = results;
         } catch (error) {
             console.error('Error searching profiles:', error);
             result = [];

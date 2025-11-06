@@ -1,8 +1,10 @@
 <script lang="ts">
     import { groupMetrics } from '$lib/stores/groupMetrics.svelte';
+    import { avatarState } from '$lib/stores/avatar.svelte';
     import GroupMetricsStats from '$lib/components/GroupMetricsStats.svelte';
     import ModernHistoryChart from '$lib/components/ModernHistoryChart.svelte';
     import ModernPieChart from '$lib/components/ModernPieChart.svelte';
+    import TokenHoldersList from '$lib/components/TokenHoldersList.svelte';
 </script>
 
 <div class="w-full mb-6">
@@ -70,16 +72,8 @@
             </div>
         {/if}
 
-        {#if groupMetrics?.tokenHolderBalance && groupMetrics.tokenHolderBalance.length > 0}
-            <div class="bg-white p-6 rounded-xl border shadow-sm">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4">Token Distribution</h2>
-                <ModernPieChart
-                        data={groupMetrics.tokenHolderBalance}
-                        labelKey="holder"
-                        valueKey="demurragedTotalBalance"
-                        title="Token Holder Distribution"
-                />
-            </div>
+        {#if avatarState.avatar && avatarState.isGroup}
+            <TokenHoldersList groupAddress={avatarState.avatar.address} />
         {/if}
     </div>
 {:else}

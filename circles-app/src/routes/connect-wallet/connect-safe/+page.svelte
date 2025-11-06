@@ -1,91 +1,36 @@
 <script lang="ts">
   import ConnectSafe from '$lib/components/ConnectSafe.svelte';
-  import {
-    clearSession,
-    getSigner,
-    initBrowserProviderContractRunner,
-    initSafeSdkBrowserContractRunner,
-    signer,
-    wallet,
-  } from '$lib/stores/wallet.svelte';
-  import type { Address } from '@circles-sdk/utils';
+  import { wallet, initNewSafeBrowserRunner, getSigner, signer } from '$lib/stores/wallet.svelte';
   import WalletLoader from '$lib/components/WalletLoader.svelte';
-  import { type AvatarRow, type GroupRow } from '@circles-sdk/data';
-  import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
-  import ConnectCircles from '$lib/components/ConnectCircles.svelte';
-  import SettingsDropdown from '$lib/components/SettingsDropdown.svelte';
-  import { settings } from '$lib/stores/settings.svelte';
   import { onMount } from 'svelte';
-  import { gnosisConfig } from '$lib/circlesConfig';
-  import { Sdk } from '@circles-sdk/sdk';
-  import type { SdkContractRunner } from '@circles-sdk/adapter';
+  import { Sdk } from '@circles-sdk-v2/sdk';
+  import { circlesConfig } from '@circles-sdk-v2/core';
   import { circles } from '$lib/stores/circles';
-  let groupsByOwner: Record<Address, GroupRow[]> | undefined = $state();
-  let avatarInfo: AvatarRow | undefined = $state();
-  let runner: SdkContractRunner | undefined = $state();
 
   onMount(async () => {
-      try {
-          // Try to recover an EOA if wagmi already has one
-          signer.address = await getSigner();
-
-          // Always prepare a browser runner; it will trigger the wallet when needed
-          runner = await initBrowserProviderContractRunner();
-      } catch (err) {
-          // Do not clear/redirect here; let the user continue to the connect UI
-          console.error('connect-safe onMount init failed:', err);
-          runner = undefined;
-      }
+    try {
+      signer.address = await getSigner();
+    } catch (err) {
+      console.error('Failed to get signer:', err);
+    }
   });
-
-  async function connectLegacy(address: Address) {
-    runner = await initBrowserProviderContractRunner();
-    wallet.set(runner);
-    return new Sdk(
-      runner,
-      settings.ring ? gnosisConfig.rings : gnosisConfig.production
-    );
-  }
 
   async function connectSafe(address: Address) {
-    runner = await initSafeSdkBrowserContractRunner(address);
+    const runner = await initNewSafeBrowserRunner(address);
     wallet.set(runner);
-    return new Sdk(
-      runner,
-      settings.ring ? gnosisConfig.rings : gnosisConfig.production
-    );
+    return new Sdk(circlesConfig[100], runner);
   }
 
   $effect(() => {
-    circles.set(
-      runner
-        ? new Sdk(
-            runner,
-            settings.ring ? gnosisConfig.rings : gnosisConfig.production
-          )
-        : undefined
-    );
-  });
-
-  $effect(() => {
-    (async () => {
-      if (!signer.address || !$circles) return;
-      groupsByOwner = await getBaseAndCmgGroupsByOwnerBatch($circles, [
-        signer.address,
-      ]);
-      avatarInfo = await $circles.data.getAvatarInfo(signer.address);
-    })();
+    if (signer.address && !$circles) {
+      circles.set(new Sdk(circlesConfig[100]));
+    } else if (!signer.address) {
+      circles.set(undefined);
+    }
   });
 
   function goBack(): void {
     history.back();
-  }
-
-  async function refreshGroups() {
-      if (!signer.address || !$circles) return;
-      groupsByOwner = await getBaseAndCmgGroupsByOwnerBatch($circles, [
-          signer.address,
-      ]);
   }
 </script>
 
@@ -103,20 +48,14 @@
 
   {#if !signer.address || !$circles}
     <WalletLoader />
-  {:else if settings.legacy}
-    <ConnectCircles
-      address={signer.address}
-      isRegistered={avatarInfo !== undefined}
-      groups={groupsByOwner?.[signer.address] ?? []}
-      initSdk={connectLegacy}
-      refreshGroupsCallback={refreshGroups}
-    />
-  {:else if $circles}
+    {#if signer.address}
+      <p class="muted">Waiting for SDK to initialize...</p>
+    {/if}
+  {:else}
     <ConnectSafe
       safeOwnerAddress={signer.address}
       initSdk={connectSafe}
       sdk={$circles}
-      refreshGroupsCallback={refreshGroups}
     />
   {/if}
 </div>

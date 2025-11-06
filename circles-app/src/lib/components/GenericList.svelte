@@ -5,7 +5,7 @@
     import type { Readable } from 'svelte/store';
 
     interface Props<T extends Record<string, any> = any> {
-        store: Readable<{ data: EventRow[] | TransactionHistoryRow[]; next: () => Promise<boolean>; ended: boolean; }>;
+        store?: Readable<{ data: any[]; next: () => Promise<boolean>; ended: boolean; }>;
         row: Component<T>;
     }
     let { store, row }: Props = $props();

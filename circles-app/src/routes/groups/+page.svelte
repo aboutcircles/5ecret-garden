@@ -1,22 +1,60 @@
 <script lang="ts">
     import GenericList from '$lib/components/GenericList.svelte';
-    import {createCMGroups} from '$lib/stores/groups.svelte';
+    import {createBaseGroups, createAllGroups} from '$lib/stores/groups.svelte';
     import type {Readable} from 'svelte/store';
-    import type {EventRow} from '@circles-sdk/data';
     import GroupRowView from './GroupRowView.svelte';
     import {avatarState} from '$lib/stores/avatar.svelte';
     import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
+    import {circles} from '$lib/stores/circles';
+    import type {GroupRow} from '@circles-sdk-v2/types';
 
-    let groups: Readable<{
-        data: EventRow[];
+    type Tab = 'my-groups' | 'all-groups';
+
+    // Default to 'all-groups' for non-humans, 'my-groups' for humans
+    let activeTab: Tab = $state(avatarState.isHuman ? 'my-groups' : 'all-groups');
+
+    let myGroups: Readable<{
+        data: any[];
         next: () => Promise<boolean>;
         ended: boolean;
-    }> = $state();
+    }> | undefined = $state();
+
+    let allGroups: Readable<{
+        data: GroupRow[];
+        next: () => Promise<boolean>;
+        ended: boolean;
+    }> | undefined = $state();
+
+    let isLoadingMyGroups = $state(false);
+    let isLoadingAllGroups = $state(false);
+
+    // Update default tab when avatar changes
+    $effect(() => {
+        if (!avatarState.isHuman && activeTab === 'my-groups') {
+            activeTab = 'all-groups';
+        }
+    });
 
     $effect(() => {
-        if (avatarState.avatar) {
-            createCMGroups(avatarState.avatar).then((result) => {
-                groups = result;
+        if (avatarState.avatar && avatarState.isHuman && activeTab === 'my-groups' && !myGroups) {
+            isLoadingMyGroups = true;
+            createBaseGroups(avatarState.avatar).then((result) => {
+                myGroups = result;
+                isLoadingMyGroups = false;
+            }).catch(() => {
+                isLoadingMyGroups = false;
+            });
+        }
+    });
+
+    $effect(() => {
+        if ($circles && activeTab === 'all-groups' && !allGroups) {
+            isLoadingAllGroups = true;
+            createAllGroups($circles).then((result) => {
+                allGroups = result;
+                isLoadingAllGroups = false;
+            }).catch(() => {
+                isLoadingAllGroups = false;
             });
         }
     });
@@ -67,5 +105,54 @@
         {/each}
     </svelte:fragment>
 
-    <GenericList store={groups} row={GroupRowView}/>
+    {#if avatarState.isHuman}
+        <div role="tablist" class="tabs tabs-bordered w-full mb-4">
+            <button
+                    role="tab"
+                    class="tab"
+                    class:tab-active={activeTab === 'my-groups'}
+                    onclick={() => activeTab = 'my-groups'}
+            >
+                My Groups
+            </button>
+            <button
+                    role="tab"
+                    class="tab"
+                    class:tab-active={activeTab === 'all-groups'}
+                    onclick={() => activeTab = 'all-groups'}
+            >
+                All Groups
+            </button>
+        </div>
+
+        {#if activeTab === 'my-groups'}
+            {#if isLoadingMyGroups}
+                <div class="w-full flex flex-col items-center justify-center py-12">
+                    <span class="loading loading-spinner loading-lg text-primary"></span>
+                    <span class="mt-4 text-base-content/70">Loading your groups...</span>
+                </div>
+            {:else}
+                <GenericList store={myGroups} row={GroupRowView}/>
+            {/if}
+        {:else}
+            {#if isLoadingAllGroups}
+                <div class="w-full flex flex-col items-center justify-center py-12">
+                    <span class="loading loading-spinner loading-lg text-primary"></span>
+                    <span class="mt-4 text-base-content/70">Loading all groups...</span>
+                </div>
+            {:else}
+                <GenericList store={allGroups} row={GroupRowView}/>
+            {/if}
+        {/if}
+    {:else}
+        <!-- Organizations only see all groups -->
+        {#if isLoadingAllGroups}
+            <div class="w-full flex flex-col items-center justify-center py-12">
+                <span class="loading loading-spinner loading-lg text-primary"></span>
+                <span class="mt-4 text-base-content/70">Loading all groups...</span>
+            </div>
+        {:else}
+            <GenericList store={allGroups} row={GroupRowView}/>
+        {/if}
+    {/if}
 </PageScaffold>

@@ -1,7 +1,7 @@
 <script lang="ts">
     import {avatarState} from '$lib/stores/avatar.svelte';
     import {circles} from '$lib/stores/circles';
-    import {Sdk} from '@circles-sdk/sdk';
+    import {Sdk} from '@circles-sdk-v2/sdk';
     import {goto} from '$app/navigation';
     import Avatar from './avatar/Avatar.svelte';
     import type {Address} from '@circles-sdk/utils';
@@ -11,35 +11,52 @@
     import {popupControls} from '$lib/stores/popUp';
     import CreateGroup from "$lib/flows/createGroup/1_CreateGroup.svelte";
     import {resetCreateGroupContext} from '$lib/flows/createGroup/context';
+    import {initNewSafeBrowserRunner} from '$lib/stores/wallet.svelte';
+    import {circlesConfig} from '@circles-sdk-v2/core';
 
     interface Props {
         address: Address;
         isRegistered: boolean;
         groups?: GroupRow[];
-        isV1?: boolean;
+        sdk: Sdk;
         initSdk: (address: Address) => Promise<Sdk>;
         refreshGroupsCallback?: () => void;
     }
 
-    let {address, isRegistered, groups, isV1, initSdk, refreshGroupsCallback}: Props = $props();
+    let {address, isRegistered, initSdk, groups, sdk, refreshGroupsCallback}: Props = $props();
 
-    async function connectAvatar(groupAddress?: Address) {
-        const sdk = await initSdk(address);
+    async function connectAvatar(avatarAddress?: Address) {
+        //@todo pass runner here
+        // Use the safe address if no specific avatar address is provided
+        const targetAddress = avatarAddress ?? address;
+        const sdk = await initSdk(targetAddress);
         $circles = sdk;
-
-        if (groupAddress === undefined && !isRegistered) {
+        if (avatarAddress === undefined && !isRegistered) {
             await goto('/register');
             return;
         }
-        avatarState.avatar = await sdk.getAvatar(groupAddress ?? address);
-        avatarState.isGroup = !!groupAddress;
-        avatarState.groupType = groupAddress
-            ? await sdk.getGroupType(groupAddress)
-            : undefined;
+
+        // Initialize new SDK with Safe runner for the selected Safe
+       // const runner = await initNewSafeBrowserRunner(address as `0x${string}`);
+        //const newSdk = new NewSdk(circlesConfig[100], runner);
+        //$circles = newSdk;
+
+        // Use the new SDK to get the avatar
+        avatarState.avatar = await sdk.getAvatar(targetAddress);
+        avatarState.isGroup = !!avatarState.avatar?.avatarInfo.isGroup;
+        avatarState.isHuman = !!avatarState.avatar?.avatarInfo.isHuman;
+
+        // Use the new SDK to get group type if it's a group
+        if (avatarState.isGroup) {
+            //@todo implement
+            //avatarState.groupType = await sdk.getType(avatarAddress as `0x${string}`) as any;
+        } else {
+            avatarState.groupType = undefined;
+        }
 
         CirclesStorage.getInstance().data = {
             avatar: address,
-            group: groupAddress,
+            group: avatarState.isGroup ? avatarAddress : undefined,
             isGroup: avatarState.isGroup,
             groupType: avatarState.groupType,
             rings: settings.ring,
@@ -74,7 +91,7 @@
 
 <div class="w-full border rounded-lg flex flex-col p-4 shadow-sm">
     <button
-            onclick={() => connectAvatar()}
+            onclick={() => connectAvatar(address)}
             class="flex justify-between items-center hover:bg-base-200 rounded-lg p-2"
     >
         <Avatar
@@ -86,40 +103,36 @@
         <div class="btn btn-xs btn-outline btn-primary">
             {#if !isRegistered}
                 register
-            {:else if isV1}
-                V1
             {:else}
                 V2
             {/if}
         </div>
     </button
     >
-    {#if !isV1}
-        <div class="w-full flex gap-x-2 items-center justify-between mt-6 px-2">
-            <p class="font-bold text-primary">My groups</p>
+    <div class="w-full flex gap-x-2 items-center justify-between mt-6 px-2">
+        <p class="font-bold text-primary">My groups</p>
+        <button
+                onclick={() => openCreateGroup()}
+                class="btn btn-xs btn-outline btn-primary">Create a group
+        </button
+        >
+    </div>
+    <div class="w-full pl-6 flex flex-col gap-y-2 mt-2">
+        {#each groups ?? [] as group}
             <button
-                    onclick={() => openCreateGroup()}
-                    class="btn btn-xs btn-outline btn-primary">Create a group
-            </button
+                    class="flex w-full hover:bg-base-200 rounded-lg p-2"
+                    onclick={() => connectAvatar(group.group as `0x${string}`)}
             >
-        </div>
-        <div class="w-full pl-6 flex flex-col gap-y-2 mt-2">
-            {#each groups ?? [] as group}
-                <button
-                        class="flex w-full hover:bg-base-200 rounded-lg p-2"
-                        onclick={() => connectAvatar(group.group)}
-                >
-                    <Avatar
-                            address={group.group}
-                            clickable={false}
-                            view="horizontal"
-                            topInfo={group.group}
-                    />
-                </button>
-            {/each}
-            {#if (groups ?? []).length === 0}
-                <p class="text-sm">No groups available.</p>
-            {/if}
-        </div>
-    {/if}
+                <Avatar
+                        address={group.group as `0x${string}`}
+                        clickable={false}
+                        view="horizontal"
+                        topInfo={group.group}
+                />
+            </button>
+        {/each}
+        {#if (groups ?? []).length === 0}
+            <p class="text-sm">No groups available.</p>
+        {/if}
+    </div>
 </div>

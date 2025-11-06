@@ -43,12 +43,28 @@ export const initBalanceStore = (avatar: Avatar) => {
 
   const _initialLoad = async () => {
       try {
-          return await avatar.getBalances();
-      } catch (e:any) {
-          if (e?.includes?.("No balances found") || e?.message.includes("No balances found")) {
+          // Validate avatar is properly initialized
+          if (!avatar || typeof avatar !== 'object') {
+              console.error('❌ Avatar is not properly initialized:', avatar);
               return [];
           }
-          throw e;
+
+          // Use new SDK balances.getTokenBalances method
+          if (typeof (avatar as any).balances?.getTokenBalances === 'function') {
+              console.log('🔄 Using new SDK avatar.balances.getTokenBalances()');
+              const allBalances = await (avatar as any).balances.getTokenBalances();
+              // Only return version 2 balances
+              return allBalances.filter((balance: any) => balance.version === 2);
+          }
+
+          console.error('❌ No balances.getTokenBalances method available on avatar');
+          return [];
+      } catch (e:any) {
+          if (e?.includes?.("No balances found") || e?.message?.includes("No balances found")) {
+              return [];
+          }
+          console.error('❌ Error loading balances:', e);
+          return [];
       }
   };
 
@@ -58,9 +74,15 @@ export const initBalanceStore = (avatar: Avatar) => {
   ) => {
     if (!refreshOnEvents.has(event.$event)) return currentData;
       try {
-          return await avatar.getBalances();
+          // Use new SDK balances.getTokenBalances method
+          if (typeof (avatar as any).balances?.getTokenBalances === 'function') {
+              const allBalances = await (avatar as any).balances.getTokenBalances();
+              // Only return version 2 balances
+              return allBalances.filter((balance: any) => balance.version === 2);
+          }
+          throw new Error('No balances.getTokenBalances method available');
       } catch (e:any) {
-          if (e?.includes?.("No balances found") || e?.message.includes("No balances found")) {
+          if (e?.includes?.("No balances found") || e?.message?.includes("No balances found")) {
               return [];
           }
           throw e;

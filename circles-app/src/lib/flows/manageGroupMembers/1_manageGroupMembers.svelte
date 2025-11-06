@@ -88,9 +88,9 @@
 
     try {
       if (untrust) {
-        await avatarState.avatar?.untrust(addresses);
+        await avatarState.avatar?.trust.remove(addresses);
       } else {
-        await avatarState.avatar?.trust(addresses);
+        await avatarState.avatar?.trust.add(addresses);
       }
       selectedAddresses = '';
     } catch (error: any) {
