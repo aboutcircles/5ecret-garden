@@ -6,6 +6,15 @@
   interface Props { context: OfferFlowContext; }
   let { context }: Props = $props();
 
+  // Hard guard: we must know which namespace/operator to publish under
+  const hasOperator: boolean =
+    typeof context?.operator === 'string' &&
+    /^0x[a-f0-9]{40}$/.test(context.operator.toLowerCase());
+
+  if (!hasOperator) {
+    throw new Error('Marketplace operator address is required to create an offer.');
+  }
+
   if (!context.draft) {
     context.draft = {
       sku: '',
