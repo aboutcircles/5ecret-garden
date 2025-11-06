@@ -27,4 +27,5 @@ export interface OfferFlowContext {
   operator: Address;      // marketplace namespace key (address)
   draft?: OfferDraft;     // carried through steps
   result?: unknown;       // optional: store appendOffer result
+  pinApiBase?: string;    // ← NEW: market API base for pinning
 }

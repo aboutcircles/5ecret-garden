@@ -91,21 +91,55 @@
         if (!circlesVal.profiles) throw new Error('Profiles service not configured');
         if (!walletVal?.address) throw new Error('Wallet runner not available');
 
+        // ----- Pin endpoint wiring -----
+        const pinBase = (context.pinApiBase ?? '').replace(/\/$/, '');
+        const pinUrl  = pinBase ? `${pinBase}/api/pin` : '';
+
+        async function pinViaMarketApi(obj: any): Promise<string> {
+            if (!pinUrl) {
+                throw new Error('pinApiBase not provided; cannot call /api/pin');
+            }
+            const res = await fetch(pinUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/ld+json; charset=utf-8',
+                    'Accept': 'application/ld+json'
+                },
+                body: JSON.stringify(obj)
+            });
+
+            if (!res.ok) {
+                let detail = '';
+                try { detail = await res.text(); } catch {}
+                throw new Error(`Pin API error ${res.status}: ${detail || res.statusText}`);
+            }
+
+            const body = await res.json().catch(() => ({} as any));
+            const cid = body?.cid;
+            const looksCidV0 = typeof cid === 'string' && /^Qm[1-9A-HJ-NP-Za-km-z]{44}$/.test(cid);
+            if (!looksCidV0) {
+                throw new Error(`Pin API returned invalid cid: ${String(cid)}`);
+            }
+            return cid;
+        }
+
+        // ----- CirclesBindings -----
         const circlesBindings = {
+            // Read latest profile CID for avatar
             getLatestProfileCid: async (avatar: Address) =>
                 (await circlesVal.data.getMetadataCidForAddress(avatar)) ?? null,
+
+            // Read arbitrary JSON-LD by CID (reuse profiles reader)
             getProfile: async (cid: string) => {
-                try {
-                    return await circlesVal.profiles!.get(cid);
-                } catch {
-                    return undefined;
-                }
+                try { return await circlesVal.profiles!.get(cid); } catch { return undefined; }
             },
+
+            // IMPORTANT: write via market /api/pin
             putJsonLd: async (obj: any) => {
-                const cid = await circlesVal.profiles!.create(obj);
-                if (!cid) throw new Error('Failed to pin JSON-LD');
-                return cid;
+                return await pinViaMarketApi(obj);
             },
+
+            // Publish digest on-chain (unchanged)
             updateAvatarProfileDigest: async (avatar: Address, cid: string) => {
                 const av = await circlesVal.getAvatar(avatar);
                 const tx = await av.updateMetadata(cid);
@@ -113,17 +147,8 @@
             }
         };
 
-        async function ethSign(addr: Address, digest: `0x${string}`): Promise<`0x${string}`> {
-            const eth: any = (window as any)?.ethereum;
-            if (!eth?.request) throw new Error('No injected provider for eth_sign');
-            return await eth.request({method: 'eth_sign', params: [addr, digest]});
-        }
+        // ----- Signing (EOA / Safe owner) -----
 
-        /**
-         * Uniform digest signer:
-         * - If we have a local PK, sign directly (matches eth_sign semantics).
-         * - Otherwise, sign via provider with fallbacks as above.
-         */
         async function signDigest(d: `0x${string}`): Promise<`0x${string}`> {
             // local PK path (works for circles "circles" / PK sessions)
             if (signerVal.privateKey) {
