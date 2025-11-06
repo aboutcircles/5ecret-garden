@@ -140,14 +140,21 @@
     </svelte:fragment>
 
     <svelte:fragment slot="collapsed-menu">
-        <button
-                type="button"
-                class="btn btn-secondary min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3"
-                on:click={() => popupControls.open({ title: 'Create Offer', component: OfferStep1, props: { context: {} } })}
-        >
-            Offer
-        </button>
-    </svelte:fragment>
+  <button
+    type="button"
+    class="btn btn-secondary min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3"
+    on:click={() =>
+      popupControls.open({
+        title: 'Create Offer',
+        component: OfferStep1,
+        props: { context: { operator: OPERATOR } },
+        onClose: () => { void loadCatalog(); }
+      })
+    }
+  >
+    Offer
+  </button>
+</svelte:fragment>
 
     {#if loading}
         <div class="flex flex-col items-center justify-center h-[50vh]">

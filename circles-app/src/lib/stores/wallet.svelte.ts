@@ -96,20 +96,37 @@ export async function restoreSession() {
         if (privateKey && savedAvatar) {
             // Safe + PK path
             runner = await initSafeSdkPrivateKeyContractRunner(privateKey, savedAvatar);
-            // signer.address remains the PK's EOA; set below when we know it
             const account = privateKeyToAccount(privateKey as `0x${string}`);
             signer.address = account.address?.toLowerCase() as Address;
             signer.privateKey = privateKey;
         } else if (legacy) {
             // Legacy browser provider (EOA flow)
             runner = await initBrowserProviderContractRunner();
-            // signer.address will be kept in sync by watchAccount()
             signer.privateKey = undefined;
+
+            // Best-effort resolve the EOA immediately
+            try {
+                const addr = await getSigner();
+                if (addr) {
+                    signer.address = addr;
+                }
+            } catch (e) {
+                console.warn('getSigner failed during legacy restore:', e);
+            }
         } else if (savedAvatar) {
             // Safe + browser provider (EOA != Safe)
             runner = await initSafeSdkBrowserContractRunner(savedAvatar);
-            // DO NOT set signer.address = runner.address (runner is Safe!)
             signer.privateKey = undefined;
+
+            // IMPORTANT: resolve current EOA eagerly so features that need the owner have it
+            try {
+                const addr = await getSigner();
+                if (addr) {
+                    signer.address = addr;
+                }
+            } catch (e) {
+                console.warn('getSigner failed during Safe restore:', e);
+            }
         } else {
             throw new Error('No private key, rings, legacy or saved avatar found in localStorage');
         }
