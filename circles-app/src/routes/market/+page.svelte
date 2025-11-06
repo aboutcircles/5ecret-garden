@@ -123,7 +123,7 @@
       popupControls.open({
         title: 'Create Offer',
         component: OfferStep1,
-        props: { context: { operator: OPERATOR } },   // ← pass operator here
+        props: { context: { operator: OPERATOR, pinApiBase: API_BASE } },   // ← pass operator and pinApiBase
         onClose: () => { void loadCatalog(); }        // ← refresh after closing
       })
     }
@@ -147,7 +147,7 @@
       popupControls.open({
         title: 'Create Offer',
         component: OfferStep1,
-        props: { context: { operator: OPERATOR } },
+        props: { context: { operator: OPERATOR, pinApiBase: API_BASE } },
         onClose: () => { void loadCatalog(); }
       })
     }
