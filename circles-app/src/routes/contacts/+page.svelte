@@ -13,8 +13,7 @@
     import ManageGroupMembers from '$lib/flows/manageGroupMembers/1_manageGroupMembers.svelte';
     import {avatarState} from '$lib/stores/avatar.svelte';
 
-    let filterVersion = writable<number | undefined>(undefined);
-    let filterRelation = writable<'mutuallyTrusts' | 'trusts' | 'trustedBy' | 'variesByVersion' | undefined>(undefined);
+    let filterRelation = writable<'mutuallyTrusts' | 'trusts' | 'trustedBy' | undefined>(undefined);
     let searchQuery = writable<string>('');
 
     // Filters panel state — store to ensure reactivity in all modes
@@ -26,17 +25,16 @@
     }
 
     let filteredStore = derived(
-        [contacts, filterVersion, filterRelation],
-        ([$contacts, filterVersion, filterRelation]) => {
+        [contacts, filterRelation],
+        ([$contacts, filterRelation]) => {
             const filteredData = Object.entries($contacts.data)
                 .filter(([_, contact]) => {
                     if (avatarState.isGroup) {
                         return contact.row.relation === "trusts";
                     }
 
-                    const matchesVersion = !filterVersion || contact?.avatarInfo?.version === filterVersion;
                     const matchesRelation = !filterRelation || contact?.row?.relation === filterRelation;
-                    return matchesVersion && matchesRelation;
+                    return matchesRelation;
                 })
                 .sort((a, b) => {
                     const aRelation = a[1].row.relation;
@@ -210,12 +208,6 @@
     {#if $showFilters}
         <div id={FILTER_PANEL_ID} class="mt-3  mb-3 space-y-3">
             {#if !avatarState.isGroup}
-                <div class="flex gap-x-2 items-center flex-wrap">
-                    <p class="text-sm">Version</p>
-                    <Filter text="All" filter={filterVersion} value={undefined}/>
-                    <Filter text="Version 1" filter={filterVersion} value={1}/>
-                    <Filter text="Version 2" filter={filterVersion} value={2}/>
-                </div>
                 <div class="flex justify-between items-center flex-wrap gap-y-4">
                     <div class="flex gap-2 items-center flex-wrap">
                         <p class="text-sm">Relation</p>
@@ -223,7 +215,6 @@
                         <Filter text="Mutual" filter={filterRelation} value={'mutuallyTrusts'}/>
                         <Filter text="Trusted" filter={filterRelation} value={'trusts'}/>
                         <Filter text="Trust you" filter={filterRelation} value={'trustedBy'}/>
-                        <Filter text="Varies by version" filter={filterRelation} value={'variesByVersion'}/>
                     </div>
                     <div class="flex-grow flex justify-end">
                         <button class="mt-4 sm:mt-0" onclick={handleExportCSV}>Export CSV</button>

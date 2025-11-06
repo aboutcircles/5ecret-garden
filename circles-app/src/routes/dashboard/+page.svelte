@@ -1,10 +1,9 @@
 <script lang="ts">
+    import { CirclesConverter } from '@circles-sdk-v2/utils';
     import { avatarState } from '$lib/stores/avatar.svelte';
     import { roundToDecimals } from '$lib/utils/shared';
     import { runTask } from '$lib/utils/tasks';
 
-    import Tabs from '$lib/components/tabs/Tabs.svelte';
-    import Tab from '$lib/components/tabs/Tab.svelte';
     import OverviewPanel from './OverviewPanel.svelte';
     import TransactionHistoryPanel from './TransactionHistoryPanel.svelte';
 
@@ -20,38 +19,129 @@
     import { Send as LSend, Banknote as LBanknote, BarChart3 as LBarChart3 } from 'lucide';
     import Lucide from '$lib/icons/Lucide.svelte';
 
+    import { circles } from '$lib/stores/circles';
+    import { initTransactionHistoryStore } from '$lib/stores/transactionHistory';
+    import type { CirclesEvent } from '@circles-sdk-v2/rpc';
+
     let mintableAmount: number = $state(0);
+    let unsubscribeEvents: (() => void) | null = null;
 
-    const defaultTab: string = avatarState.isGroup ? 'overview' : 'transaction-history';
-    let selectedTab: string = defaultTab;
-
+    // Single unified effect for event subscription and initial data load
     $effect(() => {
         (async () => {
-            const hasAvatar: boolean = !!avatarState.avatar;
-            const isHuman: boolean = hasAvatar && !avatarState.isGroup;
+            // Cleanup previous subscription
+            if (unsubscribeEvents) {
+                unsubscribeEvents();
+                unsubscribeEvents = null;
+            }
 
-            if (isHuman) {
-                const amount = await avatarState.avatar!.getMintableAmount();
-                mintableAmount = amount ?? 0;
+            if (!$circles || !avatarState.avatar) {
+                return;
+            }
+
+            const avatarAddress = avatarState.avatar.address;
+            if (!avatarAddress) {
+                return;
+            }
+
+            try {
+                // Initial load for humans
+                if (avatarState.isHuman && avatarState.avatar) {
+                    try {
+                        const result = await avatarState.avatar.personalToken.getMintableAmount();
+                        const amount = CirclesConverter.attoCirclesToCircles(result.amount);
+                        mintableAmount = amount ?? 0;
+                    } catch (error) {
+                        console.error('Failed to load initial mintable amount:', error);
+                        mintableAmount = 0;
+                    }
+                }
+
+                console.log('🔔 Setting up event subscription for avatar:', avatarAddress);
+
+                // Subscribe to events for this avatar
+                const observable = await $circles.rpc.client.subscribe(avatarAddress);
+
+                unsubscribeEvents = observable.subscribe(async (event: CirclesEvent) => {
+                    try {
+                        console.log('📥 Received event:', event.$event, event);
+
+                        // Handle transaction-related events
+                        // Note: Balance store handles its own events automatically in +layout.svelte
+                        // But transaction history store needs manual refresh
+                        const transactionEvents = [
+                            'CrcV2_TransferSingle',
+                            'CrcV2_TransferBatch',
+                            'CrcV2_PersonalMint',
+                            'CrcV2_GroupMint',
+                            'CrcV2_StreamCompleted',
+                            'CrcV2_TransferSummary'
+                        ];
+
+                        if (transactionEvents.includes(event.$event)) {
+                            console.log('🔄 Transaction event detected, refreshing transaction history...');
+
+                            // Refresh transaction history (it doesn't have built-in event handling)
+                            if (avatarState.avatar) {
+                                await initTransactionHistoryStore(avatarState.avatar as any);
+                            }
+
+                            // Update mintable amount for personal mints
+                            if (event.$event === 'CrcV2_PersonalMint' && avatarState.isHuman && avatarState.avatar) {
+                                try {
+                                    const result = await avatarState.avatar.personalToken.getMintableAmount();
+                                    const amount = CirclesConverter.attoCirclesToCircles(result.amount);
+                                    mintableAmount = amount ?? 0;
+                                } catch (error) {
+                                    console.error('Failed to update mintable amount:', error);
+                                }
+                            }
+                        }
+
+                        // Log other events for debugging/future features
+                        if (event.$event === 'CrcV2_Trust') {
+                            console.log('🤝 Trust event detected');
+                        }
+
+                        if (event.$event === 'CrcV2_RegisterGroup' || event.$event === 'CrcV2_InviteHuman') {
+                            console.log('👥 Group event detected');
+                        }
+                    } catch (error) {
+                        console.error('❌ Error handling event:', error, event);
+                        // Don't rethrow - keep subscription alive
+                    }
+                });
+
+                console.log('✅ Event subscription established');
+            } catch (error) {
+                console.error('❌ Failed to set up event subscription:', error);
             }
         })();
+
+        // Cleanup on component destroy or when avatar changes
+        return () => {
+            if (unsubscribeEvents) {
+                console.log('🔕 Unsubscribing from events');
+                unsubscribeEvents();
+                unsubscribeEvents = null;
+            }
+        };
     });
 
     async function mintPersonalCircles() {
-        const hasAvatar: boolean = !!avatarState.avatar;
-        if (!hasAvatar) {
-            throw new Error('Avatar store is not available');
+        if (!avatarState.avatar || !avatarState.isHuman) {
+            throw new Error('Avatar is not a human or not available');
         }
 
+        // Set to 0 immediately for UI feedback
+        mintableAmount = 0;
+
+        // Execute mint task
+        // The PersonalMint event will update mintableAmount automatically via subscription
         runTask({
             name: 'Minting Circles ...',
-            promise: avatarState.avatar!.personalMint(),
-        }).finally(async () => {
-            const refreshed = await avatarState.avatar!.getMintableAmount();
-            mintableAmount = refreshed ?? 0;
+            promise: avatarState.avatar.personalToken.mint(),
         });
-
-        mintableAmount = 0;
     }
 
     let personalToken: number = $derived(
@@ -110,13 +200,13 @@
     <!-- Meta -->
     <svelte:fragment slot="meta">
         {#if !avatarState.isGroup}
-            <span class="hover:underline cursor-pointer" onclick={openBalances}>
+            <button class="hover:underline" onclick={openBalances} type="button">
                 {personalToken} individual tokens
-            </span>
+            </button>
             <span class="mx-1.5">•</span>
-            <span class="hover:underline cursor-pointer" onclick={openBalances}>
+            <button class="hover:underline" onclick={openBalances} type="button">
                 {groupToken} group tokens
-            </span>
+            </button>
         {/if}
     </svelte:fragment>
 
@@ -129,7 +219,7 @@
             </button>
         {/if}
 
-        {#if mintableAmount >= 0.01}
+        {#if avatarState.isHuman && mintableAmount >= 0.01}
             <button type="button" class="btn btn-primary btn-sm" onclick={mintPersonalCircles}>
                 <Lucide icon={LBanknote} size={16} class={`shrink-0 ${primaryIconStrokeClass}`} />
                 Mint {roundToDecimals(mintableAmount)} Circles
@@ -154,7 +244,7 @@
     <svelte:fragment slot="collapsed-menu">
         <div class="grid grid-cols-1 gap-2">
 
-            {#if mintableAmount >= 0.01}
+            {#if avatarState.isHuman && mintableAmount >= 0.01}
                 <button
                         type="button"
                         class="btn btn-primary min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] justify-start px-3"

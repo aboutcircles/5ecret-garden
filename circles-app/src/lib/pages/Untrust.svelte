@@ -25,7 +25,7 @@
         } else {
             runTask({
                 name: `Untrusting V2 ${shortenAddress(address)} ...`,
-                promise: avatarState.avatar!.untrust(address),
+                promise: avatarState.avatar!.trust.remove(address),
             });
         }
         popupControls.close();

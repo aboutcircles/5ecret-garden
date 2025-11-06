@@ -1,76 +1,59 @@
 import type { Address } from '@circles-sdk/utils';
-import type { Sdk } from '@circles-sdk/sdk';
-import { CirclesQuery, type GroupRow, type PagedQueryParams } from '@circles-sdk/data';
+import type { Sdk } from '@circles-sdk-v2/sdk';
+import type { GroupRow as NewGroupRow } from '@circles-sdk-v2/types';
+import type { GroupRow as OldGroupRow } from '@circles-sdk/data';
 
-// export async function getBaseAndCmgGroupsByOwnerBatch(
-//   sdk: Sdk,
-//   owners: Address[]
-// ): Promise<Record<Address, GroupRow[]>> {
-//   const acc: Record<Address, GroupRow[]> = {}
-
-//   for (const owner of owners) {
-//     const query = sdk.data.findGroups(
-//       1000,
-//       {
-//         ownerEquals: owner.toLowerCase(),
-//         groupTypeIn: ['CrcV2_BaseGroupCreated', 'CrcV2_CMGroupCreated']
-//       }
-//     )
-
-//     const rows: GroupRow[] = []
-//     while (await query.queryNextPage()) {
-//       rows.push(...(query.currentPage?.results ?? []))
-//     }
-
-//     acc[owner] = rows
-//   }
-
-//   return acc
-// }
-
-export async function getBaseAndCmgGroupsByOwnerBatch(sdk: Sdk, owners: Address[]): Promise<Record<Address, GroupRow[]>> {
+/**
+ * Get base and CMG groups by owner addresses in batch
+ * Uses the new SDK v2 RPC API to query groups with a single aggregated query
+ *
+ * @param sdk - The new SDK v2 instance
+ * @param owners - Array of owner addresses to query groups for
+ * @returns Record mapping owner addresses to their groups (in old SDK format for compatibility)
+ */
+export async function getBaseAndCmgGroupsByOwnerBatch(
+  sdk: Sdk,
+  owners: Address[]
+): Promise<Record<Address, OldGroupRow[]>> {
   if (owners.length === 0 || !sdk) {
     return {};
   }
 
-  const BaseQueryDefintion: PagedQueryParams = {
-    namespace: 'V_CrcV2',
-    table: 'Groups',
-    columns: [
-      'blockNumber',
-      'timestamp',
-      'transactionIndex',
-      'logIndex',
-      'transactionHash',
-      'group',
-      'owner',
-    ],
-    filter: [{
-      Type: 'FilterPredicate',
-      FilterType: 'In',
-      Column: 'owner',
-      Value: owners.map(o => o.toLowerCase() as Address),
-    }],
-    sortOrder: 'DESC',
-    limit: 1000,
-  };
+  // Initialize result with empty arrays for each owner
+  const acc: Record<Address, OldGroupRow[]> = {};
+  const normalizedOwners = owners.map(o => o.toLowerCase() as Address);
+  normalizedOwners.forEach(owner => {
+    acc[owner] = [];
+  });
 
-  const query = new CirclesQuery(sdk.circlesRpc, BaseQueryDefintion);
-  const results = [];
-  const acc: Record<Address, GroupRow[]>= {};
+  try {
+    const allGroups = await sdk.rpc.group.findGroups(100, {
+      ownerIn: normalizedOwners,
+      groupTypeIn: ['CrcV2_BaseGroupCreated']
+    });
 
-  while (await query.queryNextPage()) {
-    const resultRows = query.currentPage?.results ?? [];
-    if (resultRows.length === 0) break;
-    results.push(...resultRows);
-  }
+    // Group results by owner
+    allGroups.forEach((group: NewGroupRow) => {
+      const ownerLower = group.owner?.toLowerCase() as Address;
+      if (acc[ownerLower]) {
+        // Map new SDK GroupRow to old SDK GroupRow format
+        // @todo switch to the new format
+        const mappedGroup: OldGroupRow = {
+          ...group,
+          type: group.type as 'CrcV2_BaseGroupCreated',
+          name: group.name || '',
+          symbol: group.symbol || '',
+          cidV0Digest: group.cidV0Digest || '',
+          memberCount: group.memberCount || 0,
+          mintPolicy: group.mintPolicy || '',
+          treasury: group.treasury || '',
+        };
+        acc[ownerLower].push(mappedGroup);
+      }
+    });
 
-  for (const row of results) {
-    const owner = (<any>row).owner.toLowerCase() as Address;
-    if (!acc[owner]) {
-      acc[owner] = [];
-    }
-    acc[owner].push(<GroupRow>row);
+  } catch (error) {
+    console.error(`Failed to fetch groups for owners in batch:`, error);
   }
 
   return acc;

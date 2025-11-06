@@ -25,9 +25,13 @@
             if (!$circles || !me || !other) { loading = false; commonConnectionsCount = 0; return; }
 
             const good = new Set(['trusts', 'mutuallyTrusts']);
+
+            // Support both old and new SDK
+            let getTrustRelations = (addr: Address) => $circles?.rpc.trust.getAggregatedTrustRelations(addr);
+
             const [mine, theirs] = await Promise.all([
-                $circles.data.getAggregatedTrustRelations(me),
-                $circles.data.getAggregatedTrustRelations(other)
+                getTrustRelations(me),
+                getTrustRelations(other)
             ]);
             const mySet = new Set(mine.filter(r => good.has(r.relation)).map(r => r.objectAvatar));
             const theirSet = new Set(theirs.filter(r => good.has(r.relation)).map(r => r.objectAvatar));
@@ -46,7 +50,7 @@
     $effect(() => { void loadCommon(); });
 
     function openProfile(addr: Address): void {
-        popupControls.open({ component: ProfilePage, props: { address: addr } });
+        popupControls.open({ title: 'Profile', component: ProfilePage, props: { address: addr } });
     }
 </script>
 

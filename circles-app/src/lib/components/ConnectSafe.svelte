@@ -1,15 +1,14 @@
 <script lang="ts">
-  import { Sdk, type AvatarRow } from '@circles-sdk/sdk';
+  import type { Sdk } from '@circles-sdk-v2/sdk';
+  import type { AvatarInfo, Address } from '@circles-sdk-v2/types';
   import ConnectCircles from '$lib/components/ConnectCircles.svelte';
   import CreateSafe from '$lib/pages/CreateSafe.svelte';
-  import type { Address } from '@circles-sdk/utils';
   import { ethers } from 'ethers';
-  import { onMount } from 'svelte';
   import type { GroupRow } from '@circles-sdk/data';
   import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
 
   let safes: Address[] = $state([]);
-  let profileBySafe: Record<string, AvatarRow | undefined> = $state({});
+  let profileBySafe: Record<string, AvatarInfo | undefined> = $state({});
   let groupsByOwner: Record<Address, GroupRow[]> = $state({});
 
   interface Props {
@@ -41,7 +40,7 @@
       (safe) => safe.toLowerCase() as Address
     );
 
-    // Preserve existing order to avoid list items jumping; append any new safes.
+    // Preserve existing order to avoid list items jumping; append any new safes
     if (safes.length === 0) {
       safes = fetchedSafes;
     } else {
@@ -53,27 +52,50 @@
       safes = merged;
     }
 
-    const [avatarInfo, groupInfo] = await Promise.all([
-      sdk?.data?.getAvatarInfoBatch(safes) ?? [],
-      getBaseAndCmgGroupsByOwnerBatch(sdk, safes),
-    ]);
-    const profileBySafeNew: Record<string, AvatarRow | undefined> = {};
-    avatarInfo.forEach((info) => {
-      profileBySafeNew[info.avatar] = info;
+    let avatarInfoResults: AvatarInfo[];
+    let groupInfo: Record<Address, GroupRow[]>;
+
+    try {
+      const rpc = (sdk as any).rpc;
+
+      [avatarInfoResults, groupInfo] = await Promise.all([
+        rpc.avatar.getAvatarInfoBatch(safes),
+        getBaseAndCmgGroupsByOwnerBatch(sdk, safes),
+      ]);
+    } catch (error) {
+      console.error('[ConnectSafe] Error fetching avatar info:', error);
+      return;
+    }
+
+    const profileBySafeNew: Record<string, AvatarInfo | undefined> = {};
+
+    // Process avatar info - only registered avatars are included
+    avatarInfoResults.forEach((avatarInfo: AvatarInfo) => {
+      const safeAddress = avatarInfo.avatar.toLowerCase();
+      profileBySafeNew[safeAddress] = avatarInfo;
     });
+
+    // Mark unregistered safes
+    safes.forEach((safe) => {
+      const safeAddress = safe.toLowerCase();
+      if (!profileBySafeNew[safeAddress]) {
+        profileBySafeNew[safeAddress] = undefined;
+      }
+    });
+
     profileBySafe = profileBySafeNew;
     groupsByOwner = groupInfo;
   }
 
-  onMount(async () => {
-    await loadSafesAndProfile();
+  $effect(() => {
+    if (!sdk || !safeOwnerAddress) return;
+    loadSafesAndProfile();
   });
 
   async function onsafecreated(address: Address) {
     safes = [...safes, address];
   }
 
-  // Refresh groups for all safes owned by this account
   async function refreshGroupsLocal() {
     await loadSafesAndProfile();
   }
@@ -83,8 +105,8 @@
   <ConnectCircles
     address={item}
     isRegistered={profileBySafe[item.toLowerCase()] !== undefined}
-    isV1={profileBySafe[item]?.version === 1}
-    groups={groupsByOwner[item.toLowerCase()] ?? []}
+    groups={groupsByOwner[item.toLowerCase() as Address] ?? []}
+    sdk={sdk}
     initSdk={initSdk}
     refreshGroupsCallback={refreshGroupsLocal}
   />

@@ -6,7 +6,6 @@
     import Filter from "../components/Filter.svelte";
     import GenericList from "../components/GenericList.svelte";
 
-    let filterVersion = writable<number | undefined>(undefined);
     let filterType = writable<'personal' | 'group' | undefined>(undefined);
     let filterToken = writable<'erc20' | 'erc1155' | undefined>(undefined);
 
@@ -20,12 +19,11 @@
 
     // Shape this like other lists so GenericList can key rows
     let filteredStore = derived(
-        [circlesBalances, filterVersion, filterType, filterToken],
-        ([$circlesBalances, filterVersion, filterType, filterToken]) => {
+        [circlesBalances, filterType, filterToken],
+        ([$circlesBalances, filterType, filterToken]) => {
             const filteredData = Object
                 .values($circlesBalances.data)
                 .filter((balance) => {
-                    const matchesVersion = filterVersion === undefined || balance.version === filterVersion;
                     const matchesType =
                         filterType === undefined ||
                         (filterType === 'personal' ? !balance.isGroup :
@@ -36,7 +34,7 @@
                             filterToken === 'erc1155' ? balance.isErc1155 : true);
                     const isNotDust = BigInt(balance.attoCircles) >= 10_000_000_000_000_000n;
 
-                    return matchesVersion && matchesType && matchesToken && isNotDust;
+                    return matchesType && matchesToken && isNotDust;
                 })
                 .map((balance, i) => ({
                     blockNumber: i,
@@ -76,13 +74,6 @@
 
 {#if $showFilters}
     <div id={FILTER_PANEL_ID} class="mt-3 space-y-3">
-        <div class="flex flex-wrap items-center gap-2">
-            <p class="text-sm">Version</p>
-            <Filter text="All" filter={filterVersion} value={undefined}/>
-            <Filter text="Version 1" filter={filterVersion} value={1}/>
-            <Filter text="Version 2" filter={filterVersion} value={2}/>
-        </div>
-
         <div class="flex flex-wrap items-center gap-2">
             <p class="text-sm">Type</p>
             <Filter text="All" filter={filterType} value={undefined}/>

@@ -16,7 +16,7 @@
         }
         runTask({
             name: `Trusting ${shortenAddress(address)} ...`,
-            promise: avatarState.avatar!.trust(address),
+            promise: avatarState.avatar!.trust.add(address),
         });
         popupControls.close();
     }

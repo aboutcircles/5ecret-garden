@@ -1,7 +1,6 @@
 <script lang="ts">
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { clearSession, wallet } from '$lib/stores/wallet.svelte';
-  import { circles } from '$lib/stores/circles';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import { canMigrate } from '$lib/guards/canMigrate';
   import { type Profile } from '@circles-sdk/profiles';
@@ -11,18 +10,10 @@
   import GroupSetting from './editors/GroupSetting.svelte';
   import { ethers } from 'ethers';
   import ProfileEditor from '$lib/components/ProfileEditor.svelte';
-  import { FallbackImageUrl, profilesEqual } from '$lib/utils/profile';
+  import { FallbackImageUrl, profilesEqual, removeProfileFromCache } from '$lib/utils/profile';
   import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
   import Lucide from '$lib/icons/Lucide.svelte';
   import { Save as LSave, LogOut as LLogOut } from 'lucide';
-
-  async function saveProfileData(profile: Profile): Promise<string> {
-    if (!$circles?.profiles) {
-      throw new Error('Profiles not available');
-    }
-
-    return await $circles.profiles.create(profile);
-  }
 
   let newProfile: Profile = $state({
     name: '',
@@ -67,24 +58,29 @@
   });
 
   async function saveProfile() {
-    if (!newProfile) {
+    if (!newProfile || !avatarState.avatar) {
       return;
     }
+
+    // Remove fallback image URLs before saving
     if (newProfile.previewImageUrl && Object.values(FallbackImageUrl).includes(newProfile.previewImageUrl as FallbackImageUrl)) {
       newProfile.previewImageUrl = '';
     }
-    const cid = await saveProfileData(newProfile!);
 
-    const tx = await runTask({
+    await runTask({
       name: 'Updating profile ...',
       promise: (async () => {
-        if (!$circles?.nameRegistry) {
-          throw new Error('Name registry not available');
-        }
-        await avatarState.avatar!.updateMetadata(cid);
-      })().then(() => {
+        // Use the new SDK's profile.update method which handles:
+        // 1. Pinning to IPFS via the profile service
+        // 2. Updating metadata digest in the name registry
+        await avatarState.avatar!.profile.update(newProfile);
+
+        // Clear the profile cache for this address to force a reload
+        removeProfileFromCache(avatarState.avatar!.address);
+
+        // Reload the window to reflect changes
         window.location.reload();
-      }),
+      })(),
     });
   }
 
@@ -102,7 +98,7 @@
     <h1 class="h2">Settings</h1>
   </svelte:fragment>
   <svelte:fragment slot="meta">
-    Profile, wallet, migration
+    Profile, wallet
   </svelte:fragment>
   <svelte:fragment slot="actions">
     {#each actions as a (a.id)}

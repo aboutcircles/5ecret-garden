@@ -34,13 +34,6 @@
       <span class="label-text">Circles address</span>
       <input type="text" readonly class="input input-bordered w-full" value={avatarState.avatar?.avatarInfo?.avatar} />
     </label>
-
-    {#if avatarState.avatar?.avatarInfo?.v1Token && !avatarState.avatar?.avatarInfo?.v1Stopped}
-      <label class="form-control">
-        <span class="label-text">Token address</span>
-        <input type="text" readonly class="input input-bordered w-full" value={avatarState.avatar.avatarInfo.v1Token} />
-      </label>
-    {/if}
   {/if}
 
   {#if showCustomizableFields}

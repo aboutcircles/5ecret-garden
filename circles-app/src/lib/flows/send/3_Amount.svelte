@@ -4,15 +4,10 @@
     import Send from './4_Send.svelte';
     import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
     import {onMount, tick} from 'svelte';
-    import { circles } from '$lib/stores/circles';
     import { avatarState } from '$lib/stores/avatar.svelte';
     import { TransitiveTransferTokenAddress } from '$lib/pages/SelectAsset.svelte';
-    import type { TokenBalanceRow } from '@circles-sdk/data';
-    import { writable } from 'svelte/store';
-    import type { MaxFlowResponse } from '@circles-sdk/sdk';
     import { ethers } from 'ethers';
     import { popupControls } from '$lib/stores/popUp';
-    import { CirclesConverter } from '@circles-sdk/utils';
 
     interface Props {
         context: SendFlowContext;
@@ -24,10 +19,6 @@
         context.amount = 0;
     }
 
-    let deadBalances: TokenBalanceRow[] = $state([]);
-    let path: MaxFlowResponse | undefined = $state();
-
-    let showUnusedBalances = writable(false);
     let showPathsSection = $state(false); // True if pathfinding succeeds
     let pathfindingFailed = $state(false); // True if pathfinding fails
     let maxAmountCircles = $state(-1);
@@ -51,7 +42,6 @@
         // If not transitive transfer or missing info, skip pathfinding
         if (
             context.selectedAsset?.tokenAddress != TransitiveTransferTokenAddress ||
-            !$circles ||
             !avatarState.avatar ||
             !context.selectedAddress
         ) {
@@ -62,65 +52,32 @@
         calculatingPath = true;
 
         try {
-            const excludedTokens = await $circles.getDefaultTokenExcludeList(
+            // Use new SDK's transfer.getMaxAmount method
+            const maxAmountAttoCrc = await avatarState.avatar.transfer.getMaxAmount(
                 context.selectedAddress
             );
 
-            const bigNumber = '99999999999999999999999999999999999';
-            const p =
-                avatarState.avatar?.avatarInfo?.version === 1
-                    ? await $circles.v1Pathfinder?.getPath(
-                        avatarState.avatar.address,
-                        context.selectedAddress,
-                        bigNumber
-                    )
-                    : await $circles.v2Pathfinder?.getPath(
-                        avatarState.avatar.address,
-                        context.selectedAddress,
-                        bigNumber,
-                        true,
-                        undefined,
-                        undefined,
-                        excludedTokens
-                    );
-
-            if (!p || !p.transfers?.length) {
+            if (!maxAmountAttoCrc || maxAmountAttoCrc === 0n) {
                 pathfindingFailed = true;
+                maxAmountCircles = 0;
                 return;
             }
 
-            path = p;
+            // Convert atto-circles to CRC for display
+            maxAmountCircles = parseFloat(ethers.formatEther(maxAmountAttoCrc));
 
-            maxAmountCircles = parseFloat(
-                ethers.formatEther(path.maxFlow.toString())
-            );
-            if (avatarState.avatar?.avatarInfo?.version === 1) {
-                const attoCircles = CirclesConverter.attoCrcToAttoCircles(BigInt(path.maxFlow), BigInt(Date.now() / 1000));
-                maxAmountCircles = CirclesConverter.attoCirclesToCircles(attoCircles);
-                // maxAmountCircles = crcToTc(new Date(), BigInt(path.maxFlow));
-            }
-
-            // If pathfinding returned maxFlow = 0 or no meaningful transfers, treat as failure
-            if (!path.transfers?.length || maxAmountCircles === 0) {
-                pathfindingFailed = true;
-                return;
-            }
-
-            // Otherwise, pathfinding succeeded
+            // Pathfinding succeeded
             showPathsSection = true;
 
-            const balances = await avatarState.avatar.getBalances();
-            const sourceEdges = path.transfers.filter(
-                (edge) => edge.from === avatarState.avatar?.address
-            );
+            console.log('✅ Pathfinding complete:', {
+                maxAmountCrc: maxAmountCircles,
+                maxAmountAttoCrc: maxAmountAttoCrc.toString()
+            });
 
-            // Identify "dead" balances not used in the path
-            deadBalances = balances.filter(
-                (balance) =>
-                    !sourceEdges.some((edge) => edge.tokenOwner === balance.tokenAddress)
-            );
+            // Note: The new SDK handles path calculation internally in transfer.advanced()
+            // We don't need to manually fetch the path here anymore
         } catch (err) {
-            console.error('Error fetching path:', err);
+            console.error('❌ Error calculating max transferable amount:', err);
             pathfindingFailed = true;
             maxAmountCircles = -2;
         } finally {
@@ -143,10 +100,6 @@
             // Optional but helpful: stable key so the same transaction step reuses the instance
             key: `send:${context.selectedAddress ?? 'na'}:${context.selectedAsset?.tokenAddress ?? 'transitive'}`
         });
-    }
-
-    function toggleUnusedBalances() {
-        showUnusedBalances.update((v) => !v);
     }
 
     function toggleDataInput() {

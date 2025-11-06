@@ -79,17 +79,35 @@ async function fetchProfiles(addresses: Address[]): Promise<Map<Address, Profile
   if (!sdk.profiles) throw new Error('No sdk.profiles instance found. Is the profile service url configured?');
 
   // 1) Fetch avatar info for all addresses in one go
-  const avatars = await sdk.data.getAvatarInfoBatch(addresses);
+  let avatars;
+
+  // Validate SDK is properly initialized
+  if (!sdk || typeof sdk !== 'object') {
+    console.error('❌ SDK is not properly initialized:', sdk);
+    return new Map();
+  }
+
+  if (typeof (sdk as any).rpc?.avatar?.getAvatarInfoBatch === 'function') {
+    // New SDK - use RPC directly
+    console.log('🔄 Using new SDK rpc.avatar.getAvatarInfoBatch()');
+    avatars = await (sdk as any).rpc.avatar.getAvatarInfoBatch(addresses);
+  } else {
+    console.error('❌ No rpc.avatar.getAvatarInfoBatch method available on SDK');
+    return new Map();
+  }
 
   // 2) Build a map address->avatar for convenience
+  // Filter out null/undefined avatars (addresses that don't have registered avatars)
   const addressToAvatar = new Map<string, AvatarRow>();
   for (const avatar of avatars) {
-    addressToAvatar.set(avatar.avatar.toLowerCase(), avatar);
+    if (avatar && avatar.avatar) {
+      addressToAvatar.set(avatar.avatar.toLowerCase(), avatar);
+    }
   }
 
   // 3) Gather all CIDs
   const cids: string[] = avatars
-    .filter((a) => a.cidV0)
+    .filter((a) => a && a.cidV0)
     .map((a) => a.cidV0!);
 
   const uniqueCids = [...new Set(cids)];
@@ -101,7 +119,18 @@ async function fetchProfiles(addresses: Address[]): Promise<Map<Address, Profile
     const chunk = uniqueCids.slice(i, i + chunkSize);
 
     // console.log(`chunk:`, chunk);
-    const chunkProfiles = await sdk.circlesRpc.call<Profile[]>("circles_getProfileByCidBatch", [chunk]);
+    let chunkProfiles;
+    let isNewSdk = false;
+    if (typeof (sdk as any).rpc?.client?.call === 'function') {
+      // New SDK - use rpc.client.call (returns result directly, not wrapped)
+      // @todo refactor
+      console.log('🔄 Using new SDK rpc.client.call() for profile batch');
+      const result = await (sdk as any).rpc.client.call<string[], Profile[]>("circles_getProfileByCidBatch", [chunk]);
+      chunkProfiles = { result }; // Wrap to match old SDK format
+      isNewSdk = true;
+    } else {
+      throw new Error('No RPC call method available');
+    }
     // console.log(`newApiResults:`, newApiResults);
 
       const profilesMap = chunk.reduce((p,c, i) => {
@@ -159,12 +188,6 @@ export async function getProfile(address: Address): Promise<Profile> {
   if (address === $circles?.circlesConfig.v2HubAddress?.toLowerCase()) {
     return {
       name: 'Circles V2 Hub Contract',
-      previewImageUrl: '/logo.svg',
-    };
-  }
-  if (address === $circles?.circlesConfig.migrationAddress?.toLowerCase()) {
-    return {
-      name: 'Circles V2 Migration Contract',
       previewImageUrl: '/logo.svg',
     };
   }

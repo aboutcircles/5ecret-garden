@@ -5,7 +5,6 @@
     import {contacts} from '$lib/stores/contacts';
     import {
         type AvatarRow,
-        CirclesQuery,
         type TrustRelation,
         type TrustRelationRow,
     } from '@circles-sdk/data';
@@ -17,15 +16,11 @@
     import Avatar from '$lib/components/avatar/Avatar.svelte';
     import {popupControls} from '$lib/stores/popUp';
     import AddressComponent from '$lib/components/Address.svelte';
-    import {uint256ToAddress, type Address} from '@circles-sdk/utils';
+    import type {Address} from '@circles-sdk/utils';
     import SelectAmount from '$lib/flows/send/3_Amount.svelte';
     import {transitiveTransfer} from '$lib/pages/SelectAsset.svelte';
-    import {
-        getGroupCollateral, getGroupTokenHolders,
-        getTreasuryAddress,
-        getVaultAddress,
-    } from '$lib/utils/vault';
     import CollateralTable from '$lib/components/CollateralTable.svelte';
+    import TokenHoldersList from '$lib/components/TokenHoldersList.svelte';
     import {goto} from '$app/navigation';
     import {avatarState} from '$lib/stores/avatar.svelte';
 
@@ -50,7 +45,11 @@
 
     let otherAvatar: AvatarRow | undefined = $state();
     let profile: Profile | undefined = $state();
-    let members: Address[] | undefined = $state(undefined);
+    let members: Array<{ address: Address; expiryTime: number }> | undefined = $state(undefined);
+    let totalMemberCount: number = $state(0);
+    let memberQuery: any = $state(undefined);
+    let loadingMoreMembers: boolean = $state(false);
+    let hasMoreMembers: boolean = $state(true);
     let mintHandler: Address | undefined = $state();
 
     let trustRow: TrustRelationRow | undefined = $state();
@@ -70,14 +69,62 @@
         trustRelation?: TrustRelation;
     }> = $state([]);
 
+    async function loadMoreMembers() {
+        if (!memberQuery || loadingMoreMembers || !hasMoreMembers) {
+            return;
+        }
+
+        // Check if there are more pages to load
+        if (memberQuery.currentPage && !memberQuery.currentPage.hasMore) {
+            hasMoreMembers = false;
+            return;
+        }
+
+        loadingMoreMembers = true;
+        try {
+            console.log('🔄 Loading next page of members...');
+            const hasResults = await memberQuery.queryNextPage();
+
+            if (hasResults && memberQuery.currentPage) {
+                const memberRows = memberQuery.currentPage.results;
+                const newMembers = memberRows.map((row: any) => ({
+                    address: row.member,
+                    expiryTime: row.expiryTime
+                }));
+
+                console.log(`📊 Loaded ${newMembers.length} members (hasMore: ${memberQuery.currentPage.hasMore})`);
+
+                members = [...(members || []), ...newMembers];
+                hasMoreMembers = memberQuery.currentPage.hasMore;
+            } else {
+                hasMoreMembers = false;
+            }
+        } catch (error) {
+            console.error('❌ Error loading more members:', error);
+            hasMoreMembers = false;
+        } finally {
+            loadingMoreMembers = false;
+        }
+    }
+
     async function initialize(address: Address) {
         const hasCircles: boolean = !!$circles;
         if (!hasCircles) {
             return;
         }
 
+        // Reset pagination state
+        members = undefined;
+        totalMemberCount = 0;
+        memberQuery = undefined;
+        hasMoreMembers = true;
+        loadingMoreMembers = false;
+
+        // Get avatar info using new SDK
+        console.log('🔄 Using new SDK rpc.avatar.getAvatarInfo()');
+
         const [other, prof] = await Promise.all([
-            $circles.data.getAvatarInfo(address),
+            ($circles as any).rpc.avatar.getAvatarInfo(address),
             getProfile(address),
         ]);
         otherAvatar = other;
@@ -88,114 +135,130 @@
         const isGroup: boolean = otherAvatar?.type === 'CrcV2_RegisterGroup';
         const isHuman: boolean = otherAvatar?.type === 'CrcV2_RegisterHuman';
 
+        console.log('🔍 Profile initialization:', {
+            address,
+            type: otherAvatar?.type,
+            isGroup,
+            isHuman
+        });
+
         if (isGroup) {
+            // Fetch group info directly for the specific group being viewed
+            const groupInfoP = (async () => {
+                try {
+                    console.log('🔄 Fetching group info directly for address:', address);
+                    // Use findGroups with groupAddressIn filter to get the specific group
+                    const groups = await ($circles as any).rpc.group.findGroups(1, {
+                        groupAddressIn: [address],
+                    });
+                    console.log('📊 Group data:', groups);
+
+                    if (groups && groups.length > 0) {
+                        const groupData = groups[0];
+                        if (groupData.memberCount !== undefined) {
+                            console.log('📊 Found group with memberCount:', groupData.memberCount);
+                            totalMemberCount = groupData.memberCount;
+                            return groupData;
+                        }
+                    } else {
+                        console.warn('⚠️ Group not found');
+                    }
+
+                    return null;
+                } catch (error) {
+                    console.error('❌ Error fetching group info:', error);
+                    return null;
+                }
+            })();
             const membersP = (async () => {
-                const groupTrustRelations = await $circles.data.getAggregatedTrustRelations(otherAvatar!.avatar);
-                return groupTrustRelations
-                    .filter((row) => row.relation === 'trusts')
-                    .map((o) => o.objectAvatar);
+                try {
+                    console.log('🔄 Using new SDK avatar.group.getMembers() for group:', otherAvatar!.avatar);
+                    // Create a PagedQuery instance for group members
+                    memberQuery = avatarState.avatar.group.getMembers(otherAvatar!.avatar, 100, 'DESC');
+
+                    // Fetch first page
+                    const hasResults = await memberQuery.queryNextPage();
+                    if (hasResults && memberQuery.currentPage) {
+                        const memberRows = memberQuery.currentPage.results;
+                        console.log('📊 Members data (first page):', memberRows);
+                        const mappedMembers = memberRows.map((row: any) => ({
+                            address: row.member,
+                            expiryTime: row.expiryTime
+                        }));
+                        console.log('📊 Mapped members:', mappedMembers);
+                        hasMoreMembers = memberQuery.currentPage.hasMore;
+                        return mappedMembers;
+                    }
+                    return [];
+                } catch (error) {
+                    console.error('❌ Error fetching members:', error);
+                    return [];
+                }
             })();
 
             const mintHandlerP = (async () => {
-                const findMintHandlerQuery = new CirclesQuery<any>($circles.circlesRpc, {
-                    namespace: 'V_CrcV2',
-                    table: 'Groups',
-                    columns: ['mintHandler'],
-                    filter: [
-                        {
-                            Type: 'FilterPredicate',
-                            FilterType: 'Equals',
-                            Column: 'group',
-                            Value: address,
-                        },
-                    ],
-                    sortOrder: 'DESC',
-                    limit: 1,
-                });
-                return (await findMintHandlerQuery.getSingleRow())?.mintHandler as Address | undefined;
+                try {
+                    console.log('🔄 Using new SDK avatar.group.properties.mintHandler()');
+                    return await avatarState.avatar.group.properties.mintHandler(otherAvatar!.avatar);
+                } catch (error) {
+                    console.error('❌ Error fetching mint handler:', error);
+                    return undefined;
+                }
             })();
 
-            const vaultAndTreasuryP = Promise.allSettled([
-                getVaultAddress($circles.circlesRpc, otherAvatar!.avatar),
-                getTreasuryAddress($circles.circlesRpc, otherAvatar!.avatar),
+            const collateralP = (async () => {
+                try {
+                    console.log('🔄 Using new SDK avatar.group.getCollateral() for group:', otherAvatar!.avatar);
+                    const collateralTokens = await avatarState.avatar.group.getCollateral(otherAvatar!.avatar);
+                    console.log('📊 Collateral data:', collateralTokens);
+                    const filtered = collateralTokens.filter((token: any) => token.isErc1155);
+                    console.log('📊 Filtered collateral (ERC1155 only):', filtered);
+                    return filtered
+                        .map((token: any) => ({
+                            avatar: token.tokenAddress,
+                            amount: token.attoCircles,
+                            amountToRedeemInCircles: 0,
+                            amountToRedeem: 0n,
+                        }))
+                        .sort((a: any, b: any) => (a.amount > b.amount ? -1 : a.amount === b.amount ? 0 : 1));
+                } catch (error) {
+                    console.error('❌ Error fetching collateral:', error);
+                    return [];
+                }
+            })();
+
+            // Token holders are now loaded directly by the TokenHoldersList component with pagination
+            const tokenHoldersP = (async () => {
+                return [];
+            })();
+
+            const [membersResult, mintHandlerResult, collateralResult, tokenHoldersResult, _groupInfoResult] = await Promise.all([
+                membersP,
+                mintHandlerP,
+                collateralP,
+                tokenHoldersP,
+                groupInfoP
             ]);
 
-            const tokenHoldersP = getGroupTokenHolders($circles.circlesRpc, address);
+            members = membersResult;
+            mintHandler = mintHandlerResult;
+            collateralInTreasury = collateralResult;
+            tokenHolders = tokenHoldersResult;
+            // _groupInfoResult already set totalMemberCount in the promise
 
-            [members, mintHandler] = await Promise.all([membersP, mintHandlerP]);
-
-            const [vaultRes, treasuryRes] = await vaultAndTreasuryP as [
-                PromiseSettledResult<string | null>,
-                PromiseSettledResult<string | null>
-            ];
-            const vaultAddress = vaultRes.status === 'fulfilled' ? vaultRes.value : null;
-            const treasuryAddress = treasuryRes.status === 'fulfilled' ? treasuryRes.value : null;
-            const balanceOwner: string = vaultAddress ?? treasuryAddress ?? '';
-
-            const hasBalanceOwner: boolean = balanceOwner.length > 0;
-
-            if (hasBalanceOwner) {
-                const balancesResult = await getGroupCollateral($circles.circlesRpc, balanceOwner);
-                if (balancesResult) {
-                    const {columns, rows} = balancesResult;
-                    const colId = columns.indexOf('tokenId');
-                    const colBal = columns.indexOf('demurragedTotalBalance');
-                    collateralInTreasury = rows
-                        .map((row) => ({
-                            avatar: uint256ToAddress(BigInt(row[colId])),
-                            amount: BigInt(row[colBal]),
-                            amountToRedeemInCircles: 0,
-                            amountToRedeem: 0n,
-                        }))
-                        .sort((a, b) => (a.amount > b.amount ? -1 : a.amount === b.amount ? 0 : 1));
-                } else {
-                    collateralInTreasury = [];
-                }
-            } else {
-                collateralInTreasury = [];
-            }
-
-            const tokenHodlers = await tokenHoldersP;
-            if (tokenHodlers) {
-                const {columns, rows} = tokenHodlers;
-                const avatarIdx = columns.indexOf('account');
-                const colBal = columns.indexOf('demurragedTotalBalance');
-                tokenHolders = rows
-                    .map((row) => ({
-                        avatar: row[avatarIdx],
-                        amount: BigInt(row[colBal]),
-                        amountToRedeemInCircles: 0,
-                        amountToRedeem: 0n,
-                    }))
-                    .sort((a, b) => (a.amount > b.amount ? -1 : a.amount === b.amount ? 0 : 1));
-            } else {
-                tokenHolders = [];
-            }
+            console.log('✅ Final group data loaded:');
+            console.log('  - Total member count:', totalMemberCount);
+            console.log('  - Members loaded:', members?.length, members);
+            console.log('  - Collateral:', collateralInTreasury?.length, collateralInTreasury);
+            console.log('  - Token holders:', tokenHolders?.length, tokenHolders);
         } else {
             members = undefined;
-
-            if (isHuman) {
-                const tokenHodlers = await getGroupTokenHolders($circles.circlesRpc, address);
-                if (tokenHodlers) {
-                    const {columns, rows} = tokenHodlers;
-                    const avatarIdx = columns.indexOf('account');
-                    const colBal = columns.indexOf('demurragedTotalBalance');
-                    tokenHolders = rows
-                        .map((row) => ({
-                            avatar: row[avatarIdx],
-                            amount: BigInt(row[colBal]),
-                            amountToRedeemInCircles: 0,
-                            amountToRedeem: 0n,
-                        }))
-                        .sort((a, b) => (a.amount > b.amount ? -1 : a.amount === b.amount ? 0 : 1));
-                } else {
-                    tokenHolders = [];
-                }
-            }
+            // Token holders for humans are now loaded directly by the TokenHoldersList component with pagination
+            tokenHolders = [];
         }
     }
 
-    let selectedTab: string = 'common_connections';
+    let selectedTab: string = $state('common_connections');
     let commonConnectionsCount = $state(0);
 </script>
 
@@ -277,6 +340,7 @@
                                 transitiveOnly: true,
                                 selectedAsset: transitiveTransfer(),
                                 amount: 0,
+                                useWrappedBalances: true,
                             },
                         },
                     });
@@ -372,34 +436,64 @@
         </div>
     </Tab>
 
-    {#if members}
+    {#if otherAvatar?.type === 'CrcV2_RegisterGroup'}
         <Tab
                 id="members"
                 title="Members"
-                badge={members.length}
+                badge={totalMemberCount || 0}
                 panelClass="p-4 bg-base-100 border-none"
         >
-            {#each members as member (member)}
-                <RowFrame
-                        clickable={true}
-                        noLeading
-                        on:click={async () => {
-                    // Open another Profile instance in a popup (same UX as groups/contacts lists)
-                    const ProfilePage = (await import('$lib/pages/Profile.svelte')).default;
-                    popupControls.open({ component: ProfilePage, props: { address: member } });
-                  }}
-                >
-                    <div class="min-w-0">
-                        <Avatar address={member} view="horizontal" clickable={false}/>
-                    </div>
-                    <div slot="trailing" class="font-medium underline flex gap-x-2">
-                        <img src="/chevron-right.svg" alt="Chevron Right" class="w-4"/>
-                    </div>
-                </RowFrame>
-            {/each}
-            {#if members.length === 0}
-                <div>No members</div>
+            {#if totalMemberCount > 0}
+                <div class="mb-4 text-sm text-gray-600">
+                    Total members: {totalMemberCount}
+                    {#if members}
+                        · Loaded: {members.length}
+                    {/if}
+                </div>
             {/if}
+            <div
+                    onscroll={(e) => {
+                        const target = e.currentTarget;
+                        const scrollPosition = target.scrollTop + target.clientHeight;
+                        const scrollThreshold = target.scrollHeight - 200;
+
+                        if (scrollPosition >= scrollThreshold && hasMoreMembers && !loadingMoreMembers) {
+                            loadMoreMembers();
+                        }
+                    }}
+                    class="max-h-[600px] overflow-y-auto"
+            >
+                {#if members && members.length > 0}
+                    {#each members as member (member.address)}
+                        <RowFrame
+                                clickable={true}
+                                noLeading
+                                on:click={async () => {
+                            // Open another Profile instance in a popup (same UX as groups/contacts lists)
+                            const ProfilePage = (await import('$lib/pages/Profile.svelte')).default;
+                            popupControls.open({ title: 'Profile', component: ProfilePage, props: { address: member.address } });
+                          }}
+                        >
+                            <div class="min-w-0">
+                                <Avatar address={member.address} view="horizontal" clickable={false}/>
+                            </div>
+                            <div slot="trailing" class="font-medium underline flex gap-x-2">
+                                <img src="/chevron-right.svg" alt="Chevron Right" class="w-4"/>
+                            </div>
+                        </RowFrame>
+                    {/each}
+                    {#if loadingMoreMembers}
+                        <div class="p-4 text-center text-gray-500">Loading more members...</div>
+                    {/if}
+                    {#if !hasMoreMembers && members.length < totalMemberCount}
+                        <div class="p-4 text-center text-gray-500">All members loaded ({members.length} of {totalMemberCount})</div>
+                    {/if}
+                {:else if members && members.length === 0}
+                    <div class="p-4 text-center text-gray-500">No members</div>
+                {:else}
+                    <div class="p-4 text-center text-gray-500">Loading members...</div>
+                {/if}
+            </div>
         </Tab>
     {/if}
 
@@ -407,25 +501,35 @@
         <Tab
                 id="collateral"
                 title="Collateral"
-                badge={collateralInTreasury.length}
+                badge={collateralInTreasury?.length || 0}
                 panelClass="p-4 bg-base-100 border-none"
         >
             <div class="w-full">
-                <CollateralTable {collateralInTreasury}/>
+                {#if collateralInTreasury && collateralInTreasury.length > 0}
+                    <CollateralTable {collateralInTreasury}/>
+                {:else if collateralInTreasury && collateralInTreasury.length === 0}
+                    <div class="p-4 text-center text-gray-500">No collateral tokens</div>
+                {:else}
+                    <div class="p-4 text-center text-gray-500">Loading collateral...</div>
+                {/if}
             </div>
         </Tab>
     {/if}
 
-    {#if otherAvatar?.type === 'CrcV2_RegisterGroup' || otherAvatar?.type === 'CrcV2_RegisterHuman'}
+    {#if otherAvatar?.type === 'CrcV2_RegisterGroup' || otherAvatar?.type === 'CrcV2_RegisterHuman' || otherAvatar?.type === 'CrcV2_RegisterOrganization'}
         <Tab
                 id="holders"
                 title="Holders"
-                badge={tokenHolders.length}
                 panelClass="p-4 bg-base-100 border-none"
         >
-            <div class="w-full">
-                <CollateralTable collateralInTreasury={tokenHolders}/>
-            </div>
+            {#if otherAvatar}
+                <TokenHoldersList
+                    tokenAddress={otherAvatar.avatar}
+                    isPersonalToken={otherAvatar.type === 'CrcV2_RegisterHuman' || otherAvatar.type === 'CrcV2_RegisterOrganization'}
+                />
+            {:else}
+                <div class="p-4 text-center text-gray-500">Loading holders...</div>
+            {/if}
         </Tab>
     {/if}
 </Tabs>

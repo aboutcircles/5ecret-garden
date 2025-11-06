@@ -9,12 +9,16 @@ import {
     SafeSdkBrowserContractRunner,
     SafeSdkPrivateKeyContractRunner,
 } from '@circles-sdk/adapter-safe';
-import {Sdk} from '@circles-sdk/sdk';
+import {Sdk as OldSdk} from '@circles-sdk/sdk';
+import {Sdk} from '@circles-sdk-v2/sdk';
+import {SafeContractRunner, SafeBrowserRunner} from '@circles-sdk-v2/runner';
+import {circlesConfig} from '@circles-sdk-v2/core';
 import {getCirclesConfig} from '$lib/utils/helpers';
 import {gnosisConfig} from '$lib/circlesConfig';
 import {JsonRpcProvider} from 'ethers';
 import {type SdkContractRunner} from '@circles-sdk/adapter';
 import type {Address} from '@circles-sdk/utils';
+import type {Address as ViemAddress} from 'viem';
 import {CirclesStorage} from '$lib/utils/storage';
 import {groupMetrics} from './groupMetrics.svelte';
 import {disconnect, getAccount, getConnectors, reconnect} from '@wagmi/core';
@@ -22,6 +26,8 @@ import {config} from '../../config';
 import {settings} from './settings.svelte';
 import type {GroupType} from '@circles-sdk/data';
 import {privateKeyToAccount} from 'viem/accounts';
+import {createPublicClient, http} from 'viem';
+import {gnosis} from 'viem/chains';
 
 export const wallet = writable<SdkContractRunner | undefined>();
 
@@ -84,6 +90,48 @@ export async function initSafeSdkBrowserContractRunner(address: Address) {
     return runner as SdkContractRunner;
 }
 
+// New runner initialization functions using @markfender/runner
+export async function initNewSafeContractRunner(privateKey: string, safeAddress: ViemAddress) {
+    const rpcUrl = settings.ring ? gnosisConfig.rings.circlesRpcUrl : gnosisConfig.production.circlesRpcUrl;
+
+    const publicClient = createPublicClient({
+        chain: gnosis,
+        transport: http(rpcUrl),
+    });
+
+    const runner = new SafeContractRunner(
+        publicClient,
+        privateKey as `0x${string}`,
+        rpcUrl,
+        safeAddress
+    );
+
+    await runner.init();
+    return runner;
+}
+
+export async function initNewSafeBrowserRunner(safeAddress: ViemAddress) {
+    const rpcUrl = settings.ring ? gnosisConfig.rings.circlesRpcUrl : gnosisConfig.production.circlesRpcUrl;
+
+    const publicClient = createPublicClient({
+        chain: gnosis,
+        transport: http(rpcUrl),
+    });
+
+    if (!window.ethereum) {
+        throw new Error('No ethereum provider found');
+    }
+
+    const runner = new SafeBrowserRunner(
+        publicClient,
+        window.ethereum,
+        safeAddress
+    );
+
+    await runner.init();
+    return runner;
+}
+// @todo check
 export async function restoreSession() {
     try {
         const privateKey = CirclesStorage.getInstance().privateKey;
@@ -91,39 +139,36 @@ export async function restoreSession() {
         const rings: boolean = CirclesStorage.getInstance().rings ? true : false;
         const legacy = CirclesStorage.getInstance().legacy;
 
-        let runner: SdkContractRunner | undefined;
+        let newRunner;
+        let sdk: Sdk;
 
         if (privateKey && savedAvatar) {
-            // Safe + PK path
-            runner = await initSafeSdkPrivateKeyContractRunner(privateKey, savedAvatar);
-            // signer.address remains the PK's EOA; set below when we know it
+            // Safe + PK path - use NEW SDK with runner
+            newRunner = await initNewSafeContractRunner(privateKey, savedAvatar as ViemAddress);
+
             const account = privateKeyToAccount(privateKey as `0x${string}`);
             signer.address = account.address?.toLowerCase() as Address;
             signer.privateKey = privateKey;
-        } else if (legacy) {
-            // Legacy browser provider (EOA flow)
-            runner = await initBrowserProviderContractRunner();
-            // signer.address will be kept in sync by watchAccount()
-            signer.privateKey = undefined;
+
+            // Use the new SDK with runner - use default config for now (rings not supported yet in new SDK)
+            sdk = new Sdk(circlesConfig[100], newRunner);
+
         } else if (savedAvatar) {
-            // Safe + browser provider (EOA != Safe)
-            runner = await initSafeSdkBrowserContractRunner(savedAvatar);
-            // DO NOT set signer.address = runner.address (runner is Safe!)
+            // Safe + browser provider (EOA != Safe) - use NEW SDK with browser runner
+            newRunner = await initNewSafeBrowserRunner(savedAvatar as ViemAddress);
             signer.privateKey = undefined;
+
+            // Use the new SDK with runner - use default config for now (rings not supported yet in new SDK)
+            sdk = new Sdk(circlesConfig[100], newRunner);
+
         } else {
             throw new Error('No private key, rings, legacy or saved avatar found in localStorage');
         }
 
-        if (!runner) {
-            throw new Error('Failed to restore contract runner');
+        if (!sdk) {
+            throw new Error('Failed to initialize SDK');
         }
 
-        wallet.set(runner);
-
-        const sdk = new Sdk(
-            runner,
-            await getCirclesConfig(100n, rings),
-        );
         circles.set(sdk);
 
         let savedGroup = CirclesStorage.getInstance().group;
@@ -137,17 +182,13 @@ export async function restoreSession() {
         const avatarToRestore =
             (savedGroup
                 ?? savedAvatar
-                ?? runner.address) as Address;
+                ?? (newRunner?.address || sdk.contractRunner?.address)) as Address;
 
-        console.log('savedAvatar', savedAvatar);
-        console.log('savedGroup', savedGroup);
-        console.log('restoredWallet.address', runner.address);
-        console.log('-> avatarToRestore is: ', avatarToRestore);
-
-        const avatarInfo = await sdk.data.getAvatarInfo(avatarToRestore);
-
+        // Check if avatar exists - handle both old and new SDK
+        let avatarInfo = await sdk.getAvatar(avatarToRestore);
         if (avatarInfo) {
-            avatarState.avatar = await sdk.getAvatar(avatarToRestore);
+            avatarState.avatar = avatarInfo;
+            avatarState.isHuman = !!avatarInfo.avatarInfo?.isHuman;
         } else {
             await goto('/register');
         }
@@ -181,6 +222,7 @@ export async function clearSession() {
     Object.assign(avatarState, {
         avatar: undefined,
         isGroup: undefined,
+        isHuman: undefined,
         groupType: undefined,
         profile: undefined,
     });

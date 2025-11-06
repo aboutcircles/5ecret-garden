@@ -19,7 +19,7 @@ interface ContactEventRow extends EventRow {
 
 export async function createContactsQueryStore(
   avatar: Avatar,
-  address: Address,
+  _address: Address,
   refreshOnEvents?: Set<CirclesEventType>
 ) {
   const sdk = get(circles);
@@ -28,11 +28,18 @@ export async function createContactsQueryStore(
   const createContactsQuery = async (): Promise<
     CirclesQuery<ContactEventRow>
   > => {
+    // Get RPC client - handle both old and new SDK
+    let rpcClient;
+    if ((sdk as any).rpc) {
+      // New SDK
+      rpcClient = (sdk as any).rpc;
+    }
+
     const query = {
       currentPage: undefined,
       mutable: true,
       params: {},
-      rpc: sdk.data.rpc,
+      rpc: rpcClient,
       _calculatedColumns: [],
       buildCursorFilter: () => [],
       buildOrderBy: () => [],
@@ -53,8 +60,35 @@ export async function createContactsQueryStore(
           return false;
         }
 
-        const contacts = await sdk.data.getAggregatedTrustRelations(address);
+        // Check if we have the new SDK with avatar.trust.getAll()
+        let contacts;
+        if (avatar && typeof (avatar as any).trust?.getAll === 'function') {
+          // Use new SDK method from avatar
+          console.log('🔄 Using new SDK avatar.trust.getAll()');
+          const allTrustRelations = await (avatar as any).trust.getAll();
+
+          // Show all trust relations:
+          // trustedBy = someone trusts you (they accept your tokens)
+          // trusts = you trust them (you accept their tokens)
+          // mutuallyTrusts = mutual trust
+          const filteredContacts = allTrustRelations.filter((contact: any) =>
+            contact.relation === 'trusts' || contact.relation === 'mutuallyTrusts' || contact.relation === 'trustedBy'
+          );
+
+          console.log(`Total trust relations: ${allTrustRelations.length}, Filtered contacts (outgoing/mutual): ${filteredContacts.length}`);
+
+          // Adapt new SDK format to old SDK format by adding missing fields
+          contacts = filteredContacts.map((contact: any) => ({
+            ...contact,
+            versions: [2], // New SDK only works with V2
+            versionSpecificRelations: { 2: contact.relation }
+          }));
+        }
+
         const enrichedContacts = await enrichContactData(contacts);
+
+        console.log(`Enriched contacts count: ${Object.keys(enrichedContacts).length}`);
+        console.log('Enriched contacts sample:', Object.keys(enrichedContacts).slice(0, 3));
 
         const contactEventRow: ContactEventRow = {
           blockNumber: Date.now(),
@@ -101,6 +135,7 @@ export async function createContactsQueryStore(
 async function enrichContactData(
   rows: TrustRelationRow[]
 ): Promise<ContactList> {
+  console.log(`Enriching ${rows.length} contacts...`);
   const profileRecord: ContactList = {};
 
   const promises = rows.map(async (row) => {
@@ -110,17 +145,35 @@ async function enrichContactData(
         contactProfile: profile,
         row: row,
       };
+    } else {
+      console.warn(`No profile found for ${row.objectAvatar}`);
     }
   });
 
   await Promise.all(promises);
+  console.log(`Profiles fetched: ${Object.keys(profileRecord).length} out of ${rows.length}`);
 
-  const avatarInfos =
-    (await get(circles)?.data.getAvatarInfoBatch(Object.keys(profileRecord) as Address[])) ??
-    [];
+  const sdk = get(circles);
+  let avatarInfos = [];
+
+  if (sdk) {
+    const addresses = Object.keys(profileRecord) as Address[];
+    console.log(`Fetching avatar info for ${addresses.length} addresses...`);
+    if (typeof (sdk as any).data?.getAvatarInfoBatch === 'function') {
+      // Old SDK
+      avatarInfos = await (sdk as any).data.getAvatarInfoBatch(addresses) ?? [];
+    } else if (typeof (sdk as any).rpc?.avatar?.getAvatarInfoBatch === 'function') {
+      // New SDK - use RPC directly
+      avatarInfos = await (sdk as any).rpc.avatar.getAvatarInfoBatch(addresses) ?? [];
+    }
+    console.log(`Avatar infos received: ${avatarInfos.length}`);
+  }
+
   const avatarInfoRecord: Record<string, AvatarRow> = {};
-  avatarInfos.forEach((info) => {
-    avatarInfoRecord[info.avatar] = info;
+  avatarInfos.forEach((info: any) => {
+    if (info && info.avatar) {
+      avatarInfoRecord[info.avatar] = info;
+    }
   });
 
   Object.values(profileRecord).forEach((item) => {
@@ -130,5 +183,6 @@ async function enrichContactData(
     }
   });
 
+  console.log(`Final enriched contacts: ${Object.keys(profileRecord).length}`);
   return profileRecord;
 }
