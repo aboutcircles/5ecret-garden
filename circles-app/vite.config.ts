@@ -15,11 +15,4 @@ export default defineConfig({
     }),
     sveltekit(),
   ],
-  build: {
-    rollupOptions: {
-      external: [
-        /^vite-plugin-node-polyfills\//,
-      ],
-    },
-  },
 });
