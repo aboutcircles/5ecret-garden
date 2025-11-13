@@ -1,8 +1,7 @@
-import type { EventRow } from '@circles-sdk/data';
+import type { EventRow } from '@aboutcircles/sdk-types';
 import { writable } from 'svelte/store';
-import type { Avatar } from '@circles-sdk/sdk';
-import type { Sdk } from '@circles-sdk-v2/sdk';
-import type { GroupRow } from '@circles-sdk-v2/types';
+import type { Avatar, Sdk } from '@aboutcircles/sdk';
+import type { GroupRow } from '@aboutcircles/sdk-types';
 
 export const createBaseGroups = async (avatar: Avatar) => {
   let isLoading = false;
@@ -27,24 +26,41 @@ export const createBaseGroups = async (avatar: Avatar) => {
 
       // Use the avatar.group.getGroupMembershipsWithDetails() method
       // which internally handles pagination and enriches with group details
-      const groups = await (avatar as any).group.getGroupMembershipsWithDetails(1000);
+      // Only HumanAvatar has this method, so we need to check the type
+      if (
+        'group' in avatar &&
+        typeof (avatar as any).group?.getGroupMembershipsWithDetails ===
+          'function'
+      ) {
+        const groups = await (
+          avatar as any
+        ).group.getGroupMembershipsWithDetails(1000);
+        console.log(`✅ Loaded ${groups.length} groups with details`);
 
-      console.log(`✅ Loaded ${groups.length} groups with details`);
+        store.set({
+          data: groups as EventRow[],
+          next: async () => false,
+          ended: true,
+        });
 
-      store.set({
-        data: groups as EventRow[],
-        next: async () => false,
-        ended: true
-      });
-
-      allGroupsLoaded = true;
-      return groups.length > 0;
+        allGroupsLoaded = true;
+        return groups.length > 0;
+      } else {
+        console.warn('Avatar does not support group memberships');
+        store.set({
+          data: [],
+          next: async () => false,
+          ended: true,
+        });
+        allGroupsLoaded = true;
+        return false;
+      }
     } catch (error) {
       console.error('Failed to load groups:', error);
       store.set({
         data: [],
         next: async () => false,
-        ended: true
+        ended: true,
       });
       allGroupsLoaded = true;
       return false;
@@ -83,20 +99,43 @@ export const createBaseGroups = async (avatar: Avatar) => {
   // Subscribe to events for automatic updates
   if (typeof (avatar as any).subscribeToEvents === 'function') {
     try {
+      console.log('🔗 Groups: Subscribing to avatar events...');
       await (avatar as any).subscribeToEvents();
+      console.log('✅ Groups: Avatar events subscription initialized');
+
+      // Validate events subscription method exists before subscribing
+      if (
+        !avatar.events ||
+        typeof (avatar as any).events.subscribe !== 'function'
+      ) {
+        console.error('❌ Groups: Avatar.events.subscribe is not available');
+        throw new Error('Avatar.events.subscribe is not available');
+      }
 
       // Listen for group membership changes
       (avatar as any).events.subscribe((event: any) => {
-        // Reload groups when membership changes
-        if (event.$event === 'CrcV2_InviteHuman' ||
+        try {
+          // Reload groups when membership changes
+          if (
+            event.$event === 'CrcV2_InviteHuman' ||
             event.$event === 'CrcV2_RegisterGroup' ||
-            event.$event === 'CrcV2_Trust') {
-          console.log('🔄 Group membership event detected, reloading groups...', event.$event);
-          initGroups();
+            event.$event === 'CrcV2_Trust'
+          ) {
+            console.log(
+              '🔄 Groups: Group membership event detected, reloading groups...',
+              event.$event
+            );
+            initGroups();
+          }
+        } catch (error) {
+          console.error(
+            `Groups: Failed to process group membership event ${event?.$event}`,
+            error
+          );
         }
       });
     } catch (error) {
-      console.warn('Failed to subscribe to events:', error);
+      console.error('❌ Groups: Failed to subscribe to events:', error);
     }
   }
 
@@ -132,28 +171,30 @@ export const createAllGroups = async (sdk: Sdk) => {
         console.log(`✅ Loaded ${newGroups.length} groups`);
 
         // Append new groups to existing data
-        store.update(state => ({
+        store.update((state) => ({
           data: [...state.data, ...newGroups],
-          next: currentQuery.currentPage.hasMore ? loadNextBatch : async () => false,
-          ended: !currentQuery.currentPage.hasMore
+          next: currentQuery.currentPage.hasMore
+            ? loadNextBatch
+            : async () => false,
+          ended: !currentQuery.currentPage.hasMore,
         }));
 
         return currentQuery.currentPage.hasMore;
       } else {
         // No more data
-        store.update(state => ({
+        store.update((state) => ({
           ...state,
           next: async () => false,
-          ended: true
+          ended: true,
         }));
         return false;
       }
     } catch (error) {
       console.error('Failed to load groups:', error);
-      store.update(state => ({
+      store.update((state) => ({
         ...state,
         next: async () => false,
-        ended: true
+        ended: true,
       }));
       return false;
     } finally {

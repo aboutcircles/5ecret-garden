@@ -1,11 +1,17 @@
 <script lang="ts">
   import ConnectSafe from '$lib/components/ConnectSafe.svelte';
-  import { wallet, initNewSafeBrowserRunner, getSigner, signer } from '$lib/stores/wallet.svelte';
+  import {
+    wallet,
+    initNewSafeBrowserRunner,
+    getSigner,
+    signer,
+  } from '$lib/stores/wallet.svelte';
   import WalletLoader from '$lib/components/WalletLoader.svelte';
   import { onMount } from 'svelte';
-  import { Sdk } from '@circles-sdk-v2/sdk';
-  import { circlesConfig } from '@circles-sdk-v2/core';
+  import { Sdk } from '@aboutcircles/sdk';
+  import { circlesConfig } from '@aboutcircles/sdk-core';
   import { circles } from '$lib/stores/circles';
+  import type { Address } from '@aboutcircles/sdk-types';
 
   onMount(async () => {
     try {
@@ -15,8 +21,9 @@
     }
   });
 
-  async function connectSafe(address: Address) {
-    const runner = await initNewSafeBrowserRunner(address);
+  async function connectSafe(safeAddress: Address, _targetAddress?: Address) {
+    // Always create runner with the Safe address
+    const runner = await initNewSafeBrowserRunner(safeAddress);
     wallet.set(runner);
     return new Sdk(circlesConfig[100], runner);
   }
@@ -38,13 +45,15 @@
   <div class="toolbar">
     <button type="button" class="back-btn" aria-label="Back" onclick={goBack}>
       <img src="/arrow-left.svg" alt="Back" class="icon mr-4" />
-        <h1 class="h2">Select Account</h1>
+      <h1 class="h2">Select Account</h1>
     </button>
     <div class="flex-grow"></div>
-<!--    <SettingsDropdown />-->
+    <!--    <SettingsDropdown />-->
   </div>
 
-  <p class="muted">Please select the account you want to use from the list below.</p>
+  <p class="muted">
+    Please select the account you want to use from the list below.
+  </p>
 
   {#if !signer.address || !$circles}
     <WalletLoader />

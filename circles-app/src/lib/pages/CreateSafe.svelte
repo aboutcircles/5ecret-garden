@@ -1,37 +1,43 @@
 <script lang="ts">
-  import { wallet } from '$lib/stores/wallet.svelte';
+  // @todo double check
+  import { wallet, signer } from '$lib/stores/wallet.svelte';
   import Safe from '@safe-global/protocol-kit';
   import type {
     PredictedSafeProps,
     SafeAccountConfig,
     SafeDeploymentConfig,
   } from '@safe-global/protocol-kit';
-  import { onMount } from 'svelte';
-  import { ethers } from 'ethers';
+  import { ethers, BrowserProvider, JsonRpcProvider, Wallet } from 'ethers';
+  import { settings } from '$lib/stores/settings.svelte';
+  import { gnosisConfig } from '$lib/circlesConfig';
 
   let isCreating = $state(false);
   let error: string | null = $state(null);
-  let isWalletReady = $state(false);
+  let isSignerReady = $state(false);
 
-  let {onsafecreated} = $props();
+  let { onsafecreated } = $props();
 
-  onMount(() => {
-    isWalletReady = !!$wallet;
+  $effect(() => {
+    isSignerReady = !!signer.address || !!$wallet?.address;
   });
 
   async function createSafe() {
     isCreating = true;
     error = null;
 
-    if (!$wallet?.address) {
+    const ownerAddress = $wallet?.address || signer.address;
+    if (!ownerAddress) {
       error = 'Wallet not connected or invalid type';
       isCreating = false;
       return;
     }
 
+    // Check if we have a private key (imported wallet) or browser wallet
+    const hasPrivateKey = !!signer.privateKey;
+
     try {
       const safeAccountConfig: SafeAccountConfig = {
-        owners: [$wallet.address],
+        owners: [ownerAddress],
         threshold: 1,
       };
       console.log(safeAccountConfig);
@@ -47,11 +53,34 @@
       };
       console.log(predictedSafe);
 
-      const protocolKit = await Safe.init({
-        provider: window.ethereum, // Use browserProvider
-        predictedSafe,
-        signer: $wallet.address,
-      });
+      let protocolKit;
+      let provider;
+      let ethersWallet;
+
+      if (hasPrivateKey) {
+        // Private key flow (imported seed phrase)
+        const rpcUrl = settings.ring
+          ? gnosisConfig.rings.circlesRpcUrl
+          : gnosisConfig.production.circlesRpcUrl;
+
+        provider = new JsonRpcProvider(rpcUrl);
+        ethersWallet = new Wallet(signer.privateKey!, provider);
+
+        protocolKit = await Safe.init({
+          provider: rpcUrl,
+          signer: signer.privateKey,
+          predictedSafe,
+        });
+      } else {
+        // Browser wallet flow (MetaMask, etc.)
+        protocolKit = await Safe.init({
+          provider: window.ethereum,
+          predictedSafe,
+          signer: ownerAddress,
+        });
+
+        provider = new BrowserProvider(window.ethereum);
+      }
 
       const safeAddress = await protocolKit.getAddress();
       console.log('Safe address:', safeAddress);
@@ -59,23 +88,40 @@
       const deploymentTransaction =
         await protocolKit.createSafeDeploymentTransaction();
 
-      const client = await protocolKit.getSafeProvider().getExternalSigner();
-      console.log(client, 'this is client value');
+      if (hasPrivateKey) {
+        // Private key flow - send transaction directly
+        console.log('Deploying Safe with private key...');
+        const txResponse = await ethersWallet!.sendTransaction({
+          to: deploymentTransaction.to,
+          value: BigInt(deploymentTransaction.value),
+          data: deploymentTransaction.data as string,
+        });
 
-      if (!client) {
-        throw new Error('Failed to get external signer');
+        console.log('Transaction hash:', txResponse.hash);
+        await txResponse.wait();
+      } else {
+        // Browser wallet flow - use external signer
+        const client = await protocolKit.getSafeProvider().getExternalSigner();
+        console.log(client, 'this is client value');
+
+        if (!client) {
+          throw new Error('Failed to get external signer');
+        }
+
+        const network = await provider.getNetwork();
+
+        const txResult = await client.sendTransaction({
+          to: deploymentTransaction.to,
+          value: BigInt(deploymentTransaction.value),
+          data: deploymentTransaction.data as `0x${string}`,
+          chainId: network.chainId,
+        });
+
+        console.log('Transaction hash:', txResult.hash);
+        await provider.waitForTransaction(txResult.hash);
       }
 
-      const transactionHash = await client.sendTransaction({
-        to: deploymentTransaction.to,
-        value: BigInt(deploymentTransaction.value),
-        data: deploymentTransaction.data as `0x${string}`,
-        chainId: (await $wallet.provider.getNetwork()).chainId,
-      });
-
-      console.log('Transaction hash:', transactionHash);
-
-      await $wallet.provider.waitForTransaction(transactionHash.hash);
+      console.log('Safe deployed successfully');
 
       const isSafeDeployed = await protocolKit.connect({
         safeAddress,
@@ -103,7 +149,7 @@
 <button
   class="btn btm-nav-xs btn-outline btn-primary"
   class:loading={isCreating}
-  disabled={isCreating || !isWalletReady}
+  disabled={isCreating || !isSignerReady}
   onclick={createSafe}
 >
   {#if isCreating}

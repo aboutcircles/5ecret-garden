@@ -1,7 +1,7 @@
 <script lang="ts">
   import { avatarState } from '$lib/stores/avatar.svelte';
   import ImageUpload from '$lib/components/ImageUpload.svelte';
-  import type { Profile } from '@circles-sdk/profiles';
+  import type { Profile } from '@aboutcircles/sdk-types';
   import { sanitizeText } from '$lib/utils/isValid';
 
   interface Props {
@@ -9,7 +9,8 @@
     showCustomizableFields?: boolean;
   }
 
-  let { profile = $bindable(), showCustomizableFields = true }: Props = $props();
+  let { profile = $bindable(), showCustomizableFields = true }: Props =
+    $props();
 
   const onnewimage = (dataUrl: string) => {
     profile.previewImageUrl = dataUrl;
@@ -32,29 +33,56 @@
   {#if avatarState.avatar}
     <label class="form-control">
       <span class="label-text">Circles address</span>
-      <input type="text" readonly class="input input-bordered w-full" value={avatarState.avatar?.avatarInfo?.avatar} />
+      <input
+        type="text"
+        readonly
+        class="input input-bordered w-full"
+        value={avatarState.avatar.address}
+      />
     </label>
   {/if}
 
   {#if showCustomizableFields}
     <label class="form-control">
       <span class="label-text">Name</span>
-      <input id="name" type="text" class="input input-bordered w-full" bind:value={profile.name} placeholder="Name" />
+      <input
+        id="name"
+        type="text"
+        class="input input-bordered w-full"
+        bind:value={profile.name}
+        placeholder="Name"
+      />
     </label>
 
     <label class="form-control">
       <span class="label-text">Description</span>
-      <textarea id="description" class="textarea textarea-bordered w-full" bind:value={profile.description} placeholder="Description"></textarea>
+      <textarea
+        id="description"
+        class="textarea textarea-bordered w-full"
+        bind:value={profile.description}
+        placeholder="Description"
+      ></textarea>
     </label>
 
     <label class="form-control">
       <span class="label-text">Location</span>
-      <input type="text" class="input input-bordered w-full" bind:value={profile.location} placeholder="Location" />
+      <input
+        type="text"
+        class="input input-bordered w-full"
+        bind:value={profile.location}
+        placeholder="Location"
+      />
     </label>
 
     <div>
       <span class="label-text">Image</span>
-      <ImageUpload imageDataUrl={profile.previewImageUrl} cropHeight={256} cropWidth={256} onnewimage={onnewimage} oncleared={oncleared} />
+      <ImageUpload
+        imageDataUrl={profile.previewImageUrl}
+        cropHeight={256}
+        cropWidth={256}
+        {onnewimage}
+        {oncleared}
+      />
     </div>
   {/if}
 </div>

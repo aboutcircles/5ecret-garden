@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Profile } from '@circles-sdk/profiles';
+  import type { Profile } from '@aboutcircles/sdk-types';
 
   interface Props {
     profile: Profile | undefined;

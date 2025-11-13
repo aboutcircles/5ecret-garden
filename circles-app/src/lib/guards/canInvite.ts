@@ -1,6 +1,6 @@
-import type { AvatarRow } from '@circles-sdk/data';
+import type { AvatarInfo } from '@aboutcircles/sdk-types';
 
-export function canInvite(avatar: AvatarRow): boolean {
+export function canInvite(avatar: AvatarInfo): boolean {
   // Invitations only work for human v2 avatars.
   // If they have a v1 token, it must be stopped.
 

@@ -5,9 +5,9 @@
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { circles } from '$lib/stores/circles';
   import { popupControls } from '$lib/stores/popUp';
-  import type { TokenBalanceRow } from '@circles-sdk/data';
+  import type { TokenBalance } from '@aboutcircles/sdk-types';
   import SearchAvatar from '$lib/pages/SearchAvatar.svelte';
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
 
   interface Props {
     context?: SendFlowContext;
@@ -17,7 +17,7 @@
     context = $bindable({
       selectedAddress: undefined,
       transitiveOnly: false,
-      selectedAsset: {} as TokenBalanceRow,
+      selectedAsset: {} as TokenBalance,
       amount: undefined,
     }),
   }: Props = $props();
@@ -46,7 +46,7 @@
 
 <FlowDecoration>
   <SearchAvatar
-    avatarTypes={["CrcV2_RegisterHuman","CrcV2_RegisterOrganization"]}
+    avatarTypes={['CrcV2_RegisterHuman', 'CrcV2_RegisterOrganization']}
     selectedAddress={context.selectedAddress}
     {onselect}
     searchType="send"

@@ -1,9 +1,7 @@
-import {
-  type TransactionHistoryRow,
-} from '@circles-sdk/data';
+import type { TransactionHistoryRow } from '@aboutcircles/sdk-rpc';
 import { writable } from 'svelte/store';
-import type { Avatar } from '@circles-sdk/sdk';
-import type { PagedQuery } from '@circles-sdk-v2/rpc';
+import type { Avatar } from '@aboutcircles/sdk';
+import type { PagedQuery } from '@aboutcircles/sdk-rpc';
 
 const PAGE_SIZE = 25;
 
@@ -19,7 +17,7 @@ const _transactionHistory = writable<{
 }>({
   data: [],
   next: async () => false,
-  ended: false
+  ended: false,
 });
 
 /**
@@ -44,26 +42,28 @@ async function loadNextPage(): Promise<boolean> {
     if (hasResults && pagedQuery.currentPage) {
       const newData = pagedQuery.currentPage.results;
 
-      _transactionHistory.update(state => ({
+      _transactionHistory.update((state) => ({
         data: [...state.data, ...newData],
         next: loadNextPage,
-        ended: !pagedQuery?.currentPage?.hasMore
+        ended: !pagedQuery?.currentPage?.hasMore,
       }));
 
-      console.log(`✅ Loaded ${newData.length} transactions (hasMore: ${pagedQuery.currentPage.hasMore})`);
+      console.log(
+        `✅ Loaded ${newData.length} transactions (hasMore: ${pagedQuery.currentPage.hasMore})`
+      );
       return true;
     } else {
-      _transactionHistory.update(state => ({
+      _transactionHistory.update((state) => ({
         ...state,
-        ended: true
+        ended: true,
       }));
       return false;
     }
   } catch (error) {
     console.error('Failed to load transaction history page:', error);
-    _transactionHistory.update(state => ({
+    _transactionHistory.update((state) => ({
       ...state,
-      ended: true
+      ended: true,
     }));
     return false;
   } finally {
@@ -91,8 +91,8 @@ export const initTransactionHistoryStore = async (avatar: Avatar) => {
     return;
   }
 
-  // Validate avatar has history methods
-  if (typeof (avatar as any).history?.getTransactions !== 'function') {
+  // Validate avatar has history methods (all avatar types from new SDK have this)
+  if (!avatar.history || typeof avatar.history.getTransactions !== 'function') {
     console.error('❌ No history.getTransactions method available on avatar');
     _transactionHistory.set({
       data: [],
@@ -104,7 +104,7 @@ export const initTransactionHistoryStore = async (avatar: Avatar) => {
 
   // Create a new PagedQuery instance using the avatar's history API
   // avatar.history.getTransactions returns a PagedQuery
-  pagedQuery = (avatar as any).history.getTransactions(PAGE_SIZE, 'DESC');
+  pagedQuery = avatar.history.getTransactions(PAGE_SIZE, 'DESC');
 
   // Reset store
   _transactionHistory.set({

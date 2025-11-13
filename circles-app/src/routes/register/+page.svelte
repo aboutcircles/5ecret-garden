@@ -7,14 +7,20 @@
   import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
 </script>
 
-
-<PageScaffold highlight="soft" collapsedMode="bar" collapsedHeightClass="h-12" maxWidthClass="page page--lg" contentWidthClass="page page--lg" usePagePadding={true} headerTopGapClass="mt-4 md:mt-6" collapsedTopGapClass="mt-3 md:mt-4">
+<PageScaffold
+  highlight="soft"
+  collapsedMode="bar"
+  collapsedHeightClass="h-12"
+  maxWidthClass="page page--lg"
+  contentWidthClass="page page--lg"
+  usePagePadding={true}
+  headerTopGapClass="mt-4 md:mt-6"
+  collapsedTopGapClass="mt-3 md:mt-4"
+>
   <svelte:fragment slot="title">
     <h1 class="h2 m-0">Create Account</h1>
   </svelte:fragment>
-  <svelte:fragment slot="meta">
-    Takes ~2 minutes
-  </svelte:fragment>
+  <svelte:fragment slot="meta">Takes ~2 minutes</svelte:fragment>
   <svelte:fragment slot="collapsed-left">
     <div class="truncate flex items-center gap-2">
       <span class="font-medium">Create Account</span>
@@ -28,10 +34,15 @@
 
   <!-- Register section -->
   <section class="mt-4">
-    <h2 class="text-sm font-semibold text-base-content/70 tracking-wide uppercase">Register</h2>
+    <h2
+      class="text-sm font-semibold text-base-content/70 tracking-wide uppercase"
+    >
+      Register
+    </h2>
     <div class="mt-2 space-y-2">
       <div class="text-md text-base-content/70">
-        You're not yet signed up to Circles. Choose an account type that matches your needs.
+        You're not yet signed up to Circles. Choose an account type that matches
+        your needs.
       </div>
       <ConnectWallet
         imgUrl="/person.svg"
@@ -51,14 +62,12 @@
 
   <!-- Advanced section -->
   <section class="mt-4">
-    <h2 class="text-sm font-semibold text-base-content/70 tracking-wide uppercase">Advanced</h2>
+    <h2
+      class="text-sm font-semibold text-base-content/70 tracking-wide uppercase"
+    >
+      Advanced
+    </h2>
     <div class="mt-2 space-y-2">
-      <ConnectWallet
-        imgUrl="/person.svg"
-        header="Human (v1)"
-        desc="Register at the Circles v1 Hub"
-        route="/register/register-v1-person"
-      />
       <ConnectWallet
         imgUrl="/person.svg"
         header="Profile only"

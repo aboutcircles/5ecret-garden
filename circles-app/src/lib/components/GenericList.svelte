@@ -1,61 +1,79 @@
 <script lang="ts">
-    import { onDestroy, type Component } from 'svelte';
-    import type { EventRow, TransactionHistoryRow } from '@circles-sdk/data';
-    import { getKeyFromItem } from '$lib/stores/query/circlesQueryStore';
-    import type { Readable } from 'svelte/store';
+  import { onDestroy, type Component } from 'svelte';
+  import type { EventRow } from '@aboutcircles/sdk-types';
+  import type { TransactionHistoryRow } from '@aboutcircles/sdk-rpc';
+  import { getKeyFromItem } from '$lib/stores/query/circlesQueryStore';
+  import type { Readable } from 'svelte/store';
 
-    interface Props<T extends Record<string, any> = any> {
-        store?: Readable<{ data: any[]; next: () => Promise<boolean>; ended: boolean; }>;
-        row: Component<T>;
-    }
-    let { store, row }: Props = $props();
+  interface Props<T extends Record<string, any> = any> {
+    store?: Readable<{
+      data: any[];
+      next: () => Promise<boolean>;
+      ended: boolean;
+    }>;
+    row: Component<T>;
+  }
+  let { store, row }: Props = $props();
 
-    let observer: IntersectionObserver | null = null;
-    let anchor: HTMLElement | undefined = $state();
-    let hasError = $state(false);
+  let observer: IntersectionObserver | null = null;
+  let anchor: HTMLElement | undefined = $state();
+  let hasError = $state(false);
 
-    const setupObserver = () => {
-        if (observer) observer.disconnect();
-        if (anchor && !$store?.ended && !hasError) {
-            observer = new IntersectionObserver(async (entries) => {
-                if (entries[0]?.isIntersecting && !$store.ended) {
-                    observer?.disconnect();
-                    try { await $store.next(); hasError = false; }
-                    catch { hasError = true; }
-                    setupObserver();
-                }
-            });
-            observer.observe(anchor);
+  const setupObserver = () => {
+    if (observer) observer.disconnect();
+    if (anchor && !$store?.ended && !hasError) {
+      observer = new IntersectionObserver(async (entries) => {
+        if (entries[0]?.isIntersecting && !$store.ended) {
+          observer?.disconnect();
+          try {
+            await $store.next();
+            hasError = false;
+          } catch {
+            hasError = true;
+          }
+          setupObserver();
         }
-    };
-    const handleRetry = async () => {
-        try { await $store.next(); hasError = false; setupObserver(); }
-        catch {}
-    };
-    $effect(() => { if (store && anchor) setupObserver(); });
-    onDestroy(() => { observer?.disconnect(); observer = null; });
+      });
+      observer.observe(anchor);
+    }
+  };
+  const handleRetry = async () => {
+    try {
+      await $store.next();
+      hasError = false;
+      setupObserver();
+    } catch {}
+  };
+  $effect(() => {
+    if (store && anchor) setupObserver();
+  });
+  onDestroy(() => {
+    observer?.disconnect();
+    observer = null;
+  });
 </script>
 
 <div class="w-full flex flex-col gap-y-1.5 py-2" role="list">
-    {#each $store?.data ?? [] as item (getKeyFromItem(item))}
-        {@const SvelteComponent_1 = row}
-        <SvelteComponent_1 {item} />
-    {/each}
+  {#each $store?.data ?? [] as item, index (getKeyFromItem(item) + '-' + index)}
+    {@const SvelteComponent_1 = row}
+    <SvelteComponent_1 {item} />
+  {/each}
 
-    <div
-            class="text-center py-4"
-            bind:this={anchor}
-            aria-live="polite"
-            aria-busy={$store && !$store?.ended && !hasError ? 'true' : 'false'}
-    >
-        {#if ($store?.data ?? []).length === 0 || $store?.ended}
-            <span class="text-base-content/70">End of list</span>
-        {:else if hasError}
-            <span class="text-error">Error loading items</span>
-            <button class="ml-2 link link-primary" onclick={handleRetry}>Retry</button>
-        {:else}
-            <span class="loading loading-spinner text-primary"></span>
-            <span class="ml-2 text-base-content/70">Loading more...</span>
-        {/if}
-    </div>
+  <div
+    class="text-center py-4"
+    bind:this={anchor}
+    aria-live="polite"
+    aria-busy={$store && !$store?.ended && !hasError ? 'true' : 'false'}
+  >
+    {#if ($store?.data ?? []).length === 0 || $store?.ended}
+      <span class="text-base-content/70">End of list</span>
+    {:else if hasError}
+      <span class="text-error">Error loading items</span>
+      <button class="ml-2 link link-primary" onclick={handleRetry}>Retry</button
+      >
+    {:else}
+      <span class="loading loading-spinner text-primary"></span>
+      <span class="ml-2 text-base-content/70">Loading more...</span>
+    {/if}
+  </div>
 </div>

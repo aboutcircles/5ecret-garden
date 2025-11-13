@@ -5,7 +5,7 @@
   import { goto } from '$app/navigation';
   import { popupControls } from '$lib/stores/popUp';
   import { signer } from '$lib/stores/wallet.svelte';
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
   import ImportCircles from './ImportCircles.svelte';
   import { clearSession } from '$lib/stores/wallet.svelte';
   const connectors = getConnectors(config);
@@ -18,7 +18,10 @@
       id={connector.id}
       onclick={async () => {
         await clearSession();
-        const result = await connect(config, { connector: connector, chainId: 100 });
+        const result = await connect(config, {
+          connector: connector,
+          chainId: 100,
+        });
         localStorage.setItem('connectorId', connector.id);
         signer.address = result.accounts[0].toLowerCase() as Address;
         popupControls.close();
@@ -34,10 +37,10 @@
     onclick={async () => {
       await clearSession();
       popupControls.open({
-      component: ImportCircles,
-      title: 'Use circles magic words',
-      props: {},
-    });
+        component: ImportCircles,
+        title: 'Use circles magic words',
+        props: {},
+      });
     }}
   >
     Circles.garden

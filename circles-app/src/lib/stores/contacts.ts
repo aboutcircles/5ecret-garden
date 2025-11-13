@@ -1,23 +1,19 @@
-import type {
-  AvatarRow,
-  CirclesEventType,
-  TrustRelationRow,
-} from '@circles-sdk/data';
-import type { Profile } from '@circles-sdk/profiles';
+import type { AvatarInfo, AggregatedTrustRelation } from '@aboutcircles/sdk-types';
+import type { CirclesEventType } from '@aboutcircles/sdk-rpc';
+import type { Profile } from '@aboutcircles/sdk-types';
 import { writable } from 'svelte/store';
 import { createContactsQueryStore } from './query/circlesContactsQueryStore.svelte';
-import type { Avatar } from '@circles-sdk/sdk';
+import type { Avatar } from '@aboutcircles/sdk';
 
 export type ContactListItem = {
   contactProfile: Profile;
-  avatarInfo?: AvatarRow;
-  row: TrustRelationRow;
+  avatarInfo?: AvatarInfo;
+  row: AggregatedTrustRelation;
 };
 
 export type ContactList = Record<string, ContactListItem>;
 
 const refreshOnEvents: Set<CirclesEventType> = new Set([
-  'CrcV1_Trust',
   'CrcV2_Trust',
   'CrcV2_InviteHuman',
 ]);
@@ -33,16 +29,18 @@ export const contacts = writable<{
 
 export const initContactStore = ($avatar: Avatar) => {
   if (currentStoreUnsubscribe) {
-		currentStoreUnsubscribe();
-		currentStoreUnsubscribe = undefined;
-	}
+    currentStoreUnsubscribe();
+    currentStoreUnsubscribe = undefined;
+  }
 
-	currentQuery = undefined;
+  currentQuery = undefined;
 
-  currentQuery = createContactsQueryStore($avatar, $avatar.address, refreshOnEvents);
+  currentQuery = createContactsQueryStore(
+    $avatar,
+    $avatar.address,
+    refreshOnEvents
+  );
   currentQuery.then((store) => {
     currentStoreUnsubscribe = store.subscribe(contacts.set);
   });
-}
-
-
+};

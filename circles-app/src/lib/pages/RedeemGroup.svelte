@@ -3,21 +3,22 @@
 
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { circles } from '$lib/stores/circles';
-  import { type Address, uint256ToAddress } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
+  import { uint256ToAddress } from '@aboutcircles/sdk-utils';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import { onMount } from 'svelte';
   import { ethers, formatUnits } from 'ethers';
-  import type { TokenBalanceRow, TrustRelation } from '@circles-sdk/data';
+  import type { TokenBalance, TrustRelationType } from '@aboutcircles/sdk-types';
   import { contacts } from '$lib/stores/contacts';
   import {
-  getGroupCollateral,
+    getGroupCollateral,
     getTreasuryAddress,
     getVaultAddress,
   } from '$lib/utils/vault';
   import CollateralTable from '$lib/components/CollateralTable.svelte';
 
   interface Props {
-    asset: TokenBalanceRow;
+    asset: TokenBalance;
   }
 
   let { asset }: Props = $props();
@@ -27,7 +28,7 @@
     amount: bigint; // raw wei from chain
     amountToRedeem: bigint;
     amountToRedeemInCircles: number;
-    trustRelation?: TrustRelation;
+    trustRelation?: TrustRelationType;
   }> = $state([]);
 
   // We'll keep track of the total to redeem and whether it's valid.
@@ -36,17 +37,13 @@
   let canRedeem = $state(false);
   let isModified = $state(false);
 
-  const trustPriorityMap: {
-    [K in TrustRelation]: number;
-  } = {
-    selfTrusts: 1,
-    mutuallyTrusts: 2,
-    trusts: 3,
-    trustedBy: 4,
-    variesByVersion: 5,
+  const trustPriorityMap: Record<TrustRelationType, number> = {
+    mutuallyTrusts: 1,
+    trusts: 2,
+    trustedBy: 3,
   };
 
-  function getTrustPriority(item: { trustRelation?: TrustRelation }): number {
+  function getTrustPriority(item: { trustRelation?: TrustRelationType }): number {
     return item.trustRelation && trustPriorityMap[item.trustRelation]
       ? trustPriorityMap[item.trustRelation]
       : 6;
@@ -104,19 +101,19 @@
 
   async function load() {
     if (!$circles) return;
-    
+
     const vaultAddress = await getVaultAddress(
-      $circles.circlesRpc,
+      $circles.rpc,
       asset.tokenOwner
     );
 
     const treasuryAddress = await getTreasuryAddress(
-      $circles.circlesRpc,
+      $circles.rpc,
       asset.tokenOwner
     );
 
     const balancesResult = await getGroupCollateral(
-      $circles.circlesRpc,
+      $circles.rpc,
       vaultAddress ?? treasuryAddress ?? ''
     );
 
@@ -125,14 +122,10 @@
       return;
     }
 
-    const { columns, rows } = balancesResult;
-    const colId = columns.indexOf('tokenId');
-    const colBal = columns.indexOf('demurragedTotalBalance');
-
     // Build up the table data
-    collateralInTreasury = rows.map((row) => ({
-      avatar: uint256ToAddress(BigInt(row[colId])),
-      amount: BigInt(row[colBal]),
+    collateralInTreasury = balancesResult.map((row) => ({
+      avatar: uint256ToAddress(BigInt(row.tokenId)),
+      amount: row.demurragedTotalBalance,
       amountToRedeemInCircles: 0,
       amountToRedeem: 0n, // default 0
     }));
@@ -153,7 +146,8 @@
     );
 
     if (item) {
-      item.trustRelation = 'selfTrusts';
+      // In new SDK, there's no 'selfTrusts', so we mark as 'mutuallyTrusts' for self
+      item.trustRelation = 'mutuallyTrusts';
     }
   }
 
@@ -179,12 +173,24 @@
       collateralAddresses
     );
 
-    // Now call groupRedeem with those arrays
-    await avatarState.avatar.groupRedeem(
-      asset.tokenOwner,
-      collateralAddresses,
-      redeemAmounts
-    );
+    // TODO: SDK v2 breaking change - Manual redemption replaced with automatic redemption
+    // Old SDK: avatar.groupRedeem(group, addresses, amounts)
+    // New SDK: avatar.groupToken.redeem(group, totalAmount) - uses pathfinder for automatic redemption
+    //
+    // The new SDK doesn't support manual collateral selection.
+    // Two options:
+    // 1. Use automatic redemption: await (avatarState.avatar as any).groupToken.redeem(asset.tokenOwner, totalToRedeem)
+    // 2. Implement manual redemption using lower-level RPC/contract calls
+    //
+    // For now, using automatic redemption:
+    if ('groupToken' in avatarState.avatar && typeof (avatarState.avatar as any).groupToken?.redeem === 'function') {
+      await (avatarState.avatar as any).groupToken.redeem(
+        asset.tokenOwner,
+        totalToRedeem
+      );
+    } else {
+      throw new Error('Group token redemption not available on this avatar type');
+    }
   }
 
   async function resetFields() {

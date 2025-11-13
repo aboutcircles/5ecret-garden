@@ -1,6 +1,5 @@
 <script lang="ts">
   import { settings } from '$lib/stores/settings.svelte';
-  import Tooltip from './Tooltip.svelte';
 </script>
 
 <div class="dropdown dropdown-end">
@@ -33,15 +32,6 @@
           class="h-3 w-3 ml-1"
         />
       </a>
-    </div>
-    <div class="flex items-center gap-x-2">
-      <input
-        type="checkbox"
-        class="toggle toggle-sm"
-        checked={settings.legacy}
-        onchange={() => (settings.legacy = !settings.legacy)}
-      />
-      <p class="text-sm">LEGACY <Tooltip content="Use your EOA to control your avatar." /></p>
     </div>
   </div>
 </div>

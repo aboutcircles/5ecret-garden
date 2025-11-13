@@ -8,8 +8,10 @@
   import Papa from 'papaparse';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { ethers } from 'ethers';
-  import type { Address } from '@circles-sdk/utils';
-  import Trust from "$lib/pages/Trust.svelte";
+  import type { Address } from '@aboutcircles/sdk-types';
+  import Trust from '$lib/pages/Trust.svelte';
+  import type { BaseGroupAvatar } from '@aboutcircles/sdk';
+  import { initContactStore } from '$lib/stores/contacts';
 
   let context: AddContactFlowContext = $state({
     selectedAddress: '',
@@ -41,7 +43,9 @@
     const alreadySelected = addressList.includes(newAddress);
 
     if (!alreadySelected) {
-      selectedAddresses = selectedAddresses ? `${selectedAddresses}, ${newAddress}` : newAddress;
+      selectedAddresses = selectedAddresses
+        ? `${selectedAddresses}, ${newAddress}`
+        : newAddress;
       addressesArray = [...addressesArray, newAddress];
       context.selectedAddress = '0x0';
     }
@@ -86,14 +90,56 @@
       throw new Error('No valid addresses provided');
     }
 
+    console.log('handleAddMembers called with:', {
+      addresses,
+      untrust,
+      isGroup: avatarState.isGroup,
+      avatarType: avatarState.avatar?.constructor.name,
+    });
+
     try {
       if (untrust) {
+        console.log('Removing members/trust');
         await avatarState.avatar?.trust.remove(addresses);
       } else {
-        await avatarState.avatar?.trust.add(addresses);
+        // For groups, use the batch method with conditions for efficient processing
+        if (avatarState.isGroup && avatarState.avatar) {
+          console.log('Adding group members using batch method');
+          // Type guard to check if this is a BaseGroupAvatar
+          const groupAvatar = avatarState.avatar as BaseGroupAvatar;
+          if (
+            groupAvatar.trust &&
+            'addBatchWithConditions' in groupAvatar.trust
+          ) {
+            const result = await groupAvatar.trust.addBatchWithConditions(
+              addresses,
+              BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFF')
+            );
+            console.log('Add members result:', result);
+          } else {
+            console.warn(
+              'addBatchWithConditions not available, falling back to regular add'
+            );
+            await avatarState.avatar.trust.add(addresses);
+          }
+        } else {
+          console.log('Adding members using regular add method');
+          await avatarState.avatar?.trust.add(addresses);
+        }
       }
+
       selectedAddresses = '';
+
+      // Wait for blockchain state to update
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Refresh the contacts/members list
+      if (avatarState.avatar) {
+        console.log('Refreshing contacts/members list...');
+        initContactStore(avatarState.avatar);
+      }
     } catch (error: any) {
+      console.error('Error in handleAddMembers:', error);
       handleErrors(error);
     }
   }

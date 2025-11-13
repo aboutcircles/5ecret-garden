@@ -3,13 +3,13 @@
   import { circles } from '$lib/stores/circles';
   import { ethers } from 'ethers';
   import BalanceRow from '$lib/components/BalanceRow.svelte';
-  import type { TokenBalanceRow } from '@circles-sdk/data';
+  import type { TokenBalance } from '@aboutcircles/sdk-types';
   import { roundToDecimals } from '$lib/utils/shared';
   import { runTask } from '$lib/utils/tasks';
   import { popupControls } from '$lib/stores/popUp';
 
   interface Props {
-    asset: TokenBalanceRow;
+    asset: TokenBalance;
   }
 
   let { asset }: Props = $props();
@@ -17,28 +17,36 @@
   let amount: number = $state(0);
 
   async function unwrap() {
-    const tokenInfo = await $circles?.data?.getTokenInfo(asset.tokenAddress);
+    if (!$circles) {
+      throw new Error('SDK not loaded');
+    }
+
+    const tokenInfo = await $circles.rpc.token.getTokenInfo(asset.tokenAddress);
     if (!tokenInfo) {
-      return;
+      throw new Error('Token info not found');
     }
     if (!avatarState.avatar) {
       throw new Error('Avatar not loaded');
     }
 
-    if (tokenInfo.type === 'CrcV2_ERC20WrapperDeployed_Inflationary') {
+    const amountInAttoCircles = BigInt(ethers.parseEther(amount.toString()));
+
+    if (tokenInfo.tokenType === 'CrcV2_ERC20WrapperDeployed_Inflationary') {
       runTask({
         name: `Unwrap ${roundToDecimals(amount)} static tokens ...`,
-        promise: avatarState.avatar.unwrapInflationErc20(
+        promise: avatarState.avatar.wrap.unwrapInflationary(
           asset.tokenAddress,
-          BigInt(ethers.parseEther(amount.toString()))
+          amountInAttoCircles
         ),
       });
-    } else if (tokenInfo.type === 'CrcV2_ERC20WrapperDeployed_Demurraged') {
+    } else if (
+      tokenInfo.tokenType === 'CrcV2_ERC20WrapperDeployed_Demurraged'
+    ) {
       runTask({
         name: `Unwrap ${roundToDecimals(amount)} tokens ...`,
-        promise: avatarState.avatar.unwrapDemurrageErc20(
+        promise: avatarState.avatar.wrap.unwrapDemurraged(
           asset.tokenAddress,
-          BigInt(ethers.parseEther(amount.toString()))
+          amountInAttoCircles
         ),
       });
     } else {

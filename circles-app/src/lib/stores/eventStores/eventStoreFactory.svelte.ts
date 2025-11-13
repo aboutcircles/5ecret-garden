@@ -1,5 +1,5 @@
-import type { CirclesEvent, CirclesEventType } from '@circles-sdk/data';
-import type { Avatar } from '@circles-sdk/sdk';
+import type { CirclesEvent, CirclesEventType } from '@aboutcircles/sdk-rpc';
+import type { Avatar } from '@aboutcircles/sdk';
 import { readable, type Readable } from 'svelte/store';
 
 // Type Definitions
@@ -63,7 +63,9 @@ export function createEventStore<T>(
   handleEvent: EventHandler<T>,
   handleNextPage: NextPageFunction<T>,
   initialData: T,
-  dataComparator?: T extends Array<infer U> ? (a: U, b: U) => number : undefined,
+  dataComparator?: T extends Array<infer U>
+    ? (a: U, b: U) => number
+    : undefined,
   debounceDelay = 50
 ): Readable<{ data: T; next: () => Promise<boolean>; ended: boolean }> {
   let timeout: any;
@@ -95,10 +97,10 @@ export function createEventStore<T>(
       }
 
       /**
-     * Loads the next page of data by calling `handleNextPage` and updates the store.
-     *
-     * @returns {Promise<boolean>} - A promise resolving to whether pagination has ended.
-     */
+       * Loads the next page of data by calling `handleNextPage` and updates the store.
+       *
+       * @returns {Promise<boolean>} - A promise resolving to whether pagination has ended.
+       */
       async function next(): Promise<boolean> {
         await initialPromise;
         const { data, ended } = await handleNextPage(storeData);
@@ -110,8 +112,8 @@ export function createEventStore<T>(
       setData(storeData); // Initialize the store with the initial data
 
       /**
-     * Processes debounced events and updates the store's data.
-     */
+       * Processes debounced events and updates the store's data.
+       */
       const processEvents = async () => {
         if (!lastEvent) return;
         const data = await handleEvent(lastEvent, storeData);
@@ -120,12 +122,26 @@ export function createEventStore<T>(
       };
 
       /**
-     * Handles incoming events by debouncing their processing.
-     *
-     * @param {CirclesEvent} event - The event to process.
-     */
+       * Handles incoming events by debouncing their processing.
+       *
+       * @param {CirclesEvent} event - The event to process.
+       */
       const eventHandler = (event: CirclesEvent) => {
-        if (!eventTypes.has(event.$event)) return;
+        console.log(
+          '🎯 EventStoreFactory: Received event',
+          event.$event,
+          'for avatar',
+          avatar.address
+        );
+        if (!eventTypes.has(event.$event)) {
+          console.log(
+            '⏭️  EventStoreFactory: Ignoring event',
+            event.$event,
+            '(not in refresh list)'
+          );
+          return;
+        }
+        console.log('✅ EventStoreFactory: Processing event', event.$event);
         lastEvent = event;
 
         if (timeout) {
@@ -146,11 +162,30 @@ export function createEventStore<T>(
       };
 
       // Load the initial data and subscribe to events
+      console.log(
+        '🏁 EventStoreFactory: Initializing store for avatar',
+        avatar.address
+      );
+      console.log(
+        '📋 EventStoreFactory: Monitoring events:',
+        Array.from(eventTypes).join(', ')
+      );
       initialLoad()
-        .then((data) => setData(data))
+        .then((data) => {
+          console.log(
+            '📊 EventStoreFactory: Initial data loaded, count:',
+            Array.isArray(data) ? data.length : 'N/A'
+          );
+          setData(data);
+        })
         .then(() => resolveInitialLoad?.())
-        .then(() => avatar.events.subscribe(eventHandler))
-        .catch((e) => console.error('Failed to initialize store', e));
+        .then(() => {
+          console.log('🔗 EventStoreFactory: Subscribing to avatar.events');
+          return avatar.events.subscribe(eventHandler);
+        })
+        .catch((e) =>
+          console.error('❌ EventStoreFactory: Failed to initialize store', e)
+        );
 
       return () => {
         avatar.unsubscribeFromEvents();
