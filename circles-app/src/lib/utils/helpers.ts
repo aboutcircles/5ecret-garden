@@ -1,6 +1,6 @@
-import type { Profile } from '@circles-sdk/profiles';
-import type { TrustRelation } from '@circles-sdk/data';
-import type { CirclesConfig } from '@circles-sdk/sdk';
+import type { Profile } from '@aboutcircles/sdk-types';
+import type { TrustRelationType } from '@aboutcircles/sdk-types';
+import type { CirclesConfig } from '@aboutcircles/sdk-types';
 
 export function getTypeString(type: string): string {
   const typeMap: Record<string, string> = {
@@ -12,30 +12,37 @@ export function getTypeString(type: string): string {
   return typeMap[type ?? ''] || 'None';
 }
 
-export function formatTrustRelation(relation: TrustRelation | undefined, profile?: Profile) {
+export function formatTrustRelation(
+  relation: TrustRelationType | undefined,
+  profile?: Profile
+) {
   switch (relation) {
     case 'trusts':
-      return `You accept ${profile ? profile.name + '’s' : 'their'} tokens`;
+      return `You accept ${profile ? profile.name + '\'s' : 'their'} tokens`;
     case 'trustedBy':
       return `${profile ? profile.name : 'They'} accept your tokens`;
     case 'mutuallyTrusts':
-      return 'You accept each other’s tokens';
-    case 'selfTrusts':
-      return 'Self-trusted';
-    case 'variesByVersion':
-      return 'Trust relationship varies by version';
+      return 'You accept each other\'s tokens';
     default:
       return "You don't trust each other";
   }
 }
 
 export async function getCirclesConfig(chainId: bigint, rings: boolean) {
-  let circlesConfig: CirclesConfig
+  let circlesConfig: CirclesConfig;
   if (chainId === 100n) {
-    rings ? circlesConfig = (await import('$lib/circlesConfig')).gnosisConfig.rings : circlesConfig = (await import('$lib/circlesConfig')).gnosisConfig.production;
+    rings
+      ? (circlesConfig = (await import('$lib/circlesConfig')).gnosisConfig
+          .rings)
+      : (circlesConfig = (await import('$lib/circlesConfig')).gnosisConfig
+          .production);
     return circlesConfig;
   } else if (chainId === 10200n) {
-    rings ? circlesConfig = (await import('$lib/circlesConfig')).chiadoConfig.rings : circlesConfig = (await import('$lib/circlesConfig')).chiadoConfig.production;
+    rings
+      ? (circlesConfig = (await import('$lib/circlesConfig')).chiadoConfig
+          .rings)
+      : (circlesConfig = (await import('$lib/circlesConfig')).chiadoConfig
+          .production);
     return circlesConfig;
   }
   throw new Error(`Unsupported chain-id: ${chainId}`);

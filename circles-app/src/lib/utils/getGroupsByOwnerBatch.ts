@@ -1,7 +1,7 @@
-import type { Address } from '@circles-sdk/utils';
-import type { Sdk } from '@circles-sdk-v2/sdk';
-import type { GroupRow as NewGroupRow } from '@circles-sdk-v2/types';
-import type { GroupRow as OldGroupRow } from '@circles-sdk/data';
+import type { Address } from '@aboutcircles/sdk-types';
+import type { Sdk } from '@aboutcircles/sdk';
+import type { GroupRow as NewGroupRow } from '@aboutcircles/sdk-types';
+import type { GroupRow as OldGroupRow } from '@aboutcircles/sdk-types';
 
 /**
  * Get base and CMG groups by owner addresses in batch
@@ -21,15 +21,15 @@ export async function getBaseAndCmgGroupsByOwnerBatch(
 
   // Initialize result with empty arrays for each owner
   const acc: Record<Address, OldGroupRow[]> = {};
-  const normalizedOwners = owners.map(o => o.toLowerCase() as Address);
-  normalizedOwners.forEach(owner => {
+  const normalizedOwners = owners.map((o) => o.toLowerCase() as Address);
+  normalizedOwners.forEach((owner) => {
     acc[owner] = [];
   });
 
   try {
     const allGroups = await sdk.rpc.group.findGroups(100, {
       ownerIn: normalizedOwners,
-      groupTypeIn: ['CrcV2_BaseGroupCreated']
+      groupTypeIn: ['Standard'],
     });
 
     // Group results by owner
@@ -40,18 +40,17 @@ export async function getBaseAndCmgGroupsByOwnerBatch(
         // @todo switch to the new format
         const mappedGroup: OldGroupRow = {
           ...group,
-          type: group.type as 'CrcV2_BaseGroupCreated',
+          type: group.type as 'Standard',
           name: group.name || '',
           symbol: group.symbol || '',
           cidV0Digest: group.cidV0Digest || '',
           memberCount: group.memberCount || 0,
-          mintPolicy: group.mintPolicy || '',
-          treasury: group.treasury || '',
+          mintPolicy: group.mintPolicy || undefined,
+          treasury: group.treasury || undefined,
         };
         acc[ownerLower].push(mappedGroup);
       }
     });
-
   } catch (error) {
     console.error(`Failed to fetch groups for owners in batch:`, error);
   }

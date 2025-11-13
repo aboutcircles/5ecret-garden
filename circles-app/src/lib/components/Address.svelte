@@ -1,6 +1,6 @@
 <script lang="ts">
   import { shortenAddress } from '$lib/utils/shared';
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
 
   let copyIcon = $state('/copy.svg');
   interface Props {

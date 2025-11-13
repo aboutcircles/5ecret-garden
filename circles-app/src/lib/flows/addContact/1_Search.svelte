@@ -7,7 +7,7 @@
   import { popupControls } from '$lib/stores/popUp';
   import YouAlreadyTrust from './2_YouAlreadyTrust.svelte';
   import type { AddContactFlowContext } from './context';
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
 
   let context: AddContactFlowContext = $state({
     selectedAddress: '0x0',
@@ -54,7 +54,11 @@
 
 <FlowDecoration>
   <SearchAvatar
-    avatarTypes={["CrcV2_RegisterHuman","CrcV2_RegisterOrganization","CrcV2_RegisterGroup"]}
+    avatarTypes={[
+      'CrcV2_RegisterHuman',
+      'CrcV2_RegisterOrganization',
+      'CrcV2_RegisterGroup',
+    ]}
     selectedAddress={context.selectedAddress}
     {oninvite}
     {onselect}

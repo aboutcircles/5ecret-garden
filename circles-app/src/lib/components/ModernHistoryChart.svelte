@@ -24,18 +24,18 @@
   // Enhanced color generation for better visual appeal
   const generateColors = (index: number) => {
     const baseColors = [
-      [56, 49, 139],  // primary
-      [64, 82, 214],  // secondary
+      [56, 49, 139], // primary
+      [64, 82, 214], // secondary
       [55, 205, 190], // accent
       [111, 79, 179], // purple variant
       [79, 142, 179], // blue variant
-      [79, 179, 159]  // teal variant
+      [79, 179, 159], // teal variant
     ];
-    
+
     const color = baseColors[index % baseColors.length];
     return {
       background: `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.1)`,
-      border: `rgba(${color[0]}, ${color[1]}, ${color[2]}, 1)`
+      border: `rgba(${color[0]}, ${color[1]}, ${color[2]}, 1)`,
     };
   };
 
@@ -124,7 +124,7 @@
           },
         },
         plugins: {
-          legend: { 
+          legend: {
             position: 'bottom',
             labels: {
               usePointStyle: true,
@@ -132,9 +132,9 @@
               padding: 20,
               color: 'rgba(107, 114, 128, 0.9)',
               font: {
-                size: 12
-              }
-            }
+                size: 12,
+              },
+            },
           },
           tooltip: {
             backgroundColor: 'rgba(255, 255, 255, 0.9)',
@@ -164,7 +164,7 @@
           point: {
             radius: 0,
             hoverRadius: 6,
-          }
+          },
         },
       },
     });
@@ -189,8 +189,10 @@
       />
     </div>
   </div>
-  
-  <div class="rounded-lg overflow-hidden bg-gradient-to-br from-transparent via-gray-50/50 to-transparent p-px min-h-[250px]">
+
+  <div
+    class="rounded-lg overflow-hidden bg-gradient-to-br from-transparent via-gray-50/50 to-transparent p-px min-h-[250px]"
+  >
     <canvas bind:this={canvas} class="w-full h-full"></canvas>
   </div>
 </div>

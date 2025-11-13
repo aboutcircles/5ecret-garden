@@ -1,14 +1,14 @@
 <script lang="ts">
   import { ethers } from 'ethers';
   import { avatarState } from '$lib/stores/avatar.svelte';
-  import type { TokenBalanceRow } from '@circles-sdk/data';
+  import type { TokenBalance } from '@aboutcircles/sdk-types';
   import BalanceRow from '$lib/components/BalanceRow.svelte';
   import { roundToDecimals } from '$lib/utils/shared';
   import { runTask } from '$lib/utils/tasks';
   import { popupControls } from '$lib/stores/popUp';
 
   interface Props {
-    asset: TokenBalanceRow;
+    asset: TokenBalance;
   }
 
   let { asset }: Props = $props();
@@ -33,10 +33,10 @@
   }
 
   async function wrapInflationary(sendValue: bigint) {
-    if (avatarState.avatar?.avatarInfo?.version !== 2) {
-      throw new Error('Only supported for Avatar v2');
+    if (!avatarState.avatar) {
+      throw new Error('Avatar not loaded');
     }
-    const receipt = await avatarState.avatar?.wrapInflationErc20(
+    const receipt = await avatarState.avatar.wrap.asInflationary(
       asset.tokenAddress,
       sendValue
     );
@@ -46,10 +46,10 @@
   }
 
   async function wrapDemurraged(sendValue: bigint) {
-    if (avatarState.avatar?.avatarInfo?.version !== 2) {
-      throw new Error('Only supported for Avatar v2');
+    if (!avatarState.avatar) {
+      throw new Error('Avatar not loaded');
     }
-    const receipt = await avatarState.avatar?.wrapDemurrageErc20(
+    const receipt = await avatarState.avatar.wrap.asDemurraged(
       asset.tokenAddress,
       sendValue
     );

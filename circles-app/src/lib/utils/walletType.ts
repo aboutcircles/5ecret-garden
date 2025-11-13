@@ -1,5 +1,5 @@
 export type WalletType =
-  'safe'
+  | 'safe'
   | 'safe+group'
   | 'injected'
   | 'injected+group'

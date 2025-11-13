@@ -1,5 +1,4 @@
 <script lang="ts">
-
   interface Props {
     imgUrl: string;
     header: string;
@@ -13,7 +12,7 @@
     header,
     desc,
     route,
-    recommended = undefined
+    recommended = undefined,
   }: Props = $props();
 </script>
 
@@ -31,7 +30,8 @@
         {#if recommended}
           <span
             class={`text-white badge ${recommended === 'Connect' ? 'badge-accent' : 'badge-secondary'} badge-sm text-sm leading-none text-yellow-400`}
-            >★</span>
+            >★</span
+          >
         {/if}
       </div>
       <p class="font-normal text-black/60 text-sm md:text-base">{desc}</p>

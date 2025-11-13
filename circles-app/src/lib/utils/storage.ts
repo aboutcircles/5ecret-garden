@@ -1,4 +1,4 @@
-import type { Address } from '@circles-sdk/utils';
+import type { Address } from '@aboutcircles/sdk-types';
 import type { WalletType } from '$lib/utils/walletType';
 
 export interface StorageSchema {
@@ -10,7 +10,6 @@ export interface StorageSchema {
   groupType?: string;
   privateKey?: string;
   rings?: boolean;
-  legacy?: boolean;
 }
 
 const STORAGE_KEY = 'Circles.Storage';
@@ -43,12 +42,19 @@ export class CirclesStorage {
       groupType: localStorage.getItem('groupType') || undefined,
       privateKey: localStorage.getItem('privateKey') || undefined,
       ...data,
-      version: CURRENT_VERSION
+      version: CURRENT_VERSION,
     };
 
     this.write(migratedData);
 
-    ['walletType', 'avatar', 'group', 'isGroup', 'groupType', 'privateKey'].forEach(key => {
+    [
+      'walletType',
+      'avatar',
+      'group',
+      'isGroup',
+      'groupType',
+      'privateKey',
+    ].forEach((key) => {
       localStorage.removeItem(key);
     });
   }
@@ -90,10 +96,6 @@ export class CirclesStorage {
 
   get rings(): boolean | undefined {
     return this.data.rings;
-  }
-
-  get legacy(): boolean | undefined {
-    return this.data.legacy;
   }
 
   clear() {

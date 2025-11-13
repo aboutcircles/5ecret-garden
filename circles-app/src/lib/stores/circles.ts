@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store';
-import type { Sdk } from '@circles-sdk-v2/sdk';
+import type { Sdk } from '@aboutcircles/sdk';
 
 /**
  * A store that contains the fully configured Circles SDK instance or undefined

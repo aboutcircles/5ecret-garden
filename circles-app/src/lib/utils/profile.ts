@@ -1,9 +1,9 @@
-import type { Profile } from '@circles-sdk/profiles';
-import type { AvatarRow } from '@circles-sdk/data';
+import type { Profile } from '@aboutcircles/sdk-types';
+import type { AvatarInfo } from '@aboutcircles/sdk-types';
 import { get } from 'svelte/store';
 import { circles } from '$lib/stores/circles';
 import { shortenAddress } from '$lib/utils/shared';
-import type { Address } from '@circles-sdk/utils';
+import type { Address } from '@aboutcircles/sdk-types';
 import { BatchAggregator } from '$lib/utils/batchAggregator';
 
 /**
@@ -28,8 +28,8 @@ export enum FallbackImageUrl {
 
 function setFallbackValues(
   address: string,
-  avatar: AvatarRow | undefined,
-  profile: Profile | undefined,
+  avatar: AvatarInfo | undefined,
+  profile: Profile | undefined
 ): Profile {
   const fallbackProfile: Profile = {
     name: shortenAddress(address),
@@ -37,7 +37,10 @@ function setFallbackValues(
   };
 
   // Assign the correct fallback image
-  if (!profile?.previewImageUrl && (avatar?.type === 'CrcV2_RegisterHuman' || avatar?.type === 'CrcV1_Signup')) {
+  if (
+    !profile?.previewImageUrl &&
+    (avatar?.type === 'CrcV2_RegisterHuman' || avatar?.type === 'CrcV1_Signup')
+  ) {
     fallbackProfile.previewImageUrl = FallbackImageUrl.Person;
   }
   if (avatar?.type === 'CrcV2_RegisterGroup') {
@@ -73,13 +76,18 @@ function setFallbackValues(
  *    - Collects CIDs, calls `profiles.getMany` in a single call or chunk if needed
  *    - Builds final Profiles in a Map(address->Profile)
  */
-async function fetchProfiles(addresses: Address[]): Promise<Map<Address, Profile>> {
+async function fetchProfiles(
+  addresses: Address[]
+): Promise<Map<Address, Profile>> {
   const sdk = get(circles);
   if (!sdk) throw new Error('No SDK instance found.');
-  if (!sdk.profiles) throw new Error('No sdk.profiles instance found. Is the profile service url configured?');
+  if (!sdk.profiles)
+    throw new Error(
+      'No sdk.profiles instance found. Is the profile service url configured?'
+    );
 
   // 1) Fetch avatar info for all addresses in one go
-  let avatars;
+  let avatars: AvatarInfo[];
 
   // Validate SDK is properly initialized
   if (!sdk || typeof sdk !== 'object') {
@@ -92,13 +100,15 @@ async function fetchProfiles(addresses: Address[]): Promise<Map<Address, Profile
     console.log('🔄 Using new SDK rpc.avatar.getAvatarInfoBatch()');
     avatars = await (sdk as any).rpc.avatar.getAvatarInfoBatch(addresses);
   } else {
-    console.error('❌ No rpc.avatar.getAvatarInfoBatch method available on SDK');
+    console.error(
+      '❌ No rpc.avatar.getAvatarInfoBatch method available on SDK'
+    );
     return new Map();
   }
 
   // 2) Build a map address->avatar for convenience
   // Filter out null/undefined avatars (addresses that don't have registered avatars)
-  const addressToAvatar = new Map<string, AvatarRow>();
+  const addressToAvatar = new Map<string, AvatarInfo>();
   for (const avatar of avatars) {
     if (avatar && avatar.avatar) {
       addressToAvatar.set(avatar.avatar.toLowerCase(), avatar);
@@ -107,8 +117,8 @@ async function fetchProfiles(addresses: Address[]): Promise<Map<Address, Profile
 
   // 3) Gather all CIDs
   const cids: string[] = avatars
-    .filter((a) => a && a.cidV0)
-    .map((a) => a.cidV0!);
+    .filter((a: AvatarInfo) => a && a.cidV0)
+    .map((a: AvatarInfo) => a.cidV0!);
 
   const uniqueCids = [...new Set(cids)];
 
@@ -125,7 +135,10 @@ async function fetchProfiles(addresses: Address[]): Promise<Map<Address, Profile
       // New SDK - use rpc.client.call (returns result directly, not wrapped)
       // @todo refactor
       console.log('🔄 Using new SDK rpc.client.call() for profile batch');
-      const result = await (sdk as any).rpc.client.call<string[], Profile[]>("circles_getProfileByCidBatch", [chunk]);
+      const result = await (sdk as any).rpc.client.call(
+        'circles_getProfileByCidBatch',
+        [chunk]
+      ) as Profile[];
       chunkProfiles = { result }; // Wrap to match old SDK format
       isNewSdk = true;
     } else {
@@ -133,10 +146,13 @@ async function fetchProfiles(addresses: Address[]): Promise<Map<Address, Profile
     }
     // console.log(`newApiResults:`, newApiResults);
 
-      const profilesMap = chunk.reduce((p,c, i) => {
-          p[c] = chunkProfiles.result[i];
-          return p;
-      }, <Record<string, Profile>>{});
+    const profilesMap = chunk.reduce(
+      (p, c, i) => {
+        p[c] = chunkProfiles.result[i];
+        return p;
+      },
+      <Record<string, Profile>>{}
+    );
 
     // const chunkProfiles = await sdk.profiles.getMany(chunk);
     for (const [cid, prof] of Object.entries(profilesMap)) {

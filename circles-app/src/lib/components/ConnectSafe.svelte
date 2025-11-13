@@ -1,10 +1,10 @@
 <script lang="ts">
-  import type { Sdk } from '@circles-sdk-v2/sdk';
-  import type { AvatarInfo, Address } from '@circles-sdk-v2/types';
+  import type { Sdk } from '@aboutcircles/sdk';
+  import type { AvatarInfo, Address } from '@aboutcircles/sdk-types';
   import ConnectCircles from '$lib/components/ConnectCircles.svelte';
   import CreateSafe from '$lib/pages/CreateSafe.svelte';
   import { ethers } from 'ethers';
-  import type { GroupRow } from '@circles-sdk/data';
+  import type { GroupRow } from '@aboutcircles/sdk-types';
   import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
 
   let safes: Address[] = $state([]);
@@ -18,7 +18,8 @@
     refreshGroupsCallback?: () => void;
   }
 
-  let { safeOwnerAddress, initSdk, sdk, refreshGroupsCallback }: Props = $props();
+  let { safeOwnerAddress, initSdk, sdk, refreshGroupsCallback }: Props =
+    $props();
 
   const getSafesByOwnerApiEndpoint = (checksumOwnerAddress: string): string =>
     `https://safe-transaction-gnosis-chain.safe.global/api/v1/owners/${checksumOwnerAddress}/safes/`;
@@ -36,9 +37,9 @@
   }
 
   async function loadSafesAndProfile() {
-    const fetchedSafes = (await querySafeTransactionService(safeOwnerAddress)).map(
-      (safe) => safe.toLowerCase() as Address
-    );
+    const fetchedSafes = (
+      await querySafeTransactionService(safeOwnerAddress)
+    ).map((safe) => safe.toLowerCase() as Address);
 
     // Preserve existing order to avoid list items jumping; append any new safes
     if (safes.length === 0) {
@@ -69,10 +70,12 @@
 
     const profileBySafeNew: Record<string, AvatarInfo | undefined> = {};
 
-    // Process avatar info - only registered avatars are included
-    avatarInfoResults.forEach((avatarInfo: AvatarInfo) => {
-      const safeAddress = avatarInfo.avatar.toLowerCase();
-      profileBySafeNew[safeAddress] = avatarInfo;
+    // Process avatar info - only registered avatars are included (null = unregistered)
+    avatarInfoResults.forEach((avatarInfo: AvatarInfo | null) => {
+      if (avatarInfo && avatarInfo.avatar) {
+        const safeAddress = avatarInfo.avatar.toLowerCase();
+        profileBySafeNew[safeAddress] = avatarInfo;
+      }
     });
 
     // Mark unregistered safes
@@ -106,8 +109,8 @@
     address={item}
     isRegistered={profileBySafe[item.toLowerCase()] !== undefined}
     groups={groupsByOwner[item.toLowerCase() as Address] ?? []}
-    sdk={sdk}
-    initSdk={initSdk}
+    {sdk}
+    {initSdk}
     refreshGroupsCallback={refreshGroupsLocal}
   />
 {/each}

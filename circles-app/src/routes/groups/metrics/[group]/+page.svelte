@@ -13,16 +13,16 @@
   import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
   import Lucide from '$lib/icons/Lucide.svelte';
   import { ArrowLeft as LArrowLeft } from 'lucide';
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
 
   let groupMetrics: GroupMetrics = $state({});
 
   let { data }: PageProps = $props();
 
   $effect(() => {
-    if ($circles?.circlesRpc) {
+    if ($circles?.rpc) {
       fetchGroupMetrics(
-        $circles.circlesRpc,
+        $circles.rpc,
         data.group as Address,
         groupMetrics
       );

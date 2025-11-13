@@ -14,10 +14,15 @@
     if (!avatarState.avatar) {
       throw new Error('Avatar store not available');
     }
-    runTask({
-      name: `Inviting ${shortenAddress(address)} ...`,
-      promise: avatarState.avatar!.inviteHuman(address),
-    });
+    // SDK v2 change: inviteHuman() -> invite.send()
+    if ('invite' in avatarState.avatar && typeof (avatarState.avatar as any).invite?.send === 'function') {
+      runTask({
+        name: `Inviting ${shortenAddress(address)} ...`,
+        promise: (avatarState.avatar as any).invite.send(address),
+      });
+    } else {
+      throw new Error('Invitation not supported on this avatar type');
+    }
     popupControls.close();
   }
 </script>

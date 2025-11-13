@@ -15,8 +15,6 @@
     restoreSession,
     signer,
   } from '$lib/stores/wallet.svelte';
-  import { canMigrate } from '$lib/guards/canMigrate';
-  import UpdateBanner from '$lib/components/UpdateBanner.svelte';
   import { page } from '$app/stores';
   import Send from '$lib/flows/send/1_To.svelte';
   import { onDestroy, onMount } from 'svelte';
@@ -37,7 +35,7 @@
   import { config } from '../config';
   import WrongNetwork from '$lib/components/WrongNetwork.svelte';
   import BottomNav from '$lib/components/BottomNav.svelte';
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
   import DefaultHeader from './DefaultHeader.svelte';
 
   const unwatch = watchAccount(config, {
@@ -127,8 +125,8 @@
       initTransactionHistoryStore(avatarState.avatar);
       initContactStore(avatarState.avatar);
       initBalanceStore(avatarState.avatar);
-      if (avatarState.groupType === 'CrcV2_BaseGroupCreated' && $circles) {
-        initGroupMetricsStore($circles.circlesRpc, avatarState.avatar.address);
+      if (avatarState.isGroup && $circles) {
+        initGroupMetricsStore($circles.rpc, avatarState.avatar.address);
       }
     }
   });
@@ -156,11 +154,6 @@
 <main
   class="relative w-full min-h-screen bg-base-200 border-gray-200 overflow-hidden font-dmSans pt-4"
 >
-  {#if avatarState.avatar?.avatarInfo && canMigrate(avatarState.avatar.avatarInfo)}
-    <UpdateBanner />
-    <div class="h-20"></div>
-  {/if}
-
   <div class="w-full flex flex-col items-stretch min-h-screen">
     {@render children?.()}
   </div>

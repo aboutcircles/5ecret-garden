@@ -13,7 +13,7 @@
     isValidMnemonic = $bindable(false),
     mnemonicPhrase = $bindable(''),
     privateKey = $bindable(''),
-    address = $bindable('')
+    address = $bindable(''),
   }: Props = $props();
 
   let boxes: string[] = $state(Array(24).fill(''));

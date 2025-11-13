@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { TokenBalanceRow } from '@circles-sdk/data';
+  import type { TokenBalance } from '@aboutcircles/sdk-types';
   import type { SendFlowContext } from '$lib/flows/send/context';
   import SelectAsset from '$lib/pages/SelectAsset.svelte';
   import SelectAmount from './3_Amount.svelte';
@@ -13,7 +13,7 @@
 
   let { context = $bindable() }: Props = $props();
 
-  let selectedAsset: TokenBalanceRow | undefined = $state(undefined);
+  let selectedAsset: TokenBalance | undefined = $state(undefined);
 
   onMount(() => {
     if (context?.selectedAsset) {
@@ -21,7 +21,7 @@
     }
   });
 
-  function onselect(tokenBalanceRow: TokenBalanceRow) {
+  function onselect(tokenBalanceRow: TokenBalance) {
     context.selectedAsset = tokenBalanceRow;
 
     popupControls.open({
