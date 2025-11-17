@@ -1,5 +1,5 @@
 import { ObjectTooLargeError, InvalidUriError, CurrencyCodeError } from './errors';
-import type { Address } from './adapters';
+import type { Address } from '../safeSigner/types';
 import { isAbsoluteUri } from './adapters';
 
 export type ProductImage =
@@ -40,26 +40,42 @@ function validateCurrency(code: string) {
   if (!/^[A-Z]{3}$/.test(code)) throw new CurrencyCodeError(code);
 }
 
-function normalizeImages(image?: ProductImage | ProductImage[]) {
-  if (image == null) return undefined;
+function normalizeImagesToArray(image?: ProductImage | ProductImage[]) {
+  if (image == null) {
+    return undefined;
+  }
+
   const normalizeOne = (img: ProductImage) => {
     if (typeof img === 'string') {
-      if (!isAbsoluteUri(img)) throw new InvalidUriError('image', img);
+      ensureAbsoluteUri('image', img);
       return img;
     }
-    if (img && img['@type'] === 'ImageObject') {
+
+    if (img && (img as any)['@type'] === 'ImageObject') {
       const { contentUrl, url } = img as any;
-      if (!contentUrl && !url) throw new InvalidUriError('image', 'missing contentUrl/url');
-      if (contentUrl) ensureAbsoluteUri('image.contentUrl', contentUrl);
-      if (url) ensureAbsoluteUri('image.url', url);
+      const hasContentUrl = typeof contentUrl === 'string' && contentUrl.length > 0;
+      const hasUrl = typeof url === 'string' && url.length > 0;
+
+      if (!hasContentUrl && !hasUrl) {
+        throw new InvalidUriError('image', 'missing contentUrl/url');
+      }
+      if (hasContentUrl) {
+        ensureAbsoluteUri('image.contentUrl', contentUrl);
+      }
+      if (hasUrl) {
+        ensureAbsoluteUri('image.url', url);
+      }
+
       const out: any = { '@type': 'ImageObject' };
-      if (contentUrl) out.contentUrl = contentUrl;
-      if (url) out.url = url;
+      if (hasContentUrl) { out.contentUrl = contentUrl; }
+      if (hasUrl) { out.url = url; }
       return out;
     }
+
     throw new InvalidUriError('image', 'invalid object');
   };
-  return Array.isArray(image) ? image.map(normalizeOne) : normalizeOne(image);
+
+  return Array.isArray(image) ? image.map(normalizeOne) : [normalizeOne(image)];
 }
 
 export function buildProduct(product: MinimalProduct, offer: MinimalOffer): any {
@@ -75,7 +91,7 @@ export function buildProduct(product: MinimalProduct, offer: MinimalOffer): any 
   // Validate product URL if present
   ensureAbsoluteUri('product.url', product.url);
 
-  const images = normalizeImages(product.image);
+  const images = normalizeImagesToArray(product.image);
 
   const obj: any = {
     '@context': ['https://schema.org/', 'https://aboutcircles.com/contexts/circles-market/'],
@@ -84,7 +100,7 @@ export function buildProduct(product: MinimalProduct, offer: MinimalOffer): any 
     name: product.name,
   };
   if (product.description) obj.description = product.description;
-  if (images) obj.image = images;
+  if (images && images.length > 0) obj.image = images; // server requires array
   if (product.url) obj.url = product.url;
   if (product.brand) obj.brand = product.brand;
   if (product.mpn) obj.mpn = product.mpn;
@@ -102,7 +118,8 @@ export function buildProduct(product: MinimalProduct, offer: MinimalOffer): any 
   if (offer.inventoryFeed) offerObj.inventoryFeed = offer.inventoryFeed;
   if (offer.url) offerObj.url = offer.url;
   if (offer.sellerName) {
-    offerObj.seller = { '@type': 'Organization', name: offer.sellerName };
+    // Do not emit a seller object without @id; carry label only.
+    offerObj.sellerName = offer.sellerName;
   }
 
   obj.offers = [offerObj];

@@ -4,12 +4,15 @@
     import {popupControls} from '$lib/stores/popUp';
     import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
     import ProductCard from '$lib/components/ProductCard.svelte';
+    import Avatar from '$lib/components/avatar/Avatar.svelte';
 
     // Defaults (as requested)
     const OPERATOR: `0x${string}` = '0x31d5d15c558fbfbbbe604c9c11eb42c9afbf5140';
-    const AVATAR: `0x${string}` = '0x31d5d15c558fbfbbbe604c9c11eb42c9afbf5140';
-
-    // Static API base from your note
+    
+    // Get seller address from URL parameters
+    const { params } = $props<{ params: { seller: string } }>();
+    
+    // Static API base
     const API_BASE = 'http://localhost:5084';
 
     type ProductLike = any;
@@ -17,6 +20,8 @@
     let loading: boolean = $state(true);
     let errorMsg: string = $state('');
     let products: ProductLike[] = $state([]);
+    let sellerAddress: `0x${string}` | null = $state(null);
+    let shortSellerAddr: string = '';
 
     // ————————————————————————————————————————————
     // helper functions (kept only those not in ProductCard)
@@ -43,20 +48,38 @@
     // ————————————————————————————————————————————
     // data load
     // ————————————————————————————————————————————
-    async function loadCatalog(): Promise<void> {
+    async function loadSellerCatalog(): Promise<void> {
         loading = true;
         errorMsg = '';
-        products = [];
-
-        const url = `${API_BASE}/api/operator/${OPERATOR}/catalog?avatars=${AVATAR}&avatars=0x1327c3cf61c6df3e0cf69faa4590281d6f675ce5&avatars=0xde374ece6fa50e781e81aac78e811b33d16912c7`;
+        
+        if (!params.seller || !params.seller.startsWith('0x')) {
+            errorMsg = 'Invalid seller address';
+            loading = false;
+            return;
+        }
+        
+        // Validate and format the seller address
         try {
+            sellerAddress = params.seller.toLowerCase() as `0x${string}`;
+            shortSellerAddr = shortAddr(sellerAddress);
+            
+            // Fetch catalog for this specific seller
+            const url = `${API_BASE}/api/operator/${OPERATOR}/catalog?avatars=${sellerAddress}`;
             const res = await fetch(url, {headers: {Accept: 'application/ld+json'}});
+            
             if (!res.ok) {
                 const text = await res.text().catch(() => '');
                 throw new Error(`HTTP ${res.status} ${res.statusText}${text ? ` — ${text}` : ''}`);
             }
+            
             const body = await res.json();
             products = extractProducts(body);
+            
+            // Filter to only show products from this seller
+            products = products.filter(p => 
+                (p.seller?.toLowerCase() === sellerAddress) || 
+                (getProductFromCard(p)?.seller?.toLowerCase() === sellerAddress)
+            );
         } catch (err: any) {
             errorMsg = err?.message ?? String(err);
         } finally {
@@ -64,7 +87,12 @@
         }
     }
 
-    onMount(loadCatalog);
+    // Helper function to get product from ProductCard context
+    function getProductFromCard(item: any): any {
+        return item?.product ?? item;
+    }
+
+    onMount(loadSellerCatalog);
 
 </script>
 
@@ -79,11 +107,15 @@
         collapsedTopGapClass="mt-3 md:mt-4"
 >
     <svelte:fragment slot="title">
-        <h1 class="h2 m-0">Marketplace</h1>
+        <h1 class="h2 m-0">Seller Profile</h1>
     </svelte:fragment>
 
     <svelte:fragment slot="meta">
-        Namespace {shortAddr(OPERATOR)} • Avatar {shortAddr(AVATAR)} • All offers
+        {#if sellerAddress}
+            Seller: {shortAddr(sellerAddress)}
+        {:else}
+            Seller Profile
+        {/if}
     </svelte:fragment>
 
     <svelte:fragment slot="actions">
@@ -93,19 +125,19 @@
       popupControls.open({
         title: 'Create Offer',
         component: OfferStep1,
-        props: { context: { operator: OPERATOR, pinApiBase: API_BASE } },   // ← pass operator and pinApiBase
-        onClose: () => { void loadCatalog(); }        // ← refresh after closing
+        props: { context: { operator: OPERATOR, pinApiBase: API_BASE } },
+        onClose: () => { void loadSellerCatalog(); }
       })
     }
         >
-            Offer
+            Create Listing
         </button>
     </svelte:fragment>
 
     <!-- Collapsed summary -->
     <svelte:fragment slot="collapsed-left">
         <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">
-      Marketplace
+      Seller Profile
     </span>
     </svelte:fragment>
 
@@ -118,39 +150,64 @@
         title: 'Create Offer',
         component: OfferStep1,
         props: { context: { operator: OPERATOR, pinApiBase: API_BASE } },
-        onClose: () => { void loadCatalog(); }
+        onClose: () => { void loadSellerCatalog(); }
       })
     }
         >
-            Offer
+            Create Listing
         </button>
     </svelte:fragment>
 
+    <!-- Seller Profile Section -->
+    <section class="bg-base-100 border border-base-300 rounded-xl p-4 mb-6">
+        {#if sellerAddress}
+            
+            <div class="mt-4 flex items-center gap-3">
+                <Avatar 
+                    address={params.seller || ''}
+                    view="vertical" 
+                    clickable={false} 
+                />
+            </div>
+        {:else if errorMsg}
+            <div class="alert alert-error">
+                <span>Invalid seller address</span>
+            </div>
+        {/if}
+    </section>
+
+    <!-- Listings Section -->
     {#if loading}
         <div class="flex flex-col items-center justify-center h-[50vh]">
             <div class="loading loading-spinner loading-lg" aria-label="loading"></div>
-            <div class="mt-3 text-base-content/70">Loading catalog…</div>
+            <div class="mt-3 text-base-content/70">Loading listings…</div>
         </div>
     {:else if errorMsg}
-        <div class="alert alert-error">
-            <span class="font-semibold">Failed to load:</span>&nbsp;{errorMsg}
-        </div>
+        <section class="bg-base-100 border border-base-300 rounded-xl p-4">
+            <div class="alert alert-error">
+                <span class="font-semibold">Failed to load:</span>&nbsp;{errorMsg}
+            </div>
+        </section>
     {:else}
         <section class="bg-base-100 border border-base-300 rounded-xl p-4">
             <div class="flex items-center justify-between mb-3">
                 <div class="text-sm">
-                    <strong>Products</strong>
+                    <strong>Listings</strong>
                     <span class="opacity-70">{products.length ? ` (${products.length})` : ''}</span>
                 </div>
             </div>
 
-
             {#if products.length === 0}
-                <div class="text-sm opacity-60">No products returned by the API.</div>
+                <div class="text-center py-8 opacity-60">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-2 text-base-content/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                    <div>No listings found for this seller</div>
+                </div>
             {:else}
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {#each products as p (p.productCid ?? p.id ?? p.sku ?? JSON.stringify(p))}
-                        <ProductCard product={p} showSellerInfo={true} />
+                        <ProductCard product={p} showSellerInfo={false} />
                     {/each}
                 </div>
             {/if}
