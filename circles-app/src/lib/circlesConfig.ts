@@ -54,8 +54,8 @@ export const gnosisConfig: { production: CirclesConfig; rings: CirclesConfig } =
       baseGroupFactoryAddress: '0xD0B5Bd9962197BEaC4cbA24244ec3587f19Bd06d',
       liftERC20Address: '0x5F99a795dD2743C36D63511f0D4bc667e6d3cDB5',
       invitationEscrowAddress: '0x8F8B74fa13eaaff4176D061a0F98ad5c8E19c903',
-      invitationFarmAddress: '0x0000000000000000000000000000000000000000',
-      referralsModuleAddress: '0x0000000000000000000000000000000000000000',
+      invitationFarmAddress: '0xd28b7C4f148B1F1E190840A1f7A796C5525D8902',
+      referralsModuleAddress: '0x12105a9B291aF2ABb0591001155A75949b062CE5',
     },
     rings: {
       circlesRpcUrl:

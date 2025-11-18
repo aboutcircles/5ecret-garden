@@ -7,7 +7,7 @@
   } from '$lib/stores/wallet.svelte';
   import { circles } from '$lib/stores/circles';
   import { Sdk } from '@aboutcircles/sdk';
-  import { circlesConfig } from '@aboutcircles/sdk-core';
+  import { gnosisConfig } from '$lib/circlesConfig';
   import ConnectSafe from '$lib/components/ConnectSafe.svelte';
   import type { Address } from '@aboutcircles/sdk-types';
   import WalletLoader from '$lib/components/WalletLoader.svelte';
@@ -29,7 +29,7 @@
 
     // Initialize SDK for querying
     try {
-      const sdk = new Sdk(circlesConfig[100]);
+      const sdk = new Sdk(gnosisConfig.production);
       circles.set(sdk);
     } catch (err) {
       console.error('Failed to initialize SDK:', err);

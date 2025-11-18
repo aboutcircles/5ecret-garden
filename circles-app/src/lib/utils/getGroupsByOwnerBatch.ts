@@ -29,7 +29,7 @@ export async function getBaseAndCmgGroupsByOwnerBatch(
   try {
     const allGroups = await sdk.rpc.group.findGroups(100, {
       ownerIn: normalizedOwners,
-      groupTypeIn: ['Standard'],
+      groupTypeIn: ['CrcV2_BaseGroupCreated'],
     });
 
     // Group results by owner

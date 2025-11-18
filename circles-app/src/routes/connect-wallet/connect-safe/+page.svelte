@@ -9,7 +9,7 @@
   import WalletLoader from '$lib/components/WalletLoader.svelte';
   import { onMount } from 'svelte';
   import { Sdk } from '@aboutcircles/sdk';
-  import { circlesConfig } from '@aboutcircles/sdk-core';
+  import { gnosisConfig } from '$lib/circlesConfig';
   import { circles } from '$lib/stores/circles';
   import type { Address } from '@aboutcircles/sdk-types';
 
@@ -25,12 +25,12 @@
     // Always create runner with the Safe address
     const runner = await initNewSafeBrowserRunner(safeAddress);
     wallet.set(runner);
-    return new Sdk(circlesConfig[100], runner);
+    return new Sdk(gnosisConfig.production, runner);
   }
 
   $effect(() => {
     if (signer.address && !$circles) {
-      circles.set(new Sdk(circlesConfig[100]));
+      circles.set(new Sdk(gnosisConfig.production));
     } else if (!signer.address) {
       circles.set(undefined);
     }

@@ -8,7 +8,7 @@ import type {
   AggregatedTrustRelation,
 } from '@aboutcircles/sdk-types';
 import type { ContactList } from '../contacts';
-import { getProfile } from '$lib/utils/profile';
+import { getProfile, getCachedAvatarInfo } from '$lib/utils/profile';
 import { get } from 'svelte/store';
 import type { Address } from '@aboutcircles/sdk-types';
 import type { Avatar } from '@aboutcircles/sdk';
@@ -128,13 +128,21 @@ async function enrichContactData(
   rows: AggregatedTrustRelation[]
 ): Promise<ContactList> {
   console.log(`Enriching ${rows.length} contacts...`);
-  const profileRecord: ContactList = {};
+  const enrichedContacts: ContactList = {};
 
+  // Fetch profiles and attach avatar info in a single combined operation
+  // Avatar info is cached during profile fetch (from getAvatarInfoBatch),
+  // so we retrieve it inline without additional API calls
   const promises = rows.map(async (row) => {
     const profile = await getProfile(row.objectAvatar);
     if (profile) {
-      profileRecord[row.objectAvatar] = {
+      const lower = row.objectAvatar.toLowerCase() as Address;
+      // Get avatar info from cache (populated during profile fetch)
+      const cachedAvatarInfo = getCachedAvatarInfo([lower])[lower];
+
+      enrichedContacts[row.objectAvatar] = {
         contactProfile: profile,
+        avatarInfo: cachedAvatarInfo,
         row: row,
       };
     } else {
@@ -144,43 +152,7 @@ async function enrichContactData(
 
   await Promise.all(promises);
   console.log(
-    `Profiles fetched: ${Object.keys(profileRecord).length} out of ${rows.length}`
+    `Final enriched contacts: ${Object.keys(enrichedContacts).length} out of ${rows.length}`
   );
-
-  const sdk = get(circles);
-  let avatarInfos = [];
-
-  if (sdk) {
-    const addresses = Object.keys(profileRecord) as Address[];
-    console.log(`Fetching avatar info for ${addresses.length} addresses...`);
-    if (typeof (sdk as any).data?.getAvatarInfoBatch === 'function') {
-      // Old SDK
-      avatarInfos =
-        (await (sdk as any).data.getAvatarInfoBatch(addresses)) ?? [];
-    } else if (
-      typeof (sdk as any).rpc?.avatar?.getAvatarInfoBatch === 'function'
-    ) {
-      // New SDK - use RPC directly
-      avatarInfos =
-        (await (sdk as any).rpc.avatar.getAvatarInfoBatch(addresses)) ?? [];
-    }
-    console.log(`Avatar infos received: ${avatarInfos.length}`);
-  }
-
-  const avatarInfoRecord: Record<string, AvatarInfo> = {};
-  avatarInfos.forEach((info: any) => {
-    if (info && info.avatar) {
-      avatarInfoRecord[info.avatar] = info;
-    }
-  });
-
-  Object.values(profileRecord).forEach((item) => {
-    const info = avatarInfoRecord[item.row.objectAvatar];
-    if (info) {
-      item.avatarInfo = info;
-    }
-  });
-
-  console.log(`Final enriched contacts: ${Object.keys(profileRecord).length}`);
-  return profileRecord;
+  return enrichedContacts;
 }

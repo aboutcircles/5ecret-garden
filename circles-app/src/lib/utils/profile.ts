@@ -12,8 +12,15 @@ import { BatchAggregator } from '$lib/utils/batchAggregator';
  */
 const profileCache = new Map<string, Promise<Profile>>();
 
+/**
+ * In-memory cache of <address -> AvatarInfo>,
+ * populated during profile fetches to avoid redundant API calls.
+ */
+const avatarInfoCache = new Map<string, AvatarInfo>();
+
 export function removeProfileFromCache(address: string) {
   profileCache.delete(address);
+  avatarInfoCache.delete(address);
 }
 
 /**
@@ -111,7 +118,10 @@ async function fetchProfiles(
   const addressToAvatar = new Map<string, AvatarInfo>();
   for (const avatar of avatars) {
     if (avatar && avatar.avatar) {
-      addressToAvatar.set(avatar.avatar.toLowerCase(), avatar);
+      const lowerAddress = avatar.avatar.toLowerCase();
+      addressToAvatar.set(lowerAddress, avatar);
+      // Also cache avatar info to avoid redundant fetches
+      avatarInfoCache.set(lowerAddress, avatar);
     }
   }
 
@@ -122,15 +132,15 @@ async function fetchProfiles(
 
   const uniqueCids = [...new Set(cids)];
 
-  // 4) Because `profiles.getMany` is limited to 50, we chunk it if needed
+  // 4) Chunk CID requests to 100 to match aggregator batch size
+  // This reduces the number of RPC calls and aligns with the aggregator's batch size
   const cidToProfile: Record<string, Profile> = {};
-  const chunkSize = 50;
+  const chunkSize = 100;
   for (let i = 0; i < uniqueCids.length; i += chunkSize) {
     const chunk = uniqueCids.slice(i, i + chunkSize);
 
     // console.log(`chunk:`, chunk);
     let chunkProfiles;
-    let isNewSdk = false;
     if (typeof (sdk as any).rpc?.client?.call === 'function') {
       // New SDK - use rpc.client.call (returns result directly, not wrapped)
       // @todo refactor
@@ -140,7 +150,6 @@ async function fetchProfiles(
         [chunk]
       ) as Profile[];
       chunkProfiles = { result }; // Wrap to match old SDK format
-      isNewSdk = true;
     } else {
       throw new Error('No RPC call method available');
     }
@@ -177,11 +186,11 @@ async function fetchProfiles(
 
 /**
  * Create a single aggregator for addresses -> Profiles,
- * configured with a 20ms wait time and batch size 50.
+ * configured with a 20ms wait time and batch size 100.
  */
 const profileAggregator = new BatchAggregator<Address, Profile>({
   waitTimeMs: 20,
-  maxBatchSize: 50,
+  maxBatchSize: 100,
   fetchFunction: fetchProfiles,
 });
 
@@ -236,4 +245,18 @@ export function profilesEqual(
     a.previewImageUrl === b.previewImageUrl &&
     a.imageUrl === b.imageUrl
   );
+}
+
+/**
+ * Get cached avatar info for multiple addresses.
+ * Returns only addresses that have been cached (from previous profile fetches).
+ * This avoids redundant API calls when avatar info has already been fetched.
+ */
+export function getCachedAvatarInfo(addresses: Address[]): Record<Address, AvatarInfo | undefined> {
+  const result: Record<Address, AvatarInfo | undefined> = {};
+  for (const address of addresses) {
+    const lower = address.toLowerCase() as Address;
+    result[lower] = avatarInfoCache.get(lower);
+  }
+  return result;
 }
