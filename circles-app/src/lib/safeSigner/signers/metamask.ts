@@ -1,4 +1,4 @@
-// src/lib/safeSigner/signers/metamask.ts
+// lib/safeSigner/signers/metamask.ts
 import type {Address, Hex, EIP1193Provider} from '../types';
 import {bytesToHex, hexToBytes} from '../bytes';
 import {computeSafeHash, buildSafeDomainSeparator} from '../safeHash';
@@ -6,26 +6,36 @@ import {secp256k1} from '@noble/curves/secp256k1';
 import {keccak_256} from '@noble/hashes/sha3';
 
 function isValidAddress(addr: string): addr is Address {
-    const ok = typeof addr === 'string' && addr.startsWith('0x') && /^[0-9a-fA-F]{40}$/.test(addr.slice(2));
+    const looksLikeString = typeof addr === 'string';
+    const hasPrefix = looksLikeString && addr.startsWith('0x');
+    const body = hasPrefix ? addr.slice(2) : '';
+    const matchesShape = /^[0-9a-fA-F]{40}$/.test(body);
+    const ok = looksLikeString && hasPrefix && matchesShape;
     return ok;
 }
 
 function normalizePayloadHex(payload: Uint8Array | Hex): Hex {
     const isHex = typeof payload === 'string' && payload.startsWith('0x');
     const isBytes = payload instanceof Uint8Array;
+
     if (isHex) {
         return payload as Hex;
     }
+
     if (isBytes) {
         return bytesToHex(payload as Uint8Array);
     }
+
     throw new TypeError('payload must be Uint8Array or 0x-hex');
 }
 
 function buildTypedData(args: { chainId: bigint; safeAddress: Address; payload: Hex }) {
     const {chainId, safeAddress, payload} = args;
+
     const chainIdNumber = Number(chainId);
-    const okInt = Number.isSafeInteger(chainIdNumber) && chainIdNumber > 0;
+    const isSafeInt = Number.isSafeInteger(chainIdNumber);
+    const isPositive = chainIdNumber > 0;
+    const okInt = isSafeInt && isPositive;
     if (!okInt) {
         throw new RangeError('chainId must be a safe integer > 0 for MetaMask typed data');
     }
@@ -34,25 +44,28 @@ function buildTypedData(args: { chainId: bigint; safeAddress: Address; payload: 
         types: {
             EIP712Domain: [
                 {name: 'chainId', type: 'uint256'},
-                {name: 'verifyingContract', type: 'address'},
+                {name: 'verifyingContract', type: 'address'}
             ],
-            SafeMessage: [{name: 'message', type: 'bytes'}],
+            SafeMessage: [{name: 'message', type: 'bytes'}]
         },
         primaryType: 'SafeMessage',
         domain: {chainId: chainIdNumber, verifyingContract: safeAddress},
-        message: {message: payload},
+        message: {message: payload}
     } as const;
 }
 
 function normalizeV(vByte: number): 27 | 28 {
-    const is01 = vByte === 0 || vByte === 1;
-    const is2728 = vByte === 27 || vByte === 28;
-    if (is01) {
+    const isZeroOrOne = vByte === 0 || vByte === 1;
+    const is27Or28 = vByte === 27 || vByte === 28;
+
+    if (isZeroOrOne) {
         return (vByte + 27) as 27 | 28;
     }
-    if (is2728) {
+
+    if (is27Or28) {
         return vByte as 27 | 28;
     }
+
     throw new TypeError('unexpected v in signature');
 }
 
@@ -62,14 +75,22 @@ function flipV(v: 27 | 28): 27 | 28 {
 }
 
 function toChecksum(addrLowerHex: string): Address {
-    const raw = addrLowerHex.slice(2).toLowerCase();
-    const hash = keccak_256(new TextEncoder().encode(raw));
+    const hasPrefix = addrLowerHex.startsWith('0x');
+    const body = hasPrefix ? addrLowerHex.slice(2).toLowerCase() : addrLowerHex.toLowerCase();
+
+    const encoder = typeof TextEncoder !== 'undefined' ? new TextEncoder() : null;
+    const encoded = encoder ? encoder.encode(body) : new Uint8Array(body.split('').map((c) => c.charCodeAt(0)));
+    const hash = keccak_256(encoded);
+
     let out = '0x';
-    for (let i = 0; i < raw.length; i++) {
-        const nibble = (hash[i >> 1] >> ((1 - (i & 1)) * 4)) & 0xf;
-        const ch = nibble >= 8 ? raw[i].toUpperCase() : raw[i];
+    for (let i = 0; i < body.length; i++) {
+        const byteIndex = i >> 1;
+        const highNibble = (i & 1) === 0;
+        const nibble = highNibble ? (hash[byteIndex] >> 4) & 0x0f : hash[byteIndex] & 0x0f;
+        const ch = nibble >= 8 ? body[i].toUpperCase() : body[i];
         out += ch;
     }
+
     return out as Address;
 }
 
@@ -82,17 +103,18 @@ function recoverAddressFromDigest(digest32: Hex, r: Hex, s: Hex, v: 27 | 28): Ad
     compact.set(rBytes, 0);
     compact.set(sBytes, 32);
 
-    const recId: 0 | 1 = (v - 27) as 0 | 1;
-    const pub = secp256k1.Signature
-        .fromCompact(compact)
+    const recId = (v - 27) as 0 | 1;
+
+    const pub = secp256k1.Signature.fromCompact(compact)
         .addRecoveryBit(recId)
         .recoverPublicKey(msg)
         .toRawBytes(false); // uncompressed (0x04 || X || Y)
 
-    const raw = pub.slice(1);
-    const h = keccak_256(raw);
-    const addr = '0x' + Buffer.from(h.slice(12)).toString('hex');
-    return toChecksum(addr);
+    const raw = pub.slice(1); // drop 0x04 prefix
+    const hash = keccak_256(raw);
+    const addrHex = bytesToHex(hash.slice(12)); // last 20 bytes → 0x + 40 hex
+    const checksummed = toChecksum(addrHex);
+    return checksummed;
 }
 
 /**
@@ -113,25 +135,50 @@ export async function signSafePayloadWithMetaMask(args: {
     if (!hasReq) {
         throw new TypeError('invalid EIP-1193 provider');
     }
-    if (!isValidAddress(account)) {
+
+    const badAccount = !isValidAddress(account);
+    if (badAccount) {
         throw new TypeError('invalid account');
     }
-    if (!isValidAddress(safeAddress)) {
+
+    const badSafe = !isValidAddress(safeAddress);
+    if (badSafe) {
         throw new TypeError('invalid address');
     }
-    if (chainId <= 0n) {
+
+    const nonPositiveChain = chainId <= 0n;
+    if (nonPositiveChain) {
         throw new RangeError('chainId must be > 0');
     }
 
     function parseChainIdToBigInt(raw: unknown): bigint {
         const isStr = typeof raw === 'string';
         const isNum = typeof raw === 'number';
+        const isBig = typeof raw === 'bigint';
+
         if (isStr) {
-            return raw.startsWith('0x') ? BigInt(raw) : BigInt(Number.parseInt(raw, 10));
+            const looksHex = raw.startsWith('0x') || raw.startsWith('0X');
+            if (looksHex) {
+                return BigInt(raw);
+            }
+
+            const parsed = Number.parseInt(raw, 10);
+            if (!Number.isFinite(parsed)) {
+                throw new TypeError('unexpected eth_chainId string result');
+            }
+
+            return BigInt(parsed);
         }
+
         if (isNum) {
-            return BigInt(Math.trunc(raw));
+            const intVal = Math.trunc(raw);
+            return BigInt(intVal);
         }
+
+        if (isBig) {
+            return raw as bigint;
+        }
+
         throw new TypeError('unexpected eth_chainId result');
     }
 
@@ -149,13 +196,14 @@ export async function signSafePayloadWithMetaMask(args: {
 
     const sigHexUnknown = await ethereum.request({
         method: 'eth_signTypedData_v4',
-        params: [account, JSON.stringify(typedData)],
+        params: [account, JSON.stringify(typedData)]
     });
 
     const isHex = typeof sigHexUnknown === 'string' && sigHexUnknown.startsWith('0x');
     if (!isHex) {
         throw new Error('MetaMask returned a non-hex signature');
     }
+
     const sigBytes = hexToBytes(sigHexUnknown as Hex);
     const lenOk = sigBytes.length === 65;
     if (!lenOk) {
@@ -183,9 +231,13 @@ export async function signSafePayloadWithMetaMask(args: {
         const vFlipped = flipV(v);
         const recAfterFlip = recoverAddressFromDigest(digest, r, s, vFlipped);
         const matchesAfter = recAfterFlip.toLowerCase() === account.toLowerCase();
+
         if (!matchesAfter) {
-            throw new Error(`wallet returned a signature that does not recover to the connected account: got=${recBefore}, flipped=${recAfterFlip}, account=${account}`);
+            throw new Error(
+                `wallet returned a signature that does not recover to the connected account: got=${recBefore}, flipped=${recAfterFlip}, account=${account}`
+            );
         }
+
         v = vFlipped;
     }
 
@@ -195,21 +247,11 @@ export async function signSafePayloadWithMetaMask(args: {
         throw new Error(`post-fix recovery mismatch: rec=${recFinal} account=${account}`);
     }
 
-    console.debug('[safeSigner/metamask]', {
-        digest,
-        r,
-        s,
-        v,
-        recBefore,
-        recFinal,
-        account,
-        safeAddress,
-    });
-
     const out = new Uint8Array(65);
     out.set(hexToBytes(r), 0);
     out.set(hexToBytes(s), 32);
     out.set(new Uint8Array([v]), 64);
+
     return bytesToHex(out);
 }
 
@@ -231,8 +273,8 @@ export function createMetaMaskSafeSigner(config: {
         throw new TypeError('invalid account');
     }
 
-    const badChain = chainId <= 0n;
-    if (badChain) {
+    const nonPositiveChain = chainId <= 0n;
+    if (nonPositiveChain) {
         throw new RangeError('chainId must be > 0');
     }
 
@@ -257,8 +299,8 @@ export function createMetaMaskSafeSigner(config: {
                 payload,
                 chainId,
                 safeAddress,
-                enforceChainId,
+                enforceChainId
             });
-        },
+        }
     };
 }
