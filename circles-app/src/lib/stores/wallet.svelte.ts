@@ -119,15 +119,17 @@ export async function restoreSession() {
       signer.address = account.address?.toLowerCase() as Address;
       signer.privateKey = privateKey;
 
-      // Use the new SDK with runner - use default config for now (rings not supported yet in new SDK)
-      sdk = new Sdk(circlesConfig[100], newRunner);
+      // Use the new SDK with runner - use custom config with invitationFarmAddress
+      const config = rings ? gnosisConfig.rings : gnosisConfig.production;
+      sdk = new Sdk(config, newRunner);
     } else if (savedAvatar) {
       // Safe + browser provider (EOA != Safe) - use NEW SDK with browser runner
       newRunner = await initNewSafeBrowserRunner(savedAvatar as Address);
       signer.privateKey = undefined;
 
-      // Use the new SDK with runner - use default config for now (rings not supported yet in new SDK)
-      sdk = new Sdk(circlesConfig[100], newRunner);
+      // Use the new SDK with runner - use custom config with invitationFarmAddress
+      const config = rings ? gnosisConfig.rings : gnosisConfig.production;
+      sdk = new Sdk(config, newRunner);
     } else {
       throw new Error('No private key or saved avatar found in localStorage');
     }
