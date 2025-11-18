@@ -1,5 +1,6 @@
 <script lang="ts">
     import Avatar from './avatar/Avatar.svelte';
+    import { goto } from '$app/navigation';
     
     interface Props {
         product: any;
@@ -52,6 +53,16 @@
         return a.slice(0, 6) + '…' + a.slice(-4);
     }
     
+    // Handle card click to navigate to detail page
+    function handleProductClick(): void {
+        const seller = (product.seller || prod?.seller)?.toLowerCase();
+        const sku = product.id || product.sku || product.productCid;
+        
+        if (seller && sku) {
+            goto(`/market/${encodeURIComponent(seller)}/${encodeURIComponent(sku)}`);
+        }
+    }
+    
     // Update derived values when product changes
     $effect(() => {
         prod = getProduct(product);
@@ -61,7 +72,10 @@
 </script>
 
 {#if product}
-    <div class="bg-base-100 border border-base-300 rounded-xl overflow-hidden flex flex-col hover:shadow-md transition-shadow">
+    <div 
+        class="bg-base-100 border border-base-300 rounded-xl overflow-hidden flex flex-col hover:shadow-md transition-shadow cursor-pointer"
+        on:click={handleProductClick}
+    >
         {#if imageUrl}
             <img
                     class="w-full h-44 object-cover"

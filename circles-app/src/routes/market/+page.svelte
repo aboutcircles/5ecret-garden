@@ -98,7 +98,7 @@
       })
     }
         >
-            Offer
+            Create offer
         </button>
     </svelte:fragment>
 

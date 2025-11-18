@@ -1,6 +1,24 @@
 import { ObjectTooLargeError, InvalidUriError, CurrencyCodeError } from './errors';
-import type { Address } from '../safeSigner/types';
+import type { Address, Hex } from '../safeSigner/types';
 import { isAbsoluteUri } from './adapters';
+
+export type CustomDataLink = {
+  '@context': 'https://aboutcircles.com/contexts/circles-linking/';
+  '@type': 'CustomDataLink';
+
+  name: string;
+  cid: string;
+
+  encrypted: boolean;
+  encryptionAlgorithm: string | null;
+  encryptionKeyFingerprint: string | null;
+
+  chainId: number;
+  signerAddress: Address;
+  signedAt: number;   // unixSeconds
+  nonce: Hex;         // 0x + 32 hex chars
+  signature: Hex | ''; // empty string before signing, Hex afterwards
+};
 
 export type ProductImage =
   | string
@@ -136,22 +154,30 @@ export async function buildLinkDraft(
   chainId: number,
   signerAddress: Address,
   nowSec: number
-) {
+): Promise<CustomDataLink> {
   const nonceBytes = await cryptoGetRandomValues(16);
+
   let nonce = '0x';
-  for (const b of nonceBytes) nonce += b.toString(16).padStart(2, '0');
-  return {
+  for (const b of nonceBytes) {
+    nonce += b.toString(16).padStart(2, '0');
+  }
+
+  const link: CustomDataLink = {
     '@context': 'https://aboutcircles.com/contexts/circles-linking/',
     '@type': 'CustomDataLink',
     name,
     cid,
     encrypted: false,
+    encryptionAlgorithm: null,
+    encryptionKeyFingerprint: null,
     chainId,
     signerAddress,
     signedAt: nowSec,
-    nonce,
-    signature: '',
+    nonce: nonce as Hex,
+    signature: '', // populated after Safe signs
   };
+
+  return link;
 }
 
 async function cryptoGetRandomValues(n: number): Promise<Uint8Array> {
