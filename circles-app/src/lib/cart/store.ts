@@ -28,6 +28,7 @@ export type CartState = {
   buyer?: Address;
   orderPreview?: OrderSnapshot | null;
   lastOrderId?: string | null;
+  lastCheckout?: CheckoutResponse | null;
 };
 
 const initialState: CartState = {
@@ -40,6 +41,7 @@ const initialState: CartState = {
   buyer: undefined,
   orderPreview: null,
   lastOrderId: null,
+  lastCheckout: null,
 };
 
 export const cartState: Writable<CartState> = writable(initialState);
@@ -93,6 +95,7 @@ export async function initCart(
       buyer,
       orderPreview: null,
       lastOrderId: null,
+      lastCheckout: null,
     });
   } catch (e: unknown) {
     const msg =
@@ -154,6 +157,7 @@ export async function upsertLineItem(
       validation: null,
       orderPreview: null,
       lastOrderId: null,
+      lastCheckout: null,
     }));
   } catch (e: unknown) {
     const msg =
@@ -206,6 +210,7 @@ export async function removeLineItem(
       validation: null,
       orderPreview: null,
       lastOrderId: null,
+      lastCheckout: null,
     }));
   } catch (e: unknown) {
     const msg =
@@ -358,6 +363,7 @@ export async function checkoutCart(
       validation: null,
       orderPreview: null,
       lastOrderId: (resp as any)?.orderId ?? (resp as any)?.basketId ?? null,
+      lastCheckout: resp,
       basket: s.basket
         ? {
             ...s.basket,

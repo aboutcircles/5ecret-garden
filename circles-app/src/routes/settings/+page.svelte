@@ -4,46 +4,24 @@
   import { circles } from '$lib/stores/circles';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import { canMigrate } from '$lib/guards/canMigrate';
-  import { type Profile } from '@circles-sdk/profiles';
-  import { runTask } from '$lib/utils/tasks';
   import MigrateToV2 from '$lib/flows/migrateToV2/1_GetInvited.svelte';
   import { popupControls } from '$lib/stores/popUp';
   import GroupSetting from './editors/GroupSetting.svelte';
   import { ethers } from 'ethers';
-  import ProfileEditor from '$lib/components/ProfileEditor.svelte';
-  import { FallbackImageUrl, profilesEqual } from '$lib/utils/profile';
+  import ProfileExplorer from '$lib/flows/offer/ProfileExplorer.svelte';
   import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
   import Lucide from '$lib/icons/Lucide.svelte';
-  import { Save as LSave, LogOut as LLogOut } from 'lucide';
+  import { LogOut as LLogOut } from 'lucide';
+  import { MARKET_API_BASE } from '$lib/config/market';
+  import type { Address } from '@circles-sdk/utils';
 
-  async function saveProfileData(profile: Profile): Promise<string> {
-    if (!$circles?.profiles) {
-      throw new Error('Profiles not available');
-    }
-
-    // Preserve existing unknown fields (like namespaces, signingKeys, etc.) to avoid breaking legacy profiles
-    const current: any = avatarState.profile || {};
-    const incoming: any = profile || {};
-
-    // Shallow merge, but preserve nested namespaces map if present
-    const merged: any = {
-      ...current,
-      ...incoming,
-      namespaces: {
-        ...(current?.namespaces || {}),
-        ...(incoming?.namespaces || {}),
-      },
-    };
-
-    return await $circles.profiles.create(merged as Profile);
-  }
-
-  let newProfile: Profile = $state({
-    name: '',
-    description: '',
-    previewImageUrl: '',
-    imageUrl: '',
-  });
+  // Profile editing is delegated to ProfileExplorer to keep a single flow.
+  const pinApiBase = MARKET_API_BASE;
+  const avatarAddress = $derived(
+    (avatarState.avatar?.address ??
+      avatarState.avatar?.avatarInfo?.avatar ??
+      '') as Address | ''
+  );
 
   async function migrateToV2() {
     popupControls.open({
@@ -74,39 +52,8 @@
     }
   }
 
-  $effect(() => {
-    if (avatarState.profile) {
-      newProfile = { ...avatarState.profile };
-    }
-  });
-
-  async function saveProfile() {
-    if (!newProfile) {
-      return;
-    }
-    if (newProfile.previewImageUrl && Object.values(FallbackImageUrl).includes(newProfile.previewImageUrl as FallbackImageUrl)) {
-      newProfile.previewImageUrl = '';
-    }
-    const cid = await saveProfileData(newProfile!);
-
-    const tx = await runTask({
-      name: 'Updating profile ...',
-      promise: (async () => {
-        if (!$circles?.nameRegistry) {
-          throw new Error('Name registry not available');
-        }
-        await avatarState.avatar!.updateMetadata(cid);
-      })().then(() => {
-        window.location.reload();
-      }),
-    });
-  }
-
-  let saveDisabled: boolean = $derived(avatarState.avatar?.avatarInfo?.version !== 2 || profilesEqual(newProfile, avatarState.profile));
-
   type Action = { id: string; label: string; iconNode: any; onClick: () => void; variant: 'primary'|'ghost' };
   const actions: Action[] = [
-    { id: 'save', label: 'Save', iconNode: LSave, onClick: saveProfile, variant: 'primary' },
     { id: 'disconnect', label: 'Disconnect', iconNode: LLogOut, onClick: clearSession, variant: 'ghost' },
   ];
 </script>
@@ -120,7 +67,7 @@
   </svelte:fragment>
   <svelte:fragment slot="actions">
     {#each actions as a (a.id)}
-      <button type="button" class={`btn btn-sm ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'}`} onclick={a.onClick} aria-label={a.label} disabled={a.id === 'save' ? saveDisabled : false}>
+      <button type="button" class={`btn btn-sm ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'}`} onclick={a.onClick} aria-label={a.label}>
         <Lucide icon={a.iconNode} size={16} class={a.variant === 'primary' ? 'shrink-0 stroke-white' : 'shrink-0 stroke-black'} />
         <span>{a.label}</span>
       </button>
@@ -133,7 +80,7 @@
     </svelte:fragment>
   <svelte:fragment slot="collapsed-menu">
     {#each actions as a (a.id)}
-      <button type="button" class={`btn ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'} min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3`} onclick={a.onClick} aria-label={a.label} disabled={a.id === 'save' ? saveDisabled : false}>
+      <button type="button" class={`btn ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'} min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3`} onclick={a.onClick} aria-label={a.label}>
         <Lucide icon={a.iconNode} size={20} class={a.variant === 'primary' ? 'shrink-0 stroke-white' : 'shrink-0 stroke-black'} />
         <span>{a.label}</span>
       </button>
@@ -144,11 +91,13 @@
     class="flex flex-col items-center md:border rounded-lg md:px-6 md:py-8 gap-y-4"
   >
     <div class="flex flex-col w-full gap-y-4">
-      <ProfileEditor
-        bind:profile={newProfile}
-        showCustomizableFields={avatarState.avatar?.avatarInfo?.version === 2}
-      />
-
+      {#if avatarAddress}
+        <ProfileExplorer avatar={avatarAddress} pinApiBase={pinApiBase} />
+      {:else}
+        <div class="p-4 text-sm opacity-70">
+          Connect a Circles avatar first to edit your profile.
+        </div>
+      {/if}
     </div>
 
     {#if avatarState.isGroup}

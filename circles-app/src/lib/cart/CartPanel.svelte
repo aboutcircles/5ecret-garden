@@ -10,7 +10,7 @@
 
   let { catalog = [] }: Props = $props();
 
-  const SCOPE_CHAIN_ID = 100;
+  // Removed unused SCOPE_CHAIN_ID
 
   let localError = $state<string | null>(null);
   let validating = $state(false);
@@ -209,6 +209,9 @@
 
     return out;
   });
+
+  // Whether the current basket has been checked out
+  const isCheckedOut = $derived.by(() => $cartState.basket?.status === 'CheckedOut');
 </script>
 
 <div class="w-full max-w-lg mx-auto space-y-4">
@@ -263,11 +266,13 @@
               class="input input-xs input-bordered w-20 text-right"
               value={line.orderQuantity}
               onchange={(e) => onQtyChange(i, e)}
+              disabled={isCheckedOut}
             />
             <button
               type="button"
               class="btn btn-xs btn-ghost text-error"
               onclick={() => handleRemove(i)}
+              disabled={isCheckedOut}
             >
               Remove
             </button>
@@ -351,7 +356,7 @@
           type="button"
           class="btn btn-xs btn-outline"
           onclick={() => saveDetails()}
-          disabled={$cartState.loading}
+          disabled={$cartState.loading || isCheckedOut}
         >
           Save details
         </button>
@@ -432,13 +437,20 @@
       </div>
     {/if}
 
+    {#if $cartState.basket?.status === 'CheckedOut' && $cartState.lastOrderId}
+      <div class="mt-3 alert alert-success text-xs">
+        <span>Order created:</span>
+        <code class="ml-1 break-all">{$cartState.lastOrderId}</code>
+      </div>
+    {/if}
+
     <!-- Validation / preview / checkout actions -->
     <div class="mt-4 flex justify-end gap-2">
       <button
         type="button"
         class="btn btn-sm btn-outline"
         onclick={() => runValidate()}
-        disabled={validating || $cartState.loading}
+        disabled={validating || $cartState.loading || isCheckedOut}
       >
         {validating ? 'Validating…' : 'Validate'}
       </button>
@@ -446,7 +458,7 @@
         type="button"
         class="btn btn-sm btn-outline"
         onclick={() => runPreview()}
-        disabled={previewing || $cartState.loading}
+        disabled={previewing || $cartState.loading || isCheckedOut}
       >
         {previewing ? 'Previewing…' : 'Preview order'}
       </button>
@@ -459,7 +471,8 @@
           $cartState.loading ||
           !$cartState.basket ||
           !$cartState.basket.items ||
-          $cartState.basket.items.length === 0
+          $cartState.basket.items.length === 0 ||
+          isCheckedOut
         }
       >
         {checkingOut ? 'Checking out…' : 'Checkout'}

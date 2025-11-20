@@ -22,24 +22,9 @@
     let errorMsg: string = $state('');
     let products: ProductLike[] = $state([]);
 
-    // ————————————————————————————————————————————
-    // helper functions (kept only those not in ProductCard)
-    // ————————————————————————————————————————————
-    function extractProducts(body: any): AggregatedCatalogItem[] {
-        // typed path first
-        const typed = (body as AggregatedCatalog | undefined)?.products;
-        if (Array.isArray(typed)) return typed as AggregatedCatalogItem[];
-        // fallback for older dev servers
-        if (Array.isArray((body as any)?.items)) return (body as any).items as AggregatedCatalogItem[];
-        if (Array.isArray((body as any)?.results)) return (body as any).results as AggregatedCatalogItem[];
-        if ((body as any)?.catalog && Array.isArray((body as any).catalog.products)) return (body as any).catalog.products as AggregatedCatalogItem[];
-        return [] as AggregatedCatalogItem[];
-    }
-
-    function shortAddr(a?: string): string {
-        if (!a) return '';
-        return a.slice(0, 6) + '…' + a.slice(-4);
-    }
+    import { extractProducts } from '$lib/market/catalogHelpers';
+    import { shortenAddress } from '$lib/utils/shared';
+    const shortAddr = (a?: string) => (a ? shortenAddress(a as any) : '');
 
     // ————————————————————————————————————————————
     // data load
@@ -98,26 +83,6 @@
     </svelte:fragment>
 
     <svelte:fragment slot="actions">
-        <button
-                class="btn btn-sm btn-secondary"
-                onclick={() =>
-      popupControls.open({
-        title: 'Profile',
-        component: ProfileExplorer,
-        props: {
-            // No explicit avatar: default to currently connected avatar inside ProfileExplorer
-            pinApiBase: API_BASE,
-            context: {
-                operator: OPERATOR,
-                pinApiBase: API_BASE
-            }
-        },   // ← pass operator and pinApiBase
-        onClose: () => { void loadCatalog(); }        // ← refresh after closing
-      })
-    }
-        >
-            Open profile
-        </button>
         <button
                 class="btn btn-sm btn-secondary"
                 onclick={() =>

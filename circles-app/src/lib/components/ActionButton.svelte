@@ -50,8 +50,7 @@
     }
     buttonState = 'Working';
     action()
-      .then((result) => {
-        result = result;
+      .then(() => {
         buttonState = 'Done';
         setTimeout(() => {
           // Transition from Done to either Ready or Disabled

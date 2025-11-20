@@ -19,6 +19,7 @@
   import { GNOSIS_CHAIN_ID_NUM, GNOSIS_CHAIN_ID_HEX } from '$lib/config/market';
   import { mkCirclesBindings } from '$lib/offers/mkCirclesBindings';
   import { normalizeAddress } from '$lib/offers/adapters';
+  import { resolveImagesToHttpUrls } from '$lib/media/resolveImageUrl';
 
   interface Props { context: OfferFlowContext; }
   let { context }: Props = $props();
@@ -58,24 +59,7 @@
     }
   }
 
-  function isDataUrl(s?: string): boolean {
-    if (!s) return false;
-    return /^data:([a-zA-Z0-9.+-]+\/[a-zA-Z0-9.+-]+)?(;charset=[^;]+)?;base64,/.test(s);
-  }
-
-  function parseDataUrl(dataUrl: string): { mime: string | null; bytes: Uint8Array } {
-    // Expected: data:[<mediatype>][;charset=<charset>][;base64],<data>
-    const match = dataUrl.match(/^data:([^;,]+)?(?:;charset=[^;]+)?;base64,(.*)$/);
-    if (!match) throw new Error('Unsupported data URL format');
-    const mime = match[1] || null;
-    const b64 = match[2];
-    // atob polyfill safe way
-    const binary = typeof atob === 'function' ? atob(b64) : Buffer.from(b64, 'base64').toString('binary');
-    const len = binary.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
-    return { mime, bytes };
-  }
+  // Image data URL helpers moved to $lib/media/imageTools
 
   // Get all images (prioritizing multiple images, falling back to single image)
   function getAllImages(): Array<string | { url: string }> {
@@ -218,33 +202,14 @@
     await runTask({
       name: 'Publishing offer…',
       promise: (async () => {
-        // Pre-pin images: convert any data: URLs to gateway URLs via /api/pin-media
+        // Pre-pin images: convert any strings to gateway http(s) URLs via resolver
         let finalImageUrls: string[] | undefined = undefined;
         if (Array.isArray(productImages) && productImages.length > 0) {
           const imgs = productImages as string[];
-          const toCidUrl = async (img: string): Promise<string> => {
-            // Already absolute URL? keep
-            if (isAbsUrl(img)) return img;
-            // ipfs://CID
-            if (typeof img === 'string' && img.startsWith('ipfs://')) {
-              const cid = img.slice('ipfs://'.length);
-              return circlesBindings.gatewayUrlForCid(cid);
-            }
-            // Bare CID (Qm...)
-            if (/^Qm[1-9A-HJ-NP-Za-km-z]{44}$/.test(img)) {
-              return circlesBindings.gatewayUrlForCid(img);
-            }
-            // data: URL -> pin-media
-            if (isDataUrl(img)) {
-              const { mime, bytes } = parseDataUrl(img);
-              const cid = await circlesBindings.pinMediaBytes(bytes, mime);
-              return circlesBindings.gatewayUrlForCid(cid);
-            }
-            // Fallback: treat as URL if parsable, else error
-            if (isAbsUrl(img)) return img;
-            throw new Error('Unsupported image format. Please provide an http(s) URL or upload an image.');
-          };
-          finalImageUrls = await Promise.all(imgs.map(toCidUrl));
+          finalImageUrls = await resolveImagesToHttpUrls(imgs, {
+            gatewayUrlForCid: circlesBindings.gatewayUrlForCid,
+            pinMediaBytes: circlesBindings.pinMediaBytes,
+          });
         }
 
         const res = await client.appendOffer({
