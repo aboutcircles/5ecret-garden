@@ -4,7 +4,7 @@
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { circles } from '$lib/stores/circles';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popUp.svelte';
   import type { TokenBalance } from '@aboutcircles/sdk-types';
   import SearchAvatar from '$lib/pages/SearchAvatar.svelte';
   import type { Address } from '@aboutcircles/sdk-types';

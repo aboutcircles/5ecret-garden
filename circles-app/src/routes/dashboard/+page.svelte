@@ -7,7 +7,7 @@
   import OverviewPanel from './OverviewPanel.svelte';
   import TransactionHistoryPanel from './TransactionHistoryPanel.svelte';
 
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popUp.svelte';
   import Balances from '$lib/pages/Balances.svelte';
   import { circlesBalances } from '$lib/stores/circlesBalances';
   import { totalCirclesBalance } from '$lib/stores/totalCirclesBalance';
@@ -46,123 +46,136 @@
     }, 300); // Wait 300ms for all events from the same transaction
   }
 
-  // Single unified effect for event subscription and initial data load
-  $effect(() => {
-    (async () => {
-      // Cleanup previous subscription
-      if (unsubscribeEvents) {
-        unsubscribeEvents();
-        unsubscribeEvents = null;
-      }
+  // Cleanup function for event subscription
+  function cleanupSubscription() {
+    if (unsubscribeEvents) {
+      console.log('🔕 Unsubscribing from events');
+      unsubscribeEvents();
+      unsubscribeEvents = null;
+    }
+    if (txHistoryRefreshTimeout) {
+      clearTimeout(txHistoryRefreshTimeout);
+      txHistoryRefreshTimeout = null;
+    }
+  }
 
-      if (!$circles || !avatarState.avatar) {
-        return;
-      }
+  // Fire-and-forget: Initialize data and subscriptions in background
+  // This allows the UI to render immediately without waiting
+  async function initializeAvatarInBackground() {
+    if (!$circles || !avatarState.avatar) {
+      return;
+    }
 
-      const avatarAddress = avatarState.avatar.address;
-      if (!avatarAddress) {
-        return;
-      }
+    const avatarAddress = avatarState.avatar.address;
+    if (!avatarAddress) {
+      return;
+    }
 
-      try {
-        // Initial load for humans
-        if (avatarState.isHuman && avatarState.avatar) {
-          try {
-            const result =
-              await (avatarState.avatar as any).personalToken.getMintableAmount();
-            const amount = CirclesConverter.attoCirclesToCircles(result.amount);
-            mintableAmount = amount ?? 0;
-          } catch (error) {
-            console.error('Failed to load initial mintable amount:', error);
-            mintableAmount = 0;
-          }
+    try {
+      // Load mintable amount for humans (non-blocking)
+      if (avatarState.isHuman && avatarState.avatar) {
+        try {
+          const result =
+            await (avatarState.avatar as any).personalToken.getMintableAmount();
+          const amount = CirclesConverter.attoCirclesToCircles(result.amount);
+          mintableAmount = amount ?? 0;
+        } catch (error) {
+          console.error('Failed to load initial mintable amount:', error);
+          mintableAmount = 0;
         }
+      }
 
-        console.log(
-          '🔔 Setting up event subscription for avatar (using avatar.events):',
-          avatarAddress
-        );
+      console.log(
+        '🔔 Setting up event subscription for avatar (using avatar.events):',
+        avatarAddress
+      );
 
-        // Subscribe to avatar's existing event stream (from auto-subscription)
-        // No need to create a new WebSocket connection
-        unsubscribeEvents = avatarState.avatar.events.subscribe(
-          async (event: CirclesEvent) => {
-            try {
-              console.log('📥 Received event:', event.$event, event);
+      // Subscribe to avatar's existing event stream (from auto-subscription)
+      // No need to create a new WebSocket connection
+      unsubscribeEvents = avatarState.avatar.events.subscribe(
+        async (event: CirclesEvent) => {
+          try {
+            console.log('📥 Received event:', event.$event, event);
 
-              // Handle transaction-related events
-              // Note: Balance store handles its own events automatically in +layout.svelte
-              // But transaction history store needs manual refresh
-              const transactionEvents = [
-                'CrcV2_TransferSingle',
-                'CrcV2_TransferBatch',
-                'CrcV2_PersonalMint',
-                'CrcV2_GroupMint',
-                'CrcV2_StreamCompleted',
-                'CrcV2_TransferSummary',
-              ];
+            // Handle transaction-related events
+            // Note: Balance store handles its own events automatically in +layout.svelte
+            // But transaction history store needs manual refresh
+            const transactionEvents = [
+              'CrcV2_TransferSingle',
+              'CrcV2_TransferBatch',
+              'CrcV2_PersonalMint',
+              'CrcV2_GroupMint',
+              'CrcV2_StreamCompleted',
+              'CrcV2_TransferSummary',
+            ];
 
-              if (transactionEvents.includes(event.$event)) {
-                console.log('🔄 Transaction event detected:', event.$event);
+            if (transactionEvents.includes(event.$event)) {
+              console.log('🔄 Transaction event detected:', event.$event);
 
-                // Debounce transaction history refresh to avoid multiple refreshes
-                // from the same transaction that generates multiple events
-                refreshTransactionHistoryDebounced();
+              // Debounce transaction history refresh to avoid multiple refreshes
+              // from the same transaction that generates multiple events
+              refreshTransactionHistoryDebounced();
 
-                // Update mintable amount for personal mints
-                if (
-                  event.$event === 'CrcV2_PersonalMint' &&
-                  avatarState.isHuman &&
-                  avatarState.avatar
-                ) {
-                  try {
-                    const result =
-                      await (avatarState.avatar as any).personalToken.getMintableAmount();
-                    const amount = CirclesConverter.attoCirclesToCircles(
-                      result.amount
-                    );
-                    mintableAmount = amount ?? 0;
-                  } catch (error) {
-                    console.error('Failed to update mintable amount:', error);
-                  }
+              // Update mintable amount for personal mints
+              if (
+                event.$event === 'CrcV2_PersonalMint' &&
+                avatarState.isHuman &&
+                avatarState.avatar
+              ) {
+                try {
+                  const result =
+                    await (avatarState.avatar as any).personalToken.getMintableAmount();
+                  const amount = CirclesConverter.attoCirclesToCircles(
+                    result.amount
+                  );
+                  mintableAmount = amount ?? 0;
+                } catch (error) {
+                  console.error('Failed to update mintable amount:', error);
                 }
               }
-
-              // Log other events for debugging/future features
-              if (event.$event === 'CrcV2_Trust') {
-                console.log('🤝 Trust event detected');
-              }
-
-              if (
-                event.$event === 'CrcV2_RegisterGroup' ||
-                event.$event === 'CrcV2_InviteHuman'
-              ) {
-                console.log('👥 Group event detected');
-              }
-            } catch (error) {
-              console.error('❌ Error handling event:', error, event);
-              // Don't rethrow - keep subscription alive
             }
+
+            // Log other events for debugging/future features
+            if (event.$event === 'CrcV2_Trust') {
+              console.log('🤝 Trust event detected');
+            }
+
+            if (
+              event.$event === 'CrcV2_RegisterGroup' ||
+              event.$event === 'CrcV2_InviteHuman'
+            ) {
+              console.log('👥 Group event detected');
+            }
+          } catch (error) {
+            console.error('❌ Error handling event:', error, event);
+            // Don't rethrow - keep subscription alive
           }
-        );
+        }
+      );
 
-        console.log('✅ Event subscription established');
-      } catch (error) {
-        console.error('❌ Failed to set up event subscription:', error);
-      }
-    })();
+      console.log('✅ Event subscription established');
+    } catch (error) {
+      console.error('❌ Failed to set up event subscription:', error);
+    }
+  }
 
-    // Cleanup on component destroy or when avatar changes
+  // Effect only handles cleanup and triggering initialization
+  // The initialization itself runs in background without blocking
+  $effect(() => {
+    // Cleanup previous subscription when avatar changes
+    cleanupSubscription();
+
+    if (!$circles || !avatarState.avatar) {
+      return;
+    }
+
+    // Fire-and-forget: start initialization without awaiting
+    // This allows the UI to render immediately
+    initializeAvatarInBackground();
+
+    // Return cleanup function for when component is destroyed
     return () => {
-      if (unsubscribeEvents) {
-        console.log('🔕 Unsubscribing from events');
-        unsubscribeEvents();
-        unsubscribeEvents = null;
-      }
-      if (txHistoryRefreshTimeout) {
-        clearTimeout(txHistoryRefreshTimeout);
-        txHistoryRefreshTimeout = null;
-      }
+      cleanupSubscription();
     };
   });
 

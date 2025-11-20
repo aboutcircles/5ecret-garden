@@ -6,7 +6,7 @@
   import type { TokenBalance } from '@aboutcircles/sdk-types';
   import { roundToDecimals } from '$lib/utils/shared';
   import { runTask } from '$lib/utils/tasks';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popUp.svelte';
 
   interface Props {
     asset: TokenBalance;

@@ -128,31 +128,77 @@ async function enrichContactData(
   rows: AggregatedTrustRelation[]
 ): Promise<ContactList> {
   console.log(`Enriching ${rows.length} contacts...`);
-  const enrichedContacts: ContactList = {};
+  const profileRecord: ContactList = {};
 
-  // Fetch profiles and attach avatar info in a single combined operation
-  // Avatar info is cached during profile fetch (from getAvatarInfoBatch),
-  // so we retrieve it inline without additional API calls
+  // Step 1: Fetch profiles for all contacts
   const promises = rows.map(async (row) => {
-    const profile = await getProfile(row.objectAvatar);
-    if (profile) {
-      const lower = row.objectAvatar.toLowerCase() as Address;
-      // Get avatar info from cache (populated during profile fetch)
-      const cachedAvatarInfo = getCachedAvatarInfo([lower])[lower];
-
-      enrichedContacts[row.objectAvatar] = {
-        contactProfile: profile,
-        avatarInfo: cachedAvatarInfo,
-        row: row,
-      };
-    } else {
-      console.warn(`No profile found for ${row.objectAvatar}`);
+    try {
+      const profile = await getProfile(row.objectAvatar);
+      if (profile) {
+        profileRecord[row.objectAvatar] = {
+          contactProfile: profile,
+          row: row,
+        };
+      } else {
+        console.warn(`No profile found for ${row.objectAvatar}`);
+      }
+    } catch (error) {
+      console.error(`Error fetching profile for ${row.objectAvatar}:`, error);
     }
   });
 
   await Promise.all(promises);
   console.log(
-    `Final enriched contacts: ${Object.keys(enrichedContacts).length} out of ${rows.length}`
+    `Profiles fetched: ${Object.keys(profileRecord).length} out of ${rows.length}`
   );
-  return enrichedContacts;
+
+  // Step 2: Try to use cached avatar info first (populated during profile fetch)
+  const addresses = Object.keys(profileRecord) as Address[];
+  console.log(`Using cached avatar info for ${addresses.length} addresses...`);
+  const cachedAvatarInfoRecord = getCachedAvatarInfo(addresses);
+
+  const avatarInfoRecord: Record<string, AvatarInfo> = {};
+  let missingAddresses: Address[] = [];
+
+  Object.entries(cachedAvatarInfoRecord).forEach(([addr, info]) => {
+    if (info && info.avatar) {
+      avatarInfoRecord[info.avatar] = info;
+    } else if (addr) {
+      missingAddresses.push(addr as Address);
+    }
+  });
+
+  console.log(`Avatar infos from cache: ${Object.keys(avatarInfoRecord).length}, Missing: ${missingAddresses.length}`);
+
+  // Step 3: If some avatar info is missing, fetch it directly as fallback
+  if (missingAddresses.length > 0 && get(circles)) {
+    try {
+      console.log(`Fetching ${missingAddresses.length} missing avatar infos...`);
+      const sdk = get(circles);
+      if (typeof (sdk as any).rpc?.avatar?.getAvatarInfoBatch === 'function') {
+        const fetchedAvatarInfos = await (sdk as any).rpc.avatar.getAvatarInfoBatch(missingAddresses);
+
+        fetchedAvatarInfos?.forEach((info: AvatarInfo) => {
+          if (info && info.avatar) {
+            const lower = info.avatar.toLowerCase();
+            avatarInfoRecord[lower] = info;
+          }
+        });
+        console.log(`Fetched ${fetchedAvatarInfos?.length ?? 0} missing avatar infos`);
+      }
+    } catch (error) {
+      console.error(`Error fetching missing avatar info:`, error);
+    }
+  }
+
+  // Step 4: Attach avatar info to contacts
+  Object.values(profileRecord).forEach((item) => {
+    const info = avatarInfoRecord[item.row.objectAvatar.toLowerCase()];
+    if (info) {
+      item.avatarInfo = info;
+    }
+  });
+
+  console.log(`Final enriched contacts: ${Object.keys(profileRecord).length}`);
+  return profileRecord;
 }

@@ -3,7 +3,7 @@
   import { circles } from '$lib/stores/circles';
   import { wallet } from '$lib/stores/wallet.svelte';
   import { runTask } from '$lib/utils/tasks';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popUp.svelte';
   //@todo check if works correctly
   import { cidV0ToUint8Array } from '@aboutcircles/sdk-utils';
   import { isValidName, isValidSymbol } from '$lib/utils/isValid';

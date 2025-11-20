@@ -1,7 +1,7 @@
 <script lang="ts">
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import ProfilePage from '$lib/pages/Profile.svelte';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popUp.svelte';
   import RowFrame from '$lib/ui/RowFrame.svelte';
 
   interface Props {
@@ -11,7 +11,11 @@
   let { address = '', trustRelation = '' }: Props = $props();
 
   function openProfile() {
-    popupControls.open?.({ component: ProfilePage, props: { address } });
+    popupControls.open({
+      title: '',
+      component: ProfilePage,
+      props: { address },
+    });
   }
 </script>
 

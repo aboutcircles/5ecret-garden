@@ -1,6 +1,6 @@
 <script lang="ts">
   import ActionButton from '$lib/components/ActionButton.svelte';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popUp.svelte';
   import SelectWallet from '$lib/components/SelectWallet.svelte';
 
   async function connectWallet() {

@@ -6,12 +6,12 @@
   import { onMount } from 'svelte';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import { circlesBalances } from '$lib/stores/circlesBalances';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popUp.svelte';
   interface Props {
     context: SendFlowContext;
   }
 
-  let { context = $bindable() }: Props = $props();
+  let { context }: Props = $props();
 
   let selectedAsset: TokenBalance | undefined = $state(undefined);
 

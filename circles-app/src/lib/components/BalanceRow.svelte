@@ -8,7 +8,7 @@
   import WrapTokens from '$lib/pages/WrapTokens.svelte';
   import UnwrapTokens from '$lib/pages/UnwrapTokens.svelte';
   import RedeemGroup from '$lib/pages/RedeemGroup.svelte';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popUp.svelte';
   import type { TokenBalance } from '@aboutcircles/sdk-types';
 
   interface Props {
@@ -53,7 +53,7 @@
   ];
 
   function executeAction(action: RowAction) {
-    popupControls.open?.({
+    popupControls.open({
       title: action.title,
       component: action.component,
       props: { asset: item },

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { switchChain } from '@wagmi/core';
   import { config } from '../../config';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popUp.svelte';
 </script>
 
 <div class="flex items-center justify-center">

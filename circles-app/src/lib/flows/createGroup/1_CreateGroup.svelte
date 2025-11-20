@@ -3,7 +3,7 @@
   import Tooltip from '../../components/Tooltip.svelte';
   import ImageUpload from '../../components/ImageUpload.svelte';
   import { isValidName, isValidSymbol } from '$lib/utils/isValid';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popUp.svelte';
   import { wallet } from '$lib/stores/wallet.svelte';
   import Settings from './2_Settings.svelte';
   import { createGroupContext, type CreateGroupFlowContext } from './context';
@@ -20,7 +20,7 @@
     ) => void;
   }
 
-  let { context = $bindable(), setGroup }: Props = $props();
+  let { context, setGroup }: Props = $props();
 
   // Mirror store -> local state; keep them in sync.
   let ctx: CreateGroupFlowContext = $state($createGroupContext);

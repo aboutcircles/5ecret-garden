@@ -2,7 +2,7 @@
   import Untrust from '$lib/pages/Untrust.svelte';
   import type { AddContactFlowContext } from '$lib/flows/addContact/context';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popUp.svelte';
 
   interface Props {
     context: AddContactFlowContext;

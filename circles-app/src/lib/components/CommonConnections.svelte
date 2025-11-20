@@ -1,7 +1,7 @@
 <script lang="ts">
   import RowFrame from '$lib/ui/RowFrame.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popUp.svelte';
   import ProfilePage from '$lib/pages/Profile.svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { circles } from '$lib/stores/circles';

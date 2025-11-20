@@ -7,13 +7,13 @@
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { TransitiveTransferTokenAddress } from '$lib/pages/SelectAsset.svelte';
   import { ethers } from 'ethers';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popUp.svelte';
 
   interface Props {
     context: SendFlowContext;
   }
 
-  let { context = $bindable() }: Props = $props();
+  let { context }: Props = $props();
 
   if (context.amount === undefined) {
     context.amount = 0;

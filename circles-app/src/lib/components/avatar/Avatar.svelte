@@ -6,7 +6,7 @@
   import {
     popupControls,
     type PopupContentDefinition,
-  } from '$lib/stores/popUp';
+  } from '$lib/stores/popUp.svelte';
   import type { Address } from '@aboutcircles/sdk-types';
   import type { Profile } from '@aboutcircles/sdk-types';
   import { fade } from 'svelte/transition';

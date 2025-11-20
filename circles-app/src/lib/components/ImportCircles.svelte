@@ -1,7 +1,7 @@
 <script lang="ts">
   import { CirclesStorage } from '$lib/utils/storage';
   import SeedphraseInput from './SeedphraseInput.svelte';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popUp.svelte';
   import { goto } from '$app/navigation';
   let mnemonicPhrase: string = $state('');
   let hasValidKey = $state(false);
