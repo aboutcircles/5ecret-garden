@@ -2,9 +2,11 @@
     import Avatar from './avatar/Avatar.svelte';
     import { circles } from '$lib/stores/circles';
     import { goto } from '$app/navigation';
+    import type { AggregatedCatalogItem } from '$lib/market/types';
+    import { MARKET_OPERATOR, GNOSIS_CHAIN_ID_NUM, MARKET_API_BASE } from '$lib/config/market';
     
     interface Props {
-        product: any;
+        product: AggregatedCatalogItem;
         showSellerInfo?: boolean;
     }
     
@@ -12,27 +14,39 @@
     
     // State for derived values and ownership handling
     import { avatarState } from '$lib/stores/avatar.svelte';
+    import { cartState, addToCart } from '$lib/cart/store';
     import { createProfilesOffersClient } from '$lib/offers/client';
     import { createMetaMaskSafeSigner } from '$lib/safeSigner/signers/metamask';
+    import { mkCirclesBindings } from '$lib/offers/mkCirclesBindings';
+    import { normalizeAddress } from '$lib/offers/adapters';
+    import { get } from 'svelte/store';
 
-    // Marketplace operator (same as used elsewhere)
-    const OPERATOR = '0x31d5d15c558fbfbbbe604c9c11eb42c9afbf5140';
+    // Marketplace operator (centralized)
+    const OPERATOR = MARKET_OPERATOR;
 
     let prod = $state<any>(null);
     let offer = $state<any>(null);
     let imageUrl = $state<string | null>(null);
 
-    // Determine if the current user owns this product
-    const myAvatar = $state(avatarState.avatar?.avatarInfo?.avatar ?? '');
+    // Current connected avatar address (reactive)
+    const currentAvatar = $derived(
+      (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '').toLowerCase()
+    );
+
+    // Buyer = current avatar (used for addToCart)
+    const buyerAddress = $derived(
+      (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar) || null
+    );
+
+    const cartLoading = $derived($cartState.loading);
+
     const isOwner = $derived(() => {
-        const avatar = myAvatar;
-        const seller = (product.seller ?? prod?.seller ?? '').toLowerCase();
-        return !!avatar && avatar.toLowerCase() === seller;
+      const seller = (product.seller ?? prod?.seller ?? '').toLowerCase();
+      return !!currentAvatar && !!seller && currentAvatar === seller;
     });
 
     // Delete / tombstone handling for owners
     async function handleTombstone(): Promise<void> {
-        // Prevent navigation when clicking delete
         try {
             const eth: any = (window as any).ethereum;
             if (!eth) throw new Error('MetaMask not available');
@@ -40,22 +54,41 @@
             const eoa = accounts[0]?.toLowerCase() ?? '';
             if (!eoa) throw new Error('No account selected');
 
-            const client = createProfilesOffersClient(circles as any, createMetaMaskSafeSigner({
+            const sdk = get(circles);
+            if (!sdk) throw new Error('Circles SDK not initialized');
+
+            const seller = normalizeAddress(product.seller as string);
+            const bindings = mkCirclesBindings(MARKET_API_BASE, sdk as any);
+
+            const safeSigner = createMetaMaskSafeSigner({
                 ethereum: eth,
-                account: eoa,
-                chainId: BigInt(100),
-                safeAddress: myAvatar,
-                enforceChainId: true
-            }));
-            await client.tombstone({
-                avatar: myAvatar,
-                operator: OPERATOR,
-                sku: prod?.sku ?? product.sku
+                account: eoa as any,
+                chainId: BigInt(GNOSIS_CHAIN_ID_NUM),
+                safeAddress: seller,
+                enforceChainId: true,
             });
+
+            const client = createProfilesOffersClient(bindings as any, safeSigner as any);
+
+            await client.tombstone({
+                avatar: seller,
+                operator: OPERATOR,
+                sku: prod?.sku ?? product.product?.sku,
+                chainId: GNOSIS_CHAIN_ID_NUM,
+            });
+
             alert('Product removed (tombstoned).');
         } catch (e) {
             console.error('Tombstone failed', e);
             alert('Failed to remove product.');
+        }
+    }
+
+    async function handleAddToBasket(): Promise<void> {
+        try {
+            await addToCart(product, buyerAddress);
+        } catch (e) {
+            console.error('[cart] addToCart failed:', e);
         }
     }
 
@@ -80,10 +113,7 @@
         return null;
     }
 
-    function getProduct(item: any): any {
-        // Some backends wrap as { product, seller, productCid }
-        return item?.product ?? item;
-    }
+    function getProduct(item: AggregatedCatalogItem): any { return item.product; }
 
     function getFirstOffer(prodItem: any): any | null {
         const o = prodItem?.offers ?? prodItem?.offer ?? prodItem?.Offers ?? prodItem?.Offer;
@@ -101,7 +131,7 @@
     // Handle card click to navigate to detail page
     function handleProductClick(): void {
         const seller = (product.seller || prod?.seller)?.toLowerCase();
-        const sku = product.id || product.sku || product.productCid;
+        const sku = product.product?.sku || (product as any).id || (product as any).productCid;
         
         if (seller && sku) {
             goto(`/market/${encodeURIComponent(seller)}/${encodeURIComponent(sku)}`);
@@ -171,21 +201,40 @@
             {/if}
 
             <div class="flex items-center justify-between mt-2">
-                <div class="inline-flex gap-2">
+                <div class="inline-flex gap-2 items-center">
+                {#if offer}
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-outline"
+                        on:click|stopPropagation={handleAddToBasket}
+                        disabled={cartLoading || !buyerAddress}
+                        title={buyerAddress ? 'Add to basket' : 'Connect a Circles account first'}
+                    >
+                        Add to basket
+                    </button>
+
+                    {#if typeof (offer.checkout || offer.Checkout) === 'string' && (offer.checkout || offer.Checkout).trim() !== ''}
+                        <a
+                            class="btn btn-sm btn-primary"
+                            title="Open checkout"
+                            target="_blank"
+                            rel="noopener"
+                            href={(offer.checkout || offer.Checkout) || ''}
+                            on:click|stopPropagation
+                        >
+                            Buy
+                        </a>
+                    {/if}
+                {/if}
+
                 {#if isOwner}
                     <button
                         type="button"
                         class="btn btn-sm btn-error"
                         on:click|stopPropagation={handleTombstone}
-                    >Remove</button>
-                {:else if offer && typeof (offer.checkout || offer.Checkout) === 'string' && (offer.checkout || offer.Checkout).trim() !== ''}
-                    <a
-                        class="btn btn-sm btn-primary"
-                        title="Open checkout"
-                        target="_blank"
-                        rel="noopener"
-                        href={(offer.checkout || offer.Checkout) || ''}
-                    >Buy</a>
+                    >
+                        Remove
+                    </button>
                 {/if}
                 </div>
                 <div class="inline-flex items-center gap-2">

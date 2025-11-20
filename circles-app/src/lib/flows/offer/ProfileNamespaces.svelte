@@ -13,6 +13,7 @@
     } from './namespacesEditor';
     import {get} from 'svelte/store';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
+    import { mkCirclesBindings } from '$lib/offers/mkCirclesBindings';
 
     interface Props {
         avatar: Address;
@@ -36,76 +37,12 @@
 
     let perNamespace = $state<Record<string, NamespaceState>>({});
 
-    function mkBindings(): CirclesBindings {
-        if (!circlesVal) {
+    function getBindings(): CirclesBindings {
+        const sdk = get(circles);
+        if (!sdk) {
             throw new Error('Circles SDK not initialized');
         }
-        if (!circlesVal.profiles) {
-            throw new Error('Profiles service not configured');
-        }
-
-        const base = (pinApiBase ?? '').replace(/\/$/, '');
-        const pinUrl = base ? `${base}/api/pin` : '';
-
-        if (!pinUrl) {
-            throw new Error('pinApiBase not provided; cannot call /api/pin');
-        }
-
-        const bindings: CirclesBindings = {
-            async getLatestProfileCid(av: string): Promise<CidV0 | null> {
-                const cid = await circlesVal.data.getMetadataCidForAddress(av as Address);
-                return (cid as CidV0 | null) ?? null;
-            },
-            async getProfile(cid: CidV0): Promise<any | null> {
-                try {
-                    return await circlesVal.profiles!.get(cid);
-                } catch {
-                    return null;
-                }
-            },
-            async putJsonLd(obj: any): Promise<CidV0> {
-                const res = await fetch(pinUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/ld+json; charset=utf-8',
-                        Accept: 'application/ld+json'
-                    },
-                    body: JSON.stringify(obj)
-                });
-
-                if (!res.ok) {
-                    let detail = '';
-                    try {
-                        detail = await res.text();
-                    } catch {
-                        // ignore
-                    }
-
-                    throw new Error(
-                        `Pin API error ${res.status}: ${detail || res.statusText}`
-                    );
-                }
-
-                const body = (await res.json().catch(() => ({} as any))) as any;
-                const cid = body?.cid as string | undefined;
-                const looksCidV0 =
-                    typeof cid === 'string' && /^Qm[1-9A-HJ-NP-Za-km-z]{44}$/.test(cid);
-
-                if (!looksCidV0) {
-                    throw new Error(`Pin API returned invalid cid: ${String(cid)}`);
-                }
-
-                return cid as CidV0;
-            },
-            async updateAvatarProfileDigest(av: string, cid: CidV0): Promise<string> {
-                const avatarObj = await circlesVal.getAvatar(av as Address);
-                const tx = await avatarObj.updateMetadata(cid);
-                return ((tx as any)?.hash ?? '') as string;
-            },
-            // canonicalizeJsonLd is not needed here
-        };
-
-        return bindings;
+        return mkCirclesBindings(pinApiBase, sdk as any);
     }
 
     function ensureNamespaceState(key: string): NamespaceState {
@@ -142,7 +79,7 @@
             return;
         }
 
-        const bindings = mkBindings();
+        const bindings = getBindings();
         const indexCid = namespaces[key] as CidV0 | undefined;
 
         if (!indexCid) {
@@ -204,7 +141,7 @@
         }
 
         const remaining = existing.filter((_, i) => i !== idx);
-        const bindings = mkBindings();
+        const bindings = getBindings();
 
         await runTask({
             name: 'Updating namespace…',
@@ -250,7 +187,7 @@
     async function removeNamespace(nsKey: string): Promise<void> {
         if (readonly) return;
         ensureNamespaceState(nsKey);
-        const bindings = mkBindings();
+        const bindings = getBindings();
 
         await runTask({
             name: 'Removing namespace…',

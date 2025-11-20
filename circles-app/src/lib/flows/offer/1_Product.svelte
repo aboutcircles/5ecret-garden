@@ -3,14 +3,20 @@
   import OfferStep2 from './2_Pricing.svelte';
   import type { OfferFlowContext, OfferDraft } from './types';
   import ImageUpload from '$lib/components/ImageUpload.svelte';
+  import { normalizeAddress } from '$lib/offers/adapters';
 
   interface Props { context: OfferFlowContext; }
   let { context }: Props = $props();
 
   // Hard guard: we must know which namespace/operator to publish under
-  const hasOperator: boolean =
-    typeof context?.operator === 'string' &&
-    /^0x[a-f0-9]{40}$/.test(context.operator.toLowerCase());
+  let hasOperator = false;
+  try {
+    const op = normalizeAddress(String((context as any)?.operator ?? ''));
+    (context as any).operator = op; // store normalized value once
+    hasOperator = true;
+  } catch {
+    hasOperator = false;
+  }
 
   if (!hasOperator) {
     throw new Error('Marketplace operator address is required to create an offer.');

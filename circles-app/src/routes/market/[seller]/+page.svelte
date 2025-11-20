@@ -5,17 +5,20 @@
     import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
     import ProductCard from '$lib/components/ProductCard.svelte';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
+    import { MARKET_API_BASE, MARKET_OPERATOR } from '$lib/config/market';
+    import type { AggregatedCatalog, AggregatedCatalogItem } from '$lib/market/types';
+    import { normalizeAddress } from '$lib/offers/adapters';
 
     // Defaults (as requested)
-    const OPERATOR: `0x${string}` = '0x31d5d15c558fbfbbbe604c9c11eb42c9afbf5140';
+    const OPERATOR: `0x${string}` = MARKET_OPERATOR;
     
     // Get seller address from URL parameters
     const { params } = $props<{ params: { seller: string } }>();
     
     // Static API base
-    const API_BASE = 'http://localhost:5084';
+    const API_BASE = MARKET_API_BASE;
 
-    type ProductLike = any;
+    type ProductLike = AggregatedCatalogItem;
 
     let loading: boolean = $state(true);
     let errorMsg: string = $state('');
@@ -26,18 +29,13 @@
     // ————————————————————————————————————————————
     // helper functions (kept only those not in ProductCard)
     // ————————————————————————————————————————————
-    function extractProducts(body: any): any[] {
-        if (!body || typeof body !== 'object') return [];
-        if (Array.isArray(body.products)) return body.products;
-        if (Array.isArray(body.items)) return body.items;
-        if (Array.isArray(body.results)) return body.results;
-        if (body.data && typeof body.data === 'object') {
-            if (Array.isArray(body.data.products)) return body.data.products;
-            if (Array.isArray(body.data.items)) return body.data.items;
-            if (Array.isArray(body.data.results)) return body.data.results;
-        }
-        if (body.catalog && Array.isArray(body.catalog.products)) return body.catalog.products;
-        return [];
+    function extractProducts(body: any): AggregatedCatalogItem[] {
+        const typed = (body as AggregatedCatalog | undefined)?.products;
+        if (Array.isArray(typed)) return typed as AggregatedCatalogItem[];
+        if (Array.isArray((body as any)?.items)) return (body as any).items as AggregatedCatalogItem[];
+        if (Array.isArray((body as any)?.results)) return (body as any).results as AggregatedCatalogItem[];
+        if ((body as any)?.catalog && Array.isArray((body as any).catalog.products)) return (body as any).catalog.products as AggregatedCatalogItem[];
+        return [] as AggregatedCatalogItem[];
     }
 
     function shortAddr(a?: string): string {
@@ -52,15 +50,9 @@
         loading = true;
         errorMsg = '';
         
-        if (!params.seller || !params.seller.startsWith('0x')) {
-            errorMsg = 'Invalid seller address';
-            loading = false;
-            return;
-        }
-        
-        // Validate and format the seller address
         try {
-            sellerAddress = params.seller.toLowerCase() as `0x${string}`;
+            // Validate and normalize the seller address
+            sellerAddress = normalizeAddress(params.seller) as `0x${string}`;
             shortSellerAddr = shortAddr(sellerAddress);
             
             // Fetch catalog for this specific seller
@@ -74,12 +66,8 @@
             
             const body = await res.json();
             products = extractProducts(body);
-            
-            // Filter to only show products from this seller
-            products = products.filter(p => 
-                (p.seller?.toLowerCase() === sellerAddress) || 
-                (getProductFromCard(p)?.seller?.toLowerCase() === sellerAddress)
-            );
+            // Filter to only show products from this seller using typed field
+            products = products.filter(p => (p.seller?.toLowerCase?.() ?? p.seller) === sellerAddress);
         } catch (err: any) {
             errorMsg = err?.message ?? String(err);
         } finally {
@@ -87,10 +75,7 @@
         }
     }
 
-    // Helper function to get product from ProductCard context
-    function getProductFromCard(item: any): any {
-        return item?.product ?? item;
-    }
+    // No longer needed complex unwrap helpers due to strong typing
 
     onMount(loadSellerCatalog);
 
