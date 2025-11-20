@@ -9,7 +9,7 @@
     tokenTypeToString,
     TransitiveTransferTokenAddress,
   } from '$lib/pages/SelectAsset.svelte';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popUp.svelte';
   import { parseEther } from 'ethers';
 
   interface Props {

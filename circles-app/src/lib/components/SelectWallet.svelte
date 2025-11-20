@@ -3,7 +3,7 @@
   import { config } from '../../config';
   import { connect } from '@wagmi/core';
   import { goto } from '$app/navigation';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popUp.svelte';
   import { signer } from '$lib/stores/wallet.svelte';
   import type { Address } from '@aboutcircles/sdk-types';
   import ImportCircles from './ImportCircles.svelte';

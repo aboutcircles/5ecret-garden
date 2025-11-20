@@ -1,22 +1,25 @@
 <!-- src/lib/components/PopUp.svelte -->
 <script lang="ts">
-  import { popupControls, popupState } from '$lib/stores/popUp';
+  import { popupControls, popupState } from '$lib/stores/popUp.svelte';
   import Lucide from '$lib/icons/Lucide.svelte';
-  import { ArrowLeft as LArrowLeft, X as LX } from 'lucide';
+  import PopUpPage from './PopUpPage.svelte';
+  import { ArrowLeft as LArrowLeft, X as LX, type IconNode } from 'lucide';
 
   function handleKeydown(e: KeyboardEvent) {
-    if (e.key === 'Escape' && $popupState.content) popupControls.close();
+    if (e.key === 'Escape' && popupState.content) popupControls.close();
   }
 
   function onClose() {
-    if ($popupState.stack.length > 0) popupControls.back();
+    if (popupState.stack.length > 0) popupControls.back();
     else popupControls.close();
   }
 
+  let icon: IconNode = $derived(popupState.stack.length > 0 ? LArrowLeft : LX);
+
   // Keep *all* pages mounted: stack + current
   let pages = $derived([
-    ...($popupState.stack ?? []),
-    ...($popupState.content ? [$popupState.content] : []),
+    ...(popupState.stack ?? []),
+    ...(popupState.content ? [popupState.content] : []),
   ]);
 
   let top = $derived(Math.max(0, pages.length - 1));
@@ -39,7 +42,7 @@
 
 <div
   class="popup rounded-t-lg overflow-y-auto"
-  class:open={$popupState.content !== null}
+  class:open={popupState.content !== null}
   role="dialog"
   aria-modal="true"
   aria-labelledby="popup-title"
@@ -50,20 +53,20 @@
       <button
         class="btn btn-ghost btn-circle btn-sm"
         onclick={onClose}
-        aria-label={$popupState.stack.length > 0 ? 'Back' : 'Close'}
-        title={$popupState.stack.length > 0 ? 'Back' : 'Close'}
+        aria-label={popupState.stack.length > 0 ? 'Back' : 'Close'}
+        title={popupState.stack.length > 0 ? 'Back' : 'Close'}
       >
         <Lucide
-          icon={$popupState.stack.length > 0 ? LArrowLeft : LX}
+          icon={icon}
           size={16}
           class="shrink-0 stroke-black"
           ariaLabel=""
         />
       </button>
 
-      {#if $popupState.content?.title}
+      {#if popupState.content?.title}
         <h2 id="popup-title" class="text-xl font-bold">
-          {$popupState.content.title}
+          {popupState.content.title}
         </h2>
       {/if}
     </div>
@@ -71,13 +74,7 @@
     <!-- Content: render the whole stack; only top is visible -->
     <div class="content w-full relative">
       {#each pages as page, i (keyFor(page))}
-        <div
-          class={`popup-page ${i === top ? 'is-top' : 'is-hidden'}`}
-          aria-hidden={i === top ? 'false' : 'true'}
-          inert={i !== top}
-        >
-          <svelte:component this={page.component} {...page.props} />
-        </div>
+        <PopUpPage page={page} isVisible={i === top} />
       {/each}
     </div>
   </div>
@@ -105,16 +102,5 @@
   .popup.open {
     transform: translateY(0);
     opacity: 1;
-  }
-
-  /* Keep instances mounted; hide non-top pages */
-  .popup-page {
-    position: relative;
-  }
-  .popup-page.is-hidden {
-    display: none;
-  }
-  .popup-page.is-top {
-    display: block;
   }
 </style>

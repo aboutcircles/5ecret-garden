@@ -2,7 +2,7 @@
   import type { GroupRow } from '@aboutcircles/sdk-types';
   import ProfilePage from '$lib/pages/Profile.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popUp.svelte';
   import RowFrame from '$lib/ui/RowFrame.svelte';
 
   interface Props {
@@ -11,7 +11,8 @@
   let { item }: Props = $props();
 
   function openProfile() {
-    popupControls.open?.({
+    popupControls.open({
+      title: '',
       component: ProfilePage,
       props: { address: item.group },
     });

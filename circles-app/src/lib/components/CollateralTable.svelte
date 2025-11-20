@@ -4,7 +4,7 @@
   import type { Address } from '@aboutcircles/sdk-types';
   import type { TrustRelation } from '@aboutcircles/sdk-types';
   import RowFrame from '$lib/ui/RowFrame.svelte';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popUp.svelte';
   import ProfilePage from '$lib/pages/Profile.svelte';
 
   function formatEtherTwoDecimals(value: bigint): string {
@@ -43,7 +43,11 @@
   }
 
   function openProfile(addr: Address): void {
-    popupControls.open({ component: ProfilePage, props: { address: addr } });
+    popupControls.open({
+      title: '',
+      component: ProfilePage,
+      props: { address: addr },
+    });
   }
 </script>
 

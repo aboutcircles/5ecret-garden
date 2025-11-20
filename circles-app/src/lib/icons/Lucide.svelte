@@ -1,12 +1,12 @@
 <script lang="ts">
+  import type { IconNode } from 'lucide';
+
   /**
    * Minimal Svelte5 wrapper for lucide "standalone" icon nodes.
    * Pass an icon node from the "lucide" package, e.g.:
    *   import { Send } from 'lucide';
    *   <Lucide icon={Send} size={16} class="stroke-black" />
    */
-  type IconNode = Array<[string, Record<string, string>]>;
-
   interface Props {
     icon: IconNode;
     size?: number;
@@ -40,7 +40,7 @@
 >
   {#each icon as node (node[1]?.d ?? JSON.stringify(node))}
     {@const tag = node[0]}
-    {@const attrs = node[1]}
+    {@const attrs = node[1] as Record<string, string | number | boolean | undefined>}
     <svelte:element this={tag} {...attrs} />
   {/each}
 </svg>

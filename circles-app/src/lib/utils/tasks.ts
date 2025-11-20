@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store';
 import ErrorPage from '$lib/pages/Error.svelte';
-import { popupControls } from '$lib/stores/popUp';
+import { popupControls } from '$lib/stores/popUp.svelte';
 
 export type Task<T> = {
   name: string;

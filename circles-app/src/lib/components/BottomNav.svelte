@@ -1,7 +1,7 @@
 <script lang="ts">
   import { page } from '$app/stores';
-  import { popupState } from '$lib/stores/popUp';
-  import { headerDropdownOpen } from '../stores/headerDropdown';
+  import { popupState } from '$lib/stores/popUp.svelte';
+  import { headerDropdown } from '../stores/headerDropdown.svelte';
   import Lucide from '$lib/icons/Lucide.svelte';
   import {
     Home as LHome,
@@ -59,8 +59,8 @@
   };
 
   // runes-friendly
-  let isPopupOpen: boolean = $derived($popupState.content !== null);
-  let isHeaderDropdownOpen: boolean = $derived($headerDropdownOpen === true);
+  let isPopupOpen: boolean = $derived(popupState.content !== null);
+  let isHeaderDropdownOpen: boolean = $derived(headerDropdown.open === true);
   let shouldHide: boolean = $derived(isPopupOpen || isHeaderDropdownOpen);
 </script>
 

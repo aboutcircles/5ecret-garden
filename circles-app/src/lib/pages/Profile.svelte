@@ -14,7 +14,7 @@
   import { getProfile } from '$lib/utils/profile';
   import { formatTrustRelation, getTypeString } from '$lib/utils/helpers';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popUp.svelte';
   import AddressComponent from '$lib/components/Address.svelte';
   import type { Address } from '@aboutcircles/sdk-types';
   import SelectAmount from '$lib/flows/send/3_Amount.svelte';

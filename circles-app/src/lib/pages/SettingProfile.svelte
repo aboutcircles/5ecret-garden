@@ -3,7 +3,7 @@
   import Address from '$lib/components/Address.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import QrCode from '$lib/components/QrCode.svelte';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popUp.svelte';
   import { signer } from '$lib/stores/wallet.svelte';
 
   interface Props {

@@ -19,7 +19,7 @@
   import Send from '$lib/flows/send/1_To.svelte';
   import { onDestroy, onMount } from 'svelte';
   import { tasks } from '$lib/utils/tasks';
-  import { popupControls, popupState } from '$lib/stores/popUp';
+  import { popupControls, popupState } from '$lib/stores/popUp.svelte';
   import PopUp from '$lib/components/PopUp.svelte';
   import ManageGroupMembers from '$lib/flows/manageGroupMembers/1_manageGroupMembers.svelte';
   import { getProfile } from '$lib/utils/profile';
@@ -166,7 +166,7 @@
   <div
     role="button"
     tabindex="0"
-    class={`fixed top-0 left-0 w-full h-full bg-black/50 z-[90] ${$popupState.content ? 'opacity-100' : 'opacity-0 hidden'} transition duration-300 ease-in-out pointer-events-auto`}
+    class={`fixed top-0 left-0 w-full h-full bg-black/50 z-[90] ${popupState.content ? 'opacity-100' : 'opacity-0 hidden'} transition duration-300 ease-in-out pointer-events-auto`}
     style="touch-action: none;"
     onpointerdown={(e) => {
       e.stopPropagation();
@@ -193,7 +193,7 @@
       e.preventDefault();
       popupControls.close();
     }}
-    aria-hidden={$popupState.content ? 'false' : 'true'}
+    aria-hidden={popupState.content ? 'false' : 'true'}
   ></div>
   <PopUp />
 </main>

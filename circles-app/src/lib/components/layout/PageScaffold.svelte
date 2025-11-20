@@ -1,10 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { popupState } from '$lib/stores/popUp';
-  import { headerDropdownOpen } from '$lib/stores/headerDropdown';
+  import { popupState, popupControls } from '$lib/stores/popUp.svelte';
+  import { headerDropdown } from '$lib/stores/headerDropdown.svelte';
 
   import { avatarState } from '$lib/stores/avatar.svelte';
-  import { popupControls } from '$lib/stores/popUp';
   import SettingProfile from '$lib/pages/SettingProfile.svelte';
 
   type Highlight = 'soft' | 'tint';
@@ -70,11 +69,11 @@
   const contentPaddingClass = usePagePadding ? '' : 'px-4 md:px-6';
   const fixedPaddingClass = usePagePadding ? '' : 'px-4 md:px-6';
 
-  const isPopupOpen: boolean = $derived($popupState.content !== null);
+  const isPopupOpen: boolean = $derived(popupState.content !== null);
 
   // Sync flag for other components (BottomNav)
   $effect(() => {
-    headerDropdownOpen.set(collapsedMenuOpen);
+    headerDropdown.open = collapsedMenuOpen;
   });
 
   // Close the tray when popup opens, header un-collapses, or there are no actions

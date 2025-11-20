@@ -4,7 +4,7 @@
   import { shortenAddress } from '$lib/utils/shared';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popUp.svelte';
   import RowFrame from '$lib/ui/RowFrame.svelte';
   import { initContactStore } from '$lib/stores/contacts';
 

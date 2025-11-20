@@ -1,6 +1,6 @@
 <script lang="ts">
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popUp.svelte';
   import CreateStep from './4_Create.svelte';
   import { createGroupContext, type CreateGroupFlowContext } from './context';
 
