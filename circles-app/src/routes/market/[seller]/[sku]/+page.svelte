@@ -1,18 +1,17 @@
 <script lang="ts">
     import { onMount } from 'svelte';
+    import { page } from '$app/stores';
     import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
-    import ProductGallery from '$lib/components/ProductGallery.svelte';
-    import Avatar from '$lib/components/avatar/Avatar.svelte';
+    import ProductViewer from '$lib/components/ProductViewer.svelte';
     import {goto} from "$app/navigation";
     import { MARKET_API_BASE, MARKET_OPERATOR } from '$lib/config/market';
-    import type { AggregatedCatalog, AggregatedCatalogItem } from '$lib/market/types';
-    import { extractProducts, getProduct, getFirstOffer } from '$lib/market/catalogHelpers';
-    import { shortenAddress } from '$lib/utils/shared';
+    import type { AggregatedCatalogItem } from '$lib/market/types';
+    import { extractProducts, getFirstOffer } from '$lib/market/catalogHelpers';
     import { normalizeAddress } from '$lib/offers/adapters';
 
-    // Get seller and SKU from URL parameters
-    const { params } = $props<{ params: { seller: string; sku: string } }>();
-    
+    // Derive seller and SKU from SvelteKit's $page store
+    const params = $derived($page.params as { seller: string; sku: string });
+
     // Defaults (as requested)
     const OPERATOR: `0x${string}` = MARKET_OPERATOR;
     
@@ -24,8 +23,6 @@
     let loading: boolean = $state(true);
     let errorMsg: string = $state('');
     let product: ProductLike | null = $state(null);
-
-    const shortAddr = (a?: string) => (a ? shortenAddress(a as any) : '');
 
     // Load product details
     async function loadProduct(): Promise<void> {
@@ -48,6 +45,8 @@
             if (!product && fromSeller.length > 0) {
                 product = fromSeller.find(i => (i as any).id === params.sku || (i as any).productCid === params.sku) ?? fromSeller[0];
             }
+            console.log("seller-sku-page: ", product);
+
         } catch (err: any) {
             errorMsg = err?.message ?? String(err);
         } finally {
@@ -72,8 +71,7 @@
         }
     }
 
-    const prod = $derived(() => product ? getProduct(product) : null);
-    const offer = $derived(() => prod ? getFirstOffer(prod) : null);
+    const offer = $derived(product?.product ? getFirstOffer(product?.product) : null);
 </script>
 
 <PageScaffold
@@ -98,7 +96,7 @@
                     <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd" />
                 </svg>
             </button>
-            <h1 class="text-xl font-semibold truncate">{prod?.name || prod?.Name || 'Product Details'}</h1>
+            <h1 class="text-xl font-semibold truncate">{product?.product?.name || 'Product Details'}</h1>
         </div>
     </svelte:fragment>
 
@@ -131,126 +129,17 @@
                 Go Back
             </button>
         </div>
-    {:else if product}
-        <!-- Product Images -->
-        {#if product.product?.image || product.product?.images}
-            <ProductGallery images={product.product.image || product.product.images} />
-        {:else}
-            <div class="bg-base-200 rounded-lg p-8 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-base-content/30 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-            </div>
-        {/if}
-
-        <!-- Product Details -->
-        <div class="space-y-4">
-            <!-- Seller Info -->
-            {#if product.seller}
-                <div class="flex items-center gap-3 p-3 bg-base-100 rounded-lg">
-                    <Avatar 
-                        address={product.seller || ''}
-                        view="horizontal" 
-                        clickable={true}
-                    />
-                    <a 
-                        href={`/market/${encodeURIComponent(product.seller)}`}
-                        class="btn btn-sm btn-ghost"
-                    >
-                        View Profile
-                    </a>
-                </div>
-            {/if}
-
-            <!-- Product Name -->
-            <h2 class="text-2xl font-bold">{product.product?.name || product.product?.Name || '(no name)'}</h2>
-
-            <!-- Description -->
-            {#if product.product?.description || product.product?.Description}
-                <div class="prose prose-sm max-w-none">
-                    {@html product.product.description || product.product.Description}
-                </div>
-            {:else if product.product?.text}
-                <div class="prose prose-sm max-w-none">
-                    {@html product.product.text}
-                </div>
-            {/if}
-
-            <!-- Offer Information -->
-            {#if product.product?.offers && product.product.offers[0]}
-                <div class="bg-base-100 rounded-lg p-4 space-y-2">
-                    <h3 class="font-semibold">Offer Details</h3>
-                    
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm text-base-content/70">Price:</span>
-                        <span class="font-medium">{product.product.offers[0].price ?? product.product.offers[0].Price ?? '?'}</span>
-                    </div>
-
-                    {#if product.product.offers[0]?.priceCurrency || product.product.offers[0]?.PriceCurrency}
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm text-base-content/70">Currency:</span>
-                            <span>{product.product.offers[0].priceCurrency || product.product.offers[0].PriceCurrency}</span>
-                        </div>
-                    {/if}
-
-                    <!-- Checkout Button -->
-                    {#if typeof (product.product.offers[0]?.checkout ?? product.product.offers[0]?.Checkout) === 'string' && (product.product.offers[0].checkout || product.product.offers[0].Checkout).trim() !== ''}
-                        <a
-                            href={product.product.offers[0].checkout || product.product.offers[0].Checkout}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="btn btn-primary w-full mt-4"
-                        >
-                            Purchase Now
-                        </a>
-                    {/if}
-                </div>
-            {/if}
-
-            <!-- External Links -->
-            <div class="flex flex-wrap gap-2">
-                {#if product.product?.url || product.product?.Url}
-                    <a 
-                        href={product.product.url || product.product.Url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        class="btn btn-outline btn-sm"
-                    >
-                        Visit Product Site
-                    </a>
-                {/if}
-
-                {#if product.productCid}
-                    <a 
-                        href={'https://ipfs.io/ipfs/' + encodeURIComponent(product.productCid)}
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        class="btn btn-outline btn-sm"
-                    >
-                        View on IPFS
-                    </a>
-                {/if}
-            </div>
-
-            <!-- Product Metadata -->
-            <div class="text-xs text-base-content/50 space-y-1">
-                {#if product.id}
-                    <div>Product ID: {product.id}</div>
-                {/if}
-
-                {#if product.sku}
-                    <div>SKU: {product.sku}</div>
-                {/if}
-
-                {#if product.productCid}
-                    <div>CID: {product.productCid}</div>
-                {/if}
-
-                {#if typeof (product.publishedAt) === 'number'}
-                    <div>Published: {new Date(product.publishedAt * 1000).toLocaleString()}</div>
-                {/if}
-            </div>
-        </div>
+    {:else if product && product?.product}
+        <ProductViewer
+            product={product?.product}
+            offer={offer}
+            seller={product.seller}
+            productCid={product.productCid}
+            showSeller={true}
+            showMeta={true}
+            meta={{ publishedAt: product.publishedAt, productCid: product.productCid, sku: product?.product?.sku }}
+            layout="detail"
+        />
     {:else if !loading && !errorMsg}
         <!-- Product not found -->
         <div class="flex flex-col items-center justify-center p-8">

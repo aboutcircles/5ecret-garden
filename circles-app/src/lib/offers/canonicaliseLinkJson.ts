@@ -17,7 +17,9 @@ type Json =
  * Returns UTF-8 bytes of the canonical JSON string.
  */
 export function canonicaliseLink(linkObj: CustomDataLink): Uint8Array {
-    const allowedKeys = [
+    // Validate that all required keys are present, but allow future extensions.
+    // Only the top-level "signature" field is excluded from the canonicalised preimage.
+    const requiredKeys = [
         '@context',
         '@type',
         'name',
@@ -29,20 +31,12 @@ export function canonicaliseLink(linkObj: CustomDataLink): Uint8Array {
         'signerAddress',
         'signedAt',
         'nonce',
-        'signature',
     ] as const;
 
-    const keys = Object.keys(linkObj).sort();
-    const expectedKeys = [...allowedKeys].sort();
-
-    const keysMatch =
-        keys.length === expectedKeys.length &&
-        keys.every((k, i) => k === expectedKeys[i]);
-
-    if (!keysMatch) {
-        throw new CanonicalisationError(
-            `CustomDataLink has wrong top-level keys: ${JSON.stringify(keys)}`
-        );
+    for (const k of requiredKeys) {
+        if (!(k in (linkObj as any))) {
+            throw new CanonicalisationError(`CustomDataLink missing required key: ${k as string}`);
+        }
     }
 
     const shallow: Record<string, Json> = {};

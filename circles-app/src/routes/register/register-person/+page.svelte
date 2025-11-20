@@ -9,7 +9,7 @@
     import type { Profile } from '@circles-sdk/profiles';
     import { onMount } from 'svelte';
     import type { Address } from '@circles-sdk/utils';
-    import ProfileEditor from '$lib/components/ProfileEditor.svelte';
+    import ProfileHeaderEditor from '$lib/flows/offer/ProfileHeaderEditor.svelte';
     import { settings } from '$lib/stores/settings.svelte';
     import { avatarState } from '$lib/stores/avatar.svelte';
     import Disclaimer from '$lib/components/Disclaimer.svelte';
@@ -113,7 +113,12 @@
 
                     <div class="flex flex-col items-center gap-y-4 pl-10">
                         {#if inviterSelected}
-                            <ProfileEditor bind:profile />
+                            <ProfileHeaderEditor
+                                bind:name={profile.name}
+                                bind:description={profile.description}
+                                bind:previewImageUrl={profile.previewImageUrl}
+                                bind:imageUrl={profile.imageUrl}
+                            />
                             <div class="mx-auto">
                                 <ActionButton action={registerHuman} disabled={profile.name.trim().length < 1}>
                                     Create

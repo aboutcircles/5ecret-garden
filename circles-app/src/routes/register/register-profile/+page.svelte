@@ -3,7 +3,7 @@
     import { circles } from '$lib/stores/circles';
     import { wallet } from '$lib/stores/wallet.svelte';
     import type { Profile } from '@circles-sdk/profiles';
-    import ProfileEditor from '$lib/components/ProfileEditor.svelte';
+    import ProfileHeaderEditor from '$lib/flows/offer/ProfileHeaderEditor.svelte';
     import { onMount } from 'svelte';
     import Disclaimer from '$lib/components/Disclaimer.svelte';
     import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
@@ -54,7 +54,12 @@
         <div class="flex flex-col items-center text-center gap-4">
           <img src="/person.svg" alt="person" class="w-16 h-16 rounded-xl" />
           <h3 class="text-xl font-semibold">Register profile</h3>
-          <ProfileEditor bind:profile />
+          <ProfileHeaderEditor
+            bind:name={profile.name}
+            bind:description={profile.description}
+            bind:previewImageUrl={profile.previewImageUrl}
+            bind:imageUrl={profile.imageUrl}
+          />
           <ActionButton action={registerProfile} disabled={profile.name.trim().length < 1}>Create</ActionButton>
         </div>
       </div>

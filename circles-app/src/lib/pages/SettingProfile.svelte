@@ -5,9 +5,12 @@
   import QrCode from '$lib/components/QrCode.svelte';
   import { popupControls } from '$lib/stores/popUp';
   import { signer } from '$lib/stores/wallet.svelte';
+  import ProfileExplorer from '$lib/flows/offer/ProfileExplorer.svelte';
+  import { MARKET_API_BASE } from '$lib/config/market';
+  import type { Address as EvmAddress } from '@circles-sdk/utils';
 
   interface Props {
-    address: Address | undefined;
+    address: EvmAddress | undefined;
   }
 
   let { address = undefined }: Props = $props();
@@ -18,6 +21,18 @@
     signer.privateKey
       ? goto('/connect-wallet/import-circles-garden')
       : goto('/connect-wallet/connect-safe');
+  }
+
+  function openProfileEditor() {
+    if (!address) return;
+    popupControls.open({
+      title: 'Edit profile',
+      component: ProfileExplorer,
+      props: {
+        avatar: address,
+        pinApiBase: MARKET_API_BASE,
+      },
+    });
   }
 </script>
 
@@ -31,6 +46,13 @@
       onclick={changeWallet}
       class="btn btn-sm btn-outline btn-primary text-primary hover:text-white"
       >Change Avatar
+    </button>
+    <button
+      type="button"
+      class="btn btn-sm btn-outline"
+      onclick={openProfileEditor}
+    >
+      Edit profile
     </button>
   </div>
 

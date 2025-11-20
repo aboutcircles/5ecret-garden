@@ -62,20 +62,20 @@
   // Image data URL helpers moved to $lib/media/imageTools
 
   // Get all images (prioritizing multiple images, falling back to single image)
-  function getAllImages(): Array<string | { url: string }> {
+  // Returns plain string[] for ProductGallery
+  function getAllImages(): string[] {
     const draft = context.draft;
     
     // If we have multiple images, return them in the expected format
     if (draft?.images && Array.isArray(draft.images) && draft.images.length > 0) {
-      return draft.images.map(url => ({ url }));
+      return draft.images.filter((u: unknown) => typeof u === 'string' && u.trim().length > 0) as string[];
     }
-    
+
     // Fall back to single image
-    if (draft?.image) {
-      return [{ url: draft.image }];
+    if (typeof draft?.image === 'string' && draft.image.trim().length > 0) {
+      return [draft.image.trim()];
     }
-    
-    // No images available
+
     return [];
   }
 
