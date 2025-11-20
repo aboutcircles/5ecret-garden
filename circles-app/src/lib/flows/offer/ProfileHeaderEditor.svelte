@@ -1,5 +1,11 @@
 <!-- src/lib/flows/offer/ProfileHeaderEditor.svelte -->
 <script lang="ts">
+    import {
+        fileToCroppedDataUrl,
+        AVATAR_PREFERRED_MAX_BYTES,
+        MEDIA_MAX_BYTES,
+    } from '$lib/media/imageTools';
+
     interface Props {
         name: string;
         description?: string;
@@ -52,7 +58,7 @@
             return;
         }
         const file = files[0];
-        createImagePreview(file);
+        void createImagePreview(file);
     }
 
     function handleDragOver(event: DragEvent): void {
@@ -71,52 +77,32 @@
             return;
         }
         const file = dt.files[0];
-        createImagePreview(file);
+        void createImagePreview(file);
     }
 
-    function createImagePreview(file: File): void {
-        const reader = new FileReader();
-        reader.onload = () => {
-            const img = new Image();
-            img.src = reader.result as string;
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                if (!ctx) {
-                    return;
-                }
+    async function createImagePreview(file: File): Promise<void> {
+        if (readonly) return;
 
-                canvas.width = CROP_WIDTH;
-                canvas.height = CROP_HEIGHT;
+        try {
+            const { dataUrl, bytes } = await fileToCroppedDataUrl(file, {
+                width: CROP_WIDTH,
+                height: CROP_HEIGHT,
+                mime: 'image/jpeg',
+                quality: 0.85,
+                maxBytes: MEDIA_MAX_BYTES,
+            });
 
-                const srcW = img.width;
-                const srcH = img.height;
-                if (srcW <= 0 || srcH <= 0) {
-                    return;
-                }
+            if (bytes.length > AVATAR_PREFERRED_MAX_BYTES) {
+                console.warn('Avatar image data URL exceeds ~150 KB');
+            }
 
-                const scale = Math.max(CROP_WIDTH / srcW, CROP_HEIGHT / srcH);
-                const targetW = srcW * scale;
-                const targetH = srcH * scale;
-                const offsetX = (CROP_WIDTH - targetW) / 2;
-                const offsetY = (CROP_HEIGHT - targetH) / 2;
-
-                ctx.clearRect(0, 0, CROP_WIDTH, CROP_HEIGHT);
-                ctx.drawImage(img, offsetX, offsetY, targetW, targetH);
-
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-
-                if (dataUrl.length > 150 * 1024) {
-                    console.warn('Avatar image data URL exceeds ~150 KB');
-                }
-
-                previewImageUrl = dataUrl;
-                if (!imageUrl) {
-                    imageUrl = dataUrl;
-                }
-            };
-        };
-        reader.readAsDataURL(file);
+            previewImageUrl = dataUrl;
+            if (!imageUrl) {
+                imageUrl = dataUrl;
+            }
+        } catch (e) {
+            console.error('[profile-avatar] failed to create image preview:', e);
+        }
     }
 
     function clearPicture(): void {

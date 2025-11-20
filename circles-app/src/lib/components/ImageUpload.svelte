@@ -1,164 +1,180 @@
 <script lang="ts">
-	// Props - interface for parent components
-	interface Props {
-		imageDataUrls?: string[];
-		onnewimage?: (dataUrl: string) => void;
-		onremoveimage?: (index: number) => void;
-		onclearall?: () => void;
-		cropWidth?: number;
-		cropHeight?: number;
-	}
-	
-	let { imageDataUrls = [], onnewimage, onremoveimage, onclearall, cropWidth = 256, cropHeight = 256 }: Props = $props();
+  import {
+    fileToCroppedDataUrl,
+    MEDIA_MAX_BYTES,
+  } from '$lib/media/imageTools';
 
-	let imageFiles: File[] = [];
-	let fileUpload: HTMLInputElement | undefined;
+  interface Props {
+    imageDataUrls: string[];
+    cropWidth?: number;
+    cropHeight?: number;
+    maxBytes?: number;
+    readonly?: boolean;
+    onnewimage?: (dataUrl: string) => void;
+    onremoveimage?: (index: number) => void;
+    onclearall?: () => void;
+  }
 
-	// Effect to handle external URLs when imageDataUrls changes
-	$effect(() => {
-		const allUrls = imageDataUrls || [];
-		for (const url of allUrls) {
-			if (url.startsWith('http')) {
-				getImageAsDataUrl(url);
-			}
-		}
-	});
+  let {
+    imageDataUrls,
+    cropWidth = 512,
+    cropHeight = 512,
+    maxBytes = MEDIA_MAX_BYTES,
+    readonly = false,
+    onnewimage,
+    onremoveimage,
+    onclearall,
+  }: Props = $props();
 
-	async function getImageAsDataUrl(imageUrl: string) {
-		try {
-			const response = await fetch(imageUrl);
-			const blob = await response.blob();
-			const file = new File([blob], 'image.jpg', { type: blob.type });
-			createImagePreview(file);
-		} catch (error) {
-			console.error('Failed to fetch external image:', error);
-		}
-	}
+  let fileInput: HTMLInputElement | undefined = $state();
+  let dragging = $state(false);
 
-	function handleFileInput(event: Event) {
-		const target = event.target as HTMLInputElement;
-		if (target.files && target.files.length > 0) {
-			for (let i = 0; i < target.files.length; i++) {
-				imageFiles.push(target.files[i]);
-				createImagePreview(target.files[i]);
-			}
-		}
-	}
+  async function processFile(file: File): Promise<void> {
+    if (readonly) return;
+    try {
+      const { dataUrl } = await fileToCroppedDataUrl(file, {
+        width: cropWidth,
+        height: cropHeight,
+        maxBytes,
+      });
 
-	function handleDrop(event: DragEvent) {
-		event.preventDefault();
-		if (
-			event.dataTransfer &&
-			event.dataTransfer.files &&
-			event.dataTransfer.files.length > 0
-		) {
-			for (let i = 0; i < event.dataTransfer.files.length; i++) {
-				imageFiles.push(event.dataTransfer.files[i]);
-				createImagePreview(event.dataTransfer.files[i]);
-			}
-		}
-	}
+      if (typeof onnewimage === 'function') {
+        onnewimage(dataUrl);
+      }
+    } catch (e) {
+      console.error('[ImageUpload] failed to process file:', e);
+    }
+  }
 
-	function handleDragOver(event: DragEvent) {
-		event.preventDefault();
-	}
+  function handleFileInput(event: Event): void {
+    if (readonly) return;
+    const input = event.target as HTMLInputElement | null;
+    const files = input?.files;
+    if (!files || files.length === 0) return;
 
-	function createImagePreview(file: File) {
-		const reader = new FileReader();
-		reader.onload = () => {
-			const img = new Image();
-			img.src = reader.result as string;
-			img.onload = () => {
-				const canvas = document.createElement('canvas');
-				const ctx = canvas.getContext('2d');
-				if (ctx) {
-					canvas.width = cropWidth;
-					canvas.height = cropHeight;
-					ctx.drawImage(img, 0, 0, cropWidth, cropHeight);
-					const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    for (let i = 0; i < files.length; i++) {
+      void processFile(files[i]);
+    }
 
-					if (dataUrl.length > 150 * 1024) {
-						console.warn("Image size exceeds 150 KB");
-					}
-					
-					// Add to the array of image URLs
-					imageDataUrls = [...imageDataUrls, dataUrl];
-          onnewimage?.(dataUrl);
-				}
-			};
-		};
-		reader.readAsDataURL(file);
-	}
+    if (input) {
+      input.value = '';
+    }
+  }
 
-	function removeImage(index: number) {
-		imageFiles.splice(index, 1);
-		const newImages = imageDataUrls.filter((_, i) => i !== index);
-    imageDataUrls = newImages;
-    onremoveimage?.(index);
-	}
+  function handleClickSelect(): void {
+    if (readonly) return;
+    if (!fileInput) return;
+    fileInput.value = '';
+    fileInput.click();
+  }
 
-	function clearAllImages() {
-		imageFiles = [];
-		imageDataUrls = [];
-    onclearall?.();
-	}
+  function handleDragOver(event: DragEvent): void {
+    if (readonly) return;
+    event.preventDefault();
+    event.stopPropagation();
+    dragging = true;
+  }
 
-	function openFilePicker() {
-		if (fileUpload) {
-			fileUpload.click();
-		}
-	}
+  function handleDragLeave(event: DragEvent): void {
+    if (readonly) return;
+    event.preventDefault();
+    event.stopPropagation();
+    dragging = false;
+  }
+
+  function handleDrop(event: DragEvent): void {
+    if (readonly) return;
+    event.preventDefault();
+    event.stopPropagation();
+    dragging = false;
+
+    const dt = event.dataTransfer;
+    if (!dt || !dt.files || dt.files.length === 0) return;
+
+    for (let i = 0; i < dt.files.length; i++) {
+      void processFile(dt.files[i]);
+    }
+  }
+
+  function removeAt(idx: number): void {
+    if (readonly) return;
+    if (typeof onremoveimage === 'function') {
+      onremoveimage(idx);
+    }
+  }
+
+  function clearAll(): void {
+    if (readonly) return;
+    if (typeof onclearall === 'function') {
+      onclearall();
+    }
+  }
 </script>
 
-<div class="space-y-4">
-  <button
-    type="button"
-    class="w-full flex-col items-center border border-dashed border-gray-300 rounded-lg px-6 py-10 bg-50 hover:bg-100 transition-colors"
-    onclick={openFilePicker}
-    ondragover={handleDragOver}
-    ondrop={handleDrop}
+<div class="space-y-2">
+  <div
+    class="border border-dashed rounded-md p-3 text-xs flex flex-col gap-2 cursor-pointer"
+    class:border-primary={dragging}
+    on:click={handleClickSelect}
+    on:dragover={handleDragOver}
+    on:dragleave={handleDragLeave}
+    on:drop={handleDrop}
   >
-    <input
-      bind:this={fileUpload}
-      type="file"
-      id="imageUpload"
-      accept="image/*"
-      multiple
-      onchange={handleFileInput}
-      class="hidden"
-    />
-    <p class="text-gray-500">Drag and drop images here or click to select</p>
-  </button>
-
-  {#if imageDataUrls.length > 0}
-    <div class="flex justify-between items-center mb-2">
-      <span class="text-sm text-gray-600">{imageDataUrls.length} image(s) uploaded</span>
-      <button
-        type="button"
-        class="px-3 py-1 bg-red-100 text-red-700 rounded-md hover:bg-200 transition-colors sm:text-xs"
-        onclick={clearAllImages}
-      >
-        Clear All
-      </button>
+    <div class="flex items-center justify-between gap-2">
+      <span class="font-semibold">Upload images</span>
+      <span class="opacity-60">
+        JPEG/PNG, up to {Math.round(maxBytes / (1024 * 1024))} MiB each
+      </span>
     </div>
-    
-    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-      {#each imageDataUrls as url, index (index)}
-        <div class="relative group">
+    <div class="opacity-70">
+      Click to select files or drag &amp; drop them here. Images are cropped to
+      {cropWidth}×{cropHeight}px.
+    </div>
+
+    <input
+      bind:this={fileInput}
+      type="file"
+      accept="image/*"
+      class="hidden"
+      multiple
+      on:change={handleFileInput}
+    />
+  </div>
+
+  {#if imageDataUrls?.length}
+    <div class="flex justify-between items-center mt-1 text-xs">
+      <span class="opacity-70">
+        {imageDataUrls.length} image{imageDataUrls.length === 1 ? '' : 's'}
+      </span>
+      {#if !readonly}
+        <button
+          type="button"
+          class="btn btn-ghost btn-xs"
+          on:click={clearAll}
+        >
+          Clear all
+        </button>
+      {/if}
+    </div>
+
+    <div class="mt-2 grid grid-cols-3 sm:grid-cols-4 gap-2">
+      {#each imageDataUrls as url, idx}
+        <div class="relative group rounded-md overflow-hidden border border-base-300">
           <img
             src={url}
-            alt={`Preview ${index + 1}`}
-            class="w-full h-32 object-cover rounded-lg"
+            alt={`image-${idx}`}
+            class="w-full h-24 object-cover"
+            loading="lazy"
           />
-          <button
-            type="button"
-            class="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-            onclick={() => removeImage(index)}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" />
-            </svg>
-          </button>
+          {#if !readonly}
+            <button
+              type="button"
+              class="absolute top-1 right-1 btn btn-xs btn-circle btn-error opacity-0 group-hover:opacity-100 transition-opacity"
+              on:click|stopPropagation={() => removeAt(idx)}
+            >
+              ✕
+            </button>
+          {/if}
         </div>
       {/each}
     </div>

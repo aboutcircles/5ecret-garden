@@ -8,9 +8,10 @@
     interface Props {
         product: AggregatedCatalogItem;
         showSellerInfo?: boolean;
+        ondeleted?: () => void;
     }
     
-    let { product, showSellerInfo }: Props = $props();
+    let { product, showSellerInfo, ondeleted }: Props = $props();
     
     // State for derived values and ownership handling
     import { avatarState } from '$lib/stores/avatar.svelte';
@@ -20,6 +21,7 @@
     import { mkCirclesBindings } from '$lib/offers/mkCirclesBindings';
     import { normalizeAddress } from '$lib/offers/adapters';
     import { get } from 'svelte/store';
+    import { getProduct, getFirstOffer } from '$lib/market/catalogHelpers';
 
     // Marketplace operator (centralized)
     const OPERATOR = MARKET_OPERATOR;
@@ -47,6 +49,14 @@
 
     // Delete / tombstone handling for owners
     async function handleTombstone(): Promise<void> {
+        // Runtime guard: even if button renders due to some logic bug, prevent action
+        if (!isOwner) {
+            console.warn('[ProductCard] tombstone requested for non-owner item; ignoring', {
+                seller: product?.seller,
+                currentAvatar,
+            });
+            return;
+        }
         try {
             const eth: any = (window as any).ethereum;
             if (!eth) throw new Error('MetaMask not available');
@@ -77,6 +87,8 @@
                 chainId: GNOSIS_CHAIN_ID_NUM,
             });
 
+            // Notify parent to refresh listings if provided
+            try { ondeleted?.(); } catch (e) { /* noop */ }
             alert('Product removed (tombstoned).');
         } catch (e) {
             console.error('Tombstone failed', e);
@@ -113,15 +125,7 @@
         return null;
     }
 
-    function getProduct(item: AggregatedCatalogItem): any { return item.product; }
-
-    function getFirstOffer(prodItem: any): any | null {
-        const o = prodItem?.offers ?? prodItem?.offer ?? prodItem?.Offers ?? prodItem?.Offer;
-        if (!o) return null;
-        if (Array.isArray(o)) return o[0] ?? null;
-        if (typeof o === 'object') return o;
-        return null;
-    }
+    // product/offer helpers imported from catalogHelpers
 
     function shortAddr(a?: string): string {
         if (!a) return '';
@@ -143,6 +147,16 @@
         prod = getProduct(product);
         offer = getFirstOffer(prod);
         imageUrl = pickImageUrl(prod);
+    });
+
+    // Temporary debug to verify owner gating in environments where the Remove button misbehaves
+    $effect(() => {
+        // Log once per product change
+        console.debug('[ProductCard:isOwner]', {
+            productSeller: product?.seller,
+            currentAvatar,
+            isOwner,
+        });
     });
 </script>
 

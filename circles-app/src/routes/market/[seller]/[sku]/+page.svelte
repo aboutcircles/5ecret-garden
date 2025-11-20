@@ -6,6 +6,8 @@
     import {goto} from "$app/navigation";
     import { MARKET_API_BASE, MARKET_OPERATOR } from '$lib/config/market';
     import type { AggregatedCatalog, AggregatedCatalogItem } from '$lib/market/types';
+    import { extractProducts, getProduct, getFirstOffer } from '$lib/market/catalogHelpers';
+    import { shortenAddress } from '$lib/utils/shared';
     import { normalizeAddress } from '$lib/offers/adapters';
 
     // Get seller and SKU from URL parameters
@@ -23,20 +25,7 @@
     let errorMsg: string = $state('');
     let product: ProductLike | null = $state(null);
 
-    // Helper functions (typed-first with fallback for older dev servers)
-    function extractProducts(body: any): AggregatedCatalogItem[] {
-        const typed = (body as AggregatedCatalog | undefined)?.products;
-        if (Array.isArray(typed)) return typed as AggregatedCatalogItem[];
-        if (Array.isArray((body as any)?.items)) return (body as any).items as AggregatedCatalogItem[];
-        if (Array.isArray((body as any)?.results)) return (body as any).results as AggregatedCatalogItem[];
-        if ((body as any)?.catalog && Array.isArray((body as any).catalog.products)) return (body as any).catalog.products as AggregatedCatalogItem[];
-        return [] as AggregatedCatalogItem[];
-    }
-
-    function shortAddr(a?: string): string {
-        if (!a) return '';
-        return a.slice(0, 6) + '…' + a.slice(-4);
-    }
+    const shortAddr = (a?: string) => (a ? shortenAddress(a as any) : '');
 
     // Load product details
     async function loadProduct(): Promise<void> {
