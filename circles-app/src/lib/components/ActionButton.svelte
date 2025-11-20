@@ -30,12 +30,12 @@
     title = '',
     disabled = false,
     theme = {
-      ['Ready']: 'bg-primary text-white',
-      ['Working']: 'bg-gray-200 text-black',
-      ['Error']: 'bg-yellow-500 text-white',
-      ['Retry']: 'bg-yellow-500 text-white',
-      ['Done']: 'bg-green-700 text-white',
-      ['Disabled']: 'bg-gray-400 text-white',
+      ['Ready']: 'btn-primary',
+      ['Working']: 'btn-disabled',
+      ['Error']: 'btn-warning',
+      ['Retry']: 'btn-warning',
+      ['Done']: 'btn-success',
+      ['Disabled']: 'btn-disabled',
     },
   }: Props = $props();
   const doneStateDuration: number = 2000;
@@ -81,14 +81,10 @@
 <button
   onclick={executeAction}
   title={errorMessage ?? title}
-  class="text-sm p-2 px-4 rounded-lg {theme[
-    buttonState
-  ]} focus:outline-none transition"
+  class="btn btn-sm inline-flex items-center gap-1 {theme[buttonState]}"
 >
   {#if buttonState === 'Working'}
-    <div
-      class="loading-spinner inline-block border-t-2 border-b-2 border-gray-900 rounded-full w-4 h-4 animate-spin"
-    ></div>
+    <span class="loading loading-spinner loading-xs"></span>
   {/if}
   {#if buttonState === 'Retry'}
     <div class="inline-block">⟳</div>

@@ -1,30 +1,15 @@
 <script lang="ts">
     interface Props {
-        images: string[] | Array<{ url?: string }>;
+        images: string[];
     }
-    
+
     let { images }: Props = $props();
-    
+
     // State for current image index
     let currentIndex: number = $state(0);
     const originalIndex: number = 0; // Always remember the first image
     
-    // Extract image URLs from mixed format (strings or objects)
-    function getImageUrls(imgs: string[] | Array<{ url?: string }>): string[] {
-        if (!imgs || !Array.isArray(imgs) || imgs.length === 0) return [];
-        
-        const urls: string[] = [];
-        for (const img of imgs) {
-            if (typeof img === 'string') {
-                urls.push(img);
-            } else if (img && typeof img.url === 'string') {
-                urls.push(img.url);
-            }
-        }
-        return urls;
-    }
-
-    const imageUrls = $derived(getImageUrls(images));
+    const imageUrls = $derived(Array.isArray(images) ? images : []);
     
     // Handle image selection
     function selectImage(index: number): void {
@@ -54,7 +39,7 @@
         <!-- Main Image Display -->
         <div class="relative group" on:click={nextImage}>
             <img 
-                src={imageUrls[currentIndex]} 
+                src={imageUrls[currentIndex]}
                 alt={`Product image ${currentIndex + 1}`}
                 class="w-full h-64 md:h-96 object-cover rounded-lg cursor-pointer transition-opacity duration-200"
             />

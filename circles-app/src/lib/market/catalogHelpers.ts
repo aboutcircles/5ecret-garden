@@ -2,6 +2,7 @@
 // Centralised helpers for working with catalog API responses and products/offers.
 
 import type { AggregatedCatalog, AggregatedCatalogItem, SchemaOrgProductLite, SchemaOrgOfferLite } from '$lib/market/types';
+import { normalizeProductImagesFromSchema } from '$lib/market/imageHelpers';
 
 /**
  * Extracts the array of catalog items from a variety of possible API response shapes.
@@ -22,7 +23,7 @@ export function extractProducts(body: unknown): AggregatedCatalogItem[] {
  * Returns the Schema.org-like product object from an AggregatedCatalogItem.
  */
 export function getProduct(item: AggregatedCatalogItem): SchemaOrgProductLite {
-  return (item as any).product as SchemaOrgProductLite;
+  return item.product as SchemaOrgProductLite;
 }
 
 /**
@@ -41,22 +42,8 @@ export function getFirstOffer(prod: any): SchemaOrgOfferLite | null {
  * Accepts various shapes: string, array of strings/objects with url fields, or contentUrl-like nests.
  */
 export function pickProductImageUrl(prod: any): string | null {
-  if (!prod) return null;
-  const imgs = (prod as any)?.image ?? (prod as any)?.images;
-  if (typeof imgs === 'string') return imgs;
-  if (Array.isArray(imgs)) {
-    for (const it of imgs) {
-      if (!it) continue;
-      if (typeof it === 'string') return it;
-      if (typeof (it as any)?.url === 'string') return (it as any).url;
-      if (typeof (it as any)?.Url === 'string') return (it as any).Url;
-      if (typeof (it as any)?.object?.contentUrl === 'string') return (it as any).object.contentUrl;
-      if (typeof (it as any)?.Object?.ContentUrl === 'string') return (it as any).Object.ContentUrl;
-    }
-  }
-  if (typeof (prod as any)?.imageUrl === 'string') return (prod as any).imageUrl;
-  if (typeof (prod as any)?.ImageUrl === 'string') return (prod as any).ImageUrl;
-  return null;
+  const imgs = normalizeProductImagesFromSchema(prod);
+  return imgs[0] ?? null;
 }
 
 /**

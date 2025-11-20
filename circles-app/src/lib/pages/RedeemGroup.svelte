@@ -6,6 +6,8 @@
   import { type Address, uint256ToAddress } from '@circles-sdk/utils';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import { onMount } from 'svelte';
+  import { runTask } from '$lib/utils/tasks';
+  import { popupControls } from '$lib/stores/popUp';
   import { ethers, formatUnits } from 'ethers';
   import type { TokenBalanceRow, TrustRelation } from '@circles-sdk/data';
   import { contacts } from '$lib/stores/contacts';
@@ -173,18 +175,17 @@
       }
     }
 
-    console.log(`Redeeming ${redeemAmounts.length} tokens:`, redeemAmounts);
-    console.log(
-      `Redeeming ${collateralAddresses.length} addresses:`,
-      collateralAddresses
-    );
+    // Execute as a long-running task and close the popup when started
+    await runTask({
+      name: `Redeeming ${ethers.formatEther(totalToRedeem)} group tokens…`,
+      promise: avatarState.avatar.groupRedeem(
+        asset.tokenOwner,
+        collateralAddresses,
+        redeemAmounts
+      )
+    });
 
-    // Now call groupRedeem with those arrays
-    await avatarState.avatar.groupRedeem(
-      asset.tokenOwner,
-      collateralAddresses,
-      redeemAmounts
-    );
+    try { popupControls.close(); } catch {}
   }
 
   async function resetFields() {

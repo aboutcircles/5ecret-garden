@@ -22,17 +22,9 @@ function ensureProfileShape(obj: any): any {
         p['@type'] = 'Profile';
     }
 
-    const ctx = p['@context'];
-    if (typeof ctx === 'string') {
-        if (ctx !== PROFILE_CTX) {
-            p['@context'] = [PROFILE_CTX, ctx];
-        }
-    } else if (Array.isArray(ctx)) {
-        const strings = ctx.filter((x) => typeof x === 'string');
-        p['@context'] = strings.includes(PROFILE_CTX) ? ctx : [PROFILE_CTX, ...ctx];
-    } else {
-        p['@context'] = PROFILE_CTX;
-    }
+    // Hard-normalize to canonical profile context as a string to match backend expectations
+    // and avoid array contexts that would fail server-side deserialization.
+    p['@context'] = PROFILE_CTX;
 
     if (!p.namespaces || typeof p.namespaces !== 'object' || Array.isArray(p.namespaces)) {
         p.namespaces = {};
@@ -52,17 +44,8 @@ function ensureNamespaceChunkShape(obj: any): any {
         h['@type'] = 'NamespaceChunk';
     }
 
-    const ctx = h['@context'];
-    if (typeof ctx === 'string') {
-        if (ctx !== NAMESPACE_CTX) {
-            h['@context'] = [NAMESPACE_CTX, ctx];
-        }
-    } else if (Array.isArray(ctx)) {
-        const strings = ctx.filter((x: any) => typeof x === 'string');
-        h['@context'] = strings.includes(NAMESPACE_CTX) ? ctx : [NAMESPACE_CTX, ...ctx];
-    } else {
-        h['@context'] = NAMESPACE_CTX;
-    }
+    // Normalize to canonical namespace context as a string
+    h['@context'] = NAMESPACE_CTX;
 
     if (!Array.isArray(h.links)) {
         h.links = [];
@@ -82,17 +65,8 @@ function ensureNameIndexDocShape(obj: any): any {
         idx['@type'] = 'NameIndexDoc';
     }
 
-    const ctx = idx['@context'];
-    if (typeof ctx === 'string') {
-        if (ctx !== NAMESPACE_CTX) {
-            idx['@context'] = [NAMESPACE_CTX, ctx];
-        }
-    } else if (Array.isArray(ctx)) {
-        const strings = ctx.filter((x: any) => typeof x === 'string');
-        idx['@context'] = strings.includes(NAMESPACE_CTX) ? ctx : [NAMESPACE_CTX, ...ctx];
-    } else {
-        idx['@context'] = NAMESPACE_CTX;
-    }
+    // Normalize to canonical namespace context as a string
+    idx['@context'] = NAMESPACE_CTX;
 
     if (typeof idx.head !== 'string') {
         idx.head = '';

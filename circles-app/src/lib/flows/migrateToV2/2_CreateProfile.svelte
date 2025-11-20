@@ -1,6 +1,6 @@
 <script lang="ts">
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
-  import ProfileEditor from '$lib/components/ProfileEditor.svelte';
+  import ProfileHeaderEditor from '$lib/flows/offer/ProfileHeaderEditor.svelte';
   import type { MigrateToV2Context } from '$lib/flows/migrateToV2/context';
   import MigrateContacts from './3_MigrateContacts.svelte';
   import { onMount } from 'svelte';
@@ -132,7 +132,12 @@
     </div>
   {/if}
 
-  <ProfileEditor bind:profile={newProfile} />
+  <ProfileHeaderEditor
+    bind:name={newProfile.name}
+    bind:description={newProfile.description}
+    bind:previewImageUrl={newProfile.previewImageUrl}
+    bind:imageUrl={newProfile.imageUrl}
+  />
 
   <div class="flex justify-end space-x-2 mt-6">
     <button type="submit" class="btn btn-primary text-white" onclick={() => next()}>

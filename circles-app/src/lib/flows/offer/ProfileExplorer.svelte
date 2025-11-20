@@ -15,21 +15,18 @@
     import type {CirclesBindings} from '$lib/offers/namespaces';
     import {loadProfileOrInit, rebaseAndSaveProfile} from '$lib/offers/namespaces';
     import type {CidV0} from '$lib/offers/cid';
-    import { mkCirclesBindings } from '$lib/offers/mkCirclesBindings';
+    import {mkCirclesBindings} from '$lib/offers/mkCirclesBindings';
 
     import {keccak256, hexToBytes, bytesToHex} from '$lib/safeSigner';
-    import { secp256k1 } from '@noble/curves/secp256k1';
+    import {secp256k1} from '@noble/curves/secp256k1';
     import type {Address} from '@circles-sdk/utils';
 
     interface Props {
         avatar?: Address;
         pinApiBase?: string;
-        context?: any;
     }
 
     let {avatar, pinApiBase}: Props = $props();
-
-    const circlesVal = get(circles);
 
     let resolvedAvatar = $state<Address | null>(null);
     let loading = $state(true);
@@ -54,12 +51,13 @@
 
     // editability
     let readonly = $state<boolean>(true);
-    let isOwner = $derived(() => {
-        const connected = (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '').toLowerCase();
-        const ra = (resolvedAvatar ?? '').toLowerCase();
-        return !!connected && !!ra && connected === ra;
+    let connected = $derived((avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '').toLowerCase())
+    let ra = $derived((resolvedAvatar ?? '').toLowerCase());
+    let isOwner = $derived(!!connected && !!ra && connected === ra);
+
+    $effect(() => {
+        readonly = !isOwner;
     });
-    $effect(() => { readonly = !isOwner; });
 
     function getBindings(): CirclesBindings {
         const sdk = get(circles);
@@ -275,7 +273,7 @@
 
     /* ─────────── derived UI helpers (Svelte 5 runes) ─────────── */
 
-    let signingKeyEntries = $derived(() => Object.entries(signingKeys ?? {}));
+    let signingKeyEntries = $derived(Object.entries(signingKeys ?? {}));
 </script>
 
 {#if loading}
@@ -395,92 +393,92 @@
 
             <!-- Add / generate signing key -->
             {#if !readonly}
-            <div class="mt-2 border rounded-md p-3 space-y-3 bg-base-100/60 text-xs">
-                <div class="flex items-start justify-between gap-2">
-                    <div>
-                        <div class="font-semibold">Signing key tools</div>
-                        <p class="opacity-70">
-                            Generate a new secp256k1 key pair in this browser or paste an existing public key.
-                            Only the public key is stored in your profile.
-                        </p>
-                    </div>
-                    <button
-                            type="button"
-                            class="btn btn-xs btn-outline"
-                            on:click={generateSigningKey}
-                    >
-                        Generate key
-                    </button>
-                </div>
-
-                {#if generatedPrivateKey}
-                    <div class="border rounded-md p-2 bg-base-200/60 space-y-1">
-                        <div class="flex items-center justify-between">
-                            <span class="text-[11px] font-semibold">New key generated</span>
-                            <span class="text-[11px] text-error font-semibold">
-                                Store this private key safely.
-                            </span>
+                <div class="mt-2 border rounded-md p-3 space-y-3 bg-base-100/60 text-xs">
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <div class="font-semibold">Signing key tools</div>
+                            <p class="opacity-70">
+                                Generate a new secp256k1 key pair in this browser or paste an existing public key.
+                                Only the public key is stored in your profile.
+                            </p>
                         </div>
-
-                        <div class="mt-1 text-[11px] opacity-70">
-                            Private key (keep secret):
-                        </div>
-                        <div class="mt-1 flex items-start gap-2">
-                            <code class="break-all text-[11px] flex-1">
-                                {generatedPrivateKey}
-                            </code>
-                            <button
-                                    type="button"
-                                    class="btn btn-ghost btn-xs"
-                                    on:click={copyGeneratedPrivateKey}
-                            >
-                                {copyPrivateKeyState === 'copied' ? 'Copied' : 'Copy'}
-                            </button>
-                        </div>
-
-                        {#if generatedPublicKey}
-                            <div class="mt-1 text-[11px] opacity-70">
-                                Public key (stored in profile):
-                            </div>
-                            <div class="mt-1">
-                                <code class="break-all text-[11px]">
-                                    {generatedPublicKey}
-                                </code>
-                            </div>
-                        {/if}
-
-                        {#if generatedFingerprint}
-                            <div class="mt-1 text-[11px] opacity-70">
-                                Fingerprint:&nbsp;<code>{generatedFingerprint}</code>
-                            </div>
-                        {/if}
-                    </div>
-                {/if}
-
-                <div class="border-t border-base-200 pt-2 mt-2 space-y-2">
-                    <p class="opacity-70">
-                        Or paste an uncompressed secp256k1 public key (<code>0x04…</code>). The fingerprint is
-                        computed as keccak256(XY).
-                    </p>
-                    <label class="form-control mt-1">
-                        <span class="label-text text-xs">Public key</span>
-                        <input
-                                class="input input-sm input-bordered font-mono"
-                                bind:value={newSigningPublicKey}
-                                placeholder="0x04…"
-                        />
-                    </label>
-                    <div class="flex justify-end">
                         <button
                                 type="button"
-                                class="btn btn-xs btn-primary"
-                                on:click={addSigningKey}
+                                class="btn btn-xs btn-outline"
+                                on:click={generateSigningKey}
                         >
-                            Add key
+                            Generate key
                         </button>
                     </div>
+
+                    {#if generatedPrivateKey}
+                        <div class="border rounded-md p-2 bg-base-200/60 space-y-1">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[11px] font-semibold">New key generated</span>
+                                <span class="text-[11px] text-error font-semibold">
+                                Store this private key safely.
+                            </span>
+                            </div>
+
+                            <div class="mt-1 text-[11px] opacity-70">
+                                Private key (keep secret):
+                            </div>
+                            <div class="mt-1 flex items-start gap-2">
+                                <code class="break-all text-[11px] flex-1">
+                                    {generatedPrivateKey}
+                                </code>
+                                <button
+                                        type="button"
+                                        class="btn btn-ghost btn-xs"
+                                        on:click={copyGeneratedPrivateKey}
+                                >
+                                    {copyPrivateKeyState === 'copied' ? 'Copied' : 'Copy'}
+                                </button>
+                            </div>
+
+                            {#if generatedPublicKey}
+                                <div class="mt-1 text-[11px] opacity-70">
+                                    Public key (stored in profile):
+                                </div>
+                                <div class="mt-1">
+                                    <code class="break-all text-[11px]">
+                                        {generatedPublicKey}
+                                    </code>
+                                </div>
+                            {/if}
+
+                            {#if generatedFingerprint}
+                                <div class="mt-1 text-[11px] opacity-70">
+                                    Fingerprint:&nbsp;<code>{generatedFingerprint}</code>
+                                </div>
+                            {/if}
+                        </div>
+                    {/if}
+
+                    <div class="border-t border-base-200 pt-2 mt-2 space-y-2">
+                        <p class="opacity-70">
+                            Or paste an uncompressed secp256k1 public key (<code>0x04…</code>). The fingerprint is
+                            computed as keccak256(XY).
+                        </p>
+                        <label class="form-control mt-1">
+                            <span class="label-text text-xs">Public key</span>
+                            <input
+                                    class="input input-sm input-bordered font-mono"
+                                    bind:value={newSigningPublicKey}
+                                    placeholder="0x04…"
+                            />
+                        </label>
+                        <div class="flex justify-end">
+                            <button
+                                    type="button"
+                                    class="btn btn-xs btn-primary"
+                                    on:click={addSigningKey}
+                            >
+                                Add key
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            </div>
             {/if}
         </section>
 

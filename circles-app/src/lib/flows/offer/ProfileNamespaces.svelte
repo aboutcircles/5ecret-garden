@@ -26,7 +26,6 @@
 
     const dispatch = createEventDispatcher<{ namespacesChanged: Record<string, string> }>();
 
-    const circlesVal = $state(get(circles));
 
     type NamespaceState = {
         loading: boolean;

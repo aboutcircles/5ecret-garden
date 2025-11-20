@@ -1,5 +1,6 @@
 <script lang="ts">
     import {onMount} from 'svelte';
+    import { page } from '$app/stores';
     import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
     import {popupControls} from '$lib/stores/popUp';
     import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
@@ -14,8 +15,8 @@
     // Defaults (as requested)
     const OPERATOR: `0x${string}` = MARKET_OPERATOR;
     
-    // Get seller address from URL parameters
-    const { params } = $props<{ params: { seller: string } }>();
+    // Derive seller address from SvelteKit's $page store
+    const params = $derived($page.params as { seller: string });
     
     // Static API base
     const API_BASE = MARKET_API_BASE;
@@ -179,7 +180,11 @@
             {:else}
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {#each products as p (p.productCid ?? p.id ?? p.sku ?? JSON.stringify(p))}
-                        <ProductCard product={p} showSellerInfo={false} />
+                        <ProductCard 
+                          product={p} 
+                          showSellerInfo={false}
+                          ondeleted={() => loadSellerCatalog()}
+                        />
                     {/each}
                 </div>
             {/if}
