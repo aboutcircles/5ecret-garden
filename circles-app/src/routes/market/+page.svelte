@@ -7,6 +7,7 @@
     import ProfileExplorer from "$lib/flows/offer/ProfileExplorer.svelte";
     import { MARKET_API_BASE, MARKET_OPERATOR } from '$lib/config/market';
     import { cartItemCount } from '$lib/cart/store';
+    import CartPanel from '$lib/cart/CartPanel.svelte';
     import type { AggregatedCatalog, AggregatedCatalogItem } from '$lib/market/types';
 
     // Defaults (as requested)
@@ -66,6 +67,16 @@
 
     onMount(loadCatalog);
 
+    function openBasket(): void {
+        popupControls.open({
+            title: 'Basket',
+            component: CartPanel,
+            props: {
+                catalog: products,
+            },
+        });
+    }
+
 </script>
 
 <PageScaffold
@@ -89,7 +100,7 @@
     <svelte:fragment slot="actions">
         <button
                 class="btn btn-sm btn-secondary"
-                on:click={() =>
+                onclick={() =>
       popupControls.open({
         title: 'Profile',
         component: ProfileExplorer,
@@ -109,7 +120,7 @@
         </button>
         <button
                 class="btn btn-sm btn-secondary"
-                on:click={() =>
+                onclick={() =>
       popupControls.open({
         title: 'Create Offer',
         component: OfferStep1,
@@ -126,10 +137,14 @@
             Create offer
         </button>
 
-        <!-- new tiny badge / text-only for now -->
-        <span class="ml-2 text-xs text-base-content/70">
-            Basket: {$cartItemCount} item{$cartItemCount === 1 ? '' : 's'}
-        </span>
+        <button
+                type="button"
+                class="btn btn-sm btn-ghost ml-2"
+                onclick={openBasket}
+                disabled={$cartItemCount === 0}
+        >
+            Basket ({$cartItemCount})
+        </button>
     </svelte:fragment>
 
     <!-- Collapsed summary -->
@@ -143,7 +158,7 @@
         <button
                 type="button"
                 class="btn btn-secondary min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3"
-                on:click={() =>
+                onclick={() =>
       popupControls.open({
         title: 'Create Offer',
         component: OfferStep1,
@@ -153,6 +168,15 @@
     }
         >
             Offer
+        </button>
+
+        <button
+                type="button"
+                class="btn btn-ghost min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3"
+                onclick={openBasket}
+                disabled={$cartItemCount === 0}
+        >
+            Basket ({$cartItemCount})
         </button>
     </svelte:fragment>
 
@@ -183,7 +207,7 @@
                         <ProductCard
                             product={p}
                             showSellerInfo={true}
-                            on:deleted={() => loadCatalog()}
+                            ondeleted={() => loadCatalog()}
                         />
                     {/each}
                 </div>

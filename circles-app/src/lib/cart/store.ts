@@ -3,12 +3,16 @@ import { writable, derived, type Writable } from 'svelte/store';
 import type { Address } from '@circles-sdk/utils';
 import { MARKET_OPERATOR } from '$lib/config/market';
 import { normalizeAddress } from '$lib/offers/adapters';
-import type { Basket, ValidationResult } from './types';
+import type { Basket, ValidationResult, OrderSnapshot } from './types';
 import {
   createBasket,
   getBasket,
   patchBasket,
+  validateBasket,
+  previewOrder,
+  checkoutBasket,
   type CartClientConfig,
+  type CheckoutResponse,
 } from './client';
 import { catalogItemToOrderItem } from './mapping';
 import type { AggregatedCatalogItem } from '$lib/market/types';
@@ -21,6 +25,8 @@ export type CartState = {
   lastError?: string;
   operator?: Address;
   buyer?: Address;
+  orderPreview?: OrderSnapshot | null;
+  lastOrderId?: string | null;
 };
 
 const initialState: CartState = {
@@ -31,6 +37,8 @@ const initialState: CartState = {
   lastError: undefined,
   operator: undefined,
   buyer: undefined,
+  orderPreview: null,
+  lastOrderId: null,
 };
 
 export const cartState: Writable<CartState> = writable(initialState);
@@ -82,6 +90,8 @@ export async function initCart(
       lastError: undefined,
       operator,
       buyer,
+      orderPreview: null,
+      lastOrderId: null,
     });
   } catch (e: unknown) {
     const msg =
@@ -141,6 +151,8 @@ export async function upsertLineItem(
       loading: false,
       lastError: undefined,
       validation: null,
+      orderPreview: null,
+      lastOrderId: null,
     }));
   } catch (e: unknown) {
     const msg =
@@ -150,6 +162,219 @@ export async function upsertLineItem(
       loading: false,
       lastError: String(msg),
     }));
+  }
+}
+
+/**
+ * Remove a line item from the basket by sku + seller derived from the catalog item.
+ */
+export async function removeLineItem(
+  item: AggregatedCatalogItem,
+  cfg?: CartClientConfig,
+): Promise<void> {
+  let snapshot: CartState = initialState;
+  cartState.update((s) => {
+    snapshot = s;
+    return { ...s, loading: true, lastError: undefined };
+  });
+
+  if (!snapshot.basketId || !snapshot.basket) {
+    throw new Error(
+      'Cart not initialized – call initCart(operator, buyer, cfg) before removing items.',
+    );
+  }
+
+  try {
+    const sku = item.product.sku.toLowerCase();
+    const seller = item.seller.toLowerCase();
+
+    const existing = snapshot.basket.items ?? [];
+    const nextItems = existing.filter(
+      (it) =>
+        it.orderedItem.sku.toLowerCase() !== sku ||
+        (it.seller ?? '').toLowerCase() !== seller,
+    );
+
+    const patched = await patchBasket(snapshot.basketId, { items: nextItems }, cfg);
+
+    cartState.update((s) => ({
+      ...s,
+      basket: patched,
+      loading: false,
+      lastError: undefined,
+      validation: null,
+      orderPreview: null,
+      lastOrderId: null,
+    }));
+  } catch (e: unknown) {
+    const msg =
+      e instanceof Error ? e.message : typeof e === 'string' ? e : 'Unknown error';
+    cartState.update((s) => ({
+      ...s,
+      loading: false,
+      lastError: String(msg),
+    }));
+  }
+}
+
+/**
+ * Set quantity of a line item; quantity <= 0 means remove.
+ */
+export async function setLineQuantity(
+  item: AggregatedCatalogItem,
+  quantity: number,
+  cfg?: CartClientConfig,
+): Promise<void> {
+  if (!(quantity > 0)) {
+    // quantity <= 0 → treat as removal
+    await removeLineItem(item, cfg);
+    return;
+  }
+
+  await upsertLineItem(item, quantity, cfg);
+}
+
+/**
+ * Validate the current basket via POST /baskets/{id}/validate.
+ * Stores the ValidationResult in cartState.validation.
+ */
+export async function validateCart(cfg?: CartClientConfig): Promise<ValidationResult> {
+  let snapshot: CartState = initialState;
+  cartState.update((s) => {
+    snapshot = s;
+    return { ...s, loading: true, lastError: undefined };
+  });
+
+  const hasBasketId = typeof snapshot.basketId === 'string' && snapshot.basketId.length > 0;
+  if (!hasBasketId) {
+    const err = new Error('Cart not initialized – cannot validate basket.');
+    cartState.update((s) => ({
+      ...initialState,
+      lastError: err.message,
+      loading: false,
+    }));
+    throw err;
+  }
+
+  try {
+    const result = await validateBasket(snapshot.basketId!, cfg);
+    cartState.update((s) => ({
+      ...s,
+      loading: false,
+      lastError: undefined,
+      validation: result,
+    }));
+    return result;
+  } catch (e: unknown) {
+    const msg =
+      e instanceof Error ? e.message : typeof e === 'string' ? e : 'Unknown error';
+    cartState.update((s) => ({
+      ...s,
+      loading: false,
+      lastError: String(msg),
+    }));
+    throw e;
+  }
+}
+
+/**
+ * Preview the current basket as an OrderSnapshot via POST /baskets/{id}/preview.
+ * Stores the snapshot in cartState.orderPreview.
+ */
+export async function previewCartOrder(
+  cfg?: CartClientConfig,
+): Promise<OrderSnapshot> {
+  let snapshot: CartState = initialState;
+  cartState.update((s) => {
+    snapshot = s;
+    return { ...s, loading: true, lastError: undefined };
+  });
+
+  const hasBasketId = typeof snapshot.basketId === 'string' && snapshot.basketId.length > 0;
+  if (!hasBasketId) {
+    const err = new Error('Cart not initialized – cannot preview order.');
+    cartState.update((s) => ({
+      ...initialState,
+      lastError: err.message,
+      loading: false,
+    }));
+    throw err;
+  }
+
+  try {
+    const snapshotOrder = await previewOrder(snapshot.basketId!, cfg);
+    cartState.update((s) => ({
+      ...s,
+      loading: false,
+      lastError: undefined,
+      orderPreview: snapshotOrder,
+    }));
+    return snapshotOrder;
+  } catch (e: unknown) {
+    const msg =
+      e instanceof Error ? e.message : typeof e === 'string' ? e : 'Unknown error';
+    cartState.update((s) => ({
+      ...s,
+      loading: false,
+      lastError: String(msg),
+    }));
+    throw e;
+  }
+}
+
+/**
+ * Checkout the current basket via POST /baskets/{id}/checkout.
+ * Stores the last orderId in cartState.lastOrderId and marks the basket as CheckedOut.
+ */
+export async function checkoutCart(
+  cfg?: CartClientConfig,
+): Promise<CheckoutResponse> {
+  let snapshot: CartState = initialState;
+  cartState.update((s) => {
+    snapshot = s;
+    return { ...s, loading: true, lastError: undefined };
+  });
+
+  const hasBasketId =
+    typeof snapshot.basketId === 'string' && snapshot.basketId.length > 0;
+  if (!hasBasketId) {
+    const err = new Error('Cart not initialized – cannot checkout basket.');
+    cartState.update((s) => ({
+      ...initialState,
+      lastError: err.message,
+      loading: false,
+    }));
+    throw err;
+  }
+
+  try {
+    const resp = await checkoutBasket(snapshot.basketId!, cfg);
+
+    cartState.update((s) => ({
+      ...s,
+      loading: false,
+      lastError: undefined,
+      validation: null,
+      orderPreview: null,
+      lastOrderId: (resp as any)?.orderId ?? (resp as any)?.basketId ?? null,
+      basket: s.basket
+        ? {
+            ...s.basket,
+            status: 'CheckedOut',
+          }
+        : s.basket,
+    }));
+
+    return resp;
+  } catch (e: unknown) {
+    const msg =
+      e instanceof Error ? e.message : typeof e === 'string' ? e : 'Unknown error';
+    cartState.update((s) => ({
+      ...s,
+      loading: false,
+      lastError: String(msg),
+    }));
+    throw e;
   }
 }
 

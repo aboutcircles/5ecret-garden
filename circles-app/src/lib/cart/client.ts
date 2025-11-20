@@ -55,15 +55,14 @@ export async function createBasket(
     body: JSON.stringify(req),
   });
 
+  const raw = await parseJson<any>(res).catch(() => ({} as any));
+
   if (!res.ok) {
-    const body = await parseJson<unknown>(res).catch(() => ({}));
-    throw new CartHttpError(res.status, body);
+    throw new CartHttpError(res.status, raw);
   }
 
   // Normalize backend variations: it may return `BasketId` (PascalCase)
   // while the client expects `basketId` (camelCase).
-  const raw = await parseJson<any>(res).catch(() => ({} as any));
-
   const rawBasketId =
     typeof raw?.basketId === 'string' && raw.basketId.trim().length > 0
       ? raw.basketId
