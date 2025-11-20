@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { cartState, setLineQuantity, removeLineItem, validateCart, previewCartOrder, checkoutCart } from '$lib/cart/store';
+  import { cartState, setLineQuantity, removeLineItem, validateCart, previewCartOrder, checkoutCart, updateBasketDetails } from '$lib/cart/store';
   import type { AggregatedCatalogItem } from '$lib/market/types';
   import { popupControls } from '$lib/stores/popUp';
 
@@ -16,6 +16,15 @@
   let validating = $state(false);
   let previewing = $state(false);
   let checkingOut = $state(false);
+
+  // Shipping/contact/age form state
+  let shippingStreet = $state('');
+  let shippingLocality = $state('');
+  let shippingPostal = $state('');
+  let shippingCountry = $state('');
+  let contactEmail = $state('');
+  let contactPhone = $state('');
+  let birthDate = $state('');
 
   function findCatalogItem(seller: string | undefined, sku: string | undefined): AggregatedCatalogItem | undefined {
     if (!seller || !sku) return undefined;
@@ -70,10 +79,79 @@
     popupControls.close();
   }
 
+  // Keep local form in sync with basket details
+  $effect(() => {
+    const b = $cartState.basket;
+
+    const addr = b?.shippingAddress;
+    shippingStreet = (addr?.streetAddress as string) ?? '';
+    shippingLocality = (addr?.addressLocality as string) ?? '';
+    shippingPostal = (addr?.postalCode as string) ?? '';
+    shippingCountry = (addr?.addressCountry as string) ?? '';
+
+    const contact = b?.contactPoint;
+    contactEmail = (contact?.email as string) ?? '';
+    contactPhone = (contact?.telephone as string) ?? '';
+
+    const age = b?.ageProof;
+    birthDate = (age?.birthDate as string) ?? '';
+  });
+
+  async function saveDetails(): Promise<void> {
+    localError = null;
+
+    const hasAnyField =
+      shippingStreet ||
+      shippingLocality ||
+      shippingPostal ||
+      shippingCountry ||
+      contactEmail ||
+      contactPhone ||
+      birthDate;
+
+    if (!hasAnyField) {
+      // nothing to save
+      return;
+    }
+
+    const patch: any = {};
+
+    patch.shippingAddress = {
+      '@type': 'PostalAddress',
+      streetAddress: shippingStreet || null,
+      addressLocality: shippingLocality || null,
+      postalCode: shippingPostal || null,
+      addressCountry: shippingCountry || null,
+    };
+
+    if (contactEmail || contactPhone) {
+      patch.contactPoint = {
+        '@type': 'ContactPoint',
+        email: contactEmail || null,
+        telephone: contactPhone || null,
+      };
+    }
+
+    if (birthDate) {
+      patch.ageProof = {
+        '@type': 'Person',
+        birthDate,
+      };
+    }
+
+    try {
+      await updateBasketDetails(patch);
+    } catch (e: unknown) {
+      localError =
+        e instanceof Error ? e.message : typeof e === 'string' ? e : 'Unknown error';
+    }
+  }
+
   async function runValidate(): Promise<void> {
     localError = null;
     validating = true;
     try {
+      await saveDetails();
       await validateCart();
     } catch (e: unknown) {
       localError =
@@ -87,6 +165,7 @@
     localError = null;
     previewing = true;
     try {
+      await saveDetails();
       await previewCartOrder();
     } catch (e: unknown) {
       localError =
@@ -100,6 +179,7 @@
     localError = null;
     checkingOut = true;
     try {
+      await saveDetails();
       await checkoutCart();
     } catch (e: unknown) {
       localError =
@@ -194,6 +274,88 @@
           </div>
         </div>
       {/each}
+    </div>
+
+    <!-- Checkout details (shipping & contact) -->
+    <div class="mt-3 border-t border-base-300 pt-3 space-y-2 text-xs">
+      <div class="font-semibold text-sm">Shipping &amp; contact</div>
+
+      <div class="grid grid-cols-1 gap-2">
+        <label class="form-control">
+          <span class="label-text text-xs">Street address</span>
+          <input
+            class="input input-xs input-bordered"
+            bind:value={shippingStreet}
+            placeholder="Street and house number"
+          />
+        </label>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <label class="form-control">
+            <span class="label-text text-xs">City / locality</span>
+            <input
+              class="input input-xs input-bordered"
+              bind:value={shippingLocality}
+            />
+          </label>
+          <label class="form-control">
+            <span class="label-text text-xs">Postal code</span>
+            <input
+              class="input input-xs input-bordered"
+              bind:value={shippingPostal}
+            />
+          </label>
+          <label class="form-control">
+            <span class="label-text text-xs">Country</span>
+            <input
+              class="input input-xs input-bordered"
+              bind:value={shippingCountry}
+              placeholder="DE, FR, …"
+            />
+          </label>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+        <label class="form-control">
+          <span class="label-text text-xs">Email (optional)</span>
+          <input
+            class="input input-xs input-bordered"
+            type="email"
+            bind:value={contactEmail}
+          />
+        </label>
+        <label class="form-control">
+          <span class="label-text text-xs">Phone (optional)</span>
+          <input
+            class="input input-xs input-bordered"
+            type="tel"
+            bind:value={contactPhone}
+          />
+        </label>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+        <label class="form-control">
+          <span class="label-text text-xs">Birth date (optional)</span>
+          <input
+            class="input input-xs input-bordered"
+            type="date"
+            bind:value={birthDate}
+          />
+        </label>
+      </div>
+
+      <div class="mt-2 flex justify-end">
+        <button
+          type="button"
+          class="btn btn-xs btn-outline"
+          onclick={() => saveDetails()}
+          disabled={$cartState.loading}
+        >
+          Save details
+        </button>
+      </div>
     </div>
 
     <!-- totals -->

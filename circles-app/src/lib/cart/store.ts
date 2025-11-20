@@ -11,6 +11,7 @@ import {
   validateBasket,
   previewOrder,
   checkoutBasket,
+  CartHttpError,
   type CartClientConfig,
   type CheckoutResponse,
 } from './client';
@@ -366,6 +367,72 @@ export async function checkoutCart(
     }));
 
     return resp;
+  } catch (e: unknown) {
+    let msg: string;
+    let validation: ValidationResult | null = null;
+
+    if (e instanceof CartHttpError) {
+      const body = e.body as any;
+      msg = typeof body?.error === 'string' ? body.error : e.message;
+      if (body && typeof body === 'object' && body.validation) {
+        validation = body.validation as ValidationResult;
+      }
+    } else {
+      msg =
+        e instanceof Error ? e.message : typeof e === 'string' ? e : 'Unknown error';
+    }
+
+    cartState.update((s) => ({
+      ...s,
+      loading: false,
+      lastError: String(msg),
+      validation: validation ?? s.validation,
+    }));
+    throw e;
+  }
+}
+
+/**
+ * Update basket-level details such as shipping/billing address, ageProof, contactPoint, ttlSeconds.
+ * Does a PATCH /baskets/{id} and updates cartState.basket.
+ */
+export async function updateBasketDetails(
+  patch: {
+    shippingAddress?: Basket['shippingAddress'];
+    billingAddress?: Basket['billingAddress'];
+    ageProof?: Basket['ageProof'];
+    contactPoint?: Basket['contactPoint'];
+    ttlSeconds?: number;
+  },
+  cfg?: CartClientConfig,
+): Promise<void> {
+  let snapshot: CartState = initialState;
+  cartState.update((s) => {
+    snapshot = s;
+    return { ...s, loading: true, lastError: undefined };
+  });
+
+  if (!snapshot.basketId || !snapshot.basket) {
+    const err = new Error('Cart not initialized – cannot update basket details.');
+    cartState.update((s) => ({
+      ...initialState,
+      lastError: err.message,
+      loading: false,
+    }));
+    throw err;
+  }
+
+  try {
+    const patched = await patchBasket(snapshot.basketId, patch, cfg);
+
+    cartState.update((s) => ({
+      ...s,
+      basket: patched,
+      loading: false,
+      lastError: undefined,
+      validation: null,
+      orderPreview: null,
+    }));
   } catch (e: unknown) {
     const msg =
       e instanceof Error ? e.message : typeof e === 'string' ? e : 'Unknown error';
