@@ -4,6 +4,7 @@
     import {popupControls} from '$lib/stores/popUp';
     import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
     import ProductCard from '$lib/components/ProductCard.svelte';
+    import ProfileExplorer from "$lib/flows/offer/ProfileExplorer.svelte";
 
     // Defaults (as requested)
     const OPERATOR: `0x${string}` = '0x31d5d15c558fbfbbbe604c9c11eb42c9afbf5140';
@@ -91,9 +92,34 @@
                 class="btn btn-sm btn-secondary"
                 on:click={() =>
       popupControls.open({
+        title: 'Profile',
+        component: ProfileExplorer,
+        props: {
+            // No explicit avatar: default to currently connected avatar inside ProfileExplorer
+            pinApiBase: API_BASE,
+            context: {
+                operator: OPERATOR,
+                pinApiBase: API_BASE
+            }
+        },   // ← pass operator and pinApiBase
+        onClose: () => { void loadCatalog(); }        // ← refresh after closing
+      })
+    }
+        >
+            Open profile
+        </button>
+        <button
+                class="btn btn-sm btn-secondary"
+                on:click={() =>
+      popupControls.open({
         title: 'Create Offer',
         component: OfferStep1,
-        props: { context: { operator: OPERATOR, pinApiBase: API_BASE } },   // ← pass operator and pinApiBase
+        props: {
+            context: {
+                operator: OPERATOR,
+                pinApiBase: API_BASE
+            }
+        },   // ← pass operator and pinApiBase
         onClose: () => { void loadCatalog(); }        // ← refresh after closing
       })
     }
@@ -150,7 +176,11 @@
             {:else}
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {#each products as p (p.productCid ?? p.id ?? p.sku ?? JSON.stringify(p))}
-                        <ProductCard product={p} showSellerInfo={true} />
+                        <ProductCard
+                            product={p}
+                            showSellerInfo={true}
+                            on:deleted={() => loadCatalog()}
+                        />
                     {/each}
                 </div>
             {/if}

@@ -1,5 +1,6 @@
 <script lang="ts">
     import Avatar from './avatar/Avatar.svelte';
+    import { circles } from '$lib/stores/circles';
     import { goto } from '$app/navigation';
     
     interface Props {
@@ -9,10 +10,54 @@
     
     let { product, showSellerInfo }: Props = $props();
     
-    // State for derived values
+    // State for derived values and ownership handling
+    import { avatarState } from '$lib/stores/avatar.svelte';
+    import { createProfilesOffersClient } from '$lib/offers/client';
+    import { createMetaMaskSafeSigner } from '$lib/safeSigner/signers/metamask';
+
+    // Marketplace operator (same as used elsewhere)
+    const OPERATOR = '0x31d5d15c558fbfbbbe604c9c11eb42c9afbf5140';
+
     let prod = $state<any>(null);
     let offer = $state<any>(null);
     let imageUrl = $state<string | null>(null);
+
+    // Determine if the current user owns this product
+    const myAvatar = $state(avatarState.avatar?.avatarInfo?.avatar ?? '');
+    const isOwner = $derived(() => {
+        const avatar = myAvatar;
+        const seller = (product.seller ?? prod?.seller ?? '').toLowerCase();
+        return !!avatar && avatar.toLowerCase() === seller;
+    });
+
+    // Delete / tombstone handling for owners
+    async function handleTombstone(): Promise<void> {
+        // Prevent navigation when clicking delete
+        try {
+            const eth: any = (window as any).ethereum;
+            if (!eth) throw new Error('MetaMask not available');
+            const accounts: string[] = await eth.request({ method: 'eth_requestAccounts' });
+            const eoa = accounts[0]?.toLowerCase() ?? '';
+            if (!eoa) throw new Error('No account selected');
+
+            const client = createProfilesOffersClient(circles as any, createMetaMaskSafeSigner({
+                ethereum: eth,
+                account: eoa,
+                chainId: BigInt(100),
+                safeAddress: myAvatar,
+                enforceChainId: true
+            }));
+            await client.tombstone({
+                avatar: myAvatar,
+                operator: OPERATOR,
+                sku: prod?.sku ?? product.sku
+            });
+            alert('Product removed (tombstoned).');
+        } catch (e) {
+            console.error('Tombstone failed', e);
+            alert('Failed to remove product.');
+        }
+    }
 
     // Helper functions (extracted from both pages)
     function pickImageUrl(product: any): string | null {
@@ -127,15 +172,21 @@
 
             <div class="flex items-center justify-between mt-2">
                 <div class="inline-flex gap-2">
-                    {#if offer && typeof (offer.checkout || offer.Checkout) === 'string' && (offer.checkout || offer.Checkout).trim() !== ''}
-                        <a
-                                class="btn btn-sm btn-primary"
-                                title="Open checkout"
-                                target="_blank"
-                                rel="noopener"
-                                href={(offer.checkout || offer.Checkout) || ''}
-                        >Buy</a>
-                    {/if}
+                {#if isOwner}
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-error"
+                        on:click|stopPropagation={handleTombstone}
+                    >Remove</button>
+                {:else if offer && typeof (offer.checkout || offer.Checkout) === 'string' && (offer.checkout || offer.Checkout).trim() !== ''}
+                    <a
+                        class="btn btn-sm btn-primary"
+                        title="Open checkout"
+                        target="_blank"
+                        rel="noopener"
+                        href={(offer.checkout || offer.Checkout) || ''}
+                    >Buy</a>
+                {/if}
                 </div>
                 <div class="inline-flex items-center gap-2">
                     {#if prod?.url || prod?.Url}

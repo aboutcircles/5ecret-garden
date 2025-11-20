@@ -6,19 +6,19 @@
   import { wallet } from '$lib/stores/wallet.svelte';
 
   import { createProfilesOffersClient } from '$lib/offers/client';
-  import type { OfferFlowContext, Address } from './types';
+  import ProductGallery from '$lib/components/ProductGallery.svelte';
+
 
   // read-only Safe calls (owners / threshold only)
   import { Contract, JsonRpcProvider } from 'ethers';
 
   // EIP-712 SafeMessage signer via MetaMask
   import { createMetaMaskSafeSigner } from '$lib/safeSigner/signers/metamask';
+  import type {Address} from "@circles-sdk/utils";
+  import type {OfferFlowContext} from "$lib/flows/offer/types";
 
   interface Props { context: OfferFlowContext; }
   let { context }: Props = $props();
-
-  const circlesVal = get(circles);
-  const walletVal = get(wallet);
 
   const CHAIN_ID_NUM = 100;   // Gnosis
   const CHAIN_ID_HEX = '0x64';
@@ -39,8 +39,52 @@
   }
 
   function isAbsUrl(s?: string): boolean {
+    // Only treat http(s) as acceptable absolute URLs for product.image
+    // (data:, ipfs:, etc. should be handled explicitly elsewhere)
     if (!s) return false;
-    try { new URL(s); return true; } catch { return false; }
+    try {
+      const u = new URL(s);
+      return u.protocol === 'http:' || u.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  }
+
+  function isDataUrl(s?: string): boolean {
+    if (!s) return false;
+    return /^data:([a-zA-Z0-9.+-]+\/[a-zA-Z0-9.+-]+)?(;charset=[^;]+)?;base64,/.test(s);
+  }
+
+  function parseDataUrl(dataUrl: string): { mime: string | null; bytes: Uint8Array } {
+    // Expected: data:[<mediatype>][;charset=<charset>][;base64],<data>
+    const match = dataUrl.match(/^data:([^;,]+)?(?:;charset=[^;]+)?;base64,(.*)$/);
+    if (!match) throw new Error('Unsupported data URL format');
+    const mime = match[1] || null;
+    const b64 = match[2];
+    // atob polyfill safe way
+    const binary = typeof atob === 'function' ? atob(b64) : Buffer.from(b64, 'base64').toString('binary');
+    const len = binary.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
+    return { mime, bytes };
+  }
+
+  // Get all images (prioritizing multiple images, falling back to single image)
+  function getAllImages(): Array<string | { url: string }> {
+    const draft = context.draft;
+    
+    // If we have multiple images, return them in the expected format
+    if (draft?.images && Array.isArray(draft.images) && draft.images.length > 0) {
+      return draft.images.map(url => ({ url }));
+    }
+    
+    // Fall back to single image
+    if (draft?.image) {
+      return [{ url: draft.image }];
+    }
+    
+    // No images available
+    return [];
   }
 
   // ──────────────────────────────────────────────────────────────────────────────
@@ -126,11 +170,14 @@
   // Circles bindings
   // ──────────────────────────────────────────────────────────────────────────────
   function mkCirclesBindings() {
-    if (!circlesVal) throw new Error('Circles SDK not initialized');
+    const circlesVal = get(circles);
+    const hasCircles = !!circlesVal;
+    if (!hasCircles) throw new Error('Circles SDK not initialized');
     if (!circlesVal.profiles) throw new Error('Profiles service not configured');
 
     const pinBase = (context.pinApiBase ?? '').replace(/\/$/, '');
     const pinUrl = pinBase ? `${pinBase}/api/pin` : '';
+    const pinMediaUrl = pinBase ? `${pinBase}/api/pin-media` : '';
     const canonicalizeUrl = pinBase ? `${pinBase}/api/canonicalize` : '';
 
     async function pinViaMarketApi(obj: any): Promise<string> {
@@ -155,6 +202,35 @@
       return cid;
     }
 
+    async function pinMediaBytes(bytes: Uint8Array, mime?: string | null): Promise<string> {
+      if (!pinMediaUrl) throw new Error('pinApiBase not provided; cannot call /api/pin-media');
+      // 8 MiB cap mirrored on client to avoid 413
+      const MAX = 8 * 1024 * 1024;
+      if (bytes.length > MAX) {
+        throw new Error('Image too large: exceeds 8 MiB upload limit. Please upload a smaller image.');
+      }
+      const res = await fetch(pinMediaUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': (mime || 'application/octet-stream'), 'Accept': 'application/json' },
+        body: bytes
+      });
+      if (!res.ok) {
+        let detail = '';
+        try { detail = await res.text(); } catch { /* ignore */ }
+        throw new Error(`Pin API error ${res.status}: ${detail || res.statusText}`);
+      }
+      const body = await res.json().catch(() => ({} as any));
+      const cid = body?.cid;
+      const looksCidV0 = typeof cid === 'string' && /^Qm[1-9A-HJ-NP-Za-km-z]{44}$/.test(cid);
+      if (!looksCidV0) throw new Error(`Pin API returned invalid cid: ${String(cid)}`);
+      return cid;
+    }
+
+    function gatewayUrlForCid(cid: string): string {
+      // Use public IPFS gateway per requirement
+      return `https://ipfs.io/ipfs/${cid}`;
+    }
+
     return {
       getLatestProfileCid: async (avatar: Address) =>
         (await circlesVal.data.getMetadataCidForAddress(avatar)) ?? null,
@@ -162,6 +238,8 @@
         try { return await circlesVal.profiles!.get(cid); } catch { return undefined; }
       },
       putJsonLd: async (obj: any) => pinViaMarketApi(obj),
+      pinMediaBytes,
+      gatewayUrlForCid,
       updateAvatarProfileDigest: async (avatar: Address, cid: string) => {
         const av = await circlesVal.getAvatar(avatar);
         const tx = await av.updateMetadata(cid);
@@ -190,8 +268,16 @@
   async function publish(): Promise<void> {
     if (!requiredOk()) throw new Error('Draft has missing or invalid fields.');
 
-    const d = context.draft!;
-    const seller = (walletVal!.address as Address); // Safe (avatar) address
+    const draft = context.draft!;
+
+    const walletVal = get(wallet);
+    const sellerAddress = walletVal?.address as Address | undefined;
+    const hasSellerAddress = typeof sellerAddress === 'string' && sellerAddress.length === 42;
+    if (!hasSellerAddress) {
+      throw new Error('Wallet avatar address is required to publish an offer.');
+    }
+
+    const seller = sellerAddress;
 
     await ensureGnosisChain();
     const { owner } = await resolveOwnerAndAssertSafe(seller);
@@ -210,35 +296,67 @@
 
     const client = createProfilesOffersClient(circlesBindings as any, safeSigner as any);
 
+    const hasImagesArray = Array.isArray(draft.images) && draft.images.length > 0;
+    const hasLegacyImage = typeof draft.image === 'string' && draft.image.length > 0;
+    const productImages = hasImagesArray ? draft.images : (hasLegacyImage ? [draft.image] : undefined);
+
     await runTask({
       name: 'Publishing offer…',
       promise: (async () => {
+        // Pre-pin images: convert any data: URLs to gateway URLs via /api/pin-media
+        let finalImageUrls: string[] | undefined = undefined;
+        if (Array.isArray(productImages) && productImages.length > 0) {
+          const imgs = productImages as string[];
+          const toCidUrl = async (img: string): Promise<string> => {
+            // Already absolute URL? keep
+            if (isAbsUrl(img)) return img;
+            // ipfs://CID
+            if (typeof img === 'string' && img.startsWith('ipfs://')) {
+              const cid = img.slice('ipfs://'.length);
+              return circlesBindings.gatewayUrlForCid(cid);
+            }
+            // Bare CID (Qm...)
+            if (/^Qm[1-9A-HJ-NP-Za-km-z]{44}$/.test(img)) {
+              return circlesBindings.gatewayUrlForCid(img);
+            }
+            // data: URL -> pin-media
+            if (isDataUrl(img)) {
+              const { mime, bytes } = parseDataUrl(img);
+              const cid = await circlesBindings.pinMediaBytes(bytes, mime);
+              return circlesBindings.gatewayUrlForCid(cid);
+            }
+            // Fallback: treat as URL if parsable, else error
+            if (isAbsUrl(img)) return img;
+            throw new Error('Unsupported image format. Please provide an http(s) URL or upload an image.');
+          };
+          finalImageUrls = await Promise.all(imgs.map(toCidUrl));
+        }
+
         const res = await client.appendOffer({
           avatar: seller,
           operator: context.operator,
           chainId: CHAIN_ID_NUM,
           product: {
-            sku: d.sku,
-            name: d.name,
-            description: d.description || undefined,
-            image: d.image || undefined,
-            url: d.url || undefined,
-            brand: d.brand || undefined,
-            mpn: d.mpn || undefined,
-            gtin13: d.gtin13 || undefined,
-            category: d.category || undefined
+            sku: draft.sku,
+            name: draft.name,
+            description: draft.description || undefined,
+            image: finalImageUrls,
+            url: draft.url || undefined,
+            brand: draft.brand || undefined,
+            mpn: draft.mpn || undefined,
+            gtin13: draft.gtin13 || undefined,
+            category: draft.category || undefined
           },
           offer: {
-            price: Number(d.price),
-            priceCurrency: d.priceCurrency!,
-            checkout: d.checkout!,
-            availability: d.availability || undefined,
-            availabilityFeed: d.availabilityFeed || undefined,
-            inventoryFeed: d.inventoryFeed || undefined,
-            url: d.url || undefined,
-            sellerName: d.sellerName || undefined
+            price: Number(draft.price),
+            priceCurrency: draft.priceCurrency!,
+            checkout: draft.checkout!,
+            availability: draft.availability || undefined,
+            availabilityFeed: draft.availabilityFeed || undefined,
+            inventoryFeed: draft.inventoryFeed || undefined,
+            url: draft.url || undefined,
+            sellerName: draft.sellerName || undefined
           },
-          // debugSaveLinkObject: true,
         });
         context.result = res;
       })()
@@ -260,7 +378,11 @@
             <span class="opacity-60">({context.draft?.sku})</span>
         </div>
 
-        {#if context.draft?.image}
+        <!-- Show product gallery if images exist -->
+        {#if getAllImages().length > 0}
+          <ProductGallery images={getAllImages()} />
+        {:else if context.draft?.image}
+            <!-- Fallback to single image for legacy support -->
             <img alt="preview" class="w-full h-40 object-cover rounded mt-2" src={context.draft?.image}/>
         {/if}
 
