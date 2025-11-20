@@ -1,11 +1,12 @@
-export type Address = `0x${string}`;
+import type {Address} from "@circles-sdk/utils";
 
 export type OfferDraft = {
   // Product
   sku: string;
   name: string;
   description?: string;
-  image?: string;
+  image?: string;       // Legacy support for single image
+  images?: string[];    // New multiple images support
   url?: string;
   brand?: string;
   mpn?: string;

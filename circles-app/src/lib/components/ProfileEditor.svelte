@@ -61,7 +61,11 @@
 
     <div>
       <span class="label-text">Image</span>
-      <ImageUpload imageDataUrl={profile.previewImageUrl} cropHeight={256} cropWidth={256} onnewimage={onnewimage} oncleared={oncleared} />
+      <ImageUpload 
+        imageDataUrls={profile.previewImageUrl ? [profile.previewImageUrl] : []}
+        onnewimage={onnewimage} 
+        onclearall={oncleared} 
+      />
     </div>
   {/if}
 </div>

@@ -2,6 +2,7 @@
   import { popupControls } from '$lib/stores/popUp';
   import OfferStep2 from './2_Pricing.svelte';
   import type { OfferFlowContext, OfferDraft } from './types';
+  import ImageUpload from '$lib/components/ImageUpload.svelte';
 
   interface Props { context: OfferFlowContext; }
   let { context }: Props = $props();
@@ -21,6 +22,7 @@
       name: '',
       description: '',
       image: '',
+      images: [],
       url: '',
       brand: '',
       mpn: '',
@@ -35,6 +37,8 @@
   let name        = $state(context.draft.name);
   let description = $state(context.draft.description ?? '');
   let image       = $state(context.draft.image ?? '');
+  // New: support multiple images via uploader
+  let images      = $state<string[]>(context.draft.images ?? []);
   let url         = $state(context.draft.url ?? '');
   let brand       = $state(context.draft.brand ?? '');
   let mpn         = $state(context.draft.mpn ?? '');
@@ -48,12 +52,26 @@
     if (!skuOk) { throw new Error('SKU must be [a-z0-9-_], max 63 chars, no leading "-" or "_".'); }
     if (!nameOk) { throw new Error('Name is required.'); }
 
+    // Robust normalization to avoid undefined access and keep legacy `image` in sync
+    const hasImagesArray = Array.isArray(images) && images.length > 0;
+    const hasLegacyImage = typeof image === 'string' && image.trim().length > 0;
+
+    const imagesNormalized: string[] = hasImagesArray
+      ? [...images]
+      : hasLegacyImage
+        ? [image]
+        : [];
+
+    const imagesField = imagesNormalized.length > 0 ? imagesNormalized : undefined;
+    const legacyImageField = hasLegacyImage ? image : (imagesNormalized[0] ?? undefined);
+
     context.draft = {
       ...context.draft!,
       sku,
       name,
       description: description || undefined,
-      image: image || undefined,
+      images: imagesField,
+      image: legacyImageField,
       url: url || undefined,
       brand: brand || undefined,
       mpn: mpn || undefined,
@@ -82,8 +100,23 @@
     <span class="label-text">Description</span>
     <textarea class="textarea textarea-bordered" rows="3" bind:value={description} />
   </label>
+  <!-- Images: either upload multiple or paste a single URL (legacy) -->
+  <div class="space-y-2">
+    <div class="label">
+      <span class="label-text">Images</span>
+      <span class="label-text-alt opacity-70">You can add multiple images</span>
+    </div>
+    <ImageUpload
+      imageDataUrls={images}
+      onnewimage={(dataUrl) => { images = [...images, dataUrl]; }}
+      onremoveimage={(index) => { images = images.filter((_, i) => i !== index); }}
+      onclearall={() => { images = []; }}
+      cropWidth={512}
+      cropHeight={512}
+    />
+  </div>
   <label class="form-control">
-    <span class="label-text">Image URL</span>
+    <span class="label-text">Image URL (legacy / optional)</span>
     <input class="input input-bordered" bind:value={image} placeholder="https://…" />
   </label>
   <label class="form-control">

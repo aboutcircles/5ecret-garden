@@ -161,7 +161,7 @@
     <div class="h-20"></div>
   {/if}
 
-  <div class="w-full flex flex-col items-stretch min-h-screen">
+  <div class="w-full flex flex-col items-stretch min-h-screen pb-24">
     {@render children?.()}
   </div>
 
