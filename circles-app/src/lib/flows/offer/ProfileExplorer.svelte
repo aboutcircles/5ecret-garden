@@ -15,6 +15,7 @@
     import type {CirclesBindings} from '$lib/offers/namespaces';
     import {loadProfileOrInit, rebaseAndSaveProfile} from '$lib/offers/namespaces';
     import type {CidV0} from '$lib/offers/cid';
+    import { mkCirclesBindings } from '$lib/offers/mkCirclesBindings';
 
     import {keccak256, hexToBytes, bytesToHex} from '$lib/safeSigner';
     import { secp256k1 } from '@noble/curves/secp256k1';
@@ -60,77 +61,12 @@
     });
     $effect(() => { readonly = !isOwner; });
 
-    function mkBindings(): CirclesBindings {
-        if (!circlesVal) {
+    function getBindings(): CirclesBindings {
+        const sdk = get(circles);
+        if (!sdk) {
             throw new Error('Circles SDK not initialized');
         }
-
-        if (!circlesVal.profiles) {
-            throw new Error('Profiles service not configured');
-        }
-
-        const base = (pinApiBase ?? '').replace(/\/$/, '');
-        const pinUrl = base ? `${base}/api/pin` : '';
-
-        if (!pinUrl) {
-            throw new Error('pinApiBase not provided; cannot call /api/pin');
-        }
-
-        const bindings: CirclesBindings = {
-            async getLatestProfileCid(av: Address): Promise<CidV0 | null> {
-                const cid = await circlesVal.data.getMetadataCidForAddress(av);
-                return (cid as CidV0 | null) ?? null;
-            },
-            async getProfile(cid: CidV0): Promise<any | null> {
-                try {
-                    return await circlesVal.profiles!.get(cid);
-                } catch {
-                    return null;
-                }
-            },
-            async putJsonLd(obj: any): Promise<CidV0> {
-                const res = await fetch(pinUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/ld+json; charset=utf-8',
-                        Accept: 'application/ld+json'
-                    },
-                    body: JSON.stringify(obj)
-                });
-
-                if (!res.ok) {
-                    let detail = '';
-                    try {
-                        detail = await res.text();
-                    } catch {
-                        // ignore
-                    }
-
-                    throw new Error(
-                        `Pin API error ${res.status}: ${detail || res.statusText}`
-                    );
-                }
-
-                const body = (await res.json().catch(() => ({} as any))) as any;
-                const cid = body?.cid as string | undefined;
-                const looksCidV0 =
-                    typeof cid === 'string' && /^Qm[1-9A-HJ-NP-Za-km-z]{44}$/.test(cid);
-
-                if (!looksCidV0) {
-                    throw new Error(`Pin API returned invalid cid: ${String(cid)}`);
-                }
-
-                return cid as CidV0;
-            },
-            async updateAvatarProfileDigest(av: Address, cid: CidV0): Promise<string> {
-                const avatarObj = await circlesVal.getAvatar(av);
-                const tx = await avatarObj.updateMetadata(cid);
-                return ((tx as any)?.hash ?? '') as string;
-            },
-            // canonicalizeJsonLd is not needed here
-        };
-
-        return bindings;
+        return mkCirclesBindings(pinApiBase, sdk as any);
     }
 
     async function loadProfile(): Promise<void> {
@@ -144,8 +80,7 @@
             const norm = normalizeAddress(rawAvatar);
             resolvedAvatar = norm;
 
-            const bindings = mkBindings();
-            const {profile} = await loadProfileOrInit(bindings, norm);
+            const {profile} = await loadProfileOrInit(getBindings(), norm);
 
             name = String(profile.name ?? '');
             description = String(profile.description ?? '');
@@ -308,7 +243,7 @@
             throw new Error('No avatar resolved for profile save');
         }
 
-        const bindings = mkBindings();
+        const bindings = getBindings();
 
         await runTask({
             name: 'Saving profile…',

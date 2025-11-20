@@ -270,9 +270,26 @@ export async function rebaseAndSaveProfile(
     mutator: (profile: any) => void
 ): Promise<CidV0> {
     const latest = await circles.getLatestProfileCid(avatar);
-    const raw = latest ? await circles.getProfile(latest) : {};
-    let profile = ensureProfileShape(raw ?? {});
+
+    let base: any = {};
+    if (latest) {
+        try {
+            // Load the full JSON-LD as stored on IPFS to preserve all profile fields
+            base = await fetchIpfsJson(latest);
+        } catch (_err) {
+            // Fallback to typed getter; if that fails too, start from empty
+            try {
+                base = (await circles.getProfile(latest)) ?? {};
+            } catch {
+                base = {};
+            }
+        }
+    }
+
+    let profile = ensureProfileShape(base ?? {});
+    // Allow caller to mutate specific fields (e.g., namespaces)
     mutator(profile);
+    // Re-ensure minimal required shape without removing other fields
     profile = ensureProfileShape(profile);
 
     try {

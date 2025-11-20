@@ -16,17 +16,25 @@
   import { createMetaMaskSafeSigner } from '$lib/safeSigner/signers/metamask';
   import type {Address} from "@circles-sdk/utils";
   import type {OfferFlowContext} from "$lib/flows/offer/types";
+  import { GNOSIS_CHAIN_ID_NUM, GNOSIS_CHAIN_ID_HEX } from '$lib/config/market';
+  import { mkCirclesBindings } from '$lib/offers/mkCirclesBindings';
+  import { normalizeAddress } from '$lib/offers/adapters';
 
   interface Props { context: OfferFlowContext; }
   let { context }: Props = $props();
 
-  const CHAIN_ID_NUM = 100;   // Gnosis
-  const CHAIN_ID_HEX = '0x64';
+  const CHAIN_ID_NUM = GNOSIS_CHAIN_ID_NUM;   // Gnosis
+  const CHAIN_ID_HEX = GNOSIS_CHAIN_ID_HEX;
 
   function requiredOk(): boolean {
-    const hasOperator =
-      typeof context.operator === 'string' &&
-      /^0x[a-f0-9]{40}$/.test(context.operator.toLowerCase());
+    let hasOperator = false;
+    try {
+      const op = normalizeAddress(String((context as any).operator ?? ''));
+      (context as any).operator = op; // store normalized once
+      hasOperator = true;
+    } catch {
+      hasOperator = false;
+    }
 
     const d = context.draft!;
     const hasProduct = !!d?.sku && !!d?.name;
@@ -166,101 +174,7 @@
     return { owner };
   }
 
-  // ──────────────────────────────────────────────────────────────────────────────
-  // Circles bindings
-  // ──────────────────────────────────────────────────────────────────────────────
-  function mkCirclesBindings() {
-    const circlesVal = get(circles);
-    const hasCircles = !!circlesVal;
-    if (!hasCircles) throw new Error('Circles SDK not initialized');
-    if (!circlesVal.profiles) throw new Error('Profiles service not configured');
-
-    const pinBase = (context.pinApiBase ?? '').replace(/\/$/, '');
-    const pinUrl = pinBase ? `${pinBase}/api/pin` : '';
-    const pinMediaUrl = pinBase ? `${pinBase}/api/pin-media` : '';
-    const canonicalizeUrl = pinBase ? `${pinBase}/api/canonicalize` : '';
-
-    async function pinViaMarketApi(obj: any): Promise<string> {
-      if (!pinUrl) throw new Error('pinApiBase not provided; cannot call /api/pin');
-
-      const res = await fetch(pinUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/ld+json; charset=utf-8', 'Accept': 'application/ld+json' },
-        body: JSON.stringify(obj)
-      });
-
-      if (!res.ok) {
-        let detail = '';
-        try { detail = await res.text(); } catch { /* ignore */ }
-        throw new Error(`Pin API error ${res.status}: ${detail || res.statusText}`);
-      }
-
-      const body = await res.json().catch(() => ({} as any));
-      const cid = body?.cid;
-      const looksCidV0 = typeof cid === 'string' && /^Qm[1-9A-HJ-NP-Za-km-z]{44}$/.test(cid);
-      if (!looksCidV0) throw new Error(`Pin API returned invalid cid: ${String(cid)}`);
-      return cid;
-    }
-
-    async function pinMediaBytes(bytes: Uint8Array, mime?: string | null): Promise<string> {
-      if (!pinMediaUrl) throw new Error('pinApiBase not provided; cannot call /api/pin-media');
-      // 8 MiB cap mirrored on client to avoid 413
-      const MAX = 8 * 1024 * 1024;
-      if (bytes.length > MAX) {
-        throw new Error('Image too large: exceeds 8 MiB upload limit. Please upload a smaller image.');
-      }
-      const res = await fetch(pinMediaUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': (mime || 'application/octet-stream'), 'Accept': 'application/json' },
-        body: bytes
-      });
-      if (!res.ok) {
-        let detail = '';
-        try { detail = await res.text(); } catch { /* ignore */ }
-        throw new Error(`Pin API error ${res.status}: ${detail || res.statusText}`);
-      }
-      const body = await res.json().catch(() => ({} as any));
-      const cid = body?.cid;
-      const looksCidV0 = typeof cid === 'string' && /^Qm[1-9A-HJ-NP-Za-km-z]{44}$/.test(cid);
-      if (!looksCidV0) throw new Error(`Pin API returned invalid cid: ${String(cid)}`);
-      return cid;
-    }
-
-    function gatewayUrlForCid(cid: string): string {
-      // Use public IPFS gateway per requirement
-      return `https://ipfs.io/ipfs/${cid}`;
-    }
-
-    return {
-      getLatestProfileCid: async (avatar: Address) =>
-        (await circlesVal.data.getMetadataCidForAddress(avatar)) ?? null,
-      getProfile: async (cid: string) => {
-        try { return await circlesVal.profiles!.get(cid); } catch { return undefined; }
-      },
-      putJsonLd: async (obj: any) => pinViaMarketApi(obj),
-      pinMediaBytes,
-      gatewayUrlForCid,
-      updateAvatarProfileDigest: async (avatar: Address, cid: string) => {
-        const av = await circlesVal.getAvatar(avatar);
-        const tx = await av.updateMetadata(cid);
-        return (tx as any)?.hash ?? undefined;
-      },
-      canonicalizeJsonLd: async (obj: any) => {
-        if (!canonicalizeUrl) throw new Error('pinApiBase not provided; cannot call /api/canonicalize');
-        const res = await fetch(canonicalizeUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/ld+json; charset=utf-8', 'Accept': 'text/plain' },
-          body: JSON.stringify(obj)
-        });
-        if (!res.ok) {
-          let detail = '';
-          try { detail = await res.text(); } catch { /* ignore */ }
-          throw new Error(`Canonicalize API error ${res.status}: ${detail || res.statusText}`);
-        }
-        return await res.text();
-      }
-    };
-  }
+  // Circles bindings will be constructed lazily at publish-time to ensure SDK is initialized
 
   // ──────────────────────────────────────────────────────────────────────────────
   // Publish
@@ -271,18 +185,19 @@
     const draft = context.draft!;
 
     const walletVal = get(wallet);
-    const sellerAddress = walletVal?.address as Address | undefined;
-    const hasSellerAddress = typeof sellerAddress === 'string' && sellerAddress.length === 42;
-    if (!hasSellerAddress) {
+    const sellerRaw = walletVal?.address as Address | undefined;
+    let seller: Address;
+    try {
+      seller = normalizeAddress(String(sellerRaw)) as Address;
+    } catch {
       throw new Error('Wallet avatar address is required to publish an offer.');
     }
-
-    const seller = sellerAddress;
 
     await ensureGnosisChain();
     const { owner } = await resolveOwnerAndAssertSafe(seller);
 
-    const circlesBindings = mkCirclesBindings();
+    // Build bindings now (after app init) to avoid early access before SDK is set
+    const circlesBindings = mkCirclesBindings((context as any).pinApiBase, get(circles)!);
     const eth: any = (window as any)?.ethereum;
 
     // EIP-712 ONLY: MetaMask typed-data signer

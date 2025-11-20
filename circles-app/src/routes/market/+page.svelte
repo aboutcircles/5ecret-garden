@@ -5,15 +5,17 @@
     import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
     import ProductCard from '$lib/components/ProductCard.svelte';
     import ProfileExplorer from "$lib/flows/offer/ProfileExplorer.svelte";
+    import { MARKET_API_BASE, MARKET_OPERATOR } from '$lib/config/market';
+    import { cartItemCount } from '$lib/cart/store';
+    import type { AggregatedCatalog, AggregatedCatalogItem } from '$lib/market/types';
 
     // Defaults (as requested)
-    const OPERATOR: `0x${string}` = '0x31d5d15c558fbfbbbe604c9c11eb42c9afbf5140';
+    const OPERATOR: `0x${string}` = MARKET_OPERATOR;
     const AVATAR: `0x${string}` = '0x31d5d15c558fbfbbbe604c9c11eb42c9afbf5140';
 
-    // Static API base from your note
-    const API_BASE = 'http://localhost:5084';
+    const API_BASE = MARKET_API_BASE;
 
-    type ProductLike = any;
+    type ProductLike = AggregatedCatalogItem;
 
     let loading: boolean = $state(true);
     let errorMsg: string = $state('');
@@ -22,18 +24,15 @@
     // ————————————————————————————————————————————
     // helper functions (kept only those not in ProductCard)
     // ————————————————————————————————————————————
-    function extractProducts(body: any): any[] {
-        if (!body || typeof body !== 'object') return [];
-        if (Array.isArray(body.products)) return body.products;
-        if (Array.isArray(body.items)) return body.items;
-        if (Array.isArray(body.results)) return body.results;
-        if (body.data && typeof body.data === 'object') {
-            if (Array.isArray(body.data.products)) return body.data.products;
-            if (Array.isArray(body.data.items)) return body.data.items;
-            if (Array.isArray(body.data.results)) return body.data.results;
-        }
-        if (body.catalog && Array.isArray(body.catalog.products)) return body.catalog.products;
-        return [];
+    function extractProducts(body: any): AggregatedCatalogItem[] {
+        // typed path first
+        const typed = (body as AggregatedCatalog | undefined)?.products;
+        if (Array.isArray(typed)) return typed as AggregatedCatalogItem[];
+        // fallback for older dev servers
+        if (Array.isArray((body as any)?.items)) return (body as any).items as AggregatedCatalogItem[];
+        if (Array.isArray((body as any)?.results)) return (body as any).results as AggregatedCatalogItem[];
+        if ((body as any)?.catalog && Array.isArray((body as any).catalog.products)) return (body as any).catalog.products as AggregatedCatalogItem[];
+        return [] as AggregatedCatalogItem[];
     }
 
     function shortAddr(a?: string): string {
@@ -126,6 +125,11 @@
         >
             Create offer
         </button>
+
+        <!-- new tiny badge / text-only for now -->
+        <span class="ml-2 text-xs text-base-content/70">
+            Basket: {$cartItemCount} item{$cartItemCount === 1 ? '' : 's'}
+        </span>
     </svelte:fragment>
 
     <!-- Collapsed summary -->

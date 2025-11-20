@@ -4,58 +4,33 @@
     import ProductGallery from '$lib/components/ProductGallery.svelte';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
     import {goto} from "$app/navigation";
+    import { MARKET_API_BASE, MARKET_OPERATOR } from '$lib/config/market';
+    import type { AggregatedCatalog, AggregatedCatalogItem } from '$lib/market/types';
+    import { normalizeAddress } from '$lib/offers/adapters';
 
     // Get seller and SKU from URL parameters
     const { params } = $props<{ params: { seller: string; sku: string } }>();
     
     // Defaults (as requested)
-    const OPERATOR: `0x${string}` = '0x31d5d15c558fbfbbbe604c9c11eb42c9afbf5140';
+    const OPERATOR: `0x${string}` = MARKET_OPERATOR;
     
     // Static API base
-    const API_BASE = 'http://localhost:5084';
+    const API_BASE = MARKET_API_BASE;
 
-    type ProductLike = any;
+    type ProductLike = AggregatedCatalogItem;
 
     let loading: boolean = $state(true);
     let errorMsg: string = $state('');
     let product: ProductLike | null = $state(null);
 
-    // Helper functions (extracted from existing pages)
-    function extractProducts(body: any): any[] {
-        if (!body || typeof body !== 'object') return [];
-        if (Array.isArray(body.products)) return body.products;
-        if (Array.isArray(body.items)) return body.items;
-        if (Array.isArray(body.results)) return body.results;
-        if (body.data && typeof body.data === 'object') {
-            if (Array.isArray(body.data.products)) return body.data.products;
-            if (Array.isArray(body.data.items)) return body.data.items;
-            if (Array.isArray(body.data.results)) return body.data.results;
-        }
-        if (body.catalog && Array.isArray(body.catalog.products)) return body.catalog.products;
-        
-        // Fallback: look for any array of products
-        const keys = Object.keys(body);
-        for (const key of keys) {
-            if (key.toLowerCase().includes('product')) {
-                const value = body[key];
-                if (Array.isArray(value)) return value;
-            }
-        }
-        
-        return [];
-    }
-
-    function getProduct(item: any): any {
-        // Some backends wrap as { product, seller, productCid }
-        return item?.product ?? item;
-    }
-
-    function getFirstOffer(prodItem: any): any | null {
-        const o = prodItem?.offers ?? prodItem?.offer ?? prodItem?.Offers ?? prodItem?.Offer;
-        if (!o) return null;
-        if (Array.isArray(o)) return o[0] ?? null;
-        if (typeof o === 'object') return o;
-        return null;
+    // Helper functions (typed-first with fallback for older dev servers)
+    function extractProducts(body: any): AggregatedCatalogItem[] {
+        const typed = (body as AggregatedCatalog | undefined)?.products;
+        if (Array.isArray(typed)) return typed as AggregatedCatalogItem[];
+        if (Array.isArray((body as any)?.items)) return (body as any).items as AggregatedCatalogItem[];
+        if (Array.isArray((body as any)?.results)) return (body as any).results as AggregatedCatalogItem[];
+        if ((body as any)?.catalog && Array.isArray((body as any).catalog.products)) return (body as any).catalog.products as AggregatedCatalogItem[];
+        return [] as AggregatedCatalogItem[];
     }
 
     function shortAddr(a?: string): string {
@@ -70,90 +45,21 @@
         product = null;
 
         try {
-            // Fetch catalog for this seller first
-            const url = `${API_BASE}/api/operator/${OPERATOR}/catalog?avatars=${params.seller}`;
-            console.log('Fetching URL:', url);
-            
+            const seller = normalizeAddress(params.seller);
+            const url = `${API_BASE}/api/operator/${OPERATOR}/catalog?avatars=${seller}`;
             const res = await fetch(url, {headers: {Accept: 'application/ld+json'}});
-            
             if (!res.ok) {
-                throw new Error(`HTTP ${res.status} ${res.statusText}`);
+                const text = await res.text().catch(() => '');
+                throw new Error(`HTTP ${res.status} ${res.statusText}${text ? ` — ${text}` : ''}`);
             }
-            
             const body = await res.json();
-            console.log('API Response:', JSON.stringify(body, null, 2));
-            
-            // Extract products with enhanced fallback
-            let products: any[] = [];
-            if (body && typeof body === 'object') {
-                products = extractProducts(body);
-                
-                // If still no products found, check for direct match in top-level properties
-                if (products.length === 0) {
-                    console.log('No extracted products found. Looking for direct matches...');
-                    
-                    // Check all possible product-like objects in the response
-                    const entries = Object.entries(body).filter(([_, value]) => 
-                        value && typeof value === 'object'
-                    );
-                    
-                    for (const [key, value] of entries) {
-                        if (
-                            key === params.sku ||
-                            (value.id === params.sku) || 
-                            (value.sku === params.sku) ||
-                            (value.productCid === params.sku)
-                        ) {
-                            products = [value];
-                            console.log(`Found direct match in ${key}:`, JSON.stringify(value, null, 2));
-                            break;
-                        }
-                    }
-                }
+            const items = extractProducts(body);
+            const fromSeller = items.filter(i => (i.seller?.toLowerCase?.() ?? i.seller) === seller);
+            product = fromSeller.find(i => i.product?.sku === params.sku) ?? null;
+            if (!product && fromSeller.length > 0) {
+                product = fromSeller.find(i => (i as any).id === params.sku || (i as any).productCid === params.sku) ?? fromSeller[0];
             }
-            
-            // Debug: Find all potential matches
-            const matches = [];
-            for (const p of products) {
-                const rawProduct = p;
-                const processedProduct = getProduct(p);
-                
-                if (
-                    (rawProduct.id === params.sku) ||
-                    (processedProduct.id === params.sku) ||
-                    (rawProduct.sku === params.sku) || 
-                    (processedProduct.sku === params.sku) ||
-                    (rawProduct.productCid === params.sku) ||
-                    (processedProduct.productCid === params.sku)
-                ) {
-                    matches.push({ raw: rawProduct, processed: processedProduct });
-                }
-            }
-            
-            console.log('Found matches:', matches.length);
-            if (matches.length > 0) {
-                console.log('First match - Raw:', JSON.stringify(matches[0].raw, null, 2));
-                console.log('First match - Processed:', JSON.stringify(matches[0].processed, null, 2));
-            }
-            
-            // Find the specific product by SKU - check both raw and wrapped properties
-            product = products.find(p => {
-                const rawProduct = p;
-                const processedProduct = getProduct(p);
-                
-                return (
-                    (rawProduct.id === params.sku) ||
-                    (processedProduct.id === params.sku) ||
-                    (rawProduct.sku === params.sku) || 
-                    (processedProduct.sku === params.sku) ||
-                    (rawProduct.productCid === params.sku) ||
-                    (processedProduct.productCid === params.sku)
-                );
-            }) || null;
-            
-            console.log('Selected product:', JSON.stringify(product, null, 2));
         } catch (err: any) {
-            console.error('Error loading product:', err);
             errorMsg = err?.message ?? String(err);
         } finally {
             loading = false;
