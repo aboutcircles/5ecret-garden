@@ -175,11 +175,7 @@ async function cryptoGetRandomValues(n: number): Promise<Uint8Array> {
   if (typeof globalThis.crypto?.getRandomValues === 'function') {
     return globalThis.crypto.getRandomValues(new Uint8Array(n));
   }
-  try {
-    // Node.js
-    const { randomBytes } = await import('node:crypto');
-    return new Uint8Array(randomBytes(n));
-  } catch {
-    throw new Error('No secure RNG available for nonce generation');
-  }
+  // No Node-specific fallback: require a standards-compliant Web Crypto API
+  // to avoid bundling or referencing Node-only modules in client code.
+  throw new Error('No secure RNG available for nonce generation');
 }

@@ -221,7 +221,9 @@
     }
   }
 
-  // Derived totals per currency (simple sum of qty * price)
+  // Derive simple totals per currency from server-managed offer snapshots on
+  // basket lines. This is for immediate UI feedback; the server remains
+  // authoritative (preview/checkout use canonical data).
   const perCurrency = $derived.by(() => {
     const state = $cartState;
     const basket = state.basket;
@@ -231,12 +233,13 @@
 
     for (const line of basket.items) {
       const snap = line.offerSnapshot;
-      const price = snap?.price;
-      const code = snap?.priceCurrency ?? '???';
-      if (price == null || !Number.isFinite(price)) continue;
-      const key = code;
+      const price = snap?.price as number | null | undefined;
+      const code = (snap?.priceCurrency ?? '') as string;
+      if (price == null || !Number.isFinite(Number(price))) continue;
+      const qty = Number(line.orderQuantity || 0) || 0;
+      const key = code || '';
       const current = out.get(key) ?? 0;
-      out.set(key, current + price * (line.orderQuantity || 0));
+      out.set(key, current + Number(price) * qty);
     }
 
     return out;
@@ -246,13 +249,8 @@
   const isCheckedOut = $derived.by(() => $cartState.basket?.status === 'CheckedOut');
 </script>
 
-<div class="w-full max-w-lg mx-auto space-y-4">
-  <header class="flex items-center justify-between">
-    <h2 class="text-lg font-semibold">Basket</h2>
-    <button type="button" class="btn btn-ghost btn-sm" onclick={close}>
-      Close
-    </button>
-  </header>
+<div class="w-full max-w-2xl md:max-w-3xl lg:max-w-4xl mx-auto space-y-4">
+  <!-- Title and close button are provided by the popup shell; remove duplicates here -->
 
   {#if localError}
     <div class="alert alert-error text-xs">
@@ -284,8 +282,8 @@
               <div class="text-xs mt-1">
                 Price:&nbsp;
                 {formatCurrency(
-                  line.offerSnapshot.price ?? null,
-                  line.offerSnapshot.priceCurrency ?? null,
+                  line.offerSnapshot?.price ?? null,
+                  line.offerSnapshot?.priceCurrency ?? null,
                 )}
               </div>
             {/if}
@@ -402,7 +400,7 @@
       {:else}
         {#each Array.from(perCurrency.entries()) as [code, total]}
           <div class="flex justify-between">
-            <span>Total ({code})</span>
+            <span>Total {#if code}( {code} ){/if}</span>
             <span class="font-semibold">{total.toFixed(2)} {code}</span>
           </div>
         {/each}

@@ -4,6 +4,7 @@
   import type { OfferFlowContext, OfferDraft } from './types';
   import ImageUpload from '$lib/components/ImageUpload.svelte';
   import { normalizeAddress } from '$lib/offers/adapters';
+  import { generateSku, isValidSku } from '$lib/utils/offer';
 
   interface Props { context: OfferFlowContext; }
   let { context }: Props = $props();
@@ -51,8 +52,15 @@
   let gtin13      = $state(context.draft.gtin13 ?? '');
   let category    = $state(context.draft.category ?? '');
 
+  // Advanced section toggle
+  let showAdvanced = $state(false);
+
+  // Live preview of auto-generated SKU (when no manual sku is provided)
+  const autoSku = $derived(generateSku(name || ''));
+
   function next(): void {
-    const skuOk = /^[a-z0-9][a-z0-9-_]{0,62}$/.test(sku);
+    const hasManualSku = (sku ?? '').trim().length > 0;
+    const skuOk = hasManualSku ? isValidSku(sku) : true;
     const nameOk = name.trim().length > 0;
 
     if (!skuOk) { throw new Error('SKU must be [a-z0-9-_], max 63 chars, no leading "-" or "_".'); }
@@ -73,7 +81,7 @@
 
     context.draft = {
       ...context.draft!,
-      sku,
+      sku: hasManualSku ? sku : generateSku(name),
       name,
       description: description || undefined,
       images: imagesField,
@@ -94,14 +102,16 @@
 </script>
 
 <div class="space-y-3">
-  <label class="form-control">
-    <span class="label-text">SKU</span>
-    <input class="input input-bordered" bind:value={sku} placeholder="coffee-250g" />
-  </label>
+  <!-- Name first; SKU is optional and hidden under Advanced -->
   <label class="form-control">
     <span class="label-text">Name</span>
     <input class="input input-bordered" bind:value={name} placeholder="Coffee 250g" />
   </label>
+
+  <!-- Show live auto-generated SKU preview when no manual SKU provided -->
+  {#if !(sku && sku.trim().length > 0)}
+    <div class="text-sm opacity-70">Auto SKU (preview): {autoSku}</div>
+  {/if}
   <label class="form-control">
     <span class="label-text">Description</span>
     <textarea class="textarea textarea-bordered" rows="3" bind:value={description} />
@@ -150,6 +160,19 @@
     <span class="label-text">Category</span>
     <input class="input input-bordered" bind:value={category} placeholder="Grocery" />
   </label>
+
+  <!-- Advanced section -->
+  <div class="collapse bg-base-200">
+    <input type="checkbox" bind:checked={showAdvanced} />
+    <div class="collapse-title text-md font-medium">Advanced</div>
+    <div class="collapse-content space-y-3">
+      <label class="form-control">
+        <span class="label-text">SKU (optional)</span>
+        <input class="input input-bordered" bind:value={sku} placeholder={autoSku} />
+        <span class="label-text-alt opacity-70">Leave empty to auto-generate from name. Allowed: a–z, 0–9, dashes and underscores; max 63 chars.</span>
+      </label>
+    </div>
+  </div>
 
   <div class="mt-4 flex justify-end">
     <button type="button" class="btn btn-primary" onclick={next}>Next</button>
