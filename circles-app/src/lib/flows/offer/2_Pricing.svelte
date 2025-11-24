@@ -6,33 +6,26 @@
   interface Props { context: OfferFlowContext; }
   let { context }: Props = $props();
 
-  let price          = $state(context.draft?.price ?? 0);
-  let priceCurrency  = $state(context.draft?.priceCurrency ?? 'EUR');
-  let checkout       = $state(context.draft?.checkout ?? '');
-  let availability   = $state(context.draft?.availability ?? '');
+  let price            = $state(context.draft?.price ?? 0);
+  let priceCurrency    = $state(context.draft?.priceCurrency ?? 'EUR');
   let availabilityFeed = $state(context.draft?.availabilityFeed ?? '');
-  let inventoryFeed  = $state(context.draft?.inventoryFeed ?? '');
-  let sellerName     = $state(context.draft?.sellerName ?? '');
+  let inventoryFeed    = $state(context.draft?.inventoryFeed ?? '');
+  let availableDeliveryMethod = $state(context.draft?.availableDeliveryMethod ?? '');
 
   function next(): void {
     const priceOk = Number(price) > 0;
     const codeOk = /^[A-Z]{3}$/.test((priceCurrency ?? '').trim());
-    const hasCheckout = (checkout ?? '').trim().length > 0;
-    const checkoutOk = hasCheckout ? isAbsUrl(checkout) : false;
 
     if (!priceOk) { throw new Error('Price must be > 0.'); }
     if (!codeOk) { throw new Error('Currency must be ISO-4217 (e.g. EUR, USD).'); }
-    if (!checkoutOk) { throw new Error('Checkout must be an absolute URL.'); }
 
     context.draft = {
       ...context.draft!,
       price: Number(price),
       priceCurrency: priceCurrency.trim(),
-      checkout: checkout.trim(),
-      availability: availability || undefined,
       availabilityFeed: availabilityFeed || undefined,
       inventoryFeed: inventoryFeed || undefined,
-      sellerName: sellerName || undefined,
+      availableDeliveryMethod: availableDeliveryMethod || undefined,
     };
 
     popupControls.open({
@@ -42,7 +35,17 @@
     });
   }
 
-  function isAbsUrl(s: string): boolean { try { new URL(s); return true; } catch { return false; } }
+  // Persist form state into the shared draft reactively to avoid losing data when navigating back
+  $effect(() => {
+    context.draft = {
+      ...context.draft!,
+      price: Number(price) || undefined,
+      priceCurrency: (priceCurrency ?? '').trim() || undefined,
+      availabilityFeed: (availabilityFeed ?? '').trim() || undefined,
+      inventoryFeed: (inventoryFeed ?? '').trim() || undefined,
+      availableDeliveryMethod: (availableDeliveryMethod ?? '').trim() || undefined,
+    };
+  });
 </script>
 
 <div class="space-y-3">
@@ -56,21 +59,21 @@
       <input class="input input-bordered" bind:value={priceCurrency} placeholder="EUR" />
     </label>
     <label class="form-control">
-      <span class="label-text">Seller name (optional)</span>
-      <input class="input input-bordered" bind:value={sellerName} />
+      <span class="label-text">Delivery method (optional)</span>
+      <select class="select select-bordered" bind:value={availableDeliveryMethod}>
+        <option value="">Not specified</option>
+        <option value="http://purl.org/goodrelations/v1#DeliveryModePickUp">Pick up</option>
+        <option value="http://purl.org/goodrelations/v1#DeliveryModeOwnFleet">Own fleet</option>
+        <option value="http://purl.org/goodrelations/v1#DeliveryModeMail">Mail</option>
+        <option value="http://purl.org/goodrelations/v1#DeliveryModeFreight">Freight</option>
+        <option value="http://purl.org/goodrelations/v1#DeliveryModeDHL">DHL</option>
+        <option value="http://purl.org/goodrelations/v1#DeliveryModeUPS">UPS</option>
+        <option value="http://purl.org/goodrelations/v1#DeliveryModeFedEx">FedEx</option>
+      </select>
     </label>
   </div>
 
-  <label class="form-control">
-    <span class="label-text">Checkout URL</span>
-    <input class="input input-bordered" bind:value={checkout} placeholder="https://…" />
-  </label>
-
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-    <label class="form-control">
-      <span class="label-text">Availability IRI (optional)</span>
-      <input class="input input-bordered" bind:value={availability} placeholder="https://schema.org/InStock" />
-    </label>
     <label class="form-control">
       <span class="label-text">Availability feed URL (optional)</span>
       <input class="input input-bordered" bind:value={availabilityFeed} placeholder="https://…" />

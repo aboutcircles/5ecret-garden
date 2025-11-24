@@ -4,12 +4,12 @@ export type SchemaOrgOfferLite = {
   '@type': 'Offer';
   price?: number;
   priceCurrency?: string;
-  checkout: string;
-  availability?: string;
   availabilityFeed?: string;
   inventoryFeed?: string;
+  // Optional non-feed stock information per spec §4.1
+  inventoryLevel?: { '@type': 'QuantitativeValue'; value: number; unitCode?: string };
   url?: string;
-  sellerName?: string;
+  availableDeliveryMethod?: string;
 };
 
 export type SchemaOrgProductLite = {

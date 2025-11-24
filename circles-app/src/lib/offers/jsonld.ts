@@ -39,12 +39,10 @@ export type MinimalProduct = {
 export type MinimalOffer = {
   price: number;
   priceCurrency: string; // ISO-4217 (A–Z{3})
-  checkout: string; // absolute URI
-  availability?: string; // schema IRI
   availabilityFeed?: string; // URI
   inventoryFeed?: string; // URI
   url?: string;
-  sellerName?: string;
+  availableDeliveryMethod?: string; // GoodRelations IRI
 };
 
 const SIZE_LIMIT = 8 * 1024 * 1024; // 8 MiB
@@ -100,8 +98,6 @@ export function buildProduct(product: MinimalProduct, offer: MinimalOffer): any 
   // Validate offer fields
   if (!(offer.price > 0)) throw new Error('price must be > 0');
   validateCurrency(offer.priceCurrency);
-  ensureAbsoluteUri('offer.checkout', offer.checkout);
-  ensureAbsoluteUri('offer.availability', offer.availability);
   ensureAbsoluteUri('offer.availabilityFeed', offer.availabilityFeed);
   ensureAbsoluteUri('offer.inventoryFeed', offer.inventoryFeed);
   ensureAbsoluteUri('offer.url', offer.url);
@@ -129,16 +125,11 @@ export function buildProduct(product: MinimalProduct, offer: MinimalOffer): any 
     '@type': 'Offer',
     price: offer.price,
     priceCurrency: offer.priceCurrency,
-    checkout: offer.checkout,
   };
-  if (offer.availability) offerObj.availability = offer.availability;
   if (offer.availabilityFeed) offerObj.availabilityFeed = offer.availabilityFeed;
   if (offer.inventoryFeed) offerObj.inventoryFeed = offer.inventoryFeed;
   if (offer.url) offerObj.url = offer.url;
-  if (offer.sellerName) {
-    // Do not emit a seller object without @id; carry label only.
-    offerObj.sellerName = offer.sellerName;
-  }
+  if (offer.availableDeliveryMethod) offerObj.availableDeliveryMethod = offer.availableDeliveryMethod;
 
   obj.offers = [offerObj];
 
