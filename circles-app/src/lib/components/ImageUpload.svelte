@@ -1,6 +1,7 @@
 <script lang="ts">
   import {
     fileToCroppedDataUrl,
+    fileToFittedDataUrl,
     MEDIA_MAX_BYTES,
   } from '$lib/media/imageTools';
 
@@ -13,6 +14,7 @@
     onnewimage?: (dataUrl: string) => void;
     onremoveimage?: (index: number) => void;
     onclearall?: () => void;
+    mode?: 'crop' | 'fit';
   }
 
   let {
@@ -24,6 +26,7 @@
     onnewimage,
     onremoveimage,
     onclearall,
+    mode = 'crop',
   }: Props = $props();
 
   let fileInput: HTMLInputElement | undefined = $state();
@@ -32,11 +35,22 @@
   async function processFile(file: File): Promise<void> {
     if (readonly) return;
     try {
-      const { dataUrl } = await fileToCroppedDataUrl(file, {
-        width: cropWidth,
-        height: cropHeight,
-        maxBytes,
-      });
+      let dataUrl: string;
+      if (mode === 'crop') {
+        const res = await fileToCroppedDataUrl(file, {
+          width: cropWidth,
+          height: cropHeight,
+          maxBytes,
+        });
+        dataUrl = res.dataUrl;
+      } else {
+        const res = await fileToFittedDataUrl(file, {
+          maxWidth: cropWidth,
+          maxHeight: cropHeight,
+          maxBytes,
+        });
+        dataUrl = res.dataUrl;
+      }
 
       if (typeof onnewimage === 'function') {
         onnewimage(dataUrl);

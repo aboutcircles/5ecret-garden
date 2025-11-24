@@ -11,12 +11,26 @@
     import { extractProducts } from '$lib/market/catalogHelpers';
     import { shortenAddress } from '$lib/utils/shared';
     import { normalizeAddress } from '$lib/offers/adapters';
+    import { avatarState } from '$lib/stores/avatar.svelte';
 
     // Defaults (as requested)
     const OPERATOR: `0x${string}` = MARKET_OPERATOR;
     
     // Derive seller address from SvelteKit's $page store
     const params = $derived($page.params as { seller: string });
+    
+    // Current connected avatar (lowercased for comparison)
+    const currentAvatar = $derived(
+      (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '').toLowerCase()
+    );
+    
+    // Seller from route params, lowercased
+    const sellerFromRoute = $derived((params.seller ?? '').toLowerCase());
+    
+    // True when viewing your own seller profile
+    const isSelfSeller = $derived(
+      !!currentAvatar && !!sellerFromRoute && currentAvatar === sellerFromRoute
+    );
     
     // Static API base
     const API_BASE = MARKET_API_BASE;
@@ -184,6 +198,7 @@
                           product={p} 
                           showSellerInfo={false}
                           ondeleted={() => loadSellerCatalog()}
+                          canTombstone={isSelfSeller}
                         />
                     {/each}
                 </div>

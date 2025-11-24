@@ -117,8 +117,9 @@
       onnewimage={(dataUrl) => { images = [...images, dataUrl]; }}
       onremoveimage={(index) => { images = images.filter((_, i) => i !== index); }}
       onclearall={() => { images = []; }}
-      cropWidth={512}
-      cropHeight={512}
+      mode="fit"
+      cropWidth={1600}
+      cropHeight={1600}
     />
   </div>
   <label class="form-control">
