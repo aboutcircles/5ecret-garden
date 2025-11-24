@@ -8,6 +8,8 @@
     import type { AggregatedCatalogItem } from '$lib/market/types';
     import { extractProducts, getFirstOffer } from '$lib/market/catalogHelpers';
     import { normalizeAddress } from '$lib/offers/adapters';
+    import { avatarState } from '$lib/stores/avatar.svelte';
+    import { cartState, addToCart } from '$lib/cart/store';
 
     // Derive seller and SKU from SvelteKit's $page store
     const params = $derived($page.params as { seller: string; sku: string });
@@ -72,6 +74,21 @@
     }
 
     const offer = $derived(product?.product ? getFirstOffer(product?.product) : null);
+
+    // Cart integration
+    const currentAvatar = $derived(avatarState?.avatar?.address?.toLowerCase());
+    const cartLoading = $derived($cartState.loading);
+
+    async function handleAddToBasket(): Promise<void> {
+        if (!product) return;
+        try {
+            await addToCart(product, currentAvatar);
+        } catch (e) {
+            console.error('[cart] addToCart failed:', e);
+        }
+    }
+
+    // Basket button moved to global header
 </script>
 
 <PageScaffold
@@ -88,7 +105,7 @@
         <div class="flex items-center gap-2">
             <button 
                 type="button"
-                on:click={goBack}
+                onclick={goBack}
                 class="btn btn-sm btn-ghost p-0"
                 aria-label="Go back"
             >
@@ -99,6 +116,8 @@
             <h1 class="text-xl font-semibold truncate">{product?.product?.name || 'Product Details'}</h1>
         </div>
     </svelte:fragment>
+
+    <!-- Basket button moved to global header -->
 
     {#if loading}
         <div class="flex flex-col items-center justify-center p-8">
@@ -116,14 +135,14 @@
             <p class="text-destructive text-center mb-4">{errorMsg}</p>
             <button 
                 type="button"
-                on:click={loadProduct}
+                onclick={loadProduct}
                 class="btn btn-primary mr-2"
             >
                 Retry
             </button>
             <button 
                 type="button"
-                on:click={goBack}
+                onclick={goBack}
                 class="btn btn-outline"
             >
                 Go Back
@@ -139,7 +158,21 @@
             showMeta={true}
             meta={{ publishedAt: product.publishedAt, productCid: product.productCid, sku: product?.product?.sku }}
             layout="detail"
-        />
+        >
+            <svelte:fragment slot="actions">
+                <div class="flex gap-2 w-full">
+                    <button
+                        type="button"
+                        class="btn btn-outline w-full"
+                        onclick={handleAddToBasket}
+                        disabled={!offer || cartLoading || !currentAvatar}
+                        title={!currentAvatar ? 'Connect a Circles account first' : (!offer ? 'No offer available' : 'Add to basket')}
+                    >
+                        Add to basket
+                    </button>
+                </div>
+            </svelte:fragment>
+        </ProductViewer>
     {:else if !loading && !errorMsg}
         <!-- Product not found -->
         <div class="flex flex-col items-center justify-center p-8">
@@ -152,14 +185,14 @@
             </p>
             <button 
                 type="button"
-                on:click={loadProduct}
+                onclick={loadProduct}
                 class="btn btn-primary mr-2"
             >
                 Try Again
             </button>
             <button 
                 type="button"
-                on:click={goBack}
+                onclick={goBack}
                 class="btn btn-outline"
             >
                 Browse Products

@@ -40,8 +40,6 @@
 
   // Card view should not perform live feed fetching. Use static offer fields only.
   const availabilityUi = $derived(mapAvailabilityToLabel(offer?.availability ?? null));
-  const effectiveInventoryValue = $derived<number | null>((offer?.inventoryLevel?.value ?? null) as number | null);
-  const effectiveInventoryUnit = $derived<string | undefined>(offer?.inventoryLevel?.unitCode as string | undefined);
 
   function availabilityBadgeClass(tone: 'success' | 'warning' | 'neutral'): string {
     if (tone === 'success') return 'badge badge-success';
@@ -58,44 +56,44 @@
   {/if}
 
   <div class="p-3 flex flex-col gap-1">
-    <div class="font-semibold truncate">{product?.name || '(no name)'}</div>
+    <div class="font-semibold line-clamp-2 min-h-[3rem]">{product?.name || '(no name)'}</div>
 
-    {#if product?.description}
-      <div class="text-xs opacity-70 line-clamp-3">{product.description}</div>
-    {/if}
-
-    {#if offer}
-      <div class="text-sm font-medium text-primary">
-        Offer: {offer?.price ?? '?'}{offer?.priceCurrency ? ` ${offer.priceCurrency}` : ''}
-        {#if availabilityUi}
-          <span class={availabilityBadgeClass(availabilityUi.tone)}>{availabilityUi.label}</span>
+    <!-- Price row: always reserve height; no verbose prefix; availability on the right -->
+    <div class="min-h-[1.5rem] flex items-center justify-between">
+      <div class="text-sm font-semibold text-primary">
+        {#if offer && offer.price != null}
+          {offer.price}{offer.priceCurrency ? ` ${offer.priceCurrency}` : ''}
+        {:else}
+          —
         {/if}
       </div>
-      {#if effectiveInventoryValue != null}
-        <div class="text-xs opacity-80">Stock: {effectiveInventoryValue}{effectiveInventoryUnit ? ` ${effectiveInventoryUnit}` : ''}</div>
+      {#if availabilityUi}
+        <span class={availabilityBadgeClass(availabilityUi.tone)}>{availabilityUi.label}</span>
+      {:else}
+        <span class="invisible badge">placeholder</span>
       {/if}
-    {/if}
+    </div>
 
-    {#if showSeller && seller}
-      <Avatar address={seller} view="horizontal" clickable={false} />
-    {:else if showMeta && publishedDateText}
-      <div class="text-xs opacity-60 flex items-center gap-1">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        Published: {publishedDateText}
-      </div>
-    {/if}
+    <!-- Meta row: reserve height; show seller or published date when present -->
+    <div class="min-h-[1.5rem]">
+      {#if showSeller && seller}
+        <Avatar address={seller} view="horizontal" clickable={false} />
+      {:else if showMeta && publishedDateText}
+        <div class="text-xs opacity-60 flex items-center gap-1">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Published: {publishedDateText}
+        </div>
+      {/if}
+    </div>
 
-    <div class="flex items-center justify-between mt-2">
+    <!-- Actions row: fixed height; right side placeholder to keep layout stable -->
+    <div class="min-h-[2.25rem] flex items-center justify-between mt-2">
       <div class="inline-flex gap-2 items-center">
         <slot name="actions" />
       </div>
-      <div class="inline-flex items-center gap-2">
-        {#if product?.url}
-          <a class="link link-primary text-xs" href={product.url} target="_blank" rel="noopener">Product</a>
-        {/if}
-      </div>
+      <span class="invisible btn btn-sm">placeholder</span>
     </div>
   </div>
 </div>

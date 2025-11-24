@@ -1,5 +1,13 @@
 <script lang="ts">
-  import { cartState, setLineQuantity, removeLineItem, validateCart, previewCartOrder, checkoutCart, updateBasketDetails } from '$lib/cart/store';
+  import {
+    cartState,
+    setLineQuantityByIdentity,
+    removeLineByIdentity,
+    validateCart,
+    previewCartOrder,
+    checkoutCart,
+    updateBasketDetails,
+  } from '$lib/cart/store';
   import type { AggregatedCatalogItem } from '$lib/market/types';
   import { popupControls } from '$lib/stores/popUp';
 
@@ -48,17 +56,31 @@
     itemIdx: number,
     quantityStr: string,
   ): Promise<void> {
-    const q = Number(quantityStr);
-    if (!Number.isFinite(q) || q < 0) return;
+    const parsed = Number(quantityStr);
+    const isInvalid = !Number.isFinite(parsed) || parsed < 0;
+    if (isInvalid) {
+      return;
+    }
+
+    const q = parsed;
 
     const state = $cartState;
-    const line = state.basket?.items[itemIdx];
-    if (!line) return;
+    const basket = state.basket;
+    const line = basket?.items?.[itemIdx];
+    if (!line) {
+      return;
+    }
 
-    const catItem = findCatalogItem(line.seller, line.orderedItem.sku);
-    if (!catItem) return;
+    const seller = line.seller;
+    const sku = line.orderedItem?.sku;
 
-    await setLineQuantity(catItem, q);
+    if (!seller || !sku) {
+      // If we ever hit this, the basket is malformed. Log, but don't try any other path.
+      console.warn('[cart] line has no seller/sku; cannot update quantity', { line, itemIdx });
+      return;
+    }
+
+    await setLineQuantityByIdentity(seller, sku, q);
   }
 
   function onQtyChange(idx: number, e: Event): void {
@@ -68,11 +90,21 @@
 
   async function handleRemove(itemIdx: number): Promise<void> {
     const state = $cartState;
-    const line = state.basket?.items[itemIdx];
-    if (!line) return;
-    const catItem = findCatalogItem(line.seller, line.orderedItem.sku);
-    if (!catItem) return;
-    await removeLineItem(catItem);
+    const basket = state.basket;
+    const line = basket?.items?.[itemIdx];
+    if (!line) {
+      return;
+    }
+
+    const seller = line.seller;
+    const sku = line.orderedItem?.sku;
+
+    if (!seller || !sku) {
+      console.warn('[cart] line has no seller/sku; cannot remove', { line, itemIdx });
+      return;
+    }
+
+    await removeLineByIdentity(seller, sku);
   }
 
   function close(): void {
