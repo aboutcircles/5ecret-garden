@@ -16,12 +16,10 @@ export type OfferDraft = {
   // Offer
   price?: number;
   priceCurrency?: string; // ISO-4217, e.g. "EUR"
-  checkout?: string;      // absolute URL
-  availability?: string;  // schema IRI
   availabilityFeed?: string;
   inventoryFeed?: string;
   urlProduct?: string;    // not used; kept for future extension
-  sellerName?: string;
+  availableDeliveryMethod?: string; // GoodRelations IRI (e.g. http://purl.org/goodrelations/v1#DeliveryModePickUp)
 };
 
 export interface OfferFlowContext {

@@ -196,7 +196,7 @@ export function createProfilesOffersClient(
         const name = `product/${p.sku}`;
 
         const dummyProduct: MinimalProduct = {sku: p.sku, name: 'tombstone'};
-        const dummyOffer: MinimalOffer = {price: 1, priceCurrency: 'EUR', checkout: 'https://example.com'};
+        const dummyOffer: MinimalOffer = {price: 1, priceCurrency: 'EUR'};
 
         return doAppend(name, obj, {...(p as any), product: dummyProduct, offer: dummyOffer});
     }

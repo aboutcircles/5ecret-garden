@@ -41,8 +41,7 @@
     const hasProduct = !!d?.sku && !!d?.name;
     const hasOffer =
       (d?.price ?? 0) > 0 &&
-      /^[A-Z]{3}$/.test(d?.priceCurrency ?? '') &&
-      isAbsUrl(d?.checkout ?? '');
+      /^[A-Z]{3}$/.test(d?.priceCurrency ?? '');
 
     return hasOperator && hasProduct && hasOffer;
   }
@@ -230,12 +229,10 @@
           offer: {
             price: Number(draft.price),
             priceCurrency: draft.priceCurrency!,
-            checkout: draft.checkout!,
-            availability: draft.availability || undefined,
             availabilityFeed: draft.availabilityFeed || undefined,
             inventoryFeed: draft.inventoryFeed || undefined,
             url: draft.url || undefined,
-            sellerName: draft.sellerName || undefined
+            availableDeliveryMethod: draft.availableDeliveryMethod || undefined,
           },
         });
         context.result = res;
@@ -270,9 +267,17 @@
             <div class="mt-2 text-sm opacity-80">{context.draft?.description}</div>
         {/if}
 
-        <div class="mt-3 text-sm">
+        <div class="mt-3 text-sm space-y-1">
             <div><strong>Price:</strong> {context.draft?.price} {context.draft?.priceCurrency}</div>
-            <div class="truncate"><strong>Checkout:</strong> {context.draft?.checkout}</div>
+            {#if context.draft?.availableDeliveryMethod}
+              <div class="truncate"><strong>Delivery method:</strong> {context.draft?.availableDeliveryMethod}</div>
+            {/if}
+            {#if context.draft?.availabilityFeed}
+              <div class="truncate"><strong>Availability feed:</strong> {context.draft?.availabilityFeed}</div>
+            {/if}
+            {#if context.draft?.inventoryFeed}
+              <div class="truncate"><strong>Inventory feed:</strong> {context.draft?.inventoryFeed}</div>
+            {/if}
         </div>
     </div>
 
