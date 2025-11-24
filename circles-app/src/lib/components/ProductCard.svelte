@@ -9,9 +9,10 @@
         product: AggregatedCatalogItem;
         showSellerInfo?: boolean;
         ondeleted?: () => void;
+        canTombstone?: boolean; // enable owner-only actions
     }
 
-    let {product, showSellerInfo, ondeleted}: Props = $props();
+    let {product, showSellerInfo, ondeleted, canTombstone = false}: Props = $props();
 
     // State for derived values and ownership handling
     import {avatarState} from '$lib/stores/avatar.svelte';
@@ -142,6 +143,17 @@
                 meta={{ publishedAt: product.publishedAt, productCid: product.productCid, sku: prod?.sku }}
         >
             <svelte:fragment slot="actions">
+                {#if isOwner && canTombstone}
+                    <button
+                            type="button"
+                            class="btn btn-sm btn-outline btn-error"
+                            on:click|stopPropagation={handleTombstone}
+                            title="Remove listing"
+                    >
+                        Remove
+                    </button>
+                {/if}
+
                 <button
                         type="button"
                         class="btn btn-sm btn-outline"
