@@ -3,7 +3,7 @@ import { writable, derived, type Writable } from 'svelte/store';
 import type { Address } from '@circles-sdk/utils';
 import { MARKET_OPERATOR } from '$lib/config/market';
 import { normalizeAddress } from '$lib/offers/adapters';
-import type { Basket, ValidationResult, OrderSnapshot, OfferSnapshot, OrderItemPreview } from './types';
+import type { Basket, ValidationResult, OrderSnapshot, OrderItemPreview } from './types';
 import {
   createBasket,
   getBasket,
@@ -125,9 +125,8 @@ export async function upsertLineItem(
   const line = catalogItemToOrderItem(item, quantity);
   const seller = line.seller!;
   const sku = line.orderedItem.sku;
-  const offerSnapshot = line.offerSnapshot ?? null;
-
-  await upsertLineByIdentity(seller, sku, quantity, offerSnapshot, cfg);
+  // Do not forward client-side offer snapshots; server resolves canonically
+  await upsertLineByIdentity(seller, sku, quantity, cfg);
 }
 
 /**
@@ -214,13 +213,11 @@ export async function setLineQuantity(
 
 /**
  * Upsert a line by identity (seller, sku) and desired quantity.
- * Optionally accepts an offerSnapshot when creating a new line.
  */
 export async function upsertLineByIdentity(
   sellerRaw: string,
   skuRaw: string,
   quantity: number,
-  offerSnapshot?: OfferSnapshot | null,
   cfg?: CartClientConfig,
 ): Promise<void> {
   let snapshot: CartState = initialState;
@@ -259,7 +256,6 @@ export async function upsertLineByIdentity(
         orderQuantity: quantity,
         orderedItem: { '@type': 'Product', sku: skuRaw },
         seller: sellerRaw,
-        offerSnapshot: offerSnapshot ?? null,
       };
       nextItems.push(newLine);
     }
@@ -297,7 +293,7 @@ export async function setLineQuantityByIdentity(
     await removeLineByIdentity(sellerRaw, skuRaw, cfg);
     return;
   }
-  await upsertLineByIdentity(sellerRaw, skuRaw, quantity, undefined, cfg);
+  await upsertLineByIdentity(sellerRaw, skuRaw, quantity, cfg);
 }
 
 /**

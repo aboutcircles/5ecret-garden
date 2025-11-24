@@ -18,10 +18,10 @@ export type Basket = {
 
   items: OrderItemPreview[];
 
-  shippingAddress?: PostalAddress;
-  billingAddress?: PostalAddress;
-  ageProof?: PersonMinimal;
-  contactPoint?: ContactPoint;
+  shippingAddress: PostalAddress | null;
+  billingAddress: PostalAddress | null;
+  ageProof: PersonMinimal | null;
+  contactPoint: ContactPoint | null;
 
   createdAt: number; // unix seconds
   modifiedAt: number; // unix seconds
@@ -34,6 +34,11 @@ export type OrderItemPreview = {
   orderedItem: OrderedItemRef;
   seller?: Address;
   productCid?: string;
+  /**
+   * Server-managed canonical offer snapshot. Present in responses for display
+   * (price, currency, delivery methods), ignored on client input.
+   * Do NOT send this field in PATCH requests; the server will overwrite it.
+   */
   offerSnapshot?: OfferSnapshot | null;
 };
 
@@ -42,17 +47,17 @@ export type OrderedItemRef = {
   sku: string;
 };
 
+export type SchemaOrgOrgId = {
+  '@type': 'Organization';
+  '@id': string | null; // eip155:chainId:address
+};
+
 export type OfferSnapshot = {
   '@type': 'Offer';
   price?: number | null;
   priceCurrency?: string | null;
   seller?: SchemaOrgOrgId | null;
-  checkoutPageURLTemplate?: string | null;
-};
-
-export type SchemaOrgOrgId = {
-  '@type': 'Organization';
-  '@id': string | null; // eip155:chainId:address
+  availableDeliveryMethod?: string[] | null;
 };
 
 export type PostalAddress = {
@@ -138,7 +143,9 @@ export type OrderSnapshot = {
   orderStatus: string;
   customer: SchemaOrgPersonId;
   broker: SchemaOrgOrgId;
-  acceptedOffer: OfferSnapshot[];
+  // Canonicalized offers as returned by server. The client no longer relies on
+  // client-side offer snapshots, so keep this untyped to avoid coupling.
+  acceptedOffer: unknown[];
   orderedItem: OrderItemLine[];
   billingAddress?: PostalAddress | null;
   shippingAddress?: PostalAddress | null;

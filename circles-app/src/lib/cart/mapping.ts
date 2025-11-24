@@ -1,7 +1,7 @@
 // src/lib/cart/mapping.ts
 import type { Address } from '@circles-sdk/utils';
 import type { AggregatedCatalogItem } from '$lib/market/types';
-import type { OrderItemPreview, OfferSnapshot, SchemaOrgOrgId } from './types';
+import type { OrderItemPreview } from './types';
 
 /**
  * Given an AggregatedCatalogItem and a quantity, build a basket OrderItemPreview.
@@ -25,19 +25,6 @@ export function catalogItemToOrderItem(
 
   const sellerAddr = item.seller.toLowerCase() as Address;
 
-  const sellerOrgId: SchemaOrgOrgId = {
-    '@type': 'Organization',
-    '@id': `eip155:100:${sellerAddr}`,
-  };
-
-  const offerSnapshot: OfferSnapshot = {
-    '@type': 'Offer',
-    price: primaryOffer.price ?? null,
-    priceCurrency: primaryOffer.priceCurrency ?? null,
-    seller: sellerOrgId,
-    checkoutPageURLTemplate: primaryOffer.checkout ?? null,
-  };
-
   const line: OrderItemPreview = {
     '@type': 'OrderItem',
     orderQuantity: quantity,
@@ -47,7 +34,9 @@ export function catalogItemToOrderItem(
     },
     seller: sellerAddr,
     productCid: item.productCid,
-    offerSnapshot,
+    // Do NOT include offerSnapshot in outbound payloads; server will resolve
+    // canonical offer data based on (chainId, seller, sku) and populate it
+    // in responses. Leaving this undefined keeps PATCH payloads reference-only.
   };
 
   return line;

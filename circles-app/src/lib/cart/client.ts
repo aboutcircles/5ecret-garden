@@ -125,6 +125,20 @@ export async function patchBasket(
   patch: BasketPatch,
   cfg?: CartClientConfig,
 ): Promise<Basket> {
+  // Defensive: strip any offerSnapshot fields from outbound items. The server
+  // is authoritative and will populate canonical snapshots in responses.
+  const safePatch: BasketPatch = {
+    ...patch,
+    items: Array.isArray(patch.items)
+      ? patch.items.map((it: any) => {
+          if (it && typeof it === 'object' && 'offerSnapshot' in it) {
+            const { offerSnapshot: _drop, ...rest } = it;
+            return rest;
+          }
+          return it;
+        })
+      : patch.items,
+  };
   const base = resolveBase(cfg);
   const url = `${base}/api/cart/v1/baskets/${encodeURIComponent(basketId)}`;
 
@@ -134,7 +148,7 @@ export async function patchBasket(
       'Content-Type': 'application/ld+json; charset=utf-8',
       Accept: 'application/ld+json',
     },
-    body: JSON.stringify(patch),
+    body: JSON.stringify(safePatch),
   });
 
   if (!res.ok) {
