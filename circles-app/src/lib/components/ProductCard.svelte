@@ -142,39 +142,27 @@
                 meta={{ publishedAt: product.publishedAt, productCid: product.productCid, sku: prod?.sku }}
         >
             <svelte:fragment slot="actions">
-                {#if offer}
-                    <button
-                            type="button"
-                            class="btn btn-sm btn-outline"
-                            on:click|stopPropagation={handleAddToBasket}
-                            disabled={cartLoading || !currentAvatar}
-                            title={currentAvatar ? 'Add to basket' : 'Connect a Circles account first'}
-                    >
-                        Add to basket
-                    </button>
+                <button
+                        type="button"
+                        class="btn btn-sm btn-outline"
+                        on:click|stopPropagation={handleAddToBasket}
+                        disabled={!offer || cartLoading || !currentAvatar}
+                        title={!currentAvatar ? 'Connect a Circles account first' : (!offer ? 'No offer available' : 'Add to basket')}
+                >
+                    Add to basket
+                </button>
 
-                    {#if typeof offer.checkout === 'string' && offer.checkout.trim() !== ''}
-                        <a
-                                class="btn btn-sm btn-primary"
-                                title="Open checkout"
-                                target="_blank"
-                                rel="noopener"
-                                href={offer.checkout}
-                                on:click|stopPropagation
-                        >
-                                Buy
-                        </a>
-                    {/if}
-                {/if}
-
-                {#if isOwner}
-                    <button
-                            type="button"
-                            class="btn btn-sm btn-error"
-                            on:click|stopPropagation={handleTombstone}
+                {#if offer && typeof offer.checkout === 'string' && offer.checkout.trim() !== ''}
+                    <a
+                            class="btn btn-sm btn-primary"
+                            title="Open checkout"
+                            target="_blank"
+                            rel="noopener"
+                            href={offer.checkout}
+                            on:click|stopPropagation
                     >
-                        Remove
-                    </button>
+                            Buy
+                    </a>
                 {/if}
             </svelte:fragment>
         </ProductViewer>

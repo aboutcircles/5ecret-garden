@@ -10,6 +10,9 @@ export type SchemaOrgOfferLite = {
   inventoryLevel?: { '@type': 'QuantitativeValue'; value: number; unitCode?: string };
   url?: string;
   availableDeliveryMethod?: string;
+  // Fields used by UI components at runtime
+  availability?: string; // IRI like https://schema.org/InStock
+  checkout?: string;     // External checkout URL
 };
 
 export type SchemaOrgProductLite = {

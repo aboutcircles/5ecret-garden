@@ -6,8 +6,6 @@
     import ProductCard from '$lib/components/ProductCard.svelte';
     import ProfileExplorer from "$lib/flows/offer/ProfileExplorer.svelte";
     import { MARKET_API_BASE, MARKET_OPERATOR } from '$lib/config/market';
-    import { cartItemCount } from '$lib/cart/store';
-    import CartPanel from '$lib/cart/CartPanel.svelte';
     import type { AggregatedCatalog, AggregatedCatalogItem } from '$lib/market/types';
 
     // Defaults (as requested)
@@ -52,15 +50,7 @@
 
     onMount(loadCatalog);
 
-    function openBasket(): void {
-        popupControls.open({
-            title: 'Basket',
-            component: CartPanel,
-            props: {
-                catalog: products,
-            },
-        });
-    }
+    // Basket button moved to global header; inline basket trigger removed here
 
 </script>
 
@@ -101,15 +91,6 @@
         >
             Create offer
         </button>
-
-        <button
-                type="button"
-                class="btn btn-sm btn-ghost ml-2"
-                onclick={openBasket}
-                disabled={$cartItemCount === 0}
-        >
-            Basket ({$cartItemCount})
-        </button>
     </svelte:fragment>
 
     <!-- Collapsed summary -->
@@ -135,21 +116,57 @@
             Offer
         </button>
 
-        <button
-                type="button"
-                class="btn btn-ghost min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3"
-                onclick={openBasket}
-                disabled={$cartItemCount === 0}
-        >
-            Basket ({$cartItemCount})
-        </button>
+        <!-- Basket button moved to global header -->
     </svelte:fragment>
 
     {#if loading}
-        <div class="flex flex-col items-center justify-center h-[50vh]">
-            <div class="loading loading-spinner loading-lg" aria-label="loading"></div>
-            <div class="mt-3 text-base-content/70">Loading catalog…</div>
-        </div>
+        <section class="bg-base-100 border border-base-300 rounded-xl p-4">
+            <div class="flex items-center justify-between mb-3">
+                <div class="text-sm">
+                    <strong>Products</strong>
+                    <span class="opacity-70"> (loading)</span>
+                </div>
+                <div class="loading loading-spinner loading-sm" aria-label="loading"></div>
+            </div>
+
+            <!-- Stable skeleton grid to prevent layout jumps -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" data-sveltekit-preload-data="hover">
+                {#each Array(6) as _, i}
+                    <div class="bg-base-100 border border-base-300 rounded-xl overflow-hidden flex flex-col">
+                        <!-- Image placeholder (fixed height) -->
+                        <div class="w-full h-44 skeleton"></div>
+
+                        <!-- Body -->
+                        <div class="p-3 flex flex-col gap-1">
+                            <!-- Title (2 lines reserved) -->
+                            <div class="min-h-[3rem]">
+                                <div class="skeleton h-4 w-3/4 mb-2"></div>
+                                <div class="skeleton h-4 w-1/2"></div>
+                            </div>
+
+                            <!-- Price row (reserved height) -->
+                            <div class="min-h-[1.5rem] flex items-center justify-between">
+                                <div class="skeleton h-4 w-16"></div>
+                                <div class="skeleton h-5 w-20 rounded-full"></div>
+                            </div>
+
+                            <!-- Meta row (reserved height) -->
+                            <div class="min-h-[1.5rem] flex items-center">
+                                <div class="skeleton h-4 w-24"></div>
+                            </div>
+
+                            <!-- Actions row (reserved height) -->
+                            <div class="min-h-[2.25rem] flex items-center justify-between mt-2">
+                                <div class="inline-flex gap-2 items-center">
+                                    <div class="skeleton h-8 w-28 rounded-lg"></div>
+                                </div>
+                                <div class="skeleton h-8 w-16 rounded-lg"></div>
+                            </div>
+                        </div>
+                    </div>
+                {/each}
+            </div>
+        </section>
     {:else if errorMsg}
         <div class="alert alert-error">
             <span class="font-semibold">Failed to load:</span>&nbsp;{errorMsg}
@@ -167,7 +184,7 @@
             {#if products.length === 0}
                 <div class="text-sm opacity-60">No products returned by the API.</div>
             {:else}
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" data-sveltekit-preload-data="hover">
                     {#each products as p (p.productCid ?? p.id ?? p.sku ?? JSON.stringify(p))}
                         <ProductCard
                             product={p}

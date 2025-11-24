@@ -4,6 +4,24 @@
   }
 
   let { homeLink = '/' }: Props = $props();
+
+  import { page } from '$app/stores';
+  import { cartItemCount } from '$lib/cart/store';
+  import { popupControls } from '$lib/stores/popUp';
+  import CartPanel from '$lib/cart/CartPanel.svelte';
+
+  function openBasket(): void {
+    popupControls.open({
+      title: 'Basket',
+      component: CartPanel,
+      props: {
+        // No catalog available in global header context
+        catalog: [],
+      },
+    });
+  }
+
+  const isMarketPage = $derived($page.url.pathname.startsWith('/market'));
 </script>
 
 <div class="navbar bg-base-100 px-4 sticky top-0 z-10">
@@ -15,6 +33,16 @@
       >
     </a>
   </div>
+  {#if isMarketPage || $cartItemCount > 0}
+    <button
+      type="button"
+      class="btn btn-sm btn-ghost mr-2"
+      onclick={openBasket}
+      disabled={$cartItemCount === 0}
+    >
+      Basket ({$cartItemCount})
+    </button>
+  {/if}
   <details class="dropdown dropdown-end flex-none">
     <summary class="btn btn-circle btn-ghost btn-sm"
       ><svg

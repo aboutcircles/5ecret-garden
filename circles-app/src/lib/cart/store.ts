@@ -3,7 +3,7 @@ import { writable, derived, type Writable } from 'svelte/store';
 import type { Address } from '@circles-sdk/utils';
 import { MARKET_OPERATOR } from '$lib/config/market';
 import { normalizeAddress } from '$lib/offers/adapters';
-import type { Basket, ValidationResult, OrderSnapshot } from './types';
+import type { Basket, ValidationResult, OrderSnapshot, OfferSnapshot, OrderItemPreview } from './types';
 import {
   createBasket,
   getBasket,
@@ -115,59 +115,19 @@ export async function upsertLineItem(
   quantity: number,
   cfg?: CartClientConfig,
 ): Promise<void> {
-  let snapshot: CartState = initialState;
-  cartState.update((s) => {
-    snapshot = s;
-    return { ...s, loading: true, lastError: undefined };
-  });
-
-  if (!snapshot.basketId || !snapshot.basket) {
-    throw new Error(
-      'Cart not initialized – call initCart(operator, buyer, cfg) before upserting items.',
-    );
+  // Keep validation that quantity > 0
+  if (!(quantity > 0)) {
+    await removeLineItem(item, cfg);
+    return;
   }
 
-  try {
-    const line = catalogItemToOrderItem(item, quantity);
+  // Build a line once to reuse mapping logic
+  const line = catalogItemToOrderItem(item, quantity);
+  const seller = line.seller!;
+  const sku = line.orderedItem.sku;
+  const offerSnapshot = line.offerSnapshot ?? null;
 
-    const existing = snapshot.basket.items ?? [];
-    const sku = line.orderedItem.sku.toLowerCase();
-    const seller = (line.seller ?? '').toLowerCase();
-
-    const nextItems = [...existing];
-    const idx = existing.findIndex(
-      (it) =>
-        it.orderedItem.sku.toLowerCase() === sku &&
-        (it.seller ?? '').toLowerCase() === seller,
-    );
-
-    if (idx >= 0) {
-      nextItems[idx] = { ...line };
-    } else {
-      nextItems.push(line);
-    }
-
-    const patched = await patchBasket(snapshot.basketId, { items: nextItems }, cfg);
-
-    cartState.update((s) => ({
-      ...s,
-      basket: patched,
-      loading: false,
-      lastError: undefined,
-      validation: null,
-      orderPreview: null,
-      lastOrderId: null,
-      lastCheckout: null,
-    }));
-  } catch (e: unknown) {
-    const msg =
-      e instanceof Error ? e.message : typeof e === 'string' ? e : 'Unknown error';
-    cartState.update((s) => ({
-      ...s,
-      loading: false,
-      lastError: String(msg),
-    }));
-  }
+  await upsertLineByIdentity(seller, sku, quantity, offerSnapshot, cfg);
 }
 
 /**
@@ -175,6 +135,22 @@ export async function upsertLineItem(
  */
 export async function removeLineItem(
   item: AggregatedCatalogItem,
+  cfg?: CartClientConfig,
+): Promise<void> {
+  const seller = item.seller;
+  const sku = item.product.sku;
+  await removeLineByIdentity(seller, sku, cfg);
+}
+
+/**
+ * Remove a line item by explicit identifiers (seller address + SKU).
+ * This variant is useful when no AggregatedCatalogItem is available in the UI
+ * context (e.g., when the basket popup is opened from a global header without
+ * a local catalog to resolve against).
+ */
+export async function removeLineByIdentity(
+  sellerRaw: string,
+  skuRaw: string,
   cfg?: CartClientConfig,
 ): Promise<void> {
   let snapshot: CartState = initialState;
@@ -190,8 +166,8 @@ export async function removeLineItem(
   }
 
   try {
-    const sku = item.product.sku.toLowerCase();
-    const seller = item.seller.toLowerCase();
+    const sku = String(skuRaw).toLowerCase();
+    const seller = String(sellerRaw).toLowerCase();
 
     const existing = snapshot.basket.items ?? [];
     const nextItems = existing.filter(
@@ -231,13 +207,97 @@ export async function setLineQuantity(
   quantity: number,
   cfg?: CartClientConfig,
 ): Promise<void> {
-  if (!(quantity > 0)) {
-    // quantity <= 0 → treat as removal
-    await removeLineItem(item, cfg);
-    return;
+  const seller = item.seller;
+  const sku = item.product.sku;
+  await setLineQuantityByIdentity(seller, sku, quantity, cfg);
+}
+
+/**
+ * Upsert a line by identity (seller, sku) and desired quantity.
+ * Optionally accepts an offerSnapshot when creating a new line.
+ */
+export async function upsertLineByIdentity(
+  sellerRaw: string,
+  skuRaw: string,
+  quantity: number,
+  offerSnapshot?: OfferSnapshot | null,
+  cfg?: CartClientConfig,
+): Promise<void> {
+  let snapshot: CartState = initialState;
+  cartState.update((s) => {
+    snapshot = s;
+    return { ...s, loading: true, lastError: undefined };
+  });
+
+  if (!snapshot.basketId || !snapshot.basket) {
+    // reset and throw like other methods
+    const err = new Error(
+      'Cart not initialized – call initCart(operator, buyer, cfg) before upserting items.',
+    );
+    cartState.set({ ...initialState, lastError: err.message, loading: false });
+    throw err;
   }
 
-  await upsertLineItem(item, quantity, cfg);
+  try {
+    const sku = String(skuRaw).toLowerCase();
+    const seller = String(sellerRaw ?? '').toLowerCase();
+
+    const existing = snapshot.basket.items ?? [];
+    const nextItems: OrderItemPreview[] = [...existing];
+    const idx = nextItems.findIndex(
+      (it) =>
+        (it.orderedItem.sku ?? '').toLowerCase() === sku &&
+        (it.seller ?? '').toLowerCase() === seller,
+    );
+
+    if (idx >= 0) {
+      const current = nextItems[idx];
+      nextItems[idx] = { ...current, orderQuantity: quantity };
+    } else {
+      const newLine: OrderItemPreview = {
+        '@type': 'OrderItem',
+        orderQuantity: quantity,
+        orderedItem: { '@type': 'Product', sku: skuRaw },
+        seller: sellerRaw,
+        offerSnapshot: offerSnapshot ?? null,
+      };
+      nextItems.push(newLine);
+    }
+
+    const patched = await patchBasket(snapshot.basketId, { items: nextItems }, cfg);
+
+    cartState.update((s) => ({
+      ...s,
+      basket: patched,
+      loading: false,
+      lastError: undefined,
+      validation: null,
+      orderPreview: null,
+      lastOrderId: null,
+      lastCheckout: null,
+    }));
+  } catch (e: unknown) {
+    const msg =
+      e instanceof Error ? e.message : typeof e === 'string' ? e : 'Unknown error';
+    cartState.update((s) => ({
+      ...s,
+      loading: false,
+      lastError: String(msg),
+    }));
+  }
+}
+
+export async function setLineQuantityByIdentity(
+  sellerRaw: string,
+  skuRaw: string,
+  quantity: number,
+  cfg?: CartClientConfig,
+): Promise<void> {
+  if (!(quantity > 0)) {
+    await removeLineByIdentity(sellerRaw, skuRaw, cfg);
+    return;
+  }
+  await upsertLineByIdentity(sellerRaw, skuRaw, quantity, undefined, cfg);
 }
 
 /**
