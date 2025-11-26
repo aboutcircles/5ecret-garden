@@ -16,6 +16,7 @@ import {
   type CheckoutResponse,
 } from './client';
 import { catalogItemToOrderItem } from './mapping';
+import { addStoredOrderId } from './orders-local';
 import type { AggregatedCatalogItem } from '$lib/market/types';
 
 export type CartState = {
@@ -426,13 +427,19 @@ export async function checkoutCart(
   try {
     const resp = await checkoutBasket(snapshot.basketId!, cfg);
 
+    const newOrderId = (resp as any)?.orderId ?? (resp as any)?.basketId ?? null;
+    if (newOrderId) {
+      // Persist order id locally for later retrieval (acts like bearer token)
+      addStoredOrderId(String(newOrderId));
+    }
+
     cartState.update((s) => ({
       ...s,
       loading: false,
       lastError: undefined,
       validation: null,
       orderPreview: null,
-      lastOrderId: (resp as any)?.orderId ?? (resp as any)?.basketId ?? null,
+      lastOrderId: newOrderId,
       lastCheckout: resp,
       basket: s.basket
         ? {
