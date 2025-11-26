@@ -24,6 +24,7 @@
     import {getProduct, getFirstOffer, isProductOwnedBy} from '$lib/market/catalogHelpers';
     import { popupControls, type PopupContentDefinition } from '$lib/stores/popUp';
     import ProductDetailsPopup from '$lib/market/ProductDetailsPopup.svelte';
+    import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
 
     // Marketplace operator (centralized)
     const OPERATOR = MARKET_OPERATOR;
@@ -116,6 +117,56 @@
         }
     }
 
+    // Map current product + first offer into an OfferDraft and open the edit flow
+    function handleEdit(): void {
+        if (!isOwner) return; // guard
+        const p = getProduct(product) as any;
+        const o = getFirstOffer(p) as any;
+
+        // Normalize images: if array present use it, else try single string
+        let images: string[] | undefined = undefined;
+        if (Array.isArray(p?.image)) {
+            images = (p.image as any[]).map((it) => (typeof it === 'string' ? it : (it?.url || it?.contentUrl || ''))).filter((s) => typeof s === 'string' && s.trim().length > 0);
+        } else if (typeof p?.image === 'string' && p.image.trim().length > 0) {
+            images = [p.image.trim()];
+        }
+
+        const draft = {
+            sku: String(p?.sku || ''),
+            name: String(p?.name || ''),
+            description: (p?.description || undefined) as string | undefined,
+            image: images && images.length > 0 ? images[0] : undefined,
+            images,
+            url: (p?.url || undefined) as string | undefined,
+            brand: (p?.brand || undefined) as string | undefined,
+            mpn: (p?.mpn || undefined) as string | undefined,
+            gtin13: (p?.gtin13 || undefined) as string | undefined,
+            category: (p?.category || undefined) as string | undefined,
+
+            price: o?.price != null ? Number(o.price) : undefined,
+            priceCurrency: (o?.priceCurrency || 'EUR') as string,
+            availabilityFeed: (o?.availabilityFeed || undefined) as string | undefined,
+            inventoryFeed: (o?.inventoryFeed || undefined) as string | undefined,
+            availableDeliveryMethod: (o?.availableDeliveryMethod || undefined) as string | undefined,
+          } as any;
+
+        popupControls.open({
+            title: 'Edit Offer',
+            component: OfferStep1,
+            props: {
+                context: {
+                    operator: OPERATOR,
+                    pinApiBase: MARKET_API_BASE,
+                    draft,
+                    editMode: true,
+                }
+            },
+            onClose: () => {
+                try { ondeleted?.(); } catch {}
+            }
+        });
+    }
+
     // Update derived values when product changes
     $effect(() => {
         prod = getProduct(product);
@@ -150,6 +201,14 @@
         >
             <svelte:fragment slot="actions">
                 {#if isOwner && canTombstone}
+                    <button
+                            type="button"
+                            class="btn btn-sm btn-outline"
+                            on:click|stopPropagation={handleEdit}
+                            title="Edit listing"
+                    >
+                        Edit
+                    </button>
                     <button
                             type="button"
                             class="btn btn-sm btn-outline btn-error"

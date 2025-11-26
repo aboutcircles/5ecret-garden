@@ -27,4 +27,5 @@ export interface OfferFlowContext {
   draft?: OfferDraft;     // carried through steps
   result?: unknown;       // optional: store appendOffer result
   pinApiBase?: string;    // ← NEW: market API base for pinning
+  editMode?: boolean;     // ← when true, the flow edits an existing product (e.g., lock SKU)
 }
