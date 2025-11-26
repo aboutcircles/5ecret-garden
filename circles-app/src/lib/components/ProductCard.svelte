@@ -1,6 +1,5 @@
 <script lang="ts">
     import {circles} from '$lib/stores/circles';
-    import {goto} from '$app/navigation';
     import type {AggregatedCatalogItem} from '$lib/market/types';
     import {MARKET_OPERATOR, GNOSIS_CHAIN_ID_NUM, MARKET_API_BASE} from '$lib/config/market';
     import ProductViewer from '$lib/components/ProductViewer.svelte';
@@ -23,6 +22,8 @@
     import {normalizeAddress} from '$lib/offers/adapters';
     import {get} from 'svelte/store';
     import {getProduct, getFirstOffer, isProductOwnedBy} from '$lib/market/catalogHelpers';
+    import { popupControls, type PopupContentDefinition } from '$lib/stores/popUp';
+    import ProductDetailsPopup from '$lib/market/ProductDetailsPopup.svelte';
 
     // Marketplace operator (centralized)
     const OPERATOR = MARKET_OPERATOR;
@@ -100,13 +101,18 @@
 
     // product/offer helpers imported from catalogHelpers
 
-    // Handle card click to navigate to detail page
+    // Handle card click to open product details popup
     function handleProductClick(): void {
         const seller = (product.seller || prod?.seller)?.toLowerCase();
         const sku = product.product?.sku || (product as any).id || (product as any).productCid;
 
         if (seller && sku) {
-            goto(`/market/${encodeURIComponent(seller)}/${encodeURIComponent(sku)}`);
+            const def: PopupContentDefinition = {
+                title: 'Product details',
+                component: ProductDetailsPopup,
+                props: { seller, sku }
+            };
+            popupControls.open(def);
         }
     }
 

@@ -114,8 +114,8 @@
   import { onMount } from 'svelte';
   import { fetchProductForSellerAndSku } from '$lib/market/catalogClient';
   import { getProduct, pickProductImageUrl } from '$lib/market/catalogHelpers';
-  import { goto } from '$app/navigation';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls, type PopupContentDefinition } from '$lib/stores/popUp';
+  import ProductDetailsPopup from '$lib/market/ProductDetailsPopup.svelte';
 
   interface Props {
     snapshot: OrderSnapshot | null | undefined;
@@ -227,15 +227,18 @@
     });
   });
 
-  // Navigate to offer detail page for a given order line
+  // Open offer detail in a popup for a given order line
   function goToOffer(i: number) {
     const sid = sellerIdForIndex(i);
     const sku = skuForIndex(i);
     const seller = evmFromEip155(sid ?? undefined);
     if (!seller || !sku) return;
-    // Close popup if open, then navigate
-    try { popupControls.close(); } catch {}
-    goto(`/market/${encodeURIComponent(String(seller))}/${encodeURIComponent(String(sku))}`);
+    const def: PopupContentDefinition = {
+      title: 'Product details',
+      component: ProductDetailsPopup,
+      props: { seller: String(seller), sku: String(sku) },
+    };
+    popupControls.open(def);
   }
 
   function onKeyGoToOffer(e: KeyboardEvent, i: number) {
