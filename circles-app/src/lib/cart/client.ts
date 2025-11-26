@@ -8,6 +8,7 @@ import type {
   ValidationResult,
   OrderSnapshot,
 } from './types';
+import { getAuthToken } from '$lib/auth/siwe';
 
 export type CartClientConfig = {
   apiBase?: string; // defaults to MARKET_API_BASE if not provided
@@ -93,6 +94,38 @@ export async function getOrdersBatch(
 
   const items = Array.isArray(body?.items) ? (body.items as OrderSnapshot[]) : [];
   return items;
+}
+
+/**
+ * GET /orders/by-buyer (requires JWT)
+ */
+export async function getOrdersByBuyer(
+  page = 1,
+  pageSize = 50,
+  cfg?: CartClientConfig,
+): Promise<{ items: any[] }> {
+  const base = resolveBase(cfg);
+  const token = getAuthToken();
+  if (!token) {
+    const err = new CartHttpError(401, {}, 'Missing auth token');
+    (err as any).authRequired = true;
+    throw err;
+  }
+
+  const url = `${base}/api/cart/v1/orders/by-buyer?page=${encodeURIComponent(String(page))}&pageSize=${encodeURIComponent(String(pageSize))}`;
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const body = await parseJson<any>(res).catch(() => ({}));
+  if (res.status === 401) throw new CartHttpError(401, body, 'Unauthorized');
+  if (!res.ok) throw new CartHttpError(res.status, body);
+  const items = Array.isArray(body?.items) ? body.items : [];
+  return { items } as { items: any[] };
 }
 
 /**

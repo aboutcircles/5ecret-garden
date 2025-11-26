@@ -5,7 +5,9 @@
   import { listStoredOrderIds } from '$lib/cart/orders-local';
   import type { Readable } from 'svelte/store';
   import { browser } from '$app/environment';
-  import { getOrdersBatch } from '$lib/cart/client';
+  import { getOrdersBatch, getOrdersByBuyer } from '$lib/cart/client';
+  import { getAuthMeta } from '$lib/auth/siwe';
+  import { signInWithWallet } from '$lib/auth/signin';
 
   type ListItem = {
     id: string; // orderNumber
@@ -15,15 +17,71 @@
   } & { blockNumber: number; transactionIndex: number; logIndex: number; address?: string };
 
   // Build a simple readable-like object compatible with GenericList
-  let ordersStore: Readable<{ data: ListItem[]; next: () => Promise<boolean>; ended: boolean }>; 
+  let ordersStore: Readable<{ data: ListItem[]; next: () => Promise<boolean>; ended: boolean }>;
 
-  function buildStore(): Readable<{ data: ListItem[]; next: () => Promise<boolean>; ended: boolean }>{
+  function mapItems(items: any[]): ListItem[] {
+    const now = Date.now();
+    return items.map((s, i) => ({
+      id: (s as any)?.orderNumber ?? (s as any)?.id ?? `ord_${i}`,
+      status: (s as any)?.orderStatus,
+      total: (s as any)?.totalPaymentDue ?? null,
+      customerId: (s as any)?.customer?.['@id'] ?? null,
+      blockNumber: now - i,
+      transactionIndex: i,
+      logIndex: 0,
+      address: (s as any)?.orderNumber ?? (s as any)?.id ?? undefined,
+    }));
+  }
+
+  function buildAuthedStore(): Readable<{ data: ListItem[]; next: () => Promise<boolean>; ended: boolean }>{
+    type State = { data: ListItem[]; ended: boolean; next: () => Promise<boolean>; page: number; loading: boolean };
+    const subscribers = new Set<(v: State) => void>();
+    const notify = (v: State) => subscribers.forEach((fn) => fn(v));
+
+    let state: State = {
+      data: [],
+      ended: false,
+      page: 0,
+      loading: false,
+      next: async () => {
+        if (state.loading || state.ended) return true;
+        state = { ...state, loading: true };
+        notify(state);
+        try {
+          const nextPage = state.page + 1;
+          const resp = await getOrdersByBuyer(nextPage, 50);
+          const items = Array.isArray(resp?.items) ? resp.items : [];
+          const data = state.data.concat(mapItems(items));
+          const ended = items.length === 0; // until API exposes paging metadata
+          state = { ...state, data, page: nextPage, ended, loading: false };
+          notify(state);
+          return true;
+        } catch (e) {
+          // On 401 or any error, stop further loading
+          state = { ...state, ended: true, loading: false };
+          notify(state);
+          return true;
+        }
+      },
+    };
+
+    return {
+      subscribe(run: (v: State) => void) {
+        subscribers.add(run);
+        run(state);
+        return () => {
+          subscribers.delete(run);
+        };
+      },
+    } as any;
+  }
+
+  function buildFallbackStore(): Readable<{ data: ListItem[]; next: () => Promise<boolean>; ended: boolean }>{
     const ids = listStoredOrderIds();
     type State = { data: ListItem[]; ended: boolean; next: () => Promise<boolean> };
     const subscribers = new Set<(v: State) => void>();
     const notify = (v: State) => subscribers.forEach((fn) => fn(v));
     let loaded = false;
-    const now = Date.now();
 
     let state: State = {
       data: [],
@@ -38,21 +96,10 @@
             return true;
           }
           const snapshots = await getOrdersBatch(ids);
-          const data: ListItem[] = (snapshots || []).map((s, i) => ({
-            id: (s as any)?.orderNumber ?? ids[i] ?? `ord_${i}`,
-            status: (s as any)?.orderStatus,
-            total: (s as any)?.totalPaymentDue ?? null,
-            customerId: (s as any)?.customer?.['@id'] ?? null,
-            blockNumber: now - i,
-            transactionIndex: i,
-            logIndex: 0,
-            address: (s as any)?.orderNumber ?? ids[i] ?? undefined,
-          }));
-          state = { ...state, data, ended: true };
+          state = { ...state, data: mapItems(snapshots || []), ended: true };
           notify(state);
           return true;
         } catch (e) {
-          // On error, settle with empty list to avoid spinner loop
           state = { ...state, data: [], ended: true };
           notify(state);
           return true;
@@ -78,10 +125,43 @@
     },
   } as any;
 
-  // Build on client only, since localStorage is not available on the server
-  ordersStore = browser ? buildStore() : emptyStore;
+  let authed = false;
+  let actions: { id: string; label: string; variant: 'primary' | 'ghost'; onClick: () => void }[] = [];
 
-  const actions: { id: string; label: string; variant: 'primary' | 'ghost'; onClick: () => void }[] = [];
+  async function ensureAuthed() {
+    try {
+      await signInWithWallet();
+      authed = !!getAuthMeta();
+      ordersStore = buildAuthedStore();
+      actions = [
+        { id: 'signin', label: 'Signed in', variant: 'ghost', onClick: () => {} },
+      ];
+    } catch (e) {
+      authed = false;
+      ordersStore = buildFallbackStore();
+      actions = [
+        { id: 'signin', label: 'Sign in to view all orders', variant: 'primary', onClick: () => ensureAuthed() },
+      ];
+    }
+  }
+
+  // Build on client only
+  if (browser) {
+    authed = !!getAuthMeta();
+    ordersStore = authed ? buildAuthedStore() : buildFallbackStore();
+    actions = [
+      {
+        id: 'signin',
+        label: authed ? 'Signed in' : 'Sign in to view all orders',
+        variant: authed ? 'ghost' : 'primary',
+        onClick: () => {
+          if (!authed) void ensureAuthed();
+        },
+      },
+    ];
+  } else {
+    ordersStore = emptyStore;
+  }
 </script>
 
 <PageScaffold highlight="soft" collapsedMode="bar" collapsedHeightClass="h-12" maxWidthClass="page page--lg"
@@ -91,7 +171,9 @@
     <h1 class="h2">My Orders</h1>
   </svelte:fragment>
   <svelte:fragment slot="meta">
-    Recent order ids stored on this device
+    {authed
+      ? 'Orders for the authenticated wallet'
+      : 'Recent orders stored on this device (sign in to see all)'}
   </svelte:fragment>
   <svelte:fragment slot="actions">
     {#each actions as a (a.id)}
