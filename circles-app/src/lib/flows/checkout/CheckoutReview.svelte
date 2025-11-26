@@ -7,6 +7,7 @@
     import { fetchProductForSellerAndSku } from '$lib/market/catalogClient';
     import type { AggregatedCatalogItem } from '$lib/market/types';
     import { pickFirstProductImageUrl } from '$lib/market/imageHelpers';
+    import Avatar from '$lib/components/avatar/Avatar.svelte';
 
     let localError: string | null = $state(null);
     let submitting = $state(false);
@@ -86,13 +87,9 @@
 
     function lineSubtitle(line: any): string | null {
         const sku = line?.orderedItem?.sku;
-        const seller = line?.seller;
         const parts: string[] = [];
         if (typeof sku === 'string' && sku.trim().length > 0) {
             parts.push(`SKU: ${sku.trim()}`);
-        }
-        if (typeof seller === 'string' && seller.trim().length > 0) {
-            parts.push(`Seller: ${seller.trim()}`);
         }
         return parts.length ? parts.join(' • ') : null;
     }
@@ -254,6 +251,12 @@
                                     {#if lineSubtitle(line)}
                                         <div class="text-xs opacity-70 truncate">
                                             {lineSubtitle(line)}
+                                        </div>
+                                    {/if}
+                                    {#if typeof line?.seller === 'string' && line.seller.trim().length > 0}
+                                        <div class="flex items-center gap-2 mt-0.5 min-w-0">
+                                            <Avatar view="small_no_text" address={line.seller} />
+                                            <span class="font-mono text-[11px] opacity-70 break-all">{line.seller}</span>
                                         </div>
                                     {/if}
                                     <div class="text-xs opacity-70 mt-0.5">
