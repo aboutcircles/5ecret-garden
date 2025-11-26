@@ -52,6 +52,9 @@
   let gtin13      = $state(context.draft.gtin13 ?? '');
   let category    = $state(context.draft.category ?? '');
 
+  // Are we editing an existing product?
+  const editMode: boolean = Boolean((context as any)?.editMode);
+
   // Advanced section toggle
   let showAdvanced = $state(false);
 
@@ -81,7 +84,8 @@
 
     context.draft = {
       ...context.draft!,
-      sku: hasManualSku ? sku : generateSku(name),
+      // Never alter SKU in edit mode
+      sku: editMode ? (context.draft!.sku || sku) : (hasManualSku ? sku : generateSku(name)),
       name,
       description: description || undefined,
       images: imagesField,
@@ -167,12 +171,18 @@
     <div class="collapse-title text-md font-medium">Advanced</div>
     <div class="collapse-content space-y-3">
       <label class="form-control">
-        <span class="label-text">SKU (optional)</span>
-        <input class="input input-bordered" bind:value={sku} placeholder={autoSku} />
-        <span class="label-text-alt opacity-70">Leave empty to auto-generate from name. Allowed: a–z, 0–9, dashes and underscores; max 63 chars.</span>
+        <span class="label-text">SKU {#if editMode}(locked){/if}</span>
+        <input class="input input-bordered" bind:value={sku} placeholder={autoSku} disabled={editMode} readonly={editMode} />
+        <span class="label-text-alt opacity-70">
+          {#if editMode}
+            SKU cannot be changed for existing products.
+          {:else}
+            Leave empty to auto-generate from name. Allowed: a–z, 0–9, dashes and underscores; max 63 chars.
+          {/if}
+        </span>
       </label>
-    </div>
-  </div>
+      </div>
+      </div>
 
   <div class="mt-4 flex justify-end">
     <button type="button" class="btn btn-primary" onclick={next}>Next</button>
