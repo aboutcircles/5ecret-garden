@@ -68,7 +68,10 @@
         };
         popupControls.open(nextPage);
 
-        e?.preventDefault();
+        // Prevent parent click handlers (e.g., clickable list rows) from firing
+        // and avoid default navigation when Avatar is used inside a link.
+        e?.stopPropagation?.();
+        e?.preventDefault?.();
     }
 </script>
 
