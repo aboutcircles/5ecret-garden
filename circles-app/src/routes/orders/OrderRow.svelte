@@ -36,10 +36,16 @@
     navigator.clipboard?.writeText(item.id).catch(() => {});
   }
 
+  import { popupControls, type PopupContentDefinition } from '$lib/stores/popUp';
+  import OrderDetailsPopup from '$lib/orders/OrderDetailsPopup.svelte';
+
   function goToDetails() {
-    // Lazy import to avoid direct dependency; use location for simplicity
-    // since it's an internal route.
-    window.location.assign(`/orders/${encodeURIComponent(item.id)}`);
+    const def: PopupContentDefinition = {
+      title: 'Order details',
+      component: OrderDetailsPopup,
+      props: { orderId: item.id },
+    };
+    popupControls.open(def);
   }
 </script>
 
