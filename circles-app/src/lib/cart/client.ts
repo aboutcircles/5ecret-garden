@@ -37,6 +37,65 @@ export class CartHttpError extends Error {
 }
 
 /**
+ * GET /orders/{orderId}
+ */
+export async function getOrder(
+  orderId: string,
+  cfg?: CartClientConfig,
+): Promise<OrderSnapshot> {
+  const base = resolveBase(cfg);
+  const url = `${base}/api/cart/v1/orders/${encodeURIComponent(orderId)}`;
+
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: { Accept: 'application/ld+json' },
+  });
+
+  const body = await parseJson<unknown>(res).catch(() => ({}));
+
+  if (res.status === 200) {
+    return body as OrderSnapshot;
+  }
+  if (res.status === 404) {
+    throw new CartHttpError(404, body, 'Order not found');
+  }
+  throw new CartHttpError(res.status, body);
+}
+
+/**
+ * POST /orders/batch
+ */
+export async function getOrdersBatch(
+  ids: string[],
+  cfg?: CartClientConfig,
+): Promise<OrderSnapshot[]> {
+  const base = resolveBase(cfg);
+  const url = `${base}/api/cart/v1/orders/batch`;
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/ld+json; charset=utf-8',
+      Accept: 'application/ld+json',
+    },
+    body: JSON.stringify({ ids }),
+  });
+
+  const body = await parseJson<any>(res).catch(() => ({}));
+
+  if (res.status === 400) {
+    throw new CartHttpError(400, body);
+  }
+
+  if (!res.ok) {
+    throw new CartHttpError(res.status, body);
+  }
+
+  const items = Array.isArray(body?.items) ? (body.items as OrderSnapshot[]) : [];
+  return items;
+}
+
+/**
  * POST /baskets – create basket.
  */
 export async function createBasket(

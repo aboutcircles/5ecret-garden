@@ -5,27 +5,68 @@
   import { listStoredOrderIds } from '$lib/cart/orders-local';
   import type { Readable } from 'svelte/store';
   import { browser } from '$app/environment';
+  import { getOrdersBatch } from '$lib/cart/client';
 
-  type ListItem = { id: string; createdAt?: string } & { blockNumber: number; transactionIndex: number; logIndex: number; address?: string };
+  type ListItem = {
+    id: string; // orderNumber
+    status?: string;
+    total?: { price?: number | null; priceCurrency?: string | null } | null;
+    customerId?: string | null;
+  } & { blockNumber: number; transactionIndex: number; logIndex: number; address?: string };
 
   // Build a simple readable-like object compatible with GenericList
   let ordersStore: Readable<{ data: ListItem[]; next: () => Promise<boolean>; ended: boolean }>; 
 
   function buildStore(): Readable<{ data: ListItem[]; next: () => Promise<boolean>; ended: boolean }>{
     const ids = listStoredOrderIds();
-    // Optionally we could store timestamps alongside, but for now only id
+    type State = { data: ListItem[]; ended: boolean; next: () => Promise<boolean> };
+    const subscribers = new Set<(v: State) => void>();
+    const notify = (v: State) => subscribers.forEach((fn) => fn(v));
+    let loaded = false;
     const now = Date.now();
-    const data: ListItem[] = ids.map((id, i) => ({
-      id,
-      blockNumber: now - i,
-      transactionIndex: i,
-      logIndex: 0,
-      address: id,
-    }));
+
+    let state: State = {
+      data: [],
+      ended: ids.length === 0 ? true : false,
+      next: async () => {
+        if (loaded) return true;
+        loaded = true;
+        try {
+          if (ids.length === 0) {
+            state = { ...state, data: [], ended: true };
+            notify(state);
+            return true;
+          }
+          const snapshots = await getOrdersBatch(ids);
+          const data: ListItem[] = (snapshots || []).map((s, i) => ({
+            id: (s as any)?.orderNumber ?? ids[i] ?? `ord_${i}`,
+            status: (s as any)?.orderStatus,
+            total: (s as any)?.totalPaymentDue ?? null,
+            customerId: (s as any)?.customer?.['@id'] ?? null,
+            blockNumber: now - i,
+            transactionIndex: i,
+            logIndex: 0,
+            address: (s as any)?.orderNumber ?? ids[i] ?? undefined,
+          }));
+          state = { ...state, data, ended: true };
+          notify(state);
+          return true;
+        } catch (e) {
+          // On error, settle with empty list to avoid spinner loop
+          state = { ...state, data: [], ended: true };
+          notify(state);
+          return true;
+        }
+      },
+    };
+
     return {
-      subscribe(run: any) {
-        run({ data, next: async () => true, ended: true });
-        return () => {};
+      subscribe(run: (v: State) => void) {
+        subscribers.add(run);
+        run(state);
+        return () => {
+          subscribers.delete(run);
+        };
       },
     } as any;
   }
