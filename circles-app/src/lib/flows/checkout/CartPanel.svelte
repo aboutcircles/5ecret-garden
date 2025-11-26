@@ -9,6 +9,7 @@
   import type { AggregatedCatalogItem } from '$lib/market/types';
   import { popupControls } from '$lib/stores/popUp';
   import { fetchProductForSellerAndSku } from '$lib/market/catalogClient';
+  import { pickFirstProductImageUrl } from '$lib/market/imageHelpers';
   import CheckoutForms from '$lib/flows/checkout/CheckoutForms.svelte';
   import CheckoutReview from '$lib/flows/checkout/CheckoutReview.svelte';
 
@@ -33,6 +34,12 @@
     if (!key) return undefined;
     const entry = resolvedProducts[key];
     return entry ?? undefined;
+  }
+
+  function imageUrlForLine(line: any): string | null {
+    const item = findCatalogItem(line?.seller as string | undefined, line?.orderedItem?.sku as string | undefined);
+    if (!item) return null;
+    return pickFirstProductImageUrl(item.product);
   }
 
   function formatCurrency(amount: number | null | undefined, code: string | null | undefined): string {
@@ -208,23 +215,33 @@
     <div class="space-y-2">
       {#each $cartState.basket.items as line, i}
         <div class="flex items-start justify-between gap-3 border border-base-300 rounded-md px-3 py-2">
-          <div class="min-w-0">
-            <div class="font-semibold truncate">
-              {findCatalogItem(line.seller, line.orderedItem.sku)?.product.name
-                ?? line.orderedItem.sku}
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-14 h-14 rounded bg-base-200 overflow-hidden shrink-0 flex items-center justify-center">
+              {#if imageUrlForLine(line)}
+                <img src={imageUrlForLine(line) || ''} alt={findCatalogItem(line.seller, line.orderedItem.sku)?.product.name || 'product-image'} class="w-14 h-14 object-cover" loading="lazy" />
+              {:else}
+                <span class="text-[10px] opacity-60">No image</span>
+              {/if}
             </div>
-            <div class="text-xs opacity-70 truncate">
-              Seller: {line.seller}
-            </div>
-            {#if line.offerSnapshot}
-              <div class="text-xs mt-1">
-                Price:&nbsp;
-                {formatCurrency(
-                  line.offerSnapshot?.price ?? null,
-                  line.offerSnapshot?.priceCurrency ?? null,
-                )}
+
+            <div class="min-w-0">
+              <div class="font-semibold truncate">
+                {findCatalogItem(line.seller, line.orderedItem.sku)?.product.name
+                  ?? line.orderedItem.sku}
               </div>
-            {/if}
+              <div class="text-xs opacity-70 truncate">
+                Seller: {line.seller}
+              </div>
+              {#if line.offerSnapshot}
+                <div class="text-xs mt-1">
+                  Price:&nbsp;
+                  {formatCurrency(
+                    line.offerSnapshot?.price ?? null,
+                    line.offerSnapshot?.priceCurrency ?? null,
+                  )}
+                </div>
+              {/if}
+            </div>
           </div>
 
           <div class="flex flex-col items-end gap-1">

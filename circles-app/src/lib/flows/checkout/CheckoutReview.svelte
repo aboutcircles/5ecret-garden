@@ -4,6 +4,9 @@
     import { cartState, checkoutCart } from '$lib/cart/store';
     import { popupControls } from '$lib/stores/popUp';
     import CheckoutPayment from './CheckoutPayment.svelte';
+    import { fetchProductForSellerAndSku } from '$lib/market/catalogClient';
+    import type { AggregatedCatalogItem } from '$lib/market/types';
+    import { pickFirstProductImageUrl } from '$lib/market/imageHelpers';
 
     let localError: string | null = $state(null);
     let submitting = $state(false);
@@ -16,6 +19,58 @@
     const shippingAddress = $derived(basket?.shippingAddress as any);
     const contactPoint = $derived(basket?.contactPoint as any);
     const ageProof = $derived(basket?.ageProof as any);
+
+    // Resolve product metadata (name, image) for review items
+    type ProductKey = string;
+    function productKey(seller: string | undefined, sku: string | undefined): ProductKey | null {
+        if (!seller || !sku) return null;
+        return `${seller.toLowerCase()}::${sku.toLowerCase()}`;
+    }
+
+    let resolvedProducts: Record<ProductKey, AggregatedCatalogItem | null> = $state({});
+    let resolvingKeys: Set<ProductKey> = new Set();
+
+    function findCatalogItem(
+        seller: string | undefined,
+        sku: string | undefined,
+    ): AggregatedCatalogItem | undefined {
+        const key = productKey(seller, sku);
+        if (!key) return undefined;
+        const entry = resolvedProducts[key];
+        return entry ?? undefined;
+    }
+
+    function imageUrlForLine(line: any): string | null {
+        const item = findCatalogItem(line?.seller as string | undefined, line?.orderedItem?.sku as string | undefined);
+        if (!item) return null;
+        return pickFirstProductImageUrl(item.product);
+    }
+
+    // Background fetch of product metadata
+    $effect(() => {
+        for (const line of lines) {
+            const seller = line?.seller as string | undefined;
+            const sku = line?.orderedItem?.sku as string | undefined;
+            const key = productKey(seller, sku);
+            if (!key) continue;
+            const known = Object.prototype.hasOwnProperty.call(resolvedProducts, key);
+            const busy = resolvingKeys.has(key);
+            if (known || busy) continue;
+
+            resolvingKeys.add(key);
+            resolvedProducts = { ...resolvedProducts, [key]: null };
+            void (async () => {
+                try {
+                    const item = await fetchProductForSellerAndSku(seller as string, sku as string);
+                    resolvedProducts = { ...resolvedProducts, [key]: item };
+                } catch {
+                    resolvedProducts = { ...resolvedProducts, [key]: null };
+                } finally {
+                    resolvingKeys.delete(key);
+                }
+            })();
+        }
+    });
 
     function lineTitle(line: any): string {
         const name = line?.orderedItem?.name;
@@ -148,7 +203,7 @@
 </script>
 
 <FlowDecoration>
-    <div class="space-y-4 text-xs">
+    <div class="space-y-4 text-sm">
         <!-- Order meta -->
         {#if preview}
             <div class="space-y-1">
@@ -180,10 +235,10 @@
         {#if hasLines}
             <div class="mt-2 border border-base-300 rounded-lg bg-base-100">
                 <div class="px-3 py-2 border-b border-base-300 flex items-center justify-between">
-                    <span class="font-semibold text-[11px] uppercase tracking-wide">
+                    <span class="font-semibold text-xs uppercase tracking-wide">
                         Items
                     </span>
-                    <span class="text-[11px] opacity-70">
+                    <span class="text-xs opacity-70">
                         {lines.length} item{lines.length === 1 ? '' : 's'}
                     </span>
                 </div>
@@ -193,23 +248,33 @@
                         {@const unit = getLineUnitPrice(line)}
                         {@const total = getLineTotal(line)}
                         <div class="px-3 py-2 flex items-start justify-between gap-3">
-                            <div class="min-w-0">
-                                <div class="text-xs font-semibold truncate">
-                                    {lineTitle(line)}
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-14 h-14 rounded bg-base-200 overflow-hidden shrink-0 flex items-center justify-center">
+                                    {#if imageUrlForLine(line)}
+                                        <img src={imageUrlForLine(line) || ''} alt={findCatalogItem(line.seller, line.orderedItem?.sku)?.product.name || 'product-image'} class="w-14 h-14 object-cover" loading="lazy" />
+                                    {:else}
+                                        <span class="text-[10px] opacity-60">No image</span>
+                                    {/if}
                                 </div>
-                                {#if lineSubtitle(line)}
-                                    <div class="text-[11px] opacity-70 truncate">
-                                        {lineSubtitle(line)}
+
+                                <div class="min-w-0">
+                                    <div class="font-semibold truncate">
+                                        {findCatalogItem(line.seller, line.orderedItem?.sku)?.product.name ?? lineTitle(line)}
                                     </div>
-                                {/if}
-                                <div class="text-[11px] opacity-70 mt-0.5">
-                                    Qty: {getLineQuantity(line)}
+                                    {#if lineSubtitle(line)}
+                                        <div class="text-xs opacity-70 truncate">
+                                            {lineSubtitle(line)}
+                                        </div>
+                                    {/if}
+                                    <div class="text-xs opacity-70 mt-0.5">
+                                        Qty: {getLineQuantity(line)}
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="text-right shrink-0">
                                 {#if unit.amount != null}
-                                    <div class="text-[11px] opacity-70">
+                                    <div class="text-xs opacity-70">
                                         {formatCurrency(unit.amount, unit.code)} each
                                     </div>
                                 {/if}
@@ -236,7 +301,7 @@
             <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {#if shippingAddress}
                     <div class="border border-base-300 rounded-lg bg-base-100 p-3">
-                        <div class="font-semibold text-[11px] uppercase tracking-wide mb-1">
+                        <div class="font-semibold text-xs uppercase tracking-wide mb-1">
                             Shipping address
                         </div>
                         {#each formatShippingAddress(shippingAddress) as line}
@@ -246,7 +311,7 @@
                 {/if}
 
                 <div class="border border-base-300 rounded-lg bg-base-100 p-3">
-                    <div class="font-semibold text-[11px] uppercase tracking-wide mb-1">
+                    <div class="font-semibold text-xs uppercase tracking-wide mb-1">
                         Contact
                     </div>
                     {#if formatContactPoint(contactPoint).length > 0}
@@ -265,7 +330,7 @@
 
         <!-- Totals per currency (client-side) -->
         {#if totalsArray.length > 0}
-            <div class="mt-1 border-t border-base-300 pt-2 text-xs space-y-1">
+            <div class="mt-1 border-t border-base-300 pt-2 text-sm space-y-1">
                 {#each totalsArray as [code, total]}
                     <div class="flex justify-between">
                         <span>Items total{code ? ` (${code})` : ''}</span>
@@ -290,7 +355,7 @@
         </div>
 
         {#if localError}
-            <div class="alert alert-error text-xs mt-2">
+            <div class="alert alert-error text-sm mt-2">
                 {localError}
             </div>
         {/if}
