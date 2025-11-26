@@ -97,17 +97,7 @@
         return parts.length ? parts.join(' • ') : null;
     }
 
-    function formatCurrency(
-        amount: number | null | undefined,
-        code: string | null | undefined
-    ): string {
-        if (amount == null || !Number.isFinite(Number(amount))) {
-            return '?';
-        }
-        const value = Number(amount);
-        const rounded = value.toFixed(2);
-        return code ? `${rounded} ${code}` : rounded;
-    }
+    import { formatCurrency } from '$lib/cart/money';
 
     function getLineUnitPrice(line: any): { amount: number | null; code: string | null } {
         const snap = line?.offerSnapshot;
