@@ -251,7 +251,7 @@
           type="button"
           class="btn btn-sm btn-outline"
           on:click={goToReview}
-          disabled={!canContinue}
+          disabled={validating || $cartState.loading}
         >
           {validating || $cartState.loading ? 'Checking…' : 'Continue'}
         </button>

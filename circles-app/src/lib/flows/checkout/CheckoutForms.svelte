@@ -129,7 +129,6 @@
       await persistDetails();
       const v = await validateCart();
       if (needsShippingFromValidation(v)) {
-        // TODO: This sometimes leads to the problem that the button must be pressed two times. Maybe in conjunction with bad network.
         // Stay on details; per-field errors will be visible
         return;
       }
@@ -252,10 +251,10 @@
           type="button"
           class="btn btn-sm btn-outline"
           on:click={goToReview}
-          disabled={!canContinue}
+          disabled={validating || $cartState.loading}
         >
           {validating || $cartState.loading ? 'Checking…' : 'Continue'}
         </button>
       </div>
     </div>
-</FlowDecoration>
+  </FlowDecoration>
