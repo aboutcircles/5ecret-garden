@@ -37,6 +37,17 @@
     if (!p) return null;
     return formatCurrency(p.price ?? null, p.priceCurrency ?? null);
   }
+
+  // Extract seller @id for a given item index, aligning with acceptedOffer order.
+  function sellerIdForIndex(i: number): string | null {
+    try {
+      const offer = (snapshot as any)?.acceptedOffer?.[i];
+      const sellerObj = offer?.seller;
+      return getSchemaId(sellerObj);
+    } catch {
+      return null;
+    }
+  }
 </script>
 
 {#if snapshot}
@@ -96,6 +107,9 @@
             <div class="min-w-0">
               <div class="font-medium truncate">{line?.orderedItem?.sku ?? 'Item'}</div>
               <div class="text-xs opacity-70">Qty: {line?.orderQuantity ?? 1}</div>
+              {#if sellerIdForIndex(i)}
+                <div class="font-mono text-[11px] opacity-70 break-all">Seller: {sellerIdForIndex(i)}</div>
+              {/if}
               {#if line?.productCid}
                 <div class="font-mono text-[11px] opacity-70 break-all">{line.productCid}</div>
               {/if}
