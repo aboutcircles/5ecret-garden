@@ -8,7 +8,7 @@
     import Avatar from '$lib/components/avatar/Avatar.svelte';
     import { MARKET_API_BASE, MARKET_OPERATOR } from '$lib/config/market';
     import type { AggregatedCatalog, AggregatedCatalogItem } from '$lib/market/types';
-    import { extractProducts } from '$lib/market/catalogHelpers';
+    import { fetchSellerCatalog } from '$lib/market/catalogClient';
     import { shortenAddress } from '$lib/utils/shared';
     import { normalizeAddress } from '$lib/offers/adapters';
     import { avatarState } from '$lib/stores/avatar.svelte';
@@ -49,32 +49,29 @@
     // data load
     // ————————————————————————————————————————————
     async function loadSellerCatalog(): Promise<void> {
-        loading = true;
-        errorMsg = '';
-        
-        try {
-            // Validate and normalize the seller address
-            sellerAddress = normalizeAddress(params.seller) as `0x${string}`;
-            shortSellerAddr = shortAddr(sellerAddress);
-            
-            // Fetch catalog for this specific seller
-            const url = `${API_BASE}/api/operator/${OPERATOR}/catalog?avatars=${sellerAddress}`;
-            const res = await fetch(url, {headers: {Accept: 'application/ld+json'}});
-            
-            if (!res.ok) {
-                const text = await res.text().catch(() => '');
-                throw new Error(`HTTP ${res.status} ${res.statusText}${text ? ` — ${text}` : ''}`);
-            }
-            
-            const body = await res.json();
-            products = extractProducts(body);
-            // Filter to only show products from this seller using typed field
-            products = products.filter(p => (p.seller?.toLowerCase?.() ?? p.seller) === sellerAddress);
-        } catch (err: any) {
-            errorMsg = err?.message ?? String(err);
-        } finally {
-            loading = false;
-        }
+      loading = true;
+      errorMsg = '';
+      products = [];
+      sellerAddress = null;
+      shortSellerAddr = '';
+
+      try {
+        const normalized = normalizeAddress(params.seller);
+        sellerAddress = normalized as `0x${string}`;
+        shortSellerAddr = shortAddr(sellerAddress);
+
+        const items = await fetchSellerCatalog(normalized);
+        // fetchSellerCatalog already filters by seller, but keep this defensive filter
+        products = items.filter(
+          (p) => (p.seller ?? '').toLowerCase() === normalized.toLowerCase(),
+        );
+      } catch (err: unknown) {
+        const msg =
+          err instanceof Error ? err.message : typeof err === 'string' ? err : 'Unknown error';
+        errorMsg = msg;
+      } finally {
+        loading = false;
+      }
     }
 
     // No longer needed complex unwrap helpers due to strong typing

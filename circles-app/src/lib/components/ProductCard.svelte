@@ -159,23 +159,14 @@
                         class="btn btn-sm btn-outline"
                         on:click|stopPropagation={handleAddToBasket}
                         disabled={!offer || cartLoading || !currentAvatar}
-                        title={!currentAvatar ? 'Connect a Circles account first' : (!offer ? 'No offer available' : 'Add to basket')}
+                        title={!currentAvatar
+          ? 'Connect a Circles account first'
+          : !offer
+            ? 'No offer available'
+            : 'Add to basket'}
                 >
                     Add to basket
                 </button>
-
-                {#if offer && typeof offer.checkout === 'string' && offer.checkout.trim() !== ''}
-                    <a
-                            class="btn btn-sm btn-primary"
-                            title="Open checkout"
-                            target="_blank"
-                            rel="noopener"
-                            href={offer.checkout}
-                            on:click|stopPropagation
-                    >
-                            Buy
-                    </a>
-                {/if}
             </svelte:fragment>
         </ProductViewer>
     </div>

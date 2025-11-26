@@ -6,6 +6,7 @@
     import ProductCard from '$lib/components/ProductCard.svelte';
     import ProfileExplorer from "$lib/flows/offer/ProfileExplorer.svelte";
     import { MARKET_API_BASE, MARKET_OPERATOR } from '$lib/config/market';
+    import { fetchGlobalCatalog } from '$lib/market/catalogClient';
     import type { AggregatedCatalog, AggregatedCatalogItem } from '$lib/market/types';
 
     // Defaults (as requested)
@@ -20,7 +21,6 @@
     let errorMsg: string = $state('');
     let products: ProductLike[] = $state([]);
 
-    import { extractProducts } from '$lib/market/catalogHelpers';
     import { shortenAddress } from '$lib/utils/shared';
     const shortAddr = (a?: string) => (a ? shortenAddress(a as any) : '');
 
@@ -28,24 +28,19 @@
     // data load
     // ————————————————————————————————————————————
     async function loadCatalog(): Promise<void> {
-        loading = true;
-        errorMsg = '';
-        products = [];
+      loading = true;
+      errorMsg = '';
+      products = [];
 
-        const url = `${API_BASE}/api/operator/${OPERATOR}/catalog?avatars=${AVATAR}&avatars=0x1327c3cf61c6df3e0cf69faa4590281d6f675ce5&avatars=0xde374ece6fa50e781e81aac78e811b33d16912c7`;
-        try {
-            const res = await fetch(url, {headers: {Accept: 'application/ld+json'}});
-            if (!res.ok) {
-                const text = await res.text().catch(() => '');
-                throw new Error(`HTTP ${res.status} ${res.statusText}${text ? ` — ${text}` : ''}`);
-            }
-            const body = await res.json();
-            products = extractProducts(body);
-        } catch (err: any) {
-            errorMsg = err?.message ?? String(err);
-        } finally {
-            loading = false;
-        }
+      try {
+        products = await fetchGlobalCatalog();
+      } catch (err: unknown) {
+        const msg =
+          err instanceof Error ? err.message : typeof err === 'string' ? err : 'Unknown error';
+        errorMsg = msg;
+      } finally {
+        loading = false;
+      }
     }
 
     onMount(loadCatalog);

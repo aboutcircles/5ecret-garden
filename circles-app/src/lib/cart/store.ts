@@ -373,12 +373,26 @@ export async function previewCartOrder(
     }));
     return snapshotOrder;
   } catch (e: unknown) {
-    const msg =
-      e instanceof Error ? e.message : typeof e === 'string' ? e : 'Unknown error';
+    let msg: string;
+    let validation: ValidationResult | null = null;
+
+    if (e instanceof CartHttpError) {
+      const body = e.body as any;
+      msg = typeof body?.error === 'string' ? body.error : e.message;
+      if (body && typeof body === 'object' && body.validation) {
+        validation = body.validation as ValidationResult;
+      }
+    } else {
+      msg =
+        e instanceof Error ? e.message : typeof e === 'string' ? e : 'Unknown error';
+    }
+
     cartState.update((s) => ({
       ...s,
       loading: false,
       lastError: String(msg),
+      validation: validation ?? s.validation,
+      orderPreview: null,
     }));
     throw e;
   }

@@ -130,16 +130,6 @@
         </div>
       {/if}
 
-      {#if typeof offer?.checkout === 'string' && offer.checkout.trim() !== ''}
-        <a
-          href={offer.checkout}
-          target="_blank"
-          rel="noopener noreferrer"
-          class="btn btn-primary w-full mt-4"
-        >
-          Purchase Now
-        </a>
-      {/if}
     </div>
   {/if}
 
