@@ -3,12 +3,14 @@
   import { browser } from '$app/environment';
   import { page } from '$app/stores';
   import { getOrder, CartHttpError } from '$lib/cart/client';
+  import OrderDetailsView from '$lib/orders/OrderDetailsView.svelte';
 
   const orderId: string | null = $derived($page.params?.id ?? null);
 
   let loading = $state<boolean>(true);
   let error: string | null = $state<string | null>(null);
   let jsonText: string = $state<string>('{}');
+  let snapshot: any = $state<any>(null);
 
   async function load(): Promise<void> {
     if (!browser || !orderId) {
@@ -18,14 +20,16 @@
     loading = true;
     error = null;
     try {
-      const snapshot = await getOrder(orderId);
-      jsonText = JSON.stringify(snapshot, null, 2);
+      const snap = await getOrder(orderId);
+      snapshot = snap;
+      jsonText = JSON.stringify(snap, null, 2);
     } catch (e: unknown) {
       if (e instanceof CartHttpError && e.status === 404) {
         error = 'Order not found';
       } else {
         error = e instanceof Error ? e.message : 'Failed to load order';
       }
+      snapshot = null;
       jsonText = '{}';
     } finally {
       loading = false;
@@ -101,8 +105,13 @@
         <span>{error}</span>
       </div>
     {/if}
-    <div class="bg-base-100 border rounded-xl shadow-sm overflow-hidden">
-      <pre class="m-0 p-4 text-xs overflow-auto"><code>{jsonText}</code></pre>
-    </div>
+    <OrderDetailsView {snapshot} />
+
+    <details class="mt-4">
+      <summary class="cursor-pointer text-sm opacity-70 hover:opacity-100">View raw JSON</summary>
+      <div class="bg-base-100 border rounded-xl shadow-sm overflow-hidden mt-2">
+        <pre class="m-0 p-4 text-xs overflow-auto"><code>{jsonText}</code></pre>
+      </div>
+    </details>
   {/if}
 </PageScaffold>
