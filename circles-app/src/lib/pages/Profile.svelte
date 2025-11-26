@@ -33,6 +33,11 @@
     import Tabs from '$lib/components/tabs/Tabs.svelte';
     import Tab from '$lib/components/tabs/Tab.svelte';
     import RowFrame from '$lib/ui/RowFrame.svelte';
+    // Offers tab dependencies
+    import ProductCard from '$lib/components/ProductCard.svelte';
+    import { fetchSellerCatalog } from '$lib/market/catalogClient';
+    import { normalizeAddress } from '$lib/offers/adapters';
+    import type { AggregatedCatalogItem } from '$lib/market/types';
 
     interface Props {
         address: Address | undefined;
@@ -69,6 +74,41 @@
         amountToRedeemInCircles: number;
         trustRelation?: TrustRelation;
     }> = $state([]);
+
+    // Offers tab state
+    let offersLoading: boolean = $state(false);
+    let offersError: string = $state('');
+    let offers: AggregatedCatalogItem[] = $state([]);
+    // Track which seller address the current `offers` belong to (lowercased)
+    let offersFor: string | null = $state(null);
+
+    async function loadOffers(): Promise<void> {
+        if (!address) return;
+        const seller = normalizeAddress(String(address));
+        offersLoading = true;
+        offersError = '';
+        offers = [];
+        try {
+            const items = await fetchSellerCatalog(seller);
+            offers = items;
+            offersFor = seller;
+        } catch (e: any) {
+            offersError = e?.message || 'Failed to load offers';
+            offersFor = seller; // avoid refetch loop on same address
+        } finally {
+            offersLoading = false;
+        }
+    }
+
+    // Load when the Offers tab is selected or when the address changes while on the tab
+    $effect(() => {
+        if (selectedTab === 'offers' && address) {
+            const want = normalizeAddress(String(address));
+            if (!offersLoading && offersFor !== want) {
+                void loadOffers();
+            }
+        }
+    });
 
     async function initialize(address: Address) {
         const hasCircles: boolean = !!$circles;
@@ -428,4 +468,38 @@
             </div>
         </Tab>
     {/if}
+
+    <!-- Offers tab: shows products listed by this profile's address -->
+    <Tab
+            id="offers"
+            title="Offers"
+            badge={offers.length}
+            panelClass="p-4 bg-base-100 border-none"
+    >
+        {#if offersLoading}
+            <div class="flex items-center gap-2 text-base-content/70 py-2">
+                <span class="loading loading-spinner loading-sm"></span>
+                <span>Loading offers…</span>
+            </div>
+        {:else if offersError}
+            <div class="alert alert-warning">
+                <span>{offersError}</span>
+                <button class="btn btn-xs ml-2" onclick={loadOffers}>Retry</button>
+            </div>
+        {:else}
+            {#if offers.length === 0}
+                <div class="text-sm opacity-70">No offers</div>
+            {:else}
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" data-sveltekit-preload-data="hover">
+                    {#each offers as p (p.productCid ?? p.linkKeccak ?? p.indexInChunk)}
+                        <ProductCard
+                                product={p}
+                                showSellerInfo={false}
+                                ondeleted={() => loadOffers()}
+                        />
+                    {/each}
+                </div>
+            {/if}
+        {/if}
+    </Tab>
 </Tabs>
