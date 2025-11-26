@@ -12,7 +12,7 @@
     interface Props {
         address: Address | undefined;
         clickable?: boolean;
-        view: 'horizontal' | 'vertical';
+        view: 'horizontal' | 'vertical' | 'small' | 'small_no_text';
         pictureOverlayUrl?: string | undefined;
         topInfo?: string | undefined;
         bottomInfo?: string | undefined;
@@ -97,6 +97,15 @@
                 {/if}
             </div>
         </div>
+    {:else if view === 'small' || view === 'small_no_text'}
+        <div class="inline-flex items-center gap-2">
+            {#if placeholderAvatar}
+                <div class="w-6 h-6 rounded-full bg-transparent inline-block align-middle">&nbsp;</div>
+            {/if}
+            {#if view === 'small' && placeholderTop}
+                <div class="text-sm font-medium inline-block align-middle">&nbsp;</div>
+            {/if}
+        </div>
     {:else}
         <div
                 class="flex flex-col items-center gap-2 p-2 rounded-lg w-full"
@@ -123,6 +132,19 @@
                 {topInfo}
                 {bottomInfo}
         />
+    </div>
+{:else if view === 'small' || view === 'small_no_text'}
+    <div class="inline-flex items-center gap-2" transition:fade>
+        <button class="cursor-pointer inline-flex items-center" onclick={openAvatar} aria-label={profile?.name || 'Profile'}>
+            <img
+                src={profile?.previewImageUrl}
+                alt="User Icon"
+                class="w-6 h-6 object-cover rounded-full"
+            />
+        </button>
+        {#if view === 'small'}
+            <span class="text-sm font-medium truncate max-w-[12rem] align-middle">{profile?.name}</span>
+        {/if}
     </div>
 {:else}
     <div transition:fade>

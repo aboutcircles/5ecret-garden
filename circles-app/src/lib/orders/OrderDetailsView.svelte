@@ -1,5 +1,7 @@
 <script lang="ts">
   import { formatCurrency } from '$lib/cart/money';
+  import Avatar from '$lib/components/avatar/Avatar.svelte';
+  import type { Address as EvmAddress } from '@circles-sdk/utils';
   import type { OrderSnapshot } from '$lib/cart/types';
 
   interface Props {
@@ -30,6 +32,17 @@
       }
     } catch {}
     return null;
+  }
+
+  // Extract an EVM address from an eip155-style Schema.org @id (e.g. eip155:100:0xabc...)
+  function evmFromEip155(id: string | null | undefined): EvmAddress | undefined {
+    if (!id || typeof id !== 'string') return null;
+    const parts = id.split(':');
+    if (parts.length >= 3) {
+      const addr = parts[2];
+      if (/^0x[a-fA-F0-9]{40}$/.test(addr)) return addr as unknown as EvmAddress;
+    }
+    return undefined;
   }
 
   function priceDisplay(): string | null {
@@ -69,11 +82,18 @@
     <div class="px-4 md:px-5 pb-4 md:pb-5 grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="space-y-1">
         <div class="text-xs uppercase tracking-wide opacity-60">Customer</div>
+        <!-- Buyer (me): do NOT show avatar per requirement -->
         <div class="font-mono text-sm break-all">{partyId(getSchemaId(snapshot.customer))}</div>
       </div>
       <div class="space-y-1">
         <div class="text-xs uppercase tracking-wide opacity-60">Broker</div>
-        <div class="font-mono text-sm break-all">{partyId(getSchemaId(snapshot.broker))}</div>
+        <div class="flex items-center gap-2 min-w-0">
+          {#if evmFromEip155(getSchemaId(snapshot.broker))}
+            <!-- Small inline avatar before broker address -->
+            <Avatar view="small_no_text" address={evmFromEip155(getSchemaId(snapshot.broker))} />
+          {/if}
+          <span class="font-mono text-sm break-all">{partyId(getSchemaId(snapshot.broker))}</span>
+        </div>
       </div>
 
       {#if snapshot.shippingAddress}
@@ -108,7 +128,12 @@
               <div class="font-medium truncate">{line?.orderedItem?.sku ?? 'Item'}</div>
               <div class="text-xs opacity-70">Qty: {line?.orderQuantity ?? 1}</div>
               {#if sellerIdForIndex(i)}
-                <div class="font-mono text-[11px] opacity-70 break-all">Seller: {sellerIdForIndex(i)}</div>
+                <div class="flex items-center gap-2">
+                  {#if evmFromEip155(sellerIdForIndex(i))}
+                    <Avatar view="small_no_text" address={evmFromEip155(sellerIdForIndex(i))} />
+                  {/if}
+                  <span class="font-mono text-[11px] opacity-70 break-all">Seller: {sellerIdForIndex(i)}</span>
+                </div>
               {/if}
               {#if line?.productCid}
                 <div class="font-mono text-[11px] opacity-70 break-all">{line.productCid}</div>
