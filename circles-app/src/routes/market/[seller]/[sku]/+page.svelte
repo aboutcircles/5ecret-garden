@@ -6,10 +6,11 @@
     import {goto} from "$app/navigation";
     import { MARKET_API_BASE, MARKET_OPERATOR } from '$lib/config/market';
     import type { AggregatedCatalogItem } from '$lib/market/types';
-    import { extractProducts, getFirstOffer } from '$lib/market/catalogHelpers';
+    import { getFirstOffer } from '$lib/market/catalogHelpers';
     import { normalizeAddress } from '$lib/offers/adapters';
     import { avatarState } from '$lib/stores/avatar.svelte';
     import { cartState, addToCart } from '$lib/cart/store';
+    import { fetchProductForSellerAndSku } from '$lib/market/catalogClient';
 
     // Derive seller and SKU from SvelteKit's $page store
     const params = $derived($page.params as { seller: string; sku: string });
@@ -28,32 +29,26 @@
 
     // Load product details
     async function loadProduct(): Promise<void> {
-        loading = true;
-        errorMsg = '';
-        product = null;
+      loading = true;
+      errorMsg = '';
+      product = null;
 
-        try {
-            const seller = normalizeAddress(params.seller);
-            const url = `${API_BASE}/api/operator/${OPERATOR}/catalog?avatars=${seller}`;
-            const res = await fetch(url, {headers: {Accept: 'application/ld+json'}});
-            if (!res.ok) {
-                const text = await res.text().catch(() => '');
-                throw new Error(`HTTP ${res.status} ${res.statusText}${text ? ` — ${text}` : ''}`);
-            }
-            const body = await res.json();
-            const items = extractProducts(body);
-            const fromSeller = items.filter(i => (i.seller?.toLowerCase?.() ?? i.seller) === seller);
-            product = fromSeller.find(i => i.product?.sku === params.sku) ?? null;
-            if (!product && fromSeller.length > 0) {
-                product = fromSeller.find(i => (i as any).id === params.sku || (i as any).productCid === params.sku) ?? fromSeller[0];
-            }
-            console.log("seller-sku-page: ", product);
+      try {
+        const seller = normalizeAddress(params.seller);
+        const sku = params.sku;
 
-        } catch (err: any) {
-            errorMsg = err?.message ?? String(err);
-        } finally {
-            loading = false;
+        const found = await fetchProductForSellerAndSku(seller, sku);
+        product = found;
+        if (!product) {
+          throw new Error('Product not found for this seller / sku.');
         }
+      } catch (err: unknown) {
+        const msg =
+          err instanceof Error ? err.message : typeof err === 'string' ? err : 'Unknown error';
+        errorMsg = msg;
+      } finally {
+        loading = false;
+      }
     }
 
     onMount(loadProduct);
