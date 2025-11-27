@@ -103,17 +103,14 @@
     </svelte:fragment>
 
     <svelte:fragment slot="actions">
-        <button
-                class="btn btn-sm btn-secondary"
-                on:click={() =>
+        <button type="button" class="btn btn-sm" on:click={() =>
       popupControls.open({
         title: 'Create Offer',
         component: OfferStep1,
         props: { context: { operator: OPERATOR, pinApiBase: API_BASE } },
         onClose: () => { void loadSellerCatalog(); }
       })
-    }
-        >
+    }>
             Create Listing
         </button>
     </svelte:fragment>
@@ -128,7 +125,7 @@
     <svelte:fragment slot="collapsed-menu">
         <button
                 type="button"
-                class="btn btn-secondary min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3"
+                class="btn btn-ghost min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3"
                 on:click={() =>
       popupControls.open({
         title: 'Create Offer',

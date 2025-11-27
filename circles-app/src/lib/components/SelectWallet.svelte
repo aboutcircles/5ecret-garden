@@ -34,10 +34,10 @@
     onclick={async () => {
       await clearSession();
       popupControls.open({
-      component: ImportCircles,
-      title: 'Use circles magic words',
-      props: {},
-    });
+        component: ImportCircles,
+        title: 'Use circles magic words',
+        props: {},
+      });
     }}
   >
     Circles.garden

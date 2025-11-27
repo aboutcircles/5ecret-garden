@@ -1,4 +1,6 @@
 <script lang="ts">
+  import Lucide from '$lib/icons/Lucide.svelte';
+  import { ChevronRight } from 'lucide';
 
   interface Props {
     imgUrl: string;
@@ -31,11 +33,12 @@
         {#if recommended}
           <span
             class={`text-white badge ${recommended === 'Connect' ? 'badge-accent' : 'badge-secondary'} badge-sm text-sm leading-none text-yellow-400`}
-            >★</span>
+            >★</span
+          >
         {/if}
       </div>
       <p class="font-normal text-black/60 text-sm md:text-base">{desc}</p>
     </div>
   </div>
-  <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
+  <Lucide icon={ChevronRight} size={16} />
 </a>

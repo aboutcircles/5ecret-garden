@@ -44,7 +44,7 @@
         <Address {address}/>
         <button
                 onclick={changeWallet}
-                class="btn btn-sm btn-outline btn-primary text-primary hover:text-white"
+                class="btn btn-sm btn-primary"
         >Change Avatar
         </button>
         <button

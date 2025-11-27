@@ -10,6 +10,8 @@
   import { ethers } from 'ethers';
   import type { Address } from '@circles-sdk/utils';
   import Trust from "$lib/pages/Trust.svelte";
+  import Lucide from '$lib/icons/Lucide.svelte';
+  import { X } from 'lucide';
 
   let context: AddContactFlowContext = $state({
     selectedAddress: '',
@@ -147,7 +149,7 @@
       aria-label="Clear addresses"
       title="Clear addresses"
     >
-      <img class="w-3 h-3" src="/x-mark.svg" alt="Clear" />
+      <Lucide icon={X} size={12} class="text-base-content/60" />
     </button>
   </div>
 
