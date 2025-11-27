@@ -8,6 +8,9 @@
     import { MARKET_API_BASE, MARKET_OPERATOR } from '$lib/config/market';
     import { fetchGlobalCatalog } from '$lib/market/catalogClient';
     import type { AggregatedCatalog, AggregatedCatalogItem } from '$lib/market/types';
+    import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
+    import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
+    import type { Action } from '$lib/components/layout/Action';
 
     // Defaults (as requested)
     const OPERATOR: `0x${string}` = MARKET_OPERATOR;
@@ -47,6 +50,19 @@
 
     // Basket button moved to global header; inline basket trigger removed here
 
+    function openCreateOffer() {
+      popupControls.open({
+        title: 'Create Offer',
+        component: OfferStep1,
+        props: { context: { operator: OPERATOR, pinApiBase: API_BASE } },
+        onClose: () => { void loadCatalog(); }
+      });
+    }
+
+    const actions: Action[] = [
+      { id: 'create-offer', label: 'Create offer', variant: 'primary', onClick: openCreateOffer }
+    ];
+
 </script>
 
 <PageScaffold
@@ -68,21 +84,7 @@
     </svelte:fragment>
 
     <svelte:fragment slot="actions">
-        <button type="button" class="btn btn-sm" onclick={() =>
-      popupControls.open({
-        title: 'Create Offer',
-        component: OfferStep1,
-        props: {
-            context: {
-                operator: OPERATOR,
-                pinApiBase: API_BASE
-            }
-        },
-        onClose: () => { void loadCatalog(); }
-      })
-    }>
-            Create offer
-        </button>
+        <ActionButtonBar {actions} />
     </svelte:fragment>
 
     <!-- Collapsed summary -->
@@ -93,17 +95,7 @@
     </svelte:fragment>
 
     <svelte:fragment slot="collapsed-menu">
-        <button type="button" class="btn btn-ghost min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3" onclick={() =>
-      popupControls.open({
-        title: 'Create Offer',
-        component: OfferStep1,
-        props: { context: { operator: OPERATOR, pinApiBase: API_BASE } },
-        onClose: () => { void loadCatalog(); }
-      })
-    }>
-            Offer
-        </button>
-
+        <ActionButtonDropDown {actions} />
         <!-- Basket button moved to global header -->
     </svelte:fragment>
 

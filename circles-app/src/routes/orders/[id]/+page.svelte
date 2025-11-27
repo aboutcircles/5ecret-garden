@@ -4,6 +4,9 @@
   import { page } from '$app/stores';
   import { getOrder, CartHttpError } from '$lib/cart/client';
   import OrderDetailsView from '$lib/orders/OrderDetailsView.svelte';
+  import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
+  import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
+  import type { Action } from '$lib/components/layout/Action';
 
   const orderId: string | null = $derived($page.params?.id ?? null);
 
@@ -49,7 +52,7 @@
     navigator.clipboard?.writeText(jsonText).catch(() => {});
   }
 
-  const actions: { id: string; label: string; variant: 'primary' | 'ghost'; onClick: () => void }[] = [
+  const actions: Action[] = [
     { id: 'copy-id', label: 'Copy ID', variant: 'ghost', onClick: copyId },
     { id: 'copy-json', label: 'Copy JSON', variant: 'ghost', onClick: copyJson },
   ];
@@ -72,26 +75,13 @@
     <span class="font-mono text-xs opacity-80" title={orderId || ''}>{orderId}</span>
   </svelte:fragment>
   <svelte:fragment slot="actions">
-    {#each actions as a (a.id)}
-      <button type="button" class="btn btn-sm" onclick={a.onClick} aria-label={a.label}>
-        <span>{a.label}</span>
-      </button>
-    {/each}
+    <ActionButtonBar {actions} />
   </svelte:fragment>
   <svelte:fragment slot="collapsed-left">
     <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">Order</span>
   </svelte:fragment>
   <svelte:fragment slot="collapsed-menu">
-    {#each actions as a (a.id)}
-      <button
-        type="button"
-        class={`btn btn-sm min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3`}
-        onclick={a.onClick}
-        aria-label={a.label}
-      >
-        <span>{a.label}</span>
-      </button>
-    {/each}
+    <ActionButtonDropDown {actions} />
   </svelte:fragment>
 
   {#if loading}

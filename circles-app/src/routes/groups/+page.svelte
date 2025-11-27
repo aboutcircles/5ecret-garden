@@ -6,6 +6,9 @@
     import GroupRowView from './GroupRowView.svelte';
     import {avatarState} from '$lib/stores/avatar.svelte';
     import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
+    import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
+    import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
+    import type { Action } from '$lib/components/layout/Action';
 
     let groups: Readable<{
         data: EventRow[];
@@ -21,19 +24,16 @@
         }
     });
 
-    type Action = {
-        id: string;
-        label: string;
-        iconNode: any;
-        onClick: () => void;
-        variant: 'primary' | 'ghost';
-        disabled?: boolean
-    };
     const actions: Action[] = [];
 </script>
 
-<PageScaffold highlight="soft" collapsedMode="bar" collapsedHeightClass="h-12" maxWidthClass="page page--lg"
-              contentWidthClass="page page--lg" usePagePadding={true} headerTopGapClass="mt-4 md:mt-6"
+<PageScaffold highlight="soft"
+              collapsedMode="bar"
+              collapsedHeightClass="h-12"
+              maxWidthClass="page page--lg"
+              contentWidthClass="page page--lg"
+              usePagePadding={true}
+              headerTopGapClass="mt-4 md:mt-6"
               collapsedTopGapClass="mt-3 md:mt-4">
     <svelte:fragment slot="title">
         <h1 class="h2">Groups</h1>
@@ -42,12 +42,7 @@
         and Communities
     </svelte:fragment>
     <svelte:fragment slot="actions">
-        {#each actions as a (a.id)}
-            <button type="button" class="btn btn-sm"
-                    onclick={a.onClick} aria-label={a.label}>
-                <span>{a.label}</span>
-            </button>
-        {/each}
+        <ActionButtonBar {actions} />
     </svelte:fragment>
     <svelte:fragment slot="collapsed-left">
   <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">
@@ -55,16 +50,7 @@
   </span>
     </svelte:fragment>
     <svelte:fragment slot="collapsed-menu">
-        {#each actions as a (a.id)}
-            <button
-                    type="button"
-                    class={`btn btn-sm min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3`}
-                    onclick={a.onClick}
-                    aria-label={a.label}
-            >
-                <span>{a.label}</span>
-            </button>
-        {/each}
+        <ActionButtonDropDown {actions} />
     </svelte:fragment>
 
     <GenericList store={groups} row={GroupRowView}/>

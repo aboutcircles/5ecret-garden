@@ -12,6 +12,9 @@
     import {popupControls} from '$lib/stores/popUp';
     import ManageGroupMembers from '$lib/flows/manageGroupMembers/1_manageGroupMembers.svelte';
     import {avatarState} from '$lib/stores/avatar.svelte';
+    import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
+    import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
+    import type { Action } from '$lib/components/layout/Action';
 
     let filterVersion = writable<number | undefined>(undefined);
     let filterRelation = writable<'mutuallyTrusts' | 'trusts' | 'trustedBy' | 'variesByVersion' | undefined>(undefined);
@@ -125,15 +128,6 @@
     let countLabel: string = $derived(avatarState.isGroup ? 'members' : 'entries');
     let addLabel: string = $derived(avatarState.isGroup ? 'Add Member' : 'Add Contact');
 
-    type Action = {
-        id: string;
-        label: string;
-        iconNode: any;
-        onClick: () => void;
-        variant: 'primary' | 'ghost';
-        disabled?: boolean
-    };
-
     // Keep actions lean: filter moved next to the title
     const actions: Action[] = [
         {id: 'add', label: addLabel, iconNode: LPlus, onClick: openAddContact, variant: 'primary'},
@@ -175,14 +169,7 @@
     </svelte:fragment>
 
     <svelte:fragment slot="actions">
-        {#each actions as a (a.id)}
-            <button type="button" class="btn btn-sm"
-                    onclick={a.onClick} aria-label={a.label}>
-                <Lucide icon={a.iconNode} size={16}
-                        class="shrink-0 stroke-black"/>
-                <span>{a.label}</span>
-            </button>
-        {/each}
+        <ActionButtonBar {actions} />
     </svelte:fragment>
 
     <svelte:fragment slot="collapsed-left">
@@ -193,18 +180,7 @@
     </svelte:fragment>
 
     <svelte:fragment slot="collapsed-menu">
-        {#each actions as a (a.id)}
-            <button
-                    type="button"
-                    class={`btn btn-sm min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3`}
-                    onclick={a.onClick}
-                    aria-label={a.label}
-            >
-                <Lucide icon={a.iconNode} size={20}
-                        class="shrink-0 stroke-black"/>
-                <span>{a.label}</span>
-            </button>
-        {/each}
+        <ActionButtonDropDown {actions} />
     </svelte:fragment>
 
     {#if $showFilters}
