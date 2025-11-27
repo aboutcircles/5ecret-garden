@@ -12,6 +12,9 @@
     import { shortenAddress } from '$lib/utils/shared';
     import { normalizeAddress } from '$lib/offers/adapters';
     import { avatarState } from '$lib/stores/avatar.svelte';
+    import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
+    import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
+    import type { Action } from '$lib/components/layout/Action';
 
     // Defaults (as requested)
     const OPERATOR: `0x${string}` = MARKET_OPERATOR;
@@ -78,6 +81,19 @@
 
     onMount(loadSellerCatalog);
 
+    function openCreateListing() {
+      popupControls.open({
+        title: 'Create Offer',
+        component: OfferStep1,
+        props: { context: { operator: OPERATOR, pinApiBase: API_BASE } },
+        onClose: () => { void loadSellerCatalog(); }
+      });
+    }
+
+    const actions: Action[] = [
+      { id: 'create-offer', label: 'Create Listing', variant: 'primary', onClick: openCreateListing }
+    ];
+
 </script>
 
 <PageScaffold
@@ -103,16 +119,7 @@
     </svelte:fragment>
 
     <svelte:fragment slot="actions">
-        <button type="button" class="btn btn-sm" on:click={() =>
-      popupControls.open({
-        title: 'Create Offer',
-        component: OfferStep1,
-        props: { context: { operator: OPERATOR, pinApiBase: API_BASE } },
-        onClose: () => { void loadSellerCatalog(); }
-      })
-    }>
-            Create Listing
-        </button>
+        <ActionButtonBar {actions} />
     </svelte:fragment>
 
     <!-- Collapsed summary -->
@@ -123,20 +130,7 @@
     </svelte:fragment>
 
     <svelte:fragment slot="collapsed-menu">
-        <button
-                type="button"
-                class="btn btn-ghost min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3"
-                on:click={() =>
-      popupControls.open({
-        title: 'Create Offer',
-        component: OfferStep1,
-        props: { context: { operator: OPERATOR, pinApiBase: API_BASE } },
-        onClose: () => { void loadSellerCatalog(); }
-      })
-    }
-        >
-            Create Listing
-        </button>
+        <ActionButtonDropDown {actions} />
     </svelte:fragment>
 
     <!-- Seller Profile Section -->

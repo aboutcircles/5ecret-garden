@@ -1,0 +1,1 @@
+export type Action = { id: string; label: string; iconNode?: any; onClick: () => void; variant: 'primary'|'ghost' };

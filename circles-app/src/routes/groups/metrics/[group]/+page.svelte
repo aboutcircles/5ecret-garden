@@ -11,9 +11,11 @@
   import type { PageProps } from './$types';
   import { circles } from '$lib/stores/circles';
   import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
-  import Lucide from '$lib/icons/Lucide.svelte';
   import { ArrowLeft as LArrowLeft } from 'lucide';
   import type { Address } from '@circles-sdk/utils';
+  import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
+  import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
+  import type { Action } from '$lib/components/layout/Action';
 
   let groupMetrics: GroupMetrics = $state({});
 
@@ -33,14 +35,6 @@
     goto('/dashboard');
   }
 
-  type Action = {
-    id: string;
-    label: string;
-    iconNode: any;
-    onClick: () => void;
-    variant: 'primary' | 'ghost';
-    disabled?: boolean;
-  };
   const actions: Action[] = [
     {
       id: 'back',
@@ -70,34 +64,10 @@
     <Avatar address={data.group as Address} view="horizontal" />
   </svelte:fragment>
   <svelte:fragment slot="actions">
-    {#each actions as a (a.id)}
-      <button
-        type="button"
-        class="btn btn-sm"
-        onclick={a.onClick}
-        aria-label={a.label}
-      >
-        <Lucide icon={a.iconNode} size={16} class="shrink-0 stroke-black" />
-        <span>{a.label}</span>
-      </button>
-    {/each}
+    <ActionButtonBar {actions} />
   </svelte:fragment>
   <svelte:fragment slot="collapsed-menu">
-    {#each actions as a (a.id)}
-      <button
-        type="button"
-        class={`btn btn-sm min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3`}
-        onclick={a.onClick}
-        aria-label={a.label}
-      >
-        <Lucide
-          icon={a.iconNode}
-          size={20}
-          class="shrink-0 stroke-black"
-        />
-        <span>{a.label}</span>
-      </button>
-    {/each}
+    <ActionButtonDropDown {actions} />
   </svelte:fragment>
   {#if Object.keys(groupMetrics).length > 0}
     <!-- Stats Overview -->

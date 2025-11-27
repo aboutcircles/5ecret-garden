@@ -8,6 +8,9 @@
   import { getOrdersBatch, getOrdersByBuyer } from '$lib/cart/client';
   import { getAuthMeta } from '$lib/auth/siwe';
   import { signInWithWallet } from '$lib/auth/signin';
+  import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
+  import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
+  import type { Action } from '$lib/components/layout/Action';
 
   type ListItem = {
     id: string; // orderNumber
@@ -126,7 +129,7 @@
   } as any;
 
   let authed = false;
-  let actions: { id: string; label: string; variant: 'primary' | 'ghost'; onClick: () => void }[] = [];
+  let actions: Action[] = [];
 
   async function ensureAuthed() {
     try {
@@ -176,27 +179,13 @@
       : 'Recent orders stored on this device (sign in to see all)'}
   </svelte:fragment>
   <svelte:fragment slot="actions">
-    {#each actions as a (a.id)}
-      <button type="button" class="btn btn-sm"
-              onclick={a.onClick} aria-label={a.label}>
-        <span>{a.label}</span>
-      </button>
-    {/each}
+    <ActionButtonBar {actions} />
   </svelte:fragment>
   <svelte:fragment slot="collapsed-left">
     <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">Orders</span>
   </svelte:fragment>
   <svelte:fragment slot="collapsed-menu">
-    {#each actions as a (a.id)}
-      <button
-        type="button"
-        class={`btn btn-sm min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3`}
-        onclick={a.onClick}
-        aria-label={a.label}
-      >
-        <span>{a.label}</span>
-      </button>
-    {/each}
+    <ActionButtonDropDown {actions} />
   </svelte:fragment>
 
   <GenericList store={ordersStore} row={OrderRow} />

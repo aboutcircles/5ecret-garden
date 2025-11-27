@@ -17,6 +17,9 @@
     import Lucide from '$lib/icons/Lucide.svelte';
     import { ArrowLeft as LArrowLeft, ExternalLink as LExternalLink, Lock as LLock } from 'lucide';
     import RowFrame from '$lib/ui/RowFrame.svelte';
+    import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
+    import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
+    import type { Action } from '$lib/components/layout/Action';
 
     let invitations: AvatarRow[] = $state([]);
     let inviterSelected: Address | undefined = $state(
@@ -59,16 +62,24 @@
 
         await goto('/dashboard');
     }
+
+    function goBack() {
+        history.back();
+    }
+
+    const actions: Action[] = [
+        { id: 'back', label: 'Back', iconNode: LArrowLeft, onClick: goBack, variant: 'ghost' }
+    ];
 </script>
 
 <PageScaffold highlight="soft" collapsedMode="bar" collapsedHeightClass="h-12" maxWidthClass="page page--lg" contentWidthClass="page page--lg" usePagePadding={true} headerTopGapClass="mt-4 md:mt-6" collapsedTopGapClass="mt-3 md:mt-4">
     <svelte:fragment slot="title"><h1 class="h2 m-0">Register Person</h1></svelte:fragment>
     <svelte:fragment slot="meta">Step 1 of 2</svelte:fragment>
     <svelte:fragment slot="actions">
-        <button type="button" class="btn btn-sm" onclick={() => history.back()} aria-label="Back">
-            <Lucide icon={LArrowLeft} size={16} class="shrink-0 stroke-black" />
-            Back
-        </button>
+        <ActionButtonBar {actions} />
+    </svelte:fragment>
+    <svelte:fragment slot="collapsed-menu">
+        <ActionButtonDropDown {actions} />
     </svelte:fragment>
 
     <div class="mt-3"><Disclaimer /></div>

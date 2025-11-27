@@ -1,7 +1,6 @@
 <script lang="ts">
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { clearSession, wallet } from '$lib/stores/wallet.svelte';
-  import { circles } from '$lib/stores/circles';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import { canMigrate } from '$lib/guards/canMigrate';
   import MigrateToV2 from '$lib/flows/migrateToV2/1_GetInvited.svelte';
@@ -14,6 +13,9 @@
   import { LogOut as LLogOut } from 'lucide';
   import { MARKET_API_BASE } from '$lib/config/market';
   import type { Address } from '@circles-sdk/utils';
+  import ActionButtonDropDown from "$lib/components/layout/ActionButtonDropDown.svelte";
+  import ActionButtonBar from "$lib/components/layout/ActionButtonBar.svelte";
+  import type {Action} from "$lib/components/layout/Action";
 
   // Profile editing is delegated to ProfileExplorer to keep a single flow.
   const pinApiBase = MARKET_API_BASE;
@@ -52,7 +54,6 @@
     }
   }
 
-  type Action = { id: string; label: string; iconNode: any; onClick: () => void; variant: 'primary'|'ghost' };
   const actions: Action[] = [
     { id: 'disconnect', label: 'Disconnect', iconNode: LLogOut, onClick: clearSession, variant: 'ghost' },
   ];
@@ -66,27 +67,16 @@
     Profile, wallet, migration
   </svelte:fragment>
   <svelte:fragment slot="actions">
-    {#each actions as a (a.id)}
-      <button type="button" class="btn btn-sm" onclick={a.onClick} aria-label={a.label}>
-        <Lucide icon={a.iconNode} size={16} class="shrink-0 stroke-black" />
-        <span>{a.label}</span>
-      </button>
-    {/each}
+      <ActionButtonBar {actions} />
   </svelte:fragment>
-    <svelte:fragment slot="collapsed-left">
-  <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">
-      Settings
-  </span>
-    </svelte:fragment>
   <svelte:fragment slot="collapsed-menu">
-    {#each actions as a (a.id)}
-      <button type="button" class={`btn btn-sm min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3`} onclick={a.onClick} aria-label={a.label}>
-        <Lucide icon={a.iconNode} size={20} class="shrink-0 stroke-black" />
-        <span>{a.label}</span>
-      </button>
-    {/each}
+      <ActionButtonDropDown {actions} />
   </svelte:fragment>
-
+  <svelte:fragment slot="collapsed-left">
+    <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">
+      Settings
+    </span>
+  </svelte:fragment>
   <div
     class="flex flex-col items-center md:border rounded-lg md:px-6 md:py-8 gap-y-4"
   >
