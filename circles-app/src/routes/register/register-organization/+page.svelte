@@ -26,7 +26,9 @@
   <svelte:fragment slot="meta">Step 1 of 1</svelte:fragment>
   <svelte:fragment slot="actions">
     <button type="button" class="btn btn-ghost btn-sm" onclick={() => history.back()} aria-label="Back">
-      <Lucide icon={LArrowLeft} size={16} class="shrink-0 stroke-black" />
+      {#if LArrowLeft}
+        <Lucide icon={LArrowLeft} size={16} class="shrink-0 stroke-black" />
+      {/if}
       <span>Back</span>
     </button>
   </svelte:fragment>
@@ -37,7 +39,9 @@
   </svelte:fragment>
   <svelte:fragment slot="collapsed-menu">
     <button type="button" class="btn btn-ghost min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3" onclick={() => history.back()} aria-label="Back">
-      <Lucide icon={LArrowLeft} size={20} class="shrink-0 stroke-black" />
+      {#if LArrowLeft}
+        <Lucide icon={LArrowLeft} size={20} class="shrink-0 stroke-black" />
+      {/if}
       <span>Back</span>
     </button>
   </svelte:fragment>

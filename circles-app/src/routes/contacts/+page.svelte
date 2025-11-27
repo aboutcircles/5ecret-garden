@@ -176,10 +176,10 @@
 
     <svelte:fragment slot="actions">
         {#each actions as a (a.id)}
-            <button type="button" class={`btn btn-sm ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'}`}
+            <button type="button" class="btn btn-sm"
                     onclick={a.onClick} aria-label={a.label}>
                 <Lucide icon={a.iconNode} size={16}
-                        class={a.variant === 'primary' ? 'shrink-0 stroke-white' : 'shrink-0 stroke-black'}/>
+                        class="shrink-0 stroke-black"/>
                 <span>{a.label}</span>
             </button>
         {/each}
@@ -196,12 +196,12 @@
         {#each actions as a (a.id)}
             <button
                     type="button"
-                    class={`btn ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'} min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3`}
+                    class={`btn btn-sm min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3`}
                     onclick={a.onClick}
                     aria-label={a.label}
             >
                 <Lucide icon={a.iconNode} size={20}
-                        class={a.variant === 'primary' ? 'shrink-0 stroke-white' : 'shrink-0 stroke-black'}/>
+                        class="shrink-0 stroke-black"/>
                 <span>{a.label}</span>
             </button>
         {/each}

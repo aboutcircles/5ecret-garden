@@ -52,7 +52,7 @@
     <span class="label-text">Service address</span>
     <div class="join">
       <input id="circlesAddress" type="text" class="input input-bordered join-item w-full" bind:value={serviceAddress} placeholder="0x…" />
-      <button type="button" class="btn btn-outline btn-primary join-item btn-xs" onclick={handleSetService}>
+      <button type="button" class="btn btn-primary join-item btn-xs" onclick={handleSetService}>
         <Lucide icon={LCheck} size={16} class="shrink-0 stroke-black" ariaLabel="" />
       </button>
     </div>
@@ -62,7 +62,7 @@
     <span class="label-text">Mint handler address</span>
     <div class="join">
       <input id="tokenAddress" type="text" class="input input-bordered join-item w-full" bind:value={mintHandlerAddress} placeholder="0x…" />
-      <button type="button" class="btn btn-outline btn-primary join-item btn-xs" onclick={handleSetMintHandler}>
+      <button type="button" class="btn btn-primary join-item btn-xs" onclick={handleSetMintHandler}>
         <Lucide icon={LCheck} size={16} class="shrink-0 stroke-black" ariaLabel="" />
       </button>
     </div>
@@ -73,7 +73,7 @@
       <span class="label-text">Redemption handler address</span>
       <div class="join">
         <input id="redemption" type="text" class="input input-bordered join-item w-full" bind:value={redemptionHandlerAddress} placeholder="0x…" />
-        <button type="button" class="btn btn-outline btn-primary join-item btn-xs" onclick={handleSetRedemptionHandler}>
+        <button type="button" class="btn btn-primary join-item btn-xs" onclick={handleSetRedemptionHandler}>
           <Lucide icon={LCheck} size={16} class="shrink-0 stroke-black" ariaLabel="" />
         </button>
       </div>

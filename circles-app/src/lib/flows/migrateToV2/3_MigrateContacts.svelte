@@ -7,6 +7,8 @@
   import { formatTrustRelation } from '$lib/utils/helpers';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { popupControls } from '$lib/stores/popUp';
+  import Lucide from '$lib/icons/Lucide.svelte';
+  import {ArrowLeft, ArrowLeftRight, ArrowRight} from 'lucide';
 
   interface Props {
     context: MigrateToV2Context;
@@ -88,25 +90,13 @@
         >
           <div>
             {#if $contacts?.data[address].row.relation === 'trusts'}
-              <img
-                src="/incoming.svg"
-                alt="Incoming trust"
-                class="w-3 h-3 inline"
-              />
+              <Lucide icon={ArrowLeft} size={12} class="text-info inline" />
             {/if}
             {#if $contacts?.data[address].row.relation === 'trustedBy'}
-              <img
-                src="/outgoing.svg"
-                alt="Outgoing trust"
-                class="w-3 h-3 inline"
-              />
+              <Lucide icon={ArrowRight} size={12} class="text-warning inline" />
             {/if}
             {#if $contacts?.data[address].row.relation === 'mutuallyTrusts'}
-              <img
-                src="/mutual.svg"
-                alt="Mutual trust"
-                class="w-3 h-3 inline"
-              />
+              <Lucide icon={ArrowLeftRight} size={12} class="text-success inline" />
             {/if}
             {#if $contacts?.data[address]}
               <span>{formatTrustRelation($contacts.data[address].row.relation)}</span>

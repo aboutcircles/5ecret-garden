@@ -65,9 +65,9 @@
     <svelte:fragment slot="title"><h1 class="h2 m-0">Register Person</h1></svelte:fragment>
     <svelte:fragment slot="meta">Step 1 of 2</svelte:fragment>
     <svelte:fragment slot="actions">
-        <button type="button" class="btn btn-ghost btn-sm" onclick={() => history.back()} aria-label="Back">
+        <button type="button" class="btn btn-sm" onclick={() => history.back()} aria-label="Back">
             <Lucide icon={LArrowLeft} size={16} class="shrink-0 stroke-black" />
-            <span>Back</span>
+            Back
         </button>
     </svelte:fragment>
 

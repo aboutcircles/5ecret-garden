@@ -171,7 +171,7 @@
         <button class="btn btn-primary flex-1" onclick={connect}>
           {runner ? "Connected" : "Connect Wallet"}
         </button>
-        <button class="btn btn-secondary flex-1" onclick={run} disabled={!runner}>
+        <button class="btn btn-outline flex-1" onclick={run} disabled={!runner}>
           Run Flow
         </button>
       </div>
