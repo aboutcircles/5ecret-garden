@@ -156,7 +156,7 @@
     {/if}
 
     <div class="mt-5 flex justify-end">
-        <button type="button" class="btn btn-primary text-white" disabled={!canContinue} onclick={next}>
+        <button type="button" class="btn btn-primary" disabled={!canContinue} onclick={next}>
             Continue
         </button>
     </div>

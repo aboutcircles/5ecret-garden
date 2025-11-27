@@ -67,7 +67,7 @@
     {/if}
 
     <div class="flex justify-end space-x-2 mt-6">
-        <button type="submit" class="btn btn-primary text-white max-sm:w-full" onclick={() => onselect()}>
+        <button type="submit" class="btn btn-primary max-sm:w-full" onclick={() => onselect()}>
             {textButton}
         </button>
     </div>
