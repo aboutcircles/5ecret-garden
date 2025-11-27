@@ -191,7 +191,7 @@
                 {/if}
                 <button
                         type="button"
-                        class="btn btn-primary w-full md:w-auto rounded-md text-white"
+                        class="btn btn-primary w-full md:w-auto rounded-md"
                         onclick={handleSelect}
                 >
                     Continue

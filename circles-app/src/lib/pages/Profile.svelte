@@ -254,7 +254,7 @@
     {/if}
 
     <div class="my-6 flex flex-row gap-x-2">
-        <span class="bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm">
+        <span class="bg-base-200 rounded-lg px-2 py-1 text-sm">
             {getTypeString(otherAvatar?.type || '')}
         </span>
         <AddressComponent address={address ?? '0x0'}/>
@@ -283,7 +283,7 @@
     <div class="w-full flex justify-center mt-6 space-x-6">
         {#if !avatarState.isGroup}
             <button
-                    class="btn btn-primary text-white"
+                    class="btn btn-primary"
                     onclick={() => {
                 popupControls.open({
                     title: 'Send Circles',
@@ -302,7 +302,7 @@
         {/if}
         {#if otherAvatar?.type === 'CrcV2_RegisterGroup' && !!mintHandler && !avatarState.isGroup}
             <button
-                    class="btn bg-[#F3F4F6] border-none"
+                    class="btn btn-primary"
                     onclick={() => {
                     popupControls.open({
                         title: 'Enter Amount',
@@ -327,7 +327,7 @@
         {/if}
         {#if trustRow?.relation === 'trusts'}
             <button
-                    class="btn bg-[#F3F4F6] border-none"
+                    class="btn btn-primary"
                     onclick={() => {
                     popupControls.open({
                         title: !avatarState.isGroup ? "Untrust" : "Remove member",
@@ -343,7 +343,7 @@
             </button>
         {:else if trustRow?.relation === 'mutuallyTrusts'}
             <button
-                    class="btn bg-[#F3F4F6] border-none"
+                    class="btn btn-primary"
                     onclick={() => {
                     popupControls.open({
                         title: !avatarState.isGroup ? "Untrust" : "Remove member",
@@ -358,7 +358,7 @@
             </button>
         {:else if trustRow?.relation === 'trustedBy'}
             <button
-                    class="btn bg-[#F3F4F6] border-none"
+                    class="btn btn-primary"
                     onclick={() => {
                     popupControls.open({
                         title: !avatarState.isGroup ? "Trust back" : "Add member",
@@ -373,7 +373,7 @@
             </button>
         {:else}
             <button
-                    class="btn bg-[#F3F4F6] border-none"
+                    class="btn btn-primary"
                     onclick={() => {
                     popupControls.open({
                         title: !avatarState.isGroup ? "Trust" : "Add as member",

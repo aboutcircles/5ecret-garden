@@ -122,7 +122,7 @@
     </div>
 
     <div class="mt-5 flex justify-end">
-        <button type="button" class="btn btn-primary text-white" onclick={createGroup}>
+        <button type="button" class="btn btn-primary" onclick={createGroup}>
             Confirm & Create
         </button>
     </div>
