@@ -123,7 +123,7 @@
     </p>
 
     {#if result.length > 0}
-        <div class="w-full flex flex-col gap-y-1.5">
+        <div class="w-full flex flex-col gap-y-1.5" role="list">
             {#each result as profile}
                 <RowFrame clickable={true} dense={true} noLeading={true} on:click={() => onselect && onselect(profile.address)}>
                     <div class="min-w-0">

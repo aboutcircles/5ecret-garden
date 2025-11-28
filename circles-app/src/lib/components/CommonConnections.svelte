@@ -57,7 +57,7 @@
 {:else if rows.length === 0}
     <div class="w-full py-6 text-center text-base-content/60">No common connections</div>
 {:else}
-    <div class="w-full flex flex-col gap-y-1.5">
+    <div class="w-full flex flex-col gap-y-1.5" role="list">
         {#each rows as addr (addr)}
             <RowFrame clickable={true} dense={true} noLeading={true} on:click={() => openProfile(addr)}>
                 <div class="min-w-0">

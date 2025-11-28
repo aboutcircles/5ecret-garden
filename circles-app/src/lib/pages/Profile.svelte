@@ -419,26 +419,34 @@
                 badge={members.length}
                 panelClass="p-4 bg-base-100 border-none"
         >
-            {#each members as member (member)}
-                <RowFrame
-                        clickable={true}
-                        noLeading
-                        on:click={async () => {
-                    // Open another Profile instance in a popup (same UX as groups/contacts lists)
-                    const ProfilePage = (await import('$lib/pages/Profile.svelte')).default;
-                    popupControls.open({ component: ProfilePage, props: { address: member } });
-                  }}
-                >
-                    <div class="min-w-0">
-                        <Avatar address={member} view="horizontal" clickable={false}/>
-                    </div>
-                    <div slot="trailing" class="font-medium underline flex gap-x-2">
-                        <img src="/chevron-right.svg" alt="Chevron Right" class="w-4"/>
-                    </div>
-                </RowFrame>
-            {/each}
             {#if members.length === 0}
-                <div>No members</div>
+                <div class="w-full py-6 text-center text-base-content/60">No members</div>
+            {:else}
+                <div class="w-full flex flex-col gap-y-1.5" role="list">
+                    {#each members as member (member)}
+                        <RowFrame
+                                clickable={true}
+                                dense={true}
+                                noLeading
+                                on:click={async () => {
+                            // Open another Profile instance in a popup (same UX as groups/contacts lists)
+                            const ProfilePage = (await import('$lib/pages/Profile.svelte')).default;
+                            popupControls.open({ 
+                                title: 'Profile',
+                                component: ProfilePage, 
+                                props: { address: member } 
+                            });
+                          }}
+                        >
+                            <div class="min-w-0">
+                                <Avatar address={member} view="horizontal" clickable={false}/>
+                            </div>
+                            <div slot="trailing" aria-hidden="true">
+                                <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" />
+                            </div>
+                        </RowFrame>
+                    {/each}
+                </div>
             {/if}
         </Tab>
     {/if}
