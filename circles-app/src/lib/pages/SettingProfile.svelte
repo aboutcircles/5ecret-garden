@@ -40,30 +40,37 @@
         class="flex flex-col items-center w-full sm:w-[90%] lg:w-3/5 mx-auto gap-y-4 mt-10"
 >
     <Avatar view="vertical" clickable={false} {address}/>
-    <div class="flex gap-x-2">
-        <Address {address}/>
+
+    <!-- Address chip on its own line -->
+    <div class="w-full flex justify-center">
+        <Address {address} />
+    </div>
+
+    <!-- Buttons row below, centered -->
+    <div class="flex flex-wrap justify-center gap-2">
         <button
-                onclick={changeWallet}
-                class="btn btn-sm btn-primary"
-        >Change Avatar
+            onclick={changeWallet}
+            class="btn btn-sm btn-primary"
+        >
+            Change Avatar
         </button>
         <button
-                type="button"
-                class="btn btn-sm btn-outline"
-                onclick={openProfileEditor}
+            type="button"
+            class="btn btn-sm btn-outline"
+            onclick={openProfileEditor}
         >
             Edit profile
         </button>
 
         <!-- My orders: quick access to the local Orders list route -->
         <button
-                type="button"
-                class="btn btn-sm btn-outline"
-                onclick={() => {
+            type="button"
+            class="btn btn-sm btn-outline"
+            onclick={() => {
                 popupControls.close();
                 goto('/orders');
             }}
-                aria-label="My orders"
+            aria-label="My orders"
         >
             My orders
         </button>
