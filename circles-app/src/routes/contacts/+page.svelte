@@ -15,6 +15,7 @@
     import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/components/layout/Action';
+    import { createPaginatedList } from '$lib/stores/paginatedList';
 
     let filterVersion = writable<number | undefined>(undefined);
     let filterRelation = writable<'mutuallyTrusts' | 'trusts' | 'trustedBy' | 'variesByVersion' | undefined>(undefined);
@@ -28,37 +29,26 @@
         showFilters.update((v) => !v);
     }
 
-    let filteredStore = derived(
+    // Build the full filtered array (not paginated)
+    const filteredAll = derived(
         [contacts, filterVersion, filterRelation],
-        ([$contacts, filterVersion, filterRelation]) => {
-            const filteredData = Object.entries($contacts.data)
+        ([$contacts, $filterVersion, $filterRelation]) => {
+            return Object.entries($contacts.data)
                 .filter(([_, contact]) => {
                     if (avatarState.isGroup) {
-                        return contact.row.relation === "trusts";
+                        return contact.row.relation === 'trusts';
                     }
-
-                    const matchesVersion = !filterVersion || contact?.avatarInfo?.version === filterVersion;
-                    const matchesRelation = !filterRelation || contact?.row?.relation === filterRelation;
+                    const matchesVersion = !$filterVersion || contact?.avatarInfo?.version === $filterVersion;
+                    const matchesRelation = !$filterRelation || contact?.row?.relation === $filterRelation;
                     return matchesVersion && matchesRelation;
                 })
                 .sort((a, b) => {
                     const aRelation = a[1].row.relation;
                     const bRelation = b[1].row.relation;
-                    if (aRelation === 'mutuallyTrusts' && bRelation !== 'mutuallyTrusts') {
-                        return -1;
-                    }
-                    if (aRelation === 'trusts' && bRelation === 'trustedBy') {
-                        return -1;
-                    }
-                    if (aRelation === bRelation) {
-                        return 0;
-                    }
-                    if (bRelation === 'mutuallyTrusts' && aRelation !== 'mutuallyTrusts') {
-                        return 1;
-                    }
-                    if (bRelation === 'trusts' && aRelation === 'trustedBy') {
-                        return 1;
-                    }
+                    if (aRelation === 'mutuallyTrusts' && bRelation !== 'mutuallyTrusts') return -1;
+                    if (aRelation === 'trusts' && bRelation === 'trustedBy') return -1;
+                    if (bRelation === 'mutuallyTrusts' && aRelation !== 'mutuallyTrusts') return 1;
+                    if (bRelation === 'trusts' && aRelation === 'trustedBy') return 1;
                     return 0;
                 })
                 .map(([address, contact]) => ({
@@ -68,39 +58,25 @@
                     address,
                     contact,
                 }));
-
-            return {
-                data: filteredData,
-                next: $contacts.next,
-                ended: $contacts.ended,
-            };
         }
     );
 
-    let searchedStore = derived(
-        [filteredStore, searchQuery],
-        ([$filteredStore, searchQuery]) => {
-            let results = $filteredStore.data.filter((item) => {
-                const name = item.contact?.contactProfile.name || '';
-                const addressMatches = item.address.toLowerCase().includes(searchQuery.toLowerCase());
-                const nameMatches = name.toLowerCase().includes(searchQuery.toLowerCase());
-                return addressMatches || nameMatches;
-            });
+    // Apply search on top of filtered
+    const searchedAll = derived([filteredAll, searchQuery], ([$filteredAll, $searchQuery]) => {
+        const q = ($searchQuery ?? '').toLowerCase();
+        if (!q) return $filteredAll;
+        return $filteredAll.filter((item) => {
+            const name = item.contact?.contactProfile?.name?.toLowerCase?.() ?? '';
+            return item.address.toLowerCase().includes(q) || name.includes(q);
+        });
+    });
 
-            if (results.length === 0) {
-                results = [];
-            }
-
-            return {
-                data: results,
-                next: $filteredStore.next,
-                ended: $filteredStore.ended,
-            };
-        }
-    );
+    // Paginate searched results for rendering
+    const contactsPaginated = createPaginatedList(searchedAll, { pageSize: 25 });
 
     async function handleExportCSV(): Promise<void> {
-        const csvData = $filteredStore.data.map((item) => ({
+        // Export uses full filtered set (ignores pagination and current search)
+        const csvData = $filteredAll.map((item) => ({
             address: item.address,
             name: item.contact?.contactProfile.name,
         }));
@@ -165,7 +141,7 @@
     </svelte:fragment>
 
     <svelte:fragment slot="meta">
-        {$filteredStore.data.length} {countLabel}
+        {$filteredAll.length} {countLabel}
     </svelte:fragment>
 
     <svelte:fragment slot="actions">
@@ -175,7 +151,7 @@
     <svelte:fragment slot="collapsed-left">
         <div class="truncate flex items-center gap-2">
             <span class="font-medium">{titleText}</span>
-            <span class="text-sm text-base-content/60">{$filteredStore.data.length} {countLabel}</span>
+            <span class="text-sm text-base-content/60">{$filteredAll.length} {countLabel}</span>
         </div>
     </svelte:fragment>
 
@@ -211,5 +187,5 @@
 
     <AddressInput bind:address={$searchQuery}/>
 
-    <GenericList store={searchedStore} row={ContactRow}/>
+    <GenericList store={contactsPaginated} row={ContactRow}/>
 </PageScaffold>
