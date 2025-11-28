@@ -102,7 +102,7 @@
 <p class="menu-title pl-0 mt-4">Individual tokens</p>
 
 {#if $balances?.data?.length > 0}
-    <div class="flex flex-col p-0 w-full overflow-x-auto gap-y-2">
+    <div class="flex flex-col p-0 w-full gap-y-1.5">
         {#each $balances.data as balance (balance.tokenAddress)}
             <!-- Same wrapper for reliable clicks without changing visuals -->
             <div
@@ -115,5 +115,5 @@
         {/each}
     </div>
 {:else}
-    <li class="text-center py-4">You don't have any trusted assets</li>
+    <div class="text-center py-4">You don't have any trusted assets</div>
 {/if}
