@@ -1,6 +1,6 @@
 <!-- lib/flows/profile/ProfileNamespaces.svelte -->
 <script lang="ts">
-    import {createEventDispatcher, onMount} from 'svelte';
+    import {createEventDispatcher} from 'svelte';
     import {runTask} from '$lib/utils/tasks';
     import {circles} from '$lib/stores/circles';
     import type {Address} from "@circles-sdk/utils";
@@ -41,33 +41,6 @@
     // Expand/collapse state for folders per namespace
     // Structure: { [namespaceAddr]: { [folderPath]: boolean } }
     let folderExpanded = $state<Record<string, Record<string, boolean>>>({});
-
-    // Persist folder expansion state per avatar in localStorage
-    const STORAGE_PREFIX = 'settings.nsTree';
-    function storageKeyForAvatar(addr: Address) {
-        return `${STORAGE_PREFIX}.${addr}`;
-    }
-
-    function saveFolderState() {
-        try {
-            localStorage.setItem(storageKeyForAvatar(avatar), JSON.stringify(folderExpanded));
-        } catch {}
-    }
-
-    function loadFolderState() {
-        try {
-            const raw = localStorage.getItem(storageKeyForAvatar(avatar));
-            if (!raw) return;
-            const parsed = JSON.parse(raw);
-            if (parsed && typeof parsed === 'object') {
-                folderExpanded = parsed as Record<string, Record<string, boolean>>;
-            }
-        } catch {}
-    }
-
-    onMount(() => {
-        loadFolderState();
-    });
 
     function getBindings(): CirclesBindings {
         const sdk = get(circles);
@@ -192,7 +165,6 @@
         const nsState = folderExpanded[ns] ?? {};
         const next = { ...nsState, [path]: !nsState[path] };
         folderExpanded = { ...folderExpanded, [ns]: next };
-        saveFolderState();
     }
 
     function buildTree(links: LoadedNamespaceLink[]): FolderNode {
