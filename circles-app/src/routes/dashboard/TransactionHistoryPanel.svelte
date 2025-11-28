@@ -4,4 +4,4 @@
     import {transactionHistory} from '$lib/stores/transactionHistory';
 </script>
 
-<GenericList row={TransactionRow} store={transactionHistory}/>
+<GenericList row={TransactionRow} store={transactionHistory} rowHeight={64} maxPlaceholderPages={2}/>

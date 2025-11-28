@@ -38,6 +38,12 @@
     import { fetchSellerCatalog } from '$lib/market/catalogClient';
     import { normalizeAddress } from '$lib/offers/adapters';
     import type { AggregatedCatalogItem } from '$lib/market/types';
+    // Namespaces explorer (read-only) for other profiles
+    import ProfileNamespaces from '$lib/flows/offer/ProfileNamespaces.svelte';
+    import { loadProfileOrInit } from '$lib/offers/namespaces';
+    import type { CirclesBindings } from '$lib/offers/namespaces';
+    import { mkCirclesBindings } from '$lib/offers/mkCirclesBindings';
+    import { get } from 'svelte/store';
 
     interface Props {
         address: Address | undefined;
@@ -90,7 +96,8 @@
         offers = [];
         try {
             const items = await fetchSellerCatalog(seller);
-            offers = items;
+            // Defensive filter (API already filters by seller)
+            offers = items.filter((p) => (p.seller ?? '').toLowerCase() === seller.toLowerCase());
             offersFor = seller;
         } catch (e: any) {
             offersError = e?.message || 'Failed to load offers';
@@ -107,6 +114,67 @@
             if (!offersLoading && offersFor !== want) {
                 void loadOffers();
             }
+        }
+    });
+
+    // Also eagerly load offers whenever the viewed address changes,
+    // so the Offers tab is ready immediately. This avoids timing issues
+    // where the tab becomes visible before the fetch is triggered.
+    $effect(() => {
+        if (!address) return;
+        const want = normalizeAddress(String(address));
+        if (!offersLoading && offersFor !== want) {
+            void loadOffers();
+        }
+    });
+
+    // ─────────────────────────────────────────────────────────────
+    // Namespaces explorer for the displayed profile (auto-load)
+    // ─────────────────────────────────────────────────────────────
+    let otherResolvedAvatar: Address | null = $state(null);
+    let otherNamespaces: Record<string, string> = $state({});
+    let otherLoading: boolean = $state(false);
+    let otherError: string | null = $state(null);
+    // Track which address' namespaces are currently loaded
+    let namespacesFor: string | null = $state(null);
+
+    function getBindings(): CirclesBindings {
+        const sdk = get(circles);
+        if (!sdk) {
+            throw new Error('Circles SDK not initialized');
+        }
+        return mkCirclesBindings(undefined, sdk as any);
+    }
+
+    async function loadNamespacesFor(addr: Address): Promise<void> {
+        const norm = normalizeAddress(addr as any) as Address;
+        namespacesFor = String(norm).toLowerCase();
+        otherLoading = true;
+        otherError = null;
+        otherNamespaces = {};
+        otherResolvedAvatar = norm as Address;
+        try {
+            const { profile } = await loadProfileOrInit(getBindings(), norm as Address);
+            const nsObj = profile?.namespaces && typeof profile.namespaces === 'object' ? profile.namespaces : {};
+            otherNamespaces = { ...(nsObj as Record<string, string>) };
+        } catch (e: any) {
+            otherError = String(e?.message ?? e);
+        } finally {
+            otherLoading = false;
+        }
+    }
+
+    // Auto-load when the page knows the address and whenever it changes
+    $effect(() => {
+        if (!address) {
+            otherResolvedAvatar = null;
+            otherNamespaces = {};
+            namespacesFor = null;
+            return;
+        }
+        const want = normalizeAddress(String(address)).toLowerCase();
+        if (!otherLoading && namespacesFor !== want) {
+            void loadNamespacesFor(address);
         }
     });
 
@@ -428,7 +496,7 @@
                                 clickable={true}
                                 dense={true}
                                 noLeading
-                                on:click={async () => {
+                                onclick={async () => {
                             // Open another Profile instance in a popup (same UX as groups/contacts lists)
                             const ProfilePage = (await import('$lib/pages/Profile.svelte')).default;
                             popupControls.open({ 
@@ -509,5 +577,29 @@
                 </div>
             {/if}
         {/if}
+    </Tab>
+    
+    <!-- Explore namespaces tab: auto-load the viewed profile's namespaces (read-only) -->
+    <Tab
+            id="explore_namespaces"
+            title="Explore namespaces"
+            panelClass="p-4 bg-base-100 border-none"
+    >
+        <div class="space-y-3">
+            {#if otherError}
+                <div class="alert alert-error text-sm">{otherError}</div>
+            {/if}
+
+            {#if otherLoading}
+                <div class="flex items-center gap-2 text-base-content/70 py-2">
+                    <span class="loading loading-spinner loading-sm"></span>
+                    <span>Loading namespaces…</span>
+                </div>
+            {:else if otherResolvedAvatar}
+                <ProfileNamespaces avatar={otherResolvedAvatar} namespaces={otherNamespaces} readonly={true} />
+            {:else}
+                <div class="text-sm opacity-60">No avatar selected.</div>
+            {/if}
+        </div>
     </Tab>
 </Tabs>
