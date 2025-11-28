@@ -64,7 +64,11 @@
     <h1 class="h2">Settings</h1>
   </svelte:fragment>
   <svelte:fragment slot="meta">
-    Profile, wallet, migration
+    {#if avatarAddress}
+      <span class="font-mono text-xs text-base-content/70 select-all">{avatarAddress}</span>
+    {:else}
+      Profile, wallet, migration
+    {/if}
   </svelte:fragment>
   <svelte:fragment slot="actions">
       <ActionButtonBar {actions} />
@@ -78,11 +82,11 @@
     </span>
   </svelte:fragment>
   <div
-    class="flex flex-col items-center md:border rounded-lg md:px-6 md:py-8 gap-y-4"
+    class="flex flex-col items-center rounded-md px-3 py-4 md:px-4 md:py-5 gap-y-3"
   >
     <div class="flex flex-col w-full gap-y-4">
       {#if avatarAddress}
-        <ProfileExplorer avatar={avatarAddress} pinApiBase={pinApiBase} />
+        <ProfileExplorer avatar={avatarAddress} pinApiBase={pinApiBase} showAdvancedSections={true} />
       {:else}
         <div class="p-4 text-sm opacity-70">
           Connect a Circles avatar first to edit your profile.
@@ -91,7 +95,7 @@
     </div>
 
     {#if avatarState.isGroup}
-      <div class="w-full pt-2 border-t">
+      <div class="w-full pt-2">
         <h2 class="font-bold">Advanced Group Settings</h2>
         <GroupSetting />
       </div>
@@ -99,7 +103,7 @@
 
     {#if avatarState.avatar?.avatarInfo && canMigrate(avatarState.avatar.avatarInfo)}
       {#if avatarState.avatar?.avatarInfo?.version === 1}
-        <div class="w-full pt-2 border-t">
+        <div class="w-full pt-2">
           <h2 class="text-lg font-medium">Circles V2</h2>
           <div class="mt-3">
             <ActionButton action={migrateToV2}
@@ -109,7 +113,7 @@
         </div>
       {/if}
       {#if avatarState.avatar?.avatarInfo?.v1Token && !avatarState.avatar?.avatarInfo?.v1Stopped}
-        <div class="w-full pt-2 border-t">
+        <div class="w-full pt-2">
           <h2 class="text-lg font-medium">Circles V1</h2>
           <div class="mt-3">
             <ActionButton action={stopV1}

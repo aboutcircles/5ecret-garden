@@ -112,20 +112,22 @@
 </script>
 
 <section aria-label="Profile header">
-    <div class="card bg-base-100 border shadow-sm">
-        <div class="card-body gap-6">
+    <div class="card bg-transparent border-0 shadow-none">
+        <div class="card-body gap-4 p-0">
             <div class="flex flex-col md:flex-row gap-6 items-start md:items-center">
                 <!-- Avatar: click / drop to change -->
                 <div class="flex flex-col items-center gap-2">
                     <button
-                            type="button"
-                            class="relative group rounded-full focus:outline-none focus-visible:ring focus-visible:ring-primary/60"
-                            on:click={handleAvatarClick}
-                            on:dragover={handleDragOver}
-                            on:drop={handleDrop}
+                        type="button"
+                        class="relative rounded-full focus:outline-none focus-visible:ring focus-visible:ring-primary/60"
+                        on:click={handleAvatarClick}
+                        on:dragover={handleDragOver}
+                        on:drop={handleDrop}
+                        aria-label={readonly ? 'Profile photo' : 'Change profile photo'}
+                        title={readonly ? 'Profile photo' : 'Change profile photo'}
                     >
                         <div
-                                class="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden ring ring-primary/60 ring-offset-2 ring-offset-base-100 bg-gradient-to-br from-primary/80 to-secondary/80 flex items-center justify-center text-primary-content text-2xl font-semibold"
+                            class="w-24 h-24 md:w-28 md:h-28 rounded-full overflow-hidden ring ring-base-200 ring-offset-2 ring-offset-base-100 bg-base-200 flex items-center justify-center text-base-content/70 text-2xl font-semibold"
                         >
                             {#if previewImageUrl}
                                 <img
@@ -138,13 +140,19 @@
                             {/if}
                         </div>
 
-                        <div
-                                class="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center text-[11px] text-white font-medium opacity-0 group-hover:opacity-100 transition-opacity"
-                                class:opacity-0={readonly}
-                                class:group-hover:opacity-100={!readonly}
-                        >
-                            {readonly ? '' : 'Change photo'}
-                        </div>
+                        {#if !readonly}
+                            <!-- Subtle floating camera button, like social media UIs -->
+                            <span
+                                class="absolute -bottom-1 -right-1 inline-flex items-center justify-center w-7 h-7 rounded-full bg-base-100 shadow ring-1 ring-base-300 hover:bg-base-200 transition"
+                                aria-hidden="true"
+                            >
+                                <!-- simple camera icon (no external dep) -->
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-base-content/80">
+                                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3l2-3h8l2 3h3a2 2 0 0 1 2 2z"></path>
+                                    <circle cx="12" cy="13" r="4"></circle>
+                                </svg>
+                            </span>
+                        {/if}
 
                         <input
                                 bind:this={fileInput}
@@ -154,21 +162,17 @@
                                 on:change={handleFileInput}
                         />
                     </button>
-
-                    <div class="flex items-center gap-2 text-[11px] opacity-70">
-                        {#if !readonly}
-                            <span>Click or drop to change picture</span>
-                        {/if}
-                        {#if previewImageUrl && !readonly}
+                    {#if previewImageUrl && !readonly}
+                        <div class="flex items-center gap-2 text-[11px] opacity-70">
                             <button
-                                    type="button"
-                                    class="link link-error text-[11px]"
-                                    on:click={clearPicture}
+                                type="button"
+                                class="link link-error text-[11px]"
+                                on:click={clearPicture}
                             >
                                 Clear
                             </button>
-                        {/if}
-                    </div>
+                        </div>
+                    {/if}
                 </div>
 
                 <!-- Editable text fields -->
@@ -184,7 +188,7 @@
                             </span>
                         </div>
                         <input
-                                class="w-full bg-transparent border-none text-xl md:text-2xl font-semibold tracking-tight p-0 focus:outline-none focus:ring-0"
+                                class="w-full bg-transparent border-none text-2xl md:text-3xl font-semibold tracking-tight p-0 focus:outline-none focus:ring-0"
                                 bind:value={name}
                                 placeholder="Add a name"
                                 disabled={readonly}
@@ -220,8 +224,7 @@
                             </span>
                         </div>
                         <textarea
-                                class="textarea border-none textarea-bordered textarea-sm md:textarea-md w-full min-h-[3.5rem]"
-                                style="margin:0; padding: 0;"
+                                class="w-full bg-transparent border-none focus:outline-none focus:ring-0 resize-y min-h-[3.5rem] text-sm text-base-content/90 p-0"
                                 rows="3"
                                 bind:value={description}
                                 placeholder="Tell people who you are or what this organization does…"

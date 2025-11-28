@@ -10,6 +10,10 @@
 
     import ProfileNamespaces from './ProfileNamespaces.svelte';
     import ProfileHeaderEditor from '$lib/flows/offer/ProfileHeaderEditor.svelte';
+    import AddSigningKey from './AddSigningKey.svelte';
+    // Use Lucide icons instead of inline SVGs
+    import Lucide from '$lib/icons/Lucide.svelte';
+    import { Plus as LPlus, Trash2 as LTrash2, Ban as LBan } from 'lucide';
 
     import {normalizeAddress} from '$lib/offers/adapters';
     import type {CirclesBindings} from '$lib/offers/namespaces';
@@ -24,9 +28,10 @@
     interface Props {
         avatar?: Address;
         pinApiBase?: string;
+        showAdvancedSections?: boolean; // when true (Settings page), show Namespaces + Signing keys
     }
 
-    let {avatar, pinApiBase}: Props = $props();
+    let {avatar, pinApiBase, showAdvancedSections = false}: Props = $props();
 
     let resolvedAvatar = $state<Address | null>(null);
     let loading = $state(true);
@@ -284,11 +289,6 @@
     </div>
 {:else}
     <div class="space-y-4">
-        {#if resolvedAvatar}
-            <div class="text-[11px] font-mono opacity-60 break-all">
-                Avatar:&nbsp;<code>{resolvedAvatar}</code>
-            </div>
-        {/if}
 
         <!-- Profile header: avatar, inline name/location editing, description + image upload -->
         <ProfileHeaderEditor
@@ -300,187 +300,119 @@
                 {readonly}
         />
 
-        <!-- Namespaces -->
-        <section aria-label="Namespaces" class="space-y-2">
-            <div class="flex items-center justify-between">
-                <div class="font-semibold text-sm">Namespaces</div>
-                <div class="text-[11px] opacity-60">
-                    Each namespace is another profile or app writing into this one.
+        {#if showAdvancedSections}
+            <!-- Namespaces (visible on Settings page) -->
+            <section aria-label="Namespaces" class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="font-semibold text-sm">Namespaces</span>
+                    <span class="text-[11px] opacity-60">App or profile sources</span>
                 </div>
-            </div>
-
-            {#if resolvedAvatar}
-                <ProfileNamespaces
-                        avatar={resolvedAvatar}
-                        pinApiBase={pinApiBase}
-                        {readonly}
-                        {namespaces}
-                        on:namespacesChanged={(e) => (namespaces = e.detail)}
-                />
-            {:else}
-                <div class="text-sm opacity-70">No avatar resolved.</div>
-            {/if}
-        </section>
-
-        <!-- Signing keys -->
-        <section aria-label="Signing keys" class="space-y-3">
-            <div class="flex items-center justify-between">
-                <div class="font-semibold text-sm">Signing keys</div>
-                <div class="text-[11px] opacity-60">
-                    Operator / app keys that can pre-sign links for this profile.
+                <div class="mt-1">
+                    {#if resolvedAvatar}
+                        <ProfileNamespaces
+                            avatar={resolvedAvatar}
+                            pinApiBase={pinApiBase}
+                            {readonly}
+                            {namespaces}
+                            on:namespacesChanged={(e) => (namespaces = e.detail)}
+                        />
+                    {:else}
+                        <div class="text-sm opacity-70">No avatar resolved.</div>
+                    {/if}
                 </div>
+            </section>
+        {/if}
+
+        {#if showAdvancedSections}
+        <!-- Signing keys (visible on Settings page, always expanded) -->
+        <section aria-label="Signing keys" class="space-y-2">
+            <div class="flex items-center justify-between py-2">
+                <div class="flex items-center gap-2">
+                    <span class="font-semibold text-sm">Signing keys</span>
+                    <span class="text-[11px] opacity-60">Operator/app keys</span>
+                </div>
+                {#if !readonly}
+                    <button
+                        type="button"
+                        class="btn btn-xs btn-primary btn-square"
+                        disabled={!resolvedAvatar}
+                        title="Add signing key"
+                        aria-label="Add signing key"
+                        on:click={() => popupControls.open({ title: 'Add signing key', component: AddSigningKey, props: { avatar: resolvedAvatar, pinApiBase }, onClose: () => { void loadProfile(); } })}
+                    >
+                        <Lucide icon={LPlus} size={16} />
+                    </button>
+                {/if}
             </div>
+            <div class="mt-0 space-y-3">
+                    {#if signingKeyEntries.length === 0}
+                        <div class="text-sm opacity-70">No signing keys.</div>
+                    {:else}
+                        <div class="space-y-1 max-h-48 overflow-auto text-xs">
+                            {#each signingKeyEntries as [fp, meta]}
+                                <div class="flex items-start gap-2 border rounded-lg p-2 bg-base-100/60">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2">
+                                            <code class="truncate">{fp}</code>
+                                            {#if typeof meta?.revokedAt === 'number'}
+                                                <span class="badge badge-xs badge-error ml-1">
+                                                    revoked
+                                                </span>
+                                            {/if}
+                                        </div>
 
-            {#if signingKeyEntries.length === 0}
-                <div class="text-sm opacity-70">No signing keys.</div>
-            {:else}
-                <div class="space-y-1 max-h-48 overflow-auto text-xs">
-                    {#each signingKeyEntries as [fp, meta]}
-                        <div class="flex items-start gap-2 border border-base-200 rounded-md px-2 py-1.5 bg-base-100/70">
-                            <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2">
-                                    <code class="truncate">{fp}</code>
-                                    {#if typeof meta?.revokedAt === 'number'}
-                                        <span class="badge badge-xs badge-error ml-1">
-                                            revoked
-                                        </span>
-                                    {/if}
-                                </div>
+                                        {#if meta?.publicKey}
+                                            <div class="mt-0.5 text-[11px] opacity-70 truncate">
+                                                pub:&nbsp;<code>{meta.publicKey}</code>
+                                            </div>
+                                        {/if}
 
-                                {#if meta?.publicKey}
-                                    <div class="mt-0.5 text-[11px] opacity-70 truncate">
-                                        pub:&nbsp;<code>{meta.publicKey}</code>
+                                        <div class="mt-0.5 text-[11px] opacity-60 flex flex-wrap gap-x-2 gap-y-0.5">
+                                            {#if typeof meta?.validFrom === 'number'}
+                                                <span>from={meta.validFrom}</span>
+                                            {/if}
+                                            {#if typeof meta?.validTo === 'number'}
+                                                <span>to={meta.validTo}</span>
+                                            {/if}
+                                            {#if typeof meta?.revokedAt === 'number'}
+                                                <span class="text-error">
+                                                    revokedAt={meta.revokedAt}
+                                                </span>
+                                            {/if}
+                                        </div>
                                     </div>
-                                {/if}
 
-                                <div class="mt-0.5 text-[11px] opacity-60 flex flex-wrap gap-x-2 gap-y-0.5">
-                                    {#if typeof meta?.validFrom === 'number'}
-                                        <span>from={meta.validFrom}</span>
+                                    {#if !readonly}
+                                        <div class="flex flex-col gap-1">
+                                            <button
+                                                    type="button"
+                                                    class="btn btn-xs btn-ghost btn-square"
+                                                    on:click={() => revokeSigningKey(fp)}
+                                                    title="Revoke now"
+                                                    aria-label="Revoke now"
+                                            >
+                                                <Lucide icon={LBan} size={16} />
+                                            </button>
+                                            <button
+                                                    type="button"
+                                                    class="btn btn-xs btn-ghost btn-square"
+                                                    on:click={() => removeSigningKey(fp)}
+                                                    title="Remove"
+                                                    aria-label="Remove"
+                                            >
+                                                <Lucide icon={LTrash2} size={16} />
+                                            </button>
+                                        </div>
                                     {/if}
-                                    {#if typeof meta?.validTo === 'number'}
-                                        <span>to={meta.validTo}</span>
-                                    {/if}
-                                    {#if typeof meta?.revokedAt === 'number'}
-                                        <span class="text-error">
-                                            revokedAt={meta.revokedAt}
-                                        </span>
-                                    {/if}
                                 </div>
-                            </div>
-
-                            {#if !readonly}
-                                <div class="flex flex-col gap-1">
-                                    <button
-                                            type="button"
-                                            class="btn btn-xs btn-outline"
-                                            on:click={() => revokeSigningKey(fp)}
-                                    >
-                                        Revoke now
-                                    </button>
-                                    <button
-                                            type="button"
-                                            class="btn btn-xs btn-outline"
-                                            on:click={() => removeSigningKey(fp)}
-                                    >
-                                        Remove
-                                    </button>
-                                </div>
-                            {/if}
-                        </div>
-                    {/each}
-                </div>
-            {/if}
-
-            <!-- Add / generate signing key -->
-            {#if !readonly}
-                <div class="mt-2 border rounded-md p-3 space-y-3 bg-base-100/60 text-xs">
-                    <div class="flex items-start justify-between gap-2">
-                        <div>
-                            <div class="font-semibold">Signing key tools</div>
-                            <p class="opacity-70">
-                                Generate a new secp256k1 key pair in this browser or paste an existing public key.
-                                Only the public key is stored in your profile.
-                            </p>
-                        </div>
-                        <button
-                                type="button"
-                                class="btn btn-xs btn-outline"
-                                on:click={generateSigningKey}
-                        >
-                            Generate key
-                        </button>
-                    </div>
-
-                    {#if generatedPrivateKey}
-                        <div class="border rounded-md p-2 bg-base-200/60 space-y-1">
-                            <div class="flex items-center justify-between">
-                                <span class="text-[11px] font-semibold">New key generated</span>
-                                <span class="text-[11px] text-error font-semibold">
-                                Store this private key safely.
-                            </span>
-                            </div>
-
-                            <div class="mt-1 text-[11px] opacity-70">
-                                Private key (keep secret):
-                            </div>
-                            <div class="mt-1 flex items-start gap-2">
-                                <code class="break-all text-[11px] flex-1">
-                                    {generatedPrivateKey}
-                                </code>
-                                <button
-                                        type="button"
-                                        class="btn btn-ghost btn-xs"
-                                        on:click={copyGeneratedPrivateKey}
-                                >
-                                    {copyPrivateKeyState === 'copied' ? 'Copied' : 'Copy'}
-                                </button>
-                            </div>
-
-                            {#if generatedPublicKey}
-                                <div class="mt-1 text-[11px] opacity-70">
-                                    Public key (stored in profile):
-                                </div>
-                                <div class="mt-1">
-                                    <code class="break-all text-[11px]">
-                                        {generatedPublicKey}
-                                    </code>
-                                </div>
-                            {/if}
-
-                            {#if generatedFingerprint}
-                                <div class="mt-1 text-[11px] opacity-70">
-                                    Fingerprint:&nbsp;<code>{generatedFingerprint}</code>
-                                </div>
-                            {/if}
+                            {/each}
                         </div>
                     {/if}
 
-                    <div class="border-t border-base-200 pt-2 mt-2 space-y-2">
-                        <p class="opacity-70">
-                            Or paste an uncompressed secp256k1 public key (<code>0x04…</code>). The fingerprint is
-                            computed as keccak256(XY).
-                        </p>
-                        <label class="form-control mt-1">
-                            <span class="label-text text-xs">Public key</span>
-                            <input
-                                    class="input input-sm input-bordered font-mono"
-                                    bind:value={newSigningPublicKey}
-                                    placeholder="0x04…"
-                            />
-                        </label>
-                        <div class="flex justify-end">
-                            <button
-                                    type="button"
-                                    class="btn btn-xs btn-primary"
-                                    on:click={addSigningKey}
-                            >
-                                Add key
-                            </button>
-                        </div>
-                    </div>
+                    <!-- Inline add/generate removed in favor of dedicated popup flow -->
                 </div>
-            {/if}
         </section>
+        {/if}
 
         <div class="mt-4 flex justify-end gap-2">
             <button

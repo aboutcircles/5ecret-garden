@@ -18,8 +18,8 @@
   }: Props = $props();
 </script>
 
-<div class="inline-flex items-center">
-  <button class="cursor-pointer" {onclick}>
+<div class="inline-flex items-center min-w-0 max-w-full">
+  <button class="cursor-pointer shrink-0" {onclick}>
     {#if pictureOverlayUrl}
       <div class="indicator">
         <img
@@ -41,15 +41,15 @@
       />
     {/if}
   </button>
-  <div class="flex flex-col items-start pl-4 gap-y-0.5">
+  <div class="flex flex-col items-start pl-4 gap-y-0.5 min-w-0">
     {#if topInfo}
-      <p class="text-xs text-gray-500">
+      <p class="text-xs text-gray-500 truncate w-full">
         {topInfo}
       </p>
     {/if}
-    <span class="font-semibold text-[#161616]">{profile?.name}</span>
+    <span class="font-semibold text-[#161616] truncate w-full">{profile?.name}</span>
     {#if bottomInfo}
-      <p class="text-xs text-gray-500">
+      <p class="text-xs text-gray-500 truncate w-full">
         {bottomInfo}
       </p>
     {/if}
