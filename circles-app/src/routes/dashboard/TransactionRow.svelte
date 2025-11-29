@@ -14,6 +14,7 @@
     let badgeUrl: string | null = $state(null);
     let displayAmount = $state('');
     let sent = $state(false);
+    let topInfoText = $state('');
 
     function getCounterpartyAddress(avatarAddress: string) {
         const zero = '0x0000000000000000000000000000000000000000';
@@ -23,6 +24,14 @@
         if (item.from === zero) return lowerTo;     // mint
         if (item.to === zero) return lowerAvatar;   // burn
         return lowerFrom === lowerAvatar ? lowerTo : lowerFrom;
+    }
+
+    function getTopInfo(avatarAddress: string): string {
+        const zero = '0x0000000000000000000000000000000000000000';
+        if (item.from === zero && item.to.toLowerCase() === avatarAddress.toLowerCase()) {
+            return 'Personal minting';
+        }
+        return '';
     }
 
     function getBadge(avatarAddress: string) {
@@ -54,6 +63,7 @@
     $effect(() => {
         if (!avatarState.avatar) return;
         counterpartyAddress = getCounterpartyAddress(avatarState.avatar.address);
+        topInfoText = getTopInfo(avatarState.avatar.address);
         badgeUrl = getBadge(avatarState.avatar.address);
         sent = item.from.toLowerCase() === avatarState.avatar.address.toLowerCase();
         const prefix = sent ? '-' : '+';
@@ -70,7 +80,7 @@
                     view="horizontal"
                     clickable={true}
                     pictureOverlayUrl={badgeUrl ?? undefined}
-                    topInfo={''}
+                    topInfo={topInfoText}
                     bottomInfo={getTimeAgo(item.timestamp)}
             />
         </div>
