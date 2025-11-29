@@ -6,7 +6,7 @@
     import Tab from '$lib/components/tabs/Tab.svelte';
     // Lucide icons are node definitions (arrays). Use the local Lucide wrapper to render them.
     import Lucide from '$lib/icons/Lucide.svelte';
-    import { ArrowRight as LArrowRight, ExternalLink as LExternalLink, Copy as LCopy } from 'lucide';
+    import { ArrowRight as LArrowRight, ExternalLink as LExternalLink, Copy as LCopy, Flame as LFlame, Coins as LCoins } from 'lucide';
     import { uint256ToAddress } from '@circles-sdk/utils';
     import { formatCurrency } from '$lib/cart/money';
 
@@ -88,6 +88,8 @@
 
     // Helper: detect EVM address strings
     const isAddress = (v: unknown): v is string => typeof v === 'string' && /^0x[a-fA-F0-9]{40}$/.test(v);
+    const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+    const isZeroAddress = (addr?: string | null) => (addr ?? '').toLowerCase() === ZERO_ADDRESS;
 
     // Helper: detect ERC1155 token id-looking fields and convert to avatar address
     // According to project usage, the token id maps 1:1 to an avatar address.
@@ -162,6 +164,103 @@
         }
     });
 
+    // --- Aggregated transfers (CrcV2_Transfer*) ---
+    // Build a compact summary of all net flows between accounts found inside nested events.
+    type AggregatedTransfer = { from: string; to: string; amount: number };
+
+    // Helper: try to read an EVM address from an arbitrary field value
+    const asAddressMaybe = (val: unknown): string | null => (isAddress(val) ? String(val) : null);
+
+    // Convert unknown value(s) representing attoCircles to a numeric amount in Circles (CRC)
+    function toCirclesNumber(val: unknown): number | null {
+        // Prefer bigint/hex/integer parsing
+        const bi = toBigIntMaybe(val);
+        if (bi !== null) {
+            const sign = bi < 0n ? -1 : 1;
+            const abs = bi < 0n ? -bi : bi;
+            const num = Number(abs) / 1e18;
+            if (!Number.isFinite(num)) return null;
+            return num * sign;
+        }
+        // Fallback: already provided as a number in CRC
+        if (typeof val === 'number' && Number.isFinite(val)) return val;
+        return null;
+    }
+
+    // Extract simple transfers from supported Transfer* events
+    function extractTransfers(ev: TxEvent): { from: string; to: string; amount: number }[] {
+        const type = String(ev.$type ?? '');
+        // Support standard TransferSingle/TransferBatch and ERC20 wrapper transfers
+        const isTransferLike = /^CrcV2_Transfer/.test(type) || type === 'CrcV2_Erc20WrapperTransfer';
+        if (!isTransferLike) return [];
+
+        const from = asAddressMaybe(ev.From);
+        const to = asAddressMaybe(ev.To);
+        if (!from || !to) return [];
+
+        // Single transfer
+        if ('Value' in ev) {
+            const amount = toCirclesNumber((ev as any).Value);
+            if (amount === null) return [];
+            return [{ from, to, amount }];
+        }
+
+        // Batch transfer: Values[]
+        if (Array.isArray((ev as any).Values)) {
+            const vals: unknown[] = (ev as any).Values;
+            const sum = vals.reduce((acc, v) => {
+                const n = toCirclesNumber(v);
+                return acc + (n ?? 0);
+            }, 0);
+            if (sum === 0) return [];
+            return [{ from, to, amount: sum }];
+        }
+
+        return [];
+    }
+
+    const aggregatedTransfers = $derived<AggregatedTransfer[]>(() => {
+        const map = new Map<string, { a: string; b: string; net: number }>();
+        for (const ev of events()) {
+            const transfers = extractTransfers(ev);
+            for (const t of transfers) {
+                if (t.from.toLowerCase() === t.to.toLowerCase()) continue; // ignore self-transfers
+                const a = t.from.toLowerCase();
+                const b = t.to.toLowerCase();
+                // canonical unordered key
+                const [min, max] = a < b ? [a, b] : [b, a];
+                const key = `${min}|${max}`;
+                const rec = map.get(key) ?? { a: min, b: max, net: 0 };
+                // positive when flowing from a->b in canonical order
+                const delta = (t.from.toLowerCase() === rec.a) ? t.amount : -t.amount;
+                rec.net += delta;
+                map.set(key, rec);
+            }
+        }
+        const result: AggregatedTransfer[] = [];
+        for (const { a, b, net } of map.values()) {
+            const amt = Math.abs(net);
+            if (amt <= 0) continue;
+            const from = net >= 0 ? a : b;
+            const to = net >= 0 ? b : a;
+            result.push({ from, to, amount: amt });
+        }
+        // Sort by largest absolute amount first
+        result.sort((x, y) => y.amount - x.amount);
+        return result;
+    });
+
+    // Split aggregated transfers into non-burns and burns (to zero address)
+    const nonBurnTransfers = $derived(() => aggregatedTransfers().filter(t => !isZeroAddress(t.to)));
+    const burnTransfers = $derived(() => aggregatedTransfers().filter(t => isZeroAddress(t.to)));
+
+    // Burns group collapsed by default
+    let burnsOpen = $state(false);
+    function toggleBurns() { burnsOpen = !burnsOpen; }
+
+    // Total amount burned (sum of burn transfers)
+    const totalBurned = $derived(() => burnTransfers().reduce((acc, t) => acc + (t?.amount ?? 0), 0));
+
     // Collapsible state for single nested events – collapsed by default
     let openEvents = $state<Set<number>>(new Set());
     function isOpen(i: number) { return openEvents.has(i); }
@@ -205,7 +304,7 @@
     };
 </script>
 
-<div class="flex flex-col w-full max-w-[min(92vw,48rem)]">
+<div class="flex flex-col w-full">
     <Tabs id="tx-details-tabs" defaultValue="details" bind:selected={selectedTab} variant="bordered" size="sm">
         <Tab id="details" title="Details" panelClass="pt-4">
             <!-- Combined Amount + From→To box to avoid double borders -->
@@ -258,6 +357,99 @@
                     </div>
                 </div>
             </div>
+            {#if aggregatedTransfers().length}
+                <div class="bg-base-100 border mt-4 rounded-xl overflow-hidden">
+                    <div class="p-3 border-b">
+                        <div class="text-sm opacity-70">Aggregated transfers <span class="opacity-60">({aggregatedTransfers().length})</span></div>
+                    </div>
+                    <div class="divide-y">
+                        {#each nonBurnTransfers() as t}
+                            <div class="px-3 py-2.5 sm:py-3 flex items-center gap-3 sm:gap-4 hover:bg-base-200/40 transition-colors">
+                                <div class="flex-1 min-w-0 flex items-center gap-2">
+                                    {#if isZeroAddress(t.from)}
+                                        <div class="w-6 h-6 rounded-full bg-success/10 flex items-center justify-center" title="Minted">
+                                            <Lucide icon={LCoins} size={14} class="text-success" />
+                                        </div>
+                                    {:else}
+                                        <!-- Mobile: icon only -->
+                                        <div class="sm:hidden">
+                                            <Avatar address={t.from} view="small_no_text" clickable={true} />
+                                        </div>
+                                        <!-- ≥sm: name inline -->
+                                        <div class="hidden sm:inline-flex">
+                                            <Avatar address={t.from} view="small" clickable={true} />
+                                        </div>
+                                    {/if}
+                                </div>
+                                <div class="shrink-0 text-sm sm:text-base font-semibold tabular-nums">
+                                    {formatAmount(t.amount)} <span class="opacity-70">CRC</span>
+                                </div>
+                                <div class="shrink-0 text-base-content/70">
+                                    <div class="w-6 h-6 rounded-full bg-base-200/70 flex items-center justify-center">
+                                        <Lucide icon={LArrowRight} size={16} />
+                                    </div>
+                                </div>
+                                <div class="flex-1 min-w-0 flex items-center gap-2 justify-end">
+                                    <!-- Mobile: icon only -->
+                                    <div class="sm:hidden">
+                                        <Avatar address={t.to} view="small_no_text" clickable={true} />
+                                    </div>
+                                    <!-- ≥sm: name inline but reversed (text left, image right) -->
+                                    <div class="hidden sm:inline-flex">
+                                        <Avatar address={t.to} view="small_reverse" clickable={true} />
+                                    </div>
+                                </div>
+                            </div>
+                        {/each}
+                        {#if burnTransfers().length}
+                            <!-- Burns sub-header inside the same box; collapsible, collapsed by default -->
+                            <button class="w-full p-3 bg-base-200/50 text-xs uppercase tracking-wide text-base-content/60 flex items-center justify-between hover:bg-base-200/70 transition-colors"
+                                onclick={toggleBurns}
+                                aria-expanded={burnsOpen}
+                                title={burnsOpen ? 'Hide burns' : 'Show burns'}>
+                                <span>Burns <span class="opacity-60">({burnTransfers().length})</span></span>
+                                <span class="text-[11px] normal-case opacity-80">{formatAmount(totalBurned())} <span class="opacity-70">CRC</span></span>
+                            </button>
+                            {#if burnsOpen}
+                            {#each burnTransfers() as t}
+                                <div class="px-3 py-2.5 sm:py-3 flex items-center gap-3 sm:gap-4 hover:bg-base-200/40 transition-colors">
+                                    <div class="flex-1 min-w-0 flex items-center gap-2">
+                                        {#if isZeroAddress(t.from)}
+                                            <div class="w-6 h-6 rounded-full bg-success/10 flex items-center justify-center" title="Minted">
+                                                <Lucide icon={LCoins} size={14} class="text-success" />
+                                            </div>
+                                        {:else}
+                                            <!-- Mobile: icon only -->
+                                            <div class="sm:hidden">
+                                                <Avatar address={t.from} view="small_no_text" clickable={true} />
+                                            </div>
+                                            <!-- ≥sm: name inline -->
+                                            <div class="hidden sm:inline-flex">
+                                                <Avatar address={t.from} view="small" clickable={true} />
+                                            </div>
+                                        {/if}
+                                    </div>
+                                    <div class="shrink-0 text-sm sm:text-base font-semibold tabular-nums">
+                                        {formatAmount(t.amount)} <span class="opacity-70">CRC</span>
+                                    </div>
+                                    <div class="shrink-0 text-base-content/70">
+                                        <div class="w-6 h-6 rounded-full bg-base-200/70 flex items-center justify-center">
+                                            <Lucide icon={LArrowRight} size={16} />
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 min-w-0 flex items-center gap-2 justify-end">
+                                        <div class="w-6 h-6 rounded-full bg-error/10 flex items-center justify-center" title="Burned">
+                                            <Lucide icon={LFlame} size={14} class="text-error" />
+                                        </div>
+                                    </div>
+                                </div>
+                            {/each}
+                            {/if}
+                        {/if}
+                    </div>
+                </div>
+            {/if}
+
             {#if events().length}
                 <div class="bg-base-100 border mt-4 rounded-xl overflow-hidden">
                     <div

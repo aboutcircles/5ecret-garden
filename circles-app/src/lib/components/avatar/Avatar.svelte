@@ -12,7 +12,7 @@
     interface Props {
         address: Address | undefined;
         clickable?: boolean;
-        view: 'horizontal' | 'vertical' | 'small' | 'small_no_text';
+        view: 'horizontal' | 'vertical' | 'small' | 'small_no_text' | 'small_reverse';
         pictureOverlayUrl?: string | undefined;
         topInfo?: string | undefined;
         bottomInfo?: string | undefined;
@@ -43,6 +43,7 @@
     
 
     let profile: Profile | undefined = $state();
+    const tooltipText = $derived(() => profile?.name || (address as string | undefined) || 'Profile');
 
     $effect(() => {
         if (address && $circles) {
@@ -109,6 +110,15 @@
                 <div class="text-sm font-medium inline-block align-middle">&nbsp;</div>
             {/if}
         </div>
+    {:else if view === 'small_reverse'}
+        <div class="inline-flex items-center gap-2">
+            {#if placeholderTop}
+                <div class="text-sm font-medium inline-block align-middle">&nbsp;</div>
+            {/if}
+            {#if placeholderAvatar}
+                <div class="w-6 h-6 rounded-full bg-transparent inline-block align-middle">&nbsp;</div>
+            {/if}
+        </div>
     {:else}
         <div
                 class="flex flex-col items-center gap-2 p-2 rounded-lg w-full"
@@ -127,7 +137,7 @@
     {/if}
 {:else if view === 'horizontal'}
     <!-- Fade in the final layout once profile is loaded -->
-    <div transition:fade>
+    <div transition:fade title={tooltipText()}>
         <HorizontalAvatarLayout
                 {pictureOverlayUrl}
                 onclick={openAvatar}
@@ -138,7 +148,12 @@
     </div>
 {:else if view === 'small' || view === 'small_no_text'}
     <div class="inline-flex items-center gap-2" transition:fade>
-        <button class="cursor-pointer inline-flex items-center" onclick={openAvatar} aria-label={profile?.name || 'Profile'}>
+        <button
+            class="cursor-pointer inline-flex items-center"
+            onclick={openAvatar}
+            aria-label={tooltipText()}
+            title={tooltipText()}
+        >
             <img
                 src={profile?.previewImageUrl}
                 alt="User Icon"
@@ -149,8 +164,24 @@
             <span class="text-sm font-medium truncate max-w-[12rem] align-middle">{profile?.name}</span>
         {/if}
     </div>
+{:else if view === 'small_reverse'}
+    <div class="inline-flex items-center gap-2" transition:fade>
+        <span class="text-sm font-medium truncate max-w-[12rem] align-middle text-right">{profile?.name}</span>
+        <button
+            class="cursor-pointer inline-flex items-center"
+            onclick={openAvatar}
+            aria-label={tooltipText()}
+            title={tooltipText()}
+        >
+            <img
+                src={profile?.previewImageUrl}
+                alt="User Icon"
+                class="w-6 h-6 object-cover rounded-full"
+            />
+        </button>
+    </div>
 {:else}
-    <div transition:fade>
+    <div transition:fade title={tooltipText()}>
         <VerticalAvatarLayout
                 onclick={openAvatar}
                 {profile}
