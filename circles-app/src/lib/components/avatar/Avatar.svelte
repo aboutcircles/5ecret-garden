@@ -12,7 +12,7 @@
     interface Props {
         address: Address | undefined;
         clickable?: boolean;
-        view: 'horizontal' | 'vertical' | 'small' | 'small_no_text' | 'small_reverse';
+        view: 'horizontal' | 'horizontal_reverse' | 'vertical' | 'small' | 'small_no_text' | 'small_reverse';
         pictureOverlayUrl?: string | undefined;
         topInfo?: string | undefined;
         bottomInfo?: string | undefined;
