@@ -4,6 +4,8 @@
     import Avatar from '$lib/components/avatar/Avatar.svelte';
     import { avatarState } from '$lib/stores/avatar.svelte';
     import RowFrame from '$lib/ui/RowFrame.svelte';
+    import { popupControls, type PopupContentDefinition } from '$lib/stores/popUp';
+    import TransactionDetailsPopup from './TransactionDetailsPopup.svelte';
 
     interface Props { item: TransactionHistoryRow; }
     let { item }: Props = $props();
@@ -40,9 +42,13 @@
         return abs < 0.01 ? '< 0.01' : abs.toFixed(2);
     }
 
-    function openTx() {
-        const url = 'https://gnosisscan.io/tx/' + item.transactionHash;
-        window.open(url, '_blank', 'noopener,noreferrer');
+    function openDetails() {
+        const def: PopupContentDefinition = {
+            title: 'Transaction details',
+            component: TransactionDetailsPopup,
+            props: { item }
+        };
+        popupControls.open(def);
     }
 
     $effect(() => {
@@ -56,8 +62,8 @@
 </script>
 
 <!-- One cohesive horizontal block inside content; collapse RowFrame leading -->
-<RowFrame clickable={false} dense={true} noLeading={true}>
-    <div class="w-full flex items-center justify-between">
+<RowFrame clickable={true} dense={true} noLeading={true}>
+    <div class="w-full flex items-center justify-between cursor-pointer" role="button" tabindex="0" onclick={openDetails} onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetails(); } }}>
         <div class="min-w-0">
             <Avatar
                     address={counterpartyAddress}
