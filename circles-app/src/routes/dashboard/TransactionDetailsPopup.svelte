@@ -2,19 +2,17 @@
     import type { TransactionHistoryRow } from '@circles-sdk/data';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
     import { avatarState } from '$lib/stores/avatar.svelte';
-    import Tabs from '$lib/components/tabs/Tabs.svelte';
-    import Tab from '$lib/components/tabs/Tab.svelte';
     // Lucide icons are node definitions (arrays). Use the local Lucide wrapper to render them.
     import Lucide from '$lib/icons/Lucide.svelte';
-    import { ArrowRight as LArrowRight, ExternalLink as LExternalLink, Copy as LCopy, Flame as LFlame, Coins as LCoins } from 'lucide';
-    import { uint256ToAddress, CirclesConverter } from '@circles-sdk/utils';
-    import { formatCurrency } from '$lib/cart/money';
+    import { ArrowRight as LArrowRight, ExternalLink as LExternalLink, Flame as LFlame, Coins as LCoins, Copy as LCopy } from 'lucide';
+    import { CirclesConverter } from '@circles-sdk/utils';
+    import { isAddress, isZeroAddress, toBigIntMaybe, tokenIdToAddressMaybe } from '$lib/utils/tx';
+    import TxEvents from './tx-details/TxEvents.svelte';
 
     interface Props { item: TransactionHistoryRow }
     let { item }: Props = $props();
 
-    // Selected tab id (Details | JSON)
-    let selectedTab = $state<string | null>('details');
+    // Tab control removed (JSON view no longer needed)
 
     // Robust timestamp handling: support seconds and milliseconds
     const dateTime = $derived(() => {
@@ -57,44 +55,7 @@
         return v;
     }
 
-    // Robust JSON stringify that handles BigInt, Maps/Sets, and circular references
-    function safeStringify(value: any, space: number = 2): string {
-        const seen = new WeakSet();
-        function replacer(_key: string, val: any) {
-            if (typeof val === 'bigint') {
-                return val.toString();
-            }
-            if (val instanceof Map) {
-                return Object.fromEntries(val);
-            }
-            if (val instanceof Set) {
-                return Array.from(val);
-            }
-            if (typeof val === 'object' && val !== null) {
-                if (seen.has(val)) {
-                    return '[Circular]';
-                }
-                seen.add(val);
-            }
-            return val;
-        }
-        try {
-            return JSON.stringify(value, replacer, space);
-        } catch (e) {
-            console.error('Error serializing transaction data:', e);
-            return '{}';
-        }
-    }
-
-    const formattedJson = $derived(() => safeStringify(item, 2));
-
-    async function copyJsonToClipboard() {
-        try {
-            await navigator.clipboard.writeText(formattedJson());
-        } catch (error) {
-            console.error('Failed to copy JSON:', error);
-        }
-    }
+    // JSON tab moved to TxJson component
 
     function openOnExplorer() {
         const url = `https://gnosisscan.io/tx/${item.transactionHash}`;
@@ -111,115 +72,7 @@
         navigator.clipboard?.writeText(item.transactionHash).catch(() => {});
     }
 
-    const isAddress = (v: unknown): v is string => typeof v === 'string' && /^0x[a-fA-F0-9]{40}$/.test(v);
-    const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
-    const isZeroAddress = (addr?: string | null) => (addr ?? '').toLowerCase() === ZERO_ADDRESS;
-
-    // ERC1155 token-id → avatar address
-    const tokenIdKeys = new Set(['Id', 'TokenId', 'TokenID']);
-    function tokenIdToAddressMaybe(key: string, val: unknown): string | null {
-        if (!tokenIdKeys.has(key)) {
-            return null;
-        }
-
-        const bi = toBigIntMaybe(val);
-        if (bi === null) {
-            console.warn('tokenIdToAddressMaybe: unable to parse token id to bigint', {
-                key,
-                value: val
-            });
-            return null;
-        }
-
-        try {
-            const addr = uint256ToAddress(bi);
-            if (!isAddress(addr)) {
-                console.warn('tokenIdToAddressMaybe: derived non-address from token id', {
-                    key,
-                    value: val,
-                    bigint: bi.toString(),
-                    derived: addr
-                });
-                return null;
-            }
-            return addr;
-        } catch (error) {
-            console.warn('tokenIdToAddressMaybe: failed to derive address from token id', {
-                key,
-                value: val,
-                bigint: bi.toString(),
-                error
-            });
-            return null;
-        }
-    }
-
-    function addressForDisplay(key: string, val: unknown): string {
-        const addr = isAddress(val) ? val : tokenIdToAddressMaybe(key, val);
-        return addr ?? '';
-    }
-
-    function toBigIntMaybe(v: unknown): bigint | null {
-        try {
-            if (typeof v === 'bigint') {
-                return v;
-            }
-
-            if (typeof v === 'number') {
-                if (!Number.isFinite(v)) {
-                    return null;
-                }
-                // Truncate to match on-chain semantics
-                return BigInt(Math.trunc(v));
-            }
-
-            if (typeof v === 'string') {
-                const s = v.trim();
-                if (/^0x[0-9a-fA-F]+$/.test(s)) {
-                    return BigInt(s);
-                }
-                if (/^[+-]?\d+$/.test(s)) {
-                    return BigInt(s);
-                }
-            }
-
-            // Unsupported shape – not an error, just "cannot convert"
-            return null;
-        } catch (error) {
-            console.warn('toBigIntMaybe: failed to convert value to bigint', {
-                value: v,
-                error
-            });
-            return null;
-        }
-    }
-
-    function formatAttoCircles(val: unknown): string | null {
-        const bi = toBigIntMaybe(val);
-        if (bi === null) {
-            return null;
-        }
-
-        try {
-            const circles = CirclesConverter.attoCirclesToCircles(bi);
-            if (!Number.isFinite(circles)) {
-                console.warn('formatAttoCircles: non-finite result from atto value', {
-                    value: val,
-                    bigint: bi.toString(),
-                    circles
-                });
-                return null;
-            }
-            return formatCurrency(circles, 'CRC');
-        } catch (error) {
-            console.warn('formatAttoCircles: failed to format atto circles value', {
-                value: val,
-                bigint: bi.toString(),
-                error
-            });
-            return null;
-        }
-    }
+    // moved helpers to $lib/utils/tx and $lib/utils/json
 
     type TxEvent = Record<string, any> & { $type?: string };
 
@@ -663,10 +516,9 @@
 </script>
 
 <div class="flex flex-col w-full">
-    <Tabs id="tx-details-tabs" defaultValue="details" bind:selected={selectedTab} variant="bordered" size="sm">
-        <Tab id="details" title="Details" panelClass="pt-4">
-            <!-- Amount + From/To (no borders in this block) -->
-            <div class="bg-base-100 rounded-xl overflow-hidden">
+        <div class="pt-4">
+            <!-- Amount + From/To (border around tx-value block, with splitter between amount and diagram) -->
+            <div class="bg-base-100 border rounded-xl overflow-hidden divide-y">
                 <div class="p-4 flex flex-col items-center justify-center">
                     <div class="text-center">
                         <div class={`text-3xl sm:text-4xl font-extrabold ${headerColorClass()}`}>
@@ -864,113 +716,16 @@
                 </div>
             {/if}
 
-            {#if events().length}
-                <div class="bg-base-100 border mt-4 rounded-xl overflow-hidden">
-                    <div
-                            class="flex items-center justify-between p-3 border-b cursor-pointer select-none"
-                            role="button"
-                            tabindex="0"
-                            aria-expanded={eventsListOpen}
-                            onkeydown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                toggleEventsList();
-                            }
-                        }}
-                            onclick={toggleEventsList}
-                    >
-                        <div class="text-sm opacity-70">
-                            Events <span class="opacity-60">({events().length})</span>
-                        </div>
-                        <div class="transition-transform duration-200 text-base-content/70 {eventsListOpen ? 'rotate-90' : ''}">
-                            <Lucide icon={LArrowRight} size={14} />
-                        </div>
-                    </div>
-                    {#if eventsListOpen}
-                        <div class="divide-y">
-                            {#each events() as ev, i}
-                                <div class="p-3">
-                                    <div
-                                            class="flex items-center justify-between mb-1 cursor-pointer select-none"
-                                            role="button"
-                                            tabindex="0"
-                                            aria-expanded={isOpen(i)}
-                                            onkeydown={(e) => {
-                                            if (e.key === 'Enter' || e.key === ' ') {
-                                                e.preventDefault();
-                                                toggleOpen(i);
-                                            }
-                                        }}
-                                            onclick={() => toggleOpen(i)}
-                                    >
-                                        <div class="flex items-center gap-2 min-w-0">
-                                            <div class="transition-transform duration-200 text-base-content/70 {isOpen(i) ? 'rotate-90' : ''}">
-                                                <Lucide icon={LArrowRight} size={14} />
-                                            </div>
-                                            <div class="text-sm font-medium truncate">
-                                                {ev.$type ?? 'Event'} <span class="opacity-60">#{i + 1}</span>
-                                            </div>
-                                        </div>
-                                        <div class="text-xs opacity-60 shrink-0">Log {ev.LogIndex ?? '-'}</div>
-                                    </div>
-                                    {#if isOpen(i)}
-                                        <div class="mt-2 overflow-x-auto">
-                                            <table class="table table-xs text-xs">
-                                                <thead>
-                                                <tr>
-                                                    <th class="w-40 whitespace-nowrap opacity-70">Field</th>
-                                                    <th>Value</th>
-                                                </tr>
-                                                </thead>
-                                                <tbody>
-                                                {#each eventDisplayEntries(ev) as [k, v]}
-                                                    <tr>
-                                                        <td class="whitespace-nowrap opacity-70">{niceKey(k)}</td>
-                                                        <td class="align-middle">
-                                                            {#if k === 'Value' && formatAttoCircles(v)}
-                                                                <span>{formatAttoCircles(v)}</span>
-                                                            {:else if isAddress(v) || tokenIdToAddressMaybe(k, v)}
-                                                                <div class="inline-flex items-center gap-2">
-                                                                    <Avatar address={addressForDisplay(k, v)} view="small" clickable={true} />
-                                                                </div>
-                                                            {:else}
-                                                                    <span class="font-mono break-all">
-                                                                        {typeof v === 'object' ? safeStringify(v, 0) : String(v)}
-                                                                    </span>
-                                                            {/if}
-                                                        </td>
-                                                    </tr>
-                                                {/each}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    {/if}
-                                </div>
-                            {/each}
-                        </div>
-                    {/if}
-                </div>
-            {/if}
-        </Tab>
-
-        <Tab id="json" title="JSON" panelClass="pt-4">
-            <div class="bg-base-100 border rounded-xl p-4">
-                <div class="flex items-center justify-between mb-3">
-                    <h3 class="text-base font-semibold">Transaction Data (JSON)</h3>
-                    <button
-                            class="btn btn-xs btn-ghost"
-                            onclick={copyJsonToClipboard}
-                            title="Copy JSON to clipboard"
-                    >
-                        <Lucide icon={LCopy} size={14} /> Copy JSON
-                    </button>
-                </div>
-                <pre class="bg-base-200 p-4 rounded-lg overflow-auto max-h-96 text-xs leading-relaxed font-mono">
-{formattedJson()}
-                </pre>
-            </div>
-        </Tab>
-    </Tabs>
+            <TxEvents
+                events={events()}
+                {eventDisplayEntries}
+                {niceKey}
+                {isOpen}
+                {toggleOpen}
+                {eventsListOpen}
+                {toggleEventsList}
+            />
+        </div>
 </div>
 
 <style>
