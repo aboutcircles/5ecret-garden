@@ -2,7 +2,6 @@
     import { setContext, tick, createEventDispatcher, onMount, onDestroy } from 'svelte';
     import { writable, type Readable } from 'svelte/store';
     import { TABS_CTX, type TabRegistration, type TabsContext } from './tabs.context';
-    import { ChevronRight } from 'lucide';
 
     let uidCounter = 0;
     function nextUid() {

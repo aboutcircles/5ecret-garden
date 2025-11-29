@@ -98,13 +98,13 @@
   $effect(() => {
     if (avatarState.avatar) {
       menuItems = [
-        { name: 'Dashboard', link: '/dashboard' },
+        { name: 'Wallet', link: '/dashboard' },
         {
           name: avatarState.isGroup ? 'Members' : 'Contacts',
           link: '/contacts',
         },
-        ...(!avatarState.isGroup ? [{ name: 'Groups', link: '/groups' }] : []),
-        { name: 'Settings', link: '/settings' },
+        ...(!avatarState.isGroup ? [{ name: 'Market', link: '/groups' }] : []),
+        { name: 'Me', link: '/settings' },
       ];
     }
   });
