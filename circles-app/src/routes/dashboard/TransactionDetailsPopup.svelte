@@ -7,7 +7,7 @@
     import { ArrowRight as LArrowRight, ExternalLink as LExternalLink, Flame as LFlame, Coins as LCoins, Copy as LCopy } from 'lucide';
     import { CirclesConverter } from '@circles-sdk/utils';
     import { isAddress, isZeroAddress, toBigIntMaybe, tokenIdToAddressMaybe } from '$lib/utils/tx';
-    import TxEvents from './tx-details/TxEvents.svelte';
+    import TxEvents from './TxEvents.svelte';
 
     interface Props { item: TransactionHistoryRow }
     let { item }: Props = $props();
