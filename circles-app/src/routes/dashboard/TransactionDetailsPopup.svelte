@@ -252,23 +252,80 @@
 
     const aggregatedTransfers = $derived<AggregatedTransfer[]>(() => {
         const map = new Map<string, { a: string; b: string; net: number; tokenAddress: string | null }>();
+
         for (const t of transfers()) {
+            // Exclude protocol-cost transfers from the "intended transfers" aggregation.
+            // These will be shown separately in the Burns section.
+            if (t.isProtocolCost) {
+                continue;
+            }
+
             const from = t.from.toLowerCase();
             const to = t.to.toLowerCase();
             if (from === to) {
                 continue;
             }
+
             const a = from;
             const b = to;
             const [min, max] = a < b ? [a, b] : [b, a];
             const key = `${min}|${max}`;
             const existing = map.get(key);
             const rec = existing ?? { a: min, b: max, net: 0, tokenAddress: null };
+
             const delta = from === rec.a ? t.amount : -t.amount;
             rec.net += delta;
+
             if (!rec.tokenAddress && t.tokenAddress) {
                 rec.tokenAddress = t.tokenAddress;
             }
+
+            map.set(key, rec);
+        }
+
+        const result: AggregatedTransfer[] = [];
+        for (const { a, b, net, tokenAddress } of map.values()) {
+            const amt = Math.abs(net);
+            if (amt <= 0) {
+                continue;
+            }
+            const from = net >= 0 ? a : b;
+            const to = net >= 0 ? b : a;
+            result.push({ from, to, amount: amt, tokenAddress });
+        }
+        result.sort((x, y) => y.amount - x.amount);
+        return result;
+    });
+
+    const aggregatedBurnTransfers = $derived<AggregatedTransfer[]>(() => {
+        const map = new Map<string, { a: string; b: string; net: number; tokenAddress: string | null }>();
+
+        for (const t of transfers()) {
+            const from = t.from.toLowerCase();
+            const to = t.to.toLowerCase();
+
+            // Only aggregate burns (to the zero address)
+            if (!isZeroAddress(to)) {
+                continue;
+            }
+            if (from === to) {
+                continue;
+            }
+
+            const a = from;
+            const b = to;
+            const [min, max] = a < b ? [a, b] : [b, a];
+            const key = `${min}|${max}`;
+            const existing = map.get(key);
+            const rec = existing ?? { a: min, b: max, net: 0, tokenAddress: null };
+
+            const delta = from === rec.a ? t.amount : -t.amount;
+            rec.net += delta;
+
+            if (!rec.tokenAddress && t.tokenAddress) {
+                rec.tokenAddress = t.tokenAddress;
+            }
+
             map.set(key, rec);
         }
 
@@ -357,15 +414,21 @@
         return 'text-base-content';
     });
 
-    const nonBurnTransfers = $derived(() => aggregatedTransfers().filter(t => !isZeroAddress(t.to)));
-    const burnTransfers = $derived(() => aggregatedTransfers().filter(t => isZeroAddress(t.to)));
+    const nonBurnTransfers = $derived(() =>
+        aggregatedTransfers().filter(t => !isZeroAddress(t.to))
+    );
+
+    // Burns are aggregated separately (including protocol-cost burns)
+    const burnTransfers = $derived(() => aggregatedBurnTransfers());
 
     let burnsOpen = $state(false);
     function toggleBurns() {
         burnsOpen = !burnsOpen;
     }
 
-    const totalBurned = $derived(() => burnTransfers().reduce((acc, t) => acc + (t?.amount ?? 0), 0));
+    const totalBurned = $derived(() =>
+        burnTransfers().reduce((acc, t) => acc + (t?.amount ?? 0), 0)
+    );
 
     // Zero-sum swap detection for item.from vs item.to, ignoring protocol DiscountCost burns
     type SwapSummary = {
