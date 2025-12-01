@@ -26,7 +26,7 @@ export const chiadoConfig: { production: CirclesConfig, rings: CirclesConfig } =
 
 export const gnosisConfig: { production: CirclesConfig, rings: CirclesConfig } = {
   production: {
-    circlesRpcUrl: import.meta.env.VITE_CIRCLES_RPC_URL || 'http://localhost:8545/',
+    circlesRpcUrl: import.meta.env.VITE_PUBLIC_CIRCLES_RPC_URL || 'http://localhost:8545/',
     pathfinderUrl: 'https://pathfinder.aboutcircles.com',
     profileServiceUrl: 'http://localhost:3000/',
     v1HubAddress: '0x29b9a7fbb8995b2423a71cc17cf9810798f6c543',
