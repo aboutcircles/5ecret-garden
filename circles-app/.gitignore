@@ -8,3 +8,11 @@ node_modules
 !.env.example
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Local LLM context
+.context
+
+# Playwright artifacts
+/playwright-report
+/test-results
+/blob-report
