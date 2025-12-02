@@ -4,93 +4,173 @@
     import { getKeyFromItem } from '$lib/stores/query/circlesQueryStore';
     import type { Readable } from 'svelte/store';
 
+    interface ListStoreValue {
+        data: EventRow[] | TransactionHistoryRow[];
+        next: () => Promise<boolean>;
+        ended: boolean;
+    }
+
     interface Props<T extends Record<string, any> = any> {
-        store: Readable<{ data: EventRow[] | TransactionHistoryRow[]; next: () => Promise<boolean>; ended: boolean; }>;
+        store: Readable<ListStoreValue>;
         row: Component<T>;
         // Approximate row height for placeholder sizing (px). Keep in sync with real row.
         rowHeight?: number;
         // Maximum number of eager placeholder pages to render ahead (1–2 recommended)
         maxPlaceholderPages?: number;
     }
-    let { store, row, rowHeight = 64, maxPlaceholderPages = 0 }: Props = $props();
+
+    let { store, row, rowHeight = 64, maxPlaceholderPages = 2 }: Props = $props();
 
     let observer: IntersectionObserver | null = null;
     let anchor: HTMLElement | undefined = $state();
+
     let hasError = $state(false);
     let isLoadingNext = $state(false);
-    // Number of placeholder rows currently mounted
-    let placeholders = $state(0);
-    // Track how many placeholder "pages" are currently staged
-    let stagedPages = $state(0);
 
-    function perPagePlaceholders(): number {
-        const viewport = typeof window !== 'undefined' ? window.innerHeight : 700;
-        return Math.min(30, Math.ceil(viewport / rowHeight) + 4);
+    // Number of placeholder "pages" currently staged
+    let stagedPages = $state(0);
+    // Size of a single placeholder page in rows, computed lazily once
+    let placeholderPageSize = $state(0);
+
+    const totalPlaceholders = $derived(stagedPages * placeholderPageSize);
+
+    function ensurePlaceholderPageSize(): number {
+        const isInitialised = placeholderPageSize > 0;
+        if (isInitialised) {
+            return placeholderPageSize;
+        }
+
+        const isBrowser = typeof window !== 'undefined';
+        const viewport = isBrowser ? window.innerHeight : 700;
+        const rowsPerViewport = Math.ceil(viewport / rowHeight) + 4;
+        const cappedRows = Math.min(30, rowsPerViewport);
+
+        placeholderPageSize = cappedRows;
+        return placeholderPageSize;
     }
 
-    function enqueuePlaceholderPage() {
-        if (stagedPages >= (maxPlaceholderPages ?? 2)) return;
-        const count = perPagePlaceholders();
-        placeholders += count;
+    function enqueuePlaceholderPage(): void {
+        const effectiveMax = maxPlaceholderPages ?? 2;
+        const canStageMorePages = stagedPages < effectiveMax;
+
+        if (!canStageMorePages) {
+            return;
+        }
+
+        ensurePlaceholderPageSize();
         stagedPages += 1;
     }
 
-    function clearOnePlaceholderPage() {
-        if (stagedPages <= 0) return;
-        const count = perPagePlaceholders();
-        placeholders = Math.max(0, placeholders - count);
-        stagedPages = Math.max(0, stagedPages - 1);
+    function clearOnePlaceholderPage(): void {
+        const hasStagedPages = stagedPages > 0;
+
+        if (!hasStagedPages) {
+            return;
+        }
+
+        stagedPages -= 1;
     }
 
-    const setupObserver = () => {
-        if (observer) observer.disconnect();
-        if (anchor && !$store?.ended && !hasError) {
-            observer = new IntersectionObserver(async (entries) => {
-                const hit = entries.some((e) => e.isIntersecting);
-                if (hit && !$store.ended && !isLoadingNext) {
-                    // Eagerly reserve space with placeholders before fetching
-                    enqueuePlaceholderPage();
-                    isLoadingNext = true;
-                    try {
-                        await $store.next();
-                        hasError = false;
-                    } catch {
-                        // On error, remove all placeholders and show error state
-                        placeholders = 0;
-                        stagedPages = 0;
-                        hasError = true;
-                    } finally {
-                        isLoadingNext = false;
-                        // Remove one placeholder page now that data arrived (or failed)
-                        clearOnePlaceholderPage();
-                        // Re-arm the observer for subsequent pages
-                        setupObserver();
-                    }
-                }
-            }, { rootMargin: '400px 0px' });
-            observer.observe(anchor);
+    function clearAllPlaceholderPages(): void {
+        stagedPages = 0;
+    }
+
+    async function loadNextPage(): Promise<void> {
+        const storeValue = $store;
+        const canLoad =
+            !!storeValue &&
+            !storeValue.ended &&
+            !isLoadingNext;
+
+        if (!canLoad) {
+            return;
         }
-    };
-    const handleRetry = async () => {
+
+        isLoadingNext = true;
+        enqueuePlaceholderPage();
+
         try {
-            enqueuePlaceholderPage();
-            await $store.next();
+            await storeValue.next();
             hasError = false;
         } catch {
-            // keep error visible
+            // On error, remove all placeholders and show error state
+            clearAllPlaceholderPages();
+            hasError = true;
         } finally {
+            isLoadingNext = false;
             clearOnePlaceholderPage();
+        }
+    }
+
+    const handleIntersection: IntersectionObserverCallback = (entries) => {
+        const hit = entries.some((entry) => entry.isIntersecting);
+
+        const shouldLoadNext =
+            hit &&
+            !$store?.ended &&
+            !hasError &&
+            !isLoadingNext;
+
+        if (!shouldLoadNext) {
+            return;
+        }
+
+        void loadNextPage();
+    };
+
+    const setupObserver = (): void => {
+        const storeValue = $store;
+
+        const canObserve =
+            !!anchor &&
+            !!storeValue &&
+            !storeValue.ended;
+
+        if (!canObserve) {
+            if (observer) {
+                observer.disconnect();
+                observer = null;
+            }
+            return;
+        }
+
+        if (!observer) {
+            observer = new IntersectionObserver(handleIntersection, { rootMargin: '400px 0px' });
+        } else {
+            observer.disconnect();
+        }
+
+        observer.observe(anchor as HTMLElement);
+    };
+
+    const handleRetry = async (): Promise<void> => {
+        await loadNextPage();
+    };
+
+    $effect(() => {
+        if (store && anchor) {
             setupObserver();
         }
-    };
-    $effect(() => { if (store && anchor) setupObserver(); });
-    // Whenever the store data changes significantly (e.g., after a page append),
-    // ensure no stale placeholders persist beyond what we staged.
-    $effect(() => {
-        // If list ended, clear placeholders immediately
-        if ($store?.ended) { placeholders = 0; stagedPages = 0; }
     });
-    onDestroy(() => { observer?.disconnect(); observer = null; });
+
+    // When the store reports "ended", clear placeholders and stop observing
+    $effect(() => {
+        if ($store?.ended) {
+            clearAllPlaceholderPages();
+
+            if (observer) {
+                observer.disconnect();
+                observer = null;
+            }
+        }
+    });
+
+    onDestroy(() => {
+        if (observer) {
+            observer.disconnect();
+            observer = null;
+        }
+    });
 </script>
 
 <div class="w-full flex flex-col gap-y-1.5 py-2" role="list">
@@ -99,8 +179,8 @@
         <SvelteComponent_1 {item} />
     {/each}
 
-    {#if placeholders > 0}
-        {#each Array.from({ length: placeholders }) as _, i}
+    {#if totalPlaceholders > 0}
+        {#each Array.from({ length: totalPlaceholders }) as _, i}
             <div class="skeleton-row" aria-hidden="true" style={`height: ${rowHeight}px`}>
                 <div class="sk-row">
                     <div class="sk-avatar" />
@@ -124,7 +204,7 @@
             <span class="text-base-content/70">End of list</span>
         {:else if hasError}
             <span class="text-error">Error loading items</span>
-            <button class="ml-2 link link-primary" onclick={handleRetry}>Retry</button>
+            <button class="ml-2 link link-primary" on:click={handleRetry}>Retry</button>
         {:else}
             <span class="loading loading-spinner text-primary"></span>
             <span class="ml-2 text-base-content/70">Loading more...</span>
@@ -142,23 +222,56 @@
         padding: 8px 12px;
         display: block;
     }
-    .sk-row { height: 100%; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; }
-    .sk-avatar { width: 40px; height: 40px; border-radius: 9999px; background: color-mix(in oklab, currentColor 18%, transparent); }
-    .sk-lines { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-    .sk-line { height: 10px; border-radius: 8px; background: color-mix(in oklab, currentColor 16%, transparent); }
-    .sk-line-1 { width: 56%; }
-    .sk-line-2 { width: 36%; }
-    .sk-amount { width: 68px; height: 14px; border-radius: 8px; background: color-mix(in oklab, currentColor 22%, transparent); }
+    .sk-row {
+        height: 100%;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 12px;
+    }
+    .sk-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 9999px;
+        background: color-mix(in oklab, currentColor 18%, transparent);
+    }
+    .sk-lines {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 0;
+    }
+    .sk-line {
+        height: 10px;
+        border-radius: 8px;
+        background: color-mix(in oklab, currentColor 16%, transparent);
+    }
+    .sk-line-1 {
+        width: 56%;
+    }
+    .sk-line-2 {
+        width: 36%;
+    }
+    .sk-amount {
+        width: 68px;
+        height: 14px;
+        border-radius: 8px;
+        background: color-mix(in oklab, currentColor 22%, transparent);
+    }
     @media (prefers-reduced-motion: no-preference) {
         .skeleton-row::after {
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
             transform: translateX(-100%);
             animation: shimmer 1.1s infinite;
             pointer-events: none;
         }
-        @keyframes shimmer { 100% { transform: translateX(100%); } }
+        @keyframes shimmer {
+            100% {
+                transform: translateX(100%);
+            }
+        }
     }
 </style>
