@@ -1,10 +1,8 @@
 [build]
   # Build command for SvelteKit app
   command = "npm run build"
-  
   # Output directory for built files
   publish = "build"
-  
   # Base directory (root of the app)
   base = "circles-app"
 
@@ -14,11 +12,6 @@
   
   # NPM version
   NPM_VERSION = "10.8.2"
-
-# Production deployment settings
-[context.production]
-  command = "npm run build"
-  publish = "build"
   
   [context.production.environment]
     # Production environment variables
