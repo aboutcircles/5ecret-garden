@@ -8,7 +8,7 @@
     import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
     import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
-    import type { Action } from '$lib/components/layout/Action';
+    import type {Action} from '$lib/components/layout/Action';
 
     let groups: Readable<{
         data: EventRow[];
@@ -42,7 +42,7 @@
         and Communities
     </svelte:fragment>
     <svelte:fragment slot="actions">
-        <ActionButtonBar {actions} />
+        <ActionButtonBar {actions}/>
     </svelte:fragment>
     <svelte:fragment slot="collapsed-left">
   <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">
@@ -50,8 +50,8 @@
   </span>
     </svelte:fragment>
     <svelte:fragment slot="collapsed-menu">
-        <ActionButtonDropDown {actions} />
+        <ActionButtonDropDown {actions}/>
     </svelte:fragment>
 
-    <GenericList store={groups} row={GroupRowView}/>
+    <GenericList store={groups} row={GroupRowView} rowHeight={64} maxPlaceholderPages={2} expectedPageSize={25} />
 </PageScaffold>

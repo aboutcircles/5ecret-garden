@@ -187,5 +187,5 @@
 
     <AddressInput bind:address={$searchQuery}/>
 
-    <GenericList store={contactsPaginated} row={ContactRow}/>
+    <GenericList store={contactsPaginated} row={ContactRow} rowHeight={64} maxPlaceholderPages={2} expectedPageSize={25} />
 </PageScaffold>

@@ -17,9 +17,17 @@
         rowHeight?: number;
         // Maximum number of eager placeholder pages to render ahead (1–2 recommended)
         maxPlaceholderPages?: number;
+        // Expected number of items loaded per page (per next() call)
+        expectedPageSize?: number;
     }
 
-    let { store, row, rowHeight = 64, maxPlaceholderPages = 2 }: Props = $props();
+    let {
+        store,
+        row,
+        rowHeight = 64,
+        maxPlaceholderPages = 2,
+        expectedPageSize
+    }: Props = $props();
 
     let observer: IntersectionObserver | null = null;
     let anchor: HTMLElement | undefined = $state();
@@ -34,18 +42,40 @@
 
     const totalPlaceholders = $derived(stagedPages * placeholderPageSize);
 
+    function computePlaceholderPageSize(): number {
+        const isBrowser = typeof window !== 'undefined';
+        const viewportHeight = isBrowser ? window.innerHeight : 700;
+
+        const approxRowsPerViewport = Math.ceil(viewportHeight / rowHeight) + 4;
+        const cappedByViewport = Math.min(30, approxRowsPerViewport);
+
+        const hasExpectedPageSize = typeof expectedPageSize === 'number' && expectedPageSize > 0;
+
+        if (!hasExpectedPageSize) {
+            // Fallback: original behaviour (capped by viewport / 30)
+            return cappedByViewport;
+        }
+
+        // Ensure we always stage strictly fewer placeholders than real items per page.
+        // This guarantees that once a full page of real items is rendered,
+        // the total list height increases and tends to push the sentinel out of view.
+        const maxByPage = Math.max(1, expectedPageSize - 1);
+
+        const effectiveSize = Math.min(cappedByViewport, maxByPage);
+
+        return effectiveSize;
+    }
+
     function ensurePlaceholderPageSize(): number {
         const isInitialised = placeholderPageSize > 0;
+
         if (isInitialised) {
             return placeholderPageSize;
         }
 
-        const isBrowser = typeof window !== 'undefined';
-        const viewport = isBrowser ? window.innerHeight : 700;
-        const rowsPerViewport = Math.ceil(viewport / rowHeight) + 4;
-        const cappedRows = Math.min(30, rowsPerViewport);
+        const size = computePlaceholderPageSize();
+        placeholderPageSize = size;
 
-        placeholderPageSize = cappedRows;
         return placeholderPageSize;
     }
 
@@ -77,6 +107,7 @@
 
     async function loadNextPage(): Promise<void> {
         const storeValue = $store;
+
         const canLoad =
             !!storeValue &&
             !storeValue.ended &&
