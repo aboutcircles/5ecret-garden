@@ -75,7 +75,7 @@
                     placeholderAvatar={false}
                     address={item.tokenOwner}
                     view="horizontal"
-                    clickable={false}
+                    clickable={true}
                     bottomInfo={tokenTypeToString(item.tokenType)}
             />
         </div>
