@@ -104,9 +104,9 @@
   );
 
   onMount(async () => {
-    if ($page.route.id === '/' || $page.route.id === '/connect-wallet') {
+    if ($page.route.id === '/connect-wallet') {
       await clearSession();
-    } else {
+    } else if ($page.route.id !== '/') {
       await restoreWallet();
     }
   });
