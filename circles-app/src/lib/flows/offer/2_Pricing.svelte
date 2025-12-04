@@ -11,6 +11,101 @@
   let availabilityFeed = $state(context.draft?.availabilityFeed ?? '');
   let inventoryFeed    = $state(context.draft?.inventoryFeed ?? '');
   let availableDeliveryMethod = $state(context.draft?.availableDeliveryMethod ?? '');
+  // Offer-driven basket requirements (requiredSlots)
+  // Contact
+  let reqEmail = $state(Boolean(context.draft?.requiredSlots?.includes('contactPoint.email')));
+  let reqPhone = $state(Boolean(context.draft?.requiredSlots?.includes('contactPoint.telephone')));
+  // Age verification
+  let reqAgeProof = $state(Boolean(context.draft?.requiredSlots?.includes('ageProof')));
+  let reqBirthDate = $state(Boolean(context.draft?.requiredSlots?.includes('ageProof.birthDate')));
+  // Shipping address (coarse and fine-grained)
+  let reqShip = $state(Boolean(context.draft?.requiredSlots?.includes('shippingAddress')));
+  let reqShipStreet = $state(Boolean(context.draft?.requiredSlots?.includes('shippingAddress.streetAddress')));
+  let reqShipLocality = $state(Boolean(context.draft?.requiredSlots?.includes('shippingAddress.addressLocality')));
+  let reqShipPostal = $state(Boolean(context.draft?.requiredSlots?.includes('shippingAddress.postalCode')));
+  let reqShipCountry = $state(Boolean(context.draft?.requiredSlots?.includes('shippingAddress.addressCountry')));
+  // Billing address (coarse and fine-grained)
+  let reqBill = $state(Boolean(context.draft?.requiredSlots?.includes('billingAddress')));
+  let reqBillStreet = $state(Boolean(context.draft?.requiredSlots?.includes('billingAddress.streetAddress')));
+  let reqBillLocality = $state(Boolean(context.draft?.requiredSlots?.includes('billingAddress.addressLocality')));
+  let reqBillPostal = $state(Boolean(context.draft?.requiredSlots?.includes('billingAddress.postalCode')));
+  let reqBillCountry = $state(Boolean(context.draft?.requiredSlots?.includes('billingAddress.addressCountry')));
+
+  // Machine-parsable descriptor of the slot hierarchy (for dynamic UIs/parsers)
+  // This mirrors the currently recognized keys and provides a stable tree structure.
+  const slotTree = [
+    {
+      id: 'contact',
+      label: 'Contact',
+      children: [
+        { key: 'contactPoint.email', label: 'Email' },
+        { key: 'contactPoint.telephone', label: 'Telephone' },
+      ],
+    },
+    {
+      id: 'age',
+      label: 'Age verification',
+      children: [
+        { key: 'ageProof', label: 'Age proof object' },
+        { key: 'ageProof.birthDate', label: 'Birth date' },
+      ],
+    },
+    {
+      id: 'shipping',
+      label: 'Shipping address',
+      children: [
+        { key: 'shippingAddress', label: 'Address object' },
+        { key: 'shippingAddress.streetAddress', label: 'Street address' },
+        { key: 'shippingAddress.addressLocality', label: 'City / locality' },
+        { key: 'shippingAddress.postalCode', label: 'Postal code' },
+        { key: 'shippingAddress.addressCountry', label: 'Country' },
+      ],
+    },
+    {
+      id: 'billing',
+      label: 'Billing address',
+      children: [
+        { key: 'billingAddress', label: 'Address object' },
+        { key: 'billingAddress.streetAddress', label: 'Street address' },
+        { key: 'billingAddress.addressLocality', label: 'City / locality' },
+        { key: 'billingAddress.postalCode', label: 'Postal code' },
+        { key: 'billingAddress.addressCountry', label: 'Country' },
+      ],
+    },
+  ] as const;
+
+  // Group-level derived states and toggle helpers (tree behavior)
+  const contactAll = $derived(reqEmail && reqPhone);
+  const ageAll = $derived(reqAgeProof && reqBirthDate);
+  const shipAll = $derived(
+    reqShip && reqShipStreet && reqShipLocality && reqShipPostal && reqShipCountry
+  );
+  const billAll = $derived(
+    reqBill && reqBillStreet && reqBillLocality && reqBillPostal && reqBillCountry
+  );
+
+  function setContactAll(v: boolean): void {
+    reqEmail = v;
+    reqPhone = v;
+  }
+  function setAgeAll(v: boolean): void {
+    reqAgeProof = v;
+    reqBirthDate = v;
+  }
+  function setShipAll(v: boolean): void {
+    reqShip = v;
+    reqShipStreet = v;
+    reqShipLocality = v;
+    reqShipPostal = v;
+    reqShipCountry = v;
+  }
+  function setBillAll(v: boolean): void {
+    reqBill = v;
+    reqBillStreet = v;
+    reqBillLocality = v;
+    reqBillPostal = v;
+    reqBillCountry = v;
+  }
 
   function next(): void {
     const priceOk = Number(price) > 0;
@@ -26,6 +121,26 @@
       availabilityFeed: availabilityFeed || undefined,
       inventoryFeed: inventoryFeed || undefined,
       availableDeliveryMethod: availableDeliveryMethod || undefined,
+      requiredSlots: [
+        // Contact
+        ...(reqEmail ? ['contactPoint.email'] : []),
+        ...(reqPhone ? ['contactPoint.telephone'] : []),
+        // Age verification
+        ...(reqAgeProof ? ['ageProof'] : []),
+        ...(reqBirthDate ? ['ageProof.birthDate'] : []),
+        // Shipping address
+        ...(reqShip ? ['shippingAddress'] : []),
+        ...(reqShipStreet ? ['shippingAddress.streetAddress'] : []),
+        ...(reqShipLocality ? ['shippingAddress.addressLocality'] : []),
+        ...(reqShipPostal ? ['shippingAddress.postalCode'] : []),
+        ...(reqShipCountry ? ['shippingAddress.addressCountry'] : []),
+        // Billing address
+        ...(reqBill ? ['billingAddress'] : []),
+        ...(reqBillStreet ? ['billingAddress.streetAddress'] : []),
+        ...(reqBillLocality ? ['billingAddress.addressLocality'] : []),
+        ...(reqBillPostal ? ['billingAddress.postalCode'] : []),
+        ...(reqBillCountry ? ['billingAddress.addressCountry'] : []),
+      ],
     };
 
     popupControls.open({
@@ -44,6 +159,26 @@
       availabilityFeed: (availabilityFeed ?? '').trim() || undefined,
       inventoryFeed: (inventoryFeed ?? '').trim() || undefined,
       availableDeliveryMethod: (availableDeliveryMethod ?? '').trim() || undefined,
+      requiredSlots: [
+        // Contact
+        ...(reqEmail ? ['contactPoint.email'] : []),
+        ...(reqPhone ? ['contactPoint.telephone'] : []),
+        // Age verification
+        ...(reqAgeProof ? ['ageProof'] : []),
+        ...(reqBirthDate ? ['ageProof.birthDate'] : []),
+        // Shipping address
+        ...(reqShip ? ['shippingAddress'] : []),
+        ...(reqShipStreet ? ['shippingAddress.streetAddress'] : []),
+        ...(reqShipLocality ? ['shippingAddress.addressLocality'] : []),
+        ...(reqShipPostal ? ['shippingAddress.postalCode'] : []),
+        ...(reqShipCountry ? ['shippingAddress.addressCountry'] : []),
+        // Billing address
+        ...(reqBill ? ['billingAddress'] : []),
+        ...(reqBillStreet ? ['billingAddress.streetAddress'] : []),
+        ...(reqBillLocality ? ['billingAddress.addressLocality'] : []),
+        ...(reqBillPostal ? ['billingAddress.postalCode'] : []),
+        ...(reqBillCountry ? ['billingAddress.addressCountry'] : []),
+      ],
     };
   });
 </script>
@@ -82,6 +217,161 @@
       <span class="label-text">Inventory feed URL (optional)</span>
       <input class="input input-bordered" bind:value={inventoryFeed} placeholder="https://…" />
     </label>
+  </div>
+
+  <!-- Offer-driven basket requirements -->
+  <div class="divider my-2">Checkout requirements</div>
+
+  <!-- Contact group -->
+  <div class="space-y-2">
+    <label class="label cursor-pointer justify-start gap-2">
+      <input type="checkbox" class="checkbox" checked={contactAll} onchange={(e) => setContactAll((e.target).checked)} />
+      <span class="label-text font-semibold">Contact</span>
+    </label>
+    <div class="pl-6 border-l border-base-200 grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <label class="label cursor-pointer justify-start gap-2">
+        <input type="checkbox" class="checkbox checkbox-sm" bind:checked={reqEmail} data-slot="contactPoint.email" />
+        <span class="label-text">Require buyer email at checkout</span>
+        <span class="label-text-alt opacity-70">(contactPoint.email)</span>
+      </label>
+      <label class="label cursor-pointer justify-start gap-2">
+        <input type="checkbox" class="checkbox checkbox-sm" bind:checked={reqPhone} data-slot="contactPoint.telephone" />
+        <span class="label-text">Require buyer phone at checkout</span>
+        <span class="label-text-alt opacity-70">(contactPoint.telephone)</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Age verification group -->
+  <div class="mt-3 space-y-2">
+    <label class="label cursor-pointer justify-start gap-2">
+      <input type="checkbox" class="checkbox" checked={ageAll} onchange={(e) => setAgeAll((e.target).checked)} />
+      <span class="label-text font-semibold">Age verification</span>
+    </label>
+    <div class="pl-6 border-l border-base-200 space-y-2" role="tree" aria-label="Age verification slots">
+      <!-- Object parent: ageProof -->
+      <div data-slot-node data-slot="ageProof">
+        <label class="label cursor-pointer justify-start gap-2">
+          <input
+            type="checkbox"
+            class="checkbox checkbox-sm"
+            bind:checked={reqAgeProof}
+            onchange={(e) => setAgeAll((e.target).checked)}
+            data-slot="ageProof"
+          />
+          <span class="label-text">Require age proof object</span>
+          <span class="label-text-alt opacity-70">(ageProof)</span>
+        </label>
+        <!-- Children of ageProof -->
+        <div class="pl-6 border-l border-base-200 space-y-2" role="group" data-slot-children-of="ageProof">
+          <label class="label cursor-pointer justify-start gap-2">
+            <input
+              type="checkbox"
+              class="checkbox checkbox-sm"
+              bind:checked={reqBirthDate}
+              data-slot="ageProof.birthDate"
+              data-parent-slot="ageProof"
+            />
+            <span class="label-text">Require date of birth</span>
+            <span class="label-text-alt opacity-70">(ageProof.birthDate)</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shipping address group -->
+  <div class="mt-3 space-y-2">
+    <label class="label cursor-pointer justify-start gap-2">
+      <input type="checkbox" class="checkbox" checked={shipAll} onchange={(e) => setShipAll((e.target).checked)} />
+      <span class="label-text font-semibold">Shipping address</span>
+    </label>
+    <div class="pl-6 border-l border-base-200 space-y-2" role="tree" aria-label="Shipping address slots">
+      <!-- Object parent: shippingAddress -->
+      <div data-slot-node data-slot="shippingAddress">
+        <label class="label cursor-pointer justify-start gap-2">
+          <input
+            type="checkbox"
+            class="checkbox checkbox-sm"
+            bind:checked={reqShip}
+            onchange={(e) => setShipAll((e.target).checked)}
+            data-slot="shippingAddress"
+          />
+          <span class="label-text">Require shipping address object</span>
+          <span class="label-text-alt opacity-70">(shippingAddress)</span>
+        </label>
+        <!-- Children of shippingAddress -->
+        <div class="pl-6 border-l border-base-200 grid grid-cols-1 sm:grid-cols-2 gap-3" role="group" data-slot-children-of="shippingAddress">
+          <label class="label cursor-pointer justify-start gap-2">
+            <input type="checkbox" class="checkbox checkbox-sm" bind:checked={reqShipStreet} data-slot="shippingAddress.streetAddress" data-parent-slot="shippingAddress" />
+            <span class="label-text">Require shipping street address</span>
+            <span class="label-text-alt opacity-70">(shippingAddress.streetAddress)</span>
+          </label>
+          <label class="label cursor-pointer justify-start gap-2">
+            <input type="checkbox" class="checkbox checkbox-sm" bind:checked={reqShipLocality} data-slot="shippingAddress.addressLocality" data-parent-slot="shippingAddress" />
+            <span class="label-text">Require shipping city/locality</span>
+            <span class="label-text-alt opacity-70">(shippingAddress.addressLocality)</span>
+          </label>
+          <label class="label cursor-pointer justify-start gap-2">
+            <input type="checkbox" class="checkbox checkbox-sm" bind:checked={reqShipPostal} data-slot="shippingAddress.postalCode" data-parent-slot="shippingAddress" />
+            <span class="label-text">Require shipping postal code</span>
+            <span class="label-text-alt opacity-70">(shippingAddress.postalCode)</span>
+          </label>
+          <label class="label cursor-pointer justify-start gap-2">
+            <input type="checkbox" class="checkbox checkbox-sm" bind:checked={reqShipCountry} data-slot="shippingAddress.addressCountry" data-parent-slot="shippingAddress" />
+            <span class="label-text">Require shipping country</span>
+            <span class="label-text-alt opacity-70">(shippingAddress.addressCountry)</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Billing address group -->
+  <div class="mt-3 space-y-2">
+    <label class="label cursor-pointer justify-start gap-2">
+      <input type="checkbox" class="checkbox" checked={billAll} onchange={(e) => setBillAll((e.target).checked)} />
+      <span class="label-text font-semibold">Billing address</span>
+    </label>
+    <div class="pl-6 border-l border-base-200 space-y-2" role="tree" aria-label="Billing address slots">
+      <!-- Object parent: billingAddress -->
+      <div data-slot-node data-slot="billingAddress">
+        <label class="label cursor-pointer justify-start gap-2">
+          <input
+            type="checkbox"
+            class="checkbox checkbox-sm"
+            bind:checked={reqBill}
+            onchange={(e) => setBillAll((e.target).checked)}
+            data-slot="billingAddress"
+          />
+          <span class="label-text">Require billing address object</span>
+          <span class="label-text-alt opacity-70">(billingAddress)</span>
+        </label>
+        <!-- Children of billingAddress -->
+        <div class="pl-6 border-l border-base-200 grid grid-cols-1 sm:grid-cols-2 gap-3" role="group" data-slot-children-of="billingAddress">
+          <label class="label cursor-pointer justify-start gap-2">
+            <input type="checkbox" class="checkbox checkbox-sm" bind:checked={reqBillStreet} data-slot="billingAddress.streetAddress" data-parent-slot="billingAddress" />
+            <span class="label-text">Require billing street address</span>
+            <span class="label-text-alt opacity-70">(billingAddress.streetAddress)</span>
+          </label>
+          <label class="label cursor-pointer justify-start gap-2">
+            <input type="checkbox" class="checkbox checkbox-sm" bind:checked={reqBillLocality} data-slot="billingAddress.addressLocality" data-parent-slot="billingAddress" />
+            <span class="label-text">Require billing city/locality</span>
+            <span class="label-text-alt opacity-70">(billingAddress.addressLocality)</span>
+          </label>
+          <label class="label cursor-pointer justify-start gap-2">
+            <input type="checkbox" class="checkbox checkbox-sm" bind:checked={reqBillPostal} data-slot="billingAddress.postalCode" data-parent-slot="billingAddress" />
+            <span class="label-text">Require billing postal code</span>
+            <span class="label-text-alt opacity-70">(billingAddress.postalCode)</span>
+          </label>
+          <label class="label cursor-pointer justify-start gap-2">
+            <input type="checkbox" class="checkbox checkbox-sm" bind:checked={reqBillCountry} data-slot="billingAddress.addressCountry" data-parent-slot="billingAddress" />
+            <span class="label-text">Require billing country</span>
+            <span class="label-text-alt opacity-70">(billingAddress.addressCountry)</span>
+          </label>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="mt-4 flex justify-end">

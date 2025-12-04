@@ -2,10 +2,9 @@
   import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
   import GenericList from '$lib/components/GenericList.svelte';
   import OrderRow from './OrderRow.svelte';
-  import { listStoredOrderIds } from '$lib/cart/orders-local';
   import type { Readable } from 'svelte/store';
   import { browser } from '$app/environment';
-  import { getOrdersBatch, getOrdersByBuyer } from '$lib/cart/client';
+  import { getOrdersByBuyer } from '$lib/cart/client';
   import { getAuthMeta } from '$lib/auth/siwe';
   import { signInWithWallet } from '$lib/auth/signin';
   import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
@@ -13,10 +12,11 @@
   import type { Action } from '$lib/components/layout/Action';
 
   type ListItem = {
-    id: string; // orderNumber
+    id: string; // non-secret identifier for display (orderNumber or paymentReference)
     status?: string;
     total?: { price?: number | null; priceCurrency?: string | null } | null;
     customerId?: string | null;
+    snapshot?: any; // full order snapshot for popup
   } & { blockNumber: number; transactionIndex: number; logIndex: number; address?: string };
 
   // Build a simple readable-like object compatible with GenericList
@@ -25,14 +25,16 @@
   function mapItems(items: any[]): ListItem[] {
     const now = Date.now();
     return items.map((s, i) => ({
-      id: (s as any)?.orderNumber ?? (s as any)?.id ?? `ord_${i}`,
+      // Use non-secret orderNumber if available; otherwise fall back to paymentReference
+      id: (s as any)?.orderNumber ?? (s as any)?.paymentReference ?? `ord_${i}`,
       status: (s as any)?.orderStatus,
       total: (s as any)?.totalPaymentDue ?? null,
       customerId: (s as any)?.customer?.['@id'] ?? null,
       blockNumber: now - i,
       transactionIndex: i,
       logIndex: 0,
-      address: (s as any)?.orderNumber ?? (s as any)?.id ?? undefined,
+      address: (s as any)?.orderNumber ?? (s as any)?.paymentReference ?? undefined,
+      snapshot: s,
     }));
   }
 
@@ -79,44 +81,21 @@
     } as any;
   }
 
+  // Remove fallback based on locally stored order IDs to avoid exposing secrets.
   function buildFallbackStore(): Readable<{ data: ListItem[]; next: () => Promise<boolean>; ended: boolean }>{
-    const ids = listStoredOrderIds();
     type State = { data: ListItem[]; ended: boolean; next: () => Promise<boolean> };
     const subscribers = new Set<(v: State) => void>();
     const notify = (v: State) => subscribers.forEach((fn) => fn(v));
-    let loaded = false;
-
     let state: State = {
       data: [],
-      ended: ids.length === 0 ? true : false,
-      next: async () => {
-        if (loaded) return true;
-        loaded = true;
-        try {
-          if (ids.length === 0) {
-            state = { ...state, data: [], ended: true };
-            notify(state);
-            return true;
-          }
-          const snapshots = await getOrdersBatch(ids);
-          state = { ...state, data: mapItems(snapshots || []), ended: true };
-          notify(state);
-          return true;
-        } catch (e) {
-          state = { ...state, data: [], ended: true };
-          notify(state);
-          return true;
-        }
-      },
+      ended: true,
+      next: async () => true,
     };
-
     return {
       subscribe(run: (v: State) => void) {
         subscribers.add(run);
         run(state);
-        return () => {
-          subscribers.delete(run);
-        };
+        return () => { subscribers.delete(run); };
       },
     } as any;
   }

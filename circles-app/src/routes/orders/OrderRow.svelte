@@ -1,10 +1,11 @@
 <script lang="ts">
   interface Props {
     item: {
-      id: string; // orderNumber
+      id: string; // public order number or reference (non-secret)
       status?: string;
       total?: { price?: number | null; priceCurrency?: string | null } | null;
       customerId?: string | null;
+      snapshot?: any; // full order snapshot for details popup
     };
   }
   let { item }: Props = $props();
@@ -32,10 +33,6 @@
     }
   }
 
-  function copyId() {
-    navigator.clipboard?.writeText(item.id).catch(() => {});
-  }
-
   import { popupControls, type PopupContentDefinition } from '$lib/stores/popUp';
   import OrderDetailsPopup from '$lib/orders/OrderDetailsPopup.svelte';
 
@@ -43,7 +40,7 @@
     const def: PopupContentDefinition = {
       title: 'Order details',
       component: OrderDetailsPopup,
-      props: { orderId: item.id },
+      props: { snapshot: item.snapshot ?? {} },
     };
     popupControls.open(def);
   }
@@ -68,7 +65,7 @@
     </div>
   </div>
   <div class="flex items-center gap-2 flex-shrink-0">
-    <button class="btn btn-xs btn-ghost" title="Copy order id" onclick={(e) => { e.stopPropagation(); copyId(); }}>Copy</button>
+    <!-- No copy action for secret keys; id shown here should be non-secret order number/reference -->
   </div>
-  <div class="sr-only">Order id</div>
+  <div class="sr-only">Order</div>
 </div>

@@ -233,6 +233,12 @@
             inventoryFeed: draft.inventoryFeed || undefined,
             url: draft.url || undefined,
             availableDeliveryMethod: draft.availableDeliveryMethod || undefined,
+            // Pass through requiredSlots when present (array of non-empty strings)
+            requiredSlots: Array.isArray(draft.requiredSlots)
+              ? draft.requiredSlots
+                  .map((s: unknown) => (typeof s === 'string' ? s.trim() : ''))
+                  .filter((s: string) => s.length > 0)
+              : undefined,
           },
         });
         context.result = res;
@@ -277,6 +283,12 @@
             {/if}
             {#if context.draft?.inventoryFeed}
               <div class="truncate"><strong>Inventory feed:</strong> {context.draft?.inventoryFeed}</div>
+            {/if}
+            {#if Array.isArray(context.draft?.requiredSlots) && context.draft?.requiredSlots.length > 0}
+              <div class="truncate">
+                <strong>Checkout requirements:</strong>
+                {context.draft?.requiredSlots.join(', ')}
+              </div>
             {/if}
         </div>
     </div>

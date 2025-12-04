@@ -20,6 +20,11 @@ export type OfferDraft = {
   inventoryFeed?: string;
   urlProduct?: string;    // not used; kept for future extension
   availableDeliveryMethod?: string; // GoodRelations IRI (e.g. http://purl.org/goodrelations/v1#DeliveryModePickUp)
+  /**
+   * Offer-driven basket requirements: array of opaque slot keys.
+   * Recognized initial set: "contactPoint.email", "contactPoint.telephone".
+   */
+  requiredSlots?: string[];
 };
 
 export interface OfferFlowContext {

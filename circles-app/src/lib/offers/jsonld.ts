@@ -43,6 +43,11 @@ export type MinimalOffer = {
   inventoryFeed?: string; // URI
   url?: string;
   availableDeliveryMethod?: string; // GoodRelations IRI
+  /**
+   * Offer-driven basket requirements. Array of opaque slot keys.
+   * Server recognizes an initial set (e.g., "contactPoint.email", "contactPoint.telephone").
+   */
+  requiredSlots?: string[];
 };
 
 const SIZE_LIMIT = 8 * 1024 * 1024; // 8 MiB
@@ -130,6 +135,15 @@ export function buildProduct(product: MinimalProduct, offer: MinimalOffer): any 
   if (offer.inventoryFeed) offerObj.inventoryFeed = offer.inventoryFeed;
   if (offer.url) offerObj.url = offer.url;
   if (offer.availableDeliveryMethod) offerObj.availableDeliveryMethod = offer.availableDeliveryMethod;
+  if (Array.isArray((offer as any).requiredSlots)) {
+    const slots = (offer as any).requiredSlots as unknown[];
+    const filtered = slots
+      .map((s) => (typeof s === 'string' ? s.trim() : ''))
+      .filter((s) => s.length > 0);
+    if (filtered.length > 0) {
+      offerObj.requiredSlots = filtered;
+    }
+  }
 
   obj.offers = [offerObj];
 
