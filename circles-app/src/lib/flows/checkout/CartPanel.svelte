@@ -280,10 +280,10 @@
       {/if}
     </div>
 
-    {#if $cartState.basket?.status === 'CheckedOut' && $cartState.lastOrderId}
+    {#if $cartState.basket?.status === 'CheckedOut' && $cartState.lastCheckout?.paymentReference}
       <div class="mt-3 alert alert-success text-xs">
-        <span>Order created:</span>
-        <code class="ml-1 break-all">{$cartState.lastOrderId}</code>
+        <span>Payment reference:</span>
+        <code class="ml-1 break-all">{$cartState.lastCheckout.paymentReference}</code>
       </div>
     {/if}
 

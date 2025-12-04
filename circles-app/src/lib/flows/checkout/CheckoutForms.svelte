@@ -109,6 +109,45 @@
     );
   }
 
+  // ————————————————————————————————————————————
+  // Offer-driven required slots support (contactPoint.email / telephone)
+  // ————————————————————————————————————————————
+  function basketRequiredSlotsFromOffers(): Set<string> {
+    const out = new Set<string>();
+    const items = $cartState.basket?.items ?? [];
+    for (const it of items) {
+      const slots = (it as any)?.offerSnapshot?.requiredSlots as unknown;
+      if (Array.isArray(slots)) {
+        for (const s of slots) {
+          const key = typeof s === 'string' ? s.trim() : '';
+          if (key) out.add(key);
+        }
+      }
+    }
+    return out;
+  }
+
+  function requiredSlotsFromValidation(v: any): Set<string> {
+    const out = new Set<string>();
+    if (!v || !Array.isArray(v.requirements)) return out;
+    for (const r of v.requirements) {
+      const status = (r?.status ?? '').toString();
+      const blocking = !!(r as any)?.blocking;
+      const slot = (r?.slot ?? '').toString();
+      if (blocking && status !== 'ok' && slot) {
+        out.add(slot);
+      }
+    }
+    return out;
+  }
+
+  const offerDrivenRequired = $derived(basketRequiredSlotsFromOffers());
+  const validationRequired = $derived(requiredSlotsFromValidation($cartState.validation));
+  const allRequiredSlots = $derived(new Set<string>([...offerDrivenRequired, ...validationRequired]));
+
+  const emailRequired = $derived(allRequiredSlots.has('contactPoint.email'));
+  const phoneRequired = $derived(allRequiredSlots.has('contactPoint.telephone'));
+
   // Field-level error based purely on server ValidationRequirement.path
   function fieldHasError(path: string): boolean {
     const v = $cartState.validation;
@@ -122,13 +161,18 @@
     });
   }
 
+  function hasBlockingUnmet(v: any): boolean {
+    if (!v || !Array.isArray(v.requirements)) return false;
+    return v.requirements.some((r: any) => !!r?.blocking && (r?.status ?? '') !== 'ok');
+  }
+
   async function goToReview(): Promise<void> {
     localError = null;
     validating = true;
     try {
       await persistDetails();
       const v = await validateCart();
-      if (needsShippingFromValidation(v)) {
+      if (needsShippingFromValidation(v) || hasBlockingUnmet(v)) {
         // Stay on details; per-field errors will be visible
         return;
       }
@@ -153,12 +197,13 @@
   const validation = $derived($cartState.validation);
   // Preview and payment happen in the subsequent popup steps
 
-  // Continue is enabled only when the last server validation says "ok" for shipping
+  // Continue is enabled only when the last server validation has no unmet blocking requirements
   const canContinue = $derived(
     !$cartState.loading &&
       !validating &&
       !!validation &&
-      !needsShippingFromValidation(validation)
+      !needsShippingFromValidation(validation) &&
+      !hasBlockingUnmet(validation)
   );
 </script>
 
@@ -209,21 +254,29 @@
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
         <label class="form-control">
-          <span class="label-text text-xs">Email (optional)</span>
+          <span class="label-text text-xs">
+            Email {#if emailRequired}<span class="text-error">(required)</span>{:else}(optional){/if}
+          </span>
           <input
             class="input input-xs input-bordered"
             type="email"
             bind:value={contactEmail}
             on:blur={validateOnBlur}
+            class:border-error={fieldHasError('/contactPoint/email')}
+            required={emailRequired}
           />
         </label>
         <label class="form-control">
-          <span class="label-text text-xs">Phone (optional)</span>
+          <span class="label-text text-xs">
+            Phone {#if phoneRequired}<span class="text-error">(required)</span>{:else}(optional){/if}
+          </span>
           <input
             class="input input-xs input-bordered"
             type="tel"
             bind:value={contactPhone}
             on:blur={validateOnBlur}
+            class:border-error={fieldHasError('/contactPoint/telephone')}
+            required={phoneRequired}
           />
         </label>
       </div>

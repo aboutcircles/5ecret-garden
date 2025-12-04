@@ -58,6 +58,12 @@ export type OfferSnapshot = {
   priceCurrency?: string | null;
   seller?: SchemaOrgOrgId | null;
   availableDeliveryMethod?: string[] | null;
+  /**
+   * Canonicalized offer-driven basket requirements. Copied from Offer.requiredSlots
+   * when present on the catalog offer. Used by clients to pre-emptively display
+   * required fields (e.g., contactPoint.email) before running validation.
+   */
+  requiredSlots?: string[] | null;
 };
 
 export type PostalAddress = {
@@ -112,6 +118,10 @@ export type ValidationRequirement = {
   status: ValidationRequirementStatus;
   foundAt?: string | null;
   foundType?: string | null;
+  /** True if this requirement blocks checkout until satisfied. */
+  blocking?: boolean;
+  /** Scope where the requirement applies (e.g., "basket"). */
+  scope?: string;
 };
 
 export type RuleTrace = {

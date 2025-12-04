@@ -4,15 +4,16 @@
     import QrCode from '$lib/components/QrCode.svelte';
     import { cartState } from '$lib/cart/store';
 
-    const lastOrderId = $derived($cartState.lastOrderId ?? null);
+    const paymentReference = $derived($cartState.lastCheckout?.paymentReference ?? null);
     const basketId = $derived($cartState.basket?.basketId ?? null);
 
+    // Do NOT include orderKey in any QR codes or UI. Prefer non-secret paymentReference.
     const paymentQrValue = $derived(
-        lastOrderId
-            ? `circles:order:${lastOrderId}`
+        paymentReference
+            ? `circles:payment:${paymentReference}`
             : basketId
                 ? `circles:basket:${basketId}`
-                : 'circles:order',
+                : 'circles:payment'
     );
 </script>
 
@@ -29,9 +30,9 @@
             <QrCode value={paymentQrValue} />
         </div>
 
-        {#if lastOrderId}
+        {#if paymentReference}
             <div class="mt-2 text-xs opacity-70 text-center">
-                Order created: <code>{lastOrderId}</code>
+                Payment reference: <code>{paymentReference}</code>
             </div>
         {/if}
     </div>

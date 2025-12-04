@@ -38,18 +38,26 @@ export class CartHttpError extends Error {
 }
 
 /**
- * GET /orders/{orderId}
+ * POST /orders/lookup
+ * Accepts an order capability key in the request body. For a transition period,
+ * legacy clients may still pass an orderId value, which we forward under the
+ * deprecated field as well.
  */
 export async function getOrder(
-  orderId: string,
+  orderKeyOrId: string,
   cfg?: CartClientConfig,
 ): Promise<OrderSnapshot> {
   const base = resolveBase(cfg);
-  const url = `${base}/api/cart/v1/orders/${encodeURIComponent(orderId)}`;
+  const url = `${base}/api/cart/v1/orders/lookup`;
 
   const res = await fetch(url, {
-    method: 'GET',
-    headers: { Accept: 'application/ld+json' },
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/ld+json; charset=utf-8',
+      Accept: 'application/ld+json',
+    },
+    // Send both fields for transitional compatibility; server will prefer orderKey
+    body: JSON.stringify({ orderKey: orderKeyOrId, orderId: orderKeyOrId }),
   });
 
   const body = await parseJson<unknown>(res).catch(() => ({}));
@@ -79,7 +87,8 @@ export async function getOrdersBatch(
       'Content-Type': 'application/ld+json; charset=utf-8',
       Accept: 'application/ld+json',
     },
-    body: JSON.stringify({ ids }),
+    // Send new field `keys` while keeping legacy `ids` for transition
+    body: JSON.stringify({ keys: ids, ids }),
   });
 
   const body = await parseJson<any>(res).catch(() => ({}));
@@ -309,9 +318,11 @@ export async function previewOrder(
  * POST /baskets/{id}/checkout
  */
 export type CheckoutResponse = {
-  orderId: string;
+  orderKey?: string; // new, secret
+  orderId?: string; // deprecated transitional support
   basketId: string;
   orderCid: string | null;
+  paymentReference?: string; // non-secret, public correlation
 };
 
 export async function checkoutBasket(

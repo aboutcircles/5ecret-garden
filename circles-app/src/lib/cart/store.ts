@@ -16,7 +16,8 @@ import {
   type CheckoutResponse,
 } from './client';
 import { catalogItemToOrderItem } from './mapping';
-import { addStoredOrderId } from './orders-local';
+// NOTE: We no longer persist order capability keys (orderKey) to localStorage
+// to avoid accidental exposure. See order-key migration notes.
 import type { AggregatedCatalogItem } from '$lib/market/types';
 
 export type CartState = {
@@ -401,7 +402,9 @@ export async function previewCartOrder(
 
 /**
  * Checkout the current basket via POST /baskets/{id}/checkout.
- * Stores the last orderId in cartState.lastOrderId and marks the basket as CheckedOut.
+ * Stores the last order key internally in cartState.lastOrderId (name kept for
+ * backward compatibility) and marks the basket as CheckedOut. The key is treated
+ * as a secret and is not persisted or rendered in UI.
  */
 export async function checkoutCart(
   cfg?: CartClientConfig,
@@ -427,11 +430,8 @@ export async function checkoutCart(
   try {
     const resp = await checkoutBasket(snapshot.basketId!, cfg);
 
-    const newOrderId = (resp as any)?.orderId ?? (resp as any)?.basketId ?? null;
-    if (newOrderId) {
-      // Persist order id locally for later retrieval (acts like bearer token)
-      addStoredOrderId(String(newOrderId));
-    }
+    // Prefer new secret field orderKey. For a transition, accept legacy orderId.
+    const newOrderId = (resp as any)?.orderKey ?? (resp as any)?.orderId ?? null;
 
     cartState.update((s) => ({
       ...s,
