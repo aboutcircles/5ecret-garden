@@ -21,6 +21,11 @@
   let shippingLocality = $state('');
   let shippingPostal = $state('');
   let shippingCountry = $state('');
+  // Billing
+  let billingStreet = $state('');
+  let billingLocality = $state('');
+  let billingPostal = $state('');
+  let billingCountry = $state('');
   let contactEmail = $state('');
   let contactPhone = $state('');
   let birthDate = $state('');
@@ -43,6 +48,12 @@
     shippingPostal = (addr?.postalCode as string) ?? '';
     shippingCountry = (addr?.addressCountry as string) ?? '';
 
+    const bill = b.billingAddress as any;
+    billingStreet = (bill?.streetAddress as string) ?? '';
+    billingLocality = (bill?.addressLocality as string) ?? '';
+    billingPostal = (bill?.postalCode as string) ?? '';
+    billingCountry = (bill?.addressCountry as string) ?? '';
+
     const contact = b.contactPoint as any;
     contactEmail = (contact?.email as string) ?? '';
     contactPhone = (contact?.telephone as string) ?? '';
@@ -56,13 +67,23 @@
   async function persistDetails(): Promise<void> {
     const patch: any = {};
 
-    patch.shippingAddress = {
-      '@type': 'PostalAddress',
-      streetAddress: shippingStreet || null,
-      addressLocality: shippingLocality || null,
-      postalCode: shippingPostal || null,
-      addressCountry: shippingCountry || null
-    };
+    // Only send objects when user provided something or when currently required
+    const shipGroupRequired = shippingRequired;
+    if (
+      shipGroupRequired ||
+      shippingStreet ||
+      shippingLocality ||
+      shippingPostal ||
+      shippingCountry
+    ) {
+      patch.shippingAddress = {
+        '@type': 'PostalAddress',
+        streetAddress: shippingStreet || null,
+        addressLocality: shippingLocality || null,
+        postalCode: shippingPostal || null,
+        addressCountry: shippingCountry || null
+      };
+    }
 
     if (contactEmail || contactPhone) {
       patch.contactPoint = {
@@ -76,6 +97,23 @@
       patch.ageProof = {
         '@type': 'Person',
         birthDate
+      };
+    }
+
+    const billGroupRequired = billingRequired;
+    if (
+      billGroupRequired ||
+      billingStreet ||
+      billingLocality ||
+      billingPostal ||
+      billingCountry
+    ) {
+      patch.billingAddress = {
+        '@type': 'PostalAddress',
+        streetAddress: billingStreet || null,
+        addressLocality: billingLocality || null,
+        postalCode: billingPostal || null,
+        addressCountry: billingCountry || null
       };
     }
 
@@ -148,6 +186,51 @@
   const emailRequired = $derived(allRequiredSlots.has('contactPoint.email'));
   const phoneRequired = $derived(allRequiredSlots.has('contactPoint.telephone'));
 
+  // Shipping and billing groups: show if any of their slots are required (coarse or fine)
+  const shippingRequired = $derived(
+    allRequiredSlots.has('shippingAddress') ||
+      allRequiredSlots.has('shippingAddress.streetAddress') ||
+      allRequiredSlots.has('shippingAddress.addressLocality') ||
+      allRequiredSlots.has('shippingAddress.postalCode') ||
+      allRequiredSlots.has('shippingAddress.addressCountry')
+  );
+  const shipStreetRequired = $derived(
+    allRequiredSlots.has('shippingAddress.streetAddress') || shippingRequired
+  );
+  const shipLocalityRequired = $derived(
+    allRequiredSlots.has('shippingAddress.addressLocality') || shippingRequired
+  );
+  const shipPostalRequired = $derived(
+    allRequiredSlots.has('shippingAddress.postalCode') || shippingRequired
+  );
+  const shipCountryRequired = $derived(
+    allRequiredSlots.has('shippingAddress.addressCountry') || shippingRequired
+  );
+
+  const billingRequired = $derived(
+    allRequiredSlots.has('billingAddress') ||
+      allRequiredSlots.has('billingAddress.streetAddress') ||
+      allRequiredSlots.has('billingAddress.addressLocality') ||
+      allRequiredSlots.has('billingAddress.postalCode') ||
+      allRequiredSlots.has('billingAddress.addressCountry')
+  );
+  const billStreetRequired = $derived(
+    allRequiredSlots.has('billingAddress.streetAddress') || billingRequired
+  );
+  const billLocalityRequired = $derived(
+    allRequiredSlots.has('billingAddress.addressLocality') || billingRequired
+  );
+  const billPostalRequired = $derived(
+    allRequiredSlots.has('billingAddress.postalCode') || billingRequired
+  );
+  const billCountryRequired = $derived(
+    allRequiredSlots.has('billingAddress.addressCountry') || billingRequired
+  );
+
+  const birthDateRequired = $derived(
+    allRequiredSlots.has('ageProof.birthDate') || allRequiredSlots.has('ageProof')
+  );
+
   // Field-level error based purely on server ValidationRequirement.path
   function fieldHasError(path: string): boolean {
     const v = $cartState.validation;
@@ -208,90 +291,181 @@
 </script>
 
 <FlowDecoration>
-    <div class="space-y-3 text-xs">
-      <div class="grid grid-cols-1 gap-2">
-        <label class="form-control">
-          <span class="label-text text-xs">Street address</span>
-          <input
-            class="input input-xs input-bordered"
-            bind:value={shippingStreet}
-            on:blur={validateOnBlur}
-            class:border-error={fieldHasError('/shippingAddress/streetAddress')}
-          />
-        </label>
+    <p>
+        The seller needs some additional information from you. Please fill in the forms below:
+    </p>
+    <div class="space-y-4 text-xs">
+      {#if shippingRequired}
+        <div class="space-y-2">
+          <div class="font-semibold opacity-80">Shipping address</div>
+          <div class="grid grid-cols-1 gap-2">
+            {#if shipStreetRequired}
+              <label class="form-control">
+                <span class="label-text text-xs">Street address</span>
+                <input
+                  class="input input-xs input-bordered"
+                  bind:value={shippingStreet}
+                  on:blur={validateOnBlur}
+                  class:border-error={fieldHasError('/shippingAddress/streetAddress')}
+                  required
+                />
+              </label>
+            {/if}
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-          <label class="form-control">
-            <span class="label-text text-xs">City / locality</span>
-            <input
-              class="input input-xs input-bordered"
-              bind:value={shippingLocality}
-              on:blur={validateOnBlur}
-              class:border-error={fieldHasError('/shippingAddress/addressLocality')}
-            />
-          </label>
-          <label class="form-control">
-            <span class="label-text text-xs">Postal code</span>
-            <input
-              class="input input-xs input-bordered"
-              bind:value={shippingPostal}
-              on:blur={validateOnBlur}
-              class:border-error={fieldHasError('/shippingAddress/postalCode')}
-            />
-          </label>
-          <label class="form-control">
-            <span class="label-text text-xs">Country</span>
-            <input
-              class="input input-xs input-bordered"
-              bind:value={shippingCountry}
-              placeholder="DE, FR, …"
-              on:blur={validateOnBlur}
-              class:border-error={fieldHasError('/shippingAddress/addressCountry')}
-            />
-          </label>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {#if shipLocalityRequired}
+                <label class="form-control">
+                  <span class="label-text text-xs">City / locality</span>
+                  <input
+                    class="input input-xs input-bordered"
+                    bind:value={shippingLocality}
+                    on:blur={validateOnBlur}
+                    class:border-error={fieldHasError('/shippingAddress/addressLocality')}
+                    required
+                  />
+                </label>
+              {/if}
+              {#if shipPostalRequired}
+                <label class="form-control">
+                  <span class="label-text text-xs">Postal code</span>
+                  <input
+                    class="input input-xs input-bordered"
+                    bind:value={shippingPostal}
+                    on:blur={validateOnBlur}
+                    class:border-error={fieldHasError('/shippingAddress/postalCode')}
+                    required
+                  />
+                </label>
+              {/if}
+              {#if shipCountryRequired}
+                <label class="form-control">
+                  <span class="label-text text-xs">Country</span>
+                  <input
+                    class="input input-xs input-bordered"
+                    bind:value={shippingCountry}
+                    placeholder="DE, FR, …"
+                    on:blur={validateOnBlur}
+                    class:border-error={fieldHasError('/shippingAddress/addressCountry')}
+                    required
+                  />
+                </label>
+              {/if}
+            </div>
+          </div>
         </div>
-      </div>
+      {/if}
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-        <label class="form-control">
-          <span class="label-text text-xs">
-            Email {#if emailRequired}<span class="text-error">(required)</span>{:else}(optional){/if}
-          </span>
-          <input
-            class="input input-xs input-bordered"
-            type="email"
-            bind:value={contactEmail}
-            on:blur={validateOnBlur}
-            class:border-error={fieldHasError('/contactPoint/email')}
-            required={emailRequired}
-          />
-        </label>
-        <label class="form-control">
-          <span class="label-text text-xs">
-            Phone {#if phoneRequired}<span class="text-error">(required)</span>{:else}(optional){/if}
-          </span>
-          <input
-            class="input input-xs input-bordered"
-            type="tel"
-            bind:value={contactPhone}
-            on:blur={validateOnBlur}
-            class:border-error={fieldHasError('/contactPoint/telephone')}
-            required={phoneRequired}
-          />
-        </label>
-      </div>
+      {#if billingRequired}
+        <div class="space-y-2">
+          <div class="font-semibold opacity-80">Billing address</div>
+          <div class="grid grid-cols-1 gap-2">
+            {#if billStreetRequired}
+              <label class="form-control">
+                <span class="label-text text-xs">Street address</span>
+                <input
+                  class="input input-xs input-bordered"
+                  bind:value={billingStreet}
+                  on:blur={validateOnBlur}
+                  class:border-error={fieldHasError('/billingAddress/streetAddress')}
+                  required
+                />
+              </label>
+            {/if}
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {#if billLocalityRequired}
+                <label class="form-control">
+                  <span class="label-text text-xs">City / locality</span>
+                  <input
+                    class="input input-xs input-bordered"
+                    bind:value={billingLocality}
+                    on:blur={validateOnBlur}
+                    class:border-error={fieldHasError('/billingAddress/addressLocality')}
+                    required
+                  />
+                </label>
+              {/if}
+              {#if billPostalRequired}
+                <label class="form-control">
+                  <span class="label-text text-xs">Postal code</span>
+                  <input
+                    class="input input-xs input-bordered"
+                    bind:value={billingPostal}
+                    on:blur={validateOnBlur}
+                    class:border-error={fieldHasError('/billingAddress/postalCode')}
+                    required
+                  />
+                </label>
+              {/if}
+              {#if billCountryRequired}
+                <label class="form-control">
+                  <span class="label-text text-xs">Country</span>
+                  <input
+                    class="input input-xs input-bordered"
+                    bind:value={billingCountry}
+                    placeholder="DE, FR, …"
+                    on:blur={validateOnBlur}
+                    class:border-error={fieldHasError('/billingAddress/addressCountry')}
+                    required
+                  />
+                </label>
+              {/if}
+            </div>
+          </div>
+        </div>
+      {/if}
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-        <label class="form-control">
-          <span class="label-text text-xs">Birth date (optional)</span>
-          <input
-            class="input input-xs input-bordered"
-            type="date"
-            bind:value={birthDate}
-            on:blur={validateOnBlur}
-          />
-        </label>
-      </div>
+      {#if emailRequired || phoneRequired}
+        <div class="space-y-2">
+          <div class="font-semibold opacity-80">Contact</div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {#if emailRequired}
+              <label class="form-control">
+                <span class="label-text text-xs">Email</span>
+                <input
+                  class="input input-xs input-bordered"
+                  type="email"
+                  bind:value={contactEmail}
+                  on:blur={validateOnBlur}
+                  class:border-error={fieldHasError('/contactPoint/email')}
+                  required
+                />
+              </label>
+            {/if}
+            {#if phoneRequired}
+              <label class="form-control">
+                <span class="label-text text-xs">Phone</span>
+                <input
+                  class="input input-xs input-bordered"
+                  type="tel"
+                  bind:value={contactPhone}
+                  on:blur={validateOnBlur}
+                  class:border-error={fieldHasError('/contactPoint/telephone')}
+                  required
+                />
+              </label>
+            {/if}
+          </div>
+        </div>
+      {/if}
+
+      {#if birthDateRequired}
+        <div class="space-y-2">
+          <div class="font-semibold opacity-80">Age verification</div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <label class="form-control">
+              <span class="label-text text-xs">Birth date</span>
+              <input
+                class="input input-xs input-bordered"
+                type="date"
+                bind:value={birthDate}
+                on:blur={validateOnBlur}
+                class:border-error={fieldHasError('/ageProof/birthDate')}
+                required
+              />
+            </label>
+          </div>
+        </div>
+      {/if}
 
       {#if localError}
         <div class="alert alert-error text-xs mt-2">

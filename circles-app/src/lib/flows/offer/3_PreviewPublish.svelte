@@ -294,7 +294,6 @@
     </div>
 
     <div class="mt-4 flex justify-end gap-2">
-        <button type="button" class="btn" onclick={() => history.back()}>Back</button>
         <button type="button" class="btn btn-primary" disabled={!requiredOk()} onclick={publish}>Publish</button>
     </div>
 </div>
