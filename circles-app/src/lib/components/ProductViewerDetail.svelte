@@ -70,6 +70,21 @@
     if (tone === 'warning') return 'badge badge-warning';
     return 'badge badge-ghost';
   }
+
+  // Map common GoodRelations delivery method IRIs to concise labels
+  function deliveryMethodLabel(iri?: string | null): string {
+    if (!iri) return '';
+    const map: Record<string, string> = {
+      'http://purl.org/goodrelations/v1#DeliveryModePickUp': 'Pick up',
+      'http://purl.org/goodrelations/v1#DeliveryModeOwnFleet': 'Own fleet',
+      'http://purl.org/goodrelations/v1#DeliveryModeMail': 'Mail',
+      'http://purl.org/goodrelations/v1#DeliveryModeFreight': 'Freight',
+      'http://purl.org/goodrelations/v1#DeliveryModeDHL': 'DHL',
+      'http://purl.org/goodrelations/v1#DeliveryModeUPS': 'UPS',
+      'http://purl.org/goodrelations/v1#DeliveryModeFedEx': 'FedEx',
+    };
+    return map[iri] || iri;
+  }
 </script>
 
 <!-- Product Images -->
@@ -127,6 +142,14 @@
         <div class="flex items-center justify-between">
           <span class="text-sm text-base-content/70">Currency:</span>
           <span>{offer.priceCurrency}</span>
+        </div>
+      {/if}
+      {#if offer?.availableDeliveryMethod}
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-base-content/70">Delivery:</span>
+          <span class="truncate max-w-[70%]" title={offer.availableDeliveryMethod}>
+            {deliveryMethodLabel(offer.availableDeliveryMethod)}
+          </span>
         </div>
       {/if}
 
