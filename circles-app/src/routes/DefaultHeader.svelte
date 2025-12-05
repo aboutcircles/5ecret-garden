@@ -1,4 +1,6 @@
 <script lang="ts">
+  import ThemeToggle from '$lib/components/ThemeToggle.svelte';
+
   interface Props {
     homeLink?: string;
   }
@@ -15,6 +17,7 @@
       >
     </a>
   </div>
+  <ThemeToggle />
   <details class="dropdown dropdown-end flex-none">
     <summary class="btn btn-circle btn-ghost btn-sm"
       ><svg

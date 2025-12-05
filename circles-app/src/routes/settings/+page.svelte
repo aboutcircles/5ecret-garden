@@ -14,7 +14,10 @@
   import { FallbackImageUrl, profilesEqual } from '$lib/utils/profile';
   import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
   import Lucide from '$lib/icons/Lucide.svelte';
-  import { Save as LSave, LogOut as LLogOut } from 'lucide';
+  import { Save as LSave, LogOut as LLogOut, Sun as LSun, Moon as LMoon } from 'lucide';
+  import { themeState, themeControls } from '$lib/stores/theme.svelte';
+
+  let isDark: boolean = $derived(themeState.current === 'circles-dark');
 
   async function saveProfileData(profile: Profile): Promise<string> {
     if (!$circles?.profiles) {
@@ -135,6 +138,26 @@
         showCustomizableFields={avatarState.avatar?.avatarInfo?.version === 2}
       />
 
+    </div>
+
+    <div class="w-full pt-2 border-t">
+      <h2 class="text-lg font-medium">Appearance</h2>
+      <div class="mt-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <Lucide icon={isDark ? LMoon : LSun} size={20} class="stroke-current" />
+          <span>{isDark ? 'Dark mode' : 'Light mode'}</span>
+        </div>
+        <label class="swap swap-rotate">
+          <input
+            type="checkbox"
+            checked={isDark}
+            onchange={() => themeControls.toggle()}
+            aria-label="Toggle dark mode"
+          />
+          <Lucide icon={LSun} size={24} class="swap-off stroke-current" />
+          <Lucide icon={LMoon} size={24} class="swap-on stroke-current" />
+        </label>
+      </div>
     </div>
 
     {#if avatarState.isGroup}

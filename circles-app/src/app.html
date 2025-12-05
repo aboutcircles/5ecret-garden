@@ -4,6 +4,30 @@
     <meta charset="utf-8" />
     <link rel="icon" href="%sveltekit.assets%/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script>
+      // Prevent FOUC by immediately applying the correct theme
+      (function() {
+        const STORAGE_KEY = 'circles-theme';
+        const LIGHT_THEME = 'circles-clean';
+        const DARK_THEME = 'circles-dark';
+        
+        function getTheme() {
+          try {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored === LIGHT_THEME || stored === DARK_THEME) {
+              return stored;
+            }
+          } catch (e) {}
+          // Fall back to system preference
+          if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            return DARK_THEME;
+          }
+          return LIGHT_THEME;
+        }
+        
+        document.documentElement.setAttribute('data-theme', getTheme());
+      })();
+    </script>
     %sveltekit.head%
   </head>
   <body data-sveltekit-preload-data="hover">

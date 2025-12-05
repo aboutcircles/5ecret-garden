@@ -32,6 +32,7 @@
   import { PUBLIC_PLAUSIBLE_DOMAIN } from '$env/static/public';
   import { initGroupMetricsStore } from '$lib/stores/groupMetrics.svelte';
   import { circles } from '$lib/stores/circles';
+  import { themeControls } from '$lib/stores/theme.svelte';
 
   import { watchAccount } from '@wagmi/core';
   import { config } from '../config';
@@ -39,6 +40,11 @@
   import BottomNav from '$lib/components/BottomNav.svelte';
   import type { Address } from '@circles-sdk/utils';
   import DefaultHeader from './DefaultHeader.svelte';
+
+  // Initialize theme on mount
+  onMount(() => {
+    themeControls.init();
+  });
 
   const unwatch = watchAccount(config, {
     onChange(account) {
