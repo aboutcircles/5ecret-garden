@@ -147,7 +147,7 @@
       const v = await validateCart();
       if (hasRequirements(v)) {
         popupControls.open({
-          title: 'Shipping address',
+          title: 'Additional details',
           component: CheckoutForms,
           props: {},
         });
@@ -163,7 +163,7 @@
       // In case of error, still allow the user to proceed to address step to resolve issues
       console.warn('[cart] validate before checkout failed; opening details step', e);
       popupControls.open({
-        title: 'Shipping address',
+        title: 'Additional details',
         component: CheckoutForms,
         props: {},
       });
