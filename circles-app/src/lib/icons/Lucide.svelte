@@ -5,7 +5,7 @@
      *   import { Send } from 'lucide';
      *   <Lucide icon={Send} size={16} class="stroke-black" />
      */
-    type IconNode = Array<[string, Record<string, string>]>;
+    type IconNode = Array<[string, Record<string, string | number>]>;
 
     interface Props {
         icon: IconNode;

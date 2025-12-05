@@ -164,7 +164,7 @@
                         onclick={toggleFilters}
                         title="Filter"
                 >
-                    <Lucide icon={LFilter} size={16} class="shrink-0 stroke-black" ariaLabel=""/>
+                    <Lucide icon={LFilter} size={16} class="shrink-0 stroke-base-content" ariaLabel=""/>
                 </button>
             {/if}
         </div>
@@ -179,7 +179,7 @@
             <button type="button" class={`btn btn-sm ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'}`}
                     onclick={a.onClick} aria-label={a.label}>
                 <Lucide icon={a.iconNode} size={16}
-                        class={a.variant === 'primary' ? 'shrink-0 stroke-white' : 'shrink-0 stroke-black'}/>
+                        class={a.variant === 'primary' ? 'shrink-0 stroke-white' : 'shrink-0 stroke-base-content'}/>
                 <span>{a.label}</span>
             </button>
         {/each}
@@ -201,7 +201,7 @@
                     aria-label={a.label}
             >
                 <Lucide icon={a.iconNode} size={20}
-                        class={a.variant === 'primary' ? 'shrink-0 stroke-white' : 'shrink-0 stroke-black'}/>
+                        class={a.variant === 'primary' ? 'shrink-0 stroke-white' : 'shrink-0 stroke-base-content'}/>
                 <span>{a.label}</span>
             </button>
         {/each}

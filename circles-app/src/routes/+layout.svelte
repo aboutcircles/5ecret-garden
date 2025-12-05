@@ -164,7 +164,7 @@
 {/if}
 
 <main
-  class="relative w-full min-h-screen bg-base-200 border-gray-200 overflow-hidden font-dmSans pt-4"
+  class="relative w-full min-h-screen bg-base-200 border-base-300 overflow-hidden font-dmSans pt-4"
 >
   {#if avatarState.avatar?.avatarInfo && canMigrate(avatarState.avatar.avatarInfo)}
     <UpdateBanner />

@@ -17,7 +17,7 @@
   }
 </script>
 
-<p class="font-normal text-black/60 text-base">
+<p class="font-normal text-base-content/60 text-base">
   Please enter or paste your keyphrase from circles.garden below.
 </p>
 <SeedphraseInput

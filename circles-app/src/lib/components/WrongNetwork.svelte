@@ -7,7 +7,7 @@
 <div
   class="flex items-center justify-center"
 >
-  <div class="bg-white p-8 rounded-lg">
+  <div class="bg-base-100 p-8 rounded-lg">
     <h1 class="text-2xl font-bold">Wrong Network</h1>
     <p class="mt-4">Please switch to the correct network to continue.</p>
     <button

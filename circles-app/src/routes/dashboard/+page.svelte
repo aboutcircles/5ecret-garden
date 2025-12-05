@@ -78,7 +78,7 @@
     }
 
     // Stroke policy
-    const ghostIconStrokeClass: string = 'stroke-black';
+    const ghostIconStrokeClass: string = 'stroke-base-content';
     const primaryIconStrokeClass: string = 'stroke-white';
 </script>
 

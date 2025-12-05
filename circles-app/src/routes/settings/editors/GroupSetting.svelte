@@ -53,7 +53,7 @@
     <div class="join">
       <input id="circlesAddress" type="text" class="input input-bordered join-item w-full" bind:value={serviceAddress} placeholder="0x…" />
       <button type="button" class="btn btn-outline btn-primary join-item btn-xs" onclick={handleSetService}>
-        <Lucide icon={LCheck} size={16} class="shrink-0 stroke-black" ariaLabel="" />
+        <Lucide icon={LCheck} size={16} class="shrink-0 stroke-base-content" ariaLabel="" />
       </button>
     </div>
   </label>
@@ -63,7 +63,7 @@
     <div class="join">
       <input id="tokenAddress" type="text" class="input input-bordered join-item w-full" bind:value={mintHandlerAddress} placeholder="0x…" />
       <button type="button" class="btn btn-outline btn-primary join-item btn-xs" onclick={handleSetMintHandler}>
-        <Lucide icon={LCheck} size={16} class="shrink-0 stroke-black" ariaLabel="" />
+        <Lucide icon={LCheck} size={16} class="shrink-0 stroke-base-content" ariaLabel="" />
       </button>
     </div>
   </label>
@@ -74,7 +74,7 @@
       <div class="join">
         <input id="redemption" type="text" class="input input-bordered join-item w-full" bind:value={redemptionHandlerAddress} placeholder="0x…" />
         <button type="button" class="btn btn-outline btn-primary join-item btn-xs" onclick={handleSetRedemptionHandler}>
-          <Lucide icon={LCheck} size={16} class="shrink-0 stroke-black" ariaLabel="" />
+          <Lucide icon={LCheck} size={16} class="shrink-0 stroke-base-content" ariaLabel="" />
         </button>
       </div>
     </label>

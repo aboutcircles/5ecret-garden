@@ -74,7 +74,7 @@
       <div class="text-xs text-base-content/70 mb-2">
         <Address address={$wallet?.address ?? '0x0'} />
       </div>
-      <div class="inline-block bg-base-100 border rounded-xl p-3">
+      <div class="inline-block bg-base-100 border border-base-300 rounded-xl p-3">
         <QrCode value={$wallet?.address} />
       </div>
     </div>

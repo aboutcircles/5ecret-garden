@@ -66,7 +66,7 @@
     <svelte:fragment slot="meta">Step 1 of 2</svelte:fragment>
     <svelte:fragment slot="actions">
         <button type="button" class="btn btn-ghost btn-sm" onclick={() => history.back()} aria-label="Back">
-            <Lucide icon={LArrowLeft} size={16} class="shrink-0 stroke-black" />
+            <Lucide icon={LArrowLeft} size={16} class="shrink-0 stroke-base-content" />
             <span>Back</span>
         </button>
     </svelte:fragment>
@@ -76,7 +76,7 @@
     <section class="mt-4">
         <h2 class="text-sm font-semibold text-base-content/70 tracking-wide uppercase">Register</h2>
         <div class="mt-2 space-y-2">
-            <div class="bg-base-100 border rounded-xl px-4 py-3 shadow-sm flex flex-col items-center w-full">
+            <div class="bg-base-100 border border-base-300 rounded-xl px-4 py-3 shadow-sm flex flex-col items-center w-full">
                 <p class="text-lg">Register person</p>
                 <div class="w-full">
                     <ul class="steps steps-vertical">
@@ -102,7 +102,7 @@
                             {/each}
                         {:else}
                             No invitations pending. <a href="/link-to-telegram" class="underline inline-flex items-center">
-                            Get help <Lucide icon={LExternalLink} size={12} class="shrink-0 stroke-black ml-1" ariaLabel="" />
+                            Get help <Lucide icon={LExternalLink} size={12} class="shrink-0 stroke-base-content ml-1" ariaLabel="" />
                         </a>
                         {/if}
                     </div>
@@ -120,7 +120,7 @@
                                 </ActionButton>
                             </div>
                         {:else}
-                            <Lucide icon={LLock} size={28} class="shrink-0 stroke-black" ariaLabel="" />
+                            <Lucide icon={LLock} size={28} class="shrink-0 stroke-base-content" ariaLabel="" />
                             <p>Select an inviter to continue</p>
                         {/if}
                     </div>

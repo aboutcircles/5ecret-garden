@@ -95,7 +95,7 @@
 </script>
 
 <button
-  class="w-full flex flex-col items-center border border-dashed border-gray-300 rounded-lg px-6 py-10 bg-gray-50"
+  class="w-full flex flex-col items-center border border-dashed border-base-300 rounded-lg px-6 py-10 bg-base-200"
   onclick={openFilePicker}
   ondragover={handleDragOver}
   ondrop={handleDrop}

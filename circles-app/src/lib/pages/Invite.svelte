@@ -30,7 +30,7 @@
   >
     <div>
       <span>{shortenAddress(address)}</span>
-      <p class="text-xs text-gray-500">
+      <p class="text-xs text-base-content/60">
         <a
           href="https://gnosisscan.io/address/{address}"
           target="_blank"

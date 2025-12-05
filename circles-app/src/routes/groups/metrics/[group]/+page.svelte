@@ -63,8 +63,8 @@
   collapsedTopGapClass="mt-3 md:mt-4"
 >
   <svelte:fragment slot="title">
-    <h1 class="h2 font-bold text-gray-800">Group Metrics</h1>
-    <p class="text-sm text-gray-500">Analytics and insights for your group</p>
+    <h1 class="h2 font-bold text-base-content">Group Metrics</h1>
+    <p class="text-sm text-base-content/60">Analytics and insights for your group</p>
   </svelte:fragment>
   <svelte:fragment slot="meta">
     <Avatar address={data.group as Address} view="horizontal" />
@@ -77,7 +77,7 @@
         onclick={a.onClick}
         aria-label={a.label}
       >
-        <Lucide icon={a.iconNode} size={16} class="shrink-0 stroke-black" />
+        <Lucide icon={a.iconNode} size={16} class="shrink-0 stroke-base-content" />
         <span>{a.label}</span>
       </button>
     {/each}
@@ -95,7 +95,7 @@
           size={20}
           class={a.variant === 'primary'
             ? 'shrink-0 stroke-white'
-            : 'shrink-0 stroke-black'}
+            : 'shrink-0 stroke-base-content'}
         />
         <span>{a.label}</span>
       </button>
@@ -108,7 +108,7 @@
     <!-- Charts Grid -->
     <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
       {#if groupMetrics.priceHistoryWeek && groupMetrics.priceHistoryMonth}
-        <div class="bg-white p-6 rounded-xl border shadow-sm">
+        <div class="bg-base-100 p-6 rounded-xl border border-base-300 shadow-sm">
           <ModernHistoryChart
             dataSet1={groupMetrics.priceHistoryWeek}
             dataSet2={groupMetrics.priceHistoryMonth}
@@ -119,7 +119,7 @@
       {/if}
 
       {#if groupMetrics?.memberCountPerHour && groupMetrics.memberCountPerHour.length > 0 && groupMetrics.memberCountPerDay && groupMetrics.memberCountPerDay.length > 0}
-        <div class="bg-white p-6 rounded-xl border shadow-sm">
+        <div class="bg-base-100 p-6 rounded-xl border border-base-300 shadow-sm">
           <ModernHistoryChart
             dataSet1={groupMetrics.memberCountPerHour}
             dataSet2={groupMetrics.memberCountPerDay}
@@ -130,7 +130,7 @@
       {/if}
 
       {#if groupMetrics?.mintRedeemPerHour && groupMetrics.mintRedeemPerHour.length > 0 && groupMetrics.mintRedeemPerDay && groupMetrics.mintRedeemPerDay.length > 0}
-        <div class="bg-white p-6 rounded-xl border shadow-sm">
+        <div class="bg-base-100 p-6 rounded-xl border border-base-300 shadow-sm">
           <ModernHistoryChart
             dataSet1={groupMetrics.mintRedeemPerHour}
             dataSet2={groupMetrics.mintRedeemPerDay}
@@ -141,7 +141,7 @@
       {/if}
 
       {#if groupMetrics?.wrapUnwrapPerHour && groupMetrics.wrapUnwrapPerHour.length > 0 && groupMetrics.wrapUnwrapPerDay && groupMetrics.wrapUnwrapPerDay.length > 0}
-        <div class="bg-white p-6 rounded-xl border shadow-sm">
+        <div class="bg-base-100 p-6 rounded-xl border border-base-300 shadow-sm">
           <ModernHistoryChart
             dataSet1={groupMetrics.wrapUnwrapPerHour}
             dataSet2={groupMetrics.wrapUnwrapPerDay}
@@ -156,8 +156,8 @@
     <!-- Distribution Charts -->
     <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
       {#if groupMetrics?.collateralInTreasury && groupMetrics.collateralInTreasury.length > 0}
-        <div class="bg-white p-6 rounded-xl border shadow-sm">
-          <h2 class="text-lg font-semibold text-gray-800 mb-4">
+        <div class="bg-base-100 p-6 rounded-xl border border-base-300 shadow-sm">
+          <h2 class="text-lg font-semibold text-base-content mb-4">
             Treasury Collateral
           </h2>
           <ModernPieChart
@@ -170,8 +170,8 @@
       {/if}
 
       {#if groupMetrics?.tokenHolderBalance && groupMetrics.tokenHolderBalance.length > 0}
-        <div class="bg-white p-6 rounded-xl border shadow-sm">
-          <h2 class="text-lg font-semibold text-gray-800 mb-4">
+        <div class="bg-base-100 p-6 rounded-xl border border-base-300 shadow-sm">
+          <h2 class="text-lg font-semibold text-base-content mb-4">
             Token Distribution
           </h2>
           <ModernPieChart
@@ -185,7 +185,7 @@
     </div>
   {:else}
     <div class="flex flex-col items-center justify-center h-[50vh]">
-      <div class="text-2xl font-bold text-gray-400">
+      <div class="text-2xl font-bold text-base-content/40">
         Loading group metrics...
       </div>
     </div>

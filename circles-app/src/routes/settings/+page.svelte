@@ -110,7 +110,7 @@
   <svelte:fragment slot="actions">
     {#each actions as a (a.id)}
       <button type="button" class={`btn btn-sm ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'}`} onclick={a.onClick} aria-label={a.label} disabled={a.id === 'save' ? saveDisabled : false}>
-        <Lucide icon={a.iconNode} size={16} class={a.variant === 'primary' ? 'shrink-0 stroke-white' : 'shrink-0 stroke-black'} />
+        <Lucide icon={a.iconNode} size={16} class={a.variant === 'primary' ? 'shrink-0 stroke-white' : 'shrink-0 stroke-base-content'} />
         <span>{a.label}</span>
       </button>
     {/each}
@@ -123,14 +123,14 @@
   <svelte:fragment slot="collapsed-menu">
     {#each actions as a (a.id)}
       <button type="button" class={`btn ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'} min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3`} onclick={a.onClick} aria-label={a.label} disabled={a.id === 'save' ? saveDisabled : false}>
-        <Lucide icon={a.iconNode} size={20} class={a.variant === 'primary' ? 'shrink-0 stroke-white' : 'shrink-0 stroke-black'} />
+        <Lucide icon={a.iconNode} size={20} class={a.variant === 'primary' ? 'shrink-0 stroke-white' : 'shrink-0 stroke-base-content'} />
         <span>{a.label}</span>
       </button>
     {/each}
   </svelte:fragment>
 
   <div
-    class="flex flex-col items-center md:border rounded-lg md:px-6 md:py-8 gap-y-4"
+    class="flex flex-col items-center md:border md:border-base-300 rounded-lg md:px-6 md:py-8 gap-y-4"
   >
     <div class="flex flex-col w-full gap-y-4">
       <ProfileEditor
@@ -140,7 +140,7 @@
 
     </div>
 
-    <div class="w-full pt-2 border-t">
+    <div class="w-full pt-2 border-t border-base-300">
       <h2 class="text-lg font-medium">Appearance</h2>
       <div class="mt-3 flex items-center justify-between">
         <label for="theme-toggle" class="flex items-center gap-3 cursor-pointer">
@@ -162,7 +162,7 @@
     </div>
 
     {#if avatarState.isGroup}
-      <div class="w-full pt-2 border-t">
+      <div class="w-full pt-2 border-t border-base-300">
         <h2 class="font-bold">Advanced Group Settings</h2>
         <GroupSetting />
       </div>
@@ -170,7 +170,7 @@
 
     {#if avatarState.avatar?.avatarInfo && canMigrate(avatarState.avatar.avatarInfo)}
       {#if avatarState.avatar?.avatarInfo?.version === 1}
-        <div class="w-full pt-2 border-t">
+        <div class="w-full pt-2 border-t border-base-300">
           <h2 class="text-lg font-medium">Circles V2</h2>
           <div class="mt-3">
             <ActionButton action={migrateToV2}
@@ -180,7 +180,7 @@
         </div>
       {/if}
       {#if avatarState.avatar?.avatarInfo?.v1Token && !avatarState.avatar?.avatarInfo?.v1Stopped}
-        <div class="w-full pt-2 border-t">
+        <div class="w-full pt-2 border-t border-base-300">
           <h2 class="text-lg font-medium">Circles V1</h2>
           <div class="mt-3">
             <ActionButton action={stopV1}

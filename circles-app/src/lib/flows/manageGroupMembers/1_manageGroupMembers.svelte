@@ -147,7 +147,7 @@
       aria-label="Clear addresses"
       title="Clear addresses"
     >
-      <img class="w-3 h-3" src="/x-mark.svg" alt="Clear" />
+      <img class="icon w-3 h-3" src="/x-mark.svg" alt="Clear" />
     </button>
   </div>
 

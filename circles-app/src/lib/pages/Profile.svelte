@@ -195,7 +195,7 @@
         }
     }
 
-    let selectedTab: string = 'common_connections';
+    let selectedTab = $state('common_connections');
     let commonConnectionsCount = $state(0);
 </script>
 
@@ -210,11 +210,11 @@
             {formatTrustRelation(trustRow.relation, profile)}
         </span>
     {:else}
-        <span class="text-sm text-gray-500">No relation available</span>
+        <span class="text-sm text-base-content/60">No relation available</span>
     {/if}
 
     <div class="my-6 flex flex-row gap-x-2">
-        <span class="bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm">
+        <span class="bg-base-200 border-none rounded-lg px-2 py-1 text-sm">
             {getTypeString(otherAvatar?.type || '')}
         </span>
         <AddressComponent address={address ?? '0x0'}/>
@@ -224,21 +224,21 @@
                     goto('/groups/metrics/' + address);
                     popupControls.close();
                 }}
-                    class="flex items-center justify-center bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm"
+                    class="flex items-center justify-center bg-base-200 border-none rounded-lg px-2 py-1 text-sm"
             >
-                <img src="/chart.svg" alt="Chart" class="w-4"/>
+                <img src="/chart.svg" alt="Chart" class="icon"/>
             </button>
         {/if}
         <a
                 href={'https://gnosisscan.io/address/' + otherAvatar?.avatar}
                 target="_blank"
-                class="flex items-center justify-center bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm"
+                class="flex items-center justify-center bg-base-200 border-none rounded-lg px-2 py-1 text-sm"
         >
-            <img src="/external.svg" alt="External Link" class="w-4"/>
+            <img src="/external.svg" alt="External Link" class="icon"/>
         </a>
     </div>
 
-    <div class="w-[80%] sm:w-[60%] border-b border-[#E5E7EB]"></div>
+    <div class="w-[80%] sm:w-[60%] border-b border-base-300"></div>
 
     <div class="w-full flex justify-center mt-6 space-x-6">
         {#if !avatarState.isGroup}
@@ -256,13 +256,13 @@
                 });
             }}
             >
-                <img src="/send-new.svg" alt="Send" class="w-5 h-5"/>
+                <img src="/send-new.svg" alt="Send" class="icon w-5 h-5"/>
                 Send
             </button>
         {/if}
         {#if otherAvatar?.type === 'CrcV2_RegisterGroup' && !!mintHandler && !avatarState.isGroup}
             <button
-                    class="btn bg-[#F3F4F6] border-none"
+                    class="btn bg-base-200 border-none"
                     onclick={() => {
                     popupControls.open({
                         title: 'Enter Amount',
@@ -287,7 +287,7 @@
         {/if}
         {#if trustRow?.relation === 'trusts'}
             <button
-                    class="btn bg-[#F3F4F6] border-none"
+                    class="btn bg-base-200 border-none"
                     onclick={() => {
                     popupControls.open({
                         title: !avatarState.isGroup ? "Untrust" : "Remove member",
@@ -303,7 +303,7 @@
             </button>
         {:else if trustRow?.relation === 'mutuallyTrusts'}
             <button
-                    class="btn bg-[#F3F4F6] border-none"
+                    class="btn bg-base-200 border-none"
                     onclick={() => {
                     popupControls.open({
                         title: !avatarState.isGroup ? "Untrust" : "Remove member",
@@ -318,7 +318,7 @@
             </button>
         {:else if trustRow?.relation === 'trustedBy'}
             <button
-                    class="btn bg-[#F3F4F6] border-none"
+                    class="btn bg-base-200 border-none"
                     onclick={() => {
                     popupControls.open({
                         title: !avatarState.isGroup ? "Trust back" : "Add member",
@@ -333,7 +333,7 @@
             </button>
         {:else}
             <button
-                    class="btn bg-[#F3F4F6] border-none"
+                    class="btn bg-base-200 border-none"
                     onclick={() => {
                     popupControls.open({
                         title: !avatarState.isGroup ? "Trust" : "Add as member",
@@ -393,7 +393,7 @@
                         <Avatar address={member} view="horizontal" clickable={false}/>
                     </div>
                     <div slot="trailing" class="font-medium underline flex gap-x-2">
-                        <img src="/chevron-right.svg" alt="Chevron Right" class="w-4"/>
+                        <img src="/chevron-right.svg" alt="Chevron Right" class="icon"/>
                     </div>
                 </RowFrame>
             {/each}

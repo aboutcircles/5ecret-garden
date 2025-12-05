@@ -21,6 +21,7 @@
 
 /* Icons & buttons */
 .icon { @apply w-4 h-4 shrink-0; }
+[data-theme="circles-dark"] .icon { filter: invert(1); }
 .back-btn { @apply btn btn-ghost btn-sm; }
 
 :root {

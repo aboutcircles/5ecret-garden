@@ -106,7 +106,7 @@
 </div>
 
 <div
-        class="w-full flex items-center justify-between border border-gray-400 rounded-lg font-bold px-4 mt-4"
+        class="w-full flex items-center justify-between border border-base-300 rounded-lg font-bold px-4 mt-4"
 >
     <div class="flex items-center">
         <input
@@ -120,7 +120,7 @@
                 class="input input-lg p-0 text-3xl w-44 placeholder-gray-400 focus:outline-none focus-visible:outline-none focus:ring-0 focus:border-none"
                 style="caret-color: currentColor;"
         />
-        <p class="text-3xl text-neutral-900 opacity-25">CRC</p>
+        <p class="text-3xl text-base-content opacity-25">CRC</p>
     </div>
     <div class="hidden md:flex">
         <Avatar
@@ -135,7 +135,7 @@
 <p class="font-medium text-sm mt-4">
     {maxAmountCircles >= 0
         ? roundToDecimals(maxAmountCircles)
-        : '?'} <span class="text-gray-500">/ {roundToDecimals(balanceRow.circles)} CRC
+        : '?'} <span class="text-base-content/60">/ {roundToDecimals(balanceRow.circles)} CRC
         <Tooltip content="The max. amount depends on your trust network and blockchain limits. Try to chunk large transfers if you experience issues."/></span>
     <button class="btn btn-sm ml-4 font-normal" onclick={setMaxAmount}>
         Use Max

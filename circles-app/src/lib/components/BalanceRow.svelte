@@ -96,14 +96,14 @@
 
             {#if !avatarState.isGroup}
                 <div class="dropdown dropdown-end">
-                    <button tabindex="0" class="btn btn-ghost btn-xs" aria-label="Row actions" onclick={(e)=>e.stopPropagation()}>
+                    <div role="button" tabindex="0" class="btn btn-ghost btn-xs" aria-label="Row actions" onclick={(e)=>e.stopPropagation()} onkeydown={(e) => { if(e.key === 'Enter' || e.key === ' ') e.stopPropagation(); }}>
                         <img src="/union.svg" alt="" class="icon" aria-hidden="true" />
-                    </button>
-                    <ul tabindex="0" class="dropdown-content menu menu-sm bg-base-100 rounded-box shadow z-10 w-56 p-2">
+                    </div>
+                    <ul tabindex="0" role="menu" class="dropdown-content menu menu-sm bg-base-100 rounded-box shadow z-10 w-56 p-2">
                         {#each actions as action (action.title)}
                             {#if action.condition(item)}
-                                <li>
-                                    <button onclick={(e)=>{ e.stopPropagation(); executeAction(action); }}>
+                                <li role="none">
+                                    <button role="menuitem" onclick={(e)=>{ e.stopPropagation(); executeAction(action); }}>
                                         <img src={action.icon} alt="" class="icon" aria-hidden="true" />
                                         {action.title}
                                     </button>

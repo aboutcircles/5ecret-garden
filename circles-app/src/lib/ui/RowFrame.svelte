@@ -57,8 +57,8 @@
         role={clickable ? 'button' : 'group'}
         tabindex={clickable && !disabled ? 0 : undefined}
         aria-disabled={disabled ? 'true' : 'false'}
-        on:keydown={handleKeydown}
-        on:click={handleClick}
+        onkeydown={handleKeydown}
+        onclick={handleClick}
 >
     {#if !noLeading}
         <div class="ui-row__leading">

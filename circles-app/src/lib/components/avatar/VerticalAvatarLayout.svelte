@@ -18,9 +18,9 @@
     />
   </button>
   <div class="flex flex-col items-center p-4 gap-y-0.5">
-    <span class="font-semibold text-[#161616]">{profile?.name}</span>
+    <span class="font-semibold text-base-content">{profile?.name}</span>
     {#if profile?.description}
-      <p class="text-sm text-gray-500 mt-0">
+      <p class="text-sm text-base-content/70 mt-0">
         {profile?.description}
       </p>
     {/if}

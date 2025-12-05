@@ -23,6 +23,7 @@
     title?: string;
     disabled?: boolean;
     theme?: ActionButtonTheme;
+    children?: import('svelte').Snippet;
   }
 
   let {
@@ -31,12 +32,13 @@
     disabled = false,
     theme = {
       ['Ready']: 'bg-primary text-white',
-      ['Working']: 'bg-gray-200 text-black',
+      ['Working']: 'bg-base-200 text-base-content',
       ['Error']: 'bg-yellow-500 text-white',
       ['Retry']: 'bg-yellow-500 text-white',
       ['Done']: 'bg-green-700 text-white',
       ['Disabled']: 'bg-gray-400 text-white',
     },
+    children
   }: Props = $props();
   const doneStateDuration: number = 2000;
   const errorTransitory: boolean = true;
@@ -98,5 +100,5 @@
   {:else if buttonState === 'Done'}
     <div class="inline-block">✓</div>
   {/if}
-  <slot />
+  {@render children?.()}
 </button>

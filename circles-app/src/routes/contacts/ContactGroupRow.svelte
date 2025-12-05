@@ -17,6 +17,6 @@
         <Avatar address={address} view="horizontal" bottomInfo={trustRelation} clickable={false} />
     </div>
     <div slot="trailing" aria-hidden="true">
-        <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" />
+        <img src="/chevron-right.svg" alt="" class="icon opacity-70" />
     </div>
 </RowFrame>

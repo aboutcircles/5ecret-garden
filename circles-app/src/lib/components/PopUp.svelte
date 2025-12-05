@@ -38,7 +38,7 @@
 <svelte:window onkeydown={handleKeydown} />
 
 <div
-        class="popup rounded-t-lg overflow-y-auto"
+        class="popup rounded-t-lg overflow-y-auto bg-base-100"
         class:open={$popupState.content !== null}
         role="dialog"
         aria-modal="true"
@@ -56,7 +56,7 @@
                 <Lucide
                         icon={$popupState.stack.length > 0 ? LArrowLeft : LX}
                         size={16}
-                        class="shrink-0 stroke-black"
+                        class="shrink-0 stroke-base-content"
                         ariaLabel=""
                 />
             </button>
@@ -89,7 +89,7 @@
         bottom: 0; left: 0; width: 100%;
         max-height: 80%; min-height: 80%;
         display: flex; flex-direction: column; align-items: center;
-        background: white;
+        border-top: 1px solid hsl(var(--b3));
         transition: transform .3s ease, opacity .3s ease;
         transform: translateY(100%); opacity: 0;
         z-index: 100;

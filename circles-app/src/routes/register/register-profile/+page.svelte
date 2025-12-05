@@ -27,7 +27,7 @@
   <svelte:fragment slot="meta">Step 1 of 1</svelte:fragment>
   <svelte:fragment slot="actions">
     <button type="button" class="btn btn-ghost btn-sm" onclick={() => history.back()} aria-label="Back">
-      <Lucide icon={LArrowLeft} size={16} class="shrink-0 stroke-black" />
+      <Lucide icon={LArrowLeft} size={16} class="shrink-0 stroke-base-content" />
       <span>Back</span>
     </button>
   </svelte:fragment>
@@ -38,7 +38,7 @@
   </svelte:fragment>
   <svelte:fragment slot="collapsed-menu">
     <button type="button" class="btn btn-ghost min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3" onclick={() => history.back()} aria-label="Back">
-      <Lucide icon={LArrowLeft} size={20} class="shrink-0 stroke-black" />
+      <Lucide icon={LArrowLeft} size={20} class="shrink-0 stroke-base-content" />
       <span>Back</span>
     </button>
   </svelte:fragment>
@@ -50,7 +50,7 @@
   <section class="mt-4">
     <h2 class="text-sm font-semibold text-base-content/70 tracking-wide uppercase">Register</h2>
     <div class="mt-2 space-y-2">
-      <div class="bg-base-100 border rounded-xl px-4 py-3 shadow-sm">
+      <div class="bg-base-100 border border-base-300 rounded-xl px-4 py-3 shadow-sm">
         <div class="flex flex-col items-center text-center gap-4">
           <img src="/person.svg" alt="person" class="w-16 h-16 rounded-xl" />
           <h3 class="text-xl font-semibold">Register profile</h3>

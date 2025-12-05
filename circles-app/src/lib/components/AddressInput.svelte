@@ -86,7 +86,7 @@
   <input
     bind:this={input}
     type="text"
-    class="input input-bordered bg-gray-100 flex-1"
+    class="input input-bordered bg-base-200 flex-1"
     placeholder="Enter or scan Ethereum address"
     oninput={handleInput}
     onpaste={handleInput}

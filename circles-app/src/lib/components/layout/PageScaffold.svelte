@@ -110,7 +110,7 @@
 
     <div class={`mx-auto ${maxWidthClass} ${headerPaddingClass}`}>
         <div class={`rounded-2xl ${highlight === 'soft'
-            ? 'bg-base-100 border shadow-sm'
+            ? 'bg-base-100 border border-base-300 shadow-sm'
             : 'bg-base-100 ring-1 ring-base-300'}
             px-5 md:px-6 py-4 md:py-5 ${headerTopGapClass} relative`}><!-- NOTE: relative for absolute avatar -->
             <!-- Always stack title/meta and actions into separate rows -->
@@ -221,6 +221,9 @@
                                     class="bg-base-100 border shadow-xl rounded-xl p-2"
                                     style={`--collapsed-h:${collapsedHeight}; --collapsed-h-md:${collapsedHeightMd};`}
                                     onclick={onMenuClick}
+                                    role="menu"
+                                    tabindex="0"
+                                    onkeydown={(e) => { if(e.key === 'Escape') collapsedMenuOpen = false; }}
                             >
                                 <slot name="collapsed-menu" />
                             </div>
@@ -258,6 +261,7 @@
                 ontouchstart={(e) => { e.stopPropagation(); e.preventDefault(); collapsedMenuOpen = false; }}
                 ontouchend={(e) => { e.stopPropagation(); e.preventDefault(); collapsedMenuOpen = false; }}
                 onclick={(e) => { e.stopPropagation(); e.preventDefault(); collapsedMenuOpen = false; }}
+                onkeydown={(e) => { if(e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') collapsedMenuOpen = false; }}
                 aria-hidden="true"
         ></div>
     {/if}

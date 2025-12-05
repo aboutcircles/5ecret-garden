@@ -92,10 +92,12 @@
     <!-- Wrap to ensure click is caught at the DOM boundary (BalanceRow doesn't emit a component 'click') -->
     <div
             role="button"
+            tabindex="0"
             class="w-full"
-            onclick={() => handleSelect(transitiveTransfer())}
+            onclick={() => handleSelect(transitiveTransfer() as any)}
+            onkeydown={(e) => { if(e.key === 'Enter' || e.key === ' ') handleSelect(transitiveTransfer() as any); }}
     >
-        <BalanceRow item={transitiveTransfer()} />
+        <BalanceRow item={transitiveTransfer() as any} />
     </div>
 {/if}
 
@@ -107,8 +109,10 @@
             <!-- Same wrapper for reliable clicks without changing visuals -->
             <div
                     role="button"
+                    tabindex="0"
                     class="w-full"
                     onclick={() => handleSelect(balance)}
+                    onkeydown={(e) => { if(e.key === 'Enter' || e.key === ' ') handleSelect(balance); }}
             >
                 <BalanceRow item={balance} />
             </div>

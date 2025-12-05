@@ -10,7 +10,7 @@
 <!-- Modal Content -->
 <div class="p-6 max-h-[70vh] overflow-y-auto">
   <div class="space-y-4">
-    <p class="text-lg text-error-content break-words">
+    <p class="text-lg text-error break-words">
       {errorMessage}
     </p>
 

@@ -34,7 +34,7 @@
             >★</span>
         {/if}
       </div>
-      <p class="font-normal text-black/60 text-sm md:text-base">{desc}</p>
+      <p class="font-normal text-base-content/60 text-sm md:text-base">{desc}</p>
     </div>
   </div>
   <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
