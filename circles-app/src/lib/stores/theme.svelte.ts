@@ -39,6 +39,9 @@ export const themeState = $state<{ current: Theme }>({
 	current: browser ? getStoredTheme() : LIGHT_THEME
 });
 
+// Store reference for cleanup
+let mediaQueryCleanup: (() => void) | null = null;
+
 /**
  * Theme controls for toggling and setting the theme.
  */
@@ -64,9 +67,10 @@ export const themeControls = {
 
 	/**
 	 * Initializes the theme on mount. Should be called once in the root layout.
+	 * Returns a cleanup function to remove the event listener.
 	 */
-	init(): void {
-		if (!browser) return;
+	init(): () => void {
+		if (!browser) return () => {};
 		const theme = getStoredTheme();
 		themeState.current = theme;
 		applyTheme(theme);
@@ -83,6 +87,23 @@ export const themeControls = {
 			}
 		};
 		mediaQuery.addEventListener('change', handleChange);
+
+		// Store cleanup function
+		mediaQueryCleanup = () => {
+			mediaQuery.removeEventListener('change', handleChange);
+		};
+
+		return mediaQueryCleanup;
+	},
+
+	/**
+	 * Cleans up event listeners. Call this in onDestroy if needed.
+	 */
+	destroy(): void {
+		if (mediaQueryCleanup) {
+			mediaQueryCleanup();
+			mediaQueryCleanup = null;
+		}
 	},
 
 	/**

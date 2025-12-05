@@ -41,9 +41,13 @@
   import type { Address } from '@circles-sdk/utils';
   import DefaultHeader from './DefaultHeader.svelte';
 
-  // Initialize theme on mount
+  // Initialize theme on mount and cleanup on destroy
+  let themeCleanup: (() => void) | undefined;
   onMount(() => {
-    themeControls.init();
+    themeCleanup = themeControls.init();
+  });
+  onDestroy(() => {
+    themeCleanup?.();
   });
 
   const unwatch = watchAccount(config, {

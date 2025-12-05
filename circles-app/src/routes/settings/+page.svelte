@@ -143,16 +143,17 @@
     <div class="w-full pt-2 border-t">
       <h2 class="text-lg font-medium">Appearance</h2>
       <div class="mt-3 flex items-center justify-between">
-        <div class="flex items-center gap-3">
+        <label for="theme-toggle" class="flex items-center gap-3 cursor-pointer">
           <Lucide icon={isDark ? LMoon : LSun} size={20} class="stroke-current" />
-          <span>{isDark ? 'Dark mode' : 'Light mode'}</span>
-        </div>
+          <span id="theme-label">{isDark ? 'Dark mode' : 'Light mode'}</span>
+        </label>
         <label class="swap swap-rotate">
           <input
+            id="theme-toggle"
             type="checkbox"
             checked={isDark}
             onchange={() => themeControls.toggle()}
-            aria-label="Toggle dark mode"
+            aria-labelledby="theme-label"
           />
           <Lucide icon={LSun} size={24} class="swap-off stroke-current" />
           <Lucide icon={LMoon} size={24} class="swap-on stroke-current" />
