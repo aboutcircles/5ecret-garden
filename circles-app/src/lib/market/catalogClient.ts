@@ -54,9 +54,10 @@ async function fetchCatalogForAvatars(
  */
 export async function fetchGlobalCatalog(): Promise<AggregatedCatalogItem[]> {
   const avatars: Address[] = [
-    '0x31d5d15c558fbfbbbe604c9c11eb42c9afbf5140',
+    // '0x31d5d15c558fbfbbbe604c9c11eb42c9afbf5140',
     '0x1327c3cf61c6df3e0cf69faa4590281d6f675ce5',
     '0xde374ece6fa50e781e81aac78e811b33d16912c7',
+    '0x314278c65545f0f96f8fe0836ad92b3326bfff2e'
   ];
   return fetchCatalogForAvatars(avatars);
 }
