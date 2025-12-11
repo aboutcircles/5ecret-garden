@@ -4,8 +4,8 @@
   import { getOrderStatusHistory, subscribeBuyerOrderEvents, getOrder, type OrderStatusEvent } from '$lib/cart/client';
 
   // Security: Do NOT accept or render order keys in the UI. Instead, this popup
-  // now expects a full snapshot to be provided by the caller (e.g., from an
-  // authenticated listing) and only allows copying the JSON, not any secret.
+  // expects a full snapshot to be provided by the caller (e.g., from an
+  // authenticated listing).
 
   interface Props { snapshot: any }
   let { snapshot }: Props = $props();
@@ -19,9 +19,6 @@
   let stopSse: (() => void) | null = null;
   const seenKeys = new Set<string>();
 
-  function copyJson() {
-    navigator.clipboard?.writeText(jsonText).catch(() => {});
-  }
 
   onMount(async () => {
     try {
@@ -66,13 +63,6 @@
 </script>
 
 <div class="flex flex-col gap-3 w-full max-w-[min(92vw,52rem)]">
-  <div class="flex items-start justify-between gap-3">
-    <div class="text-xs opacity-70">Order details</div>
-    <div class="flex items-center gap-2">
-      <button class="btn btn-xs btn-ghost" onclick={copyJson}>Copy JSON</button>
-    </div>
-  </div>
-
   <OrderDetailsView {snapshot} {statusEvents} />
 
   {#if historyError}
