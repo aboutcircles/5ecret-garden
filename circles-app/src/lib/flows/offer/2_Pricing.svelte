@@ -18,6 +18,9 @@
   let availabilityFeed = $state(context.draft?.availabilityFeed ?? '');
   let inventoryFeed    = $state(context.draft?.inventoryFeed ?? '');
   let availableDeliveryMethod = $state(context.draft?.availableDeliveryMethod ?? '');
+  // Fulfillment config (optional)
+  let fulfillmentEndpoint = $state(context.draft?.fulfillmentEndpoint ?? '');
+  let fulfillmentTrigger = $state(context.draft?.fulfillmentTrigger ?? '');
   // Collapsible toggle for Checkout requirements
   let showRequirements = $state(false);
   // Offer-driven basket requirements (requiredSlots)
@@ -189,6 +192,8 @@
       availabilityFeed: availabilityFeed || undefined,
       inventoryFeed: inventoryFeed || undefined,
       availableDeliveryMethod: availableDeliveryMethod || undefined,
+      fulfillmentEndpoint: (fulfillmentEndpoint || '').trim() || undefined,
+      fulfillmentTrigger: (fulfillmentTrigger as any) || undefined,
       requiredSlots: [
         // Contact
         ...(reqEmail ? ['contactPoint.email'] : []),
@@ -228,6 +233,8 @@
       availabilityFeed: (availabilityFeed ?? '').trim() || undefined,
       inventoryFeed: (inventoryFeed ?? '').trim() || undefined,
       availableDeliveryMethod: (availableDeliveryMethod ?? '').trim() || undefined,
+      fulfillmentEndpoint: (fulfillmentEndpoint ?? '').trim() || undefined,
+      fulfillmentTrigger: ((fulfillmentTrigger ?? '') as any) || undefined,
       requiredSlots: [
         // Contact
         ...(reqEmail ? ['contactPoint.email'] : []),
@@ -313,6 +320,27 @@
     <span class="label-text">Inventory feed URL (optional)</span>
     <input class="input input-bordered" bind:value={inventoryFeed} placeholder="https://…" />
   </label>
+
+  <!-- Fulfillment configuration (optional) -->
+  <div class="bg-base-200 rounded-lg p-3">
+    <div class="text-sm font-semibold mb-2">Fulfillment (optional)</div>
+    <label class="form-control">
+      <span class="label-text">Fulfillment endpoint URL</span>
+      <input class="input input-bordered" bind:value={fulfillmentEndpoint} placeholder="https://…" />
+      <span class="label-text-alt opacity-70">If provided, the marketplace will POST order details to this endpoint after payment to obtain delivery metadata (e.g., download links, vouchers).</span>
+    </label>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+      <label class="form-control">
+        <span class="label-text">Trigger</span>
+        <select class="select select-bordered" bind:value={fulfillmentTrigger}>
+          <option value="">Default (any)</option>
+          <option value="confirmed">confirmed</option>
+          <option value="finalized">finalized</option>
+        </select>
+        <span class="label-text-alt opacity-70">When to call the endpoint: on payment confirmation or after finalization.</span>
+      </label>
+    </div>
+  </div>
 
   <!-- Offer-driven basket requirements (collapsible) -->
   <div class="collapse bg-base-200 mt-2">

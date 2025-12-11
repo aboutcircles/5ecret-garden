@@ -6,9 +6,6 @@
       <div class="min-w-0 flex-1">
         <div class="flex items-center gap-2">
           <span class="font-mono text-xs opacity-70 truncate" title={snapshot.orderNumber}>{snapshot.orderNumber}</span>
-          {#if statusLabel(snapshot.orderStatus)}
-            <span class="badge badge-sm {statusClass(snapshot.orderStatus)}">{statusLabel(snapshot.orderStatus)}</span>
-          {/if}
         </div>
         <div class="mt-1 text-xs opacity-70">
           {#if orderDate()}
@@ -176,16 +173,18 @@
 
     {#if snapshot?.outbox && snapshot.outbox.length > 0}
       <div class="px-4 md:px-5 pt-3 border-t text-xs uppercase tracking-wide opacity-60">
-        Fulfillment / outbox
+        Messages
       </div>
       <div class="px-4 md:px-5 pb-3 flex flex-col gap-2 text-sm">
         {#each snapshot.outbox as item}
           <div class="border rounded-lg bg-base-100/60 p-2 space-y-1">
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-2">
-                <span class="badge badge-ghost badge-xs">
-                  {outboxLabel(item.payload)}
-                </span>
+                {#if !isMessagePayload(item.payload)}
+                  <span class={`badge badge-xs ${badgeForOutbox(item.payload)}`}>
+                    {outboxLabel(item.payload)}
+                  </span>
+                {/if}
                 {#if item.source}
                   <span class="text-[11px] opacity-60">{item.source}</span>
                 {/if}
@@ -227,10 +226,17 @@
       Voucher code:
       <code>{payload.code}</code>
     </div>
+  {:else if isMessagePayload(payload)}
+    <div class="flex flex-col gap-1.5">
+      <div class="text-sm font-semibold">
+        {messageSubject(payload)}
+      </div>
+      {#if payload.text}
+        <div class="text-sm leading-relaxed whitespace-pre-line opacity-90">{payload.text}</div>
+      {/if}
+    </div>
   {:else}
-    <pre class="text-[11px] bg-base-200/80 rounded-md p-2 overflow-auto">
-      {JSON.stringify(payload, null, 2)}
-    </pre>
+    <pre class="text-[11px] bg-base-200/80 rounded-md p-2 overflow-auto">{JSON.stringify(payload, null, 2)}</pre>
   {/if}
 {/snippet}
 
@@ -309,7 +315,9 @@
 
   function outboxLabel(payload: any): string {
     try {
-      const t = payload && typeof payload === 'object' ? payload['@type'] : null;
+      const t = (payload && typeof payload === 'object')
+        ? (payload['@type'] || payload['type'])
+        : null;
       if (typeof t === 'string' && t.length > 0) {
         const parts = t.split(/[\/#]/);
         return parts[parts.length - 1] || 'Outbox item';
@@ -335,6 +343,50 @@
     } catch {
       return false;
     }
+  }
+
+  // Helpers to detect schema.org types whether declared under "@type" or "type"
+  function schemaTypeOf(payload: any): string | null {
+    try {
+      const t = payload?.['@type'] ?? payload?.['type'];
+      return typeof t === 'string' ? t : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function isSchemaType(payload: any, endsWith: string): boolean {
+    const t = schemaTypeOf(payload);
+    if (!t) return false;
+    const lower = t.toLowerCase();
+    const end = endsWith.toLowerCase();
+    return lower.endsWith('/' + end) || lower.endsWith('#' + end) || lower === end;
+  }
+
+  function isMessagePayload(payload: any): boolean {
+    return isSchemaType(payload, 'Message');
+  }
+
+  // Derive a concise subject like an email client.
+  function messageSubject(payload: any): string {
+    const headline = (payload?.headline ?? '').toString().trim();
+    if (headline) return headline;
+    const text = (payload?.text ?? '').toString();
+    if (text) {
+      const firstLine = text.split(/\r?\n/)[0].trim();
+      const subj = firstLine || text.trim();
+      if (subj.length > 120) return subj.slice(0, 117) + '...';
+      return subj || 'Message';
+    }
+    return 'Message';
+  }
+
+  function badgeForOutbox(payload: any): string {
+    const trig = (payload?.trigger || '').toString().toLowerCase();
+    if (trig.includes('confirm')) return 'badge-success';
+    if (trig.includes('ship') || trig.includes('dispatch')) return 'badge-info';
+    if (trig.includes('cancel')) return 'badge-error';
+    return 'badge-ghost';
   }
 
   function getSchemaId(x: any): string | null {

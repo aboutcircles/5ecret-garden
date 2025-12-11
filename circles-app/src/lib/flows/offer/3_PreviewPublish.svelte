@@ -241,6 +241,9 @@
             inventoryFeed: draft.inventoryFeed || undefined,
             url: draft.url || undefined,
             availableDeliveryMethod: draft.availableDeliveryMethod || undefined,
+            // New: fulfillment configuration
+            fulfillmentEndpoint: draft.fulfillmentEndpoint || undefined,
+            fulfillmentTrigger: draft.fulfillmentTrigger || undefined,
             // Pass through requiredSlots when present (array of non-empty strings)
             requiredSlots: Array.isArray(draft.requiredSlots)
               ? draft.requiredSlots
@@ -305,6 +308,12 @@
                 <strong>Checkout requirements:</strong>
                 {context.draft?.requiredSlots.join(', ')}
               </div>
+            {/if}
+            {#if context.draft?.fulfillmentEndpoint}
+              <div class="truncate"><strong>Fulfillment endpoint:</strong> {context.draft?.fulfillmentEndpoint}</div>
+            {/if}
+            {#if context.draft?.fulfillmentTrigger}
+              <div class="truncate"><strong>Fulfillment trigger:</strong> {context.draft?.fulfillmentTrigger}</div>
             {/if}
         </div>
     </div>
