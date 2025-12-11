@@ -1,7 +1,7 @@
 <script lang="ts">
   import OrderDetailsView from '$lib/orders/OrderDetailsView.svelte';
   import { onMount, onDestroy } from 'svelte';
-  import { getOrderStatusHistory, subscribeBuyerOrderEvents, getOrder, type OrderStatusEvent } from '$lib/cart/client';
+  import { getOrderStatusHistory, subscribeBuyerOrderEvents, getOrder, type OrderStatusEvent } from '$lib/cart/ordersAdapter';
 
   // Security: Do NOT accept or render order keys in the UI. Instead, this popup
   // expects a full snapshot to be provided by the caller (e.g., from an

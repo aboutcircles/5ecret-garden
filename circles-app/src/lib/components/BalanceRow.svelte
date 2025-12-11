@@ -99,7 +99,7 @@
                     <button tabindex="0" class="btn btn-ghost btn-xs" aria-label="Row actions" onclick={(e)=>e.stopPropagation()}>
                         <img src="/union.svg" alt="" class="icon" aria-hidden="true" />
                     </button>
-                    <ul tabindex="0" class="dropdown-content menu menu-sm bg-base-100 rounded-box shadow z-10 w-56 p-2">
+                    <ul class="dropdown-content menu menu-sm bg-base-100 rounded-box shadow z-10 w-56 p-2">
                         {#each actions as action (action.title)}
                             {#if action.condition(item)}
                                 <li>
