@@ -17,6 +17,20 @@
     const lines = $derived((basket?.items ?? []) as any[]);
     const hasLines: boolean = $derived(lines.length > 0);
 
+    // Group basket lines by seller to show a header per seller
+    type ReviewGroup = { seller: string | null; indices: number[] };
+    const reviewGroups: ReviewGroup[] = $derived((() => {
+        const map = new Map<string, number[]>();
+        lines.forEach((_, idx) => {
+            const seller = (lines[idx]?.seller as string | undefined) ?? null;
+            const key = seller || '__unknown__';
+            const arr = map.get(key) ?? [];
+            arr.push(idx);
+            map.set(key, arr);
+        });
+        return Array.from(map.entries()).map(([key, idxs]) => ({ seller: key === '__unknown__' ? null : (key as string), indices: idxs }));
+    })());
+
     const shippingAddress = $derived(basket?.shippingAddress as any);
     const contactPoint = $derived(basket?.contactPoint as any);
     const ageProof = $derived(basket?.ageProof as any);
@@ -230,54 +244,60 @@
                     </span>
                 </div>
 
-                <div class="divide-y divide-base-200">
-                    {#each lines as line}
-                        {@const unit = getLineUnitPrice(line)}
-                        {@const total = getLineTotal(line)}
-                        <div class="px-3 py-2 flex items-start justify-between gap-3">
-                            <div class="flex items-center gap-3 min-w-0">
-                                <div class="w-14 h-14 rounded bg-base-200 overflow-hidden shrink-0 flex items-center justify-center">
-                                    {#if imageUrlForLine(line)}
-                                        <img src={imageUrlForLine(line) || ''} alt={findCatalogItem(line.seller, line.orderedItem?.sku)?.product.name || 'product-image'} class="w-14 h-14 object-cover" loading="lazy" />
-                                    {:else}
-                                        <span class="text-[10px] opacity-60">No image</span>
-                                    {/if}
-                                </div>
-
-                                <div class="min-w-0">
-                                    <div class="font-semibold truncate">
-                                        {findCatalogItem(line.seller, line.orderedItem?.sku)?.product.name ?? lineTitle(line)}
-                                    </div>
-                                    {#if lineSubtitle(line)}
-                                        <div class="text-xs opacity-70 truncate">
-                                            {lineSubtitle(line)}
-                                        </div>
-                                    {/if}
-                                    {#if typeof line?.seller === 'string' && line.seller.trim().length > 0}
-                                        <div class="flex items-center gap-2 mt-0.5 min-w-0">
-                                            <Avatar view="small_no_text" address={line.seller} />
-                                            <span class="font-mono text-[11px] opacity-70 break-all">{line.seller}</span>
-                                        </div>
-                                    {/if}
-                                    <div class="text-xs opacity-70 mt-0.5">
-                                        Qty: {getLineQuantity(line)}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="text-right shrink-0">
-                                {#if unit.amount != null}
-                                    <div class="text-xs opacity-70">
-                                        {formatCurrency(unit.amount, unit.code)} each
-                                    </div>
+                <div class="flex flex-col">
+                    {#each reviewGroups as grp, gi (gi)}
+                        <div class="border-b last:border-b-0">
+                            <div class="px-3 py-2 bg-base-200/60 flex items-center justify-between border-b">
+                                {#if grp.seller}
+                                    <Avatar view="horizontal" address={grp.seller} bottomInfo={grp.seller} />
+                                {:else}
+                                    <div class="text-xs uppercase tracking-wide opacity-60">Seller</div>
                                 {/if}
-                                <div class="font-semibold">
-                                    {#if total.amount != null}
-                                        {formatCurrency(total.amount, total.code)}
-                                    {:else}
-                                        —
-                                    {/if}
-                                </div>
+                                <div class="text-[11px] opacity-60">{grp.indices.length} item{grp.indices.length === 1 ? '' : 's'}</div>
+                            </div>
+                            <div class="divide-y divide-base-200">
+                                {#each grp.indices as i}
+                                    <div class="px-3 py-2 bg-base-200/20 flex items-start justify-between gap-3">
+                                        <div class="flex items-center gap-3 min-w-0">
+                                            <div class="w-14 h-14 rounded bg-base-200 overflow-hidden shrink-0 flex items-center justify-center">
+                                                {#if imageUrlForLine(lines[i])}
+                                                    <img src={imageUrlForLine(lines[i]) || ''} alt={findCatalogItem(lines[i].seller, lines[i].orderedItem?.sku)?.product.name || 'product-image'} class="w-14 h-14 object-cover" loading="lazy" />
+                                                {:else}
+                                                    <span class="text-[10px] opacity-60">No image</span>
+                                                {/if}
+                                            </div>
+
+                                            <div class="min-w-0">
+                                                <div class="font-semibold truncate">
+                                                    {findCatalogItem(lines[i].seller, lines[i].orderedItem?.sku)?.product.name ?? lineTitle(lines[i])}
+                                                </div>
+                                                {#if lineSubtitle(lines[i])}
+                                                    <div class="text-xs opacity-70 truncate">
+                                                        {lineSubtitle(lines[i])}
+                                                    </div>
+                                                {/if}
+                                                <div class="text-xs opacity-70 mt-0.5">
+                                                    Qty: {getLineQuantity(lines[i])}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="text-right shrink-0">
+                                            {#if getLineUnitPrice(lines[i]).amount != null}
+                                                <div class="text-xs opacity-70">
+                                                    {formatCurrency(getLineUnitPrice(lines[i]).amount, getLineUnitPrice(lines[i]).code)} each
+                                                </div>
+                                            {/if}
+                                            <div class="font-semibold">
+                                                {#if getLineTotal(lines[i]).amount != null}
+                                                    {formatCurrency(getLineTotal(lines[i]).amount, getLineTotal(lines[i]).code)}
+                                                {:else}
+                                                    —
+                                                {/if}
+                                            </div>
+                                        </div>
+                                    </div>
+                                {/each}
                             </div>
                         </div>
                     {/each}

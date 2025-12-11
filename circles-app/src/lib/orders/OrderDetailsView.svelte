@@ -72,74 +72,54 @@
     </div>
 
     <div class="px-4 md:px-5 py-3 border-t text-xs uppercase tracking-wide opacity-60">Items</div>
-    <!-- Simple header row to evoke an invoice table -->
-    <div class="px-4 md:px-5 text-[11px] uppercase tracking-wide opacity-60 hidden sm:flex">
-      <div class="flex-1">Description</div>
-      <div class="w-20 text-center">Qty</div>
-      <div class="w-40">Seller</div>
-    </div>
-    <div class="px-4 md:px-5 pb-4 md:pb-5 flex flex-col gap-2">
-      {#each snapshot.orderedItem as line, i (i)}
-        <div class="border rounded-lg px-3 py-2 bg-base-200/30 cursor-pointer hover:bg-base-200/60 focus:outline-none focus:ring-2 focus:ring-primary/40"
-             role="button" tabindex="0"
-             onclick={() => goToOffer(i)}
-             onkeydown={(e) => onKeyGoToOffer(e, i)}>
-          <div class="sm:grid sm:grid-cols-[1fr,5rem,12rem] sm:items-center sm:gap-3 flex items-start justify-between gap-3">
-            <!-- Left column: thumbnail + title; on mobile also shows qty + seller -->
-            <div class="flex items-start gap-3 min-w-0">
-              <!-- Product thumbnail -->
-              {#if resolved[i]?.imageUrl}
-                <img src={resolved[i]?.imageUrl || ''}
-                     alt={resolved[i]?.name ?? line?.orderedItem?.sku ?? 'Product image'}
-                     class="w-12 h-12 rounded-md object-cover flex-shrink-0" />
+    <div class="px-4 md:px-5 pb-4 md:pb-5 flex flex-col gap-3">
+      {#each sellerGroups as grp, gi (gi)}
+        <!-- Seller header -->
+        <div class="border rounded-lg overflow-hidden bg-base-100/80 shadow-sm">
+          <div class="px-3 py-2 border-b bg-base-200/60 flex items-center justify-between">
+            <div class="min-w-0">
+              {#if grp.evm}
+                <Avatar view="horizontal" address={grp.evm} bottomInfo={shortAddr(grp.evm)} />
               {:else}
-                <div class="w-12 h-12 rounded-md bg-base-300/50 flex items-center justify-center text-xs text-base-content/50 select-none">
-                  Img
-                </div>
+                <div class="text-xs uppercase tracking-wide opacity-60">Seller</div>
+                <div class="font-mono text-sm break-all">{grp.sellerId ?? 'Unknown'}</div>
               {/if}
+            </div>
+            <div class="shrink-0 text-[11px] opacity-60">{grp.indices.length} item{grp.indices.length === 1 ? '' : 's'}</div>
+          </div>
 
-              <div class="min-w-0">
-                <div class="font-medium truncate">{resolved[i]?.name || line?.orderedItem?.name || line?.orderedItem?.sku || 'Item'}</div>
-                <!-- Mobile-only meta: qty and seller under description -->
-                <div class="sm:hidden text-xs opacity-70">Qty: {line?.orderQuantity ?? 1}</div>
-                {#if sellerIdForIndex(i)}
-                  <div class="sm:hidden">
-                    {#if evmFromEip155(sellerIdForIndex(i))}
-                      <div class="mt-1 flex items-center gap-2">
-                        <Avatar view="small_no_text" address={evmFromEip155(sellerIdForIndex(i))} />
-                        <div class="text-xs opacity-70">
-                          <span class="uppercase opacity-60">Seller</span>
-                          <span class="font-mono ml-1">{shortAddr(evmFromEip155(sellerIdForIndex(i)))}</span>
-                        </div>
-                      </div>
+          <!-- Lines for this seller -->
+          <div class="divide-y divide-base-200">
+            {#each grp.indices as i}
+              <div class="px-3 py-2 bg-base-200/20 cursor-pointer hover:bg-base-200/40 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                   role="button" tabindex="0"
+                   onclick={() => goToOffer(i)}
+                   onkeydown={(e) => onKeyGoToOffer(e, i)}>
+                <div class="sm:grid sm:grid-cols-[1fr,5rem] sm:items-center sm:gap-3 flex items-start justify-between gap-3">
+                  <!-- Left: thumbnail + title -->
+                  <div class="flex items-start gap-3 min-w-0">
+                    {#if resolved[i]?.imageUrl}
+                      <img src={resolved[i]?.imageUrl || ''}
+                           alt={resolved[i]?.name ?? lineAt(i)?.orderedItem?.sku ?? 'Product image'}
+                           class="w-12 h-12 rounded-md object-cover flex-shrink-0" />
                     {:else}
-                      <div class="text-[11px] opacity-70 break-all">Seller: {sellerIdForIndex(i)}</div>
+                      <div class="w-12 h-12 rounded-md bg-base-300/50 flex items-center justify-center text-xs text-base-content/50 select-none">Img</div>
                     {/if}
+
+                    <div class="min-w-0">
+                      <div class="font-medium truncate">{resolved[i]?.name || lineAt(i)?.orderedItem?.name || lineAt(i)?.orderedItem?.sku || 'Item'}</div>
+                      <div class="sm:hidden text-xs opacity-70">Qty: {lineAt(i)?.orderQuantity ?? 1}</div>
+                      {#if lineAt(i)?.productCid}
+                        <div class="font-mono text-[11px] opacity-70 break-all">{lineAt(i)?.productCid}</div>
+                      {/if}
+                    </div>
                   </div>
-                {/if}
-                {#if line?.productCid}
-                  <div class="font-mono text-[11px] opacity-70 break-all">{line.productCid}</div>
-                {/if}
+
+                  <!-- Quantity (sm+) -->
+                  <div class="hidden sm:flex items-center justify-center text-sm opacity-80">{lineAt(i)?.orderQuantity ?? 1}</div>
+                </div>
               </div>
-            </div>
-
-            <!-- Middle column (sm+): quantity -->
-            <div class="hidden sm:flex items-center justify-center text-sm opacity-80">{line?.orderQuantity ?? 1}</div>
-
-            <!-- Right column (sm+): seller -->
-            <div class="hidden sm:flex items-center gap-2">
-              {#if sellerIdForIndex(i)}
-                {#if evmFromEip155(sellerIdForIndex(i))}
-                  <Avatar view="small_no_text" address={evmFromEip155(sellerIdForIndex(i))} />
-                  <div class="text-xs opacity-70">
-                    <span class="uppercase opacity-60">Seller</span>
-                    <span class="font-mono ml-1">{shortAddr(evmFromEip155(sellerIdForIndex(i)))}</span>
-                  </div>
-                {:else}
-                  <div class="text-[11px] opacity-70 break-all">{sellerIdForIndex(i)}</div>
-                {/if}
-              {/if}
-            </div>
+            {/each}
           </div>
         </div>
       {/each}
@@ -468,6 +448,14 @@
     }
   }
 
+  function lineAt(i: number): any {
+    try {
+      return (snapshot as any)?.orderedItem?.[i] ?? null;
+    } catch {
+      return null;
+    }
+  }
+
   async function resolveLine(i: number) {
     try {
       const sid = sellerIdForIndex(i);
@@ -495,9 +483,32 @@
   let mounted = $state(false);
   onMount(() => { mounted = true; });
 
+  // Group indices by seller so we can render a seller header once
+  type SellerGroup = { sellerId: string | null; evm?: EvmAddress | undefined; indices: number[] };
+  let sellerGroups: SellerGroup[] = $state([]);
+
   $effect(() => {
-    if (!mounted || !snapshot) return;
+    // Resolve product meta for any lines not yet resolved
+    if (!mounted || !snapshot) {
+      sellerGroups = [];
+      return;
+    }
     const items = (snapshot as any)?.orderedItem ?? [];
+
+    // Recompute seller groups from current snapshot
+    const map = new Map<string, number[]>();
+    items.forEach((_: any, idx: number) => {
+      const sid = sellerIdForIndex(idx);
+      const key = sid || '__unknown__';
+      const arr = map.get(key) ?? [];
+      arr.push(idx);
+      map.set(key, arr);
+    });
+    sellerGroups = Array.from(map.entries()).map(([key, indices]) => {
+      const sellerId = key === '__unknown__' ? null : key;
+      return { sellerId, evm: evmFromEip155(sellerId ?? undefined), indices } as SellerGroup;
+    });
+
     // Keep existing resolutions when possible; only resolve missing ones
     items.forEach((_: any, idx: number) => {
       if (!resolved[idx]) {
