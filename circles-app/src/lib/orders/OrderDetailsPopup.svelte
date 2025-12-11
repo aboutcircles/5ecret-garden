@@ -44,7 +44,7 @@
         if (seenKeys.has(key)) return;
         seenKeys.add(key);
         statusEvents = [...statusEvents, { oldStatus: evt.oldStatus ?? null, newStatus: evt.newStatus, changedAt: evt.changedAt }];
-        if (evt.newStatus === 'https://schema.org/PaymentComplete') {
+        if (evt.newStatus === 'https://schema.org/PaymentComplete' || evt.newStatus === 'https://schema.org/OrderDelivered') {
           try {
             const fresh = await getOrder(orderId);
             snapshot = fresh;

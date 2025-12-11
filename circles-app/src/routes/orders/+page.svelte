@@ -60,8 +60,8 @@
           state = { ...state, data: nextData };
           notify(state);
         }
-        // If payment completed, refresh full snapshot for authoritative data (e.g., voucherCode)
-        if (evt.newStatus === 'https://schema.org/PaymentComplete') {
+        // If payment completed or delivered, refresh full snapshot for authoritative data (e.g., outbox items)
+        if (evt.newStatus === 'https://schema.org/PaymentComplete' || evt.newStatus === 'https://schema.org/OrderDelivered') {
           try {
             const snap = await getOrder(evt.orderId!);
             const idx2 = state.data.findIndex((it) => it.id === evt.orderId);
@@ -72,6 +72,14 @@
               arr[idx2] = next;
               state = { ...state, data: arr };
               notify(state);
+
+              // If we have at least one outbox item, surface details popup to the user
+              const outbox = (snap as any)?.outbox;
+              if (Array.isArray(outbox) && outbox.length > 0) {
+                const { popupControls } = await import('$lib/stores/popUp');
+                const { default: OrderDetailsPopup } = await import('$lib/orders/OrderDetailsPopup.svelte');
+                popupControls.open({ title: 'Order updated', component: OrderDetailsPopup, props: { snapshot: snap } });
+              }
             }
           } catch {
             // ignore fetch errors

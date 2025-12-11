@@ -34,6 +34,13 @@
     };
     popupControls.open(def);
   }
+
+  function hasOutbox(it: Props['item']): boolean {
+    try {
+      const arr = (it?.snapshot as any)?.outbox;
+      return Array.isArray(arr) && arr.length > 0;
+    } catch { return false; }
+  }
 </script>
 
 <div
@@ -51,6 +58,9 @@
       {/if}
       {#if totalDisplay}
         <span class="opacity-80">Total: {totalDisplay}</span>
+      {/if}
+      {#if hasOutbox(item)}
+        <span class="badge badge-primary badge-xs">Has outbox</span>
       {/if}
     </div>
   </div>

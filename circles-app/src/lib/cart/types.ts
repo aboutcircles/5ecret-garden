@@ -146,6 +146,13 @@ export type ValidationResult = {
   ruleTrace: RuleTrace[];
 };
 
+export type OrderOutboxItem = {
+  id: number;
+  createdAt: string;
+  source?: string | null;
+  payload: any;
+};
+
 export type OrderSnapshot = {
   '@context': string; // "https://schema.org/"
   '@type': 'Order';
@@ -161,6 +168,7 @@ export type OrderSnapshot = {
   shippingAddress?: PostalAddress | null;
   totalPaymentDue?: PriceSpecification | null;
   paymentUrl?: string | null;
+  outbox?: OrderOutboxItem[];
 };
 
 export type SchemaOrgPersonId = {

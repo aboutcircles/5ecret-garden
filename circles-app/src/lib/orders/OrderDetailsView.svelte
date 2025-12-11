@@ -55,7 +55,50 @@
       {/if}
     </div>
 
-    <!-- NEW: Status history -->
+    <div class="px-4 md:px-5 py-3 border-t text-xs uppercase tracking-wide opacity-60">Items</div>
+    <div class="px-4 md:px-5 pb-4 md:pb-5 flex flex-col gap-2">
+      {#each snapshot.orderedItem as line, i (i)}
+        <div class="border rounded-lg px-3 py-2 bg-base-200/30 cursor-pointer hover:bg-base-200/60 focus:outline-none focus:ring-2 focus:ring-primary/40"
+             role="button" tabindex="0"
+             onclick={() => goToOffer(i)}
+             onkeydown={(e) => onKeyGoToOffer(e, i)}>
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex items-start gap-3 min-w-0">
+              <!-- Product thumbnail -->
+              {#if resolved[i]?.imageUrl}
+                <img src={resolved[i]?.imageUrl || ''}
+                     alt={resolved[i]?.name ?? line?.orderedItem?.sku ?? 'Product image'}
+                     class="w-12 h-12 rounded-md object-cover flex-shrink-0" />
+              {:else}
+                <div class="w-12 h-12 rounded-md bg-base-300/50 flex items-center justify-center text-xs text-base-content/50 select-none">
+                  Img
+                </div>
+              {/if}
+
+              <div class="min-w-0">
+                <div class="font-medium truncate">{resolved[i]?.name || line?.orderedItem?.name || line?.orderedItem?.sku || 'Item'}</div>
+                <div class="text-xs opacity-70">Qty: {line?.orderQuantity ?? 1}</div>
+                {#if sellerIdForIndex(i)}
+                  <div class="flex items-center gap-2">
+                    {#if evmFromEip155(sellerIdForIndex(i))}
+                      <Avatar view="small_no_text" address={evmFromEip155(sellerIdForIndex(i))} />
+                    {/if}
+                    <span class="font-mono text-[11px] opacity-70 break-all">Seller: {sellerIdForIndex(i)}</span>
+                  </div>
+                {/if}
+                {#if line?.productCid}
+                  <div class="font-mono text-[11px] opacity-70 break-all">{line.productCid}</div>
+                {/if}
+              </div>
+            </div>
+          </div>
+        </div>
+      {/each}
+      {#if (snapshot.orderedItem ?? []).length === 0}
+        <div class="text-sm opacity-70">No items</div>
+      {/if}
+    </div>
+
     <div class="px-4 md:px-5 pt-3 border-t text-xs uppercase tracking-wide opacity-60">
       Status history
     </div>
@@ -79,53 +122,65 @@
       {/if}
     </div>
 
-    <div class="px-4 md:px-5 py-3 border-t text-xs uppercase tracking-wide opacity-60">Items</div>
-    <div class="px-4 md:px-5 pb-4 md:pb-5 flex flex-col gap-2">
-      {#each snapshot.orderedItem as line, i (i)}
-        <div class="border rounded-lg px-3 py-2 bg-base-200/30 cursor-pointer hover:bg-base-200/60 focus:outline-none focus:ring-2 focus:ring-primary/40"
-             role="button" tabindex="0"
-             onclick={() => goToOffer(i)}
-             onkeydown={(e) => onKeyGoToOffer(e, i)}>
-          <div class="flex items-start justify-between gap-3">
-            <div class="flex items-start gap-3 min-w-0">
-              <!-- Product thumbnail -->
-              {#if resolved[i]?.imageUrl}
-                <img src={resolved[i]?.imageUrl || ''}
-                     alt={resolved[i]?.name ?? line?.orderedItem?.sku ?? 'Product image'}
-                     class="w-12 h-12 rounded-md object-cover flex-shrink-0" />
-              {:else}
-                <div class="w-12 h-12 rounded-md bg-base-300/50 flex items-center justify-center text-xs text-base-content/50 select-none">
-                  Img
-                </div>
-              {/if}
-
-              <div class="min-w-0">
-                <div class="font-medium truncate">{resolved[i]?.name || line?.orderedItem?.name || line?.orderedItem?.sku || 'Item'}</div>
-              <div class="text-xs opacity-70">Qty: {line?.orderQuantity ?? 1}</div>
-              {#if sellerIdForIndex(i)}
-                <div class="flex items-center gap-2">
-                  {#if evmFromEip155(sellerIdForIndex(i))}
-                    <Avatar view="small_no_text" address={evmFromEip155(sellerIdForIndex(i))} />
-                  {/if}
-                  <span class="font-mono text-[11px] opacity-70 break-all">Seller: {sellerIdForIndex(i)}</span>
-                </div>
-              {/if}
-              {#if line?.productCid}
-                <div class="font-mono text-[11px] opacity-70 break-all">{line.productCid}</div>
-              {/if}
+    {#if snapshot?.outbox && snapshot.outbox.length > 0}
+      <div class="px-4 md:px-5 pt-3 border-t text-xs uppercase tracking-wide opacity-60">
+        Fulfillment / outbox
+      </div>
+      <div class="px-4 md:px-5 pb-3 flex flex-col gap-2 text-sm">
+        {#each snapshot.outbox as item}
+          <div class="border rounded-lg bg-base-100/60 p-2 space-y-1">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <span class="badge badge-ghost badge-xs">
+                  {outboxLabel(item.payload)}
+                </span>
+                {#if item.source}
+                  <span class="text-[11px] opacity-60">{item.source}</span>
+                {/if}
               </div>
+              <span class="text-[11px] opacity-60">
+                {formatTimestamp(item.createdAt)}
+              </span>
             </div>
+
+            {@render OutboxPayloadView({ payload: item.payload })}
           </div>
-        </div>
-      {/each}
-      {#if (snapshot.orderedItem ?? []).length === 0}
-        <div class="text-sm opacity-70">No items</div>
-      {/if}
-    </div>
+        {/each}
+      </div>
+    {/if}
   </section>
 {:else}
   <div class="text-sm opacity-70">No order data</div>
 {/if}
+
+{#snippet OutboxPayloadView({ payload })}
+  {#if isKnownDownloadPayload(payload)}
+    <div class="flex items-center gap-2">
+      <a
+        class="btn btn-xs btn-primary"
+        href={payload.downloadUrl || payload.contentUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Download
+      </a>
+      {#if payload.expiresAt}
+        <span class="text-[11px] opacity-70">
+          Expires: {formatTimestamp(payload.expiresAt)}
+        </span>
+      {/if}
+    </div>
+  {:else if isVoucherPayload(payload)}
+    <div class="text-xs">
+      Voucher code:
+      <code>{payload.code}</code>
+    </div>
+  {:else}
+    <pre class="text-[11px] bg-base-200/80 rounded-md p-2 overflow-auto">
+      {JSON.stringify(payload, null, 2)}
+    </pre>
+  {/if}
+{/snippet}
 
 <style>
 </style>
@@ -198,6 +253,36 @@
   function partyId(id?: string | null): string | null {
     if (!id) return null;
     return id;
+  }
+
+  function outboxLabel(payload: any): string {
+    try {
+      const t = payload && typeof payload === 'object' ? payload['@type'] : null;
+      if (typeof t === 'string' && t.length > 0) {
+        const parts = t.split(/[\/#]/);
+        return parts[parts.length - 1] || 'Outbox item';
+      }
+    } catch {}
+    return 'Outbox item';
+  }
+
+  function isKnownDownloadPayload(payload: any): boolean {
+    try {
+      const t = payload?.['@type'];
+      const hasUrl = typeof payload?.downloadUrl === 'string' || typeof payload?.contentUrl === 'string';
+      return typeof t === 'string' && hasUrl;
+    } catch {
+      return false;
+    }
+  }
+
+  function isVoucherPayload(payload: any): boolean {
+    try {
+      const t = payload?.['@type'];
+      return typeof t === 'string' && t.toLowerCase().includes('voucher') && typeof payload?.code === 'string';
+    } catch {
+      return false;
+    }
   }
 
   function getSchemaId(x: any): string | null {
