@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import ProductViewer from '$lib/components/ProductViewer.svelte';
   import type { AggregatedCatalogItem } from '$lib/market/types';
-  import { getFirstOffer } from '$lib/market/catalogHelpers';
+  import { getFirstOffer, resolvePayTo } from '$lib/market/catalogHelpers';
   import { fetchProductForSellerAndSku } from '$lib/market/catalogClient';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { cartState, addToCart } from '$lib/cart/store';
@@ -39,8 +39,11 @@
   onMount(loadProduct);
 
   const offer = $derived(product?.product ? getFirstOffer(product?.product) : null);
+  const payTo = $derived(offer ? resolvePayTo(offer) : { address: null } as any);
+  const hasPayAction = $derived(!!payTo.address);
   const currentAvatar = $derived(avatarState?.avatar?.address?.toLowerCase());
   const cartLoading = $derived($cartState.loading);
+  const canAdd = $derived(!!offer && hasPayAction && !!currentAvatar && !cartLoading);
 
   async function handleAddToBasket(): Promise<void> {
     if (!product) return;
@@ -79,8 +82,14 @@
             type="button"
             class="btn btn-outline w-full"
             on:click|stopPropagation={handleAddToBasket}
-            disabled={!offer || cartLoading || !currentAvatar}
-            title={!currentAvatar ? 'Connect a Circles account first' : (!offer ? 'No offer available' : 'Add to basket')}
+            disabled={!canAdd}
+            title={!currentAvatar
+              ? 'Connect a Circles account first'
+              : (!offer
+                  ? 'No offer available'
+                  : (!hasPayAction
+                      ? 'This item has no PayAction; cannot add to basket'
+                      : 'Add to basket'))}
           >
             Add to basket
           </button>

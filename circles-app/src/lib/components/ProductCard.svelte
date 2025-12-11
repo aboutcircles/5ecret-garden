@@ -21,7 +21,7 @@
     import {mkCirclesBindings} from '$lib/offers/mkCirclesBindings';
     import {normalizeAddress} from '$lib/offers/adapters';
     import {get} from 'svelte/store';
-    import {getProduct, getFirstOffer, isProductOwnedBy} from '$lib/market/catalogHelpers';
+    import {getProduct, getFirstOffer, isProductOwnedBy, resolvePayTo} from '$lib/market/catalogHelpers';
     import { popupControls, type PopupContentDefinition } from '$lib/stores/popUp';
     import ProductDetailsPopup from '$lib/market/ProductDetailsPopup.svelte';
     import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
@@ -39,6 +39,11 @@
     const cartLoading = $derived($cartState.loading);
 
     const isOwner = $derived(isProductOwnedBy(product, currentAvatar));
+
+    // PayAction presence for UI enabling
+    const payTo = $derived(offer ? resolvePayTo(offer) : ({ address: null } as any));
+    const hasPayAction = $derived(!!payTo.address);
+    const canAdd = $derived(!!offer && hasPayAction && !!currentAvatar && !cartLoading);
 
     // Delete / tombstone handling for owners
     async function handleTombstone(): Promise<void> {
@@ -223,12 +228,14 @@
                         type="button"
                         class="btn btn-sm btn-outline"
                         on:click|stopPropagation={handleAddToBasket}
-                        disabled={!offer || cartLoading || !currentAvatar}
+                        disabled={!canAdd}
                         title={!currentAvatar
           ? 'Connect a Circles account first'
-          : !offer
+          : (!offer
             ? 'No offer available'
-            : 'Add to basket'}
+            : (!hasPayAction
+              ? 'This item has no PayAction; cannot add to basket'
+              : 'Add to basket'))}
                 >
                     Add to basket
                 </button>
