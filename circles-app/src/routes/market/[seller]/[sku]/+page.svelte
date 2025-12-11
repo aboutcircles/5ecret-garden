@@ -4,7 +4,6 @@
     import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
     import ProductViewer from '$lib/components/ProductViewer.svelte';
     import {goto} from "$app/navigation";
-    import { MARKET_API_BASE, MARKET_OPERATOR } from '$lib/config/market';
     import type { AggregatedCatalogItem } from '$lib/market/types';
     import { getFirstOffer } from '$lib/market/catalogHelpers';
     import { normalizeAddress } from '$lib/offers/adapters';
@@ -14,12 +13,6 @@
 
     // Derive seller and SKU from SvelteKit's $page store
     const params = $derived($page.params as { seller: string; sku: string });
-
-    // Defaults (as requested)
-    const OPERATOR: `0x${string}` = MARKET_OPERATOR;
-    
-    // Static API base
-    const API_BASE = MARKET_API_BASE;
 
     type ProductLike = AggregatedCatalogItem;
 
@@ -58,8 +51,14 @@
         // Determine if we should go to seller profile or marketplace
         const url = new URL(window.location.href);
         const pathParts = url.pathname.split('/').filter(Boolean);
-        
-        if (pathParts.length >= 3 && pathParts[1] === 'market' && pathParts[2]) {
+
+        const isSellerDetail =
+          pathParts.length >= 3 &&
+          pathParts[0] === 'market' &&
+          !!pathParts[1] &&
+          !!pathParts[2];
+
+        if (isSellerDetail) {
             // Go back to seller profile: /market/[seller]
             goto(`/market/${params.seller}`);
         } else {

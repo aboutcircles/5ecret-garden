@@ -45,6 +45,7 @@
 
   // Machine-parsable descriptor of the slot hierarchy (for dynamic UIs/parsers)
   // This mirrors the currently recognized keys and provides a stable tree structure.
+  // NOTE: Currently unused in the UI; kept as a machine-readable spec for requiredSlots.
   const slotTree = [
     {
       id: 'contact',

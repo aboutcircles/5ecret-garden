@@ -13,8 +13,6 @@
 
   let localError: string | null = $state(null);
   let validating = $state(false);
-  // Submitting is no longer used here (checkout happens in CheckoutReview)
-  let submitting = $state(false);
 
   // Local form state, hydrated once from the basket
   let shippingStreet = $state('');
@@ -277,17 +275,10 @@
     }
   }
 
-  const validation = $derived($cartState.validation);
   // Preview and payment happen in the subsequent popup steps
 
   // Continue is enabled only when the last server validation has no unmet blocking requirements
-  const canContinue = $derived(
-    !$cartState.loading &&
-      !validating &&
-      !!validation &&
-      !needsShippingFromValidation(validation) &&
-      !hasBlockingUnmet(validation)
-  );
+  // NOTE: Derived canContinue was unused; button disabling is handled inline.
 </script>
 
 <FlowDecoration>

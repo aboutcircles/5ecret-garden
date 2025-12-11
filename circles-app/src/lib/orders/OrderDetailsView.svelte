@@ -410,18 +410,6 @@
     return a.slice(0, 6) + '...' + a.slice(-4);
   }
   
-  // Map status to contextual badge colors
-  function statusClass(status: any): string {
-    try {
-      const s = String(status || '').toLowerCase();
-      if (s.includes('paymentcomplete') || s.endsWith('#PaymentComplete'.toLowerCase())) return 'badge-success';
-      if (s.includes('paymentprocessing')) return 'badge-info';
-      if (s.includes('orderpaymentdue') || s.includes('paymentdue')) return 'badge-warning';
-      if (s.includes('ordercancelled') || s.includes('canceled') || s.includes('cancelled')) return 'badge-error';
-    } catch {}
-    return 'badge-ghost';
-  }
-  
   function orderDate(): string | null {
     try {
       const d = (snapshot as any)?.orderDate;

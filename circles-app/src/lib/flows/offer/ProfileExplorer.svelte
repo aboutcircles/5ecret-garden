@@ -18,11 +18,7 @@
     import {normalizeAddress} from '$lib/offers/adapters';
     import type {CirclesBindings} from '$lib/offers/namespaces';
     import {loadProfileOrInit, rebaseAndSaveProfile} from '$lib/offers/namespaces';
-    import type {CidV0} from '$lib/offers/cid';
     import {mkCirclesBindings} from '$lib/offers/mkCirclesBindings';
-
-    import {keccak256, hexToBytes, bytesToHex} from '$lib/safeSigner';
-    import {secp256k1} from '@noble/curves/secp256k1';
     import type {Address} from '@circles-sdk/utils';
 
     interface Props {
@@ -45,14 +41,7 @@
     let namespaces = $state<Record<string, string>>({});
     let signingKeys = $state<Record<string, any>>({});
 
-    // add-key form state
-    let newSigningPublicKey = $state('');
-
-    // locally generated key (never stored in profile)
-    let generatedPrivateKey = $state<string | null>(null);
-    let generatedPublicKey = $state<string | null>(null);
-    let generatedFingerprint = $state<string | null>(null);
-    let copyPrivateKeyState: 'idle' | 'copied' = $state('idle');
+    // Inline key generation moved to AddSigningKey popup; local generated* state removed
 
     // editability
     let readonly = $state<boolean>(true);
@@ -134,111 +123,7 @@
         signingKeys = next;
     }
 
-    function clearImages(): void {
-        if (readonly) return;
-        imageUrl = '';
-        previewImageUrl = '';
-    }
 
-    function computeFingerprint(pubKeyHexRaw: string): string {
-        const value = pubKeyHexRaw.trim();
-        const hasPrefix = value.startsWith('0x');
-        const body = hasPrefix ? value.slice(2) : value;
-
-        const validShape = hasPrefix && body.length === 130 && /^04[0-9a-fA-F]{128}$/.test(body);
-        if (!validShape) {
-            throw new Error('Public key must be uncompressed secp256k1 (0x04 + 128 hex chars).');
-        }
-
-        const bytes = hexToBytes(value as any);
-        if (bytes.length !== 65) {
-            throw new Error('Public key must be 65 bytes (0x04 + 64-byte XY).');
-        }
-
-        const raw = bytes.slice(1); // drop 0x04 prefix
-        const fp = keccak256(raw); // 0x + 64-hex
-        return fp.toLowerCase();
-    }
-
-    function getRandomBytes32(): Uint8Array {
-        const hasCrypto =
-            typeof globalThis !== 'undefined' &&
-            typeof globalThis.crypto?.getRandomValues === 'function';
-
-        if (!hasCrypto) {
-            throw new Error('Secure random generator is not available in this environment');
-        }
-
-        const out = new Uint8Array(32);
-        globalThis.crypto.getRandomValues(out);
-        return out;
-    }
-
-    function addSigningKeyFromPublicKey(pkRaw: string): string {
-        if (readonly) return '';
-        const value = pkRaw.trim();
-        if (!value) {
-            throw new Error('Public key is required.');
-        }
-
-        const fp = computeFingerprint(value);
-        const nowSec = Math.floor(Date.now() / 1000);
-
-        const next = {...signingKeys};
-        next[fp] = {
-            '@context': 'https://aboutcircles.com/contexts/circles-profile/',
-            '@type': 'SigningKey',
-            publicKey: value,
-            validFrom: nowSec,
-            validTo: null,
-            revokedAt: null
-        };
-        signingKeys = next;
-        return fp;
-    }
-
-    function addSigningKey(): void {
-        if (readonly) return;
-        const pkRaw = newSigningPublicKey.trim();
-        if (!pkRaw) {
-            throw new Error('Public key is required.');
-        }
-
-        addSigningKeyFromPublicKey(pkRaw);
-        newSigningPublicKey = '';
-    }
-
-    function generateSigningKey(): void {
-        if (readonly) return;
-        const privBytes = getRandomBytes32();
-        const privHex = bytesToHex(privBytes);
-
-        const pubBytes = secp256k1.getPublicKey(privBytes, false); // uncompressed (0x04 + XY)
-        const pubHex = bytesToHex(pubBytes);
-
-        const fp = addSigningKeyFromPublicKey(pubHex);
-
-        generatedPrivateKey = privHex;
-        generatedPublicKey = pubHex;
-        generatedFingerprint = fp;
-        newSigningPublicKey = pubHex; // also fill the manual field so user can see / reuse it
-        copyPrivateKeyState = 'idle';
-    }
-
-    async function copyGeneratedPrivateKey(): Promise<void> {
-        if (!generatedPrivateKey) {
-            return;
-        }
-        try {
-            await navigator.clipboard.writeText(generatedPrivateKey);
-            copyPrivateKeyState = 'copied';
-            setTimeout(() => {
-                copyPrivateKeyState = 'idle';
-            }, 2000);
-        } catch {
-            // ignore clipboard errors
-        }
-    }
 
     async function saveProfile(): Promise<void> {
         if (readonly) return;

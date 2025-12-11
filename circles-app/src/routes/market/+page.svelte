@@ -1,10 +1,9 @@
 <script lang="ts">
-    import {onMount, onDestroy} from 'svelte';
+    import {onMount} from 'svelte';
     import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
     import {popupControls} from '$lib/stores/popUp';
     import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
     import ProductCard from '$lib/components/ProductCard.svelte';
-    import ProfileExplorer from "$lib/flows/offer/ProfileExplorer.svelte";
     import { MARKET_API_BASE, MARKET_OPERATOR } from '$lib/config/market';
     import { fetchCatalogPage } from '$lib/market/catalogClient';
     import type { AggregatedCatalogItem } from '$lib/market/types';

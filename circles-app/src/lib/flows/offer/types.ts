@@ -18,7 +18,8 @@ export type OfferDraft = {
   priceCurrency?: string; // ISO-4217, e.g. "EUR"
   availabilityFeed?: string;
   inventoryFeed?: string;
-  urlProduct?: string;    // not used; kept for future extension
+  /** @deprecated Not used; kept for potential future extension. Prefer product.url and offer.url */
+  urlProduct?: string;
   availableDeliveryMethod?: string; // GoodRelations IRI (e.g. http://purl.org/goodrelations/v1#DeliveryModePickUp)
   /**
    * Offer-driven basket requirements: array of opaque slot keys.

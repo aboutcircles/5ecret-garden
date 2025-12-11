@@ -3,6 +3,8 @@
  */
 
 import type { OfferDraft } from '$lib/flows/offer/types';
+import type { SchemaOrgProductLite, SchemaOrgOfferLite } from '$lib/market/types';
+import { normalizeProductImagesFromSchema } from '$lib/market/imageHelpers';
 
 /**
  * Generate a SKU based on product name with collision detection
@@ -112,4 +114,56 @@ export function createInitialOfferDraft(
     sku: generateSku(name, existingSkus),
     name,
   };
+}
+
+/**
+ * Map a Schema.org Product + Offer into an OfferDraft used by the offer flow.
+ */
+export function productAndOfferToDraft(
+  product: SchemaOrgProductLite,
+  offer?: SchemaOrgOfferLite | null
+): OfferDraft {
+  const imagesRaw = normalizeProductImagesFromSchema(product);
+  const hasImages = imagesRaw.length > 0;
+  const primaryImage = hasImages ? imagesRaw[0] : undefined;
+
+  const hasPrice = typeof offer?.price === 'number';
+  const priceValue = hasPrice ? Number(offer!.price) : undefined;
+
+  const hasCurrency = typeof offer?.priceCurrency === 'string' && offer!.priceCurrency.trim().length > 0;
+  const priceCurrency = hasCurrency ? offer!.priceCurrency!.trim() : 'CRC';
+
+  const offerHasRequiredSlots = Array.isArray((offer as any)?.requiredSlots);
+  const requiredSlots = offerHasRequiredSlots
+    ? ((offer as any).requiredSlots as unknown[])
+        .map((slot) => (typeof slot === 'string' ? slot.trim() : ''))
+        .filter((slot) => slot.length > 0)
+    : undefined;
+
+  const fulfillmentEndpoint = (offer as any)?.fulfillmentEndpoint as string | undefined;
+  const fulfillmentTrigger = (offer as any)?.fulfillmentTrigger as 'confirmed' | 'finalized' | undefined;
+
+  const draft: OfferDraft = {
+    sku: String(product.sku || ''),
+    name: String(product.name || ''),
+    description: (product.description || undefined) as string | undefined,
+    image: primaryImage,
+    images: hasImages ? imagesRaw : undefined,
+    url: (product.url || undefined) as string | undefined,
+    brand: (product.brand || undefined) as string | undefined,
+    mpn: (product.mpn || undefined) as string | undefined,
+    gtin13: (product.gtin13 || undefined) as string | undefined,
+    category: (product.category || undefined) as string | undefined,
+    price: priceValue,
+    priceCurrency,
+    availabilityFeed: (offer?.availabilityFeed || undefined) as string | undefined,
+    inventoryFeed: (offer?.inventoryFeed || undefined) as string | undefined,
+    availableDeliveryMethod: (offer?.availableDeliveryMethod || undefined) as string | undefined,
+    requiredSlots,
+    fulfillmentEndpoint: fulfillmentEndpoint || undefined,
+    fulfillmentTrigger: fulfillmentTrigger || undefined,
+    paymentGateway: undefined
+  };
+
+  return draft;
 }

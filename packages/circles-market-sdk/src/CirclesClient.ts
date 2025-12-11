@@ -3,6 +3,9 @@ import { InMemoryAuthContext, type AuthContext } from './authContext';
 import { AuthClientImpl, type AuthClient } from './auth';
 import { SignersClientImpl, type SignersClient } from './signers';
 import { OrdersClientImpl, type OrdersClient } from './orders';
+import { CartClientImpl, type CartClient } from './cart';
+import { OffersClientImpl, type OffersClient } from './offers';
+import type { ProfilesBindings } from './offers';
 
 export interface CirclesClientOptions {
   /** Base URL of the Circles Market API, e.g. https://market.aboutcircles.com */
@@ -11,6 +14,8 @@ export interface CirclesClientOptions {
   http?: HttpTransport;
   /** Optional custom AuthContext (defaults to in-memory implementation). */
   authContext?: AuthContext;
+  /** Optional bindings for Profiles/IPFS to enable offers publishing. */
+  profilesBindings?: ProfilesBindings;
 }
 
 /** Top-level entry point to the Circles Market SDK. */
@@ -25,6 +30,10 @@ export class CirclesClient {
   readonly auth: AuthClient;
   /** Buyer-scoped order operations and SSE events. */
   readonly orders: OrdersClient;
+  /** Basket/cart operations. */
+  readonly cart: CartClient;
+  /** Offers publishing operations (requires profiles bindings). */
+  readonly offers?: OffersClient;
 
   constructor(opts: CirclesClientOptions) {
     this.marketApiBase = opts.marketApiBase.replace(/\/$/, '');
@@ -34,5 +43,7 @@ export class CirclesClient {
     this.signers = new SignersClientImpl();
     this.auth = new AuthClientImpl(this.marketApiBase, this.http, this.authContext, this.signers);
     this.orders = new OrdersClientImpl(this.marketApiBase, this.http, this.authContext);
+    this.cart = new CartClientImpl(this.marketApiBase, this.http, this.authContext);
+    this.offers = opts.profilesBindings ? new OffersClientImpl(opts.profilesBindings) : undefined;
   }
 }

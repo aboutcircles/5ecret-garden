@@ -7,7 +7,7 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import type { Address } from '@circles-sdk/utils';
 
-  import { createProfilesOffersClient } from '$lib/offers/client';
+  import { createProfilesOffersClient, type SafeSignerLike } from '$lib/offers/client';
   import ProductGallery from '$lib/components/ProductGallery.svelte';
 
 
@@ -53,17 +53,6 @@
     return hasOperator && hasProduct && hasOffer && hasGateway;
   });
 
-  function isAbsUrl(s?: string): boolean {
-    // Only treat http(s) as acceptable absolute URLs for product.image
-    // (data:, ipfs:, etc. should be handled explicitly elsewhere)
-    if (!s) return false;
-    try {
-      const u = new URL(s);
-      return u.protocol === 'http:' || u.protocol === 'https:';
-    } catch {
-      return false;
-    }
-  }
 
   // Image data URL helpers moved to $lib/media/imageTools
 
@@ -191,7 +180,7 @@
     const eth: any = (window as any)?.ethereum;
 
     // EIP-712 ONLY: MetaMask typed-data signer
-    const safeSigner = createMetaMaskSafeSigner({
+    const safeSigner: SafeSignerLike = createMetaMaskSafeSigner({
       ethereum: eth,
       account: owner,
       chainId: BigInt(CHAIN_ID_NUM),
@@ -199,7 +188,7 @@
       enforceChainId: true
     });
 
-    const client = createProfilesOffersClient(circlesBindings as any, safeSigner as any);
+    const client = createProfilesOffersClient(circlesBindings, safeSigner);
 
     const hasImagesArray = Array.isArray(draft.images) && draft.images.length > 0;
     const hasLegacyImage = typeof draft.image === 'string' && draft.image.length > 0;

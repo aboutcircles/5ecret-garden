@@ -16,12 +16,13 @@
     // State for derived values and ownership handling
     import {avatarState} from '$lib/stores/avatar.svelte';
     import {cartState, addToCart} from '$lib/cart/store';
-    import {createProfilesOffersClient} from '$lib/offers/client';
+    import {createProfilesOffersClient, type SafeSignerLike} from '$lib/offers/client';
     import {createMetaMaskSafeSigner} from '$lib/safeSigner/signers/metamask';
     import {mkCirclesBindings} from '$lib/offers/mkCirclesBindings';
     import {normalizeAddress} from '$lib/offers/adapters';
     import {get} from 'svelte/store';
     import {getProduct, getFirstOffer, isProductOwnedBy, resolvePayTo} from '$lib/market/catalogHelpers';
+    import { productAndOfferToDraft } from '$lib/utils/offer';
     import { popupControls, type PopupContentDefinition } from '$lib/stores/popUp';
     import ProductDetailsPopup from '$lib/market/ProductDetailsPopup.svelte';
     import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
@@ -32,8 +33,10 @@
     let prod = $state<any>(null);
     let offer = $state<any>(null);
 
-    // Current connected avatar address (reactive)
-    const currentAvatar = avatarState?.avatar?.address?.toLowerCase()
+    // Current connected avatar address (reactive): keep in sync with wallet/avatar changes
+    const currentAvatar = $derived(
+        (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '').toLowerCase()
+    );
 
     // In Svelte 5 runes mode, use $derived instead of legacy $:
     const cartLoading = $derived($cartState.loading);
@@ -66,9 +69,9 @@
             if (!sdk) throw new Error('Circles SDK not initialized');
 
             const seller = normalizeAddress(product.seller as string);
-            const bindings = mkCirclesBindings(MARKET_API_BASE, sdk as any);
+            const bindings = mkCirclesBindings(MARKET_API_BASE, sdk);
 
-            const safeSigner = createMetaMaskSafeSigner({
+            const safeSigner: SafeSignerLike = createMetaMaskSafeSigner({
                 ethereum: eth,
                 account: eoa as any,
                 chainId: BigInt(GNOSIS_CHAIN_ID_NUM),
@@ -76,7 +79,7 @@
                 enforceChainId: true,
             });
 
-            const client = createProfilesOffersClient(bindings as any, safeSigner as any);
+            const client = createProfilesOffersClient(bindings, safeSigner);
 
             await client.tombstone({
                 avatar: seller,
@@ -124,36 +127,14 @@
 
     // Map current product + first offer into an OfferDraft and open the edit flow
     function handleEdit(): void {
-        if (!isOwner) return; // guard
-        const p = getProduct(product) as any;
-        const o = getFirstOffer(p) as any;
-
-        // Normalize images: if array present use it, else try single string
-        let images: string[] | undefined = undefined;
-        if (Array.isArray(p?.image)) {
-            images = (p.image as any[]).map((it) => (typeof it === 'string' ? it : (it?.url || it?.contentUrl || ''))).filter((s) => typeof s === 'string' && s.trim().length > 0);
-        } else if (typeof p?.image === 'string' && p.image.trim().length > 0) {
-            images = [p.image.trim()];
+        if (!isOwner) {
+            return;
         }
 
-        const draft = {
-            sku: String(p?.sku || ''),
-            name: String(p?.name || ''),
-            description: (p?.description || undefined) as string | undefined,
-            image: images && images.length > 0 ? images[0] : undefined,
-            images,
-            url: (p?.url || undefined) as string | undefined,
-            brand: (p?.brand || undefined) as string | undefined,
-            mpn: (p?.mpn || undefined) as string | undefined,
-            gtin13: (p?.gtin13 || undefined) as string | undefined,
-            category: (p?.category || undefined) as string | undefined,
+        const productCore = getProduct(product) as any;
+        const firstOffer = getFirstOffer(productCore) as any;
 
-            price: o?.price != null ? Number(o.price) : undefined,
-            priceCurrency: (o?.priceCurrency || 'EUR') as string,
-            availabilityFeed: (o?.availabilityFeed || undefined) as string | undefined,
-            inventoryFeed: (o?.inventoryFeed || undefined) as string | undefined,
-            availableDeliveryMethod: (o?.availableDeliveryMethod || undefined) as string | undefined,
-          } as any;
+        const draft = productAndOfferToDraft(productCore, firstOffer);
 
         popupControls.open({
             title: 'Edit Offer',
@@ -178,15 +159,6 @@
         offer = getFirstOffer(prod);
     });
 
-    // Temporary debug to verify owner gating in environments where the Remove button misbehaves
-    $effect(() => {
-        // Log once per product change
-        console.debug('[ProductCard:isOwner]', {
-            productSeller: product?.seller,
-            currentAvatar,
-            isOwner,
-        });
-    });
 </script>
 
 {#if product}
