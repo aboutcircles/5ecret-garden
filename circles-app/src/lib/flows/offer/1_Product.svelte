@@ -38,7 +38,7 @@
       mpn: '',
       gtin13: '',
       category: '',
-      priceCurrency: 'EUR',
+      priceCurrency: 'CRC',
     } as OfferDraft;
   }
 
