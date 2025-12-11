@@ -1,13 +1,16 @@
 <script lang="ts">
-  import { popupControls } from '$lib/stores/popUp';
+  import {popupControls} from '$lib/stores/popUp';
   import OfferStep2 from './2_Pricing.svelte';
-  import type { OfferFlowContext, OfferDraft } from './types';
+  import type {OfferFlowContext, OfferDraft} from './types';
   import ImageUpload from '$lib/components/ImageUpload.svelte';
-  import { normalizeAddress } from '$lib/offers/adapters';
-  import { generateSku, isValidSku } from '$lib/utils/offer';
+  import {normalizeAddress} from '$lib/offers/adapters';
+  import {generateSku, isValidSku} from '$lib/utils/offer';
 
-  interface Props { context: OfferFlowContext; }
-  let { context }: Props = $props();
+  interface Props {
+    context: OfferFlowContext;
+  }
+
+  let {context}: Props = $props();
 
   // Hard guard: we must know which namespace/operator to publish under
   let hasOperator = false;
@@ -40,17 +43,17 @@
   }
 
   // Local bindings for form inputs
-  let sku         = $state(context.draft.sku);
-  let name        = $state(context.draft.name);
+  let sku = $state(context.draft.sku);
+  let name = $state(context.draft.name);
   let description = $state(context.draft.description ?? '');
-  let image       = $state(context.draft.image ?? '');
+  let image = $state(context.draft.image ?? '');
   // New: support multiple images via uploader
-  let images      = $state<string[]>(context.draft.images ?? []);
-  let url         = $state(context.draft.url ?? '');
-  let brand       = $state(context.draft.brand ?? '');
-  let mpn         = $state(context.draft.mpn ?? '');
-  let gtin13      = $state(context.draft.gtin13 ?? '');
-  let category    = $state(context.draft.category ?? '');
+  let images = $state<string[]>(context.draft.images ?? []);
+  let url = $state(context.draft.url ?? '');
+  let brand = $state(context.draft.brand ?? '');
+  let mpn = $state(context.draft.mpn ?? '');
+  let gtin13 = $state(context.draft.gtin13 ?? '');
+  let category = $state(context.draft.category ?? '');
 
   // Are we editing an existing product?
   const editMode: boolean = Boolean((context as any)?.editMode);
@@ -66,8 +69,12 @@
     const skuOk = hasManualSku ? isValidSku(sku) : true;
     const nameOk = name.trim().length > 0;
 
-    if (!skuOk) { throw new Error('SKU must be [a-z0-9-_], max 63 chars, no leading "-" or "_".'); }
-    if (!nameOk) { throw new Error('Name is required.'); }
+    if (!skuOk) {
+      throw new Error('SKU must be [a-z0-9-_], max 63 chars, no leading "-" or "_".');
+    }
+    if (!nameOk) {
+      throw new Error('Name is required.');
+    }
 
     // Robust normalization to avoid undefined access and keep legacy `image` in sync
     const hasImagesArray = Array.isArray(images) && images.length > 0;
@@ -100,7 +107,7 @@
     popupControls.open({
       title: 'Offer • Pricing',
       component: OfferStep2,
-      props: { context }
+      props: {context}
     });
   }
 </script>
@@ -109,7 +116,7 @@
   <!-- Name first; SKU is optional and hidden under Advanced -->
   <label class="form-control">
     <span class="label-text">Name</span>
-    <input class="input input-bordered" bind:value={name} placeholder="Coffee 250g" />
+    <input class="input input-bordered" bind:value={name} placeholder="Coffee 250g"/>
   </label>
 
   <!-- Show live auto-generated SKU preview when no manual SKU provided -->
@@ -118,7 +125,7 @@
   {/if}
   <label class="form-control">
     <span class="label-text">Description</span>
-    <textarea class="textarea textarea-bordered" rows="3" bind:value={description} />
+    <textarea class="textarea textarea-bordered" rows="3" bind:value={description}/>
   </label>
   <!-- Images: either upload multiple or paste a single URL (legacy) -->
   <div class="space-y-2">
@@ -127,52 +134,50 @@
       <span class="label-text-alt opacity-70">You can add multiple images</span>
     </div>
     <ImageUpload
-      imageDataUrls={images}
-      onnewimage={(dataUrl) => { images = [...images, dataUrl]; }}
-      onremoveimage={(index) => { images = images.filter((_, i) => i !== index); }}
-      onclearall={() => { images = []; }}
-      mode="fit"
-      cropWidth={1600}
-      cropHeight={1600}
+        imageDataUrls={images}
+        onnewimage={(dataUrl) => { images = [...images, dataUrl]; }}
+        onremoveimage={(index) => { images = images.filter((_, i) => i !== index); }}
+        onclearall={() => { images = []; }}
+        mode="fit"
+        cropWidth={1600}
+        cropHeight={1600}
     />
   </div>
-  <label class="form-control">
-    <span class="label-text">Image URL (legacy / optional)</span>
-    <input class="input input-bordered" bind:value={image} placeholder="https://…" />
-  </label>
-  <label class="form-control">
-    <span class="label-text">Product URL</span>
-    <input class="input input-bordered" bind:value={url} placeholder="https://…" />
-  </label>
-
-  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-    <label class="form-control">
-      <span class="label-text">Brand</span>
-      <input class="input input-bordered" bind:value={brand} />
-    </label>
-    <label class="form-control">
-      <span class="label-text">MPN</span>
-      <input class="input input-bordered" bind:value={mpn} />
-    </label>
-    <label class="form-control">
-      <span class="label-text">GTIN-13</span>
-      <input class="input input-bordered" bind:value={gtin13} />
-    </label>
-  </div>
-
-  <label class="form-control">
-    <span class="label-text">Category</span>
-    <input class="input input-bordered" bind:value={category} placeholder="Grocery" />
-  </label>
 
   <!-- Advanced section -->
   <div class="collapse bg-base-200">
-    <input type="checkbox" bind:checked={showAdvanced} />
+    <input type="checkbox" bind:checked={showAdvanced}/>
     <div class="collapse-title text-md font-medium">Advanced</div>
     <div class="collapse-content space-y-3">
       <label class="form-control">
-        <span class="label-text">SKU {#if editMode}(locked){/if}</span>
-        <input class="input input-bordered" bind:value={sku} placeholder={autoSku} disabled={editMode} readonly={editMode} />
+        <span class="label-text">Product URL</span>
+        <input class="input input-bordered" bind:value={url} placeholder="https://…"/>
+      </label>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <label class="form-control">
+          <span class="label-text">Brand</span>
+          <input class="input input-bordered" bind:value={brand}/>
+        </label>
+        <label class="form-control">
+          <span class="label-text">MPN</span>
+          <input class="input input-bordered" bind:value={mpn}/>
+        </label>
+        <label class="form-control">
+          <span class="label-text">GTIN-13</span>
+          <input class="input input-bordered" bind:value={gtin13}/>
+        </label>
+      </div>
+
+      <label class="form-control">
+        <span class="label-text">Category</span>
+        <input class="input input-bordered" bind:value={category} placeholder="Grocery"/>
+      </label>
+      <label class="form-control">
+        <span class="label-text">SKU
+          {#if editMode}(locked){/if}</span>
+        <input class="input input-bordered" bind:value={sku} placeholder={autoSku} disabled={editMode}
+               readonly={editMode}/>
         <span class="label-text-alt opacity-70">
           {#if editMode}
             SKU cannot be changed for existing products.
@@ -181,8 +186,8 @@
           {/if}
         </span>
       </label>
-      </div>
-      </div>
+    </div>
+  </div>
 
   <div class="mt-4 flex justify-end">
     <button type="button" class="btn btn-primary" onclick={next}>Next</button>
