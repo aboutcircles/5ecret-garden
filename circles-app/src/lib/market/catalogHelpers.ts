@@ -57,3 +57,65 @@ export function isProductOwnedBy(
   const o = (owner ?? '').toLowerCase();
   return !!seller && !!o && seller === o;
 }
+
+// --- PayAction helpers ---
+export type ResolvedPayTo = {
+  chainId: number | null;
+  address: string | null; // lowercased
+  price: number | null;
+  priceCurrency: string | null;
+  source: 'action' | 'offer' | 'none';
+};
+
+function pickFirstPayAction(pa: any): any | null {
+  if (!pa) return null;
+  if (Array.isArray(pa)) return pa.find((x) => x?.['@type'] === 'PayAction') ?? pa[0] ?? null;
+  if (pa?.['@type'] === 'PayAction') return pa;
+  return null;
+}
+
+export function resolvePayTo(offer: any): ResolvedPayTo {
+  const action = pickFirstPayAction(offer?.potentialAction);
+
+  const parseEip155 = (idOrValue: string | undefined): { chainId: number | null; address: string | null } => {
+    if (!idOrValue) return { chainId: null, address: null };
+    const raw = idOrValue.startsWith('eip155:') ? idOrValue.slice('eip155:'.length) : idOrValue;
+    const [chain, addr] = raw.split(':');
+    const chainId = chain ? Number(chain) : NaN;
+    if (!addr || !chain || Number.isNaN(chainId)) return { chainId: null, address: null };
+    return { chainId, address: addr.toLowerCase() };
+  };
+
+  let chainId: number | null = null;
+  let address: string | null = null;
+
+  if (action?.recipient?.['@id']) {
+    const parsed = parseEip155(String(action.recipient['@id']));
+    chainId = parsed.chainId;
+    address = parsed.address;
+  }
+
+  if ((!chainId || !address) && action?.instrument?.propertyID === 'eip155') {
+    const parsed = parseEip155(String(action.instrument.value ?? ''));
+    chainId = chainId ?? parsed.chainId;
+    address = address ?? parsed.address;
+  }
+
+  const price =
+    typeof action?.price === 'number'
+      ? action.price
+      : typeof offer?.price === 'number'
+      ? offer.price
+      : null;
+
+  const priceCurrency =
+    typeof action?.priceCurrency === 'string'
+      ? action.priceCurrency
+      : typeof offer?.priceCurrency === 'string'
+      ? offer.priceCurrency
+      : null;
+
+  const source: ResolvedPayTo['source'] = action ? 'action' : offer ? 'offer' : 'none';
+
+  return { chainId, address, price, priceCurrency, source };
+}

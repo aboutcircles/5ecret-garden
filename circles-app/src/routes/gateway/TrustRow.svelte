@@ -9,11 +9,11 @@
 
   let { item }: Props = $props();
 
-  const expiryLabel = $derived(() =>
+  const expiryLabel = $derived.by(() =>
     item.expiry ? new Date(Number(item.expiry) * 1000).toLocaleString() : ''
   );
 
-  const isActive = $derived(() => Number(item.expiry) * 1000 > Date.now());
+  const isActive = $derived.by(() => Number(item.expiry) * 1000 > Date.now());
 </script>
 
 <RowFrame clickable={false} dense={true} noLeading={true}>
