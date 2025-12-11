@@ -95,28 +95,41 @@
                    role="button" tabindex="0"
                    onclick={() => goToOffer(i)}
                    onkeydown={(e) => onKeyGoToOffer(e, i)}>
-                <div class="sm:grid sm:grid-cols-[1fr,5rem] sm:items-center sm:gap-3 flex items-start justify-between gap-3">
+                <div class="flex items-start justify-between gap-3">
                   <!-- Left: thumbnail + title -->
-                  <div class="flex items-start gap-3 min-w-0">
-                    {#if resolved[i]?.imageUrl}
-                      <img src={resolved[i]?.imageUrl || ''}
-                           alt={resolved[i]?.name ?? lineAt(i)?.orderedItem?.sku ?? 'Product image'}
-                           class="w-12 h-12 rounded-md object-cover flex-shrink-0" />
-                    {:else}
-                      <div class="w-12 h-12 rounded-md bg-base-300/50 flex items-center justify-center text-xs text-base-content/50 select-none">Img</div>
-                    {/if}
+                  <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-14 h-14 rounded bg-base-200 overflow-hidden shrink-0 flex items-center justify-center">
+                      {#if resolved[i]?.imageUrl}
+                        <img src={resolved[i]?.imageUrl || ''}
+                             alt={resolved[i]?.name ?? lineAt(i)?.orderedItem?.sku ?? 'Product image'}
+                             class="w-14 h-14 object-cover" />
+                      {:else}
+                        <span class="text-[10px] opacity-60">No image</span>
+                      {/if}
+                    </div>
 
                     <div class="min-w-0">
-                      <div class="font-medium truncate">{resolved[i]?.name || lineAt(i)?.orderedItem?.name || lineAt(i)?.orderedItem?.sku || 'Item'}</div>
-                      <div class="sm:hidden text-xs opacity-70">Qty: {lineAt(i)?.orderQuantity ?? 1}</div>
+                      <div class="font-semibold truncate">{resolved[i]?.name || lineAt(i)?.orderedItem?.name || lineAt(i)?.orderedItem?.sku || 'Item'}</div>
+                      <div class="text-xs opacity-70 mt-0.5">Qty: {lineAt(i)?.orderQuantity ?? 1}</div>
                       {#if lineAt(i)?.productCid}
                         <div class="font-mono text-[11px] opacity-70 break-all">{lineAt(i)?.productCid}</div>
                       {/if}
                     </div>
                   </div>
 
-                  <!-- Quantity (sm+) -->
-                  <div class="hidden sm:flex items-center justify-center text-sm opacity-80">{lineAt(i)?.orderQuantity ?? 1}</div>
+                  <!-- Right: prices -->
+                  <div class="text-right shrink-0">
+                    {#if unitPrice(i).amount != null}
+                      <div class="text-xs opacity-70">{formatCurrency(unitPrice(i).amount, unitPrice(i).code)} each</div>
+                    {/if}
+                    <div class="font-semibold">
+                      {#if lineTotal(i).amount != null}
+                        {formatCurrency(lineTotal(i).amount, lineTotal(i).code)}
+                      {:else}
+                        —
+                      {/if}
+                    </div>
+                  </div>
                 </div>
               </div>
             {/each}
@@ -454,6 +467,31 @@
     } catch {
       return null;
     }
+  }
+
+  function getLineQuantity(i: number): number {
+    const raw = lineAt(i)?.orderQuantity;
+    const n = typeof raw === 'number' ? raw : Number(raw ?? 0);
+    if (!Number.isFinite(n) || n <= 0) return 0;
+    return n;
+  }
+
+  function unitPrice(i: number): { amount: number | null; code: string | null } {
+    try {
+      const offer = (snapshot as any)?.acceptedOffer?.[i];
+      const amt = typeof offer?.price === 'number' ? (offer.price as number) : null;
+      const code = (offer?.priceCurrency ?? null) as string | null;
+      return { amount: amt, code };
+    } catch {
+      return { amount: null, code: null };
+    }
+  }
+
+  function lineTotal(i: number): { amount: number | null; code: string | null } {
+    const { amount, code } = unitPrice(i);
+    const qty = getLineQuantity(i);
+    if (amount == null || !Number.isFinite(amount) || qty <= 0) return { amount: null, code };
+    return { amount: amount * qty, code };
   }
 
   async function resolveLine(i: number) {

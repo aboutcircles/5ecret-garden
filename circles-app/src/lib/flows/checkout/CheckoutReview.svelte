@@ -148,6 +148,20 @@
         );
     });
 
+    // Prefer the server-provided preview total; fall back to the first subtotal
+    type OrderTotal = { amount: number | null; code: string | null };
+    const orderTotal: OrderTotal = $derived((() => {
+        const p = (preview as any)?.totalPaymentDue;
+        const amt = typeof p?.price === 'number' ? (p.price as number) : null;
+        const code = (p?.priceCurrency ?? null) as string | null;
+        if (amt != null) return { amount: amt, code };
+        if (totalsArray.length > 0) {
+            const [c, t] = totalsArray[0];
+            return { amount: t, code: (c || null) as string | null };
+        }
+        return { amount: null, code: null };
+    })());
+
     const hasShippingInfo: boolean = $derived(
         !!shippingAddress ||
         !!contactPoint ||
@@ -209,24 +223,7 @@
         {#if preview}
             <div class="space-y-1">
                 <div><strong>Order #</strong> {preview.orderNumber}</div>
-                {#if preview.orderStatus}
-                    <div>Status: {preview.orderStatus}</div>
-                {/if}
-
-                {#if preview.totalPaymentDue}
-                    <div class="mt-1">
-                        <span class="font-semibold">Total:</span>
-                        &nbsp;
-                        {#if typeof preview.totalPaymentDue.price === 'number'}
-                            {preview.totalPaymentDue.price.toFixed(2)}
-                        {:else}
-                            ?
-                        {/if}
-                        {#if preview.totalPaymentDue.priceCurrency}
-                            &nbsp;{preview.totalPaymentDue.priceCurrency}
-                        {/if}
-                    </div>
-                {/if}
+                <!-- Total moved to bottom-right summary under subtotals -->
             </div>
         {:else}
             <div class="opacity-70">No order preview available.</div>
@@ -341,19 +338,27 @@
             </div>
         {/if}
 
-        <!-- Totals per currency (client-side) -->
-        {#if totalsArray.length > 0}
-            <div class="mt-1 border-t border-base-300 pt-2 text-sm space-y-1">
-                {#each totalsArray as [code, total]}
-                    <div class="flex justify-between">
-                        <span>Items total{code ? ` (${code})` : ''}</span>
-                        <span class="font-semibold">
-                            {total.toFixed(2)} {code}
-                        </span>
+        <!-- Totals per currency (client-side) + grand total at bottom-right -->
+        <div class="mt-2 flex justify-end">
+            <div class="text-right text-sm">
+                {#if totalsArray.length > 0}
+                    <div class="space-y-1">
+                        {#each totalsArray as [code, total]}
+                            <div class="flex items-baseline justify-between gap-6">
+                                <span class="opacity-80">Items subtotal{code ? ` (${code})` : ''}</span>
+                                <span class="font-medium">{formatCurrency(total, code || null)}</span>
+                            </div>
+                        {/each}
                     </div>
-                {/each}
+                {/if}
+                {#if orderTotal.amount != null}
+                    <div class="mt-2 border-t border-base-300 pt-2">
+                        <div class="text-[11px] uppercase tracking-wide opacity-60">Total</div>
+                        <div class="text-xl font-semibold">{formatCurrency(orderTotal.amount, orderTotal.code)}</div>
+                    </div>
+                {/if}
             </div>
-        {/if}
+        </div>
 
         <!-- Action + error -->
         <div class="mt-3 flex justify-end">
