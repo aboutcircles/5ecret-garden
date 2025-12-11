@@ -20,6 +20,7 @@
   import { mkCirclesBindings } from '$lib/offers/mkCirclesBindings';
   import { normalizeAddress } from '$lib/offers/adapters';
   import { resolveImagesToHttpUrls } from '$lib/media/resolveImageUrl';
+  import { onMount } from 'svelte';
 
   interface Props { context: OfferFlowContext; }
   let { context }: Props = $props();
@@ -27,24 +28,91 @@
   const CHAIN_ID_NUM = GNOSIS_CHAIN_ID_NUM;   // Gnosis
   const CHAIN_ID_HEX = GNOSIS_CHAIN_ID_HEX;
 
-  function requiredOk(): boolean {
-    let hasOperator = false;
-    try {
-      const op = normalizeAddress(String((context as any).operator ?? ''));
-      (context as any).operator = op; // store normalized once
-      hasOperator = true;
-    } catch {
-      hasOperator = false;
-    }
+  // Payment gateway selection state
+  let loadingGateways: boolean = $state(false);
+  let gateways: string[] = $state([]);
+  let selectedGateway: string = $state('');
 
+  async function loadMyGatewaysFor(owner: Address): Promise<void> {
+    const c = get(circles);
+    if (!owner || !c?.circlesRpc) {
+      gateways = [];
+      return;
+    }
+    try {
+      loadingGateways = true;
+      const resp = await c.circlesRpc.call<{ columns: string[]; rows: any[][] }>('circles_query', [
+        {
+          Namespace: 'CrcV2_PaymentGateway',
+          Table: 'GatewayCreated',
+          Columns: ['gateway'],
+          Filter: [
+            { Type: 'FilterPredicate', FilterType: 'Equals', Column: 'owner', Value: owner.toLowerCase() }
+          ],
+          Order: []
+        }
+      ]);
+      const cols = resp?.result?.columns ?? [];
+      const rows = resp?.result?.rows ?? [];
+      const idxG = cols.indexOf('gateway');
+      gateways = rows
+        .map((r) => (r[idxG] ? (r[idxG] as string) : ''))
+        .filter((g) => typeof g === 'string' && g.length > 0)
+        .map((g) => g.toLowerCase());
+
+      // Preselect: keep existing selection if present and still available
+      const current = (context.draft?.paymentGateway ?? '').toString().toLowerCase();
+      if (current && gateways.includes(current)) {
+        selectedGateway = current;
+        // Ensure draft stays in sync when the current selection is still valid
+        if (context.draft) (context.draft as any).paymentGateway = current as any;
+      } else if (gateways.length > 0) {
+        selectedGateway = gateways[0];
+        (context.draft as any).paymentGateway = selectedGateway as any;
+      } else {
+        selectedGateway = '';
+        if (context.draft) (context.draft as any).paymentGateway = undefined;
+      }
+    } catch (e) {
+      console.error('loadMyGatewaysFor', e);
+      gateways = [];
+      selectedGateway = '';
+    } finally {
+      loadingGateways = false;
+    }
+  }
+
+  onMount(async () => {
+    const walletVal = get(wallet);
+    const sellerRaw = walletVal?.address as Address | undefined;
+    if (sellerRaw) await loadMyGatewaysFor(sellerRaw as Address);
+  });
+
+  function onGatewayChange() {
+    if (context?.draft) {
+      (context.draft as any).paymentGateway = selectedGateway as unknown as Address;
+    }
+  }
+
+  // Use Svelte 5 reactivity so UI updates when selectedGateway changes
+  const hasOperator = $derived.by(() => {
+    try {
+      // Do not mutate context here; just validate
+      normalizeAddress(String((context as any).operator ?? ''));
+      return true;
+    } catch {
+      return false;
+    }
+  });
+
+  const requiredOk = $derived.by(() => {
     const d = context.draft!;
     const hasProduct = !!d?.sku && !!d?.name;
-    const hasOffer =
-      (d?.price ?? 0) > 0 &&
-      /^[A-Z]{3}$/.test(d?.priceCurrency ?? '');
-
-    return hasOperator && hasProduct && hasOffer;
-  }
+    const hasOffer = (d?.price ?? 0) > 0 && /^[A-Z]{3}$/.test(d?.priceCurrency ?? '');
+    // Prefer reactive selectedGateway; fall back to draft value if any
+    const hasGateway = !!(selectedGateway || d?.paymentGateway);
+    return hasOperator && hasProduct && hasOffer && hasGateway;
+  });
 
   function isAbsUrl(s?: string): boolean {
     // Only treat http(s) as acceptable absolute URLs for product.image
@@ -163,7 +231,7 @@
   // Publish
   // ──────────────────────────────────────────────────────────────────────────────
   async function publish(): Promise<void> {
-    if (!requiredOk()) throw new Error('Draft has missing or invalid fields.');
+    if (!requiredOk) throw new Error('Draft has missing or invalid fields.');
 
     const draft = context.draft!;
 
@@ -215,6 +283,7 @@
           avatar: seller,
           operator: context.operator,
           chainId: CHAIN_ID_NUM,
+          paymentGateway: context.draft?.paymentGateway as Address,
           product: {
             sku: draft.sku,
             name: draft.name,
@@ -249,7 +318,7 @@
   }
 </script>
 
-{#if !requiredOk()}
+{#if !loadingGateways && !requiredOk}
     <div class="alert alert-warning mb-4">Draft has missing or invalid fields.</div>
 {/if}
 
@@ -274,6 +343,26 @@
         {/if}
 
         <div class="mt-3 text-sm space-y-1">
+            <div class="flex items-center gap-3">
+              <div class="font-semibold">Payment gateway:</div>
+              {#if loadingGateways}
+                <span class="opacity-70 text-sm">Loading…</span>
+              {:else if gateways.length === 0}
+                <span class="opacity-70 text-sm">No gateways found. <a class="link" href="/gateway" target="_blank">Create one</a> and come back.</span>
+              {:else}
+                <select class="select select-bordered select-sm"
+                  bind:value={selectedGateway}
+                  onchange={onGatewayChange}
+                >
+                  {#each gateways as gw}
+                    <option value={gw}>{gw}</option>
+                  {/each}
+                </select>
+              {/if}
+            </div>
+            {#if gateways.length > 0 && !(selectedGateway || context.draft?.paymentGateway)}
+              <div class="text-warning text-sm">Select a payment gateway to enable publishing.</div>
+            {/if}
             <div><strong>Price:</strong> {context.draft?.price} {context.draft?.priceCurrency}</div>
             {#if context.draft?.availableDeliveryMethod}
               <div class="truncate"><strong>Delivery method:</strong> {context.draft?.availableDeliveryMethod}</div>
@@ -294,6 +383,6 @@
     </div>
 
     <div class="mt-4 flex justify-end gap-2">
-        <button type="button" class="btn btn-primary" disabled={!requiredOk()} onclick={publish}>Publish</button>
+        <button type="button" class="btn btn-primary" disabled={!requiredOk} onclick={publish}>Publish</button>
     </div>
 </div>

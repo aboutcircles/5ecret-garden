@@ -1,5 +1,21 @@
 import type { Address } from '@circles-sdk/utils';
 
+export type SchemaOrgThingRef = { '@id': string };
+export type SchemaOrgPropertyValue = {
+  '@type': 'PropertyValue';
+  propertyID: string;
+  value: string;
+  name?: string;
+};
+
+export type SchemaOrgPayAction = {
+  '@type': 'PayAction';
+  price?: number;
+  priceCurrency?: string;
+  recipient?: SchemaOrgThingRef; // {"@id":"eip155:{chainId}:{address}"}
+  instrument?: SchemaOrgPropertyValue; // propertyID=="eip155", value=="{chainId}:{address}"
+};
+
 export type SchemaOrgOfferLite = {
   '@type': 'Offer';
   price?: number;
@@ -13,6 +29,8 @@ export type SchemaOrgOfferLite = {
   // Fields used by UI components at runtime
   availability?: string; // IRI like https://schema.org/InStock
   checkout?: string;     // External checkout URL
+  // New: schema.org action(s)
+  potentialAction?: SchemaOrgPayAction | SchemaOrgPayAction[];
 };
 
 export type SchemaOrgProductLite = {

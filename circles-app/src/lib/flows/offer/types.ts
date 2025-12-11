@@ -25,6 +25,9 @@ export type OfferDraft = {
    * Recognized initial set: "contactPoint.email", "contactPoint.telephone".
    */
   requiredSlots?: string[];
+
+  // Payment
+  paymentGateway?: Address; // selected payment gateway address used for PayAction
 };
 
 export interface OfferFlowContext {

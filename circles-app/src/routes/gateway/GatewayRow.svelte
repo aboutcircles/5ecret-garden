@@ -11,7 +11,7 @@
 
   let { item }: Props = $props();
 
-  const createdAt = $derived(() =>
+  const createdAt = $derived.by(() =>
     item.timestamp ? new Date(Number(item.timestamp) * 1000).toLocaleString() : ''
   );
 

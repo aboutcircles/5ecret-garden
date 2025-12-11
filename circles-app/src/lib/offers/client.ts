@@ -22,6 +22,7 @@ export type AppendOfferParams = {
     chainId?: number;
     product: MinimalProduct;
     offer: MinimalOffer;
+    paymentGateway?: Address; // selected payment gateway address for PayAction
     debugSaveLinkObject?: boolean;
 };
 
@@ -169,6 +170,35 @@ export function createProfilesOffersClient(
 
     async function appendOffer(p: AppendOfferParams): Promise<AppendOfferResult> {
         const productObj = buildProduct(p.product, p.offer);
+
+        // Inject schema.org PayAction onto the Offer so clients/server have a first-class pay-to.
+        try {
+            const chainId = p.chainId ?? 100;
+            // Prefer payment gateway when provided, otherwise fall back to seller avatar
+            const payTo = normalizeAddress((p.paymentGateway ?? p.avatar) as Address);
+            const offer0: any = Array.isArray((productObj as any)?.offers)
+                ? (productObj as any).offers[0]
+                : (productObj as any)?.offer ?? null;
+            if (offer0 && typeof offer0 === 'object') {
+                const price = offer0.price;
+                const priceCurrency = offer0.priceCurrency;
+                (offer0 as any).potentialAction = {
+                    '@type': 'PayAction',
+                    price,
+                    priceCurrency,
+                    recipient: { '@id': `eip155:${chainId}:${payTo}` },
+                    instrument: {
+                        '@type': 'PropertyValue',
+                        propertyID: 'eip155',
+                        value: `${chainId}:${payTo}`,
+                        name: 'pay-to',
+                    },
+                };
+            }
+        } catch (e) {
+            console.warn('[circles] failed to attach PayAction to offer:', (e as any)?.message ?? e);
+        }
+
         const name = `product/${p.product.sku}`;
         return doAppend(name, productObj, p);
     }
