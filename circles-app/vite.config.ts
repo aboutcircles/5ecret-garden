@@ -19,7 +19,9 @@ export default defineConfig({
   resolve: {
     alias: {
       // Map the local SDK package for dev/build without publishing
-      '@circles-market/sdk': fileURLToPath(new URL('../circles-market-sdk/src/index.ts', import.meta.url)),
+      '@circles-market/sdk': fileURLToPath(new URL('../packages/circles-market-sdk/src/index.ts', import.meta.url)),
+      // Map the local profile core package
+      '@circles-profile/core': fileURLToPath(new URL('../packages/circles-profile-core/src/index.ts', import.meta.url)),
     },
   },
 });

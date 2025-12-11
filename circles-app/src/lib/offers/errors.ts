@@ -1,32 +1,7 @@
-// Typed error classes for profiles-offers-lite
+// Domain-specific errors and re-exports for profiles-offers-lite
 
-export class InvalidAddressError extends Error {
-  constructor(field: string, value: string) {
-    super(`InvalidAddressError: ${field}=${value}`);
-    this.name = 'InvalidAddressError';
-  }
-}
-
-export class InvalidSkuError extends Error {
-  constructor(sku: string) {
-    super(`InvalidSkuError: sku=${sku}`);
-    this.name = 'InvalidSkuError';
-  }
-}
-
-export class InvalidUriError extends Error {
-  constructor(field: string, value: string) {
-    super(`InvalidUriError: ${field}=${value}`);
-    this.name = 'InvalidUriError';
-  }
-}
-
-export class CurrencyCodeError extends Error {
-  constructor(value: string) {
-    super(`CurrencyCodeError: ${value}`);
-    this.name = 'CurrencyCodeError';
-  }
-}
+// Re-export SDK/core errors instead of duplicating
+export { CurrencyCodeError, ObjectTooLargeError } from '@circles-market/sdk';
 
 export class PinFailedError extends Error {
   constructor(what: 'product'|'head'|'index'|'profile'|'link', detail?: string) {
@@ -35,30 +10,5 @@ export class PinFailedError extends Error {
   }
 }
 
-export class PublishRaceError extends Error {
-  constructor(currentDigest: string, rebasedDigest?: string) {
-    super(`PublishRaceError: current=${currentDigest}${rebasedDigest ? `, rebased=${rebasedDigest}` : ''}`);
-    this.name = 'PublishRaceError';
-  }
-}
-
-export class SafeOwnerSignatureUnavailableError extends Error {
-  constructor() {
-    super('SafeOwnerSignatureUnavailableError');
-    this.name = 'SafeOwnerSignatureUnavailableError';
-  }
-}
-
-export class ObjectTooLargeError extends Error {
-  constructor(bytes: number, limit: number) {
-    super(`ObjectTooLargeError: ${bytes} > ${limit}`);
-    this.name = 'ObjectTooLargeError';
-  }
-}
-
-export class CanonicalisationError extends Error {
-  constructor(detail: string) {
-    super(`CanonicalisationError: ${detail}`);
-    this.name = 'CanonicalisationError';
-  }
-}
+// Re-export the canonicalisation error from the core library to avoid duplication
+export { CanonicalisationError } from '@circles-profile/core';

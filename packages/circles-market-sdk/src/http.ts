@@ -10,6 +10,19 @@ export interface HttpTransport {
   request<T = unknown>(opts: HttpRequestOptions): Promise<T>;
 }
 
+export class HttpError extends Error {
+  readonly status: number;
+  readonly statusText: string;
+  readonly body: string;
+
+  constructor(status: number, statusText: string, body: string) {
+    super(`HTTP ${status} ${statusText}: ${body}`);
+    this.status = status;
+    this.statusText = statusText;
+    this.body = body;
+  }
+}
+
 export class FetchHttpTransport implements HttpTransport {
   async request<T = unknown>(opts: HttpRequestOptions): Promise<T> {
     const headers: Record<string, string> = {
@@ -38,11 +51,7 @@ export class FetchHttpTransport implements HttpTransport {
 
     if (!res.ok) {
       const text = await res.text().catch(() => '');
-      const err: any = new Error(`HTTP ${res.status} ${res.statusText}: ${text}`);
-      err.status = res.status;
-      err.statusText = res.statusText;
-      err.body = text;
-      throw err;
+      throw new HttpError(res.status, res.statusText, text);
     }
 
     const contentType = res.headers.get('content-type') || '';

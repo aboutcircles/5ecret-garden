@@ -77,6 +77,64 @@ The SDK ships with an in‑memory AuthContext. You can provide your own by imple
   - `orders.getStatusHistory(orderId)`
   - `orders.subscribeStatusEvents(onEvent)` → `unsubscribe()`
   - `orders.onOrderDelivered(onOrder)` → `unsubscribe()`
+  - `cart.createBasket({ buyer, operator, chainId? })`
+  - `cart.setItems({ basketId, items })`
+  - `cart.setCheckoutDetails({ basketId, shippingAddress?, billingAddress?, contactPoint?, ageProof? })`
+  - `cart.validateBasket(basketId)`
+  - `cart.previewOrder(basketId)`
+  - `cart.checkoutBasket({ basketId, buyer? })`
+  - `offers?.publishOffer({ avatar, operator, signer, chainId?, product, offer })`
+  - `offers?.tombstone({ avatar, operator, signer, chainId?, sku })`
+
+## Cart
+
+- Endpoints map 1:1 to the Circles Market Cart API.
+- Auth is optional: the SDK automatically attaches the JWT if you are signed in, but all cart calls work for anonymous users too.
+- Item shape follows schema.org JSON‑LD and the backend spec: `{ seller, orderedItem: { '@type': 'Product', sku }, orderQuantity, imageUrl? }`.
+- Checkout details use the proper JSON‑LD `@type`s: `PostalAddress`, `ContactPoint`, `Person`.
+
+## Offers (experimental but spec-aligned)
+
+The `client.offers` module implements the same Profiles + Namespaces + CustomDataLink + Safe-signature pipeline used in the app. To enable it, you must pass a `profilesBindings` implementation when constructing `CirclesClient` so the SDK can pin JSON‑LD to IPFS and update the on‑chain profile digest.
+
+```ts
+import { CirclesClient } from '@circles-market/sdk';
+
+const client = new CirclesClient({
+  marketApiBase: 'https://market.aboutcircles.com',
+  profilesBindings: bindings, // see below
+});
+
+const signer = await client.signers.createSafeSignerForAvatar({
+  avatar: '0xSellerSafe',
+  ethereum: window.ethereum,
+  chainId: 100n,
+  enforceChainId: true,
+});
+
+const res = await client.offers!.publishOffer({
+  avatar: '0xSellerSafe',
+  operator: '0xMarketOperator',
+  signer,
+  chainId: 100,
+  product: { sku: 'coffee-250g', name: 'Coffee 250g' },
+  offer: { price: 10, priceCurrency: 'CRC' },
+});
+```
+
+`profilesBindings` must provide IPFS pinning and profile helpers:
+
+```ts
+export interface ProfilesBindings {
+  putJsonLd(obj: any): Promise<string>;
+  getJsonLd(cid: string): Promise<any>;
+  getLatestProfileCid(avatar: string): Promise<string | null>;
+  updateAvatarProfileDigest(avatar: string, profileCid: string): Promise<string | void>;
+  canonicalizeJsonLd?(obj: any): Promise<string> | string;
+}
+```
+
+The Offers client returns CIDs for the product payload and updated namespace/index/profile heads and will sign `CustomDataLink` envelopes using the provided Safe signer. It also attaches a PayAction to the first offer to align with the app’s behavior.
 
 ## Notes & semantics
 

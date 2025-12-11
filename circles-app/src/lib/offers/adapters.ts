@@ -1,18 +1,20 @@
-import { InvalidAddressError } from './errors';
 import type { Address } from '../safeSigner/types';
 
 export type { Address };
 
 /**
  * Lowercase & validate an EVM address. Throws on invalid.
+ * Note: This implementation is stricter than the SDK's SignersClientImpl.normalizeAddress,
+ * which only checks prefix/length. Here we also validate hex chars via /^0x[a-f0-9]{40}$/. 
+ * Keep in mind when comparing behaviours across layers.
  */
 export function normalizeAddress(s: string): Address {
   if (typeof s !== 'string') {
-    throw new InvalidAddressError('address', String(s));
+    throw new Error(`Invalid EVM address: ${String(s)}`);
   }
   const v = s.toLowerCase();
   if (!/^0x[a-f0-9]{40}$/.test(v)) {
-    throw new InvalidAddressError('address', s);
+    throw new Error(`Invalid EVM address: ${s}`);
   }
   return v as Address;
 }

@@ -2,6 +2,7 @@ import type { Sdk } from '@circles-sdk/sdk';
 import type { Address } from '@circles-sdk/utils';
 import type { CidV0 } from '$lib/offers/cid';
 import type { CirclesBindings as NamespacesBindings } from '$lib/offers/namespaces';
+import { fetchIpfsJson } from '$lib/offers/namespaces';
 
 // A Circles bindings shape compatible with both namespaces.ts and offers client
 export type CirclesBindings = NamespacesBindings;
@@ -71,16 +72,25 @@ export function mkCirclesBindings(pinApiBase: string | undefined, circlesSdk: Sd
     return `https://ipfs.io/ipfs/${cid}`;
   }
 
+  async function getJsonLd(cid: string): Promise<any> {
+    try {
+      return await circlesSdk.profiles!.get(cid);
+    } catch {
+      return await fetchIpfsJson(cid);
+    }
+  }
+
   return {
-    async getLatestProfileCid(av: Address): Promise<CidV0 | null> {
+    async getLatestProfileCid(av: Address): Promise<string | null> {
       const cid = await circlesSdk.data.getMetadataCidForAddress(av);
-      return (cid as CidV0 | null) ?? null;
+      return (cid as string | null) ?? null;
     },
     async getProfile(cid: CidV0): Promise<any | null> {
       try { return await circlesSdk.profiles!.get(cid); } catch { return null; }
     },
     putJsonLd,
-    async updateAvatarProfileDigest(av: Address, cid: CidV0): Promise<string> {
+    getJsonLd,
+    async updateAvatarProfileDigest(av: Address, cid: string): Promise<string> {
       const avatarObj = await circlesSdk.getAvatar(av);
       const tx = await avatarObj.updateMetadata(cid);
       return ((tx as any)?.hash ?? '') as string;

@@ -43,7 +43,11 @@
     
 
     let profile: Profile | undefined = $state();
-    const tooltipText = $derived(() => profile?.name || (address as string | undefined) || 'Profile');
+    const tooltipText = $derived(
+      (profile?.name && profile.name.length > 0)
+        ? profile.name
+        : (address as string | undefined) || 'Profile'
+    );
 
     $effect(() => {
         if (address && $circles) {
@@ -137,7 +141,7 @@
     {/if}
 {:else if view === 'horizontal'}
     <!-- Fade in the final layout once profile is loaded -->
-    <div transition:fade title={tooltipText()}>
+    <div transition:fade title={tooltipText}>
         <HorizontalAvatarLayout
                 {pictureOverlayUrl}
                 onclick={openAvatar}
@@ -151,8 +155,8 @@
         <button
             class="cursor-pointer inline-flex items-center"
             onclick={openAvatar}
-            aria-label={tooltipText()}
-            title={tooltipText()}
+            aria-label={tooltipText}
+            title={tooltipText}
         >
             <img
                 src={profile?.previewImageUrl}
@@ -170,8 +174,8 @@
         <button
             class="cursor-pointer inline-flex items-center"
             onclick={openAvatar}
-            aria-label={tooltipText()}
-            title={tooltipText()}
+            aria-label={tooltipText}
+            title={tooltipText}
         >
             <img
                 src={profile?.previewImageUrl}
@@ -181,7 +185,7 @@
         </button>
     </div>
 {:else}
-    <div transition:fade title={tooltipText()}>
+    <div transition:fade title={tooltipText}>
         <VerticalAvatarLayout
                 onclick={openAvatar}
                 {profile}

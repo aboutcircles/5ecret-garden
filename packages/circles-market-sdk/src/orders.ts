@@ -1,4 +1,4 @@
-import type { HttpTransport } from './http';
+import { HttpError, type HttpTransport } from './http';
 import type { AuthContext } from './authContext';
 import type { OrderSnapshot, OrderStatusEventPayload, OrderStatusHistory } from './ordersTypes';
 
@@ -64,7 +64,7 @@ export class OrdersClientImpl implements OrdersClient {
         headers: { Authorization: `Bearer ${token}` },
       });
     } catch (e: any) {
-      if (e && typeof e.status === 'number' && e.status === 404) {
+      if (e instanceof HttpError && e.status === 404) {
         return null;
       }
       throw e;

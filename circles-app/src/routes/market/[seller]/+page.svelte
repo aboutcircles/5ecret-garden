@@ -7,7 +7,7 @@
     import ProductCard from '$lib/components/ProductCard.svelte';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
     import { MARKET_API_BASE, MARKET_OPERATOR } from '$lib/config/market';
-    import type { AggregatedCatalog, AggregatedCatalogItem } from '$lib/market/types';
+    import type { AggregatedCatalogItem } from '$lib/market/types';
     import { fetchSellerCatalog } from '$lib/market/catalogClient';
     import { shortenAddress } from '$lib/utils/shared';
     import { normalizeAddress } from '$lib/offers/adapters';
@@ -44,7 +44,6 @@
     let errorMsg: string = $state('');
     let products: ProductLike[] = $state([]);
     let sellerAddress: `0x${string}` | null = $state(null);
-    let shortSellerAddr: string = '';
 
     const shortAddr = (a?: string) => (a ? shortenAddress(a as any) : '');
 
@@ -56,12 +55,10 @@
       errorMsg = '';
       products = [];
       sellerAddress = null;
-      shortSellerAddr = '';
 
       try {
         const normalized = normalizeAddress(params.seller);
         sellerAddress = normalized as `0x${string}`;
-        shortSellerAddr = shortAddr(sellerAddress);
 
         const items = await fetchSellerCatalog(normalized);
         // fetchSellerCatalog already filters by seller, but keep this defensive filter

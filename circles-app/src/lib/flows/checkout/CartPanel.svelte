@@ -104,10 +104,6 @@
     await removeLineByIdentity(seller, sku);
   }
 
-  function close(): void {
-    popupControls.close();
-  }
-
   // Lazily fetch missing products for each line in basket
   $effect(() => {
     const items = $cartState.basket?.items ?? [];

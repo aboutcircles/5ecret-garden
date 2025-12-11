@@ -124,7 +124,7 @@ export async function rewriteNamespaceFromLinks(
 
     if (count === 0) {
         // Remove the namespace entry from the profile.
-        const profileCid = await rebaseAndSaveProfile(circles as any, avatar, (prof: any) => {
+        const profileCid = await rebaseAndSaveProfile(circles, avatar, (prof: any) => {
             if (!prof.namespaces || typeof prof.namespaces !== 'object') {
                 prof.namespaces = {};
             }
@@ -167,7 +167,7 @@ export async function rewriteNamespaceFromLinks(
     const indexCid = (await circles.putJsonLd(index)) as CidV0;
 
     // Rebase profile, update namespace pointer, then update on-chain registry.
-    const profileCid = await rebaseAndSaveProfile(circles as any, avatar, (prof: any) => {
+    const profileCid = await rebaseAndSaveProfile(circles, avatar, (prof: any) => {
         if (!prof.namespaces || typeof prof.namespaces !== 'object') {
             prof.namespaces = {};
         }

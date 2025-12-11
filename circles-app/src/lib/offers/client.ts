@@ -1,20 +1,17 @@
-import {buildProduct, buildLinkDraft, type MinimalOffer, type MinimalProduct} from './jsonld';
-import {canonicaliseLink} from './canonicaliseLinkJson';
-import {normalizeAddress, type Address} from './adapters';
-import {cidV0ToDigest32, type CidV0, type Hex} from './cid';
+import { normalizeAddress, type Address } from './adapters';
+import { cidV0ToDigest32, type CidV0, type Hex } from './cid';
+import { isValidSku } from '$lib/utils/offer';
 import {
-    InvalidSkuError,
-    PinFailedError,
-    SafeOwnerSignatureUnavailableError,
-} from './errors';
-import {loadProfileOrInit, loadIndex, insertIntoHead, saveHeadAndIndex, rebaseAndSaveProfile} from './namespaces';
+  OffersClientImpl,
+  type MinimalProductInput,
+  type MinimalOfferInput,
+} from '@circles-market/sdk';
+import { toSdkAvatarSigner } from '$lib/offers/sdkAdapter';
+import type { CirclesBindings } from '$lib/offers/namespaces';
 
-// debug only
-import {bytesToHex} from '$lib/safeSigner';
-import {keccak256} from '$lib/safeSigner';
-
-export type {Hex, Address, CidV0};
-export type {MinimalProduct, MinimalOffer};
+export type { Hex, Address, CidV0 };
+export type MinimalProduct = MinimalProductInput;
+export type MinimalOffer = MinimalOfferInput;
 
 export type AppendOfferParams = {
     avatar: Address;
@@ -23,7 +20,6 @@ export type AppendOfferParams = {
     product: MinimalProduct;
     offer: MinimalOffer;
     paymentGateway?: Address; // selected payment gateway address for PayAction
-    debugSaveLinkObject?: boolean;
 };
 
 export type AppendOfferResult = {
@@ -32,21 +28,13 @@ export type AppendOfferResult = {
     headCid: CidV0;
     indexCid: CidV0;
     profileCid: CidV0;
+    /**
+     * 32-byte digest derived from profileCid (not the product payload nor link).
+     * Named for backwards-compat; callers should not assume it hashes the product.
+     */
     digest32: Hex;
     txHash?: Hex;
 };
-
-export interface CirclesBindings {
-    getLatestProfileCid(avatar: Address): Promise<CidV0 | null>;
-
-    getProfile(cid: CidV0): Promise<any | null>;
-
-    putJsonLd(obj: any): Promise<CidV0>;
-
-    updateAvatarProfileDigest(avatar: Address, cid: CidV0): Promise<Hex>;
-
-    canonicalizeJsonLd?(obj: any): Promise<string>; // optional: compare/debug only
-}
 
 export interface SafeSignerLike {
     sign(payload: Uint8Array | Hex): Promise<Hex>;
@@ -64,172 +52,85 @@ export interface ProfilesOffersClient {
 }
 
 export function createProfilesOffersClient(
-    circles: CirclesBindings,
-    safe: SafeSignerLike
+  circles: CirclesBindings,
+  safe: SafeSignerLike
 ): ProfilesOffersClient {
-    async function doAppend(name: string, payloadObj: any, p: AppendOfferParams): Promise<AppendOfferResult> {
-        const avatar = normalizeAddress(p.avatar);
-        const operator = normalizeAddress(p.operator);
+  const sdkOffers = new OffersClientImpl(circles);
 
-        const sku = p.product?.sku ?? (p as any).sku ?? '';
-        const skuOk = /^[a-z0-9][a-z0-9-_]{0,62}$/.test(sku);
-        if (!skuOk) {
-            throw new InvalidSkuError(sku);
-        }
+  async function appendOffer(p: AppendOfferParams): Promise<AppendOfferResult> {
+    const avatar = normalizeAddress(p.avatar);
+    const operator = normalizeAddress(p.operator);
+    const chainId = p.chainId ?? 100;
 
-        const chainId = p.chainId ?? 100;
-
-        let productCid: CidV0;
-        try {
-            productCid = await circles.putJsonLd(payloadObj);
-        } catch (e: any) {
-            throw new PinFailedError('product', String(e?.message ?? e));
-        }
-
-        const signerAddress = avatar;
-        const nowSec = Math.floor(Date.now() / 1000);
-        const link = await buildLinkDraft(name, productCid, chainId, signerAddress, nowSec);
-
-        // RFC 8785 canonicalization in-browser
-        const payloadBytes = canonicaliseLink(link);
-
-        // Optional compare with server canonicalization (debug only)
-        try {
-            if (typeof circles.canonicalizeJsonLd === 'function') {
-                const serverCanonText = await circles.canonicalizeJsonLd(link);
-                const serverBytes = new TextEncoder().encode(serverCanonText);
-                const localHash = keccak256(payloadBytes);
-                const serverHash = keccak256(serverBytes);
-                const sameLen = payloadBytes.length === serverBytes.length;
-
-                let sameBytes = sameLen;
-                if (sameLen) {
-                    for (let i = 0; i < payloadBytes.length; i++) {
-                        if (payloadBytes[i] !== serverBytes[i]) {
-                            sameBytes = false;
-                            break;
-                        }
-                    }
-                }
-
-                if (sameBytes) {
-                    console.debug('[circles] canonicalization: MATCH (len=', payloadBytes.length, ') hash=', localHash, ')');
-                } else {
-                    console.warn('[circles] canonicalization: MISMATCH', {
-                        localLen: payloadBytes.length,
-                        serverLen: serverBytes.length,
-                        localHash,
-                        serverHash
-                    });
-                }
-            }
-        } catch (e) {
-            console.warn('[circles] canonicalization compare failed:', (e as any)?.message ?? e);
-        }
-
-        if (!safe?.sign) {
-            throw new SafeOwnerSignatureUnavailableError();
-        }
-
-        const payloadHex = bytesToHex(payloadBytes);
-        console.debug('[circles] linkDraft(pre-sign):', JSON.stringify(link));
-        console.debug('[circles] payload.hex:', payloadHex);
-        console.debug('[circles] payload.keccak:', keccak256(payloadBytes));
-
-        const signature = await safe.sign(payloadBytes);
-        console.debug('[circles] signature.hex:', signature);
-        (link as any).signature = signature;
-
-        let linkCid: CidV0 | undefined;
-        if (p.debugSaveLinkObject) {
-            try {
-                linkCid = await circles.putJsonLd(link);
-            } catch (e: any) {
-                throw new PinFailedError('link', String(e?.message ?? e));
-            }
-        }
-
-        const {profile} = await loadProfileOrInit(circles as any, avatar);
-        const existingIndexCid = profile.namespaces?.[operator] ?? null;
-        const {index, head} = await loadIndex(circles as any, existingIndexCid ?? null);
-        const {rotated, closedHead} = insertIntoHead(head, link);
-        const {headCid, indexCid} = await saveHeadAndIndex(circles as any, head, index, closedHead);
-
-        const profileCid = await rebaseAndSaveProfile(circles as any, avatar, (prof) => {
-            if (!prof.namespaces) {
-                prof.namespaces = {};
-            }
-            prof.namespaces[operator] = indexCid;
-        });
-
-        const digest = cidV0ToDigest32(profileCid);
-        const txHash = await circles.updateAvatarProfileDigest(avatar, profileCid);
-
-        return {productCid, linkCid, headCid, indexCid, profileCid, digest32: digest, txHash};
+    const sku = p.product.sku;
+    if (!isValidSku(sku)) {
+      throw new Error(`Invalid SKU: ${sku}`);
     }
 
-    async function appendOffer(p: AppendOfferParams): Promise<AppendOfferResult> {
-        const productObj = buildProduct(p.product, p.offer);
+    const signer = toSdkAvatarSigner(avatar, chainId, safe);
 
-        // Inject schema.org PayAction onto the Offer so clients/server have a first-class pay-to.
-        try {
-            const chainId = p.chainId ?? 100;
-            // Prefer payment gateway when provided, otherwise fall back to seller avatar
-            const payTo = normalizeAddress((p.paymentGateway ?? p.avatar) as Address);
-            const offer0: any = Array.isArray((productObj as any)?.offers)
-                ? (productObj as any).offers[0]
-                : (productObj as any)?.offer ?? null;
-            if (offer0 && typeof offer0 === 'object') {
-                const price = offer0.price;
-                const priceCurrency = offer0.priceCurrency;
-                (offer0 as any).potentialAction = {
-                    '@type': 'PayAction',
-                    price,
-                    priceCurrency,
-                    recipient: { '@id': `eip155:${chainId}:${payTo}` },
-                    instrument: {
-                        '@type': 'PropertyValue',
-                        propertyID: 'eip155',
-                        value: `${chainId}:${payTo}`,
-                        name: 'pay-to',
-                    },
-                };
-            }
-        } catch (e) {
-            console.warn('[circles] failed to attach PayAction to offer:', (e as any)?.message ?? e);
-        }
+    const gateway = p.paymentGateway ? normalizeAddress(p.paymentGateway) : undefined;
 
-        const name = `product/${p.product.sku}`;
-        return doAppend(name, productObj, p);
+    const res = await sdkOffers.publishOffer({
+      avatar,
+      operator,
+      signer,
+      chainId,
+      paymentGateway: gateway as any,
+      product: p.product,
+      offer: p.offer,
+    });
+
+    const digest32 = (res as any).digest32 ?? cidV0ToDigest32(res.profileCid as CidV0);
+
+    return {
+      productCid: res.productCid as CidV0,
+      linkCid: res.linkCid as CidV0 | undefined,
+      headCid: res.headCid as CidV0,
+      indexCid: res.indexCid as CidV0,
+      profileCid: res.profileCid as CidV0,
+      digest32: digest32 as Hex,
+      txHash: (res.txHash as Hex | undefined) ?? undefined,
+    };
+  }
+
+  async function tombstone(p: {
+    avatar: Address;
+    operator: Address;
+    sku: string;
+    chainId?: number;
+  }): Promise<AppendOfferResult> {
+    const avatar = normalizeAddress(p.avatar);
+    const operator = normalizeAddress(p.operator);
+    const chainId = p.chainId ?? 100;
+
+    const skuOk = isValidSku(p.sku);
+    if (!skuOk) {
+      throw new Error(`Invalid SKU: ${p.sku}`);
     }
 
-    async function tombstone(p: {
-        avatar: Address;
-        operator: Address;
-        sku: string;
-        chainId?: number;
-    }): Promise<AppendOfferResult> {
-        const avatar = normalizeAddress(p.avatar);
-        const operator = normalizeAddress(p.operator);
-        const skuOk = /^[a-z0-9][a-z0-9-_]{0,62}$/.test(p.sku);
-        if (!skuOk) {
-            throw new InvalidSkuError(p.sku);
-        }
+    const signer = toSdkAvatarSigner(avatar, chainId, safe);
 
-        const now = Math.floor(Date.now() / 1000);
-        const obj = {
-            '@context': 'https://aboutcircles.com/contexts/circles-market/',
-            '@type': 'Tombstone',
-            sku: p.sku,
-            at: now
-        };
-        const name = `product/${p.sku}`;
+    const res = await sdkOffers.tombstone({
+      avatar,
+      operator,
+      signer,
+      chainId,
+      sku: p.sku,
+    });
 
-        const dummyProduct: MinimalProduct = {sku: p.sku, name: 'tombstone'};
-        const dummyOffer: MinimalOffer = {price: 1, priceCurrency: 'EUR'};
+    return {
+      // Tombstones do not expose the payload CID via SDK at the moment.
+      // Keep productCid empty by convention; downstream should ignore it for tombstones.
+      productCid: '' as CidV0,
+      linkCid: res.linkCid as CidV0 | undefined,
+      headCid: res.headCid as CidV0,
+      indexCid: res.indexCid as CidV0,
+      profileCid: res.profileCid as CidV0,
+      digest32: cidV0ToDigest32(res.profileCid as CidV0),
+      txHash: (res.txHash as Hex | undefined) ?? undefined,
+    };
+  }
 
-        return doAppend(name, obj, {...(p as any), product: dummyProduct, offer: dummyOffer});
-    }
-
-    return {appendOffer, tombstone};
+  return { appendOffer, tombstone };
 }

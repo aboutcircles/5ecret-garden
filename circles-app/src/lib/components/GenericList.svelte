@@ -4,14 +4,14 @@
     import { getKeyFromItem } from '$lib/stores/query/circlesQueryStore';
     import type { Readable } from 'svelte/store';
 
-    interface ListStoreValue {
-        data: EventRow[] | TransactionHistoryRow[];
+    interface ListStoreValue<T = EventRow | TransactionHistoryRow> {
+        data: T[];
         next: () => Promise<boolean>;
         ended: boolean;
     }
 
     interface Props<T extends Record<string, any> = any> {
-        store: Readable<ListStoreValue>;
+        store: Readable<ListStoreValue<T>>;
         row: Component<T>;
         // Approximate row height for placeholder sizing (px). Keep in sync with real row.
         rowHeight?: number;
