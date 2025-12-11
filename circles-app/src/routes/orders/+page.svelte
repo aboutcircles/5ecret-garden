@@ -4,7 +4,7 @@
   import OrderRow from './OrderRow.svelte';
   import type { Readable } from 'svelte/store';
   import { browser } from '$app/environment';
-  import { getOrdersByBuyer } from '$lib/cart/client';
+  import { getOrdersByBuyer, getOrder, subscribeBuyerOrderEvents, type OrderStatusEvent } from '$lib/cart/client';
   import { getAuthMeta } from '$lib/auth/siwe';
   import { signInWithSafe } from '$lib/auth/signin';
   import { avatarState } from '$lib/stores/avatar.svelte';
@@ -44,6 +44,49 @@
     const subscribers = new Set<(v: State) => void>();
     const notify = (v: State) => subscribers.forEach((fn) => fn(v));
 
+    let stopSse: (() => void) | null = null;
+
+    function ensureSse() {
+      if (stopSse) return;
+      stopSse = subscribeBuyerOrderEvents(async (evt: OrderStatusEvent) => {
+        if (!evt || typeof evt.orderId !== 'string' || typeof evt.newStatus !== 'string') return;
+        // Update the list item if present
+        const idx = state.data.findIndex((it) => it.id === evt.orderId);
+        if (idx >= 0) {
+          const cur = state.data[idx];
+          const updated = { ...cur, status: evt.newStatus };
+          const nextData = state.data.slice();
+          nextData[idx] = updated;
+          state = { ...state, data: nextData };
+          notify(state);
+        }
+        // If payment completed, refresh full snapshot for authoritative data (e.g., voucherCode)
+        if (evt.newStatus === 'https://schema.org/PaymentComplete') {
+          try {
+            const snap = await getOrder(evt.orderId!);
+            const idx2 = state.data.findIndex((it) => it.id === evt.orderId);
+            if (idx2 >= 0) {
+              const total = (snap as any)?.totalPaymentDue ?? state.data[idx2].total ?? null;
+              const next = { ...state.data[idx2], status: (snap as any)?.orderStatus ?? evt.newStatus, total, snapshot: snap };
+              const arr = state.data.slice();
+              arr[idx2] = next;
+              state = { ...state, data: arr };
+              notify(state);
+            }
+          } catch {
+            // ignore fetch errors
+          }
+        }
+      }) as (() => void) | null;
+    }
+
+    function stopSseIfIdle() {
+      if (subscribers.size === 0 && stopSse) {
+        try { stopSse(); } catch {}
+        stopSse = null;
+      }
+    }
+
     let state: State = {
       data: [],
       ended: false,
@@ -74,9 +117,12 @@
     return {
       subscribe(run: (v: State) => void) {
         subscribers.add(run);
+        // Start SSE when first subscriber appears
+        if (subscribers.size === 1) ensureSse();
         run(state);
         return () => {
           subscribers.delete(run);
+          stopSseIfIdle();
         };
       },
     } as any;
