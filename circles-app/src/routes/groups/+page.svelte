@@ -53,5 +53,5 @@
         <ActionButtonDropDown {actions}/>
     </svelte:fragment>
 
-    <GenericList store={groups} row={GroupRowView} rowHeight={64} maxPlaceholderPages={2} expectedPageSize={25} />
+    <GenericList store={groups} row={GroupRowView} rowHeight={64} maxPlaceholderPages={0} expectedPageSize={25} />
 </PageScaffold>
