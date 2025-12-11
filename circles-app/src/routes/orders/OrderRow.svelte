@@ -22,17 +22,7 @@
 
   const totalDisplay = $derived(_formatTotal(item));
 
-  function statusLabel(status?: string): string | null {
-    if (!status) return null;
-    // If it's a URL like https://schema.org/OrderProcessing, show the last segment
-    try {
-      const url = new URL(status);
-      return url.pathname.split('/').pop() || status;
-    } catch {
-      return status;
-    }
-  }
-
+  import { statusLabel } from '$lib/cart/status';
   import { popupControls, type PopupContentDefinition } from '$lib/stores/popUp';
   import OrderDetailsPopup from '$lib/orders/OrderDetailsPopup.svelte';
 

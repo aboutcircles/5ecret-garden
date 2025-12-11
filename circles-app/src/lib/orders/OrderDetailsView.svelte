@@ -55,6 +55,30 @@
       {/if}
     </div>
 
+    <!-- NEW: Status history -->
+    <div class="px-4 md:px-5 pt-3 border-t text-xs uppercase tracking-wide opacity-60">
+      Status history
+    </div>
+    <div class="px-4 md:px-5 pb-3 flex flex-col gap-1.5 text-sm">
+      {#if timeline.length === 0}
+        <div class="text-xs opacity-70">No status changes recorded.</div>
+      {:else}
+        {#each timeline as evt, idx}
+          <div class="flex items-start gap-2">
+            <div class="mt-1 w-2 h-2 rounded-full {idx === timeline.length - 1 ? 'bg-primary' : 'bg-base-300'}"></div>
+            <div class="flex flex-col">
+              <div class="font-medium">
+                {statusLabel(evt.status) ?? evt.status}
+              </div>
+              <div class="text-xs opacity-70">
+                {formatTimestamp(evt.changedAt)}
+              </div>
+            </div>
+          </div>
+        {/each}
+      {/if}
+    </div>
+
     <div class="px-4 md:px-5 py-3 border-t text-xs uppercase tracking-wide opacity-60">Items</div>
     <div class="px-4 md:px-5 pb-4 md:pb-5 flex flex-col gap-2">
       {#each snapshot.orderedItem as line, i (i)}
@@ -111,6 +135,8 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import type { Address as EvmAddress } from '@circles-sdk/utils';
   import type { OrderSnapshot } from '$lib/cart/types';
+  import type { OrderStatusEvent } from '$lib/cart/client';
+  import { formatTimestamp, statusLabel } from '$lib/cart/status';
   import { onMount } from 'svelte';
   import { fetchProductForSellerAndSku } from '$lib/market/catalogClient';
   import { getProduct, pickProductImageUrl } from '$lib/market/catalogHelpers';
@@ -119,18 +145,55 @@
 
   interface Props {
     snapshot: OrderSnapshot | null | undefined;
+    statusEvents?: OrderStatusEvent[] | null;
   }
-  let { snapshot }: Props = $props();
+  let { snapshot, statusEvents = null }: Props = $props();
 
-  function statusLabel(status?: string | null): string | null {
-    if (!status) return null;
-    try {
-      const u = new URL(status);
-      return u.pathname.split('/').pop() || status;
-    } catch {
-      return status;
+
+  type TimelineEvent = { status: string; changedAt: string };
+  let timeline: TimelineEvent[] = $state([]);
+
+  $effect(() => {
+    if (!snapshot) {
+      timeline = [];
+      return;
     }
-  }
+
+    const events: TimelineEvent[] = [];
+
+    // Build timeline from history, inferring the initial creation status from the
+    // first entry's oldStatus instead of using the current snapshot status.
+    const history = Array.isArray(statusEvents)
+      ? statusEvents
+          .filter((ev) => ev && typeof ev.newStatus === 'string' && typeof ev.changedAt === 'string')
+          .slice()
+          .sort((a, b) => String(a.changedAt).localeCompare(String(b.changedAt)))
+      : [];
+
+    if (history.length > 0) {
+      const first = history[0];
+      const initialStatus = (first.oldStatus && String(first.oldStatus)) || null;
+      const initialTime = (snapshot as any)?.orderDate ?? first.changedAt;
+      if (initialStatus) {
+        events.push({ status: initialStatus, changedAt: String(initialTime) });
+      }
+      for (const ev of history) {
+        events.push({ status: ev.newStatus, changedAt: ev.changedAt });
+      }
+    } else {
+      // No history available — fall back to a single entry using the snapshot info.
+      if ((snapshot as any)?.orderStatus && (snapshot as any)?.orderDate) {
+        events.push({
+          status: (snapshot as any).orderStatus,
+          changedAt: (snapshot as any).orderDate,
+        });
+      }
+    }
+
+    // Ensure chronological order.
+    timeline = events.sort((a, b) => a.changedAt.localeCompare(b.changedAt));
+  });
+
 
   function partyId(id?: string | null): string | null {
     if (!id) return null;

@@ -37,6 +37,190 @@ export class CartHttpError extends Error {
   }
 }
 
+// --- Order status DTOs (client-side) ---
+// Reused for both history rows and live SSE events. Some fields are optional
+// in history results and populated in SSE.
+export type OrderStatusEvent = {
+  orderId?: string; // present in SSE events
+  paymentReference?: string | null; // present in SSE events
+  oldStatus?: string | null;
+  newStatus: string;
+  changedAt: string; // ISO 8601
+};
+
+export type OrderStatusHistory = {
+  orderId: string;
+  events: OrderStatusEvent[];
+};
+
+/**
+ * GET /orders/{orderId}/status-history (auth required)
+ * Returns the timeline of status changes for an order owned by the buyer.
+ */
+export async function getOrderStatusHistory(
+  orderId: string,
+  cfg?: CartClientConfig,
+): Promise<OrderStatusHistory> {
+  const base = resolveBase(cfg);
+  const token = getAuthToken();
+  if (!token) {
+    const err = new CartHttpError(401, {}, 'Missing auth token');
+    (err as any).authRequired = true;
+    throw err;
+  }
+
+  const url = `${base}/api/cart/v1/orders/${encodeURIComponent(orderId)}/status-history`;
+
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/ld+json',
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (res.status === 404) {
+    // Unknown order or not owned by this buyer — surface empty timeline gracefully.
+    return { orderId, events: [] };
+  }
+
+  const body = await parseJson<any>(res).catch(() => ({}));
+
+  if (!res.ok) {
+    throw new CartHttpError(res.status, body, 'getOrderStatusHistory failed');
+  }
+
+  const events = Array.isArray(body?.events) ? (body.events as OrderStatusEvent[]) : [];
+  return {
+    orderId: String(body?.orderId ?? orderId),
+    events,
+  };
+}
+
+// --- Live SSE: buyer-scoped order status events ---
+export function subscribeOrderEvents(
+  apiBase: string,
+  token: string,
+  onEvent: (e: OrderStatusEvent) => void,
+  opts?: { reconnect?: boolean; minDelayMs?: number; maxDelayMs?: number },
+): () => void {
+  const base = apiBase.replace(/\/$/, '');
+  const reconnect = opts?.reconnect ?? true;
+  const minDelay = Math.max(250, opts?.minDelayMs ?? 1000);
+  const maxDelay = Math.max(minDelay, opts?.maxDelayMs ?? 15000);
+
+  let aborted = false;
+  let controller: AbortController | null = null;
+  let retryDelay = minDelay;
+
+  const connect = async () => {
+    if (aborted) return;
+    try {
+      controller = new AbortController();
+      const res = await fetch(`${base}/api/cart/v1/orders/events`, {
+        headers: {
+          Accept: 'text/event-stream',
+          Authorization: `Bearer ${token}`,
+        },
+        signal: controller.signal,
+      });
+
+      if (!res.ok || !res.body) {
+        if (!aborted && reconnect) scheduleReconnect();
+        return;
+      }
+
+      // Reset delay after successful HTTP setup
+      retryDelay = minDelay;
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      while (!aborted) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        let idx: number;
+        while ((idx = buffer.indexOf('\n\n')) >= 0) {
+          const chunk = buffer.slice(0, idx);
+          buffer = buffer.slice(idx + 2);
+          handleSseChunk(chunk, onEvent);
+        }
+      }
+
+      if (!aborted && reconnect) scheduleReconnect();
+    } catch (_) {
+      if (!aborted && reconnect) scheduleReconnect();
+    }
+  };
+
+  const scheduleReconnect = () => {
+    const delay = retryDelay;
+    retryDelay = Math.min(maxDelay, Math.floor(retryDelay * 1.7));
+    setTimeout(() => { if (!aborted) connect(); }, delay);
+  };
+
+  const handleSseChunk = (chunk: string, cb: (e: OrderStatusEvent) => void) => {
+    const lines = chunk.split('\n');
+    let eventType: string | null = null;
+    const dataLines: string[] = [];
+    for (const line of lines) {
+      if (line.startsWith('event:')) eventType = line.slice(6).trim();
+      else if (line.startsWith('data:')) dataLines.push(line.slice(5).trim());
+    }
+    if (eventType !== 'order-status' || dataLines.length === 0) return;
+    try {
+      const obj = JSON.parse(dataLines.join('\n')) as OrderStatusEvent;
+      cb(obj);
+    } catch {
+      // ignore
+    }
+  };
+
+  connect();
+
+  return () => {
+    aborted = true;
+    try { controller?.abort(); } catch {}
+  };
+}
+
+// --- Buyer-scoped SSE hub (singleton connection, multiple subscribers) ---
+let __buyerSseStop: (() => void) | null = null;
+const __buyerSseSubs = new Set<(e: OrderStatusEvent) => void>();
+let __buyerSseBase: string | null = null;
+
+function __ensureBuyerSse(cfg?: CartClientConfig) {
+  if (__buyerSseStop) return;
+  const token = getAuthToken();
+  if (!token) return;
+  const base = resolveBase(cfg);
+  __buyerSseBase = base;
+  __buyerSseStop = subscribeOrderEvents(base, token, (evt) => {
+    for (const fn of Array.from(__buyerSseSubs)) {
+      try { fn(evt); } catch {}
+    }
+  });
+}
+
+export function subscribeBuyerOrderEvents(
+  onEvent: (e: OrderStatusEvent) => void,
+  cfg?: CartClientConfig,
+): (() => void) | null {
+  const token = getAuthToken();
+  if (!token) return null;
+  __buyerSseSubs.add(onEvent);
+  __ensureBuyerSse(cfg);
+  return () => {
+    __buyerSseSubs.delete(onEvent);
+    if (__buyerSseSubs.size === 0 && __buyerSseStop) {
+      try { __buyerSseStop(); } catch {}
+      __buyerSseStop = null;
+      __buyerSseBase = null;
+    }
+  };
+}
+
 /**
  * GET /orders/{orderId} (auth required)
  * Retrieves a full order snapshot for the authenticated owner.
