@@ -73,11 +73,10 @@ export function mkCirclesBindings(pinApiBase: string | undefined, circlesSdk: Sd
   }
 
   async function getJsonLd(cid: string): Promise<any> {
-    try {
-      return await circlesSdk.profiles!.get(cid);
-    } catch {
-      return await fetchIpfsJson(cid);
-    }
+    // Fetch generic JSON-LD by CID. Do not use profiles.get here because it only
+    // understands profile documents and may return empty objects for namespace/index chunks,
+    // which would cause namespace rewrites to drop previous entries.
+    return await fetchIpfsJson(cid);
   }
 
   return {
