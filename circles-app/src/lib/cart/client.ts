@@ -166,7 +166,7 @@ export async function getOrdersByBuyer(
   const res = await fetch(url, {
     method: 'GET',
     headers: {
-      Accept: 'application/json',
+      Accept: 'application/ld+json',
       Authorization: `Bearer ${token}`,
     },
   });
