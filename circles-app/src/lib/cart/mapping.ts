@@ -2,6 +2,7 @@
 import type { Address } from '@circles-sdk/utils';
 import type { AggregatedCatalogItem } from '$lib/market/types';
 import type { OrderItemPreview } from './types';
+import { resolvePayTo } from '$lib/market/catalogHelpers';
 
 /**
  * Given an AggregatedCatalogItem and a quantity, build a basket OrderItemPreview.
@@ -17,6 +18,12 @@ export function catalogItemToOrderItem(
 
   if (!primaryOffer) {
     throw new Error('Product has no offers; cannot add to basket');
+  }
+
+  // Require a PayAction recipient (destination address) before allowing add-to-basket
+  const payTo = resolvePayTo(primaryOffer as any);
+  if (!payTo.address) {
+    throw new Error('This item has no PayAction/recipient configured; cannot add to basket');
   }
 
   if (!(quantity > 0)) {
