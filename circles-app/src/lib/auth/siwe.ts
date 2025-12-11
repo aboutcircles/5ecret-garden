@@ -1,6 +1,7 @@
 // src/lib/auth/siwe.ts
 import { browser } from '$app/environment';
 import { MARKET_API_BASE } from '$lib/config/market';
+import { getMarketClient } from '$lib/sdk/marketClient';
 
 // Prefer env override; fallback to configured MARKET_API_BASE (shared with catalog)
 const DEFAULT_BASE = (import.meta as any).env?.VITE_MARKET_API_BASE || MARKET_API_BASE;
@@ -47,31 +48,29 @@ export async function verifyChallenge(challengeId: string, signature: string, ba
   return (await res.json()) as VerifyResp;
 }
 
-// Minimal in-memory token holder (avoid localStorage for security)
-let tokenMemory: string | null = null;
-let tokenExp: number | null = null; // epoch ms
-let tokenMeta: { address: string; chainId: number } | null = null;
-
-export function setAuthToken(token: string, expiresInSeconds: number, address: string, chainId: number) {
-  tokenMemory = token;
-  // safety margin of 5 seconds
-  const ttl = Math.max(1, Math.floor(expiresInSeconds) - 5) * 1000;
-  tokenExp = Date.now() + ttl;
-  tokenMeta = { address: address.toLowerCase(), chainId };
-}
-
+// Bridge token/meta to SDK's AuthContext to avoid duplicated state
 export function getAuthToken(): string | null {
   if (!browser) return null;
-  if (!tokenMemory || !tokenExp || Date.now() >= tokenExp) return null;
-  return tokenMemory;
+  try {
+    const client = getMarketClient();
+    return client.authContext.getToken();
+  } catch (_) {
+    return null;
+  }
 }
 
 export function getAuthMeta(): { address: string; chainId: number } | null {
-  return getAuthToken() ? tokenMeta : null;
+  try {
+    const client = getMarketClient();
+    return client.auth.getAuthMeta();
+  } catch (_) {
+    return null;
+  }
 }
 
 export function clearAuth() {
-  tokenMemory = null;
-  tokenExp = null;
-  tokenMeta = null;
+  try {
+    const client = getMarketClient();
+    client.auth.signOut();
+  } catch {}
 }

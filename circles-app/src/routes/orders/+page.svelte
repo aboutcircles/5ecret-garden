@@ -4,7 +4,7 @@
   import OrderRow from './OrderRow.svelte';
   import type { Readable } from 'svelte/store';
   import { browser } from '$app/environment';
-  import { getOrdersByBuyer, getOrder, subscribeBuyerOrderEvents, type OrderStatusEvent } from '$lib/cart/client';
+  import { getOrdersByBuyer, getOrder, subscribeBuyerOrderEvents, type OrderStatusEvent } from '$lib/cart/ordersAdapter';
   import { getAuthMeta } from '$lib/auth/siwe';
   import { signInWithSafe } from '$lib/auth/signin';
   import { avatarState } from '$lib/stores/avatar.svelte';
