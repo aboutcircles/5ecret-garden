@@ -5,6 +5,10 @@
   import ImageUpload from '$lib/components/ImageUpload.svelte';
   import {normalizeAddress} from '$lib/offers/adapters';
   import {generateSku, isValidSku} from '$lib/utils/offer';
+  import { get } from 'svelte/store';
+  import { circles } from '$lib/stores/circles';
+  import { wallet } from '$lib/stores/wallet.svelte';
+  import { onMount } from 'svelte';
 
   interface Props {
     context: OfferFlowContext;
@@ -61,6 +65,35 @@
   // Advanced section toggle
   let showAdvanced = $state(false);
 
+  // Validate user has at least one payment gateway before proceeding in the flow
+  let hasGateway = $state(true);
+  onMount(async () => {
+    try {
+      const c = get(circles);
+      const owner = get(wallet)?.address as string | undefined;
+      if (!c?.circlesRpc || !owner) {
+        hasGateway = false;
+        return;
+      }
+      const resp = await c.circlesRpc.call<{ columns: string[]; rows: any[][] }>('circles_query', [
+        {
+          Namespace: 'CrcV2_PaymentGateway',
+          Table: 'GatewayCreated',
+          Columns: ['gateway'],
+          Filter: [
+            { Type: 'FilterPredicate', FilterType: 'Equals', Column: 'owner', Value: owner.toLowerCase() }
+          ],
+          Order: []
+        }
+      ]);
+      const rows = resp?.result?.rows ?? [];
+      hasGateway = rows.length > 0;
+    } catch (e) {
+      console.error('Offer step 1 gateway validation failed', e);
+      hasGateway = false;
+    }
+  });
+
   // Live preview of auto-generated SKU (when no manual sku is provided)
   const autoSku = $derived(generateSku(name || ''));
 
@@ -112,84 +145,97 @@
   }
 </script>
 
-<div class="space-y-3">
-  <!-- Name first; SKU is optional and hidden under Advanced -->
-  <label class="form-control">
-    <span class="label-text">Name</span>
-    <input class="input input-bordered" bind:value={name} placeholder="Coffee 250g"/>
-  </label>
-
-  <!-- Show live auto-generated SKU preview when no manual SKU provided -->
-  {#if !(sku && sku.trim().length > 0)}
-    <div class="text-sm opacity-70">Auto SKU (preview): {autoSku}</div>
-  {/if}
-  <label class="form-control">
-    <span class="label-text">Description</span>
-    <textarea class="textarea textarea-bordered" rows="3" bind:value={description}/>
-  </label>
-  <!-- Images: either upload multiple or paste a single URL (legacy) -->
-  <div class="space-y-2">
-    <div class="label">
-      <span class="label-text">Images</span>
-      <span class="label-text-alt opacity-70">You can add multiple images</span>
-    </div>
-    <ImageUpload
-        imageDataUrls={images}
-        onnewimage={(dataUrl) => { images = [...images, dataUrl]; }}
-        onremoveimage={(index) => { images = images.filter((_, i) => i !== index); }}
-        onclearall={() => { images = []; }}
-        mode="fit"
-        cropWidth={1600}
-        cropHeight={1600}
-    />
-  </div>
-
-  <!-- Advanced section -->
-  <div class="collapse bg-base-200">
-    <input type="checkbox" bind:checked={showAdvanced}/>
-    <div class="collapse-title text-md font-medium">Advanced</div>
-    <div class="collapse-content space-y-3">
+{#if $wallet?.address}
+  <!-- Gateway ownership gate: if user has no gateways, show message and link -->
+  {#if hasGateway}
+    <div class="space-y-3">
+      <!-- Name first; SKU is optional and hidden under Advanced -->
       <label class="form-control">
-        <span class="label-text">Product URL</span>
-        <input class="input input-bordered" bind:value={url} placeholder="https://…"/>
+        <span class="label-text">Name</span>
+        <input class="input input-bordered" bind:value={name} placeholder="Coffee 250g"/>
       </label>
 
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <label class="form-control">
-          <span class="label-text">Brand</span>
-          <input class="input input-bordered" bind:value={brand}/>
-        </label>
-        <label class="form-control">
-          <span class="label-text">MPN</span>
-          <input class="input input-bordered" bind:value={mpn}/>
-        </label>
-        <label class="form-control">
-          <span class="label-text">GTIN-13</span>
-          <input class="input input-bordered" bind:value={gtin13}/>
-        </label>
+      <!-- Show live auto-generated SKU preview when no manual SKU provided -->
+      {#if !(sku && sku.trim().length > 0)}
+        <div class="text-sm opacity-70">Auto SKU (preview): {autoSku}</div>
+      {/if}
+      <label class="form-control">
+        <span class="label-text">Description</span>
+        <textarea class="textarea textarea-bordered" rows="3" bind:value={description}/>
+      </label>
+      <!-- Images: either upload multiple or paste a single URL (legacy) -->
+      <div class="space-y-2">
+        <div class="label">
+          <span class="label-text">Images</span>
+          <span class="label-text-alt opacity-70">You can add multiple images</span>
+        </div>
+        <ImageUpload
+            imageDataUrls={images}
+            onnewimage={(dataUrl) => { images = [...images, dataUrl]; }}
+            onremoveimage={(index) => { images = images.filter((_, i) => i !== index); }}
+            onclearall={() => { images = []; }}
+            mode="fit"
+            cropWidth={1600}
+            cropHeight={1600}
+        />
       </div>
 
-      <label class="form-control">
-        <span class="label-text">Category</span>
-        <input class="input input-bordered" bind:value={category} placeholder="Grocery"/>
-      </label>
-      <label class="form-control">
-        <span class="label-text">SKU
-          {#if editMode}(locked){/if}</span>
-        <input class="input input-bordered" bind:value={sku} placeholder={autoSku} disabled={editMode}
-               readonly={editMode}/>
-        <span class="label-text-alt opacity-70">
-          {#if editMode}
-            SKU cannot be changed for existing products.
-          {:else}
-            Leave empty to auto-generate from name. Allowed: a–z, 0–9, dashes and underscores; max 63 chars.
-          {/if}
-        </span>
-      </label>
-    </div>
-  </div>
+      <!-- Advanced section -->
+      <div class="collapse bg-base-200">
+        <input type="checkbox" bind:checked={showAdvanced}/>
+        <div class="collapse-title text-md font-medium">Advanced</div>
+        <div class="collapse-content space-y-3">
+          <label class="form-control">
+            <span class="label-text">Product URL</span>
+            <input class="input input-bordered" bind:value={url} placeholder="https://…"/>
+          </label>
 
-  <div class="mt-4 flex justify-end">
-    <button type="button" class="btn btn-primary" onclick={next}>Next</button>
-  </div>
-</div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <label class="form-control">
+              <span class="label-text">Brand</span>
+              <input class="input input-bordered" bind:value={brand}/>
+            </label>
+            <label class="form-control">
+              <span class="label-text">MPN</span>
+              <input class="input input-bordered" bind:value={mpn}/>
+            </label>
+            <label class="form-control">
+              <span class="label-text">GTIN-13</span>
+              <input class="input input-bordered" bind:value={gtin13}/>
+            </label>
+          </div>
+
+          <label class="form-control">
+            <span class="label-text">Category</span>
+            <input class="input input-bordered" bind:value={category} placeholder="Grocery"/>
+          </label>
+          <label class="form-control">
+            <span class="label-text">SKU
+              {#if editMode}(locked){/if}</span>
+            <input class="input input-bordered" bind:value={sku} placeholder={autoSku} disabled={editMode}
+                   readonly={editMode}/>
+            <span class="label-text-alt opacity-70">
+              {#if editMode}
+                SKU cannot be changed for existing products.
+              {:else}
+                Leave empty to auto-generate from name. Allowed: a–z, 0–9, dashes and underscores; max 63 chars.
+              {/if}
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div class="mt-4 flex justify-end">
+        <button type="button" class="btn btn-primary" onclick={next}>Next</button>
+      </div>
+    </div>
+  {:else}
+    <div class="alert alert-info">
+      <div>
+        You need a payment gateway to create an offer. Please <a class="link" href="/gateway" target="_blank">create a gateway</a> and come back.
+      </div>
+    </div>
+  {/if}
+{:else}
+  <div class="alert">Connect your wallet to continue.</div>
+{/if}
