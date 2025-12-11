@@ -18,18 +18,27 @@
     <div class="px-4 md:px-5 pb-4 md:pb-5 grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="space-y-1">
         <div class="text-xs uppercase tracking-wide opacity-60">Customer</div>
-        <!-- Buyer (me): do NOT show avatar per requirement -->
-        <div class="font-mono text-sm break-all">{partyId(getSchemaId(snapshot.customer))}</div>
+        {#if evmFromEip155(getSchemaId(snapshot.customer))}
+          <Avatar
+            view="horizontal"
+            address={evmFromEip155(getSchemaId(snapshot.customer))}
+            bottomInfo={String(evmFromEip155(getSchemaId(snapshot.customer)))}
+          />
+        {:else}
+          <div class="font-mono text-sm break-all">{partyId(getSchemaId(snapshot.customer))}</div>
+        {/if}
       </div>
       <div class="space-y-1">
         <div class="text-xs uppercase tracking-wide opacity-60">Broker</div>
-        <div class="flex items-center gap-2 min-w-0">
-          {#if evmFromEip155(getSchemaId(snapshot.broker))}
-            <!-- Small inline avatar before broker address -->
-            <Avatar view="small_no_text" address={evmFromEip155(getSchemaId(snapshot.broker))} />
-          {/if}
-          <span class="font-mono text-sm break-all">{partyId(getSchemaId(snapshot.broker))}</span>
-        </div>
+        {#if evmFromEip155(getSchemaId(snapshot.broker))}
+          <Avatar
+            view="horizontal"
+            address={evmFromEip155(getSchemaId(snapshot.broker))}
+            bottomInfo={String(evmFromEip155(getSchemaId(snapshot.broker)))}
+          />
+        {:else}
+          <div class="font-mono text-sm break-all">{partyId(getSchemaId(snapshot.broker))}</div>
+        {/if}
       </div>
 
       {#if snapshot.shippingAddress}
@@ -79,12 +88,17 @@
                 <div class="font-medium truncate">{resolved[i]?.name || line?.orderedItem?.name || line?.orderedItem?.sku || 'Item'}</div>
                 <div class="text-xs opacity-70">Qty: {line?.orderQuantity ?? 1}</div>
                 {#if sellerIdForIndex(i)}
-                  <div class="flex items-center gap-2">
-                    {#if evmFromEip155(sellerIdForIndex(i))}
+                  {#if evmFromEip155(sellerIdForIndex(i))}
+                    <div class="mt-1 flex items-center gap-2">
                       <Avatar view="small_no_text" address={evmFromEip155(sellerIdForIndex(i))} />
-                    {/if}
-                    <span class="font-mono text-[11px] opacity-70 break-all">Seller: {sellerIdForIndex(i)}</span>
-                  </div>
+                      <div class="text-xs opacity-70">
+                        <span class="uppercase opacity-60">Seller</span>
+                        <span class="font-mono ml-1">{shortAddr(evmFromEip155(sellerIdForIndex(i)))}</span>
+                      </div>
+                    </div>
+                  {:else}
+                    <div class="text-[11px] opacity-70 break-all">Seller: {sellerIdForIndex(i)}</div>
+                  {/if}
                 {/if}
                 {#if line?.productCid}
                   <div class="font-mono text-[11px] opacity-70 break-all">{line.productCid}</div>
@@ -305,7 +319,14 @@
     }
     return undefined;
   }
-
+  
+  // Shorten an EVM address like 0x1234...ABCD
+  function shortAddr(addr?: EvmAddress | string | null): string {
+    const a = typeof addr === 'string' ? addr : (addr as any) ?? '';
+    if (!a || a.length < 10) return String(a || '');
+    return a.slice(0, 6) + '...' + a.slice(-4);
+  }
+  
   function priceDisplay(): string | null {
     const p = snapshot?.totalPaymentDue;
     if (!p) return null;
