@@ -1,18 +1,28 @@
 
 {#if snapshot}
   <section class="w-full bg-base-100 border rounded-xl shadow-sm overflow-hidden">
-    <div class="p-4 md:p-5 flex items-start justify-between gap-3">
-      <div class="min-w-0">
+    <div class="p-4 md:p-5 flex items-start justify-between gap-4">
+      <!-- Left: status + order meta -->
+      <div class="min-w-0 flex-1">
         <div class="flex items-center gap-2">
-          {#if statusLabel(snapshot.orderStatus)}
-            <span class="badge badge-ghost badge-sm">{statusLabel(snapshot.orderStatus)}</span>
-          {/if}
           <span class="font-mono text-xs opacity-70 truncate" title={snapshot.orderNumber}>{snapshot.orderNumber}</span>
+          {#if statusLabel(snapshot.orderStatus)}
+            <span class="badge badge-sm {statusClass(snapshot.orderStatus)}">{statusLabel(snapshot.orderStatus)}</span>
+          {/if}
         </div>
-        {#if priceDisplay()}
-          <div class="mt-1 text-sm">Total: <span class="font-medium">{priceDisplay()}</span></div>
-        {/if}
+        <div class="mt-1 text-xs opacity-70">
+          {#if orderDate()}
+            {formatTimestamp(orderDate())}
+          {/if}
+        </div>
       </div>
+      <!-- Right: prominent total amount like an invoice -->
+      {#if priceDisplay()}
+        <div class="shrink-0 bg-base-200/60 rounded-lg px-4 py-3 text-right">
+          <div class="text-[10px] uppercase tracking-wide opacity-60">Total</div>
+          <div class="text-xl font-semibold leading-none">{priceDisplay()}</div>
+        </div>
+      {/if}
     </div>
 
     <div class="px-4 md:px-5 pb-4 md:pb-5 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -65,13 +75,20 @@
     </div>
 
     <div class="px-4 md:px-5 py-3 border-t text-xs uppercase tracking-wide opacity-60">Items</div>
+    <!-- Simple header row to evoke an invoice table -->
+    <div class="px-4 md:px-5 text-[11px] uppercase tracking-wide opacity-60 hidden sm:flex">
+      <div class="flex-1">Description</div>
+      <div class="w-20 text-center">Qty</div>
+      <div class="w-40">Seller</div>
+    </div>
     <div class="px-4 md:px-5 pb-4 md:pb-5 flex flex-col gap-2">
       {#each snapshot.orderedItem as line, i (i)}
         <div class="border rounded-lg px-3 py-2 bg-base-200/30 cursor-pointer hover:bg-base-200/60 focus:outline-none focus:ring-2 focus:ring-primary/40"
              role="button" tabindex="0"
              onclick={() => goToOffer(i)}
              onkeydown={(e) => onKeyGoToOffer(e, i)}>
-          <div class="flex items-start justify-between gap-3">
+          <div class="sm:grid sm:grid-cols-[1fr,5rem,12rem] sm:items-center sm:gap-3 flex items-start justify-between gap-3">
+            <!-- Left column: thumbnail + title; on mobile also shows qty + seller -->
             <div class="flex items-start gap-3 min-w-0">
               <!-- Product thumbnail -->
               {#if resolved[i]?.imageUrl}
@@ -86,24 +103,45 @@
 
               <div class="min-w-0">
                 <div class="font-medium truncate">{resolved[i]?.name || line?.orderedItem?.name || line?.orderedItem?.sku || 'Item'}</div>
-                <div class="text-xs opacity-70">Qty: {line?.orderQuantity ?? 1}</div>
+                <!-- Mobile-only meta: qty and seller under description -->
+                <div class="sm:hidden text-xs opacity-70">Qty: {line?.orderQuantity ?? 1}</div>
                 {#if sellerIdForIndex(i)}
-                  {#if evmFromEip155(sellerIdForIndex(i))}
-                    <div class="mt-1 flex items-center gap-2">
-                      <Avatar view="small_no_text" address={evmFromEip155(sellerIdForIndex(i))} />
-                      <div class="text-xs opacity-70">
-                        <span class="uppercase opacity-60">Seller</span>
-                        <span class="font-mono ml-1">{shortAddr(evmFromEip155(sellerIdForIndex(i)))}</span>
+                  <div class="sm:hidden">
+                    {#if evmFromEip155(sellerIdForIndex(i))}
+                      <div class="mt-1 flex items-center gap-2">
+                        <Avatar view="small_no_text" address={evmFromEip155(sellerIdForIndex(i))} />
+                        <div class="text-xs opacity-70">
+                          <span class="uppercase opacity-60">Seller</span>
+                          <span class="font-mono ml-1">{shortAddr(evmFromEip155(sellerIdForIndex(i)))}</span>
+                        </div>
                       </div>
-                    </div>
-                  {:else}
-                    <div class="text-[11px] opacity-70 break-all">Seller: {sellerIdForIndex(i)}</div>
-                  {/if}
+                    {:else}
+                      <div class="text-[11px] opacity-70 break-all">Seller: {sellerIdForIndex(i)}</div>
+                    {/if}
+                  </div>
                 {/if}
                 {#if line?.productCid}
                   <div class="font-mono text-[11px] opacity-70 break-all">{line.productCid}</div>
                 {/if}
               </div>
+            </div>
+
+            <!-- Middle column (sm+): quantity -->
+            <div class="hidden sm:flex items-center justify-center text-sm opacity-80">{line?.orderQuantity ?? 1}</div>
+
+            <!-- Right column (sm+): seller -->
+            <div class="hidden sm:flex items-center gap-2">
+              {#if sellerIdForIndex(i)}
+                {#if evmFromEip155(sellerIdForIndex(i))}
+                  <Avatar view="small_no_text" address={evmFromEip155(sellerIdForIndex(i))} />
+                  <div class="text-xs opacity-70">
+                    <span class="uppercase opacity-60">Seller</span>
+                    <span class="font-mono ml-1">{shortAddr(evmFromEip155(sellerIdForIndex(i)))}</span>
+                  </div>
+                {:else}
+                  <div class="text-[11px] opacity-70 break-all">{sellerIdForIndex(i)}</div>
+                {/if}
+              {/if}
             </div>
           </div>
         </div>
@@ -325,6 +363,27 @@
     const a = typeof addr === 'string' ? addr : (addr as any) ?? '';
     if (!a || a.length < 10) return String(a || '');
     return a.slice(0, 6) + '...' + a.slice(-4);
+  }
+  
+  // Map status to contextual badge colors
+  function statusClass(status: any): string {
+    try {
+      const s = String(status || '').toLowerCase();
+      if (s.includes('paymentcomplete') || s.endsWith('#PaymentComplete'.toLowerCase())) return 'badge-success';
+      if (s.includes('paymentprocessing')) return 'badge-info';
+      if (s.includes('orderpaymentdue') || s.includes('paymentdue')) return 'badge-warning';
+      if (s.includes('ordercancelled') || s.includes('canceled') || s.includes('cancelled')) return 'badge-error';
+    } catch {}
+    return 'badge-ghost';
+  }
+  
+  function orderDate(): string | null {
+    try {
+      const d = (snapshot as any)?.orderDate;
+      return typeof d === 'string' ? d : null;
+    } catch {
+      return null;
+    }
   }
   
   function priceDisplay(): string | null {
