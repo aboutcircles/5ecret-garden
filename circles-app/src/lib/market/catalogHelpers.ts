@@ -75,11 +75,20 @@ function pickFirstPayAction(pa: any): any | null {
 }
 
 export function resolvePayTo(offer: any): ResolvedPayTo {
-  const action = pickFirstPayAction(offer?.potentialAction);
+  // In some catalogs, potentialAction can sit on the offer or the nested item/product
+  const action =
+    pickFirstPayAction(offer?.potentialAction) ??
+    pickFirstPayAction(offer?.itemOffered?.potentialAction) ??
+    null;
 
   const parseEip155 = (idOrValue: string | undefined): { chainId: number | null; address: string | null } => {
     if (!idOrValue) return { chainId: null, address: null };
-    const raw = idOrValue.startsWith('eip155:') ? idOrValue.slice('eip155:'.length) : idOrValue;
+    const trimmed = String(idOrValue).trim();
+    // Accept bare addresses too (assume chain null)
+    if (/^0x[0-9a-fA-F]{40}$/.test(trimmed)) {
+      return { chainId: null, address: trimmed.toLowerCase() };
+    }
+    const raw = trimmed.startsWith('eip155:') ? trimmed.slice('eip155:'.length) : trimmed;
     const [chain, addr] = raw.split(':');
     const chainId = chain ? Number(chain) : NaN;
     if (!addr || !chain || Number.isNaN(chainId)) return { chainId: null, address: null };
@@ -89,12 +98,30 @@ export function resolvePayTo(offer: any): ResolvedPayTo {
   let chainId: number | null = null;
   let address: string | null = null;
 
-  if (action?.recipient?.['@id']) {
-    const parsed = parseEip155(String(action.recipient['@id']));
-    chainId = parsed.chainId;
-    address = parsed.address;
+  // Prefer explicit recipient on PayAction
+  const rec: any = action?.recipient;
+  if (rec) {
+    // Common shapes: {"@id":"eip155:100:0x..."} | {id:"eip155:..."} | {identifier:"eip155:..."} | "eip155:..." | "0x..."
+    const idStr =
+      (typeof rec === 'string' ? rec : null) ??
+      (rec?.['@id'] ?? null) ??
+      (rec?.id ?? null) ??
+      (rec?.identifier ?? null);
+    if (typeof idStr === 'string') {
+      const parsed = parseEip155(idStr);
+      chainId = parsed.chainId;
+      address = parsed.address;
+    } else if (typeof rec?.address === 'string') {
+      // Fallback if recipient has direct address field
+      const addr = rec.address.trim();
+      if (/^0x[0-9a-fA-F]{40}$/.test(addr)) {
+        chainId = chainId ?? null;
+        address = addr.toLowerCase();
+      }
+    }
   }
 
+  // Fallback to instrument carrying eip155 destination
   if ((!chainId || !address) && action?.instrument?.propertyID === 'eip155') {
     const parsed = parseEip155(String(action.instrument.value ?? ''));
     chainId = chainId ?? parsed.chainId;
