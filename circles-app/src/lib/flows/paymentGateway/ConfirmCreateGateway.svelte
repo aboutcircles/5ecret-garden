@@ -29,15 +29,14 @@
     }
   }
 
-  function isHex32(v: string): boolean {
-    return /^0x[0-9a-fA-F]{64}$/.test((v || '').trim());
-  }
-
   const factoryValid = $derived(isAddress(context.factoryAddress));
-  const metadataValid = $derived(isHex32(context.metadataDigest));
   const nameValid = $derived((context.gatewayName ?? '').trim().length > 0);
 
-  const canSubmit = $derived(factoryValid && metadataValid && nameValid);
+  // Metadata digest is fixed to zero internally
+  const ZERO32 = '0x0000000000000000000000000000000000000000000000000000000000000000';
+  context.metadataDigest = ZERO32;
+
+  const canSubmit = $derived(factoryValid && nameValid);
 
   async function createGateway() {
     if (!canSubmit) {
@@ -50,12 +49,6 @@
     await runTask({
       name: 'Creating payment gateway…',
       promise: (async () => {
-        // Remember factory for next time
-        try {
-          localStorage.setItem('pg_factory', context.factoryAddress);
-        } catch {
-          // ignore
-        }
 
         const data = factoryIface.encodeFunctionData('createGateway', [
           context.gatewayName,
@@ -121,13 +114,9 @@
         <div class="text-base-content/70">Gateway name</div>
         <div>{context.gatewayName}</div>
       </div>
-      <div class="text-sm">
-        <div class="text-base-content/70">Metadata digest</div>
-        <div class="font-mono break-all">{context.metadataDigest}</div>
-      </div>
     </div>
 
-    {#if !factoryValid || !metadataValid || !nameValid}
+    {#if !factoryValid || !nameValid}
       <div class="alert alert-warning text-xs">
         <ul class="list-disc list-inside">
           {#if !nameValid}
@@ -135,9 +124,6 @@
           {/if}
           {#if !factoryValid}
             <li>Factory address is invalid.</li>
-          {/if}
-          {#if !metadataValid}
-            <li>Metadata digest must be a 0x-prefixed 32-byte hex string.</li>
           {/if}
         </ul>
       </div>
