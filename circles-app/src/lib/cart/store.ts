@@ -430,8 +430,8 @@ export async function checkoutCart(
   try {
     const resp = await checkoutBasket(snapshot.basketId!, cfg);
 
-    // Prefer new secret field orderKey. For a transition, accept legacy orderId.
-    const newOrderId = (resp as any)?.orderKey ?? (resp as any)?.orderId ?? null;
+    // New API: checkout returns public orderId; store it for navigation.
+    const newOrderId = (resp as any)?.orderId ?? null;
 
     cartState.update((s) => ({
       ...s,

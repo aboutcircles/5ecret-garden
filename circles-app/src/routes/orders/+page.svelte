@@ -6,7 +6,8 @@
   import { browser } from '$app/environment';
   import { getOrdersByBuyer } from '$lib/cart/client';
   import { getAuthMeta } from '$lib/auth/siwe';
-  import { signInWithWallet } from '$lib/auth/signin';
+  import { signInWithSafe } from '$lib/auth/signin';
+  import { avatarState } from '$lib/stores/avatar.svelte';
   import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
   import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
   import type { Action } from '$lib/components/layout/Action';
@@ -112,17 +113,34 @@
 
   async function ensureAuthed() {
     try {
-      await signInWithWallet();
+      const avatar = (
+        (avatarState.avatar as any)?.address ??
+        (avatarState.avatar as any)?.avatarInfo?.avatar ??
+        ''
+      ).toLowerCase();
+
+      if (!avatar || !/^0x[a-f0-9]{40}$/.test(avatar)) {
+        throw new Error('No Circles avatar address available for Safe login');
+      }
+
+      await signInWithSafe(avatar);
+
       authed = !!getAuthMeta();
       ordersStore = buildAuthedStore();
       actions = [
         { id: 'signin', label: 'Signed in', variant: 'ghost', onClick: () => {} },
       ];
     } catch (e) {
+      console.error('[orders] safe sign-in failed:', e);
       authed = false;
       ordersStore = buildFallbackStore();
       actions = [
-        { id: 'signin', label: 'Sign in to view all orders', variant: 'primary', onClick: () => ensureAuthed() },
+        {
+          id: 'signin',
+          label: 'Sign in to view all orders',
+          variant: 'primary',
+          onClick: () => { void ensureAuthed(); },
+        },
       ];
     }
   }

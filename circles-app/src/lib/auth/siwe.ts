@@ -1,8 +1,9 @@
 // src/lib/auth/siwe.ts
 import { browser } from '$app/environment';
+import { MARKET_API_BASE } from '$lib/config/market';
 
-// Prefer env override, fallback to existing MARKET_API_BASE
-const DEFAULT_BASE = (import.meta as any).env?.VITE_MARKET_API_BASE || 'https://static.174.163.76.144.clients.your-server.de/market';
+// Prefer env override; fallback to configured MARKET_API_BASE (shared with catalog)
+const DEFAULT_BASE = (import.meta as any).env?.VITE_MARKET_API_BASE || MARKET_API_BASE;
 
 export type ChallengeResp = {
   challengeId: string;

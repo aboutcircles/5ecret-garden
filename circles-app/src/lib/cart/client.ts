@@ -38,32 +38,38 @@ export class CartHttpError extends Error {
 }
 
 /**
- * POST /orders/lookup
- * Accepts an order capability key in the request body. For a transition period,
- * legacy clients may still pass an orderId value, which we forward under the
- * deprecated field as well.
+ * GET /orders/{orderId} (auth required)
+ * Retrieves a full order snapshot for the authenticated owner.
+ * Use this in new clients instead of the legacy POST /orders/lookup.
  */
 export async function getOrder(
-  orderKeyOrId: string,
+  orderId: string,
   cfg?: CartClientConfig,
 ): Promise<OrderSnapshot> {
   const base = resolveBase(cfg);
-  const url = `${base}/api/cart/v1/orders/lookup`;
+  const token = getAuthToken();
+  if (!token) {
+    const err = new CartHttpError(401, {}, 'Missing auth token');
+    (err as any).authRequired = true;
+    throw err;
+  }
+  const url = `${base}/api/cart/v1/orders/${encodeURIComponent(orderId)}`;
 
   const res = await fetch(url, {
-    method: 'POST',
+    method: 'GET',
     headers: {
-      'Content-Type': 'application/ld+json; charset=utf-8',
       Accept: 'application/ld+json',
+      Authorization: `Bearer ${token}`,
     },
-    // Send both fields for transitional compatibility; server will prefer orderKey
-    body: JSON.stringify({ orderKey: orderKeyOrId, orderId: orderKeyOrId }),
   });
 
   const body = await parseJson<unknown>(res).catch(() => ({}));
 
   if (res.status === 200) {
     return body as OrderSnapshot;
+  }
+  if (res.status === 401) {
+    throw new CartHttpError(401, body, 'Unauthorized');
   }
   if (res.status === 404) {
     throw new CartHttpError(404, body, 'Order not found');
@@ -72,7 +78,43 @@ export async function getOrder(
 }
 
 /**
- * POST /orders/batch
+ * Legacy compat: POST /orders/lookup (auth required)
+ * Treats provided id as orderId. Prefer getOrder() above and migrate callers.
+ */
+export async function getOrderViaLookup(
+  orderId: string,
+  cfg?: CartClientConfig,
+): Promise<OrderSnapshot> {
+  const base = resolveBase(cfg);
+  const token = getAuthToken();
+  if (!token) {
+    const err = new CartHttpError(401, {}, 'Missing auth token');
+    (err as any).authRequired = true;
+    throw err;
+  }
+  const url = `${base}/api/cart/v1/orders/lookup`;
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      Accept: 'application/ld+json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ orderId }),
+  });
+
+  const body = await parseJson<unknown>(res).catch(() => ({}));
+
+  if (res.status === 200) return body as OrderSnapshot;
+  if (res.status === 401) throw new CartHttpError(401, body, 'Unauthorized');
+  if (res.status === 404) throw new CartHttpError(404, body, 'Order not found');
+  throw new CartHttpError(res.status, body);
+}
+
+/**
+ * POST /orders/batch (public by ids)
+ * Note: This endpoint remains public and must not leak owner-only fields.
  */
 export async function getOrdersBatch(
   ids: string[],
@@ -87,8 +129,7 @@ export async function getOrdersBatch(
       'Content-Type': 'application/ld+json; charset=utf-8',
       Accept: 'application/ld+json',
     },
-    // Send new field `keys` while keeping legacy `ids` for transition
-    body: JSON.stringify({ keys: ids, ids }),
+    body: JSON.stringify({ ids }),
   });
 
   const body = await parseJson<any>(res).catch(() => ({}));
@@ -318,8 +359,7 @@ export async function previewOrder(
  * POST /baskets/{id}/checkout
  */
 export type CheckoutResponse = {
-  orderKey?: string; // new, secret
-  orderId?: string; // deprecated transitional support
+  orderId: string;
   basketId: string;
   orderCid: string | null;
   paymentReference?: string; // non-secret, public correlation
