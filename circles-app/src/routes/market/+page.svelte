@@ -1,13 +1,13 @@
 <script lang="ts">
-    import {onMount} from 'svelte';
+    import {onMount, onDestroy} from 'svelte';
     import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
     import {popupControls} from '$lib/stores/popUp';
     import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
     import ProductCard from '$lib/components/ProductCard.svelte';
     import ProfileExplorer from "$lib/flows/offer/ProfileExplorer.svelte";
     import { MARKET_API_BASE, MARKET_OPERATOR } from '$lib/config/market';
-    import { fetchGlobalCatalog } from '$lib/market/catalogClient';
-    import type { AggregatedCatalog, AggregatedCatalogItem } from '$lib/market/types';
+    import { fetchCatalogPage } from '$lib/market/catalogClient';
+    import type { AggregatedCatalogItem } from '$lib/market/types';
     import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/components/layout/Action';
@@ -23,20 +23,54 @@
     let loading: boolean = $state(true);
     let errorMsg: string = $state('');
     let products: ProductLike[] = $state([]);
+    let nextCursor: string | null = $state(null);
+    let hasMore: boolean = $state(false);
+
+    // Infinite scroll sentinel and observer
+    let sentinel: HTMLDivElement | null = null;
+    let io: IntersectionObserver | null = null;
+    let observed: Element | null = null;
+
+    // Reactively (un)observe the sentinel when it changes or when hasMore toggles
+    $effect(() => {
+      if (!io) return;
+      const target = hasMore ? sentinel : null;
+      if (observed && observed !== target) {
+        io.unobserve(observed);
+        observed = null;
+      }
+      if (target && observed !== target) {
+        io.observe(target);
+        observed = target;
+      }
+    });
 
     import { shortenAddress } from '$lib/utils/shared';
     const shortAddr = (a?: string) => (a ? shortenAddress(a as any) : '');
 
+    const PAGE_SIZE = 20;
+
     // ————————————————————————————————————————————
-    // data load
+    // data load with pagination
     // ————————————————————————————————————————————
-    async function loadCatalog(): Promise<void> {
+    const avatars: `0x${string}`[] = [
+      '0x1327c3cf61c6df3e0cf69faa4590281d6f675ce5',
+      '0xde374ece6fa50e781e81aac78e811b33d16912c7',
+      '0x314278c65545f0f96f8fe0836ad92b3326bfff2e'
+    ];
+
+    async function loadFirstPage(): Promise<void> {
       loading = true;
       errorMsg = '';
       products = [];
+      nextCursor = null;
+      hasMore = false;
 
       try {
-        products = await fetchGlobalCatalog();
+        const page = await fetchCatalogPage({ avatars, pageSize: PAGE_SIZE, chainId: 100 });
+        products = page.items;
+        nextCursor = page.nextCursor;
+        hasMore = !!nextCursor;
       } catch (err: unknown) {
         const msg =
           err instanceof Error ? err.message : typeof err === 'string' ? err : 'Unknown error';
@@ -46,7 +80,56 @@
       }
     }
 
-    onMount(loadCatalog);
+    async function loadNextPage(): Promise<void> {
+      if (!nextCursor || loading) return;
+      loading = true;
+      errorMsg = '';
+      try {
+        const page = await fetchCatalogPage({ avatars, pageSize: PAGE_SIZE, chainId: 100, cursor: nextCursor });
+        products = products.concat(page.items);
+        nextCursor = page.nextCursor;
+        hasMore = !!nextCursor;
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : typeof err === 'string' ? err : 'Unknown error';
+        // Treat 416 as end-of-results if bubbled
+        if (msg.includes('416')) {
+          hasMore = false;
+        } else {
+          errorMsg = msg;
+        }
+      } finally {
+        loading = false;
+      }
+    }
+
+    onMount(() => {
+      // Initialize IntersectionObserver for infinite scroll
+      io = new IntersectionObserver((entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            // Guard with `loading` and `hasMore` to avoid duplicate fetches
+            if (!loading && hasMore) {
+              void loadNextPage();
+            }
+          }
+        }
+      }, { root: null, rootMargin: '600px 0px 600px 0px', threshold: 0 });
+
+      void loadFirstPage();
+
+      return () => {
+        if (io) {
+          try {
+            if (observed) io.unobserve(observed);
+          } catch {}
+          try {
+            io.disconnect();
+          } catch {}
+          io = null;
+          observed = null;
+        }
+      };
+    });
 
     // Basket button moved to global header; inline basket trigger removed here
 
@@ -55,7 +138,7 @@
         title: 'Create Offer',
         component: OfferStep1,
         props: { context: { operator: OPERATOR, pinApiBase: API_BASE } },
-        onClose: () => { void loadCatalog(); }
+        onClose: () => { void loadFirstPage(); }
       });
     }
 
@@ -169,10 +252,20 @@
                         <ProductCard
                             product={p}
                             showSellerInfo={true}
-                            ondeleted={() => loadCatalog()}
+                            ondeleted={() => loadFirstPage()}
                         />
                     {/each}
                 </div>
+                {#if hasMore}
+                    <!-- Infinite scroll sentinel: observed by IntersectionObserver to auto-load next page -->
+                    <div bind:this={sentinel} class="h-2 w-full"></div>
+                    <!-- Fallback manual button for accessibility -->
+                    <div class="flex justify-center mt-4">
+                        <button class="btn btn-outline" disabled={loading} on:click={loadNextPage}>
+                            {loading ? 'Loading…' : 'Load more'}
+                        </button>
+                    </div>
+                {/if}
             {/if}
         </section>
     {/if}
