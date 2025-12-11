@@ -2,6 +2,12 @@
   import { popupControls } from '$lib/stores/popUp';
   import OfferStep3 from './3_PreviewPublish.svelte';
   import type { OfferFlowContext } from './types';
+  import { get } from 'svelte/store';
+  import { onMount } from 'svelte';
+  import { circles } from '$lib/stores/circles';
+  import { wallet } from '$lib/stores/wallet.svelte';
+  import Avatar from '$lib/components/avatar/Avatar.svelte';
+  import type { Address } from '@circles-sdk/utils';
 
   interface Props { context: OfferFlowContext; }
   let { context }: Props = $props();
@@ -110,15 +116,76 @@
     reqBillCountry = v;
   }
 
+  // Payment gateway selection state
+  let loadingGateways: boolean = $state(false);
+  let gateways: string[] = $state([]);
+  let selectedGateway: string = $state((context.draft?.paymentGateway as string) ?? '');
+
+  async function loadMyGatewaysFor(owner: Address): Promise<void> {
+    const c = get(circles);
+    if (!owner || !c?.circlesRpc) {
+      gateways = [];
+      return;
+    }
+    try {
+      loadingGateways = true;
+      const resp = await c.circlesRpc.call<{ columns: string[]; rows: any[][] }>('circles_query', [
+        {
+          Namespace: 'CrcV2_PaymentGateway',
+          Table: 'GatewayCreated',
+          Columns: ['gateway'],
+          Filter: [
+            { Type: 'FilterPredicate', FilterType: 'Equals', Column: 'owner', Value: owner.toLowerCase() }
+          ],
+          Order: []
+        }
+      ]);
+      const cols = resp?.result?.columns ?? [];
+      const rows = resp?.result?.rows ?? [];
+      const idxG = cols.indexOf('gateway');
+      gateways = rows
+        .map((r) => (r[idxG] ? (r[idxG] as string) : ''))
+        .filter((g) => typeof g === 'string' && g.length > 0)
+        .map((g) => g.toLowerCase());
+
+      // Preselect existing draft gateway or the first one
+      const current = (context.draft?.paymentGateway ?? '').toString().toLowerCase();
+      if (current && gateways.includes(current)) {
+        selectedGateway = current;
+      } else if (gateways.length > 0) {
+        selectedGateway = gateways[0];
+      } else {
+        selectedGateway = '';
+      }
+    } catch (e) {
+      console.error('loadMyGatewaysFor', e);
+      gateways = [];
+      selectedGateway = '';
+    } finally {
+      loadingGateways = false;
+    }
+  }
+
+  onMount(async () => {
+    const walletVal = get(wallet);
+    const sellerRaw = walletVal?.address as Address | undefined;
+    if (sellerRaw) await loadMyGatewaysFor(sellerRaw as Address);
+  });
+
+  function asAddress(s: string | undefined): Address | undefined { return s as unknown as Address; }
+
   function next(): void {
     const priceOk = Number(price) > 0;
+    const gwOk = !!selectedGateway;
 
     if (!priceOk) { throw new Error('Price must be > 0.'); }
+    if (!gwOk) { throw new Error('Select a payment gateway.'); }
 
     context.draft = {
       ...context.draft!,
       price: Number(price),
       priceCurrency: 'CRC',
+      paymentGateway: selectedGateway as unknown as Address,
       availabilityFeed: availabilityFeed || undefined,
       inventoryFeed: inventoryFeed || undefined,
       availableDeliveryMethod: availableDeliveryMethod || undefined,
@@ -157,6 +224,7 @@
       ...context.draft!,
       price: Number(price) || undefined,
       priceCurrency: (priceCurrency ?? '').trim() || undefined,
+      paymentGateway: (selectedGateway ?? '').trim() || undefined,
       availabilityFeed: (availabilityFeed ?? '').trim() || undefined,
       inventoryFeed: (inventoryFeed ?? '').trim() || undefined,
       availableDeliveryMethod: (availableDeliveryMethod ?? '').trim() || undefined,
@@ -190,6 +258,34 @@
     <span class="label-text">Price (CRC)</span>
     <input class="input input-bordered" type="number" step="0.01" min="0" bind:value={price} />
   </label>
+
+  <!-- Payment gateway row -->
+  <div class="form-control">
+    <div class="label">
+      <span class="label-text">Payment gateway</span>
+    </div>
+    {#if loadingGateways}
+      <div class="opacity-70 text-sm">Loading…</div>
+    {:else if gateways.length === 0}
+      <div class="opacity-70 text-sm">No gateways found. <a class="link" href="/gateway" target="_blank">Create one</a> and come back.</div>
+    {:else}
+      <!-- Custom dropdown to show Avatar names -->
+      <div class="dropdown">
+        <div tabindex="0" role="button" class="btn btn-outline justify-start">
+          <Avatar address={asAddress(selectedGateway)} view="horizontal" bottomInfo={selectedGateway} clickable={false} />
+        </div>
+        <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-[1] w-72 p-2 shadow">
+          {#each gateways as gw}
+            <li>
+              <button type="button" class="flex items-center gap-2" onclick={() => { selectedGateway = gw; }}>
+                <Avatar address={asAddress(gw)} view="horizontal" bottomInfo={gw} clickable={false} />
+              </button>
+            </li>
+          {/each}
+        </ul>
+      </div>
+    {/if}
+  </div>
 
   <!-- Delivery method row -->
   <label class="form-control">
