@@ -26,6 +26,10 @@ export type OfferDraft = {
    */
   requiredSlots?: string[];
 
+  // Fulfillment
+  fulfillmentEndpoint?: string; // absolute URL
+  fulfillmentTrigger?: 'confirmed' | 'finalized';
+
   // Payment
   paymentGateway?: Address; // selected payment gateway address used for PayAction
 };

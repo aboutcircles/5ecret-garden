@@ -48,6 +48,9 @@ export type MinimalOffer = {
    * Server recognizes an initial set (e.g., "contactPoint.email", "contactPoint.telephone").
    */
   requiredSlots?: string[];
+  // Fulfillment integration (optional)
+  fulfillmentEndpoint?: string; // absolute URL
+  fulfillmentTrigger?: 'confirmed' | 'finalized';
 };
 
 const SIZE_LIMIT = 8 * 1024 * 1024; // 8 MiB
@@ -106,6 +109,7 @@ export function buildProduct(product: MinimalProduct, offer: MinimalOffer): any 
   ensureAbsoluteUri('offer.availabilityFeed', offer.availabilityFeed);
   ensureAbsoluteUri('offer.inventoryFeed', offer.inventoryFeed);
   ensureAbsoluteUri('offer.url', offer.url);
+  ensureAbsoluteUri('offer.fulfillmentEndpoint', (offer as any).fulfillmentEndpoint);
 
   // Validate product URL if present
   ensureAbsoluteUri('product.url', product.url);
@@ -143,6 +147,13 @@ export function buildProduct(product: MinimalProduct, offer: MinimalOffer): any 
     if (filtered.length > 0) {
       offerObj.requiredSlots = filtered;
     }
+  }
+  // Fulfillment fields (optional)
+  if ((offer as any).fulfillmentEndpoint) {
+    offerObj.fulfillmentEndpoint = (offer as any).fulfillmentEndpoint;
+  }
+  if ((offer as any).fulfillmentTrigger) {
+    offerObj.fulfillmentTrigger = (offer as any).fulfillmentTrigger;
   }
 
   obj.offers = [offerObj];
