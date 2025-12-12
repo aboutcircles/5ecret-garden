@@ -4,15 +4,15 @@ import type { CidV0 } from '$lib/offers/cid';
 import type { ProfilesBindings } from '@circles-market/sdk';
 import { ipfsGatewayUrl } from '$lib/utils/ipfs';
 
-export type CirclesBindings = ProfilesBindings;
+export interface AppProfilesBindings extends ProfilesBindings {
+  pinMediaBytes: (bytes: Uint8Array, mime?: string | null) => Promise<string>;
+  gatewayUrlForCid: (cid: string) => string;
+}
 
 export function mkCirclesBindings(
   pinApiBase: string | undefined,
   circlesSdk: Sdk,
-): CirclesBindings & {
-  pinMediaBytes: (bytes: Uint8Array, mime?: string | null) => Promise<string>;
-  gatewayUrlForCid: (cid: string) => string;
-} {
+): AppProfilesBindings { 
   if (!circlesSdk) throw new Error('Circles SDK not initialized');
   if (!circlesSdk.profiles) throw new Error('Profiles service not configured');
 

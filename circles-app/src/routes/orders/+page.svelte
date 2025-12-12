@@ -4,8 +4,9 @@
   import OrderRow from './OrderRow.svelte';
   import type { Readable } from 'svelte/store';
   import { browser } from '$app/environment';
-  import { getOrdersByBuyer, getOrder, subscribeBuyerOrderEvents, type OrderStatusEvent } from '$lib/cart/ordersAdapter';
-  import { getAuthMeta } from '$lib/auth/siwe';
+  import { getOrdersByBuyer, getOrder, subscribeBuyerOrderEvents } from '$lib/orders/ordersAdapter';
+  import type { OrderStatusSseEvent } from '$lib/orders/types';
+  import { getMarketClient } from '$lib/sdk/marketClient';
   import { signInWithSafe } from '$lib/auth/signin';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
@@ -18,23 +19,18 @@
     total?: { price?: number | null; priceCurrency?: string | null } | null;
     customerId?: string | null;
     snapshot?: any; // full order snapshot for popup
-  } & { blockNumber: number; transactionIndex: number; logIndex: number; address?: string };
+  };
 
   // Build a simple readable-like object compatible with GenericList
   let ordersStore: Readable<{ data: ListItem[]; next: () => Promise<boolean>; ended: boolean }>;
 
   function mapItems(items: any[]): ListItem[] {
-    const now = Date.now();
     return items.map((s, i) => ({
       // Use non-secret orderNumber if available; otherwise fall back to paymentReference
       id: (s as any)?.orderNumber ?? (s as any)?.paymentReference ?? `ord_${i}`,
       status: (s as any)?.orderStatus,
       total: (s as any)?.totalPaymentDue ?? null,
       customerId: (s as any)?.customer?.['@id'] ?? null,
-      blockNumber: now - i,
-      transactionIndex: i,
-      logIndex: 0,
-      address: (s as any)?.orderNumber ?? (s as any)?.paymentReference ?? undefined,
       snapshot: s,
     }));
   }
@@ -48,8 +44,8 @@
 
     function ensureSse() {
       if (stopSse) return;
-      stopSse = subscribeBuyerOrderEvents(async (evt: OrderStatusEvent) => {
-        if (!evt || typeof evt.orderId !== 'string' || typeof evt.newStatus !== 'string') return;
+      stopSse = subscribeBuyerOrderEvents(async (evt: OrderStatusSseEvent) => {
+        if (!evt || typeof evt.orderId !== 'string') return;
         // Update the list item if present
         const idx = state.data.findIndex((it) => it.id === evt.orderId);
         if (idx >= 0) {
@@ -179,7 +175,7 @@
 
       await signInWithSafe(avatar);
 
-      authed = !!getAuthMeta();
+      authed = !!getMarketClient().auth.getAuthMeta();
       ordersStore = buildAuthedStore();
       actions = [
         { id: 'signin', label: 'Signed in', variant: 'ghost', onClick: () => {} },
@@ -201,7 +197,7 @@
 
   // Build on client only
   if (browser) {
-    authed = !!getAuthMeta();
+    authed = !!getMarketClient().auth.getAuthMeta();
     ordersStore = authed ? buildAuthedStore() : buildFallbackStore();
     actions = [
       {
@@ -227,7 +223,7 @@
   <svelte:fragment slot="meta">
     {authed
       ? 'Orders for the authenticated wallet'
-      : 'Recent orders stored on this device (sign in to see all)'}
+      : 'Sign in to view orders'}
   </svelte:fragment>
   <svelte:fragment slot="actions">
     <ActionButtonBar {actions} />
@@ -239,5 +235,5 @@
     <ActionButtonDropDown {actions} />
   </svelte:fragment>
 
-  <GenericList store={ordersStore} row={OrderRow} />
+  <GenericList store={ordersStore} row={OrderRow} getKey={(it) => it.id} />
 </PageScaffold>

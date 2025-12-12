@@ -6,8 +6,8 @@ import {
   type AvatarSigner,
   type MinimalProductInput,
   type MinimalOfferInput,
+  type ProfilesBindings,
 } from '@circles-market/sdk';
-import type { ProfilesBindings } from '@circles-market/sdk';
 import type { Address } from '@circles-sdk/utils';
 
 export type { Hex, Address, CidV0 };
@@ -20,10 +20,11 @@ export type AppendOfferParams = {
   chainId?: number;
   product: MinimalProduct;
   offer: MinimalOffer;
-  paymentGateway?: Address; // selected payment gateway address for PayAction
+  paymentGateway?: Address;
 };
 
-export type AppendOfferResult = {
+export type PublishOfferResult = {
+  kind: 'publish';
   productCid: CidV0;
   linkCid?: CidV0;
   headCid: CidV0;
@@ -37,19 +38,26 @@ export type AppendOfferResult = {
   txHash?: Hex;
 };
 
+export type TombstoneResult = {
+  kind: 'tombstone';
+  sku: string;
+  linkCid?: CidV0;
+  headCid: CidV0;
+  indexCid: CidV0;
+  profileCid: CidV0;
+  digest32: Hex;
+  txHash?: Hex;
+};
+
+export type AppendOfferResult = PublishOfferResult | TombstoneResult;
+
 export interface SafeSignerLike {
   sign(payload: Uint8Array | Hex): Promise<Hex>;
 }
 
 export interface ProfilesOffersClient {
-  appendOffer(p: AppendOfferParams): Promise<AppendOfferResult>;
-
-  tombstone(p: {
-    avatar: Address;
-    operator: Address;
-    sku: string;
-    chainId?: number;
-  }): Promise<AppendOfferResult>;
+  appendOffer(p: AppendOfferParams): Promise<PublishOfferResult>;
+  tombstone(p: { avatar: Address; operator: Address; sku: string; chainId?: number }): Promise<TombstoneResult>;
 }
 
 function assertHex32(label: string, v: unknown): Hex {
@@ -88,13 +96,10 @@ function toAvatarSigner(avatar: string, chainId: number, safe: SafeSignerLike): 
   };
 }
 
-export function createProfilesOffersClient(
-  circles: ProfilesBindings,
-  safe: SafeSignerLike,
-): ProfilesOffersClient {
+export function createProfilesOffersClient(circles: ProfilesBindings, safe: SafeSignerLike): ProfilesOffersClient {
   const sdkOffers = new OffersClientImpl(circles);
 
-  async function appendOffer(p: AppendOfferParams): Promise<AppendOfferResult> {
+  async function appendOffer(p: AppendOfferParams): Promise<PublishOfferResult> {
     const avatar = normalizeAddress(p.avatar);
     const operator = normalizeAddress(p.operator);
     const chainId = p.chainId ?? 100;
@@ -118,6 +123,7 @@ export function createProfilesOffersClient(
         : cidV0ToDigest32(res.profileCid as CidV0);
 
     return {
+      kind: 'publish',
       productCid: res.productCid as CidV0,
       linkCid: res.linkCid as CidV0 | undefined,
       headCid: res.headCid as CidV0,
@@ -128,12 +134,7 @@ export function createProfilesOffersClient(
     };
   }
 
-  async function tombstone(p: {
-    avatar: Address;
-    operator: Address;
-    sku: string;
-    chainId?: number;
-  }): Promise<AppendOfferResult> {
+  async function tombstone(p: { avatar: Address; operator: Address; sku: string; chainId?: number }): Promise<TombstoneResult> {
     const avatar = normalizeAddress(p.avatar);
     const operator = normalizeAddress(p.operator);
     const chainId = p.chainId ?? 100;
@@ -149,9 +150,8 @@ export function createProfilesOffersClient(
     });
 
     return {
-      // Tombstones do not expose the payload CID via SDK at the moment.
-      // Keep productCid empty by convention; downstream should ignore it for tombstones.
-      productCid: '' as CidV0,
+      kind: 'tombstone',
+      sku: p.sku,
       linkCid: res.linkCid as CidV0 | undefined,
       headCid: res.headCid as CidV0,
       indexCid: res.indexCid as CidV0,

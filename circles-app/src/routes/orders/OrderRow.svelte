@@ -12,17 +12,16 @@
 
   // In runes mode, $derived expects an expression, not a function value.
   // Use a helper and call it inside $derived(...) to avoid rendering a function as text.
-  function _formatTotal(it: Props['item']): string | null {
-    const price = it.total?.price;
-    const cur = it.total?.priceCurrency || '';
-    if (price == null || !Number.isFinite(Number(price))) return null;
-    const val = Number(price).toFixed(2);
-    return cur ? `${val} ${cur}` : val;
-  }
+  import { formatCurrency } from '$lib/utils/money';
 
-  const totalDisplay = $derived(_formatTotal(item));
+  const totalDisplay = $derived((() => {
+    const price = item.total?.price ?? null;
+    const cur = item.total?.priceCurrency ?? null;
+    const formatted = price == null ? null : formatCurrency(price as number, cur as string | null);
+    return formatted;
+  })());
 
-  import { statusLabel } from '$lib/cart/status';
+  import { statusLabel } from '$lib/orders/status';
   import { popupControls, type PopupContentDefinition } from '$lib/stores/popUp';
   import OrderDetailsPopup from '$lib/orders/OrderDetailsPopup.svelte';
 

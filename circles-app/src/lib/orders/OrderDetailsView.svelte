@@ -237,12 +237,12 @@
 </style>
 
 <script lang="ts">
-  import { formatCurrency } from '$lib/cart/money';
+  import { formatCurrency } from '$lib/utils/money';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import type { Address as EvmAddress } from '@circles-sdk/utils';
-  import type { OrderSnapshot } from '$lib/cart/types';
-  import type { OrderStatusEvent } from '$lib/cart/ordersAdapter';
-  import { formatTimestamp, statusLabel } from '$lib/cart/status';
+  import type { OrderSnapshot } from '$lib/orders/types';
+  import type { OrderStatusChange } from '$lib/orders/types';
+  import { formatTimestamp, statusLabel } from '$lib/orders/status';
   import { onMount } from 'svelte';
   import { fetchProductForSellerAndSku } from '$lib/market/catalogClient';
   import { getProduct, pickProductImageUrl } from '$lib/market/catalogHelpers';
@@ -251,7 +251,7 @@
 
   interface Props {
     snapshot: OrderSnapshot | null | undefined;
-    statusEvents?: OrderStatusEvent[] | null;
+    statusEvents?: OrderStatusChange[] | null;
   }
   let { snapshot, statusEvents = null }: Props = $props();
 

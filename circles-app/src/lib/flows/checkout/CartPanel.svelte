@@ -12,6 +12,7 @@
   import { pickFirstProductImageUrl } from '$lib/market/imageHelpers';
   import CheckoutForms from '$lib/flows/checkout/CheckoutForms.svelte';
   import CheckoutReview from '$lib/flows/checkout/CheckoutReview.svelte';
+  import { formatCurrency } from '$lib/utils/money';
 
   // ————————————————————————————————————————————
   // Product metadata resolver via shared catalog client
@@ -40,13 +41,6 @@
     const item = findCatalogItem(line?.seller as string | undefined, line?.orderedItem?.sku as string | undefined);
     if (!item) return null;
     return pickFirstProductImageUrl(item.product);
-  }
-
-  function formatCurrency(amount: number | null | undefined, code: string | null | undefined): string {
-    if (amount == null || !Number.isFinite(amount)) return '?';
-    const val = Number(amount);
-    const rounded = val.toFixed(2);
-    return code ? `${rounded} ${code}` : rounded;
   }
 
   async function handleQuantityChange(

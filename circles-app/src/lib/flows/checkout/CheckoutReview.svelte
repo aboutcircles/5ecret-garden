@@ -108,7 +108,7 @@
         return parts.length ? parts.join(' • ') : null;
     }
 
-    import { formatCurrency } from '$lib/cart/money';
+    import { formatCurrency } from '$lib/utils/money';
 
     function getLineUnitPrice(line: any): { amount: number | null; code: string | null } {
         const snap = line?.offerSnapshot;

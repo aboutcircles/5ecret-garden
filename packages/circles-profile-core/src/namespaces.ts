@@ -15,7 +15,7 @@ export interface ProfilesBindings {
  * replaced by bindings.getJsonLd when you have your own gateway.
  */
 export async function fetchIpfsJson(cid: string, gatewayUrl?: string): Promise<any> {
-  const url = (gatewayUrl ?? 'https://ipfs.io') + '/ipfs/' + cid;
+  const url = (gatewayUrl ?? 'https://da08cae2-8b50-45dc-80b9-48925be78ec8.myfilebase.com') + '/ipfs/' + cid;
   const res = await fetch(url, { method: 'GET' });
   if (!res.ok) {
     throw new Error(`Failed to fetch IPFS JSON: ${res.status} ${res.statusText}`);

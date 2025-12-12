@@ -43,49 +43,29 @@
   let reqBillPostal = $state(Boolean(context.draft?.requiredSlots?.includes('billingAddress.postalCode')));
   let reqBillCountry = $state(Boolean(context.draft?.requiredSlots?.includes('billingAddress.addressCountry')));
 
-  // Machine-parsable descriptor of the slot hierarchy (for dynamic UIs/parsers)
-  // This mirrors the currently recognized keys and provides a stable tree structure.
-  // NOTE: Currently unused in the UI; kept as a machine-readable spec for requiredSlots.
-  const slotTree = [
-    {
-      id: 'contact',
-      label: 'Contact',
-      children: [
-        { key: 'contactPoint.email', label: 'Email' },
-        { key: 'contactPoint.telephone', label: 'Telephone' },
-      ],
-    },
-    {
-      id: 'age',
-      label: 'Age verification',
-      children: [
-        { key: 'ageProof', label: 'Age proof object' },
-        { key: 'ageProof.birthDate', label: 'Birth date' },
-      ],
-    },
-    {
-      id: 'shipping',
-      label: 'Shipping address',
-      children: [
-        { key: 'shippingAddress', label: 'Address object' },
-        { key: 'shippingAddress.streetAddress', label: 'Street address' },
-        { key: 'shippingAddress.addressLocality', label: 'City / locality' },
-        { key: 'shippingAddress.postalCode', label: 'Postal code' },
-        { key: 'shippingAddress.addressCountry', label: 'Country' },
-      ],
-    },
-    {
-      id: 'billing',
-      label: 'Billing address',
-      children: [
-        { key: 'billingAddress', label: 'Address object' },
-        { key: 'billingAddress.streetAddress', label: 'Street address' },
-        { key: 'billingAddress.addressLocality', label: 'City / locality' },
-        { key: 'billingAddress.postalCode', label: 'Postal code' },
-        { key: 'billingAddress.addressCountry', label: 'Country' },
-      ],
-    },
-  ] as const;
+  function computeRequiredSlots(): string[] | undefined {
+    const out: string[] = [];
+
+    if (reqEmail) out.push('contactPoint.email');
+    if (reqPhone) out.push('contactPoint.telephone');
+
+    if (reqAgeProof) out.push('ageProof');
+    if (reqBirthDate) out.push('ageProof.birthDate');
+
+    if (reqShip) out.push('shippingAddress');
+    if (reqShipStreet) out.push('shippingAddress.streetAddress');
+    if (reqShipLocality) out.push('shippingAddress.addressLocality');
+    if (reqShipPostal) out.push('shippingAddress.postalCode');
+    if (reqShipCountry) out.push('shippingAddress.addressCountry');
+
+    if (reqBill) out.push('billingAddress');
+    if (reqBillStreet) out.push('billingAddress.streetAddress');
+    if (reqBillLocality) out.push('billingAddress.addressLocality');
+    if (reqBillPostal) out.push('billingAddress.postalCode');
+    if (reqBillCountry) out.push('billingAddress.addressCountry');
+
+    return out.length > 0 ? out : undefined;
+  }
 
   // Group-level derived states and toggle helpers (tree behavior)
   const contactAll = $derived(reqEmail && reqPhone);
@@ -195,26 +175,7 @@
       availableDeliveryMethod: availableDeliveryMethod || undefined,
       fulfillmentEndpoint: (fulfillmentEndpoint || '').trim() || undefined,
       fulfillmentTrigger: (fulfillmentTrigger as any) || undefined,
-      requiredSlots: [
-        // Contact
-        ...(reqEmail ? ['contactPoint.email'] : []),
-        ...(reqPhone ? ['contactPoint.telephone'] : []),
-        // Age verification
-        ...(reqAgeProof ? ['ageProof'] : []),
-        ...(reqBirthDate ? ['ageProof.birthDate'] : []),
-        // Shipping address
-        ...(reqShip ? ['shippingAddress'] : []),
-        ...(reqShipStreet ? ['shippingAddress.streetAddress'] : []),
-        ...(reqShipLocality ? ['shippingAddress.addressLocality'] : []),
-        ...(reqShipPostal ? ['shippingAddress.postalCode'] : []),
-        ...(reqShipCountry ? ['shippingAddress.addressCountry'] : []),
-        // Billing address
-        ...(reqBill ? ['billingAddress'] : []),
-        ...(reqBillStreet ? ['billingAddress.streetAddress'] : []),
-        ...(reqBillLocality ? ['billingAddress.addressLocality'] : []),
-        ...(reqBillPostal ? ['billingAddress.postalCode'] : []),
-        ...(reqBillCountry ? ['billingAddress.addressCountry'] : []),
-      ],
+      requiredSlots: computeRequiredSlots(),
     };
 
     popupControls.open({
@@ -236,26 +197,7 @@
       availableDeliveryMethod: (availableDeliveryMethod ?? '').trim() || undefined,
       fulfillmentEndpoint: (fulfillmentEndpoint ?? '').trim() || undefined,
       fulfillmentTrigger: ((fulfillmentTrigger ?? '') as any) || undefined,
-      requiredSlots: [
-        // Contact
-        ...(reqEmail ? ['contactPoint.email'] : []),
-        ...(reqPhone ? ['contactPoint.telephone'] : []),
-        // Age verification
-        ...(reqAgeProof ? ['ageProof'] : []),
-        ...(reqBirthDate ? ['ageProof.birthDate'] : []),
-        // Shipping address
-        ...(reqShip ? ['shippingAddress'] : []),
-        ...(reqShipStreet ? ['shippingAddress.streetAddress'] : []),
-        ...(reqShipLocality ? ['shippingAddress.addressLocality'] : []),
-        ...(reqShipPostal ? ['shippingAddress.postalCode'] : []),
-        ...(reqShipCountry ? ['shippingAddress.addressCountry'] : []),
-        // Billing address
-        ...(reqBill ? ['billingAddress'] : []),
-        ...(reqBillStreet ? ['billingAddress.streetAddress'] : []),
-        ...(reqBillLocality ? ['billingAddress.addressLocality'] : []),
-        ...(reqBillPostal ? ['billingAddress.postalCode'] : []),
-        ...(reqBillCountry ? ['billingAddress.addressCountry'] : []),
-      ],
+      requiredSlots: computeRequiredSlots(),
     };
   });
 </script>

@@ -9,13 +9,13 @@ const OPERATOR: Address = MARKET_OPERATOR;
 const API_BASE = MARKET_API_BASE;
 
 export type CatalogQuery = {
-  avatars: Address[];              // required: one or more
-  chainId?: number;                // defaults to 100 on server
-  start?: number;                  // unix seconds
-  end?: number;                    // unix seconds
-  pageSize?: number;               // 1..100 (server clamps)
-  cursor?: string | null;          // from X-Next-Cursor
-  offset?: number;                 // optional if you want offset mode
+  avatars: Address[];
+  chainId?: number;
+  start?: number;
+  end?: number;
+  pageSize?: number;
+  cursor?: string | null;
+  offset?: number;
 };
 
 function buildCatalogUrl(q: CatalogQuery): string {
@@ -31,12 +31,47 @@ function buildCatalogUrl(q: CatalogQuery): string {
 }
 
 export type CatalogPage = {
-  catalog: AggregatedCatalog | null;      // full payload (optional to use)
-  items: AggregatedCatalogItem[];         // current page products
-  nextCursor: string | null;              // cursor for the next page
-  nextLink: string | null;                // Link rel="next" (if you want)
-  status: number;                         // response status
+  catalog: AggregatedCatalog | null;
+  items: AggregatedCatalogItem[];
+  nextCursor: string | null;
+  nextLink: string | null;
+  status: number;
 };
+
+type CacheEntry<T> = { exp: number; promise: Promise<T> };
+const PAGE_CACHE_TTL_MS = 10_000;
+const PAGE_CACHE_MAX = 200;
+const pageCache = new Map<string, CacheEntry<CatalogPage>>();
+
+function prunePageCache(): void {
+  const now = Date.now();
+  for (const [k, v] of pageCache) {
+    if (v.exp <= now) pageCache.delete(k);
+  }
+  while (pageCache.size > PAGE_CACHE_MAX) {
+    const firstKey = pageCache.keys().next().value as string | undefined;
+    if (!firstKey) break;
+    pageCache.delete(firstKey);
+  }
+}
+
+function memoizeCatalogPage(key: string, fn: () => Promise<CatalogPage>): Promise<CatalogPage> {
+  const now = Date.now();
+  const existing = pageCache.get(key);
+  if (existing && existing.exp > now) return existing.promise;
+
+  prunePageCache();
+
+  const p = fn();
+  pageCache.set(key, { exp: now + PAGE_CACHE_TTL_MS, promise: p });
+
+  p.catch(() => {
+    const cur = pageCache.get(key);
+    if (cur?.promise === p) pageCache.delete(key);
+  });
+
+  return p;
+}
 
 export async function fetchCatalogPage(q: CatalogQuery): Promise<CatalogPage> {
   if (!q.avatars?.length) {
@@ -44,114 +79,113 @@ export async function fetchCatalogPage(q: CatalogQuery): Promise<CatalogPage> {
   }
 
   const url = buildCatalogUrl(q);
-  const res = await fetch(url, { headers: { Accept: 'application/ld+json' } });
 
-  if (res.status === 416) {
-    // Past end: no more items
-    return { catalog: null, items: [], nextCursor: null, nextLink: null, status: 416 };
-  }
+  return memoizeCatalogPage(url, async () => {
+    const res = await fetch(url, { headers: { Accept: 'application/ld+json' } });
 
-  let body: unknown = {};
-  try {
-    body = await res.json();
-  } catch {/* keep empty */}
+    if (res.status === 416) {
+      return { catalog: null, items: [], nextCursor: null, nextLink: null, status: 416 };
+    }
 
-  if (!res.ok) {
-    // Surface the server error (e.g., 400/413/502)
-    const msg = (body as any)?.error ?? res.statusText ?? 'Request failed';
-    throw new Error(`Catalog API error ${res.status}: ${msg}`);
-  }
+    let body: unknown = {};
+    try {
+      body = await res.json();
+    } catch {
+      body = {};
+    }
 
-  const items = extractProducts(body);
-  const nextCursor = res.headers.get('X-Next-Cursor');
+    if (!res.ok) {
+      const msg = (body as any)?.error ?? res.statusText ?? 'Request failed';
+      throw new Error(`Catalog API error ${res.status}: ${msg}`);
+    }
 
-  // Optionally read Link: <...>; rel="next"
-  const link = res.headers.get('Link');
-  const nextLink = link && /<([^>]+)>;\s*rel="next"/i.test(link)
-    ? (link.match(/<([^>]+)>;\s*rel="next"/i)?.[1] ?? null)
-    : null;
+    const items = extractProducts(body);
+    const nextCursor = res.headers.get('X-Next-Cursor');
 
-  return {
-    catalog: body as AggregatedCatalog,
-    items,
-    nextCursor,
-    nextLink,
-    status: res.status,
-  };
+    const link = res.headers.get('Link');
+    const nextLink =
+      link && /<([^>]+)>;\s*rel="next"/i.test(link)
+        ? (link.match(/<([^>]+)>;\s*rel="next"/i)?.[1] ?? null)
+        : null;
+
+    return {
+      catalog: body as AggregatedCatalog,
+      items,
+      nextCursor,
+      nextLink,
+      status: res.status,
+    };
+  });
 }
 
-export async function* listCatalogAllPages(q: Omit<CatalogQuery, 'cursor' | 'offset'>) {
-  let cursor: string | null = null;
-  do {
-    const page = await fetchCatalogPage({ ...q, cursor });
-    if (page.status === 416) return; // stop if past end
-    yield page;
-    cursor = page.nextCursor;
-  } while (cursor);
-}
-
-/**
- * Fetch the operator catalog for a fixed set of avatars
- * (used on the main /market page). Returns first page only.
- */
-export async function fetchGlobalCatalog(opts?: Omit<CatalogQuery, 'avatars'>): Promise<AggregatedCatalogItem[]> {
-  const avatars: Address[] = [
-    '0x1327c3cf61c6df3e0cf69faa4590281d6f675ce5',
-    '0xde374ece6fa50e781e81aac78e811b33d16912c7',
-    '0x314278c65545f0f96f8fe0836ad92b3326bfff2e'
-  ];
-  const page = await fetchCatalogPage({ avatars, pageSize: opts?.pageSize ?? 20, chainId: opts?.chainId ?? 100, start: opts?.start, end: opts?.end });
-  return page.items;
-}
-
-/**
- * Fetch catalog items for a given seller address (first page only).
- */
 export async function fetchSellerCatalog(
   sellerRaw: string,
   opts?: Omit<CatalogQuery, 'avatars'>,
 ): Promise<AggregatedCatalogItem[]> {
   const seller = normalizeAddress(sellerRaw) as Address;
-  const page = await fetchCatalogPage({ avatars: [seller], pageSize: opts?.pageSize ?? 20, chainId: opts?.chainId ?? 100, start: opts?.start, end: opts?.end });
+  const page = await fetchCatalogPage({
+    avatars: [seller],
+    pageSize: opts?.pageSize ?? 100,
+    chainId: opts?.chainId ?? 100,
+    start: opts?.start,
+    end: opts?.end,
+    cursor: opts?.cursor ?? null,
+    offset: opts?.offset,
+  });
   return page.items;
 }
 
-/**
- * Fetch a single product for (seller, sku).
- * If multiple entries match, returns the first one.
- */
 export async function fetchProductForSellerAndSku(
   sellerRaw: string,
   skuRaw: string,
+  opts?: { chainId?: number; start?: number; end?: number; pageSize?: number; maxPages?: number },
 ): Promise<AggregatedCatalogItem | null> {
   const seller = normalizeAddress(sellerRaw) as Address;
   const sku = String(skuRaw).toLowerCase();
 
-  const all = await fetchSellerCatalog(seller);
-  const fromSeller = all.filter(
-    (it) => it.seller.toLowerCase() === seller.toLowerCase(),
-  );
+  const chainId = opts?.chainId ?? 100;
+  const pageSize = opts?.pageSize ?? 100;
+  const maxPages = opts?.maxPages ?? 10;
 
-  if (!fromSeller.length) {
-    return null;
+  let cursor: string | null = null;
+
+  for (let pageNo = 0; pageNo < maxPages; pageNo++) {
+    const page = await fetchCatalogPage({
+      avatars: [seller],
+      chainId,
+      start: opts?.start,
+      end: opts?.end,
+      pageSize,
+      cursor,
+    });
+
+    if (page.status === 416) {
+      return null;
+    }
+
+    const bySku =
+      page.items.find((it) => (it.product?.sku ?? '').toLowerCase() === sku) ?? null;
+
+    if (bySku) {
+      return bySku;
+    }
+
+    const byId =
+      page.items.find((it: any) => {
+        const id = String(it.id ?? '').toLowerCase();
+        const cid = String(it.productCid ?? '').toLowerCase();
+        return id === sku || cid === sku;
+      }) ?? null;
+
+    if (byId) {
+      return byId;
+    }
+
+    cursor = page.nextCursor;
+    if (!cursor) {
+      return null;
+    }
   }
 
-  const bySku =
-    fromSeller.find(
-      (it) => (it.product?.sku ?? '').toLowerCase() === sku,
-    ) ?? null;
-
-  if (bySku) return bySku;
-
-  // Fallback: match by id/productCid if SKU lookup fails.
-  const byId =
-    fromSeller.find((it: any) => {
-      const id = String(it.id ?? '').toLowerCase();
-      const cid = String(it.productCid ?? '').toLowerCase();
-      return id === sku || cid === sku;
-    }) ?? null;
-
-  return byId ?? fromSeller[0] ?? null;
+  return null;
 }
-
-// Note: No caching here. If needed, add a simple in-memory Map cache later.
