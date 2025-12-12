@@ -134,7 +134,7 @@
     }
 
     // Aggregate totals per currency using a plain object so SES doesn’t choke on Map proxies
-    const totalsArray: [string, number][] = $derived(() => {
+    const totalsArray: [string, number][] = $derived.by(() => {
         const acc: Record<string, number> = {};
         for (const line of lines) {
             const { amount, code } = getLineTotal(line);

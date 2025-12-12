@@ -241,7 +241,7 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import type { Address as EvmAddress } from '@circles-sdk/utils';
   import type { OrderSnapshot } from '$lib/cart/types';
-  import type { OrderStatusEvent } from '$lib/cart/client';
+  import type { OrderStatusEvent } from '$lib/cart/ordersAdapter';
   import { formatTimestamp, statusLabel } from '$lib/cart/status';
   import { onMount } from 'svelte';
   import { fetchProductForSellerAndSku } from '$lib/market/catalogClient';

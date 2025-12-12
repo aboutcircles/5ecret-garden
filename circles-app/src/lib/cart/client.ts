@@ -8,7 +8,15 @@ import type {
   ValidationResult,
   OrderSnapshot,
 } from './types';
-import { getAuthToken } from '$lib/auth/siwe';
+import { getMarketClient } from '$lib/sdk/marketClient';
+
+function getAuthToken(): string | null {
+  try {
+    return getMarketClient().authContext.getToken();
+  } catch {
+    return null;
+  }
+}
 
 export type CartClientConfig = {
   apiBase?: string; // defaults to MARKET_API_BASE if not provided
@@ -369,46 +377,15 @@ export async function createBasket(
   req: BasketCreateRequest,
   cfg?: CartClientConfig,
 ): Promise<BasketCreateResponse> {
-  const base = resolveBase(cfg);
-  const url = `${base}/api/cart/v1/baskets`;
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/ld+json; charset=utf-8',
-      Accept: 'application/ld+json',
-    },
-    body: JSON.stringify(req),
+  // Delegate to SDK cart.createBasket
+  const { getMarketClient } = await import('$lib/sdk/marketClient');
+  const client = getMarketClient();
+  const res = await client.cart.createBasket({
+    buyer: String(req.buyer ?? ''),
+    operator: String(req.operator ?? ''),
+    chainId: typeof req.chainId === 'number' ? req.chainId : undefined,
   });
-
-  const raw = await parseJson<any>(res).catch(() => ({} as any));
-
-  if (!res.ok) {
-    throw new CartHttpError(res.status, raw);
-  }
-
-  // Normalize backend variations: it may return `BasketId` (PascalCase)
-  // while the client expects `basketId` (camelCase).
-  const rawBasketId =
-    typeof raw?.basketId === 'string' && raw.basketId.trim().length > 0
-      ? raw.basketId
-      : typeof raw?.BasketId === 'string' && raw.BasketId.trim().length > 0
-        ? raw.BasketId
-        : null;
-
-  if (!rawBasketId) {
-    throw new Error(
-      'Cart API createBasket did not return a valid basketId/BasketId field. ' +
-        'Check the backend implementation of POST /api/cart/v1/baskets.',
-    );
-  }
-
-  const out: BasketCreateResponse = {
-    '@type': raw['@type'] ?? 'circles:Basket',
-    basketId: rawBasketId,
-  };
-
-  return out;
+  return { '@type': 'circles:Basket', basketId: res.basketId };
 }
 
 /**
@@ -451,38 +428,64 @@ export async function patchBasket(
   patch: BasketPatch,
   cfg?: CartClientConfig,
 ): Promise<Basket> {
-  // Defensive: strip any offerSnapshot fields from outbound items. The server
-  // is authoritative and will populate canonical snapshots in responses.
-  const safePatch: BasketPatch = {
-    ...patch,
-    items: Array.isArray(patch.items)
-      ? patch.items.map((it: any) => {
-          if (it && typeof it === 'object' && 'offerSnapshot' in it) {
-            const { offerSnapshot: _drop, ...rest } = it;
-            return rest;
-          }
-          return it;
-        })
-      : patch.items,
-  };
-  const base = resolveBase(cfg);
-  const url = `${base}/api/cart/v1/baskets/${encodeURIComponent(basketId)}`;
+  // Delegate to SDK cart methods while preserving semantics.
+  const { getMarketClient } = await import('$lib/sdk/marketClient');
+  const client = getMarketClient();
 
-  const res = await fetch(url, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/ld+json; charset=utf-8',
-      Accept: 'application/ld+json',
-    },
-    body: JSON.stringify(safePatch),
-  });
+  let result: Basket | null = null;
 
-  if (!res.ok) {
-    const body = await parseJson<unknown>(res).catch(() => ({}));
-    throw new CartHttpError(res.status, body);
+  // Apply items if provided
+  if (Array.isArray(patch.items)) {
+    // Map to SDK BasketItemInput[]
+    const items = patch.items.map((it: any) => ({
+      seller: it?.seller ?? undefined,
+      sku: it?.orderedItem?.sku,
+      quantity: it?.orderQuantity,
+      imageUrl: it?.imageUrl,
+    }));
+    result = await client.cart.setItems({ basketId, items });
   }
 
-  return parseJson<Basket>(res);
+  // Apply checkout details if provided
+  if (
+    patch.shippingAddress !== undefined ||
+    patch.billingAddress !== undefined ||
+    patch.contactPoint !== undefined ||
+    patch.ageProof !== undefined
+  ) {
+    result = await client.cart.setCheckoutDetails({
+      basketId,
+      shippingAddress: patch.shippingAddress ?? undefined,
+      billingAddress: patch.billingAddress ?? undefined,
+      contactPoint: patch.contactPoint ?? undefined,
+      ageProof: patch.ageProof ?? undefined,
+    });
+  }
+
+  // TTL currently not supported via SDK; fallback to HTTP if only ttlSeconds is being updated
+  if (!result && typeof patch.ttlSeconds === 'number') {
+    const base = resolveBase(cfg);
+    const url = `${base}/api/cart/v1/baskets/${encodeURIComponent(basketId)}`;
+    const res = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/ld+json; charset=utf-8',
+        Accept: 'application/ld+json',
+      },
+      body: JSON.stringify({ ttlSeconds: patch.ttlSeconds }),
+    });
+    if (!res.ok) {
+      const body = await parseJson<unknown>(res).catch(() => ({}));
+      throw new CartHttpError(res.status, body);
+    }
+    return parseJson<Basket>(res);
+  }
+
+  // If neither items nor details changed, just return current basket
+  if (!result) {
+    return await getBasket(basketId, cfg);
+  }
+  return result;
 }
 
 /**
@@ -492,23 +495,9 @@ export async function validateBasket(
   basketId: string,
   cfg?: CartClientConfig,
 ): Promise<ValidationResult> {
-  const base = resolveBase(cfg);
-  const url = `${base}/api/cart/v1/baskets/${encodeURIComponent(
-    basketId,
-  )}/validate`;
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { Accept: 'application/ld+json' },
-  });
-
-  const body = await parseJson<unknown>(res).catch(() => ({}));
-
-  if (!res.ok) {
-    throw new CartHttpError(res.status, body);
-  }
-
-  return body as ValidationResult;
+  const { getMarketClient } = await import('$lib/sdk/marketClient');
+  const client = getMarketClient();
+  return await client.cart.validateBasket(basketId);
 }
 
 /**
@@ -518,25 +507,24 @@ export async function previewOrder(
   basketId: string,
   cfg?: CartClientConfig & { buyerOverride?: Address },
 ): Promise<OrderSnapshot> {
-  const base = resolveBase(cfg);
-  const buyerQuery =
-    cfg?.buyerOverride != null ? `?buyer=${encodeURIComponent(cfg.buyerOverride)}` : '';
-  const url = `${base}/api/cart/v1/baskets/${encodeURIComponent(
-    basketId,
-  )}/preview${buyerQuery}`;
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { Accept: 'application/ld+json' },
-  });
-
-  const body = await parseJson<unknown>(res).catch(() => ({}));
-
-  if (!res.ok) {
-    throw new CartHttpError(res.status, body);
+  // If a buyerOverride is provided, fall back to HTTP preview to preserve legacy behavior.
+  if (cfg?.buyerOverride) {
+    const base = resolveBase(cfg);
+    const url = `${base}/api/cart/v1/baskets/${encodeURIComponent(basketId)}/preview?buyer=${encodeURIComponent(
+      cfg.buyerOverride,
+    )}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { Accept: 'application/ld+json' },
+    });
+    const body = await parseJson<unknown>(res).catch(() => ({}));
+    if (!res.ok) throw new CartHttpError(res.status, body);
+    return body as OrderSnapshot;
   }
-
-  return body as OrderSnapshot;
+  // Otherwise use SDK
+  const { getMarketClient } = await import('$lib/sdk/marketClient');
+  const client = getMarketClient();
+  return (await client.cart.previewOrder(basketId)) as OrderSnapshot;
 }
 
 /**
@@ -553,25 +541,16 @@ export async function checkoutBasket(
   basketId: string,
   cfg?: CartClientConfig & { buyerOverride?: Address },
 ): Promise<CheckoutResponse> {
-  const base = resolveBase(cfg);
-  const buyerQuery =
-    cfg?.buyerOverride != null ? `?buyer=${encodeURIComponent(cfg.buyerOverride)}` : '';
-  const url = `${base}/api/cart/v1/baskets/${encodeURIComponent(
+  const { getMarketClient } = await import('$lib/sdk/marketClient');
+  const client = getMarketClient();
+  const resp = await client.cart.checkoutBasket({
     basketId,
-  )}/checkout${buyerQuery}`;
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      Accept: 'application/ld+json; charset=utf-8',
-    },
+    buyer: cfg?.buyerOverride ? String(cfg.buyerOverride) : undefined,
   });
-
-  const body = await parseJson<unknown>(res).catch(() => ({}));
-
-  if (!res.ok) {
-    throw new CartHttpError(res.status, body);
-  }
-
-  return body as CheckoutResponse;
+  return {
+    orderId: resp.orderId,
+    basketId: resp.basketId,
+    orderCid: null,
+    paymentReference: resp.paymentReference,
+  };
 }

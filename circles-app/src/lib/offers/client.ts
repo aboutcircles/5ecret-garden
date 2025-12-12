@@ -14,46 +14,71 @@ export type MinimalProduct = MinimalProductInput;
 export type MinimalOffer = MinimalOfferInput;
 
 export type AppendOfferParams = {
-    avatar: Address;
-    operator: Address;
-    chainId?: number;
-    product: MinimalProduct;
-    offer: MinimalOffer;
-    paymentGateway?: Address; // selected payment gateway address for PayAction
+  avatar: Address;
+  operator: Address;
+  chainId?: number;
+  product: MinimalProduct;
+  offer: MinimalOffer;
+  paymentGateway?: Address; // selected payment gateway address for PayAction
 };
 
 export type AppendOfferResult = {
-    productCid: CidV0;
-    linkCid?: CidV0;
-    headCid: CidV0;
-    indexCid: CidV0;
-    profileCid: CidV0;
-    /**
-     * 32-byte digest derived from profileCid (not the product payload nor link).
-     * Named for backwards-compat; callers should not assume it hashes the product.
-     */
-    digest32: Hex;
-    txHash?: Hex;
+  productCid: CidV0;
+  linkCid?: CidV0;
+  headCid: CidV0;
+  indexCid: CidV0;
+  profileCid: CidV0;
+  /**
+   * 32-byte digest derived from profileCid (not the product payload nor link).
+   * Named for backwards-compat; callers should not assume it hashes the product.
+   */
+  digest32: Hex;
+  txHash?: Hex;
 };
 
 export interface SafeSignerLike {
-    sign(payload: Uint8Array | Hex): Promise<Hex>;
+  sign(payload: Uint8Array | Hex): Promise<Hex>;
 }
 
 export interface ProfilesOffersClient {
-    appendOffer(p: AppendOfferParams): Promise<AppendOfferResult>;
+  appendOffer(p: AppendOfferParams): Promise<AppendOfferResult>;
 
-    tombstone(p: {
-        avatar: Address;
-        operator: Address;
-        sku: string;
-        chainId?: number;
-    }): Promise<AppendOfferResult>;
+  tombstone(p: {
+    avatar: Address;
+    operator: Address;
+    sku: string;
+    chainId?: number;
+  }): Promise<AppendOfferResult>;
+}
+
+function assertHex32(label: string, v: unknown): Hex {
+  if (typeof v !== 'string') {
+    throw new Error(`${label} must be a hex string`);
+  }
+  const s = v.toLowerCase();
+  const ok = /^0x[0-9a-f]{64}$/.test(s);
+  if (!ok) {
+    throw new Error(`${label} must be 0x + 64 hex chars (got: ${String(v)})`);
+  }
+  return s as Hex;
+}
+
+function normalizeTxHash(v: unknown): Hex | undefined {
+  if (v == null) return undefined;
+  if (typeof v !== 'string') {
+    throw new Error(`txHash must be a hex string (got: ${typeof v})`);
+  }
+  const s = v.trim().toLowerCase();
+  if (s.length === 0) return undefined;
+  if (!/^0x[0-9a-f]+$/.test(s)) {
+    throw new Error(`txHash must be hex (got: ${v})`);
+  }
+  return s as Hex;
 }
 
 export function createProfilesOffersClient(
   circles: CirclesBindings,
-  safe: SafeSignerLike
+  safe: SafeSignerLike,
 ): ProfilesOffersClient {
   const sdkOffers = new OffersClientImpl(circles);
 
@@ -68,7 +93,6 @@ export function createProfilesOffersClient(
     }
 
     const signer = toSdkAvatarSigner(avatar, chainId, safe);
-
     const gateway = p.paymentGateway ? normalizeAddress(p.paymentGateway) : undefined;
 
     const res = await sdkOffers.publishOffer({
@@ -76,12 +100,15 @@ export function createProfilesOffersClient(
       operator,
       signer,
       chainId,
-      paymentGateway: gateway as any,
+      paymentGateway: gateway,
       product: p.product,
       offer: p.offer,
     });
 
-    const digest32 = (res as any).digest32 ?? cidV0ToDigest32(res.profileCid as CidV0);
+    const digest32 =
+      res.digest32 != null
+        ? assertHex32('digest32', res.digest32)
+        : cidV0ToDigest32(res.profileCid as CidV0);
 
     return {
       productCid: res.productCid as CidV0,
@@ -89,8 +116,8 @@ export function createProfilesOffersClient(
       headCid: res.headCid as CidV0,
       indexCid: res.indexCid as CidV0,
       profileCid: res.profileCid as CidV0,
-      digest32: digest32 as Hex,
-      txHash: (res.txHash as Hex | undefined) ?? undefined,
+      digest32,
+      txHash: normalizeTxHash(res.txHash),
     };
   }
 
@@ -104,8 +131,7 @@ export function createProfilesOffersClient(
     const operator = normalizeAddress(p.operator);
     const chainId = p.chainId ?? 100;
 
-    const skuOk = isValidSku(p.sku);
-    if (!skuOk) {
+    if (!isValidSku(p.sku)) {
       throw new Error(`Invalid SKU: ${p.sku}`);
     }
 
@@ -128,7 +154,7 @@ export function createProfilesOffersClient(
       indexCid: res.indexCid as CidV0,
       profileCid: res.profileCid as CidV0,
       digest32: cidV0ToDigest32(res.profileCid as CidV0),
-      txHash: (res.txHash as Hex | undefined) ?? undefined,
+      txHash: normalizeTxHash(res.txHash),
     };
   }
 
