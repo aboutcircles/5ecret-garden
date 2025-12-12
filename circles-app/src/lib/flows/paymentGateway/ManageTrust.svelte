@@ -55,7 +55,7 @@
 
   const gatewayValid = $derived(isAddress(gateway));
   const trustReceiverValid = $derived(isAddress(trustReceiver));
-  const expiryValid = $derived(() => toExpiryUint96(expiryIso) > 0n);
+  const expiryValid = $derived(toExpiryUint96(expiryIso) > 0n);
 
   const canSet = $derived(gatewayValid && trustReceiverValid && expiryValid);
   const canClear = $derived(gatewayValid && trustReceiverValid);

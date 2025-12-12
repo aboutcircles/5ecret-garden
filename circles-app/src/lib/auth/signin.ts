@@ -1,25 +1,26 @@
-// src/lib/auth/signin.ts
-// New thin wrappers that delegate to the Market SDK auth flow.
-import type { Address } from '@circles-sdk/utils';
-import { getMarketClient } from '$lib/sdk/marketClient';
+import { browser } from '$app/environment';
 import { GNOSIS_CHAIN_ID_NUM } from '$lib/config/market';
+import { ensureGnosisChain } from '$lib/chain/gnosis';
+import { getMarketClient } from '$lib/sdk/marketClient';
 
-export async function signInWithAvatarSafe(avatar: Address): Promise<{ address: string; chainId: number }> {
-  const anyWindow = window as any;
-  const ethereum = anyWindow?.ethereum;
+export async function signInWithSafe(
+  avatar: string,
+  chainId: number = GNOSIS_CHAIN_ID_NUM,
+): Promise<{ address: string; chainId: number }> {
+  if (!browser) {
+    throw new Error('signInWithSafe() can only be used in the browser');
+  }
+
+  const ethereum: any = (window as any)?.ethereum;
   if (!ethereum?.request) {
-    throw new Error('No EIP-1193 wallet found (window.ethereum missing)');
-    }
-  const client = getMarketClient();
-  return await client.auth.signInWithAvatar({ avatar, ethereum, chainId: GNOSIS_CHAIN_ID_NUM ?? 100 });
-}
+    throw new Error('No injected provider available (window.ethereum missing)');
+  }
 
-// Keep legacy names for compatibility if other code calls signInWithSafe.
-export async function signInWithSafe(avatar: string) {
-  return signInWithAvatarSafe(avatar as Address);
-}
+  await ensureGnosisChain(ethereum);
 
-// Historic function name; if used, it should sign in by inferring the avatar elsewhere.
-export async function signInWithWallet() {
-  throw new Error('signInWithWallet is deprecated. Use signInWithAvatarSafe(avatar) instead.');
+  return await getMarketClient().auth.signInWithAvatar({
+    avatar,
+    ethereum,
+    chainId,
+  });
 }

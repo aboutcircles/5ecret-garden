@@ -17,7 +17,8 @@
   // EIP-712 SafeMessage signer via MetaMask
   import { createMetaMaskSafeSigner } from '$lib/safeSigner/signers/metamask';
   import type {OfferFlowContext} from "$lib/flows/offer/types";
-  import { GNOSIS_CHAIN_ID_NUM, GNOSIS_CHAIN_ID_HEX } from '$lib/config/market';
+  import { GNOSIS_CHAIN_ID_NUM } from '$lib/config/market';
+  import { ensureGnosisChain } from '$lib/chain/gnosis';
   import { mkCirclesBindings } from '$lib/offers/mkCirclesBindings';
   import { normalizeAddress } from '$lib/offers/adapters';
   import { resolveImagesToHttpUrls } from '$lib/media/resolveImageUrl';
@@ -26,7 +27,6 @@
   let { context }: Props = $props();
 
   const CHAIN_ID_NUM = GNOSIS_CHAIN_ID_NUM;   // Gnosis
-  const CHAIN_ID_HEX = GNOSIS_CHAIN_ID_HEX;
 
   // Payment gateway moved to Pricing step. Keep only draft value for review.
   let selectedGateway: string = $state((context.draft?.paymentGateway ?? '') as string);
@@ -74,32 +74,6 @@
     return [];
   }
 
-  // ──────────────────────────────────────────────────────────────────────────────
-  // Chain helpers
-  // ──────────────────────────────────────────────────────────────────────────────
-  async function ensureGnosisChain(): Promise<void> {
-    const eth: any = (window as any)?.ethereum;
-    if (!eth) throw new Error('No injected provider');
-
-    try {
-      await eth.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: CHAIN_ID_HEX }] });
-    } catch (e: any) {
-      if (e?.code === 4902) {
-        await eth.request({
-          method: 'wallet_addEthereumChain',
-          params: [{
-            chainId: CHAIN_ID_HEX,
-            chainName: 'Gnosis Chain',
-            nativeCurrency: { name: 'xDAI', symbol: 'XDAI', decimals: 18 },
-            rpcUrls: ['https://rpc.gnosis.gateway.fm', 'https://rpc.gnosischain.com'],
-            blockExplorerUrls: ['https://gnosisscan.io']
-          }]
-        });
-      } else {
-        throw e;
-      }
-    }
-  }
 
   // ──────────────────────────────────────────────────────────────────────────────
   // SAFE helpers (owners + threshold only, no fallback handler call)
@@ -172,7 +146,6 @@
       throw new Error('Wallet avatar address is required to publish an offer.');
     }
 
-    await ensureGnosisChain();
     const { owner } = await resolveOwnerAndAssertSafe(seller);
 
     // Build bindings now (after app init) to avoid early access before SDK is set

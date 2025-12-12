@@ -1,39 +1,56 @@
-// src/lib/cart/ordersAdapter.ts
-// Thin compatibility wrappers that delegate to the SDK's Orders API.
+import { browser } from '$app/environment';
 import { getMarketClient } from '$lib/sdk/marketClient';
+import type {
+  OrderSnapshot,
+  OrderStatusEventPayload,
+  OrderStatusHistory,
+} from '@circles-market/sdk';
 
-export type { OrderSnapshot } from '$lib/cart/types';
+export type OrderStatusEvent = OrderStatusEventPayload;
 
-export type OrderStatusEvent = {
-  orderId?: string;
-  paymentReference?: string | null;
-  oldStatus?: string | null;
-  newStatus: string;
-  changedAt: string;
-};
-
-export type OrderStatusHistory = {
-  orderId: string;
-  events: OrderStatusEvent[];
-};
-
-export async function getOrdersByBuyer(page = 1, pageSize = 50): Promise<{ items: any[] }> {
+export async function getOrdersByBuyer(
+  page: number = 1,
+  pageSize: number = 50,
+): Promise<{ items: OrderSnapshot[] }> {
+  if (!browser) {
+    return { items: [] };
+  }
   const client = getMarketClient();
   const items = await client.orders.list({ page, pageSize });
   return { items };
 }
 
-export async function getOrder(orderId: string): Promise<any | null> {
+export async function getOrder(orderId: string): Promise<OrderSnapshot> {
+  if (!browser) {
+    throw new Error('getOrder() can only be used in the browser');
+  }
   const client = getMarketClient();
-  return await client.orders.getById(orderId);
+  const snap = await client.orders.getById(orderId);
+  if (!snap) {
+    throw new Error(`Order not found: ${orderId}`);
+  }
+  return snap;
 }
 
 export async function getOrderStatusHistory(orderId: string): Promise<OrderStatusHistory> {
-  const client = getMarketClient();
-  return await client.orders.getStatusHistory(orderId);
+  if (!browser) {
+    return { events: [] } as OrderStatusHistory;
+  }
+  return await getMarketClient().orders.getStatusHistory(orderId);
 }
 
-export function subscribeBuyerOrderEvents(onEvent: (e: OrderStatusEvent) => void): () => void {
+export function subscribeBuyerOrderEvents(
+  onEvent: (evt: OrderStatusEvent) => void,
+): () => void {
+  if (!browser) {
+    return () => {};
+  }
+
   const client = getMarketClient();
-  return client.orders.subscribeStatusEvents(onEvent as any);
+  const hasToken = !!client.authContext.getToken();
+  if (!hasToken) {
+    return () => {};
+  }
+
+  return client.orders.subscribeStatusEvents(onEvent);
 }
