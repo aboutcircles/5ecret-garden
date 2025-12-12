@@ -95,7 +95,7 @@
         headerTopGapClass="mt-4 md:mt-6"
         collapsedTopGapClass="mt-3 md:mt-4"
 >
-    <svelte:fragment slot="title">
+    {#snippet title()}
         <div class="flex items-center gap-2">
             <button 
                 type="button"
@@ -109,7 +109,7 @@
             </button>
             <h1 class="text-xl font-semibold truncate">{product?.product?.name || 'Product Details'}</h1>
         </div>
-    </svelte:fragment>
+    {/snippet}
 
     <!-- Basket button moved to global header -->
 
@@ -143,7 +143,7 @@
             </button>
         </div>
     {:else if product && product?.product}
-        {#snippet actions()}
+        {#snippet headerActions()}
             <div class="flex gap-2 w-full">
                 <button
                     type="button"

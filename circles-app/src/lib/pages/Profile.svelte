@@ -303,7 +303,7 @@
         }
     }
 
-    let selectedTab: string = 'common_connections';
+    let selectedTab = $state<string>('common_connections');
     let commonConnectionsCount = $state(0);
 </script>
 

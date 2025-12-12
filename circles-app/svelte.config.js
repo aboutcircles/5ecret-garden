@@ -20,6 +20,10 @@ const config = {
     adapter: process.env.NETLIFY_BUILD === 'true'
       ? adapterNetlify()
       : adapter(),
+    alias: {
+      '@circles-market/sdk': '../packages/circles-market-sdk/src',
+      '@circles-profile/core': '../packages/circles-profile-core/src'
+    }
   },
 };
 

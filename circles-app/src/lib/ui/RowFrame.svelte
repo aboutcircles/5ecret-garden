@@ -36,6 +36,8 @@
         onclick,
         onkeydown,
 
+        tabindex: _tabindex,
+
         leading,
         title,
         subtitle,
@@ -75,14 +77,14 @@
     {...rest}
     bind:this={el}
     data-row
-    data-clickable={clickable ? '' : undefined}
+    data-clickable={clickable && !disabled ? '' : undefined}
     data-selected={selected ? '' : undefined}
     data-disabled={disabled ? '' : undefined}
     data-dense={dense ? '' : undefined}
     data-no-leading={noLeading ? '' : undefined}
-    class={`ui-row ${classAttr} ${className}`.trim()}
-    role={clickable ? 'button' : 'group'}
-    tabindex={clickable && !disabled ? 0 : undefined}
+    class={`ui-row ${classAttr} ${className}`.trim()
+    }
+    role="group"
     aria-disabled={disabled ? 'true' : 'false'}
     onkeydown={handleKeydown}
     onclick={handleClick}

@@ -157,29 +157,29 @@
         headerTopGapClass="mt-4 md:mt-6"
         collapsedTopGapClass="mt-3 md:mt-4"
 >
-    <svelte:fragment slot="title">
+    {#snippet title()}
         <h1 class="h2 m-0">Marketplace</h1>
-    </svelte:fragment>
+    {/snippet}
 
-    <svelte:fragment slot="meta">
+    {#snippet meta()}
         Namespace {shortAddr(OPERATOR)} • Avatar {shortAddr(AVATAR)} • All offers
-    </svelte:fragment>
+    {/snippet}
 
-    <svelte:fragment slot="actions">
+    {#snippet headerActions()}
         <ActionButtonBar {actions} />
-    </svelte:fragment>
+    {/snippet}
 
     <!-- Collapsed summary -->
-    <svelte:fragment slot="collapsed-left">
+    {#snippet collapsedLeft()}
         <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">
       Marketplace
     </span>
-    </svelte:fragment>
+    {/snippet}
 
-    <svelte:fragment slot="collapsed-menu">
+    {#snippet collapsedMenu()}
         <ActionButtonDropDown {actions} />
         <!-- Basket button moved to global header -->
-    </svelte:fragment>
+    {/snippet}
 
     {#if loading}
         <section class="bg-base-100 border border-base-300 rounded-xl p-4">

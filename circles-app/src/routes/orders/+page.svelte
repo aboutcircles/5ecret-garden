@@ -202,23 +202,23 @@
 <PageScaffold highlight="soft" collapsedMode="bar" collapsedHeightClass="h-12" maxWidthClass="page page--lg"
               contentWidthClass="page page--lg" usePagePadding={true} headerTopGapClass="mt-4 md:mt-6"
               collapsedTopGapClass="mt-3 md:mt-4">
-  <svelte:fragment slot="title">
+  {#snippet title()}
     <h1 class="h2">My Orders</h1>
-  </svelte:fragment>
-  <svelte:fragment slot="meta">
+  {/snippet}
+  {#snippet meta()}
     {authed
       ? 'Orders for the authenticated wallet'
       : 'Sign in to view orders'}
-  </svelte:fragment>
-  <svelte:fragment slot="actions">
+  {/snippet}
+  {#snippet headerActions()}
     <ActionButtonBar {actions} />
-  </svelte:fragment>
-  <svelte:fragment slot="collapsed-left">
+  {/snippet}
+  {#snippet collapsedLeft()}
     <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">Orders</span>
-  </svelte:fragment>
-  <svelte:fragment slot="collapsed-menu">
+  {/snippet}
+  {#snippet collapsedMenu()}
     <ActionButtonDropDown {actions} />
-  </svelte:fragment>
+  {/snippet}
 
   <GenericList store={ordersStore} row={OrderRow} getKey={(it) => it.id} />
 </PageScaffold>

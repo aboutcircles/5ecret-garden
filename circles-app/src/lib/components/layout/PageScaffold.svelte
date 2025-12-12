@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from 'svelte';
+    import type { Snippet } from 'svelte';
     import { popupState } from '$lib/stores/popUp';
     import {headerDropdownOpen} from "$lib/stores/headerDropdown";
 
@@ -23,7 +24,37 @@
         collapsedHeightMd = '3.5rem',
 
         headerTopGapClass = 'mt-4 md:mt-6',
-        collapsedTopGapClass = 'mt-3 md:mt-4'
+        collapsedTopGapClass = 'mt-3 md:mt-4',
+
+        // Svelte 5 snippet props (replacement for named slots)
+        title,
+        meta,
+        headerActions,
+        collapsedLeft,
+        collapsedMenu,
+        collapsedLabel,
+        headerActionsCollapsed,
+        // implicit default content inside <PageScaffold>...</PageScaffold>
+        children,
+    }: {
+        maxWidthClass?: string;
+        contentWidthClass?: string;
+        highlight?: Highlight;
+        usePagePadding?: boolean;
+        collapsedMode?: CollapsedMode;
+        collapsedHeightClass?: string;
+        collapsedHeight?: string;
+        collapsedHeightMd?: string;
+        headerTopGapClass?: string;
+        collapsedTopGapClass?: string;
+        title?: Snippet;
+        meta?: Snippet;
+        headerActions?: Snippet;
+        collapsedLeft?: Snippet;
+        collapsedMenu?: Snippet;
+        collapsedLabel?: Snippet;
+        headerActionsCollapsed?: Snippet;
+        children?: Snippet;
     } = $props();
 
     let collapsed = $state(false);
@@ -35,10 +66,8 @@
 
     function computeHasChildren(node: HTMLElement | null): boolean {
         if (!node) return false;
-        for (const el of Array.from(node.children)) {
-            if (el.tagName.toLowerCase() !== 'slot') return true;
-        }
-        return false;
+        // With snippets, any real child means there are actions
+        return node.children.length > 0;
     }
 
     function updateHasActions() { hasActions = computeHasChildren(actionsHost); }
@@ -79,10 +108,15 @@
     let hasAnyCollapsedUI: boolean = $derived(collapsedMode === 'bar' || hasActions);
 
     function toggleCollapsedMenu() { collapsedMenuOpen = !collapsedMenuOpen; }
-    function onMenuClick(e: MouseEvent) {
-        const target = e.target as HTMLElement | null;
-        const shouldClose: boolean = !!target?.closest('button, a, [data-close-dropdown]');
-        if (shouldClose) { collapsedMenuOpen = false; }
+    function closeMenu(): void { collapsedMenuOpen = false; }
+    function closeOnMenuSelection(node: HTMLElement) {
+        const onClick = (e: MouseEvent) => {
+            const target = e.target as HTMLElement | null;
+            const shouldClose: boolean = !!target?.closest('button, a, [data-close-dropdown]');
+            if (shouldClose) { collapsedMenuOpen = false; }
+        };
+        node.addEventListener('click', onClick);
+        return { destroy() { node.removeEventListener('click', onClick); } };
     }
 
     /* NEW: minimal avatar state + open behavior */
@@ -116,12 +150,12 @@
             <!-- Always stack title/meta and actions into separate rows -->
             <div class="flex flex-col gap-3">
                 <div class="min-w-0">
-                    <div class="leading-tight"><slot name="title" /></div>
-                    <div class="mt-1 text-sm text-base-content/60"><slot name="meta" /></div>
+                    <div class="leading-tight">{@render title?.()}</div>
+                    <div class="mt-1 text-sm text-base-content/60">{@render meta?.()}</div>
                 </div>
 
                 <div class="flex items-center gap-2 flex-wrap mt-4" bind:this={actionsHost} use:observeActions>
-                    <slot name="actions" />
+                    {@render headerActions?.()}
                 </div>
             </div>
 
@@ -167,11 +201,13 @@
                                 onclick={toggleCollapsedMenu}
                         >
                             <div class="min-w-0 flex items-center gap-2">
-                                <slot name="collapsed-left">
+                                {#if collapsedLeft}
+                                    {@render collapsedLeft()}
+                                {:else}
                                     <span class="text-base md:text-lg font-semibold tracking-tight text-base-content truncate">
-                                        <slot name="title" />
+                                        {@render title?.()}
                                     </span>
-                                </slot>
+                                {/if}
                             </div>
                             <svg xmlns="http://www.w3.org/2000/svg"
                                  class={`h-4 w-4 shrink-0 transition-transform ${collapsedMenuOpen ? 'rotate-180' : ''}`}
@@ -187,11 +223,13 @@
                                 aria-hidden="true"
                         >
                             <div class="min-w-0 flex items-center gap-2">
-                                <slot name="collapsed-left">
+                                {#if collapsedLeft}
+                                    {@render collapsedLeft()}
+                                {:else}
                                     <span class="text-base md:text-lg font-semibold tracking-tight text-base-content truncate">
-                                        <slot name="title" />
+                                        {@render title?.()}
                                     </span>
-                                </slot>
+                                {/if}
                             </div>
                         </div>
                     {/if}
@@ -220,9 +258,9 @@
                             <div
                                     class="bg-base-100 border shadow-xl rounded-xl p-2"
                                     style={`--collapsed-h:${collapsedHeight}; --collapsed-h-md:${collapsedHeightMd};`}
-                                    onclick={onMenuClick}
+                                    use:closeOnMenuSelection
                             >
-                                <slot name="collapsed-menu" />
+                                {@render collapsedMenu?.()}
                             </div>
                         </div>
                     {/if}
@@ -231,13 +269,13 @@
                 <div class="mt-3 md:mt-4 mb-3 flex justify-center">
                     <div class="dropdown">
                         <button type="button" class="btn btn-primary btn-md rounded-full shadow-md pointer-events-auto">
-                            <slot name="collapsed-label" />
+                            {@render collapsedLabel?.()}
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" />
                             </svg>
                         </button>
                         <ul class="dropdown-content menu menu-sm bg-base-100 rounded-box shadow z-30 w-56 p-2 pointer-events-auto">
-                            <slot name="actions-collapsed" />
+                            {@render headerActionsCollapsed?.()}
                         </ul>
                     </div>
                 </div>
@@ -246,25 +284,19 @@
     </div>
 
     {#if collapsedMenuOpen && hasActions}
-        <!-- Full-viewport backdrop (outside the width-limited host) -->
-        <div
-                class="fixed inset-0 bg-black/50 transition-opacity duration-300 z-40 pointer-events-auto"
-                role="button"
-                tabindex="0"
-                aria-label="Close menu"
-                style="touch-action: none;"
-                onpointerdown={(e) => { e.stopPropagation(); e.preventDefault(); collapsedMenuOpen = false; }}
-                onmousedown={(e) => { e.stopPropagation(); e.preventDefault(); collapsedMenuOpen = false; }}
-                ontouchstart={(e) => { e.stopPropagation(); e.preventDefault(); collapsedMenuOpen = false; }}
-                ontouchend={(e) => { e.stopPropagation(); e.preventDefault(); collapsedMenuOpen = false; }}
-                onclick={(e) => { e.stopPropagation(); e.preventDefault(); collapsedMenuOpen = false; }}
-                aria-hidden="true"
-        ></div>
+        <button
+            type="button"
+            class="fixed inset-0 bg-black/50 transition-opacity duration-300 z-40 pointer-events-auto"
+            aria-label="Close menu"
+            style="touch-action: none;"
+            onpointerdown={(e) => { e.stopPropagation(); e.preventDefault(); closeMenu(); }}
+            onclick={(e) => { e.stopPropagation(); e.preventDefault(); closeMenu(); }}
+        ></button>
     {/if}
 {/if}
 
 <section class={`mx-auto ${contentWidthClass} ${contentPaddingClass}`}>
-    <slot />
+    {@render children?.()}
 </section>
 
 <style>

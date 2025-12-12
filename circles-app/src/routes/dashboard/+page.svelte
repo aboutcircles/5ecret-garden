@@ -93,7 +93,7 @@
         collapsedTopGapClass="mt-3 md:mt-4"
 >
     <!-- Title -->
-    <svelte:fragment slot="title">
+    {#snippet title()}
         {#if !avatarState.isGroup}
             <button class="text-left" onclick={openBalances} aria-label="Open balances breakdown">
                 <h2 class="h2 m-0">
@@ -105,10 +105,10 @@
                 Group overview
             </h2>
         {/if}
-    </svelte:fragment>
+    {/snippet}
 
     <!-- Meta -->
-    <svelte:fragment slot="meta">
+    {#snippet meta()}
         {#if !avatarState.isGroup}
             <button type="button" class="hover:underline cursor-pointer text-left" onclick={openBalances}>
                 {personalToken} individual tokens
@@ -118,10 +118,10 @@
                 {groupToken} group tokens
             </button>
         {/if}
-    </svelte:fragment>
+    {/snippet}
 
     <!-- Full-size quick actions -->
-    <svelte:fragment slot="actions">
+    {#snippet headerActions()}
         {#if !avatarState.isGroup}
             <button type="button" class="btn btn-ghost btn-sm" onclick={openSend}>
                 <Lucide icon={LSend} size={16} class={`shrink-0 ${ghostIconStrokeClass}`} />
@@ -135,10 +135,10 @@
                 Mint {roundToDecimals(mintableAmount)} Circles
             </button>
         {/if}
-    </svelte:fragment>
+    {/snippet}
 
     <!-- Collapsed summary (balance only) -->
-    <svelte:fragment slot="collapsed-left">
+    {#snippet collapsedLeft()}
         {#if !avatarState.isGroup}
         <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">
             {roundToDecimals($totalCirclesBalance)} Circles
@@ -148,10 +148,10 @@
                 Group overview
             </span>
         {/if}
-    </svelte:fragment>
+    {/snippet}
 
     <!-- Collapsed dropdown content -->
-    <svelte:fragment slot="collapsed-menu">
+    {#snippet collapsedMenu()}
         <div class="grid grid-cols-1 gap-2">
 
             {#if mintableAmount >= 0.01}
@@ -185,7 +185,7 @@
                 See breakdown
             </button>
         </div>
-    </svelte:fragment>
+    {/snippet}
 
     <!-- Content -->
     {#if avatarState.isGroup}

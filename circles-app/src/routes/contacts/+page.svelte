@@ -121,7 +121,7 @@
         headerTopGapClass="mt-4 md:mt-6"
         collapsedTopGapClass="mt-3 md:mt-4"
 >
-    <svelte:fragment slot="title">
+    {#snippet title()}
         <div class="flex items-center gap-2">
             <h1 class="h2 m-0">{titleText}</h1>
             {#if !avatarState.isGroup}
@@ -138,26 +138,26 @@
                 </button>
             {/if}
         </div>
-    </svelte:fragment>
+    {/snippet}
 
-    <svelte:fragment slot="meta">
+    {#snippet meta()}
         {$filteredAll.length} {countLabel}
-    </svelte:fragment>
+    {/snippet}
 
-    <svelte:fragment slot="actions">
+    {#snippet headerActions()}
         <ActionButtonBar {actions} />
-    </svelte:fragment>
+    {/snippet}
 
-    <svelte:fragment slot="collapsed-left">
+    {#snippet collapsedLeft()}
         <div class="truncate flex items-center gap-2">
             <span class="font-medium">{titleText}</span>
             <span class="text-sm text-base-content/60">{$filteredAll.length} {countLabel}</span>
         </div>
-    </svelte:fragment>
+    {/snippet}
 
-    <svelte:fragment slot="collapsed-menu">
+    {#snippet collapsedMenu()}
         <ActionButtonDropDown {actions} />
-    </svelte:fragment>
+    {/snippet}
 
     {#if $showFilters}
         <div id={FILTER_PANEL_ID} class="mt-3  mb-3 space-y-3">

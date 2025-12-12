@@ -1,10 +1,11 @@
 <script lang="ts">
 import Lucide from "$lib/icons/Lucide.svelte";
 
-const {actions} = $props();
+// Default to empty array and filter out invalid entries to avoid runtime errors
+let { actions = [] as any[] } = $props();
 
 </script>
-{#each actions as a (a.id)}
+{#each actions.filter(Boolean) as a, i (a?.id ?? a?.label ?? i)}
     <button
       type="button"
       class={`btn btn-sm ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'}`}

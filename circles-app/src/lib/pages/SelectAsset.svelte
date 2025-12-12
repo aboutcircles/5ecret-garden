@@ -90,13 +90,13 @@
 
 {#if showTransitive}
     <!-- Wrap to ensure click is caught at the DOM boundary (BalanceRow doesn't emit a component 'click') -->
-    <div
-            role="button"
-            class="w-full"
+    <button
+            type="button"
+            class="w-full text-left bg-transparent border-0 p-0"
             onclick={() => handleSelect(transitiveTransfer())}
     >
         <BalanceRow item={transitiveTransfer()} />
-    </div>
+    </button>
 {/if}
 
 <p class="menu-title pl-0 mt-4">Individual tokens</p>
@@ -105,13 +105,13 @@
     <div class="flex flex-col p-0 w-full gap-y-1.5">
         {#each $balances.data as balance (balance.tokenAddress)}
             <!-- Same wrapper for reliable clicks without changing visuals -->
-            <div
-                    role="button"
-                    class="w-full"
+            <button
+                    type="button"
+                    class="w-full text-left bg-transparent border-0 p-0"
                     onclick={() => handleSelect(balance)}
             >
                 <BalanceRow item={balance} />
-            </div>
+            </button>
         {/each}
     </div>
 {:else}

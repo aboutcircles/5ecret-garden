@@ -56,19 +56,19 @@
   headerTopGapClass="mt-4 md:mt-6"
   collapsedTopGapClass="mt-3 md:mt-4"
 >
-  <svelte:fragment slot="title">
+  {#snippet title()}
     <h1 class="h2 font-bold text-gray-800">Group Metrics</h1>
     <p class="text-sm text-gray-500">Analytics and insights for your group</p>
-  </svelte:fragment>
-  <svelte:fragment slot="meta">
-    <Avatar address={data.group as Address} view="horizontal" />
-  </svelte:fragment>
-  <svelte:fragment slot="actions">
+  {/snippet}
+  {#snippet meta()}
+    <Avatar address={data.group} view="horizontal" />
+  {/snippet}
+  {#snippet headerActions()}
     <ActionButtonBar {actions} />
-  </svelte:fragment>
-  <svelte:fragment slot="collapsed-menu">
+  {/snippet}
+  {#snippet collapsedMenu()}
     <ActionButtonDropDown {actions} />
-  </svelte:fragment>
+  {/snippet}
   {#if Object.keys(groupMetrics).length > 0}
     <!-- Stats Overview -->
     <GroupMetricsStats {groupMetrics} />

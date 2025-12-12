@@ -224,7 +224,7 @@
         <div tabindex="0" role="button" class="btn btn-outline justify-start">
           <Avatar address={asAddress(selectedGateway)} view="horizontal" bottomInfo={selectedGateway} clickable={false} />
         </div>
-        <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-[1] w-72 p-2 shadow">
+        <ul class="dropdown-content menu bg-base-100 rounded-box z-[1] w-72 p-2 shadow">
           {#each gateways as gw}
             <li>
               <button type="button" class="flex items-center gap-2" onclick={() => { selectedGateway = gw; }}>

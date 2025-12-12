@@ -31,19 +31,17 @@
 
 
 <PageScaffold highlight="soft" collapsedMode="bar" collapsedHeightClass="h-12" maxWidthClass="page page--lg" contentWidthClass="page page--lg" usePagePadding={true} headerTopGapClass="mt-4 md:mt-6" collapsedTopGapClass="mt-3 md:mt-4">
-  <svelte:fragment slot="title"><h1 class="h2 m-0">Register Person (v1)</h1></svelte:fragment>
-  <svelte:fragment slot="meta">Step 1 of 1</svelte:fragment>
-  <svelte:fragment slot="actions">
+  {#snippet title()}<h1 class="h2 m-0">Register Person (v1)</h1>{/snippet}
+  {#snippet meta()}Step 1 of 1{/snippet}
+  {#snippet headerActions()}
     <ActionButtonBar {actions} />
-  </svelte:fragment>
-  <svelte:fragment slot="collapsed-left">
+  {/snippet}
+  {#snippet collapsedLeft()}
     <div class="truncate flex items-center gap-2">
       <span class="font-medium">Register (v1)</span>
     </div>
-  </svelte:fragment>
-  <svelte:fragment slot="collapsed-menu">
-    <ActionButtonDropDown {actions} />
-  </svelte:fragment>
+  {/snippet}
+  {#snippet collapsedMenu()}<ActionButtonDropDown {actions} />{/snippet}
 
   <div class="mt-3">
     <Disclaimer/>
