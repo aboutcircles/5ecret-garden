@@ -134,9 +134,9 @@
                                 clickable={false}
                         />
                     </div>
-                    <div slot="trailing" aria-hidden="true">
+                    {#snippet trailing()}<div aria-hidden="true">
                         <img src="/chevron-right.svg" alt="" class="icon" />
-                    </div>
+                    </div>{/snippet}
                 </RowFrame>
             {/each}
         </div>

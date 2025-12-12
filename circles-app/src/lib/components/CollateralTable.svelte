@@ -55,7 +55,7 @@
         />
       </div>
 
-      <div slot="trailing" class="flex items-center gap-3 md:gap-4">
+      {#snippet trailing()}<div class="flex items-center gap-3 md:gap-4">
         <div class="text-right tabular-nums">
           <div class="font-medium">{formatEtherTwoDecimals(item.amount)} CRC</div>
         </div>
@@ -69,7 +69,7 @@
             min="0"
           />
         {/if}
-      </div>
+      </div>{/snippet}
     </RowFrame>
   {/each}
 </div>

@@ -16,7 +16,7 @@
     <div class="min-w-0">
         <Avatar address={address} view="horizontal" bottomInfo={trustRelation} clickable={true} />
     </div>
-    <div slot="trailing" aria-hidden="true">
+    {#snippet trailing()}<div aria-hidden="true">
         <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" />
-    </div>
+    </div>{/snippet}
 </RowFrame>

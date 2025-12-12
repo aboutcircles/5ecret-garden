@@ -62,7 +62,7 @@ export function mkCirclesBindings(
     const res = await fetch(pinMediaUrl, {
       method: 'POST',
       headers: { 'Content-Type': (mime || 'application/octet-stream'), 'Accept': 'application/json' },
-      body: bytes
+      body: bytes as Uint8Array<ArrayBuffer>
     });
     if (!res.ok) {
       let detail = '';
@@ -97,9 +97,6 @@ export function mkCirclesBindings(
     async getLatestProfileCid(av: Address): Promise<string | null> {
       const cid = await circlesSdk.data.getMetadataCidForAddress(av);
       return (cid as string | null) ?? null;
-    },
-    async getProfile(cid: CidV0): Promise<any | null> {
-      try { return await circlesSdk.profiles!.get(cid); } catch { return null; }
     },
     putJsonLd,
     getJsonLd,

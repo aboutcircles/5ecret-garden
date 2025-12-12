@@ -10,8 +10,16 @@
     "sourceMap": true,
     "strict": true,
     "moduleResolution": "bundler",
-    "types": ["svelte"],
-    "allowSyntheticDefaultImports": true
+    "types": ["svelte", "vitest/globals"],
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "$lib": ["./src/lib"],
+      "$lib/*": ["./src/lib/*"],
+      "$app/types": ["./.svelte-kit/types/index.d.ts"],
+      "@circles-market/sdk": ["../packages/circles-market-sdk/src/index.ts"],
+      "@circles-profile/core": ["../packages/circles-profile-core/src/index.ts"]
+    }
   }
   // Path aliases are handled by https://kit.svelte.dev/docs/configuration#alias
   // except $lib which is handled by https://kit.svelte.dev/docs/configuration#files
