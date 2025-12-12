@@ -9,6 +9,8 @@
         className?: string;
         /** Collapse the leading column for rows whose content already includes its own avatar/layout. */
         noLeading?: boolean;
+        /** Optional direct click handler prop to support `onclick={...}` on the component. */
+        onclick?: (e: MouseEvent) => void;
     }
 
     let {
@@ -17,7 +19,8 @@
         disabled = false,
         dense = false,
         className = '',
-        noLeading = false
+        noLeading = false,
+        onclick = undefined,
     }: Props = $props();
 
     const dispatch = createEventDispatcher();
@@ -40,7 +43,9 @@
         if (!isInteractive) {
             return;
         }
-        // Re-dispatch as a component event so parents can use onclick on <RowFrame>
+        // Call direct prop if provided (supports `onclick={...}` usage)
+        onclick?.(e);
+        // Also re-dispatch as a Svelte event so parents can use `on:click`
         dispatch('click', { originalEvent: e });
     }
 </script>

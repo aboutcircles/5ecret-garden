@@ -143,6 +143,20 @@
             </button>
         </div>
     {:else if product && product?.product}
+        {#snippet actions()}
+            <div class="flex gap-2 w-full">
+                <button
+                    type="button"
+                    class="btn btn-outline w-full"
+                    onclick={handleAddToBasket}
+                    disabled={!offer || cartLoading || !currentAvatar}
+                    title={!currentAvatar ? 'Connect a Circles account first' : (!offer ? 'No offer available' : 'Add to basket')}
+                >
+                    Add to basket
+                </button>
+            </div>
+        {/snippet}
+
         <ProductViewer
             product={product?.product}
             offer={offer}
@@ -152,21 +166,8 @@
             showMeta={true}
             meta={{ publishedAt: product.publishedAt, productCid: product.productCid, sku: product?.product?.sku }}
             layout="detail"
-        >
-            <svelte:fragment slot="actions">
-                <div class="flex gap-2 w-full">
-                    <button
-                        type="button"
-                        class="btn btn-outline w-full"
-                        onclick={handleAddToBasket}
-                        disabled={!offer || cartLoading || !currentAvatar}
-                        title={!currentAvatar ? 'Connect a Circles account first' : (!offer ? 'No offer available' : 'Add to basket')}
-                    >
-                        Add to basket
-                    </button>
-                </div>
-            </svelte:fragment>
-        </ProductViewer>
+            actions={actions}
+        />
     {:else if !loading && !errorMsg}
         <!-- Product not found -->
         <div class="flex flex-col items-center justify-center p-8">

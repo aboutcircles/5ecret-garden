@@ -61,7 +61,7 @@
         {#each rows as addr (addr)}
             <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => openProfile(addr)}>
                 <div class="min-w-0">
-                    <Avatar address={addr} view="horizontal" clickable={false} />
+                    <Avatar address={addr} view="horizontal" clickable={true} />
                 </div>
                 <div slot="trailing" aria-hidden="true">
                     <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" />

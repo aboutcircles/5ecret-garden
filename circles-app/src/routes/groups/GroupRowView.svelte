@@ -21,7 +21,7 @@
                 placeholderAvatar={true}
                 address={item.group}
                 view="horizontal"
-                clickable={false}
+                clickable={true}
                 bottomInfo={`${item.memberCount} member${item.memberCount === 1 ? '' : 's'}`}
         />
     </div>

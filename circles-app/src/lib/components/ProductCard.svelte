@@ -161,6 +161,43 @@
 
 </script>
 
+{#snippet actions()}
+    {#if isOwner && canTombstone}
+        <button
+                type="button"
+                class="btn btn-sm btn-outline"
+                onclick={(e) => { e.stopPropagation(); handleEdit(); }}
+                title="Edit listing"
+        >
+            Edit
+        </button>
+        <button
+                type="button"
+                class="btn btn-sm btn-outline btn-error"
+                onclick={(e) => { e.stopPropagation(); handleTombstone(); }}
+                title="Remove listing"
+        >
+            Remove
+        </button>
+    {/if}
+
+    <button
+            type="button"
+            class="btn btn-sm btn-outline"
+            onclick={(e) => { e.stopPropagation(); handleAddToBasket(); }}
+            disabled={!canAdd}
+            title={!currentAvatar
+      ? 'Connect a Circles account first'
+      : (!offer
+        ? 'No offer available'
+        : (!hasPayAction
+          ? 'This item has no PayAction; cannot add to basket'
+          : 'Add to basket'))}
+    >
+        Add to basket
+    </button>
+{/snippet}
+
 {#if product}
     <div
             class="bg-base-100 border border-base-300 rounded-xl overflow-hidden flex flex-col hover:shadow-md transition-shadow cursor-pointer"
@@ -184,44 +221,8 @@
                 showSeller={!!showSellerInfo}
                 showMeta={!showSellerInfo}
                 meta={{ publishedAt: product.publishedAt, productCid: product.productCid, sku: prod?.sku }}
-        >
-            <svelte:fragment slot="actions">
-                {#if isOwner && canTombstone}
-                    <button
-                            type="button"
-                            class="btn btn-sm btn-outline"
-                            onclick={(e) => { e.stopPropagation(); handleEdit(); }}
-                            title="Edit listing"
-                    >
-                        Edit
-                    </button>
-                    <button
-                            type="button"
-                            class="btn btn-sm btn-outline btn-error"
-                            onclick={(e) => { e.stopPropagation(); handleTombstone(); }}
-                            title="Remove listing"
-                    >
-                        Remove
-                    </button>
-                {/if}
-
-                <button
-                        type="button"
-                        class="btn btn-sm btn-outline"
-                        onclick={(e) => { e.stopPropagation(); handleAddToBasket(); }}
-                        disabled={!canAdd}
-                        title={!currentAvatar
-          ? 'Connect a Circles account first'
-          : (!offer
-            ? 'No offer available'
-            : (!hasPayAction
-              ? 'This item has no PayAction; cannot add to basket'
-              : 'Add to basket'))}
-                >
-                    Add to basket
-                </button>
-            </svelte:fragment>
-        </ProductViewer>
+                actions={actions}
+        />
     </div>
 {:else}
     <div>Product data not available</div>

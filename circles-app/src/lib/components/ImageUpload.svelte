@@ -127,9 +127,20 @@
 
 <div class="space-y-2">
   <div
+    role="button"
+    tabindex="0"
     class="border border-dashed rounded-md p-3 text-xs flex flex-col gap-2 cursor-pointer"
     class:border-primary={dragging}
     onclick={handleClickSelect}
+    onkeydown={(e) => {
+      const key = e.key;
+      const isEnter = key === 'Enter';
+      const isSpace = key === ' ';
+      if (isEnter || isSpace) {
+        e.preventDefault();
+        handleClickSelect();
+      }
+    }}
     ondragover={handleDragOver}
     ondragleave={handleDragLeave}
     ondrop={handleDrop}

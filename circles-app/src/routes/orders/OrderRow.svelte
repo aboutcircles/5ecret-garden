@@ -42,12 +42,10 @@
   }
 </script>
 
-<div
-  class="w-full bg-base-100 border shadow-sm rounded-xl px-3 md:px-4 py-2 md:py-2.5 flex items-center justify-between cursor-pointer hover:bg-base-200/40 transition-colors"
-  role="listitem button"
-  tabindex="0"
+<button
+  type="button"
+  class="w-full bg-base-100 border shadow-sm rounded-xl px-3 md:px-4 py-2 md:py-2.5 flex items-center justify-between cursor-pointer hover:bg-base-200/40 transition-colors text-left"
   onclick={goToDetails}
-  onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToDetails(); } }}
 >
   <div class="flex flex-col min-w-0 mr-3">
     <div class="font-mono text-sm truncate" title={item.id}>{item.id}</div>
@@ -67,4 +65,4 @@
     <!-- No copy action for secret keys; id shown here should be non-secret order number/reference -->
   </div>
   <div class="sr-only">Order</div>
-</div>
+</button>

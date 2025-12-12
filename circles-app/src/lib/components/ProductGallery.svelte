@@ -37,7 +37,7 @@
 {#if imageUrls.length > 0}
     <div class="image-gallery">
         <!-- Main Image Display -->
-        <div class="relative group" onclick={nextImage}>
+        <div class="relative group" role="button" tabindex="0" onclick={nextImage} onkeydown={(e) => { const k=e.key; if (k==='Enter' || k===' ') { e.preventDefault(); nextImage(); }}} >
             <img 
                 src={imageUrls[currentIndex]}
                 alt={`Product image ${currentIndex + 1}`}

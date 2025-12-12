@@ -79,7 +79,7 @@
     <!-- Meta row: reserve height; show seller or published date when present -->
     <div class="min-h-[1.5rem]">
       {#if showSeller && seller}
-        <Avatar address={seller} view="horizontal" clickable={false} />
+        <Avatar address={seller} view="horizontal" clickable={true} />
       {:else if showMeta && publishedDateText}
         <div class="text-xs opacity-60 flex items-center gap-1">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">

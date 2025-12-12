@@ -66,6 +66,26 @@
       <span>{errorMsg}</span>
     </div>
   {:else if product && product?.product}
+    {#snippet actions()}
+      <div class="flex gap-2 w-full">
+        <button
+          type="button"
+          class="btn btn-outline w-full"
+          onclick={(e) => { e.stopPropagation(); void handleAddToBasket(); }}
+          disabled={!canAdd}
+          title={!currentAvatar
+            ? 'Connect a Circles account first'
+            : (!offer
+                ? 'No offer available'
+                : (!hasPayAction
+                    ? 'This item has no PayAction; cannot add to basket'
+                    : 'Add to basket'))}
+        >
+          Add to basket
+        </button>
+      </div>
+    {/snippet}
+
     <ProductViewer
       product={product.product}
       offer={offer}
@@ -75,27 +95,8 @@
       showMeta={true}
       meta={{ publishedAt: product.publishedAt, productCid: product.productCid, sku: product?.product?.sku }}
       layout="detail"
-    >
-      <svelte:fragment slot="actions">
-        <div class="flex gap-2 w-full">
-          <button
-            type="button"
-            class="btn btn-outline w-full"
-            onclick={(e) => {handleAddToBasket(); e.stopPropagation();}}
-            disabled={!canAdd}
-            title={!currentAvatar
-              ? 'Connect a Circles account first'
-              : (!offer
-                  ? 'No offer available'
-                  : (!hasPayAction
-                      ? 'This item has no PayAction; cannot add to basket'
-                      : 'Add to basket'))}
-          >
-            Add to basket
-          </button>
-        </div>
-      </svelte:fragment>
-    </ProductViewer>
+      actions={actions}
+    />
   {:else}
     <div class="text-sm opacity-70">Product data not available</div>
   {/if}

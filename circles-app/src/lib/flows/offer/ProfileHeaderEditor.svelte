@@ -229,7 +229,7 @@
                                 bind:value={description}
                                 placeholder="Tell people who you are or what this organization does…"
                                 disabled={readonly}
-                        />
+                        ></textarea>
                     </div>
                 </div>
             </div>
