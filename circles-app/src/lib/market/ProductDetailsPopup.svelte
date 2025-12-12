@@ -81,7 +81,7 @@
           <button
             type="button"
             class="btn btn-outline w-full"
-            on:click|stopPropagation={handleAddToBasket}
+            onclick={(e) => {handleAddToBasket(); e.stopPropagation();}}
             disabled={!canAdd}
             title={!currentAvatar
               ? 'Connect a Circles account first'

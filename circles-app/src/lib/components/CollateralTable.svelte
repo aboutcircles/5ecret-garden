@@ -46,7 +46,7 @@
 
 <div class="w-full">
   {#each collateralInTreasury as item}
-      <RowFrame clickable={true} dense={true} noLeading={true} on:click={() => openProfile(item.avatar)}>
+      <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => openProfile(item.avatar)}>
       <div class="min-w-0">
         <Avatar
           address={item.avatar}

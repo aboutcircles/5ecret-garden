@@ -59,7 +59,7 @@
 {:else}
     <div class="w-full flex flex-col gap-y-1.5" role="list">
         {#each rows as addr (addr)}
-            <RowFrame clickable={true} dense={true} noLeading={true} on:click={() => openProfile(addr)}>
+            <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => openProfile(addr)}>
                 <div class="min-w-0">
                     <Avatar address={addr} view="horizontal" clickable={false} />
                 </div>

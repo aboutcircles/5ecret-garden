@@ -98,7 +98,7 @@
                     <div class="flex flex-col gap-y-2 pl-10 text-sm">
                         {#if invitations.length > 0}
                             {#each invitations as inviter (inviter.avatar)}
-                                <RowFrame clickable={true} dense={true} noLeading={true} on:click={() => (inviterSelected = inviter.avatar)}>
+                                <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => (inviterSelected = inviter.avatar)}>
                                     <div class="flex items-center gap-x-2 min-w-0">
                                         <input
                                                 type="radio"

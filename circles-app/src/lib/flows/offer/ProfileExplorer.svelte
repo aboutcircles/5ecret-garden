@@ -223,7 +223,7 @@
                         disabled={!resolvedAvatar}
                         title="Add signing key"
                         aria-label="Add signing key"
-                        on:click={() => popupControls.open({ title: 'Add signing key', component: AddSigningKey, props: { avatar: resolvedAvatar, pinApiBase }, onClose: () => { void loadProfile(); } })}
+                        onclick={() => popupControls.open({ title: 'Add signing key', component: AddSigningKey, props: { avatar: resolvedAvatar, pinApiBase }, onClose: () => { void loadProfile(); } })}
                     >
                         <Lucide icon={LPlus} size={16} />
                     </button>
@@ -272,7 +272,7 @@
                                             <button
                                                     type="button"
                                                     class="btn btn-xs btn-ghost btn-square"
-                                                    on:click={() => revokeSigningKey(fp)}
+                                                    onclick={() => revokeSigningKey(fp)}
                                                     title="Revoke now"
                                                     aria-label="Revoke now"
                                             >
@@ -281,7 +281,7 @@
                                             <button
                                                     type="button"
                                                     class="btn btn-xs btn-ghost btn-square"
-                                                    on:click={() => removeSigningKey(fp)}
+                                                    onclick={() => removeSigningKey(fp)}
                                                     title="Remove"
                                                     aria-label="Remove"
                                             >
@@ -303,7 +303,7 @@
             <button
                     type="button"
                     class="btn"
-                    on:click={popupControls.close}
+                    onclick={popupControls.close}
             >
                 {readonly ? 'Close' : 'Cancel'}
             </button>
@@ -311,7 +311,7 @@
                 <button
                         type="button"
                         class="btn btn-primary"
-                        on:click={saveProfile}
+                        onclick={saveProfile}
                 >
                     Save
                 </button>

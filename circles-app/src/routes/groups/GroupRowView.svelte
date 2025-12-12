@@ -13,7 +13,7 @@
     }
 </script>
 
-<RowFrame clickable={true} dense={true} noLeading={true} on:click={openProfile}>
+<RowFrame clickable={true} dense={true} noLeading={true} onclick={openProfile}>
     <div class="min-w-0">
         <Avatar
                 placeholderBottom={true}

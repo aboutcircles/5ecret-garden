@@ -40,7 +40,7 @@
         if (!isInteractive) {
             return;
         }
-        // Re-dispatch as a component event so parents can use on:click on <RowFrame>
+        // Re-dispatch as a component event so parents can use onclick on <RowFrame>
         dispatch('click', { originalEvent: e });
     }
 </script>
@@ -57,8 +57,8 @@
         role={clickable ? 'button' : 'group'}
         tabindex={clickable && !disabled ? 0 : undefined}
         aria-disabled={disabled ? 'true' : 'false'}
-        on:keydown={handleKeydown}
-        on:click={handleClick}
+        onkeydown={handleKeydown}
+        onclick={handleClick}
 >
     {#if !noLeading}
         <div class="ui-row__leading">

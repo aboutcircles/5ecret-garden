@@ -113,7 +113,7 @@
     <div class="rounded-md p-2 bg-base-100/60 space-y-2">
         <div class="flex items-center justify-between">
             <div class="text-xs font-semibold">Create in browser</div>
-            <button class="btn btn-xs btn-outline" on:click={onGenerate}>Generate key pair</button>
+            <button class="btn btn-xs btn-outline" onclick={onGenerate}>Generate key pair</button>
         </div>
 
         {#if privateKey}
@@ -133,7 +133,7 @@
     </label>
 
     <div class="flex justify-end gap-2 pt-2">
-        <button class="btn btn-ghost btn-sm" on:click={onCancel} disabled={saving}>Cancel</button>
-        <button class="btn btn-primary btn-sm" on:click={onSave} disabled={saving || !publicKey.trim() || !avatar}>Save</button>
+        <button class="btn btn-ghost btn-sm" onclick={onCancel} disabled={saving}>Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick={onSave} disabled={saving || !publicKey.trim() || !avatar}>Save</button>
     </div>
 </div>

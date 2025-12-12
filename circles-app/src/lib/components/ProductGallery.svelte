@@ -37,7 +37,7 @@
 {#if imageUrls.length > 0}
     <div class="image-gallery">
         <!-- Main Image Display -->
-        <div class="relative group" on:click={nextImage}>
+        <div class="relative group" onclick={nextImage}>
             <img 
                 src={imageUrls[currentIndex]}
                 alt={`Product image ${currentIndex + 1}`}
@@ -47,7 +47,7 @@
             <!-- Navigation Arrows -->
             {#if imageUrls.length > 1}
                 <button
-                    on:click|stopPropagation={prevImage}
+                    onclick={(e) => {prevImage(); e.stopPropagation();}}
                     class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-black/70"
                     aria-label="Previous image"
                 >
@@ -57,7 +57,7 @@
                 </button>
                 
                 <button
-                    on:click|stopPropagation={nextImage}
+                    onclick={(e) => {nextImage(); e.stopPropagation();}}
                     class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-black/70"
                     aria-label="Next image"
                 >
@@ -78,7 +78,7 @@
             <div class="flex gap-2 mt-4 overflow-x-auto pb-2">
                 {#each imageUrls as url, index}
                     <button
-                        on:click={() => selectImage(index)}
+                        onclick={() => selectImage(index)}
                         class={`flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
                             currentIndex === index 
                                 ? 'border-primary scale-105' 
@@ -97,7 +97,7 @@
                 <!-- Reset to Original Button (only show if not on first image) -->
                 {#if currentIndex !== originalIndex}
                     <button
-                        on:click={resetToOriginal}
+                        onclick={resetToOriginal}
                         class="flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-lg border-2 border-base-300 flex items-center justify-center hover:border-primary/50 transition-all duration-200"
                         aria-label="Reset to original image"
                     >
@@ -111,7 +111,7 @@
             <!-- Single Image - Show reset button anyway -->
             <div class="flex gap-2 mt-4">
                 <button
-                    on:click={resetToOriginal}
+                    onclick={resetToOriginal}
                     class="px-3 py-1 text-xs bg-base-200 hover:bg-base-300 rounded-lg transition-colors duration-200"
                     aria-label="Reset image"
                 >

@@ -12,7 +12,7 @@
     }
 </script>
 
-<RowFrame clickable={true} dense={true} noLeading={true} on:click={openProfile}>
+<RowFrame clickable={true} dense={true} noLeading={true} onclick={openProfile}>
     <div class="min-w-0">
         <Avatar address={address} view="horizontal" bottomInfo={trustRelation} clickable={false} />
     </div>
