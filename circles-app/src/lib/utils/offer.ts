@@ -64,9 +64,9 @@ export function generateSku(name: string, existingSkus: string[] = []): string {
  * @param sku The SKU to validate
  * @returns True if valid, false otherwise
  */
+import { isValidSku as sdkIsValidSku } from '@circles-market/sdk';
 export function isValidSku(sku: string): boolean {
-  // Regex from 1_Product.svelte: /^[a-z0-9][a-z0-9-_]{0,62}$/
-  return /^[a-z0-9][a-z0-9-_]{0,62}$/.test(sku);
+  return sdkIsValidSku(sku);
 }
 
 /**

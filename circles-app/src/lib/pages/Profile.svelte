@@ -36,12 +36,12 @@
     // Offers tab dependencies
     import ProductCard from '$lib/components/ProductCard.svelte';
     import { fetchSellerCatalog } from '$lib/market/catalogClient';
-    import { normalizeAddress } from '$lib/offers/adapters';
+    import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
     import type { AggregatedCatalogItem } from '$lib/market/types';
     // Namespaces explorer (read-only) for other profiles
     import ProfileNamespaces from '$lib/flows/offer/ProfileNamespaces.svelte';
-    import { loadProfileOrInit } from '$lib/offers/namespaces';
-    import type { CirclesBindings } from '$lib/offers/namespaces';
+    import { loadProfileOrInit } from '@circles-market/sdk';
+    import type { ProfilesBindings } from '@circles-market/sdk';
     import { mkCirclesBindings } from '$lib/offers/mkCirclesBindings';
     import { get } from 'svelte/store';
 
@@ -138,7 +138,7 @@
     // Track which address' namespaces are currently loaded
     let namespacesFor: string | null = $state(null);
 
-    function getBindings(): CirclesBindings {
+    function getBindings(): ProfilesBindings {
         const sdk = get(circles);
         if (!sdk) {
             throw new Error('Circles SDK not initialized');

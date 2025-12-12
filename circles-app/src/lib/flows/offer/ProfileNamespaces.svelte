@@ -5,7 +5,7 @@
     import {circles} from '$lib/stores/circles';
     import type {Address} from "@circles-sdk/utils";
     import type {CidV0} from '$lib/offers/cid';
-    import type {CirclesBindings} from '$lib/offers/namespaces';
+    import type { ProfilesBindings } from '@circles-market/sdk';
     import {
         loadNamespaceLinks,
         rewriteNamespaceFromLinks,
@@ -16,6 +16,7 @@
     import Lucide from '$lib/icons/Lucide.svelte';
     import { ChevronRight as LChevronRight, ChevronDown as LChevronDown, Trash2 as LTrash2, ExternalLink as LExternalLink } from 'lucide';
     import { mkCirclesBindings } from '$lib/offers/mkCirclesBindings';
+    import { ipfsGatewayUrl } from '$lib/utils/ipfs';
 
     interface Props {
         avatar: Address;
@@ -42,7 +43,7 @@
     // Structure: { [namespaceAddr]: { [folderPath]: boolean } }
     let folderExpanded = $state<Record<string, Record<string, boolean>>>({});
 
-    function getBindings(): CirclesBindings {
+    function getBindings(): ProfilesBindings {
         const sdk = get(circles);
         if (!sdk) {
             throw new Error('Circles SDK not initialized');
@@ -131,7 +132,7 @@
         if (!hasCid) {
             return;
         }
-        const url = `https://ipfs.io/ipfs/${cid}`;
+        const url = ipfsGatewayUrl(cid);
         window.open(url, '_blank', 'noopener,noreferrer');
     }
 

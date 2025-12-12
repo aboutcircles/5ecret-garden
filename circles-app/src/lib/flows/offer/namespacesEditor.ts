@@ -1,8 +1,8 @@
 // lib/flows/profile/namespacesEditor.ts
 import type { CidV0 } from '$lib/offers/cid';
-import type { CirclesBindings } from '$lib/offers/namespaces';
-import { loadIndex, fetchIpfsJson, rebaseAndSaveProfile } from '$lib/offers/namespaces';
-import type { Address } from '$lib/offers/adapters';
+import type { ProfilesBindings } from '@circles-market/sdk';
+import { loadIndex, rebaseAndSaveProfile } from '@circles-market/sdk';
+import type { Address } from '@circles-sdk/utils';
 
 export type LoadedNamespaceLink = {
     link: any;          // JSON-LD CustomDataLink as stored on IPFS
@@ -23,7 +23,7 @@ export type NamespaceLinksResult = {
  * - returns newest-first by storage (head first)
  */
 export async function loadNamespaceLinks(
-    circles: CirclesBindings,
+    circles: ProfilesBindings,
     indexCid: CidV0 | null
 ): Promise<NamespaceLinksResult> {
     if (!indexCid) {
@@ -58,7 +58,7 @@ export async function loadNamespaceLinks(
         }
 
         curCid = prev;
-        curChunk = await fetchIpfsJson(prev);
+        curChunk = await circles.getJsonLd(prev);
     }
 
     return { links: all, indexCid, headCid };
@@ -115,7 +115,7 @@ function normalizeChunk(obj: any): ChunkShape {
  * is updated via CirclesBindings.updateAvatarProfileDigest.
  */
 export async function rewriteNamespaceFromLinks(
-    circles: CirclesBindings,
+    circles: ProfilesBindings,
     avatar: Address,
     namespaceKey: Address,
     links: any[]

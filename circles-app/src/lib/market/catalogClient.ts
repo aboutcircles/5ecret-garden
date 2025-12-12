@@ -2,7 +2,7 @@
 import { MARKET_API_BASE, MARKET_OPERATOR } from '$lib/config/market';
 import type { AggregatedCatalog, AggregatedCatalogItem } from '$lib/market/types';
 import { extractProducts } from '$lib/market/catalogHelpers';
-import { normalizeAddress } from '$lib/offers/adapters';
+import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
 import type { Address } from '@circles-sdk/utils';
 
 const OPERATOR: Address = MARKET_OPERATOR;
@@ -111,7 +111,7 @@ export async function fetchSellerCatalog(
   sellerRaw: string,
   opts?: Omit<CatalogQuery, 'avatars'>,
 ): Promise<AggregatedCatalogItem[]> {
-  const seller = normalizeAddress(sellerRaw);
+  const seller = normalizeAddress(sellerRaw) as Address;
   const page = await fetchCatalogPage({ avatars: [seller], pageSize: opts?.pageSize ?? 20, chainId: opts?.chainId ?? 100, start: opts?.start, end: opts?.end });
   return page.items;
 }
@@ -124,7 +124,7 @@ export async function fetchProductForSellerAndSku(
   sellerRaw: string,
   skuRaw: string,
 ): Promise<AggregatedCatalogItem | null> {
-  const seller = normalizeAddress(sellerRaw);
+  const seller = normalizeAddress(sellerRaw) as Address;
   const sku = String(skuRaw).toLowerCase();
 
   const all = await fetchSellerCatalog(seller);

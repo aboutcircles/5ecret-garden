@@ -1,7 +1,7 @@
 // src/lib/market/feeds.ts
 // Lightweight client-side resolvers for availability/inventory feeds (display-only).
 
-import { isAbsoluteUri } from '$lib/offers/adapters';
+import { isAbsoluteUri } from '@circles-market/sdk';
 
 export type QuantitativeValue = {
   '@type': 'QuantitativeValue';

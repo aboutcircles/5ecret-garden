@@ -15,9 +15,9 @@
     import Lucide from '$lib/icons/Lucide.svelte';
     import { Plus as LPlus, Trash2 as LTrash2, Ban as LBan } from 'lucide';
 
-    import {normalizeAddress} from '$lib/offers/adapters';
-    import type {CirclesBindings} from '$lib/offers/namespaces';
-    import {loadProfileOrInit, rebaseAndSaveProfile} from '$lib/offers/namespaces';
+    import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
+    import type { ProfilesBindings } from '@circles-market/sdk';
+    import { loadProfileOrInit, rebaseAndSaveProfile } from '@circles-market/sdk';
     import {mkCirclesBindings} from '$lib/offers/mkCirclesBindings';
     import type {Address} from '@circles-sdk/utils';
 
@@ -53,7 +53,7 @@
         readonly = !isOwner;
     });
 
-    function getBindings(): CirclesBindings {
+    function getBindings(): ProfilesBindings {
         const sdk = get(circles);
         if (!sdk) {
             throw new Error('Circles SDK not initialized');
@@ -69,10 +69,10 @@
             // If no explicit avatar is passed, default to the currently connected avatar from app state
             const rawAvatar =
                 avatar ?? ((avatarState.avatar?.address as string | undefined) ?? (avatarState.avatar?.avatarInfo?.avatar as string | undefined) ?? '');
-            const norm = normalizeAddress(rawAvatar);
+            const norm = normalizeAddress(rawAvatar) as Address;
             resolvedAvatar = norm;
 
-            const {profile} = await loadProfileOrInit(getBindings(), norm);
+            const {profile} = await loadProfileOrInit(getBindings(), norm as Address);
 
             name = String(profile.name ?? '');
             description = String(profile.description ?? '');

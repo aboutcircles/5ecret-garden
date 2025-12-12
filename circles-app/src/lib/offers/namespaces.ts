@@ -12,6 +12,7 @@ import {
   rebaseAndSaveProfile as coreRebaseAndSaveProfile,
   fetchIpfsJson as coreFetchIpfsJson,
 } from '@circles-profile/core';
+import { ipfsGatewayBase } from '$lib/utils/ipfs';
 
 // App-level bindings now extend core ProfilesBindings and add optional extras.
 export interface CirclesBindings extends CoreProfilesBindings {
@@ -19,8 +20,10 @@ export interface CirclesBindings extends CoreProfilesBindings {
   getProfile?(cid: CidV0): Promise<any | null>;
 }
 
-// Re-export the core fetcher to avoid duplication
-export const fetchIpfsJson = coreFetchIpfsJson;
+// Wrap the core fetcher to ensure the single gateway base is always used
+export function fetchIpfsJson(cid: string): Promise<any> {
+  return coreFetchIpfsJson(cid, ipfsGatewayBase);
+}
 
 // Re-export normalizers directly from core
 export const ensureProfileShape = coreEnsureProfileShape;

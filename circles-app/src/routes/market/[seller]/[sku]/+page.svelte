@@ -6,7 +6,7 @@
     import {goto} from "$app/navigation";
     import type { AggregatedCatalogItem } from '$lib/market/types';
     import { getFirstOffer } from '$lib/market/catalogHelpers';
-    import { normalizeAddress } from '$lib/offers/adapters';
+    import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
     import { avatarState } from '$lib/stores/avatar.svelte';
     import { cartState, addToCart } from '$lib/cart/store';
     import { fetchProductForSellerAndSku } from '$lib/market/catalogClient';

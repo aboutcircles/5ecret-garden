@@ -1,20 +1,17 @@
 import type { MinimalOfferInput, MinimalProductInput } from './offersTypes';
 import type { AvatarSigner } from './signers';
 import { buildProduct } from './offersJsonld';
-// Pull shared types and helpers from @circles-profile/core
 import type { ProfilesBindings as CoreProfilesBindings, CustomDataLink } from '@circles-profile/core';
 import {
   canonicaliseLink,
   buildLinkDraft,
-  ensureProfileShape,
-  ensureNameIndexDocShape,
-  ensureNamespaceChunkShape,
   loadProfileOrInit,
   loadIndex,
   insertIntoHead,
   saveHeadAndIndex,
   rebaseAndSaveProfile,
 } from '@circles-profile/core';
+import { normalizeEvmAddress, assertSku } from './utils';
 
 // Backwards-compatible alias: SDK still exports ProfilesBindings
 export type ProfilesBindings = CoreProfilesBindings;
@@ -63,14 +60,6 @@ export class OffersClientImpl implements OffersClient {
     return this.bindings;
   }
 
-  private normalizeAddress(addr: string): string {
-    if (!addr || !addr.startsWith('0x') || addr.length !== 42) throw new Error('Invalid address');
-    return addr.toLowerCase();
-  }
-
-  private assertSku(sku: string) {
-    if (!/^[a-z0-9][a-z0-9-_]{0,62}$/.test(sku)) throw new Error('Invalid SKU');
-  }
 
   async publishOffer(opts: {
     avatar: string;
@@ -91,10 +80,10 @@ export class OffersClientImpl implements OffersClient {
   }> {
     const b = this.ensureBindings();
     const chainId = opts.chainId ?? 100;
-    const avatar = this.normalizeAddress(opts.avatar);
-    const operator = this.normalizeAddress(opts.operator);
-    const gateway = opts.paymentGateway ? this.normalizeAddress(opts.paymentGateway) : undefined;
-    this.assertSku(opts.product.sku);
+    const avatar = normalizeEvmAddress(opts.avatar);
+    const operator = normalizeEvmAddress(opts.operator);
+    const gateway = opts.paymentGateway ? normalizeEvmAddress(opts.paymentGateway) : undefined;
+    assertSku(opts.product.sku);
 
     // Build product JSON-LD
     const productObj: any = buildProduct(opts.product, opts.offer);
@@ -172,9 +161,9 @@ export class OffersClientImpl implements OffersClient {
   }> {
     const b = this.ensureBindings();
     const chainId = opts.chainId ?? 100;
-    const avatar = this.normalizeAddress(opts.avatar);
-    const operator = this.normalizeAddress(opts.operator);
-    this.assertSku(opts.sku);
+    const avatar = normalizeEvmAddress(opts.avatar);
+    const operator = normalizeEvmAddress(opts.operator);
+    assertSku(opts.sku);
 
     const nowSec = Math.floor(Date.now() / 1000);
     const tomb = {

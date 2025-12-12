@@ -6,7 +6,7 @@
   import { fetchProductForSellerAndSku } from '$lib/market/catalogClient';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { cartState, addToCart } from '$lib/cart/store';
-  import { normalizeAddress } from '$lib/offers/adapters';
+  import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
 
   interface Props {
     seller: string; // EVM address

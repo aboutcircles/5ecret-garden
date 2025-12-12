@@ -4,8 +4,8 @@
     import { runTask } from '$lib/utils/tasks';
     import { circles } from '$lib/stores/circles';
     import { mkCirclesBindings } from '$lib/offers/mkCirclesBindings';
-    import { loadProfileOrInit, rebaseAndSaveProfile } from '$lib/offers/namespaces';
-    import type { CirclesBindings } from '$lib/offers/namespaces';
+    import { loadProfileOrInit, rebaseAndSaveProfile } from '@circles-market/sdk';
+    import type { ProfilesBindings } from '@circles-market/sdk';
     import type { Address } from '@circles-sdk/utils';
     import { bytesToHex, keccak256, hexToBytes } from '$lib/safeSigner';
     import { secp256k1 } from '@noble/curves/secp256k1';
@@ -23,7 +23,7 @@
     let error = $state<string | null>(null);
     let saving = $state(false);
 
-    function getBindings(): CirclesBindings {
+    function getBindings(): ProfilesBindings {
         const sdk = get(circles);
         if (!sdk) throw new Error('Circles SDK not initialized');
         return mkCirclesBindings(pinApiBase, sdk as any);

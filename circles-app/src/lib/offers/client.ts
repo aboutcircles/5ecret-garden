@@ -1,13 +1,14 @@
-import { normalizeAddress, type Address } from './adapters';
+// circles-app/src/lib/offers/client.ts
 import { cidV0ToDigest32, type CidV0, type Hex } from './cid';
-import { isValidSku } from '$lib/utils/offer';
 import {
   OffersClientImpl,
+  normalizeEvmAddress as normalizeAddress,
+  type AvatarSigner,
   type MinimalProductInput,
   type MinimalOfferInput,
 } from '@circles-market/sdk';
-import { toSdkAvatarSigner } from '$lib/offers/sdkAdapter';
-import type { CirclesBindings } from '$lib/offers/namespaces';
+import type { ProfilesBindings } from '@circles-market/sdk';
+import type { Address } from '@circles-sdk/utils';
 
 export type { Hex, Address, CidV0 };
 export type MinimalProduct = MinimalProductInput;
@@ -76,8 +77,19 @@ function normalizeTxHash(v: unknown): Hex | undefined {
   return s as Hex;
 }
 
+function toAvatarSigner(avatar: string, chainId: number, safe: SafeSignerLike): AvatarSigner {
+  return {
+    avatar: avatar.toLowerCase(),
+    chainId: BigInt(chainId),
+    async signBytes(payload: Uint8Array) {
+      const sig = await safe.sign(payload);
+      return sig as `0x${string}`;
+    },
+  };
+}
+
 export function createProfilesOffersClient(
-  circles: CirclesBindings,
+  circles: ProfilesBindings,
   safe: SafeSignerLike,
 ): ProfilesOffersClient {
   const sdkOffers = new OffersClientImpl(circles);
@@ -87,12 +99,7 @@ export function createProfilesOffersClient(
     const operator = normalizeAddress(p.operator);
     const chainId = p.chainId ?? 100;
 
-    const sku = p.product.sku;
-    if (!isValidSku(sku)) {
-      throw new Error(`Invalid SKU: ${sku}`);
-    }
-
-    const signer = toSdkAvatarSigner(avatar, chainId, safe);
+    const signer = toAvatarSigner(avatar, chainId, safe);
     const gateway = p.paymentGateway ? normalizeAddress(p.paymentGateway) : undefined;
 
     const res = await sdkOffers.publishOffer({
@@ -131,11 +138,7 @@ export function createProfilesOffersClient(
     const operator = normalizeAddress(p.operator);
     const chainId = p.chainId ?? 100;
 
-    if (!isValidSku(p.sku)) {
-      throw new Error(`Invalid SKU: ${p.sku}`);
-    }
-
-    const signer = toSdkAvatarSigner(avatar, chainId, safe);
+    const signer = toAvatarSigner(avatar, chainId, safe);
 
     const res = await sdkOffers.tombstone({
       avatar,

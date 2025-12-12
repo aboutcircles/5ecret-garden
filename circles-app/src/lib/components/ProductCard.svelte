@@ -19,7 +19,7 @@
     import {createProfilesOffersClient, type SafeSignerLike} from '$lib/offers/client';
     import {createMetaMaskSafeSigner} from '$lib/safeSigner/signers/metamask';
     import {mkCirclesBindings} from '$lib/offers/mkCirclesBindings';
-    import {normalizeAddress} from '$lib/offers/adapters';
+    import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
     import {get} from 'svelte/store';
     import {getProduct, getFirstOffer, isProductOwnedBy, resolvePayTo} from '$lib/market/catalogHelpers';
     import { productAndOfferToDraft } from '$lib/utils/offer';
@@ -68,7 +68,7 @@
             const sdk = get(circles);
             if (!sdk) throw new Error('Circles SDK not initialized');
 
-            const seller = normalizeAddress(product.seller as string);
+            const seller = normalizeAddress(product.seller as string) as typeof product.seller;
             const bindings = mkCirclesBindings(MARKET_API_BASE, sdk);
 
             const safeSigner: SafeSignerLike = createMetaMaskSafeSigner({

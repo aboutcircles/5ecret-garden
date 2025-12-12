@@ -16,6 +16,10 @@
   import ActionButtonDropDown from "$lib/components/layout/ActionButtonDropDown.svelte";
   import ActionButtonBar from "$lib/components/layout/ActionButtonBar.svelte";
   import type {Action} from "$lib/components/layout/Action";
+  import { circles } from '$lib/stores/circles';
+  import { get } from 'svelte/store';
+  import { mkCirclesBindings } from '$lib/offers/mkCirclesBindings';
+  import { ipfsGatewayUrl } from '$lib/utils/ipfs';
 
   // Profile editing is delegated to ProfileExplorer to keep a single flow.
   const pinApiBase = MARKET_API_BASE;
@@ -24,6 +28,37 @@
       avatarState.avatar?.avatarInfo?.avatar ??
       '') as Address | ''
   );
+
+  // Latest profile CID for the connected avatar (if any)
+  let profileCid: string | null = $state(null);
+  let profileCidLoading: boolean = $state(false);
+  let profileCidError: string | null = $state(null);
+
+  async function loadProfileCid(): Promise<void> {
+    profileCidLoading = true;
+    profileCidError = null;
+    profileCid = null;
+    try {
+      const sdk = get(circles);
+      if (!sdk || !avatarAddress) return;
+      const bindings = mkCirclesBindings(pinApiBase, sdk as any);
+      profileCid = (await bindings.getLatestProfileCid(avatarAddress)) || null;
+    } catch (e: any) {
+      profileCidError = String(e?.message ?? e);
+    } finally {
+      profileCidLoading = false;
+    }
+  }
+
+  $effect(() => {
+    // refresh on avatar change
+    void loadProfileCid();
+  });
+
+  async function copyProfileCid(): Promise<void> {
+    if (!profileCid) return;
+    try { await navigator.clipboard?.writeText(profileCid); } catch {}
+  }
 
   async function migrateToV2() {
     popupControls.open({
@@ -86,6 +121,18 @@
   >
     <div class="flex flex-col w-full gap-y-4">
       {#if avatarAddress}
+        <div class="w-full -mt-1 text-xs text-base-content/70 flex flex-wrap items-center gap-2">
+          <span class="font-semibold">Profile CID:</span>
+          {#if profileCidLoading}
+            <span>loading…</span>
+          {:else if profileCid}
+            <span class="font-mono select-all break-all">{profileCid}</span>
+            <button class="btn btn-ghost btn-xs" on:click={copyProfileCid}>Copy</button>
+            <a class="link link-primary text-xs" href={ipfsGatewayUrl(profileCid)} target="_blank" rel="noopener noreferrer">Open</a>
+          {:else}
+            <span class="opacity-70">none yet</span>
+          {/if}
+        </div>
         <ProfileExplorer avatar={avatarAddress} pinApiBase={pinApiBase} showAdvancedSections={true} />
       {:else}
         <div class="p-4 text-sm opacity-70">

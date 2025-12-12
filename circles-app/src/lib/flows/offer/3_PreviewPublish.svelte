@@ -20,7 +20,7 @@
   import { GNOSIS_CHAIN_ID_NUM } from '$lib/config/market';
   import { ensureGnosisChain } from '$lib/chain/gnosis';
   import { mkCirclesBindings } from '$lib/offers/mkCirclesBindings';
-  import { normalizeAddress } from '$lib/offers/adapters';
+  import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
   import { resolveImagesToHttpUrls } from '$lib/media/resolveImageUrl';
 
   interface Props { context: OfferFlowContext; }
@@ -102,10 +102,10 @@
   }
 
   async function resolveOwnerAndAssertSafe(safe: Address): Promise<{ owner: Address }> {
-    await ensureGnosisChain();
-
     const eth: any = (window as any)?.ethereum;
     if (!eth?.request) throw new Error('No injected provider');
+
+    await ensureGnosisChain(eth);
 
     const accs: string[] = await eth.request({ method: 'eth_requestAccounts' }) as string[];
     const owner = (accs?.[0] ?? '').toLowerCase() as Address;

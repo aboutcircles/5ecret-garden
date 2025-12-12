@@ -260,7 +260,7 @@
                     <div bind:this={sentinel} class="h-2 w-full"></div>
                     <!-- Fallback manual button for accessibility -->
                     <div class="flex justify-center mt-4">
-                        <button class="btn btn-outline" disabled={loading} on:click={loadNextPage}>
+                        <button class="btn btn-outline" disabled={loading} onclick={loadNextPage}>
                             {loading ? 'Loading…' : 'Load more'}
                         </button>
                     </div>

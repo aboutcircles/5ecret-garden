@@ -3,7 +3,7 @@
   import OfferStep2 from './2_Pricing.svelte';
   import type {OfferFlowContext, OfferDraft} from './types';
   import ImageUpload from '$lib/components/ImageUpload.svelte';
-  import {normalizeAddress} from '$lib/offers/adapters';
+  import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
   import {generateSku, isValidSku} from '$lib/utils/offer';
   import { get } from 'svelte/store';
   import { circles } from '$lib/stores/circles';

@@ -10,7 +10,7 @@
     import type { AggregatedCatalogItem } from '$lib/market/types';
     import { fetchSellerCatalog } from '$lib/market/catalogClient';
     import { shortenAddress } from '$lib/utils/shared';
-    import { normalizeAddress } from '$lib/offers/adapters';
+    import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
     import { avatarState } from '$lib/stores/avatar.svelte';
     import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';

@@ -10,6 +10,7 @@ export * from './cartTypes';
 export { type OffersClient, OffersClientImpl, type ProfilesBindings } from './offers';
 export * from './offersTypes';
 export { CurrencyCodeError, ObjectTooLargeError, UrlValidationError, buildProduct } from './offersJsonld';
+export { isAbsoluteUri, normalizeEvmAddress, isEvmAddress, isValidSku, assertSku } from './utils';
 export * from './offersLinkTypes';
 export { CanonicalisationError, canonicaliseLink, buildLinkDraft } from './canonicaliseLink';
 export * from './namespaces';
