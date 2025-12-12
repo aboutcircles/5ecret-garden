@@ -167,8 +167,8 @@
             role="button"
             tabindex="0"
             aria-label={`Open product details: ${prod?.name ?? product?.product?.name ?? 'Product'}`}
-            on:click={handleProductClick}
-            on:keydown={(e) => {
+            onclick={handleProductClick}
+            onkeydown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     handleProductClick();
@@ -190,7 +190,7 @@
                     <button
                             type="button"
                             class="btn btn-sm btn-outline"
-                            on:click|stopPropagation={handleEdit}
+                            onclick={(e) => { e.stopPropagation(); handleEdit(); }}
                             title="Edit listing"
                     >
                         Edit
@@ -198,7 +198,7 @@
                     <button
                             type="button"
                             class="btn btn-sm btn-outline btn-error"
-                            on:click|stopPropagation={handleTombstone}
+                            onclick={(e) => { e.stopPropagation(); handleTombstone(); }}
                             title="Remove listing"
                     >
                         Remove
@@ -208,7 +208,7 @@
                 <button
                         type="button"
                         class="btn btn-sm btn-outline"
-                        on:click|stopPropagation={handleAddToBasket}
+                        onclick={(e) => { e.stopPropagation(); handleAddToBasket(); }}
                         disabled={!canAdd}
                         title={!currentAvatar
           ? 'Connect a Circles account first'

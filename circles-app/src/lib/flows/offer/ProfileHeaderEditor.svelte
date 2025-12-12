@@ -120,9 +120,9 @@
                     <button
                         type="button"
                         class="relative rounded-full focus:outline-none focus-visible:ring focus-visible:ring-primary/60"
-                        on:click={handleAvatarClick}
-                        on:dragover={handleDragOver}
-                        on:drop={handleDrop}
+                        onclick={handleAvatarClick}
+                        ondragover={handleDragOver}
+                        ondrop={handleDrop}
                         aria-label={readonly ? 'Profile photo' : 'Change profile photo'}
                         title={readonly ? 'Profile photo' : 'Change profile photo'}
                     >
@@ -159,7 +159,7 @@
                                 type="file"
                                 accept="image/*"
                                 class="hidden"
-                                on:change={handleFileInput}
+                                onchange={handleFileInput}
                         />
                     </button>
                     {#if previewImageUrl && !readonly}
@@ -167,7 +167,7 @@
                             <button
                                 type="button"
                                 class="link link-error text-[11px]"
-                                on:click={clearPicture}
+                                onclick={clearPicture}
                             >
                                 Clear
                             </button>

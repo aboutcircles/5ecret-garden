@@ -23,6 +23,7 @@
     showSeller?: boolean;
     showMeta?: boolean;
     meta?: Meta;
+    actions?: any;
   }
 
   let {
@@ -33,6 +34,7 @@
     showSeller = false,
     showMeta = false,
     meta = undefined,
+    actions,
   }: Props = $props();
 
   const productImages = $derived<string[]>(normalizeProductImagesFromSchema(product));
@@ -182,5 +184,5 @@
     </div>
   {/if}
 
-  <slot name="actions" />
+  {@render actions?.()}
 </div>

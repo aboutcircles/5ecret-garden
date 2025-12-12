@@ -163,7 +163,7 @@
       {/if}
       <label class="form-control">
         <span class="label-text">Description</span>
-        <textarea class="textarea textarea-bordered" rows="3" bind:value={description}/>
+        <textarea class="textarea textarea-bordered" rows="3" bind:value={description}></textarea>
       </label>
       <!-- Images: either upload multiple or paste a single URL (legacy) -->
       <div class="space-y-2">

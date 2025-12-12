@@ -19,6 +19,7 @@
     showSeller?: boolean;
     showMeta?: boolean;
     meta?: Meta;
+    actions?: any;
   }
 
   let {
@@ -29,6 +30,7 @@
     showSeller = false,
     showMeta = false,
     meta = undefined,
+    actions,
   }: Props = $props();
 
   const productImages = $derived<string[]>(normalizeProductImagesFromSchema(product));
@@ -91,7 +93,7 @@
     <!-- Actions row: fixed height; right side placeholder to keep layout stable -->
     <div class="min-h-[2.25rem] flex items-center justify-between mt-2">
       <div class="inline-flex gap-2 items-center">
-        <slot name="actions" />
+        {@render actions?.()}
       </div>
       <span class="invisible btn btn-sm">placeholder</span>
     </div>
