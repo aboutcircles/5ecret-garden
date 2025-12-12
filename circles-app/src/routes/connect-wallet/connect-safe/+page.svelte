@@ -93,13 +93,13 @@
   <div class="toolbar">
     <button type="button" class="back-btn" aria-label="Back" onclick={goBack}>
       <img src="/arrow-left.svg" alt="Back" class="icon mr-4" />
-        <h1 class="h2">Select Account</h1>
+        <h1 class="h2">Select avatar</h1>
     </button>
     <div class="flex-grow"></div>
 <!--    <SettingsDropdown />-->
   </div>
 
-  <p class="muted">Please select the account you want to use from the list below.</p>
+  <p class="muted">Please select the avatar you want to use from the list below.</p>
 
   {#if !signer.address || !$circles}
     <WalletLoader />

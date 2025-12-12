@@ -22,6 +22,7 @@
     showMeta?: boolean;
     meta?: Meta;
     layout?: Layout;
+    actions?: any;
   }
 
   let {
@@ -33,6 +34,7 @@
     showMeta = false,
     meta = undefined,
     layout = 'detail',
+    actions,
   }: Props = $props();
 </script>
 
@@ -45,9 +47,8 @@
     {showSeller}
     {showMeta}
     {meta}
-  >
-    <slot name="actions" slot="actions" />
-  </ProductViewerDetail>
+    actions={actions}
+  />
 {:else}
   <ProductViewerCard
     {product}
@@ -57,7 +58,6 @@
     {showSeller}
     {showMeta}
     {meta}
-  >
-    <slot name="actions" slot="actions" />
-  </ProductViewerCard>
+    actions={actions}
+  />
 {/if}

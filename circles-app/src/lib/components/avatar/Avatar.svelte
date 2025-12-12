@@ -1,83 +1,105 @@
 <script lang="ts">
-    import ProfilePage from '$lib/pages/Profile.svelte';
-    import {getProfile} from '$lib/utils/profile';
-    import HorizontalAvatarLayout from './HorizontalAvatarLayout.svelte';
-    import VerticalAvatarLayout from './VerticalAvatarLayout.svelte';
-    import {popupControls, type PopupContentDefinition} from '$lib/stores/popUp';
-    import type {Address} from '@circles-sdk/utils';
-    import type {Profile} from '@circles-sdk/profiles';
-    import {fade} from 'svelte/transition';
-    import {circles} from '$lib/stores/circles';
+  import ProfilePage from '$lib/pages/Profile.svelte';
+  import { getProfile } from '$lib/utils/profile';
+  import HorizontalAvatarLayout from './HorizontalAvatarLayout.svelte';
+  import VerticalAvatarLayout from './VerticalAvatarLayout.svelte';
+  import { popupControls, type PopupContentDefinition } from '$lib/stores/popUp';
+  import type { Address } from '@circles-sdk/utils';
+  import type { Profile } from '@circles-sdk/profiles';
+  import { fade } from 'svelte/transition';
+  import { circles } from '$lib/stores/circles';
+  import { normalizeEvmAddress } from '@circles-market/sdk';
 
-    interface Props {
-        address: Address | undefined;
-        clickable?: boolean;
-        view: 'horizontal' | 'horizontal_reverse' | 'vertical' | 'small' | 'small_no_text' | 'small_reverse';
-        pictureOverlayUrl?: string | undefined;
-        topInfo?: string | undefined;
-        bottomInfo?: string | undefined;
+  type AddressLike = Address | string | null | undefined;
 
-        /**
-         * Control whether to show placeholders for each position
-         * so the layout doesn’t shift if you sometimes use them.
-         */
-        placeholderAvatar?: boolean;
-        placeholderTop?: boolean;
-        placeholderBottom?: boolean;
+  interface Props {
+    address: AddressLike;
+    clickable?: boolean;
+    view: 'horizontal' | 'horizontal_reverse' | 'vertical' | 'small' | 'small_no_text' | 'small_reverse';
+    pictureOverlayUrl?: string | undefined;
+    topInfo?: string | undefined;
+    bottomInfo?: string | undefined;
+
+    placeholderAvatar?: boolean;
+    placeholderTop?: boolean;
+    placeholderBottom?: boolean;
+  }
+
+  let {
+    address,
+    clickable = true,
+    view,
+    pictureOverlayUrl,
+    topInfo,
+    bottomInfo,
+    placeholderAvatar = true,
+    placeholderTop = true,
+    placeholderBottom = true,
+  }: Props = $props();
+
+  const normalizedAddress = $derived((): Address | null => {
+    if (address == null) return null;
+    try {
+      return normalizeEvmAddress(String(address)) as Address;
+    } catch {
+      return null;
+    }
+  });
+
+  let profile: Profile | undefined = $state();
+
+  const tooltipText = $derived(
+    (profile?.name && profile.name.length > 0)
+      ? profile.name
+      : normalizedAddress() ?? 'Profile'
+  );
+
+  let requestId = 0;
+
+  $effect(() => {
+    const addr = normalizedAddress();
+
+    requestId += 1;
+    const myReq = requestId;
+
+    if (!addr || !$circles) {
+      profile = undefined;
+      return;
     }
 
-    let {
-        address,
-        clickable = true,
-        view,
-        pictureOverlayUrl,
-        topInfo,
-        bottomInfo,
+    profile = undefined;
 
-        // Default placeholders to true
-        placeholderAvatar = true,
-        placeholderTop = true,
-        placeholderBottom = true,
-    }: Props = $props();
+    getProfile(addr)
+      .then((p) => {
+        if (myReq !== requestId) return;
+        profile = p;
+      })
+      .catch((error) => {
+        if (myReq !== requestId) return;
+        console.error('Error getting profile for', addr, ':', error);
+        profile = {
+          name: addr.slice(0, 6) + '...' + addr.slice(-4),
+          previewImageUrl: '/logo.svg',
+        } as any;
+      });
+  });
 
-    
+  function openAvatar(e: MouseEvent) {
+    if (!clickable) return;
 
-    let profile: Profile | undefined = $state();
-    const tooltipText = $derived(
-      (profile?.name && profile.name.length > 0)
-        ? profile.name
-        : (address as string | undefined) || 'Profile'
-    );
+    const addr = normalizedAddress();
+    if (!addr) return;
 
-    $effect(() => {
-        if (address && $circles) {
-            getProfile(address).then((newProfile) => {
-                profile = newProfile;
-            }).catch((error) => {
-                console.error('Error getting profile for', address, ':', error);
-                profile = {
-                    name: address.slice(0, 6) + '...' + address.slice(-4),
-                    previewImageUrl: '/logo.svg'
-                };
-            });
-        }
-    });
+    const nextPage: PopupContentDefinition = {
+      title: '',
+      component: ProfilePage,
+      props: { address: addr },
+    };
+    popupControls.open(nextPage);
 
-    function openAvatar(e: MouseEvent) {
-        if (!clickable) return;
-
-        const nextPage: PopupContentDefinition = {
-            title: "",
-            component: ProfilePage,
-            props: {address},
-        };
-        popupControls.open(nextPage);
-
-        // Prevent parent click handlers (e.g., clickable list rows) from firing
-        // and avoid default navigation when Avatar is used inside a link.
-        e?.stopPropagation?.();
-        e?.preventDefault?.();
-    }
+    e?.stopPropagation?.();
+    e?.preventDefault?.();
+  }
 </script>
 
 <!-- If no profile, show placeholders; otherwise fade in final layout. -->

@@ -1,13 +1,16 @@
-import { normalizeAddress, type Address } from './adapters';
-import { cidV0ToDigest32, type CidV0, type Hex } from './cid';
-import { isValidSku } from '$lib/utils/offer';
+// circles-app/src/lib/offers/client.ts
+import { type CidV0, type Hex } from './cid';
 import {
   OffersClientImpl,
+  normalizeEvmAddress as normalizeAddress,
+  type AvatarSigner,
   type MinimalProductInput,
   type MinimalOfferInput,
+  type ProfilesBindings,
 } from '@circles-market/sdk';
-import { toSdkAvatarSigner } from '$lib/offers/sdkAdapter';
-import type { CirclesBindings } from '$lib/offers/namespaces';
+import type { Address } from '@circles-sdk/utils';
+import { getProfilesBindings } from '$lib/offers/profilesBindings';
+import { getMarketClient } from '$lib/sdk/marketClient';
 
 export type { Hex, Address, CidV0 };
 export type MinimalProduct = MinimalProductInput;
@@ -19,80 +22,48 @@ export type AppendOfferParams = {
   chainId?: number;
   product: MinimalProduct;
   offer: MinimalOffer;
-  paymentGateway?: Address; // selected payment gateway address for PayAction
+  paymentGateway?: Address;
 };
 
-export type AppendOfferResult = {
+export type PublishOfferResult = {
+  kind: 'publish';
   productCid: CidV0;
-  linkCid?: CidV0;
   headCid: CidV0;
   indexCid: CidV0;
   profileCid: CidV0;
   /**
    * 32-byte digest derived from profileCid (not the product payload nor link).
-   * Named for backwards-compat; callers should not assume it hashes the product.
+   * Provided by SDK; callers should not assume it hashes the product.
    */
   digest32: Hex;
   txHash?: Hex;
 };
 
-export interface SafeSignerLike {
-  sign(payload: Uint8Array | Hex): Promise<Hex>;
-}
+export type TombstoneResult = {
+  kind: 'tombstone';
+  sku: string;
+  headCid: CidV0;
+  indexCid: CidV0;
+  profileCid: CidV0;
+  digest32: Hex;
+  txHash?: Hex;
+};
+
+export type AppendOfferResult = PublishOfferResult | TombstoneResult;
 
 export interface ProfilesOffersClient {
-  appendOffer(p: AppendOfferParams): Promise<AppendOfferResult>;
-
-  tombstone(p: {
-    avatar: Address;
-    operator: Address;
-    sku: string;
-    chainId?: number;
-  }): Promise<AppendOfferResult>;
+  appendOffer(p: AppendOfferParams): Promise<PublishOfferResult>;
+  tombstone(p: { avatar: Address; operator: Address; sku: string; chainId?: number }): Promise<TombstoneResult>;
 }
 
-function assertHex32(label: string, v: unknown): Hex {
-  if (typeof v !== 'string') {
-    throw new Error(`${label} must be a hex string`);
-  }
-  const s = v.toLowerCase();
-  const ok = /^0x[0-9a-f]{64}$/.test(s);
-  if (!ok) {
-    throw new Error(`${label} must be 0x + 64 hex chars (got: ${String(v)})`);
-  }
-  return s as Hex;
-}
-
-function normalizeTxHash(v: unknown): Hex | undefined {
-  if (v == null) return undefined;
-  if (typeof v !== 'string') {
-    throw new Error(`txHash must be a hex string (got: ${typeof v})`);
-  }
-  const s = v.trim().toLowerCase();
-  if (s.length === 0) return undefined;
-  if (!/^0x[0-9a-f]+$/.test(s)) {
-    throw new Error(`txHash must be hex (got: ${v})`);
-  }
-  return s as Hex;
-}
-
-export function createProfilesOffersClient(
-  circles: CirclesBindings,
-  safe: SafeSignerLike,
-): ProfilesOffersClient {
+function createProfilesOffersClient(circles: ProfilesBindings, signer: AvatarSigner): ProfilesOffersClient {
   const sdkOffers = new OffersClientImpl(circles);
 
-  async function appendOffer(p: AppendOfferParams): Promise<AppendOfferResult> {
+  async function appendOffer(p: AppendOfferParams): Promise<PublishOfferResult> {
     const avatar = normalizeAddress(p.avatar);
     const operator = normalizeAddress(p.operator);
     const chainId = p.chainId ?? 100;
 
-    const sku = p.product.sku;
-    if (!isValidSku(sku)) {
-      throw new Error(`Invalid SKU: ${sku}`);
-    }
-
-    const signer = toSdkAvatarSigner(avatar, chainId, safe);
     const gateway = p.paymentGateway ? normalizeAddress(p.paymentGateway) : undefined;
 
     const res = await sdkOffers.publishOffer({
@@ -105,37 +76,21 @@ export function createProfilesOffersClient(
       offer: p.offer,
     });
 
-    const digest32 =
-      res.digest32 != null
-        ? assertHex32('digest32', res.digest32)
-        : cidV0ToDigest32(res.profileCid as CidV0);
-
     return {
+      kind: 'publish',
       productCid: res.productCid as CidV0,
-      linkCid: res.linkCid as CidV0 | undefined,
       headCid: res.headCid as CidV0,
       indexCid: res.indexCid as CidV0,
       profileCid: res.profileCid as CidV0,
-      digest32,
-      txHash: normalizeTxHash(res.txHash),
+      digest32: res.digest32,
+      txHash: res.txHash,
     };
   }
 
-  async function tombstone(p: {
-    avatar: Address;
-    operator: Address;
-    sku: string;
-    chainId?: number;
-  }): Promise<AppendOfferResult> {
+  async function tombstone(p: { avatar: Address; operator: Address; sku: string; chainId?: number }): Promise<TombstoneResult> {
     const avatar = normalizeAddress(p.avatar);
     const operator = normalizeAddress(p.operator);
     const chainId = p.chainId ?? 100;
-
-    if (!isValidSku(p.sku)) {
-      throw new Error(`Invalid SKU: ${p.sku}`);
-    }
-
-    const signer = toSdkAvatarSigner(avatar, chainId, safe);
 
     const res = await sdkOffers.tombstone({
       avatar,
@@ -146,17 +101,42 @@ export function createProfilesOffersClient(
     });
 
     return {
-      // Tombstones do not expose the payload CID via SDK at the moment.
-      // Keep productCid empty by convention; downstream should ignore it for tombstones.
-      productCid: '' as CidV0,
-      linkCid: res.linkCid as CidV0 | undefined,
+      kind: 'tombstone',
+      sku: p.sku,
       headCid: res.headCid as CidV0,
       indexCid: res.indexCid as CidV0,
       profileCid: res.profileCid as CidV0,
-      digest32: cidV0ToDigest32(res.profileCid as CidV0),
-      txHash: normalizeTxHash(res.txHash),
+      digest32: res.digest32,
+      txHash: res.txHash,
     };
   }
 
   return { appendOffer, tombstone };
+}
+
+export async function createOffersClientForAvatar(params: {
+  avatar: Address;
+  chainId: number;
+  ethereum: any;
+  pinApiBase?: string;
+  gatewayUrlForCid?: (cid: string) => string;
+}): Promise<{
+  offers: ProfilesOffersClient;
+  media?: {
+    pinMediaBytes: (bytes: Uint8Array, mime?: string | null) => Promise<string>;
+    gatewayUrlForCid: (cid: string) => string;
+  };
+}> {
+  const { avatar, chainId, ethereum, pinApiBase, gatewayUrlForCid } = params;
+  const { bindings, media } = getProfilesBindings({ pinApiBase, gatewayUrlForCid });
+
+  const signer = await getMarketClient().signers.createSafeSignerForAvatar({
+    avatar,
+    ethereum,
+    chainId: BigInt(chainId),
+    enforceChainId: true,
+  });
+
+  const offers = createProfilesOffersClient(bindings, signer);
+  return { offers, media };
 }

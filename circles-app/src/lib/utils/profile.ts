@@ -12,8 +12,12 @@ import { BatchAggregator } from '$lib/utils/batchAggregator';
  */
 const profileCache = new Map<string, Promise<Profile>>();
 
+function cacheKey(address: string): string {
+  return address.toLowerCase();
+}
+
 export function removeProfileFromCache(address: string) {
-  profileCache.delete(address);
+  profileCache.delete(cacheKey(address));
 }
 
 /**
@@ -147,8 +151,10 @@ const profileAggregator = new BatchAggregator<Address, Profile>({
  *   3. Otherwise, aggregator.enqueue(address).
  */
 export async function getProfile(address: Address): Promise<Profile> {
+  const addr = cacheKey(address) as Address;
+
   // Some special-case addresses we handle immediately
-  if (address === '0x0000000000000000000000000000000000000001') {
+  if (addr === '0x0000000000000000000000000000000000000001') {
     return {
       name: 'Transitive transfer',
       previewImageUrl: '/circles-token.svg',
@@ -156,13 +162,13 @@ export async function getProfile(address: Address): Promise<Profile> {
   }
 
   const $circles = get(circles);
-  if (address === $circles?.circlesConfig.v2HubAddress?.toLowerCase()) {
+  if (addr === $circles?.circlesConfig.v2HubAddress?.toLowerCase()) {
     return {
       name: 'Circles V2 Hub Contract',
       previewImageUrl: '/logo.svg',
     };
   }
-  if (address === $circles?.circlesConfig.migrationAddress?.toLowerCase()) {
+  if (addr === $circles?.circlesConfig.migrationAddress?.toLowerCase()) {
     return {
       name: 'Circles V2 Migration Contract',
       previewImageUrl: '/logo.svg',
@@ -170,16 +176,16 @@ export async function getProfile(address: Address): Promise<Profile> {
   }
 
   // Check the local promise cache
-  const cached = profileCache.get(address);
+  const cached = profileCache.get(addr);
   if (cached) {
     return cached;
   }
 
   // Not cached -> aggregator
-  const profilePromise = profileAggregator.enqueue(address);
+  const profilePromise = profileAggregator.enqueue(addr);
 
   // Store it in the cache so subsequent calls don't re-enqueue
-  profileCache.set(address, profilePromise);
+  profileCache.set(addr, profilePromise);
 
   return profilePromise;
 }

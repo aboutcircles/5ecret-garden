@@ -5,7 +5,7 @@
     import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
     import ProductCard from '$lib/components/ProductCard.svelte';
     import { MARKET_API_BASE, MARKET_OPERATOR } from '$lib/config/market';
-    import { fetchCatalogPage } from '$lib/market/catalogClient';
+    import { getMarketClient } from '$lib/sdk/marketClient';
     import type { AggregatedCatalogItem } from '$lib/market/types';
     import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
@@ -26,7 +26,7 @@
     let hasMore: boolean = $state(false);
 
     // Infinite scroll sentinel and observer
-    let sentinel: HTMLDivElement | null = null;
+    let sentinel: HTMLDivElement | null = $state(null);
     let io: IntersectionObserver | null = null;
     let observed: Element | null = null;
 
@@ -66,7 +66,8 @@
       hasMore = false;
 
       try {
-        const page = await fetchCatalogPage({ avatars, pageSize: PAGE_SIZE, chainId: 100 });
+        const catalog = getMarketClient().catalog.forOperator(MARKET_OPERATOR);
+        const page = await catalog.fetchCatalogPage({ avatars, pageSize: PAGE_SIZE, chainId: 100 });
         products = page.items;
         nextCursor = page.nextCursor;
         hasMore = !!nextCursor;
@@ -84,7 +85,8 @@
       loading = true;
       errorMsg = '';
       try {
-        const page = await fetchCatalogPage({ avatars, pageSize: PAGE_SIZE, chainId: 100, cursor: nextCursor });
+        const catalog = getMarketClient().catalog.forOperator(MARKET_OPERATOR);
+        const page = await catalog.fetchCatalogPage({ avatars, pageSize: PAGE_SIZE, chainId: 100, cursor: nextCursor });
         products = products.concat(page.items);
         nextCursor = page.nextCursor;
         hasMore = !!nextCursor;
@@ -157,29 +159,29 @@
         headerTopGapClass="mt-4 md:mt-6"
         collapsedTopGapClass="mt-3 md:mt-4"
 >
-    <svelte:fragment slot="title">
+    {#snippet title()}
         <h1 class="h2 m-0">Marketplace</h1>
-    </svelte:fragment>
+    {/snippet}
 
-    <svelte:fragment slot="meta">
+    {#snippet meta()}
         Namespace {shortAddr(OPERATOR)} • Avatar {shortAddr(AVATAR)} • All offers
-    </svelte:fragment>
+    {/snippet}
 
-    <svelte:fragment slot="actions">
+    {#snippet headerActions()}
         <ActionButtonBar {actions} />
-    </svelte:fragment>
+    {/snippet}
 
     <!-- Collapsed summary -->
-    <svelte:fragment slot="collapsed-left">
+    {#snippet collapsedLeft()}
         <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">
       Marketplace
     </span>
-    </svelte:fragment>
+    {/snippet}
 
-    <svelte:fragment slot="collapsed-menu">
+    {#snippet collapsedMenu()}
         <ActionButtonDropDown {actions} />
         <!-- Basket button moved to global header -->
-    </svelte:fragment>
+    {/snippet}
 
     {#if loading}
         <section class="bg-base-100 border border-base-300 rounded-xl p-4">
@@ -247,7 +249,7 @@
                 <div class="text-sm opacity-60">No products returned by the API.</div>
             {:else}
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" data-sveltekit-preload-data="hover">
-                    {#each products as p (p.productCid ?? p.id ?? p.sku ?? JSON.stringify(p))}
+                    {#each products as p (p.productCid)}
                         <ProductCard
                             product={p}
                             showSellerInfo={true}
@@ -260,7 +262,7 @@
                     <div bind:this={sentinel} class="h-2 w-full"></div>
                     <!-- Fallback manual button for accessibility -->
                     <div class="flex justify-center mt-4">
-                        <button class="btn btn-outline" disabled={loading} on:click={loadNextPage}>
+                        <button class="btn btn-outline" disabled={loading} onclick={loadNextPage}>
                             {loading ? 'Loading…' : 'Load more'}
                         </button>
                     </div>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   interface Props {
     homeLink?: string;
   }
@@ -22,6 +23,49 @@
   }
 
   const isMarketPage = $derived($page.url.pathname.startsWith('/market'));
+
+  let menuEl: HTMLDetailsElement | null = $state(null);
+
+  function closeMenu(focusTrigger = false) {
+    if (menuEl && menuEl.open) {
+      menuEl.open = false;
+      if (focusTrigger) {
+        const summary = menuEl.querySelector('summary') as HTMLSummaryElement | null;
+        summary?.focus();
+      }
+    }
+  }
+
+  function handleDocClick(event: MouseEvent) {
+    if (menuEl && menuEl.open) {
+      const target = event.target as Node | null;
+      if (target && !menuEl.contains(target)) {
+        closeMenu();
+      }
+    }
+  }
+
+  function handleKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      closeMenu(true);
+    }
+  }
+
+  // Close on route changes
+  $effect(() => {
+    // react to URL changes
+    const _ = $page.url.pathname; // touch dependency
+    closeMenu();
+  });
+
+  onMount(() => {
+    document.addEventListener('click', handleDocClick);
+    document.addEventListener('keydown', handleKeydown);
+    return () => {
+      document.removeEventListener('click', handleDocClick);
+      document.removeEventListener('keydown', handleKeydown);
+    };
+  });
 </script>
 
 <div class="navbar bg-base-100 px-4 sticky top-0 z-10">
@@ -43,8 +87,8 @@
       Basket ({$cartItemCount})
     </button>
   {/if}
-  <details class="dropdown dropdown-end flex-none">
-    <summary class="btn btn-circle btn-ghost btn-sm"
+  <details class="dropdown dropdown-end flex-none" bind:this={menuEl}>
+    <summary class="btn btn-circle btn-ghost btn-sm" aria-haspopup="menu" aria-expanded={menuEl?.open ? 'true' : 'false'}
       ><svg
         xmlns="http://www.w3.org/2000/svg"
         fill="none"

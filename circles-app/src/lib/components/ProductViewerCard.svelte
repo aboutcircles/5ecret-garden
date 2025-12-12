@@ -19,6 +19,7 @@
     showSeller?: boolean;
     showMeta?: boolean;
     meta?: Meta;
+    actions?: any;
   }
 
   let {
@@ -29,6 +30,7 @@
     showSeller = false,
     showMeta = false,
     meta = undefined,
+    actions,
   }: Props = $props();
 
   const productImages = $derived<string[]>(normalizeProductImagesFromSchema(product));
@@ -77,7 +79,7 @@
     <!-- Meta row: reserve height; show seller or published date when present -->
     <div class="min-h-[1.5rem]">
       {#if showSeller && seller}
-        <Avatar address={seller} view="horizontal" clickable={false} />
+        <Avatar address={seller} view="horizontal" clickable={true} />
       {:else if showMeta && publishedDateText}
         <div class="text-xs opacity-60 flex items-center gap-1">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -91,7 +93,7 @@
     <!-- Actions row: fixed height; right side placeholder to keep layout stable -->
     <div class="min-h-[2.25rem] flex items-center justify-between mt-2">
       <div class="inline-flex gap-2 items-center">
-        <slot name="actions" />
+        {@render actions?.()}
       </div>
       <span class="invisible btn btn-sm">placeholder</span>
     </div>

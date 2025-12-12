@@ -1,7 +1,8 @@
 <script lang="ts">
   import OrderDetailsView from '$lib/orders/OrderDetailsView.svelte';
   import { onMount, onDestroy } from 'svelte';
-  import { getOrderStatusHistory, subscribeBuyerOrderEvents, getOrder, type OrderStatusEvent } from '$lib/cart/ordersAdapter';
+  import { getOrderStatusHistory, subscribeBuyerOrderEvents, getOrder } from '$lib/orders/ordersAdapter';
+  import type { OrderStatusChange } from '$lib/orders/types';
 
   // Security: Do NOT accept or render order keys in the UI. Instead, this popup
   // expects a full snapshot to be provided by the caller (e.g., from an
@@ -12,7 +13,7 @@
 
   let jsonText: string = $state(JSON.stringify(snapshot ?? {}, null, 2));
 
-  let statusEvents: OrderStatusEvent[] = $state([]);
+  let statusEvents: OrderStatusChange[] = $state([]);
   let loadingHistory: boolean = $state(false);
   let historyError: string | null = $state(null);
 

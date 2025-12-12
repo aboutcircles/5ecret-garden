@@ -13,6 +13,7 @@
     interface Props<T extends Record<string, any> = any> {
         store: Readable<ListStoreValue<T>>;
         row: Component<T>;
+        getKey?: (item: T) => string;
         // Approximate row height for placeholder sizing (px). Keep in sync with real row.
         rowHeight?: number;
         // Maximum number of eager placeholder pages to render ahead (1–2 recommended)
@@ -24,6 +25,7 @@
     let {
         store,
         row,
+        getKey = (getKeyFromItem as unknown as (item: any) => string),
         rowHeight = 64,
         maxPlaceholderPages = 2,
         expectedPageSize
@@ -205,7 +207,7 @@
 </script>
 
 <div class="w-full flex flex-col gap-y-1.5 py-2" role="list">
-    {#each $store?.data ?? [] as item (getKeyFromItem(item))}
+    {#each $store?.data ?? [] as item (getKey(item))}
         {@const SvelteComponent_1 = row}
         <SvelteComponent_1 {item} />
     {/each}
@@ -214,12 +216,12 @@
         {#each Array.from({ length: totalPlaceholders }) as _, i}
             <div class="skeleton-row" aria-hidden="true" style={`height: ${rowHeight}px`}>
                 <div class="sk-row">
-                    <div class="sk-avatar" />
+                    <div class="sk-avatar"></div>
                     <div class="sk-lines">
-                        <div class="sk-line sk-line-1" />
-                        <div class="sk-line sk-line-2" />
+                        <div class="sk-line sk-line-1"></div>
+                        <div class="sk-line sk-line-2"></div>
                     </div>
-                    <div class="sk-amount" />
+                    <div class="sk-amount"></div>
                 </div>
             </div>
         {/each}
@@ -235,7 +237,7 @@
             <span class="text-base-content/70">End of list</span>
         {:else if hasError}
             <span class="text-error">Error loading items</span>
-            <button class="ml-2 link link-primary" on:click={handleRetry}>Retry</button>
+            <button class="ml-2 link link-primary" onclick={handleRetry}>Retry</button>
         {:else}
             <span class="loading loading-spinner text-primary"></span>
             <span class="ml-2 text-base-content/70">Loading more...</span>

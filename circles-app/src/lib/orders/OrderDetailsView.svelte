@@ -237,21 +237,22 @@
 </style>
 
 <script lang="ts">
-  import { formatCurrency } from '$lib/cart/money';
+  import { formatCurrency } from '$lib/utils/money';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import type { Address as EvmAddress } from '@circles-sdk/utils';
-  import type { OrderSnapshot } from '$lib/cart/types';
-  import type { OrderStatusEvent } from '$lib/cart/ordersAdapter';
-  import { formatTimestamp, statusLabel } from '$lib/cart/status';
+  import type { OrderSnapshot } from '$lib/orders/types';
+  import type { OrderStatusChange } from '$lib/orders/types';
+  import { formatTimestamp, statusLabel } from '$lib/orders/status';
   import { onMount } from 'svelte';
-  import { fetchProductForSellerAndSku } from '$lib/market/catalogClient';
   import { getProduct, pickProductImageUrl } from '$lib/market/catalogHelpers';
+  import { getMarketClient } from '$lib/sdk/marketClient';
+  import { MARKET_OPERATOR } from '$lib/config/market';
   import { popupControls, type PopupContentDefinition } from '$lib/stores/popUp';
   import ProductDetailsPopup from '$lib/market/ProductDetailsPopup.svelte';
 
   interface Props {
     snapshot: OrderSnapshot | null | undefined;
-    statusEvents?: OrderStatusEvent[] | null;
+    statusEvents?: OrderStatusChange[] | null;
   }
   let { snapshot, statusEvents = null }: Props = $props();
 
@@ -491,7 +492,8 @@
         resolved[i] = { name: null, imageUrl: null };
         return;
       }
-      const prod = await fetchProductForSellerAndSku(evm as unknown as string, sku);
+      const catalog = getMarketClient().catalog.forOperator(MARKET_OPERATOR);
+      const prod = await catalog.fetchProductForSellerAndSku(String(evm), String(sku));
       if (!prod) {
         resolved[i] = { name: null, imageUrl: null };
         return;

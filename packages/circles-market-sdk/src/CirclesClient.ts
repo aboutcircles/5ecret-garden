@@ -6,6 +6,7 @@ import { OrdersClientImpl, type OrdersClient } from './orders';
 import { CartClientImpl, type CartClient } from './cart';
 import { OffersClientImpl, type OffersClient } from './offers';
 import type { ProfilesBindings } from './offers';
+import { CatalogClientImpl, type CatalogClient } from './catalog';
 
 export interface CirclesClientOptions {
   /** Base URL of the Circles Market API, e.g. https://market.aboutcircles.com */
@@ -35,6 +36,9 @@ export class CirclesClient {
   /** Offers publishing operations (requires profiles bindings). */
   readonly offers?: OffersClient;
 
+  /** Catalog browsing client. */
+  readonly catalog: CatalogClient;
+
   constructor(opts: CirclesClientOptions) {
     this.marketApiBase = opts.marketApiBase.replace(/\/$/, '');
     this.http = opts.http ?? new FetchHttpTransport();
@@ -45,5 +49,7 @@ export class CirclesClient {
     this.orders = new OrdersClientImpl(this.marketApiBase, this.http, this.authContext);
     this.cart = new CartClientImpl(this.marketApiBase, this.http, this.authContext);
     this.offers = opts.profilesBindings ? new OffersClientImpl(opts.profilesBindings) : undefined;
+
+    this.catalog = new CatalogClientImpl(this.marketApiBase);
   }
 }

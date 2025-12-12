@@ -73,14 +73,12 @@
 </script>
 
 <PageScaffold highlight="soft" collapsedMode="bar" collapsedHeightClass="h-12" maxWidthClass="page page--lg" contentWidthClass="page page--lg" usePagePadding={true} headerTopGapClass="mt-4 md:mt-6" collapsedTopGapClass="mt-3 md:mt-4">
-    <svelte:fragment slot="title"><h1 class="h2 m-0">Register Person</h1></svelte:fragment>
-    <svelte:fragment slot="meta">Step 1 of 2</svelte:fragment>
-    <svelte:fragment slot="actions">
+    {#snippet title()}<h1 class="h2 m-0">Register Person</h1>{/snippet}
+    {#snippet meta()}Step 1 of 2{/snippet}
+    {#snippet headerActions()}
         <ActionButtonBar {actions} />
-    </svelte:fragment>
-    <svelte:fragment slot="collapsed-menu">
-        <ActionButtonDropDown {actions} />
-    </svelte:fragment>
+    {/snippet}
+    {#snippet collapsedMenu()}<ActionButtonDropDown {actions} />{/snippet}
 
     <div class="mt-3"><Disclaimer /></div>
 
@@ -98,7 +96,7 @@
                     <div class="flex flex-col gap-y-2 pl-10 text-sm">
                         {#if invitations.length > 0}
                             {#each invitations as inviter (inviter.avatar)}
-                                <RowFrame clickable={true} dense={true} noLeading={true} on:click={() => (inviterSelected = inviter.avatar)}>
+                                <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => (inviterSelected = inviter.avatar)}>
                                     <div class="flex items-center gap-x-2 min-w-0">
                                         <input
                                                 type="radio"

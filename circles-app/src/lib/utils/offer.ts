@@ -1,7 +1,6 @@
 /**
  * Helper functions for offer creation
  */
-
 import type { OfferDraft } from '$lib/flows/offer/types';
 import type { SchemaOrgProductLite, SchemaOrgOfferLite } from '$lib/market/types';
 import { normalizeProductImagesFromSchema } from '$lib/market/imageHelpers';
@@ -64,9 +63,9 @@ export function generateSku(name: string, existingSkus: string[] = []): string {
  * @param sku The SKU to validate
  * @returns True if valid, false otherwise
  */
+import { isValidSku as sdkIsValidSku } from '@circles-market/sdk';
 export function isValidSku(sku: string): boolean {
-  // Regex from 1_Product.svelte: /^[a-z0-9][a-z0-9-_]{0,62}$/
-  return /^[a-z0-9][a-z0-9-_]{0,62}$/.test(sku);
+  return sdkIsValidSku(sku);
 }
 
 /**
@@ -98,22 +97,6 @@ export function shortRandom(len = 5): string {
     }
   }
   return out.join('');
-}
-
-/**
- * Create an initial OfferDraft with sensible defaults
- * @param name Product name
- * @param existingSkus Existing SKUs to avoid collisions
- * @returns Partial OfferDraft with generated SKU and name
- */
-export function createInitialOfferDraft(
-  name: string, 
-  existingSkus: string[] = []
-): Partial<OfferDraft> {
-  return {
-    sku: generateSku(name, existingSkus),
-    name,
-  };
 }
 
 /**

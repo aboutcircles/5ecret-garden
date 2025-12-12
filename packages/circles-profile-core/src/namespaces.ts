@@ -1,13 +1,21 @@
-import type { CustomDataLink } from './links';
+import type {CustomDataLink} from './links';
 
 export type Cid = string;
 
 export interface ProfilesBindings {
-  putJsonLd(obj: any): Promise<Cid>;
-  getJsonLd(cid: Cid): Promise<any>;
+  putJsonLd(obj: unknown): Promise<Cid>;
+
+  getJsonLd(cid: Cid): Promise<unknown>;
+
   getLatestProfileCid(avatar: string): Promise<Cid | null>;
+
   updateAvatarProfileDigest(avatar: string, profileCid: Cid): Promise<string | void>;
-  canonicalizeJsonLd?(obj: any): Promise<string> | string;
+}
+
+export interface MediaBindings {
+  pinMediaBytes(bytes: Uint8Array, mime?: string | null): Promise<Cid>;
+
+  gatewayUrlForCid(cid: string): string;
 }
 
 /**
@@ -15,8 +23,8 @@ export interface ProfilesBindings {
  * replaced by bindings.getJsonLd when you have your own gateway.
  */
 export async function fetchIpfsJson(cid: string, gatewayUrl?: string): Promise<any> {
-  const url = (gatewayUrl ?? 'https://ipfs.io') + '/ipfs/' + cid;
-  const res = await fetch(url, { method: 'GET' });
+  const url = (gatewayUrl ?? 'https://da08cae2-8b50-45dc-80b9-48925be78ec8.myfilebase.com') + '/ipfs/' + cid;
+  const res = await fetch(url, {method: 'GET'});
   if (!res.ok) {
     throw new Error(`Failed to fetch IPFS JSON: ${res.status} ${res.statusText}`);
   }
@@ -66,7 +74,7 @@ export async function loadProfileOrInit(
   const latest = await bindings.getLatestProfileCid(avatar);
   if (latest) {
     const prof = await bindings.getJsonLd(latest);
-    return { profile: ensureProfileShape(prof), profileCid: latest };
+    return {profile: ensureProfileShape(prof), profileCid: latest};
   }
   const profile = ensureProfileShape({
     '@context': 'https://aboutcircles.com/contexts/circles-profile/',
@@ -74,7 +82,7 @@ export async function loadProfileOrInit(
     avatar,
     namespaces: {},
   });
-  return { profile, profileCid: null };
+  return {profile, profileCid: null};
 }
 
 export async function loadIndex(
@@ -84,7 +92,7 @@ export async function loadIndex(
   if (!indexCid) {
     const index = ensureNameIndexDocShape({});
     const head = ensureNamespaceChunkShape({});
-    return { index, head, headCid: null };
+    return {index, head, headCid: null};
   }
   const index = ensureNameIndexDocShape(await bindings.getJsonLd(indexCid));
   let head: any;
@@ -95,7 +103,7 @@ export async function loadIndex(
   } else {
     head = ensureNamespaceChunkShape({});
   }
-  return { index, head, headCid };
+  return {index, head, headCid};
 }
 
 export function insertIntoHead(
@@ -107,7 +115,7 @@ export function insertIntoHead(
   let closedHead: any | undefined;
 
   if (links.length === 100) {
-    closedHead = ensureNamespaceChunkShape({ ...head, links: [...links] });
+    closedHead = ensureNamespaceChunkShape({...head, links: [...links]});
     head.links = [] as CustomDataLink[];
     rotated = true;
   }
@@ -124,7 +132,7 @@ export function insertIntoHead(
   if (!replaced) nextLinks.push(signedLink);
   head.links = nextLinks;
 
-  return rotated ? { rotated: true, closedHead } : { rotated: false };
+  return rotated ? {rotated: true, closedHead} : {rotated: false};
 }
 
 export async function saveHeadAndIndex(
@@ -157,7 +165,7 @@ export async function saveHeadAndIndex(
   normalizedIndex.head = headCid;
 
   const indexCid = await bindings.putJsonLd(normalizedIndex);
-  return { headCid, indexCid };
+  return {headCid, indexCid};
 }
 
 export async function rebaseAndSaveProfile(
@@ -165,8 +173,7 @@ export async function rebaseAndSaveProfile(
   avatar: string,
   mutator: (profile: any) => void,
 ): Promise<Cid> {
-  const { profile } = await loadProfileOrInit(bindings, avatar);
+  const {profile} = await loadProfileOrInit(bindings, avatar);
   mutator(profile);
-  const profileCid = await bindings.putJsonLd(profile);
-  return profileCid;
+  return await bindings.putJsonLd(profile);
 }

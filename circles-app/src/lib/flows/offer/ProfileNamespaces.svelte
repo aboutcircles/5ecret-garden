@@ -5,7 +5,7 @@
     import {circles} from '$lib/stores/circles';
     import type {Address} from "@circles-sdk/utils";
     import type {CidV0} from '$lib/offers/cid';
-    import type {CirclesBindings} from '$lib/offers/namespaces';
+    import type { ProfilesBindings } from '@circles-market/sdk';
     import {
         loadNamespaceLinks,
         rewriteNamespaceFromLinks,
@@ -15,7 +15,8 @@
     import Avatar from '$lib/components/avatar/Avatar.svelte';
     import Lucide from '$lib/icons/Lucide.svelte';
     import { ChevronRight as LChevronRight, ChevronDown as LChevronDown, Trash2 as LTrash2, ExternalLink as LExternalLink } from 'lucide';
-    import { mkCirclesBindings } from '$lib/offers/mkCirclesBindings';
+    import { ipfsGatewayUrl } from '$lib/utils/ipfs';
+    import { getProfilesBindings } from '$lib/offers/profilesBindings';
 
     interface Props {
         avatar: Address;
@@ -42,12 +43,8 @@
     // Structure: { [namespaceAddr]: { [folderPath]: boolean } }
     let folderExpanded = $state<Record<string, Record<string, boolean>>>({});
 
-    function getBindings(): CirclesBindings {
-        const sdk = get(circles);
-        if (!sdk) {
-            throw new Error('Circles SDK not initialized');
-        }
-        return mkCirclesBindings(pinApiBase, sdk as any);
+    function getBindings(): ProfilesBindings {
+        return getProfilesBindings({ pinApiBase }).bindings;
     }
 
     function ensureNamespaceState(key: string): NamespaceState {
@@ -131,7 +128,7 @@
         if (!hasCid) {
             return;
         }
-        const url = `https://ipfs.io/ipfs/${cid}`;
+        const url = ipfsGatewayUrl(cid);
         window.open(url, '_blank', 'noopener,noreferrer');
     }
 
@@ -302,7 +299,7 @@
                         <button
                                 type="button"
                                 class="btn btn-xs btn-ghost"
-                                on:click={() => toggleNamespace(addr)}
+                                onclick={() => toggleNamespace(addr)}
                         >
                             {#if perNamespace[addr]?.expanded}
                                 <Lucide icon={LChevronDown} size={16} />
@@ -320,7 +317,7 @@
                         <button
                                 type="button"
                                 class="btn btn-xs btn-ghost btn-square"
-                                on:click={() => removeNamespace(addr)}
+                                onclick={() => removeNamespace(addr)}
                                 title="Remove namespace"
                                 aria-label="Remove namespace"
                         >
@@ -371,7 +368,7 @@
                 class="btn btn-ghost btn-sm md:btn-xs btn-square"
                 aria-expanded={isFolderOpen(ns, node.path)}
                 title={isFolderOpen(ns, node.path) ? 'Collapse folder' : 'Expand folder'}
-                on:click={() => toggleFolder(ns, node.path)}
+                onclick={() => toggleFolder(ns, node.path)}
             >
                 {#if isFolderOpen(ns, node.path)}
                     <Lucide icon={LChevronDown} size={16} />
@@ -418,7 +415,7 @@
             <button
                 type="button"
                 class="btn btn-ghost btn-sm md:btn-xs btn-square"
-                on:click={() => openPayload(node.item.link.cid)}
+                onclick={() => openPayload(node.item.link.cid)}
                 title="Open"
                 aria-label="Open"
             >
@@ -428,7 +425,7 @@
                 <button
                     type="button"
                     class="btn btn-ghost btn-sm md:btn-xs btn-square"
-                    on:click={() => {
+                    onclick={() => {
                         const idx = perNamespace[ns].links.findIndex((x) => x === node.item);
                         if (idx >= 0) removeLink(ns, idx);
                     }}

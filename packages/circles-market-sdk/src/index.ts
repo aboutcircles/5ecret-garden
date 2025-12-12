@@ -1,6 +1,6 @@
 export { CirclesClient, type CirclesClientOptions } from './CirclesClient';
 export { type HttpTransport, FetchHttpTransport, HttpError } from './http';
-export { type AuthContext, InMemoryAuthContext } from './authContext';
+export { type AuthContext, InMemoryAuthContext, type AuthContextMeta } from './authContext';
 export { type WalletProvider, type AvatarSigner, type SignersClient, SignersClientImpl } from './signers';
 export { type AuthClient, AuthClientImpl } from './auth';
 export { type OrdersClient, OrdersClientImpl } from './orders';
@@ -10,6 +10,10 @@ export * from './cartTypes';
 export { type OffersClient, OffersClientImpl, type ProfilesBindings } from './offers';
 export * from './offersTypes';
 export { CurrencyCodeError, ObjectTooLargeError, UrlValidationError, buildProduct } from './offersJsonld';
+export { isAbsoluteUri, normalizeEvmAddress, isEvmAddress, isValidSku, assertSku, type Hex, normalizeHex32 } from './utils';
+export { cidV0ToDigest32Strict, tryCidV0ToDigest32 } from '@circles-profile/core';
 export * from './offersLinkTypes';
 export { CanonicalisationError, canonicaliseLink, buildLinkDraft } from './canonicaliseLink';
 export * from './namespaces';
+export * from './catalog';
+export * from './catalogTypes';

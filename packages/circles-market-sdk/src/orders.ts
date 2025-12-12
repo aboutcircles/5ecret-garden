@@ -31,6 +31,8 @@ export interface OrdersClient {
   subscribeStatusEvents(onEvent: (evt: OrderStatusEventPayload) => void): () => void;
   /** Convenience: triggers handler when an order is delivered or payment completes. */
   onOrderDelivered(handler: (order: OrderSnapshot) => void): () => void;
+  /** Public batch lookup by order ids (no auth required). */
+  getOrdersBatch(ids: string[]): Promise<OrderSnapshot[]>;
 }
 
 export class OrdersClientImpl implements OrdersClient {
@@ -39,6 +41,16 @@ export class OrdersClientImpl implements OrdersClient {
     private readonly http: HttpTransport,
     private readonly authContext: AuthContext,
   ) {}
+
+  async getOrdersBatch(ids: string[]): Promise<OrderSnapshot[]> {
+    const res = await this.http.request<{ items: OrderSnapshot[] }>({
+      method: 'POST',
+      url: `${this.marketApiBase}/api/cart/v1/orders/batch`,
+      headers: { 'Content-Type': 'application/ld+json; charset=utf-8', Accept: 'application/ld+json' },
+      body: { ids },
+    });
+    return Array.isArray(res.items) ? res.items : [];
+  }
 
   async list(opts?: { page?: number; pageSize?: number }): Promise<OrderSnapshot[]> {
     const token = this.requireToken();

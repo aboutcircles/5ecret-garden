@@ -9,13 +9,14 @@
   import { ethers } from 'ethers';
   import ProfileExplorer from '$lib/flows/offer/ProfileExplorer.svelte';
   import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
-  import Lucide from '$lib/icons/Lucide.svelte';
   import { LogOut as LLogOut } from 'lucide';
   import { MARKET_API_BASE } from '$lib/config/market';
   import type { Address } from '@circles-sdk/utils';
   import ActionButtonDropDown from "$lib/components/layout/ActionButtonDropDown.svelte";
   import ActionButtonBar from "$lib/components/layout/ActionButtonBar.svelte";
   import type {Action} from "$lib/components/layout/Action";
+  import { ipfsGatewayUrl } from '$lib/utils/ipfs';
+  import { getProfilesBindings } from '$lib/offers/profilesBindings';
 
   // Profile editing is delegated to ProfileExplorer to keep a single flow.
   const pinApiBase = MARKET_API_BASE;
@@ -24,6 +25,36 @@
       avatarState.avatar?.avatarInfo?.avatar ??
       '') as Address | ''
   );
+
+  // Latest profile CID for the connected avatar (if any)
+  let profileCid: string | null = $state(null);
+  let profileCidLoading: boolean = $state(false);
+  let profileCidError: string | null = $state(null);
+
+  async function loadProfileCid(): Promise<void> {
+    profileCidLoading = true;
+    profileCidError = null;
+    profileCid = null;
+    try {
+      if (!avatarAddress) return;
+      const { bindings } = getProfilesBindings({ pinApiBase });
+      profileCid = (await bindings.getLatestProfileCid(avatarAddress)) || null;
+    } catch (e: any) {
+      profileCidError = String(e?.message ?? e);
+    } finally {
+      profileCidLoading = false;
+    }
+  }
+
+  $effect(() => {
+    // refresh on avatar change
+    void loadProfileCid();
+  });
+
+  async function copyProfileCid(): Promise<void> {
+    if (!profileCid) return;
+    try { await navigator.clipboard?.writeText(profileCid); } catch {}
+  }
 
   async function migrateToV2() {
     popupControls.open({
@@ -60,32 +91,44 @@
 </script>
 
 <PageScaffold highlight="soft" collapsedMode="bar" collapsedHeightClass="h-12" maxWidthClass="page page--lg" contentWidthClass="page page--lg" usePagePadding={true} headerTopGapClass="mt-4 md:mt-6" collapsedTopGapClass="mt-3 md:mt-4">
-  <svelte:fragment slot="title">
+  {#snippet title()}
     <h1 class="h2">Settings</h1>
-  </svelte:fragment>
-  <svelte:fragment slot="meta">
+  {/snippet}
+  {#snippet meta()}
     {#if avatarAddress}
       <span class="font-mono text-xs text-base-content/70 select-all">{avatarAddress}</span>
     {:else}
       Profile, wallet, migration
     {/if}
-  </svelte:fragment>
-  <svelte:fragment slot="actions">
+  {/snippet}
+  {#snippet headerActions()}
       <ActionButtonBar {actions} />
-  </svelte:fragment>
-  <svelte:fragment slot="collapsed-menu">
+  {/snippet}
+  {#snippet collapsedMenu()}
       <ActionButtonDropDown {actions} />
-  </svelte:fragment>
-  <svelte:fragment slot="collapsed-left">
+  {/snippet}
+  {#snippet collapsedLeft()}
     <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">
       Settings
     </span>
-  </svelte:fragment>
+  {/snippet}
   <div
     class="flex flex-col items-center rounded-md px-3 py-4 md:px-4 md:py-5 gap-y-3"
   >
     <div class="flex flex-col w-full gap-y-4">
       {#if avatarAddress}
+        <div class="w-full -mt-1 text-xs text-base-content/70 flex flex-wrap items-center gap-2">
+          <span class="font-semibold">Profile CID:</span>
+          {#if profileCidLoading}
+            <span>loading…</span>
+          {:else if profileCid}
+            <span class="font-mono select-all break-all">{profileCid}</span>
+            <button class="btn btn-ghost btn-xs" onclick={copyProfileCid}>Copy</button>
+            <a class="link link-primary text-xs" href={ipfsGatewayUrl(profileCid)} target="_blank" rel="noopener noreferrer">Open</a>
+          {:else}
+            <span class="opacity-70">none yet</span>
+          {/if}
+        </div>
         <ProfileExplorer avatar={avatarAddress} pinApiBase={pinApiBase} showAdvancedSections={true} />
       {:else}
         <div class="p-4 text-sm opacity-70">

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { formatCurrency } from '$lib/cart/money';
+  import { formatCurrency } from '$lib/utils/money';
   interface Props {
     amount: number | null | undefined;
     code?: string | null | undefined;

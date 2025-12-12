@@ -1,5 +1,6 @@
 <script lang="ts">
     import { getContext, onDestroy } from 'svelte';
+    import type { Snippet } from 'svelte';
     import { TABS_CTX, type TabsContext } from './tabs.context';
 
     const ctx = getContext<TabsContext>(TABS_CTX);
@@ -18,7 +19,9 @@
         panelClass = '',
         // still accepted for compatibility; if omitted, we take it from context
         hostId = undefined as string | undefined,
-    } = $props();
+        // Svelte 5: accept children as a snippet instead of using $slots()
+        children
+    }: { id?: string; title?: string; badge?: number | string; disabled?: boolean; panelClass?: string; hostId?: string; children?: Snippet } = $props();
 
     // derive a stable id when not given
     $effect(() => {
@@ -90,5 +93,5 @@
         hidden={!isActive}
         aria-hidden={!isActive}
 >
-    <slot />
+    {@render children?.()}
 </div>

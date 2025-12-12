@@ -71,12 +71,13 @@
         <!-- Content: render the whole stack; only top is visible -->
         <div class="content w-full relative">
             {#each pages as page, i (keyFor(page))}
+                {@const Component = page.component}
                 <div
                         class={`popup-page ${i === top ? 'is-top' : 'is-hidden'}`}
                         aria-hidden={i === top ? 'false' : 'true'}
                         inert={i !== top}
                 >
-                    <svelte:component this={page.component} {...page.props} />
+                    <Component {...page.props} />
                 </div>
             {/each}
         </div>

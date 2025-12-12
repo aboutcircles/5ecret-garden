@@ -25,7 +25,7 @@
   }
 </script>
 
-<RowFrame clickable={true} dense={true} noLeading={true} on:click={openManageTrust}>
+<RowFrame clickable={true} dense={true} noLeading={true} onclick={openManageTrust}>
   <div class="w-full flex items-center justify-between gap-3">
     <div class="min-w-0 flex items-center gap-2">
       <Avatar address={item.gateway} view="horizontal" clickable={true} />

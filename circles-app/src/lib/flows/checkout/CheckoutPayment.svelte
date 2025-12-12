@@ -5,7 +5,8 @@
   import { cartState } from '$lib/cart/store';
 
   // NEW: imports to resolve PayAction and open send flow (Svelte 5 runes aware)
-  import { fetchProductForSellerAndSku } from '$lib/market/catalogClient';
+  import { getMarketClient } from '$lib/sdk/marketClient';
+  import { MARKET_OPERATOR } from '$lib/config/market';
   import { resolvePayTo } from '$lib/market/catalogHelpers';
   import { popupControls } from '$lib/stores/popUp';
   import SendFlow from '$lib/flows/send/4_Send.svelte';
@@ -80,6 +81,7 @@
       const recipients = new Set<string>();
       let total = 0;
 
+      const catalog = getMarketClient().catalog.forOperator(MARKET_OPERATOR);
       for (const line of lines) {
         const seller = String(line?.seller ?? '');
         const sku = String(line?.orderedItem?.sku ?? '');
@@ -91,7 +93,7 @@
         const snapPrice = typeof line?.offerSnapshot?.price === 'number' ? line.offerSnapshot.price : null;
         const snapCurrency = line?.offerSnapshot?.priceCurrency ?? null;
 
-        const item = await fetchProductForSellerAndSku(seller as string, sku as string);
+        const item = await catalog.fetchProductForSellerAndSku(seller as string, sku as string);
         const prod = (item as any)?.product;
         const offer = Array.isArray(prod?.offers) ? prod.offers[0] : prod?.offer ?? (Array.isArray(prod?.Offers) ? prod.Offers[0] : prod?.Offer);
         const payTo = resolvePayTo(offer);

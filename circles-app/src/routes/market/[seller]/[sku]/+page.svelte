@@ -1,77 +1,54 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
-    import { page } from '$app/stores';
-    import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
-    import ProductViewer from '$lib/components/ProductViewer.svelte';
-    import {goto} from "$app/navigation";
-    import type { AggregatedCatalogItem } from '$lib/market/types';
-    import { getFirstOffer } from '$lib/market/catalogHelpers';
-    import { normalizeAddress } from '$lib/offers/adapters';
-    import { avatarState } from '$lib/stores/avatar.svelte';
-    import { cartState, addToCart } from '$lib/cart/store';
-    import { fetchProductForSellerAndSku } from '$lib/market/catalogClient';
+  import {onMount} from 'svelte';
+  import {page} from '$app/stores';
+  import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
+  import ProductViewer from '$lib/components/ProductViewer.svelte';
+  import {goto} from "$app/navigation";
+  import type {AggregatedCatalogItem} from '$lib/market/types';
+  import {getFirstOffer} from '$lib/market/catalogHelpers';
+  import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
+  import {avatarState} from '$lib/stores/avatar.svelte';
+  import {addToCart, cartState} from '$lib/cart/store';
+  import { getMarketClient } from '$lib/sdk/marketClient';
+  import { MARKET_OPERATOR } from '$lib/config/market';
+  import { createLoadable } from '$lib/utils/loadable';
+  import { getAddToCartState } from '$lib/cart/addToCartUi';
 
-    // Derive seller and SKU from SvelteKit's $page store
+  // Derive seller and SKU from SvelteKit's $page store
     const params = $derived($page.params as { seller: string; sku: string });
 
     type ProductLike = AggregatedCatalogItem;
 
-    let loading: boolean = $state(true);
-    let errorMsg: string = $state('');
-    let product: ProductLike | null = $state(null);
+    const loader = createLoadable<ProductLike | null>(null);
+    const loading = $derived($loader.loading);
+    const errorMsg = $derived($loader.error || '');
+    const product: ProductLike | null = $derived($loader.value);
 
     // Load product details
     async function loadProduct(): Promise<void> {
-      loading = true;
-      errorMsg = '';
-      product = null;
-
-      try {
+      await loader.run(async () => {
         const seller = normalizeAddress(params.seller);
         const sku = params.sku;
-
-        const found = await fetchProductForSellerAndSku(seller, sku);
-        product = found;
-        if (!product) {
+        const catalog = getMarketClient().catalog.forOperator(MARKET_OPERATOR);
+        const p = await catalog.fetchProductForSellerAndSku(seller, sku);
+        if (!p) {
           throw new Error('Product not found for this seller / sku.');
         }
-      } catch (err: unknown) {
-        const msg =
-          err instanceof Error ? err.message : typeof err === 'string' ? err : 'Unknown error';
-        errorMsg = msg;
-      } finally {
-        loading = false;
-      }
+        return p;
+      });
     }
 
     onMount(loadProduct);
 
     // Handle back navigation
     function goBack(): void {
-        // Determine if we should go to seller profile or marketplace
-        const url = new URL(window.location.href);
-        const pathParts = url.pathname.split('/').filter(Boolean);
-
-        const isSellerDetail =
-          pathParts.length >= 3 &&
-          pathParts[0] === 'market' &&
-          !!pathParts[1] &&
-          !!pathParts[2];
-
-        if (isSellerDetail) {
-            // Go back to seller profile: /market/[seller]
-            goto(`/market/${params.seller}`);
-        } else {
-            // Go back to main marketplace
-            goto('/market');
-        }
+        goto(`/market/${params.seller}`);
     }
 
     const offer = $derived(product?.product ? getFirstOffer(product?.product) : null);
-
-    // Cart integration
     const currentAvatar = $derived(avatarState?.avatar?.address?.toLowerCase());
     const cartLoading = $derived($cartState.loading);
+    const addState = $derived(getAddToCartState({ product: product as any, offer, currentAvatar, cartLoading }));
 
     async function handleAddToBasket(): Promise<void> {
         if (!product) return;
@@ -95,7 +72,7 @@
         headerTopGapClass="mt-4 md:mt-6"
         collapsedTopGapClass="mt-3 md:mt-4"
 >
-    <svelte:fragment slot="title">
+    {#snippet title()}
         <div class="flex items-center gap-2">
             <button 
                 type="button"
@@ -109,7 +86,7 @@
             </button>
             <h1 class="text-xl font-semibold truncate">{product?.product?.name || 'Product Details'}</h1>
         </div>
-    </svelte:fragment>
+    {/snippet}
 
     <!-- Basket button moved to global header -->
 
@@ -143,6 +120,20 @@
             </button>
         </div>
     {:else if product && product?.product}
+        {#snippet actions()}
+            <div class="flex gap-2 w-full">
+                <button
+                    type="button"
+                    class="btn btn-outline w-full"
+                    onclick={(e) => { e.stopPropagation(); void handleAddToBasket(); }}
+                    disabled={!addState.canAdd}
+                    title={addState.disabledReason}
+                >
+                    Add to basket
+                </button>
+            </div>
+        {/snippet}
+
         <ProductViewer
             product={product?.product}
             offer={offer}
@@ -152,21 +143,8 @@
             showMeta={true}
             meta={{ publishedAt: product.publishedAt, productCid: product.productCid, sku: product?.product?.sku }}
             layout="detail"
-        >
-            <svelte:fragment slot="actions">
-                <div class="flex gap-2 w-full">
-                    <button
-                        type="button"
-                        class="btn btn-outline w-full"
-                        onclick={handleAddToBasket}
-                        disabled={!offer || cartLoading || !currentAvatar}
-                        title={!currentAvatar ? 'Connect a Circles account first' : (!offer ? 'No offer available' : 'Add to basket')}
-                    >
-                        Add to basket
-                    </button>
-                </div>
-            </svelte:fragment>
-        </ProductViewer>
+            actions={actions}
+        />
     {:else if !loading && !errorMsg}
         <!-- Product not found -->
         <div class="flex flex-col items-center justify-center p-8">

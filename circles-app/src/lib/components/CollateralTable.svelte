@@ -46,7 +46,7 @@
 
 <div class="w-full">
   {#each collateralInTreasury as item}
-      <RowFrame clickable={true} dense={true} noLeading={true} on:click={() => openProfile(item.avatar)}>
+      <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => openProfile(item.avatar)}>
       <div class="min-w-0">
         <Avatar
           address={item.avatar}
@@ -55,7 +55,7 @@
         />
       </div>
 
-      <div slot="trailing" class="flex items-center gap-3 md:gap-4">
+      {#snippet trailing()}<div class="flex items-center gap-3 md:gap-4">
         <div class="text-right tabular-nums">
           <div class="font-medium">{formatEtherTwoDecimals(item.amount)} CRC</div>
         </div>
@@ -69,7 +69,7 @@
             min="0"
           />
         {/if}
-      </div>
+      </div>{/snippet}
     </RowFrame>
   {/each}
 </div>

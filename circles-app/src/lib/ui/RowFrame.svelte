@@ -1,7 +1,8 @@
 <script lang="ts">
-    import { createEventDispatcher } from 'svelte';
+    import type { Snippet } from 'svelte';
+    import type { HTMLAttributes } from 'svelte/elements';
 
-    interface Props {
+    type Props = Omit<HTMLAttributes<HTMLDivElement>, 'children'> & {
         clickable?: boolean;
         selected?: boolean;
         disabled?: boolean;
@@ -9,21 +10,49 @@
         className?: string;
         /** Collapse the leading column for rows whose content already includes its own avatar/layout. */
         noLeading?: boolean;
-    }
+        /** Optional direct click handler prop to support `onclick={...}` on the component. */
+        onclick?: (e: MouseEvent) => void;
+
+        // Svelte 5 snippet props (replacement for named slots)
+        leading?: Snippet;
+        title?: Snippet;
+        subtitle?: Snippet;
+        meta?: Snippet;
+        trailing?: Snippet;
+
+        // implicit default content inside <RowFrame>...</RowFrame>
+        children?: Snippet;
+    };
 
     let {
         clickable = false,
         selected = false,
         disabled = false,
         dense = false,
+        class: classAttr = '',
         className = '',
-        noLeading = false
+        noLeading = false,
+
+        onclick,
+        onkeydown,
+
+        tabindex: _tabindex,
+
+        leading,
+        title,
+        subtitle,
+        meta,
+        trailing,
+        children,
+
+        ...rest
     }: Props = $props();
 
-    const dispatch = createEventDispatcher();
-    let el: HTMLElement;
+    let el: HTMLDivElement | null = null;
 
     function handleKeydown(e: KeyboardEvent): void {
+        onkeydown?.(e);
+
         const isInteractive: boolean = clickable && !disabled;
         const isActivate: boolean = e.key === 'Enter' || e.key === ' ';
         if (!isInteractive) {
@@ -40,41 +69,41 @@
         if (!isInteractive) {
             return;
         }
-        // Re-dispatch as a component event so parents can use on:click on <RowFrame>
-        dispatch('click', { originalEvent: e });
+        onclick?.(e);
     }
 </script>
 
 <div
-        bind:this={el}
-        data-row
-        data-clickable={clickable ? '' : undefined}
-        data-selected={selected ? '' : undefined}
-        data-disabled={disabled ? '' : undefined}
-        data-dense={dense ? '' : undefined}
-        data-no-leading={noLeading ? '' : undefined}
-        class={`ui-row ${className}`}
-        role={clickable ? 'button' : 'group'}
-        tabindex={clickable && !disabled ? 0 : undefined}
-        aria-disabled={disabled ? 'true' : 'false'}
-        on:keydown={handleKeydown}
-        on:click={handleClick}
+    {...rest}
+    bind:this={el}
+    data-row
+    data-clickable={clickable && !disabled ? '' : undefined}
+    data-selected={selected ? '' : undefined}
+    data-disabled={disabled ? '' : undefined}
+    data-dense={dense ? '' : undefined}
+    data-no-leading={noLeading ? '' : undefined}
+    class={`ui-row ${classAttr} ${className}`.trim()
+    }
+    role="group"
+    aria-disabled={disabled ? 'true' : 'false'}
+    onkeydown={handleKeydown}
+    onclick={handleClick}
 >
     {#if !noLeading}
         <div class="ui-row__leading">
-            <slot name="leading" />
+            {@render leading?.()}
         </div>
     {/if}
 
     <div class="ui-row__content">
-        <div class="ui-row__title"><slot name="title" /></div>
-        <div class="ui-row__subtitle"><slot name="subtitle" /></div>
-        <div class="ui-row__meta"><slot name="meta" /></div>
-        <slot />
+        <div class="ui-row__title">{@render title?.()}</div>
+        <div class="ui-row__subtitle">{@render subtitle?.()}</div>
+        <div class="ui-row__meta">{@render meta?.()}</div>
+        {@render children?.()}
     </div>
 
     <div class="ui-row__trailing">
-        <slot name="trailing" />
+        {@render trailing?.()}
     </div>
 </div>
 

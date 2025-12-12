@@ -1,10 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { cartState, upsertLineItem } from '$lib/cart/store';
-import * as client from '$lib/cart/client';
-import type { Basket } from '$lib/cart/types';
+import { cartState, upsertLineItem, patchBasket, type OrderItemPreview } from '$lib/cart/store';
 import type { AggregatedCatalogItem } from '$lib/market/types';
 
-function baseBasket(overrides: Partial<Basket> = {}): Basket {
+function baseBasket(overrides: Partial<any> = {}): any {
   return {
     '@context': ['https://schema.org/', 'https://aboutcircles.com/contexts/circles-market/'],
     '@type': 'circles:Basket',
@@ -72,7 +70,7 @@ describe('basket PATCH payload is reference-only (no offerSnapshot)', () => {
     const srcArray = ['http://purl.org/goodrelations/v1#DeliveryModePickUp'];
     const item = makeCatalogItemWithDelivery(srcArray);
 
-    const patchSpy = vi.spyOn(client, 'patchBasket').mockImplementation(async (_id, patch) => {
+    const patchSpy = vi.spyOn(require('$lib/cart/store'), 'patchBasket').mockImplementation(async (_id: string, patch: any) => {
       const items = (patch as any).items as any[];
       expect(items).toHaveLength(1);
       const sent = items[0];

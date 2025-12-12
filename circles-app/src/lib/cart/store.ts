@@ -173,7 +173,63 @@ if (browser) {
   void reloadBasketIfPresent();
 }
 
-async function setItems(items: { seller: string; sku: string; quantity: number; imageUrl?: string }[]): Promise<void> {
+export type OrderItemPreview = {
+  '@type': 'OrderItem';
+  orderQuantity: number;
+  orderedItem: { '@type': 'Product'; sku: string };
+  seller: string;
+  imageUrl?: string;
+};
+
+export type BasketPatch = {
+  items?: OrderItemPreview[];
+  shippingAddress?: any;
+  billingAddress?: any;
+  ageProof?: any;
+  contactPoint?: any;
+  ttlSeconds?: number;
+};
+
+export async function patchBasket(basketId: string, patch: BasketPatch): Promise<any> {
+  const client = getMarketClient();
+  let updated: any | null = null;
+
+  if (Array.isArray(patch.items)) {
+    const items = patch.items
+      .map((it) => ({
+        seller: normalizeAddr(it.seller),
+        sku: normalizeSku(it.orderedItem?.sku as any),
+        quantity: Number(it.orderQuantity ?? 0),
+        imageUrl: typeof it.imageUrl === 'string' ? it.imageUrl : undefined,
+      }))
+      .filter((x) => x.seller && x.sku && x.quantity > 0);
+
+    updated = await client.cart.setItems({ basketId, items });
+  }
+
+  if (
+    patch.shippingAddress !== undefined ||
+    patch.billingAddress !== undefined ||
+    patch.contactPoint !== undefined ||
+    patch.ageProof !== undefined
+  ) {
+    updated = await client.cart.setCheckoutDetails({
+      basketId,
+      shippingAddress: patch.shippingAddress ?? undefined,
+      billingAddress: patch.billingAddress ?? undefined,
+      contactPoint: patch.contactPoint ?? undefined,
+      ageProof: patch.ageProof ?? undefined,
+    });
+  }
+
+  if (!updated) {
+    // No changes applied, return current basket
+    return await fetchBasketById(basketId);
+  }
+  return updated;
+}
+
+export async function setItems(items: { seller: string; sku: string; quantity: number; imageUrl?: string }[]): Promise<void> {
   const state = get(cartState);
 
   const basketId = state.basket?.basketId ?? readBasketId();
@@ -181,8 +237,16 @@ async function setItems(items: { seller: string; sku: string; quantity: number; 
     throw new Error('No basketId available');
   }
 
-  const client = getMarketClient();
-  const updated = await client.cart.setItems({ basketId, items });
+  // Convert to OrderItemPreview shape so tests can spy on payload semantics
+  const orderItems: OrderItemPreview[] = items.map((it) => ({
+    '@type': 'OrderItem',
+    orderQuantity: it.quantity,
+    seller: it.seller,
+    imageUrl: it.imageUrl,
+    orderedItem: { '@type': 'Product', sku: it.sku },
+  }));
+
+  const updated = await patchBasket(basketId, { items: orderItems });
   cartState.update((s) => ({ ...s, basket: updated }));
 }
 
@@ -235,6 +299,11 @@ export async function setLineQuantityByIdentity(
   const qtyOk = Number.isFinite(quantity) && quantity >= 0;
   if (!qtyOk) {
     throw new Error(`Invalid quantity: ${quantity}`);
+  }
+  if (quantity <= 0) {
+    // Delegate to remove path to satisfy tests and avoid sending zero-qty lines
+    await removeLineByIdentity(sellerRaw, skuRaw);
+    return;
   }
 
   setLoading(true);
@@ -406,6 +475,51 @@ export async function checkoutCart(): Promise<CheckoutResult> {
   } finally {
     setLoading(false);
   }
+}
+
+export async function upsertLineByIdentity(sellerRaw: string, skuRaw: string, quantity: number): Promise<void> {
+  const qtyOk = Number.isFinite(quantity) && quantity >= 0;
+  if (!qtyOk) throw new Error(`Invalid quantity: ${quantity}`);
+  if (quantity <= 0) {
+    await removeLineByIdentity(sellerRaw, skuRaw);
+    return;
+  }
+
+  setLoading(true);
+  clearError();
+  try {
+    const state = get(cartState);
+    const basket = state.basket ?? (readBasketId() ? await fetchBasketById(readBasketId()!) : null);
+    if (!basket?.basketId) throw new Error('No basket available');
+
+    const seller = normalizeAddr(sellerRaw);
+    const sku = normalizeSku(skuRaw);
+
+    const items = toSdkItemsFromBasket(basket);
+    const idx = items.findIndex((x) => x.seller === seller && x.sku === sku);
+    if (idx >= 0) {
+      const next = items.slice();
+      next[idx] = { ...next[idx], quantity };
+      await setItems(next);
+    } else {
+      const next = items.concat([{ seller, sku, quantity }]);
+      await setItems(next);
+    }
+    const refreshed = await fetchBasketById(basket.basketId);
+    cartState.update((s) => ({ ...s, basket: refreshed }));
+  } catch (e) {
+    setError(e);
+    throw e;
+  } finally {
+    setLoading(false);
+  }
+}
+
+export async function upsertLineItem(item: AggregatedCatalogItem, quantity: number): Promise<void> {
+  const seller = normalizeAddr(item.seller as any);
+  const sku = normalizeSku(item.product?.sku);
+  if (!seller || !sku) throw new Error('Product missing seller or sku');
+  await upsertLineByIdentity(seller, sku, quantity);
 }
 
 export function clearCart(): void {

@@ -73,8 +73,8 @@
     <SettingsDropdown />
   </div>
 
-  <h1 class="h2">Select Account</h1>
-  <p class="muted">Please select the account you want to use from the list below.</p>
+  <h1 class="h2">Select avatar</h1>
+  <p class="muted">Please select the avatar you want to use from the list below.</p>
 
   {#if !signer.address || !$circles}
     <WalletLoader />

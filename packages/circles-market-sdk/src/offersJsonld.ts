@@ -9,15 +9,8 @@ const CONTEXT = [
   'https://aboutcircles.com/contexts/circles-market/',
 ] as const;
 
-function isAbsoluteUri(u: unknown): u is string {
-  if (typeof u !== 'string') return false;
-  try {
-    const url = new URL(u);
-    return !!url.protocol && !!url.hostname;
-  } catch {
-    return false;
-  }
-}
+// moved to utils.ts
+import { isAbsoluteUri } from './utils';
 
 function normalizeImages(img: unknown): any[] | undefined {
   if (img == null) return undefined;
