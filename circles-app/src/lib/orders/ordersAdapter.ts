@@ -1,12 +1,7 @@
 import { browser } from '$app/environment';
 import { getMarketClient } from '$lib/sdk/marketClient';
-import type {
-  OrderSnapshot,
-  OrderStatusEventPayload,
-  OrderStatusHistory,
-} from '@circles-market/sdk';
-
-export type OrderStatusEvent = OrderStatusEventPayload;
+import type { OrderSnapshot, OrderStatusHistory } from '@circles-market/sdk';
+import type { OrderStatusSseEvent } from '$lib/orders/types';
 
 export async function getOrdersByBuyer(
   page: number = 1,
@@ -40,7 +35,7 @@ export async function getOrderStatusHistory(orderId: string): Promise<OrderStatu
 }
 
 export function subscribeBuyerOrderEvents(
-  onEvent: (evt: OrderStatusEvent) => void,
+  onEvent: (evt: OrderStatusSseEvent) => void,
 ): () => void {
   if (!browser) {
     return () => {};

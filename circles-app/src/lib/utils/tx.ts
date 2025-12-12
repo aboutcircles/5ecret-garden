@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import { uint256ToAddress, CirclesConverter } from '@circles-sdk/utils';
-import { formatCurrency } from '$lib/cart/money';
+import { formatCurrency } from '$lib/utils/money';
 
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 export const isZeroAddress = (addr?: string | null) => (addr ?? '').toLowerCase() === ZERO_ADDRESS;

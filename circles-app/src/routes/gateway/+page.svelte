@@ -162,32 +162,32 @@
   headerTopGapClass="mt-4 md:mt-6"
   collapsedTopGapClass="mt-3 md:mt-4"
 >
-  <svelte:fragment slot="title">
+  {#snippet title()}
     <h1 class="h2 m-0">Payment gateways</h1>
-  </svelte:fragment>
+  {/snippet}
 
-  <svelte:fragment slot="meta">
+  {#snippet meta()}
     {#if ownerAddress}
       Owner {shortAddr(ownerAddress)}
     {:else}
-      Connect wallet to manage gateways
+      Connect an avatar to manage gateways
     {/if}
-  </svelte:fragment>
+  {/snippet}
 
-  <svelte:fragment slot="actions">
+  {#snippet headerActions()}
     <ActionButtonBar {actions} />
-  </svelte:fragment>
+  {/snippet}
 
-  <svelte:fragment slot="collapsed-left">
+  {#snippet collapsedLeft()}
     <span
       class="text-base md:text-lg font-semibold tracking-tight text-base-content"
       >Payment gateways</span
     >
-  </svelte:fragment>
+  {/snippet}
 
-  <svelte:fragment slot="collapsed-menu">
+  {#snippet collapsedMenu()}
     <ActionButtonDropDown {actions} />
-  </svelte:fragment>
+  {/snippet}
 
   <section class="bg-base-100 border border-base-300 rounded-xl p-4">
     <div class="flex items-center justify-between mb-3">
@@ -196,11 +196,11 @@
 
     {#if !ownerAddress}
       <div class="text-sm opacity-70">
-        Connect a Circles avatar to see your payment gateways.
+        Connect an avatar to see your payment gateways.
       </div>
     {:else if !$circles}
       <div class="text-sm opacity-70">
-        Connect Circles to load your gateways.
+        Connect an avatar to load your gateways.
       </div>
     {:else if loadingGateways}
       <div class="loading loading-spinner loading-md"></div>

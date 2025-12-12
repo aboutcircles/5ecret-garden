@@ -64,7 +64,7 @@
 </script>
 
 <!-- Use noLeading to collapse the empty first column; put the old "horizontal avatar row" inside content -->
-<RowFrame noLeading={true} clickable={true} className="balance-row" on:click={onClick}>
+<RowFrame noLeading={true} clickable={true} className="balance-row" onclick={onClick}>
     <!-- CONTENT (old layout preserved) -->
     <div class="w-full flex items-center justify-between">
         <!-- Left: Avatar horizontal exactly like before -->

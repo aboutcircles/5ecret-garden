@@ -1,12 +1,15 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import {onMount} from 'svelte';
   import ProductViewer from '$lib/components/ProductViewer.svelte';
-  import type { AggregatedCatalogItem } from '$lib/market/types';
-  import { getFirstOffer, resolvePayTo } from '$lib/market/catalogHelpers';
-  import { fetchProductForSellerAndSku } from '$lib/market/catalogClient';
-  import { avatarState } from '$lib/stores/avatar.svelte';
-  import { cartState, addToCart } from '$lib/cart/store';
-  import { normalizeAddress } from '$lib/offers/adapters';
+  import type {AggregatedCatalogItem} from '$lib/market/types';
+  import {getFirstOffer} from '$lib/market/catalogHelpers';
+  import {avatarState} from '$lib/stores/avatar.svelte';
+  import {addToCart, cartState} from '$lib/cart/store';
+  import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
+  import { getMarketClient } from '$lib/sdk/marketClient';
+  import { MARKET_OPERATOR } from '$lib/config/market';
+  import { getAddToCartState } from '$lib/cart/addToCartUi';
+  import { createLoadable } from '$lib/utils/loadable';
 
   interface Props {
     seller: string; // EVM address
@@ -16,34 +19,27 @@
 
   type ProductLike = AggregatedCatalogItem;
 
-  let loading: boolean = $state(true);
-  let errorMsg: string = $state('');
-  let product: ProductLike | null = $state(null);
+  const loader = createLoadable<ProductLike | null>(null);
+  const loading = $derived($loader.loading);
+  const errorMsg = $derived($loader.error || '');
+  const product: ProductLike | null = $derived($loader.value);
 
   async function loadProduct(): Promise<void> {
-    loading = true;
-    errorMsg = '';
-    product = null;
-    try {
+    await loader.run(async () => {
       const s = normalizeAddress(seller);
-      const found = await fetchProductForSellerAndSku(s, sku);
-      product = found;
-      if (!product) throw new Error('Product not found for this seller / sku.');
-    } catch (err: unknown) {
-      errorMsg = err instanceof Error ? err.message : String(err ?? 'Unknown error');
-    } finally {
-      loading = false;
-    }
+      const catalog = getMarketClient().catalog.forOperator(MARKET_OPERATOR);
+      const p = await catalog.fetchProductForSellerAndSku(s, sku);
+      if (!p) throw new Error('Product not found for this seller / sku.');
+      return p;
+    });
   }
 
   onMount(loadProduct);
 
   const offer = $derived(product?.product ? getFirstOffer(product?.product) : null);
-  const payTo = $derived(offer ? resolvePayTo(offer) : { address: null } as any);
-  const hasPayAction = $derived(!!payTo.address);
   const currentAvatar = $derived(avatarState?.avatar?.address?.toLowerCase());
   const cartLoading = $derived($cartState.loading);
-  const canAdd = $derived(!!offer && hasPayAction && !!currentAvatar && !cartLoading);
+  const addState = $derived(getAddToCartState({ product: product as any, offer, currentAvatar, cartLoading }));
 
   async function handleAddToBasket(): Promise<void> {
     if (!product) return;
@@ -66,6 +62,20 @@
       <span>{errorMsg}</span>
     </div>
   {:else if product && product?.product}
+    {#snippet actions()}
+      <div class="flex gap-2 w-full">
+        <button
+          type="button"
+          class="btn btn-outline w-full"
+          onclick={(e) => { e.stopPropagation(); void handleAddToBasket(); }}
+          disabled={!addState.canAdd}
+          title={addState.disabledReason}
+        >
+          Add to basket
+        </button>
+      </div>
+    {/snippet}
+
     <ProductViewer
       product={product.product}
       offer={offer}
@@ -75,27 +85,8 @@
       showMeta={true}
       meta={{ publishedAt: product.publishedAt, productCid: product.productCid, sku: product?.product?.sku }}
       layout="detail"
-    >
-      <svelte:fragment slot="actions">
-        <div class="flex gap-2 w-full">
-          <button
-            type="button"
-            class="btn btn-outline w-full"
-            on:click|stopPropagation={handleAddToBasket}
-            disabled={!canAdd}
-            title={!currentAvatar
-              ? 'Connect a Circles account first'
-              : (!offer
-                  ? 'No offer available'
-                  : (!hasPayAction
-                      ? 'This item has no PayAction; cannot add to basket'
-                      : 'Add to basket'))}
-          >
-            Add to basket
-          </button>
-        </div>
-      </svelte:fragment>
-    </ProductViewer>
+      actions={actions}
+    />
   {:else}
     <div class="text-sm opacity-70">Product data not available</div>
   {/if}

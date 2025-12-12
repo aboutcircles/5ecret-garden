@@ -1,10 +1,11 @@
 <script lang="ts">
 import Lucide from "$lib/icons/Lucide.svelte";
 
-const {actions} = $props();
+// Default to empty list; tolerate undefined entries
+let { actions = [] as any[] } = $props();
 
 </script>
-{#each actions as a (a.id)}
+{#each actions.filter(Boolean) as a, i (a?.id ?? a?.label ?? i)}
   <button
     type="button"
     class={`btn btn-sm ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'} min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3`}

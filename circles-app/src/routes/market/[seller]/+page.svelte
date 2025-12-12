@@ -8,9 +8,9 @@
     import Avatar from '$lib/components/avatar/Avatar.svelte';
     import { MARKET_API_BASE, MARKET_OPERATOR } from '$lib/config/market';
     import type { AggregatedCatalogItem } from '$lib/market/types';
-    import { fetchSellerCatalog } from '$lib/market/catalogClient';
+    import { getMarketClient } from '$lib/sdk/marketClient';
     import { shortenAddress } from '$lib/utils/shared';
-    import { normalizeAddress } from '$lib/offers/adapters';
+    import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
     import { avatarState } from '$lib/stores/avatar.svelte';
     import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
@@ -60,7 +60,8 @@
         const normalized = normalizeAddress(params.seller);
         sellerAddress = normalized as `0x${string}`;
 
-        const items = await fetchSellerCatalog(normalized);
+        const catalog = getMarketClient().catalog.forOperator(MARKET_OPERATOR);
+        const items = await catalog.fetchSellerCatalog(normalized);
         // fetchSellerCatalog already filters by seller, but keep this defensive filter
         products = items.filter(
           (p) => (p.seller ?? '').toLowerCase() === normalized.toLowerCase(),
@@ -103,32 +104,32 @@
         headerTopGapClass="mt-4 md:mt-6"
         collapsedTopGapClass="mt-3 md:mt-4"
 >
-    <svelte:fragment slot="title">
+    {#snippet title()}
         <h1 class="h2 m-0">Seller Profile</h1>
-    </svelte:fragment>
+    {/snippet}
 
-    <svelte:fragment slot="meta">
+    {#snippet meta()}
         {#if sellerAddress}
             Seller: {shortAddr(sellerAddress)}
         {:else}
             Seller Profile
         {/if}
-    </svelte:fragment>
+    {/snippet}
 
-    <svelte:fragment slot="actions">
+    {#snippet headerActions()}
         <ActionButtonBar {actions} />
-    </svelte:fragment>
+    {/snippet}
 
     <!-- Collapsed summary -->
-    <svelte:fragment slot="collapsed-left">
+    {#snippet collapsedLeft()}
         <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">
       Seller Profile
     </span>
-    </svelte:fragment>
+    {/snippet}
 
-    <svelte:fragment slot="collapsed-menu">
+    {#snippet collapsedMenu()}
         <ActionButtonDropDown {actions} />
-    </svelte:fragment>
+    {/snippet}
 
     <!-- Seller Profile Section -->
     <section class="bg-base-100 border border-base-300 rounded-xl p-4 mb-6">
@@ -178,7 +179,7 @@
                 </div>
             {:else}
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {#each products as p (p.productCid ?? p.id ?? p.sku ?? JSON.stringify(p))}
+                    {#each products as p (p.productCid)}
                         <ProductCard 
                           product={p} 
                           showSellerInfo={false}

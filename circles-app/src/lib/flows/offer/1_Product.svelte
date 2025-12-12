@@ -3,7 +3,7 @@
   import OfferStep2 from './2_Pricing.svelte';
   import type {OfferFlowContext, OfferDraft} from './types';
   import ImageUpload from '$lib/components/ImageUpload.svelte';
-  import {normalizeAddress} from '$lib/offers/adapters';
+  import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
   import {generateSku, isValidSku} from '$lib/utils/offer';
   import { get } from 'svelte/store';
   import { circles } from '$lib/stores/circles';
@@ -46,13 +46,20 @@
     } as OfferDraft;
   }
 
+  function normalizeDraftImages(d: OfferDraft): string[] {
+    const arr = Array.isArray(d.images) ? d.images : [];
+    const cleaned = arr.map((x) => (typeof x === 'string' ? x.trim() : '')).filter((x) => x.length > 0);
+    if (cleaned.length > 0) return cleaned;
+
+    const legacy = typeof d.image === 'string' ? d.image.trim() : '';
+    return legacy ? [legacy] : [];
+  }
+
   // Local bindings for form inputs
   let sku = $state(context.draft.sku);
   let name = $state(context.draft.name);
   let description = $state(context.draft.description ?? '');
-  let image = $state(context.draft.image ?? '');
-  // New: support multiple images via uploader
-  let images = $state<string[]>(context.draft.images ?? []);
+  let images = $state<string[]>(normalizeDraftImages(context.draft));
   let url = $state(context.draft.url ?? '');
   let brand = $state(context.draft.brand ?? '');
   let mpn = $state(context.draft.mpn ?? '');
@@ -94,8 +101,11 @@
     }
   });
 
-  // Live preview of auto-generated SKU (when no manual sku is provided)
-  const autoSku = $derived(generateSku(name || ''));
+  // Live preview of auto-generated SKU, stored in state so we can reuse it when saving
+  let autoSku = $state('');
+  $effect(() => {
+    autoSku = generateSku(name || '');
+  });
 
   function next(): void {
     const hasManualSku = (sku ?? '').trim().length > 0;
@@ -109,27 +119,19 @@
       throw new Error('Name is required.');
     }
 
-    // Robust normalization to avoid undefined access and keep legacy `image` in sync
-    const hasImagesArray = Array.isArray(images) && images.length > 0;
-    const hasLegacyImage = typeof image === 'string' && image.trim().length > 0;
+    const imgs = images
+      .map((x) => x.trim())
+      .filter((x) => x.length > 0);
 
-    const imagesNormalized: string[] = hasImagesArray
-      ? [...images]
-      : hasLegacyImage
-        ? [image]
-        : [];
-
-    const imagesField = imagesNormalized.length > 0 ? imagesNormalized : undefined;
-    const legacyImageField = hasLegacyImage ? image : (imagesNormalized[0] ?? undefined);
+    const nextSku = editMode ? (context.draft!.sku || sku) : (hasManualSku ? sku : autoSku);
 
     context.draft = {
       ...context.draft!,
-      // Never alter SKU in edit mode
-      sku: editMode ? (context.draft!.sku || sku) : (hasManualSku ? sku : generateSku(name)),
+      sku: nextSku,
       name,
       description: description || undefined,
-      images: imagesField,
-      image: legacyImageField,
+      images: imgs.length > 0 ? imgs : undefined,
+      image: imgs[0] || undefined,
       url: url || undefined,
       brand: brand || undefined,
       mpn: mpn || undefined,
@@ -140,7 +142,7 @@
     popupControls.open({
       title: 'Offer • Pricing',
       component: OfferStep2,
-      props: {context}
+      props: { context },
     });
   }
 </script>
@@ -161,7 +163,7 @@
       {/if}
       <label class="form-control">
         <span class="label-text">Description</span>
-        <textarea class="textarea textarea-bordered" rows="3" bind:value={description}/>
+        <textarea class="textarea textarea-bordered" rows="3" bind:value={description}></textarea>
       </label>
       <!-- Images: either upload multiple or paste a single URL (legacy) -->
       <div class="space-y-2">

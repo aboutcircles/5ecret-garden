@@ -4,7 +4,8 @@
     import { cartState, checkoutCart } from '$lib/cart/store';
     import { popupControls } from '$lib/stores/popUp';
     import CheckoutPayment from './CheckoutPayment.svelte';
-    import { fetchProductForSellerAndSku } from '$lib/market/catalogClient';
+    import { getMarketClient } from '$lib/sdk/marketClient';
+    import { MARKET_OPERATOR } from '$lib/config/market';
     import type { AggregatedCatalogItem } from '$lib/market/types';
     import { pickFirstProductImageUrl } from '$lib/market/imageHelpers';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
@@ -63,6 +64,7 @@
 
     // Background fetch of product metadata
     $effect(() => {
+        const catalog = getMarketClient().catalog.forOperator(MARKET_OPERATOR);
         for (const line of lines) {
             const seller = line?.seller as string | undefined;
             const sku = line?.orderedItem?.sku as string | undefined;
@@ -76,7 +78,7 @@
             resolvedProducts = { ...resolvedProducts, [key]: null };
             void (async () => {
                 try {
-                    const item = await fetchProductForSellerAndSku(seller as string, sku as string);
+                    const item = await catalog.fetchProductForSellerAndSku(seller as string, sku as string);
                     resolvedProducts = { ...resolvedProducts, [key]: item };
                 } catch {
                     resolvedProducts = { ...resolvedProducts, [key]: null };
@@ -108,7 +110,7 @@
         return parts.length ? parts.join(' • ') : null;
     }
 
-    import { formatCurrency } from '$lib/cart/money';
+    import { formatCurrency } from '$lib/utils/money';
 
     function getLineUnitPrice(line: any): { amount: number | null; code: string | null } {
         const snap = line?.offerSnapshot;

@@ -1,9 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { cartState, upsertLineByIdentity, setLineQuantityByIdentity, removeLineByIdentity } from '$lib/cart/store';
-import * as client from '$lib/cart/client';
-import type { Basket, OrderItemPreview } from '$lib/cart/types';
+import { cartState, upsertLineByIdentity, setLineQuantityByIdentity, removeLineByIdentity, setItems, patchBasket, type OrderItemPreview } from '$lib/cart/store';
 
-function baseBasket(overrides: Partial<Basket> = {}): Basket {
+function baseBasket(overrides: Partial<any> = {}): any {
   return {
     '@context': ['https://schema.org/', 'https://aboutcircles.com/contexts/circles-market/'],
     '@type': 'circles:Basket',
@@ -38,7 +36,7 @@ beforeEach(() => {
 
 describe('identity-based cart mutations', () => {
   it('inserts new line without offerSnapshot (server derives canonical data)', async () => {
-    const patchSpy = vi.spyOn(client, 'patchBasket').mockImplementation(async (_id, patch) => {
+    const patchSpy = vi.spyOn(require('$lib/cart/store'), 'patchBasket').mockImplementation(async (_id, patch) => {
       // Expect a single new item
       const items = (patch as any).items as OrderItemPreview[];
       expect(items).toHaveLength(1);
@@ -64,7 +62,7 @@ describe('identity-based cart mutations', () => {
     };
     cartState.update((s) => ({ ...s, basket: baseBasket({ items: [seeded] }) }));
 
-    const patchSpy = vi.spyOn(client, 'patchBasket').mockImplementation(async (_id, patch) => {
+    const patchSpy = vi.spyOn(require('$lib/cart/store'), 'patchBasket').mockImplementation(async (_id, patch) => {
       const items = (patch as any).items as OrderItemPreview[];
       expect(items).toHaveLength(1);
       // Same object shape but updated quantity
@@ -91,7 +89,7 @@ describe('identity-based cart mutations', () => {
     cartState.update((s) => ({ ...s, basket: baseBasket({ items: [seeded] }) }));
 
     const removeSpy = vi.spyOn(require('$lib/cart/store'), 'removeLineByIdentity');
-    const patchSpy = vi.spyOn(client, 'patchBasket').mockImplementation(async (_id, patch) => {
+    const patchSpy = vi.spyOn(require('$lib/cart/store'), 'patchBasket').mockImplementation(async (_id, patch) => {
       const items = (patch as any).items as OrderItemPreview[];
       // Remove path should result in empty items
       expect(items).toHaveLength(0);
@@ -110,7 +108,7 @@ describe('identity-based cart mutations', () => {
     ];
     cartState.update((s) => ({ ...s, basket: baseBasket({ items }) }));
 
-    const patchSpy = vi.spyOn(client, 'patchBasket').mockImplementation(async (_id, patch) => {
+    const patchSpy = vi.spyOn(require('$lib/cart/store'), 'patchBasket').mockImplementation(async (_id, patch) => {
       const patchedItems = (patch as any).items as OrderItemPreview[];
       expect(patchedItems).toHaveLength(1);
       // Only the non-matching line should remain

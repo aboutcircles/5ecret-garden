@@ -2,7 +2,6 @@
     import {ethers} from 'ethers';
     import AddressInput from '$lib/components/AddressInput.svelte';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
-    import type {Address} from '@circles-sdk/utils';
     import type {Profile, SearchResultProfile} from '@circles-sdk/profiles';
     import {circles} from '$lib/stores/circles';
     import {get} from 'svelte/store';
@@ -125,18 +124,18 @@
     {#if result.length > 0}
         <div class="w-full flex flex-col gap-y-1.5" role="list">
             {#each result as profile}
-                <RowFrame clickable={true} dense={true} noLeading={true} on:click={() => onselect && onselect(profile.address)}>
+                <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => onselect && onselect(profile.address)}>
                     <div class="min-w-0">
                         <Avatar
-                                address={profile.address as Address}
+                                address={profile.address}
                                 view="horizontal"
                                 bottomInfo={avatarTypeToReadable(profile.avatarType)}
                                 clickable={false}
                         />
                     </div>
-                    <div slot="trailing" aria-hidden="true">
+                    {#snippet trailing()}<div aria-hidden="true">
                         <img src="/chevron-right.svg" alt="" class="icon" />
-                    </div>
+                    </div>{/snippet}
                 </RowFrame>
             {/each}
         </div>

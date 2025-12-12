@@ -7,7 +7,6 @@
     import type {Profile} from '@circles-sdk/profiles';
     import Disclaimer from '$lib/components/Disclaimer.svelte';
     import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
-    import Lucide from '$lib/icons/Lucide.svelte';
     import { ArrowLeft as LArrowLeft } from 'lucide';
     import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
@@ -29,21 +28,21 @@
   </script>
 
 <PageScaffold highlight="soft" collapsedMode="bar" collapsedHeightClass="h-12" maxWidthClass="page page--lg" contentWidthClass="page page--lg" usePagePadding={true} headerTopGapClass="mt-4 md:mt-6" collapsedTopGapClass="mt-3 md:mt-4">
-  <svelte:fragment slot="title">
+  {#snippet title()}
     <h1 class="h2 m-0">Register Organization</h1>
-  </svelte:fragment>
-  <svelte:fragment slot="meta">Step 1 of 1</svelte:fragment>
-  <svelte:fragment slot="actions">
+  {/snippet}
+  {#snippet meta()}Step 1 of 1{/snippet}
+  {#snippet headerActions()}
     <ActionButtonBar {actions} />
-  </svelte:fragment>
-  <svelte:fragment slot="collapsed-left">
+  {/snippet}
+  {#snippet collapsedLeft()}
     <div class="truncate flex items-center gap-2">
       <span class="font-medium">Register Organization</span>
     </div>
-  </svelte:fragment>
-  <svelte:fragment slot="collapsed-menu">
+  {/snippet}
+  {#snippet collapsedMenu()}
     <ActionButtonDropDown {actions} />
-  </svelte:fragment>
+  {/snippet}
 
   <div class="mt-3">
     <Disclaimer/>

@@ -2,42 +2,34 @@
   import { get } from 'svelte/store';
   import { popupControls } from '$lib/stores/popUp';
   import { runTask } from '$lib/utils/tasks';
-  import { circles } from '$lib/stores/circles';
   import { wallet } from '$lib/stores/wallet.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import type { Address } from '@circles-sdk/utils';
 
-  import { createProfilesOffersClient, type SafeSignerLike } from '$lib/offers/client';
   import ProductGallery from '$lib/components/ProductGallery.svelte';
 
-
-  // read-only Safe calls (owners / threshold only)
   import { Contract, JsonRpcProvider } from 'ethers';
 
-  // EIP-712 SafeMessage signer via MetaMask
-  import { createMetaMaskSafeSigner } from '$lib/safeSigner/signers/metamask';
-  import type {OfferFlowContext} from "$lib/flows/offer/types";
+  import type { OfferFlowContext } from '$lib/flows/offer/types';
   import { GNOSIS_CHAIN_ID_NUM } from '$lib/config/market';
   import { ensureGnosisChain } from '$lib/chain/gnosis';
-  import { mkCirclesBindings } from '$lib/offers/mkCirclesBindings';
-  import { normalizeAddress } from '$lib/offers/adapters';
+  import { ipfsGatewayUrl } from '$lib/utils/ipfs';
+  import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
   import { resolveImagesToHttpUrls } from '$lib/media/resolveImageUrl';
+  import { createOffersClientForAvatar } from '$lib/offers/client';
 
   interface Props { context: OfferFlowContext; }
   let { context }: Props = $props();
 
-  const CHAIN_ID_NUM = GNOSIS_CHAIN_ID_NUM;   // Gnosis
+  const CHAIN_ID_NUM = GNOSIS_CHAIN_ID_NUM;
 
-  // Payment gateway moved to Pricing step. Keep only draft value for review.
   let selectedGateway: string = $state((context.draft?.paymentGateway ?? '') as string);
   $effect(() => { selectedGateway = (context.draft?.paymentGateway ?? '') as string; });
 
   function asAddress(s: string | undefined): Address | undefined { return s as unknown as Address; }
 
-  // Use Svelte 5 reactivity so UI updates when selectedGateway changes
   const hasOperator = $derived.by(() => {
     try {
-      // Do not mutate context here; just validate
       normalizeAddress(String((context as any).operator ?? ''));
       return true;
     } catch {
@@ -53,20 +45,13 @@
     return hasOperator && hasProduct && hasOffer && hasGateway;
   });
 
-
-  // Image data URL helpers moved to $lib/media/imageTools
-
-  // Get all images (prioritizing multiple images, falling back to single image)
-  // Returns plain string[] for ProductGallery
   function getAllImages(): string[] {
     const draft = context.draft;
-    
-    // If we have multiple images, return them in the expected format
+
     if (draft?.images && Array.isArray(draft.images) && draft.images.length > 0) {
       return draft.images.filter((u: unknown) => typeof u === 'string' && u.trim().length > 0) as string[];
     }
 
-    // Fall back to single image
     if (typeof draft?.image === 'string' && draft.image.trim().length > 0) {
       return [draft.image.trim()];
     }
@@ -74,10 +59,6 @@
     return [];
   }
 
-
-  // ──────────────────────────────────────────────────────────────────────────────
-  // SAFE helpers (owners + threshold only, no fallback handler call)
-  // ──────────────────────────────────────────────────────────────────────────────
   const SAFE_VIEW_ABI = [
     'function getOwners() view returns (address[])',
     'function getThreshold() view returns (uint256)',
@@ -87,9 +68,7 @@
     const provider = new JsonRpcProvider('https://rpc.aboutcircles.com');
     const contract = new Contract(safe, SAFE_VIEW_ABI, provider);
 
-    const owners = (await (contract.getOwners() as Promise<string[]>)).map(
-      (o) => o.toLowerCase() as Address
-    );
+    const owners = (await (contract.getOwners() as Promise<string[]>)).map((o) => o.toLowerCase() as Address);
     const thresholdRaw = await (contract.getThreshold() as Promise<bigint | number>);
     const threshold = typeof thresholdRaw === 'bigint' ? Number(thresholdRaw) : thresholdRaw;
 
@@ -102,10 +81,10 @@
   }
 
   async function resolveOwnerAndAssertSafe(safe: Address): Promise<{ owner: Address }> {
-    await ensureGnosisChain();
-
     const eth: any = (window as any)?.ethereum;
     if (!eth?.request) throw new Error('No injected provider');
+
+    await ensureGnosisChain(eth);
 
     const accs: string[] = await eth.request({ method: 'eth_requestAccounts' }) as string[];
     const owner = (accs?.[0] ?? '').toLowerCase() as Address;
@@ -127,11 +106,6 @@
     return { owner };
   }
 
-  // Circles bindings will be constructed lazily at publish-time to ensure SDK is initialized
-
-  // ──────────────────────────────────────────────────────────────────────────────
-  // Publish
-  // ──────────────────────────────────────────────────────────────────────────────
   async function publish(): Promise<void> {
     if (!requiredOk) throw new Error('Draft has missing or invalid fields.');
 
@@ -146,22 +120,17 @@
       throw new Error('Wallet avatar address is required to publish an offer.');
     }
 
-    const { owner } = await resolveOwnerAndAssertSafe(seller);
+    await resolveOwnerAndAssertSafe(seller);
 
-    // Build bindings now (after app init) to avoid early access before SDK is set
-    const circlesBindings = mkCirclesBindings((context as any).pinApiBase, get(circles)!);
     const eth: any = (window as any)?.ethereum;
 
-    // EIP-712 ONLY: MetaMask typed-data signer
-    const safeSigner: SafeSignerLike = createMetaMaskSafeSigner({
+    const { offers: client, media } = await createOffersClientForAvatar({
+      avatar: seller,
+      chainId: CHAIN_ID_NUM,
       ethereum: eth,
-      account: owner,
-      chainId: BigInt(CHAIN_ID_NUM),
-      safeAddress: seller,
-      enforceChainId: true
+      pinApiBase: (context as any).pinApiBase,
+      gatewayUrlForCid: (cid) => ipfsGatewayUrl(cid),
     });
-
-    const client = createProfilesOffersClient(circlesBindings, safeSigner);
 
     const hasImagesArray = Array.isArray(draft.images) && draft.images.length > 0;
     const hasLegacyImage = typeof draft.image === 'string' && draft.image.length > 0;
@@ -170,13 +139,15 @@
     await runTask({
       name: 'Publishing offer…',
       promise: (async () => {
-        // Pre-pin images: convert any strings to gateway http(s) URLs via resolver
         let finalImageUrls: string[] | undefined = undefined;
         if (Array.isArray(productImages) && productImages.length > 0) {
+          if (!media) {
+            throw new Error('Media pinning not available (missing pinApiBase).');
+          }
           const imgs = productImages as string[];
           finalImageUrls = await resolveImagesToHttpUrls(imgs, {
-            gatewayUrlForCid: circlesBindings.gatewayUrlForCid,
-            pinMediaBytes: circlesBindings.pinMediaBytes,
+            gatewayUrlForCid: media.gatewayUrlForCid,
+            pinMediaBytes: media.pinMediaBytes,
           });
         }
 
@@ -194,7 +165,7 @@
             brand: draft.brand || undefined,
             mpn: draft.mpn || undefined,
             gtin13: draft.gtin13 || undefined,
-            category: draft.category || undefined
+            category: draft.category || undefined,
           },
           offer: {
             price: Number(draft.price),
@@ -203,19 +174,17 @@
             inventoryFeed: draft.inventoryFeed || undefined,
             url: draft.url || undefined,
             availableDeliveryMethod: draft.availableDeliveryMethod || undefined,
-            // New: fulfillment configuration
             fulfillmentEndpoint: draft.fulfillmentEndpoint || undefined,
             fulfillmentTrigger: draft.fulfillmentTrigger || undefined,
-            // Pass through requiredSlots when present (array of non-empty strings)
             requiredSlots: Array.isArray(draft.requiredSlots)
               ? draft.requiredSlots
-                  .map((s: unknown) => (typeof s === 'string' ? s.trim() : ''))
-                  .filter((s: string) => s.length > 0)
+                .map((s: unknown) => (typeof s === 'string' ? s.trim() : ''))
+                .filter((s: string) => s.length > 0)
               : undefined,
           },
         });
         context.result = res;
-      })()
+      })(),
     });
 
     popupControls.close();

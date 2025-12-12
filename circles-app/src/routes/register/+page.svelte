@@ -9,17 +9,13 @@
 
 
 <PageScaffold highlight="soft" collapsedMode="bar" collapsedHeightClass="h-12" maxWidthClass="page page--lg" contentWidthClass="page page--lg" usePagePadding={true} headerTopGapClass="mt-4 md:mt-6" collapsedTopGapClass="mt-3 md:mt-4">
-  <svelte:fragment slot="title">
-    <h1 class="h2 m-0">Create Account</h1>
-  </svelte:fragment>
-  <svelte:fragment slot="meta">
-    Takes ~2 minutes
-  </svelte:fragment>
-  <svelte:fragment slot="collapsed-left">
+  {#snippet title()}<h1 class="h2 m-0">Create Account</h1>{/snippet}
+  {#snippet meta()}Takes ~2 minutes{/snippet}
+  {#snippet collapsedLeft()}
     <div class="truncate flex items-center gap-2">
       <span class="font-medium">Create Account</span>
     </div>
-  </svelte:fragment>
+  {/snippet}
 
   <!-- Warning/banner spacing -->
   <div class="mt-3">

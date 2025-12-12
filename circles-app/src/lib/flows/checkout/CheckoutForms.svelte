@@ -296,7 +296,7 @@
                 <input
                   class="input input-xs input-bordered"
                   bind:value={shippingStreet}
-                  on:blur={validateOnBlur}
+                  onblur={validateOnBlur}
                   class:border-error={fieldHasError('/shippingAddress/streetAddress')}
                   required
                 />
@@ -310,7 +310,7 @@
                   <input
                     class="input input-xs input-bordered"
                     bind:value={shippingLocality}
-                    on:blur={validateOnBlur}
+                    onblur={validateOnBlur}
                     class:border-error={fieldHasError('/shippingAddress/addressLocality')}
                     required
                   />
@@ -322,7 +322,7 @@
                   <input
                     class="input input-xs input-bordered"
                     bind:value={shippingPostal}
-                    on:blur={validateOnBlur}
+                    onblur={validateOnBlur}
                     class:border-error={fieldHasError('/shippingAddress/postalCode')}
                     required
                   />
@@ -335,7 +335,7 @@
                     class="input input-xs input-bordered"
                     bind:value={shippingCountry}
                     placeholder="DE, FR, …"
-                    on:blur={validateOnBlur}
+                    onblur={validateOnBlur}
                     class:border-error={fieldHasError('/shippingAddress/addressCountry')}
                     required
                   />
@@ -356,7 +356,7 @@
                 <input
                   class="input input-xs input-bordered"
                   bind:value={billingStreet}
-                  on:blur={validateOnBlur}
+                  onblur={validateOnBlur}
                   class:border-error={fieldHasError('/billingAddress/streetAddress')}
                   required
                 />
@@ -369,7 +369,7 @@
                   <input
                     class="input input-xs input-bordered"
                     bind:value={billingLocality}
-                    on:blur={validateOnBlur}
+                    onblur={validateOnBlur}
                     class:border-error={fieldHasError('/billingAddress/addressLocality')}
                     required
                   />
@@ -381,7 +381,7 @@
                   <input
                     class="input input-xs input-bordered"
                     bind:value={billingPostal}
-                    on:blur={validateOnBlur}
+                    onblur={validateOnBlur}
                     class:border-error={fieldHasError('/billingAddress/postalCode')}
                     required
                   />
@@ -394,7 +394,7 @@
                     class="input input-xs input-bordered"
                     bind:value={billingCountry}
                     placeholder="DE, FR, …"
-                    on:blur={validateOnBlur}
+                    onblur={validateOnBlur}
                     class:border-error={fieldHasError('/billingAddress/addressCountry')}
                     required
                   />
@@ -416,7 +416,7 @@
                   class="input input-xs input-bordered"
                   type="email"
                   bind:value={contactEmail}
-                  on:blur={validateOnBlur}
+                  onblur={validateOnBlur}
                   class:border-error={fieldHasError('/contactPoint/email')}
                   required
                 />
@@ -429,7 +429,7 @@
                   class="input input-xs input-bordered"
                   type="tel"
                   bind:value={contactPhone}
-                  on:blur={validateOnBlur}
+                  onblur={validateOnBlur}
                   class:border-error={fieldHasError('/contactPoint/telephone')}
                   required
                 />
@@ -449,7 +449,7 @@
                 class="input input-xs input-bordered"
                 type="date"
                 bind:value={birthDate}
-                on:blur={validateOnBlur}
+                onblur={validateOnBlur}
                 class:border-error={fieldHasError('/ageProof/birthDate')}
                 required
               />
@@ -468,7 +468,7 @@
         <button
           type="button"
           class="btn btn-sm btn-outline"
-          on:click={goToReview}
+          onclick={goToReview}
           disabled={validating || $cartState.loading}
         >
           {validating || $cartState.loading ? 'Checking…' : 'Continue'}

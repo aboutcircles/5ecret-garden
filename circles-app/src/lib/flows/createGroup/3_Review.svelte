@@ -38,7 +38,7 @@
     <!-- Row: Image (optional) -->
     <div class="mt-4">
         {#if hasImage}
-            <img src={ctx.profile.previewImageUrl} alt="Group image" class="w-32 h-32 rounded object-cover" />
+            <img src={ctx.profile.previewImageUrl} alt="Group" class="w-32 h-32 rounded object-cover" />
         {:else}
             <div class="w-32 h-32 rounded bg-base-200 flex items-center justify-center text-base-content/50">
                 No image

@@ -1,20 +1,18 @@
-import type { MinimalOfferInput, MinimalProductInput } from './offersTypes';
-import type { AvatarSigner } from './signers';
-import { buildProduct } from './offersJsonld';
-// Pull shared types and helpers from @circles-profile/core
-import type { ProfilesBindings as CoreProfilesBindings, CustomDataLink } from '@circles-profile/core';
+import type {MinimalOfferInput, MinimalProductInput} from './offersTypes';
+import type {AvatarSigner} from './signers';
+import {buildProduct} from './offersJsonld';
+import type {CustomDataLink, ProfilesBindings as CoreProfilesBindings} from '@circles-profile/core';
 import {
-  canonicaliseLink,
   buildLinkDraft,
-  ensureProfileShape,
-  ensureNameIndexDocShape,
-  ensureNamespaceChunkShape,
-  loadProfileOrInit,
-  loadIndex,
+  canonicaliseLink,
   insertIntoHead,
-  saveHeadAndIndex,
+  loadIndex,
+  loadProfileOrInit,
   rebaseAndSaveProfile,
+  saveHeadAndIndex,
 } from '@circles-profile/core';
+import {assertSku, type Hex, normalizeEvmAddress, normalizeHex32} from './utils';
+import { cidV0ToDigest32Strict } from '@circles-profile/core';
 
 // Backwards-compatible alias: SDK still exports ProfilesBindings
 export type ProfilesBindings = CoreProfilesBindings;
@@ -34,8 +32,8 @@ export interface OffersClient {
     indexCid: string;
     profileCid: string;
     linkCid?: string;
-    digest32?: string;
-    txHash?: string;
+    digest32: Hex;
+    txHash?: Hex;
   }>;
 
   tombstone(opts: {
@@ -49,12 +47,14 @@ export interface OffersClient {
     headCid: string;
     indexCid: string;
     profileCid: string;
-    txHash?: string;
+    digest32: Hex;
+    txHash?: Hex;
   }>;
 }
 
 export class OffersClientImpl implements OffersClient {
-  constructor(private readonly bindings?: ProfilesBindings) {}
+  constructor(private readonly bindings?: ProfilesBindings) {
+  }
 
   private ensureBindings(): ProfilesBindings {
     if (!this.bindings) {
@@ -63,13 +63,16 @@ export class OffersClientImpl implements OffersClient {
     return this.bindings;
   }
 
-  private normalizeAddress(addr: string): string {
-    if (!addr || !addr.startsWith('0x') || addr.length !== 42) throw new Error('Invalid address');
-    return addr.toLowerCase();
-  }
-
-  private assertSku(sku: string) {
-    if (!/^[a-z0-9][a-z0-9-_]{0,62}$/.test(sku)) throw new Error('Invalid SKU');
+  private assertSignerMatches(avatar: string, chainId: number, signer: AvatarSigner): void {
+    const expectedAvatar = avatar.toLowerCase();
+    const expectedChainId = BigInt(chainId);
+    const signerAvatar = signer.avatar.toLowerCase();
+    if (signerAvatar !== expectedAvatar) {
+      throw new Error(`Signer avatar mismatch. Expected ${expectedAvatar}, got ${signerAvatar}`);
+    }
+    if (signer.chainId !== expectedChainId) {
+      throw new Error(`Signer chainId mismatch. Expected ${expectedChainId}, got ${signer.chainId}`);
+    }
   }
 
   async publishOffer(opts: {
@@ -86,15 +89,16 @@ export class OffersClientImpl implements OffersClient {
     indexCid: string;
     profileCid: string;
     linkCid?: string;
-    digest32?: string;
-    txHash?: string;
+    digest32: Hex;
+    txHash?: Hex;
   }> {
     const b = this.ensureBindings();
     const chainId = opts.chainId ?? 100;
-    const avatar = this.normalizeAddress(opts.avatar);
-    const operator = this.normalizeAddress(opts.operator);
-    const gateway = opts.paymentGateway ? this.normalizeAddress(opts.paymentGateway) : undefined;
-    this.assertSku(opts.product.sku);
+    const avatar = normalizeEvmAddress(opts.avatar);
+    const operator = normalizeEvmAddress(opts.operator);
+    const gateway = opts.paymentGateway ? normalizeEvmAddress(opts.paymentGateway) : undefined;
+    this.assertSignerMatches(avatar, chainId, opts.signer);
+    assertSku(opts.product.sku);
 
     // Build product JSON-LD
     const productObj: any = buildProduct(opts.product, opts.offer);
@@ -108,7 +112,7 @@ export class OffersClientImpl implements OffersClient {
         '@type': 'PayAction',
         price: offer0.price,
         priceCurrency: offer0.priceCurrency,
-        recipient: { '@id': `eip155:${chainId}:${payTo}` },
+        recipient: {'@id': `eip155:${chainId}:${payTo}`},
         instrument: {
           '@type': 'PropertyValue',
           propertyID: 'eip155',
@@ -134,27 +138,22 @@ export class OffersClientImpl implements OffersClient {
     link.signature = signature;
 
     // Load profile/index
-    const { profile } = await loadProfileOrInit(b, avatar);
+    const {profile} = await loadProfileOrInit(b, avatar);
     const currentIndexCid: string | null = profile.namespaces?.[operator] ?? null;
-    const { index, head } = await loadIndex(b, currentIndexCid);
-    const { rotated, closedHead } = insertIntoHead(head, link);
-    const { headCid, indexCid } = await saveHeadAndIndex(b, head, index, closedHead);
+    const {index, head} = await loadIndex(b, currentIndexCid);
+    const {rotated, closedHead} = insertIntoHead(head, link);
+    const {headCid, indexCid} = await saveHeadAndIndex(b, head, index, closedHead);
 
     const profileCid = await rebaseAndSaveProfile(b, avatar, (prof) => {
       prof.namespaces[operator] = indexCid;
     });
 
     const txHash = await b.updateAvatarProfileDigest(avatar, profileCid);
+    const txHashNorm = normalizeHex32(txHash, 'txHash');
 
-    // Optionally pin link itself
-    let linkCid: string | undefined;
-    try {
-      linkCid = await b.putJsonLd(link);
-    } catch {
-      // optional
-    }
+    const digest32 = cidV0ToDigest32Strict(profileCid);
 
-    return { productCid, headCid, indexCid, profileCid, linkCid, txHash: txHash || undefined };
+    return { productCid, headCid, indexCid, profileCid, digest32, txHash: txHashNorm };
   }
 
   async tombstone(opts: {
@@ -168,13 +167,15 @@ export class OffersClientImpl implements OffersClient {
     headCid: string;
     indexCid: string;
     profileCid: string;
-    txHash?: string;
+    digest32: Hex;
+    txHash?: Hex;
   }> {
     const b = this.ensureBindings();
     const chainId = opts.chainId ?? 100;
-    const avatar = this.normalizeAddress(opts.avatar);
-    const operator = this.normalizeAddress(opts.operator);
-    this.assertSku(opts.sku);
+    const avatar = normalizeEvmAddress(opts.avatar);
+    const operator = normalizeEvmAddress(opts.operator);
+    this.assertSignerMatches(avatar, chainId, opts.signer);
+    assertSku(opts.sku);
 
     const nowSec = Math.floor(Date.now() / 1000);
     const tomb = {
@@ -194,26 +195,22 @@ export class OffersClientImpl implements OffersClient {
     });
 
     const preimage = canonicaliseLink(link);
-    const signature = await opts.signer.signBytes(preimage);
-    link.signature = signature;
+    link.signature = await opts.signer.signBytes(preimage);
 
-    const { profile } = await loadProfileOrInit(b, avatar);
+    const {profile} = await loadProfileOrInit(b, avatar);
     const currentIndexCid: string | null = profile.namespaces?.[operator] ?? null;
-    const { index, head } = await loadIndex(b, currentIndexCid);
-    const { rotated, closedHead } = insertIntoHead(head, link);
-    const { headCid, indexCid } = await saveHeadAndIndex(b, head, index, closedHead);
+    const {index, head} = await loadIndex(b, currentIndexCid);
+    const {rotated, closedHead} = insertIntoHead(head, link);
+    const {headCid, indexCid} = await saveHeadAndIndex(b, head, index, closedHead);
 
     const profileCid = await rebaseAndSaveProfile(b, avatar, (prof) => {
       prof.namespaces[operator] = indexCid;
     });
 
     const txHash = await b.updateAvatarProfileDigest(avatar, profileCid);
+    const txHashNorm = normalizeHex32(txHash, 'txHash');
 
-    let linkCid: string | undefined;
-    try {
-      linkCid = await b.putJsonLd(link);
-    } catch {}
-
-    return { headCid, indexCid, profileCid, linkCid, txHash: txHash || undefined };
+    const digest32 = cidV0ToDigest32Strict(profileCid);
+    return { headCid, indexCid, profileCid, digest32, txHash: txHashNorm };
   }
 }

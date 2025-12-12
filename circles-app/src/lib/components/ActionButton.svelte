@@ -40,7 +40,8 @@
             ['Done']: 'btn-success',
             ['Disabled']: 'btn-disabled',
         },
-    }: Props = $props();
+        children,
+    }: Props & { children?: any } = $props();
     const doneStateDuration: number = 2000;
     const errorTransitory: boolean = true;
 
@@ -95,5 +96,5 @@
     {:else if buttonState === 'Done'}
         <Lucide icon={Check} size={16} class="text-success"/>
     {/if}
-    <slot/>
+    {@render children?.()}
 </button>

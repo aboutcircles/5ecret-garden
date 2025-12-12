@@ -1,11 +1,9 @@
 <!-- lib/flows/offer/ProfileExplorer.svelte -->
 <!-- lib/flows/profile/ProfileExplorer.svelte -->
 <script lang="ts">
-    import {get} from 'svelte/store';
     import {onMount} from 'svelte';
     import {popupControls} from '$lib/stores/popUp';
     import {runTask} from '$lib/utils/tasks';
-    import {circles} from '$lib/stores/circles';
     import {avatarState} from '$lib/stores/avatar.svelte';
 
     import ProfileNamespaces from './ProfileNamespaces.svelte';
@@ -15,10 +13,10 @@
     import Lucide from '$lib/icons/Lucide.svelte';
     import { Plus as LPlus, Trash2 as LTrash2, Ban as LBan } from 'lucide';
 
-    import {normalizeAddress} from '$lib/offers/adapters';
-    import type {CirclesBindings} from '$lib/offers/namespaces';
-    import {loadProfileOrInit, rebaseAndSaveProfile} from '$lib/offers/namespaces';
-    import {mkCirclesBindings} from '$lib/offers/mkCirclesBindings';
+    import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
+    import type { ProfilesBindings } from '@circles-market/sdk';
+    import { loadProfileOrInit, rebaseAndSaveProfile } from '@circles-market/sdk';
+    import { getProfilesBindings } from '$lib/offers/profilesBindings';
     import type {Address} from '@circles-sdk/utils';
 
     interface Props {
@@ -53,12 +51,8 @@
         readonly = !isOwner;
     });
 
-    function getBindings(): CirclesBindings {
-        const sdk = get(circles);
-        if (!sdk) {
-            throw new Error('Circles SDK not initialized');
-        }
-        return mkCirclesBindings(pinApiBase, sdk as any);
+    function getBindings(): ProfilesBindings {
+        return getProfilesBindings({ pinApiBase }).bindings;
     }
 
     async function loadProfile(): Promise<void> {
@@ -69,10 +63,10 @@
             // If no explicit avatar is passed, default to the currently connected avatar from app state
             const rawAvatar =
                 avatar ?? ((avatarState.avatar?.address as string | undefined) ?? (avatarState.avatar?.avatarInfo?.avatar as string | undefined) ?? '');
-            const norm = normalizeAddress(rawAvatar);
+            const norm = normalizeAddress(rawAvatar) as Address;
             resolvedAvatar = norm;
 
-            const {profile} = await loadProfileOrInit(getBindings(), norm);
+            const {profile} = await loadProfileOrInit(getBindings(), norm as Address);
 
             name = String(profile.name ?? '');
             description = String(profile.description ?? '');
@@ -223,7 +217,7 @@
                         disabled={!resolvedAvatar}
                         title="Add signing key"
                         aria-label="Add signing key"
-                        on:click={() => popupControls.open({ title: 'Add signing key', component: AddSigningKey, props: { avatar: resolvedAvatar, pinApiBase }, onClose: () => { void loadProfile(); } })}
+                        onclick={() => popupControls.open({ title: 'Add signing key', component: AddSigningKey, props: { avatar: resolvedAvatar, pinApiBase }, onClose: () => { void loadProfile(); } })}
                     >
                         <Lucide icon={LPlus} size={16} />
                     </button>
@@ -272,7 +266,7 @@
                                             <button
                                                     type="button"
                                                     class="btn btn-xs btn-ghost btn-square"
-                                                    on:click={() => revokeSigningKey(fp)}
+                                                    onclick={() => revokeSigningKey(fp)}
                                                     title="Revoke now"
                                                     aria-label="Revoke now"
                                             >
@@ -281,7 +275,7 @@
                                             <button
                                                     type="button"
                                                     class="btn btn-xs btn-ghost btn-square"
-                                                    on:click={() => removeSigningKey(fp)}
+                                                    onclick={() => removeSigningKey(fp)}
                                                     title="Remove"
                                                     aria-label="Remove"
                                             >
@@ -303,7 +297,7 @@
             <button
                     type="button"
                     class="btn"
-                    on:click={popupControls.close}
+                    onclick={popupControls.close}
             >
                 {readonly ? 'Close' : 'Cancel'}
             </button>
@@ -311,7 +305,7 @@
                 <button
                         type="button"
                         class="btn btn-primary"
-                        on:click={saveProfile}
+                        onclick={saveProfile}
                 >
                     Save
                 </button>

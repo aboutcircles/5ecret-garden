@@ -1,17 +1,19 @@
 <script lang="ts">
   import {
     cartState,
-    setLineQuantityByIdentity,
-    removeLineByIdentity,
-    validateCart,
     previewCartOrder,
+    removeLineByIdentity,
+    setLineQuantityByIdentity,
+    validateCart,
   } from '$lib/cart/store';
-  import type { AggregatedCatalogItem } from '$lib/market/types';
-  import { popupControls } from '$lib/stores/popUp';
-  import { fetchProductForSellerAndSku } from '$lib/market/catalogClient';
-  import { pickFirstProductImageUrl } from '$lib/market/imageHelpers';
+  import type {AggregatedCatalogItem} from '$lib/market/types';
+  import {popupControls} from '$lib/stores/popUp';
+  import { getMarketClient } from '$lib/sdk/marketClient';
+  import { MARKET_OPERATOR } from '$lib/config/market';
+  import {pickFirstProductImageUrl} from '$lib/market/imageHelpers';
   import CheckoutForms from '$lib/flows/checkout/CheckoutForms.svelte';
   import CheckoutReview from '$lib/flows/checkout/CheckoutReview.svelte';
+  import {formatCurrency} from '$lib/utils/money';
 
   // ————————————————————————————————————————————
   // Product metadata resolver via shared catalog client
@@ -42,13 +44,6 @@
     return pickFirstProductImageUrl(item.product);
   }
 
-  function formatCurrency(amount: number | null | undefined, code: string | null | undefined): string {
-    if (amount == null || !Number.isFinite(amount)) return '?';
-    const val = Number(amount);
-    const rounded = val.toFixed(2);
-    return code ? `${rounded} ${code}` : rounded;
-  }
-
   async function handleQuantityChange(
     itemIdx: number,
     quantityStr: string,
@@ -61,8 +56,7 @@
 
     const q = parsed;
 
-    const state = $cartState;
-    const basket = state.basket;
+    const basket = $cartState.basket;
     const line = basket?.items?.[itemIdx];
     if (!line) {
       return;
@@ -86,8 +80,7 @@
   }
 
   async function handleRemove(itemIdx: number): Promise<void> {
-    const state = $cartState;
-    const basket = state.basket;
+    const basket = $cartState.basket;
     const line = basket?.items?.[itemIdx];
     if (!line) {
       return;
@@ -107,6 +100,7 @@
   // Lazily fetch missing products for each line in basket
   $effect(() => {
     const items = $cartState.basket?.items ?? [];
+    const catalog = getMarketClient().catalog.forOperator(MARKET_OPERATOR);
     for (const line of items) {
       const seller = line.seller as string | undefined;
       const sku = line.orderedItem?.sku as string | undefined;
@@ -122,7 +116,7 @@
 
       void (async () => {
         try {
-          const item = await fetchProductForSellerAndSku(seller as string, sku as string);
+          const item = await catalog.fetchProductForSellerAndSku(seller as string, sku as string);
           resolvedProducts = { ...resolvedProducts, [key]: item };
         } catch {
           resolvedProducts = { ...resolvedProducts, [key]: null };
@@ -170,8 +164,7 @@
   // basket lines. This is for immediate UI feedback; the server remains
   // authoritative (preview/checkout use canonical data).
   const perCurrency = $derived.by(() => {
-    const state = $cartState;
-    const basket = state.basket;
+    const basket = $cartState.basket;
     const out = new Map<string, number>();
 
     if (!basket?.items) return out;

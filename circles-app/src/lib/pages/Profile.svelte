@@ -35,14 +35,15 @@
     import RowFrame from '$lib/ui/RowFrame.svelte';
     // Offers tab dependencies
     import ProductCard from '$lib/components/ProductCard.svelte';
-    import { fetchSellerCatalog } from '$lib/market/catalogClient';
-    import { normalizeAddress } from '$lib/offers/adapters';
+    import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
     import type { AggregatedCatalogItem } from '$lib/market/types';
+    import { getMarketClient } from '$lib/sdk/marketClient';
+    import { MARKET_OPERATOR } from '$lib/config/market';
     // Namespaces explorer (read-only) for other profiles
     import ProfileNamespaces from '$lib/flows/offer/ProfileNamespaces.svelte';
-    import { loadProfileOrInit } from '$lib/offers/namespaces';
-    import type { CirclesBindings } from '$lib/offers/namespaces';
-    import { mkCirclesBindings } from '$lib/offers/mkCirclesBindings';
+    import { loadProfileOrInit } from '@circles-market/sdk';
+    import type { ProfilesBindings } from '@circles-market/sdk';
+    import { createCirclesSdkProfilesBindings } from '@circles-profile/core';
     import { get } from 'svelte/store';
 
     interface Props {
@@ -95,7 +96,8 @@
         offersError = '';
         offers = [];
         try {
-            const items = await fetchSellerCatalog(seller);
+            const catalog = getMarketClient().catalog.forOperator(MARKET_OPERATOR);
+            const items = await catalog.fetchSellerCatalog(seller);
             // Defensive filter (API already filters by seller)
             offers = items.filter((p) => (p.seller ?? '').toLowerCase() === seller.toLowerCase());
             offersFor = seller;
@@ -138,12 +140,13 @@
     // Track which address' namespaces are currently loaded
     let namespacesFor: string | null = $state(null);
 
-    function getBindings(): CirclesBindings {
+    function getBindings(): ProfilesBindings {
         const sdk = get(circles);
         if (!sdk) {
             throw new Error('Circles SDK not initialized');
         }
-        return mkCirclesBindings(undefined, sdk as any);
+        const { bindings } = createCirclesSdkProfilesBindings({ circlesSdk: sdk as any });
+        return bindings as ProfilesBindings;
     }
 
     async function loadNamespacesFor(addr: Address): Promise<void> {
@@ -303,7 +306,7 @@
         }
     }
 
-    let selectedTab: string = 'common_connections';
+    let selectedTab = $state<string>('common_connections');
     let commonConnectionsCount = $state(0);
 </script>
 
@@ -507,11 +510,11 @@
                           }}
                         >
                             <div class="min-w-0">
-                                <Avatar address={member} view="horizontal" clickable={false}/>
+                                <Avatar address={member} view="horizontal" clickable={true}/>
                             </div>
-                            <div slot="trailing" aria-hidden="true">
+                            {#snippet trailing()}<div aria-hidden="true">
                                 <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" />
-                            </div>
+                            </div>{/snippet}
                         </RowFrame>
                     {/each}
                 </div>

@@ -1,3 +1,5 @@
+import { normalizeEvmAddress } from './utils';
+
 export interface WalletProvider {
   request<T = unknown>(args: { method: string; params?: unknown[] }): Promise<T>;
 }
@@ -24,7 +26,7 @@ export class SignersClientImpl implements SignersClient {
     chainId: bigint;
     enforceChainId?: boolean;
   }): Promise<AvatarSigner> {
-    const avatar = normalizeAddress(opts.avatar);
+    const avatar = normalizeEvmAddress(opts.avatar);
     const chainId = opts.chainId;
 
     if (opts.enforceChainId) {
@@ -40,7 +42,7 @@ export class SignersClientImpl implements SignersClient {
     if (!accounts || accounts.length === 0) {
       throw new Error('No EOA account unlocked in wallet');
     }
-    const owner = normalizeAddress(accounts[0]);
+    const owner = normalizeEvmAddress(accounts[0]);
 
     const signer: AvatarSigner = {
       avatar,
@@ -60,10 +62,6 @@ export class SignersClientImpl implements SignersClient {
   }
 }
 
-function normalizeAddress(addr: string): string {
-  if (!addr || !addr.startsWith('0x') || addr.length !== 42) throw new Error('Invalid address');
-  return addr.toLowerCase();
-}
 
 function toHex(bytes: Uint8Array): `0x${string}` {
   return ('0x' + Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('')) as `0x${string}`;

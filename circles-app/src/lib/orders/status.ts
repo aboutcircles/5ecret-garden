@@ -1,4 +1,4 @@
-// src/lib/cart/status.ts
+// Order domain helpers
 
 /**
  * Convert an IRI-like order status to a short label for display.

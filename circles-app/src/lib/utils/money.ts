@@ -1,4 +1,4 @@
-// src/lib/cart/money.ts
+// Shared money formatting utilities used across the app.
 
 export function formatCurrency(amount: number | null | undefined, code: string | null | undefined): string {
   if (amount == null || !Number.isFinite(Number(amount))) {

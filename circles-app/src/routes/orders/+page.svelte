@@ -4,39 +4,54 @@
   import OrderRow from './OrderRow.svelte';
   import type { Readable } from 'svelte/store';
   import { browser } from '$app/environment';
-  import { getOrdersByBuyer, getOrder, subscribeBuyerOrderEvents, type OrderStatusEvent } from '$lib/cart/ordersAdapter';
-  import { getAuthMeta } from '$lib/auth/siwe';
+  import { getOrdersByBuyer, getOrder, subscribeBuyerOrderEvents } from '$lib/orders/ordersAdapter';
+  import type { OrderStatusSseEvent } from '$lib/orders/types';
+  import { getMarketClient } from '$lib/sdk/marketClient';
   import { signInWithSafe } from '$lib/auth/signin';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
   import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
   import type { Action } from '$lib/components/layout/Action';
+  import { popupControls } from '$lib/stores/popUp';
+  import OrderDetailsPopup from '$lib/orders/OrderDetailsPopup.svelte';
 
   type ListItem = {
-    id: string; // non-secret identifier for display (orderNumber or paymentReference)
+    key: string; // stable order id used by SSE and fetch (orderNumber)
+    displayId: string; // what we show (orderNumber or paymentReference fallback)
     status?: string;
     total?: { price?: number | null; priceCurrency?: string | null } | null;
     customerId?: string | null;
     snapshot?: any; // full order snapshot for popup
-  } & { blockNumber: number; transactionIndex: number; logIndex: number; address?: string };
+  };
+
+  // Auth state must be initialized before using in $derived stores to avoid TDZ
+  let authed = $state(false);
 
   // Build a simple readable-like object compatible with GenericList
-  let ordersStore: Readable<{ data: ListItem[]; next: () => Promise<boolean>; ended: boolean }>;
+  let ordersStore = $derived<Readable<{ data: ListItem[]; next: () => Promise<boolean>; ended: boolean }>>(
+    browser
+      ? (authed ? buildAuthedStore() : buildFallbackStore())
+      : ({
+          subscribe(run: any) {
+            run({ data: [], next: async () => true, ended: true });
+            return () => {};
+          },
+        } as any)
+  );
 
   function mapItems(items: any[]): ListItem[] {
-    const now = Date.now();
-    return items.map((s, i) => ({
-      // Use non-secret orderNumber if available; otherwise fall back to paymentReference
-      id: (s as any)?.orderNumber ?? (s as any)?.paymentReference ?? `ord_${i}`,
-      status: (s as any)?.orderStatus,
-      total: (s as any)?.totalPaymentDue ?? null,
-      customerId: (s as any)?.customer?.['@id'] ?? null,
-      blockNumber: now - i,
-      transactionIndex: i,
-      logIndex: 0,
-      address: (s as any)?.orderNumber ?? (s as any)?.paymentReference ?? undefined,
-      snapshot: s,
-    }));
+    return items.map((s, i) => {
+      const orderId = (s as any)?.orderNumber ?? `ord_${i}`;
+      const displayId = (s as any)?.orderNumber ?? (s as any)?.paymentReference ?? `ord_${i}`;
+      return {
+        key: orderId,
+        displayId,
+        status: (s as any)?.orderStatus,
+        total: (s as any)?.totalPaymentDue ?? null,
+        customerId: (s as any)?.customer?.['@id'] ?? null,
+        snapshot: s,
+      } as ListItem;
+    });
   }
 
   function buildAuthedStore(): Readable<{ data: ListItem[]; next: () => Promise<boolean>; ended: boolean }>{
@@ -48,10 +63,10 @@
 
     function ensureSse() {
       if (stopSse) return;
-      stopSse = subscribeBuyerOrderEvents(async (evt: OrderStatusEvent) => {
-        if (!evt || typeof evt.orderId !== 'string' || typeof evt.newStatus !== 'string') return;
+      stopSse = subscribeBuyerOrderEvents(async (evt: OrderStatusSseEvent) => {
+        if (!evt || typeof evt.orderId !== 'string') return;
         // Update the list item if present
-        const idx = state.data.findIndex((it) => it.id === evt.orderId);
+        const idx = state.data.findIndex((it) => it.key === evt.orderId);
         if (idx >= 0) {
           const cur = state.data[idx];
           const updated = { ...cur, status: evt.newStatus };
@@ -64,7 +79,7 @@
         if (evt.newStatus === 'https://schema.org/PaymentComplete' || evt.newStatus === 'https://schema.org/OrderDelivered') {
           try {
             const snap = await getOrder(evt.orderId!);
-            const idx2 = state.data.findIndex((it) => it.id === evt.orderId);
+            const idx2 = state.data.findIndex((it) => it.key === evt.orderId);
             if (idx2 >= 0) {
               const total = (snap as any)?.totalPaymentDue ?? state.data[idx2].total ?? null;
               const next = { ...state.data[idx2], status: (snap as any)?.orderStatus ?? evt.newStatus, total, snapshot: snap };
@@ -76,8 +91,6 @@
               // If we have at least one outbox item, surface details popup to the user
               const outbox = (snap as any)?.outbox;
               if (Array.isArray(outbox) && outbox.length > 0) {
-                const { popupControls } = await import('$lib/stores/popUp');
-                const { default: OrderDetailsPopup } = await import('$lib/orders/OrderDetailsPopup.svelte');
                 popupControls.open({ title: 'Order updated', component: OrderDetailsPopup, props: { snapshot: snap } });
               }
             }
@@ -140,7 +153,6 @@
   function buildFallbackStore(): Readable<{ data: ListItem[]; next: () => Promise<boolean>; ended: boolean }>{
     type State = { data: ListItem[]; ended: boolean; next: () => Promise<boolean> };
     const subscribers = new Set<(v: State) => void>();
-    const notify = (v: State) => subscribers.forEach((fn) => fn(v));
     let state: State = {
       data: [],
       ended: true,
@@ -155,15 +167,18 @@
     } as any;
   }
   // Minimal no-op readable to avoid SSR issues when store isn't available yet
-  const emptyStore: Readable<{ data: ListItem[]; next: () => Promise<boolean>; ended: boolean }> = {
-    subscribe(run: any) {
-      run({ data: [], next: async () => true, ended: true });
-      return () => {};
-    },
-  } as any;
+  // (Defined inline in ordersStore to avoid TDZ concerns.)
 
-  let authed = false;
-  let actions: Action[] = [];
+  // authed must be declared before ordersStore
+  // (moved above)
+  const actions: Action[] = $derived([
+    {
+      id: 'signin',
+      label: authed ? 'Signed in' : 'Sign in to view all orders',
+      variant: authed ? 'ghost' : 'primary',
+      onClick: () => { if (!authed) void ensureAuthed(); },
+    },
+  ]);
 
   async function ensureAuthed() {
     try {
@@ -179,65 +194,41 @@
 
       await signInWithSafe(avatar);
 
-      authed = !!getAuthMeta();
-      ordersStore = buildAuthedStore();
-      actions = [
-        { id: 'signin', label: 'Signed in', variant: 'ghost', onClick: () => {} },
-      ];
+      authed = !!getMarketClient().auth.getAuthMeta();
+      // ordersStore and actions are derived from `authed` and will update automatically
     } catch (e) {
       console.error('[orders] safe sign-in failed:', e);
       authed = false;
-      ordersStore = buildFallbackStore();
-      actions = [
-        {
-          id: 'signin',
-          label: 'Sign in to view all orders',
-          variant: 'primary',
-          onClick: () => { void ensureAuthed(); },
-        },
-      ];
+      // ordersStore/actions will reflect unauthenticated state automatically
     }
   }
 
-  // Build on client only
+  // Initialize auth state on client only
   if (browser) {
-    authed = !!getAuthMeta();
-    ordersStore = authed ? buildAuthedStore() : buildFallbackStore();
-    actions = [
-      {
-        id: 'signin',
-        label: authed ? 'Signed in' : 'Sign in to view all orders',
-        variant: authed ? 'ghost' : 'primary',
-        onClick: () => {
-          if (!authed) void ensureAuthed();
-        },
-      },
-    ];
-  } else {
-    ordersStore = emptyStore;
+    authed = !!getMarketClient().auth.getAuthMeta();
   }
 </script>
 
 <PageScaffold highlight="soft" collapsedMode="bar" collapsedHeightClass="h-12" maxWidthClass="page page--lg"
               contentWidthClass="page page--lg" usePagePadding={true} headerTopGapClass="mt-4 md:mt-6"
               collapsedTopGapClass="mt-3 md:mt-4">
-  <svelte:fragment slot="title">
+  {#snippet title()}
     <h1 class="h2">My Orders</h1>
-  </svelte:fragment>
-  <svelte:fragment slot="meta">
+  {/snippet}
+  {#snippet meta()}
     {authed
       ? 'Orders for the authenticated wallet'
-      : 'Recent orders stored on this device (sign in to see all)'}
-  </svelte:fragment>
-  <svelte:fragment slot="actions">
+      : 'Sign in to view orders'}
+  {/snippet}
+  {#snippet headerActions()}
     <ActionButtonBar {actions} />
-  </svelte:fragment>
-  <svelte:fragment slot="collapsed-left">
+  {/snippet}
+  {#snippet collapsedLeft()}
     <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">Orders</span>
-  </svelte:fragment>
-  <svelte:fragment slot="collapsed-menu">
+  {/snippet}
+  {#snippet collapsedMenu()}
     <ActionButtonDropDown {actions} />
-  </svelte:fragment>
+  {/snippet}
 
-  <GenericList store={ordersStore} row={OrderRow} />
+  <GenericList store={ordersStore} row={OrderRow} getKey={(it) => it.key} />
 </PageScaffold>

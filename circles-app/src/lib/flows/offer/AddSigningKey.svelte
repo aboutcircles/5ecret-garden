@@ -1,11 +1,9 @@
 <script lang="ts">
-    import { get } from 'svelte/store';
     import { popupControls } from '$lib/stores/popUp';
     import { runTask } from '$lib/utils/tasks';
-    import { circles } from '$lib/stores/circles';
-    import { mkCirclesBindings } from '$lib/offers/mkCirclesBindings';
-    import { loadProfileOrInit, rebaseAndSaveProfile } from '$lib/offers/namespaces';
-    import type { CirclesBindings } from '$lib/offers/namespaces';
+    import { loadProfileOrInit, rebaseAndSaveProfile } from '@circles-market/sdk';
+    import type { ProfilesBindings } from '@circles-market/sdk';
+    import { getProfilesBindings } from '$lib/offers/profilesBindings';
     import type { Address } from '@circles-sdk/utils';
     import { bytesToHex, keccak256, hexToBytes } from '$lib/safeSigner';
     import { secp256k1 } from '@noble/curves/secp256k1';
@@ -23,10 +21,8 @@
     let error = $state<string | null>(null);
     let saving = $state(false);
 
-    function getBindings(): CirclesBindings {
-        const sdk = get(circles);
-        if (!sdk) throw new Error('Circles SDK not initialized');
-        return mkCirclesBindings(pinApiBase, sdk as any);
+    function getBindings(): ProfilesBindings {
+        return getProfilesBindings({ pinApiBase }).bindings;
     }
 
     function onGenerate() {
@@ -113,7 +109,7 @@
     <div class="rounded-md p-2 bg-base-100/60 space-y-2">
         <div class="flex items-center justify-between">
             <div class="text-xs font-semibold">Create in browser</div>
-            <button class="btn btn-xs btn-outline" on:click={onGenerate}>Generate key pair</button>
+            <button class="btn btn-xs btn-outline" onclick={onGenerate}>Generate key pair</button>
         </div>
 
         {#if privateKey}
@@ -133,7 +129,7 @@
     </label>
 
     <div class="flex justify-end gap-2 pt-2">
-        <button class="btn btn-ghost btn-sm" on:click={onCancel} disabled={saving}>Cancel</button>
-        <button class="btn btn-primary btn-sm" on:click={onSave} disabled={saving || !publicKey.trim() || !avatar}>Save</button>
+        <button class="btn btn-ghost btn-sm" onclick={onCancel} disabled={saving}>Cancel</button>
+        <button class="btn btn-primary btn-sm" onclick={onSave} disabled={saving || !publicKey.trim() || !avatar}>Save</button>
     </div>
 </div>

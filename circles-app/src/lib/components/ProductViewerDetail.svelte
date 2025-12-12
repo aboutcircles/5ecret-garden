@@ -7,6 +7,8 @@
   import type { SchemaOrgOfferLite, SchemaOrgProductLite } from '$lib/market/types';
   import type { Address } from '@circles-sdk/utils';
 
+  import { ipfsGatewayUrl } from '$lib/utils/ipfs';
+
   interface Meta {
     publishedAt?: number;
     sku?: string;
@@ -21,6 +23,7 @@
     showSeller?: boolean;
     showMeta?: boolean;
     meta?: Meta;
+    actions?: any;
   }
 
   let {
@@ -31,6 +34,7 @@
     showSeller = false,
     showMeta = false,
     meta = undefined,
+    actions,
   }: Props = $props();
 
   const productImages = $derived<string[]>(normalizeProductImagesFromSchema(product));
@@ -162,7 +166,7 @@
       <a class="link link-primary" href={product.url} target="_blank" rel="noopener">Product URL</a>
     {/if}
     {#if productCid}
-      <a class="link link-primary" href={`https://ipfs.io/ipfs/${productCid}`} target="_blank" rel="noopener">IPFS</a>
+      <a class="link link-primary" href={ipfsGatewayUrl(productCid)} target="_blank" rel="noopener">IPFS</a>
     {/if}
   </div>
 
@@ -180,5 +184,5 @@
     </div>
   {/if}
 
-  <slot name="actions" />
+  {@render actions?.()}
 </div>
