@@ -12,18 +12,16 @@
 
   // In runes mode, $derived expects an expression, not a function value.
   // Use a helper and call it inside $derived(...) to avoid rendering a function as text.
-  import { formatCurrency } from '$lib/utils/money';
+  import {formatCurrency} from '$lib/utils/money';
+  import {statusLabel} from '$lib/orders/status';
+  import {type PopupContentDefinition, popupControls} from '$lib/stores/popUp';
+  import OrderDetailsPopup from '$lib/orders/OrderDetailsPopup.svelte';
 
   const totalDisplay = $derived((() => {
     const price = item.total?.price ?? null;
     const cur = item.total?.priceCurrency ?? null;
-    const formatted = price == null ? null : formatCurrency(price as number, cur as string | null);
-    return formatted;
+    return price == null ? null : formatCurrency(price as number, cur as string | null);
   })());
-
-  import { statusLabel } from '$lib/orders/status';
-  import { popupControls, type PopupContentDefinition } from '$lib/stores/popUp';
-  import OrderDetailsPopup from '$lib/orders/OrderDetailsPopup.svelte';
 
   function goToDetails() {
     const def: PopupContentDefinition = {

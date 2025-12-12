@@ -3,8 +3,6 @@
     import { roundToDecimals } from '$lib/utils/shared';
     import { runTask } from '$lib/utils/tasks';
 
-    import Tabs from '$lib/components/tabs/Tabs.svelte';
-    import Tab from '$lib/components/tabs/Tab.svelte';
     import OverviewPanel from './OverviewPanel.svelte';
     import TransactionHistoryPanel from './TransactionHistoryPanel.svelte';
 

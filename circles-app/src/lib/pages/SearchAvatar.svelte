@@ -2,7 +2,6 @@
     import {ethers} from 'ethers';
     import AddressInput from '$lib/components/AddressInput.svelte';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
-    import type {Address} from '@circles-sdk/utils';
     import type {Profile, SearchResultProfile} from '@circles-sdk/profiles';
     import {circles} from '$lib/stores/circles';
     import {get} from 'svelte/store';

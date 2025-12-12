@@ -1,12 +1,12 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import {onMount} from 'svelte';
   import ProductViewer from '$lib/components/ProductViewer.svelte';
-  import type { AggregatedCatalogItem } from '$lib/market/types';
-  import { getFirstOffer, resolvePayTo } from '$lib/market/catalogHelpers';
-  import { fetchProductForSellerAndSku } from '$lib/market/catalogClient';
-  import { avatarState } from '$lib/stores/avatar.svelte';
-  import { cartState, addToCart } from '$lib/cart/store';
-  import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
+  import type {AggregatedCatalogItem} from '$lib/market/types';
+  import {getFirstOffer, resolvePayTo} from '$lib/market/catalogHelpers';
+  import {fetchProductForSellerAndSku} from '$lib/market/catalogClient';
+  import {avatarState} from '$lib/stores/avatar.svelte';
+  import {addToCart, cartState} from '$lib/cart/store';
+  import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
 
   interface Props {
     seller: string; // EVM address
@@ -26,8 +26,7 @@
     product = null;
     try {
       const s = normalizeAddress(seller);
-      const found = await fetchProductForSellerAndSku(s, sku);
-      product = found;
+      product = await fetchProductForSellerAndSku(s, sku);
       if (!product) throw new Error('Product not found for this seller / sku.');
     } catch (err: unknown) {
       errorMsg = err instanceof Error ? err.message : String(err ?? 'Unknown error');

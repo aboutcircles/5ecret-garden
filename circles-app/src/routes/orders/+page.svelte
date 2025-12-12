@@ -74,8 +74,6 @@
               // If we have at least one outbox item, surface details popup to the user
               const outbox = (snap as any)?.outbox;
               if (Array.isArray(outbox) && outbox.length > 0) {
-                const { popupControls } = await import('$lib/stores/popUp');
-                const { default: OrderDetailsPopup } = await import('$lib/orders/OrderDetailsPopup.svelte');
                 popupControls.open({ title: 'Order updated', component: OrderDetailsPopup, props: { snapshot: snap } });
               }
             }
@@ -138,7 +136,6 @@
   function buildFallbackStore(): Readable<{ data: ListItem[]; next: () => Promise<boolean>; ended: boolean }>{
     type State = { data: ListItem[]; ended: boolean; next: () => Promise<boolean> };
     const subscribers = new Set<(v: State) => void>();
-    const notify = (v: State) => subscribers.forEach((fn) => fn(v));
     let state: State = {
       data: [],
       ended: true,

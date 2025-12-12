@@ -6,7 +6,6 @@
     import {circles} from '$lib/stores/circles';
     import type {Avatar} from '@circles-sdk/sdk';
     import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
-    import Lucide from '$lib/icons/Lucide.svelte';
     import { ArrowLeft as LArrowLeft } from 'lucide';
     import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';

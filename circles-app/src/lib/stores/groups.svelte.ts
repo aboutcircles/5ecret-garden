@@ -1,5 +1,4 @@
 import {
-  CalculatedColumn,
   type CirclesEventType,
   CirclesQuery,
   type EventRow,

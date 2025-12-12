@@ -120,7 +120,7 @@
     }
 
     const imgs = images
-      .map((x) => (typeof x === 'string' ? x.trim() : ''))
+      .map((x) => x.trim())
       .filter((x) => x.length > 0);
 
     const nextSku = editMode ? (context.draft!.sku || sku) : (hasManualSku ? sku : autoSku);

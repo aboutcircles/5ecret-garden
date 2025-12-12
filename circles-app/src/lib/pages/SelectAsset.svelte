@@ -56,13 +56,6 @@
     import type { TokenBalanceRow } from '@circles-sdk/data';
     import BalanceRow from '$lib/components/BalanceRow.svelte';
     import type { Readable } from 'svelte/store';
-    import {
-        crcTypes,
-        roundToDecimals,
-        shortenAddress,
-        staticTypes,
-    } from '$lib/utils/shared';
-    import Avatar from '$lib/components/avatar/Avatar.svelte';
 
     interface Props {
         balances: Readable<{

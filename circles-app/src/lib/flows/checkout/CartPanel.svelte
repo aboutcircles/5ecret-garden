@@ -1,18 +1,18 @@
 <script lang="ts">
   import {
     cartState,
-    setLineQuantityByIdentity,
-    removeLineByIdentity,
-    validateCart,
     previewCartOrder,
+    removeLineByIdentity,
+    setLineQuantityByIdentity,
+    validateCart,
   } from '$lib/cart/store';
-  import type { AggregatedCatalogItem } from '$lib/market/types';
-  import { popupControls } from '$lib/stores/popUp';
-  import { fetchProductForSellerAndSku } from '$lib/market/catalogClient';
-  import { pickFirstProductImageUrl } from '$lib/market/imageHelpers';
+  import type {AggregatedCatalogItem} from '$lib/market/types';
+  import {popupControls} from '$lib/stores/popUp';
+  import {fetchProductForSellerAndSku} from '$lib/market/catalogClient';
+  import {pickFirstProductImageUrl} from '$lib/market/imageHelpers';
   import CheckoutForms from '$lib/flows/checkout/CheckoutForms.svelte';
   import CheckoutReview from '$lib/flows/checkout/CheckoutReview.svelte';
-  import { formatCurrency } from '$lib/utils/money';
+  import {formatCurrency} from '$lib/utils/money';
 
   // ————————————————————————————————————————————
   // Product metadata resolver via shared catalog client
@@ -55,8 +55,7 @@
 
     const q = parsed;
 
-    const state = $cartState;
-    const basket = state.basket;
+    const basket = $cartState.basket;
     const line = basket?.items?.[itemIdx];
     if (!line) {
       return;
@@ -80,8 +79,7 @@
   }
 
   async function handleRemove(itemIdx: number): Promise<void> {
-    const state = $cartState;
-    const basket = state.basket;
+    const basket = $cartState.basket;
     const line = basket?.items?.[itemIdx];
     if (!line) {
       return;
@@ -164,8 +162,7 @@
   // basket lines. This is for immediate UI feedback; the server remains
   // authoritative (preview/checkout use canonical data).
   const perCurrency = $derived.by(() => {
-    const state = $cartState;
-    const basket = state.basket;
+    const basket = $cartState.basket;
     const out = new Map<string, number>();
 
     if (!basket?.items) return out;

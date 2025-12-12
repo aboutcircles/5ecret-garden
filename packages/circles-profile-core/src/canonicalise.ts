@@ -1,4 +1,4 @@
-import type { CustomDataLink } from './links';
+import type {CustomDataLink} from './links';
 
 export class CanonicalisationError extends Error {}
 export class ObjectTooLargeError extends Error {}
@@ -70,7 +70,7 @@ export async function buildLinkDraft(args: {
   }
   const nonce = toHex(nonceBytes);
 
-  const link: CustomDataLink = {
+  return {
     '@context': 'https://aboutcircles.com/contexts/circles-linking/',
     '@type': 'CustomDataLink',
     name: args.name,
@@ -84,5 +84,4 @@ export async function buildLinkDraft(args: {
     nonce,
     signature: '',
   };
-  return link;
 }

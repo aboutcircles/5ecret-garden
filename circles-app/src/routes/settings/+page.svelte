@@ -9,7 +9,6 @@
   import { ethers } from 'ethers';
   import ProfileExplorer from '$lib/flows/offer/ProfileExplorer.svelte';
   import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
-  import Lucide from '$lib/icons/Lucide.svelte';
   import { LogOut as LLogOut } from 'lucide';
   import { MARKET_API_BASE } from '$lib/config/market';
   import type { Address } from '@circles-sdk/utils';

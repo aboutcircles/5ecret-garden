@@ -30,14 +30,14 @@ export async function loadNamespaceLinks(
         return { links: [], indexCid: null, headCid: null };
     }
 
-    const { index, head, headCid } = await loadIndex(circles, indexCid);
+    const { head, headCid } = await loadIndex(circles, indexCid);
     if (!headCid) {
         return { links: [], indexCid, headCid: null };
     }
 
     const all: LoadedNamespaceLink[] = [];
 
-    let curCid: CidV0 | null = headCid;
+    let curCid: CidV0 | null = headCid.startsWith("Qm") ? headCid as CidV0 : null;
     let curChunk: any = head;
 
     while (curCid) {
@@ -52,7 +52,7 @@ export async function loadNamespaceLinks(
             all.push({ link, chunkCid: curCid, indexInChunk: i });
         }
 
-        const prev = typeof norm.prev === 'string' ? (norm.prev as CidV0) : null;
+        const prev = norm.prev as CidV0 | null;
         if (!prev) {
             break;
         }
@@ -61,7 +61,7 @@ export async function loadNamespaceLinks(
         curChunk = await circles.getJsonLd(prev);
     }
 
-    return { links: all, indexCid, headCid };
+    return { links: all, indexCid, headCid: headCid as CidV0 };
 }
 
 type ChunkShape = {

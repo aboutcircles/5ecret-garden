@@ -1,17 +1,17 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
-    import { page } from '$app/stores';
-    import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
-    import ProductViewer from '$lib/components/ProductViewer.svelte';
-    import {goto} from "$app/navigation";
-    import type { AggregatedCatalogItem } from '$lib/market/types';
-    import { getFirstOffer } from '$lib/market/catalogHelpers';
-    import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
-    import { avatarState } from '$lib/stores/avatar.svelte';
-    import { cartState, addToCart } from '$lib/cart/store';
-    import { fetchProductForSellerAndSku } from '$lib/market/catalogClient';
+  import {onMount} from 'svelte';
+  import {page} from '$app/stores';
+  import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
+  import ProductViewer from '$lib/components/ProductViewer.svelte';
+  import {goto} from "$app/navigation";
+  import type {AggregatedCatalogItem} from '$lib/market/types';
+  import {getFirstOffer} from '$lib/market/catalogHelpers';
+  import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
+  import {avatarState} from '$lib/stores/avatar.svelte';
+  import {addToCart, cartState} from '$lib/cart/store';
+  import {fetchProductForSellerAndSku} from '$lib/market/catalogClient';
 
-    // Derive seller and SKU from SvelteKit's $page store
+  // Derive seller and SKU from SvelteKit's $page store
     const params = $derived($page.params as { seller: string; sku: string });
 
     type ProductLike = AggregatedCatalogItem;
@@ -30,15 +30,12 @@
         const seller = normalizeAddress(params.seller);
         const sku = params.sku;
 
-        const found = await fetchProductForSellerAndSku(seller, sku);
-        product = found;
+        product = await fetchProductForSellerAndSku(seller, sku);
         if (!product) {
           throw new Error('Product not found for this seller / sku.');
         }
       } catch (err: unknown) {
-        const msg =
-          err instanceof Error ? err.message : typeof err === 'string' ? err : 'Unknown error';
-        errorMsg = msg;
+        errorMsg = err instanceof Error ? err.message : typeof err === 'string' ? err : 'Unknown error';
       } finally {
         loading = false;
       }
