@@ -26,7 +26,7 @@
     let hasMore: boolean = $state(false);
 
     // Infinite scroll sentinel and observer
-    let sentinel: HTMLDivElement | null = null;
+    let sentinel: HTMLDivElement | null = $state(null);
     let io: IntersectionObserver | null = null;
     let observed: Element | null = null;
 

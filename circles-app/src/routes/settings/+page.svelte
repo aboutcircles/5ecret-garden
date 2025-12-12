@@ -127,7 +127,7 @@
             <span>loading…</span>
           {:else if profileCid}
             <span class="font-mono select-all break-all">{profileCid}</span>
-            <button class="btn btn-ghost btn-xs" on:click={copyProfileCid}>Copy</button>
+            <button class="btn btn-ghost btn-xs" onclick={copyProfileCid}>Copy</button>
             <a class="link link-primary text-xs" href={ipfsGatewayUrl(profileCid)} target="_blank" rel="noopener noreferrer">Open</a>
           {:else}
             <span class="opacity-70">none yet</span>

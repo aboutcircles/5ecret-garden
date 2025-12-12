@@ -102,7 +102,7 @@
   });
 
   // Live preview of auto-generated SKU, stored in state so we can reuse it when saving
-  let autoSku = $state(generateSku(name || ''));
+  let autoSku = $state('');
   $effect(() => {
     autoSku = generateSku(name || '');
   });

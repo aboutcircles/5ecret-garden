@@ -110,13 +110,13 @@
     <!-- Meta -->
     <svelte:fragment slot="meta">
         {#if !avatarState.isGroup}
-            <span class="hover:underline cursor-pointer" onclick={openBalances}>
+            <button type="button" class="hover:underline cursor-pointer text-left" onclick={openBalances}>
                 {personalToken} individual tokens
-            </span>
-            <span class="mx-1.5">•</span>
-            <span class="hover:underline cursor-pointer" onclick={openBalances}>
+            </button>
+            <span class="mx-1.5" aria-hidden="true">•</span>
+            <button type="button" class="hover:underline cursor-pointer text-left" onclick={openBalances}>
                 {groupToken} group tokens
-            </span>
+            </button>
         {/if}
     </svelte:fragment>
 

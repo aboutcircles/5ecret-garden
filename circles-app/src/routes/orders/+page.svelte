@@ -22,7 +22,9 @@
   };
 
   // Build a simple readable-like object compatible with GenericList
-  let ordersStore: Readable<{ data: ListItem[]; next: () => Promise<boolean>; ended: boolean }>;
+  let ordersStore = $derived<Readable<{ data: ListItem[]; next: () => Promise<boolean>; ended: boolean }>>(
+    browser ? (authed ? buildAuthedStore() : buildFallbackStore()) : emptyStore
+  );
 
   function mapItems(items: any[]): ListItem[] {
     return items.map((s, i) => ({
@@ -158,8 +160,15 @@
     },
   } as any;
 
-  let authed = false;
-  let actions: Action[] = [];
+  let authed = $state(false);
+  const actions: Action[] = $derived([
+    {
+      id: 'signin',
+      label: authed ? 'Signed in' : 'Sign in to view all orders',
+      variant: authed ? 'ghost' : 'primary',
+      onClick: () => { if (!authed) void ensureAuthed(); },
+    },
+  ]);
 
   async function ensureAuthed() {
     try {
@@ -176,41 +185,17 @@
       await signInWithSafe(avatar);
 
       authed = !!getMarketClient().auth.getAuthMeta();
-      ordersStore = buildAuthedStore();
-      actions = [
-        { id: 'signin', label: 'Signed in', variant: 'ghost', onClick: () => {} },
-      ];
+      // ordersStore and actions are derived from `authed` and will update automatically
     } catch (e) {
       console.error('[orders] safe sign-in failed:', e);
       authed = false;
-      ordersStore = buildFallbackStore();
-      actions = [
-        {
-          id: 'signin',
-          label: 'Sign in to view all orders',
-          variant: 'primary',
-          onClick: () => { void ensureAuthed(); },
-        },
-      ];
+      // ordersStore/actions will reflect unauthenticated state automatically
     }
   }
 
-  // Build on client only
+  // Initialize auth state on client only
   if (browser) {
     authed = !!getMarketClient().auth.getAuthMeta();
-    ordersStore = authed ? buildAuthedStore() : buildFallbackStore();
-    actions = [
-      {
-        id: 'signin',
-        label: authed ? 'Signed in' : 'Sign in to view all orders',
-        variant: authed ? 'ghost' : 'primary',
-        onClick: () => {
-          if (!authed) void ensureAuthed();
-        },
-      },
-    ];
-  } else {
-    ordersStore = emptyStore;
   }
 </script>
 

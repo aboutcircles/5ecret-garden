@@ -105,10 +105,10 @@
     let addLabel: string = $derived(avatarState.isGroup ? 'Add Member' : 'Add Contact');
 
     // Keep actions lean: filter moved next to the title
-    const actions: Action[] = [
+    const actions: Action[] = $derived([
         {id: 'add', label: addLabel, iconNode: LPlus, onClick: openAddContact, variant: 'primary'},
         {id: 'export', label: 'Export CSV', iconNode: LDownload, onClick: handleExportCSV, variant: 'ghost'},
-    ];
+    ]);
 </script>
 
 <PageScaffold

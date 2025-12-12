@@ -164,7 +164,16 @@
 {#if product}
     <div
             class="bg-base-100 border border-base-300 rounded-xl overflow-hidden flex flex-col hover:shadow-md transition-shadow cursor-pointer"
+            role="button"
+            tabindex="0"
+            aria-label={`Open product details: ${prod?.name ?? product?.product?.name ?? 'Product'}`}
             on:click={handleProductClick}
+            on:keydown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleProductClick();
+                }
+            }}
     >
         <ProductViewer
                 layout="card"
