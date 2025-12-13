@@ -24,11 +24,15 @@
   const gatewayIface = new ethers.Interface(gatewayAbi);
 
   let trustReceiver: string = $state('');
-  // default expiry: 1 year from now
+
+  function toDatetimeLocalValue(d: Date): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  // default expiry: 1 year from now (LOCAL time, because datetime-local is local)
   let expiryIso: string = $state(
-    new Date(Date.now() + 365 * 24 * 3600 * 1000)
-      .toISOString()
-      .slice(0, 16)
+    toDatetimeLocalValue(new Date(Date.now() + 365 * 24 * 3600 * 1000))
   ); // yyyy-MM-ddTHH:mm
 
   let loadingTrusts: boolean = $state(false);
@@ -43,14 +47,16 @@
     }
   }
 
-  function toExpiryUint96(iso: string): bigint {
-    try {
-      const ms = Date.parse(iso);
-      const sec = Math.floor(ms / 1000);
-      return BigInt(sec);
-    } catch {
-      return 0n;
-    }
+  function toExpiryUint96(localIso: string): bigint {
+    const trimmed = (localIso ?? '').trim();
+    if (!trimmed) return 0n;
+
+    const ms = new Date(trimmed).getTime(); // treats yyyy-MM-ddTHH:mm as local
+    const ok = Number.isFinite(ms) && ms > 0;
+    if (!ok) return 0n;
+
+    const sec = Math.floor(ms / 1000);
+    return BigInt(sec);
   }
 
   const gatewayValid = $derived(isAddress(gateway));
@@ -240,7 +246,7 @@
       </label>
 
       <label class="form-control w-full">
-        <span class="label-text">Expiry (UTC)</span>
+        <span class="label-text">Expiry (local time)</span>
         <input
           class="input input-bordered w-full"
           type="datetime-local"
