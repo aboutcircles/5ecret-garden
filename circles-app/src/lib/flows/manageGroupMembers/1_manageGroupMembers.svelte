@@ -3,7 +3,7 @@
   import SearchAvatar from '$lib/pages/SearchAvatar.svelte';
   import Invite from '$lib/pages/Invite.svelte';
   import { popupControls } from '$lib/stores/popUp';
-  import type { AddContactFlowContext } from './context';
+  import type { ManageGroupMembersFlowContext } from './context';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import Papa from 'papaparse';
   import { avatarState } from '$lib/stores/avatar.svelte';
@@ -13,7 +13,7 @@
   import Lucide from '$lib/icons/Lucide.svelte';
   import { X } from 'lucide';
 
-  let context: AddContactFlowContext = $state({
+  let context: ManageGroupMembersFlowContext = $state({
     selectedAddress: '',
   });
 
