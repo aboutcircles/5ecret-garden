@@ -73,6 +73,8 @@
     return errors;
   };
 
+  import { parseDataUrlToBytes } from '$lib/media/imageTools';
+
   const validateImage = async (dataUrl: string): Promise<boolean> => {
     const dataUrlPattern = /^data:image\/(png|jpeg|jpg|gif|svg\+xml);base64,/;
     if (!dataUrlPattern.test(dataUrl)) {
@@ -80,14 +82,17 @@
       return false;
     }
 
-    const base64Data = dataUrl.replace(dataUrlPattern, '');
-    const buffer = Buffer.from(base64Data, 'base64');
-    if (buffer.length > config.maxImageSizeKB * 1024) {
-      console.error('Image size exceeds limit');
+    try {
+      const { bytes } = parseDataUrlToBytes(dataUrl);
+      if (bytes.length > config.maxImageSizeKB * 1024) {
+        console.error('Image size exceeds limit');
+        return false;
+      }
+      return true;
+    } catch (e) {
+      console.error('Failed to parse image data URL', e);
       return false;
     }
-
-    return true;
   };
 
   async function next() {

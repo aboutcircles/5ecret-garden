@@ -24,18 +24,19 @@
       throw new Error('Profile not initialized');
     }
 
-    runTask({
+    await runTask({
       name: `Migrating your Avatar ...`,
       promise: $circles.migrateAvatar(
         context.inviter ?? '0x0000000000000000000000000000000000000000',
         avatarState.avatar.address,
         context.profile
       ),
-    }).then(async () => {
-      removeProfileFromCache(avatarState.avatar!.address);
-      avatarState.avatar!.avatarInfo!.version = 2;
-      avatarState.avatar!.avatarInfo!.v1Stopped = true;
     });
+
+    // On success, refresh local cache/state
+    removeProfileFromCache(avatarState.avatar!.address);
+    avatarState.avatar!.avatarInfo!.version = 2;
+    avatarState.avatar!.avatarInfo!.v1Stopped = true;
 
     popupControls.close();
   }

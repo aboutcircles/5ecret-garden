@@ -58,14 +58,17 @@
     }
   });
 
+  let buildSeq = 0;
+
   async function buildTransferContext(): Promise<void> {
+  const mySeq = ++buildSeq;
+
   resolveError = null;
   chainWarning = null;
   transferContext = null;
   payActionChainId = null;
 
   if (!lines?.length) {
-    resolveError = 'No items to pay.';
     return;
   }
 
@@ -74,9 +77,9 @@
     return;
   }
 
-  try {
-    resolving = true;
+  resolving = true;
 
+  try {
     const recipients = new Set<string>();
     let total = 0;
 
@@ -105,6 +108,8 @@
     }
 
     for (const line of lines) {
+      if (mySeq !== buildSeq) return;
+
       const seller = String(line?.seller ?? '');
       const sku = String(line?.orderedItem?.sku ?? '');
       if (!seller || !sku) {
@@ -120,12 +125,12 @@
       const snapPrice = typeof snap?.price === 'number' ? snap.price : null;
       const snapCurrency = typeof snap?.priceCurrency === 'string' ? snap.priceCurrency : null;
 
-      // Prefer snapshot for pay-to if it contains potentialAction.
       let payTo = resolvePayTo(snap);
 
       const needsOfferFallback = !payTo?.address;
       if (needsOfferFallback) {
         const offerFallback = await fetchOfferFallback(seller, sku);
+        if (mySeq !== buildSeq) return;
         payTo = resolvePayTo(offerFallback);
       }
 
@@ -153,6 +158,8 @@
       total += unitPrice * qty;
     }
 
+    if (mySeq !== buildSeq) return;
+
     if (recipients.size !== 1) {
       resolveError = 'Items have different payment recipients; please pay them separately.';
       return;
@@ -169,40 +176,38 @@
       return;
     }
 
-    try {
-      const excludedTokens = await $circles.getDefaultTokenExcludeList(to);
-      const bigNumber = '99999999999999999999999999999999999';
-      const p =
-        avatarState.avatar?.avatarInfo?.version === 1
-          ? await $circles.v1Pathfinder?.getPath(avatarState.avatar.address, to, bigNumber)
-          : await $circles.v2Pathfinder?.getPath(
-              avatarState.avatar.address,
-              to,
-              bigNumber,
-              true,
-              undefined,
-              undefined,
-              excludedTokens
-            );
+    const excludedTokens = await $circles.getDefaultTokenExcludeList(to);
+    if (mySeq !== buildSeq) return;
 
-      if (!p || !p.transfers?.length) {
-        resolveError = 'Pathfinding failed. No usable path was found.';
-        return;
-      }
+    const bigNumber = '99999999999999999999999999999999999';
+    const p =
+      avatarState.avatar?.avatarInfo?.version === 1
+        ? await $circles.v1Pathfinder?.getPath(avatarState.avatar.address, to, bigNumber)
+        : await $circles.v2Pathfinder?.getPath(
+            avatarState.avatar.address,
+            to,
+            bigNumber,
+            true,
+            undefined,
+            undefined,
+            excludedTokens
+          );
 
-      let maxAmountCircles = parseFloat(ethers.formatEther(p.maxFlow.toString()));
-      if (avatarState.avatar?.avatarInfo?.version === 1) {
-        const attoCircles = CirclesConverter.attoCrcToAttoCircles(BigInt(p.maxFlow), BigInt(Date.now() / 1000));
-        maxAmountCircles = CirclesConverter.attoCirclesToCircles(attoCircles);
-      }
+    if (mySeq !== buildSeq) return;
 
-      if (maxAmountCircles <= 0 || total > maxAmountCircles) {
-        resolveError = `Insufficient path capacity. Max transferable is ${maxAmountCircles}, but required is ${total}.`;
-        return;
-      }
-    } catch (err) {
-      console.error('Pathfinding error in checkout:', err);
-      resolveError = 'Failed to calculate a transfer path.';
+    if (!p || !p.transfers?.length) {
+      resolveError = 'Pathfinding failed. No usable path was found.';
+      return;
+    }
+
+    let maxAmountCircles = parseFloat(ethers.formatEther(p.maxFlow.toString()));
+    if (avatarState.avatar?.avatarInfo?.version === 1) {
+      const attoCircles = CirclesConverter.attoCrcToAttoCircles(BigInt(p.maxFlow), BigInt(Date.now() / 1000));
+      maxAmountCircles = CirclesConverter.attoCirclesToCircles(attoCircles);
+    }
+
+    if (maxAmountCircles <= 0 || total > maxAmountCircles) {
+      resolveError = `Insufficient path capacity. Max transferable is ${maxAmountCircles}, but required is ${total}.`;
       return;
     }
 
@@ -215,9 +220,12 @@
       dataType: 'utf-8',
     };
   } catch (e) {
+    if (mySeq !== buildSeq) return;
     resolveError = e instanceof Error ? e.message : 'Failed to resolve payment details';
   } finally {
-    resolving = false;
+    if (mySeq === buildSeq) {
+      resolving = false;
+    }
   }
 }
 
