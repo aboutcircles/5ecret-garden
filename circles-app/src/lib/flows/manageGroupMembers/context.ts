@@ -1,5 +1,5 @@
 import type { Address } from "@circles-sdk/utils";
 
-export type AddContactFlowContext = {
+export type ManageGroupMembersFlowContext = {
   selectedAddress: Address;
 };
