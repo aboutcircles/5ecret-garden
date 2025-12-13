@@ -8,8 +8,8 @@
   import { circles } from '$lib/stores/circles';
   import { runTask } from '$lib/utils/tasks';
 
-  import TrustRowView from '../../../routes/gateway/TrustRow.svelte';
-  import type { TrustRow } from '../../../routes/gateway/types';
+  import TrustRowView from '$lib/gateway/TrustRow.svelte';
+  import type { TrustRow } from '$lib/gateway/types';
 
   interface Props {
     gateway: string;

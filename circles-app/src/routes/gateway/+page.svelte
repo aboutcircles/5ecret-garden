@@ -14,8 +14,8 @@
   import type { Address } from '@circles-sdk/utils';
   import { popupControls } from '$lib/stores/popUp';
 
-  import GatewayRowView from './GatewayRow.svelte';
-  import type { GatewayRow } from './types';
+  import GatewayRowView from '$lib/gateway/GatewayRow.svelte';
+  import type { GatewayRow } from '$lib/gateway/types';
   import CreateGatewayProfile from '$lib/flows/paymentGateway/CreateGatewayProfile.svelte';
 
   type GatewayListStore = {
