@@ -492,6 +492,14 @@
         resolved[i] = { name: null, imageUrl: null };
         return;
       }
+
+      // Prefer direct imageUrl from snapshot if present
+      const direct = typeof lineAt(i)?.imageUrl === 'string' ? lineAt(i).imageUrl.trim() : '';
+      if (direct) {
+        resolved[i] = { name: lineAt(i)?.orderedItem?.name ?? null, imageUrl: direct };
+        return;
+      }
+
       const catalog = getMarketClient().catalog.forOperator(MARKET_OPERATOR);
       const prod = await catalog.fetchProductForSellerAndSku(String(evm), String(sku));
       if (!prod) {

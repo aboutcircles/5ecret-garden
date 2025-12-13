@@ -39,10 +39,17 @@
   }
 
   function imageUrlForLine(line: any): string | null {
-    const item = findCatalogItem(line?.seller as string | undefined, line?.orderedItem?.sku as string | undefined);
-    if (!item) return null;
-    return pickFirstProductImageUrl(item.product);
-  }
+  const direct = typeof line?.imageUrl === 'string' ? line.imageUrl.trim() : '';
+  if (direct) return direct;
+
+  const item = findCatalogItem(
+    line?.seller as string | undefined,
+    line?.orderedItem?.sku as string | undefined
+  );
+  if (!item) return null;
+
+  return pickFirstProductImageUrl(item.product);
+}
 
   async function handleQuantityChange(
     itemIdx: number,

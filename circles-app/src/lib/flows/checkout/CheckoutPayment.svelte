@@ -59,144 +59,167 @@
   });
 
   async function buildTransferContext(): Promise<void> {
-    resolveError = null;
-    chainWarning = null;
-    transferContext = null;
-    payActionChainId = null;
+  resolveError = null;
+  chainWarning = null;
+  transferContext = null;
+  payActionChainId = null;
 
-    if (!lines?.length) {
-      resolveError = 'No items to pay.';
+  if (!lines?.length) {
+    resolveError = 'No items to pay.';
+    return;
+  }
+
+  if (!paymentReference) {
+    resolveError = 'Payment reference not available yet. Please wait a moment and try again.';
+    return;
+  }
+
+  try {
+    resolving = true;
+
+    const recipients = new Set<string>();
+    let total = 0;
+
+    const catalog = getMarketClient().catalog.forOperator(MARKET_OPERATOR);
+    const productCache = new Map<string, any>();
+
+    async function fetchOfferFallback(seller: string, sku: string): Promise<any | null> {
+      const key = `${seller.toLowerCase()}::${sku.toLowerCase()}`;
+      const cached = productCache.get(key);
+      if (cached !== undefined) return cached;
+
+      try {
+        const item = await catalog.fetchProductForSellerAndSku(seller, sku);
+        const prod = (item as any)?.product;
+        const offer =
+          Array.isArray(prod?.offers) ? prod.offers[0] :
+          prod?.offer ??
+          (Array.isArray(prod?.Offers) ? prod.Offers[0] : prod?.Offer);
+
+        productCache.set(key, offer ?? null);
+        return offer ?? null;
+      } catch {
+        productCache.set(key, null);
+        return null;
+      }
+    }
+
+    for (const line of lines) {
+      const seller = String(line?.seller ?? '');
+      const sku = String(line?.orderedItem?.sku ?? '');
+      if (!seller || !sku) {
+        resolveError = 'Incomplete line item (seller/SKU missing).';
+        return;
+      }
+
+      const qtyRaw = Number(line?.orderQuantity ?? 1);
+      const qtyOk = Number.isFinite(qtyRaw) && qtyRaw > 0;
+      const qty = qtyOk ? qtyRaw : 1;
+
+      const snap = line?.offerSnapshot;
+      const snapPrice = typeof snap?.price === 'number' ? snap.price : null;
+      const snapCurrency = typeof snap?.priceCurrency === 'string' ? snap.priceCurrency : null;
+
+      // Prefer snapshot for pay-to if it contains potentialAction.
+      let payTo = resolvePayTo(snap);
+
+      const needsOfferFallback = !payTo?.address;
+      if (needsOfferFallback) {
+        const offerFallback = await fetchOfferFallback(seller, sku);
+        payTo = resolvePayTo(offerFallback);
+      }
+
+      if (payActionChainId == null && typeof payTo.chainId === 'number') {
+        payActionChainId = payTo.chainId;
+      }
+
+      const unitPrice = snapPrice ?? payTo.price ?? null;
+      const code = (snapCurrency ?? payTo.priceCurrency ?? null) as string | null;
+
+      if (!payTo?.address) {
+        resolveError = 'Missing pay-to address on offer.';
+        return;
+      }
+      if (unitPrice == null || !Number.isFinite(unitPrice)) {
+        resolveError = 'Missing or invalid price for an item.';
+        return;
+      }
+      if (!code || code.toUpperCase() !== 'CRC') {
+        resolveError = `Unsupported currency ${code || '(none)'} – only CRC supported for in-app transfer.`;
+        return;
+      }
+
+      recipients.add((payTo.address as string).toLowerCase());
+      total += unitPrice * qty;
+    }
+
+    if (recipients.size !== 1) {
+      resolveError = 'Items have different payment recipients; please pay them separately.';
       return;
     }
 
-    // Enforce: paymentReference must be present to proceed
-    if (!paymentReference) {
-      resolveError = 'Payment reference not available yet. Please wait a moment and try again.';
+    if (payActionChainId && currentChainId && payActionChainId !== currentChainId) {
+      chainWarning = `Network mismatch: Offer requests chain ${payActionChainId}, but wallet is on ${currentChainId}.`;
+    }
+
+    const to = Array.from(recipients)[0] as any;
+
+    if (!$circles || !avatarState.avatar) {
+      resolveError = 'Wallet not ready for pathfinding.';
       return;
     }
 
     try {
-      resolving = true;
+      const excludedTokens = await $circles.getDefaultTokenExcludeList(to);
+      const bigNumber = '99999999999999999999999999999999999';
+      const p =
+        avatarState.avatar?.avatarInfo?.version === 1
+          ? await $circles.v1Pathfinder?.getPath(avatarState.avatar.address, to, bigNumber)
+          : await $circles.v2Pathfinder?.getPath(
+              avatarState.avatar.address,
+              to,
+              bigNumber,
+              true,
+              undefined,
+              undefined,
+              excludedTokens
+            );
 
-      const recipients = new Set<string>();
-      let total = 0;
-
-      const catalog = getMarketClient().catalog.forOperator(MARKET_OPERATOR);
-      for (const line of lines) {
-        const seller = String(line?.seller ?? '');
-        const sku = String(line?.orderedItem?.sku ?? '');
-        if (!seller || !sku) {
-          resolveError = 'Incomplete line item (seller/SKU missing).';
-          return;
-        }
-
-        const snapPrice = typeof line?.offerSnapshot?.price === 'number' ? line.offerSnapshot.price : null;
-        const snapCurrency = line?.offerSnapshot?.priceCurrency ?? null;
-
-        const item = await catalog.fetchProductForSellerAndSku(seller as string, sku as string);
-        const prod = (item as any)?.product;
-        const offer = Array.isArray(prod?.offers) ? prod.offers[0] : prod?.offer ?? (Array.isArray(prod?.Offers) ? prod.Offers[0] : prod?.Offer);
-        const payTo = resolvePayTo(offer);
-
-        // capture first found chainId (for warning later)
-        if (payActionChainId == null && typeof payTo.chainId === 'number') {
-          payActionChainId = payTo.chainId;
-        }
-
-        const unitPrice = snapPrice ?? payTo.price ?? null;
-        const code = (snapCurrency ?? payTo.priceCurrency ?? null) as string | null;
-        const qty = Number(line?.orderQuantity ?? 1);
-
-        if (!payTo?.address) {
-          resolveError = 'Missing pay-to address on offer.';
-          return;
-        }
-        if (unitPrice == null || !Number.isFinite(unitPrice)) {
-          resolveError = 'Missing or invalid price for an item.';
-          return;
-        }
-        if (!code || code.toUpperCase() !== 'CRC') {
-          resolveError = `Unsupported currency ${code || '(none)'} – only CRC supported for in-app transfer.`;
-          return;
-        }
-
-        // Destination is the PayAction recipient (payment gateway)
-        recipients.add((payTo.address as string).toLowerCase());
-        total += unitPrice * (Number.isFinite(qty) ? qty : 1);
-      }
-
-      if (recipients.size !== 1) {
-        resolveError = 'Items have different payment recipients; please pay them separately.';
+      if (!p || !p.transfers?.length) {
+        resolveError = 'Pathfinding failed. No usable path was found.';
         return;
       }
 
-      // Chain ID warning (non-blocking)
-      if (payActionChainId && currentChainId && payActionChainId !== currentChainId) {
-        chainWarning = `Network mismatch: Offer requests chain ${payActionChainId}, but wallet is on ${currentChainId}.`;
+      let maxAmountCircles = parseFloat(ethers.formatEther(p.maxFlow.toString()));
+      if (avatarState.avatar?.avatarInfo?.version === 1) {
+        const attoCircles = CirclesConverter.attoCrcToAttoCircles(BigInt(p.maxFlow), BigInt(Date.now() / 1000));
+        maxAmountCircles = CirclesConverter.attoCirclesToCircles(attoCircles);
       }
 
-      const to = Array.from(recipients)[0] as any;
-
-      // --- Pathfinding for transitive transfer ---
-      if (!$circles || !avatarState.avatar) {
-        resolveError = 'Wallet not ready for pathfinding.';
+      if (maxAmountCircles <= 0 || total > maxAmountCircles) {
+        resolveError = `Insufficient path capacity. Max transferable is ${maxAmountCircles}, but required is ${total}.`;
         return;
       }
-      try {
-        const excludedTokens = await $circles.getDefaultTokenExcludeList(to);
-        const bigNumber = '99999999999999999999999999999999999';
-        const p =
-          avatarState.avatar?.avatarInfo?.version === 1
-            ? await $circles.v1Pathfinder?.getPath(
-                avatarState.avatar.address,
-                to,
-                bigNumber
-              )
-            : await $circles.v2Pathfinder?.getPath(
-                avatarState.avatar.address,
-                to,
-                bigNumber,
-                true,
-                undefined,
-                undefined,
-                excludedTokens
-              );
-
-        if (!p || !p.transfers?.length) {
-          resolveError = 'Pathfinding failed. No usable path was found.';
-          return;
-        }
-
-        // Compute max sendable amount in Circles units
-        let maxAmountCircles = parseFloat(ethers.formatEther(p.maxFlow.toString()));
-        if (avatarState.avatar?.avatarInfo?.version === 1) {
-          const attoCircles = CirclesConverter.attoCrcToAttoCircles(BigInt(p.maxFlow), BigInt(Date.now() / 1000));
-          maxAmountCircles = CirclesConverter.attoCirclesToCircles(attoCircles);
-        }
-        if (maxAmountCircles <= 0 || total > maxAmountCircles) {
-          resolveError = `Insufficient path capacity. Max transferable is ${maxAmountCircles}, but required is ${total}.`;
-          return;
-        }
-      } catch (err) {
-        console.error('Pathfinding error in checkout:', err);
-        resolveError = 'Failed to calculate a transfer path.';
-        return;
-      }
-
-      transferContext = {
-        selectedAddress: to,
-        selectedAsset: transitiveTransfer(),
-        transitiveOnly: true,
-        amount: total,
-        data: paymentReference ?? undefined,
-        dataType: 'utf-8',
-      };
-    } catch (e) {
-      resolveError = e instanceof Error ? e.message : 'Failed to resolve payment details';
-    } finally {
-      resolving = false;
+    } catch (err) {
+      console.error('Pathfinding error in checkout:', err);
+      resolveError = 'Failed to calculate a transfer path.';
+      return;
     }
+
+    transferContext = {
+      selectedAddress: to,
+      selectedAsset: transitiveTransfer(),
+      transitiveOnly: true,
+      amount: total,
+      data: paymentReference ?? undefined,
+      dataType: 'utf-8',
+    };
+  } catch (e) {
+    resolveError = e instanceof Error ? e.message : 'Failed to resolve payment details';
+  } finally {
+    resolving = false;
   }
+}
 
   function openTransferFlow(): void {
     if (!transferContext) return;
