@@ -215,10 +215,68 @@ export type BasketPatch = {
 
 export async function patchBasket(basketId: string, patch: BasketPatch): Promise<any> {
   const client = getMarketClient();
+
+  const hasItemsPatch = Array.isArray(patch.items);
+  const hasDetailsPatch =
+    patch.shippingAddress !== undefined ||
+    patch.billingAddress !== undefined ||
+    patch.contactPoint !== undefined ||
+    patch.ageProof !== undefined;
+
+  function ensureTyped(obj: any, typeName: string): any | undefined {
+    const isNil = obj === null || obj === undefined;
+    if (isNil) return undefined;
+    const isObj = typeof obj === 'object' && !Array.isArray(obj);
+    if (!isObj) return obj;
+
+    const hasType = typeof obj?.['@type'] === 'string' && obj['@type'].length > 0;
+    if (hasType) return obj;
+
+    return { '@type': typeName, ...obj };
+  }
+
+  function buildPatchItems(): any[] {
+    if (!hasItemsPatch) return [];
+    return patch.items!
+      .map((it) => ({
+        seller: normalizeAddr(it.seller),
+        orderedItem: { '@type': 'Product', sku: normalizeSku(it.orderedItem?.sku as any) },
+        orderQuantity: Number(it.orderQuantity ?? 0),
+        imageUrl: typeof it.imageUrl === 'string' ? it.imageUrl : undefined,
+      }))
+      .filter((x) => x.seller && x.orderedItem?.sku && x.orderQuantity > 0);
+  }
+
+  // If we need to apply both, do it in one server PATCH.
+  if (hasItemsPatch && hasDetailsPatch) {
+    const token = client.authContext?.getToken?.();
+    const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+
+    const body: any = { items: buildPatchItems() };
+
+    const shipping = ensureTyped(patch.shippingAddress ?? undefined, 'PostalAddress');
+    const billing = ensureTyped(patch.billingAddress ?? undefined, 'PostalAddress');
+    const contact = ensureTyped(patch.contactPoint ?? undefined, 'ContactPoint');
+    const age = ensureTyped(patch.ageProof ?? undefined, 'Person');
+
+    if (shipping !== undefined) body.shippingAddress = shipping;
+    if (billing !== undefined) body.billingAddress = billing;
+    if (contact !== undefined) body.contactPoint = contact;
+    if (age !== undefined) body.ageProof = age;
+
+    return await client.http.request<any>({
+      method: 'PATCH',
+      url: `${client.marketApiBase}/api/cart/v1/baskets/${encodeURIComponent(basketId)}`,
+      headers: { ...authHeaders },
+      body,
+    });
+  }
+
+  // Otherwise keep the existing single-operation behavior.
   let updated: any | null = null;
 
-  if (Array.isArray(patch.items)) {
-    const items = patch.items
+  if (hasItemsPatch) {
+    const items = patch.items!
       .map((it) => ({
         seller: normalizeAddr(it.seller),
         sku: normalizeSku(it.orderedItem?.sku as any),
@@ -230,12 +288,7 @@ export async function patchBasket(basketId: string, patch: BasketPatch): Promise
     updated = await client.cart.setItems({ basketId, items });
   }
 
-  if (
-    patch.shippingAddress !== undefined ||
-    patch.billingAddress !== undefined ||
-    patch.contactPoint !== undefined ||
-    patch.ageProof !== undefined
-  ) {
+  if (hasDetailsPatch) {
     updated = await client.cart.setCheckoutDetails({
       basketId,
       shippingAddress: patch.shippingAddress ?? undefined,
@@ -246,7 +299,6 @@ export async function patchBasket(basketId: string, patch: BasketPatch): Promise
   }
 
   if (!updated) {
-    // No changes applied, return current basket
     return await fetchBasketById(basketId);
   }
   return updated;
