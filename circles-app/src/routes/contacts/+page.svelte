@@ -9,7 +9,7 @@
     import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
     import Lucide from '$lib/icons/Lucide.svelte';
     import {Filter as LFilter, Download as LDownload, Plus as LPlus} from 'lucide';
-    import {popupControls} from '$lib/stores/popUp';
+    import {popupControls} from '$lib/stores/popup';
     import ManageGroupMembers from '$lib/flows/manageGroupMembers/1_manageGroupMembers.svelte';
     import {avatarState} from '$lib/stores/avatar.svelte';
     import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';

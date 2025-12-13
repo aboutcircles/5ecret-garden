@@ -21,8 +21,8 @@
   import Send from '$lib/flows/send/1_To.svelte';
   import { onDestroy, onMount } from 'svelte';
   import { tasks } from '$lib/utils/tasks';
-  import { popupControls, popupState } from '$lib/stores/popUp';
-  import PopUp from '$lib/components/PopUp.svelte';
+  import { popupControls, popupState } from '$lib/stores/popup';
+  import Popup from '$lib/components/Popup.svelte';
   import ManageGroupMembers from '$lib/flows/manageGroupMembers/1_manageGroupMembers.svelte';
   import { getProfile } from '$lib/utils/profile';
   import { initTransactionHistoryStore } from '$lib/stores/transactionHistory';
@@ -202,7 +202,7 @@
     }}
     aria-hidden={$popupState.content ? 'false' : 'true'}
   ></div>
-  <PopUp />
+  <Popup />
 </main>
 {#if hasToasts}
   <div

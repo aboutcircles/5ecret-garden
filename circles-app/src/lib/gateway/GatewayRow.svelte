@@ -2,7 +2,7 @@
   import RowFrame from '$lib/ui/RowFrame.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import type { GatewayRow as GatewayRowType } from '$lib/gateway/types';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
   import ManageTrust from '$lib/flows/paymentGateway/ManageTrust.svelte';
 
   interface Props {

@@ -1,11 +1,11 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import type { Snippet } from 'svelte';
-    import { popupState } from '$lib/stores/popUp';
+    import { popupState } from '$lib/stores/popup';
     import {headerDropdownOpen} from "$lib/stores/headerDropdown";
 
     import { avatarState } from '$lib/stores/avatar.svelte';
-    import { popupControls } from '$lib/stores/popUp';
+    import { popupControls } from '$lib/stores/popup';
     import SettingProfile from "$lib/pages/SettingProfile.svelte";
 
     type Highlight = 'soft' | 'tint';
