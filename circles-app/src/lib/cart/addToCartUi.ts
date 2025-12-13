@@ -11,27 +11,28 @@ export type AddToCartInputs = {
 
 export type AddToCartState = {
   canAdd: boolean;
-  disabledReason: string;
+  label: string;
+  reason?: string;
 };
 
 export function getAddToCartState(inputs: AddToCartInputs): AddToCartState {
   const { product, currentAvatar, cartLoading } = inputs;
   const offer = inputs.offer ?? (product?.product ? getFirstOffer(product.product) : null);
-  const payTo = offer ? resolvePayTo(offer) : { address: null } as any;
-  const hasPay = !!payTo.address;
+  const payTo = offer ? resolvePayTo(offer) : { address: null };
+  const hasPay = !!(payTo && (payTo as any).address);
 
   if (!currentAvatar) {
-    return { canAdd: false, disabledReason: UI_COPY.connectAvatarFirst };
+    return { canAdd: false, label: UI_COPY.addToBasket, reason: UI_COPY.connectAvatarFirst };
   }
   if (!offer) {
-    return { canAdd: false, disabledReason: 'No offer available' };
+    return { canAdd: false, label: UI_COPY.addToBasket, reason: 'No offer available' };
   }
   if (!hasPay) {
-    return { canAdd: false, disabledReason: 'This item can’t be purchased yet' };
+    return { canAdd: false, label: UI_COPY.addToBasket, reason: 'This item can’t be purchased yet' };
   }
   if (cartLoading) {
     // Disabled while cart is mutating to avoid duplicate adds
-    return { canAdd: false, disabledReason: UI_COPY.basketUpdating };
+    return { canAdd: false, label: UI_COPY.addToBasket, reason: UI_COPY.basketUpdating };
   }
-  return { canAdd: true, disabledReason: UI_COPY.addToBasket };
+  return { canAdd: true, label: UI_COPY.addToBasket };
 }

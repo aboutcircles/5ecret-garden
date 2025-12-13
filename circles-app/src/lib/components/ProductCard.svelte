@@ -162,9 +162,9 @@
       class="btn btn-sm btn-outline"
       onclick={(e) => { e.stopPropagation(); handleAddToBasket(); }}
       disabled={!addState.canAdd}
-      title={addState.disabledReason}
-  >
-    Add to basket
+          title={addState.reason}
+        >
+          {addState.label}
   </button>
 {/snippet}
 

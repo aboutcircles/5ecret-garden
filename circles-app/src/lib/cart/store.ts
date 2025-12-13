@@ -58,8 +58,19 @@ function writeBasketId(id: string | null): void {
     } else {
       window.localStorage.setItem(KEY_BASKET_ID, id);
     }
-  } catch {
-    // ignore storage failures
+  } catch (e) {
+    // Surface storage failures to aid debugging but keep soft-fail behavior
+    console.error('[cart] Failed to persist basket id to localStorage:', e);
+    try {
+      // Only surface to UI in dev builds to avoid noisy errors for users
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (typeof import.meta !== 'undefined' && (import.meta as any).env?.DEV) {
+        const msg = e instanceof Error ? e.message : String(e ?? 'storage error');
+        setError(`Basket storage unavailable: ${msg}`);
+      }
+    } catch {
+      // no-op: avoid cascading errors
+    }
   }
 }
 
