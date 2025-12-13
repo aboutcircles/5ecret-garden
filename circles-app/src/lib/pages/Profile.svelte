@@ -1,6 +1,6 @@
 <script lang="ts">
     import {circles} from '$lib/stores/circles';
-    import type {Profile} from '@circles-sdk/profiles';
+    import type { Profile } from '$lib/utils/profile';
     import CommonConnections from '$lib/components/CommonConnections.svelte';
     import {contacts} from '$lib/stores/contacts';
     import {

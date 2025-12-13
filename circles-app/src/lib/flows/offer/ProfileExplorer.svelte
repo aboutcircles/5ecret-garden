@@ -17,6 +17,7 @@
     import type { ProfilesBindings } from '@circles-market/sdk';
     import { loadProfileOrInit, rebaseAndSaveProfile } from '@circles-market/sdk';
     import { getProfilesBindings } from '$lib/offers/profilesBindings';
+    import { removeProfileFromCache } from '$lib/utils/profile';
     import type {Address} from '@circles-sdk/utils';
 
     interface Props {
@@ -145,6 +146,8 @@
                 );
 
                 await bindings.updateAvatarProfileDigest(resolvedAvatar!, profileCid);
+                // Invalidate caches so hot-path UIs refresh
+                removeProfileFromCache(resolvedAvatar!);
             })()
         });
 
