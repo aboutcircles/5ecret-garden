@@ -21,6 +21,8 @@
     let fingerprint = $state<string | null>(null);
     let error = $state<string | null>(null);
     let saving = $state(false);
+    let showPrivate = $state(false);
+    let copied = $state<null | 'private' | 'public' | 'fingerprint'>(null);
 
     function getBindings(): ProfilesBindings {
         return getProfilesBindings({ pinApiBase }).bindings;
@@ -39,6 +41,8 @@
             privateKey = privHex;
             publicKey = pubHex;
             fingerprint = fp;
+            showPrivate = false; // default to hidden
+            copied = null;
         } catch (e: any) {
             error = String(e?.message ?? e);
         }
@@ -92,11 +96,31 @@
             })()
         });
         saving = false;
+        // Clear sensitive data from state before closing
+        privateKey = null;
+        fingerprint = null;
+        showPrivate = false;
+        copied = null;
         popupControls.close();
     }
 
     function onCancel() {
+        // Clear sensitive data before leaving
+        privateKey = null;
+        fingerprint = null;
+        showPrivate = false;
+        copied = null;
         popupControls.back?.() ?? popupControls.close();
+    }
+
+    async function copyToClipboard(text: string, what: 'private' | 'public' | 'fingerprint') {
+        try {
+            await navigator.clipboard.writeText(text);
+            copied = what;
+            setTimeout(() => { if (copied === what) copied = null; }, 1500);
+        } catch (e) {
+            console.error('Clipboard copy failed', e);
+        }
     }
 </script>
 
@@ -116,19 +140,46 @@
         </div>
 
         {#if privateKey}
-            <div class="mt-1 text-[11px] opacity-70">Private key (keep secret):</div>
-            <code class="break-all text-[11px] block">{privateKey}</code>
+            <div class="mt-1 text-[11px] opacity-70 flex items-center justify-between">
+                <span>Private key (keep secret)</span>
+                <label class="flex items-center gap-2 text-[11px]">
+                    <input type="checkbox" class="toggle toggle-xs" bind:checked={showPrivate}>
+                    <span>Show private key</span>
+                </label>
+            </div>
+            <div class="flex items-center gap-2">
+                {#if showPrivate}
+                    <code class="break-all text-[11px] block flex-1">{privateKey}</code>
+                {:else}
+                    <code class="break-all text-[11px] block flex-1 select-none">••••••••••••••••••••••••••••••••••••••</code>
+                {/if}
+                <button class="btn btn-xs" title="Copy private key" onclick={() => copyToClipboard(privateKey || '', 'private')}>
+                    {copied === 'private' ? 'Copied' : 'Copy'}
+                </button>
+            </div>
         {/if}
 
         {#if fingerprint}
-            <div class="mt-1 text-[11px] opacity-70">Fingerprint:</div>
+            <div class="mt-1 text-[11px] opacity-70 flex items-center justify-between">
+                <span>Fingerprint</span>
+                <button class="btn btn-ghost btn-xs" onclick={() => copyToClipboard(fingerprint || '', 'fingerprint')}>
+                    {copied === 'fingerprint' ? 'Copied' : 'Copy'}
+                </button>
+            </div>
             <code class="break-all text-[11px] block">{fingerprint}</code>
         {/if}
     </div>
 
     <label class="form-control">
         <span class="label-text text-xs">Public key (uncompressed 0x04…)</span>
-        <input class="input input-sm input-bordered font-mono" bind:value={publicKey} placeholder="0x04…" />
+        <div class="flex items-center gap-2">
+            <input class="input input-sm input-bordered font-mono flex-1" bind:value={publicKey} placeholder="0x04…" />
+            {#if publicKey.trim()}
+                <button class="btn btn-ghost btn-xs" onclick={() => copyToClipboard(publicKey.trim(), 'public')}>
+                    {copied === 'public' ? 'Copied' : 'Copy'}
+                </button>
+            {/if}
+        </div>
     </label>
 
     <div class="flex justify-end gap-2 pt-2">

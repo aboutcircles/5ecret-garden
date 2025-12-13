@@ -41,13 +41,15 @@
             throw new Error('Avatar store is not available');
         }
 
-        runTask({
-            name: 'Minting Circles ...',
-            promise: avatarState.avatar!.personalMint(),
-        }).finally(async () => {
+        try {
+            await runTask({
+                name: 'Minting Circles ...',
+                promise: avatarState.avatar!.personalMint(),
+            });
+        } finally {
             const refreshed = await avatarState.avatar!.getMintableAmount();
             mintableAmount = refreshed ?? 0;
-        });
+        }
 
         mintableAmount = 0;
     }
