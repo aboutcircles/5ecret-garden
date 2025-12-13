@@ -18,7 +18,7 @@
   import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
   import {getProduct, getFirstOffer, isProductOwnedBy} from '$lib/market/catalogHelpers';
   import {productAndOfferToDraft} from '$lib/utils/offer';
-  import {popupControls, type PopupContentDefinition} from '$lib/stores/popUp';
+  import {popupControls, type PopupContentDefinition} from '$lib/stores/popup';
   import ProductDetailsPopup from '$lib/market/ProductDetailsPopup.svelte';
   import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
 

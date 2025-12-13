@@ -12,7 +12,7 @@
   import { circles } from '$lib/stores/circles';
   import { shortenAddress } from '$lib/utils/shared';
   import type { Address } from '@circles-sdk/utils';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
 
   import GatewayRowView from '$lib/gateway/GatewayRow.svelte';
   import type { GatewayRow } from '$lib/gateway/types';
