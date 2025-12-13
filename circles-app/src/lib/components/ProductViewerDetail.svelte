@@ -56,12 +56,16 @@
       if (typeof af === 'string' && af) {
         liveAvailability = await fetchAvailabilityFeed(af);
       }
-    } catch {}
+    } catch (e) {
+      console.warn('[feeds] availability fetch failed', { uri: af, error: e });
+    }
     try {
       if (typeof inf === 'string' && inf) {
         liveInventory = await fetchInventoryFeed(inf);
       }
-    } catch {}
+    } catch (e) {
+      console.warn('[feeds] inventory fetch failed', { uri: inf, error: e });
+    }
   });
 
   const effectiveAvailabilityIri = $derived<string | null>(liveAvailability ?? offer?.availability ?? null);

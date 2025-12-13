@@ -127,9 +127,9 @@
                     class="btn btn-outline w-full"
                     onclick={(e) => { e.stopPropagation(); void handleAddToBasket(); }}
                     disabled={!addState.canAdd}
-                    title={addState.disabledReason}
+                    title={addState.reason}
                 >
-                    Add to basket
+                    {addState.label}
                 </button>
             </div>
         {/snippet}

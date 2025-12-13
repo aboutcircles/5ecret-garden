@@ -1,1 +1,1 @@
-export type Action = { id: string; label: string; iconNode?: any; onClick: () => void; variant: 'primary'|'ghost' };
+export { type ActionButton as Action, type ButtonVariant } from '$lib/types/action-buttons';
