@@ -11,6 +11,8 @@ let { actions = [] as any[] } = $props();
       class={`btn btn-sm ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'}`}
       onclick={a.onClick}
       aria-label={a.label}
+      disabled={!!a?.disabled}
+      aria-disabled={!!a?.disabled}
     >
         {#if a.iconNode}
             <Lucide icon={a.iconNode} size={16} class={`shrink-0 ${a.variant === 'primary' ? 'stroke-white' : 'stroke-black'}`} />

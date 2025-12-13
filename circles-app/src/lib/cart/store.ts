@@ -252,14 +252,10 @@ export async function patchBasket(basketId: string, patch: BasketPatch): Promise
   return updated;
 }
 
-export async function setItems(items: { seller: string; sku: string; quantity: number; imageUrl?: string }[]): Promise<void> {
-  const state = get(cartState);
-
-  const basketId = state.basket?.basketId ?? readBasketId();
-  if (!basketId) {
-    throw new Error('No basketId available');
-  }
-
+async function setItemsForBasket(
+  basketId: string,
+  items: { seller: string; sku: string; quantity: number; imageUrl?: string }[],
+): Promise<any> {
   // Convert to OrderItemPreview shape so tests can spy on payload semantics
   const orderItems: OrderItemPreview[] = items.map((it) => ({
     '@type': 'OrderItem',
@@ -271,21 +267,41 @@ export async function setItems(items: { seller: string; sku: string; quantity: n
 
   const updated = await patchBasket(basketId, { items: orderItems });
   cartState.update((s) => ({ ...s, basket: updated }));
+  return updated;
+}
+
+export async function setItems(items: { seller: string; sku: string; quantity: number; imageUrl?: string }[]): Promise<void> {
+  const state = get(cartState);
+
+  const basketId = state.basket?.basketId ?? readBasketId();
+  if (!basketId) {
+    throw new Error('No basketId available');
+  }
+
+  await setItemsForBasket(basketId, items);
 }
 
 export async function addToCart(product: AggregatedCatalogItem, buyer: string | null | undefined): Promise<void> {
   if (!buyer) {
     throw new Error('Buyer address is required to add to basket');
   }
+
   setLoading(true);
   clearError();
+
   try {
     const basketId = await ensureBasketId(normalizeAddr(buyer));
 
-    const curBasket = await fetchBasketById(basketId);
-    cartState.update((s) => ({ ...s, basket: curBasket }));
+    // Use in-memory basket if it matches; otherwise fetch once.
+    const state = get(cartState);
+    const haveBasketInState = String(state.basket?.basketId ?? '') === String(basketId);
+    const baseBasket = haveBasketInState && state.basket ? state.basket : await fetchBasketById(basketId);
 
-    const items = toSdkItemsFromBasket(curBasket);
+    if (!haveBasketInState) {
+      cartState.update((s) => ({ ...s, basket: baseBasket }));
+    }
+
+    const items = toSdkItemsFromBasket(baseBasket);
 
     const seller = normalizeAddr(product.seller as any);
     const sku = normalizeSku(product.product?.sku);
@@ -293,19 +309,25 @@ export async function addToCart(product: AggregatedCatalogItem, buyer: string | 
       throw new Error('Product is missing seller or sku');
     }
 
+    const img = pickFirstProductImageUrl(product.product) ?? undefined;
+
     const idx = items.findIndex((x) => x.seller === seller && x.sku === sku);
-    const img = pickFirstProductImageUrl(product.product);
+
+    let nextItems: { seller: string; sku: string; quantity: number; imageUrl?: string }[];
     if (idx >= 0) {
-      const next = items.slice();
-      next[idx] = { ...next[idx], quantity: next[idx].quantity + 1 };
-      await getMarketClient().cart.setItems({ basketId, items: next });
+      const cur = items[idx];
+      nextItems = items.slice();
+      nextItems[idx] = {
+        ...cur,
+        quantity: cur.quantity + 1,
+        imageUrl: cur.imageUrl ?? img,
+      };
     } else {
-      const next = items.concat([{ seller, sku, quantity: 1, imageUrl: img ?? undefined }]);
-      await getMarketClient().cart.setItems({ basketId, items: next });
+      nextItems = items.concat([{ seller, sku, quantity: 1, imageUrl: img }]);
     }
 
-    const refreshed = await fetchBasketById(basketId);
-    cartState.update((s) => ({ ...s, basket: refreshed }));
+    // setItemsForBasket -> patchBasket -> client.cart.setItems() (PATCH) returns the updated basket.
+    await setItemsForBasket(basketId, nextItems);
   } catch (e) {
     setError(e);
     throw e;
@@ -334,24 +356,23 @@ export async function setLineQuantityByIdentity(
   try {
     const state = get(cartState);
 
-    const basket = state.basket ?? (readBasketId() ? await fetchBasketById(readBasketId()!) : null);
-    if (!basket?.basketId) {
+    const basketId = state.basket?.basketId ?? readBasketId();
+    if (!basketId) {
       throw new Error('No basket available');
     }
 
+    const basket = state.basket ?? (await fetchBasketById(basketId));
     const seller = normalizeAddr(sellerRaw);
     const sku = normalizeSku(skuRaw);
 
-    const items = toSdkItemsFromBasket(basket).map((it) => {
+    const nextItems = toSdkItemsFromBasket(basket).map((it) => {
       if (it.seller === seller && it.sku === sku) {
         return { ...it, quantity };
       }
       return it;
     });
 
-    await setItems(items);
-    const refreshed = await fetchBasketById(basket.basketId);
-    cartState.update((s) => ({ ...s, basket: refreshed }));
+    await setItemsForBasket(basketId, nextItems);
   } catch (e) {
     setError(e);
     throw e;
@@ -366,19 +387,17 @@ export async function removeLineByIdentity(sellerRaw: string, skuRaw: string): P
   try {
     const state = get(cartState);
 
-    const basket = state.basket ?? (readBasketId() ? await fetchBasketById(readBasketId()!) : null);
-    if (!basket?.basketId) {
+    const basketId = state.basket?.basketId ?? readBasketId();
+    if (!basketId) {
       throw new Error('No basket available');
     }
 
+    const basket = state.basket ?? (await fetchBasketById(basketId));
     const seller = normalizeAddr(sellerRaw);
     const sku = normalizeSku(skuRaw);
 
-    const items = toSdkItemsFromBasket(basket).filter((it) => !(it.seller === seller && it.sku === sku));
-    await setItems(items);
-
-    const refreshed = await fetchBasketById(basket.basketId);
-    cartState.update((s) => ({ ...s, basket: refreshed }));
+    const nextItems = toSdkItemsFromBasket(basket).filter((it) => !(it.seller === seller && it.sku === sku));
+    await setItemsForBasket(basketId, nextItems);
   } catch (e) {
     setError(e);
     throw e;
@@ -512,24 +531,22 @@ export async function upsertLineByIdentity(sellerRaw: string, skuRaw: string, qu
   clearError();
   try {
     const state = get(cartState);
-    const basket = state.basket ?? (readBasketId() ? await fetchBasketById(readBasketId()!) : null);
-    if (!basket?.basketId) throw new Error('No basket available');
+    const basketId = state.basket?.basketId ?? readBasketId();
+    if (!basketId) throw new Error('No basket available');
 
+    const basket = state.basket ?? (await fetchBasketById(basketId));
     const seller = normalizeAddr(sellerRaw);
     const sku = normalizeSku(skuRaw);
 
     const items = toSdkItemsFromBasket(basket);
     const idx = items.findIndex((x) => x.seller === seller && x.sku === sku);
-    if (idx >= 0) {
-      const next = items.slice();
-      next[idx] = { ...next[idx], quantity };
-      await setItems(next);
-    } else {
-      const next = items.concat([{ seller, sku, quantity }]);
-      await setItems(next);
-    }
-    const refreshed = await fetchBasketById(basket.basketId);
-    cartState.update((s) => ({ ...s, basket: refreshed }));
+
+    const nextItems =
+      idx >= 0
+        ? items.map((it, i) => (i === idx ? { ...it, quantity } : it))
+        : items.concat([{ seller, sku, quantity }]);
+
+    await setItemsForBasket(basketId, nextItems);
   } catch (e) {
     setError(e);
     throw e;
