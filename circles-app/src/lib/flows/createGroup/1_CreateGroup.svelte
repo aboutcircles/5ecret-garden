@@ -123,11 +123,12 @@
             Group Image <Tooltip content="Upload a square logo (e.g. 256×256)." />
         </div>
         <ImageUpload
-                imageDataUrl={ctx.profile.previewImageUrl}
-                cropHeight={256}
+                imageDataUrls={ctx.profile.previewImageUrl ? [ctx.profile.previewImageUrl] : []}
                 cropWidth={256}
-                {onnewimage}
-                {oncleared}
+                cropHeight={256}
+                mode="crop"
+                onnewimage={(dataUrl) => { ctx.profile.previewImageUrl = dataUrl; }}
+                onclearall={() => { ctx.profile.previewImageUrl = ''; }}
         />
     </div>
 

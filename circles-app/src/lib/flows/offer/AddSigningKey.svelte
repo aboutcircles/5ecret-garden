@@ -4,6 +4,7 @@
     import { loadProfileOrInit, rebaseAndSaveProfile } from '@circles-market/sdk';
     import type { ProfilesBindings } from '@circles-market/sdk';
     import { getProfilesBindings } from '$lib/offers/profilesBindings';
+    import { removeProfileFromCache } from '$lib/utils/profile';
     import type { Address } from '@circles-sdk/utils';
     import { bytesToHex, keccak256, hexToBytes } from '$lib/safeSigner';
     import { secp256k1 } from '@noble/curves/secp256k1';
@@ -86,6 +87,8 @@
                     p.signingKeys = entries;
                 });
                 await bindings.updateAvatarProfileDigest(avatar!, cid);
+                // Invalidate caches so avatar/name updates propagate in hot paths
+                removeProfileFromCache(avatar!);
             })()
         });
         saving = false;

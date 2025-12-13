@@ -5,7 +5,7 @@
   import VerticalAvatarLayout from './VerticalAvatarLayout.svelte';
   import { popupControls, type PopupContentDefinition } from '$lib/stores/popUp';
   import type { Address } from '@circles-sdk/utils';
-  import type { Profile } from '@circles-sdk/profiles';
+  import type { AppProfileCore as Profile } from '$lib/profiles';
   import { fade } from 'svelte/transition';
   import { circles } from '$lib/stores/circles';
   import { normalizeEvmAddress } from '@circles-market/sdk';
@@ -37,7 +37,7 @@
     placeholderBottom = true,
   }: Props = $props();
 
-  const normalizedAddress = $derived((): Address | null => {
+  const normalizedAddress = $derived.by((): Address | null => {
     if (address == null) return null;
     try {
       return normalizeEvmAddress(String(address)) as Address;
@@ -51,13 +51,13 @@
   const tooltipText = $derived(
     (profile?.name && profile.name.length > 0)
       ? profile.name
-      : normalizedAddress() ?? 'Profile'
+      : (normalizedAddress ?? 'Profile')
   );
 
   let requestId = 0;
 
   $effect(() => {
-    const addr = normalizedAddress();
+    const addr = normalizedAddress;
 
     requestId += 1;
     const myReq = requestId;
@@ -87,7 +87,7 @@
   function openAvatar(e: MouseEvent) {
     if (!clickable) return;
 
-    const addr = normalizedAddress();
+    const addr = normalizedAddress;
     if (!addr) return;
 
     const nextPage: PopupContentDefinition = {

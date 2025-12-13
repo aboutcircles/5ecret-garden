@@ -2,7 +2,7 @@
     import {ethers} from 'ethers';
     import AddressInput from '$lib/components/AddressInput.svelte';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
-    import type {Profile, SearchResultProfile} from '@circles-sdk/profiles';
+    import type { SearchProfileResult } from '$lib/profiles';
     import {circles} from '$lib/stores/circles';
     import {get} from 'svelte/store';
     import {onMount} from "svelte";
@@ -19,44 +19,42 @@
 
     let {selectedAddress = $bindable(undefined), searchType = 'send', oninvite, ontrust, onselect, avatarTypes}: Props = $props();
     let lastAddress: string = $state('');
-    let result: SearchResultProfile[] = $state([]);
+    let result: SearchProfileResult[] = $state([]);
 
-    function toSearchResult(raw: any | null | undefined): SearchResultProfile | undefined {
+    function toSearchResult(raw: any | null | undefined): SearchProfileResult | undefined {
         if (!raw || typeof raw !== 'object') return undefined;
 
-        const base = raw ?? {name: ''};
-        const CID = typeof raw.CID === 'string' ? raw.CID : (typeof raw.cid === 'string' ? raw.cid : '');
+        const base = raw ?? { name: '' };
         const address = typeof raw.address === 'string' ? raw.address : (typeof raw.owner === 'string' ? raw.owner : '');
-        const lastUpdatedAt = typeof raw.lastUpdatedAt === 'number' ? raw.lastUpdatedAt : 0;
+        const lastUpdatedAt = typeof raw.lastUpdatedAt === 'number' ? raw.lastUpdatedAt : undefined;
         const registeredName = typeof raw.registeredName === 'string' ? raw.registeredName : null;
+        const avatarType = typeof raw.avatarType === 'string' ? raw.avatarType : (typeof raw.type === 'string' ? raw.type : undefined);
 
         return {
-            ...base,
+            address,
             name: base.name,
             description: base.description,
-            CID,
             lastUpdatedAt,
-            address,
             registeredName,
             imageUrl: base.imageUrl,
             previewImageUrl: base.previewImageUrl,
             location: base.location,
-            geoLocation: base.geoLocation
-        };
+            avatarType
+        } as SearchProfileResult;
     }
 
-    async function rpcSearchByText(query: string, limit: number, offset = 0, avatarTypes:string[]|undefined = undefined): Promise<SearchResultProfile[]> {
+    async function rpcSearchByText(query: string, limit: number, offset = 0, avatarTypes:string[]|undefined = undefined): Promise<SearchProfileResult[]> {
         const sdk = get(circles);
         if (!sdk?.circlesRpc) throw new Error('No circles RPC available');
-        const raw = await sdk.circlesRpc.call<Profile[]>('circles_searchProfiles', [query, limit, offset, avatarTypes]);
-        return (raw.result ?? []).map(toSearchResult).filter(Boolean) as SearchResultProfile[];
+        const raw = await sdk.circlesRpc.call('circles_searchProfiles', [query, limit, offset, avatarTypes]);
+        return (raw.result ?? []).map(toSearchResult).filter(Boolean) as SearchProfileResult[];
     }
 
     async function searchProfiles() {
         try {
             const q = selectedAddress?.toString() ?? '';
             const limit = 50;
-            let results: SearchResultProfile[] = [];
+            let results: SearchProfileResult[] = [];
 
             if (q.trim() !== '') {
                 const nameResults = await rpcSearchByText(q, limit, undefined, avatarTypes);
@@ -66,11 +64,10 @@
                     const needle = q.toLowerCase();
                     const found = results.some(r => (r.address ?? '').toLowerCase() === needle);
                     if (!found && ethers.isAddress(q)) {
-                        const synthetic: SearchResultProfile = {
+                        const synthetic: SearchProfileResult = {
                             address: q,
                             name: q,
-                            CID: '',
-                            lastUpdatedAt: 0,
+                            lastUpdatedAt: undefined,
                             registeredName: null
                         };
                         results.unshift(synthetic);

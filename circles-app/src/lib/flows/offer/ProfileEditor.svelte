@@ -1,6 +1,6 @@
 <script lang="ts">
     import {avatarState} from '$lib/stores/avatar.svelte';
-    import type {Profile} from '@circles-sdk/profiles';
+    import type { AppProfile as Profile } from '$lib/profiles';
     import {sanitizeText} from '$lib/utils/isValid';
     import ProfileHeaderEditor from '$lib/flows/offer/ProfileHeaderEditor.svelte';
 

@@ -130,13 +130,25 @@ async function fetchBasketById(basketId: string): Promise<any> {
 
 async function ensureBasketId(buyer: string): Promise<string> {
   const state = get(cartState);
+  const storedId = readBasketId();
+  const candidateId = (state.basket?.basketId ?? storedId) ? String(state.basket?.basketId ?? storedId) : null;
 
-  const existing = state.basket?.basketId ?? readBasketId();
-  const existingStatus = String(state.basket?.status ?? '');
-  const isClosed = existingStatus.toLowerCase() === 'checkedout';
+  if (candidateId) {
+    const haveFreshBasket = String(state.basket?.basketId ?? '') === candidateId;
+    const basket = haveFreshBasket ? state.basket : await fetchBasketById(candidateId).catch(() => null);
 
-  if (existing && !isClosed) {
-    return String(existing);
+    const status = String(basket?.status ?? '').toLowerCase();
+    const isClosed = status === 'checkedout';
+
+    if (basket && !isClosed) {
+      cartState.update((s) => ({ ...s, basket }));
+      writeBasketId(String(basket.basketId));
+      return String(basket.basketId);
+    }
+
+    // Stored basket is invalid/closed; drop it
+    writeBasketId(null);
+    cartState.update((s) => ({ ...s, basket: null }));
   }
 
   const client = getMarketClient();
