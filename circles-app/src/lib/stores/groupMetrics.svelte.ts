@@ -1,5 +1,5 @@
 import { getGroupCollateral, getTreasuryAddress, getVaultAddress } from "$lib/utils/vault";
-import { CirclesRpc } from "@circles-sdk/data";
+import type { CirclesRpc } from "@circles-sdk/data";
 import { uint256ToAddress, type Address } from "@circles-sdk/utils";
 import { formatEther } from "ethers";
 

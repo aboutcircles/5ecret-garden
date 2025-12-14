@@ -1,6 +1,4 @@
 import { writable } from 'svelte/store';
-import ErrorPage from '$lib/pages/Error.svelte';
-import { popupControls } from '$lib/stores/popUp';
 
 export type Task<T> = {
   name: string;
@@ -9,6 +7,22 @@ export type Task<T> = {
 
 export const tasks = writable<Task<any>[]>([]);
 
+async function showErrorPopup(err: Error): Promise<void> {
+  const errorMessage = err.message;
+  const stackTrace = err.stack;
+
+  const [{ popupControls }, { default: ErrorPage }] = await Promise.all([
+    import('$lib/stores/popup'),
+    import('$lib/pages/Error.svelte'),
+  ]);
+
+  popupControls.open({
+    title: 'Error',
+    component: ErrorPage,
+    props: { errorMessage, stackTrace },
+  });
+}
+
 export async function runTask<T>(task: Task<T>): Promise<T> {
   tasks.update((current) => [...current, task]);
 
@@ -16,19 +30,15 @@ export async function runTask<T>(task: Task<T>): Promise<T> {
     return await task.promise;
   } catch (e) {
     console.error(`Task errored: ${task.name}`, e);
+
     if (e instanceof Error) {
-      console.error(`Task errored: ${task.name}`, e);
-      popupControls.open({
-        title: 'Error',
-        component: ErrorPage,
-        props: {
-          errorMessage: e.message,
-          stackTrace: e.stack,
-        },
-      });
-    } else {
-      console.error(`Task errored with unknown error: ${task.name}`, e);
+      try {
+        await showErrorPopup(e);
+      } catch (popupErr) {
+        console.error('Failed to open error popup:', popupErr);
+      }
     }
+
     throw e;
   } finally {
     tasks.update((current) => current.filter((t) => t !== task));

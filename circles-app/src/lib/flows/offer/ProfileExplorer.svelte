@@ -2,7 +2,7 @@
 <!-- lib/flows/profile/ProfileExplorer.svelte -->
 <script lang="ts">
     import {onMount} from 'svelte';
-    import {popupControls} from '$lib/stores/popUp';
+    import { popupControls } from '$lib/stores/popup';
     import {runTask} from '$lib/utils/tasks';
     import {avatarState} from '$lib/stores/avatar.svelte';
 
@@ -172,19 +172,21 @@
 {:else}
     <div class="space-y-4">
 
-        <!-- Profile header: avatar, inline name/location editing, description + image upload -->
-        <ProfileHeaderEditor
-                bind:name={name}
-                bind:description={description}
-                bind:location={location}
-                bind:previewImageUrl={previewImageUrl}
-                bind:imageUrl={imageUrl}
-                {readonly}
-        />
+        <!-- Profile header panel -->
+        <section class="bg-base-100 border border-base-300 rounded-xl p-4 shadow-sm">
+            <ProfileHeaderEditor
+                    bind:name={name}
+                    bind:description={description}
+                    bind:location={location}
+                    bind:previewImageUrl={previewImageUrl}
+                    bind:imageUrl={imageUrl}
+                    {readonly}
+            />
+        </section>
 
         {#if showAdvancedSections}
-            <!-- Namespaces (visible on Settings page) -->
-            <section aria-label="Namespaces" class="space-y-2">
+            <!-- Namespaces panel -->
+            <section aria-label="Namespaces" class="bg-base-100 border border-base-300 rounded-xl p-4 shadow-sm space-y-2">
                 <div class="flex items-center justify-between">
                     <span class="font-semibold text-sm">Namespaces</span>
                     <span class="text-[11px] opacity-60">App or profile sources</span>
@@ -206,8 +208,8 @@
         {/if}
 
         {#if showAdvancedSections}
-        <!-- Signing keys (visible on Settings page, always expanded) -->
-        <section aria-label="Signing keys" class="space-y-2">
+        <!-- Signing keys panel -->
+        <section aria-label="Signing keys" class="bg-base-100 border border-base-300 rounded-xl p-4 shadow-sm space-y-2">
             <div class="flex items-center justify-between py-2">
                 <div class="flex items-center gap-2">
                     <span class="font-semibold text-sm">Signing keys</span>

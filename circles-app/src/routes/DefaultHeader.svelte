@@ -8,7 +8,7 @@
 
   import { page } from '$app/stores';
   import { cartItemCount } from '$lib/cart/store';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
   import CartPanel from '$lib/flows/checkout/CartPanel.svelte';
 
   function openBasket(): void {

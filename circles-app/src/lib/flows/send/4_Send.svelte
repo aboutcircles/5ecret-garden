@@ -6,9 +6,7 @@
   import { roundToDecimals, shortenAddress } from '$lib/utils/shared';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { tokenTypeToString, TransitiveTransferTokenAddress } from '$lib/pages/SelectAsset.svelte';
-  import { popupControls } from '$lib/stores/popUp';
-  import { CirclesConverter } from '@circles-sdk/utils';
-  import { parseEther } from 'ethers';
+  import { popupControls } from '$lib/stores/popup';
 
   interface Props {
     context: SendFlowContext;
@@ -43,8 +41,12 @@
         if (!/^[0-9A-Fa-f]*$/.test(hexString)) {
           throw new Error('Invalid hex string provided');
         }
+        // Ensure even-length hex; pad leading 0 if odd-length
+        if (hexString.length % 2 === 1) {
+          hexString = '0' + hexString;
+        }
         // Convert to Uint8Array
-        const pairs = hexString.match(/.{1,2}/g) ?? [];
+        const pairs = hexString.match(/.{2}/g) ?? [];
         dataUInt8Arr = new Uint8Array(
           pairs.map((byte) => parseInt(byte, 16)),
         );

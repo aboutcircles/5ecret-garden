@@ -18,12 +18,10 @@
   import { canMigrate } from '$lib/guards/canMigrate';
   import UpdateBanner from '$lib/components/UpdateBanner.svelte';
   import { page } from '$app/stores';
-  import Send from '$lib/flows/send/1_To.svelte';
   import { onDestroy, onMount } from 'svelte';
   import { tasks } from '$lib/utils/tasks';
   import { popupControls, popupState } from '$lib/stores/popup';
   import Popup from '$lib/components/Popup.svelte';
-  import ManageGroupMembers from '$lib/flows/manageGroupMembers/1_manageGroupMembers.svelte';
   import { getProfile } from '$lib/utils/profile';
   import { initTransactionHistoryStore } from '$lib/stores/transactionHistory';
   import { initContactStore } from '$lib/stores/contacts';
@@ -32,12 +30,12 @@
   import { PUBLIC_PLAUSIBLE_DOMAIN } from '$env/static/public';
   import { initGroupMetricsStore } from '$lib/stores/groupMetrics.svelte';
   import { circles } from '$lib/stores/circles';
+  import type { Address } from '@circles-sdk/utils';
 
   import { watchAccount } from '@wagmi/core';
   import { config } from '../config';
   import WrongNetwork from '$lib/components/WrongNetwork.svelte';
   import BottomNav from '$lib/components/BottomNav.svelte';
-  import type { Address } from '@circles-sdk/utils';
   import DefaultHeader from './DefaultHeader.svelte';
 
   const unwatch = watchAccount(config, {
@@ -176,26 +174,6 @@
     class={`fixed top-0 left-0 w-full h-full bg-black/50 z-[90] ${$popupState.content ? 'opacity-100' : 'opacity-0 hidden'} transition duration-300 ease-in-out pointer-events-auto`}
     style="touch-action: none;"
     onpointerdown={(e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      popupControls.close();
-    }}
-    onmousedown={(e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      popupControls.close();
-    }}
-    ontouchstart={(e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      popupControls.close();
-    }}
-    ontouchend={(e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      popupControls.close();
-    }}
-    onclick={(e) => {
       e.stopPropagation();
       e.preventDefault();
       popupControls.close();

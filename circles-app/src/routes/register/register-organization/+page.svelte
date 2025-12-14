@@ -10,7 +10,7 @@
     import { ArrowLeft as LArrowLeft } from 'lucide';
     import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
-    import type { Action } from '$lib/components/layout/Action';
+    import type { Action } from '$lib/types/actions';
 
     let profile: Profile = $state({name: '', description: '', previewImageUrl: '', imageUrl: undefined});
 

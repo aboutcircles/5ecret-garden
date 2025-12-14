@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
   import OfferStep3 from './3_PreviewPublish.svelte';
   import type { OfferFlowContext } from './types';
   import { get } from 'svelte/store';

@@ -3,9 +3,9 @@
     import Address from '$lib/components/Address.svelte';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
     import QrCode from '$lib/components/QrCode.svelte';
-    import {popupControls} from '$lib/stores/popUp';
+    import {popupControls} from '$lib/stores/popup';
     import {signer} from '$lib/stores/wallet.svelte';
-    import ProfileExplorer from '$lib/flows/offer/ProfileExplorer.svelte';
+    import ProfileExplorer from '$lib/profile/ProfileExplorer.svelte';
     import {MARKET_API_BASE} from '$lib/config/market';
     import type {Address as EvmAddress} from '@circles-sdk/utils';
 

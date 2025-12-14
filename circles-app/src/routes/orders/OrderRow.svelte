@@ -15,7 +15,7 @@
   // Use a helper and call it inside $derived(...) to avoid rendering a function as text.
   import {formatCurrency} from '$lib/utils/money';
   import {statusLabel} from '$lib/orders/status';
-  import {type PopupContentDefinition, popupControls} from '$lib/stores/popUp';
+  import {type PopupContentDefinition, popupControls} from '$lib/stores/popup';
   import OrderDetailsPopup from '$lib/orders/OrderDetailsPopup.svelte';
 
   const totalDisplay = $derived((() => {

@@ -3,14 +3,14 @@
     import { circles } from '$lib/stores/circles';
     import { wallet } from '$lib/stores/wallet.svelte';
     import type { Profile } from '@circles-sdk/profiles';
-    import ProfileHeaderEditor from '$lib/flows/offer/ProfileHeaderEditor.svelte';
+    import ProfileHeaderEditor from '$lib/profile/ProfileHeaderEditor.svelte';
     import { onMount } from 'svelte';
     import Disclaimer from '$lib/components/Disclaimer.svelte';
     import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
     import { ArrowLeft as LArrowLeft } from 'lucide';
     import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
-    import type { Action } from '$lib/components/layout/Action';
+    import type { Action } from '$lib/types/actions';
 
     let profile: Profile = $state({ name: '', description: '', previewImageUrl: '', imageUrl: undefined });
 

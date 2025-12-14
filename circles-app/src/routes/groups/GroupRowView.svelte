@@ -1,15 +1,15 @@
 <script lang="ts">
     import type { GroupRow } from '@circles-sdk/data';
-    import ProfilePage from '$lib/pages/Profile.svelte';
+    import ProfilePopup from '$lib/pages/ProfilePopup.svelte';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
-    import { popupControls } from '$lib/stores/popUp';
+    import { popupControls } from '$lib/stores/popup';
     import RowFrame from '$lib/ui/RowFrame.svelte';
 
     interface Props { item: GroupRow; }
     let { item }: Props = $props();
 
     function openProfile() {
-        popupControls.open?.({ component: ProfilePage, props: { address: item.group } });
+        popupControls.open?.({ component: ProfilePopup, props: { address: item.group } });
     }
 </script>
 

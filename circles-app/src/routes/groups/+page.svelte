@@ -8,7 +8,7 @@
     import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
     import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
-    import type {Action} from '$lib/components/layout/Action';
+    import type { Action } from '$lib/types/actions';
 
     let groups: Readable<{
         data: EventRow[];

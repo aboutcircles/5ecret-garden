@@ -5,7 +5,7 @@
   import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
   import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
   import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
-  import type { Action } from '$lib/components/layout/Action';
+  import type { Action } from '$lib/types/actions';
   import GenericList from '$lib/components/GenericList.svelte';
 
   import { avatarState } from '$lib/stores/avatar.svelte';

@@ -7,7 +7,7 @@
     validateCart,
   } from '$lib/cart/store';
   import type {AggregatedCatalogItem} from '$lib/market/types';
-  import {popupControls} from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
   import { getMarketClient } from '$lib/sdk/marketClient';
   import { MARKET_OPERATOR } from '$lib/config/market';
   import {pickFirstProductImageUrl} from '$lib/market/imageHelpers';

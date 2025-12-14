@@ -11,8 +11,8 @@
   import { avatarState } from '$lib/stores/avatar.svelte';
   import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
   import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
-  import type { Action } from '$lib/components/layout/Action';
-  import { popupControls } from '$lib/stores/popUp';
+  import type { Action } from '$lib/types/actions';
+  import { popupControls } from '$lib/stores/popup';
   import OrderDetailsPopup from '$lib/orders/OrderDetailsPopup.svelte';
 
   type ListItem = {

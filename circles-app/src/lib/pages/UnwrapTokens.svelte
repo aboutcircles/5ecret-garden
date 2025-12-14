@@ -6,7 +6,7 @@
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import { roundToDecimals } from '$lib/utils/shared';
   import { runTask } from '$lib/utils/tasks';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
 
   interface Props {
     asset: TokenBalanceRow;

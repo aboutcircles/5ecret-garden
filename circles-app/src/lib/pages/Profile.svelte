@@ -15,7 +15,8 @@
     import {getProfile} from '$lib/utils/profile';
     import {formatTrustRelation, getTypeString} from '$lib/utils/helpers';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
-    import {popupControls} from '$lib/stores/popUp';
+    import ProfilePage from '$lib/pages/ProfilePopup.svelte';
+    import {popupControls} from '$lib/stores/popup';
     import AddressComponent from '$lib/components/Address.svelte';
     import {uint256ToAddress, type Address} from '@circles-sdk/utils';
     import SelectAmount from '$lib/flows/send/3_Amount.svelte';
@@ -40,7 +41,7 @@
     import { getMarketClient } from '$lib/sdk/marketClient';
     import { MARKET_OPERATOR } from '$lib/config/market';
     // Namespaces explorer (read-only) for other profiles
-    import ProfileNamespaces from '$lib/flows/offer/ProfileNamespaces.svelte';
+    import ProfileNamespaces from '$lib/profile/ProfileNamespaces.svelte';
     import { loadProfileOrInit } from '@circles-market/sdk';
     import type { ProfilesBindings } from '@circles-market/sdk';
     import { createCirclesSdkProfilesBindings } from '@circles-profile/core';
@@ -501,7 +502,6 @@
                                 noLeading
                                 onclick={async () => {
                             // Open another Profile instance in a popup (same UX as groups/contacts lists)
-                            const ProfilePage = (await import('$lib/pages/Profile.svelte')).default;
                             popupControls.open({ 
                                 title: 'Profile',
                                 component: ProfilePage, 

@@ -1,14 +1,16 @@
 <script lang="ts">
     import Avatar from '$lib/components/avatar/Avatar.svelte';
-    import ProfilePage from '$lib/pages/Profile.svelte';
-    import { popupControls } from '$lib/stores/popUp';
+    import ProfilePopup from '$lib/pages/ProfilePopup.svelte';
+    import { popupControls } from '$lib/stores/popup';
     import RowFrame from '$lib/ui/RowFrame.svelte';
+    import type { Address } from '@circles-sdk/utils';
 
-    interface Props { address?: string; trustRelation?: string; }
-    let { address = '', trustRelation = '' }: Props = $props();
+    interface Props { address?: Address; trustRelation?: string; }
+    let { address, trustRelation = '' }: Props = $props();
 
     function openProfile() {
-        popupControls.open?.({ component: ProfilePage, props: { address } });
+        if (!address) return;
+        popupControls.open?.({ component: ProfilePopup, props: { address } });
     }
 </script>
 
@@ -17,6 +19,6 @@
         <Avatar address={address} view="horizontal" bottomInfo={trustRelation} clickable={true} />
     </div>
     {#snippet trailing()}<div aria-hidden="true">
-        <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" />
+        <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" aria-hidden="true" />
     </div>{/snippet}
 </RowFrame>

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {popupControls} from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
   import OfferStep2 from './2_Pricing.svelte';
   import type {OfferFlowContext, OfferDraft} from './types';
   import ImageUpload from '$lib/components/ImageUpload.svelte';

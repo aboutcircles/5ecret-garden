@@ -2,7 +2,7 @@
     import {avatarState} from '$lib/stores/avatar.svelte';
     import type { AppProfile as Profile } from '$lib/profiles';
     import {sanitizeText} from '$lib/utils/isValid';
-    import ProfileHeaderEditor from '$lib/flows/offer/ProfileHeaderEditor.svelte';
+    import ProfileHeaderEditor from '$lib/profile/ProfileHeaderEditor.svelte';
 
     interface Props {
         profile: Profile;
