@@ -8,7 +8,7 @@
     import {CirclesStorage} from '$lib/utils/storage';
     import type {GroupRow} from '@circles-sdk/data';
     import {settings} from '$lib/stores/settings.svelte';
-    import {popupControls} from '$lib/stores/popUp';
+    import { popupControls } from '$lib/stores/popup';
     import CreateGroup from "$lib/flows/createGroup/1_CreateGroup.svelte";
     import {resetCreateGroupContext} from '$lib/flows/createGroup/context';
 

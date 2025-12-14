@@ -3,13 +3,14 @@
     import Tooltip from '../../components/Tooltip.svelte';
     import ImageUpload from '../../components/ImageUpload.svelte';
     import { isValidName, isValidSymbol } from '$lib/utils/isValid';
-    import { popupControls } from '$lib/stores/popUp';
+    import { popupControls } from '$lib/stores/popup';
     import { wallet } from '$lib/stores/wallet.svelte';
     import Settings from './2_Settings.svelte';
     import {
         createGroupContext,
         type CreateGroupFlowContext
     } from './context';
+    import { resetCreateGroupContext } from './context';
 
     interface Props {
         /** Kept for compatibility; the store is the source of truth. */
@@ -65,7 +66,7 @@
             props: { context: ctx, setGroup },
             onClose: () => {
                 // ensure flow state is cleared when closing at any step
-                import('./context').then(m => m.resetCreateGroupContext());
+                resetCreateGroupContext();
             }
         });
     }

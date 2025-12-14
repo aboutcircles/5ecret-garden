@@ -4,7 +4,7 @@
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import { wallet } from '$lib/stores/wallet.svelte';
   import { runTask } from '$lib/utils/tasks';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
   import type { CreateGatewayFlowContext } from './context';
 
   interface Props {

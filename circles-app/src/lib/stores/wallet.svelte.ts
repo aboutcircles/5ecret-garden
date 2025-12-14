@@ -17,7 +17,7 @@ import {type SdkContractRunner} from '@circles-sdk/adapter';
 import type {Address} from '@circles-sdk/utils';
 import {CirclesStorage} from '$lib/utils/storage';
 import {groupMetrics} from './groupMetrics.svelte';
-import {disconnect, getAccount, getConnectors, reconnect} from '@wagmi/core';
+import { disconnect, getConnectors, reconnect, getAccount } from '@wagmi/core';
 import {config} from '../../config';
 import {settings} from './settings.svelte';
 import type {GroupType} from '@circles-sdk/data';

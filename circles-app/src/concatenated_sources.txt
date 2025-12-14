@@ -75,12 +75,12 @@ export function getAddToCartState(inputs: AddToCartInputs): AddToCartState {
   return { canAdd: true, label: UI_COPY.addToBasket };
 }
 // lib/cart/store.ts
-import { browser } from '$app/environment';
-import { writable, derived, get } from 'svelte/store';
-import { getMarketClient } from '$lib/sdk/marketClient';
-import { MARKET_OPERATOR, GNOSIS_CHAIN_ID_NUM } from '$lib/config/market';
-import type { AggregatedCatalogItem } from '$lib/market/types';
-import { pickFirstProductImageUrl } from '$lib/market/imageHelpers';
+import {browser} from '$app/environment';
+import {writable, derived, get} from 'svelte/store';
+import {getMarketClient} from '$lib/sdk/marketClient';
+import {MARKET_OPERATOR, GNOSIS_CHAIN_ID_NUM} from '$lib/config/market';
+import type {AggregatedCatalogItem} from '$lib/market/types';
+import {pickFirstProductImageUrl} from '$lib/market/imageHelpers';
 
 type CheckoutResult = { orderId: string; paymentReference: string; basketId: string };
 
@@ -152,17 +152,17 @@ function writeBasketId(id: string | null): void {
 }
 
 function setLoading(loading: boolean): void {
-  cartState.update((s) => ({ ...s, loading }));
+  cartState.update((s) => ({...s, loading}));
 }
 
 function setError(err: unknown): void {
   const msg =
     err instanceof Error ? err.message : typeof err === 'string' ? err : 'Unknown error';
-  cartState.update((s) => ({ ...s, lastError: msg }));
+  cartState.update((s) => ({...s, lastError: msg}));
 }
 
 function clearError(): void {
-  cartState.update((s) => ({ ...s, lastError: null }));
+  cartState.update((s) => ({...s, lastError: null}));
 }
 
 function normalizeAddr(a: string): string {
@@ -202,24 +202,29 @@ function toSdkItemsFromBasket(basket: any): { seller: string; sku: string; quant
     const sku = lineSku(it);
     const quantity = lineQty(it);
     if (!seller || !sku) continue;
-    out.push({ seller, sku, quantity, imageUrl: typeof it?.imageUrl === 'string' ? it.imageUrl : undefined });
+    out.push({seller, sku, quantity, imageUrl: typeof it?.imageUrl === 'string' ? it.imageUrl : undefined});
   }
   return out;
 }
 
 async function fetchBasketById(basketId: string): Promise<any> {
   const client = getMarketClient();
+  const token = client.authContext?.getToken?.();
+  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+
   return await client.http.request<any>({
     method: 'GET',
     url: `${client.marketApiBase}/api/cart/v1/baskets/${encodeURIComponent(basketId)}`,
-    headers: {},
+    headers: { ...authHeaders },
   });
 }
 
 async function ensureBasketId(buyer: string): Promise<string> {
   const state = get(cartState);
   const storedId = readBasketId();
-  const candidateId = (state.basket?.basketId ?? storedId) ? String(state.basket?.basketId ?? storedId) : null;
+  const candidateId = (state.basket?.basketId ?? storedId)
+    ? String(state.basket?.basketId ?? storedId)
+    : null;
 
   if (candidateId) {
     const haveFreshBasket = String(state.basket?.basketId ?? '') === candidateId;
@@ -228,13 +233,16 @@ async function ensureBasketId(buyer: string): Promise<string> {
     const status = String(basket?.status ?? '').toLowerCase();
     const isClosed = status === 'checkedout';
 
-    if (basket && !isClosed) {
+    const basketBuyer = typeof basket?.buyer === 'string' ? normalizeAddr(basket.buyer) : null;
+    const buyerMismatch = basketBuyer !== null && basketBuyer !== normalizeAddr(buyer);
+
+    if (basket && !isClosed && !buyerMismatch) {
       cartState.update((s) => ({ ...s, basket }));
       writeBasketId(String(basket.basketId));
       return String(basket.basketId);
     }
 
-    // Stored basket is invalid/closed; drop it
+    // Stored basket is invalid/closed or buyer mismatch; drop it
     writeBasketId(null);
     cartState.update((s) => ({ ...s, basket: null }));
   }
@@ -258,11 +266,11 @@ async function reloadBasketIfPresent(): Promise<void> {
   clearError();
   try {
     const b = await fetchBasketById(id);
-    cartState.update((s) => ({ ...s, basket: b }));
+    cartState.update((s) => ({...s, basket: b}));
   } catch (e) {
     // If the basket is gone/invalid, drop it locally
     writeBasketId(null);
-    cartState.update((s) => ({ ...s, basket: null }));
+    cartState.update((s) => ({...s, basket: null}));
     setError(e);
   } finally {
     setLoading(false);
@@ -312,7 +320,7 @@ export async function patchBasket(basketId: string, patch: BasketPatch): Promise
     const hasType = typeof obj?.['@type'] === 'string' && obj['@type'].length > 0;
     if (hasType) return obj;
 
-    return { '@type': typeName, ...obj };
+    return {'@type': typeName, ...obj};
   }
 
   function normalizeImageUrl(u: unknown): string | undefined {
@@ -325,7 +333,7 @@ export async function patchBasket(basketId: string, patch: BasketPatch): Promise
     return patch.items!
       .map((it) => ({
         seller: normalizeAddr(it.seller),
-        orderedItem: { '@type': 'Product', sku: normalizeSku(it.orderedItem?.sku as any) },
+        orderedItem: {'@type': 'Product', sku: normalizeSku(it.orderedItem?.sku as any)},
         orderQuantity: Number(it.orderQuantity ?? 0),
         imageUrl: normalizeImageUrl(it.imageUrl),
       }))
@@ -359,13 +367,10 @@ export async function patchBasket(basketId: string, patch: BasketPatch): Promise
 
   const needsDirectPatch =
     (hasItemsPatch && (hasDetailsPatch || hasTtlPatch)) ||
-    (hasTtlPatch && !hasItemsPatch) ||
-    (hasDetailsPatch && hasTtlPatch);
+    (hasTtlPatch && !hasItemsPatch);
 
   if (needsDirectPatch) {
     const token = client.authContext?.getToken?.();
-    const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
-
     const body: any = {};
 
     if (hasItemsPatch) {
@@ -380,7 +385,7 @@ export async function patchBasket(basketId: string, patch: BasketPatch): Promise
     return await client.http.request<any>({
       method: 'PATCH',
       url: `${client.marketApiBase}/api/cart/v1/baskets/${encodeURIComponent(basketId)}`,
-      headers: { ...authHeaders },
+      headers: {...token ? {Authorization: `Bearer ${token}`} : {}},
       body,
     });
   }
@@ -398,7 +403,7 @@ export async function patchBasket(basketId: string, patch: BasketPatch): Promise
       }))
       .filter((x) => x.seller && x.sku && x.quantity > 0);
 
-    updated = await client.cart.setItems({ basketId, items });
+    updated = await client.cart.setItems({basketId, items});
   }
 
   if (hasDetailsPatch) {
@@ -427,15 +432,20 @@ async function setItemsForBasket(
     orderQuantity: it.quantity,
     seller: it.seller,
     imageUrl: it.imageUrl,
-    orderedItem: { '@type': 'Product', sku: it.sku },
+    orderedItem: {'@type': 'Product', sku: it.sku},
   }));
 
-  const updated = await patchBasket(basketId, { items: orderItems });
-  cartState.update((s) => ({ ...s, basket: updated }));
+  const updated = await patchBasket(basketId, {items: orderItems});
+  cartState.update((s) => ({...s, basket: updated}));
   return updated;
 }
 
-export async function setItems(items: { seller: string; sku: string; quantity: number; imageUrl?: string }[]): Promise<void> {
+export async function setItems(items: {
+  seller: string;
+  sku: string;
+  quantity: number;
+  imageUrl?: string
+}[]): Promise<void> {
   const state = get(cartState);
 
   const basketId = state.basket?.basketId ?? readBasketId();
@@ -463,7 +473,7 @@ export async function addToCart(product: AggregatedCatalogItem, buyer: string | 
     const baseBasket = haveBasketInState && state.basket ? state.basket : await fetchBasketById(basketId);
 
     if (!haveBasketInState) {
-      cartState.update((s) => ({ ...s, basket: baseBasket }));
+      cartState.update((s) => ({...s, basket: baseBasket}));
     }
 
     const items = toSdkItemsFromBasket(baseBasket);
@@ -488,7 +498,7 @@ export async function addToCart(product: AggregatedCatalogItem, buyer: string | 
         imageUrl: cur.imageUrl ?? img,
       };
     } else {
-      nextItems = items.concat([{ seller, sku, quantity: 1, imageUrl: img }]);
+      nextItems = items.concat([{seller, sku, quantity: 1, imageUrl: img}]);
     }
 
     // setItemsForBasket -> patchBasket -> client.cart.setItems() (PATCH) returns the updated basket.
@@ -532,7 +542,7 @@ export async function setLineQuantityByIdentity(
 
     const nextItems = toSdkItemsFromBasket(basket).map((it) => {
       if (it.seller === seller && it.sku === sku) {
-        return { ...it, quantity };
+        return {...it, quantity};
       }
       return it;
     });
@@ -605,7 +615,7 @@ export async function updateBasketDetails(patch: any): Promise<void> {
       ageProof: age as any,
     });
 
-    cartState.update((s) => ({ ...s, basket: updated }));
+    cartState.update((s) => ({...s, basket: updated}));
   } catch (e) {
     setError(e);
     throw e;
@@ -626,7 +636,7 @@ export async function validateCart(): Promise<any> {
     }
 
     const v = await getMarketClient().cart.validateBasket(basketId);
-    cartState.update((s) => ({ ...s, validation: v }));
+    cartState.update((s) => ({...s, validation: v}));
     return v;
   } catch (e) {
     setError(e);
@@ -648,7 +658,7 @@ export async function previewCartOrder(): Promise<any> {
     }
 
     const p = await getMarketClient().cart.previewOrder(basketId);
-    cartState.update((s) => ({ ...s, orderPreview: p }));
+    cartState.update((s) => ({...s, orderPreview: p}));
     return p;
   } catch (e) {
     setError(e);
@@ -669,11 +679,11 @@ export async function checkoutCart(): Promise<CheckoutResult> {
       throw new Error('No basketId available');
     }
 
-    const res = await getMarketClient().cart.checkoutBasket({ basketId });
+    const res = await getMarketClient().cart.checkoutBasket({basketId});
     cartState.update((s) => ({
       ...s,
       lastCheckout: res,
-      basket: s.basket ? { ...s.basket, status: 'CheckedOut' } : s.basket,
+      basket: s.basket ? {...s.basket, status: 'CheckedOut'} : s.basket,
     }));
     return res;
   } catch (e) {
@@ -716,11 +726,11 @@ export async function upsertLineByIdentity(
     const nextItems =
       idx >= 0
         ? items.map((it, i) =>
-            i === idx
-              ? { ...it, quantity, imageUrl: it.imageUrl ?? img }
-              : it
-          )
-        : items.concat([{ seller, sku, quantity, imageUrl: img }]);
+          i === idx
+            ? {...it, quantity, imageUrl: it.imageUrl ?? img}
+            : it
+        )
+        : items.concat([{seller, sku, quantity, imageUrl: img}]);
 
     await setItemsForBasket(basketId, nextItems);
   } catch (e) {
@@ -741,7 +751,7 @@ export async function upsertLineItem(item: AggregatedCatalogItem, quantity: numb
 
 export function clearCart(): void {
   writeBasketId(null);
-  cartState.set({ ...initialState });
+  cartState.set({...initialState});
 }
 // lib/chain/gnosis.ts
 import { GNOSIS_CHAIN_ID_HEX } from '$lib/config/market';
@@ -822,11 +832,11 @@ export async function ensureGnosisChain(ethereum: WalletProvider): Promise<void>
 </div>
 // lib/components/avatar/Avatar.svelte
 <script lang="ts">
-  import ProfilePage from '$lib/pages/Profile.svelte';
+  import ProfilePage from '$lib/pages/ProfilePopup.svelte';
   import { getProfile } from '$lib/utils/profile';
   import HorizontalAvatarLayout from './HorizontalAvatarLayout.svelte';
   import VerticalAvatarLayout from './VerticalAvatarLayout.svelte';
-  import { popupControls, type PopupContentDefinition } from '$lib/stores/popUp';
+  import { popupControls, type PopupContentDefinition } from '$lib/stores/popup';
   import type { Address } from '@circles-sdk/utils';
   import type { AppProfileCore as Profile } from '$lib/profiles';
   import { fade } from 'svelte/transition';
@@ -1159,11 +1169,11 @@ let { actions = [] as any[] } = $props();
 <script lang="ts">
     import { onMount } from 'svelte';
     import type { Snippet } from 'svelte';
-    import { popupState } from '$lib/stores/popUp';
+    import { popupState } from '$lib/stores/popup';
     import {headerDropdownOpen} from "$lib/stores/headerDropdown";
 
     import { avatarState } from '$lib/stores/avatar.svelte';
-    import { popupControls } from '$lib/stores/popUp';
+    import { popupControls } from '$lib/stores/popup';
     import SettingProfile from "$lib/pages/SettingProfile.svelte";
 
     type Highlight = 'soft' | 'tint';
@@ -1473,7 +1483,7 @@ export { type ActionButton as Action, type ButtonVariant } from '$lib/types/acti
     import MigrateTokens from '$lib/pages/MigrateTokens.svelte';
     import UnwrapTokens from '$lib/pages/UnwrapTokens.svelte';
     import RedeemGroup from '$lib/pages/RedeemGroup.svelte';
-    import { popupControls } from '$lib/stores/popUp';
+    import { popupControls } from '$lib/stores/popup';
     import type { TokenBalanceRow } from '@circles-sdk/data';
 
     interface Props { item: TokenBalanceRow; }
@@ -1613,7 +1623,7 @@ export { type ActionButton as Action, type ButtonVariant } from '$lib/types/acti
 // lib/components/BottomNav.svelte
 <script lang="ts">
     import { page } from '$app/stores';
-    import { popupState } from '$lib/stores/popUp';
+    import { popupState } from '$lib/stores/popup';
     import { headerDropdownOpen } from '../stores/headerDropdown';
     import Lucide from '$lib/icons/Lucide.svelte';
     import { Home as LHome, Users as LUsers, Layers as LLayers, Settings as LSettings, Circle as LCircle } from 'lucide';
@@ -1725,7 +1735,7 @@ export { type ActionButton as Action, type ButtonVariant } from '$lib/types/acti
     import {CirclesStorage} from '$lib/utils/storage';
     import type {GroupRow} from '@circles-sdk/data';
     import {settings} from '$lib/stores/settings.svelte';
-    import {popupControls} from '$lib/stores/popUp';
+    import { popupControls } from '$lib/stores/popup';
     import CreateGroup from "$lib/flows/createGroup/1_CreateGroup.svelte";
     import {resetCreateGroupContext} from '$lib/flows/createGroup/context';
 
@@ -2501,110 +2511,14 @@ export { type ActionButton as Action, type ButtonVariant } from '$lib/types/acti
   {/if}
 </div>
 // lib/components/PopUp.svelte
-<!-- src/lib/components/PopUp.svelte -->
+<!-- src/lib/components/PopUp.svelte (compat wrapper) -->
 <script lang="ts">
-    import { popupControls, popupState } from '$lib/stores/popUp';
-    import Lucide from '$lib/icons/Lucide.svelte';
-    import { ArrowLeft as LArrowLeft, X as LX } from 'lucide';
-
-    function handleKeydown(e: KeyboardEvent) {
-        if (e.key === 'Escape' && $popupState.content) popupControls.close();
-    }
-
-    function onClose() {
-        if ($popupState.stack.length > 0) popupControls.back();
-        else popupControls.close();
-    }
-
-    // Keep *all* pages mounted: stack + current
-    let pages = $derived([
-        ...($popupState.stack ?? []),
-        ...($popupState.content ? [$popupState.content] : [])
-    ]);
-
-    let top = $derived(Math.max(0, pages.length - 1));
-
-    // Guarantee keys are unique and stable per page object
-    const _ids = new WeakMap<any, string>();
-    let _seq = 0;
-    function keyFor(page: any): string {
-        if (page?.key != null) return String(page.key);
-        if (page?.id != null) return String(page.id);
-        const got = _ids.get(page);
-        if (got) return got;
-        const id = `pg-auto-${++_seq}`;
-        _ids.set(page, id);
-        return id;
-    }
+    // Compatibility wrapper to ensure a single popup implementation.
+    // Delegate to the canonical Popup.svelte component.
+    import Popup from './Popup.svelte';
 </script>
 
-<svelte:window onkeydown={handleKeydown} />
-
-<div
-        class="popup rounded-t-lg overflow-y-auto"
-        class:open={$popupState.content !== null}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="popup-title"
->
-    <div class="w-full max-w-4xl mx-auto p-6">
-        <!-- Header -->
-        <div class="flex items-center gap-3 mb-4">
-            <button
-                    class="btn btn-ghost btn-circle btn-sm"
-                    onclick={onClose}
-                    aria-label={$popupState.stack.length > 0 ? 'Back' : 'Close'}
-                    title={$popupState.stack.length > 0 ? 'Back' : 'Close'}
-            >
-                <Lucide
-                        icon={$popupState.stack.length > 0 ? LArrowLeft : LX}
-                        size={16}
-                        class="shrink-0 stroke-black"
-                        ariaLabel=""
-                />
-            </button>
-
-            {#if $popupState.content?.title}
-                <h2 id="popup-title" class="text-xl font-bold">
-                    {$popupState.content.title}
-                </h2>
-            {/if}
-        </div>
-
-        <!-- Content: render the whole stack; only top is visible -->
-        <div class="content w-full relative">
-            {#each pages as page, i (keyFor(page))}
-                {@const Component = page.component}
-                <div
-                        class={`popup-page ${i === top ? 'is-top' : 'is-hidden'}`}
-                        aria-hidden={i === top ? 'false' : 'true'}
-                        inert={i !== top}
-                >
-                    <Component {...page.props} />
-                </div>
-            {/each}
-        </div>
-    </div>
-</div>
-
-<style>
-    .popup {
-        position: fixed;
-        bottom: 0; left: 0; width: 100%;
-        max-height: 80%; min-height: 80%;
-        display: flex; flex-direction: column; align-items: center;
-        background: white;
-        transition: transform .3s ease, opacity .3s ease;
-        transform: translateY(100%); opacity: 0;
-        z-index: 100;
-    }
-    .popup.open { transform: translateY(0); opacity: 1; }
-
-    /* Keep instances mounted; hide non-top pages */
-    .popup-page { position: relative; }
-    .popup-page.is-hidden { display: none; }
-    .popup-page.is-top { display: block; }
-</style>
+<Popup />
 // lib/components/ProductCard.svelte
 <script lang="ts">
   import type {AggregatedCatalogItem} from '$lib/market/types';
@@ -2626,7 +2540,7 @@ export { type ActionButton as Action, type ButtonVariant } from '$lib/types/acti
   import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
   import {getProduct, getFirstOffer, isProductOwnedBy} from '$lib/market/catalogHelpers';
   import {productAndOfferToDraft} from '$lib/utils/offer';
-  import {popupControls, type PopupContentDefinition} from '$lib/stores/popUp';
+  import {popupControls, type PopupContentDefinition} from '$lib/stores/popup';
   import ProductDetailsPopup from '$lib/market/ProductDetailsPopup.svelte';
   import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
 
@@ -3238,16 +3152,34 @@ export { type ActionButton as Action, type ButtonVariant } from '$lib/types/acti
 </div>
 // lib/components/SelectWallet.svelte
 <script lang="ts">
-  import { getConnectors } from '@wagmi/core';
+  import { getConnectors, connect } from '@wagmi/core';
   import { config } from '../../config';
-  import { connect } from '@wagmi/core';
   import { goto } from '$app/navigation';
-  import { popupControls } from '$lib/stores/popUp';
-  import { signer } from '$lib/stores/wallet.svelte';
+  import { popupControls } from '$lib/stores/popup';
+  import { signer, clearSession } from '$lib/stores/wallet.svelte';
   import type { Address } from '@circles-sdk/utils';
   import ImportCircles from './ImportCircles.svelte';
-  import { clearSession } from '$lib/stores/wallet.svelte';
   const connectors = getConnectors(config);
+
+  async function handleConnect(connector: ReturnType<typeof getConnectors>[number]) {
+    try {
+      await clearSession();
+      const result = await connect(config, { connector, chainId: 100 });
+      localStorage.setItem('connectorId', connector.id);
+      // Safely set signer address only if an account is returned
+      const addr0 = (result as any)?.accounts?.[0];
+      if (typeof addr0 === 'string' && addr0) {
+        signer.address = addr0.toLowerCase() as Address;
+      } else {
+        console.warn('No account returned by connector', connector?.id, result);
+      }
+      popupControls.close();
+      goto('/connect-wallet/connect-safe/');
+    } catch (e) {
+      console.error('Wallet connect failed', e);
+      // keep popup open so user can retry
+    }
+  }
 </script>
 
 <div class="list max-w-md mx-auto">
@@ -3255,14 +3187,7 @@ export { type ActionButton as Action, type ButtonVariant } from '$lib/types/acti
     <button
       class="list-row flex w-full justify-between items-center btn btn-sm my-2"
       id={connector.id}
-      onclick={async () => {
-        await clearSession();
-        const result = await connect(config, { connector: connector, chainId: 100 });
-        localStorage.setItem('connectorId', connector.id);
-        signer.address = result.accounts[0].toLowerCase() as Address;
-        popupControls.close();
-        goto('/connect-wallet/connect-safe/');
-      }}
+      onclick={() => handleConnect(connector)}
     >
       {connector.name}
     </button>
@@ -3302,8 +3227,8 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
   import { circles } from '$lib/stores/circles';
   import { runTask } from '$lib/utils/tasks';
 
-  import TrustRowView from '../../../routes/gateway/TrustRow.svelte';
-  import type { TrustRow } from '../../../routes/gateway/types';
+  import TrustRowView from '$lib/gateway/TrustRow.svelte';
+  import type { TrustRow } from '$lib/gateway/types';
 
   interface Props {
     gateway: string;
@@ -3600,7 +3525,7 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
   import { ethers } from 'ethers';
 
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
   import type { CreateGatewayFlowContext } from './context';
   import ConfirmCreateGateway from './ConfirmCreateGateway.svelte';
 
@@ -3693,7 +3618,7 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import { wallet } from '$lib/stores/wallet.svelte';
   import { runTask } from '$lib/utils/tasks';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
   import type { CreateGatewayFlowContext } from './context';
 
   interface Props {
@@ -3842,7 +3767,7 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
   import Untrust from '$lib/pages/Untrust.svelte';
   import type { AddContactFlowContext } from '$lib/flows/addContact/context';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
 
   interface Props {
     context: AddContactFlowContext;
@@ -3876,7 +3801,7 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
   import Invite from '$lib/pages/Invite.svelte';
   import Trust from '$lib/pages/Trust.svelte';
   import { contacts } from '$lib/stores/contacts';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
   import YouAlreadyTrust from './2_YouAlreadyTrust.svelte';
   import type { AddContactFlowContext } from './context';
   import type { Address } from '@circles-sdk/utils';
@@ -3944,7 +3869,7 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
   import { getMarketClient } from '$lib/sdk/marketClient';
   import { MARKET_OPERATOR } from '$lib/config/market';
   import { resolvePayTo } from '$lib/market/catalogHelpers';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
   import SendFlow from '$lib/flows/send/4_Send.svelte';
   import { transitiveTransfer } from '$lib/pages/SelectAsset.svelte';
   import type { SendFlowContext } from '$lib/flows/send/context';
@@ -4241,7 +4166,7 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
     validateCart,
     previewCartOrder
   } from '$lib/cart/store';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
   import CheckoutReview from './CheckoutReview.svelte';
 
   // This component shows only the address/details step.
@@ -4721,7 +4646,7 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
     validateCart,
   } from '$lib/cart/store';
   import type {AggregatedCatalogItem} from '$lib/market/types';
-  import {popupControls} from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
   import { getMarketClient } from '$lib/sdk/marketClient';
   import { MARKET_OPERATOR } from '$lib/config/market';
   import {pickFirstProductImageUrl} from '$lib/market/imageHelpers';
@@ -5020,7 +4945,7 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
 <script lang="ts">
     import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
     import { cartState, checkoutCart } from '$lib/cart/store';
-    import { popupControls } from '$lib/stores/popUp';
+    import { popupControls } from '$lib/stores/popup';
     import CheckoutPayment from './CheckoutPayment.svelte';
     import { getMarketClient } from '$lib/sdk/marketClient';
     import { MARKET_OPERATOR } from '$lib/config/market';
@@ -5411,8 +5336,8 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import SearchAvatar from '$lib/pages/SearchAvatar.svelte';
   import Invite from '$lib/pages/Invite.svelte';
-  import { popupControls } from '$lib/stores/popUp';
-  import type { AddContactFlowContext } from './context';
+  import { popupControls } from '$lib/stores/popup';
+  import type { ManageGroupMembersFlowContext } from './context';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import Papa from 'papaparse';
   import { avatarState } from '$lib/stores/avatar.svelte';
@@ -5422,7 +5347,7 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
   import Lucide from '$lib/icons/Lucide.svelte';
   import { X } from 'lucide';
 
-  let context: AddContactFlowContext = $state({
+  let context: ManageGroupMembersFlowContext = $state({
     selectedAddress: '',
   });
 
@@ -5619,7 +5544,7 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { runTask } from '$lib/utils/tasks';
   import { removeProfileFromCache } from '$lib/utils/profile';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
 
   interface Props {
     context: MigrateToV2Context;
@@ -5637,18 +5562,19 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
       throw new Error('Profile not initialized');
     }
 
-    runTask({
+    await runTask({
       name: `Migrating your Avatar ...`,
       promise: $circles.migrateAvatar(
         context.inviter ?? '0x0000000000000000000000000000000000000000',
         avatarState.avatar.address,
         context.profile
       ),
-    }).then(async () => {
-      removeProfileFromCache(avatarState.avatar!.address);
-      avatarState.avatar!.avatarInfo!.version = 2;
-      avatarState.avatar!.avatarInfo!.v1Stopped = true;
     });
+
+    // On success, refresh local cache/state
+    removeProfileFromCache(avatarState.avatar!.address);
+    avatarState.avatar!.avatarInfo!.version = 2;
+    avatarState.avatar!.avatarInfo!.v1Stopped = true;
 
     popupControls.close();
   }
@@ -5679,7 +5605,7 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
   import { circles } from '$lib/stores/circles';
   import type { AvatarRow } from '@circles-sdk/data';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
   import type { Profile } from '@circles-sdk/profiles';
   import { settings } from '$lib/stores/settings.svelte';
 
@@ -5775,7 +5701,7 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
   import { contacts } from '$lib/stores/contacts';
   import { formatTrustRelation } from '$lib/utils/helpers';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
   import Lucide from '$lib/icons/Lucide.svelte';
   import {ArrowLeft, ArrowLeftRight, ArrowRight} from 'lucide';
 
@@ -5891,7 +5817,7 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
 // lib/flows/migrateToV2/2_CreateProfile.svelte
 <script lang="ts">
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
-  import ProfileHeaderEditor from '$lib/flows/offer/ProfileHeaderEditor.svelte';
+  import ProfileHeaderEditor from '$lib/profile/ProfileHeaderEditor.svelte';
   import type { MigrateToV2Context } from '$lib/flows/migrateToV2/context';
   import MigrateContacts from './3_MigrateContacts.svelte';
   import { onMount } from 'svelte';
@@ -5901,7 +5827,7 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
     getProfile,
     profilesEqual,
   } from '$lib/utils/profile';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
   import type { Profile } from '@circles-sdk/profiles';
 
   interface Props {
@@ -5964,6 +5890,8 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
     return errors;
   };
 
+  import { parseDataUrlToBytes } from '$lib/media/imageTools';
+
   const validateImage = async (dataUrl: string): Promise<boolean> => {
     const dataUrlPattern = /^data:image\/(png|jpeg|jpg|gif|svg\+xml);base64,/;
     if (!dataUrlPattern.test(dataUrl)) {
@@ -5971,14 +5899,17 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
       return false;
     }
 
-    const base64Data = dataUrl.replace(dataUrlPattern, '');
-    const buffer = Buffer.from(base64Data, 'base64');
-    if (buffer.length > config.maxImageSizeKB * 1024) {
-      console.error('Image size exceeds limit');
+    try {
+      const { bytes } = parseDataUrlToBytes(dataUrl);
+      if (bytes.length > config.maxImageSizeKB * 1024) {
+        console.error('Image size exceeds limit');
+        return false;
+      }
+      return true;
+    } catch (e) {
+      console.error('Failed to parse image data URL', e);
       return false;
     }
-
-    return true;
   };
 
   async function next() {
@@ -6041,7 +5972,7 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
     import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
     import Tooltip from '../../components/Tooltip.svelte';
     import { ethers } from 'ethers';
-    import { popupControls } from '$lib/stores/popUp';
+    import { popupControls } from '$lib/stores/popup';
     import Review from './3_Review.svelte';
     import { wallet } from '$lib/stores/wallet.svelte';
     import {
@@ -6203,7 +6134,7 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
 // lib/flows/createGroup/3_Review.svelte
 <script lang="ts">
     import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
-    import { popupControls } from '$lib/stores/popUp';
+    import { popupControls } from '$lib/stores/popup';
     import CreateStep from './4_Create.svelte';
     import {
         createGroupContext,
@@ -6294,7 +6225,7 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
     import { circles } from '$lib/stores/circles';
     import { wallet } from '$lib/stores/wallet.svelte';
     import { runTask } from '$lib/utils/tasks';
-    import { popupControls } from '$lib/stores/popUp';
+    import { popupControls } from '$lib/stores/popup';
     import { cidV0ToUint8Array } from '@circles-sdk/utils';
     import { isValidName, isValidSymbol } from '$lib/utils/isValid';
     import {
@@ -6424,7 +6355,7 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
     import Tooltip from '../../components/Tooltip.svelte';
     import ImageUpload from '../../components/ImageUpload.svelte';
     import { isValidName, isValidSymbol } from '$lib/utils/isValid';
-    import { popupControls } from '$lib/stores/popUp';
+    import { popupControls } from '$lib/stores/popup';
     import { wallet } from '$lib/stores/wallet.svelte';
     import Settings from './2_Settings.svelte';
     import {
@@ -6561,7 +6492,7 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
 </FlowDecoration>
 // lib/flows/offer/2_Pricing.svelte
 <script lang="ts">
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
   import OfferStep3 from './3_PreviewPublish.svelte';
   import type { OfferFlowContext } from './types';
   import { get } from 'svelte/store';
@@ -7252,7 +7183,7 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
 // lib/flows/offer/3_PreviewPublish.svelte
 <script lang="ts">
   import { get } from 'svelte/store';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
   import { runTask } from '$lib/utils/tasks';
   import { wallet } from '$lib/stores/wallet.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
@@ -7510,7 +7441,7 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
 <!-- lib/flows/profile/ProfileExplorer.svelte -->
 <script lang="ts">
     import {onMount} from 'svelte';
-    import {popupControls} from '$lib/stores/popUp';
+    import { popupControls } from '$lib/stores/popup';
     import {runTask} from '$lib/utils/tasks';
     import {avatarState} from '$lib/stores/avatar.svelte';
 
@@ -7680,19 +7611,21 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
 {:else}
     <div class="space-y-4">
 
-        <!-- Profile header: avatar, inline name/location editing, description + image upload -->
-        <ProfileHeaderEditor
-                bind:name={name}
-                bind:description={description}
-                bind:location={location}
-                bind:previewImageUrl={previewImageUrl}
-                bind:imageUrl={imageUrl}
-                {readonly}
-        />
+        <!-- Profile header panel -->
+        <section class="bg-base-100 border border-base-300 rounded-xl p-4 shadow-sm">
+            <ProfileHeaderEditor
+                    bind:name={name}
+                    bind:description={description}
+                    bind:location={location}
+                    bind:previewImageUrl={previewImageUrl}
+                    bind:imageUrl={imageUrl}
+                    {readonly}
+            />
+        </section>
 
         {#if showAdvancedSections}
-            <!-- Namespaces (visible on Settings page) -->
-            <section aria-label="Namespaces" class="space-y-2">
+            <!-- Namespaces panel -->
+            <section aria-label="Namespaces" class="bg-base-100 border border-base-300 rounded-xl p-4 shadow-sm space-y-2">
                 <div class="flex items-center justify-between">
                     <span class="font-semibold text-sm">Namespaces</span>
                     <span class="text-[11px] opacity-60">App or profile sources</span>
@@ -7714,8 +7647,8 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
         {/if}
 
         {#if showAdvancedSections}
-        <!-- Signing keys (visible on Settings page, always expanded) -->
-        <section aria-label="Signing keys" class="space-y-2">
+        <!-- Signing keys panel -->
+        <section aria-label="Signing keys" class="bg-base-100 border border-base-300 rounded-xl p-4 shadow-sm space-y-2">
             <div class="flex items-center justify-between py-2">
                 <div class="flex items-center gap-2">
                     <span class="font-semibold text-sm">Signing keys</span>
@@ -7829,7 +7762,7 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
     import {avatarState} from '$lib/stores/avatar.svelte';
     import type { AppProfile as Profile } from '$lib/profiles';
     import {sanitizeText} from '$lib/utils/isValid';
-    import ProfileHeaderEditor from '$lib/flows/offer/ProfileHeaderEditor.svelte';
+    import ProfileHeaderEditor from '$lib/profile/ProfileHeaderEditor.svelte';
 
     interface Props {
         profile: Profile;
@@ -7883,7 +7816,7 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
 </div>
 // lib/flows/offer/1_Product.svelte
 <script lang="ts">
-  import {popupControls} from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
   import OfferStep2 from './2_Pricing.svelte';
   import type {OfferFlowContext, OfferDraft} from './types';
   import ImageUpload from '$lib/components/ImageUpload.svelte';
@@ -8568,7 +8501,7 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
 {/snippet}
 // lib/flows/offer/AddSigningKey.svelte
 <script lang="ts">
-    import { popupControls } from '$lib/stores/popUp';
+    import { popupControls } from '$lib/stores/popup';
     import { runTask } from '$lib/utils/tasks';
     import { loadProfileOrInit, rebaseAndSaveProfile } from '@circles-market/sdk';
     import type { ProfilesBindings } from '@circles-market/sdk';
@@ -8590,6 +8523,8 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
     let fingerprint = $state<string | null>(null);
     let error = $state<string | null>(null);
     let saving = $state(false);
+    let showPrivate = $state(false);
+    let copied = $state<null | 'private' | 'public' | 'fingerprint'>(null);
 
     function getBindings(): ProfilesBindings {
         return getProfilesBindings({ pinApiBase }).bindings;
@@ -8608,6 +8543,8 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
             privateKey = privHex;
             publicKey = pubHex;
             fingerprint = fp;
+            showPrivate = false; // default to hidden
+            copied = null;
         } catch (e: any) {
             error = String(e?.message ?? e);
         }
@@ -8661,11 +8598,31 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
             })()
         });
         saving = false;
+        // Clear sensitive data from state before closing
+        privateKey = null;
+        fingerprint = null;
+        showPrivate = false;
+        copied = null;
         popupControls.close();
     }
 
     function onCancel() {
+        // Clear sensitive data before leaving
+        privateKey = null;
+        fingerprint = null;
+        showPrivate = false;
+        copied = null;
         popupControls.back?.() ?? popupControls.close();
+    }
+
+    async function copyToClipboard(text: string, what: 'private' | 'public' | 'fingerprint') {
+        try {
+            await navigator.clipboard.writeText(text);
+            copied = what;
+            setTimeout(() => { if (copied === what) copied = null; }, 1500);
+        } catch (e) {
+            console.error('Clipboard copy failed', e);
+        }
     }
 </script>
 
@@ -8685,19 +8642,46 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
         </div>
 
         {#if privateKey}
-            <div class="mt-1 text-[11px] opacity-70">Private key (keep secret):</div>
-            <code class="break-all text-[11px] block">{privateKey}</code>
+            <div class="mt-1 text-[11px] opacity-70 flex items-center justify-between">
+                <span>Private key (keep secret)</span>
+                <label class="flex items-center gap-2 text-[11px]">
+                    <input type="checkbox" class="toggle toggle-xs" bind:checked={showPrivate}>
+                    <span>Show private key</span>
+                </label>
+            </div>
+            <div class="flex items-center gap-2">
+                {#if showPrivate}
+                    <code class="break-all text-[11px] block flex-1">{privateKey}</code>
+                {:else}
+                    <code class="break-all text-[11px] block flex-1 select-none">••••••••••••••••••••••••••••••••••••••</code>
+                {/if}
+                <button class="btn btn-xs" title="Copy private key" onclick={() => copyToClipboard(privateKey || '', 'private')}>
+                    {copied === 'private' ? 'Copied' : 'Copy'}
+                </button>
+            </div>
         {/if}
 
         {#if fingerprint}
-            <div class="mt-1 text-[11px] opacity-70">Fingerprint:</div>
+            <div class="mt-1 text-[11px] opacity-70 flex items-center justify-between">
+                <span>Fingerprint</span>
+                <button class="btn btn-ghost btn-xs" onclick={() => copyToClipboard(fingerprint || '', 'fingerprint')}>
+                    {copied === 'fingerprint' ? 'Copied' : 'Copy'}
+                </button>
+            </div>
             <code class="break-all text-[11px] block">{fingerprint}</code>
         {/if}
     </div>
 
     <label class="form-control">
         <span class="label-text text-xs">Public key (uncompressed 0x04…)</span>
-        <input class="input input-sm input-bordered font-mono" bind:value={publicKey} placeholder="0x04…" />
+        <div class="flex items-center gap-2">
+            <input class="input input-sm input-bordered font-mono flex-1" bind:value={publicKey} placeholder="0x04…" />
+            {#if publicKey.trim()}
+                <button class="btn btn-ghost btn-xs" onclick={() => copyToClipboard(publicKey.trim(), 'public')}>
+                    {copied === 'public' ? 'Copied' : 'Copy'}
+                </button>
+            {/if}
+        </div>
     </label>
 
     <div class="flex justify-end gap-2 pt-2">
@@ -8714,7 +8698,7 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
   import { onMount } from 'svelte';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import { circlesBalances } from '$lib/stores/circlesBalances';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
   interface Props {
     context: SendFlowContext;
   }
@@ -8754,9 +8738,7 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
   import { roundToDecimals, shortenAddress } from '$lib/utils/shared';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { tokenTypeToString, TransitiveTransferTokenAddress } from '$lib/pages/SelectAsset.svelte';
-  import { popupControls } from '$lib/stores/popUp';
-  import { CirclesConverter } from '@circles-sdk/utils';
-  import { parseEther } from 'ethers';
+  import { popupControls } from '$lib/stores/popup';
 
   interface Props {
     context: SendFlowContext;
@@ -8791,8 +8773,12 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
         if (!/^[0-9A-Fa-f]*$/.test(hexString)) {
           throw new Error('Invalid hex string provided');
         }
+        // Ensure even-length hex; pad leading 0 if odd-length
+        if (hexString.length % 2 === 1) {
+          hexString = '0' + hexString;
+        }
         // Convert to Uint8Array
-        const pairs = hexString.match(/.{1,2}/g) ?? [];
+        const pairs = hexString.match(/.{2}/g) ?? [];
         dataUInt8Arr = new Uint8Array(
           pairs.map((byte) => parseInt(byte, 16)),
         );
@@ -8843,7 +8829,7 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { circles } from '$lib/stores/circles';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import SearchAvatar from '$lib/pages/SearchAvatar.svelte';
   import type { Address } from '@circles-sdk/utils';
@@ -8905,7 +8891,7 @@ export const GNOSIS_CHAIN_ID_HEX = '0x64';
     import { writable } from 'svelte/store';
     import type { MaxFlowResponse } from '@circles-sdk/sdk';
     import { ethers } from 'ethers';
-    import { popupControls } from '$lib/stores/popUp';
+    import { popupControls } from '$lib/stores/popup';
     import { CirclesConverter } from '@circles-sdk/utils';
 
     interface Props {
@@ -9161,7 +9147,7 @@ export type AddContactFlowContext = {
 // lib/flows/manageGroupMembers/context.ts
 import type { Address } from "@circles-sdk/utils";
 
-export type AddContactFlowContext = {
+export type ManageGroupMembersFlowContext = {
   selectedAddress: Address;
 };
 // lib/flows/migrateToV2/context.ts
@@ -10589,7 +10575,7 @@ export function getProfilesBindings(params?: {
   import { getProduct, pickProductImageUrl } from '$lib/market/catalogHelpers';
   import { getMarketClient } from '$lib/sdk/marketClient';
   import { MARKET_OPERATOR } from '$lib/config/market';
-  import { popupControls, type PopupContentDefinition } from '$lib/stores/popUp';
+  import { popupControls, type PopupContentDefinition } from '$lib/stores/popup';
   import ProductDetailsPopup from '$lib/market/ProductDetailsPopup.svelte';
 
   interface Props {
@@ -11209,7 +11195,7 @@ export type OrderStatusChange = import('@circles-market/sdk').OrderStatusHistory
     import {getProfile} from '$lib/utils/profile';
     import {formatTrustRelation, getTypeString} from '$lib/utils/helpers';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
-    import {popupControls} from '$lib/stores/popUp';
+    import {popupControls} from '$lib/stores/popup';
     import AddressComponent from '$lib/components/Address.svelte';
     import {uint256ToAddress, type Address} from '@circles-sdk/utils';
     import SelectAmount from '$lib/flows/send/3_Amount.svelte';
@@ -11234,7 +11220,7 @@ export type OrderStatusChange = import('@circles-market/sdk').OrderStatusHistory
     import { getMarketClient } from '$lib/sdk/marketClient';
     import { MARKET_OPERATOR } from '$lib/config/market';
     // Namespaces explorer (read-only) for other profiles
-    import ProfileNamespaces from '$lib/flows/offer/ProfileNamespaces.svelte';
+    import ProfileNamespaces from '$lib/profile/ProfileNamespaces.svelte';
     import { loadProfileOrInit } from '@circles-market/sdk';
     import type { ProfilesBindings } from '@circles-market/sdk';
     import { createCirclesSdkProfilesBindings } from '@circles-profile/core';
@@ -11695,7 +11681,7 @@ export type OrderStatusChange = import('@circles-market/sdk').OrderStatusHistory
                                 noLeading
                                 onclick={async () => {
                             // Open another Profile instance in a popup (same UX as groups/contacts lists)
-                            const ProfilePage = (await import('$lib/pages/Profile.svelte')).default;
+                            const ProfilePage = (await import('$lib/pages/ProfilePopup.svelte')).default;
                             popupControls.open({ 
                                 title: 'Profile',
                                 component: ProfilePage, 
@@ -12171,9 +12157,9 @@ export type OrderStatusChange = import('@circles-market/sdk').OrderStatusHistory
     import Address from '$lib/components/Address.svelte';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
     import QrCode from '$lib/components/QrCode.svelte';
-    import {popupControls} from '$lib/stores/popUp';
+    import {popupControls} from '$lib/stores/popup';
     import {signer} from '$lib/stores/wallet.svelte';
-    import ProfileExplorer from '$lib/flows/offer/ProfileExplorer.svelte';
+    import ProfileExplorer from '$lib/profile/ProfileExplorer.svelte';
     import {MARKET_API_BASE} from '$lib/config/market';
     import type {Address as EvmAddress} from '@circles-sdk/utils';
 
@@ -13038,6 +13024,8 @@ export interface ActionButton {
   variant?: ButtonVariant;
   disabled?: boolean;
 }
+// lib/types/actions.ts
+export type { ActionButton as Action, ButtonVariant } from '$lib/types/action-buttons';
 // lib/types/papaparse.d.ts
 declare module 'papaparse' {
   const Papa: any;
@@ -13451,8 +13439,6 @@ export function ipfsGatewayUrl(cid: string): string {
 }
 // lib/utils/tasks.ts
 import { writable } from 'svelte/store';
-import ErrorPage from '$lib/pages/Error.svelte';
-import { popupControls } from '$lib/stores/popUp';
 
 export type Task<T> = {
   name: string;
@@ -13461,6 +13447,22 @@ export type Task<T> = {
 
 export const tasks = writable<Task<any>[]>([]);
 
+async function showErrorPopup(err: Error): Promise<void> {
+  const errorMessage = err.message;
+  const stackTrace = err.stack;
+
+  const [{ popupControls }, { default: ErrorPage }] = await Promise.all([
+    import('$lib/stores/popup'),
+    import('$lib/pages/Error.svelte'),
+  ]);
+
+  popupControls.open({
+    title: 'Error',
+    component: ErrorPage,
+    props: { errorMessage, stackTrace },
+  });
+}
+
 export async function runTask<T>(task: Task<T>): Promise<T> {
   tasks.update((current) => [...current, task]);
 
@@ -13468,19 +13470,15 @@ export async function runTask<T>(task: Task<T>): Promise<T> {
     return await task.promise;
   } catch (e) {
     console.error(`Task errored: ${task.name}`, e);
+
     if (e instanceof Error) {
-      console.error(`Task errored: ${task.name}`, e);
-      popupControls.open({
-        title: 'Error',
-        component: ErrorPage,
-        props: {
-          errorMessage: e.message,
-          stackTrace: e.stack,
-        },
-      });
-    } else {
-      console.error(`Task errored with unknown error: ${task.name}`, e);
+      try {
+        await showErrorPopup(e);
+      } catch (popupErr) {
+        console.error('Failed to open error popup:', popupErr);
+      }
     }
+
     throw e;
   } finally {
     tasks.update((current) => current.filter((t) => t !== task));
@@ -14196,17 +14194,17 @@ export function formatCurrency(amount: number | null | undefined, code: string |
   import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
   import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
   import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
-  import type { Action } from '$lib/components/layout/Action';
+  import type { Action } from '$lib/types/actions';
   import GenericList from '$lib/components/GenericList.svelte';
 
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { circles } from '$lib/stores/circles';
   import { shortenAddress } from '$lib/utils/shared';
   import type { Address } from '@circles-sdk/utils';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
 
-  import GatewayRowView from './GatewayRow.svelte';
-  import type { GatewayRow } from './types';
+  import GatewayRowView from '$lib/gateway/GatewayRow.svelte';
+  import type { GatewayRow } from '$lib/gateway/types';
   import CreateGatewayProfile from '$lib/flows/paymentGateway/CreateGatewayProfile.svelte';
 
   type GatewayListStore = {
@@ -14412,87 +14410,6 @@ export function formatCurrency(amount: number | null | undefined, code: string |
     {/if}
   </section>
 </PageScaffold>
-// routes/gateway/GatewayRow.svelte
-<script lang="ts">
-  import RowFrame from '$lib/ui/RowFrame.svelte';
-  import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import type { GatewayRow as GatewayRowType } from './types';
-  import { popupControls } from '$lib/stores/popUp';
-  import ManageTrust from '$lib/flows/paymentGateway/ManageTrust.svelte';
-
-  interface Props {
-    item: GatewayRowType;
-  }
-
-  let { item }: Props = $props();
-
-  const createdAt = $derived.by(() =>
-    item.timestamp ? new Date(Number(item.timestamp) * 1000).toLocaleString() : ''
-  );
-
-  function openManageTrust() {
-    if (!item?.gateway) return;
-    popupControls.open({
-      title: 'Manage trust',
-      component: ManageTrust,
-      props: { gateway: item.gateway }
-    });
-  }
-</script>
-
-<RowFrame clickable={true} dense={true} noLeading={true} onclick={openManageTrust}>
-  <div class="w-full flex items-center justify-between gap-3">
-    <div class="min-w-0 flex items-center gap-2">
-      <Avatar address={item.gateway} view="horizontal" clickable={true} />
-      <div class="flex flex-col min-w-0">
-        <div class="font-mono text-xs truncate">{item.gateway}</div>
-        {#if createdAt}
-          <div class="text-xs text-base-content/70">Created {createdAt}</div>
-        {/if}
-      </div>
-    </div>
-  </div>
-</RowFrame>
-// routes/gateway/TrustRow.svelte
-<script lang="ts">
-  import RowFrame from '$lib/ui/RowFrame.svelte';
-  import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import type { TrustRow as TrustRowType } from './types';
-
-  interface Props {
-    item: TrustRowType;
-  }
-
-  let { item }: Props = $props();
-
-  const expiryLabel = $derived.by(() =>
-    item.expiry ? new Date(Number(item.expiry) * 1000).toLocaleString() : ''
-  );
-
-  const isActive = $derived.by(() => Number(item.expiry) * 1000 > Date.now());
-</script>
-
-<RowFrame clickable={false} dense={true} noLeading={true}>
-  <div class="w-full flex items-center justify-between gap-3">
-    <div class="min-w-0 flex items-center gap-2">
-      <Avatar address={item.trustReceiver} view="horizontal" clickable={true} />
-      <div class="flex flex-col min-w-0">
-        <div class="font-mono text-xs truncate">{item.trustReceiver}</div>
-        <div class="text-xs text-base-content/70">{expiryLabel}</div>
-      </div>
-    </div>
-
-    <div class="flex flex-col items-end gap-1 text-right shrink-0">
-      <div>
-        {#if isActive}
-          <span class="badge badge-success">active</span>
-        {:else}
-          <span class="badge">expired</span>
-        {/if}
-      </div>
-    </div>
-  </div>
-</RowFrame>
 // routes/privacy-policy/+page.svelte
 <script lang="ts">
   import Privacy from './privacy.svx';
@@ -14521,7 +14438,7 @@ export function formatCurrency(amount: number | null | undefined, code: string |
 // routes/+page.svelte
 <script lang="ts">
     import ActionButton from '$lib/components/ActionButton.svelte';
-    import {popupControls} from '$lib/stores/popUp';
+    import {popupControls} from '$lib/stores/popup';
     import SelectWallet from '$lib/components/SelectWallet.svelte';
 
     async function connectWallet() {
@@ -14556,12 +14473,12 @@ export function formatCurrency(amount: number | null | undefined, code: string |
     import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
     import Lucide from '$lib/icons/Lucide.svelte';
     import {Filter as LFilter, Download as LDownload, Plus as LPlus} from 'lucide';
-    import {popupControls} from '$lib/stores/popUp';
+    import {popupControls} from '$lib/stores/popup';
     import ManageGroupMembers from '$lib/flows/manageGroupMembers/1_manageGroupMembers.svelte';
     import {avatarState} from '$lib/stores/avatar.svelte';
     import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
-    import type { Action } from '$lib/components/layout/Action';
+    import type { Action } from '$lib/types/actions';
     import { createPaginatedList } from '$lib/stores/paginatedList';
 
     let filterVersion = writable<number | undefined>(undefined);
@@ -14739,15 +14656,17 @@ export function formatCurrency(amount: number | null | undefined, code: string |
 // routes/contacts/ContactGroupRow.svelte
 <script lang="ts">
     import Avatar from '$lib/components/avatar/Avatar.svelte';
-    import ProfilePage from '$lib/pages/Profile.svelte';
-    import { popupControls } from '$lib/stores/popUp';
+    import ProfilePopup from '$lib/pages/ProfilePopup.svelte';
+    import { popupControls } from '$lib/stores/popup';
     import RowFrame from '$lib/ui/RowFrame.svelte';
+    import type { Address } from '@circles-sdk/utils';
 
-    interface Props { address?: string; trustRelation?: string; }
-    let { address = '', trustRelation = '' }: Props = $props();
+    interface Props { address?: Address; trustRelation?: string; }
+    let { address, trustRelation = '' }: Props = $props();
 
     function openProfile() {
-        popupControls.open?.({ component: ProfilePage, props: { address } });
+        if (!address) return;
+        popupControls.open?.({ component: ProfilePopup, props: { address } });
     }
 </script>
 
@@ -14799,7 +14718,7 @@ export function formatCurrency(amount: number | null | undefined, code: string |
   import type { Address } from '@circles-sdk/utils';
   import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
   import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
-  import type { Action } from '$lib/components/layout/Action';
+  import type { Action } from '$lib/types/actions';
 
   let groupMetrics: GroupMetrics = $state({});
 
@@ -14954,7 +14873,7 @@ export function formatCurrency(amount: number | null | undefined, code: string |
     import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
     import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
-    import type {Action} from '$lib/components/layout/Action';
+    import type { Action } from '$lib/types/actions';
 
     let groups: Readable<{
         data: EventRow[];
@@ -15004,16 +14923,16 @@ export function formatCurrency(amount: number | null | undefined, code: string |
 // routes/groups/GroupRowView.svelte
 <script lang="ts">
     import type { GroupRow } from '@circles-sdk/data';
-    import ProfilePage from '$lib/pages/Profile.svelte';
+    import ProfilePopup from '$lib/pages/ProfilePopup.svelte';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
-    import { popupControls } from '$lib/stores/popUp';
+    import { popupControls } from '$lib/stores/popup';
     import RowFrame from '$lib/ui/RowFrame.svelte';
 
     interface Props { item: GroupRow; }
     let { item }: Props = $props();
 
     function openProfile() {
-        popupControls.open?.({ component: ProfilePage, props: { address: item.group } });
+        popupControls.open?.({ component: ProfilePopup, props: { address: item.group } });
     }
 </script>
 
@@ -15055,12 +14974,10 @@ export function formatCurrency(amount: number | null | undefined, code: string |
   import { canMigrate } from '$lib/guards/canMigrate';
   import UpdateBanner from '$lib/components/UpdateBanner.svelte';
   import { page } from '$app/stores';
-  import Send from '$lib/flows/send/1_To.svelte';
   import { onDestroy, onMount } from 'svelte';
   import { tasks } from '$lib/utils/tasks';
-  import { popupControls, popupState } from '$lib/stores/popUp';
-  import PopUp from '$lib/components/PopUp.svelte';
-  import ManageGroupMembers from '$lib/flows/manageGroupMembers/1_manageGroupMembers.svelte';
+  import { popupControls, popupState } from '$lib/stores/popup';
+  import Popup from '$lib/components/Popup.svelte';
   import { getProfile } from '$lib/utils/profile';
   import { initTransactionHistoryStore } from '$lib/stores/transactionHistory';
   import { initContactStore } from '$lib/stores/contacts';
@@ -15069,12 +14986,12 @@ export function formatCurrency(amount: number | null | undefined, code: string |
   import { PUBLIC_PLAUSIBLE_DOMAIN } from '$env/static/public';
   import { initGroupMetricsStore } from '$lib/stores/groupMetrics.svelte';
   import { circles } from '$lib/stores/circles';
+  import type { Address } from '@circles-sdk/utils';
 
   import { watchAccount } from '@wagmi/core';
   import { config } from '../config';
   import WrongNetwork from '$lib/components/WrongNetwork.svelte';
   import BottomNav from '$lib/components/BottomNav.svelte';
-  import type { Address } from '@circles-sdk/utils';
   import DefaultHeader from './DefaultHeader.svelte';
 
   const unwatch = watchAccount(config, {
@@ -15239,7 +15156,7 @@ export function formatCurrency(amount: number | null | undefined, code: string |
     }}
     aria-hidden={$popupState.content ? 'false' : 'true'}
   ></div>
-  <PopUp />
+  <Popup />
 </main>
 {#if hasToasts}
   <div
@@ -15282,14 +15199,14 @@ export function formatCurrency(amount: number | null | undefined, code: string |
     import { circles } from '$lib/stores/circles';
     import { wallet } from '$lib/stores/wallet.svelte';
     import type { Profile } from '@circles-sdk/profiles';
-    import ProfileHeaderEditor from '$lib/flows/offer/ProfileHeaderEditor.svelte';
+    import ProfileHeaderEditor from '$lib/profile/ProfileHeaderEditor.svelte';
     import { onMount } from 'svelte';
     import Disclaimer from '$lib/components/Disclaimer.svelte';
     import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
     import { ArrowLeft as LArrowLeft } from 'lucide';
     import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
-    import type { Action } from '$lib/components/layout/Action';
+    import type { Action } from '$lib/types/actions';
 
     let profile: Profile = $state({ name: '', description: '', previewImageUrl: '', imageUrl: undefined });
 
@@ -15436,7 +15353,7 @@ export function formatCurrency(amount: number | null | undefined, code: string |
     import { ArrowLeft as LArrowLeft } from 'lucide';
     import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
-    import type { Action } from '$lib/components/layout/Action';
+    import type { Action } from '$lib/types/actions';
 
     let profile: Profile = $state({name: '', description: '', previewImageUrl: '', imageUrl: undefined});
 
@@ -15505,7 +15422,7 @@ export function formatCurrency(amount: number | null | undefined, code: string |
     import type { Profile } from '@circles-sdk/profiles';
     import { onMount } from 'svelte';
     import type { Address } from '@circles-sdk/utils';
-    import ProfileHeaderEditor from '$lib/flows/offer/ProfileHeaderEditor.svelte';
+    import ProfileHeaderEditor from '$lib/profile/ProfileHeaderEditor.svelte';
     import { settings } from '$lib/stores/settings.svelte';
     import { avatarState } from '$lib/stores/avatar.svelte';
     import Disclaimer from '$lib/components/Disclaimer.svelte';
@@ -15515,7 +15432,7 @@ export function formatCurrency(amount: number | null | undefined, code: string |
     import RowFrame from '$lib/ui/RowFrame.svelte';
     import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
-    import type { Action } from '$lib/components/layout/Action';
+    import type { Action } from '$lib/types/actions';
 
     let invitations: AvatarRow[] = $state([]);
     let inviterSelected: Address | undefined = $state(
@@ -15651,7 +15568,7 @@ export function formatCurrency(amount: number | null | undefined, code: string |
     import { ArrowLeft as LArrowLeft } from 'lucide';
     import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
-    import type { Action } from '$lib/components/layout/Action';
+    import type { Action } from '$lib/types/actions';
 
     async function registerHuman() {
         if (!$circles) {
@@ -15715,7 +15632,7 @@ export function formatCurrency(amount: number | null | undefined, code: string |
 
   import { page } from '$app/stores';
   import { cartItemCount } from '$lib/cart/store';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
   import CartPanel from '$lib/flows/checkout/CartPanel.svelte';
 
   function openBasket(): void {
@@ -15829,7 +15746,7 @@ export function formatCurrency(amount: number | null | undefined, code: string |
     import OverviewPanel from './OverviewPanel.svelte';
     import TransactionHistoryPanel from './TransactionHistoryPanel.svelte';
 
-    import { popupControls } from '$lib/stores/popUp';
+    import { popupControls } from '$lib/stores/popup';
     import Balances from '$lib/pages/Balances.svelte';
     import { circlesBalances } from '$lib/stores/circlesBalances';
     import { totalCirclesBalance } from '$lib/stores/totalCirclesBalance';
@@ -15864,13 +15781,15 @@ export function formatCurrency(amount: number | null | undefined, code: string |
             throw new Error('Avatar store is not available');
         }
 
-        runTask({
-            name: 'Minting Circles ...',
-            promise: avatarState.avatar!.personalMint(),
-        }).finally(async () => {
+        try {
+            await runTask({
+                name: 'Minting Circles ...',
+                promise: avatarState.avatar!.personalMint(),
+            });
+        } finally {
             const refreshed = await avatarState.avatar!.getMintableAmount();
             mintableAmount = refreshed ?? 0;
-        });
+        }
 
         mintableAmount = 0;
     }
@@ -16022,7 +15941,7 @@ export function formatCurrency(amount: number | null | undefined, code: string |
     import Avatar from '$lib/components/avatar/Avatar.svelte';
     import { avatarState } from '$lib/stores/avatar.svelte';
     import RowFrame from '$lib/ui/RowFrame.svelte';
-    import { popupControls, type PopupContentDefinition } from '$lib/stores/popUp';
+    import { popupControls, type PopupContentDefinition } from '$lib/stores/popup';
     import TransactionDetailsPopup from './TransactionDetailsPopup.svelte';
 
     interface Props { item: TransactionHistoryRow; }
@@ -17549,7 +17468,7 @@ export function formatCurrency(amount: number | null | undefined, code: string |
     import {onMount} from 'svelte';
     import { page } from '$app/stores';
     import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
-    import {popupControls} from '$lib/stores/popUp';
+    import {popupControls} from '$lib/stores/popup';
     import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
     import ProductCard from '$lib/components/ProductCard.svelte';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
@@ -17561,7 +17480,7 @@ export function formatCurrency(amount: number | null | undefined, code: string |
     import { avatarState } from '$lib/stores/avatar.svelte';
     import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
-    import type { Action } from '$lib/components/layout/Action';
+    import type { Action } from '$lib/types/actions';
 
     // Defaults (as requested)
     const OPERATOR: `0x${string}` = MARKET_OPERATOR;
@@ -17918,7 +17837,7 @@ export function formatCurrency(amount: number | null | undefined, code: string |
 <script lang="ts">
     import {onMount} from 'svelte';
     import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
-    import {popupControls} from '$lib/stores/popUp';
+    import {popupControls} from '$lib/stores/popup';
     import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
     import ProductCard from '$lib/components/ProductCard.svelte';
     import { MARKET_API_BASE, MARKET_OPERATOR } from '$lib/config/market';
@@ -17926,7 +17845,7 @@ export function formatCurrency(amount: number | null | undefined, code: string |
     import type { AggregatedCatalogItem } from '$lib/market/types';
     import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
-    import type { Action } from '$lib/components/layout/Action';
+    import type { Action } from '$lib/types/actions';
 
     // Defaults (as requested)
     const OPERATOR: `0x${string}` = MARKET_OPERATOR;
@@ -18219,17 +18138,17 @@ export function formatCurrency(amount: number | null | undefined, code: string |
   import ActionButton from '$lib/components/ActionButton.svelte';
   import { canMigrate } from '$lib/guards/canMigrate';
   import MigrateToV2 from '$lib/flows/migrateToV2/1_GetInvited.svelte';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
   import GroupSetting from './editors/GroupSetting.svelte';
   import { ethers } from 'ethers';
-  import ProfileExplorer from '$lib/flows/offer/ProfileExplorer.svelte';
+  import ProfileExplorer from '$lib/profile/ProfileExplorer.svelte';
   import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
   import { LogOut as LLogOut } from 'lucide';
   import { MARKET_API_BASE } from '$lib/config/market';
   import type { Address } from '@circles-sdk/utils';
   import ActionButtonDropDown from "$lib/components/layout/ActionButtonDropDown.svelte";
   import ActionButtonBar from "$lib/components/layout/ActionButtonBar.svelte";
-  import type {Action} from "$lib/components/layout/Action";
+  import type { Action } from '$lib/types/actions';
   import { ipfsGatewayUrl } from '$lib/utils/ipfs';
   import { getProfilesBindings } from '$lib/offers/profilesBindings';
 
@@ -18480,8 +18399,8 @@ export function formatCurrency(amount: number | null | undefined, code: string |
   import { avatarState } from '$lib/stores/avatar.svelte';
   import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
   import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
-  import type { Action } from '$lib/components/layout/Action';
-  import { popupControls } from '$lib/stores/popUp';
+  import type { Action } from '$lib/types/actions';
+  import { popupControls } from '$lib/stores/popup';
   import OrderDetailsPopup from '$lib/orders/OrderDetailsPopup.svelte';
 
   type ListItem = {
@@ -18719,7 +18638,7 @@ export function formatCurrency(amount: number | null | undefined, code: string |
   // Use a helper and call it inside $derived(...) to avoid rendering a function as text.
   import {formatCurrency} from '$lib/utils/money';
   import {statusLabel} from '$lib/orders/status';
-  import {type PopupContentDefinition, popupControls} from '$lib/stores/popUp';
+  import {type PopupContentDefinition, popupControls} from '$lib/stores/popup';
   import OrderDetailsPopup from '$lib/orders/OrderDetailsPopup.svelte';
 
   const totalDisplay = $derived((() => {
@@ -18850,23 +18769,6 @@ export const GET: RequestHandler = async ({ url }) => {
   } finally {
     client.end();
   }
-};
-// routes/gateway/types.ts
-export type GatewayRow = {
-  gateway: string;
-  timestamp?: number;
-  blockNumber: number;
-  transactionIndex: number;
-  logIndex: number;
-  tx?: string;
-};
-
-export type TrustRow = {
-  trustReceiver: string;
-  expiry: number;
-  blockNumber: number;
-  transactionIndex: number;
-  logIndex: number;
 };
 // routes/groups/metrics/[group]/+page.ts
 import type { PageLoad } from './$types';

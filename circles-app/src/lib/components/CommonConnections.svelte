@@ -1,8 +1,8 @@
 <script lang="ts">
     import RowFrame from '$lib/ui/RowFrame.svelte';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
-    import { popupControls } from '$lib/stores/popUp';
-    import ProfilePage from '$lib/pages/Profile.svelte';
+    import { popupControls } from '$lib/stores/popup';
+    import ProfilePage from '$lib/pages/ProfilePopup.svelte';
     import { avatarState } from '$lib/stores/avatar.svelte';
     import { circles } from '$lib/stores/circles';
     import type { Address } from '@circles-sdk/utils';
@@ -64,7 +64,7 @@
                     <Avatar address={addr} view="horizontal" clickable={true} />
                 </div>
                 {#snippet trailing()}<div aria-hidden="true">
-                    <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" />
+                    <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" aria-hidden="true" />
                 </div>{/snippet}
             </RowFrame>
         {/each}

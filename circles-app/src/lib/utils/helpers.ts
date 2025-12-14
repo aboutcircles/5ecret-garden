@@ -29,13 +29,15 @@ export function formatTrustRelation(relation: TrustRelation | undefined, profile
   }
 }
 
+import { gnosisConfig, chiadoConfig } from '$lib/circlesConfig';
+
 export async function getCirclesConfig(chainId: bigint, rings: boolean) {
   let circlesConfig: CirclesConfig
   if (chainId === 100n) {
-    rings ? circlesConfig = (await import('$lib/circlesConfig')).gnosisConfig.rings : circlesConfig = (await import('$lib/circlesConfig')).gnosisConfig.production;
+    circlesConfig = rings ? gnosisConfig.rings : gnosisConfig.production;
     return circlesConfig;
   } else if (chainId === 10200n) {
-    rings ? circlesConfig = (await import('$lib/circlesConfig')).chiadoConfig.rings : circlesConfig = (await import('$lib/circlesConfig')).chiadoConfig.production;
+    circlesConfig = rings ? chiadoConfig.rings : chiadoConfig.production;
     return circlesConfig;
   }
   throw new Error(`Unsupported chain-id: ${chainId}`);

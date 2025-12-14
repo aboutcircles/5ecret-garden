@@ -6,7 +6,7 @@
   import { onMount } from 'svelte';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import { circlesBalances } from '$lib/stores/circlesBalances';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
   interface Props {
     context: SendFlowContext;
   }

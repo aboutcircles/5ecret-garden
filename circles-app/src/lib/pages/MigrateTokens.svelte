@@ -5,7 +5,7 @@
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import { runTask } from '$lib/utils/tasks';
   import { tokenTypeToString } from '$lib/pages/SelectAsset.svelte';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
   interface Props {
     asset: TokenBalanceRow;
   }

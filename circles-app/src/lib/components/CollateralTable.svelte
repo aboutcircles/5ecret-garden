@@ -4,8 +4,8 @@
   import type { Address } from '@circles-sdk/utils';
   import type { TrustRelation } from '@circles-sdk/data';
   import RowFrame from '$lib/ui/RowFrame.svelte';
-    import {popupControls} from "$lib/stores/popUp";
-    import ProfilePage from "$lib/pages/Profile.svelte";
+    import {popupControls} from "$lib/stores/popup";
+    import ProfilePopup from "$lib/pages/ProfilePopup.svelte";
 
   function formatEtherTwoDecimals(value: bigint): string {
     const etherString = formatUnits(value.toString(), 18);
@@ -40,7 +40,7 @@
   }
 
     function openProfile(addr: Address): void {
-        popupControls.open({ component: ProfilePage, props: { address: addr } });
+        popupControls.open({ component: ProfilePopup, props: { address: addr } });
     }
 </script>
 

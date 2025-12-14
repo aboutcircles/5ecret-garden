@@ -2,7 +2,7 @@
 <script lang="ts">
     import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
     import { cartState, checkoutCart } from '$lib/cart/store';
-    import { popupControls } from '$lib/stores/popUp';
+    import { popupControls } from '$lib/stores/popup';
     import CheckoutPayment from './CheckoutPayment.svelte';
     import { getMarketClient } from '$lib/sdk/marketClient';
     import { MARKET_OPERATOR } from '$lib/config/market';

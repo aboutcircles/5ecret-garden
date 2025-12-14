@@ -11,7 +11,7 @@
     import { writable } from 'svelte/store';
     import type { MaxFlowResponse } from '@circles-sdk/sdk';
     import { ethers } from 'ethers';
-    import { popupControls } from '$lib/stores/popUp';
+    import { popupControls } from '$lib/stores/popup';
     import { CirclesConverter } from '@circles-sdk/utils';
 
     interface Props {

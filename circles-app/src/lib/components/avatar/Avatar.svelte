@@ -1,9 +1,9 @@
 <script lang="ts">
-  import ProfilePage from '$lib/pages/Profile.svelte';
+  import ProfilePage from '$lib/pages/ProfilePopup.svelte';
   import { getProfile } from '$lib/utils/profile';
   import HorizontalAvatarLayout from './HorizontalAvatarLayout.svelte';
   import VerticalAvatarLayout from './VerticalAvatarLayout.svelte';
-  import { popupControls, type PopupContentDefinition } from '$lib/stores/popUp';
+  import { popupControls, type PopupContentDefinition } from '$lib/stores/popup';
   import type { Address } from '@circles-sdk/utils';
   import type { AppProfileCore as Profile } from '$lib/profiles';
   import { fade } from 'svelte/transition';

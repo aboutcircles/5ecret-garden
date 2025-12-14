@@ -9,7 +9,7 @@
     import MigrateTokens from '$lib/pages/MigrateTokens.svelte';
     import UnwrapTokens from '$lib/pages/UnwrapTokens.svelte';
     import RedeemGroup from '$lib/pages/RedeemGroup.svelte';
-    import { popupControls } from '$lib/stores/popUp';
+    import { popupControls } from '$lib/stores/popup';
     import type { TokenBalanceRow } from '@circles-sdk/data';
 
     interface Props { item: TokenBalanceRow; }

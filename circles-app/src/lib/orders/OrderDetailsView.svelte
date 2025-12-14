@@ -247,7 +247,7 @@
   import { getProduct, pickProductImageUrl } from '$lib/market/catalogHelpers';
   import { getMarketClient } from '$lib/sdk/marketClient';
   import { MARKET_OPERATOR } from '$lib/config/market';
-  import { popupControls, type PopupContentDefinition } from '$lib/stores/popUp';
+  import { popupControls, type PopupContentDefinition } from '$lib/stores/popup';
   import ProductDetailsPopup from '$lib/market/ProductDetailsPopup.svelte';
 
   interface Props {

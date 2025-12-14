@@ -4,7 +4,7 @@
     import Avatar from '$lib/components/avatar/Avatar.svelte';
     import { avatarState } from '$lib/stores/avatar.svelte';
     import RowFrame from '$lib/ui/RowFrame.svelte';
-    import { popupControls, type PopupContentDefinition } from '$lib/stores/popUp';
+    import { popupControls, type PopupContentDefinition } from '$lib/stores/popup';
     import TransactionDetailsPopup from './TransactionDetailsPopup.svelte';
 
     interface Props { item: TransactionHistoryRow; }

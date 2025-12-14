@@ -6,7 +6,7 @@
     import OverviewPanel from './OverviewPanel.svelte';
     import TransactionHistoryPanel from './TransactionHistoryPanel.svelte';
 
-    import { popupControls } from '$lib/stores/popUp';
+    import { popupControls } from '$lib/stores/popup';
     import Balances from '$lib/pages/Balances.svelte';
     import { circlesBalances } from '$lib/stores/circlesBalances';
     import { totalCirclesBalance } from '$lib/stores/totalCirclesBalance';

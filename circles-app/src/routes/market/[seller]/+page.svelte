@@ -2,7 +2,7 @@
     import {onMount} from 'svelte';
     import { page } from '$app/stores';
     import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
-    import {popupControls} from '$lib/stores/popUp';
+    import {popupControls} from '$lib/stores/popup';
     import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
     import ProductCard from '$lib/components/ProductCard.svelte';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
@@ -14,7 +14,7 @@
     import { avatarState } from '$lib/stores/avatar.svelte';
     import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
-    import type { Action } from '$lib/components/layout/Action';
+    import type { Action } from '$lib/types/actions';
 
     // Defaults (as requested)
     const OPERATOR: `0x${string}` = MARKET_OPERATOR;

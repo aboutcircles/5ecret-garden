@@ -9,7 +9,7 @@
     import type { Profile } from '@circles-sdk/profiles';
     import { onMount } from 'svelte';
     import type { Address } from '@circles-sdk/utils';
-    import ProfileHeaderEditor from '$lib/flows/offer/ProfileHeaderEditor.svelte';
+    import ProfileHeaderEditor from '$lib/profile/ProfileHeaderEditor.svelte';
     import { settings } from '$lib/stores/settings.svelte';
     import { avatarState } from '$lib/stores/avatar.svelte';
     import Disclaimer from '$lib/components/Disclaimer.svelte';
@@ -19,7 +19,7 @@
     import RowFrame from '$lib/ui/RowFrame.svelte';
     import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
-    import type { Action } from '$lib/components/layout/Action';
+    import type { Action } from '$lib/types/actions';
 
     let invitations: AvatarRow[] = $state([]);
     let inviterSelected: Address | undefined = $state(

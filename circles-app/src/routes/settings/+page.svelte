@@ -4,17 +4,17 @@
   import ActionButton from '$lib/components/ActionButton.svelte';
   import { canMigrate } from '$lib/guards/canMigrate';
   import MigrateToV2 from '$lib/flows/migrateToV2/1_GetInvited.svelte';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
   import GroupSetting from './editors/GroupSetting.svelte';
   import { ethers } from 'ethers';
-  import ProfileExplorer from '$lib/flows/offer/ProfileExplorer.svelte';
+  import ProfileExplorer from '$lib/profile/ProfileExplorer.svelte';
   import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
   import { LogOut as LLogOut } from 'lucide';
   import { MARKET_API_BASE } from '$lib/config/market';
   import type { Address } from '@circles-sdk/utils';
   import ActionButtonDropDown from "$lib/components/layout/ActionButtonDropDown.svelte";
   import ActionButtonBar from "$lib/components/layout/ActionButtonBar.svelte";
-  import type {Action} from "$lib/components/layout/Action";
+  import type { Action } from '$lib/types/actions';
   import { ipfsGatewayUrl } from '$lib/utils/ipfs';
   import { getProfilesBindings } from '$lib/offers/profilesBindings';
 

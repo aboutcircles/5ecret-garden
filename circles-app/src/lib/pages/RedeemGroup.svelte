@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
 
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { circles } from '$lib/stores/circles';
@@ -7,7 +6,7 @@
   import ActionButton from '$lib/components/ActionButton.svelte';
   import { onMount } from 'svelte';
   import { runTask } from '$lib/utils/tasks';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
   import { ethers, formatUnits } from 'ethers';
   import type { TokenBalanceRow, TrustRelation } from '@circles-sdk/data';
   import { contacts } from '$lib/stores/contacts';
@@ -56,7 +55,7 @@
 
   // This runs whenever collateralInTreasury changes or user input changes.
   // It re-calculates the sums and validity for the UI.
-  run(() => {
+  $effect(() => {
     // 1) Convert the user's total redeemable (asset.circles) from wei to a floating number.
     //    If asset.circles is already a string or BigInt, adapt accordingly.
     //    Example assumes it's a BigInt or numeric string in wei:

@@ -2,13 +2,14 @@
     import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
     import Tooltip from '../../components/Tooltip.svelte';
     import { ethers } from 'ethers';
-    import { popupControls } from '$lib/stores/popUp';
+    import { popupControls } from '$lib/stores/popup';
     import Review from './3_Review.svelte';
     import { wallet } from '$lib/stores/wallet.svelte';
     import {
         createGroupContext,
         type CreateGroupFlowContext
     } from './context';
+    import { resetCreateGroupContext } from './context';
 
     interface Props {
         context: CreateGroupFlowContext;
@@ -70,7 +71,7 @@
             component: Review,
             props: { context: ctx, setGroup },
             onClose: () => {
-                import('./context').then(m => m.resetCreateGroupContext());
+                resetCreateGroupContext();
             }
         });
     }

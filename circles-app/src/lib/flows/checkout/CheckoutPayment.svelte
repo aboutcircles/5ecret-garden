@@ -8,7 +8,7 @@
   import { getMarketClient } from '$lib/sdk/marketClient';
   import { MARKET_OPERATOR } from '$lib/config/market';
   import { resolvePayTo } from '$lib/market/catalogHelpers';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
   import SendFlow from '$lib/flows/send/4_Send.svelte';
   import { transitiveTransfer } from '$lib/pages/SelectAsset.svelte';
   import type { SendFlowContext } from '$lib/flows/send/context';

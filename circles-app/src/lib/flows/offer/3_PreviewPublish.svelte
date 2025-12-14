@@ -1,6 +1,6 @@
 <script lang="ts">
   import { get } from 'svelte/store';
-  import { popupControls } from '$lib/stores/popUp';
+  import { popupControls } from '$lib/stores/popup';
   import { runTask } from '$lib/utils/tasks';
   import { wallet } from '$lib/stores/wallet.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
