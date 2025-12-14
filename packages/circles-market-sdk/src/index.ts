@@ -1,4 +1,4 @@
-export { CirclesClient, type CirclesClientOptions } from './CirclesClient';
+export { MarketplaceClient, type MarketplaceClientOptions } from './marketplaceClient';
 export { type HttpTransport, FetchHttpTransport, HttpError } from './http';
 export { type AuthContext, InMemoryAuthContext, type AuthContextMeta } from './authContext';
 export { type WalletProvider, type AvatarSigner, type SignersClient, SignersClientImpl } from './signers';

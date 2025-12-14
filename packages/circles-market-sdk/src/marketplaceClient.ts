@@ -1,14 +1,14 @@
-import { FetchHttpTransport, type HttpTransport } from './http';
-import { InMemoryAuthContext, type AuthContext } from './authContext';
-import { AuthClientImpl, type AuthClient } from './auth';
-import { SignersClientImpl, type SignersClient } from './signers';
-import { OrdersClientImpl, type OrdersClient } from './orders';
-import { CartClientImpl, type CartClient } from './cart';
-import { OffersClientImpl, type OffersClient } from './offers';
-import type { ProfilesBindings } from './offers';
-import { CatalogClientImpl, type CatalogClient } from './catalog';
+import {FetchHttpTransport, type HttpTransport} from './http';
+import {InMemoryAuthContext, type AuthContext} from './authContext';
+import {AuthClientImpl, type AuthClient} from './auth';
+import {SignersClientImpl, type SignersClient} from './signers';
+import {OrdersClientImpl, type OrdersClient} from './orders';
+import {CartClientImpl, type CartClient} from './cart';
+import {OffersClientImpl, type OffersClient} from './offers';
+import type {ProfilesBindings} from './offers';
+import {CatalogClientImpl, type CatalogClient} from './catalog';
 
-export interface CirclesClientOptions {
+export interface MarketplaceClientOptions {
   /** Base URL of the Circles Market API, e.g. https://market.aboutcircles.com */
   marketApiBase: string;
   /** Optional custom HTTP transport (defaults to FetchHttpTransport). */
@@ -20,7 +20,7 @@ export interface CirclesClientOptions {
 }
 
 /** Top-level entry point to the Circles Market SDK. */
-export class CirclesClient {
+export class MarketplaceClient {
   readonly marketApiBase: string;
   readonly http: HttpTransport;
   readonly authContext: AuthContext;
@@ -39,7 +39,7 @@ export class CirclesClient {
   /** Catalog browsing client. */
   readonly catalog: CatalogClient;
 
-  constructor(opts: CirclesClientOptions) {
+  constructor(opts: MarketplaceClientOptions) {
     this.marketApiBase = opts.marketApiBase.replace(/\/$/, '');
     this.http = opts.http ?? new FetchHttpTransport();
     this.authContext = opts.authContext ?? new InMemoryAuthContext();
