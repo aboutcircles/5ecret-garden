@@ -22,6 +22,14 @@ const config = {
       : adapter(),
     alias: {
       '@circles-market/sdk': '../packages/circles-market-sdk/src',
+      '@circles-market/core': '../packages/circles-market-core/src',
+      '@circles-market/session': '../packages/circles-market-session/src',
+      '@circles-market/catalog': '../packages/circles-market-catalog/src',
+      '@circles-market/cart': '../packages/circles-market-cart/src',
+      '@circles-market/orders': '../packages/circles-market-orders/src',
+      '@circles-market/signers': '../packages/circles-market-signers/src',
+      '@circles-market/auth': '../packages/circles-market-auth/src',
+      '@circles-market/offers': '../packages/circles-market-offers/src',
       '@circles-profile/core': '../packages/circles-profile-core/src'
     }
   },
