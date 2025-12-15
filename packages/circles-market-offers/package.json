@@ -1,0 +1,14 @@
+{
+  "name": "@circles-market/offers",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "module": "src/index.ts",
+  "types": "src/index.ts",
+  "dependencies": {
+    "@circles-market/core": "workspace:*",
+    "@circles-market/signers": "workspace:*",
+    "@circles-profile/core": "workspace:*"
+  }
+}

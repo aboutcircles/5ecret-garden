@@ -15,6 +15,14 @@
     "types": [],
     "baseUrl": ".",
     "paths": {
+      "@circles-market/core": ["../circles-market-core/src/index.ts"],
+      "@circles-market/session": ["../circles-market-session/src/index.ts"],
+      "@circles-market/signers": ["../circles-market-signers/src/index.ts"],
+      "@circles-market/auth": ["../circles-market-auth/src/index.ts"],
+      "@circles-market/orders": ["../circles-market-orders/src/index.ts"],
+      "@circles-market/cart": ["../circles-market-cart/src/index.ts"],
+      "@circles-market/offers": ["../circles-market-offers/src/index.ts"],
+      "@circles-market/catalog": ["../circles-market-catalog/src/index.ts"],
       "@circles-profile/core": ["../circles-profile-core/src/index.ts"]
     }
   },

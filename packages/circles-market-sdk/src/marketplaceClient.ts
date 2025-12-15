@@ -1,12 +1,11 @@
-import {FetchHttpTransport, type HttpTransport} from './http';
-import {InMemoryAuthContext, type AuthContext} from './authContext';
-import {AuthClientImpl, type AuthClient} from './auth';
-import {SignersClientImpl, type SignersClient} from './signers';
-import {OrdersClientImpl, type OrdersClient} from './orders';
-import {CartClientImpl, type CartClient} from './cart';
-import {OffersClientImpl, type OffersClient} from './offers';
-import type {ProfilesBindings} from './offers';
-import {CatalogClientImpl, type CatalogClient} from './catalog';
+import {FetchHttpTransport, type HttpTransport} from '@circles-market/core';
+import {InMemoryAuthContext, type AuthContext} from '@circles-market/session';
+import {AuthClientImpl, type AuthClient} from '@circles-market/auth';
+import {SignersClientImpl, type SignersClient} from '@circles-market/signers';
+import {OrdersClientImpl, type OrdersClient} from '@circles-market/orders';
+import {CartClientImpl, type CartClient} from '@circles-market/cart';
+import {OffersClientImpl, type OffersClient, type ProfilesBindings} from '@circles-market/offers';
+import {CatalogClientImpl, type CatalogClient} from '@circles-market/catalog';
 
 export interface MarketplaceClientOptions {
   /** Base URL of the Circles Market API, e.g. https://market.aboutcircles.com */
