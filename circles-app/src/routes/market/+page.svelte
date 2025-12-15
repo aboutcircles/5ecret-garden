@@ -10,6 +10,10 @@
     import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/types/actions';
+    import { avatarState } from '$lib/stores/avatar.svelte';
+    import { getSettings as getMarketSettings } from '$lib/stores/marketSettings.svelte';
+    import Tabs from '$lib/components/tabs/Tabs.svelte';
+    import Tab from '$lib/components/tabs/Tab.svelte';
 
     // Defaults (as requested)
     const OPERATOR: `0x${string}` = MARKET_OPERATOR;
@@ -49,22 +53,75 @@
     const PAGE_SIZE = 20;
 
     // ————————————————————————————————————————————
+    // Operators tabs (API supports one operator at a time)
+    // Build per-avatar operator list: default + extraOperators from settings
+    // ————————————————————————————————————————————
+    function getScanOperators(): `0x${string}`[] {
+      const addr = (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '') as `0x${string}` | '';
+      const extras = getMarketSettings(addr).extraOperators || [];
+      const set = new Set<string>();
+      set.add((MARKET_OPERATOR as string).toLowerCase());
+      for (const o of extras) {
+        const s = (o || '').toLowerCase();
+        if (s && /^0x[0-9a-f]{40}$/.test(s)) set.add(s);
+      }
+      return Array.from(set) as `0x${string}`[];
+    }
+
+    // Cache operator list for the current render to avoid recomputing in the template
+    let scanOperators: `0x${string}`[] = $derived(getScanOperators());
+
+    let selectedOperator: `0x${string}` | null = $state(null);
+
+    // Keep selection valid when avatar changes or settings change (by re-evaluating list on demand)
+    $effect(() => {
+      const ops = scanOperators;
+      if (!ops || ops.length === 0) {
+        selectedOperator = MARKET_OPERATOR as `0x${string}`;
+        return;
+      }
+      if (!selectedOperator || !ops.includes(selectedOperator)) {
+        selectedOperator = ops[0];
+      }
+    });
+
+    // Reload when operator changes
+    $effect(() => {
+      const op = selectedOperator;
+      if (!op) return;
+      void loadFirstPage(true);
+    });
+
+    // ————————————————————————————————————————————
     // data load with pagination
     // ————————————————————————————————————————————
-    const avatars: `0x${string}`[] = [
-      '0xde374ece6fa50e781e81aac78e811b33d16912c7'
+    const defaultAvatars: `0x${string}`[] = [
+      '0xde374ece6fa50e781e81aac78e811b33d16912c7',
+      '0x636f44a378da9256a128b104b1e06aa50a578f33'
     ];
+    const avatarAddress = $derived((avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '') as `0x${string}` | '');
+    function getScanAvatars(): `0x${string}`[] {
+      const addr = (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '') as `0x${string}` | '';
+      const extras = getMarketSettings(addr).extraAvatars || [];
+      const set = new Set<string>();
+      for (const a of defaultAvatars) set.add(a.toLowerCase());
+      for (const a of extras) set.add((a || '').toLowerCase());
+      return Array.from(set) as `0x${string}`[];
+    }
 
-    async function loadFirstPage(): Promise<void> {
+    async function loadFirstPage(keepProducts: boolean = false): Promise<void> {
       loading = true;
       errorMsg = '';
-      products = [];
+      if (!keepProducts) {
+        products = [];
+      }
       nextCursor = null;
       hasMore = false;
 
       try {
-        const catalog = getMarketClient().catalog.forOperator(MARKET_OPERATOR);
-        const page = await catalog.fetchCatalogPage({ avatars, pageSize: PAGE_SIZE, chainId: 100 });
+        const op = (selectedOperator ?? (MARKET_OPERATOR as `0x${string}`)) as `0x${string}`;
+        const catalog = getMarketClient().catalog.forOperator(op);
+        const page = await catalog.fetchCatalogPage({ avatars: getScanAvatars(), pageSize: PAGE_SIZE, chainId: 100 });
         products = page.items;
         nextCursor = page.nextCursor;
         hasMore = !!nextCursor;
@@ -82,8 +139,9 @@
       loading = true;
       errorMsg = '';
       try {
-        const catalog = getMarketClient().catalog.forOperator(MARKET_OPERATOR);
-        const page = await catalog.fetchCatalogPage({ avatars, pageSize: PAGE_SIZE, chainId: 100, cursor: nextCursor });
+        const op = (selectedOperator ?? (MARKET_OPERATOR as `0x${string}`)) as `0x${string}`;
+        const catalog = getMarketClient().catalog.forOperator(op);
+        const page = await catalog.fetchCatalogPage({ avatars: getScanAvatars(), pageSize: PAGE_SIZE, chainId: 100, cursor: nextCursor });
         products = products.concat(page.items);
         nextCursor = page.nextCursor;
         hasMore = !!nextCursor;
@@ -113,7 +171,8 @@
         }
       }, { root: null, rootMargin: '600px 0px 600px 0px', threshold: 0 });
 
-      void loadFirstPage();
+      // initial load is triggered by selectedOperator effect
+      // void loadFirstPage();
 
       return () => {
         if (io) {
@@ -132,10 +191,11 @@
     // Basket button moved to global header; inline basket trigger removed here
 
     function openCreateOffer() {
+      const op = (selectedOperator ?? (MARKET_OPERATOR as `0x${string}`)) as `0x${string}`;
       popupControls.open({
         title: 'Create Offer',
         component: OfferStep1,
-        props: { context: { operator: OPERATOR, pinApiBase: API_BASE } },
+        props: { context: { operator: op, pinApiBase: API_BASE } },
         onClose: () => { void loadFirstPage(); }
       });
     }
@@ -161,7 +221,7 @@
     {/snippet}
 
     {#snippet meta()}
-        Namespace {shortAddr(OPERATOR)} • All offers
+        Namespace {shortAddr(selectedOperator ?? OPERATOR)} • All offers
     {/snippet}
 
     {#snippet headerActions()}
@@ -180,16 +240,8 @@
         <!-- Basket button moved to global header -->
     {/snippet}
 
-    {#if loading}
+    {#if loading && products.length === 0}
         <section class="bg-base-100 border border-base-300 rounded-xl p-4">
-            <div class="flex items-center justify-between mb-3">
-                <div class="text-sm">
-                    <strong>Products</strong>
-                    <span class="opacity-70"> (loading)</span>
-                </div>
-                <div class="loading loading-spinner loading-sm" aria-label="loading"></div>
-            </div>
-
             <!-- Stable skeleton grid to prevent layout jumps -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" data-sveltekit-preload-data="hover">
                 {#each Array(6) as _, i}
@@ -234,13 +286,23 @@
         </div>
     {:else}
         <section class="bg-base-100 border border-base-300 rounded-xl p-4">
-            <div class="flex items-center justify-between mb-3">
-                <div class="text-sm">
-                    <strong>Products</strong>
-                    <span class="opacity-70">{products.length ? ` (${products.length})` : ''}</span>
+            <!-- Operators tabs -->
+            {#if scanOperators.length > 1}
+              <div class="mb-3 flex items-center justify-between gap-2">
+                <div class="flex-1 min-w-0">
+                  <Tabs bind:selected={selectedOperator} size="sm" variant="bordered">
+                    {#each scanOperators as op (op)}
+                      <Tab id={op} title={shortAddr(op)} />
+                    {/each}
+                  </Tabs>
                 </div>
-            </div>
-
+                {#if loading && products.length > 0}
+                  <div class="ml-2 flex-none">
+                    <div class="loading loading-spinner loading-xs" aria-label="loading"></div>
+                  </div>
+                {/if}
+              </div>
+            {/if}
 
             {#if products.length === 0}
                 <div class="text-sm opacity-60">No products returned by the API.</div>

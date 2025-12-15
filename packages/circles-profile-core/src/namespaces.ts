@@ -173,7 +173,72 @@ export async function rebaseAndSaveProfile(
   avatar: string,
   mutator: (profile: any) => void,
 ): Promise<Cid> {
-  const {profile} = await loadProfileOrInit(bindings, avatar);
-  mutator(profile);
-  return await bindings.putJsonLd(profile);
+  // Load base snapshot and remember its CID
+  const { profile: baseProfile, profileCid: baseCid } = await loadProfileOrInit(bindings, avatar);
+  const base = ensureProfileShape(baseProfile);
+  // Clone base to create a local working copy
+  const local = JSON.parse(JSON.stringify(base));
+  // Apply caller mutation to the local copy
+  mutator(local);
+
+  // Check if latest changed since we loaded base
+  const latestCid = await bindings.getLatestProfileCid(avatar);
+  if (!latestCid || latestCid === baseCid) {
+    // No concurrent change: persist local as-is
+    return await bindings.putJsonLd(local);
+  }
+
+  // Concurrent update detected: fetch latest and perform a 3-way merge
+  const latestRaw = await bindings.getJsonLd(latestCid);
+  const latest = ensureProfileShape(latestRaw);
+
+  function jsonEqual(a: any, b: any): boolean {
+    return JSON.stringify(a) === JSON.stringify(b);
+  }
+
+  function isPlainObject(v: any): boolean {
+    return v && typeof v === 'object' && !Array.isArray(v);
+  }
+
+  function mergeNode(path: string, b: any, l: any, r: any): any {
+    // If local equals base, take latest; if latest equals base, take local
+    if (jsonEqual(l, b)) return r;
+    if (jsonEqual(r, b)) return l;
+
+    const objB = isPlainObject(b);
+    const objL = isPlainObject(l);
+    const objR = isPlainObject(r);
+
+    // Prefer object-wise merge for nested objects/maps
+    if (objB && objL && objR) {
+      const keys = new Set<string>([...Object.keys(b || {}), ...Object.keys(l || {}), ...Object.keys(r || {})]);
+      const out: any = {};
+      for (const k of keys) {
+        const childB = b?.[k];
+        const childL = l?.[k];
+        const childR = r?.[k];
+        const blEq = jsonEqual(childL, childB);
+        const brEq = jsonEqual(childR, childB);
+        if (blEq && brEq) {
+          out[k] = childR; // both unchanged vs base -> either is fine
+        } else if (brEq) {
+          out[k] = childL; // only local changed
+        } else if (blEq) {
+          out[k] = childR; // only latest changed
+        } else if (jsonEqual(childL, childR)) {
+          out[k] = childL; // both changed to the same value
+        } else {
+          // Conflict: choose latest deterministically to avoid data loss on chain
+          out[k] = childR;
+        }
+      }
+      return out;
+    }
+
+    // For scalars/arrays or mismatched shapes: if values differ, prefer latest deterministically
+    return jsonEqual(l, r) ? l : r;
+  }
+
+  const merged = mergeNode('', base, local, latest);
+  return await bindings.putJsonLd(merged);
 }

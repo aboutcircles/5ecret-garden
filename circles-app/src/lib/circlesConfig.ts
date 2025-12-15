@@ -1,5 +1,7 @@
 import type { CirclesConfig } from '@circles-sdk/sdk';
 
+export const MAX_PATH_STEPS = 250;
+
 export const chiadoConfig: { production: CirclesConfig, rings: CirclesConfig } = {
   production: {
     circlesRpcUrl: 'https://chiado-rpc.aboutcircles.com',

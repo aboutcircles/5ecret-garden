@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { wallet } from '$lib/stores/wallet.svelte';
   import Safe from '@safe-global/protocol-kit';
   import type {
     PredictedSafeProps,
@@ -11,27 +10,31 @@
 
   let isCreating = $state(false);
   let error: string | null = $state(null);
-  let isWalletReady = $state(false);
+  let hasProvider = $state(false);
 
   let {onsafecreated} = $props();
 
   onMount(() => {
-    isWalletReady = !!$wallet;
+    hasProvider = typeof window !== 'undefined' && !!(window as any).ethereum;
   });
 
   async function createSafe() {
     isCreating = true;
     error = null;
 
-    if (!$wallet?.address) {
-      error = 'Wallet not connected or invalid type';
+    if (typeof window === 'undefined' || !(window as any).ethereum) {
+      error = 'No Ethereum provider found. Please connect a wallet.';
       isCreating = false;
       return;
     }
 
     try {
+      const browserProvider = new ethers.BrowserProvider((window as any).ethereum);
+      const signer = await browserProvider.getSigner();
+      const ownerAddress = await signer.getAddress();
+
       const safeAccountConfig: SafeAccountConfig = {
-        owners: [$wallet.address],
+        owners: [ownerAddress],
         threshold: 1,
       };
       console.log(safeAccountConfig);
@@ -48,9 +51,9 @@
       console.log(predictedSafe);
 
       const protocolKit = await Safe.init({
-        provider: window.ethereum, // Use browserProvider
+        provider: (window as any).ethereum, // Use browser provider
         predictedSafe,
-        signer: $wallet.address,
+        signer: ownerAddress,
       });
 
       const safeAddress = await protocolKit.getAddress();
@@ -66,16 +69,17 @@
         throw new Error('Failed to get external signer');
       }
 
+      const network = await browserProvider.getNetwork();
       const transactionHash = await client.sendTransaction({
         to: deploymentTransaction.to,
         value: BigInt(deploymentTransaction.value),
         data: deploymentTransaction.data as `0x${string}`,
-        chainId: (await $wallet.provider.getNetwork()).chainId,
+        chainId: network.chainId,
       });
 
       console.log('Transaction hash:', transactionHash);
 
-      await $wallet.provider.waitForTransaction(transactionHash.hash);
+      await browserProvider.waitForTransaction(transactionHash.hash);
 
       const isSafeDeployed = await protocolKit.connect({
         safeAddress,
@@ -103,7 +107,7 @@
 <button
   class="btn btm-nav-xs btn-outline btn-primary"
   class:loading={isCreating}
-  disabled={isCreating || !isWalletReady}
+  disabled={isCreating || !hasProvider}
   onclick={createSafe}
 >
   {#if isCreating}
