@@ -123,7 +123,6 @@
         await runTask({
             name: 'Saving profile…',
             promise: (async () => {
-                const { profile } = await loadProfileOrInit(bindings, resolvedAvatar!);
                 const cid = await rebaseAndSaveProfile(bindings, resolvedAvatar!, (p: any) => {
                     p.name = name;
                     p.description = description;

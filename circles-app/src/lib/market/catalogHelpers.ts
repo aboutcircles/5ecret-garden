@@ -1,23 +1,8 @@
 // src/lib/market/catalogHelpers.ts
 // Centralised helpers for working with catalog API responses and products/offers.
 
-import type { AggregatedCatalog, AggregatedCatalogItem, SchemaOrgProductLite, SchemaOrgOfferLite } from '$lib/market/types';
+import type { AggregatedCatalogItem, SchemaOrgProductLite, SchemaOrgOfferLite } from '$lib/market/types';
 import { normalizeProductImagesFromSchema } from '$lib/market/imageHelpers';
-
-/**
- * Extracts the array of catalog items from a variety of possible API response shapes.
- */
-export function extractProducts(body: unknown): AggregatedCatalogItem[] {
-  const typed = (body as AggregatedCatalog | undefined)?.products;
-  if (Array.isArray(typed)) return typed as AggregatedCatalogItem[];
-  const anyBody = body as any;
-  if (Array.isArray(anyBody?.items)) return anyBody.items as AggregatedCatalogItem[];
-  if (Array.isArray(anyBody?.results)) return anyBody.results as AggregatedCatalogItem[];
-  if (anyBody?.catalog && Array.isArray(anyBody.catalog.products)) {
-    return anyBody.catalog.products as AggregatedCatalogItem[];
-  }
-  return [] as AggregatedCatalogItem[];
-}
 
 /**
  * Returns the Schema.org-like product object from an AggregatedCatalogItem.

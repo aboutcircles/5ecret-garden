@@ -69,7 +69,7 @@
     {#each orderedContacts as address}
       <button
         class="btn btn-ghost justify-start w-full"
-        onclick={(e) => {
+        onclick={() => {
           console.log('Selected address', address);
           // Toggle selection
           if (selectedAddresses.includes(address)) {

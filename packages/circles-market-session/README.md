@@ -10,41 +10,6 @@ This package is intentionally tiny: it stores a JWT + associated metadata and gi
 pnpm add @circles-market/session
 ```
 
-## Exports
-
-* `AuthContext` (interface)
-* `InMemoryAuthContext` (default implementation)
-* `AuthContextMeta`
-
-## Return types
-
-### `InMemoryAuthContext.setToken(token, expiresInSeconds, address, chainId)`
-
-Returns: `void`
-
-Side effects:
-- stores `{ token, expiresAt, address, chainId }`
-
-### `InMemoryAuthContext.getToken()`
-
-Returns: `string | null` (null when expired or not set)
-
-### `InMemoryAuthContext.getMeta()`
-
-Returns:
-
-```ts
-type AuthMeta = { address: string; chainId: number } | null;
-```
-
-Fields (when not `null`):
-- `address`: authenticated avatar address (lowercased)
-- `chainId`: chain id associated with the token
-
-### `InMemoryAuthContext.clear()`
-
-Returns: `void` (clears token + metadata)
-
 ## Quickstart
 
 ```ts
@@ -62,7 +27,42 @@ if (!token) {
 const meta = session.getMeta();
 ```
 
-## When you need this
+## Reference
 
-* You’re using `@circles-market/auth` to log in and you want other clients (`orders`, `cart`) to automatically pick up the session.
-* You want to provide your own storage (e.g. localStorage, encrypted store). Implement the `AuthContext` interface.
+### Concepts
+
+* Stores `{ token, expiresAt, address, chainId }` and hides expired tokens.
+* `getToken()` returns `null` when token is missing or expired (with a small grace window).
+* Lowercases the `address` for consistency.
+
+### API and return values
+
+* `setToken(token, expiresInSeconds, address, chainId)` → `void`
+  * Stores token + metadata; calculates `expiresAt` from `expiresInSeconds`.
+* `getToken()` → `string | null`
+  * Returns `null` when token is expired or not set.
+* `getMeta()` → `AuthMeta`
+  * `{ address: string; chainId: number } | null` depending on validity of the token.
+* `clear()` → `void`
+  * Clears token + metadata.
+
+### Types
+
+* `AuthContext` (interface) — implement this to provide your own storage (e.g. localStorage, secure store).
+* `InMemoryAuthContext` — default in-memory implementation.
+* `AuthMeta`:
+
+```ts
+type AuthMeta = { address: string; chainId: number } | null;
+```
+
+### Runtime notes
+
+* No external dependencies; works in browser and Node environments.
+* Does not perform network calls.
+
+## Related packages
+
+* `@circles-market/auth` writes tokens into an `AuthContext` after sign-in.
+* `@circles-market/orders`, `@circles-market/cart`, and `@circles-market/sales` read tokens from an `AuthContext`.
+* `@circles-market/sdk` wires auth + session with the other domain clients.

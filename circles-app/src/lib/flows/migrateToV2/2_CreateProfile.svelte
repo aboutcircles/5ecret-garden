@@ -7,7 +7,6 @@
   import { avatarState } from '$lib/stores/avatar.svelte';
   import {
     FallbackImageUrl,
-    getProfile,
     profilesEqual,
   } from '$lib/utils/profile';
   import { popupControls } from '$lib/stores/popup';

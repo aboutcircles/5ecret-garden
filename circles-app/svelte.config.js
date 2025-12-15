@@ -30,6 +30,7 @@ const config = {
       '@circles-market/signers': '../packages/circles-market-signers/src',
       '@circles-market/auth': '../packages/circles-market-auth/src',
       '@circles-market/offers': '../packages/circles-market-offers/src',
+      '@circles-market/sales': '../packages/circles-market-sales/src',
       '@circles-profile/core': '../packages/circles-profile-core/src'
     }
   },
