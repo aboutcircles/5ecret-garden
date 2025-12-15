@@ -258,36 +258,6 @@ async function getCollateralInTreasury(
     }));
 }
 
-async function getGroupCollateralByToken(
-    circlesRpc: CirclesRpc,
-    groupAddress: Address
-) {
-    const result = await circlesRpc.call<{
-        columns: string[];
-        rows: any[][];
-    }>('circles_query', [
-        {
-            Namespace: 'V_CrcV2',
-            Table: 'GroupCollateralByToken',
-            Columns: [],
-            Filter: [
-                {
-                    Type: 'FilterPredicate',
-                    FilterType: 'Equals',
-                    Column: 'group',
-                    Value: groupAddress.toLowerCase(),
-                },
-            ],
-        },
-    ]);
-
-    return result.result.rows.map(([_, h, t, d, f]) => ({
-        holder: h as Address,
-        demurragedTotalBalance: Number(d),
-        fractionalOwnership: Number(f),
-    }));
-}
-
 async function getGroupTokenHoldersBalance(
     circlesRpc: CirclesRpc,
     groupAddress: Address

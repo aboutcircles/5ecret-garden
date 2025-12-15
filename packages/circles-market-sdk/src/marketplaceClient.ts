@@ -6,6 +6,7 @@ import {OrdersClientImpl, type OrdersClient} from '@circles-market/orders';
 import {CartClientImpl, type CartClient} from '@circles-market/cart';
 import {OffersClientImpl, type OffersClient, type ProfilesBindings} from '@circles-market/offers';
 import {CatalogClientImpl, type CatalogClient} from '@circles-market/catalog';
+import {SalesClient, type SalesClientApi} from '@circles-market/sales';
 
 export interface MarketplaceClientOptions {
   /** Base URL of the Circles Market API, e.g. https://market.aboutcircles.com */
@@ -37,6 +38,8 @@ export class MarketplaceClient {
 
   /** Catalog browsing client. */
   readonly catalog: CatalogClient;
+  /** Seller-scoped sales operations. */
+  readonly sales: SalesClientApi;
 
   constructor(opts: MarketplaceClientOptions) {
     this.marketApiBase = opts.marketApiBase.replace(/\/$/, '');
@@ -50,5 +53,6 @@ export class MarketplaceClient {
     this.offers = opts.profilesBindings ? new OffersClientImpl(opts.profilesBindings) : undefined;
 
     this.catalog = new CatalogClientImpl(this.marketApiBase);
+    this.sales = new SalesClient(this.marketApiBase, this.http, this.authContext);
   }
 }

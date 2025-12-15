@@ -29,6 +29,7 @@ export default defineConfig({
       '@circles-market/signers': fileURLToPath(new URL('../packages/circles-market-signers/src/index.ts', import.meta.url)),
       '@circles-market/auth': fileURLToPath(new URL('../packages/circles-market-auth/src/index.ts', import.meta.url)),
       '@circles-market/offers': fileURLToPath(new URL('../packages/circles-market-offers/src/index.ts', import.meta.url)),
+      '@circles-market/sales': fileURLToPath(new URL('../packages/circles-market-sales/src/index.ts', import.meta.url)),
       // Map the local profile core package
       '@circles-profile/core': fileURLToPath(new URL('../packages/circles-profile-core/src/index.ts', import.meta.url)),
     },

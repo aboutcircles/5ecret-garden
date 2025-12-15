@@ -60,8 +60,9 @@
       {/if}
     </div>
   </div>
-  <div class="flex items-center gap-2 flex-shrink-0">
-    <!-- No copy action for secret keys; id shown here should be non-secret order number/reference -->
+  <div class="shrink-0 flex items-center gap-2">
+    <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" aria-hidden="true" />
   </div>
+
   <div class="sr-only">Order</div>
 </button>

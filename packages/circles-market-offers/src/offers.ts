@@ -74,6 +74,40 @@ export class OffersClientImpl implements OffersClient {
     }
   }
 
+  // Helper to sign a link and insert it into the profile/index, returning common fields
+  private async signAndInsertLink(params: {
+    avatar: string;
+    operator: string;
+    signer: AvatarSigner;
+    link: CustomDataLink;
+  }): Promise<{ headCid: string; indexCid: string; profileCid: string; digest32: Hex; txHashNorm: Hex }>
+  {
+    const b = this.ensureBindings();
+    const { avatar, operator, signer, link } = params;
+
+    // Canonicalise and sign
+    const preimage = canonicaliseLink(link);
+    const signature = await signer.signBytes(preimage);
+    link.signature = signature;
+
+    // Load profile/index
+    const { profile } = await loadProfileOrInit(b, avatar);
+    const currentIndexCid: string | null = profile.namespaces?.[operator] ?? null;
+    const { index, head } = await loadIndex(b, currentIndexCid);
+    const { closedHead } = insertIntoHead(head, link);
+    const { headCid, indexCid } = await saveHeadAndIndex(b, head, index, closedHead);
+
+    const profileCid = await rebaseAndSaveProfile(b, avatar, (prof) => {
+      prof.namespaces[operator] = indexCid;
+    });
+
+    const txHash = await b.updateAvatarProfileDigest(avatar, profileCid);
+    const txHashNorm = normalizeHex32(txHash, 'txHash');
+    const digest32 = cidV0ToDigest32Strict(profileCid);
+
+    return { headCid, indexCid, profileCid, digest32, txHashNorm };
+  }
+
   async publishOffer(opts: {
     avatar: string;
     operator: string;
@@ -131,28 +165,14 @@ export class OffersClientImpl implements OffersClient {
       signerAddress: avatar,
     });
 
-    // Canonicalise and sign
-    const preimage = canonicaliseLink(link);
-    const signature = await opts.signer.signBytes(preimage);
-    link.signature = signature;
-
-    // Load profile/index
-    const { profile } = await loadProfileOrInit(b, avatar);
-    const currentIndexCid: string | null = profile.namespaces?.[operator] ?? null;
-    const { index, head } = await loadIndex(b, currentIndexCid);
-    const { rotated, closedHead } = insertIntoHead(head, link);
-    const { headCid, indexCid } = await saveHeadAndIndex(b, head, index, closedHead);
-
-    const profileCid = await rebaseAndSaveProfile(b, avatar, (prof) => {
-      prof.namespaces[operator] = indexCid;
+    const res = await this.signAndInsertLink({
+      avatar,
+      operator,
+      signer: opts.signer,
+      link,
     });
 
-    const txHash = await b.updateAvatarProfileDigest(avatar, profileCid);
-    const txHashNorm = normalizeHex32(txHash, 'txHash');
-
-    const digest32 = cidV0ToDigest32Strict(profileCid);
-
-    return { productCid, headCid, indexCid, profileCid, digest32, txHash: txHashNorm };
+    return { productCid, headCid: res.headCid, indexCid: res.indexCid, profileCid: res.profileCid, digest32: res.digest32, txHash: res.txHashNorm };
   }
 
   async tombstone(opts: {
@@ -194,24 +214,13 @@ export class OffersClientImpl implements OffersClient {
       signerAddress: avatar,
     });
 
-    const preimage = canonicaliseLink(link);
-    const signature = await opts.signer.signBytes(preimage);
-    link.signature = signature;
-
-    const { profile } = await loadProfileOrInit(b, avatar);
-    const currentIndexCid: string | null = profile.namespaces?.[operator] ?? null;
-    const { index, head } = await loadIndex(b, currentIndexCid);
-    const { rotated, closedHead } = insertIntoHead(head, link);
-    const { headCid, indexCid } = await saveHeadAndIndex(b, head, index, closedHead);
-
-    const profileCid = await rebaseAndSaveProfile(b, avatar, (prof) => {
-      prof.namespaces[operator] = indexCid;
+    const res = await this.signAndInsertLink({
+      avatar,
+      operator,
+      signer: opts.signer,
+      link,
     });
 
-    const txHash = await b.updateAvatarProfileDigest(avatar, profileCid);
-    const txHashNorm = normalizeHex32(txHash, 'txHash');
-    const digest32 = cidV0ToDigest32Strict(profileCid);
-
-    return { headCid, indexCid, profileCid, digest32, txHash: txHashNorm };
+    return { headCid: res.headCid, indexCid: res.indexCid, profileCid: res.profileCid, digest32: res.digest32, txHash: res.txHashNorm };
   }
 }
