@@ -1,1 +1,0 @@
-export { fetchIpfsJson, ensureProfileShape, ensureNamespaceChunkShape, ensureNameIndexDocShape, loadProfileOrInit, loadIndex, insertIntoHead, saveHeadAndIndex, rebaseAndSaveProfile, } from '@circles-profile/core';
