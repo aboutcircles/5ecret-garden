@@ -5,7 +5,7 @@ Read-only access to aggregated operator catalogs (no auth).
 ## Install
 
 ```bash
-pnpm add @circles-market/catalog @circles-market/core
+pnpm add @circles-market/catalog
 ```
 
 ## Quickstart
@@ -26,6 +26,28 @@ async function fetchFirstPage(marketApiBase: string, operator: string, sellers: 
   return page.items;
 }
 ```
+
+## Demo app
+
+A minimal runnable demo is included. It fetches the first catalog page and prints a compact summary.
+
+Run it either from the monorepo root or from this package directory (requires Node 18+ for global fetch):
+
+```bash
+# Set your environment values (run these in your shell)
+export MARKET_API_BASE="https://market-api.aboutcircles.com/market/"
+export OPERATOR="0x31d5d15c558fbfbbbe604c9c11eb42c9afbf5140"
+
+# Optional: comma-separated list of seller/avatar addresses to filter
+export SELLERS="0xde374ece6fa50e781e81aac78e811b33d16912c7"
+
+# Option B) From the package directory (no workspace flags):
+# (run these commands inside packages/circles-market-catalog)
+pnpm install
+pnpm demo
+```
+
+If you omit SELLERS, the demo will request whatever the operator returns by default. The script exits with a helpful message if required env vars are missing.
 
 ## Quickstart (lookup by seller + sku)
 

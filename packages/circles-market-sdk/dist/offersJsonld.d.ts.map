@@ -1,1 +1,0 @@
-{"version":3,"file":"offersJsonld.d.ts","sourceRoot":"","sources":["../src/offersJsonld.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,iBAAiB,EAAE,mBAAmB,EAAE,MAAM,eAAe,CAAC;AAE5E,qBAAa,iBAAkB,SAAQ,KAAK;CAAG;AAC/C,qBAAa,mBAAoB,SAAQ,KAAK;CAAG;AACjD,qBAAa,kBAAmB,SAAQ,KAAK;CAAG;AAoDhD;;;GAGG;AACH,wBAAgB,YAAY,CAAC,OAAO,EAAE,mBAAmB,EAAE,KAAK,EAAE,iBAAiB,GAAG,GAAG,CAgDxF"}

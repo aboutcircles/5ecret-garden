@@ -16,11 +16,6 @@ const cache = new Map<string, CacheEntry<any>>();
 let DEFAULT_TIMEOUT_MS = 3000;
 let DEFAULT_TTL_MS = 60_000;
 
-export function configureFeedDefaults(opts: { timeoutMs?: number; ttlMs?: number }): void {
-  if (typeof opts.timeoutMs === 'number' && opts.timeoutMs > 0) DEFAULT_TIMEOUT_MS = opts.timeoutMs;
-  if (typeof opts.ttlMs === 'number' && opts.ttlMs > 0) DEFAULT_TTL_MS = opts.ttlMs;
-}
-
 async function fetchJson(url: string, timeoutMs = DEFAULT_TIMEOUT_MS): Promise<any | null> {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);

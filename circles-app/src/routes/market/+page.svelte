@@ -13,7 +13,6 @@
 
     // Defaults (as requested)
     const OPERATOR: `0x${string}` = MARKET_OPERATOR;
-    const AVATAR: `0x${string}` = '0x31d5d15c558fbfbbbe604c9c11eb42c9afbf5140';
 
     const API_BASE = MARKET_API_BASE;
 
@@ -53,9 +52,7 @@
     // data load with pagination
     // ————————————————————————————————————————————
     const avatars: `0x${string}`[] = [
-      '0x1327c3cf61c6df3e0cf69faa4590281d6f675ce5',
-      '0xde374ece6fa50e781e81aac78e811b33d16912c7',
-      '0x314278c65545f0f96f8fe0836ad92b3326bfff2e'
+      '0xde374ece6fa50e781e81aac78e811b33d16912c7'
     ];
 
     async function loadFirstPage(): Promise<void> {
@@ -164,7 +161,7 @@
     {/snippet}
 
     {#snippet meta()}
-        Namespace {shortAddr(OPERATOR)} • Avatar {shortAddr(AVATAR)} • All offers
+        Namespace {shortAddr(OPERATOR)} • All offers
     {/snippet}
 
     {#snippet headerActions()}

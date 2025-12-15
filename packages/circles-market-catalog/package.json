@@ -6,7 +6,13 @@
   "main": "src/index.ts",
   "module": "src/index.ts",
   "types": "src/index.ts",
+  "scripts": {
+    "demo": "tsx examples/demo.ts"
+  },
   "dependencies": {
-    "@circles-market/core": "workspace:*"
+    "@circles-market/core": "file:../circles-market-core"
+  },
+  "devDependencies": {
+    "tsx": "^4.16.2"
   }
 }
