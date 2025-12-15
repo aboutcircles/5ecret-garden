@@ -1,18 +1,19 @@
 <script lang="ts">
   import Send from '$lib/pages/Send.svelte';
-  import type { SendFlowContext } from '$lib/flows/send/context';
+  import type {SendFlowContext} from '$lib/flows/send/context';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
-  import { runTask } from '$lib/utils/tasks';
-  import { roundToDecimals, shortenAddress } from '$lib/utils/shared';
-  import { avatarState } from '$lib/stores/avatar.svelte';
-  import { tokenTypeToString, TransitiveTransferTokenAddress } from '$lib/pages/SelectAsset.svelte';
-  import { popupControls } from '$lib/stores/popup';
+  import {runTask} from '$lib/utils/tasks';
+  import {roundToDecimals, shortenAddress} from '$lib/utils/shared';
+  import {avatarState} from '$lib/stores/avatar.svelte';
+  import {tokenTypeToString, TransitiveTransferTokenAddress} from '$lib/pages/SelectAsset.svelte';
+  import {popupControls} from '$lib/stores/popup';
+  import {MAX_PATH_STEPS} from "$lib/circlesConfig";
 
   interface Props {
     context: SendFlowContext;
   }
 
-  let { context }: Props = $props();
+  let {context}: Props = $props();
 
   function onselect() {
     if (!avatarState.avatar) {
@@ -64,14 +65,29 @@
       name: `Send ${roundToDecimals(context.amount)} ${tokenTypeToString(context.selectedAsset.tokenType)} to ${shortenAddress(context.selectedAddress)}...`,
       promise:
         context.selectedAsset.tokenAddress === TransitiveTransferTokenAddress
-          ? avatarState.avatar.transfer(context.selectedAddress, context.amount, undefined, dataUInt8Arr, true)
+          ? avatarState.avatar.transfer(
+            context.selectedAddress,
+            context.amount,
+            undefined,
+            dataUInt8Arr,
+            true,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            MAX_PATH_STEPS)
           : avatarState.avatar.transfer(
             context.selectedAddress,
             context.amount,
             // amountToSend,
             context.selectedAsset.tokenAddress,
             dataUInt8Arr,
-            true
+            true,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            MAX_PATH_STEPS
           ),
     });
 
@@ -81,12 +97,12 @@
 
 <FlowDecoration>
   <Send
-    asset={context.selectedAsset}
-    amount={context.amount}
-    receiverAddress={context.selectedAddress}
-    textButton="Send CRC"
-    data={context.data}
-    dataType={context.dataType}
-    {onselect}
+      asset={context.selectedAsset}
+      amount={context.amount}
+      receiverAddress={context.selectedAddress}
+      textButton="Send CRC"
+      data={context.data}
+      dataType={context.dataType}
+      {onselect}
   />
 </FlowDecoration>

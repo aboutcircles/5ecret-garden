@@ -17,6 +17,7 @@
   import type { Action } from '$lib/types/actions';
   import { ipfsGatewayUrl } from '$lib/utils/ipfs';
   import { getProfilesBindings } from '$lib/offers/profilesBindings';
+  import { getSettings as getMarketSettings, saveSettings as saveMarketSettings, parseAddresses } from '$lib/stores/marketSettings.svelte';
 
   // Profile editing is delegated to ProfileExplorer to keep a single flow.
   const pinApiBase = MARKET_API_BASE;
@@ -49,11 +50,33 @@
   $effect(() => {
     // refresh on avatar change
     void loadProfileCid();
+    loadMarketSettingsSection();
   });
 
   async function copyProfileCid(): Promise<void> {
     if (!profileCid) return;
     try { await navigator.clipboard?.writeText(profileCid); } catch {}
+  }
+
+  // ——— Market settings (per avatar) ———
+  let extraAvatarsText: string = $state('');
+  let extraOperatorsText: string = $state('');
+  let marketSaved: string | null = $state(null);
+
+  function loadMarketSettingsSection(): void {
+    marketSaved = null;
+    const ms = getMarketSettings(avatarAddress);
+    extraAvatarsText = (ms.extraAvatars || []).join('\n');
+    extraOperatorsText = (ms.extraOperators || []).join('\n');
+  }
+
+  function saveMarketSettingsSection(): void {
+    const extraAvatars = parseAddresses(extraAvatarsText);
+    const extraOperators = parseAddresses(extraOperatorsText);
+    saveMarketSettings(avatarAddress, { extraAvatars, extraOperators });
+    marketSaved = 'Saved';
+    // Slight timeout to fade message
+    setTimeout(() => { marketSaved = null; }, 1500);
   }
 
   async function migrateToV2() {
@@ -136,6 +159,35 @@
         </div>
       {/if}
     </div>
+
+    {#if avatarAddress}
+      <div class="w-full pt-2">
+        <h2 class="font-bold">Market settings</h2>
+        <div class="mt-1 text-xs text-base-content/70">These settings are saved per avatar on this device.</div>
+        <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium">Extra avatars to scan</label>
+            <textarea class="textarea textarea-bordered font-mono text-xs min-h-[120px]"
+              placeholder="0xabc..., one per line or comma-separated"
+              bind:value={extraAvatarsText}></textarea>
+            <div class="text-xs opacity-70">Defaults are always included; add more here.</div>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-sm font-medium">Extra operators</label>
+            <textarea class="textarea textarea-bordered font-mono text-xs min-h-[120px]"
+              placeholder="0xoperator..., one per line or comma-separated"
+              bind:value={extraOperatorsText}></textarea>
+            <div class="text-xs opacity-70">Optional. Currently not used everywhere.</div>
+          </div>
+        </div>
+        <div class="mt-3 flex items-center gap-2">
+          <button class="btn btn-primary btn-sm" onclick={saveMarketSettingsSection}>Save</button>
+          {#if marketSaved}
+            <span class="text-xs text-success">{marketSaved}</span>
+          {/if}
+        </div>
+      </div>
+    {/if}
 
     {#if avatarState.isGroup}
       <div class="w-full pt-2">

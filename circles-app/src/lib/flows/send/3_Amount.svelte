@@ -13,6 +13,7 @@
     import { ethers } from 'ethers';
     import { popupControls } from '$lib/stores/popup';
     import { CirclesConverter } from '@circles-sdk/utils';
+    import {MAX_PATH_STEPS} from "$lib/circlesConfig";
 
     interface Props {
         context: SendFlowContext;
@@ -81,7 +82,9 @@
                         true,
                         undefined,
                         undefined,
-                        excludedTokens
+                        excludedTokens,
+                        undefined,
+                        MAX_PATH_STEPS
                     );
 
             if (!p || !p.transfers?.length) {

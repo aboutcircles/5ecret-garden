@@ -38,7 +38,15 @@ function buildCatalogUrl(marketApiBase: string, q: CatalogQuery): string {
   const operator = normalizeEvmAddress(q.operator);
 
   const qp = new URLSearchParams();
-  q.avatars.forEach((a) => qp.append('avatars', normalizeEvmAddress(a)));
+  // Be defensive: q.avatars may not always be a plain array at runtime.
+  const avatarsInput: any = (q as any).avatars;
+  if (avatarsInput) {
+    const iterable = typeof avatarsInput[Symbol.iterator] === 'function' ? avatarsInput : [avatarsInput];
+    for (const a of iterable as any) {
+      if (!a) continue;
+      qp.append('avatars', normalizeEvmAddress(String(a)));
+    }
+  }
   if (q.chainId != null) qp.set('chainId', String(q.chainId));
   if (q.start != null) qp.set('start', String(q.start));
   if (q.end != null) qp.set('end', String(q.end));
