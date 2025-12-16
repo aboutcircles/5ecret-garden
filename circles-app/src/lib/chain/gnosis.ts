@@ -24,13 +24,26 @@ export async function ensureGnosisChain(ethereum: WalletProvider): Promise<void>
       params: [{ chainId: GNOSIS_CHAIN_ID_HEX }],
     });
   } catch (e: any) {
-    const missing = e?.code === 4902;
+    const methodNotFound = e?.code === -32601; // local provider or unsupported
+    const missing = e?.code === 4902; // chain not added
+    if (methodNotFound) {
+      // Likely a local provider; nothing to switch.
+      return;
+    }
     if (!missing) {
       throw e;
     }
-    await ethereum.request({
-      method: 'wallet_addEthereumChain',
-      params: [GNOSIS_PARAMS],
-    });
+    try {
+      await ethereum.request({
+        method: 'wallet_addEthereumChain',
+        params: [GNOSIS_PARAMS],
+      });
+    } catch (e2: any) {
+      if (e2?.code === -32601) {
+        // Unsupported for local provider — ignore.
+        return;
+      }
+      throw e2;
+    }
   }
 }

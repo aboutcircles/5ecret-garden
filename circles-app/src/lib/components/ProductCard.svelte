@@ -15,6 +15,7 @@
   import {avatarState} from '$lib/stores/avatar.svelte';
   import {cartState, addToCart} from '$lib/cart/store';
   import {createOffersClientForAvatar} from '$lib/offers/client';
+  import { getWalletProvider } from '$lib/ethereum/getWalletProvider';
   import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
   import {getProduct, getFirstOffer, isProductOwnedBy} from '$lib/market/catalogHelpers';
   import {productAndOfferToDraft} from '$lib/utils/offer';
@@ -49,10 +50,7 @@
     }
 
     try {
-      const eth: any = (window as any).ethereum;
-      if (!eth?.request) {
-        throw new Error('No injected provider');
-      }
+      const eth = getWalletProvider();
 
       const seller = normalizeAddress(product.seller as string) as typeof product.seller;
 

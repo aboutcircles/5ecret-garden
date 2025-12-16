@@ -1,22 +1,23 @@
 <script lang="ts">
-  import { get } from 'svelte/store';
-  import { popupControls } from '$lib/stores/popup';
-  import { runTask } from '$lib/utils/tasks';
-  import { wallet } from '$lib/stores/wallet.svelte';
+  import {get} from 'svelte/store';
+  import {popupControls} from '$lib/stores/popup';
+  import {runTask} from '$lib/utils/tasks';
+  import {wallet} from '$lib/stores/wallet.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import type { Address } from '@circles-sdk/utils';
+  import type {Address} from '@circles-sdk/utils';
 
   import ProductGallery from '$lib/components/ProductGallery.svelte';
 
-  import { Contract, JsonRpcProvider } from 'ethers';
+  import {Contract, JsonRpcProvider} from 'ethers';
 
-  import type { OfferFlowContext } from '$lib/flows/offer/types';
-  import { GNOSIS_CHAIN_ID_NUM } from '$lib/config/market';
-  import { ensureGnosisChain } from '$lib/chain/gnosis';
-  import { ipfsGatewayUrl } from '$lib/utils/ipfs';
-  import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
-  import { resolveImagesToHttpUrls } from '$lib/media/resolveImageUrl';
-  import { createOffersClientForAvatar } from '$lib/offers/client';
+  import type {OfferFlowContext} from '$lib/flows/offer/types';
+  import {GNOSIS_CHAIN_ID_NUM} from '$lib/config/market';
+  import {ensureGnosisChain} from '$lib/chain/gnosis';
+  import {ipfsGatewayUrl} from '$lib/utils/ipfs';
+  import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
+  import {resolveImagesToHttpUrls} from '$lib/media/resolveImageUrl';
+  import {createOffersClientForAvatar} from '$lib/offers/client';
+  import {getWalletProvider} from '$lib/ethereum/getWalletProvider';
 
   interface Props { context: OfferFlowContext; }
   let { context }: Props = $props();
@@ -81,8 +82,7 @@
   }
 
   async function resolveOwnerAndAssertSafe(safe: Address): Promise<{ owner: Address }> {
-    const eth: any = (window as any)?.ethereum;
-    if (!eth?.request) throw new Error('No injected provider');
+    const eth = getWalletProvider();
 
     await ensureGnosisChain(eth);
 
@@ -122,7 +122,7 @@
 
     await resolveOwnerAndAssertSafe(seller);
 
-    const eth: any = (window as any)?.ethereum;
+    const eth = getWalletProvider();
 
     const { offers: client, media } = await createOffersClientForAvatar({
       avatar: seller,
@@ -151,7 +151,7 @@
           });
         }
 
-        const res = await client.appendOffer({
+        context.result = await client.appendOffer({
           avatar: seller,
           operator: context.operator,
           chainId: CHAIN_ID_NUM,
@@ -183,7 +183,6 @@
               : undefined,
           },
         });
-        context.result = res;
       })(),
     });
 
