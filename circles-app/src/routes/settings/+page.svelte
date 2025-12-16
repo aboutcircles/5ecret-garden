@@ -1,6 +1,6 @@
 <script lang="ts">
   import { avatarState } from '$lib/stores/avatar.svelte';
-  import { clearSession, wallet } from '$lib/stores/wallet.svelte';
+  import { clearSession, wallet, signer } from '$lib/stores/wallet.svelte';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import { canMigrate } from '$lib/guards/canMigrate';
   import MigrateToV2 from '$lib/flows/migrateToV2/1_GetInvited.svelte';
@@ -18,6 +18,7 @@
   import { ipfsGatewayUrl } from '$lib/utils/ipfs';
   import { getProfilesBindings } from '$lib/offers/profilesBindings';
   import { getSettings as getMarketSettings, saveSettings as saveMarketSettings, parseAddresses } from '$lib/stores/marketSettings.svelte';
+  import { CirclesStorage } from '$lib/utils/storage';
 
   // Profile editing is delegated to ProfileExplorer to keep a single flow.
   const pinApiBase = MARKET_API_BASE;
@@ -111,6 +112,21 @@
   const actions: Action[] = [
     { id: 'disconnect', label: 'Disconnect', iconNode: LLogOut, onClick: clearSession, variant: 'ghost' },
   ];
+
+  // Delete only the locally stored private key (seed-derived). Keeps current session unless you disconnect.
+  async function deleteLocalKey(): Promise<void> {
+    try {
+      const confirmDelete = window.confirm('Delete the Circles magic words (private key) from this device? You will need to import them again next time you connect.');
+      if (!confirmDelete) return;
+      CirclesStorage.getInstance().data = { privateKey: undefined };
+      // Drop in-memory reference too
+      try { (signer as any).privateKey = undefined; } catch {}
+      alert('Local key deleted from this device. You remain connected until you disconnect.');
+    } catch (e) {
+      console.error('Failed to delete local key', e);
+      alert('Failed to delete key. See console for details.');
+    }
+  }
 </script>
 
 <PageScaffold highlight="soft" collapsedMode="bar" collapsedHeightClass="h-12" maxWidthClass="page page--lg" contentWidthClass="page page--lg" usePagePadding={true} headerTopGapClass="mt-4 md:mt-6" collapsedTopGapClass="mt-3 md:mt-4">
@@ -218,5 +234,15 @@
         </div>
       {/if}
     {/if}
+
+    <div class="w-full pt-4">
+      <h2 class="font-bold">Security</h2>
+      <div class="mt-2 text-xs text-base-content/70">Manage keys stored on this device.</div>
+      <div class="mt-3">
+        <button class="btn btn-outline btn-sm" onclick={deleteLocalKey} title="Remove the Circles.garden key from this device">
+          Delete key from this device
+        </button>
+      </div>
+    </div>
   </div>
 </PageScaffold>

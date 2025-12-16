@@ -6,6 +6,7 @@
   import { runTask } from '$lib/utils/tasks';
   import { popupControls } from '$lib/stores/popup';
   import type { CreateGatewayFlowContext } from './context';
+  import ActionButton from '$lib/components/ActionButton.svelte';
 
   interface Props {
     context: CreateGatewayFlowContext;
@@ -137,14 +138,13 @@
       >
         Back
       </button>
-      <button
-        type="button"
-        class="btn btn-primary"
-        onclick={createGateway}
+      <ActionButton
+        action={createGateway}
         disabled={!canSubmit}
+        title="Create gateway"
       >
-        Create gateway
-      </button>
+        {#snippet children()}Create gateway{/snippet}
+      </ActionButton>
     </div>
   </div>
 </FlowDecoration>
