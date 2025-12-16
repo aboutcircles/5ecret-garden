@@ -44,6 +44,13 @@ export class OrdersClientImpl implements OrdersClient {
 
   async getOrdersBatch(ids: string[]): Promise<OrderSnapshot[]> {
     const token = this.requireToken();
+
+    const orderIds = Array.isArray(ids) ? ids.filter((x) => typeof x === 'string' && x.length > 0) : [];
+    const hasIds = orderIds.length > 0;
+    if (!hasIds) {
+      throw new Error('orderIds must be a non-empty array');
+    }
+
     const res = await this.http.request<{ items: OrderSnapshot[] }>({
       method: 'POST',
       url: `${this.marketApiBase}/api/cart/v1/orders/batch`,
@@ -52,7 +59,7 @@ export class OrdersClientImpl implements OrdersClient {
         'Content-Type': 'application/ld+json; charset=utf-8',
         Accept: 'application/ld+json',
       },
-      body: { ids },
+      body: { orderIds },
     });
     return Array.isArray(res.items) ? res.items : [];
   }

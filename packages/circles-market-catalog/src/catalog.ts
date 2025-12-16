@@ -201,17 +201,34 @@ export class CatalogClientImpl implements CatalogClient {
       // next link discovery (offset pagination or cursor)
       let nextCursor: string | null = null;
       let nextLink: string | null = null;
-      const link = res.headers.get('Link') || res.headers.get('link');
-      if (link) {
-        const m = /<([^>]+)>;\s*rel="next"/i.exec(link);
-        if (m) {
-          nextLink = m[1];
+
+      const cursorHeader = res.headers.get('X-Next-Cursor') || res.headers.get('x-next-cursor');
+      const hasCursorHeader = typeof cursorHeader === 'string' && cursorHeader.trim().length > 0;
+      if (hasCursorHeader) {
+        nextCursor = cursorHeader.trim();
+      }
+
+      const linkHeader = res.headers.get('Link') || res.headers.get('link');
+      const hasLinkHeader = typeof linkHeader === 'string' && linkHeader.length > 0;
+      if (hasLinkHeader) {
+        const m = /<([^>]+)>;\s*rel="next"/i.exec(linkHeader);
+        const hasNext = Boolean(m && m[1]);
+        if (hasNext) {
+          const raw = m![1]!;
           try {
-            const url = new URL(nextLink);
-            const cc = url.searchParams.get('cursor');
-            if (cc) nextCursor = cc;
+            // server may emit a relative link; resolve against the request URL
+            const resolved = new URL(raw, url).toString();
+            nextLink = resolved;
+
+            if (!nextCursor) {
+              const cc = new URL(resolved).searchParams.get('cursor');
+              const hasCc = typeof cc === 'string' && cc.length > 0;
+              if (hasCc) {
+                nextCursor = cc;
+              }
+            }
           } catch {
-            // ignore invalid next link
+            nextLink = raw;
           }
         }
       }

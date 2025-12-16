@@ -80,7 +80,7 @@ export class OffersClientImpl implements OffersClient {
     operator: string;
     signer: AvatarSigner;
     link: CustomDataLink;
-  }): Promise<{ headCid: string; indexCid: string; profileCid: string; digest32: Hex; txHashNorm: Hex }>
+  }): Promise<{ headCid: string; indexCid: string; profileCid: string; digest32: Hex; txHash?: Hex }>
   {
     const b = this.ensureBindings();
     const { avatar, operator, signer, link } = params;
@@ -102,10 +102,10 @@ export class OffersClientImpl implements OffersClient {
     });
 
     const txHash = await b.updateAvatarProfileDigest(avatar, profileCid);
-    const txHashNorm = normalizeHex32(txHash, 'txHash');
+    const txHashOpt = normalizeHex32(txHash, 'txHash');
     const digest32 = cidV0ToDigest32Strict(profileCid);
 
-    return { headCid, indexCid, profileCid, digest32, txHashNorm };
+    return { headCid, indexCid, profileCid, digest32, txHash: txHashOpt };
   }
 
   async publishOffer(opts: {
@@ -172,7 +172,7 @@ export class OffersClientImpl implements OffersClient {
       link,
     });
 
-    return { productCid, headCid: res.headCid, indexCid: res.indexCid, profileCid: res.profileCid, digest32: res.digest32, txHash: res.txHashNorm };
+    return { productCid, headCid: res.headCid, indexCid: res.indexCid, profileCid: res.profileCid, digest32: res.digest32, txHash: res.txHash };
   }
 
   async tombstone(opts: {
@@ -221,6 +221,6 @@ export class OffersClientImpl implements OffersClient {
       link,
     });
 
-    return { headCid: res.headCid, indexCid: res.indexCid, profileCid: res.profileCid, digest32: res.digest32, txHash: res.txHashNorm };
+    return { headCid: res.headCid, indexCid: res.indexCid, profileCid: res.profileCid, digest32: res.digest32, txHash: res.txHash };
   }
 }
