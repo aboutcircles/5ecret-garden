@@ -6,6 +6,7 @@
   import { signer, clearSession } from '$lib/stores/wallet.svelte';
   import type { Address } from '@circles-sdk/utils';
   import ImportCircles from './ImportCircles.svelte';
+  import { CirclesStorage } from '$lib/utils/storage';
   const connectors = getConnectors(config);
 
   async function handleConnect(connector: ReturnType<typeof getConnectors>[number]) {
@@ -43,7 +44,14 @@
   <button
     class="list-row flex w-full justify-between items-center btn btn-sm my-2"
     onclick={async () => {
-      await clearSession();
+      // If a local private key is already present, reuse it without asking again
+      const pk = CirclesStorage.getInstance().privateKey;
+      if (pk) {
+        popupControls.close();
+        goto('/connect-wallet/import-circles-garden');
+        return;
+      }
+      // Otherwise, prompt for the seed phrase
       popupControls.open({
         component: ImportCircles,
         title: 'Use circles magic words',

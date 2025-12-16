@@ -7,6 +7,7 @@
   import type {Address} from '@circles-sdk/utils';
 
   import ProductGallery from '$lib/components/ProductGallery.svelte';
+  import ActionButton from '$lib/components/ActionButton.svelte';
 
   import {Contract, JsonRpcProvider} from 'ethers';
 
@@ -249,6 +250,8 @@
     </div>
 
     <div class="mt-4 flex justify-end gap-2">
-        <button type="button" class="btn btn-primary" disabled={!requiredOk} onclick={publish}>Publish</button>
+        <ActionButton action={publish} disabled={!requiredOk} title="Publish">
+          {#snippet children()}Publish{/snippet}
+        </ActionButton>
     </div>
 </div>

@@ -22,6 +22,7 @@
   import {popupControls, type PopupContentDefinition} from '$lib/stores/popup';
   import ProductDetailsPopup from '$lib/market/ProductDetailsPopup.svelte';
   import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
+  import ActionButton from '$lib/components/ActionButton.svelte';
 
   const OPERATOR = MARKET_OPERATOR;
 
@@ -145,14 +146,22 @@
     >
       Edit
     </button>
-    <button
-        type="button"
-        class="btn btn-sm btn-outline btn-error"
-        onclick={(e) => { e.stopPropagation(); handleTombstone(); }}
+    <div onclick={(e) => e.stopPropagation()}>
+      <ActionButton
+        action={handleTombstone}
         title="Remove listing"
-    >
-      Remove
-    </button>
+        theme={{
+          Ready: 'btn-outline btn-error',
+          Working: 'btn-disabled',
+          Error: 'btn-warning',
+          Retry: 'btn-warning',
+          Done: 'btn-success',
+          Disabled: 'btn-disabled'
+        }}
+      >
+        {#snippet children()}Remove{/snippet}
+      </ActionButton>
+    </div>
   {/if}
 
   <button
