@@ -2,6 +2,7 @@ import { browser } from '$app/environment';
 import { GNOSIS_CHAIN_ID_NUM } from '$lib/config/market';
 import { ensureGnosisChain } from '$lib/chain/gnosis';
 import { getMarketClient } from '$lib/sdk/marketClient';
+import { getWalletProvider } from '$lib/ethereum/getWalletProvider';
 
 /**
  * Sign in with a Safe on the Gnosis chain.
@@ -15,17 +16,13 @@ export async function signInWithSafe(
     throw new Error('signInWithSafe() can only be used in the browser');
   }
 
-  const ethereum: any = (window as any)?.ethereum;
-  if (!ethereum?.request) {
-    throw new Error('No injected provider available (window.ethereum missing)');
-  }
-
   if (chainId !== GNOSIS_CHAIN_ID_NUM) {
     throw new Error(
       `signInWithSafe currently supports only Gnosis chain (${GNOSIS_CHAIN_ID_NUM}); received ${chainId}`,
     );
   }
 
+  const ethereum = getWalletProvider();
   await ensureGnosisChain(ethereum);
 
   return await getMarketClient().auth.signInWithAvatar({
