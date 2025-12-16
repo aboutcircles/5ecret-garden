@@ -89,8 +89,18 @@ Fields:
 - `buyer?`: buyer address (when provided/known)
 - `operator?`: operator address (when provided/known)
 - `chainId`: chain id (default `100` when created by SDK)
-- `items`: basket items (backend may add extra fields via `[k: string]: unknown`)
+- `items`: `BasketItem[]` (server-side basket line shape; see below). Backend may add extra fields via `[k: string]: unknown`.
 - `status`: backend-defined status string
+- `[k: string]: unknown`: forward-compat for backend-added fields
+
+#### `BasketItem` (server basket line shape)
+Fields (all optional unless noted by backend):
+- `@type?`: typically "OrderItem"
+- `orderQuantity?`: number
+- `orderedItem?`: `{ '@type'?: string; sku?: string; [k: string]: unknown }`
+- `seller?`: seller/avatar EVM address (`0x...`)
+- `imageUrl?`: optional UI hint
+- `productCid?`, `offerSnapshot?`: optional provenance fields that the server may include
 - `[k: string]: unknown`: forward-compat for backend-added fields
 
 #### `PostalAddressInput`

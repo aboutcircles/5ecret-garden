@@ -104,11 +104,24 @@ export class CartClientImpl implements CartClient {
   }
 
   async checkoutBasket(opts: { basketId: string; buyer?: string }): Promise<{ orderId: string; paymentReference: string; basketId: string }> {
+    const qp = new URLSearchParams();
+    const buyer = opts.buyer;
+    const hasBuyer = typeof buyer === 'string' && buyer.length > 0;
+    if (hasBuyer) {
+      qp.set('buyer', buyer);
+    }
+
+    const qs = qp.toString();
+    const hasQuery = qs.length > 0;
+
+    const url = hasQuery
+      ? `${this.marketApiBase}/api/cart/v1/baskets/${encodeURIComponent(opts.basketId)}/checkout?${qs}`
+      : `${this.marketApiBase}/api/cart/v1/baskets/${encodeURIComponent(opts.basketId)}/checkout`;
+
     return await this.http.request<{ orderId: string; paymentReference: string; basketId: string }>({
       method: 'POST',
-      url: `${this.marketApiBase}/api/cart/v1/baskets/${encodeURIComponent(opts.basketId)}/checkout`,
+      url,
       headers: { ...this.maybeAuthHeaders() },
-      body: opts.buyer ? { buyer: opts.buyer } : undefined,
     });
   }
 }

@@ -215,9 +215,15 @@
       {/if}
     </div>
   {:else if isVoucherPayload(payload)}
-    <div class="text-xs">
-      Voucher code:
-      <code>{payload.code}</code>
+    <div class="text-xs flex items-start gap-2">
+      <span class="opacity-70 shrink-0 mt-0.5">Codes:</span>
+      <ul class="m-0 p-0 list-none space-y-1.5">
+        {#each voucherCodes(payload) as c}
+          <li class="max-w-full">
+            <code class="font-mono text-[11px] break-all inline-block max-w-full px-1.5 py-1 bg-base-200/80 border border-base-300 rounded">{c}</code>
+          </li>
+        {/each}
+      </ul>
     </div>
   {:else if isMessagePayload(payload)}
     <div class="flex flex-col gap-1.5">
@@ -321,21 +327,38 @@
   }
 
   function isKnownDownloadPayload(payload: any): boolean {
+    // try {
+    //   const t = payload?.['@type'];
+    //   const hasUrl = typeof payload?.downloadUrl === 'string' || typeof payload?.contentUrl === 'string';
+    //   return typeof t === 'string' && hasUrl;
+    // } catch {
+      return false;
+    // }
+  }
+
+  function isVoucherPayload(payload: any): boolean {
     try {
-      const t = payload?.['@type'];
-      const hasUrl = typeof payload?.downloadUrl === 'string' || typeof payload?.contentUrl === 'string';
-      return typeof t === 'string' && hasUrl;
+      const t = (payload?.['@type'] ?? '').toString().toLowerCase();
+      const hasType = t.includes('voucher') || t.includes('codedispenserresult');
+      const hasSingle = typeof payload?.code === 'string' && payload.code.length > 0;
+      const codes = Array.isArray(payload?.codes) ? payload.codes.filter((x: any) => typeof x === 'string' && x.length > 0) : [];
+      const hasMany = codes.length > 0;
+      return hasType && (hasSingle || hasMany);
     } catch {
       return false;
     }
   }
 
-  function isVoucherPayload(payload: any): boolean {
+  function voucherCodes(payload: any): string[] {
     try {
-      const t = payload?.['@type'];
-      return typeof t === 'string' && t.toLowerCase().includes('voucher') && typeof payload?.code === 'string';
+      const arr = Array.isArray(payload?.codes) ? payload.codes : [];
+      const codes = arr.filter((x: any) => typeof x === 'string' && x.length > 0);
+      const single = (payload?.code ?? '').toString();
+      if (codes.length > 0) return codes;
+      if (single) return [single];
+      return [];
     } catch {
-      return false;
+      return [];
     }
   }
 

@@ -35,6 +35,10 @@ export class AuthClientImpl implements AuthClient {
     private readonly signers: SignersClient,
   ) {}
 
+  private baseUrl(): string {
+    return this.marketApiBase.replace(/\/$/, '');
+  }
+
   async signInWithAvatar(options: {
     avatar: string;
     ethereum: WalletProvider;
@@ -48,7 +52,7 @@ export class AuthClientImpl implements AuthClient {
       message: string; // utf-8 string to be signed as bytes
     }>({
       method: 'POST',
-      url: `${this.marketApiBase}/api/auth/challenge`,
+      url: `${this.baseUrl()}/api/auth/challenge`,
       body: { address: options.avatar, chainId },
     });
 
@@ -65,6 +69,17 @@ export class AuthClientImpl implements AuthClient {
 
     const signature = await safeSigner.signBytes(msgBytes);
 
+    const sig = signature as any;
+    const isString = typeof sig === 'string';
+    if (!isString) {
+      throw new Error('Wallet returned a non-string signature');
+    }
+    const trimmed = (sig as string).trim();
+    const looksHex = /^0x[0-9a-fA-F]+$/.test(trimmed);
+    if (!looksHex) {
+      throw new Error('Wallet returned an invalid signature format (expected 0x-prefixed hex)');
+    }
+
     // 3) Verify
     const verify = await this.http.request<{
       token: string;
@@ -73,8 +88,8 @@ export class AuthClientImpl implements AuthClient {
       chainId: number;
     }>({
       method: 'POST',
-      url: `${this.marketApiBase}/api/auth/verify`,
-      body: { challengeId: ch.challengeId, signature },
+      url: `${this.baseUrl()}/api/auth/verify`,
+      body: { challengeId: ch.challengeId, signature: trimmed },
     });
 
     this.authContext.setToken(verify.token, verify.expiresIn, verify.address, verify.chainId);
