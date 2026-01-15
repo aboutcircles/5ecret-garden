@@ -1,8 +1,7 @@
 <script lang="ts">
   import { formatUnits, parseEther } from 'ethers';
   import Avatar from './avatar/Avatar.svelte';
-  import type { Address } from '@aboutcircles/sdk-types';
-  import type { TrustRelation } from '@aboutcircles/sdk-types';
+  import type { Address, TrustRelationType } from '@aboutcircles/sdk-types';
   import RowFrame from '$lib/ui/RowFrame.svelte';
   import { popupControls } from '$lib/stores/popUp.svelte';
   import ProfilePage from '$lib/pages/Profile.svelte';
@@ -18,7 +17,7 @@
       amount: bigint; // raw wei from chain
       amountToRedeem: bigint;
       amountToRedeemInCircles: number;
-      trustRelation?: TrustRelation;
+      trustRelation?: TrustRelationType;
     }>;
     redeemable?: boolean;
   }
@@ -31,7 +30,7 @@
       amount: bigint;
       amountToRedeem: bigint;
       amountToRedeemInCircles: number;
-      trustRelation?: TrustRelation;
+      trustRelation?: TrustRelationType;
     },
     e: Event
   ) {

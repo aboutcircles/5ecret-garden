@@ -6,6 +6,7 @@
   import {
     type AvatarInfo,
     type TrustRelation,
+    type TrustRelationType,
     type AggregatedTrustRelation,
   } from '@aboutcircles/sdk-types';
   import Untrust from '$lib/pages/Untrust.svelte';
@@ -59,7 +60,7 @@
     amount: bigint;
     amountToRedeem: bigint;
     amountToRedeemInCircles: number;
-    trustRelation?: TrustRelation;
+    trustRelation?: TrustRelationType;
   }> = $state([]);
 
   let tokenHolders: Array<{

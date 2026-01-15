@@ -97,8 +97,6 @@
       title: 'Send',
       component: Send,
       props: { context },
-      // Optional but helpful: stable key so the same transaction step reuses the instance
-      key: `send:${context.selectedAddress ?? 'na'}:${context.selectedAsset?.tokenAddress ?? 'transitive'}`,
     });
   }
 
