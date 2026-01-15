@@ -5,6 +5,7 @@
   import ModernHistoryChart from '$lib/components/ModernHistoryChart.svelte';
   import ModernPieChart from '$lib/components/ModernPieChart.svelte';
   import TokenHoldersList from '$lib/components/TokenHoldersList.svelte';
+  import TrustNetworkSummary from '$lib/components/TrustNetworkSummary.svelte';
 </script>
 
 <div class="w-full mb-6"></div>
@@ -77,8 +78,13 @@
       <TokenHoldersList tokenAddress={avatarState.avatar.address} />
     {/if}
   </div>
+{:else if avatarState.isHuman}
+  <!-- Show trust network summary for human avatars -->
+  <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+    <TrustNetworkSummary />
+  </div>
 {:else}
   <div class="flex flex-col items-center justify-center h-[50vh]">
-    <div class="text-2xl font-bold text-gray-400">Loading group metrics...</div>
+    <div class="text-2xl font-bold text-gray-400">Loading metrics...</div>
   </div>
 {/if}
