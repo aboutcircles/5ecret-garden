@@ -7,6 +7,7 @@
   import type { Address } from '@aboutcircles/sdk-types';
   import { CirclesStorage } from '$lib/utils/storage';
   import type { GroupRow } from '@aboutcircles/sdk-types';
+  import { GroupType } from '@aboutcircles/sdk-types';
   import { settings } from '$lib/stores/settings.svelte';
   import { popupControls } from '$lib/stores/popUp.svelte';
   import CreateGroup from '$lib/flows/createGroup/1_CreateGroup.svelte';
@@ -58,7 +59,7 @@
       avatarState.isGroup = true;
       avatarState.isHuman = false;
       // Try to detect group type - default to base group
-      avatarState.groupType = 'Standard';
+      avatarState.groupType = GroupType.Standard;
     } else if (avatarType === 'CrcV2_RegisterOrganization') {
       avatarState.isGroup = false;
       avatarState.isHuman = false;

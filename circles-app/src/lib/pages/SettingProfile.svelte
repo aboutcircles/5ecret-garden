@@ -1,10 +1,11 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import Address from '$lib/components/Address.svelte';
+  import AddressDisplay from '$lib/components/Address.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import QrCode from '$lib/components/QrCode.svelte';
   import { popupControls } from '$lib/stores/popUp.svelte';
   import { signer } from '$lib/stores/wallet.svelte';
+  import type { Address } from '@aboutcircles/sdk-types';
 
   interface Props {
     address: Address | undefined;
@@ -26,7 +27,7 @@
 >
   <Avatar view="vertical" clickable={false} {address} />
   <div class="flex gap-x-2">
-    <Address {address} />
+    <AddressDisplay {address} />
     <button
       onclick={changeWallet}
       class="btn btn-sm btn-outline btn-primary text-primary hover:text-white"

@@ -16,13 +16,7 @@
 
   interface Props {
     context?: CreateGroupFlowContext;
-    setGroup?: (
-      address: string,
-      name: string,
-      symbol: string,
-      treasury: string,
-      cidV0Digest: string
-    ) => void;
+    setGroup?: (address: string) => void;
   }
 
   let { context, setGroup }: Props = $props();
@@ -30,11 +24,7 @@
   let ctx: CreateGroupFlowContext = $state(context ?? $createGroupContext);
 
   function extractAddressFromTopic(topic: string | undefined): string | null {
-    const looksRight: boolean =
-      typeof topic === 'string' &&
-      topic.startsWith('0x') &&
-      topic.length === 66;
-    if (!looksRight) {
+    if (typeof topic !== 'string' || !topic.startsWith('0x') || topic.length !== 66) {
       return null;
     }
     const addr = '0x' + topic.slice(26);

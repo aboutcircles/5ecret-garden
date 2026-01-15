@@ -10,16 +10,16 @@
   }
   let { item }: Props = $props();
 
-  let counterpartyAddress = $state('');
+  let counterpartyAddress: `0x${string}` = $state('0x0000000000000000000000000000000000000000');
   let badgeUrl: string | null = $state(null);
   let displayAmount = $state('');
   let sent = $state(false);
 
-  function getCounterpartyAddress(avatarAddress: string) {
+  function getCounterpartyAddress(avatarAddress: string): `0x${string}` {
     const zero = '0x0000000000000000000000000000000000000000';
-    const lowerFrom = item.from.toLowerCase();
-    const lowerTo = item.to.toLowerCase();
-    const lowerAvatar = avatarAddress.toLowerCase();
+    const lowerFrom = item.from.toLowerCase() as `0x${string}`;
+    const lowerTo = item.to.toLowerCase() as `0x${string}`;
+    const lowerAvatar = avatarAddress.toLowerCase() as `0x${string}`;
     if (item.from === zero) return lowerTo; // mint
     if (item.to === zero) return lowerAvatar; // burn
     return lowerFrom === lowerAvatar ? lowerTo : lowerFrom;
@@ -53,7 +53,7 @@
     badgeUrl = getBadge(avatarState.avatar.address);
     sent = item.from.toLowerCase() === avatarState.avatar.address.toLowerCase();
     const prefix = sent ? '-' : '+';
-    displayAmount = `${prefix}${formatNetCircles(item.circles)}`;
+    displayAmount = `${prefix}${formatNetCircles(item.circles ?? 0)}`;
   });
 </script>
 

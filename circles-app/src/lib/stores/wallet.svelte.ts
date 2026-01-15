@@ -72,11 +72,12 @@ export async function initNewSafeContractRunner(
   const rpcUrl = settings.ring
     ? gnosisConfig.rings.circlesRpcUrl
     : gnosisConfig.production.circlesRpcUrl;
+  // Cast gnosis to any to avoid viem type mismatch between SDK and app
   const runner = await SafeContractRunner.create(
     rpcUrl,
     privateKey as `0x${string}`,
     safeAddress,
-    gnosis
+    gnosis as any
   );
   return runner;
 }
@@ -90,11 +91,12 @@ export async function initNewSafeBrowserRunner(safeAddress: Address) {
     throw new Error('No ethereum provider found');
   }
 
+  // Cast gnosis to any to avoid viem type mismatch between SDK and app
   const runner = await SafeBrowserRunner.create(
     rpcUrl,
     window.ethereum,
     safeAddress,
-    gnosis
+    gnosis as any
   );
   return runner;
 }

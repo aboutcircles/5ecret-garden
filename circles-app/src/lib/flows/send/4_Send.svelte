@@ -66,7 +66,7 @@
               context.selectedAddress,
               amountInAttoCrc,
               {
-                data: dataUInt8Arr.length > 0 ? dataUInt8Arr : undefined,
+                txData: dataUInt8Arr.length > 0 ? dataUInt8Arr : undefined,
                 useWrappedBalances: context.useWrappedBalances ?? false,
               }
             )

@@ -1,4 +1,5 @@
 <script lang="ts">
+  // @ts-ignore - MDsveX component
   import Terms from './terms.svx';
 </script>
 

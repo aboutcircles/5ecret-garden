@@ -24,7 +24,7 @@
           ended: boolean;
         }>
       | undefined;
-    selectedAddress?: Address;
+    selectedAddress?: Address | '';
     addressListTitle?: string;
     noResultsMessage?: string;
     group?: boolean;
@@ -33,7 +33,7 @@
 
   let {
     store = undefined,
-    selectedAddress = $bindable(''),
+    selectedAddress = $bindable<Address | ''>(''),
     addressListTitle = 'Recent',
     noResultsMessage = 'No recent addresses found',
     group = false,
@@ -57,9 +57,9 @@
     })()
   );
 
-  function handleSelect(address: Address) {
+  function handleSelect(address: string) {
     const profile = $store?.data[address]?.contactProfile;
-    onselect?.(address);
+    onselect?.(address as Address);
   }
 </script>
 
@@ -74,7 +74,7 @@
     clickable={true}
     dense={true}
     noLeading={true}
-    on:click={() => handleSelect(selectedAddress)}
+    on:click={() => handleSelect(selectedAddress as string)}
   >
     <div class="min-w-0">
       <Avatar

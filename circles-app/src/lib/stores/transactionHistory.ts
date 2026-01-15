@@ -1,14 +1,15 @@
 import type { TransactionHistoryRow } from '@aboutcircles/sdk-rpc';
 import { writable } from 'svelte/store';
 import type { Avatar } from '@aboutcircles/sdk';
-import type { PagedQuery } from '@aboutcircles/sdk-rpc';
+import type { PagedResponse } from '@aboutcircles/sdk-types';
 
 const PAGE_SIZE = 25;
 
-// State for pagination
+// State for cursor-based pagination
 let currentAvatar: Avatar | null = null;
 let isLoading = false;
-let pagedQuery: PagedQuery<TransactionHistoryRow> | null = null;
+let nextCursor: string | null = null;
+let hasMore = true;
 
 const _transactionHistory = writable<{
   data: TransactionHistoryRow[];
@@ -22,14 +23,10 @@ const _transactionHistory = writable<{
 
 /**
  * Load the next page of transactions using cursor-based pagination
+ * New SDK returns PagedResponse with { results, hasMore, nextCursor }
  */
 async function loadNextPage(): Promise<boolean> {
-  if (!currentAvatar || isLoading || !pagedQuery) {
-    return false;
-  }
-
-  // Check if there are more pages to load
-  if (pagedQuery.currentPage && !pagedQuery.currentPage.hasMore) {
+  if (!currentAvatar || isLoading || !hasMore) {
     return false;
   }
 
@@ -37,22 +34,32 @@ async function loadNextPage(): Promise<boolean> {
 
   try {
     console.log('🔄 Fetching next page of transaction history...');
-    const hasResults = await pagedQuery.queryNextPage();
 
-    if (hasResults && pagedQuery.currentPage) {
-      const newData = pagedQuery.currentPage.results;
+    // New SDK: getTransactionHistory returns Promise<PagedResponse<TransactionHistoryRow>>
+    // Call via SDK's RPC directly with cursor support
+    const sdk = (currentAvatar as any).sdk;
+    const response: PagedResponse<TransactionHistoryRow> = await sdk.rpc.transaction.getTransactionHistory(
+      currentAvatar.address,
+      PAGE_SIZE,
+      nextCursor
+    );
+
+    if (response.results.length > 0) {
+      nextCursor = response.nextCursor;
+      hasMore = response.hasMore;
 
       _transactionHistory.update((state) => ({
-        data: [...state.data, ...newData],
+        data: [...state.data, ...response.results],
         next: loadNextPage,
-        ended: !pagedQuery?.currentPage?.hasMore,
+        ended: !response.hasMore,
       }));
 
       console.log(
-        `✅ Loaded ${newData.length} transactions (hasMore: ${pagedQuery.currentPage.hasMore})`
+        `✅ Loaded ${response.results.length} transactions (hasMore: ${response.hasMore})`
       );
       return true;
     } else {
+      hasMore = false;
       _transactionHistory.update((state) => ({
         ...state,
         ended: true,
@@ -91,9 +98,9 @@ export const initTransactionHistoryStore = async (avatar: Avatar) => {
     return;
   }
 
-  // Validate avatar has history methods (all avatar types from new SDK have this)
-  if (!avatar.history || typeof avatar.history.getTransactions !== 'function') {
-    console.error('❌ No history.getTransactions method available on avatar');
+  // Validate avatar has SDK reference for RPC calls
+  if (!(avatar as any).sdk?.rpc?.transaction) {
+    console.error('❌ No SDK RPC transaction methods available on avatar');
     _transactionHistory.set({
       data: [],
       next: async () => false,
@@ -102,9 +109,9 @@ export const initTransactionHistoryStore = async (avatar: Avatar) => {
     return;
   }
 
-  // Create a new PagedQuery instance using the avatar's history API
-  // avatar.history.getTransactions returns a PagedQuery
-  pagedQuery = avatar.history.getTransactions(PAGE_SIZE, 'DESC');
+  // Reset cursor state for new avatar
+  nextCursor = null;
+  hasMore = true;
 
   // Reset store
   _transactionHistory.set({
