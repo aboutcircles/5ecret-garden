@@ -20,10 +20,11 @@
   }: Props = $props();
 
   let inputElement: HTMLInputElement | undefined = $state();
-  let mask: IMask.InputMask<any> | null = null;
+  let mask: any = null;
 
   // Single IMask config (2 decimals, no negatives)
-  const maskOptions: IMask.AnyMaskedOptions = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const maskOptions: any = {
     mask: Number,
     scale: 2,
     signed: false,
@@ -32,7 +33,7 @@
     normalizeZeros: true,
     radix: '.',
     mapToRadix: ['.'],
-    // Do not show underscores — they can make the caret look “gone”
+    // Do not show underscores — they can make the caret look "gone"
     // placeholderChar: '_',  // <-- removed on purpose
   };
 

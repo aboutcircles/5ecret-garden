@@ -40,12 +40,15 @@
       return [];
     }
     try {
-      return await $circles.rpc.profile.searchByAddressOrName(
+      // New SDK: searchByAddressOrName returns ProfileSearchResponse with { results, query, searchType, totalCount }
+      const response = await $circles.rpc.profile.searchByAddressOrName(
         query,
         limit,
         offset,
         avatarTypes
       );
+      // Map Profile[] to SearchResultProfile[] - the results already have the needed fields
+      return response.results as unknown as SearchResultProfile[];
     } catch (error) {
       console.error('Error searching profiles:', error);
       return [];

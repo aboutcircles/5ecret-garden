@@ -27,13 +27,14 @@ export async function getBaseAndCmgGroupsByOwnerBatch(
   });
 
   try {
-    const allGroups = await sdk.rpc.group.findGroups(100, {
+    // New SDK returns PagedResponse<GroupRow> with { results, hasMore, nextCursor }
+    const response = await sdk.rpc.group.findGroups(100, {
       ownerIn: normalizedOwners,
       groupTypeIn: ['CrcV2_BaseGroupCreated'],
     });
 
-    // Group results by owner
-    allGroups.forEach((group: NewGroupRow) => {
+    // Group results by owner - access the results array from PagedResponse
+    response.results.forEach((group: NewGroupRow) => {
       const ownerLower = group.owner?.toLowerCase() as Address;
       if (acc[ownerLower]) {
         // Map new SDK GroupRow to old SDK GroupRow format

@@ -21,9 +21,9 @@
 
   const setupObserver = () => {
     if (observer) observer.disconnect();
-    if (anchor && !$store?.ended && !hasError) {
+    if (anchor && store && !$store?.ended && !hasError) {
       observer = new IntersectionObserver(async (entries) => {
-        if (entries[0]?.isIntersecting && !$store.ended) {
+        if (entries[0]?.isIntersecting && $store && !$store.ended) {
           observer?.disconnect();
           try {
             await $store.next();
@@ -38,6 +38,7 @@
     }
   };
   const handleRetry = async () => {
+    if (!$store) return;
     try {
       await $store.next();
       hasError = false;

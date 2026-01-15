@@ -12,7 +12,7 @@
     "format": "prettier --write ."
   },
   "devDependencies": {
-    "@safe-global/protocol-kit": "^4.1.0",
+    "@safe-global/protocol-kit": "^5.1.1",
     "@sveltejs/adapter-auto": "^4.0.0",
     "@sveltejs/adapter-node": "^5.2.12",
     "@sveltejs/adapter-static": "^3.0.8",
@@ -52,14 +52,6 @@
     "@aboutcircles/sdk-transfers": "^0.1.1",
     "@aboutcircles/sdk-types": "^0.1.1",
     "@aboutcircles/sdk-utils": "^0.1.1",
-    "@circles-sdk/adapter": "^0.29.1",
-    "@circles-sdk/adapter-ethers": "^0.29.1",
-    "@circles-sdk/adapter-safe": "^0.29.1",
-    "@circles-sdk/data": "^0.29.1",
-    "@circles-sdk/pathfinder": "^0.29.1",
-    "@circles-sdk/profiles": "^0.29.1",
-    "@circles-sdk/sdk": "^0.29.1",
-    "@circles-sdk/utils": "^0.29.1",
     "@wagmi/connectors": "^5.8.3",
     "@wagmi/core": "^2.17.2",
     "@zxing/library": "^0.21.3",
@@ -77,6 +69,6 @@
     "pg": "^8.15.6",
     "process": "^0.11.10",
     "qrcode": "^1.5.4",
-    "viem": "^2.30.1"
+    "viem": "^2.38.0"
   }
 }

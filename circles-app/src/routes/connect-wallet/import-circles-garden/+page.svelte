@@ -10,6 +10,7 @@
   import { gnosisConfig } from '$lib/circlesConfig';
   import ConnectSafe from '$lib/components/ConnectSafe.svelte';
   import type { Address } from '@aboutcircles/sdk-types';
+  import { GroupType } from '@aboutcircles/sdk-types';
   import WalletLoader from '$lib/components/WalletLoader.svelte';
   import SettingsDropdown from '$lib/components/SettingsDropdown.svelte';
   import { onMount } from 'svelte';
@@ -53,7 +54,7 @@
       safeAddress as Address
     );
 
-    const sdk = new Sdk(circlesConfig[100], runner);
+    const sdk = new Sdk(gnosisConfig.production, runner);
     circles.set(sdk);
 
     // Get avatar info for the target address (could be Safe or Group)
@@ -74,7 +75,7 @@
     if (avatarType === 'CrcV2_RegisterGroup') {
       avatarState.isGroup = true;
       avatarState.isHuman = false;
-      avatarState.groupType = 'Standard';
+      avatarState.groupType = GroupType.Standard;
     } else if (avatarType === 'CrcV2_RegisterOrganization') {
       avatarState.isGroup = false;
       avatarState.isHuman = false;
