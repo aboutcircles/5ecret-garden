@@ -1,7 +1,8 @@
 import type { TransactionHistoryRow } from '@aboutcircles/sdk-rpc';
 import { writable } from 'svelte/store';
 import type { Avatar } from '@aboutcircles/sdk';
-import type { PagedResponse } from '@aboutcircles/sdk-types';
+import type { PagedResponse, EnrichedTransaction, Address } from '@aboutcircles/sdk-types';
+import { getTransactionHistoryEnriched } from '$lib/utils/sdkHelpers';
 
 const PAGE_SIZE = 25;
 
@@ -10,6 +11,17 @@ let currentAvatar: Avatar | null = null;
 let isLoading = false;
 let nextCursor: string | null = null;
 let hasMore = true;
+
+// Profile cache for enriched transaction participants
+const enrichedProfileCache = new Map<string, { name?: string; previewImageUrl?: string }>();
+
+/**
+ * Get a cached profile from enriched transactions
+ * Can be used by other components to avoid redundant RPC calls
+ */
+export function getEnrichedProfile(address: Address): { name?: string; previewImageUrl?: string } | undefined {
+  return enrichedProfileCache.get(address.toLowerCase());
+}
 
 const _transactionHistory = writable<{
   data: TransactionHistoryRow[];
@@ -22,8 +34,8 @@ const _transactionHistory = writable<{
 });
 
 /**
- * Load the next page of transactions using cursor-based pagination
- * New SDK returns PagedResponse with { results, hasMore, nextCursor }
+ * Load the next page of transactions using enriched endpoint
+ * Profiles are pre-loaded and cached for efficiency
  */
 async function loadNextPage(): Promise<boolean> {
   if (!currentAvatar || isLoading || !hasMore) {
@@ -33,13 +45,14 @@ async function loadNextPage(): Promise<boolean> {
   isLoading = true;
 
   try {
-    console.log('🔄 Fetching next page of transaction history...');
+    console.log('🔄 Fetching enriched transaction history (profiles included)...');
 
-    // New SDK: getTransactionHistory returns Promise<PagedResponse<TransactionHistoryRow>>
-    // Call via SDK's RPC directly with cursor support
     const sdk = (currentAvatar as any).sdk;
-    const response: PagedResponse<TransactionHistoryRow> = await sdk.rpc.transaction.getTransactionHistory(
-      currentAvatar.address,
+    const response: PagedResponse<EnrichedTransaction> = await getTransactionHistoryEnriched(
+      sdk,
+      currentAvatar.address as Address,
+      0, // fromBlock
+      null, // toBlock
       PAGE_SIZE,
       nextCursor
     );
@@ -48,14 +61,42 @@ async function loadNextPage(): Promise<boolean> {
       nextCursor = response.nextCursor;
       hasMore = response.hasMore;
 
+      // Cache profiles from enriched transactions
+      for (const tx of response.results) {
+        if (tx.fromProfile) {
+          enrichedProfileCache.set(tx.from.toLowerCase(), tx.fromProfile);
+        }
+        if (tx.toProfile) {
+          enrichedProfileCache.set(tx.to.toLowerCase(), tx.toProfile);
+        }
+      }
+
+      // Convert EnrichedTransaction to TransactionHistoryRow format
+      const rows: TransactionHistoryRow[] = response.results.map((tx) => ({
+        blockNumber: tx.blockNumber,
+        timestamp: tx.timestamp,
+        transactionIndex: tx.transactionIndex,
+        logIndex: tx.logIndex,
+        transactionHash: tx.transactionHash,
+        version: tx.version,
+        from: tx.from,
+        to: tx.to,
+        id: tx.id ?? '',
+        tokenAddress: tx.from as Address, // Approximation - enriched doesn't have tokenAddress
+        value: tx.value,
+        circles: parseFloat(tx.circles),
+        staticCircles: parseFloat(tx.staticCircles),
+        crc: parseFloat(tx.crc),
+      }));
+
       _transactionHistory.update((state) => ({
-        data: [...state.data, ...response.results],
+        data: [...state.data, ...rows],
         next: loadNextPage,
         ended: !response.hasMore,
       }));
 
       console.log(
-        `✅ Loaded ${response.results.length} transactions (hasMore: ${response.hasMore})`
+        `✅ Loaded ${response.results.length} enriched transactions (hasMore: ${response.hasMore})`
       );
       return true;
     } else {
@@ -67,7 +108,7 @@ async function loadNextPage(): Promise<boolean> {
       return false;
     }
   } catch (error) {
-    console.error('Failed to load transaction history page:', error);
+    console.error('Failed to load enriched transaction history:', error);
     _transactionHistory.update((state) => ({
       ...state,
       ended: true,
@@ -99,8 +140,8 @@ export const initTransactionHistoryStore = async (avatar: Avatar) => {
   }
 
   // Validate avatar has SDK reference for RPC calls
-  if (!(avatar as any).sdk?.rpc?.transaction) {
-    console.error('❌ No SDK RPC transaction methods available on avatar');
+  if (!(avatar as any).sdk?.rpc?.sdk) {
+    console.error('❌ No SDK RPC methods available on avatar');
     _transactionHistory.set({
       data: [],
       next: async () => false,

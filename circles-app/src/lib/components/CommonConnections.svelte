@@ -5,7 +5,8 @@
   import ProfilePage from '$lib/pages/Profile.svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { circles } from '$lib/stores/circles';
-  import type { Address } from '@aboutcircles/sdk-types';
+  import type { Address, TrustRelationInfo } from '@aboutcircles/sdk-types';
+  import { getAggregatedTrustRelationsEnriched } from '$lib/utils/sdkHelpers';
 
   interface Props {
     otherAvatarAddress?: Address;
@@ -16,7 +17,7 @@
 
   let loading = $state(true);
   let error: string | null = $state(null);
-  let rows: Address[] = $state([]);
+  let rows: TrustRelationInfo[] = $state([]);
 
   async function loadCommon(): Promise<void> {
     loading = true;
@@ -31,28 +32,27 @@
         return;
       }
 
-      const good = new Set(['trusts', 'mutuallyTrusts']);
-
-      // Support both old and new SDK
-      let getTrustRelations = (addr: Address) =>
-        $circles?.rpc.trust.getAggregatedTrustRelations(addr);
-
+      // Use enriched trust relations - includes avatar info in single call
       const [mine, theirs] = await Promise.all([
-        getTrustRelations(me),
-        getTrustRelations(other),
+        getAggregatedTrustRelationsEnriched($circles, me),
+        getAggregatedTrustRelationsEnriched($circles, other),
       ]);
-      const mySet = new Set(
-        mine.filter((r) => good.has(r.relation)).map((r) => r.objectAvatar)
-      );
-      const theirSet = new Set(
-        theirs.filter((r) => good.has(r.relation)).map((r) => r.objectAvatar)
-      );
 
-      const list: Address[] = [];
-      for (const a of mySet) {
-        if (theirSet.has(a) && a !== me && a !== other) list.push(a as Address);
+      // Combine mutual + trusts (outgoing trust) for "good" relations
+      const myTrusted = [...mine.mutual, ...mine.trusts];
+      const theirTrusted = [...theirs.mutual, ...theirs.trusts];
+
+      const mySet = new Set(myTrusted.map((r) => r.address));
+      const theirMap = new Map(theirTrusted.map((r) => [r.address, r]));
+
+      const list: TrustRelationInfo[] = [];
+      for (const addr of mySet) {
+        if (theirMap.has(addr) && addr !== me && addr !== other) {
+          // Use the enriched info from their relations (has avatar info)
+          list.push(theirMap.get(addr)!);
+        }
       }
-      list.sort((a, b) => a.localeCompare(b));
+      list.sort((a, b) => a.address.localeCompare(b.address));
 
       rows = list;
       commonConnectionsCount = rows.length;
@@ -87,15 +87,15 @@
   </div>
 {:else}
   <div class="w-full flex flex-col gap-y-1.5">
-    {#each rows as addr (addr)}
+    {#each rows as relation (relation.address)}
       <RowFrame
         clickable={true}
         dense={true}
         noLeading={true}
-        on:click={() => openProfile(addr)}
+        on:click={() => openProfile(relation.address)}
       >
         <div class="min-w-0">
-          <Avatar address={addr} view="horizontal" clickable={false} />
+          <Avatar address={relation.address} view="horizontal" clickable={false} />
         </div>
         <div slot="trailing" aria-hidden="true">
           <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" />

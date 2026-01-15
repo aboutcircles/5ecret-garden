@@ -3,12 +3,13 @@
   import ProfilePage from '$lib/pages/Profile.svelte';
   import { popupControls } from '$lib/stores/popUp.svelte';
   import RowFrame from '$lib/ui/RowFrame.svelte';
+  import type { Address } from '@aboutcircles/sdk-types';
 
   interface Props {
-    address?: string;
+    address?: Address;
     trustRelation?: string;
   }
-  let { address = '', trustRelation = '' }: Props = $props();
+  let { address = '0x0' as Address, trustRelation = '' }: Props = $props();
 
   function openProfile() {
     popupControls.open({

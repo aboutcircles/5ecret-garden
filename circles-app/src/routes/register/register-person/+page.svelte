@@ -4,7 +4,7 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { circles } from '$lib/stores/circles';
   import { wallet } from '$lib/stores/wallet.svelte';
-  import type { AvatarInfo, Profile, Address } from '@aboutcircles/sdk-types';
+  import type { Profile, Address, Invitation, AllInvitationsResponse } from '@aboutcircles/sdk-types';
   import { onMount } from 'svelte';
   import ProfileEditor from '$lib/components/ProfileEditor.svelte';
   import { settings } from '$lib/stores/settings.svelte';
@@ -19,8 +19,10 @@
   } from 'lucide';
   import RowFrame from '$lib/ui/RowFrame.svelte';
   import { CirclesStorage } from '$lib/utils/storage';
+  import { getAllInvitations } from '$lib/utils/sdkHelpers';
 
-  let invitations: AvatarInfo[] = $state([]);
+  // All invitations from all sources (trust, escrow, at-scale)
+  let allInvitations: AllInvitationsResponse | null = $state(null);
   let inviterSelected: Address | undefined = $state(
     settings.ring ? '0x0000000000000000000000000000000000000000' : undefined
   );
@@ -32,22 +34,35 @@
     imageUrl: undefined,
   });
 
+  // Helper to get invitation source label
+  function getSourceLabel(source: Invitation['source']): string {
+    switch (source) {
+      case 'trust': return 'Trusted you';
+      case 'escrow': return 'Escrowed CRC';
+      case 'atScale': return 'Pre-created';
+      default: return '';
+    }
+  }
+
   onMount(async () => {
     if (!$wallet?.address) throw new Error('Wallet not connected');
     if (!$circles?.rpc) throw new Error('Circles SDK not initialized');
 
-    invitations = await $circles.rpc.invitation.getInvitations(
+    // Use getAllInvitations for unified view of all invitation sources
+    allInvitations = await getAllInvitations(
+      $circles,
       $wallet.address.toLowerCase() as Address
     );
-    if (settings.ring) {
-      invitations = [
-        ...invitations,
+
+    // Add ring mode fake invitation if enabled
+    if (settings.ring && allInvitations) {
+      allInvitations.all = [
+        ...allInvitations.all,
         {
-          avatar: '0x0000000000000000000000000000000000000000',
-          version: 2,
-          isHuman: false,
-          invited_by: null,
-        } as any,
+          address: '0x0000000000000000000000000000000000000000' as Address,
+          source: 'trust' as const,
+          balance: '0',
+        },
       ];
     }
   });
@@ -134,37 +149,37 @@
             <li class="step step-primary">Select Inviter</li>
           </ul>
 
-          <!-- Invitations list -->
+          <!-- Invitations list - showing all sources (trust, escrow, at-scale) -->
           <div class="flex flex-col gap-y-2 pl-10 text-sm">
-            {#if invitations.length > 0}
-              {#each invitations as inviter (inviter.avatar)}
+            {#if allInvitations && allInvitations.all.length > 0}
+              {#each allInvitations.all as invitation (invitation.address)}
                 <RowFrame
                   clickable={true}
                   dense={true}
                   noLeading={true}
-                  on:click={() => (inviterSelected = inviter.avatar)}
+                  on:click={() => (inviterSelected = invitation.address)}
                 >
                   <div class="flex items-center gap-x-2 min-w-0">
                     <input
                       type="radio"
                       name="inviter"
                       class="radio radio-success radio-sm"
-                      checked={inviterSelected === inviter.avatar}
+                      checked={inviterSelected === invitation.address}
                       onclick={(e) => {
                         e.stopPropagation();
-                        inviterSelected = inviter.avatar;
+                        inviterSelected = invitation.address;
                       }}
                     />
                     <Avatar
-                      topInfo="Inviter"
+                      topInfo={getSourceLabel(invitation.source)}
                       clickable={false}
-                      address={inviter.avatar}
+                      address={invitation.address}
                       view="horizontal"
                     />
                   </div>
                 </RowFrame>
               {/each}
-            {:else}
+            {:else if allInvitations}
               No invitations pending. <a
                 href="/link-to-telegram"
                 class="underline inline-flex items-center"
@@ -176,6 +191,9 @@
                   ariaLabel=""
                 />
               </a>
+            {:else}
+              <span class="loading loading-spinner loading-sm"></span>
+              Loading invitations...
             {/if}
           </div>
 

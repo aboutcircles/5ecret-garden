@@ -126,7 +126,7 @@
             <Avatar
               address={profile.address as Address}
               view="horizontal"
-              bottomInfo={avatarTypeToReadable(profile.avatarType)}
+              bottomInfo={avatarTypeToReadable(profile.avatarType ?? '')}
               clickable={false}
             />
           </div>
