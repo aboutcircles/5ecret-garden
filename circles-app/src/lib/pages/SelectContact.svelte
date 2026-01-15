@@ -98,11 +98,11 @@
           clickable={true}
           dense={true}
           noLeading={true}
-          on:click={() => handleSelect(address)}
+          on:click={() => handleSelect(address as Address)}
         >
           <div class="min-w-0">
             <Avatar
-              {address}
+              address={address as Address}
               view="horizontal"
               clickable={false}
               bottomInfo={shortenAddress(address)}

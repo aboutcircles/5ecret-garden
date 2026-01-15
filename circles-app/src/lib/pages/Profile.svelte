@@ -1,6 +1,6 @@
 <script lang="ts">
   import { circles } from '$lib/stores/circles';
-  import type { Profile } from '@aboutcircles/sdk-types';
+  import type { Profile, ProfileView } from '@aboutcircles/sdk-types';
   import CommonConnections from '$lib/components/CommonConnections.svelte';
   import { contacts } from '$lib/stores/contacts';
   import {
@@ -23,6 +23,7 @@
   import TokenHoldersList from '$lib/components/TokenHoldersList.svelte';
   import { goto } from '$app/navigation';
   import { avatarState } from '$lib/stores/avatar.svelte';
+  import { getProfileView as fetchProfileView } from '$lib/utils/sdkHelpers';
 
   /* NEW: tabs */
   import Tabs from '$lib/components/tabs/Tabs.svelte';
@@ -122,15 +123,12 @@
     hasMoreMembers = true;
     loadingMoreMembers = false;
 
-    // Get avatar info using new SDK
-    console.log('🔄 Using new SDK rpc.avatar.getAvatarInfo()');
+    // Use getProfileView - single RPC call instead of multiple
+    console.log('🔄 Using optimized getProfileView() - single RPC call');
 
-    const [other, prof] = await Promise.all([
-      ($circles as any).rpc.avatar.getAvatarInfo(address),
-      getProfile(address),
-    ]);
-    otherAvatar = other;
-    profile = prof;
+    const profileView = await fetchProfileView($circles!, address);
+    otherAvatar = profileView.avatarInfo;
+    profile = profileView.profile ?? await getProfile(address); // Fallback if no profile in view
 
     trustRow = $contacts?.data[address]?.row;
 
