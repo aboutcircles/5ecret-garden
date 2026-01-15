@@ -110,15 +110,16 @@
 
         const network = await provider.getNetwork();
 
-        const txResult = await client.sendTransaction({
-          to: deploymentTransaction.to,
+        const txHash = await client.sendTransaction({
+          to: deploymentTransaction.to as `0x${string}`,
           value: BigInt(deploymentTransaction.value),
           data: deploymentTransaction.data as `0x${string}`,
-          chainId: network.chainId,
+          account: client.account!,
+          chain: null,
         });
 
-        console.log('Transaction hash:', txResult.hash);
-        await provider.waitForTransaction(txResult.hash);
+        console.log('Transaction hash:', txHash);
+        await provider.waitForTransaction(txHash);
       }
 
       console.log('Safe deployed successfully');

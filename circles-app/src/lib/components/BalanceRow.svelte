@@ -63,7 +63,7 @@
   let copyIcon = $state('/copy.svg');
   function handleCopy() {
     navigator.clipboard.writeText(
-      item.isWrapped ? item.tokenAddress : item.tokenId
+      item.isWrapped ? item.tokenAddress : String(item.tokenId)
     );
     copyIcon = '/check.svg';
     setTimeout(() => {

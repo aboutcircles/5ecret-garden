@@ -1,10 +1,10 @@
 <script lang="ts">
-  import type { EventRow } from '@aboutcircles/sdk-types';
+  import type { Address, EventRow } from '@aboutcircles/sdk-types';
   import ContactGroupRow from './ContactGroupRow.svelte';
   import { formatTrustRelation } from '$lib/utils/helpers';
 
   interface ContactEventRow extends EventRow {
-    address: string;
+    address: Address;
     contact: any; // Type this properly based on your ContactListItem type
   }
 

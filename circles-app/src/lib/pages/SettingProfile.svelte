@@ -27,7 +27,9 @@
 >
   <Avatar view="vertical" clickable={false} {address} />
   <div class="flex gap-x-2">
-    <AddressDisplay {address} />
+    {#if address}
+      <AddressDisplay {address} />
+    {/if}
     <button
       onclick={changeWallet}
       class="btn btn-sm btn-outline btn-primary text-primary hover:text-white"

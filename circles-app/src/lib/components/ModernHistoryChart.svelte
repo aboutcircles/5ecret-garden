@@ -147,8 +147,9 @@
             usePointStyle: true,
             callbacks: {
               title: (items) => {
-                const x = items[0].parsed.x;
-                const d = new Date(x);
+                const x = items[0]?.parsed?.x;
+                if (x === undefined) return '';
+                const d = new Date(x as number);
                 return resolution === 'hour'
                   ? `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
                   : `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`;
