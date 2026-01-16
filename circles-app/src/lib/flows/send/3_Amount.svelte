@@ -3,7 +3,7 @@
     import SelectAmount from '$lib/pages/SelectAmount.svelte';
     import Send from './4_Send.svelte';
     import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
-    import {onMount, tick} from 'svelte';
+    import {onMount, tick, untrack} from 'svelte';
     import { circles } from '$lib/stores/circles';
     import { avatarState } from '$lib/stores/avatar.svelte';
     import { TransitiveTransferTokenAddress } from '$lib/pages/SelectAsset.svelte';
@@ -20,6 +20,10 @@
     }
 
     let { context = $bindable() }: Props = $props();
+
+    if (context.maxTransfers === undefined) {
+        context.maxTransfers = MAX_PATH_STEPS;
+    }
 
     if (context.amount === undefined) {
         context.amount = 0;
@@ -38,17 +42,9 @@
     let showDataInput = $state(false);
 
     let calculatingPath = $state(false); // Indicates pathfinding is in progress
+    let amountError = $state(false);
 
-    onMount(async () => {
-        // If context.data is already set, expand the "Attach data" area by default
-        if (context.data) {
-            showDataInput = true;
-            // If user didn't specify a dataType, default to UTF-8
-        }
-        if (!context.dataType) {
-            context.dataType = 'utf-8';
-        }
-
+    async function calculatePath() {
         // If not transitive transfer or missing info, skip pathfinding
         if (
             context.selectedAsset?.tokenAddress != TransitiveTransferTokenAddress ||
@@ -61,6 +57,7 @@
 
         // Start loading
         calculatingPath = true;
+        pathfindingFailed = false;
 
         try {
             const excludedTokens = await $circles.getDefaultTokenExcludeList(
@@ -84,7 +81,7 @@
                         undefined,
                         excludedTokens,
                         undefined,
-                        MAX_PATH_STEPS
+                        context.maxTransfers
                     );
 
             if (!p || !p.transfers?.length) {
@@ -130,6 +127,21 @@
             // End loading
             calculatingPath = false;
         }
+    }
+
+    $effect(() => {
+        untrack(() => calculatePath());
+    });
+
+    onMount(async () => {
+        // If context.data is already set, expand the "Attach data" area by default
+        if (context.data) {
+            showDataInput = true;
+            // If user didn't specify a dataType, default to UTF-8
+        }
+        if (!context.dataType) {
+            context.dataType = 'utf-8';
+        }
     });
 
     async function handleSelect() {
@@ -138,6 +150,16 @@
 
         // Normalize to a number (defensive)
         context.amount = Number(context.amount ?? 0);
+
+        const limit = context.selectedAsset.isErc20
+            ? context.selectedAsset.staticCircles
+            : maxAmountCircles;
+
+        if (context.amount > limit) {
+            amountError = true;
+            return;
+        }
+        amountError = false;
 
         popupControls.open({
             title: 'Send',
@@ -152,8 +174,13 @@
         showUnusedBalances.update((v) => !v);
     }
 
-    function toggleDataInput() {
-        showDataInput = !showDataInput;
+    function onMaxTransfersChange(e: Event) {
+        const target = e.target as HTMLInputElement;
+        const value = parseInt(target.value);
+        if (!isNaN(value) && value > 0 && value !== context.maxTransfers) {
+            context.maxTransfers = value;
+            calculatePath();
+        }
     }
 </script>
 
@@ -168,6 +195,12 @@
             bind:amount={context.amount}
     />
 
+    {#if amountError}
+        <div class="text-error text-sm mt-1">
+            The amount exceeds the maximum transferable amount.
+        </div>
+    {/if}
+
     <!-- Loading indicator while pathfinding is in progress -->
     {#if calculatingPath}
         <div class="flex items-center mt-4 space-x-2">
@@ -179,19 +212,51 @@
         {#if pathfindingFailed}
             <div class="mt-4 p-2 text-error">
                 <p>Pathfinding failed. No usable path was found.</p>
+                {#if context.selectedAsset?.tokenAddress === TransitiveTransferTokenAddress}
+                    <div class="flex items-center gap-2 mt-2">
+                        <label for="maxTransfersFailed" class="text-sm font-medium whitespace-nowrap">Max. Transfers</label>
+                        <input
+                                id="maxTransfersFailed"
+                                type="number"
+                                min="1"
+                                max="1000"
+                                class="input input-bordered input-sm w-20"
+                                value={context.maxTransfers}
+                                onblur={onMaxTransfersChange}
+                                onkeydown={(e) => e.key === 'Enter' && onMaxTransfersChange(e)}
+                        />
+                    </div>
+                {/if}
             </div>
         {:else}
             <!-- Attach data + Continue -->
-            <div class="mt-6 flex flex-col md:flex-row justify-end items-stretch md:items-center gap-2">
-                {#if avatarState.avatar?.avatarInfo?.version === 2 && !context.selectedAsset.isErc20}
-                    <button
-                            type="button"
-                            class="btn btn-outline w-full md:w-auto rounded-md"
-                            onclick={toggleDataInput}
-                    >
-                        Attach data
-                    </button>
-                {/if}
+            <div class="mt-6 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-2">
+                <div class="flex flex-row items-center gap-2">
+                    {#if avatarState.avatar?.avatarInfo?.version === 2 && !context.selectedAsset.isErc20}
+                        <button
+                                type="button"
+                                class="btn btn-outline w-full md:w-auto rounded-md"
+                                onclick={toggleDataInput}
+                        >
+                            Attach data
+                        </button>
+                    {/if}
+                    {#if context.selectedAsset?.tokenAddress === TransitiveTransferTokenAddress}
+                        <div class="flex items-center gap-2 ml-2">
+                            <label for="maxTransfers" class="text-sm font-medium whitespace-nowrap">Max. Transfers</label>
+                            <input
+                                    id="maxTransfers"
+                                    type="number"
+                                    min="1"
+                                    max="1000"
+                                    class="input input-bordered input-sm w-20"
+                                    value={context.maxTransfers}
+                                    onblur={onMaxTransfersChange}
+                                    onkeydown={(e) => e.key === 'Enter' && onMaxTransfersChange(e)}
+                            />
+                        </div>
+                    {/if}
+                </div>
                 <button
                         type="button"
                         class="btn btn-primary w-full md:w-auto rounded-md"
