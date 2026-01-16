@@ -75,7 +75,7 @@
             undefined,
             undefined,
             undefined,
-            MAX_PATH_STEPS)
+             context.maxTransfers ?? MAX_PATH_STEPS)
           : avatarState.avatar.transfer(
             context.selectedAddress,
             context.amount,
@@ -87,7 +87,7 @@
             undefined,
             undefined,
             undefined,
-            MAX_PATH_STEPS
+            context.maxTransfers ?? MAX_PATH_STEPS
           ),
     });
 

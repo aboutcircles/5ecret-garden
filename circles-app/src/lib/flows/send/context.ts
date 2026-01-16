@@ -10,4 +10,5 @@ export type SendFlowContext = {
   transitiveOnly: boolean;
   selectedAsset: TokenBalanceRow;
   amount: number | undefined;
+  maxTransfers?: number;
 };
