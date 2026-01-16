@@ -14,29 +14,6 @@
     <div class="flex items-center gap-x-2">
       <input
         type="checkbox"
-        class="toggle toggle-sm checked:bg-orange-400 checked:text-orange-800"
-        checked={settings.ring}
-        onchange={() => (settings.ring = !settings.ring)}
-      />
-      <a
-        href="https://docs.aboutcircles.com/developer-docs/getting-started-with-the-sdk#using-the-sandbox-version-of-circles-sdk-for-builders"
-        target="_blank"
-        class={`flex font-semibold items-center text-sm text-nowrap  transition-color duration-300 ease-in-out ${
-          settings.ring
-            ? 'text-orange-700'
-            : 'text-primary hover:text-primary/80'
-        }`}
-      >
-        RINGS<img
-          src="/external.svg"
-          alt="external icon"
-          class="h-3 w-3 ml-1"
-        />
-      </a>
-    </div>
-    <div class="flex items-center gap-x-2">
-      <input
-        type="checkbox"
         class="toggle toggle-sm"
         checked={settings.legacy}
         onchange={() => (settings.legacy = !settings.legacy)}

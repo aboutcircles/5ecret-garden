@@ -96,7 +96,7 @@
         <h1 class="h2">Select avatar</h1>
     </button>
     <div class="flex-grow"></div>
-<!--    <SettingsDropdown />-->
+    <SettingsDropdown />
   </div>
 
   <p class="muted">Please select the avatar you want to use from the list below.</p>
