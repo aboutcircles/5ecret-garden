@@ -16,7 +16,7 @@
     </button>
   </div>
   <div class="flex items-center justify-between gap-x-2">
-    <p class="font-bold text-xl">Access Circles</p>
+    <p class="font-bold text-xl">Access Circles TESTING VERSION</p>
     <div class="flex items-center gap-x-2">
       <input
         type="checkbox"
