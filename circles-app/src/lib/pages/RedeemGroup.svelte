@@ -1,13 +1,11 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { circles } from '$lib/stores/circles';
   import type { Address } from '@aboutcircles/sdk-types';
   import { uint256ToAddress } from '@aboutcircles/sdk-utils';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import { onMount } from 'svelte';
-  import { ethers, formatUnits } from 'ethers';
+  import { formatUnits, parseUnits } from 'ethers';
   import type { TokenBalance, TrustRelationType } from '@aboutcircles/sdk-types';
   import { contacts } from '$lib/stores/contacts';
   import {
@@ -23,83 +21,33 @@
 
   let { asset }: Props = $props();
 
+  // Collateral display (read-only, no manual selection)
   let collateralInTreasury: Array<{
     avatar: Address;
-    amount: bigint; // raw wei from chain
+    amount: bigint;
     amountToRedeem: bigint;
     amountToRedeemInCircles: number;
     trustRelation?: TrustRelationType;
   }> = $state([]);
 
-  // We'll keep track of the total to redeem and whether it's valid.
-  let totalToRedeem: bigint = $state(0n);
-  let remainingToAllocate: bigint = $state(0n);
-  let canRedeem = $state(false);
-  let isModified = $state(false);
-
-  const trustPriorityMap: Record<TrustRelationType, number> = {
-    mutuallyTrusts: 1,
-    trusts: 2,
-    trustedBy: 3,
-  };
-
-  function getTrustPriority(item: { trustRelation?: TrustRelationType }): number {
-    return item.trustRelation && trustPriorityMap[item.trustRelation]
-      ? trustPriorityMap[item.trustRelation]
-      : 6;
-  }
-
-  // This runs whenever collateralInTreasury changes or user input changes.
-  // It re-calculates the sums and validity for the UI.
-  run(() => {
-    // 1) Convert the user's total redeemable (asset.circles) from wei to a floating number.
-    //    If asset.circles is already a string or BigInt, adapt accordingly.
-    //    Example assumes it's a BigInt or numeric string in wei:
-    const userMaxRedeem = BigInt(asset.attoCircles);
-
-    // 2) Sum the amounts the user wants to redeem.
-    totalToRedeem = collateralInTreasury.reduce(
-      (acc, item) => acc + (BigInt(item.amountToRedeem) || 0n),
-      0n
-    );
-
-    // 3) Check that no user input exceeds its available collateral,
-    //    and that totalToRedeem doesn't exceed the user’s own max.
-    const allWithinCollateral = collateralInTreasury.every((item) => {
-      return item.amountToRedeem >= 0n && item.amountToRedeem <= item.amount;
-    });
-
-    const withinUserBalance =
-      totalToRedeem <= userMaxRedeem && totalToRedeem >= 0n;
-
-    // 4) The user can still allocate up to this many tokens
-    remainingToAllocate = userMaxRedeem - totalToRedeem;
-
-    // 5) Only enable redeem if everything checks out
-    canRedeem = allWithinCollateral && withinUserBalance && totalToRedeem > 0;
-
-    // If any item.amountToRedeem != 0, this is “modified”
-    isModified = collateralInTreasury.some(
-      (item) => item.amountToRedeem !== 0n
-    );
-
-    convertAmountToRedeem();
-  });
-
-  function convertAmountToRedeem() {
-    for (const item of collateralInTreasury) {
-      item.amountToRedeemInCircles = Number(
-        formatUnits(item.amountToRedeem, 18)
-      );
-    }
-  }
+  // Simple redemption amount input
+  let redeemAmountInput = $state('');
+  let redeemAmount = $derived(parseFloat(redeemAmountInput) || 0);
+  let maxRedeemable = $derived(asset?.circles ?? 0);
+  let canRedeem = $derived(
+    redeemAmount > 0 &&
+    redeemAmount <= maxRedeemable &&
+    avatarState.avatar !== null
+  );
+  let isLoading = $state(false);
+  let error = $state<string | null>(null);
 
   onMount(async () => {
     if (!$circles) return;
-    await load();
+    await loadCollateral();
   });
 
-  async function load() {
+  async function loadCollateral() {
     if (!$circles) return;
 
     const vaultAddress = await getVaultAddress(
@@ -122,150 +70,148 @@
       return;
     }
 
-    // Build up the table data
+    // Build display-only table data (no amountToRedeem inputs needed)
     collateralInTreasury = balancesResult.map((row) => ({
       avatar: uint256ToAddress(BigInt(row.tokenId)),
       amount: row.demurragedTotalBalance,
+      amountToRedeem: 0n,
       amountToRedeemInCircles: 0,
-      amountToRedeem: 0n, // default 0
     }));
 
+    // Enrich with trust relations for display
     Object.entries($contacts.data).map(([_, contact]) => {
       const address = contact.avatarInfo?.avatar;
       const relation = contact.row.relation;
 
       const item = collateralInTreasury.find((item) => item.avatar === address);
-
       if (item) {
         item.trustRelation = relation;
       }
     });
 
-    const item = collateralInTreasury.find(
+    const selfItem = collateralInTreasury.find(
       (item) => item.avatar === avatarState.avatar?.address
     );
-
-    if (item) {
-      // In new SDK, there's no 'selfTrusts', so we mark as 'mutuallyTrusts' for self
-      item.trustRelation = 'mutuallyTrusts';
+    if (selfItem) {
+      selfItem.trustRelation = 'mutuallyTrusts';
     }
   }
 
   async function redeem() {
-    if (!avatarState.avatar) return;
+    if (!avatarState.avatar || !canRedeem) return;
 
-    // Build the arrays:
-    //   1) All collateral addresses
-    //   2) Corresponding amounts in wei
-    const collateralAddresses: Address[] = [];
-    const redeemAmounts: bigint[] = [];
+    isLoading = true;
+    error = null;
 
-    for (const item of collateralInTreasury) {
-      if (item.amountToRedeem > 0) {
-        collateralAddresses.push(item.avatar);
-        redeemAmounts.push(item.amountToRedeem);
+    try {
+      // Convert circles amount to wei (18 decimals)
+      const amountInWei = parseUnits(redeemAmount.toString(), 18);
+
+      console.log(`Redeeming ${redeemAmount} group tokens (${amountInWei} wei)`);
+
+      // New SDK: automatic pathfinder redemption
+      if ('groupToken' in avatarState.avatar && typeof (avatarState.avatar as any).groupToken?.redeem === 'function') {
+        await (avatarState.avatar as any).groupToken.redeem(
+          asset.tokenOwner,
+          amountInWei
+        );
+        // Clear input on success
+        redeemAmountInput = '';
+        // Reload collateral to show updated balances
+        await loadCollateral();
+      } else {
+        throw new Error('Group token redemption not available on this avatar type');
       }
-    }
-
-    console.log(`Redeeming ${redeemAmounts.length} tokens:`, redeemAmounts);
-    console.log(
-      `Redeeming ${collateralAddresses.length} addresses:`,
-      collateralAddresses
-    );
-
-    // TODO: SDK v2 breaking change - Manual redemption replaced with automatic redemption
-    // Old SDK: avatar.groupRedeem(group, addresses, amounts)
-    // New SDK: avatar.groupToken.redeem(group, totalAmount) - uses pathfinder for automatic redemption
-    //
-    // The new SDK doesn't support manual collateral selection.
-    // Two options:
-    // 1. Use automatic redemption: await (avatarState.avatar as any).groupToken.redeem(asset.tokenOwner, totalToRedeem)
-    // 2. Implement manual redemption using lower-level RPC/contract calls
-    //
-    // For now, using automatic redemption:
-    if ('groupToken' in avatarState.avatar && typeof (avatarState.avatar as any).groupToken?.redeem === 'function') {
-      await (avatarState.avatar as any).groupToken.redeem(
-        asset.tokenOwner,
-        totalToRedeem
-      );
-    } else {
-      throw new Error('Group token redemption not available on this avatar type');
+    } catch (err) {
+      console.error('Redemption failed:', err);
+      error = err instanceof Error ? err.message : 'Redemption failed';
+    } finally {
+      isLoading = false;
     }
   }
 
-  async function resetFields() {
-    collateralInTreasury = collateralInTreasury.map((item) => ({
-      ...item,
-      amountToRedeem: 0n,
-      amountToRedeemInCircles: 0,
-    }));
-    convertAmountToRedeem();
-  }
-
-  function distribute() {
-    const sortedCollateral = collateralInTreasury
-      .slice()
-      .sort((a, b) => getTrustPriority(a) - getTrustPriority(b));
-
-    for (const item of sortedCollateral) {
-      if (item.amountToRedeem > 0) {
-        continue;
-      }
-      if (remainingToAllocate <= 0) break;
-
-      const available = item.amount;
-
-      if (available > 0n) {
-        let minBigInt = BigInt(0);
-        if (available < remainingToAllocate) {
-          minBigInt = available;
-        } else {
-          minBigInt = remainingToAllocate;
-        }
-
-        const allocation = minBigInt;
-        item.amountToRedeem = allocation;
-        remainingToAllocate -= allocation;
-      }
-    }
+  function setMaxAmount() {
+    redeemAmountInput = maxRedeemable.toFixed(2);
   }
 </script>
 
-<p>
-  <strong>Total redeemable balance:</strong>
-  {#if asset?.circles}
-    {#if +asset.circles > 0}
-      {asset.circles.toFixed(2)}
-    {:else}
-      0
+<div class="space-y-4">
+  <!-- Total redeemable balance -->
+  <div class="bg-base-200 rounded-lg p-4">
+    <p class="text-sm text-base-content/70">Your redeemable balance</p>
+    <p class="text-2xl font-bold">
+      {#if maxRedeemable > 0}
+        {maxRedeemable.toFixed(2)} CRC
+      {:else}
+        0 CRC
+      {/if}
+    </p>
+  </div>
+
+  <!-- Redemption input -->
+  <div class="form-control">
+    <label class="label">
+      <span class="label-text">Amount to redeem</span>
+      <button
+        class="label-text-alt link link-primary"
+        onclick={setMaxAmount}
+        type="button"
+      >
+        Max
+      </button>
+    </label>
+    <div class="join w-full">
+      <input
+        type="number"
+        class="input input-bordered join-item flex-1"
+        placeholder="0.00"
+        bind:value={redeemAmountInput}
+        min="0"
+        max={maxRedeemable}
+        step="0.01"
+        disabled={isLoading}
+      />
+      <span class="btn btn-ghost join-item no-animation">CRC</span>
+    </div>
+    {#if redeemAmount > maxRedeemable}
+      <label class="label">
+        <span class="label-text-alt text-error">Amount exceeds available balance</span>
+      </label>
     {/if}
-  {:else}
-    0
+  </div>
+
+  <!-- Info about automatic selection -->
+  <div class="alert alert-info">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+    </svg>
+    <span>Collateral tokens are selected automatically for optimal redemption paths.</span>
+  </div>
+
+  {#if error}
+    <div class="alert alert-error">
+      <span>{error}</span>
+    </div>
   {/if}
-</p>
 
-<div class="flex justify-between items-center my-2">
-  <p>
-    You can still allocate:
-    {#if remainingToAllocate >= 0}
-      {Number(ethers.formatEther(remainingToAllocate)).toFixed(2)}
-    {:else}
-      0
-    {/if}
-  </p>
-
-  <div class="flex gap-x-2">
-    <button class="text-primary font-semibold" onclick={distribute}
-      >Distribute</button
+  <!-- Redeem button -->
+  <div class="flex justify-end">
+    <ActionButton
+      action={redeem}
+      disabled={!canRedeem || isLoading}
     >
-    <ActionButton action={resetFields} disabled={!isModified}>
-      Reset
+      {#if isLoading}
+        <span class="loading loading-spinner loading-sm"></span>
+        Redeeming...
+      {:else}
+        Redeem
+      {/if}
     </ActionButton>
   </div>
-</div>
 
-<CollateralTable {collateralInTreasury} redeemable={true} />
-
-<div class="mt-4 flex justify-end">
-  <ActionButton action={redeem} disabled={!canRedeem}>Redeem</ActionButton>
+  <!-- Collateral table (read-only display) -->
+  {#if collateralInTreasury.length > 0}
+    <div class="divider">Available Collateral</div>
+    <CollateralTable {collateralInTreasury} redeemable={false} />
+  {/if}
 </div>

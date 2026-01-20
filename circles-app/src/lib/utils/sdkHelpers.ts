@@ -104,3 +104,54 @@ export async function findMaxFlow(
 ): Promise<bigint> {
   return (sdk as any).rpc.pathfinder.findMaxFlow({ from, to });
 }
+
+/**
+ * Search profile type returned by searchProfiles
+ */
+export interface ProfileSearchResult {
+  address: Address;
+  name?: string;
+  previewImageUrl?: string;
+  avatarType?: string;
+}
+
+/**
+ * Search profiles by name or address
+ * Uses the new SDK's optimized searchByAddressOrName endpoint
+ */
+export async function searchProfiles(
+  sdk: Sdk,
+  query: string,
+  limit: number = 20,
+  offset: number = 0,
+  avatarTypes?: string[]
+): Promise<ProfileSearchResult[]> {
+  const response = await (sdk as any).rpc.profile.searchByAddressOrName(
+    query,
+    limit,
+    offset,
+    avatarTypes
+  );
+  return response.results as ProfileSearchResult[];
+}
+
+/**
+ * Get invitation origin for an address
+ * Returns how an avatar was invited to Circles (v1_signup, v2_standard, v2_escrow, v2_at_scale)
+ */
+export interface InvitationOrigin {
+  type: 'v1_signup' | 'v2_standard' | 'v2_escrow' | 'v2_at_scale';
+  inviterAddress?: Address;
+  proxyInviterAddress?: Address;
+}
+
+export async function getInvitationOrigin(
+  sdk: Sdk,
+  address: Address
+): Promise<InvitationOrigin | null> {
+  try {
+    return await (sdk as any).rpc.sdk.getInvitationOrigin(address);
+  } catch {
+    return null;
+  }
+}
