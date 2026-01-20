@@ -8,9 +8,9 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "require": "./dist/index.cjs",
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "import": "./dist/index.js"
     }
   },
   "sideEffects": false,
@@ -18,6 +18,18 @@
     "build": "tsup src/index.ts --dts --format esm,cjs --sourcemap",
     "clean": "rm -rf dist",
     "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@circles-market/auth": "0.1.0",
+    "@circles-market/cart": "0.1.0",
+    "@circles-market/catalog": "0.1.0",
+    "@circles-market/core": "0.1.0",
+    "@circles-market/offers": "0.1.0",
+    "@circles-market/orders": "0.1.0",
+    "@circles-market/sales": "0.1.0",
+    "@circles-market/session": "0.1.0",
+    "@circles-market/signers": "0.1.0",
+    "@circles-profile/core": "0.1.0"
   },
   "devDependencies": {
     "tsup": "^8.3.0",
