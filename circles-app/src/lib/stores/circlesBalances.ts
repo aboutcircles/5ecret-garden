@@ -60,14 +60,12 @@ export const initBalanceStore = (avatar: Avatar) => {
       const allBalances = (await avatar.balances.getTokenBalances()) as unknown as TokenBalance[];
       // Only return version 2 balances
       return allBalances.filter((balance: any) => balance.version === 2);
-    } catch (e: any) {
-      if (
-        e?.includes?.('No balances found') ||
-        e?.message?.includes('No balances found')
-      ) {
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : String(e);
+      if (errorMessage.includes('No balances found')) {
         return [];
       }
-      console.error('❌ Error loading balances:', e);
+      console.error('❌ Error loading balances:', errorMessage);
       return [];
     }
   };
@@ -101,16 +99,14 @@ export const initBalanceStore = (avatar: Avatar) => {
         'tokens'
       );
       return v2Balances;
-    } catch (e: any) {
-      if (
-        e?.includes?.('No balances found') ||
-        e?.message?.includes('No balances found')
-      ) {
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : String(e);
+      if (errorMessage.includes('No balances found')) {
         console.log('💰 Balance store: No balances found');
         return [];
       }
-      console.error('❌ Balance store: Error refreshing balances:', e);
-      throw new Error(`Failed to refresh balances: ${e?.message || String(e)}`);
+      console.error('❌ Balance store: Error refreshing balances:', errorMessage);
+      throw new Error(`Failed to refresh balances: ${errorMessage}`);
     }
   };
 

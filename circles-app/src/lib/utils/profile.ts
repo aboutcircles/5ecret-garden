@@ -5,6 +5,8 @@ import { circles } from '$lib/stores/circles';
 import { shortenAddress } from '$lib/utils/shared';
 import type { Address } from '@aboutcircles/sdk-types';
 import { BatchAggregator } from '$lib/utils/batchAggregator';
+import { validateProfileBatchResults } from '$lib/utils/sdkAdapters';
+import { getEnrichedProfile } from '$lib/stores/transactionHistory';
 
 /**
  * In-memory cache of <address -> Profile Promise>,
@@ -143,11 +145,15 @@ async function fetchProfiles(
     let chunkProfiles;
     if (typeof sdk.rpc?.client?.call === 'function') {
       console.log('🔄 Using SDK rpc.client.call() for profile batch');
-      const result = await sdk.rpc.client.call(
+      const rawResult = await sdk.rpc.client.call(
         'circles_getProfileByCidBatch',
         [chunk]
-      ) as Profile[];
-      chunkProfiles = { result }; // Wrap for consistent format
+      );
+      // Validate results at runtime - filter out invalid profiles
+      const validatedResults = Array.isArray(rawResult)
+        ? validateProfileBatchResults(rawResult)
+        : [];
+      chunkProfiles = { result: validatedResults as Profile[] };
     } else {
       throw new Error('No RPC call method available');
     }
@@ -195,8 +201,9 @@ const profileAggregator = new BatchAggregator<Address, Profile>({
 /**
  * Our main getProfile function:
  *   1. If it's one of the special-case addresses, return a static profile.
- *   2. Check the cache.
- *   3. Otherwise, aggregator.enqueue(address).
+ *   2. Check the enriched profile cache from transaction history (already fetched).
+ *   3. Check the local promise cache.
+ *   4. Otherwise, aggregator.enqueue(address).
  */
 export async function getProfile(address: Address): Promise<Profile> {
   // Some special-case addresses we handle immediately
@@ -215,10 +222,24 @@ export async function getProfile(address: Address): Promise<Profile> {
     };
   }
 
-  // Check the local promise cache
+  // Check the local promise cache first
   const cached = profileCache.get(address);
   if (cached) {
     return cached;
+  }
+
+  // Check enriched profile cache from transaction history
+  // This cache is populated when viewing transactions with profiles already included
+  const enrichedProfile = getEnrichedProfile(address);
+  if (enrichedProfile?.name) {
+    const profile: Profile = {
+      name: enrichedProfile.name,
+      previewImageUrl: enrichedProfile.previewImageUrl,
+    };
+    // Store in cache as resolved promise
+    const resolvedPromise = Promise.resolve(profile);
+    profileCache.set(address, resolvedPromise);
+    return profile;
   }
 
   // Not cached -> aggregator

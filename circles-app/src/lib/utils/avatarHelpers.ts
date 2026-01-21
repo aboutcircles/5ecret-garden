@@ -42,6 +42,20 @@ export function isOrganisationAvatar(avatar: Avatar): avatar is OrganisationAvat
 }
 
 /**
+ * Type guard to check if an object has an SDK reference attached.
+ * The SDK attaches itself when creating avatars via Sdk.getAvatar().
+ */
+function hasAttachedSdk(obj: unknown): obj is { sdk: Sdk } {
+  return (
+    obj !== null &&
+    typeof obj === 'object' &&
+    'sdk' in obj &&
+    (obj as { sdk?: unknown }).sdk !== null &&
+    typeof (obj as { sdk?: unknown }).sdk === 'object'
+  );
+}
+
+/**
  * Get the SDK reference from an avatar
  * Avatars created via Sdk.getAvatar() have an SDK reference for RPC access
  *
@@ -49,14 +63,11 @@ export function isOrganisationAvatar(avatar: Avatar): avatar is OrganisationAvat
  * @returns The SDK reference or undefined if not available
  */
 export function getSdkFromAvatar(avatar: Avatar): Sdk | undefined {
-  try {
-    // Access the sdk property - CommonAvatar has a getter that throws if not set
-    const sdk = (avatar as any).sdk;
-    return sdk as unknown as Sdk;
-  } catch {
-    // Avatar was not created via Sdk.getAvatar()
-    return undefined;
+  // Type-safe check for SDK property using duck typing
+  if (hasAttachedSdk(avatar)) {
+    return avatar.sdk;
   }
+  return undefined;
 }
 
 /**

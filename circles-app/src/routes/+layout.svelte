@@ -37,6 +37,7 @@
   import BottomNav from '$lib/components/BottomNav.svelte';
   import type { Address } from '@aboutcircles/sdk-types';
   import DefaultHeader from './DefaultHeader.svelte';
+import Toast from '$lib/components/Toast.svelte';
 
   const unwatch = watchAccount(config, {
     onChange(account) {
@@ -221,6 +222,9 @@
     {/each}
   </div>
 {/if}
+
+<!-- User notifications (errors, warnings, success messages) -->
+<Toast />
 
 <style>
   /* Lift toasts above BottomNav only on small screens; keep original position on md+ */

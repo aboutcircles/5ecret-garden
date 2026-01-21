@@ -6,6 +6,7 @@ import type {
   CirclesQuery,
   AvatarInfo,
   AggregatedTrustRelation,
+  TrustRelationInfo,
 } from '@aboutcircles/sdk-types';
 import type { ContactList } from '../contacts';
 import { getProfile, getCachedAvatarInfo } from '$lib/utils/profile';
@@ -13,6 +14,13 @@ import { get } from 'svelte/store';
 import type { Address } from '@aboutcircles/sdk-types';
 import type { Avatar, Sdk } from '@aboutcircles/sdk';
 import { getSdkFromAvatar } from '$lib/utils/avatarHelpers';
+import {
+  adaptTrustRelationsForV2,
+  adaptTrustRelationInfosToAggregated,
+  type TrustRelationType,
+} from '$lib/utils/sdkAdapters';
+import { getAggregatedTrustRelationsEnriched } from '$lib/utils/sdkHelpers';
+import { handleWarning } from '$lib/utils/errorHandler';
 
 interface ContactEventRow extends EventRow {
   data: ContactList;
@@ -29,37 +37,56 @@ export async function createContactsQueryStore(
   const createContactsQuery = async (): Promise<
     CirclesQuery<ContactEventRow>
   > => {
-    // Get RPC client from SDK
-    const rpcClient = sdk.rpc;
+    // Fetch contacts using enriched endpoint - single RPC call with avatar info pre-loaded
+    let contacts: AggregatedTrustRelation[] = [];
+    const avatarAddress = avatar.address as Address;
 
-    // Fetch contacts data using avatar's trust methods
-    let contacts;
-    if (avatar && typeof avatar.trust?.getAll === 'function') {
-      // Use SDK method from avatar
-      console.log('🔄 Using SDK avatar.trust.getAll()');
-      const allTrustRelations = await avatar.trust.getAll();
+    try {
+      console.log('🔄 Using getAggregatedTrustRelationsEnriched (optimized single RPC)');
+      const enrichedRelations = await getAggregatedTrustRelationsEnriched(sdk, avatarAddress);
 
-      // Show all trust relations:
-      // trustedBy = someone trusts you (they accept your tokens)
-      // trusts = you trust them (you accept their tokens)
-      // mutuallyTrusts = mutual trust
-      const filteredContacts = allTrustRelations.filter(
-        (contact: any) =>
-          contact.relation === 'trusts' ||
-          contact.relation === 'mutuallyTrusts' ||
-          contact.relation === 'trustedBy'
+      // Convert TrustRelationInfo arrays to AggregatedTrustRelation format
+      // Categories: mutual (both trust each other), trusts (you trust them), trustedBy (they trust you)
+      const mutualRelations = adaptTrustRelationInfosToAggregated(
+        enrichedRelations.mutual || [],
+        'mutuallyTrusts',
+        avatarAddress
+      );
+      const trustsRelations = adaptTrustRelationInfosToAggregated(
+        enrichedRelations.trusts || [],
+        'trusts',
+        avatarAddress
+      );
+      const trustedByRelations = adaptTrustRelationInfosToAggregated(
+        enrichedRelations.trustedBy || [],
+        'trustedBy',
+        avatarAddress
       );
 
+      // Combine all relations
+      const allRelations = [...mutualRelations, ...trustsRelations, ...trustedByRelations];
       console.log(
-        `Total trust relations: ${allTrustRelations.length}, Filtered contacts (outgoing/mutual): ${filteredContacts.length}`
+        `Enriched trust relations: ${allRelations.length} (mutual: ${mutualRelations.length}, trusts: ${trustsRelations.length}, trustedBy: ${trustedByRelations.length})`
       );
 
-      // Adapt new SDK format to old SDK format by adding missing fields
-      contacts = filteredContacts.map((contact: any) => ({
-        ...contact,
-        versions: [2], // New SDK only works with V2
-        versionSpecificRelations: { 2: contact.relation },
-      }));
+      // Adapt to include V2 compatibility fields
+      contacts = adaptTrustRelationsForV2(allRelations);
+    } catch (error) {
+      // Fallback to avatar.trust.getAll() if enriched endpoint fails
+      handleWarning('Enriched contacts endpoint failed, using fallback', {
+        notify: false,
+        context: 'sdk',
+      });
+      if (avatar && typeof avatar.trust?.getAll === 'function') {
+        const allTrustRelations = await avatar.trust.getAll();
+        const filteredContacts = allTrustRelations.filter(
+          (contact: AggregatedTrustRelation) =>
+            contact.relation === 'trusts' ||
+            contact.relation === 'mutuallyTrusts' ||
+            contact.relation === 'trustedBy'
+        );
+        contacts = adaptTrustRelationsForV2(filteredContacts);
+      }
     }
 
     const enrichedContacts = await enrichContactData(contacts || []);
