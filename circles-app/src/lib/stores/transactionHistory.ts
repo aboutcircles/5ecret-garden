@@ -4,6 +4,7 @@ import type { Avatar, Sdk } from '@aboutcircles/sdk';
 import type { PagedResponse, EnrichedTransaction, Address } from '@aboutcircles/sdk-types';
 import { getTransactionHistoryEnriched } from '$lib/utils/sdkHelpers';
 import { getSdkFromAvatar } from '$lib/utils/avatarHelpers';
+import { handleError } from '$lib/utils/errorHandler';
 
 const PAGE_SIZE = 25;
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
@@ -210,7 +211,11 @@ async function loadNextPage(): Promise<boolean> {
       return false;
     }
   } catch (error) {
-    console.error('Failed to load enriched transaction history:', error);
+    // Don't show notification for transaction history errors (user can retry)
+    handleError(error, {
+      context: 'transaction',
+      notify: false,
+    });
     _transactionHistory.update((state) => ({
       ...state,
       ended: true,

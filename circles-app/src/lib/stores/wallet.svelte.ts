@@ -22,6 +22,7 @@ import type { GroupType } from '@aboutcircles/sdk-types';
 import { privateKeyToAccount } from 'viem/accounts';
 import { gnosisChainConfig } from '$lib/utils/chainConfig';
 import { isHumanType, isGroupType, isOrganizationType } from '$lib/utils/avatarHelpers';
+import { handleError } from '$lib/utils/errorHandler';
 
 export const wallet = writable<ContractRunner | undefined>();
 
@@ -32,6 +33,18 @@ export let signer: {
 } = $state({
   address: undefined,
   privateKey: undefined,
+});
+
+/**
+ * Connector state for tracking the active wallet connector.
+ * Used to manage disconnect and reconnect flows.
+ */
+export let connectorState: {
+  id: string | undefined;
+  connected: boolean;
+} = $state({
+  id: undefined,
+  connected: false,
 });
 
 export async function getSigner() {
@@ -49,6 +62,13 @@ export async function getSigner() {
   }
 
   const account = getAccount(config);
+
+  // Update connector state on successful connection
+  if (account.address && account.connector) {
+    connectorState.id = account.connector.id;
+    connectorState.connected = true;
+  }
+
   // Return undefined instead of throwing; callers can decide what to do
   return account.address?.toLowerCase() as Address | undefined;
 }
@@ -101,7 +121,6 @@ export async function initNewSafeBrowserRunner(safeAddress: Address) {
   );
   return runner;
 }
-// @todo check
 export async function restoreSession() {
   try {
     const privateKey = CirclesStorage.getInstance().privateKey;
@@ -185,19 +204,27 @@ export async function restoreSession() {
       await goto('/register');
     }
   } catch (error) {
-    console.error('Failed to restore wallet:', error);
+    handleError(error, {
+      context: 'wallet',
+      title: 'Session Restore Failed',
+    });
     clearSession();
   }
 }
 
 export async function clearSession() {
-  //TODO: create a state for the connector
-  const connectorId = localStorage.getItem('connectorId');
+  // Use connectorState or fallback to localStorage for backward compatibility
+  const connectorId = connectorState.id || localStorage.getItem('connectorId');
   const connector = getConnectors(config).find((c) => c.id == connectorId);
   if (connector) {
     await disconnect(config, { connector: connector });
     localStorage.removeItem('connectorId');
   }
+  // Reset connector state
+  Object.assign(connectorState, {
+    id: undefined,
+    connected: false,
+  });
   Object.assign(groupMetrics, {
     memberCountPerHour: undefined,
     memberCountPerDay: undefined,
