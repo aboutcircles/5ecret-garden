@@ -17,10 +17,11 @@ import { CirclesStorage } from '$lib/utils/storage';
 import { groupMetrics } from './groupMetrics.svelte';
 import { disconnect, getAccount, getConnectors, reconnect } from '@wagmi/core';
 import { config } from '../../config';
-import { settings } from './settings.svelte';
+import { settings, getActiveConfig } from './settings.svelte';
 import type { GroupType } from '@aboutcircles/sdk-types';
 import { privateKeyToAccount } from 'viem/accounts';
-import { gnosis } from 'viem/chains';
+import { gnosisChainConfig } from '$lib/utils/chainConfig';
+import { isHumanType, isGroupType, isOrganizationType } from '$lib/utils/avatarHelpers';
 
 export const wallet = writable<ContractRunner | undefined>();
 
@@ -64,39 +65,39 @@ export async function getSignerFromPk() {
   };
 }
 
-// New runner initialization functions using @markfender/runner
+// New runner initialization functions using @aboutcircles/sdk-runner
 export async function initNewSafeContractRunner(
   privateKey: string,
   safeAddress: Address
 ) {
-  const rpcUrl = settings.ring
-    ? gnosisConfig.rings.circlesRpcUrl
-    : gnosisConfig.production.circlesRpcUrl;
-  // Cast gnosis to any to avoid viem type mismatch between SDK and app
+  // Use chainRpcUrl for runner - it needs standard Ethereum RPC methods
+  // (eth_call, eth_getTransactionReceipt, etc.) which circlesRpcUrl doesn't support
+  const activeConfig = getActiveConfig();
+  const rpcUrl = activeConfig.chainRpcUrl ?? activeConfig.circlesRpcUrl;
+
   const runner = await SafeContractRunner.create(
     rpcUrl,
     privateKey as `0x${string}`,
     safeAddress,
-    gnosis as any
+    gnosisChainConfig
   );
   return runner;
 }
 
 export async function initNewSafeBrowserRunner(safeAddress: Address) {
-  const rpcUrl = settings.ring
-    ? gnosisConfig.rings.circlesRpcUrl
-    : gnosisConfig.production.circlesRpcUrl;
+  // Use chainRpcUrl for runner - it needs standard Ethereum RPC methods
+  const activeConfig = getActiveConfig();
+  const rpcUrl = activeConfig.chainRpcUrl ?? activeConfig.circlesRpcUrl;
 
   if (!window.ethereum) {
     throw new Error('No ethereum provider found');
   }
 
-  // Cast gnosis to any to avoid viem type mismatch between SDK and app
   const runner = await SafeBrowserRunner.create(
     rpcUrl,
     window.ethereum,
     safeAddress,
-    gnosis as any
+    gnosisChainConfig
   );
   return runner;
 }
@@ -106,6 +107,11 @@ export async function restoreSession() {
     const privateKey = CirclesStorage.getInstance().privateKey;
     const savedAvatar = CirclesStorage.getInstance().avatar;
     const rings: boolean = CirclesStorage.getInstance().rings ? true : false;
+
+    // Sync settings with stored rings preference
+    if (settings.ring !== rings) {
+      settings.ring = rings;
+    }
 
     let newRunner;
     let sdk: Sdk;
@@ -121,17 +127,17 @@ export async function restoreSession() {
       signer.address = account.address?.toLowerCase() as Address;
       signer.privateKey = privateKey;
 
-      // Use the new SDK with runner - use custom config with invitationFarmAddress
-      const config = rings ? gnosisConfig.rings : gnosisConfig.production;
-      sdk = new Sdk(config, newRunner);
+      // Use the new SDK with runner - get config from settings
+      const activeConfig = getActiveConfig();
+      sdk = new Sdk(activeConfig, newRunner);
     } else if (savedAvatar) {
       // Safe + browser provider (EOA != Safe) - use NEW SDK with browser runner
       newRunner = await initNewSafeBrowserRunner(savedAvatar as Address);
       signer.privateKey = undefined;
 
-      // Use the new SDK with runner - use custom config with invitationFarmAddress
-      const config = rings ? gnosisConfig.rings : gnosisConfig.production;
-      sdk = new Sdk(config, newRunner);
+      // Use the new SDK with runner - get config from settings
+      const activeConfig = getActiveConfig();
+      sdk = new Sdk(activeConfig, newRunner);
     } else {
       throw new Error('No private key or saved avatar found in localStorage');
     }
@@ -149,23 +155,23 @@ export async function restoreSession() {
       (newRunner?.address || sdk.contractRunner?.address)) as Address;
 
     // Get avatar from SDK - returns HumanAvatar, OrganisationAvatar, or BaseGroupAvatar
-    // Enable auto event subscription for reactive balance/transaction updates
+    // Enable auto event subscription for reactive updates
     let avatar = await sdk.getAvatar(avatarToRestore, true);
 
     if (avatar) {
       avatarState.avatar = avatar;
 
-      // Detect avatar type from the avatarInfo returned by SDK
-      const avatarType = (avatar.avatarInfo as any)?.type;
+      // Detect avatar type from the avatarInfo returned by SDK (now properly typed)
+      const avatarType = avatar.avatarInfo?.type;
 
-      if (avatarType === 'CrcV2_RegisterGroup') {
+      if (isGroupType(avatarType)) {
         avatarState.isGroup = true;
         avatarState.isHuman = false;
         // Try to get group type from storage or avatarInfo
         avatarState.groupType =
           (CirclesStorage.getInstance().groupType as GroupType) ||
           'Standard';
-      } else if (avatarType === 'CrcV2_RegisterOrganization') {
+      } else if (isOrganizationType(avatarType)) {
         avatarState.isGroup = false;
         avatarState.isHuman = false;
         avatarState.groupType = undefined;

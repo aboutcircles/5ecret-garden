@@ -102,10 +102,10 @@ async function fetchProfiles(
     return new Map();
   }
 
-  if (typeof (sdk as any).rpc?.avatar?.getAvatarInfoBatch === 'function') {
-    // New SDK - use RPC directly
-    console.log('🔄 Using new SDK rpc.avatar.getAvatarInfoBatch()');
-    avatars = await (sdk as any).rpc.avatar.getAvatarInfoBatch(addresses);
+  // Use SDK's RPC methods directly (properly typed via Sdk class)
+  if (typeof sdk.rpc?.avatar?.getAvatarInfoBatch === 'function') {
+    console.log('🔄 Using SDK rpc.avatar.getAvatarInfoBatch()');
+    avatars = await sdk.rpc.avatar.getAvatarInfoBatch(addresses);
   } else {
     console.error(
       '❌ No rpc.avatar.getAvatarInfoBatch method available on SDK'
@@ -139,17 +139,15 @@ async function fetchProfiles(
   for (let i = 0; i < uniqueCids.length; i += chunkSize) {
     const chunk = uniqueCids.slice(i, i + chunkSize);
 
-    // console.log(`chunk:`, chunk);
+    // Use SDK's RPC client to fetch profile batch
     let chunkProfiles;
-    if (typeof (sdk as any).rpc?.client?.call === 'function') {
-      // New SDK - use rpc.client.call (returns result directly, not wrapped)
-      // @todo refactor
-      console.log('🔄 Using new SDK rpc.client.call() for profile batch');
-      const result = await (sdk as any).rpc.client.call(
+    if (typeof sdk.rpc?.client?.call === 'function') {
+      console.log('🔄 Using SDK rpc.client.call() for profile batch');
+      const result = await sdk.rpc.client.call(
         'circles_getProfileByCidBatch',
         [chunk]
       ) as Profile[];
-      chunkProfiles = { result }; // Wrap to match old SDK format
+      chunkProfiles = { result }; // Wrap for consistent format
     } else {
       throw new Error('No RPC call method available');
     }

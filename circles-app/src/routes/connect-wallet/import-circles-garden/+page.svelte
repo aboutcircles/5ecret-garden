@@ -17,6 +17,8 @@
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { CirclesStorage } from '$lib/utils/storage';
   import { goto } from '$app/navigation';
+  import { isGroupType, isOrganizationType } from '$lib/utils/avatarHelpers';
+  import { getActiveConfig } from '$lib/stores/settings.svelte';
 
   onMount(async () => {
     const { address, privateKey } = (await getSignerFromPk()) ?? {};
@@ -28,9 +30,9 @@
     signer.address = address;
     signer.privateKey = privateKey;
 
-    // Initialize SDK for querying
+    // Initialize SDK for querying (using active config from settings)
     try {
-      const sdk = new Sdk(gnosisConfig.production);
+      const sdk = new Sdk(getActiveConfig());
       circles.set(sdk);
     } catch (err) {
       console.error('Failed to initialize SDK:', err);
@@ -54,11 +56,12 @@
       safeAddress as Address
     );
 
-    const sdk = new Sdk(gnosisConfig.production, runner);
+    // Use active config from settings
+    const sdk = new Sdk(getActiveConfig(), runner);
     circles.set(sdk);
 
     // Get avatar info for the target address (could be Safe or Group)
-    // Enable auto event subscription for reactive balance/transaction updates
+    // Enable auto event subscription for reactive updates
     const avatar = await sdk.getAvatar(addressToConnect, true);
 
     if (!avatar) {
@@ -69,14 +72,14 @@
 
     avatarState.avatar = avatar;
 
-    // Detect avatar type from the avatarInfo
-    const avatarType = (avatar.avatarInfo as any)?.type;
+    // Detect avatar type from the avatarInfo (now properly typed)
+    const avatarType = avatar.avatarInfo?.type;
 
-    if (avatarType === 'CrcV2_RegisterGroup') {
+    if (isGroupType(avatarType)) {
       avatarState.isGroup = true;
       avatarState.isHuman = false;
       avatarState.groupType = GroupType.Standard;
-    } else if (avatarType === 'CrcV2_RegisterOrganization') {
+    } else if (isOrganizationType(avatarType)) {
       avatarState.isGroup = false;
       avatarState.isHuman = false;
       avatarState.groupType = undefined;

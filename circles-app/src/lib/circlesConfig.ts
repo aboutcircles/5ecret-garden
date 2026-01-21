@@ -4,6 +4,7 @@ export const chiadoConfig: { production: CirclesConfig; rings: CirclesConfig } =
   {
     production: {
       circlesRpcUrl: 'https://chiado-rpc.aboutcircles.com',
+      chainRpcUrl: 'https://chiado-rpc.aboutcircles.com/chain-rpc',
       pathfinderUrl: 'https://chiado-pathfinder.aboutcircles.com',
       profileServiceUrl: 'https://chiado-pathfinder.aboutcircles.com/profiles/',
       v1HubAddress: '0xdbf22d4e8962db3b2f1d9ff55be728a887e47710',
@@ -21,6 +22,7 @@ export const chiadoConfig: { production: CirclesConfig; rings: CirclesConfig } =
     // rings are not deployed on chiado yet
     rings: {
       circlesRpcUrl: 'https://chiado-rpc.aboutcircles.com',
+      chainRpcUrl: 'https://chiado-rpc.aboutcircles.com/chain-rpc',
       pathfinderUrl: 'https://chiado-pathfinder.aboutcircles.com',
       profileServiceUrl: 'https://chiado-pathfinder.aboutcircles.com/profiles/',
       v1HubAddress: '0xdbf22d4e8962db3b2f1d9ff55be728a887e47710',
@@ -43,6 +45,9 @@ export const gnosisConfig: { production: CirclesConfig; rings: CirclesConfig } =
       circlesRpcUrl:
         import.meta.env.VITE_CIRCLES_RPC_URL ||
         'https://staging.circlesubi.network/',
+      chainRpcUrl:
+        import.meta.env.VITE_CHAIN_RPC_URL ||
+        'https://staging.circlesubi.network/chain-rpc',
       pathfinderUrl: 'https://pathfinder.aboutcircles.com',
       profileServiceUrl: 'https://rpc.aboutcircles.com/profiles/',
       v1HubAddress: '0x29b9a7fbb8995b2423a71cc17cf9810798f6c543',
@@ -60,6 +65,8 @@ export const gnosisConfig: { production: CirclesConfig; rings: CirclesConfig } =
     rings: {
       circlesRpcUrl:
         'https://static.94.138.251.148.clients.your-server.de/rpc/',
+      chainRpcUrl:
+        'https://static.94.138.251.148.clients.your-server.de/chain-rpc/',
       pathfinderUrl: 'https://pathfinder.aboutcircles.com',
       profileServiceUrl:
         'https://static.94.138.251.148.clients.your-server.de/profiles/',

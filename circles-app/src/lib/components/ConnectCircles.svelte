@@ -14,6 +14,7 @@
   import { resetCreateGroupContext } from '$lib/flows/createGroup/context';
   import { initNewSafeBrowserRunner } from '$lib/stores/wallet.svelte';
   import { circlesConfig } from '@aboutcircles/sdk-core';
+  import { isGroupType, isOrganizationType } from '$lib/utils/avatarHelpers';
 
   interface Props {
     address: Address;
@@ -38,29 +39,47 @@
     // Use the safe address if no specific avatar address is provided
     const targetAddress = avatarAddress ?? address;
 
+    console.log('[ConnectCircles] connectAvatar called:', {
+      targetAddress,
+      safeAddress: address,
+      isRegistered,
+      isMainSafe: targetAddress === address,
+    });
+
     // Always create SDK with the Safe address, not the group address
     const sdk = await initSdk(address, targetAddress);
     $circles = sdk;
 
     // If clicking on the main safe (not a group) and it's not registered, go to registration
     if (targetAddress === address && !isRegistered) {
+      console.log('[ConnectCircles] Unregistered safe, redirecting to /register');
       await goto('/register');
       return;
     }
 
     // Use the new SDK to get the avatar for the target (could be Safe or Group)
-    // Enable auto event subscription for reactive balance/transaction updates
-    avatarState.avatar = await sdk.getAvatar(targetAddress, true);
+    // Enable auto event subscription for reactive updates
+    try {
+      avatarState.avatar = await sdk.getAvatar(targetAddress, true);
+    } catch (err: any) {
+      console.error('[ConnectCircles] Failed to get avatar:', err);
+      // If avatar not found, redirect to registration
+      if (err.message?.includes('Avatar not found') || err.code === 'AVATAR_NOT_FOUND') {
+        await goto('/register');
+        return;
+      }
+      throw err;
+    }
 
-    // Detect avatar type from the avatarInfo returned by SDK
-    const avatarType = (avatarState.avatar.avatarInfo as any)?.type;
+    // Detect avatar type from the avatarInfo returned by SDK (now properly typed)
+    const avatarType = avatarState.avatar.avatarInfo?.type;
 
-    if (avatarType === 'CrcV2_RegisterGroup') {
+    if (isGroupType(avatarType)) {
       avatarState.isGroup = true;
       avatarState.isHuman = false;
       // Try to detect group type - default to base group
       avatarState.groupType = GroupType.Standard;
-    } else if (avatarType === 'CrcV2_RegisterOrganization') {
+    } else if (isOrganizationType(avatarType)) {
       avatarState.isGroup = false;
       avatarState.isHuman = false;
       avatarState.groupType = undefined;

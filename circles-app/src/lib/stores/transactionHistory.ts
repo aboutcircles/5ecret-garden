@@ -1,8 +1,9 @@
 import type { TransactionHistoryRow } from '@aboutcircles/sdk-rpc';
 import { writable, derived } from 'svelte/store';
-import type { Avatar } from '@aboutcircles/sdk';
+import type { Avatar, Sdk } from '@aboutcircles/sdk';
 import type { PagedResponse, EnrichedTransaction, Address } from '@aboutcircles/sdk-types';
 import { getTransactionHistoryEnriched } from '$lib/utils/sdkHelpers';
+import { getSdkFromAvatar } from '$lib/utils/avatarHelpers';
 
 const PAGE_SIZE = 25;
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
@@ -142,9 +143,15 @@ async function loadNextPage(): Promise<boolean> {
   try {
     console.log('🔄 Fetching enriched transaction history (profiles included)...');
 
-    const sdk = (currentAvatar as any).sdk;
+    // Get SDK reference from avatar (set by Sdk.getAvatar())
+    const sdk = getSdkFromAvatar(currentAvatar);
+    if (!sdk) {
+      console.error('❌ SDK reference not available on avatar');
+      throw new Error('SDK reference not available');
+    }
+
     const response: PagedResponse<EnrichedTransaction> = await getTransactionHistoryEnriched(
-      sdk,
+      sdk as Sdk,
       currentAvatar.address as Address,
       0, // fromBlock
       null, // toBlock
@@ -224,6 +231,9 @@ export const initTransactionHistoryStore = async (avatar: Avatar) => {
   currentAvatarAddress = avatar.address;
   isLoading = false;
 
+  // Clear memoization cache for fresh grouping
+  resetGroupedCache();
+
   // Validate avatar is properly initialized
   if (!avatar || typeof avatar !== 'object') {
     console.error('❌ Avatar is not properly initialized:', avatar);
@@ -236,7 +246,8 @@ export const initTransactionHistoryStore = async (avatar: Avatar) => {
   }
 
   // Validate avatar has SDK reference for RPC calls
-  if (!(avatar as any).sdk?.rpc?.sdk) {
+  const sdk = getSdkFromAvatar(avatar);
+  if (!sdk?.rpc) {
     console.error('❌ No SDK RPC methods available on avatar');
     _transactionHistory.set({
       data: [],
@@ -263,9 +274,29 @@ export const initTransactionHistoryStore = async (avatar: Avatar) => {
 
 export const transactionHistory = _transactionHistory;
 
+// Memoization cache for grouped transactions
+// Avoids redundant O(n) grouping + O(n log n) sorting when only metadata changes
+let lastDataLength = 0;
+let lastAvatarAddress = '';
+let cachedGrouped: GroupedTransaction[] = [];
+
+/**
+ * Reset the grouped transaction cache.
+ * Called when avatar changes to ensure fresh grouping.
+ */
+function resetGroupedCache() {
+  lastDataLength = 0;
+  lastAvatarAddress = '';
+  cachedGrouped = [];
+}
+
 /**
  * Derived store that groups transactions by hash.
  * Shows consolidated rows with net amounts and expandable drill-down.
+ *
+ * Performance: Memoized to avoid recalculating when only pagination
+ * metadata (ended flag, next cursor) changes. Regrouping only occurs
+ * when actual transaction data grows.
  */
 export const groupedTransactionHistory = derived(
   _transactionHistory,
@@ -278,12 +309,29 @@ export const groupedTransactionHistory = derived(
       };
     }
 
-    const grouped = groupByTransaction($txHistory.data, currentAvatarAddress);
-    // Sort by timestamp descending (most recent first)
-    grouped.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    // Skip recalculation if data hasn't changed
+    const avatarChanged = currentAvatarAddress !== lastAvatarAddress;
+    const dataChanged = $txHistory.data.length !== lastDataLength;
+
+    if (!avatarChanged && !dataChanged && cachedGrouped.length > 0) {
+      return {
+        data: cachedGrouped,
+        next: $txHistory.next,
+        ended: $txHistory.ended,
+      };
+    }
+
+    // Update cache keys
+    lastDataLength = $txHistory.data.length;
+    lastAvatarAddress = currentAvatarAddress;
+
+    // Perform grouping and sorting
+    cachedGrouped = groupByTransaction($txHistory.data, currentAvatarAddress);
+    // Sort by timestamp descending (timestamps are numbers, no Date conversion needed)
+    cachedGrouped.sort((a, b) => b.timestamp - a.timestamp);
 
     return {
-      data: grouped,
+      data: cachedGrouped,
       next: $txHistory.next,
       ended: $txHistory.ended,
     };
