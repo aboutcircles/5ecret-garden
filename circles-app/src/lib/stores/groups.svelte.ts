@@ -1,7 +1,8 @@
 import type { EventRow } from '@aboutcircles/sdk-types';
 import { writable } from 'svelte/store';
-import type { Avatar, Sdk } from '@aboutcircles/sdk';
+import type { Avatar, Sdk, HumanAvatar } from '@aboutcircles/sdk';
 import type { GroupRow } from '@aboutcircles/sdk-types';
+import { isHumanAvatar } from '$lib/utils/avatarHelpers';
 
 export const createBaseGroups = async (avatar: Avatar) => {
   let isLoading = false;
@@ -26,35 +27,34 @@ export const createBaseGroups = async (avatar: Avatar) => {
 
       // Use the avatar.group.getGroupMembershipsWithDetails() method
       // which internally handles pagination and enriches with group details
-      // Only HumanAvatar has this method, so we need to check the type
-      if (
-        'group' in avatar &&
-        typeof (avatar as any).group?.getGroupMembershipsWithDetails ===
-          'function'
-      ) {
-        const groups = await (
-          avatar as any
-        ).group.getGroupMembershipsWithDetails(1000);
-        console.log(`✅ Loaded ${groups.length} groups with details`);
+      // Only HumanAvatar has this method, so we use the type guard
+      if (isHumanAvatar(avatar)) {
+        const humanAvatar = avatar as HumanAvatar;
+        // Check if the method exists (it may not be in all SDK versions)
+        if (typeof humanAvatar.group?.getGroupMembershipsWithDetails === 'function') {
+          const groups = await humanAvatar.group.getGroupMembershipsWithDetails(1000);
+          console.log(`✅ Loaded ${groups.length} groups with details`);
 
-        store.set({
-          data: groups as EventRow[],
-          next: async () => false,
-          ended: true,
-        });
+          store.set({
+            data: groups as EventRow[],
+            next: async () => false,
+            ended: true,
+          });
 
-        allGroupsLoaded = true;
-        return groups.length > 0;
-      } else {
-        console.warn('Avatar does not support group memberships');
-        store.set({
-          data: [],
-          next: async () => false,
-          ended: true,
-        });
-        allGroupsLoaded = true;
-        return false;
+          allGroupsLoaded = true;
+          return groups.length > 0;
+        }
       }
+
+      // Avatar does not support group memberships or method doesn't exist
+      console.warn('Avatar does not support group memberships');
+      store.set({
+        data: [],
+        next: async () => false,
+        ended: true,
+      });
+      allGroupsLoaded = true;
+      return false;
     } catch (error) {
       console.error('Failed to load groups:', error);
       store.set({
@@ -97,23 +97,21 @@ export const createBaseGroups = async (avatar: Avatar) => {
   await initGroups();
 
   // Subscribe to events for automatic updates
-  if (typeof (avatar as any).subscribeToEvents === 'function') {
+  // Avatar's subscribeToEvents is a public method on CommonAvatar
+  if (typeof avatar.subscribeToEvents === 'function') {
     try {
       console.log('🔗 Groups: Subscribing to avatar events...');
-      await (avatar as any).subscribeToEvents();
+      await avatar.subscribeToEvents();
       console.log('✅ Groups: Avatar events subscription initialized');
 
       // Validate events subscription method exists before subscribing
-      if (
-        !avatar.events ||
-        typeof (avatar as any).events.subscribe !== 'function'
-      ) {
+      if (!avatar.events || typeof avatar.events.subscribe !== 'function') {
         console.error('❌ Groups: Avatar.events.subscribe is not available');
         throw new Error('Avatar.events.subscribe is not available');
       }
 
       // Listen for group membership changes
-      (avatar as any).events.subscribe((event: any) => {
+      avatar.events.subscribe((event) => {
         try {
           // Reload groups when membership changes
           if (

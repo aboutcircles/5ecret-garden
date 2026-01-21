@@ -4,6 +4,7 @@
  */
 
 import type { Sdk } from '@aboutcircles/sdk';
+import type { CirclesRpc } from '@aboutcircles/sdk-rpc';
 import type { Address } from '@aboutcircles/sdk-types';
 import type {
   ProfileView,
@@ -16,6 +17,16 @@ import type {
 } from '@aboutcircles/sdk-types';
 
 /**
+ * Type-safe accessor for SDK's RPC interface.
+ * The Sdk class has `rpc: CirclesRpc` but TypeScript's deep type inference
+ * through viem's complex types sometimes fails. This accessor provides
+ * the typed boundary once, enabling full type safety in all helper functions.
+ */
+function getRpc(sdk: Sdk): CirclesRpc {
+  return sdk.rpc as CirclesRpc;
+}
+
+/**
  * Get comprehensive profile view in a single RPC call
  * Replaces: getAvatarInfo + getProfile + getTrustStats + getBalance
  */
@@ -23,7 +34,7 @@ export async function getProfileView(
   sdk: Sdk,
   address: Address
 ): Promise<ProfileView> {
-  return (sdk as any).rpc.sdk.getProfileView(address);
+  return getRpc(sdk).sdk.getProfileView(address);
 }
 
 /**
@@ -35,7 +46,7 @@ export async function getTrustNetworkSummary(
   address: Address,
   maxDepth: number = 2
 ): Promise<TrustNetworkSummary> {
-  return (sdk as any).rpc.sdk.getTrustNetworkSummary(address, maxDepth);
+  return getRpc(sdk).sdk.getTrustNetworkSummary(address, maxDepth);
 }
 
 /**
@@ -46,7 +57,7 @@ export async function getAggregatedTrustRelationsEnriched(
   sdk: Sdk,
   address: Address
 ): Promise<AggregatedTrustRelationsResponse> {
-  return (sdk as any).rpc.trust.getAggregatedTrustRelationsEnriched(address);
+  return getRpc(sdk).trust.getAggregatedTrustRelationsEnriched(address);
 }
 
 /**
@@ -58,7 +69,7 @@ export async function getAllInvitations(
   address: Address,
   minimumBalance?: string
 ): Promise<AllInvitationsResponse> {
-  return (sdk as any).rpc.invitation.getAllInvitations(address, minimumBalance);
+  return getRpc(sdk).invitation.getAllInvitations(address, minimumBalance);
 }
 
 /**
@@ -69,7 +80,7 @@ export async function getValidInviters(
   address: Address,
   minimumBalance?: string
 ): Promise<ValidInvitersResponse> {
-  return (sdk as any).rpc.trust.getValidInviters(address, minimumBalance);
+  return getRpc(sdk).trust.getValidInviters(address, minimumBalance);
 }
 
 /**
@@ -84,7 +95,7 @@ export async function getTransactionHistoryEnriched(
   limit: number = 25,
   cursor?: string | null
 ): Promise<PagedResponse<EnrichedTransaction>> {
-  return (sdk as any).rpc.sdk.getTransactionHistoryEnriched(
+  return getRpc(sdk).sdk.getTransactionHistoryEnriched(
     address,
     fromBlock,
     toBlock,
@@ -102,7 +113,7 @@ export async function findMaxFlow(
   from: Address,
   to: Address
 ): Promise<bigint> {
-  return (sdk as any).rpc.pathfinder.findMaxFlow({ from, to });
+  return getRpc(sdk).pathfinder.findMaxFlow({ from, to });
 }
 
 /**
@@ -126,7 +137,7 @@ export async function searchProfiles(
   offset: number = 0,
   avatarTypes?: string[]
 ): Promise<ProfileSearchResult[]> {
-  const response = await (sdk as any).rpc.profile.searchByAddressOrName(
+  const response = await getRpc(sdk).profile.searchByAddressOrName(
     query,
     limit,
     offset,
@@ -138,6 +149,9 @@ export async function searchProfiles(
 /**
  * Get invitation origin for an address
  * Returns how an avatar was invited to Circles (v1_signup, v2_standard, v2_escrow, v2_at_scale)
+ *
+ * Note: This method may not be available in all SDK versions.
+ * Falls back gracefully to null if unavailable.
  */
 export interface InvitationOrigin {
   type: 'v1_signup' | 'v2_standard' | 'v2_escrow' | 'v2_at_scale';
@@ -150,7 +164,13 @@ export async function getInvitationOrigin(
   address: Address
 ): Promise<InvitationOrigin | null> {
   try {
-    return await (sdk as any).rpc.sdk.getInvitationOrigin(address);
+    // Method may not exist in all SDK versions - use dynamic access
+    const rpc = getRpc(sdk);
+    const sdkMethods = rpc.sdk as { getInvitationOrigin?: (addr: Address) => Promise<InvitationOrigin> };
+    if (typeof sdkMethods.getInvitationOrigin === 'function') {
+      return await sdkMethods.getInvitationOrigin(address);
+    }
+    return null;
   } catch {
     return null;
   }

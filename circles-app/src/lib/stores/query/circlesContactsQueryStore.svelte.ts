@@ -11,7 +11,8 @@ import type { ContactList } from '../contacts';
 import { getProfile, getCachedAvatarInfo } from '$lib/utils/profile';
 import { get } from 'svelte/store';
 import type { Address } from '@aboutcircles/sdk-types';
-import type { Avatar } from '@aboutcircles/sdk';
+import type { Avatar, Sdk } from '@aboutcircles/sdk';
+import { getSdkFromAvatar } from '$lib/utils/avatarHelpers';
 
 interface ContactEventRow extends EventRow {
   data: ContactList;
@@ -28,19 +29,15 @@ export async function createContactsQueryStore(
   const createContactsQuery = async (): Promise<
     CirclesQuery<ContactEventRow>
   > => {
-    // Get RPC client - handle both old and new SDK
-    let rpcClient;
-    if ((sdk as any).rpc) {
-      // New SDK
-      rpcClient = (sdk as any).rpc;
-    }
+    // Get RPC client from SDK
+    const rpcClient = sdk.rpc;
 
-    // Fetch contacts data
+    // Fetch contacts data using avatar's trust methods
     let contacts;
-    if (avatar && typeof (avatar as any).trust?.getAll === 'function') {
-      // Use new SDK method from avatar
-      console.log('🔄 Using new SDK avatar.trust.getAll()');
-      const allTrustRelations = await (avatar as any).trust.getAll();
+    if (avatar && typeof avatar.trust?.getAll === 'function') {
+      // Use SDK method from avatar
+      console.log('🔄 Using SDK avatar.trust.getAll()');
+      const allTrustRelations = await avatar.trust.getAll();
 
       // Show all trust relations:
       // trustedBy = someone trusts you (they accept your tokens)
@@ -171,12 +168,13 @@ async function enrichContactData(
   console.log(`Avatar infos from cache: ${Object.keys(avatarInfoRecord).length}, Missing: ${missingAddresses.length}`);
 
   // Step 3: If some avatar info is missing, fetch it directly as fallback
-  if (missingAddresses.length > 0 && get(circles)) {
+  const sdk = get(circles);
+  if (missingAddresses.length > 0 && sdk) {
     try {
       console.log(`Fetching ${missingAddresses.length} missing avatar infos...`);
-      const sdk = get(circles);
-      if (typeof (sdk as any).rpc?.avatar?.getAvatarInfoBatch === 'function') {
-        const fetchedAvatarInfos = await (sdk as any).rpc.avatar.getAvatarInfoBatch(missingAddresses);
+      // Use SDK's RPC methods directly (properly typed)
+      if (typeof sdk.rpc?.avatar?.getAvatarInfoBatch === 'function') {
+        const fetchedAvatarInfos = await sdk.rpc.avatar.getAvatarInfoBatch(missingAddresses);
 
         fetchedAvatarInfos?.forEach((info: AvatarInfo) => {
           if (info && info.avatar) {
