@@ -232,3 +232,87 @@ export const createAllGroups = async (sdk: Sdk) => {
 
   return store;
 };
+
+/**
+ * Create a store for searching groups by name.
+ * Uses the SDK's findGroups() method with nameStartsWith filter.
+ * Supports cursor-based pagination for large result sets.
+ */
+export const createSearchGroups = async (sdk: Sdk, query: string) => {
+  let isLoading = false;
+  let currentCursor: string | null = null;
+  let hasMoreResults = true;
+
+  const store = writable<{
+    data: GroupRow[];
+    next: () => Promise<boolean>;
+    ended: boolean;
+  }>({ data: [], next: async () => false, ended: false });
+
+  // Load next batch of search results
+  const loadNextBatch = async (): Promise<boolean> => {
+    if (isLoading || !hasMoreResults) {
+      return false;
+    }
+
+    isLoading = true;
+
+    try {
+      console.log('🔍 Searching groups with query:', query, 'cursor:', currentCursor);
+
+      // Use findGroups with nameStartsWith filter
+      const response = await sdk.rpc.group.findGroups(
+        50, // pageSize
+        { nameStartsWith: query },
+        currentCursor
+      );
+
+      if (response.results.length > 0) {
+        currentCursor = response.nextCursor;
+        hasMoreResults = response.hasMore;
+
+        console.log(`✅ Found ${response.results.length} groups matching "${query}"`);
+
+        // Append new results
+        store.update((state) => ({
+          data: [...state.data, ...response.results],
+          next: response.hasMore ? loadNextBatch : async () => false,
+          ended: !response.hasMore,
+        }));
+
+        return response.hasMore;
+      } else {
+        // No results
+        hasMoreResults = false;
+        store.update((state) => ({
+          ...state,
+          next: async () => false,
+          ended: true,
+        }));
+        return false;
+      }
+    } catch (error) {
+      console.error('Group search failed:', error);
+      store.update((state) => ({
+        ...state,
+        next: async () => false,
+        ended: true,
+      }));
+      return false;
+    } finally {
+      isLoading = false;
+    }
+  };
+
+  // Initialize store
+  store.set({
+    data: [],
+    next: loadNextBatch,
+    ended: false,
+  });
+
+  // Load first batch
+  await loadNextBatch();
+
+  return store;
+};

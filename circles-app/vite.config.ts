@@ -23,4 +23,16 @@ export default defineConfig({
       },
     },
   },
+  resolve: {
+    alias: {
+      // Fix SDK runner import of vite polyfill shims
+      'vite-plugin-node-polyfills/shims/global': 'vite-plugin-node-polyfills/shims/global',
+    },
+  },
+  build: {
+    rollupOptions: {
+      // Don't bundle vite-plugin-node-polyfills shims - let vite handle them
+      external: (id) => id.includes('vite-plugin-node-polyfills/shims'),
+    },
+  },
 });
