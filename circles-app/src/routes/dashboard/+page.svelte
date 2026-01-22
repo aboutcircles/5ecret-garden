@@ -26,6 +26,10 @@
   import { circles } from '$lib/stores/circles';
   import { initTransactionHistoryStore } from '$lib/stores/transactionHistory';
   import type { CirclesEvent } from '@aboutcircles/sdk-rpc';
+  import { page } from '$app/stores';
+
+  // Read transaction hash from URL for deep-linking
+  let highlightTx = $derived($page.url.searchParams.get('tx') || undefined);
 
   let mintableAmount: number = $state(0);
   let unsubscribeEvents: (() => void) | null = null;
@@ -361,6 +365,6 @@
   {#if avatarState.isGroup}
     <OverviewPanel />
   {:else}
-    <TransactionHistoryPanel />
+    <TransactionHistoryPanel {highlightTx} />
   {/if}
 </PageScaffold>

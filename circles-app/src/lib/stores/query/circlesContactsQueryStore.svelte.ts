@@ -26,6 +26,17 @@ interface ContactEventRow extends EventRow {
   data: ContactList;
 }
 
+/**
+ * Creates a store for contacts (trust relations).
+ *
+ * **Pagination Design Note:**
+ * This store intentionally loads ALL contacts in a single RPC call (`hasMore: false`).
+ * Trust relations are typically a small dataset (<100-200 contacts for most users),
+ * and loading them all at once provides better UX than paginating.
+ *
+ * The `getAggregatedTrustRelationsEnriched()` endpoint returns all trust relations
+ * (mutual, trusts, trustedBy) with avatar info pre-loaded, optimized for this use case.
+ */
 export async function createContactsQueryStore(
   avatar: Avatar,
   _address: Address,

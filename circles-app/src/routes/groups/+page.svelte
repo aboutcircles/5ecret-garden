@@ -1,17 +1,120 @@
 <script lang="ts">
   import GenericList from '$lib/components/GenericList.svelte';
-  import { createBaseGroups, createAllGroups } from '$lib/stores/groups.svelte';
-  import type { Readable } from 'svelte/store';
+  import { createBaseGroups, createAllGroups, createSearchGroups } from '$lib/stores/groups.svelte';
+  import { derived, type Readable } from 'svelte/store';
   import GroupRowView from './GroupRowView.svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
   import { circles } from '$lib/stores/circles';
   import type { GroupRow } from '@aboutcircles/sdk-types';
+  import { page } from '$app/stores';
+  import { goto } from '$app/navigation';
 
   type Tab = 'my-groups' | 'all-groups';
 
-  // Default to 'all-groups' for non-humans, 'my-groups' for humans
-  let activeTab: Tab = $state(avatarState.isHuman ? 'my-groups' : 'all-groups');
+  // Read initial tab from URL, fallback to default based on avatar type
+  function getInitialTab(): Tab {
+    const urlTab = $page.url.searchParams.get('tab');
+    if (urlTab === 'my-groups' || urlTab === 'all-groups') {
+      return urlTab;
+    }
+    return avatarState.isHuman ? 'my-groups' : 'all-groups';
+  }
+
+  // Read initial search query from URL
+  function getInitialQuery(): string {
+    return $page.url.searchParams.get('q') || '';
+  }
+
+  let activeTab: Tab = $state(getInitialTab());
+  let searchQuery = $state(getInitialQuery());
+  let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+  // Sync tab and search to URL
+  function updateUrl(tab: Tab, query: string) {
+    const url = new URL($page.url);
+    url.searchParams.set('tab', tab);
+    if (query) {
+      url.searchParams.set('q', query);
+    } else {
+      url.searchParams.delete('q');
+    }
+    goto(url.toString(), { replaceState: true, keepFocus: true });
+  }
+
+  // Update URL when tab changes
+  function setActiveTab(tab: Tab) {
+    activeTab = tab;
+    updateUrl(tab, searchQuery);
+  }
+
+  // Handle search input with debounce
+  function handleSearchInput(e: Event) {
+    const target = e.target as HTMLInputElement;
+    searchQuery = target.value;
+
+    if (debounceTimer) clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      updateUrl(activeTab, searchQuery);
+      // Trigger search for all-groups tab
+      if (activeTab === 'all-groups' && $circles) {
+        performSearch(searchQuery);
+      }
+    }, 300);
+  }
+
+  // Search state for all-groups tab
+  let searchedGroups:
+    | Readable<{
+        data: GroupRow[];
+        next: () => Promise<boolean>;
+        ended: boolean;
+      }>
+    | undefined = $state();
+  let isSearching = $state(false);
+
+  async function performSearch(query: string) {
+    if (!$circles || !query.trim()) {
+      searchedGroups = undefined;
+      return;
+    }
+
+    isSearching = true;
+    try {
+      searchedGroups = await createSearchGroups($circles, query.trim());
+    } catch (error) {
+      console.error('Group search failed:', error);
+      searchedGroups = undefined;
+    } finally {
+      isSearching = false;
+    }
+  }
+
+  // Initialize search if URL has query param
+  $effect(() => {
+    if ($circles && searchQuery && activeTab === 'all-groups' && !searchedGroups) {
+      performSearch(searchQuery);
+    }
+  });
+
+  // Create a filtered version of myGroups for client-side search
+  let filteredMyGroups: Readable<{ data: any[]; next: () => Promise<boolean>; ended: boolean }> | undefined = $state();
+
+  $effect(() => {
+    if (myGroups && searchQuery) {
+      const lowerQuery = searchQuery.toLowerCase();
+      filteredMyGroups = derived(myGroups, ($myGroups) => ({
+        data: $myGroups.data.filter((g: any) =>
+          g.name?.toLowerCase().includes(lowerQuery) ||
+          g.symbol?.toLowerCase().includes(lowerQuery)
+        ),
+        next: async () => false,
+        ended: true,
+      }));
+    } else {
+      filteredMyGroups = undefined;
+    }
+  });
 
   let myGroups:
     | Readable<{
@@ -32,10 +135,10 @@
   let isLoadingMyGroups = $state(false);
   let isLoadingAllGroups = $state(false);
 
-  // Update default tab when avatar changes
+  // Update default tab when avatar changes (non-humans can't view my-groups)
   $effect(() => {
     if (!avatarState.isHuman && activeTab === 'my-groups') {
-      activeTab = 'all-groups';
+      setActiveTab('all-groups');
     }
   });
 
@@ -135,7 +238,7 @@
         role="tab"
         class="tab"
         class:tab-active={activeTab === 'my-groups'}
-        onclick={() => (activeTab = 'my-groups')}
+        onclick={() => setActiveTab('my-groups')}
       >
         My Groups
       </button>
@@ -143,10 +246,50 @@
         role="tab"
         class="tab"
         class:tab-active={activeTab === 'all-groups'}
-        onclick={() => (activeTab = 'all-groups')}
+        onclick={() => setActiveTab('all-groups')}
       >
         All Groups
       </button>
+    </div>
+
+    <!-- Search input -->
+    <div class="mb-4">
+      <div class="input input-bordered flex items-center gap-2">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 16 16"
+          fill="currentColor"
+          class="w-4 h-4 opacity-70"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+            clip-rule="evenodd"
+          />
+        </svg>
+        <input
+          type="text"
+          class="grow"
+          placeholder="Search groups by name..."
+          value={searchQuery}
+          oninput={handleSearchInput}
+        />
+        {#if isSearching}
+          <span class="loading loading-spinner loading-xs"></span>
+        {/if}
+        {#if searchQuery}
+          <button
+            type="button"
+            class="btn btn-ghost btn-xs btn-circle"
+            onclick={() => { searchQuery = ''; searchedGroups = undefined; updateUrl(activeTab, ''); }}
+            aria-label="Clear search"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        {/if}
+      </div>
     </div>
 
     {#if activeTab === 'my-groups'}
@@ -155,23 +298,71 @@
           <span class="loading loading-spinner loading-lg text-primary"></span>
           <span class="mt-4 text-base-content/70">Loading your groups...</span>
         </div>
+      {:else if searchQuery && filteredMyGroups}
+        <!-- Client-side filtered my groups -->
+        <GenericList store={filteredMyGroups} row={GroupRowView} />
       {:else}
         <GenericList store={myGroups} row={GroupRowView} />
       {/if}
-    {:else if isLoadingAllGroups}
+    {:else if searchQuery && searchedGroups}
+      <!-- Server-side search results for all groups -->
+      <GenericList store={searchedGroups} row={GroupRowView} />
+    {:else if isLoadingAllGroups || isSearching}
       <div class="w-full flex flex-col items-center justify-center py-12">
         <span class="loading loading-spinner loading-lg text-primary"></span>
-        <span class="mt-4 text-base-content/70">Loading all groups...</span>
+        <span class="mt-4 text-base-content/70">{isSearching ? 'Searching groups...' : 'Loading all groups...'}</span>
       </div>
     {:else}
       <GenericList store={allGroups} row={GroupRowView} />
     {/if}
   {:else}
     <!-- Organizations only see all groups -->
-    {#if isLoadingAllGroups}
+    <!-- Search input -->
+    <div class="mb-4">
+      <div class="input input-bordered flex items-center gap-2">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 16 16"
+          fill="currentColor"
+          class="w-4 h-4 opacity-70"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+            clip-rule="evenodd"
+          />
+        </svg>
+        <input
+          type="text"
+          class="grow"
+          placeholder="Search groups by name..."
+          value={searchQuery}
+          oninput={handleSearchInput}
+        />
+        {#if isSearching}
+          <span class="loading loading-spinner loading-xs"></span>
+        {/if}
+        {#if searchQuery}
+          <button
+            type="button"
+            class="btn btn-ghost btn-xs btn-circle"
+            onclick={() => { searchQuery = ''; searchedGroups = undefined; updateUrl(activeTab, ''); }}
+            aria-label="Clear search"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        {/if}
+      </div>
+    </div>
+
+    {#if searchQuery && searchedGroups}
+      <GenericList store={searchedGroups} row={GroupRowView} />
+    {:else if isLoadingAllGroups || isSearching}
       <div class="w-full flex flex-col items-center justify-center py-12">
         <span class="loading loading-spinner loading-lg text-primary"></span>
-        <span class="mt-4 text-base-content/70">Loading all groups...</span>
+        <span class="mt-4 text-base-content/70">{isSearching ? 'Searching groups...' : 'Loading all groups...'}</span>
       </div>
     {:else}
       <GenericList store={allGroups} row={GroupRowView} />

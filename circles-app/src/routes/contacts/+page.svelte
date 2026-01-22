@@ -16,11 +16,66 @@
   import { popupControls } from '$lib/stores/popUp.svelte';
   import ManageGroupMembers from '$lib/flows/manageGroupMembers/1_manageGroupMembers.svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
+  import { page } from '$app/stores';
+  import { goto } from '$app/navigation';
+  import { onMount } from 'svelte';
 
-  let filterRelation = writable<
-    'mutuallyTrusts' | 'trusts' | 'trustedBy' | undefined
-  >(undefined);
-  let searchQuery = writable<string>('');
+  type FilterValue = 'mutuallyTrusts' | 'trusts' | 'trustedBy' | undefined;
+
+  // Read initial values from URL
+  function getInitialFilter(): FilterValue {
+    const urlFilter = $page.url.searchParams.get('filter');
+    if (urlFilter === 'mutual') return 'mutuallyTrusts';
+    if (urlFilter === 'trusts') return 'trusts';
+    if (urlFilter === 'trustedBy') return 'trustedBy';
+    return undefined;
+  }
+
+  function getInitialSearch(): string {
+    return $page.url.searchParams.get('q') || '';
+  }
+
+  let filterRelation = writable<FilterValue>(getInitialFilter());
+  let searchQuery = writable<string>(getInitialSearch());
+
+  // Sync state to URL
+  function updateUrl(filter: FilterValue, query: string) {
+    const url = new URL($page.url);
+
+    // Map filter value to URL param
+    if (filter === 'mutuallyTrusts') {
+      url.searchParams.set('filter', 'mutual');
+    } else if (filter === 'trusts') {
+      url.searchParams.set('filter', 'trusts');
+    } else if (filter === 'trustedBy') {
+      url.searchParams.set('filter', 'trustedBy');
+    } else {
+      url.searchParams.delete('filter');
+    }
+
+    if (query) {
+      url.searchParams.set('q', query);
+    } else {
+      url.searchParams.delete('q');
+    }
+
+    goto(url.toString(), { replaceState: true, keepFocus: true });
+  }
+
+  // Subscribe to store changes and sync to URL
+  let isInitialized = false;
+  onMount(() => {
+    isInitialized = true;
+  });
+
+  // Sync filter changes to URL (after initial mount)
+  $effect(() => {
+    if (isInitialized) {
+      const currentFilter = $filterRelation;
+      const currentQuery = $searchQuery;
+      updateUrl(currentFilter, currentQuery);
+    }
+  });
 
   // Filters panel state — store to ensure reactivity in all modes
   const showFilters: Writable<boolean> = writable(false);

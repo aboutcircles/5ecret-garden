@@ -3,13 +3,49 @@
   import type { GroupedTransaction } from '$lib/stores/transactionHistory';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import RowFrame from '$lib/ui/RowFrame.svelte';
+  import { page } from '$app/stores';
+  import { goto } from '$app/navigation';
+  import { onMount } from 'svelte';
 
   interface Props {
     item: GroupedTransaction;
+    /** Transaction hash to highlight (from URL deep-link) */
+    highlightTx?: string;
   }
-  let { item }: Props = $props();
+  let { item, highlightTx }: Props = $props();
 
   let expanded = $state(false);
+  let rowElement: HTMLDivElement | undefined = $state();
+
+  // Check if this transaction should be highlighted
+  const isHighlighted = $derived(
+    highlightTx?.toLowerCase() === item.transactionHash.toLowerCase()
+  );
+
+  // Auto-scroll and expand when this transaction is highlighted
+  onMount(() => {
+    if (isHighlighted && rowElement) {
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        rowElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Auto-expand multi-event transactions when deep-linked
+        if (item.eventCount > 1) {
+          expanded = true;
+        }
+      }, 100);
+    }
+  });
+
+  // Update URL when clicking the row (for sharing)
+  function handleRowClick() {
+    if (item.eventCount > 1) {
+      expanded = !expanded;
+    }
+    // Update URL with this transaction hash for sharing
+    const url = new URL($page.url);
+    url.searchParams.set('tx', item.transactionHash);
+    goto(url.toString(), { replaceState: true, keepFocus: true });
+  }
 
   function formatNetCircles(amount: number): string {
     const abs = Math.abs(amount);
@@ -19,12 +55,6 @@
   function openTx() {
     const url = 'https://gnosisscan.io/tx/' + item.transactionHash;
     window.open(url, '_blank', 'noopener,noreferrer');
-  }
-
-  function toggleExpand() {
-    if (item.eventCount > 1) {
-      expanded = !expanded;
-    }
   }
 
   const isSent = $derived(item.netCircles < 0);
@@ -48,9 +78,17 @@
   }
 </script>
 
-<div class="w-full">
+<div
+  class="w-full {isHighlighted ? 'ring-2 ring-primary ring-offset-2 ring-offset-base-100 rounded-lg' : ''}"
+  bind:this={rowElement}
+>
   <!-- Main collapsed row -->
-  <RowFrame clickable={item.eventCount > 1} dense={true} noLeading={true} on:click={toggleExpand}>
+  <RowFrame
+    clickable={true}
+    dense={true}
+    noLeading={true}
+    on:click={handleRowClick}
+  >
     <div class="w-full flex items-center justify-between">
       <div class="min-w-0 flex items-center gap-2">
         <Avatar

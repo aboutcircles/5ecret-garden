@@ -12,8 +12,10 @@
       ended: boolean;
     }>;
     row: Component<T>;
+    /** Additional props to pass to each row component */
+    rowProps?: Record<string, any>;
   }
-  let { store, row }: Props = $props();
+  let { store, row, rowProps = {} }: Props = $props();
 
   let observer: IntersectionObserver | null = null;
   let anchor: HTMLElement | undefined = $state();
@@ -57,7 +59,7 @@
 <div class="w-full flex flex-col gap-y-1.5 py-2" role="list">
   {#each $store?.data ?? [] as item, index (getKeyFromItem(item) + '-' + index)}
     {@const SvelteComponent_1 = row}
-    <SvelteComponent_1 {item} />
+    <SvelteComponent_1 {item} {...rowProps} />
   {/each}
 
   <div
@@ -66,15 +68,24 @@
     aria-live="polite"
     aria-busy={$store && !$store?.ended && !hasError ? 'true' : 'false'}
   >
-    {#if ($store?.data ?? []).length === 0 || $store?.ended}
+    {#if ($store?.data ?? []).length === 0 && $store?.ended}
+      <span class="text-base-content/70">No items</span>
+    {:else if $store?.ended}
       <span class="text-base-content/70">End of list</span>
     {:else if hasError}
       <span class="text-error">Error loading items</span>
-      <button class="ml-2 link link-primary" onclick={handleRetry}>Retry</button
-      >
+      <button class="ml-2 link link-primary" onclick={handleRetry}>Retry</button>
     {:else}
       <span class="loading loading-spinner text-primary"></span>
       <span class="ml-2 text-base-content/70">Loading more...</span>
+      <!-- Manual "Load More" fallback for when IntersectionObserver doesn't trigger -->
+      <button
+        class="ml-4 btn btn-ghost btn-xs"
+        onclick={handleRetry}
+        title="Load more items manually"
+      >
+        Load More
+      </button>
     {/if}
   </div>
 </div>
