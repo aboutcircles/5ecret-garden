@@ -2,7 +2,6 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { fileURLToPath, URL } from 'node:url';
-import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   plugins: [
@@ -15,7 +14,6 @@ export default defineConfig({
       },
       protocolImports: true,
     }),
-    tailwindcss(),
     sveltekit(),
   ],
   resolve: {
