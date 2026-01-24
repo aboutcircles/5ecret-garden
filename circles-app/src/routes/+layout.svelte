@@ -102,7 +102,7 @@
           link: '/contacts',
         },
         ...(!avatarState.isGroup ? [{ name: 'Groups', link: '/groups' }] : []),
-        { name: 'Me', link: '/settings' },
+        { name: 'Market', link: '/market' },
       ];
     }
   });
