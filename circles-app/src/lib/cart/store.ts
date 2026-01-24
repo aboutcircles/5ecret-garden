@@ -218,6 +218,7 @@ export type BasketPatch = {
   billingAddress?: any;
   ageProof?: any;
   contactPoint?: any;
+  customer?: any;
   ttlSeconds?: number;
 };
 
@@ -232,7 +233,8 @@ export async function patchBasket(basketId: string, patch: BasketPatch): Promise
     patch.shippingAddress !== undefined ||
     patch.billingAddress !== undefined ||
     patch.contactPoint !== undefined ||
-    patch.ageProof !== undefined;
+    patch.ageProof !== undefined ||
+    patch.customer !== undefined;
 
   function ensureTyped(obj: any, typeName: string): any | undefined {
     const isNil = obj === null || obj === undefined;
@@ -270,11 +272,13 @@ export async function patchBasket(basketId: string, patch: BasketPatch): Promise
     const billing = ensureTyped(patch.billingAddress ?? undefined, 'PostalAddress');
     const contact = ensureTyped(patch.contactPoint ?? undefined, 'ContactPoint');
     const age = ensureTyped(patch.ageProof ?? undefined, 'Person');
+    const customer = ensureTyped(patch.customer ?? undefined, 'Person');
 
     if (shipping !== undefined) body.shippingAddress = shipping;
     if (billing !== undefined) body.billingAddress = billing;
     if (contact !== undefined) body.contactPoint = contact;
     if (age !== undefined) body.ageProof = age;
+    if (customer !== undefined) body.customer = customer;
 
     if (hasTtlPatch) {
       const ttl = Number(patch.ttlSeconds);
@@ -529,6 +533,7 @@ export async function updateBasketDetails(patch: any): Promise<void> {
     const billing = stripNulls(patch?.billingAddress);
     const contact = stripNulls(patch?.contactPoint);
     const age = stripNulls(patch?.ageProof);
+    const customer = stripNulls(patch?.customer);
 
     const updated = await getMarketClient().cart.setCheckoutDetails({
       basketId,
@@ -536,6 +541,7 @@ export async function updateBasketDetails(patch: any): Promise<void> {
       billingAddress: billing as any,
       contactPoint: contact as any,
       ageProof: age as any,
+      customer: customer as any,
     });
 
     cartState.update((s) => ({...s, basket: updated}));

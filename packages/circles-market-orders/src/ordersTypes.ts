@@ -34,6 +34,14 @@ export interface OrderSnapshot {
   orderDate?: string;
   /** Optional payment reference issued by backend for convenience */
   paymentReference?: string;
+  /** schema.org Person who placed the order */
+  customer?: {
+    '@type'?: 'Person';
+    '@id'?: string;
+    givenName?: string;
+    familyName?: string;
+    [k: string]: unknown;
+  };
   /** Arbitrary outbox payloads (download links, vouchers, etc.) */
   outbox?: OrderOutboxItem[];
   /** Allow extra properties from backend without strict typing for forward-compat */
