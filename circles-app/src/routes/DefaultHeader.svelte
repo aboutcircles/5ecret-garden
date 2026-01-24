@@ -106,6 +106,7 @@
     <ul
       class="menu dropdown-content bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
     >
+      <li><a class="link link-hover" href="/settings">Settings</a></li>
       <li><a class="link link-hover" href="/terms">Terms of use</a></li>
       <li>
         <a class="link link-hover" href="/privacy-policy">Privacy policy</a>
