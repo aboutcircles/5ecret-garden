@@ -40,6 +40,9 @@ export interface ContactPointInput {
 }
 
 export interface PersonMinimalInput {
+  '@type'?: 'Person';
+  givenName?: string;
+  familyName?: string;
   birthDate?: string; // ISO date
 }
 
@@ -49,6 +52,7 @@ export interface Basket {
   operator?: string;
   chainId: number;
   items: BasketItem[];
+  customer?: PersonMinimalInput;
   status: string;
   [k: string]: unknown;
 }

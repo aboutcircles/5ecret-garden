@@ -18,6 +18,7 @@ export interface CartClient {
     billingAddress?: PostalAddressInput;
     contactPoint?: ContactPointInput;
     ageProof?: PersonMinimalInput;
+    customer?: PersonMinimalInput;
   }): Promise<Basket>;
   validateBasket(basketId: string): Promise<ValidationResult>;
   previewOrder(basketId: string): Promise<any>;
@@ -72,12 +73,14 @@ export class CartClientImpl implements CartClient {
     billingAddress?: PostalAddressInput;
     contactPoint?: ContactPointInput;
     ageProof?: PersonMinimalInput;
+    customer?: PersonMinimalInput;
   }): Promise<Basket> {
     const body: any = {};
     if (opts.shippingAddress) body.shippingAddress = toPostal(opts.shippingAddress);
     if (opts.billingAddress) body.billingAddress = toPostal(opts.billingAddress);
     if (opts.contactPoint) body.contactPoint = toContact(opts.contactPoint);
     if (opts.ageProof) body.ageProof = toPerson(opts.ageProof);
+    if (opts.customer) body.customer = toPerson(opts.customer);
 
     return await this.http.request<Basket>({
       method: 'PATCH',

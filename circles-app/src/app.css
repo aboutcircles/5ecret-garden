@@ -1,30 +1,99 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+
+@import "tailwindcss";
+
+/* daisyUI v5 config: only ship the theme you actually use */
+@plugin "daisyui" {
+    themes: circles-clean --default;
+}
+
+/* Port of your old tailwind.config.js theme to daisyUI v5 */
+@plugin "daisyui/theme" {
+    name: "circles-clean";
+    default: true;
+    prefersdark: true;
+    color-scheme: light;
+
+    --color-primary: #4F46E5;
+    --color-primary-content: #FFFFFF;
+
+    --color-secondary: #7C3AED;
+    --color-secondary-content: #FFFFFF;
+
+    --color-accent: #10B981;
+    --color-accent-content: #FFFFFF;
+
+    --color-neutral: #1F2937;
+    --color-neutral-content: #FFFFFF;
+
+    --color-base-100: #FFFFFF;
+    --color-base-200: #F8FAFC;
+    --color-base-300: #E5E7EB;
+    --color-base-content: #111827;
+
+    --color-info: #38BDF8;
+    --color-info-content: #0C4A6E;
+
+    --color-success: #16A34A;
+    --color-success-content: #FFFFFF;
+
+    --color-warning: #F59E0B;
+    --color-warning-content: #111827;
+
+    --color-error: #EF4444;
+    --color-error-content: #FFFFFF;
+
+    /* These replace --rounded-box / --rounded-btn in v5 */
+    --radius-box: 12px;
+    --radius-field: 10px;
+    --radius-selector: 8px;
+
+    /* If v5 feels “too border-y” vs v4, this is the closest global knob */
+    --border: 1px;
+
+    --depth: 0;
+    --noise: 0;
+}
 
 /* Layout helpers */
-.page { @apply w-full mx-auto px-4 sm:px-6; }
-.page--md { @apply max-w-2xl; }   /* forms/lists */
-.page--lg { @apply max-w-4xl; }   /* dashboard */
-.page--xl { @apply max-w-6xl; }   /* analytics/metrics */
+.page {
+    @apply w-full mx-auto px-4;
+    @variant sm {
+        @apply px-6;
+    }
+}
 
-.page-pt { @apply pt-6; }        /* consistent top space below header/banner */
+.page--md { @apply max-w-2xl; }
+.page--lg { @apply max-w-4xl; }
+.page--xl { @apply max-w-6xl; }
+
+.page-pt { @apply pt-6; }
 .page-stack { @apply flex flex-col gap-y-6; }
 
 /* Sections */
-.section { @apply w-full bg-base-100 border border-base-300 rounded-lg p-4 md:p-6 shadow-sm; }
+.section {
+    @apply w-full bg-base-100 border border-base-300 rounded-lg p-4 shadow-sm;
+    @variant md {
+        @apply p-6;
+    }
+}
 
 /* Typography */
-.h2 { @apply text-2xl md:text-3xl font-bold; }
+.h2 {
+    @apply text-2xl font-bold;
+    @variant md {
+        @apply text-3xl;
+    }
+}
+
 .muted { @apply text-base-content/70; }
 
 /* Icons & buttons */
 .icon { @apply w-4 h-4 shrink-0; }
 .back-btn { @apply btn btn-ghost btn-sm; }
 
+/* Row tokens (UPDATED for daisyUI v5 variable names) */
 :root {
-    /* sizing */
     --row-height-sm: 44px;
     --row-height-md: 56px;
 
@@ -37,54 +106,24 @@
     --row-gap: 12px;
     --row-radius: 12px;
 
-    /* colors (mapped to DaisyUI/Tailwind palette via current theme) */
-    --row-bg: hsl(var(--b1));             /* base-100 */
-    --row-bg-hover: hsl(var(--b2));       /* base-200 */
-    --row-bg-selected: hsl(var(--b2));
-    --row-border: hsl(var(--bc) / 0.12);  /* border muted */
-    --row-border-hover: hsl(var(--bc) / 0.2);
-    --row-border-selected: hsl(var(--p)); /* primary */
-    --row-focus-ring: hsl(var(--p) / 0.35);
+    --row-bg: var(--color-base-100);
+    --row-bg-hover: var(--color-base-200);
+    --row-bg-selected: var(--color-base-200);
 
-    --row-fg-strong: hsl(var(--bc));      /* base-content */
-    --row-fg-muted: hsl(var(--bc) / 0.7);
-    --row-fg-muted-2: hsl(var(--bc) / 0.6);
-}
+    --row-border: color-mix(in oklch, var(--color-base-content) 12%, transparent);
+    --row-border-hover: color-mix(in oklch, var(--color-base-content) 20%, transparent);
+    --row-border-selected: var(--color-primary);
+    --row-focus-ring: color-mix(in oklch, var(--color-primary) 35%, transparent);
 
-/* Optional: make any <tr data-row> adopt the same visuals (CollateralTable) */
-:root .ui-row, :root tr[data-row] {
-    /* keep vars in sync if you want table rows styled identically */
-}
-
-
-/* Row tokens (correct root selector override) */
-:root {
-    --row-height-sm: 44px;
-    --row-height-md: 56px;
-    --row-pad-x-sm: 12px;
-    --row-pad-y-sm: 8px;
-    --row-pad-x-md: 16px;
-    --row-pad-y-md: 12px;
-    --row-gap: 12px;
-    --row-radius: 12px;
-    --row-bg: hsl(var(--b1));
-    --row-bg-hover: hsl(var(--b2));
-    --row-bg-selected: hsl(var(--b2));
-    --row-border: hsl(var(--bc) / 0.12);
-    --row-border-hover: hsl(var(--bc) / 0.2);
-    --row-border-selected: hsl(var(--p));
-    --row-focus-ring: hsl(var(--p) / 0.35);
-    --row-fg-strong: hsl(var(--bc));
-    --row-fg-muted: hsl(var(--bc) / 0.7);
-    --row-fg-muted-2: hsl(var(--bc) / 0.6);
+    --row-fg-strong: var(--color-base-content);
+    --row-fg-muted: color-mix(in oklch, var(--color-base-content) 70%, transparent);
+    --row-fg-muted-2: color-mix(in oklch, var(--color-base-content) 60%, transparent);
 }
 
 :root .ui-row, :root tr[data-row] {
-    /* keep vars in sync if you want table rows styled identically */
 }
 
-
-/* Fallback for environments where :root fails */
+/* Fallback */
 html {
     --row-height-sm: 44px;
     --row-height-md: 56px;
@@ -94,14 +133,17 @@ html {
     --row-pad-y-md: 12px;
     --row-gap: 12px;
     --row-radius: 12px;
-    --row-bg: hsl(var(--b1));
-    --row-bg-hover: hsl(var(--b2));
-    --row-bg-selected: hsl(var(--b2));
-    --row-border: hsl(var(--bc) / 0.12);
-    --row-border-hover: hsl(var(--bc) / 0.2);
-    --row-border-selected: hsl(var(--p));
-    --row-focus-ring: hsl(var(--p) / 0.35);
-    --row-fg-strong: hsl(var(--bc));
-    --row-fg-muted: hsl(var(--bc) / 0.7);
-    --row-fg-muted-2: hsl(var(--bc) / 0.6);
+
+    --row-bg: var(--color-base-100);
+    --row-bg-hover: var(--color-base-200);
+    --row-bg-selected: var(--color-base-200);
+
+    --row-border: color-mix(in oklch, var(--color-base-content) 12%, transparent);
+    --row-border-hover: color-mix(in oklch, var(--color-base-content) 20%, transparent);
+    --row-border-selected: var(--color-primary);
+    --row-focus-ring: color-mix(in oklch, var(--color-primary) 35%, transparent);
+
+    --row-fg-strong: var(--color-base-content);
+    --row-fg-muted: color-mix(in oklch, var(--color-base-content) 70%, transparent);
+    --row-fg-muted-2: color-mix(in oklch, var(--color-base-content) 60%, transparent);
 }

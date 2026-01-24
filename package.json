@@ -1,0 +1,11 @@
+{
+  "name": "5ecret-garden",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "circles-app"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}

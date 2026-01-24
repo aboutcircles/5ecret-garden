@@ -27,6 +27,8 @@
   let contactEmail = $state('');
   let contactPhone = $state('');
   let birthDate = $state('');
+  let givenName = $state('');
+  let familyName = $state('');
 
   let formInitialised = $state(false);
 
@@ -58,6 +60,10 @@
 
     const age = b.ageProof as any;
     birthDate = (age?.birthDate as string) ?? '';
+
+    const customer = b.customer as any;
+    givenName = (customer?.givenName as string) ?? '';
+    familyName = (customer?.familyName as string) ?? '';
 
     formInitialised = true;
   });
@@ -95,6 +101,14 @@
       patch.ageProof = {
         '@type': 'Person',
         birthDate
+      };
+    }
+
+    if (givenName || familyName) {
+      patch.customer = {
+        '@type': 'Person',
+        givenName: givenName || null,
+        familyName: familyName || null
       };
     }
 
@@ -229,6 +243,8 @@
     allRequiredSlots.has('ageProof.birthDate') || allRequiredSlots.has('ageProof')
   );
 
+  const customerRequired = $derived(allRequiredSlots.has('customer'));
+
   // Field-level error based purely on server ValidationRequirement.path
   function fieldHasError(path: string): boolean {
     const v = $cartState.validation;
@@ -286,6 +302,34 @@
         The seller needs some additional information from you. Please fill in the forms below:
     </p>
     <div class="space-y-4 text-xs">
+      {#if customerRequired}
+        <div class="space-y-2">
+          <div class="font-semibold opacity-80">Customer identification</div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <label class="form-control">
+              <span class="label-text text-xs">First name</span>
+              <input
+                class="input input-xs input-bordered"
+                bind:value={givenName}
+                onblur={validateOnBlur}
+                class:border-error={fieldHasError('/customer/givenName')}
+                required
+              />
+            </label>
+            <label class="form-control">
+              <span class="label-text text-xs">Last name</span>
+              <input
+                class="input input-xs input-bordered"
+                bind:value={familyName}
+                onblur={validateOnBlur}
+                class:border-error={fieldHasError('/customer/familyName')}
+                required
+              />
+            </label>
+          </div>
+        </div>
+      {/if}
+
       {#if shippingRequired}
         <div class="space-y-2">
           <div class="font-semibold opacity-80">Shipping address</div>

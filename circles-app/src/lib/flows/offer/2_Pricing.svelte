@@ -27,6 +27,8 @@
   // Contact
   let reqEmail = $state(Boolean(context.draft?.requiredSlots?.includes('contactPoint.email')));
   let reqPhone = $state(Boolean(context.draft?.requiredSlots?.includes('contactPoint.telephone')));
+  // Customer
+  let reqCustomer = $state(Boolean(context.draft?.requiredSlots?.includes('customer')));
   // Age verification
   let reqAgeProof = $state(Boolean(context.draft?.requiredSlots?.includes('ageProof')));
   let reqBirthDate = $state(Boolean(context.draft?.requiredSlots?.includes('ageProof.birthDate')));
@@ -48,6 +50,8 @@
 
     if (reqEmail) out.push('contactPoint.email');
     if (reqPhone) out.push('contactPoint.telephone');
+
+    if (reqCustomer) out.push('customer');
 
     if (reqAgeProof) out.push('ageProof');
     if (reqBirthDate) out.push('ageProof.birthDate');
@@ -290,6 +294,21 @@
     <input type="checkbox" bind:checked={showRequirements} />
     <div class="collapse-title text-md font-medium">Checkout requirements</div>
     <div class="collapse-content">
+      <!-- Customer identification group -->
+      <div class="space-y-2">
+        <label class="label cursor-pointer justify-start gap-2">
+          <input type="checkbox" class="checkbox" bind:checked={reqCustomer} />
+          <span class="label-text font-semibold">Customer identification</span>
+        </label>
+        <div class="pl-6 border-l border-base-200 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label class="label cursor-pointer justify-start gap-2">
+            <input type="checkbox" class="checkbox checkbox-sm" bind:checked={reqCustomer} data-slot="customer" />
+            <span class="label-text">Require buyer first and last name</span>
+            <span class="label-text-alt opacity-70">(customer)</span>
+          </label>
+        </div>
+      </div>
+
       <!-- Contact group -->
       <div class="space-y-2">
         <label class="label cursor-pointer justify-start gap-2">
