@@ -1,66 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
 
-@import "tailwindcss";
-
-/* daisyUI v5 config: only ship the theme you actually use */
-@plugin "daisyui" {
-    themes: circles-clean --default;
-}
-
-/* Port of your old tailwind.config.js theme to daisyUI v5 */
-@plugin "daisyui/theme" {
-    name: "circles-clean";
-    default: true;
-    prefersdark: true;
-    color-scheme: light;
-
-    --color-primary: #4F46E5;
-    --color-primary-content: #FFFFFF;
-
-    --color-secondary: #7C3AED;
-    --color-secondary-content: #FFFFFF;
-
-    --color-accent: #10B981;
-    --color-accent-content: #FFFFFF;
-
-    --color-neutral: #1F2937;
-    --color-neutral-content: #FFFFFF;
-
-    --color-base-100: #FFFFFF;
-    --color-base-200: #F8FAFC;
-    --color-base-300: #E5E7EB;
-    --color-base-content: #111827;
-
-    --color-info: #38BDF8;
-    --color-info-content: #0C4A6E;
-
-    --color-success: #16A34A;
-    --color-success-content: #FFFFFF;
-
-    --color-warning: #F59E0B;
-    --color-warning-content: #111827;
-
-    --color-error: #EF4444;
-    --color-error-content: #FFFFFF;
-
-    /* These replace --rounded-box / --rounded-btn in v5 */
-    --radius-box: 12px;
-    --radius-field: 10px;
-    --radius-selector: 8px;
-
-    /* If v5 feels “too border-y” vs v4, this is the closest global knob */
-    --border: 1px;
-
-    --depth: 0;
-    --noise: 0;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* Layout helpers */
 .page {
-    @apply w-full mx-auto px-4;
-    @variant sm {
-        @apply px-6;
-    }
+    @apply w-full mx-auto px-4 sm:px-6;
 }
 
 .page--md { @apply max-w-2xl; }
@@ -72,18 +18,12 @@
 
 /* Sections */
 .section {
-    @apply w-full bg-base-100 border border-base-300 rounded-lg p-4 shadow-sm;
-    @variant md {
-        @apply p-6;
-    }
+    @apply w-full bg-base-100 border border-base-300 rounded-lg p-4 md:p-6 shadow-sm;
 }
 
 /* Typography */
 .h2 {
-    @apply text-2xl font-bold;
-    @variant md {
-        @apply text-3xl;
-    }
+    @apply text-2xl font-bold md:text-3xl;
 }
 
 .muted { @apply text-base-content/70; }
@@ -92,7 +32,7 @@
 .icon { @apply w-4 h-4 shrink-0; }
 .back-btn { @apply btn btn-ghost btn-sm; }
 
-/* Row tokens (UPDATED for daisyUI v5 variable names) */
+/* Row tokens */
 :root {
     --row-height-sm: 44px;
     --row-height-md: 56px;
@@ -106,18 +46,18 @@
     --row-gap: 12px;
     --row-radius: 12px;
 
-    --row-bg: var(--color-base-100);
-    --row-bg-hover: var(--color-base-200);
-    --row-bg-selected: var(--color-base-200);
+    --row-bg: var(--p);
+    --row-bg-hover: var(--p,96);
+    --row-bg-selected: var(--p,96);
 
-    --row-border: color-mix(in oklch, var(--color-base-content) 12%, transparent);
-    --row-border-hover: color-mix(in oklch, var(--color-base-content) 20%, transparent);
-    --row-border-selected: var(--color-primary);
-    --row-focus-ring: color-mix(in oklch, var(--color-primary) 35%, transparent);
+    --row-border: color-mix(in oklch, var(--bc) 12%, transparent);
+    --row-border-hover: color-mix(in oklch, var(--bc) 20%, transparent);
+    --row-border-selected: var(--p);
+    --row-focus-ring: color-mix(in oklch, var(--p) 35%, transparent);
 
-    --row-fg-strong: var(--color-base-content);
-    --row-fg-muted: color-mix(in oklch, var(--color-base-content) 70%, transparent);
-    --row-fg-muted-2: color-mix(in oklch, var(--color-base-content) 60%, transparent);
+    --row-fg-strong: var(--bc);
+    --row-fg-muted: color-mix(in oklch, var(--bc) 70%, transparent);
+    --row-fg-muted-2: color-mix(in oklch, var(--bc) 60%, transparent);
 }
 
 :root .ui-row, :root tr[data-row] {
@@ -134,16 +74,16 @@ html {
     --row-gap: 12px;
     --row-radius: 12px;
 
-    --row-bg: var(--color-base-100);
-    --row-bg-hover: var(--color-base-200);
-    --row-bg-selected: var(--color-base-200);
+    --row-bg: var(--p);
+    --row-bg-hover: var(--p,96);
+    --row-bg-selected: var(--p,96);
 
-    --row-border: color-mix(in oklch, var(--color-base-content) 12%, transparent);
-    --row-border-hover: color-mix(in oklch, var(--color-base-content) 20%, transparent);
-    --row-border-selected: var(--color-primary);
-    --row-focus-ring: color-mix(in oklch, var(--color-primary) 35%, transparent);
+    --row-border: color-mix(in oklch, var(--bc) 12%, transparent);
+    --row-border-hover: color-mix(in oklch, var(--bc) 20%, transparent);
+    --row-border-selected: var(--p);
+    --row-focus-ring: color-mix(in oklch, var(--p) 35%, transparent);
 
-    --row-fg-strong: var(--color-base-content);
-    --row-fg-muted: color-mix(in oklch, var(--color-base-content) 70%, transparent);
-    --row-fg-muted-2: color-mix(in oklch, var(--color-base-content) 60%, transparent);
+    --row-fg-strong: var(--bc);
+    --row-fg-muted: color-mix(in oklch, var(--bc) 70%, transparent);
+    --row-fg-muted-2: color-mix(in oklch, var(--bc) 60%, transparent);
 }
