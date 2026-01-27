@@ -53,21 +53,22 @@
         count: response.results?.length ?? 0,
         totalCount: response.totalCount,
         firstResult: response.results?.[0],
+        firstResultKeys: response.results?.[0] ? Object.keys(response.results[0]) : [],
       });
-      // Log first few results to check for missing profile data
-      if (response.results?.length > 0) {
-        const sample = response.results.slice(0, 3);
-        sample.forEach((r: any, i: number) => {
-          console.log(`[SearchAvatar] Result ${i}:`, {
-            address: r.address,
-            name: r.name,
-            previewImageUrl: r.previewImageUrl,
-            avatarType: r.avatarType,
-          });
-        });
-      }
-      // Map Profile[] to SearchResultProfile[] - the results already have the needed fields
-      return response.results as unknown as SearchResultProfile[];
+      // Map results - extract address from namespaces keys (backend doesn't return address directly)
+      // Filter out results without addresses (can't be selected anyway)
+      return (response.results || [])
+        .map((r: any) => {
+          // Address is stored as key in namespaces object
+          const address = r.address || (r.namespaces ? Object.keys(r.namespaces)[0] : undefined);
+          return {
+            ...r,
+            address,
+            // Normalize image field
+            previewImageUrl: r.previewImageUrl || r.imageUrl,
+          };
+        })
+        .filter((r: any) => r.address) as SearchResultProfile[];
     } catch (error) {
       console.error('Error searching profiles:', error);
       return [];
