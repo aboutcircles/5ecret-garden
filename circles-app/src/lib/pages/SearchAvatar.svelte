@@ -5,7 +5,6 @@
   import type { SearchResultProfile } from '@aboutcircles/sdk-rpc';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { circles } from '$lib/stores/circles';
-  import { onMount } from 'svelte';
   import { ethers } from 'ethers';
   import RowFrame from '$lib/ui/RowFrame.svelte';
 
@@ -28,6 +27,8 @@
   }: Props = $props();
   let lastAddress: string = $state('');
   let result: SearchResultProfile[] = $state([]);
+  let isLoading: boolean = $state(true);
+  let hasInitialized: boolean = $state(false);
 
   async function rpcSearchByText(
     query: string,
@@ -47,6 +48,24 @@
         offset,
         avatarTypes
       );
+      console.log('[SearchAvatar] searchByAddressOrName:', {
+        query,
+        count: response.results?.length ?? 0,
+        totalCount: response.totalCount,
+        firstResult: response.results?.[0],
+      });
+      // Log first few results to check for missing profile data
+      if (response.results?.length > 0) {
+        const sample = response.results.slice(0, 3);
+        sample.forEach((r: any, i: number) => {
+          console.log(`[SearchAvatar] Result ${i}:`, {
+            address: r.address,
+            name: r.name,
+            previewImageUrl: r.previewImageUrl,
+            avatarType: r.avatarType,
+          });
+        });
+      }
       // Map Profile[] to SearchResultProfile[] - the results already have the needed fields
       return response.results as unknown as SearchResultProfile[];
     } catch (error) {
@@ -61,6 +80,7 @@
       const limit = 50;
 
       if (q.trim() !== '') {
+        isLoading = true;
         // Use the new SDK's searchByAddressOrName which handles both address and name search
         const results = await rpcSearchByText(q, limit, 0, avatarTypes);
         result = results;
@@ -70,29 +90,31 @@
     } catch (error) {
       console.error('Error searching profiles:', error);
       result = [];
+    } finally {
+      isLoading = false;
     }
   }
 
+  // Initial load - wait for SDK to be available before fetching
   $effect(() => {
-    if (!selectedAddress || selectedAddress.toString().trim() === '') {
-      rpcSearchByText('a', 25, 0)
-        .then((r) => (result = r.slice(0, 25)))
-        .catch((err) => {
-          console.error('Error loading default results:', err);
-          result = [];
-        });
-    }
+    if (hasInitialized || !$circles) return;
+
+    isLoading = true;
+    rpcSearchByText('Circles', 25, 0, avatarTypes)
+      .then((r) => {
+        result = r;
+      })
+      .finally(() => {
+        isLoading = false;
+        hasInitialized = true;
+      });
   });
 
+  // Search when address changes AFTER initialization
   $effect(() => {
-    if (selectedAddress && selectedAddress !== lastAddress) {
-      lastAddress = selectedAddress;
-      searchProfiles();
-    }
-  });
-
-  onMount(async () => {
-    result = await rpcSearchByText('Circles', 25, 0, avatarTypes);
+    if (!hasInitialized || !selectedAddress || selectedAddress === lastAddress) return;
+    lastAddress = selectedAddress;
+    searchProfiles();
   });
 
   function avatarTypeToReadable(type: string): string {
@@ -113,7 +135,11 @@
       Account{:else}Group{/if}
   </p>
 
-  {#if result.length > 0}
+  {#if isLoading}
+    <div class="flex justify-center py-8">
+      <span class="loading loading-spinner loading-md"></span>
+    </div>
+  {:else if result.length > 0}
     <div class="w-full flex flex-col gap-y-1.5">
       {#each result as profile}
         <RowFrame

@@ -1,10 +1,10 @@
 import type { TransactionHistoryRow } from '@aboutcircles/sdk-rpc';
-import { writable, derived } from 'svelte/store';
+import { writable, derived, get } from 'svelte/store';
 import type { Avatar, Sdk } from '@aboutcircles/sdk';
 import type { PagedResponse, EnrichedTransaction, Address } from '@aboutcircles/sdk-types';
 import { getTransactionHistoryEnriched } from '$lib/utils/sdkHelpers';
-import { getSdkFromAvatar } from '$lib/utils/avatarHelpers';
 import { handleError } from '$lib/utils/errorHandler';
+import { circles } from '$lib/stores/circles';
 
 const PAGE_SIZE = 25;
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
@@ -68,6 +68,9 @@ function groupByTransaction(rows: TransactionHistoryRow[], userAddress: string):
     let hasBurn = false;
 
     for (const event of events) {
+      // Skip events with missing addresses
+      if (!event.from || !event.to) continue;
+
       const fromLower = event.from.toLowerCase();
       const toLower = event.to.toLowerCase();
 
@@ -94,15 +97,27 @@ function groupByTransaction(rows: TransactionHistoryRow[], userAddress: string):
 
     // Determine transaction type
     let type: GroupedTransaction['type'] = 'complex';
+
+    // Only classify as mint/burn if it's a SINGLE event with zero address
+    // Multi-hop transactions with mints/burns are transfers, not pure mints/burns
     if (events.length === 1) {
-      if (hasMint) type = 'mint';
-      else if (hasBurn) type = 'burn';
-      else if (netCircles > 0) type = 'receive';
-      else if (netCircles < 0) type = 'send';
+      if (hasMint) {
+        type = 'mint';
+      } else if (hasBurn) {
+        type = 'burn';
+      } else if (netCircles > 0) {
+        type = 'receive';
+      } else if (netCircles < 0) {
+        type = 'send';
+      }
     } else {
-      // Multi-hop transaction
-      if (netCircles > 0) type = 'receive';
-      else if (netCircles < 0) type = 'send';
+      // Multi-event: classify by net flow direction
+      if (netCircles > 0) {
+        type = 'receive';
+      } else if (netCircles < 0) {
+        type = 'send';
+      }
+      // Keep as 'complex' if net is zero
     }
 
     // Use first event's timestamp (events are sorted by logIndex)
@@ -124,10 +139,12 @@ const _transactionHistory = writable<{
   data: TransactionHistoryRow[];
   next: () => Promise<boolean>;
   ended: boolean;
+  isLoading: boolean;
 }>({
   data: [],
   next: async () => false,
   ended: false,
+  isLoading: true, // Start with loading=true until first fetch completes
 });
 
 /**
@@ -140,15 +157,14 @@ async function loadNextPage(): Promise<boolean> {
   }
 
   isLoading = true;
+  _transactionHistory.update((state) => ({ ...state, isLoading: true }));
 
   try {
-    console.log('🔄 Fetching enriched transaction history (profiles included)...');
-
-    // Get SDK reference from avatar (set by Sdk.getAvatar())
-    const sdk = getSdkFromAvatar(currentAvatar);
+    // Use global circles store - more reliable than extracting from avatar
+    const sdk = get(circles);
     if (!sdk) {
-      console.error('❌ SDK reference not available on avatar');
-      throw new Error('SDK reference not available');
+      console.error('[TxHistory] SDK not available in circles store');
+      throw new Error('SDK not available');
     }
 
     const response: PagedResponse<EnrichedTransaction> = await getTransactionHistoryEnriched(
@@ -166,51 +182,106 @@ async function loadNextPage(): Promise<boolean> {
 
       // Cache profiles from enriched transactions
       for (const tx of response.results) {
-        if (tx.fromProfile) {
-          enrichedProfileCache.set(tx.from.toLowerCase(), tx.fromProfile);
+        const raw = tx as Record<string, unknown>;
+        const fromAddr = tx.from || raw['from_address'] || raw['sender'] || raw['fromAddress'];
+        const toAddr = tx.to || raw['to_address'] || raw['receiver'] || raw['toAddress'];
+
+        if (tx.fromProfile && fromAddr) {
+          enrichedProfileCache.set((fromAddr as string).toLowerCase(), tx.fromProfile);
         }
-        if (tx.toProfile) {
-          enrichedProfileCache.set(tx.to.toLowerCase(), tx.toProfile);
+        if (tx.toProfile && toAddr) {
+          enrichedProfileCache.set((toAddr as string).toLowerCase(), tx.toProfile);
         }
       }
 
+      // Debug: log first tx to verify full structure
+      if (response.results.length > 0) {
+        const sample = response.results[0];
+        console.log('[TxHistory] Sample tx structure:', JSON.stringify(sample, null, 2));
+        console.log('[TxHistory] Sample tx keys:', Object.keys(sample));
+        // Check for alternative field names and nested structure
+        const raw = sample as Record<string, unknown>;
+        const nested = (raw['event'] as Record<string, unknown>) || {};
+        console.log('[TxHistory] Nested event keys:', Object.keys(nested));
+        console.log('[TxHistory] from:', sample.from, '| nested.from:', nested['from']);
+        console.log('[TxHistory] to:', sample.to, '| nested.to:', nested['to']);
+        console.log('[TxHistory] circles:', sample.circles, '| nested.circles:', nested['circles']);
+      }
+
       // Convert EnrichedTransaction to TransactionHistoryRow format
-      const rows: TransactionHistoryRow[] = response.results.map((tx) => ({
-        blockNumber: tx.blockNumber,
-        timestamp: tx.timestamp,
-        transactionIndex: tx.transactionIndex,
-        logIndex: tx.logIndex,
-        transactionHash: tx.transactionHash,
-        version: tx.version,
-        from: tx.from,
-        to: tx.to,
-        id: tx.id ?? '',
-        tokenAddress: tx.from as Address, // Approximation - enriched doesn't have tokenAddress
-        value: tx.value,
-        circles: parseFloat(tx.circles),
-        staticCircles: parseFloat(tx.staticCircles),
-        crc: parseFloat(tx.crc),
-      }));
+      // Handle potential alternative field names from server (including nested event structure)
+      const rows: TransactionHistoryRow[] = response.results.map((tx) => {
+        const raw = tx as Record<string, unknown>;
+        // Server might return nested event structure or flat structure
+        const event = (raw['event'] as Record<string, unknown>) || {};
+
+        // Try multiple possible field names for from/to addresses
+        // Priority: flat fields > nested event fields > alternative names
+        const fromAddr = tx.from ||
+          event['from'] ||
+          raw['from_address'] ||
+          event['from_address'] ||
+          raw['sender'];
+        const toAddr = tx.to ||
+          event['to'] ||
+          raw['to_address'] ||
+          event['to_address'] ||
+          raw['receiver'];
+
+        // Same for circles/value - might be nested in event
+        // SDK returns 'value' in wei (1e18), need to convert to CRC
+        const valueVal = tx.value || event['value'] || raw['value'] || '0';
+        const circlesVal = tx.circles || event['circles'] || raw['circles'];
+        const staticCirclesVal = tx.staticCircles || event['staticCircles'] || raw['static_circles'];
+        const crcVal = tx.crc || event['crc'] || raw['crc'];
+
+        // Convert value (wei) to CRC if circles field not provided
+        let circlesAmount = 0;
+        if (circlesVal) {
+          circlesAmount = parseFloat(circlesVal as string);
+        } else if (valueVal && valueVal !== '0') {
+          // value is in wei (1e18 = 1 CRC)
+          circlesAmount = parseFloat(valueVal as string) / 1e18;
+        }
+
+        return {
+          blockNumber: tx.blockNumber,
+          timestamp: tx.timestamp,
+          transactionIndex: tx.transactionIndex,
+          logIndex: tx.logIndex,
+          transactionHash: tx.transactionHash,
+          version: tx.version ?? 2,
+          from: (fromAddr as Address) ?? (ZERO_ADDRESS as Address),
+          to: (toAddr as Address) ?? (ZERO_ADDRESS as Address),
+          id: tx.id ?? '',
+          tokenAddress: ((fromAddr || ZERO_ADDRESS) as Address),
+          value: valueVal as string,
+          circles: circlesAmount,
+          staticCircles: staticCirclesVal ? parseFloat(staticCirclesVal as string) : 0,
+          crc: crcVal ? parseFloat(crcVal as string) : 0,
+        };
+      });
 
       _transactionHistory.update((state) => ({
         data: [...state.data, ...rows],
         next: loadNextPage,
         ended: !response.hasMore,
+        isLoading: false,
       }));
 
-      console.log(
-        `✅ Loaded ${response.results.length} enriched transactions (hasMore: ${response.hasMore})`
-      );
       return true;
     } else {
       hasMore = false;
       _transactionHistory.update((state) => ({
         ...state,
         ended: true,
+        isLoading: false,
       }));
       return false;
     }
   } catch (error) {
+    // Log the actual error for debugging
+    console.error('[TxHistory] FAILED to load transactions:', error);
     // Don't show notification for transaction history errors (user can retry)
     handleError(error, {
       context: 'transaction',
@@ -219,6 +290,7 @@ async function loadNextPage(): Promise<boolean> {
     _transactionHistory.update((state) => ({
       ...state,
       ended: true,
+      isLoading: false,
     }));
     return false;
   } finally {
@@ -231,6 +303,11 @@ async function loadNextPage(): Promise<boolean> {
  * Uses the new SDK's cursor-based pagination via avatar.history.getTransactions()
  */
 export const initTransactionHistoryStore = async (avatar: Avatar) => {
+  // Early return if already initialized for this avatar - don't reset, don't reload
+  if (currentAvatarAddress === avatar.address && currentAvatar) {
+    return;
+  }
+
   // Reset state
   currentAvatar = avatar;
   currentAvatarAddress = avatar.address;
@@ -241,36 +318,44 @@ export const initTransactionHistoryStore = async (avatar: Avatar) => {
 
   // Validate avatar is properly initialized
   if (!avatar || typeof avatar !== 'object') {
-    console.error('❌ Avatar is not properly initialized:', avatar);
+    console.error('[TxHistory] Avatar is not properly initialized:', avatar);
     _transactionHistory.set({
       data: [],
       next: async () => false,
       ended: true,
+      isLoading: false,
     });
     return;
   }
 
   // Validate avatar has SDK reference for RPC calls
-  const sdk = getSdkFromAvatar(avatar);
+  // Note: Avatar objects don't expose SDK directly, so use global store as primary source
+  let sdk = get(circles);
   if (!sdk?.rpc) {
-    console.error('❌ No SDK RPC methods available on avatar');
-    _transactionHistory.set({
-      data: [],
-      next: async () => false,
-      ended: true,
-    });
-    return;
+    // Fallback: try global circles store
+    sdk = get(circles);
+    if (!sdk?.rpc) {
+      console.error('[TxHistory] No SDK RPC available (neither on avatar nor global)');
+      _transactionHistory.set({
+        data: [],
+        next: async () => false,
+        ended: true,
+        isLoading: false,
+      });
+      return;
+    }
   }
 
   // Reset cursor state for new avatar
   nextCursor = null;
   hasMore = true;
 
-  // Reset store
+  // Reset store with loading=true for initial fetch
   _transactionHistory.set({
     data: [],
     next: loadNextPage,
     ended: false,
+    isLoading: true,
   });
 
   // Load initial page
@@ -311,6 +396,7 @@ export const groupedTransactionHistory = derived(
         data: [] as GroupedTransaction[],
         next: $txHistory.next,
         ended: $txHistory.ended,
+        isLoading: $txHistory.isLoading,
       };
     }
 
@@ -323,6 +409,7 @@ export const groupedTransactionHistory = derived(
         data: cachedGrouped,
         next: $txHistory.next,
         ended: $txHistory.ended,
+        isLoading: $txHistory.isLoading,
       };
     }
 
@@ -339,6 +426,7 @@ export const groupedTransactionHistory = derived(
       data: cachedGrouped,
       next: $txHistory.next,
       ended: $txHistory.ended,
+      isLoading: $txHistory.isLoading,
     };
   }
 );

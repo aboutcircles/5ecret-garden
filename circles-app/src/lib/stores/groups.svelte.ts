@@ -7,6 +7,7 @@ import { isHumanAvatar } from '$lib/utils/avatarHelpers';
 export const createBaseGroups = async (avatar: Avatar) => {
   let isLoading = false;
   let allGroupsLoaded = false;
+  let unsubscribeFromEvents: (() => void) | undefined;
 
   const store = writable<{
     data: EventRow[];
@@ -23,7 +24,7 @@ export const createBaseGroups = async (avatar: Avatar) => {
     isLoading = true;
 
     try {
-      console.log('🔄 Fetching group memberships with details...');
+      console.log('[Groups] Fetching group memberships with details...');
 
       // Use the avatar.group.getGroupMembershipsWithDetails() method
       // which internally handles pagination and enriches with group details
@@ -33,7 +34,7 @@ export const createBaseGroups = async (avatar: Avatar) => {
         // Check if the method exists (it may not be in all SDK versions)
         if (typeof humanAvatar.group?.getGroupMembershipsWithDetails === 'function') {
           const groups = await humanAvatar.group.getGroupMembershipsWithDetails(1000);
-          console.log(`✅ Loaded ${groups.length} groups with details`);
+          console.log(`[Groups] Loaded ${groups.length} groups with details`);
 
           store.set({
             data: groups as EventRow[],
@@ -72,7 +73,7 @@ export const createBaseGroups = async (avatar: Avatar) => {
   // Initialize groups from new SDK
   const initGroups = async () => {
     try {
-      console.log('🔄 Initializing group memberships');
+      console.log('[Groups] Initializing group memberships');
 
       // Reset store
       store.set({
@@ -100,18 +101,18 @@ export const createBaseGroups = async (avatar: Avatar) => {
   // Avatar's subscribeToEvents is a public method on CommonAvatar
   if (typeof avatar.subscribeToEvents === 'function') {
     try {
-      console.log('🔗 Groups: Subscribing to avatar events...');
+      console.log('[Groups] Subscribing to avatar events...');
       await avatar.subscribeToEvents();
-      console.log('✅ Groups: Avatar events subscription initialized');
+      console.log('[Groups] Avatar events subscription initialized');
 
       // Validate events subscription method exists before subscribing
       if (!avatar.events || typeof avatar.events.subscribe !== 'function') {
-        console.error('❌ Groups: Avatar.events.subscribe is not available');
+        console.error('[Groups] Avatar.events.subscribe is not available');
         throw new Error('Avatar.events.subscribe is not available');
       }
 
-      // Listen for group membership changes
-      avatar.events.subscribe((event) => {
+      // Listen for group membership changes - capture unsubscribe function
+      unsubscribeFromEvents = avatar.events.subscribe((event) => {
         try {
           // Reload groups when membership changes
           if (
@@ -120,7 +121,7 @@ export const createBaseGroups = async (avatar: Avatar) => {
             event.$event === 'CrcV2_Trust'
           ) {
             console.log(
-              '🔄 Groups: Group membership event detected, reloading groups...',
+              '[Groups] Group membership event detected, reloading groups...',
               event.$event
             );
             initGroups();
@@ -133,11 +134,20 @@ export const createBaseGroups = async (avatar: Avatar) => {
         }
       });
     } catch (error) {
-      console.error('❌ Groups: Failed to subscribe to events:', error);
+      console.error('[Groups] Failed to subscribe to events:', error);
     }
   }
 
-  return store;
+  return {
+    store,
+    unsubscribe: () => {
+      console.log('[Groups] Cleaning up event subscription');
+      if (unsubscribeFromEvents) {
+        unsubscribeFromEvents();
+        unsubscribeFromEvents = undefined;
+      }
+    }
+  };
 };
 
 export const createAllGroups = async (sdk: Sdk) => {
@@ -159,14 +169,14 @@ export const createAllGroups = async (sdk: Sdk) => {
     isLoading = true;
 
     try {
-      console.log('🔄 Fetching next batch of all groups...');
+      console.log('[Groups] Fetching next batch of all groups...');
 
       // Query next page
       const hasMore = await currentQuery.queryNextPage();
 
       if (hasMore && currentQuery.currentPage) {
         const newGroups = currentQuery.currentPage.results;
-        console.log(`✅ Loaded ${newGroups.length} groups`);
+        console.log(`[Groups] Loaded ${newGroups.length} groups`);
 
         // Append new groups to existing data
         store.update((state) => ({
@@ -203,7 +213,7 @@ export const createAllGroups = async (sdk: Sdk) => {
   // Initialize groups from new SDK
   const initGroups = async () => {
     try {
-      console.log('🔄 Initializing all groups query');
+      console.log('[Groups] Initializing all groups query');
 
       // Create paged query using SDK
       currentQuery = sdk.rpc.group.getGroups(50);
@@ -258,7 +268,7 @@ export const createSearchGroups = async (sdk: Sdk, query: string) => {
     isLoading = true;
 
     try {
-      console.log('🔍 Searching groups with query:', query, 'cursor:', currentCursor);
+      console.log('[Groups] Searching groups with query:', query, 'cursor:', currentCursor);
 
       // Use findGroups with nameStartsWith filter
       const response = await sdk.rpc.group.findGroups(
@@ -271,7 +281,7 @@ export const createSearchGroups = async (sdk: Sdk, query: string) => {
         currentCursor = response.nextCursor;
         hasMoreResults = response.hasMore;
 
-        console.log(`✅ Found ${response.results.length} groups matching "${query}"`);
+        console.log(`[Groups] Found ${response.results.length} groups matching "${query}"`);
 
         // Append new results
         store.update((state) => ({

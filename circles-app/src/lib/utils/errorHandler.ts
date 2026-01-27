@@ -109,7 +109,7 @@ export function handleError<T = undefined>(
   // Log to console if enabled
   if (log) {
     const contextLabel = context !== 'unknown' ? `[${context}] ` : '';
-    console.error(`❌ ${contextLabel}${message}`);
+    console.error(`[ERROR] ${contextLabel}${message}`);
     if (error instanceof Error && error.stack) {
       console.debug(error.stack);
     }
@@ -143,7 +143,7 @@ export function handleWarning(
   const { notify = true, context = 'unknown' } = options;
 
   const contextLabel = context !== 'unknown' ? `[${context}] ` : '';
-  console.warn(`⚠️ ${contextLabel}${message}`);
+  console.warn(`[WARN] ${contextLabel}${message}`);
 
   if (notify) {
     notifyWarning(message);

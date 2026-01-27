@@ -39,15 +39,21 @@
       ]);
 
       // Combine mutual + trusts (outgoing trust) for "good" relations
-      const myTrusted = [...mine.mutual, ...mine.trusts];
-      const theirTrusted = [...theirs.mutual, ...theirs.trusts];
+      // SDK may return undefined instead of empty arrays
+      const myTrusted = [...(mine.mutual || []), ...(mine.trusts || [])];
+      const theirTrusted = [...(theirs.mutual || []), ...(theirs.trusts || [])];
 
-      const mySet = new Set(myTrusted.map((r) => r.address));
-      const theirMap = new Map(theirTrusted.map((r) => [r.address, r]));
+      // SDK may return `objectAvatar` instead of `address` in some cases
+      // CRITICAL: Normalize to lowercase for comparison - addresses can have different checksums
+      const getAddr = (r: any) => (r.address || r.objectAvatar)?.toLowerCase();
+      const mySet = new Set(myTrusted.map((r) => getAddr(r)));
+      const theirMap = new Map(theirTrusted.map((r) => [getAddr(r), r]));
 
+      const meLower = me?.toLowerCase();
+      const otherLower = other?.toLowerCase();
       const list: TrustRelationInfo[] = [];
       for (const addr of mySet) {
-        if (theirMap.has(addr) && addr !== me && addr !== other) {
+        if (theirMap.has(addr) && addr !== meLower && addr !== otherLower) {
           // Use the enriched info from their relations (has avatar info)
           list.push(theirMap.get(addr)!);
         }

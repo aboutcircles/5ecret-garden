@@ -46,59 +46,81 @@
       isMainSafe: targetAddress === address,
     });
 
-    // Always create SDK with the Safe address, not the group address
-    const sdk = await initSdk(address, targetAddress);
-    $circles = sdk;
+    // Set loading state for UI feedback
+    avatarState.isLoading = true;
 
-    // If clicking on the main safe (not a group) and it's not registered, go to registration
-    if (targetAddress === address && !isRegistered) {
-      console.log('[ConnectCircles] Unregistered safe, redirecting to /register');
-      await goto('/register');
-      return;
-    }
-
-    // Use the new SDK to get the avatar for the target (could be Safe or Group)
-    // Enable auto event subscription for reactive updates
     try {
-      avatarState.avatar = await sdk.getAvatar(targetAddress, true);
-    } catch (err: any) {
-      console.error('[ConnectCircles] Failed to get avatar:', err);
-      // If avatar not found, redirect to registration
-      if (err.message?.includes('Avatar not found') || err.code === 'AVATAR_NOT_FOUND') {
+      // Always create SDK with the Safe address, not the group address
+      const sdk = await initSdk(address, targetAddress);
+      $circles = sdk;
+
+      // If clicking on the main safe (not a group) and it's not registered, go to registration
+      if (targetAddress === address && !isRegistered) {
+        console.log('[ConnectCircles] Unregistered safe, redirecting to /register');
         await goto('/register');
         return;
       }
-      throw err;
+
+      // Use the new SDK to get the avatar for the target (could be Safe or Group)
+      // Enable auto event subscription for reactive updates
+      try {
+        avatarState.avatar = await sdk.getAvatar(targetAddress, true);
+      } catch (err: any) {
+        console.error('[ConnectCircles] Failed to get avatar:', err);
+        // Distinguish between "avatar not found" and network/RPC errors
+        const isNetworkError = err.message?.includes('fetch') ||
+          err.message?.includes('network') ||
+          err.message?.includes('ECONNREFUSED') ||
+          err.message?.includes('timeout') ||
+          err.code === 'NETWORK_ERROR';
+
+        if (isNetworkError) {
+          // Don't redirect - show error to user
+          throw new Error('Unable to connect to server. Please check your connection and try again.');
+        }
+
+        // If avatar genuinely not found, redirect to registration
+        // SDK uses 'SDK_AVATAR_NOT_FOUND' code
+        if (err.message?.includes('Avatar not found') ||
+            err.code === 'AVATAR_NOT_FOUND' ||
+            err.code === 'SDK_AVATAR_NOT_FOUND') {
+          await goto('/register');
+          return;
+        }
+        throw err;
+      }
+
+      // Detect avatar type from the avatarInfo returned by SDK (now properly typed)
+      const avatarType = avatarState.avatar.avatarInfo?.type;
+
+      if (isGroupType(avatarType)) {
+        avatarState.isGroup = true;
+        avatarState.isHuman = false;
+        // Try to detect group type - default to base group
+        avatarState.groupType = GroupType.Standard;
+      } else if (isOrganizationType(avatarType)) {
+        avatarState.isGroup = false;
+        avatarState.isHuman = false;
+        avatarState.groupType = undefined;
+      } else {
+        // Default to human
+        avatarState.isGroup = false;
+        avatarState.isHuman = true;
+        avatarState.groupType = undefined;
+      }
+
+      CirclesStorage.getInstance().data = {
+        avatar: address,
+        group: avatarState.isGroup ? avatarAddress : undefined,
+        isGroup: avatarState.isGroup,
+        groupType: avatarState.groupType,
+        rings: settings.ring,
+      };
+
+      goto('/dashboard');
+    } finally {
+      avatarState.isLoading = false;
     }
-
-    // Detect avatar type from the avatarInfo returned by SDK (now properly typed)
-    const avatarType = avatarState.avatar.avatarInfo?.type;
-
-    if (isGroupType(avatarType)) {
-      avatarState.isGroup = true;
-      avatarState.isHuman = false;
-      // Try to detect group type - default to base group
-      avatarState.groupType = GroupType.Standard;
-    } else if (isOrganizationType(avatarType)) {
-      avatarState.isGroup = false;
-      avatarState.isHuman = false;
-      avatarState.groupType = undefined;
-    } else {
-      // Default to human
-      avatarState.isGroup = false;
-      avatarState.isHuman = true;
-      avatarState.groupType = undefined;
-    }
-
-    CirclesStorage.getInstance().data = {
-      avatar: address,
-      group: avatarState.isGroup ? avatarAddress : undefined,
-      isGroup: avatarState.isGroup,
-      groupType: avatarState.groupType,
-      rings: settings.ring,
-    };
-
-    goto('/dashboard');
   }
 
   async function openCreateGroup() {

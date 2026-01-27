@@ -46,17 +46,17 @@
   async function loadInitialData() {
     // We need the SDK for both personal and group tokens
     if (!$circles) {
-      console.log('⏸️ loadInitialData skipped: no SDK');
+      console.log('loadInitialData skipped: no SDK');
       return;
     }
 
     // Prevent concurrent initialization
     if (isLoading) {
-      console.log('⏸️ loadInitialData skipped: already loading');
+      console.log('loadInitialData skipped: already loading');
       return;
     }
 
-    console.log('🔄 Loading ALL token holders data...', {
+    console.log('Loading ALL token holders data...', {
       tokenAddress,
       isPersonalToken,
     });
@@ -72,13 +72,13 @@
         // Use sdk.tokens.getHolders for personal tokens
         query = ($circles as any).tokens.getHolders(tokenAddress, 1000); // Large page size
         console.log(
-          '✅ Created PagedQuery instance for personal token using sdk.tokens.getHolders'
+          'Created PagedQuery instance for personal token using sdk.tokens.getHolders'
         );
       } else {
         // Use sdk.groups.getHolders for group tokens
         query = ($circles as any).groups.getHolders(tokenAddress, 1000); // Large page size
         console.log(
-          '✅ Created PagedQuery instance for group token using sdk.groups.getHolders'
+          'Created PagedQuery instance for group token using sdk.groups.getHolders'
         );
       }
 
@@ -91,7 +91,7 @@
         if (query.currentPage) {
           holders.push(...query.currentPage.results);
           console.log(
-            `📄 Loaded page ${pageNum}: ${query.currentPage.results.length} holders (total: ${holders.length}, hasMore: ${query.currentPage.hasMore})`
+            `Loaded page ${pageNum}: ${query.currentPage.results.length} holders (total: ${holders.length}, hasMore: ${query.currentPage.hasMore})`
           );
 
           if (!query.currentPage.hasMore) {
@@ -107,14 +107,14 @@
       displayedHolders = allHolders.slice(0, pageSize);
       hasMore = allHolders.length > pageSize;
 
-      console.log('✅ All holders loaded:', {
+      console.log('All holders loaded:', {
         totalHolders: allHolders.length,
         displayedHolders: displayedHolders.length,
         hasMore,
         pages: Math.ceil(allHolders.length / pageSize),
       });
     } catch (err) {
-      console.error('❌ Error loading token holders:', err);
+      console.error('Error loading token holders:', err);
       hasError = true;
       error =
         err instanceof Error ? err.message : 'Failed to load token holders';
@@ -133,16 +133,16 @@
 
   function loadMore() {
     if (isLoading) {
-      console.log('⏸️ loadMore already in progress');
+      console.log('loadMore already in progress');
       return;
     }
 
     if (!hasMore) {
-      console.log('⏸️ loadMore skipped: no more data');
+      console.log('loadMore skipped: no more data');
       return;
     }
 
-    console.log('🔄 Loading more holders (client-side pagination)...', {
+    console.log('Loading more holders (client-side pagination)...', {
       currentDisplayed: displayedHolders.length,
       total: allHolders.length,
       currentPage,
@@ -160,7 +160,7 @@
       displayedHolders = [...displayedHolders, ...newHolders];
       hasMore = endIndex < allHolders.length;
 
-      console.log('✅ Load more complete:', {
+      console.log('Load more complete:', {
         newHoldersCount: newHolders.length,
         totalDisplayed: displayedHolders.length,
         totalAvailable: allHolders.length,
@@ -189,7 +189,7 @@
 
     // Only log when close to bottom to reduce noise
     if (distanceToBottom < 300) {
-      console.log('📜 Scroll event:', {
+      console.log('Scroll event:', {
         distanceToBottom: Math.round(distanceToBottom),
         scrollThreshold,
         isLoading,
@@ -199,7 +199,7 @@
     }
 
     if (distanceToBottom < scrollThreshold && !isLoading && hasMore) {
-      console.log('🎯 Triggering loadMore from scroll');
+      console.log('Triggering loadMore from scroll');
       loadMore();
     }
   }
@@ -257,7 +257,7 @@
 
     // Only initialize once when we have required dependencies
     if (hasRequiredDeps && !initialized) {
-      console.log('🆕 First initialization');
+      console.log('First initialization');
       loadInitialData();
       return;
     }
@@ -268,7 +268,7 @@
       initialized &&
       currentTokenAddress !== tokenAddress
     ) {
-      console.log('🔄 Token address changed, reloading...', {
+      console.log('Token address changed, reloading...', {
         old: currentTokenAddress,
         new: tokenAddress,
       });

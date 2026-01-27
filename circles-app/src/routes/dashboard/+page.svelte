@@ -42,7 +42,7 @@
     }
 
     txHistoryRefreshTimeout = setTimeout(async () => {
-      console.log('🔄 Refreshing transaction history (debounced)...');
+      console.log('Refreshing transaction history (debounced)...');
       if (avatarState.avatar) {
         await initTransactionHistoryStore(avatarState.avatar);
       }
@@ -53,7 +53,7 @@
   // Cleanup function for event subscription
   function cleanupSubscription() {
     if (unsubscribeEvents) {
-      console.log('🔕 Unsubscribing from events');
+      console.log('Unsubscribing from events');
       unsubscribeEvents();
       unsubscribeEvents = null;
     }
@@ -90,7 +90,7 @@
       }
 
       console.log(
-        '🔔 Setting up event subscription for avatar (using avatar.events):',
+        'Setting up event subscription for avatar (using avatar.events):',
         avatarAddress
       );
 
@@ -99,7 +99,7 @@
       unsubscribeEvents = avatarState.avatar.events.subscribe(
         async (event: CirclesEvent) => {
           try {
-            console.log('📥 Received event:', event.$event, event);
+            console.log('Received event:', event.$event, event);
 
             // Handle transaction-related events
             // Note: Balance store handles its own events automatically in +layout.svelte
@@ -114,7 +114,7 @@
             ];
 
             if (transactionEvents.includes(event.$event)) {
-              console.log('🔄 Transaction event detected:', event.$event);
+              console.log('Transaction event detected:', event.$event);
 
               // Debounce transaction history refresh to avoid multiple refreshes
               // from the same transaction that generates multiple events
@@ -141,25 +141,25 @@
 
             // Log other events for debugging/future features
             if (event.$event === 'CrcV2_Trust') {
-              console.log('🤝 Trust event detected');
+              console.log('Trust event detected');
             }
 
             if (
               event.$event === 'CrcV2_RegisterGroup' ||
               event.$event === 'CrcV2_InviteHuman'
             ) {
-              console.log('👥 Group event detected');
+              console.log('Group event detected');
             }
           } catch (error) {
-            console.error('❌ Error handling event:', error, event);
+            console.error('Error handling event:', error, event);
             // Don't rethrow - keep subscription alive
           }
         }
       );
 
-      console.log('✅ Event subscription established');
+      console.log('Event subscription established');
     } catch (error) {
-      console.error('❌ Failed to set up event subscription:', error);
+      console.error('Failed to set up event subscription:', error);
     }
   }
 
@@ -199,11 +199,18 @@
     });
   }
 
+  // Dust threshold: 0.01 CRC (same as Balances.svelte)
+  const DUST_THRESHOLD = 10_000_000_000_000_000n;
+
   let personalToken: number = $derived(
-    $circlesBalances?.data?.filter((balance) => !balance.isGroup).length
+    $circlesBalances?.data?.filter(
+      (balance) => !balance.isGroup && BigInt(balance.attoCircles) >= DUST_THRESHOLD
+    ).length
   );
   let groupToken: number = $derived(
-    $circlesBalances?.data?.filter((balance) => balance.isGroup).length
+    $circlesBalances?.data?.filter(
+      (balance) => balance.isGroup && BigInt(balance.attoCircles) >= DUST_THRESHOLD
+    ).length
   );
 
   function openBalances() {

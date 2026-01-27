@@ -18,6 +18,7 @@ const refreshOnEvents: Set<CirclesEventType> = new Set<CirclesEventType>([
 ] as CirclesEventType[]);
 
 let currentStoreUnsubscribe: (() => void) | undefined;
+let currentAvatarAddress: string = '';
 
 const _circlesBalances = writable<{
   data: TokenBalance[];
@@ -26,6 +27,12 @@ const _circlesBalances = writable<{
 }>({ data: [], next: async () => false, ended: false });
 
 export const initBalanceStore = (avatar: Avatar) => {
+  // Early return if already initialized for this avatar
+  if (currentAvatarAddress === avatar.address) {
+    return;
+  }
+  currentAvatarAddress = avatar.address;
+
   if (currentStoreUnsubscribe) {
     currentStoreUnsubscribe();
     currentStoreUnsubscribe = undefined;
@@ -41,7 +48,7 @@ export const initBalanceStore = (avatar: Avatar) => {
     try {
       // Validate avatar is properly initialized
       if (!avatar || typeof avatar !== 'object') {
-        console.error('❌ Avatar is not properly initialized:', avatar);
+        console.error('[Balances] Avatar is not properly initialized:', avatar);
         return [];
       }
 
@@ -51,12 +58,11 @@ export const initBalanceStore = (avatar: Avatar) => {
         typeof avatar.balances.getTokenBalances !== 'function'
       ) {
         console.error(
-          '❌ No balances.getTokenBalances method available on avatar'
+          '[Balances] No balances.getTokenBalances method available on avatar'
         );
         return [];
       }
 
-      console.log('🔄 Using new SDK avatar.balances.getTokenBalances()');
       const allBalances = (await avatar.balances.getTokenBalances()) as unknown as TokenBalance[];
       // Only return version 2 balances
       return allBalances.filter((balance: any) => balance.version === 2);
@@ -65,7 +71,7 @@ export const initBalanceStore = (avatar: Avatar) => {
       if (errorMessage.includes('No balances found')) {
         return [];
       }
-      console.error('❌ Error loading balances:', errorMessage);
+      console.error('[Balances] Error loading balances:', errorMessage);
       return [];
     }
   };
@@ -75,10 +81,6 @@ export const initBalanceStore = (avatar: Avatar) => {
     currentData: TokenBalance[]
   ): Promise<TokenBalance[]> => {
     if (!refreshOnEvents.has(event.$event)) return currentData;
-    console.log(
-      '💰 Balance store: Refreshing balances due to event:',
-      event.$event
-    );
     try {
       // Use new SDK balances.getTokenBalances method
       if (
@@ -93,19 +95,13 @@ export const initBalanceStore = (avatar: Avatar) => {
       const v2Balances = allBalances.filter(
         (balance: any) => balance.version === 2
       );
-      console.log(
-        '💰 Balance store: Updated with',
-        v2Balances.length,
-        'tokens'
-      );
       return v2Balances;
     } catch (e: unknown) {
       const errorMessage = e instanceof Error ? e.message : String(e);
       if (errorMessage.includes('No balances found')) {
-        console.log('💰 Balance store: No balances found');
         return [];
       }
-      console.error('❌ Balance store: Error refreshing balances:', errorMessage);
+      console.error('[Balances] Error refreshing balances:', errorMessage);
       throw new Error(`Failed to refresh balances: ${errorMessage}`);
     }
   };
