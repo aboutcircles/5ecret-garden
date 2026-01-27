@@ -53,8 +53,40 @@ export async function createContactsQueryStore(
     const avatarAddress = avatar.address as Address;
 
     try {
-      console.log('🔄 Using getAggregatedTrustRelationsEnriched (optimized single RPC)');
+      console.log('[Contacts] Using getAggregatedTrustRelationsEnriched (optimized single RPC)');
+      const rpcStartTime = performance.now();
       const enrichedRelations = await getAggregatedTrustRelationsEnriched(sdk, avatarAddress);
+      console.log(`[Contacts] RPC call completed in ${(performance.now() - rpcStartTime).toFixed(0)}ms`);
+
+      // DEBUG: If enriched returns empty, check if fallback has data (to detect backend bug)
+      const enrichedTotal = (enrichedRelations.mutual?.length ?? 0) +
+                           (enrichedRelations.trusts?.length ?? 0) +
+                           (enrichedRelations.trustedBy?.length ?? 0);
+      if (enrichedTotal === 0 && avatar && typeof avatar.trust?.getAll === 'function') {
+        console.log('[Contacts] DEBUG: Enriched returned 0, checking fallback for comparison...');
+        try {
+          const fallbackData = await avatar.trust.getAll();
+          console.log('[Contacts] DEBUG: Fallback avatar.trust.getAll() returned:', fallbackData?.length ?? 0);
+          if (fallbackData?.[0]) console.log('[Contacts] DEBUG: Sample fallback:', fallbackData[0]);
+
+          // If fallback has data but enriched doesn't, use fallback instead
+          if (fallbackData && fallbackData.length > 0) {
+            console.warn('[Contacts] BACKEND BUG: Enriched endpoint returned 0 but fallback has', fallbackData.length, 'relations. Using fallback.');
+            const filteredContacts = fallbackData.filter(
+              (contact: AggregatedTrustRelation) =>
+                contact.relation === 'trusts' ||
+                contact.relation === 'mutuallyTrusts' ||
+                contact.relation === 'trustedBy'
+            );
+            contacts = adaptTrustRelationsForV2(filteredContacts);
+            // Skip the enriched data processing below
+            throw new Error('SKIP_TO_FALLBACK');
+          }
+        } catch (debugError) {
+          if ((debugError as Error).message === 'SKIP_TO_FALLBACK') throw debugError;
+          console.log('[Contacts] DEBUG: Fallback check failed:', debugError);
+        }
+      }
 
       // Convert TrustRelationInfo arrays to AggregatedTrustRelation format
       // Categories: mutual (both trust each other), trusts (you trust them), trustedBy (they trust you)
@@ -76,27 +108,48 @@ export async function createContactsQueryStore(
 
       // Combine all relations
       const allRelations = [...mutualRelations, ...trustsRelations, ...trustedByRelations];
-      console.log(
-        `Enriched trust relations: ${allRelations.length} (mutual: ${mutualRelations.length}, trusts: ${trustsRelations.length}, trustedBy: ${trustedByRelations.length})`
-      );
+      console.log('[Contacts] Combined relations:', {
+        mutual: mutualRelations.length,
+        trusts: trustsRelations.length,
+        trustedBy: trustedByRelations.length,
+        total: allRelations.length,
+      });
+      if (allRelations[0]) {
+        console.log('[Contacts] Sample combined relation:', allRelations[0]);
+      }
 
       // Adapt to include V2 compatibility fields
       contacts = adaptTrustRelationsForV2(allRelations);
     } catch (error) {
-      // Fallback to avatar.trust.getAll() if enriched endpoint fails
-      handleWarning('Enriched contacts endpoint failed, using fallback', {
-        notify: false,
-        context: 'sdk',
-      });
-      if (avatar && typeof avatar.trust?.getAll === 'function') {
-        const allTrustRelations = await avatar.trust.getAll();
-        const filteredContacts = allTrustRelations.filter(
-          (contact: AggregatedTrustRelation) =>
-            contact.relation === 'trusts' ||
-            contact.relation === 'mutuallyTrusts' ||
-            contact.relation === 'trustedBy'
-        );
-        contacts = adaptTrustRelationsForV2(filteredContacts);
+      // Handle fallback skip (when enriched returned empty but fallback has data)
+      if ((error as Error).message === 'SKIP_TO_FALLBACK') {
+        console.log('[Contacts] Using fallback data instead of empty enriched response');
+        // contacts already set in the debug block above
+      } else {
+        // Fallback to avatar.trust.getAll() if enriched endpoint fails
+        console.warn('[Contacts] Enriched endpoint failed:', error);
+        handleWarning('Enriched contacts endpoint failed, using fallback', {
+          notify: false,
+          context: 'sdk',
+        });
+        if (avatar && typeof avatar.trust?.getAll === 'function') {
+          console.log('[Contacts] Attempting fallback: avatar.trust.getAll()');
+          const allTrustRelations = await avatar.trust.getAll();
+          console.log('[Contacts] Fallback trust.getAll() returned:', allTrustRelations?.length ?? 0);
+          if (allTrustRelations?.[0]) {
+            console.log('[Contacts] Sample fallback relation:', allTrustRelations[0]);
+          }
+          const filteredContacts = allTrustRelations.filter(
+            (contact: AggregatedTrustRelation) =>
+              contact.relation === 'trusts' ||
+              contact.relation === 'mutuallyTrusts' ||
+              contact.relation === 'trustedBy'
+          );
+          console.log('[Contacts] Filtered fallback contacts:', filteredContacts.length);
+          contacts = adaptTrustRelationsForV2(filteredContacts);
+        } else {
+          console.error('[Contacts] No fallback available - avatar.trust.getAll not found');
+        }
       }
     }
 
@@ -162,10 +215,12 @@ export async function createContactsQueryStore(
 async function enrichContactData(
   rows: AggregatedTrustRelation[]
 ): Promise<ContactList> {
-  console.log(`Enriching ${rows.length} contacts...`);
+  const startTime = performance.now();
+  console.log(`[Contacts] Enriching ${rows.length} contacts...`);
   const profileRecord: ContactList = {};
 
   // Step 1: Fetch profiles for all contacts
+  const profileStartTime = performance.now();
   const promises = rows.map(async (row) => {
     try {
       const profile = await getProfile(row.objectAvatar);
@@ -183,13 +238,15 @@ async function enrichContactData(
   });
 
   await Promise.all(promises);
+  const profileTime = performance.now() - profileStartTime;
   console.log(
-    `Profiles fetched: ${Object.keys(profileRecord).length} out of ${rows.length}`
+    `[Contacts] Profiles fetched: ${Object.keys(profileRecord).length} out of ${rows.length} in ${profileTime.toFixed(0)}ms`
   );
 
   // Step 2: Try to use cached avatar info first (populated during profile fetch)
+  const avatarInfoStartTime = performance.now();
   const addresses = Object.keys(profileRecord) as Address[];
-  console.log(`Using cached avatar info for ${addresses.length} addresses...`);
+  console.log(`[Contacts] Using cached avatar info for ${addresses.length} addresses...`);
   const cachedAvatarInfoRecord = getCachedAvatarInfo(addresses);
 
   const avatarInfoRecord: Record<string, AvatarInfo> = {};
@@ -209,18 +266,18 @@ async function enrichContactData(
   const sdk = get(circles);
   if (missingAddresses.length > 0 && sdk) {
     try {
-      console.log(`Fetching ${missingAddresses.length} missing avatar infos...`);
       // Use SDK's RPC methods directly (properly typed)
       if (typeof sdk.rpc?.avatar?.getAvatarInfoBatch === 'function') {
         const fetchedAvatarInfos = await sdk.rpc.avatar.getAvatarInfoBatch(missingAddresses);
-
+        let fetchedCount = 0;
         fetchedAvatarInfos?.forEach((info: AvatarInfo) => {
           if (info && info.avatar) {
             const lower = info.avatar.toLowerCase();
             avatarInfoRecord[lower] = info;
+            fetchedCount++;
           }
         });
-        console.log(`Fetched ${fetchedAvatarInfos?.length ?? 0} missing avatar infos`);
+        console.log(`Avatar info batch: requested ${missingAddresses.length}, found ${fetchedCount} registered`);
       }
     } catch (error) {
       console.error(`Error fetching missing avatar info:`, error);
@@ -235,6 +292,9 @@ async function enrichContactData(
     }
   });
 
-  console.log(`Final enriched contacts: ${Object.keys(profileRecord).length}`);
+  const avatarInfoTime = performance.now() - avatarInfoStartTime;
+  const totalTime = performance.now() - startTime;
+  console.log(`[Contacts] Avatar info processing: ${avatarInfoTime.toFixed(0)}ms`);
+  console.log(`[Contacts] TOTAL enrichment: ${totalTime.toFixed(0)}ms for ${Object.keys(profileRecord).length} contacts`);
   return profileRecord;
 }

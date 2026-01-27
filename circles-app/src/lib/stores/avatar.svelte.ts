@@ -12,10 +12,12 @@ export let avatarState: {
   isHuman: boolean | undefined;
   groupType: GroupType | undefined;
   profile: Profile | undefined;
+  isLoading: boolean;
 } = $state({
   avatar: undefined,
   isGroup: undefined,
   isHuman: undefined,
   groupType: undefined,
   profile: undefined,
+  isLoading: false,
 });

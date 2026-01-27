@@ -120,15 +120,22 @@ import Toast from '$lib/components/Toast.svelte';
     }
   });
 
-  // init stores
+  // init stores - track which avatar we've initialized for
+  let lastInitializedAvatar: string | null = null;
+
   $effect(() => {
-    if (avatarState.avatar) {
-      initTransactionHistoryStore(avatarState.avatar);
-      initContactStore(avatarState.avatar);
-      initBalanceStore(avatarState.avatar);
-      if (avatarState.isGroup && $circles) {
-        initGroupMetricsStore($circles.rpc, avatarState.avatar.address);
-      }
+    const avatar = avatarState.avatar;
+    if (!avatar) return;
+
+    // Only init when avatar address actually changes
+    if (lastInitializedAvatar === avatar.address) return;
+    lastInitializedAvatar = avatar.address;
+
+    initTransactionHistoryStore(avatar);
+    initContactStore(avatar);
+    initBalanceStore(avatar);
+    if (avatarState.isGroup && $circles) {
+      initGroupMetricsStore($circles.rpc, avatar.address);
     }
   });
 

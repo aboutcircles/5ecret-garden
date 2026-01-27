@@ -20,20 +20,27 @@ const refreshOnEvents: Set<CirclesEventType> = new Set([
 
 let currentStoreUnsubscribe: (() => void) | undefined;
 let currentQuery: Promise<any> | undefined;
+let currentAvatarAddress: string | undefined;
 
 export const contacts = writable<{
   data: ContactList;
   next: () => Promise<boolean>;
   ended: boolean;
-}>({ data: {}, next: async () => false, ended: false });
+}>({ data: {}, next: async () => true, ended: true });
 
 export const initContactStore = ($avatar: Avatar) => {
+  // Skip if already initialized for this avatar
+  if (currentAvatarAddress === $avatar.address && currentQuery) {
+    return;
+  }
+
   if (currentStoreUnsubscribe) {
     currentStoreUnsubscribe();
     currentStoreUnsubscribe = undefined;
   }
 
   currentQuery = undefined;
+  currentAvatarAddress = $avatar.address;
 
   currentQuery = createContactsQueryStore(
     $avatar,

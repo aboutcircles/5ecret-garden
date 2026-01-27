@@ -16,11 +16,13 @@ export function formatTrustRelation(
   relation: TrustRelationType | undefined,
   profile?: Profile
 ) {
+  // Check profile?.name not just profile - name can be null even when profile exists
+  const name = profile?.name;
   switch (relation) {
     case 'trusts':
-      return `You accept ${profile ? profile.name + '\'s' : 'their'} tokens`;
+      return `You accept ${name ? name + '\'s' : 'their'} tokens`;
     case 'trustedBy':
-      return `${profile ? profile.name : 'They'} accept your tokens`;
+      return `${name ?? 'They'} accept your tokens`;
     case 'mutuallyTrusts':
       return 'You accept each other\'s tokens';
     default:

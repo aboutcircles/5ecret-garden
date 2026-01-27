@@ -14,24 +14,30 @@
     row: Component<T>;
     /** Additional props to pass to each row component */
     rowProps?: Record<string, any>;
+    /** Show initial loading spinner (before any data loads) */
+    isInitialLoading?: boolean;
   }
-  let { store, row, rowProps = {} }: Props = $props();
+  let { store, row, rowProps = {}, isInitialLoading = false }: Props = $props();
 
   let observer: IntersectionObserver | null = null;
   let anchor: HTMLElement | undefined = $state();
   let hasError = $state(false);
+  let isLoadingMore = $state(false);
 
   const setupObserver = () => {
     if (observer) observer.disconnect();
-    if (anchor && store && !$store?.ended && !hasError) {
+    if (anchor && store && !$store?.ended && !hasError && !isLoadingMore) {
       observer = new IntersectionObserver(async (entries) => {
-        if (entries[0]?.isIntersecting && $store && !$store.ended) {
+        if (entries[0]?.isIntersecting && $store && !$store.ended && !isLoadingMore) {
           observer?.disconnect();
+          isLoadingMore = true;
           try {
             await $store.next();
             hasError = false;
           } catch {
             hasError = true;
+          } finally {
+            isLoadingMore = false;
           }
           setupObserver();
         }
@@ -40,12 +46,17 @@
     }
   };
   const handleRetry = async () => {
-    if (!$store) return;
+    if (!$store || isLoadingMore) return;
+    isLoadingMore = true;
     try {
       await $store.next();
       hasError = false;
       setupObserver();
-    } catch {}
+    } catch {
+      // Error handled by hasError state
+    } finally {
+      isLoadingMore = false;
+    }
   };
   $effect(() => {
     if (store && anchor) setupObserver();
@@ -55,6 +66,15 @@
     observer = null;
   });
 </script>
+
+{#if isLoadingMore}
+  <div
+    class="fixed bottom-24 left-1/2 -translate-x-1/2 bg-base-100 shadow-lg rounded-full px-4 py-2 flex items-center gap-2 z-40"
+  >
+    <span class="loading loading-spinner loading-sm text-primary"></span>
+    <span class="text-sm">Loading more...</span>
+  </div>
+{/if}
 
 <div class="w-full flex flex-col gap-y-1.5 py-2" role="list">
   {#each $store?.data ?? [] as item, index (getKeyFromItem(item) + '-' + index)}
@@ -68,21 +88,25 @@
     aria-live="polite"
     aria-busy={$store && !$store?.ended && !hasError ? 'true' : 'false'}
   >
-    {#if ($store?.data ?? []).length === 0 && $store?.ended}
+    {#if isInitialLoading}
+      <div class="flex justify-center py-4">
+        <span class="loading loading-spinner loading-lg text-primary"></span>
+      </div>
+    {:else if ($store?.data ?? []).length === 0 && $store?.ended}
       <span class="text-base-content/70">No items</span>
     {:else if $store?.ended}
       <span class="text-base-content/70">End of list</span>
     {:else if hasError}
       <span class="text-error">Error loading items</span>
       <button class="ml-2 link link-primary" onclick={handleRetry}>Retry</button>
+    {:else if isLoadingMore}
+      <!-- Loading in progress - floating pill already visible, keep this minimal -->
+      <span class="text-base-content/50 text-sm">Loading...</span>
     {:else}
-      <span class="loading loading-spinner text-primary"></span>
-      <span class="ml-2 text-base-content/70">Loading more...</span>
-      <!-- Manual "Load More" fallback for when IntersectionObserver doesn't trigger -->
+      <!-- Idle state - show Load More button for manual trigger -->
       <button
-        class="ml-4 btn btn-ghost btn-xs"
+        class="btn btn-ghost btn-sm text-base-content/70"
         onclick={handleRetry}
-        title="Load more items manually"
       >
         Load More
       </button>

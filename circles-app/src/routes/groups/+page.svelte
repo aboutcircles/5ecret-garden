@@ -30,7 +30,8 @@
   let searchQuery = $state(getInitialQuery());
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-  // Sync tab and search to URL
+  // Sync tab and search to URL (with dedup to prevent navigation flooding)
+  let lastUrlString = '';
   function updateUrl(tab: Tab, query: string) {
     const url = new URL($page.url);
     url.searchParams.set('tab', tab);
@@ -39,7 +40,13 @@
     } else {
       url.searchParams.delete('q');
     }
-    goto(url.toString(), { replaceState: true, keepFocus: true });
+
+    // Prevent redundant navigation calls
+    const newUrlString = url.toString();
+    if (newUrlString === lastUrlString) return;
+    lastUrlString = newUrlString;
+
+    goto(newUrlString, { replaceState: true, keepFocus: true });
   }
 
   // Update URL when tab changes
@@ -123,6 +130,7 @@
         ended: boolean;
       }>
     | undefined = $state();
+  let myGroupsUnsubscribe: (() => void) | undefined;
 
   let allGroups:
     | Readable<{
@@ -152,13 +160,22 @@
       isLoadingMyGroups = true;
       createBaseGroups(avatarState.avatar)
         .then((result) => {
-          myGroups = result;
+          myGroups = result.store;
+          myGroupsUnsubscribe = result.unsubscribe;
           isLoadingMyGroups = false;
         })
         .catch(() => {
           isLoadingMyGroups = false;
         });
     }
+
+    // Cleanup when component unmounts or avatar changes
+    return () => {
+      if (myGroupsUnsubscribe) {
+        myGroupsUnsubscribe();
+        myGroupsUnsubscribe = undefined;
+      }
+    };
   });
 
   $effect(() => {

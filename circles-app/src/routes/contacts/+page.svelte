@@ -38,7 +38,8 @@
   let filterRelation = writable<FilterValue>(getInitialFilter());
   let searchQuery = writable<string>(getInitialSearch());
 
-  // Sync state to URL
+  // Sync state to URL (with dedup to prevent navigation flooding)
+  let lastUrlString = '';
   function updateUrl(filter: FilterValue, query: string) {
     const url = new URL($page.url);
 
@@ -59,7 +60,12 @@
       url.searchParams.delete('q');
     }
 
-    goto(url.toString(), { replaceState: true, keepFocus: true });
+    // Prevent redundant navigation calls
+    const newUrlString = url.toString();
+    if (newUrlString === lastUrlString) return;
+    lastUrlString = newUrlString;
+
+    goto(newUrlString, { replaceState: true, keepFocus: true });
   }
 
   // Subscribe to store changes and sync to URL

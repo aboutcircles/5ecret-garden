@@ -46,8 +46,7 @@ export const gnosisConfig: { production: CirclesConfig; rings: CirclesConfig } =
         import.meta.env.VITE_CIRCLES_RPC_URL ||
         'https://staging.circlesubi.network/',
       chainRpcUrl:
-        import.meta.env.VITE_CHAIN_RPC_URL ||
-        'https://staging.circlesubi.network/chain-rpc',
+        import.meta.env.VITE_CHAIN_RPC_URL || 'https://rpc.gnosischain.com/',
       pathfinderUrl: 'https://pathfinder.aboutcircles.com',
       profileServiceUrl: 'https://rpc.aboutcircles.com/profiles/',
       v1HubAddress: '0x29b9a7fbb8995b2423a71cc17cf9810798f6c543',

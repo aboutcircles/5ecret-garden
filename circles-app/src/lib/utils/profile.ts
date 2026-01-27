@@ -100,17 +100,17 @@ async function fetchProfiles(
 
   // Validate SDK is properly initialized
   if (!sdk || typeof sdk !== 'object') {
-    console.error('❌ SDK is not properly initialized:', sdk);
+    console.error('SDK is not properly initialized:', sdk);
     return new Map();
   }
 
   // Use SDK's RPC methods directly (properly typed via Sdk class)
   if (typeof sdk.rpc?.avatar?.getAvatarInfoBatch === 'function') {
-    console.log('🔄 Using SDK rpc.avatar.getAvatarInfoBatch()');
+    console.log('Using SDK rpc.avatar.getAvatarInfoBatch()');
     avatars = await sdk.rpc.avatar.getAvatarInfoBatch(addresses);
   } else {
     console.error(
-      '❌ No rpc.avatar.getAvatarInfoBatch method available on SDK'
+      'No rpc.avatar.getAvatarInfoBatch method available on SDK'
     );
     return new Map();
   }
@@ -144,7 +144,7 @@ async function fetchProfiles(
     // Use SDK's RPC client to fetch profile batch
     let chunkProfiles;
     if (typeof sdk.rpc?.client?.call === 'function') {
-      console.log('🔄 Using SDK rpc.client.call() for profile batch');
+      console.log('Using SDK rpc.client.call() for profile batch');
       const rawResult = await sdk.rpc.client.call(
         'circles_getProfileByCidBatch',
         [chunk]

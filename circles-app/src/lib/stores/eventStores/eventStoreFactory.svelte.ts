@@ -72,6 +72,7 @@ export function createEventStore<T>(
   let lastEvent: CirclesEvent | null = null;
   let finished = false;
   let storeData = initialData;
+  let unsubscribeFromEvents: (() => void) | undefined;
 
   return readable<{ data: T; next: () => Promise<boolean>; ended: boolean }>(
     {
@@ -128,20 +129,20 @@ export function createEventStore<T>(
        */
       const eventHandler = (event: CirclesEvent) => {
         console.log(
-          '🎯 EventStoreFactory: Received event',
+          '[EventStore] Received event',
           event.$event,
           'for avatar',
           avatar.address
         );
         if (!eventTypes.has(event.$event)) {
           console.log(
-            '⏭️  EventStoreFactory: Ignoring event',
+            '[EventStore] Ignoring event',
             event.$event,
             '(not in refresh list)'
           );
           return;
         }
-        console.log('✅ EventStoreFactory: Processing event', event.$event);
+        console.log('[EventStore] Processing event', event.$event);
         lastEvent = event;
 
         if (timeout) {
@@ -163,32 +164,39 @@ export function createEventStore<T>(
 
       // Load the initial data and subscribe to events
       console.log(
-        '🏁 EventStoreFactory: Initializing store for avatar',
+        '[EventStore] Initializing store for avatar',
         avatar.address
       );
       console.log(
-        '📋 EventStoreFactory: Monitoring events:',
+        '[EventStore] Monitoring events:',
         Array.from(eventTypes).join(', ')
       );
       initialLoad()
         .then((data) => {
           console.log(
-            '📊 EventStoreFactory: Initial data loaded, count:',
+            '[EventStore] Initial data loaded, count:',
             Array.isArray(data) ? data.length : 'N/A'
           );
           setData(data);
         })
         .then(() => resolveInitialLoad?.())
         .then(() => {
-          console.log('🔗 EventStoreFactory: Subscribing to avatar.events');
-          return avatar.events.subscribe(eventHandler);
+          console.log('[EventStore] Subscribing to avatar.events');
+          unsubscribeFromEvents = avatar.events.subscribe(eventHandler);
         })
         .catch((e) =>
-          console.error('❌ EventStoreFactory: Failed to initialize store', e)
+          console.error('[EventStore] Failed to initialize store', e)
         );
 
       return () => {
-        avatar.unsubscribeFromEvents();
+        console.log('[EventStore] Cleaning up store for avatar', avatar.address);
+        if (unsubscribeFromEvents) {
+          unsubscribeFromEvents();
+          unsubscribeFromEvents = undefined;
+        }
+        if (timeout) {
+          clearTimeout(timeout);
+        }
       };
     }
   );

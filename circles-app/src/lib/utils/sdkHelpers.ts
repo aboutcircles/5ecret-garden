@@ -57,7 +57,21 @@ export async function getAggregatedTrustRelationsEnriched(
   sdk: Sdk,
   address: Address
 ): Promise<AggregatedTrustRelationsResponse> {
-  return getRpc(sdk).trust.getAggregatedTrustRelationsEnriched(address);
+  // Add timeout to prevent hanging - RPC calls should complete within 15s
+  const timeoutMs = 15000;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => reject(new Error(`SDK call timed out after ${timeoutMs}ms`)), timeoutMs);
+  });
+
+  try {
+    return await Promise.race([
+      getRpc(sdk).trust.getAggregatedTrustRelationsEnriched(address),
+      timeoutPromise
+    ]);
+  } catch (error) {
+    console.error('[SDK] getAggregatedTrustRelationsEnriched FAILED:', error);
+    throw error;
+  }
 }
 
 /**

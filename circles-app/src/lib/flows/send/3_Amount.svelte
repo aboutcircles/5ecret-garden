@@ -69,7 +69,7 @@
       // Pathfinding succeeded
       showPathsSection = true;
 
-      console.log('✅ Pathfinding complete:', {
+      console.log('Pathfinding complete:', {
         maxAmountCrc: maxAmountCircles,
         maxAmountAttoCrc: maxAmountAttoCrc.toString(),
       });
@@ -77,7 +77,7 @@
       // Note: The new SDK handles path calculation internally in transfer.advanced()
       // We don't need to manually fetch the path here anymore
     } catch (err) {
-      console.error('❌ Error calculating max transferable amount:', err);
+      console.error('Error calculating max transferable amount:', err);
       pathfindingFailed = true;
       maxAmountCircles = -2;
     } finally {
