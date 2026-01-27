@@ -10,6 +10,13 @@ const PAGE_SIZE = 25;
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 /**
+ * Extended transaction row with event type
+ */
+export type ExtendedTransactionRow = TransactionHistoryRow & {
+  eventType?: string; // e.g., "CrcV2_PersonalMint", "CrcV2_TransferSingle"
+};
+
+/**
  * Grouped transaction representing multiple events consolidated by transactionHash.
  * Shows net amount and primary counterparty, with expandable drill-down to individual events.
  */
@@ -18,9 +25,10 @@ export type GroupedTransaction = {
   timestamp: number; // Unix timestamp from the SDK
   netCircles: number; // Positive = received, negative = sent
   counterparty: Address; // Final sender or recipient
-  events: TransactionHistoryRow[]; // All events for drill-down
+  events: ExtendedTransactionRow[]; // All events for drill-down
   eventCount: number;
   type: 'send' | 'receive' | 'mint' | 'burn' | 'complex';
+  eventTypes: string[]; // Unique event types in this transaction
 };
 
 // State for cursor-based pagination
@@ -45,8 +53,8 @@ export function getEnrichedProfile(address: Address): { name?: string; previewIm
  * Group transaction events by transactionHash and calculate net amounts.
  * A single blockchain transaction with multiple hops becomes one grouped row.
  */
-function groupByTransaction(rows: TransactionHistoryRow[], userAddress: string): GroupedTransaction[] {
-  const groups = new Map<string, TransactionHistoryRow[]>();
+function groupByTransaction(rows: ExtendedTransactionRow[], userAddress: string): GroupedTransaction[] {
+  const groups = new Map<string, ExtendedTransactionRow[]>();
 
   // Group events by transaction hash
   for (const row of rows) {
@@ -123,6 +131,9 @@ function groupByTransaction(rows: TransactionHistoryRow[], userAddress: string):
     // Use first event's timestamp (events are sorted by logIndex)
     const timestamp = events[0].timestamp;
 
+    // Collect unique event types
+    const eventTypes = [...new Set(events.map(e => e.eventType).filter(Boolean))] as string[];
+
     return {
       transactionHash: hash,
       timestamp,
@@ -131,12 +142,13 @@ function groupByTransaction(rows: TransactionHistoryRow[], userAddress: string):
       events,
       eventCount: events.length,
       type,
+      eventTypes,
     };
   });
 }
 
 const _transactionHistory = writable<{
-  data: TransactionHistoryRow[];
+  data: ExtendedTransactionRow[];
   next: () => Promise<boolean>;
   ended: boolean;
   isLoading: boolean;
@@ -208,12 +220,15 @@ async function loadNextPage(): Promise<boolean> {
         console.log('[TxHistory] circles:', sample.circles, '| nested.circles:', nested['circles']);
       }
 
-      // Convert EnrichedTransaction to TransactionHistoryRow format
+      // Convert EnrichedTransaction to ExtendedTransactionRow format
       // Handle potential alternative field names from server (including nested event structure)
-      const rows: TransactionHistoryRow[] = response.results.map((tx) => {
+      const rows: ExtendedTransactionRow[] = response.results.map((tx) => {
         const raw = tx as Record<string, unknown>;
         // Server might return nested event structure or flat structure
         const event = (raw['event'] as Record<string, unknown>) || {};
+
+        // Extract event type (e.g., "CrcV2_PersonalMint", "CrcV2_TransferSingle")
+        const eventType = (event['type'] || raw['type'] || raw['eventType'] || raw['$event']) as string | undefined;
 
         // Try multiple possible field names for from/to addresses
         // Priority: flat fields > nested event fields > alternative names
@@ -259,6 +274,7 @@ async function loadNextPage(): Promise<boolean> {
           circles: circlesAmount,
           staticCircles: staticCirclesVal ? parseFloat(staticCirclesVal as string) : 0,
           crc: crcVal ? parseFloat(crcVal as string) : 0,
+          eventType,
         };
       });
 

@@ -199,6 +199,33 @@
         return isSent ? '/badge-sent.svg' : '/badge-received.svg';
     }
   }
+
+  /**
+   * Format event type for display
+   * e.g., "CrcV2_PersonalMint" → "Personal Mint"
+   */
+  function formatEventType(eventType: string): string {
+    // Remove CrcV1_ or CrcV2_ prefix
+    let formatted = eventType.replace(/^CrcV[12]_/, '');
+    // Add spaces between camelCase words
+    formatted = formatted.replace(/([a-z])([A-Z])/g, '$1 $2');
+    return formatted;
+  }
+
+  /**
+   * Get formatted event types for display
+   * Shows first 2 types, or "Multiple" if more
+   */
+  const eventTypeLabel = $derived.by(() => {
+    if (!item.eventTypes || item.eventTypes.length === 0) return '';
+    if (item.eventTypes.length === 1) {
+      return formatEventType(item.eventTypes[0]);
+    }
+    if (item.eventTypes.length === 2) {
+      return item.eventTypes.map(formatEventType).join(', ');
+    }
+    return `${formatEventType(item.eventTypes[0])} +${item.eventTypes.length - 1}`;
+  });
 </script>
 
 <div
@@ -235,6 +262,9 @@
               </div>
             </div>
             <div class="flex flex-col">
+              {#if eventTypeLabel}
+                <span class="text-xs text-base-content/50">{eventTypeLabel}</span>
+              {/if}
               <span class="font-medium">
                 {item.type === 'mint' ? 'Minted' : item.type === 'burn' ? 'Burned' : 'System'}
               </span>
@@ -252,7 +282,7 @@
             view="horizontal"
             clickable={true}
             pictureOverlayUrl={getBadgeUrl(item.type) ?? undefined}
-            topInfo={''}
+            topInfo={eventTypeLabel}
             bottomInfo={formatTimestamp(item.timestamp)}
           />
         {/if}
