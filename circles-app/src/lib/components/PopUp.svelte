@@ -5,8 +5,23 @@
   import PopUpPage from './PopUpPage.svelte';
   import { ArrowLeft as LArrowLeft, X as LX, type IconNode } from 'lucide';
 
-  function handleKeydown(e: KeyboardEvent) {
-    if (e.key === 'Escape' && popupState.content) popupControls.close();
+  // Use $effect to manage ESC listener - always add/remove, check condition in handler
+  // Note: Early return in $effect breaks cleanup pattern in Svelte 5
+  // Uses capture phase to intercept before child components can stopPropagation
+  $effect(() => {
+    function handleKeydown(e: KeyboardEvent) {
+      if (e.key === 'Escape' && popupState.content) {
+        e.preventDefault();
+        e.stopPropagation();
+        popupControls.close();
+      }
+    }
+    window.addEventListener('keydown', handleKeydown, true);
+    return () => window.removeEventListener('keydown', handleKeydown, true);
+  });
+
+  function handleBackdropClick() {
+    popupControls.close();
   }
 
   function onClose() {
@@ -38,7 +53,15 @@
   }
 </script>
 
-<svelte:window onkeydown={handleKeydown} />
+<!-- Backdrop overlay - click to close -->
+{#if popupState.content}
+  <button
+    class="popup-backdrop"
+    onclick={handleBackdropClick}
+    aria-label="Close popup"
+    tabindex="-1"
+  ></button>
+{/if}
 
 <div
   class="popup rounded-t-lg overflow-y-auto"
@@ -81,6 +104,14 @@
 </div>
 
 <style>
+  .popup-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 99;
+    cursor: default;
+    border: none;
+  }
   .popup {
     position: fixed;
     bottom: 0;
