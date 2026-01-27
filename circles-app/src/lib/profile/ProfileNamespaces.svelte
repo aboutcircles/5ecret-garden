@@ -168,43 +168,68 @@
 <div class="space-y-2">
     {#each Object.keys(namespaces) as ns (ns)}
         {@const state = perNamespace[ns] ?? { loading: false, error: null, links: [], expanded: false }}
-        <div class="rounded-md border bg-base-100/60">
-            <button class="w-full flex items-center justify-between px-3 py-2 text-left" onclick={() => toggleNamespace(ns)}>
-                <div class="flex items-center gap-2">
-                    {#if state.expanded}
-                        <Lucide icon={LChevronDown} size={16} class="shrink-0 stroke-current" ariaLabel="" />
-                    {:else}
-                        <Lucide icon={LChevronRight} size={16} class="shrink-0 stroke-current" ariaLabel="" />
-                    {/if}
+        <div class="rounded-md border border-base-content/10 bg-base-200/30 overflow-hidden">
+            <button class="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-base-200/50 transition-colors" onclick={() => toggleNamespace(ns)}>
+                <div class="flex items-center gap-3">
+                    <div class="text-base-content/50">
+                        {#if state.expanded}
+                            <Lucide icon={LChevronDown} size={18} />
+                        {:else}
+                            <Lucide icon={LChevronRight} size={18} />
+                        {/if}
+                    </div>
                     <Avatar address={ns} view="horizontal" clickable={true} />
                 </div>
-                <div class="text-xs opacity-60">
-                    {#if state.loading} Loading… {/if}
-                    {#if state.error} {state.error} {/if}
-                    {#if !state.loading && !state.error} {state.links.length} links {/if}
+                <div class="text-xs font-medium">
+                    {#if state.loading} 
+                        <span class="loading loading-spinner loading-xs text-primary"></span>
+                    {:else if state.error} 
+                        <span class="text-error">{state.error}</span>
+                    {:else} 
+                        <span class="opacity-50">{state.links.length} items</span>
+                    {/if}
                 </div>
             </button>
 
             {#if state.expanded}
-                <div class="px-3 pb-2 space-y-1">
+                <div class="px-2 pb-2 space-y-1 bg-base-100/40 border-t border-base-content/5">
                     {#each state.links as item, i (i)}
-                        <div class="flex items-start justify-between gap-2 px-2 py-1 rounded hover:bg-base-200/60">
+                        <div class="flex items-center justify-between gap-3 px-3 py-2 rounded-lg hover:bg-base-200/80 transition-all group">
                             <div class="min-w-0 flex-1">
-                                <div class="font-mono text-[11px] truncate">{prettyIpfsCid(item.chunkCid)}</div>
-                                <div class="text-xs break-words">{JSON.stringify(item.link)}</div>
-                            </div>
-                            {#if !readonly}
-                                <div class="shrink-0 flex items-center gap-1">
-                                    <a class="btn btn-ghost btn-xs" href={ipfsGatewayUrl(item.chunkCid)} target="_blank" rel="noreferrer" title="Open chunk on IPFS">
-                                        <Lucide icon={LExternalLink} size={14} class="shrink-0 stroke-current" ariaLabel="" />
-                                    </a>
-                                    <button class="btn btn-ghost btn-xs" title="Remove" onclick={() => removeLink(ns, i)}>
-                                        <Lucide icon={LTrash2} size={14} class="shrink-0 stroke-current" ariaLabel="" />
-                                    </button>
+                                <div class="flex items-center gap-2 mb-0.5">
+                                    <span class="text-xs font-semibold truncate">
+                                        {item.link.name || 'Unnamed Link'}
+                                    </span>
+                                    <span class="text-[10px] font-mono opacity-30 truncate">
+                                        {prettyIpfsCid(item.chunkCid)}
+                                    </span>
                                 </div>
-                            {/if}
+                                <div class="text-[11px] opacity-60 truncate">
+                                    {typeof item.link === 'object' ? JSON.stringify(item.link) : item.link}
+                                </div>
+                            </div>
+                            
+                            <div class="shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <a class="btn btn-ghost btn-xs btn-square" 
+                                   href={ipfsGatewayUrl(item.chunkCid)} 
+                                   target="_blank" 
+                                   rel="noreferrer" 
+                                   title="View on IPFS">
+                                    <Lucide icon={LExternalLink} size={14} />
+                                </a>
+                                {#if !readonly}
+                                    <button class="btn btn-ghost btn-xs btn-square text-error/70 hover:text-error" 
+                                            title="Remove" 
+                                            onclick={() => removeLink(ns, i)}>
+                                        <Lucide icon={LTrash2} size={14} />
+                                    </button>
+                                {/if}
+                            </div>
                         </div>
                     {/each}
+                    {#if state.links.length === 0 && !state.loading}
+                        <div class="py-4 text-center text-xs opacity-40 italic">No links found in this namespace.</div>
+                    {/if}
                 </div>
             {/if}
         </div>
