@@ -398,6 +398,22 @@ function groupByTransaction(rows: ExtendedTransactionRow[], userAddress: string)
     const smallNet = Math.abs(netCircles) <= 0.05 || (totalVolume > 0.1 && relativeNet < 0.05);
     const isIntermediary = userParticipatedInEvents && smallNet && type !== 'mint';
 
+    // Debug: log transactions with small net that AREN'T marked as intermediary
+    if (Math.abs(netCircles) <= 0.05 && !isIntermediary && netCircles !== 0) {
+      console.log('[TxHistory] Small net NOT intermediary:', {
+        hash: hash.slice(0, 10),
+        netCircles: netCircles.toFixed(4),
+        type,
+        userParticipated: userParticipatedInEvents,
+        smallNet,
+        totalVolume: totalVolume.toFixed(2),
+        transferIn: transferInAmount.toFixed(2),
+        transferOut: transferOutAmount.toFixed(2),
+        mintAmount: mintAmount.toFixed(2),
+        eventTypes,
+      });
+    }
+
     // Detect operator-only transactions: user signed but tokens flowed between others
     const isOperatorOnly = !userParticipatedInEvents && userIsInitiator;
 
