@@ -40,8 +40,43 @@
 
       // Combine mutual + trusts (outgoing trust) for "good" relations
       // SDK may return undefined instead of empty arrays
-      const myTrusted = [...(mine.mutual || []), ...(mine.trusts || [])];
-      const theirTrusted = [...(theirs.mutual || []), ...(theirs.trusts || [])];
+      let myTrusted = [...(mine.mutual || []), ...(mine.trusts || [])];
+      let theirTrusted = [...(theirs.mutual || []), ...(theirs.trusts || [])];
+
+      // Fallback: If enriched returns empty but user has trust relations (known backend bug)
+      if (myTrusted.length === 0 && avatarState.avatar?.trust?.getAll) {
+        console.log('[CommonConnections] Enriched returned 0 for me, trying fallback...');
+        try {
+          const myFallback = await avatarState.avatar.trust.getAll();
+          if (myFallback && myFallback.length > 0) {
+            myTrusted = myFallback
+              .filter((r: any) => r.relation === 'mutuallyTrusts' || r.relation === 'trusts')
+              .map((r: any) => ({ address: r.objectAvatar as Address }));
+            console.log('[CommonConnections] Fallback for me:', myTrusted.length);
+          }
+        } catch (e) {
+          console.warn('[CommonConnections] Fallback for me failed:', e);
+        }
+      }
+
+      if (theirTrusted.length === 0) {
+        console.log('[CommonConnections] Enriched returned 0 for other, trying fallback...');
+        try {
+          // Get an avatar instance for the other address to access trust.getAll()
+          const otherAvatar = await $circles.getAvatar(other);
+          if (otherAvatar?.trust?.getAll) {
+            const theirFallback = await otherAvatar.trust.getAll();
+            if (theirFallback && theirFallback.length > 0) {
+              theirTrusted = theirFallback
+                .filter((r: any) => r.relation === 'mutuallyTrusts' || r.relation === 'trusts')
+                .map((r: any) => ({ address: r.objectAvatar as Address }));
+              console.log('[CommonConnections] Fallback for other:', theirTrusted.length);
+            }
+          }
+        } catch (e) {
+          console.warn('[CommonConnections] Fallback for other failed:', e);
+        }
+      }
 
       // SDK may return `objectAvatar` instead of `address` in some cases
       // CRITICAL: Normalize to lowercase for comparison - addresses can have different checksums
@@ -71,7 +106,12 @@
     }
   }
   $effect(() => {
-    void loadCommon();
+    // Read otherAvatarAddress synchronously to track it as a reactive dependency
+    // (async functions don't track dependencies after awaits in Svelte 5)
+    const addr = otherAvatarAddress;
+    if (addr) {
+      void loadCommon();
+    }
   });
 
   function openProfile(addr: Address): void {
