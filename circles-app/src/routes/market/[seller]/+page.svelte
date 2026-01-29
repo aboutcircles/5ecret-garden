@@ -6,7 +6,6 @@
     import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
     import ProductCard from '$lib/components/ProductCard.svelte';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
-    import { MARKET_API_BASE, MARKET_OPERATOR } from '$lib/config/market';
     import type { AggregatedCatalogItem } from '$lib/market/types';
     import { getMarketClient } from '$lib/sdk/marketClient';
     import { shortenAddress } from '$lib/utils/shared';
@@ -15,9 +14,8 @@
     import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/types/actions';
+    import {gnosisConfig} from "$lib/circlesConfig";
 
-    // Defaults (as requested)
-    const OPERATOR: `0x${string}` = MARKET_OPERATOR;
     
     // Derive seller address from SvelteKit's $page store
     const params = $derived($page.params as { seller: string });
@@ -36,7 +34,6 @@
     );
     
     // Static API base
-    const API_BASE = MARKET_API_BASE;
 
     type ProductLike = AggregatedCatalogItem;
 
@@ -60,7 +57,7 @@
         const normalized = normalizeAddress(params.seller);
         sellerAddress = normalized as `0x${string}`;
 
-        const catalog = getMarketClient().catalog.forOperator(MARKET_OPERATOR);
+        const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
         const items = await catalog.fetchSellerCatalog(normalized);
         // fetchSellerCatalog already filters by seller, but keep this defensive filter
         products = items.filter(
@@ -83,7 +80,7 @@
       popupControls.open({
         title: 'Create Offer',
         component: OfferStep1,
-        props: { context: { operator: OPERATOR, pinApiBase: API_BASE } },
+        props: { context: { operator: gnosisConfig.production.marketOperator, pinApiBase: gnosisConfig.production.marketApiBase } },
         onClose: () => { void loadSellerCatalog(); }
       });
     }

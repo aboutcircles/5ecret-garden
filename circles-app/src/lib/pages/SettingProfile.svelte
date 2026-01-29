@@ -6,8 +6,8 @@
     import {popupControls} from '$lib/stores/popup';
     import {signer} from '$lib/stores/wallet.svelte';
     import ProfileExplorer from '$lib/profile/ProfileExplorer.svelte';
-    import {MARKET_API_BASE} from '$lib/config/market';
     import type {Address as EvmAddress} from '@circles-sdk/utils';
+    import {gnosisConfig} from "$lib/circlesConfig";
 
     interface Props {
         address: EvmAddress | undefined;
@@ -30,7 +30,7 @@
             component: ProfileExplorer,
             props: {
                 avatar: address,
-                pinApiBase: MARKET_API_BASE,
+                pinApiBase: gnosisConfig.production.marketApiBase,
             },
         });
     }

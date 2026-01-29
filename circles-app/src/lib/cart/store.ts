@@ -1,9 +1,9 @@
 import {browser} from '$app/environment';
 import {writable, derived, get} from 'svelte/store';
 import {getMarketClient} from '$lib/sdk/marketClient';
-import {MARKET_OPERATOR, GNOSIS_CHAIN_ID_NUM} from '$lib/config/market';
 import type {AggregatedCatalogItem} from '$lib/market/types';
 import {pickFirstProductImageUrl} from '$lib/market/imageHelpers';
+import {gnosisConfig} from "$lib/circlesConfig";
 
 type CheckoutResult = { orderId: string; paymentReference: string; basketId: string };
 
@@ -170,11 +170,15 @@ async function ensureBasketId(buyer: string): Promise<string> {
     cartState.update((s) => ({ ...s, basket: null }));
   }
 
+  if (!gnosisConfig.production.marketOperator) {
+    throw new Error(`gnosisConfig.production.marketOperator is not set.`)
+  }
+
   const client = getMarketClient();
   const created = await client.cart.createBasket({
     buyer,
-    operator: MARKET_OPERATOR,
-    chainId: GNOSIS_CHAIN_ID_NUM,
+    operator: gnosisConfig.production.marketOperator,
+    chainId: gnosisConfig.production.marketChainId,
   });
 
   writeBasketId(created.basketId);

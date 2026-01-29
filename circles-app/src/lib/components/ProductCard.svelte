@@ -1,6 +1,5 @@
 <script lang="ts">
   import type {AggregatedCatalogItem} from '$lib/market/types';
-  import {MARKET_OPERATOR, GNOSIS_CHAIN_ID_NUM, MARKET_API_BASE} from '$lib/config/market';
   import ProductViewer from '$lib/components/ProductViewer.svelte';
 
   interface Props {
@@ -23,8 +22,9 @@
   import ProductDetailsPopup from '$lib/market/ProductDetailsPopup.svelte';
   import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
   import ActionButton from '$lib/components/ActionButton.svelte';
+  import {gnosisConfig} from "$lib/circlesConfig";
 
-  const OPERATOR = MARKET_OPERATOR;
+  const OPERATOR = gnosisConfig.production.marketOperator;
 
   const prod = $derived(getProduct(product));
   const offer = $derived(getFirstOffer(prod));
@@ -57,15 +57,15 @@
 
       const {offers} = await createOffersClientForAvatar({
         avatar: seller as any,
-        chainId: GNOSIS_CHAIN_ID_NUM,
+        chainId: gnosisConfig.production.marketChainId,
         ethereum: eth,
-        pinApiBase: MARKET_API_BASE,
+        pinApiBase: gnosisConfig.production.marketApiBase,
       });
 
       await offers.tombstone({
         avatar: seller as any,
         operator: OPERATOR as any,
-        chainId: GNOSIS_CHAIN_ID_NUM,
+        chainId: gnosisConfig.production.marketChainId,
         sku: prod?.sku ?? product.product?.sku,
       });
 
@@ -119,7 +119,7 @@
       props: {
         context: {
           operator: OPERATOR,
-          pinApiBase: MARKET_API_BASE,
+          pinApiBase: gnosisConfig.production.marketApiBase,
           draft,
           editMode: true,
         }

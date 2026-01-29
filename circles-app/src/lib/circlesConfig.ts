@@ -1,9 +1,23 @@
 import type { CirclesConfig } from '@circles-sdk/sdk';
+import type {Address} from "@circles-sdk/utils";
+
+export type AppConfig = CirclesConfig & {
+  ipfsGatewayBase?: string;
+  marketApiBase?: string;
+  marketOperator?: Address;
+  marketChainId?: number;
+  marketChainIdHex?: string;
+};
 
 export const MAX_PATH_STEPS = 250;
 
-export const chiadoConfig: { production: CirclesConfig, rings: CirclesConfig } = {
+export const chiadoConfig: { production: AppConfig, rings: AppConfig } = {
   production: {
+    ipfsGatewayBase: 'https://da08cae2-8b50-45dc-80b9-48925be78ec8.myfilebase.com',
+    marketApiBase: 'http://box:18080/',
+    marketOperator: '0x20ced4ed3b1651b832a77e13e54ea5cb14c8b95b',
+    marketChainId: 100,
+    marketChainIdHex: "0x64",
     circlesRpcUrl: 'https://chiado-rpc.aboutcircles.com',
     pathfinderUrl: 'https://chiado-pathfinder.aboutcircles.com',
     profileServiceUrl: 'https://chiado-pathfinder.aboutcircles.com/profiles/',
@@ -15,6 +29,11 @@ export const chiadoConfig: { production: CirclesConfig, rings: CirclesConfig } =
   },
   // rings are not deployed on chiado yet
   rings: {
+    ipfsGatewayBase: 'https://da08cae2-8b50-45dc-80b9-48925be78ec8.myfilebase.com',
+    marketApiBase: 'http://box:18080/',
+    marketOperator: '0x20ced4ed3b1651b832a77e13e54ea5cb14c8b95b',
+    marketChainId: 100,
+    marketChainIdHex: "0x64",
     circlesRpcUrl: 'https://chiado-rpc.aboutcircles.com',
     pathfinderUrl: 'https://chiado-pathfinder.aboutcircles.com',
     profileServiceUrl: 'https://chiado-pathfinder.aboutcircles.com/profiles/',
@@ -26,8 +45,13 @@ export const chiadoConfig: { production: CirclesConfig, rings: CirclesConfig } =
   }
 };
 
-export const gnosisConfig: { production: CirclesConfig, rings: CirclesConfig } = {
+export const gnosisConfig: { production: AppConfig, rings: AppConfig } = {
   production: {
+    ipfsGatewayBase: 'https://da08cae2-8b50-45dc-80b9-48925be78ec8.myfilebase.com',
+    marketApiBase: 'http://box:18080/',
+    marketOperator: '0x20ced4ed3b1651b832a77e13e54ea5cb14c8b95b',
+    marketChainId: 100,
+    marketChainIdHex: "0x64",
     circlesRpcUrl: 'http://localhost:8545',
     pathfinderUrl: 'https://pathfinder.aboutcircles.com',
     profileServiceUrl: 'https://rpc.aboutcircles.com/profiles/',
@@ -41,6 +65,11 @@ export const gnosisConfig: { production: CirclesConfig, rings: CirclesConfig } =
     baseGroupFactory: '0xD0B5Bd9962197BEaC4cbA24244ec3587f19Bd06d'
   },
   rings: {
+    ipfsGatewayBase: 'https://da08cae2-8b50-45dc-80b9-48925be78ec8.myfilebase.com',
+    marketApiBase: 'http://box:18080/',
+    marketOperator: '0x20ced4ed3b1651b832a77e13e54ea5cb14c8b95b',
+    marketChainId: 100,
+    marketChainIdHex: "0x64",
     circlesRpcUrl: 'https://static.94.138.251.148.clients.your-server.de/rpc/',
     pathfinderUrl: 'https://pathfinder.aboutcircles.com',
     profileServiceUrl: 'https://static.94.138.251.148.clients.your-server.de/profiles/',

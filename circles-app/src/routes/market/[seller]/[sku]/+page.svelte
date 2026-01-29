@@ -10,9 +10,9 @@
   import {avatarState} from '$lib/stores/avatar.svelte';
   import {addToCart, cartState} from '$lib/cart/store';
   import { getMarketClient } from '$lib/sdk/marketClient';
-  import { MARKET_OPERATOR } from '$lib/config/market';
   import { createLoadable } from '$lib/utils/loadable';
   import { getAddToCartState } from '$lib/cart/addToCartUi';
+  import {gnosisConfig} from "$lib/circlesConfig";
 
   // Derive seller and SKU from SvelteKit's $page store
     const params = $derived($page.params as { seller: string; sku: string });
@@ -29,7 +29,7 @@
       await loader.run(async () => {
         const seller = normalizeAddress(params.seller);
         const sku = params.sku;
-        const catalog = getMarketClient().catalog.forOperator(MARKET_OPERATOR);
+        const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
         const p = await catalog.fetchProductForSellerAndSku(seller, sku);
         if (!p) {
           throw new Error('Product not found for this seller / sku.');

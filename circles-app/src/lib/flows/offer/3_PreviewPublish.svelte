@@ -12,18 +12,16 @@
   import {Contract, JsonRpcProvider} from 'ethers';
 
   import type {OfferFlowContext} from '$lib/flows/offer/types';
-  import {GNOSIS_CHAIN_ID_NUM} from '$lib/config/market';
   import {ensureGnosisChain} from '$lib/chain/gnosis';
   import {ipfsGatewayUrl} from '$lib/utils/ipfs';
   import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
   import {resolveImagesToHttpUrls} from '$lib/media/resolveImageUrl';
   import {createOffersClientForAvatar} from '$lib/offers/client';
   import {getWalletProvider} from '$lib/ethereum/getWalletProvider';
+  import {gnosisConfig} from "$lib/circlesConfig";
 
   interface Props { context: OfferFlowContext; }
   let { context }: Props = $props();
-
-  const CHAIN_ID_NUM = GNOSIS_CHAIN_ID_NUM;
 
   let selectedGateway: string = $state((context.draft?.paymentGateway ?? '') as string);
   $effect(() => { selectedGateway = (context.draft?.paymentGateway ?? '') as string; });
@@ -127,7 +125,7 @@
 
     const { offers: client, media } = await createOffersClientForAvatar({
       avatar: seller,
-      chainId: CHAIN_ID_NUM,
+      chainId: gnosisConfig.production.marketChainId,
       ethereum: eth,
       pinApiBase: (context as any).pinApiBase,
       gatewayUrlForCid: (cid) => ipfsGatewayUrl(cid),
@@ -155,7 +153,7 @@
         context.result = await client.appendOffer({
           avatar: seller,
           operator: context.operator,
-          chainId: CHAIN_ID_NUM,
+          chainId: gnosisConfig.production.marketChainId,
           paymentGateway: context.draft?.paymentGateway as Address,
           product: {
             sku: draft.sku,

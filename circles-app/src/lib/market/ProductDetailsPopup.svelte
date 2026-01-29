@@ -7,9 +7,9 @@
   import {addToCart, cartState} from '$lib/cart/store';
   import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
   import { getMarketClient } from '$lib/sdk/marketClient';
-  import { MARKET_OPERATOR } from '$lib/config/market';
   import { getAddToCartState } from '$lib/cart/addToCartUi';
   import { createLoadable } from '$lib/utils/loadable';
+  import {gnosisConfig} from "$lib/circlesConfig";
 
   interface Props {
     seller: string; // EVM address
@@ -27,7 +27,7 @@
   async function loadProduct(): Promise<void> {
     await loader.run(async () => {
       const s = normalizeAddress(seller);
-      const catalog = getMarketClient().catalog.forOperator(MARKET_OPERATOR);
+      const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
       const p = await catalog.fetchProductForSellerAndSku(s, sku);
       if (!p) throw new Error('Product not found for this seller / sku.');
       return p;
