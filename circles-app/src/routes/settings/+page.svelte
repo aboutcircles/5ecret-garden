@@ -10,7 +10,6 @@
   import ProfileExplorer from '$lib/profile/ProfileExplorer.svelte';
   import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
   import { LogOut as LLogOut } from 'lucide';
-  import { MARKET_API_BASE } from '$lib/config/market';
   import type { Address } from '@circles-sdk/utils';
   import ActionButtonDropDown from "$lib/components/layout/ActionButtonDropDown.svelte";
   import ActionButtonBar from "$lib/components/layout/ActionButtonBar.svelte";
@@ -19,9 +18,10 @@
   import { getProfilesBindings } from '$lib/offers/profilesBindings';
   import { getSettings as getMarketSettings, saveSettings as saveMarketSettings, parseAddresses } from '$lib/stores/marketSettings.svelte';
   import { CirclesStorage } from '$lib/utils/storage';
+  import {gnosisConfig} from "$lib/circlesConfig";
 
   // Profile editing is delegated to ProfileExplorer to keep a single flow.
-  const pinApiBase = MARKET_API_BASE;
+  const pinApiBase = gnosisConfig.production.marketApiBase;
   const avatarAddress = $derived(
     (avatarState.avatar?.address ??
       avatarState.avatar?.avatarInfo?.avatar ??

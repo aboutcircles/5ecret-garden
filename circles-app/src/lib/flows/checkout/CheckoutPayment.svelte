@@ -6,7 +6,6 @@
 
   // NEW: imports to resolve PayAction and open send flow (Svelte 5 runes aware)
   import { getMarketClient } from '$lib/sdk/marketClient';
-  import { MARKET_OPERATOR } from '$lib/config/market';
   import { resolvePayTo } from '$lib/market/catalogHelpers';
   import { popupControls } from '$lib/stores/popup';
   import SendFlow from '$lib/flows/send/4_Send.svelte';
@@ -17,6 +16,7 @@
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { ethers } from 'ethers';
   import { CirclesConverter } from '@circles-sdk/utils';
+  import {gnosisConfig} from "$lib/circlesConfig";
 
   const paymentReference = $derived($cartState.lastCheckout?.paymentReference ?? null);
   const basketId = $derived($cartState.basket?.basketId ?? null);
@@ -83,7 +83,7 @@
     const recipients = new Set<string>();
     let total = 0;
 
-    const catalog = getMarketClient().catalog.forOperator(MARKET_OPERATOR);
+    const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
     const productCache = new Map<string, any>();
 
     async function fetchOfferFallback(seller: string, sku: string): Promise<any | null> {

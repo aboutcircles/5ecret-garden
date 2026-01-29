@@ -4,7 +4,6 @@
     import {popupControls} from '$lib/stores/popup';
     import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
     import ProductCard from '$lib/components/ProductCard.svelte';
-    import { MARKET_API_BASE, MARKET_OPERATOR } from '$lib/config/market';
     import { getMarketClient } from '$lib/sdk/marketClient';
     import type { AggregatedCatalogItem } from '$lib/market/types';
     import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
@@ -14,11 +13,12 @@
     import { getSettings as getMarketSettings } from '$lib/stores/marketSettings.svelte';
     import Tabs from '$lib/components/tabs/Tabs.svelte';
     import Tab from '$lib/components/tabs/Tab.svelte';
+    import {gnosisConfig} from "$lib/circlesConfig";
 
     // Defaults (as requested)
-    const OPERATOR: `0x${string}` = MARKET_OPERATOR;
+    const OPERATOR: `0x${string}` = gnosisConfig.production.marketOperator;
 
-    const API_BASE = MARKET_API_BASE;
+    const API_BASE = gnosisConfig.production.marketApiBase;
 
     type ProductLike = AggregatedCatalogItem;
 
@@ -60,7 +60,7 @@
       const addr = (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '') as `0x${string}` | '';
       const extras = getMarketSettings(addr).extraOperators || [];
       const set = new Set<string>();
-      set.add((MARKET_OPERATOR as string).toLowerCase());
+      set.add((gnosisConfig.production.marketOperator as string).toLowerCase());
       for (const o of extras) {
         const s = (o || '').toLowerCase();
         if (s && /^0x[0-9a-f]{40}$/.test(s)) set.add(s);
@@ -77,7 +77,7 @@
     $effect(() => {
       const ops = scanOperators;
       if (!ops || ops.length === 0) {
-        selectedOperator = MARKET_OPERATOR as `0x${string}`;
+        selectedOperator = gnosisConfig.production.marketOperator as `0x${string}`;
         return;
       }
       if (!selectedOperator || !ops.includes(selectedOperator)) {
@@ -119,7 +119,7 @@
       hasMore = false;
 
       try {
-        const op = (selectedOperator ?? (MARKET_OPERATOR as `0x${string}`)) as `0x${string}`;
+        const op = (selectedOperator ?? (gnosisConfig.production.marketOperator as `0x${string}`)) as `0x${string}`;
         const catalog = getMarketClient().catalog.forOperator(op);
         const page = await catalog.fetchCatalogPage({ avatars: getScanAvatars(), pageSize: PAGE_SIZE, chainId: 100 });
         products = page.items;
@@ -139,7 +139,7 @@
       loading = true;
       errorMsg = '';
       try {
-        const op = (selectedOperator ?? (MARKET_OPERATOR as `0x${string}`)) as `0x${string}`;
+        const op = (selectedOperator ?? (gnosisConfig.production.marketOperator as `0x${string}`)) as `0x${string}`;
         const catalog = getMarketClient().catalog.forOperator(op);
         const page = await catalog.fetchCatalogPage({ avatars: getScanAvatars(), pageSize: PAGE_SIZE, chainId: 100, cursor: nextCursor });
         products = products.concat(page.items);
@@ -191,7 +191,7 @@
     // Basket button moved to global header; inline basket trigger removed here
 
     function openCreateOffer() {
-      const op = (selectedOperator ?? (MARKET_OPERATOR as `0x${string}`)) as `0x${string}`;
+      const op = (selectedOperator ?? (gnosisConfig.production.marketOperator as `0x${string}`)) as `0x${string}`;
       popupControls.open({
         title: 'Create Offer',
         component: OfferStep1,

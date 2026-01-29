@@ -39,13 +39,13 @@
     import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
     import type { AggregatedCatalogItem } from '$lib/market/types';
     import { getMarketClient } from '$lib/sdk/marketClient';
-    import { MARKET_OPERATOR } from '$lib/config/market';
     // Namespaces explorer (read-only) for other profiles
     import ProfileNamespaces from '$lib/profile/ProfileNamespaces.svelte';
     import { loadProfileOrInit } from '@circles-market/sdk';
     import type { ProfilesBindings } from '@circles-market/sdk';
     import { createCirclesSdkProfilesBindings } from '@circles-profile/core';
     import { get } from 'svelte/store';
+    import {gnosisConfig} from "$lib/circlesConfig";
 
     interface Props {
         address: Address | undefined;
@@ -97,7 +97,7 @@
         offersError = '';
         offers = [];
         try {
-            const catalog = getMarketClient().catalog.forOperator(MARKET_OPERATOR);
+            const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
             const items = await catalog.fetchSellerCatalog(seller);
             // Defensive filter (API already filters by seller)
             offers = items.filter((p) => (p.seller ?? '').toLowerCase() === seller.toLowerCase());

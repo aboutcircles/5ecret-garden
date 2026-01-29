@@ -9,11 +9,11 @@
   import type {AggregatedCatalogItem} from '$lib/market/types';
   import { popupControls } from '$lib/stores/popup';
   import { getMarketClient } from '$lib/sdk/marketClient';
-  import { MARKET_OPERATOR } from '$lib/config/market';
   import {pickFirstProductImageUrl} from '$lib/market/imageHelpers';
   import CheckoutForms from '$lib/flows/checkout/CheckoutForms.svelte';
   import CheckoutReview from '$lib/flows/checkout/CheckoutReview.svelte';
   import {formatCurrency} from '$lib/utils/money';
+  import {gnosisConfig} from "$lib/circlesConfig";
 
   // ————————————————————————————————————————————
   // Product metadata resolver via shared catalog client
@@ -107,7 +107,7 @@
   // Lazily fetch missing products for each line in basket
   $effect(() => {
     const items = $cartState.basket?.items ?? [];
-    const catalog = getMarketClient().catalog.forOperator(MARKET_OPERATOR);
+    const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
     for (const line of items) {
       const seller = line.seller as string | undefined;
       const sku = line.orderedItem?.sku as string | undefined;

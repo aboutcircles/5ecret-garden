@@ -5,10 +5,10 @@
     import { popupControls } from '$lib/stores/popup';
     import CheckoutPayment from './CheckoutPayment.svelte';
     import { getMarketClient } from '$lib/sdk/marketClient';
-    import { MARKET_OPERATOR } from '$lib/config/market';
     import type { AggregatedCatalogItem } from '$lib/market/types';
     import { pickFirstProductImageUrl } from '$lib/market/imageHelpers';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
+    import {gnosisConfig} from "$lib/circlesConfig";
 
     let localError: string | null = $state(null);
     let submitting = $state(false);
@@ -71,7 +71,7 @@
 
     // Background fetch of product metadata
     $effect(() => {
-        const catalog = getMarketClient().catalog.forOperator(MARKET_OPERATOR);
+        const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
         for (const line of lines) {
             const seller = line?.seller as string | undefined;
             const sku = line?.orderedItem?.sku as string | undefined;

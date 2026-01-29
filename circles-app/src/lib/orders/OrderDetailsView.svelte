@@ -252,9 +252,9 @@
   import { onMount } from 'svelte';
   import { getProduct, pickProductImageUrl } from '$lib/market/catalogHelpers';
   import { getMarketClient } from '$lib/sdk/marketClient';
-  import { MARKET_OPERATOR } from '$lib/config/market';
   import { popupControls, type PopupContentDefinition } from '$lib/stores/popup';
   import ProductDetailsPopup from '$lib/market/ProductDetailsPopup.svelte';
+  import {gnosisConfig} from "$lib/circlesConfig";
 
   interface Props {
     snapshot: OrderSnapshot | null | undefined;
@@ -523,7 +523,7 @@
         return;
       }
 
-      const catalog = getMarketClient().catalog.forOperator(MARKET_OPERATOR);
+      const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
       const prod = await catalog.fetchProductForSellerAndSku(String(evm), String(sku));
       if (!prod) {
         resolved[i] = { name: null, imageUrl: null };
