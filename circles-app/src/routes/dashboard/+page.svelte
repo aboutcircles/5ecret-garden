@@ -6,6 +6,9 @@
 
   import OverviewPanel from './OverviewPanel.svelte';
   import TransactionHistoryPanel from './TransactionHistoryPanel.svelte';
+  import TrustEventsPanel from './TrustEventsPanel.svelte';
+  import Tabs from '$lib/components/tabs/Tabs.svelte';
+  import Tab from '$lib/components/tabs/Tab.svelte';
 
   import { popupControls } from '$lib/stores/popUp.svelte';
   import Balances from '$lib/pages/Balances.svelte';
@@ -14,6 +17,7 @@
 
   import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
   import Send from '$lib/flows/send/1_To.svelte';
+  import Profile from '$lib/pages/Profile.svelte';
 
   // lucide (standalone) icon nodes
   import {
@@ -27,9 +31,58 @@
   import { initTransactionHistoryStore } from '$lib/stores/transactionHistory';
   import type { CirclesEvent } from '@aboutcircles/sdk-rpc';
   import { page } from '$app/stores';
+  import { goto } from '$app/navigation';
+  import { getGroupName } from '$lib/stores/groupNameCache';
+  import type { Address } from '@aboutcircles/sdk-types';
 
   // Read transaction hash from URL for deep-linking
   let highlightTx = $derived($page.url.searchParams.get('tx') || undefined);
+
+  // Read profile address from URL for deep-linking to profile modal
+  let profileAddress = $derived($page.url.searchParams.get('profile') || undefined);
+
+  // Track if we've already opened the profile modal (avoid re-opening on every render)
+  let profileModalOpened = $state<string | null>(null);
+
+  // Open profile modal when URL has profile param
+  $effect(() => {
+    if (profileAddress && profileAddress !== profileModalOpened) {
+      profileModalOpened = profileAddress;
+      popupControls.open({
+        title: 'Profile',
+        component: Profile,
+        props: { address: profileAddress as Address },
+        onClose: () => {
+          // Clear profile param from URL when modal closes
+          profileModalOpened = null;
+          const url = new URL(window.location.href);
+          url.searchParams.delete('profile');
+          goto(url.toString(), { replaceState: true, keepFocus: true, noScroll: true });
+        },
+      });
+    }
+  });
+
+  // Active tab for dashboard - derived directly from URL (single source of truth)
+  let activeTab = $derived($page.url.searchParams.get('tab') || 'transactions');
+
+  // Update URL when tab changes (user clicks tab)
+  function handleTabChange(newTab: string) {
+    const url = new URL(window.location.href);
+    const currentUrlTab = url.searchParams.get('tab') || 'transactions';
+
+    // Skip if URL already matches (avoid redundant navigation)
+    if (newTab === currentUrlTab) return;
+
+    url.searchParams.set('tab', newTab);
+
+    // Clear tx param when switching away from transactions tab
+    if (newTab !== 'transactions') {
+      url.searchParams.delete('tx');
+    }
+
+    goto(url.toString(), { replaceState: true, keepFocus: true, noScroll: true });
+  }
 
   let mintableAmount: number = $state(0);
   let unsubscribeEvents: (() => void) | null = null;
@@ -202,14 +255,26 @@
   // Dust threshold: 0.01 CRC (same as Balances.svelte)
   const DUST_THRESHOLD = 10_000_000_000_000_000n;
 
+  /**
+   * Check if a token is a "group token" - either:
+   * 1. tokenType is CrcV2_RegisterGroup (isGroup = true)
+   * 2. tokenOwner is a known group (ERC20 wrapper of a group token)
+   */
+  function isGroupToken(balance: { isGroup: boolean; tokenOwner: Address }): boolean {
+    if (balance.isGroup) return true;
+    // Check if tokenOwner is a known group (from our static cache)
+    const groupName = getGroupName(balance.tokenOwner);
+    return !!groupName;
+  }
+
   let personalToken: number = $derived(
     $circlesBalances?.data?.filter(
-      (balance) => !balance.isGroup && BigInt(balance.attoCircles) >= DUST_THRESHOLD
+      (balance) => !isGroupToken(balance) && BigInt(balance.attoCircles) >= DUST_THRESHOLD
     ).length
   );
   let groupToken: number = $derived(
     $circlesBalances?.data?.filter(
-      (balance) => balance.isGroup && BigInt(balance.attoCircles) >= DUST_THRESHOLD
+      (balance) => isGroupToken(balance) && BigInt(balance.attoCircles) >= DUST_THRESHOLD
     ).length
   );
 
@@ -264,12 +329,9 @@
   <!-- Meta -->
   <svelte:fragment slot="meta">
     {#if !avatarState.isGroup}
-      <button class="hover:underline" onclick={openBalances} type="button">
-        {personalToken} individual tokens
-      </button>
-      <span class="mx-1.5">•</span>
-      <button class="hover:underline" onclick={openBalances} type="button">
-        {groupToken} group tokens
+      <button class="hover:underline inline-flex items-center gap-1" onclick={openBalances} type="button">
+        <span>{personalToken + groupToken} tokens</span>
+        <Lucide icon={LBarChart3} size={14} class="opacity-60" />
       </button>
     {/if}
   </svelte:fragment>
@@ -372,6 +434,24 @@
   {#if avatarState.isGroup}
     <OverviewPanel />
   {:else}
-    <TransactionHistoryPanel {highlightTx} />
+    <div class="mb-4">
+      <Tabs
+        selected={activeTab}
+        variant="bordered"
+        size="sm"
+        on:change={(e) => handleTabChange(e.detail)}
+      >
+        <Tab id="transactions" title="Transactions">
+          <div class="pt-4">
+            <TransactionHistoryPanel {highlightTx} />
+          </div>
+        </Tab>
+        <Tab id="trusts" title="Trusts">
+          <div class="pt-4">
+            <TrustEventsPanel />
+          </div>
+        </Tab>
+      </Tabs>
+    </div>
   {/if}
 </PageScaffold>

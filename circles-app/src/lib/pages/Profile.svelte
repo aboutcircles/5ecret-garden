@@ -46,6 +46,13 @@
 
   let otherAvatar: AvatarInfo | undefined = $state();
   let profile: Profile | undefined = $state();
+
+  // Derived: detect if this is a group from avatar type OR profile description
+  let isGroupProfile = $derived(
+    otherAvatar?.type === 'CrcV2_RegisterGroup' ||
+    profile?.description?.toLowerCase().includes('member of this group')
+  );
+
   let members: Array<{ address: Address; expiryTime: number }> | undefined =
     $state(undefined);
   let totalMemberCount: number = $state(0);
@@ -147,7 +154,9 @@
 
     trustRow = $contacts?.data[address]?.row;
 
-    const isGroup: boolean = otherAvatar?.type === 'CrcV2_RegisterGroup';
+    // Detect group/human from type OR from profile description (fallback when type is missing)
+    const descriptionSuggestsGroup = profile?.description?.toLowerCase().includes('member of this group');
+    const isGroup: boolean = otherAvatar?.type === 'CrcV2_RegisterGroup' || descriptionSuggestsGroup;
     const isHuman: boolean = otherAvatar?.type === 'CrcV2_RegisterHuman';
 
     console.log('Profile initialization:', {
@@ -155,6 +164,7 @@
       type: otherAvatar?.type,
       isGroup,
       isHuman,
+      descriptionSuggestsGroup,
     });
 
     if (isGroup) {
@@ -327,11 +337,18 @@
   {/if}
 
   <div class="my-6 flex flex-row gap-x-2">
-    <span class="bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm">
-      {getTypeString(otherAvatar?.type || '')}
-    </span>
+    {#if isGroupProfile}
+      <span class="bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm">Group</span>
+    {:else if otherAvatar?.type}
+      {@const typeStr = getTypeString(otherAvatar.type)}
+      {#if typeStr && typeStr !== 'None' && typeStr !== 'Unknown' && typeStr !== ''}
+        <span class="bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm">
+          {typeStr}
+        </span>
+      {/if}
+    {/if}
     <AddressComponent address={address ?? '0x0'} />
-    {#if otherAvatar?.type === 'CrcV2_RegisterGroup'}
+    {#if isGroupProfile}
       <button
         onclick={() => {
           goto('/groups/metrics/' + address);

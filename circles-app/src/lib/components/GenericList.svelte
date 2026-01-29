@@ -12,69 +12,48 @@
       ended: boolean;
     }>;
     row: Component<T>;
-    /** Additional props to pass to each row component */
     rowProps?: Record<string, any>;
-    /** Show initial loading spinner (before any data loads) */
     isInitialLoading?: boolean;
   }
   let { store, row, rowProps = {}, isInitialLoading = false }: Props = $props();
 
-  let observer: IntersectionObserver | null = null;
   let anchor: HTMLElement | undefined = $state();
-  let hasError = $state(false);
   let isLoadingMore = $state(false);
+  let observer: IntersectionObserver | null = null;
 
-  const setupObserver = () => {
-    if (observer) observer.disconnect();
-    if (anchor && store && !$store?.ended && !hasError && !isLoadingMore) {
-      observer = new IntersectionObserver(async (entries) => {
-        if (entries[0]?.isIntersecting && $store && !$store.ended && !isLoadingMore) {
-          observer?.disconnect();
-          isLoadingMore = true;
-          try {
-            await $store.next();
-            hasError = false;
-          } catch {
-            hasError = true;
-          } finally {
-            isLoadingMore = false;
-          }
-          setupObserver();
-        }
-      });
-      observer.observe(anchor);
-    }
-  };
-  const handleRetry = async () => {
-    if (!$store || isLoadingMore) return;
+  async function loadMore() {
+    if (!$store || $store.ended || isLoadingMore) return;
     isLoadingMore = true;
     try {
       await $store.next();
-      hasError = false;
-      setupObserver();
-    } catch {
-      // Error handled by hasError state
     } finally {
       isLoadingMore = false;
     }
-  };
+  }
+
+  // Simple intersection observer - triggers once when anchor visible
   $effect(() => {
-    if (store && anchor) setupObserver();
+    if (!anchor || !store) return;
+
+    observer?.disconnect();
+
+    if ($store?.ended) return;
+
+    observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && !isLoadingMore && !$store?.ended) {
+          loadMore();
+        }
+      },
+      { rootMargin: '50px' }
+    );
+    observer.observe(anchor);
   });
+
   onDestroy(() => {
     observer?.disconnect();
-    observer = null;
   });
 </script>
-
-{#if isLoadingMore}
-  <div
-    class="fixed bottom-24 left-1/2 -translate-x-1/2 bg-base-100 shadow-lg rounded-full px-4 py-2 flex items-center gap-2 z-40"
-  >
-    <span class="loading loading-spinner loading-sm text-primary"></span>
-    <span class="text-sm">Loading more...</span>
-  </div>
-{/if}
 
 <div class="w-full flex flex-col gap-y-1.5 py-2" role="list">
   {#each $store?.data ?? [] as item, index (getKeyFromItem(item) + '-' + index)}
@@ -82,34 +61,23 @@
     <SvelteComponent_1 {item} {...rowProps} />
   {/each}
 
-  <div
-    class="text-center py-4"
-    bind:this={anchor}
-    aria-live="polite"
-    aria-busy={$store && !$store?.ended && !hasError ? 'true' : 'false'}
-  >
+  <div bind:this={anchor} class="text-center py-4">
     {#if isInitialLoading}
-      <div class="flex justify-center py-4">
-        <span class="loading loading-spinner loading-lg text-primary"></span>
+      <!-- Initial load spinner -->
+      <div class="flex items-center justify-center gap-2 py-4">
+        <span class="loading loading-spinner loading-md"></span>
+        <span class="text-base-content/60">Loading...</span>
+      </div>
+    {:else if isLoadingMore}
+      <!-- Loading more spinner -->
+      <div class="flex items-center justify-center gap-2 py-2">
+        <span class="loading loading-spinner loading-sm"></span>
+        <span class="text-sm text-base-content/70">Loading more...</span>
       </div>
     {:else if ($store?.data ?? []).length === 0 && $store?.ended}
       <span class="text-base-content/70">No items</span>
     {:else if $store?.ended}
       <span class="text-base-content/70">End of list</span>
-    {:else if hasError}
-      <span class="text-error">Error loading items</span>
-      <button class="ml-2 link link-primary" onclick={handleRetry}>Retry</button>
-    {:else if isLoadingMore}
-      <!-- Loading in progress - floating pill already visible, keep this minimal -->
-      <span class="text-base-content/50 text-sm">Loading...</span>
-    {:else}
-      <!-- Idle state - show Load More button for manual trigger -->
-      <button
-        class="btn btn-ghost btn-sm text-base-content/70"
-        onclick={handleRetry}
-      >
-        Load More
-      </button>
     {/if}
   </div>
 </div>

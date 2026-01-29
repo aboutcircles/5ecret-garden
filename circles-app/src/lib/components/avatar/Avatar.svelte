@@ -98,19 +98,19 @@
 {#if !profile}
   {#if view === 'horizontal'}
     <div
-      class="flex items-center gap-2 p-2 rounded-lg w-full animate-pulse"
-      style="min-height: 3rem;"
+      class="flex items-center gap-3 py-1 rounded-lg w-full animate-pulse"
+      style="min-height: 48px;"
     >
       {#if placeholderAvatar}
-        <div class="w-8 h-8 rounded-full bg-base-300 shrink-0"></div>
+        <div class="w-10 h-10 rounded-full bg-base-300/70 shrink-0"></div>
       {/if}
 
-      <div class="flex flex-col justify-center gap-1 min-w-0">
+      <div class="flex flex-col justify-center gap-1.5 min-w-0">
         {#if placeholderTop}
-          <div class="h-4 w-24 bg-base-300 rounded"></div>
+          <div class="h-4 w-28 bg-base-300/70 rounded"></div>
         {/if}
         {#if placeholderBottom}
-          <div class="h-3 w-16 bg-base-300 rounded"></div>
+          <div class="h-3 w-20 bg-base-300/70 rounded"></div>
         {/if}
       </div>
     </div>

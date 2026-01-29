@@ -46,7 +46,12 @@ export type GroupMetrics = {
 };
 
 export let groupMetrics: GroupMetrics = $state({});
-// @todo rework to use the new version
+
+/**
+ * Fetch group metrics using CirclesRpc aggregate queries.
+ * Uses the query API for statistical data (member counts, mint/redeem history)
+ * which is more efficient than SDK avatar methods for time-series data.
+ */
 export async function fetchGroupMetrics(
   circlesRpc: CirclesRpc,
   groupAddress: Address,
