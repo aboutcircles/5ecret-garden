@@ -53,9 +53,6 @@
         bind:value={profile.description}
         placeholder="Write a description (Markdown supported)…"
       />
-      <div class="text-xs opacity-70 mt-1">
-        Supports: bold/italic, links.
-      </div>
     </label>
 
     <label class="form-control">

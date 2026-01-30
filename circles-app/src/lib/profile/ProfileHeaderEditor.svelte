@@ -177,9 +177,6 @@
             readonly={readonly}
             editorClass="textarea textarea-bordered textarea-sm w-full"
         />
-        <div class="text-xs opacity-70 mt-1">
-            Supports: bold/italic, links.
-        </div>
     </label>
 
     <!-- Hidden file input for avatar upload -->

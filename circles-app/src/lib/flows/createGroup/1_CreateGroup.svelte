@@ -116,9 +116,6 @@
                 rows={4}
                 placeholder="What is this group about? (Markdown supported)…"
         />
-        <div class="text-xs opacity-70 mt-1">
-            Supports: bold/italic, links.
-        </div>
     </label>
 
     <!-- Row: Image -->
