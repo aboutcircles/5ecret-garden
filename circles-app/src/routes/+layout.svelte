@@ -26,11 +26,13 @@
   import { initTransactionHistoryStore } from '$lib/stores/transactionHistory';
   import { initContactStore } from '$lib/stores/contacts';
   import { initBalanceStore } from '$lib/stores/circlesBalances';
+  import { clearCart } from '$lib/cart/store';
   import { browser } from '$app/environment';
   import { PUBLIC_PLAUSIBLE_DOMAIN } from '$env/static/public';
   import { initGroupMetricsStore } from '$lib/stores/groupMetrics.svelte';
   import { circles } from '$lib/stores/circles';
   import type { Address } from '@circles-sdk/utils';
+  import { PersistentAuthContext } from '$lib/sdk/persistentAuthContext';
 
   import { watchAccount } from '@wagmi/core';
   import { config } from '../config';
@@ -82,6 +84,7 @@
   let { children }: Props = $props();
 
   let menuItems: { name: string; link: string }[] = $state([]);
+  let lastAvatarAddress: string | undefined = $state(undefined);
 
   onMount(async () => {
     if (
@@ -129,6 +132,15 @@
         initGroupMetricsStore($circles.circlesRpc, avatarState.avatar.address);
       }
     }
+  });
+
+  $effect(() => {
+    const currentAddress = avatarState.avatar?.address?.toLowerCase();
+    if (lastAvatarAddress && currentAddress && lastAvatarAddress !== currentAddress) {
+      new PersistentAuthContext().clear();
+      clearCart();
+    }
+    lastAvatarAddress = currentAddress;
   });
 
   // Toasts

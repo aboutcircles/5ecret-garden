@@ -41,6 +41,9 @@
 
     let selectedTab: TabId = $state('yours');
 
+    const hasOwnedGroups: boolean = $derived(ownedGroups.length > 0);
+    const hasMemberships: boolean = $derived(memberships.length > 0);
+
     async function loadGroups(): Promise<void> {
         if (!avatarState.avatar) return;
         groups = await createCMGroups(avatarState.avatar);
@@ -101,6 +104,21 @@
         // Load whenever SDK or owner changes
         void loadOwnedGroups();
         void loadMemberships();
+    });
+
+    $effect(() => {
+        const availableTabs: TabId[] = [];
+        if (hasOwnedGroups) {
+            availableTabs.push('yours');
+        }
+        if (hasMemberships) {
+            availableTabs.push('memberships');
+        }
+        availableTabs.push('all');
+
+        if (!availableTabs.includes(selectedTab)) {
+            selectedTab = availableTabs[0];
+        }
     });
 
     const canCreateGroup: boolean = $derived(!!$circles && !!CirclesStorage.getInstance().avatar);
@@ -166,8 +184,12 @@
     <div class="flex flex-col items-center rounded-md px-3 py-4 md:px-4 md:py-5 gap-y-3">
         <div class="w-full">
             <Tabs bind:selected={selectedTab} variant="boxed" size="sm">
-                <Tab id="yours" title="Own" />
-                <Tab id="memberships" title="Member in" />
+                {#if hasOwnedGroups}
+                    <Tab id="yours" title="Own" />
+                {/if}
+                {#if hasMemberships}
+                    <Tab id="memberships" title="Member in" />
+                {/if}
                 <Tab id="all" title="All groups" />
             </Tabs>
         </div>

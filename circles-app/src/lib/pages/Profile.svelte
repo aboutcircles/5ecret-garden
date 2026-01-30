@@ -324,7 +324,7 @@
     let selectedTab = $state<TabId>('common_connections');
     let commonConnectionsCount = $state(0);
 
-    const availableTabIds = $derived((): TabId[] => {
+    const availableTabIds = $derived((() => {
         const ids: TabId[] = ['common_connections'];
         if (members) ids.push('members');
         if (otherAvatar?.type === 'CrcV2_RegisterGroup') ids.push('collateral');
@@ -332,7 +332,7 @@
         ids.push('offers');
         ids.push('explore_namespaces');
         return ids;
-    });
+    })());
 
     $effect(() => {
         // When conditional tabs appear/disappear, ensure `selectedTab` always points to a visible tab.
