@@ -37,12 +37,18 @@ export function sanitizeUrl(raw: string): string | null {
     }
 
     const hasScheme = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(candidate);
-    if (!hasScheme) {
+    // Allow common bare domains like "example.com" by normalizing to https.
+    // This keeps relative paths ("/foo") and other scheme-less strings disallowed.
+    const looksLikeBareDomain = /^[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?)+(?::\d{2,5})?(?:\/[\S]*)?$/.test(
+        candidate,
+    );
+    const normalizedCandidate = !hasScheme && looksLikeBareDomain ? `https://${candidate}` : candidate;
+    if (!hasScheme && !looksLikeBareDomain) {
         return null;
     }
 
     try {
-        const u = new URL(candidate);
+        const u = new URL(normalizedCandidate);
         const isAllowed = allowedProtocols.has(u.protocol);
         if (!isAllowed) {
             return null;

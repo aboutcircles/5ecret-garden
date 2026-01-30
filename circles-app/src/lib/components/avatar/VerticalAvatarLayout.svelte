@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { AppProfileCore as Profile } from '$lib/profiles';
+  import Markdown from '$lib/components/markdown/Markdown.svelte';
 
   interface Props {
     profile: Profile | undefined;
@@ -31,9 +32,7 @@
   <div class="flex flex-col items-center p-4 gap-y-0.5">
     <span class="font-semibold text-base-content">{profile?.name}</span>
     {#if profile?.description}
-      <p class="text-sm text-base-content/70 mt-0">
-        {profile?.description}
-      </p>
+      <Markdown content={profile.description} class="prose prose-sm max-w-none text-base-content/70 mt-0" />
     {/if}
   </div>
 </div>

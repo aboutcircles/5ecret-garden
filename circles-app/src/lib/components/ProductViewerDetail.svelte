@@ -1,6 +1,7 @@
 <script lang="ts">
   import ProductGallery from '$lib/components/ProductGallery.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
+  import Markdown from '$lib/components/markdown/Markdown.svelte';
   import { normalizeProductImagesFromSchema } from '$lib/market/imageHelpers';
   import { fetchAvailabilityFeed, fetchInventoryFeed, mapAvailabilityToLabel } from '$lib/market/feeds';
   import type { QuantitativeValue } from '$lib/market/feeds';
@@ -8,6 +9,8 @@
   import type { Address } from '@circles-sdk/utils';
 
   import { ipfsGatewayUrl } from '$lib/utils/ipfs';
+  import { sanitizeUrl } from '$lib/components/markdown/ast';
+  import { jumpHref } from '$lib/components/markdown/jump';
 
   interface Meta {
     publishedAt?: number;
@@ -38,6 +41,14 @@
   }: Props = $props();
 
   const productImages = $derived<string[]>(normalizeProductImagesFromSchema(product));
+
+  const productUrlSafe = $derived(
+    typeof product?.url === 'string' ? sanitizeUrl(product.url) : null
+  );
+
+  const ipfsUrlSafe = $derived(
+    productCid ? sanitizeUrl(ipfsGatewayUrl(productCid)) : null
+  );
 
   const publishedDateText = $derived<string | null>(
     typeof meta?.publishedAt === 'number' ? new Date(meta.publishedAt * 1000).toLocaleDateString() : null,
@@ -121,9 +132,7 @@
 
   <!-- Description -->
   {#if product?.description}
-    <div class="prose prose-sm max-w-none">
-      {@html product.description}
-    </div>
+    <Markdown content={product.description} class="prose prose-sm max-w-none" />
   {/if}
 
   <!-- Offer Information -->
@@ -166,11 +175,16 @@
 
   <!-- External Links -->
   <div class="flex flex-wrap gap-3 items-center">
-    {#if product.url}
-      <a class="link link-primary" href={product.url} target="_blank" rel="noopener">Product URL</a>
+    {#if productUrlSafe}
+      <a class="link link-primary" href={jumpHref(productUrlSafe)} rel="noopener">
+        Product URL
+      </a>
     {/if}
-    {#if productCid}
-      <a class="link link-primary" href={ipfsGatewayUrl(productCid)} target="_blank" rel="noopener">IPFS</a>
+
+    {#if ipfsUrlSafe}
+      <a class="link link-primary" href={jumpHref(ipfsUrlSafe)} rel="noopener">
+        IPFS
+      </a>
     {/if}
   </div>
 

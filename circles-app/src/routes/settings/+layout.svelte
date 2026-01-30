@@ -894,6 +894,16 @@
         {#if !avatarAddress}
           <div class="p-4 text-sm opacity-70">Connect a Circles avatar to see your marketplace listings.</div>
         {:else}
+          <section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
+            <div class="flex items-center justify-between">
+              <div class="text-sm">
+                <strong>Create</strong>
+                <div class="text-xs opacity-70 mt-0.5">Publish a new listing to your marketplace catalog.</div>
+              </div>
+              <button class="btn btn-primary btn-sm" onclick={openCreateListing}>Create Listing</button>
+            </div>
+          </section>
+
           {#if marketLoading}
             <div class="flex flex-col items-center justify-center h-[50vh]">
               <div class="loading loading-spinner loading-lg" aria-label="loading"></div>
