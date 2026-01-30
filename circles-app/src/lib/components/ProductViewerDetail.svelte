@@ -10,7 +10,7 @@
 
   import { ipfsGatewayUrl } from '$lib/utils/ipfs';
   import { sanitizeUrl } from '$lib/components/markdown/ast';
-  import { jumpHref } from '$lib/components/markdown/jump';
+  import JumpLink from '$lib/components/jump/JumpLink.svelte';
 
   interface Meta {
     publishedAt?: number;
@@ -176,15 +176,11 @@
   <!-- External Links -->
   <div class="flex flex-wrap gap-3 items-center">
     {#if productUrlSafe}
-      <a class="link link-primary" href={jumpHref(productUrlSafe)} rel="noopener">
-        Product URL
-      </a>
+      <JumpLink className="link link-primary" url={productUrlSafe}>Product URL</JumpLink>
     {/if}
 
     {#if ipfsUrlSafe}
-      <a class="link link-primary" href={jumpHref(ipfsUrlSafe)} rel="noopener">
-        IPFS
-      </a>
+      <JumpLink className="link link-primary" url={ipfsUrlSafe}>IPFS</JumpLink>
     {/if}
   </div>
 

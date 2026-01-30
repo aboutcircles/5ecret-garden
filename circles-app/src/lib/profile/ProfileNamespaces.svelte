@@ -14,6 +14,7 @@
     import Lucide from '$lib/icons/Lucide.svelte';
     import { ChevronRight as LChevronRight, ChevronDown as LChevronDown, Trash2 as LTrash2, ExternalLink as LExternalLink } from 'lucide';
     import { ipfsGatewayUrl } from '$lib/utils/ipfs';
+    import JumpLink from '$lib/components/jump/JumpLink.svelte';
     import { getProfilesBindings } from '$lib/offers/profilesBindings';
 
     interface Props {
@@ -210,13 +211,12 @@
                             </div>
                             
                             <div class="shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <a class="btn btn-ghost btn-xs btn-square" 
-                                   href={ipfsGatewayUrl(item.chunkCid)} 
-                                   target="_blank" 
-                                   rel="noreferrer" 
+                                <JumpLink
+                                   className="btn btn-ghost btn-xs btn-square"
+                                   url={ipfsGatewayUrl(item.chunkCid)}
                                    title="View on IPFS">
                                     <Lucide icon={LExternalLink} size={14} />
-                                </a>
+                                </JumpLink>
                                 {#if !readonly}
                                     <button class="btn btn-ghost btn-xs btn-square text-error/70 hover:text-error" 
                                             title="Remove" 
