@@ -5,6 +5,7 @@ export type Root = { type: 'root'; children: Block[] };
 
 export type Block =
     | { type: 'paragraph'; children: Inline[] }
+    | { type: 'blankLine' }
     | { type: 'blockquote'; children: Block[] }
     | { type: 'list'; ordered: boolean; items: Inline[][] }
     | { type: 'code'; lang?: string; value: string };
@@ -80,7 +81,22 @@ function parseBlocks(src: string): Block[] {
 
         const isBlankLine = line.trim().length === 0;
         if (isBlankLine) {
-            i += 1;
+            // Preserve a single blank line between blocks.
+            // Tailwind's preflight resets default paragraph margins, so without an explicit
+            // representation there is no way to get a visual empty line in rendered HTML.
+            //
+            // Collapse multiple blank lines into one, and ignore leading/trailing blank lines.
+            while (i < lines.length && lines[i].trim().length === 0) {
+                i += 1;
+            }
+
+            const hasPreviousBlock = blocks.length > 0;
+            const hasNextNonBlankLine = i < lines.length;
+            const prevWasBlankLine = blocks[blocks.length - 1]?.type === 'blankLine';
+
+            if (hasPreviousBlock && hasNextNonBlankLine && !prevWasBlankLine) {
+                blocks.push({ type: 'blankLine' });
+            }
             continue;
         }
 
