@@ -170,12 +170,8 @@
           offer: {
             price: Number(draft.price),
             priceCurrency: draft.priceCurrency!,
-            availabilityFeed: draft.availabilityFeed || undefined,
-            inventoryFeed: draft.inventoryFeed || undefined,
             url: draft.url || undefined,
             availableDeliveryMethod: draft.availableDeliveryMethod || undefined,
-            fulfillmentEndpoint: draft.fulfillmentEndpoint || undefined,
-            fulfillmentTrigger: draft.fulfillmentTrigger || undefined,
             requiredSlots: Array.isArray(draft.requiredSlots)
               ? draft.requiredSlots
                 .map((s: unknown) => (typeof s === 'string' ? s.trim() : ''))
@@ -227,23 +223,11 @@
             {#if context.draft?.availableDeliveryMethod}
               <div class="truncate"><strong>Delivery method:</strong> {context.draft?.availableDeliveryMethod}</div>
             {/if}
-            {#if context.draft?.availabilityFeed}
-              <div class="truncate"><strong>Availability feed:</strong> {context.draft?.availabilityFeed}</div>
-            {/if}
-            {#if context.draft?.inventoryFeed}
-              <div class="truncate"><strong>Inventory feed:</strong> {context.draft?.inventoryFeed}</div>
-            {/if}
             {#if Array.isArray(context.draft?.requiredSlots) && context.draft?.requiredSlots.length > 0}
               <div class="truncate">
                 <strong>Checkout requirements:</strong>
                 {context.draft?.requiredSlots.join(', ')}
               </div>
-            {/if}
-            {#if context.draft?.fulfillmentEndpoint}
-              <div class="truncate"><strong>Fulfillment endpoint:</strong> {context.draft?.fulfillmentEndpoint}</div>
-            {/if}
-            {#if context.draft?.fulfillmentTrigger}
-              <div class="truncate"><strong>Fulfillment trigger:</strong> {context.draft?.fulfillmentTrigger}</div>
             {/if}
         </div>
     </div>
