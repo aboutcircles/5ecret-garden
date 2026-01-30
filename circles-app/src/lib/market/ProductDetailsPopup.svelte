@@ -62,19 +62,21 @@
       <span>{errorMsg}</span>
     </div>
   {:else if product && product?.product}
-    {#snippet actions()}
-      <div class="flex gap-2 w-full">
-        <button
-          type="button"
-          class="btn btn-outline w-full"
-          onclick={(e) => { e.stopPropagation(); void handleAddToBasket(); }}
-          disabled={!addState.canAdd}
-          title={addState.reason}
-        >
-          {addState.label}
-        </button>
-      </div>
-    {/snippet}
+    {#if addState.showButton}
+      {#snippet actions()}
+        <div class="flex gap-2 w-full">
+          <button
+            type="button"
+            class="btn btn-outline w-full"
+            onclick={(e) => { e.stopPropagation(); void handleAddToBasket(); }}
+            disabled={!addState.canAdd}
+            title={addState.reason}
+          >
+            {addState.label}
+          </button>
+        </div>
+      {/snippet}
+    {/if}
 
     <ProductViewer
       product={product.product}

@@ -13,6 +13,8 @@ export type AddToCartState = {
   canAdd: boolean;
   label: string;
   reason?: string;
+  /** Whether the button should be shown at all. False for products without fulfillment link. */
+  showButton: boolean;
 };
 
 export function getAddToCartState(inputs: AddToCartInputs): AddToCartState {
@@ -20,19 +22,21 @@ export function getAddToCartState(inputs: AddToCartInputs): AddToCartState {
   const offer = inputs.offer ?? (product?.product ? getFirstOffer(product.product) : null);
   const payTo = offer ? resolvePayTo(offer) : { address: null };
   const hasPay = !!(payTo && (payTo as any).address);
+  const hasFulfillmentLink = !!offer?.availabilityFeed;
 
-  if (!currentAvatar) {
-    return { canAdd: false, label: UI_COPY.addToBasket, reason: UI_COPY.connectAvatarFirst };
-  }
   if (!offer) {
-    return { canAdd: false, label: UI_COPY.addToBasket, reason: 'No offer available' };
+    return { canAdd: false, label: UI_COPY.addToBasket, reason: 'No offer available', showButton: true };
+  }
+  // Products without a fulfillment link cannot be bought - hide the button entirely
+  if (!hasFulfillmentLink) {
+    return { canAdd: false, label: UI_COPY.addToBasket, showButton: false };
   }
   if (!hasPay) {
-    return { canAdd: false, label: UI_COPY.addToBasket, reason: 'This item can’t be purchased yet' };
+    return { canAdd: false, label: UI_COPY.addToBasket, reason: "This item can't be purchased yet", showButton: true };
   }
   if (cartLoading) {
     // Disabled while cart is mutating to avoid duplicate adds
-    return { canAdd: false, label: UI_COPY.addToBasket, reason: UI_COPY.basketUpdating };
+    return { canAdd: false, label: UI_COPY.addToBasket, reason: UI_COPY.basketUpdating, showButton: true };
   }
-  return { canAdd: true, label: UI_COPY.addToBasket };
+  return { canAdd: true, label: UI_COPY.addToBasket, showButton: true };
 }

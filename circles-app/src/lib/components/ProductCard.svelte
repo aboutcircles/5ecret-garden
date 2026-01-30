@@ -164,15 +164,17 @@
     </div>
   {/if}
 
-  <button
-      type="button"
-      class="btn btn-sm btn-outline"
-      onclick={(e) => { e.stopPropagation(); handleAddToBasket(); }}
-      disabled={!addState.canAdd}
-          title={addState.reason}
-        >
-          {addState.label}
-  </button>
+  {#if addState.showButton}
+    <button
+        type="button"
+        class="btn btn-sm btn-outline"
+        onclick={(e) => { e.stopPropagation(); handleAddToBasket(); }}
+        disabled={!addState.canAdd}
+            title={addState.reason}
+          >
+            {addState.label}
+    </button>
+  {/if}
 {/snippet}
 
 {#if product}
