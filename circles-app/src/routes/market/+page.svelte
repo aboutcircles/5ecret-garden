@@ -10,7 +10,6 @@
     import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/types/actions';
     import { avatarState } from '$lib/stores/avatar.svelte';
-    import { getSettings as getMarketSettings } from '$lib/stores/marketSettings.svelte';
     import Tabs from '$lib/components/tabs/Tabs.svelte';
     import Tab from '$lib/components/tabs/Tab.svelte';
     import {gnosisConfig} from "$lib/circlesConfig";
@@ -54,18 +53,10 @@
 
     // ————————————————————————————————————————————
     // Operators tabs (API supports one operator at a time)
-    // Build per-avatar operator list: default + extraOperators from settings
+    // Currently fixed to the default operator.
     // ————————————————————————————————————————————
     function getScanOperators(): `0x${string}`[] {
-      const addr = (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '') as `0x${string}` | '';
-      const extras = getMarketSettings(addr).extraOperators || [];
-      const set = new Set<string>();
-      set.add((gnosisConfig.production.marketOperator as string).toLowerCase());
-      for (const o of extras) {
-        const s = (o || '').toLowerCase();
-        if (s && /^0x[0-9a-f]{40}$/.test(s)) set.add(s);
-      }
-      return Array.from(set) as `0x${string}`[];
+      return [gnosisConfig.production.marketOperator as `0x${string}`];
     }
 
     // Cache operator list for the current render to avoid recomputing in the template
@@ -101,11 +92,8 @@
     ];
     const avatarAddress = $derived((avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '') as `0x${string}` | '');
     function getScanAvatars(): `0x${string}`[] {
-      const addr = (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '') as `0x${string}` | '';
-      const extras = getMarketSettings(addr).extraAvatars || [];
       const set = new Set<string>();
       for (const a of defaultAvatars) set.add(a.toLowerCase());
-      for (const a of extras) set.add((a || '').toLowerCase());
       return Array.from(set) as `0x${string}`[];
     }
 

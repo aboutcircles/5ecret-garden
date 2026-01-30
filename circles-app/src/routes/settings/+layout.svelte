@@ -32,11 +32,6 @@
   import { getProfilesBindings } from '$lib/offers/profilesBindings';
   import { runTask } from '$lib/utils/tasks';
   import { removeProfileFromCache } from '$lib/utils/profile';
-  import {
-    getSettings as getMarketSettings,
-    parseAddresses,
-    saveSettings as saveMarketSettings,
-  } from '$lib/stores/marketSettings.svelte';
   import { CirclesStorage } from '$lib/utils/storage';
   import { gnosisConfig } from '$lib/circlesConfig';
 
@@ -297,7 +292,6 @@
   $effect(() => {
     // refresh on avatar change
     void loadProfileCid();
-    loadMarketSettingsSection();
   });
 
   async function copyProfileCid(): Promise<void> {
@@ -370,29 +364,6 @@
         removeProfileFromCache(nsResolvedAvatar!);
       })(),
     });
-  }
-
-  // ——— Market settings (per avatar) ———
-  let extraAvatarsText: string = $state('');
-  let extraOperatorsText: string = $state('');
-  let marketSaved: string | null = $state(null);
-
-  function loadMarketSettingsSection(): void {
-    marketSaved = null;
-    const ms = getMarketSettings(avatarAddress);
-    extraAvatarsText = (ms.extraAvatars || []).join('\n');
-    extraOperatorsText = (ms.extraOperators || []).join('\n');
-  }
-
-  function saveMarketSettingsSection(): void {
-    const extraAvatars = parseAddresses(extraAvatarsText);
-    const extraOperators = parseAddresses(extraOperatorsText);
-    saveMarketSettings(avatarAddress, { extraAvatars, extraOperators });
-    marketSaved = 'Saved';
-    // Slight timeout to fade message
-    setTimeout(() => {
-      marketSaved = null;
-    }, 1500);
   }
 
   async function migrateToV2() {
@@ -735,10 +706,6 @@
           {profileCidLoading}
           {profileCidError}
           {copyProfileCid}
-          bind:extraAvatarsText
-          bind:extraOperatorsText
-          {marketSaved}
-          {saveMarketSettingsSection}
           {migrateToV2}
           {stopV1}
         />
