@@ -1,4 +1,5 @@
 <script lang="ts">
+  import MarkdownEditor from '$lib/components/markdown/MarkdownEditor.svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import ImageUpload from '$lib/components/ImageUpload.svelte';
   import type { AppProfile as Profile } from '$lib/profiles';
@@ -22,9 +23,6 @@
 
   $effect(() => {
     profile.name = sanitizeText(profile.name);
-    if (profile.description) {
-      profile.description = normalizeMarkdownInput(profile.description);
-    }
   });
 </script>
 
@@ -51,7 +49,13 @@
 
     <label class="form-control">
       <span class="label-text">Description</span>
-      <textarea id="description" class="textarea textarea-bordered w-full" bind:value={profile.description} placeholder="Description"></textarea>
+      <MarkdownEditor
+        bind:value={profile.description}
+        placeholder="Write a description (Markdown supported)…"
+      />
+      <div class="text-xs opacity-70 mt-1">
+        Supports: bold/italic, links.
+      </div>
     </label>
 
     <label class="form-control">

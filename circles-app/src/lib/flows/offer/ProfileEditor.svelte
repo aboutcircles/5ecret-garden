@@ -13,9 +13,6 @@
 
     $effect(() => {
         profile.name = sanitizeText(profile.name);
-        if (profile.description) {
-            profile.description = normalizeMarkdownInput(profile.description);
-        }
     });
 </script>
 

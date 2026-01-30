@@ -1,5 +1,6 @@
 <!-- src/lib/flows/offer/ProfileHeaderEditor.svelte -->
 <script lang="ts">
+    import MarkdownEditor from '$lib/components/markdown/MarkdownEditor.svelte';
     import {
         fileToCroppedDataUrl,
         AVATAR_PREFERRED_MAX_BYTES,
@@ -223,13 +224,16 @@
                                 Optional
                             </span>
                         </div>
-                        <textarea
-                                class="w-full bg-transparent border-none focus:outline-none focus:ring-0 resize-y min-h-[3.5rem] text-sm text-base-content/90 p-0"
-                                rows="3"
+                        <MarkdownEditor
                                 bind:value={description}
+                                rows={3}
                                 placeholder="Tell people who you are or what this organization does…"
-                                disabled={readonly}
-                        ></textarea>
+                                readonly={readonly}
+                                editorClass="w-full bg-transparent border-none focus:outline-none focus:ring-0 resize-y min-h-[3.5rem] text-sm text-base-content/90 p-0"
+                        />
+                        <div class="text-xs opacity-70 mt-1">
+                            Supports: bold/italic, links.
+                        </div>
                     </div>
                 </div>
             </div>

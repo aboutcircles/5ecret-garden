@@ -1,5 +1,6 @@
 <script lang="ts">
   import { popupControls } from '$lib/stores/popup';
+  import MarkdownEditor from '$lib/components/markdown/MarkdownEditor.svelte';
   import OfferStep2 from './2_Pricing.svelte';
   import type {OfferFlowContext, OfferDraft} from './types';
   import ImageUpload from '$lib/components/ImageUpload.svelte';
@@ -163,7 +164,14 @@
       {/if}
       <label class="form-control">
         <span class="label-text">Description</span>
-        <textarea class="textarea textarea-bordered" rows="3" bind:value={description}></textarea>
+        <MarkdownEditor
+          bind:value={description}
+          rows={3}
+          placeholder="Write a description (Markdown supported)…"
+        />
+        <div class="text-xs opacity-70 mt-1">
+          Supports: bold/italic, links.
+        </div>
       </label>
       <!-- Images: either upload multiple or paste a single URL (legacy) -->
       <div class="space-y-2">

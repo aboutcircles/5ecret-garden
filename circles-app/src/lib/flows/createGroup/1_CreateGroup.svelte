@@ -1,5 +1,6 @@
 <script lang="ts">
     import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
+    import MarkdownEditor from '$lib/components/markdown/MarkdownEditor.svelte';
     import Tooltip from '../../components/Tooltip.svelte';
     import ImageUpload from '../../components/ImageUpload.svelte';
     import { isValidName, isValidSymbol } from '$lib/utils/isValid';
@@ -110,12 +111,14 @@
         <div class="label">
             <span class="label-text">Description <Tooltip content="Brief description of your group." /></span>
         </div>
-        <textarea
-                class="textarea textarea-bordered w-full"
-                rows="4"
+        <MarkdownEditor
                 bind:value={ctx.profile.description}
-                placeholder="What is this group about?"
-        ></textarea>
+                rows={4}
+                placeholder="What is this group about? (Markdown supported)…"
+        />
+        <div class="text-xs opacity-70 mt-1">
+            Supports: bold/italic, links.
+        </div>
     </label>
 
     <!-- Row: Image -->

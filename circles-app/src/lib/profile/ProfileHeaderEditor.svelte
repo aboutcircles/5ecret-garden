@@ -1,5 +1,6 @@
 <!-- src/lib/profile/ProfileHeaderEditor.svelte -->
 <script lang="ts">
+    import MarkdownEditor from '$lib/components/markdown/MarkdownEditor.svelte';
     import {
         fileToCroppedDataUrl,
         AVATAR_PREFERRED_MAX_BYTES,
@@ -163,13 +164,16 @@
 
     <label class="form-control">
         <span class="label-text text-xs">Description</span>
-        <textarea
-            class="textarea textarea-bordered textarea-sm"
-            rows={3}
+        <MarkdownEditor
             bind:value={description}
+            rows={3}
             placeholder="Short profile description"
             readonly={readonly}
-        ></textarea>
+            editorClass="textarea textarea-bordered textarea-sm w-full"
+        />
+        <div class="text-xs opacity-70 mt-1">
+            Supports: bold/italic, links.
+        </div>
     </label>
 
     <!-- Hidden file input for avatar upload -->
