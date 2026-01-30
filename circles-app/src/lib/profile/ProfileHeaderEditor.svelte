@@ -114,30 +114,36 @@
 
 <div class="space-y-3">
     <div class="flex items-center gap-3">
-        <div
-            class="avatar placeholder"
-            class:cursor-pointer={!readonly}
-            title={readonly ? 'Avatar' : 'Change avatar'}
-            role={!readonly ? 'button' : undefined}
-            tabindex={!readonly ? 0 : undefined}
-            onkeydown={(e) => {
-                if (readonly) return;
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    handleAvatarClick();
-                }
-            }}
-            onclick={handleAvatarClick}
-            ondragover={handleDragOver}
-            ondrop={handleDrop}
-        >
-            <div class="w-16 h-16 rounded-full bg-base-200">
-                {#if previewImageUrl}
-                    <img src={previewImageUrl} alt={`${safeName} avatar preview`} />
-                {:else}
-                    <span class="text-xl">{initials}</span>
-                {/if}
-            </div>
+        <div class="flex flex-col items-center gap-1">
+            <button
+                type="button"
+                class="avatar placeholder"
+                class:cursor-pointer={!readonly}
+                title={readonly ? 'Avatar' : 'Change avatar'}
+                aria-label={readonly ? 'Avatar' : 'Change avatar'}
+                onclick={handleAvatarClick}
+                ondragover={handleDragOver}
+                ondrop={handleDrop}
+                disabled={readonly}
+            >
+                <div class="w-16 h-16 rounded-full bg-base-200">
+                    {#if previewImageUrl}
+                        <img src={previewImageUrl} alt={`${safeName} avatar preview`} />
+                    {:else}
+                        <span class="text-xl">{initials}</span>
+                    {/if}
+                </div>
+            </button>
+
+            {#if previewImageUrl}
+                <button
+                    class="btn btn-ghost btn-xs px-1 min-h-0 h-auto"
+                    onclick={clearPicture}
+                    disabled={readonly}
+                >
+                    Remove picture
+                </button>
+            {/if}
         </div>
 
         <div class="flex-1 space-y-2">
@@ -184,12 +190,6 @@
         class="hidden"
         onchange={handleFileInput}
     />
-
-    {#if previewImageUrl}
-        <div class="flex justify-end">
-            <button class="btn btn-ghost btn-xs" onclick={clearPicture} disabled={readonly}>Remove picture</button>
-        </div>
-    {/if}
 </div>
 
 <style>
