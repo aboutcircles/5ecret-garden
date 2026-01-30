@@ -9,22 +9,132 @@
     import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/types/actions';
+    import {popupControls} from '$lib/stores/popup';
+    import CreateGroup from '$lib/flows/createGroup/1_CreateGroup.svelte';
+    import {resetCreateGroupContext} from '$lib/flows/createGroup/context';
+    import {circles} from '$lib/stores/circles';
+    import {CirclesStorage} from '$lib/utils/storage';
+    import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
+    import { getGroupsByMember } from '$lib/utils/getGroupsByMemberBatch';
+    import type { GroupRow } from '@circles-sdk/data';
+    import Tabs from '$lib/components/tabs/Tabs.svelte';
+    import Tab from '$lib/components/tabs/Tab.svelte';
 
     let groups: Readable<{
         data: EventRow[];
         next: () => Promise<boolean>;
         ended: boolean;
-    }> = $state();
+    }> | undefined = $state();
+
+    let ownedGroups: GroupRow[] = $state([]);
+    let ownedGroupsLoading: boolean = $state(false);
+    let ownedGroupsError: string | null = $state(null);
+
+    let memberships: GroupRow[] = $state([]);
+    let membershipsLoading: boolean = $state(false);
+    let membershipsError: string | null = $state(null);
+
+    let selectedTab: 'yours' | 'memberships' | 'all' = $state('yours');
+
+    function onTabChange(e: CustomEvent<string | null>) {
+        const next = e.detail;
+        selectedTab = (next === 'memberships' ? 'memberships' : next === 'all' ? 'all' : 'yours');
+    }
+
+    async function loadGroups(): Promise<void> {
+        if (!avatarState.avatar) return;
+        groups = await createCMGroups(avatarState.avatar);
+    }
+
+    const ownerAddress: string | undefined = $derived(
+        (CirclesStorage.getInstance().avatar as string | undefined) ?? avatarState.avatar?.address
+    );
+
+    async function loadOwnedGroups(): Promise<void> {
+        if (!$circles || !ownerAddress) {
+            ownedGroups = [];
+            ownedGroupsLoading = false;
+            ownedGroupsError = null;
+            return;
+        }
+
+        ownedGroupsLoading = true;
+        ownedGroupsError = null;
+        try {
+            const result = await getBaseAndCmgGroupsByOwnerBatch($circles, [ownerAddress as any]);
+            ownedGroups = result[(ownerAddress as string).toLowerCase() as any] ?? result[ownerAddress as any] ?? [];
+        } catch (e) {
+            ownedGroupsError = e instanceof Error ? e.message : String(e);
+            ownedGroups = [];
+        } finally {
+            ownedGroupsLoading = false;
+        }
+    }
+
+    async function loadMemberships(): Promise<void> {
+        if (!$circles || !ownerAddress) {
+            memberships = [];
+            membershipsLoading = false;
+            membershipsError = null;
+            return;
+        }
+
+        membershipsLoading = true;
+        membershipsError = null;
+        try {
+            memberships = await getGroupsByMember($circles, ownerAddress as any);
+        } catch (e) {
+            membershipsError = e instanceof Error ? e.message : String(e);
+            memberships = [];
+        } finally {
+            membershipsLoading = false;
+        }
+    }
 
     $effect(() => {
         if (avatarState.avatar) {
-            createCMGroups(avatarState.avatar).then((result) => {
-                groups = result;
-            });
+            loadGroups();
         }
     });
 
-    const actions: Action[] = [];
+    $effect(() => {
+        // Load whenever SDK or owner changes
+        void loadOwnedGroups();
+        void loadMemberships();
+    });
+
+    const canCreateGroup: boolean = $derived(!!$circles && !!CirclesStorage.getInstance().avatar);
+
+    async function openCreateGroup(): Promise<void> {
+        const safeAddress = CirclesStorage.getInstance().avatar;
+        if (!$circles || !safeAddress) return;
+
+        // Initialize a fresh context with feeCollection defaulted to this safe address
+        resetCreateGroupContext(safeAddress as `0x${string}`);
+
+        popupControls.open({
+            title: 'Create group',
+            component: CreateGroup,
+            props: {
+                setGroup: async (_address: string) => {
+                    await loadGroups();
+                    await loadOwnedGroups();
+                }
+            },
+            // Ensure state is cleared if the user closes the flow
+            onClose: () => resetCreateGroupContext()
+        } as any);
+    }
+
+    const actions: Action[] = $derived([
+        {
+            id: 'create-group',
+            label: 'Create group',
+            onClick: openCreateGroup,
+            variant: 'primary',
+            disabled: !canCreateGroup,
+        }
+    ]);
 </script>
 
 <PageScaffold highlight="soft"
@@ -53,5 +163,61 @@
         <ActionButtonDropDown {actions}/>
     {/snippet}
 
-    <GenericList store={groups} row={GroupRowView} rowHeight={64} maxPlaceholderPages={0} expectedPageSize={25} />
+    <div class="flex flex-col items-center rounded-md px-3 py-4 md:px-4 md:py-5 gap-y-3">
+        <div class="w-full">
+            <Tabs selected={selectedTab} variant="boxed" size="sm" on:change={onTabChange}>
+                <Tab id="yours" title="Your groups" />
+                <Tab id="memberships" title="Memberships" />
+                <Tab id="all" title="All groups" />
+            </Tabs>
+        </div>
+
+        <div class="flex flex-col w-full gap-y-4">
+            {#if selectedTab === 'yours'}
+                {#if !ownerAddress}
+                    <div class="text-sm opacity-70">Connect an avatar to see your groups.</div>
+                {:else if ownedGroupsLoading}
+                    <div class="text-sm opacity-70">Loading…</div>
+                {:else if ownedGroupsError}
+                    <div class="text-sm text-error">{ownedGroupsError}</div>
+                {:else if ownedGroups.length === 0}
+                    <div class="text-sm opacity-70">No owned groups found.</div>
+                {:else}
+                    <div class="flex flex-col">
+                        {#each ownedGroups as item (item.group)}
+                            <GroupRowView {item} />
+                        {/each}
+                    </div>
+                {/if}
+            {:else if selectedTab === 'memberships'}
+                {#if !ownerAddress}
+                    <div class="text-sm opacity-70">Connect an avatar to see your memberships.</div>
+                {:else if membershipsLoading}
+                    <div class="text-sm opacity-70">Loading…</div>
+                {:else if membershipsError}
+                    <div class="text-sm text-error">{membershipsError}</div>
+                {:else if memberships.length === 0}
+                    <div class="text-sm opacity-70">No memberships found.</div>
+                {:else}
+                    <div class="flex flex-col">
+                        {#each memberships as item (item.group)}
+                            <GroupRowView {item} />
+                        {/each}
+                    </div>
+                {/if}
+            {:else}
+                {#if groups}
+                    <GenericList
+                        store={groups}
+                        row={GroupRowView}
+                        rowHeight={64}
+                        maxPlaceholderPages={0}
+                        expectedPageSize={25}
+                    />
+                {:else}
+                    <div class="text-sm opacity-70">Loading…</div>
+                {/if}
+            {/if}
+        </div>
+    </div>
 </PageScaffold>
