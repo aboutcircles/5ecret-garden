@@ -1,2 +1,2 @@
-<!-- `/settings` now redirects to `/settings/personal` via +page.ts.
-     The actual Settings UI lives in /settings/+layout.svelte and is rendered for /settings/[tab]. -->
+<!-- The Settings UI lives in /settings/+layout.svelte.
+     The initial tab can be deep-linked via `?tab=` (e.g. `/settings?tab=orders`). -->

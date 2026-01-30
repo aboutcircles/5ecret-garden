@@ -44,13 +44,34 @@
   // Internal active id that actually drives UI
   let active = $state<string | null>(selected ?? null);
 
+  // When Tabs is used in a controlled mode (selected != null), there can be a short period
+  // after a click where `active` is updated locally, but the parent `selected` prop still
+  // contains the previous value (until navigation/state updates). Without a guard, the sync
+  // effect below would immediately overwrite the clicked tab with the old external value,
+  // producing a “needs a second click” feel.
+  let pendingExternalAck = $state<string | null>(null);
+
   // Keep internal active in sync if parent controls `selected`
   $effect(() => {
     const external = selected;
     const hasExternal = external !== null;
     const differs = external !== active;
 
-    if (hasExternal && differs) {
+    if (!hasExternal) return;
+
+    // Parent acknowledged our last request.
+    if (pendingExternalAck !== null && external === pendingExternalAck) {
+      pendingExternalAck = null;
+      if (differs) active = external;
+      return;
+    }
+
+    // While waiting for parent to reflect the requested value, don't snap back.
+    if (pendingExternalAck !== null && active === pendingExternalAck) {
+      return;
+    }
+
+    if (differs) {
       active = external;
     }
   });
@@ -128,6 +149,7 @@
     const changed = active !== id_;
     if (changed) {
       active = id_;
+      pendingExternalAck = id_;
       // mirror to bindable prop so parent sees updates
       selected = id_;
       dispatch('change', id_);
