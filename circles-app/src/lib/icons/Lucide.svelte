@@ -5,7 +5,8 @@
      *   import { Send } from 'lucide';
      *   <Lucide icon={Send} size={16} class="stroke-black" />
      */
-    type IconNode = Array<[string, Record<string, string>]>;
+    // lucide icons include attributes with non-string values (e.g. numbers), so keep this permissive.
+    type IconNode = Array<[string, Record<string, any>]>;
 
     interface Props {
         icon: IconNode;

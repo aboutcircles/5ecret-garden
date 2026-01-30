@@ -30,7 +30,7 @@
     if (menuEl && menuEl.open) {
       menuEl.open = false;
       if (focusTrigger) {
-        const summary = menuEl.querySelector('summary') as HTMLSummaryElement | null;
+        const summary = menuEl.querySelector('summary') as HTMLElement | null;
         summary?.focus();
       }
     }
