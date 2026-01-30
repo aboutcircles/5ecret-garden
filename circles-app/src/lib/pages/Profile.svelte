@@ -34,6 +34,7 @@
     /* NEW: tabs */
     import Tabs from '$lib/components/tabs/Tabs.svelte';
     import Tab from '$lib/components/tabs/Tab.svelte';
+    import type { TabIdOf } from '$lib/components/tabs/tabId';
     import RowFrame from '$lib/ui/RowFrame.svelte';
     // Offers tab dependencies
     import ProductCard from '$lib/components/ProductCard.svelte';
@@ -308,8 +309,37 @@
         }
     }
 
-    let selectedTab = $state<string>('common_connections');
+    const TAB_IDS = [
+        'common_connections',
+        'members',
+        'collateral',
+        'holders',
+        'offers',
+        'explore_namespaces',
+    ] as const;
+    type TabId = TabIdOf<typeof TAB_IDS>;
+
+    const tabPanelClass = 'p-4 bg-base-100 border-none';
+
+    let selectedTab = $state<TabId>('common_connections');
     let commonConnectionsCount = $state(0);
+
+    const availableTabIds = $derived((): TabId[] => {
+        const ids: TabId[] = ['common_connections'];
+        if (members) ids.push('members');
+        if (otherAvatar?.type === 'CrcV2_RegisterGroup') ids.push('collateral');
+        if (otherAvatar?.type === 'CrcV2_RegisterGroup' || otherAvatar?.type === 'CrcV2_RegisterHuman') ids.push('holders');
+        ids.push('offers');
+        ids.push('explore_namespaces');
+        return ids;
+    });
+
+    $effect(() => {
+        // When conditional tabs appear/disappear, ensure `selectedTab` always points to a visible tab.
+        if (!availableTabIds.includes(selectedTab)) {
+            selectedTab = availableTabIds[0] ?? 'common_connections';
+        }
+    });
 </script>
 
 <div class="flex flex-col items-center w-full sm:w-[90%] lg:w-3/5 mx-auto">
@@ -465,8 +495,8 @@
 <Tabs
         id="profile-tabs"
         bind:selected={selectedTab}
-        variant="lifted"
-        size="md"
+        variant="boxed"
+        size="sm"
         class="w-full p-0 mt-8"
         fitted={false}
 >
@@ -474,7 +504,7 @@
             id="common_connections"
             title="Common connections"
             badge={commonConnectionsCount}
-            panelClass="p-4 bg-base-100 border-none"
+            panelClass={tabPanelClass}
     >
         <div class="w-full">
             <CommonConnections
@@ -489,7 +519,7 @@
                 id="members"
                 title="Members"
                 badge={members.length}
-                panelClass="p-4 bg-base-100 border-none"
+                panelClass={tabPanelClass}
         >
             {#if members.length === 0}
                 <div class="w-full py-6 text-center text-base-content/60">No members</div>
@@ -527,7 +557,7 @@
                 id="collateral"
                 title="Collateral"
                 badge={collateralInTreasury.length}
-                panelClass="p-4 bg-base-100 border-none"
+                panelClass={tabPanelClass}
         >
             <div class="w-full">
                 <CollateralTable {collateralInTreasury}/>
@@ -540,7 +570,7 @@
                 id="holders"
                 title="Holders"
                 badge={tokenHolders.length}
-                panelClass="p-4 bg-base-100 border-none"
+                panelClass={tabPanelClass}
         >
             <div class="w-full">
                 <CollateralTable collateralInTreasury={tokenHolders}/>
@@ -553,7 +583,7 @@
             id="offers"
             title="Offers"
             badge={offers.length}
-            panelClass="p-4 bg-base-100 border-none"
+            panelClass={tabPanelClass}
     >
         {#if offersLoading}
             <div class="flex items-center gap-2 text-base-content/70 py-2">
@@ -586,7 +616,7 @@
     <Tab
             id="explore_namespaces"
             title="Explore namespaces"
-            panelClass="p-4 bg-base-100 border-none"
+            panelClass={tabPanelClass}
     >
         <div class="space-y-3">
             {#if otherError}

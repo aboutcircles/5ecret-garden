@@ -52,25 +52,18 @@
   // ——— Payment (duplicate of /gateway) ———
   import type { GatewayRow } from '$lib/gateway/types';
   import CreateGatewayProfile from '$lib/flows/paymentGateway/CreateGatewayProfile.svelte';
+  import { coerceTabId, type TabIdOf } from '$lib/components/tabs/tabId';
 
   const TAB_IDS = ['personal', 'orders', 'keys', 'namespaces', 'marketplace', 'payment'] as const;
-  type TabId = (typeof TAB_IDS)[number];
-  const isTabId = (v: string | null | undefined): v is TabId =>
-    !!v && (TAB_IDS as readonly string[]).includes(v);
+  type TabId = TabIdOf<typeof TAB_IDS>;
 
   let selectedTab = $state<TabId>('personal');
 
   $effect(() => {
     const fromUrl = $page.url.searchParams.get('tab');
-    selectedTab = isTabId(fromUrl) ? fromUrl : 'personal';
+    selectedTab = coerceTabId(TAB_IDS, fromUrl, 'personal');
   });
 
-  function onTabChange(e: CustomEvent<string | null>) {
-    const next = e.detail;
-    if (!isTabId(next)) return;
-    if (next === selectedTab) return;
-    selectedTab = next;
-  }
 
   // ——— Orders (buyer) (copied from /orders and embedded here) ———
   type OrdersListItem = {
@@ -686,7 +679,7 @@
 
   <div class="flex flex-col items-center rounded-md px-3 py-4 md:px-4 md:py-5 gap-y-3">
     <div class="w-full">
-      <Tabs selected={selectedTab} variant="boxed" size="sm" on:change={onTabChange}>
+      <Tabs bind:selected={selectedTab} variant="boxed" size="sm">
         <Tab id="personal" title="Profile" />
         <Tab id="orders" title="Orders" />
         <Tab id="marketplace" title="Offers" />
