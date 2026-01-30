@@ -16,6 +16,8 @@
         <MarkdownInline node={child} />
       {/each}
     </p>
+  {:else if n.type === 'blankLine'}
+    <br />
   {:else if n.type === 'blockquote'}
     <blockquote>
       {#each n.children as child}

@@ -353,6 +353,17 @@ export async function patchBasket(basketId: string, patch: BasketPatch): Promise
   return updated;
 }
 
+// Indirection for testability: Vitest cannot reliably spy on ESM live bindings, but can spy on
+// object properties. Internal helpers should call through this object when they want to allow
+// tests to observe/mock the outbound basket patch semantics.
+export const cartApi: {
+  patchBasket: typeof patchBasket;
+  removeLineByIdentity: typeof removeLineByIdentity;
+} = {
+  patchBasket,
+  removeLineByIdentity,
+};
+
 async function setItemsForBasket(
   basketId: string,
   items: { seller: string; sku: string; quantity: number; imageUrl?: string }[],
@@ -366,7 +377,7 @@ async function setItemsForBasket(
     orderedItem: {'@type': 'Product', sku: it.sku},
   }));
 
-  const updated = await patchBasket(basketId, {items: orderItems});
+  const updated = await cartApi.patchBasket(basketId, {items: orderItems});
   cartState.update((s) => ({...s, basket: updated}));
   return updated;
 }
@@ -453,7 +464,7 @@ export async function setLineQuantityByIdentity(
   }
   if (quantity <= 0) {
     // Delegate to remove path to satisfy tests and avoid sending zero-qty lines
-    await removeLineByIdentity(sellerRaw, skuRaw);
+    await cartApi.removeLineByIdentity(sellerRaw, skuRaw);
     return;
   }
 
@@ -636,7 +647,7 @@ export async function upsertLineByIdentity(
   const qtyOk = Number.isFinite(quantity) && quantity >= 0;
   if (!qtyOk) throw new Error(`Invalid quantity: ${quantity}`);
   if (quantity <= 0) {
-    await removeLineByIdentity(sellerRaw, skuRaw);
+    await cartApi.removeLineByIdentity(sellerRaw, skuRaw);
     return;
   }
 
