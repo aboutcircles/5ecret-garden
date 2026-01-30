@@ -1,31 +1,34 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
   import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
   import Tabs from '$lib/components/tabs/Tabs.svelte';
   import Tab from '$lib/components/tabs/Tab.svelte';
   import { writable, type Readable } from 'svelte/store';
   import { browser } from '$app/environment';
-  import { goto } from '$app/navigation';
   import { page } from '$app/stores';
+
+  import PersonalSection from './sections/PersonalSection.svelte';
+  import OrdersSection from './sections/OrdersSection.svelte';
+  import KeysSection from './sections/KeysSection.svelte';
+  import NamespacesSection from './sections/NamespacesSection.svelte';
+  import MarketplaceSection from './sections/MarketplaceSection.svelte';
+  import PaymentSection from './sections/PaymentSection.svelte';
+
+  let { children }: { children?: Snippet } = $props();
 
   // ——— Personal (duplicate of /settings) ———
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { clearSession, signer, wallet } from '$lib/stores/wallet.svelte';
   import { circles } from '$lib/stores/circles';
-  import { canMigrate } from '$lib/guards/canMigrate';
   import MigrateToV2 from '$lib/flows/migrateToV2/1_GetInvited.svelte';
   import { popupControls } from '$lib/stores/popup';
-  import GroupSetting from './editors/GroupSetting.svelte';
   import { ethers } from 'ethers';
-  import ProfileExplorer from '$lib/profile/ProfileExplorer.svelte';
-  import ProfileNamespaces from '$lib/profile/ProfileNamespaces.svelte';
-  import ProfileSigningKeys from '$lib/profile/ProfileSigningKeys.svelte';
   import { LogOut as LLogOut } from 'lucide';
   import type { Address } from '@circles-sdk/utils';
   import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
   import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
   import type { Action } from '$lib/types/actions';
   import ActionButton from '$lib/components/ActionButton.svelte';
-  import { ipfsGatewayUrl } from '$lib/utils/ipfs';
   import { getProfilesBindings } from '$lib/offers/profilesBindings';
   import { runTask } from '$lib/utils/tasks';
   import { removeProfileFromCache } from '$lib/utils/profile';
@@ -44,18 +47,14 @@
     rebaseAndSaveProfile,
   } from '@circles-market/sdk';
   import type { AggregatedCatalogItem } from '$lib/market/types';
-  import ProductCard from '$lib/components/ProductCard.svelte';
   import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
   import { getMarketClient } from '$lib/sdk/marketClient';
   import { signInWithSafe } from '$lib/auth/signin';
   import { getOrdersByBuyer, getOrder, subscribeBuyerOrderEvents } from '$lib/orders/ordersAdapter';
   import type { OrderStatusSseEvent } from '$lib/orders/types';
-  import OrderRow from '../orders/OrderRow.svelte';
   import OrderDetailsPopup from '$lib/orders/OrderDetailsPopup.svelte';
 
   // ——— Payment (duplicate of /gateway) ———
-  import GenericList from '$lib/components/GenericList.svelte';
-  import GatewayRowView from '$lib/gateway/GatewayRow.svelte';
   import type { GatewayRow } from '$lib/gateway/types';
   import CreateGatewayProfile from '$lib/flows/paymentGateway/CreateGatewayProfile.svelte';
 
@@ -64,16 +63,18 @@
   const isTabId = (v: string | null | undefined): v is TabId =>
     !!v && (TAB_IDS as readonly string[]).includes(v);
 
-  const selectedTab = $derived(
-    isTabId(($page.params.tab as string | undefined) ?? 'personal')
-      ? (($page.params.tab as string | undefined) ?? 'personal')
-      : 'personal',
-  );
+  let selectedTab = $state<TabId>('personal');
+
+  $effect(() => {
+    const fromUrl = $page.url.searchParams.get('tab');
+    selectedTab = isTabId(fromUrl) ? fromUrl : 'personal';
+  });
 
   function onTabChange(e: CustomEvent<string | null>) {
     const next = e.detail;
     if (!isTabId(next)) return;
-    void goto(`/settings/${next}`);
+    if (next === selectedTab) return;
+    selectedTab = next;
   }
 
   // ——— Orders (buyer) (copied from /orders and embedded here) ———
@@ -726,260 +727,64 @@
 
     <div class="flex flex-col w-full gap-y-4">
       {#if selectedTab === 'personal'}
-        {#if avatarAddress}
-          <div class="w-full -mt-1 text-xs text-base-content/70 flex flex-wrap items-center gap-2">
-            <span class="font-semibold">Profile CID:</span>
-            {#if profileCidLoading}
-              <span>loading…</span>
-            {:else if profileCid}
-              <span class="font-mono select-all break-all">{profileCid}</span>
-              <button class="btn btn-ghost btn-xs" onclick={copyProfileCid}>Copy</button>
-              <a
-                class="link link-primary text-xs"
-                href={ipfsGatewayUrl(profileCid)}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Open
-              </a>
-            {:else}
-              <span class="opacity-70">none yet</span>
-            {/if}
-            {#if profileCidError}
-              <span class="text-error">{profileCidError}</span>
-            {/if}
-          </div>
-          <ProfileExplorer avatar={avatarAddress} pinApiBase={pinApiBase} showNamespaces={false} showSigningKeys={false} />
-        {:else}
-          <div class="p-4 text-sm opacity-70">Connect a Circles avatar first to edit your profile.</div>
-        {/if}
-
-        {#if avatarAddress}
-          <div class="w-full pt-2">
-            <h2 class="font-bold">Market settings</h2>
-            <div class="mt-1 text-xs text-base-content/70">These settings are saved per avatar on this device.</div>
-            <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div class="flex flex-col gap-1">
-                <label class="text-sm font-medium">Extra avatars to scan</label>
-                <textarea
-                  class="textarea textarea-bordered font-mono text-xs min-h-[120px]"
-                  placeholder="0xabc..., one per line or comma-separated"
-                  bind:value={extraAvatarsText}
-                ></textarea>
-                <div class="text-xs opacity-70">Defaults are always included; add more here.</div>
-              </div>
-              <div class="flex flex-col gap-1">
-                <label class="text-sm font-medium">Extra operators</label>
-                <textarea
-                  class="textarea textarea-bordered font-mono text-xs min-h-[120px]"
-                  placeholder="0xoperator..., one per line or comma-separated"
-                  bind:value={extraOperatorsText}
-                ></textarea>
-                <div class="text-xs opacity-70">Optional. Currently not used everywhere.</div>
-              </div>
-            </div>
-            <div class="mt-3 flex items-center gap-2">
-              <button class="btn btn-primary btn-sm" onclick={saveMarketSettingsSection}>Save</button>
-              {#if marketSaved}
-                <span class="text-xs text-success">{marketSaved}</span>
-              {/if}
-            </div>
-          </div>
-        {/if}
-
-        {#if avatarState.isGroup}
-          <div class="w-full pt-2">
-            <h2 class="font-bold">Advanced Group Settings</h2>
-            <GroupSetting />
-          </div>
-        {/if}
-
-        {#if avatarState.avatar?.avatarInfo && canMigrate(avatarState.avatar.avatarInfo)}
-          {#if avatarState.avatar?.avatarInfo?.version === 1}
-            <div class="w-full pt-2">
-              <h2 class="text-lg font-medium">Circles V2</h2>
-              <div class="mt-3">
-                <ActionButton action={migrateToV2}>Update to Circles V2</ActionButton>
-              </div>
-            </div>
-          {/if}
-          {#if avatarState.avatar?.avatarInfo?.v1Token && !avatarState.avatar?.avatarInfo?.v1Stopped}
-            <div class="w-full pt-2">
-              <h2 class="text-lg font-medium">Circles V1</h2>
-              <div class="mt-3">
-                <ActionButton action={stopV1}>
-                  <span class="text-orange-400">Stop V1 account permanently</span>
-                </ActionButton>
-              </div>
-            </div>
-          {/if}
-        {/if}
+        <PersonalSection
+          {avatarAddress}
+          {avatarState}
+          {pinApiBase}
+          {profileCid}
+          {profileCidLoading}
+          {profileCidError}
+          {copyProfileCid}
+          bind:extraAvatarsText
+          bind:extraOperatorsText
+          {marketSaved}
+          {saveMarketSettingsSection}
+          {migrateToV2}
+          {stopV1}
+        />
       {:else if selectedTab === 'orders'}
-        <section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
-          <div class="text-sm mb-2">
-            <strong>My Orders</strong>
-            <span class="opacity-60"> · Orders for the authenticated wallet</span>
-          </div>
-
-          {#if !avatarAddress}
-            <div class="text-sm opacity-70">Connect an avatar to sign in and view orders.</div>
-          {:else if !ordersAuthed}
-            <div class="text-sm opacity-70">
-              Sign in to view orders.
-              <button class="btn btn-primary btn-sm ml-2" onclick={() => ensureOrdersAuthed()}>
-                Sign in
-              </button>
-            </div>
-          {:else}
-            <GenericList store={ordersStore} row={OrderRow} getKey={(it) => it.key} />
-          {/if}
-        </section>
+        <OrdersSection
+          {avatarAddress}
+          {ordersAuthed}
+          {ensureOrdersAuthed}
+          {ordersStore}
+        />
       {:else if selectedTab === 'keys'}
-        {#if !avatarAddress}
-          <div class="p-4 text-sm opacity-70">Connect a Circles avatar first to manage keys.</div>
-        {:else}
-          <ProfileSigningKeys avatar={avatarAddress} {pinApiBase} readonly={false} />
-
-          <div class="w-full pt-4">
-            <h2 class="font-bold">Security</h2>
-            <div class="mt-2 text-xs text-base-content/70">Manage keys stored on this device.</div>
-            <div class="mt-3">
-              <button
-                class="btn btn-outline btn-sm"
-                onclick={deleteLocalKey}
-                title="Remove the Circles.garden key from this device"
-              >
-                Delete key from this device
-              </button>
-            </div>
-          </div>
-        {/if}
+        <KeysSection {avatarAddress} {pinApiBase} {deleteLocalKey} />
       {:else if selectedTab === 'namespaces'}
-        {#if !avatarAddress}
-          <div class="p-4 text-sm opacity-70">Connect a Circles avatar first to edit your namespaces.</div>
-        {:else}
-          {#if nsError}
-            <div class="alert alert-error text-xs">{nsError}</div>
-          {/if}
-
-          <section class="bg-base-100 border border-base-300 rounded-xl p-4 shadow-sm w-full">
-            <div class="flex items-center justify-between mb-2">
-              <h3 class="font-semibold text-sm m-0">Namespaces</h3>
-              <span class="text-[11px] opacity-60">App/profile sources</span>
-            </div>
-
-            {#if nsLoading}
-              <div class="text-sm opacity-70">Loading…</div>
-            {:else if nsResolvedAvatar}
-              <ProfileNamespaces
-                avatar={nsResolvedAvatar}
-                {pinApiBase}
-                namespaces={nsNamespaces}
-                readonly={!nsIsOwner}
-                on:namespacesChanged={(e) =>
-                  onNamespacesChanged(new CustomEvent('namespacesChanged', { detail: e.detail }))}
-              />
-            {:else}
-              <div class="text-sm opacity-70">No avatar resolved.</div>
-            {/if}
-          </section>
-
-          {#if nsIsOwner}
-            <div class="flex justify-end w-full">
-              <button class="btn btn-primary btn-sm" onclick={saveNamespacesProfile}>Save</button>
-            </div>
-          {/if}
-        {/if}
+        <NamespacesSection
+          {avatarAddress}
+          {pinApiBase}
+          {nsError}
+          {nsLoading}
+          {nsResolvedAvatar}
+          {nsNamespaces}
+          {nsIsOwner}
+          {onNamespacesChanged}
+          {saveNamespacesProfile}
+        />
       {:else if selectedTab === 'marketplace'}
-        {#if !avatarAddress}
-          <div class="p-4 text-sm opacity-70">Connect a Circles avatar to see your marketplace listings.</div>
-        {:else}
-          <section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
-            <div class="flex items-center justify-between">
-              <div class="text-sm">
-                <strong>Create</strong>
-                <div class="text-xs opacity-70 mt-0.5">Publish a new listing to your marketplace catalog.</div>
-              </div>
-              <button class="btn btn-primary btn-sm" onclick={openCreateListing}>Create Listing</button>
-            </div>
-          </section>
-
-          {#if marketLoading}
-            <div class="flex flex-col items-center justify-center h-[50vh]">
-              <div class="loading loading-spinner loading-lg" aria-label="loading"></div>
-              <div class="mt-3 text-base-content/70">Loading listings…</div>
-            </div>
-          {:else if marketErrorMsg}
-            <section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
-              <div class="alert alert-error"><span class="font-semibold">Failed to load:</span>&nbsp;{marketErrorMsg}</div>
-            </section>
-          {:else}
-            <section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
-              <div class="flex items-center justify-between mb-3">
-                <div class="text-sm">
-                  <strong>Listings</strong>
-                  <span class="opacity-70">{marketProducts.length ? ` (${marketProducts.length})` : ''}</span>
-                </div>
-              </div>
-
-              {#if marketProducts.length === 0}
-                <div class="text-center py-8 opacity-60">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-12 w-12 mx-auto mb-2 text-base-content/30"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                    />
-                  </svg>
-                  <div>No listings found for this seller</div>
-                </div>
-              {:else}
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {#each marketProducts as p (p.productCid)}
-                    <ProductCard product={p} showSellerInfo={false} ondeleted={() => loadSellerCatalog()} canTombstone={true} />
-                  {/each}
-                </div>
-              {/if}
-            </section>
-          {/if}
-        {/if}
+        <MarketplaceSection
+          {avatarAddress}
+          {marketLoading}
+          {marketErrorMsg}
+          marketProducts={marketProducts}
+          {openCreateListing}
+          {loadSellerCatalog}
+        />
       {:else if selectedTab === 'payment'}
-        <section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
-          <div class="flex items-center justify-between mb-3">
-            <div class="text-sm">
-              <strong>Payment gateways</strong>
-              {#if gatewayOwnerAddress}
-                <span class="opacity-60"> · Owner {shortGatewayAddr(gatewayOwnerAddress)}</span>
-              {/if}
-            </div>
-          </div>
-
-          {#if !gatewayOwnerAddress}
-            <div class="text-sm opacity-70">Connect an avatar to see your payment gateways.</div>
-          {:else if !$circles}
-            <div class="text-sm opacity-70">Connect an avatar to load your gateways.</div>
-          {:else if loadingGateways}
-            <div class="loading loading-spinner loading-md"></div>
-          {:else}
-            {#if ($myGatewaysStore?.data ?? []).length === 0}
-              <div class="text-sm opacity-70">No gateways found for your avatar.</div>
-            {:else}
-              <GenericList store={myGatewaysStore} row={GatewayRowView} rowHeight={64} maxPlaceholderPages={1} expectedPageSize={25} />
-            {/if}
-          {/if}
-        </section>
+        <PaymentSection
+          {gatewayOwnerAddress}
+          circlesReady={!!$circles}
+          {loadingGateways}
+          {myGatewaysStore}
+          {shortGatewayAddr}
+        />
       {:else}
         <div class="p-4 text-sm opacity-70">Select a tab.</div>
       {/if}
 
-      <slot />
+      {@render children?.()}
     </div>
   </div>
 </PageScaffold>
