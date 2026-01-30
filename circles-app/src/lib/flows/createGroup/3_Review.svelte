@@ -1,6 +1,7 @@
 <script lang="ts">
     import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
     import { popupControls } from '$lib/stores/popup';
+    import Markdown from '$lib/components/markdown/Markdown.svelte';
     import CreateStep from './4_Create.svelte';
     import {
         createGroupContext,
@@ -56,7 +57,7 @@
     {#if hasDescription}
         <div class="mt-3">
             <div class="text-base-content/70 mb-0.5">Description</div>
-            <div class="whitespace-pre-wrap">{ctx.profile.description}</div>
+            <Markdown content={ctx.profile.description} class="prose prose-sm max-w-none" />
         </div>
     {/if}
 

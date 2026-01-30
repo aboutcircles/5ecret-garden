@@ -4,6 +4,7 @@
   import {runTask} from '$lib/utils/tasks';
   import {wallet} from '$lib/stores/wallet.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
+  import Markdown from '$lib/components/markdown/Markdown.svelte';
   import type {Address} from '@circles-sdk/utils';
 
   import ProductGallery from '$lib/components/ProductGallery.svelte';
@@ -210,7 +211,7 @@
         {/if}
 
         {#if context.draft?.description}
-            <div class="mt-2 text-sm opacity-80">{context.draft?.description}</div>
+            <Markdown content={context.draft.description} class="prose prose-sm max-w-none mt-2" />
         {/if}
 
         <div class="mt-3 text-sm space-y-1">

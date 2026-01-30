@@ -4,6 +4,7 @@
     import { wallet } from '$lib/stores/wallet.svelte';
     import { runTask } from '$lib/utils/tasks';
     import { popupControls } from '$lib/stores/popup';
+    import Markdown from '$lib/components/markdown/Markdown.svelte';
     import { cidV0ToUint8Array } from '@circles-sdk/utils';
     import { isValidName, isValidSymbol } from '$lib/utils/isValid';
     import {
@@ -110,7 +111,7 @@
     {#if hasDesc}
         <div class="mt-3">
             <div class="text-base-content/70 mb-0.5">Description</div>
-            <div class="whitespace-pre-wrap">{ctx.profile.description}</div>
+            <Markdown content={ctx.profile.description} class="prose prose-sm max-w-none" />
         </div>
     {/if}
 

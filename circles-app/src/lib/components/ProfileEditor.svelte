@@ -2,7 +2,7 @@
   import { avatarState } from '$lib/stores/avatar.svelte';
   import ImageUpload from '$lib/components/ImageUpload.svelte';
   import type { AppProfile as Profile } from '$lib/profiles';
-  import { sanitizeText } from '$lib/utils/isValid';
+  import { normalizeMarkdownInput, sanitizeText } from '$lib/utils/isValid';
 
   interface Props {
     profile: Profile;
@@ -23,7 +23,7 @@
   $effect(() => {
     profile.name = sanitizeText(profile.name);
     if (profile.description) {
-      profile.description = sanitizeText(profile.description);
+      profile.description = normalizeMarkdownInput(profile.description);
     }
   });
 </script>

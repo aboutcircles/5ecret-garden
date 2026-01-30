@@ -33,3 +33,16 @@ export function sanitizeText(input: string): string {
     .replace(/'/g, '’')
     .replace(/"/g, '”');
 }
+
+/**
+ * Normalizes user input for Markdown-capable fields (e.g. description).
+ *
+ * Important: unlike {@link sanitizeText}, this must NOT strip backslashes or
+ * rewrite quotes, because that would corrupt valid Markdown (escapes, code).
+ */
+export function normalizeMarkdownInput(input: string): string {
+  return String(input ?? '')
+    .replace(/\\n/g, '\n')
+    .replace(/\\r/g, '\r')
+    .replace(/\\t/g, '\t');
+}
