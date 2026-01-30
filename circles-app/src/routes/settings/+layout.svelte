@@ -716,12 +716,12 @@
   <div class="flex flex-col items-center rounded-md px-3 py-4 md:px-4 md:py-5 gap-y-3">
     <div class="w-full">
       <Tabs selected={selectedTab} variant="boxed" size="sm" on:change={onTabChange}>
-        <Tab id="personal" title="Personal" />
+        <Tab id="personal" title="Profile" />
         <Tab id="orders" title="Orders" />
-        <Tab id="marketplace" title="Marketplace" />
-        <Tab id="payment" title="Payment" />
+        <Tab id="marketplace" title="Offers" />
+        <Tab id="payment" title="Payment gateways" />
         <Tab id="namespaces" title="Namespaces" />
-        <Tab id="keys" title="Keys" />
+        <Tab id="keys" title="Signing keys" />
       </Tabs>
     </div>
 
