@@ -200,14 +200,12 @@
 {#snippet OutboxPayloadView({ payload })}
   {#if isKnownDownloadPayload(payload)}
     <div class="flex items-center gap-2">
-      <a
-        class="btn btn-xs btn-primary"
-        href={payload.downloadUrl || payload.contentUrl}
-        target="_blank"
-        rel="noopener noreferrer"
+      <JumpLink
+        className="btn btn-xs btn-primary"
+        url={payload.downloadUrl || payload.contentUrl}
       >
         Download
-      </a>
+      </JumpLink>
       {#if payload.expiresAt}
         <span class="text-[11px] opacity-70">
           Expires: {formatTimestamp(payload.expiresAt)}
@@ -245,6 +243,7 @@
 <script lang="ts">
   import { formatCurrency } from '$lib/utils/money';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
+  import JumpLink from '$lib/components/jump/JumpLink.svelte';
   import type { Address as EvmAddress } from '@circles-sdk/utils';
   import type { OrderSnapshot } from '$lib/orders/types';
   import type { OrderStatusChange } from '$lib/orders/types';

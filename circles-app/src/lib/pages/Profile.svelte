@@ -17,6 +17,7 @@
     import Avatar from '$lib/components/avatar/Avatar.svelte';
     import ProfilePage from '$lib/pages/ProfilePopup.svelte';
     import {popupControls} from '$lib/stores/popup';
+    import JumpLink from '$lib/components/jump/JumpLink.svelte';
     import AddressComponent from '$lib/components/Address.svelte';
     import {uint256ToAddress, type Address} from '@circles-sdk/utils';
     import SelectAmount from '$lib/flows/send/3_Amount.svelte';
@@ -341,13 +342,12 @@
                 <img src="/chart.svg" alt="Chart" class="w-4"/>
             </button>
         {/if}
-        <a
-                href={'https://gnosisscan.io/address/' + otherAvatar?.avatar}
-                target="_blank"
-                class="flex items-center justify-center bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm"
+        <JumpLink
+                url={'https://gnosisscan.io/address/' + otherAvatar?.avatar}
+                className="flex items-center justify-center bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm"
         >
             <img src="/external.svg" alt="External Link" class="w-4"/>
-        </a>
+        </JumpLink>
     </div>
 
     <div class="w-[80%] sm:w-[60%] border-b border-[#E5E7EB]"></div>

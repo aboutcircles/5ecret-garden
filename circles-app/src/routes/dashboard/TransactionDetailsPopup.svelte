@@ -8,6 +8,8 @@
     import { CirclesConverter } from '@circles-sdk/utils';
     import { isAddress, isZeroAddress, toBigIntMaybe, tokenIdToAddressMaybe } from '$lib/utils/tx';
     import TxEvents from './TxEvents.svelte';
+    import { popupControls } from '$lib/stores/popup';
+    import JumpPopup from '$lib/components/jump/JumpPopup.svelte';
 
     interface Props { item: TransactionHistoryRow }
     let { item }: Props = $props();
@@ -58,14 +60,11 @@
     // JSON tab moved to TxJson component
 
     function openOnExplorer() {
-        const url = `https://gnosisscan.io/tx/${item.transactionHash}`;
-        const a = document.createElement('a');
-        a.href = url;
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
+        popupControls.open({
+            title: 'Leaving this app',
+            component: JumpPopup,
+            props: { to: `https://gnosisscan.io/tx/${item.transactionHash}` },
+        });
     }
 
     function copyHash() {

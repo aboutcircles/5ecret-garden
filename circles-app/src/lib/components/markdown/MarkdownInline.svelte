@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Inline } from '$lib/components/markdown/ast';
-  import { jumpHref } from '$lib/components/markdown/jump';
+  import JumpLink from '$lib/components/jump/JumpLink.svelte';
 
   interface Props {
     node: Inline;
@@ -33,11 +33,11 @@
       {/each}
     </em>
   {:else if n.type === 'link'}
-    <a class="link link-primary" href={jumpHref(n.url)}>
+    <JumpLink className="link link-primary" url={n.url}>
       {#each n.children as child}
         {@render renderInline(child)}
       {/each}
-    </a>
+    </JumpLink>
   {/if}
 {/snippet}
 
