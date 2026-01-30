@@ -123,9 +123,6 @@ export function productAndOfferToDraft(
         .filter((slot) => slot.length > 0)
     : undefined;
 
-  const fulfillmentEndpoint = (offer as any)?.fulfillmentEndpoint as string | undefined;
-  const fulfillmentTrigger = (offer as any)?.fulfillmentTrigger as 'confirmed' | 'finalized' | undefined;
-
   const draft: OfferDraft = {
     sku: String(product.sku || ''),
     name: String(product.name || ''),
@@ -139,12 +136,8 @@ export function productAndOfferToDraft(
     category: (product.category || undefined) as string | undefined,
     price: priceValue,
     priceCurrency,
-    availabilityFeed: (offer?.availabilityFeed || undefined) as string | undefined,
-    inventoryFeed: (offer?.inventoryFeed || undefined) as string | undefined,
     availableDeliveryMethod: (offer?.availableDeliveryMethod || undefined) as string | undefined,
     requiredSlots,
-    fulfillmentEndpoint: fulfillmentEndpoint || undefined,
-    fulfillmentTrigger: fulfillmentTrigger || undefined,
     paymentGateway: undefined
   };
 

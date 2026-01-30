@@ -16,8 +16,6 @@ export type OfferDraft = {
   // Offer
   price?: number;
   priceCurrency?: string; // ISO-4217, e.g. "EUR"
-  availabilityFeed?: string;
-  inventoryFeed?: string;
   /** @deprecated Not used; kept for potential future extension. Prefer product.url and offer.url */
   urlProduct?: string;
   availableDeliveryMethod?: string; // GoodRelations IRI (e.g. http://purl.org/goodrelations/v1#DeliveryModePickUp)
@@ -26,10 +24,6 @@ export type OfferDraft = {
    * Recognized initial set: "contactPoint.email", "contactPoint.telephone".
    */
   requiredSlots?: string[];
-
-  // Fulfillment
-  fulfillmentEndpoint?: string; // absolute URL
-  fulfillmentTrigger?: 'confirmed' | 'finalized';
 
   // Payment
   paymentGateway?: Address; // selected payment gateway address used for PayAction
