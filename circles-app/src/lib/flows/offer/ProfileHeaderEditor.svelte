@@ -231,9 +231,6 @@
                                 readonly={readonly}
                                 editorClass="w-full bg-transparent border-none focus:outline-none focus:ring-0 resize-y min-h-[3.5rem] text-sm text-base-content/90 p-0"
                         />
-                        <div class="text-xs opacity-70 mt-1">
-                            Supports: bold/italic, links.
-                        </div>
                     </div>
                 </div>
             </div>

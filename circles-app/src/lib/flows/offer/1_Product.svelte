@@ -160,7 +160,7 @@
 
       <!-- Show live auto-generated SKU preview when no manual SKU provided -->
       {#if !(sku && sku.trim().length > 0)}
-        <div class="text-sm opacity-70">Auto SKU (preview): {autoSku}</div>
+        <div class="text-sm opacity-70">sku: {autoSku}</div>
       {/if}
       <label class="form-control">
         <span class="label-text">Description</span>
@@ -169,9 +169,6 @@
           rows={3}
           placeholder="Write a description (Markdown supported)…"
         />
-        <div class="text-xs opacity-70 mt-1">
-          Supports: bold/italic, links.
-        </div>
       </label>
       <!-- Images: either upload multiple or paste a single URL (legacy) -->
       <div class="space-y-2">

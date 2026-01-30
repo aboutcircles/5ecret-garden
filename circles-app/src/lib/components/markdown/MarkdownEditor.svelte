@@ -1,11 +1,9 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
   import Markdown from '$lib/components/markdown/Markdown.svelte';
-  import { normalizeMarkdownInput } from '$lib/utils/isValid';
+  import Lucide from '$lib/icons/Lucide.svelte';
+  import { Bold as LBold, Italic as LItalic, Link2 as LLink2, Pencil as LPencil, Eye as LEye } from 'lucide';
 
-  type Mode = 'write' | 'preview' | 'split';
-
-  interface Props {
+  type Props = {
     value?: string;
     placeholder?: string;
     rows?: number;
@@ -13,7 +11,7 @@
     editorClass?: string;
     previewClass?: string;
     containerClass?: string;
-  }
+  };
 
   let {
     value = $bindable(''),
@@ -25,134 +23,419 @@
     containerClass = '',
   }: Props = $props();
 
-  let mode: Mode = $state('write');
+  let textarea = $state<HTMLTextAreaElement | null>(null);
+  type ViewMode = 'editor' | 'preview';
+  let viewMode = $state<ViewMode>('editor');
 
-  onMount(() => {
-    const isLargeScreen = window.matchMedia('(min-width: 768px)').matches;
-    if (isLargeScreen) {
-      mode = 'split';
-    }
-  });
+  const disabled = $derived(readonly);
+  const showPreview = $derived(viewMode === 'preview');
+  const canEdit = $derived(!disabled && viewMode === 'editor');
+  const normalizedRows = $derived(Math.max(2, Number(rows) || 4));
+  const minHeightStyle = $derived(`min-height: ${normalizedRows * 1.5}rem;`);
 
-  let ta: HTMLTextAreaElement | null = $state(null);
+  type LinkRange = {
+    start: number;
+    end: number;
+    labelStart: number;
+    labelEnd: number;
+    urlStart: number;
+    urlEnd: number;
+    label: string;
+    url: string;
+  };
 
-  const showEditor = $derived(mode === 'write' || mode === 'split');
-  const showPreview = $derived(mode === 'preview' || mode === 'split');
-  const isSplit = $derived(mode === 'split');
-
-  function setMode(next: Mode): void {
-    mode = next;
+  function onToolbarPointerDown(e: PointerEvent, action: () => void): void {
+    e.preventDefault();
+    e.stopPropagation();
+    action();
   }
 
-  function normalizeNow(): void {
-    const next = normalizeMarkdownInput(value);
-    const changed = next !== value;
-    if (changed) {
-      value = next;
-    }
-  }
-
-  function withTextarea(fn: (el: HTMLTextAreaElement) => void): void {
-    const hasEl = ta !== null;
-    if (!hasEl) {
-      return;
-    }
-    fn(ta);
-  }
-
-  function wrapSelection(before: string, after: string): void {
-    const isReadonly = readonly;
-    if (isReadonly) {
-      return;
+  function readSelection(): { text: string; start: number; end: number } | null {
+    const hasTextarea = textarea !== null;
+    if (!hasTextarea) {
+      return null;
     }
 
-    withTextarea((el) => {
-      const start = el.selectionStart ?? 0;
-      const end = el.selectionEnd ?? 0;
+    const text = textarea!.value;
+    const start = textarea!.selectionStart ?? 0;
+    const end = textarea!.selectionEnd ?? start;
 
-      const head = value.slice(0, start);
-      const mid = value.slice(start, end);
-      const tail = value.slice(end);
+    const clampedStart = Math.max(0, Math.min(start, text.length));
+    const clampedEnd = Math.max(clampedStart, Math.min(end, text.length));
 
-      value = `${head}${before}${mid}${after}${tail}`;
-
-      queueMicrotask(() => {
-        el.focus();
-        el.selectionStart = start + before.length;
-        el.selectionEnd = end + before.length;
-      });
-    });
+    return { text, start: clampedStart, end: clampedEnd };
   }
 
-  function insertLinkTemplate(): void {
-    const isReadonly = readonly;
-    if (isReadonly) {
+  function writeTextAndSelection(nextText: string, nextStart: number, nextEnd: number): void {
+    const hasTextarea = textarea !== null;
+    if (!hasTextarea) {
+      value = nextText;
       return;
     }
 
-    wrapSelection('[', '](https://example.com)');
+    value = nextText;
+    textarea!.value = nextText;
+
+    const start = Math.max(0, Math.min(nextStart, nextText.length));
+    const end = Math.max(start, Math.min(nextEnd, nextText.length));
+
+    textarea!.focus();
+    textarea!.setSelectionRange(start, end);
+  }
+
+  function toggleWrap(marker: string): void {
+    if (!canEdit) {
+      return;
+    }
+
+    const sel = readSelection();
+    if (!sel) {
+      return;
+    }
+
+    const { text, start, end } = sel;
+    const hasSelection = start !== end;
+
+    if (!hasSelection) {
+      const insert = `${marker}${marker}`;
+      const nextText = text.slice(0, start) + insert + text.slice(end);
+      const caret = start + marker.length;
+      writeTextAndSelection(nextText, caret, caret);
+      return;
+    }
+
+    const selected = text.slice(start, end);
+
+    const beforeStart = start - marker.length;
+    const afterEnd = end + marker.length;
+
+    const canUnwrap =
+      beforeStart >= 0 &&
+      afterEnd <= text.length &&
+      text.slice(beforeStart, start) === marker &&
+      text.slice(end, afterEnd) === marker;
+
+    if (canUnwrap) {
+      const nextText = text.slice(0, beforeStart) + selected + text.slice(afterEnd);
+      const nextStart = beforeStart;
+      const nextEnd = beforeStart + selected.length;
+      writeTextAndSelection(nextText, nextStart, nextEnd);
+      return;
+    }
+
+    const nextText = text.slice(0, start) + marker + selected + marker + text.slice(end);
+    const nextStart = start + marker.length;
+    const nextEnd = end + marker.length;
+    writeTextAndSelection(nextText, nextStart, nextEnd);
+  }
+
+  function toggleBold(): void {
+    toggleWrap('**');
+  }
+
+  function toggleItalic(): void {
+    toggleWrap('*');
+  }
+
+  function findEnclosingLink(text: string, selStart: number, selEnd: number): LinkRange | null {
+    const re = /\[([^\]]*)\]\(([^)]+)\)/g;
+
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(text)) !== null) {
+      const full = m[0];
+      const start = m.index;
+      const end = start + full.length;
+
+      const isWithin = selStart >= start && selEnd <= end;
+      if (!isWithin) {
+        continue;
+      }
+
+      const label = m[1] ?? '';
+      const url = m[2] ?? '';
+
+      const labelStart = start + 1;
+      const labelEnd = labelStart + label.length;
+
+      const markerIdx = full.indexOf('](');
+      const hasMarker = markerIdx >= 0;
+      if (!hasMarker) {
+        continue;
+      }
+
+      const urlStart = start + markerIdx + 2;
+      const urlEnd = urlStart + url.length;
+
+      return { start, end, labelStart, labelEnd, urlStart, urlEnd, label, url };
+    }
+
+    return null;
+  }
+
+  function normalizeHref(raw: string): string | null {
+    const trimmed = raw.trim();
+    const hasAny = trimmed.length > 0;
+
+    if (!hasAny) {
+      return null;
+    }
+
+    const lower = trimmed.toLowerCase();
+    const isUnsafeScheme = lower.startsWith('javascript:') || lower.startsWith('data:');
+
+    if (isUnsafeScheme) {
+      return null;
+    }
+
+    const isAllowedAbsolute =
+      lower.startsWith('http://') || lower.startsWith('https://') || lower.startsWith('mailto:');
+    if (isAllowedAbsolute) {
+      return trimmed;
+    }
+
+    const isAllowedRelative = trimmed.startsWith('/') || trimmed.startsWith('#');
+    if (isAllowedRelative) {
+      return trimmed;
+    }
+
+    const looksLikeDomain = /^[\w.-]+\.[a-z]{2,}([\/?#].*)?$/i.test(trimmed);
+    if (looksLikeDomain) {
+      return `https://${trimmed}`;
+    }
+
+    return null;
+  }
+
+  function setLink(): void {
+    if (!canEdit) {
+      return;
+    }
+
+    const sel = readSelection();
+    if (!sel) {
+      return;
+    }
+
+    const { text, start, end } = sel;
+
+    const existing = findEnclosingLink(text, start, end);
+    const initialHref = existing?.url || 'https://';
+
+    const savedStart = start;
+    const savedEnd = end;
+
+    const input = window.prompt('Link URL', initialHref);
+    const cancelled = input === null;
+
+    if (cancelled) {
+      writeTextAndSelection(text, savedStart, savedEnd);
+      return;
+    }
+
+    const normalized = normalizeHref(input);
+    const isValid = normalized !== null;
+
+    if (!isValid) {
+      window.alert('Invalid/unsafe URL.');
+      writeTextAndSelection(text, savedStart, savedEnd);
+      return;
+    }
+
+    const afterPromptSel = readSelection() ?? { text, start: savedStart, end: savedEnd };
+    const freshText = afterPromptSel.text;
+
+    const linkNow = findEnclosingLink(freshText, savedStart, savedEnd);
+    const isUpdatingExisting = linkNow !== null;
+
+    if (isUpdatingExisting) {
+      const oldLen = linkNow!.urlEnd - linkNow!.urlStart;
+      const nextText =
+        freshText.slice(0, linkNow!.urlStart) + normalized + freshText.slice(linkNow!.urlEnd);
+      const delta = normalized.length - oldLen;
+      const caret = linkNow!.end + delta;
+      writeTextAndSelection(nextText, caret, caret);
+      return;
+    }
+
+    const hasSelection = savedStart !== savedEnd;
+
+    if (hasSelection) {
+      const label = freshText.slice(savedStart, savedEnd);
+      const insert = `[${label}](${normalized})`;
+      const nextText = freshText.slice(0, savedStart) + insert + freshText.slice(savedEnd);
+      const nextLabelStart = savedStart + 1;
+      const nextLabelEnd = nextLabelStart + label.length;
+      writeTextAndSelection(nextText, nextLabelStart, nextLabelEnd);
+      return;
+    }
+
+    const insert = `[](${normalized})`;
+    const nextText = freshText.slice(0, savedStart) + insert + freshText.slice(savedEnd);
+    const caret = savedStart + 1;
+    writeTextAndSelection(nextText, caret, caret);
   }
 </script>
 
-<div class={containerClass}>
-  <div class="flex items-center gap-2 mb-2">
-    <div class="join">
+<div
+  class={`mmw ${containerClass}`.trim()}
+  data-disabled={disabled ? 'true' : 'false'}
+  data-preview={showPreview ? 'true' : 'false'}
+>
+  <div class="toolbar">
+    <div class="toolbar-group">
       <button
         type="button"
-        class="btn btn-xs join-item {mode === 'write' ? 'btn-neutral' : ''}"
-        onclick={() => setMode('write')}
-        aria-pressed={mode === 'write'}
+        class="tb"
+        aria-label="Bold"
+        disabled={!canEdit}
+        onpointerdown={(e) => onToolbarPointerDown(e, toggleBold)}
       >
-        Write
+        <Lucide icon={LBold} size={16} ariaLabel="" />
       </button>
       <button
         type="button"
-        class="btn btn-xs join-item {mode === 'preview' ? 'btn-neutral' : ''}"
-        onclick={() => setMode('preview')}
-        aria-pressed={mode === 'preview'}
+        class="tb"
+        aria-label="Italic"
+        disabled={!canEdit}
+        onpointerdown={(e) => onToolbarPointerDown(e, toggleItalic)}
       >
+        <Lucide icon={LItalic} size={16} ariaLabel="" />
+      </button>
+      <button
+        type="button"
+        class="tb"
+        aria-label="Link"
+        disabled={!canEdit}
+        onpointerdown={(e) => onToolbarPointerDown(e, setLink)}
+      >
+        <Lucide icon={LLink2} size={16} ariaLabel="" />
+      </button>
+    </div>
+    <div class="tabs tabs-boxed tabs-sm" role="tablist" aria-label="Markdown view">
+      <button
+        type="button"
+        role="tab"
+        class={`tab gap-2 ${viewMode === 'editor' ? 'tab-active' : ''}`.trim()}
+        aria-selected={viewMode === 'editor'}
+        tabindex={viewMode === 'editor' ? 0 : -1}
+        onpointerdown={(e) =>
+          onToolbarPointerDown(e, () => {
+            viewMode = 'editor';
+          })}
+      >
+        <Lucide icon={LPencil} size={16} ariaLabel="" />
+        Editor
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class={`tab gap-2 ${viewMode === 'preview' ? 'tab-active' : ''}`.trim()}
+        aria-selected={viewMode === 'preview'}
+        tabindex={viewMode === 'preview' ? 0 : -1}
+        onpointerdown={(e) =>
+          onToolbarPointerDown(e, () => {
+            viewMode = 'preview';
+          })}
+      >
+        <Lucide icon={LEye} size={16} ariaLabel="" />
         Preview
       </button>
-      <button
-        type="button"
-        class="btn btn-xs join-item {mode === 'split' ? 'btn-neutral' : ''}"
-        onclick={() => setMode('split')}
-        aria-pressed={mode === 'split'}
-      >
-        Split
-      </button>
-    </div>
-
-    <div class="join ml-2">
-      <button type="button" class="btn btn-xs join-item" onclick={() => wrapSelection('**', '**')} disabled={readonly}>
-        B
-      </button>
-      <button type="button" class="btn btn-xs join-item" onclick={() => wrapSelection('*', '*')} disabled={readonly}>
-        I
-      </button>
-      <button type="button" class="btn btn-xs join-item" onclick={insertLinkTemplate} disabled={readonly}>
-        Link
-      </button>
     </div>
   </div>
 
-  <div class={isSplit ? 'grid grid-cols-1 md:grid-cols-2 gap-3' : ''}>
-    {#if showEditor}
-      <textarea
-        bind:this={ta}
-        class={editorClass}
-        bind:value
-        {placeholder}
-        {rows}
-        readonly={readonly}
-        onblur={normalizeNow}
-      ></textarea>
-    {/if}
-
-    {#if showPreview}
-      <div class="bg-base-100 border border-base-300 rounded-lg p-3">
-        <Markdown content={value} class={previewClass} />
-      </div>
-    {/if}
-  </div>
+  {#if showPreview}
+    <div class={`preview ${previewClass}`.trim()} style={minHeightStyle}>
+      <Markdown content={value} />
+    </div>
+  {:else}
+    <textarea
+      bind:this={textarea}
+      class={`editor ${editorClass}`.trim()}
+      style={minHeightStyle}
+      rows={normalizedRows}
+      placeholder={placeholder}
+      readonly={disabled}
+      aria-disabled={disabled}
+      spellcheck="false"
+      bind:value={value}
+    ></textarea>
+  {/if}
 </div>
+
+<style>
+  .mmw {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .toolbar-group {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .tb {
+    font: inherit;
+    font-size: 12px;
+    padding: 6px;
+    border: 1px solid rgba(0, 0, 0, 0.14);
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 8px;
+    opacity: 0.92;
+    cursor: pointer;
+    transition: opacity 120ms ease, transform 120ms ease, background 120ms ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    min-height: 32px;
+  }
+
+  .tb:hover {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  .tb:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .tb:active {
+    opacity: 1;
+    transform: translateY(1px);
+  }
+
+  .editor {
+    font: inherit;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow: auto;
+    resize: vertical;
+  }
+
+  .preview {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    background: rgba(0, 0, 0, 0.02);
+  }
+
+  .mmw[data-disabled='true'] .tb {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  .mmw[data-disabled='true'] .editor {
+    opacity: 0.6;
+  }
+</style>
