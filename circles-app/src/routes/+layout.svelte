@@ -10,65 +10,78 @@
   import '../app.css';
 
   import { avatarState } from '$lib/stores/avatar.svelte';
-  import {
-    clearSession,
-    restoreSession,
-    signer,
-  } from '$lib/stores/wallet.svelte';
   import { canMigrate } from '$lib/guards/canMigrate';
   import { page } from '$app/stores';
   import { onDestroy, onMount } from 'svelte';
   import { tasks } from '$lib/utils/tasks';
   import { popupControls, popupState } from '$lib/stores/popup';
   import Popup from '$lib/components/Popup.svelte';
-  import { getProfile } from '$lib/utils/profile';
   import { initTransactionHistoryStore } from '$lib/stores/transactionHistory';
   import { initContactStore } from '$lib/stores/contacts';
   import { initBalanceStore } from '$lib/stores/circlesBalances';
-  import { clearCart } from '$lib/cart/store';
   import { browser } from '$app/environment';
   import { PUBLIC_PLAUSIBLE_DOMAIN } from '$env/static/public';
   import { initGroupMetricsStore } from '$lib/stores/groupMetrics.svelte';
-  import { circles } from '$lib/stores/circles';
   import type { Address } from '@circles-sdk/utils';
-  import { PersistentAuthContext } from '$lib/sdk/persistentAuthContext';
-
-  import { watchAccount } from '@wagmi/core';
-  import { config } from '../config';
+  import { get } from 'svelte/store';
   import BottomNav from '$lib/components/BottomNav.svelte';
   import DefaultHeader from './DefaultHeader.svelte';
 
-  const unwatch = watchAccount(config, {
-    onChange(account) {
-      const isPrivateKeySession = signer.privateKey !== undefined;
+  let unwatch: (() => void) | null = null;
+  let walletModule: typeof import('$lib/stores/wallet.svelte') | null = null;
 
-      // Wrong network guard (only when an EOA is actually present)
-      if (account.chainId !== 100 && account.address) {
-        void openWrongNetworkPopup();
-        return;
-      }
+  async function getWalletModule() {
+    if (!walletModule) {
+      walletModule = await import('$lib/stores/wallet.svelte');
+    }
+    return walletModule;
+  }
 
-      // Keep signer.address in sync with the current EOA for browser sessions
-      // (EOA != Safe; this is expected and NOT a reason to clear the session)
-      if (!isPrivateKeySession && account.address) {
-        signer.address = account.address.toLowerCase() as Address;
-        return;
-      }
+  async function initWalletWatcher(): Promise<void> {
+    const { restoreSession, clearSession, signer } = await getWalletModule();
+    const { watchAccount } = await import('@wagmi/core');
+    const { config } = await import('../config');
 
-      // For private-key sessions, mismatch means "user switched account in wallet UI"
-      if (
-        isPrivateKeySession &&
-        signer.address &&
-        account.address &&
-        account.address.toLowerCase() !== signer.address.toLowerCase()
-      ) {
-        clearSession();
-      }
-    },
-  });
+    unwatch = watchAccount(config, {
+      onChange(account) {
+        const isPrivateKeySession = signer.privateKey !== undefined;
+
+        // Wrong network guard (only when an EOA is actually present)
+        if (account.chainId !== 100 && account.address) {
+          void openWrongNetworkPopup();
+          return;
+        }
+
+        // Keep signer.address in sync with the current EOA for browser sessions
+        // (EOA != Safe; this is expected and NOT a reason to clear the session)
+        if (!isPrivateKeySession && account.address) {
+          signer.address = account.address.toLowerCase() as Address;
+          return;
+        }
+
+        // For private-key sessions, mismatch means "user switched account in wallet UI"
+        if (
+          isPrivateKeySession &&
+          signer.address &&
+          account.address &&
+          account.address.toLowerCase() !== signer.address.toLowerCase()
+        ) {
+          clearSession();
+        }
+      },
+    });
+
+    if (
+      $page.route.id !== '/' &&
+      $page.route.id !== '/connect-wallet/connect-safe' &&
+      $page.route.id !== '/connect-wallet/import-circles-garden'
+    ) {
+      await restoreSession();
+    }
+  }
 
   onDestroy(() => {
-    unwatch();
+    unwatch?.();
   });
 
   interface Props {
@@ -82,14 +95,7 @@
   let hasUserInteraction = $state(false);
 
   onMount(async () => {
-    if (
-      $page.route.id !== '/' &&
-      $page.route.id !== '/connect-wallet/connect-safe' &&
-      $page.route.id !== '/connect-wallet/import-circles-garden'
-    ) {
-      await restoreSession();
-    }
-
+    await initWalletWatcher();
     if (browser) {
       const markInteraction = () => {
         hasUserInteraction = true;
@@ -137,9 +143,11 @@
   $effect(() => {
     const address = avatarState.avatar?.address;
     if (address) {
-      getProfile(address).then((newProfile) => {
+      void (async () => {
+        const { getProfile } = await import('$lib/utils/profile');
+        const newProfile = await getProfile(address);
         avatarState.profile = newProfile;
-      });
+      })();
     } else {
       avatarState.profile = undefined;
     }
@@ -151,8 +159,14 @@
       initTransactionHistoryStore(avatarState.avatar);
       initContactStore(avatarState.avatar);
       initBalanceStore(avatarState.avatar);
-      if (avatarState.groupType === 'CrcV2_BaseGroupCreated' && $circles) {
-        initGroupMetricsStore($circles.circlesRpc, avatarState.avatar.address);
+      if (avatarState.groupType === 'CrcV2_BaseGroupCreated') {
+        void (async () => {
+          const { circles } = await import('$lib/stores/circles');
+          const circlesValue = get(circles);
+          if (circlesValue) {
+            initGroupMetricsStore(circlesValue.circlesRpc, avatarState.avatar.address);
+          }
+        })();
       }
     }
   });
@@ -160,8 +174,14 @@
   $effect(() => {
     const currentAddress = avatarState.avatar?.address?.toLowerCase();
     if (lastAvatarAddress && currentAddress && lastAvatarAddress !== currentAddress) {
-      new PersistentAuthContext().clear();
-      clearCart();
+      void (async () => {
+        const [{ PersistentAuthContext }, { clearCart }] = await Promise.all([
+          import('$lib/sdk/persistentAuthContext'),
+          import('$lib/cart/store'),
+        ]);
+        new PersistentAuthContext().clear();
+        clearCart();
+      })();
     }
     lastAvatarAddress = currentAddress;
   });
@@ -171,7 +191,7 @@
 </script>
 
 <svelte:head>
-  {#if browser && PUBLIC_PLAUSIBLE_DOMAIN && hasUserInteraction}
+  {#if browser && PUBLIC_PLAUSIBLE_DOMAIN && hasUserInteraction && avatarState.avatar}
     <script
       defer
       data-domain={PUBLIC_PLAUSIBLE_DOMAIN}

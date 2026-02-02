@@ -7,11 +7,32 @@
   let { homeLink = '/' }: Props = $props();
 
   import { page } from '$app/stores';
-  import { cartItemCount } from '$lib/cart/store';
   import { popupControls } from '$lib/stores/popup';
+  import { writable, type Unsubscriber } from 'svelte/store';
+
+  const cartItemCount = writable(0);
+  let cartCountUnsub: Unsubscriber | null = null;
+
+  async function ensureCartCountSubscription(): Promise<void> {
+    if (cartCountUnsub) return;
+    const { cartItemCount: cartItemCountStore } = await import('$lib/cart/store');
+    cartCountUnsub = cartItemCountStore.subscribe((value) => {
+      cartItemCount.set(value);
+    });
+  }
 
   async function openBasket(): Promise<void> {
-    const { default: CartPanel } = await import('$lib/flows/checkout/CartPanel.svelte');
+    const [{ default: CartPanel }, { cartItemCount: cartItemCountStore }] = await Promise.all([
+      import('$lib/flows/checkout/CartPanel.svelte'),
+      import('$lib/cart/store'),
+    ]);
+
+    if (!cartCountUnsub) {
+      cartCountUnsub = cartItemCountStore.subscribe((value) => {
+        cartItemCount.set(value);
+      });
+    }
+
     popupControls.open({
       title: 'Basket',
       component: CartPanel,
@@ -59,9 +80,12 @@
   });
 
   onMount(() => {
+    void ensureCartCountSubscription();
     document.addEventListener('click', handleDocClick);
     document.addEventListener('keydown', handleKeydown);
     return () => {
+      cartCountUnsub?.();
+      cartCountUnsub = null;
       document.removeEventListener('click', handleDocClick);
       document.removeEventListener('keydown', handleKeydown);
     };
