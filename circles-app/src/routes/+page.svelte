@@ -15,7 +15,13 @@
 
 <div class="page page-stack page--lg">
     <div class="min-h-screen flex flex-col items-center justify-center text-center">
-        <img src="./illustration.png" alt="illustration" class="max-w-[340px]"/>
+        <img
+            src="./illustration.png"
+            alt="illustration"
+            width="340"
+            height="340"
+            class="max-w-[340px]"
+        />
         <h1 class="text-5xl font-medium">Money, Reimagined</h1>
         <p class="py-6 px-2 max-w-2xl">
             Mint personal Circles, build trust, and manage your community groups with the Circles Core app
