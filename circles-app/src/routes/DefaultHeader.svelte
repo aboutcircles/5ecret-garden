@@ -72,9 +72,10 @@
   <div class="flex-1">
     <a class="flex items-center text-xl font-bold" href={homeLink}>
       <img src="/logo.svg" alt="Circles" class="w-8 h-8" />
-      <span class="inline-block overflow-hidden text-primary"
-        >Circles <p class="text-sm text-red-500">(beta)</p></span
-      >
+      <span class="inline-block overflow-hidden text-primary">
+        Circles
+        <span class="ml-1 text-sm font-semibold text-red-800">(beta)</span>
+      </span>
     </a>
   </div>
   {#if isMarketPage || $cartItemCount > 0}
