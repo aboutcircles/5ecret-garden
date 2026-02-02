@@ -16,11 +16,15 @@
 <div class="page page-stack page--lg">
     <div class="min-h-screen flex flex-col items-center justify-center text-center">
         <img
-            src="./illustration.png"
+            src="/illustration-340.png"
+            srcset="/illustration-340.png 340w, /illustration-680.png 680w"
+            sizes="(max-width: 640px) 340px, 340px"
             alt="illustration"
             width="340"
             height="340"
             class="max-w-[340px]"
+            loading="eager"
+            fetchpriority="high"
         />
         <h1 class="text-5xl font-medium">Money, Reimagined</h1>
         <p class="py-6 px-2 max-w-2xl">
