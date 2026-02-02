@@ -87,8 +87,11 @@
     // data load with pagination
     // ————————————————————————————————————————————
     const defaultAvatars: `0x${string}`[] = [
-      '0xde374ece6fa50e781e81aac78e811b33d16912c7',
-      '0x636f44a378da9256a128b104b1e06aa50a578f33'
+        '0x3cf62e563c47d0f049c3ee56cc4955ebc2207984',
+        '0x943186fbcfd74fd575bcf9aa76a53f56b2f06aba',
+        '0x808da12fdd0a56413551449053c2ff918822e7d6',
+        '0x636f44a378da9256a128b104b1e06aa50a578f33'
+
     ];
     const avatarAddress = $derived((avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '') as `0x${string}` | '');
     function getScanAvatars(): `0x${string}`[] {
