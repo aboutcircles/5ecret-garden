@@ -62,8 +62,8 @@
       <span>{errorMsg}</span>
     </div>
   {:else if product && product?.product}
-    {#if addState.showButton}
-      {#snippet actions()}
+    {#snippet actions()}
+      {#if addState.showButton}
         <div class="flex gap-2 w-full">
           <button
             type="button"
@@ -75,8 +75,8 @@
             {addState.label}
           </button>
         </div>
-      {/snippet}
-    {/if}
+      {/if}
+    {/snippet}
 
     <ProductViewer
       product={product.product}
