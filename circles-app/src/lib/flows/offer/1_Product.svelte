@@ -1,15 +1,16 @@
 <script lang="ts">
-  import { popupControls } from '$lib/stores/popup';
+  import {popupControls} from '$lib/stores/popup';
   import MarkdownEditor from '$lib/components/markdown/MarkdownEditor.svelte';
   import OfferStep2 from './2_Pricing.svelte';
-  import type {OfferFlowContext, OfferDraft} from './types';
+  import type {OfferDraft, OfferFlowContext} from './types';
   import ImageUpload from '$lib/components/ImageUpload.svelte';
-  import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
+  import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
   import {generateSku, isValidSku} from '$lib/utils/offer';
-  import { get } from 'svelte/store';
-  import { circles } from '$lib/stores/circles';
-  import { wallet } from '$lib/stores/wallet.svelte';
-  import { onMount } from 'svelte';
+  import {get} from 'svelte/store';
+  import {circles} from '$lib/stores/circles';
+  import {wallet} from '$lib/stores/wallet.svelte';
+  import {onMount} from 'svelte';
+  import {goto} from '$app/navigation';
 
   interface Props {
     context: OfferFlowContext;
@@ -20,8 +21,7 @@
   // Hard guard: we must know which namespace/operator to publish under
   let hasOperator = false;
   try {
-    const op = normalizeAddress(String((context as any)?.operator ?? ''));
-    (context as any).operator = op; // store normalized value once
+    (context as any).operator = normalizeAddress(String((context as any)?.operator ?? '')); // store normalized value once
     hasOperator = true;
   } catch {
     hasOperator = false;
@@ -49,7 +49,7 @@
 
   function normalizeDraftImages(d: OfferDraft): string[] {
     const arr = Array.isArray(d.images) ? d.images : [];
-    const cleaned = arr.map((x) => (typeof x === 'string' ? x.trim() : '')).filter((x) => x.length > 0);
+    const cleaned = arr.map((x) => x.trim()).filter((x) => x.length > 0);
     if (cleaned.length > 0) return cleaned;
 
     const legacy = typeof d.image === 'string' ? d.image.trim() : '';
@@ -107,6 +107,11 @@
   $effect(() => {
     autoSku = generateSku(name || '');
   });
+
+  function goToPaymentSettings(): void {
+    popupControls.close();
+    goto('/settings?tab=payment');
+  }
 
   function next(): void {
     const hasManualSku = (sku ?? '').trim().length > 0;
@@ -239,7 +244,7 @@
   {:else}
     <div class="alert alert-info">
       <div>
-        You need a payment gateway to create an offer. Please <a class="link" href="/gateway" target="_blank">create a gateway</a> and come back.
+        You need a payment gateway to create an offer. Please <button type="button" class="link" onclick={goToPaymentSettings}>create a gateway</button> and come back.
       </div>
     </div>
   {/if}

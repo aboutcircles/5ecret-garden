@@ -128,7 +128,7 @@
       const idxG = cols.indexOf('gateway');
       gateways = rows
         .map((r) => (r[idxG] ? (r[idxG] as string) : ''))
-        .filter((g) => typeof g === 'string' && g.length > 0)
+        .filter((g) => g.length > 0)
         .map((g) => g.toLowerCase());
 
       // Preselect existing draft gateway or the first one
@@ -208,7 +208,7 @@
     {#if loadingGateways}
       <div class="opacity-70 text-sm">Loading…</div>
     {:else if gateways.length === 0}
-      <div class="opacity-70 text-sm">No gateways found. <a class="link" href="/gateway" target="_blank">Create one</a> and come back.</div>
+      <div class="opacity-70 text-sm">No gateways found. <a class="link" href="/settings?tab=payment" target="_blank">Create one</a> and come back.</div>
     {:else}
       <!-- Custom dropdown to show Avatar names -->
       <div class="dropdown">
