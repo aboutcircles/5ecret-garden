@@ -16,7 +16,6 @@
     signer,
   } from '$lib/stores/wallet.svelte';
   import { canMigrate } from '$lib/guards/canMigrate';
-  import UpdateBanner from '$lib/components/UpdateBanner.svelte';
   import { page } from '$app/stores';
   import { onDestroy, onMount } from 'svelte';
   import { tasks } from '$lib/utils/tasks';
@@ -36,7 +35,6 @@
 
   import { watchAccount } from '@wagmi/core';
   import { config } from '../config';
-  import WrongNetwork from '$lib/components/WrongNetwork.svelte';
   import BottomNav from '$lib/components/BottomNav.svelte';
   import DefaultHeader from './DefaultHeader.svelte';
 
@@ -46,11 +44,7 @@
 
       // Wrong network guard (only when an EOA is actually present)
       if (account.chainId !== 100 && account.address) {
-        popupControls.open({
-          title: 'Wrong Network',
-          component: WrongNetwork,
-          props: {},
-        });
+        void openWrongNetworkPopup();
         return;
       }
 
@@ -85,6 +79,7 @@
 
   let menuItems: { name: string; link: string }[] = $state([]);
   let lastAvatarAddress: string | undefined = $state(undefined);
+  let hasUserInteraction = $state(false);
 
   onMount(async () => {
     if (
@@ -94,7 +89,35 @@
     ) {
       await restoreSession();
     }
+
+    if (browser) {
+      const markInteraction = () => {
+        hasUserInteraction = true;
+        window.removeEventListener('pointerdown', markInteraction);
+        window.removeEventListener('keydown', markInteraction);
+      };
+      window.addEventListener('pointerdown', markInteraction, { once: true });
+      window.addEventListener('keydown', markInteraction, { once: true });
+    }
   });
+
+  async function openWrongNetworkPopup(): Promise<void> {
+    const { default: WrongNetwork } = await import('$lib/components/WrongNetwork.svelte');
+    popupControls.open({
+      title: 'Wrong Network',
+      component: WrongNetwork,
+      props: {},
+    });
+  }
+
+  async function openMigratePopup(): Promise<void> {
+    const { default: MigrateToV2 } = await import('$lib/flows/migrateToV2/1_GetInvited.svelte');
+    popupControls.open({
+      title: 'Migrate to v2',
+      component: MigrateToV2,
+      props: {},
+    });
+  }
 
   $effect(() => {
     if (avatarState.avatar) {
@@ -148,7 +171,7 @@
 </script>
 
 <svelte:head>
-  {#if browser && PUBLIC_PLAUSIBLE_DOMAIN}
+  {#if browser && PUBLIC_PLAUSIBLE_DOMAIN && hasUserInteraction}
     <script
       defer
       data-domain={PUBLIC_PLAUSIBLE_DOMAIN}
@@ -167,7 +190,14 @@
   class="relative w-full min-h-screen bg-base-200 border-gray-200 overflow-hidden font-dmSans pt-4"
 >
   {#if avatarState.avatar?.avatarInfo && canMigrate(avatarState.avatar.avatarInfo)}
-    <UpdateBanner />
+    <button
+      class="w-full flex flex-col bg-blue-100 border-t-4 mb-4 border-blue-500 rounded-b text-blue-900 px-4 py-3 shadow-md cursor-pointer fixed top-16 z-10"
+      onclick={() => void openMigratePopup()}
+      onkeydown={(e) => e.key === 'Enter' && void openMigratePopup()}
+    >
+      <p class="font-bold">Circles V2 is here!</p>
+      <p class="text-sm">Migrate your avatar to Circles V2.</p>
+    </button>
     <div class="h-20"></div>
   {/if}
 

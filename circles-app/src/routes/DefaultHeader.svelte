@@ -9,9 +9,9 @@
   import { page } from '$app/stores';
   import { cartItemCount } from '$lib/cart/store';
   import { popupControls } from '$lib/stores/popup';
-  import CartPanel from '$lib/flows/checkout/CartPanel.svelte';
 
-  function openBasket(): void {
+  async function openBasket(): Promise<void> {
+    const { default: CartPanel } = await import('$lib/flows/checkout/CartPanel.svelte');
     popupControls.open({
       title: 'Basket',
       component: CartPanel,
