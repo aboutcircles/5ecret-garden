@@ -2,6 +2,10 @@ import { writable, type Writable } from 'svelte/store';
 
 export type PopupContentDefinition = {
   title?: string;
+  /**
+   * If true, the popup shell will not render the title text (useful when the inner component already has its own header).
+   */
+  hideTitle?: boolean;
   component: any; // Svelte component constructor (kept loose for app-wide compatibility)
   props?: Record<string, any>;
   key?: string | number;

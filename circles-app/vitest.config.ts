@@ -5,7 +5,9 @@ export default defineConfig({
   plugins: [sveltekit()],
   test: {
     globals: true,
-    environment: 'jsdom',
+    // Use the Node environment by default to avoid requiring a DOM implementation.
+    // Individual test files can opt into jsdom via `// @vitest-environment jsdom`.
+    environment: 'node',
     setupFiles: ['./tests/setup.ts']
   }
 });
