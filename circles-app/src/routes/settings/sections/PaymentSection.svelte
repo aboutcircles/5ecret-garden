@@ -3,6 +3,8 @@
   import type { Readable } from 'svelte/store';
   import GenericList from '$lib/components/GenericList.svelte';
   import GatewayRowView from '$lib/gateway/GatewayRow.svelte';
+  import { popupControls } from '$lib/stores/popup';
+  import CreateGatewayProfile from '$lib/flows/paymentGateway/CreateGatewayProfile.svelte';
 
   type Props = {
     gatewayOwnerAddress: Address | '';
@@ -10,9 +12,22 @@
     loadingGateways: boolean;
     myGatewaysStore: Readable<{ data: any[]; next: () => Promise<boolean>; ended: boolean }>;
     shortGatewayAddr: (a?: string) => string;
+    onReloadGateways?: () => void;
   };
 
-  let { gatewayOwnerAddress, circlesReady, loadingGateways, myGatewaysStore, shortGatewayAddr }: Props = $props();
+  let { gatewayOwnerAddress, circlesReady, loadingGateways, myGatewaysStore, shortGatewayAddr, onReloadGateways }: Props = $props();
+
+  function openCreateGatewayFlow() {
+    popupControls.open({
+      title: 'Create payment gateway',
+      component: CreateGatewayProfile,
+      props: {
+        onCreated: async () => {
+          onReloadGateways?.();
+        }
+      }
+    });
+  }
 </script>
 
 <section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
@@ -23,6 +38,11 @@
         <span class="opacity-60"> · Owner {shortGatewayAddr(gatewayOwnerAddress)}</span>
       {/if}
     </div>
+    {#if gatewayOwnerAddress && circlesReady}
+      <button type="button" class="btn btn-sm btn-primary" onclick={openCreateGatewayFlow}>
+        Create gateway
+      </button>
+    {/if}
   </div>
 
   {#if !gatewayOwnerAddress}

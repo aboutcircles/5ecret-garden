@@ -739,6 +739,7 @@
           {loadingGateways}
           {myGatewaysStore}
           {shortGatewayAddr}
+          onReloadGateways={loadMyGateways}
         />
       {:else}
         <div class="p-4 text-sm opacity-70">Select a tab.</div>
