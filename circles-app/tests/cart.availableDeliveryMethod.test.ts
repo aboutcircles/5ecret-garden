@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { cartState, upsertLineItem, patchBasket, type OrderItemPreview } from '$lib/cart/store';
+import { cartState, upsertLineItem, patchBasket, cartApi, type OrderItemPreview } from '$lib/cart/store';
 import type { AggregatedCatalogItem } from '$lib/market/types';
 
 function baseBasket(overrides: Partial<any> = {}): any {
@@ -70,7 +70,7 @@ describe('basket PATCH payload is reference-only (no offerSnapshot)', () => {
     const srcArray = ['http://purl.org/goodrelations/v1#DeliveryModePickUp'];
     const item = makeCatalogItemWithDelivery(srcArray);
 
-    const patchSpy = vi.spyOn(require('$lib/cart/store'), 'patchBasket').mockImplementation(async (_id: string, patch: any) => {
+    const patchSpy = vi.spyOn(cartApi, 'patchBasket').mockImplementation(async (_id: string, patch: any) => {
       const items = (patch as any).items as any[];
       expect(items).toHaveLength(1);
       const sent = items[0];
@@ -89,7 +89,7 @@ describe('basket PATCH payload is reference-only (no offerSnapshot)', () => {
     const srcStr = 'http://purl.org/goodrelations/v1#DeliveryModePickUp';
     const item = makeCatalogItemWithDelivery(srcStr);
 
-    const patchSpy = vi.spyOn(client, 'patchBasket').mockImplementation(async (_id, patch) => {
+    const patchSpy = vi.spyOn(cartApi, 'patchBasket').mockImplementation(async (_id, patch) => {
       const items = (patch as any).items as any[];
       expect(items).toHaveLength(1);
       const sent = items[0];

@@ -21,6 +21,8 @@
 
     let top = $derived(Math.max(0, pages.length - 1));
 
+    const showTitle = $derived(Boolean($popupState.content?.title) && !$popupState.content?.hideTitle);
+
     // Guarantee keys are unique and stable per page object
     const _ids = new WeakMap<any, string>();
     let _seq = 0;
@@ -42,7 +44,8 @@
         class:open={$popupState.content !== null}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="popup-title"
+        aria-labelledby={showTitle ? 'popup-title' : undefined}
+        aria-label={!showTitle ? ($popupState.content?.title ?? 'Popup') : undefined}
 >
     <div class="w-full max-w-4xl mx-auto p-6">
         <!-- Header -->
@@ -61,7 +64,7 @@
                 />
             </button>
 
-            {#if $popupState.content?.title}
+            {#if showTitle}
                 <h2 id="popup-title" class="text-xl font-bold">
                     {$popupState.content.title}
                 </h2>

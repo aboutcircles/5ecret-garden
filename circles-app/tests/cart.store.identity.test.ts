@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { cartState, upsertLineByIdentity, setLineQuantityByIdentity, removeLineByIdentity, setItems, patchBasket, type OrderItemPreview } from '$lib/cart/store';
+import { cartState, upsertLineByIdentity, setLineQuantityByIdentity, removeLineByIdentity, setItems, patchBasket, cartApi, type OrderItemPreview } from '$lib/cart/store';
 
 function baseBasket(overrides: Partial<any> = {}): any {
   return {
@@ -36,13 +36,13 @@ beforeEach(() => {
 
 describe('identity-based cart mutations', () => {
   it('inserts new line without offerSnapshot (server derives canonical data)', async () => {
-    const patchSpy = vi.spyOn(require('$lib/cart/store'), 'patchBasket').mockImplementation(async (_id, patch) => {
+    const patchSpy = vi.spyOn(cartApi, 'patchBasket').mockImplementation(async (_id, patch) => {
       // Expect a single new item
       const items = (patch as any).items as OrderItemPreview[];
       expect(items).toHaveLength(1);
       expect(items[0].orderQuantity).toBe(2);
-      expect(items[0].seller).toBe('SellerCASE');
-      expect(items[0].orderedItem.sku).toBe('SkuCase');
+      expect(items[0].seller).toBe('sellercase');
+      expect(items[0].orderedItem.sku).toBe('skucase');
       // No offerSnapshot should be present on outbound items
       expect('offerSnapshot' in (items[0] as any)).toBe(false);
       return baseBasket({ items });
@@ -61,13 +61,12 @@ describe('identity-based cart mutations', () => {
       seller: '0xseller',
     };
     cartState.update((s) => ({ ...s, basket: baseBasket({ items: [seeded] }) }));
-
-    const patchSpy = vi.spyOn(require('$lib/cart/store'), 'patchBasket').mockImplementation(async (_id, patch) => {
+    const patchSpy = vi.spyOn(cartApi, 'patchBasket').mockImplementation(async (_id, patch) => {
       const items = (patch as any).items as OrderItemPreview[];
       expect(items).toHaveLength(1);
       // Same object shape but updated quantity
       expect(items[0].orderQuantity).toBe(5);
-      expect(items[0].orderedItem.sku).toBe('ABC');
+      expect(items[0].orderedItem.sku).toBe('abc');
       expect(items[0].seller).toBe('0xseller');
       // Ensure no offerSnapshot field is sent anymore
       expect('offerSnapshot' in (items[0] as any)).toBe(false);
@@ -88,8 +87,8 @@ describe('identity-based cart mutations', () => {
     };
     cartState.update((s) => ({ ...s, basket: baseBasket({ items: [seeded] }) }));
 
-    const removeSpy = vi.spyOn(require('$lib/cart/store'), 'removeLineByIdentity');
-    const patchSpy = vi.spyOn(require('$lib/cart/store'), 'patchBasket').mockImplementation(async (_id, patch) => {
+    const removeSpy = vi.spyOn(cartApi, 'removeLineByIdentity');
+    const patchSpy = vi.spyOn(cartApi, 'patchBasket').mockImplementation(async (_id, patch) => {
       const items = (patch as any).items as OrderItemPreview[];
       // Remove path should result in empty items
       expect(items).toHaveLength(0);
@@ -107,13 +106,12 @@ describe('identity-based cart mutations', () => {
       { '@type': 'OrderItem', orderQuantity: 2, orderedItem: { '@type': 'Product', sku: 'Two' }, seller: 'Bob' },
     ];
     cartState.update((s) => ({ ...s, basket: baseBasket({ items }) }));
-
-    const patchSpy = vi.spyOn(require('$lib/cart/store'), 'patchBasket').mockImplementation(async (_id, patch) => {
+    const patchSpy = vi.spyOn(cartApi, 'patchBasket').mockImplementation(async (_id, patch) => {
       const patchedItems = (patch as any).items as OrderItemPreview[];
       expect(patchedItems).toHaveLength(1);
       // Only the non-matching line should remain
-      expect(patchedItems[0].orderedItem.sku).toBe('Two');
-      expect(patchedItems[0].seller).toBe('Bob');
+      expect(patchedItems[0].orderedItem.sku).toBe('two');
+      expect(patchedItems[0].seller).toBe('bob');
       return baseBasket({ items: patchedItems });
     });
 

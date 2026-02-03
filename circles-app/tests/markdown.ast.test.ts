@@ -2,6 +2,16 @@ import { describe, expect, it } from 'vitest';
 import { parseMarkdown, sanitizeUrl, type Inline } from '$lib/components/markdown/ast';
 
 describe('markdown AST parsing', () => {
+  it('preserves a single blank line between blocks', () => {
+    const ast = parseMarkdown('one\n\nTwo');
+    expect(ast.children.map((b) => b.type)).toEqual(['paragraph', 'blankLine', 'paragraph']);
+  });
+
+  it('collapses multiple blank lines into a single blank line node', () => {
+    const ast = parseMarkdown('one\n\n\n\nTwo');
+    expect(ast.children.map((b) => b.type)).toEqual(['paragraph', 'blankLine', 'paragraph']);
+  });
+
   it('parses **bold** as a strong node', () => {
     const ast = parseMarkdown('Made from **65% recycled materials**.');
     expect(ast.children).toHaveLength(1);
