@@ -102,7 +102,7 @@
   const connectionOptions = $derived.by(() =>
     connections.map((item) => ({
       key: `${chainId}:${item.seller.toLowerCase()}`,
-      label: `${item.odooDb} · ${item.seller.toLowerCase()}`,
+      label: `${item.odooUrl} · ${item.odooDb}`,
       connection: item,
     }))
   );

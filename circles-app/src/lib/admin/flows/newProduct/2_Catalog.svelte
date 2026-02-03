@@ -88,7 +88,7 @@
   function goNext(item: AggregatedCatalogItem): void {
     context.catalogItem = item;
     popupControls.open({
-      title: 'Choose product type',
+      title: 'Setup product - Fulfillment strategy',
       component: TypeStep,
       props: { context, connections, existingProducts, onExecute, onCreateConnection },
       id: 'admin-new-product-type',

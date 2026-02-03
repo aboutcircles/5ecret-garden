@@ -117,11 +117,11 @@
   <div class="bg-base-200 rounded-box p-3 text-sm">
     <div><span class="opacity-70">Seller:</span> <code class="ml-2 font-mono">{normalizedSeller ?? ''}</code></div>
     <div class="mt-1"><span class="opacity-70">SKU:</span> <code class="ml-2 font-mono">{normalizedSku}</code></div>
-    <div class="mt-1"><span class="opacity-70">Type:</span> {(context.selectedType ?? 'codedispenser') === 'codedispenser' ? 'Voucher code' : 'Odoo'}</div>
+    <div class="mt-1"><span class="opacity-70">Type:</span> {(context.selectedType ?? 'codedispenser') === 'codedispenser' ? 'Digital voucher code' : 'Odoo'}</div>
     <div class="mt-1"><span class="opacity-70">Actions:</span>
       <ul class="list-disc ml-5">
         <li>Create/Update route (offerType={context.selectedType ?? 'codedispenser'})</li>
-        <li>Create/Update {(context.selectedType ?? 'codedispenser') === 'codedispenser' ? 'CodeDispenser product' : 'Odoo product'}</li>
+        <li>Create/Update {(context.selectedType ?? 'codedispenser') === 'codedispenser' ? 'Digital voucher code product' : 'Odoo product'}</li>
       </ul>
     </div>
   </div>

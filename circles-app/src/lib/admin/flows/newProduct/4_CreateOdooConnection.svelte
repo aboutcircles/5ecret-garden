@@ -70,7 +70,7 @@
       context.selectedConnectionKey = `${context.chainId}:${String(created.seller).toLowerCase()}`;
 
       popupControls.open({
-        title: 'Enter details',
+        title: 'Setup product - Map to odoo product code',
         component: DetailsStep,
         props: { context, connections: [...connections, created], existingProducts, onExecute, onCreateConnection },
         id: 'admin-new-product-details',
