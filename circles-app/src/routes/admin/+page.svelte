@@ -12,7 +12,6 @@
     type AdminVerifyResponse,
   } from '$lib/gateway/adminAuth';
   import {
-    adminHealth,
     listRoutes,
     upsertRoute,
     disableRoute,
@@ -57,7 +56,6 @@
   let adminUser: AdminVerifyResponse | null = $state(null);
   let authLoading: boolean = $state(false);
   let authError: string | null = $state(null);
-  let healthError: string | null = $state(null);
 
   // Routes state
   let routes: MarketRoute[] = $state([]);
@@ -183,18 +181,6 @@
 
   async function loadAdminData(): Promise<void> {
     await Promise.all([loadRoutes(), loadConnections(), loadProducts()]);
-  }
-
-  async function checkHealth(): Promise<void> {
-    healthError = null;
-    try {
-      await runTask({
-        name: 'Checking admin API…',
-        promise: adminHealth(),
-      });
-    } catch (e) {
-      healthError = e instanceof Error ? e.message : String(e);
-    }
   }
 
   function openProductEditor(
@@ -415,43 +401,33 @@
     <span class="text-sm opacity-70">Unified product configuration for the Market API</span>
   {/snippet}
 
+  {#snippet headerActions()}
+    {#if !adminUser}
+      <ActionButton
+        action={connectAdminWallet}
+        loading={authLoading}
+        variant="primary"
+      >
+        {authLoading ? 'Connecting…' : 'Connect Admin Wallet'}
+      </ActionButton>
+    {:else}
+      <ActionButton action={disconnectAdmin} variant="ghost" size="sm">
+        Disconnect
+      </ActionButton>
+    {/if}
+  {/snippet}
+
   <div class="flex flex-col gap-y-6">
     {#if !adminUser}
       <AdminSectionCard
         title="Admin Authentication Required"
         description="Connect an allowlisted admin wallet to manage market configuration."
       >
-        <ActionButton
-          action={connectAdminWallet}
-          loading={authLoading}
-          variant="primary"
-        >
-          {authLoading ? 'Connecting…' : 'Connect Admin Wallet'}
-        </ActionButton>
         {#if authError}
           <p class="text-error text-sm">{authError}</p>
         {/if}
       </AdminSectionCard>
     {:else}
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div class="text-sm">
-          <span class="opacity-70">Connected as:</span>
-          <code class="ml-2 font-mono">{shortenAddress(adminUser.address)}</code>
-          <span class="ml-2 badge badge-success badge-sm">Admin</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <ActionButton action={checkHealth} variant="ghost" size="sm">
-            Check API
-          </ActionButton>
-          <ActionButton action={disconnectAdmin} variant="ghost" size="sm">
-            Disconnect
-          </ActionButton>
-        </div>
-      </div>
-
-      {#if healthError}
-        <p class="text-error text-sm">Admin API health check failed: {healthError}</p>
-      {/if}
 
       <AdminSectionCard
         title="Odoo connections"
