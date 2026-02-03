@@ -4,6 +4,7 @@
   import { popupControls } from '$lib/stores/popup';
   import { normalizeSku } from '$lib/admin/productEditorUtils';
   import SummaryStep from './6_Summary.svelte';
+  import { listOdooProductCatalog, type OdooProductCatalogItem } from '$lib/gateway/adminClient';
   import type { AdminNewProductFlowContext } from './context';
   import type { AdminOdooConnection, AdminUnifiedProduct } from '$lib/admin/types';
 
@@ -18,6 +19,9 @@
   let { context, connections, existingProducts, onExecute, onCreateConnection }: Props = $props();
 
   let formError = $state<string | null>(null);
+  let catalogLoading = $state(false);
+  let catalogError = $state<string | null>(null);
+  let catalogItems = $state<OdooProductCatalogItem[]>([]);
 
   const normalizedSeller = $derived(
     context.seller ? (normalizeAddress(String(context.seller)) as Address) : undefined
@@ -30,6 +34,10 @@
     return (connections ?? []).filter((c) => String(c.seller).toLowerCase() === s);
   });
 
+  const selectedConnection = $derived(
+    sellerConnections.find((c) => `${context.chainId}:${String(c.seller).toLowerCase()}` === (context.selectedConnectionKey ?? '')) ?? null
+  );
+
   $effect(() => {
     if (context.enabled == null) context.enabled = true;
     if (context.poolId == null) context.poolId = '';
@@ -37,6 +45,37 @@
     if (context.codesTextarea == null) context.codesTextarea = '';
     if (context.odooProductCode == null) context.odooProductCode = '';
     if (context.selectedConnectionKey == null) context.selectedConnectionKey = '';
+  });
+
+  $effect(() => {
+    if (context.selectedType !== 'odoo') return;
+    if (!selectedConnection) {
+      catalogItems = [];
+      catalogError = null;
+      return;
+    }
+
+    catalogLoading = true;
+    catalogError = null;
+    catalogItems = [];
+
+    listOdooProductCatalog({
+      chainId: context.chainId,
+      seller: selectedConnection.seller,
+      limit: 200,
+      offset: 0,
+      activeOnly: true,
+      hasCode: true,
+    })
+      .then((r) => {
+        catalogItems = r.items;
+      })
+      .catch((e) => {
+        catalogError = e instanceof Error ? e.message : 'Failed to load Odoo product catalog.';
+      })
+      .finally(() => {
+        catalogLoading = false;
+      });
   });
 
   function parseCodes(): string[] | undefined {
@@ -175,7 +214,29 @@
     </label>
     <label class="form-control">
       <span class="label-text">Odoo product code *</span>
-      <input class="input input-bordered input-sm font-mono" bind:value={context.odooProductCode} />
+      <select
+        class="select select-bordered select-sm font-mono"
+        bind:value={context.odooProductCode}
+        disabled={!selectedConnection || catalogLoading}
+      >
+        <option value="" disabled={true}>Select product code</option>
+        {#each catalogItems as item (item.id)}
+          {#if item.default_code}
+            <option value={item.default_code}>
+              {item.default_code} · {item.display_name}
+            </option>
+          {/if}
+        {/each}
+      </select>
+      {#if catalogLoading}
+        <span class="label-text-alt text-xs opacity-70">Loading catalog…</span>
+      {:else if catalogError}
+        <span class="label-text-alt text-xs text-error break-words">
+          {catalogError}
+        </span>
+      {:else if selectedConnection && catalogItems.length === 0}
+        <span class="label-text-alt text-xs text-warning">No products found for this connection.</span>
+      {/if}
     </label>
   {/if}
 
