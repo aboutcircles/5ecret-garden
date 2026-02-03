@@ -13,22 +13,34 @@
 
   let { product, productType, onSelect }: Props = $props();
 
-  const hasMapping = productType !== 'route';
-  const mappingEnabled = productType === 'odoo'
-    ? product.odoo?.enabled
-    : productType === 'codedispenser'
-      ? product.code?.enabled
-      : null;
-  const revokedAt = productType === 'odoo'
-    ? product.odoo?.revokedAt
-    : productType === 'codedispenser'
-      ? product.code?.revokedAt
-      : null;
-  const poolRemaining = productType === 'codedispenser' ? product.code?.poolRemaining : null;
-  const hasInactiveMapping = mappingEnabled === false || !!revokedAt;
-  const typeLabel = productType === 'route'
-    ? 'Needs adapter'
-    : adminProductTypeLabels[productType];
+  const hasMapping = $derived(productType !== 'route');
+  const routeEnabled = $derived(product.route?.enabled);
+  const mappingEnabled = $derived(
+    productType === 'odoo'
+      ? product.odoo?.enabled
+      : productType === 'codedispenser'
+        ? product.code?.enabled
+        : null
+  );
+  const revokedAt = $derived(
+    productType === 'odoo'
+      ? product.odoo?.revokedAt
+      : productType === 'codedispenser'
+        ? product.code?.revokedAt
+        : null
+  );
+  const poolRemaining = $derived(
+    productType === 'codedispenser' ? product.code?.poolRemaining : null
+  );
+  const hasInactiveMapping = $derived(
+    mappingEnabled === false || !!revokedAt || routeEnabled === false
+  );
+  const typeLabel = $derived(
+    productType === 'route' ? 'Needs adapter' : adminProductTypeLabels[productType]
+  );
+  const typeVariant = $derived(
+    hasInactiveMapping ? 'error' : productType === 'route' ? 'warning' : 'success'
+  );
 </script>
 
 <RowFrame
@@ -56,7 +68,7 @@
     <div class="flex items-center gap-2 flex-wrap justify-end">
       <AdminStatusBadge
         label={typeLabel}
-        variant={productType === 'route' ? 'warning' : 'success'}
+        variant={typeVariant}
       />
       {#if poolRemaining !== null && poolRemaining !== undefined}
         <AdminStatusBadge
