@@ -2,7 +2,7 @@
     import type { Snippet } from 'svelte';
     import type { HTMLAttributes } from 'svelte/elements';
 
-    type Props = Omit<HTMLAttributes<HTMLDivElement>, 'children'> & {
+    type Props = Omit<HTMLAttributes<HTMLDivElement>, 'children' | 'title'> & {
         clickable?: boolean;
         selected?: boolean;
         disabled?: boolean;
