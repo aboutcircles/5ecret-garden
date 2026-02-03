@@ -72,6 +72,24 @@ export interface OdooProductListItem {
   revokedAt: string | null;
 }
 
+export interface OdooProductCatalogItem {
+  id: number;
+  display_name: string;
+  default_code: string | null;
+  product_tmpl_id: [number, string];
+  barcode: string | null;
+  qty_available: number;
+  active: boolean;
+}
+
+export interface OdooProductCatalogResponse {
+  items: OdooProductCatalogItem[];
+  limit: number;
+  offset: number;
+  activeOnly: boolean;
+  hasCode: boolean;
+}
+
 export interface CodeProductConfig {
   chainId: number;
   seller: Address;
@@ -193,6 +211,36 @@ export async function listOdooProducts(): Promise<OdooProductListItem[]> {
 export async function disableOdooProduct(chainId: number, seller: string, sku: string): Promise<{ ok: true }> {
   const path = `/admin/odoo-products/${chainId}/${encodeURIComponent(seller)}/${encodeURIComponent(sku)}`;
   return adminFetch<{ ok: true }>(path, { method: 'DELETE' });
+}
+
+export async function listOdooProductCatalog(params: {
+  chainId: number;
+  seller: string;
+  limit?: number;
+  offset?: number;
+  activeOnly?: boolean;
+  hasCode?: boolean;
+}): Promise<OdooProductCatalogResponse> {
+  const url = new URL(`${getBaseUrl()}/admin/odoo-product-catalog`);
+  url.searchParams.set('chainId', String(params.chainId));
+  url.searchParams.set('seller', params.seller);
+  if (params.limit != null) url.searchParams.set('limit', String(params.limit));
+  if (params.offset != null) url.searchParams.set('offset', String(params.offset));
+  if (params.activeOnly != null) url.searchParams.set('activeOnly', String(params.activeOnly));
+  if (params.hasCode != null) url.searchParams.set('hasCode', String(params.hasCode));
+
+  const res = await fetch(url.toString(), {
+    headers: {
+      ...getAdminAuthHeader(),
+    },
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`GET /admin/odoo-product-catalog failed (${res.status}): ${text}`);
+  }
+
+  return res.json() as Promise<OdooProductCatalogResponse>;
 }
 
 // ============= CodeDispenser Product Configuration =============

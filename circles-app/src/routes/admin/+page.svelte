@@ -41,12 +41,17 @@
   import AdminProductList from '$lib/admin/components/AdminProductList.svelte';
   import AdminOdooProductEditor from '$lib/admin/components/AdminOdooProductEditor.svelte';
   import AdminCodeProductEditor from '$lib/admin/components/AdminCodeProductEditor.svelte';
+  import AdminNewProductSellerStep from '$lib/admin/flows/newProduct/1_Seller.svelte';
+  import AdminNewConnectionSellerStep from '$lib/admin/flows/newConnection/1_Seller.svelte';
   import { combineAdminProducts, adminOdooConnectionKey } from '$lib/admin/helpers';
   import { resolveAdminProductType } from '$lib/admin/types';
   import type { AdminProductType, AdminUnifiedProduct, AdminOdooConnection } from '$lib/admin/types';
   import { shortenAddress } from '$lib/utils/shared';
   import RowFrame from '$lib/ui/RowFrame.svelte';
   import AdminStatusBadge from '$lib/admin/components/AdminStatusBadge.svelte';
+  import Tabs from '$lib/components/tabs/Tabs.svelte';
+  import Tab from '$lib/components/tabs/Tab.svelte';
+  import type { TabIdOf } from '$lib/components/tabs/tabId';
 
   // Auth state
   let adminUser: AdminVerifyResponse | null = $state(null);
@@ -75,21 +80,14 @@
   const unifiedProducts = $derived(combineAdminProducts(routes, odooProducts, codeProducts));
   const hasRouteOnlyProducts = $derived(unifiedProducts.some((item) => !item.odoo && !item.code));
   const loadingAny = $derived(productsLoading || routesLoading || connectionsLoading);
-  const productsByConnection = $derived.by(() => {
-    const map = new Map<string, AdminUnifiedProduct[]>();
-    for (const product of unifiedProducts) {
-      if (!product.odoo && product.route?.offerType !== 'odoo') continue;
-      const key = adminOdooConnectionKey(product.chainId, product.seller);
-      if (!map.has(key)) {
-        map.set(key, []);
-      }
-      map.get(key)!.push(product);
-    }
-    for (const items of map.values()) {
-      items.sort((a, b) => a.sku.localeCompare(b.sku));
-    }
-    return map;
-  });
+
+  const codeProductsUnified = $derived(unifiedProducts.filter((item) => resolveAdminProductType(item) === 'codedispenser'));
+  const odooProductsUnified = $derived(unifiedProducts.filter((item) => resolveAdminProductType(item) === 'odoo'));
+  const routeOnlyProductsUnified = $derived(unifiedProducts.filter((item) => resolveAdminProductType(item) === 'route'));
+
+  const PRODUCT_TAB_IDS = ['codedispenser', 'odoo', 'route'] as const;
+  type ProductsTabId = TabIdOf<typeof PRODUCT_TAB_IDS>;
+  let selectedProductsTab = $state<ProductsTabId>('codedispenser');
 
   async function connectAdminWallet(): Promise<void> {
     authLoading = true;
@@ -209,7 +207,7 @@
     }
 
     const resolvedType = product
-      ? resolveAdminProductType(product)
+      ? (resolveAdminProductType(product) === 'route' ? defaultProductType : resolveAdminProductType(product))
       : defaultProductType;
 
     const component = resolvedType === 'codedispenser'
@@ -235,23 +233,72 @@
     });
   }
 
-  function openConnectionEditor(connection?: AdminOdooConnection | null): void {
+  function openNewProductWizard(): void {
     popupControls.open?.({
-      title: connection ? 'Edit Odoo connection' : 'New Odoo connection',
+      title: 'New product',
+      component: AdminNewProductSellerStep,
+      props: {
+        connections: odooConnections,
+        existingProducts: unifiedProducts,
+        onExecute: async (payload) => {
+          await saveProduct(payload, null);
+        },
+        onCreateConnection: createConnectionInFlow,
+      },
+      id: 'admin-new-product-seller',
+    });
+  }
+
+  function openConnectionEditor(connection?: AdminOdooConnection | null): void {
+    if (!connection) {
+      popupControls.open?.({
+        title: 'New Odoo connection',
+        component: AdminNewConnectionSellerStep,
+        props: {
+          onCreate: async (payload) => {
+            await saveConnection(payload);
+          },
+        },
+        id: 'admin-new-connection-seller',
+      });
+      return;
+    }
+
+    popupControls.open?.({
+      title: 'Edit Odoo connection',
       hideTitle: true,
       component: AdminOdooProductEditor,
       props: {
-        connection: connection ?? null,
+        connection,
         connections: odooConnections,
         mode: 'connection',
         onCancel: () => popupControls.close(),
-        onDisable: connection ? async () => handleDisableConnection(connection) : undefined,
+        onDisable: async () => handleDisableConnection(connection),
         onSubmit: async (payload) => {
           await saveConnection(payload);
         },
       },
-      id: connection ? `connection-${connection.chainId}-${connection.seller}` : 'new-odoo-connection',
+      id: `connection-${connection.chainId}-${connection.seller}`,
     });
+  }
+
+  async function createConnectionInFlow(payload: { connection: OdooConnectionConfig }): Promise<AdminOdooConnection> {
+    await runTask({
+      name: 'Saving Odoo connection…',
+      promise: upsertOdooConnection(payload.connection),
+    });
+
+    // Refresh connections in-place (do NOT close popup; the flow will continue)
+    const updated = await listOdooConnections();
+    odooConnections = updated;
+
+    return (
+      updated.find(
+        (c) =>
+          c.chainId === payload.connection.chainId &&
+          String(c.seller).toLowerCase() === String(payload.connection.seller).toLowerCase()
+      ) ?? (payload.connection as unknown as AdminOdooConnection)
+    );
   }
 
   async function saveConnection(payload: { connection: OdooConnectionConfig }): Promise<void> {
@@ -408,7 +455,7 @@
 
       <AdminSectionCard
         title="Odoo connections"
-        description="Create a connection per seller/chain first. Then add Odoo products under it."
+        description="Manage connection credentials per seller/chain. Odoo products are configured in the Products section."
       >
         {#snippet actions()}
           <button class="btn btn-outline btn-sm" onclick={loadAdminData} disabled={loadingAny}>
@@ -449,43 +496,23 @@
                   {#if connection.revokedAt}
                     <AdminStatusBadge label="Revoked" variant="warning" />
                   {/if}
-                  <button
-                    class="btn btn-outline btn-xs"
-                    onclick={(event) => {
-                      event.stopPropagation();
-                      openProductEditor(null, 'odoo', connection);
-                    }}
-                  >
-                    New product
-                  </button>
                 </div>
               {/snippet}
             </RowFrame>
-            {#if (productsByConnection.get(adminOdooConnectionKey(connection.chainId, connection.seller)) ?? []).length > 0}
-              <div class="ml-4 border-l border-base-300 pl-4">
-                <AdminProductList
-                  products={productsByConnection.get(adminOdooConnectionKey(connection.chainId, connection.seller)) ?? []}
-                  productTypes={['odoo']}
-                  onSelect={(product) => openProductEditor(product, 'odoo', connection)}
-                />
-              </div>
-            {:else}
-              <p class="text-xs opacity-60 ml-4">No Odoo products yet for this connection.</p>
-            {/if}
           {/each}
         {/if}
       </AdminSectionCard>
 
       <AdminSectionCard
         title="Products"
-        description="Code dispenser products and route-only SKUs. Odoo products live under their connections."
+        description="Products are configured per SKU (route + adapter mapping)."
       >
         {#snippet actions()}
           <button class="btn btn-outline btn-sm" onclick={loadAdminData} disabled={loadingAny}>
             {loadingAny ? 'Refreshing…' : 'Refresh'}
           </button>
-          <button class="btn btn-primary btn-sm" onclick={() => openProductEditor(null, 'codedispenser')}>
-            New Code
+          <button class="btn btn-primary btn-sm" onclick={openNewProductWizard}>
+            New product
           </button>
         {/snippet}
         {#if hasRouteOnlyProducts}
@@ -495,14 +522,44 @@
         {/if}
         {#if productsError || routesError}
           <p class="text-error text-sm">{productsError || routesError}</p>
-        {:else if unifiedProducts.filter((item) => resolveAdminProductType(item) !== 'odoo').length === 0}
-          <p class="text-sm opacity-70">No code products configured yet.</p>
         {:else}
-          <AdminProductList
-            products={unifiedProducts.filter((item) => resolveAdminProductType(item) !== 'odoo')}
-            onSelect={(product) => openProductEditor(product)}
-            productTypes={['codedispenser', 'route']}
-          />
+          <Tabs bind:selected={selectedProductsTab} variant="boxed" size="sm" class="w-full p-0">
+            <Tab id="codedispenser" title="Voucher codes" badge={codeProductsUnified.length} panelClass="pt-4">
+              {#if codeProductsUnified.length === 0}
+                <p class="text-sm opacity-70">No voucher code products configured yet.</p>
+              {:else}
+                <AdminProductList
+                  products={codeProductsUnified}
+                  onSelect={(product) => openProductEditor(product, 'codedispenser')}
+                  productTypes={['codedispenser']}
+                />
+              {/if}
+            </Tab>
+
+            <Tab id="odoo" title="Odoo" badge={odooProductsUnified.length} panelClass="pt-4">
+              {#if odooProductsUnified.length === 0}
+                <p class="text-sm opacity-70">No Odoo products configured yet.</p>
+              {:else}
+                <AdminProductList
+                  products={odooProductsUnified}
+                  onSelect={(product) => openProductEditor(product, 'odoo')}
+                  productTypes={['odoo']}
+                />
+              {/if}
+            </Tab>
+
+            <Tab id="route" title="Route-only" badge={routeOnlyProductsUnified.length} panelClass="pt-4">
+              {#if routeOnlyProductsUnified.length === 0}
+                <p class="text-sm opacity-70">No route-only SKUs.</p>
+              {:else}
+                <AdminProductList
+                  products={routeOnlyProductsUnified}
+                  onSelect={(product) => openProductEditor(product, 'route')}
+                  productTypes={['route']}
+                />
+              {/if}
+            </Tab>
+          </Tabs>
         {/if}
       </AdminSectionCard>
 

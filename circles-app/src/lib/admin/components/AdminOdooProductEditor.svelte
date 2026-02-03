@@ -1,7 +1,13 @@
 <script lang="ts">
   import AdminProductFormBase from './AdminProductFormBase.svelte';
   import type { AdminProductType, AdminUnifiedProduct, AdminOdooConnection } from '../types';
-  import type { OdooConnectionConfig, OdooProductConfig, RouteUpsertInput } from '$lib/gateway/adminClient';
+  import {
+    listOdooProductCatalog,
+    type OdooConnectionConfig,
+    type OdooProductCatalogItem,
+    type OdooProductConfig,
+    type RouteUpsertInput,
+  } from '$lib/gateway/adminClient';
   import { normalizeAddressInput, normalizeSku } from '../productEditorUtils';
 
   interface Props {
@@ -54,6 +60,45 @@
   let saving = $state(false);
   let formError: string | null = $state(null);
 
+  // Odoo catalog search (for product mode)
+  let catalogSearch = $state('');
+  let catalogOpen = $state(false);
+  let catalogLoading = $state(false);
+  let catalogError = $state<string | null>(null);
+  let catalogItems = $state<OdooProductCatalogItem[]>([]);
+  let catalogOffset = $state(0);
+  const catalogLimit = 200;
+  let catalogHasMore = $state(false);
+
+  async function loadCatalogPage(reset: boolean): Promise<void> {
+    if (!selectedConnection) return;
+    catalogLoading = true;
+    catalogError = null;
+    try {
+      const offset = reset ? 0 : catalogOffset;
+      const r = await listOdooProductCatalog({
+        chainId,
+        seller: selectedConnection.seller,
+        limit: catalogLimit,
+        offset,
+        activeOnly: true,
+        hasCode: true,
+      });
+      if (reset) {
+        catalogItems = r.items;
+        catalogOffset = r.items.length;
+      } else {
+        catalogItems = [...catalogItems, ...r.items];
+        catalogOffset = catalogOffset + r.items.length;
+      }
+      catalogHasMore = r.items.length === catalogLimit;
+    } catch (e) {
+      catalogError = e instanceof Error ? e.message : 'Failed to load Odoo product catalog.';
+    } finally {
+      catalogLoading = false;
+    }
+  }
+
   const connectionOptions = $derived.by(() =>
     connections.map((item) => ({
       key: `${chainId}:${item.seller.toLowerCase()}`,
@@ -81,6 +126,26 @@
     jsonrpcTimeoutMs = selectedConnection.jsonrpcTimeoutMs ?? 30000;
     fulfillInheritRequestAbort = selectedConnection.fulfillInheritRequestAbort ?? false;
     connectionEnabled = selectedConnection.enabled;
+
+    // Reset catalog state when switching connection.
+    catalogSearch = '';
+    catalogOpen = false;
+    catalogItems = [];
+    catalogOffset = 0;
+    catalogHasMore = false;
+    catalogError = null;
+  });
+
+  const filteredCatalogItems = $derived.by(() => {
+    const q = catalogSearch.trim().toLowerCase();
+    if (!q) return catalogItems;
+    return catalogItems.filter((item) => {
+      const code = (item.default_code ?? '').toLowerCase();
+      const name = (item.display_name ?? '').toLowerCase();
+      const barcode = (item.barcode ?? '').toLowerCase();
+      const tmpl = (item.product_tmpl_id?.[1] ?? '').toLowerCase();
+      return code.includes(q) || name.includes(q) || barcode.includes(q) || tmpl.includes(q);
+    });
   });
 
   async function submit(): Promise<void> {
@@ -276,7 +341,85 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
       <label class="form-control">
         <span class="label-text">Odoo product code *</span>
-        <input class="input input-bordered input-sm font-mono" bind:value={odooProductCode} />
+        <div class="dropdown dropdown-bottom w-full" class:dropdown-open={catalogOpen}>
+          <input
+            class="input input-bordered input-sm font-mono w-full"
+            bind:value={odooProductCode}
+            placeholder="Select from catalog or paste code"
+            onfocus={async () => {
+              catalogOpen = true;
+              if (selectedConnection && catalogItems.length === 0 && !catalogLoading) {
+                await loadCatalogPage(true);
+              }
+            }}
+            onblur={() => {
+              // Give clicks on dropdown items a chance to register.
+              setTimeout(() => {
+                catalogOpen = false;
+              }, 150);
+            }}
+          />
+
+          {#if catalogOpen}
+            <div class="dropdown-content z-[50] card card-compact w-full bg-base-100 shadow border border-base-300 mt-1">
+              <div class="card-body gap-2">
+                <input
+                  class="input input-bordered input-xs"
+                  bind:value={catalogSearch}
+                  placeholder="Search by name, code, barcode"
+                />
+
+                {#if !selectedConnection}
+                  <p class="text-xs text-warning">Select a connection first.</p>
+                {:else if catalogError}
+                  <p class="text-xs text-error break-words">{catalogError}</p>
+                {:else if catalogLoading && catalogItems.length === 0}
+                  <p class="text-xs opacity-70">Loading…</p>
+                {:else if filteredCatalogItems.length === 0}
+                  <p class="text-xs opacity-70">No matches in loaded catalog.</p>
+                {:else}
+                  <div class="max-h-64 overflow-auto">
+                    <ul class="menu menu-sm bg-base-100 w-full">
+                      {#each filteredCatalogItems.slice(0, 100) as item (item.id)}
+                        <li>
+                          <button
+                            type="button"
+                            class="justify-between"
+                            onclick={() => {
+                              if (!item.default_code) return;
+                              odooProductCode = item.default_code;
+                              catalogSearch = '';
+                              catalogOpen = false;
+                            }}
+                          >
+                            <span class="flex flex-col items-start">
+                              <span class="font-mono">{item.default_code}</span>
+                              <span class="text-xs opacity-70">{item.display_name}</span>
+                            </span>
+                            <span class="text-xs opacity-70">{item.qty_available}</span>
+                          </button>
+                        </li>
+                      {/each}
+                    </ul>
+                  </div>
+
+                  {#if catalogHasMore}
+                    <button
+                      type="button"
+                      class="btn btn-ghost btn-xs"
+                      disabled={catalogLoading}
+                      onclick={async () => {
+                        await loadCatalogPage(false);
+                      }}
+                    >
+                      {catalogLoading ? 'Loading…' : 'Load more'}
+                    </button>
+                  {/if}
+                {/if}
+              </div>
+            </div>
+          {/if}
+        </div>
       </label>
       <label class="form-control">
         <span class="label-text">Connection URL</span>

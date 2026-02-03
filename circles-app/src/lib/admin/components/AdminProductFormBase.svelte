@@ -4,6 +4,7 @@
   interface Props {
     title: string;
     subtitle?: string;
+    showHeader?: boolean;
     onSubmit: () => Promise<void> | void;
     onCancel?: () => void;
     loading?: boolean;
@@ -14,6 +15,7 @@
   let {
     title,
     subtitle = '',
+    showHeader = true,
     onSubmit,
     onCancel,
     loading = false,
@@ -28,12 +30,14 @@
 </script>
 
 <form onsubmit={handleSubmit} class="space-y-4">
-  <div>
-    <h3 class="text-lg font-semibold">{title}</h3>
-    {#if subtitle}
-      <p class="text-sm opacity-70 mt-1">{subtitle}</p>
-    {/if}
-  </div>
+  {#if showHeader}
+    <div>
+      <h3 class="text-lg font-semibold">{title}</h3>
+      {#if subtitle}
+        <p class="text-sm opacity-70 mt-1">{subtitle}</p>
+      {/if}
+    </div>
+  {/if}
 
   <div class="space-y-3">
     {@render children?.()}
