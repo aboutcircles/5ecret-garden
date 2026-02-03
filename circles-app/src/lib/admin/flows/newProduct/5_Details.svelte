@@ -176,7 +176,7 @@
   </label>
 
   {#if (context.selectedType ?? 'codedispenser') === 'codedispenser'}
-    <div class="divider text-xs">Voucher code details</div>
+    <div class="divider text-xs">Digital voucher code details</div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
       <label class="form-control">
         <span class="label-text">Pool ID *</span>
@@ -197,13 +197,13 @@
       <textarea class="textarea textarea-bordered textarea-sm font-mono" rows="3" bind:value={context.codesTextarea}></textarea>
     </label>
   {:else}
-    <div class="divider text-xs">Odoo details</div>
+    <div class="divider text-xs">Map to odoo product code</div>
     <label class="form-control">
       <span class="label-text">Odoo connection *</span>
       <select class="select select-bordered select-sm" bind:value={context.selectedConnectionKey}>
         <option value="" disabled={true}>Select connection</option>
         {#each sellerConnections as c (`${c.chainId}:${String(c.seller).toLowerCase()}`)}
-          <option value={`${c.chainId}:${String(c.seller).toLowerCase()}`}>{c.odooDb} · {String(c.seller).toLowerCase()}</option>
+          <option value={`${c.chainId}:${String(c.seller).toLowerCase()}`}>{c.odooUrl} · {c.odooDb}</option>
         {/each}
       </select>
       {#if sellerConnections.length === 0}

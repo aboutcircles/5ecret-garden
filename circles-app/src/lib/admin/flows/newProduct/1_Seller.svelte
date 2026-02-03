@@ -39,7 +39,7 @@
   function goNext(addr: Address): void {
     context.seller = addr;
     popupControls.open({
-      title: 'Select catalog product',
+      title: 'Setup product - Map product',
       component: CatalogStep,
       props: { context, connections, existingProducts, onExecute, onCreateConnection },
       id: 'admin-new-product-catalog',

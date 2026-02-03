@@ -18,6 +18,7 @@
     const OPERATOR: `0x${string}` = gnosisConfig.production.marketOperator;
 
     const API_BASE = gnosisConfig.production.marketApiBase;
+    const MARKET_CHAIN_ID = gnosisConfig.production.marketChainId ?? 100;
 
     type ProductLike = AggregatedCatalogItem;
 
@@ -26,6 +27,11 @@
     let products: ProductLike[] = $state([]);
     let nextCursor: string | null = $state(null);
     let hasMore: boolean = $state(false);
+
+    type SellerListing = { chainId: number; seller: string };
+    type SellersResponse = { sellers?: SellerListing[] };
+    let sellers: `0x${string}`[] = $state([]);
+    let sellersLoaded = $state(false);
 
     // Infinite scroll sentinel and observer
     let sentinel: HTMLDivElement | null = $state(null);
@@ -86,18 +92,42 @@
     // ————————————————————————————————————————————
     // data load with pagination
     // ————————————————————————————————————————————
-    const defaultAvatars: `0x${string}`[] = [
-        '0x3cf62e563c47d0f049c3ee56cc4955ebc2207984',
-        '0x943186fbcfd74fd575bcf9aa76a53f56b2f06aba',
-        '0x808da12fdd0a56413551449053c2ff918822e7d6',
-        '0x636f44a378da9256a128b104b1e06aa50a578f33'
-
-    ];
     const avatarAddress = $derived((avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '') as `0x${string}` | '');
     function getScanAvatars(): `0x${string}`[] {
-      const set = new Set<string>();
-      for (const a of defaultAvatars) set.add(a.toLowerCase());
-      return Array.from(set) as `0x${string}`[];
+      return sellers;
+    }
+
+    function getMarketApiBase(): string {
+      const base = String(API_BASE ?? '').trim();
+      if (!base) {
+        throw new Error('Market API base is not configured.');
+      }
+      return base.replace(/\/$/, '');
+    }
+
+    async function loadSellers(): Promise<void> {
+      if (sellersLoaded) return;
+      const url = `${getMarketApiBase()}/api/sellers`;
+      const res = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' } });
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(`Failed to load sellers (${res.status}): ${text || res.statusText}`);
+      }
+      const body = (await res.json().catch(() => null)) as SellerListing[] | SellersResponse | null;
+      const list = Array.isArray(body)
+        ? body
+        : (body && Array.isArray((body as SellersResponse).sellers) ? (body as SellersResponse).sellers : []);
+      const filtered = list
+        .map((entry) => ({
+          chainId: Number((entry as SellerListing).chainId),
+          seller: String((entry as SellerListing).seller ?? ''),
+        }))
+        .filter((entry) => Number.isFinite(entry.chainId) && entry.seller)
+        .filter((entry) => entry.chainId === MARKET_CHAIN_ID)
+        .map((entry) => entry.seller.toLowerCase());
+
+      sellers = Array.from(new Set(filtered)) as `0x${string}`[];
+      sellersLoaded = true;
     }
 
     async function loadFirstPage(keepProducts: boolean = false): Promise<void> {
@@ -110,9 +140,17 @@
       hasMore = false;
 
       try {
+        await loadSellers();
+        const avatars = getScanAvatars();
+        if (avatars.length === 0) {
+          products = [];
+          nextCursor = null;
+          hasMore = false;
+          return;
+        }
         const op = (selectedOperator ?? (gnosisConfig.production.marketOperator as `0x${string}`)) as `0x${string}`;
         const catalog = getMarketClient().catalog.forOperator(op);
-        const page = await catalog.fetchCatalogPage({ avatars: getScanAvatars(), pageSize: PAGE_SIZE, chainId: 100 });
+        const page = await catalog.fetchCatalogPage({ avatars, pageSize: PAGE_SIZE, chainId: MARKET_CHAIN_ID });
         products = page.items;
         nextCursor = page.nextCursor;
         hasMore = !!nextCursor;
@@ -132,7 +170,7 @@
       try {
         const op = (selectedOperator ?? (gnosisConfig.production.marketOperator as `0x${string}`)) as `0x${string}`;
         const catalog = getMarketClient().catalog.forOperator(op);
-        const page = await catalog.fetchCatalogPage({ avatars: getScanAvatars(), pageSize: PAGE_SIZE, chainId: 100, cursor: nextCursor });
+        const page = await catalog.fetchCatalogPage({ avatars: getScanAvatars(), pageSize: PAGE_SIZE, chainId: MARKET_CHAIN_ID, cursor: nextCursor });
         products = products.concat(page.items);
         nextCursor = page.nextCursor;
         hasMore = !!nextCursor;

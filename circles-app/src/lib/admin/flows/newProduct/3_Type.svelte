@@ -37,7 +37,7 @@
     context.selectedType = selectedType;
     if (selectedType === 'odoo' && sellerConnections.length === 0) {
       popupControls.open({
-        title: 'Create Odoo connection',
+        title: 'Setup product - Map to odoo product code',
         component: CreateConnectionStep,
         props: { context, connections, existingProducts, onExecute, onCreateConnection },
         id: 'admin-new-product-create-connection',
@@ -46,7 +46,7 @@
     }
 
     popupControls.open({
-      title: 'Enter details',
+      title: 'Setup product - Map to odoo product code',
       component: DetailsStep,
       props: { context, connections, existingProducts, onExecute, onCreateConnection },
       id: 'admin-new-product-details',
@@ -64,10 +64,10 @@
     <code class="ml-2 font-mono">{normalizedSku}</code>
   </div>
 
-  <div class="divider text-xs">Type</div>
+  <div class="divider text-xs">Fulfillment strategy</div>
   <label class="flex items-center gap-2">
     <input class="radio radio-sm" type="radio" name="ptype" value="codedispenser" bind:group={selectedType} />
-    <span>Voucher code (CodeDispenser)</span>
+    <span>Digital voucher code</span>
   </label>
   <label class="flex items-center gap-2">
     <input class="radio radio-sm" type="radio" name="ptype" value="odoo" bind:group={selectedType} />

@@ -46,6 +46,7 @@
   import { resolveAdminProductType } from '$lib/admin/types';
   import type { AdminProductType, AdminUnifiedProduct, AdminOdooConnection } from '$lib/admin/types';
   import { shortenAddress } from '$lib/utils/shared';
+  import Avatar from '$lib/components/avatar/Avatar.svelte';
   import RowFrame from '$lib/ui/RowFrame.svelte';
   import AdminStatusBadge from '$lib/admin/components/AdminStatusBadge.svelte';
   import Tabs from '$lib/components/tabs/Tabs.svelte';
@@ -221,7 +222,7 @@
 
   function openNewProductWizard(): void {
     popupControls.open?.({
-      title: 'New product',
+      title: 'Setup product - Select Seller',
       component: AdminNewProductSellerStep,
       props: {
         connections: odooConnections,
@@ -408,7 +409,7 @@
         loading={authLoading}
         variant="primary"
       >
-        {authLoading ? 'Connecting…' : 'Connect Admin Wallet'}
+        {authLoading ? 'Connecting…' : 'Login'}
       </ActionButton>
     {:else}
       <ActionButton action={disconnectAdmin} variant="ghost" size="sm">
@@ -455,13 +456,13 @@
               onclick={() => openConnectionEditor(connection)}
             >
               {#snippet title()}
-                {connection.odooDb}
+                <Avatar address={connection.seller} view="small" clickable={true} />
               {/snippet}
               {#snippet subtitle()}
                 {connection.odooUrl}
               {/snippet}
               {#snippet meta()}
-                Chain {connection.chainId} · {shortenAddress(connection.seller)}
+                Chain {connection.chainId} · {connection.odooDb}
               {/snippet}
               {#snippet trailing()}
                 <div class="flex items-center gap-2 flex-wrap justify-end">
@@ -488,7 +489,7 @@
             {loadingAny ? 'Refreshing…' : 'Refresh'}
           </button>
           <button class="btn btn-primary btn-sm" onclick={openNewProductWizard}>
-            New product
+            Setup product
           </button>
         {/snippet}
         {#if hasRouteOnlyProducts}

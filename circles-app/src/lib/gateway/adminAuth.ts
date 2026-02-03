@@ -30,7 +30,7 @@ export function getAdminBaseUrl(): string {
     return String(envBase).replace(/\/$/, '');
   }
 
-  return 'https://market-api.aboutcircles.com:18080/market';
+  return 'http://localhost:18080/market';
 }
 
 /**
