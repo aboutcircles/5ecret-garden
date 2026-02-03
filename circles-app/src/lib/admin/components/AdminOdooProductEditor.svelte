@@ -134,6 +134,8 @@
     catalogOffset = 0;
     catalogHasMore = false;
     catalogError = null;
+
+    void loadCatalogPage(true);
   });
 
   const filteredCatalogItems = $derived.by(() => {
