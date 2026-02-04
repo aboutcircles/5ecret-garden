@@ -13,7 +13,7 @@
         searchType?: 'send' | 'group' | 'contact';
         oninvite?: (avatar: any) => void;
         ontrust?: (avatar: any) => void;
-        onselect?: (avatar: any) => void;
+        onselect?: (avatar: any, profile?: SearchProfileResult) => void;
         avatarTypes?: string[]
     }
 
@@ -121,7 +121,7 @@
     {#if result.length > 0}
         <div class="w-full flex flex-col gap-y-1.5" role="list">
             {#each result as profile}
-                <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => onselect && onselect(profile.address)}>
+                <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => onselect && onselect(profile.address, profile)}>
                     <div class="min-w-0">
                         <Avatar
                                 address={profile.address}

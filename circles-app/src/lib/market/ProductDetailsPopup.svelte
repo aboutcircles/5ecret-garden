@@ -8,6 +8,7 @@
   import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
   import { getMarketClient } from '$lib/sdk/marketClient';
   import { getAddToCartState } from '$lib/cart/addToCartUi';
+  import { fetchAvailabilityFeed, fetchInventoryFeed, type QuantitativeValue } from '$lib/market/feeds';
   import { createLoadable } from '$lib/utils/loadable';
   import {gnosisConfig} from "$lib/circlesConfig";
 
@@ -39,7 +40,45 @@
   const offer = $derived(product?.product ? getFirstOffer(product?.product) : null);
   const currentAvatar = $derived(avatarState?.avatar?.address?.toLowerCase());
   const cartLoading = $derived($cartState.loading);
-  const addState = $derived(getAddToCartState({ product: product as any, offer, currentAvatar, cartLoading }));
+  let liveAvailability = $state<string | null>(null);
+  let liveInventory = $state<QuantitativeValue | null>(null);
+
+  $effect(async () => {
+    liveAvailability = null;
+    liveInventory = null;
+    const af = offer?.availabilityFeed;
+    const inf = offer?.inventoryFeed;
+    try {
+      if (typeof af === 'string' && af) {
+        liveAvailability = await fetchAvailabilityFeed(af);
+      }
+    } catch (e) {
+      console.warn('[feeds] availability fetch failed', { uri: af, error: e });
+    }
+    try {
+      if (typeof inf === 'string' && inf) {
+        liveInventory = await fetchInventoryFeed(inf);
+      }
+    } catch (e) {
+      console.warn('[feeds] inventory fetch failed', { uri: inf, error: e });
+    }
+  });
+  const effectiveAvailabilityIri = $derived<string | null>(
+    liveAvailability ?? (product as any)?.availability ?? (product?.product as any)?.availability ?? null
+  );
+  const effectiveInventoryValue = $derived<number | null>(
+    (liveInventory?.value ?? (product as any)?.inventoryLevel?.value ?? (product?.product as any)?.inventoryLevel?.value ?? null) as number | null
+  );
+  const addState = $derived(
+    getAddToCartState({
+      product: product as any,
+      offer,
+      currentAvatar,
+      cartLoading,
+      availabilityIri: effectiveAvailabilityIri,
+      inventoryValue: effectiveInventoryValue,
+    })
+  );
 
   async function handleAddToBasket(): Promise<void> {
     if (!product) return;

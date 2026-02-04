@@ -26,7 +26,6 @@
   let seller: string = $state(product?.seller ?? '');
   let sku: string = $state(product?.sku ?? '');
 
-  let poolId: string = $state(product?.code?.poolId ?? '');
   let downloadUrlTemplate: string = $state(product?.code?.downloadUrlTemplate ?? '');
   let codesTextarea: string = $state('');
   let codeEnabled: boolean = $state(product?.code?.enabled ?? true);
@@ -53,16 +52,11 @@
         return;
       }
 
-      if (!poolId) {
-        formError = 'Pool ID is required for code products.';
-        return;
-      }
-
       const code: CodeProductConfig = {
         chainId,
         seller: normalizedSeller,
         sku: normalizedSku,
-        poolId: poolId.trim(),
+        poolId: product?.code?.poolId ?? '',
         downloadUrlTemplate: downloadUrlTemplate.trim() || undefined,
         codes: parseCodes(),
         enabled: codeEnabled,
@@ -113,10 +107,6 @@
   <div class="divider text-xs">Code dispenser</div>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
     <label class="form-control">
-      <span class="label-text">Pool ID *</span>
-      <input class="input input-bordered input-sm font-mono" bind:value={poolId} />
-    </label>
-    <label class="form-control">
       <span class="label-text">Download URL template</span>
       <input
         class="input input-bordered input-sm"
@@ -130,11 +120,6 @@
     <span class="label-text">Seed codes (one per line)</span>
     <textarea class="textarea textarea-bordered textarea-sm font-mono" rows="3" bind:value={codesTextarea}></textarea>
   </label>
-  <label class="form-control">
-    <span class="label-text">Enabled</span>
-    <input type="checkbox" class="checkbox checkbox-sm" bind:checked={codeEnabled} />
-  </label>
-
   {#if product && onDisable}
     <div class="divider text-xs">Danger zone</div>
     <button
@@ -153,4 +138,9 @@
       Disable product
     </button>
   {/if}
+
+  <label class="form-control">
+    <span class="label-text">Enabled</span>
+    <input type="checkbox" class="checkbox checkbox-sm" bind:checked={codeEnabled} />
+  </label>
 </AdminProductFormBase>

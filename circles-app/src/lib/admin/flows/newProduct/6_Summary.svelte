@@ -59,10 +59,6 @@
     };
 
     if (selectedType === 'codedispenser') {
-      if (!(context.poolId ?? '').trim()) {
-        formError = 'Pool ID is required for voucher code products.';
-        return null;
-      }
       const code = {
         chainId: context.chainId,
         seller: normalizedSeller,

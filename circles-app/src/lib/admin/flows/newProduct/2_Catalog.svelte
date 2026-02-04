@@ -53,6 +53,14 @@
     return existingKeys.has(key);
   }
 
+  function resolvePriceAmount(item: AggregatedCatalogItem): number | null {
+    const offer: any = (item as any)?.offer ?? (item as any)?.offers ?? (item as any)?.product?.offer ?? (item as any)?.product?.offers;
+    const pick = Array.isArray(offer) ? offer[0] : offer;
+    const price = pick?.price;
+    if (typeof price === 'number' && Number.isFinite(price)) return price;
+    return null;
+  }
+
   function productImageUrl(item: AggregatedCatalogItem): string | null {
     const img = item?.product?.image as unknown;
     if (!img) return null;
@@ -73,7 +81,20 @@
     try {
       const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
       const items = await catalog.fetchSellerCatalog(seller);
-      catalogItems = items.filter((p) => (p.seller ?? '').toLowerCase() === seller.toLowerCase());
+      const filtered = items.filter((p) => (p.seller ?? '').toLowerCase() === seller.toLowerCase());
+      catalogItems = filtered.sort((a, b) => {
+        const mappedA = isMappedCatalogItem(a);
+        const mappedB = isMappedCatalogItem(b);
+        if (mappedA !== mappedB) return mappedA ? 1 : -1;
+
+        const priceA = resolvePriceAmount(a) ?? Number.POSITIVE_INFINITY;
+        const priceB = resolvePriceAmount(b) ?? Number.POSITIVE_INFINITY;
+        if (priceA !== priceB) return priceA - priceB;
+
+        const nameA = String(a?.product?.name ?? a?.product?.sku ?? '').toLowerCase();
+        const nameB = String(b?.product?.name ?? b?.product?.sku ?? '').toLowerCase();
+        return nameA.localeCompare(nameB);
+      });
     } catch (e) {
       catalogError = e instanceof Error ? e.message : String(e);
     } finally {
@@ -85,10 +106,18 @@
     void loadCatalog();
   });
 
+  function resolveProductTitle(item: AggregatedCatalogItem): string {
+    const nameRaw = (item as any)?.product?.name ?? '';
+    const name = typeof nameRaw === 'string' ? nameRaw.trim() : '';
+    const sku = normalizeSku((item as any)?.product?.sku ?? '') ?? String((item as any)?.product?.sku ?? '').trim();
+    if (name) return "Fulfillment: " + name;
+    return sku || 'Selected product';
+  }
+
   function goNext(item: AggregatedCatalogItem): void {
     context.catalogItem = item;
     popupControls.open({
-      title: 'Setup product - Fulfillment strategy',
+      title: resolveProductTitle(item),
       component: TypeStep,
       props: { context, connections, existingProducts, onExecute, onCreateConnection },
       id: 'admin-new-product-type',
@@ -97,13 +126,8 @@
 </script>
 
 <div class="space-y-3">
-  <div class="text-sm">
-    <span class="opacity-70">Seller:</span>
-    <code class="ml-2 font-mono">{normalizedSeller ?? ''}</code>
-  </div>
-
   <div class="flex items-center justify-between gap-2">
-    <p class="text-sm opacity-70">Pick a catalog product (SKU) to configure.</p>
+    <p class="text-sm opacity-70">Select the product you want to offer.</p>
     <button class="btn btn-outline btn-sm" type="button" onclick={loadCatalog} disabled={catalogLoading}>
       {catalogLoading ? 'Loading…' : 'Reload'}
     </button>

@@ -70,7 +70,7 @@
       context.selectedConnectionKey = `${context.chainId}:${String(created.seller).toLowerCase()}`;
 
       popupControls.open({
-        title: 'Setup product - Map to odoo product code',
+        title: 'Use odoo product',
         component: DetailsStep,
         props: { context, connections: [...connections, created], existingProducts, onExecute, onCreateConnection },
         id: 'admin-new-product-details',
@@ -91,11 +91,6 @@
   {#if formError}
     <p class="text-error text-sm">{formError}</p>
   {/if}
-
-  <div class="text-sm">
-    <span class="opacity-70">Seller:</span>
-    <code class="ml-2 font-mono">{normalizedSeller ?? ''}</code>
-  </div>
 
   <div class="divider text-xs">Odoo connection</div>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-3">

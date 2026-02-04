@@ -1,9 +1,11 @@
 <script lang="ts">
   import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
   import ActionButton from '$lib/components/ActionButton.svelte';
+  import Lucide from '$lib/icons/Lucide.svelte';
   import { browser } from '$app/environment';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { runTask } from '$lib/utils/tasks';
+  import { RefreshCw as LRefreshCw } from 'lucide';
   import {
     getAdminToken,
     setAdminToken,
@@ -42,13 +44,10 @@
   import AdminCodeProductEditor from '$lib/admin/components/AdminCodeProductEditor.svelte';
   import AdminNewProductSellerStep from '$lib/admin/flows/newProduct/1_Seller.svelte';
   import AdminNewConnectionSellerStep from '$lib/admin/flows/newConnection/1_Seller.svelte';
-  import { combineAdminProducts, adminOdooConnectionKey } from '$lib/admin/helpers';
+  import { combineAdminProducts } from '$lib/admin/helpers';
   import { resolveAdminProductType } from '$lib/admin/types';
   import type { AdminProductType, AdminUnifiedProduct, AdminOdooConnection } from '$lib/admin/types';
   import { shortenAddress } from '$lib/utils/shared';
-  import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import RowFrame from '$lib/ui/RowFrame.svelte';
-  import AdminStatusBadge from '$lib/admin/components/AdminStatusBadge.svelte';
   import Tabs from '$lib/components/tabs/Tabs.svelte';
   import Tab from '$lib/components/tabs/Tab.svelte';
   import type { TabIdOf } from '$lib/components/tabs/tabId';
@@ -222,7 +221,7 @@
 
   function openNewProductWizard(): void {
     popupControls.open?.({
-      title: 'Setup product - Select Seller',
+      title: 'Product from avatar',
       component: AdminNewProductSellerStep,
       props: {
         connections: odooConnections,
@@ -431,65 +430,21 @@
     {:else}
 
       <AdminSectionCard
-        title="Odoo connections"
-        description="Manage connection credentials per seller/chain. Odoo products are configured in the Products section."
-      >
-        {#snippet actions()}
-          <button class="btn btn-outline btn-sm" onclick={loadAdminData} disabled={loadingAny}>
-            {loadingAny ? 'Refreshing…' : 'Refresh'}
-          </button>
-          <button class="btn btn-primary btn-sm" onclick={() => openConnectionEditor(null)}>
-            New connection
-          </button>
-        {/snippet}
-        {#if connectionsError || productsError || routesError}
-          <p class="text-error text-sm">{connectionsError || productsError || routesError}</p>
-        {:else if odooConnections.length === 0}
-          <p class="text-sm opacity-70">No Odoo connections yet. Create one to enable Odoo products.</p>
-        {:else}
-          {#each odooConnections as connection (adminOdooConnectionKey(connection.chainId, connection.seller))}
-            <RowFrame
-              className="bg-base-100"
-              dense={true}
-              noLeading={true}
-              clickable={true}
-              onclick={() => openConnectionEditor(connection)}
-            >
-              {#snippet title()}
-                <Avatar address={connection.seller} view="small" clickable={true} />
-              {/snippet}
-              {#snippet subtitle()}
-                {connection.odooUrl}
-              {/snippet}
-              {#snippet meta()}
-                Chain {connection.chainId} · {connection.odooDb}
-              {/snippet}
-              {#snippet trailing()}
-                <div class="flex items-center gap-2 flex-wrap justify-end">
-                  <AdminStatusBadge
-                    label={connection.enabled ? 'Enabled' : 'Disabled'}
-                    variant={connection.enabled ? 'success' : 'warning'}
-                  />
-                  {#if connection.revokedAt}
-                    <AdminStatusBadge label="Revoked" variant="warning" />
-                  {/if}
-                </div>
-              {/snippet}
-            </RowFrame>
-          {/each}
-        {/if}
-      </AdminSectionCard>
-
-      <AdminSectionCard
         title="Products"
         description="Products are configured per SKU (route + adapter mapping)."
       >
         {#snippet actions()}
-          <button class="btn btn-outline btn-sm" onclick={loadAdminData} disabled={loadingAny}>
-            {loadingAny ? 'Refreshing…' : 'Refresh'}
+          <button
+            class="btn btn-outline btn-sm btn-square"
+            onclick={loadAdminData}
+            disabled={loadingAny}
+            aria-label={loadingAny ? 'Refreshing…' : 'Refresh'}
+          >
+            <Lucide icon={LRefreshCw} size={16} class={loadingAny ? 'animate-spin' : ''} />
+            <span class="sr-only">{loadingAny ? 'Refreshing…' : 'Refresh'}</span>
           </button>
           <button class="btn btn-primary btn-sm" onclick={openNewProductWizard}>
-            Setup product
+            Connect product
           </button>
         {/snippet}
         {#if hasRouteOnlyProducts}
@@ -497,8 +452,8 @@
             Some SKUs only have a route configured. Open them to add the missing product adapter.
           </p>
         {/if}
-        {#if productsError || routesError}
-          <p class="text-error text-sm">{productsError || routesError}</p>
+        {#if productsError || routesError || connectionsError}
+          <p class="text-error text-sm">{productsError || routesError || connectionsError}</p>
         {:else}
           <Tabs bind:selected={selectedProductsTab} variant="boxed" size="sm" class="w-full p-0">
             <Tab id="codedispenser" title="Voucher codes" badge={codeProductsUnified.length} panelClass="pt-4">
@@ -508,18 +463,31 @@
                 <AdminProductList
                   products={codeProductsUnified}
                   onSelect={(product) => openProductEditor(product, 'codedispenser')}
+                  connections={odooConnections}
                   productTypes={['codedispenser']}
                 />
               {/if}
             </Tab>
 
             <Tab id="odoo" title="Odoo" badge={odooProductsUnified.length} panelClass="pt-4">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                <div class="text-xs opacity-70">
+                  Odoo connections are shown per seller below. Click a seller group to review products.
+                </div>
+                <div class="flex items-center gap-2">
+                  <button class="btn btn-outline btn-xs" onclick={() => openConnectionEditor(null)}>
+                    New connection
+                  </button>
+                </div>
+              </div>
               {#if odooProductsUnified.length === 0}
                 <p class="text-sm opacity-70">No Odoo products configured yet.</p>
               {:else}
                 <AdminProductList
                   products={odooProductsUnified}
                   onSelect={(product) => openProductEditor(product, 'odoo')}
+                  connections={odooConnections}
+                  onEditConnection={openConnectionEditor}
                   productTypes={['odoo']}
                 />
               {/if}

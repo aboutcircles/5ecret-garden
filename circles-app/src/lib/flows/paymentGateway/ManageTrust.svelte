@@ -1,9 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { ethers } from 'ethers';
+  import { RefreshCw as LRefreshCw } from 'lucide';
 
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
+  import Lucide from '$lib/icons/Lucide.svelte';
   import type { SearchProfileResult } from '$lib/profiles';
   import { wallet } from '$lib/stores/wallet.svelte';
   import { circles } from '$lib/stores/circles';
@@ -412,11 +414,13 @@
         <div class="text-sm opacity-70">Latest expiry per receiver</div>
         <button
           type="button"
-          class="btn btn-xs btn-ghost"
+          class="btn btn-xs btn-ghost btn-square"
           onclick={loadTrusts}
           disabled={loadingTrusts}
+          aria-label={loadingTrusts ? 'Refreshing…' : 'Refresh'}
         >
-          Refresh
+          <Lucide icon={LRefreshCw} size={14} class={loadingTrusts ? 'animate-spin' : ''} />
+          <span class="sr-only">{loadingTrusts ? 'Refreshing…' : 'Refresh'}</span>
         </button>
       </div>
 

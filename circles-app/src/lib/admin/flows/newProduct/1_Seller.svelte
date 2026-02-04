@@ -5,6 +5,7 @@
   import type { AdminUnifiedProduct, AdminOdooConnection } from '$lib/admin/types';
   import type { AdminNewProductFlowContext } from './context';
   import CatalogStep from './2_Catalog.svelte';
+  import { shortenAddress } from '$lib/utils/shared';
 
   interface Props {
     context?: AdminNewProductFlowContext;
@@ -36,23 +37,25 @@
     onCreateConnection,
   }: Props = $props();
 
-  function goNext(addr: Address): void {
+  function goNext(addr: Address, name?: string): void {
     context.seller = addr;
     popupControls.open({
-      title: 'Setup product - Map product',
+      title: (name ?? '').trim() || shortenAddress(String(addr)),
       component: CatalogStep,
       props: { context, connections, existingProducts, onExecute, onCreateConnection },
       id: 'admin-new-product-catalog',
     });
   }
 
-  function handleSelect(addr: unknown): void {
-    goNext(addr as Address);
+  function handleSelect(addr: unknown, profile?: { name?: string | null; registeredName?: string | null }): void {
+    const name = profile?.name || profile?.registeredName || '';
+    goNext(addr as Address, "Products: " + name);
   }
+
 </script>
 
 <div class="space-y-3">
-  <p class="text-sm opacity-70">Select the seller (avatar) for which you want to configure a product.</p>
+  <p class="text-sm opacity-70">Select the avatar that created the product you want to offer.</p>
   <SearchAvatar
     avatarTypes={['CrcV2_RegisterHuman', 'CrcV2_RegisterOrganization']}
     selectedAddress={context.seller}
