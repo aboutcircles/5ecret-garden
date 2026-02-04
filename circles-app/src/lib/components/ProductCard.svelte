@@ -38,7 +38,22 @@
   const isOwner = $derived(isProductOwnedBy(product, currentAvatar));
 
   import { getAddToCartState } from '$lib/cart/addToCartUi';
-  const addState = $derived(getAddToCartState({ product, offer, currentAvatar, cartLoading }));
+  const effectiveAvailabilityIri = $derived<string | null>(
+    (product as any)?.availability ?? (product?.product as any)?.availability ?? null
+  );
+  const effectiveInventoryValue = $derived<number | null>(
+    ((product as any)?.inventoryLevel?.value ?? (product?.product as any)?.inventoryLevel?.value ?? null) as number | null
+  );
+  const addState = $derived(
+    getAddToCartState({
+      product,
+      offer,
+      currentAvatar,
+      cartLoading,
+      availabilityIri: effectiveAvailabilityIri,
+      inventoryValue: effectiveInventoryValue,
+    })
+  );
 
   // Delete / tombstone handling for owners
   async function handleTombstone(): Promise<void> {

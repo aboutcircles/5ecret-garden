@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { Address } from '@circles-sdk/utils';
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
-  import { normalizeSku } from '$lib/admin/productEditorUtils';
   import { popupControls } from '$lib/stores/popup';
   import DetailsStep from './5_Details.svelte';
   import CreateConnectionStep from './4_CreateOdooConnection.svelte';
@@ -25,7 +24,6 @@
   const normalizedSeller = $derived(
     context.seller ? (normalizeAddress(String(context.seller)) as Address) : undefined
   );
-  const normalizedSku = $derived(normalizeSku(context.catalogItem?.product?.sku ?? '') ?? '');
 
   const sellerConnections = $derived.by(() => {
     if (!normalizedSeller) return [];
@@ -35,9 +33,12 @@
 
   function goNext(): void {
     context.selectedType = selectedType;
+    const nextTitle = selectedType === 'odoo'
+      ? 'Use odoo product'
+      : 'Add codes';
     if (selectedType === 'odoo' && sellerConnections.length === 0) {
       popupControls.open({
-        title: 'Setup product - Map to odoo product code',
+        title: 'Connect to odoo',
         component: CreateConnectionStep,
         props: { context, connections, existingProducts, onExecute, onCreateConnection },
         id: 'admin-new-product-create-connection',
@@ -46,7 +47,7 @@
     }
 
     popupControls.open({
-      title: 'Setup product - Map to odoo product code',
+      title: nextTitle,
       component: DetailsStep,
       props: { context, connections, existingProducts, onExecute, onCreateConnection },
       id: 'admin-new-product-details',
@@ -55,23 +56,19 @@
 </script>
 
 <div class="space-y-3">
-  <div class="text-sm">
-    <span class="opacity-70">Seller:</span>
-    <code class="ml-2 font-mono">{normalizedSeller ?? ''}</code>
-  </div>
-  <div class="text-sm">
-    <span class="opacity-70">SKU:</span>
-    <code class="ml-2 font-mono">{normalizedSku}</code>
-  </div>
-
-  <div class="divider text-xs">Fulfillment strategy</div>
-  <label class="flex items-center gap-2">
-    <input class="radio radio-sm" type="radio" name="ptype" value="codedispenser" bind:group={selectedType} />
-    <span>Digital voucher code</span>
+  <label class="flex items-start gap-2">
+    <input class="radio radio-sm mt-1" type="radio" name="ptype" value="codedispenser" bind:group={selectedType} />
+    <span>
+      <div class="font-medium">Digital voucher code</div>
+      <div class="text-xs opacity-70">Serve a finite pool of codes and optionally a download URL per purchase.</div>
+    </span>
   </label>
-  <label class="flex items-center gap-2">
-    <input class="radio radio-sm" type="radio" name="ptype" value="odoo" bind:group={selectedType} />
-    <span>Odoo</span>
+  <label class="flex items-start gap-2">
+    <input class="radio radio-sm mt-1" type="radio" name="ptype" value="odoo" bind:group={selectedType} />
+    <span>
+      <div class="font-medium">Odoo</div>
+      <div class="text-xs opacity-70">Sync fulfillment with your Odoo inventory and dispatch workflows.</div>
+    </span>
   </label>
 
   {#if selectedType === 'odoo' && sellerConnections.length === 0}

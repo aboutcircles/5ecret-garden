@@ -2,7 +2,6 @@
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
   import type { Address } from '@circles-sdk/utils';
   import { popupControls } from '$lib/stores/popup';
-  import { normalizeSku } from '$lib/admin/productEditorUtils';
   import SummaryStep from './6_Summary.svelte';
   import { listOdooProductCatalog, type OdooProductCatalogItem } from '$lib/gateway/adminClient';
   import type { AdminNewProductFlowContext } from './context';
@@ -26,7 +25,7 @@
   const normalizedSeller = $derived(
     context.seller ? (normalizeAddress(String(context.seller)) as Address) : undefined
   );
-  const normalizedSku = $derived(normalizeSku(context.catalogItem?.product?.sku ?? '') ?? '');
+  const normalizedSku = $derived((context.catalogItem?.product?.sku ?? '').trim());
 
   const sellerConnections = $derived.by(() => {
     if (!normalizedSeller) return [];
@@ -45,6 +44,14 @@
     if (context.codesTextarea == null) context.codesTextarea = '';
     if (context.odooProductCode == null) context.odooProductCode = '';
     if (context.selectedConnectionKey == null) context.selectedConnectionKey = '';
+  });
+
+  $effect(() => {
+    if ((context.selectedType ?? 'codedispenser') !== 'codedispenser') return;
+    const seller = normalizedSeller ? String(normalizedSeller) : '';
+    const sku = normalizedSku || '';
+    if (!seller || !sku) return;
+    context.poolId = `${seller}/${sku}`;
   });
 
   $effect(() => {
@@ -108,9 +115,13 @@
     };
 
     if (selectedType === 'codedispenser') {
-      if (!(context.poolId ?? '').trim()) {
-        formError = 'Pool ID is required for voucher code products.';
-        return null;
+      const rawCodes = (context.codesTextarea ?? '').split('\n');
+      for (const code of rawCodes) {
+        const trimmedEnd = code.replace(/\s+$/, '');
+        if (trimmedEnd.length > 0 && /\s/.test(trimmedEnd)) {
+          formError = 'Codes cannot contain whitespace (only trailing spaces are allowed).';
+          return null;
+        }
       }
       const code = {
         chainId: context.chainId,
@@ -147,8 +158,11 @@
   function goNext(): void {
     const payload = buildPayload();
     if (!payload) return;
+    const title = (context.selectedType ?? 'codedispenser') === 'odoo'
+      ? 'Use odoo product'
+      : 'Add codes';
     popupControls.open({
-      title: 'Review & confirm',
+      title,
       component: SummaryStep,
       props: { context, connections, existingProducts, onExecute, onCreateConnection },
       id: 'admin-new-product-summary',
@@ -161,27 +175,12 @@
     <p class="text-error text-sm">{formError}</p>
   {/if}
 
-  <div class="text-sm">
-    <span class="opacity-70">Seller:</span>
-    <code class="ml-2 font-mono">{normalizedSeller ?? ''}</code>
-  </div>
-  <div class="text-sm">
-    <span class="opacity-70">SKU:</span>
-    <code class="ml-2 font-mono">{normalizedSku}</code>
-  </div>
-
-  <label class="form-control">
-    <span class="label-text">Enabled</span>
-    <input type="checkbox" class="checkbox checkbox-sm" bind:checked={context.enabled} />
-  </label>
-
   {#if (context.selectedType ?? 'codedispenser') === 'codedispenser'}
-    <div class="divider text-xs">Digital voucher code details</div>
+    <label class="form-control">
+      <span class="label-text">Seed codes (one per line)</span>
+      <textarea class="textarea textarea-bordered textarea-sm font-mono" rows="3" bind:value={context.codesTextarea}></textarea>
+    </label>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <label class="form-control">
-        <span class="label-text">Pool ID *</span>
-        <input class="input input-bordered input-sm font-mono" bind:value={context.poolId} />
-      </label>
       <label class="form-control">
         <span class="label-text">Download URL template</span>
         <input
@@ -191,13 +190,12 @@
         />
         <span class="label-text-alt text-xs opacity-70">Use &lbrace;code&rbrace; as placeholder</span>
       </label>
+      <label class="form-control">
+        <span class="label-text">Enabled</span>
+        <input type="checkbox" class="checkbox checkbox-sm" bind:checked={context.enabled} />
+      </label>
     </div>
-    <label class="form-control">
-      <span class="label-text">Seed codes (one per line)</span>
-      <textarea class="textarea textarea-bordered textarea-sm font-mono" rows="3" bind:value={context.codesTextarea}></textarea>
-    </label>
   {:else}
-    <div class="divider text-xs">Map to odoo product code</div>
     <label class="form-control">
       <span class="label-text">Odoo connection *</span>
       <select class="select select-bordered select-sm" bind:value={context.selectedConnectionKey}>

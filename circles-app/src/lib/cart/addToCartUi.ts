@@ -7,6 +7,8 @@ export type AddToCartInputs = {
   offer?: SchemaOrgOfferLite | null; // allow caller to pre-provide
   currentAvatar?: string | null | undefined;
   cartLoading?: boolean;
+  availabilityIri?: string | null;
+  inventoryValue?: number | null;
 };
 
 export type AddToCartState = {
@@ -23,12 +25,24 @@ export function getAddToCartState(inputs: AddToCartInputs): AddToCartState {
   const payTo = offer ? resolvePayTo(offer) : { address: null };
   const hasPay = !!(payTo && (payTo as any).address);
   const hasFulfillmentLink = !!offer?.availabilityFeed;
+  const inventoryValue = inputs.inventoryValue ?? offer?.inventoryLevel?.value ?? null;
+  const hasInventory = typeof inventoryValue === 'number' && Number.isFinite(inventoryValue);
+  const availabilityIri = inputs.availabilityIri ?? offer?.availability ?? null;
+  const isOutOfStock = typeof availabilityIri === 'string' && availabilityIri.endsWith('/OutOfStock');
 
   if (!offer) {
     return { canAdd: false, label: UI_COPY.addToBasket, reason: 'No offer available', showButton: true };
   }
   // Products without a fulfillment link cannot be bought - hide the button entirely
   if (!hasFulfillmentLink) {
+    return { canAdd: false, label: UI_COPY.addToBasket, showButton: false };
+  }
+  // Explicit OutOfStock availability should hide the button
+  if (isOutOfStock) {
+    return { canAdd: false, label: UI_COPY.addToBasket, showButton: false };
+  }
+  // If we have stock info and remaining stock is 0, hide the button entirely
+  if (hasInventory && inventoryValue <= 0) {
     return { canAdd: false, label: UI_COPY.addToBasket, showButton: false };
   }
   if (!hasPay) {
