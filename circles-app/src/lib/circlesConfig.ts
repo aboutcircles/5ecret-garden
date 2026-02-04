@@ -48,7 +48,7 @@ export const chiadoConfig: { production: AppConfig, rings: AppConfig } = {
 export const gnosisConfig: { production: AppConfig, rings: AppConfig } = {
   production: {
     ipfsGatewayBase: 'https://da08cae2-8b50-45dc-80b9-48925be78ec8.myfilebase.com',
-    marketApiBase: 'http://localhost:18080/market/',
+    marketApiBase: 'https://market-api.aboutcircles.com:18080/market/',
     marketOperator: '0x20ced4ed3b1651b832a77e13e54ea5cb14c8b95b',
     marketChainId: 100,
     marketChainIdHex: "0x64",
@@ -66,7 +66,7 @@ export const gnosisConfig: { production: AppConfig, rings: AppConfig } = {
   },
   rings: {
     ipfsGatewayBase: 'https://da08cae2-8b50-45dc-80b9-48925be78ec8.myfilebase.com',
-    marketApiBase: 'http://market-api.aboutcircles.com:18080/market/',
+    marketApiBase: 'https://market-api.aboutcircles.com:18080/market/',
     marketOperator: '0x20ced4ed3b1651b832a77e13e54ea5cb14c8b95b',
     marketChainId: 100,
     marketChainIdHex: "0x64",
