@@ -1,8 +1,8 @@
-import { browser } from '$app/environment';
-import type { Address } from '@circles-sdk/utils';
-import { getWalletProvider } from '$lib/ethereum/getWalletProvider';
-import { getMarketClient } from '$lib/sdk/marketClient';
-import { gnosisConfig } from '$lib/circlesConfig';
+import {browser} from '$app/environment';
+import type {Address} from '@circles-sdk/utils';
+import {getWalletProvider} from '$lib/ethereum/getWalletProvider';
+import {getMarketClient} from '$lib/sdk/marketClient';
+import {gnosisConfig} from '$lib/circlesConfig';
 
 export interface AdminChallengeResponse {
   challengeId: string;
@@ -24,13 +24,12 @@ export function getAdminBaseUrl(): string {
   if (!browser) {
     throw new Error('getAdminClient() can only be used in the browser');
   }
-  
-  const envBase = (import.meta as any)?.env?.VITE_MARKET_ADMIN_BASE_URL;
-  if (envBase) {
-    return String(envBase).replace(/\/$/, '');
-  }
 
-  return 'http://localhost:18080/market';
+  const envBase = gnosisConfig.production.marketApiBase;
+  if (!envBase) {
+    throw new Error('Admin API base URL not configured');
+  }
+  return String(envBase).replace(/\/$/, '');
 }
 
 /**
@@ -41,11 +40,11 @@ export async function createAdminChallenge(
   chainId: number = 100
 ): Promise<AdminChallengeResponse> {
   const baseUrl = getAdminBaseUrl();
-  
+
   const res = await fetch(`${baseUrl}/admin/auth/challenge`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ address, chainId }),
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({address, chainId}),
   });
 
   if (!res.ok) {
@@ -64,11 +63,11 @@ export async function verifyAdminChallenge(
   signature: `0x${string}`
 ): Promise<AdminVerifyResponse> {
   const baseUrl = getAdminBaseUrl();
-  
+
   const res = await fetch(`${baseUrl}/admin/auth/verify`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ challengeId, signature }),
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({challengeId, signature}),
   });
 
   if (!res.ok) {
@@ -92,7 +91,7 @@ export async function signInAdminWithSafe(options: {
   }
 
   const chainId = options.chainId ?? gnosisConfig.production.marketChainId;
-  if (chainId !== gnosisConfig.production.marketChainId) {
+  if (!chainId || chainId !== gnosisConfig.production.marketChainId) {
     throw new Error(
       `signInAdminWithSafe currently supports only Gnosis chain (${gnosisConfig.production.marketChainId}); received ${chainId}`,
     );
@@ -143,5 +142,5 @@ export function getAdminToken(): string | null {
  */
 export function getAdminAuthHeader(): Record<string, string> {
   const token = getAdminToken();
-  return (token ? { Authorization: `Bearer ${token}` } : {}) as Record<string, string>;
+  return (token ? {Authorization: `Bearer ${token}`} : {}) as Record<string, string>;
 }
