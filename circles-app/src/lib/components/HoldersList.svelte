@@ -1,8 +1,9 @@
 <script lang="ts">
     import CollateralTable from '$lib/components/CollateralTable.svelte';
-    import { getProfile } from '$lib/utils/profile';
+    import { createFilteredAddresses, createProfileNameStore } from '$lib/utils/searchableProfiles';
     import type { Address } from '@circles-sdk/utils';
     import type { TrustRelation } from '@circles-sdk/data';
+    import { derived, writable } from 'svelte/store';
 
     interface HolderRow {
         avatar: Address;
@@ -18,31 +19,17 @@
 
     let { holders }: Props = $props();
 
-    let searchQuery = $state('');
-    let profileNames = $state<Record<string, string>>({});
-
-    const filteredRows = $derived.by(() => {
-        const q = searchQuery.trim().toLowerCase();
-        if (!q) return holders;
-        return holders.filter((row) => {
-            const key = row.avatar.toLowerCase();
-            const name = (profileNames[key] ?? '').toLowerCase();
-            return key.includes(q) || name.includes(q);
-        });
-    });
+    const searchQuery = writable('');
+    const holdersStore = writable<HolderRow[]>([]);
+    const holderAddresses = derived(holdersStore, ($holders) => $holders.map((row) => row.avatar));
+    const profileNames = createProfileNameStore(holderAddresses);
+    const filteredAddresses = createFilteredAddresses(holderAddresses, searchQuery, profileNames);
+    const filteredRows = derived([holdersStore, filteredAddresses], ([$holders, $filtered]) =>
+        $holders.filter((row) => $filtered.includes(row.avatar))
+    );
 
     $effect(() => {
-        holders.forEach((row) => {
-            const key = row.avatar.toLowerCase();
-            if (profileNames[key] !== undefined) return;
-            getProfile(row.avatar)
-                .then((profile) => {
-                    profileNames = { ...profileNames, [key]: profile?.name ?? '' };
-                })
-                .catch(() => {
-                    profileNames = { ...profileNames, [key]: '' };
-                });
-        });
+        holdersStore.set(holders);
     });
 </script>
 
@@ -51,8 +38,8 @@
         type="text"
         class="input input-bordered w-full"
         placeholder="Search by address or name"
-        bind:value={searchQuery}
+        bind:value={$searchQuery}
     />
 </div>
 
-<CollateralTable collateralInTreasury={filteredRows} />
+<CollateralTable collateralInTreasury={$filteredRows} />
