@@ -2,17 +2,20 @@
     import GenericList from '$lib/components/GenericList.svelte';
     import TrustRelationRow from '$lib/components/TrustRelationRow.svelte';
     import { createPaginatedList } from '$lib/stores/paginatedList';
-    import { avatarState } from '$lib/stores/avatar.svelte';
     import { circles } from '$lib/stores/circles';
     import { get, writable } from 'svelte/store';
     import { getProfile } from '$lib/utils/profile';
     import type { Address } from '@circles-sdk/utils';
 
+    type RelationFilter = 'trusts' | 'trustedBy';
+
     interface Props {
-        otherAvatarAddress?: Address;
-        commonConnectionsCount?: number;
+        avatarAddress?: Address;
+        relation: RelationFilter;
+        count?: number;
     }
-    let { otherAvatarAddress, commonConnectionsCount = $bindable(0) }: Props = $props();
+
+    let { avatarAddress, relation, count = $bindable(0) }: Props = $props();
 
     let loading = $state(true);
     let error: string | null = $state(null);
@@ -20,30 +23,50 @@
     let searchQuery = $state('');
     let profileNames = $state<Record<string, string>>({});
 
-    async function loadCommon(): Promise<void> {
-        loading = true; error = null; rows = [];
+    async function loadRelations(): Promise<void> {
+        loading = true;
+        error = null;
+        rows = [];
         try {
-            const me = avatarState.avatar?.address as Address | undefined;
-            const other = otherAvatarAddress;
-            if (!$circles || !me || !other) { loading = false; commonConnectionsCount = 0; return; }
-
             const sdk = get(circles);
-            if (!sdk?.circlesRpc) {
-                throw new Error('No circles RPC available');
+            if (!sdk || !avatarAddress) {
+                loading = false;
+                count = 0;
+                return;
             }
-            const resp = await sdk.circlesRpc.call<Address[]>('circles_getCommonTrust', [me, other]);
-            const list = (resp.result ?? [])
-                .map((addr) => addr as Address)
-                .filter((addr) => addr !== me && addr !== other)
+
+            const list: Address[] = [];
+
+            const relations = await sdk.data.getAggregatedTrustRelations(avatarAddress);
+            if (relation === 'trusts') {
+                list.push(
+                    ...relations
+                        .filter((row) => row.relation === 'trusts' || row.relation === 'mutuallyTrusts')
+                        .map((row) => row.objectAvatar as Address)
+                );
+            } else {
+                list.push(
+                    ...relations
+                        .filter((row) => row.relation === 'trustedBy' || row.relation === 'mutuallyTrusts')
+                        .map((row) => row.objectAvatar as Address)
+                );
+            }
+
+            const unique = Array.from(new Set(list))
+                .filter((addr) => addr !== avatarAddress)
                 .sort((a, b) => a.localeCompare(b));
 
-            rows = list;
-            commonConnectionsCount = rows.length;
+            rows = unique;
+            count = rows.length;
         } catch (e) {
-            error = e instanceof Error ? e.message : 'Failed to load connections';
-            rows = []; commonConnectionsCount = 0;
-        } finally { loading = false; }
+            error = e instanceof Error ? e.message : 'Failed to load trust relations';
+            rows = [];
+            count = 0;
+        } finally {
+            loading = false;
+        }
     }
+
     const filteredRows = $derived.by(() => {
         const q = searchQuery.trim().toLowerCase();
         if (!q) return rows;
@@ -74,7 +97,9 @@
         filteredRowsStore.set(filteredRows);
     });
 
-    $effect(() => { void loadCommon(); });
+    $effect(() => {
+        void loadRelations();
+    });
 
     const paginatedRows = createPaginatedList(filteredRowsStore, { pageSize: 25 });
 </script>
@@ -93,7 +118,7 @@
 {:else if error}
     <div class="w-full py-6 text-center text-error">{error}</div>
 {:else if rows.length === 0}
-    <div class="w-full py-6 text-center text-base-content/60">No common connections</div>
+    <div class="w-full py-6 text-center text-base-content/60">No connections</div>
 {:else if filteredRows.length === 0}
     <div class="w-full py-6 text-center text-base-content/60">No matches</div>
 {:else}

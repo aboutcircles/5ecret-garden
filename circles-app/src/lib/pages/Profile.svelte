@@ -2,6 +2,8 @@
     import {circles} from '$lib/stores/circles';
     import type { Profile } from '$lib/utils/profile';
     import CommonConnections from '$lib/components/CommonConnections.svelte';
+    import TrustRelationsList from '$lib/components/TrustRelationsList.svelte';
+    import HoldersList from '$lib/components/HoldersList.svelte';
     import {contacts} from '$lib/stores/contacts';
     import {
         type AvatarRow,
@@ -23,6 +25,7 @@
     import SelectAmount from '$lib/flows/send/3_Amount.svelte';
     import {transitiveTransfer} from '$lib/pages/SelectAsset.svelte';
     import {
+        getAccountHoldings,
         getGroupCollateral, getGroupTokenHolders,
         getTreasuryAddress,
         getVaultAddress,
@@ -78,6 +81,14 @@
     }> = $state([]);
 
     let tokenHolders: Array<{
+        avatar: Address;
+        amount: bigint;
+        amountToRedeem: bigint;
+        amountToRedeemInCircles: number;
+        trustRelation?: TrustRelation;
+    }> = $state([]);
+
+    let holdings: Array<{
         avatar: Address;
         amount: bigint;
         amountToRedeem: bigint;
@@ -202,6 +213,21 @@
         const isGroup: boolean = otherAvatar?.type === 'CrcV2_RegisterGroup';
         const isHuman: boolean = otherAvatar?.type === 'CrcV2_RegisterHuman';
 
+        const toTokenRows = (result: { columns: string[]; rows: any[][] } | null, avatarColumn: 'tokenId' | 'account') => {
+            if (!result) return [];
+            const { columns, rows } = result;
+            const avatarIdx = columns.indexOf(avatarColumn);
+            const colBal = columns.indexOf('demurragedTotalBalance');
+            return rows
+                .map((row) => ({
+                    avatar: uint256ToAddress(BigInt(row[avatarIdx])),
+                    amount: BigInt(row[colBal]),
+                    amountToRedeemInCircles: 0,
+                    amountToRedeem: 0n,
+                }))
+                .sort((a, b) => (a.amount > b.amount ? -1 : a.amount === b.amount ? 0 : 1));
+        };
+
         if (isGroup) {
             const membersP = (async () => {
                 const groupTrustRelations = await $circles.data.getAggregatedTrustRelations(otherAvatar!.avatar);
@@ -250,70 +276,55 @@
 
             if (hasBalanceOwner) {
                 const balancesResult = await getGroupCollateral($circles.circlesRpc, balanceOwner);
-                if (balancesResult) {
-                    const {columns, rows} = balancesResult;
-                    const colId = columns.indexOf('tokenId');
-                    const colBal = columns.indexOf('demurragedTotalBalance');
-                    collateralInTreasury = rows
-                        .map((row) => ({
-                            avatar: uint256ToAddress(BigInt(row[colId])),
-                            amount: BigInt(row[colBal]),
-                            amountToRedeemInCircles: 0,
-                            amountToRedeem: 0n,
-                        }))
-                        .sort((a, b) => (a.amount > b.amount ? -1 : a.amount === b.amount ? 0 : 1));
-                } else {
-                    collateralInTreasury = [];
-                }
+                collateralInTreasury = toTokenRows(balancesResult, 'tokenId');
             } else {
                 collateralInTreasury = [];
             }
 
+            const holdingsResult = await getAccountHoldings($circles.circlesRpc, address);
+            holdings = toTokenRows(holdingsResult, 'tokenId');
+
             const tokenHodlers = await tokenHoldersP;
-            if (tokenHodlers) {
-                const {columns, rows} = tokenHodlers;
-                const avatarIdx = columns.indexOf('account');
-                const colBal = columns.indexOf('demurragedTotalBalance');
-                tokenHolders = rows
+            tokenHolders = tokenHodlers
+                ? tokenHodlers.rows
                     .map((row) => ({
-                        avatar: row[avatarIdx],
-                        amount: BigInt(row[colBal]),
+                        avatar: row[tokenHodlers.columns.indexOf('account')],
+                        amount: BigInt(row[tokenHodlers.columns.indexOf('demurragedTotalBalance')]),
                         amountToRedeemInCircles: 0,
                         amountToRedeem: 0n,
                     }))
-                    .sort((a, b) => (a.amount > b.amount ? -1 : a.amount === b.amount ? 0 : 1));
-            } else {
-                tokenHolders = [];
-            }
+                    .sort((a, b) => (a.amount > b.amount ? -1 : a.amount === b.amount ? 0 : 1))
+                : [];
         } else {
             members = undefined;
 
+            const holdingsResult = await getAccountHoldings($circles.circlesRpc, address);
+            holdings = toTokenRows(holdingsResult, 'tokenId');
+
             if (isHuman) {
                 const tokenHodlers = await getGroupTokenHolders($circles.circlesRpc, address);
-                if (tokenHodlers) {
-                    const {columns, rows} = tokenHodlers;
-                    const avatarIdx = columns.indexOf('account');
-                    const colBal = columns.indexOf('demurragedTotalBalance');
-                    tokenHolders = rows
+                tokenHolders = tokenHodlers
+                    ? tokenHodlers.rows
                         .map((row) => ({
-                            avatar: row[avatarIdx],
-                            amount: BigInt(row[colBal]),
+                            avatar: row[tokenHodlers.columns.indexOf('account')],
+                            amount: BigInt(row[tokenHodlers.columns.indexOf('demurragedTotalBalance')]),
                             amountToRedeemInCircles: 0,
                             amountToRedeem: 0n,
                         }))
-                        .sort((a, b) => (a.amount > b.amount ? -1 : a.amount === b.amount ? 0 : 1));
-                } else {
-                    tokenHolders = [];
-                }
+                        .sort((a, b) => (a.amount > b.amount ? -1 : a.amount === b.amount ? 0 : 1))
+                    : [];
             }
         }
     }
 
     const TAB_IDS = [
         'common_connections',
+        'trusts',
+        'trusted_by',
         'members',
         'collateral',
         'holders',
+        'holdings',
         'offers',
         'explore_namespaces',
     ] as const;
@@ -323,12 +334,17 @@
 
     let selectedTab = $state<TabId>('common_connections');
     let commonConnectionsCount = $state(0);
+    let trustsCount = $state(0);
+    let trustedByCount = $state(0);
 
     const availableTabIds = $derived((() => {
-        const ids: TabId[] = ['common_connections'];
+        const ids: TabId[] = ['common_connections', 'trusts', 'trusted_by'];
         if (members) ids.push('members');
         if (otherAvatar?.type === 'CrcV2_RegisterGroup') ids.push('collateral');
-        if (otherAvatar?.type === 'CrcV2_RegisterGroup' || otherAvatar?.type === 'CrcV2_RegisterHuman') ids.push('holders');
+        if (otherAvatar?.type === 'CrcV2_RegisterGroup' || otherAvatar?.type === 'CrcV2_RegisterHuman') {
+            ids.push('holders');
+            ids.push('holdings');
+        }
         ids.push('offers');
         ids.push('explore_namespaces');
         return ids;
@@ -514,6 +530,36 @@
         </div>
     </Tab>
 
+    <Tab
+            id="trusts"
+            title="Trusts"
+            badge={trustsCount}
+            panelClass={tabPanelClass}
+    >
+        <div class="w-full">
+            <TrustRelationsList
+                    avatarAddress={otherAvatar?.avatar}
+                    relation="trusts"
+                    bind:count={trustsCount}
+            />
+        </div>
+    </Tab>
+
+    <Tab
+            id="trusted_by"
+            title="Trusted by"
+            badge={trustedByCount}
+            panelClass={tabPanelClass}
+    >
+        <div class="w-full">
+            <TrustRelationsList
+                    avatarAddress={otherAvatar?.avatar}
+                    relation="trustedBy"
+                    bind:count={trustedByCount}
+            />
+        </div>
+    </Tab>
+
     {#if members}
         <Tab
                 id="members"
@@ -573,7 +619,18 @@
                 panelClass={tabPanelClass}
         >
             <div class="w-full">
-                <CollateralTable collateralInTreasury={tokenHolders}/>
+                <HoldersList holders={tokenHolders} />
+            </div>
+        </Tab>
+
+        <Tab
+                id="holdings"
+                title="Holdings"
+                badge={holdings.length}
+                panelClass={tabPanelClass}
+        >
+            <div class="w-full">
+                <HoldersList holders={holdings} />
             </div>
         </Tab>
     {/if}
