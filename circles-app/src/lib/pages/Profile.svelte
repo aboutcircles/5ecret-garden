@@ -69,6 +69,8 @@
     let otherAvatar: AvatarRow | undefined = $state();
     let profile: Profile | undefined = $state();
     let members: Address[] | undefined = $state(undefined);
+    let membersLoading: boolean = $state(false);
+    let membersError: string | null = $state(null);
     let mintHandler: Address | undefined = $state();
 
     let trustRow: TrustRelationRow | undefined = $state();
@@ -79,6 +81,8 @@
         amountToRedeemInCircles: number;
         trustRelation?: TrustRelation;
     }> = $state([]);
+    let collateralLoading: boolean = $state(false);
+    let collateralError: string | null = $state(null);
 
     let tokenHolders: Array<{
         avatar: Address;
@@ -87,6 +91,8 @@
         amountToRedeemInCircles: number;
         trustRelation?: TrustRelation;
     }> = $state([]);
+    let holdersLoading: boolean = $state(false);
+    let holdersError: string | null = $state(null);
 
     let holdings: Array<{
         avatar: Address;
@@ -95,6 +101,8 @@
         amountToRedeemInCircles: number;
         trustRelation?: TrustRelation;
     }> = $state([]);
+    let holdingsLoading: boolean = $state(false);
+    let holdingsError: string | null = $state(null);
 
     // Offers tab state
     let offersLoading: boolean = $state(false);
@@ -228,15 +236,24 @@
                 .sort((a, b) => (a.amount > b.amount ? -1 : a.amount === b.amount ? 0 : 1));
         };
 
-        if (isGroup) {
-            const membersP = (async () => {
+        const loadMembers = async () => {
+            membersLoading = true;
+            membersError = null;
+            try {
                 const groupTrustRelations = await $circles.data.getAggregatedTrustRelations(otherAvatar!.avatar);
-                return groupTrustRelations
+                members = groupTrustRelations
                     .filter((row) => row.relation === 'trusts')
                     .map((o) => o.objectAvatar);
-            })();
+            } catch (e: any) {
+                membersError = e?.message ?? 'Failed to load members';
+                members = [];
+            } finally {
+                membersLoading = false;
+            }
+        };
 
-            const mintHandlerP = (async () => {
+        const loadMintHandler = async () => {
+            try {
                 const findMintHandlerQuery = new CirclesQuery<any>($circles.circlesRpc, {
                     namespace: 'V_CrcV2',
                     table: 'Groups',
@@ -252,68 +269,90 @@
                     sortOrder: 'DESC',
                     limit: 1,
                 });
-                return (await findMintHandlerQuery.getSingleRow())?.mintHandler as Address | undefined;
-            })();
+                mintHandler = (await findMintHandlerQuery.getSingleRow())?.mintHandler as Address | undefined;
+            } catch (e) {
+                mintHandler = undefined;
+            }
+        };
 
-            const vaultAndTreasuryP = Promise.allSettled([
-                getVaultAddress($circles.circlesRpc, otherAvatar!.avatar),
-                getTreasuryAddress($circles.circlesRpc, otherAvatar!.avatar),
-            ]);
+        const loadCollateral = async () => {
+            collateralLoading = true;
+            collateralError = null;
+            try {
+                const [vaultRes, treasuryRes] = await Promise.allSettled([
+                    getVaultAddress($circles.circlesRpc, otherAvatar!.avatar),
+                    getTreasuryAddress($circles.circlesRpc, otherAvatar!.avatar),
+                ]);
+                const vaultAddress = vaultRes.status === 'fulfilled' ? vaultRes.value : null;
+                const treasuryAddress = treasuryRes.status === 'fulfilled' ? treasuryRes.value : null;
+                const balanceOwner: string = vaultAddress ?? treasuryAddress ?? '';
 
-            const tokenHoldersP = getGroupTokenHolders($circles.circlesRpc, address);
-
-            [members, mintHandler] = await Promise.all([membersP, mintHandlerP]);
-
-            const [vaultRes, treasuryRes] = await vaultAndTreasuryP as [
-                PromiseSettledResult<string | null>,
-                PromiseSettledResult<string | null>
-            ];
-            const vaultAddress = vaultRes.status === 'fulfilled' ? vaultRes.value : null;
-            const treasuryAddress = treasuryRes.status === 'fulfilled' ? treasuryRes.value : null;
-            const balanceOwner: string = vaultAddress ?? treasuryAddress ?? '';
-
-            const hasBalanceOwner: boolean = balanceOwner.length > 0;
-
-            if (hasBalanceOwner) {
+                if (!balanceOwner) {
+                    collateralInTreasury = [];
+                    return;
+                }
                 const balancesResult = await getGroupCollateral($circles.circlesRpc, balanceOwner);
                 collateralInTreasury = toTokenRows(balancesResult, 'tokenId');
-            } else {
+            } catch (e: any) {
+                collateralError = e?.message ?? 'Failed to load collateral';
                 collateralInTreasury = [];
+            } finally {
+                collateralLoading = false;
             }
+        };
 
-            const holdingsResult = await getAccountHoldings($circles.circlesRpc, address);
-            holdings = toTokenRows(holdingsResult, 'tokenId');
+        const loadHoldings = async () => {
+            holdingsLoading = true;
+            holdingsError = null;
+            try {
+                const holdingsResult = await getAccountHoldings($circles.circlesRpc, address);
+                holdings = toTokenRows(holdingsResult, 'tokenId');
+            } catch (e: any) {
+                holdingsError = e?.message ?? 'Failed to load holdings';
+                holdings = [];
+            } finally {
+                holdingsLoading = false;
+            }
+        };
 
-            const tokenHodlers = await tokenHoldersP;
-            tokenHolders = tokenHodlers
-                ? tokenHodlers.rows
-                    .map((row) => ({
-                        avatar: row[tokenHodlers.columns.indexOf('account')],
-                        amount: BigInt(row[tokenHodlers.columns.indexOf('demurragedTotalBalance')]),
-                        amountToRedeemInCircles: 0,
-                        amountToRedeem: 0n,
-                    }))
-                    .sort((a, b) => (a.amount > b.amount ? -1 : a.amount === b.amount ? 0 : 1))
-                : [];
-        } else {
-            members = undefined;
-
-            const holdingsResult = await getAccountHoldings($circles.circlesRpc, address);
-            holdings = toTokenRows(holdingsResult, 'tokenId');
-
-            if (isHuman) {
-                const tokenHodlers = await getGroupTokenHolders($circles.circlesRpc, address);
-                tokenHolders = tokenHodlers
-                    ? tokenHodlers.rows
+        const loadTokenHolders = async () => {
+            holdersLoading = true;
+            holdersError = null;
+            try {
+                const tokenHoldersResult = await getGroupTokenHolders($circles.circlesRpc, address);
+                tokenHolders = tokenHoldersResult
+                    ? tokenHoldersResult.rows
                         .map((row) => ({
-                            avatar: row[tokenHodlers.columns.indexOf('account')],
-                            amount: BigInt(row[tokenHodlers.columns.indexOf('demurragedTotalBalance')]),
+                            avatar: row[tokenHoldersResult.columns.indexOf('account')],
+                            amount: BigInt(row[tokenHoldersResult.columns.indexOf('demurragedTotalBalance')]),
                             amountToRedeemInCircles: 0,
                             amountToRedeem: 0n,
                         }))
                         .sort((a, b) => (a.amount > b.amount ? -1 : a.amount === b.amount ? 0 : 1))
                     : [];
+            } catch (e: any) {
+                holdersError = e?.message ?? 'Failed to load holders';
+                tokenHolders = [];
+            } finally {
+                holdersLoading = false;
             }
+        };
+
+        if (isGroup) {
+            members = [];
+            await Promise.allSettled([
+                loadMembers(),
+                loadMintHandler(),
+                loadCollateral(),
+                loadHoldings(),
+                loadTokenHolders(),
+            ]);
+        } else {
+            members = undefined;
+            await Promise.allSettled([
+                loadHoldings(),
+                ...(isHuman ? [loadTokenHolders()] : []),
+            ]);
         }
     }
 
@@ -567,7 +606,11 @@
                 badge={members.length}
                 panelClass={tabPanelClass}
         >
-            {#if members.length === 0}
+            {#if membersLoading}
+                <div class="w-full py-6 text-center text-base-content/60">Loading…</div>
+            {:else if membersError}
+                <div class="w-full py-6 text-center text-error">{membersError}</div>
+            {:else if members.length === 0}
                 <div class="w-full py-6 text-center text-base-content/60">No members</div>
             {:else}
                 <div class="w-full flex flex-col gap-y-1.5" role="list">
@@ -606,7 +649,13 @@
                 panelClass={tabPanelClass}
         >
             <div class="w-full">
-                <CollateralTable {collateralInTreasury}/>
+                {#if collateralLoading}
+                    <div class="w-full py-6 text-center text-base-content/60">Loading…</div>
+                {:else if collateralError}
+                    <div class="w-full py-6 text-center text-error">{collateralError}</div>
+                {:else}
+                    <CollateralTable {collateralInTreasury}/>
+                {/if}
             </div>
         </Tab>
     {/if}
@@ -619,7 +668,13 @@
                 panelClass={tabPanelClass}
         >
             <div class="w-full">
-                <HoldersList holders={tokenHolders} />
+                {#if holdersLoading}
+                    <div class="w-full py-6 text-center text-base-content/60">Loading…</div>
+                {:else if holdersError}
+                    <div class="w-full py-6 text-center text-error">{holdersError}</div>
+                {:else}
+                    <HoldersList holders={tokenHolders} />
+                {/if}
             </div>
         </Tab>
 
@@ -630,7 +685,13 @@
                 panelClass={tabPanelClass}
         >
             <div class="w-full">
-                <HoldersList holders={holdings} />
+                {#if holdingsLoading}
+                    <div class="w-full py-6 text-center text-base-content/60">Loading…</div>
+                {:else if holdingsError}
+                    <div class="w-full py-6 text-center text-error">{holdingsError}</div>
+                {:else}
+                    <HoldersList holders={holdings} />
+                {/if}
             </div>
         </Tab>
     {/if}

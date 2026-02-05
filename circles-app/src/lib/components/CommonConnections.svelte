@@ -1,11 +1,8 @@
 <script lang="ts">
-    import GenericList from '$lib/components/GenericList.svelte';
-    import TrustRelationRow from '$lib/components/TrustRelationRow.svelte';
-    import { createPaginatedList } from '$lib/stores/paginatedList';
+    import SearchablePaginatedAddressList from '$lib/components/SearchablePaginatedAddressList.svelte';
     import { avatarState } from '$lib/stores/avatar.svelte';
     import { circles } from '$lib/stores/circles';
     import { get, writable } from 'svelte/store';
-    import { getProfile } from '$lib/utils/profile';
     import type { Address } from '@circles-sdk/utils';
 
     interface Props {
@@ -17,8 +14,7 @@
     let loading = $state(true);
     let error: string | null = $state(null);
     let rows: Address[] = $state([]);
-    let searchQuery = $state('');
-    let profileNames = $state<Record<string, string>>({});
+    const rowsStore = writable<Address[]>([]);
 
     async function loadCommon(): Promise<void> {
         loading = true; error = null; rows = [];
@@ -38,71 +34,25 @@
                 .sort((a, b) => a.localeCompare(b));
 
             rows = list;
+            rowsStore.set(rows);
             commonConnectionsCount = rows.length;
         } catch (e) {
             error = e instanceof Error ? e.message : 'Failed to load connections';
-            rows = []; commonConnectionsCount = 0;
+            rows = []; rowsStore.set([]); commonConnectionsCount = 0;
         } finally { loading = false; }
     }
-    const filteredRows = $derived.by(() => {
-        const q = searchQuery.trim().toLowerCase();
-        if (!q) return rows;
-        return rows.filter((addr) => {
-            const key = addr.toLowerCase();
-            const name = (profileNames[key] ?? '').toLowerCase();
-            return key.includes(q) || name.includes(q);
-        });
-    });
-
-    const filteredRowsStore = writable<Address[]>([]);
-
-    $effect(() => {
-        rows.forEach((addr) => {
-            const key = addr.toLowerCase();
-            if (profileNames[key] !== undefined) return;
-            getProfile(addr)
-                .then((profile) => {
-                    profileNames = { ...profileNames, [key]: profile?.name ?? '' };
-                })
-                .catch(() => {
-                    profileNames = { ...profileNames, [key]: '' };
-                });
-        });
-    });
-
-    $effect(() => {
-        filteredRowsStore.set(filteredRows);
-    });
 
     $effect(() => { void loadCommon(); });
-
-    const paginatedRows = createPaginatedList(filteredRowsStore, { pageSize: 25 });
 </script>
-
-<div class="mb-3">
-    <input
-        type="text"
-        class="input input-bordered w-full"
-        placeholder="Search by address or name"
-        bind:value={searchQuery}
-    />
-</div>
 
 {#if loading}
     <div class="w-full py-6 text-center text-base-content/60">Loading…</div>
 {:else if error}
     <div class="w-full py-6 text-center text-error">{error}</div>
-{:else if rows.length === 0}
-    <div class="w-full py-6 text-center text-base-content/60">No common connections</div>
-{:else if filteredRows.length === 0}
-    <div class="w-full py-6 text-center text-base-content/60">No matches</div>
 {:else}
-    <GenericList
-        store={paginatedRows}
-        row={TrustRelationRow}
-        getKey={(addr) => String(addr)}
-        rowHeight={64}
-        maxPlaceholderPages={2}
-        expectedPageSize={25}
+    <SearchablePaginatedAddressList
+        addresses={rowsStore}
+        emptyLabel="No common connections"
+        noMatchesLabel="No matches"
     />
 {/if}
