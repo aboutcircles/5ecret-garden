@@ -1,5 +1,7 @@
 <script lang="ts">
-    import CollateralTable from '$lib/components/CollateralTable.svelte';
+    import GenericList from '$lib/components/GenericList.svelte';
+    import HoldersRow from '$lib/components/HoldersRow.svelte';
+    import { createPaginatedList } from '$lib/stores/paginatedList';
     import { createFilteredAddresses, createProfileNameStore } from '$lib/utils/searchableProfiles';
     import type { Address } from '@circles-sdk/utils';
     import type { TrustRelation } from '@circles-sdk/data';
@@ -28,6 +30,8 @@
         $holders.filter((row) => $filtered.includes(row.avatar))
     );
 
+    const paginatedRows = createPaginatedList(filteredRows, { pageSize: 25 });
+
     $effect(() => {
         holdersStore.set(holders);
     });
@@ -42,4 +46,17 @@
     />
 </div>
 
-<CollateralTable collateralInTreasury={$filteredRows} />
+{#if holders.length === 0}
+    <div class="w-full py-6 text-center text-base-content/60">No holders</div>
+{:else if ($filteredRows ?? []).length === 0}
+    <div class="w-full py-6 text-center text-base-content/60">No matches</div>
+{:else}
+    <GenericList
+        store={paginatedRows}
+        row={HoldersRow}
+        getKey={(item) => String(item.avatar)}
+        rowHeight={64}
+        maxPlaceholderPages={2}
+        expectedPageSize={25}
+    />
+{/if}
