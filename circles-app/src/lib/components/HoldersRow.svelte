@@ -33,7 +33,7 @@
 
 <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => openProfile(item.avatar)}>
   <div class="min-w-0">
-    <Avatar address={item.avatar} clickable={true} view="horizontal" />
+    <Avatar address={item.avatar} clickable={true} view="horizontal" showTypeInfo={true} />
   </div>
   {#snippet trailing()}<div class="text-right tabular-nums">
     <div class="font-medium">{formatAmount(item.amount)} CRC</div>

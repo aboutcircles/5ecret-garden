@@ -17,7 +17,6 @@
     import {getProfile} from '$lib/utils/profile';
     import {formatTrustRelation, getTypeString} from '$lib/utils/helpers';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
-    import ProfilePage from '$lib/pages/ProfilePopup.svelte';
     import {popupControls} from '$lib/stores/popup';
     import JumpLink from '$lib/components/jump/JumpLink.svelte';
     import AddressComponent from '$lib/components/Address.svelte';
@@ -38,7 +37,6 @@
     import Tabs from '$lib/components/tabs/Tabs.svelte';
     import Tab from '$lib/components/tabs/Tab.svelte';
     import type { TabIdOf } from '$lib/components/tabs/tabId';
-    import RowFrame from '$lib/ui/RowFrame.svelte';
     // Offers tab dependencies
     import ProductCard from '$lib/components/ProductCard.svelte';
     import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
@@ -68,9 +66,6 @@
 
     let otherAvatar: AvatarRow | undefined = $state();
     let profile: Profile | undefined = $state();
-    let members: Address[] | undefined = $state(undefined);
-    let membersLoading: boolean = $state(false);
-    let membersError: string | null = $state(null);
     let mintHandler: Address | undefined = $state();
 
     let trustRow: TrustRelationRow | undefined = $state();
@@ -239,23 +234,6 @@
                 .sort((a, b) => (a.amount > b.amount ? -1 : a.amount === b.amount ? 0 : 1));
         };
 
-        const loadMembers = async () => {
-            membersLoading = true;
-            membersError = null;
-            try {
-                const groupTrustRelations = await $circles.data.getAggregatedTrustRelations(otherAvatar!.avatar);
-                members = groupTrustRelations
-                    .filter((row) => row.relation === 'trusts')
-                    .filter((row) => row.objectAvatar !== otherAvatar!.avatar)
-                    .map((o) => o.objectAvatar);
-            } catch (e: any) {
-                membersError = e?.message ?? 'Failed to load members';
-                members = [];
-            } finally {
-                membersLoading = false;
-            }
-        };
-
         const loadMintHandler = async () => {
             try {
                 const findMintHandlerQuery = new CirclesQuery<any>($circles.circlesRpc, {
@@ -334,16 +312,13 @@
         };
 
         if (isGroup) {
-            members = [];
             await Promise.allSettled([
-                loadMembers(),
                 loadMintHandler(),
                 loadCollateral(),
                 loadHoldings(),
                 loadTokenHolders(),
             ]);
         } else {
-            members = undefined;
             await Promise.allSettled([
                 loadHoldings(),
                 ...(isHuman ? [loadTokenHolders()] : []),
@@ -355,7 +330,6 @@
         'common_connections',
         'trusts',
         'trusted_by',
-        'members',
         'collateral',
         'holders',
         'holdings',
@@ -373,7 +347,6 @@
 
     const availableTabIds = $derived((() => {
         const ids: TabId[] = ['common_connections', 'trusts', 'trusted_by'];
-        if (members) ids.push('members');
         if (otherAvatar?.type === 'CrcV2_RegisterGroup') ids.push('collateral');
         if (otherAvatar?.type === 'CrcV2_RegisterGroup' || otherAvatar?.type === 'CrcV2_RegisterHuman') {
             ids.push('holders');
@@ -542,6 +515,7 @@
     </div>
 </div>
 
+{#key availableTabIds.join('|')}
 <Tabs
         id="profile-tabs"
         bind:selected={selectedTab}
@@ -593,48 +567,6 @@
             />
         </div>
     </Tab>
-
-    {#if members}
-        <Tab
-                id="members"
-                title="Members"
-                badge={members.length}
-                panelClass={tabPanelClass}
-        >
-            {#if membersLoading}
-                <div class="w-full py-6 text-center text-base-content/60">Loading…</div>
-            {:else if membersError}
-                <div class="w-full py-6 text-center text-error">{membersError}</div>
-            {:else if members.length === 0}
-                <div class="w-full py-6 text-center text-base-content/60">No members</div>
-            {:else}
-                <div class="w-full flex flex-col gap-y-1.5" role="list">
-                    {#each members as member (member)}
-                        <RowFrame
-                                clickable={true}
-                                dense={true}
-                                noLeading
-                                onclick={async () => {
-                            // Open another Profile instance in a popup (same UX as groups/contacts lists)
-                            popupControls.open({ 
-                                title: 'Profile',
-                                component: ProfilePage, 
-                                props: { address: member } 
-                            });
-                          }}
-                        >
-                            <div class="min-w-0">
-                                <Avatar address={member} view="horizontal" clickable={true}/>
-                            </div>
-                            {#snippet trailing()}<div aria-hidden="true">
-                                <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" />
-                            </div>{/snippet}
-                        </RowFrame>
-                    {/each}
-                </div>
-            {/if}
-        </Tab>
-    {/if}
 
     {#if otherAvatar?.type === 'CrcV2_RegisterGroup'}
         <Tab
@@ -728,7 +660,7 @@
     <!-- Explore namespaces tab: auto-load the viewed profile's namespaces (read-only) -->
     <Tab
             id="explore_namespaces"
-            title="Explore namespaces"
+            title="Namespaces"
             panelClass={tabPanelClass}
     >
         <div class="space-y-3">
@@ -749,3 +681,4 @@
         </div>
     </Tab>
 </Tabs>
+{/key}
