@@ -6,6 +6,9 @@
   import { runTask } from '$lib/utils/tasks';
   import { popupControls } from '$lib/stores/popup';
   import type { CreateGatewayFlowContext } from './context';
+  import { gnosisConfig } from '$lib/circlesConfig';
+  import { getProfilesBindings } from '$lib/offers/profilesBindings';
+  import { ensureProfileShape, cidV0ToDigest32Strict } from '@circles-profile/core';
   import ActionButton from '$lib/components/ActionButton.svelte';
 
   interface Props {
@@ -32,12 +35,13 @@
 
   const factoryValid = $derived(isAddress(context.factoryAddress));
   const nameValid = $derived((context.gatewayName ?? '').trim().length > 0);
+  const profileNameValid = $derived((context.profile?.name ?? '').trim().length > 0);
 
-  // Metadata digest is fixed to zero internally
-  const ZERO32 = '0x0000000000000000000000000000000000000000000000000000000000000000';
-  context.metadataDigest = ZERO32;
+  const canSubmit = $derived(factoryValid && nameValid && profileNameValid);
 
-  const canSubmit = $derived(factoryValid && nameValid);
+  function getBindings() {
+    return getProfilesBindings({ pinApiBase: gnosisConfig.production.marketApiBase }).bindings;
+  }
 
   async function createGateway() {
     if (!canSubmit) {
@@ -50,6 +54,27 @@
     await runTask({
       name: 'Creating payment gateway…',
       promise: (async () => {
+
+        const bindings = getBindings();
+
+        const profilePayload = ensureProfileShape({
+          '@context': 'https://aboutcircles.com/contexts/circles-profile/',
+          '@type': 'Profile',
+          name: context.profile?.name ?? '',
+          description: context.profile?.description ?? '',
+          imageUrl: context.profile?.imageUrl || undefined,
+          previewImageUrl: context.profile?.previewImageUrl || undefined,
+          namespaces: {},
+          signingKeys: {},
+        });
+
+        const profileCid = await (bindings as any).putJsonLd(profilePayload);
+
+        if (!profileCid) {
+          throw new Error('Failed to pin gateway profile metadata.');
+        }
+
+        context.metadataDigest = cidV0ToDigest32Strict(profileCid);
 
         const data = factoryIface.encodeFunctionData('createGateway', [
           context.gatewayName,
@@ -115,13 +140,20 @@
         <div class="text-base-content/70">Gateway name</div>
         <div>{context.gatewayName}</div>
       </div>
+      <div class="text-sm">
+        <div class="text-base-content/70">Gateway profile</div>
+        <div>{context.profile?.name}</div>
+      </div>
     </div>
 
-    {#if !factoryValid || !nameValid}
+    {#if !factoryValid || !nameValid || !profileNameValid}
       <div class="alert alert-warning text-xs">
         <ul class="list-disc list-inside">
           {#if !nameValid}
             <li>Gateway name is required.</li>
+          {/if}
+          {#if !profileNameValid}
+            <li>Gateway profile name is required.</li>
           {/if}
           {#if !factoryValid}
             <li>Factory address is invalid.</li>
