@@ -9,7 +9,9 @@
   import { gnosisConfig } from '$lib/circlesConfig';
   import { getProfilesBindings } from '$lib/offers/profilesBindings';
   import { ensureProfileShape, cidV0ToDigest32Strict } from '@circles-profile/core';
+  import { isValidOnChainName } from '$lib/utils/isValid';
   import ActionButton from '$lib/components/ActionButton.svelte';
+  import Markdown from '$lib/components/markdown/Markdown.svelte';
 
   interface Props {
     context: CreateGatewayFlowContext;
@@ -34,7 +36,8 @@
   }
 
   const factoryValid = $derived(isAddress(context.factoryAddress));
-  const nameValid = $derived((context.gatewayName ?? '').trim().length > 0);
+  const trimmedGatewayName = $derived((context.gatewayName ?? '').trim());
+  const nameValid = $derived(trimmedGatewayName.length > 0 && isValidOnChainName(trimmedGatewayName));
   const profileNameValid = $derived((context.profile?.name ?? '').trim().length > 0);
 
   const canSubmit = $derived(factoryValid && nameValid && profileNameValid);
@@ -132,17 +135,56 @@
     </p>
 
     <div class="bg-base-100 border border-base-300 rounded-xl p-4 space-y-3">
+      <div class="flex flex-col gap-1">
+        <span class="text-xs text-base-content/60">On-chain name</span>
+        <span class="text-lg font-semibold">{context.gatewayName}</span>
+      </div>
       <div class="text-sm">
         <div class="text-base-content/70">Factory</div>
         <div class="font-mono break-all">{context.factoryAddress}</div>
       </div>
-      <div class="text-sm">
-        <div class="text-base-content/70">Gateway name</div>
-        <div>{context.gatewayName}</div>
-      </div>
-      <div class="text-sm">
-        <div class="text-base-content/70">Gateway profile</div>
-        <div>{context.profile?.name}</div>
+    </div>
+
+    <div class="bg-base-100 border border-base-300 rounded-xl p-4 space-y-3">
+      <div class="text-sm font-semibold">Gateway profile</div>
+
+      <div class="flex items-start gap-4">
+        <div class="w-24 h-24 rounded-lg bg-base-200 overflow-hidden flex items-center justify-center text-base-content/50">
+          {#if context.profile?.previewImageUrl}
+            <img
+              src={context.profile.previewImageUrl}
+              alt="Profile"
+              class="w-full h-full object-cover"
+            />
+          {:else if context.profile?.imageUrl}
+            <img
+              src={context.profile.imageUrl}
+              alt="Profile"
+              class="w-full h-full object-cover"
+            />
+          {:else}
+            No image
+          {/if}
+        </div>
+
+        <div class="flex-1 space-y-2">
+          <div>
+            <div class="text-base-content/70 mb-0.5">Name</div>
+            <div class="text-sm">{context.profile?.name || '—'}</div>
+          </div>
+
+          {#if context.profile?.description}
+            <div>
+              <div class="text-base-content/70 mb-0.5">Description</div>
+              <Markdown content={context.profile.description} class="prose prose-sm max-w-none" />
+            </div>
+          {:else}
+            <div>
+              <div class="text-base-content/70 mb-0.5">Description</div>
+              <div class="text-sm text-base-content/50">No description provided.</div>
+            </div>
+          {/if}
+        </div>
       </div>
     </div>
 
@@ -150,7 +192,7 @@
       <div class="alert alert-warning text-xs">
         <ul class="list-disc list-inside">
           {#if !nameValid}
-            <li>Gateway name is required.</li>
+            <li>On-chain name is required and must follow the on-chain naming rules.</li>
           {/if}
           {#if !profileNameValid}
             <li>Gateway profile name is required.</li>
@@ -162,14 +204,7 @@
       </div>
     {/if}
 
-    <div class="mt-4 flex justify-end gap-2">
-      <button
-        type="button"
-        class="btn btn-ghost"
-        onclick={popupControls.back}
-      >
-        Back
-      </button>
+    <div class="mt-4 flex justify-end">
       <ActionButton
         action={createGateway}
         disabled={!canSubmit}

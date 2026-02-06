@@ -14,6 +14,7 @@
         previewImageUrl?: string;
         imageUrl?: string;
         readonly?: boolean;
+        showLocation?: boolean;
     }
 
     let {
@@ -23,6 +24,7 @@
         previewImageUrl = $bindable(''),
         imageUrl = $bindable(''),
         readonly = false,
+        showLocation = true,
     }: Props = $props();
 
     const CROP_WIDTH = 256;
@@ -156,15 +158,17 @@
                     readonly={readonly}
                 />
             </label>
-            <label class="form-control">
-                <span class="label-text text-xs">Location</span>
-                <input
-                    class="input input-sm input-bordered"
-                    bind:value={location}
-                    placeholder="City, Country"
-                    readonly={readonly}
-                />
-            </label>
+            {#if showLocation}
+                <label class="form-control">
+                    <span class="label-text text-xs">Location</span>
+                    <input
+                        class="input input-sm input-bordered"
+                        bind:value={location}
+                        placeholder="City, Country"
+                        readonly={readonly}
+                    />
+                </label>
+            {/if}
         </div>
     </div>
 
