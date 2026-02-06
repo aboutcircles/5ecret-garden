@@ -395,12 +395,14 @@
                 <img src="/chart.svg" alt="Chart" class="w-4"/>
             </button>
         {/if}
-        <JumpLink
-                url={'https://gnosisscan.io/address/' + otherAvatar?.avatar}
-                className="flex items-center justify-center bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm"
-        >
-            <img src="/external.svg" alt="External Link" class="w-4"/>
-        </JumpLink>
+        {#if address}
+            <JumpLink
+                    url={'https://gnosisscan.io/address/' + address}
+                    className="flex items-center justify-center bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm"
+            >
+                <img src="/external.svg" alt="External Link" class="w-4"/>
+            </JumpLink>
+        {/if}
     </div>
 
     <div class="w-[80%] sm:w-[60%] border-b border-[#E5E7EB]"></div>
