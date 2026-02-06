@@ -5,17 +5,14 @@
 
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import GenericList from '$lib/components/GenericList.svelte';
-  import { createPaginatedList } from '$lib/stores/paginatedList';
-  import { createFilteredAddresses, createProfileNameStore } from '$lib/utils/searchableProfiles';
   import { derived, writable } from 'svelte/store';
   import Lucide from '$lib/icons/Lucide.svelte';
   import { circles } from '$lib/stores/circles';
   import { popupControls } from '$lib/stores/popup';
   import ManageTrustSearch from '$lib/flows/paymentGateway/SearchTrustReceiver.svelte';
   import ConfirmGatewayUntrust from '$lib/flows/paymentGateway/ConfirmGatewayUntrust.svelte';
+  import GatewayTrustedAccountsList from '$lib/components/gateway/GatewayTrustedAccountsList.svelte';
 
-  import TrustRowView from '$lib/gateway/TrustRow.svelte';
   import type { TrustRow } from '$lib/gateway/types';
 
   interface Props {
@@ -27,21 +24,13 @@
   let loadingTrusts: boolean = $state(false);
   let trusts: TrustRow[] = $state([]);
   const trustRowsStore = writable<TrustRow[]>([]);
-  const trustReceiverAddresses = derived(trustRowsStore, ($rows) => $rows.map((row) => row.trustReceiver));
-  const searchQuery = writable('');
-  const trustProfileNames = createProfileNameStore(trustReceiverAddresses);
-  const filteredAddresses = createFilteredAddresses(trustReceiverAddresses, searchQuery, trustProfileNames);
-  const filteredTrusts = derived([trustRowsStore, filteredAddresses], ([$rows, $filtered]) =>
-    $rows.filter((row) => $filtered.includes(row.trustReceiver))
-  );
-  const trustRowsWithActions = derived(filteredTrusts, ($rows) =>
+  const trustRowsWithActions = derived(trustRowsStore, ($rows) =>
     $rows.map((row) => ({
       ...row,
       showRemove: true,
       onRemove: () => openRemoveTrust(row.trustReceiver)
     }))
   );
-  const paginatedTrusts = createPaginatedList(trustRowsWithActions, { pageSize: 25 });
 
   $effect(() => {
     trustRowsStore.set(trusts);
@@ -222,31 +211,10 @@
         </div>
       </div>
 
-      <div class="mb-3">
-        <input
-          type="text"
-          class="input input-bordered w-full"
-          placeholder="Search by address or name"
-          bind:value={$searchQuery}
-        />
-      </div>
-
-      {#if loadingTrusts}
-        <div class="loading loading-spinner loading-sm"></div>
-      {:else if trusts.length === 0}
-        <div class="text-sm opacity-70">No trusted accounts yet.</div>
-      {:else if ($filteredTrusts ?? []).length === 0}
-        <div class="text-sm opacity-70">No matching trusted accounts.</div>
-      {:else}
-        <GenericList
-          store={paginatedTrusts}
-          row={TrustRowView}
-          getKey={(item) => String(item.trustReceiver)}
-          rowHeight={72}
-          maxPlaceholderPages={2}
-          expectedPageSize={25}
-        />
-      {/if}
+      <GatewayTrustedAccountsList
+        rows={trustRowsWithActions}
+        loading={loadingTrusts}
+      />
     </div>
   </div>
 </FlowDecoration>

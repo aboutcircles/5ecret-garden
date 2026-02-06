@@ -28,13 +28,17 @@
 <RowFrame clickable={true} dense={true} noLeading={true} onclick={openManageTrust}>
   <div class="w-full flex items-center justify-between gap-3">
     <div class="min-w-0 flex items-center gap-2">
-      <Avatar address={item.gateway} view="horizontal" clickable={true} />
-      <div class="flex flex-col min-w-0">
-        <div class="font-mono text-xs truncate">{item.gateway}</div>
-        {#if createdAt}
-          <div class="text-xs text-base-content/70">Created {createdAt}</div>
-        {/if}
-      </div>
+      <Avatar
+        address={item.gateway}
+        view="horizontal"
+        clickable={true}
+        bottomInfo={createdAt ? `Created ${createdAt}` : undefined}
+      />
     </div>
+    {#snippet trailing()}
+      <div aria-hidden="true">
+        <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" aria-hidden="true" />
+      </div>
+    {/snippet}
   </div>
 </RowFrame>
