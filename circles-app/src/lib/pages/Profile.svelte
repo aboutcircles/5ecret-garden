@@ -357,7 +357,15 @@
         return ids;
     })());
 
-    const tabOrder = $derived([...availableTabIds]);
+    const tabOrder = $derived(() => {
+        const ids = [...availableTabIds];
+        const namespacesIndex = ids.indexOf('explore_namespaces');
+        if (namespacesIndex > -1) {
+            ids.splice(namespacesIndex, 1);
+            ids.push('explore_namespaces');
+        }
+        return ids;
+    });
 
     $effect(() => {
         // When conditional tabs appear/disappear, ensure `selectedTab` always points to a visible tab.

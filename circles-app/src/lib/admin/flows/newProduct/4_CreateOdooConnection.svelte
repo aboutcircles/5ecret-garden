@@ -92,7 +92,6 @@
     <p class="text-error text-sm">{formError}</p>
   {/if}
 
-  <div class="divider text-xs">Odoo connection</div>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
     <label class="form-control">
       <span class="label-text">Odoo URL *</span>
