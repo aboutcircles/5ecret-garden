@@ -21,6 +21,7 @@
     fitted?: boolean;
     class?: string;
     id?: string;
+    tabOrder?: string[];
     children?: Snippet;
   };
 
@@ -33,6 +34,7 @@
     fitted = false,
     class: className = '',
     id = nextUid(),
+    tabOrder = undefined as string[] | undefined,
     children
   }: Props = $props();
 
@@ -76,10 +78,23 @@
     }
   });
 
+  function sortTabs(list: TabRegistration[]): TabRegistration[] {
+    if (!tabOrder || tabOrder.length === 0) return list;
+    const orderMap = new Map(tabOrder.map((id_, idx) => [id_, idx] as const));
+    return list.slice().sort((a, b) => {
+      const aIdx = orderMap.get(a.id);
+      const bIdx = orderMap.get(b.id);
+      if (aIdx === undefined && bIdx === undefined) return 0;
+      if (aIdx === undefined) return 1;
+      if (bIdx === undefined) return -1;
+      return aIdx - bIdx;
+    });
+  }
+
   function updateOrInsertTab(info: TabRegistration) {
     const i = tabs.findIndex((t) => t.id === info.id);
     if (i === -1) {
-      tabs = [...tabs, info];
+      tabs = sortTabs([...tabs, info]);
       return;
     }
     const prev = tabs[i];
@@ -92,7 +107,7 @@
 
     const next = tabs.slice();
     next[i] = info;
-    tabs = next;
+    tabs = sortTabs(next);
   }
 
   function register(info: TabRegistration): () => void {

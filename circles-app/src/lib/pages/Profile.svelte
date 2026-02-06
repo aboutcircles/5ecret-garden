@@ -357,6 +357,8 @@
         return ids;
     })());
 
+    const tabOrder = $derived([...availableTabIds]);
+
     $effect(() => {
         // When conditional tabs appear/disappear, ensure `selectedTab` always points to a visible tab.
         if (!availableTabIds.includes(selectedTab)) {
@@ -524,6 +526,7 @@
         size="sm"
         class="w-full p-0 mt-8"
         fitted={false}
+        tabOrder={tabOrder}
 >
     <Tab
             id="common_connections"
@@ -657,7 +660,7 @@
             {/if}
         {/if}
     </Tab>
-    
+
     <!-- Explore namespaces tab: auto-load the viewed profile's namespaces (read-only) -->
     <Tab
             id="explore_namespaces"
