@@ -221,7 +221,10 @@
         const isGroup: boolean = otherAvatar?.type === 'CrcV2_RegisterGroup';
         const isHuman: boolean = otherAvatar?.type === 'CrcV2_RegisterHuman';
 
-        const toTokenRows = (result: { columns: string[]; rows: any[][] } | null, avatarColumn: 'tokenId' | 'account') => {
+        const toTokenRows = (
+            result: { columns: string[]; rows: any[][] } | null,
+            avatarColumn: 'tokenId' | 'account'
+        ) => {
             if (!result) return [];
             const { columns, rows } = result;
             const avatarIdx = columns.indexOf(avatarColumn);
@@ -243,6 +246,7 @@
                 const groupTrustRelations = await $circles.data.getAggregatedTrustRelations(otherAvatar!.avatar);
                 members = groupTrustRelations
                     .filter((row) => row.relation === 'trusts')
+                    .filter((row) => row.objectAvatar !== otherAvatar!.avatar)
                     .map((o) => o.objectAvatar);
             } catch (e: any) {
                 membersError = e?.message ?? 'Failed to load members';
@@ -320,16 +324,7 @@
             holdersError = null;
             try {
                 const tokenHoldersResult = await getGroupTokenHolders($circles.circlesRpc, address);
-                tokenHolders = tokenHoldersResult
-                    ? tokenHoldersResult.rows
-                        .map((row) => ({
-                            avatar: row[tokenHoldersResult.columns.indexOf('account')],
-                            amount: BigInt(row[tokenHoldersResult.columns.indexOf('demurragedTotalBalance')]),
-                            amountToRedeemInCircles: 0,
-                            amountToRedeem: 0n,
-                        }))
-                        .sort((a, b) => (a.amount > b.amount ? -1 : a.amount === b.amount ? 0 : 1))
-                    : [];
+                tokenHolders = toTokenRows(tokenHoldersResult, 'account');
             } catch (e: any) {
                 holdersError = e?.message ?? 'Failed to load holders';
                 tokenHolders = [];

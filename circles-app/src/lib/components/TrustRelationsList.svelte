@@ -38,12 +38,14 @@
                 list.push(
                     ...relations
                         .filter((row) => row.relation === 'trusts' || row.relation === 'mutuallyTrusts')
+                        .filter((row) => row.objectAvatar !== avatarAddress)
                         .map((row) => row.objectAvatar as Address)
                 );
             } else {
                 list.push(
                     ...relations
                         .filter((row) => row.relation === 'trustedBy' || row.relation === 'mutuallyTrusts')
+                        .filter((row) => row.objectAvatar !== avatarAddress)
                         .map((row) => row.objectAvatar as Address)
                 );
             }

@@ -54,7 +54,7 @@ export async function createContactsQueryStore(
         }
 
         const contacts = await sdk.data.getAggregatedTrustRelations(address);
-        const enrichedContacts = await enrichContactData(contacts);
+        const enrichedContacts = await enrichContactData(contacts, address);
 
         const contactEventRow: ContactEventRow = {
           blockNumber: Date.now(),
@@ -99,11 +99,16 @@ export async function createContactsQueryStore(
 }
 
 async function enrichContactData(
-  rows: TrustRelationRow[]
+  rows: TrustRelationRow[],
+  ownerAddress?: Address
 ): Promise<ContactList> {
   const profileRecord: ContactList = {};
 
-  const promises = rows.map(async (row) => {
+  const filteredRows = ownerAddress
+    ? rows.filter((row) => row.objectAvatar !== ownerAddress)
+    : rows;
+
+  const promises = filteredRows.map(async (row) => {
     const profile = await getProfile(row.objectAvatar);
     if (profile) {
       profileRecord[row.objectAvatar] = {
