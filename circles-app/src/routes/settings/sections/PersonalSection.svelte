@@ -34,22 +34,24 @@
 </script>
 
 {#if avatarAddress}
-  <div class="w-full -mt-1 text-xs text-base-content/70 flex flex-wrap items-center gap-2">
-    <span class="font-semibold">Profile CID:</span>
-    {#if profileCidLoading}
-      <span>loading…</span>
-    {:else if profileCid}
-      <span class="font-mono select-all break-all">{profileCid}</span>
-      <button class="btn btn-ghost btn-xs" onclick={copyProfileCid}>Copy</button>
-      <a class="link link-primary text-xs" href={ipfsGatewayUrl(profileCid)} target="_blank" rel="noopener noreferrer">
-        Open
-      </a>
-    {:else}
-      <span class="opacity-70">none yet</span>
-    {/if}
-    {#if profileCidError}
-      <span class="text-error">{profileCidError}</span>
-    {/if}
+  <div class="bg-base-100 border border-base-300 rounded-xl p-3 mb-3">
+    <div class="text-xs text-base-content/60 mb-1">Profile CID</div>
+    <div class="text-xs text-base-content/70 flex flex-wrap items-center gap-2">
+      {#if profileCidLoading}
+        <span>loading…</span>
+      {:else if profileCid}
+        <span class="font-mono select-all break-all">{profileCid}</span>
+        <button class="btn btn-ghost btn-xs" onclick={copyProfileCid}>Copy</button>
+        <a class="link link-primary text-xs" href={ipfsGatewayUrl(profileCid)} target="_blank" rel="noopener noreferrer">
+          Open
+        </a>
+      {:else}
+        <span class="opacity-70">none yet</span>
+      {/if}
+      {#if profileCidError}
+        <span class="text-error">{profileCidError}</span>
+      {/if}
+    </div>
   </div>
   <ProfileExplorer avatar={avatarAddress} pinApiBase={pinApiBase} showNamespaces={false} showSigningKeys={false} />
 {:else}

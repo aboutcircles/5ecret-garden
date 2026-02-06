@@ -1,10 +1,21 @@
-//TODO: after migrate to daisyui 5, we can use directly into validators field
+ //TODO: after migrate to daisyui 5, we can use directly into validators field
 
 const utf8Len = (s: string) => new TextEncoder().encode(s).length;
 
 export function isValidName(name: string): boolean {
   // Check length (max 19 UTF-8 bytes)
   const maxBytes = 19;
+  if (utf8Len(name) > maxBytes) {
+    return false;
+  }
+
+  const validChars = /^[0-9A-Za-z \-\_\.\(\)\'\&\+\#]+$/;
+  return validChars.test(name);
+}
+
+export function isValidOnChainName(name: string): boolean {
+  // Check length (max 32 UTF-8 bytes)
+  const maxBytes = 32;
   if (utf8Len(name) > maxBytes) {
     return false;
   }
