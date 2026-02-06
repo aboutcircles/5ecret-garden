@@ -17,9 +17,11 @@
         avatar: Address | null;
         pinApiBase?: string;
         readonly?: boolean;
+        showHeader?: boolean;
+        onAddSigningKey?: () => void;
     }
 
-    let { avatar, pinApiBase, readonly = true }: Props = $props();
+    let { avatar, pinApiBase, readonly = true, showHeader = true, onAddSigningKey }: Props = $props();
 
     let loading = $state(false);
     let error = $state<string | null>(null);
@@ -70,6 +72,14 @@
             props: { avatar, pinApiBase }
         });
     }
+
+    const handleAddSigningKey = () => {
+        if (onAddSigningKey) {
+            onAddSigningKey();
+            return;
+        }
+        openAddSigningKey();
+    };
 
     $effect(() => {
         // Reload after the AddSigningKey popup closes.
@@ -124,18 +134,20 @@
 {/if}
 
 <section class="bg-base-100 border border-base-300 rounded-xl p-4 shadow-sm">
-    <div class="flex justify-between items-center mb-2">
-        <div class="flex items-center gap-2">
-            <h3 class="font-semibold text-sm m-0">Signing keys</h3>
-            <span class="text-[11px] opacity-60">Operator/app keys</span>
+    {#if showHeader}
+        <div class="flex justify-between items-center mb-2">
+            <div class="flex items-center gap-2">
+                <h3 class="font-semibold text-sm m-0">Signing keys</h3>
+                <span class="text-[11px] opacity-60">Operator/app keys</span>
+            </div>
+            {#if !readonly}
+                <button class="btn btn-xs" onclick={handleAddSigningKey}>
+                    <Lucide icon={LPlus} size={16} class="shrink-0 stroke-current" ariaLabel="" />
+                    Add signing key
+                </button>
+            {/if}
         </div>
-        {#if !readonly}
-            <button class="btn btn-xs" onclick={openAddSigningKey}>
-                <Lucide icon={LPlus} size={16} class="shrink-0 stroke-current" ariaLabel="" />
-                Add signing key
-            </button>
-        {/if}
-    </div>
+    {/if}
 
     {#if loading}
         <div class="text-sm opacity-70">Loading…</div>
@@ -164,7 +176,7 @@
     {/if}
 </section>
 
-{#if !readonly}
+{#if !readonly && showHeader}
     <div class="flex justify-end">
         <button class="btn btn-primary btn-sm" onclick={saveSigningKeys} disabled={loading || !avatar}>Save</button>
     </div>

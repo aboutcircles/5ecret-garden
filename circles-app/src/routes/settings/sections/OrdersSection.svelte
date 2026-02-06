@@ -15,20 +15,24 @@
 </script>
 
 <section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
-  <div class="text-sm mb-2">
-    <strong>My Orders</strong>
-    <span class="opacity-60"> · Orders for the authenticated wallet</span>
+  <div class="flex items-center justify-between">
+    <div>
+      <h3 class="text-sm font-semibold m-0">Orders</h3>
+      <p class="text-xs text-base-content/70 mt-0.5">Orders for the authenticated wallet.</p>
+    </div>
+    {#if avatarAddress && !ordersAuthed}
+      <button class="btn btn-primary btn-sm" onclick={() => ensureOrdersAuthed()}>
+        Sign in
+      </button>
+    {/if}
   </div>
+</section>
 
+<section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
   {#if !avatarAddress}
     <div class="text-sm opacity-70">Connect an avatar to sign in and view orders.</div>
   {:else if !ordersAuthed}
-    <div class="text-sm opacity-70">
-      Sign in to view orders.
-      <button class="btn btn-primary btn-sm ml-2" onclick={() => ensureOrdersAuthed()}>
-        Sign in
-      </button>
-    </div>
+    <div class="text-sm opacity-70">Sign in to view orders.</div>
   {:else}
     <GenericList store={ordersStore} row={OrderRow} getKey={(it) => it.key} />
   {/if}

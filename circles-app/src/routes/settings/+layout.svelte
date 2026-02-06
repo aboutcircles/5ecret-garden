@@ -428,6 +428,9 @@
 
   function onNamespacesChanged(e: CustomEvent<Record<string, string>>): void {
     nsNamespaces = e.detail;
+    if (nsIsOwner) {
+      void saveNamespacesProfile();
+    }
   }
 
   async function saveNamespacesProfile(): Promise<void> {
@@ -832,7 +835,6 @@
           {nsNamespaces}
           {nsIsOwner}
           {onNamespacesChanged}
-          {saveNamespacesProfile}
         />
       {:else if selectedTab === 'marketplace'}
         <MarketplaceSection

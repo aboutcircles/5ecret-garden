@@ -31,12 +31,16 @@
 </script>
 
 <section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
-  <div class="flex items-center justify-between mb-3">
-    <div class="text-sm">
-      <strong>Payment gateways</strong>
-      {#if gatewayOwnerAddress}
-        <span class="opacity-60"> · Owner {shortGatewayAddr(gatewayOwnerAddress)}</span>
-      {/if}
+  <div class="flex items-center justify-between">
+    <div>
+      <h3 class="text-sm font-semibold m-0">Payment gateways</h3>
+      <p class="text-xs text-base-content/70 mt-0.5">
+        {#if gatewayOwnerAddress}
+          Owner {shortGatewayAddr(gatewayOwnerAddress)}.
+        {:else}
+          Connect an avatar to manage gateways.
+        {/if}
+      </p>
     </div>
     {#if gatewayOwnerAddress && circlesReady}
       <button type="button" class="btn btn-sm btn-primary" onclick={openCreateGatewayFlow}>
@@ -44,7 +48,9 @@
       </button>
     {/if}
   </div>
+</section>
 
+<section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
   {#if !gatewayOwnerAddress}
     <div class="text-sm opacity-70">Connect an avatar to see your payment gateways.</div>
   {:else if !circlesReady}
