@@ -185,10 +185,10 @@
         <div class="w-full">
             <Tabs bind:selected={selectedTab} variant="boxed" size="sm">
                 {#if hasOwnedGroups}
-                    <Tab id="yours" title="Own" />
+                    <Tab id="yours" title="My groups" />
                 {/if}
                 {#if hasMemberships}
-                    <Tab id="memberships" title="Member in" />
+                    <Tab id="memberships" title="Memberships" />
                 {/if}
                 <Tab id="all" title="All groups" />
             </Tabs>
