@@ -132,10 +132,22 @@
     return active === id_;
   }
 
+  function isTabVisible(id_: string): boolean {
+    if (!scroller) return true;
+    const el = document.querySelector<HTMLElement>(`#${id}-tab-${CSS.escape(id_)}`);
+    if (!el) return true;
+    const left = el.offsetLeft;
+    const right = el.offsetLeft + el.offsetWidth;
+    const viewLeft = scroller.scrollLeft;
+    const viewRight = scroller.scrollLeft + scroller.clientWidth;
+    return left >= viewLeft && right <= viewRight;
+  }
+
   function centerOnTabId(id_: string, behavior: ScrollBehavior = 'smooth') {
     if (!scroller) return;
     const el = document.querySelector<HTMLElement>(`#${id}-tab-${CSS.escape(id_)}`);
     if (!el) return;
+    if (isTabVisible(id_)) return;
     const elCenter = el.offsetLeft + el.offsetWidth / 2;
     const containerCenter = scroller.clientWidth / 2;
     const target = Math.max(0, Math.min(elCenter - containerCenter, scroller.scrollWidth - scroller.clientWidth));
