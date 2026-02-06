@@ -15,6 +15,8 @@
         imageUrl?: string;
         readonly?: boolean;
         showLocation?: boolean;
+        nameLabel?: string;
+        onNameInput?: (value: string) => void;
     }
 
     let {
@@ -25,6 +27,8 @@
         imageUrl = $bindable(''),
         readonly = false,
         showLocation = true,
+        nameLabel = 'Name',
+        onNameInput,
     }: Props = $props();
 
     const CROP_WIDTH = 256;
@@ -150,12 +154,13 @@
 
         <div class="flex-1 space-y-2">
             <label class="form-control">
-                <span class="label-text text-xs">Name</span>
+                <span class="label-text text-xs">{nameLabel}</span>
                 <input
                     class="input input-sm input-bordered"
                     bind:value={name}
                     placeholder="Your profile name"
                     readonly={readonly}
+                    oninput={(event) => onNameInput?.((event.currentTarget as HTMLInputElement).value)}
                 />
             </label>
             {#if showLocation}
