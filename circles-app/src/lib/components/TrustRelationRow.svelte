@@ -18,7 +18,7 @@
 
 <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => openProfile(item)}>
     <div class="min-w-0">
-        <Avatar address={item} view="horizontal" clickable={true} />
+        <Avatar address={item} view="horizontal" clickable={true} showTypeInfo={true} />
     </div>
     {#snippet trailing()}<div aria-hidden="true">
         <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" aria-hidden="true" />

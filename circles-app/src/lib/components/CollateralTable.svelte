@@ -52,6 +52,7 @@
           address={item.avatar}
           clickable={true}
           view="horizontal"
+          showTypeInfo={true}
         />
       </div>
 

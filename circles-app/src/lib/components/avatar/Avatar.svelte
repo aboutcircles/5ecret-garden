@@ -1,14 +1,18 @@
 <script lang="ts">
   import ProfilePage from '$lib/pages/ProfilePopup.svelte';
   import { getProfile } from '$lib/utils/profile';
+  import { getTypeString } from '$lib/utils/helpers';
   import HorizontalAvatarLayout from './HorizontalAvatarLayout.svelte';
   import VerticalAvatarLayout from './VerticalAvatarLayout.svelte';
   import { popupControls, type PopupContentDefinition } from '$lib/stores/popup';
   import type { Address } from '@circles-sdk/utils';
   import type { AppProfileCore as Profile } from '$lib/profiles';
+  import type { AvatarRow } from '@circles-sdk/data';
   import { fade } from 'svelte/transition';
   import { circles } from '$lib/stores/circles';
   import { normalizeEvmAddress } from '@circles-market/sdk';
+
+  const avatarInfoCache = new Map<string, Promise<AvatarRow | undefined>>();
 
   type AddressLike = Address | string | null | undefined;
 
@@ -19,6 +23,7 @@
     pictureOverlayUrl?: string | undefined;
     topInfo?: string | undefined;
     bottomInfo?: string | undefined;
+    showTypeInfo?: boolean;
 
     placeholderAvatar?: boolean;
     placeholderTop?: boolean;
@@ -32,6 +37,7 @@
     pictureOverlayUrl,
     topInfo,
     bottomInfo,
+    showTypeInfo = false,
     placeholderAvatar = true,
     placeholderTop = true,
     placeholderBottom = true,
@@ -47,6 +53,7 @@
   });
 
   let profile: Profile | undefined = $state();
+  let avatarInfo: AvatarRow | undefined = $state();
 
   const tooltipText = $derived(
     (profile?.name && profile.name.length > 0)
@@ -55,6 +62,7 @@
   );
 
   let requestId = 0;
+  let avatarInfoRequestId = 0;
 
   $effect(() => {
     const addr = normalizedAddress;
@@ -83,6 +91,38 @@
         } as any;
       });
   });
+
+  $effect(() => {
+    const addr = normalizedAddress;
+    avatarInfoRequestId += 1;
+    const myReq = avatarInfoRequestId;
+
+    if (!showTypeInfo || !addr || !$circles) {
+      avatarInfo = undefined;
+      return;
+    }
+
+    const key = addr.toLowerCase();
+    let promise = avatarInfoCache.get(key);
+    if (!promise) {
+      promise = $circles.data.getAvatarInfo(addr).catch(() => undefined);
+      avatarInfoCache.set(key, promise);
+    }
+
+    promise
+      .then((info) => {
+        if (myReq !== avatarInfoRequestId) return;
+        avatarInfo = info;
+      })
+      .catch(() => {
+        if (myReq !== avatarInfoRequestId) return;
+        avatarInfo = undefined;
+      });
+  });
+
+  const computedBottomInfo = $derived(
+    bottomInfo ?? (showTypeInfo ? getTypeString(avatarInfo?.type ?? '') : undefined)
+  );
 
   function openAvatar(e: MouseEvent) {
     if (!clickable) return;
@@ -169,7 +209,7 @@
                 onclick={openAvatar}
                 {profile}
                 {topInfo}
-                {bottomInfo}
+                bottomInfo={computedBottomInfo}
         />
     </div>
 {:else if view === 'small' || view === 'small_no_text'}
