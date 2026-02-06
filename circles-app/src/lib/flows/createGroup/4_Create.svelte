@@ -6,7 +6,7 @@
     import { popupControls } from '$lib/stores/popup';
     import Markdown from '$lib/components/markdown/Markdown.svelte';
     import { cidV0ToUint8Array } from '@circles-sdk/utils';
-    import { isValidName, isValidSymbol } from '$lib/utils/isValid';
+    import { isValidName, isValidSymbol, isValidOnChainName } from '$lib/utils/isValid';
     import {
         createGroupContext,
         type CreateGroupFlowContext,
@@ -35,10 +35,10 @@
         const hasWallet: boolean = !!$wallet?.address;
         const nameOk: boolean = isValidName(ctx.profile.name);
         const symbolOk: boolean = isValidSymbol(ctx.profile.symbol);
-
+        const onChainOk: boolean = isValidOnChainName(onChainName);
         if (!hasSdk) { throw new Error('SDK not initialized'); }
         if (!hasWallet) { throw new Error('Wallet not connected'); }
-        if (!nameOk || !symbolOk) { throw new Error('Invalid name or symbol'); }
+        if (!nameOk || !symbolOk || !onChainOk) { throw new Error('Invalid name or symbol'); }
 
         popupControls.close();
 
@@ -57,7 +57,7 @@
                     ctx.service,
                     ctx.feeCollection,
                     ctx.initialConditions,
-                    ctx.profile.name,
+                    onChainName,
                     ctx.profile.symbol,
                     cidV0ToUint8Array(CID)
                 );
@@ -94,6 +94,8 @@
     }
 
     const hasDesc: boolean = $derived(!!ctx.profile.description && ctx.profile.description.trim().length > 0);
+    const onChainName = $derived(ctx.profile.onChainName ?? ctx.profile.name);
+    const fastLane = $derived((ctx.settingsMode ?? 'fast') === 'fast');
 </script>
 
 <FlowDecoration>
@@ -102,10 +104,13 @@
     <!-- Simple summary, row-by-row -->
     <div class="mt-4 space-y-1">
         <div><span class="text-base-content/70 mr-1">Name:</span>{ctx.profile.name}</div>
+        <div><span class="text-base-content/70 mr-1">On-chain name:</span>{onChainName}</div>
         <div><span class="text-base-content/70 mr-1">Symbol:</span>{ctx.profile.symbol}</div>
-        <div class="truncate"><span class="text-base-content/70 mr-1">Service:</span>{ctx.service}</div>
-        <div class="truncate"><span class="text-base-content/70 mr-1">Fee collection:</span>{ctx.feeCollection}</div>
-        <div><span class="text-base-content/70 mr-1">Initial conditions:</span>{ctx.initialConditions.length}</div>
+        {#if !fastLane}
+            <div class="truncate"><span class="text-base-content/70 mr-1">Service:</span>{ctx.service}</div>
+            <div class="truncate"><span class="text-base-content/70 mr-1">Fee collection:</span>{ctx.feeCollection}</div>
+            <div><span class="text-base-content/70 mr-1">Initial conditions:</span>{ctx.initialConditions.length}</div>
+        {/if}
     </div>
 
     {#if hasDesc}

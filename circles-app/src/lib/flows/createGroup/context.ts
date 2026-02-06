@@ -4,6 +4,7 @@ import type { Address } from '@circles-sdk/utils';
 /** Minimal shape accepted by profiles.create() for group profiles */
 export type GroupProfileShape = {
     name: string;
+    onChainName?: string;
     symbol: string;
     description?: string;
     previewImageUrl?: string;
@@ -15,6 +16,7 @@ export type CreateGroupFlowContext = {
     service: `0x${string}`;
     feeCollection: `0x${string}`;
     initialConditions: Address[];
+    settingsMode?: 'fast' | 'advanced';
     cid?: string;
 };
 
@@ -23,6 +25,7 @@ export function defaultCreateGroupContext(feeCollection?: `0x${string}`): Create
     return {
         profile: {
             name: '',
+            onChainName: '',
             symbol: '',
             description: '',
             previewImageUrl: '',
@@ -30,7 +33,8 @@ export function defaultCreateGroupContext(feeCollection?: `0x${string}`): Create
         },
         service: zero,
         feeCollection: feeCollection ?? zero,
-        initialConditions: []
+        initialConditions: [],
+        settingsMode: 'fast'
     };
 }
 
