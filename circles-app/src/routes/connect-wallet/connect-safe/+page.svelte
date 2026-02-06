@@ -13,59 +13,105 @@
   import { gnosisConfig } from '$lib/circlesConfig';
   import { circles } from '$lib/stores/circles';
   import type { Address } from '@aboutcircles/sdk-types';
-  import { switchChain, getAccount } from '@wagmi/core';
+  import { switchChain, getChainId } from '@wagmi/core';
+  import { gnosis } from '@wagmi/core/chains';
   import { config } from '../../../config';
+  import { withRetry, isTransientError } from '$lib/utils/retry';
+  import { resetConnectionStatus } from '$lib/stores/connectionStatus.svelte';
 
   let chainError = $state<string | null>(null);
+  let walletError = $state<string | null>(null);
+  let isConnecting = $state(false);
 
   async function ensureGnosisChain(): Promise<boolean> {
-    // Check actual chainId from MetaMask directly (not wagmi cache)
-    const rawChainId = await window.ethereum?.request({ method: 'eth_chainId' });
-    // Normalize to hex string (some wallets return number, some hex)
-    const currentChainId = typeof rawChainId === 'number'
-      ? '0x' + rawChainId.toString(16)
-      : String(rawChainId).toLowerCase();
+    // Use wagmi's managed provider - avoids Phantom/MetaMask conflicts
+    let currentChainId: number;
+    try {
+      currentChainId = getChainId(config);
+    } catch (err) {
+      console.warn('[Chain check] getChainId failed, assuming gnosis:', err);
+      // If wagmi state isn't ready, assume we're on gnosis (will fail later if not)
+      currentChainId = gnosis.id;
+    }
+    console.log('[Chain check] Current chain:', currentChainId, 'Expected:', gnosis.id);
 
-    console.log('[Chain check] Current chain:', currentChainId, 'Expected: 0x64');
-
-    // 0x64 = 100 = Gnosis Chain
-    if (currentChainId === '0x64') {
-      chainError = null; // Clear any previous error
+    if (currentChainId === gnosis.id) {
+      chainError = null;
       return true;
     }
 
     try {
-      // Force MetaMask to switch using direct RPC call
-      await window.ethereum?.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: '0x64' }],
-      });
-      // Give MetaMask a moment to settle
-      await new Promise(resolve => setTimeout(resolve, 500));
+      console.log('[Chain check] Switching to Gnosis...');
+      await switchChain(config, { chainId: gnosis.id });
+      // Give wallet time to settle after chain switch
+      await new Promise(resolve => setTimeout(resolve, 300));
+      console.log('[Chain check] Switch successful');
       chainError = null;
       return true;
     } catch (err: any) {
-      console.error('Failed to switch to Gnosis:', err?.message || err?.code || err);
-      // 4902 = chain not added to MetaMask
+      console.error('[Chain check] Failed to switch to Gnosis:', err?.message || err?.code || err);
       if (err.code === 4902) {
-        chainError = 'Gnosis Chain not found in MetaMask. Please add it manually.';
+        chainError = 'Gnosis Chain not found. Please add it manually.';
       } else if (err.code === 4001) {
-        chainError = 'User rejected network switch. Please switch to Gnosis Chain manually.';
+        chainError = 'User rejected network switch.';
       } else {
-        chainError = 'Please switch MetaMask to Gnosis Chain and refresh the page.';
+        chainError = 'Please switch to Gnosis Chain and refresh.';
       }
       return false;
     }
   }
 
-  onMount(async () => {
+  async function connectWallet() {
+    isConnecting = true;
+    walletError = null;
+
     try {
-      signer.address = await getSigner();
+      // Use retry logic for wallet connection
+      signer.address = await withRetry(
+        () => getSigner(),
+        {
+          maxAttempts: 3,
+          initialDelayMs: 1000,
+          maxDelayMs: 5000,
+          updateConnectionStatus: true,
+          statusLabel: 'Wallet',
+          isRetryable: (err) => {
+            // Don't retry user rejections or "not connected" errors (require user action)
+            const code = (err as any).code;
+            const message = err.message?.toLowerCase() || '';
+            if (code === 4001) return false; // User rejected
+            if (code === 4900 || message.includes('not connected')) return false; // Not connected
+            return isTransientError(err);
+          },
+          onRetry: (attempt, error) => {
+            console.warn(`[ConnectSafe] Wallet connection failed (attempt ${attempt}/3):`, error.message);
+          },
+        }
+      );
+
       // Check chain on mount
       await ensureGnosisChain();
-    } catch (err) {
-      console.error('Failed to get signer:', err);
+    } catch (err: any) {
+      console.error('Failed to get signer after retries:', err);
+      const code = err.code;
+      const message = err.message?.toLowerCase() || '';
+
+      // Detect "Not connected" errors (can come as code 4900 or in error message from ethers)
+      const isNotConnected = code === 4900 || message.includes('not connected');
+
+      walletError = code === 4001
+        ? 'Connection rejected. Please approve the connection in MetaMask.'
+        : isNotConnected
+        ? 'MetaMask is not connected. Please unlock MetaMask and connect to this site.'
+        : err.message || 'Failed to connect wallet';
+      resetConnectionStatus();
+    } finally {
+      isConnecting = false;
     }
+  }
+
+  onMount(() => {
+    connectWallet();
   });
 
   async function connectSafe(safeAddress: Address, _targetAddress?: Address) {
@@ -85,10 +131,10 @@
     } catch (err: any) {
       console.error('Failed to connect Safe:', err);
       if (err.message?.includes('SafeProxy contract is not deployed')) {
-        // Check actual chainId to give better error
-        const chainId = await window.ethereum?.request({ method: 'eth_chainId' });
-        if (chainId !== '0x64') {
-          chainError = `MetaMask is on wrong network (${chainId}). Please switch to Gnosis (0x64) and refresh.`;
+        // Use wagmi to check chain - avoids wallet extension conflicts
+        const currentChainId = getChainId(config);
+        if (currentChainId !== gnosis.id) {
+          chainError = `Wallet is on wrong network (${currentChainId}). Please switch to Gnosis (100) and refresh.`;
         } else {
           chainError = `Could not connect to Safe. Verify the Safe exists on Gnosis Chain.`;
         }
@@ -104,6 +150,14 @@
       circles.set(new Sdk(gnosisConfig.production));
     } else if (!signer.address) {
       circles.set(undefined);
+    }
+  });
+
+  // Clear wallet error when we have a valid signer (connection recovered)
+  $effect(() => {
+    if (signer.address && walletError) {
+      walletError = null;
+      resetConnectionStatus();
     }
   });
 
@@ -126,6 +180,18 @@
     Please select the account you want to use from the list below.
   </p>
 
+
+  <!-- Only show wallet error if we don't have a valid signer (error is stale otherwise) -->
+  {#if walletError && !signer.address}
+    <div class="alert alert-error">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span>{walletError}</span>
+      <button class="btn btn-sm" onclick={() => connectWallet()}>Retry</button>
+    </div>
+  {/if}
+
   {#if chainError}
     <div class="alert alert-error">
       <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
@@ -137,9 +203,21 @@
   {/if}
 
   {#if !signer.address || !$circles}
-    <WalletLoader />
-    {#if signer.address}
-      <p class="muted">Waiting for SDK to initialize...</p>
+    {#if isConnecting}
+      <WalletLoader />
+      <p class="muted text-center">Connecting to MetaMask...</p>
+    {:else if walletError}
+      <!-- Error state: show message prompting user to retry -->
+      <div class="flex flex-col items-center justify-center py-8 text-center">
+        <p class="text-base-content/70 mb-4">
+          Unable to connect to wallet. Please ensure MetaMask is unlocked and connected to this site.
+        </p>
+      </div>
+    {:else}
+      <WalletLoader />
+      {#if signer.address}
+        <p class="muted">Waiting for SDK to initialize...</p>
+      {/if}
     {/if}
   {:else}
     <ConnectSafe
