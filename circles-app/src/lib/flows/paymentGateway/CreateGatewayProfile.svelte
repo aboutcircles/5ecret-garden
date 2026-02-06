@@ -5,6 +5,7 @@
   import { popupControls } from '$lib/stores/popup';
   import type { CreateGatewayFlowContext } from './context';
   import ConfirmCreateGateway from './ConfirmCreateGateway.svelte';
+  import ProfileHeaderEditor from '$lib/profile/ProfileHeaderEditor.svelte';
 
   interface Props {
     context?: CreateGatewayFlowContext;
@@ -19,7 +20,13 @@
     context ?? {
       factoryAddress: FACTORY_ADDRESS,
       gatewayName: '',
-      metadataDigest: '0x0000000000000000000000000000000000000000000000000000000000000000'
+      metadataDigest: '0x0000000000000000000000000000000000000000000000000000000000000000',
+      profile: {
+        name: '',
+        description: '',
+        imageUrl: '',
+        previewImageUrl: ''
+      }
     }
   );
 
@@ -43,10 +50,10 @@
   const hasName = $derived((ctx.gatewayName ?? '').trim().length > 0);
   const factoryValid = $derived(isAddress(ctx.factoryAddress));
 
-  // Metadata digest is fixed internally; no user input required
-  ctx.metadataDigest = '0x0000000000000000000000000000000000000000000000000000000000000000';
+  // Metadata digest will be derived from the pinned gateway profile.
 
-  const canContinue = $derived(hasName && factoryValid);
+  const profileHasName = $derived((ctx.profile?.name ?? '').trim().length > 0);
+  const canContinue = $derived(hasName && factoryValid && profileHasName);
 
   function goNext() {
     if (!canContinue) {
@@ -66,6 +73,10 @@
       Define the basic details for your payment gateway.
     </p>
 
+    <div class="bg-warning/10 border border-warning/30 text-warning-content rounded-xl p-3 text-xs">
+      The gateway profile metadata is pinned during creation and can’t be changed later.
+    </div>
+
     <label class="form-control w-full">
       <span class="label-text">Gateway name</span>
       <input
@@ -74,6 +85,16 @@
         placeholder="My Shop"
       />
     </label>
+
+    <div class="space-y-2">
+      <div class="text-sm font-semibold">Gateway profile</div>
+      <ProfileHeaderEditor
+        bind:name={ctx.profile.name}
+        bind:description={ctx.profile.description}
+        bind:previewImageUrl={ctx.profile.previewImageUrl}
+        bind:imageUrl={ctx.profile.imageUrl}
+      />
+    </div>
 
 
     <div class="mt-4 flex justify-end">
