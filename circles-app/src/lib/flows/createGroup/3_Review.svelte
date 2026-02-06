@@ -21,6 +21,7 @@
     const hasImage: boolean = $derived(!!ctx.profile.previewImageUrl && ctx.profile.previewImageUrl.trim().length > 0);
     const hasDescription: boolean = $derived(!!ctx.profile.description && ctx.profile.description.trim().length > 0);
     const icCount: number = $derived(ctx.initialConditions.length);
+    const fastLane: boolean = $derived((ctx.settingsMode ?? 'fast') === 'fast');
 
     function next() {
         popupControls.open({
@@ -37,49 +38,78 @@
 <FlowDecoration>
     <p class="text-sm text-base-content/70 mt-1">Confirm details before creating the group.</p>
 
-    <!-- Row: Image (optional) -->
-    <div class="mt-4">
-        {#if hasImage}
-            <img src={ctx.profile.previewImageUrl} alt="Group" class="w-32 h-32 rounded object-cover" />
-        {:else}
-            <div class="w-32 h-32 rounded bg-base-200 flex items-center justify-center text-base-content/50">
-                No image
+    <div class="bg-base-100 border border-base-300 rounded-xl p-4 space-y-3 mt-4">
+        <div class="flex flex-col gap-1">
+            <span class="text-xs text-base-content/60">Symbol</span>
+            <span class="text-lg font-semibold">{ctx.profile.symbol}</span>
+        </div>
+        <div class="text-sm">
+            <div class="text-base-content/70">On-chain name</div>
+            <div>{ctx.profile.onChainName ?? ctx.profile.name}</div>
+        </div>
+        {#if !fastLane}
+            <div class="text-sm">
+                <div class="text-base-content/70">Service</div>
+                <div class="truncate">{ctx.service}</div>
+            </div>
+            <div class="text-sm">
+                <div class="text-base-content/70">Fee collection</div>
+                <div class="truncate">{ctx.feeCollection}</div>
+            </div>
+            <div class="text-sm">
+                <div class="text-base-content/70">Initial conditions</div>
+                <div>{icCount}</div>
             </div>
         {/if}
     </div>
 
-    <!-- Row: Basics -->
-    <div class="mt-4 space-y-1">
-        <div><span class="text-base-content/70 mr-1">Name:</span>{ctx.profile.name}</div>
-        <div><span class="text-base-content/70 mr-1">Symbol:</span>{ctx.profile.symbol}</div>
+    <div class="bg-base-100 border border-base-300 rounded-xl p-4 space-y-3 mt-4">
+        <div class="text-sm font-semibold">Group profile</div>
+
+        <div class="flex items-start gap-4">
+            <div class="w-24 h-24 rounded-lg bg-base-200 overflow-hidden flex items-center justify-center text-base-content/50">
+                {#if hasImage}
+                    <img src={ctx.profile.previewImageUrl} alt="Group" class="w-full h-full object-cover" />
+                {:else}
+                    No image
+                {/if}
+            </div>
+
+            <div class="flex-1 space-y-2">
+                <div>
+                    <div class="text-base-content/70 mb-0.5">Name</div>
+                    <div class="text-sm">{ctx.profile.name}</div>
+                </div>
+
+                {#if hasDescription}
+                    <div>
+                        <div class="text-base-content/70 mb-0.5">Description</div>
+                        <Markdown content={ctx.profile.description} class="prose prose-sm max-w-none" />
+                    </div>
+                {:else}
+                    <div>
+                        <div class="text-base-content/70 mb-0.5">Description</div>
+                        <div class="text-sm text-base-content/50">No description provided.</div>
+                    </div>
+                {/if}
+            </div>
+        </div>
     </div>
 
-    {#if hasDescription}
-        <div class="mt-3">
-            <div class="text-base-content/70 mb-0.5">Description</div>
-            <Markdown content={ctx.profile.description} class="prose prose-sm max-w-none" />
+    {#if !fastLane}
+        <div class="bg-base-100 border border-base-300 rounded-xl p-4 space-y-2 mt-4">
+            <div class="text-sm font-semibold">Initial conditions ({icCount})</div>
+            {#if icCount > 0}
+                <div class="flex flex-wrap gap-2">
+                    {#each ctx.initialConditions as addr}
+                        <span class="badge badge-outline">{addr}</span>
+                    {/each}
+                </div>
+            {:else}
+                <div class="text-sm text-base-content/50">None</div>
+            {/if}
         </div>
     {/if}
-
-    <!-- Row: Settings -->
-    <div class="mt-4 space-y-1">
-        <div class="truncate"><span class="text-base-content/70 mr-1">Service:</span>{ctx.service}</div>
-        <div class="truncate"><span class="text-base-content/70 mr-1">Fee collection:</span>{ctx.feeCollection}</div>
-    </div>
-
-    <!-- Row: Initial conditions -->
-    <div class="mt-3">
-        <div class="text-base-content/70 mb-1">Initial conditions ({icCount})</div>
-        {#if icCount > 0}
-            <div class="flex flex-wrap gap-2">
-                {#each ctx.initialConditions as addr}
-                    <span class="badge badge-outline">{addr}</span>
-                {/each}
-            </div>
-        {:else}
-            <div class="text-sm text-base-content/50">None</div>
-        {/if}
-    </div>
 
     <div class="mt-5 flex justify-end">
         <button type="button" class="btn btn-primary" onclick={next}>
