@@ -515,7 +515,6 @@
     </div>
 </div>
 
-{#key availableTabIds.join('|')}
 <Tabs
         id="profile-tabs"
         bind:selected={selectedTab}
@@ -681,4 +680,3 @@
         </div>
     </Tab>
 </Tabs>
-{/key}

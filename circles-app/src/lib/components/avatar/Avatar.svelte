@@ -120,9 +120,17 @@
       });
   });
 
-  const computedBottomInfo = $derived(
-    bottomInfo ?? (showTypeInfo ? getTypeString(avatarInfo?.type ?? '') : undefined)
+  const typeLabel = $derived(
+    showTypeInfo ? getTypeString(avatarInfo?.type ?? '') : undefined
   );
+
+  const computedBottomInfo = $derived.by(() => {
+    const normalizedType = typeLabel && typeLabel !== 'None' ? typeLabel : undefined;
+    if (bottomInfo && normalizedType) {
+      return `${normalizedType} • ${bottomInfo}`;
+    }
+    return normalizedType ?? bottomInfo;
+  });
 
   function openAvatar(e: MouseEvent) {
     if (!clickable) return;
