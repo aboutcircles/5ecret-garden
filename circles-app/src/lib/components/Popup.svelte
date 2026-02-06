@@ -13,6 +13,10 @@
         else popupControls.close();
     }
 
+    function closeAll() {
+        popupControls.close();
+    }
+
     // Keep *all* pages mounted: stack + current
     let pages = $derived([
         ...($popupState.stack ?? []),
@@ -39,66 +43,115 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<div
+<div class="popup-shell" class:open={$popupState.content !== null}>
+    <button
+        type="button"
+        class="popup-backdrop"
+        onclick={closeAll}
+        aria-label="Close popup"
+        tabindex={-1}
+    ></button>
+
+    <div
         class="popup rounded-t-lg overflow-y-auto"
-        class:open={$popupState.content !== null}
         role="dialog"
         aria-modal="true"
         aria-labelledby={showTitle ? 'popup-title' : undefined}
         aria-label={!showTitle ? ($popupState.content?.title ?? 'Popup') : undefined}
->
-    <div class="w-full max-w-4xl mx-auto p-6">
-        <!-- Header -->
-        <div class="flex items-center gap-3 mb-4">
-            <button
-                    class="btn btn-ghost btn-circle btn-sm"
-                    onclick={onClose}
-                    aria-label={$popupState.stack.length > 0 ? 'Back' : 'Close'}
-                    title={$popupState.stack.length > 0 ? 'Back' : 'Close'}
-            >
-                <Lucide
-                        icon={$popupState.stack.length > 0 ? LArrowLeft : LX}
-                        size={16}
-                        class="shrink-0 stroke-black"
-                        ariaLabel=""
-                />
-            </button>
-
-            {#if showTitle}
-                <h2 id="popup-title" class="text-xl font-bold">
-                    {$popupState.content.title}
-                </h2>
-            {/if}
-        </div>
-
-        <!-- Content: render the whole stack; only top is visible -->
-        <div class="content w-full relative">
-            {#each pages as page, i (keyFor(page))}
-                {@const Component = page.component}
-                <div
-                        class={`popup-page ${i === top ? 'is-top' : 'is-hidden'}`}
-                        aria-hidden={i === top ? 'false' : 'true'}
-                        inert={i !== top}
+    >
+        <div class="w-full max-w-4xl mx-auto p-6">
+            <!-- Header -->
+            <div class="flex items-center gap-3 mb-4">
+                <button
+                        class="btn btn-ghost btn-circle btn-sm"
+                        onclick={onClose}
+                        aria-label={$popupState.stack.length > 0 ? 'Back' : 'Close'}
+                        title={$popupState.stack.length > 0 ? 'Back' : 'Close'}
                 >
-                    <Component {...page.props} />
-                </div>
-            {/each}
+                    <Lucide
+                            icon={$popupState.stack.length > 0 ? LArrowLeft : LX}
+                            size={16}
+                            class="shrink-0 stroke-black"
+                            ariaLabel=""
+                    />
+                </button>
+
+                {#if showTitle}
+                    <h2 id="popup-title" class="text-xl font-bold">
+                        {$popupState.content.title}
+                    </h2>
+                {/if}
+            </div>
+
+            <!-- Content: render the whole stack; only top is visible -->
+            <div class="content w-full relative">
+                {#each pages as page, i (keyFor(page))}
+                    {@const Component = page.component}
+                    <div
+                            class={`popup-page ${i === top ? 'is-top' : 'is-hidden'}`}
+                            aria-hidden={i === top ? 'false' : 'true'}
+                            inert={i !== top}
+                    >
+                        <Component {...page.props} />
+                    </div>
+                {/each}
+            </div>
         </div>
     </div>
 </div>
 
 <style>
-    .popup {
+    .popup-shell {
         position: fixed;
-        bottom: 0; left: 0; width: 100%;
-        max-height: 80%; min-height: 80%;
-        display: flex; flex-direction: column; align-items: center;
-        background: white;
-        transition: transform .3s ease, opacity .3s ease;
-        transform: translateY(100%); opacity: 0;
+        inset: 0;
+        z-index: 100;
+        pointer-events: none;
+    }
+
+    .popup-shell.open {
+        pointer-events: auto;
+    }
+
+    .popup-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.35);
+        border: none;
+        padding: 0;
+        margin: 0;
+        opacity: 0;
+        transition: opacity .3s ease;
+        pointer-events: none;
         z-index: 100;
     }
-    .popup.open { transform: translateY(0); opacity: 1; }
+
+    .popup-shell.open .popup-backdrop {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .popup {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        max-height: 80%;
+        min-height: 80%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: white;
+        transition: transform .3s ease, opacity .3s ease;
+        transform: translateY(100%);
+        opacity: 0;
+        z-index: 101;
+        pointer-events: auto;
+    }
+
+    .popup-shell.open .popup {
+        transform: translateY(0);
+        opacity: 1;
+    }
 
     /* Keep instances mounted; hide non-top pages */
     .popup-page { position: relative; }
