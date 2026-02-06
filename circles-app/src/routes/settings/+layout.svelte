@@ -9,6 +9,7 @@
 
   import PersonalSection from './sections/PersonalSection.svelte';
   import OrdersSection from './sections/OrdersSection.svelte';
+  import SalesSection from './sections/SalesSection.svelte';
   import KeysSection from './sections/KeysSection.svelte';
   import NamespacesSection from './sections/NamespacesSection.svelte';
   import MarketplaceSection from './sections/MarketplaceSection.svelte';
@@ -45,7 +46,12 @@
   import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
   import { getMarketClient } from '$lib/sdk/marketClient';
   import { signInWithSafe } from '$lib/auth/signin';
-  import { getOrdersByBuyer, getOrder, subscribeBuyerOrderEvents } from '$lib/orders/ordersAdapter';
+  import {
+    getOrdersByBuyer,
+    getOrder,
+    subscribeBuyerOrderEvents,
+    getSalesBySeller,
+  } from '$lib/orders/ordersAdapter';
   import type { OrderStatusSseEvent } from '$lib/orders/types';
   import OrderDetailsPopup from '$lib/orders/OrderDetailsPopup.svelte';
 
@@ -54,7 +60,7 @@
   import CreateGatewayProfile from '$lib/flows/paymentGateway/CreateGatewayProfile.svelte';
   import { coerceTabId, type TabIdOf } from '$lib/components/tabs/tabId';
 
-  const TAB_IDS = ['personal', 'orders', 'keys', 'namespaces', 'marketplace', 'payment'] as const;
+  const TAB_IDS = ['personal', 'orders', 'sales', 'keys', 'namespaces', 'marketplace', 'payment'] as const;
   type TabId = TabIdOf<typeof TAB_IDS>;
 
   let selectedTab = $state<TabId>('personal');
@@ -77,6 +83,7 @@
 
   // Auth state must be initialized before using in $derived stores to avoid TDZ
   let ordersAuthed = $state(false);
+  let salesAuthed = $state(false);
 
   function mapOrderItems(items: any[]): OrdersListItem[] {
     return items.map((s, i) => {
@@ -208,6 +215,58 @@
     } as any;
   }
 
+  function buildSalesAuthedStore(): Readable<{
+    data: OrdersListItem[];
+    next: () => Promise<boolean>;
+    ended: boolean;
+  }> {
+    type State = {
+      data: OrdersListItem[];
+      ended: boolean;
+      next: () => Promise<boolean>;
+      page: number;
+      loading: boolean;
+    };
+    const subscribers = new Set<(v: State) => void>();
+    const notify = (v: State) => subscribers.forEach((fn) => fn(v));
+
+    let state: State = {
+      data: [],
+      ended: false,
+      page: 0,
+      loading: false,
+      next: async () => {
+        if (state.loading || state.ended) return true;
+        state = { ...state, loading: true };
+        notify(state);
+        try {
+          const nextPage = state.page + 1;
+          const resp = await getSalesBySeller(nextPage, 50);
+          const items = Array.isArray(resp?.items) ? resp.items : [];
+          const data = state.data.concat(mapOrderItems(items));
+          const ended = items.length === 0;
+          state = { ...state, data, page: nextPage, ended, loading: false };
+          notify(state);
+          return true;
+        } catch {
+          state = { ...state, ended: true, loading: false };
+          notify(state);
+          return true;
+        }
+      },
+    };
+
+    return {
+      subscribe(run: (v: State) => void) {
+        subscribers.add(run);
+        run(state);
+        return () => {
+          subscribers.delete(run);
+        };
+      },
+    } as any;
+  }
+
   function buildOrdersFallbackStore(): Readable<{
     data: OrdersListItem[];
     next: () => Promise<boolean>;
@@ -238,6 +297,21 @@
         } as any),
   );
 
+  const salesStore = $derived<
+    Readable<{ data: OrdersListItem[]; next: () => Promise<boolean>; ended: boolean }>
+  >(
+    browser
+      ? salesAuthed
+        ? buildSalesAuthedStore()
+        : buildOrdersFallbackStore()
+      : ({
+          subscribe(run: any) {
+            run({ data: [], next: async () => true, ended: true });
+            return () => {};
+          },
+        } as any),
+  );
+
   async function ensureOrdersAuthed(): Promise<void> {
     try {
       const avatar = (avatarAddress ?? '').toLowerCase();
@@ -249,6 +323,20 @@
     } catch (e) {
       console.error('[settings/orders] safe sign-in failed:', e);
       ordersAuthed = false;
+    }
+  }
+
+  async function ensureSalesAuthed(): Promise<void> {
+    try {
+      const avatar = (avatarAddress ?? '').toLowerCase();
+      if (!avatar || !/^0x[a-f0-9]{40}$/.test(avatar)) {
+        throw new Error('No Circles avatar address available for Safe login');
+      }
+      await signInWithSafe(avatar);
+      salesAuthed = !!getMarketClient().auth.getAuthMeta();
+    } catch (e) {
+      console.error('[settings/sales] safe sign-in failed:', e);
+      salesAuthed = false;
     }
   }
 
@@ -494,18 +582,33 @@
     ...actionsPersonal,
   ]);
 
+  const actionsSales: Action[] = $derived([
+    {
+      id: 'signin-sales',
+      label: salesAuthed ? 'Signed in' : 'Sign in to view all sales',
+      variant: salesAuthed ? 'ghost' : 'primary',
+      onClick: () => {
+        if (!salesAuthed) void ensureSalesAuthed();
+      },
+    },
+    ...actionsPersonal,
+  ]);
+
   const headerActions = $derived(
     selectedTab === 'marketplace'
       ? actionsMarketplace
       : selectedTab === 'orders'
         ? actionsOrders
-        : selectedTab === 'payment'
-          ? actionsPayment
-          : actionsPersonal,
+        : selectedTab === 'sales'
+          ? actionsSales
+          : selectedTab === 'payment'
+            ? actionsPayment
+            : actionsPersonal,
   );
 
   if (browser) {
     ordersAuthed = !!getMarketClient().auth.getAuthMeta();
+    salesAuthed = ordersAuthed;
   }
 
   // ——— Payment gateways (copied from /gateway) ———
@@ -682,6 +785,7 @@
       <Tabs bind:selected={selectedTab} variant="boxed" size="sm">
         <Tab id="personal" title="Profile" />
         <Tab id="orders" title="Orders" />
+        <Tab id="sales" title="Sales" />
         <Tab id="marketplace" title="Offers" />
         <Tab id="payment" title="Payment gateways" />
         <Tab id="namespaces" title="Namespaces" />
@@ -708,6 +812,13 @@
           {ordersAuthed}
           {ensureOrdersAuthed}
           {ordersStore}
+        />
+      {:else if selectedTab === 'sales'}
+        <SalesSection
+          {avatarAddress}
+          {salesAuthed}
+          {ensureSalesAuthed}
+          salesStore={salesStore}
         />
       {:else if selectedTab === 'keys'}
         <KeysSection {avatarAddress} {pinApiBase} {deleteLocalKey} />
