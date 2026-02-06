@@ -5,11 +5,15 @@
 
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
+  import GenericList from '$lib/components/GenericList.svelte';
+  import { createPaginatedList } from '$lib/stores/paginatedList';
+  import { createFilteredAddresses, createProfileNameStore } from '$lib/utils/searchableProfiles';
+  import { derived, writable } from 'svelte/store';
   import Lucide from '$lib/icons/Lucide.svelte';
-  import type { SearchProfileResult } from '$lib/profiles';
-  import { wallet } from '$lib/stores/wallet.svelte';
   import { circles } from '$lib/stores/circles';
-  import { runTask } from '$lib/utils/tasks';
+  import { popupControls } from '$lib/stores/popup';
+  import ManageTrustSearch from '$lib/flows/paymentGateway/SearchTrustReceiver.svelte';
+  import ConfirmGatewayUntrust from '$lib/flows/paymentGateway/ConfirmGatewayUntrust.svelte';
 
   import TrustRowView from '$lib/gateway/TrustRow.svelte';
   import type { TrustRow } from '$lib/gateway/types';
@@ -20,123 +24,28 @@
 
   let { gateway }: Props = $props();
 
-  const gatewayAbi = ['function setTrust(address trustReceiver, uint192 expiry)'];
-  const gatewayIface = new ethers.Interface(gatewayAbi);
-
-  let trustReceiver: string = $state('');
-
-  let searchOpen = $state(false);
-  let searchResults = $state<SearchProfileResult[]>([]);
-  let searchLoading = $state(false);
-  let searchError = $state<string | null>(null);
-  let searchDebounce: ReturnType<typeof setTimeout> | null = null;
-
-  const avatarTypes = [
-    'CrcV2_RegisterHuman',
-    'CrcV2_RegisterOrganization',
-    'CrcV2_RegisterGroup'
-  ];
-
-  function toSearchResult(raw: any | null | undefined): SearchProfileResult | undefined {
-    if (!raw || typeof raw !== 'object') return undefined;
-    const base = raw ?? { name: '' };
-    const address =
-      typeof raw.address === 'string'
-        ? raw.address
-        : typeof raw.owner === 'string'
-          ? raw.owner
-          : '';
-    const lastUpdatedAt = typeof raw.lastUpdatedAt === 'number' ? raw.lastUpdatedAt : undefined;
-    const registeredName =
-      typeof raw.registeredName === 'string' ? raw.registeredName : null;
-    const avatarType =
-      typeof raw.avatarType === 'string'
-        ? raw.avatarType
-        : typeof raw.type === 'string'
-          ? raw.type
-          : undefined;
-
-    return {
-      address,
-      name: base.name,
-      description: base.description,
-      lastUpdatedAt,
-      registeredName,
-      imageUrl: base.imageUrl,
-      previewImageUrl: base.previewImageUrl,
-      location: base.location,
-      avatarType
-    } as SearchProfileResult;
-  }
-
-  async function searchProfiles(query: string) {
-    if (!$circles?.circlesRpc) {
-      searchResults = [];
-      return;
-    }
-
-    const q = query.trim();
-    if (!q) {
-      searchResults = [];
-      return;
-    }
-
-    searchLoading = true;
-    searchError = null;
-    try {
-      const raw = await $circles.circlesRpc.call('circles_searchProfiles', [
-        q,
-        50,
-        0,
-        avatarTypes
-      ]);
-      const results = (raw?.result ?? []).map(toSearchResult).filter(Boolean) as SearchProfileResult[];
-
-      const needle = q.toLowerCase();
-      const found = results.some((r) => (r.address ?? '').toLowerCase() === needle);
-      if (!found && ethers.isAddress(q)) {
-        results.unshift({
-          address: q,
-          name: q,
-          lastUpdatedAt: undefined,
-          registeredName: null
-        } as SearchProfileResult);
-      }
-
-      searchResults = results;
-    } catch (error) {
-      searchError = error instanceof Error ? error.message : 'Failed to search profiles.';
-      searchResults = [];
-    } finally {
-      searchLoading = false;
-    }
-  }
-
-  function handleSearchInput(event: Event) {
-    trustReceiver = (event.target as HTMLInputElement).value;
-    if (searchDebounce) clearTimeout(searchDebounce);
-    searchDebounce = setTimeout(() => {
-      void searchProfiles(trustReceiver ?? '');
-    }, 250);
-  }
-
-  function handlePaste(event: ClipboardEvent) {
-    const paste = event.clipboardData?.getData('text') ?? '';
-    if (!paste) return;
-    trustReceiver = paste.trim();
-    searchOpen = false;
-  }
-
-  function selectReceiver(address: string) {
-    trustReceiver = address;
-    searchOpen = false;
-  }
-
-  const trustExpiryMax = (1n << 192n) - 1n;
-  const nowSeconds = () => BigInt(Math.floor(Date.now() / 1000));
-
   let loadingTrusts: boolean = $state(false);
   let trusts: TrustRow[] = $state([]);
+  const trustRowsStore = writable<TrustRow[]>([]);
+  const trustReceiverAddresses = derived(trustRowsStore, ($rows) => $rows.map((row) => row.trustReceiver));
+  const searchQuery = writable('');
+  const trustProfileNames = createProfileNameStore(trustReceiverAddresses);
+  const filteredAddresses = createFilteredAddresses(trustReceiverAddresses, searchQuery, trustProfileNames);
+  const filteredTrusts = derived([trustRowsStore, filteredAddresses], ([$rows, $filtered]) =>
+    $rows.filter((row) => $filtered.includes(row.trustReceiver))
+  );
+  const trustRowsWithActions = derived(filteredTrusts, ($rows) =>
+    $rows.map((row) => ({
+      ...row,
+      showRemove: true,
+      onRemove: () => openRemoveTrust(row.trustReceiver)
+    }))
+  );
+  const paginatedTrusts = createPaginatedList(trustRowsWithActions, { pageSize: 25 });
+
+  $effect(() => {
+    trustRowsStore.set(trusts);
+  });
 
   function isAddress(v: string): boolean {
     try {
@@ -148,10 +57,7 @@
   }
 
   const gatewayValid = $derived(isAddress(gateway));
-  const trustReceiverValid = $derived(isAddress(trustReceiver));
 
-  const canSet = $derived(gatewayValid && trustReceiverValid);
-  const canClear = $derived(gatewayValid && trustReceiverValid);
 
   async function loadTrusts() {
     if (!gatewayValid || !$circles?.circlesRpc) {
@@ -232,27 +138,23 @@
 
       const now = Math.floor(Date.now() / 1000);
 
-      const entries: TrustRow[] = Array.from(map.entries()).map(
-        ([trustReceiver, v]) => ({
+      const entries: TrustRow[] = Array.from(map.entries())
+        .map(([trustReceiver, v]) => ({
           trustReceiver,
           expiry: v.expiry,
           blockNumber: v.blockNumber,
           transactionIndex: v.transactionIndex,
           logIndex: v.logIndex
-        })
-      );
-
-      entries.sort((a, b) => {
-        const aActive = (a.expiry ?? 0) > now ? 1 : 0;
-        const bActive = (b.expiry ?? 0) > now ? 1 : 0;
-        if (aActive !== bActive) return bActive - aActive;
-        return a.trustReceiver.localeCompare(b.trustReceiver);
-      });
+        }))
+        .filter((row) => (row.expiry ?? 0) > now)
+        .sort((a, b) => a.trustReceiver.localeCompare(b.trustReceiver));
 
       trusts = entries;
+      trustRowsStore.set(entries);
     } catch (e) {
       console.error('loadTrusts', e);
       trusts = [];
+      trustRowsStore.set([]);
     } finally {
       loadingTrusts = false;
     }
@@ -260,55 +162,33 @@
 
   onMount(loadTrusts);
 
-  async function setTrust() {
-    if (!$wallet) {
-      throw new Error('Wallet not connected.');
-    }
-    if (!canSet) {
-      throw new Error('Please provide a valid gateway and receiver.');
-    }
-
-    await runTask({
-      name: 'Updating trust…',
-      promise: (async () => {
-        const data = gatewayIface.encodeFunctionData('setTrust', [
-          trustReceiver,
-          trustExpiryMax
-        ]);
-        const tx = await $wallet.sendTransaction!({
-          to: gateway,
-          value: 0n,
-          data
-        });
-        await $wallet.provider.waitForTransaction(tx.hash);
-        await loadTrusts();
-      })()
+  function openAddTrust() {
+    if (!gatewayValid) return;
+    popupControls.open({
+      title: 'Add trusted account',
+      component: ManageTrustSearch,
+      props: {
+        gateway,
+        onTrusted: async () => {
+          await loadTrusts();
+        }
+      }
     });
   }
 
-  async function clearTrust() {
-    if (!$wallet) {
-      throw new Error('Wallet not connected.');
-    }
-    if (!canClear) {
-      throw new Error('Please provide a valid gateway and receiver.');
-    }
-
-    await runTask({
-      name: 'Clearing trust…',
-      promise: (async () => {
-        const data = gatewayIface.encodeFunctionData('setTrust', [
-          trustReceiver,
-          nowSeconds()
-        ]);
-        const tx = await $wallet.sendTransaction!({
-          to: gateway,
-          value: 0n,
-          data
-        });
-        await $wallet.provider.waitForTransaction(tx.hash);
-        await loadTrusts();
-      })()
+  function openRemoveTrust(trustReceiver: string) {
+    if (!gatewayValid) return;
+    popupControls.open({
+      title: 'Remove trust',
+      component: ConfirmGatewayUntrust,
+      props: {
+        gateway,
+        trustReceiver,
+        onDone: async () => {
+          await loadTrusts();
+        }
+      },
+      key: `pg-untrust:${gateway}:${trustReceiver}`
     });
   }
 </script>
@@ -322,118 +202,50 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
-      <label class="form-control w-full">
-        <span class="label-text">Trust receiver</span>
-        <div class="dropdown dropdown-bottom w-full" class:dropdown-open={searchOpen}>
-          <input
-            type="text"
-            class="input input-bordered w-full font-mono"
-            placeholder="gibber"
-            value={trustReceiver}
-            oninput={handleSearchInput}
-            onpaste={handlePaste}
-            onfocus={() => {
-              searchOpen = true;
-              void searchProfiles(trustReceiver ?? '');
-            }}
-            onblur={() => {
-              setTimeout(() => {
-                searchOpen = false;
-              }, 150);
-            }}
-            autocomplete="off"
-            autocorrect="off"
-            autocapitalize="off"
-            spellcheck={false}
-          />
-
-          {#if searchOpen}
-            <div class="dropdown-content z-[50] card card-compact w-full bg-base-100 shadow border border-base-300 mt-1">
-              <div class="card-body gap-2">
-                {#if searchError}
-                  <p class="text-xs text-error break-words">{searchError}</p>
-                {:else if searchLoading}
-                  <p class="text-xs opacity-70">Searching…</p>
-                {:else if searchResults.length === 0}
-                  <p class="text-xs opacity-70">No matches yet.</p>
-                {:else}
-                  <div class="max-h-64 overflow-auto">
-                    <ul class="menu menu-sm bg-base-100 w-full">
-                      {#each searchResults as profile (profile.address)}
-                        <li>
-                          <button
-                            type="button"
-                            class="justify-start"
-                            onclick={() => selectReceiver(profile.address)}
-                          >
-                            <div class="min-w-0 flex flex-col gap-0.5">
-                              <Avatar
-                                address={profile.address}
-                                view="horizontal"
-                                clickable={false}
-                              />
-                              <span class="text-xs font-mono opacity-70 break-all">
-                                {profile.address}
-                              </span>
-                            </div>
-                          </button>
-                        </li>
-                      {/each}
-                    </ul>
-                  </div>
-                {/if}
-              </div>
-            </div>
-          {/if}
-        </div>
-      </label>
-    </div>
-
-    <div class="flex gap-3 mt-2">
-      <button
-        type="button"
-        class="btn btn-primary flex-1"
-        onclick={setTrust}
-        disabled={!canSet}
-      >
-        Set trust
-      </button>
-      <button
-        type="button"
-        class="btn btn-outline flex-1"
-        onclick={clearTrust}
-        disabled={!canClear}
-      >
-        Clear trust
-      </button>
-    </div>
-
     <div class="mt-4">
-      <div class="flex items-center justify-between mb-2">
-        <div class="text-sm opacity-70">Latest expiry per receiver</div>
-        <button
-          type="button"
-          class="btn btn-xs btn-ghost btn-square"
-          onclick={loadTrusts}
-          disabled={loadingTrusts}
-          aria-label={loadingTrusts ? 'Refreshing…' : 'Refresh'}
-        >
-          <Lucide icon={LRefreshCw} size={14} class={loadingTrusts ? 'animate-spin' : ''} />
-          <span class="sr-only">{loadingTrusts ? 'Refreshing…' : 'Refresh'}</span>
-        </button>
+      <div class="flex items-center justify-between gap-2 mb-2">
+        <div class="text-sm font-semibold">Trusted accounts</div>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            class="btn btn-xs btn-ghost btn-square"
+            onclick={loadTrusts}
+            disabled={loadingTrusts}
+            aria-label={loadingTrusts ? 'Refreshing…' : 'Refresh'}
+          >
+            <Lucide icon={LRefreshCw} size={14} class={loadingTrusts ? 'animate-spin' : ''} />
+            <span class="sr-only">{loadingTrusts ? 'Refreshing…' : 'Refresh'}</span>
+          </button>
+          <button type="button" class="btn btn-sm btn-primary" onclick={openAddTrust}>
+            Add
+          </button>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <input
+          type="text"
+          class="input input-bordered w-full"
+          placeholder="Search by address or name"
+          bind:value={$searchQuery}
+        />
       </div>
 
       {#if loadingTrusts}
         <div class="loading loading-spinner loading-sm"></div>
       {:else if trusts.length === 0}
-        <div class="text-sm opacity-70">No trust relations found yet.</div>
+        <div class="text-sm opacity-70">No trusted accounts yet.</div>
+      {:else if ($filteredTrusts ?? []).length === 0}
+        <div class="text-sm opacity-70">No matching trusted accounts.</div>
       {:else}
-        <div class="flex flex-col gap-1.5">
-          {#each trusts as item (item.trustReceiver)}
-            <TrustRowView {item} />
-          {/each}
-        </div>
+        <GenericList
+          store={paginatedTrusts}
+          row={TrustRowView}
+          getKey={(item) => String(item.trustReceiver)}
+          rowHeight={72}
+          maxPlaceholderPages={2}
+          expectedPageSize={25}
+        />
       {/if}
     </div>
   </div>
