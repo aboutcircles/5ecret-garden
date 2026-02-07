@@ -129,9 +129,21 @@
       </svg></summary
     >
     <ul
-      class="menu dropdown-content bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
+      class="menu dropdown-content bg-base-100 rounded-box z-[1] w-64 p-2 shadow"
     >
-      <li><a class="link link-hover" href="/settings">Settings</a></li>
+      <li>
+        <a class="link link-hover" href="/settings">Settings</a>
+        <ul>
+          <li><a class="link link-hover" href="/settings?tab=personal">Profile</a></li>
+          <li><a class="link link-hover" href="/settings?tab=bookmarks">Bookmarks</a></li>
+          <li><a class="link link-hover" href="/settings?tab=orders">Orders</a></li>
+          <li><a class="link link-hover" href="/settings?tab=sales">Sales</a></li>
+          <li><a class="link link-hover" href="/settings?tab=marketplace">Offers</a></li>
+          <li><a class="link link-hover" href="/settings?tab=payment">Payment gateways</a></li>
+          <li><a class="link link-hover" href="/settings?tab=namespaces">Namespaces</a></li>
+          <li><a class="link link-hover" href="/settings?tab=keys">Signing keys</a></li>
+        </ul>
+      </li>
       <li><a class="link link-hover" href="/terms">Terms of use</a></li>
       <li>
         <a class="link link-hover" href="/privacy-policy">Privacy policy</a>
