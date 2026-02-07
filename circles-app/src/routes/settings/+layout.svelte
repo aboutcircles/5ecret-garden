@@ -14,6 +14,7 @@
   import NamespacesSection from './sections/NamespacesSection.svelte';
   import MarketplaceSection from './sections/MarketplaceSection.svelte';
   import PaymentSection from './sections/PaymentSection.svelte';
+  import BookmarksSection from './sections/BookmarksSection.svelte';
 
   let { children }: { children?: Snippet } = $props();
 
@@ -60,7 +61,7 @@
   import CreateGatewayProfile from '$lib/flows/paymentGateway/CreateGatewayProfile.svelte';
   import { coerceTabId, type TabIdOf } from '$lib/components/tabs/tabId';
 
-  const TAB_IDS = ['personal', 'orders', 'sales', 'keys', 'namespaces', 'marketplace', 'payment'] as const;
+  const TAB_IDS = ['personal', 'bookmarks', 'orders', 'sales', 'keys', 'namespaces', 'marketplace', 'payment'] as const;
   type TabId = TabIdOf<typeof TAB_IDS>;
 
   let selectedTab = $state<TabId>('personal');
@@ -787,6 +788,7 @@
     <div class="w-full">
       <Tabs bind:selected={selectedTab} variant="boxed" size="sm">
         <Tab id="personal" title="Profile" />
+        <Tab id="bookmarks" title="Bookmarks" />
         <Tab id="orders" title="Orders" />
         <Tab id="sales" title="Sales" />
         <Tab id="marketplace" title="Offers" />
@@ -809,6 +811,8 @@
           {migrateToV2}
           {stopV1}
         />
+      {:else if selectedTab === 'bookmarks'}
+        <BookmarksSection />
       {:else if selectedTab === 'orders'}
         <OrdersSection
           {avatarAddress}

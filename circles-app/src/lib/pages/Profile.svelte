@@ -50,6 +50,13 @@
     import { get } from 'svelte/store';
     import {gnosisConfig} from "$lib/circlesConfig";
     import TrustScoreBadge from '$lib/profile/TrustScoreBadge.svelte';
+    import Lucide from '$lib/icons/Lucide.svelte';
+    import { Star as LStar } from 'lucide';
+    import {
+        profileBookmarksService,
+        profileBookmarksStore,
+        type ProfileBookmark,
+    } from '$lib/bookmarks/profileBookmarks';
 
     interface Props {
         address: Address | undefined;
@@ -345,6 +352,76 @@
     let commonConnectionsCount = $state(0);
     let trustsCount = $state(0);
     let trustedByCount = $state(0);
+    let bookmarkedProfiles: ProfileBookmark[] = $state([]);
+    let showBookmarkEditor: boolean = $state(false);
+    let bookmarkNoteInput: string = $state('');
+    let bookmarkButtonEl: HTMLButtonElement | null = $state(null);
+    let bookmarkPopoverEl: HTMLDivElement | null = $state(null);
+
+    const normalizedAddress = $derived.by(() => {
+        if (!address) return null;
+        const v = String(address).trim().toLowerCase();
+        return /^0x[a-f0-9]{40}$/.test(v) ? v : null;
+    });
+
+    const currentBookmark = $derived(
+        normalizedAddress
+            ? bookmarkedProfiles.find((v) => v.address === normalizedAddress)
+            : undefined
+    );
+    const isBookmarked = $derived(!!currentBookmark);
+
+    $effect(() => {
+        const unsubscribe = profileBookmarksStore.subscribe((value) => {
+            bookmarkedProfiles = value;
+        });
+        return () => unsubscribe();
+    });
+
+    function openBookmarkEditor(): void {
+        if (!address) return;
+        bookmarkNoteInput = currentBookmark?.note ?? '';
+        showBookmarkEditor = !showBookmarkEditor;
+    }
+
+    function saveBookmarkWithCurrentNote(): void {
+        if (!address) return;
+        profileBookmarksService.upsertProfile(String(address), bookmarkNoteInput);
+        showBookmarkEditor = false;
+    }
+
+    function removeBookmark(): void {
+        if (!address) return;
+        profileBookmarksService.removeProfile(String(address));
+        showBookmarkEditor = false;
+    }
+
+    $effect(() => {
+        if (!showBookmarkEditor) return;
+
+        const onPointerDown = (event: PointerEvent) => {
+            const target = event.target as Node | null;
+            const insideButton = !!(bookmarkButtonEl && target && bookmarkButtonEl.contains(target));
+            const insidePopover = !!(bookmarkPopoverEl && target && bookmarkPopoverEl.contains(target));
+            if (!insideButton && !insidePopover) {
+                showBookmarkEditor = false;
+            }
+        };
+
+        const onKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                showBookmarkEditor = false;
+            }
+        };
+
+        window.addEventListener('pointerdown', onPointerDown);
+        window.addEventListener('keydown', onKeyDown);
+
+        return () => {
+            window.removeEventListener('pointerdown', onPointerDown);
+            window.removeEventListener('keydown', onKeyDown);
+        };
+    });
 
     const availableTabIds = $derived((() => {
         const ids: TabId[] = ['common_connections', 'trusts', 'trusted_by'];
@@ -394,17 +471,59 @@
     <TrustScoreBadge {address} />
 
     <div class="my-6 flex flex-row gap-x-2">
-        <span class="bg-base-200 rounded-lg px-2 py-1 text-sm">
+        <span class="inline-flex items-center h-8 bg-base-200 rounded-lg px-2 text-sm">
             {getTypeString(otherAvatar?.type || '')}
         </span>
         <AddressComponent address={address ?? '0x0'}/>
+        {#if address}
+            <div class="relative">
+                <button
+                        type="button"
+                        class="inline-flex items-center justify-center w-8 h-8 bg-[#F3F4F6] border-none rounded-lg leading-none"
+                        onclick={openBookmarkEditor}
+                        bind:this={bookmarkButtonEl}
+                        aria-label={isBookmarked ? 'Edit profile bookmark' : 'Bookmark profile'}
+                        title={isBookmarked ? 'Edit bookmark' : 'Bookmark profile'}
+                >
+                    <Lucide icon={LStar} size={16} class={isBookmarked ? 'text-yellow-500 fill-yellow-500' : 'text-base-content/60'} />
+                </button>
+
+                {#if showBookmarkEditor}
+                    <div
+                            class="absolute z-20 top-full mt-2 right-0 w-72 bg-base-100 border border-base-300 rounded-xl shadow-lg p-3 space-y-2"
+                            bind:this={bookmarkPopoverEl}
+                    >
+                        <div class="text-xs font-semibold">Profile bookmark</div>
+                        <textarea
+                                class="textarea textarea-bordered textarea-sm w-full"
+                                rows={3}
+                                placeholder="Add a note (optional)"
+                                bind:value={bookmarkNoteInput}
+                        ></textarea>
+                        <div class="flex items-center justify-end gap-2">
+                            <button class="btn btn-ghost btn-xs" type="button" onclick={() => (showBookmarkEditor = false)}>
+                                Cancel
+                            </button>
+                            {#if isBookmarked}
+                                <button class="btn btn-ghost btn-xs" type="button" onclick={removeBookmark}>
+                                    Remove
+                                </button>
+                            {/if}
+                            <button class="btn btn-primary btn-xs" type="button" onclick={saveBookmarkWithCurrentNote}>
+                                Save
+                            </button>
+                        </div>
+                    </div>
+                {/if}
+            </div>
+        {/if}
         {#if otherAvatar?.type === 'CrcV2_RegisterGroup'}
             <button
                     onclick={() => {
                     goto('/groups/metrics/' + address);
                     popupControls.close();
                 }}
-                    class="flex items-center justify-center bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm"
+                    class="inline-flex items-center justify-center w-8 h-8 bg-[#F3F4F6] border-none rounded-lg"
             >
                 <img src="/chart.svg" alt="Chart" class="w-4"/>
             </button>
@@ -412,7 +531,7 @@
         {#if address}
             <JumpLink
                     url={'https://gnosisscan.io/address/' + address}
-                    className="flex items-center justify-center bg-[#F3F4F6] border-none rounded-lg px-2 py-1 text-sm"
+                    className="inline-flex items-center justify-center w-8 h-8 bg-[#F3F4F6] border-none rounded-lg"
             >
                 <img src="/external.svg" alt="External Link" class="w-4"/>
             </JumpLink>
