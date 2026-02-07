@@ -8,6 +8,8 @@ export interface ProfileBookmark {
   folder?: string;
 }
 
+export const VIP_BOOKMARK_FOLDER = 'VIPs';
+
 export interface BookmarksState {
   profiles: ProfileBookmark[];
   products: string[];
@@ -73,7 +75,11 @@ function normalizeFolderName(folder: string | null | undefined): string | undefi
   if (typeof folder !== 'string') return undefined;
   const trimmed = folder.trim().replace(/\s+/g, ' ');
   if (!trimmed) return undefined;
-  return trimmed.slice(0, 64);
+  const normalized = trimmed.slice(0, 64);
+  if (folderKey(normalized) === folderKey(VIP_BOOKMARK_FOLDER)) {
+    return VIP_BOOKMARK_FOLDER;
+  }
+  return normalized;
 }
 
 function folderKey(folder: string): string {
@@ -85,6 +91,11 @@ function isFolderOrDescendant(folder: string | undefined, targetFolder: string):
   const f = folderKey(folder);
   const t = folderKey(targetFolder);
   return f === t || f.startsWith(`${t}/`);
+}
+
+export function isVipProfileBookmark(bookmark: ProfileBookmark | null | undefined): boolean {
+  if (!bookmark?.folder) return false;
+  return folderKey(bookmark.folder) === folderKey(VIP_BOOKMARK_FOLDER);
 }
 
 function normalizeProfileBookmark(input: unknown): ProfileBookmark | null {
@@ -146,6 +157,11 @@ function sanitizeOwnerState(state: Partial<BookmarksState> | null | undefined): 
     if (seenFolders.has(key)) continue;
     seenFolders.add(key);
     folders.push(profile.folder);
+  }
+
+  if (!seenFolders.has(folderKey(VIP_BOOKMARK_FOLDER))) {
+    seenFolders.add(folderKey(VIP_BOOKMARK_FOLDER));
+    folders.push(VIP_BOOKMARK_FOLDER);
   }
 
   const products = Array.isArray(state?.products)
@@ -428,6 +444,7 @@ function createProfileBookmarksService(repository: BookmarksRepository): Profile
     removeProfileFolder(name: string): void {
       const normalized = normalizeFolderName(name);
       if (!normalized) return;
+      if (folderKey(normalized) === folderKey(VIP_BOOKMARK_FOLDER)) return;
 
       updateCurrent((state) => {
         const nextProfiles = state.profiles.map((profile) => {

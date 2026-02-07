@@ -15,6 +15,7 @@
     bookmarksStateStore,
     profileBookmarksService,
     profileBookmarksStore,
+    VIP_BOOKMARK_FOLDER,
     type ProfileBookmark,
   } from '$lib/bookmarks/profileBookmarks';
   import BookmarkDetailsPopup from './BookmarkDetailsPopup.svelte';
@@ -195,6 +196,7 @@
 
   function removeFolder(path: string): void {
     if (!path) return;
+    if (path.toLowerCase() === VIP_BOOKMARK_FOLDER.toLowerCase()) return;
     const ok = window.confirm(
       `Delete folder "${path}"? Bookmarks inside will be moved to “Unsorted”. This cannot be undone.`,
     );
@@ -363,6 +365,7 @@
             <button
               class="btn btn-ghost btn-xs btn-square"
               type="button"
+              disabled={folderRow.path.toLowerCase() === VIP_BOOKMARK_FOLDER.toLowerCase()}
               title="Delete folder"
               onclick={() => removeFolder(folderRow.path)}
             >

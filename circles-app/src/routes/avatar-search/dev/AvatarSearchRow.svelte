@@ -26,7 +26,7 @@
       view="horizontal"
       bottomInfo={bottomInfo}
       showTypeInfo={true}
-      showBookmarkBadge={item.isBookmarked}
+      showBookmarkBadge={item.isVipBookmarked}
       clickable={true}
     />
   </div>

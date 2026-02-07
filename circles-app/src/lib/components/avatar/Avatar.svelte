@@ -5,7 +5,7 @@
   import HorizontalAvatarLayout from './HorizontalAvatarLayout.svelte';
   import VerticalAvatarLayout from './VerticalAvatarLayout.svelte';
   import { popupControls, type PopupContentDefinition } from '$lib/stores/popup';
-  import { profileBookmarksStore } from '$lib/bookmarks/profileBookmarks';
+  import { isVipProfileBookmark, profileBookmarksStore } from '$lib/bookmarks/profileBookmarks';
   import type { Address } from '@circles-sdk/utils';
   import type { AppProfileCore as Profile } from '$lib/profiles';
   import type { AvatarRow } from '@circles-sdk/data';
@@ -135,13 +135,15 @@
     return normalizedType ?? bottomInfo;
   });
 
-  const isBookmarked = $derived.by(() => {
+  const isVipBookmarked = $derived.by(() => {
     const addr = normalizedAddress?.toLowerCase();
     if (!addr) return false;
-    return ($profileBookmarksStore ?? []).some((bookmark) => bookmark.address === addr);
+    return ($profileBookmarksStore ?? []).some(
+      (bookmark) => bookmark.address === addr && isVipProfileBookmark(bookmark),
+    );
   });
 
-  const effectiveShowBookmarkBadge = $derived(showBookmarkBadge || isBookmarked);
+  const effectiveShowBookmarkBadge = $derived(showBookmarkBadge || isVipBookmarked);
 
   function openAvatar(e: MouseEvent) {
     if (!clickable) return;
