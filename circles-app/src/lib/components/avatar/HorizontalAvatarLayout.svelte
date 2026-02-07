@@ -4,6 +4,7 @@
   interface Props {
     profile: Profile | undefined;
     pictureOverlayUrl?: string | undefined;
+    showBookmarkBadge?: boolean;
     topInfo?: string | undefined;
     bottomInfo?: string | undefined;
     onclick?: (e: MouseEvent) => void | undefined;
@@ -12,6 +13,7 @@
   let {
     profile,
     pictureOverlayUrl = undefined,
+    showBookmarkBadge = false,
     topInfo = undefined,
     bottomInfo = undefined,
     onclick = undefined,
@@ -26,8 +28,7 @@
 
 <div class="inline-flex items-center min-w-0 max-w-full">
   <button class="cursor-pointer shrink-0" {onclick}>
-    {#if pictureOverlayUrl}
-      <div class="indicator">
+      <div class="relative inline-block">
         {#if imgUrl && !imgError}
           <img
             src={imgUrl}
@@ -38,24 +39,25 @@
         {:else}
           <img src="/logo.svg" alt="Fallback" class="w-10 h-10 object-cover rounded-full" />
         {/if}
+
+        {#if showBookmarkBadge}
+          <span
+            class="absolute -top-1 -right-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-warning text-warning-content text-[10px] leading-none font-bold border border-base-100"
+            aria-label="Bookmarked"
+            title="Bookmarked"
+          >
+            ★
+          </span>
+        {/if}
+
+        {#if pictureOverlayUrl}
         <img
           src={pictureOverlayUrl}
           alt="Overlay"
-          class="indicator-item indicator-bottom h-5 w-5 rounded-full border border-base-100 translate-y-[8%] translate-x-[10%] bg-base-100"
+          class="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border border-base-100 bg-base-100"
         />
-      </div>
-    {:else}
-      {#if imgUrl && !imgError}
-        <img
-          src={imgUrl}
-          alt="User Icon"
-          class="w-10 h-10 object-cover rounded-full"
-          onerror={onImgError}
-        />
-      {:else}
-        <img src="/logo.svg" alt="Fallback" class="w-10 h-10 object-cover rounded-full" />
       {/if}
-    {/if}
+    </div>
   </button>
   <div class="flex flex-col items-start pl-4 gap-y-0.5 min-w-0">
     {#if topInfo}
