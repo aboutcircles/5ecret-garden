@@ -1,6 +1,6 @@
 <script lang="ts">
   import GenericList from '$lib/components/GenericList.svelte';
-  import { profileBookmarksStore } from '$lib/bookmarks/profileBookmarks';
+  import { isVipProfileBookmark, profileBookmarksStore } from '$lib/bookmarks/profileBookmarks';
   import { contacts } from '$lib/stores/contacts';
   import { circles } from '$lib/stores/circles';
   import { createPaginatedList } from '$lib/stores/paginatedList';
@@ -38,6 +38,7 @@
       hasProfile: false,
       isContact: false,
       isBookmarked: false,
+      isVipBookmarked: false,
       localRank: 0,
       remoteRank: 0,
     };
@@ -75,6 +76,7 @@
         hasProfile: existing.hasProfile || r.hasProfile,
         isContact: existing.isContact || r.isContact,
         isBookmarked: existing.isBookmarked || r.isBookmarked,
+        isVipBookmarked: existing.isVipBookmarked || r.isVipBookmarked,
         trustRelation: existing.trustRelation ?? r.trustRelation,
       };
       next.localRank = computeLocalRank(next);
@@ -118,6 +120,7 @@
       const existing = map.get(address) ?? makeBaseItem(address);
       if (!matchesQuery(address, existing.name, q)) continue;
       existing.isBookmarked = true;
+      existing.isVipBookmarked = isVipProfileBookmark(bookmark);
       existing.localRank = computeLocalRank(existing);
       existing.remoteRank = computeTextRank(existing, q);
       map.set(address, existing);

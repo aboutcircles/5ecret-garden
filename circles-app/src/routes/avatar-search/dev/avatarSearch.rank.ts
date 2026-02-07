@@ -18,12 +18,12 @@ export function computeTextRank(item: { address: string; name?: string }, query:
 
 export function computeLocalRank(flags: {
   isContact: boolean;
-  isBookmarked: boolean;
+  isVipBookmarked?: boolean;
   trustRelation?: TrustRelationLike;
 }): number {
   let rank = 0;
   if (flags.isContact) rank += 100;
-  if (flags.isBookmarked) rank += 100;
+  if (flags.isVipBookmarked) rank += 100;
 
   if (flags.trustRelation === 'mutuallyTrusts') rank += 25;
   else if (flags.trustRelation === 'trusts') rank += 20;

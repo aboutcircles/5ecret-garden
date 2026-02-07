@@ -11,6 +11,7 @@ export interface AvatarSearchItem extends EventRow {
   hasProfile: boolean;
   isContact: boolean;
   isBookmarked: boolean;
+  isVipBookmarked: boolean;
   trustRelation?: TrustRelationLike;
   localRank: number;
   remoteRank: number;
