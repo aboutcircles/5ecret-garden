@@ -43,6 +43,7 @@ export interface ProfileBookmarksService {
   ): ProfileBookmark | undefined;
   removeProfile(address: string): void;
   ensureProfileFolder(name: string): string | undefined;
+  removeProfileFolder(name: string): void;
 }
 
 const STORAGE_KEY = 'Circles.Bookmarks';
@@ -77,6 +78,13 @@ function normalizeFolderName(folder: string | null | undefined): string | undefi
 
 function folderKey(folder: string): string {
   return folder.toLowerCase();
+}
+
+function isFolderOrDescendant(folder: string | undefined, targetFolder: string): boolean {
+  if (!folder) return false;
+  const f = folderKey(folder);
+  const t = folderKey(targetFolder);
+  return f === t || f.startsWith(`${t}/`);
 }
 
 function normalizeProfileBookmark(input: unknown): ProfileBookmark | null {
@@ -416,6 +424,25 @@ function createProfileBookmarksService(repository: BookmarksRepository): Profile
       });
 
       return saved;
+    },
+    removeProfileFolder(name: string): void {
+      const normalized = normalizeFolderName(name);
+      if (!normalized) return;
+
+      updateCurrent((state) => {
+        const nextProfiles = state.profiles.map((profile) => {
+          if (!isFolderOrDescendant(profile.folder, normalized)) return profile;
+          return { ...profile, folder: undefined };
+        });
+
+        const nextFolders = state.folders.filter((folder) => !isFolderOrDescendant(folder, normalized));
+
+        return {
+          ...state,
+          profiles: nextProfiles,
+          folders: nextFolders,
+        };
+      });
     },
   };
 }
