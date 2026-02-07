@@ -5,6 +5,7 @@
   import HorizontalAvatarLayout from './HorizontalAvatarLayout.svelte';
   import VerticalAvatarLayout from './VerticalAvatarLayout.svelte';
   import { popupControls, type PopupContentDefinition } from '$lib/stores/popup';
+  import { profileBookmarksStore } from '$lib/bookmarks/profileBookmarks';
   import type { Address } from '@circles-sdk/utils';
   import type { AppProfileCore as Profile } from '$lib/profiles';
   import type { AvatarRow } from '@circles-sdk/data';
@@ -21,6 +22,7 @@
     clickable?: boolean;
     view: 'horizontal' | 'horizontal_reverse' | 'vertical' | 'small' | 'small_no_text' | 'small_reverse';
     pictureOverlayUrl?: string | undefined;
+    showBookmarkBadge?: boolean;
     topInfo?: string | undefined;
     bottomInfo?: string | undefined;
     showTypeInfo?: boolean;
@@ -35,6 +37,7 @@
     clickable = true,
     view,
     pictureOverlayUrl,
+    showBookmarkBadge = false,
     topInfo,
     bottomInfo,
     showTypeInfo = false,
@@ -132,6 +135,14 @@
     return normalizedType ?? bottomInfo;
   });
 
+  const isBookmarked = $derived.by(() => {
+    const addr = normalizedAddress?.toLowerCase();
+    if (!addr) return false;
+    return ($profileBookmarksStore ?? []).some((bookmark) => bookmark.address === addr);
+  });
+
+  const effectiveShowBookmarkBadge = $derived(showBookmarkBadge || isBookmarked);
+
   function openAvatar(e: MouseEvent) {
     if (!clickable) return;
 
@@ -214,6 +225,7 @@
     <div transition:fade title={tooltipText}>
         <HorizontalAvatarLayout
                 {pictureOverlayUrl}
+                showBookmarkBadge={effectiveShowBookmarkBadge}
                 onclick={openAvatar}
                 {profile}
                 {topInfo}
@@ -228,11 +240,22 @@
             aria-label={tooltipText}
             title={tooltipText}
         >
-            <img
-                src={profile?.previewImageUrl}
-                alt="User Icon"
-                class="w-6 h-6 object-cover rounded-full"
-            />
+            <span class="relative inline-flex">
+                <img
+                    src={profile?.previewImageUrl}
+                    alt="User Icon"
+                    class="w-6 h-6 object-cover rounded-full"
+                />
+                {#if effectiveShowBookmarkBadge}
+                    <span
+                        class="absolute -top-1 -right-1 inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-warning text-warning-content text-[9px] leading-none font-bold border border-base-100"
+                        aria-label="Bookmarked"
+                        title="Bookmarked"
+                    >
+                        ★
+                    </span>
+                {/if}
+            </span>
         </button>
         {#if view === 'small'}
             <span class="text-sm font-medium truncate max-w-[12rem] align-middle">{profile?.name}</span>
@@ -247,11 +270,22 @@
             aria-label={tooltipText}
             title={tooltipText}
         >
-            <img
-                src={profile?.previewImageUrl}
-                alt="User Icon"
-                class="w-6 h-6 object-cover rounded-full"
-            />
+            <span class="relative inline-flex">
+                <img
+                    src={profile?.previewImageUrl}
+                    alt="User Icon"
+                    class="w-6 h-6 object-cover rounded-full"
+                />
+                {#if effectiveShowBookmarkBadge}
+                    <span
+                        class="absolute -top-1 -right-1 inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-warning text-warning-content text-[9px] leading-none font-bold border border-base-100"
+                        aria-label="Bookmarked"
+                        title="Bookmarked"
+                    >
+                        ★
+                    </span>
+                {/if}
+            </span>
         </button>
     </div>
 {:else}
@@ -259,6 +293,7 @@
         <VerticalAvatarLayout
                 onclick={openAvatar}
                 {profile}
+                showBookmarkBadge={effectiveShowBookmarkBadge}
         />
     </div>
 {/if}
