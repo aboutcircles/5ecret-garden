@@ -50,6 +50,7 @@
     import { get } from 'svelte/store';
     import {gnosisConfig} from "$lib/circlesConfig";
     import TrustScoreBadge from '$lib/profile/TrustScoreBadge.svelte';
+    import TrustHistoryHeatmap from '$lib/components/TrustHistoryHeatmap.svelte';
     import Lucide from '$lib/icons/Lucide.svelte';
     import { Star as LStar } from 'lucide';
     import {
@@ -118,11 +119,21 @@
     async function loadOffers(): Promise<void> {
         if (!address) return;
         const seller = normalizeAddress(String(address));
+        if (!seller) {
+            offersError = 'Invalid address';
+            offers = [];
+            offersFor = null;
+            return;
+        }
         offersLoading = true;
         offersError = '';
         offers = [];
         try {
-            const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
+            const operator = gnosisConfig.production.marketOperator;
+            if (!operator) {
+                throw new Error('Market operator not configured');
+            }
+            const catalog = getMarketClient().catalog.forOperator(operator);
             const items = await catalog.fetchSellerCatalog(seller);
             // Defensive filter (API already filters by seller)
             offers = items.filter((p) => (p.seller ?? '').toLowerCase() === seller.toLowerCase());
@@ -208,13 +219,13 @@
     });
 
     async function initialize(address: Address) {
-        const hasCircles: boolean = !!$circles;
-        if (!hasCircles) {
+        const sdk = $circles;
+        if (!sdk) {
             return;
         }
 
         const [other, prof] = await Promise.all([
-            $circles.data.getAvatarInfo(address),
+            sdk.data.getAvatarInfo(address),
             getProfile(address),
         ]);
         otherAvatar = other;
@@ -245,7 +256,7 @@
 
         const loadMintHandler = async () => {
             try {
-                const findMintHandlerQuery = new CirclesQuery<any>($circles.circlesRpc, {
+                const findMintHandlerQuery = new CirclesQuery<any>(sdk.circlesRpc, {
                     namespace: 'V_CrcV2',
                     table: 'Groups',
                     columns: ['mintHandler'],
@@ -271,8 +282,8 @@
             collateralError = null;
             try {
                 const [vaultRes, treasuryRes] = await Promise.allSettled([
-                    getVaultAddress($circles.circlesRpc, otherAvatar!.avatar),
-                    getTreasuryAddress($circles.circlesRpc, otherAvatar!.avatar),
+                    getVaultAddress(sdk.circlesRpc, otherAvatar!.avatar),
+                    getTreasuryAddress(sdk.circlesRpc, otherAvatar!.avatar),
                 ]);
                 const vaultAddress = vaultRes.status === 'fulfilled' ? vaultRes.value : null;
                 const treasuryAddress = treasuryRes.status === 'fulfilled' ? treasuryRes.value : null;
@@ -282,7 +293,7 @@
                     collateralInTreasury = [];
                     return;
                 }
-                const balancesResult = await getGroupCollateral($circles.circlesRpc, balanceOwner);
+                const balancesResult = await getGroupCollateral(sdk.circlesRpc, balanceOwner);
                 collateralInTreasury = toTokenRows(balancesResult, 'tokenId');
             } catch (e: any) {
                 collateralError = e?.message ?? 'Failed to load collateral';
@@ -296,7 +307,7 @@
             holdingsLoading = true;
             holdingsError = null;
             try {
-                const holdingsResult = await getAccountHoldings($circles.circlesRpc, address);
+                const holdingsResult = await getAccountHoldings(sdk.circlesRpc, address);
                 holdings = toTokenRows(holdingsResult, 'tokenId');
             } catch (e: any) {
                 holdingsError = e?.message ?? 'Failed to load holdings';
@@ -310,7 +321,7 @@
             holdersLoading = true;
             holdersError = null;
             try {
-                const tokenHoldersResult = await getGroupTokenHolders($circles.circlesRpc, address);
+                const tokenHoldersResult = await getGroupTokenHolders(sdk.circlesRpc, address);
                 tokenHolders = toTokenRows(tokenHoldersResult, 'account');
             } catch (e: any) {
                 holdersError = e?.message ?? 'Failed to load holders';
@@ -339,6 +350,7 @@
         'common_connections',
         'trusts',
         'trusted_by',
+        'trust_history',
         'collateral',
         'holders',
         'holdings',
@@ -353,6 +365,7 @@
     let commonConnectionsCount = $state(0);
     let trustsCount = $state(0);
     let trustedByCount = $state(0);
+    let trustHistoryEventCount = $state(0);
     let bookmarkedProfiles: ProfileBookmark[] = $state([]);
     let showBookmarkEditor: boolean = $state(false);
     let bookmarkNoteInput: string = $state('');
@@ -453,7 +466,7 @@
     });
 
     const availableTabIds = $derived((() => {
-        const ids: TabId[] = ['common_connections', 'trusts', 'trusted_by'];
+        const ids: TabId[] = ['common_connections', 'trusts', 'trusted_by', 'trust_history'];
         if (otherAvatar?.type === 'CrcV2_RegisterGroup') ids.push('collateral');
         if (otherAvatar?.type === 'CrcV2_RegisterGroup' || otherAvatar?.type === 'CrcV2_RegisterHuman') {
             ids.push('holders');
@@ -464,7 +477,7 @@
         return ids;
     })());
 
-    const tabOrder = $derived(() => {
+    const tabOrder = $derived.by(() => {
         const ids = [...availableTabIds];
         const namespacesIndex = ids.indexOf('explore_namespaces');
         if (namespacesIndex > -1) {
@@ -751,6 +764,22 @@
                     avatarAddress={otherAvatar?.avatar}
                     relation="trustedBy"
                     bind:count={trustedByCount}
+            />
+        </div>
+    </Tab>
+
+    <Tab
+            id="trust_history"
+            title="Trust history"
+            badge={trustHistoryEventCount}
+            panelClass={tabPanelClass}
+    >
+        <div class="w-full">
+            <TrustHistoryHeatmap
+                    address={address}
+                    granularity="week"
+                    showGranularitySwitch={true}
+                    bind:eventCount={trustHistoryEventCount}
             />
         </div>
     </Tab>
