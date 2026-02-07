@@ -53,6 +53,7 @@
     import Lucide from '$lib/icons/Lucide.svelte';
     import { Star as LStar } from 'lucide';
     import {
+        bookmarksStateStore,
         profileBookmarksService,
         profileBookmarksStore,
         type ProfileBookmark,
@@ -355,6 +356,9 @@
     let bookmarkedProfiles: ProfileBookmark[] = $state([]);
     let showBookmarkEditor: boolean = $state(false);
     let bookmarkNoteInput: string = $state('');
+    let bookmarkFolders: string[] = $state([]);
+    let bookmarkFolderSelection: string = $state('');
+    let newBookmarkFolderInput: string = $state('');
     let bookmarkButtonEl: HTMLButtonElement | null = $state(null);
     let bookmarkPopoverEl: HTMLDivElement | null = $state(null);
 
@@ -378,15 +382,40 @@
         return () => unsubscribe();
     });
 
+    $effect(() => {
+        const unsubscribe = bookmarksStateStore.subscribe((value) => {
+            bookmarkFolders = value.folders;
+        });
+        return () => unsubscribe();
+    });
+
+    function resolveBookmarkFolderInput(): string | undefined {
+        const fromNewInput = profileBookmarksService.ensureProfileFolder(newBookmarkFolderInput);
+        if (fromNewInput) {
+            bookmarkFolderSelection = fromNewInput;
+            newBookmarkFolderInput = '';
+            return fromNewInput;
+        }
+
+        const selected = bookmarkFolderSelection.trim();
+        return selected.length > 0 ? selected : undefined;
+    }
+
     function openBookmarkEditor(): void {
         if (!address) return;
+        const currentFolder = currentBookmark?.folder ?? '';
         bookmarkNoteInput = currentBookmark?.note ?? '';
+        bookmarkFolderSelection = currentFolder;
+        newBookmarkFolderInput = '';
         showBookmarkEditor = !showBookmarkEditor;
     }
 
     function saveBookmarkWithCurrentNote(): void {
         if (!address) return;
-        profileBookmarksService.upsertProfile(String(address), bookmarkNoteInput);
+        profileBookmarksService.upsertProfile(String(address), {
+            note: bookmarkNoteInput,
+            folder: resolveBookmarkFolderInput(),
+        });
         showBookmarkEditor = false;
     }
 
@@ -494,6 +523,29 @@
                             bind:this={bookmarkPopoverEl}
                     >
                         <div class="text-xs font-semibold">Profile bookmark</div>
+                        <div class="space-y-1">
+                            <div class="text-[11px] opacity-70">Folder</div>
+                            {#if bookmarkFolders.length > 0}
+                                <select
+                                        class="select select-bordered select-sm w-full"
+                                        bind:value={bookmarkFolderSelection}
+                                >
+                                    <option value="">No folder</option>
+                                    {#each bookmarkFolders as folder (folder)}
+                                        <option value={folder}>{folder}</option>
+                                    {/each}
+                                </select>
+                            {:else}
+                                <div class="text-xs opacity-60">No folders yet. Create one below.</div>
+                            {/if}
+                            <input
+                                    class="input input-bordered input-sm w-full"
+                                    type="text"
+                                    maxlength="64"
+                                    placeholder="Create folder (e.g. Friends)"
+                                    bind:value={newBookmarkFolderInput}
+                            />
+                        </div>
                         <textarea
                                 class="textarea textarea-bordered textarea-sm w-full"
                                 rows={3}
