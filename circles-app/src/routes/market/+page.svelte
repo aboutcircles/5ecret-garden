@@ -1,14 +1,13 @@
 <script lang="ts">
     import {onMount} from 'svelte';
     import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
-    import {popupControls} from '$lib/stores/popup';
-    import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
     import ProductCard from '$lib/components/ProductCard.svelte';
     import { getMarketClient } from '$lib/sdk/marketClient';
     import type { AggregatedCatalogItem } from '$lib/market/types';
     import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/types/actions';
+    import { goto } from '$app/navigation';
     import { avatarState } from '$lib/stores/avatar.svelte';
     import Tabs from '$lib/components/tabs/Tabs.svelte';
     import Tab from '$lib/components/tabs/Tab.svelte';
@@ -217,20 +216,10 @@
       };
     });
 
-    // Basket button moved to global header; inline basket trigger removed here
-
-    function openCreateOffer() {
-      const op = (selectedOperator ?? (gnosisConfig.production.marketOperator as `0x${string}`)) as `0x${string}`;
-      popupControls.open({
-        title: 'Create Offer',
-        component: OfferStep1,
-        props: { context: { operator: op, pinApiBase: API_BASE } },
-        onClose: () => { void loadFirstPage(); }
-      });
-    }
-
     const actions: Action[] = [
-      { id: 'create-offer', label: 'Create offer', variant: 'primary', onClick: openCreateOffer }
+      { id: 'settings-offers', label: 'Manage offers', variant: 'primary', onClick: () => goto('/settings?tab=marketplace') },
+      { id: 'settings-orders', label: 'Orders', variant: 'ghost', onClick: () => goto('/settings?tab=orders') },
+      { id: 'settings-sales', label: 'Sales', variant: 'ghost', onClick: () => goto('/settings?tab=sales') }
     ];
 
 </script>
