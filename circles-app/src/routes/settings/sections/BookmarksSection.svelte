@@ -2,11 +2,14 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import Lucide from '$lib/icons/Lucide.svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
+  import { popupControls } from '$lib/stores/popup';
+  import RowFrame from '$lib/ui/RowFrame.svelte';
   import {
     ChevronDown as LChevronDown,
     ChevronRight as LChevronRight,
     Folder as LFolder,
     GripVertical as LGripVertical,
+    Trash2 as LTrash2,
   } from 'lucide';
   import {
     bookmarksStateStore,
@@ -14,6 +17,7 @@
     profileBookmarksStore,
     type ProfileBookmark,
   } from '$lib/bookmarks/profileBookmarks';
+  import BookmarkDetailsPopup from './BookmarkDetailsPopup.svelte';
 
   type FolderNode = {
     name: string;
@@ -34,7 +38,6 @@
   let folders: string[] = $state([]);
   let newFolderName: string = $state('');
   let expandedFolders: Record<string, boolean> = $state({});
-  let expandedByAddress: Record<string, boolean> = $state({});
   let draggingAddress: string | null = $state(null);
   let dragOverFolder: string | null = $state(null);
 
@@ -42,9 +45,7 @@
     (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '').toLowerCase(),
   );
 
-  const sortedBookmarks = $derived.by(() => {
-    return [...bookmarkedProfiles].sort((a, b) => b.createdAt - a.createdAt);
-  });
+  const sortedBookmarks = $derived.by(() => [...bookmarkedProfiles].sort((a, b) => b.createdAt - a.createdAt));
 
   function splitFolderPath(path: string): string[] {
     return path
@@ -71,13 +72,7 @@
   function ensureFolderNode(nodes: Map<string, FolderNode>, path: string): FolderNode {
     const existing = nodes.get(path);
     if (existing) return existing;
-
-    const node: FolderNode = {
-      path,
-      name: folderName(path),
-      children: [],
-      bookmarks: [],
-    };
+    const node: FolderNode = { path, name: folderName(path), children: [], bookmarks: [] };
     nodes.set(path, node);
     return node;
   }
@@ -88,7 +83,6 @@
     for (const folder of folders) {
       const normalized = splitFolderPath(folder).join('/');
       if (!normalized) continue;
-
       const parts = splitFolderPath(normalized);
       let acc = '';
       for (const part of parts) {
@@ -97,9 +91,7 @@
         const parent = parentPath(acc);
         if (parent) {
           const parentNode = ensureFolderNode(nodeMap, parent);
-          if (!parentNode.children.some((v) => v.path === node.path)) {
-            parentNode.children.push(node);
-          }
+          if (!parentNode.children.some((v) => v.path === node.path)) parentNode.children.push(node);
         }
       }
     }
@@ -109,26 +101,17 @@
       if (!folder) continue;
       const node = ensureFolderNode(nodeMap, folder);
       node.bookmarks.push(bookmark);
-
-      const parent = parentPath(folder);
-      if (parent) {
-        const parentNode = ensureFolderNode(nodeMap, parent);
-        if (!parentNode.children.some((v) => v.path === node.path)) {
-          parentNode.children.push(node);
-        }
-      }
     }
 
-    const allNodes = Array.from(nodeMap.values());
-    allNodes.sort((a, b) => a.name.localeCompare(b.name));
-    for (const node of allNodes) {
+    for (const node of nodeMap.values()) {
       node.children.sort((a, b) => a.name.localeCompare(b.name));
       node.bookmarks.sort((a, b) => b.createdAt - a.createdAt);
     }
 
-    const roots = allNodes.filter((v) => parentPath(v.path) === '');
-    const rows: VisibleFolderRow[] = [];
+    const roots = Array.from(nodeMap.values()).filter((v) => parentPath(v.path) === '');
+    roots.sort((a, b) => a.name.localeCompare(b.name));
 
+    const rows: VisibleFolderRow[] = [];
     const walk = (node: FolderNode) => {
       rows.push({
         path: node.path,
@@ -137,17 +120,10 @@
         childCount: node.children.length,
         bookmarkCount: node.bookmarks.length,
       });
-
       if (!isFolderExpanded(node.path)) return;
-      for (const child of node.children) {
-        walk(child);
-      }
+      for (const child of node.children) walk(child);
     };
-
-    for (const root of roots) {
-      walk(root);
-    }
-
+    for (const root of roots) walk(root);
     return rows;
   });
 
@@ -169,17 +145,12 @@
   }
 
   function isFolderExpanded(path: string): boolean {
-    if (Object.prototype.hasOwnProperty.call(expandedFolders, path)) {
-      return !!expandedFolders[path];
-    }
+    if (Object.prototype.hasOwnProperty.call(expandedFolders, path)) return !!expandedFolders[path];
     return folderDepth(path) < 1;
   }
 
   function toggleFolder(path: string): void {
-    expandedFolders = {
-      ...expandedFolders,
-      [path]: !isFolderExpanded(path),
-    };
+    expandedFolders = { ...expandedFolders, [path]: !isFolderExpanded(path) };
   }
 
   function expandFolderPath(path: string): void {
@@ -215,21 +186,6 @@
     return () => unsubscribe();
   });
 
-  function removeProfile(bookmark: ProfileBookmark): void {
-    profileBookmarksService.removeProfile(bookmark.address);
-  }
-
-  function clearNote(bookmark: ProfileBookmark): void {
-    profileBookmarksService.upsertProfile(bookmark.address, { note: undefined });
-  }
-
-  function assignFolder(bookmark: ProfileBookmark, folder: string | undefined): void {
-    profileBookmarksService.upsertProfile(bookmark.address, {
-      folder: folder ?? null,
-    });
-    if (folder) expandFolderPath(folder);
-  }
-
   function createFolder(): void {
     const saved = profileBookmarksService.ensureProfileFolder(newFolderName);
     if (!saved) return;
@@ -237,11 +193,13 @@
     newFolderName = '';
   }
 
-  function toggleExpanded(address: string): void {
-    expandedByAddress = {
-      ...expandedByAddress,
-      [address]: !expandedByAddress[address],
-    };
+  function removeFolder(path: string): void {
+    if (!path) return;
+    const ok = window.confirm(
+      `Delete folder "${path}"? Bookmarks inside will be moved to “Unsorted”. This cannot be undone.`,
+    );
+    if (!ok) return;
+    profileBookmarksService.removeProfileFolder(path);
   }
 
   function setBookmarkFolderByAddress(address: string, folder: string | undefined): void {
@@ -270,9 +228,7 @@
   }
 
   function onFolderDragLeave(folder: string): void {
-    if (dragOverFolder === folder) {
-      dragOverFolder = null;
-    }
+    if (dragOverFolder === folder) dragOverFolder = null;
   }
 
   function onFolderDrop(event: DragEvent, folder: string | undefined): void {
@@ -288,9 +244,14 @@
     draggingAddress = null;
   }
 
-  function folderFromChangeEvent(event: Event): string | undefined {
-    const value = (event.currentTarget as HTMLSelectElement | null)?.value ?? '__none__';
-    return value === '__none__' ? undefined : value;
+  function openBookmarkDetails(bookmark: ProfileBookmark): void {
+    popupControls.open({
+      title: 'Bookmark details',
+      component: BookmarkDetailsPopup,
+      props: {
+        bookmark,
+      },
+    });
   }
 </script>
 
@@ -319,16 +280,13 @@
     </div>
   </div>
 
-  <p class="text-[11px] text-base-content/60 mb-2">
-    On mobile, use item details to move bookmarks if drag is not available in your browser.
-  </p>
+  <div class="space-y-2">
+    {#if sortedBookmarks.length === 0 && folders.length === 0}
+      <div class="text-sm opacity-70 mb-2">
+        No profile bookmarks yet. Open a profile popup and tap the star to save it.
+      </div>
+    {/if}
 
-  {#if sortedBookmarks.length === 0}
-    <div class="text-sm opacity-70">
-      No profile bookmarks yet. Open a profile popup and tap the star to save it.
-    </div>
-  {:else}
-    <div class="space-y-2">
       <div
         class={`rounded-lg border border-base-200 ${dragOverFolder === '__none__' ? 'bg-base-200/30' : ''}`}
         ondragover={(event) => onFolderDragOver(event, '__none__')}
@@ -336,87 +294,43 @@
         ondrop={(event) => onFolderDrop(event, undefined)}
       >
         <div class="px-2 py-2 flex items-center justify-between text-xs font-semibold">
-          <span class="inline-flex items-center gap-1.5">
-            <Lucide icon={LFolder} size={14} />
-            Unsorted
-          </span>
+          <span class="inline-flex items-center gap-1.5"><Lucide icon={LFolder} size={14} />Unsorted</span>
           <span class="opacity-60">{uncategorizedBookmarks.length}</span>
         </div>
 
         {#if uncategorizedBookmarks.length > 0}
           <div class="divide-y divide-base-200">
             {#each uncategorizedBookmarks as bookmark (bookmark.address)}
-              <div class="py-2 px-2">
-                <div class="w-full flex items-start gap-2">
-                  <button
-                    class="btn btn-ghost btn-xs btn-square mt-0.5 cursor-grab"
-                    type="button"
-                    title="Drag bookmark"
-                    draggable="true"
-                    ondragstart={(event) => onDragStart(event, bookmark)}
-                    ondragend={onDragEnd}
-                  >
-                    <Lucide icon={LGripVertical} size={14} />
-                  </button>
-                  <button
-                    class="flex-1 text-left flex items-start justify-between gap-3 hover:bg-base-200/30 rounded-lg px-1.5 py-1.5"
-                    type="button"
-                    onclick={() => toggleExpanded(bookmark.address)}
-                  >
-                    <div class="min-w-0 flex-1 flex items-center gap-2">
-                      <Avatar address={bookmark.address} view="small" />
-                      <div class="min-w-0">
-                        <div class="text-sm truncate">{bookmark.address}</div>
-                        <div class="text-xs text-base-content/60 truncate">
-                          Bookmarked {formatCreatedAt(bookmark.createdAt)}
-                        </div>
-                      </div>
-                    </div>
-                    <span class="text-base-content/50 text-xs pt-1">{expandedByAddress[bookmark.address] ? 'Hide' : 'Details'}</span>
-                  </button>
-                </div>
+              <div class="py-1.5 px-2 flex items-stretch gap-2">
+                <button
+                  class="btn btn-ghost btn-xs btn-square mt-1 cursor-grab"
+                  type="button"
+                  title="Drag bookmark"
+                  draggable="true"
+                  ondragstart={(event) => onDragStart(event, bookmark)}
+                  ondragend={onDragEnd}
+                >
+                  <Lucide icon={LGripVertical} size={14} />
+                </button>
 
-                {#if expandedByAddress[bookmark.address]}
-                  <div class="mt-2 ml-10 mr-2 rounded-lg border border-base-200 bg-base-200/30 p-2 text-xs space-y-2">
-                    <div>
-                      <div class="opacity-60">Address</div>
-                      <div class="font-mono break-all">{bookmark.address}</div>
-                    </div>
-                    <div>
-                      <div class="opacity-60">Bookmarked</div>
-                      <div>{formatCreatedAt(bookmark.createdAt)}</div>
-                    </div>
-                    <div>
-                      <div class="opacity-60">Move to folder</div>
-                      <select
-                        class="select select-bordered select-xs mt-1"
-                        value={bookmark.folder ?? '__none__'}
-                        onchange={(event) => assignFolder(bookmark, folderFromChangeEvent(event))}
-                      >
-                        <option value="__none__">No folder</option>
-                        {#each folders as folder (folder)}
-                          <option value={folder}>{folder}</option>
-                        {/each}
-                      </select>
-                    </div>
-                    {#if bookmark.note}
-                      <div>
-                        <div class="opacity-60">Note</div>
-                        <div class="whitespace-pre-wrap">{bookmark.note}</div>
+                <div class="flex-1 min-w-0">
+                  <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => openBookmarkDetails(bookmark)}>
+                    <div class="min-w-0">
+                      <div onclick={(event) => event.stopPropagation()}>
+                        <Avatar
+                          address={bookmark.address}
+                          view="horizontal"
+                          bottomInfo={`Bookmarked ${formatCreatedAt(bookmark.createdAt)}`}
+                          showTypeInfo={true}
+                          clickable={true}
+                        />
                       </div>
-                    {/if}
-                    <div class="flex items-center justify-end gap-2 pt-1">
-                      {#if bookmark.note}
-                        <button class="btn btn-ghost btn-xs" type="button" onclick={() => clearNote(bookmark)}>
-                          Clear note
-                        </button>
-                      {/if}
-                      <button class="btn btn-ghost btn-xs" type="button" onclick={() => removeProfile(bookmark)}>
-                        Remove
-                      </button>
                     </div>
-                  </div>
-                {/if}
+                    {#snippet trailing()}
+                      <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" aria-hidden="true" />
+                    {/snippet}
+                  </RowFrame>
+                </div>
               </div>
             {/each}
           </div>
@@ -430,101 +344,70 @@
           ondragleave={() => onFolderDragLeave(folderRow.path)}
           ondrop={(event) => onFolderDrop(event, folderRow.path)}
         >
-          <button
-            class="w-full px-2 py-2 text-left flex items-center justify-between gap-2 hover:bg-base-200/30"
-            type="button"
-            onclick={() => toggleFolder(folderRow.path)}
-          >
-            <span class="inline-flex items-center gap-1.5 min-w-0" style={`padding-left: ${folderRow.depth * 0.9}rem`}>
-              <Lucide icon={isFolderExpanded(folderRow.path) ? LChevronDown : LChevronRight} size={14} />
-              <Lucide icon={LFolder} size={14} />
-              <span class="text-sm truncate">{folderRow.name}</span>
-            </span>
-            <span class="text-xs text-base-content/60">
-              {folderRow.bookmarkCount}{#if folderRow.childCount > 0} • {folderRow.childCount} subfolders{/if}
-            </span>
-          </button>
+          <div class="w-full px-2 py-2 flex items-center gap-1">
+            <button
+              class="flex-1 min-w-0 text-left flex items-center justify-between gap-2 hover:bg-base-200/30 rounded"
+              type="button"
+              onclick={() => toggleFolder(folderRow.path)}
+            >
+              <span class="inline-flex items-center gap-1.5 min-w-0" style={`padding-left: ${folderRow.depth * 0.9}rem`}>
+                <Lucide icon={isFolderExpanded(folderRow.path) ? LChevronDown : LChevronRight} size={14} />
+                <Lucide icon={LFolder} size={14} />
+                <span class="text-sm truncate">{folderRow.name}</span>
+              </span>
+              <span class="text-xs text-base-content/60">
+                {folderRow.bookmarkCount}{#if folderRow.childCount > 0} • {folderRow.childCount} subfolders{/if}
+              </span>
+            </button>
+
+            <button
+              class="btn btn-ghost btn-xs btn-square"
+              type="button"
+              title="Delete folder"
+              onclick={() => removeFolder(folderRow.path)}
+            >
+              <Lucide icon={LTrash2} size={13} />
+            </button>
+          </div>
 
           {#if isFolderExpanded(folderRow.path) && bookmarksForFolder(folderRow.path).length > 0}
             <div class="divide-y divide-base-200">
               {#each bookmarksForFolder(folderRow.path) as bookmark (bookmark.address)}
-                <div class="py-2 px-2">
-                  <div class="w-full flex items-start gap-2">
-                    <button
-                      class="btn btn-ghost btn-xs btn-square mt-0.5 cursor-grab"
-                      type="button"
-                      title="Drag bookmark"
-                      draggable="true"
-                      ondragstart={(event) => onDragStart(event, bookmark)}
-                      ondragend={onDragEnd}
-                    >
-                      <Lucide icon={LGripVertical} size={14} />
-                    </button>
-                    <button
-                      class="flex-1 text-left flex items-start justify-between gap-3 hover:bg-base-200/30 rounded-lg px-1.5 py-1.5"
-                      type="button"
-                      onclick={() => toggleExpanded(bookmark.address)}
-                    >
-                      <div class="min-w-0 flex-1 flex items-center gap-2">
-                        <Avatar address={bookmark.address} view="small" />
-                        <div class="min-w-0">
-                          <div class="text-sm truncate">{bookmark.address}</div>
-                          <div class="text-xs text-base-content/60 truncate">
-                            Bookmarked {formatCreatedAt(bookmark.createdAt)}
-                          </div>
-                        </div>
-                      </div>
-                      <span class="text-base-content/50 text-xs pt-1">{expandedByAddress[bookmark.address] ? 'Hide' : 'Details'}</span>
-                    </button>
-                  </div>
+                <div class="py-1.5 px-2 flex items-stretch gap-2">
+                  <button
+                    class="btn btn-ghost btn-xs btn-square mt-1 cursor-grab"
+                    type="button"
+                    title="Drag bookmark"
+                    draggable="true"
+                    ondragstart={(event) => onDragStart(event, bookmark)}
+                    ondragend={onDragEnd}
+                  >
+                    <Lucide icon={LGripVertical} size={14} />
+                  </button>
 
-                  {#if expandedByAddress[bookmark.address]}
-                    <div class="mt-2 ml-10 mr-2 rounded-lg border border-base-200 bg-base-200/30 p-2 text-xs space-y-2">
-                      <div>
-                        <div class="opacity-60">Address</div>
-                        <div class="font-mono break-all">{bookmark.address}</div>
-                      </div>
-                      <div>
-                        <div class="opacity-60">Bookmarked</div>
-                        <div>{formatCreatedAt(bookmark.createdAt)}</div>
-                      </div>
-                      <div>
-                        <div class="opacity-60">Move to folder</div>
-                        <select
-                          class="select select-bordered select-xs mt-1"
-                          value={bookmark.folder ?? '__none__'}
-                          onchange={(event) => assignFolder(bookmark, folderFromChangeEvent(event))}
-                        >
-                          <option value="__none__">No folder</option>
-                          {#each folders as folder (folder)}
-                            <option value={folder}>{folder}</option>
-                          {/each}
-                        </select>
-                      </div>
-                      {#if bookmark.note}
-                        <div>
-                          <div class="opacity-60">Note</div>
-                          <div class="whitespace-pre-wrap">{bookmark.note}</div>
+                  <div class="flex-1 min-w-0">
+                    <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => openBookmarkDetails(bookmark)}>
+                      <div class="min-w-0">
+                        <div onclick={(event) => event.stopPropagation()}>
+                          <Avatar
+                            address={bookmark.address}
+                            view="horizontal"
+                            bottomInfo={`Bookmarked ${formatCreatedAt(bookmark.createdAt)}`}
+                            showTypeInfo={true}
+                            clickable={true}
+                          />
                         </div>
-                      {/if}
-                      <div class="flex items-center justify-end gap-2 pt-1">
-                        {#if bookmark.note}
-                          <button class="btn btn-ghost btn-xs" type="button" onclick={() => clearNote(bookmark)}>
-                            Clear note
-                          </button>
-                        {/if}
-                        <button class="btn btn-ghost btn-xs" type="button" onclick={() => removeProfile(bookmark)}>
-                          Remove
-                        </button>
                       </div>
-                    </div>
-                  {/if}
+                      {#snippet trailing()}
+                        <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" aria-hidden="true" />
+                      {/snippet}
+                    </RowFrame>
+                  </div>
                 </div>
               {/each}
             </div>
           {/if}
         </div>
       {/each}
-    </div>
-  {/if}
+  </div>
 </section>
