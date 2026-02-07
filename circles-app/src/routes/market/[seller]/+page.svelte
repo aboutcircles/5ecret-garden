@@ -86,7 +86,7 @@
     }
 
     const actions: Action[] = [
-      { id: 'create-offer', label: 'Create Listing', variant: 'primary', onClick: openCreateListing }
+      // { id: 'create-offer', label: 'Create Listing', variant: 'primary', onClick: openCreateListing }
     ];
 
 </script>
