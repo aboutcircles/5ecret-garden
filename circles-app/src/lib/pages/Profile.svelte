@@ -49,6 +49,7 @@
     import { createCirclesSdkProfilesBindings } from '@circles-profile/core';
     import { get } from 'svelte/store';
     import {gnosisConfig} from "$lib/circlesConfig";
+    import TrustScoreBadge from '$lib/profile/TrustScoreBadge.svelte';
 
     interface Props {
         address: Address | undefined;
@@ -373,6 +374,7 @@
             selectedTab = availableTabIds[0] ?? 'common_connections';
         }
     });
+
 </script>
 
 <div class="flex flex-col items-center w-full sm:w-[90%] lg:w-3/5 mx-auto">
@@ -388,6 +390,8 @@
     {:else}
         <span class="text-sm text-gray-500">No relation available</span>
     {/if}
+
+    <TrustScoreBadge {address} />
 
     <div class="my-6 flex flex-row gap-x-2">
         <span class="bg-base-200 rounded-lg px-2 py-1 text-sm">
