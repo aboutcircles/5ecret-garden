@@ -6,7 +6,7 @@
     import {circles} from '$lib/shared/state/circles';
     import {get} from 'svelte/store';
     import {onMount} from "svelte";
-    import RowFrame from '$lib/ui/RowFrame.svelte';
+    import RowFrame from '$lib/shared/ui/RowFrame.svelte';
 
     interface Props {
         selectedAddress?: any;

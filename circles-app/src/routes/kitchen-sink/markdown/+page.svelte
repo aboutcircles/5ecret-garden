@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Markdown from '$lib/components/markdown/Markdown.svelte';
-  import MarkdownEditor from '$lib/components/markdown/MarkdownEditor.svelte';
+  import Markdown from '$lib/shared/ui/content/markdown/Markdown.svelte';
+  import MarkdownEditor from '$lib/shared/ui/content/markdown/MarkdownEditor.svelte';
 
   let markdownValue = $state('## Kitchen sink markdown\n\n- Item A\n- Item B\n\n[Open Circles](https://aboutcircles.com)');
   const markdownPreview = '# Rendered markdown\n\nThis is **bold**, *italic*, and [safe jump link](https://aboutcircles.com).';

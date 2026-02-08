@@ -4,7 +4,7 @@
     import ProfileHeaderEditor from '$lib/domains/profile/ui/ProfileHeaderEditor.svelte';
     import { isValidName, isValidSymbol, isValidOnChainName } from '$lib/utils/isValid';
     import { popupControls } from '$lib/shared/state/popup';
-    import { wallet } from '$lib/stores/wallet.svelte';
+    import { wallet } from '$lib/shared/state/wallet.svelte';
     import Settings from './2_Settings.svelte';
     import {
         createGroupContext,

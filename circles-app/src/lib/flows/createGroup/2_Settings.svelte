@@ -4,7 +4,7 @@
     import { ethers } from 'ethers';
     import { popupControls } from '$lib/shared/state/popup';
     import Review from './3_Review.svelte';
-    import { wallet } from '$lib/stores/wallet.svelte';
+    import { wallet } from '$lib/shared/state/wallet.svelte';
     import {
         createGroupContext,
         type CreateGroupFlowContext

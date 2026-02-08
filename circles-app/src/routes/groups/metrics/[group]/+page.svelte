@@ -2,7 +2,7 @@
   import {
     fetchGroupMetrics,
     type GroupMetrics,
-  } from '$lib/stores/groupMetrics.svelte';
+  } from '$lib/domains/groups/state/groupMetrics.svelte';
   import { goto } from '$app/navigation';
   import ModernHistoryChart from '$lib/components/ModernHistoryChart.svelte';
   import ModernPieChart from '$lib/components/ModernPieChart.svelte';

@@ -4,7 +4,7 @@
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import {runTask} from '$lib/utils/tasks';
   import {roundToDecimals, shortenAddress} from '$lib/utils/shared';
-  import {avatarState} from '$lib/stores/avatar.svelte';
+  import {avatarState} from '$lib/shared/state/avatar.svelte';
   import {tokenTypeToString, TransitiveTransferTokenAddress} from '$lib/pages/SelectAsset.svelte';
   import {popupControls} from '$lib/shared/state/popup';
   import {MAX_PATH_STEPS} from "$lib/circlesConfig";

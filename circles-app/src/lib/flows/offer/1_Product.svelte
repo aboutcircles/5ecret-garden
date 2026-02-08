@@ -1,6 +1,6 @@
 <script lang="ts">
   import {popupControls} from '$lib/shared/state/popup';
-  import MarkdownEditor from '$lib/components/markdown/MarkdownEditor.svelte';
+  import MarkdownEditor from '$lib/shared/ui/content/markdown/MarkdownEditor.svelte';
   import OfferStep2 from './2_Pricing.svelte';
   import type {OfferDraft, OfferFlowContext} from './types';
   import ImageUpload from '$lib/components/ImageUpload.svelte';
@@ -8,7 +8,7 @@
   import {generateSku, isValidSku} from '$lib/utils/offer';
   import {get} from 'svelte/store';
   import {circles} from '$lib/shared/state/circles';
-  import {wallet} from '$lib/stores/wallet.svelte';
+  import {wallet} from '$lib/shared/state/wallet.svelte';
   import {onMount} from 'svelte';
   import {goto} from '$app/navigation';
 

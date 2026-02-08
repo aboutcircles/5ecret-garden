@@ -5,7 +5,7 @@
     import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
     import {onMount, tick, untrack} from 'svelte';
     import { circles } from '$lib/shared/state/circles';
-    import { avatarState } from '$lib/stores/avatar.svelte';
+    import { avatarState } from '$lib/shared/state/avatar.svelte';
     import { TransitiveTransferTokenAddress } from '$lib/pages/SelectAsset.svelte';
     import type { TokenBalanceRow } from '@circles-sdk/data';
     import { writable } from 'svelte/store';

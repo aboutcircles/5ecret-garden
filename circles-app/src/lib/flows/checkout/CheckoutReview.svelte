@@ -4,7 +4,7 @@
     import { cartState, checkoutCart } from '$lib/cart/store';
     import { popupControls } from '$lib/shared/state/popup';
     import CheckoutPayment from './CheckoutPayment.svelte';
-    import { getMarketClient } from '$lib/sdk/marketClient';
+    import { getMarketClient } from '$lib/integrations/market/marketClient';
     import type { AggregatedCatalogItem } from '$lib/domains/market/model/types';
     import { pickFirstProductImageUrl } from '$lib/domains/market/services/imageHelpers';
     import Avatar from '$lib/components/avatar/Avatar.svelte';

@@ -3,7 +3,7 @@
     import ProfilePopup from '$lib/domains/profile/ui/pages/ProfilePopup.svelte';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
     import { popupControls } from '$lib/shared/state/popup';
-    import RowFrame from '$lib/ui/RowFrame.svelte';
+    import RowFrame from '$lib/shared/ui/RowFrame.svelte';
 
     interface Props { item: GroupRow; }
     let { item }: Props = $props();

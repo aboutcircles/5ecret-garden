@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { avatarState } from '$lib/stores/avatar.svelte';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
   import Lucide from '$lib/icons/Lucide.svelte';
   import { Check as LCheck } from 'lucide';
 

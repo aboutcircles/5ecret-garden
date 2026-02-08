@@ -6,9 +6,9 @@
   import { browser } from '$app/environment';
   import { getOrdersByBuyer, getOrder, subscribeBuyerOrderEvents } from '$lib/orders/ordersAdapter';
   import type { OrderStatusSseEvent } from '$lib/orders/types';
-  import { getMarketClient } from '$lib/sdk/marketClient';
+  import { getMarketClient } from '$lib/integrations/market/marketClient';
   import { signInWithSafe } from '$lib/auth/signin';
-  import { avatarState } from '$lib/stores/avatar.svelte';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
   import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
   import ActionButtonDropDown from '$lib/app/shell/ActionButtonDropDown.svelte';
   import type { Action } from '$lib/types/actions';

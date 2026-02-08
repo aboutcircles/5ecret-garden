@@ -2,9 +2,9 @@
   import {get} from 'svelte/store';
   import {popupControls} from '$lib/shared/state/popup';
   import {runTask} from '$lib/utils/tasks';
-  import {wallet} from '$lib/stores/wallet.svelte';
+  import {wallet} from '$lib/shared/state/wallet.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import Markdown from '$lib/components/markdown/Markdown.svelte';
+  import Markdown from '$lib/shared/ui/content/markdown/Markdown.svelte';
   import type {Address} from '@circles-sdk/utils';
 
   import ProductGallery from '$lib/components/ProductGallery.svelte';
@@ -18,7 +18,7 @@
   import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
   import {resolveImagesToHttpUrls} from '$lib/media/resolveImageUrl';
   import {createOffersClientForAvatar} from '$lib/domains/market/offers/client';
-  import {getWalletProvider} from '$lib/ethereum/getWalletProvider';
+  import {getWalletProvider} from '$lib/integrations/wallet/getWalletProvider';
   import {gnosisConfig} from "$lib/circlesConfig";
 
   interface Props { context: OfferFlowContext; }

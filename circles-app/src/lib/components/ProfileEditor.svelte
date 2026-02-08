@@ -1,6 +1,6 @@
 <script lang="ts">
-  import MarkdownEditor from '$lib/components/markdown/MarkdownEditor.svelte';
-  import { avatarState } from '$lib/stores/avatar.svelte';
+  import MarkdownEditor from '$lib/shared/ui/content/markdown/MarkdownEditor.svelte';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
   import ImageUpload from '$lib/components/ImageUpload.svelte';
   import type { AppProfile as Profile } from '$lib/domains/profile/model/profiles';
   import { normalizeMarkdownInput, sanitizeText } from '$lib/utils/isValid';

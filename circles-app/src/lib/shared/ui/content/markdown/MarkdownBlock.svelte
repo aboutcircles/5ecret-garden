@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { Block } from '$lib/components/markdown/ast';
-  import MarkdownInline from '$lib/components/markdown/MarkdownInline.svelte';
+  import type { Block } from '$lib/shared/ui/content/markdown/ast';
+  import MarkdownInline from '$lib/shared/ui/content/markdown/MarkdownInline.svelte';
 
   interface Props {
     node: Block;

@@ -1,5 +1,5 @@
 import { browser } from '$app/environment';
-import { getMarketClient } from '$lib/sdk/marketClient';
+import { getMarketClient } from '$lib/integrations/market/marketClient';
 import type { OrderSnapshot, OrderStatusHistory, SellerOrderDto } from '@circles-market/sdk';
 import type { OrderStatusSseEvent } from '$lib/orders/types';
 

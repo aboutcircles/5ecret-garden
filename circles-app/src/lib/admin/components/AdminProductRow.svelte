@@ -1,9 +1,9 @@
 <script lang="ts">
-  import RowFrame from '$lib/ui/RowFrame.svelte';
+  import RowFrame from '$lib/shared/ui/RowFrame.svelte';
   import AdminStatusBadge from './AdminStatusBadge.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import type { AdminUnifiedProduct, AdminProductType } from '../types';
-  import { getMarketClient } from '$lib/sdk/marketClient';
+  import { getMarketClient } from '$lib/integrations/market/marketClient';
   import { gnosisConfig } from '$lib/circlesConfig';
   import { getProduct, pickProductImageUrl } from '$lib/domains/market/services/catalogHelpers';
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';

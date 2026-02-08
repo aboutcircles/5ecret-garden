@@ -5,7 +5,7 @@ import type {
 } from '@circles-sdk/data';
 import type { AppProfileCore as Profile } from '$lib/domains/profile/model/profiles';
 import { writable } from 'svelte/store';
-import { createContactsQueryStore } from './query/circlesContactsQueryStore.svelte';
+import { createContactsQueryStore } from '$lib/domains/profile/state/query/circlesContactsQueryStore.svelte';
 import type { Avatar } from '@circles-sdk/sdk';
 
 export type ContactListItem = {

@@ -10,7 +10,7 @@
     type SdkContractRunner
   } from "@circles-sdk/adapter";
   import {circles} from "$lib/shared/state/circles";
-  import {avatarState} from "$lib/stores/avatar.svelte";
+  import {avatarState} from "$lib/shared/state/avatar.svelte";
   import {circlesConfig} from "@circles-sdk/sdk";
 
   const HUB_V2 = "0xc12C1E50ABB450d6205Ea2C3Fa861b3B834d13e8";

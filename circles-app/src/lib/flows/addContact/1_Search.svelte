@@ -3,7 +3,7 @@
   import SearchAvatar from '$lib/pages/SearchAvatar.svelte';
   import Invite from '$lib/pages/Invite.svelte';
   import Trust from '$lib/pages/Trust.svelte';
-  import { contacts } from '$lib/stores/contacts';
+  import { contacts } from '$lib/domains/profile/state/contacts';
   import { popupControls } from '$lib/shared/state/popup';
   import YouAlreadyTrust from './2_YouAlreadyTrust.svelte';
   import type { AddContactFlowContext } from './context';

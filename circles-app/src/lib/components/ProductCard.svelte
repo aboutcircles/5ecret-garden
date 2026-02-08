@@ -11,10 +11,10 @@
 
   let {product, showSellerInfo, ondeleted, canTombstone = false}: Props = $props();
 
-  import {avatarState} from '$lib/stores/avatar.svelte';
+  import {avatarState} from '$lib/shared/state/avatar.svelte';
   import {cartState, addToCart} from '$lib/cart/store';
   import {createOffersClientForAvatar} from '$lib/domains/market/offers/client';
-  import { getWalletProvider } from '$lib/ethereum/getWalletProvider';
+  import { getWalletProvider } from '$lib/integrations/wallet/getWalletProvider';
   import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
   import {getProduct, getFirstOffer, isProductOwnedBy} from '$lib/domains/market/services/catalogHelpers';
   import {productAndOfferToDraft} from '$lib/utils/offer';

@@ -4,7 +4,7 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import AddressComponent from '$lib/components/Address.svelte';
   import Tooltip from '$lib/components/Tooltip.svelte';
-  import JumpLink from '$lib/components/jump/JumpLink.svelte';
+  import JumpLink from '$lib/shared/ui/content/jump/JumpLink.svelte';
   import QrCode from '$lib/components/QrCode.svelte';
 
   const demoAddressA = '0x1111111111111111111111111111111111111111' as Address;

@@ -4,7 +4,7 @@
     import CommonConnections from '$lib/components/CommonConnections.svelte';
     import TrustRelationsList from '$lib/components/TrustRelationsList.svelte';
     import HoldersList from '$lib/components/HoldersList.svelte';
-    import {contacts} from '$lib/stores/contacts';
+    import {contacts} from '$lib/domains/profile/state/contacts';
     import {
         type AvatarRow,
         CirclesQuery,
@@ -18,7 +18,7 @@
     import {formatTrustRelation, getTypeString} from '$lib/utils/helpers';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
     import {popupControls} from '$lib/shared/state/popup';
-    import JumpLink from '$lib/components/jump/JumpLink.svelte';
+    import JumpLink from '$lib/shared/ui/content/jump/JumpLink.svelte';
     import AddressComponent from '$lib/components/Address.svelte';
     import {uint256ToAddress, type Address} from '@circles-sdk/utils';
     import SelectAmount from '$lib/flows/send/3_Amount.svelte';
@@ -31,17 +31,17 @@
     } from '$lib/utils/vault';
     import CollateralTable from '$lib/components/CollateralTable.svelte';
     import {goto} from '$app/navigation';
-    import {avatarState} from '$lib/stores/avatar.svelte';
+    import {avatarState} from '$lib/shared/state/avatar.svelte';
 
     /* NEW: tabs */
-    import Tabs from '$lib/components/tabs/Tabs.svelte';
-    import Tab from '$lib/components/tabs/Tab.svelte';
-    import type { TabIdOf } from '$lib/components/tabs/tabId';
+    import Tabs from '$lib/shared/ui/primitives/tabs/Tabs.svelte';
+    import Tab from '$lib/shared/ui/primitives/tabs/Tab.svelte';
+    import type { TabIdOf } from '$lib/shared/ui/primitives/tabs/tabId';
     // Offers tab dependencies
     import ProductCard from '$lib/components/ProductCard.svelte';
     import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
     import type { AggregatedCatalogItem } from '$lib/domains/market/model/types';
-    import { getMarketClient } from '$lib/sdk/marketClient';
+    import { getMarketClient } from '$lib/integrations/market/marketClient';
     // Namespaces explorer (read-only) for other profiles
     import ProfileNamespaces from '$lib/domains/profile/ui/ProfileNamespaces.svelte';
     import { loadProfileOrInit } from '@circles-market/sdk';

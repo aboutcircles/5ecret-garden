@@ -1,6 +1,6 @@
 <!-- src/lib/flows/offer/ProfileHeaderEditor.svelte -->
 <script lang="ts">
-    import MarkdownEditor from '$lib/components/markdown/MarkdownEditor.svelte';
+    import MarkdownEditor from '$lib/shared/ui/content/markdown/MarkdownEditor.svelte';
     import {
         fileToCroppedDataUrl,
         AVATAR_PREFERRED_MAX_BYTES,

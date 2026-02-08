@@ -1,9 +1,9 @@
 <script lang="ts">
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import Lucide from '$lib/icons/Lucide.svelte';
-  import { avatarState } from '$lib/stores/avatar.svelte';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { popupControls } from '$lib/shared/state/popup';
-  import RowFrame from '$lib/ui/RowFrame.svelte';
+  import RowFrame from '$lib/shared/ui/RowFrame.svelte';
   import {
     ChevronDown as LChevronDown,
     ChevronRight as LChevronRight,

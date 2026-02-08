@@ -2,8 +2,8 @@
     import { getTimeAgo } from '$lib/utils/shared';
     import type { TransactionHistoryRow } from '@circles-sdk/data';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
-    import { avatarState } from '$lib/stores/avatar.svelte';
-    import RowFrame from '$lib/ui/RowFrame.svelte';
+    import { avatarState } from '$lib/shared/state/avatar.svelte';
+    import RowFrame from '$lib/shared/ui/RowFrame.svelte';
     import { popupControls, type PopupContentDefinition } from '$lib/shared/state/popup';
     import TransactionDetailsPopup from './TransactionDetailsPopup.svelte';
 

@@ -4,7 +4,7 @@
   import type { MigrateToV2Context } from '$lib/flows/migrateToV2/context';
   import MigrateContacts from './3_MigrateContacts.svelte';
   import { onMount } from 'svelte';
-  import { avatarState } from '$lib/stores/avatar.svelte';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
   import {
     FallbackImageUrl,
     profilesEqual,

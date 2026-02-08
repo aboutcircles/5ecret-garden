@@ -1,8 +1,8 @@
 <script lang="ts">
-    import RowFrame from '$lib/ui/RowFrame.svelte';
+    import RowFrame from '$lib/shared/ui/RowFrame.svelte';
     import { createEventDispatcher } from 'svelte';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
-    import { avatarState } from '$lib/stores/avatar.svelte';
+    import { avatarState } from '$lib/shared/state/avatar.svelte';
     import { tokenTypeToString } from '$lib/pages/SelectAsset.svelte';
     import { crcTypes, roundToDecimals, staticTypes } from '$lib/utils/shared';
     import WrapTokens from '$lib/pages/WrapTokens.svelte';

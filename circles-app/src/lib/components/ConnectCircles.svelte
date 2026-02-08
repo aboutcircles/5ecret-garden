@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {avatarState} from '$lib/stores/avatar.svelte';
+    import {avatarState} from '$lib/shared/state/avatar.svelte';
     import {circles} from '$lib/shared/state/circles';
     import {Sdk} from '@circles-sdk/sdk';
     import {goto} from '$app/navigation';
@@ -7,7 +7,7 @@
     import type {Address} from '@circles-sdk/utils';
     import {CirclesStorage} from '$lib/utils/storage';
     import type {GroupRow} from '@circles-sdk/data';
-    import {settings} from '$lib/stores/settings.svelte';
+    import {settings} from '$lib/shared/state/settings.svelte';
     import { popupControls } from '$lib/shared/state/popup';
     import CreateGroup from "$lib/flows/createGroup/1_CreateGroup.svelte";
     import {resetCreateGroupContext} from '$lib/flows/createGroup/context';

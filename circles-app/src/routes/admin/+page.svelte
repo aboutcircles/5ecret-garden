@@ -3,7 +3,7 @@
   import ActionButton from '$lib/components/ActionButton.svelte';
   import Lucide from '$lib/icons/Lucide.svelte';
   import { browser } from '$app/environment';
-  import { avatarState } from '$lib/stores/avatar.svelte';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { runTask } from '$lib/utils/tasks';
   import { RefreshCw as LRefreshCw } from 'lucide';
   import {
@@ -48,9 +48,9 @@
   import { resolveAdminProductType } from '$lib/admin/types';
   import type { AdminProductType, AdminUnifiedProduct, AdminOdooConnection } from '$lib/admin/types';
   import { shortenAddress } from '$lib/utils/shared';
-  import Tabs from '$lib/components/tabs/Tabs.svelte';
-  import Tab from '$lib/components/tabs/Tab.svelte';
-  import type { TabIdOf } from '$lib/components/tabs/tabId';
+  import Tabs from '$lib/shared/ui/primitives/tabs/Tabs.svelte';
+  import Tab from '$lib/shared/ui/primitives/tabs/Tab.svelte';
+  import type { TabIdOf } from '$lib/shared/ui/primitives/tabs/tabId';
 
   // Auth state
   let adminUser: AdminVerifyResponse | null = $state(null);

@@ -2,7 +2,7 @@
   import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
   import GenericList from '$lib/components/GenericList.svelte';
   import { browser } from '$app/environment';
-  import { getMarketClient } from '$lib/sdk/marketClient';
+  import { getMarketClient } from '$lib/integrations/market/marketClient';
   import { onMount } from 'svelte';
   import type { Readable } from 'svelte/store';
 
@@ -12,7 +12,7 @@
   import { RefreshCw as LRefreshCw } from 'lucide';
 
   import { signInWithSafe } from '$lib/auth/signin';
-  import { avatarState } from '$lib/stores/avatar.svelte';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
 
   import SalesOrderRow from './SalesOrderRow.svelte';
 

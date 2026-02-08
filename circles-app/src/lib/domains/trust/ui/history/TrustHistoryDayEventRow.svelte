@@ -1,5 +1,5 @@
 <script lang="ts">
-  import RowFrame from '$lib/ui/RowFrame.svelte';
+  import RowFrame from '$lib/shared/ui/RowFrame.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import type { TrustHistoryEventRow, TrustHistoryListItem } from './types';
 

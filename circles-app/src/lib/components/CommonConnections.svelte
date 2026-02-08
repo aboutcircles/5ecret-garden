@@ -1,6 +1,6 @@
 <script lang="ts">
     import SearchablePaginatedAddressList from '$lib/components/SearchablePaginatedAddressList.svelte';
-    import { avatarState } from '$lib/stores/avatar.svelte';
+    import { avatarState } from '$lib/shared/state/avatar.svelte';
     import { circles } from '$lib/shared/state/circles';
     import { get, writable } from 'svelte/store';
     import type { Address } from '@circles-sdk/utils';

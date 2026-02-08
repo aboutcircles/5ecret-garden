@@ -4,7 +4,7 @@
     import { popupState } from '$lib/shared/state/popup';
     import {headerDropdownOpen} from "$lib/shared/state/headerDropdown";
 
-    import { avatarState } from '$lib/stores/avatar.svelte';
+    import { avatarState } from '$lib/shared/state/avatar.svelte';
     import { popupControls } from '$lib/shared/state/popup';
     import SettingProfile from "$lib/domains/profile/ui/pages/SettingProfile.svelte";
 

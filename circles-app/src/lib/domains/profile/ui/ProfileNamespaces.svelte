@@ -14,7 +14,7 @@
     import Lucide from '$lib/icons/Lucide.svelte';
     import { ChevronRight as LChevronRight, ChevronDown as LChevronDown, Trash2 as LTrash2, ExternalLink as LExternalLink } from 'lucide';
     import { ipfsGatewayUrl } from '$lib/utils/ipfs';
-    import JumpLink from '$lib/components/jump/JumpLink.svelte';
+    import JumpLink from '$lib/shared/ui/content/jump/JumpLink.svelte';
     import { getProfilesBindings } from '$lib/domains/market/offers/profilesBindings';
 
     interface Props {

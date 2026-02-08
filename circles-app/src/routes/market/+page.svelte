@@ -2,15 +2,15 @@
     import {onMount} from 'svelte';
     import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
     import ProductCard from '$lib/components/ProductCard.svelte';
-    import { getMarketClient } from '$lib/sdk/marketClient';
+    import { getMarketClient } from '$lib/integrations/market/marketClient';
     import type { AggregatedCatalogItem } from '$lib/domains/market/model/types';
     import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/app/shell/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/types/actions';
     import { goto } from '$app/navigation';
-    import { avatarState } from '$lib/stores/avatar.svelte';
-    import Tabs from '$lib/components/tabs/Tabs.svelte';
-    import Tab from '$lib/components/tabs/Tab.svelte';
+    import { avatarState } from '$lib/shared/state/avatar.svelte';
+    import Tabs from '$lib/shared/ui/primitives/tabs/Tabs.svelte';
+    import Tab from '$lib/shared/ui/primitives/tabs/Tab.svelte';
     import {gnosisConfig} from "$lib/circlesConfig";
 
     // Defaults (as requested)

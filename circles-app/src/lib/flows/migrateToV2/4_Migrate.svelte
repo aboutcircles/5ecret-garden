@@ -3,7 +3,7 @@
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import type { MigrateToV2Context } from '$lib/flows/migrateToV2/context';
   import { circles } from '$lib/shared/state/circles';
-  import { avatarState } from '$lib/stores/avatar.svelte';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { runTask } from '$lib/utils/tasks';
   import { removeProfileFromCache } from '$lib/utils/profile';
   import { popupControls } from '$lib/shared/state/popup';

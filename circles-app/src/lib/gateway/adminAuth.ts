@@ -1,7 +1,7 @@
 import {browser} from '$app/environment';
 import type {Address} from '@circles-sdk/utils';
-import {getWalletProvider} from '$lib/ethereum/getWalletProvider';
-import {getMarketClient} from '$lib/sdk/marketClient';
+import {getWalletProvider} from '$lib/integrations/wallet/getWalletProvider';
+import {getMarketClient} from '$lib/integrations/market/marketClient';
 import {gnosisConfig} from '$lib/circlesConfig';
 
 export interface AdminChallengeResponse {

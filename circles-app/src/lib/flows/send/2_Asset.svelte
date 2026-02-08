@@ -5,7 +5,7 @@
   import SelectAmount from './3_Amount.svelte';
   import { onMount } from 'svelte';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
-  import { circlesBalances } from '$lib/stores/circlesBalances';
+  import { circlesBalances } from '$lib/shared/state/circlesBalances';
   import { popupControls } from '$lib/shared/state/popup';
   interface Props {
     context: SendFlowContext;

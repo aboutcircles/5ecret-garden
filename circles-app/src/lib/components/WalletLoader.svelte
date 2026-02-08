@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { clearSession } from '$lib/stores/wallet.svelte';
+  import { clearSession } from '$lib/shared/state/wallet.svelte';
 </script>
 
 <div
