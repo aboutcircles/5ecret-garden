@@ -24,6 +24,12 @@ interface PersistedBookmarksState {
   folders?: unknown[];
 }
 
+type LooseBookmarksState = {
+  profiles?: unknown[];
+  products?: unknown[];
+  folders?: unknown[];
+};
+
 export interface BookmarksRepository {
   load(): PersistedBookmarksState;
   save(state: PersistedBookmarksState): void;
@@ -126,29 +132,33 @@ function normalizeProfileBookmark(input: unknown): ProfileBookmark | null {
   };
 }
 
-function sanitizeOwnerState(state: Partial<BookmarksState> | null | undefined): BookmarksState {
+function sanitizeOwnerState(
+  state: Partial<BookmarksState> | LooseBookmarksState | null | undefined
+): BookmarksState {
+  const stateProfiles = state?.profiles;
+  const stateFolders = state?.folders;
+  const stateProducts = state?.products;
+
   const profiles: ProfileBookmark[] = [];
   const seenProfiles = new Set<string>();
-  if (Array.isArray(state?.profiles)) {
-    for (const raw of state!.profiles) {
-      const next = normalizeProfileBookmark(raw);
-      if (!next || seenProfiles.has(next.address)) continue;
-      seenProfiles.add(next.address);
-      profiles.push(next);
-    }
+  const rawProfiles: unknown[] = Array.isArray(stateProfiles) ? stateProfiles : [];
+  for (const raw of rawProfiles) {
+    const next = normalizeProfileBookmark(raw);
+    if (!next || seenProfiles.has(next.address)) continue;
+    seenProfiles.add(next.address);
+    profiles.push(next);
   }
 
   const folders: string[] = [];
   const seenFolders = new Set<string>();
-  if (Array.isArray(state?.folders)) {
-    for (const raw of state.folders) {
-      const next = normalizeFolderName(String(raw));
-      if (!next) continue;
-      const key = folderKey(next);
-      if (seenFolders.has(key)) continue;
-      seenFolders.add(key);
-      folders.push(next);
-    }
+  const rawFolders: unknown[] = Array.isArray(stateFolders) ? stateFolders : [];
+  for (const raw of rawFolders) {
+    const next = normalizeFolderName(String(raw));
+    if (!next) continue;
+    const key = folderKey(next);
+    if (seenFolders.has(key)) continue;
+    seenFolders.add(key);
+    folders.push(next);
   }
 
   for (const profile of profiles) {
@@ -164,9 +174,14 @@ function sanitizeOwnerState(state: Partial<BookmarksState> | null | undefined): 
     folders.push(VIP_BOOKMARK_FOLDER);
   }
 
-  const products = Array.isArray(state?.products)
-    ? Array.from(new Set(state!.products.map((v) => String(v).trim()).filter((v) => v.length > 0)))
-    : [];
+  const rawProducts: unknown[] = Array.isArray(stateProducts) ? stateProducts : [];
+  const normalizedProducts = rawProducts
+    .reduce<string[]>((acc, value) => {
+      const next = String(value).trim();
+      if (next.length > 0) acc.push(next);
+      return acc;
+    }, []);
+  const products = Array.from(new Set(normalizedProducts));
 
   return { profiles, products, folders };
 }
@@ -188,12 +203,11 @@ function sanitizePersistedState(state: PersistedBookmarksState | null | undefine
   if (hasLegacyData) {
     const owner = getConnectedOwnerKey();
     const current = owners[owner] ?? EMPTY_OWNER_STATE;
-    const merged = sanitizeOwnerState({
+    owners[owner] = sanitizeOwnerState({
       profiles: [...(current.profiles ?? []), ...(Array.isArray(state?.profiles) ? state!.profiles : [])],
       products: [...(current.products ?? []), ...(Array.isArray(state?.products) ? state!.products : [])],
       folders: [...(current.folders ?? []), ...(Array.isArray(state?.folders) ? state!.folders : [])],
     });
-    owners[owner] = merged;
   }
 
   return { owners };
