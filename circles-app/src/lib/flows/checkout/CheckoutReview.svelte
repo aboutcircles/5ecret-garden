@@ -2,11 +2,11 @@
 <script lang="ts">
     import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
     import { cartState, checkoutCart } from '$lib/cart/store';
-    import { popupControls } from '$lib/stores/popup';
+    import { popupControls } from '$lib/shared/state/popup';
     import CheckoutPayment from './CheckoutPayment.svelte';
     import { getMarketClient } from '$lib/sdk/marketClient';
-    import type { AggregatedCatalogItem } from '$lib/market/types';
-    import { pickFirstProductImageUrl } from '$lib/market/imageHelpers';
+    import type { AggregatedCatalogItem } from '$lib/domains/market/model/types';
+    import { pickFirstProductImageUrl } from '$lib/domains/market/services/imageHelpers';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
     import {gnosisConfig} from "$lib/circlesConfig";
 

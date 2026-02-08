@@ -6,7 +6,7 @@
     validateCart,
     previewCartOrder
   } from '$lib/cart/store';
-  import { popupControls } from '$lib/stores/popup';
+  import { popupControls } from '$lib/shared/state/popup';
   import CheckoutReview from './CheckoutReview.svelte';
 
   // This component shows only the address/details step.

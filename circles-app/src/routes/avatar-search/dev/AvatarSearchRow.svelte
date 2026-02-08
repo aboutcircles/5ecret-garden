@@ -1,7 +1,7 @@
 <script lang="ts">
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import ProfilePopup from '$lib/pages/ProfilePopup.svelte';
-  import { popupControls } from '$lib/stores/popup';
+  import ProfilePopup from '$lib/domains/profile/ui/pages/ProfilePopup.svelte';
+  import { popupControls } from '$lib/shared/state/popup';
   import RowFrame from '$lib/ui/RowFrame.svelte';
   import { formatTrustRelation } from '$lib/utils/helpers';
   import type { AvatarSearchItem } from './avatarSearch.types';

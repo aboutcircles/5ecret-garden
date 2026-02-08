@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { popupControls } from '$lib/stores/popup';
+  import { popupControls } from '$lib/shared/state/popup';
   import OfferStep3 from './3_PreviewPublish.svelte';
   import type { OfferFlowContext } from './types';
   import { get } from 'svelte/store';
   import { onMount } from 'svelte';
-  import { circles } from '$lib/stores/circles';
+  import { circles } from '$lib/shared/state/circles';
   import { wallet } from '$lib/stores/wallet.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import type { Address } from '@circles-sdk/utils';

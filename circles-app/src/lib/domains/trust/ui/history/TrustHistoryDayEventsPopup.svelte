@@ -1,9 +1,9 @@
 <script lang="ts">
   import { tick } from 'svelte';
   import GenericList from '$lib/components/GenericList.svelte';
-  import TrustHistoryDayEventRow from '$lib/components/trustHistory/TrustHistoryDayEventRow.svelte';
+  import TrustHistoryDayEventRow from '$lib/domains/trust/ui/history/TrustHistoryDayEventRow.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import { createPaginatedList } from '$lib/stores/paginatedList';
+  import { createPaginatedList } from '$lib/shared/state/paginatedList';
   import { writable } from 'svelte/store';
   import type { TrustHistoryEventRow, TrustHistoryListItem } from './types';
 

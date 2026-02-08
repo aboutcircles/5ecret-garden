@@ -1,8 +1,8 @@
 <script lang="ts">
     import type { GroupRow } from '@circles-sdk/data';
-    import ProfilePopup from '$lib/pages/ProfilePopup.svelte';
+    import ProfilePopup from '$lib/domains/profile/ui/pages/ProfilePopup.svelte';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
-    import { popupControls } from '$lib/stores/popup';
+    import { popupControls } from '$lib/shared/state/popup';
     import RowFrame from '$lib/ui/RowFrame.svelte';
 
     interface Props { item: GroupRow; }

@@ -1,16 +1,16 @@
 <script lang="ts">
-  import ProfilePage from '$lib/pages/ProfilePopup.svelte';
+  import ProfilePage from '$lib/domains/profile/ui/pages/ProfilePopup.svelte';
   import { getProfile } from '$lib/utils/profile';
   import { getTypeString } from '$lib/utils/helpers';
   import HorizontalAvatarLayout from './HorizontalAvatarLayout.svelte';
   import VerticalAvatarLayout from './VerticalAvatarLayout.svelte';
-  import { popupControls, type PopupContentDefinition } from '$lib/stores/popup';
+  import { popupControls, type PopupContentDefinition } from '$lib/shared/state/popup';
   import { isVipProfileBookmark, profileBookmarksStore } from '$lib/bookmarks/profileBookmarks';
   import type { Address } from '@circles-sdk/utils';
-  import type { AppProfileCore as Profile } from '$lib/profiles';
+  import type { AppProfileCore as Profile } from '$lib/domains/profile/model/profiles';
   import type { AvatarRow } from '@circles-sdk/data';
   import { fade } from 'svelte/transition';
-  import { circles } from '$lib/stores/circles';
+  import { circles } from '$lib/shared/state/circles';
   import { normalizeEvmAddress } from '@circles-market/sdk';
 
   const avatarInfoCache = new Map<string, Promise<AvatarRow | undefined>>();

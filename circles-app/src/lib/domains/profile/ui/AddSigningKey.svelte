@@ -1,9 +1,9 @@
 <script lang="ts">
-    import { popupControls } from '$lib/stores/popup';
+    import { popupControls } from '$lib/shared/state/popup';
     import { runTask } from '$lib/utils/tasks';
     import { loadProfileOrInit, rebaseAndSaveProfile } from '@circles-market/sdk';
     import type { ProfilesBindings } from '@circles-market/sdk';
-    import { getProfilesBindings } from '$lib/offers/profilesBindings';
+    import { getProfilesBindings } from '$lib/domains/market/offers/profilesBindings';
     import { removeProfileFromCache } from '$lib/utils/profile';
     import type { Address } from '@circles-sdk/utils';
     import { bytesToHex, keccak256, hexToBytes } from '$lib/safeSigner';

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
+  import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import Lucide from '$lib/icons/Lucide.svelte';
   import { browser } from '$app/environment';
@@ -37,7 +37,7 @@
   } from '$lib/gateway/adminClient';
   import { gnosisConfig } from '$lib/circlesConfig';
   import type { Address } from '@circles-sdk/utils';
-  import { popupControls } from '$lib/stores/popup';
+  import { popupControls } from '$lib/shared/state/popup';
   import AdminSectionCard from '$lib/admin/components/AdminSectionCard.svelte';
   import AdminProductList from '$lib/admin/components/AdminProductList.svelte';
   import AdminOdooProductEditor from '$lib/admin/components/AdminOdooProductEditor.svelte';

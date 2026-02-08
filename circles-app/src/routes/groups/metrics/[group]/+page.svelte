@@ -9,12 +9,12 @@
   import GroupMetricsStats from '$lib/components/GroupMetricsStats.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import type { PageProps } from './$types';
-  import { circles } from '$lib/stores/circles';
-  import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
+  import { circles } from '$lib/shared/state/circles';
+  import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
   import { ArrowLeft as LArrowLeft } from 'lucide';
   import type { Address } from '@circles-sdk/utils';
-  import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
-  import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
+  import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
+  import ActionButtonDropDown from '$lib/app/shell/ActionButtonDropDown.svelte';
   import type { Action } from '$lib/types/actions';
 
   let groupMetrics: GroupMetrics = $state({});

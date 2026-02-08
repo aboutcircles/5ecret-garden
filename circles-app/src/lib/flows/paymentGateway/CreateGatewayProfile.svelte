@@ -2,10 +2,10 @@
   import { ethers } from 'ethers';
 
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
-  import { popupControls } from '$lib/stores/popup';
+  import { popupControls } from '$lib/shared/state/popup';
   import type { CreateGatewayFlowContext } from './context';
   import ConfirmCreateGateway from './ConfirmCreateGateway.svelte';
-  import ProfileHeaderEditor from '$lib/profile/ProfileHeaderEditor.svelte';
+  import ProfileHeaderEditor from '$lib/domains/profile/ui/ProfileHeaderEditor.svelte';
   import { isValidOnChainName } from '$lib/utils/isValid';
 
   interface Props {

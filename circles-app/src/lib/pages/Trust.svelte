@@ -4,7 +4,7 @@
     import { shortenAddress } from '$lib/utils/shared';
     import ActionButton from '$lib/components/ActionButton.svelte';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
-    import { popupControls } from '$lib/stores/popup';
+    import { popupControls } from '$lib/shared/state/popup';
     import RowFrame from '$lib/ui/RowFrame.svelte';
 
     interface Props { address: `0x${string}`; }

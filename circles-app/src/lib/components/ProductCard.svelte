@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type {AggregatedCatalogItem} from '$lib/market/types';
+  import type {AggregatedCatalogItem} from '$lib/domains/market/model/types';
   import ProductViewer from '$lib/components/ProductViewer.svelte';
 
   interface Props {
@@ -13,13 +13,13 @@
 
   import {avatarState} from '$lib/stores/avatar.svelte';
   import {cartState, addToCart} from '$lib/cart/store';
-  import {createOffersClientForAvatar} from '$lib/offers/client';
+  import {createOffersClientForAvatar} from '$lib/domains/market/offers/client';
   import { getWalletProvider } from '$lib/ethereum/getWalletProvider';
   import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
-  import {getProduct, getFirstOffer, isProductOwnedBy} from '$lib/market/catalogHelpers';
+  import {getProduct, getFirstOffer, isProductOwnedBy} from '$lib/domains/market/services/catalogHelpers';
   import {productAndOfferToDraft} from '$lib/utils/offer';
-  import {popupControls, type PopupContentDefinition} from '$lib/stores/popup';
-  import ProductDetailsPopup from '$lib/market/ProductDetailsPopup.svelte';
+  import {popupControls, type PopupContentDefinition} from '$lib/shared/state/popup';
+  import ProductDetailsPopup from '$lib/domains/market/ui/ProductDetailsPopup.svelte';
   import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import {gnosisConfig} from "$lib/circlesConfig";

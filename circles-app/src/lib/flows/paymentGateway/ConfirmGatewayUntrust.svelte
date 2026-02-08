@@ -5,7 +5,7 @@
   import ActionButton from '$lib/components/ActionButton.svelte';
   import { wallet } from '$lib/stores/wallet.svelte';
   import { runTask } from '$lib/utils/tasks';
-  import { popupControls } from '$lib/stores/popup';
+  import { popupControls } from '$lib/shared/state/popup';
 
   interface Props {
     gateway: string;

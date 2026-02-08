@@ -1,6 +1,6 @@
 // circles-app/src/lib/offers/profilesBindings.ts
 import { get } from 'svelte/store';
-import { circles } from '$lib/stores/circles';
+import { circles } from '$lib/shared/state/circles';
 import { createCirclesSdkProfilesBindings } from '@circles-profile/core';
 import type { ProfilesBindings } from '@circles-market/sdk';
 

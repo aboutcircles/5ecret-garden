@@ -5,7 +5,7 @@
         fetchTrusteeValidation,
         getCachedTrusteeValidation,
         type TrusteeValidationResponse,
-    } from '$lib/profile/trustScore';
+    } from '$lib/domains/profile/model/trustScore';
 
     interface Props {
         address: Address | undefined;

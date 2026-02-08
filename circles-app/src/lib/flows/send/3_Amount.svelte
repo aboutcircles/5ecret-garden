@@ -4,14 +4,14 @@
     import Send from './4_Send.svelte';
     import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
     import {onMount, tick, untrack} from 'svelte';
-    import { circles } from '$lib/stores/circles';
+    import { circles } from '$lib/shared/state/circles';
     import { avatarState } from '$lib/stores/avatar.svelte';
     import { TransitiveTransferTokenAddress } from '$lib/pages/SelectAsset.svelte';
     import type { TokenBalanceRow } from '@circles-sdk/data';
     import { writable } from 'svelte/store';
     import type { MaxFlowResponse } from '@circles-sdk/sdk';
     import { ethers } from 'ethers';
-    import { popupControls } from '$lib/stores/popup';
+    import { popupControls } from '$lib/shared/state/popup';
     import { CirclesConverter } from '@circles-sdk/utils';
     import {MAX_PATH_STEPS} from "$lib/circlesConfig";
 

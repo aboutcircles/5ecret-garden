@@ -8,7 +8,7 @@
     import { CirclesConverter } from '@circles-sdk/utils';
     import { isAddress, isZeroAddress, toBigIntMaybe, tokenIdToAddressMaybe } from '$lib/utils/tx';
     import TxEvents from './TxEvents.svelte';
-    import { popupControls } from '$lib/stores/popup';
+    import { popupControls } from '$lib/shared/state/popup';
     import JumpPopup from '$lib/components/jump/JumpPopup.svelte';
 
     interface Props { item: TransactionHistoryRow }

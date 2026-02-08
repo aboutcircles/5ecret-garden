@@ -1,14 +1,14 @@
 <script lang="ts">
-  import { circles } from '$lib/stores/circles';
+  import { circles } from '$lib/shared/state/circles';
   import { get } from 'svelte/store';
   import { CirclesQuery, type PagedQueryParams } from '@circles-sdk/data';
   import type { Address } from '@circles-sdk/utils';
-  import TrustHistoryDayCalendar from '$lib/components/trustHistory/TrustHistoryDayCalendar.svelte';
-  import TrustHistoryWeeklySections from '$lib/components/trustHistory/TrustHistoryWeeklySections.svelte';
-  import TrustHistoryMonthlyList from '$lib/components/trustHistory/TrustHistoryMonthlyList.svelte';
-  import TrustHistoryDayEventsPopup from '$lib/components/trustHistory/TrustHistoryDayEventsPopup.svelte';
-  import { trustHistoryKnownRangeEvents } from '$lib/components/trustHistory/knownRangeEvents';
-  import { popupControls } from '$lib/stores/popup';
+  import TrustHistoryDayCalendar from '$lib/domains/trust/ui/history/TrustHistoryDayCalendar.svelte';
+  import TrustHistoryWeeklySections from '$lib/domains/trust/ui/history/TrustHistoryWeeklySections.svelte';
+  import TrustHistoryMonthlyList from '$lib/domains/trust/ui/history/TrustHistoryMonthlyList.svelte';
+  import TrustHistoryDayEventsPopup from '$lib/domains/trust/ui/history/TrustHistoryDayEventsPopup.svelte';
+  import { trustHistoryKnownRangeEvents } from '$lib/domains/trust/ui/history/knownRangeEvents';
+  import { popupControls } from '$lib/shared/state/popup';
   import type {
     Granularity,
     CalendarCell,
@@ -18,7 +18,7 @@
     MonthlyItem,
     TrustHistoryEventRow,
     TrustHistoryRangeEvent,
-  } from '$lib/components/trustHistory/types';
+  } from '$lib/domains/trust/ui/history/types';
 
   interface Props {
     address?: Address;

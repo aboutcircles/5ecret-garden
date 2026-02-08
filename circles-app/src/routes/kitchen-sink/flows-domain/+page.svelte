@@ -1,9 +1,9 @@
 <script lang="ts">
   import type { Address } from '@circles-sdk/utils';
 
-  import { popupControls } from '$lib/stores/popup';
-  import ProfilePopup from '$lib/pages/ProfilePopup.svelte';
-  import TrustHistoryHeatmap from '$lib/components/TrustHistoryHeatmap.svelte';
+  import { popupControls } from '$lib/shared/state/popup';
+  import ProfilePopup from '$lib/domains/profile/ui/pages/ProfilePopup.svelte';
+  import TrustHistoryHeatmap from '$lib/domains/trust/ui/TrustHistoryHeatmap.svelte';
   import { tokenTypeToString, transitiveTransfer } from '$lib/pages/SelectAsset.svelte';
 
   const demoAddress = '0x1aca75e38263c79d9d4f10df0635cc6fcfe6f026' as Address;

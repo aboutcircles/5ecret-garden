@@ -2,7 +2,7 @@
     import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
     import Tooltip from '../../components/Tooltip.svelte';
     import { ethers } from 'ethers';
-    import { popupControls } from '$lib/stores/popup';
+    import { popupControls } from '$lib/shared/state/popup';
     import Review from './3_Review.svelte';
     import { wallet } from '$lib/stores/wallet.svelte';
     import {

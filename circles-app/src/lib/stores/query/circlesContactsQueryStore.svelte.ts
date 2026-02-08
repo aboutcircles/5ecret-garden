@@ -1,5 +1,5 @@
 import { createCirclesQueryStore } from './circlesQueryStore';
-import { circles } from '$lib/stores/circles';
+import { circles } from '$lib/shared/state/circles';
 import type {
   CirclesEventType,
   TrustRelationRow,

@@ -9,7 +9,7 @@
     type TransactionRequest,
     type SdkContractRunner
   } from "@circles-sdk/adapter";
-  import {circles} from "$lib/stores/circles";
+  import {circles} from "$lib/shared/state/circles";
   import {avatarState} from "$lib/stores/avatar.svelte";
   import {circlesConfig} from "@circles-sdk/sdk";
 

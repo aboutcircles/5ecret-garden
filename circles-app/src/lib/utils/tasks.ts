@@ -12,7 +12,7 @@ async function showErrorPopup(err: Error): Promise<void> {
   const stackTrace = err.stack;
 
   const [{ popupControls }, { default: ErrorPage }] = await Promise.all([
-    import('$lib/stores/popup'),
+    import('$lib/shared/state/popup'),
     import('$lib/pages/Error.svelte'),
   ]);
 

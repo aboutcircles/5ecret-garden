@@ -1,1 +1,1 @@
-export * from './popup';
+export * from '$lib/shared/state/popup';

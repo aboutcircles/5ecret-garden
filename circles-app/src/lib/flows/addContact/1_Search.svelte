@@ -4,7 +4,7 @@
   import Invite from '$lib/pages/Invite.svelte';
   import Trust from '$lib/pages/Trust.svelte';
   import { contacts } from '$lib/stores/contacts';
-  import { popupControls } from '$lib/stores/popup';
+  import { popupControls } from '$lib/shared/state/popup';
   import YouAlreadyTrust from './2_YouAlreadyTrust.svelte';
   import type { AddContactFlowContext } from './context';
   import type { Address } from '@circles-sdk/utils';

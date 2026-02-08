@@ -1,6 +1,6 @@
 <!-- src/lib/components/Popup.svelte -->
 <script lang="ts">
-    import { popupControls, popupState } from '$lib/stores/popup';
+    import { popupControls, popupState } from '$lib/shared/state/popup';
     import Lucide from '$lib/icons/Lucide.svelte';
     import { ArrowLeft as LArrowLeft, X as LX } from 'lucide';
 

@@ -6,10 +6,10 @@
     setLineQuantityByIdentity,
     validateCart,
   } from '$lib/cart/store';
-  import type {AggregatedCatalogItem} from '$lib/market/types';
-  import { popupControls } from '$lib/stores/popup';
+  import type {AggregatedCatalogItem} from '$lib/domains/market/model/types';
+  import { popupControls } from '$lib/shared/state/popup';
   import { getMarketClient } from '$lib/sdk/marketClient';
-  import {pickFirstProductImageUrl} from '$lib/market/imageHelpers';
+  import {pickFirstProductImageUrl} from '$lib/domains/market/services/imageHelpers';
   import CheckoutForms from '$lib/flows/checkout/CheckoutForms.svelte';
   import CheckoutReview from '$lib/flows/checkout/CheckoutReview.svelte';
   import {formatCurrency} from '$lib/utils/money';

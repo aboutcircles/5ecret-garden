@@ -1,6 +1,6 @@
 <script lang="ts">
     import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
-    import { popupControls } from '$lib/stores/popup';
+    import { popupControls } from '$lib/shared/state/popup';
     import Markdown from '$lib/components/markdown/Markdown.svelte';
     import CreateStep from './4_Create.svelte';
     import {

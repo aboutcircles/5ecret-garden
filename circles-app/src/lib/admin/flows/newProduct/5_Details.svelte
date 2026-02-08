@@ -1,7 +1,7 @@
 <script lang="ts">
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
   import type { Address } from '@circles-sdk/utils';
-  import { popupControls } from '$lib/stores/popup';
+  import { popupControls } from '$lib/shared/state/popup';
   import SummaryStep from './6_Summary.svelte';
   import { listOdooProductCatalog, type OdooProductCatalogItem } from '$lib/gateway/adminClient';
   import type { AdminNewProductFlowContext } from './context';

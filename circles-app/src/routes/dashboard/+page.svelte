@@ -6,12 +6,12 @@
     import OverviewPanel from './OverviewPanel.svelte';
     import TransactionHistoryPanel from './TransactionHistoryPanel.svelte';
 
-    import { popupControls } from '$lib/stores/popup';
+    import { popupControls } from '$lib/shared/state/popup';
     import Balances from '$lib/pages/Balances.svelte';
     import { circlesBalances } from '$lib/stores/circlesBalances';
-    import { totalCirclesBalance } from '$lib/stores/totalCirclesBalance';
+    import { totalCirclesBalance } from '$lib/shared/state/totalCirclesBalance';
 
-    import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
+    import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
     import Send from '$lib/flows/send/1_To.svelte';
 
     // lucide (standalone) icon nodes

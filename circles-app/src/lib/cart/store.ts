@@ -1,8 +1,8 @@
 import {browser} from '$app/environment';
 import {writable, derived, get} from 'svelte/store';
 import {getMarketClient} from '$lib/sdk/marketClient';
-import type {AggregatedCatalogItem} from '$lib/market/types';
-import {pickFirstProductImageUrl} from '$lib/market/imageHelpers';
+import type {AggregatedCatalogItem} from '$lib/domains/market/model/types';
+import {pickFirstProductImageUrl} from '$lib/domains/market/services/imageHelpers';
 import {gnosisConfig} from "$lib/circlesConfig";
 
 type CheckoutResult = { orderId: string; paymentReference: string; basketId: string };

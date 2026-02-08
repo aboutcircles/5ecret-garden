@@ -6,7 +6,7 @@
   import {roundToDecimals, shortenAddress} from '$lib/utils/shared';
   import {avatarState} from '$lib/stores/avatar.svelte';
   import {tokenTypeToString, TransitiveTransferTokenAddress} from '$lib/pages/SelectAsset.svelte';
-  import {popupControls} from '$lib/stores/popup';
+  import {popupControls} from '$lib/shared/state/popup';
   import {MAX_PATH_STEPS} from "$lib/circlesConfig";
 
   interface Props {

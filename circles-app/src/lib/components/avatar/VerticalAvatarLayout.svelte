@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { AppProfileCore as Profile } from '$lib/profiles';
+  import type { AppProfileCore as Profile } from '$lib/domains/profile/model/profiles';
   import Markdown from '$lib/components/markdown/Markdown.svelte';
 
   interface Props {

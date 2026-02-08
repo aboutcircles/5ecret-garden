@@ -1,18 +1,18 @@
 <script lang="ts">
     import {onMount} from 'svelte';
     import { page } from '$app/stores';
-    import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
-    import {popupControls} from '$lib/stores/popup';
+    import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
+    import {popupControls} from '$lib/shared/state/popup';
     import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
     import ProductCard from '$lib/components/ProductCard.svelte';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
-    import type { AggregatedCatalogItem } from '$lib/market/types';
+    import type { AggregatedCatalogItem } from '$lib/domains/market/model/types';
     import { getMarketClient } from '$lib/sdk/marketClient';
     import { shortenAddress } from '$lib/utils/shared';
     import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
     import { avatarState } from '$lib/stores/avatar.svelte';
-    import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
-    import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
+    import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
+    import ActionButtonDropDown from '$lib/app/shell/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/types/actions';
     import {gnosisConfig} from "$lib/circlesConfig";
 

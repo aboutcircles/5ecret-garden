@@ -7,7 +7,7 @@
   let { homeLink = '/' }: Props = $props();
 
   import { page } from '$app/stores';
-  import { popupControls } from '$lib/stores/popup';
+  import { popupControls } from '$lib/shared/state/popup';
   import { writable, type Unsubscriber } from 'svelte/store';
 
   const cartItemCount = writable(0);

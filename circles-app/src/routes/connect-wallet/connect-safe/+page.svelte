@@ -19,7 +19,7 @@
   import { gnosisConfig } from '$lib/circlesConfig';
   import { Sdk } from '@circles-sdk/sdk';
   import type { SdkContractRunner } from '@circles-sdk/adapter';
-  import { circles } from '$lib/stores/circles';
+  import { circles } from '$lib/shared/state/circles';
   let groupsByOwner: Record<Address, GroupRow[]> | undefined = $state();
   let avatarInfo: AvatarRow | undefined = $state();
   let runner: SdkContractRunner | undefined = $state();

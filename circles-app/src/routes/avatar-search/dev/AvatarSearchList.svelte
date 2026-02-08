@@ -2,8 +2,8 @@
   import GenericList from '$lib/components/GenericList.svelte';
   import { isVipProfileBookmark, profileBookmarksStore } from '$lib/bookmarks/profileBookmarks';
   import { contacts } from '$lib/stores/contacts';
-  import { circles } from '$lib/stores/circles';
-  import { createPaginatedList } from '$lib/stores/paginatedList';
+  import { circles } from '$lib/shared/state/circles';
+  import { createPaginatedList } from '$lib/shared/state/paginatedList';
   import { get } from 'svelte/store';
   import { writable } from 'svelte/store';
   import AvatarSearchRow from './AvatarSearchRow.svelte';

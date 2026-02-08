@@ -1,4 +1,4 @@
-import type { AppProfileCore as Profile } from '$lib/profiles';
+import type { AppProfileCore as Profile } from '$lib/domains/profile/model/profiles';
 import type { TrustRelation } from '@circles-sdk/data';
 import type { CirclesConfig } from '@circles-sdk/sdk';
 

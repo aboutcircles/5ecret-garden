@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {circles} from '$lib/stores/circles';
+    import {circles} from '$lib/shared/state/circles';
     import type { Profile } from '$lib/utils/profile';
     import CommonConnections from '$lib/components/CommonConnections.svelte';
     import TrustRelationsList from '$lib/components/TrustRelationsList.svelte';
@@ -17,7 +17,7 @@
     import {getProfile} from '$lib/utils/profile';
     import {formatTrustRelation, getTypeString} from '$lib/utils/helpers';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
-    import {popupControls} from '$lib/stores/popup';
+    import {popupControls} from '$lib/shared/state/popup';
     import JumpLink from '$lib/components/jump/JumpLink.svelte';
     import AddressComponent from '$lib/components/Address.svelte';
     import {uint256ToAddress, type Address} from '@circles-sdk/utils';
@@ -40,17 +40,17 @@
     // Offers tab dependencies
     import ProductCard from '$lib/components/ProductCard.svelte';
     import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
-    import type { AggregatedCatalogItem } from '$lib/market/types';
+    import type { AggregatedCatalogItem } from '$lib/domains/market/model/types';
     import { getMarketClient } from '$lib/sdk/marketClient';
     // Namespaces explorer (read-only) for other profiles
-    import ProfileNamespaces from '$lib/profile/ProfileNamespaces.svelte';
+    import ProfileNamespaces from '$lib/domains/profile/ui/ProfileNamespaces.svelte';
     import { loadProfileOrInit } from '@circles-market/sdk';
     import type { ProfilesBindings } from '@circles-market/sdk';
     import { createCirclesSdkProfilesBindings } from '@circles-profile/core';
     import { get } from 'svelte/store';
     import {gnosisConfig} from "$lib/circlesConfig";
-    import TrustScoreBadge from '$lib/profile/TrustScoreBadge.svelte';
-    import TrustHistoryHeatmap from '$lib/components/TrustHistoryHeatmap.svelte';
+    import TrustScoreBadge from '$lib/domains/profile/ui/TrustScoreBadge.svelte';
+    import TrustHistoryHeatmap from '$lib/domains/trust/ui/TrustHistoryHeatmap.svelte';
     import Lucide from '$lib/icons/Lucide.svelte';
     import { Star as LStar } from 'lucide';
     import {

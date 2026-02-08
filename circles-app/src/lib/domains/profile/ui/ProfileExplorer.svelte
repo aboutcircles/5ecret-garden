@@ -1,18 +1,18 @@
 <!-- lib/profile/ProfileExplorer.svelte -->
 <script lang="ts">
     import {onMount} from 'svelte';
-    import {popupControls} from '$lib/stores/popup';
+    import {popupControls} from '$lib/shared/state/popup';
     import {runTask} from '$lib/utils/tasks';
     import {avatarState} from '$lib/stores/avatar.svelte';
 
-    import ProfileNamespaces from '$lib/profile/ProfileNamespaces.svelte';
-    import ProfileHeaderEditor from '$lib/profile/ProfileHeaderEditor.svelte';
-    import ProfileSigningKeys from '$lib/profile/ProfileSigningKeys.svelte';
+    import ProfileNamespaces from '$lib/domains/profile/ui/ProfileNamespaces.svelte';
+    import ProfileHeaderEditor from '$lib/domains/profile/ui/ProfileHeaderEditor.svelte';
+    import ProfileSigningKeys from '$lib/domains/profile/ui/ProfileSigningKeys.svelte';
 
     import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
     import type { ProfilesBindings } from '@circles-market/sdk';
     import { loadProfileOrInit, rebaseAndSaveProfile } from '@circles-market/sdk';
-    import { getProfilesBindings } from '$lib/offers/profilesBindings';
+    import { getProfilesBindings } from '$lib/domains/market/offers/profilesBindings';
     import { removeProfileFromCache } from '$lib/utils/profile';
     import type {Address} from '@circles-sdk/utils';
 

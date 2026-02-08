@@ -2,8 +2,8 @@
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
-  import { popupControls, popupState } from '$lib/stores/popup';
-  import SalesOrderDetailsPopup from '$lib/sales/SalesOrderDetailsPopup.svelte';
+  import { popupControls, popupState } from '$lib/shared/state/popup';
+  import SalesOrderDetailsPopup from '$lib/domains/market/ui/SalesOrderDetailsPopup.svelte';
 
   const orderId = $derived(decodeURIComponent($page.params.orderId || ''));
 

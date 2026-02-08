@@ -5,7 +5,7 @@
   import BalanceRow from '$lib/components/BalanceRow.svelte';
   import { roundToDecimals } from '$lib/utils/shared';
   import { runTask } from '$lib/utils/tasks';
-  import { popupControls } from '$lib/stores/popup';
+  import { popupControls } from '$lib/shared/state/popup';
 
   interface Props {
     asset: TokenBalanceRow;
