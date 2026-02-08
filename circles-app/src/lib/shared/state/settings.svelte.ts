@@ -1,4 +1,4 @@
-import { CirclesStorage } from '$lib/utils/storage';
+import { CirclesStorage } from '$lib/shared/utils/storage';
 
 const storage = CirclesStorage.getInstance();
 

@@ -1,9 +1,9 @@
 <script lang="ts">
     import {circles} from '$lib/shared/state/circles';
-    import type { Profile } from '$lib/utils/profile';
-    import CommonConnections from '$lib/components/CommonConnections.svelte';
-    import TrustRelationsList from '$lib/components/TrustRelationsList.svelte';
-    import HoldersList from '$lib/components/HoldersList.svelte';
+    import type { Profile } from '$lib/shared/utils/profile';
+    import CommonConnections from '$lib/domains/profile/ui/components/CommonConnections.svelte';
+    import TrustRelationsList from '$lib/domains/profile/ui/components/TrustRelationsList.svelte';
+    import HoldersList from '$lib/domains/profile/ui/components/HoldersList.svelte';
     import {contacts} from '$lib/domains/profile/state';
     import {
         type AvatarRow,
@@ -11,25 +11,25 @@
         type TrustRelation,
         type TrustRelationRow,
     } from '@circles-sdk/data';
-    import Untrust from '$lib/pages/Untrust.svelte';
-    import Trust from '$lib/pages/Trust.svelte';
-    import SelectAsset from '$lib/flows/send/2_Asset.svelte';
-    import {getProfile} from '$lib/utils/profile';
-    import {formatTrustRelation, getTypeString} from '$lib/utils/helpers';
-    import Avatar from '$lib/components/avatar/Avatar.svelte';
+    import Untrust from '$lib/areas/contacts/ui/pages/Untrust.svelte';
+    import Trust from '$lib/areas/contacts/ui/pages/Trust.svelte';
+    import SelectAsset from '$lib/areas/wallet/flows/send/2_Asset.svelte';
+    import {getProfile} from '$lib/shared/utils/profile';
+    import {formatTrustRelation, getTypeString} from '$lib/shared/utils/helpers';
+    import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import {popupControls} from '$lib/shared/state/popup';
     import JumpLink from '$lib/shared/ui/content/jump/JumpLink.svelte';
-    import AddressComponent from '$lib/components/Address.svelte';
+    import AddressComponent from '$lib/shared/ui/common/Address.svelte';
     import {uint256ToAddress, type Address} from '@circles-sdk/utils';
-    import SelectAmount from '$lib/flows/send/3_Amount.svelte';
-    import {transitiveTransfer} from '$lib/pages/SelectAsset.svelte';
+    import SelectAmount from '$lib/areas/wallet/flows/send/3_Amount.svelte';
+    import {transitiveTransfer} from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
     import {
         getAccountHoldings,
         getGroupCollateral, getGroupTokenHolders,
         getTreasuryAddress,
         getVaultAddress,
-    } from '$lib/utils/vault';
-    import CollateralTable from '$lib/components/CollateralTable.svelte';
+    } from '$lib/shared/utils/vault';
+    import CollateralTable from '$lib/domains/profile/ui/components/CollateralTable.svelte';
     import {goto} from '$app/navigation';
     import {avatarState} from '$lib/shared/state/avatar.svelte';
 
@@ -38,27 +38,27 @@
     import Tab from '$lib/shared/ui/primitives/tabs/Tab.svelte';
     import type { TabIdOf } from '$lib/shared/ui/primitives/tabs/tabId';
     // Offers tab dependencies
-    import ProductCard from '$lib/components/ProductCard.svelte';
+    import ProductCard from '$lib/areas/market/ui/product/ProductCard.svelte';
     import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
     import type { AggregatedCatalogItem } from '$lib/areas/market/model';
-    import { getMarketClient } from '$lib/integrations/market';
+    import { getMarketClient } from '$lib/shared/integrations/market';
     // Namespaces explorer (read-only) for other profiles
 import { ProfileNamespaces } from '$lib/domains/profile/ui';
     import { loadProfileOrInit } from '@circles-market/sdk';
     import type { ProfilesBindings } from '@circles-market/sdk';
     import { createCirclesSdkProfilesBindings } from '@circles-profile/core';
     import { get } from 'svelte/store';
-    import {gnosisConfig} from "$lib/circlesConfig";
+    import {gnosisConfig} from "$lib/shared/config/circles";
 import { TrustScoreBadge } from '$lib/domains/profile/ui';
     import TrustHistoryHeatmap from '$lib/domains/trust/ui/TrustHistoryHeatmap.svelte';
-    import Lucide from '$lib/icons/Lucide.svelte';
+    import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
     import { Star as LStar } from 'lucide';
     import {
         bookmarksStateStore,
         profileBookmarksService,
         profileBookmarksStore,
         type ProfileBookmark,
-    } from '$lib/bookmarks/profileBookmarks';
+    } from '$lib/areas/settings/state/profileBookmarks';
 
     interface Props {
         address: Address | undefined;

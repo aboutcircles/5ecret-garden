@@ -1,7 +1,7 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
-    import ActionButton from '$lib/components/ActionButton.svelte';
-    import Avatar from '$lib/components/avatar/Avatar.svelte';
+    import ActionButton from '$lib/shared/ui/common/ActionButton.svelte';
+    import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import type { Avatar as AvatarType } from '@circles-sdk/sdk';
     import { circles } from '$lib/shared/state/circles';
     import { wallet } from '$lib/shared/state/wallet.svelte';
@@ -12,14 +12,14 @@
 import { ProfileHeaderEditor } from '$lib/domains/profile/ui';
     import { settings } from '$lib/shared/state/settings.svelte';
     import { avatarState } from '$lib/shared/state/avatar.svelte';
-    import Disclaimer from '$lib/components/Disclaimer.svelte';
-    import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
-    import Lucide from '$lib/icons/Lucide.svelte';
+    import Disclaimer from '$lib/shared/ui/common/Disclaimer.svelte';
+    import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
+    import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
     import { ArrowLeft as LArrowLeft, ExternalLink as LExternalLink, Lock as LLock } from 'lucide';
     import RowFrame from '$lib/shared/ui/RowFrame.svelte';
-    import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
-    import ActionButtonDropDown from '$lib/app/shell/ActionButtonDropDown.svelte';
-    import type { Action } from '$lib/types/actions';
+    import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
+    import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
+    import type { Action } from '$lib/shared/ui/shell/actions';
 
     let invitations: AvatarRow[] = $state([]);
     let inviterSelected: Address | undefined = $state(

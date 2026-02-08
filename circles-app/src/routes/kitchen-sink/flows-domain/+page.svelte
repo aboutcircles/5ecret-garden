@@ -4,7 +4,7 @@
   import { popupControls } from '$lib/shared/state/popup';
 import { ProfilePopup } from '$lib/domains/profile/ui/pages';
   import TrustHistoryHeatmap from '$lib/domains/trust/ui/TrustHistoryHeatmap.svelte';
-  import { tokenTypeToString, transitiveTransfer } from '$lib/pages/SelectAsset.svelte';
+  import { tokenTypeToString, transitiveTransfer } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
 
   const demoAddress = '0x1aca75e38263c79d9d4f10df0635cc6fcfe6f026' as Address;
 

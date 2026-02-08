@@ -1,5 +1,5 @@
 <script lang="ts">
-  import ConnectSafe from '$lib/components/ConnectSafe.svelte';
+  import ConnectSafe from '$lib/areas/wallet/ui/onboarding/ConnectSafe.svelte';
   import {
     clearSession,
     getSigner,
@@ -9,14 +9,14 @@
     wallet,
   } from '$lib/shared/state/wallet.svelte';
   import type { Address } from '@circles-sdk/utils';
-  import WalletLoader from '$lib/components/WalletLoader.svelte';
+  import WalletLoader from '$lib/areas/wallet/ui/onboarding/WalletLoader.svelte';
   import { type AvatarRow, type GroupRow } from '@circles-sdk/data';
-  import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
-  import ConnectCircles from '$lib/components/ConnectCircles.svelte';
-  import SettingsDropdown from '$lib/components/SettingsDropdown.svelte';
+  import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/shared/utils/getGroupsByOwnerBatch';
+  import ConnectCircles from '$lib/areas/wallet/ui/onboarding/ConnectCircles.svelte';
+  import SettingsDropdown from '$lib/areas/settings/ui/SettingsDropdown.svelte';
   import { settings } from '$lib/shared/state/settings.svelte';
   import { onMount } from 'svelte';
-  import { gnosisConfig } from '$lib/circlesConfig';
+  import { gnosisConfig } from '$lib/shared/config/circles';
   import { Sdk } from '@circles-sdk/sdk';
   import type { SdkContractRunner } from '@circles-sdk/adapter';
   import { circles } from '$lib/shared/state/circles';

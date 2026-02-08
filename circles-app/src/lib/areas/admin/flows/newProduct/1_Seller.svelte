@@ -1,11 +1,11 @@
 <script lang="ts">
   import type { Address } from '@circles-sdk/utils';
   import { popupControls } from '$lib/shared/state/popup';
-  import SearchAvatar from '$lib/pages/SearchAvatar.svelte';
+  import SearchAvatar from '$lib/areas/contacts/ui/pages/SearchAvatar.svelte';
   import type { AdminUnifiedProduct, AdminOdooConnection } from '$lib/areas/admin/types';
   import type { AdminNewProductFlowContext } from './context';
   import CatalogStep from './2_Catalog.svelte';
-  import { shortenAddress } from '$lib/utils/shared';
+  import { shortenAddress } from '$lib/shared/utils/shared';
 
   interface Props {
     context?: AdminNewProductFlowContext;

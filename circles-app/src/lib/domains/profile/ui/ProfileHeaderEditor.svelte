@@ -5,7 +5,7 @@
         fileToCroppedDataUrl,
         AVATAR_PREFERRED_MAX_BYTES,
         MEDIA_MAX_BYTES,
-    } from '$lib/media/imageTools';
+    } from '$lib/shared/media/imageTools';
 
     interface Props {
         name: string;

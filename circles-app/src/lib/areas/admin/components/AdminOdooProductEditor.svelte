@@ -7,7 +7,7 @@
     type OdooProductCatalogItem,
     type OdooProductConfig,
     type RouteUpsertInput,
-  } from '$lib/gateway/adminClient';
+  } from '$lib/areas/admin/services/gateway/adminClient';
   import { normalizeAddressInput, normalizeSku } from '../productEditorUtils';
 
   interface Props {

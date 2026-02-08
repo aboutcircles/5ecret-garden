@@ -1,17 +1,17 @@
 <script lang="ts">
     import {onMount} from 'svelte';
-    import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
-    import ProductCard from '$lib/components/ProductCard.svelte';
-    import { getMarketClient } from '$lib/integrations/market';
+    import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
+    import ProductCard from '$lib/areas/market/ui/product/ProductCard.svelte';
+    import { getMarketClient } from '$lib/shared/integrations/market';
     import type { AggregatedCatalogItem } from '$lib/areas/market/model';
-    import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
-    import ActionButtonDropDown from '$lib/app/shell/ActionButtonDropDown.svelte';
-    import type { Action } from '$lib/types/actions';
+    import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
+    import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
+    import type { Action } from '$lib/shared/ui/shell/actions';
     import { goto } from '$app/navigation';
     import { avatarState } from '$lib/shared/state/avatar.svelte';
     import Tabs from '$lib/shared/ui/primitives/tabs/Tabs.svelte';
     import Tab from '$lib/shared/ui/primitives/tabs/Tab.svelte';
-    import {gnosisConfig} from "$lib/circlesConfig";
+    import {gnosisConfig} from "$lib/shared/config/circles";
 
     // Defaults (as requested)
     const OPERATOR: `0x${string}` = gnosisConfig.production.marketOperator;
@@ -51,7 +51,7 @@
       }
     });
 
-    import { shortenAddress } from '$lib/utils/shared';
+    import { shortenAddress } from '$lib/shared/utils/shared';
     const shortAddr = (a?: string) => (a ? shortenAddress(a as any) : '');
 
     const PAGE_SIZE = 20;

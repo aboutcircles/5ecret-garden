@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { getTimeAgo } from '$lib/utils/shared';
+    import { getTimeAgo } from '$lib/shared/utils/shared';
     import type { TransactionHistoryRow } from '@circles-sdk/data';
-    import Avatar from '$lib/components/avatar/Avatar.svelte';
+    import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import { avatarState } from '$lib/shared/state/avatar.svelte';
     import RowFrame from '$lib/shared/ui/RowFrame.svelte';
     import { popupControls, type PopupContentDefinition } from '$lib/shared/state/popup';

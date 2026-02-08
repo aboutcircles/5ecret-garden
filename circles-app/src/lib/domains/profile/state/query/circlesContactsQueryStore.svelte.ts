@@ -8,7 +8,7 @@ import type {
   AvatarRow,
 } from '@circles-sdk/data';
 import type { ContactList } from '$lib/domains/profile/state';
-import { getProfile } from '$lib/utils/profile';
+import { getProfile } from '$lib/shared/utils/profile';
 import { get } from 'svelte/store';
 import type { Address } from '@circles-sdk/utils';
 import type { Avatar } from '@circles-sdk/sdk';

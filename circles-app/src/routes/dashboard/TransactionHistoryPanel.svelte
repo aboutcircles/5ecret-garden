@@ -1,5 +1,5 @@
 <script lang="ts">
-    import GenericList from '$lib/components/GenericList.svelte';
+    import GenericList from '$lib/shared/ui/common/GenericList.svelte';
     import TransactionRow from './TransactionRow.svelte';
     import {transactionHistory} from '$lib/shared/state/transactionHistory';
 </script>

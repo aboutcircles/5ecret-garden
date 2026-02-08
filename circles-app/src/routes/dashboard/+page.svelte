@@ -1,22 +1,22 @@
 <script lang="ts">
     import { avatarState } from '$lib/shared/state/avatar.svelte';
-    import { roundToDecimals } from '$lib/utils/shared';
-    import { runTask } from '$lib/utils/tasks';
+    import { roundToDecimals } from '$lib/shared/utils/shared';
+    import { runTask } from '$lib/shared/utils/tasks';
 
     import OverviewPanel from './OverviewPanel.svelte';
     import TransactionHistoryPanel from './TransactionHistoryPanel.svelte';
 
     import { popupControls } from '$lib/shared/state/popup';
-    import Balances from '$lib/pages/Balances.svelte';
+    import Balances from '$lib/areas/wallet/ui/pages/Balances.svelte';
     import { circlesBalances } from '$lib/shared/state/circlesBalances';
     import { totalCirclesBalance } from '$lib/shared/state/totalCirclesBalance';
 
-    import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
-    import Send from '$lib/flows/send/1_To.svelte';
+    import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
+    import Send from '$lib/areas/wallet/flows/send/1_To.svelte';
 
     // lucide (standalone) icon nodes
     import { Send as LSend, Banknote as LBanknote, BarChart3 as LBarChart3 } from 'lucide';
-    import Lucide from '$lib/icons/Lucide.svelte';
+    import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
 
     let mintableAmount: number = $state(0);
 

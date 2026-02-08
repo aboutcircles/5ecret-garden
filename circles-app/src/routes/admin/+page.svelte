@@ -1,10 +1,10 @@
 <script lang="ts">
-  import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
-  import ActionButton from '$lib/components/ActionButton.svelte';
-  import Lucide from '$lib/icons/Lucide.svelte';
+  import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
+  import ActionButton from '$lib/shared/ui/common/ActionButton.svelte';
+  import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import { browser } from '$app/environment';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
-  import { runTask } from '$lib/utils/tasks';
+  import { runTask } from '$lib/shared/utils/tasks';
   import { RefreshCw as LRefreshCw } from 'lucide';
   import {
     getAdminToken,
@@ -12,7 +12,7 @@
     clearAdminToken,
     signInAdminWithSafe,
     type AdminVerifyResponse,
-  } from '$lib/gateway/adminAuth';
+  } from '$lib/areas/admin/services/gateway/adminAuth';
   import {
     listRoutes,
     upsertRoute,
@@ -34,8 +34,8 @@
     type CodeProductConfig,
     type OdooProductListItem,
     type CodeProductListItem,
-  } from '$lib/gateway/adminClient';
-  import { gnosisConfig } from '$lib/circlesConfig';
+  } from '$lib/areas/admin/services/gateway/adminClient';
+  import { gnosisConfig } from '$lib/shared/config/circles';
   import type { Address } from '@circles-sdk/utils';
   import { popupControls } from '$lib/shared/state/popup';
   import AdminSectionCard from '$lib/areas/admin/components/AdminSectionCard.svelte';
@@ -47,7 +47,7 @@
   import { combineAdminProducts } from '$lib/areas/admin/helpers';
   import { resolveAdminProductType } from '$lib/areas/admin/types';
   import type { AdminProductType, AdminUnifiedProduct, AdminOdooConnection } from '$lib/areas/admin/types';
-  import { shortenAddress } from '$lib/utils/shared';
+  import { shortenAddress } from '$lib/shared/utils/shared';
   import Tabs from '$lib/shared/ui/primitives/tabs/Tabs.svelte';
   import Tab from '$lib/shared/ui/primitives/tabs/Tab.svelte';
   import type { TabIdOf } from '$lib/shared/ui/primitives/tabs/tabId';

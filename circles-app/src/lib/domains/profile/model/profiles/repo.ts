@@ -4,7 +4,7 @@ import { circles } from '$lib/shared/state/circles';
 import { getProfilesBindings } from '$lib/areas/market/offers';
 import type { AppProfile, AppProfileCore, ProfileAddress } from './types';
 import { FallbackImageUrl } from './types';
-import { BatchAggregator } from '$lib/utils/batchAggregator';
+import { BatchAggregator } from '$lib/shared/utils/batchAggregator';
 import { ensureProfileShape } from '@circles-profile/core';
 import { rebaseAndSaveProfile } from '@circles-market/sdk';
 

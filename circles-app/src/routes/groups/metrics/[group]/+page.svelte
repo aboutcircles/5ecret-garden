@@ -2,20 +2,20 @@
   import {
     fetchGroupMetrics,
     type GroupMetrics,
-  } from '$lib/domains/groups/state';
+  } from '$lib/areas/groups/state';
   import { goto } from '$app/navigation';
-  import ModernHistoryChart from '$lib/components/ModernHistoryChart.svelte';
-  import ModernPieChart from '$lib/components/ModernPieChart.svelte';
-  import GroupMetricsStats from '$lib/components/GroupMetricsStats.svelte';
-  import Avatar from '$lib/components/avatar/Avatar.svelte';
+  import ModernHistoryChart from '$lib/areas/groups/ui/components/ModernHistoryChart.svelte';
+  import ModernPieChart from '$lib/areas/groups/ui/components/ModernPieChart.svelte';
+  import GroupMetricsStats from '$lib/areas/groups/ui/components/GroupMetricsStats.svelte';
+  import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import type { PageProps } from './$types';
   import { circles } from '$lib/shared/state/circles';
-  import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
+  import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
   import { ArrowLeft as LArrowLeft } from 'lucide';
   import type { Address } from '@circles-sdk/utils';
-  import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
-  import ActionButtonDropDown from '$lib/app/shell/ActionButtonDropDown.svelte';
-  import type { Action } from '$lib/types/actions';
+  import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
+  import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
+  import type { Action } from '$lib/shared/ui/shell/actions';
 
   let groupMetrics: GroupMetrics = $state({});
 

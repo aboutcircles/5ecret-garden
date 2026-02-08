@@ -1,11 +1,11 @@
 <script lang="ts">
   import type { Address } from '@circles-sdk/utils';
 
-  import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import AddressComponent from '$lib/components/Address.svelte';
-  import Tooltip from '$lib/components/Tooltip.svelte';
+  import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
+  import AddressComponent from '$lib/shared/ui/common/Address.svelte';
+  import Tooltip from '$lib/shared/ui/common/Tooltip.svelte';
   import JumpLink from '$lib/shared/ui/content/jump/JumpLink.svelte';
-  import QrCode from '$lib/components/QrCode.svelte';
+  import QrCode from '$lib/shared/ui/common/QrCode.svelte';
 
   const demoAddressA = '0x1111111111111111111111111111111111111111' as Address;
   const demoAddressB = '0x2222222222222222222222222222222222222222' as Address;

@@ -10,13 +10,13 @@ import {
     SafeSdkPrivateKeyContractRunner,
 } from '@circles-sdk/adapter-safe';
 import {Sdk} from '@circles-sdk/sdk';
-import {getCirclesConfig} from '$lib/utils/helpers';
-import {gnosisConfig} from '$lib/circlesConfig';
+import {getCirclesConfig} from '$lib/shared/utils/helpers';
+import {gnosisConfig} from '$lib/shared/config/circles';
 import {JsonRpcProvider} from 'ethers';
 import {type SdkContractRunner} from '@circles-sdk/adapter';
 import type {Address} from '@circles-sdk/utils';
-import {CirclesStorage} from '$lib/utils/storage';
-import {groupMetrics} from '$lib/domains/groups/state';
+import {CirclesStorage} from '$lib/shared/utils/storage';
+import {groupMetrics} from '$lib/areas/groups/state';
 import { disconnect, getConnectors, reconnect, getAccount } from '@wagmi/core';
 import {config} from '../../../config';
 import {settings} from './settings.svelte';

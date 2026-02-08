@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Address } from '@circles-sdk/utils';
   import { popupControls } from '$lib/shared/state/popup';
-  import SearchAvatar from '$lib/pages/SearchAvatar.svelte';
+  import SearchAvatar from '$lib/areas/contacts/ui/pages/SearchAvatar.svelte';
   import type { AdminNewConnectionFlowContext } from './context';
   import DetailsStep from './2_Details.svelte';
 

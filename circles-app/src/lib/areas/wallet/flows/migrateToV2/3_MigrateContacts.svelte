@@ -1,0 +1,121 @@
+<script lang="ts">
+  import { onMount } from 'svelte';
+  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+  import type { MigrateToV2Context } from '$lib/areas/wallet/flows/migrateToV2/context';
+  import Migrate from './4_Migrate.svelte';
+  import { contacts } from '$lib/domains/profile/state';
+  import { formatTrustRelation } from '$lib/shared/utils/helpers';
+  import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
+  import { popupControls } from '$lib/shared/state/popup';
+  import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
+  import {ArrowLeft, ArrowLeftRight, ArrowRight} from 'lucide';
+
+  interface Props {
+    context: MigrateToV2Context;
+  }
+
+  let { context = $bindable() }: Props = $props();
+
+  let selectedAddresses: string[] = $state([]);
+
+  onMount(async () => {
+    selectedAddresses = context.trustList ?? Object.keys($contacts?.data ?? {});
+    console.log('Selected addresses', selectedAddresses);
+  });
+
+  async function next() {
+    popupControls.open({
+      title: 'Run Migration',
+      component: Migrate,
+      props: {
+        context: context,
+      },
+    });
+  }
+
+  let orderedContacts = $derived(Object.keys($contacts?.data ?? {}).sort((a, b) => {
+    /*
+            // Alphabetical sorting by contact name
+            const aRelation = $contacts?.data[a]?.contactProfile?.name;
+            const bRelation = $contacts?.data[b]?.contactProfile?.name;
+            return aRelation.localeCompare(bRelation);
+         */
+    const aRelation = $contacts?.data[a].row.relation;
+    const bRelation = $contacts?.data[b].row.relation;
+    if (aRelation === 'mutuallyTrusts' && bRelation !== 'mutuallyTrusts') {
+      return -1;
+    }
+    if (aRelation === 'trusts' && bRelation === 'trustedBy') {
+      return -1;
+    }
+    if (aRelation === bRelation) {
+      return 0;
+    }
+    if (bRelation === 'mutuallyTrusts' && aRelation !== 'mutuallyTrusts') {
+      return 1;
+    }
+    if (bRelation === 'trusts' && aRelation === 'trustedBy') {
+      return 1;
+    }
+    return 0;
+  }));
+</script>
+
+<FlowDecoration>
+  <p class="text-base-content/70 mt-2">
+    Select the contacts you want to keep in your new Circles V2 profile.
+  </p>
+  <div class="mt-6">
+    {#each orderedContacts as address}
+      <button
+        class="btn btn-ghost justify-start w-full"
+        onclick={() => {
+          console.log('Selected address', address);
+          // Toggle selection
+          if (selectedAddresses.includes(address)) {
+            selectedAddresses = selectedAddresses.filter((a) => a !== address);
+          } else {
+            selectedAddresses = [...selectedAddresses, address];
+          }
+          context.trustList = selectedAddresses;
+        }}
+      >
+        <Avatar
+          pictureOverlayUrl={selectedAddresses.includes(address)
+            ? '/check.svg'
+            : undefined}
+          {address}
+          clickable={false}
+          view="horizontal"
+        >
+          <div>
+            {#if $contacts?.data[address].row.relation === 'trusts'}
+              <Lucide icon={ArrowLeft} size={12} class="text-info inline" />
+            {/if}
+            {#if $contacts?.data[address].row.relation === 'trustedBy'}
+              <Lucide icon={ArrowRight} size={12} class="text-warning inline" />
+            {/if}
+            {#if $contacts?.data[address].row.relation === 'mutuallyTrusts'}
+              <Lucide icon={ArrowLeftRight} size={12} class="text-success inline" />
+            {/if}
+            {#if $contacts?.data[address]}
+              <span>{formatTrustRelation($contacts.data[address].row.relation)}</span>
+            {/if}
+          </div>
+        </Avatar>
+      </button>
+    {/each}
+    {#if orderedContacts.length === 0}
+      <p class="text-center mt-4">No contacts to migrate</p>
+    {/if}
+  </div>
+  <div class="flex justify-end space-x-2 mt-6">
+    <button
+      type="submit"
+      class="btn btn-primary"
+      onclick={() => next()}
+    >
+      Next
+    </button>
+  </div>
+</FlowDecoration>

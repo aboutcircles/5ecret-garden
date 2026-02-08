@@ -1,6 +1,6 @@
 <script lang="ts">
   import Markdown from '$lib/shared/ui/content/markdown/Markdown.svelte';
-  import Lucide from '$lib/icons/Lucide.svelte';
+  import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import { Bold as LBold, Italic as LItalic, Link2 as LLink2 } from 'lucide';
   import Tabs from '$lib/shared/ui/primitives/tabs/Tabs.svelte';
   import Tab from '$lib/shared/ui/primitives/tabs/Tab.svelte';
