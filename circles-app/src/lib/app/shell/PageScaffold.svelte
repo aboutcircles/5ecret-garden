@@ -1,12 +1,12 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import type { Snippet } from 'svelte';
-    import { popupState } from '$lib/stores/popup';
-    import {headerDropdownOpen} from "$lib/stores/headerDropdown";
+    import { popupState } from '$lib/shared/state/popup';
+    import {headerDropdownOpen} from "$lib/shared/state/headerDropdown";
 
     import { avatarState } from '$lib/stores/avatar.svelte';
-    import { popupControls } from '$lib/stores/popup';
-    import SettingProfile from "$lib/pages/SettingProfile.svelte";
+    import { popupControls } from '$lib/shared/state/popup';
+    import SettingProfile from "$lib/domains/profile/ui/pages/SettingProfile.svelte";
 
     type Highlight = 'soft' | 'tint';
     type CollapsedMode = 'dropdown' | 'bar';

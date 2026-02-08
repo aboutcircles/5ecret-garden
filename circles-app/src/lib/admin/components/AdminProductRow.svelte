@@ -5,7 +5,7 @@
   import type { AdminUnifiedProduct, AdminProductType } from '../types';
   import { getMarketClient } from '$lib/sdk/marketClient';
   import { gnosisConfig } from '$lib/circlesConfig';
-  import { getProduct, pickProductImageUrl } from '$lib/market/catalogHelpers';
+  import { getProduct, pickProductImageUrl } from '$lib/domains/market/services/catalogHelpers';
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
   import { onMount } from 'svelte';
 

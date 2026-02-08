@@ -1,7 +1,7 @@
 import {writable} from 'svelte/store';
 import {goto} from '$app/navigation';
 import {avatarState} from '$lib/stores/avatar.svelte';
-import {circles} from '$lib/stores/circles';
+import {circles} from '$lib/shared/state/circles';
 import {
     BrowserProviderContractRunner, PrivateKeyContractRunner,
 } from '@circles-sdk/adapter-ethers';

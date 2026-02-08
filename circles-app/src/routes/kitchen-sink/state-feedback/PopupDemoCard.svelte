@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { popupControls, popupState } from '$lib/stores/popup';
+  import { popupControls, popupState } from '$lib/shared/state/popup';
 
   interface Props {
     step?: number;

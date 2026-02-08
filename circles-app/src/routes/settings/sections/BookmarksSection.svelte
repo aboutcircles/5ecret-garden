@@ -2,7 +2,7 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import Lucide from '$lib/icons/Lucide.svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
-  import { popupControls } from '$lib/stores/popup';
+  import { popupControls } from '$lib/shared/state/popup';
   import RowFrame from '$lib/ui/RowFrame.svelte';
   import {
     ChevronDown as LChevronDown,

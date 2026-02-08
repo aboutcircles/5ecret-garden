@@ -1,11 +1,11 @@
 <script lang="ts">
     import {onMount} from 'svelte';
-    import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
+    import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
     import ProductCard from '$lib/components/ProductCard.svelte';
     import { getMarketClient } from '$lib/sdk/marketClient';
-    import type { AggregatedCatalogItem } from '$lib/market/types';
-    import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
-    import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
+    import type { AggregatedCatalogItem } from '$lib/domains/market/model/types';
+    import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
+    import ActionButtonDropDown from '$lib/app/shell/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/types/actions';
     import { goto } from '$app/navigation';
     import { avatarState } from '$lib/stores/avatar.svelte';

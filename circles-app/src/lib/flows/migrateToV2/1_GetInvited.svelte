@@ -4,10 +4,10 @@
   import CreateProfile from './2_CreateProfile.svelte';
   import { onMount } from 'svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
-  import { circles } from '$lib/stores/circles';
+  import { circles } from '$lib/shared/state/circles';
   import type { AvatarRow } from '@circles-sdk/data';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import { popupControls } from '$lib/stores/popup';
+  import { popupControls } from '$lib/shared/state/popup';
   import type { Profile } from '@circles-sdk/profiles';
   import { settings } from '$lib/stores/settings.svelte';
 

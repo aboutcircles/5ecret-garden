@@ -1,11 +1,11 @@
 <script lang="ts">
   import {onMount} from 'svelte';
   import {page} from '$app/stores';
-  import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
+  import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
   import ProductViewer from '$lib/components/ProductViewer.svelte';
   import {goto} from "$app/navigation";
-  import type {AggregatedCatalogItem} from '$lib/market/types';
-  import {getFirstOffer} from '$lib/market/catalogHelpers';
+  import type {AggregatedCatalogItem} from '$lib/domains/market/model/types';
+  import {getFirstOffer} from '$lib/domains/market/services/catalogHelpers';
   import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
   import {avatarState} from '$lib/stores/avatar.svelte';
   import {addToCart, cartState} from '$lib/cart/store';

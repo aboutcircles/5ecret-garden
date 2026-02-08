@@ -1,6 +1,6 @@
 import type { AvatarRow } from '@circles-sdk/data';
 import { get } from 'svelte/store';
-import { circles } from '$lib/stores/circles';
+import { circles } from '$lib/shared/state/circles';
 
 export function canMigrate(avatar: AvatarRow): boolean {
   if (!get(circles)?.v2Hub) {

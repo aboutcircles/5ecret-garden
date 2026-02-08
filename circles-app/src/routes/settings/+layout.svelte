@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
+  import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
   import Tabs from '$lib/components/tabs/Tabs.svelte';
   import Tab from '$lib/components/tabs/Tab.svelte';
   import { writable, type Readable } from 'svelte/store';
@@ -21,17 +21,17 @@
   // ——— Personal (duplicate of /settings) ———
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { clearSession, signer, wallet } from '$lib/stores/wallet.svelte';
-  import { circles } from '$lib/stores/circles';
+  import { circles } from '$lib/shared/state/circles';
   import MigrateToV2 from '$lib/flows/migrateToV2/1_GetInvited.svelte';
-  import { popupControls } from '$lib/stores/popup';
+  import { popupControls } from '$lib/shared/state/popup';
   import { ethers } from 'ethers';
   import { LogOut as LLogOut } from 'lucide';
   import type { Address } from '@circles-sdk/utils';
-  import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
-  import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
+  import ActionButtonDropDown from '$lib/app/shell/ActionButtonDropDown.svelte';
+  import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
   import type { Action } from '$lib/types/actions';
   import ActionButton from '$lib/components/ActionButton.svelte';
-  import { getProfilesBindings } from '$lib/offers/profilesBindings';
+  import { getProfilesBindings } from '$lib/domains/market/offers/profilesBindings';
   import { runTask } from '$lib/utils/tasks';
   import { removeProfileFromCache } from '$lib/utils/profile';
   import { CirclesStorage } from '$lib/utils/storage';
@@ -43,7 +43,7 @@
     normalizeEvmAddress as normalizeAddress,
     rebaseAndSaveProfile,
   } from '@circles-market/sdk';
-  import type { AggregatedCatalogItem } from '$lib/market/types';
+  import type { AggregatedCatalogItem } from '$lib/domains/market/model/types';
   import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
   import { getMarketClient } from '$lib/sdk/marketClient';
   import { signInWithSafe } from '$lib/auth/signin';

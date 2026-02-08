@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  import { popupControls, popupState } from '$lib/stores/popup';
+  import { popupControls, popupState } from '$lib/shared/state/popup';
   import { jumpHref } from '$lib/components/markdown/jump';
   import JumpPopup from '$lib/components/jump/JumpPopup.svelte';
 

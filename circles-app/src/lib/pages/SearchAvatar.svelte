@@ -2,8 +2,8 @@
     import {ethers} from 'ethers';
     import AddressInput from '$lib/components/AddressInput.svelte';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
-    import type { SearchProfileResult } from '$lib/profiles';
-    import {circles} from '$lib/stores/circles';
+    import type { SearchProfileResult } from '$lib/domains/profile/model/profiles';
+    import {circles} from '$lib/shared/state/circles';
     import {get} from 'svelte/store';
     import {onMount} from "svelte";
     import RowFrame from '$lib/ui/RowFrame.svelte';

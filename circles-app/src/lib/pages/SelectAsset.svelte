@@ -1,6 +1,6 @@
 <script lang="ts" module>
     import { get } from 'svelte/store';
-    import { totalCirclesBalance } from '$lib/stores/totalCirclesBalance';
+    import { totalCirclesBalance } from '$lib/shared/state/totalCirclesBalance';
 
     export const TransitiveTransferTokenOwner =
         '0x0000000000000000000000000000000000000001';

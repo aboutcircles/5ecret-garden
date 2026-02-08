@@ -2,7 +2,7 @@
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
   import type { Address } from '@circles-sdk/utils';
   import AdminProductFormBase from '$lib/admin/components/AdminProductFormBase.svelte';
-  import { popupControls } from '$lib/stores/popup';
+  import { popupControls } from '$lib/shared/state/popup';
   import { normalizeAddressInput } from '$lib/admin/productEditorUtils';
   import DetailsStep from './5_Details.svelte';
   import type { AdminNewProductFlowContext } from './context';

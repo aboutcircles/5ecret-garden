@@ -1,9 +1,9 @@
 <script lang="ts">
   import { Plus as LPlus, RefreshCw as LRefreshCw } from 'lucide';
 
-  import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
-  import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
-  import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
+  import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
+  import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
+  import ActionButtonDropDown from '$lib/app/shell/ActionButtonDropDown.svelte';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import RowFrame from '$lib/ui/RowFrame.svelte';
   import type { Action } from '$lib/types/actions';

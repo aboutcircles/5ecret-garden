@@ -1,7 +1,7 @@
 <script lang="ts">
     import GenericList from '$lib/components/GenericList.svelte';
     import HoldersRow from '$lib/components/HoldersRow.svelte';
-    import { createPaginatedList } from '$lib/stores/paginatedList';
+    import { createPaginatedList } from '$lib/shared/state/paginatedList';
     import { createFilteredAddresses, createProfileNameStore } from '$lib/utils/searchableProfiles';
     import type { Address } from '@circles-sdk/utils';
     import type { TrustRelation } from '@circles-sdk/data';

@@ -1,9 +1,9 @@
 <script lang="ts">
     import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
-    import { circles } from '$lib/stores/circles';
+    import { circles } from '$lib/shared/state/circles';
     import { wallet } from '$lib/stores/wallet.svelte';
     import { runTask } from '$lib/utils/tasks';
-    import { popupControls } from '$lib/stores/popup';
+    import { popupControls } from '$lib/shared/state/popup';
     import Markdown from '$lib/components/markdown/Markdown.svelte';
     import { cidV0ToUint8Array } from '@circles-sdk/utils';
     import { isValidName, isValidSymbol, isValidOnChainName } from '$lib/utils/isValid';

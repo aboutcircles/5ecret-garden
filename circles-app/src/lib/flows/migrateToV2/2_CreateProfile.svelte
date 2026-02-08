@@ -1,6 +1,6 @@
 <script lang="ts">
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
-  import ProfileHeaderEditor from '$lib/profile/ProfileHeaderEditor.svelte';
+  import ProfileHeaderEditor from '$lib/domains/profile/ui/ProfileHeaderEditor.svelte';
   import type { MigrateToV2Context } from '$lib/flows/migrateToV2/context';
   import MigrateContacts from './3_MigrateContacts.svelte';
   import { onMount } from 'svelte';
@@ -9,7 +9,7 @@
     FallbackImageUrl,
     profilesEqual,
   } from '$lib/utils/profile';
-  import { popupControls } from '$lib/stores/popup';
+  import { popupControls } from '$lib/shared/state/popup';
   import type { Profile } from '@circles-sdk/profiles';
 
   interface Props {

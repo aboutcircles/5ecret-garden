@@ -1,13 +1,13 @@
 <script lang="ts">
-  import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
+  import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
   import GenericList from '$lib/components/GenericList.svelte';
   import { browser } from '$app/environment';
   import { getMarketClient } from '$lib/sdk/marketClient';
   import { onMount } from 'svelte';
   import type { Readable } from 'svelte/store';
 
-  import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
-  import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
+  import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
+  import ActionButtonDropDown from '$lib/app/shell/ActionButtonDropDown.svelte';
   import type { Action } from '$lib/types/actions';
   import { RefreshCw as LRefreshCw } from 'lucide';
 

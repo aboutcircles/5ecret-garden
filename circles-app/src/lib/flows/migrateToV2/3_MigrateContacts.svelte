@@ -6,7 +6,7 @@
   import { contacts } from '$lib/stores/contacts';
   import { formatTrustRelation } from '$lib/utils/helpers';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import { popupControls } from '$lib/stores/popup';
+  import { popupControls } from '$lib/shared/state/popup';
   import Lucide from '$lib/icons/Lucide.svelte';
   import {ArrowLeft, ArrowLeftRight, ArrowRight} from 'lucide';
 

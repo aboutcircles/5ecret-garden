@@ -6,17 +6,17 @@
     import {derived, writable, type Writable} from 'svelte/store';
     import Filter from '$lib/components/Filter.svelte';
     import AddressInput from '$lib/components/AddressInput.svelte';
-    import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
+    import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
     import Lucide from '$lib/icons/Lucide.svelte';
     import {Filter as LFilter, Download as LDownload, Plus as LPlus, Star} from 'lucide';
-    import {popupControls} from '$lib/stores/popup';
+    import {popupControls} from '$lib/shared/state/popup';
     import ManageGroupMembers from '$lib/flows/manageGroupMembers/1_manageGroupMembers.svelte';
     import {avatarState} from '$lib/stores/avatar.svelte';
-    import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
-    import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
+    import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
+    import ActionButtonDropDown from '$lib/app/shell/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/types/actions';
     import { goto } from '$app/navigation';
-    import { createPaginatedList } from '$lib/stores/paginatedList';
+    import { createPaginatedList } from '$lib/shared/state/paginatedList';
 
     let filterVersion = writable<number | undefined>(undefined);
     let filterRelation = writable<'mutuallyTrusts' | 'trusts' | 'trustedBy' | 'variesByVersion' | undefined>(undefined);

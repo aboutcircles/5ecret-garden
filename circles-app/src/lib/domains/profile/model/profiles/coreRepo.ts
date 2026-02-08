@@ -1,6 +1,6 @@
 // src/lib/profiles/coreRepo.ts
 import { get } from 'svelte/store';
-import { circles } from '$lib/stores/circles';
+import { circles } from '$lib/shared/state/circles';
 import { BatchAggregator } from '$lib/utils/batchAggregator';
 import type { AppProfileCore, ProfileAddress } from './types';
 import { FallbackImageUrl } from './types';

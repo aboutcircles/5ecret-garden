@@ -3,22 +3,22 @@
     import ActionButton from '$lib/components/ActionButton.svelte';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
     import type { Avatar as AvatarType } from '@circles-sdk/sdk';
-    import { circles } from '$lib/stores/circles';
+    import { circles } from '$lib/shared/state/circles';
     import { wallet } from '$lib/stores/wallet.svelte';
     import type { AvatarRow } from '@circles-sdk/data';
     import type { Profile } from '@circles-sdk/profiles';
     import { onMount } from 'svelte';
     import type { Address } from '@circles-sdk/utils';
-    import ProfileHeaderEditor from '$lib/profile/ProfileHeaderEditor.svelte';
+    import ProfileHeaderEditor from '$lib/domains/profile/ui/ProfileHeaderEditor.svelte';
     import { settings } from '$lib/stores/settings.svelte';
     import { avatarState } from '$lib/stores/avatar.svelte';
     import Disclaimer from '$lib/components/Disclaimer.svelte';
-    import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
+    import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
     import Lucide from '$lib/icons/Lucide.svelte';
     import { ArrowLeft as LArrowLeft, ExternalLink as LExternalLink, Lock as LLock } from 'lucide';
     import RowFrame from '$lib/ui/RowFrame.svelte';
-    import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
-    import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
+    import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
+    import ActionButtonDropDown from '$lib/app/shell/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/types/actions';
 
     let invitations: AvatarRow[] = $state([]);

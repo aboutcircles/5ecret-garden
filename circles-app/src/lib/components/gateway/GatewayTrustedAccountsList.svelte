@@ -2,7 +2,7 @@
   import type { Readable } from 'svelte/store';
   import { derived, writable } from 'svelte/store';
   import GenericList from '$lib/components/GenericList.svelte';
-  import { createPaginatedList } from '$lib/stores/paginatedList';
+  import { createPaginatedList } from '$lib/shared/state/paginatedList';
   import { createFilteredAddresses, createProfileNameStore } from '$lib/utils/searchableProfiles';
   import TrustRowView from '$lib/gateway/TrustRow.svelte';
   import type { TrustRow } from '$lib/gateway/types';

@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { circles } from '$lib/stores/circles';
+  import { circles } from '$lib/shared/state/circles';
   import BalanceRow from '$lib/components/BalanceRow.svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import { runTask } from '$lib/utils/tasks';
   import { tokenTypeToString } from '$lib/pages/SelectAsset.svelte';
-  import { popupControls } from '$lib/stores/popup';
+  import { popupControls } from '$lib/shared/state/popup';
   interface Props {
     asset: TokenBalanceRow;
   }

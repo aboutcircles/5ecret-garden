@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Address } from '@circles-sdk/utils';
-  import ProfileExplorer from '$lib/profile/ProfileExplorer.svelte';
+  import ProfileExplorer from '$lib/domains/profile/ui/ProfileExplorer.svelte';
   import GroupSetting from '../editors/GroupSetting.svelte';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import { ipfsGatewayUrl } from '$lib/utils/ipfs';

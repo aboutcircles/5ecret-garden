@@ -1,12 +1,12 @@
 <script lang="ts">
   import { avatarState } from '$lib/stores/avatar.svelte';
-  import { circles } from '$lib/stores/circles';
+  import { circles } from '$lib/shared/state/circles';
   import { ethers } from 'ethers';
   import BalanceRow from '$lib/components/BalanceRow.svelte';
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import { roundToDecimals } from '$lib/utils/shared';
   import { runTask } from '$lib/utils/tasks';
-  import { popupControls } from '$lib/stores/popup';
+  import { popupControls } from '$lib/shared/state/popup';
 
   interface Props {
     asset: TokenBalanceRow;

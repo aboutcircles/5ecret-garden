@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Address } from '@circles-sdk/utils';
-  import { popupControls } from '$lib/stores/popup';
+  import { popupControls } from '$lib/shared/state/popup';
   import SearchAvatar from '$lib/pages/SearchAvatar.svelte';
   import type { AdminUnifiedProduct, AdminOdooConnection } from '$lib/admin/types';
   import type { AdminNewProductFlowContext } from './context';

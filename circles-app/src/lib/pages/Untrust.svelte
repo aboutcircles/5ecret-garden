@@ -3,10 +3,10 @@
     import { runTask } from '$lib/utils/tasks';
     import { shortenAddress } from '$lib/utils/shared';
     import { V1Avatar } from '@circles-sdk/sdk';
-    import { circles } from '$lib/stores/circles';
+    import { circles } from '$lib/shared/state/circles';
     import ActionButton from '$lib/components/ActionButton.svelte';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
-    import { popupControls } from '$lib/stores/popup';
+    import { popupControls } from '$lib/shared/state/popup';
     import RowFrame from '$lib/ui/RowFrame.svelte';
 
     interface Props { address: `0x${string}`; trustVersion: number; }

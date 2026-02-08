@@ -1,8 +1,8 @@
 <script lang="ts">
     import {avatarState} from '$lib/stores/avatar.svelte';
-    import type { AppProfile as Profile } from '$lib/profiles';
+    import type { AppProfile as Profile } from '$lib/domains/profile/model/profiles';
     import { normalizeMarkdownInput, sanitizeText } from '$lib/utils/isValid';
-    import ProfileHeaderEditor from '$lib/profile/ProfileHeaderEditor.svelte';
+    import ProfileHeaderEditor from '$lib/domains/profile/ui/ProfileHeaderEditor.svelte';
 
     interface Props {
         profile: Profile;

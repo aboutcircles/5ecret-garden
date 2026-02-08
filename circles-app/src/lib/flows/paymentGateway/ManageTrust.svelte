@@ -7,8 +7,8 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { derived, writable } from 'svelte/store';
   import Lucide from '$lib/icons/Lucide.svelte';
-  import { circles } from '$lib/stores/circles';
-  import { popupControls } from '$lib/stores/popup';
+  import { circles } from '$lib/shared/state/circles';
+  import { popupControls } from '$lib/shared/state/popup';
   import ManageTrustSearch from '$lib/flows/paymentGateway/SearchTrustReceiver.svelte';
   import ConfirmGatewayUntrust from '$lib/flows/paymentGateway/ConfirmGatewayUntrust.svelte';
   import GatewayTrustedAccountsList from '$lib/components/gateway/GatewayTrustedAccountsList.svelte';

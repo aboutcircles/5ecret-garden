@@ -3,12 +3,12 @@
     import ActionButton from '$lib/components/ActionButton.svelte';
     import Disclaimer from '$lib/components/Disclaimer.svelte';
     import {avatarState} from '$lib/stores/avatar.svelte';
-    import {circles} from '$lib/stores/circles';
+    import {circles} from '$lib/shared/state/circles';
     import type {Avatar} from '@circles-sdk/sdk';
-    import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
+    import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
     import { ArrowLeft as LArrowLeft } from 'lucide';
-    import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
-    import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
+    import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
+    import ActionButtonDropDown from '$lib/app/shell/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/types/actions';
 
     async function registerHuman() {

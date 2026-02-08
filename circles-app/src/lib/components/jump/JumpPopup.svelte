@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { popupControls } from '$lib/stores/popup';
+  import { popupControls } from '$lib/shared/state/popup';
   import { sanitizeUrl } from '$lib/components/markdown/ast';
 
   let copyIcon = $state('/copy.svg');

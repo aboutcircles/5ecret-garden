@@ -3,8 +3,8 @@
   import type { SendFlowContext } from '$lib/flows/send/context';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
-  import { circles } from '$lib/stores/circles';
-  import { popupControls } from '$lib/stores/popup';
+  import { circles } from '$lib/shared/state/circles';
+  import { popupControls } from '$lib/shared/state/popup';
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import SearchAvatar from '$lib/pages/SearchAvatar.svelte';
   import type { Address } from '@circles-sdk/utils';

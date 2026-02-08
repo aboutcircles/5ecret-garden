@@ -2,7 +2,7 @@
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
   import type { Address } from '@circles-sdk/utils';
   import { normalizeSku } from '$lib/admin/productEditorUtils';
-  import { popupControls } from '$lib/stores/popup';
+  import { popupControls } from '$lib/shared/state/popup';
   import type { AdminNewProductFlowContext } from './context';
   import type { AdminOdooConnection, AdminUnifiedProduct } from '$lib/admin/types';
 

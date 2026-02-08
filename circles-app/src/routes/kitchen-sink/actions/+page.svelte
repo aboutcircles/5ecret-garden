@@ -2,8 +2,8 @@
   import { Plus as LPlus, RefreshCw as LRefreshCw, Star as LStar } from 'lucide';
 
   import ActionButton from '$lib/components/ActionButton.svelte';
-  import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
-  import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
+  import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
+  import ActionButtonDropDown from '$lib/app/shell/ActionButtonDropDown.svelte';
   import type { Action } from '$lib/types/actions';
 
   let flakyCount = $state(0);

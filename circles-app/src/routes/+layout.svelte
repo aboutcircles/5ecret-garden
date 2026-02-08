@@ -14,7 +14,7 @@
   import { page } from '$app/stores';
   import { onDestroy, onMount } from 'svelte';
   import { tasks } from '$lib/utils/tasks';
-  import { popupControls, popupState } from '$lib/stores/popup';
+  import { popupControls, popupState } from '$lib/shared/state/popup';
   import Popup from '$lib/components/Popup.svelte';
   import { initTransactionHistoryStore } from '$lib/stores/transactionHistory';
   import { initContactStore } from '$lib/stores/contacts';
@@ -24,7 +24,7 @@
   import { initGroupMetricsStore } from '$lib/stores/groupMetrics.svelte';
   import type { Address } from '@circles-sdk/utils';
   import { get } from 'svelte/store';
-  import BottomNav from '$lib/components/BottomNav.svelte';
+  import BottomNav from '$lib/app/shell/BottomNav.svelte';
   import DefaultHeader from './DefaultHeader.svelte';
 
   let unwatch: (() => void) | null = null;
@@ -161,7 +161,7 @@
       initBalanceStore(avatarState.avatar);
       if (avatarState.groupType === 'CrcV2_BaseGroupCreated') {
         void (async () => {
-          const { circles } = await import('$lib/stores/circles');
+          const { circles } = await import('$lib/shared/state/circles');
           const circlesValue = get(circles);
           if (circlesValue) {
             initGroupMetricsStore(circlesValue.circlesRpc, avatarState.avatar.address);

@@ -3,7 +3,7 @@
   import type { Readable } from 'svelte/store';
   import GenericList from '$lib/components/GenericList.svelte';
   import GatewayRowView from '$lib/gateway/GatewayRow.svelte';
-  import { popupControls } from '$lib/stores/popup';
+  import { popupControls } from '$lib/shared/state/popup';
   import CreateGatewayProfile from '$lib/flows/paymentGateway/CreateGatewayProfile.svelte';
 
   type Props = {

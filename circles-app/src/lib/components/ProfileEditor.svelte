@@ -2,7 +2,7 @@
   import MarkdownEditor from '$lib/components/markdown/MarkdownEditor.svelte';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import ImageUpload from '$lib/components/ImageUpload.svelte';
-  import type { AppProfile as Profile } from '$lib/profiles';
+  import type { AppProfile as Profile } from '$lib/domains/profile/model/profiles';
   import { normalizeMarkdownInput, sanitizeText } from '$lib/utils/isValid';
 
   interface Props {

@@ -1,8 +1,8 @@
 <script lang="ts">
   import type { Address } from '@circles-sdk/utils';
-  import ProfileSigningKeys from '$lib/profile/ProfileSigningKeys.svelte';
-  import AddSigningKey from '$lib/profile/AddSigningKey.svelte';
-  import { popupControls } from '$lib/stores/popup';
+  import ProfileSigningKeys from '$lib/domains/profile/ui/ProfileSigningKeys.svelte';
+  import AddSigningKey from '$lib/domains/profile/ui/AddSigningKey.svelte';
+  import { popupControls } from '$lib/shared/state/popup';
   import { browser } from '$app/environment';
   import { CirclesStorage } from '$lib/utils/storage';
 

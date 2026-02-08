@@ -4,8 +4,8 @@
   import type { Address } from '@circles-sdk/utils';
   import type { TrustRelation } from '@circles-sdk/data';
   import RowFrame from '$lib/ui/RowFrame.svelte';
-    import {popupControls} from "$lib/stores/popup";
-    import ProfilePopup from "$lib/pages/ProfilePopup.svelte";
+    import {popupControls} from "$lib/shared/state/popup";
+    import ProfilePopup from "$lib/domains/profile/ui/pages/ProfilePopup.svelte";
 
   function formatEtherTwoDecimals(value: bigint): string {
     const etherString = formatUnits(value.toString(), 18);

@@ -7,7 +7,7 @@ import {
 } from '@circles-sdk/data';
 import { get } from 'svelte/store';
 import { createCirclesQueryStore } from '$lib/stores/query/circlesQueryStore';
-import { circles } from '$lib/stores/circles';
+import { circles } from '$lib/shared/state/circles';
 import type { Avatar } from '@circles-sdk/sdk';
 
 const groupEvents: Set<CirclesEventType> = new Set([]);

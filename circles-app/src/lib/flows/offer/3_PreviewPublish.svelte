@@ -1,6 +1,6 @@
 <script lang="ts">
   import {get} from 'svelte/store';
-  import {popupControls} from '$lib/stores/popup';
+  import {popupControls} from '$lib/shared/state/popup';
   import {runTask} from '$lib/utils/tasks';
   import {wallet} from '$lib/stores/wallet.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
@@ -17,7 +17,7 @@
   import {ipfsGatewayUrl} from '$lib/utils/ipfs';
   import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
   import {resolveImagesToHttpUrls} from '$lib/media/resolveImageUrl';
-  import {createOffersClientForAvatar} from '$lib/offers/client';
+  import {createOffersClientForAvatar} from '$lib/domains/market/offers/client';
   import {getWalletProvider} from '$lib/ethereum/getWalletProvider';
   import {gnosisConfig} from "$lib/circlesConfig";
 

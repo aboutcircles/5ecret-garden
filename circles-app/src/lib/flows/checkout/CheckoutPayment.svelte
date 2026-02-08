@@ -6,13 +6,13 @@
 
   // NEW: imports to resolve PayAction and open send flow (Svelte 5 runes aware)
   import { getMarketClient } from '$lib/sdk/marketClient';
-  import { resolvePayTo } from '$lib/market/catalogHelpers';
-  import { popupControls } from '$lib/stores/popup';
+  import { resolvePayTo } from '$lib/domains/market/services/catalogHelpers';
+  import { popupControls } from '$lib/shared/state/popup';
   import SendFlow from '$lib/flows/send/4_Send.svelte';
   import { transitiveTransfer } from '$lib/pages/SelectAsset.svelte';
   import type { SendFlowContext } from '$lib/flows/send/context';
   import { wallet } from '$lib/stores/wallet.svelte';
-  import { circles } from '$lib/stores/circles';
+  import { circles } from '$lib/shared/state/circles';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { ethers } from 'ethers';
   import { CirclesConverter } from '@circles-sdk/utils';

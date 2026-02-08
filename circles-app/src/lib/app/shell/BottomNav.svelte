@@ -1,7 +1,7 @@
 <script lang="ts">
     import { page } from '$app/stores';
-    import { popupState } from '$lib/stores/popup';
-    import { headerDropdownOpen } from '../stores/headerDropdown';
+    import { popupState } from '$lib/shared/state/popup';
+    import { headerDropdownOpen } from '$lib/shared/state/headerDropdown';
     import Lucide from '$lib/icons/Lucide.svelte';
     import { Home as LHome, Users as LUsers, Layers as LLayers, Settings as LSettings, Circle as LCircle, ShoppingBag as LShoppingBag } from 'lucide';
 

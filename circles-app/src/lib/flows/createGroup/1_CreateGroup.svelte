@@ -1,9 +1,9 @@
 <script lang="ts">
     import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
     import Tooltip from '../../components/Tooltip.svelte';
-    import ProfileHeaderEditor from '$lib/profile/ProfileHeaderEditor.svelte';
+    import ProfileHeaderEditor from '$lib/domains/profile/ui/ProfileHeaderEditor.svelte';
     import { isValidName, isValidSymbol, isValidOnChainName } from '$lib/utils/isValid';
-    import { popupControls } from '$lib/stores/popup';
+    import { popupControls } from '$lib/shared/state/popup';
     import { wallet } from '$lib/stores/wallet.svelte';
     import Settings from './2_Settings.svelte';
     import {

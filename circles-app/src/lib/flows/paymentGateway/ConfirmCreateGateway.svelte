@@ -4,10 +4,10 @@
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import { wallet } from '$lib/stores/wallet.svelte';
   import { runTask } from '$lib/utils/tasks';
-  import { popupControls } from '$lib/stores/popup';
+  import { popupControls } from '$lib/shared/state/popup';
   import type { CreateGatewayFlowContext } from './context';
   import { gnosisConfig } from '$lib/circlesConfig';
-  import { getProfilesBindings } from '$lib/offers/profilesBindings';
+  import { getProfilesBindings } from '$lib/domains/market/offers/profilesBindings';
   import { ensureProfileShape, cidV0ToDigest32Strict } from '@circles-profile/core';
   import { isValidOnChainName } from '$lib/utils/isValid';
   import ActionButton from '$lib/components/ActionButton.svelte';

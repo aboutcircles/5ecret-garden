@@ -1,5 +1,5 @@
 <script lang="ts">
-  import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
+  import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
   import GenericList from '$lib/components/GenericList.svelte';
   import OrderRow from './OrderRow.svelte';
   import type { Readable } from 'svelte/store';
@@ -9,10 +9,10 @@
   import { getMarketClient } from '$lib/sdk/marketClient';
   import { signInWithSafe } from '$lib/auth/signin';
   import { avatarState } from '$lib/stores/avatar.svelte';
-  import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
-  import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
+  import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
+  import ActionButtonDropDown from '$lib/app/shell/ActionButtonDropDown.svelte';
   import type { Action } from '$lib/types/actions';
-  import { popupControls } from '$lib/stores/popup';
+  import { popupControls } from '$lib/shared/state/popup';
   import OrderDetailsPopup from '$lib/orders/OrderDetailsPopup.svelte';
 
   type ListItem = {

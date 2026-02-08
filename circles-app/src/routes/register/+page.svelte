@@ -4,7 +4,7 @@
   import Address from '$lib/components/Address.svelte';
   import ConnectWallet from '$lib/components/ConnectWallet.svelte';
   import Disclaimer from '$lib/components/Disclaimer.svelte';
-  import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
+  import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
 </script>
 
 

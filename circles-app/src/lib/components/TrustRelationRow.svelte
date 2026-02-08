@@ -1,8 +1,8 @@
 <script lang="ts">
     import RowFrame from '$lib/ui/RowFrame.svelte';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
-    import ProfilePage from '$lib/pages/ProfilePopup.svelte';
-    import { popupControls } from '$lib/stores/popup';
+    import ProfilePage from '$lib/domains/profile/ui/pages/ProfilePopup.svelte';
+    import { popupControls } from '$lib/shared/state/popup';
     import type { Address } from '@circles-sdk/utils';
 
     interface Props {

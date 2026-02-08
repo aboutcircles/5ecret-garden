@@ -1,7 +1,7 @@
 <script lang="ts">
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import SearchAvatar from '$lib/pages/SearchAvatar.svelte';
-  import { popupControls } from '$lib/stores/popup';
+  import { popupControls } from '$lib/shared/state/popup';
   import ConfirmGatewayTrust from '$lib/flows/paymentGateway/ConfirmGatewayTrust.svelte';
 
   interface Props {

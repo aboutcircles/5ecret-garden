@@ -2,7 +2,7 @@
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { runTask } from '$lib/utils/tasks';
   import { shortenAddress } from '$lib/utils/shared';
-  import { popupControls } from '$lib/stores/popup';
+  import { popupControls } from '$lib/shared/state/popup';
 
   interface Props {
     address: `0x${string}`;

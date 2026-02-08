@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Address } from '@circles-sdk/utils';
-  import type { AggregatedCatalogItem } from '$lib/market/types';
+  import type { AggregatedCatalogItem } from '$lib/domains/market/model/types';
   import { getMarketClient } from '$lib/sdk/marketClient';
   import { gnosisConfig } from '$lib/circlesConfig';
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
@@ -8,7 +8,7 @@
   import AdminStatusBadge from '$lib/admin/components/AdminStatusBadge.svelte';
   import { adminProductKey } from '$lib/admin/helpers';
   import { normalizeSku } from '$lib/admin/productEditorUtils';
-  import { popupControls } from '$lib/stores/popup';
+  import { popupControls } from '$lib/shared/state/popup';
   import TypeStep from './3_Type.svelte';
   import type { AdminUnifiedProduct, AdminOdooConnection } from '$lib/admin/types';
   import type { AdminNewProductFlowContext } from './context';

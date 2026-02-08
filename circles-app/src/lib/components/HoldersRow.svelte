@@ -2,8 +2,8 @@
   import RowFrame from '$lib/ui/RowFrame.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { formatUnits } from 'ethers';
-  import { popupControls } from '$lib/stores/popup';
-  import ProfilePopup from '$lib/pages/ProfilePopup.svelte';
+  import { popupControls } from '$lib/shared/state/popup';
+  import ProfilePopup from '$lib/domains/profile/ui/pages/ProfilePopup.svelte';
   import type { Address } from '@circles-sdk/utils';
   import type { TrustRelation } from '@circles-sdk/data';
 

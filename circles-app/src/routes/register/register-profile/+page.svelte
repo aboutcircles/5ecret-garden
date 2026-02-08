@@ -1,15 +1,15 @@
 <script lang="ts">
     import ActionButton from '$lib/components/ActionButton.svelte';
-    import { circles } from '$lib/stores/circles';
+    import { circles } from '$lib/shared/state/circles';
     import { wallet } from '$lib/stores/wallet.svelte';
     import type { Profile } from '@circles-sdk/profiles';
-    import ProfileHeaderEditor from '$lib/profile/ProfileHeaderEditor.svelte';
+    import ProfileHeaderEditor from '$lib/domains/profile/ui/ProfileHeaderEditor.svelte';
     import { onMount } from 'svelte';
     import Disclaimer from '$lib/components/Disclaimer.svelte';
-    import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
+    import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
     import { ArrowLeft as LArrowLeft } from 'lucide';
-    import ActionButtonBar from '$lib/components/layout/ActionButtonBar.svelte';
-    import ActionButtonDropDown from '$lib/components/layout/ActionButtonDropDown.svelte';
+    import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
+    import ActionButtonDropDown from '$lib/app/shell/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/types/actions';
 
     let profile: Profile = $state({ name: '', description: '', previewImageUrl: '', imageUrl: undefined });
