@@ -3,8 +3,20 @@
   import { get } from 'svelte/store';
   import { CirclesQuery, type PagedQueryParams } from '@circles-sdk/data';
   import type { Address } from '@circles-sdk/utils';
-
-  type Granularity = 'day' | 'week' | 'month';
+  import TrustHistoryDayCalendar from '$lib/components/trustHistory/TrustHistoryDayCalendar.svelte';
+  import TrustHistoryWeeklySections from '$lib/components/trustHistory/TrustHistoryWeeklySections.svelte';
+  import TrustHistoryMonthlyList from '$lib/components/trustHistory/TrustHistoryMonthlyList.svelte';
+  import TrustHistoryDayEventsPopup from '$lib/components/trustHistory/TrustHistoryDayEventsPopup.svelte';
+  import { popupControls } from '$lib/stores/popup';
+  import type {
+    Granularity,
+    CalendarCell,
+    MonthCalendar,
+    WeeklyBucket,
+    MonthWeeklySection,
+    MonthlyItem,
+    TrustHistoryEventRow,
+  } from '$lib/components/trustHistory/types';
 
   interface Props {
     address?: Address;
@@ -15,7 +27,7 @@
 
   let {
     address,
-    granularity = 'week',
+    granularity = 'month',
     showGranularitySwitch = true,
     eventCount = $bindable(0),
   }: Props = $props();
@@ -33,19 +45,26 @@
     limit?: number;
   }
 
-  type Bucket = {
-    startSec: number;
-    endSec: number;
-    count: number;
-  };
-
   let loading = $state(false);
   let error = $state<string | null>(null);
   let rows = $state<TrustHistoryRow[]>([]);
   let requestId = 0;
+  let selectedWeekStartSec: number | null = $state(null);
+  let selectedDayTsSec: number | null = $state(null);
 
-  const buckets = $derived(buildBuckets(rows, granularity));
-  const maxBucketCount = $derived(Math.max(0, ...buckets.map((b) => b.count)));
+  const dayCounts = $derived(buildCountMap(rows, 'day'));
+  const weekCounts = $derived(buildCountMap(rows, 'week'));
+  const monthCounts = $derived(buildCountMap(rows, 'month'));
+  const maxBucketCount = $derived(
+    granularity === 'day'
+      ? Math.max(0, ...Array.from(dayCounts.values()))
+      : granularity === 'week'
+        ? Math.max(0, ...Array.from(weekCounts.values()))
+        : Math.max(0, ...Array.from(monthCounts.values()))
+  );
+  const monthCalendars = $derived(buildMonthCalendars(rows, dayCounts));
+  const weeklySections = $derived(buildWeeklySections(rows, weekCounts));
+  const monthlyItems = $derived(buildMonthlyItems(rows, monthCounts));
   const establishedCount = $derived(rows.filter((row) => toNumber(row.expiryTime) > toNumber(row.timestamp)).length);
   const removedCount = $derived(rows.length - establishedCount);
 
@@ -162,57 +181,167 @@
     return Math.floor(d.getTime() / 1000);
   }
 
-  function buildBuckets(input: TrustHistoryRow[], g: Granularity): Bucket[] {
-    if (input.length === 0) return [];
-
+  function buildCountMap(input: TrustHistoryRow[], g: Granularity): Map<number, number> {
     const counts = new Map<number, number>();
-
     for (const row of input) {
       const start = startOfBucketSec(toNumber(row.timestamp), g);
       counts.set(start, (counts.get(start) ?? 0) + 1);
     }
+    return counts;
+  }
 
-    const starts = Array.from(counts.keys()).sort((a, b) => a - b);
-    const minStart = starts[0];
-    const maxStart = starts[starts.length - 1];
+  function startOfMonthSec(tsSec: number): number {
+    const d = new Date(tsSec * 1000);
+    d.setUTCHours(0, 0, 0, 0);
+    d.setUTCDate(1);
+    return Math.floor(d.getTime() / 1000);
+  }
 
-    const out: Bucket[] = [];
-    for (let cursor = minStart; cursor <= maxStart; cursor = nextBucketStartSec(cursor, g)) {
-      const next = nextBucketStartSec(cursor, g);
+  function startOfWeekSec(tsSec: number): number {
+    const d = new Date(tsSec * 1000);
+    d.setUTCHours(0, 0, 0, 0);
+    const weekday = (d.getUTCDay() + 6) % 7;
+    d.setUTCDate(d.getUTCDate() - weekday);
+    return Math.floor(d.getTime() / 1000);
+  }
+
+  function nextMonthStartSec(tsSec: number): number {
+    const d = new Date(tsSec * 1000);
+    d.setUTCMonth(d.getUTCMonth() + 1);
+    d.setUTCDate(1);
+    d.setUTCHours(0, 0, 0, 0);
+    return Math.floor(d.getTime() / 1000);
+  }
+
+  function getCellCount(tsSec: number, counts: Map<number, number>): number {
+    const bucketStart = startOfBucketSec(tsSec, 'day');
+    return counts.get(bucketStart) ?? 0;
+  }
+
+  function buildMonthCalendars(input: TrustHistoryRow[], counts: Map<number, number>): MonthCalendar[] {
+    if (input.length === 0) return [];
+
+    const firstTs = toNumber(input[0].timestamp);
+    const lastTs = toNumber(input[input.length - 1].timestamp);
+    const firstMonth = startOfMonthSec(firstTs);
+    const lastMonth = startOfMonthSec(lastTs);
+
+    const out: MonthCalendar[] = [];
+
+    for (let month = firstMonth; month <= lastMonth; month = nextMonthStartSec(month)) {
+      const monthDate = new Date(month * 1000);
+      const monthLabel = monthDate.toLocaleString(undefined, { month: 'long', year: 'numeric' });
+      const monthEnd = nextMonthStartSec(month) - 1;
+
+      const gridStart = startOfWeekSec(month);
+      const gridEnd = startOfWeekSec(monthEnd) + 6 * 24 * 60 * 60;
+
+      const weeks: CalendarCell[][] = [];
+      let cursor = gridStart;
+
+      while (cursor <= gridEnd) {
+        const week: CalendarCell[] = [];
+        for (let i = 0; i < 7; i += 1) {
+          const current = cursor + i * 24 * 60 * 60;
+          const currentDate = new Date(current * 1000);
+          const inCurrentMonth = currentDate.getUTCMonth() === monthDate.getUTCMonth();
+          week.push({
+            tsSec: current,
+            dayOfMonth: currentDate.getUTCDate(),
+            inCurrentMonth,
+            count: inCurrentMonth ? getCellCount(current, counts) : 0,
+          });
+        }
+        weeks.push(week);
+        cursor += 7 * 24 * 60 * 60;
+      }
+
       out.push({
-        startSec: cursor,
-        endSec: next,
-        count: counts.get(cursor) ?? 0,
+        key: String(month),
+        label: monthLabel,
+        weeks,
       });
     }
+
     return out;
   }
 
-  function bucketLabel(bucket: Bucket): string {
-    const start = new Date(bucket.startSec * 1000);
-    const endInclusive = new Date((bucket.endSec - 1) * 1000);
+  function buildWeeklySections(input: TrustHistoryRow[], counts: Map<number, number>): MonthWeeklySection[] {
+    if (input.length === 0) return [];
 
-    if (granularity === 'month') {
-      return `${start.toLocaleString(undefined, { month: 'short', year: 'numeric' })}`;
+    const firstTs = toNumber(input[0].timestamp);
+    const lastTs = toNumber(input[input.length - 1].timestamp);
+    const firstMonth = startOfMonthSec(firstTs);
+    const lastMonth = startOfMonthSec(lastTs);
+    const out: MonthWeeklySection[] = [];
+
+    for (let month = firstMonth; month <= lastMonth; month = nextMonthStartSec(month)) {
+      const monthDate = new Date(month * 1000);
+      const monthLabel = monthDate.toLocaleString(undefined, { month: 'long', year: 'numeric' });
+      const monthEnd = nextMonthStartSec(month) - 1;
+      const firstWeek = startOfWeekSec(month);
+      const lastWeek = startOfWeekSec(monthEnd);
+      const weeks: WeeklyBucket[] = [];
+
+      for (let w = firstWeek; w <= lastWeek; w += 7 * 24 * 60 * 60) {
+        weeks.push({ startSec: w, count: counts.get(w) ?? 0 });
+      }
+
+      out.push({ key: String(month), label: monthLabel, weeks });
     }
 
-    if (granularity === 'day') {
-      return start.toLocaleDateString();
+    return out;
+  }
+
+  function buildMonthlyItems(input: TrustHistoryRow[], counts: Map<number, number>): MonthlyItem[] {
+    if (input.length === 0) return [];
+
+    const firstTs = toNumber(input[0].timestamp);
+    const lastTs = toNumber(input[input.length - 1].timestamp);
+    const firstMonth = startOfMonthSec(firstTs);
+    const lastMonth = startOfMonthSec(lastTs);
+    const out: MonthlyItem[] = [];
+
+    for (let month = firstMonth; month <= lastMonth; month = nextMonthStartSec(month)) {
+      const d = new Date(month * 1000);
+      out.push({
+        startSec: month,
+        label: d.toLocaleString(undefined, { month: 'long', year: 'numeric' }),
+        count: counts.get(month) ?? 0,
+      });
     }
 
-    return `${start.toLocaleDateString()} – ${endInclusive.toLocaleDateString()}`;
+    return out;
   }
 
-  function intensityClass(count: number, max: number): string {
-    if (count <= 0 || max <= 0) return 'bg-base-300/50';
-
-    const ratio = count / max;
-    if (ratio <= 0.2) return 'bg-primary/25';
-    if (ratio <= 0.4) return 'bg-primary/40';
-    if (ratio <= 0.6) return 'bg-primary/55';
-    if (ratio <= 0.8) return 'bg-primary/70';
-    return 'bg-primary';
+  function onSelectMonth(monthStartSec: number): void {
+    selectedWeekStartSec = startOfWeekSec(monthStartSec);
+    granularity = 'week';
   }
+
+  function onSelectWeek(weekStartSec: number): void {
+    selectedDayTsSec = weekStartSec;
+    granularity = 'day';
+  }
+
+  function onSelectDay(dayStartSec: number): void {
+    const dayEndSec = dayStartSec + 24 * 60 * 60;
+    const events = rows.filter((row) => {
+      const ts = toNumber(row.timestamp);
+      return ts >= dayStartSec && ts < dayEndSec;
+    }) as TrustHistoryEventRow[];
+
+    popupControls.open({
+      title: 'Trust events',
+      component: TrustHistoryDayEventsPopup,
+      props: {
+        dayStartSec,
+        dayEndSec,
+        events,
+      },
+    });
+  }
+
 </script>
 
 <div class="space-y-3">
@@ -261,17 +390,23 @@
       {rows.length} outgoing trust events · {establishedCount} set · {removedCount} removed
     </div>
 
-    <div class="overflow-x-auto pb-1">
-      <div class="inline-flex items-end gap-1 min-w-max">
-        {#each buckets as bucket (bucket.startSec)}
-          <div
-            class={`w-3 h-10 rounded-sm ${intensityClass(bucket.count, maxBucketCount)}`}
-            title={`${bucketLabel(bucket)}: ${bucket.count} event${bucket.count === 1 ? '' : 's'}`}
-            aria-label={`${bucketLabel(bucket)}: ${bucket.count} events`}
-          ></div>
-        {/each}
-      </div>
-    </div>
+    {#if granularity === 'day'}
+      <TrustHistoryDayCalendar
+        {monthCalendars}
+        {maxBucketCount}
+        {selectedDayTsSec}
+        onSelectDay={onSelectDay}
+      />
+    {:else if granularity === 'week'}
+      <TrustHistoryWeeklySections
+        {weeklySections}
+        {maxBucketCount}
+        {selectedWeekStartSec}
+        onSelectWeek={onSelectWeek}
+      />
+    {:else}
+      <TrustHistoryMonthlyList {monthlyItems} {maxBucketCount} onSelectMonth={onSelectMonth} />
+    {/if}
 
     <div class="flex items-center gap-2 text-[11px] opacity-70">
       <span>Less</span>

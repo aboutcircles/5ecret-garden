@@ -777,7 +777,7 @@
         <div class="w-full">
             <TrustHistoryHeatmap
                     address={address}
-                    granularity="week"
+                    granularity="month"
                     showGranularitySwitch={true}
                     bind:eventCount={trustHistoryEventCount}
             />
