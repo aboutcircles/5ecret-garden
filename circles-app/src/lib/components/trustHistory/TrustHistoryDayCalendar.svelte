@@ -1,15 +1,22 @@
 <script lang="ts">
   import { tick } from 'svelte';
-  import type { MonthCalendar } from './types';
+  import type { MonthCalendar, TrustHistoryRangeEvent } from './types';
 
   interface Props {
     monthCalendars: MonthCalendar[];
     maxBucketCount: number;
+    rangeEvents?: TrustHistoryRangeEvent[];
     selectedDayTsSec?: number | null;
     onSelectDay?: (dayStartTsSec: number) => void;
   }
 
-  let { monthCalendars, maxBucketCount, selectedDayTsSec = null, onSelectDay }: Props = $props();
+  let {
+    monthCalendars,
+    maxBucketCount,
+    rangeEvents = [],
+    selectedDayTsSec = null,
+    onSelectDay,
+  }: Props = $props();
   let containerEl: HTMLDivElement | null = $state(null);
 
   function intensityClass(count: number, max: number): string {
@@ -22,8 +29,26 @@
     return 'bg-primary';
   }
 
-  function cellTitle(tsSec: number, count: number): string {
-    return `${new Date(tsSec * 1000).toLocaleDateString()}: ${count} event${count === 1 ? '' : 's'}`;
+  function dayRangeEvents(tsSec: number): TrustHistoryRangeEvent[] {
+    return rangeEvents.filter((event) => tsSec >= event.startDaySec && tsSec <= event.endDaySec);
+  }
+
+  function isRangeStart(event: TrustHistoryRangeEvent, tsSec: number): boolean {
+    return event.startDaySec === tsSec;
+  }
+
+  function isRangeEnd(event: TrustHistoryRangeEvent, tsSec: number): boolean {
+    return event.endDaySec === tsSec;
+  }
+
+  function formatEventRange(event: TrustHistoryRangeEvent): string {
+    return `${new Date(event.startDaySec * 1000).toLocaleDateString()} – ${new Date(event.endDaySec * 1000).toLocaleDateString()}`;
+  }
+
+  function cellTitle(tsSec: number, count: number, events: TrustHistoryRangeEvent[]): string {
+    const base = `${new Date(tsSec * 1000).toLocaleDateString()}: ${count} event${count === 1 ? '' : 's'}`;
+    if (events.length === 0) return base;
+    return `${base}\nKnown events: ${events.map((event) => event.title).join(', ')}`;
   }
 
   $effect(() => {
@@ -54,15 +79,27 @@
           {#each month.weeks as week, weekIndex (`${month.key}-${weekIndex}`)}
             <div class="grid grid-cols-7 gap-1">
               {#each week as cell (`${month.key}-${cell.tsSec}`)}
+                {@const cellRangeEvents = cell.inCurrentMonth ? dayRangeEvents(cell.tsSec) : []}
                 <button
                   type="button"
                   data-day-start={cell.tsSec}
-                  class={`w-9 h-9 rounded-md border border-base-300 p-1 text-[10px] flex items-start justify-end ${cell.inCurrentMonth ? intensityClass(cell.count, maxBucketCount) : 'bg-base-200/40 text-base-content/40'}`}
-                  title={cell.inCurrentMonth ? cellTitle(cell.tsSec, cell.count) : ''}
-                  aria-label={cell.inCurrentMonth ? cellTitle(cell.tsSec, cell.count) : 'Outside month'}
+                  class={`relative w-9 h-9 rounded-md border border-base-300 p-1 text-[10px] flex items-start justify-end overflow-hidden ${cell.inCurrentMonth ? intensityClass(cell.count, maxBucketCount) : 'bg-base-200/40 text-base-content/40'}`}
+                  title={cell.inCurrentMonth ? cellTitle(cell.tsSec, cell.count, cellRangeEvents) : ''}
+                  aria-label={cell.inCurrentMonth ? cellTitle(cell.tsSec, cell.count, cellRangeEvents) : 'Outside month'}
                   onclick={() => cell.inCurrentMonth && onSelectDay?.(cell.tsSec)}
                 >
-                  {cell.dayOfMonth}
+                  <span class="relative z-[1]">{cell.dayOfMonth}</span>
+
+                  {#if cellRangeEvents.length > 0}
+                    <div class="absolute inset-x-0 bottom-1 px-[2px] space-y-[2px]">
+                      {#each cellRangeEvents.slice(0, 2) as event (`${cell.tsSec}-${event.id}`)}
+                        <div
+                          class={`h-[4px] bg-secondary/90 ${isRangeStart(event, cell.tsSec) ? 'rounded-l-full' : ''} ${isRangeEnd(event, cell.tsSec) ? 'rounded-r-full' : ''}`}
+                          title={`${event.title} (${formatEventRange(event)})`}
+                        ></div>
+                      {/each}
+                    </div>
+                  {/if}
                 </button>
               {/each}
             </div>
@@ -70,5 +107,22 @@
         </div>
       </section>
     {/each}
+
+    {#if rangeEvents.length > 0}
+      <section class="pt-1 space-y-1">
+        <div class="text-[11px] opacity-70">Known events</div>
+        <div class="space-y-1">
+          {#each rangeEvents as event (event.id)}
+            <div class="text-[11px] rounded-md border border-base-300 p-2">
+              <div class="font-medium">{event.title}</div>
+              <div class="opacity-70">{formatEventRange(event)}</div>
+              {#if event.description}
+                <div class="opacity-60">{event.description}</div>
+              {/if}
+            </div>
+          {/each}
+        </div>
+      </section>
+    {/if}
   </div>
 </div>

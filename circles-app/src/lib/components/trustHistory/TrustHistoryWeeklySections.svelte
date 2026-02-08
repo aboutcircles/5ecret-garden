@@ -1,10 +1,11 @@
 <script lang="ts">
   import { tick } from 'svelte';
-  import type { MonthWeeklySection } from './types';
+  import type { MonthWeeklySection, TrustHistoryRangeEvent } from './types';
 
   interface Props {
     weeklySections: MonthWeeklySection[];
     maxBucketCount: number;
+    rangeEvents?: TrustHistoryRangeEvent[];
     selectedWeekStartSec?: number | null;
     onSelectWeek?: (weekStartSec: number) => void;
   }
@@ -12,6 +13,7 @@
   let {
     weeklySections,
     maxBucketCount,
+    rangeEvents = [],
     selectedWeekStartSec = null,
     onSelectWeek,
   }: Props = $props();
@@ -30,6 +32,24 @@
   function formatWeekRange(startSec: number): string {
     const endSec = startSec + 7 * 24 * 60 * 60 - 1;
     return `${new Date(startSec * 1000).toLocaleDateString()} – ${new Date(endSec * 1000).toLocaleDateString()}`;
+  }
+
+  function weekRangeEvents(weekStartSec: number): TrustHistoryRangeEvent[] {
+    const weekEndSec = weekStartSec + 7 * 24 * 60 * 60 - 1;
+    return rangeEvents.filter((event) => event.startDaySec <= weekEndSec && event.endDaySec >= weekStartSec);
+  }
+
+  function isWeekRangeStart(event: TrustHistoryRangeEvent, weekStartSec: number): boolean {
+    return event.startDaySec >= weekStartSec && event.startDaySec < weekStartSec + 7 * 24 * 60 * 60;
+  }
+
+  function isWeekRangeEnd(event: TrustHistoryRangeEvent, weekStartSec: number): boolean {
+    const weekEndSec = weekStartSec + 7 * 24 * 60 * 60 - 1;
+    return event.endDaySec >= weekStartSec && event.endDaySec <= weekEndSec;
+  }
+
+  function formatEventRange(event: TrustHistoryRangeEvent): string {
+    return `${new Date(event.startDaySec * 1000).toLocaleDateString()} – ${new Date(event.endDaySec * 1000).toLocaleDateString()}`;
   }
 
   $effect(() => {
@@ -54,10 +74,11 @@
         <div class="text-sm font-medium">{section.label}</div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {#each section.weeks as week (`${section.key}-${week.startSec}`)}
+            {@const overlappingEvents = weekRangeEvents(week.startSec)}
             <button
               type="button"
               data-week-start={week.startSec}
-              class={`rounded-md border px-3 py-2 text-xs ${intensityClass(week.count, maxBucketCount)} ${selectedWeekStartSec === week.startSec ? 'border-primary ring-1 ring-primary/50' : 'border-base-300'}`}
+              class={`relative overflow-hidden rounded-md border px-3 py-2 text-xs ${intensityClass(week.count, maxBucketCount)} ${selectedWeekStartSec === week.startSec ? 'border-primary ring-1 ring-primary/50' : 'border-base-300'}`}
               title={`${formatWeekRange(week.startSec)}: ${week.count} event${week.count === 1 ? '' : 's'}`}
               aria-label={`${formatWeekRange(week.startSec)}: ${week.count} events`}
               onclick={() => onSelectWeek?.(week.startSec)}
@@ -65,6 +86,17 @@
               <div class="font-medium">Week</div>
               <div class="opacity-80">{formatWeekRange(week.startSec)}</div>
               <div class="mt-1">{week.count} event{week.count === 1 ? '' : 's'}</div>
+
+              {#if overlappingEvents.length > 0}
+                <div class="mt-2 space-y-1">
+                  {#each overlappingEvents.slice(0, 2) as event (`week-${week.startSec}-${event.id}`)}
+                    <div
+                      class={`h-[4px] bg-secondary/90 ${isWeekRangeStart(event, week.startSec) ? 'rounded-l-full' : ''} ${isWeekRangeEnd(event, week.startSec) ? 'rounded-r-full' : ''}`}
+                      title={`${event.title} (${formatEventRange(event)})`}
+                    ></div>
+                  {/each}
+                </div>
+              {/if}
             </button>
           {/each}
         </div>
