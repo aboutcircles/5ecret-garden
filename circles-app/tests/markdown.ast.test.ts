@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseMarkdown, sanitizeUrl, type Inline } from '$lib/components/markdown/ast';
+import { parseMarkdown, sanitizeUrl, type Inline } from '$lib/shared/ui/content/markdown';
 
 describe('markdown AST parsing', () => {
   it('preserves a single blank line between blocks', () => {
