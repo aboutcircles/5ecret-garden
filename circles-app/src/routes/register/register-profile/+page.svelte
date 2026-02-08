@@ -1,7 +1,7 @@
 <script lang="ts">
     import ActionButton from '$lib/components/ActionButton.svelte';
     import { circles } from '$lib/shared/state/circles';
-    import { wallet } from '$lib/stores/wallet.svelte';
+    import { wallet } from '$lib/shared/state/wallet.svelte';
     import type { Profile } from '@circles-sdk/profiles';
     import ProfileHeaderEditor from '$lib/domains/profile/ui/ProfileHeaderEditor.svelte';
     import { onMount } from 'svelte';

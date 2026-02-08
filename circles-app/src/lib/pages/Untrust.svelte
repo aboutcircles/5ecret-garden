@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { avatarState } from '$lib/stores/avatar.svelte';
+    import { avatarState } from '$lib/shared/state/avatar.svelte';
     import { runTask } from '$lib/utils/tasks';
     import { shortenAddress } from '$lib/utils/shared';
     import { V1Avatar } from '@circles-sdk/sdk';
@@ -7,7 +7,7 @@
     import ActionButton from '$lib/components/ActionButton.svelte';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
     import { popupControls } from '$lib/shared/state/popup';
-    import RowFrame from '$lib/ui/RowFrame.svelte';
+    import RowFrame from '$lib/shared/ui/RowFrame.svelte';
 
     interface Props { address: `0x${string}`; trustVersion: number; }
     let { address, trustVersion }: Props = $props();

@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { TransactionHistoryRow } from '@circles-sdk/data';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
-    import { avatarState } from '$lib/stores/avatar.svelte';
+    import { avatarState } from '$lib/shared/state/avatar.svelte';
     // Lucide icons are node definitions (arrays). Use the local Lucide wrapper to render them.
     import Lucide from '$lib/icons/Lucide.svelte';
     import { ArrowRight as LArrowRight, ExternalLink as LExternalLink, Flame as LFlame, Coins as LCoins, Copy as LCopy } from 'lucide';
@@ -9,7 +9,7 @@
     import { isAddress, isZeroAddress, toBigIntMaybe, tokenIdToAddressMaybe } from '$lib/utils/tx';
     import TxEvents from './TxEvents.svelte';
     import { popupControls } from '$lib/shared/state/popup';
-    import JumpPopup from '$lib/components/jump/JumpPopup.svelte';
+    import JumpPopup from '$lib/shared/ui/content/jump/JumpPopup.svelte';
 
     interface Props { item: TransactionHistoryRow }
     let { item }: Props = $props();

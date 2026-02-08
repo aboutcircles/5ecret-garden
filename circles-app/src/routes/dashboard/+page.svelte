@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { avatarState } from '$lib/stores/avatar.svelte';
+    import { avatarState } from '$lib/shared/state/avatar.svelte';
     import { roundToDecimals } from '$lib/utils/shared';
     import { runTask } from '$lib/utils/tasks';
 
@@ -8,7 +8,7 @@
 
     import { popupControls } from '$lib/shared/state/popup';
     import Balances from '$lib/pages/Balances.svelte';
-    import { circlesBalances } from '$lib/stores/circlesBalances';
+    import { circlesBalances } from '$lib/shared/state/circlesBalances';
     import { totalCirclesBalance } from '$lib/shared/state/totalCirclesBalance';
 
     import PageScaffold from '$lib/app/shell/PageScaffold.svelte';

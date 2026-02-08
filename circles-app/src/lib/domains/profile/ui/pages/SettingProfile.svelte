@@ -4,7 +4,7 @@
     import Avatar from '$lib/components/avatar/Avatar.svelte';
     import QrCode from '$lib/components/QrCode.svelte';
     import {popupControls} from '$lib/shared/state/popup';
-    import {signer} from '$lib/stores/wallet.svelte';
+    import {signer} from '$lib/shared/state/wallet.svelte';
     import ProfileExplorer from '$lib/domains/profile/ui/ProfileExplorer.svelte';
     import type {Address as EvmAddress} from '@circles-sdk/utils';
     import {gnosisConfig} from "$lib/circlesConfig";

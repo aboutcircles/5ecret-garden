@@ -5,7 +5,7 @@
   import { get } from 'svelte/store';
   import { onMount } from 'svelte';
   import { circles } from '$lib/shared/state/circles';
-  import { wallet } from '$lib/stores/wallet.svelte';
+  import { wallet } from '$lib/shared/state/wallet.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import type { Address } from '@circles-sdk/utils';
 

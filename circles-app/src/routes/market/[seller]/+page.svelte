@@ -7,10 +7,10 @@
     import ProductCard from '$lib/components/ProductCard.svelte';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
     import type { AggregatedCatalogItem } from '$lib/domains/market/model/types';
-    import { getMarketClient } from '$lib/sdk/marketClient';
+    import { getMarketClient } from '$lib/integrations/market/marketClient';
     import { shortenAddress } from '$lib/utils/shared';
     import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
-    import { avatarState } from '$lib/stores/avatar.svelte';
+    import { avatarState } from '$lib/shared/state/avatar.svelte';
     import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/app/shell/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/types/actions';

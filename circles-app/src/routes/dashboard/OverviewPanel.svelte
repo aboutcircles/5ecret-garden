@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { groupMetrics } from '$lib/stores/groupMetrics.svelte';
+    import { groupMetrics } from '$lib/domains/groups/state/groupMetrics.svelte';
     import GroupMetricsStats from '$lib/components/GroupMetricsStats.svelte';
     import ModernHistoryChart from '$lib/components/ModernHistoryChart.svelte';
     import ModernPieChart from '$lib/components/ModernPieChart.svelte';

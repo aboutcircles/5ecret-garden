@@ -1,7 +1,7 @@
 <script lang="ts">
   import AdminProductRow from './AdminProductRow.svelte';
-  import Tabs from '$lib/components/tabs/Tabs.svelte';
-  import Tab from '$lib/components/tabs/Tab.svelte';
+  import Tabs from '$lib/shared/ui/primitives/tabs/Tabs.svelte';
+  import Tab from '$lib/shared/ui/primitives/tabs/Tab.svelte';
   import type { AdminUnifiedProduct, AdminProductType } from '../types';
   import { resolveAdminProductType, adminProductTypeLabels } from '../types';
   import Avatar from '$lib/components/avatar/Avatar.svelte';

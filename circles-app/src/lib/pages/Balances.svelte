@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {circlesBalances} from '$lib/stores/circlesBalances';
+    import {circlesBalances} from '$lib/shared/state/circlesBalances';
     import {derived, writable, type Writable} from 'svelte/store';
     import BalanceRow from '$lib/components/BalanceRow.svelte';
     import type {EventRow} from '@circles-sdk/data';

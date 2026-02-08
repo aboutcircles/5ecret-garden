@@ -4,7 +4,7 @@
     import {onMount} from 'svelte';
     import { popupControls } from '$lib/shared/state/popup';
     import {runTask} from '$lib/utils/tasks';
-    import {avatarState} from '$lib/stores/avatar.svelte';
+    import {avatarState} from '$lib/shared/state/avatar.svelte';
 
     import ProfileNamespaces from './ProfileNamespaces.svelte';
     import ProfileHeaderEditor from '$lib/flows/offer/ProfileHeaderEditor.svelte';

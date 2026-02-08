@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { GroupMetrics } from '$lib/stores/groupMetrics.svelte';
+  import type { GroupMetrics } from '$lib/domains/groups/state/groupMetrics.svelte';
 
   type Props = {
     groupMetrics: GroupMetrics;

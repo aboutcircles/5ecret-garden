@@ -2,7 +2,7 @@
   import SelectAsset from './2_Asset.svelte';
   import type { SendFlowContext } from '$lib/flows/send/context';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
-  import { avatarState } from '$lib/stores/avatar.svelte';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { circles } from '$lib/shared/state/circles';
   import { popupControls } from '$lib/shared/state/popup';
   import type { TokenBalanceRow } from '@circles-sdk/data';

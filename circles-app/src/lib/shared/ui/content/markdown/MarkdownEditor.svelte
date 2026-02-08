@@ -1,9 +1,9 @@
 <script lang="ts">
-  import Markdown from '$lib/components/markdown/Markdown.svelte';
+  import Markdown from '$lib/shared/ui/content/markdown/Markdown.svelte';
   import Lucide from '$lib/icons/Lucide.svelte';
   import { Bold as LBold, Italic as LItalic, Link2 as LLink2 } from 'lucide';
-  import Tabs from '$lib/components/tabs/Tabs.svelte';
-  import Tab from '$lib/components/tabs/Tab.svelte';
+  import Tabs from '$lib/shared/ui/primitives/tabs/Tabs.svelte';
+  import Tab from '$lib/shared/ui/primitives/tabs/Tab.svelte';
 
   type Props = {
     value?: string;

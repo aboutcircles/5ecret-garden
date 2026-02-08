@@ -7,9 +7,9 @@
   import type {AggregatedCatalogItem} from '$lib/domains/market/model/types';
   import {getFirstOffer} from '$lib/domains/market/services/catalogHelpers';
   import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
-  import {avatarState} from '$lib/stores/avatar.svelte';
+  import {avatarState} from '$lib/shared/state/avatar.svelte';
   import {addToCart, cartState} from '$lib/cart/store';
-  import { getMarketClient } from '$lib/sdk/marketClient';
+  import { getMarketClient } from '$lib/integrations/market/marketClient';
   import { createLoadable } from '$lib/utils/loadable';
   import { getAddToCartState } from '$lib/cart/addToCartUi';
   import {gnosisConfig} from "$lib/circlesConfig";

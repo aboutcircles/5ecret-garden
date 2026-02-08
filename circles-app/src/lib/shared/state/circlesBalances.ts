@@ -1,10 +1,10 @@
-import { avatarState } from '$lib/stores/avatar.svelte';
+import { avatarState } from '$lib/shared/state/avatar.svelte';
 import type {
   CirclesEvent,
   CirclesEventType,
   TokenBalanceRow,
 } from '@circles-sdk/data';
-import { createEventStore } from '$lib/stores/eventStores/eventStoreFactory.svelte';
+import { createEventStore } from '$lib/shared/state/eventStores/eventStoreFactory.svelte';
 import type { Avatar } from '@circles-sdk/sdk';
 import { writable } from 'svelte/store';
 

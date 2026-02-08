@@ -1,8 +1,8 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { popupControls, popupState } from '$lib/shared/state/popup';
-  import { jumpHref } from '$lib/components/markdown/jump';
-  import JumpPopup from '$lib/components/jump/JumpPopup.svelte';
+  import { jumpHref } from '$lib/shared/ui/content/markdown/jump';
+  import JumpPopup from '$lib/shared/ui/content/jump/JumpPopup.svelte';
 
   interface Props {
     url: string;

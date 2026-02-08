@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { settings } from '$lib/stores/settings.svelte';
+  import { settings } from '$lib/shared/state/settings.svelte';
   import Tooltip from './Tooltip.svelte';
 </script>
 

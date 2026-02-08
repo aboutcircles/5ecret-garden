@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { avatarState } from '$lib/stores/avatar.svelte';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { runTask } from '$lib/utils/tasks';
   import { shortenAddress } from '$lib/utils/shared';
   import { popupControls } from '$lib/shared/state/popup';

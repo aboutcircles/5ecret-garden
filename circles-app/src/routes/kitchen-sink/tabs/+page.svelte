@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Tabs from '$lib/components/tabs/Tabs.svelte';
-  import Tab from '$lib/components/tabs/Tab.svelte';
+  import Tabs from '$lib/shared/ui/primitives/tabs/Tabs.svelte';
+  import Tab from '$lib/shared/ui/primitives/tabs/Tab.svelte';
 
   let selectedMain = $state<string | null>('overview');
   let selectedBordered = $state<string | null>('a');

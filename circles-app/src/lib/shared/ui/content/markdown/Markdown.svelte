@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { parseMarkdown } from '$lib/components/markdown/ast';
-  import MarkdownBlock from '$lib/components/markdown/MarkdownBlock.svelte';
+  import { parseMarkdown } from '$lib/shared/ui/content/markdown/ast';
+  import MarkdownBlock from '$lib/shared/ui/content/markdown/MarkdownBlock.svelte';
 
   interface Props {
     content: string | null | undefined;

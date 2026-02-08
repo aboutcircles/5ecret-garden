@@ -1,10 +1,10 @@
 <script lang="ts">
     import GenericList from '$lib/components/GenericList.svelte';
-    import {createCMGroups} from '$lib/stores/groups.svelte';
+    import {createCMGroups} from '$lib/domains/groups/state/groups.svelte';
     import type {Readable} from 'svelte/store';
     import type {EventRow} from '@circles-sdk/data';
     import GroupRowView from './GroupRowView.svelte';
-    import {avatarState} from '$lib/stores/avatar.svelte';
+    import {avatarState} from '$lib/shared/state/avatar.svelte';
     import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
     import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/app/shell/ActionButtonDropDown.svelte';
@@ -18,9 +18,9 @@
     import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
     import { getGroupsByMember } from '$lib/utils/getGroupsByMemberBatch';
     import type { GroupRow } from '@circles-sdk/data';
-    import Tabs from '$lib/components/tabs/Tabs.svelte';
-    import Tab from '$lib/components/tabs/Tab.svelte';
-    import { type TabIdOf } from '$lib/components/tabs/tabId';
+    import Tabs from '$lib/shared/ui/primitives/tabs/Tabs.svelte';
+    import Tab from '$lib/shared/ui/primitives/tabs/Tab.svelte';
+    import { type TabIdOf } from '$lib/shared/ui/primitives/tabs/tabId';
 
     let groups: Readable<{
         data: EventRow[];

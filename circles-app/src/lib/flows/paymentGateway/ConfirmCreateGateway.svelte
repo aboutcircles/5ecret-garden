@@ -2,7 +2,7 @@
   import { ethers } from 'ethers';
 
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
-  import { wallet } from '$lib/stores/wallet.svelte';
+  import { wallet } from '$lib/shared/state/wallet.svelte';
   import { runTask } from '$lib/utils/tasks';
   import { popupControls } from '$lib/shared/state/popup';
   import type { CreateGatewayFlowContext } from './context';
@@ -11,7 +11,7 @@
   import { ensureProfileShape, cidV0ToDigest32Strict } from '@circles-profile/core';
   import { isValidOnChainName } from '$lib/utils/isValid';
   import ActionButton from '$lib/components/ActionButton.svelte';
-  import Markdown from '$lib/components/markdown/Markdown.svelte';
+  import Markdown from '$lib/shared/ui/content/markdown/Markdown.svelte';
 
   interface Props {
     context: CreateGatewayFlowContext;

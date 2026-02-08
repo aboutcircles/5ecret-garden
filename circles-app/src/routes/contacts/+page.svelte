@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {contacts} from '$lib/stores/contacts';
+    import {contacts} from '$lib/domains/profile/state/contacts';
     import Papa from 'papaparse';
     import GenericList from '$lib/components/GenericList.svelte';
     import ContactRow from './ContactRow.svelte';
@@ -11,7 +11,7 @@
     import {Filter as LFilter, Download as LDownload, Plus as LPlus, Star} from 'lucide';
     import {popupControls} from '$lib/shared/state/popup';
     import ManageGroupMembers from '$lib/flows/manageGroupMembers/1_manageGroupMembers.svelte';
-    import {avatarState} from '$lib/stores/avatar.svelte';
+    import {avatarState} from '$lib/shared/state/avatar.svelte';
     import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/app/shell/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/types/actions';

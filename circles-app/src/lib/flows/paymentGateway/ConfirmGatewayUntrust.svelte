@@ -3,7 +3,7 @@
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import ActionButton from '$lib/components/ActionButton.svelte';
-  import { wallet } from '$lib/stores/wallet.svelte';
+  import { wallet } from '$lib/shared/state/wallet.svelte';
   import { runTask } from '$lib/utils/tasks';
   import { popupControls } from '$lib/shared/state/popup';
 

@@ -6,7 +6,7 @@
   import type { ManageGroupMembersFlowContext } from './context';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import Papa from 'papaparse';
-  import { avatarState } from '$lib/stores/avatar.svelte';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { ethers } from 'ethers';
   import type { Address } from '@circles-sdk/utils';
   import Trust from "$lib/pages/Trust.svelte";

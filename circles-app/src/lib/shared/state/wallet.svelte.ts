@@ -1,6 +1,6 @@
 import {writable} from 'svelte/store';
 import {goto} from '$app/navigation';
-import {avatarState} from '$lib/stores/avatar.svelte';
+import {avatarState} from '$lib/shared/state/avatar.svelte';
 import {circles} from '$lib/shared/state/circles';
 import {
     BrowserProviderContractRunner, PrivateKeyContractRunner,
@@ -16,9 +16,9 @@ import {JsonRpcProvider} from 'ethers';
 import {type SdkContractRunner} from '@circles-sdk/adapter';
 import type {Address} from '@circles-sdk/utils';
 import {CirclesStorage} from '$lib/utils/storage';
-import {groupMetrics} from './groupMetrics.svelte';
+import {groupMetrics} from '$lib/domains/groups/state/groupMetrics.svelte';
 import { disconnect, getConnectors, reconnect, getAccount } from '@wagmi/core';
-import {config} from '../../config';
+import {config} from '../../../config';
 import {settings} from './settings.svelte';
 import type {GroupType} from '@circles-sdk/data';
 import {privateKeyToAccount} from 'viem/accounts';

@@ -6,12 +6,12 @@
     initSafeSdkPrivateKeyContractRunner,
     signer,
     wallet,
-  } from '$lib/stores/wallet.svelte';
+  } from '$lib/shared/state/wallet.svelte';
   import { circles } from '$lib/shared/state/circles';
   import { Sdk } from '@circles-sdk/sdk';
   import { onMount } from 'svelte';
   import ConnectSafe from '$lib/components/ConnectSafe.svelte';
-  import { settings } from '$lib/stores/settings.svelte';
+  import { settings } from '$lib/shared/state/settings.svelte';
   import { gnosisConfig } from '$lib/circlesConfig';
   import type { SdkContractRunner } from '@circles-sdk/adapter';
   import type { Address } from '@circles-sdk/utils';

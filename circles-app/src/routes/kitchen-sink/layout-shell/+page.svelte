@@ -5,7 +5,7 @@
   import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
   import ActionButtonDropDown from '$lib/app/shell/ActionButtonDropDown.svelte';
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
-  import RowFrame from '$lib/ui/RowFrame.svelte';
+  import RowFrame from '$lib/shared/ui/RowFrame.svelte';
   import type { Action } from '$lib/types/actions';
 
   const shellActionItems: Action[] = [

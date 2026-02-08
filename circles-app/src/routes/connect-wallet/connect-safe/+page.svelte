@@ -7,14 +7,14 @@
     initSafeSdkBrowserContractRunner,
     signer,
     wallet,
-  } from '$lib/stores/wallet.svelte';
+  } from '$lib/shared/state/wallet.svelte';
   import type { Address } from '@circles-sdk/utils';
   import WalletLoader from '$lib/components/WalletLoader.svelte';
   import { type AvatarRow, type GroupRow } from '@circles-sdk/data';
   import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/utils/getGroupsByOwnerBatch';
   import ConnectCircles from '$lib/components/ConnectCircles.svelte';
   import SettingsDropdown from '$lib/components/SettingsDropdown.svelte';
-  import { settings } from '$lib/stores/settings.svelte';
+  import { settings } from '$lib/shared/state/settings.svelte';
   import { onMount } from 'svelte';
   import { gnosisConfig } from '$lib/circlesConfig';
   import { Sdk } from '@circles-sdk/sdk';

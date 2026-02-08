@@ -3,7 +3,7 @@
   import { config } from '../../config';
   import { goto } from '$app/navigation';
   import { popupControls } from '$lib/shared/state/popup';
-  import { signer, clearSession } from '$lib/stores/wallet.svelte';
+  import { signer, clearSession } from '$lib/shared/state/wallet.svelte';
   import type { Address } from '@circles-sdk/utils';
   import ImportCircles from './ImportCircles.svelte';
   import { CirclesStorage } from '$lib/utils/storage';

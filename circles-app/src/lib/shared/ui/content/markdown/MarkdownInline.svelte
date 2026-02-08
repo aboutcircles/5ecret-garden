@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { Inline } from '$lib/components/markdown/ast';
-  import JumpLink from '$lib/components/jump/JumpLink.svelte';
+  import type { Inline } from '$lib/shared/ui/content/markdown/ast';
+  import JumpLink from '$lib/shared/ui/content/jump/JumpLink.svelte';
 
   interface Props {
     node: Inline;

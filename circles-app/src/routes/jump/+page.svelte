@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from '$app/stores';
-  import { sanitizeUrl } from '$lib/components/markdown/ast';
+  import { sanitizeUrl } from '$lib/shared/ui/content/markdown/ast';
 
   let copyIcon = $state('/copy.svg');
 

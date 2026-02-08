@@ -6,7 +6,7 @@ import {
   type PagedQueryParams,
 } from '@circles-sdk/data';
 import { get } from 'svelte/store';
-import { createCirclesQueryStore } from '$lib/stores/query/circlesQueryStore';
+import { createCirclesQueryStore } from '$lib/shared/state/query/circlesQueryStore';
 import { circles } from '$lib/shared/state/circles';
 import type { Avatar } from '@circles-sdk/sdk';
 

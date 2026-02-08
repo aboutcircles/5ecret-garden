@@ -1,8 +1,8 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
-  import Tabs from '$lib/components/tabs/Tabs.svelte';
-  import Tab from '$lib/components/tabs/Tab.svelte';
+  import Tabs from '$lib/shared/ui/primitives/tabs/Tabs.svelte';
+  import Tab from '$lib/shared/ui/primitives/tabs/Tab.svelte';
   import { writable, type Readable } from 'svelte/store';
   import { browser } from '$app/environment';
   import { page } from '$app/stores';
@@ -19,8 +19,8 @@
   let { children }: { children?: Snippet } = $props();
 
   // ——— Personal (duplicate of /settings) ———
-  import { avatarState } from '$lib/stores/avatar.svelte';
-  import { clearSession, signer, wallet } from '$lib/stores/wallet.svelte';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
+  import { clearSession, signer, wallet } from '$lib/shared/state/wallet.svelte';
   import { circles } from '$lib/shared/state/circles';
   import MigrateToV2 from '$lib/flows/migrateToV2/1_GetInvited.svelte';
   import { popupControls } from '$lib/shared/state/popup';
@@ -45,7 +45,7 @@
   } from '@circles-market/sdk';
   import type { AggregatedCatalogItem } from '$lib/domains/market/model/types';
   import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
-  import { getMarketClient } from '$lib/sdk/marketClient';
+  import { getMarketClient } from '$lib/integrations/market/marketClient';
   import { signInWithSafe } from '$lib/auth/signin';
   import {
     getOrdersByBuyer,
@@ -59,7 +59,7 @@
   // ——— Payment (duplicate of /gateway) ———
   import type { GatewayRow } from '$lib/gateway/types';
   import CreateGatewayProfile from '$lib/flows/paymentGateway/CreateGatewayProfile.svelte';
-  import { coerceTabId, type TabIdOf } from '$lib/components/tabs/tabId';
+  import { coerceTabId, type TabIdOf } from '$lib/shared/ui/primitives/tabs/tabId';
 
   const TAB_IDS = ['personal', 'bookmarks', 'orders', 'sales', 'keys', 'namespaces', 'marketplace', 'payment'] as const;
   type TabId = TabIdOf<typeof TAB_IDS>;

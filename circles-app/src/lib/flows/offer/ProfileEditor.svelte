@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {avatarState} from '$lib/stores/avatar.svelte';
+    import {avatarState} from '$lib/shared/state/avatar.svelte';
     import type { AppProfile as Profile } from '$lib/domains/profile/model/profiles';
     import { normalizeMarkdownInput, sanitizeText } from '$lib/utils/isValid';
     import ProfileHeaderEditor from '$lib/domains/profile/ui/ProfileHeaderEditor.svelte';

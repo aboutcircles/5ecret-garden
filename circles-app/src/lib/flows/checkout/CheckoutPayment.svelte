@@ -5,15 +5,15 @@
   import { cartState } from '$lib/cart/store';
 
   // NEW: imports to resolve PayAction and open send flow (Svelte 5 runes aware)
-  import { getMarketClient } from '$lib/sdk/marketClient';
+  import { getMarketClient } from '$lib/integrations/market/marketClient';
   import { resolvePayTo } from '$lib/domains/market/services/catalogHelpers';
   import { popupControls } from '$lib/shared/state/popup';
   import SendFlow from '$lib/flows/send/4_Send.svelte';
   import { transitiveTransfer } from '$lib/pages/SelectAsset.svelte';
   import type { SendFlowContext } from '$lib/flows/send/context';
-  import { wallet } from '$lib/stores/wallet.svelte';
+  import { wallet } from '$lib/shared/state/wallet.svelte';
   import { circles } from '$lib/shared/state/circles';
-  import { avatarState } from '$lib/stores/avatar.svelte';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { ethers } from 'ethers';
   import { CirclesConverter } from '@circles-sdk/utils';
   import {gnosisConfig} from "$lib/circlesConfig";

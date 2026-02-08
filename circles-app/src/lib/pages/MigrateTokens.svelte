@@ -1,7 +1,7 @@
 <script lang="ts">
   import { circles } from '$lib/shared/state/circles';
   import BalanceRow from '$lib/components/BalanceRow.svelte';
-  import { avatarState } from '$lib/stores/avatar.svelte';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import { runTask } from '$lib/utils/tasks';
   import { tokenTypeToString } from '$lib/pages/SelectAsset.svelte';

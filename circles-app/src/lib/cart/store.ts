@@ -1,6 +1,6 @@
 import {browser} from '$app/environment';
 import {writable, derived, get} from 'svelte/store';
-import {getMarketClient} from '$lib/sdk/marketClient';
+import {getMarketClient} from '$lib/integrations/market/marketClient';
 import type {AggregatedCatalogItem} from '$lib/domains/market/model/types';
 import {pickFirstProductImageUrl} from '$lib/domains/market/services/imageHelpers';
 import {gnosisConfig} from "$lib/circlesConfig";

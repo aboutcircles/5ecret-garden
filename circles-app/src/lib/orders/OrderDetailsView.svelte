@@ -243,14 +243,14 @@
 <script lang="ts">
   import { formatCurrency } from '$lib/utils/money';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import JumpLink from '$lib/components/jump/JumpLink.svelte';
+  import JumpLink from '$lib/shared/ui/content/jump/JumpLink.svelte';
   import type { Address as EvmAddress } from '@circles-sdk/utils';
   import type { OrderSnapshot } from '$lib/orders/types';
   import type { OrderStatusChange } from '$lib/orders/types';
   import { formatTimestamp, statusLabel } from '$lib/orders/status';
   import { onMount } from 'svelte';
   import { getProduct, pickProductImageUrl } from '$lib/domains/market/services/catalogHelpers';
-  import { getMarketClient } from '$lib/sdk/marketClient';
+  import { getMarketClient } from '$lib/integrations/market/marketClient';
   import { popupControls, type PopupContentDefinition } from '$lib/shared/state/popup';
   import ProductDetailsPopup from '$lib/domains/market/ui/ProductDetailsPopup.svelte';
   import {gnosisConfig} from "$lib/circlesConfig";

@@ -1,7 +1,7 @@
 <script lang="ts">
   import ProductGallery from '$lib/components/ProductGallery.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import Markdown from '$lib/components/markdown/Markdown.svelte';
+  import Markdown from '$lib/shared/ui/content/markdown/Markdown.svelte';
   import { normalizeProductImagesFromSchema } from '$lib/domains/market/services/imageHelpers';
   import { fetchAvailabilityFeed, fetchInventoryFeed, mapAvailabilityToLabel } from '$lib/domains/market/services/feeds';
   import type { QuantitativeValue } from '$lib/domains/market/services/feeds';
@@ -9,8 +9,8 @@
   import type { Address } from '@circles-sdk/utils';
 
   import { ipfsGatewayUrl } from '$lib/utils/ipfs';
-  import { sanitizeUrl } from '$lib/components/markdown/ast';
-  import JumpLink from '$lib/components/jump/JumpLink.svelte';
+  import { sanitizeUrl } from '$lib/shared/ui/content/markdown/ast';
+  import JumpLink from '$lib/shared/ui/content/jump/JumpLink.svelte';
 
   interface Meta {
     publishedAt?: number;

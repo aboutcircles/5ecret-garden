@@ -1,7 +1,7 @@
 <script lang="ts">
     import {goto} from '$app/navigation';
     import ActionButton from '$lib/components/ActionButton.svelte';
-    import {avatarState} from '$lib/stores/avatar.svelte';
+    import {avatarState} from '$lib/shared/state/avatar.svelte';
     import {circles} from '$lib/shared/state/circles';
     import type {Avatar} from '@circles-sdk/sdk';
     import type {Profile} from '@circles-sdk/profiles';

@@ -9,30 +9,30 @@
 <script lang="ts">
   import '../app.css';
 
-  import { avatarState } from '$lib/stores/avatar.svelte';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { canMigrate } from '$lib/guards/canMigrate';
   import { page } from '$app/stores';
   import { onDestroy, onMount } from 'svelte';
   import { tasks } from '$lib/utils/tasks';
   import { popupControls, popupState } from '$lib/shared/state/popup';
   import Popup from '$lib/components/Popup.svelte';
-  import { initTransactionHistoryStore } from '$lib/stores/transactionHistory';
-  import { initContactStore } from '$lib/stores/contacts';
-  import { initBalanceStore } from '$lib/stores/circlesBalances';
+  import { initTransactionHistoryStore } from '$lib/shared/state/transactionHistory';
+  import { initContactStore } from '$lib/domains/profile/state/contacts';
+  import { initBalanceStore } from '$lib/shared/state/circlesBalances';
   import { browser } from '$app/environment';
   import { PUBLIC_PLAUSIBLE_DOMAIN } from '$env/static/public';
-  import { initGroupMetricsStore } from '$lib/stores/groupMetrics.svelte';
+  import { initGroupMetricsStore } from '$lib/domains/groups/state/groupMetrics.svelte';
   import type { Address } from '@circles-sdk/utils';
   import { get } from 'svelte/store';
   import BottomNav from '$lib/app/shell/BottomNav.svelte';
   import DefaultHeader from './DefaultHeader.svelte';
 
   let unwatch: (() => void) | null = null;
-  let walletModule: typeof import('$lib/stores/wallet.svelte') | null = null;
+  let walletModule: typeof import('$lib/shared/state/wallet.svelte') | null = null;
 
   async function getWalletModule() {
     if (!walletModule) {
-      walletModule = await import('$lib/stores/wallet.svelte');
+      walletModule = await import('$lib/shared/state/wallet.svelte');
     }
     return walletModule;
   }
@@ -176,7 +176,7 @@
     if (lastAvatarAddress && currentAddress && lastAvatarAddress !== currentAddress) {
       void (async () => {
         const [{ PersistentAuthContext }, { clearCart }] = await Promise.all([
-          import('$lib/sdk/persistentAuthContext'),
+          import('$lib/integrations/market/persistentAuthContext'),
           import('$lib/cart/store'),
         ]);
         new PersistentAuthContext().clear();

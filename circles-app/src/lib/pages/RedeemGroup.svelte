@@ -1,6 +1,6 @@
 <script lang="ts">
 
-  import { avatarState } from '$lib/stores/avatar.svelte';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { circles } from '$lib/shared/state/circles';
   import { type Address, uint256ToAddress } from '@circles-sdk/utils';
   import ActionButton from '$lib/components/ActionButton.svelte';
@@ -9,7 +9,7 @@
   import { popupControls } from '$lib/shared/state/popup';
   import { ethers, formatUnits } from 'ethers';
   import type { TokenBalanceRow, TrustRelation } from '@circles-sdk/data';
-  import { contacts } from '$lib/stores/contacts';
+  import { contacts } from '$lib/domains/profile/state/contacts';
   import {
   getGroupCollateral,
     getTreasuryAddress,
