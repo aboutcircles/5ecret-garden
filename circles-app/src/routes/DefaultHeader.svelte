@@ -15,7 +15,7 @@
 
   async function ensureCartCountSubscription(): Promise<void> {
     if (cartCountUnsub) return;
-    const { cartItemCount: cartItemCountStore } = await import('$lib/cart/store');
+    const { cartItemCount: cartItemCountStore } = await import('$lib/areas/market/cart/store');
     cartCountUnsub = cartItemCountStore.subscribe((value) => {
       cartItemCount.set(value);
     });
@@ -24,7 +24,7 @@
   async function openBasket(): Promise<void> {
     const [{ default: CartPanel }, { cartItemCount: cartItemCountStore }] = await Promise.all([
       import('$lib/flows/checkout/CartPanel.svelte'),
-      import('$lib/cart/store'),
+      import('$lib/areas/market/cart/store'),
     ]);
 
     if (!cartCountUnsub) {

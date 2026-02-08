@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { cartState, upsertLineItem, patchBasket, cartApi, type OrderItemPreview } from '$lib/cart/store';
-import type { AggregatedCatalogItem } from '$lib/market/types';
+import { cartState, upsertLineItem, patchBasket, cartApi, type OrderItemPreview } from '$lib/areas/market/cart/store';
+import type { AggregatedCatalogItem } from '$lib/areas/market/model';
 
 function baseBasket(overrides: Partial<any> = {}): any {
   return {

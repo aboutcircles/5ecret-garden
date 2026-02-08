@@ -245,14 +245,14 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import JumpLink from '$lib/shared/ui/content/jump/JumpLink.svelte';
   import type { Address as EvmAddress } from '@circles-sdk/utils';
-  import type { OrderSnapshot } from '$lib/orders/types';
-  import type { OrderStatusChange } from '$lib/orders/types';
-  import { formatTimestamp, statusLabel } from '$lib/orders/status';
+  import type { OrderSnapshot } from '$lib/areas/market/orders/types';
+  import type { OrderStatusChange } from '$lib/areas/market/orders/types';
+  import { formatTimestamp, statusLabel } from '$lib/areas/market/orders/status';
   import { onMount } from 'svelte';
-  import { getProduct, pickProductImageUrl } from '$lib/domains/market/services';
+  import { getProduct, pickProductImageUrl } from '$lib/areas/market/services';
   import { getMarketClient } from '$lib/integrations/market';
   import { popupControls, type PopupContentDefinition } from '$lib/shared/state/popup';
-import { ProductDetailsPopup } from '$lib/domains/market/ui';
+import { ProductDetailsPopup } from '$lib/areas/market/ui';
   import {gnosisConfig} from "$lib/circlesConfig";
 
   interface Props {

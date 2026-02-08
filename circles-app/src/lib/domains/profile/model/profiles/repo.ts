@@ -1,7 +1,7 @@
 // src/lib/profiles/repo.ts
 import { get } from 'svelte/store';
 import { circles } from '$lib/shared/state/circles';
-import { getProfilesBindings } from '$lib/domains/market/offers';
+import { getProfilesBindings } from '$lib/areas/market/offers';
 import type { AppProfile, AppProfileCore, ProfileAddress } from './types';
 import { FallbackImageUrl } from './types';
 import { BatchAggregator } from '$lib/utils/batchAggregator';

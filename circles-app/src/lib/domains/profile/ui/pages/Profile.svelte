@@ -40,7 +40,7 @@
     // Offers tab dependencies
     import ProductCard from '$lib/components/ProductCard.svelte';
     import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
-    import type { AggregatedCatalogItem } from '$lib/domains/market/model';
+    import type { AggregatedCatalogItem } from '$lib/areas/market/model';
     import { getMarketClient } from '$lib/integrations/market';
     // Namespaces explorer (read-only) for other profiles
 import { ProfileNamespaces } from '$lib/domains/profile/ui';

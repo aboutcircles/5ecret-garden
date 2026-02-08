@@ -2,7 +2,7 @@
   import type { Address } from '@circles-sdk/utils';
   import { popupControls } from '$lib/shared/state/popup';
   import SearchAvatar from '$lib/pages/SearchAvatar.svelte';
-  import type { AdminUnifiedProduct, AdminOdooConnection } from '$lib/admin/types';
+  import type { AdminUnifiedProduct, AdminOdooConnection } from '$lib/areas/admin/types';
   import type { AdminNewProductFlowContext } from './context';
   import CatalogStep from './2_Catalog.svelte';
   import { shortenAddress } from '$lib/utils/shared';

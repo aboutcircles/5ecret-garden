@@ -5,7 +5,7 @@
     updateBasketDetails,
     validateCart,
     previewCartOrder
-  } from '$lib/cart/store';
+  } from '$lib/areas/market/cart/store';
   import { popupControls } from '$lib/shared/state/popup';
   import CheckoutReview from './CheckoutReview.svelte';
 

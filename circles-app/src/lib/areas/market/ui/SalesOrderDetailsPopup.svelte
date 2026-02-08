@@ -1,5 +1,5 @@
 <script lang="ts">
-  import OrderDetailsView from '$lib/orders/OrderDetailsView.svelte';
+  import OrderDetailsView from '$lib/areas/market/orders/OrderDetailsView.svelte';
   import { createLoadable } from '$lib/utils/loadable';
   import { onMount } from 'svelte';
   import { getMarketClient } from '$lib/integrations/market';

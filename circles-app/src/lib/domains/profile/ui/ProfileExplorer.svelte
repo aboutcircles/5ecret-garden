@@ -10,7 +10,7 @@ import { ProfileSigningKeys } from '$lib/domains/profile/ui';
     import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
     import type { ProfilesBindings } from '@circles-market/sdk';
     import { loadProfileOrInit, rebaseAndSaveProfile } from '@circles-market/sdk';
-    import { getProfilesBindings } from '$lib/domains/market/offers';
+    import { getProfilesBindings } from '$lib/areas/market/offers';
     import { removeProfileFromCache } from '$lib/utils/profile';
     import type {Address} from '@circles-sdk/utils';
 

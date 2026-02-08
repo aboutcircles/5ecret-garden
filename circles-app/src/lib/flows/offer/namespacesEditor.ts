@@ -1,5 +1,5 @@
 // lib/flows/profile/namespacesEditor.ts
-import type { CidV0 } from '$lib/domains/market/offers';
+import type { CidV0 } from '$lib/areas/market/offers';
 import type { ProfilesBindings } from '@circles-market/sdk';
 import { loadIndex, rebaseAndSaveProfile } from '@circles-market/sdk';
 import type { Address } from '@circles-sdk/utils';

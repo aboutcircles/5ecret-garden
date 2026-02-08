@@ -4,14 +4,14 @@
   import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
   import ProductViewer from '$lib/components/ProductViewer.svelte';
   import {goto} from "$app/navigation";
-  import type {AggregatedCatalogItem} from '$lib/domains/market/model';
-  import {getFirstOffer} from '$lib/domains/market/services';
+  import type {AggregatedCatalogItem} from '$lib/areas/market/model';
+  import {getFirstOffer} from '$lib/areas/market/services';
   import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
   import {avatarState} from '$lib/shared/state/avatar.svelte';
-  import {addToCart, cartState} from '$lib/cart/store';
+  import {addToCart, cartState} from '$lib/areas/market/cart/store';
   import { getMarketClient } from '$lib/integrations/market';
   import { createLoadable } from '$lib/utils/loadable';
-  import { getAddToCartState } from '$lib/cart/addToCartUi';
+  import { getAddToCartState } from '$lib/areas/market/cart/addToCartUi';
   import {gnosisConfig} from "$lib/circlesConfig";
 
   // Derive seller and SKU from SvelteKit's $page store

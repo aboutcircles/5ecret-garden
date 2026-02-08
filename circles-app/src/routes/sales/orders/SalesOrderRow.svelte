@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { formatTimestamp, statusLabel } from '$lib/orders/status';
+  import { formatTimestamp, statusLabel } from '$lib/areas/market/orders/status';
   import { popupControls, type PopupContentDefinition } from '$lib/shared/state/popup';
-import { SalesOrderDetailsPopup } from '$lib/domains/market/ui';
+import { SalesOrderDetailsPopup } from '$lib/areas/market/ui';
   interface Props {
     item: {
       key: string;

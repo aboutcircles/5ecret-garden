@@ -1,7 +1,7 @@
 import { browser } from '$app/environment';
 import { getMarketClient } from '$lib/integrations/market';
 import type { OrderSnapshot, OrderStatusHistory, SellerOrderDto } from '@circles-market/sdk';
-import type { OrderStatusSseEvent } from '$lib/orders/types';
+import type { OrderStatusSseEvent } from '$lib/areas/market/orders/types';
 
 export async function getOrdersByBuyer(
   page: number = 1,

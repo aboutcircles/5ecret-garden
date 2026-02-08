@@ -3,7 +3,7 @@
     import {createEventDispatcher} from 'svelte';
     import {runTask} from '$lib/utils/tasks';
     import type {Address} from "@circles-sdk/utils";
-    import type {CidV0} from '$lib/domains/market/offers';
+    import type {CidV0} from '$lib/areas/market/offers';
     import type { ProfilesBindings } from '@circles-market/sdk';
     import {
         loadNamespaceLinks,
@@ -15,7 +15,7 @@
     import { ChevronRight as LChevronRight, ChevronDown as LChevronDown, Trash2 as LTrash2, ExternalLink as LExternalLink } from 'lucide';
     import { ipfsGatewayUrl } from '$lib/utils/ipfs';
     import JumpLink from '$lib/shared/ui/content/jump/JumpLink.svelte';
-    import { getProfilesBindings } from '$lib/domains/market/offers';
+    import { getProfilesBindings } from '$lib/areas/market/offers';
 
     interface Props {
         avatar: Address;

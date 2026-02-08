@@ -3,7 +3,7 @@
     import { runTask } from '$lib/utils/tasks';
     import { loadProfileOrInit, rebaseAndSaveProfile } from '@circles-market/sdk';
     import type { ProfilesBindings } from '@circles-market/sdk';
-    import { getProfilesBindings } from '$lib/domains/market/offers';
+    import { getProfilesBindings } from '$lib/areas/market/offers';
     import { removeProfileFromCache } from '$lib/utils/profile';
     import type { Address } from '@circles-sdk/utils';
     import { bytesToHex, keccak256, hexToBytes } from '$lib/safeSigner';

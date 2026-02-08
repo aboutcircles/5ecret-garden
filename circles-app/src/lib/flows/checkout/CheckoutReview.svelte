@@ -1,12 +1,12 @@
 <!-- lib/flows/checkout/CheckoutReview.svelte -->
 <script lang="ts">
     import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
-    import { cartState, checkoutCart } from '$lib/cart/store';
+    import { cartState, checkoutCart } from '$lib/areas/market/cart/store';
     import { popupControls } from '$lib/shared/state/popup';
     import CheckoutPayment from './CheckoutPayment.svelte';
     import { getMarketClient } from '$lib/integrations/market';
-    import type { AggregatedCatalogItem } from '$lib/domains/market/model';
-    import { pickFirstProductImageUrl } from '$lib/domains/market/services';
+    import type { AggregatedCatalogItem } from '$lib/areas/market/model';
+    import { pickFirstProductImageUrl } from '$lib/areas/market/services';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
     import {gnosisConfig} from "$lib/circlesConfig";
 

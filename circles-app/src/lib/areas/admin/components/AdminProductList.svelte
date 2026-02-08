@@ -5,8 +5,8 @@
   import type { AdminUnifiedProduct, AdminProductType } from '../types';
   import { resolveAdminProductType, adminProductTypeLabels } from '../types';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import AdminStatusBadge from '$lib/admin/components/AdminStatusBadge.svelte';
-  import { adminOdooConnectionKey } from '$lib/admin/helpers';
+  import AdminStatusBadge from '$lib/areas/admin/components/AdminStatusBadge.svelte';
+  import { adminOdooConnectionKey } from '$lib/areas/admin/helpers';
   import type { AdminOdooConnection } from '../types';
   import { shortenAddress } from '$lib/utils/shared';
 
