@@ -1,7 +1,9 @@
 <script lang="ts">
   import Markdown from '$lib/components/markdown/Markdown.svelte';
   import Lucide from '$lib/icons/Lucide.svelte';
-  import { Bold as LBold, Italic as LItalic, Link2 as LLink2, Pencil as LPencil, Eye as LEye } from 'lucide';
+  import { Bold as LBold, Italic as LItalic, Link2 as LLink2 } from 'lucide';
+  import Tabs from '$lib/components/tabs/Tabs.svelte';
+  import Tab from '$lib/components/tabs/Tab.svelte';
 
   type Props = {
     value?: string;
@@ -311,35 +313,11 @@
         <Lucide icon={LLink2} size={16} ariaLabel="" />
       </button>
     </div>
-    <div class="tabs tabs-boxed tabs-sm" role="tablist" aria-label="Markdown view">
-      <button
-        type="button"
-        role="tab"
-        class={`tab gap-2 ${viewMode === 'editor' ? 'tab-active' : ''}`.trim()}
-        aria-selected={viewMode === 'editor'}
-        tabindex={viewMode === 'editor' ? 0 : -1}
-        onpointerdown={(e) =>
-          onToolbarPointerDown(e, () => {
-            viewMode = 'editor';
-          })}
-      >
-        <Lucide icon={LPencil} size={16} ariaLabel="" />
-        Editor
-      </button>
-      <button
-        type="button"
-        role="tab"
-        class={`tab gap-2 ${viewMode === 'preview' ? 'tab-active' : ''}`.trim()}
-        aria-selected={viewMode === 'preview'}
-        tabindex={viewMode === 'preview' ? 0 : -1}
-        onpointerdown={(e) =>
-          onToolbarPointerDown(e, () => {
-            viewMode = 'preview';
-          })}
-      >
-        <Lucide icon={LEye} size={16} ariaLabel="" />
-        Preview
-      </button>
+    <div class="toolbar-tabs" aria-label="Markdown view tabs">
+      <Tabs bind:selected={viewMode} variant="boxed" size="sm" fitted={true} class="w-full" id="markdown-editor-view-tabs">
+        <Tab id="editor" title="Editor" panelClass="hidden" />
+        <Tab id="preview" title="Preview" panelClass="hidden" />
+      </Tabs>
     </div>
   </div>
 
@@ -380,6 +358,10 @@
     display: flex;
     gap: 6px;
     align-items: center;
+  }
+
+  .toolbar-tabs {
+    min-width: 180px;
   }
 
   .tb {
