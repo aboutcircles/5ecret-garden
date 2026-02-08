@@ -1,5 +1,5 @@
-import type { AggregatedCatalogItem, SchemaOrgOfferLite } from '$lib/domains/market/model';
-import { getFirstOffer, resolvePayTo } from '$lib/domains/market/services';
+import type { AggregatedCatalogItem, SchemaOrgOfferLite } from '$lib/areas/market/model';
+import { getFirstOffer, resolvePayTo } from '$lib/areas/market/services';
 import { UI_COPY } from '$lib/shared/ui/copy';
 
 export type AddToCartInputs = {

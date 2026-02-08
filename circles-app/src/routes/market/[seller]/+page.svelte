@@ -6,7 +6,7 @@
     import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
     import ProductCard from '$lib/components/ProductCard.svelte';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
-    import type { AggregatedCatalogItem } from '$lib/domains/market/model';
+    import type { AggregatedCatalogItem } from '$lib/areas/market/model';
     import { getMarketClient } from '$lib/integrations/market';
     import { shortenAddress } from '$lib/utils/shared';
     import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';

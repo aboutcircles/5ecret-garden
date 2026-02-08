@@ -4,8 +4,8 @@
   import OrderRow from './OrderRow.svelte';
   import type { Readable } from 'svelte/store';
   import { browser } from '$app/environment';
-  import { getOrdersByBuyer, getOrder, subscribeBuyerOrderEvents } from '$lib/orders/ordersAdapter';
-  import type { OrderStatusSseEvent } from '$lib/orders/types';
+  import { getOrdersByBuyer, getOrder, subscribeBuyerOrderEvents } from '$lib/areas/market/orders/ordersAdapter';
+  import type { OrderStatusSseEvent } from '$lib/areas/market/orders/types';
   import { getMarketClient } from '$lib/integrations/market';
   import { signInWithSafe } from '$lib/auth/signin';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
@@ -13,7 +13,7 @@
   import ActionButtonDropDown from '$lib/app/shell/ActionButtonDropDown.svelte';
   import type { Action } from '$lib/types/actions';
   import { popupControls } from '$lib/shared/state/popup';
-  import OrderDetailsPopup from '$lib/orders/OrderDetailsPopup.svelte';
+  import OrderDetailsPopup from '$lib/areas/market/orders/OrderDetailsPopup.svelte';
 
   type ListItem = {
     key: string; // stable order id used by SSE and fetch (orderNumber)

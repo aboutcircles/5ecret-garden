@@ -177,7 +177,7 @@
       void (async () => {
         const [{ PersistentAuthContext }, { clearCart }] = await Promise.all([
           import('$lib/integrations/market'),
-          import('$lib/cart/store'),
+          import('$lib/areas/market/cart/store'),
         ]);
         new PersistentAuthContext().clear();
         clearCart();

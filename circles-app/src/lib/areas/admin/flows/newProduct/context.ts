@@ -1,6 +1,6 @@
 import type { Address } from '@circles-sdk/utils';
-import type { AggregatedCatalogItem } from '$lib/domains/market/model';
-import type { AdminProductType } from '$lib/admin/types';
+import type { AggregatedCatalogItem } from '$lib/areas/market/model';
+import type { AdminProductType } from '$lib/areas/admin/types';
 
 export type AdminNewProductFlowContext = {
   chainId: number;

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type {AggregatedCatalogItem} from '$lib/domains/market/model';
+  import type {AggregatedCatalogItem} from '$lib/areas/market/model';
   import ProductViewer from '$lib/components/ProductViewer.svelte';
 
   interface Props {
@@ -12,14 +12,14 @@
   let {product, showSellerInfo, ondeleted, canTombstone = false}: Props = $props();
 
   import {avatarState} from '$lib/shared/state/avatar.svelte';
-  import {cartState, addToCart} from '$lib/cart/store';
-  import {createOffersClientForAvatar} from '$lib/domains/market/offers';
+  import {cartState, addToCart} from '$lib/areas/market/cart/store';
+  import {createOffersClientForAvatar} from '$lib/areas/market/offers';
   import { getWalletProvider } from '$lib/integrations/wallet';
   import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
-  import {getProduct, getFirstOffer, isProductOwnedBy} from '$lib/domains/market/services';
+  import {getProduct, getFirstOffer, isProductOwnedBy} from '$lib/areas/market/services';
   import {productAndOfferToDraft} from '$lib/utils/offer';
   import {popupControls, type PopupContentDefinition} from '$lib/shared/state/popup';
-import { ProductDetailsPopup } from '$lib/domains/market/ui';
+import { ProductDetailsPopup } from '$lib/areas/market/ui';
   import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
   import ActionButton from '$lib/components/ActionButton.svelte';
   import {gnosisConfig} from "$lib/circlesConfig";
@@ -37,7 +37,7 @@ import { ProductDetailsPopup } from '$lib/domains/market/ui';
 
   const isOwner = $derived(isProductOwnedBy(product, currentAvatar));
 
-  import { getAddToCartState } from '$lib/cart/addToCartUi';
+  import { getAddToCartState } from '$lib/areas/market/cart/addToCartUi';
   const effectiveAvailabilityIri = $derived<string | null>(
     (product as any)?.availability ?? (product?.product as any)?.availability ?? null
   );

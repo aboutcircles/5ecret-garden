@@ -17,7 +17,7 @@
   import {ipfsGatewayUrl} from '$lib/utils/ipfs';
   import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
   import {resolveImagesToHttpUrls} from '$lib/media/resolveImageUrl';
-  import {createOffersClientForAvatar} from '$lib/domains/market/offers';
+  import {createOffersClientForAvatar} from '$lib/areas/market/offers';
   import {getWalletProvider} from '$lib/integrations/wallet';
   import {gnosisConfig} from "$lib/circlesConfig";
 

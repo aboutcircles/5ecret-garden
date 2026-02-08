@@ -2,11 +2,11 @@
 <script lang="ts">
   import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
   import QrCode from '$lib/components/QrCode.svelte';
-  import { cartState } from '$lib/cart/store';
+  import { cartState } from '$lib/areas/market/cart/store';
 
   // NEW: imports to resolve PayAction and open send flow (Svelte 5 runes aware)
   import { getMarketClient } from '$lib/integrations/market';
-  import { resolvePayTo } from '$lib/domains/market/services';
+  import { resolvePayTo } from '$lib/areas/market/services';
   import { popupControls } from '$lib/shared/state/popup';
   import SendFlow from '$lib/flows/send/4_Send.svelte';
   import { transitiveTransfer } from '$lib/pages/SelectAsset.svelte';

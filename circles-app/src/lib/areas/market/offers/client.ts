@@ -9,7 +9,7 @@ import {
   type ProfilesBindings,
 } from '@circles-market/sdk';
 import type { Address } from '@circles-sdk/utils';
-import { getProfilesBindings } from '$lib/domains/market/offers';
+import { getProfilesBindings } from '$lib/areas/market/offers';
 import { getMarketClient } from '$lib/integrations/market';
 
 export type { Hex, Address, CidV0 };

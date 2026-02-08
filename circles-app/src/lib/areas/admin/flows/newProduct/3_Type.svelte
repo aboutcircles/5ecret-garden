@@ -5,7 +5,7 @@
   import DetailsStep from './5_Details.svelte';
   import CreateConnectionStep from './4_CreateOdooConnection.svelte';
   import type { AdminNewProductFlowContext } from './context';
-  import type { AdminOdooConnection, AdminUnifiedProduct } from '$lib/admin/types';
+  import type { AdminOdooConnection, AdminUnifiedProduct } from '$lib/areas/admin/types';
 
   interface Props {
     context: AdminNewProductFlowContext;

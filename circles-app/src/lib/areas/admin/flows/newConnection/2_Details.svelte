@@ -1,8 +1,8 @@
 <script lang="ts">
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
   import type { Address } from '@circles-sdk/utils';
-  import AdminProductFormBase from '$lib/admin/components/AdminProductFormBase.svelte';
-  import { normalizeAddressInput } from '$lib/admin/productEditorUtils';
+  import AdminProductFormBase from '$lib/areas/admin/components/AdminProductFormBase.svelte';
+  import { normalizeAddressInput } from '$lib/areas/admin/productEditorUtils';
   import type { AdminNewConnectionFlowContext } from './context';
 
   interface Props {

@@ -1,8 +1,8 @@
 <script lang="ts">
   import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import { normalizeProductImagesFromSchema } from '$lib/domains/market/services';
-  import { mapAvailabilityToLabel } from '$lib/domains/market/services';
-  import type { SchemaOrgOfferLite, SchemaOrgProductLite } from '$lib/domains/market/model';
+  import { normalizeProductImagesFromSchema } from '$lib/areas/market/services';
+  import { mapAvailabilityToLabel } from '$lib/areas/market/services';
+  import type { SchemaOrgOfferLite, SchemaOrgProductLite } from '$lib/areas/market/model';
   import type { Address } from '@circles-sdk/utils';
 
   interface Meta {

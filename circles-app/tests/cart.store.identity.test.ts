@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { cartState, upsertLineByIdentity, setLineQuantityByIdentity, removeLineByIdentity, setItems, patchBasket, cartApi, type OrderItemPreview } from '$lib/cart/store';
+import { cartState, upsertLineByIdentity, setLineQuantityByIdentity, removeLineByIdentity, setItems, patchBasket, cartApi, type OrderItemPreview } from '$lib/areas/market/cart/store';
 
 function baseBasket(overrides: Partial<any> = {}): any {
   return {

@@ -3,7 +3,7 @@
     adminProductTypeLabels,
     resolveAdminProductType,
     type AdminUnifiedProduct
-  } from '$lib/admin/types';
+  } from '$lib/areas/admin/types';
 
   const sampleProducts: AdminUnifiedProduct[] = [
     {
@@ -31,17 +31,17 @@
   const typeContractRows = [
     {
       domain: 'market',
-      file: '$lib/domains/market/model.ts',
+      file: '$lib/areas/market/model.ts',
       exports: 'AggregatedCatalogItem, SchemaOrgOfferLite, SchemaOrgProductLite, ...'
     },
     {
       domain: 'orders',
-      file: '$lib/orders/types.ts',
+      file: '$lib/areas/market/orders/types.ts',
       exports: 'OrderSnapshot, OrderStatusHistory, OrderStatusEventPayload, ...'
     },
     {
       domain: 'admin',
-      file: '$lib/admin/types.ts',
+      file: '$lib/areas/admin/types.ts',
       exports: 'AdminUnifiedProduct, AdminProductType, resolveAdminProductType(...)'
     }
   ];
@@ -83,7 +83,7 @@
   <div class="space-y-2">
     <h3 class="font-medium">Admin product type resolution</h3>
     <p class="text-sm opacity-70">
-      Demonstrates <code>resolveAdminProductType</code> and human label mapping from <code>$lib/admin/types.ts</code>.
+      Demonstrates <code>resolveAdminProductType</code> and human label mapping from <code>$lib/areas/admin/types.ts</code>.
     </p>
     <div class="space-y-2">
       {#each sampleProducts as product (product.key)}

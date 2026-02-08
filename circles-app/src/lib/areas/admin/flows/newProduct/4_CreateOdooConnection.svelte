@@ -1,12 +1,12 @@
 <script lang="ts">
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
   import type { Address } from '@circles-sdk/utils';
-  import AdminProductFormBase from '$lib/admin/components/AdminProductFormBase.svelte';
+  import AdminProductFormBase from '$lib/areas/admin/components/AdminProductFormBase.svelte';
   import { popupControls } from '$lib/shared/state/popup';
-  import { normalizeAddressInput } from '$lib/admin/productEditorUtils';
+  import { normalizeAddressInput } from '$lib/areas/admin/productEditorUtils';
   import DetailsStep from './5_Details.svelte';
   import type { AdminNewProductFlowContext } from './context';
-  import type { AdminOdooConnection, AdminUnifiedProduct } from '$lib/admin/types';
+  import type { AdminOdooConnection, AdminUnifiedProduct } from '$lib/areas/admin/types';
 
   interface Props {
     context: AdminNewProductFlowContext;

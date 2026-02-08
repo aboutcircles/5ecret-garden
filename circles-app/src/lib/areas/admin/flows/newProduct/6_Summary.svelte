@@ -1,10 +1,10 @@
 <script lang="ts">
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
   import type { Address } from '@circles-sdk/utils';
-  import { normalizeSku } from '$lib/admin/productEditorUtils';
+  import { normalizeSku } from '$lib/areas/admin/productEditorUtils';
   import { popupControls } from '$lib/shared/state/popup';
   import type { AdminNewProductFlowContext } from './context';
-  import type { AdminOdooConnection, AdminUnifiedProduct } from '$lib/admin/types';
+  import type { AdminOdooConnection, AdminUnifiedProduct } from '$lib/areas/admin/types';
 
   interface Props {
     context: AdminNewProductFlowContext;

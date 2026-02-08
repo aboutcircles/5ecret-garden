@@ -31,7 +31,7 @@
   import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
   import type { Action } from '$lib/types/actions';
   import ActionButton from '$lib/components/ActionButton.svelte';
-  import { getProfilesBindings } from '$lib/domains/market/offers';
+  import { getProfilesBindings } from '$lib/areas/market/offers';
   import { runTask } from '$lib/utils/tasks';
   import { removeProfileFromCache } from '$lib/utils/profile';
   import { CirclesStorage } from '$lib/utils/storage';
@@ -43,7 +43,7 @@
     normalizeEvmAddress as normalizeAddress,
     rebaseAndSaveProfile,
   } from '@circles-market/sdk';
-  import type { AggregatedCatalogItem } from '$lib/domains/market/model';
+  import type { AggregatedCatalogItem } from '$lib/areas/market/model';
   import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
   import { getMarketClient } from '$lib/integrations/market';
   import { signInWithSafe } from '$lib/auth/signin';
@@ -52,9 +52,9 @@
     getOrder,
     subscribeBuyerOrderEvents,
     getSalesBySeller,
-  } from '$lib/orders/ordersAdapter';
-  import type { OrderStatusSseEvent } from '$lib/orders/types';
-  import OrderDetailsPopup from '$lib/orders/OrderDetailsPopup.svelte';
+  } from '$lib/areas/market/orders/ordersAdapter';
+  import type { OrderStatusSseEvent } from '$lib/areas/market/orders/types';
+  import OrderDetailsPopup from '$lib/areas/market/orders/OrderDetailsPopup.svelte';
 
   // ——— Payment (duplicate of /gateway) ———
   import type { GatewayRow } from '$lib/gateway/types';

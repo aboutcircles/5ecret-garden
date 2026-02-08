@@ -5,7 +5,7 @@
   import SummaryStep from './6_Summary.svelte';
   import { listOdooProductCatalog, type OdooProductCatalogItem } from '$lib/gateway/adminClient';
   import type { AdminNewProductFlowContext } from './context';
-  import type { AdminOdooConnection, AdminUnifiedProduct } from '$lib/admin/types';
+  import type { AdminOdooConnection, AdminUnifiedProduct } from '$lib/areas/admin/types';
 
   interface Props {
     context: AdminNewProductFlowContext;

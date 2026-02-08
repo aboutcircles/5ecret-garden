@@ -7,7 +7,7 @@
   import { popupControls } from '$lib/shared/state/popup';
   import type { CreateGatewayFlowContext } from './context';
   import { gnosisConfig } from '$lib/circlesConfig';
-  import { getProfilesBindings } from '$lib/domains/market/offers';
+  import { getProfilesBindings } from '$lib/areas/market/offers';
   import { ensureProfileShape, cidV0ToDigest32Strict } from '@circles-profile/core';
   import { isValidOnChainName } from '$lib/utils/isValid';
   import ActionButton from '$lib/components/ActionButton.svelte';

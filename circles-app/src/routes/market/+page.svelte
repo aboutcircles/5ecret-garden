@@ -3,7 +3,7 @@
     import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
     import ProductCard from '$lib/components/ProductCard.svelte';
     import { getMarketClient } from '$lib/integrations/market';
-    import type { AggregatedCatalogItem } from '$lib/domains/market/model';
+    import type { AggregatedCatalogItem } from '$lib/areas/market/model';
     import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/app/shell/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/types/actions';
