@@ -1,5 +1,5 @@
 <script lang="ts">
-  import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
+  import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
 </script>
 
 <PageScaffold

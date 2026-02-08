@@ -1,18 +1,18 @@
 <script lang="ts">
   import {onMount} from 'svelte';
   import {page} from '$app/stores';
-  import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
-  import ProductViewer from '$lib/components/ProductViewer.svelte';
+  import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
+  import ProductViewer from '$lib/areas/market/ui/product/ProductViewer.svelte';
   import {goto} from "$app/navigation";
   import type {AggregatedCatalogItem} from '$lib/areas/market/model';
   import {getFirstOffer} from '$lib/areas/market/services';
   import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
   import {avatarState} from '$lib/shared/state/avatar.svelte';
   import {addToCart, cartState} from '$lib/areas/market/cart/store';
-  import { getMarketClient } from '$lib/integrations/market';
-  import { createLoadable } from '$lib/utils/loadable';
+  import { getMarketClient } from '$lib/shared/integrations/market';
+  import { createLoadable } from '$lib/shared/utils/loadable';
   import { getAddToCartState } from '$lib/areas/market/cart/addToCartUi';
-  import {gnosisConfig} from "$lib/circlesConfig";
+  import {gnosisConfig} from "$lib/shared/config/circles";
 
   // Derive seller and SKU from SvelteKit's $page store
     const params = $derived($page.params as { seller: string; sku: string });

@@ -23,7 +23,7 @@
 
   async function openBasket(): Promise<void> {
     const [{ default: CartPanel }, { cartItemCount: cartItemCountStore }] = await Promise.all([
-      import('$lib/flows/checkout/CartPanel.svelte'),
+      import('$lib/areas/market/flows/checkout/CartPanel.svelte'),
       import('$lib/areas/market/cart/store'),
     ]);
 

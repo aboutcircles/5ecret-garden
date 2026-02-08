@@ -1,20 +1,20 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
+  import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
   import Tabs from '$lib/shared/ui/primitives/tabs/Tabs.svelte';
   import Tab from '$lib/shared/ui/primitives/tabs/Tab.svelte';
   import { writable, type Readable } from 'svelte/store';
   import { browser } from '$app/environment';
   import { page } from '$app/stores';
 
-  import PersonalSection from './sections/PersonalSection.svelte';
-  import OrdersSection from './sections/OrdersSection.svelte';
-  import SalesSection from './sections/SalesSection.svelte';
-  import KeysSection from './sections/KeysSection.svelte';
-  import NamespacesSection from './sections/NamespacesSection.svelte';
-  import MarketplaceSection from './sections/MarketplaceSection.svelte';
-  import PaymentSection from './sections/PaymentSection.svelte';
-  import BookmarksSection from './sections/BookmarksSection.svelte';
+  import PersonalSection from '$lib/areas/settings/ui/sections/PersonalSection.svelte';
+  import OrdersSection from '$lib/areas/settings/ui/sections/OrdersSection.svelte';
+  import SalesSection from '$lib/areas/settings/ui/sections/SalesSection.svelte';
+  import KeysSection from '$lib/areas/settings/ui/sections/KeysSection.svelte';
+  import NamespacesSection from '$lib/areas/settings/ui/sections/NamespacesSection.svelte';
+  import MarketplaceSection from '$lib/areas/settings/ui/sections/MarketplaceSection.svelte';
+  import PaymentSection from '$lib/areas/settings/ui/sections/PaymentSection.svelte';
+  import BookmarksSection from '$lib/areas/settings/ui/sections/BookmarksSection.svelte';
 
   let { children }: { children?: Snippet } = $props();
 
@@ -22,20 +22,20 @@
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { clearSession, signer, wallet } from '$lib/shared/state/wallet.svelte';
   import { circles } from '$lib/shared/state/circles';
-  import MigrateToV2 from '$lib/flows/migrateToV2/1_GetInvited.svelte';
+  import MigrateToV2 from '$lib/areas/wallet/flows/migrateToV2/1_GetInvited.svelte';
   import { popupControls } from '$lib/shared/state/popup';
   import { ethers } from 'ethers';
   import { LogOut as LLogOut } from 'lucide';
   import type { Address } from '@circles-sdk/utils';
-  import ActionButtonDropDown from '$lib/app/shell/ActionButtonDropDown.svelte';
-  import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
-  import type { Action } from '$lib/types/actions';
-  import ActionButton from '$lib/components/ActionButton.svelte';
+  import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
+  import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
+  import type { Action } from '$lib/shared/ui/shell/actions';
+  import ActionButton from '$lib/shared/ui/common/ActionButton.svelte';
   import { getProfilesBindings } from '$lib/areas/market/offers';
-  import { runTask } from '$lib/utils/tasks';
-  import { removeProfileFromCache } from '$lib/utils/profile';
-  import { CirclesStorage } from '$lib/utils/storage';
-  import { gnosisConfig } from '$lib/circlesConfig';
+  import { runTask } from '$lib/shared/utils/tasks';
+  import { removeProfileFromCache } from '$lib/shared/utils/profile';
+  import { CirclesStorage } from '$lib/shared/utils/storage';
+  import { gnosisConfig } from '$lib/shared/config/circles';
 
   // ——— Marketplace (duplicate of /market/[seller], but seller = connected avatar) ———
   import {
@@ -44,9 +44,9 @@
     rebaseAndSaveProfile,
   } from '@circles-market/sdk';
   import type { AggregatedCatalogItem } from '$lib/areas/market/model';
-  import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
-  import { getMarketClient } from '$lib/integrations/market';
-  import { signInWithSafe } from '$lib/auth/signin';
+  import OfferStep1 from '$lib/areas/market/flows/offer/1_Product.svelte';
+  import { getMarketClient } from '$lib/shared/integrations/market';
+  import { signInWithSafe } from '$lib/areas/market/auth/signin';
   import {
     getOrdersByBuyer,
     getOrder,
@@ -57,8 +57,8 @@
   import OrderDetailsPopup from '$lib/areas/market/orders/OrderDetailsPopup.svelte';
 
   // ——— Payment (duplicate of /gateway) ———
-  import type { GatewayRow } from '$lib/gateway/types';
-  import CreateGatewayProfile from '$lib/flows/paymentGateway/CreateGatewayProfile.svelte';
+  import type { GatewayRow } from '$lib/areas/settings/model/gatewayTypes';
+  import CreateGatewayProfile from '$lib/areas/settings/flows/gateway/CreateGatewayProfile.svelte';
   import { coerceTabId, type TabIdOf } from '$lib/shared/ui/primitives/tabs/tabId';
 
   const TAB_IDS = ['personal', 'bookmarks', 'orders', 'sales', 'keys', 'namespaces', 'marketplace', 'payment'] as const;

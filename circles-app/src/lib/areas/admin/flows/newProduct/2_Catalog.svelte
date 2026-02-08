@@ -1,8 +1,8 @@
 <script lang="ts">
   import type { Address } from '@circles-sdk/utils';
   import type { AggregatedCatalogItem } from '$lib/areas/market/model';
-  import { getMarketClient } from '$lib/integrations/market';
-  import { gnosisConfig } from '$lib/circlesConfig';
+  import { getMarketClient } from '$lib/shared/integrations/market';
+  import { gnosisConfig } from '$lib/shared/config/circles';
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
   import RowFrame from '$lib/shared/ui/RowFrame.svelte';
   import AdminStatusBadge from '$lib/areas/admin/components/AdminStatusBadge.svelte';

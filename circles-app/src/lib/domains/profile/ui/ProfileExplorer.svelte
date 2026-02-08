@@ -2,7 +2,7 @@
 <script lang="ts">
     import {onMount} from 'svelte';
     import {popupControls} from '$lib/shared/state/popup';
-    import {runTask} from '$lib/utils/tasks';
+    import {runTask} from '$lib/shared/utils/tasks';
     import {avatarState} from '$lib/shared/state/avatar.svelte';
 import { ProfileNamespaces } from '$lib/domains/profile/ui';
 import { ProfileHeaderEditor } from '$lib/domains/profile/ui';
@@ -11,7 +11,7 @@ import { ProfileSigningKeys } from '$lib/domains/profile/ui';
     import type { ProfilesBindings } from '@circles-market/sdk';
     import { loadProfileOrInit, rebaseAndSaveProfile } from '@circles-market/sdk';
     import { getProfilesBindings } from '$lib/areas/market/offers';
-    import { removeProfileFromCache } from '$lib/utils/profile';
+    import { removeProfileFromCache } from '$lib/shared/utils/profile';
     import type {Address} from '@circles-sdk/utils';
 
     interface Props {

@@ -1,12 +1,12 @@
 <script lang="ts">
   import { Plus as LPlus, RefreshCw as LRefreshCw } from 'lucide';
 
-  import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
-  import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
-  import ActionButtonDropDown from '$lib/app/shell/ActionButtonDropDown.svelte';
-  import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
+  import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
+  import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
+  import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
+  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
   import RowFrame from '$lib/shared/ui/RowFrame.svelte';
-  import type { Action } from '$lib/types/actions';
+  import type { Action } from '$lib/shared/ui/shell/actions';
 
   const shellActionItems: Action[] = [
     { id: 'refresh', label: 'Refresh', iconNode: LRefreshCw, variant: 'ghost', onClick: () => {} },

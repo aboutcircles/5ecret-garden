@@ -1,6 +1,6 @@
 <script lang="ts">
   import { popupControls, popupState } from '$lib/shared/state/popup';
-  import { runTask, tasks } from '$lib/utils/tasks';
+  import { runTask, tasks } from '$lib/shared/utils/tasks';
   import PopupDemoCard from './PopupDemoCard.svelte';
 
   const openPopup = () => {

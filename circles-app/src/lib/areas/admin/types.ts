@@ -4,7 +4,7 @@ import type {
   OdooProductListItem,
   CodeProductListItem,
   OdooConnectionListItem,
-} from '$lib/gateway/adminClient';
+} from '$lib/areas/admin/services/gateway/adminClient';
 
 export type AdminProductType = 'odoo' | 'codedispenser' | 'route';
 

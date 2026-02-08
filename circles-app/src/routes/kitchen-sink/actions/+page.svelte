@@ -1,10 +1,10 @@
 <script lang="ts">
   import { Plus as LPlus, RefreshCw as LRefreshCw, Star as LStar } from 'lucide';
 
-  import ActionButton from '$lib/components/ActionButton.svelte';
-  import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
-  import ActionButtonDropDown from '$lib/app/shell/ActionButtonDropDown.svelte';
-  import type { Action } from '$lib/types/actions';
+  import ActionButton from '$lib/shared/ui/common/ActionButton.svelte';
+  import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
+  import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
+  import type { Action } from '$lib/shared/ui/shell/actions';
 
   let flakyCount = $state(0);
 

@@ -1,8 +1,8 @@
 <script lang="ts">
   import { writable, type Readable } from 'svelte/store';
 
-  import GenericList from '$lib/components/GenericList.svelte';
-  import BalanceRowSkeleton from '$lib/components/BalanceRowSkeleton.svelte';
+  import GenericList from '$lib/shared/ui/common/GenericList.svelte';
+  import BalanceRowSkeleton from '$lib/areas/wallet/ui/components/BalanceRowSkeleton.svelte';
   import DemoGenericRow from '../DemoGenericRow.svelte';
 
   type DemoItem = {

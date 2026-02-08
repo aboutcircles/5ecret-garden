@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { groupMetrics } from '$lib/domains/groups/state';
-    import GroupMetricsStats from '$lib/components/GroupMetricsStats.svelte';
-    import ModernHistoryChart from '$lib/components/ModernHistoryChart.svelte';
-    import ModernPieChart from '$lib/components/ModernPieChart.svelte';
+    import { groupMetrics } from '$lib/areas/groups/state';
+    import GroupMetricsStats from '$lib/areas/groups/ui/components/GroupMetricsStats.svelte';
+    import ModernHistoryChart from '$lib/areas/groups/ui/components/ModernHistoryChart.svelte';
+    import ModernPieChart from '$lib/areas/groups/ui/components/ModernPieChart.svelte';
 </script>
 
 <div class="w-full mb-6">

@@ -1,13 +1,13 @@
 <script lang="ts">
     import {goto} from '$app/navigation';
-    import Address from '$lib/components/Address.svelte';
-    import Avatar from '$lib/components/avatar/Avatar.svelte';
-    import QrCode from '$lib/components/QrCode.svelte';
+    import Address from '$lib/shared/ui/common/Address.svelte';
+    import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
+    import QrCode from '$lib/shared/ui/common/QrCode.svelte';
     import {popupControls} from '$lib/shared/state/popup';
     import {signer} from '$lib/shared/state/wallet.svelte';
 import { ProfileExplorer } from '$lib/domains/profile/ui';
     import type {Address as EvmAddress} from '@circles-sdk/utils';
-    import {gnosisConfig} from "$lib/circlesConfig";
+    import {gnosisConfig} from "$lib/shared/config/circles";
 
     interface Props {
         address: EvmAddress | undefined;
@@ -60,19 +60,6 @@ import { ProfileExplorer } from '$lib/domains/profile/ui';
             onclick={openProfileEditor}
         >
             Edit profile
-        </button>
-
-        <!-- My orders: quick access to the local Orders list route -->
-        <button
-            type="button"
-            class="btn btn-sm btn-outline"
-            onclick={() => {
-                popupControls.close();
-                goto('/orders');
-            }}
-            aria-label="My orders"
-        >
-            My orders
         </button>
     </div>
 

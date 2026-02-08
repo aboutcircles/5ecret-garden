@@ -1,7 +1,7 @@
 <script lang="ts">
   import AdminProductFormBase from './AdminProductFormBase.svelte';
   import type { AdminProductType, AdminUnifiedProduct } from '../types';
-  import type { CodeProductConfig, RouteUpsertInput } from '$lib/gateway/adminClient';
+  import type { CodeProductConfig, RouteUpsertInput } from '$lib/areas/admin/services/gateway/adminClient';
   import { normalizeAddressInput, normalizeSku } from '../productEditorUtils';
 
   interface Props {

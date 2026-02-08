@@ -10,21 +10,21 @@
   import '../app.css';
 
   import { avatarState } from '$lib/shared/state/avatar.svelte';
-  import { canMigrate } from '$lib/guards/canMigrate';
+  import { canMigrate } from '$lib/shared/guards/canMigrate';
   import { page } from '$app/stores';
   import { onDestroy, onMount } from 'svelte';
-  import { tasks } from '$lib/utils/tasks';
+  import { tasks } from '$lib/shared/utils/tasks';
   import { popupControls, popupState } from '$lib/shared/state/popup';
-  import Popup from '$lib/components/Popup.svelte';
+  import Popup from '$lib/shared/ui/common/Popup.svelte';
   import { initTransactionHistoryStore } from '$lib/shared/state/transactionHistory';
   import { initContactStore } from '$lib/domains/profile/state';
   import { initBalanceStore } from '$lib/shared/state/circlesBalances';
   import { browser } from '$app/environment';
   import { PUBLIC_PLAUSIBLE_DOMAIN } from '$env/static/public';
-  import { initGroupMetricsStore } from '$lib/domains/groups/state';
+  import { initGroupMetricsStore } from '$lib/areas/groups/state';
   import type { Address } from '@circles-sdk/utils';
   import { get } from 'svelte/store';
-  import BottomNav from '$lib/app/shell/BottomNav.svelte';
+  import BottomNav from '$lib/shared/ui/shell/BottomNav.svelte';
   import DefaultHeader from './DefaultHeader.svelte';
 
   let unwatch: (() => void) | null = null;
@@ -108,7 +108,7 @@
   });
 
   async function openWrongNetworkPopup(): Promise<void> {
-    const { default: WrongNetwork } = await import('$lib/components/WrongNetwork.svelte');
+    const { default: WrongNetwork } = await import('$lib/areas/wallet/ui/onboarding/WrongNetwork.svelte');
     popupControls.open({
       title: 'Wrong Network',
       component: WrongNetwork,
@@ -117,7 +117,7 @@
   }
 
   async function openMigratePopup(): Promise<void> {
-    const { default: MigrateToV2 } = await import('$lib/flows/migrateToV2/1_GetInvited.svelte');
+    const { default: MigrateToV2 } = await import('$lib/areas/wallet/flows/migrateToV2/1_GetInvited.svelte');
     popupControls.open({
       title: 'Migrate to v2',
       component: MigrateToV2,
@@ -144,7 +144,7 @@
     const address = avatarState.avatar?.address;
     if (address) {
       void (async () => {
-        const { getProfile } = await import('$lib/utils/profile');
+        const { getProfile } = await import('$lib/shared/utils/profile');
         const newProfile = await getProfile(address);
         avatarState.profile = newProfile;
       })();
@@ -176,7 +176,7 @@
     if (lastAvatarAddress && currentAddress && lastAvatarAddress !== currentAddress) {
       void (async () => {
         const [{ PersistentAuthContext }, { clearCart }] = await Promise.all([
-          import('$lib/integrations/market'),
+          import('$lib/shared/integrations/market'),
           import('$lib/areas/market/cart/store'),
         ]);
         new PersistentAuthContext().clear();

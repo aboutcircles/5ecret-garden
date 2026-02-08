@@ -1,5 +1,5 @@
 import type { Address } from '@circles-sdk/utils';
-import { isAddress } from '$lib/utils/tx';
+import { isAddress } from '$lib/shared/utils/tx';
 
 export function normalizeSku(value: string): string {
   return value.trim().toLowerCase();

@@ -1,20 +1,20 @@
 <script lang="ts">
     import {onMount} from 'svelte';
     import { page } from '$app/stores';
-    import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
+    import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
     import {popupControls} from '$lib/shared/state/popup';
-    import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
-    import ProductCard from '$lib/components/ProductCard.svelte';
-    import Avatar from '$lib/components/avatar/Avatar.svelte';
+    import OfferStep1 from '$lib/areas/market/flows/offer/1_Product.svelte';
+    import ProductCard from '$lib/areas/market/ui/product/ProductCard.svelte';
+    import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import type { AggregatedCatalogItem } from '$lib/areas/market/model';
-    import { getMarketClient } from '$lib/integrations/market';
-    import { shortenAddress } from '$lib/utils/shared';
+    import { getMarketClient } from '$lib/shared/integrations/market';
+    import { shortenAddress } from '$lib/shared/utils/shared';
     import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
     import { avatarState } from '$lib/shared/state/avatar.svelte';
-    import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
-    import ActionButtonDropDown from '$lib/app/shell/ActionButtonDropDown.svelte';
-    import type { Action } from '$lib/types/actions';
-    import {gnosisConfig} from "$lib/circlesConfig";
+    import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
+    import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
+    import type { Action } from '$lib/shared/ui/shell/actions';
+    import {gnosisConfig} from "$lib/shared/config/circles";
 
     
     // Derive seller address from SvelteKit's $page store

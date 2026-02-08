@@ -241,8 +241,8 @@
 </style>
 
 <script lang="ts">
-  import { formatCurrency } from '$lib/utils/money';
-  import Avatar from '$lib/components/avatar/Avatar.svelte';
+  import { formatCurrency } from '$lib/shared/utils/money';
+  import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import JumpLink from '$lib/shared/ui/content/jump/JumpLink.svelte';
   import type { Address as EvmAddress } from '@circles-sdk/utils';
   import type { OrderSnapshot } from '$lib/areas/market/orders/types';
@@ -250,10 +250,10 @@
   import { formatTimestamp, statusLabel } from '$lib/areas/market/orders/status';
   import { onMount } from 'svelte';
   import { getProduct, pickProductImageUrl } from '$lib/areas/market/services';
-  import { getMarketClient } from '$lib/integrations/market';
+  import { getMarketClient } from '$lib/shared/integrations/market';
   import { popupControls, type PopupContentDefinition } from '$lib/shared/state/popup';
 import { ProductDetailsPopup } from '$lib/areas/market/ui';
-  import {gnosisConfig} from "$lib/circlesConfig";
+  import {gnosisConfig} from "$lib/shared/config/circles";
 
   interface Props {
     snapshot: OrderSnapshot | null | undefined;

@@ -1,20 +1,20 @@
 <script lang="ts">
-  import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
-  import GenericList from '$lib/components/GenericList.svelte';
+  import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
+  import GenericList from '$lib/shared/ui/common/GenericList.svelte';
   import { browser } from '$app/environment';
-  import { getMarketClient } from '$lib/integrations/market';
+  import { getMarketClient } from '$lib/shared/integrations/market';
   import { onMount } from 'svelte';
   import type { Readable } from 'svelte/store';
 
-  import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
-  import ActionButtonDropDown from '$lib/app/shell/ActionButtonDropDown.svelte';
-  import type { Action } from '$lib/types/actions';
+  import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
+  import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
+  import type { Action } from '$lib/shared/ui/shell/actions';
   import { RefreshCw as LRefreshCw } from 'lucide';
 
-  import { signInWithSafe } from '$lib/auth/signin';
+  import { signInWithSafe } from '$lib/areas/market/auth/signin';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
 
-  import SalesOrderRow from './SalesOrderRow.svelte';
+  import SalesOrderRow from '$lib/areas/market/ui/SalesOrderRow.svelte';
 
   type ListItem = {
     key: string;

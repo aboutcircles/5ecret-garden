@@ -1,9 +1,9 @@
 <script lang="ts">
-  import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import Lucide from '$lib/icons/Lucide.svelte';
+  import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
+  import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import { ArrowRight as LArrowRight, Flame as LFlame } from 'lucide';
-  import { safeStringify } from '$lib/utils/json';
-  import { addressForDisplay, formatAttoCircles, isAddress } from '$lib/utils/tx';
+  import { safeStringify } from '$lib/shared/utils/json';
+  import { addressForDisplay, formatAttoCircles, isAddress } from '$lib/shared/utils/tx';
 
   export type TxEvent = Record<string, any> & { $type?: string };
 

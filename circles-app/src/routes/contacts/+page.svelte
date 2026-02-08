@@ -1,20 +1,20 @@
 <script lang="ts">
     import {contacts} from '$lib/domains/profile/state';
     import Papa from 'papaparse';
-    import GenericList from '$lib/components/GenericList.svelte';
+    import GenericList from '$lib/shared/ui/common/GenericList.svelte';
     import ContactRow from './ContactRow.svelte';
     import {derived, writable, type Writable} from 'svelte/store';
-    import Filter from '$lib/components/Filter.svelte';
-    import AddressInput from '$lib/components/AddressInput.svelte';
-    import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
-    import Lucide from '$lib/icons/Lucide.svelte';
+    import Filter from '$lib/shared/ui/common/Filter.svelte';
+    import AddressInput from '$lib/shared/ui/common/AddressInput.svelte';
+    import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
+    import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
     import {Filter as LFilter, Download as LDownload, Plus as LPlus, Star} from 'lucide';
     import {popupControls} from '$lib/shared/state/popup';
-    import ManageGroupMembers from '$lib/flows/manageGroupMembers/1_manageGroupMembers.svelte';
+    import ManageGroupMembers from '$lib/areas/groups/flows/manageGroupMembers/1_manageGroupMembers.svelte';
     import {avatarState} from '$lib/shared/state/avatar.svelte';
-    import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
-    import ActionButtonDropDown from '$lib/app/shell/ActionButtonDropDown.svelte';
-    import type { Action } from '$lib/types/actions';
+    import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
+    import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
+    import type { Action } from '$lib/shared/ui/shell/actions';
     import { goto } from '$app/navigation';
     import { createPaginatedList } from '$lib/shared/state/paginatedList';
 

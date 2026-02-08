@@ -4,4 +4,5 @@ export { default as ProfileHeaderEditor } from './ProfileHeaderEditor.svelte';
 export { default as ProfileNamespaces } from './ProfileNamespaces.svelte';
 export { default as ProfileSigningKeys } from './ProfileSigningKeys.svelte';
 export { default as TrustScoreBadge } from './TrustScoreBadge.svelte';
+export * from './components';
 export * from './pages';

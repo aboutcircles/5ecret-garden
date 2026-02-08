@@ -1,7 +1,7 @@
 <script lang="ts">
-    import ActionButton from '$lib/components/ActionButton.svelte';
+    import ActionButton from '$lib/shared/ui/common/ActionButton.svelte';
     import {popupControls} from '$lib/shared/state/popup';
-    import SelectWallet from '$lib/components/SelectWallet.svelte';
+    import SelectWallet from '$lib/areas/wallet/ui/onboarding/SelectWallet.svelte';
 
     async function connectWallet() {
         popupControls.open({

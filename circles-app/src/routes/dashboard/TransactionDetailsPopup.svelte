@@ -1,12 +1,12 @@
 <script lang="ts">
     import type { TransactionHistoryRow } from '@circles-sdk/data';
-    import Avatar from '$lib/components/avatar/Avatar.svelte';
+    import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import { avatarState } from '$lib/shared/state/avatar.svelte';
     // Lucide icons are node definitions (arrays). Use the local Lucide wrapper to render them.
-    import Lucide from '$lib/icons/Lucide.svelte';
+    import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
     import { ArrowRight as LArrowRight, ExternalLink as LExternalLink, Flame as LFlame, Coins as LCoins, Copy as LCopy } from 'lucide';
     import { CirclesConverter } from '@circles-sdk/utils';
-    import { isAddress, isZeroAddress, toBigIntMaybe, tokenIdToAddressMaybe } from '$lib/utils/tx';
+    import { isAddress, isZeroAddress, toBigIntMaybe, tokenIdToAddressMaybe } from '$lib/shared/utils/tx';
     import TxEvents from './TxEvents.svelte';
     import { popupControls } from '$lib/shared/state/popup';
     import JumpPopup from '$lib/shared/ui/content/jump/JumpPopup.svelte';
@@ -71,7 +71,7 @@
         navigator.clipboard?.writeText(item.transactionHash).catch(() => {});
     }
 
-    // moved helpers to $lib/utils/tx and $lib/utils/json
+    // moved helpers to $lib/shared/utils/tx and $lib/shared/utils/json
 
     type TxEvent = Record<string, any> & { $type?: string };
 
