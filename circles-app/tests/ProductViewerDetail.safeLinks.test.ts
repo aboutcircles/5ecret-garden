@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { sanitizeUrl } from '../src/lib/components/markdown/ast';
-import { jumpHref } from '../src/lib/components/markdown/jump';
+import { sanitizeUrl, jumpHref } from '../src/lib/shared/ui/content/markdown';
 
 // Since we cannot easily test the Svelte component's derived state in this environment 
 // without setting up a full component test suite, we test the logic that the component uses.

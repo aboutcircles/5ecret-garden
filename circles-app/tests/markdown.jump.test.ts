@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { sanitizeUrl } from '$lib/components/markdown/ast';
-import { jumpHref } from '$lib/components/markdown/jump';
+import { sanitizeUrl, jumpHref } from '$lib/shared/ui/content/markdown';
 
 describe('safe markdown link handling', () => {
   it('sanitizeUrl rejects dangerous protocols', () => {
