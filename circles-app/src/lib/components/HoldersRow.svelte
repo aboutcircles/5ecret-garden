@@ -3,7 +3,7 @@
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import { formatUnits } from 'ethers';
   import { popupControls } from '$lib/shared/state/popup';
-  import ProfilePopup from '$lib/domains/profile/ui/pages/ProfilePopup.svelte';
+import { ProfilePopup } from '$lib/domains/profile/ui/pages';
   import type { Address } from '@circles-sdk/utils';
   import type { TrustRelation } from '@circles-sdk/data';
 

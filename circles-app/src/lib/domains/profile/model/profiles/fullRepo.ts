@@ -3,7 +3,7 @@ import { get } from 'svelte/store';
 import { circles } from '$lib/shared/state/circles';
 import type { AppProfile, ProfileAddress } from './types';
 import { FallbackImageUrl } from './types';
-import { getProfilesBindings } from '$lib/domains/market/offers/profilesBindings';
+import { getProfilesBindings } from '$lib/domains/market/offers';
 import { ensureProfileShape } from '@circles-profile/core';
 import { rebaseAndSaveProfile } from '@circles-market/sdk';
 import { invalidateProfileCore } from './coreRepo';

@@ -1,7 +1,7 @@
 <script lang="ts">
     import FlowDecoration from '$lib/flows/FlowDecoration.svelte';
     import Tooltip from '../../components/Tooltip.svelte';
-    import ProfileHeaderEditor from '$lib/domains/profile/ui/ProfileHeaderEditor.svelte';
+import { ProfileHeaderEditor } from '$lib/domains/profile/ui';
     import { isValidName, isValidSymbol, isValidOnChainName } from '$lib/utils/isValid';
     import { popupControls } from '$lib/shared/state/popup';
     import { wallet } from '$lib/shared/state/wallet.svelte';

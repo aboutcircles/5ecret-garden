@@ -4,9 +4,9 @@
     import { cartState, checkoutCart } from '$lib/cart/store';
     import { popupControls } from '$lib/shared/state/popup';
     import CheckoutPayment from './CheckoutPayment.svelte';
-    import { getMarketClient } from '$lib/integrations/market/marketClient';
-    import type { AggregatedCatalogItem } from '$lib/domains/market/model/types';
-    import { pickFirstProductImageUrl } from '$lib/domains/market/services/imageHelpers';
+    import { getMarketClient } from '$lib/integrations/market';
+    import type { AggregatedCatalogItem } from '$lib/domains/market/model';
+    import { pickFirstProductImageUrl } from '$lib/domains/market/services';
     import Avatar from '$lib/components/avatar/Avatar.svelte';
     import {gnosisConfig} from "$lib/circlesConfig";
 

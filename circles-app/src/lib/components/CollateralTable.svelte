@@ -5,8 +5,7 @@
   import type { TrustRelation } from '@circles-sdk/data';
   import RowFrame from '$lib/shared/ui/RowFrame.svelte';
     import {popupControls} from "$lib/shared/state/popup";
-    import ProfilePopup from "$lib/domains/profile/ui/pages/ProfilePopup.svelte";
-
+import { ProfilePopup } from '$lib/domains/profile/ui/pages';
   function formatEtherTwoDecimals(value: bigint): string {
     const etherString = formatUnits(value.toString(), 18);
     return parseFloat(etherString).toFixed(2);

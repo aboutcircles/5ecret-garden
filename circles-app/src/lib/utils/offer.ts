@@ -2,8 +2,8 @@
  * Helper functions for offer creation
  */
 import type { OfferDraft } from '$lib/flows/offer/types';
-import type { SchemaOrgProductLite, SchemaOrgOfferLite } from '$lib/domains/market/model/types';
-import { normalizeProductImagesFromSchema } from '$lib/domains/market/services/imageHelpers';
+import type { SchemaOrgProductLite, SchemaOrgOfferLite } from '$lib/domains/market/model';
+import { normalizeProductImagesFromSchema } from '$lib/domains/market/services';
 
 /**
  * Generate a SKU based on product name with collision detection

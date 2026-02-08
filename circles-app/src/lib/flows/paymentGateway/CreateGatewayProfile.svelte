@@ -5,7 +5,7 @@
   import { popupControls } from '$lib/shared/state/popup';
   import type { CreateGatewayFlowContext } from './context';
   import ConfirmCreateGateway from './ConfirmCreateGateway.svelte';
-  import ProfileHeaderEditor from '$lib/domains/profile/ui/ProfileHeaderEditor.svelte';
+import { ProfileHeaderEditor } from '$lib/domains/profile/ui';
   import { isValidOnChainName } from '$lib/utils/isValid';
 
   interface Props {

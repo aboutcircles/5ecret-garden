@@ -2,7 +2,7 @@ import {
   type CirclesEventType,
   type TransactionHistoryRow,
 } from '@circles-sdk/data';
-import { createCirclesQueryStore } from '$lib/shared/state/query/circlesQueryStore';
+import { createCirclesQueryStore } from '$lib/shared/state/query';
 import { writable } from 'svelte/store';
 import type { Avatar } from '@circles-sdk/sdk';
 

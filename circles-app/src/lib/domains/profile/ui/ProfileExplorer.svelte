@@ -4,15 +4,13 @@
     import {popupControls} from '$lib/shared/state/popup';
     import {runTask} from '$lib/utils/tasks';
     import {avatarState} from '$lib/shared/state/avatar.svelte';
-
-    import ProfileNamespaces from '$lib/domains/profile/ui/ProfileNamespaces.svelte';
-    import ProfileHeaderEditor from '$lib/domains/profile/ui/ProfileHeaderEditor.svelte';
-    import ProfileSigningKeys from '$lib/domains/profile/ui/ProfileSigningKeys.svelte';
-
+import { ProfileNamespaces } from '$lib/domains/profile/ui';
+import { ProfileHeaderEditor } from '$lib/domains/profile/ui';
+import { ProfileSigningKeys } from '$lib/domains/profile/ui';
     import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
     import type { ProfilesBindings } from '@circles-market/sdk';
     import { loadProfileOrInit, rebaseAndSaveProfile } from '@circles-market/sdk';
-    import { getProfilesBindings } from '$lib/domains/market/offers/profilesBindings';
+    import { getProfilesBindings } from '$lib/domains/market/offers';
     import { removeProfileFromCache } from '$lib/utils/profile';
     import type {Address} from '@circles-sdk/utils';
 

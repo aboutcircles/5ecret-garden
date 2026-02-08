@@ -2,7 +2,7 @@
   import type { Address } from '@circles-sdk/utils';
 
   import { popupControls } from '$lib/shared/state/popup';
-  import ProfilePopup from '$lib/domains/profile/ui/pages/ProfilePopup.svelte';
+import { ProfilePopup } from '$lib/domains/profile/ui/pages';
   import TrustHistoryHeatmap from '$lib/domains/trust/ui/TrustHistoryHeatmap.svelte';
   import { tokenTypeToString, transitiveTransfer } from '$lib/pages/SelectAsset.svelte';
 

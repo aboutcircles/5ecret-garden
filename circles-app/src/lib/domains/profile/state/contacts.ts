@@ -3,7 +3,7 @@ import type {
   CirclesEventType,
   TrustRelationRow,
 } from '@circles-sdk/data';
-import type { AppProfileCore as Profile } from '$lib/domains/profile/model/profiles';
+import type { AppProfileCore as Profile } from '$lib/domains/profile/model';
 import { writable } from 'svelte/store';
 import { createContactsQueryStore } from '$lib/domains/profile/state/query/circlesContactsQueryStore.svelte';
 import type { Avatar } from '@circles-sdk/sdk';

@@ -2,7 +2,7 @@
   import PageScaffold from '$lib/app/shell/PageScaffold.svelte';
   import GenericList from '$lib/components/GenericList.svelte';
   import { browser } from '$app/environment';
-  import { getMarketClient } from '$lib/integrations/market/marketClient';
+  import { getMarketClient } from '$lib/integrations/market';
   import { onMount } from 'svelte';
   import type { Readable } from 'svelte/store';
 

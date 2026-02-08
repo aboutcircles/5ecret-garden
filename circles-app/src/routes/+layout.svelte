@@ -17,11 +17,11 @@
   import { popupControls, popupState } from '$lib/shared/state/popup';
   import Popup from '$lib/components/Popup.svelte';
   import { initTransactionHistoryStore } from '$lib/shared/state/transactionHistory';
-  import { initContactStore } from '$lib/domains/profile/state/contacts';
+  import { initContactStore } from '$lib/domains/profile/state';
   import { initBalanceStore } from '$lib/shared/state/circlesBalances';
   import { browser } from '$app/environment';
   import { PUBLIC_PLAUSIBLE_DOMAIN } from '$env/static/public';
-  import { initGroupMetricsStore } from '$lib/domains/groups/state/groupMetrics.svelte';
+  import { initGroupMetricsStore } from '$lib/domains/groups/state';
   import type { Address } from '@circles-sdk/utils';
   import { get } from 'svelte/store';
   import BottomNav from '$lib/app/shell/BottomNav.svelte';
@@ -176,7 +176,7 @@
     if (lastAvatarAddress && currentAddress && lastAvatarAddress !== currentAddress) {
       void (async () => {
         const [{ PersistentAuthContext }, { clearCart }] = await Promise.all([
-          import('$lib/integrations/market/persistentAuthContext'),
+          import('$lib/integrations/market'),
           import('$lib/cart/store'),
         ]);
         new PersistentAuthContext().clear();

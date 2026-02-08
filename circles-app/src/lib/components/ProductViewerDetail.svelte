@@ -2,10 +2,10 @@
   import ProductGallery from '$lib/components/ProductGallery.svelte';
   import Avatar from '$lib/components/avatar/Avatar.svelte';
   import Markdown from '$lib/shared/ui/content/markdown/Markdown.svelte';
-  import { normalizeProductImagesFromSchema } from '$lib/domains/market/services/imageHelpers';
-  import { fetchAvailabilityFeed, fetchInventoryFeed, mapAvailabilityToLabel } from '$lib/domains/market/services/feeds';
-  import type { QuantitativeValue } from '$lib/domains/market/services/feeds';
-  import type { SchemaOrgOfferLite, SchemaOrgProductLite } from '$lib/domains/market/model/types';
+  import { normalizeProductImagesFromSchema } from '$lib/domains/market/services';
+  import { fetchAvailabilityFeed, fetchInventoryFeed, mapAvailabilityToLabel } from '$lib/domains/market/services';
+  import type { QuantitativeValue } from '$lib/domains/market/services';
+  import type { SchemaOrgOfferLite, SchemaOrgProductLite } from '$lib/domains/market/model';
   import type { Address } from '@circles-sdk/utils';
 
   import { ipfsGatewayUrl } from '$lib/utils/ipfs';

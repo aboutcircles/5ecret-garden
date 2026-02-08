@@ -1,9 +1,8 @@
 <script lang="ts">
     import {avatarState} from '$lib/shared/state/avatar.svelte';
-    import type { AppProfile as Profile } from '$lib/domains/profile/model/profiles';
+    import type { AppProfile as Profile } from '$lib/domains/profile/model';
     import { normalizeMarkdownInput, sanitizeText } from '$lib/utils/isValid';
-    import ProfileHeaderEditor from '$lib/domains/profile/ui/ProfileHeaderEditor.svelte';
-
+import { ProfileHeaderEditor } from '$lib/domains/profile/ui';
     interface Props {
         profile: Profile;
         showCustomizableFields?: boolean;

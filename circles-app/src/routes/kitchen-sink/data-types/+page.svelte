@@ -31,7 +31,7 @@
   const typeContractRows = [
     {
       domain: 'market',
-      file: '$lib/domains/market/model/types.ts',
+      file: '$lib/domains/market/model.ts',
       exports: 'AggregatedCatalogItem, SchemaOrgOfferLite, SchemaOrgProductLite, ...'
     },
     {

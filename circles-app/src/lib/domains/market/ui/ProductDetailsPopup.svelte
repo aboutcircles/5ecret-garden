@@ -1,14 +1,14 @@
 <script lang="ts">
   import {onMount} from 'svelte';
   import ProductViewer from '$lib/components/ProductViewer.svelte';
-  import type {AggregatedCatalogItem} from '$lib/domains/market/model/types';
-  import {getFirstOffer} from '$lib/domains/market/services/catalogHelpers';
+  import type {AggregatedCatalogItem} from '$lib/domains/market/model';
+  import {getFirstOffer} from '$lib/domains/market/services';
   import {avatarState} from '$lib/shared/state/avatar.svelte';
   import {addToCart, cartState} from '$lib/cart/store';
   import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
-  import { getMarketClient } from '$lib/integrations/market/marketClient';
+  import { getMarketClient } from '$lib/integrations/market';
   import { getAddToCartState } from '$lib/cart/addToCartUi';
-  import { fetchAvailabilityFeed, fetchInventoryFeed, type QuantitativeValue } from '$lib/domains/market/services/feeds';
+  import { fetchAvailabilityFeed, fetchInventoryFeed, type QuantitativeValue } from '$lib/domains/market/services';
   import { createLoadable } from '$lib/utils/loadable';
   import {gnosisConfig} from "$lib/circlesConfig";
 

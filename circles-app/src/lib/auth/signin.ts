@@ -1,7 +1,7 @@
 import { browser } from '$app/environment';
 import { ensureGnosisChain } from '$lib/chain/gnosis';
-import { getMarketClient } from '$lib/integrations/market/marketClient';
-import { getWalletProvider } from '$lib/integrations/wallet/getWalletProvider';
+import { getMarketClient } from '$lib/integrations/market';
+import { getWalletProvider } from '$lib/integrations/wallet';
 import {gnosisConfig} from "$lib/circlesConfig";
 
 /**

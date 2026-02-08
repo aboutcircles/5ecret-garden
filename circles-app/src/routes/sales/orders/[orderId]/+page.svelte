@@ -3,8 +3,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { popupControls, popupState } from '$lib/shared/state/popup';
-  import SalesOrderDetailsPopup from '$lib/domains/market/ui/SalesOrderDetailsPopup.svelte';
-
+import { SalesOrderDetailsPopup } from '$lib/domains/market/ui';
   const orderId = $derived(decodeURIComponent($page.params.orderId || ''));
 
   onMount(() => {

@@ -9,8 +9,8 @@ import {
   type ProfilesBindings,
 } from '@circles-market/sdk';
 import type { Address } from '@circles-sdk/utils';
-import { getProfilesBindings } from '$lib/domains/market/offers/profilesBindings';
-import { getMarketClient } from '$lib/integrations/market/marketClient';
+import { getProfilesBindings } from '$lib/domains/market/offers';
+import { getMarketClient } from '$lib/integrations/market';
 
 export type { Hex, Address, CidV0 };
 export type MinimalProduct = MinimalProductInput;
