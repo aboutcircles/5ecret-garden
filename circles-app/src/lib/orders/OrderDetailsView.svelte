@@ -249,10 +249,10 @@
   import type { OrderStatusChange } from '$lib/orders/types';
   import { formatTimestamp, statusLabel } from '$lib/orders/status';
   import { onMount } from 'svelte';
-  import { getProduct, pickProductImageUrl } from '$lib/domains/market/services/catalogHelpers';
-  import { getMarketClient } from '$lib/integrations/market/marketClient';
+  import { getProduct, pickProductImageUrl } from '$lib/domains/market/services';
+  import { getMarketClient } from '$lib/integrations/market';
   import { popupControls, type PopupContentDefinition } from '$lib/shared/state/popup';
-  import ProductDetailsPopup from '$lib/domains/market/ui/ProductDetailsPopup.svelte';
+import { ProductDetailsPopup } from '$lib/domains/market/ui';
   import {gnosisConfig} from "$lib/circlesConfig";
 
   interface Props {

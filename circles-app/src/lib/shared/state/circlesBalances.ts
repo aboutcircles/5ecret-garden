@@ -4,7 +4,7 @@ import type {
   CirclesEventType,
   TokenBalanceRow,
 } from '@circles-sdk/data';
-import { createEventStore } from '$lib/shared/state/eventStores/eventStoreFactory.svelte';
+import { createEventStore } from '$lib/shared/state/eventStores';
 import type { Avatar } from '@circles-sdk/sdk';
 import { writable } from 'svelte/store';
 

@@ -2,7 +2,7 @@ import { avatarState } from '$lib/shared/state/avatar.svelte';
 import {
   createEventStore,
   type NextPageData,
-} from '$lib/shared/state/eventStores/eventStoreFactory.svelte';
+} from '$lib/shared/state/eventStores';
 import {
   type CirclesEventType,
   type CirclesEvent,

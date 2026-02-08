@@ -9,7 +9,7 @@
   import { popupControls } from '$lib/shared/state/popup';
   import { ethers, formatUnits } from 'ethers';
   import type { TokenBalanceRow, TrustRelation } from '@circles-sdk/data';
-  import { contacts } from '$lib/domains/profile/state/contacts';
+  import { contacts } from '$lib/domains/profile/state';
   import {
   getGroupCollateral,
     getTreasuryAddress,

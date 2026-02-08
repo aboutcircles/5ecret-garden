@@ -5,8 +5,8 @@
   import { cartState } from '$lib/cart/store';
 
   // NEW: imports to resolve PayAction and open send flow (Svelte 5 runes aware)
-  import { getMarketClient } from '$lib/integrations/market/marketClient';
-  import { resolvePayTo } from '$lib/domains/market/services/catalogHelpers';
+  import { getMarketClient } from '$lib/integrations/market';
+  import { resolvePayTo } from '$lib/domains/market/services';
   import { popupControls } from '$lib/shared/state/popup';
   import SendFlow from '$lib/flows/send/4_Send.svelte';
   import { transitiveTransfer } from '$lib/pages/SelectAsset.svelte';

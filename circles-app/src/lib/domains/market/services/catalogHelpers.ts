@@ -1,8 +1,8 @@
 // src/lib/market/catalogHelpers.ts
 // Centralised helpers for working with catalog API responses and products/offers.
 
-import type { AggregatedCatalogItem, SchemaOrgProductLite, SchemaOrgOfferLite } from '$lib/domains/market/model/types';
-import { normalizeProductImagesFromSchema } from '$lib/domains/market/services/imageHelpers';
+import type { AggregatedCatalogItem, SchemaOrgProductLite, SchemaOrgOfferLite } from '$lib/domains/market/model';
+import { normalizeProductImagesFromSchema } from '$lib/domains/market/services';
 
 /**
  * Returns the Schema.org-like product object from an AggregatedCatalogItem.

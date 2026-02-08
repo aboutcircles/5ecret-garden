@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {contacts} from '$lib/domains/profile/state/contacts';
+    import {contacts} from '$lib/domains/profile/state';
     import Papa from 'papaparse';
     import GenericList from '$lib/components/GenericList.svelte';
     import ContactRow from './ContactRow.svelte';

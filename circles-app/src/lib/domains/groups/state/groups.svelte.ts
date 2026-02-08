@@ -6,22 +6,11 @@ import {
   type PagedQueryParams,
 } from '@circles-sdk/data';
 import { get } from 'svelte/store';
-import { createCirclesQueryStore } from '$lib/shared/state/query/circlesQueryStore';
+import { createCirclesQueryStore } from '$lib/shared/state/query';
 import { circles } from '$lib/shared/state/circles';
 import type { Avatar } from '@circles-sdk/sdk';
 
 const groupEvents: Set<CirclesEventType> = new Set([]);
-export interface CMGroupRow extends EventRow {
-  group: string;
-  mint: string;
-  treasury: string;
-  name: string;
-  symbol: string;
-  isMember?: boolean;
-  cidV0Digest?: string;
-  memberCount?: number;
-  trustedCount?: number;
-}
 
 export const createCMGroups = (avatar: Avatar) => {
 

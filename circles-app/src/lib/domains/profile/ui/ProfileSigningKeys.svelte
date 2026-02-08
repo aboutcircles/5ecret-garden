@@ -2,14 +2,13 @@
     import { onMount } from 'svelte';
     import { popupControls, popupState } from '$lib/shared/state/popup';
     import { runTask } from '$lib/utils/tasks';
-
-    import AddSigningKey from '$lib/domains/profile/ui/AddSigningKey.svelte';
+import { AddSigningKey } from '$lib/domains/profile/ui';
     import Lucide from '$lib/icons/Lucide.svelte';
     import { Plus as LPlus, Trash2 as LTrash2, Ban as LBan } from 'lucide';
 
     import { loadProfileOrInit, rebaseAndSaveProfile } from '@circles-market/sdk';
     import type { ProfilesBindings } from '@circles-market/sdk';
-    import { getProfilesBindings } from '$lib/domains/market/offers/profilesBindings';
+    import { getProfilesBindings } from '$lib/domains/market/offers';
     import { removeProfileFromCache } from '$lib/utils/profile';
     import type { Address } from '@circles-sdk/utils';
 

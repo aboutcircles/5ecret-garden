@@ -1,4 +1,4 @@
-import { createCirclesQueryStore } from '$lib/shared/state/query/circlesQueryStore';
+import { createCirclesQueryStore } from '$lib/shared/state/query';
 import { circles } from '$lib/shared/state/circles';
 import type {
   CirclesEventType,
@@ -7,7 +7,7 @@ import type {
   CirclesQuery,
   AvatarRow,
 } from '@circles-sdk/data';
-import type { ContactList } from '$lib/domains/profile/state/contacts';
+import type { ContactList } from '$lib/domains/profile/state';
 import { getProfile } from '$lib/utils/profile';
 import { get } from 'svelte/store';
 import type { Address } from '@circles-sdk/utils';

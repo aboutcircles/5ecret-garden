@@ -31,7 +31,7 @@
   import ActionButtonBar from '$lib/app/shell/ActionButtonBar.svelte';
   import type { Action } from '$lib/types/actions';
   import ActionButton from '$lib/components/ActionButton.svelte';
-  import { getProfilesBindings } from '$lib/domains/market/offers/profilesBindings';
+  import { getProfilesBindings } from '$lib/domains/market/offers';
   import { runTask } from '$lib/utils/tasks';
   import { removeProfileFromCache } from '$lib/utils/profile';
   import { CirclesStorage } from '$lib/utils/storage';
@@ -43,9 +43,9 @@
     normalizeEvmAddress as normalizeAddress,
     rebaseAndSaveProfile,
   } from '@circles-market/sdk';
-  import type { AggregatedCatalogItem } from '$lib/domains/market/model/types';
+  import type { AggregatedCatalogItem } from '$lib/domains/market/model';
   import OfferStep1 from '$lib/flows/offer/1_Product.svelte';
-  import { getMarketClient } from '$lib/integrations/market/marketClient';
+  import { getMarketClient } from '$lib/integrations/market';
   import { signInWithSafe } from '$lib/auth/signin';
   import {
     getOrdersByBuyer,

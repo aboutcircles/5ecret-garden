@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Address } from '@circles-sdk/utils';
-  import type { AggregatedCatalogItem } from '$lib/domains/market/model/types';
-  import { getMarketClient } from '$lib/integrations/market/marketClient';
+  import type { AggregatedCatalogItem } from '$lib/domains/market/model';
+  import { getMarketClient } from '$lib/integrations/market';
   import { gnosisConfig } from '$lib/circlesConfig';
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
   import RowFrame from '$lib/shared/ui/RowFrame.svelte';

@@ -9,7 +9,7 @@
     import type { Profile } from '@circles-sdk/profiles';
     import { onMount } from 'svelte';
     import type { Address } from '@circles-sdk/utils';
-    import ProfileHeaderEditor from '$lib/domains/profile/ui/ProfileHeaderEditor.svelte';
+import { ProfileHeaderEditor } from '$lib/domains/profile/ui';
     import { settings } from '$lib/shared/state/settings.svelte';
     import { avatarState } from '$lib/shared/state/avatar.svelte';
     import Disclaimer from '$lib/components/Disclaimer.svelte';

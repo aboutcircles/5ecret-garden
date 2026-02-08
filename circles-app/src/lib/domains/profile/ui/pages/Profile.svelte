@@ -4,7 +4,7 @@
     import CommonConnections from '$lib/components/CommonConnections.svelte';
     import TrustRelationsList from '$lib/components/TrustRelationsList.svelte';
     import HoldersList from '$lib/components/HoldersList.svelte';
-    import {contacts} from '$lib/domains/profile/state/contacts';
+    import {contacts} from '$lib/domains/profile/state';
     import {
         type AvatarRow,
         CirclesQuery,
@@ -40,16 +40,16 @@
     // Offers tab dependencies
     import ProductCard from '$lib/components/ProductCard.svelte';
     import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
-    import type { AggregatedCatalogItem } from '$lib/domains/market/model/types';
-    import { getMarketClient } from '$lib/integrations/market/marketClient';
+    import type { AggregatedCatalogItem } from '$lib/domains/market/model';
+    import { getMarketClient } from '$lib/integrations/market';
     // Namespaces explorer (read-only) for other profiles
-    import ProfileNamespaces from '$lib/domains/profile/ui/ProfileNamespaces.svelte';
+import { ProfileNamespaces } from '$lib/domains/profile/ui';
     import { loadProfileOrInit } from '@circles-market/sdk';
     import type { ProfilesBindings } from '@circles-market/sdk';
     import { createCirclesSdkProfilesBindings } from '@circles-profile/core';
     import { get } from 'svelte/store';
     import {gnosisConfig} from "$lib/circlesConfig";
-    import TrustScoreBadge from '$lib/domains/profile/ui/TrustScoreBadge.svelte';
+import { TrustScoreBadge } from '$lib/domains/profile/ui';
     import TrustHistoryHeatmap from '$lib/domains/trust/ui/TrustHistoryHeatmap.svelte';
     import Lucide from '$lib/icons/Lucide.svelte';
     import { Star as LStar } from 'lucide';

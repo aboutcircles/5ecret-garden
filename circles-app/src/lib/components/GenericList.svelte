@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onDestroy, type Component } from 'svelte';
     import type { EventRow, TransactionHistoryRow } from '@circles-sdk/data';
-    import { getKeyFromItem } from '$lib/shared/state/query/circlesQueryStore';
+    import { getKeyFromItem } from '$lib/shared/state/query';
     import type { Readable } from 'svelte/store';
 
     interface ListStoreValue<T = EventRow | TransactionHistoryRow> {

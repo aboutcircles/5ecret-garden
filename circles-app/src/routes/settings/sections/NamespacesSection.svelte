@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { Address } from '@circles-sdk/utils';
-  import ProfileNamespaces from '$lib/domains/profile/ui/ProfileNamespaces.svelte';
-
+import { ProfileNamespaces } from '$lib/domains/profile/ui';
   type Props = {
     avatarAddress: Address | '';
     pinApiBase: string;

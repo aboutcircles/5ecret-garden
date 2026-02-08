@@ -1,6 +1,6 @@
 <script lang="ts">
     import GenericList from '$lib/components/GenericList.svelte';
-    import {createCMGroups} from '$lib/domains/groups/state/groups.svelte';
+    import {createCMGroups} from '$lib/domains/groups/state';
     import type {Readable} from 'svelte/store';
     import type {EventRow} from '@circles-sdk/data';
     import GroupRowView from './GroupRowView.svelte';
