@@ -7,6 +7,7 @@
   import TrustHistoryWeeklySections from '$lib/components/trustHistory/TrustHistoryWeeklySections.svelte';
   import TrustHistoryMonthlyList from '$lib/components/trustHistory/TrustHistoryMonthlyList.svelte';
   import TrustHistoryDayEventsPopup from '$lib/components/trustHistory/TrustHistoryDayEventsPopup.svelte';
+  import { trustHistoryKnownRangeEvents } from '$lib/components/trustHistory/knownRangeEvents';
   import { popupControls } from '$lib/stores/popup';
   import type {
     Granularity,
@@ -16,6 +17,7 @@
     MonthWeeklySection,
     MonthlyItem,
     TrustHistoryEventRow,
+    TrustHistoryRangeEvent,
   } from '$lib/components/trustHistory/types';
 
   interface Props {
@@ -51,6 +53,9 @@
   let requestId = 0;
   let selectedWeekStartSec: number | null = $state(null);
   let selectedDayTsSec: number | null = $state(null);
+  let selectedKnownEventIds: string[] = $state([]);
+  let initializedKnownEventSelection = $state(false);
+  let knownEventsQuery = $state('');
 
   const dayCounts = $derived(buildCountMap(rows, 'day'));
   const weekCounts = $derived(buildCountMap(rows, 'week'));
@@ -65,11 +70,38 @@
   const monthCalendars = $derived(buildMonthCalendars(rows, dayCounts));
   const weeklySections = $derived(buildWeeklySections(rows, weekCounts));
   const monthlyItems = $derived(buildMonthlyItems(rows, monthCounts));
+  const knownRangeEvents = $derived(buildKnownRangeEvents());
+  const filteredKnownRangeEvents = $derived.by(() => {
+    const needle = knownEventsQuery.trim().toLowerCase();
+    if (!needle) return knownRangeEvents;
+    return knownRangeEvents.filter((event) => {
+      const haystack = [event.title, event.description ?? ''].join(' ').toLowerCase();
+      return haystack.includes(needle);
+    });
+  });
+  const selectedKnownRangeEvents = $derived(
+    knownRangeEvents.filter((event) => selectedKnownEventIds.includes(event.id))
+  );
   const establishedCount = $derived(rows.filter((row) => toNumber(row.expiryTime) > toNumber(row.timestamp)).length);
   const removedCount = $derived(rows.length - establishedCount);
 
   $effect(() => {
     eventCount = rows.length;
+  });
+
+  $effect(() => {
+    const knownIds = knownRangeEvents.map((event) => event.id);
+
+    if (!initializedKnownEventSelection && knownIds.length > 0) {
+      selectedKnownEventIds = knownIds;
+      initializedKnownEventSelection = true;
+      return;
+    }
+
+    const filtered = selectedKnownEventIds.filter((id) => knownIds.includes(id));
+    if (filtered.length !== selectedKnownEventIds.length) {
+      selectedKnownEventIds = filtered;
+    }
   });
 
   $effect(() => {
@@ -314,6 +346,88 @@
     return out;
   }
 
+  function parseDateToDayStartSec(dateString: string): number | null {
+    const d = new Date(`${dateString}T00:00:00.000Z`);
+    if (Number.isNaN(d.getTime())) return null;
+    return Math.floor(d.getTime() / 1000);
+  }
+
+  function buildKnownRangeEvents(): TrustHistoryRangeEvent[] {
+    return trustHistoryKnownRangeEvents.events
+      .map((event) => {
+        const startDaySec = parseDateToDayStartSec(event.startDate);
+        const endDaySec = parseDateToDayStartSec(event.endDate);
+        if (startDaySec === null || endDaySec === null) return null;
+
+        const eventTypeLabel = event.eventType
+          ? trustHistoryKnownRangeEvents.taxonomies?.eventType?.[event.eventType]?.label
+          : undefined;
+        const seriesLabel = event.seriesId
+          ? trustHistoryKnownRangeEvents.taxonomies?.series?.[event.seriesId]?.label
+          : undefined;
+
+        const locationParts = [event.location?.city ?? null, event.location?.country ?? null].filter(
+          (v): v is string => Boolean(v)
+        );
+        const locationLabel =
+          locationParts.length > 0
+            ? locationParts.join(', ')
+            : event.location?.mode === 'online'
+              ? 'Online'
+              : event.location?.mode === 'hybrid'
+                ? 'Hybrid'
+                : undefined;
+
+        const descriptionParts = [seriesLabel, eventTypeLabel, locationLabel].filter(
+          (v): v is string => Boolean(v)
+        );
+
+        const normalizedStart = Math.min(startDaySec, endDaySec);
+        const normalizedEnd = Math.max(startDaySec, endDaySec);
+
+        return {
+          id: event.id,
+          title: event.title ?? event.name ?? event.id,
+          description: event.description ?? (descriptionParts.length > 0 ? descriptionParts.join(' · ') : undefined),
+          startDaySec: normalizedStart,
+          endDaySec: normalizedEnd,
+        } satisfies TrustHistoryRangeEvent;
+      })
+      .filter((event): event is TrustHistoryRangeEvent => event !== null)
+      .sort((a, b) => a.startDaySec - b.startDaySec || a.endDaySec - b.endDaySec || a.title.localeCompare(b.title));
+  }
+
+  function toggleKnownEventSelection(eventId: string, enabled: boolean): void {
+    if (enabled) {
+      if (selectedKnownEventIds.includes(eventId)) return;
+      selectedKnownEventIds = [...selectedKnownEventIds, eventId];
+      return;
+    }
+
+    selectedKnownEventIds = selectedKnownEventIds.filter((id) => id !== eventId);
+  }
+
+  function formatKnownEventRange(event: TrustHistoryRangeEvent): string {
+    return `${new Date(event.startDaySec * 1000).toLocaleDateString()} – ${new Date(event.endDaySec * 1000).toLocaleDateString()}`;
+  }
+
+  function setKnownEventsSelectionAll(enabled: boolean): void {
+    if (enabled) {
+      selectedKnownEventIds = [...knownRangeEvents.map((event) => event.id)];
+      return;
+    }
+    selectedKnownEventIds = [];
+  }
+
+  function setKnownEventsSelectionFiltered(enabled: boolean): void {
+    const filteredIds = filteredKnownRangeEvents.map((event) => event.id);
+    if (enabled) {
+      selectedKnownEventIds = Array.from(new Set([...selectedKnownEventIds, ...filteredIds]));
+      return;
+    }
+    selectedKnownEventIds = selectedKnownEventIds.filter((id) => !filteredIds.includes(id));
+  }
+
   function onSelectMonth(monthStartSec: number): void {
     selectedWeekStartSec = startOfWeekSec(monthStartSec);
     granularity = 'week';
@@ -345,34 +459,101 @@
 </script>
 
 <div class="space-y-3">
-  {#if showGranularitySwitch}
-    <div class="join">
-      <button
-        class="btn btn-xs join-item"
-        class:btn-primary={granularity === 'day'}
-        class:btn-ghost={granularity !== 'day'}
-        onclick={() => (granularity = 'day')}
-      >
-        Day
-      </button>
-      <button
-        class="btn btn-xs join-item"
-        class:btn-primary={granularity === 'week'}
-        class:btn-ghost={granularity !== 'week'}
-        onclick={() => (granularity = 'week')}
-      >
-        Week
-      </button>
-      <button
-        class="btn btn-xs join-item"
-        class:btn-primary={granularity === 'month'}
-        class:btn-ghost={granularity !== 'month'}
-        onclick={() => (granularity = 'month')}
-      >
-        Month
-      </button>
-    </div>
-  {/if}
+  <div class="flex items-start justify-between gap-2">
+    {#if showGranularitySwitch}
+      <div class="join">
+        <button
+          class="btn btn-xs join-item"
+          class:btn-primary={granularity === 'day'}
+          class:btn-ghost={granularity !== 'day'}
+          onclick={() => (granularity = 'day')}
+        >
+          Day
+        </button>
+        <button
+          class="btn btn-xs join-item"
+          class:btn-primary={granularity === 'week'}
+          class:btn-ghost={granularity !== 'week'}
+          onclick={() => (granularity = 'week')}
+        >
+          Week
+        </button>
+        <button
+          class="btn btn-xs join-item"
+          class:btn-primary={granularity === 'month'}
+          class:btn-ghost={granularity !== 'month'}
+          onclick={() => (granularity = 'month')}
+        >
+          Month
+        </button>
+      </div>
+    {/if}
+
+    {#if knownRangeEvents.length > 0}
+      <details class="dropdown dropdown-end">
+        <summary class="btn btn-xs">
+          Known events ({selectedKnownRangeEvents.length}/{knownRangeEvents.length})
+        </summary>
+        <div class="dropdown-content z-[20] mt-2 w-80 rounded-box border border-base-300 bg-base-100 p-2 shadow-lg">
+          <div class="space-y-2">
+            <input
+              type="text"
+              class="input input-xs input-bordered w-full"
+              placeholder="Filter events by name, series, type, location"
+              bind:value={knownEventsQuery}
+            />
+
+            <div class="flex flex-wrap items-center gap-1">
+              <button type="button" class="btn btn-xs btn-ghost" onclick={() => setKnownEventsSelectionAll(true)}>
+                All
+              </button>
+              <button type="button" class="btn btn-xs btn-ghost" onclick={() => setKnownEventsSelectionAll(false)}>
+                None
+              </button>
+              <button
+                type="button"
+                class="btn btn-xs btn-ghost"
+                onclick={() => setKnownEventsSelectionFiltered(true)}
+              >
+                Select filtered
+              </button>
+              <button
+                type="button"
+                class="btn btn-xs btn-ghost"
+                onclick={() => setKnownEventsSelectionFiltered(false)}
+              >
+                Clear filtered
+              </button>
+            </div>
+          </div>
+
+          <div class="max-h-72 overflow-auto space-y-1 mt-2 pr-1">
+            {#if filteredKnownRangeEvents.length === 0}
+              <div class="text-xs opacity-60 p-2">No matching events.</div>
+            {/if}
+
+            {#each filteredKnownRangeEvents as event (event.id)}
+              <label class="flex items-start gap-2 rounded-md p-2 hover:bg-base-200/40 cursor-pointer">
+                <input
+                  type="checkbox"
+                  class="checkbox checkbox-xs mt-0.5"
+                  checked={selectedKnownEventIds.includes(event.id)}
+                  onchange={(e) => toggleKnownEventSelection(event.id, (e.currentTarget as HTMLInputElement).checked)}
+                />
+                <span class="min-w-0 text-xs">
+                  <span class="font-medium block">{event.title}</span>
+                  <span class="opacity-70 block">{formatKnownEventRange(event)}</span>
+                  {#if event.description}
+                    <span class="opacity-60 block">{event.description}</span>
+                  {/if}
+                </span>
+              </label>
+            {/each}
+          </div>
+        </div>
+      </details>
+    {/if}
+  </div>
 
   {#if loading}
     <div class="flex items-center gap-2 text-base-content/70 py-2">
@@ -394,6 +575,7 @@
       <TrustHistoryDayCalendar
         {monthCalendars}
         {maxBucketCount}
+        rangeEvents={selectedKnownRangeEvents}
         {selectedDayTsSec}
         onSelectDay={onSelectDay}
       />
@@ -401,11 +583,17 @@
       <TrustHistoryWeeklySections
         {weeklySections}
         {maxBucketCount}
+        rangeEvents={selectedKnownRangeEvents}
         {selectedWeekStartSec}
         onSelectWeek={onSelectWeek}
       />
     {:else}
-      <TrustHistoryMonthlyList {monthlyItems} {maxBucketCount} onSelectMonth={onSelectMonth} />
+      <TrustHistoryMonthlyList
+        {monthlyItems}
+        {maxBucketCount}
+        rangeEvents={selectedKnownRangeEvents}
+        onSelectMonth={onSelectMonth}
+      />
     {/if}
 
     <div class="flex items-center gap-2 text-[11px] opacity-70">

@@ -59,3 +59,40 @@ export type TrustHistoryTxEventItem = {
 };
 
 export type TrustHistoryListItem = TrustHistoryTxGroupHeaderItem | TrustHistoryTxEventItem;
+
+export type TrustHistoryRangeEventConfig = {
+  id: string;
+  title?: string;
+  name?: string;
+  startDate: string;
+  endDate: string;
+  description?: string;
+  eventType?: string;
+  seriesId?: string;
+  location?: {
+    mode?: 'online' | 'in_person' | 'hybrid' | string;
+    city?: string | null;
+    country?: string | null;
+  };
+  tags?: string[];
+  links?: Array<{ label: string; url: string }>;
+};
+
+export type TrustHistoryKnownEventsDataset = {
+  schemaVersion: string;
+  generatedAt: string;
+  taxonomies?: {
+    eventType?: Record<string, { label: string; description?: string }>;
+    series?: Record<string, { label: string; description?: string }>;
+  };
+  events: TrustHistoryRangeEventConfig[];
+  omissions?: Array<{ scope: string; note: string }>;
+};
+
+export type TrustHistoryRangeEvent = {
+  id: string;
+  title: string;
+  description?: string;
+  startDaySec: number;
+  endDaySec: number;
+};
