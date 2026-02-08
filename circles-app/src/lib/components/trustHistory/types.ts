@@ -42,3 +42,20 @@ export type TrustHistoryEventRow = {
   expiryTime: number;
   limit?: number;
 };
+
+export type TrustHistoryTxGroupHeaderItem = {
+  kind: 'group';
+  key: string;
+  transactionHash?: string;
+  blockNumber: number;
+  transactionIndex: number;
+  count: number;
+};
+
+export type TrustHistoryTxEventItem = {
+  kind: 'event';
+  key: string;
+  row: TrustHistoryEventRow;
+};
+
+export type TrustHistoryListItem = TrustHistoryTxGroupHeaderItem | TrustHistoryTxEventItem;
