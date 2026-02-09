@@ -2,10 +2,12 @@
     import { get } from 'svelte/store';
     import { totalCirclesBalance } from '$lib/shared/state/totalCirclesBalance';
 
+    type HexAddress = `0x${string}`;
+
     export const TransitiveTransferTokenOwner =
-        '0x0000000000000000000000000000000000000001';
+        '0x0000000000000000000000000000000000000001' as HexAddress;
     export const TransitiveTransferTokenAddress =
-        '0x0000000000000000000000000000000000000002';
+        '0x0000000000000000000000000000000000000002' as HexAddress;
 
     export function tokenTypeToString(tokenType: string) {
         if (!tokenType) {
@@ -48,7 +50,7 @@
             attoCircles: '0',
             isErc20: false,
             isErc1155: false,
-        };
+        } as any;
     };
 </script>
 
@@ -56,6 +58,9 @@
     import type { TokenBalanceRow } from '@circles-sdk/data';
     import BalanceRow from '$lib/areas/wallet/ui/components/BalanceRow.svelte';
     import type { Readable } from 'svelte/store';
+    import { derived, readable } from 'svelte/store';
+    import GenericList from '$lib/shared/ui/common/GenericList.svelte';
+    import SelectableBalanceRow, { type SelectableBalanceRowItem } from '$lib/areas/wallet/ui/components/SelectableBalanceRow.svelte';
 
     interface Props {
         balances: Readable<{
@@ -79,6 +84,30 @@
         selectedAsset = tokenBalanceRow;
         onselect(tokenBalanceRow);
     };
+
+    const emptySelectable = readable<{ data: SelectableBalanceRowItem[]; next: () => Promise<boolean>; ended: boolean }>({
+        data: [],
+        next: async () => true,
+        ended: true
+    });
+
+    // Avoid Svelte 5 `state_referenced_locally` by creating derived stores inside an effect.
+    let selectableBalances = $state<Readable<{ data: SelectableBalanceRowItem[]; next: () => Promise<boolean>; ended: boolean }>>(emptySelectable);
+
+    $effect(() => {
+        selectableBalances = derived(balances, ($balances) => {
+            const data: SelectableBalanceRowItem[] = ($balances?.data ?? []).map((balance) => ({
+                balance,
+                onSelect: () => handleSelect(balance)
+            }));
+
+            return {
+                data,
+                next: $balances?.next ?? (async () => true),
+                ended: $balances?.ended ?? true
+            };
+        });
+    });
 </script>
 
 {#if showTransitive}
@@ -95,18 +124,14 @@
 <p class="menu-title pl-0 mt-4">Individual tokens</p>
 
 {#if $balances?.data?.length > 0}
-    <div class="flex flex-col p-0 w-full gap-y-1.5">
-        {#each $balances.data as balance (balance.tokenAddress)}
-            <!-- Same wrapper for reliable clicks without changing visuals -->
-            <button
-                    type="button"
-                    class="w-full text-left bg-transparent border-0 p-0"
-                    onclick={() => handleSelect(balance)}
-            >
-                <BalanceRow item={balance} />
-            </button>
-        {/each}
-    </div>
+    <GenericList
+            store={selectableBalances}
+            row={SelectableBalanceRow}
+            getKey={(it) => String(it.balance.tokenAddress)}
+            rowHeight={64}
+            maxPlaceholderPages={0}
+            expectedPageSize={25}
+    />
 {:else}
     <div class="text-center py-4">You don't have any trusted assets</div>
 {/if}
