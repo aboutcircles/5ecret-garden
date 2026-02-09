@@ -29,6 +29,7 @@
 
   let unwatch: (() => void) | null = null;
   let walletModule: typeof import('$lib/shared/state/wallet.svelte') | null = null;
+  let walletWatcherInitialized = false;
 
   async function getWalletModule() {
     if (!walletModule) {
@@ -95,7 +96,6 @@
   let hasUserInteraction = $state(false);
 
   onMount(async () => {
-    await initWalletWatcher();
     if (browser) {
       const markInteraction = () => {
         hasUserInteraction = true;
@@ -105,6 +105,28 @@
       window.addEventListener('pointerdown', markInteraction, { once: true });
       window.addEventListener('keydown', markInteraction, { once: true });
     }
+  });
+
+  // Defer initializing wallet/watchers until the user navigates beyond the landing/connect flows.
+  // This keeps heavy wallet dependencies out of the critical path for the first paint on `/`.
+  $effect(() => {
+    if (!browser) return;
+    if (walletWatcherInitialized || unwatch) return;
+
+    const routeId = $page.route.id;
+    if (!routeId) return;
+
+    // Don’t initialize on the landing page or during connect flows.
+    if (
+      routeId === '/' ||
+      routeId === '/connect-wallet/connect-safe' ||
+      routeId === '/connect-wallet/import-circles-garden'
+    ) {
+      return;
+    }
+
+    walletWatcherInitialized = true;
+    void initWalletWatcher();
   });
 
   async function openWrongNetworkPopup(): Promise<void> {
