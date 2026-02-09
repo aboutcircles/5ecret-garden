@@ -3,7 +3,7 @@
     import Tooltip from '$lib/shared/ui/common/Tooltip.svelte';
     import { ethers } from 'ethers';
     import { popupControls } from '$lib/shared/state/popup';
-    import Review from './3_Review.svelte';
+    import CreateStep from './4_Create.svelte';
     import { wallet } from '$lib/shared/state/wallet.svelte';
     import {
         createGroupContext,
@@ -81,8 +81,8 @@
         if (!ready) { return; }
 
         popupControls.open({
-            title: 'Review',
-            component: Review,
+            title: 'Review and confirm',
+            component: CreateStep,
             props: { context: ctx, setGroup },
             onClose: () => {
                 resetCreateGroupContext();
