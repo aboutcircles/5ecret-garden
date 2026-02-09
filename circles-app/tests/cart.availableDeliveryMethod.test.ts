@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { cartState, upsertLineItem, patchBasket, cartApi, type OrderItemPreview } from '$lib/areas/market/cart/store';
+import { cartState, upsertLineItem, cartApi, type Basket } from '$lib/areas/market/cart/store';
 import type { AggregatedCatalogItem } from '$lib/areas/market/model';
 
 function baseBasket(overrides: Partial<any> = {}): any {
@@ -26,15 +26,11 @@ function baseBasket(overrides: Partial<any> = {}): any {
 beforeEach(() => {
   // Ensure cart is initialized for patching
   cartState.set({
-    basketId: 'b1',
+    loading: false,
+    lastError: null,
     basket: baseBasket(),
     validation: null,
-    loading: false,
-    lastError: undefined,
-    operator: '0xoperator' as any,
-    buyer: '0xbuyer' as any,
     orderPreview: null,
-    lastOrderId: null,
     lastCheckout: null,
   });
 });
