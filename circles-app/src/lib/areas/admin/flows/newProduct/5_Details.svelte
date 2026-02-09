@@ -51,7 +51,7 @@
     const seller = normalizedSeller ? String(normalizedSeller) : '';
     const sku = normalizedSku || '';
     if (!seller || !sku) return;
-    context.poolId = `${seller}/${sku}`;
+    context.poolId = `${seller}-${sku}`;
   });
 
   $effect(() => {
