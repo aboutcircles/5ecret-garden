@@ -2,10 +2,10 @@
     import {contacts} from '$lib/domains/profile/state';
     import Papa from 'papaparse';
     import GenericList from '$lib/shared/ui/common/GenericList.svelte';
+    import ListToolbar from '$lib/shared/ui/common/ListToolbar.svelte';
     import ContactRow from './ContactRow.svelte';
     import {derived, writable, type Writable} from 'svelte/store';
     import Filter from '$lib/shared/ui/common/Filter.svelte';
-    import AddressInput from '$lib/shared/ui/common/AddressInput.svelte';
     import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
     import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
     import {Filter as LFilter, Download as LDownload, Plus as LPlus, Star} from 'lucide';
@@ -187,7 +187,7 @@
         </div>
     {/if}
 
-    <AddressInput bind:address={$searchQuery}/>
+    <ListToolbar query={searchQuery} placeholder="Search by address or name" />
 
     <GenericList store={contactsPaginated} row={ContactRow} rowHeight={64} maxPlaceholderPages={0} expectedPageSize={25} />
 </PageScaffold>

@@ -1,9 +1,12 @@
 <script lang="ts">
   import type { Readable } from 'svelte/store';
-  import { derived, writable } from 'svelte/store';
+  import { writable } from 'svelte/store';
+  import { readable, type Writable } from 'svelte/store';
   import GenericList from '$lib/shared/ui/common/GenericList.svelte';
+  import ListStates from '$lib/shared/ui/common/ListStates.svelte';
+  import ListToolbar from '$lib/shared/ui/common/ListToolbar.svelte';
+  import { createSearchablePaginatedList } from '$lib/shared/state/searchablePaginatedList';
   import { createPaginatedList } from '$lib/shared/state/paginatedList';
-  import { createFilteredAddresses, createProfileNameStore } from '$lib/shared/utils/searchableProfiles';
   import TrustRowView from '$lib/areas/settings/ui/components/TrustRow.svelte';
   import type { TrustRow } from '$lib/areas/settings/model/gatewayTypes';
   import type { Address } from '@circles-sdk/utils';
@@ -31,53 +34,48 @@
     pageSize = 25
   }: Props = $props();
 
-  const searchQuery = writable('');
   const rowStore = writable<TrustRowItem[]>([]);
-  const trustReceiverAddresses = derived(rowStore, ($rows) =>
-    $rows.map((row) => row.trustReceiver as Address)
-  );
-  const profileNames = createProfileNameStore(trustReceiverAddresses);
-  const filteredAddresses = createFilteredAddresses(
-    trustReceiverAddresses,
-    searchQuery,
-    profileNames
-  );
-  const filteredRows = derived([rowStore, filteredAddresses], ([$rows, $filtered]) => {
-    const allowed = new Set($filtered.map((addr) => addr.toLowerCase()));
-    return $rows.filter((row) =>
-      allowed.has(String(row.trustReceiver).toLowerCase())
-    );
-  });
 
-  const paginatedRows = createPaginatedList(filteredRows, { pageSize });
+  // Keep the stores as top-level bindings so they can be used with `$store` auto-subscription.
+  // Initialized with safe placeholders, then re-created in an effect to stay reactive and avoid
+  // `state_referenced_locally` warnings.
+  const emptyItems = readable<TrustRowItem[]>([]);
+
+  let searchQuery = $state<Writable<string>>(writable(''));
+  let filteredItems = $state(emptyItems);
+  let paginatedItems = $state(createPaginatedList(emptyItems, { pageSize: 1 }));
+
+  $effect(() => {
+    const next = createSearchablePaginatedList(rowStore, {
+      pageSize,
+      addressOf: (row) => row.trustReceiver as Address
+    });
+
+    searchQuery = next.searchQuery;
+    filteredItems = next.filteredItems;
+    paginatedItems = next.paginatedItems;
+  });
 
   $effect(() => {
     rowStore.set($rows ?? []);
   });
 </script>
 
-<div class="mb-3">
-  <input
-    type="text"
-    class="input input-bordered w-full"
-    placeholder="Search by address or name"
-    bind:value={$searchQuery}
-  />
-</div>
+<ListToolbar query={searchQuery} placeholder="Search by address or name" />
 
-{#if loading}
-  <div class="loading loading-spinner loading-sm"></div>
-{:else if ($rows ?? []).length === 0}
-  <div class="text-sm opacity-70">{emptyLabel}</div>
-{:else if ($filteredRows ?? []).length === 0}
-  <div class="text-sm opacity-70">{noMatchesLabel}</div>
-{:else}
+<ListStates
+  {loading}
+  isEmpty={($rows ?? []).length === 0}
+  isNoMatches={($rows ?? []).length > 0 && ($filteredItems ?? []).length === 0}
+  emptyLabel={emptyLabel}
+  noMatchesLabel={noMatchesLabel}
+>
   <GenericList
-    store={paginatedRows}
+    store={paginatedItems}
     row={TrustRowView}
     getKey={(item) => String(item.trustReceiver)}
     rowHeight={rowHeight}
     maxPlaceholderPages={2}
     expectedPageSize={pageSize}
   />
-{/if}
+</ListStates>

@@ -45,14 +45,10 @@
     $effect(() => { void loadCommon(); });
 </script>
 
-{#if loading}
-    <div class="w-full py-6 text-center text-base-content/60">Loading…</div>
-{:else if error}
-    <div class="w-full py-6 text-center text-error">{error}</div>
-{:else}
-    <SearchablePaginatedAddressList
-        addresses={rowsStore}
-        emptyLabel="No common connections"
-        noMatchesLabel="No matches"
-    />
-{/if}
+<SearchablePaginatedAddressList
+    addresses={rowsStore}
+    loading={loading}
+    {error}
+    emptyLabel="No common connections"
+    noMatchesLabel="No matches"
+/>

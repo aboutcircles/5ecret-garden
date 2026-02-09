@@ -1,54 +1,77 @@
 <script lang="ts">
+    import type { Component } from 'svelte';
     import GenericList from '$lib/shared/ui/common/GenericList.svelte';
+    import ListStates from '$lib/shared/ui/common/ListStates.svelte';
+    import ListToolbar from '$lib/shared/ui/common/ListToolbar.svelte';
     import TrustRelationRow from '$lib/domains/profile/ui/components/TrustRelationRow.svelte';
+    import { createSearchablePaginatedList } from '$lib/shared/state/searchablePaginatedList';
     import { createPaginatedList } from '$lib/shared/state/paginatedList';
-    import { createFilteredAddresses, createProfileNameStore } from '$lib/shared/utils/searchableProfiles';
     import type { Address } from '@circles-sdk/utils';
-    import type { Readable } from 'svelte/store';
-    import { writable } from 'svelte/store';
+    import { readable, writable, type Readable, type Writable } from 'svelte/store';
 
     interface Props {
         addresses: Readable<Address[]>;
+        row?: Component<{ item: Address }>;
+        getKey?: (addr: Address) => string;
         emptyLabel?: string;
         noMatchesLabel?: string;
+        loading?: boolean;
+        error?: string | null;
         rowHeight?: number;
         pageSize?: number;
+        searchPlaceholder?: string;
     }
 
     let {
         addresses,
+        row = TrustRelationRow,
+        getKey = (addr) => String(addr),
         emptyLabel = 'No connections',
         noMatchesLabel = 'No matches',
+        loading = false,
+        error = null,
         rowHeight = 64,
         pageSize = 25,
+        searchPlaceholder = 'Search by address or name'
     }: Props = $props();
 
-    const searchQuery = writable('');
-    const profileNames = createProfileNameStore(addresses);
-    const filteredRows = createFilteredAddresses(addresses, searchQuery, profileNames);
-    const paginatedRows = createPaginatedList(filteredRows, { pageSize });
+    // Keep the stores as top-level bindings so they can be used with `$store` auto-subscription.
+    // Initialized with safe placeholders, then replaced in an effect to stay reactive and avoid
+    // `state_referenced_locally` warnings.
+    const emptyItems = readable<Address[]>([]);
+
+    let searchQuery = $state<Writable<string>>(writable(''));
+    let filteredItems = $state<Readable<Address[]>>(emptyItems);
+    let paginatedItems = $state(createPaginatedList(emptyItems, { pageSize: 1 }));
+
+    $effect(() => {
+        const next = createSearchablePaginatedList(addresses, {
+            pageSize,
+            addressOf: (addr) => addr
+        });
+
+        searchQuery = next.searchQuery;
+        filteredItems = next.filteredItems;
+        paginatedItems = next.paginatedItems;
+    });
 </script>
 
-<div class="mb-3">
-    <input
-        type="text"
-        class="input input-bordered w-full"
-        placeholder="Search by address or name"
-        bind:value={$searchQuery}
-    />
-</div>
+<ListToolbar query={searchQuery} placeholder={searchPlaceholder} />
 
-{#if ($addresses ?? []).length === 0}
-    <div class="w-full py-6 text-center text-base-content/60">{emptyLabel}</div>
-{:else if ($filteredRows ?? []).length === 0}
-    <div class="w-full py-6 text-center text-base-content/60">{noMatchesLabel}</div>
-{:else}
+<ListStates
+    loading={loading}
+    {error}
+    isEmpty={($addresses ?? []).length === 0}
+    isNoMatches={($addresses ?? []).length > 0 && ($filteredItems ?? []).length === 0}
+    {emptyLabel}
+    noMatchesLabel={noMatchesLabel}
+>
     <GenericList
-        store={paginatedRows}
-        row={TrustRelationRow}
-        getKey={(addr) => String(addr)}
+        store={paginatedItems}
+        {row}
+        getKey={getKey}
         rowHeight={rowHeight}
         maxPlaceholderPages={2}
         expectedPageSize={pageSize}
     />
-{/if}
+</ListStates>
