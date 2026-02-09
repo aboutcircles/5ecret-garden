@@ -1,42 +1,63 @@
 <script lang="ts">
   import { tick } from 'svelte';
-  import GenericList from '$lib/shared/ui/common/GenericList.svelte';
-  import TrustHistoryDayEventRow from '$lib/domains/trust/ui/history/TrustHistoryDayEventRow.svelte';
-  import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-  import { createPaginatedList } from '$lib/shared/state/paginatedList';
   import { writable } from 'svelte/store';
-  import type { TrustHistoryEventRow, TrustHistoryListItem } from './types';
+  import GenericList from '$lib/shared/ui/common/GenericList.svelte';
+  import { createPaginatedList } from '$lib/shared/state/paginatedList';
+  import type {
+    CirclesBaseEventRow,
+    EventHistoryDayPopupHeaderComponent,
+    EventHistoryLabels,
+    EventHistoryListItem,
+    EventHistoryRowComponent,
+  } from './types';
 
-  interface Props {
+  interface Props<Row extends CirclesBaseEventRow = CirclesBaseEventRow> {
     dayStartSec: number;
     dayEndSec: number;
-    events: TrustHistoryEventRow[];
+    events: Row[];
+    labels?: EventHistoryLabels<Row>;
+    searchHaystack?: (row: Row) => string;
+    getTimestampSec?: (row: Row) => number;
+    rowComponent: EventHistoryRowComponent<Row>;
+    dayPopupHeaderComponent?: EventHistoryDayPopupHeaderComponent<Row>;
   }
 
-  let { dayStartSec, dayEndSec, events }: Props = $props();
+  let {
+    dayStartSec,
+    dayEndSec,
+    events,
+    labels = {},
+    searchHaystack,
+    getTimestampSec,
+    rowComponent,
+    dayPopupHeaderComponent,
+  }: Props = $props();
+
+  const DayPopupHeader = $derived(dayPopupHeaderComponent ?? null);
+
   let searchQuery = $state('');
   let histogramGranularity = $state<'hour' | 'minute'>('hour');
   let histogramScrollEl: HTMLDivElement | null = $state(null);
 
-  const filteredEventsStore = writable<TrustHistoryListItem[]>([]);
+  const filteredEventsStore = writable<EventHistoryListItem[]>([]);
   const paginatedRows = createPaginatedList(filteredEventsStore as any, { pageSize: 25 });
-  const eventKey = (item: TrustHistoryListItem) => item.key;
+  const eventKey = (item: EventHistoryListItem) => item.key;
   const listStoreAny = paginatedRows as any;
-  const rowComponentAny = TrustHistoryDayEventRow as any;
+  const rowComponentAny = $derived(rowComponent as any);
   const getKeyAny = eventKey as any;
 
   const dayLabel = $derived(new Date(dayStartSec * 1000).toLocaleDateString());
   const rangeLabel = $derived(
     `${new Date(dayStartSec * 1000).toLocaleTimeString()} - ${new Date(dayEndSec * 1000).toLocaleTimeString()}`
   );
-  const originAddress = $derived(events[0]?.truster);
 
   const histogramBuckets = $derived.by(() => {
     const bucketCount = histogramGranularity === 'hour' ? 24 : 24 * 60;
     const buckets = Array.from({ length: bucketCount }, () => 0);
 
     for (const row of events) {
-      const d = new Date(Number(row.timestamp) * 1000);
+      const ts = timestampFor(row);
+      const d = new Date(ts * 1000);
       const hour = d.getHours();
       const minute = d.getMinutes();
       const index = histogramGranularity === 'hour' ? hour : hour * 60 + minute;
@@ -60,18 +81,31 @@
     return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
   }
 
+  function defaultHaystack(row: CirclesBaseEventRow): string {
+    return [String(row.transactionHash ?? ''), String(row.$event ?? '')].join(' ').toLowerCase();
+  }
+
+  function timestampFor(row: CirclesBaseEventRow): number {
+    if (getTimestampSec) {
+      const v = getTimestampSec(row);
+      return Number.isFinite(v) ? Number(v) : 0;
+    }
+    return toNumber(row.timestamp);
+  }
+
+  function toNumber(value: unknown): number {
+    if (typeof value === 'number') return value;
+    if (typeof value === 'bigint') return Number(value);
+    if (typeof value === 'string') return Number(value);
+    return 0;
+  }
+
   const filteredEvents = $derived.by(() => {
     const needle = searchQuery.trim().toLowerCase();
     if (!needle) return events;
     return events.filter((row) => {
-      const haystack = [
-        String(row.trustee ?? ''),
-        String(row.transactionHash ?? ''),
-        Number(row.expiryTime) > Number(row.timestamp) ? 'trust set' : 'trust removed',
-      ]
-        .join(' ')
-        .toLowerCase();
-      return haystack.includes(needle);
+      const haystack = searchHaystack ? searchHaystack(row) : defaultHaystack(row);
+      return haystack.toLowerCase().includes(needle);
     });
   });
 
@@ -85,7 +119,7 @@
           Number(a.logIndex) - Number(b.logIndex)
       );
 
-    const out: TrustHistoryListItem[] = [];
+    const out: EventHistoryListItem[] = [];
     let i = 0;
     while (i < sorted.length) {
       const base = sorted[i];
@@ -149,10 +183,9 @@
   </div>
   <div class="text-xs opacity-60">Range: {rangeLabel}</div>
 
-  {#if originAddress}
+  {#if DayPopupHeader}
     <div class="rounded-lg border border-base-300 p-2">
-      <div class="text-xs opacity-60 mb-1">Trust originated from</div>
-      <Avatar address={originAddress} view="horizontal" clickable={true} showTypeInfo={true} />
+      <DayPopupHeader {dayStartSec} {dayEndSec} {events} />
     </div>
   {/if}
 
@@ -160,7 +193,7 @@
     <div class="rounded-lg border border-base-300 p-2">
       <div class="flex items-center justify-between mb-2 gap-2">
         <div class="text-xs opacity-60">
-          Events by {histogramGranularity === 'hour' ? 'hour' : 'minute'}
+          {labels.histogramTitle ?? `Events by ${histogramGranularity === 'hour' ? 'hour' : 'minute'}`}
         </div>
         <div class="join">
           <button
@@ -222,15 +255,15 @@
     <input
       type="text"
       class="input input-bordered w-full"
-      placeholder="Search trustees, tx hash, or event type"
+      placeholder={labels.searchPlaceholder ?? 'Search by transaction hash or event type'}
       bind:value={searchQuery}
     />
   </div>
 
   {#if events.length === 0}
-    <div class="text-sm opacity-70">No trust events in this day.</div>
+    <div class="text-sm opacity-70">{labels.dayEmpty ?? 'No events in this day.'}</div>
   {:else if filteredEvents.length === 0}
-    <div class="text-sm opacity-70">No matches.</div>
+    <div class="text-sm opacity-70">{labels.dayNoMatches ?? 'No matches.'}</div>
   {:else}
     <div class="overflow-auto rounded-lg border border-base-300 max-h-[calc(80vh-14rem)]">
       <div class="px-2">

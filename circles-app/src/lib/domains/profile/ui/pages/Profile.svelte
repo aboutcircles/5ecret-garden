@@ -51,6 +51,7 @@ import { ProfileNamespaces } from '$lib/domains/profile/ui';
     import {gnosisConfig} from "$lib/shared/config/circles";
 import { TrustScoreBadge } from '$lib/domains/profile/ui';
     import TrustHistoryHeatmap from '$lib/domains/trust/ui/TrustHistoryHeatmap.svelte';
+    import PersonalMintHistoryHeatmap from '$lib/domains/minting/ui/PersonalMintHistoryHeatmap.svelte';
     import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
     import { Star as LStar } from 'lucide';
     import {
@@ -351,6 +352,7 @@ import { TrustScoreBadge } from '$lib/domains/profile/ui';
         'trusts',
         'trusted_by',
         'trust_history',
+        'minting_history',
         'collateral',
         'holders',
         'holdings',
@@ -366,6 +368,7 @@ import { TrustScoreBadge } from '$lib/domains/profile/ui';
     let trustsCount = $state(0);
     let trustedByCount = $state(0);
     let trustHistoryEventCount = $state(0);
+    let mintingHistoryEventCount = $state(0);
     let bookmarkedProfiles: ProfileBookmark[] = $state([]);
     let showBookmarkEditor: boolean = $state(false);
     let bookmarkNoteInput: string = $state('');
@@ -466,7 +469,7 @@ import { TrustScoreBadge } from '$lib/domains/profile/ui';
     });
 
     const availableTabIds = $derived((() => {
-        const ids: TabId[] = ['common_connections', 'trusts', 'trusted_by', 'trust_history'];
+        const ids: TabId[] = ['common_connections', 'trusts', 'trusted_by', 'trust_history', 'minting_history'];
         if (otherAvatar?.type === 'CrcV2_RegisterGroup') ids.push('collateral');
         if (otherAvatar?.type === 'CrcV2_RegisterGroup' || otherAvatar?.type === 'CrcV2_RegisterHuman') {
             ids.push('holders');
@@ -783,6 +786,20 @@ import { TrustScoreBadge } from '$lib/domains/profile/ui';
                     granularity="month"
                     showGranularitySwitch={true}
                     bind:eventCount={trustHistoryEventCount}
+            />
+        </div>
+    </Tab>
+
+    <Tab
+            id="minting_history"
+            title="Minting hstory"
+            badge={mintingHistoryEventCount}
+            panelClass={tabPanelClass}
+    >
+        <div class="w-full">
+            <PersonalMintHistoryHeatmap
+                    address={address}
+                    bind:eventCount={mintingHistoryEventCount}
             />
         </div>
     </Tab>

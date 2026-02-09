@@ -1,19 +1,40 @@
-import {browser} from '$app/environment';
-import {writable, derived, get} from 'svelte/store';
-import {getMarketClient} from '$lib/shared/integrations/market';
-import type {AggregatedCatalogItem} from '$lib/areas/market/model';
-import {pickFirstProductImageUrl} from '$lib/areas/market/services';
-import {gnosisConfig} from "$lib/shared/config/circles";
+import { browser } from '$app/environment';
+import { derived, get, writable } from 'svelte/store';
+import { getMarketClient } from '$lib/shared/integrations/market';
+import type { AggregatedCatalogItem } from '$lib/areas/market/model';
+import { pickFirstProductImageUrl } from '$lib/areas/market/services';
+import { gnosisConfig } from '$lib/shared/config/circles';
 
 type CheckoutResult = { orderId: string; paymentReference: string; basketId: string };
+
+type BasketLine = {
+  seller?: unknown;
+  sku?: unknown;
+  orderedItem?: {
+    sku?: unknown;
+    orderedItem?: {
+      sku?: unknown;
+    };
+  };
+  orderQuantity?: unknown;
+  quantity?: unknown;
+  imageUrl?: unknown;
+};
+
+type Basket = {
+  basketId?: string;
+  buyer?: string;
+  status?: string;
+  items?: BasketLine[];
+};
 
 type CartState = {
   loading: boolean;
   lastError: string | null;
 
-  basket: any | null;
-  validation: any | null;
-  orderPreview: any | null;
+  basket: Basket | null;
+  validation: unknown | null;
+  orderPreview: unknown | null;
   lastCheckout: CheckoutResult | null;
 };
 
@@ -32,7 +53,7 @@ export const cartState = writable<CartState>(initialState);
 
 // Derived store: total quantity across all basket lines
 export const cartItemCount = derived(cartState, ($cart) => {
-  const items = Array.isArray(($cart as any)?.basket?.items) ? ($cart as any).basket.items : [];
+  const items = Array.isArray($cart.basket?.items) ? ($cart.basket?.items as BasketLine[]) : [];
   let total = 0;
   for (const it of items) {
     total += lineQty(it);
@@ -63,8 +84,8 @@ function writeBasketId(id: string | null): void {
     console.error('[cart] Failed to persist basket id to localStorage:', e);
     try {
       // Only surface to UI in dev builds to avoid noisy errors for users
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (typeof import.meta !== 'undefined' && (import.meta as any).env?.DEV) {
+      const meta = typeof import.meta !== 'undefined' ? (import.meta as { env?: { DEV?: boolean } }) : null;
+      if (meta?.env?.DEV) {
         const msg = e instanceof Error ? e.message : String(e ?? 'storage error');
         setError(`Basket storage unavailable: ${msg}`);
       }
@@ -75,17 +96,17 @@ function writeBasketId(id: string | null): void {
 }
 
 function setLoading(loading: boolean): void {
-  cartState.update((s) => ({...s, loading}));
+  cartState.update((s) => ({ ...s, loading }));
 }
 
 function setError(err: unknown): void {
   const msg =
     err instanceof Error ? err.message : typeof err === 'string' ? err : 'Unknown error';
-  cartState.update((s) => ({...s, lastError: msg}));
+  cartState.update((s) => ({ ...s, lastError: msg }));
 }
 
 function clearError(): void {
-  cartState.update((s) => ({...s, lastError: null}));
+  cartState.update((s) => ({ ...s, lastError: null }));
 }
 
 function normalizeAddr(a: string): string {
@@ -96,12 +117,12 @@ function normalizeSku(s: string): string {
   return String(s ?? '').toLowerCase();
 }
 
-function lineSeller(line: any): string | null {
+function lineSeller(line: BasketLine): string | null {
   const s = line?.seller;
   return typeof s === 'string' && s ? normalizeAddr(s) : null;
 }
 
-function lineSku(line: any): string | null {
+function lineSku(line: BasketLine): string | null {
   const sku =
     line?.orderedItem?.sku ??
     line?.sku ??
@@ -110,35 +131,35 @@ function lineSku(line: any): string | null {
   return typeof sku === 'string' && sku ? normalizeSku(sku) : null;
 }
 
-function lineQty(line: any): number {
+function lineQty(line: BasketLine): number {
   const q = line?.orderQuantity ?? line?.quantity ?? 0;
   const n = typeof q === 'number' ? q : Number(q ?? 0);
   if (!Number.isFinite(n) || n < 0) return 0;
   return n;
 }
 
-function toSdkItemsFromBasket(basket: any): { seller: string; sku: string; quantity: number; imageUrl?: string }[] {
-  const items = Array.isArray(basket?.items) ? basket.items : [];
+function toSdkItemsFromBasket(basket: Basket | null): { seller: string; sku: string; quantity: number; imageUrl?: string }[] {
+  const items = Array.isArray(basket?.items) ? basket!.items : [];
   const out: { seller: string; sku: string; quantity: number; imageUrl?: string }[] = [];
   for (const it of items) {
     const seller = lineSeller(it);
     const sku = lineSku(it);
     const quantity = lineQty(it);
     if (!seller || !sku) continue;
-    out.push({seller, sku, quantity, imageUrl: typeof it?.imageUrl === 'string' ? it.imageUrl : undefined});
+    out.push({ seller, sku, quantity, imageUrl: typeof it?.imageUrl === 'string' ? it.imageUrl : undefined });
   }
   return out;
 }
 
-async function fetchBasketById(basketId: string): Promise<any> {
+async function fetchBasketById(basketId: string): Promise<Basket> {
   const client = getMarketClient();
   const token = client.authContext?.getToken?.();
-  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+  const authHeaders = token ? { Authorization: `Bearer ${token}` } : undefined;
 
-  return await client.http.request<any>({
+  return await client.http.request<Basket>({
     method: 'GET',
     url: `${client.marketApiBase}/api/cart/v1/baskets/${encodeURIComponent(basketId)}`,
-    headers: { ...authHeaders },
+    headers: authHeaders,
   });
 }
 
@@ -193,11 +214,11 @@ async function reloadBasketIfPresent(): Promise<void> {
   clearError();
   try {
     const b = await fetchBasketById(id);
-    cartState.update((s) => ({...s, basket: b}));
+    cartState.update((s) => ({ ...s, basket: b }));
   } catch (e) {
     // If the basket is gone/invalid, drop it locally
     writeBasketId(null);
-    cartState.update((s) => ({...s, basket: null}));
+    cartState.update((s) => ({ ...s, basket: null }));
     setError(e);
   } finally {
     setLoading(false);
@@ -218,15 +239,22 @@ export type OrderItemPreview = {
 
 export type BasketPatch = {
   items?: OrderItemPreview[];
-  shippingAddress?: any;
-  billingAddress?: any;
-  ageProof?: any;
-  contactPoint?: any;
-  customer?: any;
+  shippingAddress?: unknown;
+  billingAddress?: unknown;
+  ageProof?: unknown;
+  contactPoint?: unknown;
+  customer?: unknown;
   ttlSeconds?: number;
 };
 
-export async function patchBasket(basketId: string, patch: BasketPatch): Promise<any> {
+type BasketPatchItem = {
+  seller: string;
+  orderedItem: { '@type': 'Product'; sku: string };
+  orderQuantity: number;
+  imageUrl?: string;
+};
+
+export async function patchBasket(basketId: string, patch: BasketPatch): Promise<Basket> {
   const client = getMarketClient();
 
   const hasItemsPatch = Array.isArray(patch.items);
@@ -240,13 +268,15 @@ export async function patchBasket(basketId: string, patch: BasketPatch): Promise
     patch.ageProof !== undefined ||
     patch.customer !== undefined;
 
-  function ensureTyped(obj: any, typeName: string): any | undefined {
+  function ensureTyped(obj: unknown, typeName: string): unknown | undefined {
     const isNil = obj === null || obj === undefined;
     if (isNil) return undefined;
     const isObj = typeof obj === 'object' && !Array.isArray(obj);
     if (!isObj) return obj;
 
-    const hasType = typeof obj?.['@type'] === 'string' && obj['@type'].length > 0;
+    const rec = obj as Record<string, unknown>;
+    const type = rec['@type'];
+    const hasType = typeof type === 'string' && type.length > 0;
     if (hasType) return obj;
 
     return {'@type': typeName, ...obj};
@@ -257,20 +287,20 @@ export async function patchBasket(basketId: string, patch: BasketPatch): Promise
     return s.length > 0 ? s : undefined;
   }
 
-  function buildPatchItems(): any[] {
+  function buildPatchItems(): BasketPatchItem[] {
     if (!hasItemsPatch) return [];
     return patch.items!
       .map((it) => ({
         seller: normalizeAddr(it.seller),
-        orderedItem: {'@type': 'Product', sku: normalizeSku(it.orderedItem?.sku as any)},
+        orderedItem: { '@type': 'Product' as const, sku: normalizeSku(it.orderedItem?.sku) },
         orderQuantity: Number(it.orderQuantity ?? 0),
         imageUrl: normalizeImageUrl(it.imageUrl),
       }))
       .filter((x) => x.seller && x.orderedItem?.sku && x.orderQuantity > 0);
   }
 
-  function buildDetailsBody(): any {
-    const body: any = {};
+  function buildDetailsBody(): Record<string, unknown> {
+    const body: Record<string, unknown> = {};
 
     const shipping = ensureTyped(patch.shippingAddress ?? undefined, 'PostalAddress');
     const billing = ensureTyped(patch.billingAddress ?? undefined, 'PostalAddress');
@@ -302,7 +332,7 @@ export async function patchBasket(basketId: string, patch: BasketPatch): Promise
 
   if (needsDirectPatch) {
     const token = client.authContext?.getToken?.();
-    const body: any = {};
+    const body: Record<string, unknown> = {};
 
     if (hasItemsPatch) {
       body.items = buildPatchItems();
@@ -313,28 +343,28 @@ export async function patchBasket(basketId: string, patch: BasketPatch): Promise
       body[k] = v;
     }
 
-    return await client.http.request<any>({
+    return await client.http.request<Basket>({
       method: 'PATCH',
       url: `${client.marketApiBase}/api/cart/v1/baskets/${encodeURIComponent(basketId)}`,
-      headers: {...token ? {Authorization: `Bearer ${token}`} : {}},
+      headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       body,
     });
   }
 
   // Otherwise keep the existing single-operation behavior.
-  let updated: any | null = null;
+  let updated: Basket | null = null;
 
   if (hasItemsPatch) {
     const items = patch.items!
       .map((it) => ({
         seller: normalizeAddr(it.seller),
-        sku: normalizeSku(it.orderedItem?.sku as any),
+        sku: normalizeSku(it.orderedItem?.sku),
         quantity: Number(it.orderQuantity ?? 0),
         imageUrl: normalizeImageUrl(it.imageUrl),
       }))
       .filter((x) => x.seller && x.sku && x.quantity > 0);
 
-    updated = await client.cart.setItems({basketId, items});
+    updated = await client.cart.setItems({ basketId, items });
   }
 
   if (hasDetailsPatch) {
@@ -367,7 +397,7 @@ export const cartApi: {
 async function setItemsForBasket(
   basketId: string,
   items: { seller: string; sku: string; quantity: number; imageUrl?: string }[],
-): Promise<any> {
+): Promise<Basket> {
   // Convert to OrderItemPreview shape so tests can spy on payload semantics
   const orderItems: OrderItemPreview[] = items.map((it) => ({
     '@type': 'OrderItem',
@@ -378,7 +408,7 @@ async function setItemsForBasket(
   }));
 
   const updated = await cartApi.patchBasket(basketId, {items: orderItems});
-  cartState.update((s) => ({...s, basket: updated}));
+  cartState.update((s) => ({ ...s, basket: updated }));
   return updated;
 }
 
@@ -415,12 +445,12 @@ export async function addToCart(product: AggregatedCatalogItem, buyer: string | 
     const baseBasket = haveBasketInState && state.basket ? state.basket : await fetchBasketById(basketId);
 
     if (!haveBasketInState) {
-      cartState.update((s) => ({...s, basket: baseBasket}));
+      cartState.update((s) => ({ ...s, basket: baseBasket }));
     }
 
     const items = toSdkItemsFromBasket(baseBasket);
 
-    const seller = normalizeAddr(product.seller as any);
+    const seller = normalizeAddr(String((product as { seller?: unknown })?.seller ?? ''));
     const sku = normalizeSku(product.product?.sku);
     if (!seller || !sku) {
       throw new Error('Product is missing seller or sku');
@@ -440,7 +470,7 @@ export async function addToCart(product: AggregatedCatalogItem, buyer: string | 
         imageUrl: cur.imageUrl ?? img,
       };
     } else {
-      nextItems = items.concat([{seller, sku, quantity: 1, imageUrl: img}]);
+      nextItems = items.concat([{ seller, sku, quantity: 1, imageUrl: img }]);
     }
 
     // setItemsForBasket -> patchBasket -> client.cart.setItems() (PATCH) returns the updated basket.
@@ -523,17 +553,17 @@ export async function removeLineByIdentity(sellerRaw: string, skuRaw: string): P
   }
 }
 
-function stripNulls<T extends Record<string, any>>(obj: T | null | undefined): Partial<T> | undefined {
+function stripNulls(obj: unknown): Record<string, unknown> | undefined {
   if (!obj || typeof obj !== 'object') return undefined;
-  const out: any = {};
-  for (const [k, v] of Object.entries(obj)) {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
     if (v === null || v === undefined) continue;
     out[k] = v;
   }
   return out;
 }
 
-export async function updateBasketDetails(patch: any): Promise<void> {
+export async function updateBasketDetails(patch: unknown): Promise<void> {
   setLoading(true);
   clearError();
   try {
@@ -544,22 +574,24 @@ export async function updateBasketDetails(patch: any): Promise<void> {
       throw new Error('No basketId available');
     }
 
-    const shipping = stripNulls(patch?.shippingAddress);
-    const billing = stripNulls(patch?.billingAddress);
-    const contact = stripNulls(patch?.contactPoint);
-    const age = stripNulls(patch?.ageProof);
-    const customer = stripNulls(patch?.customer);
+    const patchObj = patch && typeof patch === 'object' ? (patch as Record<string, unknown>) : {};
+
+    const shipping = stripNulls(patchObj.shippingAddress);
+    const billing = stripNulls(patchObj.billingAddress);
+    const contact = stripNulls(patchObj.contactPoint);
+    const age = stripNulls(patchObj.ageProof);
+    const customer = stripNulls(patchObj.customer);
 
     const updated = await getMarketClient().cart.setCheckoutDetails({
       basketId,
-      shippingAddress: shipping as any,
-      billingAddress: billing as any,
-      contactPoint: contact as any,
-      ageProof: age as any,
-      customer: customer as any,
+      shippingAddress: shipping,
+      billingAddress: billing,
+      contactPoint: contact,
+      ageProof: age,
+      customer: customer,
     });
 
-    cartState.update((s) => ({...s, basket: updated}));
+    cartState.update((s) => ({ ...s, basket: updated }));
   } catch (e) {
     setError(e);
     throw e;
@@ -568,7 +600,7 @@ export async function updateBasketDetails(patch: any): Promise<void> {
   }
 }
 
-export async function validateCart(): Promise<any> {
+export async function validateCart(): Promise<unknown> {
   setLoading(true);
   clearError();
   try {
@@ -580,7 +612,7 @@ export async function validateCart(): Promise<any> {
     }
 
     const v = await getMarketClient().cart.validateBasket(basketId);
-    cartState.update((s) => ({...s, validation: v}));
+    cartState.update((s) => ({ ...s, validation: v }));
     return v;
   } catch (e) {
     setError(e);
@@ -590,7 +622,7 @@ export async function validateCart(): Promise<any> {
   }
 }
 
-export async function previewCartOrder(): Promise<any> {
+export async function previewCartOrder(): Promise<unknown> {
   setLoading(true);
   clearError();
   try {
@@ -602,7 +634,7 @@ export async function previewCartOrder(): Promise<any> {
     }
 
     const p = await getMarketClient().cart.previewOrder(basketId);
-    cartState.update((s) => ({...s, orderPreview: p}));
+    cartState.update((s) => ({ ...s, orderPreview: p }));
     return p;
   } catch (e) {
     setError(e);
@@ -623,11 +655,11 @@ export async function checkoutCart(): Promise<CheckoutResult> {
       throw new Error('No basketId available');
     }
 
-    const res = await getMarketClient().cart.checkoutBasket({basketId});
+    const res = await getMarketClient().cart.checkoutBasket({ basketId });
     cartState.update((s) => ({
       ...s,
       lastCheckout: res,
-      basket: s.basket ? {...s.basket, status: 'CheckedOut'} : s.basket,
+      basket: s.basket ? { ...s.basket, status: 'CheckedOut' } : s.basket,
     }));
     return res;
   } catch (e) {
@@ -686,7 +718,7 @@ export async function upsertLineByIdentity(
 }
 
 export async function upsertLineItem(item: AggregatedCatalogItem, quantity: number): Promise<void> {
-  const seller = normalizeAddr(item.seller as any);
+  const seller = normalizeAddr(String((item as { seller?: unknown })?.seller ?? ''));
   const sku = normalizeSku(item.product?.sku);
   if (!seller || !sku) throw new Error('Product missing seller or sku');
   const img = pickFirstProductImageUrl(item.product) ?? undefined;
@@ -695,5 +727,5 @@ export async function upsertLineItem(item: AggregatedCatalogItem, quantity: numb
 
 export function clearCart(): void {
   writeBasketId(null);
-  cartState.set({...initialState});
+  cartState.set({ ...initialState });
 }
