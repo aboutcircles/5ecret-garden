@@ -1,23 +1,22 @@
 import { readable, type Readable } from 'svelte/store';
-import type { EventRow } from '@circles-sdk/data';
 
-export type PaginatedReadable = Readable<{
-  data: EventRow[];
+export type PaginatedReadable<T = any> = Readable<{
+  data: T[];
   next: () => Promise<boolean>;
   ended: boolean;
 }>;
 
-export function createPaginatedList(
-  source: Readable<EventRow[]>,
+export function createPaginatedList<T = any>(
+  source: Readable<T[]>,
   opts: { pageSize?: number } = {}
-): PaginatedReadable {
+): PaginatedReadable<T> {
   const pageSize = opts.pageSize ?? 25;
 
-  let full: EventRow[] = [];
+  let full: T[] = [];
   let pageEnd = 0; // exclusive
   let ended = true;
 
-  let notify: (v: { data: EventRow[]; next: () => Promise<boolean>; ended: boolean }) => void = () => {};
+  let notify: (v: { data: T[]; next: () => Promise<boolean>; ended: boolean }) => void = () => {};
 
   const next = async () => {
     if (ended) return false;
@@ -29,7 +28,7 @@ export function createPaginatedList(
     return !ended;
   };
 
-  const store = readable<{ data: EventRow[]; next: () => Promise<boolean>; ended: boolean }>(
+  const store = readable<{ data: T[]; next: () => Promise<boolean>; ended: boolean }>(
     { data: [], next, ended },
     (set) => {
       notify = set;
