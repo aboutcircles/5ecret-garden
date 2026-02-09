@@ -2,7 +2,7 @@
     import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
     import Tooltip from '$lib/shared/ui/common/Tooltip.svelte';
 import { ProfileHeaderEditor } from '$lib/domains/profile/ui';
-    import { isValidName, isValidSymbol, isValidOnChainName } from '$lib/shared/utils/isValid';
+    import { isValidSymbol, isValidOnChainName } from '$lib/shared/utils/isValid';
     import { popupControls } from '$lib/shared/state/popup';
     import { wallet } from '$lib/shared/state/wallet.svelte';
     import Settings from './2_Settings.svelte';
@@ -11,6 +11,8 @@ import { ProfileHeaderEditor } from '$lib/domains/profile/ui';
         type CreateGroupFlowContext
     } from './context';
     import { resetCreateGroupContext } from './context';
+
+    const PROFILE_NAME_MAX_LENGTH = 36;
 
     interface Props {
         /** Kept for compatibility; the store is the source of truth. */
@@ -48,16 +50,17 @@ import { ProfileHeaderEditor } from '$lib/domains/profile/ui';
     // Validation / UI state
     const displayName = $derived(ctx.profile.name ?? '');
     const onChainName = $derived(ctx.profile.onChainName ?? '');
-    const nameHasInput: boolean = $derived(displayName.trim().length > 0);
+    const profileNameTrimmed = $derived(displayName.trim());
+    const profileNameValid: boolean = $derived(
+        profileNameTrimmed.length > 0 && profileNameTrimmed.length <= PROFILE_NAME_MAX_LENGTH
+    );
     const symbolHasInput: boolean = $derived(ctx.profile.symbol.trim().length > 0);
-    const nameValidNow: boolean = $derived(isValidName(displayName));
     const symbolValidNow: boolean = $derived(isValidSymbol(ctx.profile.symbol));
-    const showNameInvalid: boolean = $derived(nameHasInput && !nameValidNow);
     const showSymbolInvalid: boolean = $derived(symbolHasInput && !symbolValidNow);
     const trimmedOnChainName = $derived(onChainName.trim());
     const onChainNameHasInput = $derived(trimmedOnChainName.length > 0);
     const onChainNameValid = $derived(onChainNameHasInput && isValidOnChainName(trimmedOnChainName));
-    const canContinue: boolean = $derived(nameValidNow && symbolValidNow && onChainNameValid);
+    const canContinue: boolean = $derived(profileNameValid && symbolValidNow && onChainNameValid);
 
     let onChainNameOpen = $state(false);
     let onChainNameManual = $state(false);
@@ -141,7 +144,11 @@ import { ProfileHeaderEditor } from '$lib/domains/profile/ui';
                 bind:imageUrl={ctx.profile.imageUrl}
                 nameLabel="Profile name"
             />
-            <div class="h-5 text-xs text-error pt-1">{#if showNameInvalid}Invalid name{/if}</div>
+            <div class="h-5 text-xs text-error pt-1">
+                {#if !profileNameValid}
+                    Profile name is required and must be at most {PROFILE_NAME_MAX_LENGTH} characters.
+                {/if}
+            </div>
         </div>
 
         <div class="border border-base-200 rounded-xl p-3">
