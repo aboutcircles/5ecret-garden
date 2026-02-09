@@ -1,9 +1,10 @@
 <script lang="ts">
     import ActionButton from '$lib/shared/ui/common/ActionButton.svelte';
-    import {popupControls} from '$lib/shared/state/popup';
-    import SelectWallet from '$lib/areas/wallet/ui/onboarding/SelectWallet.svelte';
+    import { popupControls } from '$lib/shared/state/popup';
 
     async function connectWallet() {
+        const { default: SelectWallet } = await import('$lib/areas/wallet/ui/onboarding/SelectWallet.svelte');
+
         popupControls.open({
             component: SelectWallet,
             title: 'Select Wallet',
