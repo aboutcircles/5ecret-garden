@@ -1,10 +1,10 @@
 <script lang="ts">
-  import type { MonthlyItem, TrustHistoryRangeEvent } from './types';
+  import type { MonthlyItem, RangeOverlayEvent } from './types';
 
   interface Props {
     monthlyItems: MonthlyItem[];
     maxBucketCount: number;
-    rangeEvents?: TrustHistoryRangeEvent[];
+    rangeEvents?: RangeOverlayEvent[];
     onSelectMonth?: (monthStartSec: number) => void;
   }
 
@@ -28,21 +28,21 @@
     return Math.floor(d.getTime() / 1000);
   }
 
-  function monthRangeEvents(monthStartSec: number): TrustHistoryRangeEvent[] {
+  function monthRangeEvents(monthStartSec: number): RangeOverlayEvent[] {
     const monthEndSec = nextMonthStartSec(monthStartSec) - 1;
     return rangeEvents.filter((event) => event.startDaySec <= monthEndSec && event.endDaySec >= monthStartSec);
   }
 
-  function isMonthRangeStart(event: TrustHistoryRangeEvent, monthStartSec: number): boolean {
+  function isMonthRangeStart(event: RangeOverlayEvent, monthStartSec: number): boolean {
     return event.startDaySec >= monthStartSec && event.startDaySec < nextMonthStartSec(monthStartSec);
   }
 
-  function isMonthRangeEnd(event: TrustHistoryRangeEvent, monthStartSec: number): boolean {
+  function isMonthRangeEnd(event: RangeOverlayEvent, monthStartSec: number): boolean {
     const monthEndSec = nextMonthStartSec(monthStartSec) - 1;
     return event.endDaySec >= monthStartSec && event.endDaySec <= monthEndSec;
   }
 
-  function formatEventRange(event: TrustHistoryRangeEvent): string {
+  function formatEventRange(event: RangeOverlayEvent): string {
     return `${new Date(event.startDaySec * 1000).toLocaleDateString()} – ${new Date(event.endDaySec * 1000).toLocaleDateString()}`;
   }
 </script>

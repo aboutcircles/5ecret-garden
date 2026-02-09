@@ -1,11 +1,11 @@
 <script lang="ts">
   import { tick } from 'svelte';
-  import type { MonthWeeklySection, TrustHistoryRangeEvent } from './types';
+  import type { MonthWeeklySection, RangeOverlayEvent } from './types';
 
   interface Props {
     weeklySections: MonthWeeklySection[];
     maxBucketCount: number;
-    rangeEvents?: TrustHistoryRangeEvent[];
+    rangeEvents?: RangeOverlayEvent[];
     selectedWeekStartSec?: number | null;
     onSelectWeek?: (weekStartSec: number) => void;
   }
@@ -17,6 +17,7 @@
     selectedWeekStartSec = null,
     onSelectWeek,
   }: Props = $props();
+
   let containerEl: HTMLDivElement | null = $state(null);
 
   function intensityClass(count: number, max: number): string {
@@ -34,21 +35,21 @@
     return `${new Date(startSec * 1000).toLocaleDateString()} – ${new Date(endSec * 1000).toLocaleDateString()}`;
   }
 
-  function weekRangeEvents(weekStartSec: number): TrustHistoryRangeEvent[] {
+  function weekRangeEvents(weekStartSec: number): RangeOverlayEvent[] {
     const weekEndSec = weekStartSec + 7 * 24 * 60 * 60 - 1;
     return rangeEvents.filter((event) => event.startDaySec <= weekEndSec && event.endDaySec >= weekStartSec);
   }
 
-  function isWeekRangeStart(event: TrustHistoryRangeEvent, weekStartSec: number): boolean {
+  function isWeekRangeStart(event: RangeOverlayEvent, weekStartSec: number): boolean {
     return event.startDaySec >= weekStartSec && event.startDaySec < weekStartSec + 7 * 24 * 60 * 60;
   }
 
-  function isWeekRangeEnd(event: TrustHistoryRangeEvent, weekStartSec: number): boolean {
+  function isWeekRangeEnd(event: RangeOverlayEvent, weekStartSec: number): boolean {
     const weekEndSec = weekStartSec + 7 * 24 * 60 * 60 - 1;
     return event.endDaySec >= weekStartSec && event.endDaySec <= weekEndSec;
   }
 
-  function formatEventRange(event: TrustHistoryRangeEvent): string {
+  function formatEventRange(event: RangeOverlayEvent): string {
     return `${new Date(event.startDaySec * 1000).toLocaleDateString()} – ${new Date(event.endDaySec * 1000).toLocaleDateString()}`;
   }
 

@@ -1,11 +1,11 @@
 <script lang="ts">
   import { tick } from 'svelte';
-  import type { MonthCalendar, TrustHistoryRangeEvent } from './types';
+  import type { MonthCalendar, RangeOverlayEvent } from './types';
 
   interface Props {
     monthCalendars: MonthCalendar[];
     maxBucketCount: number;
-    rangeEvents?: TrustHistoryRangeEvent[];
+    rangeEvents?: RangeOverlayEvent[];
     selectedDayTsSec?: number | null;
     onSelectDay?: (dayStartTsSec: number) => void;
   }
@@ -17,6 +17,7 @@
     selectedDayTsSec = null,
     onSelectDay,
   }: Props = $props();
+
   let containerEl: HTMLDivElement | null = $state(null);
 
   function intensityClass(count: number, max: number): string {
@@ -29,23 +30,23 @@
     return 'bg-primary';
   }
 
-  function dayRangeEvents(tsSec: number): TrustHistoryRangeEvent[] {
+  function dayRangeEvents(tsSec: number): RangeOverlayEvent[] {
     return rangeEvents.filter((event) => tsSec >= event.startDaySec && tsSec <= event.endDaySec);
   }
 
-  function isRangeStart(event: TrustHistoryRangeEvent, tsSec: number): boolean {
+  function isRangeStart(event: RangeOverlayEvent, tsSec: number): boolean {
     return event.startDaySec === tsSec;
   }
 
-  function isRangeEnd(event: TrustHistoryRangeEvent, tsSec: number): boolean {
+  function isRangeEnd(event: RangeOverlayEvent, tsSec: number): boolean {
     return event.endDaySec === tsSec;
   }
 
-  function formatEventRange(event: TrustHistoryRangeEvent): string {
+  function formatEventRange(event: RangeOverlayEvent): string {
     return `${new Date(event.startDaySec * 1000).toLocaleDateString()} – ${new Date(event.endDaySec * 1000).toLocaleDateString()}`;
   }
 
-  function cellTitle(tsSec: number, count: number, events: TrustHistoryRangeEvent[]): string {
+  function cellTitle(tsSec: number, count: number, events: RangeOverlayEvent[]): string {
     const base = `${new Date(tsSec * 1000).toLocaleDateString()}: ${count} event${count === 1 ? '' : 's'}`;
     if (events.length === 0) return base;
     return `${base}\nKnown events: ${events.map((event) => event.title).join(', ')}`;
