@@ -283,6 +283,24 @@
   data-disabled={disabled ? 'true' : 'false'}
   data-preview={showPreview ? 'true' : 'false'}
 >
+  {#if showPreview}
+    <div class={`preview ${previewClass}`.trim()} style={minHeightStyle}>
+      <Markdown content={value} />
+    </div>
+  {:else}
+    <textarea
+      bind:this={textarea}
+      class={`editor ${editorClass}`.trim()}
+      style={minHeightStyle}
+      rows={normalizedRows}
+      placeholder={placeholder}
+      readonly={disabled}
+      aria-disabled={disabled}
+      spellcheck="false"
+      bind:value={value}
+    ></textarea>
+  {/if}
+
   <div class="toolbar">
     <div class="toolbar-group">
       <button
@@ -320,24 +338,6 @@
       </Tabs>
     </div>
   </div>
-
-  {#if showPreview}
-    <div class={`preview ${previewClass}`.trim()} style={minHeightStyle}>
-      <Markdown content={value} />
-    </div>
-  {:else}
-    <textarea
-      bind:this={textarea}
-      class={`editor ${editorClass}`.trim()}
-      style={minHeightStyle}
-      rows={normalizedRows}
-      placeholder={placeholder}
-      readonly={disabled}
-      aria-disabled={disabled}
-      spellcheck="false"
-      bind:value={value}
-    ></textarea>
-  {/if}
 </div>
 
 <style>
@@ -348,6 +348,7 @@
   }
 
   .toolbar {
+    order: -1;
     display: flex;
     align-items: center;
     justify-content: space-between;
