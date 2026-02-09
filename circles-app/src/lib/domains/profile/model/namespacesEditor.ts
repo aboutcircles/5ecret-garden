@@ -178,3 +178,92 @@ export async function rewriteNamespaceFromLinks(
 
     return { indexCid };
 }
+
+/**
+ * Replace one loaded namespace link in-place semantics (new array, one element swapped).
+ *
+ * This is used by the namespaces editor when a link payload is edited:
+ * - create a new link object
+ * - keep list order and size stable
+ * - persist via rewriteNamespaceFromLinks(...)
+ */
+export function replaceLoadedNamespaceLinkAt(
+    links: LoadedNamespaceLink[],
+    index: number,
+    replacementLink: any
+): LoadedNamespaceLink[] {
+    if (!Number.isInteger(index) || index < 0 || index >= links.length) {
+        throw new RangeError(`Invalid link index ${index} for list length ${links.length}.`);
+    }
+
+    if (!replacementLink || typeof replacementLink !== 'object' || Array.isArray(replacementLink)) {
+        throw new TypeError('Replacement link must be a JSON object.');
+    }
+
+    const current = links[index];
+    const next = links.slice();
+    next[index] = {
+        ...current,
+        link: replacementLink
+    };
+    return next;
+}
+
+/**
+ * Build a replacement link that keeps existing link metadata but points to a new payload CID.
+ * The link `name` is preserved from the original link to keep replacement semantics stable.
+ */
+export function buildReplacementLinkWithPayloadCid(
+    originalLink: any,
+    payloadCid: string
+): any {
+    if (!originalLink || typeof originalLink !== 'object' || Array.isArray(originalLink)) {
+        throw new TypeError('Original link must be a JSON object.');
+    }
+    const nextCid = String(payloadCid ?? '').trim();
+    if (!nextCid) {
+        throw new TypeError('Payload CID must be a non-empty string.');
+    }
+
+    return {
+        ...originalLink,
+        name: String(originalLink?.name ?? ''),
+        cid: nextCid
+    };
+}
+
+export type EditableLinkMetadata = {
+    name: string;
+    encrypted: boolean;
+    encryptionAlgorithm: string | null;
+    encryptionKeyFingerprint: string | null;
+};
+
+/**
+ * Applies user-editable metadata fields to a link object.
+ */
+export function applyEditableLinkMetadata(
+    link: any,
+    metadata: EditableLinkMetadata
+): any {
+    if (!link || typeof link !== 'object' || Array.isArray(link)) {
+        throw new TypeError('Link must be a JSON object.');
+    }
+
+    const name = String(metadata?.name ?? '').trim();
+    if (!name) {
+        throw new TypeError('Link name must be a non-empty string.');
+    }
+
+    const encrypted = Boolean(metadata?.encrypted);
+    const algorithm = (metadata?.encryptionAlgorithm ?? '').toString().trim();
+    const fingerprint = (metadata?.encryptionKeyFingerprint ?? '').toString().trim();
+
+    return {
+        ...link,
+        name,
+        encrypted,
+        encryptionAlgorithm: encrypted ? (algorithm || null) : null,
+        encryptionKeyFingerprint: encrypted ? (fingerprint || null) : null
+    };
+}
