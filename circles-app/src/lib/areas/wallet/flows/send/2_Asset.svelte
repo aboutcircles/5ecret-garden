@@ -18,6 +18,9 @@
   onMount(() => {
     if (context?.selectedAsset) {
       selectedAsset = context.selectedAsset;
+      // If we got here with a pre-selected asset, it means we probably
+      // came from a flow where we want to pick another asset, 
+      // but if the intention was to skip, 1_To.svelte should have handled it.
     }
   });
 

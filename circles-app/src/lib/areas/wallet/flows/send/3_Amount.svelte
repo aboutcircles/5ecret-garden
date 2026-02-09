@@ -35,7 +35,7 @@
     let showUnusedBalances = writable(false);
     let showPathsSection = $state(false); // True if pathfinding succeeds
     let pathfindingFailed = $state(false); // True if pathfinding fails
-    let maxAmountCircles = $state(-1);
+    let maxAmountCircles = $state(context.selectedAsset?.tokenAddress === TransitiveTransferTokenAddress ? -1 : context.selectedAsset?.circles ?? -1);
 
     // Controls displaying the data interface.
     // We'll override this in onMount if context.data is present.
@@ -153,7 +153,7 @@
 
         const limit = context.selectedAsset.isErc20
             ? context.selectedAsset.staticCircles
-            : maxAmountCircles;
+            : (maxAmountCircles >= 0 ? maxAmountCircles : (context.selectedAsset?.circles ?? 0));
 
         if (context.amount > limit) {
             amountError = true;
@@ -194,7 +194,7 @@
     <SelectAmount
             maxAmountCircles={context.selectedAsset.isErc20
       ? context.selectedAsset.staticCircles
-      : maxAmountCircles}
+      : (maxAmountCircles >= 0 ? maxAmountCircles : context.selectedAsset.circles)}
             asset={context.selectedAsset}
             bind:amount={context.amount}
     />

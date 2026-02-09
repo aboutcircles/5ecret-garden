@@ -2,10 +2,8 @@
     import { avatarState } from '$lib/shared/state/avatar.svelte';
     import { runTask } from '$lib/shared/utils/tasks';
     import { shortenAddress } from '$lib/shared/utils/shared';
-    import ActionButton from '$lib/shared/ui/common/ActionButton.svelte';
-    import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
+    import TrustActionCard from '$lib/areas/contacts/ui/components/TrustActionCard.svelte';
     import { popupControls } from '$lib/shared/state/popup';
-    import RowFrame from '$lib/shared/ui/RowFrame.svelte';
 
     interface Props { address: `0x${string}`; }
     let { address }: Props = $props();
@@ -22,20 +20,10 @@
     }
 </script>
 
-<div class="flex flex-col gap-y-4 mt-8">
-    <p>You're about to trust the following group or person:</p>
-
-    <RowFrame clickable={false} dense={true} noLeading={true}>
-        <div class="min-w-0">
-            <Avatar {address} clickable={false} view="horizontal" bottomInfo={address} />
-        </div>
-    </RowFrame>
-
-    <div role="alert" class="alert alert-warning">
-        <span>Trusting someone means that you accept their tokens at the same value as your own.</span>
-    </div>
-
-    <div>
-        <ActionButton action={trust}>Trust</ActionButton>
-    </div>
-</div>
+<TrustActionCard
+  {address}
+  intro="You're about to trust the following group or person:"
+  warning="Trusting someone means that you accept their tokens at the same value as your own."
+  cta="Trust"
+  action={trust}
+/>

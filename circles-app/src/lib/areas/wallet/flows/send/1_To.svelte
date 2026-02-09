@@ -1,5 +1,6 @@
 <script lang="ts">
   import SelectAsset from './2_Asset.svelte';
+  import SelectAmount from './3_Amount.svelte';
   import type { SendFlowContext } from '$lib/areas/wallet/flows/send/context';
   import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
@@ -17,10 +18,22 @@
     context = $bindable({
       selectedAddress: undefined,
       transitiveOnly: false,
-      selectedAsset: {} as TokenBalanceRow,
+      selectedAsset: undefined as any,
       amount: undefined,
     }),
   }: Props = $props();
+
+  $effect(() => {
+    if (context.selectedAddress && context.selectedAsset) {
+      popupControls.open({
+        title: 'Enter Amount',
+        component: SelectAmount,
+        props: {
+          context: context,
+        },
+      });
+    }
+  });
 
   async function onselect(selectedAvatar: Address) {
     context.selectedAddress = selectedAvatar;
@@ -34,13 +47,23 @@
       return;
     }
 
-    popupControls.open({
-      title: 'Select Asset',
-      component: SelectAsset,
-      props: {
-        context: context,
-      },
-    });
+    if (context.selectedAsset) {
+      popupControls.open({
+        title: 'Enter Amount',
+        component: SelectAmount,
+        props: {
+          context: context,
+        },
+      });
+    } else {
+      popupControls.open({
+        title: 'Select Asset',
+        component: SelectAsset,
+        props: {
+          context: context,
+        },
+      });
+    }
   }
 </script>
 

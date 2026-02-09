@@ -13,6 +13,7 @@
 
     import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
     import Send from '$lib/areas/wallet/flows/send/1_To.svelte';
+    import { transitiveTransfer } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
 
     // lucide (standalone) icon nodes
     import { Send as LSend, Banknote as LBanknote, BarChart3 as LBarChart3 } from 'lucide';
@@ -73,7 +74,14 @@
         popupControls.open({
             title: 'Send Circles',
             component: Send,
-            props: {},
+            props: {
+                context: {
+                    selectedAsset: transitiveTransfer(),
+                    selectedAddress: undefined,
+                    amount: undefined,
+                    transitiveOnly: true
+                }
+            },
         });
     }
 

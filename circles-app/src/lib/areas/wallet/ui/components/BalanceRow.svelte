@@ -9,6 +9,7 @@
     import MigrateTokens from '$lib/areas/wallet/ui/pages/MigrateTokens.svelte';
     import UnwrapTokens from '$lib/areas/wallet/ui/pages/UnwrapTokens.svelte';
     import RedeemGroup from '$lib/areas/groups/ui/pages/RedeemGroup.svelte';
+    import Send from '$lib/areas/wallet/flows/send/1_To.svelte';
     import { popupControls } from '$lib/shared/state/popup';
     import type { TokenBalanceRow } from '@circles-sdk/data';
 
@@ -23,6 +24,10 @@
     };
 
     const actions: RowAction[] = [
+        {
+            condition: (b) => true,
+            title: 'Send', icon: '/send.svg', component: Send
+        },
         {
             condition: (b) => ['CrcV2_RegisterHuman', 'CrcV2_RegisterGroup'].includes(b.tokenType),
             title: 'Wrap', icon: '/banknotes.svg', component: WrapTokens
@@ -49,7 +54,22 @@
     ];
 
     function executeAction(action: RowAction) {
-        popupControls.open?.({ title: action.title, component: action.component, props: { asset: item } });
+        if (action.title === 'Send') {
+            popupControls.open?.({
+                title: 'Send Circles',
+                component: action.component,
+                props: {
+                    context: {
+                        selectedAsset: item,
+                        selectedAddress: undefined,
+                        amount: undefined,
+                        transitiveOnly: false
+                    }
+                }
+            });
+        } else {
+            popupControls.open?.({ title: action.title, component: action.component, props: { asset: item } });
+        }
     }
 
     let copyIcon = $state('/copy.svg');
