@@ -1,5 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { cartState, upsertLineByIdentity, setLineQuantityByIdentity, removeLineByIdentity, setItems, patchBasket, cartApi, type OrderItemPreview } from '$lib/areas/market/cart/store';
+import {
+  cartState,
+  upsertLineByIdentity,
+  setLineQuantityByIdentity,
+  removeLineByIdentity,
+  cartApi,
+  type Basket,
+  type OrderItemPreview,
+} from '$lib/areas/market/cart/store';
 
 function baseBasket(overrides: Partial<any> = {}): any {
   return {
@@ -15,21 +23,17 @@ function baseBasket(overrides: Partial<any> = {}): any {
     modifiedAt: Date.now() / 1000,
     ttlSeconds: 600,
     ...overrides,
-  };
+  } as Basket;
 }
 
 beforeEach(() => {
   // Reset cart to a minimal initialized state before every test
   cartState.set({
-    basketId: 'b1',
+    loading: false,
+    lastError: null,
     basket: baseBasket(),
     validation: null,
-    loading: false,
-    lastError: undefined,
-    operator: '0xoperator' as any,
-    buyer: '0xbuyer' as any,
     orderPreview: null,
-    lastOrderId: null,
     lastCheckout: null,
   });
 });

@@ -1,44 +1,17 @@
-import { browser } from '$app/environment';
 import { derived, get, writable } from 'svelte/store';
-import { getMarketClient } from '$lib/shared/integrations/market';
 import type { AggregatedCatalogItem } from '$lib/areas/market/model';
 import { pickFirstProductImageUrl } from '$lib/areas/market/services';
 import { gnosisConfig } from '$lib/shared/config/circles';
+import { getMarketClient } from '$lib/shared/integrations/market';
+import type { Basket, CartState, CheckoutResult, SdkCartItem } from './types';
+import type { BasketPatch, OrderItemPreview } from './types';
+import { readBasketId, writeBasketId } from './basketIdStorage';
+import { normalizeAddr, normalizeSku, toSdkItemsFromBasket, lineQty, normalizeImageUrl } from './basketUtils';
+import { fetchBasketById, patchBasket } from './cartHttp';
 
-type CheckoutResult = { orderId: string; paymentReference: string; basketId: string };
-
-type BasketLine = {
-  seller?: unknown;
-  sku?: unknown;
-  orderedItem?: {
-    sku?: unknown;
-    orderedItem?: {
-      sku?: unknown;
-    };
-  };
-  orderQuantity?: unknown;
-  quantity?: unknown;
-  imageUrl?: unknown;
-};
-
-type Basket = {
-  basketId?: string;
-  buyer?: string;
-  status?: string;
-  items?: BasketLine[];
-};
-
-type CartState = {
-  loading: boolean;
-  lastError: string | null;
-
-  basket: Basket | null;
-  validation: unknown | null;
-  orderPreview: unknown | null;
-  lastCheckout: CheckoutResult | null;
-};
-
-const KEY_BASKET_ID = 'circles_market_basket_id';
+export type { BasketPatch, OrderItemPreview };
+export type { Basket };
+export { patchBasket };
 
 const initialState: CartState = {
   loading: false,
@@ -53,47 +26,13 @@ export const cartState = writable<CartState>(initialState);
 
 // Derived store: total quantity across all basket lines
 export const cartItemCount = derived(cartState, ($cart) => {
-  const items = Array.isArray($cart.basket?.items) ? ($cart.basket?.items as BasketLine[]) : [];
+  const items = Array.isArray($cart.basket?.items) ? $cart.basket!.items! : [];
   let total = 0;
   for (const it of items) {
     total += lineQty(it);
   }
   return total;
 });
-
-function readBasketId(): string | null {
-  if (!browser) return null;
-  try {
-    const v = window.localStorage.getItem(KEY_BASKET_ID);
-    return v && v.trim().length > 0 ? v.trim() : null;
-  } catch {
-    return null;
-  }
-}
-
-function writeBasketId(id: string | null): void {
-  if (!browser) return;
-  try {
-    if (!id) {
-      window.localStorage.removeItem(KEY_BASKET_ID);
-    } else {
-      window.localStorage.setItem(KEY_BASKET_ID, id);
-    }
-  } catch (e) {
-    // Surface storage failures to aid debugging but keep soft-fail behavior
-    console.error('[cart] Failed to persist basket id to localStorage:', e);
-    try {
-      // Only surface to UI in dev builds to avoid noisy errors for users
-      const meta = typeof import.meta !== 'undefined' ? (import.meta as { env?: { DEV?: boolean } }) : null;
-      if (meta?.env?.DEV) {
-        const msg = e instanceof Error ? e.message : String(e ?? 'storage error');
-        setError(`Basket storage unavailable: ${msg}`);
-      }
-    } catch {
-      // no-op: avoid cascading errors
-    }
-  }
-}
 
 function setLoading(loading: boolean): void {
   cartState.update((s) => ({ ...s, loading }));
@@ -109,58 +48,8 @@ function clearError(): void {
   cartState.update((s) => ({ ...s, lastError: null }));
 }
 
-function normalizeAddr(a: string): string {
-  return String(a ?? '').toLowerCase();
-}
-
-function normalizeSku(s: string): string {
-  return String(s ?? '').toLowerCase();
-}
-
-function lineSeller(line: BasketLine): string | null {
-  const s = line?.seller;
-  return typeof s === 'string' && s ? normalizeAddr(s) : null;
-}
-
-function lineSku(line: BasketLine): string | null {
-  const sku =
-    line?.orderedItem?.sku ??
-    line?.sku ??
-    line?.orderedItem?.orderedItem?.sku ??
-    null;
-  return typeof sku === 'string' && sku ? normalizeSku(sku) : null;
-}
-
-function lineQty(line: BasketLine): number {
-  const q = line?.orderQuantity ?? line?.quantity ?? 0;
-  const n = typeof q === 'number' ? q : Number(q ?? 0);
-  if (!Number.isFinite(n) || n < 0) return 0;
-  return n;
-}
-
-function toSdkItemsFromBasket(basket: Basket | null): { seller: string; sku: string; quantity: number; imageUrl?: string }[] {
-  const items = Array.isArray(basket?.items) ? basket!.items : [];
-  const out: { seller: string; sku: string; quantity: number; imageUrl?: string }[] = [];
-  for (const it of items) {
-    const seller = lineSeller(it);
-    const sku = lineSku(it);
-    const quantity = lineQty(it);
-    if (!seller || !sku) continue;
-    out.push({ seller, sku, quantity, imageUrl: typeof it?.imageUrl === 'string' ? it.imageUrl : undefined });
-  }
-  return out;
-}
-
-async function fetchBasketById(basketId: string): Promise<Basket> {
-  const client = getMarketClient();
-  const token = client.authContext?.getToken?.();
-  const authHeaders = token ? { Authorization: `Bearer ${token}` } : undefined;
-
-  return await client.http.request<Basket>({
-    method: 'GET',
-    url: `${client.marketApiBase}/api/cart/v1/baskets/${encodeURIComponent(basketId)}`,
-    headers: authHeaders,
-  });
+function writeBasketIdWithDevUiSurface(id: string | null): void {
+  writeBasketId(id, { onDevError: (msg) => setError(msg) });
 }
 
 async function ensureBasketId(buyer: string): Promise<string> {
@@ -182,12 +71,12 @@ async function ensureBasketId(buyer: string): Promise<string> {
 
     if (basket && !isClosed && !buyerMismatch) {
       cartState.update((s) => ({ ...s, basket }));
-      writeBasketId(String(basket.basketId));
+      writeBasketIdWithDevUiSurface(String(basket.basketId));
       return String(basket.basketId);
     }
 
     // Stored basket is invalid/closed or buyer mismatch; drop it
-    writeBasketId(null);
+    writeBasketIdWithDevUiSurface(null);
     cartState.update((s) => ({ ...s, basket: null }));
   }
 
@@ -202,7 +91,7 @@ async function ensureBasketId(buyer: string): Promise<string> {
     chainId: gnosisConfig.production.marketChainId,
   });
 
-  writeBasketId(created.basketId);
+  writeBasketIdWithDevUiSurface(created.basketId);
   return created.basketId;
 }
 
@@ -217,7 +106,7 @@ async function reloadBasketIfPresent(): Promise<void> {
     cartState.update((s) => ({ ...s, basket: b }));
   } catch (e) {
     // If the basket is gone/invalid, drop it locally
-    writeBasketId(null);
+    writeBasketIdWithDevUiSurface(null);
     cartState.update((s) => ({ ...s, basket: null }));
     setError(e);
   } finally {
@@ -225,162 +114,8 @@ async function reloadBasketIfPresent(): Promise<void> {
   }
 }
 
-if (browser) {
+if (typeof window !== 'undefined') {
   void reloadBasketIfPresent();
-}
-
-export type OrderItemPreview = {
-  '@type': 'OrderItem';
-  orderQuantity: number;
-  orderedItem: { '@type': 'Product'; sku: string };
-  seller: string;
-  imageUrl?: string;
-};
-
-export type BasketPatch = {
-  items?: OrderItemPreview[];
-  shippingAddress?: unknown;
-  billingAddress?: unknown;
-  ageProof?: unknown;
-  contactPoint?: unknown;
-  customer?: unknown;
-  ttlSeconds?: number;
-};
-
-type BasketPatchItem = {
-  seller: string;
-  orderedItem: { '@type': 'Product'; sku: string };
-  orderQuantity: number;
-  imageUrl?: string;
-};
-
-export async function patchBasket(basketId: string, patch: BasketPatch): Promise<Basket> {
-  const client = getMarketClient();
-
-  const hasItemsPatch = Array.isArray(patch.items);
-
-  const hasTtlPatch = patch.ttlSeconds !== undefined && patch.ttlSeconds !== null;
-
-  const hasDetailsPatch =
-    patch.shippingAddress !== undefined ||
-    patch.billingAddress !== undefined ||
-    patch.contactPoint !== undefined ||
-    patch.ageProof !== undefined ||
-    patch.customer !== undefined;
-
-  function ensureTyped(obj: unknown, typeName: string): unknown | undefined {
-    const isNil = obj === null || obj === undefined;
-    if (isNil) return undefined;
-    const isObj = typeof obj === 'object' && !Array.isArray(obj);
-    if (!isObj) return obj;
-
-    const rec = obj as Record<string, unknown>;
-    const type = rec['@type'];
-    const hasType = typeof type === 'string' && type.length > 0;
-    if (hasType) return obj;
-
-    return {'@type': typeName, ...obj};
-  }
-
-  function normalizeImageUrl(u: unknown): string | undefined {
-    const s = typeof u === 'string' ? u.trim() : '';
-    return s.length > 0 ? s : undefined;
-  }
-
-  function buildPatchItems(): BasketPatchItem[] {
-    if (!hasItemsPatch) return [];
-    return patch.items!
-      .map((it) => ({
-        seller: normalizeAddr(it.seller),
-        orderedItem: { '@type': 'Product' as const, sku: normalizeSku(it.orderedItem?.sku) },
-        orderQuantity: Number(it.orderQuantity ?? 0),
-        imageUrl: normalizeImageUrl(it.imageUrl),
-      }))
-      .filter((x) => x.seller && x.orderedItem?.sku && x.orderQuantity > 0);
-  }
-
-  function buildDetailsBody(): Record<string, unknown> {
-    const body: Record<string, unknown> = {};
-
-    const shipping = ensureTyped(patch.shippingAddress ?? undefined, 'PostalAddress');
-    const billing = ensureTyped(patch.billingAddress ?? undefined, 'PostalAddress');
-    const contact = ensureTyped(patch.contactPoint ?? undefined, 'ContactPoint');
-    const age = ensureTyped(patch.ageProof ?? undefined, 'Person');
-    const customer = ensureTyped(patch.customer ?? undefined, 'Person');
-
-    if (shipping !== undefined) body.shippingAddress = shipping;
-    if (billing !== undefined) body.billingAddress = billing;
-    if (contact !== undefined) body.contactPoint = contact;
-    if (age !== undefined) body.ageProof = age;
-    if (customer !== undefined) body.customer = customer;
-
-    if (hasTtlPatch) {
-      const ttl = Number(patch.ttlSeconds);
-      const ttlOk = Number.isFinite(ttl) && ttl > 0;
-      if (!ttlOk) {
-        throw new Error(`Invalid ttlSeconds: ${patch.ttlSeconds}`);
-      }
-      body.ttlSeconds = Math.floor(ttl);
-    }
-
-    return body;
-  }
-
-  const needsDirectPatch =
-    (hasItemsPatch && (hasDetailsPatch || hasTtlPatch)) ||
-    (hasTtlPatch && !hasItemsPatch);
-
-  if (needsDirectPatch) {
-    const token = client.authContext?.getToken?.();
-    const body: Record<string, unknown> = {};
-
-    if (hasItemsPatch) {
-      body.items = buildPatchItems();
-    }
-
-    const details = buildDetailsBody();
-    for (const [k, v] of Object.entries(details)) {
-      body[k] = v;
-    }
-
-    return await client.http.request<Basket>({
-      method: 'PATCH',
-      url: `${client.marketApiBase}/api/cart/v1/baskets/${encodeURIComponent(basketId)}`,
-      headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-      body,
-    });
-  }
-
-  // Otherwise keep the existing single-operation behavior.
-  let updated: Basket | null = null;
-
-  if (hasItemsPatch) {
-    const items = patch.items!
-      .map((it) => ({
-        seller: normalizeAddr(it.seller),
-        sku: normalizeSku(it.orderedItem?.sku),
-        quantity: Number(it.orderQuantity ?? 0),
-        imageUrl: normalizeImageUrl(it.imageUrl),
-      }))
-      .filter((x) => x.seller && x.sku && x.quantity > 0);
-
-    updated = await client.cart.setItems({ basketId, items });
-  }
-
-  if (hasDetailsPatch) {
-    updated = await client.cart.setCheckoutDetails({
-      basketId,
-      shippingAddress: patch.shippingAddress ?? undefined,
-      billingAddress: patch.billingAddress ?? undefined,
-      contactPoint: patch.contactPoint ?? undefined,
-      ageProof: patch.ageProof ?? undefined,
-    });
-  }
-
-  if (!updated) {
-    return await fetchBasketById(basketId);
-  }
-  return updated;
 }
 
 // Indirection for testability: Vitest cannot reliably spy on ESM live bindings, but can spy on
@@ -396,7 +131,7 @@ export const cartApi: {
 
 async function setItemsForBasket(
   basketId: string,
-  items: { seller: string; sku: string; quantity: number; imageUrl?: string }[],
+  items: SdkCartItem[],
 ): Promise<Basket> {
   // Convert to OrderItemPreview shape so tests can spy on payload semantics
   const orderItems: OrderItemPreview[] = items.map((it) => ({
@@ -460,7 +195,7 @@ export async function addToCart(product: AggregatedCatalogItem, buyer: string | 
 
     const idx = items.findIndex((x) => x.seller === seller && x.sku === sku);
 
-    let nextItems: { seller: string; sku: string; quantity: number; imageUrl?: string }[];
+    let nextItems: SdkCartItem[];
     if (idx >= 0) {
       const cur = items[idx];
       nextItems = items.slice();
@@ -697,7 +432,7 @@ export async function upsertLineByIdentity(
     const items = toSdkItemsFromBasket(basket);
     const idx = items.findIndex((x) => x.seller === seller && x.sku === sku);
 
-    const img = typeof imageUrl === 'string' && imageUrl.trim().length > 0 ? imageUrl.trim() : undefined;
+    const img = normalizeImageUrl(imageUrl);
 
     const nextItems =
       idx >= 0
@@ -726,6 +461,6 @@ export async function upsertLineItem(item: AggregatedCatalogItem, quantity: numb
 }
 
 export function clearCart(): void {
-  writeBasketId(null);
+  writeBasketIdWithDevUiSurface(null);
   cartState.set({ ...initialState });
 }
