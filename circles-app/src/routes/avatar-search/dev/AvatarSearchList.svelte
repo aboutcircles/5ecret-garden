@@ -1,5 +1,7 @@
 <script lang="ts">
   import GenericList from '$lib/shared/ui/common/GenericList.svelte';
+  import ListStates from '$lib/shared/ui/common/ListStates.svelte';
+  import ListToolbar from '$lib/shared/ui/common/ListToolbar.svelte';
   import { isVipProfileBookmark, profileBookmarksStore } from '$lib/areas/settings/state/profileBookmarks';
   import { contacts } from '$lib/domains/profile/state';
   import { circles } from '$lib/shared/state/circles';
@@ -14,7 +16,7 @@
   const MIN_REMOTE_QUERY_LENGTH = 2;
   const REMOTE_DEBOUNCE_MS = 100;
 
-  let query: string = $state('');
+  const query = writable('');
   let remoteRows: AvatarSearchItem[] = $state([]);
   let remoteLoading = $state(false);
   let remoteError: string | null = $state(null);
@@ -91,7 +93,7 @@
   }
 
   let localRows: AvatarSearchItem[] = $derived.by(() => {
-    const q = query.trim().toLowerCase();
+    const q = ($query ?? '').trim().toLowerCase();
     const contactData = $contacts?.data ?? {};
     const bookmarks = $profileBookmarksStore ?? [];
     const map = new Map<string, AvatarSearchItem>();
@@ -157,7 +159,7 @@
   }
 
   $effect(() => {
-    const q = query.trim();
+    const q = ($query ?? '').trim();
 
     if (remoteDebounceTimeout) {
       clearTimeout(remoteDebounceTimeout);
@@ -195,7 +197,7 @@
   });
 
   let mergedRows: AvatarSearchItem[] = $derived.by(() => {
-    const q = query.trim().toLowerCase();
+    const q = ($query ?? '').trim().toLowerCase();
     return mergeRows(localRows, remoteRows, q);
   });
 
@@ -204,34 +206,26 @@
   });
 </script>
 
-<div class="mb-3">
-  <input
-    type="text"
-    class="input input-bordered w-full"
-    placeholder="Search avatars by name or address"
-    bind:value={query}
-  />
-  <div class="mt-2 text-xs text-base-content/60 flex items-center gap-2">
-    <span>{mergedRows.length} result(s)</span>
-    {#if query.trim().length > 0 && query.trim().length < MIN_REMOTE_QUERY_LENGTH}
-      <span>• Type at least {MIN_REMOTE_QUERY_LENGTH} chars for remote search</span>
-    {/if}
-    {#if remoteLoading}
-      <span class="inline-flex items-center gap-1">
-        <span class="loading loading-spinner loading-xs text-primary" aria-hidden="true"></span>
-        <span>Searching network…</span>
-      </span>
-    {/if}
-  </div>
+<ListToolbar query={query} placeholder="Search avatars by name or address" />
+
+<div class="-mt-1 mb-3 text-xs text-base-content/60 flex items-center gap-2">
+  <span>{mergedRows.length} result(s)</span>
+  {#if ($query ?? '').trim().length > 0 && ($query ?? '').trim().length < MIN_REMOTE_QUERY_LENGTH}
+    <span>• Type at least {MIN_REMOTE_QUERY_LENGTH} chars for remote search</span>
+  {/if}
+  {#if remoteLoading}
+    <span class="inline-flex items-center gap-1">
+      <span class="loading loading-spinner loading-xs text-primary" aria-hidden="true"></span>
+      <span>Searching network…</span>
+    </span>
+  {/if}
 </div>
 
-{#if remoteError}
-  <div class="mb-3 text-sm text-error">{remoteError}</div>
-{/if}
-
-{#if mergedRows.length === 0}
-  <div class="w-full py-6 text-center text-base-content/60">No matches</div>
-{:else}
+<ListStates
+  error={remoteError}
+  isEmpty={mergedRows.length === 0}
+  emptyLabel="No matches"
+>
   <GenericList
     store={paginatedRows}
     row={AvatarSearchRow}
@@ -240,4 +234,4 @@
     maxPlaceholderPages={1}
     expectedPageSize={PAGE_SIZE}
   />
-{/if}
+</ListStates>
