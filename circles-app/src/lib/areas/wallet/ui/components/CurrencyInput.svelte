@@ -32,9 +32,10 @@
         // placeholderChar: '_',  // <-- removed on purpose
     };
 
+    let maxDisplayAmount = $derived(maxAmountCircles >= 0 ? maxAmountCircles : balanceRow.circles);
+
     function clampToMax(n: number): number {
-        const cap = maxAmountCircles >= 0 ? maxAmountCircles : balanceRow.circles;
-        return Math.max(0, Math.min(n, cap));
+        return Math.max(0, Math.min(n, maxDisplayAmount));
     }
 
     function setFromText(text: string) {
@@ -52,7 +53,7 @@
     }
 
     function setMaxAmount() {
-        const value = maxAmountCircles >= 0 ? roundToDecimals(maxAmountCircles) : roundToDecimals(balanceRow.circles);
+        const value = roundToDecimals(maxDisplayAmount);
         amount = value;
         if (inputElement) {
             inputElement.value = value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
@@ -133,9 +134,7 @@
 </div>
 
 <p class="font-medium text-sm mt-4">
-    {maxAmountCircles >= 0
-        ? roundToDecimals(maxAmountCircles)
-        : '?'} <span class="text-gray-500">/ {roundToDecimals(balanceRow.circles)} CRC
+    {roundToDecimals(maxDisplayAmount)} <span class="text-gray-500">/ {roundToDecimals(balanceRow.circles)} CRC
         <Tooltip content="The max. amount depends on your trust network and blockchain limits. Try to chunk large transfers if you experience issues."/></span>
     <button class="btn btn-sm ml-4 font-normal" onclick={setMaxAmount}>
         Use Max
