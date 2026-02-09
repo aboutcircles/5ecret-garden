@@ -473,6 +473,12 @@ import { TrustScoreBadge } from '$lib/domains/profile/ui';
         if (otherAvatar?.type === 'CrcV2_RegisterGroup') ids.push('collateral');
         if (otherAvatar?.type === 'CrcV2_RegisterGroup' || otherAvatar?.type === 'CrcV2_RegisterHuman') {
             ids.push('holders');
+        }
+        if (
+            otherAvatar?.type === 'CrcV2_RegisterGroup' ||
+            otherAvatar?.type === 'CrcV2_RegisterHuman' ||
+            otherAvatar?.type === 'CrcV2_RegisterOrganization'
+        ) {
             ids.push('holdings');
         }
         ids.push('offers');
@@ -840,7 +846,9 @@ import { TrustScoreBadge } from '$lib/domains/profile/ui';
                 {/if}
             </div>
         </Tab>
+    {/if}
 
+    {#if otherAvatar?.type === 'CrcV2_RegisterGroup' || otherAvatar?.type === 'CrcV2_RegisterHuman' || otherAvatar?.type === 'CrcV2_RegisterOrganization'}
         <Tab
                 id="holdings"
                 title="Holdings"
