@@ -7,13 +7,14 @@
   import type { Address } from '@circles-sdk/utils';
   import ImportCircles from '$lib/areas/wallet/ui/onboarding/ImportCircles.svelte';
   import { CirclesStorage } from '$lib/shared/utils/storage';
+  import { setConnectorId } from '$lib/shared/state/connector';
   const connectors = getConnectors(config);
 
   async function handleConnect(connector: ReturnType<typeof getConnectors>[number]) {
     try {
       await clearSession();
       const result = await connect(config, { connector, chainId: 100 });
-      localStorage.setItem('connectorId', connector.id);
+      setConnectorId(connector.id);
       // Safely set signer address only if an account is returned
       const addr0 = (result as any)?.accounts?.[0];
       if (typeof addr0 === 'string' && addr0) {

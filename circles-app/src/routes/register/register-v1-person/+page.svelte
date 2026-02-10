@@ -4,7 +4,6 @@
     import Disclaimer from '$lib/shared/ui/common/Disclaimer.svelte';
     import {avatarState} from '$lib/shared/state/avatar.svelte';
     import {circles} from '$lib/shared/state/circles';
-    import type {Avatar} from '@circles-sdk/sdk';
     import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
     import { ArrowLeft as LArrowLeft } from 'lucide';
     import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
@@ -16,8 +15,7 @@
             throw new Error('Wallet not connected ($circles is undefined)');
         }
 
-        //TODO: why need to bind it as Avatar
-        avatarState.avatar = (await $circles.registerHuman()) as Avatar;
+        avatarState.avatar = await $circles.registerHuman();
 
         await goto('/dashboard');
     }

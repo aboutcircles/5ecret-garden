@@ -22,6 +22,7 @@ import {config} from '../../../config';
 import {settings} from './settings.svelte';
 import type {GroupType} from '@circles-sdk/data';
 import {privateKeyToAccount} from 'viem/accounts';
+import { clearConnectorId, getConnectorId } from '$lib/shared/state/connector';
 
 export const wallet = writable<SdkContractRunner | undefined>();
 
@@ -32,7 +33,7 @@ export let signer: { address: Address | undefined, privateKey: string | undefine
 });
 
 export async function getSigner() {
-    const connectorId = localStorage.getItem('connectorId');
+    const connectorId = getConnectorId();
     const connectors = getConnectors(config);
 
     // Try stored connector first if present; otherwise, try a generic reconnect
@@ -175,13 +176,12 @@ export async function restoreSession() {
 }
 
 export async function clearSession() {
-    //TODO: create a state for the connector
-    const connectorId = localStorage.getItem('connectorId');
+    const connectorId = getConnectorId();
     const connector = getConnectors(config).find((c) => c.id == connectorId);
     if (connector) {
         await disconnect(config, {connector: connector});
-        localStorage.removeItem('connectorId');
     }
+    clearConnectorId();
     Object.assign(groupMetrics, {
         memberCountPerHour: undefined,
         memberCountPerDay: undefined,
