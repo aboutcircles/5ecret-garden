@@ -30,19 +30,16 @@
   import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
   import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
   import type { Action } from '$lib/shared/ui/shell/actions';
-  import ActionButton from '$lib/shared/ui/common/ActionButton.svelte';
   import { getProfilesBindings } from '$lib/areas/market/offers';
-  import { runTask } from '$lib/shared/utils/tasks';
-  import { removeProfileFromCache } from '$lib/shared/utils/profile';
   import { CirclesStorage } from '$lib/shared/utils/storage';
   import { gnosisConfig } from '$lib/shared/config/circles';
+  import {
+    loadNamespacesProfileForSettings,
+    saveNamespacesProfileForSettings,
+  } from '$lib/areas/settings/state/settingsNamespaces';
 
   // ——— Marketplace (duplicate of /market/[seller], but seller = connected avatar) ———
-  import {
-    loadProfileOrInit,
-    normalizeEvmAddress as normalizeAddress,
-    rebaseAndSaveProfile,
-  } from '@circles-market/sdk';
+  import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
   import type { AggregatedCatalogItem } from '$lib/areas/market/model';
   import OfferStep1 from '$lib/areas/market/flows/offer/1_Product.svelte';
   import { getMarketClient } from '$lib/shared/integrations/market';
@@ -397,10 +394,6 @@
     !!connectedAvatarLower && !!nsAvatarLower && connectedAvatarLower === nsAvatarLower,
   );
 
-  function getNsBindings() {
-    return getProfilesBindings({ pinApiBase }).bindings;
-  }
-
   async function loadNamespacesProfile(): Promise<void> {
     nsLoading = true;
     nsError = null;
@@ -408,12 +401,12 @@
     nsNamespaces = {};
 
     try {
-      if (!avatarAddress) return;
-      const norm = normalizeAddress(avatarAddress) as Address;
-      nsResolvedAvatar = norm;
-      const { profile } = await loadProfileOrInit(getNsBindings(), norm);
-      const nsObj = profile.namespaces && typeof profile.namespaces === 'object' ? profile.namespaces : {};
-      nsNamespaces = { ...(nsObj as Record<string, string>) };
+      const loaded = await loadNamespacesProfileForSettings({
+        avatarAddress,
+        pinApiBase,
+      });
+      nsResolvedAvatar = loaded.resolvedAvatar;
+      nsNamespaces = loaded.namespaces;
     } catch (e: any) {
       nsError = String(e?.message ?? e);
     } finally {
@@ -437,17 +430,10 @@
   async function saveNamespacesProfile(): Promise<void> {
     if (!nsResolvedAvatar) return;
     if (!nsIsOwner) return;
-    const bindings = getNsBindings();
-
-    await runTask({
-      name: 'Saving namespaces…',
-      promise: (async () => {
-        const cid = await rebaseAndSaveProfile(bindings, nsResolvedAvatar!, (p: any) => {
-          p.namespaces = nsNamespaces;
-        });
-        await bindings.updateAvatarProfileDigest(nsResolvedAvatar!, cid);
-        removeProfileFromCache(nsResolvedAvatar!);
-      })(),
+    await saveNamespacesProfileForSettings({
+      resolvedAvatar: nsResolvedAvatar,
+      namespaces: nsNamespaces,
+      pinApiBase,
     });
   }
 
