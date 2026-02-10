@@ -13,12 +13,14 @@
   } from 'lucide';
   import {
     bookmarksStateStore,
+    profileBookmarksUnpublishedChangesStore,
     profileBookmarksService,
     profileBookmarksStore,
     VIP_BOOKMARK_FOLDER,
     type ProfileBookmark,
   } from '$lib/areas/settings/state/profileBookmarks';
   import BookmarkDetailsPopup from './BookmarkDetailsPopup.svelte';
+  import { runTask } from '$lib/shared/utils/tasks';
 
   type FolderNode = {
     name: string;
@@ -41,6 +43,15 @@
   let expandedFolders: Record<string, boolean> = $state({});
   let draggingAddress: string | null = $state(null);
   let dragOverFolder: string | null = $state(null);
+  let deleteFolderTarget: string | null = $state(null);
+  let deleteFolderWithBookmarks = $state(false);
+  let hasUnpublishedProfileChanges = $state(false);
+  let loadingFromProfile = $state(false);
+  let publishing = $state(false);
+  let loadError: string | null = $state(null);
+  let loadSuccessAt: number | null = $state(null);
+  let publishError: string | null = $state(null);
+  let publishSuccessAt: number | null = $state(null);
 
   const connectedAvatar = $derived(
     (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '').toLowerCase(),
@@ -187,6 +198,13 @@
     return () => unsubscribe();
   });
 
+  $effect(() => {
+    const unsubscribe = profileBookmarksUnpublishedChangesStore.subscribe((value) => {
+      hasUnpublishedProfileChanges = value;
+    });
+    return () => unsubscribe();
+  });
+
   function createFolder(): void {
     const saved = profileBookmarksService.ensureProfileFolder(newFolderName);
     if (!saved) return;
@@ -194,14 +212,24 @@
     newFolderName = '';
   }
 
-  function removeFolder(path: string): void {
+  function askRemoveFolder(path: string): void {
     if (!path) return;
     if (path.toLowerCase() === VIP_BOOKMARK_FOLDER.toLowerCase()) return;
-    const ok = window.confirm(
-      `Delete folder "${path}"? Bookmarks inside will be moved to “Unsorted”. This cannot be undone.`,
-    );
-    if (!ok) return;
-    profileBookmarksService.removeProfileFolder(path);
+    deleteFolderTarget = path;
+    deleteFolderWithBookmarks = false;
+  }
+
+  function cancelRemoveFolder(): void {
+    deleteFolderTarget = null;
+    deleteFolderWithBookmarks = false;
+  }
+
+  function confirmRemoveFolder(): void {
+    if (!deleteFolderTarget) return;
+    profileBookmarksService.removeProfileFolder(deleteFolderTarget, {
+      deleteBookmarks: deleteFolderWithBookmarks,
+    });
+    cancelRemoveFolder();
   }
 
   function setBookmarkFolderByAddress(address: string, folder: string | undefined): void {
@@ -255,22 +283,83 @@
       },
     });
   }
+
+  async function publishInProfile(): Promise<void> {
+    if (!connectedAvatar || publishing) return;
+    publishing = true;
+    publishError = null;
+    publishSuccessAt = null;
+
+    try {
+      await runTask({
+        name: 'Publishing bookmarks to profile…',
+        promise: profileBookmarksService.publishToProfile(),
+      });
+      publishSuccessAt = Date.now();
+    } catch (e: unknown) {
+      publishError = e instanceof Error ? e.message : String(e);
+    } finally {
+      publishing = false;
+    }
+  }
+
+  async function loadFromProfile(): Promise<void> {
+    if (!connectedAvatar || loadingFromProfile) return;
+    loadingFromProfile = true;
+    loadError = null;
+    loadSuccessAt = null;
+
+    try {
+      await runTask({
+        name: 'Loading bookmarks from profile…',
+        promise: profileBookmarksService.syncFromProfile(),
+      });
+      loadSuccessAt = Date.now();
+    } catch (e: unknown) {
+      loadError = e instanceof Error ? e.message : String(e);
+    } finally {
+      loadingFromProfile = false;
+    }
+  }
 </script>
 
 <section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
-  <div>
-    <h3 class="text-sm font-semibold m-0">Bookmarks</h3>
-    <p class="text-xs text-base-content/70 mt-0.5">Saved profiles for your currently connected avatar.</p>
-    {#if connectedAvatar}
-      <p class="text-[11px] text-base-content/60 mt-1 font-mono break-all">{connectedAvatar}</p>
-    {/if}
+  <div class="flex items-start justify-between gap-3">
+    <div>
+      <h3 class="text-sm font-semibold m-0">Bookmarks</h3>
+      <p class="text-xs text-base-content/70 mt-0.5">Local bookmarks are authoritative. Load/save profile data manually.</p>
+      {#if connectedAvatar}
+        <p class="text-[11px] text-base-content/60 mt-1 font-mono break-all">{connectedAvatar}</p>
+      {/if}
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button class="btn btn-sm btn-ghost" type="button" onclick={loadFromProfile} disabled={!connectedAvatar || loadingFromProfile}>
+        {#if loadingFromProfile}
+          <span class="loading loading-spinner loading-xs"></span>
+        {/if}
+        Load from profile
+      </button>
+
+      <button
+        class={`btn btn-sm ${hasUnpublishedProfileChanges ? 'btn-primary' : 'btn-ghost'}`}
+        type="button"
+        onclick={publishInProfile}
+        disabled={!connectedAvatar || publishing || !hasUnpublishedProfileChanges}
+      >
+        {#if publishing}
+          <span class="loading loading-spinner loading-xs"></span>
+        {/if}
+        Save to profile
+      </button>
+    </div>
   </div>
 </section>
 
 <section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
   <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3">
     <div class="text-xs text-base-content/70">Drag bookmark items via the grip into folders</div>
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-2 flex-wrap justify-end">
       <input
         class="input input-bordered input-xs w-40"
         type="text"
@@ -281,6 +370,16 @@
       <button class="btn btn-xs" type="button" onclick={createFolder}>Add</button>
     </div>
   </div>
+
+  {#if loadError}
+    <div class="alert alert-error py-2 text-xs mb-2">{loadError}</div>
+  {:else if publishError}
+    <div class="alert alert-error py-2 text-xs mb-2">{publishError}</div>
+  {:else if loadSuccessAt}
+    <div class="alert alert-success py-2 text-xs mb-2">Bookmarks loaded from profile (new entries only).</div>
+  {:else if publishSuccessAt}
+    <div class="alert alert-success py-2 text-xs mb-2">Bookmarks saved to profile.</div>
+  {/if}
 
   <div class="space-y-2">
     {#if sortedBookmarks.length === 0 && folders.length === 0}
@@ -303,9 +402,9 @@
         {#if uncategorizedBookmarks.length > 0}
           <div class="divide-y divide-base-200">
             {#each uncategorizedBookmarks as bookmark (bookmark.address)}
-              <div class="py-1.5 px-2 flex items-stretch gap-2">
+              <div class="py-1.5 px-2 flex items-center gap-2">
                 <button
-                  class="btn btn-ghost btn-xs btn-square mt-1 cursor-grab"
+                  class="btn btn-ghost btn-xs btn-square shrink-0 self-center cursor-grab active:cursor-grabbing"
                   type="button"
                   title="Drag bookmark"
                   draggable="true"
@@ -367,7 +466,7 @@
               type="button"
               disabled={folderRow.path.toLowerCase() === VIP_BOOKMARK_FOLDER.toLowerCase()}
               title="Delete folder"
-              onclick={() => removeFolder(folderRow.path)}
+              onclick={() => askRemoveFolder(folderRow.path)}
             >
               <Lucide icon={LTrash2} size={13} />
             </button>
@@ -376,9 +475,9 @@
           {#if isFolderExpanded(folderRow.path) && bookmarksForFolder(folderRow.path).length > 0}
             <div class="divide-y divide-base-200">
               {#each bookmarksForFolder(folderRow.path) as bookmark (bookmark.address)}
-                <div class="py-1.5 px-2 flex items-stretch gap-2">
+                <div class="py-1.5 px-2 flex items-center gap-2">
                   <button
-                    class="btn btn-ghost btn-xs btn-square mt-1 cursor-grab"
+                    class="btn btn-ghost btn-xs btn-square shrink-0 self-center cursor-grab active:cursor-grabbing"
                     type="button"
                     title="Drag bookmark"
                     draggable="true"
@@ -414,3 +513,24 @@
       {/each}
   </div>
 </section>
+
+{#if deleteFolderTarget}
+  <div class="fixed inset-0 z-40 bg-black/40 flex items-center justify-center p-4" onclick={cancelRemoveFolder}>
+    <div class="w-full max-w-md rounded-xl bg-base-100 border border-base-300 p-4" onclick={(event) => event.stopPropagation()}>
+      <h4 class="text-sm font-semibold m-0">Delete folder</h4>
+      <p class="text-xs text-base-content/70 mt-2 mb-3">
+        Delete folder “{deleteFolderTarget}”? By default bookmarks inside are moved to <strong>Unsorted</strong>.
+      </p>
+
+      <label class="label cursor-pointer justify-start gap-2 px-0 py-0 mb-4">
+        <input class="checkbox checkbox-sm" type="checkbox" bind:checked={deleteFolderWithBookmarks} />
+        <span class="label-text text-sm">Also delete all bookmarks inside this folder</span>
+      </label>
+
+      <div class="flex justify-end gap-2">
+        <button class="btn btn-ghost btn-sm" type="button" onclick={cancelRemoveFolder}>Cancel</button>
+        <button class="btn btn-error btn-sm" type="button" onclick={confirmRemoveFolder}>Delete folder</button>
+      </div>
+    </div>
+  </div>
+{/if}

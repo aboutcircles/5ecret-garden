@@ -1,5 +1,13 @@
 import { browser } from '$app/environment';
 import { get, writable, type Readable } from 'svelte/store';
+import type { Address } from '@circles-sdk/utils';
+import type { CidV0 } from '$lib/areas/market/offers';
+import { getProfilesBindings } from '$lib/areas/market/offers';
+import { gnosisConfig } from '$lib/shared/config/circles';
+import { getWalletProvider } from '$lib/shared/integrations/wallet';
+import { getMarketClient } from '$lib/shared/integrations/market';
+import { buildLinkDraft, canonicaliseLink, loadProfileOrInit } from '@circles-market/sdk';
+import { loadNamespaceLinks, rewriteNamespaceFromLinks } from '$lib/domains/profile/model';
 
 export interface ProfileBookmark {
   address: string;
@@ -18,10 +26,6 @@ export interface BookmarksState {
 
 interface PersistedBookmarksState {
   owners?: Record<string, Partial<BookmarksState>>;
-  // legacy, app-global shape
-  profiles?: unknown[];
-  products?: unknown[];
-  folders?: unknown[];
 }
 
 type LooseBookmarksState = {
@@ -37,6 +41,8 @@ export interface BookmarksRepository {
 
 export interface ProfileBookmarksService {
   subscribe(run: (state: BookmarksState) => void): () => void;
+  subscribeHasUnpublishedProfileChanges(run: (value: boolean) => void): () => void;
+  hasUnpublishedProfileChanges(): boolean;
   getState(): BookmarksState;
   getProfileFolders(): string[];
   getProfileBookmark(address: string | null | undefined): ProfileBookmark | undefined;
@@ -51,12 +57,22 @@ export interface ProfileBookmarksService {
   ): ProfileBookmark | undefined;
   removeProfile(address: string): void;
   ensureProfileFolder(name: string): string | undefined;
-  removeProfileFolder(name: string): void;
+  removeProfileFolder(
+    name: string,
+    options?: {
+      deleteBookmarks?: boolean;
+    }
+  ): void;
+  syncFromProfile(): Promise<void>;
+  publishToProfile(): Promise<void>;
 }
 
 const STORAGE_KEY = 'Circles.Bookmarks';
 const CIRCLES_STORAGE_KEY = 'Circles.Storage';
 const DEFAULT_OWNER_KEY = '__default__';
+const BOOKMARKS_NAMESPACE_KEY = '0x37f6819d7c767ea831d8c0e0170b46e6ccbfa304' as Address;
+const BOOKMARKS_LINK_NAME = 'circles/bookmarks-v1';
+const PROFILE_CONTEXT = 'https://aboutcircles.com/contexts/circles-profile/';
 
 const EMPTY_OWNER_STATE: BookmarksState = {
   profiles: [],
@@ -197,20 +213,104 @@ function sanitizePersistedState(state: PersistedBookmarksState | null | undefine
     }
   }
 
-  // migrate old app-global shape into current connected owner
-  const hasLegacyData =
-    Array.isArray(state?.profiles) || Array.isArray(state?.products) || Array.isArray(state?.folders);
-  if (hasLegacyData) {
-    const owner = getConnectedOwnerKey();
-    const current = owners[owner] ?? EMPTY_OWNER_STATE;
-    owners[owner] = sanitizeOwnerState({
-      profiles: [...(current.profiles ?? []), ...(Array.isArray(state?.profiles) ? state!.profiles : [])],
-      products: [...(current.products ?? []), ...(Array.isArray(state?.products) ? state!.products : [])],
-      folders: [...(current.folders ?? []), ...(Array.isArray(state?.folders) ? state!.folders : [])],
-    });
+  return { owners };
+}
+
+function parseBookmarksProfilePayload(payload: unknown): BookmarksState {
+  if (!payload || typeof payload !== 'object') {
+    return EMPTY_OWNER_STATE;
   }
 
-  return { owners };
+  const root = payload as Record<string, unknown>;
+  const nested = root.bookmarks;
+  if (!nested || typeof nested !== 'object') {
+    return EMPTY_OWNER_STATE;
+  }
+
+  return sanitizeOwnerState(nested as LooseBookmarksState);
+}
+
+function toBookmarksProfilePayload(state: BookmarksState): Record<string, unknown> {
+  return {
+    '@context': PROFILE_CONTEXT,
+    '@type': 'Bookmarks',
+    bookmarks: {
+      version: 1,
+      profiles: state.profiles,
+      folders: state.folders,
+      products: state.products,
+    },
+  };
+}
+
+function mergeBookmarkStates(localState: BookmarksState, profileState: BookmarksState): BookmarksState {
+  const bookmarkIdentityWithoutFolder = (bookmark: ProfileBookmark): string => {
+    return normalizeProfileAddress(bookmark.address) ?? bookmark.address.toLowerCase();
+  };
+
+  const seen = new Set(localState.profiles.map((v) => bookmarkIdentityWithoutFolder(v)));
+  const mergedProfiles = [...localState.profiles];
+  for (const remote of profileState.profiles) {
+    const key = bookmarkIdentityWithoutFolder(remote);
+    // Local is authoritative: if we already have this bookmark locally,
+    // ignore remote variants (e.g. different folder/category).
+    if (seen.has(key)) continue;
+    seen.add(key);
+    mergedProfiles.push(remote);
+  }
+
+  const folderSeen = new Set(localState.folders.map((v) => folderKey(v)));
+  const mergedFolders = [...localState.folders];
+  for (const folder of profileState.folders) {
+    const key = folderKey(folder);
+    if (folderSeen.has(key)) continue;
+    folderSeen.add(key);
+    mergedFolders.push(folder);
+  }
+
+  const productSeen = new Set(localState.products);
+  const mergedProducts = [...localState.products];
+  for (const product of profileState.products) {
+    if (productSeen.has(product)) continue;
+    productSeen.add(product);
+    mergedProducts.push(product);
+  }
+
+  return sanitizeOwnerState({
+    profiles: mergedProfiles,
+    folders: mergedFolders,
+    products: mergedProducts,
+  });
+}
+
+function toComparisonState(state: BookmarksState): {
+  profiles: Array<{
+    address: string;
+    createdAt: number;
+    note?: string;
+    folder?: string;
+  }>;
+  folders: string[];
+  products: string[];
+} {
+  return {
+    profiles: [...state.profiles]
+      .map((profile) => ({
+        address: normalizeProfileAddress(profile.address) ?? profile.address,
+        createdAt: profile.createdAt,
+        note: normalizeNote(profile.note),
+        folder: normalizeFolderName(profile.folder),
+      }))
+      .sort((a, b) => a.address.localeCompare(b.address)),
+    folders: [...state.folders]
+      .map((folder) => normalizeFolderName(folder) ?? folder)
+      .sort((a, b) => folderKey(a).localeCompare(folderKey(b))),
+    products: [...state.products].sort((a, b) => a.localeCompare(b)),
+  };
+}
+
+function profileStateComparisonKey(state: BookmarksState): string {
+  return JSON.stringify(toComparisonState(sanitizeOwnerState(state)));
 }
 
 function resolveOwnerState(state: PersistedBookmarksState, ownerKey: string): BookmarksState {
@@ -298,12 +398,89 @@ function createProfileBookmarksService(repository: BookmarksRepository): Profile
   let activeOwnerKey = getConnectedOwnerKey();
   const persisted = writable<PersistedBookmarksState>(repository.load());
   const current = writable<BookmarksState>(resolveOwnerState(get(persisted), activeOwnerKey));
+  const unpublishedChanges = writable(false);
+  let profileSyncInFlight: Promise<void> | null = null;
+  const profileBaselineByOwner = new Map<string, string>();
+
+  const isConnectedOwner = (): boolean => activeOwnerKey !== DEFAULT_OWNER_KEY;
+
+  const updateUnpublishedChanges = (): void => {
+    if (!isConnectedOwner()) {
+      unpublishedChanges.set(false);
+      return;
+    }
+
+    const baseline = profileBaselineByOwner.get(activeOwnerKey);
+    if (!baseline) {
+      // Without a loaded baseline, keep save enabled.
+      unpublishedChanges.set(true);
+      return;
+    }
+
+    unpublishedChanges.set(profileStateComparisonKey(get(current)) !== baseline);
+  };
+
+  const loadProfileBookmarks = async (ownerKey: string): Promise<BookmarksState> => {
+    if (!browser || ownerKey === DEFAULT_OWNER_KEY) return EMPTY_OWNER_STATE;
+
+    const owner = normalizeProfileAddress(ownerKey) as Address | null;
+    if (!owner) return EMPTY_OWNER_STATE;
+
+    const { bindings } = getProfilesBindings({ pinApiBase: gnosisConfig.production.marketApiBase });
+    const { profile } = await loadProfileOrInit(bindings, owner);
+    const namespaces =
+      profile?.namespaces && typeof profile.namespaces === 'object'
+        ? (profile.namespaces as Record<string, string>)
+        : {};
+
+    const indexCid = namespaces[BOOKMARKS_NAMESPACE_KEY] as CidV0 | undefined;
+    if (!indexCid) return EMPTY_OWNER_STATE;
+
+    const { links } = await loadNamespaceLinks(bindings, indexCid);
+    const customDataLink = links.find((entry) => String(entry?.link?.name ?? '') === BOOKMARKS_LINK_NAME)?.link;
+    const payloadCid = String(customDataLink?.cid ?? '').trim();
+    if (!payloadCid) return EMPTY_OWNER_STATE;
+
+    const payload = await bindings.getJsonLd(payloadCid);
+    return parseBookmarksProfilePayload(payload);
+  };
+
+  const syncFromProfileIntoLocal = async (): Promise<void> => {
+    if (profileSyncInFlight) {
+      await profileSyncInFlight;
+      return;
+    }
+
+    profileSyncInFlight = (async () => {
+      syncOwner();
+      if (!isConnectedOwner()) return;
+      const ownerKey = activeOwnerKey;
+      const profileState = await loadProfileBookmarks(ownerKey);
+      updateCurrent((localState) => {
+        if (activeOwnerKey !== ownerKey) return localState;
+        // Manual load: local stays authoritative and we only add new entries
+        // from profile (matching ignores folder/category differences).
+        const merged = mergeBookmarkStates(localState, profileState);
+        // Baseline tracks what is currently stored in the remote profile so we
+        // can correctly expose unpublished local changes.
+        profileBaselineByOwner.set(ownerKey, profileStateComparisonKey(profileState));
+        return merged;
+      });
+    })();
+
+    try {
+      await profileSyncInFlight;
+    } finally {
+      profileSyncInFlight = null;
+    }
+  };
 
   const syncOwner = (): void => {
     const nextOwner = getConnectedOwnerKey();
     if (nextOwner === activeOwnerKey) return;
     activeOwnerKey = nextOwner;
     current.set(resolveOwnerState(get(persisted), activeOwnerKey));
+    updateUnpublishedChanges();
   };
 
   const persistAll = (next: PersistedBookmarksState): PersistedBookmarksState => {
@@ -325,6 +502,7 @@ function createProfileBookmarksService(repository: BookmarksRepository): Profile
         },
       });
       current.set(resolveOwnerState(nextAll, activeOwnerKey));
+      updateUnpublishedChanges();
       return nextAll;
     });
   };
@@ -353,6 +531,16 @@ function createProfileBookmarksService(repository: BookmarksRepository): Profile
         subscriberCount = Math.max(0, subscriberCount - 1);
         if (subscriberCount === 0) stopOwnerWatch();
       };
+    },
+    subscribeHasUnpublishedProfileChanges(run: (value: boolean) => void): () => void {
+      syncOwner();
+      updateUnpublishedChanges();
+      return unpublishedChanges.subscribe(run);
+    },
+    hasUnpublishedProfileChanges(): boolean {
+      syncOwner();
+      updateUnpublishedChanges();
+      return get(unpublishedChanges);
     },
     getState(): BookmarksState {
       syncOwner();
@@ -455,16 +643,24 @@ function createProfileBookmarksService(repository: BookmarksRepository): Profile
 
       return saved;
     },
-    removeProfileFolder(name: string): void {
+    removeProfileFolder(
+      name: string,
+      options?: {
+        deleteBookmarks?: boolean;
+      }
+    ): void {
       const normalized = normalizeFolderName(name);
       if (!normalized) return;
       if (folderKey(normalized) === folderKey(VIP_BOOKMARK_FOLDER)) return;
+      const deleteBookmarks = options?.deleteBookmarks === true;
 
       updateCurrent((state) => {
-        const nextProfiles = state.profiles.map((profile) => {
-          if (!isFolderOrDescendant(profile.folder, normalized)) return profile;
-          return { ...profile, folder: undefined };
-        });
+        const nextProfiles = deleteBookmarks
+          ? state.profiles.filter((profile) => !isFolderOrDescendant(profile.folder, normalized))
+          : state.profiles.map((profile) => {
+              if (!isFolderOrDescendant(profile.folder, normalized)) return profile;
+              return { ...profile, folder: undefined };
+            });
 
         const nextFolders = state.folders.filter((folder) => !isFolderOrDescendant(folder, normalized));
 
@@ -474,6 +670,62 @@ function createProfileBookmarksService(repository: BookmarksRepository): Profile
           folders: nextFolders,
         };
       });
+    },
+    async syncFromProfile(): Promise<void> {
+      await syncFromProfileIntoLocal();
+    },
+    async publishToProfile(): Promise<void> {
+      syncOwner();
+      if (!isConnectedOwner()) {
+        throw new Error('Connect a Circles avatar first.');
+      }
+
+      const avatar = normalizeProfileAddress(activeOwnerKey) as Address | null;
+      if (!avatar) {
+        throw new Error('No valid avatar address available.');
+      }
+
+      const { bindings } = getProfilesBindings({ pinApiBase: gnosisConfig.production.marketApiBase });
+      const { profile } = await loadProfileOrInit(bindings, avatar);
+
+      const namespaces =
+        profile?.namespaces && typeof profile.namespaces === 'object'
+          ? (profile.namespaces as Record<string, string>)
+          : {};
+
+      const indexCid = namespaces[BOOKMARKS_NAMESPACE_KEY] as CidV0 | undefined;
+      const existingLinks = indexCid ? (await loadNamespaceLinks(bindings, indexCid)).links.map((v) => v.link) : [];
+
+      const payloadCid = await bindings.putJsonLd(toBookmarksProfilePayload(get(current)));
+
+      const ethereum = getWalletProvider();
+      const chainId = Number(gnosisConfig.production.marketChainId ?? 100);
+      const safeSigner = await getMarketClient().signers.createSafeSignerForAvatar({
+        avatar,
+        ethereum,
+        chainId: BigInt(chainId),
+        enforceChainId: true,
+      });
+
+      const linkDraft = await buildLinkDraft({
+        name: BOOKMARKS_LINK_NAME,
+        cid: payloadCid,
+        chainId,
+        signerAddress: avatar,
+      });
+      linkDraft['@type'] = 'CustomDataLink';
+      const preimage = canonicaliseLink(linkDraft as any);
+      const signature = await safeSigner.signBytes(preimage);
+      (linkDraft as any).signature = signature;
+
+      const linksWithoutBookmarks = existingLinks.filter(
+        (link) => String((link as Record<string, unknown>)?.name ?? '') !== BOOKMARKS_LINK_NAME,
+      );
+      const nextLinks = [linkDraft, ...linksWithoutBookmarks];
+
+      await rewriteNamespaceFromLinks(bindings, avatar, BOOKMARKS_NAMESPACE_KEY, nextLinks);
+      profileBaselineByOwner.set(activeOwnerKey, profileStateComparisonKey(get(current)));
+      updateUnpublishedChanges();
     },
   };
 }
@@ -489,5 +741,11 @@ export const profileBookmarksStore: Readable<ProfileBookmark[]> = {
 export const bookmarksStateStore: Readable<BookmarksState> = {
   subscribe(run: (value: BookmarksState) => void) {
     return profileBookmarksService.subscribe(run);
+  },
+};
+
+export const profileBookmarksUnpublishedChangesStore: Readable<boolean> = {
+  subscribe(run: (value: boolean) => void) {
+    return profileBookmarksService.subscribeHasUnpublishedProfileChanges(run);
   },
 };

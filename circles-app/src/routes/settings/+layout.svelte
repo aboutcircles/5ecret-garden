@@ -793,7 +793,7 @@
         <Tab id="sales" title="Sales" />
         <Tab id="marketplace" title="Offers" />
         <Tab id="payment" title="Payment gateways" />
-        <Tab id="namespaces" title="Namespaces" />
+        <Tab id="namespaces" title="Applications" />
         <Tab id="keys" title="Signing keys" />
       </Tabs>
     </div>

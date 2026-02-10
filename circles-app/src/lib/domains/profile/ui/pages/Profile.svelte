@@ -336,7 +336,6 @@ import { TrustScoreBadge } from '$lib/domains/profile/ui';
             await Promise.allSettled([
                 loadMintHandler(),
                 loadCollateral(),
-                loadHoldings(),
                 loadTokenHolders(),
             ]);
         } else {
@@ -475,7 +474,6 @@ import { TrustScoreBadge } from '$lib/domains/profile/ui';
             ids.push('holders');
         }
         if (
-            otherAvatar?.type === 'CrcV2_RegisterGroup' ||
             otherAvatar?.type === 'CrcV2_RegisterHuman' ||
             otherAvatar?.type === 'CrcV2_RegisterOrganization'
         ) {
@@ -848,7 +846,7 @@ import { TrustScoreBadge } from '$lib/domains/profile/ui';
         </Tab>
     {/if}
 
-    {#if otherAvatar?.type === 'CrcV2_RegisterGroup' || otherAvatar?.type === 'CrcV2_RegisterHuman' || otherAvatar?.type === 'CrcV2_RegisterOrganization'}
+    {#if otherAvatar?.type === 'CrcV2_RegisterHuman' || otherAvatar?.type === 'CrcV2_RegisterOrganization'}
         <Tab
                 id="holdings"
                 title="Holdings"
