@@ -1,12 +1,9 @@
 <!-- lib/profile/ProfileExplorer.svelte -->
 <script lang="ts">
     import {onMount} from 'svelte';
-    import {popupControls} from '$lib/shared/state/popup';
     import {runTask} from '$lib/shared/utils/tasks';
     import {avatarState} from '$lib/shared/state/avatar.svelte';
-import { ProfileNamespaces } from '$lib/domains/profile/ui';
 import { ProfileHeaderEditor } from '$lib/domains/profile/ui';
-import { ProfileSigningKeys } from '$lib/domains/profile/ui';
     import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
     import type { ProfilesBindings } from '@circles-market/sdk';
     import { loadProfileOrInit, rebaseAndSaveProfile } from '@circles-market/sdk';
@@ -17,23 +14,12 @@ import { ProfileSigningKeys } from '$lib/domains/profile/ui';
     interface Props {
         avatar?: Address;
         pinApiBase?: string;
-        showAdvancedSections?: boolean; // legacy: when true (Settings page), show Namespaces + Signing keys
-        showNamespaces?: boolean;
-        showSigningKeys?: boolean;
     }
 
     let {
         avatar,
-        pinApiBase,
-        showAdvancedSections = false,
-        showNamespaces,
-        showSigningKeys
+        pinApiBase
     }: Props = $props();
-
-    // Backwards-compatible section toggles.
-    // If granular props are not provided, fall back to legacy `showAdvancedSections`.
-    const namespacesEnabled = $derived(showNamespaces ?? showAdvancedSections);
-    const signingKeysEnabled = $derived(showSigningKeys ?? showAdvancedSections);
 
     let resolvedAvatar = $state<Address | null>(null);
     let loading = $state(true);
@@ -44,9 +30,6 @@ import { ProfileSigningKeys } from '$lib/domains/profile/ui';
     let location = $state('');
     let imageUrl = $state('');
     let previewImageUrl = $state('');
-    let namespaces = $state<Record<string, string>>({});
-
-    // Inline key generation moved to AddSigningKey popup; local generated* state removed
 
     // editability
     let readonly = $state<boolean>(true);
@@ -84,12 +67,6 @@ import { ProfileSigningKeys } from '$lib/domains/profile/ui';
                     ? profile.previewImageUrl
                     : '';
 
-            const nsObj =
-                profile.namespaces && typeof profile.namespaces === 'object'
-                    ? profile.namespaces
-                    : {};
-            namespaces = {...(nsObj as Record<string, string>)};
-
         } catch (e: any) {
             error = String(e?.message ?? e);
         } finally {
@@ -109,16 +86,11 @@ import { ProfileSigningKeys } from '$lib/domains/profile/ui';
                     p.location = location;
                     p.imageUrl = imageUrl || null;
                     p.previewImageUrl = previewImageUrl || null;
-                    p.namespaces = namespaces;
                 });
                 await bindings.updateAvatarProfileDigest(resolvedAvatar!, cid);
                 removeProfileFromCache(resolvedAvatar!);
             })()
         });
-    }
-
-    function onNamespacesChanged(e: CustomEvent<Record<string, string>>): void {
-        namespaces = e.detail;
     }
 
     onMount(() => {
@@ -142,34 +114,6 @@ import { ProfileSigningKeys } from '$lib/domains/profile/ui';
             readonly={!isOwner}
         />
     </section>
-
-    {#if namespacesEnabled || signingKeysEnabled}
-        <!-- Namespaces panel -->
-        {#if namespacesEnabled}
-            <section class="bg-base-100 border border-base-300 rounded-xl p-4 shadow-sm">
-                <div class="flex items-center justify-between mb-2">
-                    <h3 class="font-semibold text-sm m-0">App data</h3>
-                    <span class="text-[11px] opacity-60">App/profile sources</span>
-                </div>
-                {#if resolvedAvatar}
-                    <ProfileNamespaces
-                        avatar={resolvedAvatar}
-                        {pinApiBase}
-                        namespaces={namespaces}
-                        readonly={!isOwner}
-                        on:namespacesChanged={(e) => onNamespacesChanged(new CustomEvent('namespacesChanged', { detail: e.detail }))}
-                    />
-                {:else}
-                    <div class="text-sm opacity-70">No avatar resolved.</div>
-                {/if}
-            </section>
-        {/if}
-
-        <!-- Signing keys panel -->
-        {#if signingKeysEnabled}
-            <ProfileSigningKeys avatar={resolvedAvatar} {pinApiBase} readonly={!isOwner} />
-        {/if}
-    {/if}
 
     {#if isOwner}
         <div class="flex justify-end">

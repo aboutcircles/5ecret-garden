@@ -57,7 +57,7 @@ import { ProfileExplorer } from '$lib/domains/profile/ui';
 
 {#if avatarAddress}
   <section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
-    <ProfileExplorer avatar={avatarAddress} pinApiBase={pinApiBase} showNamespaces={false} showSigningKeys={false} />
+    <ProfileExplorer avatar={avatarAddress} pinApiBase={pinApiBase} />
   </section>
 {:else}
   <section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
