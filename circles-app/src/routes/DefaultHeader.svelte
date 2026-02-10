@@ -149,6 +149,7 @@
         <a class="link link-hover" href="/privacy-policy">Privacy policy</a>
       </li>
       <li><a class="link link-hover" href="/kitchen-sink">Kitchen sink</a></li>
+      <li><a class="link link-hover" href="/group-management">Group management (prototype)</a></li>
     </ul>
   </details>
 </div>
