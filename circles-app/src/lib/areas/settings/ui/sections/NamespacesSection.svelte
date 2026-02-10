@@ -27,7 +27,7 @@ import { ProfileNamespaces } from '$lib/domains/profile/ui';
 <section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
   <div class="flex items-center justify-between">
     <div>
-      <h3 class="text-sm font-semibold m-0">Namespaces</h3>
+      <h3 class="text-sm font-semibold m-0">App data</h3>
       <p class="text-xs text-base-content/70 mt-0.5">App/profile sources.</p>
     </div>
   </div>
