@@ -148,7 +148,7 @@ import { ProfileSigningKeys } from '$lib/domains/profile/ui';
         {#if namespacesEnabled}
             <section class="bg-base-100 border border-base-300 rounded-xl p-4 shadow-sm">
                 <div class="flex items-center justify-between mb-2">
-                    <h3 class="font-semibold text-sm m-0">Namespaces</h3>
+                    <h3 class="font-semibold text-sm m-0">App data</h3>
                     <span class="text-[11px] opacity-60">App/profile sources</span>
                 </div>
                 {#if resolvedAvatar}
