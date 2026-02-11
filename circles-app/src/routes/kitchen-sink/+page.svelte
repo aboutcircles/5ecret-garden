@@ -14,6 +14,7 @@
     <li><a class="link" href="/kitchen-sink/identity">Identity & Utility</a> — avatar, address, tooltip, jump links, QR.</li>
     <li><a class="link" href="/kitchen-sink/markdown">Markdown</a> — renderer and interactive editor.</li>
     <li><a class="link" href="/kitchen-sink/lists">Lists & Loading</a> — generic list and skeleton states.</li>
+    <li><a class="link" href="/kitchen-sink/list-search-role-model">List/Search Role Model</a> — converged keyboard, overlay, and metadata list patterns.</li>
     <li><a class="link" href="/kitchen-sink/misc">Misc</a> — disclaimer and extra edge UI.</li>
   </ul>
 </section>

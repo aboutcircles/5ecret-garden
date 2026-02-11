@@ -27,6 +27,7 @@ export function createKeyboardListNavigator(options: KeyboardListNavigatorOption
     if (event.key === 'Enter' || event.key === ' ') {
       // Keep Enter/Space native for nested interactive controls (e.g. avatar link, checkbox).
       if (isNestedTarget) return;
+      if (!options.onActivateRow) return;
       event.preventDefault();
       options.onActivateRow?.(current);
       return;
