@@ -1,7 +1,9 @@
 import { browser } from '$app/environment';
 import { getMarketClient } from '$lib/shared/integrations/market';
-import type { OrderSnapshot, OrderStatusHistory, SellerOrderDto } from '@circles-market/sdk';
+import type { OrderSnapshot, OrderStatusHistory } from '@circles-market/sdk';
 import type { OrderStatusSseEvent } from '$lib/areas/market/orders/types';
+
+export type SellerOrderDto = any;
 
 export async function getOrdersByBuyer(
   page: number = 1,
@@ -42,8 +44,9 @@ export async function getSalesBySeller(
     return { items: [] };
   }
   const client = getMarketClient();
-  const items = await client.sales.list({ page, pageSize });
-  return { items: items.items ?? [] };
+  const res: any = await client.sales.list({ page, pageSize } as any);
+  const items = Array.isArray(res) ? res : (Array.isArray(res?.items) ? res.items : []);
+  return { items: items as SellerOrderDto[] };
 }
 
 export async function getSale(orderId: string): Promise<SellerOrderDto> {
@@ -51,11 +54,11 @@ export async function getSale(orderId: string): Promise<SellerOrderDto> {
     throw new Error('getSale() can only be used in the browser');
   }
   const client = getMarketClient();
-  const snap = await client.sales.get(orderId);
+  const snap = await client.sales.get(orderId as any);
   if (!snap) {
     throw new Error(`Sale not found: ${orderId}`);
   }
-  return snap;
+  return snap as SellerOrderDto;
 }
 
 export function subscribeBuyerOrderEvents(

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import RowFrame from '$lib/shared/ui/RowFrame.svelte';
+  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import type { Address } from '@circles-sdk/utils';
 
   export interface ConformanceTransferRowItem {

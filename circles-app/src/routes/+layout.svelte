@@ -15,7 +15,7 @@
   import { onDestroy, onMount } from 'svelte';
   import { tasks } from '$lib/shared/utils/tasks';
   import { popupControls, popupState } from '$lib/shared/state/popup';
-  import Popup from '$lib/shared/ui/common/Popup.svelte';
+  import Popup from '$lib/shared/ui/shell/PopupHost.svelte';
   import { initTransactionHistoryStore } from '$lib/shared/state/transactionHistory';
   import { initContactStore } from '$lib/domains/profile/state';
   import { initBalanceStore } from '$lib/shared/state/circlesBalances';

@@ -2,6 +2,14 @@ import { getGroupCollateral, getTreasuryAddress, getVaultAddress } from "$lib/sh
 import type { CirclesRpc } from "@circles-sdk/data";
 import { uint256ToAddress, type Address } from "@circles-sdk/utils";
 import { formatEther } from "ethers";
+import {
+    queryAffiliateGroupChangedPage,
+    queryGroupErc20Token,
+    queryGroupMembersCountSeries,
+    queryGroupMintRedeemSeries,
+    queryGroupTokenHoldersBalance,
+    queryGroupWrapUnwrapSeries,
+} from '$lib/shared/data/circles/groupMetricsQueries';
 
 type memberCount = {
     timestamp: Date;
@@ -108,33 +116,9 @@ async function getMemberCount(
 ): Promise<Array<memberCount>> {
     const table = resolution === 'hour' ? 'GroupMembersCount_1h' : 'GroupMembersCount_1d';
     const limit = resolution === 'hour' ? 24 * 7 : 30;
-    const result = await circlesRpc.call<{
-        columns: string[];
-        rows: any[][];
-    }>('circles_query', [
-        {
-            Namespace: 'V_CrcV2',
-            Table: table,
-            Columns: [],
-            Filter: [
-                {
-                    Type: 'FilterPredicate',
-                    FilterType: 'Equals',
-                    Column: 'group',
-                    Value: groupAddress.toLowerCase(),
-                }
-            ],
-            Order: [
-                {
-                    Column: 'timestamp',
-                    SortOrder: 'DESC'
-                },
-            ],
-            Limit: limit
-        },
-    ]);
+    const result = await queryGroupMembersCountSeries(circlesRpc, groupAddress, resolution);
 
-    return result.result.rows.reverse().map(([_, ts, v]) => ({
+    return result.rows.reverse().map(([_, ts, v]) => ({
         timestamp: new Date(ts),
         count: Number(v),
     }));
@@ -148,33 +132,9 @@ async function getMintRedeem(
 ): Promise<Array<mintRedeem>> {
     const table = resolution === 'hour' ? 'GroupMintRedeem_1h' : 'GroupMintRedeem_1d';
     const limit = resolution === 'hour' ? 24 * 7 : 30;
-    const result = await circlesRpc.call<{
-        columns: string[];
-        rows: any[][];
-    }>('circles_query', [
-        {
-            Namespace: 'V_CrcV2',
-            Table: table,
-            Columns: [],
-            Filter: [
-                {
-                    Type: 'FilterPredicate',
-                    FilterType: 'Equals',
-                    Column: 'group',
-                    Value: groupAddress.toLowerCase(),
-                }
-            ],
-            Order: [
-                {
-                    Column: 'timestamp',
-                    SortOrder: 'DESC'
-                },
-            ],
-            Limit: limit
-        },
-    ]);
+    const result = await queryGroupMintRedeemSeries(circlesRpc, groupAddress, resolution);
 
-    return result.result.rows.reverse().map(([_, ts, m, r, s]) => ({
+    return result.rows.reverse().map(([_, ts, m, r, s]) => ({
         timestamp: new Date(ts),
         minted: Number(formatEther(m)),
         burned: Number(-formatEther(r)),
@@ -190,33 +150,9 @@ async function getWrapUnwrap(
 ): Promise<Array<wrapUnwrap>> {
     const table = resolution === 'hour' ? 'GroupWrapUnWrap_1h' : 'GroupWrapUnWrap_1d';
     const limit = resolution === 'hour' ? 24 * 7 : 30;
-    const result = await circlesRpc.call<{
-        columns: string[];
-        rows: any[][];
-    }>('circles_query', [
-        {
-            Namespace: 'V_CrcV2',
-            Table: table,
-            Columns: [],
-            Filter: [
-                {
-                    Type: 'FilterPredicate',
-                    FilterType: 'Equals',
-                    Column: 'group',
-                    Value: groupAddress.toLowerCase(),
-                }
-            ],
-            Order: [
-                {
-                    Column: 'timestamp',
-                    SortOrder: 'DESC'
-                },
-            ],
-            Limit: limit,
-        },
-    ]);
+    const result = await queryGroupWrapUnwrapSeries(circlesRpc, groupAddress, resolution);
 
-    return result.result.rows.reverse().map(([_, ts, ta, tt, w, u]) => ({
+    return result.rows.reverse().map(([_, ts, ta, tt, w, u]) => ({
         timestamp: new Date(ts),
         wrapAmount: Number(formatEther(w)),
         unwrapAmount: Number(-formatEther(u))
@@ -262,26 +198,9 @@ async function getGroupTokenHoldersBalance(
     circlesRpc: CirclesRpc,
     groupAddress: Address
 ) {
-    const result = await circlesRpc.call<{
-        columns: string[];
-        rows: any[][];
-    }>('circles_query', [
-        {
-            Namespace: 'V_CrcV2',
-            Table: 'GroupTokenHoldersBalance',
-            Columns: [],
-            Filter: [
-                {
-                    Type: 'FilterPredicate',
-                    FilterType: 'Equals',
-                    Column: 'group',
-                    Value: groupAddress.toLowerCase(),
-                },
-            ],
-        },
-    ]);
+    const result = await queryGroupTokenHoldersBalance(circlesRpc, groupAddress);
 
-    return result.result.rows.map(([_, h, t, d, f]) => ({
+    return result.rows.map(([_, h, t, d, f]) => ({
         holder: h as Address,
         demurragedTotalBalance: Number(formatEther(d)),
         fractionalOwnership: Number(f),
@@ -292,26 +211,9 @@ async function getERC20Token(
     circlesRpc: CirclesRpc,
     groupAddress: Address
 ): Promise<Address | undefined> {
-    const result = await circlesRpc.call<{
-        columns: string[];
-        rows: any[][];
-    }>('circles_query', [
-        {
-            Namespace: 'V_Crc',
-            Table: 'Tokens',
-            Columns: [],
-            Filter: [
-                {
-                    Type: 'FilterPredicate',
-                    FilterType: 'Equals',
-                    Column: 'tokenOwner',
-                    Value: groupAddress.toLowerCase(),
-                },
-            ],
-        },
-    ]);
+    const result = await queryGroupErc20Token(circlesRpc, groupAddress);
 
-    return result.result.rows[1][7];
+    return result.rows[1]?.[7];
 }
 
 export async function countCurrentAffiliateMembers(
@@ -326,49 +228,9 @@ export async function countCurrentAffiliateMembers(
 
     while (hasMore) {
 
-        const queryPayload: any = {
-            Namespace: 'CrcV2',
-            Table: 'AffiliateGroupChanged',
-            Columns: ['human', 'newGroup', 'oldGroup', 'timestamp'],
-            Filter: [{
-                Type: 'Conjunction',
-                ConjunctionType: 'Or',
-                Predicates: [
-                    {
-                        Type: 'FilterPredicate',
-                        FilterType: 'Equals',
-                        Column: 'oldGroup',
-                        Value: groupAddress.toLowerCase(),
-                    },
-                    {
-                        Type: 'FilterPredicate',
-                        FilterType: 'Equals',
-                        Column: 'newGroup',
-                        Value: groupAddress.toLowerCase(),
-                    },
-                ],
-            }],
-            Order: [
-                {
-                    Column: 'timestamp',
-                    SortOrder: 'DESC'
-                },
-            ],
-            Limit: 1000,
-        };
+        const resp = await queryAffiliateGroupChangedPage(circlesRpc, groupAddress, cursor);
 
-        if (cursor) {
-            queryPayload.Cursor = cursor;
-        }
-
-        const resp = await circlesRpc.call<{
-            columns: string[];
-            rows: any[][];
-            cursor?: string;
-            hasMore?: boolean;
-        }>('circles_query', [queryPayload]);
-
-        const { rows, cursor: nextCursor, hasMore: more } = resp.result;
+        const { rows, cursor: nextCursor, hasMore: more } = resp;
 
         for (const row of rows) {
             const human = (row[0] as string).toLowerCase();

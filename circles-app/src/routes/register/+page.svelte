@@ -5,10 +5,10 @@
   import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/shared/utils/getGroupsByOwnerBatch';
   import type { Address as EvmAddress } from '@circles-sdk/utils';
   import { goto } from '$app/navigation';
-  import QrCode from '$lib/shared/ui/common/QrCode.svelte';
-  import Address from '$lib/shared/ui/common/Address.svelte';
+  import QrCode from '$lib/shared/ui/primitives/QrCode.svelte';
+  import Address from '$lib/shared/ui/primitives/Address.svelte';
   import ConnectWallet from '$lib/areas/wallet/ui/onboarding/ConnectWallet.svelte';
-  import Disclaimer from '$lib/shared/ui/common/Disclaimer.svelte';
+  import Disclaimer from '$lib/areas/register/ui/components/RegistrationDisclaimer.svelte';
   import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
 
   const ownerAddress = $derived(($page.url.searchParams.get('owner') ?? '').trim().toLowerCase() as EvmAddress | '');

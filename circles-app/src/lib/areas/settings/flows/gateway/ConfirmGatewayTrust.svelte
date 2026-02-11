@@ -2,7 +2,7 @@
   import { ethers } from 'ethers';
   import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-  import ActionButton from '$lib/shared/ui/common/ActionButton.svelte';
+  import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import { wallet } from '$lib/shared/state/wallet.svelte';
   import { runTask } from '$lib/shared/utils/tasks';
   import { popupControls } from '$lib/shared/state/popup';

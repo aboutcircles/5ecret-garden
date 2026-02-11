@@ -3,7 +3,7 @@
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { circles } from '$lib/shared/state/circles';
   import { type Address, uint256ToAddress } from '@circles-sdk/utils';
-  import ActionButton from '$lib/shared/ui/common/ActionButton.svelte';
+  import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import { onMount } from 'svelte';
   import { runTask } from '$lib/shared/utils/tasks';
   import { popupControls } from '$lib/shared/state/popup';

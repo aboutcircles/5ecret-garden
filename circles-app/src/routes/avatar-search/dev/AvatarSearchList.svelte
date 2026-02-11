@@ -7,6 +7,7 @@
   import { createPaginatedList } from '$lib/shared/state/paginatedList';
   import { SEARCH_POLICY } from '$lib/shared/ui/lists/utils/searchPolicies';
   import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
+  import { searchProfilesRpc } from '$lib/shared/data/circles/searchProfiles';
   import { get } from 'svelte/store';
   import { writable } from 'svelte/store';
   import AvatarSearchRow from './AvatarSearchRow.svelte';
@@ -139,25 +140,22 @@
     const sdk = get(circles);
     if (!sdk?.circlesRpc) return [];
 
-    const raw = await sdk.circlesRpc.call<any>('circles_searchProfiles', [
-      q,
-      SEARCH_POLICY.DEFAULT_REMOTE_LIMIT,
-      0,
-      undefined,
-    ]);
-    const list: any[] = Array.isArray(raw?.result) ? raw.result : [];
+    const list = await searchProfilesRpc(sdk, {
+      query: q,
+      limit: SEARCH_POLICY.DEFAULT_REMOTE_LIMIT,
+      offset: 0,
+      avatarTypes: undefined,
+    });
 
     return list
       .map((entry): AvatarSearchItem | null => {
-        const address = normalizeAddress(
-          typeof entry?.address === 'string' ? entry.address : (typeof entry?.owner === 'string' ? entry.owner : '')
-        );
+        const address = normalizeAddress(entry?.address);
         if (!address) return null;
 
         const item = makeBaseItem(address);
         item.name = typeof entry?.name === 'string' ? entry.name : undefined;
-        item.avatarType = typeof entry?.avatarType === 'string' ? entry.avatarType : (typeof entry?.type === 'string' ? entry.type : undefined);
-        item.avatarVersion = typeof entry?.version === 'number' ? entry.version : undefined;
+        item.avatarType = typeof entry?.avatarType === 'string' ? entry.avatarType : undefined;
+        item.avatarVersion = typeof entry?.avatarVersion === 'number' ? entry.avatarVersion : undefined;
         item.hasProfile = !!(item.name && item.name.trim().length > 0);
         item.remoteRank = computeTextRank(item, q);
         return item;
@@ -173,6 +171,9 @@
       remoteDebounceTimeout = null;
     }
 
+    // Invalidate any in-flight request for previous query values.
+    searchSeq += 1;
+
     remoteError = null;
 
     if (q.length < MIN_REMOTE_QUERY_LENGTH) {
@@ -181,7 +182,7 @@
       return;
     }
 
-    const seq = ++searchSeq;
+    const seq = searchSeq;
     remoteDebounceTimeout = setTimeout(async () => {
       remoteLoading = true;
       try {
@@ -201,6 +202,15 @@
         }
       }
     }, REMOTE_DEBOUNCE_MS);
+
+    return () => {
+      if (remoteDebounceTimeout) {
+        clearTimeout(remoteDebounceTimeout);
+        remoteDebounceTimeout = null;
+      }
+      // Invalidate in-flight response after teardown.
+      searchSeq += 1;
+    };
   });
 
   let mergedRows: AvatarSearchItem[] = $derived.by(() => {

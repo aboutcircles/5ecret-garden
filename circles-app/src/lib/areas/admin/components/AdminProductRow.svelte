@@ -1,5 +1,5 @@
 <script lang="ts">
-  import RowFrame from '$lib/shared/ui/RowFrame.svelte';
+  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import AdminStatusBadge from './AdminStatusBadge.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import type { AdminUnifiedProduct, AdminProductType } from '../types';

@@ -1,6 +1,6 @@
 <script lang="ts">
   import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
-  import ActionButton from '$lib/shared/ui/common/ActionButton.svelte';
+  import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import { browser } from '$app/environment';
   import { avatarState } from '$lib/shared/state/avatar.svelte';

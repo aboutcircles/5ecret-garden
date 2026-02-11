@@ -4,7 +4,7 @@
   import Invite from '$lib/areas/contacts/ui/pages/Invite.svelte';
   import { popupControls } from '$lib/shared/state/popup';
   import type { ManageGroupMembersFlowContext } from './context';
-  import ActionButton from '$lib/shared/ui/common/ActionButton.svelte';
+  import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import Papa from 'papaparse';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { ethers } from 'ethers';

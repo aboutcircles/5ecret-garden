@@ -6,6 +6,7 @@
   import { onMount } from 'svelte';
   import { circles } from '$lib/shared/state/circles';
   import { wallet } from '$lib/shared/state/wallet.svelte';
+  import { fetchGatewayRowsByOwner } from '$lib/shared/data/circles/paymentGateways';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import type { Address } from '@circles-sdk/utils';
 
@@ -112,22 +113,9 @@
     }
     try {
       loadingGateways = true;
-      const resp = await c.circlesRpc.call<{ columns: string[]; rows: any[][] }>('circles_query', [
-        {
-          Namespace: 'CrcV2_PaymentGateway',
-          Table: 'GatewayCreated',
-          Columns: ['gateway'],
-          Filter: [
-            { Type: 'FilterPredicate', FilterType: 'Equals', Column: 'owner', Value: owner.toLowerCase() }
-          ],
-          Order: []
-        }
-      ]);
-      const cols = resp?.result?.columns ?? [];
-      const rows = resp?.result?.rows ?? [];
-      const idxG = cols.indexOf('gateway');
+      const rows = await fetchGatewayRowsByOwner(c, owner);
       gateways = rows
-        .map((r) => (r[idxG] ? (r[idxG] as string) : ''))
+        .map((row) => row.gateway)
         .filter((g) => g.length > 0)
         .map((g) => g.toLowerCase());
 

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { settings } from '$lib/shared/state/settings.svelte';
-  import Tooltip from '$lib/shared/ui/common/Tooltip.svelte';
+  import Tooltip from '$lib/shared/ui/primitives/Tooltip.svelte';
 </script>
 
 <div class="dropdown dropdown-end">

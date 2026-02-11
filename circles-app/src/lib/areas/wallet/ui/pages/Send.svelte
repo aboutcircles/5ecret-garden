@@ -4,7 +4,7 @@
     import type { TokenBalanceRow } from '@circles-sdk/data';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import type { Address } from '@circles-sdk/utils';
-    import RowFrame from '$lib/shared/ui/RowFrame.svelte';
+    import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
 
     interface Props {
         receiverAddress: Address | undefined;

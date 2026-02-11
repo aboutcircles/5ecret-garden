@@ -1,7 +1,7 @@
 <!-- lib/flows/checkout/CheckoutPayment.svelte -->
 <script lang="ts">
   import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-  import QrCode from '$lib/shared/ui/common/QrCode.svelte';
+  import QrCode from '$lib/shared/ui/primitives/QrCode.svelte';
   import { cartState } from '$lib/areas/market/cart/store';
 
   // NEW: imports to resolve PayAction and open send flow (Svelte 5 runes aware)

@@ -3,7 +3,7 @@
   import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { popupControls } from '$lib/shared/state/popup';
-  import RowFrame from '$lib/shared/ui/RowFrame.svelte';
+  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import {
     ChevronDown as LChevronDown,
     ChevronRight as LChevronRight,

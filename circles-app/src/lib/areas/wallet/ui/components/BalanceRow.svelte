@@ -1,5 +1,5 @@
 <script lang="ts">
-    import RowFrame from '$lib/shared/ui/RowFrame.svelte';
+    import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
     import { createEventDispatcher } from 'svelte';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import { avatarState } from '$lib/shared/state/avatar.svelte';

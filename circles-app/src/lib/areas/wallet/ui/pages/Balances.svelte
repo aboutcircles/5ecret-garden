@@ -3,7 +3,7 @@
     import {derived, writable, type Writable} from 'svelte/store';
     import BalanceRow from '$lib/areas/wallet/ui/components/BalanceRow.svelte';
     import type {EventRow} from '@circles-sdk/data';
-    import Filter from '$lib/shared/ui/common/Filter.svelte';
+    import Filter from '$lib/shared/ui/lists/Filter.svelte';
     import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
     import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
     import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';

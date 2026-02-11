@@ -1,5 +1,5 @@
 <script lang="ts">
-  import RowFrame from '$lib/shared/ui/RowFrame.svelte';
+  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import type { GatewayRow as GatewayRowType } from '$lib/areas/settings/model/gatewayTypes';
   import { popupControls } from '$lib/shared/state/popup';

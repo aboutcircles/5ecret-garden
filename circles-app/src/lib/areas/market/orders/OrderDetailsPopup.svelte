@@ -1,7 +1,7 @@
 <script lang="ts">
   import OrderDetailsView from '$lib/areas/market/orders/OrderDetailsView.svelte';
   import { onMount, onDestroy } from 'svelte';
-  import { getOrderStatusHistory, subscribeBuyerOrderEvents, getOrder } from '$lib/areas/market/orders/ordersAdapter';
+  import { getOrderStatusHistory, subscribeBuyerOrderEvents, getOrder } from '$lib/areas/market/orders/ordersQueries';
   import type { OrderStatusChange } from '$lib/areas/market/orders/types';
 
   // Security: Do NOT accept or render order keys in the UI. Instead, this popup
