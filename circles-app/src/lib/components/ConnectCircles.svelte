@@ -15,6 +15,7 @@
   import { initNewSafeBrowserRunner } from '$lib/stores/wallet.svelte';
   import { circlesConfig } from '@aboutcircles/sdk-core';
   import { isGroupType, isOrganizationType } from '$lib/utils/avatarHelpers';
+  import { withRetry, isTransientError } from '$lib/utils/retry';
 
   interface Props {
     address: Address;
@@ -63,24 +64,37 @@
 
       // Use the new SDK to get the avatar for the target (could be Safe or Group)
       // Enable auto event subscription for reactive updates
+      // Use retry logic for WebSocket subscription resilience
       try {
-        avatarState.avatar = await sdk.getAvatar(targetAddress, true);
+        avatarState.avatar = await withRetry(
+          () => sdk.getAvatar(targetAddress, true),
+          {
+            maxAttempts: 5,
+            initialDelayMs: 1000,
+            maxDelayMs: 15000,
+            updateConnectionStatus: true,
+            statusLabel: 'Avatar',
+            isRetryable: (err) => {
+              // Don't retry if avatar genuinely not found
+              if (err.message?.includes('Avatar not found') ||
+                  (err as any).code === 'AVATAR_NOT_FOUND' ||
+                  (err as any).code === 'SDK_AVATAR_NOT_FOUND') {
+                return false;
+              }
+              return isTransientError(err);
+            },
+            onRetry: (attempt, error, delayMs) => {
+              console.warn(
+                `[ConnectCircles] Avatar subscription failed (attempt ${attempt}/5), retrying in ${Math.round(delayMs / 1000)}s:`,
+                error.message
+              );
+            },
+          }
+        );
       } catch (err: any) {
-        console.error('[ConnectCircles] Failed to get avatar:', err);
-        // Distinguish between "avatar not found" and network/RPC errors
-        const isNetworkError = err.message?.includes('fetch') ||
-          err.message?.includes('network') ||
-          err.message?.includes('ECONNREFUSED') ||
-          err.message?.includes('timeout') ||
-          err.code === 'NETWORK_ERROR';
-
-        if (isNetworkError) {
-          // Don't redirect - show error to user
-          throw new Error('Unable to connect to server. Please check your connection and try again.');
-        }
+        console.error('[ConnectCircles] Failed to get avatar after retries:', err);
 
         // If avatar genuinely not found, redirect to registration
-        // SDK uses 'SDK_AVATAR_NOT_FOUND' code
         if (err.message?.includes('Avatar not found') ||
             err.code === 'AVATAR_NOT_FOUND' ||
             err.code === 'SDK_AVATAR_NOT_FOUND') {
@@ -118,38 +132,63 @@
       };
 
       goto('/dashboard');
+    } catch (err: any) {
+      // Handle connection errors gracefully - don't let them become uncaught rejections
+      console.error('[ConnectCircles] Connection failed:', err);
+
+      const code = err?.code;
+      if (code === 4900) {
+        // Wallet not connected (MetaMask locked/disconnected)
+        // The connect-safe page already has retry UI for this
+      } else if (code === 4001) {
+        // User rejected the request - they know what they did
+      }
+      // All errors handled - don't re-throw
     } finally {
       avatarState.isLoading = false;
     }
   }
 
   async function openCreateGroup() {
-    const sdk = await initSdk(address);
-    $circles = sdk;
+    try {
+      const sdk = await initSdk(address);
+      $circles = sdk;
 
-    // Initialize a fresh context with feeCollection defaulted to this safe address
-    resetCreateGroupContext(address as `0x${string}`);
+      // Initialize a fresh context with feeCollection defaulted to this safe address
+      resetCreateGroupContext(address as `0x${string}`);
 
-    popupControls.open({
-      title: 'Create group',
-      component: CreateGroup,
-      props: {
-        setGroup: async (address: string) => {
-          // On success, navigate into the new group#
-          console.log(`Open the new group avatar dashboard. Address:`, address);
-          refreshGroupsCallback?.();
+      popupControls.open({
+        title: 'Create group',
+        component: CreateGroup,
+        props: {
+          setGroup: async (address: string) => {
+            // On success, navigate into the new group#
+            console.log(`Open the new group avatar dashboard. Address:`, address);
+            refreshGroupsCallback?.();
+          },
         },
-      },
-      // Ensure state is cleared if the user closes the flow
-      onClose: () => resetCreateGroupContext(),
-    });
+        // Ensure state is cleared if the user closes the flow
+        onClose: () => resetCreateGroupContext(),
+      });
+    } catch (err: any) {
+      console.error('[ConnectCircles] Failed to open create group:', err);
+      // Connection errors handled - don't re-throw
+    }
   }
 </script>
 
-<div class="w-full border rounded-lg flex flex-col p-4 shadow-sm">
+<div class="w-full border rounded-lg flex flex-col p-4 shadow-sm relative">
+  {#if avatarState.isLoading}
+    <!-- Loading overlay when connecting to avatar -->
+    <div class="absolute inset-0 bg-base-100/80 rounded-lg z-10 flex items-center justify-center gap-3">
+      <span class="loading loading-spinner loading-md text-primary"></span>
+      <span class="text-sm text-base-content/70">Connecting...</span>
+    </div>
+  {/if}
   <button
     onclick={() => connectAvatar(address)}
     class="flex justify-between items-center hover:bg-base-200 rounded-lg p-2"
+    disabled={avatarState.isLoading}
   >
     <Avatar topInfo="Safe" {address} clickable={false} view="horizontal" />
     <div class="btn btn-xs btn-outline btn-primary">
@@ -173,6 +212,7 @@
       <button
         class="flex w-full hover:bg-base-200 rounded-lg p-2"
         onclick={() => connectAvatar(group.group as `0x${string}`)}
+        disabled={avatarState.isLoading}
       >
         <Avatar
           address={group.group as `0x${string}`}
