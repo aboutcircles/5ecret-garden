@@ -1,7 +1,6 @@
 <script lang="ts">
   import GenericList from '$lib/shared/ui/common/GenericList.svelte';
-  import ListStates from '$lib/shared/ui/common/ListStates.svelte';
-  import ListToolbar from '$lib/shared/ui/common/ListToolbar.svelte';
+  import ListShell from '$lib/shared/ui/common/ListShell.svelte';
   import { isVipProfileBookmark, profileBookmarksStore } from '$lib/areas/settings/state/profileBookmarks';
   import { contacts } from '$lib/domains/profile/state';
   import { circles } from '$lib/shared/state/circles';
@@ -19,6 +18,7 @@
 
   const query = writable('');
   let searchInputEl: HTMLInputElement | null = $state(null);
+  let listScopeEl: HTMLDivElement | null = $state(null);
   let remoteRows: AvatarSearchItem[] = $state([]);
   let remoteLoading = $state(false);
   let remoteError: string | null = $state(null);
@@ -214,7 +214,7 @@
 
   function onInputArrowDown(event: KeyboardEvent): void {
     if (event.key !== 'ArrowDown') return;
-    const firstRow = document.querySelector<HTMLElement>('[data-avatar-search-row]');
+    const firstRow = listScopeEl?.querySelector<HTMLElement>('[data-avatar-search-row]');
     if (!firstRow) return;
     event.preventDefault();
     firstRow.focus();
@@ -229,37 +229,38 @@
   });
 </script>
 
-<ListToolbar
-  query={query}
-  placeholder="Search avatars by name or address"
-  bind:inputEl={searchInputEl}
-  onInputKeydown={onInputArrowDown}
-/>
+<div data-avatar-search-list-scope bind:this={listScopeEl}>
+  <ListShell
+    query={query}
+    searchPlaceholder="Search avatars by name or address"
+    bind:inputEl={searchInputEl}
+    onInputKeydown={onInputArrowDown}
+    loading={remoteLoading}
+    error={remoteError}
+    isEmpty={mergedRows.length === 0}
+    emptyLabel="No matches"
+    wrapInListContainer={false}
+  >
+    <div class="-mt-1 mb-3 text-xs text-base-content/60 flex items-center gap-2">
+      <span>{mergedRows.length} result(s)</span>
+      {#if ($query ?? '').trim().length > 0 && ($query ?? '').trim().length < MIN_REMOTE_QUERY_LENGTH}
+        <span>• Type at least {MIN_REMOTE_QUERY_LENGTH} chars for remote search</span>
+      {/if}
+      {#if remoteLoading}
+        <span class="inline-flex items-center gap-1">
+          <span class="loading loading-spinner loading-xs text-primary" aria-hidden="true"></span>
+          <span>Searching network…</span>
+        </span>
+      {/if}
+    </div>
 
-<div class="-mt-1 mb-3 text-xs text-base-content/60 flex items-center gap-2">
-  <span>{mergedRows.length} result(s)</span>
-  {#if ($query ?? '').trim().length > 0 && ($query ?? '').trim().length < MIN_REMOTE_QUERY_LENGTH}
-    <span>• Type at least {MIN_REMOTE_QUERY_LENGTH} chars for remote search</span>
-  {/if}
-  {#if remoteLoading}
-    <span class="inline-flex items-center gap-1">
-      <span class="loading loading-spinner loading-xs text-primary" aria-hidden="true"></span>
-      <span>Searching network…</span>
-    </span>
-  {/if}
+    <GenericList
+      store={paginatedRows}
+      row={AvatarSearchRow}
+      getKey={(item) => item.key}
+      rowHeight={64}
+      maxPlaceholderPages={1}
+      expectedPageSize={PAGE_SIZE}
+    />
+  </ListShell>
 </div>
-
-<ListStates
-  error={remoteError}
-  isEmpty={mergedRows.length === 0}
-  emptyLabel="No matches"
->
-  <GenericList
-    store={paginatedRows}
-    row={AvatarSearchRow}
-    getKey={(item) => item.key}
-    rowHeight={64}
-    maxPlaceholderPages={1}
-    expectedPageSize={PAGE_SIZE}
-  />
-</ListStates>

@@ -3,7 +3,7 @@
   import type { Address } from '@circles-sdk/utils';
   import type { SearchProfileResult } from '$lib/domains/profile/model';
   import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-  import ListToolbar from '$lib/shared/ui/common/ListToolbar.svelte';
+  import ListShell from '$lib/shared/ui/common/ListShell.svelte';
   import ListStates from '$lib/shared/ui/common/ListStates.svelte';
   import RowFrame from '$lib/shared/ui/RowFrame.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
@@ -174,12 +174,13 @@
     </p>
 
     <div role="group" aria-label="Global avatar search">
-      <ListToolbar
+      <ListShell
         query={query}
-        placeholder="Search by name or address"
+        searchPlaceholder="Search by name or address"
         bind:inputEl={searchInputEl}
         onInputKeydown={onSearchInputArrowDown}
         onInputFocus={onSearchInputFocus}
+        wrapInListContainer={false}
       />
     </div>
 

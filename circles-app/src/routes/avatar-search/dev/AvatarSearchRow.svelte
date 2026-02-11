@@ -16,8 +16,9 @@ import { ProfilePopup } from '$lib/domains/profile/ui/pages';
     popupControls.open?.({ component: ProfilePopup, props: { address: item.address } });
   }
 
-  function focusSearchInput(): void {
-    const input = document.querySelector<HTMLInputElement>('[data-avatar-search-input]');
+  function focusSearchInput(current: HTMLElement): void {
+    const scope = current.closest<HTMLElement>('[data-avatar-search-list-scope]');
+    const input = scope?.querySelector<HTMLInputElement>('[data-avatar-search-input]');
     input?.focus();
   }
 
@@ -37,14 +38,15 @@ import { ProfilePopup } from '$lib/domains/profile/ui/pages';
 
     if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
 
-    const rows = Array.from(document.querySelectorAll<HTMLElement>('[data-avatar-search-row]'));
+    const scope = current.closest<HTMLElement>('[data-avatar-search-list-scope]');
+    const rows = Array.from((scope ?? document).querySelectorAll<HTMLElement>('[data-avatar-search-row]'));
     const index = rows.indexOf(current);
     if (index === -1) return;
 
     event.preventDefault();
 
     if (event.key === 'ArrowUp' && index === 0) {
-      focusSearchInput();
+      focusSearchInput(current);
       return;
     }
 

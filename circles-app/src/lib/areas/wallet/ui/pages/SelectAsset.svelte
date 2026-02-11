@@ -83,6 +83,7 @@
     }: Props = $props();
     const query = writable('');
     let searchInputEl: HTMLInputElement | null = $state(null);
+    let selectAssetListScopeEl: HTMLDivElement | null = $state(null);
 
     const handleSelect = (tokenBalanceRow: TokenBalanceRow) => {
         selectedAsset = tokenBalanceRow;
@@ -123,7 +124,7 @@
 
     function onSearchInputKeydown(event: KeyboardEvent): void {
         if (event.key !== 'ArrowDown') return;
-        const firstRow = document.querySelector<HTMLElement>('[data-select-asset-list-scope] [data-balance-row]');
+        const firstRow = selectAssetListScopeEl?.querySelector<HTMLElement>('[data-balance-row]');
         if (!firstRow) return;
         event.preventDefault();
         firstRow.focus();
@@ -162,7 +163,7 @@
         noMatchesLabel="No matching assets"
         wrapInListContainer={false}
 >
-    <div data-select-asset-list-scope>
+    <div data-select-asset-list-scope bind:this={selectAssetListScopeEl}>
         <GenericList
                 store={selectableBalances}
                 row={SelectableBalanceRow}

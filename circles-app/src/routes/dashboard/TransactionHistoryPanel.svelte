@@ -7,6 +7,7 @@
 
     const searchQuery = writable('');
     let searchInputEl: HTMLInputElement | null = $state(null);
+    let transactionsListScopeEl: HTMLDivElement | null = $state(null);
 
     const searchedTransactionHistory = derived([transactionHistory, searchQuery], ([$history, $query]) => {
         const q = ($query ?? '').toLowerCase().trim();
@@ -24,7 +25,7 @@
 
     function onSearchInputKeydown(event: KeyboardEvent): void {
         if (event.key !== 'ArrowDown') return;
-        const firstRow = document.querySelector<HTMLElement>('[data-transactions-list-scope] [data-transaction-row]');
+        const firstRow = transactionsListScopeEl?.querySelector<HTMLElement>('[data-transaction-row]');
         if (!firstRow) return;
         event.preventDefault();
         firstRow.focus();
@@ -50,7 +51,7 @@
     noMatchesLabel="No matching transactions"
     wrapInListContainer={false}
 >
-    <div data-transactions-list-scope>
+    <div data-transactions-list-scope bind:this={transactionsListScopeEl}>
         <GenericList row={TransactionRow} store={searchedTransactionHistory} rowHeight={64} maxPlaceholderPages={0} expectedPageSize={25} />
     </div>
 </ListShell>

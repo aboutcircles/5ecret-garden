@@ -24,8 +24,9 @@
     });
   }
 
-  function focusGatewaySearchInput(): void {
-    const input = document.querySelector<HTMLInputElement>('[data-payment-gateway-search-input]');
+  function focusGatewaySearchInput(current: HTMLElement): void {
+    const scope = current.closest<HTMLElement>('[data-payment-gateway-list-scope]');
+    const input = scope?.querySelector<HTMLInputElement>('[data-payment-gateway-search-input]');
     input?.focus();
   }
 
@@ -41,14 +42,15 @@
 
     if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
 
-    const rows = Array.from(document.querySelectorAll<HTMLElement>('[data-gateway-row]'));
+    const scope = current.closest<HTMLElement>('[data-payment-gateway-list-scope]');
+    const rows = Array.from((scope ?? document).querySelectorAll<HTMLElement>('[data-gateway-row]'));
     const index = rows.indexOf(current);
     if (index === -1) return;
 
     event.preventDefault();
 
     if (event.key === 'ArrowUp' && index === 0) {
-      focusGatewaySearchInput();
+      focusGatewaySearchInput(current);
       return;
     }
 

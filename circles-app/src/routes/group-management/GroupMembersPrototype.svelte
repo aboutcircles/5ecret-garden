@@ -6,8 +6,7 @@
   import { runTask } from '$lib/shared/utils/tasks';
   import { shortenAddress } from '$lib/shared/utils/shared';
   import { getProfile } from '$lib/shared/utils/profile';
-  import ListToolbar from '$lib/shared/ui/common/ListToolbar.svelte';
-  import ListStates from '$lib/shared/ui/common/ListStates.svelte';
+  import ListShell from '$lib/shared/ui/common/ListShell.svelte';
   import RowFrame from '$lib/shared/ui/RowFrame.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import ActionButton from '$lib/shared/ui/common/ActionButton.svelte';
@@ -231,55 +230,53 @@
   <div class="text-xs opacity-70">{trusted.length} trusted avatar{trusted.length === 1 ? '' : 's'}</div>
 
   <div role="group" aria-label="Search trusted avatars">
-    <ListToolbar
+    <ListShell
       query={searchQuery}
-      placeholder="Search by address or name"
+      searchPlaceholder="Search by address or name"
       bind:inputEl={searchInputEl}
       onInputKeydown={trustedListNavigator.onInputArrowDown}
-    />
+      {loading}
+      {error}
+      isEmpty={trusted.length === 0}
+      isNoMatches={trusted.length > 0 && $filteredItems.length === 0}
+      emptyLabel="No trusted avatars"
+      noMatchesLabel="No matches"
+      wrapInListContainer={false}
+    >
+      <div bind:this={trustedListEl} class="w-full flex flex-col gap-y-1.5" role="list">
+        {#each $filteredItems as address (address)}
+          <div
+            tabindex={0}
+            data-trusted-row
+            data-trusted-address={address}
+            onkeydown={trustedListNavigator.onRowKeydown}
+            onclick={onTrustedRowClick}
+            role="button"
+            aria-pressed={selectedSet.has(address) ? 'true' : 'false'}
+            aria-label={`Trusted member ${address}`}
+            class="rounded-[var(--row-radius)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          >
+            <RowFrame clickable={false} dense={true} noLeading={true}>
+              <div class="min-w-0">
+                <Avatar
+                  {address}
+                  view="horizontal"
+                  clickable={true}
+                  bottomInfo={`${avatarTypeToReadable(trustedAvatarTypes[address.toLowerCase()])} • ${address}`}
+                />
+              </div>
+              {#snippet trailing()}
+                <input
+                  type="checkbox"
+                  class="checkbox checkbox-sm"
+                  checked={selectedSet.has(address)}
+                  onchange={(e) => toggleSelected(address, (e.currentTarget as HTMLInputElement).checked)}
+                />
+              {/snippet}
+            </RowFrame>
+          </div>
+        {/each}
+      </div>
+    </ListShell>
   </div>
-
-  <ListStates
-    {loading}
-    {error}
-    isEmpty={trusted.length === 0}
-    isNoMatches={trusted.length > 0 && $filteredItems.length === 0}
-    emptyLabel="No trusted avatars"
-    noMatchesLabel="No matches"
-  >
-    <div bind:this={trustedListEl} class="w-full flex flex-col gap-y-1.5" role="list">
-      {#each $filteredItems as address (address)}
-        <div
-          tabindex={0}
-          data-trusted-row
-          data-trusted-address={address}
-          onkeydown={trustedListNavigator.onRowKeydown}
-          onclick={onTrustedRowClick}
-          role="button"
-          aria-pressed={selectedSet.has(address) ? 'true' : 'false'}
-          aria-label={`Trusted member ${address}`}
-          class="rounded-[var(--row-radius)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-        >
-          <RowFrame clickable={false} dense={true} noLeading={true}>
-            <div class="min-w-0">
-              <Avatar
-                {address}
-                view="horizontal"
-                clickable={true}
-                bottomInfo={`${avatarTypeToReadable(trustedAvatarTypes[address.toLowerCase()])} • ${address}`}
-              />
-            </div>
-            {#snippet trailing()}
-              <input
-                type="checkbox"
-                class="checkbox checkbox-sm"
-                checked={selectedSet.has(address)}
-                onchange={(e) => toggleSelected(address, (e.currentTarget as HTMLInputElement).checked)}
-              />
-            {/snippet}
-          </RowFrame>
-        </div>
-      {/each}
-    </div>
-  </ListStates>
 </div>

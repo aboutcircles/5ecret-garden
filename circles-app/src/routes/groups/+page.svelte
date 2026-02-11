@@ -30,6 +30,7 @@
     }> | undefined = $state();
     const allGroupsQuery = writable('');
     let allGroupsSearchInputEl: HTMLInputElement | null = $state(null);
+    let allGroupsListScopeEl: HTMLDivElement | null = $state(null);
 
     const emptyGroupsStore = readable<{ data: EventRow[]; next: () => Promise<boolean>; ended: boolean }>({
         data: [],
@@ -135,7 +136,7 @@
 
     function onAllGroupsSearchInputKeydown(event: KeyboardEvent): void {
         if (event.key !== 'ArrowDown') return;
-        const firstRow = document.querySelector<HTMLElement>('[data-group-row]');
+        const firstRow = allGroupsListScopeEl?.querySelector<HTMLElement>('[data-group-row]');
         if (!firstRow) return;
         event.preventDefault();
         firstRow.focus();
@@ -274,25 +275,27 @@
                 </GroupTabPanel>
             {:else}
                 {#if groups}
-                    <ListShell
-                        query={allGroupsQuery}
-                        searchPlaceholder="Search by group address"
-                        bind:inputEl={allGroupsSearchInputEl}
-                        onInputKeydown={onAllGroupsSearchInputKeydown}
-                        isEmpty={$groups.data.length === 0}
-                        isNoMatches={$groups.data.length > 0 && $filteredAllGroupsStore.data.length === 0}
-                        emptyLabel="No groups found"
-                        noMatchesLabel="No matching groups"
-                        wrapInListContainer={false}
-                    >
-                        <GenericList
-                            store={filteredAllGroupsStore}
-                            row={GroupRowView}
-                            rowHeight={64}
-                            maxPlaceholderPages={0}
-                            expectedPageSize={25}
-                        />
-                    </ListShell>
+                    <div data-groups-list-scope bind:this={allGroupsListScopeEl}>
+                        <ListShell
+                            query={allGroupsQuery}
+                            searchPlaceholder="Search by group address"
+                            bind:inputEl={allGroupsSearchInputEl}
+                            onInputKeydown={onAllGroupsSearchInputKeydown}
+                            isEmpty={$groups.data.length === 0}
+                            isNoMatches={$groups.data.length > 0 && $filteredAllGroupsStore.data.length === 0}
+                            emptyLabel="No groups found"
+                            noMatchesLabel="No matching groups"
+                            wrapInListContainer={false}
+                        >
+                            <GenericList
+                                store={filteredAllGroupsStore}
+                                row={GroupRowView}
+                                rowHeight={64}
+                                maxPlaceholderPages={0}
+                                expectedPageSize={25}
+                            />
+                        </ListShell>
+                    </div>
                 {:else}
                     <div class="text-sm opacity-70">Loading…</div>
                 {/if}

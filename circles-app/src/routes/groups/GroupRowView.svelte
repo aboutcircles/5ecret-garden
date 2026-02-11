@@ -12,8 +12,9 @@ import { ProfilePopup } from '$lib/domains/profile/ui/pages';
         popupControls.open?.({ component: ProfilePopup, props: { address: item.group } });
     }
 
-    function focusGroupsSearchInput(): void {
-        const input = document.querySelector<HTMLInputElement>('[data-groups-search-input]');
+    function focusGroupsSearchInput(current: HTMLElement): void {
+        const scope = current.closest<HTMLElement>('[data-groups-list-scope]');
+        const input = scope?.querySelector<HTMLInputElement>('[data-groups-search-input]');
         input?.focus();
     }
 
@@ -33,14 +34,15 @@ import { ProfilePopup } from '$lib/domains/profile/ui/pages';
 
         if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
 
-        const rows = Array.from(document.querySelectorAll<HTMLElement>('[data-group-row]'));
+        const scope = current.closest<HTMLElement>('[data-groups-list-scope]');
+        const rows = Array.from((scope ?? document).querySelectorAll<HTMLElement>('[data-group-row]'));
         const index = rows.indexOf(current);
         if (index === -1) return;
 
         event.preventDefault();
 
         if (event.key === 'ArrowUp' && index === 0) {
-            focusGroupsSearchInput();
+            focusGroupsSearchInput(current);
             return;
         }
 

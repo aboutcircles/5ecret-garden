@@ -23,6 +23,7 @@
 
   const query = writable('');
   let searchInputEl: HTMLInputElement | null = $state(null);
+  let gatewaysListScopeEl: HTMLDivElement | null = $state(null);
 
   const filteredGatewaysStore = derived([myGatewaysStore, query], ([$store, $query]) => {
     const q = ($query ?? '').toLowerCase().trim();
@@ -44,7 +45,7 @@
 
   function onSearchInputKeydown(event: KeyboardEvent): void {
     if (event.key !== 'ArrowDown') return;
-    const firstRow = document.querySelector<HTMLElement>('[data-gateway-row]');
+    const firstRow = gatewaysListScopeEl?.querySelector<HTMLElement>('[data-gateway-row]');
     if (!firstRow) return;
     event.preventDefault();
     firstRow.focus();
@@ -99,24 +100,26 @@
   {:else if loadingGateways}
     <div class="loading loading-spinner loading-md"></div>
   {:else}
-    <ListShell
-      query={query}
-      searchPlaceholder="Search by gateway address"
-      bind:inputEl={searchInputEl}
-      onInputKeydown={onSearchInputKeydown}
-      isEmpty={gatewaysDataLength === 0}
-      isNoMatches={gatewaysDataLength > 0 && filteredGatewaysDataLength === 0}
-      emptyLabel="No gateways found for your avatar."
-      noMatchesLabel="No matching gateways"
-      wrapInListContainer={false}
-    >
-      <GenericList
-        store={filteredGatewaysStore}
-        row={GatewayRowView}
-        rowHeight={64}
-        maxPlaceholderPages={1}
-        expectedPageSize={25}
-      />
-    </ListShell>
+    <div data-payment-gateway-list-scope bind:this={gatewaysListScopeEl}>
+      <ListShell
+        query={query}
+        searchPlaceholder="Search by gateway address"
+        bind:inputEl={searchInputEl}
+        onInputKeydown={onSearchInputKeydown}
+        isEmpty={gatewaysDataLength === 0}
+        isNoMatches={gatewaysDataLength > 0 && filteredGatewaysDataLength === 0}
+        emptyLabel="No gateways found for your avatar."
+        noMatchesLabel="No matching gateways"
+        wrapInListContainer={false}
+      >
+        <GenericList
+          store={filteredGatewaysStore}
+          row={GatewayRowView}
+          rowHeight={64}
+          maxPlaceholderPages={1}
+          expectedPageSize={25}
+        />
+      </ListShell>
+    </div>
   {/if}
 </section>
