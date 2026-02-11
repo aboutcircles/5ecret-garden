@@ -408,19 +408,20 @@
   });
 
   // Count visible events after filtering (excludes zero-amount and mint→burn internal events)
-  // For intermediary (pass-through) and burn transactions, show ALL events regardless of
-  // amount so the path/collateral flow is visible in drill-down
+  // For intermediary/burn, use resolveEventAmount (tries hex fallback) before filtering
   const visibleEvents = $derived(
     item.events.filter(e => {
       const fromZero = isZero(e.from);
       const toZero = isZero(e.to);
       // Always skip internal protocol events (both from AND to are zero)
       if (fromZero && toZero) return false;
-      // For pass-throughs and burns, show all events (path matters more than amount)
-      if (item.isIntermediary || item.type === 'burn') return true;
-      // For other types, filter out zero-amount events
-      const amount = e.circles ?? e.staticCircles ?? e.crc ?? 0;
-      return amount > 0;
+      // Use full amount resolution (including hex fallback)
+      const amount = resolveEventAmount(e);
+      if (amount > 0) return true;
+      // For pass-throughs and burns, also show events between real addresses
+      // even if amount is 0 — but only if they involve real participants (not just mint/burn)
+      if ((item.isIntermediary || item.type === 'burn') && !fromZero && !toZero) return true;
+      return false;
     })
   );
   const visibleEventCount = $derived(visibleEvents.length);

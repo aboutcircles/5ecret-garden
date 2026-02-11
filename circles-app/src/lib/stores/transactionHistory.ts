@@ -412,12 +412,16 @@ function groupByTransaction(rows: ExtendedTransactionRow[], userAddress: string)
     const totalVolume = transferInAmount + transferOutAmount + mintAmount;
     const relativeNet = totalVolume > 0 ? Math.abs(netCircles) / totalVolume : 0;
 
-    // Mark as intermediary ONLY if:
-    // 1. User participated in events (appeared in from/to, not just operator)
-    // 2. AND has small net amount (typical hop: received ~X, sent ~X, net ~0)
-    // Thresholds increased to catch edge cases like exactly 0.01 CRC net
+    // Mark as intermediary if user has negligible involvement in this transaction.
+    // Covers two cases:
+    //   a) User appeared in from/to but net is ~0 (classic pass-through hop)
+    //   b) User didn't initiate and has tiny dust net (e.g. group mints by others that
+    //      touched user's trust path, resulting in +0.01 CRC dust)
     const smallNet = Math.abs(netCircles) <= 0.05 || (totalVolume > 0.1 && relativeNet < 0.05);
-    const isIntermediary = userParticipatedInEvents && smallNet && type !== 'mint';
+    const isIntermediary = smallNet && type !== 'mint' && (
+      userParticipatedInEvents ||  // case (a): participated but net ~0
+      (!userIsInitiator && Math.abs(netCircles) <= 0.05)  // case (b): didn't initiate, dust net
+    );
 
     // Debug: log transactions with small net that AREN'T marked as intermediary
     if (Math.abs(netCircles) <= 0.05 && !isIntermediary && netCircles !== 0) {
@@ -874,6 +878,20 @@ export const groupedTransactionHistory = derived(
 
     // Perform grouping and sorting
     cachedGrouped = groupByTransaction($txHistory.data, currentAvatarAddress);
+
+    // Filter out transactions where user has no meaningful involvement:
+    // 1. operator-only (signed but not in from/to) with negligible net amount
+    // 2. intermediary pass-throughs the user didn't initiate with negligible net
+    //    (e.g., group mints by others that routed through user's trust path,
+    //    resulting in dust amounts flowing in and out)
+    cachedGrouped = cachedGrouped.filter(tx => {
+      // Case 1: user only signed, wasn't in from/to
+      if (tx.isOperatorOnly && Math.abs(tx.netCircles) <= 0.05) return false;
+      // Case 2: pass-through hop the user didn't start, net ≈ 0
+      if (tx.isIntermediary && !tx.userIsInitiator && Math.abs(tx.netCircles) <= 0.05) return false;
+      return true;
+    });
+
     // Sort by timestamp descending (timestamps are numbers, no Date conversion needed)
     cachedGrouped.sort((a, b) => b.timestamp - a.timestamp);
 
