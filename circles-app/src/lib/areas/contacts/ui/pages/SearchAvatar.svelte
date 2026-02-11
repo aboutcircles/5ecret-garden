@@ -8,6 +8,8 @@
     import RowFrame from '$lib/shared/ui/RowFrame.svelte';
     import ListToolbar from '$lib/shared/ui/common/ListToolbar.svelte';
     import ListStates from '$lib/shared/ui/common/ListStates.svelte';
+    import { createKeyboardListNavigator } from '$lib/shared/utils/keyboardListNavigator';
+    import { SEARCH_POLICY } from '$lib/shared/utils/searchPolicies';
     import type { Address } from '@circles-sdk/utils';
 
     interface Props {
@@ -25,6 +27,27 @@
     let result: SearchProfileResult[] = $state([]);
     let loading = $state(false);
     let error: string | null = $state(null);
+    let searchInputEl: HTMLInputElement | null = $state(null);
+    let resultsListEl: HTMLDivElement | null = $state(null);
+
+    function focusSearchInput() {
+        searchInputEl?.focus();
+    }
+
+    const searchListNavigator = createKeyboardListNavigator({
+        getRows: () => Array.from(resultsListEl?.querySelectorAll<HTMLElement>('[data-search-row]') ?? []),
+        focusInput: focusSearchInput,
+        onActivateRow: (row) => {
+            const index = Number(row.dataset.searchIndex ?? -1);
+            const item = result[index];
+            if (!item) return;
+            onselect?.(item.address, item);
+        }
+    });
+
+    function onSearchRowClick(event: MouseEvent) {
+        searchListNavigator.onRowClick(event);
+    }
 
     function toSearchResult(raw: any | null | undefined): SearchProfileResult | undefined {
         if (!raw || typeof raw !== 'object') return undefined;
@@ -60,7 +83,7 @@
         loading = true;
         error = null;
         try {
-            const limit = 50;
+            const limit = SEARCH_POLICY.DEFAULT_REMOTE_LIMIT;
             let results: SearchProfileResult[] = [];
 
             if (q.trim() !== '') {
@@ -106,8 +129,8 @@
             lastQuery = '';
             loading = true;
             error = null;
-            rpcSearchByText('a', 25, 0)
-                .then(r => (result = r.slice(0, 25)))
+            rpcSearchByText('a', SEARCH_POLICY.DEFAULT_BOOTSTRAP_LIMIT, 0)
+                .then(r => (result = r.slice(0, SEARCH_POLICY.DEFAULT_BOOTSTRAP_LIMIT)))
                 .catch(err => {
                     console.error('Error loading default results:', err);
                     error = err instanceof Error ? err.message : 'Error loading default results';
@@ -126,7 +149,12 @@
     });
 
     onMount(async() => {
-        result = await rpcSearchByText('Circles', 25, 0, avatarTypes);
+        result = await rpcSearchByText(
+            SEARCH_POLICY.DEFAULT_BOOTSTRAP_QUERY,
+            SEARCH_POLICY.DEFAULT_BOOTSTRAP_LIMIT,
+            0,
+            avatarTypes
+        );
     });
 
     function avatarTypeToReadable(type?: string) : string {
@@ -137,7 +165,12 @@
     }
 </script>
 
-<ListToolbar query={query} placeholder="Search by name or address" />
+<ListToolbar
+    query={query}
+    placeholder="Search by name or address"
+    bind:inputEl={searchInputEl}
+    onInputKeydown={searchListNavigator.onInputArrowDown}
+/>
 
 <div class="mt-4">
     <p class="menu-title pl-0">
@@ -146,21 +179,31 @@
 
     <ListStates {loading} {error}>
         {#if result.length > 0}
-            <div class="w-full flex flex-col gap-y-1.5" role="list">
-                {#each result as profile}
-                    <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => onselect && onselect(profile.address, profile)}>
-                        <div class="min-w-0">
-                            <Avatar
-                                    address={profile.address}
-                                    view="horizontal"
-                                    bottomInfo={avatarTypeToReadable(profile.avatarType ?? '')}
-                                    clickable={false}
-                            />
-                        </div>
-                        {#snippet trailing()}<div aria-hidden="true">
-                            <img src="/chevron-right.svg" alt="" class="icon" />
-                        </div>{/snippet}
-                    </RowFrame>
+            <div bind:this={resultsListEl} class="w-full flex flex-col gap-y-1.5" role="list">
+                {#each result as profile, index}
+                    <div
+                        tabindex={0}
+                        role="button"
+                        data-search-row
+                        data-search-index={index}
+                        onkeydown={searchListNavigator.onRowKeydown}
+                        onclick={onSearchRowClick}
+                        class="rounded-[var(--row-radius)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                    >
+                        <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => onselect && onselect(profile.address, profile)}>
+                            <div class="min-w-0">
+                                <Avatar
+                                        address={profile.address}
+                                        view="horizontal"
+                                        bottomInfo={avatarTypeToReadable(profile.avatarType ?? '')}
+                                        clickable={false}
+                                />
+                            </div>
+                            {#snippet trailing()}<div aria-hidden="true">
+                                <img src="/chevron-right.svg" alt="" class="icon" />
+                            </div>{/snippet}
+                        </RowFrame>
+                    </div>
                 {/each}
             </div>
         {:else}

@@ -6,6 +6,7 @@
   import { contacts } from '$lib/domains/profile/state';
   import { circles } from '$lib/shared/state/circles';
   import { createPaginatedList } from '$lib/shared/state/paginatedList';
+  import { SEARCH_POLICY } from '$lib/shared/utils/searchPolicies';
   import { get } from 'svelte/store';
   import { writable } from 'svelte/store';
   import AvatarSearchRow from './AvatarSearchRow.svelte';
@@ -13,10 +14,11 @@
   import type { AvatarSearchItem } from './avatarSearch.types';
 
   const PAGE_SIZE = 25;
-  const MIN_REMOTE_QUERY_LENGTH = 2;
-  const REMOTE_DEBOUNCE_MS = 100;
+  const MIN_REMOTE_QUERY_LENGTH = SEARCH_POLICY.MIN_REMOTE_QUERY_LENGTH;
+  const REMOTE_DEBOUNCE_MS = SEARCH_POLICY.REMOTE_DEBOUNCE_MS;
 
   const query = writable('');
+  let searchInputEl: HTMLInputElement | null = $state(null);
   let remoteRows: AvatarSearchItem[] = $state([]);
   let remoteLoading = $state(false);
   let remoteError: string | null = $state(null);
@@ -137,7 +139,12 @@
     const sdk = get(circles);
     if (!sdk?.circlesRpc) return [];
 
-    const raw = await sdk.circlesRpc.call<any>('circles_searchProfiles', [q, 100, 0, undefined]);
+    const raw = await sdk.circlesRpc.call<any>('circles_searchProfiles', [
+      q,
+      SEARCH_POLICY.DEFAULT_REMOTE_LIMIT,
+      0,
+      undefined,
+    ]);
     const list: any[] = Array.isArray(raw?.result) ? raw.result : [];
 
     return list
@@ -204,9 +211,30 @@
   $effect(() => {
     mergedRowsStore.set(mergedRows);
   });
+
+  function onInputArrowDown(event: KeyboardEvent): void {
+    if (event.key !== 'ArrowDown') return;
+    const firstRow = document.querySelector<HTMLElement>('[data-avatar-search-row]');
+    if (!firstRow) return;
+    event.preventDefault();
+    firstRow.focus();
+  }
+
+  $effect(() => {
+    if (!searchInputEl) return;
+    searchInputEl.setAttribute('data-avatar-search-input', 'true');
+    return () => {
+      searchInputEl?.removeAttribute('data-avatar-search-input');
+    };
+  });
 </script>
 
-<ListToolbar query={query} placeholder="Search avatars by name or address" />
+<ListToolbar
+  query={query}
+  placeholder="Search avatars by name or address"
+  bind:inputEl={searchInputEl}
+  onInputKeydown={onInputArrowDown}
+/>
 
 <div class="-mt-1 mb-3 text-xs text-base-content/60 flex items-center gap-2">
   <span>{mergedRows.length} result(s)</span>

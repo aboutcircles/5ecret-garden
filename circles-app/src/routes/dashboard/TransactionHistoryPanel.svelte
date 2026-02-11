@@ -1,7 +1,56 @@
 <script lang="ts">
+    import { derived, writable } from 'svelte/store';
+    import ListShell from '$lib/shared/ui/common/ListShell.svelte';
     import GenericList from '$lib/shared/ui/common/GenericList.svelte';
     import TransactionRow from './TransactionRow.svelte';
     import {transactionHistory} from '$lib/shared/state/transactionHistory';
+
+    const searchQuery = writable('');
+    let searchInputEl: HTMLInputElement | null = $state(null);
+
+    const searchedTransactionHistory = derived([transactionHistory, searchQuery], ([$history, $query]) => {
+        const q = ($query ?? '').toLowerCase().trim();
+        if (!q) return $history;
+        const data = ($history?.data ?? []).filter((item) => {
+            const from = String(item.from ?? '').toLowerCase();
+            const to = String(item.to ?? '').toLowerCase();
+            return from.includes(q) || to.includes(q);
+        });
+        return {
+            ...$history,
+            data,
+        };
+    });
+
+    function onSearchInputKeydown(event: KeyboardEvent): void {
+        if (event.key !== 'ArrowDown') return;
+        const firstRow = document.querySelector<HTMLElement>('[data-transactions-list-scope] [data-transaction-row]');
+        if (!firstRow) return;
+        event.preventDefault();
+        firstRow.focus();
+    }
+
+    $effect(() => {
+        if (!searchInputEl) return;
+        searchInputEl.setAttribute('data-transactions-search-input', 'true');
+        return () => {
+            searchInputEl?.removeAttribute('data-transactions-search-input');
+        };
+    });
 </script>
 
-<GenericList row={TransactionRow} store={transactionHistory} rowHeight={64} maxPlaceholderPages={0} expectedPageSize={25} />
+<ListShell
+    query={searchQuery}
+    searchPlaceholder="Search by address"
+    bind:inputEl={searchInputEl}
+    onInputKeydown={onSearchInputKeydown}
+    isEmpty={$transactionHistory.data.length === 0}
+    isNoMatches={$transactionHistory.data.length > 0 && $searchedTransactionHistory.data.length === 0}
+    emptyLabel="No transactions"
+    noMatchesLabel="No matching transactions"
+    wrapInListContainer={false}
+>
+    <div data-transactions-list-scope>
+        <GenericList row={TransactionRow} store={searchedTransactionHistory} rowHeight={64} maxPlaceholderPages={0} expectedPageSize={25} />
+    </div>
+</ListShell>

@@ -26,17 +26,31 @@
     rowHeight = 72,
     pageSize = 25
   }: Props = $props();
+
+  const TRUST_LIST_SCOPE = '[data-gateway-trust-list-scope]';
+
+  function onInputArrowDown(event: KeyboardEvent): void {
+    if (event.key !== 'ArrowDown') return;
+    const firstRow = document.querySelector<HTMLElement>(`${TRUST_LIST_SCOPE} [data-gateway-trust-row]`);
+    if (!firstRow) return;
+    event.preventDefault();
+    firstRow.focus();
+  }
 </script>
 
-<SearchablePaginatedList
-  items={rows}
-  row={TrustRowView}
-  getKey={(item) => String(item.trustReceiver)}
-  addressOf={(row) => String(row.trustReceiver)}
-  {loading}
-  emptyLabel={emptyLabel}
-  noMatchesLabel={noMatchesLabel}
-  rowHeight={rowHeight}
-  pageSize={pageSize}
-  searchPlaceholder="Search by address or name"
-/>
+<div data-gateway-trust-list-scope>
+  <SearchablePaginatedList
+    items={rows}
+    row={TrustRowView}
+    getKey={(item) => String(item.trustReceiver)}
+    addressOf={(row) => String(row.trustReceiver)}
+    onInputKeydown={onInputArrowDown}
+    inputDataAttribute="data-gateway-trust-search-input"
+    {loading}
+    emptyLabel={emptyLabel}
+    noMatchesLabel={noMatchesLabel}
+    rowHeight={rowHeight}
+    pageSize={pageSize}
+    searchPlaceholder="Search by address or name"
+  />
+</div>

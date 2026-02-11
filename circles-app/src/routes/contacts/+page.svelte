@@ -2,7 +2,7 @@
     import {contacts} from '$lib/domains/profile/state';
     import Papa from 'papaparse';
     import GenericList from '$lib/shared/ui/common/GenericList.svelte';
-    import ListToolbar from '$lib/shared/ui/common/ListToolbar.svelte';
+    import ListShell from '$lib/shared/ui/common/ListShell.svelte';
     import ContactRow from './ContactRow.svelte';
     import {derived, writable, type Writable} from 'svelte/store';
     import Filter from '$lib/shared/ui/common/Filter.svelte';
@@ -21,6 +21,8 @@
     let filterVersion = writable<number | undefined>(undefined);
     let filterRelation = writable<'mutuallyTrusts' | 'trusts' | 'trustedBy' | 'variesByVersion' | undefined>(undefined);
     let searchQuery = writable<string>('');
+    let searchInputEl: HTMLInputElement | null = $state(null);
+    const CONTACTS_LIST_SCOPE = '[data-contacts-list-scope]';
 
     // Filters panel state — store to ensure reactivity in all modes
     const showFilters: Writable<boolean> = writable(false);
@@ -74,6 +76,22 @@
 
     // Paginate searched results for rendering
     const contactsPaginated = createPaginatedList(searchedAll, { pageSize: 25 });
+
+    function onSearchInputKeydown(event: KeyboardEvent): void {
+        if (event.key !== 'ArrowDown') return;
+        const firstRow = document.querySelector<HTMLElement>(`${CONTACTS_LIST_SCOPE} [data-contact-row]`);
+        if (!firstRow) return;
+        event.preventDefault();
+        firstRow.focus();
+    }
+
+    $effect(() => {
+        if (!searchInputEl) return;
+        searchInputEl.setAttribute('data-contacts-search-input', 'true');
+        return () => {
+            searchInputEl?.removeAttribute('data-contacts-search-input');
+        };
+    });
 
     async function handleExportCSV(): Promise<void> {
         // Export uses full filtered set (ignores pagination and current search)
@@ -187,7 +205,19 @@
         </div>
     {/if}
 
-    <ListToolbar query={searchQuery} placeholder="Search by address or name" />
-
-    <GenericList store={contactsPaginated} row={ContactRow} rowHeight={64} maxPlaceholderPages={0} expectedPageSize={25} />
+    <ListShell
+        query={searchQuery}
+        searchPlaceholder="Search by address or name"
+        bind:inputEl={searchInputEl}
+        onInputKeydown={onSearchInputKeydown}
+        isEmpty={$filteredAll.length === 0}
+        isNoMatches={$filteredAll.length > 0 && $searchedAll.length === 0}
+        emptyLabel={avatarState.isGroup ? 'No members' : 'No contacts'}
+        noMatchesLabel="No matches"
+        wrapInListContainer={false}
+    >
+        <div data-contacts-list-scope>
+            <GenericList store={contactsPaginated} row={ContactRow} rowHeight={64} maxPlaceholderPages={0} expectedPageSize={25} />
+        </div>
+    </ListShell>
 </PageScaffold>

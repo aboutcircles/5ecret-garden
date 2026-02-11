@@ -1,21 +1,62 @@
 <script lang="ts">
   import type { Address } from '@circles-sdk/utils';
   import type { Readable } from 'svelte/store';
+  import { derived, writable } from 'svelte/store';
+  import ListShell from '$lib/shared/ui/common/ListShell.svelte';
   import GenericList from '$lib/shared/ui/common/GenericList.svelte';
   import GatewayRowView from '$lib/areas/settings/ui/components/GatewayRow.svelte';
   import { popupControls } from '$lib/shared/state/popup';
   import CreateGatewayProfile from '$lib/areas/settings/flows/gateway/CreateGatewayProfile.svelte';
 
+  type ListValue = { data: any[]; next: () => Promise<boolean>; ended: boolean };
+
   type Props = {
     gatewayOwnerAddress: Address | '';
     circlesReady: boolean;
     loadingGateways: boolean;
-    myGatewaysStore: Readable<{ data: any[]; next: () => Promise<boolean>; ended: boolean }>;
+    myGatewaysStore: Readable<ListValue>;
     shortGatewayAddr: (a?: string) => string;
     onReloadGateways?: () => void;
   };
 
   let { gatewayOwnerAddress, circlesReady, loadingGateways, myGatewaysStore, shortGatewayAddr, onReloadGateways }: Props = $props();
+
+  const query = writable('');
+  let searchInputEl: HTMLInputElement | null = $state(null);
+
+  const filteredGatewaysStore = derived([myGatewaysStore, query], ([$store, $query]) => {
+    const q = ($query ?? '').toLowerCase().trim();
+    if (!q) return $store;
+
+    const data = ($store?.data ?? []).filter((it: any) => {
+      const gateway = String(it?.gateway ?? '').toLowerCase();
+      return gateway.includes(q);
+    });
+
+    return {
+      ...$store,
+      data,
+    };
+  });
+
+  const gatewaysDataLength = $derived(($myGatewaysStore?.data ?? []).length);
+  const filteredGatewaysDataLength = $derived(($filteredGatewaysStore?.data ?? []).length);
+
+  function onSearchInputKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'ArrowDown') return;
+    const firstRow = document.querySelector<HTMLElement>('[data-gateway-row]');
+    if (!firstRow) return;
+    event.preventDefault();
+    firstRow.focus();
+  }
+
+  $effect(() => {
+    if (!searchInputEl) return;
+    searchInputEl.setAttribute('data-payment-gateway-search-input', 'true');
+    return () => {
+      searchInputEl?.removeAttribute('data-payment-gateway-search-input');
+    };
+  });
 
   function openCreateGatewayFlow() {
     popupControls.open({
@@ -58,16 +99,24 @@
   {:else if loadingGateways}
     <div class="loading loading-spinner loading-md"></div>
   {:else}
-    {#if ($myGatewaysStore?.data ?? []).length === 0}
-      <div class="text-sm opacity-70">No gateways found for your avatar.</div>
-    {:else}
+    <ListShell
+      query={query}
+      searchPlaceholder="Search by gateway address"
+      bind:inputEl={searchInputEl}
+      onInputKeydown={onSearchInputKeydown}
+      isEmpty={gatewaysDataLength === 0}
+      isNoMatches={gatewaysDataLength > 0 && filteredGatewaysDataLength === 0}
+      emptyLabel="No gateways found for your avatar."
+      noMatchesLabel="No matching gateways"
+      wrapInListContainer={false}
+    >
       <GenericList
-        store={myGatewaysStore}
+        store={filteredGatewaysStore}
         row={GatewayRowView}
         rowHeight={64}
         maxPlaceholderPages={1}
         expectedPageSize={25}
       />
-    {/if}
+    </ListShell>
   {/if}
 </section>

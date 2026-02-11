@@ -1,5 +1,7 @@
 <script lang="ts">
   import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
+  import { derived, writable } from 'svelte/store';
+  import ListShell from '$lib/shared/ui/common/ListShell.svelte';
   import GenericList from '$lib/shared/ui/common/GenericList.svelte';
   import { browser } from '$app/environment';
   import { getMarketClient } from '$lib/shared/integrations/market';
@@ -27,6 +29,9 @@
   // Auth state mirrored from market client
   let authed = $state(false);
   const pageSize = 20;
+  const query = writable('');
+  const SALES_LIST_SCOPE = '[data-sales-orders-list-scope]';
+  let searchInputEl: HTMLInputElement | null = $state(null);
 
   function mapItems(items: any[]): ListItem[] {
     return (items ?? []).map((o: any) => ({
@@ -100,6 +105,39 @@
       ? (authed ? buildAuthedStore() : buildFallbackStore())
       : ({ subscribe(run: any) { run({ data: [], next: async () => true, ended: true }); return () => {}; } } as any)
   );
+
+  const filteredStore = derived([store, query], ([$store, $query]) => {
+    const q = ($query ?? '').toLowerCase().trim();
+    if (!q) return $store;
+    const data = ($store?.data ?? []).filter((it) => {
+      const orderNumber = String(it?.orderNumber ?? '').toLowerCase();
+      const paymentRef = String(it?.paymentReference ?? '').toLowerCase();
+      return orderNumber.includes(q) || paymentRef.includes(q);
+    });
+    return {
+      ...$store,
+      data,
+    };
+  });
+
+  const storeDataLength = $derived(($store?.data ?? []).length);
+  const filteredDataLength = $derived(($filteredStore?.data ?? []).length);
+
+  function onSearchInputKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'ArrowDown') return;
+    const firstRow = document.querySelector<HTMLElement>(`${SALES_LIST_SCOPE} [data-market-order-row]`);
+    if (!firstRow) return;
+    event.preventDefault();
+    firstRow.focus();
+  }
+
+  $effect(() => {
+    if (!searchInputEl) return;
+    searchInputEl.setAttribute('data-market-auth-search-input', 'true');
+    return () => {
+      searchInputEl?.removeAttribute('data-market-auth-search-input');
+    };
+  });
 
   async function ensureAuthed() {
     try {
@@ -177,13 +215,27 @@
   {/snippet}
 
   <section class="bg-base-100 border border-base-300 rounded-xl p-3 md:p-4">
-    <GenericList
-      {store}
-      row={SalesOrderRow}
-      getKey={(it) => it.key}
-      rowHeight={64}
-      expectedPageSize={pageSize}
-      maxPlaceholderPages={1}
-    />
+    <ListShell
+      query={query}
+      searchPlaceholder="Search by order id or payment reference"
+      bind:inputEl={searchInputEl}
+      onInputKeydown={onSearchInputKeydown}
+      isEmpty={storeDataLength === 0}
+      isNoMatches={storeDataLength > 0 && filteredDataLength === 0}
+      emptyLabel="No sales orders"
+      noMatchesLabel="No matching sales orders"
+      wrapInListContainer={false}
+    >
+      <div data-sales-orders-list-scope>
+        <GenericList
+          store={filteredStore}
+          row={SalesOrderRow}
+          getKey={(it) => it.key}
+          rowHeight={64}
+          expectedPageSize={pageSize}
+          maxPlaceholderPages={1}
+        />
+      </div>
+    </ListShell>
   </section>
 </PageScaffold>

@@ -60,6 +60,50 @@
         popupControls.open(def);
     }
 
+    function focusTransactionSearchInput(): void {
+        const input = document.querySelector<HTMLInputElement>('[data-transactions-search-input]');
+        input?.focus();
+    }
+
+    function onRowKeydown(event: KeyboardEvent): void {
+        const current = event.currentTarget as HTMLElement | null;
+        if (!current) return;
+
+        const target = event.target as HTMLElement | null;
+        const isNestedTarget = !!target && target !== current;
+
+        if (event.key === 'Enter' || event.key === ' ') {
+            if (isNestedTarget) return;
+            event.preventDefault();
+            openDetails();
+            return;
+        }
+
+        if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+
+        const scope = current.closest<HTMLElement>('[data-transactions-list-scope]');
+        const rows = Array.from((scope ?? document).querySelectorAll<HTMLElement>('[data-transaction-row]'));
+        const index = rows.indexOf(current);
+        if (index === -1) return;
+
+        event.preventDefault();
+
+        if (event.key === 'ArrowUp' && index === 0) {
+            focusTransactionSearchInput();
+            return;
+        }
+
+        const nextIndex = event.key === 'ArrowDown' ? index + 1 : index - 1;
+        if (nextIndex < 0 || nextIndex >= rows.length) return;
+        rows[nextIndex]?.focus();
+    }
+
+    function onRowClick(event: MouseEvent): void {
+        const current = event.currentTarget as HTMLElement | null;
+        current?.focus();
+        openDetails();
+    }
+
     $effect(() => {
         if (!avatarState.avatar) return;
         counterpartyAddress = getCounterpartyAddress(avatarState.avatar.address);
@@ -72,26 +116,36 @@
 </script>
 
 <!-- One cohesive horizontal block inside content; collapse RowFrame leading -->
-<RowFrame clickable={true} dense={true} noLeading={true}>
-    <div class="w-full flex items-center justify-between cursor-pointer" role="button" tabindex="0" onclick={openDetails} onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetails(); } }}>
-        <div class="min-w-0">
-            <Avatar
-                    address={counterpartyAddress}
-                    view="horizontal"
-                    clickable={true}
-                    pictureOverlayUrl={badgeUrl ?? undefined}
-                    topInfo={topInfoText}
-                    bottomInfo={getTimeAgo(item.timestamp)}
-            />
-        </div>
+<div
+    data-transaction-row
+    tabindex={0}
+    role="button"
+    aria-label={`Open transaction details for ${counterpartyAddress}`}
+    class="rounded-[var(--row-radius)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+    onkeydown={onRowKeydown}
+    onclick={onRowClick}
+>
+    <RowFrame clickable={true} dense={true} noLeading={true}>
+        <div class="w-full flex items-center justify-between cursor-pointer">
+            <div class="min-w-0">
+                <Avatar
+                        address={counterpartyAddress}
+                        view="horizontal"
+                        clickable={true}
+                        pictureOverlayUrl={badgeUrl ?? undefined}
+                        topInfo={topInfoText}
+                        bottomInfo={getTimeAgo(item.timestamp)}
+                />
+            </div>
 
-        <div class="text-right shrink-0">
-            {#if sent}
-                <span class="text-error font-bold">{displayAmount}</span>
-            {:else}
-                <span class="text-success font-bold">{displayAmount}</span>
-            {/if}
-            <span> CRC</span>
+            <div class="text-right shrink-0">
+                {#if sent}
+                    <span class="text-error font-bold">{displayAmount}</span>
+                {:else}
+                    <span class="text-success font-bold">{displayAmount}</span>
+                {/if}
+                <span> CRC</span>
+            </div>
         </div>
-    </div>
-</RowFrame>
+    </RowFrame>
+</div>

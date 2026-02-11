@@ -30,18 +30,32 @@
         pageSize = 25,
         searchPlaceholder = 'Search by address or name'
     }: Props = $props();
+
+    let listScopeEl: HTMLDivElement | null = $state(null);
+
+    function onInputArrowDown(event: KeyboardEvent): void {
+        if (event.key !== 'ArrowDown') return;
+        const firstRow = listScopeEl?.querySelector<HTMLElement>('[data-trust-relation-row]');
+        if (!firstRow) return;
+        event.preventDefault();
+        firstRow.focus();
+    }
 </script>
 
-<SearchablePaginatedList
-    items={addresses}
-    {row}
-    getKey={getKey}
-    addressOf={(addr) => String(addr)}
-    {loading}
-    {error}
-    emptyLabel={emptyLabel}
-    noMatchesLabel={noMatchesLabel}
-    rowHeight={rowHeight}
-    pageSize={pageSize}
-    searchPlaceholder={searchPlaceholder}
-/>
+<div data-profile-relations-list-scope bind:this={listScopeEl}>
+    <SearchablePaginatedList
+        items={addresses}
+        {row}
+        getKey={getKey}
+        addressOf={(addr) => String(addr)}
+        onInputKeydown={onInputArrowDown}
+        inputDataAttribute="data-profile-relations-search-input"
+        {loading}
+        {error}
+        emptyLabel={emptyLabel}
+        noMatchesLabel={noMatchesLabel}
+        rowHeight={rowHeight}
+        pageSize={pageSize}
+        searchPlaceholder={searchPlaceholder}
+    />
+</div>
