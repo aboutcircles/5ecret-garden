@@ -1,19 +1,74 @@
 <script lang="ts">
   import { wallet } from '$lib/shared/state/wallet.svelte';
+  import { page } from '$app/stores';
+  import { circles } from '$lib/shared/state/circles';
+  import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/shared/utils/getGroupsByOwnerBatch';
+  import type { Address as EvmAddress } from '@circles-sdk/utils';
+  import { goto } from '$app/navigation';
   import QrCode from '$lib/shared/ui/common/QrCode.svelte';
   import Address from '$lib/shared/ui/common/Address.svelte';
   import ConnectWallet from '$lib/areas/wallet/ui/onboarding/ConnectWallet.svelte';
   import Disclaimer from '$lib/shared/ui/common/Disclaimer.svelte';
   import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
+
+  const ownerAddress = $derived(($page.url.searchParams.get('owner') ?? '').trim().toLowerCase() as EvmAddress | '');
+  const shortAddr = (a?: string) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : '');
+
+  let ownerHasGroups: boolean = $state(false);
+  let ownerGroupsLoading: boolean = $state(false);
+
+  async function loadOwnerGroupsFlag() {
+    if (!ownerAddress || !$circles) {
+      ownerHasGroups = false;
+      return;
+    }
+    try {
+      ownerGroupsLoading = true;
+      const byOwner = await getBaseAndCmgGroupsByOwnerBatch($circles, [ownerAddress]);
+      const rows = byOwner[ownerAddress] ?? byOwner[ownerAddress.toLowerCase() as EvmAddress] ?? [];
+      ownerHasGroups = rows.length > 0;
+    } catch {
+      ownerHasGroups = false;
+    } finally {
+      ownerGroupsLoading = false;
+    }
+  }
+
+  $effect(() => {
+    void loadOwnerGroupsFlag();
+  });
+
+  function openManageGroups() {
+    if (!ownerAddress) return;
+    goto(`/group-management?owner=${ownerAddress}`);
+  }
 </script>
 
 
 <PageScaffold highlight="soft" collapsedMode="bar" collapsedHeightClass="h-12" maxWidthClass="page page--lg" contentWidthClass="page page--lg" usePagePadding={true} headerTopGapClass="mt-4 md:mt-6" collapsedTopGapClass="mt-3 md:mt-4">
-  {#snippet title()}<h1 class="h2 m-0">Create Account</h1>{/snippet}
-  {#snippet meta()}Takes ~2 minutes{/snippet}
+  {#snippet title()}
+    <h1 class="h2 m-0">{ownerAddress ? shortAddr(ownerAddress) : 'Create Account'}</h1>
+  {/snippet}
+  {#snippet meta()}
+    {#if ownerAddress}
+      Connected safe
+    {:else}
+      Takes ~2 minutes
+    {/if}
+  {/snippet}
+  {#snippet headerActions()}
+    {#if ownerAddress}
+      <button class="btn btn-sm btn-primary" onclick={() => goto('/register')}>Create account</button>
+      {#if ownerGroupsLoading}
+        <button class="btn btn-sm btn-ghost" disabled>Checking groups…</button>
+      {:else if ownerHasGroups}
+        <button class="btn btn-sm btn-ghost" onclick={openManageGroups}>Manage groups</button>
+      {/if}
+    {/if}
+  {/snippet}
   {#snippet collapsedLeft()}
     <div class="truncate flex items-center gap-2">
-      <span class="font-medium">Create Account</span>
+      <span class="font-medium">{ownerAddress ? shortAddr(ownerAddress) : 'Create Account'}</span>
     </div>
   {/snippet}
 
