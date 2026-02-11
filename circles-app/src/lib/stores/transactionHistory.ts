@@ -12,6 +12,27 @@ const PAGE_SIZE = 100; // Fetch 100 events - they get grouped by tx hash
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 /**
+ * Parse a numeric value that may be hex-encoded (e.g. "0x53444835ec580000")
+ * or a regular decimal string. Returns a JS number.
+ * Handles: hex bigints, decimal strings, plain numbers, "0", empty/null.
+ */
+function parseNumericValue(raw: unknown): number {
+  if (raw == null) return 0;
+  if (typeof raw === 'number') return raw;
+  const str = String(raw).trim();
+  if (!str || str === '0') return 0;
+  if (str.startsWith('0x') || str.startsWith('0X')) {
+    try {
+      return Number(BigInt(str));
+    } catch {
+      return 0;
+    }
+  }
+  const n = parseFloat(str);
+  return isNaN(n) ? 0 : n;
+}
+
+/**
  * Extended transaction row with event type and operator
  */
 export type ExtendedTransactionRow = TransactionHistoryRow & {
@@ -528,10 +549,11 @@ async function loadNextPage(): Promise<boolean> {
         }
 
         // Extract amount - check multiple possible field names
+        // RPC may return hex-encoded bigints (e.g. "0x53444835ec580000")
         const rawAmount = vals.amount || vals.value || vals.attoValue || '0';
         const amountStr = typeof rawAmount === 'string' ? rawAmount : String(rawAmount);
-        // Convert from wei (1e18) to CRC
-        const circlesAmount = amountStr !== '0' ? parseFloat(amountStr) / 1e18 : 0;
+        // Convert from wei (1e18) to CRC — parseNumericValue handles hex
+        const circlesAmount = amountStr !== '0' ? parseNumericValue(amountStr) / 1e18 : 0;
 
         return {
           blockNumber: parseInt(vals.blockNumber as string, 16) || 0,
@@ -615,19 +637,17 @@ async function loadNextPage(): Promise<boolean> {
         let circlesAmount = 0;
 
         // Priority: human-readable fields first, then atto fields (divide by 1e18)
+        // All parsing uses parseNumericValue() to handle hex-encoded bigints from RPC
         if (circlesVal && circlesVal !== '0') {
-          circlesAmount = parseFloat(circlesVal as string);
+          circlesAmount = parseNumericValue(circlesVal);
         } else if (crcVal && crcVal !== '0') {
-          circlesAmount = parseFloat(crcVal as string);
+          circlesAmount = parseNumericValue(crcVal);
         } else if (attoCirclesVal && attoCirclesVal !== '0') {
-          // attoCircles is in 1e18 units - convert to CRC
-          circlesAmount = parseFloat(attoCirclesVal as string) / 1e18;
+          circlesAmount = parseNumericValue(attoCirclesVal) / 1e18;
         } else if (attoCrcVal && attoCrcVal !== '0') {
-          // attoCrc is in 1e18 units - convert to CRC
-          circlesAmount = parseFloat(attoCrcVal as string) / 1e18;
+          circlesAmount = parseNumericValue(attoCrcVal) / 1e18;
         } else if (valueVal && valueVal !== '0') {
-          // value field - check magnitude to determine if wei or human-readable
-          const val = parseFloat(valueVal as string);
+          const val = parseNumericValue(valueVal);
           // If value > 1e15, it's likely in wei (atto) units
           circlesAmount = val > 1e15 ? val / 1e18 : val;
         }
@@ -865,3 +885,36 @@ export const groupedTransactionHistory = derived(
     };
   }
 );
+
+/**
+ * Force-refresh transaction history by resetting cursor/cache and refetching.
+ * Unlike initTransactionHistoryStore(), this bypasses the "already initialized" guard
+ * so new transactions (from WebSocket events) actually appear.
+ */
+export async function refreshTransactionHistory(): Promise<void> {
+  if (!currentAvatar || !currentAvatarAddress) {
+    console.log('[TxHistory] refreshTransactionHistory: no avatar, skipping');
+    return;
+  }
+
+  console.log('[TxHistory] refreshTransactionHistory: resetting and refetching');
+
+  // Reset pagination state
+  nextCursor = null;
+  hasMore = true;
+  isLoading = false;
+
+  // Clear memoization cache for fresh grouping
+  resetGroupedCache();
+
+  // Reset store with loading=true
+  _transactionHistory.set({
+    data: [],
+    next: loadNextPage,
+    ended: false,
+    isLoading: true,
+  });
+
+  // Refetch from page 1
+  await loadNextPage();
+}
