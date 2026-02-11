@@ -2,7 +2,7 @@
   import type { Address } from '@circles-sdk/utils';
 import { ProfileExplorer } from '$lib/domains/profile/ui';
   import GroupSetting from '$lib/areas/settings/ui/editors/GroupSetting.svelte';
-  import ActionButton from '$lib/shared/ui/common/ActionButton.svelte';
+  import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import { ipfsGatewayUrl } from '$lib/shared/utils/ipfs';
   import { canMigrate } from '$lib/shared/guards/canMigrate';
 

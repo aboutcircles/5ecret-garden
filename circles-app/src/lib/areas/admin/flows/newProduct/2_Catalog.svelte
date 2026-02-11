@@ -4,7 +4,7 @@
   import { getMarketClient } from '$lib/shared/integrations/market';
   import { gnosisConfig } from '$lib/shared/config/circles';
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
-  import RowFrame from '$lib/shared/ui/RowFrame.svelte';
+  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import AdminStatusBadge from '$lib/areas/admin/components/AdminStatusBadge.svelte';
   import { adminProductKey } from '$lib/areas/admin/helpers';
   import { normalizeSku } from '$lib/areas/admin/productEditorUtils';

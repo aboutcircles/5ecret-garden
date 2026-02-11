@@ -5,7 +5,7 @@
     import { tokenTypeToString } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
     import { roundToDecimals } from '$lib/shared/utils/shared';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-    import Tooltip from "$lib/shared/ui/common/Tooltip.svelte";
+    import Tooltip from "$lib/shared/ui/primitives/Tooltip.svelte";
 
     interface Props {
         balanceRow: TokenBalanceRow;

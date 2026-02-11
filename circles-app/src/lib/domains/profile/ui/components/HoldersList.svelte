@@ -16,9 +16,17 @@
 
     interface Props {
         holders: HolderRow[];
+        emptyLabel?: string;
+        noMatchesLabel?: string;
+        searchPlaceholder?: string;
     }
 
-    let { holders }: Props = $props();
+    let {
+        holders,
+        emptyLabel = 'No holders',
+        noMatchesLabel = 'No matches',
+        searchPlaceholder = 'Search by address or name'
+    }: Props = $props();
     let listScopeEl: HTMLDivElement | null = $state(null);
 
     const holdersStore = writable<HolderRow[]>([]);
@@ -41,10 +49,10 @@
         addressOf={(row) => String(row.avatar)}
         onInputKeydown={onInputArrowDown}
         inputDataAttribute="data-holders-search-input"
-        emptyLabel="No holders"
-        noMatchesLabel="No matches"
         rowHeight={64}
         pageSize={25}
-        searchPlaceholder="Search by address or name"
+        {searchPlaceholder}
+        {emptyLabel}
+        {noMatchesLabel}
     />
 </div>

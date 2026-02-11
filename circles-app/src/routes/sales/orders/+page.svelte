@@ -16,16 +16,20 @@
   import { signInWithSafe } from '$lib/areas/market/auth/signin';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
+  import {
+    getSalesBySeller,
+  } from '$lib/areas/market/orders/ordersQueries';
+  import {
+    mapMarketSales,
+    type MarketSalesListItem,
+  } from '$lib/areas/market/orders/ordersMappers';
+  import {
+    createPagedListStore,
+  } from '$lib/areas/market/orders/ordersStores';
 
   import SalesOrderRow from '$lib/areas/market/ui/SalesOrderRow.svelte';
 
-  type ListItem = {
-    key: string;
-    orderNumber: string;
-    orderDate?: string;
-    orderStatus?: string;
-    paymentReference?: string | null;
-  };
+  type ListItem = MarketSalesListItem;
 
   // Auth state mirrored from market client
   let authed = $state(false);
@@ -33,54 +37,16 @@
   const query = writable('');
   let salesListScopeEl: HTMLDivElement | null = $state(null);
 
-  function mapItems(items: any[]): ListItem[] {
-    return (items ?? []).map((o: any) => ({
-      key: String(o?.orderNumber ?? ''),
-      orderNumber: String(o?.orderNumber ?? ''),
-      orderDate: typeof o?.orderDate === 'string' ? o.orderDate : undefined,
-      orderStatus: typeof o?.orderStatus === 'string' ? o.orderStatus : undefined,
-      paymentReference: (o?.paymentReference ?? null) as string | null,
-    }));
-  }
-
   function buildAuthedStore(): Readable<{ data: ListItem[]; next: () => Promise<boolean>; ended: boolean }>{
-    type State = { data: ListItem[]; ended: boolean; next: () => Promise<boolean>; page: number; loading: boolean };
-    const subscribers = new Set<(v: State) => void>();
-    const notify = (v: State) => subscribers.forEach((fn) => fn(v));
-
-    let state: State = {
-      data: [],
-      ended: false,
-      page: 0,
-      loading: false,
-      next: async () => {
-        if (state.loading || state.ended) return true;
-        state = { ...state, loading: true };
-        notify(state);
-        try {
-          const nextPage = state.page + 1;
-          const res = await getMarketClient().sales.list({ page: nextPage, pageSize });
-          const items = Array.isArray(res?.items) ? res.items : [];
-          const data = state.data.concat(mapItems(items));
-          const ended = items.length < pageSize;
-          state = { ...state, data, page: nextPage, ended, loading: false };
-          notify(state);
-          return ended;
-        } catch (e) {
-          state = { ...state, ended: true, loading: false };
-          notify(state);
-          return true;
-        }
+    return createPagedListStore<ListItem>({
+      pageSize,
+      loadPage: async (page, currentPageSize) => {
+        const res = await getSalesBySeller(page, currentPageSize);
+        const items = Array.isArray(res?.items) ? res.items : [];
+        return mapMarketSales(items);
       },
-    };
-
-    return {
-      subscribe(run: (v: State) => void) {
-        subscribers.add(run);
-        run(state);
-        return () => { subscribers.delete(run); };
-      },
-    } as any;
+      isEnded: (items, currentPageSize) => items.length < currentPageSize,
+    });
   }
 
   function buildFallbackStore(): Readable<{ data: ListItem[]; next: () => Promise<boolean>; ended: boolean }>{

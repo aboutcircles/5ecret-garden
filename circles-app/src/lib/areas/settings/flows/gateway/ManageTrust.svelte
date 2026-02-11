@@ -12,6 +12,7 @@
   import ManageTrustSearch from '$lib/areas/settings/flows/gateway/SearchTrustReceiver.svelte';
   import ConfirmGatewayUntrust from '$lib/areas/settings/flows/gateway/ConfirmGatewayUntrust.svelte';
   import GatewayTrustedAccountsList from '$lib/areas/settings/ui/components/GatewayTrustedAccountsList.svelte';
+  import { fetchActiveTrustRowsByGateway } from '$lib/shared/data/circles/paymentGateways';
 
   import type { TrustRow } from '$lib/areas/settings/model/gatewayTypes';
 
@@ -56,87 +57,7 @@
 
     try {
       loadingTrusts = true;
-      const resp = await $circles.circlesRpc.call<{
-        columns: string[];
-        rows: any[][];
-      }>('circles_query', [
-        {
-          Namespace: 'CrcV2_PaymentGateway',
-          Table: 'TrustUpdated',
-          Columns: [
-            'trustReceiver',
-            'expiry',
-            'blockNumber',
-            'transactionIndex',
-            'logIndex'
-          ],
-          Filter: [
-            {
-              Type: 'FilterPredicate',
-              FilterType: 'Equals',
-              Column: 'gateway',
-              Value: gateway.toLowerCase()
-            }
-          ],
-          Order: []
-        }
-      ]);
-
-      const cols = resp?.result?.columns ?? [];
-      const rows = resp?.result?.rows ?? [];
-
-      const idxR = cols.indexOf('trustReceiver');
-      const idxE = cols.indexOf('expiry');
-      const idxB = cols.indexOf('blockNumber');
-      const idxTi = cols.indexOf('transactionIndex');
-      const idxLi = cols.indexOf('logIndex');
-
-      type Agg = {
-        expiry: number;
-        blockNumber: number;
-        transactionIndex: number;
-        logIndex: number;
-      };
-
-      const map = new Map<string, Agg>();
-
-      for (const r of rows) {
-        const recv = r[idxR] ? ethers.getAddress(r[idxR]) : '';
-        if (!recv) continue;
-        const expiryNum = r[idxE] ? Number(r[idxE]) : 0;
-        const bn = r[idxB] ? Number(r[idxB]) : 0;
-        const ti = r[idxTi] ? Number(r[idxTi]) : 0;
-        const li = r[idxLi] ? Number(r[idxLi]) : 0;
-        const prev = map.get(recv);
-
-        if (
-          !prev ||
-          bn > prev.blockNumber ||
-          (bn === prev.blockNumber &&
-            (ti > prev.transactionIndex ||
-              (ti === prev.transactionIndex && li > prev.logIndex)))
-        ) {
-          map.set(recv, {
-            expiry: expiryNum,
-            blockNumber: bn,
-            transactionIndex: ti,
-            logIndex: li
-          });
-        }
-      }
-
-      const now = Math.floor(Date.now() / 1000);
-
-      const entries: TrustRow[] = Array.from(map.entries())
-        .map(([trustReceiver, v]) => ({
-          trustReceiver,
-          expiry: v.expiry,
-          blockNumber: v.blockNumber,
-          transactionIndex: v.transactionIndex,
-          logIndex: v.logIndex
-        }))
-        .filter((row) => (row.expiry ?? 0) > now)
-        .sort((a, b) => a.trustReceiver.localeCompare(b.trustReceiver));
+      const entries: TrustRow[] = await fetchActiveTrustRowsByGateway($circles, gateway);
 
       trusts = entries;
       trustRowsStore.set(entries);

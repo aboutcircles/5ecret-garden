@@ -1,7 +1,7 @@
 <script lang="ts">
-  import ActionButton from '$lib/shared/ui/common/ActionButton.svelte';
+  import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-  import RowFrame from '$lib/shared/ui/RowFrame.svelte';
+  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
 
   interface Props {
     address: `0x${string}`;

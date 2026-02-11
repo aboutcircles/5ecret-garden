@@ -5,9 +5,9 @@
   import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
   import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
   import ListStates from '$lib/shared/ui/lists/ListStates.svelte';
-  import RowFrame from '$lib/shared/ui/RowFrame.svelte';
+  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-  import ActionButton from '$lib/shared/ui/common/ActionButton.svelte';
+  import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import { circles } from '$lib/shared/state/circles';
   import { popupControls } from '$lib/shared/state/popup';
   import { runTask } from '$lib/shared/utils/tasks';
@@ -16,6 +16,7 @@
   import { createSearchOverlayController } from '$lib/shared/ui/lists/utils/searchOverlayController';
   import { registerOutsidePointerClose } from '$lib/shared/ui/lists/utils/outsidePointerClose';
   import { SEARCH_POLICY } from '$lib/shared/ui/lists/utils/searchPolicies';
+  import { searchProfilesRpc } from '$lib/shared/data/circles/searchProfiles';
 
   interface Props {
     group: Address;
@@ -116,13 +117,12 @@
       return [];
     }
 
-    const raw = await sdk.circlesRpc.call<any>('circles_searchProfiles', [
-      q,
-      SEARCH_POLICY.DEFAULT_REMOTE_LIMIT,
-      0,
-      ['CrcV2_RegisterHuman', 'CrcV2_RegisterOrganization', 'CrcV2_RegisterGroup'],
-    ]);
-    return (Array.isArray(raw?.result) ? raw.result : []) as SearchProfileResult[];
+    return await searchProfilesRpc(sdk, {
+      query: q,
+      limit: SEARCH_POLICY.DEFAULT_REMOTE_LIMIT,
+      offset: 0,
+      avatarTypes: ['CrcV2_RegisterHuman', 'CrcV2_RegisterOrganization', 'CrcV2_RegisterGroup'],
+    }) as SearchProfileResult[];
   }
 
   $effect(() => {

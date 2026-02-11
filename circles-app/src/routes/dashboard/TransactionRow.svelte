@@ -3,7 +3,7 @@
     import type { TransactionHistoryRow } from '@circles-sdk/data';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import { avatarState } from '$lib/shared/state/avatar.svelte';
-    import RowFrame from '$lib/shared/ui/RowFrame.svelte';
+    import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
     import { popupControls, type PopupContentDefinition } from '$lib/shared/state/popup';
     import TransactionDetailsPopup from './TransactionDetailsPopup.svelte';
 

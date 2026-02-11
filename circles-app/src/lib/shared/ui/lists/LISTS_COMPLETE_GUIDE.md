@@ -221,6 +221,22 @@ Rule: avoid screen-local hardcoded policy constants unless documented.
 6. Row click focuses row (keyboard/mouse parity).
 7. Row queries are list-scope-first.
 
+## 5.1 Mandatory async search request contract
+
+For any request/response based search (RPC, HTTP, SDK):
+
+1. **Debounce user-triggered remote search** using shared policy (`SEARCH_POLICY.REMOTE_DEBOUNCE_MS`) unless a documented exception exists.
+2. **Latest-query-wins is required**:
+   - stale responses must never overwrite newer results.
+   - implement via sequence/token check or shared controller helper.
+3. **Best-effort cancellation is required**:
+   - cancel scheduled-but-not-started work (`clearTimeout`, equivalent).
+   - if transport abort is unavailable, ignore stale in-flight responses when they resolve.
+4. **Clear lifecycle behavior**:
+   - closing/disposing a search surface must invalidate pending/in-flight responses.
+5. **No copy-paste local variants**:
+   - prefer shared utilities (`createSearchOverlayController`) or equivalent reusable helper.
+
 ---
 
 ## 6) Accessibility requirements

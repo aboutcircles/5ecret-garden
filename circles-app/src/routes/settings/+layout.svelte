@@ -37,6 +37,7 @@
     loadNamespacesProfileForSettings,
     saveNamespacesProfileForSettings,
   } from '$lib/areas/settings/state/settingsNamespaces';
+  import { fetchGatewayRowsByOwner } from '$lib/shared/data/circles/paymentGateways';
 
   // ——— Marketplace (duplicate of /market/[seller], but seller = connected avatar) ———
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
@@ -45,12 +46,15 @@
   import { getMarketClient } from '$lib/shared/integrations/market';
   import { signInWithSafe } from '$lib/areas/market/auth/signin';
   import {
-    getOrdersByBuyer,
-    getOrder,
-    subscribeBuyerOrderEvents,
     getSalesBySeller,
-  } from '$lib/areas/market/orders/ordersAdapter';
-  import type { OrderStatusSseEvent } from '$lib/areas/market/orders/types';
+  } from '$lib/areas/market/orders/ordersQueries';
+  import {
+    mapMarketOrderSummaries,
+  } from '$lib/areas/market/orders/ordersMappers';
+  import {
+    createPagedListStore,
+    createBuyerOrdersStore,
+  } from '$lib/areas/market/orders/ordersStores';
   import OrderDetailsPopup from '$lib/areas/market/orders/OrderDetailsPopup.svelte';
 
   // ——— Payment (duplicate of /gateway) ———
@@ -83,134 +87,21 @@
   let ordersAuthed = $state(false);
   let salesAuthed = $state(false);
 
-  function mapOrderItems(items: any[]): OrdersListItem[] {
-    return items.map((s, i) => {
-      const orderId = (s as any)?.orderNumber ?? `ord_${i}`;
-      const displayId = (s as any)?.orderNumber ?? (s as any)?.paymentReference ?? `ord_${i}`;
-      return {
-        key: orderId,
-        displayId,
-        status: (s as any)?.orderStatus,
-        total: (s as any)?.totalPaymentDue ?? null,
-        customerId: (s as any)?.customer?.['@id'] ?? null,
-        snapshot: s,
-      } as OrdersListItem;
-    });
-  }
-
   function buildOrdersAuthedStore(): Readable<{
     data: OrdersListItem[];
     next: () => Promise<boolean>;
     ended: boolean;
   }> {
-    type State = {
-      data: OrdersListItem[];
-      ended: boolean;
-      next: () => Promise<boolean>;
-      page: number;
-      loading: boolean;
-    };
-    const subscribers = new Set<(v: State) => void>();
-    const notify = (v: State) => subscribers.forEach((fn) => fn(v));
-
-    let stopSse: (() => void) | null = null;
-
-    function ensureSse() {
-      if (stopSse) return;
-      stopSse = subscribeBuyerOrderEvents(async (evt: OrderStatusSseEvent) => {
-        if (!evt || typeof evt.orderId !== 'string') return;
-        const idx = state.data.findIndex((it) => it.key === evt.orderId);
-        if (idx >= 0) {
-          const cur = state.data[idx];
-          const updated = { ...cur, status: evt.newStatus };
-          const nextData = state.data.slice();
-          nextData[idx] = updated;
-          state = { ...state, data: nextData };
-          notify(state);
-        }
-
-        if (
-          evt.newStatus === 'https://schema.org/PaymentComplete' ||
-          evt.newStatus === 'https://schema.org/OrderDelivered'
-        ) {
-          try {
-            const snap = await getOrder(evt.orderId!);
-            const idx2 = state.data.findIndex((it) => it.key === evt.orderId);
-            if (idx2 >= 0) {
-              const total = (snap as any)?.totalPaymentDue ?? state.data[idx2].total ?? null;
-              const next = {
-                ...state.data[idx2],
-                status: (snap as any)?.orderStatus ?? evt.newStatus,
-                total,
-                snapshot: snap,
-              };
-              const arr = state.data.slice();
-              arr[idx2] = next;
-              state = { ...state, data: arr };
-              notify(state);
-
-              const outbox = (snap as any)?.outbox;
-              if (Array.isArray(outbox) && outbox.length > 0) {
-                popupControls.open({
-                  title: 'Order updated',
-                  component: OrderDetailsPopup,
-                  props: { snapshot: snap },
-                });
-              }
-            }
-          } catch {
-            // ignore fetch errors
-          }
-        }
-      }) as (() => void) | null;
-    }
-
-    function stopSseIfIdle() {
-      if (subscribers.size === 0 && stopSse) {
-        try {
-          stopSse();
-        } catch {}
-        stopSse = null;
-      }
-    }
-
-    let state: State = {
-      data: [],
-      ended: false,
-      page: 0,
-      loading: false,
-      next: async () => {
-        if (state.loading || state.ended) return true;
-        state = { ...state, loading: true };
-        notify(state);
-        try {
-          const nextPage = state.page + 1;
-          const resp = await getOrdersByBuyer(nextPage, 50);
-          const items = Array.isArray(resp?.items) ? resp.items : [];
-          const data = state.data.concat(mapOrderItems(items));
-          const ended = items.length === 0;
-          state = { ...state, data, page: nextPage, ended, loading: false };
-          notify(state);
-          return true;
-        } catch {
-          state = { ...state, ended: true, loading: false };
-          notify(state);
-          return true;
-        }
+    return createBuyerOrdersStore({
+      pageSize: 50,
+      onOrderUpdatedWithOutbox: (snap) => {
+        popupControls.open({
+          title: 'Order updated',
+          component: OrderDetailsPopup,
+          props: { snapshot: snap },
+        });
       },
-    };
-
-    return {
-      subscribe(run: (v: State) => void) {
-        subscribers.add(run);
-        if (subscribers.size === 1) ensureSse();
-        run(state);
-        return () => {
-          subscribers.delete(run);
-          stopSseIfIdle();
-        };
-      },
-    } as any;
+    }) as Readable<{ data: OrdersListItem[]; next: () => Promise<boolean>; ended: boolean }>;
   }
 
   function buildSalesAuthedStore(): Readable<{
@@ -218,51 +109,15 @@
     next: () => Promise<boolean>;
     ended: boolean;
   }> {
-    type State = {
-      data: OrdersListItem[];
-      ended: boolean;
-      next: () => Promise<boolean>;
-      page: number;
-      loading: boolean;
-    };
-    const subscribers = new Set<(v: State) => void>();
-    const notify = (v: State) => subscribers.forEach((fn) => fn(v));
-
-    let state: State = {
-      data: [],
-      ended: false,
-      page: 0,
-      loading: false,
-      next: async () => {
-        if (state.loading || state.ended) return true;
-        state = { ...state, loading: true };
-        notify(state);
-        try {
-          const nextPage = state.page + 1;
-          const resp = await getSalesBySeller(nextPage, 50);
-          const items = Array.isArray(resp?.items) ? resp.items : [];
-          const data = state.data.concat(mapOrderItems(items));
-          const ended = items.length === 0;
-          state = { ...state, data, page: nextPage, ended, loading: false };
-          notify(state);
-          return true;
-        } catch {
-          state = { ...state, ended: true, loading: false };
-          notify(state);
-          return true;
-        }
+    return createPagedListStore<OrdersListItem>({
+      pageSize: 50,
+      loadPage: async (page, pageSize) => {
+        const resp = await getSalesBySeller(page, pageSize);
+        const items = Array.isArray(resp?.items) ? resp.items : [];
+        return mapMarketOrderSummaries(items) as OrdersListItem[];
       },
-    };
-
-    return {
-      subscribe(run: (v: State) => void) {
-        subscribers.add(run);
-        run(state);
-        return () => {
-          subscribers.delete(run);
-        };
-      },
-    } as any;
+      isEnded: (items) => items.length === 0,
+    });
   }
 
   function buildOrdersFallbackStore(): Readable<{
@@ -635,50 +490,7 @@
 
     try {
       loadingGateways = true;
-
-      const resp = await $circles.circlesRpc.call<{
-        columns: string[];
-        rows: any[][];
-      }>('circles_query', [
-        {
-          Namespace: 'CrcV2_PaymentGateway',
-          Table: 'GatewayCreated',
-          Columns: ['gateway', 'timestamp', 'transactionHash', 'blockNumber'],
-          Filter: [
-            {
-              Type: 'FilterPredicate',
-              FilterType: 'Equals',
-              Column: 'owner',
-              Value: gatewayOwnerAddress.toLowerCase(),
-            },
-          ],
-          Order: [],
-        },
-      ]);
-
-      const cols = resp?.result?.columns ?? [];
-      const rows = resp?.result?.rows ?? [];
-
-      const idxG = cols.indexOf('gateway');
-      const idxTs = cols.indexOf('timestamp');
-      const idxTx = cols.indexOf('transactionHash');
-      const idxBn = cols.indexOf('blockNumber');
-
-      const rowsMapped: GatewayRow[] = rows
-        .map((r) => {
-          const gateway = r[idxG] ? ethers.getAddress(r[idxG]) : '';
-          if (!gateway) return null;
-          return {
-            gateway,
-            timestamp: r[idxTs] ? Number(r[idxTs]) : undefined,
-            tx: r[idxTx] ?? undefined,
-            blockNumber: r[idxBn] ? Number(r[idxBn]) : 0,
-            transactionIndex: 0,
-            logIndex: 0,
-          } as GatewayRow;
-        })
-        .filter((r): r is GatewayRow => r !== null)
-        .sort((a, b) => b.blockNumber - a.blockNumber);
+      const rowsMapped: GatewayRow[] = await fetchGatewayRowsByOwner($circles, gatewayOwnerAddress);
 
       myGatewaysStoreInner.set({
         data: rowsMapped,

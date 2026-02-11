@@ -1,6 +1,6 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
-    import ActionButton from '$lib/shared/ui/common/ActionButton.svelte';
+    import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import type { Avatar as AvatarType } from '@circles-sdk/sdk';
     import { circles } from '$lib/shared/state/circles';
@@ -12,11 +12,11 @@
 import { ProfileHeaderEditor } from '$lib/domains/profile/ui';
     import { settings } from '$lib/shared/state/settings.svelte';
     import { avatarState } from '$lib/shared/state/avatar.svelte';
-    import Disclaimer from '$lib/shared/ui/common/Disclaimer.svelte';
+    import Disclaimer from '$lib/areas/register/ui/components/RegistrationDisclaimer.svelte';
     import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
     import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
     import { ArrowLeft as LArrowLeft, ExternalLink as LExternalLink, Lock as LLock } from 'lucide';
-    import RowFrame from '$lib/shared/ui/RowFrame.svelte';
+    import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
     import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/shared/ui/shell/actions';

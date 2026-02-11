@@ -82,6 +82,8 @@ export function createSearchOverlayController<TItem>(
   }
 
   function closeNow(): void {
+    // Invalidate any in-flight async search response so stale results cannot re-open/update UI.
+    seq += 1;
     searchOpen.set(false);
     result.set([]);
     error.set(null);
@@ -95,6 +97,8 @@ export function createSearchOverlayController<TItem>(
   }
 
   function dispose(): void {
+    // Invalidate in-flight async work on disposal.
+    seq += 1;
     clearDebounce();
   }
 

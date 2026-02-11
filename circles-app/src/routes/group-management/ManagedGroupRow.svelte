@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { GroupRow } from '@circles-sdk/data';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-  import RowFrame from '$lib/shared/ui/RowFrame.svelte';
+  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
 
   interface Props {
     item: GroupRow;

@@ -21,7 +21,7 @@
   import {popupControls, type PopupContentDefinition} from '$lib/shared/state/popup';
 import { ProductDetailsPopup } from '$lib/areas/market/ui';
   import OfferStep1 from '$lib/areas/market/flows/offer/1_Product.svelte';
-  import ActionButton from '$lib/shared/ui/common/ActionButton.svelte';
+  import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import {gnosisConfig} from "$lib/shared/config/circles";
 
   const OPERATOR = gnosisConfig.production.marketOperator;

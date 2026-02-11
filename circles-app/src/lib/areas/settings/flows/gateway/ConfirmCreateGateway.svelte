@@ -10,7 +10,7 @@
   import { getProfilesBindings } from '$lib/areas/market/offers';
   import { ensureProfileShape, cidV0ToDigest32Strict } from '@circles-profile/core';
   import { isValidOnChainName } from '$lib/shared/utils/isValid';
-  import ActionButton from '$lib/shared/ui/common/ActionButton.svelte';
+  import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import Markdown from '$lib/shared/ui/content/markdown/Markdown.svelte';
 
   interface Props {

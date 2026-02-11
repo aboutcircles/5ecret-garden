@@ -1,7 +1,7 @@
 <script lang="ts">
     import {goto} from '$app/navigation';
-    import ActionButton from '$lib/shared/ui/common/ActionButton.svelte';
-    import Disclaimer from '$lib/shared/ui/common/Disclaimer.svelte';
+    import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
+    import Disclaimer from '$lib/areas/register/ui/components/RegistrationDisclaimer.svelte';
     import {avatarState} from '$lib/shared/state/avatar.svelte';
     import {circles} from '$lib/shared/state/circles';
     import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';

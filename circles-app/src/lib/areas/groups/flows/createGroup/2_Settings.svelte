@@ -1,6 +1,6 @@
 <script lang="ts">
     import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-    import Tooltip from '$lib/shared/ui/common/Tooltip.svelte';
+    import Tooltip from '$lib/shared/ui/primitives/Tooltip.svelte';
     import { ethers } from 'ethers';
     import { popupControls } from '$lib/shared/state/popup';
     import CreateStep from './4_Create.svelte';

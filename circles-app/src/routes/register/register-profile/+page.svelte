@@ -1,11 +1,11 @@
 <script lang="ts">
-    import ActionButton from '$lib/shared/ui/common/ActionButton.svelte';
+    import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
     import { circles } from '$lib/shared/state/circles';
     import { wallet } from '$lib/shared/state/wallet.svelte';
     import type { Profile } from '@circles-sdk/profiles';
 import { ProfileHeaderEditor } from '$lib/domains/profile/ui';
     import { onMount } from 'svelte';
-    import Disclaimer from '$lib/shared/ui/common/Disclaimer.svelte';
+    import Disclaimer from '$lib/areas/register/ui/components/RegistrationDisclaimer.svelte';
     import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
     import { ArrowLeft as LArrowLeft } from 'lucide';
     import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';

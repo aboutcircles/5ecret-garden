@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Plus as LPlus, RefreshCw as LRefreshCw, Star as LStar } from 'lucide';
 
-  import ActionButton from '$lib/shared/ui/common/ActionButton.svelte';
+  import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
   import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
   import type { Action } from '$lib/shared/ui/shell/actions';

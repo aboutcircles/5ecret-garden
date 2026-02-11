@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Disclaimer from '$lib/shared/ui/common/Disclaimer.svelte';
+  import Disclaimer from '$lib/areas/register/ui/components/RegistrationDisclaimer.svelte';
 </script>
 
 <section class="rounded-xl border border-base-300 bg-base-100 p-4 space-y-4">

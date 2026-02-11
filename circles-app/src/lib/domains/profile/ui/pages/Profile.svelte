@@ -19,7 +19,7 @@
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import {popupControls} from '$lib/shared/state/popup';
     import JumpLink from '$lib/shared/ui/content/jump/JumpLink.svelte';
-    import AddressComponent from '$lib/shared/ui/common/Address.svelte';
+    import AddressComponent from '$lib/shared/ui/primitives/Address.svelte';
     import {uint256ToAddress, type Address} from '@circles-sdk/utils';
     import SelectAmount from '$lib/areas/wallet/flows/send/3_Amount.svelte';
     import {transitiveTransfer} from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
@@ -29,7 +29,6 @@
         getTreasuryAddress,
         getVaultAddress,
     } from '$lib/shared/utils/vault';
-    import CollateralTable from '$lib/domains/profile/ui/components/CollateralTable.svelte';
     import {goto} from '$app/navigation';
     import {avatarState} from '$lib/shared/state/avatar.svelte';
 
@@ -821,7 +820,12 @@ import { TrustScoreBadge } from '$lib/domains/profile/ui';
                 {:else if collateralError}
                     <div class="w-full py-6 text-center text-error">{collateralError}</div>
                 {:else}
-                    <CollateralTable {collateralInTreasury}/>
+                    <HoldersList
+                            holders={collateralInTreasury}
+                            emptyLabel="No collateral"
+                            noMatchesLabel="No matching collateral"
+                            searchPlaceholder="Search collateral by address or name"
+                    />
                 {/if}
             </div>
         </Tab>

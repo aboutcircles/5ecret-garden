@@ -8,7 +8,7 @@
   import type {Address} from '@circles-sdk/utils';
 
   import ProductGallery from '$lib/areas/market/ui/product/ProductGallery.svelte';
-  import ActionButton from '$lib/shared/ui/common/ActionButton.svelte';
+  import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
 
   import {Contract, JsonRpcProvider} from 'ethers';
 

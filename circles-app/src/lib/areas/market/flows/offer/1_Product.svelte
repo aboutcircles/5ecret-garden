@@ -9,6 +9,7 @@
   import {get} from 'svelte/store';
   import {circles} from '$lib/shared/state/circles';
   import {wallet} from '$lib/shared/state/wallet.svelte';
+  import { fetchGatewayRowsByOwner } from '$lib/shared/data/circles/paymentGateways';
   import {onMount} from 'svelte';
   import {goto} from '$app/navigation';
 
@@ -83,19 +84,8 @@
         hasGateway = false;
         return;
       }
-      const resp = await c.circlesRpc.call<{ columns: string[]; rows: any[][] }>('circles_query', [
-        {
-          Namespace: 'CrcV2_PaymentGateway',
-          Table: 'GatewayCreated',
-          Columns: ['gateway'],
-          Filter: [
-            { Type: 'FilterPredicate', FilterType: 'Equals', Column: 'owner', Value: owner.toLowerCase() }
-          ],
-          Order: []
-        }
-      ]);
-      const rows = resp?.result?.rows ?? [];
-      hasGateway = rows.length > 0;
+      const gateways = await fetchGatewayRowsByOwner(c, owner);
+      hasGateway = gateways.length > 0;
     } catch (e) {
       console.error('Offer step 1 gateway validation failed', e);
       hasGateway = false;

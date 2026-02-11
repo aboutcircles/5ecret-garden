@@ -1,4 +1,9 @@
 import type { CirclesRpc } from "@circles-sdk/data";
+import {
+  queryBalancesByAccountAndTokenPage,
+  queryTreasuryAddressByGroup,
+  queryVaultAddressByGroup,
+} from '$lib/shared/data/circles/vaultQueries';
 
 const BALANCES_PAGE_SIZE = 1000;
 const MIN_BALANCE_FILTER = 10000000000000000;
@@ -19,26 +24,16 @@ async function queryBalancesPaginated(
   let resultColumns: string[] = [];
 
   while (true) {
-    const balancesResult = await circlesRpc.call<{
-      columns: string[];
-      rows: any[][];
-      cursor?: string;
-      hasMore?: boolean;
-    }>('circles_query', [
-      {
-        Namespace: 'V_CrcV2',
-        Table: 'BalancesByAccountAndToken',
-        Columns: columns,
-        Filter: filters,
-        Order: order,
-        Limit: BALANCES_PAGE_SIZE,
-        Cursor: cursor,
-      },
-    ]);
+    const balancesResult = await queryBalancesByAccountAndTokenPage(circlesRpc, {
+      filters,
+      cursorColumn,
+      limit: BALANCES_PAGE_SIZE,
+      cursor,
+    });
 
-    const rows = balancesResult?.result.rows ?? [];
+    const rows = balancesResult.rows ?? [];
     if (!resultColumns.length) {
-      resultColumns = balancesResult?.result.columns ?? columns;
+      resultColumns = balancesResult.columns ?? columns;
     }
 
     if (rows.length === 0) {
@@ -47,8 +42,8 @@ async function queryBalancesPaginated(
 
     allRows = allRows.concat(rows);
 
-    const hasMore = Boolean(balancesResult?.result.hasMore);
-    const nextCursor = balancesResult?.result.cursor;
+    const hasMore = Boolean(balancesResult.hasMore);
+    const nextCursor = balancesResult.cursor;
 
     if (!hasMore || !nextCursor) {
       if (rows.length < BALANCES_PAGE_SIZE) {
@@ -74,60 +69,14 @@ export async function getVaultAddress(
   circlesRpc: CirclesRpc,
   tokenOwner: string
 ): Promise<string | null> {
-  const vaultResult = await circlesRpc.call<{
-    columns: string[];
-    rows: any[][];
-  }>('circles_query', [
-    {
-      Namespace: 'CrcV2',
-      Table: 'CreateVault',
-      Columns: ['vault'],
-      Filter: [
-        {
-          Type: 'FilterPredicate',
-          FilterType: 'Equals',
-          Column: 'group',
-          Value: tokenOwner.toLowerCase(),
-        },
-      ],
-      Order: [],
-    },
-  ]);
-
-  if (!vaultResult?.result.rows || vaultResult.result.rows.length === 0) {
-    return null;
-  }
-  return vaultResult.result.rows[0][0];
+  return await queryVaultAddressByGroup(circlesRpc, tokenOwner);
 }
 
 export async function getTreasuryAddress(
   circlesRpc: CirclesRpc,
   tokenOwner: string
 ): Promise<string | null> {
-  const treasuryResult = await circlesRpc.call<{
-    columns: string[];
-    rows: any[][];
-  }>('circles_query', [
-    {
-      Namespace: 'V_CrcV2',
-      Table: 'Groups',
-      Columns: ['treasury'],
-      Filter: [
-        {
-          Type: 'FilterPredicate',
-          FilterType: 'Equals',
-          Column: 'group',
-          Value: tokenOwner.toLowerCase(),
-        },
-      ],
-      Order: [],
-    },
-  ]);
-
-  if (!treasuryResult?.result.rows || treasuryResult.result.rows.length === 0) {
-    return null;
-  }
-  return treasuryResult.result.rows[0][0];
+  return await queryTreasuryAddressByGroup(circlesRpc, tokenOwner);
 }
 
 export async function getGroupCollateral(

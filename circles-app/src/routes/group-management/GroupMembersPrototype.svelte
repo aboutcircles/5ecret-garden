@@ -7,9 +7,9 @@
   import { shortenAddress } from '$lib/shared/utils/shared';
   import { getProfile } from '$lib/shared/utils/profile';
   import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
-  import RowFrame from '$lib/shared/ui/RowFrame.svelte';
+  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-  import ActionButton from '$lib/shared/ui/common/ActionButton.svelte';
+  import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import { createSearchablePaginatedList } from '$lib/shared/state/searchablePaginatedList';
   import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
   import ConfirmGroupTrustPrototype from './ConfirmGroupTrustPrototype.svelte';

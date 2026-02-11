@@ -5,10 +5,11 @@
     import {circles} from '$lib/shared/state/circles';
     import {get, writable} from 'svelte/store';
     import {onMount} from "svelte";
-    import RowFrame from '$lib/shared/ui/RowFrame.svelte';
+    import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
     import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
     import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
     import { SEARCH_POLICY } from '$lib/shared/ui/lists/utils/searchPolicies';
+    import { searchProfilesBootstrap, searchProfilesRpc } from '$lib/shared/data/circles/searchProfiles';
     import type { Address } from '@circles-sdk/utils';
 
     interface Props {
@@ -22,12 +23,14 @@
 
     let {selectedAddress = $bindable(undefined), searchType = 'send', oninvite, ontrust, onselect, avatarTypes}: Props = $props();
     const query = writable('');
-    let lastQuery: string = $state('');
+    let lastQuery: string = '';
     let result: SearchProfileResult[] = $state([]);
     let loading = $state(false);
     let error: string | null = $state(null);
     let searchInputEl: HTMLInputElement | null = $state(null);
     let resultsListEl: HTMLDivElement | null = $state(null);
+    let remoteDebounceTimeout: ReturnType<typeof setTimeout> | null = null;
+    let searchRequestSeq = 0;
 
     function focusSearchInput() {
         searchInputEl?.focus();
@@ -48,37 +51,23 @@
         searchListNavigator.onRowClick(event);
     }
 
-    function toSearchResult(raw: any | null | undefined): SearchProfileResult | undefined {
-        if (!raw || typeof raw !== 'object') return undefined;
-
-        const base = raw ?? { name: '' };
-        const address = typeof raw.address === 'string' ? raw.address : (typeof raw.owner === 'string' ? raw.owner : '');
-        const lastUpdatedAt = typeof raw.lastUpdatedAt === 'number' ? raw.lastUpdatedAt : undefined;
-        const registeredName = typeof raw.registeredName === 'string' ? raw.registeredName : null;
-        const avatarType = typeof raw.avatarType === 'string' ? raw.avatarType : (typeof raw.type === 'string' ? raw.type : undefined);
-
-        return {
-            address,
-            name: base.name,
-            description: base.description,
-            lastUpdatedAt,
-            registeredName,
-            imageUrl: base.imageUrl,
-            previewImageUrl: base.previewImageUrl,
-            location: base.location,
-            avatarType
-        } as SearchProfileResult;
-    }
-
     async function rpcSearchByText(query: string, limit: number, offset = 0, avatarTypes:string[]|undefined = undefined): Promise<SearchProfileResult[]> {
         const sdk = get(circles);
         if (!sdk?.circlesRpc) throw new Error('No circles RPC available');
-        const raw = await sdk.circlesRpc.call<any>('circles_searchProfiles', [query, limit, offset, avatarTypes]);
-        const list: any[] = Array.isArray(raw?.result) ? raw.result : [];
-        return list.map(toSearchResult).filter(Boolean) as SearchProfileResult[];
+        return await searchProfilesRpc(sdk, { query, limit, offset, avatarTypes });
     }
 
-    async function searchProfiles(q: string) {
+    async function loadBootstrapResults(avatarTypesParam: string[] | undefined = undefined): Promise<SearchProfileResult[]> {
+        const sdk = get(circles);
+        if (!sdk?.circlesRpc) throw new Error('No circles RPC available');
+        return await searchProfilesBootstrap(sdk, {
+            limit: SEARCH_POLICY.DEFAULT_BOOTSTRAP_LIMIT,
+            offset: 0,
+            avatarTypes: avatarTypesParam,
+        });
+    }
+
+    async function searchProfiles(q: string, seq: number) {
         loading = true;
         error = null;
         try {
@@ -103,12 +92,15 @@
                     }
                 }
             }
+            if (seq !== searchRequestSeq) return;
             result = results;
         } catch (error) {
+            if (seq !== searchRequestSeq) return;
             console.error('Error searching profiles:', error);
             error = error instanceof Error ? error.message : 'Error searching profiles';
             result = [];
         } finally {
+            if (seq !== searchRequestSeq) return;
             loading = false;
         }
     }
@@ -121,39 +113,70 @@
     $effect(() => {
         const q = ($query ?? '').toString();
 
+        if (remoteDebounceTimeout) {
+            clearTimeout(remoteDebounceTimeout);
+            remoteDebounceTimeout = null;
+        }
+
         if (q.trim() === '') {
             if (lastQuery === '') {
                 return;
             }
+            const seq = ++searchRequestSeq;
             lastQuery = '';
             loading = true;
             error = null;
-            rpcSearchByText('a', SEARCH_POLICY.DEFAULT_BOOTSTRAP_LIMIT, 0)
-                .then(r => (result = r.slice(0, SEARCH_POLICY.DEFAULT_BOOTSTRAP_LIMIT)))
+            loadBootstrapResults(avatarTypes)
+                .then(r => {
+                    if (seq !== searchRequestSeq) return;
+                    result = r.slice(0, SEARCH_POLICY.DEFAULT_BOOTSTRAP_LIMIT);
+                })
                 .catch(err => {
+                    if (seq !== searchRequestSeq) return;
                     console.error('Error loading default results:', err);
                     error = err instanceof Error ? err.message : 'Error loading default results';
                     result = [];
                 })
                 .finally(() => {
+                    if (seq !== searchRequestSeq) return;
                     loading = false;
                 });
             return;
         }
 
         if (q !== lastQuery) {
+            const seq = ++searchRequestSeq;
             lastQuery = q;
-            void searchProfiles(q);
+            remoteDebounceTimeout = setTimeout(() => {
+                void searchProfiles(q, seq);
+            }, SEARCH_POLICY.REMOTE_DEBOUNCE_MS);
         }
+
+        return () => {
+            if (remoteDebounceTimeout) {
+                clearTimeout(remoteDebounceTimeout);
+                remoteDebounceTimeout = null;
+            }
+        };
     });
 
     onMount(async() => {
-        result = await rpcSearchByText(
-            SEARCH_POLICY.DEFAULT_BOOTSTRAP_QUERY,
-            SEARCH_POLICY.DEFAULT_BOOTSTRAP_LIMIT,
-            0,
-            avatarTypes
-        );
+        const seq = ++searchRequestSeq;
+        loading = true;
+        error = null;
+        try {
+            const bootstrap = await loadBootstrapResults(avatarTypes);
+            if (seq !== searchRequestSeq) return;
+            result = bootstrap;
+        } catch (err) {
+            if (seq !== searchRequestSeq) return;
+            console.error('Error loading bootstrap results:', err);
+            error = err instanceof Error ? err.message : 'Error loading bootstrap results';
+            result = [];
+        } finally {
+            if (seq !== searchRequestSeq) return;
+            loading = false;
+        }
     });
 
     function avatarTypeToReadable(type?: string) : string {

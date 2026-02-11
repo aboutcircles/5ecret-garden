@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Address } from '@circles-sdk/utils';
-  import RowFrame from '$lib/shared/ui/RowFrame.svelte';
+  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
 
   interface Props {

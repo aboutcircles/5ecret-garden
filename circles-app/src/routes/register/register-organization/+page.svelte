@@ -1,11 +1,11 @@
 <script lang="ts">
     import {goto} from '$app/navigation';
-    import ActionButton from '$lib/shared/ui/common/ActionButton.svelte';
+    import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
     import {avatarState} from '$lib/shared/state/avatar.svelte';
     import {circles} from '$lib/shared/state/circles';
     import type {Avatar} from '@circles-sdk/sdk';
     import type {Profile} from '@circles-sdk/profiles';
-    import Disclaimer from '$lib/shared/ui/common/Disclaimer.svelte';
+    import Disclaimer from '$lib/areas/register/ui/components/RegistrationDisclaimer.svelte';
     import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
     import { ArrowLeft as LArrowLeft } from 'lucide';
     import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
