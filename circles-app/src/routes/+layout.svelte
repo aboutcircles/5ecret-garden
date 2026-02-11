@@ -17,7 +17,7 @@
   import { popupControls, popupState } from '$lib/shared/state/popup';
   import Popup from '$lib/shared/ui/shell/PopupHost.svelte';
   import { initTransactionHistoryStore } from '$lib/shared/state/transactionHistory';
-  import { initContactStore } from '$lib/domains/profile/state';
+  import { initContactStore } from '$lib/shared/state/contacts';
   import { initBalanceStore } from '$lib/shared/state/circlesBalances';
   import { browser } from '$app/environment';
   import { PUBLIC_PLAUSIBLE_DOMAIN } from '$env/static/public';
@@ -198,7 +198,7 @@
     if (lastAvatarAddress && currentAddress && lastAvatarAddress !== currentAddress) {
       void (async () => {
         const [{ PersistentAuthContext }, { clearCart }] = await Promise.all([
-          import('$lib/shared/integrations/market'),
+          import('$lib/shared/data/market/marketClientProxy'),
           import('$lib/areas/market/cart/store'),
         ]);
         new PersistentAuthContext().clear();

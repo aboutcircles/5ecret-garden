@@ -1,7 +1,7 @@
 <script lang="ts">
   import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-  import { ProfilePopup } from '$lib/domains/profile/ui/pages';
+  import { ProfilePopup } from '$lib/areas/profile/ui/pages';
   import { popupControls } from '$lib/shared/state/popup';
   import type { TrustRow as TrustRowType } from '$lib/areas/settings/model/gatewayTypes';
 

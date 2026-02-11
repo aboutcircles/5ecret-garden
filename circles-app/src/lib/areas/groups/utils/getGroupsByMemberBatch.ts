@@ -2,6 +2,7 @@ import type { Address } from '@circles-sdk/utils';
 import type { Sdk } from '@circles-sdk/sdk';
 import { CirclesQuery, type GroupRow, type PagedQueryParams } from '@circles-sdk/data';
 import type { GroupMembershipRow } from '@circles-sdk/data/dist/rows/groupMembershipRow';
+import { createGroupDataSource } from '$lib/shared/data/circles/groupDataSource';
 
 function chunk<T>(arr: T[], size: number): T[][] {
   const out: T[][] = [];
@@ -14,7 +15,8 @@ function chunk<T>(arr: T[], size: number): T[][] {
 export async function getGroupsByMember(sdk: Sdk, member: Address): Promise<GroupRow[]> {
   if (!sdk || !member) return [];
 
-  const membershipsQuery = sdk.data.getGroupMemberships(member, 1000);
+  const groupDataSource = createGroupDataSource(sdk);
+  const membershipsQuery = groupDataSource.getGroupMemberships(member, 1000);
   const memberships: GroupMembershipRow[] = [];
 
   while (await membershipsQuery.queryNextPage()) {

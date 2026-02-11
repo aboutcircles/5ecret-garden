@@ -2,7 +2,7 @@
   import OrderDetailsView from '$lib/areas/market/orders/OrderDetailsView.svelte';
   import { createLoadable } from '$lib/areas/market/utils/loadable';
   import { onMount } from 'svelte';
-  import { getMarketClient } from '$lib/shared/integrations/market';
+  import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
 
   interface Props {
     orderId: string;

@@ -1,10 +1,10 @@
 // Thin shim around the new profiles module (core + full repos)
-export { FallbackImageUrl } from '$lib/domains/profile/model';
-export { getProfileCore as getProfile } from '$lib/domains/profile/model';
-import { invalidateProfileCore, invalidateProfileFull } from '$lib/domains/profile/model';
-export { invalidateProfileFull } from '$lib/domains/profile/model';
+export { FallbackImageUrl } from '$lib/shared/model/profile';
+export { getProfileCore as getProfile } from '$lib/shared/model/profile';
+import { invalidateProfileCore, invalidateProfileFull } from '$lib/shared/model/profile';
+export { invalidateProfileFull } from '$lib/shared/model/profile';
 
-export type { AppProfileCore as Profile } from '$lib/domains/profile/model';
+export type { AppProfileCore as Profile } from '$lib/shared/model/profile';
 
 export function removeProfileFromCache(address: string) {
   try { invalidateProfileCore(address as any); } catch {}

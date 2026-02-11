@@ -6,7 +6,7 @@
 
     import { avatarState } from '$lib/shared/state/avatar.svelte';
     import { popupControls } from '$lib/shared/state/popup';
-import { SettingProfile } from '$lib/domains/profile/ui/pages';
+import SettingProfile from '$lib/areas/settings/ui/pages/SettingProfile.svelte';
     type Highlight = 'soft' | 'tint';
     type CollapsedMode = 'dropdown' | 'bar';
 

@@ -250,7 +250,7 @@
   import { formatTimestamp, statusLabel } from '$lib/areas/market/orders/status';
   import { onMount } from 'svelte';
   import { getProduct, pickProductImageUrl } from '$lib/areas/market/services';
-  import { getMarketClient } from '$lib/shared/integrations/market';
+  import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
   import { popupControls, type PopupContentDefinition } from '$lib/shared/state/popup';
 import { ProductDetailsPopup } from '$lib/areas/market/ui';
   import {gnosisConfig} from "$lib/shared/config/circles";

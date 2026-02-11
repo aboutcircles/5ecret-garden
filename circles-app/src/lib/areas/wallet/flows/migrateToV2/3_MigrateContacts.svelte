@@ -3,7 +3,7 @@
   import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
   import type { MigrateToV2Context } from '$lib/areas/wallet/flows/migrateToV2/context';
   import Migrate from './4_Migrate.svelte';
-  import { contacts } from '$lib/domains/profile/state';
+  import { contacts } from '$lib/shared/state/contacts';
   import { formatTrustRelation } from '$lib/shared/utils/helpers';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import { popupControls } from '$lib/shared/state/popup';

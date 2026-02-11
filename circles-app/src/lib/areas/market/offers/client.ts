@@ -10,7 +10,7 @@ import {
 } from '@circles-market/sdk';
 import type { Address } from '@circles-sdk/utils';
 import { getProfilesBindings } from '$lib/areas/market/offers';
-import { getMarketClient } from '$lib/shared/integrations/market';
+import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
 
 export type { Hex, Address, CidV0 };
 export type MinimalProduct = MinimalProductInput;

@@ -1,7 +1,7 @@
 <script lang="ts">
     import {ethers} from 'ethers';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-    import type { SearchProfileResult } from '$lib/domains/profile/model';
+    import type { SearchProfileResult } from '$lib/shared/model/profile';
     import {circles} from '$lib/shared/state/circles';
     import {get, writable} from 'svelte/store';
     import {onMount} from "svelte";

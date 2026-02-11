@@ -23,6 +23,7 @@ import {settings} from './settings.svelte';
 import type {GroupType} from '@circles-sdk/data';
 import {privateKeyToAccount} from 'viem/accounts';
 import { clearConnectorId, getConnectorId } from '$lib/shared/state/connector';
+import { createAvatarDataSource } from '$lib/shared/data/circles/avatarDataSource';
 
 export const wallet = writable<SdkContractRunner | undefined>();
 
@@ -162,7 +163,8 @@ export async function restoreSession() {
         console.log('restoredWallet.address', runner.address);
         console.log('-> avatarToRestore is: ', avatarToRestore);
 
-        const avatarInfo = await sdk.data.getAvatarInfo(avatarToRestore);
+        const avatarDataSource = createAvatarDataSource(sdk);
+        const avatarInfo = await avatarDataSource.getAvatarInfo(avatarToRestore);
 
         if (avatarInfo) {
             avatarState.avatar = await sdk.getAvatar(avatarToRestore);

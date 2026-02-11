@@ -1,7 +1,7 @@
 <script lang="ts">
   import { get } from 'svelte/store';
   import type { Address } from '@circles-sdk/utils';
-  import type { SearchProfileResult } from '$lib/domains/profile/model';
+  import type { SearchProfileResult } from '$lib/shared/model/profile';
   import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
   import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
   import ListStates from '$lib/shared/ui/lists/ListStates.svelte';

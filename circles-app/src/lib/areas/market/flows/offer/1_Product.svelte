@@ -3,7 +3,7 @@
   import MarkdownEditor from '$lib/shared/ui/content/markdown/MarkdownEditor.svelte';
   import OfferStep2 from './2_Pricing.svelte';
   import type {OfferDraft, OfferFlowContext} from './types';
-  import ImageUpload from '$lib/domains/profile/ui/components/ImageUpload.svelte';
+  import ImageUpload from '$lib/shared/ui/profile/components/ImageUpload.svelte';
   import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
   import {generateSku, isValidSku} from '$lib/areas/market/utils/offer';
   import {get} from 'svelte/store';

@@ -6,7 +6,7 @@
   import {avatarState} from '$lib/shared/state/avatar.svelte';
   import {addToCart, cartState} from '$lib/areas/market/cart/store';
   import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
-  import { getMarketClient } from '$lib/shared/integrations/market';
+  import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
   import { getAddToCartState } from '$lib/areas/market/cart/addToCartUi';
   import { fetchAvailabilityFeed, fetchInventoryFeed, type QuantitativeValue } from '$lib/areas/market/services';
   import { createLoadable } from '$lib/areas/market/utils/loadable';

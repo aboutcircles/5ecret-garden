@@ -4,7 +4,7 @@
   import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
   import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
   import { browser } from '$app/environment';
-  import { getMarketClient } from '$lib/shared/integrations/market';
+  import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
   import { onMount } from 'svelte';
   import type { PaginatedReadable } from '$lib/shared/state/paginatedList';
 

@@ -2,7 +2,7 @@
   import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
   import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
   import { isVipProfileBookmark, profileBookmarksStore } from '$lib/areas/settings/state/profileBookmarks';
-  import { contacts } from '$lib/domains/profile/state';
+  import { contacts } from '$lib/shared/state/contacts';
   import { circles } from '$lib/shared/state/circles';
   import { createPaginatedList } from '$lib/shared/state/paginatedList';
   import { SEARCH_POLICY } from '$lib/shared/ui/lists/utils/searchPolicies';
