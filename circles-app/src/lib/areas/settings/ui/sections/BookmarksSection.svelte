@@ -390,6 +390,8 @@
 
       <div
         class={`rounded-lg border border-base-200 ${dragOverFolder === '__none__' ? 'bg-base-200/30' : ''}`}
+        role="region"
+        aria-label="Unsorted bookmarks drop zone"
         ondragover={(event) => onFolderDragOver(event, '__none__')}
         ondragleave={() => onFolderDragLeave('__none__')}
         ondrop={(event) => onFolderDrop(event, undefined)}
@@ -417,15 +419,13 @@
                 <div class="flex-1 min-w-0">
                   <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => openBookmarkDetails(bookmark)}>
                     <div class="min-w-0">
-                      <div onclick={(event) => event.stopPropagation()}>
-                        <Avatar
-                          address={bookmark.address}
-                          view="horizontal"
-                          bottomInfo={`Bookmarked ${formatCreatedAt(bookmark.createdAt)}`}
-                          showTypeInfo={true}
-                          clickable={true}
-                        />
-                      </div>
+                      <Avatar
+                        address={bookmark.address}
+                        view="horizontal"
+                        bottomInfo={`Bookmarked ${formatCreatedAt(bookmark.createdAt)}`}
+                        showTypeInfo={true}
+                        clickable={true}
+                      />
                     </div>
                     {#snippet trailing()}
                       <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" aria-hidden="true" />
@@ -441,6 +441,8 @@
       {#each folderRows as folderRow (folderRow.path)}
         <div
           class={`rounded-lg border border-base-200 ${dragOverFolder === folderRow.path ? 'bg-base-200/30' : ''}`}
+          role="region"
+          aria-label={`Folder ${folderRow.name} drop zone`}
           ondragover={(event) => onFolderDragOver(event, folderRow.path)}
           ondragleave={() => onFolderDragLeave(folderRow.path)}
           ondrop={(event) => onFolderDrop(event, folderRow.path)}
@@ -490,15 +492,13 @@
                   <div class="flex-1 min-w-0">
                     <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => openBookmarkDetails(bookmark)}>
                       <div class="min-w-0">
-                        <div onclick={(event) => event.stopPropagation()}>
-                          <Avatar
-                            address={bookmark.address}
-                            view="horizontal"
-                            bottomInfo={`Bookmarked ${formatCreatedAt(bookmark.createdAt)}`}
-                            showTypeInfo={true}
-                            clickable={true}
-                          />
-                        </div>
+                        <Avatar
+                          address={bookmark.address}
+                          view="horizontal"
+                          bottomInfo={`Bookmarked ${formatCreatedAt(bookmark.createdAt)}`}
+                          showTypeInfo={true}
+                          clickable={true}
+                        />
                       </div>
                       {#snippet trailing()}
                         <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" aria-hidden="true" />
@@ -515,8 +515,15 @@
 </section>
 
 {#if deleteFolderTarget}
-  <div class="fixed inset-0 z-40 bg-black/40 flex items-center justify-center p-4" onclick={cancelRemoveFolder}>
-    <div class="w-full max-w-md rounded-xl bg-base-100 border border-base-300 p-4" onclick={(event) => event.stopPropagation()}>
+  <div class="fixed inset-0 z-40 flex items-center justify-center p-4">
+    <button
+      type="button"
+      class="absolute inset-0 bg-black/40"
+      aria-label="Close delete folder dialog"
+      onclick={cancelRemoveFolder}
+    ></button>
+
+    <div class="relative z-10 w-full max-w-md rounded-xl bg-base-100 border border-base-300 p-4" role="dialog" aria-modal="true" aria-label="Delete folder">
       <h4 class="text-sm font-semibold m-0">Delete folder</h4>
       <p class="text-xs text-base-content/70 mt-2 mb-3">
         Delete folder “{deleteFolderTarget}”? By default bookmarks inside are moved to <strong>Unsorted</strong>.

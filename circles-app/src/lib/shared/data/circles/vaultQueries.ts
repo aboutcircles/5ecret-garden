@@ -44,7 +44,7 @@ export async function queryBalancesByAccountAndTokenPage(
   }
 ): Promise<RpcRowsResult> {
   const columns = [params.cursorColumn, 'demurragedTotalBalance'];
-  const order = [
+  const order: QuerySort[] = [
     { Column: 'demurragedTotalBalance', SortOrder: 'DESC' },
     { Column: params.cursorColumn, SortOrder: 'ASC' },
   ];

@@ -1,12 +1,12 @@
 <script lang="ts">
   import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
-  import { derived, writable } from 'svelte/store';
+  import { derived, readable, writable } from 'svelte/store';
   import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
   import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
   import { browser } from '$app/environment';
   import { getMarketClient } from '$lib/shared/integrations/market';
   import { onMount } from 'svelte';
-  import type { Readable } from 'svelte/store';
+  import type { PaginatedReadable } from '$lib/shared/state/paginatedList';
 
   import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
   import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
@@ -37,7 +37,11 @@
   const query = writable('');
   let salesListScopeEl: HTMLDivElement | null = $state(null);
 
-  function buildAuthedStore(): Readable<{ data: ListItem[]; next: () => Promise<boolean>; ended: boolean }>{
+  function createStaticListStore<T>(data: T[] = []): PaginatedReadable<T> {
+    return readable({ data, next: async () => true, ended: true });
+  }
+
+  function buildAuthedStore(): PaginatedReadable<ListItem> {
     return createPagedListStore<ListItem>({
       pageSize,
       loadPage: async (page, currentPageSize) => {
@@ -49,27 +53,14 @@
     });
   }
 
-  function buildFallbackStore(): Readable<{ data: ListItem[]; next: () => Promise<boolean>; ended: boolean }>{
-    type State = { data: ListItem[]; ended: boolean; next: () => Promise<boolean> };
-    const subscribers = new Set<(v: State) => void>();
-    let state: State = {
-      data: [],
-      ended: true,
-      next: async () => true,
-    };
-    return {
-      subscribe(run: (v: State) => void) {
-        subscribers.add(run);
-        run(state);
-        return () => { subscribers.delete(run); };
-      },
-    } as any;
+  function buildFallbackStore(): PaginatedReadable<ListItem> {
+    return createStaticListStore<ListItem>();
   }
 
-  let store = $derived<Readable<{ data: ListItem[]; next: () => Promise<boolean>; ended: boolean }>>(
+  let store = $derived<PaginatedReadable<ListItem>>(
     browser
       ? (authed ? buildAuthedStore() : buildFallbackStore())
-      : ({ subscribe(run: any) { run({ data: [], next: async () => true, ended: true }); return () => {}; } } as any)
+      : buildFallbackStore()
   );
 
   const filteredStore = derived([store, query], ([$store, $query]) => {

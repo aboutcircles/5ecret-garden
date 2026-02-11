@@ -1,7 +1,7 @@
 import { getGroupCollateral, getTreasuryAddress, getVaultAddress } from "$lib/shared/utils/vault";
 import type { CirclesRpc } from "@circles-sdk/data";
 import { uint256ToAddress, type Address } from "@circles-sdk/utils";
-import { formatEther } from "ethers";
+import { formatEther, type BigNumberish } from "ethers";
 import {
     queryAffiliateGroupChangedPage,
     queryGroupErc20Token,
@@ -108,17 +108,29 @@ export async function initGroupMetricsStore(
     fetchGroupMetrics(circlesRpc, groupAddress, groupMetrics);
 }
 
+function toDate(value: unknown): Date {
+    if (value instanceof Date) return value;
+    if (typeof value === 'string' || typeof value === 'number') return new Date(value);
+    return new Date(Number(value));
+}
+
+function toBigNumberish(value: unknown): BigNumberish {
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'bigint') {
+        return value;
+    }
+    return String(value);
+}
+
 async function getMemberCount(
     circlesRpc: CirclesRpc,
     groupAddress: Address,
     resolution: 'hour' | 'day' = 'hour',
     period: string = '7 days'
 ): Promise<Array<memberCount>> {
-    const table = resolution === 'hour' ? 'GroupMembersCount_1h' : 'GroupMembersCount_1d';
-    const limit = resolution === 'hour' ? 24 * 7 : 30;
     const result = await queryGroupMembersCountSeries(circlesRpc, groupAddress, resolution);
+    const rows = result.rows as Array<[unknown, string | number | Date, unknown]>;
 
-    return result.rows.reverse().map(([_, ts, v]) => ({
+    return rows.reverse().map(([_, ts, v]) => ({
         timestamp: new Date(ts),
         count: Number(v),
     }));
@@ -130,15 +142,14 @@ async function getMintRedeem(
     resolution: 'hour' | 'day' = 'hour',
     period: string = '7 days'
 ): Promise<Array<mintRedeem>> {
-    const table = resolution === 'hour' ? 'GroupMintRedeem_1h' : 'GroupMintRedeem_1d';
-    const limit = resolution === 'hour' ? 24 * 7 : 30;
     const result = await queryGroupMintRedeemSeries(circlesRpc, groupAddress, resolution);
+    const rows = result.rows as Array<[unknown, string | number | Date, unknown, unknown, unknown]>;
 
-    return result.rows.reverse().map(([_, ts, m, r, s]) => ({
-        timestamp: new Date(ts),
-        minted: Number(formatEther(m)),
-        burned: Number(-formatEther(r)),
-        supply: Number(formatEther(s)),
+    return rows.reverse().map(([_, ts, m, r, s]) => ({
+        timestamp: toDate(ts),
+        minted: Number(formatEther(toBigNumberish(m))),
+        burned: Number(-formatEther(toBigNumberish(r))),
+        supply: Number(formatEther(toBigNumberish(s))),
     }));
 }
 
@@ -148,14 +159,13 @@ async function getWrapUnwrap(
     resolution: 'hour' | 'day' = 'hour',
     period: string = '7 days'
 ): Promise<Array<wrapUnwrap>> {
-    const table = resolution === 'hour' ? 'GroupWrapUnWrap_1h' : 'GroupWrapUnWrap_1d';
-    const limit = resolution === 'hour' ? 24 * 7 : 30;
     const result = await queryGroupWrapUnwrapSeries(circlesRpc, groupAddress, resolution);
+    const rows = result.rows as Array<[unknown, string | number | Date, unknown, unknown, unknown, unknown]>;
 
-    return result.rows.reverse().map(([_, ts, ta, tt, w, u]) => ({
-        timestamp: new Date(ts),
-        wrapAmount: Number(formatEther(w)),
-        unwrapAmount: Number(-formatEther(u))
+    return rows.reverse().map(([_, ts, ta, tt, w, u]) => ({
+        timestamp: toDate(ts),
+        wrapAmount: Number(formatEther(toBigNumberish(w))),
+        unwrapAmount: Number(-formatEther(toBigNumberish(u)))
     }));
 }
 
@@ -199,10 +209,11 @@ async function getGroupTokenHoldersBalance(
     groupAddress: Address
 ) {
     const result = await queryGroupTokenHoldersBalance(circlesRpc, groupAddress);
+    const rows = result.rows as Array<[unknown, unknown, unknown, unknown, unknown]>;
 
-    return result.rows.map(([_, h, t, d, f]) => ({
-        holder: h as Address,
-        demurragedTotalBalance: Number(formatEther(d)),
+    return rows.map(([_, h, t, d, f]) => ({
+        holder: String(h) as Address,
+        demurragedTotalBalance: Number(formatEther(toBigNumberish(d))),
         fractionalOwnership: Number(f),
     }));
 }
@@ -212,8 +223,9 @@ async function getERC20Token(
     groupAddress: Address
 ): Promise<Address | undefined> {
     const result = await queryGroupErc20Token(circlesRpc, groupAddress);
+    const token = result.rows[1]?.[7];
 
-    return result.rows[1]?.[7];
+    return typeof token === 'string' ? (token as Address) : undefined;
 }
 
 export async function countCurrentAffiliateMembers(

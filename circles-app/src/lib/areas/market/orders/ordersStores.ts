@@ -1,4 +1,4 @@
-import type { Readable } from 'svelte/store';
+import type { PaginatedReadable } from '$lib/shared/state/paginatedList';
 import type { OrderSnapshot } from '@circles-market/sdk';
 import type { OrderStatusSseEvent } from '$lib/areas/market/orders/types';
 import {
@@ -11,22 +11,35 @@ import {
   type MarketOrderSummaryListItem,
 } from '$lib/areas/market/orders/ordersMappers';
 
+type ListValue<T> = { data: T[]; next: () => Promise<boolean>; ended: boolean };
+type InternalListState<T> = ListValue<T> & { page: number; loading: boolean };
+
+type SnapshotSummaryFields = {
+  totalPaymentDue?: { price?: number | null; priceCurrency?: string | null } | null;
+  orderStatus?: string;
+  outbox?: unknown[];
+};
+
+function toPublicListValue<T>(state: InternalListState<T>): ListValue<T> {
+  return {
+    data: state.data,
+    next: state.next,
+    ended: state.ended,
+  };
+}
+
 export function createPagedListStore<T>(options: {
   pageSize: number;
   loadPage: (page: number, pageSize: number) => Promise<T[]>;
   isEnded?: (items: T[], pageSize: number) => boolean;
-}): Readable<{ data: T[]; next: () => Promise<boolean>; ended: boolean }> {
-  type State = {
-    data: T[];
-    ended: boolean;
-    next: () => Promise<boolean>;
-    page: number;
-    loading: boolean;
+}): PaginatedReadable<T> {
+  const subscribers = new Set<(v: ListValue<T>) => void>();
+  const notify = () => {
+    const value = toPublicListValue(state);
+    subscribers.forEach((fn) => fn(value));
   };
-  const subscribers = new Set<(v: State) => void>();
-  const notify = (v: State) => subscribers.forEach((fn) => fn(v));
 
-  let state: State = {
+  let state: InternalListState<T> = {
     data: [],
     ended: false,
     page: 0,
@@ -34,7 +47,7 @@ export function createPagedListStore<T>(options: {
     next: async () => {
       if (state.loading || state.ended) return true;
       state = { ...state, loading: true };
-      notify(state);
+      notify();
       try {
         const nextPage = state.page + 1;
         const items = await options.loadPage(nextPage, options.pageSize);
@@ -43,32 +56,32 @@ export function createPagedListStore<T>(options: {
           ? options.isEnded(items ?? [], options.pageSize)
           : (items ?? []).length === 0;
         state = { ...state, data, page: nextPage, ended, loading: false };
-        notify(state);
+        notify();
         return ended;
       } catch {
         state = { ...state, ended: true, loading: false };
-        notify(state);
+        notify();
         return true;
       }
     },
   };
 
   return {
-    subscribe(run: (v: State) => void) {
+    subscribe(run: (v: ListValue<T>) => void) {
       subscribers.add(run);
-      run(state);
+      run(toPublicListValue(state));
       return () => {
         subscribers.delete(run);
       };
     },
-  } as any;
+  };
 }
 
 export function createBuyerOrdersStore(options?: {
   pageSize?: number;
   terminalStatuses?: string[];
   onOrderUpdatedWithOutbox?: (snapshot: OrderSnapshot) => void;
-}): Readable<{ data: MarketOrderSummaryListItem[]; next: () => Promise<boolean>; ended: boolean }> {
+}): PaginatedReadable<MarketOrderSummaryListItem> {
   const pageSize = options?.pageSize ?? 50;
   const terminalStatuses = new Set(
     options?.terminalStatuses ?? [
@@ -77,19 +90,14 @@ export function createBuyerOrdersStore(options?: {
     ]
   );
 
-  type State = {
-    data: MarketOrderSummaryListItem[];
-    ended: boolean;
-    next: () => Promise<boolean>;
-    page: number;
-    loading: boolean;
+  const subscribers = new Set<(v: ListValue<MarketOrderSummaryListItem>) => void>();
+  const notify = () => {
+    const value = toPublicListValue(state);
+    subscribers.forEach((fn) => fn(value));
   };
-
-  const subscribers = new Set<(v: State) => void>();
-  const notify = (v: State) => subscribers.forEach((fn) => fn(v));
   let stopSse: (() => void) | null = null;
 
-  let state: State = {
+  let state: InternalListState<MarketOrderSummaryListItem> = {
     data: [],
     ended: false,
     page: 0,
@@ -97,7 +105,7 @@ export function createBuyerOrdersStore(options?: {
     next: async () => {
       if (state.loading || state.ended) return true;
       state = { ...state, loading: true };
-      notify(state);
+      notify();
       try {
         const nextPage = state.page + 1;
         const resp = await getOrdersByBuyer(nextPage, pageSize);
@@ -105,11 +113,11 @@ export function createBuyerOrdersStore(options?: {
         const data = state.data.concat(mapMarketOrderSummaries(items));
         const ended = items.length === 0;
         state = { ...state, data, page: nextPage, ended, loading: false };
-        notify(state);
+        notify();
         return true;
       } catch {
         state = { ...state, ended: true, loading: false };
-        notify(state);
+        notify();
         return true;
       }
     },
@@ -128,29 +136,30 @@ export function createBuyerOrdersStore(options?: {
         const nextData = state.data.slice();
         nextData[idx] = updated;
         state = { ...state, data: nextData };
-        notify(state);
+        notify();
       }
 
       if (!terminalStatuses.has(evt.newStatus)) return;
 
       try {
         const snap = await getOrder(evt.orderId);
+        const snapFields = snap as OrderSnapshot & SnapshotSummaryFields;
         const idx2 = state.data.findIndex((it) => it.key === evt.orderId);
         if (idx2 >= 0) {
-          const total = (snap as any)?.totalPaymentDue ?? state.data[idx2].total ?? null;
+          const total = snapFields.totalPaymentDue ?? state.data[idx2].total ?? null;
           const next = {
             ...state.data[idx2],
-            status: (snap as any)?.orderStatus ?? evt.newStatus,
+            status: snapFields.orderStatus ?? evt.newStatus,
             total,
             snapshot: snap,
           };
           const arr = state.data.slice();
           arr[idx2] = next;
           state = { ...state, data: arr };
-          notify(state);
+          notify();
         }
 
-        const outbox = (snap as any)?.outbox;
+        const outbox = snapFields.outbox;
         if (Array.isArray(outbox) && outbox.length > 0) {
           options?.onOrderUpdatedWithOutbox?.(snap);
         }
@@ -170,14 +179,14 @@ export function createBuyerOrdersStore(options?: {
   }
 
   return {
-    subscribe(run: (v: State) => void) {
+    subscribe(run: (v: ListValue<MarketOrderSummaryListItem>) => void) {
       subscribers.add(run);
       if (subscribers.size === 1) ensureSse();
-      run(state);
+      run(toPublicListValue(state));
       return () => {
         subscribers.delete(run);
         stopSseIfIdle();
       };
     },
-  } as any;
+  };
 }

@@ -3,7 +3,7 @@
   import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
   import Tabs from '$lib/shared/ui/primitives/tabs/Tabs.svelte';
   import Tab from '$lib/shared/ui/primitives/tabs/Tab.svelte';
-  import { writable, type Readable } from 'svelte/store';
+  import { readable, writable } from 'svelte/store';
   import { browser } from '$app/environment';
   import { page } from '$app/stores';
 
@@ -18,7 +18,7 @@
 
   let { children }: { children?: Snippet } = $props();
 
-  // ——— Personal (duplicate of /settings) ———
+  // ——— Personal settings state/actions ———
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { clearSession, signer, wallet } from '$lib/shared/state/wallet.svelte';
   import { circles } from '$lib/shared/state/circles';
@@ -39,7 +39,7 @@
   } from '$lib/areas/settings/state/settingsNamespaces';
   import { fetchGatewayRowsByOwner } from '$lib/shared/data/circles/paymentGateways';
 
-  // ——— Marketplace (duplicate of /market/[seller], but seller = connected avatar) ———
+  // ——— Marketplace state/actions (connected avatar as seller) ———
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
   import type { AggregatedCatalogItem } from '$lib/areas/market/model';
   import OfferStep1 from '$lib/areas/market/flows/offer/1_Product.svelte';
@@ -49,7 +49,10 @@
     getSalesBySeller,
   } from '$lib/areas/market/orders/ordersQueries';
   import {
+    mapMarketSales,
     mapMarketOrderSummaries,
+    type MarketSalesListItem,
+    type MarketOrderSummaryListItem,
   } from '$lib/areas/market/orders/ordersMappers';
   import {
     createPagedListStore,
@@ -57,8 +60,9 @@
   } from '$lib/areas/market/orders/ordersStores';
   import OrderDetailsPopup from '$lib/areas/market/orders/OrderDetailsPopup.svelte';
 
-  // ——— Payment (duplicate of /gateway) ———
+  // ——— Payment gateways state/actions ———
   import type { GatewayRow } from '$lib/areas/settings/model/gatewayTypes';
+  import type { PaginatedReadable } from '$lib/shared/state/paginatedList';
   import CreateGatewayProfile from '$lib/areas/settings/flows/gateway/CreateGatewayProfile.svelte';
   import { coerceTabId, type TabIdOf } from '$lib/shared/ui/primitives/tabs/tabId';
 
@@ -73,25 +77,18 @@
   });
 
 
-  // ——— Orders (buyer) (copied from /orders and embedded here) ———
-  type OrdersListItem = {
-    key: string; // stable order id used by SSE and fetch (orderNumber)
-    displayId: string; // what we show (orderNumber or paymentReference fallback)
-    status?: string;
-    total?: { price?: number | null; priceCurrency?: string | null } | null;
-    customerId?: string | null;
-    snapshot?: any; // full order snapshot for popup
-  };
+  // Canonical orders list item model from market/orders domain.
+  type OrdersListItem = MarketOrderSummaryListItem;
 
   // Auth state must be initialized before using in $derived stores to avoid TDZ
   let ordersAuthed = $state(false);
   let salesAuthed = $state(false);
 
-  function buildOrdersAuthedStore(): Readable<{
-    data: OrdersListItem[];
-    next: () => Promise<boolean>;
-    ended: boolean;
-  }> {
+  function createStaticListStore<T>(data: T[] = []) {
+    return readable({ data, next: async () => true, ended: true });
+  }
+
+  function buildOrdersAuthedStore() {
     return createBuyerOrdersStore({
       pageSize: 50,
       onOrderUpdatedWithOutbox: (snap) => {
@@ -101,68 +98,43 @@
           props: { snapshot: snap },
         });
       },
-    }) as Readable<{ data: OrdersListItem[]; next: () => Promise<boolean>; ended: boolean }>;
+    });
   }
 
-  function buildSalesAuthedStore(): Readable<{
-    data: OrdersListItem[];
-    next: () => Promise<boolean>;
-    ended: boolean;
-  }> {
-    return createPagedListStore<OrdersListItem>({
+  function buildSalesAuthedStore() {
+    return createPagedListStore<MarketSalesListItem>({
       pageSize: 50,
       loadPage: async (page, pageSize) => {
         const resp = await getSalesBySeller(page, pageSize);
         const items = Array.isArray(resp?.items) ? resp.items : [];
-        return mapMarketOrderSummaries(items) as OrdersListItem[];
+        return mapMarketSales(items);
       },
       isEnded: (items) => items.length === 0,
     });
   }
 
-  function buildOrdersFallbackStore(): Readable<{
-    data: OrdersListItem[];
-    next: () => Promise<boolean>;
-    ended: boolean;
-  }> {
-    type State = { data: OrdersListItem[]; ended: boolean; next: () => Promise<boolean> };
-    let state: State = { data: [], ended: true, next: async () => true };
-    return {
-      subscribe(run: (v: State) => void) {
-        run(state);
-        return () => {};
-      },
-    } as any;
+  function buildOrdersFallbackStore() {
+    return createStaticListStore<OrdersListItem>();
   }
 
-  const ordersStore = $derived<
-    Readable<{ data: OrdersListItem[]; next: () => Promise<boolean>; ended: boolean }>
-  >(
+  function buildSalesFallbackStore() {
+    return createStaticListStore<MarketSalesListItem>();
+  }
+
+  const ordersStore = $derived(
     browser
       ? ordersAuthed
         ? buildOrdersAuthedStore()
         : buildOrdersFallbackStore()
-      : ({
-          subscribe(run: any) {
-            run({ data: [], next: async () => true, ended: true });
-            return () => {};
-          },
-        } as any),
+      : buildOrdersFallbackStore(),
   );
 
-  const salesStore = $derived<
-    Readable<{ data: OrdersListItem[]; next: () => Promise<boolean>; ended: boolean }>
-  >(
+  const salesStore = $derived(
     browser
       ? salesAuthed
         ? buildSalesAuthedStore()
-        : buildOrdersFallbackStore()
-      : ({
-          subscribe(run: any) {
-            run({ data: [], next: async () => true, ended: true });
-            return () => {};
-          },
-        } as any),
+        : buildSalesFallbackStore()
+      : buildSalesFallbackStore(),
   );
 
   async function ensureOrdersAuthed(): Promise<void> {
@@ -338,7 +310,7 @@
     }
   }
 
-  // ——— Marketplace seller data (seller = connected avatar) ———
+  // ——— Marketplace seller data for connected avatar ———
   type ProductLike = AggregatedCatalogItem;
   let marketLoading: boolean = $state(false);
   let marketErrorMsg: string = $state('');
@@ -456,20 +428,14 @@
     salesAuthed = ordersAuthed;
   }
 
-  // ——— Payment gateways (copied from /gateway) ———
-  type GatewayListStore = {
-    data: GatewayRow[];
-    next: () => Promise<boolean>;
-    ended: boolean;
-  };
-
-  const myGatewaysStoreInner = writable<GatewayListStore>({
+  // ——— Payment gateways list store ———
+  const myGatewaysStoreInner = writable<{ data: GatewayRow[]; next: () => Promise<boolean>; ended: boolean }>({
     data: [],
     next: async () => true,
     ended: true,
   });
 
-  const myGatewaysStore: Readable<GatewayListStore> = {
+  const myGatewaysStore: PaginatedReadable<GatewayRow> = {
     subscribe: myGatewaysStoreInner.subscribe,
   };
 
