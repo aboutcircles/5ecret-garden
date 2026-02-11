@@ -5,7 +5,7 @@
   import type {OfferDraft, OfferFlowContext} from './types';
   import ImageUpload from '$lib/domains/profile/ui/components/ImageUpload.svelte';
   import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
-  import {generateSku, isValidSku} from '$lib/shared/utils/offer';
+  import {generateSku, isValidSku} from '$lib/areas/market/utils/offer';
   import {get} from 'svelte/store';
   import {circles} from '$lib/shared/state/circles';
   import {wallet} from '$lib/shared/state/wallet.svelte';

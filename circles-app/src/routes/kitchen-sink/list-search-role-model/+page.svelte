@@ -7,8 +7,8 @@
   import type { MonthlyItem, RangeOverlayEvent } from '$lib/domains/events/ui/history/types';
   import type { AvatarSearchItem } from '../../avatar-search/dev/avatarSearch.types';
 
-  import ListShell from '$lib/shared/ui/common/ListShell.svelte';
-  import GenericList from '$lib/shared/ui/common/GenericList.svelte';
+  import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
+  import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
   import { createPaginatedList } from '$lib/shared/state/paginatedList';
 
   import ContactRow from '../../contacts/ContactRow.svelte';

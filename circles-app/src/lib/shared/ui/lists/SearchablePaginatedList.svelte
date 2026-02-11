@@ -1,8 +1,8 @@
 <script lang="ts">
   import type { Component } from 'svelte';
   import { readable, writable, type Readable, type Writable } from 'svelte/store';
-  import GenericList from '$lib/shared/ui/common/GenericList.svelte';
-  import ListShell from '$lib/shared/ui/common/ListShell.svelte';
+  import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
+  import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
   import { createPaginatedList } from '$lib/shared/state/paginatedList';
   import { createSearchablePaginatedList } from '$lib/shared/state/searchablePaginatedList';
 
@@ -41,9 +41,6 @@
     searchPlaceholder = 'Search by address or name'
   }: Props<any> = $props();
 
-  // Keep the stores as top-level bindings so they can be used with `$store` auto-subscription.
-  // Initialized with safe placeholders, then replaced in an effect to stay reactive and avoid
-  // `state_referenced_locally` warnings.
   const emptyItems = readable<any[]>([]);
 
   let searchQuery = $state<Writable<string>>(writable(''));
@@ -53,8 +50,6 @@
   $effect(() => {
     const next = createSearchablePaginatedList(items, {
       pageSize,
-      // `createSearchablePaginatedList` expects a Circles `Address` type, but most of our callers
-      // already operate on EVM address strings. Casting keeps API ergonomic.
       addressOf: (item) => addressOf(item) as any
     });
 
@@ -62,7 +57,6 @@
     filteredItems = next.filteredItems;
     paginatedItems = next.paginatedItems;
   });
-
 </script>
 
 <ListShell

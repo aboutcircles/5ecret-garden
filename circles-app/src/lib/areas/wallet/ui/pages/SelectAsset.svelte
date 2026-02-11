@@ -57,13 +57,13 @@
 <script lang="ts">
     import type { TokenBalanceRow } from '@circles-sdk/data';
     import { writable } from 'svelte/store';
-    import ListShell from '$lib/shared/ui/common/ListShell.svelte';
+    import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
     import BalanceRow from '$lib/areas/wallet/ui/components/BalanceRow.svelte';
     import type { Readable } from 'svelte/store';
     import { derived, readable } from 'svelte/store';
-    import GenericList from '$lib/shared/ui/common/GenericList.svelte';
+    import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
     import SelectableBalanceRow, { type SelectableBalanceRowItem } from '$lib/areas/wallet/ui/components/SelectableBalanceRow.svelte';
-    import { createListInputArrowDownHandler } from '$lib/shared/utils/listInputArrowDown';
+    import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
 
     interface Props {
         balances: Readable<{

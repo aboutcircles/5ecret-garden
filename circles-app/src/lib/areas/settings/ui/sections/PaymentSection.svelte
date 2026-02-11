@@ -2,12 +2,12 @@
   import type { Address } from '@circles-sdk/utils';
   import type { Readable } from 'svelte/store';
   import { derived, writable } from 'svelte/store';
-  import ListShell from '$lib/shared/ui/common/ListShell.svelte';
-  import GenericList from '$lib/shared/ui/common/GenericList.svelte';
+  import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
+  import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
   import GatewayRowView from '$lib/areas/settings/ui/components/GatewayRow.svelte';
   import { popupControls } from '$lib/shared/state/popup';
   import CreateGatewayProfile from '$lib/areas/settings/flows/gateway/CreateGatewayProfile.svelte';
-  import { createListInputArrowDownHandler } from '$lib/shared/utils/listInputArrowDown';
+  import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
 
   type ListValue = { data: any[]; next: () => Promise<boolean>; ended: boolean };
 

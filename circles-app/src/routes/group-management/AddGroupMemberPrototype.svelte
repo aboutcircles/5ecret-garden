@@ -3,8 +3,8 @@
   import type { Address } from '@circles-sdk/utils';
   import type { SearchProfileResult } from '$lib/domains/profile/model';
   import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-  import ListShell from '$lib/shared/ui/common/ListShell.svelte';
-  import ListStates from '$lib/shared/ui/common/ListStates.svelte';
+  import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
+  import ListStates from '$lib/shared/ui/lists/ListStates.svelte';
   import RowFrame from '$lib/shared/ui/RowFrame.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import ActionButton from '$lib/shared/ui/common/ActionButton.svelte';
@@ -12,10 +12,10 @@
   import { popupControls } from '$lib/shared/state/popup';
   import { runTask } from '$lib/shared/utils/tasks';
   import { shortenAddress } from '$lib/shared/utils/shared';
-  import { createKeyboardListNavigator } from '$lib/shared/utils/keyboardListNavigator';
-  import { createSearchOverlayController } from '$lib/shared/utils/searchOverlayController';
-  import { registerOutsidePointerClose } from '$lib/shared/utils/outsidePointerClose';
-  import { SEARCH_POLICY } from '$lib/shared/utils/searchPolicies';
+  import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
+  import { createSearchOverlayController } from '$lib/shared/ui/lists/utils/searchOverlayController';
+  import { registerOutsidePointerClose } from '$lib/shared/ui/lists/utils/outsidePointerClose';
+  import { SEARCH_POLICY } from '$lib/shared/ui/lists/utils/searchPolicies';
 
   interface Props {
     group: Address;

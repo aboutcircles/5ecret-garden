@@ -6,9 +6,9 @@
     import {get, writable} from 'svelte/store';
     import {onMount} from "svelte";
     import RowFrame from '$lib/shared/ui/RowFrame.svelte';
-    import ListShell from '$lib/shared/ui/common/ListShell.svelte';
-    import { createKeyboardListNavigator } from '$lib/shared/utils/keyboardListNavigator';
-    import { SEARCH_POLICY } from '$lib/shared/utils/searchPolicies';
+    import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
+    import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
+    import { SEARCH_POLICY } from '$lib/shared/ui/lists/utils/searchPolicies';
     import type { Address } from '@circles-sdk/utils';
 
     interface Props {

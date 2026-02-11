@@ -9,7 +9,7 @@
   import { getMarketClient } from '$lib/shared/integrations/market';
   import { getAddToCartState } from '$lib/areas/market/cart/addToCartUi';
   import { fetchAvailabilityFeed, fetchInventoryFeed, type QuantitativeValue } from '$lib/areas/market/services';
-  import { createLoadable } from '$lib/shared/utils/loadable';
+  import { createLoadable } from '$lib/areas/market/utils/loadable';
   import {gnosisConfig} from "$lib/shared/config/circles";
 
   interface Props {

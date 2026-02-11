@@ -1,9 +1,9 @@
 <script lang="ts">
   import type { Readable } from 'svelte/store';
-  import SearchablePaginatedList from '$lib/shared/ui/common/SearchablePaginatedList.svelte';
+  import SearchablePaginatedList from '$lib/shared/ui/lists/SearchablePaginatedList.svelte';
   import TrustRowView from '$lib/areas/settings/ui/components/TrustRow.svelte';
   import type { TrustRow } from '$lib/areas/settings/model/gatewayTypes';
-  import { createListInputArrowDownHandler } from '$lib/shared/utils/listInputArrowDown';
+  import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
 
   type TrustRowItem = TrustRow & {
     showRemove?: boolean;

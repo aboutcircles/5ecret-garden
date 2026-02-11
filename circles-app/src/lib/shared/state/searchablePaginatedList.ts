@@ -6,7 +6,7 @@ import {
   createFilteredAddresses,
   createProfileNameStore,
   type ProfileNameMap,
-} from '$lib/shared/utils/searchableProfiles';
+} from '$lib/shared/ui/lists/utils/searchableProfiles';
 
 type SearchablePaginatedListResult<T> = {
   searchQuery: Writable<string>;

@@ -1,5 +1,12 @@
 import type { Address } from '@circles-sdk/utils';
-import type { WalletType } from '$lib/shared/utils/walletType';
+
+type WalletType =
+  | 'safe'
+  | 'safe+group'
+  | 'injected'
+  | 'injected+group'
+  | 'circles'
+  | 'circles+group';
 
 export interface StorageSchema {
   version: number;

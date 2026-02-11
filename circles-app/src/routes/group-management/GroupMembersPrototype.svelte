@@ -6,12 +6,12 @@
   import { runTask } from '$lib/shared/utils/tasks';
   import { shortenAddress } from '$lib/shared/utils/shared';
   import { getProfile } from '$lib/shared/utils/profile';
-  import ListShell from '$lib/shared/ui/common/ListShell.svelte';
+  import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
   import RowFrame from '$lib/shared/ui/RowFrame.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import ActionButton from '$lib/shared/ui/common/ActionButton.svelte';
   import { createSearchablePaginatedList } from '$lib/shared/state/searchablePaginatedList';
-  import { createKeyboardListNavigator } from '$lib/shared/utils/keyboardListNavigator';
+  import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
   import ConfirmGroupTrustPrototype from './ConfirmGroupTrustPrototype.svelte';
   import AddGroupMemberPrototype from './AddGroupMemberPrototype.svelte';
 

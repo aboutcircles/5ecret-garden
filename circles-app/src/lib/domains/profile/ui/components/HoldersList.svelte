@@ -1,10 +1,10 @@
 <script lang="ts">
-    import SearchablePaginatedList from '$lib/shared/ui/common/SearchablePaginatedList.svelte';
+    import SearchablePaginatedList from '$lib/shared/ui/lists/SearchablePaginatedList.svelte';
     import HoldersRow from '$lib/domains/profile/ui/components/HoldersRow.svelte';
     import type { Address } from '@circles-sdk/utils';
     import type { TrustRelation } from '@circles-sdk/data';
     import { writable } from 'svelte/store';
-    import { createListInputArrowDownHandler } from '$lib/shared/utils/listInputArrowDown';
+    import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
 
     interface HolderRow {
         avatar: Address;

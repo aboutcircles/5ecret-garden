@@ -1,7 +1,7 @@
 <script lang="ts">
   import { tick } from 'svelte';
   import { writable } from 'svelte/store';
-  import GenericList from '$lib/shared/ui/common/GenericList.svelte';
+  import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
   import { createPaginatedList } from '$lib/shared/state/paginatedList';
   import type {
     CirclesBaseEventRow,

@@ -17,7 +17,7 @@
   import { getWalletProvider } from '$lib/shared/integrations/wallet';
   import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
   import {getProduct, getFirstOffer, isProductOwnedBy} from '$lib/areas/market/services';
-  import {productAndOfferToDraft} from '$lib/shared/utils/offer';
+  import {productAndOfferToDraft} from '$lib/areas/market/utils/offer';
   import {popupControls, type PopupContentDefinition} from '$lib/shared/state/popup';
 import { ProductDetailsPopup } from '$lib/areas/market/ui';
   import OfferStep1 from '$lib/areas/market/flows/offer/1_Product.svelte';

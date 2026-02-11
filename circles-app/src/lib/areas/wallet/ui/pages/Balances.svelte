@@ -4,9 +4,9 @@
     import BalanceRow from '$lib/areas/wallet/ui/components/BalanceRow.svelte';
     import type {EventRow} from '@circles-sdk/data';
     import Filter from '$lib/shared/ui/common/Filter.svelte';
-    import GenericList from '$lib/shared/ui/common/GenericList.svelte';
-    import ListShell from '$lib/shared/ui/common/ListShell.svelte';
-    import { createListInputArrowDownHandler } from '$lib/shared/utils/listInputArrowDown';
+    import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
+    import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
+    import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
 
     let filterVersion = writable<number | undefined>(undefined);
     let filterType = writable<'personal' | 'group' | undefined>(undefined);
