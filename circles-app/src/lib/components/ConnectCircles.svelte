@@ -35,6 +35,9 @@
     refreshGroupsCallback,
   }: Props = $props();
 
+  // Local loading state so only THIS card shows spinner, not all cards
+  let isConnecting = $state(false);
+
   async function connectAvatar(avatarAddress?: Address) {
     //@todo pass runner here
     // Use the safe address if no specific avatar address is provided
@@ -47,7 +50,8 @@
       isMainSafe: targetAddress === address,
     });
 
-    // Set loading state for UI feedback
+    // Set loading state for UI feedback (local per-card + global for avatar)
+    isConnecting = true;
     avatarState.isLoading = true;
 
     try {
@@ -145,6 +149,7 @@
       }
       // All errors handled - don't re-throw
     } finally {
+      isConnecting = false;
       avatarState.isLoading = false;
     }
   }
@@ -178,7 +183,7 @@
 </script>
 
 <div class="w-full border rounded-lg flex flex-col p-4 shadow-sm relative">
-  {#if avatarState.isLoading}
+  {#if isConnecting}
     <!-- Loading overlay when connecting to avatar -->
     <div class="absolute inset-0 bg-base-100/80 rounded-lg z-10 flex items-center justify-center gap-3">
       <span class="loading loading-spinner loading-md text-primary"></span>
@@ -188,7 +193,7 @@
   <button
     onclick={() => connectAvatar(address)}
     class="flex justify-between items-center hover:bg-base-200 rounded-lg p-2"
-    disabled={avatarState.isLoading}
+    disabled={isConnecting}
   >
     <Avatar topInfo="Safe" {address} clickable={false} view="horizontal" />
     <div class="btn btn-xs btn-outline btn-primary">
@@ -212,7 +217,7 @@
       <button
         class="flex w-full hover:bg-base-200 rounded-lg p-2"
         onclick={() => connectAvatar(group.group as `0x${string}`)}
-        disabled={avatarState.isLoading}
+        disabled={isConnecting}
       >
         <Avatar
           address={group.group as `0x${string}`}
