@@ -182,7 +182,10 @@
   }
 </script>
 
-<div class="w-full border rounded-lg flex flex-col p-4 shadow-sm relative">
+<div class="w-full border rounded-lg flex flex-col p-4 shadow-sm relative transition-opacity duration-200"
+  class:opacity-50={!isConnecting && avatarState.isLoading}
+  class:pointer-events-none={!isConnecting && avatarState.isLoading}
+>
   {#if isConnecting}
     <!-- Loading overlay when connecting to avatar -->
     <div class="absolute inset-0 bg-base-100/80 rounded-lg z-10 flex items-center justify-center gap-3">
@@ -192,8 +195,8 @@
   {/if}
   <button
     onclick={() => connectAvatar(address)}
-    class="flex justify-between items-center hover:bg-base-200 rounded-lg p-2"
-    disabled={isConnecting}
+    class="flex justify-between items-center hover:bg-base-200 rounded-lg p-2 disabled:opacity-50 disabled:cursor-not-allowed"
+    disabled={isConnecting || avatarState.isLoading}
   >
     <Avatar topInfo="Safe" {address} clickable={false} view="horizontal" />
     <div class="btn btn-xs btn-outline btn-primary">
@@ -217,7 +220,7 @@
       <button
         class="flex w-full hover:bg-base-200 rounded-lg p-2"
         onclick={() => connectAvatar(group.group as `0x${string}`)}
-        disabled={isConnecting}
+        disabled={isConnecting || avatarState.isLoading}
       >
         <Avatar
           address={group.group as `0x${string}`}
