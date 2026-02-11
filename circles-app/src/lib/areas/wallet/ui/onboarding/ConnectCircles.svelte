@@ -28,7 +28,7 @@
         $circles = sdk;
 
         if (groupAddress === undefined && !isRegistered) {
-            await goto('/register');
+            await goto(`/register?owner=${address}`);
             return;
         }
         avatarState.avatar = await sdk.getAvatar(groupAddress ?? address);

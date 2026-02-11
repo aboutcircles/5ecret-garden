@@ -12,9 +12,9 @@
   import type { GroupRow } from '@circles-sdk/data';
   import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/shared/utils/getGroupsByOwnerBatch';
   import ManagedGroupRow from './ManagedGroupRow.svelte';
-  import ManageGroupMembers from '$lib/areas/groups/flows/manageGroupMembers/1_manageGroupMembers.svelte';
   import GroupSettingsPrototype from './GroupSettingsPrototype.svelte';
   import { goto } from '$app/navigation';
+  import { page } from '$app/stores';
   import { getGroupsByMember } from '$lib/shared/utils/getGroupsByMemberBatch';
 
   let loading: boolean = $state(false);
@@ -24,16 +24,22 @@
   let membershipsError: string | null = $state(null);
   let memberships: GroupRow[] = $state([]);
 
+  const ownerOverride = $derived(($page.url.searchParams.get('owner') ?? '').trim().toLowerCase() as Address | '');
+
   const ownerAddress = $derived(
-    (avatarState.isGroup
-      ? ''
-      : (
-          (CirclesStorage.getInstance().avatar as Address | undefined) ??
-          (avatarState.avatar?.address as Address | undefined) ??
-          (signer.address as Address | undefined) ??
-          ''
-        )) as Address | ''
+    (ownerOverride
+      ? ownerOverride
+      : avatarState.isGroup
+        ? ''
+        : (
+            (CirclesStorage.getInstance().avatar as Address | undefined) ??
+            (avatarState.avatar?.address as Address | undefined) ??
+            (signer.address as Address | undefined) ??
+            ''
+          )) as Address | ''
   );
+
+  const withOwnerQuery = (path: string) => (ownerOverride ? `${path}?owner=${ownerOverride}` : path);
   const shortAddr = (a?: string) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : '');
 
   async function loadOwnedGroups(): Promise<void> {
@@ -78,11 +84,11 @@
   });
 
   function openManageMembers(group: string) {
-    popupControls.open({
-      title: `Manage members ${shortAddr(group)}`,
-      component: ManageGroupMembers,
-      props: {},
-    });
+    goto(withOwnerQuery(`/group-management/${group}`));
+  }
+
+  function openGroupDetail(group: string) {
+    goto(withOwnerQuery(`/group-management/${group}`));
   }
 
   function openGroupSettings(group: string) {
@@ -131,7 +137,9 @@
   {/snippet}
 
   {#snippet meta()}
-    {#if avatarState.isGroup}
+    {#if ownerOverride}
+      <span class="text-xs opacity-70">Owner override active {shortAddr(ownerOverride)}.</span>
+    {:else if avatarState.isGroup}
       <span class="text-xs opacity-70">Connected as group avatar — owner-scoped group management is disabled.</span>
     {:else if ownerAddress}
       <span class="text-xs opacity-70">Connected owner {shortAddr(ownerAddress)}</span>
@@ -186,6 +194,7 @@
             onManageMembers={openManageMembers}
             onManageSettings={openGroupSettings}
             onOpenStats={openStats}
+            onOpenDetail={openGroupDetail}
           />
         {/each}
       </div>

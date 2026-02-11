@@ -2,28 +2,23 @@
   import type { GroupRow } from '@circles-sdk/data';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import RowFrame from '$lib/shared/ui/RowFrame.svelte';
-  import { popupControls } from '$lib/shared/state/popup';
-  import { ProfilePopup } from '$lib/domains/profile/ui/pages';
 
   interface Props {
     item: GroupRow;
     onManageMembers: (group: string) => void;
     onManageSettings: (group: string) => void;
     onOpenStats: (group: string) => void;
+    onOpenDetail: (group: string) => void;
   }
 
-  let { item, onManageMembers, onManageSettings, onOpenStats }: Props = $props();
+  let { item, onManageMembers, onManageSettings, onOpenStats, onOpenDetail }: Props = $props();
 
-  function openProfile() {
-    popupControls.open?.({
-      title: 'Group profile',
-      component: ProfilePopup,
-      props: { address: item.group }
-    });
+  function openDetail() {
+    onOpenDetail(item.group);
   }
 </script>
 
-<RowFrame clickable={true} dense={false} noLeading={true} onclick={openProfile}>
+<RowFrame clickable={true} dense={false} noLeading={true} onclick={openDetail}>
   <div class="w-full flex flex-col gap-2">
     <Avatar
       address={item.group}
