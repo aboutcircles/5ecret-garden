@@ -10,6 +10,7 @@ export type PopupContentDefinition = {
   props?: Record<string, any>;
   key?: string | number;
   id?: string | number;
+  onClose?: () => void;
 };
 
 export type PopupState = {
@@ -39,12 +40,22 @@ function back(): void {
 }
 
 function close(): void {
-  popupState.set({ content: null, stack: [] });
+  popupState.update((s) => {
+    s.content?.onClose?.();
+    return { content: null, stack: [] };
+  });
 }
 
 function replace(def: PopupContentDefinition): void {
   // Replace current content without changing the stack
   popupState.update((s) => ({ content: def, stack: s.stack.slice() }));
+}
+
+export function openFlowPopup(def: PopupContentDefinition): void {
+  popupControls.open({
+    props: {},
+    ...def,
+  });
 }
 
 export const popupControls = { open, back, close, replace };

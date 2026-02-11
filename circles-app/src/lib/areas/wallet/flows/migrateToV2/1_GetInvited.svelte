@@ -6,10 +6,10 @@
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { circles } from '$lib/shared/state/circles';
   import type { AvatarRow } from '@circles-sdk/data';
-  import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-  import { popupControls } from '$lib/shared/state/popup';
+  import { openFlowPopup } from '$lib/shared/state/popup';
   import type { Profile } from '@circles-sdk/profiles';
   import { settings } from '$lib/shared/state/settings.svelte';
+  import InvitationPickerStep from '$lib/shared/ui/invitations/InvitationPickerStep.svelte';
 
   interface Props {
     context?: MigrateToV2Context;
@@ -32,7 +32,7 @@
     invitations = await $circles.data.getInvitations(avatarState.avatar.avatarInfo.avatar);
   });
   async function next() {
-    popupControls.open({
+    openFlowPopup({
       title: 'Create Profile',
       component: CreateProfile,
       props: {
@@ -51,28 +51,11 @@
     <p class="text-base-content/70 mt-2">Loading invitations...</p>
   {:else if invitations.length > 0}
     <p class="text-base-content/70 mt-2">You have been invited by:</p>
-    <div
-      class="mt-2 flex flex-col gap-y-2 w-full divide-y rounded-lg p-4 border"
-    >
-      {#each invitations as invitation}
-        <div class="pt-2">
-          <button
-            type="button"
-            class="btn btn-ghost justify-start w-full"
-            onclick={() => selectInvitation(invitation.avatar)}
-            onkeydown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ')
-                selectInvitation(invitation.avatar);
-            }}
-          >
-            <Avatar
-              address={invitation.avatar}
-              clickable={false}
-              view="horizontal"
-            />
-          </button>
-        </div>
-      {/each}
+    <div class="mt-2 w-full rounded-lg p-4 border">
+      <InvitationPickerStep
+        {invitations}
+        onSelect={(address) => selectInvitation(address)}
+      />
     </div>
   {:else}
     <p class="text-gray-500 mt-2">You have no invitations.</p>

@@ -1,6 +1,6 @@
 <script lang="ts">
   import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-import { ProfileHeaderEditor } from '$lib/shared/ui/profile';
+  import { ProfileFormStep } from '$lib/shared/ui/profile';
   import type { MigrateToV2Context } from '$lib/areas/wallet/flows/migrateToV2/context';
   import MigrateContacts from './3_MigrateContacts.svelte';
   import { onMount } from 'svelte';
@@ -9,7 +9,7 @@ import { ProfileHeaderEditor } from '$lib/shared/ui/profile';
     FallbackImageUrl,
     profilesEqual,
   } from '$lib/shared/utils/profile';
-  import { popupControls } from '$lib/shared/state/popup';
+  import { openFlowPopup } from '$lib/shared/state/popup';
   import type { Profile } from '@circles-sdk/profiles';
 
   interface Props {
@@ -112,7 +112,7 @@ import { ProfileHeaderEditor } from '$lib/shared/ui/profile';
       context.profile.previewImageUrl = undefined;
     }
 
-    popupControls.open({
+    openFlowPopup({
       title: 'Migrate Contacts',
       component: MigrateContacts,
       props: { context },
@@ -136,16 +136,13 @@ import { ProfileHeaderEditor } from '$lib/shared/ui/profile';
     </div>
   {/if}
 
-  <ProfileHeaderEditor
+  <ProfileFormStep
     bind:name={newProfile.name}
     bind:description={newProfile.description}
     bind:previewImageUrl={newProfile.previewImageUrl}
     bind:imageUrl={newProfile.imageUrl}
+    submitLabel="Next"
+    onSubmit={next}
+    submitContainerClass="flex justify-end w-full mt-2"
   />
-
-  <div class="flex justify-end space-x-2 mt-6">
-    <button type="submit" class="btn btn-primary" onclick={() => next()}>
-      Next
-    </button>
-  </div>
 </FlowDecoration>

@@ -11,7 +11,7 @@
     import { writable } from 'svelte/store';
     import type { MaxFlowResponse } from '@circles-sdk/sdk';
     import { ethers } from 'ethers';
-    import { popupControls } from '$lib/shared/state/popup';
+    import { openFlowPopup } from '$lib/shared/state/popup';
     import { CirclesConverter } from '@circles-sdk/utils';
     import {MAX_PATH_STEPS} from "$lib/shared/config/circles";
 
@@ -161,7 +161,7 @@
         }
         amountError = false;
 
-        popupControls.open({
+        openFlowPopup({
             title: 'Send',
             component: Send,
             props: { context },

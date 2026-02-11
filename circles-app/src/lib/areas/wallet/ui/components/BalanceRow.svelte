@@ -10,7 +10,8 @@
     import UnwrapTokens from '$lib/areas/wallet/ui/pages/UnwrapTokens.svelte';
     import RedeemGroup from '$lib/areas/groups/ui/pages/RedeemGroup.svelte';
     import Send from '$lib/areas/wallet/flows/send/1_To.svelte';
-    import { popupControls } from '$lib/shared/state/popup';
+    import { openFlowPopup } from '$lib/shared/state/popup';
+    import { openSendFlowPopup } from '$lib/areas/wallet/flows/send/openSendFlowPopup';
     import type { TokenBalanceRow } from '@circles-sdk/data';
 
     interface Props { item: TokenBalanceRow; }
@@ -55,20 +56,14 @@
 
     function executeAction(action: RowAction) {
         if (action.title === 'Send') {
-            popupControls.open?.({
-                title: 'Send Circles',
-                component: action.component,
-                props: {
-                    context: {
-                        selectedAsset: item,
-                        selectedAddress: undefined,
-                        amount: undefined,
-                        transitiveOnly: false
-                    }
-                }
+            openSendFlowPopup({
+                selectedAsset: item,
+                selectedAddress: undefined,
+                amount: undefined,
+                transitiveOnly: false
             });
         } else {
-            popupControls.open?.({ title: action.title, component: action.component, props: { asset: item } });
+            openFlowPopup({ title: action.title, component: action.component, props: { asset: item } });
         }
     }
 

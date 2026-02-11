@@ -7,7 +7,7 @@
   let { homeLink = '/' }: Props = $props();
 
   import { page } from '$app/stores';
-  import { popupControls } from '$lib/shared/state/popup';
+  import { openFlowPopup } from '$lib/shared/state/popup';
   import { writable, type Unsubscriber } from 'svelte/store';
 
   const cartItemCount = writable(0);
@@ -33,7 +33,7 @@
       });
     }
 
-    popupControls.open({
+    openFlowPopup({
       title: 'Basket',
       component: CartPanel,
       props: {

@@ -1,4 +1,5 @@
 export { default as AddSigningKey } from './AddSigningKey.svelte';
+export { default as ProfileFormStep } from './ProfileFormStep.svelte';
 export { default as ProfileHeaderEditor } from './ProfileHeaderEditor.svelte';
 export { default as ProfileNamespaces } from './ProfileNamespaces.svelte';
 export { default as ProfileSigningKeys } from './ProfileSigningKeys.svelte';

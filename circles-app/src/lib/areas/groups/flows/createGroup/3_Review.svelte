@@ -1,6 +1,6 @@
 <script lang="ts">
     import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-    import { popupControls } from '$lib/shared/state/popup';
+    import { openFlowPopup } from '$lib/shared/state/popup';
     import Markdown from '$lib/shared/ui/content/markdown/Markdown.svelte';
     import CreateStep from './4_Create.svelte';
     import {
@@ -24,7 +24,7 @@
     const fastLane: boolean = $derived((ctx.settingsMode ?? 'fast') === 'fast');
 
     function next() {
-        popupControls.open({
+        openFlowPopup({
             title: 'Create Group',
             component: CreateStep,
             props: { context: ctx, setGroup },

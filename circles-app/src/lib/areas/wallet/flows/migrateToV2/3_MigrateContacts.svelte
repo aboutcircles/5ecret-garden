@@ -6,7 +6,7 @@
   import { contacts } from '$lib/shared/state/contacts';
   import { formatTrustRelation } from '$lib/shared/utils/helpers';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-  import { popupControls } from '$lib/shared/state/popup';
+  import { openFlowPopup } from '$lib/shared/state/popup';
   import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import {ArrowLeft, ArrowLeftRight, ArrowRight} from 'lucide';
 
@@ -24,7 +24,7 @@
   });
 
   async function next() {
-    popupControls.open({
+    openFlowPopup({
       title: 'Run Migration',
       component: Migrate,
       props: {

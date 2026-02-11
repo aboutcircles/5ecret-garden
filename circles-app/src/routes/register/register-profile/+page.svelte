@@ -1,9 +1,8 @@
 <script lang="ts">
-    import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
     import { circles } from '$lib/shared/state/circles';
     import { wallet } from '$lib/shared/state/wallet.svelte';
     import type { Profile } from '@circles-sdk/profiles';
-import { ProfileHeaderEditor } from '$lib/shared/ui/profile';
+    import { ProfileFormStep } from '$lib/shared/ui/profile';
     import { onMount } from 'svelte';
     import Disclaimer from '$lib/areas/register/ui/components/RegistrationDisclaimer.svelte';
     import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
@@ -53,13 +52,14 @@ import { ProfileHeaderEditor } from '$lib/shared/ui/profile';
         <div class="flex flex-col items-center text-center gap-4">
           <img src="/person.svg" alt="person" class="w-16 h-16 rounded-xl" />
           <h3 class="text-xl font-semibold">Register profile</h3>
-          <ProfileHeaderEditor
+          <ProfileFormStep
             bind:name={profile.name}
             bind:description={profile.description}
             bind:previewImageUrl={profile.previewImageUrl}
             bind:imageUrl={profile.imageUrl}
+            onSubmit={registerProfile}
+            submitLabel="Create"
           />
-          <ActionButton action={registerProfile} disabled={profile.name.trim().length < 1}>Create</ActionButton>
         </div>
       </div>
     </div>

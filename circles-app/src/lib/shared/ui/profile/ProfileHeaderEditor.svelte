@@ -24,7 +24,7 @@
         description = $bindable(''),
         location = $bindable(''),
         previewImageUrl = $bindable(''),
-        imageUrl = $bindable(''),
+        imageUrl = $bindable<string | undefined>(),
         readonly = false,
         showLocation = true,
         nameLabel = 'Name',

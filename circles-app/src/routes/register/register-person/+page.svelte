@@ -1,7 +1,5 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
-    import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
-    import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import type { Avatar as AvatarType } from '@circles-sdk/sdk';
     import { circles } from '$lib/shared/state/circles';
     import { wallet } from '$lib/shared/state/wallet.svelte';
@@ -9,17 +7,17 @@
     import type { Profile } from '@circles-sdk/profiles';
     import { onMount } from 'svelte';
     import type { Address } from '@circles-sdk/utils';
-import { ProfileHeaderEditor } from '$lib/shared/ui/profile';
+    import { ProfileFormStep } from '$lib/shared/ui/profile';
     import { settings } from '$lib/shared/state/settings.svelte';
     import { avatarState } from '$lib/shared/state/avatar.svelte';
     import Disclaimer from '$lib/areas/register/ui/components/RegistrationDisclaimer.svelte';
     import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
     import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
     import { ArrowLeft as LArrowLeft, ExternalLink as LExternalLink, Lock as LLock } from 'lucide';
-    import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
     import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/shared/ui/shell/actions';
+    import InvitationPickerStep from '$lib/shared/ui/invitations/InvitationPickerStep.svelte';
 
     let invitations: AvatarRow[] = $state([]);
     let inviterSelected: Address | undefined = $state(
@@ -93,27 +91,18 @@ import { ProfileHeaderEditor } from '$lib/shared/ui/profile';
                     </ul>
 
                     <!-- Invitations list -->
-                    <div class="flex flex-col gap-y-2 pl-10 text-sm">
-                        {#if invitations.length > 0}
-                            {#each invitations as inviter (inviter.avatar)}
-                                <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => (inviterSelected = inviter.avatar)}>
-                                    <div class="flex items-center gap-x-2 min-w-0">
-                                        <input
-                                                type="radio"
-                                                name="inviter"
-                                                class="radio radio-success radio-sm"
-                                                checked={inviterSelected === inviter.avatar}
-                                                onclick={(e) => { e.stopPropagation(); inviterSelected = inviter.avatar; }}
-                                        />
-                                        <Avatar topInfo="Inviter" clickable={false} address={inviter.avatar} view="horizontal" />
-                                    </div>
-                                </RowFrame>
-                            {/each}
-                        {:else}
-                            No invitations pending. <a href="/link-to-telegram" class="underline inline-flex items-center">
-                            Get help <Lucide icon={LExternalLink} size={12} class="shrink-0 stroke-black ml-1" ariaLabel="" />
-                        </a>
-                        {/if}
+                    <div class="pl-10">
+                        <InvitationPickerStep
+                            {invitations}
+                            bind:selected={inviterSelected}
+                            onSelect={(address) => (inviterSelected = address)}
+                        >
+                            <svelte:fragment slot="empty">
+                                No invitations pending. <a href="/link-to-telegram" class="underline inline-flex items-center">
+                                    Get help <Lucide icon={LExternalLink} size={12} class="shrink-0 stroke-black ml-1" ariaLabel="" />
+                                </a>
+                            </svelte:fragment>
+                        </InvitationPickerStep>
                     </div>
 
                     <ul class="steps steps-vertical mt-4">
@@ -122,17 +111,14 @@ import { ProfileHeaderEditor } from '$lib/shared/ui/profile';
 
                     <div class="flex flex-col items-center gap-y-4 pl-10">
                         {#if inviterSelected}
-                            <ProfileHeaderEditor
+                            <ProfileFormStep
                                 bind:name={profile.name}
                                 bind:description={profile.description}
                                 bind:previewImageUrl={profile.previewImageUrl}
                                 bind:imageUrl={profile.imageUrl}
+                                onSubmit={registerHuman}
+                                submitLabel="Create"
                             />
-                            <div class="mx-auto">
-                                <ActionButton action={registerHuman} disabled={profile.name.trim().length < 1}>
-                                    Create
-                                </ActionButton>
-                            </div>
                         {:else}
                             <Lucide icon={LLock} size={28} class="shrink-0 stroke-black" ariaLabel="" />
                             <p>Select an inviter to continue</p>

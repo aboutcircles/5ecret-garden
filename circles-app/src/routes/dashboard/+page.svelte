@@ -12,8 +12,7 @@
     import { totalCirclesBalance } from '$lib/shared/state/totalCirclesBalance';
 
     import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
-    import Send from '$lib/areas/wallet/flows/send/1_To.svelte';
-    import { transitiveTransfer } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
+    import { openSendFlowPopup } from '$lib/areas/wallet/flows/send/openSendFlowPopup';
 
     // lucide (standalone) icon nodes
     import { Send as LSend, Banknote as LBanknote, BarChart3 as LBarChart3 } from 'lucide';
@@ -71,17 +70,10 @@
     }
 
     function openSend() {
-        popupControls.open({
-            title: 'Send Circles',
-            component: Send,
-            props: {
-                context: {
-                    selectedAsset: transitiveTransfer(),
-                    selectedAddress: undefined,
-                    amount: undefined,
-                    transitiveOnly: true
-                }
-            },
+        openSendFlowPopup({
+            selectedAddress: undefined,
+            amount: undefined,
+            transitiveOnly: true
         });
     }
 
