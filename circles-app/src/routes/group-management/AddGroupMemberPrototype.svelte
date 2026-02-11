@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { get, writable } from 'svelte/store';
+  import { get } from 'svelte/store';
   import type { Address } from '@circles-sdk/utils';
   import type { SearchProfileResult } from '$lib/domains/profile/model';
   import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
@@ -13,6 +13,7 @@
   import { runTask } from '$lib/shared/utils/tasks';
   import { shortenAddress } from '$lib/shared/utils/shared';
   import { createKeyboardListNavigator } from '$lib/shared/utils/keyboardListNavigator';
+  import { createSearchOverlayController } from '$lib/shared/utils/searchOverlayController';
 
   interface Props {
     group: Address;
@@ -20,15 +21,14 @@
   }
 
   let { group, onSelected }: Props = $props();
-  const query = writable('');
-  let searchOpen = $state(false);
-  let searching = $state(false);
-  let searchError: string | null = $state(null);
-  let searchResult: SearchProfileResult[] = $state([]);
+  const searchController = createSearchOverlayController<SearchProfileResult>({
+    search: searchProfiles,
+    debounceMs: 250,
+  });
+  const { query, searchOpen, searching, error: searchError, result: searchResult } = searchController;
   let selected: Address[] = $state([]);
-  let shellEl: HTMLDivElement | null = $state(null);
+  let searchInputEl: HTMLInputElement | null = $state(null);
   let overlayEl: HTMLDivElement | null = $state(null);
-  let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
   const selectedSet = $derived(new Set(selected.map((a) => a.toLowerCase())));
 
@@ -43,38 +43,18 @@
     return 'Unknown';
   }
 
-  function openSearch() {
-    searchOpen = true;
-  }
-
-  function onSearchShellFocusIn() {
+  function onSearchInputFocus() {
     if ($query.trim().length > 0) {
-      searchOpen = true;
-    }
-  }
-
-  function closeSearch() {
-    if (!$query.trim()) {
-      searchOpen = false;
-      searchResult = [];
-      searchError = null;
+      searchController.open();
     }
   }
 
   function closeSearchNow() {
-    searchOpen = false;
-    searchResult = [];
-    searchError = null;
+    searchController.closeNow();
   }
 
   function focusSearchInput() {
-    const input = shellEl?.querySelector<HTMLInputElement>('input[type="text"]');
-    input?.focus();
-  }
-
-  function focusFirstSearchResult() {
-    const first = overlayEl?.querySelector<HTMLElement>('[data-search-result-row]');
-    first?.focus();
+    searchInputEl?.focus();
   }
 
   const searchListNavigator = createKeyboardListNavigator({
@@ -92,85 +72,43 @@
   }
 
   $effect(() => {
-    if (!searchOpen) return;
+    if (!$searchOpen) return;
 
     function onWindowPointerDown(event: PointerEvent) {
       const target = event.target as Node | null;
       if (!target) return;
-      if (shellEl?.contains(target) || overlayEl?.contains(target)) return;
+      if (searchInputEl?.contains(target) || overlayEl?.contains(target)) return;
       closeSearchNow();
     }
 
-    function onWindowKeyDown(event: KeyboardEvent) {
-      if (event.key !== 'ArrowDown') return;
-      if (searchResult.length === 0) return;
-      const active = document.activeElement;
-      if (!active || !shellEl?.contains(active)) return;
-      event.preventDefault();
-      searchListNavigator.focusFirstRow();
-    }
-
     window.addEventListener('pointerdown', onWindowPointerDown);
-    window.addEventListener('keydown', onWindowKeyDown, true);
     return () => {
       window.removeEventListener('pointerdown', onWindowPointerDown);
-      window.removeEventListener('keydown', onWindowKeyDown, true);
     };
   });
 
   async function searchProfiles(q: string) {
     const sdk = get(circles);
     if (!sdk?.circlesRpc) {
-      searchResult = [];
-      return;
+      return [];
     }
 
-    searching = true;
-    searchError = null;
-    try {
-      const raw = await sdk.circlesRpc.call<any>('circles_searchProfiles', [
-        q,
-        50,
-        0,
-        ['CrcV2_RegisterHuman', 'CrcV2_RegisterOrganization', 'CrcV2_RegisterGroup'],
-      ]);
-      searchResult = (Array.isArray(raw?.result) ? raw.result : []) as SearchProfileResult[];
-    } catch (e) {
-      searchError = e instanceof Error ? e.message : String(e);
-      searchResult = [];
-    } finally {
-      searching = false;
-    }
+    const raw = await sdk.circlesRpc.call<any>('circles_searchProfiles', [
+      q,
+      50,
+      0,
+      ['CrcV2_RegisterHuman', 'CrcV2_RegisterOrganization', 'CrcV2_RegisterGroup'],
+    ]);
+    return (Array.isArray(raw?.result) ? raw.result : []) as SearchProfileResult[];
   }
 
   $effect(() => {
-    const q = $query.trim();
-    if (q.length > 0) {
-      searchOpen = true;
-    }
+    searchController.onQueryChanged($query);
+  });
 
-    if (!searchOpen) return;
-
-    if (searchDebounceTimer) {
-      clearTimeout(searchDebounceTimer);
-      searchDebounceTimer = null;
-    }
-
-    if (!q) {
-      searchResult = [];
-      searchError = null;
-      return;
-    }
-
-    searchDebounceTimer = setTimeout(() => {
-      void searchProfiles(q);
-    }, 250);
-
+  $effect(() => {
     return () => {
-      if (searchDebounceTimer) {
-        clearTimeout(searchDebounceTimer);
-        searchDebounceTimer = null;
-      }
+      searchController.dispose();
     };
   });
 
@@ -178,8 +116,7 @@
     const key = address.toLowerCase();
     if (selectedSet.has(key)) return;
     selected = [...selected, address];
-    query.set('');
-    closeSearchNow();
+    searchController.clearAndClose();
     queueMicrotask(() => {
       focusSearchInput();
     });
@@ -212,20 +149,26 @@
       Search globally and collect multiple avatars. You can remove picks before confirming.
     </p>
 
-    <div bind:this={shellEl} onfocusin={onSearchShellFocusIn} role="group" aria-label="Global avatar search">
-      <ListToolbar query={query} placeholder="Search by name or address" />
+    <div role="group" aria-label="Global avatar search">
+      <ListToolbar
+        query={query}
+        placeholder="Search by name or address"
+        bind:inputEl={searchInputEl}
+        onInputKeydown={searchListNavigator.onInputArrowDown}
+        onInputFocus={onSearchInputFocus}
+      />
     </div>
 
-    {#if searchOpen}
+    {#if $searchOpen}
       <div bind:this={overlayEl} class="absolute left-0 right-0 top-[64px] z-20 rounded-xl border border-base-300 bg-base-100 p-3 shadow-xl">
-        <ListStates loading={searching} error={searchError}>
+        <ListStates loading={$searching} error={$searchError}>
           {#if $query.trim() === ''}
             <div class="text-sm opacity-70">Type to search globally.</div>
-          {:else if searchResult.length === 0}
+          {:else if $searchResult.length === 0}
             <div class="text-sm opacity-70">No accounts found.</div>
           {:else}
             <div class="w-full flex flex-col gap-y-1.5" role="list">
-              {#each searchResult as profile (profile.address)}
+              {#each $searchResult as profile (profile.address)}
                 <div
                   tabindex={0}
                   role="button"
@@ -263,7 +206,7 @@
       </div>
     {/if}
 
-    <div class={searchOpen ? 'opacity-20 pointer-events-none select-none' : ''}>
+    <div class={$searchOpen ? 'opacity-20 pointer-events-none select-none' : ''}>
       <div class="text-sm opacity-70 mb-2">Picked avatars ({selected.length})</div>
 
       {#if selected.length === 0}

@@ -26,7 +26,7 @@
   let trusted: Address[] = $state([]);
   let selectedSet: Set<Address> = $state(new Set<Address>());
   let groupName: string | null = $state(null);
-  let searchShellEl: HTMLDivElement | null = $state(null);
+  let searchInputEl: HTMLInputElement | null = $state(null);
   let trustedListEl: HTMLDivElement | null = $state(null);
   const trustedStore = writable<Address[]>([]);
 
@@ -124,8 +124,7 @@
   }
 
   function focusSearchInput() {
-    const input = searchShellEl?.querySelector<HTMLInputElement>('input[type="text"]');
-    input?.focus();
+    searchInputEl?.focus();
   }
 
   const trustedListNavigator = createKeyboardListNavigator({
@@ -141,22 +140,6 @@
   function onTrustedRowClick(event: MouseEvent) {
     trustedListNavigator.onRowClick(event);
   }
-
-  $effect(() => {
-    function onWindowKeyDown(event: KeyboardEvent) {
-      if (event.key !== 'ArrowDown') return;
-      const active = document.activeElement;
-      if (!active || !searchShellEl?.contains(active)) return;
-      if ($filteredItems.length === 0) return;
-      event.preventDefault();
-      trustedListNavigator.focusFirstRow();
-    }
-
-    window.addEventListener('keydown', onWindowKeyDown, true);
-    return () => {
-      window.removeEventListener('keydown', onWindowKeyDown, true);
-    };
-  });
 
   async function getDisplayName(address: Address): Promise<string> {
     try {
@@ -228,8 +211,13 @@
 
   <div class="text-xs opacity-70">{trusted.length} trusted avatar{trusted.length === 1 ? '' : 's'}</div>
 
-  <div bind:this={searchShellEl} role="group" aria-label="Search trusted avatars">
-    <ListToolbar query={searchQuery} placeholder="Search by address or name" />
+  <div role="group" aria-label="Search trusted avatars">
+    <ListToolbar
+      query={searchQuery}
+      placeholder="Search by address or name"
+      bind:inputEl={searchInputEl}
+      onInputKeydown={trustedListNavigator.onInputArrowDown}
+    />
   </div>
 
   <ListStates
