@@ -20,17 +20,23 @@
     onSelected?: (addresses: Address[]) => void | Promise<void>;
   }
 
+  interface PickedAvatar {
+    address: Address;
+    avatarType?: string;
+  }
+
   let { group, onSelected }: Props = $props();
   const searchController = createSearchOverlayController<SearchProfileResult>({
     search: searchProfiles,
     debounceMs: 250,
   });
   const { query, searchOpen, searching, error: searchError, result: searchResult } = searchController;
-  let selected: Address[] = $state([]);
+  let selected: PickedAvatar[] = $state([]);
   let searchInputEl: HTMLInputElement | null = $state(null);
   let overlayEl: HTMLDivElement | null = $state(null);
+  let pickedListEl: HTMLDivElement | null = $state(null);
 
-  const selectedSet = $derived(new Set(selected.map((a) => a.toLowerCase())));
+  const selectedSet = $derived(new Set(selected.map((a) => a.address.toLowerCase())));
 
   function asAddress(value: unknown): Address {
     return String(value).toLowerCase() as Address;
@@ -63,12 +69,33 @@
     onActivateRow: (row) => {
       const addr = row.dataset.searchResultAddress;
       if (!addr) return;
-      addPicked(asAddress(addr));
+      addPicked(asAddress(addr), row.dataset.searchResultAvatarType);
     },
   });
 
   function onSearchResultRowClick(event: MouseEvent) {
     searchListNavigator.onRowClick(event);
+  }
+
+  const pickedListNavigator = createKeyboardListNavigator({
+    getRows: () => Array.from(pickedListEl?.querySelectorAll<HTMLElement>('[data-picked-row]') ?? []),
+    focusInput: focusSearchInput,
+  });
+
+  function onPickedRowClick(event: MouseEvent) {
+    pickedListNavigator.onRowClick(event);
+  }
+
+  function onSearchInputArrowDown(event: KeyboardEvent) {
+    if (event.key !== 'ArrowDown') return;
+
+    const q = $query.trim();
+    if (q.length > 0) {
+      searchListNavigator.onInputArrowDown(event);
+      return;
+    }
+
+    pickedListNavigator.onInputArrowDown(event);
   }
 
   $effect(() => {
@@ -112,10 +139,10 @@
     };
   });
 
-  function addPicked(address: Address) {
+  function addPicked(address: Address, avatarType?: string) {
     const key = address.toLowerCase();
     if (selectedSet.has(key)) return;
-    selected = [...selected, address];
+    selected = [...selected, { address, avatarType }];
     searchController.clearAndClose();
     queueMicrotask(() => {
       focusSearchInput();
@@ -123,7 +150,7 @@
   }
 
   function removePicked(address: Address) {
-    selected = selected.filter((a) => a.toLowerCase() !== address.toLowerCase());
+    selected = selected.filter((a) => a.address.toLowerCase() !== address.toLowerCase());
   }
 
   async function confirmAddAll() {
@@ -133,12 +160,13 @@
     if (!sdk) throw new Error('Circles SDK not available');
 
     const groupAvatar = await sdk.getAvatar(group);
+    const selectedAddresses = selected.map((item) => item.address);
     await runTask({
       name: `${shortenAddress(group)} trusts ${selected.length} avatar${selected.length === 1 ? '' : 's'} ...`,
-      promise: groupAvatar.trust(selected),
+      promise: groupAvatar.trust(selectedAddresses),
     });
 
-    await onSelected?.(selected);
+    await onSelected?.(selectedAddresses);
     popupControls.close();
   }
 </script>
@@ -154,7 +182,7 @@
         query={query}
         placeholder="Search by name or address"
         bind:inputEl={searchInputEl}
-        onInputKeydown={searchListNavigator.onInputArrowDown}
+        onInputKeydown={onSearchInputArrowDown}
         onInputFocus={onSearchInputFocus}
       />
     </div>
@@ -174,6 +202,7 @@
                   role="button"
                   data-search-result-row
                   data-search-result-address={String(profile.address)}
+                  data-search-result-avatar-type={profile.avatarType ?? ''}
                   onkeydown={searchListNavigator.onRowKeydown}
                   onclick={onSearchResultRowClick}
                   class="rounded-[var(--row-radius)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
@@ -182,7 +211,7 @@
                     clickable={true}
                     dense={true}
                     noLeading={true}
-                    onclick={() => addPicked(asAddress(profile.address))}
+                    onclick={() => addPicked(asAddress(profile.address), profile.avatarType)}
                   >
                     <div class="min-w-0">
                       <Avatar
@@ -212,23 +241,38 @@
       {#if selected.length === 0}
         <div class="text-sm opacity-70">No avatars picked yet.</div>
       {:else}
-        <div class="w-full flex flex-col gap-y-1.5" role="list">
-          {#each selected as address (address)}
-            <RowFrame clickable={false} dense={true} noLeading={true}>
-              <div class="min-w-0">
-                <Avatar {address} view="horizontal" clickable={true} />
-              </div>
-              {#snippet trailing()}
-                <button
-                  type="button"
-                  class="btn btn-ghost btn-xs"
-                  aria-label="Remove picked avatar"
-                  onclick={() => removePicked(address)}
-                >
-                  <img src="/trash.svg" alt="" class="h-4 w-4" />
-                </button>
-              {/snippet}
-            </RowFrame>
+        <div bind:this={pickedListEl} class="w-full flex flex-col gap-y-1.5" role="list">
+          {#each selected as picked (picked.address)}
+            <div
+              tabindex={0}
+              role="button"
+              data-picked-row
+              onkeydown={pickedListNavigator.onRowKeydown}
+              onclick={onPickedRowClick}
+              aria-label={`Picked avatar ${picked.address}`}
+              class="rounded-[var(--row-radius)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            >
+              <RowFrame clickable={false} dense={true} noLeading={true}>
+                <div class="min-w-0">
+                  <Avatar
+                    address={picked.address}
+                    view="horizontal"
+                    clickable={true}
+                    bottomInfo={`${avatarTypeToReadable(picked.avatarType)} • ${picked.address}`}
+                  />
+                </div>
+                {#snippet trailing()}
+                  <button
+                    type="button"
+                    class="btn btn-ghost btn-xs"
+                    aria-label="Remove picked avatar"
+                    onclick={() => removePicked(picked.address)}
+                  >
+                    <img src="/trash.svg" alt="" class="h-4 w-4" />
+                  </button>
+                {/snippet}
+              </RowFrame>
+            </div>
           {/each}
         </div>
       {/if}

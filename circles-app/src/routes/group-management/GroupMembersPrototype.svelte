@@ -24,6 +24,7 @@
   let loading: boolean = $state(false);
   let error: string | null = $state(null);
   let trusted: Address[] = $state([]);
+  let trustedAvatarTypes: Record<string, string | undefined> = $state({});
   let selectedSet: Set<Address> = $state(new Set<Address>());
   let groupName: string | null = $state(null);
   let searchInputEl: HTMLInputElement | null = $state(null);
@@ -43,6 +44,13 @@
       ? ((groupName ?? '') as string)
       : shortenAddress(group)
   );
+
+  function avatarTypeToReadable(type?: string): string {
+    if (type === 'CrcV2_RegisterHuman') return 'Human';
+    if (type === 'CrcV2_RegisterOrganization') return 'Organization';
+    if (type === 'CrcV2_RegisterGroup') return 'Group';
+    return 'Unknown';
+  }
 
   $effect(() => {
     const sdk = $circles;
@@ -76,6 +84,7 @@
     const sdk = get(circles);
     if (!sdk) {
       trusted = [];
+      trustedAvatarTypes = {};
       return;
     }
 
@@ -83,7 +92,7 @@
     error = null;
     try {
       const relations = await sdk.data.getAggregatedTrustRelations(group);
-      trusted = Array.from(
+      const trustedAddresses = Array.from(
         new Set(
           relations
             .filter((row) => row.relation === 'trusts' || row.relation === 'mutuallyTrusts')
@@ -91,10 +100,19 @@
             .filter((addr) => addr.toLowerCase() !== group.toLowerCase())
         )
       ).sort((a, b) => a.localeCompare(b));
+      trusted = trustedAddresses;
       trustedStore.set(trusted);
+
+      const infos = await sdk.data.getAvatarInfoBatch(trustedAddresses);
+      const nextTypes: Record<string, string | undefined> = {};
+      for (const info of infos) {
+        nextTypes[String(info.avatar).toLowerCase()] = info.type;
+      }
+      trustedAvatarTypes = nextTypes;
     } catch (e) {
       error = e instanceof Error ? e.message : String(e);
       trusted = [];
+      trustedAvatarTypes = {};
       trustedStore.set([]);
     } finally {
       loading = false;
@@ -106,6 +124,7 @@
 
     if (!group || !sdk) {
       trusted = [];
+      trustedAvatarTypes = {};
       trustedStore.set([]);
       return;
     }
@@ -243,7 +262,12 @@
         >
           <RowFrame clickable={false} dense={true} noLeading={true}>
             <div class="min-w-0">
-              <Avatar {address} view="horizontal" clickable={true} />
+              <Avatar
+                {address}
+                view="horizontal"
+                clickable={true}
+                bottomInfo={`${avatarTypeToReadable(trustedAvatarTypes[address.toLowerCase()])} • ${address}`}
+              />
             </div>
             {#snippet trailing()}
               <input

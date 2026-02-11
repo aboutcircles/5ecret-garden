@@ -18,6 +18,7 @@
     { href: '/kitchen-sink/identity', label: 'Identity & Utility' },
     { href: '/kitchen-sink/markdown', label: 'Markdown' },
     { href: '/kitchen-sink/lists', label: 'Lists & Loading' },
+    { href: '/kitchen-sink/list-search-role-model', label: 'List/Search Role Model' },
     { href: '/kitchen-sink/misc', label: 'Misc' }
   ];
 
