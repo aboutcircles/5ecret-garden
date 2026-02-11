@@ -1,4 +1,5 @@
 <script lang="ts">
+  import SelectAvatarPage from '$lib/areas/wallet/ui/onboarding/SelectAvatarPage.svelte';
   import {
     clearSession,
     getSignerFromPk,
@@ -10,13 +11,10 @@
   import { circles } from '$lib/shared/state/circles';
   import { Sdk } from '@circles-sdk/sdk';
   import { onMount } from 'svelte';
-  import ConnectSafe from '$lib/areas/wallet/ui/onboarding/ConnectSafe.svelte';
   import { settings } from '$lib/shared/state/settings.svelte';
   import { gnosisConfig } from '$lib/shared/config/circles';
   import type { SdkContractRunner } from '@circles-sdk/adapter';
   import type { Address } from '@circles-sdk/utils';
-  import WalletLoader from '$lib/areas/wallet/ui/onboarding/WalletLoader.svelte';
-  import SettingsDropdown from '$lib/areas/settings/ui/SettingsDropdown.svelte';
 
   let runner: SdkContractRunner | undefined = $state();
 
@@ -64,25 +62,11 @@
   }
 </script>
 
-<div class="page page-pt page-stack page--md">
-  <div class="toolbar">
-    <button type="button" class="back-btn" aria-label="Back" onclick={goBack}>
-      <img src="/arrow-left.svg" alt="Back" class="icon" />
-    </button>
-    <div class="flex-grow"></div>
-    <SettingsDropdown />
-  </div>
-
-  <h1 class="h2">Select avatar</h1>
-  <p class="muted">Please select the avatar you want to use from the list below.</p>
-
-  {#if !signer.address || !$circles}
-    <WalletLoader />
-  {:else if $circles}
-    <ConnectSafe
-      safeOwnerAddress={signer.address}
-      initSdk={connectCirclesGarden}
-      sdk={$circles}
-    />
-  {/if}
-</div>
+<SelectAvatarPage
+  sizeClass="page--md"
+  isLoading={!signer.address || !$circles}
+  onBack={goBack}
+  safeOwnerAddress={signer.address}
+  sdk={$circles}
+  initSdk={connectCirclesGarden}
+/>

@@ -13,7 +13,7 @@
     } from '@circles-sdk/data';
     import Untrust from '$lib/areas/contacts/ui/pages/Untrust.svelte';
     import Trust from '$lib/areas/contacts/ui/pages/Trust.svelte';
-    import Send from '$lib/areas/wallet/flows/send/1_To.svelte';
+    import { openSendFlowPopup } from '$lib/areas/wallet/flows/send/openSendFlowPopup';
     import {getProfile} from '$lib/shared/utils/profile';
     import {formatTrustRelation, getTypeString} from '$lib/shared/utils/helpers';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
@@ -618,17 +618,11 @@
             <button
                     class="btn btn-primary"
                     onclick={() => {
-                popupControls.open({
-                    title: 'Send Circles',
-                    component: Send,
-                    props: {
-                        context: {
-                            selectedAddress: otherAvatar?.avatar,
-                            selectedAsset: transitiveTransfer(),
-                            amount: undefined,
-                            transitiveOnly: true
-                        },
-                    },
+                openSendFlowPopup({
+                    selectedAddress: otherAvatar?.avatar,
+                    selectedAsset: transitiveTransfer(),
+                    amount: undefined,
+                    transitiveOnly: true
                 });
             }}
             >

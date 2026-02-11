@@ -10,7 +10,7 @@
     import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/shared/ui/shell/actions';
-    import {popupControls} from '$lib/shared/state/popup';
+    import {openFlowPopup} from '$lib/shared/state/popup';
     import CreateGroup from '$lib/areas/groups/flows/createGroup/1_CreateGroup.svelte';
     import GroupTabPanel from '$lib/areas/groups/ui/components/GroupTabPanel.svelte';
     import {resetCreateGroupContext} from '$lib/areas/groups/flows/createGroup/context';
@@ -169,7 +169,7 @@
         // Initialize a fresh context with feeCollection defaulted to this safe address
         resetCreateGroupContext(safeAddress as `0x${string}`);
 
-        popupControls.open({
+        openFlowPopup({
             title: 'Create group',
             component: CreateGroup,
             props: {

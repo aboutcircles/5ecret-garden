@@ -2,7 +2,7 @@
     import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
     import Tooltip from '$lib/shared/ui/primitives/Tooltip.svelte';
     import { ethers } from 'ethers';
-    import { popupControls } from '$lib/shared/state/popup';
+    import { openFlowPopup } from '$lib/shared/state/popup';
     import CreateStep from './4_Create.svelte';
     import { wallet } from '$lib/shared/state/wallet.svelte';
     import {
@@ -80,7 +80,7 @@
         const ready: boolean = canContinue;
         if (!ready) { return; }
 
-        popupControls.open({
+        openFlowPopup({
             title: 'Review and confirm',
             component: CreateStep,
             props: { context: ctx, setGroup },

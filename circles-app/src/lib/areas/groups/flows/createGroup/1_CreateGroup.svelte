@@ -1,9 +1,10 @@
 <script lang="ts">
     import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+    import OnChainNameSection from '$lib/shared/ui/flow/OnChainNameSection.svelte';
     import Tooltip from '$lib/shared/ui/primitives/Tooltip.svelte';
-import { ProfileHeaderEditor } from '$lib/shared/ui/profile';
+    import { ProfileFormStep } from '$lib/shared/ui/profile';
     import { isValidSymbol, isValidOnChainName } from '$lib/shared/utils/isValid';
-    import { popupControls } from '$lib/shared/state/popup';
+    import { openFlowPopup } from '$lib/shared/state/popup';
     import { wallet } from '$lib/shared/state/wallet.svelte';
     import Settings from './2_Settings.svelte';
     import {
@@ -62,49 +63,10 @@ import { ProfileHeaderEditor } from '$lib/shared/ui/profile';
     const onChainNameValid = $derived(onChainNameHasInput && isValidOnChainName(trimmedOnChainName));
     const canContinue: boolean = $derived(profileNameValid && symbolValidNow && onChainNameValid);
 
-    let onChainNameOpen = $state(false);
-    let onChainNameManual = $state(false);
-
-    function truncateAscii(value: string, maxBytes: number): string {
-        if (value.length <= maxBytes) {
-            return value;
-        }
-        return value.slice(0, maxBytes);
-    }
-
-    function deriveOnChainName(value: string): string {
-        const trimmed = (value ?? '').trim();
-        if (!trimmed) return '';
-        const sanitized = trimmed.replace(/[^0-9A-Za-z \-_.()'&+#]/g, '');
-        return truncateAscii(sanitized, 32);
-    }
-
-    $effect(() => {
-        if (!onChainNameManual) {
-            ctx.profile.onChainName = deriveOnChainName(displayName);
-        }
-    });
-
-    function toggleOnChainName(): void {
-        onChainNameOpen = !onChainNameOpen;
-    }
-
-    function handleManualToggle(enabled: boolean): void {
-        onChainNameManual = enabled;
-        if (!enabled) {
-            ctx.profile.onChainName = deriveOnChainName(displayName);
-        }
-    }
-
-    function handleManualToggleChange(event: Event): void {
-        const target = event.currentTarget as HTMLInputElement | null;
-        handleManualToggle(target?.checked ?? false);
-    }
-
     function next() {
         const ready: boolean = canContinue;
         if (!ready) { return; }
-        popupControls.open({
+        openFlowPopup({
             title: 'Group Settings',
             component: Settings,
             props: { context: ctx, setGroup },
@@ -137,12 +99,13 @@ import { ProfileHeaderEditor } from '$lib/shared/ui/profile';
         <div class="space-y-2">
             <div class="text-sm font-semibold">Group profile</div>
 
-            <ProfileHeaderEditor
+            <ProfileFormStep
                 bind:name={ctx.profile.name}
                 bind:description={ctx.profile.description}
                 bind:previewImageUrl={ctx.profile.previewImageUrl}
                 bind:imageUrl={ctx.profile.imageUrl}
                 nameLabel="Profile name"
+                showSubmit={false}
             />
             <div class="h-5 text-xs text-error pt-1">
                 {#if !profileNameValid}
@@ -151,58 +114,12 @@ import { ProfileHeaderEditor } from '$lib/shared/ui/profile';
             </div>
         </div>
 
-        <div class="border border-base-200 rounded-xl p-3">
-            <button
-                type="button"
-                class="flex items-center justify-between w-full text-xs font-semibold text-left"
-                onclick={toggleOnChainName}
-            >
-                <span>On-chain name</span>
-                <span class={onChainNameOpen ? 'rotate-180 transition-transform' : 'transition-transform'}>
-                    <img src="/chevron-down.svg" alt="Toggle" class="w-4 h-4" />
-                </span>
-            </button>
-
-            <div class="mt-1 text-xs text-base-content/60">
-                {#if ctx.profile.onChainName}
-                    {ctx.profile.onChainName}
-                {:else}
-                    Derived from the profile name
-                {/if}
-            </div>
-
-            {#if onChainNameOpen}
-                <div class="mt-3 space-y-2">
-                    <label class="flex items-center gap-2 text-xs">
-                        <input
-                            type="checkbox"
-                            class="checkbox checkbox-xs"
-                            checked={onChainNameManual}
-                            onchange={handleManualToggleChange}
-                        />
-                        Set on-chain name manually
-                    </label>
-
-                    <label class="form-control w-full">
-                        <span class="label-text text-xs">On-chain name</span>
-                        <input
-                            class="input input-sm input-bordered w-full"
-                            bind:value={ctx.profile.onChainName}
-                            placeholder="Group on-chain name…"
-                            disabled={!onChainNameManual}
-                        />
-                    </label>
-                    <p class="text-xs text-base-content/60">
-                        On-chain names follow stricter rules (ASCII only, max 32 characters).
-                    </p>
-                    {#if onChainNameHasInput && !onChainNameValid}
-                        <p class="text-xs text-error">
-                            Only ASCII letters, numbers, spaces, and - _ . ( ) ' & + # are allowed (max 32 chars).
-                        </p>
-                    {/if}
-                </div>
-            {/if}
-        </div>
+        <OnChainNameSection
+            bind:value={ctx.profile.onChainName}
+            sourceValue={displayName}
+            placeholder="Group on-chain name…"
+            invalid={onChainNameHasInput && !onChainNameValid}
+        />
     </div>
 
     <div class="mt-5 flex justify-end">

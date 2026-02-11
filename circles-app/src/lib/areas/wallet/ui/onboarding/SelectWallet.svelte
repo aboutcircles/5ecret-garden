@@ -2,7 +2,7 @@
   import { getConnectors, connect } from '@wagmi/core';
   import { config } from '../../../../../config';
   import { goto } from '$app/navigation';
-  import { popupControls } from '$lib/shared/state/popup';
+  import { openFlowPopup, popupControls } from '$lib/shared/state/popup';
   import { signer, clearSession } from '$lib/shared/state/wallet.svelte';
   import type { Address } from '@circles-sdk/utils';
   import ImportCircles from '$lib/areas/wallet/ui/onboarding/ImportCircles.svelte';
@@ -53,10 +53,9 @@
         return;
       }
       // Otherwise, prompt for the seed phrase
-      popupControls.open({
+      openFlowPopup({
         component: ImportCircles,
         title: 'Use circles magic words',
-        props: {},
       });
     }}
   >

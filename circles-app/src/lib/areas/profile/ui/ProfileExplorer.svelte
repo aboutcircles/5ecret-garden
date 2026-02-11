@@ -3,7 +3,7 @@
     import {onMount} from 'svelte';
     import {runTask} from '$lib/shared/utils/tasks';
     import {avatarState} from '$lib/shared/state/avatar.svelte';
-import { ProfileHeaderEditor } from '$lib/shared/ui/profile';
+    import { ProfileFormStep } from '$lib/shared/ui/profile';
     import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
     import type { ProfilesBindings } from '@circles-market/sdk';
     import { loadProfileOrInit, rebaseAndSaveProfile } from '@circles-market/sdk';
@@ -105,13 +105,14 @@ import { ProfileHeaderEditor } from '$lib/shared/ui/profile';
 
     <!-- Header editor panel -->
     <section class="bg-base-100 border border-base-300 rounded-xl p-4 shadow-sm">
-        <ProfileHeaderEditor
+        <ProfileFormStep
             bind:name
             bind:description
             bind:location
             bind:imageUrl
             bind:previewImageUrl
             readonly={!isOwner}
+            showSubmit={false}
         />
     </section>
 
