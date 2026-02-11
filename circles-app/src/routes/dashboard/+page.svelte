@@ -28,7 +28,7 @@
   import Lucide from '$lib/icons/Lucide.svelte';
 
   import { circles } from '$lib/stores/circles';
-  import { initTransactionHistoryStore } from '$lib/stores/transactionHistory';
+  import { initTransactionHistoryStore, refreshTransactionHistory } from '$lib/stores/transactionHistory';
   import type { CirclesEvent } from '@aboutcircles/sdk-rpc';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
@@ -96,9 +96,9 @@
 
     txHistoryRefreshTimeout = setTimeout(async () => {
       console.log('Refreshing transaction history (debounced)...');
-      if (avatarState.avatar) {
-        await initTransactionHistoryStore(avatarState.avatar);
-      }
+      // Use refreshTransactionHistory() instead of initTransactionHistoryStore()
+      // The init function short-circuits when already initialized for this avatar
+      await refreshTransactionHistory();
       txHistoryRefreshTimeout = null;
     }, 300); // Wait 300ms for all events from the same transaction
   }

@@ -2,12 +2,27 @@
   import { circlesBalances } from '$lib/stores/circlesBalances';
   import { derived, writable, type Writable } from 'svelte/store';
   import BalanceRow from '$lib/components/BalanceRow.svelte';
-  import type { EventRow } from '@aboutcircles/sdk-types';
+  import type { EventRow, Address } from '@aboutcircles/sdk-types';
   import Filter from '../components/Filter.svelte';
   import GenericList from '../components/GenericList.svelte';
+  import { getGroupName } from '$lib/stores/groupNameCache';
+
+  /**
+   * Check if a token is a "group token" - either:
+   * 1. tokenType is CrcV2_RegisterGroup (isGroup = true)
+   * 2. tokenOwner is a known group (ERC20 wrapper of a group token)
+   */
+  function isGroupToken(balance: { isGroup: boolean; tokenOwner: Address }): boolean {
+    if (balance.isGroup) return true;
+    const groupName = getGroupName(balance.tokenOwner);
+    return !!groupName;
+  }
 
   let filterType = writable<'personal' | 'group' | undefined>(undefined);
   let filterToken = writable<'erc20' | 'erc1155' | undefined>(undefined);
+  let showDust = writable<boolean>(false);
+
+  const DUST_THRESHOLD = 10_000_000_000_000_000n; // 0.01 CRC
 
   // Filters panel state — store to ensure reactivity in all modes
   const showFilters: Writable<boolean> = writable(false);
@@ -19,16 +34,17 @@
 
   // Shape this like other lists so GenericList can key rows
   let filteredStore = derived(
-    [circlesBalances, filterType, filterToken],
-    ([$circlesBalances, filterType, filterToken]) => {
+    [circlesBalances, filterType, filterToken, showDust],
+    ([$circlesBalances, filterType, filterToken, $showDust]) => {
       const filteredData = Object.values($circlesBalances.data)
         .filter((balance) => {
+          const isGroup = isGroupToken(balance);
           const matchesType =
             filterType === undefined ||
             (filterType === 'personal'
-              ? !balance.isGroup
+              ? !isGroup
               : filterType === 'group'
-                ? balance.isGroup
+                ? isGroup
                 : true);
           const matchesToken =
             filterToken === undefined ||
@@ -37,8 +53,7 @@
               : filterToken === 'erc1155'
                 ? balance.isErc1155
                 : true);
-          const isNotDust =
-            BigInt(balance.attoCircles) >= 10_000_000_000_000_000n;
+          const isNotDust = $showDust || BigInt(balance.attoCircles) >= DUST_THRESHOLD;
 
           return matchesType && matchesToken && isNotDust;
         })
@@ -57,6 +72,24 @@
         next: $circlesBalances.next,
         ended: $circlesBalances.ended,
       };
+    }
+  );
+
+  // Count of dust tokens hidden by the filter (shown when toggle is off)
+  let dustCount = derived(
+    [circlesBalances, filterType, filterToken],
+    ([$circlesBalances, filterType, filterToken]) => {
+      return Object.values($circlesBalances.data).filter((balance) => {
+        const isGroup = isGroupToken(balance);
+        const matchesType =
+          filterType === undefined ||
+          (filterType === 'personal' ? !isGroup : filterType === 'group' ? isGroup : true);
+        const matchesToken =
+          filterToken === undefined ||
+          (filterToken === 'erc20' ? balance.isErc20 : filterToken === 'erc1155' ? balance.isErc1155 : true);
+        const isDust = BigInt(balance.attoCircles) < DUST_THRESHOLD && BigInt(balance.attoCircles) > 0n;
+        return matchesType && matchesToken && isDust;
+      }).length;
     }
   );
 </script>
@@ -102,6 +135,21 @@
       <Filter text="ERC20" filter={filterToken} value={'erc20'} />
       <Filter text="ERC1155" filter={filterToken} value={'erc1155'} />
     </div>
+
+    <label class="flex items-center gap-2 cursor-pointer">
+      <input
+        type="checkbox"
+        class="checkbox checkbox-xs"
+        checked={$showDust}
+        onchange={() => showDust.update(v => !v)}
+      />
+      <span class="text-sm">
+        Show tiny balances (&lt; 0.01 CRC)
+        {#if !$showDust && $dustCount > 0}
+          <span class="text-base-content/50">({$dustCount} hidden)</span>
+        {/if}
+      </span>
+    </label>
   </div>
 {/if}
 

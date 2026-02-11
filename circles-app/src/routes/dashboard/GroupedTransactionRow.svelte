@@ -17,6 +17,22 @@
 
   const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
+  /**
+   * Get resolved CRC amount from an event, with hex value fallback.
+   * Handles RPC returning hex-encoded bigints (e.g. "0x53444835ec580000").
+   */
+  function resolveEventAmount(e: { circles?: number; staticCircles?: number; crc?: number; value?: string }): number {
+    const amount = e.circles ?? e.staticCircles ?? e.crc ?? 0;
+    if (amount > 0) return amount;
+    if (!e.value || e.value === '0') return 0;
+    const s = String(e.value).trim();
+    if (s.startsWith('0x') || s.startsWith('0X')) {
+      try { return Number(BigInt(s)) / 1e18; } catch { return 0; }
+    }
+    const n = parseFloat(s);
+    return n > 1e15 ? n / 1e18 : n;
+  }
+
   // Known contract addresses (Gnosis mainnet) - display friendly names instead of hex
   const KNOWN_CONTRACTS: Record<string, string> = {
     // Circles v2 Hub
@@ -55,6 +71,20 @@
 
   // Lift ERC20 factory address - used to detect ERC20 wrapper tokens
   const LIFT_ERC20_FACTORY = '0x5f99a795dd2743c36d63511f0d4bc667e6d3cdb5';
+
+  // Invite Module address - users pay 96 CRC fee (burned) to invite new users
+  const INVITE_MODULE_ADDRESS = '0x00738aca013b7b2e6cfe1690f0021c3182fa40b5';
+
+  /**
+   * Detect if this transaction is an invite: involves invite module + has burn
+   */
+  function isInviteTransaction(tx: GroupedTransaction): boolean {
+    const inviteLower = INVITE_MODULE_ADDRESS;
+    return tx.hasBurn && tx.events.some(e =>
+      e.from?.toLowerCase() === inviteLower ||
+      e.to?.toLowerCase() === inviteLower
+    );
+  }
 
   /**
    * Copy address to clipboard with visual feedback
@@ -244,7 +274,7 @@
 
   // Update URL when clicking the row (for sharing)
   function handleRowClick() {
-    if (visibleEventCount > 1) {
+    if (canExpand) {
       expanded = !expanded;
     }
     // Update URL with this transaction hash for sharing
@@ -266,8 +296,7 @@
     const userAddr = avatarState.avatar?.address?.toLowerCase();
     if (!userAddr) return 0;
 
-    const getAmount = (e: typeof item.events[0]) =>
-      Math.abs(e.circles ?? e.staticCircles ?? e.crc ?? 0);
+    const getAmount = (e: typeof item.events[0]) => Math.abs(resolveEventAmount(e));
 
     // Sum incoming (user is `to`)
     const incoming = item.events
@@ -379,15 +408,27 @@
   });
 
   // Count visible events after filtering (excludes zero-amount and mint→burn internal events)
+  // For intermediary (pass-through) and burn transactions, show ALL events regardless of
+  // amount so the path/collateral flow is visible in drill-down
   const visibleEvents = $derived(
     item.events.filter(e => {
-      const amount = e.circles ?? e.staticCircles ?? e.crc ?? 0;
       const fromZero = isZero(e.from);
       const toZero = isZero(e.to);
-      return amount > 0 && !(fromZero && toZero);
+      // Always skip internal protocol events (both from AND to are zero)
+      if (fromZero && toZero) return false;
+      // For pass-throughs and burns, show all events (path matters more than amount)
+      if (item.isIntermediary || item.type === 'burn') return true;
+      // For other types, filter out zero-amount events
+      const amount = e.circles ?? e.staticCircles ?? e.crc ?? 0;
+      return amount > 0;
     })
   );
   const visibleEventCount = $derived(visibleEvents.length);
+
+  // Can this row be expanded?
+  const canExpand = $derived(
+    visibleEventCount > 1 || ((item.isIntermediary || item.type === 'burn') && item.events.length > 1)
+  );
   const hopCount = $derived(visibleEventCount > 1 ? visibleEventCount - 1 : 0);
 
   function getBadgeUrl(type: GroupedTransaction['type']): string | null {
@@ -423,6 +464,10 @@
         if (counterpartyIsZero) {
           return 'Burned';
         }
+        // Invite module: user paid CRC fee to invite a new user
+        if (isInviteTransaction(item)) {
+          return 'Invited a new user';
+        }
         return `Sent to ${counterpartyName}`;
       case 'hop':
         // User's trust path was used by someone else for their transfer
@@ -441,12 +486,17 @@
           return `Minted ${groupName} tokens`;
         }
         return 'Minted Circles';
-      case 'burn':
+      case 'burn': {
         if (item.eventTypes?.some(t => t.includes('GroupRedeem'))) {
           const groupName = item.groupAddress ? getDisplayName(item.groupAddress) : 'group';
-          return `Redeemed ${groupName} tokens`;
+          // Quote short group names for clarity (e.g. "q" instead of just q)
+          const displayGroupName = groupName.length <= 3 ? `"${groupName}"` : groupName;
+          const burnAmt = Math.abs(item.netCircles);
+          const amtStr = burnAmt < 0.01 ? '< 0.01 CRC' : `${burnAmt.toFixed(2)} CRC`;
+          return `Redeemed ${displayGroupName} tokens (${amtStr})`;
         }
         return 'Burned';
+      }
       case 'complex':
         if (item.hasMint && item.hasBurn) {
           return 'Conversion';
@@ -572,7 +622,7 @@
             bottomInfo={formatTimestamp(item.timestamp)}
           />
         {/if}
-        {#if visibleEventCount > 1}
+        {#if visibleEventCount > 1 || ((item.isIntermediary || item.type === 'burn') && item.events.length > 1)}
           <!-- Expand indicator - subtle chevron instead of hops badge -->
           <span
             class="text-base-content/40 text-sm cursor-pointer"
@@ -611,14 +661,14 @@
   </RowFrame>
 
   <!-- Expanded events drill-down -->
-  {#if expanded && visibleEventCount > 1}
+  {#if expanded && canExpand}
     {@const userAddr = avatarState.avatar?.address?.toLowerCase()}
     {@const userReceived = item.events
       .filter(e => e.to?.toLowerCase() === userAddr && !isZero(e.from))
-      .reduce((sum, e) => sum + (e.circles ?? e.staticCircles ?? e.crc ?? 0), 0)}
+      .reduce((sum, e) => sum + resolveEventAmount(e), 0)}
     {@const userSent = item.events
       .filter(e => e.from?.toLowerCase() === userAddr && !isZero(e.to))
-      .reduce((sum, e) => sum + (e.circles ?? e.staticCircles ?? e.crc ?? 0), 0)}
+      .reduce((sum, e) => sum + resolveEventAmount(e), 0)}
     {@const receivedFrom = item.events.find(e => e.to?.toLowerCase() === userAddr && !isZero(e.from))?.from}
     {@const sentTo = item.events.find(e => e.from?.toLowerCase() === userAddr && !isZero(e.to))?.to}
     <div class="ml-6 pl-4 border-l-2 border-base-300 space-y-2 py-2">
@@ -626,6 +676,14 @@
       {#if userReceived > 0 || userSent > 0}
         <div class="bg-base-200/50 rounded-lg p-2 text-xs space-y-1">
           <span class="font-medium text-base-content/70">Your involvement:</span>
+          {#if isInviteTransaction(item)}
+            <!-- Invite transaction: show clear fee description instead of confusing wash -->
+            <div class="flex flex-wrap gap-x-4 gap-y-1">
+              <span class="text-error">
+                Paid {userSent.toFixed(2)} CRC invite fee (burned)
+              </span>
+            </div>
+          {:else}
           <div class="flex flex-wrap gap-x-4 gap-y-1">
             {#if userReceived > 0}
               <span class="text-success">
@@ -644,6 +702,7 @@
               </span>
             {/if}
           </div>
+          {/if}
         </div>
       {/if}
 
@@ -693,21 +752,15 @@
         </div>
       {/if}
 
-      <!-- Individual events (filter out zero-amount events and internal mint→burn protocol events) -->
-      {#each item.events.filter(e => {
-        const amount = e.circles ?? e.staticCircles ?? e.crc ?? 0;
-        const fromZero = isZero(e.from);
-        const toZero = isZero(e.to);
-        // Skip: zero amounts, or both from AND to are zero (internal protocol events)
-        return amount > 0 && !(fromZero && toZero);
-      }) as event, idx}
+      <!-- Individual events (uses same visibleEvents filter as count) -->
+      {#each visibleEvents as event, idx}
         {@const fromName = getDisplayName(event.from, 'from')}
         {@const toName = getDisplayName(event.to, 'to')}
         {@const fromImg = getProfileImage(event.from)}
         {@const toImg = getProfileImage(event.to)}
         {@const isMintEvent = isZero(event.from)}
         {@const isBurnEvent = isZero(event.to)}
-        {@const eventAmount = event.circles ?? event.staticCircles ?? event.crc ?? 0}
+        {@const eventAmount = resolveEventAmount(event)}
         <div class="flex items-center justify-between text-sm opacity-90 py-1.5 px-2 rounded hover:bg-base-200">
           <div class="flex items-center gap-2 min-w-0">
             <span class="text-xs text-base-content/50 shrink-0">#{idx + 1}</span>
