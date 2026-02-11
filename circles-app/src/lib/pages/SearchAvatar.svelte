@@ -5,6 +5,7 @@
   import type { SearchResultProfile } from '@aboutcircles/sdk-rpc';
   import { avatarState } from '$lib/stores/avatar.svelte';
   import { circles } from '$lib/stores/circles';
+  import { contacts } from '$lib/stores/contacts';
   import { ethers } from 'ethers';
   import RowFrame from '$lib/ui/RowFrame.svelte';
 
@@ -96,12 +97,29 @@
     }
   }
 
-  // Initial load - wait for SDK to be available before fetching
+  // Initial load - for 'send', show trusted contacts as default recipients
+  // For other search types, do a generic search
   $effect(() => {
     if (hasInitialized || !$circles) return;
 
+    if (searchType === 'send' && $contacts?.data) {
+      // Use the already-loaded contacts as default recipient list
+      const contactList = Object.values($contacts.data);
+      if (contactList.length > 0) {
+        result = contactList.map((c) => ({
+          address: c.row.objectAvatar as Address,
+          name: c.contactProfile?.name || c.row.objectAvatar,
+          previewImageUrl: c.contactProfile?.previewImageUrl,
+          avatarType: c.avatarInfo?.type,
+        })) as unknown as SearchResultProfile[];
+        isLoading = false;
+        hasInitialized = true;
+        return;
+      }
+    }
+
     isLoading = true;
-    rpcSearchByText('Circles', 25, 0, avatarTypes)
+    rpcSearchByText('', 25, 0, avatarTypes)
       .then((r) => {
         result = r;
       })
