@@ -81,67 +81,121 @@
 
     const dispatch = createEventDispatcher<{ click: void }>();
     function onClick() { dispatch('click'); }
+
+    function focusBalancesSearchInput(): void {
+        const input = document.querySelector<HTMLInputElement>('[data-balances-search-input], [data-select-asset-search-input]');
+        input?.focus();
+    }
+
+    function onRowKeydown(event: KeyboardEvent): void {
+        const current = event.currentTarget as HTMLElement | null;
+        if (!current) return;
+
+        const target = event.target as HTMLElement | null;
+        const isNestedTarget = !!target && target !== current;
+
+        if (event.key === 'Enter' || event.key === ' ') {
+            if (isNestedTarget) return;
+            event.preventDefault();
+            onClick();
+            return;
+        }
+
+        if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+
+        const scope = current.closest<HTMLElement>('[data-balances-list-scope], [data-select-asset-list-scope]');
+        const rows = Array.from((scope ?? document).querySelectorAll<HTMLElement>('[data-balance-row]'));
+        const index = rows.indexOf(current);
+        if (index === -1) return;
+
+        event.preventDefault();
+
+        if (event.key === 'ArrowUp' && index === 0) {
+            focusBalancesSearchInput();
+            return;
+        }
+
+        const nextIndex = event.key === 'ArrowDown' ? index + 1 : index - 1;
+        if (nextIndex < 0 || nextIndex >= rows.length) return;
+        rows[nextIndex]?.focus();
+    }
+
+    function onRowWrapperClick(event: MouseEvent): void {
+        const current = event.currentTarget as HTMLElement | null;
+        current?.focus();
+        onClick();
+    }
 </script>
 
 <!-- Use noLeading to collapse the empty first column; put the old "horizontal avatar row" inside content -->
-<RowFrame noLeading={true} clickable={true} className="balance-row" onclick={onClick}>
-    <!-- CONTENT (old layout preserved) -->
-    <div class="w-full flex items-center justify-between">
-        <!-- Left: Avatar horizontal exactly like before -->
-        <div class="min-w-0">
-            <Avatar
-                    placeholderBottom={true}
-                    placeholderTop={false}
-                    placeholderAvatar={false}
-                    address={item.tokenOwner}
-                    view="horizontal"
-                    clickable={true}
-                    bottomInfo={tokenTypeToString(item.tokenType)}
-            />
-        </div>
-
-        <!-- Right: amount + dropdown actions -->
-        <div class="flex items-center gap-3 md:gap-4 shrink-0">
-            <div class="text-right tabular-nums">
-                <div class="font-medium">{roundToDecimals(item.circles)} CRC</div>
-                <p class="text-xs text-base-content/70">
-                    {#if staticTypes.has(item.tokenType)}
-                        {roundToDecimals(item.staticCircles)} Static Circles
-                    {/if}
-                    {#if crcTypes.has(item.tokenType)}
-                        {roundToDecimals(item.crc)} CRC
-                    {/if}
-                </p>
+<div
+    data-balance-row
+    tabindex={0}
+    role="button"
+    aria-label={`Open actions for token ${item.tokenAddress}`}
+    class="rounded-[var(--row-radius)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+    onkeydown={onRowKeydown}
+    onclick={onRowWrapperClick}
+>
+    <RowFrame noLeading={true} clickable={true} className="balance-row">
+        <!-- CONTENT (old layout preserved) -->
+        <div class="w-full flex items-center justify-between">
+            <!-- Left: Avatar horizontal exactly like before -->
+            <div class="min-w-0">
+                <Avatar
+                        placeholderBottom={true}
+                        placeholderTop={false}
+                        placeholderAvatar={false}
+                        address={item.tokenOwner}
+                        view="horizontal"
+                        clickable={true}
+                        bottomInfo={tokenTypeToString(item.tokenType)}
+                />
             </div>
 
-            {#if !avatarState.isGroup}
-                <div class="dropdown dropdown-end">
-                    <button tabindex="0" class="btn btn-ghost btn-xs" aria-label="Row actions" onclick={(e)=>e.stopPropagation()}>
-                        <img src="/union.svg" alt="" class="icon" aria-hidden="true" />
-                    </button>
-                    <ul class="dropdown-content menu menu-sm bg-base-100 rounded-box shadow z-10 w-56 p-2">
-                        {#each actions as action (action.title)}
-                            {#if action.condition(item)}
-                                <li>
-                                    <button onclick={(e)=>{ e.stopPropagation(); executeAction(action); }}>
-                                        <img src={action.icon} alt="" class="icon" aria-hidden="true" />
-                                        {action.title}
-                                    </button>
-                                </li>
-                            {/if}
-                        {/each}
-                        <li>
-                            <button onclick={(e)=>{ e.stopPropagation(); handleCopy(); }}>
-                                <img src={copyIcon} alt="" class="icon" aria-hidden="true" />
-                                Copy
-                            </button>
-                        </li>
-                    </ul>
+            <!-- Right: amount + dropdown actions -->
+            <div class="flex items-center gap-3 md:gap-4 shrink-0">
+                <div class="text-right tabular-nums">
+                    <div class="font-medium">{roundToDecimals(item.circles)} CRC</div>
+                    <p class="text-xs text-base-content/70">
+                        {#if staticTypes.has(item.tokenType)}
+                            {roundToDecimals(item.staticCircles)} Static Circles
+                        {/if}
+                        {#if crcTypes.has(item.tokenType)}
+                            {roundToDecimals(item.crc)} CRC
+                        {/if}
+                    </p>
                 </div>
-            {/if}
+
+                {#if !avatarState.isGroup}
+                    <div class="dropdown dropdown-end">
+                        <button tabindex="0" class="btn btn-ghost btn-xs" aria-label="Row actions" onclick={(e)=>e.stopPropagation()}>
+                            <img src="/union.svg" alt="" class="icon" aria-hidden="true" />
+                        </button>
+                        <ul class="dropdown-content menu menu-sm bg-base-100 rounded-box shadow z-10 w-56 p-2">
+                            {#each actions as action (action.title)}
+                                {#if action.condition(item)}
+                                    <li>
+                                        <button onclick={(e)=>{ e.stopPropagation(); executeAction(action); }}>
+                                            <img src={action.icon} alt="" class="icon" aria-hidden="true" />
+                                            {action.title}
+                                        </button>
+                                    </li>
+                                {/if}
+                            {/each}
+                            <li>
+                                <button onclick={(e)=>{ e.stopPropagation(); handleCopy(); }}>
+                                    <img src={copyIcon} alt="" class="icon" aria-hidden="true" />
+                                    Copy
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                {/if}
+            </div>
         </div>
-    </div>
-</RowFrame>
+    </RowFrame>
+</div>
 
 <style>
     /* rely on RowFrame for chrome; no extra paddings here */

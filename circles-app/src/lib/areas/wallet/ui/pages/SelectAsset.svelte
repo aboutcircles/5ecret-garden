@@ -56,6 +56,8 @@
 
 <script lang="ts">
     import type { TokenBalanceRow } from '@circles-sdk/data';
+    import { writable } from 'svelte/store';
+    import ListShell from '$lib/shared/ui/common/ListShell.svelte';
     import BalanceRow from '$lib/areas/wallet/ui/components/BalanceRow.svelte';
     import type { Readable } from 'svelte/store';
     import { derived, readable } from 'svelte/store';
@@ -79,6 +81,8 @@
         showTransitive = true,
         onselect,
     }: Props = $props();
+    const query = writable('');
+    let searchInputEl: HTMLInputElement | null = $state(null);
 
     const handleSelect = (tokenBalanceRow: TokenBalanceRow) => {
         selectedAsset = tokenBalanceRow;
@@ -95,8 +99,16 @@
     let selectableBalances = $state<Readable<{ data: SelectableBalanceRowItem[]; next: () => Promise<boolean>; ended: boolean }>>(emptySelectable);
 
     $effect(() => {
-        selectableBalances = derived(balances, ($balances) => {
-            const data: SelectableBalanceRowItem[] = ($balances?.data ?? []).map((balance) => ({
+        selectableBalances = derived([balances, query], ([$balances, $query]) => {
+            const q = ($query ?? '').toLowerCase().trim();
+            const rows = ($balances?.data ?? []).filter((balance) => {
+                if (!q) return true;
+                const owner = String(balance.tokenOwner ?? '').toLowerCase();
+                const token = String(balance.tokenAddress ?? '').toLowerCase();
+                return owner.includes(q) || token.includes(q);
+            });
+
+            const data: SelectableBalanceRowItem[] = rows.map((balance) => ({
                 balance,
                 onSelect: () => handleSelect(balance)
             }));
@@ -107,6 +119,22 @@
                 ended: $balances?.ended ?? true
             };
         });
+    });
+
+    function onSearchInputKeydown(event: KeyboardEvent): void {
+        if (event.key !== 'ArrowDown') return;
+        const firstRow = document.querySelector<HTMLElement>('[data-select-asset-list-scope] [data-balance-row]');
+        if (!firstRow) return;
+        event.preventDefault();
+        firstRow.focus();
+    }
+
+    $effect(() => {
+        if (!searchInputEl) return;
+        searchInputEl.setAttribute('data-select-asset-search-input', 'true');
+        return () => {
+            searchInputEl?.removeAttribute('data-select-asset-search-input');
+        };
     });
 </script>
 
@@ -123,15 +151,25 @@
 
 <p class="menu-title pl-0 mt-4">Individual tokens</p>
 
-{#if $balances?.data?.length > 0}
-    <GenericList
-            store={selectableBalances}
-            row={SelectableBalanceRow}
-            getKey={(it) => String(it.balance.tokenAddress)}
-            rowHeight={64}
-            maxPlaceholderPages={0}
-            expectedPageSize={25}
-    />
-{:else}
-    <div class="text-center py-4">You don't have any trusted assets</div>
-{/if}
+<ListShell
+        query={query}
+        searchPlaceholder="Search by owner or token address"
+        bind:inputEl={searchInputEl}
+        onInputKeydown={onSearchInputKeydown}
+        isEmpty={$balances?.data?.length === 0}
+        isNoMatches={$balances?.data?.length > 0 && $selectableBalances.data.length === 0}
+        emptyLabel="You don't have any trusted assets"
+        noMatchesLabel="No matching assets"
+        wrapInListContainer={false}
+>
+    <div data-select-asset-list-scope>
+        <GenericList
+                store={selectableBalances}
+                row={SelectableBalanceRow}
+                getKey={(it) => String(it.balance.tokenAddress)}
+                rowHeight={64}
+                maxPlaceholderPages={0}
+                expectedPageSize={25}
+        />
+    </div>
+</ListShell>

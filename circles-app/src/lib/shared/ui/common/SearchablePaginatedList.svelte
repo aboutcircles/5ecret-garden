@@ -2,8 +2,7 @@
   import type { Component } from 'svelte';
   import { readable, writable, type Readable, type Writable } from 'svelte/store';
   import GenericList from '$lib/shared/ui/common/GenericList.svelte';
-  import ListStates from '$lib/shared/ui/common/ListStates.svelte';
-  import ListToolbar from '$lib/shared/ui/common/ListToolbar.svelte';
+  import ListShell from '$lib/shared/ui/common/ListShell.svelte';
   import { createPaginatedList } from '$lib/shared/state/paginatedList';
   import { createSearchablePaginatedList } from '$lib/shared/state/searchablePaginatedList';
 
@@ -12,6 +11,8 @@
     row: Component<{ item: T }>;
     getKey?: (item: T) => string;
     addressOf: (item: T) => string;
+    onInputKeydown?: (event: KeyboardEvent) => void;
+    inputDataAttribute?: string;
 
     loading?: boolean;
     error?: string | null;
@@ -29,6 +30,8 @@
     row,
     getKey,
     addressOf,
+    onInputKeydown,
+    inputDataAttribute,
     loading = false,
     error = null,
     rowHeight = 64,
@@ -46,6 +49,7 @@
   let searchQuery = $state<Writable<string>>(writable(''));
   let filteredItems = $state<Readable<any[]>>(emptyItems);
   let paginatedItems = $state(createPaginatedList(emptyItems, { pageSize: 1 }));
+  let searchInputEl: HTMLInputElement | null = $state(null);
 
   $effect(() => {
     const next = createSearchablePaginatedList(items, {
@@ -59,16 +63,26 @@
     filteredItems = next.filteredItems;
     paginatedItems = next.paginatedItems;
   });
+
+  $effect(() => {
+    if (!searchInputEl || !inputDataAttribute) return;
+    searchInputEl.setAttribute(inputDataAttribute, 'true');
+    return () => {
+      searchInputEl?.removeAttribute(inputDataAttribute);
+    };
+  });
 </script>
 
-<ListToolbar query={searchQuery} placeholder={searchPlaceholder} />
-
-<ListStates
+<ListShell
+  query={searchQuery}
+  searchPlaceholder={searchPlaceholder}
+  bind:inputEl={searchInputEl}
+  {onInputKeydown}
   {loading}
   {error}
   isEmpty={($items ?? []).length === 0}
   isNoMatches={($items ?? []).length > 0 && ($filteredItems ?? []).length === 0}
-  {emptyLabel}
+  emptyLabel={emptyLabel}
   noMatchesLabel={noMatchesLabel}
 >
   <GenericList
@@ -79,4 +93,4 @@
     maxPlaceholderPages={2}
     expectedPageSize={pageSize}
   />
-</ListStates>
+</ListShell>

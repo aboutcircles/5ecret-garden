@@ -12,13 +12,10 @@
     }
 
     let { item }: Props = $props();
+
+    function onSelect(): void {
+        item.onSelect();
+    }
 </script>
 
-<!-- Wrap to ensure click is caught at the DOM boundary (BalanceRow doesn't emit a component 'click') -->
-<button
-        type="button"
-        class="w-full text-left bg-transparent border-0 p-0"
-        onclick={item.onSelect}
->
-    <BalanceRow item={item.balance} />
-</button>
+<BalanceRow item={item.balance} on:click={onSelect} />

@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { writable, type Readable } from 'svelte/store';
+  import { derived, writable, type Readable } from 'svelte/store';
 
+  import ListShell from '$lib/shared/ui/common/ListShell.svelte';
   import GenericList from '$lib/shared/ui/common/GenericList.svelte';
   import BalanceRowSkeleton from '$lib/areas/wallet/ui/components/BalanceRowSkeleton.svelte';
   import DemoGenericRow from '../DemoGenericRow.svelte';
@@ -52,6 +53,38 @@
   });
 
   const demoListStore: Readable<DemoListStore> = { subscribe: listInner.subscribe };
+  const query = writable('');
+  let searchInputEl: HTMLInputElement | null = $state(null);
+
+  const filteredDemoListStore = derived([demoListStore, query], ([$store, $query]) => {
+    const q = ($query ?? '').toLowerCase().trim();
+    if (!q) return $store;
+
+    return {
+      ...$store,
+      data: ($store?.data ?? []).filter((item) => {
+        const title = String(item.title ?? '').toLowerCase();
+        const subtitle = String(item.subtitle ?? '').toLowerCase();
+        return title.includes(q) || subtitle.includes(q);
+      })
+    };
+  });
+
+  function onSearchInputKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'ArrowDown') return;
+    const firstRow = document.querySelector<HTMLElement>('[data-demo-generic-row]');
+    if (!firstRow) return;
+    event.preventDefault();
+    firstRow.focus();
+  }
+
+  $effect(() => {
+    if (!searchInputEl) return;
+    searchInputEl.setAttribute('data-demo-list-search-input', 'true');
+    return () => {
+      searchInputEl?.removeAttribute('data-demo-list-search-input');
+    };
+  });
 </script>
 
 <section class="rounded-xl border border-base-300 bg-base-100 p-4 space-y-4">
@@ -69,14 +102,26 @@
     <h3 class="font-medium">GenericList with paged loading</h3>
     <p class="text-sm opacity-70">Scroll list: additional rows are loaded via the demo store.</p>
     <div class="max-h-80 overflow-auto rounded-lg border border-base-300 p-2">
-      <GenericList
-        store={demoListStore}
-        row={DemoGenericRow}
-        getKey={(item) => item.id}
-        rowHeight={56}
-        expectedPageSize={3}
-        maxPlaceholderPages={1}
-      />
+      <ListShell
+        query={query}
+        searchPlaceholder="Search demo rows"
+        bind:inputEl={searchInputEl}
+        onInputKeydown={onSearchInputKeydown}
+        isEmpty={$demoListStore.data.length === 0}
+        isNoMatches={$demoListStore.data.length > 0 && $filteredDemoListStore.data.length === 0}
+        emptyLabel="No demo rows"
+        noMatchesLabel="No matching demo rows"
+        wrapInListContainer={false}
+      >
+        <GenericList
+          store={filteredDemoListStore}
+          row={DemoGenericRow}
+          getKey={(item) => item.id}
+          rowHeight={56}
+          expectedPageSize={3}
+          maxPlaceholderPages={1}
+        />
+      </ListShell>
     </div>
   </div>
 </section>

@@ -1,7 +1,8 @@
 <script lang="ts">
+    import { derived, readable, writable, type Readable } from 'svelte/store';
+    import ListShell from '$lib/shared/ui/common/ListShell.svelte';
     import GenericList from '$lib/shared/ui/common/GenericList.svelte';
     import {createCMGroups} from '$lib/areas/groups/state';
-    import type {Readable} from 'svelte/store';
     import type {EventRow} from '@circles-sdk/data';
     import GroupRowView from './GroupRowView.svelte';
     import {avatarState} from '$lib/shared/state/avatar.svelte';
@@ -27,6 +28,15 @@
         next: () => Promise<boolean>;
         ended: boolean;
     }> | undefined = $state();
+    const allGroupsQuery = writable('');
+    let allGroupsSearchInputEl: HTMLInputElement | null = $state(null);
+
+    const emptyGroupsStore = readable<{ data: EventRow[]; next: () => Promise<boolean>; ended: boolean }>({
+        data: [],
+        next: async () => true,
+        ended: true,
+    });
+    let filteredAllGroupsStore = $state<Readable<{ data: EventRow[]; next: () => Promise<boolean>; ended: boolean }>>(emptyGroupsStore);
 
     let ownedGroups: GroupRow[] = $state([]);
     let ownedGroupsLoading: boolean = $state(false);
@@ -98,6 +108,45 @@
         if (avatarState.avatar) {
             loadGroups();
         }
+    });
+
+    $effect(() => {
+        const base = groups;
+        if (!base) {
+            filteredAllGroupsStore = emptyGroupsStore;
+            return;
+        }
+
+        const next = derived([base, allGroupsQuery], ([$base, $query]) => {
+            const q = ($query ?? '').toLowerCase().trim();
+            const rows = ($base?.data ?? []) as GroupRow[];
+            const data = q.length === 0
+                ? rows
+                : rows.filter((item) => String(item.group ?? '').toLowerCase().includes(q));
+
+            return {
+                ...$base,
+                data,
+            };
+        });
+
+        filteredAllGroupsStore = next;
+    });
+
+    function onAllGroupsSearchInputKeydown(event: KeyboardEvent): void {
+        if (event.key !== 'ArrowDown') return;
+        const firstRow = document.querySelector<HTMLElement>('[data-group-row]');
+        if (!firstRow) return;
+        event.preventDefault();
+        firstRow.focus();
+    }
+
+    $effect(() => {
+        if (!allGroupsSearchInputEl) return;
+        allGroupsSearchInputEl.setAttribute('data-groups-search-input', 'true');
+        return () => {
+            allGroupsSearchInputEl?.removeAttribute('data-groups-search-input');
+        };
     });
 
     $effect(() => {
@@ -225,13 +274,25 @@
                 </GroupTabPanel>
             {:else}
                 {#if groups}
-                    <GenericList
-                        store={groups}
-                        row={GroupRowView}
-                        rowHeight={64}
-                        maxPlaceholderPages={0}
-                        expectedPageSize={25}
-                    />
+                    <ListShell
+                        query={allGroupsQuery}
+                        searchPlaceholder="Search by group address"
+                        bind:inputEl={allGroupsSearchInputEl}
+                        onInputKeydown={onAllGroupsSearchInputKeydown}
+                        isEmpty={$groups.data.length === 0}
+                        isNoMatches={$groups.data.length > 0 && $filteredAllGroupsStore.data.length === 0}
+                        emptyLabel="No groups found"
+                        noMatchesLabel="No matching groups"
+                        wrapInListContainer={false}
+                    >
+                        <GenericList
+                            store={filteredAllGroupsStore}
+                            row={GroupRowView}
+                            rowHeight={64}
+                            maxPlaceholderPages={0}
+                            expectedPageSize={25}
+                        />
+                    </ListShell>
                 {:else}
                     <div class="text-sm opacity-70">Loading…</div>
                 {/if}

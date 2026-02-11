@@ -5,10 +5,15 @@
     import type {EventRow} from '@circles-sdk/data';
     import Filter from '$lib/shared/ui/common/Filter.svelte';
     import GenericList from '$lib/shared/ui/common/GenericList.svelte';
+    import ListShell from '$lib/shared/ui/common/ListShell.svelte';
+
+    const BALANCES_LIST_SCOPE = '[data-balances-list-scope]';
 
     let filterVersion = writable<number | undefined>(undefined);
     let filterType = writable<'personal' | 'group' | undefined>(undefined);
     let filterToken = writable<'erc20' | 'erc1155' | undefined>(undefined);
+    let searchQuery = writable<string>('');
+    let searchInputEl: HTMLInputElement | null = $state(null);
 
     // Filters panel state — store to ensure reactivity in all modes
     const showFilters: Writable<boolean> = writable(false);
@@ -19,7 +24,7 @@
     }
 
     // Shape this like other lists so GenericList can key rows
-    let filteredStore = derived(
+    const filteredAll = derived(
         [circlesBalances, filterVersion, filterType, filterToken],
         ([$circlesBalances, filterVersion, filterType, filterToken]) => {
             const filteredData = Object
@@ -45,13 +50,46 @@
                     ...balance
                 } as EventRow));
 
+            return filteredData;
+        }
+    );
+
+    const searchedAll = derived([filteredAll, searchQuery], ([$filteredAll, $searchQuery]) => {
+        const q = ($searchQuery ?? '').toLowerCase().trim();
+        if (!q) return $filteredAll;
+        return $filteredAll.filter((item) => {
+            const owner = String((item as any).tokenOwner ?? '').toLowerCase();
+            const token = String((item as any).tokenAddress ?? '').toLowerCase();
+            return owner.includes(q) || token.includes(q);
+        });
+    });
+
+    let filteredStore = derived(
+        [searchedAll, circlesBalances],
+        ([$searchedAll, $circlesBalances]) => {
             return {
-                data: filteredData,
+                data: $searchedAll,
                 next: $circlesBalances.next,
                 ended: $circlesBalances.ended
             };
         }
     );
+
+    function onSearchInputKeydown(event: KeyboardEvent): void {
+        if (event.key !== 'ArrowDown') return;
+        const firstRow = document.querySelector<HTMLElement>(`${BALANCES_LIST_SCOPE} [data-balance-row]`);
+        if (!firstRow) return;
+        event.preventDefault();
+        firstRow.focus();
+    }
+
+    $effect(() => {
+        if (!searchInputEl) return;
+        searchInputEl.setAttribute('data-balances-search-input', 'true');
+        return () => {
+            searchInputEl?.removeAttribute('data-balances-search-input');
+        };
+    });
 </script>
 
 <div class="w-full flex items-start gap-2">
@@ -99,4 +137,18 @@
     </div>
 {/if}
 
-<GenericList store={filteredStore} row={BalanceRow}/>
+<ListShell
+    query={searchQuery}
+    searchPlaceholder="Search by owner or token address"
+    bind:inputEl={searchInputEl}
+    onInputKeydown={onSearchInputKeydown}
+    isEmpty={$filteredAll.length === 0}
+    isNoMatches={$filteredAll.length > 0 && $searchedAll.length === 0}
+    emptyLabel="No balances"
+    noMatchesLabel="No matching balances"
+    wrapInListContainer={false}
+>
+    <div data-balances-list-scope>
+        <GenericList store={filteredStore} row={BalanceRow}/>
+    </div>
+</ListShell>

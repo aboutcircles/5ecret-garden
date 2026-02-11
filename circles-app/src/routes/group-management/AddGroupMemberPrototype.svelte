@@ -14,6 +14,8 @@
   import { shortenAddress } from '$lib/shared/utils/shared';
   import { createKeyboardListNavigator } from '$lib/shared/utils/keyboardListNavigator';
   import { createSearchOverlayController } from '$lib/shared/utils/searchOverlayController';
+  import { registerOutsidePointerClose } from '$lib/shared/utils/outsidePointerClose';
+  import { SEARCH_POLICY } from '$lib/shared/utils/searchPolicies';
 
   interface Props {
     group: Address;
@@ -28,7 +30,7 @@
   let { group, onSelected }: Props = $props();
   const searchController = createSearchOverlayController<SearchProfileResult>({
     search: searchProfiles,
-    debounceMs: 250,
+    debounceMs: SEARCH_POLICY.REMOTE_DEBOUNCE_MS,
   });
   const { query, searchOpen, searching, error: searchError, result: searchResult } = searchController;
   let selected: PickedAvatar[] = $state([]);
@@ -101,17 +103,11 @@
   $effect(() => {
     if (!$searchOpen) return;
 
-    function onWindowPointerDown(event: PointerEvent) {
-      const target = event.target as Node | null;
-      if (!target) return;
-      if (searchInputEl?.contains(target) || overlayEl?.contains(target)) return;
-      closeSearchNow();
-    }
-
-    window.addEventListener('pointerdown', onWindowPointerDown);
-    return () => {
-      window.removeEventListener('pointerdown', onWindowPointerDown);
-    };
+    return registerOutsidePointerClose({
+      isEnabled: () => $searchOpen,
+      isInside: (target) => !!(searchInputEl?.contains(target) || overlayEl?.contains(target)),
+      onOutside: closeSearchNow,
+    });
   });
 
   async function searchProfiles(q: string) {
@@ -122,7 +118,7 @@
 
     const raw = await sdk.circlesRpc.call<any>('circles_searchProfiles', [
       q,
-      50,
+      SEARCH_POLICY.DEFAULT_REMOTE_LIMIT,
       0,
       ['CrcV2_RegisterHuman', 'CrcV2_RegisterOrganization', 'CrcV2_RegisterGroup'],
     ]);
