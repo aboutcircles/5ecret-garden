@@ -244,12 +244,28 @@
     // Set to 0 immediately for UI feedback
     mintableAmount = 0;
 
-    // Execute mint task
-    // The PersonalMint event will update mintableAmount automatically via subscription
-    runTask({
-      name: 'Minting Circles ...',
-      promise: (avatarState.avatar as any).personalToken.mint(),
-    });
+    // Execute mint task, then refresh transaction history and mintable amount
+    try {
+      await runTask({
+        name: 'Minting Circles ...',
+        promise: (avatarState.avatar as any).personalToken.mint(),
+      });
+
+      // Mint succeeded — refresh transaction history so new tx appears immediately
+      // Don't rely solely on WebSocket events (they may not arrive)
+      await refreshTransactionHistory();
+
+      // Update mintable amount
+      if (avatarState.isHuman && avatarState.avatar) {
+        try {
+          const result = await (avatarState.avatar as any).personalToken.getMintableAmount();
+          const amount = CirclesConverter.attoCirclesToCircles(result.amount);
+          mintableAmount = amount ?? 0;
+        } catch { /* ignore */ }
+      }
+    } catch {
+      // runTask already handles error display
+    }
   }
 
   // Dust threshold: 0.01 CRC (same as Balances.svelte)

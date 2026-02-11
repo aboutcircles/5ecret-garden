@@ -20,6 +20,11 @@
       ? goto('/connect-wallet/import-circles-garden')
       : goto('/connect-wallet/connect-safe');
   }
+
+  function disconnectProfile() {
+    popupControls.close();
+    goto('/connect-wallet/connect-safe');
+  }
 </script>
 
 <div
@@ -40,4 +45,10 @@
   <div class="shadow-lg rounded-lg">
     <QrCode value={address} />
   </div>
+
+  <button
+    onclick={disconnectProfile}
+    class="btn btn-sm btn-ghost text-error mt-4"
+  >Disconnect this profile
+  </button>
 </div>
