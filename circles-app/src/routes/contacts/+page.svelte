@@ -1,8 +1,8 @@
 <script lang="ts">
     import {contacts} from '$lib/domains/profile/state';
     import Papa from 'papaparse';
-    import GenericList from '$lib/shared/ui/common/GenericList.svelte';
-    import ListShell from '$lib/shared/ui/common/ListShell.svelte';
+    import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
+    import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
     import ContactRow from './ContactRow.svelte';
     import {derived, writable, type Writable} from 'svelte/store';
     import Filter from '$lib/shared/ui/common/Filter.svelte';
@@ -17,7 +17,7 @@
     import type { Action } from '$lib/shared/ui/shell/actions';
     import { goto } from '$app/navigation';
     import { createPaginatedList } from '$lib/shared/state/paginatedList';
-    import { createListInputArrowDownHandler } from '$lib/shared/utils/listInputArrowDown';
+    import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
 
     let filterVersion = writable<number | undefined>(undefined);
     let filterRelation = writable<'mutuallyTrusts' | 'trusts' | 'trustedBy' | 'variesByVersion' | undefined>(undefined);

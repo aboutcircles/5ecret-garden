@@ -32,10 +32,8 @@ export class BatchAggregator<T, R> {
 
   public enqueue(item: T): Promise<R> {
     return new Promise<R>((resolve, reject) => {
-      // Add this request to the queue
       this.queue.push({ item, resolve, reject });
 
-      // Schedule a timer if we haven't already
       if (!this.batchTimeout) {
         this.batchTimeout = setTimeout(() => this.flush(), this.options.waitTimeMs);
       }
@@ -45,11 +43,9 @@ export class BatchAggregator<T, R> {
   private async flush() {
     this.batchTimeout = null;
 
-    // Copy and clear out the queue
     const currentQueue = [...this.queue];
     this.queue.length = 0;
 
-    // Process in chunks of `maxBatchSize`
     const chunkSize = this.options.maxBatchSize;
     for (let i = 0; i < currentQueue.length; i += chunkSize) {
       const slice = currentQueue.slice(i, i + chunkSize);
@@ -59,12 +55,10 @@ export class BatchAggregator<T, R> {
       try {
         resultMap = await this.options.fetchFunction(items);
       } catch (err) {
-        // If our fetchFunction fails, reject all requests in this chunk
         slice.forEach(({ reject }) => reject(err));
-        continue; // Move on to next chunk
+        continue;
       }
 
-      // Resolve each item’s promise
       for (const { item, resolve, reject } of slice) {
         if (resultMap.has(item)) {
           resolve(resultMap.get(item)!);

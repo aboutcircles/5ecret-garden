@@ -1,4 +1,3 @@
-// circles-app/src/lib/utils/loadable.ts
 import { writable, type Readable } from 'svelte/store';
 
 export type LoadableState<T> = {
@@ -23,14 +22,6 @@ export function normalizeError(err: unknown): string {
   }
 }
 
-/**
- * Shared async loading helper with stale-request guard.
- *
- * Usage in Svelte:
- *   const loader = createLoadable<T>(initial);
- *   const loading = $derived($loader.loading);
- *   const value = $derived($loader.value);
- */
 export function createLoadable<T>(initial: T): Loadable<T> {
   const store = writable<LoadableState<T>>({
     value: initial,

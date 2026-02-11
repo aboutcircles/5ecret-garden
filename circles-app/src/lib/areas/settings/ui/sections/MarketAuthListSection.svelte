@@ -2,9 +2,9 @@
   import type { Address } from '@circles-sdk/utils';
   import type { Readable } from 'svelte/store';
   import { derived, writable } from 'svelte/store';
-  import ListShell from '$lib/shared/ui/common/ListShell.svelte';
-  import GenericList from '$lib/shared/ui/common/GenericList.svelte';
-  import { createListInputArrowDownHandler } from '$lib/shared/utils/listInputArrowDown';
+  import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
+  import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
+  import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
 
   type ListValue = { data: any[]; next: () => Promise<boolean>; ended: boolean };
   type ListStore = Readable<ListValue>;

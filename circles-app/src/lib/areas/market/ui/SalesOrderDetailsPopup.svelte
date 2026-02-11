@@ -1,6 +1,6 @@
 <script lang="ts">
   import OrderDetailsView from '$lib/areas/market/orders/OrderDetailsView.svelte';
-  import { createLoadable } from '$lib/shared/utils/loadable';
+  import { createLoadable } from '$lib/areas/market/utils/loadable';
   import { onMount } from 'svelte';
   import { getMarketClient } from '$lib/shared/integrations/market';
 

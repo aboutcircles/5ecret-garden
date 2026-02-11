@@ -1,10 +1,10 @@
 <script lang="ts">
     import { derived, writable } from 'svelte/store';
-    import ListShell from '$lib/shared/ui/common/ListShell.svelte';
-    import GenericList from '$lib/shared/ui/common/GenericList.svelte';
+    import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
+    import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
     import TransactionRow from './TransactionRow.svelte';
     import {transactionHistory} from '$lib/shared/state/transactionHistory';
-    import { createListInputArrowDownHandler } from '$lib/shared/utils/listInputArrowDown';
+    import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
 
     const searchQuery = writable('');
     let transactionsListScopeEl: HTMLDivElement | null = $state(null);

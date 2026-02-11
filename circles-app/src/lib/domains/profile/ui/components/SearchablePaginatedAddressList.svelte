@@ -1,10 +1,10 @@
 <script lang="ts">
     import type { Component } from 'svelte';
-    import SearchablePaginatedList from '$lib/shared/ui/common/SearchablePaginatedList.svelte';
+    import SearchablePaginatedList from '$lib/shared/ui/lists/SearchablePaginatedList.svelte';
     import TrustRelationRow from '$lib/domains/profile/ui/components/TrustRelationRow.svelte';
     import type { Address } from '@circles-sdk/utils';
     import type { Readable } from 'svelte/store';
-    import { createListInputArrowDownHandler } from '$lib/shared/utils/listInputArrowDown';
+    import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
 
     interface Props {
         addresses: Readable<Address[]>;

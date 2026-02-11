@@ -1,8 +1,8 @@
 <script lang="ts">
   import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
   import { derived, writable } from 'svelte/store';
-  import ListShell from '$lib/shared/ui/common/ListShell.svelte';
-  import GenericList from '$lib/shared/ui/common/GenericList.svelte';
+  import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
+  import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
   import { browser } from '$app/environment';
   import { getMarketClient } from '$lib/shared/integrations/market';
   import { onMount } from 'svelte';
@@ -15,7 +15,7 @@
 
   import { signInWithSafe } from '$lib/areas/market/auth/signin';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
-  import { createListInputArrowDownHandler } from '$lib/shared/utils/listInputArrowDown';
+  import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
 
   import SalesOrderRow from '$lib/areas/market/ui/SalesOrderRow.svelte';
 

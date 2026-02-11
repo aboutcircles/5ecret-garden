@@ -7,7 +7,7 @@
   import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
   import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
   import type { Action } from '$lib/shared/ui/shell/actions';
-  import { getProfileDisplayName } from '$lib/shared/utils/profileDisplayName';
+  import { getProfileDisplayName } from '../profileDisplayName';
   import GroupMembersPrototype from '../GroupMembersPrototype.svelte';
 
   const group = $derived(($page.params.group ?? '').toLowerCase() as Address | '');

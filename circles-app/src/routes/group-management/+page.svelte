@@ -15,7 +15,7 @@
   import GroupSettingsPrototype from './GroupSettingsPrototype.svelte';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
-  import { getGroupsByMember } from '$lib/shared/utils/getGroupsByMemberBatch';
+  import { getGroupsByMember } from '$lib/areas/groups/utils/getGroupsByMemberBatch';
 
   let loading: boolean = $state(false);
   let error: string | null = $state(null);
