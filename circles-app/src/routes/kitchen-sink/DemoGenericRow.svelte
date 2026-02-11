@@ -8,8 +8,9 @@
 
   let { item }: { item: DemoItem } = $props();
 
-  function focusDemoSearchInput(): void {
-    const input = document.querySelector<HTMLInputElement>('[data-demo-list-search-input]');
+  function focusDemoSearchInput(current: HTMLElement): void {
+    const scope = current.closest<HTMLElement>('[data-demo-list-scope]');
+    const input = scope?.querySelector<HTMLInputElement>('[data-demo-list-search-input]');
     input?.focus();
   }
 
@@ -17,7 +18,8 @@
     const current = event.currentTarget as HTMLElement | null;
     if (!current) return;
 
-    const rows = Array.from(document.querySelectorAll<HTMLElement>('[data-demo-generic-row]'));
+    const scope = current.closest<HTMLElement>('[data-demo-list-scope]');
+    const rows = Array.from((scope ?? document).querySelectorAll<HTMLElement>('[data-demo-generic-row]'));
     const index = rows.indexOf(current);
     if (index === -1) return;
 
@@ -25,7 +27,7 @@
     event.preventDefault();
 
     if (event.key === 'ArrowUp' && index === 0) {
-      focusDemoSearchInput();
+      focusDemoSearchInput(current);
       return;
     }
 

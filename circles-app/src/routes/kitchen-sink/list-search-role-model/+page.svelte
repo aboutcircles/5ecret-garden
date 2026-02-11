@@ -7,7 +7,7 @@
   import type { MonthlyItem, RangeOverlayEvent } from '$lib/domains/events/ui/history/types';
   import type { AvatarSearchItem } from '../../avatar-search/dev/avatarSearch.types';
 
-  import ListToolbar from '$lib/shared/ui/common/ListToolbar.svelte';
+  import ListShell from '$lib/shared/ui/common/ListShell.svelte';
   import GenericList from '$lib/shared/ui/common/GenericList.svelte';
   import { createPaginatedList } from '$lib/shared/state/paginatedList';
 
@@ -405,8 +405,9 @@
   <div class="grid gap-4 lg:grid-cols-2">
     <section class="rounded-xl border border-base-300 p-3 space-y-2">
       <h3 class="font-medium">Contacts list (ContactRow)</h3>
-      <ListToolbar query={contactsQuery} placeholder="Search contacts" />
-      <GenericList store={contactsPaginated} row={ContactRow} rowHeight={64} expectedPageSize={4} maxPlaceholderPages={1} />
+      <ListShell query={contactsQuery} searchPlaceholder="Search contacts" wrapInListContainer={false}>
+        <GenericList store={contactsPaginated} row={ContactRow} rowHeight={64} expectedPageSize={4} maxPlaceholderPages={1} />
+      </ListShell>
     </section>
 
     <section class="rounded-xl border border-base-300 p-3 space-y-2">
@@ -456,8 +457,9 @@
 
     <section class="rounded-xl border border-base-300 p-3 space-y-2">
       <h3 class="font-medium">Avatar search dev list (AvatarSearchRow)</h3>
-      <ListToolbar query={avatarSearchQuery} placeholder="Search avatar results" />
-      <GenericList store={avatarSearchPaginated} row={AvatarSearchRow} rowHeight={64} expectedPageSize={5} maxPlaceholderPages={1} />
+      <ListShell query={avatarSearchQuery} searchPlaceholder="Search avatar results" wrapInListContainer={false}>
+        <GenericList store={avatarSearchPaginated} row={AvatarSearchRow} rowHeight={64} expectedPageSize={5} maxPlaceholderPages={1} />
+      </ListShell>
     </section>
   </div>
 

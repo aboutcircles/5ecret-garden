@@ -6,8 +6,7 @@
     import {get, writable} from 'svelte/store';
     import {onMount} from "svelte";
     import RowFrame from '$lib/shared/ui/RowFrame.svelte';
-    import ListToolbar from '$lib/shared/ui/common/ListToolbar.svelte';
-    import ListStates from '$lib/shared/ui/common/ListStates.svelte';
+    import ListShell from '$lib/shared/ui/common/ListShell.svelte';
     import { createKeyboardListNavigator } from '$lib/shared/utils/keyboardListNavigator';
     import { SEARCH_POLICY } from '$lib/shared/utils/searchPolicies';
     import type { Address } from '@circles-sdk/utils';
@@ -165,19 +164,20 @@
     }
 </script>
 
-<ListToolbar
-    query={query}
-    placeholder="Search by name or address"
-    bind:inputEl={searchInputEl}
-    onInputKeydown={searchListNavigator.onInputArrowDown}
-/>
-
-<div class="mt-4">
+<div class="mt-4" data-search-avatar-list-scope>
     <p class="menu-title pl-0">
         {#if searchType === 'send'}Recipient{:else if searchType === 'contact'}Found Account{:else}Group{/if}
     </p>
 
-    <ListStates {loading} {error}>
+    <ListShell
+        query={query}
+        searchPlaceholder="Search by name or address"
+        bind:inputEl={searchInputEl}
+        onInputKeydown={searchListNavigator.onInputArrowDown}
+        {loading}
+        {error}
+        wrapInListContainer={false}
+    >
         {#if result.length > 0}
             <div bind:this={resultsListEl} class="w-full flex flex-col gap-y-1.5" role="list">
                 {#each result as profile, index}
@@ -225,5 +225,5 @@
                 </div>
             </div>
         {/if}
-    </ListStates>
+    </ListShell>
 </div>

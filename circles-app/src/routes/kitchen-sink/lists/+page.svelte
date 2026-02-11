@@ -55,6 +55,7 @@
   const demoListStore: Readable<DemoListStore> = { subscribe: listInner.subscribe };
   const query = writable('');
   let searchInputEl: HTMLInputElement | null = $state(null);
+  let demoListScopeEl: HTMLDivElement | null = $state(null);
 
   const filteredDemoListStore = derived([demoListStore, query], ([$store, $query]) => {
     const q = ($query ?? '').toLowerCase().trim();
@@ -72,7 +73,7 @@
 
   function onSearchInputKeydown(event: KeyboardEvent): void {
     if (event.key !== 'ArrowDown') return;
-    const firstRow = document.querySelector<HTMLElement>('[data-demo-generic-row]');
+    const firstRow = demoListScopeEl?.querySelector<HTMLElement>('[data-demo-generic-row]');
     if (!firstRow) return;
     event.preventDefault();
     firstRow.focus();
@@ -101,7 +102,7 @@
   <div class="space-y-2">
     <h3 class="font-medium">GenericList with paged loading</h3>
     <p class="text-sm opacity-70">Scroll list: additional rows are loaded via the demo store.</p>
-    <div class="max-h-80 overflow-auto rounded-lg border border-base-300 p-2">
+    <div class="max-h-80 overflow-auto rounded-lg border border-base-300 p-2" data-demo-list-scope bind:this={demoListScopeEl}>
       <ListShell
         query={query}
         searchPlaceholder="Search demo rows"
