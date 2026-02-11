@@ -43,7 +43,7 @@
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
   import type { AggregatedCatalogItem } from '$lib/areas/market/model';
   import OfferStep1 from '$lib/areas/market/flows/offer/1_Product.svelte';
-  import { getMarketClient } from '$lib/shared/integrations/market';
+  import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
   import { signInWithSafe } from '$lib/areas/market/auth/signin';
   import {
     getSalesBySeller,

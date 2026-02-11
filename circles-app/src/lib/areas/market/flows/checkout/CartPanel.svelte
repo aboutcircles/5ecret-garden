@@ -8,7 +8,7 @@
   } from '$lib/areas/market/cart/store';
   import type {AggregatedCatalogItem} from '$lib/areas/market/model';
   import { popupControls } from '$lib/shared/state/popup';
-  import { getMarketClient } from '$lib/shared/integrations/market';
+  import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
   import {pickFirstProductImageUrl} from '$lib/areas/market/services';
   import CheckoutForms from '$lib/areas/market/flows/checkout/CheckoutForms.svelte';
   import CheckoutReview from '$lib/areas/market/flows/checkout/CheckoutReview.svelte';

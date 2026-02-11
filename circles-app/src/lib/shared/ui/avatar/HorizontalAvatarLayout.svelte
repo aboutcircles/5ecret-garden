@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { AppProfileCore as Profile } from '$lib/domains/profile/model';
+  import type { AppProfileCore as Profile } from '$lib/shared/model/profile';
 
   interface Props {
     profile: Profile | undefined;

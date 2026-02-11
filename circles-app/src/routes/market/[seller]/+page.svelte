@@ -7,7 +7,7 @@
     import ProductCard from '$lib/areas/market/ui/product/ProductCard.svelte';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import type { AggregatedCatalogItem } from '$lib/areas/market/model';
-    import { getMarketClient } from '$lib/shared/integrations/market';
+    import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
     import { shortenAddress } from '$lib/shared/utils/shared';
     import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
     import { avatarState } from '$lib/shared/state/avatar.svelte';

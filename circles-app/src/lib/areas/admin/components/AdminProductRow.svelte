@@ -3,7 +3,7 @@
   import AdminStatusBadge from './AdminStatusBadge.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import type { AdminUnifiedProduct, AdminProductType } from '../types';
-  import { getMarketClient } from '$lib/shared/integrations/market';
+  import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
   import { gnosisConfig } from '$lib/shared/config/circles';
   import { getProduct, pickProductImageUrl } from '$lib/areas/market/services';
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';

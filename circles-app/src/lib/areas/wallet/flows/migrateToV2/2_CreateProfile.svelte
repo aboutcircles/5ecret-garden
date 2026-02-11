@@ -1,6 +1,6 @@
 <script lang="ts">
   import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-import { ProfileHeaderEditor } from '$lib/domains/profile/ui';
+import { ProfileHeaderEditor } from '$lib/shared/ui/profile';
   import type { MigrateToV2Context } from '$lib/areas/wallet/flows/migrateToV2/context';
   import MigrateContacts from './3_MigrateContacts.svelte';
   import { onMount } from 'svelte';

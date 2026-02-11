@@ -1,5 +1,5 @@
 import type { Sdk } from '@circles-sdk/sdk';
-import type { SearchProfileResult } from '$lib/domains/profile/model';
+import type { SearchProfileResult } from '$lib/shared/model/profile';
 import { SEARCH_POLICY } from '$lib/shared/ui/lists/utils/searchPolicies';
 
 export type RpcSearchProfileResult = SearchProfileResult & {

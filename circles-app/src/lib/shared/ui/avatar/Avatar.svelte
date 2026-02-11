@@ -1,5 +1,5 @@
 <script lang="ts">
-import { ProfilePopup as ProfilePage } from '$lib/domains/profile/ui/pages';
+import { ProfilePopup as ProfilePage } from '$lib/areas/profile/ui/pages';
   import { getProfile } from '$lib/shared/utils/profile';
   import { getTypeString } from '$lib/shared/utils/helpers';
   import HorizontalAvatarLayout from './HorizontalAvatarLayout.svelte';
@@ -7,7 +7,7 @@ import { ProfilePopup as ProfilePage } from '$lib/domains/profile/ui/pages';
   import { popupControls, type PopupContentDefinition } from '$lib/shared/state/popup';
   import { isVipProfileBookmark, profileBookmarksStore } from '$lib/areas/settings/state/profileBookmarks';
   import type { Address } from '@circles-sdk/utils';
-  import type { AppProfileCore as Profile } from '$lib/domains/profile/model';
+  import type { AppProfileCore as Profile } from '$lib/shared/model/profile';
   import type { AvatarRow } from '@circles-sdk/data';
   import { fade } from 'svelte/transition';
   import { circles } from '$lib/shared/state/circles';

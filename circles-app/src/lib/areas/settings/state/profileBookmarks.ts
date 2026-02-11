@@ -5,9 +5,9 @@ import type { CidV0 } from '$lib/areas/market/offers';
 import { getProfilesBindings } from '$lib/areas/market/offers';
 import { gnosisConfig } from '$lib/shared/config/circles';
 import { getWalletProvider } from '$lib/shared/integrations/wallet';
-import { getMarketClient } from '$lib/shared/integrations/market';
+import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
 import { buildLinkDraft, canonicaliseLink, loadProfileOrInit } from '@circles-market/sdk';
-import { loadNamespaceLinks, rewriteNamespaceFromLinks } from '$lib/domains/profile/model';
+import { loadNamespaceLinks, rewriteNamespaceFromLinks } from '$lib/shared/model/profile';
 
 export interface ProfileBookmark {
   address: string;

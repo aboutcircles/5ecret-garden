@@ -14,6 +14,8 @@
   import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
   import ConfirmGroupTrustPrototype from './ConfirmGroupTrustPrototype.svelte';
   import AddGroupMemberPrototype from './AddGroupMemberPrototype.svelte';
+  import { createTrustDataSource } from '$lib/shared/data/circles/trustDataSource';
+  import { createAvatarDataSource } from '$lib/shared/data/circles/avatarDataSource';
 
   interface Props {
     group: Address;
@@ -90,7 +92,9 @@
     loading = true;
     error = null;
     try {
-      const relations = await sdk.data.getAggregatedTrustRelations(group);
+      const trustDataSource = createTrustDataSource(sdk);
+      const avatarDataSource = createAvatarDataSource(sdk);
+      const relations = await trustDataSource.getAggregatedTrustRelations(group);
       const trustedAddresses = Array.from(
         new Set(
           relations
@@ -102,7 +106,7 @@
       trusted = trustedAddresses;
       trustedStore.set(trusted);
 
-      const infos = await sdk.data.getAvatarInfoBatch(trustedAddresses);
+      const infos = await avatarDataSource.getAvatarInfoBatch(trustedAddresses);
       const nextTypes: Record<string, string | undefined> = {};
       for (const info of infos) {
         nextTypes[String(info.avatar).toLowerCase()] = info.type;

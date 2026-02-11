@@ -5,7 +5,7 @@
   import { cartState } from '$lib/areas/market/cart/store';
 
   // NEW: imports to resolve PayAction and open send flow (Svelte 5 runes aware)
-  import { getMarketClient } from '$lib/shared/integrations/market';
+  import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
   import { resolvePayTo } from '$lib/areas/market/services';
   import { popupControls } from '$lib/shared/state/popup';
   import SendFlow from '$lib/areas/wallet/flows/send/4_Send.svelte';

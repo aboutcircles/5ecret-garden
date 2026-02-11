@@ -4,7 +4,7 @@
   import type { GroupRow, TokenBalanceRow, TransactionHistoryRow } from '@circles-sdk/data';
   import type { TrustRow, GatewayRow } from '$lib/areas/settings/model/gatewayTypes';
   import type { AdminUnifiedProduct, AdminProductType, AdminOdooConnection } from '$lib/areas/admin/types';
-  import type { MonthlyItem, RangeOverlayEvent } from '$lib/domains/events/ui/history/types';
+  import type { MonthlyItem, RangeOverlayEvent } from '$lib/shared/ui/event-history/types';
   import type { AvatarSearchItem } from '../../avatar-search/dev/avatarSearch.types';
 
   import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
@@ -19,12 +19,12 @@
   import AvatarSearchRow from '../../avatar-search/dev/AvatarSearchRow.svelte';
   import GatewayTrustedAccountsList from '$lib/areas/settings/ui/components/GatewayTrustedAccountsList.svelte';
   import GatewayRowView from '$lib/areas/settings/ui/components/GatewayRow.svelte';
-  import HoldersRow from '$lib/domains/profile/ui/components/HoldersRow.svelte';
-  import SearchablePaginatedAddressList from '$lib/domains/profile/ui/components/SearchablePaginatedAddressList.svelte';
+  import HoldersRow from '$lib/shared/ui/profile/components/HoldersRow.svelte';
+  import SearchablePaginatedAddressList from '$lib/shared/ui/profile/components/SearchablePaginatedAddressList.svelte';
   import SearchAvatar from '$lib/areas/contacts/ui/pages/SearchAvatar.svelte';
   import AdminProductRow from '$lib/areas/admin/components/AdminProductRow.svelte';
   import AdminProductList from '$lib/areas/admin/components/AdminProductList.svelte';
-  import EventHistoryMonthlyList from '$lib/domains/events/ui/history/EventHistoryMonthlyList.svelte';
+  import EventHistoryMonthlyList from '$lib/shared/ui/event-history/EventHistoryMonthlyList.svelte';
   import TxEvents from '../../dashboard/TxEvents.svelte';
 
   type DemoContactRow = {

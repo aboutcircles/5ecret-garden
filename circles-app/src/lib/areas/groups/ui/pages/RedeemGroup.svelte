@@ -9,13 +9,13 @@
   import { popupControls } from '$lib/shared/state/popup';
   import { ethers, formatUnits } from 'ethers';
   import type { TokenBalanceRow, TrustRelation } from '@circles-sdk/data';
-  import { contacts } from '$lib/domains/profile/state';
+  import { contacts } from '$lib/shared/state/contacts';
   import {
   getGroupCollateral,
     getTreasuryAddress,
     getVaultAddress,
   } from '$lib/shared/utils/vault';
-  import CollateralTable from '$lib/domains/profile/ui/components/CollateralTable.svelte';
+  import CollateralTable from '$lib/areas/groups/ui/components/CollateralTable.svelte';
 
   interface Props {
     asset: TokenBalanceRow;

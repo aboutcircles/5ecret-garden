@@ -1,6 +1,6 @@
 <script lang="ts">
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-import { ProfilePopup } from '$lib/domains/profile/ui/pages';
+import { ProfilePopup } from '$lib/areas/profile/ui/pages';
   import { popupControls } from '$lib/shared/state/popup';
   import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import { formatTrustRelation } from '$lib/shared/utils/helpers';

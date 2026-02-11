@@ -9,7 +9,7 @@
   import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
   import {avatarState} from '$lib/shared/state/avatar.svelte';
   import {addToCart, cartState} from '$lib/areas/market/cart/store';
-  import { getMarketClient } from '$lib/shared/integrations/market';
+  import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
   import { createLoadable } from '$lib/areas/market/utils/loadable';
   import { getAddToCartState } from '$lib/areas/market/cart/addToCartUi';
   import {gnosisConfig} from "$lib/shared/config/circles";

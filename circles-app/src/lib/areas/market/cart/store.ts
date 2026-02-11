@@ -2,7 +2,7 @@ import { derived, get, writable } from 'svelte/store';
 import type { AggregatedCatalogItem } from '$lib/areas/market/model';
 import { pickFirstProductImageUrl } from '$lib/areas/market/services';
 import { gnosisConfig } from '$lib/shared/config/circles';
-import { getMarketClient } from '$lib/shared/integrations/market';
+import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
 import type { Basket, CartState, CheckoutResult, SdkCartItem } from './types';
 import type { BasketPatch, OrderItemPreview } from './types';
 import { readBasketId, writeBasketId } from './basketIdStorage';
