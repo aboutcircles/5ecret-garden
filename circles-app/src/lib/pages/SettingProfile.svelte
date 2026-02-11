@@ -5,6 +5,8 @@
   import QrCode from '$lib/components/QrCode.svelte';
   import { popupControls } from '$lib/stores/popUp.svelte';
   import { signer } from '$lib/stores/wallet.svelte';
+  import { avatarState } from '$lib/stores/avatar.svelte';
+  import { circles } from '$lib/stores/circles';
   import type { Address } from '@aboutcircles/sdk-types';
 
   interface Props {
@@ -23,7 +25,18 @@
 
   function disconnectProfile() {
     popupControls.close();
-    goto('/connect-wallet/connect-safe');
+
+    // Clear avatar + SDK so connect-safe page creates a fresh instance
+    avatarState.avatar = undefined;
+    avatarState.isGroup = undefined;
+    avatarState.isHuman = undefined;
+    avatarState.groupType = undefined;
+    avatarState.profile = undefined;
+    circles.set(undefined);
+
+    signer.privateKey
+      ? goto('/connect-wallet/import-circles-garden')
+      : goto('/connect-wallet/connect-safe');
   }
 </script>
 
