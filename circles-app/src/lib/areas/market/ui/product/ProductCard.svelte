@@ -102,8 +102,18 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
 
   // product/offer helpers imported from catalogHelpers
 
+  function isInteractiveTarget(target: EventTarget | null): boolean {
+    const el = target as HTMLElement | null;
+    if (!el) return false;
+    return !!el.closest('button, a, input, select, textarea, [role="button"], [data-no-card-open]');
+  }
+
   // Handle card click to open product details popup
-  function handleProductClick(): void {
+  function handleProductClick(event?: MouseEvent | KeyboardEvent): void {
+    if (event && isInteractiveTarget(event.target)) {
+      return;
+    }
+
     const seller = (product.seller || prod?.seller)?.toLowerCase();
     const sku = product.product?.sku || (product as any).id || (product as any).productCid;
 
@@ -161,22 +171,20 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
     >
       Edit
     </button>
-    <div onclick={(e) => e.stopPropagation()}>
-      <ActionButton
-        action={handleTombstone}
-        title="Remove listing"
-        theme={{
-          Ready: 'btn-outline btn-error',
-          Working: 'btn-disabled',
-          Error: 'btn-warning',
-          Retry: 'btn-warning',
-          Done: 'btn-success',
-          Disabled: 'btn-disabled'
-        }}
-      >
-        {#snippet children()}Remove{/snippet}
-      </ActionButton>
-    </div>
+    <ActionButton
+      action={handleTombstone}
+      title="Remove listing"
+      theme={{
+        Ready: 'btn-outline btn-error',
+        Working: 'btn-disabled',
+        Error: 'btn-warning',
+        Retry: 'btn-warning',
+        Done: 'btn-success',
+        Disabled: 'btn-disabled'
+      }}
+    >
+      {#snippet children()}Remove{/snippet}
+    </ActionButton>
   {/if}
 
   {#if addState.showButton}
@@ -198,7 +206,7 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
       role="button"
       tabindex="0"
       aria-label={`Open product details: ${prod?.name ?? product?.product?.name ?? 'Product'}`}
-      onclick={handleProductClick}
+      onclick={(e) => handleProductClick(e)}
       onkeydown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();

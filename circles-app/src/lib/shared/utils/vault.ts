@@ -1,5 +1,6 @@
 import type { CirclesRpc } from "@circles-sdk/data";
 import {
+  type QueryFilter,
   queryBalancesByAccountAndTokenPage,
   queryTreasuryAddressByGroup,
   queryVaultAddressByGroup,
@@ -10,7 +11,7 @@ const MIN_BALANCE_FILTER = 10000000000000000;
 
 async function queryBalancesPaginated(
   circlesRpc: CirclesRpc,
-  filters: Array<Record<string, any>>,
+  filters: QueryFilter[],
   cursorColumn: 'tokenId' | 'account'
 ): Promise<{ columns: string[]; rows: any[][] } | null> {
   const columns = [cursorColumn, 'demurragedTotalBalance'];

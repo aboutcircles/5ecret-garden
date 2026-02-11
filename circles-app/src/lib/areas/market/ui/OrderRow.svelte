@@ -2,16 +2,10 @@
   import OrderDetailsPopup from '$lib/areas/market/orders/OrderDetailsPopup.svelte';
   import { popupControls } from '$lib/shared/state/popup';
   import MarketOrderListRow from '$lib/areas/market/ui/MarketOrderListRow.svelte';
+  import type { MarketOrderSummaryListItem } from '$lib/areas/market/orders/ordersMappers';
 
   interface Props {
-    item: {
-      key: string;
-      displayId?: string;
-      status?: string;
-      total?: { price?: number | null; priceCurrency?: string | null } | null;
-      customerId?: string | null;
-      snapshot?: any;
-    };
+    item: MarketOrderSummaryListItem;
   }
 
   let { item }: Props = $props();

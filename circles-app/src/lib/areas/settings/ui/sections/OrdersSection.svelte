@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Address } from '@circles-sdk/utils';
-  import type { Readable } from 'svelte/store';
+  import type { PaginatedReadable } from '$lib/shared/state/paginatedList';
+  import type { MarketOrderSummaryListItem } from '$lib/areas/market/orders/ordersMappers';
   import MarketAuthListSection from '$lib/areas/settings/ui/sections/MarketAuthListSection.svelte';
   import OrderRow from '$lib/areas/market/ui/OrderRow.svelte';
 
@@ -8,7 +9,7 @@
     avatarAddress: Address | '';
     ordersAuthed: boolean;
     ensureOrdersAuthed: () => Promise<void>;
-    ordersStore: Readable<{ data: any[]; next: () => Promise<boolean>; ended: boolean }>;
+    ordersStore: PaginatedReadable<MarketOrderSummaryListItem>;
   };
 
   let { avatarAddress, ordersAuthed, ensureOrdersAuthed, ordersStore }: Props = $props();
