@@ -6,14 +6,13 @@
     import Filter from '$lib/shared/ui/common/Filter.svelte';
     import GenericList from '$lib/shared/ui/common/GenericList.svelte';
     import ListShell from '$lib/shared/ui/common/ListShell.svelte';
-
-    const BALANCES_LIST_SCOPE = '[data-balances-list-scope]';
+    import { createListInputArrowDownHandler } from '$lib/shared/utils/listInputArrowDown';
 
     let filterVersion = writable<number | undefined>(undefined);
     let filterType = writable<'personal' | 'group' | undefined>(undefined);
     let filterToken = writable<'erc20' | 'erc1155' | undefined>(undefined);
     let searchQuery = writable<string>('');
-    let searchInputEl: HTMLInputElement | null = $state(null);
+    let balancesListScopeEl: HTMLDivElement | null = $state(null);
 
     // Filters panel state — store to ensure reactivity in all modes
     const showFilters: Writable<boolean> = writable(false);
@@ -75,20 +74,9 @@
         }
     );
 
-    function onSearchInputKeydown(event: KeyboardEvent): void {
-        if (event.key !== 'ArrowDown') return;
-        const firstRow = document.querySelector<HTMLElement>(`${BALANCES_LIST_SCOPE} [data-balance-row]`);
-        if (!firstRow) return;
-        event.preventDefault();
-        firstRow.focus();
-    }
-
-    $effect(() => {
-        if (!searchInputEl) return;
-        searchInputEl.setAttribute('data-balances-search-input', 'true');
-        return () => {
-            searchInputEl?.removeAttribute('data-balances-search-input');
-        };
+    const onSearchInputKeydown = createListInputArrowDownHandler({
+        getScope: () => balancesListScopeEl,
+        rowSelector: '[data-balance-row]'
     });
 </script>
 
@@ -140,7 +128,7 @@
 <ListShell
     query={searchQuery}
     searchPlaceholder="Search by owner or token address"
-    bind:inputEl={searchInputEl}
+    inputDataAttribute="data-balances-search-input"
     onInputKeydown={onSearchInputKeydown}
     isEmpty={$filteredAll.length === 0}
     isNoMatches={$filteredAll.length > 0 && $searchedAll.length === 0}
@@ -148,7 +136,7 @@
     noMatchesLabel="No matching balances"
     wrapInListContainer={false}
 >
-    <div data-balances-list-scope>
+    <div data-balances-list-scope bind:this={balancesListScopeEl}>
         <GenericList store={filteredStore} row={BalanceRow}/>
     </div>
 </ListShell>

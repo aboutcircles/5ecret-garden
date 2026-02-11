@@ -15,6 +15,7 @@
 
   import { signInWithSafe } from '$lib/areas/market/auth/signin';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
+  import { createListInputArrowDownHandler } from '$lib/shared/utils/listInputArrowDown';
 
   import SalesOrderRow from '$lib/areas/market/ui/SalesOrderRow.svelte';
 
@@ -30,8 +31,7 @@
   let authed = $state(false);
   const pageSize = 20;
   const query = writable('');
-  const SALES_LIST_SCOPE = '[data-sales-orders-list-scope]';
-  let searchInputEl: HTMLInputElement | null = $state(null);
+  let salesListScopeEl: HTMLDivElement | null = $state(null);
 
   function mapItems(items: any[]): ListItem[] {
     return (items ?? []).map((o: any) => ({
@@ -123,20 +123,9 @@
   const storeDataLength = $derived(($store?.data ?? []).length);
   const filteredDataLength = $derived(($filteredStore?.data ?? []).length);
 
-  function onSearchInputKeydown(event: KeyboardEvent): void {
-    if (event.key !== 'ArrowDown') return;
-    const firstRow = document.querySelector<HTMLElement>(`${SALES_LIST_SCOPE} [data-market-order-row]`);
-    if (!firstRow) return;
-    event.preventDefault();
-    firstRow.focus();
-  }
-
-  $effect(() => {
-    if (!searchInputEl) return;
-    searchInputEl.setAttribute('data-market-auth-search-input', 'true');
-    return () => {
-      searchInputEl?.removeAttribute('data-market-auth-search-input');
-    };
+  const onSearchInputKeydown = createListInputArrowDownHandler({
+    getScope: () => salesListScopeEl,
+    rowSelector: '[data-market-order-row]'
   });
 
   async function ensureAuthed() {
@@ -218,7 +207,7 @@
     <ListShell
       query={query}
       searchPlaceholder="Search by order id or payment reference"
-      bind:inputEl={searchInputEl}
+      inputDataAttribute="data-market-auth-search-input"
       onInputKeydown={onSearchInputKeydown}
       isEmpty={storeDataLength === 0}
       isNoMatches={storeDataLength > 0 && filteredDataLength === 0}
@@ -226,7 +215,7 @@
       noMatchesLabel="No matching sales orders"
       wrapInListContainer={false}
     >
-      <div data-sales-orders-list-scope>
+      <div data-sales-orders-list-scope bind:this={salesListScopeEl}>
         <GenericList
           store={filteredStore}
           row={SalesOrderRow}

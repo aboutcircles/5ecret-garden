@@ -9,6 +9,7 @@
     actions?: Snippet;
     onInputKeydown?: (event: KeyboardEvent) => void;
     onInputFocus?: (event: FocusEvent) => void;
+    inputDataAttribute?: string;
     inputEl?: HTMLInputElement | null;
   }
 
@@ -19,8 +20,17 @@
     actions,
     onInputKeydown,
     onInputFocus,
+    inputDataAttribute,
     inputEl = $bindable(null)
   }: Props = $props();
+
+  $effect(() => {
+    if (!inputEl || !inputDataAttribute) return;
+    inputEl.setAttribute(inputDataAttribute, 'true');
+    return () => {
+      inputEl?.removeAttribute(inputDataAttribute);
+    };
+  });
 </script>
 
 <div class={`mb-3 flex items-center gap-2 ${className}`.trim()}>

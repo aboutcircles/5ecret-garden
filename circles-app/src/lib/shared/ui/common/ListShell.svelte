@@ -11,6 +11,7 @@
     toolbarActions?: Snippet;
     onInputKeydown?: (event: KeyboardEvent) => void;
     onInputFocus?: (event: FocusEvent) => void;
+    inputDataAttribute?: string;
     inputEl?: HTMLInputElement | null;
 
     loading?: boolean;
@@ -35,6 +36,7 @@
     toolbarActions,
     onInputKeydown,
     onInputFocus,
+    inputDataAttribute,
     inputEl = $bindable(null),
     loading = false,
     error = null,
@@ -58,6 +60,7 @@
   bind:inputEl={inputEl}
   {onInputKeydown}
   {onInputFocus}
+  {inputDataAttribute}
 />
 
 <ListStates

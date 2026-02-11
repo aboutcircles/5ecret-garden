@@ -4,9 +4,9 @@
     import GenericList from '$lib/shared/ui/common/GenericList.svelte';
     import TransactionRow from './TransactionRow.svelte';
     import {transactionHistory} from '$lib/shared/state/transactionHistory';
+    import { createListInputArrowDownHandler } from '$lib/shared/utils/listInputArrowDown';
 
     const searchQuery = writable('');
-    let searchInputEl: HTMLInputElement | null = $state(null);
     let transactionsListScopeEl: HTMLDivElement | null = $state(null);
 
     const searchedTransactionHistory = derived([transactionHistory, searchQuery], ([$history, $query]) => {
@@ -23,27 +23,16 @@
         };
     });
 
-    function onSearchInputKeydown(event: KeyboardEvent): void {
-        if (event.key !== 'ArrowDown') return;
-        const firstRow = transactionsListScopeEl?.querySelector<HTMLElement>('[data-transaction-row]');
-        if (!firstRow) return;
-        event.preventDefault();
-        firstRow.focus();
-    }
-
-    $effect(() => {
-        if (!searchInputEl) return;
-        searchInputEl.setAttribute('data-transactions-search-input', 'true');
-        return () => {
-            searchInputEl?.removeAttribute('data-transactions-search-input');
-        };
+    const onSearchInputKeydown = createListInputArrowDownHandler({
+        getScope: () => transactionsListScopeEl,
+        rowSelector: '[data-transaction-row]'
     });
 </script>
 
 <ListShell
     query={searchQuery}
     searchPlaceholder="Search by address"
-    bind:inputEl={searchInputEl}
+    inputDataAttribute="data-transactions-search-input"
     onInputKeydown={onSearchInputKeydown}
     isEmpty={$transactionHistory.data.length === 0}
     isNoMatches={$transactionHistory.data.length > 0 && $searchedTransactionHistory.data.length === 0}

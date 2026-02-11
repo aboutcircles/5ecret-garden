@@ -22,6 +22,7 @@
     import Tabs from '$lib/shared/ui/primitives/tabs/Tabs.svelte';
     import Tab from '$lib/shared/ui/primitives/tabs/Tab.svelte';
     import { type TabIdOf } from '$lib/shared/ui/primitives/tabs/tabId';
+    import { createListInputArrowDownHandler } from '$lib/shared/utils/listInputArrowDown';
 
     let groups: Readable<{
         data: EventRow[];
@@ -29,7 +30,6 @@
         ended: boolean;
     }> | undefined = $state();
     const allGroupsQuery = writable('');
-    let allGroupsSearchInputEl: HTMLInputElement | null = $state(null);
     let allGroupsListScopeEl: HTMLDivElement | null = $state(null);
 
     const emptyGroupsStore = readable<{ data: EventRow[]; next: () => Promise<boolean>; ended: boolean }>({
@@ -134,20 +134,9 @@
         filteredAllGroupsStore = next;
     });
 
-    function onAllGroupsSearchInputKeydown(event: KeyboardEvent): void {
-        if (event.key !== 'ArrowDown') return;
-        const firstRow = allGroupsListScopeEl?.querySelector<HTMLElement>('[data-group-row]');
-        if (!firstRow) return;
-        event.preventDefault();
-        firstRow.focus();
-    }
-
-    $effect(() => {
-        if (!allGroupsSearchInputEl) return;
-        allGroupsSearchInputEl.setAttribute('data-groups-search-input', 'true');
-        return () => {
-            allGroupsSearchInputEl?.removeAttribute('data-groups-search-input');
-        };
+    const onAllGroupsSearchInputKeydown = createListInputArrowDownHandler({
+        getScope: () => allGroupsListScopeEl,
+        rowSelector: '[data-group-row]'
     });
 
     $effect(() => {
@@ -279,7 +268,7 @@
                         <ListShell
                             query={allGroupsQuery}
                             searchPlaceholder="Search by group address"
-                            bind:inputEl={allGroupsSearchInputEl}
+                            inputDataAttribute="data-groups-search-input"
                             onInputKeydown={onAllGroupsSearchInputKeydown}
                             isEmpty={$groups.data.length === 0}
                             isNoMatches={$groups.data.length > 0 && $filteredAllGroupsStore.data.length === 0}

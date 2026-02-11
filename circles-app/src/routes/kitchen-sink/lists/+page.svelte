@@ -5,6 +5,7 @@
   import GenericList from '$lib/shared/ui/common/GenericList.svelte';
   import BalanceRowSkeleton from '$lib/areas/wallet/ui/components/BalanceRowSkeleton.svelte';
   import DemoGenericRow from '../DemoGenericRow.svelte';
+  import { createListInputArrowDownHandler } from '$lib/shared/utils/listInputArrowDown';
 
   type DemoItem = {
     id: string;
@@ -54,7 +55,6 @@
 
   const demoListStore: Readable<DemoListStore> = { subscribe: listInner.subscribe };
   const query = writable('');
-  let searchInputEl: HTMLInputElement | null = $state(null);
   let demoListScopeEl: HTMLDivElement | null = $state(null);
 
   const filteredDemoListStore = derived([demoListStore, query], ([$store, $query]) => {
@@ -71,20 +71,9 @@
     };
   });
 
-  function onSearchInputKeydown(event: KeyboardEvent): void {
-    if (event.key !== 'ArrowDown') return;
-    const firstRow = demoListScopeEl?.querySelector<HTMLElement>('[data-demo-generic-row]');
-    if (!firstRow) return;
-    event.preventDefault();
-    firstRow.focus();
-  }
-
-  $effect(() => {
-    if (!searchInputEl) return;
-    searchInputEl.setAttribute('data-demo-list-search-input', 'true');
-    return () => {
-      searchInputEl?.removeAttribute('data-demo-list-search-input');
-    };
+  const onSearchInputKeydown = createListInputArrowDownHandler({
+    getScope: () => demoListScopeEl,
+    rowSelector: '[data-demo-generic-row]'
   });
 </script>
 
@@ -106,7 +95,7 @@
       <ListShell
         query={query}
         searchPlaceholder="Search demo rows"
-        bind:inputEl={searchInputEl}
+        inputDataAttribute="data-demo-list-search-input"
         onInputKeydown={onSearchInputKeydown}
         isEmpty={$demoListStore.data.length === 0}
         isNoMatches={$demoListStore.data.length > 0 && $filteredDemoListStore.data.length === 0}

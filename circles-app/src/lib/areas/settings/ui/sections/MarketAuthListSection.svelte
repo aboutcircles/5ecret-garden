@@ -4,6 +4,7 @@
   import { derived, writable } from 'svelte/store';
   import ListShell from '$lib/shared/ui/common/ListShell.svelte';
   import GenericList from '$lib/shared/ui/common/GenericList.svelte';
+  import { createListInputArrowDownHandler } from '$lib/shared/utils/listInputArrowDown';
 
   type ListValue = { data: any[]; next: () => Promise<boolean>; ended: boolean };
   type ListStore = Readable<ListValue>;
@@ -35,8 +36,7 @@
   }: Props = $props();
 
   const query = writable('');
-  let searchInputEl: HTMLInputElement | null = $state(null);
-  const MARKET_LIST_SCOPE = '[data-market-orders-list-scope]';
+  let marketListScopeEl: HTMLDivElement | null = $state(null);
 
   const filteredStore = derived([store, query], ([$store, $query]) => {
     const q = ($query ?? '').toLowerCase().trim();
@@ -58,20 +58,9 @@
   const storeDataLength = $derived(($store?.data ?? []).length);
   const filteredDataLength = $derived(($filteredStore?.data ?? []).length);
 
-  function onSearchInputKeydown(event: KeyboardEvent): void {
-    if (event.key !== 'ArrowDown') return;
-    const firstRow = document.querySelector<HTMLElement>(`${MARKET_LIST_SCOPE} [data-market-order-row]`);
-    if (!firstRow) return;
-    event.preventDefault();
-    firstRow.focus();
-  }
-
-  $effect(() => {
-    if (!searchInputEl) return;
-    searchInputEl.setAttribute('data-market-auth-search-input', 'true');
-    return () => {
-      searchInputEl?.removeAttribute('data-market-auth-search-input');
-    };
+  const onSearchInputKeydown = createListInputArrowDownHandler({
+    getScope: () => marketListScopeEl,
+    rowSelector: '[data-market-order-row]'
   });
 </script>
 
@@ -98,7 +87,7 @@
     <ListShell
       query={query}
       searchPlaceholder="Search by order id"
-      bind:inputEl={searchInputEl}
+      inputDataAttribute="data-market-auth-search-input"
       onInputKeydown={onSearchInputKeydown}
       isEmpty={storeDataLength === 0}
       isNoMatches={storeDataLength > 0 && filteredDataLength === 0}
@@ -106,7 +95,7 @@
       noMatchesLabel="No matching entries"
       wrapInListContainer={false}
     >
-      <div data-market-orders-list-scope>
+      <div data-market-orders-list-scope bind:this={marketListScopeEl}>
         <GenericList store={filteredStore} {row} getKey={(it) => it.key} />
       </div>
     </ListShell>

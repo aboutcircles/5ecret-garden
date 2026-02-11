@@ -6,6 +6,7 @@
   import { circles } from '$lib/shared/state/circles';
   import { createPaginatedList } from '$lib/shared/state/paginatedList';
   import { SEARCH_POLICY } from '$lib/shared/utils/searchPolicies';
+  import { createListInputArrowDownHandler } from '$lib/shared/utils/listInputArrowDown';
   import { get } from 'svelte/store';
   import { writable } from 'svelte/store';
   import AvatarSearchRow from './AvatarSearchRow.svelte';
@@ -17,7 +18,6 @@
   const REMOTE_DEBOUNCE_MS = SEARCH_POLICY.REMOTE_DEBOUNCE_MS;
 
   const query = writable('');
-  let searchInputEl: HTMLInputElement | null = $state(null);
   let listScopeEl: HTMLDivElement | null = $state(null);
   let remoteRows: AvatarSearchItem[] = $state([]);
   let remoteLoading = $state(false);
@@ -212,20 +212,9 @@
     mergedRowsStore.set(mergedRows);
   });
 
-  function onInputArrowDown(event: KeyboardEvent): void {
-    if (event.key !== 'ArrowDown') return;
-    const firstRow = listScopeEl?.querySelector<HTMLElement>('[data-avatar-search-row]');
-    if (!firstRow) return;
-    event.preventDefault();
-    firstRow.focus();
-  }
-
-  $effect(() => {
-    if (!searchInputEl) return;
-    searchInputEl.setAttribute('data-avatar-search-input', 'true');
-    return () => {
-      searchInputEl?.removeAttribute('data-avatar-search-input');
-    };
+  const onInputArrowDown = createListInputArrowDownHandler({
+    getScope: () => listScopeEl,
+    rowSelector: '[data-avatar-search-row]'
   });
 </script>
 
@@ -233,7 +222,7 @@
   <ListShell
     query={query}
     searchPlaceholder="Search avatars by name or address"
-    bind:inputEl={searchInputEl}
+    inputDataAttribute="data-avatar-search-input"
     onInputKeydown={onInputArrowDown}
     loading={remoteLoading}
     error={remoteError}

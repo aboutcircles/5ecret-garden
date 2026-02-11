@@ -3,6 +3,7 @@
   import SearchablePaginatedList from '$lib/shared/ui/common/SearchablePaginatedList.svelte';
   import TrustRowView from '$lib/areas/settings/ui/components/TrustRow.svelte';
   import type { TrustRow } from '$lib/areas/settings/model/gatewayTypes';
+  import { createListInputArrowDownHandler } from '$lib/shared/utils/listInputArrowDown';
 
   type TrustRowItem = TrustRow & {
     showRemove?: boolean;
@@ -27,18 +28,15 @@
     pageSize = 25
   }: Props = $props();
 
-  const TRUST_LIST_SCOPE = '[data-gateway-trust-list-scope]';
+  let trustListScopeEl: HTMLDivElement | null = $state(null);
 
-  function onInputArrowDown(event: KeyboardEvent): void {
-    if (event.key !== 'ArrowDown') return;
-    const firstRow = document.querySelector<HTMLElement>(`${TRUST_LIST_SCOPE} [data-gateway-trust-row]`);
-    if (!firstRow) return;
-    event.preventDefault();
-    firstRow.focus();
-  }
+  const onInputArrowDown = createListInputArrowDownHandler({
+    getScope: () => trustListScopeEl,
+    rowSelector: '[data-gateway-trust-row]'
+  });
 </script>
 
-<div data-gateway-trust-list-scope>
+<div data-gateway-trust-list-scope bind:this={trustListScopeEl}>
   <SearchablePaginatedList
     items={rows}
     row={TrustRowView}

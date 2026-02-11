@@ -7,6 +7,7 @@
   import GatewayRowView from '$lib/areas/settings/ui/components/GatewayRow.svelte';
   import { popupControls } from '$lib/shared/state/popup';
   import CreateGatewayProfile from '$lib/areas/settings/flows/gateway/CreateGatewayProfile.svelte';
+  import { createListInputArrowDownHandler } from '$lib/shared/utils/listInputArrowDown';
 
   type ListValue = { data: any[]; next: () => Promise<boolean>; ended: boolean };
 
@@ -22,7 +23,6 @@
   let { gatewayOwnerAddress, circlesReady, loadingGateways, myGatewaysStore, shortGatewayAddr, onReloadGateways }: Props = $props();
 
   const query = writable('');
-  let searchInputEl: HTMLInputElement | null = $state(null);
   let gatewaysListScopeEl: HTMLDivElement | null = $state(null);
 
   const filteredGatewaysStore = derived([myGatewaysStore, query], ([$store, $query]) => {
@@ -43,20 +43,9 @@
   const gatewaysDataLength = $derived(($myGatewaysStore?.data ?? []).length);
   const filteredGatewaysDataLength = $derived(($filteredGatewaysStore?.data ?? []).length);
 
-  function onSearchInputKeydown(event: KeyboardEvent): void {
-    if (event.key !== 'ArrowDown') return;
-    const firstRow = gatewaysListScopeEl?.querySelector<HTMLElement>('[data-gateway-row]');
-    if (!firstRow) return;
-    event.preventDefault();
-    firstRow.focus();
-  }
-
-  $effect(() => {
-    if (!searchInputEl) return;
-    searchInputEl.setAttribute('data-payment-gateway-search-input', 'true');
-    return () => {
-      searchInputEl?.removeAttribute('data-payment-gateway-search-input');
-    };
+  const onSearchInputKeydown = createListInputArrowDownHandler({
+    getScope: () => gatewaysListScopeEl,
+    rowSelector: '[data-gateway-row]'
   });
 
   function openCreateGatewayFlow() {
@@ -104,7 +93,7 @@
       <ListShell
         query={query}
         searchPlaceholder="Search by gateway address"
-        bind:inputEl={searchInputEl}
+        inputDataAttribute="data-payment-gateway-search-input"
         onInputKeydown={onSearchInputKeydown}
         isEmpty={gatewaysDataLength === 0}
         isNoMatches={gatewaysDataLength > 0 && filteredGatewaysDataLength === 0}
