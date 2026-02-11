@@ -22,13 +22,11 @@ export function createKeyboardListNavigator(options: KeyboardListNavigatorOption
     if (!current) return;
 
     const target = event.target as HTMLElement | null;
-    // If focus is inside a nested interactive element (e.g. link/button/checkbox),
-    // let that element handle Enter/Space/Arrow keys.
-    if (target && target !== current) {
-      return;
-    }
+    const isNestedTarget = !!target && target !== current;
 
     if (event.key === 'Enter' || event.key === ' ') {
+      // Keep Enter/Space native for nested interactive controls (e.g. avatar link, checkbox).
+      if (isNestedTarget) return;
       event.preventDefault();
       options.onActivateRow?.(current);
       return;
