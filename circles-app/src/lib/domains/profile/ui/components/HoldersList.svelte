@@ -4,6 +4,7 @@
     import type { Address } from '@circles-sdk/utils';
     import type { TrustRelation } from '@circles-sdk/data';
     import { writable } from 'svelte/store';
+    import { createListInputArrowDownHandler } from '$lib/shared/utils/listInputArrowDown';
 
     interface HolderRow {
         avatar: Address;
@@ -26,13 +27,10 @@
         holdersStore.set(holders);
     });
 
-    function onInputArrowDown(event: KeyboardEvent): void {
-        if (event.key !== 'ArrowDown') return;
-        const firstRow = listScopeEl?.querySelector<HTMLElement>('[data-holder-row]');
-        if (!firstRow) return;
-        event.preventDefault();
-        firstRow.focus();
-    }
+    const onInputArrowDown = createListInputArrowDownHandler({
+        getScope: () => listScopeEl,
+        rowSelector: '[data-holder-row]'
+    });
 </script>
 
 <div data-profile-holders-list-scope bind:this={listScopeEl}>

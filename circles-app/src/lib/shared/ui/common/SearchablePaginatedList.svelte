@@ -49,7 +49,6 @@
   let searchQuery = $state<Writable<string>>(writable(''));
   let filteredItems = $state<Readable<any[]>>(emptyItems);
   let paginatedItems = $state(createPaginatedList(emptyItems, { pageSize: 1 }));
-  let searchInputEl: HTMLInputElement | null = $state(null);
 
   $effect(() => {
     const next = createSearchablePaginatedList(items, {
@@ -64,19 +63,12 @@
     paginatedItems = next.paginatedItems;
   });
 
-  $effect(() => {
-    if (!searchInputEl || !inputDataAttribute) return;
-    searchInputEl.setAttribute(inputDataAttribute, 'true');
-    return () => {
-      searchInputEl?.removeAttribute(inputDataAttribute);
-    };
-  });
 </script>
 
 <ListShell
   query={searchQuery}
   searchPlaceholder={searchPlaceholder}
-  bind:inputEl={searchInputEl}
+  {inputDataAttribute}
   {onInputKeydown}
   {loading}
   {error}

@@ -63,6 +63,7 @@
     import { derived, readable } from 'svelte/store';
     import GenericList from '$lib/shared/ui/common/GenericList.svelte';
     import SelectableBalanceRow, { type SelectableBalanceRowItem } from '$lib/areas/wallet/ui/components/SelectableBalanceRow.svelte';
+    import { createListInputArrowDownHandler } from '$lib/shared/utils/listInputArrowDown';
 
     interface Props {
         balances: Readable<{
@@ -82,7 +83,6 @@
         onselect,
     }: Props = $props();
     const query = writable('');
-    let searchInputEl: HTMLInputElement | null = $state(null);
     let selectAssetListScopeEl: HTMLDivElement | null = $state(null);
 
     const handleSelect = (tokenBalanceRow: TokenBalanceRow) => {
@@ -122,20 +122,9 @@
         });
     });
 
-    function onSearchInputKeydown(event: KeyboardEvent): void {
-        if (event.key !== 'ArrowDown') return;
-        const firstRow = selectAssetListScopeEl?.querySelector<HTMLElement>('[data-balance-row]');
-        if (!firstRow) return;
-        event.preventDefault();
-        firstRow.focus();
-    }
-
-    $effect(() => {
-        if (!searchInputEl) return;
-        searchInputEl.setAttribute('data-select-asset-search-input', 'true');
-        return () => {
-            searchInputEl?.removeAttribute('data-select-asset-search-input');
-        };
+    const onSearchInputKeydown = createListInputArrowDownHandler({
+        getScope: () => selectAssetListScopeEl,
+        rowSelector: '[data-balance-row]'
     });
 </script>
 
@@ -155,7 +144,7 @@
 <ListShell
         query={query}
         searchPlaceholder="Search by owner or token address"
-        bind:inputEl={searchInputEl}
+        inputDataAttribute="data-select-asset-search-input"
         onInputKeydown={onSearchInputKeydown}
         isEmpty={$balances?.data?.length === 0}
         isNoMatches={$balances?.data?.length > 0 && $selectableBalances.data.length === 0}

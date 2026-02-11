@@ -17,12 +17,12 @@
     import type { Action } from '$lib/shared/ui/shell/actions';
     import { goto } from '$app/navigation';
     import { createPaginatedList } from '$lib/shared/state/paginatedList';
+    import { createListInputArrowDownHandler } from '$lib/shared/utils/listInputArrowDown';
 
     let filterVersion = writable<number | undefined>(undefined);
     let filterRelation = writable<'mutuallyTrusts' | 'trusts' | 'trustedBy' | 'variesByVersion' | undefined>(undefined);
     let searchQuery = writable<string>('');
-    let searchInputEl: HTMLInputElement | null = $state(null);
-    const CONTACTS_LIST_SCOPE = '[data-contacts-list-scope]';
+    let contactsListScopeEl: HTMLDivElement | null = $state(null);
 
     // Filters panel state — store to ensure reactivity in all modes
     const showFilters: Writable<boolean> = writable(false);
@@ -77,20 +77,9 @@
     // Paginate searched results for rendering
     const contactsPaginated = createPaginatedList(searchedAll, { pageSize: 25 });
 
-    function onSearchInputKeydown(event: KeyboardEvent): void {
-        if (event.key !== 'ArrowDown') return;
-        const firstRow = document.querySelector<HTMLElement>(`${CONTACTS_LIST_SCOPE} [data-contact-row]`);
-        if (!firstRow) return;
-        event.preventDefault();
-        firstRow.focus();
-    }
-
-    $effect(() => {
-        if (!searchInputEl) return;
-        searchInputEl.setAttribute('data-contacts-search-input', 'true');
-        return () => {
-            searchInputEl?.removeAttribute('data-contacts-search-input');
-        };
+    const onSearchInputKeydown = createListInputArrowDownHandler({
+        getScope: () => contactsListScopeEl,
+        rowSelector: '[data-contact-row]'
     });
 
     async function handleExportCSV(): Promise<void> {
@@ -208,7 +197,7 @@
     <ListShell
         query={searchQuery}
         searchPlaceholder="Search by address or name"
-        bind:inputEl={searchInputEl}
+        inputDataAttribute="data-contacts-search-input"
         onInputKeydown={onSearchInputKeydown}
         isEmpty={$filteredAll.length === 0}
         isNoMatches={$filteredAll.length > 0 && $searchedAll.length === 0}
@@ -216,7 +205,7 @@
         noMatchesLabel="No matches"
         wrapInListContainer={false}
     >
-        <div data-contacts-list-scope>
+        <div data-contacts-list-scope bind:this={contactsListScopeEl}>
             <GenericList store={contactsPaginated} row={ContactRow} rowHeight={64} maxPlaceholderPages={0} expectedPageSize={25} />
         </div>
     </ListShell>

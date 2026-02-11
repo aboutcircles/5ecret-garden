@@ -4,6 +4,7 @@
     import TrustRelationRow from '$lib/domains/profile/ui/components/TrustRelationRow.svelte';
     import type { Address } from '@circles-sdk/utils';
     import type { Readable } from 'svelte/store';
+    import { createListInputArrowDownHandler } from '$lib/shared/utils/listInputArrowDown';
 
     interface Props {
         addresses: Readable<Address[]>;
@@ -33,13 +34,10 @@
 
     let listScopeEl: HTMLDivElement | null = $state(null);
 
-    function onInputArrowDown(event: KeyboardEvent): void {
-        if (event.key !== 'ArrowDown') return;
-        const firstRow = listScopeEl?.querySelector<HTMLElement>('[data-trust-relation-row]');
-        if (!firstRow) return;
-        event.preventDefault();
-        firstRow.focus();
-    }
+    const onInputArrowDown = createListInputArrowDownHandler({
+        getScope: () => listScopeEl,
+        rowSelector: '[data-trust-relation-row]'
+    });
 </script>
 
 <div data-profile-relations-list-scope bind:this={listScopeEl}>
