@@ -4,8 +4,79 @@
     import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
     import { ArrowLeft as LArrowLeft, X as LX } from 'lucide';
 
+    function isEditableEl(el: Element | null): boolean {
+        if (!(el instanceof HTMLElement)) return false;
+
+        // Contenteditable (includes many rich text editors)
+        if (el.isContentEditable) return true;
+
+        const tag = el.tagName;
+        if (tag === 'TEXTAREA' || tag === 'SELECT') return true;
+
+        if (tag === 'INPUT') {
+            const input = el as HTMLInputElement;
+            // Most input types are editable; exclude ones where backspace is not "text editing"
+            const nonTextTypes = new Set([
+                'button',
+                'checkbox',
+                'color',
+                'file',
+                'hidden',
+                'image',
+                'radio',
+                'range',
+                'reset',
+                'submit'
+            ]);
+            return !nonTextTypes.has((input.type || '').toLowerCase());
+        }
+
+        // ARIA textbox used by some custom inputs/editors
+        if (el.getAttribute('role') === 'textbox') return true;
+
+        return false;
+    }
+
+    function isEditableTarget(target: EventTarget | null, e: KeyboardEvent): boolean {
+        // Prefer composedPath (shadow DOM) when available
+        const path = typeof e.composedPath === 'function' ? e.composedPath() : [];
+        for (const p of path) {
+            if (p instanceof Element && isEditableEl(p)) return true;
+        }
+
+        // Fallback: walk up from target
+        let node: Element | null = target instanceof Element ? target : null;
+        while (node) {
+            if (isEditableEl(node)) return true;
+            node = node.parentElement;
+        }
+
+        return false;
+    }
+
     function handleKeydown(e: KeyboardEvent) {
-        if (e.key === 'Escape' && $popupState.content) popupControls.close();
+        if (!$popupState.content) return;
+
+        if (e.key === 'Escape') {
+            popupControls.close();
+            return;
+        }
+
+        // Backspace navigates popup stack (but never closes the last popup)
+        if (e.key === 'Backspace') {
+            // Don’t interfere with typing/editing
+            if (isEditableTarget(e.target, e)) return;
+
+            // Don’t treat modified Backspace as navigation
+            if (e.altKey || e.ctrlKey || e.metaKey) return;
+
+            // Only pop if there is a previous popup
+            if ($popupState.stack.length > 0) {
+                e.preventDefault();
+                popupControls.back();
+            }
+            // If this is the last popup, do nothing
+        }
     }
 
     function onClose() {
