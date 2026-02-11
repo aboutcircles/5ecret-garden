@@ -21,25 +21,56 @@
   let { safeOwnerAddress, initSdk, sdk, refreshGroupsCallback }: Props =
     $props();
 
-  const getSafesByOwnerApiEndpoint = (checksumOwnerAddress: string): string =>
-    `https://safe-transaction-gnosis-chain.safe.global/api/v1/owners/${checksumOwnerAddress}/safes/`;
+  /**
+   * Query safes owned by an address via the Circles indexer RPC.
+   * Replaces the deprecated Safe Transaction Service API.
+   */
+  async function querySafesByOwner(ownerAddress: string): Promise<Address[]> {
+    const ownerLc = ownerAddress.toLowerCase();
+    const result = await (sdk as any).rpc.client.call<{
+      columns: string[]; rows: (string | number)[][];
+    }>('circles_query', [
+      {
+        Namespace: 'V_Safe',
+        Table: 'Owners',
+        Columns: ['safeAddress'],
+        Filter: [
+          {
+            Type: 'FilterPredicate',
+            FilterType: 'Equals',
+            Column: 'owner',
+            Value: ownerLc,
+          },
+        ],
+        Order: [],
+        Limit: 1000,
+      },
+    ]);
 
-  async function querySafeTransactionService(
-    ownerAddress: string
-  ): Promise<Address[]> {
-    const checksumAddress = ethers.getAddress(ownerAddress);
-    const requestUrl = getSafesByOwnerApiEndpoint(checksumAddress);
+    // SDK unwraps JSON-RPC result — response is { columns, rows } directly
+    const columns = result.columns ?? [];
+    const rows = result.rows ?? [];
+    const colIdx = columns.findIndex((c) => c.toLowerCase() === 'safeaddress');
+    const safesRaw: string[] = (
+      colIdx >= 0
+        ? rows.map((r) => String(r[colIdx]))
+        : rows.map((r) => String(r[0]))
+    ).filter(Boolean);
 
-    const safesByOwnerResult = await fetch(requestUrl);
-    const safesByOwner = await safesByOwnerResult.json();
-
-    return safesByOwner.safes ?? [];
+    // Normalize and deduplicate
+    return Array.from(
+      new Set(safesRaw.map((s) => ethers.getAddress(s).toLowerCase() as Address))
+    );
   }
 
   async function loadSafesAndProfile() {
-    const fetchedSafes = (
-      await querySafeTransactionService(safeOwnerAddress)
-    ).map((safe) => safe.toLowerCase() as Address);
+    let fetchedSafes: Address[];
+    try {
+      fetchedSafes = await querySafesByOwner(safeOwnerAddress);
+    } catch (err) {
+      console.error('[ConnectSafe] Failed to query safes:', err);
+      return;
+    }
 
     // Preserve existing order to avoid list items jumping; append any new safes
     if (safes.length === 0) {
