@@ -8,26 +8,23 @@
   import {tokenTypeToString, TransitiveTransferTokenAddress} from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
   import {popupControls} from '$lib/shared/state/popup';
   import {MAX_PATH_STEPS} from "$lib/shared/config/circles";
+  import {
+    requireAmount,
+    requireAvatar,
+    requireSelectedAsset,
+    requireWalletAddress,
+  } from '$lib/shared/flow/guards';
+  import type { ReviewStepProps } from '$lib/shared/flow/contracts';
 
-  interface Props {
-    context: SendFlowContext;
-  }
+  type Props = ReviewStepProps<SendFlowContext>;
 
   let {context}: Props = $props();
 
   function onselect() {
-    if (!avatarState.avatar) {
-      throw new Error('Avatar not found');
-    }
-    if (!context.selectedAddress) {
-      throw new Error('No address selected');
-    }
-    if (!context.selectedAsset) {
-      throw new Error('No asset selected');
-    }
-    if (!context.amount) {
-      throw new Error('No amount specified');
-    }
+    const avatar = requireAvatar(avatarState.avatar);
+    const selectedAddress = requireWalletAddress(context.selectedAddress, 'No address selected');
+    const selectedAsset = requireSelectedAsset(context, 'No asset selected');
+    const amount = requireAmount(context.amount, 'No amount specified');
 
     let dataUInt8Arr: Uint8Array<ArrayBufferLike> = new Uint8Array(0);
 
@@ -62,12 +59,12 @@
     //   : parseEther(context.amount.toString());
 
     runTask({
-      name: `Send ${roundToDecimals(context.amount)} ${tokenTypeToString(context.selectedAsset.tokenType)} to ${shortenAddress(context.selectedAddress)}...`,
+      name: `Send ${roundToDecimals(amount)} ${tokenTypeToString(selectedAsset.tokenType)} to ${shortenAddress(selectedAddress)}...`,
       promise:
-        context.selectedAsset.tokenAddress === TransitiveTransferTokenAddress
-          ? avatarState.avatar.transfer(
-            context.selectedAddress,
-            context.amount,
+        selectedAsset.tokenAddress === TransitiveTransferTokenAddress
+          ? avatar.transfer(
+            selectedAddress,
+            amount,
             undefined,
             dataUInt8Arr,
             true,
@@ -76,11 +73,11 @@
             undefined,
             undefined,
              context.maxTransfers ?? MAX_PATH_STEPS)
-          : avatarState.avatar.transfer(
-            context.selectedAddress,
-            context.amount,
+          : avatar.transfer(
+            selectedAddress,
+            amount,
             // amountToSend,
-            context.selectedAsset.tokenAddress,
+            selectedAsset.tokenAddress,
             dataUInt8Arr,
             true,
             undefined,

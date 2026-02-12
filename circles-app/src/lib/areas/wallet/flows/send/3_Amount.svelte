@@ -4,20 +4,20 @@
     import Send from './4_Send.svelte';
     import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
     import {onMount, tick, untrack} from 'svelte';
-    import { circles } from '$lib/shared/state/circles';
+    import { circles as circlesStore } from '$lib/shared/state/circles';
     import { avatarState } from '$lib/shared/state/avatar.svelte';
     import { TransitiveTransferTokenAddress } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
     import type { TokenBalanceRow } from '@circles-sdk/data';
     import { writable } from 'svelte/store';
-    import type { MaxFlowResponse } from '@circles-sdk/sdk';
     import { ethers } from 'ethers';
-    import { openFlowPopup } from '$lib/shared/state/popup';
+    import { openStep } from '$lib/shared/flow/runtime';
     import { CirclesConverter } from '@circles-sdk/utils';
     import {MAX_PATH_STEPS} from "$lib/shared/config/circles";
+    import { requireSelectedAsset } from '$lib/shared/flow/guards';
+    import type { EnterAmountStepProps } from '$lib/shared/flow/contracts';
+    import { get } from 'svelte/store';
 
-    interface Props {
-        context: SendFlowContext;
-    }
+    type Props = EnterAmountStepProps<SendFlowContext>;
 
     let { context = $bindable() }: Props = $props();
 
@@ -30,7 +30,6 @@
     }
 
     let deadBalances: TokenBalanceRow[] = $state([]);
-    let path: MaxFlowResponse | undefined = $state();
 
     let showUnusedBalances = writable(false);
     let showPathsSection = $state(false); // True if pathfinding succeeds
@@ -45,10 +44,11 @@
     let amountError = $state(false);
 
     async function calculatePath() {
+        const sdk = get(circlesStore);
         // If not transitive transfer or missing info, skip pathfinding
         if (
             context.selectedAsset?.tokenAddress != TransitiveTransferTokenAddress ||
-            !$circles ||
+            !sdk ||
             !avatarState.avatar ||
             !context.selectedAddress
         ) {
@@ -60,19 +60,19 @@
         pathfindingFailed = false;
 
         try {
-            const excludedTokens = await $circles.getDefaultTokenExcludeList(
+            const excludedTokens = await sdk.getDefaultTokenExcludeList(
                 context.selectedAddress
             );
 
             const bigNumber = '99999999999999999999999999999999999';
             const p =
                 avatarState.avatar?.avatarInfo?.version === 1
-                    ? await $circles.v1Pathfinder?.getPath(
+                    ? await sdk.v1Pathfinder?.getPath(
                         avatarState.avatar.address,
                         context.selectedAddress,
                         bigNumber
                     )
-                    : await $circles.v2Pathfinder?.getPath(
+                    : await sdk.v2Pathfinder?.getPath(
                         avatarState.avatar.address,
                         context.selectedAddress,
                         bigNumber,
@@ -89,19 +89,19 @@
                 return;
             }
 
-            path = p;
+            const nextPath = p;
 
             maxAmountCircles = parseFloat(
-                ethers.formatEther(path.maxFlow.toString())
+                ethers.formatEther(nextPath.maxFlow.toString())
             );
             if (avatarState.avatar?.avatarInfo?.version === 1) {
-                const attoCircles = CirclesConverter.attoCrcToAttoCircles(BigInt(path.maxFlow), BigInt(Date.now() / 1000));
+                const attoCircles = CirclesConverter.attoCrcToAttoCircles(BigInt(nextPath.maxFlow), BigInt(Date.now() / 1000));
                 maxAmountCircles = CirclesConverter.attoCirclesToCircles(attoCircles);
                 // maxAmountCircles = crcToTc(new Date(), BigInt(path.maxFlow));
             }
 
             // If pathfinding returned maxFlow = 0 or no meaningful transfers, treat as failure
-            if (!path.transfers?.length || maxAmountCircles === 0) {
+            if (!nextPath.transfers?.length || maxAmountCircles === 0) {
                 pathfindingFailed = true;
                 return;
             }
@@ -110,7 +110,7 @@
             showPathsSection = true;
 
             const balances = await avatarState.avatar.getBalances();
-            const sourceEdges = path.transfers.filter(
+            const sourceEdges = nextPath.transfers.filter(
                 (edge) => edge.from === avatarState.avatar?.address
             );
 
@@ -151,9 +151,10 @@
         // Normalize to a number (defensive)
         context.amount = Number(context.amount ?? 0);
 
-        const limit = context.selectedAsset.isErc20
-            ? context.selectedAsset.staticCircles
-            : (maxAmountCircles >= 0 ? maxAmountCircles : (context.selectedAsset?.circles ?? 0));
+        const selectedAsset = requireSelectedAsset(context);
+        const limit = selectedAsset.isErc20
+            ? selectedAsset.staticCircles
+            : (maxAmountCircles >= 0 ? maxAmountCircles : (selectedAsset?.circles ?? 0));
 
         if (context.amount > limit) {
             amountError = true;
@@ -161,7 +162,7 @@
         }
         amountError = false;
 
-        openFlowPopup({
+        openStep({
             title: 'Send',
             component: Send,
             props: { context },

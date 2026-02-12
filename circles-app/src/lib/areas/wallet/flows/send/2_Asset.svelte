@@ -6,10 +6,10 @@
   import { onMount } from 'svelte';
   import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
   import { circlesBalances } from '$lib/shared/state/circlesBalances';
-  import { openFlowPopup } from '$lib/shared/state/popup';
-  interface Props {
-    context: SendFlowContext;
-  }
+  import { openStep } from '$lib/shared/flow/runtime';
+  import type { SelectAssetStepProps } from '$lib/shared/flow/contracts';
+
+  type Props = SelectAssetStepProps<SendFlowContext>;
 
   let { context = $bindable() }: Props = $props();
 
@@ -27,7 +27,7 @@
   function onselect(tokenBalanceRow: TokenBalanceRow) {
     context.selectedAsset = tokenBalanceRow;
 
-    openFlowPopup({
+    openStep({
       title: 'Enter Amount',
       component: SelectAmount,
       props: {

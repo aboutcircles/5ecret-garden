@@ -8,7 +8,7 @@
     import {CirclesStorage} from '$lib/shared/utils/storage';
     import type {GroupRow} from '@circles-sdk/data';
     import {settings} from '$lib/shared/state/settings.svelte';
-    import { openFlowPopup } from '$lib/shared/state/popup';
+    import { openStep } from '$lib/shared/flow/runtime';
     import CreateGroup from "$lib/areas/groups/flows/createGroup/1_CreateGroup.svelte";
     import {resetCreateGroupContext} from '$lib/areas/groups/flows/createGroup/context';
 
@@ -56,7 +56,7 @@
         // Initialize a fresh context with feeCollection defaulted to this safe address
         resetCreateGroupContext(address as `0x${string}`);
 
-        openFlowPopup({
+        openStep({
             title: "Create group",
             component: CreateGroup,
             props: {
