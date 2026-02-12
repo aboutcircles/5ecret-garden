@@ -13,6 +13,9 @@
     import { openStep } from '$lib/shared/flow/runtime';
     import { openSendFlowPopup } from '$lib/areas/wallet/flows/send/openSendFlowPopup';
     import type { TokenBalanceRow } from '@circles-sdk/data';
+    import { circles } from '$lib/shared/state/circles';
+    import { get } from 'svelte/store';
+    import { formatEther } from 'ethers';
 
     interface Props { item: TokenBalanceRow; }
     let { item }: Props = $props();
@@ -120,6 +123,43 @@
         current?.focus();
         onClick();
     }
+
+    async function handleReadHubBalance(): Promise<void> {
+        const sdk = get(circles);
+        const connectedAvatar = avatarState.avatar?.address;
+
+        if (!sdk?.v2Hub) {
+            alert('Circles V2 hub contract is not available.');
+            return;
+        }
+
+        if (!connectedAvatar) {
+            alert('No connected avatar found.');
+            return;
+        }
+
+        if (!item.tokenId) {
+            alert('No tokenId found for this balance row.');
+            return;
+        }
+
+        try {
+            const tokenId = BigInt(item.tokenId);
+            const balance = await sdk.v2Hub.balanceOf(connectedAvatar, tokenId);
+            alert(
+                [
+                    'Circles V2 hub balance',
+                    `Avatar: ${connectedAvatar}`,
+                    `Token ID: ${item.tokenId}`,
+                    `Atto CRC: ${balance.toString()}`,
+                    `CRC: ${formatEther(balance)}`,
+                ].join('\n')
+            );
+        } catch (error: any) {
+            const message = error?.message ?? 'Failed to query balance from Circles V2 hub.';
+            alert(message);
+        }
+    }
 </script>
 
 <!-- Use noLeading to collapse the empty first column; put the old "horizontal avatar row" inside content -->
@@ -182,6 +222,12 @@
                                 <button onclick={(e)=>{ e.stopPropagation(); handleCopy(); }}>
                                     <img src={copyIcon} alt="" class="icon" aria-hidden="true" />
                                     Copy
+                                </button>
+                            </li>
+                            <li>
+                                <button onclick={(e)=>{ e.stopPropagation(); void handleReadHubBalance(); }}>
+                                    <img src="/banknotes.svg" alt="" class="icon" aria-hidden="true" />
+                                    Check hub balance
                                 </button>
                             </li>
                         </ul>
