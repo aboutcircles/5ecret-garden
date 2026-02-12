@@ -12,16 +12,33 @@
     import { resetCreateGroupContext } from './context';
     import type { ReviewStepProps } from '$lib/shared/flow/contracts';
 
-    type Props = ReviewStepProps<CreateGroupFlowContext> & {
+    type Props = Partial<ReviewStepProps<CreateGroupFlowContext>> & {
         setGroup?: (address: string) => void;
     };
 
-    let { context, setGroup }: Props = $props();
+    let { context = $bindable(), setGroup }: Props = $props();
 
-    // Fallback to store if no explicit context is provided
-    let ctx: CreateGroupFlowContext = $state(context ?? $createGroupContext);
-    let initialConditionsStr: string = $state((ctx.initialConditions ?? []).join(', '));
-    let mode: 'fast' | 'advanced' = $state(ctx.settingsMode ?? 'fast');
+    // Keep a local mutable snapshot; adopt incoming context reactively when provided.
+    let ctx: CreateGroupFlowContext = $state($createGroupContext);
+    $effect(() => {
+        const hasIncoming = !!context && typeof context === 'object';
+        if (hasIncoming) {
+            ctx = context as CreateGroupFlowContext;
+        }
+    });
+
+    let initialConditionsStr: string = $state('');
+    let mode: 'fast' | 'advanced' = $state('fast');
+    let initializedFromContext = $state(false);
+
+    $effect(() => {
+        if (initializedFromContext) {
+            return;
+        }
+        initialConditionsStr = (ctx.initialConditions ?? []).join(', ');
+        mode = ctx.settingsMode ?? 'fast';
+        initializedFromContext = true;
+    });
 
     // Defaults
     $effect(() => {

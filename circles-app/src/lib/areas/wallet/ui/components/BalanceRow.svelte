@@ -10,7 +10,7 @@
     import UnwrapTokens from '$lib/areas/wallet/ui/pages/UnwrapTokens.svelte';
     import RedeemGroup from '$lib/areas/groups/ui/pages/RedeemGroup.svelte';
     import Send from '$lib/areas/wallet/flows/send/1_To.svelte';
-    import { openFlowPopup } from '$lib/shared/state/popup';
+    import { openStep } from '$lib/shared/flow/runtime';
     import { openSendFlowPopup } from '$lib/areas/wallet/flows/send/openSendFlowPopup';
     import type { TokenBalanceRow } from '@circles-sdk/data';
 
@@ -63,7 +63,7 @@
                 transitiveOnly: false
             });
         } else {
-            openFlowPopup({ title: action.title, component: action.component, props: { asset: item } });
+            openStep({ title: action.title, component: action.component, props: { asset: item } });
         }
     }
 
