@@ -2,7 +2,7 @@
   import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
   import SearchAvatar from '$lib/areas/contacts/ui/pages/SearchAvatar.svelte';
   import Invite from '$lib/areas/contacts/ui/pages/Invite.svelte';
-  import { popupControls } from '$lib/shared/state/popup';
+  import { openStep } from '$lib/shared/flow/runtime';
   import type { ManageGroupMembersFlowContext } from './context';
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import Papa from 'papaparse';
@@ -14,14 +14,14 @@
   import { X } from 'lucide';
 
   let context: ManageGroupMembersFlowContext = $state({
-    selectedAddress: '',
+    selectedAddress: '0x0' as Address,
   });
 
   let addressesArray: string[] = $state([]);
   let errorMessage = $state('');
 
   function oninvite(avatar: Address) {
-    popupControls.open({
+    openStep({
       title: 'Invite someone',
       component: Invite,
       props: { address: avatar },
@@ -29,7 +29,7 @@
   }
 
   function ontrust(avatar: Address) {
-    popupControls.open({
+    openStep({
       title: 'Trust',
       component: Trust,
       props: { address: avatar },

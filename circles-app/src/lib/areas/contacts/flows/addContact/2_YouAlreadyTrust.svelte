@@ -2,6 +2,7 @@
   import Untrust from '$lib/areas/contacts/ui/pages/Untrust.svelte';
   import type { AddContactFlowContext } from '$lib/areas/contacts/flows/addContact/context';
   import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+  import { openStep } from '$lib/shared/flow/runtime';
   import { popupControls } from '$lib/shared/state/popup';
 
   interface Props {
@@ -17,7 +18,7 @@
     class="btn btn-error mt-6"
     onclick={() => {
       popupControls.close();
-      popupControls.open({
+      openStep({
         title: 'Untrust',
         component: Untrust,
         props: {

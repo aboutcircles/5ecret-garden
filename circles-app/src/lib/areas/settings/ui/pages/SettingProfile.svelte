@@ -3,6 +3,7 @@
     import Address from '$lib/shared/ui/primitives/Address.svelte';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import QrCode from '$lib/shared/ui/primitives/QrCode.svelte';
+    import { openStep } from '$lib/shared/flow/runtime';
     import {popupControls} from '$lib/shared/state/popup';
     import {signer} from '$lib/shared/state/wallet.svelte';
 import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
@@ -25,7 +26,7 @@ import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
 
     function openProfileEditor() {
         if (!address) return;
-        popupControls.open({
+        openStep({
             title: 'Edit profile',
             component: ProfileExplorer,
             props: {
@@ -42,9 +43,11 @@ import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
     <Avatar view="vertical" clickable={false} {address}/>
 
     <!-- Address chip on its own line -->
-    <div class="w-full flex justify-center">
-        <Address {address} />
-    </div>
+    {#if address}
+        <div class="w-full flex justify-center">
+            <Address {address} />
+        </div>
+    {/if}
 
     <!-- Buttons row below, centered -->
     <div class="flex flex-wrap justify-center gap-2">

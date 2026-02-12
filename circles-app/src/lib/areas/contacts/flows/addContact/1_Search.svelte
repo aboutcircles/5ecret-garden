@@ -4,7 +4,7 @@
   import Invite from '$lib/areas/contacts/ui/pages/Invite.svelte';
   import Trust from '$lib/areas/contacts/ui/pages/Trust.svelte';
   import { contacts } from '$lib/shared/state/contacts';
-  import { popupControls } from '$lib/shared/state/popup';
+  import { openStep } from '$lib/shared/flow/runtime';
   import YouAlreadyTrust from './2_YouAlreadyTrust.svelte';
   import type { AddContactFlowContext } from './context';
   import type { Address } from '@circles-sdk/utils';
@@ -14,7 +14,7 @@
   });
 
   function oninvite(avatar: Address) {
-    popupControls.open({
+    openStep({
       title: 'Invite someone',
       component: Invite,
       props: {
@@ -33,7 +33,7 @@
         existingContact.row.relation === 'mutuallyTrusts')
     ) {
       // already trusting the account
-      popupControls.open({
+      openStep({
         title: 'Untrust?',
         component: YouAlreadyTrust,
         props: {
@@ -41,7 +41,7 @@
         },
       });
     } else {
-      popupControls.open({
+      openStep({
         title: 'Trust',
         component: Trust,
         props: {
