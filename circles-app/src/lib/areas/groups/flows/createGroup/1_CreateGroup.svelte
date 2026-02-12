@@ -4,7 +4,7 @@
     import Tooltip from '$lib/shared/ui/primitives/Tooltip.svelte';
     import { ProfileFormStep } from '$lib/shared/ui/profile';
     import { isValidSymbol, isValidOnChainName } from '$lib/shared/utils/isValid';
-    import { openFlowPopup } from '$lib/shared/state/popup';
+    import { openStep } from '$lib/shared/flow/runtime';
     import { wallet } from '$lib/shared/state/wallet.svelte';
     import Settings from './2_Settings.svelte';
     import {
@@ -12,14 +12,14 @@
         type CreateGroupFlowContext
     } from './context';
     import { resetCreateGroupContext } from './context';
+    import type { ProfileEditStepProps } from '$lib/shared/flow/contracts';
 
     const PROFILE_NAME_MAX_LENGTH = 36;
 
-    interface Props {
+    type Props = Partial<ProfileEditStepProps<CreateGroupFlowContext>> & {
         /** Kept for compatibility; the store is the source of truth. */
-        context?: CreateGroupFlowContext;
-        setGroup?: (address: string, name: string, symbol: string, treasury: string, cidV0Digest: string) => void;
-    }
+        setGroup?: (address: string) => void;
+    };
 
     let { context = $bindable(), setGroup }: Props = $props();
 
@@ -66,7 +66,7 @@
     function next() {
         const ready: boolean = canContinue;
         if (!ready) { return; }
-        openFlowPopup({
+        openStep({
             title: 'Group Settings',
             component: Settings,
             props: { context: ctx, setGroup },
