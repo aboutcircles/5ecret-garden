@@ -3,16 +3,16 @@
 
   import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
   import OnChainNameSection from '$lib/shared/ui/flow/OnChainNameSection.svelte';
-  import { openFlowPopup } from '$lib/shared/state/popup';
+  import { openStep } from '$lib/shared/flow/runtime';
   import type { CreateGatewayFlowContext } from './context';
   import ConfirmCreateGateway from './ConfirmCreateGateway.svelte';
   import { ProfileFormStep } from '$lib/shared/ui/profile';
   import { isValidOnChainName } from '$lib/shared/utils/isValid';
+  import type { ProfileEditStepProps } from '$lib/shared/flow/contracts';
 
-  interface Props {
-    context?: CreateGatewayFlowContext;
+  type Props = Partial<ProfileEditStepProps<CreateGatewayFlowContext>> & {
     onCreated?: (gateway: string) => void;
-  }
+  };
 
   let { context = $bindable(), onCreated }: Props = $props();
 
@@ -63,7 +63,7 @@
     if (!canContinue) {
       return;
     }
-    openFlowPopup({
+    openStep({
       title: 'Confirm payment gateway',
       component: ConfirmCreateGateway,
       props: { context: ctx, onCreated }

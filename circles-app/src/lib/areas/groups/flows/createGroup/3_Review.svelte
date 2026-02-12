@@ -1,6 +1,6 @@
 <script lang="ts">
     import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-    import { openFlowPopup } from '$lib/shared/state/popup';
+    import { openStep } from '$lib/shared/flow/runtime';
     import Markdown from '$lib/shared/ui/content/markdown/Markdown.svelte';
     import CreateStep from './4_Create.svelte';
     import {
@@ -8,11 +8,11 @@
         type CreateGroupFlowContext
     } from './context';
     import { resetCreateGroupContext } from './context';
+    import type { ReviewStepProps } from '$lib/shared/flow/contracts';
 
-    interface Props {
-        context?: CreateGroupFlowContext;
-        setGroup?: (address: string, name: string, symbol: string, treasury: string, cidV0Digest: string) => void;
-    }
+    type Props = Partial<ReviewStepProps<CreateGroupFlowContext>> & {
+        setGroup?: (address: string) => void;
+    };
 
     let { context, setGroup }: Props = $props();
 
@@ -24,7 +24,7 @@
     const fastLane: boolean = $derived((ctx.settingsMode ?? 'fast') === 'fast');
 
     function next() {
-        openFlowPopup({
+        openStep({
             title: 'Create Group',
             component: CreateStep,
             props: { context: ctx, setGroup },

@@ -2,7 +2,7 @@
     import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
     import Tooltip from '$lib/shared/ui/primitives/Tooltip.svelte';
     import { ethers } from 'ethers';
-    import { openFlowPopup } from '$lib/shared/state/popup';
+    import { openStep } from '$lib/shared/flow/runtime';
     import CreateStep from './4_Create.svelte';
     import { wallet } from '$lib/shared/state/wallet.svelte';
     import {
@@ -10,11 +10,11 @@
         type CreateGroupFlowContext
     } from './context';
     import { resetCreateGroupContext } from './context';
+    import type { ReviewStepProps } from '$lib/shared/flow/contracts';
 
-    interface Props {
-        context: CreateGroupFlowContext;
-        setGroup?: (address: string, name: string, symbol: string, treasury: string, cidV0Digest: string) => void;
-    }
+    type Props = ReviewStepProps<CreateGroupFlowContext> & {
+        setGroup?: (address: string) => void;
+    };
 
     let { context, setGroup }: Props = $props();
 
@@ -80,7 +80,7 @@
         const ready: boolean = canContinue;
         if (!ready) { return; }
 
-        openFlowPopup({
+        openStep({
             title: 'Review and confirm',
             component: CreateStep,
             props: { context: ctx, setGroup },

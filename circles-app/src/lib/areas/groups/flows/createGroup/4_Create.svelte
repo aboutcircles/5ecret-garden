@@ -21,7 +21,7 @@
 
     interface Props {
         context?: CreateGroupFlowContext;
-        setGroup?: (address: string, name: string, symbol: string, treasury: string, cidV0Digest: string) => void;
+        setGroup?: (address: string) => void;
     }
 
     let { context, setGroup }: Props = $props();
@@ -31,7 +31,8 @@
     function extractAddressFromTopic(topic: string | undefined): string | null {
         const looksRight: boolean = typeof topic === 'string' && topic.startsWith('0x') && topic.length === 66;
         if (!looksRight) { return null; }
-        const addr = '0x' + topic.slice(26);
+        const safeTopic = topic as string;
+        const addr = '0x' + safeTopic.slice(26);
         return addr.toLowerCase();
     }
 
