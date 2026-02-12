@@ -4,12 +4,14 @@
   import CreateProfile from './2_CreateProfile.svelte';
   import { onMount } from 'svelte';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
-  import { circles } from '$lib/shared/state/circles';
+  import { circles as circlesStore } from '$lib/shared/state/circles';
   import type { AvatarRow } from '@circles-sdk/data';
-  import { openFlowPopup } from '$lib/shared/state/popup';
+  import { openStep } from '$lib/shared/flow/runtime';
   import type { Profile } from '@circles-sdk/profiles';
   import { settings } from '$lib/shared/state/settings.svelte';
   import InvitationPickerStep from '$lib/shared/ui/invitations/InvitationPickerStep.svelte';
+  import { requireAvatar, requireCircles } from '$lib/shared/flow/guards';
+  import { get } from 'svelte/store';
 
   interface Props {
     context?: MigrateToV2Context;
@@ -25,14 +27,16 @@
   let canSelfMigrate = $state(false);
   let invitations: AvatarRow[] | undefined = $state();
   onMount(async () => {
-    if (!avatarState.avatar?.avatarInfo || !$circles) {
-      throw new Error('Avatar store or SDK not initialized');
+    const sdk = requireCircles(get(circlesStore));
+    const avatar = requireAvatar(avatarState.avatar);
+    if (!avatar.avatarInfo) {
+      throw new Error('Avatar info not initialized');
     }
-    canSelfMigrate = settings.ring ? true : await $circles.canSelfMigrate(avatarState.avatar.avatarInfo);
-    invitations = await $circles.data.getInvitations(avatarState.avatar.avatarInfo.avatar);
+    canSelfMigrate = settings.ring ? true : await sdk.canSelfMigrate(avatar.avatarInfo);
+    invitations = await sdk.data.getInvitations(avatar.avatarInfo.avatar);
   });
   async function next() {
-    openFlowPopup({
+    openStep({
       title: 'Create Profile',
       component: CreateProfile,
       props: {

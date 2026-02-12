@@ -1,18 +1,22 @@
-rofl<script lang="ts">
+<script lang="ts">
   import SelectAsset from './2_Asset.svelte';
   import SelectAmount from './3_Amount.svelte';
   import type { SendFlowContext } from '$lib/areas/wallet/flows/send/context';
   import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { circles } from '$lib/shared/state/circles';
-  import { openFlowPopup } from '$lib/shared/state/popup';
-  import type { TokenBalanceRow } from '@circles-sdk/data';
+  import { openStep } from '$lib/shared/flow/runtime';
   import SearchAvatar from '$lib/areas/contacts/ui/pages/SearchAvatar.svelte';
   import type { Address } from '@circles-sdk/utils';
+  import { get } from 'svelte/store';
+  import type { SelectTargetStepProps } from '$lib/shared/flow/contracts';
+  import {
+    requireAvatar,
+    requireCircles,
+    requireWalletAddress,
+  } from '$lib/shared/flow/guards';
 
-  interface Props {
-    context?: SendFlowContext;
-  }
+  type Props = Partial<SelectTargetStepProps<SendFlowContext>>;
 
   let {
     context = $bindable({
@@ -25,7 +29,7 @@ rofl<script lang="ts">
 
   $effect(() => {
     if (context.selectedAddress && context.selectedAsset) {
-      openFlowPopup({
+      openStep({
         title: 'Enter Amount',
         component: SelectAmount,
         props: {
@@ -38,17 +42,16 @@ rofl<script lang="ts">
   async function onselect(selectedAvatar: Address) {
     context.selectedAddress = selectedAvatar;
 
-    if (
-      !$circles ||
-      !avatarState.avatar ||
-      !avatarState.avatar.avatarInfo ||
-      !context.selectedAddress
-    ) {
+    try {
+      requireCircles(get(circles));
+      requireAvatar(avatarState.avatar);
+      requireWalletAddress(context.selectedAddress, 'No address selected');
+    } catch {
       return;
     }
 
     if (context.selectedAsset) {
-      openFlowPopup({
+      openStep({
         title: 'Enter Amount',
         component: SelectAmount,
         props: {
@@ -56,7 +59,7 @@ rofl<script lang="ts">
         },
       });
     } else {
-      openFlowPopup({
+      openStep({
         title: 'Select Asset',
         component: SelectAsset,
         props: {

@@ -2,41 +2,39 @@
   import { onMount } from 'svelte';
   import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
   import type { MigrateToV2Context } from '$lib/areas/wallet/flows/migrateToV2/context';
-  import { circles } from '$lib/shared/state/circles';
+  import { circles as circlesStore } from '$lib/shared/state/circles';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { runTask } from '$lib/shared/utils/tasks';
   import { removeProfileFromCache } from '$lib/shared/utils/profile';
   import { popupControls } from '$lib/shared/state/popup';
+  import { requireAvatar, requireCircles, requireProfile } from '$lib/shared/flow/guards';
+  import type { ReviewStepProps } from '$lib/shared/flow/contracts';
+  import { get } from 'svelte/store';
 
-  interface Props {
-    context: MigrateToV2Context;
-  }
+  type Props = ReviewStepProps<MigrateToV2Context>;
 
   let { context }: Props = $props();
 
   onMount(async () => {});
 
   async function migrate() {
-    if (!$circles || !avatarState.avatar?.address) {
-      throw new Error('Sdk or Avatar store not initialized');
-    }
-    if (!context.profile) {
-      throw new Error('Profile not initialized');
-    }
+    const sdk = requireCircles(get(circlesStore));
+    const avatar = requireAvatar(avatarState.avatar);
+    const profile = requireProfile(context.profile);
 
     await runTask({
       name: `Migrating your Avatar ...`,
-      promise: $circles.migrateAvatar(
+      promise: sdk.migrateAvatar(
         context.inviter ?? '0x0000000000000000000000000000000000000000',
-        avatarState.avatar.address,
-        context.profile
+        avatar.address,
+        profile
       ),
     });
 
     // On success, refresh local cache/state
-    removeProfileFromCache(avatarState.avatar!.address);
-    avatarState.avatar!.avatarInfo!.version = 2;
-    avatarState.avatar!.avatarInfo!.v1Stopped = true;
+    removeProfileFromCache(avatar.address);
+    avatar.avatarInfo!.version = 2;
+    avatar.avatarInfo!.v1Stopped = true;
 
     popupControls.close();
   }

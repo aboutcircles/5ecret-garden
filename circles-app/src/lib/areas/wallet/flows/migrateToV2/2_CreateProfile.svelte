@@ -9,12 +9,12 @@
     FallbackImageUrl,
     profilesEqual,
   } from '$lib/shared/utils/profile';
-  import { openFlowPopup } from '$lib/shared/state/popup';
+  import { openStep } from '$lib/shared/flow/runtime';
   import type { Profile } from '@circles-sdk/profiles';
+  import { requireAvatar } from '$lib/shared/flow/guards';
+  import type { ProfileEditStepProps } from '$lib/shared/flow/contracts';
 
-  interface Props {
-    context: MigrateToV2Context;
-  }
+  type Props = ProfileEditStepProps<MigrateToV2Context>;
 
   let { context = $bindable() }: Props = $props();
 
@@ -41,9 +41,7 @@
   });
 
   onMount(async () => {
-    if (!avatarState.avatar?.address) {
-      throw new Error('Avatar store not initialized');
-    }
+    requireAvatar(avatarState.avatar);
     context.profile = avatarState.profile;
   });
 
@@ -112,7 +110,7 @@
       context.profile.previewImageUrl = undefined;
     }
 
-    openFlowPopup({
+    openStep({
       title: 'Migrate Contacts',
       component: MigrateContacts,
       props: { context },
