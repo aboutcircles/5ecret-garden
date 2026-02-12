@@ -24,9 +24,15 @@
         setGroup?: (address: string) => void;
     }
 
-    let { context, setGroup }: Props = $props();
+    let { context = $bindable(), setGroup }: Props = $props();
 
-    let ctx: CreateGroupFlowContext = $state(context ?? $createGroupContext);
+    let ctx: CreateGroupFlowContext = $state($createGroupContext);
+    $effect(() => {
+        const hasIncoming = !!context && typeof context === 'object';
+        if (hasIncoming) {
+            ctx = context as CreateGroupFlowContext;
+        }
+    });
 
     function extractAddressFromTopic(topic: string | undefined): string | null {
         const looksRight: boolean = typeof topic === 'string' && topic.startsWith('0x') && topic.length === 66;

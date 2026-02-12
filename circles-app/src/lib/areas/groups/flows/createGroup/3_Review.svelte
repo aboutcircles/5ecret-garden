@@ -14,9 +14,15 @@
         setGroup?: (address: string) => void;
     };
 
-    let { context, setGroup }: Props = $props();
+    let { context = $bindable(), setGroup }: Props = $props();
 
-    let ctx: CreateGroupFlowContext = $state(context ?? $createGroupContext);
+    let ctx: CreateGroupFlowContext = $state($createGroupContext);
+    $effect(() => {
+        const hasIncoming = !!context && typeof context === 'object';
+        if (hasIncoming) {
+            ctx = context as CreateGroupFlowContext;
+        }
+    });
 
     const hasImage: boolean = $derived(!!ctx.profile.previewImageUrl && ctx.profile.previewImageUrl.trim().length > 0);
     const hasDescription: boolean = $derived(!!ctx.profile.description && ctx.profile.description.trim().length > 0);

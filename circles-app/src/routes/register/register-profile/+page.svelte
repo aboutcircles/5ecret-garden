@@ -10,17 +10,23 @@
     import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/shared/ui/shell/actions';
+    import { requireCircles } from '$lib/shared/flow/guards';
+    import { get } from 'svelte/store';
 
     let profile: Profile = $state({ name: '', description: '', previewImageUrl: '', imageUrl: undefined });
 
     onMount(async () => {
+        const sdk = requireCircles(get(circles));
         if ($wallet?.address) {
-            const cid = await $circles?.data?.getMetadataCidForAddress($wallet.address);
-            profile = cid ? ((await $circles?.profiles?.get(cid)) ?? profile) : profile;
+            const cid = await sdk.data?.getMetadataCidForAddress($wallet.address);
+            profile = cid ? ((await sdk.profiles?.get(cid)) ?? profile) : profile;
         }
     });
 
-    async function registerProfile() { await $circles?.createOrUpdateProfile(profile); }
+    async function registerProfile() {
+      const sdk = requireCircles(get(circles));
+      await sdk.createOrUpdateProfile(profile);
+    }
 
     function goBack() { history.back(); }
     const actions: Action[] = [

@@ -18,6 +18,8 @@
     import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/shared/ui/shell/actions';
     import InvitationPickerStep from '$lib/shared/ui/invitations/InvitationPickerStep.svelte';
+    import { requireCircles, requireWalletAddress } from '$lib/shared/flow/guards';
+    import { get } from 'svelte/store';
 
     let invitations: AvatarRow[] = $state([]);
     let inviterSelected: Address | undefined = $state(
@@ -32,10 +34,10 @@
     });
 
     onMount(async () => {
-        if (!$wallet?.address) throw new Error('Wallet not connected');
-        if (!$circles?.data) throw new Error('Circles SDK not initialized');
+        const walletAddress = requireWalletAddress($wallet?.address as Address | undefined, 'Wallet not connected');
+        const sdk = requireCircles(get(circles));
 
-        invitations = await $circles.data.getInvitations($wallet.address.toLowerCase() as Address);
+        invitations = await sdk.data.getInvitations(walletAddress.toLowerCase() as Address);
         if (settings.ring) {
             invitations = [
                 ...invitations,
@@ -50,11 +52,11 @@
     });
 
     async function registerHuman() {
-        if (!$circles) throw new Error('Wallet not connected ($circles is undefined)');
-        if (!inviterSelected) throw new Error('Inviter not set');
+        const sdk = requireCircles(get(circles));
+        const inviter = requireWalletAddress(inviterSelected, 'Inviter not set');
 
-        avatarState.avatar = (await $circles.acceptInvitation(
-            inviterSelected.toLowerCase() as Address,
+        avatarState.avatar = (await sdk.acceptInvitation(
+            inviter.toLowerCase() as Address,
             profile
         )) as AvatarType;
 
