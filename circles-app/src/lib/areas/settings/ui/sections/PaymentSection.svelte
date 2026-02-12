@@ -5,7 +5,7 @@
   import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
   import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
   import GatewayRowView from '$lib/areas/settings/ui/components/GatewayRow.svelte';
-  import { popupControls } from '$lib/shared/state/popup';
+  import { openStep } from '$lib/shared/flow/runtime';
   import CreateGatewayProfile from '$lib/areas/settings/flows/gateway/CreateGatewayProfile.svelte';
   import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
 
@@ -25,19 +25,22 @@
   const query = writable('');
   let gatewaysListScopeEl: HTMLDivElement | null = $state(null);
 
-  const filteredGatewaysStore = derived([myGatewaysStore, query], ([$store, $query]) => {
-    const q = ($query ?? '').toLowerCase().trim();
-    if (!q) return $store;
+  const filteredGatewaysStore = $derived.by(() => {
+    const source = myGatewaysStore;
+    return derived([source, query], ([$store, $query]) => {
+      const q = ($query ?? '').toLowerCase().trim();
+      if (!q) return $store;
 
-    const data = ($store?.data ?? []).filter((it: any) => {
-      const gateway = String(it?.gateway ?? '').toLowerCase();
-      return gateway.includes(q);
+      const data = ($store?.data ?? []).filter((it: any) => {
+        const gateway = String(it?.gateway ?? '').toLowerCase();
+        return gateway.includes(q);
+      });
+
+      return {
+        ...$store,
+        data,
+      };
     });
-
-    return {
-      ...$store,
-      data,
-    };
   });
 
   const gatewaysDataLength = $derived(($myGatewaysStore?.data ?? []).length);
@@ -49,7 +52,7 @@
   });
 
   function openCreateGatewayFlow() {
-    popupControls.open({
+    openStep({
       title: 'Create payment gateway',
       component: CreateGatewayProfile,
       props: {

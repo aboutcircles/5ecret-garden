@@ -2,7 +2,7 @@
   import type { Address } from '@circles-sdk/utils';
 import { ProfileSigningKeys } from '$lib/shared/ui/profile';
 import { AddSigningKey } from '$lib/shared/ui/profile';
-  import { popupControls } from '$lib/shared/state/popup';
+  import { openStep } from '$lib/shared/flow/runtime';
   import { browser } from '$app/environment';
   import { CirclesStorage } from '$lib/shared/utils/storage';
 
@@ -28,7 +28,7 @@ import { AddSigningKey } from '$lib/shared/ui/profile';
 
   function openAddSigningKey(): void {
     if (!avatarAddress) return;
-    popupControls.open({
+    openStep({
       title: 'Add signing key',
       component: AddSigningKey,
       props: { avatar: avatarAddress, pinApiBase },

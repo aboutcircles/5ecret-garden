@@ -2,7 +2,7 @@
   import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import type { GatewayRow as GatewayRowType } from '$lib/areas/settings/model/gatewayTypes';
-  import { popupControls } from '$lib/shared/state/popup';
+  import { openStep } from '$lib/shared/flow/runtime';
   import ManageTrust from '$lib/areas/settings/flows/gateway/ManageTrust.svelte';
 
   interface Props {
@@ -17,7 +17,7 @@
 
   function openManageTrust() {
     if (!item?.gateway) return;
-    popupControls.open({
+    openStep({
       title: 'Manage trust',
       component: ManageTrust,
       props: { gateway: item.gateway }

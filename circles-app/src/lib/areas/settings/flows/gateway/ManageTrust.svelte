@@ -8,7 +8,7 @@
   import { derived, writable } from 'svelte/store';
   import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import { circles } from '$lib/shared/state/circles';
-  import { popupControls } from '$lib/shared/state/popup';
+  import { openStep } from '$lib/shared/flow/runtime';
   import ManageTrustSearch from '$lib/areas/settings/flows/gateway/SearchTrustReceiver.svelte';
   import ConfirmGatewayUntrust from '$lib/areas/settings/flows/gateway/ConfirmGatewayUntrust.svelte';
   import GatewayTrustedAccountsList from '$lib/areas/settings/ui/components/GatewayTrustedAccountsList.svelte';
@@ -74,7 +74,7 @@
 
   function openAddTrust() {
     if (!gatewayValid) return;
-    popupControls.open({
+    openStep({
       title: 'Add trusted account',
       component: ManageTrustSearch,
       props: {
@@ -88,7 +88,7 @@
 
   function openRemoveTrust(trustReceiver: string) {
     if (!gatewayValid) return;
-    popupControls.open({
+    openStep({
       title: 'Remove trust',
       component: ConfirmGatewayUntrust,
       props: {

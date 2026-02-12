@@ -1,7 +1,7 @@
 <script lang="ts">
   import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
   import SearchAvatar from '$lib/areas/contacts/ui/pages/SearchAvatar.svelte';
-  import { popupControls } from '$lib/shared/state/popup';
+  import { openStep } from '$lib/shared/flow/runtime';
   import ConfirmGatewayTrust from '$lib/areas/settings/flows/gateway/ConfirmGatewayTrust.svelte';
 
   interface Props {
@@ -18,7 +18,7 @@
   ];
 
   function onselect(address: string) {
-    popupControls.open({
+    openStep({
       title: 'Confirm trust',
       component: ConfirmGatewayTrust,
       props: {

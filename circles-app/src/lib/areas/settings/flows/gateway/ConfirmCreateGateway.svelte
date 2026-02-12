@@ -12,11 +12,11 @@
   import { isValidOnChainName } from '$lib/shared/utils/isValid';
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import Markdown from '$lib/shared/ui/content/markdown/Markdown.svelte';
+  import type { ReviewStepProps } from '$lib/shared/flow/contracts';
 
-  interface Props {
-    context: CreateGatewayFlowContext;
+  type Props = ReviewStepProps<CreateGatewayFlowContext> & {
     onCreated?: (gateway: string) => void;
-  }
+  };
 
   let { context, onCreated }: Props = $props();
 
@@ -57,6 +57,8 @@
     await runTask({
       name: 'Creating payment gateway…',
       promise: (async () => {
+        const runner: any = $wallet;
+        const factoryAddress = context.factoryAddress as `0x${string}`;
 
         const bindings = getBindings();
 
@@ -84,13 +86,13 @@
           context.metadataDigest
         ]);
 
-        const tx = await $wallet.sendTransaction!({
-          to: context.factoryAddress,
+        const tx = await runner.sendTransaction({
+          to: factoryAddress,
           value: 0n,
           data
         });
 
-        const receipt = await $wallet.provider.waitForTransaction(tx.hash);
+        const receipt = await runner.provider.waitForTransaction(tx.hash);
         if (!receipt) {
           throw new Error('No transaction receipt found.');
         }
