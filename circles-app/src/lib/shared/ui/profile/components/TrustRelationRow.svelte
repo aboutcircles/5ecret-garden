@@ -1,8 +1,7 @@
 <script lang="ts">
     import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-import { ProfilePopup as ProfilePage } from '$lib/areas/profile/ui/pages';
-    import { popupControls } from '$lib/shared/state/popup';
+    import { openProfilePopup } from '$lib/shared/ui/profile/openProfilePopup';
     import type { Address } from '@circles-sdk/utils';
     import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
 
@@ -13,7 +12,7 @@ import { ProfilePopup as ProfilePage } from '$lib/areas/profile/ui/pages';
     let { item }: Props = $props();
 
     function openProfile(addr: Address): void {
-        popupControls.open({ component: ProfilePage, props: { address: addr } });
+        openProfilePopup(addr);
     }
 
     function focusSearchInput(current?: HTMLElement | null): void {

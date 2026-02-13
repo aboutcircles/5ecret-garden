@@ -19,6 +19,10 @@
 
   let stopSse: (() => void) | null = null;
   const seenKeys = new Set<string>();
+  const isAuthHistoryError = $derived.by(() => {
+    const msg = (historyError ?? '').toLowerCase();
+    return msg.includes('auth') || msg.includes('401') || msg.includes('unauthor');
+  });
 
 
   onMount(async () => {
@@ -67,11 +71,18 @@
   <OrderDetailsView {snapshot} {statusEvents} />
 
   {#if historyError}
-    <div class="text-xs text-error mt-1">Failed to load status history: {historyError}</div>
+    {#if isAuthHistoryError}
+      <div class="alert alert-warning mt-1 text-sm">
+        <span>Sign in to view order status history.</span>
+        <a class="btn btn-xs btn-primary" href="/settings?tab=orders">Sign in</a>
+      </div>
+    {:else}
+      <div class="text-xs text-error mt-1">Failed to load status history: {historyError}</div>
+    {/if}
   {/if}
 
   <details class="mt-2">
-    <summary class="cursor-pointer text-sm opacity-70 hover:opacity-100">View raw JSON</summary>
+    <summary class="cursor-pointer text-sm opacity-70 hover:opacity-100">Advanced details</summary>
     <div class="bg-base-100 border rounded-xl shadow-sm overflow-hidden mt-2">
       <pre class="m-0 p-4 text-xs overflow-auto"><code>{jsonText}</code></pre>
     </div>

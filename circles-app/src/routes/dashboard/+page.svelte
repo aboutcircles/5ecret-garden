@@ -17,6 +17,13 @@
     // lucide (standalone) icon nodes
     import { Send as LSend, Banknote as LBanknote, BarChart3 as LBarChart3 } from 'lucide';
     import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
+    import HelpPopover from '$lib/shared/ui/primitives/HelpPopover.svelte';
+
+    const TOKEN_SOURCES_HELP = [
+        'Every person and group can issue its own Circles token.',
+        'Your balance is spread across tokens from people and groups you are connected to.',
+        'This is normal and expected in Circles.',
+    ];
 
     let mintableAmount: number = $state(0);
 
@@ -108,12 +115,18 @@
     {#snippet meta()}
         {#if !avatarState.isGroup}
             <button type="button" class="hover:underline cursor-pointer text-left" onclick={openBalances}>
-                {personalToken} individual tokens
+                From {personalToken} people
             </button>
             <span class="mx-1.5" aria-hidden="true">•</span>
             <button type="button" class="hover:underline cursor-pointer text-left" onclick={openBalances}>
-                {groupToken} group tokens
+                {groupToken} groups
             </button>
+            <HelpPopover
+                title="Why so many tokens?"
+                lines={TOKEN_SOURCES_HELP}
+                buttonClass="btn btn-ghost btn-xs btn-square"
+                widthClass="w-80"
+            />
         {/if}
     {/snippet}
 

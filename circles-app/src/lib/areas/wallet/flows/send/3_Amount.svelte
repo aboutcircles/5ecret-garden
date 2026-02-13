@@ -15,7 +15,7 @@
     import type { EnterAmountStepProps } from '$lib/shared/flow/contracts';
     import { get } from 'svelte/store';
     import { popupControls } from '$lib/shared/state/popup';
-    import { ProfilePopup } from '$lib/areas/profile/ui/pages';
+    import { openProfilePopup } from '$lib/shared/ui/profile/openProfilePopup';
     import ToStep from './1_To.svelte';
     import SelectAsset from './2_Asset.svelte';
     import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
@@ -222,13 +222,7 @@
 
     function openSelectedProfile() {
         if (!context.selectedAddress) return;
-        popupControls.open({
-            title: 'Profile',
-            component: ProfilePopup,
-            kind: 'inspect',
-            dismiss: 'backdrop',
-            props: { address: context.selectedAddress },
-        });
+        openProfilePopup(context.selectedAddress);
     }
 
     function tryAnotherToken() {
@@ -409,10 +403,10 @@
 
     {#if pathfindingFailed}
         <StepAlert
-            variant="error"
+            variant="warning"
             className="mt-3"
-            title="No trust route yet"
-            message="Your network can’t route a payment to this account yet."
+            title="Route not available yet"
+            message="Your current trust network cannot route this payment yet."
         >
             {#snippet action()}
                 <div class="flex flex-wrap gap-2">

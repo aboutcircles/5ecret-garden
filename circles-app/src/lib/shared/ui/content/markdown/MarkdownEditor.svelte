@@ -3,6 +3,7 @@
   import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import { Bold as LBold, Italic as LItalic, Link2 as LLink2 } from 'lucide';
   import { openInfoPopup } from '$lib/shared/ui/shell/confirmDialogs';
+  import { openTextPromptPopup } from '$lib/shared/ui/shell/promptDialogs';
 
   type Props = {
     value?: string;
@@ -45,10 +46,10 @@
     url: string;
   };
 
-  function onToolbarPointerDown(e: PointerEvent, action: () => void): void {
+  function onToolbarPointerDown(e: PointerEvent, action: () => void | Promise<void>): void {
     e.preventDefault();
     e.stopPropagation();
-    action();
+    void action();
   }
 
   function readSelection(): { text: string; start: number; end: number } | null {
@@ -207,7 +208,7 @@
     return null;
   }
 
-  function setLink(): void {
+  async function setLink(): Promise<void> {
     if (!canEdit) {
       return;
     }
@@ -225,7 +226,15 @@
     const savedStart = start;
     const savedEnd = end;
 
-    const input = window.prompt('Link URL', initialHref);
+    const input = await openTextPromptPopup({
+      title: 'Insert link',
+      label: 'Link URL',
+      initialValue: initialHref,
+      placeholder: 'https://example.org',
+      confirmLabel: 'Apply',
+      cancelLabel: 'Cancel',
+      validate: (value) => (normalizeHref(value) ? null : 'Invalid/unsafe URL.'),
+    });
     const cancelled = input === null;
 
     if (cancelled) {
@@ -307,7 +316,7 @@
     }
     if (key === 'l') {
       e.preventDefault();
-      setLink();
+      void setLink();
     }
   }
 </script>
@@ -364,7 +373,7 @@
         aria-label="Link"
         tabindex="-1"
         disabled={!canEdit}
-        onpointerdown={(e) => onToolbarPointerDown(e, setLink)}
+        onpointerdown={(e) => onToolbarPointerDown(e, () => setLink())}
       >
         <Lucide icon={LLink2} size={16} ariaLabel="" />
       </button>
@@ -421,16 +430,16 @@
   }
 
   .tb-tab[aria-pressed='true'] {
-    background: rgba(0, 0, 0, 0.08);
-    border-color: rgba(0, 0, 0, 0.2);
+    background: oklch(var(--b3) / 0.45);
+    border-color: oklch(var(--b3) / 0.8);
   }
 
   .tb {
     font: inherit;
     font-size: 12px;
     padding: 6px;
-    border: 1px solid rgba(0, 0, 0, 0.14);
-    background: rgba(0, 0, 0, 0.02);
+    border: 1px solid oklch(var(--b3) / 0.75);
+    background: oklch(var(--b2) / 0.35);
     border-radius: 8px;
     opacity: 0.92;
     cursor: pointer;
@@ -444,7 +453,7 @@
 
   .tb:hover {
     opacity: 1;
-    background: rgba(0, 0, 0, 0.04);
+    background: oklch(var(--b3) / 0.3);
   }
 
   .tb:disabled {
@@ -469,8 +478,8 @@
   .preview {
     padding: 10px 12px;
     border-radius: 8px;
-    border: 1px solid rgba(0, 0, 0, 0.12);
-    background: rgba(0, 0, 0, 0.02);
+    border: 1px solid oklch(var(--b3) / 0.75);
+    background: oklch(var(--b1) / 0.75);
   }
 
   .mmw[data-disabled='true'] .tb {

@@ -1,8 +1,7 @@
 <script lang="ts">
     import type { GroupRow } from '@circles-sdk/data';
-import { ProfilePopup } from '$lib/areas/profile/ui/pages';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-    import { popupControls } from '$lib/shared/state/popup';
+    import { openProfilePopup } from '$lib/shared/ui/profile/openProfilePopup';
     import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
     import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
 
@@ -10,7 +9,7 @@ import { ProfilePopup } from '$lib/areas/profile/ui/pages';
     let { item }: Props = $props();
 
     function openProfile() {
-        popupControls.open?.({ component: ProfilePopup, props: { address: item.group } });
+        openProfilePopup(item.group);
     }
 
     function focusGroupsSearchInput(current?: HTMLElement | null): void {

@@ -30,12 +30,25 @@
     let location = $state('');
     let imageUrl = $state('');
     let previewImageUrl = $state('');
+    let initialName = $state('');
+    let initialDescription = $state('');
+    let initialLocation = $state('');
+    let initialImageUrl = $state('');
+    let initialPreviewImageUrl = $state('');
 
     // editability
     let readonly = $state<boolean>(true);
     let connected = $derived((avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '').toLowerCase())
     let ra = $derived((resolvedAvatar ?? '').toLowerCase());
     let isOwner = $derived(!!connected && !!ra && connected === ra);
+    const hasChanges = $derived(
+        name !== initialName ||
+        description !== initialDescription ||
+        location !== initialLocation ||
+        imageUrl !== initialImageUrl ||
+        previewImageUrl !== initialPreviewImageUrl
+    );
+    const canSave = $derived(isOwner && hasChanges && name.trim().length > 0);
 
     $effect(() => {
         readonly = !isOwner;
@@ -67,11 +80,25 @@
                     ? profile.previewImageUrl
                     : '';
 
+            initialName = name;
+            initialDescription = description;
+            initialLocation = location;
+            initialImageUrl = imageUrl;
+            initialPreviewImageUrl = previewImageUrl;
+
         } catch (e: any) {
             error = String(e?.message ?? e);
         } finally {
             loading = false;
         }
+    }
+
+    function resetChanges(): void {
+        name = initialName;
+        description = initialDescription;
+        location = initialLocation;
+        imageUrl = initialImageUrl;
+        previewImageUrl = initialPreviewImageUrl;
     }
 
     async function saveProfile(): Promise<void> {
@@ -117,8 +144,9 @@
     </section>
 
     {#if isOwner}
-        <div class="flex justify-end">
-            <button class="btn btn-primary btn-sm" onclick={saveProfile}>Save</button>
+        <div class="sticky bottom-0 z-10 bg-base-100/90 backdrop-blur border border-base-300 rounded-xl p-3 flex items-center justify-end gap-2">
+            <button class="btn btn-ghost btn-sm" type="button" onclick={resetChanges} disabled={!hasChanges}>Cancel</button>
+            <button class="btn btn-primary btn-sm" type="button" onclick={saveProfile} disabled={!canSave}>Save</button>
         </div>
     {/if}
 </div>

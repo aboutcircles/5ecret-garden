@@ -28,6 +28,12 @@
     const formattedDangerScore = $derived(
         overallDangerScore === null ? null : overallDangerScore.toFixed(2)
     );
+    const trustScoreTitle = $derived.by(() => {
+        const lines: string[] = [];
+        if (trustScoreSummary) lines.push(trustScoreSummary);
+        if (formattedDangerScore !== null) lines.push(`Risk details: danger ${formattedDangerScore}`);
+        return lines.length > 0 ? lines.join('\n') : undefined;
+    });
 
     function applyTrustScoreResponse(response: TrusteeValidationResponse): void {
         trustScoreSupported = response.supported ?? null;
@@ -121,11 +127,8 @@
     {:else if trustScoreSupported === false}
         <span class="text-xs text-base-content/60">Trust score not supported</span>
     {:else if formattedGnosisTrustScore !== null}
-        <span class="text-xs text-base-content/70" title={trustScoreSummary || undefined}>
+        <span class="text-xs text-base-content/70" title={trustScoreTitle}>
             Trust score: <span class="font-semibold text-base-content">{formattedGnosisTrustScore}</span>
-            {#if formattedDangerScore !== null}
-                <span class="text-base-content/55"> · danger {formattedDangerScore}</span>
-            {/if}
         </span>
     {:else}
         <span class="text-xs text-base-content/45">&nbsp;</span>

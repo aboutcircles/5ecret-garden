@@ -1,8 +1,7 @@
 <script lang="ts">
   import type { Address } from '@circles-sdk/utils';
 
-  import { popupControls } from '$lib/shared/state/popup';
-import { ProfilePopup } from '$lib/areas/profile/ui/pages';
+  import { openProfilePopup } from '$lib/shared/ui/profile/openProfilePopup';
   import TrustHistoryHeatmap from '$lib/areas/trust/ui/TrustHistoryHeatmap.svelte';
   import { tokenTypeToString, transitiveTransfer } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
 
@@ -22,11 +21,7 @@ import { ProfilePopup } from '$lib/areas/profile/ui/pages';
   let trustAddress = $state<Address | undefined>(undefined);
 
   function openProfilePopupDemo() {
-    popupControls.open({
-      title: 'Profile popup demo',
-      component: ProfilePopup,
-      props: { address: demoAddress }
-    });
+    openProfilePopup(demoAddress, { title: 'Profile popup demo' });
   }
 </script>
 

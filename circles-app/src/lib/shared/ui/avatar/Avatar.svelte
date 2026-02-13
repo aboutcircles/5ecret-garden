@@ -1,10 +1,9 @@
 <script lang="ts">
-import { ProfilePopup as ProfilePage } from '$lib/areas/profile/ui/pages';
+  import { openProfilePopup } from '$lib/shared/ui/profile/openProfilePopup';
   import { getProfile } from '$lib/shared/utils/profile';
   import { getTypeString } from '$lib/shared/utils/helpers';
   import HorizontalAvatarLayout from './HorizontalAvatarLayout.svelte';
   import VerticalAvatarLayout from './VerticalAvatarLayout.svelte';
-  import { popupControls, type PopupContentDefinition } from '$lib/shared/state/popup';
   import { isVipProfileBookmark, profileBookmarksStore } from '$lib/areas/settings/state/profileBookmarks';
   import type { Address } from '@circles-sdk/utils';
   import type { AppProfileCore as Profile } from '$lib/shared/model/profile';
@@ -151,12 +150,7 @@ import { ProfilePopup as ProfilePage } from '$lib/areas/profile/ui/pages';
     const addr = normalizedAddress;
     if (!addr) return;
 
-    const nextPage: PopupContentDefinition = {
-      title: '',
-      component: ProfilePage,
-      props: { address: addr },
-    };
-    popupControls.open(nextPage);
+    openProfilePopup(addr, { title: '' });
 
     e?.stopPropagation?.();
     e?.preventDefault?.();

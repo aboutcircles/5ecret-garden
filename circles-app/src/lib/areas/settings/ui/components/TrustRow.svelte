@@ -1,8 +1,7 @@
 <script lang="ts">
   import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-  import { ProfilePopup } from '$lib/areas/profile/ui/pages';
-  import { popupControls } from '$lib/shared/state/popup';
+  import { openProfilePopup } from '$lib/shared/ui/profile/openProfilePopup';
   import type { TrustRow as TrustRowType } from '$lib/areas/settings/model/gatewayTypes';
   import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
 
@@ -22,7 +21,7 @@
   );
 
   function openProfile(): void {
-    popupControls.open?.({ component: ProfilePopup, props: { address: item.trustReceiver } });
+    openProfilePopup(item.trustReceiver);
   }
 
   function focusSearchInput(anchor?: HTMLElement | null): void {

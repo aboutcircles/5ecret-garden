@@ -2,8 +2,7 @@
   import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import { formatUnits } from 'ethers';
-  import { popupControls } from '$lib/shared/state/popup';
-import { ProfilePopup } from '$lib/areas/profile/ui/pages';
+  import { openProfilePopup } from '$lib/shared/ui/profile/openProfilePopup';
   import type { Address } from '@circles-sdk/utils';
   import type { TrustRelation } from '@circles-sdk/data';
   import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
@@ -23,7 +22,7 @@ import { ProfilePopup } from '$lib/areas/profile/ui/pages';
   let { item }: Props = $props();
 
   function openProfile(addr: Address): void {
-    popupControls.open({ component: ProfilePopup, props: { address: addr } });
+    openProfilePopup(addr);
   }
 
   function formatAmount(value: bigint): string {
