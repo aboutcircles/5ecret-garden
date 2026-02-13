@@ -11,9 +11,16 @@
         amount?: number;
         maxAmountCircles?: number;
         routeLoading?: boolean;
+        onBackspaceAtEmpty?: () => void;
     }
 
-    let { balanceRow, amount = $bindable(0), maxAmountCircles = -1, routeLoading = false }: Props = $props();
+    let {
+        balanceRow,
+        amount = $bindable(0),
+        maxAmountCircles = -1,
+        routeLoading = false,
+        onBackspaceAtEmpty,
+    }: Props = $props();
 
     let inputElement: HTMLInputElement | undefined = $state();
     let mask: IMask.InputMask<any> | null = null;
@@ -106,6 +113,21 @@
         mask?.destroy();
         mask = null;
     });
+
+    function onAmountKeydown(event: KeyboardEvent): void {
+        if (event.key !== 'Backspace') return;
+        if (!inputElement) return;
+
+        const isEmpty = inputElement.value.trim().length === 0;
+        const selectionStart = inputElement.selectionStart ?? 0;
+        const selectionEnd = inputElement.selectionEnd ?? 0;
+        const caretAtBeginning = selectionStart === 0 && selectionEnd === 0;
+
+        if (!isEmpty || !caretAtBeginning) return;
+
+        event.preventDefault();
+        onBackspaceAtEmpty?.();
+    }
 </script>
 
 <div class="mt-3 rounded-2xl bg-base-200/60 p-4 space-y-3">
@@ -115,6 +137,7 @@
         <input
                 bind:this={inputElement}
                 data-send-amount-input
+                data-send-step-initial-input
                 type="text"
                 inputmode="decimal"
                 autocomplete="off"
@@ -123,6 +146,7 @@
                 placeholder="0.00"
                 class="w-full bg-transparent border-0 p-0 text-4xl font-semibold placeholder-base-content/30 focus:outline-none focus-visible:outline-none focus:ring-0"
                 style="caret-color: currentColor;"
+                onkeydown={onAmountKeydown}
         />
         <span class="text-xl md:text-2xl text-base-content/45 font-medium">Circles</span>
     </div>

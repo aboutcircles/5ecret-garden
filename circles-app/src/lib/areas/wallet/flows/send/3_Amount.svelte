@@ -197,6 +197,18 @@
         });
     }
 
+    function onStepKeydown(e: KeyboardEvent) {
+        if (e.key !== 'Enter') return;
+
+        const target = e.target;
+        if (!(target instanceof HTMLInputElement)) return;
+        if (!target.matches('[data-send-amount-input]')) return;
+
+        e.preventDefault();
+        if (!canContinue) return;
+        void handleSelect();
+    }
+
     function onMaxTransfersChange(e: Event) {
         const target = e.target as HTMLInputElement;
         const value = parseInt(target.value);
@@ -234,6 +246,24 @@
                 props: { context },
             });
         }
+    }
+
+    function focusRecipientSearchInputAtEnd(attempt = 0): void {
+        const input = document.querySelector<HTMLInputElement>('[data-send-recipient-search-input]');
+        if (input) {
+            input.focus();
+            const len = input.value.length;
+            input.setSelectionRange?.(len, len);
+            return;
+        }
+
+        if (attempt >= 4) return;
+        requestAnimationFrame(() => focusRecipientSearchInputAtEnd(attempt + 1));
+    }
+
+    function onAmountBackspaceAtEmpty(): void {
+        editRecipient();
+        requestAnimationFrame(() => focusRecipientSearchInputAtEnd());
     }
 
     function focusAmountInput() {
@@ -290,47 +320,60 @@
 </script>
 
 <FlowDecoration>
-    <div class="w-full space-y-4">
+    <div class="w-full space-y-4" onkeydown={onStepKeydown}>
     <FlowStepHeader step={2} total={3} title="Amount" labels={['Recipient', 'Amount', 'Review']} />
 
-    <RowFrame clickable={true} noLeading={true} onclick={editRecipient}>
-        <div class="w-full flex items-center justify-between gap-3">
-            <div class="min-w-0">
-                <div class="menu-title p-0">To</div>
-                <Avatar address={context.selectedAddress} clickable={true} view="horizontal" />
+    <button
+        type="button"
+        class="w-full text-left bg-transparent border-0 p-0"
+        onclick={editRecipient}
+        data-send-step-initial-focus
+    >
+        <RowFrame clickable={true} noLeading={true}>
+            <div class="w-full flex items-center justify-between gap-3">
+                <div class="min-w-0">
+                    <div class="menu-title p-0">To</div>
+                    <Avatar address={context.selectedAddress} clickable={true} view="horizontal" />
+                </div>
+                <ChangeButton />
             </div>
-            <ChangeButton />
-        </div>
-    </RowFrame>
+        </RowFrame>
+    </button>
 
-    <RowFrame clickable={true} noLeading={true} onclick={tryAnotherToken} class="mt-1">
-        <div class="w-full flex items-center justify-between gap-3">
-            <div class="min-w-0">
-                <div class="menu-title p-0">Route</div>
-                {#if isAutoRoute}
-                    <div class="flex items-center gap-1">
-                        <span class="font-medium">Auto route</span>
-                        <HelpPopover
-                                title="Auto route"
-                                lines={[
-                                    'Uses your trust network to deliver the payment.',
-                                    'Routing can change which Circles you hold — not how many.',
-                                ]}
-                                widthClass="w-72"
+    <button
+        type="button"
+        class="w-full text-left bg-transparent border-0 p-0 mt-1"
+        onclick={tryAnotherToken}
+    >
+        <RowFrame clickable={true} noLeading={true}>
+            <div class="w-full flex items-center justify-between gap-3">
+                <div class="min-w-0">
+                    <div class="menu-title p-0">Route</div>
+                    {#if isAutoRoute}
+                        <div class="flex items-center gap-1">
+                            <span class="font-medium">Auto route</span>
+                            <HelpPopover
+                                    title="Auto route"
+                                    lines={[
+                                        'Uses your trust network to deliver the payment.',
+                                        'Routing can change which Circles you hold — not how many.',
+                                    ]}
+                                    widthClass="w-72"
+                            />
+                        </div>
+                        <div class="text-xs text-base-content/70">Uses your trust network</div>
+                    {:else}
+                        <Avatar
+                                address={context.selectedAsset?.tokenOwner}
+                                clickable={true}
+                                view="horizontal"
                         />
-                    </div>
-                    <div class="text-xs text-base-content/70">Uses your trust network</div>
-                {:else}
-                    <Avatar
-                            address={context.selectedAsset?.tokenOwner}
-                            clickable={true}
-                            view="horizontal"
-                    />
-                {/if}
+                    {/if}
+                </div>
+                <ChangeButton />
             </div>
-            <ChangeButton />
-        </div>
-    </RowFrame>
+        </RowFrame>
+    </button>
 
     <SelectAmount
             maxAmountCircles={context.selectedAsset.isErc20
@@ -339,6 +382,7 @@
             asset={context.selectedAsset}
             bind:amount={context.amount}
             routeLoading={isAutoRoute && calculatingPath}
+            onBackspaceAtEmpty={onAmountBackspaceAtEmpty}
     />
 
     {#if pathfindingFailed}

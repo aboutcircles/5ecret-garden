@@ -6,6 +6,7 @@
     import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
     import { popupControls, type PopupContentDefinition } from '$lib/shared/state/popup';
     import TransactionDetailsPopup from './TransactionDetailsPopup.svelte';
+    import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
 
     interface Props { item: TransactionHistoryRow; }
     let { item }: Props = $props();
@@ -60,47 +61,30 @@
         popupControls.open(def);
     }
 
-    function focusTransactionSearchInput(): void {
-        const input = document.querySelector<HTMLInputElement>('[data-transactions-search-input]');
+    function focusTransactionSearchInput(anchor?: HTMLElement | null): void {
+        const scope = anchor?.closest<HTMLElement>('[data-transactions-list-scope]')
+            ?? document.querySelector<HTMLElement>('[data-transactions-list-scope]');
+        const input = scope?.querySelector<HTMLInputElement>('[data-transactions-search-input]')
+            ?? document.querySelector<HTMLInputElement>('[data-transactions-search-input]');
         input?.focus();
     }
 
+    const listNavigator = createKeyboardListNavigator({
+        getRows: (anchor) => {
+            const scope = anchor?.closest<HTMLElement>('[data-transactions-list-scope]')
+                ?? document.querySelector<HTMLElement>('[data-transactions-list-scope]');
+            return Array.from((scope ?? document).querySelectorAll<HTMLElement>('[data-transaction-row]'));
+        },
+        focusInput: focusTransactionSearchInput,
+        onActivateRow: openDetails,
+    });
+
     function onRowKeydown(event: KeyboardEvent): void {
-        const current = event.currentTarget as HTMLElement | null;
-        if (!current) return;
-
-        const target = event.target as HTMLElement | null;
-        const isNestedTarget = !!target && target !== current;
-
-        if (event.key === 'Enter' || event.key === ' ') {
-            if (isNestedTarget) return;
-            event.preventDefault();
-            openDetails();
-            return;
-        }
-
-        if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
-
-        const scope = current.closest<HTMLElement>('[data-transactions-list-scope]');
-        const rows = Array.from((scope ?? document).querySelectorAll<HTMLElement>('[data-transaction-row]'));
-        const index = rows.indexOf(current);
-        if (index === -1) return;
-
-        event.preventDefault();
-
-        if (event.key === 'ArrowUp' && index === 0) {
-            focusTransactionSearchInput();
-            return;
-        }
-
-        const nextIndex = event.key === 'ArrowDown' ? index + 1 : index - 1;
-        if (nextIndex < 0 || nextIndex >= rows.length) return;
-        rows[nextIndex]?.focus();
+        listNavigator.onRowKeydown(event);
     }
 
     function onRowClick(event: MouseEvent): void {
-        const current = event.currentTarget as HTMLElement | null;
-        current?.focus();
+        listNavigator.onRowClick(event);
         openDetails();
     }
 

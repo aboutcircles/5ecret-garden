@@ -1,17 +1,26 @@
+import { focusActiveTabAbove } from './listInputArrowDown';
+
 export interface KeyboardListNavigatorOptions {
-  getRows: () => HTMLElement[];
-  focusInput: () => void;
+  getRows: (anchor?: HTMLElement | null) => HTMLElement[];
+  focusInput: (anchor?: HTMLElement | null) => void;
   onActivateRow?: (row: HTMLElement) => void;
 }
 
 export function createKeyboardListNavigator(options: KeyboardListNavigatorOptions) {
   function focusFirstRow(): void {
-    options.getRows()[0]?.focus();
+    options.getRows(null)[0]?.focus();
   }
 
   function onInputArrowDown(event: KeyboardEvent): void {
+    if (event.key === 'ArrowUp') {
+      if (focusActiveTabAbove(event.currentTarget as HTMLElement | null)) {
+        event.preventDefault();
+      }
+      return;
+    }
+
     if (event.key !== 'ArrowDown') return;
-    const rows = options.getRows();
+    const rows = options.getRows(event.currentTarget as HTMLElement | null);
     if (rows.length === 0) return;
     event.preventDefault();
     rows[0]?.focus();
@@ -20,6 +29,15 @@ export function createKeyboardListNavigator(options: KeyboardListNavigatorOption
   function onRowKeydown(event: KeyboardEvent): void {
     const current = event.currentTarget as HTMLElement | null;
     if (!current) return;
+
+    if (event.key === 'Escape') {
+      // If a list row currently has focus, move focus back to the input and consume this ESC.
+      // A subsequent ESC (while input is focused) is not intercepted here and can bubble up.
+      event.preventDefault();
+      event.stopPropagation();
+      options.focusInput(current);
+      return;
+    }
 
     const target = event.target as HTMLElement | null;
     const isNestedTarget = !!target && target !== current;
@@ -33,16 +51,24 @@ export function createKeyboardListNavigator(options: KeyboardListNavigatorOption
       return;
     }
 
+    if (event.key === 'ArrowLeft') {
+      const rows = options.getRows(current);
+      if (rows.length === 0) return;
+      event.preventDefault();
+      rows[0]?.focus();
+      return;
+    }
+
     if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
 
-    const rows = options.getRows();
+    const rows = options.getRows(current);
     const index = rows.indexOf(current);
     if (index === -1) return;
 
     event.preventDefault();
 
     if (event.key === 'ArrowUp' && index === 0) {
-      options.focusInput();
+      options.focusInput(current);
       return;
     }
 

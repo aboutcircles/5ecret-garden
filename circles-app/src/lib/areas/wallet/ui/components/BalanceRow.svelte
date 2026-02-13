@@ -16,6 +16,7 @@
     import { circles } from '$lib/shared/state/circles';
     import { get } from 'svelte/store';
     import { formatEther } from 'ethers';
+    import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
 
     interface Props { item: TokenBalanceRow; }
     let { item }: Props = $props();
@@ -80,47 +81,29 @@
     const dispatch = createEventDispatcher<{ click: void }>();
     function onClick() { dispatch('click'); }
 
-    function focusBalancesSearchInput(): void {
-        const input = document.querySelector<HTMLInputElement>('[data-balances-search-input], [data-select-asset-search-input]');
+    function focusBalancesSearchInput(anchor?: HTMLElement | null): void {
+        const scope = anchor?.closest<HTMLElement>('[data-balances-list-scope], [data-select-asset-list-scope]');
+        const input = scope?.querySelector<HTMLInputElement>('[data-balances-search-input], [data-select-asset-search-input]')
+            ?? document.querySelector<HTMLInputElement>('[data-balances-search-input], [data-select-asset-search-input]');
         input?.focus();
     }
 
+    const listNavigator = createKeyboardListNavigator({
+        getRows: (anchor) => {
+            const scope = anchor?.closest<HTMLElement>('[data-balances-list-scope], [data-select-asset-list-scope]')
+                ?? document.querySelector<HTMLElement>('[data-balances-list-scope], [data-select-asset-list-scope]');
+            return Array.from((scope ?? document).querySelectorAll<HTMLElement>('[data-balance-row]'));
+        },
+        focusInput: focusBalancesSearchInput,
+        onActivateRow: () => onClick(),
+    });
+
     function onRowKeydown(event: KeyboardEvent): void {
-        const current = event.currentTarget as HTMLElement | null;
-        if (!current) return;
-
-        const target = event.target as HTMLElement | null;
-        const isNestedTarget = !!target && target !== current;
-
-        if (event.key === 'Enter' || event.key === ' ') {
-            if (isNestedTarget) return;
-            event.preventDefault();
-            onClick();
-            return;
-        }
-
-        if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
-
-        const scope = current.closest<HTMLElement>('[data-balances-list-scope], [data-select-asset-list-scope]');
-        const rows = Array.from((scope ?? document).querySelectorAll<HTMLElement>('[data-balance-row]'));
-        const index = rows.indexOf(current);
-        if (index === -1) return;
-
-        event.preventDefault();
-
-        if (event.key === 'ArrowUp' && index === 0) {
-            focusBalancesSearchInput();
-            return;
-        }
-
-        const nextIndex = event.key === 'ArrowDown' ? index + 1 : index - 1;
-        if (nextIndex < 0 || nextIndex >= rows.length) return;
-        rows[nextIndex]?.focus();
+        listNavigator.onRowKeydown(event);
     }
 
     function onRowWrapperClick(event: MouseEvent): void {
-        const current = event.currentTarget as HTMLElement | null;
-        current?.focus();
+        listNavigator.onRowClick(event);
         onClick();
     }
 

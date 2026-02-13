@@ -4,6 +4,7 @@
 import { ProfilePopup as ProfilePage } from '$lib/areas/profile/ui/pages';
     import { popupControls } from '$lib/shared/state/popup';
     import type { Address } from '@circles-sdk/utils';
+    import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
 
     interface Props {
         item: Address;
@@ -15,48 +16,31 @@ import { ProfilePopup as ProfilePage } from '$lib/areas/profile/ui/pages';
         popupControls.open({ component: ProfilePage, props: { address: addr } });
     }
 
-    function focusSearchInput(current: HTMLElement): void {
-        const scope = current.closest<HTMLElement>('[data-profile-relations-list-scope]');
+    function focusSearchInput(current?: HTMLElement | null): void {
+        const scope = current?.closest<HTMLElement>('[data-profile-relations-list-scope]')
+            ?? document.querySelector<HTMLElement>('[data-profile-relations-list-scope]');
         const input = scope?.querySelector<HTMLInputElement>('[data-profile-relations-search-input]');
         input?.focus();
     }
 
+    const listNavigator = createKeyboardListNavigator({
+        getRows: (anchor) => {
+            const scope = anchor?.closest<HTMLElement>('[data-profile-relations-list-scope]')
+                ?? document.querySelector<HTMLElement>('[data-profile-relations-list-scope]');
+            return Array.from((scope ?? document).querySelectorAll<HTMLElement>('[data-trust-relation-row]'));
+        },
+        focusInput: (anchor) => {
+            focusSearchInput(anchor);
+        },
+        onActivateRow: () => openProfile(item),
+    });
+
     function onRowKeydown(event: KeyboardEvent): void {
-        const current = event.currentTarget as HTMLElement | null;
-        if (!current) return;
-
-        const target = event.target as HTMLElement | null;
-        const isNestedTarget = !!target && target !== current;
-
-        if (event.key === 'Enter' || event.key === ' ') {
-            if (isNestedTarget) return;
-            event.preventDefault();
-            openProfile(item);
-            return;
-        }
-
-        if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
-
-        const scope = current.closest<HTMLElement>('[data-profile-relations-list-scope]');
-        const rows = Array.from((scope ?? document).querySelectorAll<HTMLElement>('[data-trust-relation-row]'));
-        const index = rows.indexOf(current);
-        if (index === -1) return;
-
-        event.preventDefault();
-
-        if (event.key === 'ArrowUp' && index === 0) {
-            focusSearchInput(current);
-            return;
-        }
-
-        const nextIndex = event.key === 'ArrowDown' ? index + 1 : index - 1;
-        if (nextIndex < 0 || nextIndex >= rows.length) return;
-        rows[nextIndex]?.focus();
+        listNavigator.onRowKeydown(event);
     }
 
     function onRowClick(event: MouseEvent): void {
-        const current = event.currentTarget as HTMLElement | null;
-        current?.focus();
+        listNavigator.onRowClick(event);
         openProfile(item);
     }
 </script>

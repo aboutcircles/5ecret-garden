@@ -59,6 +59,11 @@
       subtitle="Choose route"
       labels={['Recipient', 'Amount', 'Review']}
     />
-    <SelectAsset {selectedAsset} balances={circlesBalances} {onselect} />
+    <SelectAsset
+      {selectedAsset}
+      balances={circlesBalances}
+      inputDataAttribute="data-send-step-initial-input"
+      {onselect}
+    />
   </div>
 </FlowDecoration>

@@ -3,6 +3,32 @@
     import { popupControls, popupState } from '$lib/shared/state/popup';
     import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
     import { ArrowLeft as LArrowLeft, X as LX } from 'lucide';
+    import { focusElement, shouldAutoFocusTextInput } from '$lib/shared/ui/focus/focusPolicy';
+
+    let popupEl: HTMLDivElement | null = $state(null);
+    let previouslyFocusedEl: HTMLElement | null = null;
+    let wasOpen = false;
+    let lastTopPageKey = '';
+
+    const FOCUSABLE_SELECTOR = [
+        'a[href]',
+        'button:not([disabled])',
+        'input:not([disabled]):not([type="hidden"])',
+        'select:not([disabled])',
+        'textarea:not([disabled])',
+        '[tabindex]:not([tabindex="-1"])'
+    ].join(',');
+
+    function getFocusableElements(scope: ParentNode | null): HTMLElement[] {
+        if (!scope) return [];
+        const all = Array.from(scope.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+        return all.filter((el) => {
+            if (el.hasAttribute('disabled')) return false;
+            if (el.getAttribute('aria-hidden') === 'true') return false;
+            if (el.getClientRects().length === 0) return false;
+            return true;
+        });
+    }
 
     function isEditableEl(el: Element | null): boolean {
         if (!(el instanceof HTMLElement)) return false;
@@ -57,6 +83,26 @@
     function handleKeydown(e: KeyboardEvent) {
         if (!$popupState.content) return;
 
+        if (e.key === 'Tab') {
+            const focusables = getFocusableElements(popupEl);
+            if (!focusables.length) return;
+
+            const first = focusables[0];
+            const last = focusables[focusables.length - 1];
+            const active = document.activeElement as HTMLElement | null;
+
+            if (e.shiftKey) {
+                if (!active || active === first || !popupEl?.contains(active)) {
+                    e.preventDefault();
+                    focusElement(last);
+                }
+            } else if (!active || active === last || !popupEl?.contains(active)) {
+                e.preventDefault();
+                focusElement(first);
+            }
+            return;
+        }
+
         if (e.key === 'Escape') {
             popupControls.close();
             return;
@@ -97,6 +143,7 @@
     let top = $derived(Math.max(0, pages.length - 1));
 
     const showTitle = $derived(Boolean($popupState.content?.title) && !$popupState.content?.hideTitle);
+    const popupTitleText = $derived($popupState.content?.title ?? 'Popup');
 
     // Guarantee keys are unique and stable per page object
     const _ids = new WeakMap<any, string>();
@@ -110,6 +157,54 @@
         _ids.set(page, id);
         return id;
     }
+
+    $effect(() => {
+        const isOpen = Boolean($popupState.content);
+        if (isOpen && !wasOpen) {
+            previouslyFocusedEl = document.activeElement instanceof HTMLElement
+                ? document.activeElement
+                : null;
+        }
+
+        if (!isOpen && wasOpen) {
+            focusElement(previouslyFocusedEl);
+            previouslyFocusedEl = null;
+            lastTopPageKey = '';
+        }
+
+        wasOpen = isOpen;
+    });
+
+    $effect(() => {
+        if (!$popupState.content || !popupEl) return;
+
+        const topPage = popupEl.querySelector<HTMLElement>('.popup-page.is-top');
+        if (!topPage) return;
+
+        const pageKey = topPage.dataset.popupPageKey ?? '';
+        if (pageKey === lastTopPageKey) return;
+        lastTopPageKey = pageKey;
+
+        queueMicrotask(() => {
+            const active = document.activeElement as HTMLElement | null;
+            if (active && topPage.contains(active)) return;
+
+            const preferred = shouldAutoFocusTextInput()
+                ? (
+                    topPage.querySelector<HTMLElement>('[data-popup-initial-input], [data-send-step-initial-input]')
+                    ?? topPage.querySelector<HTMLElement>('[data-popup-initial-focus], [data-send-step-initial-focus]')
+                )
+                : topPage.querySelector<HTMLElement>('[data-popup-initial-focus], [data-send-step-initial-focus]');
+
+            if (preferred) {
+                focusElement(preferred);
+                return;
+            }
+
+            const fallback = popupEl?.querySelector<HTMLElement>('[data-popup-close-control], #popup-title');
+            focusElement(fallback);
+        });
+    });
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -124,6 +219,7 @@
     ></button>
 
     <div
+        bind:this={popupEl}
         class="popup rounded-t-lg overflow-y-auto"
         role="dialog"
         aria-modal="true"
@@ -134,6 +230,7 @@
             <!-- Header -->
             <div class="flex items-center gap-3 mb-4">
                 <button
+                        data-popup-close-control
                         class="btn btn-ghost btn-circle btn-sm"
                         onclick={onClose}
                         aria-label={$popupState.stack.length > 0 ? 'Back' : 'Close'}
@@ -149,7 +246,7 @@
 
                 {#if showTitle}
                     <h2 id="popup-title" class="text-xl font-bold">
-                        {$popupState.content.title}
+                        {popupTitleText}
                     </h2>
                 {/if}
             </div>
@@ -160,6 +257,7 @@
                     {@const Component = page.component}
                     <div
                             class={`popup-page ${i === top ? 'is-top' : 'is-hidden'}`}
+                            data-popup-page-key={keyFor(page)}
                             aria-hidden={i === top ? 'false' : 'true'}
                             inert={i !== top}
                     >

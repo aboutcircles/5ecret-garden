@@ -61,13 +61,14 @@
 </script>
 
 <FlowDecoration>
-  <div class="w-full">
+  <div class="w-full" tabindex="-1" data-send-step-initial-focus>
     <FlowStepHeader step={1} total={3} title="Recipient" labels={['Recipient', 'Amount', 'Review']} />
   </div>
   <div class="w-full">
     <SearchAvatar
       avatarTypes={["CrcV2_RegisterHuman","CrcV2_RegisterOrganization"]}
       selectedAddress={context.selectedAddress}
+      inputDataAttribute="data-send-step-initial-input data-send-recipient-search-input"
       {onselect}
       searchType="send"
     />

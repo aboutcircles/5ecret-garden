@@ -4,6 +4,7 @@ import { ProfilePopup } from '$lib/areas/profile/ui/pages';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import { popupControls } from '$lib/shared/state/popup';
     import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
+    import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
 
     interface Props { item: GroupRow; }
     let { item }: Props = $props();
@@ -12,48 +13,29 @@ import { ProfilePopup } from '$lib/areas/profile/ui/pages';
         popupControls.open?.({ component: ProfilePopup, props: { address: item.group } });
     }
 
-    function focusGroupsSearchInput(current: HTMLElement): void {
-        const scope = current.closest<HTMLElement>('[data-groups-list-scope]');
+    function focusGroupsSearchInput(current?: HTMLElement | null): void {
+        const scope = current?.closest<HTMLElement>('[data-groups-list-scope]')
+            ?? document.querySelector<HTMLElement>('[data-groups-list-scope]');
         const input = scope?.querySelector<HTMLInputElement>('[data-groups-search-input]');
         input?.focus();
     }
 
+    const listNavigator = createKeyboardListNavigator({
+        getRows: (anchor) => {
+            const scope = anchor?.closest<HTMLElement>('[data-groups-list-scope]')
+                ?? document.querySelector<HTMLElement>('[data-groups-list-scope]');
+            return Array.from((scope ?? document).querySelectorAll<HTMLElement>('[data-group-row]'));
+        },
+        focusInput: focusGroupsSearchInput,
+        onActivateRow: openProfile,
+    });
+
     function onRowKeydown(event: KeyboardEvent): void {
-        const current = event.currentTarget as HTMLElement | null;
-        if (!current) return;
-
-        const target = event.target as HTMLElement | null;
-        const isNestedTarget = !!target && target !== current;
-
-        if (event.key === 'Enter' || event.key === ' ') {
-            if (isNestedTarget) return;
-            event.preventDefault();
-            openProfile();
-            return;
-        }
-
-        if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
-
-        const scope = current.closest<HTMLElement>('[data-groups-list-scope]');
-        const rows = Array.from((scope ?? document).querySelectorAll<HTMLElement>('[data-group-row]'));
-        const index = rows.indexOf(current);
-        if (index === -1) return;
-
-        event.preventDefault();
-
-        if (event.key === 'ArrowUp' && index === 0) {
-            focusGroupsSearchInput(current);
-            return;
-        }
-
-        const nextIndex = event.key === 'ArrowDown' ? index + 1 : index - 1;
-        if (nextIndex < 0 || nextIndex >= rows.length) return;
-        rows[nextIndex]?.focus();
+        listNavigator.onRowKeydown(event);
     }
 
     function onRowClick(event: MouseEvent): void {
-        const current = event.currentTarget as HTMLElement | null;
-        current?.focus();
+        listNavigator.onRowClick(event);
         openProfile();
     }
 </script>

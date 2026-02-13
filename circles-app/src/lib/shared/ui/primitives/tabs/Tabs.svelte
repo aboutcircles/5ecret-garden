@@ -202,8 +202,10 @@
     };
 
     const key = e.key;
-    if (key === 'ArrowRight' || key === 'ArrowDown') { e.preventDefault(); move(1); return; }
-    if (key === 'ArrowLeft'  || key === 'ArrowUp')   { e.preventDefault(); move(-1); return; }
+    if (key === 'ArrowRight') { e.preventDefault(); move(1); return; }
+    if (key === 'ArrowLeft')  { e.preventDefault(); move(-1); return; }
+    if (key === 'ArrowDown')  { e.preventDefault(); focusFirstBelowTabs(); return; }
+    if (key === 'ArrowUp')    { e.preventDefault(); focusLastAboveTabs(); return; }
     if (key === 'Home')                              { e.preventDefault(); select(enabled[0].id, true); return; }
     if (key === 'End')                               { e.preventDefault(); select(enabled[enabled.length - 1].id, true); return; }
   }
@@ -257,6 +259,49 @@
   let scroller: HTMLDivElement | null = null;
   let canScrollLeft = $state(false);
   let canScrollRight = $state(false);
+  let tabsNavEl: HTMLDivElement | null = null;
+  let panelsEl: HTMLDivElement | null = null;
+
+  const FOCUSABLE_SELECTOR = [
+    'a[href]',
+    'button:not([disabled])',
+    'input:not([disabled]):not([type="hidden"])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    '[tabindex]:not([tabindex="-1"])'
+  ].join(',');
+
+  function getFocusable(scope: ParentNode | null): HTMLElement[] {
+    if (!scope) return [];
+    const all = Array.from(scope.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+    return all.filter((el) => el.getClientRects().length > 0 && !el.hasAttribute('disabled'));
+  }
+
+  function focusFirstBelowTabs(): void {
+    const inPanels = getFocusable(panelsEl);
+    if (inPanels.length > 0) {
+      inPanels[0]?.focus();
+      return;
+    }
+
+    const all = getFocusable(document);
+    const afterTabs = all.find((el) => {
+      if (!tabsNavEl) return false;
+      const pos = tabsNavEl.compareDocumentPosition(el);
+      return Boolean(pos & Node.DOCUMENT_POSITION_FOLLOWING);
+    });
+    afterTabs?.focus();
+  }
+
+  function focusLastAboveTabs(): void {
+    const all = getFocusable(document).filter((el) => !tabsNavEl?.contains(el));
+    const beforeTabs = all.filter((el) => {
+      if (!tabsNavEl) return false;
+      const pos = tabsNavEl.compareDocumentPosition(el);
+      return Boolean(pos & Node.DOCUMENT_POSITION_PRECEDING);
+    });
+    beforeTabs[beforeTabs.length - 1]?.focus();
+  }
 
   function updateScrollShadows() {
     if (!scroller) return;
@@ -291,16 +336,17 @@
   });
 </script>
 
-<div class="relative">
+<div class="relative" bind:this={tabsNavEl}>
   <div class="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-base-300 z-0"></div>
 
   <div class={`pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-base-100 to-transparent transition-opacity duration-150 ${canScrollLeft ? 'opacity-100' : 'opacity-0'}`}></div>
   <div class={`pointer-events-none absolute left-0 bottom-0 w-10 h-6 bg-gradient-to-b from-base-100 to-transparent transition-opacity duration-150 z-10 ${canScrollLeft ? 'opacity-100' : 'opacity-0'}`}></div>
+  <!-- Intentionally excluded from keyboard tab order: tabs are fully keyboard navigable via tab buttons + arrow keys. -->
   <button
       type="button"
       class={`btn btn-ghost btn-xs absolute left-1 top-1/2 -translate-y-1/2 z-10 ${canScrollLeft ? '' : 'opacity-0 pointer-events-none'}`}
       aria-hidden={!canScrollLeft}
-      tabindex={canScrollLeft ? 0 : -1}
+      tabindex={-1}
       onclick={() => nudge(-1)}
   >
     <img src="/chevron-right.svg" alt="Scroll left" class="w-4 h-4 rotate-180" />
@@ -308,11 +354,12 @@
 
   <div class={`pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-base-100 to-transparent transition-opacity duration-150 ${canScrollRight ? 'opacity-100' : 'opacity-0'}`}></div>
   <div class={`pointer-events-none absolute right-0 bottom-0 w-10 h-6 bg-gradient-to-b from-base-100 to-transparent transition-opacity duration-150 z-10 ${canScrollRight ? 'opacity-100' : 'opacity-0'}`}></div>
+  <!-- Intentionally excluded from keyboard tab order: tabs are fully keyboard navigable via tab buttons + arrow keys. -->
   <button
       type="button"
       class={`btn btn-ghost btn-xs absolute right-1 top-1/2 -translate-y-1/2 z-10 ${canScrollRight ? '' : 'opacity-0 pointer-events-none'}`}
       aria-hidden={!canScrollRight}
-      tabindex={canScrollRight ? 0 : -1}
+      tabindex={-1}
       onclick={() => nudge(1)}
   >
     <img src="/chevron-right.svg" alt="Scroll right" class="w-4 h-4" />
@@ -320,7 +367,7 @@
 
   <div
       role="tablist"
-      tabindex="0"
+      tabindex="-1"
       id={id}
       aria-orientation="horizontal"
       class={tablistClasses}
@@ -333,6 +380,7 @@
           type="button"
           role="tab"
           id={`${id}-tab-${t.id}`}
+          data-popup-initial-focus={active === t.id ? 'true' : undefined}
           class={`tab ${buttonSizeClass} flex-none whitespace-nowrap min-w-max max-w-[calc(100%-4rem)] overflow-hidden`}
           class:tab-active={active === t.id}
           class:tab-disabled={t.disabled}
@@ -355,6 +403,6 @@
   </div>
 </div>
 
-<div>
+<div bind:this={panelsEl}>
   {@render children?.()}
 </div>

@@ -24,11 +24,24 @@
     inputEl = $bindable(null)
   }: Props = $props();
 
+  function handleInputKeydown(event: KeyboardEvent): void {
+    onInputKeydown?.(event);
+  }
+
   $effect(() => {
     if (!inputEl || !inputDataAttribute) return;
-    inputEl.setAttribute(inputDataAttribute, 'true');
+    const attrs = inputDataAttribute
+      .split(/\s+/)
+      .map((it) => it.trim())
+      .filter(Boolean);
+    for (const attr of attrs) {
+      inputEl.setAttribute(attr, 'true');
+    }
     return () => {
-      inputEl?.removeAttribute(inputDataAttribute);
+      if (!inputEl) return;
+      for (const attr of attrs) {
+        inputEl.removeAttribute(attr);
+      }
     };
   });
 </script>
@@ -40,7 +53,7 @@
     class="input input-bordered w-full"
     {placeholder}
     bind:value={$query}
-    onkeydown={onInputKeydown}
+    onkeydown={handleInputKeydown}
     onfocus={onInputFocus}
   />
   {@render actions?.()}
