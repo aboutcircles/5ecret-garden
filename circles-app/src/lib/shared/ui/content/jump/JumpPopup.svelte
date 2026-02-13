@@ -52,7 +52,7 @@
         </button>
       </div>
 
-      <div class="flex flex-wrap gap-2">
+      <div class="flex flex-wrap justify-end gap-2">
         <button type="button" class="btn btn-primary btn-sm" onclick={onContinue}>Continue</button>
         <button type="button" class="btn btn-ghost btn-sm" onclick={onBack}>Cancel</button>
       </div>
@@ -62,7 +62,9 @@
       <div class="alert alert-error">
         Invalid or unsupported link.
       </div>
-      <button type="button" class="btn btn-ghost btn-sm" onclick={onBack}>Back</button>
+      <div class="flex justify-end">
+        <button type="button" class="btn btn-ghost btn-sm" onclick={onBack}>Back</button>
+      </div>
     </div>
   {/if}
 </div>

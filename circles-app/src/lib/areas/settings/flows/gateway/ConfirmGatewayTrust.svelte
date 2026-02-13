@@ -108,7 +108,7 @@
 
     <StepActionBar>
       {#snippet secondary()}
-        <button type="button" class="btn btn-ghost" onclick={changeAccount}>
+        <button type="button" class="btn btn-ghost btn-sm" onclick={changeAccount}>
           Change account
         </button>
       {/snippet}

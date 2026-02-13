@@ -68,7 +68,7 @@
 
   <slot name="insight"></slot>
 
-  <div>
+  <div class="flex justify-end">
     <ActionButton action={runAction}>{cta}</ActionButton>
   </div>
 

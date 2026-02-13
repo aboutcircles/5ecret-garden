@@ -32,6 +32,17 @@
   let walletModule: typeof import('$lib/shared/state/wallet.svelte') | null = null;
   let walletWatcherInitialized = false;
 
+  function shouldBypassWalletRestore(routeId: string | null | undefined): boolean {
+    if (!routeId) return true;
+    return (
+      routeId === '/' ||
+      routeId === '/connect-wallet/connect-safe' ||
+      routeId === '/connect-wallet/import-circles-garden' ||
+      routeId === '/util' ||
+      routeId.startsWith('/kitchen-sink')
+    );
+  }
+
   async function getWalletModule() {
     if (!walletModule) {
       walletModule = await import('$lib/shared/state/wallet.svelte');
@@ -73,12 +84,7 @@
       },
     });
 
-    if (
-      $page.route.id !== '/' &&
-      $page.route.id !== '/connect-wallet/connect-safe' &&
-      $page.route.id !== '/connect-wallet/import-circles-garden' &&
-      $page.route.id !== '/util'
-    ) {
+    if (!shouldBypassWalletRestore($page.route.id)) {
       await restoreSession();
     }
   }
@@ -116,15 +122,7 @@
     if (walletWatcherInitialized || unwatch) return;
 
     const routeId = $page.route.id;
-    if (!routeId) return;
-
-    // Don’t initialize on the landing page or during connect flows.
-    if (
-      routeId === '/' ||
-      routeId === '/connect-wallet/connect-safe' ||
-      routeId === '/connect-wallet/import-circles-garden' ||
-      routeId === '/util'
-    ) {
+    if (shouldBypassWalletRestore(routeId)) {
       return;
     }
 

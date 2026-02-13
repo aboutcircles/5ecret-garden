@@ -44,12 +44,12 @@
 
   <StepActionBar>
     {#snippet secondary()}
-      <button class="btn btn-ghost" onclick={editSelection}>
+      <button class="btn btn-ghost btn-sm" onclick={editSelection}>
         Change account
       </button>
 
       <button
-        class="btn btn-error btn-outline"
+        class="btn btn-error btn-outline btn-sm"
         onclick={() => {
           popupControls.close();
           openStep({

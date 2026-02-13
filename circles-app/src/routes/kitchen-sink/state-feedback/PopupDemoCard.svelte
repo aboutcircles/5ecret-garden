@@ -24,7 +24,7 @@
     This is popup stack step <strong>{step}</strong>. Use “Open next” to push another popup and test back-stack behavior.
   </p>
 
-  <div class="flex flex-wrap gap-2">
+  <div class="flex flex-wrap justify-end gap-2">
     <button class="btn btn-sm btn-primary" onclick={openNext}>Open next</button>
     <button class="btn btn-sm btn-outline" onclick={() => popupControls.back()}>Back</button>
     <button class="btn btn-sm btn-ghost" onclick={() => popupControls.close()}>Close all</button>

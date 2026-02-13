@@ -12,7 +12,11 @@
   const steps = $derived(entry.kind === 'flow' ? entry.steps : [entry.step]);
 </script>
 
-<section class="rounded-xl border border-base-300 bg-base-100 p-4 space-y-3">
+<section
+  class="rounded-xl border border-base-300 bg-base-100 p-4 space-y-3"
+  data-popup-gallery-row={entry.id}
+  data-popup-gallery-kind={entry.kind}
+>
   <div class="flex flex-wrap items-start justify-between gap-3">
     <div>
       <h3 class="text-base font-semibold">{entry.label}</h3>
