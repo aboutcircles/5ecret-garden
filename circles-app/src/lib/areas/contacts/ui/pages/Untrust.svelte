@@ -34,6 +34,12 @@
   {address}
   intro="You're about to un-trust the following group or person:"
   warning="Un-trusting means that you no longer accept their tokens."
+  explainerTitle="How this untrust action works"
+  explainerPoints={[
+    'Trust is binary: removing trust fully turns this relation off.',
+    'Trust is one-way. Removing your trust does not automatically remove their trust in you.',
+    'Removing trust can reduce available transfer paths and may lower what is sendable through your network.',
+  ]}
   cta="Untrust"
   action={untrust}
 />
