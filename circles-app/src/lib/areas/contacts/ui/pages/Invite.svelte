@@ -48,7 +48,7 @@
   <div class="modal-action">
     <button
       type="submit"
-      class="btn btn-primary"
+      class="btn btn-primary btn-sm"
       onclick={async () => await invite()}>Invite</button
     >
   </div>

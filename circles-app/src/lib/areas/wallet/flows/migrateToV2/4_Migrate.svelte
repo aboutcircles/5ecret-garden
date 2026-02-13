@@ -48,7 +48,7 @@
   <div class="flex justify-end space-x-2 mt-6">
     <button
       type="submit"
-      class="btn btn-primary"
+      class="btn btn-primary btn-sm"
       onclick={() => migrate()}
     >
       Migrate to V2

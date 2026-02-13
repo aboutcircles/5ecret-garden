@@ -40,8 +40,6 @@
     'It doesn’t remove balances you already hold.',
     'Some routes may stop working until other paths exist.',
   ]}
-  quickHelpStorageKey="untrust-action-help-dismissed-v1"
-  quickHelpAutoShow={false}
   showExplainerDetails={false}
   explainerPoints={[
     'Untrust is on/off: it removes the trust link.',

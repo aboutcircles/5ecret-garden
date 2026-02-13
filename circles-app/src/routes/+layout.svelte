@@ -75,7 +75,8 @@
     if (
       $page.route.id !== '/' &&
       $page.route.id !== '/connect-wallet/connect-safe' &&
-      $page.route.id !== '/connect-wallet/import-circles-garden'
+      $page.route.id !== '/connect-wallet/import-circles-garden' &&
+      $page.route.id !== '/util'
     ) {
       await restoreSession();
     }
@@ -120,7 +121,8 @@
     if (
       routeId === '/' ||
       routeId === '/connect-wallet/connect-safe' ||
-      routeId === '/connect-wallet/import-circles-garden'
+      routeId === '/connect-wallet/import-circles-garden' ||
+      routeId === '/util'
     ) {
       return;
     }

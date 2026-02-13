@@ -30,8 +30,6 @@
     'Routing can change whose Circles you hold (total stays the same).',
     'You can untrust later to stop accepting more.',
   ]}
-  quickHelpStorageKey="trust-action-help-dismissed-v1"
-  quickHelpAutoShow={false}
   showExplainerDetails={false}
   cta="Trust"
   action={trust}

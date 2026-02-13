@@ -68,7 +68,7 @@
   </div>
 
   <div class="modal-action">
-    <button type="submit" class="btn btn-primary" onclick={unwrap}
+    <button type="submit" class="btn btn-primary btn-sm" onclick={unwrap}
       >Unwrap</button
     >
   </div>

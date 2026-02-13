@@ -511,7 +511,7 @@
       <div class="mt-3 flex justify-end gap-2">
         <button
           type="button"
-          class="btn btn-sm btn-outline"
+          class="btn btn-sm btn-primary"
           onclick={goToReview}
           disabled={validating || $cartState.loading}
         >

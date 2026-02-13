@@ -118,7 +118,7 @@
     {/if}
 
     <div class="mt-5 flex justify-end">
-        <button type="button" class="btn btn-primary" onclick={next}>
+        <button type="button" class="btn btn-primary btn-sm" onclick={next}>
             Create group
         </button>
     </div>

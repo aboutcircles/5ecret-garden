@@ -15,12 +15,9 @@
 <FlowDecoration>
   <p>You already trust this account.</p>
 
-  <div class="mt-6 flex flex-col sm:flex-row gap-2">
-    <button class="btn btn-primary" onclick={() => popupControls.close()}>
-      Done
-    </button>
+  <div class="mt-6 flex flex-col sm:flex-row gap-2 sm:justify-end">
     <button
-      class="btn btn-error"
+      class="btn btn-error btn-outline"
       onclick={() => {
         popupControls.close();
         openStep({
@@ -34,6 +31,9 @@
       }}
     >
       Untrust...
+    </button>
+    <button class="btn btn-primary btn-sm" onclick={() => popupControls.close()}>
+      Done
     </button>
   </div>
 </FlowDecoration>

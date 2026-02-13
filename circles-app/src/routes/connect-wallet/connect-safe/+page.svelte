@@ -91,6 +91,7 @@
   safeOwnerAddress={signer.address}
   sdk={$circles}
   initSdk={connectSafe}
+  safeCreationMode="browser"
   refreshGroupsCallback={refreshGroups}
   legacy={settings.legacy && signer.address
     ? {

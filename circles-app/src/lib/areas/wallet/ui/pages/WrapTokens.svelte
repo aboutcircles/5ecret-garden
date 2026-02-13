@@ -107,6 +107,6 @@
   </div>
 
   <div class="modal-action">
-    <button type="submit" class="btn btn-primary" onclick={wrap}>Wrap</button>
+    <button type="submit" class="btn btn-primary btn-sm" onclick={wrap}>Wrap</button>
   </div>
 </div>

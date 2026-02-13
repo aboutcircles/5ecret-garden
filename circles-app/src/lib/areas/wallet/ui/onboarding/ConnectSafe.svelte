@@ -16,10 +16,17 @@
     safeOwnerAddress: Address;
     initSdk: (ownerAddress: Address) => Promise<Sdk>;
     sdk: Sdk;
+    safeCreationMode?: 'browser' | 'importedKey';
     refreshGroupsCallback?: () => void;
   }
 
-  let { safeOwnerAddress, initSdk, sdk, refreshGroupsCallback }: Props = $props();
+  let {
+    safeOwnerAddress,
+    initSdk,
+    sdk,
+    safeCreationMode = 'browser',
+    refreshGroupsCallback,
+  }: Props = $props();
 
   const getSafesByOwnerApiEndpoint = (checksumOwnerAddress: string): string =>
     `https://safe-transaction-gnosis-chain.safe.global/api/v1/owners/${checksumOwnerAddress}/safes/`;
@@ -91,5 +98,5 @@
 {/each}
 
 <div class="text-center">
-  <CreateSafe {onsafecreated} />
+  <CreateSafe {onsafecreated} {safeCreationMode} />
 </div>

@@ -26,6 +26,7 @@
     safeOwnerAddress?: Address;
     sdk?: Sdk;
     initSdk?: InitSdk;
+    safeCreationMode?: 'browser' | 'importedKey';
     refreshGroupsCallback?: () => void;
     onBack?: () => void;
     legacy?: LegacyMode;
@@ -39,6 +40,7 @@
     safeOwnerAddress,
     sdk,
     initSdk,
+    safeCreationMode = 'browser',
     refreshGroupsCallback,
     onBack = () => history.back(),
     legacy,
@@ -73,6 +75,7 @@
       safeOwnerAddress={safeOwnerAddress}
       initSdk={initSdk}
       sdk={sdk}
+      safeCreationMode={safeCreationMode}
       refreshGroupsCallback={refreshGroupsCallback}
     />
   {/if}
