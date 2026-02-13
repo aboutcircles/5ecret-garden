@@ -7,6 +7,7 @@
     import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
     import ChangeButton from '$lib/areas/wallet/ui/components/ChangeButton.svelte';
     import AutoRouteSummary from '$lib/areas/wallet/ui/components/AutoRouteSummary.svelte';
+    import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
 
     interface Props {
         receiverAddress: Address | undefined;
@@ -18,6 +19,8 @@
         onEditTo: () => void;
         onEditRoute: () => void;
         onEditAmount: () => void;
+        submitDisabled?: boolean;
+        validationMessage?: string | null;
         onselect: () => void;
     }
 
@@ -31,6 +34,8 @@
         onEditTo,
         onEditRoute,
         onEditAmount,
+        submitDisabled = false,
+        validationMessage = null,
         onselect,
     }: Props = $props();
 
@@ -96,11 +101,16 @@
         </RowFrame>
     {/if}
 
-    <div class="mt-6 flex justify-end">
+    {#if validationMessage}
+        <StepAlert variant="warning" message={validationMessage} />
+    {/if}
+
+    <div class="mt-2 flex justify-end">
         <button
             type="submit"
             class="btn btn-primary btn-sm"
             data-send-step-initial-focus
+            disabled={submitDisabled}
             onclick={() => onselect()}
         >
             {textButton}

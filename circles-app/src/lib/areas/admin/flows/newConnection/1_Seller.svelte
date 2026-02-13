@@ -1,6 +1,8 @@
 <script lang="ts">
   import type { Address } from '@circles-sdk/utils';
-  import { popupControls } from '$lib/shared/state/popup';
+  import { openStep } from '$lib/shared/flow/runtime';
+  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
   import SearchAvatar from '$lib/areas/contacts/ui/pages/SearchAvatar.svelte';
   import type { AdminNewConnectionFlowContext } from './context';
   import DetailsStep from './2_Details.svelte';
@@ -27,11 +29,11 @@
 
   function goNext(addr: Address): void {
     context.seller = addr;
-    popupControls.open({
-      title: 'Enter Odoo connection details',
+    openStep({
+      title: 'New Odoo connection',
       component: DetailsStep,
       props: { context, onCreate },
-      id: 'admin-new-connection-details',
+      key: 'admin-new-connection-details',
     });
   }
 
@@ -40,12 +42,15 @@
   }
 </script>
 
-<div class="space-y-3">
-  <p class="text-sm opacity-70">Select the seller (avatar) to create an Odoo connection for.</p>
-  <SearchAvatar
-    avatarTypes={['CrcV2_RegisterHuman', 'CrcV2_RegisterOrganization']}
-    selectedAddress={context.seller}
-    onselect={handleSelect}
-    searchType="send"
-  />
-</div>
+<FlowDecoration>
+  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
+    <FlowStepHeader step={1} total={2} title="Seller" subtitle="Choose the seller for this Odoo connection." labels={['Seller', 'Details']} />
+
+    <SearchAvatar
+      avatarTypes={['CrcV2_RegisterHuman', 'CrcV2_RegisterOrganization']}
+      selectedAddress={context.seller}
+      onselect={handleSelect}
+      searchType="send"
+    />
+  </div>
+</FlowDecoration>

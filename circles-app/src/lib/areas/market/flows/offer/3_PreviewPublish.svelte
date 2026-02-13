@@ -1,6 +1,7 @@
 <script lang="ts">
   import {get} from 'svelte/store';
   import {popupControls} from '$lib/shared/state/popup';
+  import { openStep } from '$lib/shared/flow/runtime';
   import {runTask} from '$lib/shared/utils/tasks';
   import {wallet} from '$lib/shared/state/wallet.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
@@ -9,6 +10,14 @@
 
   import ProductGallery from '$lib/areas/market/ui/product/ProductGallery.svelte';
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
+  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
+  import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+  import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
+  import StepReviewRow from '$lib/shared/ui/flow/StepReviewRow.svelte';
+  import OfferStep1 from './1_Product.svelte';
+  import OfferStep2 from './2_Pricing.svelte';
 
   import {Contract, JsonRpcProvider} from 'ethers';
 
@@ -184,14 +193,52 @@
 
     popupControls.close();
   }
+
+  function editProduct(): void {
+    const didPop = popupControls.popTo((entry) => entry.component === OfferStep1);
+    if (!didPop) {
+      openStep({
+        title: 'Offer • Product',
+        component: OfferStep1,
+        props: { context },
+      });
+    }
+  }
+
+  function editPricing(): void {
+    const didPop = popupControls.popTo((entry) => entry.component === OfferStep2);
+    if (!didPop) {
+      openStep({
+        title: 'Offer • Pricing',
+        component: OfferStep2,
+        props: { context },
+      });
+    }
+  }
 </script>
 
+<FlowDecoration>
+  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
+    <FlowStepHeader
+      step={3}
+      total={3}
+      title="Review"
+      subtitle="Review your offer details before publishing."
+      labels={['Product', 'Pricing', 'Review']}
+    />
+
 {#if !requiredOk}
-    <div class="alert alert-warning mb-4">Draft has missing or invalid fields.</div>
+    <StepAlert variant="warning" className="mb-2" message="Draft has missing or invalid fields." />
 {/if}
 
 <div class="space-y-2">
-    <div class="text-sm opacity-70">Review</div>
+    <StepSection title="Review" subtitle="Check core product and pricing details.">
+      <div class="space-y-3">
+        <StepReviewRow label="Product" value={context.draft?.name ?? '—'} onChange={editProduct} changeLabel="Edit" />
+        <StepReviewRow label="Pricing" value={`${context.draft?.price ?? '—'} ${context.draft?.priceCurrency ?? ''}`.trim()} onChange={editPricing} changeLabel="Edit" />
+      </div>
+    </StepSection>
+
     <div class="bg-base-100 border rounded-lg p-3">
         <div class="font-semibold truncate">
             {context.draft?.name}
@@ -232,9 +279,13 @@
         </div>
     </div>
 
-    <div class="mt-4 flex justify-end gap-2">
-        <ActionButton action={publish} disabled={!requiredOk} title="Publish">
-          {#snippet children()}Publish{/snippet}
-        </ActionButton>
-    </div>
+    <StepActionBar>
+      {#snippet primary()}
+          <ActionButton action={publish} disabled={!requiredOk} title="Publish">
+            {#snippet children()}Publish{/snippet}
+          </ActionButton>
+      {/snippet}
+    </StepActionBar>
 </div>
+  </div>
+</FlowDecoration>

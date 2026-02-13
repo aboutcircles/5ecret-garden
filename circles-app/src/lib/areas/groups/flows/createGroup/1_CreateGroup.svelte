@@ -1,5 +1,7 @@
 <script lang="ts">
     import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+    import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+    import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
     import OnChainNameSection from '$lib/shared/ui/flow/OnChainNameSection.svelte';
     import Tooltip from '$lib/shared/ui/primitives/Tooltip.svelte';
     import { ProfileFormStep } from '$lib/shared/ui/profile';
@@ -79,6 +81,15 @@
 </script>
 
 <FlowDecoration>
+    <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
+    <FlowStepHeader
+        step={1}
+        total={4}
+        title="Create group"
+        subtitle="Name, symbol, description, and image."
+        labels={['Create group', 'Settings', 'Review', 'Create']}
+    />
+
     <p class="text-sm text-base-content/70 mt-1">Name, symbol, description and image.</p>
 
     <div class="space-y-4">
@@ -92,6 +103,7 @@
                 class="input input-sm input-bordered w-full"
                 bind:value={ctx.profile.symbol}
                 placeholder="CRC…"
+                data-popup-initial-input
             />
             <div class="h-5 text-xs text-error pt-1">{#if showSymbolInvalid}Invalid symbol{/if}</div>
         </label>
@@ -122,9 +134,12 @@
         />
     </div>
 
-    <div class="mt-5 flex justify-end">
-        <button type="button" class="btn btn-primary btn-sm" disabled={!canContinue} onclick={next}>
-            Continue
-        </button>
+    <StepActionBar>
+        {#snippet primary()}
+            <button type="button" class="btn btn-primary btn-sm" disabled={!canContinue} onclick={next}>
+                Continue
+            </button>
+        {/snippet}
+    </StepActionBar>
     </div>
 </FlowDecoration>

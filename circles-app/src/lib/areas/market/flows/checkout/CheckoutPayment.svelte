@@ -1,6 +1,9 @@
 <!-- lib/flows/checkout/CheckoutPayment.svelte -->
 <script lang="ts">
   import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
+  import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
   import QrCode from '$lib/shared/ui/primitives/QrCode.svelte';
   import { cartState } from '$lib/areas/market/cart/store';
 
@@ -8,6 +11,7 @@
   import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
   import { resolvePayTo } from '$lib/areas/market/services';
   import { popupControls } from '$lib/shared/state/popup';
+  import { openStep } from '$lib/shared/flow/runtime';
   import SendFlow from '$lib/areas/wallet/flows/send/4_Send.svelte';
   import { transitiveTransfer } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
   import type { SendFlowContext } from '$lib/areas/wallet/flows/send/context';
@@ -231,7 +235,7 @@
 
   function openTransferFlow(): void {
     if (!transferContext) return;
-    popupControls.open({
+    openStep({
       title: 'Pay with Circles',
       component: SendFlow,
       props: { context: transferContext },
@@ -245,13 +249,22 @@
 </script>
 
 <FlowDecoration>
+  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
+    <FlowStepHeader
+      step={4}
+      total={4}
+      title="Payment"
+      subtitle="Complete payment by QR or in-app transfer."
+      labels={['Cart', 'Details', 'Review', 'Payment']}
+    />
+
   <div class="space-y-3 text-xs">
-    <div class="alert alert-info">
+    <StepAlert variant="info">
       <span>
         Scan this QR code with the Circles app to execute the payment.
         (Mock only – payload: <code>{paymentQrValue}</code>).
       </span>
-    </div>
+    </StepAlert>
 
     <div class="flex justify-center">
       <QrCode value={paymentQrValue} />
@@ -269,20 +282,24 @@
     <!-- In-app transfer option -->
     <div class="flex flex-col items-end gap-2">
       {#if resolveError}
-        <div class="alert alert-warning text-xs w-full">{resolveError}</div>
+        <StepAlert variant="warning" className="text-xs w-full" message={resolveError} />
       {/if}
 
       {#if chainWarning}
-        <div class="alert alert-info text-xs w-full">{chainWarning}</div>
+        <StepAlert variant="info" className="text-xs w-full" message={chainWarning} />
       {/if}
 
-      <button
-        class="btn btn-primary btn-sm"
-        disabled={!transferContext || resolving}
-        onclick={openTransferFlow}
-      >
-        {resolving ? 'Preparing…' : 'Pay with Circles (in-app transfer)'}
-      </button>
+      <StepActionBar>
+        {#snippet primary()}
+          <button
+            class="btn btn-primary btn-sm"
+            disabled={!transferContext || resolving}
+            onclick={openTransferFlow}
+          >
+            {resolving ? 'Preparing…' : 'Pay with Circles (in-app transfer)'}
+          </button>
+        {/snippet}
+      </StepActionBar>
 
       {#if transferContext}
         <div class="text-[11px] opacity-70 text-right">
@@ -294,5 +311,6 @@
         </div>
       {/if}
     </div>
+  </div>
   </div>
 </FlowDecoration>

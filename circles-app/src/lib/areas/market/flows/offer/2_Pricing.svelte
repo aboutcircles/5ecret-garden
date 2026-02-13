@@ -1,5 +1,10 @@
 <script lang="ts">
-  import { popupControls } from '$lib/shared/state/popup';
+  import { openStep } from '$lib/shared/flow/runtime';
+  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+  import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
+  import PaymentGatewayDropdown from './PaymentGatewayDropdown.svelte';
   import OfferStep3 from './3_PreviewPublish.svelte';
   import type { OfferFlowContext } from './types';
   import { get } from 'svelte/store';
@@ -161,7 +166,7 @@
       requiredSlots: computeRequiredSlots(),
     };
 
-    popupControls.open({
+    openStep({
       title: 'Offer • Preview & Publish',
       component: OfferStep3,
       props: { context }
@@ -181,11 +186,21 @@
   });
 </script>
 
+<FlowDecoration>
+  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
+  <FlowStepHeader
+    step={2}
+    total={3}
+    title="Pricing"
+    subtitle="Define price, gateway, and checkout requirements."
+    labels={['Product', 'Pricing', 'Review']}
+  />
+
 <div class="space-y-3">
   <!-- Price row: currency fixed to CRC -->
   <label class="form-control">
     <span class="label-text">Price (CRC)</span>
-    <input class="input input-bordered" type="number" step="0.01" min="0" bind:value={price} />
+    <input class="input input-bordered" type="number" step="0.01" min="0" bind:value={price} data-popup-initial-input />
   </label>
 
   <!-- Payment gateway row -->
@@ -196,23 +211,19 @@
     {#if loadingGateways}
       <div class="opacity-70 text-sm">Loading…</div>
     {:else if gateways.length === 0}
-      <div class="opacity-70 text-sm">No gateways found. <a class="link" href="/settings?tab=payment" target="_blank">Create one</a> and come back.</div>
+      <StepAlert variant="info">
+        <span class="text-sm">
+          No gateways found.
+          <a class="link ml-1" href="/settings?tab=payment" target="_blank">Create one</a>
+          and come back.
+        </span>
+      </StepAlert>
     {:else}
-      <!-- Custom dropdown to show Avatar names -->
-      <div class="dropdown">
-        <div tabindex="0" role="button" class="btn btn-outline justify-start">
-          <Avatar address={asAddress(selectedGateway)} view="horizontal" bottomInfo={selectedGateway} clickable={false} />
-        </div>
-        <ul class="dropdown-content menu bg-base-100 rounded-box z-[1] w-72 p-2 shadow">
-          {#each gateways as gw}
-            <li>
-              <button type="button" class="flex items-center gap-2" onclick={() => { selectedGateway = gw; }}>
-                <Avatar address={asAddress(gw)} view="horizontal" bottomInfo={gw} clickable={false} />
-              </button>
-            </li>
-          {/each}
-        </ul>
-      </div>
+      <PaymentGatewayDropdown
+        options={gateways}
+        bind:value={selectedGateway}
+        ariaLabel="Select payment gateway"
+      />
     {/if}
   </div>
 
@@ -405,7 +416,11 @@
     </div>
   </div>
 
-  <div class="mt-4 flex justify-end">
-    <button type="button" class="btn btn-primary btn-sm" onclick={next}>Next</button>
-  </div>
+  <StepActionBar>
+    {#snippet primary()}
+      <button type="button" class="btn btn-primary btn-sm" onclick={next}>Continue</button>
+    {/snippet}
+  </StepActionBar>
 </div>
+  </div>
+</FlowDecoration>

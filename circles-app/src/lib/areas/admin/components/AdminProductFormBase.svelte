@@ -8,6 +8,7 @@
     onSubmit: () => Promise<void> | void;
     onCancel?: () => void;
     loading?: boolean;
+    submitDisabled?: boolean;
     submitLabel?: string;
     children?: Snippet;
   }
@@ -19,6 +20,7 @@
     onSubmit,
     onCancel,
     loading = false,
+    submitDisabled = false,
     submitLabel = 'Save',
     children,
   }: Props = $props();
@@ -49,7 +51,7 @@
         Cancel
       </button>
     {/if}
-    <button type="submit" class="btn btn-primary btn-sm" disabled={loading}>
+    <button type="submit" class="btn btn-primary btn-sm" disabled={loading || submitDisabled}>
       {#if loading}
         <span class="loading loading-spinner loading-xs"></span>
       {/if}

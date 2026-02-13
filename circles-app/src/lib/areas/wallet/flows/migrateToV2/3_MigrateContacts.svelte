@@ -1,6 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+  import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import type { MigrateToV2Context } from '$lib/areas/wallet/flows/migrateToV2/context';
   import Migrate from './4_Migrate.svelte';
   import { contacts } from '$lib/shared/state/contacts';
@@ -61,6 +64,15 @@
 </script>
 
 <FlowDecoration>
+  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
+  <FlowStepHeader
+    step={3}
+    total={4}
+    title="Contacts"
+    subtitle="Choose which trusted contacts to migrate to V2."
+    labels={['Invitation', 'Profile', 'Contacts', 'Migrate']}
+  />
+
   <p class="text-base-content/70 mt-2">
     Select the contacts you want to keep in your new Circles V2 profile.
   </p>
@@ -105,16 +117,19 @@
       </button>
     {/each}
     {#if orderedContacts.length === 0}
-      <p class="text-center mt-4">No contacts to migrate</p>
+      <StepAlert variant="info" message="No contacts to migrate." className="mt-4" />
     {/if}
   </div>
-  <div class="flex justify-end space-x-2 mt-6">
-    <button
-      type="submit"
-      class="btn btn-primary btn-sm"
-      onclick={() => next()}
-    >
-      Next
-    </button>
+  <StepActionBar>
+    {#snippet primary()}
+      <button
+        type="submit"
+        class="btn btn-primary btn-sm"
+        onclick={() => next()}
+      >
+        Continue
+      </button>
+    {/snippet}
+  </StepActionBar>
   </div>
 </FlowDecoration>

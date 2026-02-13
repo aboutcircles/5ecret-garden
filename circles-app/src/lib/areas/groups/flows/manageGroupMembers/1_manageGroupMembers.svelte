@@ -1,5 +1,7 @@
 <script lang="ts">
   import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import SearchAvatar from '$lib/areas/contacts/ui/pages/SearchAvatar.svelte';
   import Invite from '$lib/areas/contacts/ui/pages/Invite.svelte';
   import { openStep } from '$lib/shared/flow/runtime';
@@ -134,6 +136,15 @@
 </script>
 
 <FlowDecoration>
+  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
+  <FlowStepHeader
+    step={1}
+    total={1}
+    title="Manage members"
+    subtitle="Add or remove members by address list or search."
+    labels={['Manage members']}
+  />
+
   <div class="flex items-center justify-end gap-2 pb-1">
     <div class="badge badge-ghost badge-sm">
       {addressesArray.length}
@@ -159,6 +170,7 @@
     rows="3"
     class="textarea textarea-bordered w-full mb-4 resize-y"
     oninput={handleAddressesChange}
+    data-popup-initial-input
   ></textarea>
 
   <div class="flex flex-row gap-x-2">
@@ -173,7 +185,9 @@
         </ActionButton>
       </div>
 
-      <p class="text-sm text-error h-6">{errorMessage}</p>
+      {#if errorMessage}
+        <StepAlert variant="error" message={errorMessage} className="mt-1 py-1" />
+      {/if}
     </div>
 
     <div class="flex-grow"></div>
@@ -200,4 +214,5 @@
     {ontrust}
     searchType="contact"
   />
+  </div>
 </FlowDecoration>

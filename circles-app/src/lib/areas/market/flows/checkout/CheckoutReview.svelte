@@ -1,8 +1,16 @@
 <!-- lib/flows/checkout/CheckoutReview.svelte -->
 <script lang="ts">
     import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+    import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+    import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+    import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
+    import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
+    import StepReviewRow from '$lib/shared/ui/flow/StepReviewRow.svelte';
+    import { openStep } from '$lib/shared/flow/runtime';
     import { cartState, checkoutCart } from '$lib/areas/market/cart/store';
     import { popupControls } from '$lib/shared/state/popup';
+    import CartPanel from './CartPanel.svelte';
+    import CheckoutForms from './CheckoutForms.svelte';
     import CheckoutPayment from './CheckoutPayment.svelte';
     import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
     import type { AggregatedCatalogItem } from '$lib/areas/market/model';
@@ -208,7 +216,7 @@
         submitting = true;
         try {
             await checkoutCart();
-            popupControls.open({
+            openStep({
                 title: 'Pay order',
                 component: CheckoutPayment,
                 props: {},
@@ -224,10 +232,45 @@
             submitting = false;
         }
     }
+
+    function editCart(): void {
+        const didPop = popupControls.popTo((entry) => entry.component === CartPanel);
+        if (!didPop) {
+            openStep({
+                title: 'Cart',
+                component: CartPanel,
+                props: {},
+            });
+        }
+    }
+
+    function editDetails(): void {
+        const didPop = popupControls.popTo((entry) => entry.component === CheckoutForms);
+        if (!didPop) {
+            openStep({
+                title: 'Additional details',
+                component: CheckoutForms,
+                props: {},
+            });
+        }
+    }
 </script>
 
 <FlowDecoration>
-    <div class="space-y-4 text-sm">
+    <div class="space-y-4 text-sm" tabindex="-1" data-popup-initial-focus>
+        <FlowStepHeader
+            step={3}
+            total={4}
+            title="Review"
+            subtitle="Review cart and checkout details before payment."
+            labels={['Cart', 'Details', 'Review', 'Payment']}
+        />
+
+        <StepSection title="Review actions" subtitle="Adjust cart items or checkout details if needed.">
+            <StepReviewRow label="Cart items" value={`${lines.length} item${lines.length === 1 ? '' : 's'}`} onChange={editCart} changeLabel="Edit" />
+            <StepReviewRow label="Checkout details" value={hasShippingInfo ? 'Provided' : 'Not provided'} onChange={editDetails} changeLabel="Edit" />
+        </StepSection>
+
         <!-- Order meta -->
         {#if preview}
             <div class="space-y-1">
@@ -370,21 +413,21 @@
         </div>
 
         <!-- Action + error -->
-        <div class="mt-3 flex justify-end">
-            <button
-                    type="button"
-                    class="btn btn-sm btn-primary"
-                    onclick={finalizeCheckout}
-                    disabled={submitting || $cartState.loading}
-            >
-                {submitting ? 'Creating order…' : 'Confirm & pay'}
-            </button>
-        </div>
+        <StepActionBar className="mt-3">
+            {#snippet primary()}
+                <button
+                        type="button"
+                        class="btn btn-sm btn-primary"
+                        onclick={finalizeCheckout}
+                        disabled={submitting || $cartState.loading}
+                >
+                    {submitting ? 'Creating order…' : 'Confirm & pay'}
+                </button>
+            {/snippet}
+        </StepActionBar>
 
         {#if localError}
-            <div class="alert alert-error text-sm mt-2">
-                {localError}
-            </div>
+            <StepAlert variant="error" className="mt-2" message={localError} />
         {/if}
     </div>
 </FlowDecoration>

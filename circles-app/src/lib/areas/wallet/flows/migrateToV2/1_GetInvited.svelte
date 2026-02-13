@@ -1,5 +1,8 @@
 <script lang="ts">
   import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+  import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import type { MigrateToV2Context } from '$lib/areas/wallet/flows/migrateToV2/context';
   import CreateProfile from './2_CreateProfile.svelte';
   import { onMount } from 'svelte';
@@ -51,6 +54,15 @@
 </script>
 
 <FlowDecoration>
+  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
+    <FlowStepHeader
+      step={1}
+      total={4}
+      title="Invitation"
+      subtitle="Choose how to start your Circles V2 migration."
+      labels={['Invitation', 'Profile', 'Contacts', 'Migrate']}
+    />
+
   {#if !invitations}
     <p class="text-base-content/70 mt-2">Loading invitations...</p>
   {:else if invitations.length > 0}
@@ -62,22 +74,25 @@
       />
     </div>
   {:else}
-    <p class="text-gray-500 mt-2">You have no invitations.</p>
+    <StepAlert variant="info" message="You have no invitations." className="mt-2" />
     {#if canSelfMigrate}
       <p class="text-base-content/70 mt-2">You can migrate to v2.</p>
-      <div class="flex justify-end space-x-2 mt-6">
-        <button
-          type="submit"
-          class="btn btn-primary btn-sm"
-          onclick={() => next()}
-        >
-          Next
-        </button>
-      </div>
+      <StepActionBar className="mt-6">
+        {#snippet primary()}
+          <button
+            type="submit"
+            class="btn btn-primary btn-sm"
+            onclick={() => next()}
+          >
+            Continue
+          </button>
+        {/snippet}
+      </StepActionBar>
     {:else}
       <p class="text-base-content/70 mt-2">
         You need to find someone who is already on Circles V2 to invite you.
       </p>
     {/if}
   {/if}
+  </div>
 </FlowDecoration>

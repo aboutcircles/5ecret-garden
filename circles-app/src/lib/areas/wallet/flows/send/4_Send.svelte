@@ -26,7 +26,25 @@
 
   let {context}: Props = $props();
 
+  const hasRecipient = $derived(Boolean(context.selectedAddress));
+  const hasAsset = $derived(Boolean(context.selectedAsset));
+  const hasAmount = $derived.by(() => {
+    const amount = Number(context.amount ?? 0);
+    return Number.isFinite(amount) && amount > 0;
+  });
+
+  const canContinue = $derived(hasRecipient && hasAsset && hasAmount);
+
+  const validationMessage = $derived.by(() => {
+    if (!hasRecipient) return 'Select a recipient before sending.';
+    if (!hasAsset) return 'Select a route/asset before sending.';
+    if (!hasAmount) return 'Enter an amount greater than 0 before sending.';
+    return null;
+  });
+
   function onselect() {
+    if (!canContinue) return;
+
     const avatar = requireAvatar(avatarState.avatar);
     const selectedAddress = requireWalletAddress(context.selectedAddress, 'No address selected');
     const selectedAsset = requireSelectedAsset(context, 'No asset selected');
@@ -140,7 +158,7 @@
 </script>
 
 <FlowDecoration>
-  <div class="w-full space-y-4">
+  <div class="w-full space-y-4" tabindex="-1" data-send-step-initial-focus>
     <FlowStepHeader step={3} total={3} title="Review" labels={['Recipient', 'Amount', 'Review']} />
     <Send
         asset={context.selectedAsset}
@@ -152,6 +170,8 @@
         onEditTo={editTo}
         onEditRoute={editRoute}
         onEditAmount={editAmount}
+        submitDisabled={!canContinue}
+        {validationMessage}
         {onselect}
     />
   </div>

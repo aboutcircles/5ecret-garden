@@ -1,9 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { ethers } from 'ethers';
   import { RefreshCw as LRefreshCw } from 'lucide';
 
   import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import { derived, writable } from 'svelte/store';
   import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
@@ -13,6 +14,7 @@
   import ConfirmGatewayUntrust from '$lib/areas/settings/flows/gateway/ConfirmGatewayUntrust.svelte';
   import GatewayTrustedAccountsList from '$lib/areas/settings/ui/components/GatewayTrustedAccountsList.svelte';
   import { fetchActiveTrustRowsByGateway } from '$lib/shared/data/circles/paymentGateways';
+  import { isAddress } from '$lib/shared/utils/tx';
 
   import type { TrustRow } from '$lib/areas/settings/model/gatewayTypes';
 
@@ -24,6 +26,7 @@
 
   let loadingTrusts: boolean = $state(false);
   let trusts: TrustRow[] = $state([]);
+  let loadError: string | null = $state(null);
   const trustRowsStore = writable<TrustRow[]>([]);
   const trustRowsWithActions = derived(trustRowsStore, ($rows) =>
     $rows.map((row) => ({
@@ -37,19 +40,13 @@
     trustRowsStore.set(trusts);
   });
 
-  function isAddress(v: string): boolean {
-    try {
-      ethers.getAddress((v || '').trim());
-      return true;
-    } catch {
-      return false;
-    }
-  }
+  const gatewayValid = $derived(isAddress((gateway ?? '').trim()));
 
-  const gatewayValid = $derived(isAddress(gateway));
 
+  const canManageTrust = $derived(gatewayValid && !loadingTrusts);
 
   async function loadTrusts() {
+    loadError = null;
     if (!gatewayValid || !$circles?.circlesRpc) {
       trusts = [];
       return;
@@ -65,6 +62,7 @@
       console.error('loadTrusts', e);
       trusts = [];
       trustRowsStore.set([]);
+      loadError = e instanceof Error ? e.message : 'Failed to load trusted accounts.';
     } finally {
       loadingTrusts = false;
     }
@@ -104,6 +102,15 @@
 </script>
 
 <FlowDecoration>
+  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
+    <FlowStepHeader
+      step={1}
+      total={1}
+      title="Manage trust"
+      subtitle="View, add, and remove trusted accounts for this gateway."
+      labels={['Manage trust']}
+    />
+
   <div class="space-y-4">
     <div class="flex flex-col gap-1">
       <Avatar address={gateway} view="horizontal" clickable={false} />
@@ -111,6 +118,17 @@
         {gateway}
       </div>
     </div>
+
+    {#if !gatewayValid}
+      <StepAlert
+        variant="warning"
+        message="Gateway address is invalid. Trust management actions are disabled."
+      />
+    {/if}
+
+    {#if loadError}
+      <StepAlert variant="error" message={loadError} />
+    {/if}
 
     <div class="mt-4">
       <div class="flex items-center justify-between gap-2 mb-2">
@@ -120,13 +138,13 @@
             type="button"
             class="btn btn-xs btn-ghost btn-square"
             onclick={loadTrusts}
-            disabled={loadingTrusts}
+            disabled={!canManageTrust}
             aria-label={loadingTrusts ? 'Refreshing…' : 'Refresh'}
           >
             <Lucide icon={LRefreshCw} size={14} class={loadingTrusts ? 'animate-spin' : ''} />
             <span class="sr-only">{loadingTrusts ? 'Refreshing…' : 'Refresh'}</span>
           </button>
-          <button type="button" class="btn btn-sm btn-primary" onclick={openAddTrust}>
+          <button type="button" class="btn btn-sm btn-primary" onclick={openAddTrust} disabled={!canManageTrust}>
             Add
           </button>
         </div>
@@ -137,5 +155,6 @@
         loading={loadingTrusts}
       />
     </div>
+  </div>
   </div>
 </FlowDecoration>

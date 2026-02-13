@@ -7,12 +7,16 @@
     validateCart,
   } from '$lib/areas/market/cart/store';
   import type {AggregatedCatalogItem} from '$lib/areas/market/model';
-  import { popupControls } from '$lib/shared/state/popup';
+  import { openStep } from '$lib/shared/flow/runtime';
   import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
   import {pickFirstProductImageUrl} from '$lib/areas/market/services';
   import CheckoutForms from '$lib/areas/market/flows/checkout/CheckoutForms.svelte';
   import CheckoutReview from '$lib/areas/market/flows/checkout/CheckoutReview.svelte';
   import {formatCurrency} from '$lib/shared/utils/money';
+  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+  import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import {gnosisConfig} from "$lib/shared/config/circles";
 
   // ————————————————————————————————————————————
@@ -143,7 +147,7 @@
     try {
       const v = await validateCart();
       if (hasRequirements(v)) {
-        popupControls.open({
+        openStep({
           title: 'Additional details',
           component: CheckoutForms,
           props: {},
@@ -151,7 +155,7 @@
         return;
       }
       await previewCartOrder();
-      popupControls.open({
+      openStep({
         title: 'Review order',
         component: CheckoutReview,
         props: {},
@@ -159,7 +163,7 @@
     } catch (e) {
       // In case of error, still allow the user to proceed to address step to resolve issues
       console.warn('[cart] validate before checkout failed; opening details step', e);
-      popupControls.open({
+      openStep({
         title: 'Additional details',
         component: CheckoutForms,
         props: {},
@@ -194,13 +198,20 @@
   const isCheckedOut = $derived.by(() => $cartState.basket?.status === 'CheckedOut');
 </script>
 
-<div class="w-full max-w-2xl md:max-w-3xl lg:max-w-4xl mx-auto space-y-4">
+<FlowDecoration size="xl">
+<div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
+  <FlowStepHeader
+    step={1}
+    total={4}
+    title="Cart"
+    subtitle="Review basket items before checkout."
+    labels={['Cart', 'Details', 'Review', 'Payment']}
+  />
+
   <!-- Title and close button are provided by the popup shell; remove duplicates here -->
 
   {#if $cartState.lastError}
-    <div class="alert alert-error text-xs">
-      {$cartState.lastError}
-    </div>
+    <StepAlert variant="error" className="text-xs" message={$cartState.lastError} />
   {/if}
 
   {#if !$cartState.basket || !$cartState.basket.items || $cartState.basket.items.length === 0}
@@ -283,21 +294,24 @@
       </div>
     {/if}
 
-    <div class="mt-4 flex justify-end">
-      <button
-        type="button"
-        class="btn btn-sm btn-primary"
-        onclick={() => openCheckoutFlow()}
-        disabled={
-          $cartState.loading ||
-          !$cartState.basket ||
-          !$cartState.basket.items ||
-          $cartState.basket.items.length === 0 ||
-          isCheckedOut
-        }
-      >
-        Checkout
-      </button>
-    </div>
+    <StepActionBar>
+      {#snippet primary()}
+        <button
+          type="button"
+          class="btn btn-sm btn-primary"
+          onclick={() => openCheckoutFlow()}
+          disabled={
+            $cartState.loading ||
+            !$cartState.basket ||
+            !$cartState.basket.items ||
+            $cartState.basket.items.length === 0 ||
+            isCheckedOut
+          }
+        >
+          Checkout
+        </button>
+      {/snippet}
+    </StepActionBar>
   {/if}
 </div>
+</FlowDecoration>

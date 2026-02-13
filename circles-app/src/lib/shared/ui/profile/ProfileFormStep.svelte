@@ -12,6 +12,7 @@
     showLocation?: boolean;
     nameLabel?: string;
     onNameInput?: (value: string) => void;
+    nameInputDataAttribute?: string;
     showSubmit?: boolean;
     submitLabel?: string;
     submitDisabled?: boolean;
@@ -29,6 +30,7 @@
     showLocation = true,
     nameLabel = 'Name',
     onNameInput,
+    nameInputDataAttribute,
     showSubmit = true,
     submitLabel = 'Create',
     submitDisabled,
@@ -52,6 +54,7 @@
     {showLocation}
     {nameLabel}
     {onNameInput}
+    {nameInputDataAttribute}
   />
   {#if showSubmit}
     <div class={submitContainerClass}>

@@ -1,7 +1,14 @@
 <script lang="ts">
     import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+    import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+    import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+    import StepReviewRow from '$lib/shared/ui/flow/StepReviewRow.svelte';
+    import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
     import { openStep } from '$lib/shared/flow/runtime';
+    import { popupControls } from '$lib/shared/state/popup';
     import Markdown from '$lib/shared/ui/content/markdown/Markdown.svelte';
+    import GroupProfileStep from './1_CreateGroup.svelte';
+    import GroupSettingsStep from './2_Settings.svelte';
     import CreateStep from './4_Create.svelte';
     import {
         createGroupContext,
@@ -39,38 +46,69 @@
             }
         });
     }
+
+    function editProfile() {
+        const didPop = popupControls.popTo((entry) => entry.component === GroupProfileStep);
+        if (!didPop) {
+            openStep({
+                title: 'Create Group',
+                component: GroupProfileStep,
+                props: { context: ctx, setGroup },
+            });
+        }
+    }
+
+    function editSettings() {
+        const didPop = popupControls.popTo((entry) => entry.component === GroupSettingsStep);
+        if (!didPop) {
+            openStep({
+                title: 'Group Settings',
+                component: GroupSettingsStep,
+                props: { context: ctx, setGroup },
+            });
+        }
+    }
 </script>
 
 <FlowDecoration>
+    <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
+    <FlowStepHeader
+        step={3}
+        total={4}
+        title="Review"
+        subtitle="Confirm group details before creation."
+        labels={['Create group', 'Settings', 'Review', 'Create']}
+    />
+
     <p class="text-sm text-base-content/70 mt-1">Confirm details before creating the group.</p>
 
-    <div class="bg-base-100 border border-base-300 rounded-xl p-4 space-y-3 mt-4">
-        <div class="flex flex-col gap-1">
-            <span class="text-xs text-base-content/60">Symbol</span>
-            <span class="text-lg font-semibold">{ctx.profile.symbol}</span>
-        </div>
-        <div class="text-sm">
-            <div class="text-base-content/70">On-chain name</div>
-            <div>{ctx.profile.onChainName ?? ctx.profile.name}</div>
-        </div>
-        {#if !fastLane}
-            <div class="text-sm">
-                <div class="text-base-content/70">Service</div>
-                <div class="truncate">{ctx.service}</div>
+    <StepSection className="mt-4" title="Group settings">
+        <div class="space-y-3">
+            <div class="flex flex-col gap-1">
+                <span class="text-xs text-base-content/60">Symbol</span>
+                <span class="text-lg font-semibold">{ctx.profile.symbol}</span>
             </div>
-            <div class="text-sm">
-                <div class="text-base-content/70">Fee collection</div>
-                <div class="truncate">{ctx.feeCollection}</div>
-            </div>
-            <div class="text-sm">
-                <div class="text-base-content/70">Initial conditions</div>
-                <div>{icCount}</div>
-            </div>
-        {/if}
-    </div>
 
-    <div class="bg-base-100 border border-base-300 rounded-xl p-4 space-y-3 mt-4">
-        <div class="text-sm font-semibold">Group profile</div>
+            <StepReviewRow
+                label="Group profile"
+                value={ctx.profile.name}
+                onChange={editProfile}
+                changeLabel="Edit"
+            />
+
+            <StepReviewRow label="On-chain name" value={ctx.profile.onChainName ?? ctx.profile.name} onChange={editProfile} changeLabel="Edit" />
+
+            {#if !fastLane}
+                <StepReviewRow label="Service" value={ctx.service} className="text-sm" onChange={editSettings} changeLabel="Edit" />
+                <StepReviewRow label="Fee collection" value={ctx.feeCollection} className="text-sm" onChange={editSettings} changeLabel="Edit" />
+                <StepReviewRow label="Initial conditions" value={String(icCount)} className="text-sm" onChange={editSettings} changeLabel="Edit" />
+            {:else}
+                <StepReviewRow label="Settings mode" value="Simple" className="text-sm" onChange={editSettings} changeLabel="Edit" />
+            {/if}
+        </div>
+    </StepSection>
+
+    <StepSection className="mt-4" title="Group profile">
 
         <div class="flex items-start gap-4">
             <div class="w-24 h-24 rounded-lg bg-base-200 overflow-hidden flex items-center justify-center text-base-content/50">
@@ -100,11 +138,10 @@
                 {/if}
             </div>
         </div>
-    </div>
+    </StepSection>
 
     {#if !fastLane}
-        <div class="bg-base-100 border border-base-300 rounded-xl p-4 space-y-2 mt-4">
-            <div class="text-sm font-semibold">Initial conditions ({icCount})</div>
+        <StepSection className="mt-4" title={`Initial conditions (${icCount})`}>
             {#if icCount > 0}
                 <div class="flex flex-wrap gap-2">
                     {#each ctx.initialConditions as addr}
@@ -114,12 +151,15 @@
             {:else}
                 <div class="text-sm text-base-content/50">None</div>
             {/if}
-        </div>
+        </StepSection>
     {/if}
 
-    <div class="mt-5 flex justify-end">
-        <button type="button" class="btn btn-primary btn-sm" onclick={next}>
-            Create group
-        </button>
+    <StepActionBar>
+        {#snippet primary()}
+            <button type="button" class="btn btn-primary btn-sm" onclick={next}>
+                Create group
+            </button>
+        {/snippet}
+    </StepActionBar>
     </div>
 </FlowDecoration>

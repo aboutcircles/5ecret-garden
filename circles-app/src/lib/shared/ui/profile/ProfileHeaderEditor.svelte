@@ -17,6 +17,7 @@
         showLocation?: boolean;
         nameLabel?: string;
         onNameInput?: (value: string) => void;
+        nameInputDataAttribute?: string;
     }
 
     let {
@@ -29,6 +30,7 @@
         showLocation = true,
         nameLabel = 'Name',
         onNameInput,
+        nameInputDataAttribute,
     }: Props = $props();
 
     const CROP_WIDTH = 256;
@@ -160,6 +162,7 @@
                     bind:value={name}
                     placeholder="Your profile name"
                     readonly={readonly}
+                    data-popup-initial-input={nameInputDataAttribute === 'data-popup-initial-input' ? true : undefined}
                     oninput={(event) => onNameInput?.((event.currentTarget as HTMLInputElement).value)}
                 />
             </label>
