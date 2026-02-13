@@ -279,6 +279,10 @@
                         <button class="mt-4 sm:mt-0" onclick={handleExportCSV}>Export CSV</button>
                     </div>
                 </div>
+
+                <p class="text-xs text-base-content/70">
+                    Trust decides which Circles you accept — and whether payments can route through your connections.
+                </p>
             {/if}
 
         </div>
