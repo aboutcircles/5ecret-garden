@@ -1,5 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { dev } from '$app/environment';
+  import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
+  import { Search as LSearch } from 'lucide';
   interface Props {
     homeLink?: string;
   }
@@ -7,8 +10,9 @@
   let { homeLink = '/' }: Props = $props();
 
   import { page } from '$app/stores';
-  import { openFlowPopup } from '$lib/shared/state/popup';
+  import { openFlowPopup, popupControls, popupState } from '$lib/shared/state/popup';
   import { writable, type Unsubscriber } from 'svelte/store';
+  import GlobalAvatarSearchPopup from '$lib/shared/ui/avatar-search/GlobalAvatarSearchPopup.svelte';
 
   const cartItemCount = writable(0);
   let cartCountUnsub: Unsubscriber | null = null;
@@ -43,6 +47,15 @@
     });
   }
 
+  function openGlobalSearch(): void {
+    popupControls.open({
+      title: 'Search',
+      kind: 'inspect',
+      dismiss: 'backdrop',
+      component: GlobalAvatarSearchPopup,
+    });
+  }
+
   const isMarketPage = $derived($page.url.pathname.startsWith('/market'));
 
   let menuEl: HTMLDetailsElement | null = $state(null);
@@ -69,7 +82,30 @@
   function handleKeydown(event: KeyboardEvent) {
     if (event.key === 'Escape') {
       closeMenu(true);
+      return;
     }
+
+    const isOpenShortcut = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k';
+    if (!isOpenShortcut) return;
+
+    if ($popupState.content) return;
+    const target = event.target as HTMLElement | null;
+    const isTypingContext = !!target?.closest('input, textarea, select, [contenteditable="true"], [role="textbox"]');
+    if (isTypingContext) return;
+
+    event.preventDefault();
+    openGlobalSearch();
+  }
+
+  function onSearchButtonClick(): void {
+    openGlobalSearch();
+    closeMenu();
+  }
+
+  function onSearchButtonKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    onSearchButtonClick();
   }
 
   // Close on route changes
@@ -98,7 +134,7 @@
       <img src="/logo.svg" alt="Circles" class="w-8 h-8" />
       <span class="inline-block overflow-hidden text-primary">
         Circles
-        <span class="ml-1 text-sm font-semibold text-red-800">(beta)</span>
+        <span class="ml-1 text-xs font-semibold text-base-content/60">(beta)</span>
       </span>
     </a>
   </div>
@@ -112,6 +148,16 @@
       Basket ({$cartItemCount})
     </button>
   {/if}
+  <button
+    type="button"
+    class="btn btn-circle btn-ghost btn-sm mr-1"
+    aria-label="Search"
+    title="Search (Ctrl/Cmd+K)"
+    onclick={onSearchButtonClick}
+    onkeydown={onSearchButtonKeydown}
+  >
+    <Lucide icon={LSearch} size={16} ariaLabel="" />
+  </button>
   <details class="dropdown dropdown-end flex-none" bind:this={menuEl}>
     <summary class="btn btn-circle btn-ghost btn-sm" aria-haspopup="menu" aria-expanded={menuEl?.open ? 'true' : 'false'}
       ><svg
@@ -148,8 +194,10 @@
       <li>
         <a class="link link-hover" href="/privacy-policy">Privacy policy</a>
       </li>
-      <li><a class="link link-hover" href="/kitchen-sink">Kitchen sink</a></li>
-      <li><a class="link link-hover" href="/group-management">Group management (prototype)</a></li>
+      {#if dev}
+        <li><a class="link link-hover" href="/kitchen-sink">Kitchen sink</a></li>
+        <li><a class="link link-hover" href="/group-management">Group management (prototype)</a></li>
+      {/if}
     </ul>
   </details>
 </div>

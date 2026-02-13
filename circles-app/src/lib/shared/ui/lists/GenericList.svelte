@@ -233,8 +233,10 @@
             aria-live="polite"
             aria-busy={$store && !$store?.ended && !hasError ? 'true' : 'false'}
     >
-        {#if ($store?.data ?? []).length === 0 || $store?.ended}
-            <span class="text-base-content/70">End of list</span>
+        {#if $store?.ended}
+            {#if ($store?.data ?? []).length > 0}
+                <span class="text-base-content/70">No more items</span>
+            {/if}
         {:else if hasError}
             <span class="text-error">Error loading items</span>
             <button class="ml-2 link link-primary" onclick={handleRetry}>Retry</button>

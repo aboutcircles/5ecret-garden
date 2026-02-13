@@ -82,6 +82,11 @@
     let mintHandler: Address | undefined = $state();
 
     let trustRow: TrustRelationRow | undefined = $state();
+    const relationText = $derived.by(() => {
+        if (!trustRow) return 'Not connected';
+        const formatted = formatTrustRelation(trustRow.relation, profile);
+        return formatted === 'None' ? 'Not connected' : formatted;
+    });
     let collateralInTreasury: Array<{
         avatar: Address;
         amount: bigint;
@@ -515,7 +520,7 @@
                     class="text-sm"
                     class:text-green-600={trustRow?.relation === 'trusts' || trustRow?.relation === 'trustedBy' || trustRow?.relation === 'mutuallyTrusts'}
             >
-                {formatTrustRelation(trustRow.relation, profile)}
+                {relationText}
             </span>
 
             <HelpPopover
@@ -526,8 +531,12 @@
             />
         </div>
     {:else}
-        <span class="text-sm text-base-content/70">No relation available</span>
+        <span class="text-sm text-base-content/70">Not connected</span>
     {/if}
+
+    <div class="text-xs text-base-content/60 mt-1">
+        Trust = you accept Circles from this account.
+    </div>
 
     <TrustScoreBadge {address} />
 
@@ -626,20 +635,23 @@
 
     <div class="w-full flex justify-center mt-6 space-x-6">
         {#if !avatarState.isGroup}
-            <button
-                    class="btn btn-primary btn-sm"
-                    onclick={() => {
-                openSendFlowPopup({
-                    selectedAddress: otherAvatar?.avatar,
-                    selectedAsset: transitiveTransfer(),
-                    amount: undefined,
-                    transitiveOnly: true
-                });
-            }}
-            >
-                <img src="/send-new.svg" alt="Send" class="w-5 h-5"/>
-                Send
-            </button>
+            <div class="flex flex-col items-center gap-1">
+                <button
+                        class="btn btn-primary btn-sm"
+                        onclick={() => {
+                    openSendFlowPopup({
+                        selectedAddress: otherAvatar?.avatar,
+                        selectedAsset: transitiveTransfer(),
+                        amount: undefined,
+                        transitiveOnly: true
+                    });
+                }}
+                >
+                    <img src="/send-new.svg" alt="Send" class="w-5 h-5"/>
+                    Send
+                </button>
+                <div class="text-[11px] text-base-content/60">We’ll check routing on the next step.</div>
+            </div>
         {/if}
         {#if otherAvatar?.type === 'CrcV2_RegisterGroup' && !!mintHandler && !avatarState.isGroup}
             <button

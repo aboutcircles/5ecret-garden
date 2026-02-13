@@ -19,24 +19,45 @@
   let canvas: HTMLCanvasElement;
   let chart: Chart<'doughnut', number[], string>;
   let chartData: any;
+  const colorCache = new Map<string, string>();
 
-  // Enhanced color generation for better visual appeal
+  const themeTokens = ['--p', '--s', '--a', '--in', '--su', '--wa', '--er'];
+
+  function resolveThemeColor(token: string, alpha: number): string {
+    const key = `${token}:${alpha}`;
+    const cached = colorCache.get(key);
+    if (cached) return cached;
+
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      const fallback = `rgba(99, 102, 241, ${alpha})`;
+      colorCache.set(key, fallback);
+      return fallback;
+    }
+
+    const probe = document.createElement('span');
+    probe.style.color = `oklch(var(${token}) / ${alpha})`;
+    probe.style.position = 'absolute';
+    probe.style.pointerEvents = 'none';
+    probe.style.opacity = '0';
+    document.body.appendChild(probe);
+    const resolved = getComputedStyle(probe).color || `rgba(99, 102, 241, ${alpha})`;
+    probe.remove();
+    colorCache.set(key, resolved);
+    return resolved;
+  }
+
   const generateColors = (index: number) => {
-    const baseColors = [
-      [56, 49, 139],  // primary
-      [64, 82, 214],  // secondary
-      [55, 205, 190], // accent
-      [111, 79, 179], // purple variant
-      [79, 142, 179], // blue variant
-      [79, 179, 159]  // teal variant
-    ];
-    
-    const color = baseColors[index % baseColors.length];
+    const token = themeTokens[index % themeTokens.length];
     return {
-      background: `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.2)`,
-      border: `rgba(${color[0]}, ${color[1]}, ${color[2]}, 1)`
+      background: resolveThemeColor(token, 0.25),
+      border: resolveThemeColor(token, 1),
     };
   };
+
+  const legendColor = $derived(resolveThemeColor('--bc', 0.75));
+  const tooltipBg = $derived(resolveThemeColor('--b1', 0.95));
+  const tooltipText = $derived(resolveThemeColor('--bc', 0.9));
+  const tooltipBorder = $derived(resolveThemeColor('--b3', 0.6));
 
   $effect(() => {
     chartData = {
@@ -78,17 +99,17 @@
               usePointStyle: true,
               pointStyle: 'circle',
               padding: 20,
-              color: 'rgba(107, 114, 128, 0.9)',
+              color: legendColor,
               font: {
                 size: 12
               }
             }
           },
           tooltip: {
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            titleColor: 'rgba(17, 24, 39, 0.9)',
-            bodyColor: 'rgba(75, 85, 99, 0.9)',
-            borderColor: 'rgba(229, 231, 235, 0.5)',
+            backgroundColor: tooltipBg,
+            titleColor: tooltipText,
+            bodyColor: tooltipText,
+            borderColor: tooltipBorder,
             borderWidth: 1,
             cornerRadius: 8,
             boxPadding: 6,

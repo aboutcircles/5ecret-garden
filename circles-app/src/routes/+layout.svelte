@@ -230,7 +230,7 @@
 {/if}
 
 <main
-  class="relative w-full min-h-screen bg-base-200 border-gray-200 overflow-hidden font-dmSans pt-4"
+  class="relative w-full min-h-screen bg-base-200 border-base-300 overflow-hidden font-dmSans pt-4"
 >
   {#if avatarState.avatar?.avatarInfo && canMigrate(avatarState.avatar.avatarInfo)}
     <button class="w-full fixed top-16 z-10" onclick={() => void openMigratePopup()} onkeydown={(e) => e.key === 'Enter' && void openMigratePopup()}>
@@ -260,21 +260,16 @@
     class:layout-toast={!!avatarState.avatar}
   >
     {#each $tasks as task}
-      {#if task.name == 'Error'}
-        <div class="alert alert-error">
-          {#await task.promise}
-            <span class="loading loading-spinner loading-md"></span>
-          {:then error}
-            <p>{error.message}</p>
-            <pre>{error.stackTrace}</pre>
-          {/await}
-        </div>
-      {:else}
-        <div class="alert bg-primary-content opacity-85">
+      <div class="alert bg-primary-content opacity-85">
+        {#await task.promise}
           <span class="loading loading-spinner loading-md"></span>
           {task.name}
-        </div>
-      {/if}
+        {:then _}
+          <!-- task finished; toast entry will disappear when task store updates -->
+        {:catch _err}
+          <!-- errors are handled via dedicated popup flows; suppress stack traces in toast UI -->
+        {/await}
+      </div>
     {/each}
   </div>
 {/if}

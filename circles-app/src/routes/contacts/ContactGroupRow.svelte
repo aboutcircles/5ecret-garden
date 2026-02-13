@@ -1,7 +1,6 @@
 <script lang="ts">
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-import { ProfilePopup } from '$lib/areas/profile/ui/pages';
-    import { popupControls } from '$lib/shared/state/popup';
+    import { openProfilePopup } from '$lib/shared/ui/profile/openProfilePopup';
     import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
     import type { Address } from '@circles-sdk/utils';
     import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
@@ -11,7 +10,7 @@ import { ProfilePopup } from '$lib/areas/profile/ui/pages';
 
     function openProfile() {
         if (!address) return;
-        popupControls.open?.({ component: ProfilePopup, props: { address } });
+        openProfilePopup(address);
     }
 
     function focusSearchInput(anchor?: HTMLElement | null): void {

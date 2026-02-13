@@ -15,10 +15,12 @@
 
   let wrapType: 'Static' | 'Demurraged' = $state('Static');
   let amount: number = $state(0);
+  let showAdvanced = $state(false);
+  const canWrap = $derived(Number.isFinite(amount) && amount > 0);
 
   async function wrap() {
     const sendValue = ethers.parseEther(amount.toString());
-    if (wrapType == 'Demurraged') {
+    if (wrapType === 'Demurraged') {
       runTask({
         name: `Wrap ${roundToDecimals(amount)} Circles as Demurraged ERC20...`,
         promise: wrapDemurraged(sendValue),
@@ -36,10 +38,7 @@
     if (avatarState.avatar?.avatarInfo?.version !== 2) {
       throw new Error('Only supported for Avatar v2');
     }
-    const receipt = await avatarState.avatar?.wrapInflationErc20(
-      asset.tokenAddress,
-      sendValue
-    );
+    const receipt = await avatarState.avatar?.wrapInflationErc20(asset.tokenAddress, sendValue);
     if (!receipt) {
       throw new Error('Failed to wrap Circles');
     }
@@ -49,17 +48,12 @@
     if (avatarState.avatar?.avatarInfo?.version !== 2) {
       throw new Error('Only supported for Avatar v2');
     }
-    const receipt = await avatarState.avatar?.wrapDemurrageErc20(
-      asset.tokenAddress,
-      sendValue
-    );
+    const receipt = await avatarState.avatar?.wrapDemurrageErc20(asset.tokenAddress, sendValue);
     if (!receipt) {
       throw new Error('Failed to wrap Circles');
     }
   }
 </script>
-
-<!-- Form for entering the amount and selecting the wrapping type -->
 
 <div class="p-6 pt-0">
   <div class="form-control mb-4">
@@ -67,7 +61,7 @@
     <BalanceRow item={asset} />
   </div>
 
-  <div class="form-control mb-4">
+  <div class="form-control mb-2">
     <p class="menu-title pl-0">Amount</p>
     <input
       type="number"
@@ -80,33 +74,63 @@
     />
   </div>
 
+  <div class="flex justify-end mb-4">
+    <button
+      type="button"
+      class="btn btn-ghost btn-xs"
+      onclick={() => (amount = Number(asset.circles || 0))}
+    >
+      Use max
+    </button>
+  </div>
+
   <div class="form-control mb-4">
-    <p class="menu-title pl-0">Type</p>
-    <div class="flex space-x-4">
-      <label class="cursor-pointer flex items-center">
-        <input
-          type="radio"
-          name="wrapType"
-          value="Static"
-          bind:group={wrapType}
-          class="radio radio-primary"
-        />
-        <span class="ml-2">Static</span>
-      </label>
-      <label class="cursor-pointer flex items-center">
-        <input
-          type="radio"
-          name="wrapType"
-          value="Demurraged"
-          bind:group={wrapType}
-          class="radio radio-primary"
-        />
-        <span class="ml-2">Demurraged</span>
-      </label>
-    </div>
+    <p class="text-xs text-base-content/70">
+      Wrapping creates a transferable token. You can unwrap anytime.
+    </p>
+  </div>
+
+  <div class="form-control mb-4">
+    <button
+      type="button"
+      class="btn btn-ghost btn-sm justify-between"
+      aria-expanded={showAdvanced}
+      onclick={() => (showAdvanced = !showAdvanced)}
+    >
+      <span>Advanced</span>
+      <span class="text-xs">{showAdvanced ? 'Hide' : 'Show'}</span>
+    </button>
+
+    {#if showAdvanced}
+      <div class="mt-2">
+        <p class="menu-title pl-0">Type</p>
+        <div class="flex space-x-4">
+          <label class="cursor-pointer flex items-center">
+            <input
+              type="radio"
+              name="wrapType"
+              value="Static"
+              bind:group={wrapType}
+              class="radio radio-primary"
+            />
+            <span class="ml-2">Static</span>
+          </label>
+          <label class="cursor-pointer flex items-center">
+            <input
+              type="radio"
+              name="wrapType"
+              value="Demurraged"
+              bind:group={wrapType}
+              class="radio radio-primary"
+            />
+            <span class="ml-2">Demurraged</span>
+          </label>
+        </div>
+      </div>
+    {/if}
   </div>
 
   <div class="modal-action">
-    <button type="submit" class="btn btn-primary btn-sm" onclick={wrap}>Wrap</button>
+    <button type="submit" class="btn btn-primary btn-sm" onclick={wrap} disabled={!canWrap}>Wrap</button>
   </div>
 </div>

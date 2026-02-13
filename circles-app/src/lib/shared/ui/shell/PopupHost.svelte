@@ -409,7 +409,11 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        background: white;
+        background: oklch(var(--b1));
+        border-top: 1px solid oklch(var(--b3) / 0.55);
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
+        box-shadow: 0 -8px 24px oklch(var(--bc) / 0.08);
         transition: transform .3s ease, opacity .3s ease;
         transform: translateY(100%);
         opacity: 0;
