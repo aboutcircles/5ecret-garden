@@ -23,13 +23,16 @@
 <TrustActionCard
   {address}
   intro="You're about to trust the following group or person:"
-  warning="Trusting someone means that you accept their tokens at the same value as your own."
-  explainerTitle="How this trust action works"
-  explainerPoints={[
-    'Trust is binary: this either enables trust or it does not.',
-    'Trust is one-way. They still need to trust you separately if they want the same in reverse.',
-    'Adding trust can improve transfer paths and reduce send bottlenecks in your network.',
+  warning="Trust means you accept Circles from this account. When payments route through the network, you may end up holding more of their Circles and fewer of yours (your total stays the same)."
+  quickHelpTitle="What trusting changes"
+  quickHelpLines={[
+    'Trust means you accept this account’s Circles.',
+    'Routing can change whose Circles you hold (total stays the same).',
+    'You can untrust later to stop accepting more.',
   ]}
+  quickHelpStorageKey="trust-action-help-dismissed-v1"
+  quickHelpAutoShow={false}
+  showExplainerDetails={false}
   cta="Trust"
   action={trust}
  />

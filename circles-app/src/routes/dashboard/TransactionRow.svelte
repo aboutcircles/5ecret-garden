@@ -29,7 +29,7 @@
     function getTopInfo(avatarAddress: string): string {
         const zero = '0x0000000000000000000000000000000000000000';
         if (item.from === zero && item.to.toLowerCase() === avatarAddress.toLowerCase()) {
-            return 'Personal minting';
+            return 'Collected CRC';
         }
         return '';
     }

@@ -11,6 +11,7 @@
 
   let context: AddContactFlowContext = $state({
     selectedAddress: '0x0',
+    trustVersion: undefined,
   });
 
   function oninvite(avatar: Address) {
@@ -32,9 +33,10 @@
       (existingContact.row.relation === 'trusts' ||
         existingContact.row.relation === 'mutuallyTrusts')
     ) {
+      context.trustVersion = existingContact.avatarInfo?.version;
       // already trusting the account
       openStep({
-        title: 'Untrust?',
+        title: 'Manage trust',
         component: YouAlreadyTrust,
         props: {
           context: context,

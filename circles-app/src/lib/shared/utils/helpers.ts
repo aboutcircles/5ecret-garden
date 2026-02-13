@@ -15,11 +15,11 @@ export function getTypeString(type: string): string {
 export function formatTrustRelation(relation: TrustRelation | undefined, profile?: Profile) {
   switch (relation) {
     case 'trusts':
-      return `You accept ${profile ? profile.name + '’s' : 'their'} tokens`;
+      return `You accept ${profile ? profile.name + '’s' : 'their'} Circles`;
     case 'trustedBy':
-      return `${profile ? profile.name : 'They'} accept your tokens`;
+      return profile ? `${profile.name} accepts your Circles` : 'They accept your Circles';
     case 'mutuallyTrusts':
-      return 'You accept each other’s tokens';
+      return 'You accept each other’s Circles';
     case 'selfTrusts':
       return 'Self-trusted';
     case 'variesByVersion':

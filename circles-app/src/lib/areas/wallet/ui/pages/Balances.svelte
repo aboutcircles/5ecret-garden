@@ -1,11 +1,15 @@
 <script lang="ts">
+    import { browser } from '$app/environment';
     import {circlesBalances} from '$lib/shared/state/circlesBalances';
     import {derived, writable, type Writable} from 'svelte/store';
+    import { onMount } from 'svelte';
     import BalanceRow from '$lib/areas/wallet/ui/components/BalanceRow.svelte';
     import type {EventRow} from '@circles-sdk/data';
     import Filter from '$lib/shared/ui/lists/Filter.svelte';
     import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
     import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
+    import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
+    import { CircleHelp as LCircleHelp, X as LX } from 'lucide';
     import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
 
     let filterVersion = writable<number | undefined>(undefined);
@@ -17,10 +21,39 @@
     // Filters panel state — store to ensure reactivity in all modes
     const showFilters: Writable<boolean> = writable(false);
     const FILTER_PANEL_ID: string = 'balance-filters';
+    const BALANCES_HELP_DISMISSED_KEY = 'balances-help-dismissed-v1';
+    const WHY_MANY_CIRCLES_LINES: string[] = [
+        'You can hold Circles from many people and groups.',
+        'Trust decides which Circles you accept.',
+        'Auto route keeps the amount the same, but may change whose Circles you hold.',
+    ];
+
+    let showBalancesHelp: boolean = $state(false);
 
     function toggleFilters(): void {
         showFilters.update((v) => !v);
     }
+
+    function filterButtonClass(active: boolean): string {
+        return `btn btn-ghost btn-sm btn-square ${active ? 'btn-active' : ''}`.trim();
+    }
+
+    function dismissBalancesHelp(): void {
+        showBalancesHelp = false;
+        if (browser) {
+            localStorage.setItem(BALANCES_HELP_DISMISSED_KEY, '1');
+        }
+    }
+
+    function openBalancesHelp(): void {
+        showBalancesHelp = true;
+    }
+
+    onMount(() => {
+        if (!browser) return;
+        const alreadyDismissed = localStorage.getItem(BALANCES_HELP_DISMISSED_KEY) === '1';
+        showBalancesHelp = !alreadyDismissed;
+    });
 
     // Shape this like other lists so GenericList can key rows
     const filteredAll = derived(
@@ -80,54 +113,64 @@
     });
 </script>
 
-<div class="w-full flex items-start gap-2">
-    <div class="w-full flex items-center gap-2">
-        <button
-                type="button"
-                class="btn btn-ghost btn-xs p-1 self-start"
-                aria-label={$showFilters ? 'Hide filters' : 'Show filters'}
-                aria-expanded={$showFilters}
-                aria-controls={FILTER_PANEL_ID}
-                onclick={toggleFilters}
-                title="Filter"
-        >
-            <!-- funnel icon -->
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"
-                 aria-hidden="true">
-                <path d="M3 4h18v2l-7 7v5l-4 2v-7L3 6V4z"></path>
-            </svg>
-        </button>
-    </div>
-</div>
+{#snippet balancesToolbarActions()}
+    <button
+            type="button"
+            class={filterButtonClass($showFilters)}
+            aria-label={$showFilters ? 'Hide filters' : 'Show filters'}
+            aria-expanded={$showFilters}
+            aria-controls={FILTER_PANEL_ID}
+            onclick={toggleFilters}
+            title="Filter"
+    >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+            <path d="M3 4h18v2l-7 7v5l-4 2v-7L3 6V4z"></path>
+        </svg>
+    </button>
 
-{#if $showFilters}
-    <div id={FILTER_PANEL_ID} class="mt-3 space-y-3">
-        <div class="flex flex-wrap items-center gap-2">
-            <p class="text-sm">Version</p>
-            <Filter text="All" filter={filterVersion} value={undefined}/>
-            <Filter text="Version 1" filter={filterVersion} value={1}/>
-            <Filter text="Version 2" filter={filterVersion} value={2}/>
-        </div>
+    <button
+            type="button"
+            class="btn btn-ghost btn-sm btn-circle border border-base-300/70 bg-base-100 hover:bg-base-200"
+            aria-label="Why so many Circles?"
+            title="Why so many Circles?"
+            onclick={openBalancesHelp}
+    >
+        <Lucide icon={LCircleHelp} size={16} class="text-primary/80" ariaLabel="" />
+    </button>
+{/snippet}
 
-        <div class="flex flex-wrap items-center gap-2">
-            <p class="text-sm">Type</p>
-            <Filter text="All" filter={filterType} value={undefined}/>
-            <Filter text="Personal" filter={filterType} value={'personal'}/>
-            <Filter text="Group" filter={filterType} value={'group'}/>
-        </div>
+{#snippet balancesToolbarBelow()}
+    {#if $showFilters}
+        <div id={FILTER_PANEL_ID} class="space-y-3">
+            <div class="flex flex-wrap items-center gap-2">
+                <p class="text-sm">Version</p>
+                <Filter text="All" filter={filterVersion} value={undefined}/>
+                <Filter text="Version 1" filter={filterVersion} value={1}/>
+                <Filter text="Version 2" filter={filterVersion} value={2}/>
+            </div>
 
-        <div class="flex flex-wrap items-center gap-2">
-            <p class="text-sm">Token</p>
-            <Filter text="All" filter={filterToken} value={undefined}/>
-            <Filter text="ERC20" filter={filterToken} value={'erc20'}/>
-            <Filter text="ERC1155" filter={filterToken} value={'erc1155'}/>
+            <div class="flex flex-wrap items-center gap-2">
+                <p class="text-sm">Type</p>
+                <Filter text="All" filter={filterType} value={undefined}/>
+                <Filter text="Personal" filter={filterType} value={'personal'}/>
+                <Filter text="Group" filter={filterType} value={'group'}/>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+                <p class="text-sm">Token</p>
+                <Filter text="All" filter={filterToken} value={undefined}/>
+                <Filter text="ERC20" filter={filterToken} value={'erc20'}/>
+                <Filter text="ERC1155" filter={filterToken} value={'erc1155'}/>
+            </div>
         </div>
-    </div>
-{/if}
+    {/if}
+{/snippet}
 
 <ListShell
     query={searchQuery}
     searchPlaceholder="Search by owner or token address"
+    toolbarActions={balancesToolbarActions}
+    toolbarBelow={balancesToolbarBelow}
     inputDataAttribute="data-balances-search-input"
     onInputKeydown={onSearchInputKeydown}
     isEmpty={$filteredAll.length === 0}
@@ -136,7 +179,32 @@
     noMatchesLabel="No matching balances"
     wrapInListContainer={false}
 >
-    <div data-balances-list-scope bind:this={balancesListScopeEl}>
+    <div data-balances-list-scope bind:this={balancesListScopeEl} class="relative">
+        {#if showBalancesHelp}
+            <div class="absolute right-0 top-1 z-20 w-full max-w-sm rounded-xl border border-base-300 bg-base-100 p-3 shadow-lg">
+                <div class="flex items-start justify-between gap-2">
+                    <div>
+                        <div class="text-xs font-semibold text-base-content/70">Why so many Circles?</div>
+                        <ul class="mt-2 space-y-1 text-xs text-base-content/80">
+                            {#each WHY_MANY_CIRCLES_LINES as line}
+                                <li>{line}</li>
+                            {/each}
+                        </ul>
+                    </div>
+
+                    <button
+                            type="button"
+                            class="btn btn-ghost btn-xs btn-square"
+                            aria-label="Dismiss help"
+                            title="Dismiss"
+                            onclick={dismissBalancesHelp}
+                    >
+                        <Lucide icon={LX} size={14} class="text-base-content/70" ariaLabel="" />
+                    </button>
+                </div>
+            </div>
+        {/if}
+
         <GenericList store={filteredStore} row={BalanceRow}/>
     </div>
 </ListShell>
