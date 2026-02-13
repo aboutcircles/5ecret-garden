@@ -60,6 +60,7 @@
         profileBookmarksStore,
         type ProfileBookmark,
     } from '$lib/areas/settings/state/profileBookmarks';
+    import HelpPopover from '$lib/shared/ui/primitives/HelpPopover.svelte';
 
     interface Props {
         address: Address | undefined;
@@ -508,12 +509,25 @@
     <Avatar view="vertical" clickable={false} {address}/>
 
     {#if trustRow}
-        <span
-                class="text-sm"
-                class:text-green-600={trustRow?.relation === 'trusts' || trustRow?.relation === 'trustedBy' || trustRow?.relation === 'mutuallyTrusts'}
-        >
-            {formatTrustRelation(trustRow.relation, profile)}
-        </span>
+        <div class="mt-2 flex items-center gap-1">
+            <span
+                    class="text-sm"
+                    class:text-green-600={trustRow?.relation === 'trusts' || trustRow?.relation === 'trustedBy' || trustRow?.relation === 'mutuallyTrusts'}
+            >
+                {formatTrustRelation(trustRow.relation, profile)}
+            </span>
+
+            <HelpPopover
+                    title="Trust & routing"
+                    lines={[
+                        'Trust means you accept this account’s Circles.',
+                        'Routing can change which Circles you hold (total stays the same).',
+                        'Untrust stops accepting more from them.',
+                    ]}
+                    buttonClass="btn btn-ghost btn-xs btn-square"
+                    widthClass="w-80"
+            />
+        </div>
     {:else}
         <span class="text-sm text-gray-500">No relation available</span>
     {/if}
@@ -718,6 +732,7 @@
             </button>
         {/if}
     </div>
+
 </div>
 
 <Tabs
@@ -725,7 +740,7 @@
         bind:selected={selectedTab}
         variant="boxed"
         size="sm"
-        class="w-full p-0 mt-8"
+        class="w-full p-0 mt-6"
         fitted={false}
         tabOrder={tabOrder}
 >

@@ -9,6 +9,7 @@
     searchPlaceholder?: string;
     toolbarClass?: string;
     toolbarActions?: Snippet;
+    toolbarBelow?: Snippet;
     onInputKeydown?: (event: KeyboardEvent) => void;
     onInputFocus?: (event: FocusEvent) => void;
     inputDataAttribute?: string;
@@ -34,6 +35,7 @@
     searchPlaceholder = 'Search by address or name',
     toolbarClass = '',
     toolbarActions,
+    toolbarBelow,
     onInputKeydown,
     onInputFocus,
     inputDataAttribute,
@@ -62,6 +64,12 @@
   {onInputFocus}
   {inputDataAttribute}
 />
+
+{#if toolbarBelow}
+  <div class="mb-3">
+    {@render toolbarBelow?.()}
+  </div>
+{/if}
 
 <ListStates
   {loading}

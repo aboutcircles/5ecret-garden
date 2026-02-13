@@ -43,7 +43,7 @@
 
         try {
             await runTask({
-                name: 'Minting Circles ...',
+                name: 'Collecting CRC ...',
                 promise: avatarState.avatar!.personalMint(),
             });
         } finally {

@@ -13,20 +13,27 @@
 </script>
 
 <FlowDecoration>
-  <p>You already trust this account. Do you want to untrust it?</p>
-  <button
-    class="btn btn-error mt-6"
-    onclick={() => {
-      popupControls.close();
-      openStep({
-        title: 'Untrust',
-        component: Untrust,
-        props: {
-          address: context.selectedAddress,
-        },
-      });
-    }}
-  >
-    Untrust
-  </button>
+  <p>You already trust this account.</p>
+
+  <div class="mt-6 flex flex-col sm:flex-row gap-2">
+    <button class="btn btn-primary" onclick={() => popupControls.close()}>
+      Done
+    </button>
+    <button
+      class="btn btn-error"
+      onclick={() => {
+        popupControls.close();
+        openStep({
+          title: 'Untrust',
+          component: Untrust,
+          props: {
+            address: context.selectedAddress,
+            trustVersion: context.trustVersion,
+          },
+        });
+      }}
+    >
+      Untrust...
+    </button>
+  </div>
 </FlowDecoration>

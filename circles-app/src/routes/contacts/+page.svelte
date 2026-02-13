@@ -18,6 +18,7 @@
     import { goto } from '$app/navigation';
     import { createPaginatedList } from '$lib/shared/state/paginatedList';
     import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
+    import HelpPopover from '$lib/shared/ui/primitives/HelpPopover.svelte';
 
     let filterVersion = writable<number | undefined>(undefined);
     let filterRelation = writable<'mutuallyTrusts' | 'trusts' | 'trustedBy' | 'variesByVersion' | undefined>(undefined);
@@ -179,11 +180,24 @@
                 </div>
                 <div class="flex justify-between items-center flex-wrap gap-y-4">
                     <div class="flex gap-2 items-center flex-wrap">
-                        <p class="text-sm">Relation</p>
+                        <div class="flex items-center gap-1">
+                            <p class="text-sm">Relation</p>
+                            <HelpPopover
+                                    title="Trust relations"
+                                    lines={[
+                                        'You accept = you accept their Circles.',
+                                        'Accepts you = they accept your Circles.',
+                                        'Both accept = you accept each other’s Circles.',
+                                    ]}
+                                    buttonClass="btn btn-ghost btn-xs btn-square"
+                                    widthClass="w-72"
+                            />
+                        </div>
+
                         <Filter text="All" filter={filterRelation} value={undefined}/>
-                        <Filter text="Mutual" filter={filterRelation} value={'mutuallyTrusts'}/>
-                        <Filter text="Trusted" filter={filterRelation} value={'trusts'}/>
-                        <Filter text="Trust you" filter={filterRelation} value={'trustedBy'}/>
+                        <Filter text="Both accept" filter={filterRelation} value={'mutuallyTrusts'}/>
+                        <Filter text="You accept" filter={filterRelation} value={'trusts'}/>
+                        <Filter text="Accepts you" filter={filterRelation} value={'trustedBy'}/>
                         <Filter text="Varies by version" filter={filterRelation} value={'variesByVersion'}/>
                     </div>
                     <div class="flex-grow flex justify-end">
@@ -191,6 +205,7 @@
                     </div>
                 </div>
             {/if}
+
         </div>
     {/if}
 

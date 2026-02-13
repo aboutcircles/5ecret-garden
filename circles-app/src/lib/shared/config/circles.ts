@@ -48,11 +48,11 @@ export const chiadoConfig: { production: AppConfig, rings: AppConfig } = {
 export const gnosisConfig: { production: AppConfig, rings: AppConfig } = {
   production: {
     ipfsGatewayBase: 'https://da08cae2-8b50-45dc-80b9-48925be78ec8.myfilebase.com',
-    marketApiBase: 'https://staging.circlesubi.network/market',
+    marketApiBase: 'http://localhost:65001/',
     marketOperator: '0x20ced4ed3b1651b832a77e13e54ea5cb14c8b95b',
     marketChainId: 100,
     marketChainIdHex: "0x64",
-    circlesRpcUrl: 'https://staging.circlesubi.network/',
+    circlesRpcUrl: 'http://localhost:8080/',
     pathfinderUrl: 'https://pathfinder.aboutcircles.com',
     profileServiceUrl: 'https://rpc.aboutcircles.com/profiles/',
     v1HubAddress: '0x29b9a7fbb8995b2423a71cc17cf9810798f6c543',

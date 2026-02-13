@@ -33,12 +33,21 @@
 <TrustActionCard
   {address}
   intro="You're about to un-trust the following group or person:"
-  warning="Un-trusting means that you no longer accept their tokens."
-  explainerTitle="How this untrust action works"
+  warning="Untrust stops accepting their Circles from now on. It doesn’t delete anything you already hold."
+  quickHelpTitle="What untrusting changes"
+  quickHelpLines={[
+    'Untrust stops accepting their Circles from now on.',
+    'It doesn’t remove balances you already hold.',
+    'Some routes may stop working until other paths exist.',
+  ]}
+  quickHelpStorageKey="untrust-action-help-dismissed-v1"
+  quickHelpAutoShow={false}
+  showExplainerDetails={false}
   explainerPoints={[
-    'Trust is binary: removing trust fully turns this relation off.',
-    'Trust is one-way. Removing your trust does not automatically remove their trust in you.',
-    'Removing trust can reduce available transfer paths and may lower what is sendable through your network.',
+    'Untrust is on/off: it removes the trust link.',
+    'Trust is one-way: untrusting doesn’t remove their trust in you.',
+    'Some routes that worked before may stop working.',
+    'You can trust again later.',
   ]}
   cta="Untrust"
   action={untrust}

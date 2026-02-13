@@ -135,7 +135,7 @@
 
 <p class="font-medium text-sm mt-4">
     {roundToDecimals(maxDisplayAmount)} <span class="text-gray-500">/ {roundToDecimals(balanceRow.circles)} CRC
-        <Tooltip content="The max. amount depends on your trust network and blockchain limits. Try to chunk large transfers if you experience issues."/></span>
+        <Tooltip content="The max. amount depends on your balance, trust network and blockchain limits. Form more quality trust relations to increase your spendable amount."/></span>
     <button class="btn btn-sm ml-4 font-normal" onclick={setMaxAmount}>
         Use Max
     </button>
