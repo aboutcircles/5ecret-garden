@@ -4,6 +4,7 @@
   import type { GatewayRow as GatewayRowType } from '$lib/areas/settings/model/gatewayTypes';
   import { openStep } from '$lib/shared/flow/runtime';
   import ManageTrust from '$lib/areas/settings/flows/gateway/ManageTrust.svelte';
+  import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
 
   interface Props {
     item: GatewayRowType;
@@ -24,44 +25,29 @@
     });
   }
 
-  function focusGatewaySearchInput(current: HTMLElement): void {
-    const scope = current.closest<HTMLElement>('[data-payment-gateway-list-scope]');
+  function focusGatewaySearchInput(current?: HTMLElement | null): void {
+    const scope = current?.closest<HTMLElement>('[data-payment-gateway-list-scope]')
+      ?? document.querySelector<HTMLElement>('[data-payment-gateway-list-scope]');
     const input = scope?.querySelector<HTMLInputElement>('[data-payment-gateway-search-input]');
     input?.focus();
   }
 
+  const listNavigator = createKeyboardListNavigator({
+    getRows: (anchor) => {
+      const scope = anchor?.closest<HTMLElement>('[data-payment-gateway-list-scope]')
+        ?? document.querySelector<HTMLElement>('[data-payment-gateway-list-scope]');
+      return Array.from((scope ?? document).querySelectorAll<HTMLElement>('[data-gateway-row]'));
+    },
+    focusInput: focusGatewaySearchInput,
+    onActivateRow: () => openManageTrust(),
+  });
+
   function onRowKeydown(event: KeyboardEvent): void {
-    const current = event.currentTarget as HTMLElement | null;
-    if (!current) return;
-
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      openManageTrust();
-      return;
-    }
-
-    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
-
-    const scope = current.closest<HTMLElement>('[data-payment-gateway-list-scope]');
-    const rows = Array.from((scope ?? document).querySelectorAll<HTMLElement>('[data-gateway-row]'));
-    const index = rows.indexOf(current);
-    if (index === -1) return;
-
-    event.preventDefault();
-
-    if (event.key === 'ArrowUp' && index === 0) {
-      focusGatewaySearchInput(current);
-      return;
-    }
-
-    const nextIndex = event.key === 'ArrowDown' ? index + 1 : index - 1;
-    if (nextIndex < 0 || nextIndex >= rows.length) return;
-    rows[nextIndex]?.focus();
+    listNavigator.onRowKeydown(event);
   }
 
   function onRowClick(event: MouseEvent): void {
-    const current = event.currentTarget as HTMLElement | null;
-    current?.focus();
+    listNavigator.onRowClick(event);
     openManageTrust();
   }
 </script>

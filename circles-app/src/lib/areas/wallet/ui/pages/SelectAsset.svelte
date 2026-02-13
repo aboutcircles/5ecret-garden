@@ -74,6 +74,7 @@
         }>;
         selectedAsset?: TokenBalanceRow | undefined;
         showTransitive?: boolean;
+        inputDataAttribute?: string;
         onselect: (tokenBalanceRow: TokenBalanceRow) => void;
     }
 
@@ -81,6 +82,7 @@
         balances,
         selectedAsset = $bindable(undefined),
         showTransitive = true,
+        inputDataAttribute,
         onselect,
     }: Props = $props();
     const query = writable('');
@@ -133,6 +135,7 @@
     <button
             type="button"
             class="w-full text-left bg-transparent border-0 p-0"
+            data-send-step-initial-focus
             onclick={() => handleSelect(transitiveTransfer())}
     >
         <RowFrame clickable={true} noLeading={true} className="border-primary/30 bg-primary/5">
@@ -153,7 +156,7 @@
 <ListShell
         query={query}
         searchPlaceholder="Search by owner or token address"
-        inputDataAttribute="data-select-asset-search-input"
+        inputDataAttribute={`data-select-asset-search-input ${inputDataAttribute ?? ''}`}
         onInputKeydown={onSearchInputKeydown}
         isEmpty={$balances?.data?.length === 0}
         isNoMatches={$balances?.data?.length > 0 && $selectableBalances.data.length === 0}

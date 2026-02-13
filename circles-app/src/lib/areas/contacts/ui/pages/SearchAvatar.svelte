@@ -18,10 +18,19 @@
         oninvite?: (avatar: any) => void;
         ontrust?: (avatar: any) => void;
         onselect?: (avatar: any, profile?: SearchProfileResult) => void;
-        avatarTypes?: string[]
+        avatarTypes?: string[];
+        inputDataAttribute?: string;
     }
 
-    let {selectedAddress = $bindable(undefined), searchType = 'send', oninvite, ontrust, onselect, avatarTypes}: Props = $props();
+    let {
+        selectedAddress = $bindable(undefined),
+        searchType = 'send',
+        oninvite,
+        ontrust,
+        onselect,
+        avatarTypes,
+        inputDataAttribute,
+    }: Props = $props();
     const query = writable('');
     let lastQuery: string = '';
     let result: SearchProfileResult[] = $state([]);
@@ -49,6 +58,22 @@
 
     function onSearchRowClick(event: MouseEvent) {
         searchListNavigator.onRowClick(event);
+    }
+
+    function onSearchInputKeydown(event: KeyboardEvent) {
+        if (
+            event.key === 'Enter' &&
+            searchType === 'send' &&
+            !loading &&
+            result.length === 1
+        ) {
+            event.preventDefault();
+            const only = result[0];
+            onselect?.(only.address, only);
+            return;
+        }
+
+        searchListNavigator.onInputArrowDown(event);
     }
 
     async function rpcSearchByText(query: string, limit: number, offset = 0, avatarTypes:string[]|undefined = undefined): Promise<SearchProfileResult[]> {
@@ -196,7 +221,8 @@
         query={query}
         searchPlaceholder="Search by name or address"
         bind:inputEl={searchInputEl}
-        onInputKeydown={searchListNavigator.onInputArrowDown}
+        {inputDataAttribute}
+        onInputKeydown={onSearchInputKeydown}
         {loading}
         {error}
         wrapInListContainer={false}

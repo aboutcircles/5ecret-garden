@@ -6,6 +6,7 @@
 import { ProfilePopup } from '$lib/areas/profile/ui/pages';
   import type { Address } from '@circles-sdk/utils';
   import type { TrustRelation } from '@circles-sdk/data';
+  import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
 
   interface HolderRow {
     avatar: Address;
@@ -30,47 +31,30 @@ import { ProfilePopup } from '$lib/areas/profile/ui/pages';
     return parseFloat(etherString).toFixed(2);
   }
 
-  function focusHoldersSearchInput(): void {
-    const input = document.querySelector<HTMLInputElement>('[data-holders-search-input]');
+  function focusHoldersSearchInput(anchor?: HTMLElement | null): void {
+    const scope = anchor?.closest<HTMLElement>('[data-profile-holders-list-scope]')
+      ?? document.querySelector<HTMLElement>('[data-profile-holders-list-scope]');
+    const input = scope?.querySelector<HTMLInputElement>('[data-holders-search-input]')
+      ?? document.querySelector<HTMLInputElement>('[data-holders-search-input]');
     input?.focus();
   }
 
+  const listNavigator = createKeyboardListNavigator({
+    getRows: (anchor) => {
+      const scope = anchor?.closest<HTMLElement>('[data-profile-holders-list-scope]')
+        ?? document.querySelector<HTMLElement>('[data-profile-holders-list-scope]');
+      return Array.from((scope ?? document).querySelectorAll<HTMLElement>('[data-holder-row]'));
+    },
+    focusInput: focusHoldersSearchInput,
+    onActivateRow: () => openProfile(item.avatar),
+  });
+
   function onRowKeydown(event: KeyboardEvent): void {
-    const current = event.currentTarget as HTMLElement | null;
-    if (!current) return;
-
-    const target = event.target as HTMLElement | null;
-    const isNestedTarget = !!target && target !== current;
-
-    if (event.key === 'Enter' || event.key === ' ') {
-      if (isNestedTarget) return;
-      event.preventDefault();
-      openProfile(item.avatar);
-      return;
-    }
-
-    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
-
-    const scope = current.closest<HTMLElement>('[data-profile-holders-list-scope]');
-    const rows = Array.from((scope ?? document).querySelectorAll<HTMLElement>('[data-holder-row]'));
-    const index = rows.indexOf(current);
-    if (index === -1) return;
-
-    event.preventDefault();
-
-    if (event.key === 'ArrowUp' && index === 0) {
-      focusHoldersSearchInput();
-      return;
-    }
-
-    const nextIndex = event.key === 'ArrowDown' ? index + 1 : index - 1;
-    if (nextIndex < 0 || nextIndex >= rows.length) return;
-    rows[nextIndex]?.focus();
+    listNavigator.onRowKeydown(event);
   }
 
   function onRowClick(event: MouseEvent): void {
-    const current = event.currentTarget as HTMLElement | null;
-    current?.focus();
+    listNavigator.onRowClick(event);
     openProfile(item.avatar);
   }
 </script>

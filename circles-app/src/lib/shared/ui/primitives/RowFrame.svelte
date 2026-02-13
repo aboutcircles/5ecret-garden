@@ -51,7 +51,7 @@
     let el: HTMLDivElement | null = null;
 
     function handleKeydown(e: KeyboardEvent): void {
-        onkeydown?.(e);
+        onkeydown?.(e as KeyboardEvent & { currentTarget: EventTarget & HTMLDivElement });
 
         const isInteractive: boolean = clickable && !disabled;
         const isActivate: boolean = e.key === 'Enter' || e.key === ' ';

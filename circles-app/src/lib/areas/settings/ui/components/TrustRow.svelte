@@ -4,6 +4,7 @@
   import { ProfilePopup } from '$lib/areas/profile/ui/pages';
   import { popupControls } from '$lib/shared/state/popup';
   import type { TrustRow as TrustRowType } from '$lib/areas/settings/model/gatewayTypes';
+  import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
 
   type TrustRowItem = TrustRowType & {
     showRemove?: boolean;
@@ -24,47 +25,30 @@
     popupControls.open?.({ component: ProfilePopup, props: { address: item.trustReceiver } });
   }
 
-  function focusSearchInput(): void {
-    const input = document.querySelector<HTMLInputElement>('[data-gateway-trust-search-input]');
+  function focusSearchInput(anchor?: HTMLElement | null): void {
+    const scope = anchor?.closest<HTMLElement>('[data-gateway-trust-list-scope]')
+      ?? document.querySelector<HTMLElement>('[data-gateway-trust-list-scope]');
+    const input = scope?.querySelector<HTMLInputElement>('[data-gateway-trust-search-input]')
+      ?? document.querySelector<HTMLInputElement>('[data-gateway-trust-search-input]');
     input?.focus();
   }
 
+  const listNavigator = createKeyboardListNavigator({
+    getRows: (anchor) => {
+      const scope = anchor?.closest<HTMLElement>('[data-gateway-trust-list-scope]')
+        ?? document.querySelector<HTMLElement>('[data-gateway-trust-list-scope]');
+      return Array.from((scope ?? document).querySelectorAll<HTMLElement>('[data-gateway-trust-row]'));
+    },
+    focusInput: focusSearchInput,
+    onActivateRow: () => openProfile(),
+  });
+
   function onRowKeydown(event: KeyboardEvent): void {
-    const current = event.currentTarget as HTMLElement | null;
-    if (!current) return;
-
-    const target = event.target as HTMLElement | null;
-    const isNestedTarget = !!target && target !== current;
-
-    if (event.key === 'Enter' || event.key === ' ') {
-      if (isNestedTarget) return;
-      event.preventDefault();
-      openProfile();
-      return;
-    }
-
-    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
-
-    const scope = current.closest<HTMLElement>('[data-gateway-trust-list-scope]');
-    const rows = Array.from((scope ?? document).querySelectorAll<HTMLElement>('[data-gateway-trust-row]'));
-    const index = rows.indexOf(current);
-    if (index === -1) return;
-
-    event.preventDefault();
-
-    if (event.key === 'ArrowUp' && index === 0) {
-      focusSearchInput();
-      return;
-    }
-
-    const nextIndex = event.key === 'ArrowDown' ? index + 1 : index - 1;
-    if (nextIndex < 0 || nextIndex >= rows.length) return;
-    rows[nextIndex]?.focus();
+    listNavigator.onRowKeydown(event);
   }
 
   function onRowClick(event: MouseEvent): void {
-    const current = event.currentTarget as HTMLElement | null;
-    current?.focus();
+    listNavigator.onRowClick(event);
     openProfile();
   }
 

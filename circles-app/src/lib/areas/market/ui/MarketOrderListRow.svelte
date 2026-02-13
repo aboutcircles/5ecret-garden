@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
 
   interface Props {
     onOpen: () => void;
@@ -9,37 +10,29 @@
 
   let { onOpen, srLabel, children }: Props = $props();
 
-  function focusMarketSearchInput(): void {
-    const input = document.querySelector<HTMLInputElement>('[data-market-auth-search-input]');
+  function focusMarketSearchInput(anchor?: HTMLElement | null): void {
+    const scope = anchor?.closest<HTMLElement>('[data-market-orders-list-scope], [data-sales-orders-list-scope]');
+    const input = scope?.querySelector<HTMLInputElement>('[data-market-auth-search-input]')
+      ?? document.querySelector<HTMLInputElement>('[data-market-auth-search-input]');
     input?.focus();
   }
 
+  const listNavigator = createKeyboardListNavigator({
+    getRows: (anchor) => {
+      const scope = anchor?.closest<HTMLElement>('[data-market-orders-list-scope], [data-sales-orders-list-scope]')
+        ?? document.querySelector<HTMLElement>('[data-market-orders-list-scope], [data-sales-orders-list-scope]');
+      return Array.from((scope ?? document).querySelectorAll<HTMLElement>('[data-market-order-row]'));
+    },
+    focusInput: focusMarketSearchInput,
+    onActivateRow: () => onOpen(),
+  });
+
   function onRowKeydown(event: KeyboardEvent): void {
-    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
-
-    const current = event.currentTarget as HTMLElement | null;
-    if (!current) return;
-
-    const scope = current.closest<HTMLElement>('[data-market-orders-list-scope], [data-sales-orders-list-scope]');
-    const rows = Array.from((scope ?? document).querySelectorAll<HTMLElement>('[data-market-order-row]'));
-    const index = rows.indexOf(current);
-    if (index === -1) return;
-
-    event.preventDefault();
-
-    if (event.key === 'ArrowUp' && index === 0) {
-      focusMarketSearchInput();
-      return;
-    }
-
-    const nextIndex = event.key === 'ArrowDown' ? index + 1 : index - 1;
-    if (nextIndex < 0 || nextIndex >= rows.length) return;
-    rows[nextIndex]?.focus();
+    listNavigator.onRowKeydown(event);
   }
 
   function onRowClick(event: MouseEvent): void {
-    const current = event.currentTarget as HTMLElement | null;
-    current?.focus();
+    listNavigator.onRowClick(event);
     onOpen();
   }
 </script>

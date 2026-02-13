@@ -38,44 +38,50 @@
 </script>
 
 <div class="mt-4 flex flex-col gap-y-4">
-    <RowFrame clickable={true} noLeading={true} onclick={onEditTo}>
-        <div class="w-full flex items-center justify-between gap-3">
-            <div class="min-w-0">
-                <div class="menu-title p-0">To</div>
-                <Avatar address={receiverAddress} clickable={true} view="horizontal" />
+    <button type="button" class="w-full text-left bg-transparent border-0 p-0" onclick={onEditTo}>
+        <RowFrame clickable={true} noLeading={true}>
+            <div class="w-full flex items-center justify-between gap-3">
+                <div class="min-w-0">
+                    <div class="menu-title p-0">To</div>
+                    <Avatar address={receiverAddress} clickable={true} view="horizontal" />
+                </div>
+                <ChangeButton />
             </div>
-            <ChangeButton />
-        </div>
-    </RowFrame>
+        </RowFrame>
+    </button>
 
-    <RowFrame clickable={true} noLeading={true} onclick={onEditRoute}>
-        <div class="w-full flex items-center justify-between gap-3">
-            <div class="min-w-0">
-                <div class="menu-title p-0">Route</div>
-                {#if isAutoRoute}
-                    <AutoRouteSummary />
-                {:else}
-                    <Avatar
-                            address={asset?.tokenOwner}
-                            clickable={true}
-                            bottomInfo={tokenTypeToString(asset?.tokenType)}
-                            view="horizontal"
-                    />
-                {/if}
+    <button type="button" class="w-full text-left bg-transparent border-0 p-0" onclick={onEditRoute}>
+        <RowFrame clickable={true} noLeading={true}>
+            <div class="w-full flex items-center justify-between gap-3">
+                <div class="min-w-0">
+                    <div class="menu-title p-0">Route</div>
+                    {#if isAutoRoute}
+                        <AutoRouteSummary />
+                    {:else}
+                        <Avatar
+                                address={asset?.tokenOwner}
+                                clickable={true}
+                                bottomInfo={tokenTypeToString(asset?.tokenType)}
+                                view="horizontal"
+                        />
+                    {/if}
+                </div>
+                <ChangeButton />
             </div>
-            <ChangeButton />
-        </div>
-    </RowFrame>
+        </RowFrame>
+    </button>
 
-    <RowFrame clickable={true} noLeading={true} onclick={onEditAmount}>
-        <div class="w-full flex items-center justify-between gap-3">
-            <div class="min-w-0">
-                <div class="menu-title p-0">Amount</div>
-                <div class="text-2xl font-semibold">{roundToDecimals(amount)} Circles</div>
+    <button type="button" class="w-full text-left bg-transparent border-0 p-0" onclick={onEditAmount}>
+        <RowFrame clickable={true} noLeading={true}>
+            <div class="w-full flex items-center justify-between gap-3">
+                <div class="min-w-0">
+                    <div class="menu-title p-0">Amount</div>
+                    <div class="text-2xl font-semibold">{roundToDecimals(amount)} Circles</div>
+                </div>
+                <ChangeButton />
             </div>
-            <ChangeButton />
-        </div>
-    </RowFrame>
+        </RowFrame>
+    </button>
 
     {#if data}
         <RowFrame clickable={false} noLeading={true}>
@@ -91,7 +97,12 @@
     {/if}
 
     <div class="mt-6 flex justify-end">
-        <button type="submit" class="btn btn-primary btn-sm" onclick={() => onselect()}>
+        <button
+            type="submit"
+            class="btn btn-primary btn-sm"
+            data-send-step-initial-focus
+            onclick={() => onselect()}
+        >
             {textButton}
         </button>
     </div>
