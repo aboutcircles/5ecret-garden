@@ -1,13 +1,16 @@
- <script lang="ts">
-  import { ethers } from 'ethers';
+<script lang="ts">
 
   import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+  import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import OnChainNameSection from '$lib/shared/ui/flow/OnChainNameSection.svelte';
   import { openStep } from '$lib/shared/flow/runtime';
   import type { CreateGatewayFlowContext } from './context';
   import ConfirmCreateGateway from './ConfirmCreateGateway.svelte';
   import { ProfileFormStep } from '$lib/shared/ui/profile';
   import { isValidOnChainName } from '$lib/shared/utils/isValid';
+  import { isAddress } from '$lib/shared/utils/tx';
   import type { ProfileEditStepProps } from '$lib/shared/flow/contracts';
 
   type Props = Partial<ProfileEditStepProps<CreateGatewayFlowContext>> & {
@@ -40,19 +43,10 @@
     context = ctx;
   });
 
-  function isAddress(v: string): boolean {
-    try {
-      ethers.getAddress(v);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
   const trimmedGatewayName = $derived((ctx.gatewayName ?? '').trim());
   const hasName = $derived(trimmedGatewayName.length > 0);
   const onChainNameValid = $derived(hasName && isValidOnChainName(trimmedGatewayName));
-  const factoryValid = $derived(isAddress(ctx.factoryAddress));
+  const factoryValid = $derived(isAddress((ctx.factoryAddress ?? '').trim()));
 
   // Metadata digest will be derived from the pinned gateway profile.
 
@@ -72,6 +66,15 @@
 </script>
 
 <FlowDecoration>
+  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
+    <FlowStepHeader
+      step={1}
+      total={2}
+      title="Gateway profile"
+      subtitle="Define metadata and on-chain name for the payment gateway."
+      labels={['Gateway profile', 'Confirm']}
+    />
+
   <div class="space-y-4">
     <p class="text-sm text-base-content/70">
       Define the basic details for your payment gateway.
@@ -79,9 +82,11 @@
 
     <div class="space-y-2">
       <div class="text-sm font-semibold">Gateway profile</div>
-      <div class="bg-warning/10 border border-warning/30 text-warning-content rounded-xl p-3 text-xs">
-        The gateway profile metadata is pinned during creation and can’t be changed later.
-      </div>
+      <StepAlert
+        variant="warning"
+        message="Gateway profile metadata is pinned during creation and can’t be changed later."
+        className="text-xs"
+      />
       <ProfileFormStep
         bind:name={ctx.profile.name}
         bind:description={ctx.profile.description}
@@ -89,6 +94,7 @@
         bind:imageUrl={ctx.profile.imageUrl}
         showLocation={false}
         showSubmit={false}
+        nameInputDataAttribute="data-popup-initial-input"
       />
     </div>
 
@@ -99,16 +105,18 @@
       invalid={hasName && !onChainNameValid}
     />
 
-
-    <div class="mt-4 flex justify-end">
-      <button
-        type="button"
-        class="btn btn-primary btn-sm"
-        onclick={goNext}
-        disabled={!canContinue}
-      >
-        Continue
-      </button>
-    </div>
+    <StepActionBar>
+      {#snippet primary()}
+        <button
+          type="button"
+          class="btn btn-primary btn-sm"
+          onclick={goNext}
+          disabled={!canContinue}
+        >
+          Continue
+        </button>
+      {/snippet}
+    </StepActionBar>
+  </div>
   </div>
 </FlowDecoration>

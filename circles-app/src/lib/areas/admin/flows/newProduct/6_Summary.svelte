@@ -2,7 +2,18 @@
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
   import type { Address } from '@circles-sdk/utils';
   import { normalizeSku } from '$lib/areas/admin/productEditorUtils';
+  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
+  import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+  import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
+  import StepReviewRow from '$lib/shared/ui/flow/StepReviewRow.svelte';
+  import { openStep } from '$lib/shared/flow/runtime';
   import { popupControls } from '$lib/shared/state/popup';
+  import SellerStep from './1_Seller.svelte';
+  import CatalogStep from './2_Catalog.svelte';
+  import TypeStep from './3_Type.svelte';
+  import DetailsStep from './5_Details.svelte';
   import type { AdminNewProductFlowContext } from './context';
   import type { AdminOdooConnection, AdminUnifiedProduct } from '$lib/areas/admin/types';
 
@@ -14,7 +25,7 @@
     onCreateConnection: (payload: { connection: any }) => Promise<AdminOdooConnection>;
   }
 
-  let { context, connections, onExecute }: Props = $props();
+  let { context, connections, existingProducts, onExecute, onCreateConnection }: Props = $props();
 
   let executing = $state(false);
   let formError = $state<string | null>(null);
@@ -29,6 +40,58 @@
     const s = normalizedSeller.toLowerCase();
     return (connections ?? []).filter((c) => String(c.seller).toLowerCase() === s);
   });
+
+  const summaryTypeLabel = $derived(
+    (context.selectedType ?? 'codedispenser') === 'codedispenser' ? 'Digital voucher code' : 'Odoo'
+  );
+
+  function editSeller(): void {
+    const didPop = popupControls.popTo((entry) => entry.component === SellerStep);
+    if (!didPop) {
+      openStep({
+        title: 'Select seller',
+        component: SellerStep,
+        props: { context, connections, existingProducts, onExecute, onCreateConnection },
+        key: 'admin-new-product-seller',
+      });
+    }
+  }
+
+  function editCatalog(): void {
+    const didPop = popupControls.popTo((entry) => entry.component === CatalogStep);
+    if (!didPop) {
+      openStep({
+        title: 'Select catalog product',
+        component: CatalogStep,
+        props: { context, connections, existingProducts, onExecute, onCreateConnection },
+        key: 'admin-new-product-catalog',
+      });
+    }
+  }
+
+  function editType(): void {
+    const didPop = popupControls.popTo((entry) => entry.component === TypeStep);
+    if (!didPop) {
+      openStep({
+        title: 'Choose fulfillment type',
+        component: TypeStep,
+        props: { context, connections, existingProducts, onExecute, onCreateConnection },
+        key: 'admin-new-product-type',
+      });
+    }
+  }
+
+  function editDetails(): void {
+    const didPop = popupControls.popTo((entry) => entry.component === DetailsStep);
+    if (!didPop) {
+      openStep({
+        title: (context.selectedType ?? 'codedispenser') === 'odoo' ? 'Use odoo product' : 'Add codes',
+        component: DetailsStep,
+        props: { context, connections, existingProducts, onExecute, onCreateConnection },
+        key: 'admin-new-product-details',
+      });
+    }
+  }
 
   function parseCodes(): string[] | undefined {
     const codes = (context.codesTextarea ?? '')
@@ -105,29 +168,67 @@
   }
 </script>
 
-<div class="space-y-3">
-  {#if formError}
-    <p class="text-error text-sm">{formError}</p>
-  {/if}
+<FlowDecoration>
+  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
+    <FlowStepHeader
+      step={6}
+      total={6}
+      title="Summary"
+      subtitle="Review and apply product configuration."
+      labels={['Seller', 'Catalog', 'Type', 'Connection', 'Details', 'Summary']}
+    />
 
-  <div class="bg-base-200 rounded-box p-3 text-sm">
-    <div><span class="opacity-70">Seller:</span> <code class="ml-2 font-mono">{normalizedSeller ?? ''}</code></div>
-    <div class="mt-1"><span class="opacity-70">SKU:</span> <code class="ml-2 font-mono">{normalizedSku}</code></div>
-    <div class="mt-1"><span class="opacity-70">Type:</span> {(context.selectedType ?? 'codedispenser') === 'codedispenser' ? 'Digital voucher code' : 'Odoo'}</div>
-    <div class="mt-1"><span class="opacity-70">Actions:</span>
-      <ul class="list-disc ml-5">
-        <li>Create/Update route (offerType={context.selectedType ?? 'codedispenser'})</li>
-        <li>Create/Update {(context.selectedType ?? 'codedispenser') === 'codedispenser' ? 'Digital voucher code product' : 'Odoo product'}</li>
-      </ul>
-    </div>
-  </div>
+    {#if formError}
+      <StepAlert variant="error" message={formError} />
+    {/if}
 
-  <div class="flex justify-end gap-2">
-    <button class="btn btn-outline btn-sm" type="button" onclick={() => popupControls.close()} disabled={executing}>
-      Cancel
-    </button>
-    <button class="btn btn-primary btn-sm" type="button" onclick={execute} disabled={executing}>
-      {executing ? 'Applying…' : 'Confirm & apply'}
-    </button>
+    <StepSection title="Review configuration" subtitle="Use Change to jump back to a specific setup step.">
+      <StepReviewRow
+        label="Seller"
+        value={normalizedSeller ?? ''}
+        onChange={editSeller}
+        changeLabel="Change"
+      />
+      <StepReviewRow
+        label="Catalog SKU"
+        value={normalizedSku}
+        onChange={editCatalog}
+        changeLabel="Change"
+      />
+      <StepReviewRow
+        label="Fulfillment type"
+        value={summaryTypeLabel}
+        onChange={editType}
+        changeLabel="Change"
+      />
+      <StepReviewRow
+        label="Details"
+        value={(context.selectedType ?? 'codedispenser') === 'codedispenser' ? 'Code pool configuration' : 'Odoo product mapping'}
+        onChange={editDetails}
+        changeLabel="Change"
+      />
+    </StepSection>
+
+    <StepSection title="Execution plan">
+      <div class="text-sm">
+        <ul class="list-disc ml-5">
+          <li>Create/Update route (offerType={context.selectedType ?? 'codedispenser'})</li>
+          <li>Create/Update {(context.selectedType ?? 'codedispenser') === 'codedispenser' ? 'Digital voucher code product' : 'Odoo product'}</li>
+        </ul>
+      </div>
+    </StepSection>
+
+    <StepActionBar>
+      {#snippet secondary()}
+        <button class="btn btn-outline btn-sm" type="button" onclick={() => popupControls.close()} disabled={executing}>
+          Cancel
+        </button>
+      {/snippet}
+      {#snippet primary()}
+        <button class="btn btn-primary btn-sm" type="button" onclick={execute} disabled={executing}>
+          {executing ? 'Applying…' : 'Confirm & apply'}
+        </button>
+      {/snippet}
+    </StepActionBar>
   </div>
-</div>
+</FlowDecoration>

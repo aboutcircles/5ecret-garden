@@ -2,8 +2,6 @@
   import Markdown from '$lib/shared/ui/content/markdown/Markdown.svelte';
   import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import { Bold as LBold, Italic as LItalic, Link2 as LLink2 } from 'lucide';
-  import Tabs from '$lib/shared/ui/primitives/tabs/Tabs.svelte';
-  import Tab from '$lib/shared/ui/primitives/tabs/Tab.svelte';
 
   type Props = {
     value?: string;
@@ -276,6 +274,37 @@
     const caret = savedStart + 1;
     writeTextAndSelection(nextText, caret, caret);
   }
+
+  function setViewMode(mode: ViewMode): void {
+    viewMode = mode;
+  }
+
+  function onEditorKeydown(e: KeyboardEvent): void {
+    if (!canEdit) {
+      return;
+    }
+
+    const hasModifier = e.ctrlKey || e.metaKey;
+    if (!hasModifier || e.altKey) {
+      return;
+    }
+
+    const key = e.key.toLowerCase();
+    if (key === 'b') {
+      e.preventDefault();
+      toggleBold();
+      return;
+    }
+    if (key === 'i') {
+      e.preventDefault();
+      toggleItalic();
+      return;
+    }
+    if (key === 'l') {
+      e.preventDefault();
+      setLink();
+    }
+  }
 </script>
 
 <div
@@ -298,6 +327,7 @@
       aria-disabled={disabled}
       spellcheck="false"
       bind:value={value}
+      onkeydown={onEditorKeydown}
     ></textarea>
   {/if}
 
@@ -307,6 +337,7 @@
         type="button"
         class="tb"
         aria-label="Bold"
+        tabindex="-1"
         disabled={!canEdit}
         onpointerdown={(e) => onToolbarPointerDown(e, toggleBold)}
       >
@@ -316,6 +347,7 @@
         type="button"
         class="tb"
         aria-label="Italic"
+        tabindex="-1"
         disabled={!canEdit}
         onpointerdown={(e) => onToolbarPointerDown(e, toggleItalic)}
       >
@@ -325,6 +357,7 @@
         type="button"
         class="tb"
         aria-label="Link"
+        tabindex="-1"
         disabled={!canEdit}
         onpointerdown={(e) => onToolbarPointerDown(e, setLink)}
       >
@@ -332,10 +365,24 @@
       </button>
     </div>
     <div class="toolbar-tabs" aria-label="Markdown view tabs">
-      <Tabs bind:selected={viewMode} variant="boxed" size="sm" fitted={true} class="w-full" id="markdown-editor-view-tabs">
-        <Tab id="editor" title="Editor" panelClass="hidden" />
-        <Tab id="preview" title="Preview" panelClass="hidden" />
-      </Tabs>
+      <button
+        type="button"
+        class="tb tb-tab"
+        tabindex="-1"
+        aria-pressed={viewMode === 'editor'}
+        onpointerdown={(e) => onToolbarPointerDown(e, () => setViewMode('editor'))}
+      >
+        Editor
+      </button>
+      <button
+        type="button"
+        class="tb tb-tab"
+        tabindex="-1"
+        aria-pressed={viewMode === 'preview'}
+        onpointerdown={(e) => onToolbarPointerDown(e, () => setViewMode('preview'))}
+      >
+        Preview
+      </button>
     </div>
   </div>
 </div>
@@ -363,6 +410,14 @@
 
   .toolbar-tabs {
     min-width: 180px;
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+  }
+
+  .tb-tab[aria-pressed='true'] {
+    background: rgba(0, 0, 0, 0.08);
+    border-color: rgba(0, 0, 0, 0.2);
   }
 
   .tb {

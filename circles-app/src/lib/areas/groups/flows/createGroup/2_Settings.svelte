@@ -1,5 +1,7 @@
 <script lang="ts">
     import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+    import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+    import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
     import Tooltip from '$lib/shared/ui/primitives/Tooltip.svelte';
     import { ethers } from 'ethers';
     import { openStep } from '$lib/shared/flow/runtime';
@@ -109,6 +111,15 @@
 </script>
 
 <FlowDecoration>
+    <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
+    <FlowStepHeader
+        step={2}
+        total={4}
+        title="Settings"
+        subtitle="Choose simple defaults or configure advanced group settings."
+        labels={['Create group', 'Settings', 'Review', 'Create']}
+    />
+
     <p class="text-sm text-base-content/70 mt-1">
         Choose a fast lane setup or configure advanced settings.
     </p>
@@ -121,6 +132,7 @@
                 class="radio radio-xs mt-1"
                 checked={mode === 'fast'}
                 onchange={() => (mode = 'fast')}
+                data-popup-initial-input
             />
             <div>
                 <div class="text-sm font-semibold">Simple</div>
@@ -224,9 +236,12 @@
         {/if}
     {/if}
 
-    <div class="mt-5 flex justify-end">
-        <button type="button" class="btn btn-primary btn-sm" disabled={!canContinue} onclick={next}>
-            Continue
-        </button>
+    <StepActionBar>
+        {#snippet primary()}
+            <button type="button" class="btn btn-primary btn-sm" disabled={!canContinue} onclick={next}>
+                Continue
+            </button>
+        {/snippet}
+    </StepActionBar>
     </div>
 </FlowDecoration>

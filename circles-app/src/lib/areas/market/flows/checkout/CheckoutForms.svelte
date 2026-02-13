@@ -1,12 +1,15 @@
 <script lang="ts">
   import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+  import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
+  import { openStep } from '$lib/shared/flow/runtime';
   import {
     cartState,
     updateBasketDetails,
     validateCart,
     previewCartOrder
   } from '$lib/areas/market/cart/store';
-  import { popupControls } from '$lib/shared/state/popup';
   import CheckoutReview from './CheckoutReview.svelte';
 
   // This component shows only the address/details step.
@@ -274,7 +277,7 @@
         return;
       }
       await previewCartOrder();
-      popupControls.open({
+      openStep({
         title: 'Review order',
         component: CheckoutReview,
         props: {},
@@ -298,6 +301,15 @@
 </script>
 
 <FlowDecoration>
+  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
+    <FlowStepHeader
+      step={2}
+      total={4}
+      title="Details"
+      subtitle="Provide required checkout information."
+      labels={['Cart', 'Details', 'Review', 'Payment']}
+    />
+
     <p>
         The seller needs some additional information from you. Please fill in the forms below:
     </p>
@@ -311,6 +323,7 @@
               <input
                 class="input input-xs input-bordered"
                 bind:value={givenName}
+                  data-popup-initial-input
                 onblur={validateOnBlur}
                 class:border-error={fieldHasError('/customer/givenName')}
                 required
@@ -340,6 +353,7 @@
                 <input
                   class="input input-xs input-bordered"
                   bind:value={shippingStreet}
+                  data-popup-initial-input
                   onblur={validateOnBlur}
                   class:border-error={fieldHasError('/shippingAddress/streetAddress')}
                   required
@@ -460,6 +474,7 @@
                   class="input input-xs input-bordered"
                   type="email"
                   bind:value={contactEmail}
+                  data-popup-initial-input
                   onblur={validateOnBlur}
                   class:border-error={fieldHasError('/contactPoint/email')}
                   required
@@ -493,6 +508,7 @@
                 class="input input-xs input-bordered"
                 type="date"
                 bind:value={birthDate}
+                data-popup-initial-input
                 onblur={validateOnBlur}
                 class:border-error={fieldHasError('/ageProof/birthDate')}
                 required
@@ -503,20 +519,21 @@
       {/if}
 
       {#if localError}
-        <div class="alert alert-error text-xs mt-2">
-          {localError}
-        </div>
+        <StepAlert variant="error" className="text-xs mt-2" message={localError} />
       {/if}
 
-      <div class="mt-3 flex justify-end gap-2">
-        <button
-          type="button"
-          class="btn btn-sm btn-primary"
-          onclick={goToReview}
-          disabled={validating || $cartState.loading}
-        >
-          {validating || $cartState.loading ? 'Checking…' : 'Continue'}
-        </button>
-      </div>
+      <StepActionBar>
+        {#snippet primary()}
+          <button
+            type="button"
+            class="btn btn-sm btn-primary"
+            onclick={goToReview}
+            disabled={validating || $cartState.loading}
+          >
+            {validating || $cartState.loading ? 'Checking…' : 'Continue'}
+          </button>
+        {/snippet}
+      </StepActionBar>
     </div>
+  </div>
   </FlowDecoration>

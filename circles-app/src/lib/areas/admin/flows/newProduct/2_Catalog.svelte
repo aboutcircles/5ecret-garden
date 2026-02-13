@@ -8,7 +8,11 @@
   import AdminStatusBadge from '$lib/areas/admin/components/AdminStatusBadge.svelte';
   import { adminProductKey } from '$lib/areas/admin/helpers';
   import { normalizeSku } from '$lib/areas/admin/productEditorUtils';
-  import { popupControls } from '$lib/shared/state/popup';
+  import { openStep } from '$lib/shared/flow/runtime';
+  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
+  import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
   import TypeStep from './3_Type.svelte';
   import type { AdminUnifiedProduct, AdminOdooConnection } from '$lib/areas/admin/types';
   import type { AdminNewProductFlowContext } from './context';
@@ -116,71 +120,82 @@
 
   function goNext(item: AggregatedCatalogItem): void {
     context.catalogItem = item;
-    popupControls.open({
+    openStep({
       title: resolveProductTitle(item),
       component: TypeStep,
       props: { context, connections, existingProducts, onExecute, onCreateConnection },
-      id: 'admin-new-product-type',
+      key: 'admin-new-product-type',
     });
   }
 </script>
 
-<div class="space-y-3">
-  <div class="flex items-center justify-between gap-2">
-    <p class="text-sm opacity-70">Select the product you want to offer.</p>
-    <button class="btn btn-outline btn-sm" type="button" onclick={loadCatalog} disabled={catalogLoading}>
-      {catalogLoading ? 'Loading…' : 'Reload'}
-    </button>
+<FlowDecoration>
+  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
+    <FlowStepHeader
+      step={2}
+      total={6}
+      title="Catalog"
+      subtitle="Select the product you want to offer."
+      labels={['Seller', 'Catalog', 'Type', 'Connection', 'Details', 'Summary']}
+    />
+
+    <StepActionBar className="mt-0" align="between" stackOnMobile={false}>
+      {#snippet primary()}
+        <button class="btn btn-outline btn-sm" type="button" onclick={loadCatalog} disabled={catalogLoading}>
+          {catalogLoading ? 'Loading…' : 'Reload'}
+        </button>
+      {/snippet}
+    </StepActionBar>
+
+    {#if catalogError}
+      <StepAlert variant="warning" message={catalogError} />
+    {/if}
+
+    {#if catalogLoading}
+      <div class="flex items-center gap-2 text-base-content/70 py-2">
+        <span class="loading loading-spinner loading-sm"></span>
+        <span>Loading catalog…</span>
+      </div>
+    {:else if catalogItems.length === 0}
+      <p class="text-sm opacity-70">No catalog products found for this seller.</p>
+    {:else}
+      <div class="w-full flex flex-col gap-y-1.5" role="list">
+        {#each catalogItems as p (p.productCid ?? p.linkKeccak ?? p.indexInChunk)}
+          {@const mapped = isMappedCatalogItem(p)}
+          {@const imgUrl = productImageUrl(p)}
+          <RowFrame
+            dense={true}
+            clickable={!mapped}
+            disabled={mapped}
+            selected={context.catalogItem?.linkKeccak === p.linkKeccak}
+            onclick={() => {
+              if (mapped) return;
+              goNext(p);
+            }}
+          >
+            {#snippet leading()}
+              {#if imgUrl}
+                <img src={imgUrl} alt="" class="w-10 h-10 rounded-md object-cover bg-base-200" />
+              {:else}
+                <div class="w-10 h-10 rounded-md bg-base-200"></div>
+              {/if}
+            {/snippet}
+            {#snippet title()}
+              {p.product?.name ?? p.product?.sku}
+            {/snippet}
+            {#snippet subtitle()}
+              <span class="font-mono">{normalizeSku(p.product?.sku ?? '') ?? p.product?.sku ?? ''}</span>
+            {/snippet}
+            {#snippet trailing()}
+              {#if mapped}
+                <AdminStatusBadge label="Already configured" variant="neutral" />
+              {:else}
+                <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" />
+              {/if}
+            {/snippet}
+          </RowFrame>
+        {/each}
+      </div>
+    {/if}
   </div>
-
-  {#if catalogError}
-    <div class="alert alert-warning text-sm">{catalogError}</div>
-  {/if}
-
-  {#if catalogLoading}
-    <div class="flex items-center gap-2 text-base-content/70 py-2">
-      <span class="loading loading-spinner loading-sm"></span>
-      <span>Loading catalog…</span>
-    </div>
-  {:else if catalogItems.length === 0}
-    <p class="text-sm opacity-70">No catalog products found for this seller.</p>
-  {:else}
-    <div class="w-full flex flex-col gap-y-1.5" role="list">
-      {#each catalogItems as p (p.productCid ?? p.linkKeccak ?? p.indexInChunk)}
-        {@const mapped = isMappedCatalogItem(p)}
-        {@const imgUrl = productImageUrl(p)}
-        <RowFrame
-          dense={true}
-          clickable={!mapped}
-          disabled={mapped}
-          selected={context.catalogItem?.linkKeccak === p.linkKeccak}
-          onclick={() => {
-            if (mapped) return;
-            goNext(p);
-          }}
-        >
-          {#snippet leading()}
-            {#if imgUrl}
-              <img src={imgUrl} alt="" class="w-10 h-10 rounded-md object-cover bg-base-200" />
-            {:else}
-              <div class="w-10 h-10 rounded-md bg-base-200"></div>
-            {/if}
-          {/snippet}
-          {#snippet title()}
-            {p.product?.name ?? p.product?.sku}
-          {/snippet}
-          {#snippet subtitle()}
-            <span class="font-mono">{normalizeSku(p.product?.sku ?? '') ?? p.product?.sku ?? ''}</span>
-          {/snippet}
-          {#snippet trailing()}
-            {#if mapped}
-              <AdminStatusBadge label="Already configured" variant="neutral" />
-            {:else}
-              <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" />
-            {/if}
-          {/snippet}
-        </RowFrame>
-      {/each}
-    </div>
-  {/if}
-</div>
+</FlowDecoration>

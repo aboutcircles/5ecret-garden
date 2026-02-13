@@ -1,5 +1,7 @@
 <script lang="ts">
     import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+    import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+    import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
     import { circles } from '$lib/shared/state/circles';
     import { wallet } from '$lib/shared/state/wallet.svelte';
     import { runTask } from '$lib/shared/utils/tasks';
@@ -150,6 +152,15 @@
 </script>
 
 <FlowDecoration>
+    <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
+    <FlowStepHeader
+        step={4}
+        total={4}
+        title="Create"
+        subtitle="Confirm and create the group on-chain."
+        labels={['Create group', 'Settings', 'Review', 'Create']}
+    />
+
     <p class="text-sm text-base-content/70 mt-1">We’ll write your profile and deploy the group as a task.</p>
 
     <!-- Simple summary, row-by-row -->
@@ -178,9 +189,12 @@
         {/if}
     </div>
 
-    <div class="mt-5 flex justify-end">
-        <button type="button" class="btn btn-primary btn-sm" onclick={createGroup}>
-            Confirm & Create
-        </button>
+    <StepActionBar>
+        {#snippet primary()}
+            <button type="button" class="btn btn-primary btn-sm" onclick={createGroup}>
+                Confirm & Create
+            </button>
+        {/snippet}
+    </StepActionBar>
     </div>
 </FlowDecoration>

@@ -2,7 +2,11 @@
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
   import type { Address } from '@circles-sdk/utils';
   import AdminProductFormBase from '$lib/areas/admin/components/AdminProductFormBase.svelte';
-  import { popupControls } from '$lib/shared/state/popup';
+  import { openStep } from '$lib/shared/flow/runtime';
+  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
+  import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
   import { normalizeAddressInput } from '$lib/areas/admin/productEditorUtils';
   import DetailsStep from './5_Details.svelte';
   import type { AdminNewProductFlowContext } from './context';
@@ -33,6 +37,13 @@
 
   let saving = $state(false);
   let formError = $state<string | null>(null);
+
+  const hasRequiredFields = $derived(
+    Boolean(normalizedSeller) &&
+      Boolean(odooUrl.trim()) &&
+      Boolean(odooDb.trim()) &&
+      Boolean(odooKey.trim())
+  );
 
   async function submit(): Promise<void> {
     formError = null;
@@ -69,11 +80,11 @@
 
       context.selectedConnectionKey = `${context.chainId}:${String(created.seller).toLowerCase()}`;
 
-      popupControls.open({
+      openStep({
         title: 'Use odoo product',
         component: DetailsStep,
         props: { context, connections: [...connections, created], existingProducts, onExecute, onCreateConnection },
-        id: 'admin-new-product-details',
+        key: 'admin-new-product-details',
       });
     } finally {
       saving = false;
@@ -81,51 +92,67 @@
   }
 </script>
 
-<AdminProductFormBase
-  title=""
-  showHeader={false}
-  onSubmit={submit}
-  loading={saving}
-  submitLabel="Create connection"
->
-  {#if formError}
-    <p class="text-error text-sm">{formError}</p>
-  {/if}
+<FlowDecoration>
+  <div class="w-full space-y-4">
+    <FlowStepHeader
+      step={4}
+      total={6}
+      title="Connection"
+      subtitle="Create an Odoo connection for this seller."
+      labels={['Seller', 'Catalog', 'Type', 'Connection', 'Details', 'Summary']}
+    />
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-    <label class="form-control">
-      <span class="label-text">Odoo URL *</span>
-      <input class="input input-bordered input-sm" bind:value={odooUrl} placeholder="https://your-odoo" />
-    </label>
-    <label class="form-control">
-      <span class="label-text">Database *</span>
-      <input class="input input-bordered input-sm" bind:value={odooDb} />
-    </label>
-    <label class="form-control">
-      <span class="label-text">UID *</span>
-      <input type="number" class="input input-bordered input-sm" bind:value={odooUid} />
-    </label>
-    <label class="form-control">
-      <span class="label-text">API key *</span>
-      <input type="password" class="input input-bordered input-sm" bind:value={odooKey} />
-    </label>
-    <label class="form-control">
-      <span class="label-text">Sale partner ID</span>
-      <input type="number" class="input input-bordered input-sm" bind:value={salePartnerId} />
-    </label>
+    <AdminProductFormBase
+      title=""
+      showHeader={false}
+      onSubmit={submit}
+      loading={saving}
+      submitDisabled={!hasRequiredFields}
+      submitLabel="Create connection"
+    >
+      {#if formError}
+        <StepAlert variant="error" message={formError} />
+      {/if}
+
+      <StepSection title="Odoo connection">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <label class="form-control">
+            <span class="label-text">Odoo URL *</span>
+            <input class="input input-bordered input-sm" bind:value={odooUrl} placeholder="https://your-odoo" data-popup-initial-input />
+          </label>
+          <label class="form-control">
+            <span class="label-text">Database *</span>
+            <input class="input input-bordered input-sm" bind:value={odooDb} />
+          </label>
+          <label class="form-control">
+            <span class="label-text">UID *</span>
+            <input type="number" class="input input-bordered input-sm" bind:value={odooUid} />
+          </label>
+          <label class="form-control">
+            <span class="label-text">API key *</span>
+            <input type="password" class="input input-bordered input-sm" bind:value={odooKey} />
+          </label>
+          <label class="form-control">
+            <span class="label-text">Sale partner ID</span>
+            <input type="number" class="input input-bordered input-sm" bind:value={salePartnerId} />
+          </label>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <label class="form-control">
+            <span class="label-text">JSON-RPC timeout (ms)</span>
+            <input type="number" class="input input-bordered input-sm" bind:value={jsonrpcTimeoutMs} min="1000" />
+          </label>
+          <label class="form-control">
+            <span class="label-text">Fulfill inherit request abort</span>
+            <input type="checkbox" class="checkbox checkbox-sm" bind:checked={fulfillInheritRequestAbort} />
+          </label>
+          <label class="form-control">
+            <span class="label-text">Connection enabled</span>
+            <input type="checkbox" class="checkbox checkbox-sm" bind:checked={enabled} />
+          </label>
+        </div>
+      </StepSection>
+    </AdminProductFormBase>
   </div>
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-    <label class="form-control">
-      <span class="label-text">JSON-RPC timeout (ms)</span>
-      <input type="number" class="input input-bordered input-sm" bind:value={jsonrpcTimeoutMs} min="1000" />
-    </label>
-    <label class="form-control">
-      <span class="label-text">Fulfill inherit request abort</span>
-      <input type="checkbox" class="checkbox checkbox-sm" bind:checked={fulfillInheritRequestAbort} />
-    </label>
-    <label class="form-control">
-      <span class="label-text">Connection enabled</span>
-      <input type="checkbox" class="checkbox checkbox-sm" bind:checked={enabled} />
-    </label>
-  </div>
-</AdminProductFormBase>
+</FlowDecoration>

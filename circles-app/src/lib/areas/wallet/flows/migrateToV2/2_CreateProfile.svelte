@@ -1,5 +1,7 @@
 <script lang="ts">
   import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import { ProfileFormStep } from '$lib/shared/ui/profile';
   import type { MigrateToV2Context } from '$lib/areas/wallet/flows/migrateToV2/context';
   import MigrateContacts from './3_MigrateContacts.svelte';
@@ -119,19 +121,27 @@
 </script>
 
 <FlowDecoration>
+  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
+  <FlowStepHeader
+    step={2}
+    total={4}
+    title="Profile"
+    subtitle="Create your Circles V2 profile details."
+    labels={['Invitation', 'Profile', 'Contacts', 'Migrate']}
+  />
+
   <p class="text-base-content/70 mt-2">
     Create a profile for your new Circles v2 avatar.
   </p>
 
   {#if errors && errors.length > 0}
-    <div class="alert alert-error mt-6">
-      <span class="font-bold">Error</span>
+    <StepAlert variant="error" title="Profile validation error" className="mt-6">
       <ul class="list-disc ml-4">
         {#each errors as error}
           <li>{error}</li>
         {/each}
       </ul>
-    </div>
+    </StepAlert>
   {/if}
 
   <ProfileFormStep
@@ -139,8 +149,9 @@
     bind:description={newProfile.description}
     bind:previewImageUrl={newProfile.previewImageUrl}
     bind:imageUrl={newProfile.imageUrl}
-    submitLabel="Next"
+    submitLabel="Continue"
     onSubmit={next}
     submitContainerClass="flex justify-end w-full mt-2"
   />
+  </div>
 </FlowDecoration>

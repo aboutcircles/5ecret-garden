@@ -1,7 +1,11 @@
 <script lang="ts">
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
   import type { Address } from '@circles-sdk/utils';
-  import { popupControls } from '$lib/shared/state/popup';
+  import { openStep } from '$lib/shared/flow/runtime';
+  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
+  import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
   import SummaryStep from './6_Summary.svelte';
   import { listOdooProductCatalog, type OdooProductCatalogItem } from '$lib/areas/admin/services/gateway/adminClient';
   import type { AdminNewProductFlowContext } from './context';
@@ -161,84 +165,96 @@
     const title = (context.selectedType ?? 'codedispenser') === 'odoo'
       ? 'Use odoo product'
       : 'Add codes';
-    popupControls.open({
+    openStep({
       title,
       component: SummaryStep,
       props: { context, connections, existingProducts, onExecute, onCreateConnection },
-      id: 'admin-new-product-summary',
+      key: 'admin-new-product-summary',
     });
   }
 </script>
 
-<div class="space-y-3">
-  {#if formError}
-    <p class="text-error text-sm">{formError}</p>
-  {/if}
+<FlowDecoration>
+  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
+    <FlowStepHeader
+      step={5}
+      total={6}
+      title="Details"
+      subtitle="Configure fulfillment details before review."
+      labels={['Seller', 'Catalog', 'Type', 'Connection', 'Details', 'Summary']}
+    />
 
-  {#if (context.selectedType ?? 'codedispenser') === 'codedispenser'}
-    <label class="form-control">
-      <span class="label-text">Seed codes (one per line)</span>
-      <textarea class="textarea textarea-bordered textarea-sm font-mono" rows="3" bind:value={context.codesTextarea}></textarea>
-    </label>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+    {#if formError}
+      <StepAlert variant="error" message={formError} />
+    {/if}
+
+    {#if (context.selectedType ?? 'codedispenser') === 'codedispenser'}
       <label class="form-control">
-        <span class="label-text">Download URL template</span>
-        <input
-          class="input input-bordered input-sm"
-          bind:value={context.downloadUrlTemplate}
-          placeholder={`https://example.com/${'{code}'}`}
-        />
-        <span class="label-text-alt text-xs opacity-70">Use &lbrace;code&rbrace; as placeholder</span>
+        <span class="label-text">Seed codes (one per line)</span>
+        <textarea class="textarea textarea-bordered textarea-sm font-mono" rows="3" bind:value={context.codesTextarea} data-popup-initial-input></textarea>
+      </label>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <label class="form-control">
+          <span class="label-text">Download URL template</span>
+          <input
+            class="input input-bordered input-sm"
+            bind:value={context.downloadUrlTemplate}
+            placeholder={`https://example.com/${'{code}'}`}
+          />
+          <span class="label-text-alt text-xs opacity-70">Use &lbrace;code&rbrace; as placeholder</span>
+        </label>
+        <label class="form-control">
+          <span class="label-text">Enabled</span>
+          <input type="checkbox" class="checkbox checkbox-sm" bind:checked={context.enabled} />
+        </label>
+      </div>
+    {:else}
+      <label class="form-control">
+        <span class="label-text">Odoo connection *</span>
+        <select class="select select-bordered select-sm" bind:value={context.selectedConnectionKey} data-popup-initial-input>
+          <option value="" disabled={true}>Select connection</option>
+          {#each sellerConnections as c (`${c.chainId}:${String(c.seller).toLowerCase()}`)}
+            <option value={`${c.chainId}:${String(c.seller).toLowerCase()}`}>{c.odooUrl} · {c.odooDb}</option>
+          {/each}
+        </select>
+        {#if sellerConnections.length === 0}
+          <span class="label-text-alt text-xs text-warning">
+            No Odoo connection found for this seller.
+          </span>
+        {/if}
       </label>
       <label class="form-control">
-        <span class="label-text">Enabled</span>
-        <input type="checkbox" class="checkbox checkbox-sm" bind:checked={context.enabled} />
+        <span class="label-text">Odoo product code *</span>
+        <select
+          class="select select-bordered select-sm font-mono"
+          bind:value={context.odooProductCode}
+          disabled={!selectedConnection || catalogLoading}
+        >
+          <option value="" disabled={true}>Select product code</option>
+          {#each catalogItems as item (item.id)}
+            {#if item.default_code}
+              <option value={item.default_code}>
+                {item.default_code} · {item.display_name}
+              </option>
+            {/if}
+          {/each}
+        </select>
+        {#if catalogLoading}
+          <span class="label-text-alt text-xs opacity-70">Loading catalog…</span>
+        {:else if catalogError}
+          <span class="label-text-alt text-xs text-error break-words">
+            {catalogError}
+          </span>
+        {:else if selectedConnection && catalogItems.length === 0}
+          <span class="label-text-alt text-xs text-warning">No products found for this connection.</span>
+        {/if}
       </label>
-    </div>
-  {:else}
-    <label class="form-control">
-      <span class="label-text">Odoo connection *</span>
-      <select class="select select-bordered select-sm" bind:value={context.selectedConnectionKey}>
-        <option value="" disabled={true}>Select connection</option>
-        {#each sellerConnections as c (`${c.chainId}:${String(c.seller).toLowerCase()}`)}
-          <option value={`${c.chainId}:${String(c.seller).toLowerCase()}`}>{c.odooUrl} · {c.odooDb}</option>
-        {/each}
-      </select>
-      {#if sellerConnections.length === 0}
-        <span class="label-text-alt text-xs text-warning">
-          No Odoo connection found for this seller.
-        </span>
-      {/if}
-    </label>
-    <label class="form-control">
-      <span class="label-text">Odoo product code *</span>
-      <select
-        class="select select-bordered select-sm font-mono"
-        bind:value={context.odooProductCode}
-        disabled={!selectedConnection || catalogLoading}
-      >
-        <option value="" disabled={true}>Select product code</option>
-        {#each catalogItems as item (item.id)}
-          {#if item.default_code}
-            <option value={item.default_code}>
-              {item.default_code} · {item.display_name}
-            </option>
-          {/if}
-        {/each}
-      </select>
-      {#if catalogLoading}
-        <span class="label-text-alt text-xs opacity-70">Loading catalog…</span>
-      {:else if catalogError}
-        <span class="label-text-alt text-xs text-error break-words">
-          {catalogError}
-        </span>
-      {:else if selectedConnection && catalogItems.length === 0}
-        <span class="label-text-alt text-xs text-warning">No products found for this connection.</span>
-      {/if}
-    </label>
-  {/if}
+    {/if}
 
-  <div class="flex justify-end">
-    <button class="btn btn-primary btn-sm" type="button" onclick={goNext}>Review</button>
+    <StepActionBar>
+      {#snippet primary()}
+        <button class="btn btn-primary btn-sm" type="button" onclick={goNext}>Review</button>
+      {/snippet}
+    </StepActionBar>
   </div>
-</div>
+</FlowDecoration>

@@ -2,17 +2,24 @@
   import { ethers } from 'ethers';
 
   import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+  import { openStep } from '$lib/shared/flow/runtime';
+  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+  import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
+  import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
+  import StepReviewRow from '$lib/shared/ui/flow/StepReviewRow.svelte';
   import { wallet } from '$lib/shared/state/wallet.svelte';
   import { runTask } from '$lib/shared/utils/tasks';
+  import { isAddress } from '$lib/shared/utils/tx';
   import { popupControls } from '$lib/shared/state/popup';
   import type { CreateGatewayFlowContext } from './context';
   import { gnosisConfig } from '$lib/shared/config/circles';
   import { getProfilesBindings } from '$lib/areas/market/offers';
   import { ensureProfileShape, cidV0ToDigest32Strict } from '@circles-profile/core';
   import { isValidOnChainName } from '$lib/shared/utils/isValid';
-  import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import Markdown from '$lib/shared/ui/content/markdown/Markdown.svelte';
   import type { ReviewStepProps } from '$lib/shared/flow/contracts';
+  import CreateGatewayProfile from './CreateGatewayProfile.svelte';
 
   type Props = ReviewStepProps<CreateGatewayFlowContext> & {
     onCreated?: (gateway: string) => void;
@@ -26,16 +33,7 @@
   ];
   const factoryIface = new ethers.Interface(factoryAbi);
 
-  function isAddress(v: string): boolean {
-    try {
-      ethers.getAddress(v);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  const factoryValid = $derived(isAddress(context.factoryAddress));
+  const factoryValid = $derived(isAddress((context.factoryAddress ?? '').trim()));
   const trimmedGatewayName = $derived((context.gatewayName ?? '').trim());
   const nameValid = $derived(trimmedGatewayName.length > 0 && isValidOnChainName(trimmedGatewayName));
   const profileNameValid = $derived((context.profile?.name ?? '').trim().length > 0);
@@ -128,15 +126,42 @@
     // Close the flow after submit (success or error)
     popupControls.close();
   }
+
+  function editGatewayProfile() {
+    const didPop = popupControls.popTo((entry) => entry.component === CreateGatewayProfile);
+    if (!didPop) {
+      openStep({
+        title: 'Create payment gateway',
+        component: CreateGatewayProfile,
+        props: { context, onCreated }
+      });
+    }
+  }
 </script>
 
 <FlowDecoration>
+  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
+    <FlowStepHeader
+      step={2}
+      total={2}
+      title="Confirm"
+      subtitle="Review gateway details and create on-chain."
+      labels={['Gateway profile', 'Confirm']}
+    />
+
   <div class="space-y-4">
     <p class="text-sm text-base-content/70">
       Please confirm the details of the payment gateway before creating it.
     </p>
 
-    <div class="bg-base-100 border border-base-300 rounded-xl p-4 space-y-3">
+    <StepSection title="Gateway details">
+      <StepReviewRow
+        label="Gateway setup"
+        value={context.gatewayName}
+        onChange={editGatewayProfile}
+        changeLabel="Edit"
+      />
+
       <div class="flex flex-col gap-1">
         <span class="text-xs text-base-content/60">On-chain name</span>
         <span class="text-lg font-semibold">{context.gatewayName}</span>
@@ -145,10 +170,15 @@
         <div class="text-base-content/70">Factory</div>
         <div class="font-mono break-all">{context.factoryAddress}</div>
       </div>
-    </div>
+    </StepSection>
 
-    <div class="bg-base-100 border border-base-300 rounded-xl p-4 space-y-3">
-      <div class="text-sm font-semibold">Gateway profile</div>
+    <StepSection title="Gateway profile">
+      <StepReviewRow
+        label="Profile"
+        value={context.profile?.name || '—'}
+        onChange={editGatewayProfile}
+        changeLabel="Edit"
+      />
 
       <div class="flex items-start gap-4">
         <div class="w-24 h-24 rounded-lg bg-base-200 overflow-hidden flex items-center justify-center text-base-content/50">
@@ -188,10 +218,10 @@
           {/if}
         </div>
       </div>
-    </div>
+    </StepSection>
 
     {#if !factoryValid || !nameValid || !profileNameValid}
-      <div class="alert alert-warning text-xs">
+      <StepAlert variant="warning" className="text-xs">
         <ul class="list-disc list-inside">
           {#if !nameValid}
             <li>On-chain name is required and must follow the on-chain naming rules.</li>
@@ -203,17 +233,21 @@
             <li>Factory address is invalid.</li>
           {/if}
         </ul>
-      </div>
+      </StepAlert>
     {/if}
 
-    <div class="mt-4 flex justify-end">
-      <ActionButton
-        action={createGateway}
-        disabled={!canSubmit}
-        title="Create gateway"
-      >
-        {#snippet children()}Create gateway{/snippet}
-      </ActionButton>
-    </div>
+    <StepActionBar>
+      {#snippet primary()}
+        <button
+          type="button"
+          class="btn btn-primary btn-sm"
+          onclick={createGateway}
+          disabled={!canSubmit}
+        >
+          Create gateway
+        </button>
+      {/snippet}
+    </StepActionBar>
+  </div>
   </div>
 </FlowDecoration>

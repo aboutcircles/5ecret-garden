@@ -1,5 +1,10 @@
 <script lang="ts">
   import {popupControls} from '$lib/shared/state/popup';
+  import { openStep } from '$lib/shared/flow/runtime';
+  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+  import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import MarkdownEditor from '$lib/shared/ui/content/markdown/MarkdownEditor.svelte';
   import OfferStep2 from './2_Pricing.svelte';
   import type {OfferDraft, OfferFlowContext} from './types';
@@ -135,7 +140,7 @@
       category: category || undefined,
     };
 
-    popupControls.open({
+    openStep({
       title: 'Offer • Pricing',
       component: OfferStep2,
       props: { context },
@@ -143,14 +148,23 @@
   }
 </script>
 
+<FlowDecoration>
+  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
+    <FlowStepHeader
+      step={1}
+      total={3}
+      title="Product"
+      subtitle="Set core product information for this offer."
+      labels={['Product', 'Pricing', 'Review']}
+    />
+
 {#if $wallet?.address}
-  <!-- Gateway ownership gate: if user has no gateways, show message and link -->
   {#if hasGateway}
     <div class="space-y-3">
       <!-- Name first; SKU is optional and hidden under Advanced -->
       <label class="form-control">
         <span class="label-text">Name</span>
-        <input class="input input-bordered" bind:value={name} placeholder="Coffee 250g"/>
+        <input class="input input-bordered" bind:value={name} placeholder="Coffee 250g" data-popup-initial-input/>
       </label>
 
       <!-- Show live auto-generated SKU preview when no manual SKU provided -->
@@ -227,17 +241,23 @@
         </div>
       </div>
 
-      <div class="mt-4 flex justify-end">
-        <button type="button" class="btn btn-primary btn-sm" onclick={next}>Next</button>
-      </div>
+      <StepActionBar>
+        {#snippet primary()}
+          <button type="button" class="btn btn-primary btn-sm" onclick={next}>Continue</button>
+        {/snippet}
+      </StepActionBar>
     </div>
   {:else}
-    <div class="alert alert-info">
-      <div>
-        You need a payment gateway to create an offer. Please <button type="button" class="link" onclick={goToPaymentSettings}>create a gateway</button> and come back.
-      </div>
-    </div>
+    <StepAlert variant="info" title="Payment gateway required">
+      <span>
+        You need a payment gateway to create an offer. Please
+        <button type="button" class="link ml-1" onclick={goToPaymentSettings}>create a gateway</button>
+        and come back.
+      </span>
+    </StepAlert>
   {/if}
 {:else}
-  <div class="alert">Connect your wallet to continue.</div>
+  <StepAlert variant="warning" message="Connect your wallet to continue." />
 {/if}
+  </div>
+</FlowDecoration>
