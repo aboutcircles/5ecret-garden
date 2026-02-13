@@ -24,6 +24,12 @@
   {address}
   intro="You're about to trust the following group or person:"
   warning="Trusting someone means that you accept their tokens at the same value as your own."
+  explainerTitle="How this trust action works"
+  explainerPoints={[
+    'Trust is binary: this either enables trust or it does not.',
+    'Trust is one-way. They still need to trust you separately if they want the same in reverse.',
+    'Adding trust can improve transfer paths and reduce send bottlenecks in your network.',
+  ]}
   cta="Trust"
   action={trust}
-/>
+ />
