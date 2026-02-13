@@ -9,7 +9,7 @@
     import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
     import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
     import {Filter as LFilter, Download as LDownload, Plus as LPlus, Star} from 'lucide';
-    import {popupControls} from '$lib/shared/state/popup';
+    import {openFlowPopup, popupControls} from '$lib/shared/state/popup';
     import ManageGroupMembers from '$lib/areas/groups/flows/manageGroupMembers/1_manageGroupMembers.svelte';
     import {avatarState} from '$lib/shared/state/avatar.svelte';
     import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
@@ -101,7 +101,7 @@
     }
 
     function openAddContact() {
-        popupControls.open({
+        openFlowPopup({
             title: avatarState.isGroup ? 'Add Member' : 'Add Contact',
             component: ManageGroupMembers,
             props: {}
@@ -144,7 +144,7 @@
                         onclick={toggleFilters}
                         title="Filter"
                 >
-                    <Lucide icon={LFilter} size={16} class="shrink-0 stroke-black" ariaLabel=""/>
+                    <Lucide icon={LFilter} size={16} class="shrink-0" ariaLabel=""/>
                 </button>
             {/if}
         </div>

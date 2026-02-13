@@ -2,6 +2,7 @@
   import Markdown from '$lib/shared/ui/content/markdown/Markdown.svelte';
   import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import { Bold as LBold, Italic as LItalic, Link2 as LLink2 } from 'lucide';
+  import { openInfoPopup } from '$lib/shared/ui/shell/confirmDialogs';
 
   type Props = {
     value?: string;
@@ -236,7 +237,11 @@
     const isValid = normalized !== null;
 
     if (!isValid) {
-      window.alert('Invalid/unsafe URL.');
+      void openInfoPopup({
+        title: 'Invalid link',
+        message: 'Invalid/unsafe URL.',
+        tone: 'error',
+      });
       writeTextAndSelection(text, savedStart, savedEnd);
       return;
     }

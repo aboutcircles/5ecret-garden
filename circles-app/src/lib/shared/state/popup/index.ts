@@ -11,7 +11,19 @@ export type PopupContentDefinition = {
   key?: string | number;
   id?: string | number;
   onClose?: () => void;
+  kind?: 'flow' | 'confirm' | 'inspect' | 'edit';
+  dismiss?: 'backdrop' | 'explicit' | 'confirmIfDirty';
+  isDirty?: boolean;
+  confirmDiscardMessage?: string;
 };
+
+export function resolvePopupDismiss(def: PopupContentDefinition | null | undefined): NonNullable<PopupContentDefinition['dismiss']> {
+  if (!def) return 'explicit';
+  if (def.dismiss) return def.dismiss;
+  if (!def.kind) return 'backdrop';
+  if (def.kind === 'inspect') return 'backdrop';
+  return 'explicit';
+}
 
 export type PopupState = {
   content: PopupContentDefinition | null;
@@ -21,12 +33,23 @@ export type PopupState = {
 const initialState: PopupState = { content: null, stack: [] };
 
 export const popupState: Writable<PopupState> = writable<PopupState>(initialState);
+let popupIdentitySeq = 0;
+
+function normalizePopupDefinition(def: PopupContentDefinition): PopupContentDefinition {
+  const hasStableIdentity = def.key != null || def.id != null;
+  return {
+    ...(hasStableIdentity ? {} : { key: `popup-${++popupIdentitySeq}` }),
+    ...def,
+    isDirty: def.isDirty ?? false,
+  };
+}
 
 function open(def: PopupContentDefinition): void {
   // Push current content to stack so Back works
   popupState.update((s) => {
+    const next = normalizePopupDefinition(def);
     const stack = s.content ? [...s.stack, s.content] : s.stack.slice();
-    return { content: def, stack };
+    return { content: next, stack };
   });
 }
 
@@ -76,14 +99,44 @@ function close(): void {
 
 function replace(def: PopupContentDefinition): void {
   // Replace current content without changing the stack
-  popupState.update((s) => ({ content: def, stack: s.stack.slice() }));
+  popupState.update((s) => ({ content: normalizePopupDefinition(def), stack: s.stack.slice() }));
+}
+
+function setCurrentDirty(isDirty: boolean): void {
+  popupState.update((s) => {
+    if (!s.content) return s;
+    if ((s.content.isDirty ?? false) === isDirty) return s;
+    return {
+      content: { ...s.content, isDirty },
+      stack: s.stack.slice(),
+    };
+  });
+}
+
+function markCurrentDirty(): void {
+  setCurrentDirty(true);
+}
+
+function markCurrentPristine(): void {
+  setCurrentDirty(false);
 }
 
 export function openFlowPopup(def: PopupContentDefinition): void {
   popupControls.open({
+    kind: 'flow',
+    dismiss: 'explicit',
     props: {},
     ...def,
   });
 }
 
-export const popupControls = { open, back, popTo, close, replace };
+export const popupControls = {
+  open,
+  back,
+  popTo,
+  close,
+  replace,
+  setCurrentDirty,
+  markCurrentDirty,
+  markCurrentPristine,
+};

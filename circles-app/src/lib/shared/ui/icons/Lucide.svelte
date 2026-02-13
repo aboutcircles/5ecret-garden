@@ -3,7 +3,7 @@
      * Minimal Svelte5 wrapper for lucide "standalone" icon nodes.
      * Pass an icon node from the "lucide" package, e.g.:
      *   import { Send } from 'lucide';
-     *   <Lucide icon={Send} size={16} class="stroke-black" />
+     *   <Lucide icon={Send} size={16} class="stroke-current" />
      */
     // lucide icons include attributes with non-string values (e.g. numbers), so keep this permissive.
     type IconNode = Array<[string, Record<string, any>]>;

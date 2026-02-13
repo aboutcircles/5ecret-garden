@@ -5,6 +5,7 @@
     profileBookmarksService,
     type ProfileBookmark,
   } from '$lib/areas/settings/state/profileBookmarks';
+  import { openConfirmPopup } from '$lib/shared/ui/shell/confirmDialogs';
 
   interface Props {
     bookmark: ProfileBookmark;
@@ -35,14 +36,21 @@
     });
   }
 
-  function clearNote(): void {
-    const ok = window.confirm('Clear the saved note for this bookmark?');
+  async function clearNote(): Promise<void> {
+    const ok = await openConfirmPopup({
+      title: 'Clear note',
+      message: 'Clear the saved note for this bookmark?',
+    });
     if (!ok) return;
     profileBookmarksService.upsertProfile(bookmark.address, { note: undefined });
   }
 
-  function removeBookmark(): void {
-    const ok = window.confirm('Remove this bookmark? This cannot be undone.');
+  async function removeBookmark(): Promise<void> {
+    const ok = await openConfirmPopup({
+      title: 'Remove bookmark',
+      message: 'Remove this bookmark? This cannot be undone.',
+      confirmClass: 'btn btn-error btn-sm',
+    });
     if (!ok) return;
     profileBookmarksService.removeProfile(bookmark.address);
   }

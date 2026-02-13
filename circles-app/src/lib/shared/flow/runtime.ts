@@ -7,10 +7,16 @@ export type OpenStepOptions = {
   key?: PopupContentDefinition['key'];
   onClose?: PopupContentDefinition['onClose'];
   hideTitle?: PopupContentDefinition['hideTitle'];
+  kind?: PopupContentDefinition['kind'];
+  dismiss?: PopupContentDefinition['dismiss'];
+  isDirty?: PopupContentDefinition['isDirty'];
+  confirmDiscardMessage?: PopupContentDefinition['confirmDiscardMessage'];
 };
 
 function toPopupDefinition(options: OpenStepOptions): PopupContentDefinition {
   return {
+    kind: 'flow',
+    dismiss: 'explicit',
     props: {},
     ...options,
   };

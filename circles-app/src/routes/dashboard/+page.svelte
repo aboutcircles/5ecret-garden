@@ -77,9 +77,6 @@
         });
     }
 
-    // Stroke policy
-    const ghostIconStrokeClass: string = 'stroke-black';
-    const primaryIconStrokeClass: string = 'stroke-white';
 </script>
 
 <PageScaffold
@@ -124,14 +121,14 @@
     {#snippet headerActions()}
         {#if !avatarState.isGroup}
             <button type="button" class="btn btn-ghost btn-sm" onclick={openSend}>
-                <Lucide icon={LSend} size={16} class={`shrink-0 ${ghostIconStrokeClass}`} />
+                <Lucide icon={LSend} size={16} class="shrink-0" />
                 Send
             </button>
         {/if}
 
         {#if mintableAmount >= 0.01}
             <button type="button" class="btn btn-primary btn-sm" onclick={mintPersonalCircles}>
-                <Lucide icon={LBanknote} size={16} class={`shrink-0 ${primaryIconStrokeClass}`} />
+                <Lucide icon={LBanknote} size={16} class="shrink-0" />
                 Mint {roundToDecimals(mintableAmount)} Circles
             </button>
         {/if}
@@ -160,7 +157,7 @@
                         class="btn btn-primary min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] justify-start px-3"
                         onclick={mintPersonalCircles}
                 >
-                    <Lucide icon={LBanknote} size={20} class={`shrink-0 ${primaryIconStrokeClass}`} />
+                    <Lucide icon={LBanknote} size={20} class="shrink-0" />
                     Mint {roundToDecimals(mintableAmount)} Circles
                 </button>
             {/if}
@@ -171,7 +168,7 @@
                         class="btn btn-ghost min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] justify-start px-3"
                         onclick={openSend}
                 >
-                    <Lucide icon={LSend} size={20} class={`shrink-0 ${ghostIconStrokeClass}`} />
+                    <Lucide icon={LSend} size={20} class="shrink-0" />
                     Send
                 </button>
             {/if}
@@ -181,7 +178,7 @@
                     class="btn btn-ghost min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] justify-start px-3"
                     onclick={openBalances}
             >
-                <Lucide icon={LBarChart3} size={20} class={`shrink-0 ${ghostIconStrokeClass}`} />
+                <Lucide icon={LBarChart3} size={20} class="shrink-0" />
                 See breakdown
             </button>
         </div>

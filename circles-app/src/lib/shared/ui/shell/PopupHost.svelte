@@ -1,14 +1,16 @@
 <!-- src/lib/components/Popup.svelte -->
 <script lang="ts">
-    import { popupControls, popupState } from '$lib/shared/state/popup';
+    import { popupControls, popupState, resolvePopupDismiss } from '$lib/shared/state/popup';
     import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
     import { ArrowLeft as LArrowLeft, X as LX } from 'lucide';
     import { focusElement, shouldAutoFocusTextInput } from '$lib/shared/ui/focus/focusPolicy';
+    import CloseConfirmStep from '$lib/shared/ui/shell/CloseConfirmStep.svelte';
 
     let popupEl: HTMLDivElement | null = $state(null);
     let previouslyFocusedEl: HTMLElement | null = null;
     let wasOpen = false;
     let lastTopPageKey = '';
+    const CLOSE_CONFIRM_ID = '__close_confirm_step__';
 
     const FOCUSABLE_SELECTOR = [
         'a[href]',
@@ -80,6 +82,81 @@
         return false;
     }
 
+    function shouldTrackDirtyTarget(target: EventTarget | null): boolean {
+        if (!(target instanceof Element)) return false;
+        if (target.closest('[data-popup-dirty-ignore="true"]')) return false;
+
+        const editable = target.closest('input, textarea, select, [contenteditable="true"], [role="textbox"]');
+        if (!(editable instanceof HTMLElement)) return false;
+        if (editable instanceof HTMLInputElement) {
+            const nonDataTypes = new Set([
+                'button',
+                'submit',
+                'reset',
+                'image',
+                'file',
+            ]);
+            if (nonDataTypes.has((editable.type || '').toLowerCase())) return false;
+            if (editable.readOnly || editable.disabled) return false;
+            return true;
+        }
+        if (editable instanceof HTMLTextAreaElement || editable instanceof HTMLSelectElement) {
+            return !(editable.readOnly || editable.disabled);
+        }
+        return true;
+    }
+
+    function isCloseConfirmOpen(): boolean {
+        return $popupState.content?.id === CLOSE_CONFIRM_ID;
+    }
+
+    function pushCloseConfirmStep(): void {
+        if (isCloseConfirmOpen()) return;
+
+        popupControls.open({
+            id: CLOSE_CONFIRM_ID,
+            key: CLOSE_CONFIRM_ID,
+            kind: 'confirm',
+            dismiss: 'explicit',
+            hideTitle: true,
+            component: CloseConfirmStep,
+            props: {
+                message: 'Do you really want to close the form?',
+                onYes: () => popupControls.close(),
+                onNo: () => popupControls.back(),
+            },
+        });
+    }
+
+    function attemptClose(source: 'backdrop' | 'escape' | 'header'): void {
+        const content = $popupState.content;
+        if (!content) return;
+
+        if (isCloseConfirmOpen()) {
+            if (source === 'backdrop' || source === 'escape') {
+                popupControls.back();
+            }
+            return;
+        }
+
+        const dismiss = resolvePopupDismiss(content);
+        if (dismiss === 'explicit' && (source === 'backdrop' || source === 'escape')) {
+            if (content.isDirty) {
+                pushCloseConfirmStep();
+            } else {
+                popupControls.close();
+            }
+            return;
+        }
+
+        if (dismiss === 'confirmIfDirty' && content.isDirty) {
+            pushCloseConfirmStep();
+            return;
+        }
+
+        popupControls.close();
+    }
+
     function handleKeydown(e: KeyboardEvent) {
         if (!$popupState.content) return;
 
@@ -104,7 +181,7 @@
         }
 
         if (e.key === 'Escape') {
-            popupControls.close();
+            attemptClose('escape');
             return;
         }
 
@@ -127,11 +204,11 @@
 
     function onClose() {
         if ($popupState.stack.length > 0) popupControls.back();
-        else popupControls.close();
+        else attemptClose('header');
     }
 
     function closeAll() {
-        popupControls.close();
+        attemptClose('backdrop');
     }
 
     // Keep *all* pages mounted: stack + current
@@ -205,6 +282,28 @@
             focusElement(fallback);
         });
     });
+
+    $effect(() => {
+        if (!popupEl) return;
+
+        const markDirtyIfNeeded = (event: Event) => {
+            const content = $popupState.content;
+            if (!content) return;
+            if (isCloseConfirmOpen()) return;
+            if ((content.isDirty ?? false) === true) return;
+            if (resolvePopupDismiss(content) !== 'explicit') return;
+            if (!shouldTrackDirtyTarget(event.target)) return;
+            popupControls.markCurrentDirty();
+        };
+
+        popupEl.addEventListener('input', markDirtyIfNeeded, true);
+        popupEl.addEventListener('change', markDirtyIfNeeded, true);
+
+        return () => {
+            popupEl?.removeEventListener('input', markDirtyIfNeeded, true);
+            popupEl?.removeEventListener('change', markDirtyIfNeeded, true);
+        };
+    });
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -239,7 +338,7 @@
                     <Lucide
                             icon={$popupState.stack.length > 0 ? LArrowLeft : LX}
                             size={16}
-                            class="shrink-0 stroke-black"
+                            class="shrink-0"
                             ariaLabel=""
                     />
                 </button>
@@ -264,6 +363,7 @@
                         <Component {...page.props} />
                     </div>
                 {/each}
+
             </div>
         </div>
     </div>

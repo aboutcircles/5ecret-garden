@@ -7,42 +7,50 @@
 
   import { page } from '$app/stores';
 
-  const navItems = [
-    { href: '/kitchen-sink', label: 'Overview' },
-    { href: '/kitchen-sink/state-feedback', label: 'State & Feedback' },
-    { href: '/kitchen-sink/layout-shell', label: 'Layout & Shell' },
-    { href: '/kitchen-sink/flows-domain', label: 'Flows & Domain' },
-    { href: '/kitchen-sink/data-types', label: 'Data & Types' },
-    { href: '/kitchen-sink/tabs', label: 'Tabs' },
-    { href: '/kitchen-sink/actions', label: 'Actions' },
-    { href: '/kitchen-sink/identity', label: 'Identity & Utility' },
-    { href: '/kitchen-sink/markdown', label: 'Markdown' },
-    { href: '/kitchen-sink/lists', label: 'Lists & Loading' },
-    { href: '/kitchen-sink/list-search-role-model', label: 'List/Search Role Model' },
-    { href: '/kitchen-sink/misc', label: 'Misc' }
+  const navSections = [
+    {
+      title: 'Kitchen Sink (Golden)',
+      items: [
+        { href: '/kitchen-sink', label: 'Overview' },
+        { href: '/kitchen-sink/golden', label: 'Golden Components & Layouts' },
+        { href: '/kitchen-sink/popup-gallery', label: 'Popup Gallery' }
+      ]
+    },
+    {
+      title: 'Deprecated',
+      items: [{ href: '/kitchen-sink/deprecated', label: 'Deprecated Showcase' }]
+    }
   ];
 
   const pathname = $derived($page.url.pathname);
   const isActive = (href: string): boolean => pathname === href;
+  const isPopupGalleryRoute = $derived(pathname === '/kitchen-sink/popup-gallery');
 </script>
 
-<div class="page page--lg py-4 space-y-4">
+<div class={`py-4 space-y-4 ${isPopupGalleryRoute ? 'w-full px-4' : 'page page--lg'}`}>
   <div class="rounded-xl border border-base-300 bg-base-100 p-4">
     <h1 class="text-2xl font-semibold">Kitchen Sink</h1>
     <p class="text-sm opacity-70 mt-1">
-      Component playground split by category.
+      Golden flow/layout showcase plus a deprecated archive.
     </p>
-    <nav class="mt-4 flex flex-wrap gap-2">
-      {#each navItems as item (item.href)}
-        <a
-          href={item.href}
-          class={`btn btn-sm ${isActive(item.href) ? 'btn-primary' : 'btn-ghost'}`}
-          aria-current={isActive(item.href) ? 'page' : undefined}
-        >
-          {item.label}
-        </a>
+    <div class="mt-4 space-y-3">
+      {#each navSections as section (section.title)}
+        <div class="space-y-2">
+          <h2 class="text-xs font-semibold uppercase tracking-wide opacity-60">{section.title}</h2>
+          <nav class="flex flex-wrap gap-2">
+            {#each section.items as item (item.href)}
+              <a
+                href={item.href}
+                class={`btn btn-sm ${isActive(item.href) ? 'btn-primary' : 'btn-ghost'}`}
+                aria-current={isActive(item.href) ? 'page' : undefined}
+              >
+                {item.label}
+              </a>
+            {/each}
+          </nav>
+        </div>
       {/each}
-    </nav>
+    </div>
   </div>
 
   {@render children?.()}

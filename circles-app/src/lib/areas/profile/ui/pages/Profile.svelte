@@ -61,6 +61,7 @@
         type ProfileBookmark,
     } from '$lib/areas/settings/state/profileBookmarks';
     import HelpPopover from '$lib/shared/ui/primitives/HelpPopover.svelte';
+    import { TRUST_ROUTING_HELP_LINES } from '$lib/shared/content/trustRoutingCopy';
 
     interface Props {
         address: Address | undefined;
@@ -519,17 +520,13 @@
 
             <HelpPopover
                     title="Trust & routing"
-                    lines={[
-                        'Trust means you accept this account’s Circles.',
-                        'Routing can change which Circles you hold (total stays the same).',
-                        'Untrust stops accepting more from them.',
-                    ]}
+                    lines={TRUST_ROUTING_HELP_LINES}
                     buttonClass="btn btn-ghost btn-xs btn-square"
                     widthClass="w-80"
             />
         </div>
     {:else}
-        <span class="text-sm text-gray-500">No relation available</span>
+        <span class="text-sm text-base-content/70">No relation available</span>
     {/if}
 
     <TrustScoreBadge {address} />
@@ -543,7 +540,7 @@
             <div class="relative">
                 <button
                         type="button"
-                        class="inline-flex items-center justify-center w-8 h-8 bg-[#F3F4F6] border-none rounded-lg leading-none"
+                        class="inline-flex items-center justify-center w-8 h-8 bg-base-200 border-none rounded-lg leading-none"
                         onclick={openBookmarkEditor}
                         bind:this={bookmarkButtonEl}
                         aria-label={isBookmarked ? 'Edit profile bookmark' : 'Bookmark profile'}
@@ -610,7 +607,7 @@
                     goto('/groups/metrics/' + address);
                     popupControls.close();
                 }}
-                    class="inline-flex items-center justify-center w-8 h-8 bg-[#F3F4F6] border-none rounded-lg"
+                    class="inline-flex items-center justify-center w-8 h-8 bg-base-200 border-none rounded-lg"
             >
                 <img src="/chart.svg" alt="Chart" class="w-4"/>
             </button>
@@ -618,14 +615,14 @@
         {#if address}
             <JumpLink
                     url={'https://gnosisscan.io/address/' + address}
-                    className="inline-flex items-center justify-center w-8 h-8 bg-[#F3F4F6] border-none rounded-lg"
+                    className="inline-flex items-center justify-center w-8 h-8 bg-base-200 border-none rounded-lg"
             >
                 <img src="/external.svg" alt="External Link" class="w-4"/>
             </JumpLink>
         {/if}
     </div>
 
-    <div class="w-[80%] sm:w-[60%] border-b border-[#E5E7EB]"></div>
+    <div class="w-[80%] sm:w-[60%] border-b border-base-300"></div>
 
     <div class="w-full flex justify-center mt-6 space-x-6">
         {#if !avatarState.isGroup}
@@ -650,6 +647,8 @@
                     onclick={() => {
                     popupControls.open({
                         title: 'Enter Amount',
+                        kind: 'edit',
+                        dismiss: 'explicit',
                         component: SelectAmount,
                         props: {
                             asset: transitiveTransfer(),
@@ -675,6 +674,8 @@
                     onclick={() => {
                     popupControls.open({
                         title: !avatarState.isGroup ? "Untrust" : "Remove member",
+                        kind: 'confirm',
+                        dismiss: 'explicit',
                         component: Untrust,
                         props: {
                             address: address,
@@ -691,6 +692,8 @@
                     onclick={() => {
                     popupControls.open({
                         title: !avatarState.isGroup ? "Untrust" : "Remove member",
+                        kind: 'confirm',
+                        dismiss: 'explicit',
                         component: Untrust,
                         props: {
                             address: address,
@@ -706,6 +709,8 @@
                     onclick={() => {
                     popupControls.open({
                         title: !avatarState.isGroup ? "Trust back" : "Add member",
+                        kind: 'confirm',
+                        dismiss: 'explicit',
                         component: Trust,
                         props: {
                             address: address,
@@ -721,6 +726,8 @@
                     onclick={() => {
                     popupControls.open({
                         title: !avatarState.isGroup ? "Trust" : "Add as member",
+                        kind: 'confirm',
+                        dismiss: 'explicit',
                         component: Trust,
                         props: {
                             address: address,

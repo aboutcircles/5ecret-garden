@@ -18,11 +18,12 @@
   import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
   import {getProduct, getFirstOffer, isProductOwnedBy} from '$lib/areas/market/services';
   import {productAndOfferToDraft} from '$lib/areas/market/utils/offer';
-  import {popupControls, type PopupContentDefinition} from '$lib/shared/state/popup';
+  import {openFlowPopup, popupControls, type PopupContentDefinition} from '$lib/shared/state/popup';
 import { ProductDetailsPopup } from '$lib/areas/market/ui';
   import OfferStep1 from '$lib/areas/market/flows/offer/1_Product.svelte';
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import {gnosisConfig} from "$lib/shared/config/circles";
+  import { openInfoPopup } from '$lib/shared/ui/shell/confirmDialogs';
 
   const OPERATOR = gnosisConfig.production.marketOperator;
 
@@ -85,10 +86,10 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
       });
 
       ondeleted?.();
-      alert('Product removed (tombstoned).');
+      await openInfoPopup({ title: 'Listing removed', message: 'Product removed (tombstoned).', tone: 'success' });
     } catch (e) {
       console.error('Tombstone failed', e);
-      alert('Failed to remove product.');
+      await openInfoPopup({ title: 'Remove failed', message: 'Failed to remove product.', tone: 'error' });
     }
   }
 
@@ -138,7 +139,7 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
 
     const draft = productAndOfferToDraft(productCore, firstOffer);
 
-    popupControls.open({
+    openFlowPopup({
       title: 'Edit Offer',
       component: OfferStep1,
       props: {
