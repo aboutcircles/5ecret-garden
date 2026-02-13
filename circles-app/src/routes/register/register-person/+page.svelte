@@ -101,7 +101,7 @@
                         >
                             <svelte:fragment slot="empty">
                                 No invitations pending. <a href="/link-to-telegram" class="underline inline-flex items-center">
-                                    Get help <Lucide icon={LExternalLink} size={12} class="shrink-0 stroke-black ml-1" ariaLabel="" />
+                                    Get help <Lucide icon={LExternalLink} size={12} class="shrink-0 ml-1" ariaLabel="" />
                                 </a>
                             </svelte:fragment>
                         </InvitationPickerStep>
@@ -122,7 +122,7 @@
                                 submitLabel="Create"
                             />
                         {:else}
-                            <Lucide icon={LLock} size={28} class="shrink-0 stroke-black" ariaLabel="" />
+                            <Lucide icon={LLock} size={28} class="shrink-0" ariaLabel="" />
                             <p>Select an inviter to continue</p>
                         {/if}
                     </div>

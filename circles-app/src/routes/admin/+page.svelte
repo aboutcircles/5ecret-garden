@@ -51,6 +51,7 @@
   import Tabs from '$lib/shared/ui/primitives/tabs/Tabs.svelte';
   import Tab from '$lib/shared/ui/primitives/tabs/Tab.svelte';
   import type { TabIdOf } from '$lib/shared/ui/primitives/tabs/tabId';
+  import { openConfirmPopup } from '$lib/shared/ui/shell/confirmDialogs';
 
   // Auth state
   let adminUser: AdminVerifyResponse | null = $state(null);
@@ -341,7 +342,7 @@
 
   async function handleDisableConnection(connection: AdminOdooConnection): Promise<void> {
     const confirmMessage = `Disable Odoo connection for ${shortenAddress(connection.seller)} on chain ${connection.chainId}?`;
-    if (!confirm(confirmMessage)) return;
+    if (!(await openConfirmPopup({ title: 'Disable Odoo connection', message: confirmMessage }))) return;
 
     await runTask({
       name: 'Disabling Odoo connection…',
@@ -353,7 +354,7 @@
 
   async function handleDisableProduct(product: AdminUnifiedProduct): Promise<void> {
     const confirmMessage = `Disable ${product.sku}? This disables adapter mappings and the route.`;
-    if (!confirm(confirmMessage)) return;
+    if (!(await openConfirmPopup({ title: 'Disable product', message: confirmMessage }))) return;
 
     if (product.odoo) {
       await runTask({

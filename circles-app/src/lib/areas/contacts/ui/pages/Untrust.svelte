@@ -6,6 +6,7 @@
     import { circles } from '$lib/shared/state/circles';
     import TrustActionCard from '$lib/areas/contacts/ui/components/TrustActionCard.svelte';
     import { popupControls } from '$lib/shared/state/popup';
+    import { UNTRUST_EXPLAINER_POINTS, UNTRUST_QUICK_HELP_LINES } from '$lib/shared/content/trustRoutingCopy';
 
     interface Props { address: `0x${string}`; trustVersion: number; }
     let { address, trustVersion }: Props = $props();
@@ -35,18 +36,9 @@
   intro="You're about to un-trust the following group or person:"
   warning="Untrust stops accepting their Circles from now on. It doesn’t delete anything you already hold."
   quickHelpTitle="What untrusting changes"
-  quickHelpLines={[
-    'Untrust stops accepting their Circles from now on.',
-    'It doesn’t remove balances you already hold.',
-    'Some routes may stop working until other paths exist.',
-  ]}
+  quickHelpLines={UNTRUST_QUICK_HELP_LINES}
   showExplainerDetails={false}
-  explainerPoints={[
-    'Untrust is on/off: it removes the trust link.',
-    'Trust is one-way: untrusting doesn’t remove their trust in you.',
-    'Some routes that worked before may stop working.',
-    'You can trust again later.',
-  ]}
+  explainerPoints={UNTRUST_EXPLAINER_POINTS}
   cta="Untrust"
   action={untrust}
 />

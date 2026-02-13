@@ -2,7 +2,7 @@
     import {onMount} from 'svelte';
     import { page } from '$app/stores';
     import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
-    import {popupControls} from '$lib/shared/state/popup';
+    import {openFlowPopup, popupControls} from '$lib/shared/state/popup';
     import OfferStep1 from '$lib/areas/market/flows/offer/1_Product.svelte';
     import ProductCard from '$lib/areas/market/ui/product/ProductCard.svelte';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
@@ -77,7 +77,7 @@
     onMount(loadSellerCatalog);
 
     function openCreateListing() {
-      popupControls.open({
+      openFlowPopup({
         title: 'Create Offer',
         component: OfferStep1,
         props: { context: { operator: gnosisConfig.production.marketOperator, pinApiBase: gnosisConfig.production.marketApiBase } },

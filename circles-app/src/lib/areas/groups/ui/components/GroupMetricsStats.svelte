@@ -89,7 +89,7 @@
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 w-full gap-4 mb-8">
   <!-- Member Count -->
   <div
-    class="flex flex-col justify-between p-6 border rounded-xl bg-white hover:shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all duration-300 hover:-translate-y-0.5"
+    class="flex flex-col justify-between p-6 border border-base-300 rounded-xl bg-base-100 hover:shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all duration-300 hover:-translate-y-0.5"
   >
     <div class="w-4 h-4 mb-4 text-primary">
       <svg
@@ -111,16 +111,16 @@
       class="text-3xl tracking-tight font-medium flex flex-row gap-2 items-end"
     >
       {memberCount}
-      <span class="text-gray-500 text-sm"
+      <span class="text-base-content/70 text-sm"
         >{memberGrowth > 0 ? '+' : ''}{memberGrowth.toFixed(1)}%</span
       >
     </h2>
-    <p class="text-sm text-gray-500">Members</p>
+    <p class="text-sm text-base-content/70">Members</p>
   </div>
 
   <!-- Total Supply -->
   <div
-    class="flex flex-col justify-between p-6 border rounded-xl bg-white hover:shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all duration-300 hover:-translate-y-0.5"
+    class="flex flex-col justify-between p-6 border border-base-300 rounded-xl bg-base-100 hover:shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all duration-300 hover:-translate-y-0.5"
   >
     <div class="w-4 h-4 mb-4 text-secondary">
       <svg
@@ -141,16 +141,16 @@
       class="text-3xl tracking-tight font-medium flex flex-row gap-2 items-end"
     >
       {formatNumber(totalSupply)}
-      <span class="text-gray-500 text-sm"
+      <span class="text-base-content/70 text-sm"
         >{supplyGrowth > 0 ? '+' : ''}{supplyGrowth.toFixed(1)}%</span
       >
     </h2>
-    <p class="text-sm text-gray-500">Total Supply</p>
+    <p class="text-sm text-base-content/70">Total Supply</p>
   </div>
 
   <!-- Total Minted -->
   <div
-    class="flex flex-col justify-between p-6 border rounded-xl bg-white hover:shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all duration-300 hover:-translate-y-0.5"
+    class="flex flex-col justify-between p-6 border border-base-300 rounded-xl bg-base-100 hover:shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all duration-300 hover:-translate-y-0.5"
   >
     <div class="w-4 h-4 mb-4 text-accent">
       <svg
@@ -174,12 +174,12 @@
     >
       {formatNumber(totalMinted)}
     </h2>
-    <p class="text-sm text-gray-500">Minted last 30 days</p>
+    <p class="text-sm text-base-content/70">Minted last 30 days</p>
   </div>
 
   <!-- Total Redeemed -->
   <div
-    class="flex flex-col justify-between p-6 border rounded-xl bg-white hover:shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all duration-300 hover:-translate-y-0.5"
+    class="flex flex-col justify-between p-6 border border-base-300 rounded-xl bg-base-100 hover:shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all duration-300 hover:-translate-y-0.5"
   >
     <div class="w-4 h-4 mb-4 text-primary">
       <svg
@@ -200,12 +200,12 @@
     >
       {formatNumber(totalRedeemed)}
     </h2>
-    <p class="text-sm text-gray-500">Burned last 30 days</p>
+    <p class="text-sm text-base-content/70">Burned last 30 days</p>
   </div>
 
   <!-- Affiliate Members Count -->
   <div
-    class="flex flex-col justify-between p-6 border rounded-xl bg-white hover:shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all duration-300 hover:-translate-y-0.5"
+    class="flex flex-col justify-between p-6 border border-base-300 rounded-xl bg-base-100 hover:shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all duration-300 hover:-translate-y-0.5"
   >
     <div class="w-4 h-4 mb-4 text-primary">
       <svg
@@ -228,6 +228,6 @@
     >
       {groupMetrics.affiliateMembersCount}
     </h2>
-    <p class="text-sm text-gray-500">Affiliate Members</p>
+    <p class="text-sm text-base-content/70">Affiliate Members</p>
   </div>
 </div>

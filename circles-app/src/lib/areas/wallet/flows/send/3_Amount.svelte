@@ -21,9 +21,11 @@
     import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+    import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
     import HelpPopover from '$lib/shared/ui/primitives/HelpPopover.svelte';
     import { SEND_POPUP_TITLE } from './constants';
     import ChangeButton from '$lib/areas/wallet/ui/components/ChangeButton.svelte';
+    import { AUTO_ROUTE_HELP_LINES } from '$lib/shared/content/trustRoutingCopy';
 
     type Props = EnterAmountStepProps<SendFlowContext>;
 
@@ -223,6 +225,8 @@
         popupControls.open({
             title: 'Profile',
             component: ProfilePopup,
+            kind: 'inspect',
+            dismiss: 'backdrop',
             props: { address: context.selectedAddress },
         });
     }
@@ -272,6 +276,27 @@
         amountInput?.select();
     }
 
+    function applyMaxAmount(): void {
+        if (!Number.isFinite(maxAmountCircles) || maxAmountCircles <= 0) return;
+        context.amount = maxAmountCircles;
+        amountError = false;
+    }
+
+    function pickAnotherRecipient(): void {
+        editRecipient();
+        requestAnimationFrame(() => focusRecipientSearchInputAtEnd());
+    }
+
+    function retryRouteCalculation(): void {
+        if (!context.selectedAddress) return;
+        void calculatePath();
+    }
+
+    const maxAmountText = $derived.by(() => {
+        if (!Number.isFinite(maxAmountCircles) || maxAmountCircles <= 0) return null;
+        return maxAmountCircles.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    });
+
     $effect(() => {
         if (Number(context.amount ?? 0) > 0) {
             zeroAmountError = false;
@@ -320,7 +345,7 @@
 </script>
 
 <FlowDecoration>
-    <div class="w-full space-y-4" onkeydown={onStepKeydown}>
+    <div class="w-full space-y-4" onkeydown={onStepKeydown} role="group" aria-label="Send amount step">
     <FlowStepHeader step={2} total={3} title="Amount" labels={['Recipient', 'Amount', 'Review']} />
 
     <button
@@ -354,10 +379,7 @@
                             <span class="font-medium">Auto route</span>
                             <HelpPopover
                                     title="Auto route"
-                                    lines={[
-                                        'Uses your trust network to deliver the payment.',
-                                        'Routing can change which Circles you hold — not how many.',
-                                    ]}
+                                    lines={AUTO_ROUTE_HELP_LINES}
                                     widthClass="w-72"
                             />
                         </div>
@@ -386,39 +408,48 @@
     />
 
     {#if pathfindingFailed}
-        <div class="alert alert-error py-2 text-sm mt-3">
-            <div>
-                <div class="font-medium">No route yet</div>
-                <div class="text-xs opacity-90 mt-1">Auto route needs a trust path to this person.</div>
-                <div class="mt-2 flex flex-wrap gap-2">
-                    <button type="button" class="btn btn-xs btn-outline" onclick={openSelectedProfile}>View profile</button>
+        <StepAlert
+            variant="error"
+            className="mt-3"
+            title="No trust route yet"
+            message="Your network can’t route a payment to this account yet."
+        >
+            {#snippet action()}
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-xs btn-outline" onclick={openSelectedProfile}>Add trust</button>
+                    <button type="button" class="btn btn-xs btn-ghost" onclick={pickAnotherRecipient}>Pick another recipient</button>
                 </div>
-            </div>
-        </div>
+            {/snippet}
+        </StepAlert>
     {:else if amountError || exceedsKnownTransferLimit}
-        <div class="alert alert-warning py-2 text-sm mt-3">
-            <div>
-                <div class="font-medium">Amount is above current route availability</div>
-                <div class="text-xs opacity-90 mt-1">Try a smaller amount or adjust the route above.</div>
-                <div class="mt-2 flex flex-wrap gap-2">
-                    <button type="button" class="btn btn-xs btn-ghost" onclick={focusAmountInput}>Try smaller amount</button>
+        <StepAlert
+            variant="warning"
+            className="mt-3"
+            title="Amount exceeds route capacity"
+            message={maxAmountText ? `Right now your network can route up to ${maxAmountText} Circles.` : 'Try a smaller amount or adjust the route above.'}
+        >
+            {#snippet action()}
+                <div class="flex flex-wrap gap-2">
+                    {#if maxAmountText}
+                        <button type="button" class="btn btn-xs btn-outline" onclick={applyMaxAmount}>Use max ({maxAmountText})</button>
+                    {/if}
+                    <button type="button" class="btn btn-xs btn-ghost" onclick={focusAmountInput}>Lower amount</button>
                 </div>
-            </div>
-        </div>
+            {/snippet}
+        </StepAlert>
     {:else if zeroAmountError}
-        <div class="alert alert-warning py-2 text-sm mt-3">
-            <div>
-                <div class="font-medium">Enter an amount</div>
-                <div class="text-xs opacity-90 mt-1">Amount must be greater than 0.</div>
-            </div>
-        </div>
+        <StepAlert variant="warning" className="mt-3" title="Enter an amount" message="Amount must be greater than 0." />
     {:else if routeValidationError}
-        <div class="alert alert-warning py-2 text-sm mt-3">
-            <div>
-                <div class="font-medium">Route not ready</div>
-                <div class="text-xs opacity-90 mt-1">Wait for routing to finish or adjust the route above.</div>
-            </div>
-        </div>
+        <StepAlert
+            variant="warning"
+            className="mt-3"
+            title="Route not ready"
+            message="Wait for routing to finish or retry route calculation."
+        >
+            {#snippet action()}
+                <button type="button" class="btn btn-xs btn-ghost" onclick={retryRouteCalculation}>Retry route</button>
+            {/snippet}
+        </StepAlert>
     {/if}
 
     <div class="mt-4 border border-base-300 rounded-xl overflow-hidden bg-base-100">

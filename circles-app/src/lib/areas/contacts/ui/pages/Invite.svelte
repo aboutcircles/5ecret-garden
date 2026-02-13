@@ -30,12 +30,12 @@
   >
     <div>
       <span>{shortenAddress(address)}</span>
-      <p class="text-xs text-gray-500">
+      <p class="text-xs text-base-content/70">
         <a
           href="https://gnosisscan.io/address/{address}"
           target="_blank"
           rel="noopener noreferrer"
-          class="text-blue-500">View on Gnosisscan</a
+          class="link link-primary">View on Gnosisscan</a
         >
       </p>
     </div>

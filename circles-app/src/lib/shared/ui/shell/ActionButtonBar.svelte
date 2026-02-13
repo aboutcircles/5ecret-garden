@@ -15,7 +15,7 @@ let { actions = [] as any[] } = $props();
       aria-disabled={!!a?.disabled}
     >
         {#if a.iconNode}
-            <Lucide icon={a.iconNode} size={16} class={`shrink-0 ${a.variant === 'primary' ? 'stroke-white' : 'stroke-black'}`} />
+            <Lucide icon={a.iconNode} size={16} class="shrink-0" />
         {/if}
         <span>{a.label}</span>
     </button>

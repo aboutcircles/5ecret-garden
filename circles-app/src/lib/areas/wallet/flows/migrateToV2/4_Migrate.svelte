@@ -117,7 +117,7 @@
     />
   </StepSection>
 
-  <p class="text-gray-500 mt-2">
+  <p class="text-base-content/70 mt-2">
     You're ready to migrate to Circles V2! Click the button below to start the
     migration process.
   </p>

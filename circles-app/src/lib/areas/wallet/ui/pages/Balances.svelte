@@ -11,6 +11,7 @@
     import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
     import { CircleHelp as LCircleHelp, X as LX } from 'lucide';
     import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
+    import { WHY_MANY_CIRCLES_LINES } from '$lib/shared/content/trustRoutingCopy';
 
     let filterVersion = writable<number | undefined>(undefined);
     let filterType = writable<'personal' | 'group' | undefined>(undefined);
@@ -22,11 +23,6 @@
     const showFilters: Writable<boolean> = writable(false);
     const FILTER_PANEL_ID: string = 'balance-filters';
     const BALANCES_HELP_DISMISSED_KEY = 'balances-help-dismissed-v1';
-    const WHY_MANY_CIRCLES_LINES: string[] = [
-        'You can hold Circles from many people and groups.',
-        'Trust decides which Circles you accept.',
-        'Auto route keeps the amount the same, but may change whose Circles you hold.',
-    ];
 
     let showBalancesHelp: boolean = $state(false);
 

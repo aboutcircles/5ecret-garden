@@ -17,6 +17,7 @@
     import { get } from 'svelte/store';
     import { formatEther } from 'ethers';
     import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
+    import { openInfoPopup } from '$lib/shared/ui/shell/confirmDialogs';
 
     interface Props { item: TokenBalanceRow; }
     let { item }: Props = $props();
@@ -112,35 +113,48 @@
         const connectedAvatar = avatarState.avatar?.address;
 
         if (!sdk?.v2Hub) {
-            alert('Circles V2 hub contract is not available.');
+            await openInfoPopup({
+                title: 'Hub unavailable',
+                message: 'Circles V2 hub contract is not available.',
+                tone: 'warning',
+            });
             return;
         }
 
         if (!connectedAvatar) {
-            alert('No connected avatar found.');
+            await openInfoPopup({
+                title: 'No avatar connected',
+                message: 'No connected avatar found.',
+                tone: 'warning',
+            });
             return;
         }
 
         if (!item.tokenId) {
-            alert('No tokenId found for this balance row.');
+            await openInfoPopup({
+                title: 'Missing token id',
+                message: 'No tokenId found for this balance row.',
+                tone: 'warning',
+            });
             return;
         }
 
         try {
             const tokenId = BigInt(item.tokenId);
             const balance = await sdk.v2Hub.balanceOf(connectedAvatar, tokenId);
-            alert(
-                [
-                    'Circles V2 hub balance',
+            await openInfoPopup({
+                title: 'Circles V2 hub balance',
+                message: [
                     `Avatar: ${connectedAvatar}`,
                     `Token ID: ${item.tokenId}`,
                     `Atto CRC: ${balance.toString()}`,
                     `CRC: ${formatEther(balance)}`,
-                ].join('\n')
-            );
+                ].join('\n'),
+                tone: 'info',
+            });
         } catch (error: any) {
             const message = error?.message ?? 'Failed to query balance from Circles V2 hub.';
-            alert(message);
+            await openInfoPopup({ title: 'Balance query failed', message, tone: 'error' });
         }
     }
 </script>

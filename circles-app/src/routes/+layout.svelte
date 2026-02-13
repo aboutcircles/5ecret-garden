@@ -14,7 +14,7 @@
   import { page } from '$app/stores';
   import { onDestroy, onMount } from 'svelte';
   import { tasks } from '$lib/shared/utils/tasks';
-  import { popupControls, popupState } from '$lib/shared/state/popup';
+  import { openFlowPopup, popupControls } from '$lib/shared/state/popup';
   import Popup from '$lib/shared/ui/shell/PopupHost.svelte';
   import { initTransactionHistoryStore } from '$lib/shared/state/transactionHistory';
   import { initContactStore } from '$lib/shared/state/contacts';
@@ -26,6 +26,7 @@
   import { get } from 'svelte/store';
   import BottomNav from '$lib/shared/ui/shell/BottomNav.svelte';
   import DefaultHeader from './DefaultHeader.svelte';
+  import Banner from '$lib/shared/ui/feedback/Banner.svelte';
 
   let unwatch: (() => void) | null = null;
   let walletModule: typeof import('$lib/shared/state/wallet.svelte') | null = null;
@@ -142,7 +143,7 @@
 
   async function openMigratePopup(): Promise<void> {
     const { default: MigrateToV2 } = await import('$lib/areas/wallet/flows/migrateToV2/1_GetInvited.svelte');
-    popupControls.open({
+    openFlowPopup({
       title: 'Migrate to v2',
       component: MigrateToV2,
       props: {},
@@ -234,13 +235,13 @@
   class="relative w-full min-h-screen bg-base-200 border-gray-200 overflow-hidden font-dmSans pt-4"
 >
   {#if avatarState.avatar?.avatarInfo && canMigrate(avatarState.avatar.avatarInfo)}
-    <button
-      class="w-full flex flex-col bg-blue-100 border-t-4 mb-4 border-blue-500 rounded-b text-blue-900 px-4 py-3 shadow-md cursor-pointer fixed top-16 z-10"
-      onclick={() => void openMigratePopup()}
-      onkeydown={(e) => e.key === 'Enter' && void openMigratePopup()}
-    >
-      <p class="font-bold">Circles V2 is here!</p>
-      <p class="text-sm">Migrate your avatar to Circles V2.</p>
+    <button class="w-full fixed top-16 z-10" onclick={() => void openMigratePopup()} onkeydown={(e) => e.key === 'Enter' && void openMigratePopup()}>
+      <Banner
+        title="Circles V2 is here!"
+        message="Migrate your avatar to Circles V2."
+        tone="info"
+        className="cursor-pointer"
+      />
     </button>
     <div class="h-20"></div>
   {/if}
@@ -253,19 +254,6 @@
     <BottomNav items={menuItems} />
   {/if}
 
-  <!-- Popup backdrop with pointer events -->
-  <div
-    role="button"
-    tabindex="0"
-    class={`fixed top-0 left-0 w-full h-full bg-black/50 z-[90] ${$popupState.content ? 'opacity-100' : 'opacity-0 hidden'} transition duration-300 ease-in-out pointer-events-auto`}
-    style="touch-action: none;"
-    onpointerdown={(e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      popupControls.close();
-    }}
-    aria-hidden={$popupState.content ? 'false' : 'true'}
-  ></div>
   <Popup />
 </main>
 {#if hasToasts}

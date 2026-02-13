@@ -23,7 +23,7 @@
   import { clearSession, signer, wallet } from '$lib/shared/state/wallet.svelte';
   import { circles } from '$lib/shared/state/circles';
   import MigrateToV2 from '$lib/areas/wallet/flows/migrateToV2/1_GetInvited.svelte';
-  import { popupControls } from '$lib/shared/state/popup';
+  import { openFlowPopup, popupControls } from '$lib/shared/state/popup';
   import { ethers } from 'ethers';
   import { LogOut as LLogOut } from 'lucide';
   import type { Address } from '@circles-sdk/utils';
@@ -38,6 +38,7 @@
     saveNamespacesProfileForSettings,
   } from '$lib/areas/settings/state/settingsNamespaces';
   import { fetchGatewayRowsByOwner } from '$lib/shared/data/circles/paymentGateways';
+  import { openConfirmPopup, openInfoPopup } from '$lib/shared/ui/shell/confirmDialogs';
 
   // ——— Marketplace state/actions (connected avatar as seller) ———
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
@@ -265,7 +266,7 @@
   }
 
   async function migrateToV2() {
-    popupControls.open({
+    openFlowPopup({
       title: 'Migrate to v2',
       component: MigrateToV2,
       props: {},
@@ -294,19 +295,29 @@
   // Delete only the locally stored private key (seed-derived). Keeps current session unless you disconnect.
   async function deleteLocalKey(): Promise<void> {
     try {
-      const confirmDelete = window.confirm(
-        'Delete the Circles magic words (private key) from this device? You will need to import them again next time you connect.',
-      );
+      const confirmDelete = await openConfirmPopup({
+        title: 'Delete local key',
+        message:
+          'Delete the Circles magic words (private key) from this device? You will need to import them again next time you connect.',
+      });
       if (!confirmDelete) return;
       CirclesStorage.getInstance().data = { privateKey: undefined };
       // Drop in-memory reference too
       try {
         (signer as any).privateKey = undefined;
       } catch {}
-      alert('Local key deleted from this device. You remain connected until you disconnect.');
+      await openInfoPopup({
+        title: 'Key deleted',
+        message: 'Local key deleted from this device. You remain connected until you disconnect.',
+        tone: 'success',
+      });
     } catch (e) {
       console.error('Failed to delete local key', e);
-      alert('Failed to delete key. See console for details.');
+      await openInfoPopup({
+        title: 'Delete failed',
+        message: 'Failed to delete key. See console for details.',
+        tone: 'error',
+      });
     }
   }
 
@@ -352,7 +363,7 @@
   });
 
   function openCreateListing() {
-    popupControls.open({
+    openFlowPopup({
       title: 'Create Offer',
       component: OfferStep1,
       props: {
@@ -490,7 +501,7 @@
   });
 
   function openCreateGatewayFlow() {
-    popupControls.open({
+    openFlowPopup({
       title: 'Create payment gateway',
       component: CreateGatewayProfile,
       props: {

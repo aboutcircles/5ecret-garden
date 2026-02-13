@@ -175,12 +175,12 @@
 
 <div class="relative">
   <div class="flex items-center justify-between mb-4">
-    <h3 class="text-sm font-medium text-gray-700">{title}</h3>
+    <h3 class="text-sm font-medium text-base-content/80">{title}</h3>
     <div class="flex items-center">
-      <span class="text-xs text-gray-500 mr-2">Day/Hour</span>
+      <span class="text-xs text-base-content/70 mr-2">Day/Hour</span>
       <input
         type="checkbox"
-        class="toggle toggle-sm bg-gray-200"
+        class="toggle toggle-sm bg-base-300"
         checked={resolution === 'hour'}
         onclick={({ currentTarget }) => {
           resolution = currentTarget.checked ? 'hour' : 'day';
@@ -190,7 +190,7 @@
     </div>
   </div>
   
-  <div class="rounded-lg overflow-hidden bg-gradient-to-br from-transparent via-gray-50/50 to-transparent p-px min-h-[250px]">
+  <div class="rounded-lg overflow-hidden bg-gradient-to-br from-transparent via-base-200/40 to-transparent p-px min-h-[250px]">
     <canvas bind:this={canvas} class="w-full h-full"></canvas>
   </div>
 </div>
