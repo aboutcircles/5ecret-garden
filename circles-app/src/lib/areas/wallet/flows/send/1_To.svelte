@@ -10,6 +10,8 @@
   import type { Address } from '@circles-sdk/utils';
   import { get } from 'svelte/store';
   import type { SelectTargetStepProps } from '$lib/shared/flow/contracts';
+  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import { SEND_POPUP_TITLE } from './constants';
   import {
     requireAvatar,
     requireCircles,
@@ -27,18 +29,6 @@
     }),
   }: Props = $props();
 
-  $effect(() => {
-    if (context.selectedAddress && context.selectedAsset) {
-      openStep({
-        title: 'Enter Amount',
-        component: SelectAmount,
-        props: {
-          context: context,
-        },
-      });
-    }
-  });
-
   async function onselect(selectedAvatar: Address) {
     context.selectedAddress = selectedAvatar;
 
@@ -52,7 +42,7 @@
 
     if (context.selectedAsset) {
       openStep({
-        title: 'Enter Amount',
+        title: SEND_POPUP_TITLE,
         component: SelectAmount,
         props: {
           context: context,
@@ -60,7 +50,7 @@
       });
     } else {
       openStep({
-        title: 'Select Asset',
+        title: SEND_POPUP_TITLE,
         component: SelectAsset,
         props: {
           context: context,
@@ -71,10 +61,15 @@
 </script>
 
 <FlowDecoration>
-  <SearchAvatar
-    avatarTypes={["CrcV2_RegisterHuman","CrcV2_RegisterOrganization"]}
-    selectedAddress={context.selectedAddress}
-    {onselect}
-    searchType="send"
-  />
+  <div class="w-full">
+    <FlowStepHeader step={1} total={3} title="Recipient" labels={['Recipient', 'Amount', 'Review']} />
+  </div>
+  <div class="w-full">
+    <SearchAvatar
+      avatarTypes={["CrcV2_RegisterHuman","CrcV2_RegisterOrganization"]}
+      selectedAddress={context.selectedAddress}
+      {onselect}
+      searchType="send"
+    />
+  </div>
 </FlowDecoration>

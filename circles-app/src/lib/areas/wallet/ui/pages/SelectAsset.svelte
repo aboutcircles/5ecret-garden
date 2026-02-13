@@ -11,8 +11,7 @@
 
     export function tokenTypeToString(tokenType: string) {
         if (!tokenType) {
-            // "CrcV1_HubTransfer";
-            return 'Transitive Transfer (v1)';
+            return 'Circles (v1)';
         }
         switch (tokenType) {
             case 'CrcV2_RegisterHuman':
@@ -26,7 +25,7 @@
             case 'CrcV2_RegisterGroup':
                 return 'Group Circles';
             case 'TransitiveTransfer':
-                return 'Circles';
+                return 'Auto route';
             default:
                 return tokenType;
         }
@@ -58,12 +57,14 @@
     import type { TokenBalanceRow } from '@circles-sdk/data';
     import { writable } from 'svelte/store';
     import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
-    import BalanceRow from '$lib/areas/wallet/ui/components/BalanceRow.svelte';
     import type { Readable } from 'svelte/store';
     import { derived, readable } from 'svelte/store';
     import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
     import SelectableBalanceRow, { type SelectableBalanceRowItem } from '$lib/areas/wallet/ui/components/SelectableBalanceRow.svelte';
     import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
+    import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
+    import { roundToDecimals } from '$lib/shared/utils/shared';
+    import AutoRouteSummary from '$lib/areas/wallet/ui/components/AutoRouteSummary.svelte';
 
     interface Props {
         balances: Readable<{
@@ -129,13 +130,21 @@
 </script>
 
 {#if showTransitive}
-    <!-- Wrap to ensure click is caught at the DOM boundary (BalanceRow doesn't emit a component 'click') -->
     <button
             type="button"
             class="w-full text-left bg-transparent border-0 p-0"
             onclick={() => handleSelect(transitiveTransfer())}
     >
-        <BalanceRow item={transitiveTransfer()} />
+        <RowFrame clickable={true} noLeading={true} className="border-primary/30 bg-primary/5">
+            <div class="w-full flex items-center justify-between">
+                <div class="min-w-0">
+                    <AutoRouteSummary />
+                </div>
+                <div class="text-right text-sm text-base-content/70">
+                    {roundToDecimals(transitiveTransfer().circles)} Circles
+                </div>
+            </div>
+        </RowFrame>
     </button>
 {/if}
 

@@ -6,12 +6,13 @@
     asset: TokenBalanceRow;
     amount?: number;
     maxAmountCircles?: number;
+    routeLoading?: boolean;
   }
 
-  let { asset, amount = $bindable(0), maxAmountCircles = -1 }: Props = $props();
+  let { asset, amount = $bindable(0), maxAmountCircles = -1, routeLoading = false }: Props = $props();
 </script>
 
 <div class="mb-4">
-  <CurrencyInput balanceRow={asset} bind:amount {maxAmountCircles} />
+  <CurrencyInput balanceRow={asset} bind:amount {maxAmountCircles} {routeLoading} />
 </div>
 

@@ -267,13 +267,13 @@
     <div class="divider text-xs">or</div>
 
     <!-- In-app transfer option -->
-    <div class="flex flex-col items-center gap-2">
+    <div class="flex flex-col items-end gap-2">
       {#if resolveError}
-        <div class="alert alert-warning text-xs w-full max-w-md">{resolveError}</div>
+        <div class="alert alert-warning text-xs w-full">{resolveError}</div>
       {/if}
 
       {#if chainWarning}
-        <div class="alert alert-info text-xs w-full max-w-md">{chainWarning}</div>
+        <div class="alert alert-info text-xs w-full">{chainWarning}</div>
       {/if}
 
       <button
@@ -285,7 +285,7 @@
       </button>
 
       {#if transferContext}
-        <div class="text-[11px] opacity-70 text-center">
+        <div class="text-[11px] opacity-70 text-right">
           Will send <strong>{transferContext.amount}</strong> CRC to
           <code class="break-all">{transferContext.selectedAddress}</code>
           {#if paymentReference}

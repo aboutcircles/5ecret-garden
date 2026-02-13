@@ -1,7 +1,11 @@
 <script lang="ts">
   import Send from '$lib/areas/wallet/ui/pages/Send.svelte';
+  import ToStep from './1_To.svelte';
+  import RouteStep from './2_Asset.svelte';
+  import AmountStep from './3_Amount.svelte';
   import type {SendFlowContext} from '$lib/areas/wallet/flows/send/context';
   import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+  import { openStep } from '$lib/shared/flow/runtime';
   import {runTask} from '$lib/shared/utils/tasks';
   import {roundToDecimals, shortenAddress} from '$lib/shared/utils/shared';
   import {avatarState} from '$lib/shared/state/avatar.svelte';
@@ -15,6 +19,8 @@
     requireWalletAddress,
   } from '$lib/shared/flow/guards';
   import type { ReviewStepProps } from '$lib/shared/flow/contracts';
+  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import { SEND_POPUP_TITLE } from './constants';
 
   type Props = ReviewStepProps<SendFlowContext>;
 
@@ -90,16 +96,63 @@
 
     popupControls.close();
   }
+
+  function editTo() {
+    context.selectedAddress = undefined;
+
+    const didPop = popupControls.popTo((entry) => entry.component === ToStep);
+    if (!didPop) {
+      openStep({
+        title: SEND_POPUP_TITLE,
+        component: ToStep,
+        props: { context },
+      });
+    }
+  }
+
+  function editRoute() {
+    const didPopToAmount = popupControls.popTo((entry) => entry.component === AmountStep);
+    if (!didPopToAmount) {
+      openStep({
+        title: SEND_POPUP_TITLE,
+        component: AmountStep,
+        props: { context },
+      });
+    }
+
+    openStep({
+      title: SEND_POPUP_TITLE,
+      component: RouteStep,
+      props: { context, returnMode: 'back' },
+    });
+  }
+
+  function editAmount() {
+    const didPop = popupControls.popTo((entry) => entry.component === AmountStep);
+    if (!didPop) {
+      openStep({
+        title: SEND_POPUP_TITLE,
+        component: AmountStep,
+        props: { context },
+      });
+    }
+  }
 </script>
 
 <FlowDecoration>
-  <Send
-      asset={context.selectedAsset}
-      amount={context.amount}
-      receiverAddress={context.selectedAddress}
-      textButton="Send CRC"
-      data={context.data}
-      dataType={context.dataType}
-      {onselect}
-  />
+  <div class="w-full space-y-4">
+    <FlowStepHeader step={3} total={3} title="Review" labels={['Recipient', 'Amount', 'Review']} />
+    <Send
+        asset={context.selectedAsset}
+        amount={context.amount}
+        receiverAddress={context.selectedAddress}
+        textButton="Send Circles"
+        data={context.data}
+        dataType={context.dataType}
+        onEditTo={editTo}
+        onEditRoute={editRoute}
+        onEditAmount={editAmount}
+        {onselect}
+    />
+  </div>
 </FlowDecoration>

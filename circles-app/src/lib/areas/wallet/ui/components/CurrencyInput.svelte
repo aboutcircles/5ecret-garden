@@ -2,21 +2,22 @@
     import { onMount, onDestroy } from 'svelte';
     import IMask from 'imask';
     import type { TokenBalanceRow } from '@circles-sdk/data';
-    import { tokenTypeToString } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
+    import { TransitiveTransferTokenAddress } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
     import { roundToDecimals } from '$lib/shared/utils/shared';
-    import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import Tooltip from "$lib/shared/ui/primitives/Tooltip.svelte";
 
     interface Props {
         balanceRow: TokenBalanceRow;
         amount?: number;
         maxAmountCircles?: number;
+        routeLoading?: boolean;
     }
 
-    let { balanceRow, amount = $bindable(0), maxAmountCircles = -1 }: Props = $props();
+    let { balanceRow, amount = $bindable(0), maxAmountCircles = -1, routeLoading = false }: Props = $props();
 
     let inputElement: HTMLInputElement | undefined = $state();
     let mask: IMask.InputMask<any> | null = null;
+    let blurListener: (() => void) | null = null;
 
     // Single IMask config (2 decimals, no negatives)
     const maskOptions: IMask.AnyMaskedOptions = {
@@ -33,6 +34,12 @@
     };
 
     let maxDisplayAmount = $derived(maxAmountCircles >= 0 ? maxAmountCircles : balanceRow.circles);
+    let isAutoRoute = $derived(balanceRow?.tokenAddress === TransitiveTransferTokenAddress);
+    let routeCapDisplay = $derived(
+        routeLoading
+            ? '- / -'
+            : `${roundToDecimals(maxDisplayAmount)} / ${roundToDecimals(balanceRow.circles)}`
+    );
 
     function clampToMax(n: number): number {
         return Math.max(0, Math.min(n, maxDisplayAmount));
@@ -81,62 +88,64 @@
         });
 
         // On blur, normalize to our clamped/rounded form
-        inputElement.addEventListener('blur', () => {
+        const handleBlur = () => {
             const normalized = clampToMax(+amount || 0);
             amount = roundToDecimals(normalized);
             if (inputElement) {
                 inputElement.value = amount.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
             }
-        });
+        };
+
+        inputElement.addEventListener('blur', handleBlur);
+        blurListener = () => inputElement?.removeEventListener('blur', handleBlur);
     });
 
     onDestroy(() => {
+        blurListener?.();
+        blurListener = null;
         mask?.destroy();
         mask = null;
     });
 </script>
 
-<!-- Mobile avatar above the input -->
-<div class="flex md:hidden mt-4 md:mt-4">
-    <Avatar
-            address={balanceRow?.tokenOwner}
-            clickable={false}
-            view="horizontal"
-            bottomInfo={tokenTypeToString(balanceRow?.tokenType)}
-    />
-</div>
+<div class="mt-3 rounded-2xl bg-base-200/60 p-4 space-y-3">
+    <div class="text-xs font-semibold uppercase tracking-wide text-base-content/70">Amount</div>
 
-<div
-        class="w-full flex items-center justify-between border border-gray-400 rounded-lg font-bold px-4 mt-4"
->
-    <div class="flex items-center">
+    <div class="flex items-baseline gap-2">
         <input
                 bind:this={inputElement}
+                data-send-amount-input
                 type="text"
                 inputmode="decimal"
                 autocomplete="off"
                 autocorrect="off"
                 spellcheck="false"
                 placeholder="0.00"
-                class="input input-lg p-0 text-3xl w-44 placeholder-gray-400 focus:outline-none focus-visible:outline-none focus:ring-0 focus:border-none"
+                class="w-full bg-transparent border-0 p-0 text-4xl font-semibold placeholder-base-content/30 focus:outline-none focus-visible:outline-none focus:ring-0"
                 style="caret-color: currentColor;"
         />
-        <p class="text-3xl text-neutral-900 opacity-25">CRC</p>
+        <span class="text-xl md:text-2xl text-base-content/45 font-medium">Circles</span>
     </div>
-    <div class="hidden md:flex">
-        <Avatar
-                address={balanceRow?.tokenOwner}
-                clickable={false}
-                view="horizontal"
-                bottomInfo={tokenTypeToString(balanceRow?.tokenType)}
-        />
+
+    <div class="flex items-center justify-between gap-3 text-sm">
+        <div class="text-base-content/70">
+            {#if isAutoRoute}
+                <span class="inline-flex items-center gap-1">
+                    Route cap
+                    {#if routeLoading}
+                        <span class="loading loading-spinner loading-xs" aria-label="Loading route cap"></span>
+                    {/if}
+                </span>
+                : {routeCapDisplay}
+                <span class="text-base-content/55 ml-1">
+                    <Tooltip content="Availability depends on your trust network and routing limits."/>
+                </span>
+            {:else}
+                Available: {roundToDecimals(balanceRow.circles)}
+            {/if}
+        </div>
+        <button class="btn btn-xs btn-ghost" onclick={setMaxAmount}>
+            Use max
+        </button>
     </div>
 </div>
-
-<p class="font-medium text-sm mt-4">
-    {roundToDecimals(maxDisplayAmount)} <span class="text-gray-500">/ {roundToDecimals(balanceRow.circles)} CRC
-        <Tooltip content="The max. amount depends on your balance, trust network and blockchain limits. Form more quality trust relations to increase your spendable amount."/></span>
-    <button class="btn btn-sm ml-4 font-normal" onclick={setMaxAmount}>
-        Use Max
-    </button>
-</p>

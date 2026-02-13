@@ -45,7 +45,7 @@
   </div>
 
   <div class="modal-action">
-    <button type="submit" class="btn btn-primary" onclick={migrate}
+    <button type="submit" class="btn btn-primary btn-sm" onclick={migrate}
       >Migrate</button
     >
   </div>

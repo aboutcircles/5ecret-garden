@@ -1,23 +1,22 @@
 import Send from './1_To.svelte';
+import AmountStep from './3_Amount.svelte';
+import { SEND_POPUP_TITLE } from './constants';
 import type { SendFlowContext } from './context';
-import { transitiveTransfer } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
+import { createSendFlowContext } from './sendFlowContext.svelte';
 import { openStep } from '$lib/shared/flow/runtime';
 
 export function openSendFlowPopup(
   context: Partial<SendFlowContext> = {},
-  title = 'Send Circles'
+  title = SEND_POPUP_TITLE
 ): void {
+  const flowContext = createSendFlowContext(context);
+  const shouldStartAtAmount = Boolean(flowContext.selectedAddress);
+
   openStep({
     title,
-    component: Send,
+    component: shouldStartAtAmount ? AmountStep : Send,
     props: {
-      context: {
-        selectedAsset: transitiveTransfer(),
-        selectedAddress: undefined,
-        amount: undefined,
-        transitiveOnly: true,
-        ...context,
-      },
+      context: flowContext,
     },
   });
 }

@@ -3,6 +3,9 @@ import { sveltekit } from '@sveltejs/kit/vite';
 
 export default defineConfig({
   plugins: [sveltekit()],
+  resolve: {
+    conditions: ['browser'],
+  },
   test: {
     globals: true,
     // Use the Node environment by default to avoid requiring a DOM implementation.

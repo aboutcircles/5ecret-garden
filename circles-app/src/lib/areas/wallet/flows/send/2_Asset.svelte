@@ -3,15 +3,22 @@
   import type { SendFlowContext } from '$lib/areas/wallet/flows/send/context';
   import SelectAsset from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
   import SelectAmount from './3_Amount.svelte';
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
   import { circlesBalances } from '$lib/shared/state/circlesBalances';
   import { openStep } from '$lib/shared/flow/runtime';
   import type { SelectAssetStepProps } from '$lib/shared/flow/contracts';
+  import { popupControls } from '$lib/shared/state/popup';
+  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import { SEND_POPUP_TITLE } from './constants';
 
-  type Props = SelectAssetStepProps<SendFlowContext>;
+  type ReturnMode = 'next' | 'back';
 
-  let { context = $bindable() }: Props = $props();
+  type Props = SelectAssetStepProps<SendFlowContext> & {
+    returnMode?: ReturnMode;
+  };
+
+  let { context = $bindable(), returnMode = 'next' }: Props = $props();
 
   let selectedAsset: TokenBalanceRow | undefined = $state(undefined);
 
@@ -24,11 +31,17 @@
     }
   });
 
-  function onselect(tokenBalanceRow: TokenBalanceRow) {
+  async function onselect(tokenBalanceRow: TokenBalanceRow) {
     context.selectedAsset = tokenBalanceRow;
 
+    if (returnMode === 'back') {
+      await tick();
+      popupControls.back();
+      return;
+    }
+
     openStep({
-      title: 'Enter Amount',
+      title: SEND_POPUP_TITLE,
       component: SelectAmount,
       props: {
         context: context,
@@ -38,5 +51,14 @@
 </script>
 
 <FlowDecoration>
-  <SelectAsset {selectedAsset} balances={circlesBalances} {onselect} />
+  <div class="w-full space-y-4">
+    <FlowStepHeader
+      step={2}
+      total={3}
+      title="Amount"
+      subtitle="Choose route"
+      labels={['Recipient', 'Amount', 'Review']}
+    />
+    <SelectAsset {selectedAsset} balances={circlesBalances} {onselect} />
+  </div>
 </FlowDecoration>

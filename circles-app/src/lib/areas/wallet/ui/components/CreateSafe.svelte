@@ -7,12 +7,22 @@
   } from '@safe-global/protocol-kit';
   import { onMount } from 'svelte';
   import { ethers } from 'ethers';
+  import { signer as sessionSigner } from '$lib/shared/state/wallet.svelte';
+  import { settings } from '$lib/shared/state/settings.svelte';
+  import { gnosisConfig } from '$lib/shared/config/circles';
 
   let isCreating = $state(false);
   let error: string | null = $state(null);
   let hasProvider = $state(false);
+  let hasLocalPrivateKey = $derived(!!sessionSigner.privateKey);
 
-  let {onsafecreated} = $props();
+  let {
+    onsafecreated,
+    safeCreationMode = 'browser',
+  }: {
+    onsafecreated: (address: string) => void;
+    safeCreationMode?: 'browser' | 'importedKey';
+  } = $props();
 
   onMount(() => {
     hasProvider = typeof window !== 'undefined' && !!(window as any).ethereum;
@@ -22,16 +32,34 @@
     isCreating = true;
     error = null;
 
-    if (typeof window === 'undefined' || !(window as any).ethereum) {
-      error = 'No Ethereum provider found. Please connect a wallet.';
+    const privateKey = sessionSigner.privateKey;
+    const useLocalPrivateKey = safeCreationMode === 'importedKey';
+    if (useLocalPrivateKey && !privateKey) {
+      error = 'No imported key available. Please import your circles.garden keyphrase again.';
+      isCreating = false;
+      return;
+    }
+
+    if (!useLocalPrivateKey && (typeof window === 'undefined' || !(window as any).ethereum)) {
+      error = 'No Ethereum provider found. Please connect a browser wallet.';
       isCreating = false;
       return;
     }
 
     try {
-      const browserProvider = new ethers.BrowserProvider((window as any).ethereum);
-      const signer = await browserProvider.getSigner();
-      const ownerAddress = await signer.getAddress();
+      const rpcUrl = settings.ring
+        ? gnosisConfig.rings.circlesRpcUrl
+        : gnosisConfig.production.circlesRpcUrl;
+
+      const txProvider = useLocalPrivateKey
+        ? new ethers.JsonRpcProvider(rpcUrl)
+        : new ethers.BrowserProvider((window as any).ethereum);
+
+      const txSigner = useLocalPrivateKey
+        ? new ethers.Wallet(privateKey as `0x${string}`, txProvider)
+        : await (txProvider as ethers.BrowserProvider).getSigner();
+
+      const ownerAddress = await txSigner.getAddress();
 
       const safeAccountConfig: SafeAccountConfig = {
         owners: [ownerAddress],
@@ -51,9 +79,9 @@
       console.log(predictedSafe);
 
       const protocolKit = await Safe.init({
-        provider: (window as any).ethereum, // Use browser provider
+        provider: useLocalPrivateKey ? rpcUrl : (window as any).ethereum,
         predictedSafe,
-        signer: ownerAddress,
+        signer: useLocalPrivateKey ? (privateKey as `0x${string}`) : ownerAddress,
       });
 
       const safeAddress = await protocolKit.getAddress();
@@ -62,24 +90,17 @@
       const deploymentTransaction =
         await protocolKit.createSafeDeploymentTransaction();
 
-      const client = await protocolKit.getSafeProvider().getExternalSigner();
-      console.log(client, 'this is client value');
-
-      if (!client) {
-        throw new Error('Failed to get external signer');
-      }
-
-      const network = await browserProvider.getNetwork();
-      const transactionHash = await client.sendTransaction({
+      const network = await txProvider.getNetwork();
+      const txResponse = await txSigner.sendTransaction({
         to: deploymentTransaction.to,
         value: BigInt(deploymentTransaction.value),
         data: deploymentTransaction.data as `0x${string}`,
         chainId: network.chainId,
       });
 
-      console.log('Transaction hash:', transactionHash);
+      console.log('Transaction hash:', txResponse.hash);
 
-      await browserProvider.waitForTransaction(transactionHash.hash);
+      await txResponse.wait();
 
       const isSafeDeployed = await protocolKit.connect({
         safeAddress,
@@ -107,7 +128,10 @@
 <button
   class="btn btm-nav-xs btn-outline btn-primary"
   class:loading={isCreating}
-  disabled={isCreating || !hasProvider}
+  disabled={
+    isCreating ||
+    (safeCreationMode === 'importedKey' ? !hasLocalPrivateKey : !hasProvider)
+  }
   onclick={createSafe}
 >
   {#if isCreating}

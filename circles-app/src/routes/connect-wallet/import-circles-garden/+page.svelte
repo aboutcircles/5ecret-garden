@@ -69,4 +69,5 @@
   safeOwnerAddress={signer.address}
   sdk={$circles}
   initSdk={connectCirclesGarden}
+  safeCreationMode="importedKey"
 />

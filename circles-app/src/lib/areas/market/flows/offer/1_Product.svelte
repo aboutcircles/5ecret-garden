@@ -228,7 +228,7 @@
       </div>
 
       <div class="mt-4 flex justify-end">
-        <button type="button" class="btn btn-primary" onclick={next}>Next</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick={next}>Next</button>
       </div>
     </div>
   {:else}

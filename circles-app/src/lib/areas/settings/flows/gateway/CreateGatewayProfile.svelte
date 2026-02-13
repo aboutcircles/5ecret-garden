@@ -103,7 +103,7 @@
     <div class="mt-4 flex justify-end">
       <button
         type="button"
-        class="btn btn-primary"
+        class="btn btn-primary btn-sm"
         onclick={goNext}
         disabled={!canContinue}
       >

@@ -630,7 +630,7 @@
     <div class="w-full flex justify-center mt-6 space-x-6">
         {#if !avatarState.isGroup}
             <button
-                    class="btn btn-primary"
+                    class="btn btn-primary btn-sm"
                     onclick={() => {
                 openSendFlowPopup({
                     selectedAddress: otherAvatar?.avatar,
@@ -646,7 +646,7 @@
         {/if}
         {#if otherAvatar?.type === 'CrcV2_RegisterGroup' && !!mintHandler && !avatarState.isGroup}
             <button
-                    class="btn btn-primary"
+                    class="btn btn-primary btn-sm"
                     onclick={() => {
                     popupControls.open({
                         title: 'Enter Amount',
@@ -671,7 +671,7 @@
         {/if}
         {#if trustRow?.relation === 'trusts'}
             <button
-                    class="btn btn-primary"
+                    class="btn btn-primary btn-sm"
                     onclick={() => {
                     popupControls.open({
                         title: !avatarState.isGroup ? "Untrust" : "Remove member",
@@ -687,7 +687,7 @@
             </button>
         {:else if trustRow?.relation === 'mutuallyTrusts'}
             <button
-                    class="btn btn-primary"
+                    class="btn btn-primary btn-sm"
                     onclick={() => {
                     popupControls.open({
                         title: !avatarState.isGroup ? "Untrust" : "Remove member",
@@ -702,7 +702,7 @@
             </button>
         {:else if trustRow?.relation === 'trustedBy'}
             <button
-                    class="btn btn-primary"
+                    class="btn btn-primary btn-sm"
                     onclick={() => {
                     popupControls.open({
                         title: !avatarState.isGroup ? "Trust back" : "Add member",
@@ -717,7 +717,7 @@
             </button>
         {:else}
             <button
-                    class="btn btn-primary"
+                    class="btn btn-primary btn-sm"
                     onclick={() => {
                     popupControls.open({
                         title: !avatarState.isGroup ? "Trust" : "Add as member",

@@ -39,6 +39,34 @@ function back(): void {
   });
 }
 
+function popTo(predicate: (entry: PopupContentDefinition) => boolean): boolean {
+  let found = false;
+
+  popupState.update((s) => {
+    const entries = s.content ? [...s.stack, s.content] : s.stack.slice();
+
+    let foundIndex = -1;
+    for (let i = entries.length - 1; i >= 0; i--) {
+      if (predicate(entries[i])) {
+        foundIndex = i;
+        break;
+      }
+    }
+
+    if (foundIndex === -1) {
+      return s;
+    }
+
+    found = true;
+    return {
+      content: entries[foundIndex],
+      stack: entries.slice(0, foundIndex),
+    };
+  });
+
+  return found;
+}
+
 function close(): void {
   popupState.update((s) => {
     s.content?.onClose?.();
@@ -58,4 +86,4 @@ export function openFlowPopup(def: PopupContentDefinition): void {
   });
 }
 
-export const popupControls = { open, back, close, replace };
+export const popupControls = { open, back, popTo, close, replace };
