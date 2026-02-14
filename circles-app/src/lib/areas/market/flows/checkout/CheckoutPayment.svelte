@@ -1,8 +1,8 @@
 <!-- lib/flows/checkout/CheckoutPayment.svelte -->
 <script lang="ts">
-  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
+  import { CHECKOUT_FLOW_SCAFFOLD_BASE } from './constants';
   import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
   import QrCode from '$lib/shared/ui/primitives/QrCode.svelte';
   import { cartState } from '$lib/areas/market/cart/store';
@@ -11,7 +11,7 @@
   import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
   import { resolvePayTo } from '$lib/areas/market/services';
   import { popupControls } from '$lib/shared/state/popup';
-  import { openStep } from '$lib/shared/flow/runtime';
+  import { openStep, useAsyncAction } from '$lib/shared/flow';
   import SendFlow from '$lib/areas/wallet/flows/send/4_Send.svelte';
   import { transitiveTransfer } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
   import type { SendFlowContext } from '$lib/areas/wallet/flows/send/context';
@@ -38,56 +38,45 @@
   const basket = $derived($cartState.basket);
   const lines = $derived((basket?.items ?? []) as any[]);
 
-  let resolving = $state(false);
-  let resolveError: string | null = $state(null);
   let chainWarning: string | null = $state(null);
   let transferContext: SendFlowContext | null = $state(null);
   let payActionChainId: number | null = $state(null);
   let currentChainId: number | null = $state(null);
 
   // Determine current wallet network chainId
-  $effect(async () => {
-    const w = $wallet;
-    if (!w) {
-      currentChainId = null;
-      return;
-    }
-    try {
-      const net = await w.provider.getNetwork();
-      // ethers v6 returns bigint chainId; normalize to number
-      const cid = Number(net?.chainId);
-      currentChainId = Number.isFinite(cid) ? cid : null;
-    } catch (e) {
-      currentChainId = null;
-    }
+  $effect(() => {
+    void (async () => {
+      const w = $wallet as any;
+      if (!w) {
+        currentChainId = null;
+        return;
+      }
+      try {
+        const net = await w.provider.getNetwork();
+        // ethers v6 returns bigint chainId; normalize to number
+        const cid = Number(net?.chainId);
+        currentChainId = Number.isFinite(cid) ? cid : null;
+      } catch (e) {
+        console.debug('[checkout] failed to read wallet network', e);
+        currentChainId = null;
+      }
+    })();
   });
 
-  let buildSeq = 0;
+  const preparePaymentAction = useAsyncAction(async () => {
+    if (!lines?.length) {
+      return;
+    }
 
-  async function buildTransferContext(): Promise<void> {
-  const mySeq = ++buildSeq;
+    if (!paymentReference) {
+      throw new Error('Payment reference not available yet. Please wait a moment and try again.');
+    }
 
-  resolveError = null;
-  chainWarning = null;
-  transferContext = null;
-  payActionChainId = null;
-
-  if (!lines?.length) {
-    return;
-  }
-
-  if (!paymentReference) {
-    resolveError = 'Payment reference not available yet. Please wait a moment and try again.';
-    return;
-  }
-
-  resolving = true;
-
-  try {
     const recipients = new Set<string>();
     let total = 0;
 
-    const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
+    const operator = gnosisConfig.production.marketOperator as any;
+    const catalog = getMarketClient().catalog.forOperator(operator);
     const productCache = new Map<string, any>();
 
     async function fetchOfferFallback(seller: string, sku: string): Promise<any | null> {
@@ -105,20 +94,18 @@
 
         productCache.set(key, offer ?? null);
         return offer ?? null;
-      } catch {
+      } catch (e) {
+        console.debug('[checkout] failed to resolve offer from catalog', { seller, sku }, e);
         productCache.set(key, null);
         return null;
       }
     }
 
     for (const line of lines) {
-      if (mySeq !== buildSeq) return;
-
       const seller = String(line?.seller ?? '');
       const sku = String(line?.orderedItem?.sku ?? '');
       if (!seller || !sku) {
-        resolveError = 'Incomplete line item (seller/SKU missing).';
-        return;
+        throw new Error('Incomplete line item (seller/SKU missing).');
       }
 
       const qtyRaw = Number(line?.orderQuantity ?? 1);
@@ -134,7 +121,6 @@
       const needsOfferFallback = !payTo?.address;
       if (needsOfferFallback) {
         const offerFallback = await fetchOfferFallback(seller, sku);
-        if (mySeq !== buildSeq) return;
         payTo = resolvePayTo(offerFallback);
       }
 
@@ -146,27 +132,21 @@
       const code = (snapCurrency ?? payTo.priceCurrency ?? null) as string | null;
 
       if (!payTo?.address) {
-        resolveError = 'Missing pay-to address on offer.';
-        return;
+        throw new Error('Missing pay-to address on offer.');
       }
       if (unitPrice == null || !Number.isFinite(unitPrice)) {
-        resolveError = 'Missing or invalid price for an item.';
-        return;
+        throw new Error('Missing or invalid price for an item.');
       }
       if (!code || code.toUpperCase() !== 'CRC') {
-        resolveError = `Unsupported currency ${code || '(none)'} – only CRC supported for in-app transfer.`;
-        return;
+        throw new Error(`Unsupported currency ${code || '(none)'} – only CRC supported for in-app transfer.`);
       }
 
       recipients.add((payTo.address as string).toLowerCase());
       total += unitPrice * qty;
     }
 
-    if (mySeq !== buildSeq) return;
-
     if (recipients.size !== 1) {
-      resolveError = 'Items have different payment recipients; please pay them separately.';
-      return;
+      throw new Error('Items have different payment recipients; please pay them separately.');
     }
 
     if (payActionChainId && currentChainId && payActionChainId !== currentChainId) {
@@ -176,12 +156,10 @@
     const to = Array.from(recipients)[0] as any;
 
     if (!$circles || !avatarState.avatar) {
-      resolveError = 'Wallet not ready for pathfinding.';
-      return;
+      throw new Error('Wallet not ready for pathfinding.');
     }
 
     const excludedTokens = await $circles.getDefaultTokenExcludeList(to);
-    if (mySeq !== buildSeq) return;
 
     const bigNumber = '99999999999999999999999999999999999';
     const p =
@@ -197,11 +175,8 @@
             excludedTokens
           );
 
-    if (mySeq !== buildSeq) return;
-
     if (!p || !p.transfers?.length) {
-      resolveError = 'Pathfinding failed. No usable path was found.';
-      return;
+      throw new Error('Pathfinding failed. No usable path was found.');
     }
 
     let maxAmountCircles = parseFloat(ethers.formatEther(p.maxFlow.toString()));
@@ -211,8 +186,7 @@
     }
 
     if (maxAmountCircles <= 0 || total > maxAmountCircles) {
-      resolveError = `Insufficient path capacity. Max transferable is ${maxAmountCircles}, but required is ${total}.`;
-      return;
+      throw new Error(`Insufficient path capacity. Max transferable is ${maxAmountCircles}, but required is ${total}.`);
     }
 
     transferContext = {
@@ -223,15 +197,7 @@
       data: paymentReference ?? undefined,
       dataType: 'utf-8',
     };
-  } catch (e) {
-    if (mySeq !== buildSeq) return;
-    resolveError = e instanceof Error ? e.message : 'Failed to resolve payment details';
-  } finally {
-    if (mySeq === buildSeq) {
-      resolving = false;
-    }
-  }
-}
+  });
 
   function openTransferFlow(): void {
     if (!transferContext) return;
@@ -242,21 +208,29 @@
     });
   }
 
+  let lastPreparedFor: string | null = null;
+
   // Resolve once on mount (or re-run if basket or paymentReference changes)
   $effect(() => {
-    void buildTransferContext();
+    const b = $cartState.basket as any;
+    const basketId = b?.['@id'];
+    const currentKey = `${basketId}:${paymentReference}`;
+    if (!paymentReference || preparePaymentAction.loading || lastPreparedFor === currentKey) return;
+
+    lastPreparedFor = currentKey;
+    chainWarning = null;
+    transferContext = null;
+    payActionChainId = null;
+    void preparePaymentAction.run();
   });
 </script>
 
-<FlowDecoration>
-  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
-    <FlowStepHeader
-      step={4}
-      total={4}
-      title="Payment"
-      subtitle="Complete payment by QR or in-app transfer."
-      labels={['Cart', 'Details', 'Review', 'Payment']}
-    />
+<FlowStepScaffold
+  {...CHECKOUT_FLOW_SCAFFOLD_BASE}
+  step={4}
+  title="Payment"
+  subtitle="Complete payment by QR or in-app transfer."
+>
 
   <div class="space-y-3 text-xs">
     <StepAlert variant="info">
@@ -281,8 +255,8 @@
 
     <!-- In-app transfer option -->
     <div class="flex flex-col items-end gap-2">
-      {#if resolveError}
-        <StepAlert variant="warning" className="text-xs w-full" message={resolveError} />
+      {#if preparePaymentAction.error}
+        <StepAlert variant="warning" className="text-xs w-full" message={preparePaymentAction.error} />
       {/if}
 
       {#if chainWarning}
@@ -293,10 +267,10 @@
         {#snippet primary()}
           <button
             class="btn btn-primary btn-sm"
-            disabled={!transferContext || resolving}
+            disabled={!transferContext || preparePaymentAction.loading}
             onclick={openTransferFlow}
           >
-            {resolving ? 'Preparing…' : 'Pay with Circles (in-app transfer)'}
+            {preparePaymentAction.loading ? 'Preparing…' : 'Pay with Circles (in-app transfer)'}
           </button>
         {/snippet}
       </StepActionBar>
@@ -312,5 +286,4 @@
       {/if}
     </div>
   </div>
-  </div>
-</FlowDecoration>
+  </FlowStepScaffold>

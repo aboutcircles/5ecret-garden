@@ -46,6 +46,7 @@ export function createSearchOverlayController<TItem>(
       result.set(rows);
       error.set(null);
     } catch (e) {
+      console.debug('[search] overlay search failed', { query: q }, e);
       if (token !== seq) return;
       result.set([]);
       error.set(e instanceof Error ? e.message : String(e));

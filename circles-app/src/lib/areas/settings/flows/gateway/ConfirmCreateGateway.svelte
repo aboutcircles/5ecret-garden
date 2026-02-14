@@ -1,10 +1,9 @@
 <script lang="ts">
   import { ethers } from 'ethers';
 
-  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-  import { openStep } from '$lib/shared/flow/runtime';
-  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
-  import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+  import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
+  import StepActionButtons from '$lib/shared/ui/flow/StepActionButtons.svelte';
+  import { GATEWAY_PROFILE_FLOW_SCAFFOLD_BASE } from './constants';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
   import StepReviewRow from '$lib/shared/ui/flow/StepReviewRow.svelte';
@@ -12,13 +11,14 @@
   import { runTask } from '$lib/shared/utils/tasks';
   import { isAddress } from '$lib/shared/utils/tx';
   import { popupControls } from '$lib/shared/state/popup';
+  import { openStep, popToOrOpen } from '$lib/shared/flow';
   import type { CreateGatewayFlowContext } from './context';
   import { gnosisConfig } from '$lib/shared/config/circles';
   import { getProfilesBindings } from '$lib/areas/market/offers';
   import { ensureProfileShape, cidV0ToDigest32Strict } from '@circles-profile/core';
   import { isValidOnChainName } from '$lib/shared/utils/isValid';
   import Markdown from '$lib/shared/ui/content/markdown/Markdown.svelte';
-  import type { ReviewStepProps } from '$lib/shared/flow/contracts';
+  import type { ReviewStepProps } from '$lib/shared/flow';
   import CreateGatewayProfile from './CreateGatewayProfile.svelte';
 
   type Props = ReviewStepProps<CreateGatewayFlowContext> & {
@@ -128,26 +128,18 @@
   }
 
   function editGatewayProfile() {
-    const didPop = popupControls.popTo((entry) => entry.component === CreateGatewayProfile);
-    if (!didPop) {
-      openStep({
-        title: 'Create payment gateway',
-        component: CreateGatewayProfile,
-        props: { context, onCreated }
-      });
-    }
+    popToOrOpen(CreateGatewayProfile, {
+      title: 'Create payment gateway',
+      props: { context, onCreated }
+    });
   }
 </script>
-
-<FlowDecoration>
-  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
-    <FlowStepHeader
-      step={2}
-      total={2}
-      title="Confirm"
-      subtitle="Review gateway details and create on-chain."
-      labels={['Gateway profile', 'Confirm']}
-    />
+<FlowStepScaffold
+  {...GATEWAY_PROFILE_FLOW_SCAFFOLD_BASE}
+  step={2}
+  title="Confirm"
+  subtitle="Review receiver details before updating trust."
+>
 
   <div class="space-y-4">
     <p class="text-sm text-base-content/70">
@@ -236,18 +228,12 @@
       </StepAlert>
     {/if}
 
-    <StepActionBar>
-      {#snippet primary()}
-        <button
-          type="button"
-          class="btn btn-primary btn-sm"
-          onclick={createGateway}
-          disabled={!canSubmit}
-        >
-          Create gateway
-        </button>
-      {/snippet}
-    </StepActionBar>
+    <StepActionButtons
+      primaryLabel="Create gateway"
+      onPrimary={createGateway}
+      primaryDisabled={!canSubmit}
+    />
   </div>
-  </div>
-</FlowDecoration>
+</FlowStepScaffold>
+
+

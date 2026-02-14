@@ -1,12 +1,12 @@
 <!-- lib/flows/checkout/CheckoutReview.svelte -->
 <script lang="ts">
-    import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-    import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
-    import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+    import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
+    import StepActionButtons from '$lib/shared/ui/flow/StepActionButtons.svelte';
+    import { CHECKOUT_FLOW_SCAFFOLD_BASE } from './constants';
     import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
     import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
     import StepReviewRow from '$lib/shared/ui/flow/StepReviewRow.svelte';
-    import { openStep } from '$lib/shared/flow/runtime';
+    import { openStep, popToOrOpen, useAsyncAction } from '$lib/shared/flow';
     import { cartState, checkoutCart } from '$lib/areas/market/cart/store';
     import { popupControls } from '$lib/shared/state/popup';
     import CartPanel from './CartPanel.svelte';
@@ -18,8 +18,19 @@
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import {gnosisConfig} from "$lib/shared/config/circles";
 
-    let localError: string | null = $state(null);
-    let submitting = $state(false);
+    const checkoutAction = useAsyncAction(async () => {
+        await checkoutCart();
+        openStep({
+            title: 'Pay order',
+            component: CheckoutPayment,
+            props: {},
+        });
+    });
+
+    async function finalizeCheckout(): Promise<void> {
+        checkoutAction.reset();
+        await checkoutAction.run();
+    }
 
     const preview = $derived($cartState.orderPreview);
     const basket = $derived($cartState.basket);
@@ -79,7 +90,8 @@
 
     // Background fetch of product metadata
     $effect(() => {
-        const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
+        const operator = gnosisConfig.production.marketOperator as any;
+        const catalog = getMarketClient().catalog.forOperator(operator);
         for (const line of lines) {
             const seller = line?.seller as string | undefined;
             const sku = line?.orderedItem?.sku as string | undefined;
@@ -95,7 +107,8 @@
                 try {
                     const item = await catalog.fetchProductForSellerAndSku(seller as string, sku as string);
                     resolvedProducts = { ...resolvedProducts, [key]: item };
-                } catch {
+                } catch (e) {
+                    console.debug('[checkout] failed to resolve product from catalog', { seller, sku }, e);
                     resolvedProducts = { ...resolvedProducts, [key]: null };
                 } finally {
                     resolvingKeys.delete(key);
@@ -211,60 +224,29 @@
         return `Birth date: ${age.birthDate}`;
     }
 
-    async function finalizeCheckout(): Promise<void> {
-        localError = null;
-        submitting = true;
-        try {
-            await checkoutCart();
-            openStep({
-                title: 'Pay order',
-                component: CheckoutPayment,
-                props: {},
-            });
-        } catch (e: unknown) {
-            localError =
-                e instanceof Error
-                    ? e.message
-                    : typeof e === 'string'
-                        ? e
-                        : 'Unknown error while creating order';
-        } finally {
-            submitting = false;
-        }
-    }
 
     function editCart(): void {
-        const didPop = popupControls.popTo((entry) => entry.component === CartPanel);
-        if (!didPop) {
-            openStep({
-                title: 'Cart',
-                component: CartPanel,
-                props: {},
-            });
-        }
+        popToOrOpen(CartPanel, {
+            title: 'Cart',
+            props: {},
+        });
     }
 
     function editDetails(): void {
-        const didPop = popupControls.popTo((entry) => entry.component === CheckoutForms);
-        if (!didPop) {
-            openStep({
-                title: 'Additional details',
-                component: CheckoutForms,
-                props: {},
-            });
-        }
+        popToOrOpen(CheckoutForms, {
+            title: 'Additional details',
+            props: {},
+        });
     }
 </script>
 
-<FlowDecoration>
-    <div class="space-y-4 text-sm" tabindex="-1" data-popup-initial-focus>
-        <FlowStepHeader
-            step={3}
-            total={4}
-            title="Review"
-            subtitle="Review cart and checkout details before payment."
-            labels={['Cart', 'Details', 'Review', 'Payment']}
-        />
+<FlowStepScaffold
+  {...CHECKOUT_FLOW_SCAFFOLD_BASE}
+  className="space-y-4 text-sm"
+  step={3}
+  title="Review"
+  subtitle="Review cart and checkout details before payment."
+>
 
         <StepSection title="Review actions" subtitle="Adjust cart items or checkout details if needed.">
             <StepReviewRow label="Cart items" value={`${lines.length} item${lines.length === 1 ? '' : 's'}`} onChange={editCart} changeLabel="Edit" />
@@ -413,21 +395,15 @@
         </div>
 
         <!-- Action + error -->
-        <StepActionBar className="mt-3">
-            {#snippet primary()}
-                <button
-                        type="button"
-                        class="btn btn-sm btn-primary"
-                        onclick={finalizeCheckout}
-                        disabled={submitting || $cartState.loading}
-                >
-                    {submitting ? 'Creating order…' : 'Confirm & pay'}
-                </button>
-            {/snippet}
-        </StepActionBar>
+        <StepActionButtons
+            className="mt-3"
+            primaryLabel={checkoutAction.loading ? 'Creating order…' : 'Confirm & pay'}
+            onPrimary={finalizeCheckout}
+            primaryDisabled={checkoutAction.loading || $cartState.loading}
+            primaryClass="btn btn-sm btn-primary"
+        />
 
-        {#if localError}
-            <StepAlert variant="error" className="mt-2" message={localError} />
+        {#if checkoutAction.error}
+            <StepAlert variant="error" className="mt-2" message={checkoutAction.error} />
         {/if}
-    </div>
-</FlowDecoration>
+    </FlowStepScaffold>

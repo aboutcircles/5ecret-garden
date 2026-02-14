@@ -3,10 +3,10 @@
   import type { Address } from '@circles-sdk/utils';
   import AdminProductFormBase from '$lib/areas/admin/components/AdminProductFormBase.svelte';
   import { normalizeAddressInput } from '$lib/areas/admin/productEditorUtils';
-  import { openStep } from '$lib/shared/flow/runtime';
-  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import { openStep, popToOrOpen } from '$lib/shared/flow';
+  import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
+  import { NEW_CONNECTION_FLOW_SCAFFOLD_BASE } from './constants';
   import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
   import StepReviewRow from '$lib/shared/ui/flow/StepReviewRow.svelte';
   import { popupControls } from '$lib/shared/state/popup';
@@ -35,15 +35,11 @@
   let formError = $state<string | null>(null);
 
   function editSeller(): void {
-    const didPop = popupControls.popTo((entry) => entry.component === SellerStep);
-    if (!didPop) {
-      openStep({
-        title: 'Select seller',
-        component: SellerStep,
-        props: { context, onCreate },
-        key: 'admin-new-connection-seller',
-      });
-    }
+    popToOrOpen(SellerStep, {
+      title: 'Select seller',
+      props: { context, onCreate },
+      key: 'admin-new-connection-seller',
+    });
   }
 
   async function submit(): Promise<void> {
@@ -87,15 +83,12 @@
   }
 </script>
 
-<FlowDecoration>
-  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
-    <FlowStepHeader
-      step={2}
-      total={2}
-      title="Details"
-      subtitle="Enter Odoo connection details."
-      labels={['Seller', 'Details']}
-    />
+<FlowStepScaffold
+  {...NEW_CONNECTION_FLOW_SCAFFOLD_BASE}
+  step={2}
+  title="Details"
+  subtitle="Enter Odoo connection details."
+>
 
     <AdminProductFormBase
       title=""
@@ -153,5 +146,4 @@
         </div>
       </StepSection>
     </AdminProductFormBase>
-  </div>
-</FlowDecoration>
+  </FlowStepScaffold>

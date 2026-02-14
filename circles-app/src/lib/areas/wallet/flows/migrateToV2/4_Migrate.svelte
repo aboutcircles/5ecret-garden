@@ -1,7 +1,7 @@
 <script lang="ts">
-  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+  import { MIGRATE_FLOW_SCAFFOLD_BASE } from './constants';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
   import StepReviewRow from '$lib/shared/ui/flow/StepReviewRow.svelte';
@@ -14,97 +14,73 @@
   import { runTask } from '$lib/shared/utils/tasks';
   import { removeProfileFromCache } from '$lib/shared/utils/profile';
   import { popupControls } from '$lib/shared/state/popup';
-  import { openStep } from '$lib/shared/flow/runtime';
-  import { requireAvatar, requireCircles, requireProfile } from '$lib/shared/flow/guards';
-  import type { ReviewStepProps } from '$lib/shared/flow/contracts';
+  import { openStep, popToOrOpen, useAsyncAction } from '$lib/shared/flow';
+  import { requireAvatar, requireCircles, requireProfile } from '$lib/shared/flow';
+  import type { ReviewStepProps } from '$lib/shared/flow';
   import { get } from 'svelte/store';
 
   type Props = ReviewStepProps<MigrateToV2Context>;
 
   let { context }: Props = $props();
 
-  let migrating = $state(false);
-  let localError: string | null = $state(null);
+  const migrateAction = useAsyncAction(async () => {
+    const sdk = requireCircles(get(circlesStore));
+    const avatar = requireAvatar(avatarState.avatar);
+    const profile = requireProfile(context.profile);
+
+    await runTask({
+      name: `Migrating your Avatar ...`,
+      promise: sdk.migrateAvatar(
+        context.inviter ?? '0x0000000000000000000000000000000000000000',
+        avatar.address,
+        profile
+      ),
+    });
+
+    // On success, refresh local cache/state
+    removeProfileFromCache(avatar.address);
+    avatar.avatarInfo!.version = 2;
+    avatar.avatarInfo!.v1Stopped = true;
+
+    popupControls.close();
+  });
 
   const selectedContactsCount = $derived(context.trustList?.length ?? 0);
   const profileName = $derived(context.profile?.name?.trim() || 'Unnamed profile');
   const inviterLabel = $derived(context.inviter ? context.inviter : 'Self migration');
 
   function editInvitation() {
-    const didPop = popupControls.popTo((entry) => entry.component === GetInvited);
-    if (!didPop) {
-      openStep({
-        title: 'Get invited',
-        component: GetInvited,
-        props: { context },
-      });
-    }
+    popToOrOpen(GetInvited, {
+      title: 'Get invited',
+      props: { context },
+    });
   }
 
   function editProfile() {
-    const didPop = popupControls.popTo((entry) => entry.component === CreateProfile);
-    if (!didPop) {
-      openStep({
-        title: 'Create Profile',
-        component: CreateProfile,
-        props: { context },
-      });
-    }
+    popToOrOpen(CreateProfile, {
+      title: 'Create Profile',
+      props: { context },
+    });
   }
 
   function editContacts() {
-    const didPop = popupControls.popTo((entry) => entry.component === MigrateContacts);
-    if (!didPop) {
-      openStep({
-        title: 'Migrate Contacts',
-        component: MigrateContacts,
-        props: { context },
-      });
-    }
+    popToOrOpen(MigrateContacts, {
+      title: 'Migrate Contacts',
+      props: { context },
+    });
   }
 
   async function migrate() {
-    if (migrating) return;
-    localError = null;
-    migrating = true;
-
-    try {
-      const sdk = requireCircles(get(circlesStore));
-      const avatar = requireAvatar(avatarState.avatar);
-      const profile = requireProfile(context.profile);
-
-      await runTask({
-        name: `Migrating your Avatar ...`,
-        promise: sdk.migrateAvatar(
-          context.inviter ?? '0x0000000000000000000000000000000000000000',
-          avatar.address,
-          profile
-        ),
-      });
-
-      // On success, refresh local cache/state
-      removeProfileFromCache(avatar.address);
-      avatar.avatarInfo!.version = 2;
-      avatar.avatarInfo!.v1Stopped = true;
-
-      popupControls.close();
-    } catch (e: unknown) {
-      localError = e instanceof Error ? e.message : 'Migration failed. Please try again.';
-    } finally {
-      migrating = false;
-    }
+    await migrateAction.run();
   }
 </script>
 
-<FlowDecoration>
-  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
-  <FlowStepHeader
-    step={4}
-    total={4}
-    title="Migrate"
-    subtitle="Confirm and run the Circles V2 migration."
-    labels={['Invitation', 'Profile', 'Contacts', 'Migrate']}
-  />
+<FlowStepScaffold
+  {...MIGRATE_FLOW_SCAFFOLD_BASE}
+  step={4}
+  title="Migrate"
+  subtitle="Confirm and run the Circles V2 migration."
+>
 
   <StepSection title="Review migration settings" subtitle="Change any step before submitting.">
     <StepReviewRow label="Invitation" value={inviterLabel} onChange={editInvitation} changeLabel="Edit" />
@@ -122,8 +98,8 @@
     migration process.
   </p>
 
-  {#if localError}
-    <StepAlert variant="error" message={localError} className="mt-2" />
+  {#if migrateAction.error}
+    <StepAlert variant="error" message={migrateAction.error} className="mt-2" />
   {/if}
 
   <StepActionBar>
@@ -132,11 +108,10 @@
         type="submit"
         class="btn btn-primary btn-sm"
         onclick={() => migrate()}
-        disabled={migrating}
+        disabled={migrateAction.loading}
       >
-        {migrating ? 'Migrating…' : 'Migrate to V2'}
+        {migrateAction.loading ? 'Migrating…' : 'Migrate to V2'}
       </button>
     {/snippet}
   </StepActionBar>
-  </div>
-</FlowDecoration>
+  </FlowStepScaffold>

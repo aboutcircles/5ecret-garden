@@ -1,9 +1,9 @@
 <script lang="ts">
   import type { Address } from '@circles-sdk/utils';
-  import { openStep } from '$lib/shared/flow/runtime';
-  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import { openStep } from '$lib/shared/flow';
+  import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import SearchAvatar from '$lib/areas/contacts/ui/pages/SearchAvatar.svelte';
+  import { NEW_PRODUCT_FLOW_SCAFFOLD_BASE } from './constants';
   import type { AdminUnifiedProduct, AdminOdooConnection } from '$lib/areas/admin/types';
   import type { AdminNewProductFlowContext } from './context';
   import CatalogStep from './2_Catalog.svelte';
@@ -56,15 +56,12 @@
 
 </script>
 
-<FlowDecoration>
-  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
-    <FlowStepHeader
-      step={1}
-      total={6}
-      title="Seller"
-      subtitle="Select the avatar that created the product you want to offer."
-      labels={['Seller', 'Catalog', 'Type', 'Connection', 'Details', 'Summary']}
-    />
+<FlowStepScaffold
+  {...NEW_PRODUCT_FLOW_SCAFFOLD_BASE}
+  step={1}
+  title="Seller"
+  subtitle="Select the avatar that created the product you want to offer."
+>
 
     <SearchAvatar
       avatarTypes={['CrcV2_RegisterHuman', 'CrcV2_RegisterOrganization']}
@@ -72,5 +69,4 @@
       onselect={handleSelect}
       searchType="send"
     />
-  </div>
-</FlowDecoration>
+  </FlowStepScaffold>

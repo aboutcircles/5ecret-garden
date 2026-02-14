@@ -184,7 +184,12 @@
       )
     });
 
-    try { popupControls.close(); } catch {}
+    try {
+      popupControls.close();
+    } catch (e) {
+      // Closing is best-effort; keep flow but make failures observable.
+      console.debug('[groups] failed to close popup after redeem start', e);
+    }
   }
 
   async function resetFields() {

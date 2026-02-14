@@ -1,9 +1,9 @@
 <script lang="ts">
   import {popupControls} from '$lib/shared/state/popup';
-  import { openStep } from '$lib/shared/flow/runtime';
-  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
-  import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+  import { openStep } from '$lib/shared/flow';
+  import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
+  import StepActionButtons from '$lib/shared/ui/flow/StepActionButtons.svelte';
+  import { OFFER_FLOW_SCAFFOLD_BASE } from './constants';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import MarkdownEditor from '$lib/shared/ui/content/markdown/MarkdownEditor.svelte';
   import OfferStep2 from './2_Pricing.svelte';
@@ -148,15 +148,12 @@
   }
 </script>
 
-<FlowDecoration>
-  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
-    <FlowStepHeader
-      step={1}
-      total={3}
-      title="Product"
-      subtitle="Set core product information for this offer."
-      labels={['Product', 'Pricing', 'Review']}
-    />
+<FlowStepScaffold
+  {...OFFER_FLOW_SCAFFOLD_BASE}
+  step={1}
+  title="Product"
+  subtitle="Set core product information for this offer."
+>
 
 {#if $wallet?.address}
   {#if hasGateway}
@@ -241,11 +238,7 @@
         </div>
       </div>
 
-      <StepActionBar>
-        {#snippet primary()}
-          <button type="button" class="btn btn-primary btn-sm" onclick={next}>Continue</button>
-        {/snippet}
-      </StepActionBar>
+      <StepActionButtons primaryLabel="Continue" onPrimary={next} />
     </div>
   {:else}
     <StepAlert variant="info" title="Payment gateway required">
@@ -259,5 +252,4 @@
 {:else}
   <StepAlert variant="warning" message="Connect your wallet to continue." />
 {/if}
-  </div>
-</FlowDecoration>
+</FlowStepScaffold>

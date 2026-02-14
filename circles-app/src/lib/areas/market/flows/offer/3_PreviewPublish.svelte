@@ -1,7 +1,7 @@
 <script lang="ts">
   import {get} from 'svelte/store';
-  import {popupControls} from '$lib/shared/state/popup';
-  import { openStep } from '$lib/shared/flow/runtime';
+  import { popupControls } from '$lib/shared/state/popup';
+  import { openStep, popToOrOpen } from '$lib/shared/flow';
   import {runTask} from '$lib/shared/utils/tasks';
   import {wallet} from '$lib/shared/state/wallet.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
@@ -10,9 +10,9 @@
 
   import ProductGallery from '$lib/areas/market/ui/product/ProductGallery.svelte';
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
-  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
+  import { OFFER_FLOW_SCAFFOLD_BASE } from './constants';
   import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
   import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
   import StepReviewRow from '$lib/shared/ui/flow/StepReviewRow.svelte';
@@ -181,7 +181,7 @@
             priceCurrency: draft.priceCurrency!,
             url: draft.url || undefined,
             availableDeliveryMethod: draft.availableDeliveryMethod || undefined,
-            requiredSlots: Array.isArray(draft.requiredSlots)
+            requiredSlots: Array.isArray(draft.requiredSlots) && draft.requiredSlots.length > 0
               ? draft.requiredSlots
                 .map((s: unknown) => (typeof s === 'string' ? s.trim() : ''))
                 .filter((s: string) => s.length > 0)
@@ -195,37 +195,25 @@
   }
 
   function editProduct(): void {
-    const didPop = popupControls.popTo((entry) => entry.component === OfferStep1);
-    if (!didPop) {
-      openStep({
-        title: 'Offer • Product',
-        component: OfferStep1,
-        props: { context },
-      });
-    }
+    popToOrOpen(OfferStep1, {
+      title: 'Offer • Product',
+      props: { context },
+    });
   }
 
   function editPricing(): void {
-    const didPop = popupControls.popTo((entry) => entry.component === OfferStep2);
-    if (!didPop) {
-      openStep({
-        title: 'Offer • Pricing',
-        component: OfferStep2,
-        props: { context },
-      });
-    }
+    popToOrOpen(OfferStep2, {
+      title: 'Offer • Pricing',
+      props: { context },
+    });
   }
 </script>
-
-<FlowDecoration>
-  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
-    <FlowStepHeader
-      step={3}
-      total={3}
-      title="Review"
-      subtitle="Review your offer details before publishing."
-      labels={['Product', 'Pricing', 'Review']}
-    />
+<FlowStepScaffold
+  {...OFFER_FLOW_SCAFFOLD_BASE}
+  step={3}
+  title="Preview & Publish"
+  subtitle="Review your offer details before publishing."
+>
 
 {#if !requiredOk}
     <StepAlert variant="warning" className="mb-2" message="Draft has missing or invalid fields." />
@@ -287,5 +275,5 @@
       {/snippet}
     </StepActionBar>
 </div>
-  </div>
-</FlowDecoration>
+  </FlowStepScaffold>
+

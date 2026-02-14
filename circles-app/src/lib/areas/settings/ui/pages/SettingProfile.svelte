@@ -3,7 +3,7 @@
     import Address from '$lib/shared/ui/primitives/Address.svelte';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import QrCode from '$lib/shared/ui/primitives/QrCode.svelte';
-    import { openStep } from '$lib/shared/flow/runtime';
+    import { openStep } from '$lib/shared/flow';
     import {popupControls} from '$lib/shared/state/popup';
     import {signer} from '$lib/shared/state/wallet.svelte';
 import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';

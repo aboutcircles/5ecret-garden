@@ -10,7 +10,7 @@
     import UnwrapTokens from '$lib/areas/wallet/ui/pages/UnwrapTokens.svelte';
     import RedeemGroup from '$lib/areas/groups/ui/pages/RedeemGroup.svelte';
     import Send from '$lib/areas/wallet/flows/send/1_To.svelte';
-    import { openStep } from '$lib/shared/flow/runtime';
+    import { openStep } from '$lib/shared/flow';
     import { openSendFlowPopup } from '$lib/areas/wallet/flows/send/openSendFlowPopup';
     import type { TokenBalanceRow } from '@circles-sdk/data';
     import { circles } from '$lib/shared/state/circles';

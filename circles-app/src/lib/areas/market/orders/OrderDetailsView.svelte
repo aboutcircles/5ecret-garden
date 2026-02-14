@@ -252,8 +252,9 @@
   import { getProduct, pickProductImageUrl } from '$lib/areas/market/services';
   import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
   import { popupControls, type PopupContentDefinition } from '$lib/shared/state/popup';
-import { ProductDetailsPopup } from '$lib/areas/market/ui';
-  import {gnosisConfig} from "$lib/shared/config/circles";
+  import { ProductDetailsPopup } from '$lib/areas/market/ui';
+  import { gnosisConfig } from '$lib/shared/config/circles';
+  import { safeParse } from '$lib/shared/utils/safe';
 
   interface Props {
     snapshot: OrderSnapshot | null | undefined;
@@ -313,16 +314,18 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
   }
 
   function outboxLabel(payload: any): string {
-    try {
-      const t = (payload && typeof payload === 'object')
-        ? (payload['@type'] || payload['type'])
-        : null;
-      if (typeof t === 'string' && t.length > 0) {
-        const parts = t.split(/[\/#]/);
-        return parts[parts.length - 1] || 'Outbox item';
-      }
-    } catch {}
-    return 'Outbox item';
+    return safeParse(
+      'outboxLabel',
+      () => {
+        const t = (payload && typeof payload === 'object') ? payload['@type'] || payload['type'] : null;
+        if (typeof t === 'string' && t.length > 0) {
+          const parts = t.split(/[\/#]/);
+          return parts[parts.length - 1] || 'Outbox item';
+        }
+        return 'Outbox item';
+      },
+      'Outbox item'
+    );
   }
 
   function isKnownDownloadPayload(payload: any): boolean {
@@ -336,39 +339,47 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
   }
 
   function isVoucherPayload(payload: any): boolean {
-    try {
-      const t = (payload?.['@type'] ?? '').toString().toLowerCase();
-      const hasType = t.includes('voucher') || t.includes('codedispenserresult');
-      const hasSingle = typeof payload?.code === 'string' && payload.code.length > 0;
-      const codes = Array.isArray(payload?.codes) ? payload.codes.filter((x: any) => typeof x === 'string' && x.length > 0) : [];
-      const hasMany = codes.length > 0;
-      return hasType && (hasSingle || hasMany);
-    } catch {
-      return false;
-    }
+    return safeParse(
+      'isVoucherPayload',
+      () => {
+        const t = (payload?.['@type'] ?? '').toString().toLowerCase();
+        const hasType = t.includes('voucher') || t.includes('codedispenserresult');
+        const hasSingle = typeof payload?.code === 'string' && payload.code.length > 0;
+        const codes = Array.isArray(payload?.codes)
+          ? payload.codes.filter((x: any) => typeof x === 'string' && x.length > 0)
+          : [];
+        const hasMany = codes.length > 0;
+        return hasType && (hasSingle || hasMany);
+      },
+      false
+    );
   }
 
   function voucherCodes(payload: any): string[] {
-    try {
-      const arr = Array.isArray(payload?.codes) ? payload.codes : [];
-      const codes = arr.filter((x: any) => typeof x === 'string' && x.length > 0);
-      const single = (payload?.code ?? '').toString();
-      if (codes.length > 0) return codes;
-      if (single) return [single];
-      return [];
-    } catch {
-      return [];
-    }
+    return safeParse(
+      'voucherCodes',
+      () => {
+        const arr = Array.isArray(payload?.codes) ? payload.codes : [];
+        const codes = arr.filter((x: any) => typeof x === 'string' && x.length > 0);
+        const single = (payload?.code ?? '').toString();
+        if (codes.length > 0) return codes;
+        if (single) return [single];
+        return [];
+      },
+      []
+    );
   }
 
   // Helpers to detect schema.org types whether declared under "@type" or "type"
   function schemaTypeOf(payload: any): string | null {
-    try {
-      const t = payload?.['@type'] ?? payload?.['type'];
-      return typeof t === 'string' ? t : null;
-    } catch {
-      return null;
-    }
+    return safeParse(
+      'schemaTypeOf',
+      () => {
+        const t = payload?.['@type'] ?? payload?.['type'];
+        return typeof t === 'string' ? t : null;
+      },
+      null
+    );
   }
 
   function isSchemaType(payload: any, endsWith: string): boolean {
@@ -406,13 +417,17 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
   }
 
   function getSchemaId(x: any): string | null {
-    try {
-      if (x && typeof x === 'object') {
-        const v = (x as any)['@id'];
-        return typeof v === 'string' ? v : null;
-      }
-    } catch {}
-    return null;
+    return safeParse(
+      'getSchemaId',
+      () => {
+        if (x && typeof x === 'object') {
+          const v = (x as any)['@id'];
+          return typeof v === 'string' ? v : null;
+        }
+        return null;
+      },
+      null
+    );
   }
 
   // Extract an EVM address from an eip155-style Schema.org @id (e.g. eip155:100:0xabc...)
@@ -434,12 +449,14 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
   }
   
   function orderDate(): string | null {
-    try {
-      const d = (snapshot as any)?.orderDate;
-      return typeof d === 'string' ? d : null;
-    } catch {
-      return null;
-    }
+    return safeParse(
+      'orderDate',
+      () => {
+        const d = (snapshot as any)?.orderDate;
+        return typeof d === 'string' ? d : null;
+      },
+      null
+    );
   }
   
   function priceDisplay(): string | null {
@@ -450,13 +467,15 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
 
   // Extract seller @id for a given item index, aligning with acceptedOffer order.
   function sellerIdForIndex(i: number): string | null {
-    try {
-      const offer = (snapshot as any)?.acceptedOffer?.[i];
-      const sellerObj = offer?.seller;
-      return getSchemaId(sellerObj);
-    } catch {
-      return null;
-    }
+    return safeParse(
+      'sellerIdForIndex',
+      () => {
+        const offer = (snapshot as any)?.acceptedOffer?.[i];
+        const sellerObj = offer?.seller;
+        return getSchemaId(sellerObj);
+      },
+      null
+    );
   }
 
   // Resolve product name and image per line item using seller + sku
@@ -464,20 +483,22 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
   let resolved: Record<number, ResolvedLine> = $state({});
 
   function skuForIndex(i: number): string | null {
-    try {
-      const sku = (snapshot as any)?.orderedItem?.[i]?.orderedItem?.sku;
-      return typeof sku === 'string' && sku ? sku : null;
-    } catch {
-      return null;
-    }
+    return safeParse(
+      'skuForIndex',
+      () => {
+        const sku = (snapshot as any)?.orderedItem?.[i]?.orderedItem?.sku;
+        return typeof sku === 'string' && sku ? sku : null;
+      },
+      null
+    );
   }
 
   function lineAt(i: number): any {
-    try {
-      return (snapshot as any)?.orderedItem?.[i] ?? null;
-    } catch {
-      return null;
-    }
+    return safeParse(
+      'lineAt',
+      () => (snapshot as any)?.orderedItem?.[i] ?? null,
+      null
+    );
   }
 
   function getLineQuantity(i: number): number {
@@ -488,14 +509,16 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
   }
 
   function unitPrice(i: number): { amount: number | null; code: string | null } {
-    try {
-      const offer = (snapshot as any)?.acceptedOffer?.[i];
-      const amt = typeof offer?.price === 'number' ? (offer.price as number) : null;
-      const code = (offer?.priceCurrency ?? null) as string | null;
-      return { amount: amt, code };
-    } catch {
-      return { amount: null, code: null };
-    }
+    return safeParse(
+      'unitPrice',
+      () => {
+        const offer = (snapshot as any)?.acceptedOffer?.[i];
+        const amt = typeof offer?.price === 'number' ? (offer.price as number) : null;
+        const code = (offer?.priceCurrency ?? null) as string | null;
+        return { amount: amt, code };
+      },
+      { amount: null, code: null }
+    );
   }
 
   function lineTotal(i: number): { amount: number | null; code: string | null } {
@@ -533,7 +556,7 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
       const imageUrl = pickProductImageUrl(p);
       resolved[i] = { name, imageUrl };
     } catch (e) {
-      // Swallow errors; leave fallback to SKU
+      console.debug('[orders] resolveLine failed', { i }, e);
       resolved[i] = { name: null, imageUrl: null };
     }
   }

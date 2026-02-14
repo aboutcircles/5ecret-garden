@@ -11,7 +11,7 @@ import {
   type MarketOrderSummaryListItem,
 } from '$lib/areas/market/orders/ordersMappers';
 
-type ListValue<T> = { data: T[]; next: () => Promise<boolean>; ended: boolean };
+type ListValue<T> = { data: T[]; next: () => Promise<boolean>; ended: boolean; error: string | null };
 type InternalListState<T> = ListValue<T> & { page: number; loading: boolean };
 
 type SnapshotSummaryFields = {
@@ -25,6 +25,7 @@ function toPublicListValue<T>(state: InternalListState<T>): ListValue<T> {
     data: state.data,
     next: state.next,
     ended: state.ended,
+    error: state.error,
   };
 }
 
@@ -42,11 +43,12 @@ export function createPagedListStore<T>(options: {
   let state: InternalListState<T> = {
     data: [],
     ended: false,
+    error: null,
     page: 0,
     loading: false,
     next: async () => {
       if (state.loading || state.ended) return true;
-      state = { ...state, loading: true };
+      state = { ...state, loading: true, error: null };
       notify();
       try {
         const nextPage = state.page + 1;
@@ -55,11 +57,13 @@ export function createPagedListStore<T>(options: {
         const ended = options.isEnded
           ? options.isEnded(items ?? [], options.pageSize)
           : (items ?? []).length === 0;
-        state = { ...state, data, page: nextPage, ended, loading: false };
+        state = { ...state, data, page: nextPage, ended, loading: false, error: null };
         notify();
         return ended;
-      } catch {
-        state = { ...state, ended: true, loading: false };
+      } catch (e) {
+        console.debug('[orders] paged list load failed', { page: state.page + 1 }, e);
+        const msg = e instanceof Error ? e.message : typeof e === 'string' ? e : 'Unknown error';
+        state = { ...state, ended: true, loading: false, error: msg };
         notify();
         return true;
       }
@@ -100,11 +104,12 @@ export function createBuyerOrdersStore(options?: {
   let state: InternalListState<MarketOrderSummaryListItem> = {
     data: [],
     ended: false,
+    error: null,
     page: 0,
     loading: false,
     next: async () => {
       if (state.loading || state.ended) return true;
-      state = { ...state, loading: true };
+      state = { ...state, loading: true, error: null };
       notify();
       try {
         const nextPage = state.page + 1;
@@ -112,11 +117,13 @@ export function createBuyerOrdersStore(options?: {
         const items = Array.isArray(resp?.items) ? resp.items : [];
         const data = state.data.concat(mapMarketOrderSummaries(items));
         const ended = items.length === 0;
-        state = { ...state, data, page: nextPage, ended, loading: false };
+        state = { ...state, data, page: nextPage, ended, loading: false, error: null };
         notify();
         return true;
-      } catch {
-        state = { ...state, ended: true, loading: false };
+      } catch (e) {
+        console.debug('[orders] buyer orders load failed', { page: state.page + 1, pageSize }, e);
+        const msg = e instanceof Error ? e.message : typeof e === 'string' ? e : 'Unknown error';
+        state = { ...state, ended: true, loading: false, error: msg };
         notify();
         return true;
       }
@@ -163,8 +170,12 @@ export function createBuyerOrdersStore(options?: {
         if (Array.isArray(outbox) && outbox.length > 0) {
           options?.onOrderUpdatedWithOutbox?.(snap);
         }
-      } catch {
-        // ignore fetch errors
+      } catch (e) {
+        console.debug(
+          '[orders] SSE snapshot refresh failed',
+          { orderId: evt.orderId, newStatus: evt.newStatus },
+          e
+        );
       }
     });
   }
@@ -173,7 +184,9 @@ export function createBuyerOrdersStore(options?: {
     if (subscribers.size === 0 && stopSse) {
       try {
         stopSse();
-      } catch {}
+      } catch (e) {
+        console.debug('[orders] stop SSE failed', e);
+      }
       stopSse = null;
     }
   }

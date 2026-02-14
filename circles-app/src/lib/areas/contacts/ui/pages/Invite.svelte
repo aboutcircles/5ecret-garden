@@ -1,5 +1,6 @@
 <script lang="ts">
   import { avatarState } from '$lib/shared/state/avatar.svelte';
+  import PopupActionBar from '$lib/shared/ui/shell/PopupActionBar.svelte';
   import { runTask } from '$lib/shared/utils/tasks';
   import { shortenAddress } from '$lib/shared/utils/shared';
   import { popupControls } from '$lib/shared/state/popup';
@@ -45,11 +46,11 @@
     The person will appear in your contacts once they accept the invitation.
   </p>
 
-  <div class="modal-action">
+  <PopupActionBar>
     <button
       type="submit"
       class="btn btn-primary btn-sm"
       onclick={async () => await invite()}>Invite</button
     >
-  </div>
+  </PopupActionBar>
 </div>

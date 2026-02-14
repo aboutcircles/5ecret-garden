@@ -1,5 +1,6 @@
 <script lang="ts">
   import { ethers } from 'ethers';
+  import PopupActionBar from '$lib/shared/ui/shell/PopupActionBar.svelte';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import BalanceRow from '$lib/areas/wallet/ui/components/BalanceRow.svelte';
@@ -130,7 +131,7 @@
     {/if}
   </div>
 
-  <div class="modal-action">
+  <PopupActionBar>
     <button type="submit" class="btn btn-primary btn-sm" onclick={wrap} disabled={!canWrap}>Wrap</button>
-  </div>
+  </PopupActionBar>
 </div>

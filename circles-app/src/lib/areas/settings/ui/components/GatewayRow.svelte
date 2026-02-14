@@ -2,7 +2,7 @@
   import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import type { GatewayRow as GatewayRowType } from '$lib/areas/settings/model/gatewayTypes';
-  import { openStep } from '$lib/shared/flow/runtime';
+  import { openStep } from '$lib/shared/flow';
   import ManageTrust from '$lib/areas/settings/flows/gateway/ManageTrust.svelte';
   import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
 

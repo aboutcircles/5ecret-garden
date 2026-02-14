@@ -4,13 +4,12 @@
   import SelectAsset from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
   import SelectAmount from './3_Amount.svelte';
   import { onMount, tick } from 'svelte';
-  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+  import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
+  import { SEND_FLOW_SCAFFOLD_BASE, SEND_POPUP_TITLE } from './constants';
   import { circlesBalances } from '$lib/shared/state/circlesBalances';
-  import { openStep } from '$lib/shared/flow/runtime';
-  import type { SelectAssetStepProps } from '$lib/shared/flow/contracts';
+  import { openStep } from '$lib/shared/flow';
+  import type { SelectAssetStepProps } from '$lib/shared/flow';
   import { popupControls } from '$lib/shared/state/popup';
-  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
-  import { SEND_POPUP_TITLE } from './constants';
 
   type ReturnMode = 'next' | 'back';
 
@@ -50,20 +49,17 @@
   }
 </script>
 
-<FlowDecoration>
-  <div class="w-full space-y-4">
-    <FlowStepHeader
-      step={2}
-      total={3}
-      title="Amount"
-      subtitle="Choose route"
-      labels={['Recipient', 'Amount', 'Review']}
-    />
+<FlowStepScaffold
+  {...SEND_FLOW_SCAFFOLD_BASE}
+  step={2}
+  title="Asset"
+  subtitle="Choose the asset you want to send."
+>
     <SelectAsset
       {selectedAsset}
       balances={circlesBalances}
       inputDataAttribute="data-send-step-initial-input"
       {onselect}
     />
-  </div>
-</FlowDecoration>
+  </FlowStepScaffold>
+

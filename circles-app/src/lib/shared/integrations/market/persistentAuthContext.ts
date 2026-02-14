@@ -18,7 +18,8 @@ function readLocalStorage(key: string): string | null {
   if (!browser) return null;
   try {
     return window.localStorage.getItem(key);
-  } catch {
+  } catch (e) {
+    console.debug('[auth] failed to read local storage', { key }, e);
     return null;
   }
 }
@@ -28,8 +29,9 @@ function writeLocalStorage(key: string, val: string | null): void {
   try {
     if (val === null) window.localStorage.removeItem(key);
     else window.localStorage.setItem(key, val);
-  } catch {
+  } catch (e) {
     // ignore
+    console.debug('[auth] failed to write local storage', { key }, e);
   }
 }
 

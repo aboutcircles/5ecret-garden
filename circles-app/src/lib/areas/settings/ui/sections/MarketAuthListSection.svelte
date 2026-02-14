@@ -6,7 +6,7 @@
   import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
   import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
 
-  type ListValue = { data: any[]; next: () => Promise<boolean>; ended: boolean };
+  type ListValue = { data: any[]; next: () => Promise<boolean>; ended: boolean; error?: string | null };
   type ListStore = Readable<ListValue>;
 
   type Props = {

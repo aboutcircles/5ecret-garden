@@ -7,8 +7,16 @@ export { invalidateProfileFull } from '$lib/shared/model/profile';
 export type { AppProfileCore as Profile } from '$lib/shared/model/profile';
 
 export function removeProfileFromCache(address: string) {
-  try { invalidateProfileCore(address as any); } catch {}
-  try { invalidateProfileFull(address as any); } catch {}
+  try {
+    invalidateProfileCore(address as any);
+  } catch (e) {
+    console.debug('[profile] invalidate core failed', e);
+  }
+  try {
+    invalidateProfileFull(address as any);
+  } catch (e) {
+    console.debug('[profile] invalidate full failed', e);
+  }
 }
 
 export function profilesEqual(a: any, b: any): boolean {

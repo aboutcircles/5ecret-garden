@@ -8,6 +8,7 @@
         data: T[];
         next: () => Promise<boolean>;
         ended: boolean;
+        error?: string | null;
     }
 
     interface Props<T extends Record<string, any> = any> {
@@ -34,8 +35,12 @@
     let observer: IntersectionObserver | null = null;
     let anchor: HTMLElement | undefined = $state();
 
-    let hasError = $state(false);
+    let localError = $state<string | null>(null);
     let isLoadingNext = $state(false);
+
+    const storeError = $derived<string | null>(($store as any)?.error ?? null);
+    const displayError = $derived<string | null>(storeError ?? localError);
+    const hasError = $derived<boolean>(!!displayError);
 
     // Number of placeholder "pages" currently staged
     let stagedPages = $state(0);
@@ -124,11 +129,12 @@
 
         try {
             await storeValue.next();
-            hasError = false;
-        } catch {
+            localError = null;
+        } catch (e) {
+            console.debug('[list] load next page failed', e);
             // On error, remove all placeholders and show error state
             clearAllPlaceholderPages();
-            hasError = true;
+            localError = 'Error loading items';
         } finally {
             isLoadingNext = false;
             clearOnePlaceholderPage();
@@ -238,7 +244,7 @@
                 <span class="text-base-content/70">No more items</span>
             {/if}
         {:else if hasError}
-            <span class="text-error">Error loading items</span>
+            <span class="text-error">{String(displayError ?? 'Error loading items')}</span>
             <button class="ml-2 link link-primary" onclick={handleRetry}>Retry</button>
         {:else}
             <span class="loading loading-spinner text-primary"></span>

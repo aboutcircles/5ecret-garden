@@ -1,12 +1,12 @@
 <script lang="ts">
-    import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-    import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+    import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
     import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+    import { CREATE_GROUP_FLOW_SCAFFOLD_BASE } from './constants';
     import OnChainNameSection from '$lib/shared/ui/flow/OnChainNameSection.svelte';
     import Tooltip from '$lib/shared/ui/primitives/Tooltip.svelte';
     import { ProfileFormStep } from '$lib/shared/ui/profile';
     import { isValidSymbol, isValidOnChainName } from '$lib/shared/utils/isValid';
-    import { openStep } from '$lib/shared/flow/runtime';
+    import { openStep } from '$lib/shared/flow';
     import { wallet } from '$lib/shared/state/wallet.svelte';
     import Settings from './2_Settings.svelte';
     import {
@@ -14,7 +14,7 @@
         type CreateGroupFlowContext
     } from './context';
     import { resetCreateGroupContext } from './context';
-    import type { ProfileEditStepProps } from '$lib/shared/flow/contracts';
+    import type { ProfileEditStepProps } from '$lib/shared/flow';
 
     const PROFILE_NAME_MAX_LENGTH = 36;
 
@@ -80,15 +80,12 @@
     }
 </script>
 
-<FlowDecoration>
-    <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
-    <FlowStepHeader
-        step={1}
-        total={4}
-        title="Create group"
-        subtitle="Name, symbol, description, and image."
-        labels={['Create group', 'Settings', 'Review', 'Create']}
-    />
+<FlowStepScaffold
+  {...CREATE_GROUP_FLOW_SCAFFOLD_BASE}
+  step={1}
+  title="Create group"
+  subtitle="Choose simple defaults or configure advanced group settings."
+>
 
     <p class="text-sm text-base-content/70 mt-1">Name, symbol, description and image.</p>
 
@@ -141,5 +138,4 @@
             </button>
         {/snippet}
     </StepActionBar>
-    </div>
-</FlowDecoration>
+    </FlowStepScaffold>

@@ -123,11 +123,36 @@ if (typeof window !== 'undefined') {
 // tests to observe/mock the outbound basket patch semantics.
 export const cartApi: {
   patchBasket: typeof patchBasket;
-  removeLineByIdentity: typeof removeLineByIdentity;
+  updateLineByIdentity: typeof updateLineByIdentity;
 } = {
   patchBasket,
-  removeLineByIdentity,
+  updateLineByIdentity,
 };
+
+async function withBasketItems(
+  fn: (items: SdkCartItem[], basketId: string) => Promise<SdkCartItem[]> | SdkCartItem[],
+): Promise<void> {
+  setLoading(true);
+  clearError();
+  try {
+    const state = get(cartState);
+    const basketId = state.basket?.basketId ?? readBasketId();
+    if (!basketId) {
+      throw new Error('No basket available');
+    }
+
+    const basket = state.basket ?? (await fetchBasketById(basketId));
+    const currentItems = toSdkItemsFromBasket(basket);
+    const nextItems = await fn(currentItems, basketId);
+
+    await setItemsForBasket(basketId, nextItems);
+  } catch (e) {
+    setError(e);
+    throw e;
+  } finally {
+    setLoading(false);
+  }
+}
 
 async function setItemsForBasket(
   basketId: string,
@@ -168,124 +193,84 @@ export async function addToCart(product: AggregatedCatalogItem, buyer: string | 
     throw new Error('Buyer address is required to add to basket');
   }
 
-  setLoading(true);
-  clearError();
+  const seller = normalizeAddr(String((product as { seller?: unknown })?.seller ?? ''));
+  const sku = normalizeSku(product.product?.sku);
+  if (!seller || !sku) {
+    throw new Error('Product is missing seller or sku');
+  }
 
-  try {
-    const basketId = await ensureBasketId(normalizeAddr(buyer));
-
-    // Use in-memory basket if it matches; otherwise fetch once.
-    const state = get(cartState);
-    const haveBasketInState = String(state.basket?.basketId ?? '') === String(basketId);
-    const baseBasket = haveBasketInState && state.basket ? state.basket : await fetchBasketById(basketId);
-
-    if (!haveBasketInState) {
-      cartState.update((s) => ({ ...s, basket: baseBasket }));
-    }
-
-    const items = toSdkItemsFromBasket(baseBasket);
-
-    const seller = normalizeAddr(String((product as { seller?: unknown })?.seller ?? ''));
-    const sku = normalizeSku(product.product?.sku);
-    if (!seller || !sku) {
-      throw new Error('Product is missing seller or sku');
-    }
-
+  await withBasketItems(async (items) => {
+    await ensureBasketId(normalizeAddr(buyer));
     const img = pickFirstProductImageUrl(product.product) ?? undefined;
-
     const idx = items.findIndex((x) => x.seller === seller && x.sku === sku);
 
-    let nextItems: SdkCartItem[];
     if (idx >= 0) {
       const cur = items[idx];
-      nextItems = items.slice();
+      const nextItems = items.slice();
       nextItems[idx] = {
         ...cur,
         quantity: cur.quantity + 1,
         imageUrl: cur.imageUrl ?? img,
       };
-    } else {
-      nextItems = items.concat([{ seller, sku, quantity: 1, imageUrl: img }]);
+      return nextItems;
     }
-
-    // setItemsForBasket -> patchBasket -> client.cart.setItems() (PATCH) returns the updated basket.
-    await setItemsForBasket(basketId, nextItems);
-  } catch (e) {
-    setError(e);
-    throw e;
-  } finally {
-    setLoading(false);
-  }
+    return items.concat([{ seller, sku, quantity: 1, imageUrl: img }]);
+  });
 }
 
-export async function setLineQuantityByIdentity(
+export async function updateLineByIdentity(
   sellerRaw: string,
   skuRaw: string,
   quantity: number,
+  imageUrl?: string,
 ): Promise<void> {
   const qtyOk = Number.isFinite(quantity) && quantity >= 0;
   if (!qtyOk) {
     throw new Error(`Invalid quantity: ${quantity}`);
   }
-  if (quantity <= 0) {
-    // Delegate to remove path to satisfy tests and avoid sending zero-qty lines
-    await cartApi.removeLineByIdentity(sellerRaw, skuRaw);
-    return;
-  }
 
-  setLoading(true);
-  clearError();
-  try {
-    const state = get(cartState);
+  const seller = normalizeAddr(sellerRaw);
+  const sku = normalizeSku(skuRaw);
 
-    const basketId = state.basket?.basketId ?? readBasketId();
-    if (!basketId) {
-      throw new Error('No basket available');
+  await withBasketItems((items) => {
+    if (quantity <= 0) {
+      return items.filter((it) => !(it.seller === seller && it.sku === sku));
     }
 
-    const basket = state.basket ?? (await fetchBasketById(basketId));
-    const seller = normalizeAddr(sellerRaw);
-    const sku = normalizeSku(skuRaw);
+    const idx = items.findIndex((it) => it.seller === seller && it.sku === sku);
+    const img = normalizeImageUrl(imageUrl);
 
-    const nextItems = toSdkItemsFromBasket(basket).map((it) => {
-      if (it.seller === seller && it.sku === sku) {
-        return {...it, quantity};
-      }
-      return it;
-    });
-
-    await setItemsForBasket(basketId, nextItems);
-  } catch (e) {
-    setError(e);
-    throw e;
-  } finally {
-    setLoading(false);
-  }
+    if (idx >= 0) {
+      return items.map((it, i) =>
+        i === idx ? { ...it, quantity, imageUrl: it.imageUrl ?? img } : it,
+      );
+    } else {
+      return items.concat([{ seller, sku, quantity, imageUrl: img }]);
+    }
+  });
 }
 
+/** @deprecated use updateLineByIdentity */
+export async function setLineQuantityByIdentity(
+  sellerRaw: string,
+  skuRaw: string,
+  quantity: number,
+): Promise<void> {
+  await updateLineByIdentity(sellerRaw, skuRaw, quantity);
+}
+
+/** @deprecated use updateLineByIdentity */
 export async function removeLineByIdentity(sellerRaw: string, skuRaw: string): Promise<void> {
-  setLoading(true);
-  clearError();
-  try {
-    const state = get(cartState);
+  await updateLineByIdentity(sellerRaw, skuRaw, 0);
+}
 
-    const basketId = state.basket?.basketId ?? readBasketId();
-    if (!basketId) {
-      throw new Error('No basket available');
-    }
-
-    const basket = state.basket ?? (await fetchBasketById(basketId));
-    const seller = normalizeAddr(sellerRaw);
-    const sku = normalizeSku(skuRaw);
-
-    const nextItems = toSdkItemsFromBasket(basket).filter((it) => !(it.seller === seller && it.sku === sku));
-    await setItemsForBasket(basketId, nextItems);
-  } catch (e) {
-    setError(e);
-    throw e;
-  } finally {
-    setLoading(false);
-  }
+export async function upsertLineByIdentity(
+  sellerRaw: string,
+  skuRaw: string,
+  quantity: number,
+  imageUrl?: string,
+): Promise<void> {
+  await updateLineByIdentity(sellerRaw, skuRaw, quantity, imageUrl);
 }
 
 function stripNulls(obj: unknown): Record<string, unknown> | undefined {
@@ -405,62 +390,16 @@ export async function checkoutCart(): Promise<CheckoutResult> {
   }
 }
 
-export async function upsertLineByIdentity(
-  sellerRaw: string,
-  skuRaw: string,
-  quantity: number,
-  imageUrl?: string,
-): Promise<void> {
-  const qtyOk = Number.isFinite(quantity) && quantity >= 0;
-  if (!qtyOk) throw new Error(`Invalid quantity: ${quantity}`);
-  if (quantity <= 0) {
-    await cartApi.removeLineByIdentity(sellerRaw, skuRaw);
-    return;
-  }
-
-  setLoading(true);
-  clearError();
-  try {
-    const state = get(cartState);
-    const basketId = state.basket?.basketId ?? readBasketId();
-    if (!basketId) throw new Error('No basket available');
-
-    const basket = state.basket ?? (await fetchBasketById(basketId));
-    const seller = normalizeAddr(sellerRaw);
-    const sku = normalizeSku(skuRaw);
-
-    const items = toSdkItemsFromBasket(basket);
-    const idx = items.findIndex((x) => x.seller === seller && x.sku === sku);
-
-    const img = normalizeImageUrl(imageUrl);
-
-    const nextItems =
-      idx >= 0
-        ? items.map((it, i) =>
-          i === idx
-            ? {...it, quantity, imageUrl: it.imageUrl ?? img}
-            : it
-        )
-        : items.concat([{seller, sku, quantity, imageUrl: img}]);
-
-    await setItemsForBasket(basketId, nextItems);
-  } catch (e) {
-    setError(e);
-    throw e;
-  } finally {
-    setLoading(false);
-  }
-}
-
 export async function upsertLineItem(item: AggregatedCatalogItem, quantity: number): Promise<void> {
   const seller = normalizeAddr(String((item as { seller?: unknown })?.seller ?? ''));
   const sku = normalizeSku(item.product?.sku);
   if (!seller || !sku) throw new Error('Product missing seller or sku');
   const img = pickFirstProductImageUrl(item.product) ?? undefined;
-  await upsertLineByIdentity(seller, sku, quantity, img);
+  await updateLineByIdentity(seller, sku, quantity, img);
 }
 
 export function clearCart(): void {
   writeBasketIdWithDevUiSurface(null);
   cartState.set({ ...initialState });
 }
+

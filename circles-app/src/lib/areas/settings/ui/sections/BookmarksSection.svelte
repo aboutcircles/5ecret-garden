@@ -2,7 +2,7 @@
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
-  import { openStep } from '$lib/shared/flow/runtime';
+  import { openStep } from '$lib/shared/flow';
   import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import {
     ChevronDown as LChevronDown,
@@ -21,6 +21,7 @@
   } from '$lib/areas/settings/state/profileBookmarks';
   import BookmarkDetailsPopup from './BookmarkDetailsPopup.svelte';
   import { runTask } from '$lib/shared/utils/tasks';
+  import { openConfirmPopup } from '$lib/shared/ui/shell/confirmDialogs';
 
   type FolderNode = {
     name: string;
@@ -43,8 +44,6 @@
   let expandedFolders: Record<string, boolean> = $state({});
   let draggingAddress: string | null = $state(null);
   let dragOverFolder: string | null = $state(null);
-  let deleteFolderTarget: string | null = $state(null);
-  let deleteFolderWithBookmarks = $state(false);
   let hasUnpublishedProfileChanges = $state(false);
   let loadingFromProfile = $state(false);
   let publishing = $state(false);
@@ -212,24 +211,27 @@
     newFolderName = '';
   }
 
-  function askRemoveFolder(path: string): void {
+  async function askRemoveFolder(path: string): Promise<void> {
     if (!path) return;
     if (path.toLowerCase() === VIP_BOOKMARK_FOLDER.toLowerCase()) return;
-    deleteFolderTarget = path;
-    deleteFolderWithBookmarks = false;
-  }
 
-  function cancelRemoveFolder(): void {
-    deleteFolderTarget = null;
-    deleteFolderWithBookmarks = false;
-  }
-
-  function confirmRemoveFolder(): void {
-    if (!deleteFolderTarget) return;
-    profileBookmarksService.removeProfileFolder(deleteFolderTarget, {
-      deleteBookmarks: deleteFolderWithBookmarks,
+    const deleteFolder = await openConfirmPopup({
+      title: 'Delete folder',
+      message: `Delete folder “${path}”? By default bookmarks inside are moved to Unsorted.`,
     });
-    cancelRemoveFolder();
+    if (!deleteFolder) return;
+
+    const deleteBookmarks = await openConfirmPopup({
+      title: 'Delete bookmarks too?',
+      message: 'Also delete all bookmarks inside this folder?',
+      confirmLabel: 'Delete bookmarks',
+      cancelLabel: 'Keep bookmarks',
+      confirmClass: 'btn btn-error btn-sm',
+    });
+
+    profileBookmarksService.removeProfileFolder(path, {
+      deleteBookmarks,
+    });
   }
 
   function setBookmarkFolderByAddress(address: string, folder: string | undefined): void {
@@ -514,30 +516,3 @@
   </div>
 </section>
 
-{#if deleteFolderTarget}
-  <div class="fixed inset-0 z-40 flex items-center justify-center p-4">
-    <button
-      type="button"
-      class="absolute inset-0 bg-black/40"
-      aria-label="Close delete folder dialog"
-      onclick={cancelRemoveFolder}
-    ></button>
-
-    <div class="relative z-10 w-full max-w-md rounded-xl bg-base-100 border border-base-300 p-4" role="dialog" aria-modal="true" aria-label="Delete folder">
-      <h4 class="text-sm font-semibold m-0">Delete folder</h4>
-      <p class="text-xs text-base-content/70 mt-2 mb-3">
-        Delete folder “{deleteFolderTarget}”? By default bookmarks inside are moved to <strong>Unsorted</strong>.
-      </p>
-
-      <label class="label cursor-pointer justify-start gap-2 px-0 py-0 mb-4">
-        <input class="checkbox checkbox-sm" type="checkbox" bind:checked={deleteFolderWithBookmarks} />
-        <span class="label-text text-sm">Also delete all bookmarks inside this folder</span>
-      </label>
-
-      <div class="flex justify-end gap-2">
-        <button class="btn btn-ghost btn-sm" type="button" onclick={cancelRemoveFolder}>Cancel</button>
-        <button class="btn btn-error btn-sm" type="button" onclick={confirmRemoveFolder}>Delete folder</button>
-      </div>
-    </div>
-  </div>
-{/if}

@@ -2,14 +2,14 @@
   import { onMount } from 'svelte';
   import { RefreshCw as LRefreshCw } from 'lucide';
 
-  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
-  import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
+  import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
+  import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+  import { GATEWAY_MANAGE_TRUST_FLOW_SCAFFOLD_BASE } from './constants';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import { derived, writable } from 'svelte/store';
   import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import { circles } from '$lib/shared/state/circles';
-  import { openStep } from '$lib/shared/flow/runtime';
+  import { openStep } from '$lib/shared/flow';
   import ManageTrustSearch from '$lib/areas/settings/flows/gateway/SearchTrustReceiver.svelte';
   import ConfirmGatewayUntrust from '$lib/areas/settings/flows/gateway/ConfirmGatewayUntrust.svelte';
   import GatewayTrustedAccountsList from '$lib/areas/settings/ui/components/GatewayTrustedAccountsList.svelte';
@@ -101,15 +101,12 @@
   }
 </script>
 
-<FlowDecoration>
-  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
-    <FlowStepHeader
-      step={1}
-      total={1}
-      title="Manage trust"
-      subtitle="View, add, and remove trusted accounts for this gateway."
-      labels={['Manage trust']}
-    />
+<FlowStepScaffold
+  {...GATEWAY_MANAGE_TRUST_FLOW_SCAFFOLD_BASE}
+  step={1}
+  title="Manage trust"
+  subtitle="View, add, and remove trusted accounts for this gateway."
+>
 
   <div class="space-y-4">
     <div class="flex flex-col gap-1">
@@ -156,5 +153,4 @@
       />
     </div>
   </div>
-  </div>
-</FlowDecoration>
+  </FlowStepScaffold>

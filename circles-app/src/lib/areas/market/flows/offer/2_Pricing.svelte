@@ -1,18 +1,22 @@
 <script lang="ts">
-  import { openStep } from '$lib/shared/flow/runtime';
-  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
-  import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+  import { openStep } from '$lib/shared/flow';
+  import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
+  import StepActionButtons from '$lib/shared/ui/flow/StepActionButtons.svelte';
+  import { OFFER_FLOW_SCAFFOLD_BASE } from './constants';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import PaymentGatewayDropdown from './PaymentGatewayDropdown.svelte';
   import OfferStep3 from './3_PreviewPublish.svelte';
   import type { OfferFlowContext } from './types';
+  import {
+    REQUIRED_SLOT_GROUPS,
+    deriveRequiredSlotsState,
+    computeRequiredSlotsFromSelections
+  } from '$lib/areas/market/flows/checkout/requiredSlots';
   import { get } from 'svelte/store';
   import { onMount } from 'svelte';
   import { circles } from '$lib/shared/state/circles';
   import { wallet } from '$lib/shared/state/wallet.svelte';
   import { fetchGatewayRowsByOwner } from '$lib/shared/data/circles/paymentGateways';
-  import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import type { Address } from '@circles-sdk/utils';
 
   interface Props { context: OfferFlowContext; }
@@ -25,85 +29,36 @@
   // Collapsible toggle for Checkout requirements
   let showRequirements = $state(false);
   // Offer-driven basket requirements (requiredSlots)
-  // Contact
-  let reqEmail = $state(Boolean(context.draft?.requiredSlots?.includes('contactPoint.email')));
-  let reqPhone = $state(Boolean(context.draft?.requiredSlots?.includes('contactPoint.telephone')));
-  // Customer
-  let reqCustomer = $state(Boolean(context.draft?.requiredSlots?.includes('customer')));
-  // Age verification
-  let reqAgeProof = $state(Boolean(context.draft?.requiredSlots?.includes('ageProof')));
-  let reqBirthDate = $state(Boolean(context.draft?.requiredSlots?.includes('ageProof.birthDate')));
-  // Shipping address (coarse and fine-grained)
-  let reqShip = $state(Boolean(context.draft?.requiredSlots?.includes('shippingAddress')));
-  let reqShipStreet = $state(Boolean(context.draft?.requiredSlots?.includes('shippingAddress.streetAddress')));
-  let reqShipLocality = $state(Boolean(context.draft?.requiredSlots?.includes('shippingAddress.addressLocality')));
-  let reqShipPostal = $state(Boolean(context.draft?.requiredSlots?.includes('shippingAddress.postalCode')));
-  let reqShipCountry = $state(Boolean(context.draft?.requiredSlots?.includes('shippingAddress.addressCountry')));
-  // Billing address (coarse and fine-grained)
-  let reqBill = $state(Boolean(context.draft?.requiredSlots?.includes('billingAddress')));
-  let reqBillStreet = $state(Boolean(context.draft?.requiredSlots?.includes('billingAddress.streetAddress')));
-  let reqBillLocality = $state(Boolean(context.draft?.requiredSlots?.includes('billingAddress.addressLocality')));
-  let reqBillPostal = $state(Boolean(context.draft?.requiredSlots?.includes('billingAddress.postalCode')));
-  let reqBillCountry = $state(Boolean(context.draft?.requiredSlots?.includes('billingAddress.addressCountry')));
+  const slotState = $state<Record<string, boolean>>(deriveRequiredSlotsState(context.draft?.requiredSlots));
 
-  function computeRequiredSlots(): string[] | undefined {
-    const out: string[] = [];
-
-    if (reqEmail) out.push('contactPoint.email');
-    if (reqPhone) out.push('contactPoint.telephone');
-
-    if (reqCustomer) out.push('customer');
-
-    if (reqAgeProof) out.push('ageProof');
-    if (reqBirthDate) out.push('ageProof.birthDate');
-
-    if (reqShip) out.push('shippingAddress');
-    if (reqShipStreet) out.push('shippingAddress.streetAddress');
-    if (reqShipLocality) out.push('shippingAddress.addressLocality');
-    if (reqShipPostal) out.push('shippingAddress.postalCode');
-    if (reqShipCountry) out.push('shippingAddress.addressCountry');
-
-    if (reqBill) out.push('billingAddress');
-    if (reqBillStreet) out.push('billingAddress.streetAddress');
-    if (reqBillLocality) out.push('billingAddress.addressLocality');
-    if (reqBillPostal) out.push('billingAddress.postalCode');
-    if (reqBillCountry) out.push('billingAddress.addressCountry');
-
-    return out.length > 0 ? out : undefined;
+  function isChecked(key: string): boolean {
+    return Boolean(slotState[key]);
   }
 
-  // Group-level derived states and toggle helpers (tree behavior)
-  const contactAll = $derived(reqEmail && reqPhone);
-  const ageAll = $derived(reqAgeProof && reqBirthDate);
-  const shipAll = $derived(
-    reqShip && reqShipStreet && reqShipLocality && reqShipPostal && reqShipCountry
-  );
-  const billAll = $derived(
-    reqBill && reqBillStreet && reqBillLocality && reqBillPostal && reqBillCountry
-  );
+  function toggleKey(key: string, checked: boolean): void {
+    slotState[key] = checked;
+  }
 
-  function setContactAll(v: boolean): void {
-    reqEmail = v;
-    reqPhone = v;
+  function areAllChecked(keys: string[]): boolean {
+    return keys.every((key) => Boolean(slotState[key]));
   }
-  function setAgeAll(v: boolean): void {
-    reqAgeProof = v;
-    reqBirthDate = v;
+
+  function toggleAll(keys: string[], checked: boolean): void {
+    for (const key of keys) {
+      slotState[key] = checked;
+    }
   }
-  function setShipAll(v: boolean): void {
-    reqShip = v;
-    reqShipStreet = v;
-    reqShipLocality = v;
-    reqShipPostal = v;
-    reqShipCountry = v;
+
+  function handleGroupToggle(keys: string[], event: Event): void {
+    const target = event.currentTarget as HTMLInputElement | null;
+    toggleAll(keys, Boolean(target?.checked));
   }
-  function setBillAll(v: boolean): void {
-    reqBill = v;
-    reqBillStreet = v;
-    reqBillLocality = v;
-    reqBillPostal = v;
-    reqBillCountry = v;
+
+  function handleItemToggle(key: string, event: Event): void {
+    const target = event.currentTarget as HTMLInputElement | null;
+    toggleKey(key, Boolean(target?.checked));
   }
+
 
   // Payment gateway selection state
   let loadingGateways: boolean = $state(false);
@@ -163,7 +118,7 @@
       priceCurrency: 'CRC',
       paymentGateway: selectedGateway as unknown as Address,
       availableDeliveryMethod: availableDeliveryMethod || undefined,
-      requiredSlots: computeRequiredSlots(),
+      requiredSlots: computeRequiredSlotsFromSelections(slotState),
     };
 
     openStep({
@@ -181,20 +136,17 @@
       priceCurrency: (priceCurrency ?? '').trim() || undefined,
       paymentGateway: asAddress((selectedGateway ?? '').trim() || undefined),
       availableDeliveryMethod: (availableDeliveryMethod ?? '').trim() || undefined,
-      requiredSlots: computeRequiredSlots(),
+      requiredSlots: computeRequiredSlotsFromSelections(slotState),
     };
   });
 </script>
 
-<FlowDecoration>
-  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
-  <FlowStepHeader
-    step={2}
-    total={3}
-    title="Pricing"
-    subtitle="Define price, gateway, and checkout requirements."
-    labels={['Product', 'Pricing', 'Review']}
-  />
+<FlowStepScaffold
+  {...OFFER_FLOW_SCAFFOLD_BASE}
+  step={2}
+  title="Pricing"
+  subtitle="Define price, gateway, and checkout requirements."
+>
 
 <div class="space-y-3">
   <!-- Price row: currency fixed to CRC -->
@@ -246,181 +198,79 @@
   <div class="collapse bg-base-200 mt-2">
     <input type="checkbox" bind:checked={showRequirements} />
     <div class="collapse-title text-md font-medium">Checkout requirements</div>
-    <div class="collapse-content">
-      <!-- Customer identification group -->
-      <div class="space-y-2">
-        <label class="label cursor-pointer justify-start gap-2">
-          <input type="checkbox" class="checkbox" bind:checked={reqCustomer} />
-          <span class="label-text font-semibold">Customer identification</span>
-        </label>
-        <div class="pl-6 border-l border-base-200 grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div class="collapse-content space-y-3">
+      {#each REQUIRED_SLOT_GROUPS as group (group.id)}
+        <div class={group.layout === 'tree' ? 'mt-3 space-y-2' : 'space-y-2'}>
           <label class="label cursor-pointer justify-start gap-2">
-            <input type="checkbox" class="checkbox checkbox-sm" bind:checked={reqCustomer} data-slot="customer" />
-            <span class="label-text">Require buyer first and last name</span>
-            <span class="label-text-alt opacity-70">(customer)</span>
+            <input
+              type="checkbox"
+              class="checkbox"
+              checked={areAllChecked(group.allKeys)}
+              onchange={(event) => handleGroupToggle(group.allKeys, event)}
+            />
+            <span class="label-text font-semibold">{group.title}</span>
           </label>
-        </div>
-      </div>
 
-      <!-- Contact group -->
-      <div class="space-y-2">
-        <label class="label cursor-pointer justify-start gap-2">
-          <input type="checkbox" class="checkbox" checked={contactAll} onchange={(e) => setContactAll((e.target).checked)} />
-          <span class="label-text font-semibold">Contact</span>
-        </label>
-        <div class="pl-6 border-l border-base-200 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <label class="label cursor-pointer justify-start gap-2">
-            <input type="checkbox" class="checkbox checkbox-sm" bind:checked={reqEmail} data-slot="contactPoint.email" />
-            <span class="label-text">Require buyer email at checkout</span>
-            <span class="label-text-alt opacity-70">(contactPoint.email)</span>
-          </label>
-          <label class="label cursor-pointer justify-start gap-2">
-            <input type="checkbox" class="checkbox checkbox-sm" bind:checked={reqPhone} data-slot="contactPoint.telephone" />
-            <span class="label-text">Require buyer phone at checkout</span>
-            <span class="label-text-alt opacity-70">(contactPoint.telephone)</span>
-          </label>
-        </div>
-      </div>
-
-      <!-- Age verification group -->
-      <div class="mt-3 space-y-2">
-        <label class="label cursor-pointer justify-start gap-2">
-          <input type="checkbox" class="checkbox" checked={ageAll} onchange={(e) => setAgeAll((e.target).checked)} />
-          <span class="label-text font-semibold">Age verification</span>
-        </label>
-        <div class="pl-6 border-l border-base-200 space-y-2" role="tree" aria-label="Age verification slots">
-          <!-- Object parent: ageProof -->
-          <div data-slot-node data-slot="ageProof">
-            <label class="label cursor-pointer justify-start gap-2">
-              <input
-                type="checkbox"
-                class="checkbox checkbox-sm"
-                bind:checked={reqAgeProof}
-                onchange={(e) => setAgeAll((e.target).checked)}
-                data-slot="ageProof"
-              />
-              <span class="label-text">Require age proof object</span>
-              <span class="label-text-alt opacity-70">(ageProof)</span>
-            </label>
-            <!-- Children of ageProof -->
-            <div class="pl-6 border-l border-base-200 space-y-2" role="group" data-slot-children-of="ageProof">
-              <label class="label cursor-pointer justify-start gap-2">
-                <input
-                  type="checkbox"
-                  class="checkbox checkbox-sm"
-                  bind:checked={reqBirthDate}
-                  data-slot="ageProof.birthDate"
-                  data-parent-slot="ageProof"
-                />
-                <span class="label-text">Require date of birth</span>
-                <span class="label-text-alt opacity-70">(ageProof.birthDate)</span>
-              </label>
+          {#if group.layout === 'grid'}
+            <div class="pl-6 border-l border-base-200 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {#each group.items as item (item.key)}
+                <label class="label cursor-pointer justify-start gap-2">
+                  <input
+                    type="checkbox"
+                    class="checkbox checkbox-sm"
+                    checked={isChecked(item.key)}
+                    onchange={(event) => handleItemToggle(item.key, event)}
+                    data-slot={item.slot}
+                  />
+                  <span class="label-text">{item.label}</span>
+                  <span class="label-text-alt opacity-70">({item.slot})</span>
+                </label>
+              {/each}
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Shipping address group -->
-      <div class="mt-3 space-y-2">
-        <label class="label cursor-pointer justify-start gap-2">
-          <input type="checkbox" class="checkbox" checked={shipAll} onchange={(e) => setShipAll((e.target).checked)} />
-          <span class="label-text font-semibold">Shipping address</span>
-        </label>
-        <div class="pl-6 border-l border-base-200 space-y-2" role="tree" aria-label="Shipping address slots">
-          <!-- Object parent: shippingAddress -->
-          <div data-slot-node data-slot="shippingAddress">
-            <label class="label cursor-pointer justify-start gap-2">
-              <input
-                type="checkbox"
-                class="checkbox checkbox-sm"
-                bind:checked={reqShip}
-                onchange={(e) => setShipAll((e.target).checked)}
-                data-slot="shippingAddress"
-              />
-              <span class="label-text">Require shipping address object</span>
-              <span class="label-text-alt opacity-70">(shippingAddress)</span>
-            </label>
-            <!-- Children of shippingAddress -->
-            <div class="pl-6 border-l border-base-200 grid grid-cols-1 sm:grid-cols-2 gap-3" role="group" data-slot-children-of="shippingAddress">
-              <label class="label cursor-pointer justify-start gap-2">
-                <input type="checkbox" class="checkbox checkbox-sm" bind:checked={reqShipStreet} data-slot="shippingAddress.streetAddress" data-parent-slot="shippingAddress" />
-                <span class="label-text">Require shipping street address</span>
-                <span class="label-text-alt opacity-70">(shippingAddress.streetAddress)</span>
-              </label>
-              <label class="label cursor-pointer justify-start gap-2">
-                <input type="checkbox" class="checkbox checkbox-sm" bind:checked={reqShipLocality} data-slot="shippingAddress.addressLocality" data-parent-slot="shippingAddress" />
-                <span class="label-text">Require shipping city/locality</span>
-                <span class="label-text-alt opacity-70">(shippingAddress.addressLocality)</span>
-              </label>
-              <label class="label cursor-pointer justify-start gap-2">
-                <input type="checkbox" class="checkbox checkbox-sm" bind:checked={reqShipPostal} data-slot="shippingAddress.postalCode" data-parent-slot="shippingAddress" />
-                <span class="label-text">Require shipping postal code</span>
-                <span class="label-text-alt opacity-70">(shippingAddress.postalCode)</span>
-              </label>
-              <label class="label cursor-pointer justify-start gap-2">
-                <input type="checkbox" class="checkbox checkbox-sm" bind:checked={reqShipCountry} data-slot="shippingAddress.addressCountry" data-parent-slot="shippingAddress" />
-                <span class="label-text">Require shipping country</span>
-                <span class="label-text-alt opacity-70">(shippingAddress.addressCountry)</span>
-              </label>
+          {:else}
+            <div class="pl-6 border-l border-base-200 space-y-2" role="tree" aria-label={group.treeLabel}>
+              {#if group.parent}
+                <div data-slot-node data-slot={group.parent.slot}>
+                  <label class="label cursor-pointer justify-start gap-2">
+                    <input
+                      type="checkbox"
+                      class="checkbox checkbox-sm"
+                      checked={isChecked(group.parent.key)}
+                      onchange={(event) => handleGroupToggle(group.allKeys, event)}
+                      data-slot={group.parent.slot}
+                    />
+                    <span class="label-text">{group.parent.label}</span>
+                    <span class="label-text-alt opacity-70">({group.parent.slot})</span>
+                  </label>
+                  <div
+                    class="pl-6 border-l border-base-200 space-y-2"
+                    role="group"
+                    data-slot-children-of={group.parent.slot}
+                  >
+                    {#each group.items as item (item.key)}
+                      <label class="label cursor-pointer justify-start gap-2">
+                        <input
+                          type="checkbox"
+                          class="checkbox checkbox-sm"
+                          checked={isChecked(item.key)}
+                          onchange={(event) => handleItemToggle(item.key, event)}
+                          data-slot={item.slot}
+                          data-parent-slot={item.parentSlot}
+                        />
+                        <span class="label-text">{item.label}</span>
+                        <span class="label-text-alt opacity-70">({item.slot})</span>
+                      </label>
+                    {/each}
+                  </div>
+                </div>
+              {/if}
             </div>
-          </div>
+          {/if}
         </div>
-      </div>
-
-      <!-- Billing address group -->
-      <div class="mt-3 space-y-2">
-        <label class="label cursor-pointer justify-start gap-2">
-          <input type="checkbox" class="checkbox" checked={billAll} onchange={(e) => setBillAll((e.target).checked)} />
-          <span class="label-text font-semibold">Billing address</span>
-        </label>
-        <div class="pl-6 border-l border-base-200 space-y-2" role="tree" aria-label="Billing address slots">
-          <!-- Object parent: billingAddress -->
-          <div data-slot-node data-slot="billingAddress">
-            <label class="label cursor-pointer justify-start gap-2">
-              <input
-                type="checkbox"
-                class="checkbox checkbox-sm"
-                bind:checked={reqBill}
-                onchange={(e) => setBillAll((e.target).checked)}
-                data-slot="billingAddress"
-              />
-              <span class="label-text">Require billing address object</span>
-              <span class="label-text-alt opacity-70">(billingAddress)</span>
-            </label>
-            <!-- Children of billingAddress -->
-            <div class="pl-6 border-l border-base-200 grid grid-cols-1 sm:grid-cols-2 gap-3" role="group" data-slot-children-of="billingAddress">
-              <label class="label cursor-pointer justify-start gap-2">
-                <input type="checkbox" class="checkbox checkbox-sm" bind:checked={reqBillStreet} data-slot="billingAddress.streetAddress" data-parent-slot="billingAddress" />
-                <span class="label-text">Require billing street address</span>
-                <span class="label-text-alt opacity-70">(billingAddress.streetAddress)</span>
-              </label>
-              <label class="label cursor-pointer justify-start gap-2">
-                <input type="checkbox" class="checkbox checkbox-sm" bind:checked={reqBillLocality} data-slot="billingAddress.addressLocality" data-parent-slot="billingAddress" />
-                <span class="label-text">Require billing city/locality</span>
-                <span class="label-text-alt opacity-70">(billingAddress.addressLocality)</span>
-              </label>
-              <label class="label cursor-pointer justify-start gap-2">
-                <input type="checkbox" class="checkbox checkbox-sm" bind:checked={reqBillPostal} data-slot="billingAddress.postalCode" data-parent-slot="billingAddress" />
-                <span class="label-text">Require billing postal code</span>
-                <span class="label-text-alt opacity-70">(billingAddress.postalCode)</span>
-              </label>
-              <label class="label cursor-pointer justify-start gap-2">
-                <input type="checkbox" class="checkbox checkbox-sm" bind:checked={reqBillCountry} data-slot="billingAddress.addressCountry" data-parent-slot="billingAddress" />
-                <span class="label-text">Require billing country</span>
-                <span class="label-text-alt opacity-70">(billingAddress.addressCountry)</span>
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/each}
     </div>
   </div>
 
-  <StepActionBar>
-    {#snippet primary()}
-      <button type="button" class="btn btn-primary btn-sm" onclick={next}>Continue</button>
-    {/snippet}
-  </StepActionBar>
+    <StepActionButtons primaryLabel="Continue" onPrimary={next} />
 </div>
-  </div>
-</FlowDecoration>
+</FlowStepScaffold>

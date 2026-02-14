@@ -1,10 +1,10 @@
 <script lang="ts">
-    import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-    import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+    import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
     import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+    import { CREATE_GROUP_FLOW_SCAFFOLD_BASE } from './constants';
     import Tooltip from '$lib/shared/ui/primitives/Tooltip.svelte';
     import { ethers } from 'ethers';
-    import { openStep } from '$lib/shared/flow/runtime';
+    import { openStep } from '$lib/shared/flow';
     import CreateStep from './4_Create.svelte';
     import { wallet } from '$lib/shared/state/wallet.svelte';
     import {
@@ -12,7 +12,7 @@
         type CreateGroupFlowContext
     } from './context';
     import { resetCreateGroupContext } from './context';
-    import type { ReviewStepProps } from '$lib/shared/flow/contracts';
+    import type { ReviewStepProps } from '$lib/shared/flow';
 
     type Props = Partial<ReviewStepProps<CreateGroupFlowContext>> & {
         setGroup?: (address: string) => void;
@@ -110,15 +110,12 @@
     }
 </script>
 
-<FlowDecoration>
-    <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
-    <FlowStepHeader
-        step={2}
-        total={4}
-        title="Settings"
-        subtitle="Choose simple defaults or configure advanced group settings."
-        labels={['Create group', 'Settings', 'Review', 'Create']}
-    />
+<FlowStepScaffold
+  {...CREATE_GROUP_FLOW_SCAFFOLD_BASE}
+  step={2}
+  title="Settings"
+  subtitle="Name, symbol, description, and image."
+>
 
     <p class="text-sm text-base-content/70 mt-1">
         Choose a fast lane setup or configure advanced settings.
@@ -243,5 +240,4 @@
             </button>
         {/snippet}
     </StepActionBar>
-    </div>
-</FlowDecoration>
+    </FlowStepScaffold>

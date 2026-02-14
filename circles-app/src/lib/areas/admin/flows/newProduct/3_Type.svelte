@@ -1,10 +1,10 @@
 <script lang="ts">
   import type { Address } from '@circles-sdk/utils';
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
-  import { openStep } from '$lib/shared/flow/runtime';
-  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import { openStep } from '$lib/shared/flow';
+  import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+  import { NEW_PRODUCT_FLOW_SCAFFOLD_BASE } from './constants';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import DetailsStep from './5_Details.svelte';
   import CreateConnectionStep from './4_CreateOdooConnection.svelte';
@@ -59,15 +59,12 @@
   }
 </script>
 
-<FlowDecoration>
-  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
-    <FlowStepHeader
-      step={3}
-      total={6}
-      title="Type"
-      subtitle="Choose how this product will be fulfilled."
-      labels={['Seller', 'Catalog', 'Type', 'Connection', 'Details', 'Summary']}
-    />
+<FlowStepScaffold
+  {...NEW_PRODUCT_FLOW_SCAFFOLD_BASE}
+  step={3}
+  title="Type"
+  subtitle="Choose how this product will be fulfilled."
+>
 
     <div class="space-y-3">
       <label class="flex items-start gap-2">
@@ -98,5 +95,4 @@
         {/snippet}
       </StepActionBar>
     </div>
-  </div>
-</FlowDecoration>
+  </FlowStepScaffold>

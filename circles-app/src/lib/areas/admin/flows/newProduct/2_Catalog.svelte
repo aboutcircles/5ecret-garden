@@ -8,10 +8,10 @@
   import AdminStatusBadge from '$lib/areas/admin/components/AdminStatusBadge.svelte';
   import { adminProductKey } from '$lib/areas/admin/helpers';
   import { normalizeSku } from '$lib/areas/admin/productEditorUtils';
-  import { openStep } from '$lib/shared/flow/runtime';
-  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import { openStep } from '$lib/shared/flow';
+  import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
+  import { NEW_PRODUCT_FLOW_SCAFFOLD_BASE } from './constants';
   import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
   import TypeStep from './3_Type.svelte';
   import type { AdminUnifiedProduct, AdminOdooConnection } from '$lib/areas/admin/types';
@@ -129,15 +129,12 @@
   }
 </script>
 
-<FlowDecoration>
-  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
-    <FlowStepHeader
-      step={2}
-      total={6}
-      title="Catalog"
-      subtitle="Select the product you want to offer."
-      labels={['Seller', 'Catalog', 'Type', 'Connection', 'Details', 'Summary']}
-    />
+<FlowStepScaffold
+  {...NEW_PRODUCT_FLOW_SCAFFOLD_BASE}
+  step={2}
+  title="Catalog"
+  subtitle="Select the product you want to offer."
+>
 
     <StepActionBar className="mt-0" align="between" stackOnMobile={false}>
       {#snippet primary()}
@@ -197,5 +194,4 @@
         {/each}
       </div>
     {/if}
-  </div>
-</FlowDecoration>
+  </FlowStepScaffold>

@@ -1,17 +1,17 @@
 <script lang="ts">
 
-  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
-  import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+  import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
+  import StepActionButtons from '$lib/shared/ui/flow/StepActionButtons.svelte';
+  import { GATEWAY_PROFILE_FLOW_SCAFFOLD_BASE } from './constants';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import OnChainNameSection from '$lib/shared/ui/flow/OnChainNameSection.svelte';
-  import { openStep } from '$lib/shared/flow/runtime';
+  import { openStep } from '$lib/shared/flow';
   import type { CreateGatewayFlowContext } from './context';
   import ConfirmCreateGateway from './ConfirmCreateGateway.svelte';
   import { ProfileFormStep } from '$lib/shared/ui/profile';
   import { isValidOnChainName } from '$lib/shared/utils/isValid';
   import { isAddress } from '$lib/shared/utils/tx';
-  import type { ProfileEditStepProps } from '$lib/shared/flow/contracts';
+  import type { ProfileEditStepProps } from '$lib/shared/flow';
 
   type Props = Partial<ProfileEditStepProps<CreateGatewayFlowContext>> & {
     onCreated?: (gateway: string) => void;
@@ -65,15 +65,12 @@
   }
 </script>
 
-<FlowDecoration>
-  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
-    <FlowStepHeader
-      step={1}
-      total={2}
-      title="Gateway profile"
-      subtitle="Define metadata and on-chain name for the payment gateway."
-      labels={['Gateway profile', 'Confirm']}
-    />
+<FlowStepScaffold
+  {...GATEWAY_PROFILE_FLOW_SCAFFOLD_BASE}
+  step={1}
+  title="Gateway profile"
+  subtitle="Define metadata and on-chain name for the payment gateway."
+>
 
   <div class="space-y-4">
     <p class="text-sm text-base-content/70">
@@ -105,18 +102,10 @@
       invalid={hasName && !onChainNameValid}
     />
 
-    <StepActionBar>
-      {#snippet primary()}
-        <button
-          type="button"
-          class="btn btn-primary btn-sm"
-          onclick={goNext}
-          disabled={!canContinue}
-        >
-          Continue
-        </button>
-      {/snippet}
-    </StepActionBar>
+    <StepActionButtons
+      primaryLabel="Continue"
+      onPrimary={goNext}
+      primaryDisabled={!canContinue}
+    />
   </div>
-  </div>
-</FlowDecoration>
+</FlowStepScaffold>

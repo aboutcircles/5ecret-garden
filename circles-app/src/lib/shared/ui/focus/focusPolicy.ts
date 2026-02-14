@@ -13,7 +13,8 @@ export function focusElement(el: HTMLElement | null | undefined): void {
   if (!el) return;
   try {
     el.focus({ preventScroll: true });
-  } catch {
+  } catch (e) {
+    console.debug('[focus] focus({preventScroll:true}) failed; falling back to plain focus()', e);
     el.focus();
   }
 }
