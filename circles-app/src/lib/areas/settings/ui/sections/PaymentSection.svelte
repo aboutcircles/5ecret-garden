@@ -5,7 +5,7 @@
   import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
   import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
   import GatewayRowView from '$lib/areas/settings/ui/components/GatewayRow.svelte';
-  import { openStep } from '$lib/shared/flow/runtime';
+  import { openStep } from '$lib/shared/flow';
   import CreateGatewayProfile from '$lib/areas/settings/flows/gateway/CreateGatewayProfile.svelte';
   import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
 

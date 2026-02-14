@@ -1,7 +1,7 @@
 <script lang="ts">
-    import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-    import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+    import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
     import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+    import { CREATE_GROUP_FLOW_SCAFFOLD_BASE } from './constants';
     import { circles } from '$lib/shared/state/circles';
     import { wallet } from '$lib/shared/state/wallet.svelte';
     import { runTask } from '$lib/shared/utils/tasks';
@@ -151,15 +151,12 @@
     const fastLane = $derived((ctx.settingsMode ?? 'fast') === 'fast');
 </script>
 
-<FlowDecoration>
-    <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
-    <FlowStepHeader
-        step={4}
-        total={4}
-        title="Create"
-        subtitle="Confirm and create the group on-chain."
-        labels={['Create group', 'Settings', 'Review', 'Create']}
-    />
+<FlowStepScaffold
+  {...CREATE_GROUP_FLOW_SCAFFOLD_BASE}
+  step={4}
+  title="Create"
+  subtitle="Confirm and create the group on-chain."
+>
 
     <p class="text-sm text-base-content/70 mt-1">We’ll write your profile and deploy the group as a task.</p>
 
@@ -196,5 +193,4 @@
             </button>
         {/snippet}
     </StepActionBar>
-    </div>
-</FlowDecoration>
+    </FlowStepScaffold>

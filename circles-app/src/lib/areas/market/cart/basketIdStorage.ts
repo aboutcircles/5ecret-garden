@@ -7,7 +7,8 @@ export function readBasketId(): string | null {
   try {
     const v = window.localStorage.getItem(KEY_BASKET_ID);
     return v && v.trim().length > 0 ? v.trim() : null;
-  } catch {
+  } catch (e) {
+    console.debug('[cart] failed to read basket id from localStorage', e);
     return null;
   }
 }
@@ -32,7 +33,7 @@ export function writeBasketId(
     }
   } catch (e) {
     // Surface storage failures to aid debugging but keep soft-fail behavior
-    console.error('[cart] Failed to persist basket id to localStorage:', e);
+    console.debug('[cart] failed to persist basket id to localStorage', e);
     try {
       const meta = typeof import.meta !== 'undefined' ? (import.meta as { env?: { DEV?: boolean } }) : null;
       if (meta?.env?.DEV) {

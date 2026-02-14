@@ -2,10 +2,10 @@
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
   import type { Address } from '@circles-sdk/utils';
   import AdminProductFormBase from '$lib/areas/admin/components/AdminProductFormBase.svelte';
-  import { openStep } from '$lib/shared/flow/runtime';
-  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import { openStep } from '$lib/shared/flow';
+  import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
+  import { NEW_PRODUCT_FLOW_SCAFFOLD_BASE } from './constants';
   import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
   import { normalizeAddressInput } from '$lib/areas/admin/productEditorUtils';
   import DetailsStep from './5_Details.svelte';
@@ -92,15 +92,12 @@
   }
 </script>
 
-<FlowDecoration>
-  <div class="w-full space-y-4">
-    <FlowStepHeader
-      step={4}
-      total={6}
-      title="Connection"
-      subtitle="Create an Odoo connection for this seller."
-      labels={['Seller', 'Catalog', 'Type', 'Connection', 'Details', 'Summary']}
-    />
+<FlowStepScaffold
+  {...NEW_PRODUCT_FLOW_SCAFFOLD_BASE}
+  step={4}
+  title="Create Odoo connection"
+  subtitle="Create an Odoo connection for this seller."
+>
 
     <AdminProductFormBase
       title=""
@@ -154,5 +151,4 @@
         </div>
       </StepSection>
     </AdminProductFormBase>
-  </div>
-</FlowDecoration>
+  </FlowStepScaffold>

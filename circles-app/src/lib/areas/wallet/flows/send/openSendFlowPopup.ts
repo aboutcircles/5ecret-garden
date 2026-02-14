@@ -3,7 +3,7 @@ import AmountStep from './3_Amount.svelte';
 import { SEND_POPUP_TITLE } from './constants';
 import type { SendFlowContext } from './context';
 import { createSendFlowContext } from './sendFlowContext.svelte';
-import { openStep } from '$lib/shared/flow/runtime';
+import { openStep } from '$lib/shared/flow';
 
 export function openSendFlowPopup(
   context: Partial<SendFlowContext> = {},

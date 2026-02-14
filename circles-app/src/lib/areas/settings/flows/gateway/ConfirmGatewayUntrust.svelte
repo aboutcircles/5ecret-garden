@@ -1,13 +1,13 @@
 <script lang="ts">
   import { ethers } from 'ethers';
-  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+  import { GATEWAY_UNTRUST_FLOW_SCAFFOLD_BASE } from './constants';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
-  import { openStep } from '$lib/shared/flow/runtime';
+  import { openStep, popToOrOpen } from '$lib/shared/flow';
   import { wallet } from '$lib/shared/state/wallet.svelte';
   import { runTask } from '$lib/shared/utils/tasks';
   import { isAddress } from '$lib/shared/utils/tx';
@@ -61,26 +61,19 @@
   }
 
   function changeAccount() {
-    const didPop = popupControls.popTo((entry) => entry.component === SearchTrustReceiver);
-    if (!didPop) {
-      openStep({
-        title: 'Search account',
-        component: SearchTrustReceiver,
-        props: { gateway, onTrusted: onDone },
-      });
-    }
+    popToOrOpen(SearchTrustReceiver, {
+      title: 'Search account',
+      props: { gateway, onTrusted: onDone },
+    });
   }
 </script>
 
-<FlowDecoration>
-  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
-    <FlowStepHeader
-      step={2}
-      total={2}
-      title="Remove trust"
-      subtitle="Review receiver details before revoking trust."
-      labels={['Search account', 'Remove trust']}
-    />
+<FlowStepScaffold
+  {...GATEWAY_UNTRUST_FLOW_SCAFFOLD_BASE}
+  step={2}
+  title="Remove trust"
+  subtitle="Review receiver details before revoking trust."
+>
 
   <div class="space-y-4">
     <StepSection
@@ -130,5 +123,4 @@
       {/snippet}
     </StepActionBar>
   </div>
-  </div>
-</FlowDecoration>
+  </FlowStepScaffold>

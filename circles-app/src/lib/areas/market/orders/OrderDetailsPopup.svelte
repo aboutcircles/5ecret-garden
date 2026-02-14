@@ -51,8 +51,8 @@
             const fresh = await getOrder(orderId);
             snapshot = fresh;
             jsonText = JSON.stringify(fresh ?? {}, null, 2);
-          } catch {
-            // ignore
+          } catch (e) {
+            console.debug('[orders] live refresh failed', { orderId }, e);
           }
         }
       });
@@ -64,7 +64,14 @@
     }
   });
 
-  onDestroy(() => { try { stopSse?.(); } catch {}; stopSse = null; });
+  onDestroy(() => {
+    try {
+      stopSse?.();
+    } catch (e) {
+      console.debug('[orders] stop SSE failed', e);
+    }
+    stopSse = null;
+  });
 </script>
 
 <div class="flex flex-col gap-3 w-full max-w-[min(92vw,52rem)]">

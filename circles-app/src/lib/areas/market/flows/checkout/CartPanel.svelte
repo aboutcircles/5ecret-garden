@@ -2,20 +2,19 @@
   import {
     cartState,
     previewCartOrder,
-    removeLineByIdentity,
-    setLineQuantityByIdentity,
+    updateLineByIdentity,
     validateCart,
   } from '$lib/areas/market/cart/store';
   import type {AggregatedCatalogItem} from '$lib/areas/market/model';
-  import { openStep } from '$lib/shared/flow/runtime';
+  import { openStep, useAsyncAction } from '$lib/shared/flow';
   import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
   import {pickFirstProductImageUrl} from '$lib/areas/market/services';
   import CheckoutForms from '$lib/areas/market/flows/checkout/CheckoutForms.svelte';
   import CheckoutReview from '$lib/areas/market/flows/checkout/CheckoutReview.svelte';
   import {formatCurrency} from '$lib/shared/utils/money';
-  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+  import { CHECKOUT_FLOW_SCAFFOLD_BASE } from './constants';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import {gnosisConfig} from "$lib/shared/config/circles";
 
@@ -82,7 +81,7 @@
       return;
     }
 
-    await setLineQuantityByIdentity(seller, sku, q);
+    await updateLineByIdentity(seller, sku, q);
   }
 
   function onQtyChange(idx: number, e: Event): void {
@@ -90,22 +89,8 @@
     void handleQuantityChange(idx, val);
   }
 
-  async function handleRemove(itemIdx: number): Promise<void> {
-    const basket = $cartState.basket;
-    const line = basket?.items?.[itemIdx];
-    if (!line) {
-      return;
-    }
-
-    const seller = line.seller;
-    const sku = line.orderedItem?.sku;
-
-    if (!seller || !sku) {
-      console.warn('[cart] line has no seller/sku; cannot remove', { line, itemIdx });
-      return;
-    }
-
-    await removeLineByIdentity(seller, sku);
+  function handleRemove(itemIdx: number): void {
+    void handleQuantityChange(itemIdx, "0");
   }
 
   // Lazily fetch missing products for each line in basket
@@ -129,7 +114,8 @@
         try {
           const item = await catalog.fetchProductForSellerAndSku(seller as string, sku as string);
           resolvedProducts = { ...resolvedProducts, [key]: item };
-        } catch {
+        } catch (e) {
+          console.debug('[cart] failed to resolve catalog product', { seller, sku }, e);
           resolvedProducts = { ...resolvedProducts, [key]: null };
         } finally {
           resolvingKeys.delete(key);
@@ -143,24 +129,24 @@
     return v.requirements.length > 0;
   }
 
-  async function openCheckoutFlow(): Promise<void> {
-    try {
-      const v = await validateCart();
-      if (hasRequirements(v)) {
-        openStep({
-          title: 'Additional details',
-          component: CheckoutForms,
-          props: {},
-        });
-        return;
-      }
-      await previewCartOrder();
+  const checkoutAction = useAsyncAction(async () => {
+    const v = await validateCart();
+    if (hasRequirements(v)) {
       openStep({
-        title: 'Review order',
-        component: CheckoutReview,
+        title: 'Additional details',
+        component: CheckoutForms,
         props: {},
       });
-    } catch (e) {
+      return;
+    }
+    await previewCartOrder();
+    openStep({
+      title: 'Review order',
+      component: CheckoutReview,
+      props: {},
+    });
+  }, {
+    onError: (e) => {
       // In case of error, still allow the user to proceed to address step to resolve issues
       console.warn('[cart] validate before checkout failed; opening details step', e);
       openStep({
@@ -169,6 +155,10 @@
         props: {},
       });
     }
+  });
+
+  async function openCheckoutFlow(): Promise<void> {
+    await checkoutAction.run();
   }
 
   // Derive simple totals per currency from server-managed offer snapshots on
@@ -198,20 +188,22 @@
   const isCheckedOut = $derived.by(() => $cartState.basket?.status === 'CheckedOut');
 </script>
 
-<FlowDecoration size="xl">
-<div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
-  <FlowStepHeader
-    step={1}
-    total={4}
-    title="Cart"
-    subtitle="Review basket items before checkout."
-    labels={['Cart', 'Details', 'Review', 'Payment']}
-  />
+<FlowStepScaffold
+  {...CHECKOUT_FLOW_SCAFFOLD_BASE}
+  size="xl"
+  step={1}
+  title="Cart"
+  subtitle="Review basket items before checkout."
+>
 
   <!-- Title and close button are provided by the popup shell; remove duplicates here -->
 
   {#if $cartState.lastError}
     <StepAlert variant="error" className="text-xs" message={$cartState.lastError} />
+  {/if}
+
+  {#if checkoutAction.error}
+    <StepAlert variant="error" className="text-xs" message={checkoutAction.error} />
   {/if}
 
   {#if !$cartState.basket || !$cartState.basket.items || $cartState.basket.items.length === 0}
@@ -294,24 +286,24 @@
       </div>
     {/if}
 
-    <StepActionBar>
-      {#snippet primary()}
-        <button
-          type="button"
-          class="btn btn-sm btn-primary"
-          onclick={() => openCheckoutFlow()}
-          disabled={
-            $cartState.loading ||
-            !$cartState.basket ||
-            !$cartState.basket.items ||
-            $cartState.basket.items.length === 0 ||
-            isCheckedOut
-          }
-        >
-          Checkout
-        </button>
-      {/snippet}
-    </StepActionBar>
+  <StepActionBar>
+    {#snippet primary()}
+      <button
+        type="button"
+        class="btn btn-sm btn-primary"
+        onclick={() => openCheckoutFlow()}
+        disabled={
+          checkoutAction.loading ||
+          $cartState.loading ||
+          !$cartState.basket ||
+          !$cartState.basket.items ||
+          $cartState.basket.items.length === 0 ||
+          isCheckedOut
+        }
+      >
+        {checkoutAction.loading ? 'Checking...' : 'Checkout'}
+      </button>
+    {/snippet}
+  </StepActionBar>
   {/if}
-</div>
-</FlowDecoration>
+</FlowStepScaffold>

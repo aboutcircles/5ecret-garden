@@ -1,7 +1,7 @@
 <script lang="ts">
-  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
+  import { MIGRATE_FLOW_SCAFFOLD_BASE } from './constants';
   import { ProfileFormStep } from '$lib/shared/ui/profile';
   import type { MigrateToV2Context } from '$lib/areas/wallet/flows/migrateToV2/context';
   import MigrateContacts from './3_MigrateContacts.svelte';
@@ -11,10 +11,10 @@
     FallbackImageUrl,
     profilesEqual,
   } from '$lib/shared/utils/profile';
-  import { openStep } from '$lib/shared/flow/runtime';
+  import { openStep } from '$lib/shared/flow';
   import type { Profile } from '@circles-sdk/profiles';
-  import { requireAvatar } from '$lib/shared/flow/guards';
-  import type { ProfileEditStepProps } from '$lib/shared/flow/contracts';
+  import { requireAvatar } from '$lib/shared/flow';
+  import type { ProfileEditStepProps } from '$lib/shared/flow';
 
   type Props = ProfileEditStepProps<MigrateToV2Context>;
 
@@ -119,16 +119,12 @@
     });
   }
 </script>
-
-<FlowDecoration>
-  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
-  <FlowStepHeader
-    step={2}
-    total={4}
-    title="Profile"
-    subtitle="Create your Circles V2 profile details."
-    labels={['Invitation', 'Profile', 'Contacts', 'Migrate']}
-  />
+<FlowStepScaffold
+  {...MIGRATE_FLOW_SCAFFOLD_BASE}
+  step={2}
+  title="Create profile"
+  subtitle="Create your Circles V2 profile details."
+>
 
   <p class="text-base-content/70 mt-2">
     Create a profile for your new Circles v2 avatar.
@@ -153,5 +149,5 @@
     onSubmit={next}
     submitContainerClass="flex justify-end w-full mt-2"
   />
-  </div>
-</FlowDecoration>
+  </FlowStepScaffold>
+

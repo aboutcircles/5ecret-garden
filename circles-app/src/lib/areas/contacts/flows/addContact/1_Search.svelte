@@ -1,11 +1,11 @@
 <script lang="ts">
-  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
-  import SearchAvatar from '$lib/areas/contacts/ui/pages/SearchAvatar.svelte';
+    import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
+    import SearchAvatar from '$lib/areas/contacts/ui/pages/SearchAvatar.svelte';
+    import { ADD_CONTACT_FLOW_SCAFFOLD_BASE } from './constants';
   import Invite from '$lib/areas/contacts/ui/pages/Invite.svelte';
   import Trust from '$lib/areas/contacts/ui/pages/Trust.svelte';
   import { contacts } from '$lib/shared/state/contacts';
-  import { openStep } from '$lib/shared/flow/runtime';
+  import { openStep } from '$lib/shared/flow';
   import YouAlreadyTrust from './2_YouAlreadyTrust.svelte';
   import type { AddContactFlowContext } from './context';
   import type { Address } from '@circles-sdk/utils';
@@ -55,15 +55,12 @@
   }
 </script>
 
-<FlowDecoration>
-  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
-    <FlowStepHeader
-      step={1}
-      total={2}
-      title="Find account"
-      subtitle="Search for a person, organization, or group to add."
-      labels={['Find account', 'Trust status']}
-    />
+<FlowStepScaffold
+  {...ADD_CONTACT_FLOW_SCAFFOLD_BASE}
+  step={1}
+  title="Find account"
+  subtitle="Search for a person, organization, or group to add."
+>
 
     <SearchAvatar
       avatarTypes={["CrcV2_RegisterHuman","CrcV2_RegisterOrganization","CrcV2_RegisterGroup"]}
@@ -73,5 +70,4 @@
       searchType="contact"
       inputDataAttribute="data-popup-initial-input"
     />
-  </div>
-</FlowDecoration>
+  </FlowStepScaffold>

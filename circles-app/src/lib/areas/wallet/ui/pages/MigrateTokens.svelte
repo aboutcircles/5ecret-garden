@@ -1,5 +1,6 @@
 <script lang="ts">
   import { circles } from '$lib/shared/state/circles';
+  import PopupActionBar from '$lib/shared/ui/shell/PopupActionBar.svelte';
   import BalanceRow from '$lib/areas/wallet/ui/components/BalanceRow.svelte';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import type { TokenBalanceRow } from '@circles-sdk/data';
@@ -44,9 +45,9 @@
     <BalanceRow item={asset} />
   </div>
 
-  <div class="modal-action">
+  <PopupActionBar>
     <button type="submit" class="btn btn-primary btn-sm" onclick={migrate}
       >Migrate</button
     >
-  </div>
+  </PopupActionBar>
 </div>

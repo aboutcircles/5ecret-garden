@@ -2,7 +2,7 @@
   import type { Address } from '@circles-sdk/utils';
 import { ProfileSigningKeys } from '$lib/shared/ui/profile';
 import { AddSigningKey } from '$lib/shared/ui/profile';
-  import { openStep } from '$lib/shared/flow/runtime';
+  import { openStep } from '$lib/shared/flow';
   import { browser } from '$app/environment';
   import { CirclesStorage } from '$lib/shared/utils/storage';
 

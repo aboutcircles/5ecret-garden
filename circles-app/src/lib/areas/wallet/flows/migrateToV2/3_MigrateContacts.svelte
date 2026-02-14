@@ -1,18 +1,18 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+  import { MIGRATE_FLOW_SCAFFOLD_BASE } from './constants';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import type { MigrateToV2Context } from '$lib/areas/wallet/flows/migrateToV2/context';
   import Migrate from './4_Migrate.svelte';
   import { contacts } from '$lib/shared/state/contacts';
   import { formatTrustRelation } from '$lib/shared/utils/helpers';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-  import { openStep } from '$lib/shared/flow/runtime';
+  import { openStep } from '$lib/shared/flow';
   import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import {ArrowLeft, ArrowLeftRight, ArrowRight} from 'lucide';
-  import type { ReviewStepProps } from '$lib/shared/flow/contracts';
+  import type { ReviewStepProps } from '$lib/shared/flow';
 
   type Props = ReviewStepProps<MigrateToV2Context>;
 
@@ -62,16 +62,12 @@
     return 0;
   }));
 </script>
-
-<FlowDecoration>
-  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
-  <FlowStepHeader
-    step={3}
-    total={4}
-    title="Contacts"
-    subtitle="Choose which trusted contacts to migrate to V2."
-    labels={['Invitation', 'Profile', 'Contacts', 'Migrate']}
-  />
+<FlowStepScaffold
+  {...MIGRATE_FLOW_SCAFFOLD_BASE}
+  step={3}
+  title="Migrate contacts"
+  subtitle="Choose which trusted contacts to migrate to V2."
+>
 
   <p class="text-base-content/70 mt-2">
     Select the contacts you want to keep in your new Circles V2 profile.
@@ -131,5 +127,5 @@
       </button>
     {/snippet}
   </StepActionBar>
-  </div>
-</FlowDecoration>
+  </FlowStepScaffold>
+

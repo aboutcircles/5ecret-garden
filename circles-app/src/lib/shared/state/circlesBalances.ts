@@ -42,14 +42,15 @@ export const initBalanceStore = (avatar: Avatar) => {
   });
 
   const _initialLoad = async () => {
-      try {
-          return await avatar.getBalances();
-      } catch (e:any) {
-          if (e?.includes?.("No balances found") || e?.message.includes("No balances found")) {
-              return [];
-          }
-          throw e;
+    try {
+      return await avatar.getBalances();
+    } catch (e: any) {
+      if (e?.includes?.('No balances found') || e?.message?.includes?.('No balances found')) {
+        return [];
       }
+      console.debug('[balances] getBalances failed (initial load)', e);
+      throw e;
+    }
   };
 
   const _handleEvent = async (
@@ -57,14 +58,16 @@ export const initBalanceStore = (avatar: Avatar) => {
     currentData: TokenBalanceRow[]
   ) => {
     if (!refreshOnEvents.has(event.$event)) return currentData;
-      try {
-          return await avatar.getBalances();
-      } catch (e:any) {
-          if (e?.includes?.("No balances found") || e?.message.includes("No balances found")) {
-              return [];
-          }
-          throw e;
+
+    try {
+      return await avatar.getBalances();
+    } catch (e: any) {
+      if (e?.includes?.('No balances found') || e?.message?.includes?.('No balances found')) {
+        return [];
       }
+      console.debug('[balances] getBalances failed (event refresh)', { event: event.$event }, e);
+      throw e;
+    }
   };
 
   const _handleNextPage = async (currentData: TokenBalanceRow[]) => {

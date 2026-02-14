@@ -4,8 +4,10 @@
   import RouteStep from './2_Asset.svelte';
   import AmountStep from './3_Amount.svelte';
   import type {SendFlowContext} from '$lib/areas/wallet/flows/send/context';
-  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-  import { openStep } from '$lib/shared/flow/runtime';
+  import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
+  import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
+  import { SEND_FLOW_SCAFFOLD_BASE } from './constants';
+  import { openStep, popToOrOpen, useAsyncAction } from '$lib/shared/flow';
   import {runTask} from '$lib/shared/utils/tasks';
   import {roundToDecimals, shortenAddress} from '$lib/shared/utils/shared';
   import {avatarState} from '$lib/shared/state/avatar.svelte';
@@ -17,10 +19,9 @@
     requireAvatar,
     requireSelectedAsset,
     requireWalletAddress,
-  } from '$lib/shared/flow/guards';
-  import type { ReviewStepProps } from '$lib/shared/flow/contracts';
-  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
-  import { SEND_POPUP_TITLE } from './constants';
+  } from '$lib/shared/flow';
+  import type { ReviewStepProps } from '$lib/shared/flow';
+    import { SEND_POPUP_TITLE } from './constants';
 
   type Props = ReviewStepProps<SendFlowContext>;
 
@@ -42,7 +43,7 @@
     return null;
   });
 
-  function onselect() {
+  const sendAction = useAsyncAction(async () => {
     if (!canContinue) return;
 
     const avatar = requireAvatar(avatarState.avatar);
@@ -78,11 +79,7 @@
       }
     }
 
-    // let amountToSend: bigint = context.selectedAsset.version === 1
-    //   ? tcToCrc(new Date(), context.amount)
-    //   : parseEther(context.amount.toString());
-
-    runTask({
+    await runTask({
       name: `Send ${roundToDecimals(amount)} ${tokenTypeToString(selectedAsset.tokenType)} to ${shortenAddress(selectedAddress)}...`,
       promise:
         selectedAsset.tokenAddress === TransitiveTransferTokenAddress
@@ -100,7 +97,6 @@
           : avatar.transfer(
             selectedAddress,
             amount,
-            // amountToSend,
             selectedAsset.tokenAddress,
             dataUInt8Arr,
             true,
@@ -113,30 +109,25 @@
     });
 
     popupControls.close();
+  });
+
+  function onselect() {
+    void sendAction.run();
   }
 
   function editTo() {
     context.selectedAddress = undefined;
-
-    const didPop = popupControls.popTo((entry) => entry.component === ToStep);
-    if (!didPop) {
-      openStep({
-        title: SEND_POPUP_TITLE,
-        component: ToStep,
-        props: { context },
-      });
-    }
+    popToOrOpen(ToStep, {
+      title: SEND_POPUP_TITLE,
+      props: { context },
+    });
   }
 
   function editRoute() {
-    const didPopToAmount = popupControls.popTo((entry) => entry.component === AmountStep);
-    if (!didPopToAmount) {
-      openStep({
-        title: SEND_POPUP_TITLE,
-        component: AmountStep,
-        props: { context },
-      });
-    }
+    popToOrOpen(AmountStep, {
+      title: SEND_POPUP_TITLE,
+      props: { context },
+    });
 
     openStep({
       title: SEND_POPUP_TITLE,
@@ -146,20 +137,20 @@
   }
 
   function editAmount() {
-    const didPop = popupControls.popTo((entry) => entry.component === AmountStep);
-    if (!didPop) {
-      openStep({
-        title: SEND_POPUP_TITLE,
-        component: AmountStep,
-        props: { context },
-      });
-    }
+    popToOrOpen(AmountStep, {
+      title: SEND_POPUP_TITLE,
+      props: { context },
+    });
   }
 </script>
 
-<FlowDecoration>
-  <div class="w-full space-y-4" tabindex="-1" data-send-step-initial-focus>
-    <FlowStepHeader step={3} total={3} title="Review" labels={['Recipient', 'Amount', 'Review']} />
+<FlowStepScaffold
+  {...SEND_FLOW_SCAFFOLD_BASE}
+  step={3}
+  title="Review"
+  tabindex="-1"
+  data-send-step-initial-focus
+>
     <Send
         asset={context.selectedAsset}
         amount={context.amount}
@@ -170,9 +161,11 @@
         onEditTo={editTo}
         onEditRoute={editRoute}
         onEditAmount={editAmount}
-        submitDisabled={!canContinue}
+        submitDisabled={!canContinue || sendAction.loading}
         {validationMessage}
         {onselect}
     />
-  </div>
-</FlowDecoration>
+    {#if sendAction.error}
+        <StepAlert variant="error" className="mt-2" message={sendAction.error} />
+    {/if}
+  </FlowStepScaffold>

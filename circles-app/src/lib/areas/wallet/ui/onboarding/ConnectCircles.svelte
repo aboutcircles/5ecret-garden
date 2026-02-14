@@ -8,7 +8,7 @@
     import {CirclesStorage} from '$lib/shared/utils/storage';
     import type {GroupRow} from '@circles-sdk/data';
     import {settings} from '$lib/shared/state/settings.svelte';
-    import { openStep } from '$lib/shared/flow/runtime';
+    import { openStep } from '$lib/shared/flow';
     import CreateGroup from "$lib/areas/groups/flows/createGroup/1_CreateGroup.svelte";
     import {resetCreateGroupContext} from '$lib/areas/groups/flows/createGroup/context';
 

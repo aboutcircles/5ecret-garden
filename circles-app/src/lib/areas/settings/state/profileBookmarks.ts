@@ -328,7 +328,8 @@ function getConnectedOwnerKey(): string {
     const data = JSON.parse(raw) as { avatar?: string; group?: string };
     const addr = normalizeProfileAddress(data?.group ?? data?.avatar ?? null);
     return addr ?? DEFAULT_OWNER_KEY;
-  } catch {
+  } catch (e) {
+    console.debug('[bookmarks] failed to resolve connected owner key', e);
     return DEFAULT_OWNER_KEY;
   }
 }
@@ -379,7 +380,8 @@ class LocalStorageBookmarksRepository implements BookmarksRepository {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (!raw) return { owners: {} };
       return sanitizePersistedState(JSON.parse(raw));
-    } catch {
+    } catch (e) {
+      console.debug('[bookmarks] failed to parse local storage', e);
       return { owners: {} };
     }
   }
@@ -388,8 +390,9 @@ class LocalStorageBookmarksRepository implements BookmarksRepository {
     if (!browser) return;
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitizePersistedState(state)));
-    } catch {
+    } catch (e) {
       // ignore storage failures (quota, privacy mode, etc.)
+      console.debug('[bookmarks] failed to write local storage', e);
     }
   }
 }

@@ -2,21 +2,20 @@
   import SelectAsset from './2_Asset.svelte';
   import SelectAmount from './3_Amount.svelte';
   import type { SendFlowContext } from '$lib/areas/wallet/flows/send/context';
-  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+  import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { circles } from '$lib/shared/state/circles';
-  import { openStep } from '$lib/shared/flow/runtime';
+  import { openStep } from '$lib/shared/flow';
   import SearchAvatar from '$lib/areas/contacts/ui/pages/SearchAvatar.svelte';
   import type { Address } from '@circles-sdk/utils';
   import { get } from 'svelte/store';
-  import type { SelectTargetStepProps } from '$lib/shared/flow/contracts';
-  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
-  import { SEND_POPUP_TITLE } from './constants';
+  import type { SelectTargetStepProps } from '$lib/shared/flow';
+  import { SEND_FLOW_SCAFFOLD_BASE, SEND_POPUP_TITLE } from './constants';
   import {
     requireAvatar,
     requireCircles,
     requireWalletAddress,
-  } from '$lib/shared/flow/guards';
+  } from '$lib/shared/flow';
 
   type Props = Partial<SelectTargetStepProps<SendFlowContext>>;
 
@@ -60,10 +59,14 @@
   }
 </script>
 
-<FlowDecoration>
-  <div class="w-full" tabindex="-1" data-send-step-initial-focus>
-    <FlowStepHeader step={1} total={3} title="Recipient" labels={['Recipient', 'Amount', 'Review']} />
-  </div>
+<FlowStepScaffold
+  {...SEND_FLOW_SCAFFOLD_BASE}
+  className="w-full"
+  step={1}
+  title="Recipient"
+  tabindex="-1"
+  data-send-step-initial-focus
+>
   <div class="w-full">
     <SearchAvatar
       avatarTypes={["CrcV2_RegisterHuman","CrcV2_RegisterOrganization"]}
@@ -73,4 +76,4 @@
       searchType="send"
     />
   </div>
-</FlowDecoration>
+</FlowStepScaffold>

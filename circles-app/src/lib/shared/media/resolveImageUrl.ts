@@ -14,7 +14,9 @@ function isHttpUrl(s: string): boolean {
   try {
     const u = new URL(s);
     return u.protocol === 'http:' || u.protocol === 'https:';
-  } catch {
+  } catch (e) {
+    // Best-effort parse; callers may probe with non-URL strings.
+    console.debug('[media] failed to parse URL', { s }, e);
     return false;
   }
 }

@@ -1,9 +1,9 @@
 <script lang="ts">
   import type { Address } from '@circles-sdk/utils';
-  import { openStep } from '$lib/shared/flow/runtime';
-  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import { openStep } from '$lib/shared/flow';
+  import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import SearchAvatar from '$lib/areas/contacts/ui/pages/SearchAvatar.svelte';
+  import { NEW_CONNECTION_FLOW_SCAFFOLD_BASE } from './constants';
   import type { AdminNewConnectionFlowContext } from './context';
   import DetailsStep from './2_Details.svelte';
 
@@ -42,9 +42,12 @@
   }
 </script>
 
-<FlowDecoration>
-  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
-    <FlowStepHeader step={1} total={2} title="Seller" subtitle="Choose the seller for this Odoo connection." labels={['Seller', 'Details']} />
+<FlowStepScaffold
+  {...NEW_CONNECTION_FLOW_SCAFFOLD_BASE}
+  step={1}
+  title="Seller"
+  subtitle="Choose the seller for this Odoo connection."
+>
 
     <SearchAvatar
       avatarTypes={['CrcV2_RegisterHuman', 'CrcV2_RegisterOrganization']}
@@ -52,5 +55,4 @@
       onselect={handleSelect}
       searchType="send"
     />
-  </div>
-</FlowDecoration>
+  </FlowStepScaffold>

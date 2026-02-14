@@ -2,13 +2,13 @@
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
   import type { Address } from '@circles-sdk/utils';
   import { normalizeSku } from '$lib/areas/admin/productEditorUtils';
-  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
+  import { NEW_PRODUCT_FLOW_SCAFFOLD_BASE } from './constants';
   import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
   import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
   import StepReviewRow from '$lib/shared/ui/flow/StepReviewRow.svelte';
-  import { openStep } from '$lib/shared/flow/runtime';
+  import { openStep, popToOrOpen } from '$lib/shared/flow';
   import { popupControls } from '$lib/shared/state/popup';
   import SellerStep from './1_Seller.svelte';
   import CatalogStep from './2_Catalog.svelte';
@@ -46,51 +46,35 @@
   );
 
   function editSeller(): void {
-    const didPop = popupControls.popTo((entry) => entry.component === SellerStep);
-    if (!didPop) {
-      openStep({
-        title: 'Select seller',
-        component: SellerStep,
-        props: { context, connections, existingProducts, onExecute, onCreateConnection },
-        key: 'admin-new-product-seller',
-      });
-    }
+    popToOrOpen(SellerStep, {
+      title: 'Select seller',
+      props: { context, connections, existingProducts, onExecute, onCreateConnection },
+      key: 'admin-new-product-seller',
+    });
   }
 
   function editCatalog(): void {
-    const didPop = popupControls.popTo((entry) => entry.component === CatalogStep);
-    if (!didPop) {
-      openStep({
-        title: 'Select catalog product',
-        component: CatalogStep,
-        props: { context, connections, existingProducts, onExecute, onCreateConnection },
-        key: 'admin-new-product-catalog',
-      });
-    }
+    popToOrOpen(CatalogStep, {
+      title: 'Select catalog product',
+      props: { context, connections, existingProducts, onExecute, onCreateConnection },
+      key: 'admin-new-product-catalog',
+    });
   }
 
   function editType(): void {
-    const didPop = popupControls.popTo((entry) => entry.component === TypeStep);
-    if (!didPop) {
-      openStep({
-        title: 'Choose fulfillment type',
-        component: TypeStep,
-        props: { context, connections, existingProducts, onExecute, onCreateConnection },
-        key: 'admin-new-product-type',
-      });
-    }
+    popToOrOpen(TypeStep, {
+      title: 'Choose fulfillment type',
+      props: { context, connections, existingProducts, onExecute, onCreateConnection },
+      key: 'admin-new-product-type',
+    });
   }
 
   function editDetails(): void {
-    const didPop = popupControls.popTo((entry) => entry.component === DetailsStep);
-    if (!didPop) {
-      openStep({
-        title: (context.selectedType ?? 'codedispenser') === 'odoo' ? 'Use odoo product' : 'Add codes',
-        component: DetailsStep,
-        props: { context, connections, existingProducts, onExecute, onCreateConnection },
-        key: 'admin-new-product-details',
-      });
-    }
+    popToOrOpen(DetailsStep, {
+      title: (context.selectedType ?? 'codedispenser') === 'odoo' ? 'Use odoo product' : 'Add codes',
+      props: { context, connections, existingProducts, onExecute, onCreateConnection },
+      key: 'admin-new-product-details',
+    });
   }
 
   function parseCodes(): string[] | undefined {
@@ -168,15 +152,12 @@
   }
 </script>
 
-<FlowDecoration>
-  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
-    <FlowStepHeader
-      step={6}
-      total={6}
-      title="Summary"
-      subtitle="Review and apply product configuration."
-      labels={['Seller', 'Catalog', 'Type', 'Connection', 'Details', 'Summary']}
-    />
+<FlowStepScaffold
+  {...NEW_PRODUCT_FLOW_SCAFFOLD_BASE}
+  step={6}
+  title="Summary"
+  subtitle="Review and apply product configuration."
+>
 
     {#if formError}
       <StepAlert variant="error" message={formError} />
@@ -230,5 +211,4 @@
         </button>
       {/snippet}
     </StepActionBar>
-  </div>
-</FlowDecoration>
+  </FlowStepScaffold>

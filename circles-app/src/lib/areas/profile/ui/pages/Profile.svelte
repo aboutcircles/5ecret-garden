@@ -650,7 +650,6 @@
                     <img src="/send-new.svg" alt="Send" class="w-5 h-5"/>
                     Send
                 </button>
-                <div class="text-[11px] text-base-content/60">We’ll check routing on the next step.</div>
             </div>
         {/if}
         {#if otherAvatar?.type === 'CrcV2_RegisterGroup' && !!mintHandler && !avatarState.isGroup}
@@ -956,4 +955,5 @@
             {/if}
         </div>
     </Tab>
+
 </Tabs>

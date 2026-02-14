@@ -1,10 +1,10 @@
 <script lang="ts">
-    import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-    import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+    import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
     import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+    import { CREATE_GROUP_FLOW_SCAFFOLD_BASE } from './constants';
     import StepReviewRow from '$lib/shared/ui/flow/StepReviewRow.svelte';
     import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
-    import { openStep } from '$lib/shared/flow/runtime';
+    import { openStep, popToOrOpen } from '$lib/shared/flow';
     import { popupControls } from '$lib/shared/state/popup';
     import Markdown from '$lib/shared/ui/content/markdown/Markdown.svelte';
     import GroupProfileStep from './1_CreateGroup.svelte';
@@ -15,7 +15,7 @@
         type CreateGroupFlowContext
     } from './context';
     import { resetCreateGroupContext } from './context';
-    import type { ReviewStepProps } from '$lib/shared/flow/contracts';
+    import type { ReviewStepProps } from '$lib/shared/flow';
 
     type Props = Partial<ReviewStepProps<CreateGroupFlowContext>> & {
         setGroup?: (address: string) => void;
@@ -48,37 +48,26 @@
     }
 
     function editProfile() {
-        const didPop = popupControls.popTo((entry) => entry.component === GroupProfileStep);
-        if (!didPop) {
-            openStep({
-                title: 'Create Group',
-                component: GroupProfileStep,
-                props: { context: ctx, setGroup },
-            });
-        }
+        popToOrOpen(GroupProfileStep, {
+            title: 'Create Group',
+            props: { context: ctx, setGroup },
+        });
     }
 
     function editSettings() {
-        const didPop = popupControls.popTo((entry) => entry.component === GroupSettingsStep);
-        if (!didPop) {
-            openStep({
-                title: 'Group Settings',
-                component: GroupSettingsStep,
-                props: { context: ctx, setGroup },
-            });
-        }
+        popToOrOpen(GroupSettingsStep, {
+            title: 'Group Settings',
+            props: { context: ctx, setGroup },
+        });
     }
 </script>
 
-<FlowDecoration>
-    <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
-    <FlowStepHeader
-        step={3}
-        total={4}
-        title="Review"
-        subtitle="Confirm group details before creation."
-        labels={['Create group', 'Settings', 'Review', 'Create']}
-    />
+<FlowStepScaffold
+  {...CREATE_GROUP_FLOW_SCAFFOLD_BASE}
+  step={3}
+  title="Review"
+  subtitle="Confirm group details before creation."
+>
 
     <p class="text-sm text-base-content/70 mt-1">Confirm details before creating the group.</p>
 
@@ -161,5 +150,4 @@
             </button>
         {/snippet}
     </StepActionBar>
-    </div>
-</FlowDecoration>
+    </FlowStepScaffold>

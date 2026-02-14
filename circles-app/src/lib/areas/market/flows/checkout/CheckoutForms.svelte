@@ -1,21 +1,39 @@
 <script lang="ts">
-  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+  import { CHECKOUT_FLOW_SCAFFOLD_BASE } from './constants';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
-  import { openStep } from '$lib/shared/flow/runtime';
+  import { openStep, useAsyncAction } from '$lib/shared/flow';
   import {
     cartState,
     updateBasketDetails,
     validateCart,
     previewCartOrder
   } from '$lib/areas/market/cart/store';
+  import { deriveFormRequirements } from '$lib/areas/market/flows/checkout/requiredSlots';
   import CheckoutReview from './CheckoutReview.svelte';
 
   // This component shows only the address/details step.
 
-  let localError: string | null = $state(null);
-  let validating = $state(false);
+  const validateAction = useAsyncAction(async () => {
+    await persistDetails();
+    await validateCart();
+  });
+
+  const submitAction = useAsyncAction(async () => {
+    validateAction.reset();
+    await persistDetails();
+    const v = await validateCart();
+    if (needsShippingFromValidation(v) || hasBlockingUnmet(v)) {
+      throw new Error('Please fill in all required fields.');
+    }
+    await previewCartOrder();
+    openStep({
+      title: 'Review',
+      component: CheckoutReview,
+      props: {}
+    });
+  });
 
   // Local form state, hydrated once from the basket
   let shippingStreet = $state('');
@@ -136,18 +154,7 @@
   }
 
   async function validateOnBlur(): Promise<void> {
-    localError = null;
-    try {
-      await persistDetails();
-      await validateCart();
-    } catch (e: unknown) {
-      localError =
-        e instanceof Error
-          ? e.message
-          : typeof e === 'string'
-          ? e
-          : 'Unknown error';
-    }
+    await validateAction.run();
   }
 
   // True if the current validation result says shipping address is still required
@@ -198,55 +205,22 @@
   const validationRequired = $derived(requiredSlotsFromValidation($cartState.validation));
   const allRequiredSlots = $derived(new Set<string>([...offerDrivenRequired, ...validationRequired]));
 
-  const emailRequired = $derived(allRequiredSlots.has('contactPoint.email'));
-  const phoneRequired = $derived(allRequiredSlots.has('contactPoint.telephone'));
-
-  // Shipping and billing groups: show if any of their slots are required (coarse or fine)
-  const shippingRequired = $derived(
-    allRequiredSlots.has('shippingAddress') ||
-      allRequiredSlots.has('shippingAddress.streetAddress') ||
-      allRequiredSlots.has('shippingAddress.addressLocality') ||
-      allRequiredSlots.has('shippingAddress.postalCode') ||
-      allRequiredSlots.has('shippingAddress.addressCountry')
-  );
-  const shipStreetRequired = $derived(
-    allRequiredSlots.has('shippingAddress.streetAddress') || shippingRequired
-  );
-  const shipLocalityRequired = $derived(
-    allRequiredSlots.has('shippingAddress.addressLocality') || shippingRequired
-  );
-  const shipPostalRequired = $derived(
-    allRequiredSlots.has('shippingAddress.postalCode') || shippingRequired
-  );
-  const shipCountryRequired = $derived(
-    allRequiredSlots.has('shippingAddress.addressCountry') || shippingRequired
-  );
-
-  const billingRequired = $derived(
-    allRequiredSlots.has('billingAddress') ||
-      allRequiredSlots.has('billingAddress.streetAddress') ||
-      allRequiredSlots.has('billingAddress.addressLocality') ||
-      allRequiredSlots.has('billingAddress.postalCode') ||
-      allRequiredSlots.has('billingAddress.addressCountry')
-  );
-  const billStreetRequired = $derived(
-    allRequiredSlots.has('billingAddress.streetAddress') || billingRequired
-  );
-  const billLocalityRequired = $derived(
-    allRequiredSlots.has('billingAddress.addressLocality') || billingRequired
-  );
-  const billPostalRequired = $derived(
-    allRequiredSlots.has('billingAddress.postalCode') || billingRequired
-  );
-  const billCountryRequired = $derived(
-    allRequiredSlots.has('billingAddress.addressCountry') || billingRequired
-  );
-
-  const birthDateRequired = $derived(
-    allRequiredSlots.has('ageProof.birthDate') || allRequiredSlots.has('ageProof')
-  );
-
-  const customerRequired = $derived(allRequiredSlots.has('customer'));
+  const {
+    customerRequired,
+    emailRequired,
+    phoneRequired,
+    birthDateRequired,
+    shippingRequired,
+    shipStreetRequired,
+    shipLocalityRequired,
+    shipPostalRequired,
+    shipCountryRequired,
+    billingRequired,
+    billStreetRequired,
+    billLocalityRequired,
+    billPostalRequired,
+    billCountryRequired
+  } = $derived(deriveFormRequirements(allRequiredSlots));
 
   // Field-level error based purely on server ValidationRequirement.path
   function fieldHasError(path: string): boolean {
@@ -267,31 +241,7 @@
   }
 
   async function goToReview(): Promise<void> {
-    localError = null;
-    validating = true;
-    try {
-      await persistDetails();
-      const v = await validateCart();
-      if (needsShippingFromValidation(v) || hasBlockingUnmet(v)) {
-        // Stay on details; per-field errors will be visible
-        return;
-      }
-      await previewCartOrder();
-      openStep({
-        title: 'Review order',
-        component: CheckoutReview,
-        props: {},
-      });
-    } catch (e: unknown) {
-      localError =
-        e instanceof Error
-          ? e.message
-          : typeof e === 'string'
-          ? e
-          : 'Unknown error';
-    } finally {
-      validating = false;
-    }
+    await submitAction.run();
   }
 
   // Preview and payment happen in the subsequent popup steps
@@ -299,16 +249,12 @@
   // Continue is enabled only when the last server validation has no unmet blocking requirements
   // NOTE: Derived canContinue was unused; button disabling is handled inline.
 </script>
-
-<FlowDecoration>
-  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
-    <FlowStepHeader
-      step={2}
-      total={4}
-      title="Details"
-      subtitle="Provide required checkout information."
-      labels={['Cart', 'Details', 'Review', 'Payment']}
-    />
+<FlowStepScaffold
+  {...CHECKOUT_FLOW_SCAFFOLD_BASE}
+  step={2}
+  title="Checkout"
+  subtitle="Provide required checkout information."
+>
 
     <p>
         The seller needs some additional information from you. Please fill in the forms below:
@@ -518,8 +464,8 @@
         </div>
       {/if}
 
-      {#if localError}
-        <StepAlert variant="error" className="text-xs mt-2" message={localError} />
+      {#if validateAction.error || submitAction.error}
+        <StepAlert variant="error" className="text-xs mt-2" message={validateAction.error || submitAction.error} />
       {/if}
 
       <StepActionBar>
@@ -528,12 +474,12 @@
             type="button"
             class="btn btn-sm btn-primary"
             onclick={goToReview}
-            disabled={validating || $cartState.loading}
+            disabled={submitAction.loading || $cartState.loading}
           >
-            {validating || $cartState.loading ? 'Checking…' : 'Continue'}
+            {submitAction.loading || $cartState.loading ? 'Checking…' : 'Continue'}
           </button>
         {/snippet}
       </StepActionBar>
     </div>
-  </div>
-  </FlowDecoration>
+  </FlowStepScaffold>
+

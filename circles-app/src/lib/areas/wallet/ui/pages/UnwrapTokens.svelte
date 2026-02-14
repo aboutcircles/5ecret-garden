@@ -1,5 +1,6 @@
 <script lang="ts">
   import { avatarState } from '$lib/shared/state/avatar.svelte';
+  import PopupActionBar from '$lib/shared/ui/shell/PopupActionBar.svelte';
   import { circles } from '$lib/shared/state/circles';
   import { ethers } from 'ethers';
   import BalanceRow from '$lib/areas/wallet/ui/components/BalanceRow.svelte';
@@ -67,9 +68,9 @@
     />
   </div>
 
-  <div class="modal-action">
+  <PopupActionBar>
     <button type="submit" class="btn btn-primary btn-sm" onclick={unwrap}
       >Unwrap</button
     >
-  </div>
+  </PopupActionBar>
 </div>

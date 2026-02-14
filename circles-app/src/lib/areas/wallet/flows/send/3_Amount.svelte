@@ -2,17 +2,18 @@
     import type { SendFlowContext } from '$lib/areas/wallet/flows/send/context';
     import SelectAmount from '$lib/areas/wallet/ui/pages/SelectAmount.svelte';
     import Send from './4_Send.svelte';
-    import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+  import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
+  import { SEND_FLOW_SCAFFOLD_BASE } from './constants';
     import { tick } from 'svelte';
     import { circles as circlesStore } from '$lib/shared/state/circles';
     import { avatarState } from '$lib/shared/state/avatar.svelte';
     import { TransitiveTransferTokenAddress } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
     import { ethers } from 'ethers';
-    import { openStep } from '$lib/shared/flow/runtime';
+    import { openStep, popToOrOpen, useAsyncAction } from '$lib/shared/flow';
     import { CirclesConverter } from '@circles-sdk/utils';
     import {MAX_PATH_STEPS} from "$lib/shared/config/circles";
-    import { requireSelectedAsset } from '$lib/shared/flow/guards';
-    import type { EnterAmountStepProps } from '$lib/shared/flow/contracts';
+    import { requireSelectedAsset } from '$lib/shared/flow';
+    import type { EnterAmountStepProps } from '$lib/shared/flow';
     import { get } from 'svelte/store';
     import { popupControls } from '$lib/shared/state/popup';
     import { openProfilePopup } from '$lib/shared/ui/profile/openProfilePopup';
@@ -20,8 +21,7 @@
     import SelectAsset from './2_Asset.svelte';
     import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-    import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
-    import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
+        import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
     import HelpPopover from '$lib/shared/ui/primitives/HelpPopover.svelte';
     import { SEND_POPUP_TITLE } from './constants';
     import ChangeButton from '$lib/areas/wallet/ui/components/ChangeButton.svelte';
@@ -44,7 +44,67 @@
 
     let showMoreOptions = $state(false);
 
-    let calculatingPath = $state(false); // Indicates pathfinding is in progress
+    const pathfindingAction = useAsyncAction(async () => {
+        const sdk = get(circlesStore);
+        // If not transitive transfer or missing info, skip pathfinding
+        if (
+            context.selectedAsset?.tokenAddress != TransitiveTransferTokenAddress ||
+            !sdk ||
+            !avatarState.avatar ||
+            !context.selectedAddress
+        ) {
+            return;
+        }
+
+        pathfindingFailed = false;
+
+        try {
+            const excludedTokens = await sdk.getDefaultTokenExcludeList(
+                context.selectedAddress
+            );
+
+            const bigNumber = '99999999999999999999999999999999999';
+            const p =
+                avatarState.avatar?.avatarInfo?.version === 1
+                    ? await sdk.v1Pathfinder?.getPath(
+                        avatarState.avatar.address,
+                        context.selectedAddress,
+                        bigNumber
+                    )
+                    : await sdk.v2Pathfinder?.getPath(
+                        avatarState.avatar.address,
+                        context.selectedAddress,
+                        bigNumber,
+                        true,
+                        undefined,
+                        undefined,
+                        excludedTokens
+                    );
+
+            if (!p || !p.transfers?.length) {
+                pathfindingFailed = true;
+                maxAmountCircles = 0;
+                return;
+            }
+
+            if (avatarState.avatar?.avatarInfo?.version === 1) {
+                const attoCircles = CirclesConverter.attoCrcToAttoCircles(
+                    BigInt(p.maxFlow),
+                    BigInt(Date.now() / 1000)
+                );
+                maxAmountCircles =
+                    CirclesConverter.attoCirclesToCircles(attoCircles);
+            } else {
+                maxAmountCircles = parseFloat(
+                    ethers.formatEther(p.maxFlow.toString())
+                );
+            }
+        } catch (e) {
+            pathfindingFailed = true;
+            throw e;
+        }
+    });
+
     let amountError = $state(false);
     let zeroAmountError = $state(false);
     let routeValidationError = $state(false);
@@ -70,7 +130,7 @@
 
     const isRouteReady = $derived.by(() => {
         if (!isAutoRoute) return true;
-        if (calculatingPath || pathfindingFailed) return false;
+        if (pathfindingAction.loading || pathfindingFailed) return false;
         return maxAmountCircles > 0;
     });
 
@@ -83,76 +143,7 @@
     });
 
     async function calculatePath() {
-        const sdk = get(circlesStore);
-        // If not transitive transfer or missing info, skip pathfinding
-        if (
-            context.selectedAsset?.tokenAddress != TransitiveTransferTokenAddress ||
-            !sdk ||
-            !avatarState.avatar ||
-            !context.selectedAddress
-        ) {
-            return;
-        }
-
-        // Start loading
-        calculatingPath = true;
-        pathfindingFailed = false;
-
-        try {
-            const excludedTokens = await sdk.getDefaultTokenExcludeList(
-                context.selectedAddress
-            );
-
-            const bigNumber = '99999999999999999999999999999999999';
-            const p =
-                avatarState.avatar?.avatarInfo?.version === 1
-                    ? await sdk.v1Pathfinder?.getPath(
-                        avatarState.avatar.address,
-                        context.selectedAddress,
-                        bigNumber
-                    )
-                    : await sdk.v2Pathfinder?.getPath(
-                        avatarState.avatar.address,
-                        context.selectedAddress,
-                        bigNumber,
-                        true,
-                        undefined,
-                        undefined,
-                        excludedTokens,
-                        undefined,
-                        context.maxTransfers
-                    );
-
-            if (!p || !p.transfers?.length) {
-                pathfindingFailed = true;
-                return;
-            }
-
-            const nextPath = p;
-
-            maxAmountCircles = parseFloat(
-                ethers.formatEther(nextPath.maxFlow.toString())
-            );
-            if (avatarState.avatar?.avatarInfo?.version === 1) {
-                const attoCircles = CirclesConverter.attoCrcToAttoCircles(BigInt(nextPath.maxFlow), BigInt(Date.now() / 1000));
-                maxAmountCircles = CirclesConverter.attoCirclesToCircles(attoCircles);
-                // maxAmountCircles = crcToTc(new Date(), BigInt(path.maxFlow));
-            }
-
-            // If pathfinding returned maxFlow = 0 or no meaningful transfers, treat as failure
-            if (!nextPath.transfers?.length || maxAmountCircles === 0) {
-                pathfindingFailed = true;
-                return;
-            }
-
-        } catch (err) {
-            console.error('Error fetching path:', err);
-            pathfindingFailed = true;
-            maxAmountCircles = -2;
-        } finally {
-            // End loading
-            calculatingPath = false;
-        }
+        await pathfindingAction.run();
     }
 
     if (!context.dataType) {
@@ -226,24 +217,20 @@
     }
 
     function tryAnotherToken() {
-        openStep({
+        pathfindingAction.reset();
+        popToOrOpen(SelectAsset, {
             title: SEND_POPUP_TITLE,
-            component: SelectAsset,
             props: { context, returnMode: 'back' },
         });
     }
 
     function editRecipient() {
+        pathfindingAction.reset();
         context.selectedAddress = undefined;
-
-        const didPop = popupControls.popTo((entry) => entry.component === ToStep);
-        if (!didPop) {
-            openStep({
-                title: SEND_POPUP_TITLE,
-                component: ToStep,
-                props: { context },
-            });
-        }
+        popToOrOpen(ToStep, {
+            title: SEND_POPUP_TITLE,
+            props: { context },
+        });
     }
 
     function focusRecipientSearchInputAtEnd(attempt = 0): void {
@@ -313,7 +300,7 @@
         const selectedAsset = context.selectedAsset;
         const selectedAddress = context.selectedAddress;
 
-        calculatingPath = false;
+        pathfindingAction.reset();
 
         if (!selectedAsset) {
             maxAmountCircles = -1;
@@ -338,9 +325,14 @@
     });
 </script>
 
-<FlowDecoration>
-    <div class="w-full space-y-4" onkeydown={onStepKeydown} role="group" aria-label="Send amount step">
-    <FlowStepHeader step={2} total={3} title="Amount" labels={['Recipient', 'Amount', 'Review']} />
+<FlowStepScaffold
+  {...SEND_FLOW_SCAFFOLD_BASE}
+  step={2}
+  title="Amount"
+  onkeydown={onStepKeydown}
+  role="group"
+  aria-label="Send amount step"
+>
 
     <button
         type="button"
@@ -397,9 +389,16 @@
       : (maxAmountCircles >= 0 ? maxAmountCircles : context.selectedAsset.circles)}
             asset={context.selectedAsset}
             bind:amount={context.amount}
-            routeLoading={isAutoRoute && calculatingPath}
+            routeLoading={isAutoRoute && pathfindingAction.loading}
             onBackspaceAtEmpty={onAmountBackspaceAtEmpty}
     />
+
+    {#if pathfindingAction.error}
+        <StepAlert
+                variant="error"
+                message={pathfindingAction.error}
+        />
+    {/if}
 
     {#if pathfindingFailed}
         <StepAlert
@@ -493,7 +492,7 @@
                     </div>
                 {/if}
 
-                {#if context.selectedAsset?.tokenAddress === TransitiveTransferTokenAddress && !calculatingPath}
+                {#if context.selectedAsset?.tokenAddress === TransitiveTransferTokenAddress && !pathfindingAction.loading}
                     <div class="space-y-2">
                         <div class="text-sm font-semibold">Advanced routing</div>
                         <div class="flex items-center gap-2 mt-1">
@@ -525,5 +524,4 @@
             Continue
         </button>
     </div>
-    </div>
-</FlowDecoration>
+    </FlowStepScaffold>

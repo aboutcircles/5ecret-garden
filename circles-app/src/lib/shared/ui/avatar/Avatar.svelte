@@ -49,7 +49,8 @@
     if (address == null) return null;
     try {
       return normalizeEvmAddress(String(address)) as Address;
-    } catch {
+    } catch (e) {
+      console.debug('[avatar] failed to normalize address', { address }, e);
       return null;
     }
   });
@@ -107,7 +108,12 @@
     const key = addr.toLowerCase();
     let promise = avatarInfoCache.get(key);
     if (!promise) {
-      promise = $circles.data.getAvatarInfo(addr).catch(() => undefined);
+      promise = $circles.data
+        .getAvatarInfo(addr)
+        .catch((e) => {
+          console.debug('[avatar] failed to load avatar info', { addr }, e);
+          return undefined;
+        });
       avatarInfoCache.set(key, promise);
     }
 

@@ -1,7 +1,7 @@
 <script lang="ts">
-  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
-  import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+  import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
+  import StepActionButtons from '$lib/shared/ui/flow/StepActionButtons.svelte';
+  import { MIGRATE_FLOW_SCAFFOLD_BASE } from './constants';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import type { MigrateToV2Context } from '$lib/areas/wallet/flows/migrateToV2/context';
   import CreateProfile from './2_CreateProfile.svelte';
@@ -9,11 +9,11 @@
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { circles as circlesStore } from '$lib/shared/state/circles';
   import type { AvatarRow } from '@circles-sdk/data';
-  import { openStep } from '$lib/shared/flow/runtime';
+  import { openStep } from '$lib/shared/flow';
   import type { Profile } from '@circles-sdk/profiles';
   import { settings } from '$lib/shared/state/settings.svelte';
   import InvitationPickerStep from '$lib/shared/ui/invitations/InvitationPickerStep.svelte';
-  import { requireAvatar, requireCircles } from '$lib/shared/flow/guards';
+  import { requireAvatar, requireCircles } from '$lib/shared/flow';
   import { get } from 'svelte/store';
 
   interface Props {
@@ -52,16 +52,12 @@
     next();
   }
 </script>
-
-<FlowDecoration>
-  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
-    <FlowStepHeader
-      step={1}
-      total={4}
-      title="Invitation"
-      subtitle="Choose how to start your Circles V2 migration."
-      labels={['Invitation', 'Profile', 'Contacts', 'Migrate']}
-    />
+<FlowStepScaffold
+  {...MIGRATE_FLOW_SCAFFOLD_BASE}
+  step={1}
+  title="Get invited"
+  subtitle="Choose how to start your Circles V2 migration."
+>
 
   {#if !invitations}
     <p class="text-base-content/70 mt-2">Loading invitations...</p>
@@ -77,22 +73,16 @@
     <StepAlert variant="info" message="You have no invitations." className="mt-2" />
     {#if canSelfMigrate}
       <p class="text-base-content/70 mt-2">You can migrate to v2.</p>
-      <StepActionBar className="mt-6">
-        {#snippet primary()}
-          <button
-            type="submit"
-            class="btn btn-primary btn-sm"
-            onclick={() => next()}
-          >
-            Continue
-          </button>
-        {/snippet}
-      </StepActionBar>
+      <StepActionButtons
+        className="mt-6"
+        primaryLabel="Continue"
+        primaryType="submit"
+        onPrimary={next}
+      />
     {:else}
       <p class="text-base-content/70 mt-2">
         You need to find someone who is already on Circles V2 to invite you.
       </p>
     {/if}
   {/if}
-  </div>
-</FlowDecoration>
+</FlowStepScaffold>

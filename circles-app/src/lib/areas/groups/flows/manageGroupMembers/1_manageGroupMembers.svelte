@@ -1,10 +1,11 @@
 <script lang="ts">
-  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-  import FlowStepHeader from '$lib/shared/ui/flow/FlowStepHeader.svelte';
+  import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
+  import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+  import { MANAGE_GROUP_MEMBERS_FLOW_SCAFFOLD_BASE } from './constants';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import SearchAvatar from '$lib/areas/contacts/ui/pages/SearchAvatar.svelte';
   import Invite from '$lib/areas/contacts/ui/pages/Invite.svelte';
-  import { openStep } from '$lib/shared/flow/runtime';
+  import { openStep } from '$lib/shared/flow';
   import type { ManageGroupMembersFlowContext } from './context';
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import Papa from 'papaparse';
@@ -135,15 +136,12 @@
   }
 </script>
 
-<FlowDecoration>
-  <div class="w-full space-y-4" tabindex="-1" data-popup-initial-focus>
-  <FlowStepHeader
-    step={1}
-    total={1}
-    title="Manage members"
-    subtitle="Add or remove members by address list or search."
-    labels={['Manage members']}
-  />
+<FlowStepScaffold
+  {...MANAGE_GROUP_MEMBERS_FLOW_SCAFFOLD_BASE}
+  step={1}
+  title="Manage members"
+  subtitle="Add or remove members by address list or search."
+>
 
   <div class="flex items-center justify-end gap-2 pb-1">
     <div class="badge badge-ghost badge-sm">
@@ -214,5 +212,4 @@
     {ontrust}
     searchType="contact"
   />
-  </div>
-</FlowDecoration>
+  </FlowStepScaffold>

@@ -1,9 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   cartState,
-  upsertLineByIdentity,
-  setLineQuantityByIdentity,
-  removeLineByIdentity,
+  updateLineByIdentity,
   cartApi,
   type Basket,
   type OrderItemPreview,
@@ -52,7 +50,7 @@ describe('identity-based cart mutations', () => {
       return baseBasket({ items });
     });
 
-    await upsertLineByIdentity('SellerCASE', 'SkuCase', 2);
+    await updateLineByIdentity('SellerCASE', 'SkuCase', 2);
     expect(patchSpy).toHaveBeenCalledTimes(1);
   });
 
@@ -77,11 +75,11 @@ describe('identity-based cart mutations', () => {
       return baseBasket({ items });
     });
 
-    await upsertLineByIdentity('0xseller', 'abc', 5);
+    await updateLineByIdentity('0xseller', 'abc', 5);
     expect(patchSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('setLineQuantityByIdentity delegates to remove when quantity <= 0', async () => {
+  it('updateLineByIdentity removes when quantity <= 0', async () => {
     // Seed with one item to remove
     const seeded: OrderItemPreview = {
       '@type': 'OrderItem',
@@ -91,7 +89,6 @@ describe('identity-based cart mutations', () => {
     };
     cartState.update((s) => ({ ...s, basket: baseBasket({ items: [seeded] }) }));
 
-    const removeSpy = vi.spyOn(cartApi, 'removeLineByIdentity');
     const patchSpy = vi.spyOn(cartApi, 'patchBasket').mockImplementation(async (_id, patch) => {
       const items = (patch as any).items as OrderItemPreview[];
       // Remove path should result in empty items
@@ -99,12 +96,11 @@ describe('identity-based cart mutations', () => {
       return baseBasket({ items });
     });
 
-    await setLineQuantityByIdentity('0xseller', 'to-del', 0);
-    expect(removeSpy).toHaveBeenCalledOnce();
+    await updateLineByIdentity('0xseller', 'to-del', 0);
     expect(patchSpy).toHaveBeenCalledOnce();
   });
 
-  it('removeLineByIdentity removes matching line by (seller, sku) case-insensitively', async () => {
+  it('updateLineByIdentity removes matching line by (seller, sku) case-insensitively', async () => {
     const items: OrderItemPreview[] = [
       { '@type': 'OrderItem', orderQuantity: 1, orderedItem: { '@type': 'Product', sku: 'One' }, seller: 'Alice' },
       { '@type': 'OrderItem', orderQuantity: 2, orderedItem: { '@type': 'Product', sku: 'Two' }, seller: 'Bob' },
@@ -119,7 +115,7 @@ describe('identity-based cart mutations', () => {
       return baseBasket({ items: patchedItems });
     });
 
-    await removeLineByIdentity('alice', 'one');
+    await updateLineByIdentity('alice', 'one', 0);
     expect(patchSpy).toHaveBeenCalledTimes(1);
   });
 });
