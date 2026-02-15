@@ -2,19 +2,20 @@
   import { onMount } from 'svelte';
   import { RefreshCw as LRefreshCw } from 'lucide';
 
-  import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
-  import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
-  import { GATEWAY_MANAGE_TRUST_FLOW_SCAFFOLD_BASE } from './constants';
+  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+  import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
+  import AddressComponent from '$lib/shared/ui/primitives/Address.svelte';
   import { derived, writable } from 'svelte/store';
   import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import { circles } from '$lib/shared/state/circles';
   import { openStep } from '$lib/shared/flow';
-  import ManageTrustSearch from '$lib/areas/settings/flows/gateway/SearchTrustReceiver.svelte';
   import ConfirmGatewayUntrust from '$lib/areas/settings/flows/gateway/ConfirmGatewayUntrust.svelte';
   import GatewayTrustedAccountsList from '$lib/areas/settings/ui/components/GatewayTrustedAccountsList.svelte';
   import { fetchActiveTrustRowsByGateway } from '$lib/shared/data/circles/paymentGateways';
   import { isAddress } from '$lib/shared/utils/tx';
+  import { openAddTrustFlow } from '$lib/areas/trust/flows/addTrust/openAddTrustFlow';
+  import type { Address } from '@circles-sdk/utils';
 
   import type { TrustRow } from '$lib/areas/settings/model/gatewayTypes';
 
@@ -72,15 +73,16 @@
 
   function openAddTrust() {
     if (!gatewayValid) return;
-    openStep({
-      title: 'Add trusted account',
-      component: ManageTrustSearch,
-      props: {
-        gateway,
-        onTrusted: async () => {
-          await loadTrusts();
-        }
-      }
+    openAddTrustFlow({
+      context: {
+        actorType: 'gateway',
+        actorAddress: gateway as Address,
+        selectedTrustees: [],
+        gatewayExpiry: (1n << 96n) - 1n,
+      },
+      onCompleted: async () => {
+        await loadTrusts();
+      },
     });
   }
 
@@ -101,20 +103,22 @@
   }
 </script>
 
-<FlowStepScaffold
-  {...GATEWAY_MANAGE_TRUST_FLOW_SCAFFOLD_BASE}
-  step={1}
-  title="Manage trust"
-  subtitle="View, add, and remove trusted accounts for this gateway."
->
+<FlowDecoration>
+  <div class="w-full space-y-6" tabindex="-1" data-popup-initial-focus>
+    <div class="flex flex-col items-center w-full sm:w-[90%] lg:w-3/5 mx-auto gap-y-3">
+      <Avatar address={gateway} view="vertical" clickable={false} />
 
-  <div class="space-y-4">
-    <div class="flex flex-col gap-1">
-      <Avatar address={gateway} view="horizontal" clickable={false} />
-      <div class="font-mono text-xs text-base-content/70 break-all">
-        {gateway}
+      <div class="w-full flex justify-center">
+        <AddressComponent address={gateway} />
+      </div>
+
+      <div class="text-sm font-medium leading-tight text-base-content/90">Manage trust</div>
+      <div class="text-xs text-base-content/60 text-center">
+        View, add, and remove trusted accounts for this gateway.
       </div>
     </div>
+
+    <div class="space-y-4">
 
     {#if !gatewayValid}
       <StepAlert
@@ -152,5 +156,6 @@
         loading={loadingTrusts}
       />
     </div>
+    </div>
   </div>
-  </FlowStepScaffold>
+</FlowDecoration>

@@ -8,7 +8,7 @@
     total: number;
     title: string;
     subtitle?: string;
-    labels?: string[];
+    labels?: readonly string[];
     size?: 'md' | 'lg' | 'xl';
     className?: string;
     children?: Snippet;

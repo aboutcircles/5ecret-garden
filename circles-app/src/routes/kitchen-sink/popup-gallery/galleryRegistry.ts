@@ -14,8 +14,6 @@ import MigrateRun from '$lib/areas/wallet/flows/migrateToV2/4_Migrate.svelte';
 import CreateGatewayProfile from '$lib/areas/settings/flows/gateway/CreateGatewayProfile.svelte';
 import ConfirmCreateGateway from '$lib/areas/settings/flows/gateway/ConfirmCreateGateway.svelte';
 import ManageTrust from '$lib/areas/settings/flows/gateway/ManageTrust.svelte';
-import SearchTrustReceiver from '$lib/areas/settings/flows/gateway/SearchTrustReceiver.svelte';
-import ConfirmGatewayTrust from '$lib/areas/settings/flows/gateway/ConfirmGatewayTrust.svelte';
 import ConfirmGatewayUntrust from '$lib/areas/settings/flows/gateway/ConfirmGatewayUntrust.svelte';
 
 import AddContactSearch from '$lib/areas/contacts/flows/addContact/1_Search.svelte';
@@ -26,7 +24,6 @@ import CreateGroupSettings from '$lib/areas/groups/flows/createGroup/2_Settings.
 import CreateGroupReview from '$lib/areas/groups/flows/createGroup/3_Review.svelte';
 import CreateGroupRun from '$lib/areas/groups/flows/createGroup/4_Create.svelte';
 
-import ManageGroupMembers from '$lib/areas/groups/flows/manageGroupMembers/1_manageGroupMembers.svelte';
 
 import CheckoutCart from '$lib/areas/market/flows/checkout/CartPanel.svelte';
 import CheckoutForms from '$lib/areas/market/flows/checkout/CheckoutForms.svelte';
@@ -57,7 +54,6 @@ import MigrateTokens from '$lib/areas/wallet/ui/pages/MigrateTokens.svelte';
 import RedeemGroup from '$lib/areas/groups/ui/pages/RedeemGroup.svelte';
 
 import ProfilePopup from '$lib/areas/profile/ui/pages/ProfilePopup.svelte';
-import Trust from '$lib/areas/contacts/ui/pages/Trust.svelte';
 import Untrust from '$lib/areas/contacts/ui/pages/Untrust.svelte';
 import Invite from '$lib/areas/contacts/ui/pages/Invite.svelte';
 
@@ -237,8 +233,6 @@ export const popupGalleryEntries: GalleryEntry[] = [
     purpose: 'Manage trust receivers for a gateway.',
     steps: [
       { id: 'gw-trust-1', title: 'ManageTrust.svelte', purpose: 'List trusted accounts', component: ManageTrust, propsFactory: () => ({ gateway: mockAddressA }) },
-      { id: 'gw-trust-2', title: 'SearchTrustReceiver.svelte', purpose: 'Search receiver', component: SearchTrustReceiver, propsFactory: () => ({ gateway: mockAddressA, onTrusted: noop }) },
-      { id: 'gw-trust-3', title: 'ConfirmGatewayTrust.svelte', purpose: 'Confirm trust', component: ConfirmGatewayTrust, propsFactory: () => ({ gateway: mockAddressA, trustReceiver: mockAddressB, onTrusted: noop }) },
       { id: 'gw-trust-4', title: 'ConfirmGatewayUntrust.svelte', purpose: 'Confirm untrust', component: ConfirmGatewayUntrust, propsFactory: () => ({ gateway: mockAddressA, trustReceiver: mockAddressC, onDone: noop }) },
     ],
   },
@@ -264,16 +258,6 @@ export const popupGalleryEntries: GalleryEntry[] = [
       { id: 'group-create-2', title: '2_Settings.svelte', purpose: 'Group settings', component: CreateGroupSettings, propsFactory: () => ({ context: mockCreateGroupContext(), setGroup: noop }) },
       { id: 'group-create-3', title: '3_Review.svelte', purpose: 'Review settings', component: CreateGroupReview, propsFactory: () => ({ context: mockCreateGroupContext(), setGroup: noop }) },
       { id: 'group-create-4', title: '4_Create.svelte', purpose: 'Create on-chain', component: CreateGroupRun, propsFactory: () => ({ context: mockCreateGroupContext(), setGroup: noop }) },
-    ],
-  },
-  {
-    id: 'flow-manage-group-members',
-    kind: 'flow',
-    label: 'Groups manage-members flow',
-    domain: 'Groups',
-    purpose: 'Manage member list via search/CSV and trust actions.',
-    steps: [
-      { id: 'group-members-1', title: '1_manageGroupMembers.svelte', purpose: 'Member management', component: ManageGroupMembers, inlineDefault: true },
     ],
   },
   {
@@ -398,14 +382,6 @@ export const popupGalleryEntries: GalleryEntry[] = [
     domain: 'Profile',
     purpose: 'Canonical profile popup wrapper.',
     step: { id: 'single-profile-popup', title: 'Profile popup', purpose: 'Show profile details', component: ProfilePopup, propsFactory: () => ({ address: mockAddressA, trustVersion: 2 }) },
-  },
-  {
-    id: 'standalone-contacts-trust',
-    kind: 'standalone',
-    label: 'Trust.svelte',
-    domain: 'Contacts',
-    purpose: 'Trust confirmation popup.',
-    step: { id: 'single-trust', title: 'Trust', purpose: 'Trust action', component: Trust, propsFactory: () => ({ address: mockAddressA }) },
   },
   {
     id: 'standalone-contacts-untrust',
@@ -583,7 +559,6 @@ const entrypointsById: Record<string, string[]> = {
   'flow-gateway-manage-trust': ['src/lib/areas/settings/ui/components/GatewayRow.svelte#openManageTrust'],
   'flow-add-contact': ['src/routes/contacts/+page.svelte#openAddContact'],
   'flow-create-group': ['src/routes/groups/+page.svelte#openCreateGroup'],
-  'flow-manage-group-members': ['src/routes/contacts/+page.svelte#openManageGroupMembers'],
   'flow-checkout': ['src/routes/DefaultHeader.svelte#openCartPanel'],
   'flow-offer': [
     'src/routes/settings/+layout.svelte#openOfferStep1',
@@ -600,7 +575,6 @@ const entrypointsById: Record<string, string[]> = {
   'standalone-wallet-migrate-token': ['src/lib/areas/wallet/ui/components/BalanceRow.svelte#actions'],
   'standalone-groups-redeem': ['src/lib/areas/wallet/ui/components/BalanceRow.svelte#actions'],
   'standalone-profile-popup': ['src/lib/shared/ui/avatar/Avatar.svelte#openProfilePopup'],
-  'standalone-contacts-trust': ['src/lib/areas/contacts/flows/addContact/1_Search.svelte#openTrust'],
   'standalone-contacts-untrust': ['src/lib/areas/contacts/flows/addContact/2_YouAlreadyTrust.svelte#openUntrust'],
   'standalone-contacts-invite': ['src/lib/areas/contacts/flows/addContact/1_Search.svelte#openInvite'],
   'standalone-settings-profile': ['src/lib/shared/ui/shell/PageScaffold.svelte#openSettingProfile'],

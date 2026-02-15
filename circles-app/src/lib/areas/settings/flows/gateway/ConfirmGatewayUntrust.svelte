@@ -7,12 +7,10 @@
   import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
-  import { openStep, popToOrOpen } from '$lib/shared/flow';
   import { wallet } from '$lib/shared/state/wallet.svelte';
   import { runTask } from '$lib/shared/utils/tasks';
   import { isAddress } from '$lib/shared/utils/tx';
   import { popupControls } from '$lib/shared/state/popup';
-  import SearchTrustReceiver from './SearchTrustReceiver.svelte';
 
   interface Props {
     gateway: string;
@@ -61,10 +59,7 @@
   }
 
   function changeAccount() {
-    popToOrOpen(SearchTrustReceiver, {
-      title: 'Search account',
-      props: { gateway, onTrusted: onDone },
-    });
+    popupControls.back();
   }
 </script>
 

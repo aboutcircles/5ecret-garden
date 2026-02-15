@@ -4,7 +4,7 @@
     total: number;
     title: string;
     subtitle?: string;
-    labels?: string[];
+    labels?: readonly string[];
   }
 
   let { step, total, title, subtitle, labels = [] }: Props = $props();
