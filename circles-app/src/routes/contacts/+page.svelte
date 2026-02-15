@@ -9,9 +9,9 @@
     import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
     import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
     import {Filter as LFilter, Download as LDownload, Plus as LPlus, Star} from 'lucide';
-    import {openFlowPopup, popupControls} from '$lib/shared/state/popup';
-    import ManageGroupMembers from '$lib/areas/groups/flows/manageGroupMembers/1_manageGroupMembers.svelte';
+    import { popupControls } from '$lib/shared/state/popup';
     import {avatarState} from '$lib/shared/state/avatar.svelte';
+    import { openAddTrustFlow } from '$lib/areas/trust/flows/addTrust/openAddTrustFlow';
     import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/shared/ui/shell/actions';
@@ -101,10 +101,16 @@
     }
 
     function openAddContact() {
-        openFlowPopup({
-            title: avatarState.isGroup ? 'Add Member' : 'Add Contact',
-            component: ManageGroupMembers,
-            props: {}
+        if (!avatarState.avatar) {
+            throw new Error('Avatar store not available');
+        }
+
+        openAddTrustFlow({
+            context: {
+                actorType: avatarState.isGroup ? 'group' : 'avatar',
+                actorAddress: avatarState.avatar.address,
+                selectedTrustees: [],
+            },
         });
     }
 

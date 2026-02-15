@@ -3,12 +3,13 @@
     import SearchAvatar from '$lib/areas/contacts/ui/pages/SearchAvatar.svelte';
     import { ADD_CONTACT_FLOW_SCAFFOLD_BASE } from './constants';
   import Invite from '$lib/areas/contacts/ui/pages/Invite.svelte';
-  import Trust from '$lib/areas/contacts/ui/pages/Trust.svelte';
   import { contacts } from '$lib/shared/state/contacts';
   import { openStep } from '$lib/shared/flow';
   import YouAlreadyTrust from './2_YouAlreadyTrust.svelte';
   import type { AddContactFlowContext } from './context';
   import type { Address } from '@circles-sdk/utils';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
+  import { openAddTrustFlow } from '$lib/areas/trust/flows/addTrust/openAddTrustFlow';
 
   let context: AddContactFlowContext = $state({
     selectedAddress: '0x0',
@@ -44,11 +45,15 @@
         },
       });
     } else {
-      openStep({
-        title: 'Trust',
-        component: Trust,
-        props: {
-          address: avatar,
+      if (!avatarState.avatar) {
+        throw new Error('Avatar store not available');
+      }
+
+      openAddTrustFlow({
+        context: {
+          actorType: 'avatar',
+          actorAddress: avatarState.avatar.address,
+          selectedTrustees: [avatar],
         },
       });
     }

@@ -12,7 +12,7 @@
         type TrustRelationRow,
     } from '@circles-sdk/data';
     import Untrust from '$lib/areas/contacts/ui/pages/Untrust.svelte';
-    import Trust from '$lib/areas/contacts/ui/pages/Trust.svelte';
+    import { openAddTrustFlow } from '$lib/areas/trust/flows/addTrust/openAddTrustFlow';
     import { openSendFlowPopup } from '$lib/areas/wallet/flows/send/openSendFlowPopup';
     import {getProfile} from '$lib/shared/utils/profile';
     import {formatTrustRelation, getTypeString} from '$lib/shared/utils/helpers';
@@ -718,13 +718,16 @@
             <button
                     class="btn btn-primary btn-sm"
                     onclick={() => {
-                    popupControls.open({
-                        title: !avatarState.isGroup ? "Trust back" : "Add member",
-                        kind: 'confirm',
-                        dismiss: 'explicit',
-                        component: Trust,
-                        props: {
-                            address: address,
+                    if (!address) return;
+                    if (!avatarState.avatar) {
+                        throw new Error('Avatar store not available');
+                    }
+
+                    openAddTrustFlow({
+                        context: {
+                            actorType: avatarState.isGroup ? 'group' : 'avatar',
+                            actorAddress: avatarState.avatar.address,
+                            selectedTrustees: [address],
                         },
                     });
                 }}
@@ -735,13 +738,16 @@
             <button
                     class="btn btn-primary btn-sm"
                     onclick={() => {
-                    popupControls.open({
-                        title: !avatarState.isGroup ? "Trust" : "Add as member",
-                        kind: 'confirm',
-                        dismiss: 'explicit',
-                        component: Trust,
-                        props: {
-                            address: address,
+                    if (!address) return;
+                    if (!avatarState.avatar) {
+                        throw new Error('Avatar store not available');
+                    }
+
+                    openAddTrustFlow({
+                        context: {
+                            actorType: avatarState.isGroup ? 'group' : 'avatar',
+                            actorAddress: avatarState.avatar.address,
+                            selectedTrustees: [address],
                         },
                     });
                 }}

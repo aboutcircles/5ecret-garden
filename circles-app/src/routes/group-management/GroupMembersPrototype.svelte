@@ -13,7 +13,7 @@
   import { createSearchablePaginatedList } from '$lib/shared/state/searchablePaginatedList';
   import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
   import ConfirmGroupTrustPrototype from './ConfirmGroupTrustPrototype.svelte';
-  import AddGroupMemberPrototype from './AddGroupMemberPrototype.svelte';
+  import { openAddTrustFlow } from '$lib/areas/trust/flows/addTrust/openAddTrustFlow';
   import { createTrustDataSource } from '$lib/shared/data/circles/trustDataSource';
   import { createAvatarDataSource } from '$lib/shared/data/circles/avatarDataSource';
 
@@ -145,6 +145,11 @@
     selectedSet = next;
   }
 
+  function onToggleSelectedFromCheckbox(address: Address, event: Event) {
+    const el = event.currentTarget as HTMLInputElement | null;
+    toggleSelected(address, Boolean(el?.checked));
+  }
+
   function focusSearchInput() {
     searchInputEl?.focus();
   }
@@ -189,14 +194,14 @@
   }
 
   function openAddPopup() {
-    popupControls.open({
-      title: `Add trusted avatar for ${groupDisplayName}`,
-      component: AddGroupMemberPrototype,
-      props: {
-        group,
-        onSelected: async (_addresses: Address[]) => {
-          await loadTrusted();
-        },
+    openAddTrustFlow({
+      context: {
+        actorType: 'group',
+        actorAddress: group,
+        selectedTrustees: [],
+      },
+      onCompleted: async () => {
+        await loadTrusted();
       },
     });
   }
@@ -274,7 +279,7 @@
                   type="checkbox"
                   class="checkbox checkbox-sm"
                   checked={selectedSet.has(address)}
-                  onchange={(e) => toggleSelected(address, (e.currentTarget as HTMLInputElement).checked)}
+                  onchange={(e) => onToggleSelectedFromCheckbox(address, e)}
                 />
               {/snippet}
             </RowFrame>

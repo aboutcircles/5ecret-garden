@@ -8,9 +8,7 @@
 
 ### Manage trust chain
 1. `ManageTrust.svelte` — list trusted accounts and choose add/remove actions.
-2. `SearchTrustReceiver.svelte` — search account to trust.
-3. `ConfirmGatewayTrust.svelte` — confirm trust transaction.
-4. `ConfirmGatewayUntrust.svelte` — confirm trust removal transaction.
+2. `ConfirmGatewayUntrust.svelte` — confirm trust removal transaction.
 
 ## Shared context + source of truth
 - Gateway creation uses `CreateGatewayFlowContext` (`./context.ts`) with write-through context across create/confirm steps.

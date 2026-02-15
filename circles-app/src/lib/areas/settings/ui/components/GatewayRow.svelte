@@ -19,7 +19,7 @@
   function openManageTrust() {
     if (!item?.gateway) return;
     openStep({
-      title: 'Manage trust',
+      title: 'Payment gateway',
       component: ManageTrust,
       props: { gateway: item.gateway }
     });
