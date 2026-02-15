@@ -196,8 +196,8 @@
       </li>
       {#if dev}
         <li><a class="link link-hover" href="/kitchen-sink">Kitchen sink</a></li>
-        <li><a class="link link-hover" href="/group-management">Group management (prototype)</a></li>
       {/if}
     </ul>
   </details>
 </div>
+

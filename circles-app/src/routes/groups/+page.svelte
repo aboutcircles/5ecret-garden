@@ -5,6 +5,7 @@
     import {createCMGroups} from '$lib/areas/groups/state';
     import type {EventRow} from '@circles-sdk/data';
     import GroupRowView from './GroupRowView.svelte';
+    import OwnedGroupRowView from './OwnedGroupRowView.svelte';
     import {avatarState} from '$lib/shared/state/avatar.svelte';
     import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
     import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
@@ -146,10 +147,7 @@
     });
 
     $effect(() => {
-        const availableTabs: TabId[] = [];
-        if (hasOwnedGroups) {
-            availableTabs.push('yours');
-        }
+        const availableTabs: TabId[] = ['yours'];
         if (hasMemberships) {
             availableTabs.push('memberships');
         }
@@ -202,11 +200,11 @@
               usePagePadding={true}
               headerTopGapClass="mt-4 md:mt-6"
               collapsedTopGapClass="mt-3 md:mt-4">
-    {#snippet title()}
-        <h1 class="h2">Groups</h1>
+            {#snippet title()}
+        <h1 class="h2">My groups</h1>
     {/snippet}
     {#snippet meta()}
-        and Communities
+        Groups and communities
     {/snippet}
     {#snippet headerActions()}
         <ActionButtonBar {actions}/>
@@ -222,10 +220,8 @@
 
     <div class="flex flex-col items-center rounded-md px-3 py-4 md:px-4 md:py-5 gap-y-3">
         <div class="w-full">
-            <Tabs bind:selected={selectedTab} variant="boxed" size="sm">
-                {#if hasOwnedGroups}
-                    <Tab id="yours" title="My groups" />
-                {/if}
+            <Tabs bind:selected={selectedTab} variant="boxed" size="sm" tabOrder={TAB_IDS as unknown as string[]}>
+                <Tab id="yours" title="My groups" />
                 {#if hasMemberships}
                     <Tab id="memberships" title="Memberships" />
                 {/if}
@@ -244,8 +240,44 @@
                     emptyText="No groups found."
                     let:items
                 >
+                    {#snippet empty()}
+                        <div class="rounded-xl border border-dashed border-base-300 bg-base-200/40 p-4 space-y-3">
+                            <div>
+                                <p class="text-sm font-semibold text-base-content">No groups yet</p>
+                                <p class="text-sm text-base-content/70">
+                                    Create a group to start coordinating with others, or explore existing groups.
+                                </p>
+                            </div>
+                            <div class="flex flex-wrap gap-4 text-sm">
+                                <a
+                                    href="/groups"
+                                    class="link link-primary"
+                                    onclick={(event) => {
+                                        event.preventDefault();
+                                        selectedTab = 'all';
+                                    }}
+                                >
+                                    Browse all groups
+                                </a>
+                                <a
+                                    href="/groups#create"
+                                    class="link link-primary"
+                                    class:opacity-50={!canCreateGroup}
+                                    class:pointer-events-none={!canCreateGroup}
+                                    aria-disabled={!canCreateGroup}
+                                    onclick={(event) => {
+                                        event.preventDefault();
+                                        if (!canCreateGroup) return;
+                                        void openCreateGroup();
+                                    }}
+                                >
+                                    Create a group
+                                </a>
+                            </div>
+                        </div>
+                    {/snippet}
                     {#each items as item (item.group)}
-                        <GroupRowView {item} />
+                        <OwnedGroupRowView item={item as GroupRow} />
                     {/each}
                 </GroupTabPanel>
             {:else if selectedTab === 'memberships'}
@@ -259,7 +291,7 @@
                     let:items
                 >
                     {#each items as item (item.group)}
-                        <GroupRowView {item} />
+                        <GroupRowView item={item as GroupRow} />
                     {/each}
                 </GroupTabPanel>
             {:else}
@@ -270,8 +302,8 @@
                             searchPlaceholder="Search by group address"
                             inputDataAttribute="data-groups-search-input"
                             onInputKeydown={onAllGroupsSearchInputKeydown}
-                            isEmpty={$groups.data.length === 0}
-                            isNoMatches={$groups.data.length > 0 && $filteredAllGroupsStore.data.length === 0}
+                            isEmpty={$groups?.data.length === 0}
+                            isNoMatches={$groups?.data.length > 0 && $filteredAllGroupsStore.data.length === 0}
                             emptyLabel="No groups found"
                             noMatchesLabel="No matching groups"
                             wrapInListContainer={false}

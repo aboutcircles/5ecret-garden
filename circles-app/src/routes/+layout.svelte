@@ -199,7 +199,7 @@
     if (lastAvatarAddress && currentAddress && lastAvatarAddress !== currentAddress) {
       void (async () => {
         const [{ PersistentAuthContext }, { clearCart }] = await Promise.all([
-          import('$lib/shared/data/market/marketClientProxy'),
+          import('$lib/shared/integrations/market'),
           import('$lib/areas/market/cart/store'),
         ]);
         new PersistentAuthContext().clear();

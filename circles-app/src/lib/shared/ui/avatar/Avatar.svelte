@@ -47,6 +47,7 @@
 
   const normalizedAddress = $derived.by((): Address | null => {
     if (address == null) return null;
+    if (typeof address === 'string' && address.trim().length === 0) return null;
     try {
       return normalizeEvmAddress(String(address)) as Address;
     } catch (e) {

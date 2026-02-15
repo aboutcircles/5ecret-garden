@@ -193,6 +193,8 @@ export async function addToCart(product: AggregatedCatalogItem, buyer: string | 
     throw new Error('Buyer address is required to add to basket');
   }
 
+  await ensureBasketId(normalizeAddr(buyer));
+
   const seller = normalizeAddr(String((product as { seller?: unknown })?.seller ?? ''));
   const sku = normalizeSku(product.product?.sku);
   if (!seller || !sku) {
@@ -200,7 +202,6 @@ export async function addToCart(product: AggregatedCatalogItem, buyer: string | 
   }
 
   await withBasketItems(async (items) => {
-    await ensureBasketId(normalizeAddr(buyer));
     const img = pickFirstProductImageUrl(product.product) ?? undefined;
     const idx = items.findIndex((x) => x.seller === seller && x.sku === sku);
 

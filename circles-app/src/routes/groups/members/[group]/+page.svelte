@@ -7,11 +7,10 @@
   import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
   import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
   import type { Action } from '$lib/shared/ui/shell/actions';
-  import { getProfileDisplayName } from '../profileDisplayName';
-  import GroupMembersPrototype from '../GroupMembersPrototype.svelte';
+  import { getProfileDisplayName } from '$lib/areas/groups/ui/utils/profileDisplayName';
+  import GroupMembersManager from '$lib/areas/groups/ui/components/GroupMembersManager.svelte';
 
   const group = $derived(($page.params.group ?? '').toLowerCase() as Address | '');
-  const ownerOverride = $derived(($page.url.searchParams.get('owner') ?? '').trim().toLowerCase());
   const shortAddr = (a?: string) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : '');
   let groupName: string = $state('');
 
@@ -50,8 +49,7 @@
   });
 
   function backToOverview() {
-    const base = '/group-management';
-    goto(ownerOverride ? `${base}?owner=${ownerOverride}` : base);
+    goto('/groups');
   }
 
   const actions: Action[] = $derived([
@@ -111,7 +109,7 @@
 
   {#if group}
     <section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
-      <GroupMembersPrototype group={group} />
+      <GroupMembersManager group={group} />
     </section>
   {:else}
     <section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">

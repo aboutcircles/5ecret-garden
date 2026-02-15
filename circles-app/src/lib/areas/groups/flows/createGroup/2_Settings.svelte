@@ -5,7 +5,7 @@
     import Tooltip from '$lib/shared/ui/primitives/Tooltip.svelte';
     import { ethers } from 'ethers';
     import { openStep } from '$lib/shared/flow';
-    import CreateStep from './4_Create.svelte';
+    import ReviewStep from './4_Create.svelte';
     import { wallet } from '$lib/shared/state/wallet.svelte';
     import {
         createGroupContext,
@@ -100,8 +100,8 @@
         if (!ready) { return; }
 
         openStep({
-            title: 'Review and confirm',
-            component: CreateStep,
+            title: 'Review',
+            component: ReviewStep,
             props: { context: ctx, setGroup },
             onClose: () => {
                 resetCreateGroupContext();

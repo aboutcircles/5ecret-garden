@@ -40,7 +40,7 @@
 
   function openManageGroups() {
     if (!ownerAddress) return;
-    goto(`/group-management?owner=${ownerAddress}`);
+    goto('/groups');
   }
 </script>
 
@@ -62,7 +62,7 @@
       {#if ownerGroupsLoading}
         <button class="btn btn-sm btn-ghost" disabled>Checking groups…</button>
       {:else if ownerHasGroups}
-        <button class="btn btn-sm btn-ghost" onclick={openManageGroups}>Manage groups</button>
+        <button class="btn btn-sm btn-ghost" onclick={openManageGroups}>My groups</button>
       {/if}
     {/if}
   {/snippet}
