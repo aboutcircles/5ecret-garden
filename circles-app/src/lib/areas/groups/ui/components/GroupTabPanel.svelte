@@ -18,7 +18,9 @@
 {:else if error}
     <div class="text-sm text-error">{error}</div>
 {:else if items.length === 0}
-    <div class="text-sm opacity-70">{emptyText}</div>
+    <slot name="empty">
+        <div class="text-sm opacity-70">{emptyText}</div>
+    </slot>
 {:else}
     <div class="flex flex-col">
         <slot {items} />

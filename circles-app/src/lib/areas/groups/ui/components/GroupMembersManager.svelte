@@ -12,10 +12,10 @@
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import { createSearchablePaginatedList } from '$lib/shared/state/searchablePaginatedList';
   import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
-  import ConfirmGroupTrustPrototype from './ConfirmGroupTrustPrototype.svelte';
   import { openAddTrustFlow } from '$lib/areas/trust/flows/addTrust/openAddTrustFlow';
   import { createTrustDataSource } from '$lib/shared/data/circles/trustDataSource';
   import { createAvatarDataSource } from '$lib/shared/data/circles/avatarDataSource';
+  import GroupTrustConfirmDialog from './GroupTrustConfirmDialog.svelte';
 
   interface Props {
     group: Address;
@@ -182,7 +182,7 @@
     const displayName = await getDisplayName(address);
     popupControls.open({
       title: `Trust ${displayName}`,
-      component: ConfirmGroupTrustPrototype,
+      component: GroupTrustConfirmDialog,
       props: {
         group,
         address,
@@ -223,12 +223,15 @@
 
 <div class="space-y-3">
   <div class="flex items-center justify-between">
-    <div class="text-sm opacity-75">Trusted avatars</div>
+    <div>
+      <div class="text-sm font-semibold">{groupDisplayName} members</div>
+      <div class="text-xs opacity-70">Manage trusted avatars for this group.</div>
+    </div>
     <div class="flex items-center gap-2">
       {#if selectedCount > 0}
-      <ActionButton action={removeSelected}>
-        Remove {selectedCount} member{selectedCount === 1 ? '' : 's'}
-      </ActionButton>
+        <ActionButton action={removeSelected}>
+          Remove {selectedCount} member{selectedCount === 1 ? '' : 's'}
+        </ActionButton>
       {/if}
       <button class="btn btn-sm btn-primary" onclick={openAddPopup}>
         Add
@@ -268,19 +271,31 @@
             <RowFrame clickable={false} dense={true} noLeading={true}>
               <div class="min-w-0">
                 <Avatar
-                  {address}
+                  address={address}
                   view="horizontal"
                   clickable={true}
                   bottomInfo={`${avatarTypeToReadable(trustedAvatarTypes[address.toLowerCase()])} • ${address}`}
                 />
               </div>
               {#snippet trailing()}
-                <input
-                  type="checkbox"
-                  class="checkbox checkbox-sm"
-                  checked={selectedSet.has(address)}
-                  onchange={(e) => onToggleSelectedFromCheckbox(address, e)}
-                />
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    class="btn btn-ghost btn-xs"
+                    onclick={(event) => {
+                      event.stopPropagation();
+                      void openTrust(address);
+                    }}
+                  >
+                    Trust
+                  </button>
+                  <input
+                    type="checkbox"
+                    class="checkbox checkbox-sm"
+                    checked={selectedSet.has(address)}
+                    onchange={(e) => onToggleSelectedFromCheckbox(address, e)}
+                  />
+                </div>
               {/snippet}
             </RowFrame>
           </div>
@@ -289,3 +304,4 @@
     </ListShell>
   </div>
 </div>
+

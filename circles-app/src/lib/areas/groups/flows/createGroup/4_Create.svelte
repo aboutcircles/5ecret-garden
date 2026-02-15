@@ -153,9 +153,9 @@
 
 <FlowStepScaffold
   {...CREATE_GROUP_FLOW_SCAFFOLD_BASE}
-  step={4}
-  title="Create"
-  subtitle="Confirm and create the group on-chain."
+  step={3}
+  title="Review"
+  subtitle="Confirm details and create the group on-chain."
 >
 
     <p class="text-sm text-base-content/70 mt-1">We’ll write your profile and deploy the group as a task.</p>

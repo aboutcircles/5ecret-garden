@@ -21,7 +21,7 @@ import AddContactAlreadyTrust from '$lib/areas/contacts/flows/addContact/2_YouAl
 
 import CreateGroupStart from '$lib/areas/groups/flows/createGroup/1_CreateGroup.svelte';
 import CreateGroupSettings from '$lib/areas/groups/flows/createGroup/2_Settings.svelte';
-import CreateGroupReview from '$lib/areas/groups/flows/createGroup/3_Review.svelte';
+import CreateGroupReview from '$lib/areas/groups/flows/createGroup/4_Create.svelte';
 import CreateGroupRun from '$lib/areas/groups/flows/createGroup/4_Create.svelte';
 
 
@@ -71,9 +71,6 @@ import CloseConfirmStep from '$lib/shared/ui/shell/CloseConfirmStep.svelte';
 import ErrorPopup from '$lib/shared/ui/feedback/Error.svelte';
 import EventHistoryDayEventsPopup from '$lib/shared/ui/event-history/EventHistoryDayEventsPopup.svelte';
 
-import GroupSettingsPrototype from '../../group-management/GroupSettingsPrototype.svelte';
-import AddGroupMemberPrototype from '../../group-management/AddGroupMemberPrototype.svelte';
-import ConfirmGroupTrustPrototype from '../../group-management/ConfirmGroupTrustPrototype.svelte';
 import PopupDemoCard from '../state-feedback/PopupDemoCard.svelte';
 
 import EventHistoryDemoRow from './EventHistoryDemoRow.svelte';
@@ -513,30 +510,6 @@ export const popupGalleryEntries: GalleryEntry[] = [
     },
   },
   {
-    id: 'standalone-group-settings-prototype',
-    kind: 'standalone',
-    label: 'GroupSettingsPrototype.svelte',
-    domain: 'Prototype',
-    purpose: 'Prototype group settings popup.',
-    step: { id: 'single-group-settings-prototype', title: 'Group settings prototype', purpose: 'Prototype settings surface', component: GroupSettingsPrototype, propsFactory: () => ({ group: mockAddressD }) },
-  },
-  {
-    id: 'standalone-add-group-member-prototype',
-    kind: 'standalone',
-    label: 'AddGroupMemberPrototype.svelte',
-    domain: 'Prototype',
-    purpose: 'Prototype add members popup.',
-    step: { id: 'single-add-group-member-prototype', title: 'Add group member prototype', purpose: 'Prototype add members surface', component: AddGroupMemberPrototype, propsFactory: () => ({ group: mockAddressD, onSelected: noopAsync }) },
-  },
-  {
-    id: 'standalone-confirm-group-trust-prototype',
-    kind: 'standalone',
-    label: 'ConfirmGroupTrustPrototype.svelte',
-    domain: 'Prototype',
-    purpose: 'Prototype group trust confirm popup.',
-    step: { id: 'single-confirm-group-trust-prototype', title: 'Confirm group trust prototype', purpose: 'Prototype trust confirmation', component: ConfirmGroupTrustPrototype, propsFactory: () => ({ group: mockAddressD, address: mockAddressC, onTrusted: noopAsync }) },
-  },
-  {
     id: 'standalone-popup-demo-card',
     kind: 'standalone',
     label: 'PopupDemoCard.svelte',
@@ -571,6 +544,33 @@ const entrypointsById: Record<string, string[]> = {
   'standalone-wallet-onboarding-import': ['src/lib/areas/wallet/ui/onboarding/SelectWallet.svelte#openImportCircles'],
   'standalone-wallet-balances': ['src/routes/dashboard/+page.svelte#openBalances'],
   'standalone-wallet-wrap': ['src/lib/areas/wallet/ui/components/BalanceRow.svelte#actions'],
+  'standalone-wallet-unwrap': ['src/lib/areas/wallet/ui/components/BalanceRow.svelte#actions'],
+  'standalone-wallet-migrate-token': ['src/lib/areas/wallet/ui/components/BalanceRow.svelte#actions'],
+  'standalone-groups-redeem': ['src/lib/areas/wallet/ui/components/BalanceRow.svelte#actions'],
+  'standalone-profile-popup': ['src/lib/shared/ui/avatar/Avatar.svelte#openProfilePopup'],
+  'standalone-contacts-untrust': ['src/lib/areas/contacts/flows/addContact/2_YouAlreadyTrust.svelte#openUntrust'],
+  'standalone-contacts-invite': ['src/lib/areas/contacts/flows/addContact/1_Search.svelte#openInvite'],
+  'standalone-settings-profile': ['src/lib/shared/ui/shell/PageScaffold.svelte#openSettingProfile'],
+  'standalone-profile-explorer': ['src/lib/areas/settings/ui/pages/SettingProfile.svelte#openProfileEditor'],
+  'standalone-profile-add-signing-key': ['src/lib/areas/settings/ui/sections/KeysSection.svelte#openAddSigningKey'],
+  'standalone-settings-bookmark-details': ['src/lib/areas/settings/ui/sections/BookmarksSection.svelte#openBookmarkDetails'],
+  'standalone-market-product-details': [
+    'src/lib/areas/market/ui/product/ProductCard.svelte#openProductDetails',
+    'src/lib/areas/market/orders/OrderDetailsView.svelte#openProductDetails',
+  ],
+  'standalone-market-order-details': ['src/lib/areas/market/ui/OrderRow.svelte#openOrderDetails'],
+  'standalone-market-sales-order-details': ['src/lib/areas/market/ui/SalesOrderRow.svelte#openSalesOrderDetails'],
+  'standalone-close-confirm-step': ['src/lib/shared/ui/shell/PopupHost.svelte#pushCloseConfirmStep'],
+  'standalone-jump-popup': ['src/lib/shared/ui/content/jump/JumpLink.svelte#onClick'],
+  'standalone-error-popup': ['src/lib/shared/utils/tasks.ts#runTaskErrorPopup'],
+  'standalone-event-history-day-popup': ['src/lib/shared/ui/event-history/EventHistoryHeatmap.svelte#openDayPopup'],
+  'standalone-popup-demo-card': ['src/routes/kitchen-sink/state-feedback/+page.svelte#openPopupDemoCard'],
+};
+
+for (const entry of popupGalleryEntries) {
+  entry.entrypoints = entrypointsById[entry.id] ?? ['(entrypoint mapping pending)'];
+}
+
   'standalone-wallet-unwrap': ['src/lib/areas/wallet/ui/components/BalanceRow.svelte#actions'],
   'standalone-wallet-migrate-token': ['src/lib/areas/wallet/ui/components/BalanceRow.svelte#actions'],
   'standalone-groups-redeem': ['src/lib/areas/wallet/ui/components/BalanceRow.svelte#actions'],

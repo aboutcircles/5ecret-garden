@@ -354,9 +354,8 @@ Representative surfaces and files:
 - Profile holders/holdings: `src/lib/domains/profile/ui/components/HoldersList.svelte`
 - Avatar search (main): `src/lib/areas/contacts/ui/pages/SearchAvatar.svelte`
 - Avatar search (dev): `src/routes/avatar-search/dev/AvatarSearchList.svelte`
-- Group management list surfaces:
-  - `src/routes/group-management/GroupMembersPrototype.svelte`
-  - `src/routes/group-management/AddGroupMemberPrototype.svelte`
+- Group members management list surface:
+  - `src/lib/areas/groups/ui/components/GroupMembersManager.svelte`
 - Event day popup (exception):
   - `src/lib/domains/events/ui/history/EventHistoryDayEventsPopup.svelte`
 - Kitchen sink list demos:
@@ -421,3 +420,4 @@ Completeness definition:
 
 - New/migrated list work can be done from this file alone.
 - No normative dependency on additional list docs.
+

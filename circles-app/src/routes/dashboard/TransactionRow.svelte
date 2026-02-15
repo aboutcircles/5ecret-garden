@@ -11,7 +11,7 @@
     interface Props { item: TransactionHistoryRow; }
     let { item }: Props = $props();
 
-    let counterpartyAddress = $state('');
+    let counterpartyAddress = $state<string | null>(null);
     let badgeUrl: string | null = $state(null);
     let displayAmount = $state('');
     let sent = $state(false);
@@ -89,7 +89,10 @@
     }
 
     $effect(() => {
-        if (!avatarState.avatar) return;
+        if (!avatarState.avatar) {
+            counterpartyAddress = null;
+            return;
+        }
         counterpartyAddress = getCounterpartyAddress(avatarState.avatar.address);
         topInfoText = getTopInfo(avatarState.avatar.address);
         badgeUrl = getBadge(avatarState.avatar.address);
