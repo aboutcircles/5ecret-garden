@@ -6,6 +6,7 @@
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import StepReviewRow from '$lib/shared/ui/flow/StepReviewRow.svelte';
   import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
+  import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import type { AdminNewConnectionFlowContext } from '$lib/areas/admin/flows/newConnection/context';
   import type { AdminNewProductFlowContext } from '$lib/areas/admin/flows/newProduct/context';
 
@@ -85,7 +86,13 @@
         value={normalizedSeller ?? ''}
         onChange={onEditSeller}
         changeLabel="Change"
-      />
+      >
+        {#if normalizedSeller}
+          {#snippet children()}
+            <Avatar address={normalizedSeller} view="small" clickable={true} />
+          {/snippet}
+        {/if}
+      </StepReviewRow>
     </StepSection>
   {/if}
 

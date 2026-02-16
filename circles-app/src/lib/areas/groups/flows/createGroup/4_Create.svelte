@@ -7,6 +7,7 @@
     import { runTask } from '$lib/shared/utils/tasks';
     import { popupControls } from '$lib/shared/state/popup';
     import Markdown from '$lib/shared/ui/content/markdown/Markdown.svelte';
+    import ProfilePreviewCard from '$lib/shared/ui/profile/ProfilePreviewCard.svelte';
     import { cidV0ToUint8Array } from '@circles-sdk/utils';
     import { isValidSymbol, isValidOnChainName } from '$lib/shared/utils/isValid';
     import {
@@ -131,24 +132,14 @@
     <div class="mt-4 space-y-1">
         <div><span class="text-base-content/70 mr-1">Name:</span>{ctx.profile.name}</div>
         <div><span class="text-base-content/70 mr-1">Symbol:</span>{ctx.profile.symbol}</div>
+        <div><span class="text-base-content/70 mr-1">On-chain name:</span>{onChainName}</div>
     </div>
 
-    {#if hasDesc}
-        <div class="mt-3">
-            <div class="text-base-content/70 mb-0.5">Description</div>
-            <Markdown content={ctx.profile.description} class="prose prose-sm max-w-none" />
-        </div>
-    {/if}
-
-    <!-- Optional image -->
-    <div class="mt-4">
-        {#if ctx.profile.previewImageUrl}
-            <img src={ctx.profile.previewImageUrl} alt="Group" class="w-32 h-32 rounded object-cover" />
-        {/if}
+    <div class="mt-3">
+        <ProfilePreviewCard profile={ctx.profile} title="Group profile" />
     </div>
 
     <AdvancedDetails title="Advanced group details" subtitle="On-chain settings">
-        <div><span class="text-base-content/70 mr-1">On-chain name:</span>{onChainName}</div>
         {#if !fastLane}
             <div class="text-xs text-base-content/60">Service</div>
             <Avatar address={ctx.service} view="horizontal" clickable={false} bottomInfo={ctx.service} showTypeInfo={true} />

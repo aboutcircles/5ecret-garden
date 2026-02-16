@@ -10,6 +10,9 @@
   import StepReviewRow from '$lib/shared/ui/flow/StepReviewRow.svelte';
   import { openStep, popToOrOpen } from '$lib/shared/flow';
   import { popupControls } from '$lib/shared/state/popup';
+  import ProductPreviewCard from '$lib/areas/market/ui/product/ProductPreviewCard.svelte';
+  import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
+  import { getProduct, pickProductImageUrl } from '$lib/areas/market/services';
   import SellerStep from './1_Seller.svelte';
   import CatalogStep from './2_Catalog.svelte';
   import TypeStep from './3_Type.svelte';
@@ -34,6 +37,10 @@
     context.seller ? (normalizeAddress(String(context.seller)) as Address) : undefined
   );
   const normalizedSku = $derived(normalizeSku(context.catalogItem?.product?.sku ?? '') ?? '');
+  const productCore = $derived(context.catalogItem ? getProduct(context.catalogItem) : undefined);
+  const productImageUrl = $derived(productCore ? pickProductImageUrl(productCore) : null);
+  const productTitle = $derived(productCore?.name ?? productCore?.sku ?? normalizedSku ?? 'Selected product');
+  const productSubtitle = $derived(productCore?.sku ? `SKU: ${productCore?.sku}` : undefined);
 
   const sellerConnections = $derived.by(() => {
     if (!normalizedSeller) return [];
@@ -168,7 +175,13 @@
       value={normalizedSeller ?? ''}
       onChange={editSeller}
       changeLabel="Change"
-    />
+    >
+      {#if normalizedSeller}
+        {#snippet children()}
+          <Avatar address={normalizedSeller} view="small" clickable={true} />
+        {/snippet}
+      {/if}
+    </StepReviewRow>
     <StepReviewRow
       label="Catalog SKU"
       value={normalizedSku}
@@ -186,6 +199,16 @@
       value={(context.selectedType ?? 'codedispenser') === 'codedispenser' ? 'Code pool configuration' : 'Odoo product mapping'}
       onChange={editDetails}
       changeLabel="Change"
+    />
+  </StepSection>
+
+  <StepSection title="Selected product" subtitle="Verify the product you are configuring.">
+    <ProductPreviewCard
+      title={productTitle}
+      subtitle={productSubtitle}
+      description={productCore?.description ?? undefined}
+      imageUrl={productImageUrl ?? undefined}
+      size="md"
     />
   </StepSection>
 

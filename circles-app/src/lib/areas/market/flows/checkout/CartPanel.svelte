@@ -6,10 +6,10 @@
     validateCart,
   } from '$lib/areas/market/cart/store';
   import { openStep, useAsyncAction } from '$lib/shared/flow';
-  import {pickFirstProductImageUrl} from '$lib/areas/market/services';
   import CheckoutForms from '$lib/areas/market/flows/checkout/CheckoutForms.svelte';
   import CheckoutReview from '$lib/areas/market/flows/checkout/CheckoutReview.svelte';
   import {formatCurrency} from '$lib/shared/utils/money';
+  import OrderLineTable from './OrderLineTable.svelte';
   import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
   import { CHECKOUT_FLOW_SCAFFOLD_BASE } from './constants';
@@ -46,11 +46,6 @@
     await updateLineByIdentity(seller, sku, q);
   }
 
-  function onQtyChange(idx: number, e: Event): void {
-    const val = (e.currentTarget as HTMLInputElement).value;
-    void handleQuantityChange(idx, val);
-  }
-
   function handleRemove(itemIdx: number): void {
     void handleQuantityChange(itemIdx, "0");
   }
@@ -61,7 +56,8 @@
     }
   });
 
-  const { findCatalogItem, imageUrlForLine } = useResolvedProducts(($cartState.basket?.items ?? []) as any[]);
+  const cartLines = $derived(($cartState.basket?.items ?? []) as any[]);
+  const { findCatalogItem, imageUrlForLine } = useResolvedProducts(cartLines);
 
   function hasRequirements(v: any): boolean {
     if (!v || !Array.isArray(v.requirements)) return false;
@@ -151,57 +147,27 @@
     </div>
   {:else}
     <div class="space-y-2">
-      {#each $cartState.basket.items as line, i}
-        <div class="flex items-start justify-between gap-3 border border-base-300 rounded-md px-3 py-2">
-          <div class="flex items-center gap-3 min-w-0">
-            <div class="w-14 h-14 rounded bg-base-200 overflow-hidden shrink-0 flex items-center justify-center">
-              {#if imageUrlForLine(line)}
-                <img src={imageUrlForLine(line) || ''} alt={findCatalogItem(line.seller, line.orderedItem.sku)?.product.name || 'product-image'} class="w-14 h-14 object-cover" loading="lazy" />
-              {:else}
-                <span class="text-[10px] opacity-60">No image</span>
-              {/if}
-            </div>
-
-            <div class="min-w-0">
-              <div class="font-semibold truncate">
-                {findCatalogItem(line.seller, line.orderedItem.sku)?.product.name
-                  ?? line.orderedItem.sku}
-              </div>
-              <div class="text-xs opacity-70 truncate">
-                Seller: {line.seller}
-              </div>
-              {#if line.offerSnapshot}
-                <div class="text-xs mt-1">
-                  Price:&nbsp;
-                  {formatCurrency(
-                    line.offerSnapshot?.price ?? null,
-                    line.offerSnapshot?.priceCurrency ?? null,
-                  )}
-                </div>
-              {/if}
-            </div>
-          </div>
-
-          <div class="flex flex-col items-end gap-1">
-            <input
-              type="number"
-              min="0"
-              class="input input-xs input-bordered w-20 text-right"
-              value={line.orderQuantity}
-              onchange={(e) => onQtyChange(i, e)}
-              disabled={isCheckedOut}
-            />
-            <button
-              type="button"
-              class="btn btn-xs btn-ghost text-error"
-              onclick={() => handleRemove(i)}
-              disabled={isCheckedOut}
-            >
-              Remove
-            </button>
-          </div>
-        </div>
-      {/each}
+      <OrderLineTable
+        lines={cartLines}
+        {findCatalogItem}
+        {imageUrlForLine}
+        getLineQuantity={(line) => Number(line?.orderQuantity ?? 0)}
+        getLineUnitPrice={(line) => ({
+          amount: typeof line?.offerSnapshot?.price === 'number' ? line.offerSnapshot.price : null,
+          code: typeof line?.offerSnapshot?.priceCurrency === 'string' ? line.offerSnapshot.priceCurrency : null,
+        })}
+        getLineTotal={(line) => ({
+          amount: typeof line?.offerSnapshot?.price === 'number'
+            ? (line.offerSnapshot.price * Number(line?.orderQuantity ?? 0))
+            : null,
+          code: typeof line?.offerSnapshot?.priceCurrency === 'string' ? line.offerSnapshot.priceCurrency : null,
+        })}
+        editable={!isCheckedOut}
+        onQuantityChange={(idx, value) => {
+          void handleQuantityChange(idx, value);
+        }}
+        onRemove={handleRemove}
+      />
     </div>
 
     <!-- totals -->
@@ -225,24 +191,24 @@
       </div>
     {/if}
 
-  <StepActionBar>
-    {#snippet primary()}
-      <button
-        type="button"
-        class="btn btn-sm btn-primary"
-        onclick={() => openCheckoutFlow()}
-        disabled={
-          checkoutAction.loading ||
-          $cartState.loading ||
-          !$cartState.basket ||
-          !$cartState.basket.items ||
-          $cartState.basket.items.length === 0 ||
-          isCheckedOut
-        }
-      >
-        {checkoutAction.loading ? 'Checking...' : 'Checkout'}
-      </button>
-    {/snippet}
-  </StepActionBar>
+    <StepActionBar>
+      {#snippet primary()}
+        <button
+          type="button"
+          class="btn btn-sm btn-primary"
+          onclick={() => openCheckoutFlow()}
+          disabled={
+            checkoutAction.loading ||
+            $cartState.loading ||
+            !$cartState.basket ||
+            !$cartState.basket.items ||
+            $cartState.basket.items.length === 0 ||
+            isCheckedOut
+          }
+        >
+          {checkoutAction.loading ? 'Checking...' : 'Checkout'}
+        </button>
+      {/snippet}
+    </StepActionBar>
   {/if}
 </FlowStepScaffold>
