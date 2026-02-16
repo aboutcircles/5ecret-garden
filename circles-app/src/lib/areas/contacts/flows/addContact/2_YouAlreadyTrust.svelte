@@ -5,6 +5,8 @@
   import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
   import { ADD_CONTACT_FLOW_SCAFFOLD_BASE } from './constants';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
+  import AdvancedDetails from '$lib/shared/ui/flow/AdvancedDetails.svelte';
+  import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import { openStep, popToOrOpen } from '$lib/shared/flow';
   import { popupControls } from '$lib/shared/state/popup';
   import SearchStep from './1_Search.svelte';
@@ -34,6 +36,12 @@
     title="Trust already exists"
     message="You already trust this account. You can close this flow or continue to untrust."
   />
+
+  {#if context.selectedAddress}
+    <AdvancedDetails title="Advanced details" subtitle="Selected account">
+      <Avatar address={context.selectedAddress} view="horizontal" clickable={false} bottomInfo={context.selectedAddress} showTypeInfo={true} />
+    </AdvancedDetails>
+  {/if}
 
   <StepActionBar>
     {#snippet secondary()}

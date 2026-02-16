@@ -3,10 +3,17 @@
     import { openProfilePopup } from '$lib/shared/ui/profile/openProfilePopup';
     import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
     import type { Address } from '@circles-sdk/utils';
+    import type { AppProfileCore as Profile } from '$lib/shared/model/profile';
+    import type { AvatarRow } from '@circles-sdk/data';
     import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
 
-    interface Props { address?: Address; trustRelation?: string; }
-    let { address, trustRelation = '' }: Props = $props();
+    interface Props {
+        address?: Address;
+        profile?: Profile;
+        avatarInfo?: AvatarRow;
+        trustRelation?: string;
+    }
+    let { address, profile, avatarInfo, trustRelation = '' }: Props = $props();
 
     function openProfile() {
         if (!address) return;
@@ -54,6 +61,8 @@
         <div class="min-w-0">
             <Avatar
                 address={address}
+                {profile}
+                {avatarInfo}
                 view="horizontal"
                 bottomInfo={trustRelation}
                 showTypeInfo={true}

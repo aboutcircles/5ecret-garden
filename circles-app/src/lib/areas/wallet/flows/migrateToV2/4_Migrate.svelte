@@ -5,6 +5,8 @@
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
   import StepReviewRow from '$lib/shared/ui/flow/StepReviewRow.svelte';
+  import AdvancedDetails from '$lib/shared/ui/flow/AdvancedDetails.svelte';
+  import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import type { MigrateToV2Context } from '$lib/areas/wallet/flows/migrateToV2/context';
   import GetInvited from './1_GetInvited.svelte';
   import CreateProfile from './2_CreateProfile.svelte';
@@ -48,6 +50,7 @@
   const selectedContactsCount = $derived(context.trustList?.length ?? 0);
   const profileName = $derived(context.profile?.name?.trim() || 'Unnamed profile');
   const inviterLabel = $derived(context.inviter ? context.inviter : 'Self migration');
+  const hasInviter = $derived(Boolean(context.inviter));
 
   function editInvitation() {
     popToOrOpen(GetInvited, {
@@ -92,6 +95,25 @@
       changeLabel="Edit"
     />
   </StepSection>
+
+  <AdvancedDetails title="Advanced migration details" subtitle="Addresses">
+    {#if hasInviter}
+      <div class="text-xs text-base-content/60">Inviter address</div>
+      <Avatar address={context.inviter} view="horizontal" clickable={false} bottomInfo={context.inviter} showTypeInfo={true} />
+    {:else}
+      <div class="text-sm text-base-content/70">Self migration (no inviter address).</div>
+    {/if}
+    <div class="text-xs text-base-content/60">Selected contacts</div>
+    {#if (context.trustList ?? []).length === 0}
+      <div class="text-sm text-base-content/70">No contacts selected.</div>
+    {:else}
+      <div class="space-y-2">
+        {#each context.trustList ?? [] as address (address)}
+          <Avatar {address} view="horizontal" clickable={false} bottomInfo={address} showTypeInfo={true} />
+        {/each}
+      </div>
+    {/if}
+  </AdvancedDetails>
 
   <p class="text-base-content/70 mt-2">
     You're ready to migrate to Circles V2! Click the button below to start the

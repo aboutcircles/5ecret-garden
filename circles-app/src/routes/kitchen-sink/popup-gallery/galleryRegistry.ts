@@ -22,7 +22,6 @@ import AddContactAlreadyTrust from '$lib/areas/contacts/flows/addContact/2_YouAl
 import CreateGroupStart from '$lib/areas/groups/flows/createGroup/1_CreateGroup.svelte';
 import CreateGroupSettings from '$lib/areas/groups/flows/createGroup/2_Settings.svelte';
 import CreateGroupReview from '$lib/areas/groups/flows/createGroup/4_Create.svelte';
-import CreateGroupRun from '$lib/areas/groups/flows/createGroup/4_Create.svelte';
 
 
 import CheckoutCart from '$lib/areas/market/flows/checkout/CartPanel.svelte';
@@ -315,8 +314,7 @@ On success, the flow pins the profile metadata CID, submits the on-chain group c
     steps: [
       { id: 'group-create-1', title: '1_CreateGroup.svelte', purpose: 'Group basics', component: CreateGroupStart, propsFactory: () => ({ context: mockCreateGroupContext(), setGroup: noop }) },
       { id: 'group-create-2', title: '2_Settings.svelte', purpose: 'Group settings', component: CreateGroupSettings, propsFactory: () => ({ context: mockCreateGroupContext(), setGroup: noop }) },
-      { id: 'group-create-3', title: '3_Review.svelte', purpose: 'Review settings', component: CreateGroupReview, propsFactory: () => ({ context: mockCreateGroupContext(), setGroup: noop }) },
-      { id: 'group-create-4', title: '4_Create.svelte', purpose: 'Create on-chain', component: CreateGroupRun, propsFactory: () => ({ context: mockCreateGroupContext(), setGroup: noop }) },
+      { id: 'group-create-3', title: '4_Create.svelte', purpose: 'Review & create', component: CreateGroupReview, propsFactory: () => ({ context: mockCreateGroupContext(), setGroup: noop }) },
     ],
   },
   {
@@ -693,3 +691,4 @@ const entrypointsById: Record<string, string[]> = {
 for (const entry of popupGalleryEntries) {
   entry.entrypoints = entrypointsById[entry.id] ?? ['(entrypoint mapping pending)'];
 }
+

@@ -15,7 +15,9 @@ export let resolvedProductsCache: Record<ProductKey, AggregatedCatalogItem | nul
 const resolvingKeys: Set<ProductKey> = new Set();
 
 export function resetResolvedProductsCache(): void {
-  resolvedProductsCache = {};
+  for (const key of Object.keys(resolvedProductsCache)) {
+    delete resolvedProductsCache[key];
+  }
   resolvingKeys.clear();
 }
 
@@ -64,15 +66,15 @@ export function useResolvedProducts(lines: any[]): {
       if (alreadyKnown || alreadyResolving) continue;
 
       resolvingKeys.add(key);
-      resolvedProductsCache = { ...resolvedProductsCache, [key]: null };
+      resolvedProductsCache[key] = null;
 
       void (async () => {
         try {
           const item = await catalog.fetchProductForSellerAndSku(seller as string, sku as string);
-          resolvedProductsCache = { ...resolvedProductsCache, [key]: item };
+          resolvedProductsCache[key] = item;
         } catch (e) {
           console.debug('[checkout] failed to resolve product from catalog', { seller, sku }, e);
-          resolvedProductsCache = { ...resolvedProductsCache, [key]: null };
+          resolvedProductsCache[key] = null;
         } finally {
           resolvingKeys.delete(key);
         }

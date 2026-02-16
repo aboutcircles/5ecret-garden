@@ -158,57 +158,47 @@
   title="Summary"
   subtitle="Review and apply product configuration."
 >
+  {#if formError}
+    <StepAlert variant="error" message={formError} />
+  {/if}
 
-    {#if formError}
-      <StepAlert variant="error" message={formError} />
-    {/if}
+  <StepSection title="Review configuration" subtitle="Use Change to jump back to a specific setup step.">
+    <StepReviewRow
+      label="Seller"
+      value={normalizedSeller ?? ''}
+      onChange={editSeller}
+      changeLabel="Change"
+    />
+    <StepReviewRow
+      label="Catalog SKU"
+      value={normalizedSku}
+      onChange={editCatalog}
+      changeLabel="Change"
+    />
+    <StepReviewRow
+      label="Fulfillment type"
+      value={summaryTypeLabel}
+      onChange={editType}
+      changeLabel="Change"
+    />
+    <StepReviewRow
+      label="Details"
+      value={(context.selectedType ?? 'codedispenser') === 'codedispenser' ? 'Code pool configuration' : 'Odoo product mapping'}
+      onChange={editDetails}
+      changeLabel="Change"
+    />
+  </StepSection>
 
-    <StepSection title="Review configuration" subtitle="Use Change to jump back to a specific setup step.">
-      <StepReviewRow
-        label="Seller"
-        value={normalizedSeller ?? ''}
-        onChange={editSeller}
-        changeLabel="Change"
-      />
-      <StepReviewRow
-        label="Catalog SKU"
-        value={normalizedSku}
-        onChange={editCatalog}
-        changeLabel="Change"
-      />
-      <StepReviewRow
-        label="Fulfillment type"
-        value={summaryTypeLabel}
-        onChange={editType}
-        changeLabel="Change"
-      />
-      <StepReviewRow
-        label="Details"
-        value={(context.selectedType ?? 'codedispenser') === 'codedispenser' ? 'Code pool configuration' : 'Odoo product mapping'}
-        onChange={editDetails}
-        changeLabel="Change"
-      />
-    </StepSection>
-
-    <StepSection title="Execution plan">
-      <div class="text-sm">
-        <ul class="list-disc ml-5">
-          <li>Create/Update route (offerType={context.selectedType ?? 'codedispenser'})</li>
-          <li>Create/Update {(context.selectedType ?? 'codedispenser') === 'codedispenser' ? 'Digital voucher code product' : 'Odoo product'}</li>
-        </ul>
-      </div>
-    </StepSection>
-
-    <StepActionBar>
-      {#snippet secondary()}
-        <button class="btn btn-outline btn-sm" type="button" onclick={() => popupControls.close()} disabled={executing}>
-          Cancel
-        </button>
-      {/snippet}
-      {#snippet primary()}
-        <button class="btn btn-primary btn-sm" type="button" onclick={execute} disabled={executing}>
-          {executing ? 'Applying…' : 'Confirm & apply'}
-        </button>
-      {/snippet}
-    </StepActionBar>
-  </FlowStepScaffold>
+  <StepActionBar>
+    {#snippet secondary()}
+      <button class="btn btn-outline btn-sm" type="button" onclick={() => popupControls.close()} disabled={executing}>
+        Cancel
+      </button>
+    {/snippet}
+    {#snippet primary()}
+      <button class="btn btn-primary btn-sm" type="button" onclick={execute} disabled={executing}>
+        {executing ? 'Applying…' : 'Confirm & apply'}
+      </button>
+    {/snippet}
+  </StepActionBar>
+</FlowStepScaffold>

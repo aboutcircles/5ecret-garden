@@ -16,6 +16,7 @@
   import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
   import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
   import StepReviewRow from '$lib/shared/ui/flow/StepReviewRow.svelte';
+  import AdvancedDetails from '$lib/shared/ui/flow/AdvancedDetails.svelte';
   import OfferStep1 from './1_Product.svelte';
   import OfferStep2 from './2_Pricing.svelte';
 
@@ -207,17 +208,24 @@
               {/if}
             </div>
             <div><strong>Price:</strong> {context.draft?.price} {context.draft?.priceCurrency}</div>
-            {#if context.draft?.availableDeliveryMethod}
-              <div class="truncate"><strong>Delivery method:</strong> {context.draft?.availableDeliveryMethod}</div>
-            {/if}
-            {#if Array.isArray(context.draft?.requiredSlots) && context.draft?.requiredSlots.length > 0}
-              <div class="truncate">
-                <strong>Checkout requirements:</strong>
-                {context.draft?.requiredSlots.join(', ')}
-              </div>
-            {/if}
         </div>
     </div>
+
+    <AdvancedDetails title="Advanced offer details" subtitle="Delivery + checkout">
+      {#if context.draft?.availableDeliveryMethod}
+        <div class="truncate"><strong>Delivery method:</strong> {context.draft?.availableDeliveryMethod}</div>
+      {:else}
+        <div class="text-sm text-base-content/70">No delivery method specified.</div>
+      {/if}
+      {#if Array.isArray(context.draft?.requiredSlots) && context.draft?.requiredSlots.length > 0}
+        <div class="truncate">
+          <strong>Checkout requirements:</strong>
+          {context.draft?.requiredSlots.join(', ')}
+        </div>
+      {:else}
+        <div class="text-sm text-base-content/70">No checkout requirements specified.</div>
+      {/if}
+    </AdvancedDetails>
 
     <StepActionBar>
       {#snippet primary()}

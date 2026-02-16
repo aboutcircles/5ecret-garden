@@ -5,6 +5,7 @@
   import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
+  import AdvancedDetails from '$lib/shared/ui/flow/AdvancedDetails.svelte';
   import { popToOrOpen } from '$lib/shared/flow';
   import { popupControls } from '$lib/shared/state/popup';
   import { addTrustRelations } from '$lib/shared/utils/trustActions';
@@ -55,12 +56,22 @@
         <div class="w-full flex flex-col gap-y-1.5" role="list">
           {#each selected as address (address)}
             <div class="rounded-[var(--row-radius)]" role="listitem">
-              <Avatar {address} view="horizontal" clickable={false} bottomInfo={address} showTypeInfo={true} />
+              <Avatar {address} view="horizontal" clickable={false} showTypeInfo={true} />
             </div>
           {/each}
         </div>
       {/if}
     </StepSection>
+
+    {#if selected.length > 0}
+      <AdvancedDetails title="Advanced details" subtitle="Addresses">
+        <div class="space-y-2">
+          {#each selected as address (address)}
+            <Avatar {address} view="horizontal" clickable={false} bottomInfo={address} showTypeInfo={true} />
+          {/each}
+        </div>
+      </AdvancedDetails>
+    {/if}
 
     <StepActionBar>
       {#snippet secondary()}

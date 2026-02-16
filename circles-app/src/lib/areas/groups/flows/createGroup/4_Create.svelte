@@ -16,6 +16,8 @@
     } from './context';
     import { assertWalletCanSignForSafe } from '$lib/shared/integrations/safe/assertWalletCanSignForSafe';
   import type { AddressLike } from 'ethers';
+    import AdvancedDetails from '$lib/shared/ui/flow/AdvancedDetails.svelte';
+    import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
 
     const PROFILE_NAME_MAX_LENGTH = 36;
 
@@ -128,13 +130,7 @@
     <!-- Simple summary, row-by-row -->
     <div class="mt-4 space-y-1">
         <div><span class="text-base-content/70 mr-1">Name:</span>{ctx.profile.name}</div>
-        <div><span class="text-base-content/70 mr-1">On-chain name:</span>{onChainName}</div>
         <div><span class="text-base-content/70 mr-1">Symbol:</span>{ctx.profile.symbol}</div>
-        {#if !fastLane}
-            <div class="truncate"><span class="text-base-content/70 mr-1">Service:</span>{ctx.service}</div>
-            <div class="truncate"><span class="text-base-content/70 mr-1">Fee collection:</span>{ctx.feeCollection}</div>
-            <div><span class="text-base-content/70 mr-1">Initial conditions:</span>{ctx.initialConditions.length}</div>
-        {/if}
     </div>
 
     {#if hasDesc}
@@ -150,6 +146,19 @@
             <img src={ctx.profile.previewImageUrl} alt="Group" class="w-32 h-32 rounded object-cover" />
         {/if}
     </div>
+
+    <AdvancedDetails title="Advanced group details" subtitle="On-chain settings">
+        <div><span class="text-base-content/70 mr-1">On-chain name:</span>{onChainName}</div>
+        {#if !fastLane}
+            <div class="text-xs text-base-content/60">Service</div>
+            <Avatar address={ctx.service} view="horizontal" clickable={false} bottomInfo={ctx.service} showTypeInfo={true} />
+            <div class="text-xs text-base-content/60">Fee collection</div>
+            <Avatar address={ctx.feeCollection} view="horizontal" clickable={false} bottomInfo={ctx.feeCollection} showTypeInfo={true} />
+            <div><span class="text-base-content/70 mr-1">Initial conditions:</span>{ctx.initialConditions.length}</div>
+        {:else}
+            <div class="text-sm text-base-content/70">Fast mode uses default service + fee collection.</div>
+        {/if}
+    </AdvancedDetails>
 
     <StepActionBar>
         {#snippet primary()}

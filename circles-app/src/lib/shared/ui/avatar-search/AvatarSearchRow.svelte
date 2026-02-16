@@ -49,6 +49,14 @@
   }
 
   const bottomInfo = $derived(item.trustRelation ? formatTrustRelation(item.trustRelation as any) : '');
+
+  const avatarInfo = $derived.by(() => {
+    if (!item.avatarType) return undefined;
+    return {
+      avatar: item.address,
+      type: item.avatarType,
+    } as any;
+  });
 </script>
 
 <div
@@ -64,6 +72,7 @@
     <div class="min-w-0">
       <Avatar
         address={item.address}
+        {avatarInfo}
         view="horizontal"
         bottomInfo={bottomInfo}
         showTypeInfo={true}
