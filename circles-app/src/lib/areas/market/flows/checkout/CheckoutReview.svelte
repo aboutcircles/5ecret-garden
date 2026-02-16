@@ -4,17 +4,14 @@
     import StepActionButtons from '$lib/shared/ui/flow/StepActionButtons.svelte';
     import { CHECKOUT_FLOW_SCAFFOLD_BASE } from './constants';
     import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
-    import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
-    import StepReviewRow from '$lib/shared/ui/flow/StepReviewRow.svelte';
-    import AdvancedDetails from '$lib/shared/ui/flow/AdvancedDetails.svelte';
     import { openStep, popToOrOpen, useAsyncAction } from '$lib/shared/flow';
     import { cartState, checkoutCart } from '$lib/areas/market/cart/store';
-    import { popupControls } from '$lib/shared/state/popup';
     import CartPanel from './CartPanel.svelte';
     import CheckoutForms from './CheckoutForms.svelte';
     import CheckoutPayment from './CheckoutPayment.svelte';
-    import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import { useResolvedProducts } from '$lib/areas/market/flows/checkout/useResolvedProducts';
+    import OrderLineTable from './OrderLineTable.svelte';
+    import { formatCurrency } from '$lib/shared/utils/money';
 
     const checkoutAction = useAsyncAction(async () => {
         await checkoutCart();
@@ -35,48 +32,11 @@
     const lines = $derived((basket?.items ?? []) as any[]);
     const hasLines: boolean = $derived(lines.length > 0);
 
-    // Group basket lines by seller to show a header per seller
-    type ReviewGroup = { seller: string | null; indices: number[] };
-    const reviewGroups: ReviewGroup[] = $derived((() => {
-        const map = new Map<string, number[]>();
-        lines.forEach((_, idx) => {
-            const seller = (lines[idx]?.seller as string | undefined) ?? null;
-            const key = seller || '__unknown__';
-            const arr = map.get(key) ?? [];
-            arr.push(idx);
-            map.set(key, arr);
-        });
-        return Array.from(map.entries()).map(([key, idxs]) => ({ seller: key === '__unknown__' ? null : (key as string), indices: idxs }));
-    })());
-
     const shippingAddress = $derived(basket?.shippingAddress as any);
     const contactPoint = $derived(basket?.contactPoint as any);
     const ageProof = $derived(basket?.ageProof as any);
 
     const { findCatalogItem, imageUrlForLine } = useResolvedProducts(lines);
-
-    function lineTitle(line: any): string {
-        const name = line?.orderedItem?.name;
-        const sku = line?.orderedItem?.sku;
-        if (typeof name === 'string' && name.trim().length > 0) {
-            return name.trim();
-        }
-        if (typeof sku === 'string' && sku.trim().length > 0) {
-            return sku.trim();
-        }
-        return 'Item';
-    }
-
-    function lineSubtitle(line: any): string | null {
-        const sku = line?.orderedItem?.sku;
-        const parts: string[] = [];
-        if (typeof sku === 'string' && sku.trim().length > 0) {
-            parts.push(`SKU: ${sku.trim()}`);
-        }
-        return parts.length ? parts.join(' • ') : null;
-    }
-
-    import { formatCurrency } from '$lib/shared/utils/money';
 
     function getLineUnitPrice(line: any): { amount: number | null; code: string | null } {
         const snap = line?.offerSnapshot;
@@ -162,7 +122,6 @@
         return `Birth date: ${age.birthDate}`;
     }
 
-
     function editCart(): void {
         popToOrOpen(CartPanel, {
             title: 'Cart',
@@ -186,116 +145,26 @@
   subtitle="Review cart and checkout details before payment."
 >
 
-        <StepSection title="Review actions" subtitle="Adjust cart items or checkout details if needed.">
-            <StepReviewRow label="Cart items" value={`${lines.length} item${lines.length === 1 ? '' : 's'}`} onChange={editCart} changeLabel="Edit" />
-            <StepReviewRow label="Checkout details" value={hasShippingInfo ? 'Provided' : 'Not provided'} onChange={editDetails} changeLabel="Edit" />
-        </StepSection>
-
-        <!-- Order meta -->
-        {#if preview}
-            <div class="space-y-1">
-                <div><strong>Order #</strong> {preview.orderNumber}</div>
-                <!-- Total moved to bottom-right summary under subtotals -->
+        <div class="space-y-2">
+            <div class="flex items-center justify-between mb-2">
+                <div class="text-xs uppercase tracking-wide text-base-content/60">Information</div>
+                <button type="button" class="btn btn-ghost btn-xs" onclick={editDetails}>
+                    Edit
+                </button>
             </div>
-        {:else}
-            <div class="opacity-70">No order preview available.</div>
-        {/if}
-
-        <!-- Items -->
-        {#if hasLines}
-            <div class="mt-2 border border-base-300 rounded-lg bg-base-100">
-                <div class="px-3 py-2 border-b border-base-300 flex items-center justify-between">
-                    <span class="font-semibold text-xs uppercase tracking-wide">
-                        Items
-                    </span>
-                    <span class="text-xs opacity-70">
-                        {lines.length} item{lines.length === 1 ? '' : 's'}
-                    </span>
-                </div>
-
-                <div class="flex flex-col">
-                    {#each reviewGroups as grp, gi (gi)}
-                        <div class="border-b last:border-b-0">
-                            <div class="px-3 py-2 bg-base-200/60 flex items-center justify-between border-b">
-                                {#if grp.seller}
-                                    <Avatar view="horizontal" address={grp.seller} bottomInfo={grp.seller} />
-                                {:else}
-                                    <div class="text-xs uppercase tracking-wide opacity-60">Seller</div>
-                                {/if}
-                                <div class="text-[11px] opacity-60">{grp.indices.length} item{grp.indices.length === 1 ? '' : 's'}</div>
-                            </div>
-                            <div class="divide-y divide-base-200">
-                                {#each grp.indices as i}
-                                    <div class="px-3 py-2 bg-base-200/20 flex items-start justify-between gap-3">
-                                        <div class="flex items-center gap-3 min-w-0">
-                                            <div class="w-14 h-14 rounded bg-base-200 overflow-hidden shrink-0 flex items-center justify-center">
-                                                {#if imageUrlForLine(lines[i])}
-                                                    <img src={imageUrlForLine(lines[i]) || ''} alt={findCatalogItem(lines[i].seller, lines[i].orderedItem?.sku)?.product.name || 'product-image'} class="w-14 h-14 object-cover" loading="lazy" />
-                                                {:else}
-                                                    <span class="text-[10px] opacity-60">No image</span>
-                                                {/if}
-                                            </div>
-
-                                            <div class="min-w-0">
-                                                <div class="font-semibold truncate">
-                                                    {findCatalogItem(lines[i].seller, lines[i].orderedItem?.sku)?.product.name ?? lineTitle(lines[i])}
-                                                </div>
-                                                {#if lineSubtitle(lines[i])}
-                                                    <div class="text-xs opacity-70 truncate">
-                                                        {lineSubtitle(lines[i])}
-                                                    </div>
-                                                {/if}
-                                                <div class="text-xs opacity-70 mt-0.5">
-                                                    Qty: {getLineQuantity(lines[i])}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="text-right shrink-0">
-                                            {#if getLineUnitPrice(lines[i]).amount != null}
-                                                <div class="text-xs opacity-70">
-                                                    {formatCurrency(getLineUnitPrice(lines[i]).amount, getLineUnitPrice(lines[i]).code)} each
-                                                </div>
-                                            {/if}
-                                            <div class="font-semibold">
-                                                {#if getLineTotal(lines[i]).amount != null}
-                                                    {formatCurrency(getLineTotal(lines[i]).amount, getLineTotal(lines[i]).code)}
-                                                {:else}
-                                                    —
-                                                {/if}
-                                            </div>
-                                        </div>
-                                    </div>
-                                {/each}
-                            </div>
-                        </div>
-                    {/each}
-                </div>
-            </div>
-        {:else}
-            <div class="opacity-70">
-                No basket items attached to this order yet.
-            </div>
-        {/if}
-
-        <AdvancedDetails title="Advanced checkout details" subtitle="Shipping + contact">
             {#if hasShippingInfo}
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {#if shippingAddress}
-                        <div class="border border-base-300 rounded-lg bg-base-100 p-3">
-                            <div class="font-semibold text-xs uppercase tracking-wide mb-1">
-                                Shipping address
-                            </div>
+                        <div class="bg-base-100 p-3">
+                            <div class="font-semibold text-xs uppercase tracking-wide mb-1">Shipping address</div>
                             {#each formatShippingAddress(shippingAddress) as line}
                                 <div>{line}</div>
                             {/each}
                         </div>
                     {/if}
 
-                    <div class="border border-base-300 rounded-lg bg-base-100 p-3">
-                        <div class="font-semibold text-xs uppercase tracking-wide mb-1">
-                            Contact
-                        </div>
+                    <div class="bg-base-100 p-3">
+                        <div class="font-semibold text-xs uppercase tracking-wide mb-1">Contact</div>
                         {#if formatContactPoint(contactPoint).length > 0}
                             {#each formatContactPoint(contactPoint) as line}
                                 <div>{line}</div>
@@ -311,7 +180,31 @@
             {:else}
                 <div class="text-sm text-base-content/70">No shipping or contact details provided.</div>
             {/if}
-        </AdvancedDetails>
+        </div>
+
+        <!-- Items -->
+        {#if hasLines}
+            <div class="mt-2">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="text-xs uppercase tracking-wide text-base-content/60">Items</div>
+                    <button type="button" class="btn btn-ghost btn-xs" onclick={editCart}>
+                        Edit
+                    </button>
+                </div>
+                <OrderLineTable
+                    lines={lines}
+                    {findCatalogItem}
+                    {imageUrlForLine}
+                    {getLineQuantity}
+                    {getLineUnitPrice}
+                    {getLineTotal}
+                />
+            </div>
+        {:else}
+            <div class="opacity-70">
+                No basket items attached to this order yet.
+            </div>
+        {/if}
 
         <!-- Totals per currency (client-side) + grand total at bottom-right -->
         <div class="mt-2 flex justify-end">

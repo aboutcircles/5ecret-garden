@@ -5,7 +5,6 @@
   import { GATEWAY_UNTRUST_FLOW_SCAFFOLD_BASE } from './constants';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
-  import AdvancedDetails from '$lib/shared/ui/flow/AdvancedDetails.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import { wallet } from '$lib/shared/state/wallet.svelte';
@@ -77,6 +76,8 @@
       subtitle="This will revoke trust for the following account."
     >
       <Avatar address={trustReceiver} view="horizontal" clickable={false} bottomInfo={trustReceiver} showTypeInfo={true} />
+      <div class="text-xs text-base-content/60">Gateway</div>
+      <Avatar address={gateway} view="horizontal" clickable={false} bottomInfo={gateway} showTypeInfo={true} />
 
       {#if !walletConnected}
         <StepAlert
@@ -92,13 +93,6 @@
         />
       {/if}
     </StepSection>
-
-    <AdvancedDetails title="Advanced details" subtitle="Addresses">
-      <div class="text-xs text-base-content/60">Gateway address</div>
-      <Avatar address={gateway} view="horizontal" clickable={false} bottomInfo={gateway} showTypeInfo={true} />
-      <div class="text-xs text-base-content/60">Trust receiver</div>
-      <Avatar address={trustReceiver} view="horizontal" clickable={false} bottomInfo={trustReceiver} showTypeInfo={true} />
-    </AdvancedDetails>
 
     <StepActionBar>
       {#snippet secondary()}

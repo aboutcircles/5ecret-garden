@@ -9,6 +9,7 @@
   import type {Address} from '@circles-sdk/utils';
 
   import ProductGallery from '$lib/areas/market/ui/product/ProductGallery.svelte';
+  import ProductPreviewCard from '$lib/areas/market/ui/product/ProductPreviewCard.svelte';
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
@@ -16,7 +17,6 @@
   import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
   import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
   import StepReviewRow from '$lib/shared/ui/flow/StepReviewRow.svelte';
-  import AdvancedDetails from '$lib/shared/ui/flow/AdvancedDetails.svelte';
   import OfferStep1 from './1_Product.svelte';
   import OfferStep2 from './2_Pricing.svelte';
 
@@ -180,38 +180,36 @@
       </div>
     </StepSection>
 
-    <div class="bg-base-100 border rounded-lg p-3">
-        <div class="font-semibold truncate">
-            {context.draft?.name}
-            <span class="opacity-60">({context.draft?.sku})</span>
-        </div>
-
-        <!-- Show product gallery if images exist -->
-        {#if getAllImages().length > 0}
-          <ProductGallery images={getAllImages()} />
-        {:else if context.draft?.image}
-            <!-- Fallback to single image for legacy support -->
-            <img alt="preview" class="w-full h-40 object-cover rounded mt-2" src={context.draft?.image}/>
-        {/if}
-
-        {#if context.draft?.description}
-            <Markdown content={context.draft.description} class="prose prose-sm max-w-none mt-2" />
-        {/if}
-
-        <div class="mt-3 text-sm space-y-1">
-            <div class="flex items-center gap-3">
-              <div class="font-semibold">Payment gateway:</div>
-              {#if selectedGateway}
-                <Avatar address={asAddress(selectedGateway)} view="horizontal" bottomInfo={selectedGateway} clickable={false} />
-              {:else}
-                <span class="opacity-70 text-sm">No payment gateway selected. Go back to Pricing to select one.</span>
-              {/if}
-            </div>
+    <div class="bg-base-100 border rounded-lg p-3 space-y-3">
+        <ProductPreviewCard
+          title={context.draft?.name ?? '—'}
+          subtitle={context.draft?.sku ? `SKU: ${context.draft?.sku}` : undefined}
+          description={context.draft?.description || undefined}
+          imageUrl={getAllImages()[0] ?? context.draft?.image ?? undefined}
+          size="md"
+        >
+          <div slot="meta" class="text-sm space-y-2">
+            <div class="font-semibold">Payment gateway</div>
+            {#if selectedGateway}
+              <div class="flex items-center gap-2">
+                <Avatar address={asAddress(selectedGateway)} view="small_no_text" clickable={false} />
+                <span class="text-xs font-mono truncate">{selectedGateway}</span>
+              </div>
+            {:else}
+              <span class="opacity-70 text-sm">No payment gateway selected. Go back to Pricing to select one.</span>
+            {/if}
             <div><strong>Price:</strong> {context.draft?.price} {context.draft?.priceCurrency}</div>
-        </div>
+          </div>
+        </ProductPreviewCard>
+
+        {#if getAllImages().length > 1}
+          <div class="mt-2">
+            <ProductGallery images={getAllImages()} />
+          </div>
+        {/if}
     </div>
 
-    <AdvancedDetails title="Advanced offer details" subtitle="Delivery + checkout">
+    <StepSection title="Delivery & checkout" subtitle="Confirm delivery method and required checkout info.">
       {#if context.draft?.availableDeliveryMethod}
         <div class="truncate"><strong>Delivery method:</strong> {context.draft?.availableDeliveryMethod}</div>
       {:else}
@@ -225,7 +223,7 @@
       {:else}
         <div class="text-sm text-base-content/70">No checkout requirements specified.</div>
       {/if}
-    </AdvancedDetails>
+    </StepSection>
 
     <StepActionBar>
       {#snippet primary()}
@@ -236,4 +234,10 @@
     </StepActionBar>
 </div>
   </FlowStepScaffold>
+
+
+
+
+
+
 
