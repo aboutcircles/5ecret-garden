@@ -19,16 +19,14 @@
   import OfferStep1 from './1_Product.svelte';
   import OfferStep2 from './2_Pricing.svelte';
 
-  import {Contract, JsonRpcProvider} from 'ethers';
-
   import type {OfferFlowContext} from '$lib/areas/market/flows/offer/types';
-  import {ensureGnosisChain} from '$lib/shared/integrations/chain/gnosis';
   import {ipfsGatewayUrl} from '$lib/shared/utils/ipfs';
   import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
   import {resolveImagesToHttpUrls} from '$lib/shared/media/resolveImageUrl';
   import {createOffersClientForAvatar} from '$lib/areas/market/offers';
   import {getWalletProvider} from '$lib/shared/integrations/wallet';
   import {gnosisConfig} from "$lib/shared/config/circles";
+  import { assertWalletCanSignForSafe } from '$lib/shared/integrations/safe/assertWalletCanSignForSafe';
 
   interface Props { context: OfferFlowContext; }
   let { context }: Props = $props();
@@ -69,52 +67,6 @@
     return [];
   }
 
-  const SAFE_VIEW_ABI = [
-    'function getOwners() view returns (address[])',
-    'function getThreshold() view returns (uint256)',
-  ];
-
-  async function getSafeInfo(safe: Address): Promise<{ owners: Address[]; threshold: number }> {
-    const provider = new JsonRpcProvider('https://rpc.aboutcircles.com');
-    const contract = new Contract(safe, SAFE_VIEW_ABI, provider);
-
-    const owners = (await (contract.getOwners() as Promise<string[]>)).map((o) => o.toLowerCase() as Address);
-    const thresholdRaw = await (contract.getThreshold() as Promise<bigint | number>);
-    const threshold = typeof thresholdRaw === 'bigint' ? Number(thresholdRaw) : thresholdRaw;
-
-    return { owners, threshold };
-  }
-
-  function ownersPreview(owners: string[], max: number = 3): string {
-    if (owners.length <= max) return owners.join(', ');
-    return `${owners.slice(0, max).join(', ')}, …(+${owners.length - max})`;
-  }
-
-  async function resolveOwnerAndAssertSafe(safe: Address): Promise<{ owner: Address }> {
-    const eth = getWalletProvider();
-
-    await ensureGnosisChain(eth);
-
-    const accs: string[] = await eth.request({ method: 'eth_requestAccounts' }) as string[];
-    const owner = (accs?.[0] ?? '').toLowerCase() as Address;
-    if (!/^0x[a-f0-9]{40}$/.test(owner)) throw new Error('No EOA account unlocked in wallet');
-    if (owner === safe.toLowerCase()) throw new Error('Selected account equals the Safe. Switch to a Safe owner EOA.');
-
-    const info = await getSafeInfo(safe);
-
-    if (info.threshold !== 1) {
-      throw new Error(`Safe threshold must be 1 for this flow (current: ${info.threshold}).`);
-    }
-
-    const belongs = new Set(info.owners).has(owner);
-    if (!belongs) {
-      const preview = ownersPreview(info.owners);
-      throw new Error(`Connected account ${owner} is not an owner of Safe ${safe}. Owners: ${preview}`);
-    }
-
-    return { owner };
-  }
-
   async function publish(): Promise<void> {
     if (!requiredOk) throw new Error('Draft has missing or invalid fields.');
 
@@ -129,7 +81,7 @@
       throw new Error('Wallet avatar address is required to publish an offer.');
     }
 
-    await resolveOwnerAndAssertSafe(seller);
+    await assertWalletCanSignForSafe(seller);
 
     const eth = getWalletProvider();
 

@@ -19,4 +19,13 @@ export type AdminNewProductFlowContext = {
   // odoo
   selectedConnectionKey?: string;
   odooProductCode?: string;
+
+  // odoo connection details (used when creating a new connection inline)
+  odooUrl?: string;
+  odooDb?: string;
+  odooUid?: number;
+  odooKey?: string;
+  salePartnerId?: number | null;
+  jsonrpcTimeoutMs?: number;
+  fulfillInheritRequestAbort?: boolean;
 };

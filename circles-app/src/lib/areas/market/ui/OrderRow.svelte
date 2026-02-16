@@ -24,7 +24,7 @@
     popupControls.open({
       title: `Order ${idText}`,
       component: OrderDetailsPopup,
-      props: { snapshot: item.snapshot },
+      props: { mode: 'buyer', snapshot: item.snapshot },
     });
   }
 </script>

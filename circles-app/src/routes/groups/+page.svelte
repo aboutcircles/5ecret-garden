@@ -201,7 +201,7 @@
               headerTopGapClass="mt-4 md:mt-6"
               collapsedTopGapClass="mt-3 md:mt-4">
             {#snippet title()}
-        <h1 class="h2">My groups</h1>
+        <h1 class="h2">Groups</h1>
     {/snippet}
     {#snippet meta()}
         Groups and communities

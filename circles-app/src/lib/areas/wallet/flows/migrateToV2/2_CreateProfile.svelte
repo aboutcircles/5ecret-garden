@@ -15,19 +15,13 @@
   import type { Profile } from '@circles-sdk/profiles';
   import { requireAvatar } from '$lib/shared/flow';
   import type { ProfileEditStepProps } from '$lib/shared/flow';
+  import { validateProfile } from '$lib/shared/ui/profile/profileValidation';
 
   type Props = ProfileEditStepProps<MigrateToV2Context>;
 
   let { context = $bindable() }: Props = $props();
 
   let errors: string[] | undefined = $state(undefined);
-
-  const config = {
-    maxImageSizeKB: parseInt('150'),
-    descriptionLength: parseInt('500'),
-    imageUrlLength: parseInt('2000'),
-    maxNameLength: parseInt('36'),
-  };
 
   let newProfile: Profile = $state({
     name: '',
@@ -46,53 +40,6 @@
     requireAvatar(avatarState.avatar);
     context.profile = avatarState.profile;
   });
-
-  const validateProfile = async (profile: Profile) => {
-    const errors: string[] = [];
-
-    if (!profile.name || typeof profile.name !== 'string' || profile.name.length > config.maxNameLength) {
-      errors.push(`Name is required and must be a string with a maximum length of ${config.maxNameLength} characters.`);
-    }
-
-    if (profile.description && (typeof profile.description !== 'string' || profile.description.length > config.descriptionLength)) {
-      errors.push(`Description must be a string and cannot exceed ${config.descriptionLength} characters.`);
-    }
-
-    if (profile.previewImageUrl) {
-      const isValidImage = await validateImage(profile.previewImageUrl);
-      if (!isValidImage) {
-        errors.push(`Invalid preview image data URL, or size exceeds ${config.maxImageSizeKB}KB.`);
-      }
-    }
-
-    if (profile.imageUrl && (typeof profile.imageUrl !== 'string' || profile.imageUrl.length > config.imageUrlLength)) {
-      errors.push(`Image URL must be a string and cannot exceed ${config.imageUrlLength} characters.`);
-    }
-
-    return errors;
-  };
-
-  import { parseDataUrlToBytes } from '$lib/shared/media/imageTools';
-
-  const validateImage = async (dataUrl: string): Promise<boolean> => {
-    const dataUrlPattern = /^data:image\/(png|jpeg|jpg|gif|svg\+xml);base64,/;
-    if (!dataUrlPattern.test(dataUrl)) {
-      console.error('Invalid data URL pattern', dataUrl);
-      return false;
-    }
-
-    try {
-      const { bytes } = parseDataUrlToBytes(dataUrl);
-      if (bytes.length > config.maxImageSizeKB * 1024) {
-        console.error('Image size exceeds limit');
-        return false;
-      }
-      return true;
-    } catch (e) {
-      console.error('Failed to parse image data URL', e);
-      return false;
-    }
-  };
 
   async function next() {
     if (!profilesEqual(context.profile, newProfile)) {

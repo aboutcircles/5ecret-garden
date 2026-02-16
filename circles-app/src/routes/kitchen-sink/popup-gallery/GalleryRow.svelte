@@ -21,6 +21,13 @@
     <div>
       <h3 class="text-base font-semibold">{entry.label}</h3>
       <p class="text-xs opacity-70 mt-1">{entry.purpose}</p>
+
+      {#if entry.details}
+        <details class="mt-2">
+          <summary class="text-xs font-semibold opacity-80 cursor-pointer select-none">Flow details</summary>
+          <div class="mt-2 text-xs opacity-80 whitespace-pre-wrap leading-relaxed">{entry.details}</div>
+        </details>
+      {/if}
     </div>
     <div class="flex items-center gap-2">
       <span class="badge badge-outline badge-sm">{entry.domain}</span>
