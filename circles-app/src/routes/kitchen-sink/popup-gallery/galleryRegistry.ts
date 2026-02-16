@@ -64,7 +64,6 @@ import BookmarkDetailsPopup from '$lib/areas/settings/ui/sections/BookmarkDetail
 
 import ProductDetailsPopup from '$lib/areas/market/ui/ProductDetailsPopup.svelte';
 import OrderDetailsPopup from '$lib/areas/market/orders/OrderDetailsPopup.svelte';
-import SalesOrderDetailsPopup from '$lib/areas/market/ui/SalesOrderDetailsPopup.svelte';
 
 import JumpPopup from '$lib/shared/ui/content/jump/JumpPopup.svelte';
 import CloseConfirmStep from '$lib/shared/ui/shell/CloseConfirmStep.svelte';
@@ -191,6 +190,19 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'Wallet send flow',
     domain: 'Wallet',
     purpose: 'Recipient → route → amount → review for token transfer popups.',
+    details: `Step 1 (To): Recipient search/selection with guards for “circles-only”, avatar presence, and valid wallet address. If an asset is already selected in context, the flow can skip the asset step and jump straight to amount.
+
+Step 2 (Asset): Choose the asset/route. If opened in “returnMode=back”, selection immediately pops back to the caller; otherwise continues to amount.
+
+Step 3 (Amount): Core branching happens here:
+- Direct vs transitive (auto-route) transfers. Pathfinding only runs for transitive routing.
+- If pathfinding fails, a “route not ready” state is shown and continue is disabled ('pathfindingFailed').
+- Validation gates: amount > 0, route must be ready, and amount must not exceed the computed max capacity for the chosen route.
+- UI alerts cover: zero amount, route not ready, and “capacity exceeded”.
+- Advanced panel supports optional data payload (UTF-8/hex) and maxTransfers controls.
+- Backspace on an empty amount input jumps back to recipient search.
+
+Step 4 (Send/Review): Re-validates recipient/asset/amount before submitting. Encodes context data (hex/utf-8) and calls the transfer action with the selected token and maxTransfers. Async failures are surfaced via StepAlert. On success the popup closes.`,
     steps: [
       { id: 'send-1', title: '1_To.svelte', purpose: 'Pick recipient', component: SendTo, propsFactory: () => ({ context: mockSendContext() }) },
       { id: 'send-2', title: '2_Asset.svelte', purpose: 'Pick route/asset', component: SendAsset, propsFactory: () => ({ context: mockSendContext() }) },
@@ -204,6 +216,20 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'Wallet migrate-to-v2 flow',
     domain: 'Wallet',
     purpose: 'Invitation/profile/contacts migration wizard.',
+    details: `Step 1 (Get invited): Fetches invitations. If none exist, the UI either:
+- Allows self-migration when settings permit it (e.g., ring setting / sdk.canSelfMigrate), or
+- Blocks with an informational message when self-migration is not allowed.
+
+Step 2 (Create profile): Validates profile fields before continuing:
+- Name is required and max 36 characters.
+- Description max 500 characters.
+- previewImageUrl must be a data URL and under ~150KB.
+- imageUrl max length 2000.
+Invalid inputs are summarized via StepAlert, and fallback image URLs are reset when necessary.
+
+Step 3 (Migrate contacts): Presents a trust-ordered contact list with toggles. Empty selection shows an info alert. Order is maintained by trust relation.
+
+Step 4 (Migrate): Review rows link back to earlier steps for edits. On submit calls sdk.migrateAvatar, updates avatar state/version, and clears/refreshes caches as part of completing the migration.`,
     steps: [
       { id: 'm2v-1', title: '1_GetInvited.svelte', purpose: 'Select inviter', component: MigrateInvite, propsFactory: () => ({ context: mockMigrateContext() }) },
       { id: 'm2v-2', title: '2_CreateProfile.svelte', purpose: 'Prepare profile', component: MigrateProfile, propsFactory: () => ({ context: mockMigrateContext() }) },
@@ -217,6 +243,14 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'Gateway create flow',
     domain: 'Settings',
     purpose: 'Create payment gateway from profile and confirmation steps.',
+    details: `Step 1 (CreateGatewayProfile): Collects and validates the gateway configuration:
+- On-chain name must be valid (isValidOnChainName).
+- Factory address must be a valid address.
+- Human-friendly profile name is required.
+
+Step 2 (ConfirmCreateGateway): Repeats validation and blocks submission when invalid; StepAlert enumerates missing/invalid fields.
+
+On submit, the flow pins gateway profile metadata (e.g., to IPFS). Pin failures surface as errors. It then sends the on-chain transaction and parses the receipt for a GatewayCreated event; if found it stores the new gateway in localStorage and triggers the onCreated callback.`,
     steps: [
       { id: 'gw-create-1', title: 'CreateGatewayProfile.svelte', purpose: 'Set gateway profile', component: CreateGatewayProfile, propsFactory: () => ({ context: mockGatewayContext(), onCreated: noop }) },
       { id: 'gw-create-2', title: 'ConfirmCreateGateway.svelte', purpose: 'Review and create', component: ConfirmCreateGateway, propsFactory: () => ({ context: mockGatewayContext(), onCreated: noop }) },
@@ -228,6 +262,11 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'Gateway manage trust flow',
     domain: 'Settings',
     purpose: 'Manage trust receivers for a gateway.',
+    details: `Step 1 (ManageTrust): Loads current trust receiver rows for the gateway. If the gateway address is invalid, management actions are disabled. Adding trust opens the trust-creation flow; removing trust navigates to the confirmation step.
+
+Step 2 (ConfirmGatewayUntrust): Requires a connected wallet, a valid gateway address, and a selected trust receiver. Missing prerequisites are shown as warnings and the action stays disabled.
+
+After add/remove actions complete, the trust list is reloaded to reflect changes.`,
     steps: [
       { id: 'gw-trust-1', title: 'ManageTrust.svelte', purpose: 'List trusted accounts', component: ManageTrust, propsFactory: () => ({ gateway: mockAddressA }) },
       { id: 'gw-trust-4', title: 'ConfirmGatewayUntrust.svelte', purpose: 'Confirm untrust', component: ConfirmGatewayUntrust, propsFactory: () => ({ gateway: mockAddressA, trustReceiver: mockAddressC, onDone: noop }) },
@@ -239,6 +278,14 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'Contacts add-contact flow',
     domain: 'Contacts',
     purpose: 'Search and trust-management branching flow.',
+    details: `Step 1 (Search): Search for an avatar/contact to add. Selecting an avatar branches based on current trust state:
+- If the selected avatar is already trusted, the flow goes to the “YouAlreadyTrust” step.
+- Otherwise it opens the add-trust flow directly (requires available avatarState).
+
+Step 2 (YouAlreadyTrust): Offers resolution actions:
+- “Change account” returns to search.
+- “Untrust” opens the Untrust popup.
+- “Done” closes the branch.`,
     steps: [
       { id: 'contact-1', title: '1_Search.svelte', purpose: 'Search contacts', component: AddContactSearch, propsFactory: () => ({ context: mockAddContactContext() }) },
       { id: 'contact-2', title: '2_YouAlreadyTrust.svelte', purpose: 'Already-trusted branch', component: AddContactAlreadyTrust, propsFactory: () => ({ context: mockAddContactContext() }) },
@@ -250,6 +297,21 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'Groups create-group flow',
     domain: 'Groups',
     purpose: 'Create group from details through creation confirmation.',
+    details: `Step 1 (CreateGroup): Validates group basics:
+- Profile name required (max 36).
+- Symbol must be valid.
+- On-chain name must be valid.
+
+Step 2 (Settings): Supports “fast” and “advanced” configurations:
+- Fast mode auto-fills service = 0x0 and fee collection = connected wallet.
+- Advanced mode requires valid addresses and a valid initial conditions list.
+
+Step 3/4 (Review/Create): Performs preflight Safe checks before creation:
+- Connected wallet must be an owner of the Safe.
+- Safe threshold must equal 1.
+If checks fail, errors are thrown and shown.
+
+On success, the flow pins the profile metadata CID, submits the on-chain group creation, and resets flow context after completion.`,
     steps: [
       { id: 'group-create-1', title: '1_CreateGroup.svelte', purpose: 'Group basics', component: CreateGroupStart, propsFactory: () => ({ context: mockCreateGroupContext(), setGroup: noop }) },
       { id: 'group-create-2', title: '2_Settings.svelte', purpose: 'Group settings', component: CreateGroupSettings, propsFactory: () => ({ context: mockCreateGroupContext(), setGroup: noop }) },
@@ -263,6 +325,15 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'Market checkout flow',
     domain: 'Market',
     purpose: 'Cart -> details -> review -> payment.',
+    details: `Step 1 (CartPanel): Builds a cart preview and runs validateCart(). If validation returns unmet requirements, the flow routes to CheckoutForms; if validation passes it can go straight to review. If validation errors, it still routes to forms to allow recovery.
+
+Step 2 (CheckoutForms): Renders form fields dynamically based on required slots. Server-side validation drives field-level errors. Unmet requirements block continuation.
+
+Step 3 (CheckoutReview): Shows grouped line items, totals, and a summary of shipping/contact details. Allows jumping back to edit cart or forms.
+
+Step 4 (CheckoutPayment): Derives the payment reference and resolves the pay-to address. Enforces that all items pay to a single recipient. Validates supported currency (CRC-only) and runs pathfinding to compute max transfer capacity; mismatches or insufficient route capacity appear in StepAlert.
+
+Side effect: can branch into the Wallet Send flow to perform in-app payment.`,
     steps: [
       { id: 'checkout-1', title: 'CartPanel.svelte', purpose: 'Review cart', component: CheckoutCart },
       { id: 'checkout-2', title: 'CheckoutForms.svelte', purpose: 'Fill required details', component: CheckoutForms },
@@ -276,6 +347,11 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'Market offer flow',
     domain: 'Market',
     purpose: 'Create offer through product/pricing/review.',
+    details: `Step 1 (Product): Requires a connected wallet and an existing payment gateway. If missing, blocks with an info alert and links to settings. If SKU is manually entered it must match the expected format; when SKU is empty the UI can auto-generate one. An advanced section exposes additional metadata fields.
+
+Step 2 (Pricing): Validates price > 0 and that a gateway is selected. Required slots toggles are persisted into the draft. If no gateways are available, shows an informational alert.
+
+Step 3 (Preview/Publish): Re-validates the full draft (operator, product fields, pricing, selected gateway). Runs Safe owner checks (connected EOA must own the Safe; threshold must be 1). Publishes the offer via the market client; may optionally pin images/metadata during publish.`,
     steps: [
       { id: 'offer-1', title: '1_Product.svelte', purpose: 'Product details', component: OfferProduct, propsFactory: () => ({ context: { operator: mockAddressA, draft: { sku: 'demo-sku', name: 'Demo Product', description: 'Demo desc' } } }) },
       { id: 'offer-2', title: '2_Pricing.svelte', purpose: 'Pricing + gateway', component: OfferPricing, propsFactory: () => ({ context: { operator: mockAddressA, draft: { sku: 'demo-sku', name: 'Demo Product', price: 10, priceCurrency: 'CRC', paymentGateway: mockAddressB } } }) },
@@ -288,6 +364,19 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'Admin new-product flow',
     domain: 'Admin',
     purpose: 'Admin flow to configure product integration.',
+    details: `Step 1 (Seller): Selects/normalizes a seller and loads available catalog/integration context.
+
+Step 2 (Catalog): Fetches catalog items; items already mapped to existing products are disabled.
+
+Step 3 (Type): Choose fulfillment type. If Odoo is selected and there is no existing connection, the flow branches into the CreateOdooConnection step.
+
+Step 4 (CreateOdooConnection): Captures Odoo connection details when needed, then returns to the product flow.
+
+Step 5 (Details): Captures type-specific fields:
+- Code-dispenser: validates that codes contain no whitespace (except potential trailing whitespace).
+- Odoo: requires a connection and a product code.
+
+Step 6 (Summary): Re-validates all required fields, constructs the final payload, and allows jumping back to earlier steps for edits before executing.`,
     steps: [
       { id: 'admin-product-1', title: '1_Seller.svelte', purpose: 'Select seller', component: NewProductSeller, propsFactory: () => ({ context: mockNewProductContext(), connections: [], existingProducts: [], onExecute: noopAsync, onCreateConnection: (async () => ({})) }) },
       { id: 'admin-product-2', title: '2_Catalog.svelte', purpose: 'Select catalog item', component: NewProductCatalog, propsFactory: () => ({ context: mockNewProductContext(), connections: [], existingProducts: [], onExecute: noopAsync, onCreateConnection: (async () => ({})) }) },
@@ -303,6 +392,9 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'Admin new-connection flow',
     domain: 'Admin',
     purpose: 'Create Odoo connection in two steps.',
+    details: `Step 1 (Seller): Select and normalize a seller identity; invalid inputs are shown via StepAlert.
+
+Step 2 (Details): Requires Odoo URL, database, and API key (and related connection settings). Validation errors are summarized in StepAlert and block creation until resolved.`,
     steps: [
       { id: 'admin-conn-1', title: '1_Seller.svelte', purpose: 'Select seller', component: NewConnectionSeller, propsFactory: () => ({ context: mockNewConnectionContext(), onCreate: noopAsync }) },
       { id: 'admin-conn-2', title: '2_Details.svelte', purpose: 'Enter connection details', component: NewConnectionDetails, propsFactory: () => ({ context: mockNewConnectionContext(), onCreate: noopAsync }) },
@@ -314,6 +406,9 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'SelectWallet.svelte',
     domain: 'Wallet',
     purpose: 'Wallet connector selection popup.',
+    details: `Connects via wagmi. If no account is returned after a connect attempt, shows a warning. Depending on the chosen path it can redirect into the Safe connection flow (e.g., /connect-wallet/connect-safe/).
+
+For the circles.garden path, it can reuse a saved private key if present; otherwise it routes into ImportCircles to import a seed phrase.`,
     step: { id: 'single-select-wallet', title: 'Select wallet', purpose: 'Onboarding entry', component: SelectWallet },
   },
   {
@@ -322,6 +417,7 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'WrongNetwork.svelte',
     domain: 'Wallet',
     purpose: 'Wrong chain warning and chain switch action.',
+    details: `Shows a network mismatch warning. Primary action requests a chain switch to Gnosis Chain (chain id 100) and then closes the popup.`,
     step: { id: 'single-wrong-network', title: 'Wrong network', purpose: 'Network mismatch recovery', component: WrongNetwork, inlineDefault: true },
   },
   {
@@ -330,6 +426,7 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'ImportCircles.svelte',
     domain: 'Wallet',
     purpose: 'Seed phrase import popup.',
+    details: `Accepts a seed phrase and derives a private key + address. The Import action stays disabled until the derived values are valid.`,
     step: { id: 'single-import-circles', title: 'Import circles', purpose: 'Import by seed phrase', component: ImportCircles },
   },
   {
@@ -338,6 +435,7 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'Balances.svelte',
     domain: 'Wallet',
     purpose: 'Balances list popup with filtering/search.',
+    details: `Shows token balances with a filter panel toggle. Search supports owner and token address queries. A “dust” filter hides very small balances (e.g., < 1e16 atto units).`,
     step: { id: 'single-balances', title: 'Balances', purpose: 'Browse token balances', component: Balances },
   },
   {
@@ -346,6 +444,7 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'WrapTokens.svelte',
     domain: 'Wallet',
     purpose: 'Wrap token popup action.',
+    details: `Wrap action for tokens. Only supported for avatar v2. UI toggles between Static and Demurraged token variants (wrapping target depends on token type).`,
     step: { id: 'single-wrap', title: 'Wrap tokens', purpose: 'Wrap tokens action', component: WrapTokens, propsFactory: () => ({ asset: transitiveTransfer() }) },
   },
   {
@@ -354,6 +453,7 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'UnwrapTokens.svelte',
     domain: 'Wallet',
     purpose: 'Unwrap token popup action.',
+    details: `Unwrap action depends on the selected token type. Unsupported token types produce an error state.`,
     step: { id: 'single-unwrap', title: 'Unwrap tokens', purpose: 'Unwrap tokens action', component: UnwrapTokens, propsFactory: () => ({ asset: transitiveTransfer() }) },
   },
   {
@@ -362,6 +462,7 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'MigrateTokens.svelte',
     domain: 'Wallet',
     purpose: 'Migrate v1 token popup action.',
+    details: `Migrates v1 tokens to the newer format. Only v1 tokens are accepted; attempting to migrate a v2 token results in an error state.`,
     step: { id: 'single-migrate-token', title: 'Migrate token', purpose: 'Token migration action', component: MigrateTokens, propsFactory: () => ({ asset: transitiveTransfer() }) },
   },
   {
@@ -370,6 +471,10 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'RedeemGroup.svelte',
     domain: 'Groups',
     purpose: 'Group redeem popup.',
+    details: `Provides group token redemption with allocation logic:
+- Validates that allocations do not exceed available collateral and do not exceed the user’s balance.
+- “Distribute” can auto-allocate across recipients using trust priority.
+On redeem, builds the required arrays and executes groupRedeem.`,
     step: { id: 'single-redeem-group', title: 'Redeem group', purpose: 'Redeem group token collateral', component: RedeemGroup, propsFactory: () => ({ asset: transitiveTransfer() }) },
   },
   {
@@ -378,6 +483,7 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'ProfilePopup.svelte',
     domain: 'Profile',
     purpose: 'Canonical profile popup wrapper.',
+    details: `A wrapper popup around the Profile page/view. Does not add additional branching logic beyond the underlying profile UI.`,
     step: { id: 'single-profile-popup', title: 'Profile popup', purpose: 'Show profile details', component: ProfilePopup, propsFactory: () => ({ address: mockAddressA, trustVersion: 2 }) },
   },
   {
@@ -386,6 +492,10 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'Untrust.svelte',
     domain: 'Contacts',
     purpose: 'Untrust confirmation popup.',
+    details: `Untrust action uses TrustActionCard. Behavior depends on trust version:
+- Trust v1 uses the v1 avatar implementation.
+- Trust v2 uses the v2 implementation.
+The popup guides the user through confirming the untrust transaction/action.`,
     step: { id: 'single-untrust', title: 'Untrust', purpose: 'Untrust action', component: Untrust, propsFactory: () => ({ address: mockAddressB, trustVersion: 2 }) },
   },
   {
@@ -394,6 +504,7 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'Invite.svelte',
     domain: 'Contacts',
     purpose: 'Invite popup branch.',
+    details: `Invites an address via avatarState.avatar.inviteHuman(address). Requires a valid address and a ready avatar state.`,
     step: { id: 'single-invite', title: 'Invite', purpose: 'Invite action', component: Invite, propsFactory: () => ({ address: mockAddressC }) },
   },
   {
@@ -402,6 +513,7 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'SettingProfile.svelte',
     domain: 'Settings',
     purpose: 'Settings profile quick actions popup.',
+    details: `Provides quick profile/settings actions, including “change wallet”. Change wallet can route to connect a wallet or import, depending on whether a private key is already stored. “Edit profile” opens ProfileExplorer.`,
     step: { id: 'single-setting-profile', title: 'Setting profile', purpose: 'Profile/settings surface', component: SettingProfile, propsFactory: () => ({ address: mockAddressA }) },
   },
   {
@@ -410,6 +522,7 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'ProfileExplorer.svelte',
     domain: 'Profile',
     purpose: 'Profile editor popup surface.',
+    details: `Loads and binds profile data. Editability is restricted to the profile owner (connected avatar). Saving triggers a rebase, updates the profile digest, and resets/refreshes relevant caches.`,
     step: { id: 'single-profile-explorer', title: 'Profile explorer', purpose: 'Edit profile details', component: ProfileExplorer, propsFactory: () => ({ avatar: mockAddressA, pinApiBase: 'https://example.org/api' }) },
   },
   {
@@ -418,6 +531,7 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'AddSigningKey.svelte',
     domain: 'Profile',
     purpose: 'Add signing key popup.',
+    details: `Generates a keypair client-side; only the public key is persisted to the profile’s signingKeys. Validates inputs before updating. Sensitive, temporary key material is cleared on close.`,
     step: { id: 'single-add-signing-key', title: 'Add signing key', purpose: 'Profile signing key management', component: AddSigningKey, propsFactory: () => ({ avatar: mockAddressA, pinApiBase: 'https://example.org/api' }) },
   },
   {
@@ -426,6 +540,7 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'BookmarkDetailsPopup.svelte',
     domain: 'Settings',
     purpose: 'Bookmark details and folder management popup.',
+    details: `Shows bookmark details and supports folder/note management. Destructive actions (e.g., removal, clearing note) are guarded by confirm dialogs.`,
     step: { id: 'single-bookmark-details', title: 'Bookmark details', purpose: 'Bookmark detail management', component: BookmarkDetailsPopup, propsFactory: () => ({ bookmark: { address: mockAddressA, createdAt: Date.now(), note: 'Demo note', folder: 'VIPs' } }) },
   },
   {
@@ -434,6 +549,7 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'ProductDetailsPopup.svelte',
     domain: 'Market',
     purpose: 'Product details popup.',
+    details: `Loads product data from the catalog and fetches live availability/inventory. “Add to cart” is gated by availability/state (disabled when not purchasable).`,
     step: { id: 'single-product-details', title: 'Product details', purpose: 'Product preview and add-to-cart', component: ProductDetailsPopup, propsFactory: () => ({ seller: mockAddressA, sku: 'demo-sku' }) },
   },
   {
@@ -442,15 +558,17 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'OrderDetailsPopup.svelte',
     domain: 'Market',
     purpose: 'Buyer order details popup.',
-    step: { id: 'single-order-details', title: 'Order details', purpose: 'Buyer order detail view', component: OrderDetailsPopup, propsFactory: () => ({ snapshot: { orderNumber: 'DEMO-ORDER-1', orderStatus: 'https://schema.org/OrderProcessing', orderedItem: [{ sku: 'demo-sku', name: 'Demo product' }] } }) },
+    details: `Buyer-facing order detail view. Subscribes to server-sent events (SSE) for status updates and refreshes on key transitions (e.g., PaymentComplete / OrderDelivered). Advanced JSON is available in an expandable details section.`,
+    step: { id: 'single-order-details', title: 'Order details', purpose: 'Buyer order detail view', component: OrderDetailsPopup, propsFactory: () => ({ mode: 'buyer', snapshot: { orderNumber: 'DEMO-ORDER-1', orderStatus: 'https://schema.org/OrderProcessing', orderedItem: [{ sku: 'demo-sku', name: 'Demo product' }] } }) },
   },
   {
     id: 'standalone-market-sales-order-details',
     kind: 'standalone',
-    label: 'SalesOrderDetailsPopup.svelte',
+    label: 'OrderDetailsPopup.svelte',
     domain: 'Market',
     purpose: 'Seller order details popup.',
-    step: { id: 'single-sales-order-details', title: 'Sales order details', purpose: 'Seller order detail view', component: SalesOrderDetailsPopup, propsFactory: () => ({ orderId: 'DEMO-SALES-ORDER' }) },
+    details: `Seller-facing order detail view. Loads the order from the market sales API (seller scope).`,
+    step: { id: 'single-sales-order-details', title: 'Sales order details', purpose: 'Seller order detail view', component: OrderDetailsPopup, propsFactory: () => ({ mode: 'seller', orderId: 'DEMO-SALES-ORDER', showHistory: false, showAdvanced: false }) },
   },
   {
     id: 'standalone-close-confirm-step',
@@ -458,6 +576,7 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'CloseConfirmStep.svelte',
     domain: 'Shared',
     purpose: 'Stack-pushed close confirmation step for explicit-dismiss popups.',
+    details: `A simple yes/no confirmation step used when a popup wants explicit dismissal confirmation. No async logic; callbacks are invoked for Yes/No.`,
     step: {
       id: 'single-close-confirm-step',
       title: 'Close confirm step',
@@ -477,6 +596,7 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'JumpPopup.svelte',
     domain: 'Shared',
     purpose: 'External link confirmation popup.',
+    details: `Sanitizes the destination URL. If invalid, shows an error panel. Provides copy-to-clipboard behavior with a transient “copied” state/icon.`,
     step: { id: 'single-jump-popup', title: 'Jump popup', purpose: 'Open external link confirmation', component: JumpPopup, propsFactory: () => ({ to: 'https://aboutcircles.com' }), inlineDefault: true },
   },
   {
@@ -485,6 +605,7 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'Error.svelte',
     domain: 'Shared',
     purpose: 'Global error popup surface.',
+    details: `Displays an error message and can optionally show a stack trace in an expandable details view. Used by async task helpers to surface runtime failures.`,
     step: { id: 'single-error-popup', title: 'Error popup', purpose: 'Show async/runtime errors', component: ErrorPopup, propsFactory: () => ({ errorMessage: 'Demo error for popup gallery', stackTrace: 'Error: Demo\n at PopupGallery (gallery)' }), inlineDefault: true },
   },
   {
@@ -493,6 +614,7 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'EventHistoryDayEventsPopup.svelte',
     domain: 'Shared',
     purpose: 'Day event breakdown popup.',
+    details: `Breaks a day’s events down into buckets (hour/minute), supports drilldown on an hour bucket, and applies a search filter across the list. Larger days are paginated/virtualized to keep the UI responsive.`,
     step: {
       id: 'single-event-history-day',
       title: 'Day events popup',
@@ -515,6 +637,7 @@ export const popupGalleryEntries: GalleryEntry[] = [
     label: 'PopupDemoCard.svelte',
     domain: 'Kitchen Sink',
     purpose: 'Popup stack behavior demo card.',
+    details: `A small demo surface used to test popup stack behavior (push next step, back navigation, and how the host handles returning to previous components). Uses the current component to open the next stack step.`,
     step: { id: 'single-popup-demo-card', title: 'Popup stack demo', purpose: 'State feedback popup demo', component: PopupDemoCard, propsFactory: () => ({ step: 1 }), inlineDefault: true },
   },
 ];

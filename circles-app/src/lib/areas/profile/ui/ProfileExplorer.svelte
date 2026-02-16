@@ -10,6 +10,8 @@
     import { getProfilesBindings } from '$lib/areas/market/offers';
     import { removeProfileFromCache } from '$lib/shared/utils/profile';
     import type {Address} from '@circles-sdk/utils';
+    import type { Profile } from '@circles-sdk/profiles';
+    import { validateProfile } from '$lib/shared/ui/profile/profileValidation';
 
     interface Props {
         avatar?: Address;
@@ -24,6 +26,7 @@
     let resolvedAvatar = $state<Address | null>(null);
     let loading = $state(true);
     let error = $state<string | null>(null);
+    let validationErrors = $state<string[] | null>(null);
 
     let name = $state('');
     let description = $state('');
@@ -52,6 +55,18 @@
 
     $effect(() => {
         readonly = !isOwner;
+    });
+
+    $effect(() => {
+        const touched =
+            name !== initialName ||
+            description !== initialDescription ||
+            location !== initialLocation ||
+            imageUrl !== initialImageUrl ||
+            previewImageUrl !== initialPreviewImageUrl;
+        if (touched) {
+            validationErrors = null;
+        }
     });
 
     function getBindings(): ProfilesBindings {
@@ -103,6 +118,17 @@
 
     async function saveProfile(): Promise<void> {
         if (!resolvedAvatar) return;
+
+        validationErrors = await validateProfile({
+            name,
+            description,
+            imageUrl,
+            previewImageUrl,
+        } as Profile);
+        if (validationErrors.length > 0) {
+            return;
+        }
+
         const bindings = getBindings();
         await runTask({
             name: 'Saving profile…',
@@ -118,6 +144,14 @@
                 removeProfileFromCache(resolvedAvatar!);
             })()
         });
+
+        // Save succeeded.
+        validationErrors = null;
+        initialName = name;
+        initialDescription = description;
+        initialLocation = location;
+        initialImageUrl = imageUrl;
+        initialPreviewImageUrl = previewImageUrl;
     }
 
     onMount(() => {
@@ -128,6 +162,17 @@
 <div class="space-y-4">
     {#if error}
         <div class="alert alert-error text-xs">{error}</div>
+    {/if}
+
+    {#if validationErrors && validationErrors.length > 0}
+        <div class="alert alert-error text-xs">
+            <div class="font-semibold">Profile validation error</div>
+            <ul class="list-disc ml-4">
+                {#each validationErrors as ve}
+                    <li>{ve}</li>
+                {/each}
+            </ul>
+        </div>
     {/if}
 
     <!-- Header editor panel -->

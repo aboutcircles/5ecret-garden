@@ -1,7 +1,7 @@
 <script lang="ts">
   import { formatTimestamp, statusLabel } from '$lib/areas/market/orders/status';
   import { popupControls, type PopupContentDefinition } from '$lib/shared/state/popup';
-  import { SalesOrderDetailsPopup } from '$lib/areas/market/ui';
+  import OrderDetailsPopup from '$lib/areas/market/orders/OrderDetailsPopup.svelte';
   import MarketOrderListRow from '$lib/areas/market/ui/MarketOrderListRow.svelte';
   interface Props {
     item: {
@@ -30,8 +30,8 @@
   function openPopup(): void {
     const def: PopupContentDefinition = {
       title: 'Sales order',
-      component: SalesOrderDetailsPopup,
-      props: { orderId: item.orderNumber },
+      component: OrderDetailsPopup,
+      props: { mode: 'seller', orderId: item.orderNumber, showHistory: false, showAdvanced: false },
     };
     popupControls.open(def);
   }

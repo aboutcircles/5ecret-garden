@@ -15,6 +15,8 @@ export type GalleryFlowEntry = {
   label: string;
   domain: string;
   purpose: string;
+  /** Long-form flow description shown in the gallery as a collapsible panel. */
+  details?: string;
   entrypoints?: string[];
   steps: GalleryStep[];
 };
@@ -25,6 +27,8 @@ export type GalleryStandaloneEntry = {
   label: string;
   domain: string;
   purpose: string;
+  /** Long-form popup description shown in the gallery as a collapsible panel. */
+  details?: string;
   entrypoints?: string[];
   step: GalleryStep;
 };

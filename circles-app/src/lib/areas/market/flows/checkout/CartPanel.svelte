@@ -5,9 +5,7 @@
     updateLineByIdentity,
     validateCart,
   } from '$lib/areas/market/cart/store';
-  import type {AggregatedCatalogItem} from '$lib/areas/market/model';
   import { openStep, useAsyncAction } from '$lib/shared/flow';
-  import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
   import {pickFirstProductImageUrl} from '$lib/areas/market/services';
   import CheckoutForms from '$lib/areas/market/flows/checkout/CheckoutForms.svelte';
   import CheckoutReview from '$lib/areas/market/flows/checkout/CheckoutReview.svelte';
@@ -16,43 +14,7 @@
   import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
   import { CHECKOUT_FLOW_SCAFFOLD_BASE } from './constants';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
-  import {gnosisConfig} from "$lib/shared/config/circles";
-
-  // ————————————————————————————————————————————
-  // Product metadata resolver via shared catalog client
-  // ————————————————————————————————————————————
-  type ProductKey = string;
-  function productKey(seller: string | undefined, sku: string | undefined): ProductKey | null {
-    if (!seller || !sku) return null;
-    return `${seller.toLowerCase()}::${sku.toLowerCase()}`;
-  }
-
-  // key -> AggregatedCatalogItem | null (null: failed/not found)
-  let resolvedProducts: Record<ProductKey, AggregatedCatalogItem | null> = $state({});
-  let resolvingKeys: Set<ProductKey> = new Set();
-
-  function findCatalogItem(
-    seller: string | undefined,
-    sku: string | undefined,
-  ): AggregatedCatalogItem | undefined {
-    const key = productKey(seller, sku);
-    if (!key) return undefined;
-    const entry = resolvedProducts[key];
-    return entry ?? undefined;
-  }
-
-  function imageUrlForLine(line: any): string | null {
-  const direct = typeof line?.imageUrl === 'string' ? line.imageUrl.trim() : '';
-  if (direct) return direct;
-
-  const item = findCatalogItem(
-    line?.seller as string | undefined,
-    line?.orderedItem?.sku as string | undefined
-  );
-  if (!item) return null;
-
-  return pickFirstProductImageUrl(item.product);
-}
+  import { resetResolvedProductsCache, useResolvedProducts } from '$lib/areas/market/flows/checkout/useResolvedProducts';
 
   async function handleQuantityChange(
     itemIdx: number,
@@ -93,36 +55,13 @@
     void handleQuantityChange(itemIdx, "0");
   }
 
-  // Lazily fetch missing products for each line in basket
   $effect(() => {
-    const items = $cartState.basket?.items ?? [];
-    const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
-    for (const line of items) {
-      const seller = line.seller as string | undefined;
-      const sku = line.orderedItem?.sku as string | undefined;
-      const key = productKey(seller, sku);
-      if (!key) continue;
-
-      const alreadyKnown = Object.prototype.hasOwnProperty.call(resolvedProducts, key);
-      const alreadyResolving = resolvingKeys.has(key);
-      if (alreadyKnown || alreadyResolving) continue;
-
-      resolvingKeys.add(key);
-      resolvedProducts = { ...resolvedProducts, [key]: null };
-
-      void (async () => {
-        try {
-          const item = await catalog.fetchProductForSellerAndSku(seller as string, sku as string);
-          resolvedProducts = { ...resolvedProducts, [key]: item };
-        } catch (e) {
-          console.debug('[cart] failed to resolve catalog product', { seller, sku }, e);
-          resolvedProducts = { ...resolvedProducts, [key]: null };
-        } finally {
-          resolvingKeys.delete(key);
-        }
-      })();
+    if (!$cartState.basket || !$cartState.basket.items || $cartState.basket.items.length === 0) {
+      resetResolvedProductsCache();
     }
   });
+
+  const { findCatalogItem, imageUrlForLine } = useResolvedProducts(($cartState.basket?.items ?? []) as any[]);
 
   function hasRequirements(v: any): boolean {
     if (!v || !Array.isArray(v.requirements)) return false;

@@ -9,14 +9,12 @@
     import Markdown from '$lib/shared/ui/content/markdown/Markdown.svelte';
     import { cidV0ToUint8Array } from '@circles-sdk/utils';
     import { isValidSymbol, isValidOnChainName } from '$lib/shared/utils/isValid';
-    import { ensureGnosisChain } from '$lib/shared/integrations/chain/gnosis';
-    import { getWalletProvider } from '$lib/shared/integrations/wallet';
     import {
         createGroupContext,
         type CreateGroupFlowContext,
         resetCreateGroupContext
     } from './context';
-  import { Contract, JsonRpcProvider } from 'ethers';
+    import { assertWalletCanSignForSafe } from '$lib/shared/integrations/safe/assertWalletCanSignForSafe';
   import type { AddressLike } from 'ethers';
 
     const PROFILE_NAME_MAX_LENGTH = 36;
@@ -42,39 +40,6 @@
         const safeTopic = topic as string;
         const addr = '0x' + safeTopic.slice(26);
         return addr.toLowerCase();
-    }
-
-    const SAFE_VIEW_ABI = [
-        'function getOwners() view returns (address[])',
-        'function getThreshold() view returns (uint256)'
-    ];
-
-    async function getSafeInfo(safe: string): Promise<{ owners: string[]; threshold: number }> {
-        const provider = new JsonRpcProvider('https://rpc.aboutcircles.com');
-        const contract = new Contract(safe, SAFE_VIEW_ABI, provider);
-        const owners = (await (contract.getOwners() as Promise<string[]>)).map((o) => o.toLowerCase());
-        const thresholdRaw = await (contract.getThreshold() as Promise<bigint | number>);
-        const threshold = typeof thresholdRaw === 'bigint' ? Number(thresholdRaw) : thresholdRaw;
-        return { owners, threshold };
-    }
-
-    async function assertWalletCanSignForSafe(safeAddress: string): Promise<void> {
-        const ethereum = getWalletProvider();
-        await ensureGnosisChain(ethereum);
-
-        const accounts = (await ethereum.request({ method: 'eth_requestAccounts' }) as string[] | undefined) ?? [];
-        const eoa = String(accounts[0] ?? '').toLowerCase();
-        if (!/^0x[a-f0-9]{40}$/.test(eoa)) {
-            throw new Error('No EOA account unlocked in wallet');
-        }
-
-        const info = await getSafeInfo(safeAddress);
-        if (info.threshold !== 1) {
-            throw new Error(`Safe threshold must be 1 for group creation in this flow (current: ${info.threshold}).`);
-        }
-        if (!new Set(info.owners).has(eoa)) {
-            throw new Error(`Connected account ${eoa} is not an owner of Safe ${safeAddress}.`);
-        }
     }
 
     async function createGroup() {

@@ -12,11 +12,8 @@
     import CartPanel from './CartPanel.svelte';
     import CheckoutForms from './CheckoutForms.svelte';
     import CheckoutPayment from './CheckoutPayment.svelte';
-    import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
-    import type { AggregatedCatalogItem } from '$lib/areas/market/model';
-    import { pickFirstProductImageUrl } from '$lib/areas/market/services';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-    import {gnosisConfig} from "$lib/shared/config/circles";
+    import { useResolvedProducts } from '$lib/areas/market/flows/checkout/useResolvedProducts';
 
     const checkoutAction = useAsyncAction(async () => {
         await checkoutCart();
@@ -55,67 +52,7 @@
     const contactPoint = $derived(basket?.contactPoint as any);
     const ageProof = $derived(basket?.ageProof as any);
 
-    // Resolve product metadata (name, image) for review items
-    type ProductKey = string;
-    function productKey(seller: string | undefined, sku: string | undefined): ProductKey | null {
-        if (!seller || !sku) return null;
-        return `${seller.toLowerCase()}::${sku.toLowerCase()}`;
-    }
-
-    let resolvedProducts: Record<ProductKey, AggregatedCatalogItem | null> = $state({});
-    let resolvingKeys: Set<ProductKey> = new Set();
-
-    function findCatalogItem(
-        seller: string | undefined,
-        sku: string | undefined,
-    ): AggregatedCatalogItem | undefined {
-        const key = productKey(seller, sku);
-        if (!key) return undefined;
-        const entry = resolvedProducts[key];
-        return entry ?? undefined;
-    }
-
-    function imageUrlForLine(line: any): string | null {
-  const direct = typeof line?.imageUrl === 'string' ? line.imageUrl.trim() : '';
-  if (direct) return direct;
-
-  const item = findCatalogItem(
-    line?.seller as string | undefined,
-    line?.orderedItem?.sku as string | undefined
-  );
-  if (!item) return null;
-
-  return pickFirstProductImageUrl(item.product);
-}
-
-    // Background fetch of product metadata
-    $effect(() => {
-        const operator = gnosisConfig.production.marketOperator as any;
-        const catalog = getMarketClient().catalog.forOperator(operator);
-        for (const line of lines) {
-            const seller = line?.seller as string | undefined;
-            const sku = line?.orderedItem?.sku as string | undefined;
-            const key = productKey(seller, sku);
-            if (!key) continue;
-            const known = Object.prototype.hasOwnProperty.call(resolvedProducts, key);
-            const busy = resolvingKeys.has(key);
-            if (known || busy) continue;
-
-            resolvingKeys.add(key);
-            resolvedProducts = { ...resolvedProducts, [key]: null };
-            void (async () => {
-                try {
-                    const item = await catalog.fetchProductForSellerAndSku(seller as string, sku as string);
-                    resolvedProducts = { ...resolvedProducts, [key]: item };
-                } catch (e) {
-                    console.debug('[checkout] failed to resolve product from catalog', { seller, sku }, e);
-                    resolvedProducts = { ...resolvedProducts, [key]: null };
-                } finally {
-                    resolvingKeys.delete(key);
-                }
-            })();
-        }
-    });
+    const { findCatalogItem, imageUrlForLine } = useResolvedProducts(lines);
 
     function lineTitle(line: any): string {
         const name = line?.orderedItem?.name;
