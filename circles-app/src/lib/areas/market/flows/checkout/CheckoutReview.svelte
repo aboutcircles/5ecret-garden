@@ -6,6 +6,7 @@
     import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
     import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
     import StepReviewRow from '$lib/shared/ui/flow/StepReviewRow.svelte';
+    import AdvancedDetails from '$lib/shared/ui/flow/AdvancedDetails.svelte';
     import { openStep, popToOrOpen, useAsyncAction } from '$lib/shared/flow';
     import { cartState, checkoutCart } from '$lib/areas/market/cart/store';
     import { popupControls } from '$lib/shared/state/popup';
@@ -277,37 +278,40 @@
             </div>
         {/if}
 
-        <!-- Shipping & contact summary -->
-        {#if hasShippingInfo}
-            <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {#if shippingAddress}
+        <AdvancedDetails title="Advanced checkout details" subtitle="Shipping + contact">
+            {#if hasShippingInfo}
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {#if shippingAddress}
+                        <div class="border border-base-300 rounded-lg bg-base-100 p-3">
+                            <div class="font-semibold text-xs uppercase tracking-wide mb-1">
+                                Shipping address
+                            </div>
+                            {#each formatShippingAddress(shippingAddress) as line}
+                                <div>{line}</div>
+                            {/each}
+                        </div>
+                    {/if}
+
                     <div class="border border-base-300 rounded-lg bg-base-100 p-3">
                         <div class="font-semibold text-xs uppercase tracking-wide mb-1">
-                            Shipping address
+                            Contact
                         </div>
-                        {#each formatShippingAddress(shippingAddress) as line}
-                            <div>{line}</div>
-                        {/each}
+                        {#if formatContactPoint(contactPoint).length > 0}
+                            {#each formatContactPoint(contactPoint) as line}
+                                <div>{line}</div>
+                            {/each}
+                        {:else}
+                            <div class="opacity-70">No contact details provided.</div>
+                        {/if}
+                        {#if formatAgeProof(ageProof)}
+                            <div class="mt-1">{formatAgeProof(ageProof)}</div>
+                        {/if}
                     </div>
-                {/if}
-
-                <div class="border border-base-300 rounded-lg bg-base-100 p-3">
-                    <div class="font-semibold text-xs uppercase tracking-wide mb-1">
-                        Contact
-                    </div>
-                    {#if formatContactPoint(contactPoint).length > 0}
-                        {#each formatContactPoint(contactPoint) as line}
-                            <div>{line}</div>
-                        {/each}
-                    {:else}
-                        <div class="opacity-70">No contact details provided.</div>
-                    {/if}
-                    {#if formatAgeProof(ageProof)}
-                        <div class="mt-1">{formatAgeProof(ageProof)}</div>
-                    {/if}
                 </div>
-            </div>
-        {/if}
+            {:else}
+                <div class="text-sm text-base-content/70">No shipping or contact details provided.</div>
+            {/if}
+        </AdvancedDetails>
 
         <!-- Totals per currency (client-side) + grand total at bottom-right -->
         <div class="mt-2 flex justify-end">

@@ -18,6 +18,7 @@
   import { ensureProfileShape, cidV0ToDigest32Strict } from '@circles-profile/core';
   import { isValidOnChainName } from '$lib/shared/utils/isValid';
   import Markdown from '$lib/shared/ui/content/markdown/Markdown.svelte';
+  import AdvancedDetails from '$lib/shared/ui/flow/AdvancedDetails.svelte';
   import type { ReviewStepProps } from '$lib/shared/flow';
   import CreateGatewayProfile from './CreateGatewayProfile.svelte';
 
@@ -146,22 +147,13 @@
       Please confirm the details of the payment gateway before creating it.
     </p>
 
-    <StepSection title="Gateway details">
+    <StepSection title="Gateway essentials">
       <StepReviewRow
         label="Gateway setup"
         value={context.gatewayName}
         onChange={editGatewayProfile}
         changeLabel="Edit"
       />
-
-      <div class="flex flex-col gap-1">
-        <span class="text-xs text-base-content/60">On-chain name</span>
-        <span class="text-lg font-semibold">{context.gatewayName}</span>
-      </div>
-      <div class="text-sm">
-        <div class="text-base-content/70">Factory</div>
-        <div class="font-mono break-all">{context.factoryAddress}</div>
-      </div>
     </StepSection>
 
     <StepSection title="Gateway profile">
@@ -193,24 +185,34 @@
 
         <div class="flex-1 space-y-2">
           <div>
-            <div class="text-base-content/70 mb-0.5">Name</div>
-            <div class="text-sm">{context.profile?.name || '—'}</div>
+            <div class="text-xs text-base-content/60">Name</div>
+            <div class="text-sm font-semibold">{context.profile?.name || '—'}</div>
           </div>
-
           {#if context.profile?.description}
             <div>
-              <div class="text-base-content/70 mb-0.5">Description</div>
+              <div class="text-xs text-base-content/60 mb-0.5">Description</div>
               <Markdown content={context.profile.description} class="prose prose-sm max-w-none" />
             </div>
           {:else}
             <div>
-              <div class="text-base-content/70 mb-0.5">Description</div>
+              <div class="text-xs text-base-content/60 mb-0.5">Description</div>
               <div class="text-sm text-base-content/50">No description provided.</div>
             </div>
           {/if}
         </div>
       </div>
     </StepSection>
+
+    <AdvancedDetails title="Advanced gateway details" subtitle="Factory + on-chain name">
+      <div class="flex flex-col gap-1">
+        <span class="text-xs text-base-content/60">On-chain name</span>
+        <span class="text-sm font-semibold">{context.gatewayName}</span>
+      </div>
+      <div class="text-sm">
+        <div class="text-base-content/70">Factory</div>
+        <div class="font-mono break-all">{context.factoryAddress}</div>
+      </div>
+    </AdvancedDetails>
 
     {#if !factoryValid || !nameValid || !profileNameValid}
       <StepAlert variant="warning" className="text-xs">

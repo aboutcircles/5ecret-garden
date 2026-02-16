@@ -5,7 +5,11 @@
 
   interface ContactEventRow extends EventRow {
     address: string;
-    contact: any; // Type this properly based on your ContactListItem type
+    contact: {
+      contactProfile?: any;
+      avatarInfo?: any;
+      row: { relation: string };
+    };
   }
 
   interface Props {
@@ -17,5 +21,7 @@
 
 <ContactGroupRow
   address={item.address}
+  profile={item.contact?.contactProfile}
+  avatarInfo={item.contact?.avatarInfo}
   trustRelation={formatTrustRelation(item.contact.row.relation)}
 />

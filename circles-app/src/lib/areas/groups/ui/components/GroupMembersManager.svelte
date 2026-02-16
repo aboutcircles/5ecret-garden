@@ -53,6 +53,11 @@
     return 'Unknown';
   }
 
+  function avatarInfoFor(address: Address) {
+    const type = trustedAvatarTypes[address.toLowerCase()];
+    return type ? ({ avatar: address, type } as any) : undefined;
+  }
+
   $effect(() => {
     const sdk = $circles;
     let cancelled = false;
@@ -272,6 +277,7 @@
               <div class="min-w-0">
                 <Avatar
                   address={address}
+                  avatarInfo={avatarInfoFor(address)}
                   view="horizontal"
                   clickable={true}
                   bottomInfo={`${avatarTypeToReadable(trustedAvatarTypes[address.toLowerCase()])} • ${address}`}

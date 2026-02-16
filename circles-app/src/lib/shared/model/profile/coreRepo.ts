@@ -84,6 +84,65 @@ const aggregator = new BatchAggregator<ProfileAddress, AppProfileCore>({
   fetchFunction: fetchCoreBatch,
 });
 
+export async function getProfilesCoreBatch(
+  addresses: ProfileAddress[]
+): Promise<Map<ProfileAddress, AppProfileCore>> {
+  // Normalize + dedupe first
+  const unique = [...new Set(addresses.map((a) => norm(a)))];
+
+  // Special-cases (mirror `getProfileCore`)
+  const sdk = get(circles);
+  const hub = sdk?.circlesConfig?.v2HubAddress?.toLowerCase();
+  const migration = sdk?.circlesConfig?.migrationAddress?.toLowerCase();
+
+  const out = new Map<ProfileAddress, AppProfileCore>();
+  const pendingFromCache: Array<Promise<void>> = [];
+  const toFetch: ProfileAddress[] = [];
+
+  for (const addr of unique) {
+    if (addr === '0x0000000000000000000000000000000000000001') {
+      const p = Promise.resolve({ name: 'Transitive transfer', previewImageUrl: '/circles-token.svg' });
+      coreCache.set(addr, p);
+      pendingFromCache.push(p.then((v) => void out.set(addr, v)));
+      continue;
+    }
+    if (hub && addr === hub) {
+      const p = Promise.resolve({ name: 'Circles V2 Hub Contract', previewImageUrl: FallbackImageUrl.Logo });
+      coreCache.set(addr, p);
+      pendingFromCache.push(p.then((v) => void out.set(addr, v)));
+      continue;
+    }
+    if (migration && addr === migration) {
+      const p = Promise.resolve({ name: 'Circles V2 Migration Contract', previewImageUrl: FallbackImageUrl.Logo });
+      coreCache.set(addr, p);
+      pendingFromCache.push(p.then((v) => void out.set(addr, v)));
+      continue;
+    }
+
+    const cached = coreCache.get(addr);
+    if (cached) {
+      pendingFromCache.push(cached.then((v) => void out.set(addr, v)));
+      continue;
+    }
+    toFetch.push(addr);
+  }
+
+  if (toFetch.length > 0) {
+    const fetched = await fetchCoreBatch(toFetch);
+    for (const [addr, core] of fetched.entries()) {
+      const p = Promise.resolve(core);
+      coreCache.set(addr, p);
+      out.set(addr, core);
+    }
+  }
+
+  if (pendingFromCache.length > 0) {
+    await Promise.all(pendingFromCache);
+  }
+
+  return out;
+}
+
 export async function getProfileCore(address: ProfileAddress): Promise<AppProfileCore> {
   const addr = norm(address);
 

@@ -11,6 +11,7 @@
   import { fade } from 'svelte/transition';
   import { circles } from '$lib/shared/state/circles';
   import { normalizeEvmAddress } from '@circles-market/sdk';
+  import { getAvatarInfoBatched } from '$lib/shared/data/circles/avatarInfoBatcher';
 
   const avatarInfoCache = new Map<string, Promise<AvatarRow | undefined>>();
 
@@ -18,6 +19,8 @@
 
   interface Props {
     address: AddressLike;
+    profile?: Profile;
+    avatarInfo?: AvatarRow;
     clickable?: boolean;
     view: 'horizontal' | 'horizontal_reverse' | 'vertical' | 'small' | 'small_no_text' | 'small_reverse';
     pictureOverlayUrl?: string | undefined;
@@ -33,6 +36,8 @@
 
   let {
     address,
+    profile: profileProp,
+    avatarInfo: avatarInfoProp,
     clickable = true,
     view,
     pictureOverlayUrl,
@@ -74,6 +79,11 @@
     requestId += 1;
     const myReq = requestId;
 
+    if (profileProp) {
+      profile = profileProp;
+      return;
+    }
+
     if (!addr || !$circles) {
       profile = undefined;
       return;
@@ -101,6 +111,11 @@
     avatarInfoRequestId += 1;
     const myReq = avatarInfoRequestId;
 
+    if (avatarInfoProp) {
+      avatarInfo = avatarInfoProp;
+      return;
+    }
+
     if (!showTypeInfo || !addr || !$circles) {
       avatarInfo = undefined;
       return;
@@ -109,12 +124,10 @@
     const key = addr.toLowerCase();
     let promise = avatarInfoCache.get(key);
     if (!promise) {
-      promise = $circles.data
-        .getAvatarInfo(addr)
-        .catch((e) => {
-          console.debug('[avatar] failed to load avatar info', { addr }, e);
-          return undefined;
-        });
+      promise = getAvatarInfoBatched($circles, addr).catch((e) => {
+        console.debug('[avatar] failed to load avatar info', { addr }, e);
+        return undefined;
+      });
       avatarInfoCache.set(key, promise);
     }
 
@@ -300,3 +313,4 @@
         />
     </div>
 {/if}
+

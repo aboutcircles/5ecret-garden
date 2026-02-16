@@ -8,7 +8,7 @@ import type {
   AvatarRow,
 } from '@circles-sdk/data';
 import type { ContactList } from '$lib/shared/state/contacts';
-import { getProfile } from '$lib/shared/utils/profile';
+import { getProfilesCoreBatch, type ProfileAddress } from '$lib/shared/model/profile';
 import { get } from 'svelte/store';
 import type { Address } from '@circles-sdk/utils';
 import type { Avatar, Sdk } from '@circles-sdk/sdk';
@@ -112,17 +112,19 @@ async function enrichContactData(
     ? rows.filter((row) => row.objectAvatar !== ownerAddress)
     : rows;
 
-  const promises = filteredRows.map(async (row) => {
-    const profile = await getProfile(row.objectAvatar);
+  // Avoid N+1 profile fetches by using the existing batched core-profile pipeline.
+  const addresses = [...new Set(filteredRows.map((r) => r.objectAvatar))];
+  const normalized = addresses.map((a) => a.toLowerCase() as ProfileAddress);
+  const profileByAddress = await getProfilesCoreBatch(normalized);
+  for (const row of filteredRows) {
+    const profile = profileByAddress.get(row.objectAvatar.toLowerCase() as ProfileAddress);
     if (profile) {
       profileRecord[row.objectAvatar] = {
         contactProfile: profile,
         row: row,
       };
     }
-  });
-
-  await Promise.all(promises);
+  }
 
   const avatarDataSource = createAvatarDataSource(sdk);
   const avatarInfos = await avatarDataSource.getAvatarInfoBatch(
