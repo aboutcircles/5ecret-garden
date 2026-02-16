@@ -570,33 +570,3 @@ const entrypointsById: Record<string, string[]> = {
 for (const entry of popupGalleryEntries) {
   entry.entrypoints = entrypointsById[entry.id] ?? ['(entrypoint mapping pending)'];
 }
-
-  'standalone-wallet-unwrap': ['src/lib/areas/wallet/ui/components/BalanceRow.svelte#actions'],
-  'standalone-wallet-migrate-token': ['src/lib/areas/wallet/ui/components/BalanceRow.svelte#actions'],
-  'standalone-groups-redeem': ['src/lib/areas/wallet/ui/components/BalanceRow.svelte#actions'],
-  'standalone-profile-popup': ['src/lib/shared/ui/avatar/Avatar.svelte#openProfilePopup'],
-  'standalone-contacts-untrust': ['src/lib/areas/contacts/flows/addContact/2_YouAlreadyTrust.svelte#openUntrust'],
-  'standalone-contacts-invite': ['src/lib/areas/contacts/flows/addContact/1_Search.svelte#openInvite'],
-  'standalone-settings-profile': ['src/lib/shared/ui/shell/PageScaffold.svelte#openSettingProfile'],
-  'standalone-profile-explorer': ['src/lib/areas/settings/ui/pages/SettingProfile.svelte#openProfileEditor'],
-  'standalone-profile-add-signing-key': ['src/lib/areas/settings/ui/sections/KeysSection.svelte#openAddSigningKey'],
-  'standalone-settings-bookmark-details': ['src/lib/areas/settings/ui/sections/BookmarksSection.svelte#openBookmarkDetails'],
-  'standalone-market-product-details': [
-    'src/lib/areas/market/ui/product/ProductCard.svelte#openProductDetails',
-    'src/lib/areas/market/orders/OrderDetailsView.svelte#openProductDetails',
-  ],
-  'standalone-market-order-details': ['src/lib/areas/market/ui/OrderRow.svelte#openOrderDetails'],
-  'standalone-market-sales-order-details': ['src/lib/areas/market/ui/SalesOrderRow.svelte#openSalesOrderDetails'],
-  'standalone-close-confirm-step': ['src/lib/shared/ui/shell/PopupHost.svelte#pushCloseConfirmStep'],
-  'standalone-jump-popup': ['src/lib/shared/ui/content/jump/JumpLink.svelte#onClick'],
-  'standalone-error-popup': ['src/lib/shared/utils/tasks.ts#runTaskErrorPopup'],
-  'standalone-event-history-day-popup': ['src/lib/shared/ui/event-history/EventHistoryHeatmap.svelte#openDayPopup'],
-  'standalone-group-settings-prototype': ['src/routes/group-management/+page.svelte#openGroupSettingsPrototype'],
-  'standalone-add-group-member-prototype': ['src/routes/group-management/GroupMembersPrototype.svelte#openAddGroupMemberPrototype'],
-  'standalone-confirm-group-trust-prototype': ['src/routes/group-management/GroupMembersPrototype.svelte#openConfirmGroupTrustPrototype'],
-  'standalone-popup-demo-card': ['src/routes/kitchen-sink/state-feedback/+page.svelte#openPopupDemoCard'],
-};
-
-for (const entry of popupGalleryEntries) {
-  entry.entrypoints = entrypointsById[entry.id] ?? ['(entrypoint mapping pending)'];
-}

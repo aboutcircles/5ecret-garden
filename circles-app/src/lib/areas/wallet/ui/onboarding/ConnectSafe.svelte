@@ -1,19 +1,18 @@
 <script lang="ts">
-  import { Sdk, type AvatarRow } from '@circles-sdk/sdk';
+  import type { AvatarRow, Sdk } from '@circles-sdk/sdk';
+  import { onDestroy, onMount } from 'svelte';
+  import type { Address } from '@circles-sdk/utils';
+  import type { GroupRow } from '@circles-sdk/data';
   import ConnectCircles from '$lib/areas/wallet/ui/onboarding/ConnectCircles.svelte';
   import CreateSafe from '$lib/areas/wallet/ui/components/CreateSafe.svelte';
-  import type { Address } from '@circles-sdk/utils';
-  import { ethers } from 'ethers';
-  import { onMount } from 'svelte';
-  import type { GroupRow } from '@circles-sdk/data';
-  import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/shared/utils/getGroupsByOwnerBatch';
+  import { createSafeDiscoveryStore } from '$lib/areas/wallet/data/safeDiscovery';
 
+  let searchQuery = $state('');
   let safes: Address[] = $state([]);
   let profileBySafe: Record<string, AvatarRow | undefined> = $state({});
   let groupsByOwner: Record<Address, GroupRow[]> = $state({});
   let isLoadingSafes = $state(true);
   let loadError = $state<string | null>(null);
-  let searchQuery = $state('');
 
   interface Props {
     safeOwnerAddress: Address;
@@ -31,71 +30,33 @@
     refreshGroupsCallback,
   }: Props = $props();
 
-  const getSafesByOwnerApiEndpoint = (checksumOwnerAddress: string): string =>
-    `https://safe-transaction-gnosis-chain.safe.global/api/v1/owners/${checksumOwnerAddress}/safes/`;
-
-  async function querySafeTransactionService(
-    ownerAddress: string
-  ): Promise<Address[]> {
-    const checksumAddress = ethers.getAddress(ownerAddress);
-    const requestUrl = getSafesByOwnerApiEndpoint(checksumAddress);
-
-    const safesByOwnerResult = await fetch(requestUrl);
-    const safesByOwner = await safesByOwnerResult.json();
-
-    return safesByOwner.safes ?? [];
-  }
-
-  async function loadSafesAndProfile() {
-    isLoadingSafes = true;
-    loadError = null;
-
-    try {
-      const fetchedSafes = (await querySafeTransactionService(safeOwnerAddress)).map(
-        (safe) => safe.toLowerCase() as Address
-      );
-
-      // Preserve existing order to avoid list items jumping; append any new safes.
-      if (safes.length === 0) {
-        safes = fetchedSafes;
-      } else {
-        const existing = new Set(safes);
-        const merged = [...safes];
-        for (const s of fetchedSafes) {
-          if (!existing.has(s)) merged.push(s);
-        }
-        safes = merged;
-      }
-
-      const [avatarInfo, groupInfo] = await Promise.all([
-        sdk?.data?.getAvatarInfoBatch(safes) ?? [],
-        getBaseAndCmgGroupsByOwnerBatch(sdk, safes),
-      ]);
-      const profileBySafeNew: Record<string, AvatarRow | undefined> = {};
-      avatarInfo.forEach((info) => {
-        profileBySafeNew[info.avatar] = info;
-      });
-      profileBySafe = profileBySafeNew;
-      groupsByOwner = groupInfo;
-    } catch (e) {
-      console.error('Failed to load safes', e);
-      loadError = 'Could not load your Safes. Please try again.';
-    } finally {
-      isLoadingSafes = false;
-    }
-  }
+  const { state: safeState, refresh, addSafe } = createSafeDiscoveryStore(
+    safeOwnerAddress,
+    sdk
+  );
+  const unsubscribe = safeState.subscribe((value) => {
+    safes = value.safes;
+    profileBySafe = value.profileBySafe;
+    groupsByOwner = value.groupsByOwner;
+    isLoadingSafes = value.isLoading;
+    loadError = value.error;
+  });
 
   onMount(async () => {
-    await loadSafesAndProfile();
+    await refresh();
+  });
+
+  onDestroy(() => {
+    unsubscribe();
   });
 
   async function onsafecreated(address: Address) {
-    safes = [...safes, address];
+    addSafe(address);
   }
 
   // Refresh groups for all safes owned by this account
   async function refreshGroupsLocal() {
-    await loadSafesAndProfile();
+    await refresh({ forceRefresh: true });
   }
 
   function resolveSafeName(address: Address): string {
@@ -168,7 +129,7 @@
   {:else if loadError}
     <div class="rounded-xl border border-error/30 bg-error/10 p-4 space-y-3">
       <p class="text-sm text-error">{loadError}</p>
-      <button class="btn btn-sm btn-outline" type="button" onclick={loadSafesAndProfile}>
+      <button class="btn btn-sm btn-outline" type="button" onclick={() => refresh({ forceRefresh: true })}>
         Retry
       </button>
     </div>
@@ -211,4 +172,4 @@
   <div class="w-full">
     <CreateSafe {onsafecreated} {safeCreationMode} />
   </div>
-</section>
+ </section>
