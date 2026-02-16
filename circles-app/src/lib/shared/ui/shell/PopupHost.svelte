@@ -217,6 +217,20 @@
         ...($popupState.content ? [$popupState.content] : [])
     ]);
 
+    type PageKeyEntry = { page: any; key: string };
+    const pagesWithKeys = $derived((): PageKeyEntry[] => {
+        const entries: PageKeyEntry[] = [];
+        const seen = new Map<string, number>();
+        for (const page of pages) {
+            const base = keyFor(page);
+            const count = seen.get(base) ?? 0;
+            seen.set(base, count + 1);
+            const key = count === 0 ? base : `${base}::${count}`;
+            entries.push({ page, key });
+        }
+        return entries;
+    });
+
     let top = $derived(Math.max(0, pages.length - 1));
 
     const showTitle = $derived(Boolean($popupState.content?.title) && !$popupState.content?.hideTitle);
@@ -350,13 +364,13 @@
                 {/if}
             </div>
 
-            <!-- Content: render the whole stack; only top is visible -->
             <div class="content w-full relative">
-                {#each pages as page, i (keyFor(page))}
+                {#each pagesWithKeys() as entry, i (entry.key)}
+                    {@const page = entry.page}
                     {@const Component = page.component}
                     <div
                             class={`popup-page ${i === top ? 'is-top' : 'is-hidden'}`}
-                            data-popup-page-key={keyFor(page)}
+                            data-popup-page-key={entry.key}
                             aria-hidden={i === top ? 'false' : 'true'}
                             inert={i !== top}
                     >

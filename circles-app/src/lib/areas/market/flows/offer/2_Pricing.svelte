@@ -128,14 +128,19 @@
     });
   }
 
+  function normalizeText(value: unknown): string {
+    if (value == null) return '';
+    return typeof value === 'string' ? value.trim() : String(value).trim();
+  }
+
   // Persist form state into the shared draft reactively to avoid losing data when navigating back
   $effect(() => {
     context.draft = {
       ...context.draft!,
       price: Number(price) || undefined,
-      priceCurrency: (priceCurrency ?? '').trim() || undefined,
-      paymentGateway: asAddress((selectedGateway ?? '').trim() || undefined),
-      availableDeliveryMethod: (availableDeliveryMethod ?? '').trim() || undefined,
+      priceCurrency: normalizeText(priceCurrency) || undefined,
+      paymentGateway: asAddress(normalizeText(selectedGateway) || undefined),
+      availableDeliveryMethod: normalizeText(availableDeliveryMethod) || undefined,
       requiredSlots: computeRequiredSlotsFromSelections(slotState),
     };
   });
@@ -273,4 +278,5 @@
 
     <StepActionButtons primaryLabel="Continue" onPrimary={next} />
 </div>
+
 </FlowStepScaffold>
