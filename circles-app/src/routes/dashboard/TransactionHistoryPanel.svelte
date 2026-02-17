@@ -7,6 +7,8 @@
     import {transactionHistory} from '$lib/shared/state/transactionHistory';
     import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
 
+    const TRANSACTION_ROW_HEIGHT = 76;
+
     const searchQuery = writable('');
     let transactionsListScopeEl: HTMLDivElement | null = $state(null);
 
@@ -43,13 +45,18 @@
     noMatchesLabel="No matching transactions"
     wrapInListContainer={false}
 >
-    <div data-transactions-list-scope bind:this={transactionsListScopeEl}>
+    <div
+        data-transactions-list-scope
+        bind:this={transactionsListScopeEl}
+        style={`--transaction-row-height: ${TRANSACTION_ROW_HEIGHT}px;`}
+    >
         <GenericList
             row={TransactionRow}
             store={searchedTransactionHistory}
-            rowHeight={64}
+            rowHeight={TRANSACTION_ROW_HEIGHT}
             maxPlaceholderPages={2}
             expectedPageSize={25}
+            eagerLoadMultiplier={2}
             placeholderRow={TransactionRowPlaceholder}
         />
     </div>
