@@ -65,7 +65,7 @@
                 {avatarInfo}
                 view="horizontal"
                 bottomInfo={trustRelation}
-                showTypeInfo={true}
+                showTypeInfo={false}
                 clickable={true}
             />
         </div>
