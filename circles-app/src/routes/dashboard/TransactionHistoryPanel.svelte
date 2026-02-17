@@ -36,6 +36,8 @@
     inputDataAttribute="data-transactions-search-input"
     onInputKeydown={onSearchInputKeydown}
     isEmpty={$transactionHistory.data.length === 0}
+    ended={$transactionHistory.ended}
+    emptyRequiresEnd={true}
     isNoMatches={$transactionHistory.data.length > 0 && $searchedTransactionHistory.data.length === 0}
     emptyLabel="No transactions"
     noMatchesLabel="No matching transactions"

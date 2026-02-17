@@ -171,6 +171,8 @@
     inputDataAttribute="data-balances-search-input"
     onInputKeydown={onSearchInputKeydown}
     isEmpty={$filteredAll.length === 0}
+    ended={$circlesBalances.ended}
+    emptyRequiresEnd={true}
     isNoMatches={$filteredAll.length > 0 && $searchedAll.length === 0}
     emptyLabel="No balances"
     noMatchesLabel="No matching balances"

@@ -98,6 +98,8 @@
         inputDataAttribute="data-demo-list-search-input"
         onInputKeydown={onSearchInputKeydown}
         isEmpty={$demoListStore.data.length === 0}
+        ended={$demoListStore.ended}
+        emptyRequiresEnd={true}
         isNoMatches={$demoListStore.data.length > 0 && $filteredDemoListStore.data.length === 0}
         emptyLabel="No demo rows"
         noMatchesLabel="No matching demo rows"

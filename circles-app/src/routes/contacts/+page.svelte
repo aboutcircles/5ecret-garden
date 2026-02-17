@@ -111,6 +111,14 @@
 
     // Paginate searched results for rendering
     const contactsPaginated = createPaginatedList(searchedAll, { pageSize: 25 });
+    const contactsPaginatedWithEnd = derived([contactsPaginated, contacts], ([$paginated, $contacts]) => {
+        const hasData = ($paginated?.data ?? []).length > 0;
+        const showEnded = hasData ? $paginated.ended : ($contacts?.ended ?? $paginated.ended);
+        return {
+            ...$paginated,
+            ended: showEnded,
+        };
+    });
 
     $effect(() => {
         const addresses = $searchedAll.slice(0, 100).map((item) => item.address);
@@ -260,6 +268,8 @@
         inputDataAttribute="data-contacts-search-input"
         onInputKeydown={onSearchInputKeydown}
         isEmpty={$filteredAll.length === 0}
+        ended={$contacts?.ended ?? false}
+        emptyRequiresEnd={true}
         isNoMatches={$filteredAll.length > 0 && $searchedAll.length === 0}
         emptyLabel={avatarState.isGroup ? 'No members' : 'No contacts'}
         noMatchesLabel="No matches"
@@ -267,7 +277,7 @@
     >
         <div data-contacts-list-scope bind:this={contactsListScopeEl}>
             <GenericList
-                store={contactsPaginated}
+                store={contactsPaginatedWithEnd}
                 row={ContactRow}
                 rowHeight={64}
                 maxPlaceholderPages={2}

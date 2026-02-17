@@ -100,6 +100,8 @@
         inputDataAttribute="data-payment-gateway-search-input"
         onInputKeydown={onSearchInputKeydown}
         isEmpty={gatewaysDataLength === 0}
+        ended={$myGatewaysStore?.ended ?? false}
+        emptyRequiresEnd={true}
         isNoMatches={gatewaysDataLength > 0 && filteredGatewaysDataLength === 0}
         emptyLabel="No gateways found for your avatar."
         noMatchesLabel="No matching gateways"

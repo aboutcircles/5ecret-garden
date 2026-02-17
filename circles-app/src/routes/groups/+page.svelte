@@ -304,6 +304,8 @@
                             inputDataAttribute="data-groups-search-input"
                             onInputKeydown={onAllGroupsSearchInputKeydown}
                             isEmpty={$groups?.data.length === 0}
+                            ended={$groups?.ended ?? false}
+                            emptyRequiresEnd={true}
                             isNoMatches={$groups?.data.length > 0 && $filteredAllGroupsStore.data.length === 0}
                             emptyLabel="No groups found"
                             noMatchesLabel="No matching groups"

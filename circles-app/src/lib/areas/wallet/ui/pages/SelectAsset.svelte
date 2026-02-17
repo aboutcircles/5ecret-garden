@@ -160,6 +160,8 @@
         inputDataAttribute={`data-select-asset-search-input ${inputDataAttribute ?? ''}`}
         onInputKeydown={onSearchInputKeydown}
         isEmpty={$balances?.data?.length === 0}
+        ended={$balances?.ended ?? false}
+        emptyRequiresEnd={true}
         isNoMatches={$balances?.data?.length > 0 && $selectableBalances.data.length === 0}
         emptyLabel="You don't have any trusted assets"
         noMatchesLabel="No matching assets"

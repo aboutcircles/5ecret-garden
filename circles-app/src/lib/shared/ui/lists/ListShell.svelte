@@ -19,6 +19,8 @@
     error?: string | null;
     isEmpty?: boolean;
     isNoMatches?: boolean;
+    ended?: boolean;
+    emptyRequiresEnd?: boolean;
     loadingLabel?: string;
     emptyLabel?: string;
     noMatchesLabel?: string;
@@ -44,6 +46,8 @@
     error = null,
     isEmpty = false,
     isNoMatches = false,
+    ended = false,
+    emptyRequiresEnd = false,
     loadingLabel = 'Loading…',
     emptyLabel = 'No items',
     noMatchesLabel = 'No matches',
@@ -52,6 +56,10 @@
     listClass = 'w-full flex flex-col gap-y-1.5',
     children,
   }: Props = $props();
+
+  const effectiveIsEmpty = $derived(
+    emptyRequiresEnd ? (ended && isEmpty) : isEmpty
+  );
 </script>
 
 <ListToolbar
@@ -74,7 +82,7 @@
 <ListStates
   {loading}
   {error}
-  {isEmpty}
+  isEmpty={effectiveIsEmpty}
   {isNoMatches}
   {loadingLabel}
   {emptyLabel}

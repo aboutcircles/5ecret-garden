@@ -17,6 +17,8 @@
 
     loading?: boolean;
     error?: string | null;
+    ended?: boolean;
+    emptyRequiresEnd?: boolean;
 
     rowHeight?: number;
     pageSize?: number;
@@ -35,6 +37,8 @@
     inputDataAttribute,
     loading = false,
     error = null,
+    ended = false,
+    emptyRequiresEnd = false,
     rowHeight = 64,
     pageSize = 25,
     emptyLabel = 'No items',
@@ -68,6 +72,8 @@
   {onInputKeydown}
   {loading}
   {error}
+  {ended}
+  {emptyRequiresEnd}
   isEmpty={($items ?? []).length === 0}
   isNoMatches={($items ?? []).length > 0 && ($filteredItems ?? []).length === 0}
   emptyLabel={emptyLabel}
