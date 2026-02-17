@@ -53,3 +53,4 @@
     searchPlaceholder="Search by address or name"
     placeholderRow={AvatarRowPlaceholder}
   />
+</div>
