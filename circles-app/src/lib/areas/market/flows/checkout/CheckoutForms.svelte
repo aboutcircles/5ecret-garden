@@ -50,6 +50,7 @@
   let birthDate = $state('');
   let givenName = $state('');
   let familyName = $state('');
+  let skipNextBlurValidation = $state(false);
 
   let formInitialised = $state(false);
 
@@ -155,10 +156,16 @@
 
   async function validateOnBlur(event?: FocusEvent): Promise<void> {
     const next = event?.relatedTarget as HTMLElement | null;
-    if (next?.dataset?.skipBlurValidation === 'true') {
+    if (next?.dataset?.skipBlurValidation === 'true' && skipNextBlurValidation) {
+      skipNextBlurValidation = false;
       return;
     }
+    skipNextBlurValidation = false;
     await validateAction.run();
+  }
+
+  function markSkipNextBlurValidation(): void {
+    skipNextBlurValidation = true;
   }
 
   // True if the current validation result says shipping address is still required
@@ -478,6 +485,7 @@
             type="button"
             class="btn btn-sm btn-primary"
             onclick={goToReview}
+            onmousedown={markSkipNextBlurValidation}
             data-skip-blur-validation="true"
             disabled={submitAction.loading}
           >
