@@ -153,7 +153,11 @@
     await updateBasketDetails(patch);
   }
 
-  async function validateOnBlur(): Promise<void> {
+  async function validateOnBlur(event?: FocusEvent): Promise<void> {
+    const next = event?.relatedTarget as HTMLElement | null;
+    if (next?.dataset?.skipBlurValidation === 'true') {
+      return;
+    }
     await validateAction.run();
   }
 
@@ -455,7 +459,7 @@
                 type="date"
                 bind:value={birthDate}
                 data-popup-initial-input
-                onblur={validateOnBlur}
+                  onblur={validateOnBlur}
                 class:border-error={fieldHasError('/ageProof/birthDate')}
                 required
               />
@@ -474,12 +478,12 @@
             type="button"
             class="btn btn-sm btn-primary"
             onclick={goToReview}
-            disabled={submitAction.loading || $cartState.loading}
+            data-skip-blur-validation="true"
+            disabled={submitAction.loading}
           >
-            {submitAction.loading || $cartState.loading ? 'Checking…' : 'Continue'}
+            {submitAction.loading ? 'Checking…' : 'Continue'}
           </button>
         {/snippet}
       </StepActionBar>
     </div>
   </FlowStepScaffold>
-

@@ -154,11 +154,11 @@
             {/if}
         </div>
 
-        <div class="flex-1 space-y-2">
+        <div class="flex-1 space-y-2 min-w-0">
             <label class="form-control">
                 <span class="label-text text-xs">{nameLabel}</span>
                 <input
-                    class="input input-sm input-bordered"
+                    class="input input-sm input-bordered w-full"
                     bind:value={name}
                     placeholder="Your profile name"
                     readonly={readonly}
@@ -170,7 +170,7 @@
                 <label class="form-control">
                     <span class="label-text text-xs">Location</span>
                     <input
-                        class="input input-sm input-bordered"
+                        class="input input-sm input-bordered w-full"
                         bind:value={location}
                         placeholder="City, Country"
                         readonly={readonly}

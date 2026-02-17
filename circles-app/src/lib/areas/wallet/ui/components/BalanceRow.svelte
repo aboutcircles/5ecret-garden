@@ -5,6 +5,7 @@
     import { avatarState } from '$lib/shared/state/avatar.svelte';
     import { tokenTypeToString } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
     import { crcTypes, roundToDecimals, staticTypes } from '$lib/shared/utils/shared';
+    import { formatCompactCurrency } from '$lib/shared/utils/money';
     import WrapTokens from '$lib/areas/wallet/ui/pages/WrapTokens.svelte';
     import MigrateTokens from '$lib/areas/wallet/ui/pages/MigrateTokens.svelte';
     import UnwrapTokens from '$lib/areas/wallet/ui/pages/UnwrapTokens.svelte';
@@ -188,7 +189,7 @@
             <!-- Right: amount + dropdown actions -->
             <div class="flex items-center gap-3 md:gap-4 shrink-0">
                 <div class="text-right tabular-nums">
-                    <div class="font-medium">{roundToDecimals(item.circles)} CRC</div>
+                    <div class="font-medium">{formatCompactCurrency(item.circles, 'CRC')}</div>
                     <p class="text-xs text-base-content/70">
                         {#if staticTypes.has(item.tokenType)}
                             {roundToDecimals(item.staticCircles)} Static Circles

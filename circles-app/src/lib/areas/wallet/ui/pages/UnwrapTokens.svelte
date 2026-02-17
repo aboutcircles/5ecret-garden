@@ -16,6 +16,10 @@
   let { asset }: Props = $props();
 
   let amount: number = $state(0);
+  const maxUnwrapAmount = $derived(asset.isWrapped ? asset.staticCircles : asset.circles);
+  const canUseMax = $derived(
+    Number.isFinite(Number(maxUnwrapAmount)) && Number(maxUnwrapAmount) > 0
+  );
 
   async function unwrap() {
     const tokenInfo = await $circles?.data?.getTokenInfo(asset.tokenAddress);
@@ -61,11 +65,22 @@
       type="number"
       step="0.01"
       min="0"
-      max={asset.circles}
+      max={maxUnwrapAmount}
       placeholder="0.00"
       class="input input-bordered w-full"
       bind:value={amount}
     />
+  </div>
+
+  <div class="flex justify-end mb-4">
+    <button
+      type="button"
+      class="btn btn-ghost btn-xs"
+      onclick={() => (amount = Number(maxUnwrapAmount || 0))}
+      disabled={!canUseMax}
+    >
+      Use max
+    </button>
   </div>
 
   <PopupActionBar>
