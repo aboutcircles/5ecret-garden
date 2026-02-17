@@ -99,12 +99,12 @@
     const RUNWAY_FLOOR = 1;
 
     function clearPlaceholdersAfterLoad(addedCount: number, storeEnded: boolean): void {
+        if (storeEnded) {
+            clearAllPlaceholderPages();
+            return;
+        }
         if (addedCount <= 0) {
-            if (storeEnded) {
-                clearAllPlaceholderPages();
-            } else {
-                stagedPlaceholders = Math.max(RUNWAY_FLOOR, stagedPlaceholders);
-            }
+            stagedPlaceholders = Math.max(RUNWAY_FLOOR, stagedPlaceholders);
             return;
         }
 
