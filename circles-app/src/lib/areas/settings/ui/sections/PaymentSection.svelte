@@ -4,6 +4,7 @@
   import { derived, writable } from 'svelte/store';
   import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
   import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
+  import GatewayRowPlaceholder from '$lib/shared/ui/lists/placeholders/GatewayRowPlaceholder.svelte';
   import GatewayRowView from '$lib/areas/settings/ui/components/GatewayRow.svelte';
   import { openStep } from '$lib/shared/flow';
   import CreateGatewayProfile from '$lib/areas/settings/flows/gateway/CreateGatewayProfile.svelte';
@@ -108,8 +109,9 @@
           store={filteredGatewaysStore}
           row={GatewayRowView}
           rowHeight={64}
-          maxPlaceholderPages={1}
+          maxPlaceholderPages={2}
           expectedPageSize={25}
+          placeholderRow={GatewayRowPlaceholder}
         />
       </ListShell>
     </div>

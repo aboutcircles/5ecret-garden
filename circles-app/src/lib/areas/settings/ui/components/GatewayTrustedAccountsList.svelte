@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Readable } from 'svelte/store';
   import SearchablePaginatedList from '$lib/shared/ui/lists/SearchablePaginatedList.svelte';
+  import AvatarRowPlaceholder from '$lib/shared/ui/lists/placeholders/AvatarRowPlaceholder.svelte';
   import TrustRowView from '$lib/areas/settings/ui/components/TrustRow.svelte';
   import type { TrustRow } from '$lib/areas/settings/model/gatewayTypes';
   import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
@@ -50,5 +51,5 @@
     rowHeight={rowHeight}
     pageSize={pageSize}
     searchPlaceholder="Search by address or name"
+    placeholderRow={AvatarRowPlaceholder}
   />
-</div>

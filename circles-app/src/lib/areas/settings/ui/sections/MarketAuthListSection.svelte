@@ -4,6 +4,7 @@
   import { derived, writable } from 'svelte/store';
   import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
   import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
+  import MarketOrderRowPlaceholder from '$lib/shared/ui/lists/placeholders/MarketOrderRowPlaceholder.svelte';
   import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
 
   type ListValue = { data: any[]; next: () => Promise<boolean>; ended: boolean; error?: string | null };
@@ -96,7 +97,15 @@
       wrapInListContainer={false}
     >
       <div data-market-orders-list-scope bind:this={marketListScopeEl}>
-        <GenericList store={filteredStore} {row} getKey={(it) => it.key} />
+        <GenericList
+          store={filteredStore}
+          {row}
+          getKey={(it) => it.key}
+          rowHeight={64}
+          expectedPageSize={25}
+          maxPlaceholderPages={2}
+          placeholderRow={MarketOrderRowPlaceholder}
+        />
       </div>
     </ListShell>
   {/if}

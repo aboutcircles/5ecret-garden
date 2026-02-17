@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { Component } from 'svelte';
     import SearchablePaginatedList from '$lib/shared/ui/lists/SearchablePaginatedList.svelte';
+    import AvatarRowPlaceholder from '$lib/shared/ui/lists/placeholders/AvatarRowPlaceholder.svelte';
     import TrustRelationRow from '$lib/shared/ui/profile/components/TrustRelationRow.svelte';
     import type { Address } from '@circles-sdk/utils';
     import type { Readable } from 'svelte/store';
@@ -41,7 +42,7 @@
 </script>
 
 <div data-profile-relations-list-scope bind:this={listScopeEl}>
-    <SearchablePaginatedList
+        <SearchablePaginatedList
         items={addresses}
         {row}
         getKey={getKey}
@@ -55,5 +56,6 @@
         rowHeight={rowHeight}
         pageSize={pageSize}
         searchPlaceholder={searchPlaceholder}
+        placeholderRow={AvatarRowPlaceholder}
     />
 </div>

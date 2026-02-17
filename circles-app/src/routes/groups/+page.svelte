@@ -5,6 +5,7 @@
     import {createCMGroups} from '$lib/areas/groups/state';
     import type {EventRow} from '@circles-sdk/data';
     import GroupRowView from './GroupRowView.svelte';
+    import AvatarRowPlaceholder from '$lib/shared/ui/lists/placeholders/AvatarRowPlaceholder.svelte';
     import OwnedGroupRowView from './OwnedGroupRowView.svelte';
     import {avatarState} from '$lib/shared/state/avatar.svelte';
     import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
@@ -312,8 +313,9 @@
                                 store={filteredAllGroupsStore}
                                 row={GroupRowView}
                                 rowHeight={64}
-                                maxPlaceholderPages={0}
+                                maxPlaceholderPages={2}
                                 expectedPageSize={25}
+                                placeholderRow={AvatarRowPlaceholder}
                             />
                         </ListShell>
                     </div>

@@ -9,6 +9,7 @@
   interface Props<T> {
     items: Readable<T[]>;
     row: Component<{ item: T }>;
+    placeholderRow?: Component<{ height?: number; index?: number }>;
     getKey?: (item: T) => string;
     addressOf: (item: T) => string;
     onInputKeydown?: (event: KeyboardEvent) => void;
@@ -38,7 +39,8 @@
     pageSize = 25,
     emptyLabel = 'No items',
     noMatchesLabel = 'No matches',
-    searchPlaceholder = 'Search by address or name'
+    searchPlaceholder = 'Search by address or name',
+    placeholderRow
   }: Props<any> = $props();
 
   const emptyItems = readable<any[]>([]);
@@ -78,5 +80,6 @@
     rowHeight={rowHeight}
     maxPlaceholderPages={2}
     expectedPageSize={pageSize}
+    {placeholderRow}
   />
 </ListShell>

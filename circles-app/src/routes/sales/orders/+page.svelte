@@ -28,6 +28,7 @@
   } from '$lib/areas/market/orders/ordersStores';
 
   import SalesOrderRow from '$lib/areas/market/ui/SalesOrderRow.svelte';
+  import MarketOrderRowPlaceholder from '$lib/shared/ui/lists/placeholders/MarketOrderRowPlaceholder.svelte';
 
   type ListItem = MarketSalesListItem;
 
@@ -179,7 +180,8 @@
           getKey={(it) => it.key}
           rowHeight={64}
           expectedPageSize={pageSize}
-          maxPlaceholderPages={1}
+          maxPlaceholderPages={2}
+          placeholderRow={MarketOrderRowPlaceholder}
         />
       </div>
     </ListShell>

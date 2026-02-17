@@ -14,6 +14,7 @@
     interface Props<T extends Record<string, any> = any> {
         store: Readable<ListStoreValue<T>>;
         row: Component<T>;
+        placeholderRow?: Component<{ height?: number; index?: number }>;
         getKey?: (item: T) => string;
         // Approximate row height for placeholder sizing (px). Keep in sync with real row.
         rowHeight?: number;
@@ -27,6 +28,7 @@
         store,
         row,
         getKey = (getKeyFromItem as unknown as (item: any) => string),
+        placeholderRow,
         rowHeight = 64,
         maxPlaceholderPages = 2,
         expectedPageSize
@@ -34,20 +36,23 @@
 
     let observer: IntersectionObserver | null = null;
     let anchor: HTMLElement | undefined = $state();
+    let listContainer: HTMLDivElement | undefined = $state();
 
     let localError = $state<string | null>(null);
     let isLoadingNext = $state(false);
+    let anchorVisible = $state(false);
+    let lastScrollTop = $state(0);
 
     const storeError = $derived<string | null>(($store as any)?.error ?? null);
     const displayError = $derived<string | null>(storeError ?? localError);
     const hasError = $derived<boolean>(!!displayError);
 
     // Number of placeholder "pages" currently staged
-    let stagedPages = $state(0);
+    let stagedPlaceholders = $state(0);
     // Size of a single placeholder page in rows, computed lazily once
     let placeholderPageSize = $state(0);
 
-    const totalPlaceholders = $derived(stagedPages * placeholderPageSize);
+    const totalPlaceholders = $derived(stagedPlaceholders);
 
     function computePlaceholderPageSize(): number {
         const isBrowser = typeof window !== 'undefined';
@@ -87,29 +92,59 @@
     }
 
     function enqueuePlaceholderPage(): void {
+        const size = ensurePlaceholderPageSize();
         const effectiveMax = maxPlaceholderPages ?? 2;
-        const canStageMorePages = stagedPages < effectiveMax;
+        const maxPlaceholders = effectiveMax * size;
 
-        if (!canStageMorePages) {
-            return;
-        }
-
-        ensurePlaceholderPageSize();
-        stagedPages += 1;
+        stagedPlaceholders = Math.min(maxPlaceholders, stagedPlaceholders + size);
     }
 
-    function clearOnePlaceholderPage(): void {
-        const hasStagedPages = stagedPages > 0;
+    function getScrollTop(): number {
+        if (typeof window === 'undefined') return 0;
+        return window.scrollY || document.documentElement.scrollTop || 0;
+    }
 
-        if (!hasStagedPages) {
+    function isPinnedToBottom(): boolean {
+        if (typeof window === 'undefined') return false;
+        const scrollTop = getScrollTop();
+        const viewportHeight = window.innerHeight || 0;
+        const docHeight = document.documentElement.scrollHeight || 0;
+        return scrollTop + viewportHeight >= docHeight - 2;
+    }
+
+    function scrollToLastItem(): void {
+        const container = listContainer;
+        if (!container) return;
+
+        const rows = container.querySelectorAll<HTMLElement>('[data-list-row]');
+        if (rows.length === 0) return;
+
+        const lastRow = rows[rows.length - 1];
+        lastRow.scrollIntoView({ block: 'end' });
+    }
+
+    function clearPlaceholderRows(count: number): void {
+        if (count <= 0) {
             return;
         }
 
-        stagedPages -= 1;
+        stagedPlaceholders = Math.max(0, stagedPlaceholders - count);
+    }
+
+    function clearPlaceholdersAfterLoad(addedCount: number): void {
+        if (addedCount <= 0) {
+            clearAllPlaceholderPages();
+            return;
+        }
+
+        // Remove at most (addedCount - 1) placeholders to ensure the list
+        // grows by at least one row, pushing the sentinel downward.
+        const removable = Math.max(0, addedCount - 1);
+        clearPlaceholderRows(removable);
     }
 
     function clearAllPlaceholderPages(): void {
-        stagedPages = 0;
+        stagedPlaceholders = 0;
     }
 
     async function loadNextPage(): Promise<void> {
@@ -124,11 +159,20 @@
             return;
         }
 
+        const beforeLength = storeValue?.data?.length ?? 0;
+        const wasPinnedToBottom = isPinnedToBottom();
+
         isLoadingNext = true;
         enqueuePlaceholderPage();
 
         try {
             await storeValue.next();
+            const afterLength = $store?.data?.length ?? beforeLength;
+            const addedCount = Math.max(0, afterLength - beforeLength);
+            clearPlaceholdersAfterLoad(addedCount);
+            if (wasPinnedToBottom && addedCount > 0) {
+                requestAnimationFrame(() => scrollToLastItem());
+            }
             localError = null;
         } catch (e) {
             console.debug('[list] load next page failed', e);
@@ -137,23 +181,34 @@
             localError = 'Error loading items';
         } finally {
             isLoadingNext = false;
-            clearOnePlaceholderPage();
         }
     }
 
     const handleIntersection: IntersectionObserverCallback = (entries) => {
         const hit = entries.some((entry) => entry.isIntersecting);
 
+        if (!hit) {
+            anchorVisible = false;
+            return;
+        }
+
+        if (!anchorVisible) {
+            anchorVisible = true;
+        }
+
+        const currentScrollTop = getScrollTop();
         const shouldLoadNext =
             hit &&
             !$store?.ended &&
             !hasError &&
-            !isLoadingNext;
+            !isLoadingNext &&
+            currentScrollTop > lastScrollTop;
 
         if (!shouldLoadNext) {
             return;
         }
 
+        lastScrollTop = currentScrollTop;
         void loadNextPage();
     };
 
@@ -196,11 +251,26 @@
     $effect(() => {
         if ($store?.ended) {
             clearAllPlaceholderPages();
+            anchorVisible = false;
 
             if (observer) {
                 observer.disconnect();
                 observer = null;
             }
+        }
+    });
+
+    $effect(() => {
+        const canLoadMore = !$store?.ended && !hasError;
+
+        if (!anchorVisible || !canLoadMore || isLoadingNext) {
+            return;
+        }
+
+        const currentScrollTop = getScrollTop();
+        if (currentScrollTop > lastScrollTop) {
+            lastScrollTop = currentScrollTop;
+            void loadNextPage();
         }
     });
 
@@ -212,24 +282,30 @@
     });
 </script>
 
-<div class="w-full flex flex-col gap-y-1.5 py-2" role="list">
+<div class="w-full flex flex-col gap-y-1.5 py-2" role="list" bind:this={listContainer}>
     {#each $store?.data ?? [] as item (getKey(item))}
-        {@const SvelteComponent_1 = row}
-        <SvelteComponent_1 {item} />
+        <div data-list-row>
+            <svelte:component this={row} {item} />
+        </div>
     {/each}
 
     {#if totalPlaceholders > 0}
         {#each Array.from({ length: totalPlaceholders }) as _, i}
-            <div class="skeleton-row" aria-hidden="true" style={`height: ${rowHeight}px`}>
-                <div class="sk-row">
-                    <div class="sk-avatar"></div>
-                    <div class="sk-lines">
-                        <div class="sk-line sk-line-1"></div>
-                        <div class="sk-line sk-line-2"></div>
+            {#if placeholderRow}
+                {@const Placeholder = placeholderRow}
+                <Placeholder height={rowHeight} index={i} />
+            {:else}
+                <div class="skeleton-row" aria-hidden="true" style={`height: ${rowHeight}px`}>
+                    <div class="sk-row">
+                        <div class="sk-avatar"></div>
+                        <div class="sk-lines">
+                            <div class="sk-line sk-line-1"></div>
+                            <div class="sk-line sk-line-2"></div>
+                        </div>
+                        <div class="sk-amount"></div>
                     </div>
-                    <div class="sk-amount"></div>
                 </div>
-            </div>
+            {/if}
         {/each}
     {/if}
 
@@ -316,3 +392,5 @@
         }
     }
 </style>
+
+

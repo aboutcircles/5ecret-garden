@@ -61,6 +61,7 @@
     import { derived, readable } from 'svelte/store';
     import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
     import SelectableBalanceRow, { type SelectableBalanceRowItem } from '$lib/areas/wallet/ui/components/SelectableBalanceRow.svelte';
+    import BalanceRowPlaceholder from '$lib/shared/ui/lists/placeholders/BalanceRowPlaceholder.svelte';
     import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
     import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
     import { roundToDecimals } from '$lib/shared/utils/shared';
@@ -170,8 +171,9 @@
                 row={SelectableBalanceRow}
                 getKey={(it) => String(it.balance.tokenAddress)}
                 rowHeight={64}
-                maxPlaceholderPages={0}
+                maxPlaceholderPages={1}
                 expectedPageSize={25}
+                placeholderRow={BalanceRowPlaceholder}
         />
     </div>
 </ListShell>

@@ -1,6 +1,7 @@
 <script lang="ts">
     import SearchablePaginatedList from '$lib/shared/ui/lists/SearchablePaginatedList.svelte';
     import HoldersRow from '$lib/shared/ui/profile/components/HoldersRow.svelte';
+    import AvatarRowPlaceholder from '$lib/shared/ui/lists/placeholders/AvatarRowPlaceholder.svelte';
     import type { Address } from '@circles-sdk/utils';
     import type { TrustRelation } from '@circles-sdk/data';
     import { writable } from 'svelte/store';
@@ -51,6 +52,7 @@
         inputDataAttribute="data-holders-search-input"
         rowHeight={64}
         pageSize={25}
+        placeholderRow={AvatarRowPlaceholder}
         {searchPlaceholder}
         {emptyLabel}
         {noMatchesLabel}

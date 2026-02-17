@@ -4,6 +4,7 @@
     import {derived, writable, type Writable} from 'svelte/store';
     import { onMount } from 'svelte';
     import BalanceRow from '$lib/areas/wallet/ui/components/BalanceRow.svelte';
+    import BalanceRowPlaceholder from '$lib/shared/ui/lists/placeholders/BalanceRowPlaceholder.svelte';
     import type {EventRow} from '@circles-sdk/data';
     import Filter from '$lib/shared/ui/lists/Filter.svelte';
     import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
@@ -201,6 +202,13 @@
             </div>
         {/if}
 
-        <GenericList store={filteredStore} row={BalanceRow}/>
+        <GenericList
+            store={filteredStore}
+            row={BalanceRow}
+            rowHeight={72}
+            expectedPageSize={25}
+            maxPlaceholderPages={1}
+            placeholderRow={BalanceRowPlaceholder}
+        />
     </div>
 </ListShell>
