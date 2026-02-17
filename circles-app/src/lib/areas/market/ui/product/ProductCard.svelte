@@ -106,7 +106,10 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
   function isInteractiveTarget(target: EventTarget | null): boolean {
     const el = target as HTMLElement | null;
     if (!el) return false;
-    return !!el.closest('button, a, input, select, textarea, [role="button"], [data-no-card-open]');
+    const interactive = el.closest('button, a, input, select, textarea, [role="button"], [data-no-card-open]');
+    if (!interactive) return false;
+    // Allow clicks on the card root itself; it's also role="button".
+    return !interactive.isSameNode(el) && !interactive.classList.contains('product-card-root');
   }
 
   // Handle card click to open product details popup
@@ -203,7 +206,7 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
 
 {#if product}
   <div
-      class="bg-base-100 border border-base-300 rounded-xl overflow-hidden flex flex-col hover:shadow-md transition-shadow cursor-pointer"
+      class="product-card-root bg-base-100 border border-base-300 rounded-xl overflow-hidden flex flex-col hover:shadow-md transition-shadow cursor-pointer"
       role="button"
       tabindex="0"
       aria-label={`Open product details: ${prod?.name ?? product?.product?.name ?? 'Product'}`}

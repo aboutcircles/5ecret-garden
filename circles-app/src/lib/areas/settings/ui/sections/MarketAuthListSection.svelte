@@ -39,21 +39,28 @@
   const query = writable('');
   let marketListScopeEl: HTMLDivElement | null = $state(null);
 
-  const filteredStore = derived([store, query], ([$store, $query]) => {
-    const q = ($query ?? '').toLowerCase().trim();
-    if (!q) return $store;
+  const buildFilteredStore = () =>
+    derived([store, query], ([$store, $query]) => {
+      const q = ($query ?? '').toLowerCase().trim();
+      if (!q) return $store;
 
-    const data = ($store?.data ?? []).filter((it: any) => {
-      const key = String(it?.key ?? '').toLowerCase();
-      const orderNumber = String(it?.orderNumber ?? '').toLowerCase();
-      const displayId = String(it?.displayId ?? '').toLowerCase();
-      return key.includes(q) || orderNumber.includes(q) || displayId.includes(q);
+      const data = ($store?.data ?? []).filter((it: any) => {
+        const key = String(it?.key ?? '').toLowerCase();
+        const orderNumber = String(it?.orderNumber ?? '').toLowerCase();
+        const displayId = String(it?.displayId ?? '').toLowerCase();
+        return key.includes(q) || orderNumber.includes(q) || displayId.includes(q);
+      });
+
+      return {
+        ...$store,
+        data,
+      };
     });
 
-    return {
-      ...$store,
-      data,
-    };
+  let filteredStore = $state<ListStore>(buildFilteredStore());
+
+  $effect(() => {
+    filteredStore = buildFilteredStore();
   });
 
   const storeDataLength = $derived(($store?.data ?? []).length);

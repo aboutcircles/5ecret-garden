@@ -59,14 +59,16 @@
   const cartLines = $derived(($cartState.basket?.items ?? []) as any[]);
   const { findCatalogItem, imageUrlForLine } = useResolvedProducts(cartLines);
 
-  function hasRequirements(v: any): boolean {
+  function hasBlockingRequirements(v: any): boolean {
     if (!v || !Array.isArray(v.requirements)) return false;
-    return v.requirements.length > 0;
+    return v.requirements.some(
+      (r: any) => !!r?.blocking && (r?.status ?? '').toString() !== 'ok',
+    );
   }
 
   const checkoutAction = useAsyncAction(async () => {
     const v = await validateCart();
-    if (hasRequirements(v)) {
+    if (hasBlockingRequirements(v)) {
       openStep({
         title: 'Additional details',
         component: CheckoutForms,
