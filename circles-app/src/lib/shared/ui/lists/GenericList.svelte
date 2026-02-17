@@ -22,6 +22,8 @@
         maxPlaceholderPages?: number;
         // Expected number of items loaded per page (per next() call)
         expectedPageSize?: number;
+        // Multiplier for eager loading margin based on placeholder height
+        eagerLoadMultiplier?: number;
     }
 
     let {
@@ -31,7 +33,8 @@
         placeholderRow,
         rowHeight = 64,
         maxPlaceholderPages = 2,
-        expectedPageSize
+        expectedPageSize,
+        eagerLoadMultiplier = 2,
     }: Props = $props();
 
     let observer: IntersectionObserver | null = null;
@@ -193,13 +196,17 @@
             return;
         }
 
+        const size = ensurePlaceholderPageSize();
+        const eagerMargin = Math.max(400, size * rowHeight * eagerLoadMultiplier);
+        const rootMargin = `${eagerMargin}px 0px`;
+
         if (!observer) {
-            observer = new IntersectionObserver(handleIntersection, { rootMargin: '400px 0px' });
+            observer = new IntersectionObserver(handleIntersection, { rootMargin });
         } else {
             observer.disconnect();
         }
 
-        observer.observe(anchor as HTMLElement);
+        observer.observe(anchor as Element);
     };
 
     const handleRetry = async (): Promise<void> => {

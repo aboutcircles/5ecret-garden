@@ -11,11 +11,30 @@
     interface Props { item: TransactionHistoryRow; }
     let { item }: Props = $props();
 
-    let counterpartyAddress = $state<string | null>(null);
-    let badgeUrl: string | null = $state(null);
-    let displayAmount = $state('');
-    let sent = $state(false);
-    let topInfoText = $state('');
+    const avatarAddress = $derived(avatarState.avatar?.address ?? null);
+
+    const counterpartyAddress = $derived.by(() => {
+        if (!avatarAddress) return null;
+        return getCounterpartyAddress(avatarAddress);
+    });
+
+    const topInfoText = $derived.by(() => getTopInfo());
+
+    const badgeUrl = $derived.by(() => {
+        if (!avatarAddress) return null;
+        return getBadge(avatarAddress);
+    });
+
+    const sent = $derived.by(() => {
+        if (!avatarAddress) return false;
+        return item.from.toLowerCase() === avatarAddress.toLowerCase();
+    });
+
+    const displayAmount = $derived.by(() => {
+        if (!avatarAddress) return '';
+        const prefix = sent ? '-' : '+';
+        return `${prefix}${formatNetCircles(item.circles)}`;
+    });
 
     function getCounterpartyAddress(avatarAddress: string) {
         const zero = '0x0000000000000000000000000000000000000000';
@@ -27,12 +46,9 @@
         return lowerFrom === lowerAvatar ? lowerTo : lowerFrom;
     }
 
-    function getTopInfo(avatarAddress: string): string {
+    function getTopInfo(): string {
         const zero = '0x0000000000000000000000000000000000000000';
-        if (item.from === zero && item.to.toLowerCase() === avatarAddress.toLowerCase()) {
-            return 'Collected CRC';
-        }
-        return '';
+        return item.from === zero ? 'Collected CRC' : '';
     }
 
     function getBadge(avatarAddress: string) {
@@ -88,18 +104,7 @@
         openDetails();
     }
 
-    $effect(() => {
-        if (!avatarState.avatar) {
-            counterpartyAddress = null;
-            return;
-        }
-        counterpartyAddress = getCounterpartyAddress(avatarState.avatar.address);
-        topInfoText = getTopInfo(avatarState.avatar.address);
-        badgeUrl = getBadge(avatarState.avatar.address);
-        sent = item.from.toLowerCase() === avatarState.avatar.address.toLowerCase();
-        const prefix = sent ? '-' : '+';
-        displayAmount = `${prefix}${formatNetCircles(item.circles)}`;
-    });
+    
 </script>
 
 <!-- One cohesive horizontal block inside content; collapse RowFrame leading -->
@@ -112,7 +117,7 @@
     onkeydown={onRowKeydown}
     onclick={onRowClick}
 >
-    <RowFrame clickable={true} dense={true} noLeading={true}>
+    <RowFrame clickable={true} dense={true} noLeading={true} style="min-height: var(--transaction-row-height, 76px);">
         <div class="w-full flex items-center justify-between cursor-pointer">
             <div class="min-w-0">
                 <Avatar

@@ -45,10 +45,14 @@
     topInfo,
     bottomInfo,
     showTypeInfo = false,
+
     placeholderAvatar = true,
     placeholderTop = true,
     placeholderBottom = true,
   }: Props = $props();
+
+  const placeholderHasTopInfo = $derived(placeholderTop && !!topInfo);
+  const placeholderHasBottomInfo = $derived(placeholderBottom && !!bottomInfo);
 
   const normalizedAddress = $derived.by((): Address | null => {
     if (address == null) return null;
@@ -184,21 +188,33 @@
       the final layouts. This prevents layout shifting.
     -->
     {#if view === 'horizontal'}
-        <div
-                class="flex items-center gap-2 p-2 rounded-lg w-full"
-                style="min-height: 3rem;"
-        >
-            <!-- Placeholder for avatar -->
-            {#if placeholderAvatar}
-                <div class="w-8 h-8 rounded-full bg-transparent">&nbsp;</div>
-            {/if}
-
-            <div class="flex flex-col justify-center">
-                {#if placeholderTop}
-                    <div class="text-base font-semibold">&nbsp;</div>
+        <div class="inline-flex items-center min-w-0 max-w-full">
+            <div class="relative inline-block shrink-0">
+                {#if placeholderAvatar}
+                    <div class="w-10 h-10 rounded-full bg-transparent block">&nbsp;</div>
                 {/if}
-                {#if placeholderBottom}
-                    <div class="text-sm opacity-75">&nbsp;</div>
+                {#if showBookmarkBadge}
+                    <span
+                        class="absolute -top-1 -right-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-transparent"
+                        aria-hidden="true"
+                    >
+                        &nbsp;
+                    </span>
+                {/if}
+                {#if pictureOverlayUrl}
+                    <span
+                        class="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border border-base-100 bg-transparent"
+                        aria-hidden="true"
+                    ></span>
+                {/if}
+            </div>
+            <div class="flex flex-col items-start pl-4 gap-y-0.5 min-w-0 w-full">
+                {#if placeholderHasTopInfo}
+                    <div class="text-xs">&nbsp;</div>
+                {/if}
+                <div class="font-semibold text-base-content">&nbsp;</div>
+                {#if placeholderHasBottomInfo}
+                    <div class="text-xs">&nbsp;</div>
                 {/if}
             </div>
         </div>

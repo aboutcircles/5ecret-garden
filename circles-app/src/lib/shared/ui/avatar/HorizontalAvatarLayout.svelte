@@ -33,11 +33,11 @@
           <img
             src={imgUrl}
             alt={profile?.name ?? 'Profile avatar'}
-            class="w-10 h-10 object-cover rounded-full"
+            class="w-10 h-10 object-cover rounded-full block"
             onerror={onImgError}
           />
         {:else}
-          <img src="/logo.svg" alt="Fallback" class="w-10 h-10 object-cover rounded-full" />
+          <img src="/logo.svg" alt="Fallback" class="w-10 h-10 object-cover rounded-full block" />
         {/if}
 
         {#if showBookmarkBadge}
@@ -54,7 +54,7 @@
         <img
           src={pictureOverlayUrl}
           alt="Overlay"
-          class="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border border-base-100 bg-base-100"
+          class="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border border-base-100 bg-base-100 block"
         />
       {/if}
     </div>
