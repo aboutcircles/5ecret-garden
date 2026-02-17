@@ -91,6 +91,8 @@
       inputDataAttribute="data-market-auth-search-input"
       onInputKeydown={onSearchInputKeydown}
       isEmpty={storeDataLength === 0}
+      ended={$store?.ended ?? false}
+      emptyRequiresEnd={true}
       isNoMatches={storeDataLength > 0 && filteredDataLength === 0}
       emptyLabel="No entries"
       noMatchesLabel="No matching entries"

@@ -98,9 +98,13 @@
 
     const RUNWAY_FLOOR = 1;
 
-    function clearPlaceholdersAfterLoad(addedCount: number): void {
+    function clearPlaceholdersAfterLoad(addedCount: number, storeEnded: boolean): void {
         if (addedCount <= 0) {
-            clearAllPlaceholderPages();
+            if (storeEnded) {
+                clearAllPlaceholderPages();
+            } else {
+                stagedPlaceholders = Math.max(RUNWAY_FLOOR, stagedPlaceholders);
+            }
             return;
         }
 
@@ -134,7 +138,8 @@
             await storeValue.next();
             const afterLength = $store?.data?.length ?? beforeLength;
             const addedCount = Math.max(0, afterLength - beforeLength);
-            clearPlaceholdersAfterLoad(addedCount);
+            const storeEnded = $store?.ended ?? false;
+            clearPlaceholdersAfterLoad(addedCount, storeEnded);
             localError = null;
         } catch (e) {
             console.debug('[list] load next page failed', e);
@@ -166,7 +171,9 @@
             return;
         }
 
-        observer?.unobserve(anchor as HTMLElement);
+        if (anchor) {
+            observer?.unobserve(anchor);
+        }
         void loadNextPage();
     };
 
@@ -202,6 +209,18 @@
     $effect(() => {
         if (store && anchor) {
             setupObserver();
+        }
+    });
+
+    $effect(() => {
+        const storeValue = $store;
+        if (!storeValue) return;
+
+        const isEmpty = (storeValue.data ?? []).length === 0;
+        const canStageInitial = isEmpty && !storeValue.ended && !isLoadingNext;
+
+        if (canStageInitial && stagedPlaceholders === 0) {
+            enqueuePlaceholderPage();
         }
     });
 

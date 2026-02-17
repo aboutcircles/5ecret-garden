@@ -129,6 +129,8 @@
       loading={false}
       error={null}
       isEmpty={orderedContacts.length === 0}
+      ended={$contacts?.ended ?? false}
+      emptyRequiresEnd={true}
       isNoMatches={orderedContacts.length > 0 && $filteredItems.length === 0}
       emptyLabel="No contacts to migrate"
       noMatchesLabel="No matches"
