@@ -20,6 +20,7 @@
     import { createPaginatedList } from '$lib/shared/state/paginatedList';
     import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
     import HelpPopover from '$lib/shared/ui/primitives/HelpPopover.svelte';
+    import { getProfilesCoreBatch } from '$lib/shared/model/profile/coreRepo';
 
     let filterVersion = writable<number | undefined>(undefined);
     let filterRelation = writable<'mutuallyTrusts' | 'trusts' | 'trustedBy' | 'variesByVersion' | undefined>(undefined);
@@ -34,10 +35,39 @@
         showFilters.update((v) => !v);
     }
 
+    const profileCoreCache = writable(new Map<string, any>());
+    const inflightProfileRequests = new Set<string>();
+
+    async function preloadProfileCores(addresses: string[]) {
+        if (addresses.length === 0) return;
+
+        const normalized = addresses.map((addr) => addr.toLowerCase());
+        const cacheSnapshot = $profileCoreCache;
+        const missing = normalized.filter((addr) => !cacheSnapshot.has(addr) && !inflightProfileRequests.has(addr));
+
+        if (missing.length === 0) return;
+
+        missing.forEach((addr) => inflightProfileRequests.add(addr));
+        try {
+            const map = await getProfilesCoreBatch(missing as any);
+            profileCoreCache.update((prev) => {
+                const next = new Map(prev);
+                for (const [addr, profile] of map.entries()) {
+                    next.set(addr.toLowerCase(), profile);
+                }
+                return next;
+            });
+        } catch (e) {
+            console.debug('[contacts] failed to preload profiles', e);
+        } finally {
+            missing.forEach((addr) => inflightProfileRequests.delete(addr));
+        }
+    }
+
     // Build the full filtered array (not paginated)
     const filteredAll = derived(
-        [contacts, filterVersion, filterRelation],
-        ([$contacts, $filterVersion, $filterRelation]) => {
+        [contacts, filterVersion, filterRelation, profileCoreCache],
+        ([$contacts, $filterVersion, $filterRelation, $profileCache]) => {
             return Object.entries($contacts.data)
                 .filter(([_, contact]) => {
                     if (avatarState.isGroup) {
@@ -61,7 +91,10 @@
                     transactionIndex: 0,
                     logIndex: 0,
                     address,
-                    contact,
+                    contact: {
+                        ...contact,
+                        contactProfile: contact?.contactProfile ?? $profileCache.get(address.toLowerCase()),
+                    },
                 }));
         }
     );
@@ -78,6 +111,11 @@
 
     // Paginate searched results for rendering
     const contactsPaginated = createPaginatedList(searchedAll, { pageSize: 25 });
+
+    $effect(() => {
+        const addresses = $searchedAll.slice(0, 100).map((item) => item.address);
+        void preloadProfileCores(addresses);
+    });
 
     const onSearchInputKeydown = createListInputArrowDownHandler({
         getScope: () => contactsListScopeEl,
