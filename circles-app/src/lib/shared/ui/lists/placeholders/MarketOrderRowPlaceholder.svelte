@@ -23,3 +23,4 @@
   <div class="shrink-0 flex items-center gap-2">
     <div class="w-4 h-4 rounded bg-base-300/60"></div>
   </div>
+</div>
