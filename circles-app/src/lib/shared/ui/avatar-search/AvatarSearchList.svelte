@@ -17,6 +17,7 @@
   import { searchRemoteAvatarRows } from './avatarSearch.remote';
   import type { AvatarSearchItem } from './avatarSearch.types';
   import AvatarSearchRow from './AvatarSearchRow.svelte';
+  import AvatarRowPlaceholder from '$lib/shared/ui/lists/placeholders/AvatarRowPlaceholder.svelte';
 
   const ACTIVATE_CTX_KEY = 'avatar-search-row-activate';
 
@@ -227,8 +228,9 @@
         row={AvatarSearchRow}
         getKey={(item) => item.key}
         rowHeight={64}
-        maxPlaceholderPages={1}
+        maxPlaceholderPages={2}
         expectedPageSize={PAGE_SIZE}
+        placeholderRow={AvatarRowPlaceholder}
       />
     {:else if showEmpty}
       <div class="text-center py-4">

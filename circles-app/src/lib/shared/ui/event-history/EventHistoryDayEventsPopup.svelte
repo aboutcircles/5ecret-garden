@@ -3,6 +3,7 @@
   import { writable } from 'svelte/store';
   import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
   import { createPaginatedList } from '$lib/shared/state/paginatedList';
+  import EventHistoryRowPlaceholder from '$lib/shared/ui/lists/placeholders/EventHistoryRowPlaceholder.svelte';
   import type {
     CirclesBaseEventRow,
     EventHistoryDayPopupHeaderComponent,
@@ -274,6 +275,7 @@
           rowHeight={64}
           maxPlaceholderPages={2}
           expectedPageSize={25}
+          placeholderRow={EventHistoryRowPlaceholder}
         />
       </div>
     </div>

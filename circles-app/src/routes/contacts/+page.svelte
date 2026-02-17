@@ -4,6 +4,7 @@
     import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
     import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
     import ContactRow from './ContactRow.svelte';
+    import AvatarRowPlaceholder from '$lib/shared/ui/lists/placeholders/AvatarRowPlaceholder.svelte';
     import {derived, writable, type Writable} from 'svelte/store';
     import Filter from '$lib/shared/ui/lists/Filter.svelte';
     import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
@@ -227,7 +228,14 @@
         wrapInListContainer={false}
     >
         <div data-contacts-list-scope bind:this={contactsListScopeEl}>
-            <GenericList store={contactsPaginated} row={ContactRow} rowHeight={64} maxPlaceholderPages={0} expectedPageSize={25} />
+            <GenericList
+                store={contactsPaginated}
+                row={ContactRow}
+                rowHeight={64}
+                maxPlaceholderPages={2}
+                expectedPageSize={25}
+                placeholderRow={AvatarRowPlaceholder}
+            />
         </div>
     </ListShell>
 </PageScaffold>

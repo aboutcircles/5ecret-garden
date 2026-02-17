@@ -3,6 +3,7 @@
     import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
     import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
     import TransactionRow from './TransactionRow.svelte';
+    import TransactionRowPlaceholder from '$lib/shared/ui/lists/placeholders/TransactionRowPlaceholder.svelte';
     import {transactionHistory} from '$lib/shared/state/transactionHistory';
     import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
 
@@ -41,6 +42,13 @@
     wrapInListContainer={false}
 >
     <div data-transactions-list-scope bind:this={transactionsListScopeEl}>
-        <GenericList row={TransactionRow} store={searchedTransactionHistory} rowHeight={64} maxPlaceholderPages={0} expectedPageSize={25} />
+        <GenericList
+            row={TransactionRow}
+            store={searchedTransactionHistory}
+            rowHeight={64}
+            maxPlaceholderPages={2}
+            expectedPageSize={25}
+            placeholderRow={TransactionRowPlaceholder}
+        />
     </div>
 </ListShell>

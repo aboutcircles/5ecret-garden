@@ -2,6 +2,7 @@
     import {onMount} from 'svelte';
     import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
     import ProductCard from '$lib/areas/market/ui/product/ProductCard.svelte';
+    import ProductCardPlaceholder from '$lib/shared/ui/lists/placeholders/ProductCardPlaceholder.svelte';
     import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
     import type { AggregatedCatalogItem } from '$lib/areas/market/model';
     import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
@@ -26,6 +27,8 @@
     let products: ProductLike[] = $state([]);
     let nextCursor: string | null = $state(null);
     let hasMore: boolean = $state(false);
+    let isFetchingNext: boolean = $state(false);
+    let nextPagePlaceholders: number = $state(0);
 
     type SellerListing = { chainId: number; seller: string };
     type SellersResponse = { sellers?: SellerListing[] };
@@ -163,8 +166,10 @@
     }
 
     async function loadNextPage(): Promise<void> {
-      if (!nextCursor || loading) return;
+      if (!nextCursor || loading || isFetchingNext) return;
       loading = true;
+      isFetchingNext = true;
+      nextPagePlaceholders = Math.max(1, Math.min(PAGE_SIZE, 24));
       errorMsg = '';
       try {
         const op = (selectedOperator ?? (gnosisConfig.production.marketOperator as `0x${string}`)) as `0x${string}`;
@@ -183,6 +188,8 @@
         }
       } finally {
         loading = false;
+        isFetchingNext = false;
+        nextPagePlaceholders = 0;
       }
     }
 
@@ -333,6 +340,11 @@
                             ondeleted={() => loadFirstPage()}
                         />
                     {/each}
+                    {#if nextPagePlaceholders > 0}
+                        {#each Array.from({ length: nextPagePlaceholders }) as _, i}
+                            <ProductCardPlaceholder />
+                        {/each}
+                    {/if}
                 </div>
                 {#if hasMore}
                     <!-- Infinite scroll sentinel: observed by IntersectionObserver to auto-load next page -->

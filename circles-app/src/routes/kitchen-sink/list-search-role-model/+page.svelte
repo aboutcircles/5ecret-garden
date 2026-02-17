@@ -17,6 +17,11 @@
   import GroupRowView from '../../groups/GroupRowView.svelte';
   import SalesOrderRow from '$lib/areas/market/ui/SalesOrderRow.svelte';
   import AvatarSearchRow from '../../avatar-search/dev/AvatarSearchRow.svelte';
+  import AvatarRowPlaceholder from '$lib/shared/ui/lists/placeholders/AvatarRowPlaceholder.svelte';
+  import BalanceRowPlaceholder from '$lib/shared/ui/lists/placeholders/BalanceRowPlaceholder.svelte';
+  import TransactionRowPlaceholder from '$lib/shared/ui/lists/placeholders/TransactionRowPlaceholder.svelte';
+  import MarketOrderRowPlaceholder from '$lib/shared/ui/lists/placeholders/MarketOrderRowPlaceholder.svelte';
+  import GatewayRowPlaceholder from '$lib/shared/ui/lists/placeholders/GatewayRowPlaceholder.svelte';
   import GatewayTrustedAccountsList from '$lib/areas/settings/ui/components/GatewayTrustedAccountsList.svelte';
   import GatewayRowView from '$lib/areas/settings/ui/components/GatewayRow.svelte';
   import HoldersRow from '$lib/shared/ui/profile/components/HoldersRow.svelte';
@@ -406,13 +411,27 @@
     <section class="rounded-xl border border-base-300 p-3 space-y-2">
       <h3 class="font-medium">Contacts list (ContactRow)</h3>
       <ListShell query={contactsQuery} searchPlaceholder="Search contacts" wrapInListContainer={false}>
-        <GenericList store={contactsPaginated} row={ContactRow} rowHeight={64} expectedPageSize={4} maxPlaceholderPages={1} />
+        <GenericList
+          store={contactsPaginated}
+          row={ContactRow}
+          rowHeight={64}
+          expectedPageSize={4}
+          maxPlaceholderPages={1}
+          placeholderRow={AvatarRowPlaceholder}
+        />
       </ListShell>
     </section>
 
     <section class="rounded-xl border border-base-300 p-3 space-y-2">
       <h3 class="font-medium">Wallet balances (BalanceRow)</h3>
-      <GenericList store={balanceStore} row={BalanceRow} rowHeight={72} expectedPageSize={3} maxPlaceholderPages={0} />
+      <GenericList
+        store={balanceStore}
+        row={BalanceRow}
+        rowHeight={72}
+        expectedPageSize={3}
+        maxPlaceholderPages={1}
+        placeholderRow={BalanceRowPlaceholder}
+      />
     </section>
   </div>
 
@@ -424,7 +443,8 @@
         row={TransactionRow}
         rowHeight={64}
         expectedPageSize={3}
-        maxPlaceholderPages={0}
+        maxPlaceholderPages={1}
+        placeholderRow={TransactionRowPlaceholder}
         getKey={(item) => `${item.timestamp ?? '0'}-${item.from ?? ''}-${item.to ?? ''}`}
       />
     </section>
@@ -436,7 +456,8 @@
         row={GroupRowView}
         rowHeight={64}
         expectedPageSize={4}
-        maxPlaceholderPages={0}
+        maxPlaceholderPages={1}
+        placeholderRow={AvatarRowPlaceholder}
         getKey={(item) => String(item.group)}
       />
     </section>
@@ -450,7 +471,8 @@
         row={SalesOrderRow}
         rowHeight={64}
         expectedPageSize={3}
-        maxPlaceholderPages={0}
+        maxPlaceholderPages={1}
+        placeholderRow={MarketOrderRowPlaceholder}
         getKey={(item) => item.key ?? item.orderNumber}
       />
     </section>
@@ -458,7 +480,14 @@
     <section class="rounded-xl border border-base-300 p-3 space-y-2">
       <h3 class="font-medium">Avatar search dev list (AvatarSearchRow)</h3>
       <ListShell query={avatarSearchQuery} searchPlaceholder="Search avatar results" wrapInListContainer={false}>
-        <GenericList store={avatarSearchPaginated} row={AvatarSearchRow} rowHeight={64} expectedPageSize={5} maxPlaceholderPages={1} />
+        <GenericList
+          store={avatarSearchPaginated}
+          row={AvatarSearchRow}
+          rowHeight={64}
+          expectedPageSize={5}
+          maxPlaceholderPages={1}
+          placeholderRow={AvatarRowPlaceholder}
+        />
       </ListShell>
     </section>
   </div>
@@ -471,7 +500,14 @@
 
     <section class="rounded-xl border border-base-300 p-3 space-y-2">
       <h3 class="font-medium">Payment gateways (GatewayRow)</h3>
-      <GenericList store={gatewayStore} row={GatewayRowView} rowHeight={64} expectedPageSize={2} maxPlaceholderPages={0} />
+      <GenericList
+        store={gatewayStore}
+        row={GatewayRowView}
+        rowHeight={64}
+        expectedPageSize={2}
+        maxPlaceholderPages={1}
+        placeholderRow={GatewayRowPlaceholder}
+      />
     </section>
   </div>
 
@@ -483,7 +519,8 @@
         row={HoldersRow}
         rowHeight={64}
         expectedPageSize={2}
-        maxPlaceholderPages={0}
+        maxPlaceholderPages={1}
+        placeholderRow={AvatarRowPlaceholder}
         getKey={(item) => String(item.avatar)}
       />
     </section>
@@ -530,4 +567,6 @@
       />
     </section>
   </div>
+
 </section>
+
