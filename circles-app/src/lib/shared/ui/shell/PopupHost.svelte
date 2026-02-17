@@ -10,6 +10,8 @@
     let previouslyFocusedEl: HTMLElement | null = null;
     let wasOpen = false;
     let lastTopPageKey = '';
+    let lastScrollPageKey = '';
+    const pageScrollTops = new Map<string, number>();
     const CLOSE_CONFIRM_ID = '__close_confirm_step__';
 
     const FOCUSABLE_SELECTOR = [
@@ -261,6 +263,8 @@
             focusElement(previouslyFocusedEl);
             previouslyFocusedEl = null;
             lastTopPageKey = '';
+            lastScrollPageKey = '';
+            pageScrollTops.clear();
         }
 
         wasOpen = isOpen;
@@ -295,6 +299,48 @@
             const fallback = popupEl?.querySelector<HTMLElement>('[data-popup-close-control], #popup-title');
             focusElement(fallback);
         });
+    });
+
+    $effect(() => {
+        if (!$popupState.content || !popupEl) return;
+
+        const topPage = popupEl.querySelector<HTMLElement>('.popup-page.is-top');
+        if (!topPage) return;
+
+        const pageKey = topPage.dataset.popupPageKey ?? '';
+        if (!pageKey || pageKey === lastScrollPageKey) return;
+
+        // Important: we do NOT infer previous-page scroll here, because by the time
+        // this runs the DOM has already switched pages and scrollTop may have been
+        // clamped to the new page height. Previous page scroll is tracked live via
+        // the scroll listener below.
+        lastScrollPageKey = pageKey;
+
+        const restoreTop = pageScrollTops.get(pageKey) ?? 0;
+        const popupNode = popupEl;
+        popupNode.scrollTop = restoreTop;
+
+        // Timing guard: apply again after layout to avoid browser clamping races.
+        requestAnimationFrame(() => {
+            if (!popupEl || popupEl !== popupNode || lastScrollPageKey !== pageKey) return;
+            popupNode.scrollTop = restoreTop;
+        });
+    });
+
+    $effect(() => {
+        if (!popupEl) return;
+        const popupNode = popupEl;
+
+        const rememberScroll = () => {
+            if (!lastScrollPageKey) return;
+            pageScrollTops.set(lastScrollPageKey, popupNode.scrollTop);
+        };
+
+        popupNode.addEventListener('scroll', rememberScroll, { passive: true });
+
+        return () => {
+            popupNode.removeEventListener('scroll', rememberScroll);
+        };
     });
 
     $effect(() => {
