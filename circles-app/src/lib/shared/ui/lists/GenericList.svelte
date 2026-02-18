@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onDestroy, type Component } from 'svelte';
+    import { onDestroy, tick, type Component } from 'svelte';
     import type { EventRow, TransactionHistoryRow } from '@circles-sdk/data';
     import { getKeyFromItem } from '$lib/shared/state/query';
     import type { Readable } from 'svelte/store';
@@ -120,6 +120,27 @@
         stagedPlaceholders = 0;
     }
 
+    function findScrollRoot(el: HTMLElement | undefined): Element | null {
+        if (!el || typeof window === 'undefined') {
+            return null;
+        }
+
+        let node: HTMLElement | null = el.parentElement;
+        while (node) {
+            const style = window.getComputedStyle(node);
+            const overflowY = style.overflowY;
+            const isScrollableOverflow = overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay';
+
+            if (isScrollableOverflow) {
+                return node;
+            }
+
+            node = node.parentElement;
+        }
+
+        return null;
+    }
+
     async function loadNextPage(): Promise<void> {
         const storeValue = $store;
 
@@ -138,7 +159,19 @@
         enqueuePlaceholderPage();
 
         try {
+            // Let newly staged placeholders paint before consuming the next page.
+            // This is especially important for in-memory/synchronous paginated sources
+            // (e.g. popup tab lists), where `next()` can resolve immediately and
+            // otherwise clear placeholders before they ever become visible.
+            await tick();
+            if (typeof requestAnimationFrame !== 'undefined') {
+                await new Promise<void>((resolve) => {
+                    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+                });
+            }
+
             await storeValue.next();
+
             const afterLength = $store?.data?.length ?? beforeLength;
             const addedCount = Math.max(0, afterLength - beforeLength);
             const storeEnded = $store?.ended ?? false;
@@ -152,7 +185,11 @@
         } finally {
             isLoadingNext = false;
             if (anchor && observer && !$store?.ended) {
-                requestAnimationFrame(() => observer?.observe(anchor));
+                requestAnimationFrame(() => {
+                    if (anchor) {
+                        observer?.observe(anchor);
+                    }
+                });
             }
         }
     }
@@ -200,11 +237,14 @@
         const eagerMargin = Math.max(400, size * rowHeight * eagerLoadMultiplier);
         const rootMargin = `${eagerMargin}px 0px`;
 
-        if (!observer) {
-            observer = new IntersectionObserver(handleIntersection, { rootMargin });
-        } else {
+        const root = findScrollRoot(anchor);
+
+        if (observer) {
             observer.disconnect();
+            observer = null;
         }
+
+        observer = new IntersectionObserver(handleIntersection, { root, rootMargin });
 
         observer.observe(anchor as Element);
     };

@@ -1,6 +1,11 @@
 <!-- src/lib/components/Popup.svelte -->
 <script lang="ts">
-    import { popupControls, popupState, resolvePopupDismiss } from '$lib/shared/state/popup';
+    import {
+        isCurrentFlowDirty,
+        popupControls,
+        popupState,
+        resolvePopupDismiss
+    } from '$lib/shared/state/popup';
     import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
     import { ArrowLeft as LArrowLeft, X as LX } from 'lucide';
     import { focusElement, shouldAutoFocusTextInput } from '$lib/shared/ui/focus/focusPolicy';
@@ -133,6 +138,7 @@
     function attemptClose(source: 'backdrop' | 'escape' | 'header'): void {
         const content = $popupState.content;
         if (!content) return;
+        const flowDirty = isCurrentFlowDirty($popupState);
 
         if (isCloseConfirmOpen()) {
             if (source === 'backdrop' || source === 'escape') {
@@ -143,7 +149,7 @@
 
         const dismiss = resolvePopupDismiss(content);
         if (dismiss === 'explicit' && (source === 'backdrop' || source === 'escape')) {
-            if (content.isDirty) {
+            if (flowDirty) {
                 pushCloseConfirmStep();
             } else {
                 popupControls.close();
@@ -151,7 +157,7 @@
             return;
         }
 
-        if (dismiss === 'confirmIfDirty' && content.isDirty) {
+        if (dismiss === 'confirmIfDirty' && flowDirty) {
             pushCloseConfirmStep();
             return;
         }
