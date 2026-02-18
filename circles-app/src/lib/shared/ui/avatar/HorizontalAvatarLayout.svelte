@@ -5,6 +5,7 @@
     profile: Profile | undefined;
     pictureOverlayUrl?: string | undefined;
     showBookmarkBadge?: boolean;
+    reverse?: boolean;
     topInfo?: string | undefined;
     bottomInfo?: string | undefined;
     onclick?: (e: MouseEvent) => void | undefined;
@@ -14,6 +15,7 @@
     profile,
     pictureOverlayUrl = undefined,
     showBookmarkBadge = false,
+    reverse = false,
     topInfo = undefined,
     bottomInfo = undefined,
     onclick = undefined,
@@ -26,7 +28,7 @@
   $effect(() => { imgUrl; imgError = false; });
 </script>
 
-<div class="inline-flex items-center min-w-0 max-w-full">
+<div class={`inline-flex items-center min-w-0 max-w-full ${reverse ? 'flex-row-reverse' : ''}`}>
   <button class="cursor-pointer shrink-0" {onclick}>
       <div class="relative inline-block">
         {#if imgUrl && !imgError}
@@ -59,7 +61,7 @@
       {/if}
     </div>
   </button>
-  <div class="flex flex-col items-start pl-4 gap-y-0.5 min-w-0">
+  <div class={`flex flex-col gap-y-0.5 min-w-0 ${reverse ? 'items-end pr-4 text-right' : 'items-start pl-4'}`}>
     {#if topInfo}
       <p class="text-xs text-base-content/70 truncate w-full">
         {topInfo}
