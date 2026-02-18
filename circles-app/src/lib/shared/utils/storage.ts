@@ -23,6 +23,10 @@ export interface StorageSchema {
 const STORAGE_KEY = 'Circles.Storage';
 const CURRENT_VERSION = 1;
 
+function canUseLocalStorage(): boolean {
+  return typeof localStorage !== 'undefined';
+}
+
 export class CirclesStorage {
   private static instance: CirclesStorage;
 
@@ -38,6 +42,8 @@ export class CirclesStorage {
   }
 
   private migrate() {
+    if (!canUseLocalStorage()) return;
+
     const data = this.read();
 
     if (data?.version === CURRENT_VERSION) return;
@@ -104,14 +110,17 @@ export class CirclesStorage {
   }
 
   clear() {
+    if (!canUseLocalStorage()) return;
     localStorage.removeItem(STORAGE_KEY);
   }
 
   private write(data: StorageSchema) {
+    if (!canUseLocalStorage()) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }
 
   private read(): StorageSchema | undefined {
+    if (!canUseLocalStorage()) return undefined;
     const stored = localStorage.getItem(STORAGE_KEY);
     return stored ? JSON.parse(stored) : undefined;
   }
