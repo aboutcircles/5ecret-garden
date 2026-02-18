@@ -1,7 +1,7 @@
 <script lang="ts">
   import Send from '$lib/areas/wallet/ui/pages/Send.svelte';
   import ToStep from './1_To.svelte';
-  import RouteStep from './2_Asset.svelte';
+  import TokenFiltersStep from './2_TokenFilters.svelte';
   import AmountStep from './3_Amount.svelte';
   import type {SendFlowContext} from '$lib/areas/wallet/flows/send/context';
   import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
@@ -38,7 +38,7 @@
 
   const validationMessage = $derived.by(() => {
     if (!hasRecipient) return 'Select a recipient before sending.';
-    if (!hasAsset) return 'Select a route/asset before sending.';
+    if (!hasAsset) return 'Select routing settings before sending.';
     if (!hasAmount) return 'Enter an amount greater than 0 before sending.';
     return null;
   });
@@ -88,22 +88,22 @@
             amount,
             undefined,
             dataUInt8Arr,
-            true,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
+            context.useWrappedBalances ?? true,
+            context.fromTokens,
+            context.toTokens,
+            context.excludeFromTokens,
+            context.excludeToTokens,
              context.maxTransfers ?? MAX_PATH_STEPS)
           : avatar.transfer(
             selectedAddress,
             amount,
             selectedAsset.tokenAddress,
             dataUInt8Arr,
-            true,
-            undefined,
-            undefined,
-            undefined,
-            undefined,
+            context.useWrappedBalances ?? true,
+            context.fromTokens,
+            context.toTokens,
+            context.excludeFromTokens,
+            context.excludeToTokens,
             context.maxTransfers ?? MAX_PATH_STEPS
           ),
     });
@@ -124,6 +124,14 @@
   }
 
   function editRoute() {
+    if (!context.transitiveOnly) {
+      popToOrOpen(AmountStep, {
+        title: SEND_POPUP_TITLE,
+        props: { context },
+      });
+      return;
+    }
+
     popToOrOpen(AmountStep, {
       title: SEND_POPUP_TITLE,
       props: { context },
@@ -131,7 +139,7 @@
 
     openStep({
       title: SEND_POPUP_TITLE,
-      component: RouteStep,
+      component: TokenFiltersStep,
       props: { context, returnMode: 'back' },
     });
   }

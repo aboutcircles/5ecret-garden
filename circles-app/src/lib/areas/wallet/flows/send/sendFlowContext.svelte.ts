@@ -6,6 +6,11 @@ class SendFlowContextState implements SendFlowContext {
   selectedAddress = $state<SendFlowContext['selectedAddress']>(undefined);
   amount = $state<SendFlowContext['amount']>(undefined);
   transitiveOnly = $state(true);
+  fromTokens = $state<SendFlowContext['fromTokens']>(undefined);
+  toTokens = $state<SendFlowContext['toTokens']>(undefined);
+  excludeFromTokens = $state<SendFlowContext['excludeFromTokens']>(undefined);
+  excludeToTokens = $state<SendFlowContext['excludeToTokens']>(undefined);
+  useWrappedBalances = $state<SendFlowContext['useWrappedBalances']>(true);
   data = $state<SendFlowContext['data']>(undefined);
   dataType = $state<SendFlowContext['dataType']>(undefined);
   maxTransfers = $state<SendFlowContext['maxTransfers']>(undefined);
@@ -22,6 +27,21 @@ class SendFlowContextState implements SendFlowContext {
     }
     if ('transitiveOnly' in overrides) {
       this.transitiveOnly = overrides.transitiveOnly ?? true;
+    }
+    if ('fromTokens' in overrides) {
+      this.fromTokens = overrides.fromTokens;
+    }
+    if ('toTokens' in overrides) {
+      this.toTokens = overrides.toTokens;
+    }
+    if ('excludeFromTokens' in overrides) {
+      this.excludeFromTokens = overrides.excludeFromTokens;
+    }
+    if ('excludeToTokens' in overrides) {
+      this.excludeToTokens = overrides.excludeToTokens;
+    }
+    if ('useWrappedBalances' in overrides) {
+      this.useWrappedBalances = overrides.useWrappedBalances ?? true;
     }
     if ('data' in overrides) {
       this.data = overrides.data;

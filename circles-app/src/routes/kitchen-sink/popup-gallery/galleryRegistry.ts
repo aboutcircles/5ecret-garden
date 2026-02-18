@@ -1,7 +1,7 @@
 import type { GalleryEntry } from './types';
 
 import SendTo from '$lib/areas/wallet/flows/send/1_To.svelte';
-import SendAsset from '$lib/areas/wallet/flows/send/2_Asset.svelte';
+import SendTokenFilters from '$lib/areas/wallet/flows/send/2_TokenFilters.svelte';
 import SendAmount from '$lib/areas/wallet/flows/send/3_Amount.svelte';
 import SendReview from '$lib/areas/wallet/flows/send/4_Send.svelte';
 import { transitiveTransfer } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
@@ -204,7 +204,7 @@ Step 3 (Amount): Core branching happens here:
 Step 4 (Send/Review): Re-validates recipient/asset/amount before submitting. Encodes context data (hex/utf-8) and calls the transfer action with the selected token and maxTransfers. Async failures are surfaced via StepAlert. On success the popup closes.`,
     steps: [
       { id: 'send-1', title: '1_To.svelte', purpose: 'Pick recipient', component: SendTo, propsFactory: () => ({ context: mockSendContext() }) },
-      { id: 'send-2', title: '2_Asset.svelte', purpose: 'Pick route/asset', component: SendAsset, propsFactory: () => ({ context: mockSendContext() }) },
+      { id: 'send-2', title: '2_TokenFilters.svelte', purpose: 'Configure include/exclude token filters', component: SendTokenFilters, propsFactory: () => ({ context: mockSendContext() }) },
       { id: 'send-3', title: '3_Amount.svelte', purpose: 'Input amount', component: SendAmount, propsFactory: () => ({ context: mockSendContext() }) },
       { id: 'send-4', title: '4_Send.svelte', purpose: 'Review and submit', component: SendReview, propsFactory: () => ({ context: mockSendContext() }) },
     ],
