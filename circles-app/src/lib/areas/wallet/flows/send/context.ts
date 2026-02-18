@@ -9,6 +9,11 @@ export type SendFlowContext = {
   selectedAddress: Address | undefined;
   transitiveOnly: boolean;
   selectedAsset: TokenBalanceRow;
+  fromTokens?: Address[];
+  toTokens?: Address[];
+  excludeFromTokens?: Address[];
+  excludeToTokens?: Address[];
+  useWrappedBalances?: boolean;
   amount: number | undefined;
   maxTransfers?: number;
 };

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import SelectAsset from './2_Asset.svelte';
   import SelectAmount from './3_Amount.svelte';
   import type { SendFlowContext } from '$lib/areas/wallet/flows/send/context';
   import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
@@ -39,23 +38,13 @@
       return;
     }
 
-    if (context.selectedAsset) {
-      openStep({
-        title: SEND_POPUP_TITLE,
-        component: SelectAmount,
-        props: {
-          context: context,
-        },
-      });
-    } else {
-      openStep({
-        title: SEND_POPUP_TITLE,
-        component: SelectAsset,
-        props: {
-          context: context,
-        },
-      });
-    }
+    openStep({
+      title: SEND_POPUP_TITLE,
+      component: SelectAmount,
+      props: {
+        context: context,
+      },
+    });
   }
 </script>
 

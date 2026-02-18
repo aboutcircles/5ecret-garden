@@ -18,7 +18,7 @@
     import { popupControls } from '$lib/shared/state/popup';
     import { openProfilePopup } from '$lib/shared/ui/profile/openProfilePopup';
     import ToStep from './1_To.svelte';
-    import SelectAsset from './2_Asset.svelte';
+    import TokenFiltersStep from './2_TokenFilters.svelte';
     import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
         import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
@@ -75,10 +75,12 @@
                         avatarState.avatar.address,
                         context.selectedAddress,
                         bigNumber,
-                        true,
-                        undefined,
-                        undefined,
-                        excludedTokens
+                        context.useWrappedBalances ?? true,
+                        context.fromTokens,
+                        context.toTokens,
+                        context.excludeFromTokens,
+                        context.excludeToTokens ?? excludedTokens,
+                        context.maxTransfers
                     );
 
             if (!p || !p.transfers?.length) {
@@ -218,7 +220,7 @@
 
     function tryAnotherToken() {
         pathfindingAction.reset();
-        popToOrOpen(SelectAsset, {
+        popToOrOpen(TokenFiltersStep, {
             title: SEND_POPUP_TITLE,
             props: { context, returnMode: 'back' },
         });
@@ -299,6 +301,18 @@
     $effect(() => {
         const selectedAsset = context.selectedAsset;
         const selectedAddress = context.selectedAddress;
+        const fromTokensKey = (context.fromTokens ?? []).join(',');
+        const toTokensKey = (context.toTokens ?? []).join(',');
+        const excludeFromTokensKey = (context.excludeFromTokens ?? []).join(',');
+        const excludeToTokensKey = (context.excludeToTokens ?? []).join(',');
+        const useWrappedBalances = context.useWrappedBalances ?? true;
+
+        // Keep these references in this effect so pathfinding is recalculated when filters change.
+        void fromTokensKey;
+        void toTokensKey;
+        void excludeFromTokensKey;
+        void excludeToTokensKey;
+        void useWrappedBalances;
 
         pathfindingAction.reset();
 
@@ -359,17 +373,23 @@
         <RowFrame clickable={true} noLeading={true}>
             <div class="w-full flex items-center justify-between gap-3">
                 <div class="min-w-0">
-                    <div class="menu-title p-0">Route</div>
+                    <div class="menu-title p-0">Token filters</div>
                     {#if isAutoRoute}
-                        <div class="flex items-center gap-1">
+                        <div class="flex items-center gap-1.5">
                             <span class="font-medium">Auto route</span>
                             <HelpPopover
-                                    title="Auto route"
-                                    lines={AUTO_ROUTE_HELP_LINES}
-                                    widthClass="w-72"
+                                title="Auto route"
+                                lines={AUTO_ROUTE_HELP_LINES}
+                                widthClass="w-72"
                             />
                         </div>
-                        <div class="text-xs text-base-content/70">Uses your trust network</div>
+                        <div class="text-xs text-base-content/70">
+                            {#if context.fromTokens?.length || context.excludeFromTokens?.length}
+                                Include {context.fromTokens?.length ?? 0}, exclude {context.excludeFromTokens?.length ?? 0}
+                            {:else}
+                                Uses default trusted token routing
+                            {/if}
+                        </div>
                     {:else}
                         <Avatar
                                 address={context.selectedAsset?.tokenOwner}
