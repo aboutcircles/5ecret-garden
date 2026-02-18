@@ -5,6 +5,7 @@ export type OpenStepOptions = {
   component: PopupContentDefinition['component'];
   props?: PopupContentDefinition['props'];
   key?: PopupContentDefinition['key'];
+  flowId?: PopupContentDefinition['flowId'];
   onClose?: PopupContentDefinition['onClose'];
   hideTitle?: PopupContentDefinition['hideTitle'];
   kind?: PopupContentDefinition['kind'];
