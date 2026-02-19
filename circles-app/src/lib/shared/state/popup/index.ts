@@ -43,6 +43,7 @@ type PopupHistoryMarker = {
 const initialState: PopupState = { content: null, stack: [] };
 
 export const popupState: Writable<PopupState> = writable<PopupState>(initialState);
+export const popupHistoryForwardNoopTick: Writable<number> = writable<number>(0);
 let popupIdentitySeq = 0;
 let popupFlowIdentitySeq = 0;
 let popupHistorySyncSessionId: string | null = null;
@@ -195,8 +196,7 @@ function open(def: PopupContentDefinition): void {
 function back(): void {
   if (hasActivePopupHistorySync() && !popupHistorySyncHandlingPopstate) {
     const depth = currentDepth(get(popupState));
-    const marker = readPopupHistoryMarker(window.history.state);
-    if (depth > 0 && marker && marker.depth > 0) {
+    if (depth > 0) {
       window.history.back();
       return;
     }
@@ -229,8 +229,7 @@ function popTo(predicate: (entry: PopupContentDefinition) => boolean): boolean {
       found = true;
       const targetDepth = foundIndex + 1;
       const delta = entries.length - targetDepth;
-      const marker = readPopupHistoryMarker(window.history.state);
-      if (delta > 0 && marker && marker.depth >= entries.length) {
+      if (delta > 0) {
         window.history.go(-delta);
         return true;
       }
@@ -267,8 +266,7 @@ function popTo(predicate: (entry: PopupContentDefinition) => boolean): boolean {
 function close(): void {
   if (hasActivePopupHistorySync() && !popupHistorySyncHandlingPopstate) {
     const depth = currentDepth(get(popupState));
-    const marker = readPopupHistoryMarker(window.history.state);
-    if (depth > 0 && marker && marker.depth >= depth) {
+    if (depth > 0) {
       window.history.go(-depth);
       return;
     }
@@ -279,6 +277,21 @@ function close(): void {
     return { content: null, stack: [] };
   });
   syncPopupHistoryToCurrentDepth();
+}
+
+function closeAndThen(action: () => void): void {
+  if (hasActivePopupHistorySync() && !popupHistorySyncHandlingPopstate) {
+    popupState.update((s) => {
+      s.content?.onClose?.();
+      return { content: null, stack: [] };
+    });
+    syncPopupHistoryToCurrentDepth();
+    action();
+    return;
+  }
+
+  close();
+  action();
 }
 
 function replace(def: PopupContentDefinition): void {
@@ -390,6 +403,7 @@ export function initPopupHistorySync(): () => void {
       // We don't persist full popup component snapshots in history.
       // If browser forward reaches a popup-depth marker, normalize back
       // to the actual runtime popup depth.
+      popupHistoryForwardNoopTick.update((n) => n + 1);
       writePopupHistoryDepth(current, 'replace');
       return;
     }
@@ -421,6 +435,7 @@ export const popupControls = {
   back,
   popTo,
   close,
+  closeAndThen,
   replace,
   setCurrentDirty,
   markCurrentDirty,

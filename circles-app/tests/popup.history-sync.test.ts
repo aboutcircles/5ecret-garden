@@ -1,8 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { get } from 'svelte/store';
 import {
+  type PopupContentDefinition,
   initPopupHistorySync,
   popupControls,
+  popupHistoryForwardNoopTick,
   popupState,
   syncPopupHistoryToCurrentDepth,
 } from '../src/lib/shared/state/popup';
@@ -82,6 +84,7 @@ function setupFakeWindow() {
 
 afterEach(() => {
   popupState.set({ content: null, stack: [] });
+  popupHistoryForwardNoopTick.set(0);
 });
 
 describe('popup history sync', () => {
@@ -160,6 +163,30 @@ describe('popup history sync', () => {
     restore();
   });
 
+  it('consumes all popup history entries when closing from backdrop-style close at deeper step', () => {
+    const { fakeWindow, restore } = setupFakeWindow();
+    const dispose = initPopupHistorySync();
+
+    popupControls.open({ title: 'A', component: COMPONENT_A, props: {} });
+    popupControls.open({ title: 'B', component: COMPONENT_B, props: {} });
+    popupControls.open({ title: 'C', component: COMPONENT_A, props: {} });
+
+    expect(fakeWindow.getHistoryLength()).toBe(4);
+    expect(fakeWindow.getHistoryIndex()).toBe(3);
+    expect(get(popupState).stack).toHaveLength(2);
+
+    // Equivalent to clicking backdrop when confirm logic resolves to close()
+    popupControls.close();
+
+    expect(fakeWindow.history.go).toHaveBeenCalledWith(-3);
+    expect(fakeWindow.getHistoryIndex()).toBe(0);
+    expect(get(popupState).content).toBeNull();
+    expect(get(popupState).stack).toHaveLength(0);
+
+    dispose();
+    restore();
+  });
+
   it('keeps marker depth in sync when popup is closed via direct state update', () => {
     const { fakeWindow, restore } = setupFakeWindow();
     const dispose = initPopupHistorySync();
@@ -203,6 +230,57 @@ describe('popup history sync', () => {
 
     const marker = fakeWindow.history.state?.__circlesPopupHistory as Record<string, unknown>;
     expect(marker?.depth).toBe(1);
+
+    dispose();
+    restore();
+  });
+
+  it('signals forward noop when popstate asks for deeper popup state than runtime', () => {
+    const { fakeWindow, restore } = setupFakeWindow();
+    const dispose = initPopupHistorySync();
+
+    popupControls.open({ title: 'A', component: COMPONENT_A, props: {} });
+    popupControls.close();
+
+    const currentMarker = fakeWindow.history.state?.__circlesPopupHistory as Record<string, unknown>;
+    const tickBefore = get(popupHistoryForwardNoopTick);
+
+    fakeWindow.dispatchPopState({
+      ...fakeWindow.history.state,
+      __circlesPopupHistory: {
+        ...currentMarker,
+        depth: 1,
+      },
+    });
+
+    expect(get(popupState).content).toBeNull();
+    expect(get(popupHistoryForwardNoopTick)).toBe(tickBefore + 1);
+
+    dispose();
+    restore();
+  });
+
+  it('closeAndThen executes callback and closes popup synchronously under history sync', () => {
+    const { restore } = setupFakeWindow();
+    const dispose = initPopupHistorySync();
+
+    const onClose = vi.fn();
+    const def: PopupContentDefinition = {
+      title: 'A',
+      component: COMPONENT_A,
+      props: {},
+      onClose,
+    };
+
+    const callback = vi.fn();
+
+    popupControls.open(def);
+    popupControls.closeAndThen(callback);
+
+    expect(get(popupState).content).toBeNull();
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(get(popupHistoryForwardNoopTick)).toBe(0);
 
     dispose();
     restore();
