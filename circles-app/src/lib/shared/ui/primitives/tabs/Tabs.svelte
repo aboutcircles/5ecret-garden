@@ -23,6 +23,8 @@
   type Size = 'xs' | 'sm' | 'md' | 'lg';
 
   // Bindable props
+  import type { Snippet } from 'svelte';
+
   let {
     selected = $bindable<string | null>(null), // external (optional) controlled value
     defaultValue = null as string | null,
@@ -31,6 +33,7 @@
     fitted = false,
     class: className = '',
     id = nextUid(),
+    children = undefined as Snippet | undefined,
   } = $props();
 
   const dispatch = createEventDispatcher<{ change: string }>();
@@ -363,5 +366,5 @@
 </div>
 
 <div>
-  <slot />
+  {@render children?.()}
 </div>

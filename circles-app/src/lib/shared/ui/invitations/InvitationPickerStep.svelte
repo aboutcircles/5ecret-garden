@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import type { AvatarRow } from '@aboutcircles/sdk-types';
@@ -10,6 +11,7 @@
     selected?: Address;
     onSelect: (address: Address) => void;
     emptyText?: string;
+    empty?: Snippet;
   }
 
   let {
@@ -18,6 +20,7 @@
     selected = $bindable<Address | undefined>(),
     onSelect,
     emptyText = 'No invitations pending.',
+    empty,
   }: Props = $props();
 </script>
 
@@ -43,8 +46,8 @@
       </RowFrame>
     {/each}
   {:else}
-    <slot name="empty">
+    {#if empty}{@render empty()}{:else}
       {emptyText}
-    </slot>
+    {/if}
   {/if}
 </div>

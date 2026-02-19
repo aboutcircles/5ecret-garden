@@ -188,18 +188,20 @@
           imageUrl={getAllImages()[0] ?? context.draft?.image ?? undefined}
           size="md"
         >
-          <div slot="meta" class="text-sm space-y-2">
-            <div class="font-semibold">Payment gateway</div>
-            {#if selectedGateway}
-              <div class="flex items-center gap-2">
-                <Avatar address={asAddress(selectedGateway)} view="small_no_text" clickable={false} />
-                <span class="text-xs font-mono truncate">{selectedGateway}</span>
-              </div>
-            {:else}
-              <span class="opacity-70 text-sm">No payment gateway selected. Go back to Pricing to select one.</span>
-            {/if}
-            <div><strong>Price:</strong> {context.draft?.price} {context.draft?.priceCurrency}</div>
-          </div>
+          {#snippet meta()}
+            <div class="text-sm space-y-2">
+              <div class="font-semibold">Payment gateway</div>
+              {#if selectedGateway}
+                <div class="flex items-center gap-2">
+                  <Avatar address={asAddress(selectedGateway)} view="small_no_text" clickable={false} />
+                  <span class="text-xs font-mono truncate">{selectedGateway}</span>
+                </div>
+              {:else}
+                <span class="opacity-70 text-sm">No payment gateway selected. Go back to Pricing to select one.</span>
+              {/if}
+              <div><strong>Price:</strong> {context.draft?.price} {context.draft?.priceCurrency}</div>
+            </div>
+          {/snippet}
         </ProductPreviewCard>
 
         {#if getAllImages().length > 1}
