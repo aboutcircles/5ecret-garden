@@ -10,6 +10,7 @@ export type PopupContentDefinition<T extends Record<string, any> = any> = {
   component: Component<T>;
   props?: Record<string, any>;
   key?: string | number;
+  id?: string | number;
   onClose?: () => void;
   kind?: 'flow' | 'confirm' | 'inspect' | 'edit';
   dismiss?: 'backdrop' | 'explicit' | 'confirmIfDirty';
@@ -26,6 +27,19 @@ export const popupState = $state({
   content: null as PopupContentDefinition | null,
   stack: [] as PopupContentDefinition[],
 });
+
+/**
+ * Convenience wrapper: opens a popup pre-configured as a flow popup
+ * (kind='flow', dismiss='explicit').
+ */
+export function openFlowPopup(def: PopupContentDefinition): void {
+  popupControls.open({
+    kind: 'flow',
+    dismiss: 'explicit',
+    props: {},
+    ...def,
+  });
+}
 
 export const popupControls = {
   open(content: PopupContentDefinition) {
