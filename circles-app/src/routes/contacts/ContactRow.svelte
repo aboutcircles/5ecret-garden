@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Address, EventRow } from '@aboutcircles/sdk-types';
   import ContactGroupRow from './ContactGroupRow.svelte';
-  import { formatTrustRelation } from '$lib/utils/helpers';
+  import { formatTrustRelation } from '$lib/shared/utils/helpers';
 
   interface ContactEventRow extends EventRow {
     address: Address;

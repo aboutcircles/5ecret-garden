@@ -4,22 +4,22 @@
     getSignerFromPk,
     initNewSafeContractRunner,
     signer,
-  } from '$lib/stores/wallet.svelte';
-  import { circles } from '$lib/stores/circles';
+  } from '$lib/shared/state/wallet.svelte';
+  import { circles } from '$lib/shared/state/circles';
   import { Sdk } from '@aboutcircles/sdk';
-  import { gnosisConfig } from '$lib/circlesConfig';
-  import ConnectSafe from '$lib/components/ConnectSafe.svelte';
+  import { gnosisConfig } from '$lib/shared/config/circles';
+  import ConnectSafe from '$lib/areas/wallet/ui/onboarding/ConnectSafe.svelte';
   import type { Address } from '@aboutcircles/sdk-types';
   import { GroupType } from '@aboutcircles/sdk-types';
-  import WalletLoader from '$lib/components/WalletLoader.svelte';
-  import SettingsDropdown from '$lib/components/SettingsDropdown.svelte';
+  import WalletLoader from '$lib/shared/ui/flow/WalletLoader.svelte';
+  import SettingsDropdown from '$lib/shared/ui/shell/SettingsDropdown.svelte';
   import { onMount } from 'svelte';
-  import { avatarState } from '$lib/stores/avatar.svelte';
-  import { CirclesStorage } from '$lib/utils/storage';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
+  import { CirclesStorage } from '$lib/shared/utils/storage';
   import { goto } from '$app/navigation';
-  import { isGroupType, isOrganizationType } from '$lib/utils/avatarHelpers';
-  import { getActiveConfig } from '$lib/stores/settings.svelte';
-  import { withRetry, isTransientError } from '$lib/utils/retry';
+  import { isGroupType, isOrganizationType } from '$lib/shared/utils/avatarHelpers';
+  import { getActiveConfig } from '$lib/shared/state/settings.svelte';
+  import { withRetry, isTransientError } from '$lib/shared/utils/retry';
 
   onMount(async () => {
     const { address, privateKey } = (await getSignerFromPk()) ?? {};

@@ -1,9 +1,9 @@
 <script lang="ts">
-  import GenericList from '$lib/components/GenericList.svelte';
+  import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
   import GroupedTransactionRow from './GroupedTransactionRow.svelte';
-  import { groupedTransactionHistory } from '$lib/stores/transactionHistory';
+  import { groupedTransactionHistory } from '$lib/shared/state/transactionHistory';
   import { ChevronDown as LChevronDown, ChevronUp as LChevronUp, Flame, RefreshCw, ArrowLeftRight } from 'lucide';
-  import Lucide from '$lib/icons/Lucide.svelte';
+  import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import { browser } from '$app/environment';
   import { writable } from 'svelte/store';
 

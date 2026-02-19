@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { circles } from '$lib/stores/circles';
-  import { avatarState } from '$lib/stores/avatar.svelte';
-  import { getAggregatedTrustRelationsEnriched } from '$lib/utils/sdkHelpers';
-  import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import RowFrame from '$lib/ui/RowFrame.svelte';
-  import Lucide from '$lib/icons/Lucide.svelte';
+  import { circles } from '$lib/shared/state/circles';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
+  import { getAggregatedTrustRelationsEnriched } from '$lib/shared/utils/sdkHelpers';
+  import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
+  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
+  import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import { ArrowLeftRight, ArrowRight, ArrowLeft, RefreshCw, AlertCircle } from 'lucide';
   import type { Sdk } from '@aboutcircles/sdk';
   import type { Address } from '@aboutcircles/sdk-types';

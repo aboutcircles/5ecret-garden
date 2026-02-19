@@ -1,17 +1,17 @@
 <script lang="ts">
-  import { avatarState } from '$lib/stores/avatar.svelte';
-  import { clearSession } from '$lib/stores/wallet.svelte';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
+  import { clearSession } from '$lib/shared/state/wallet.svelte';
   import { type Profile } from '@aboutcircles/sdk-types';
-  import { runTask } from '$lib/utils/tasks';
+  import { runTask } from '$lib/shared/utils/tasks';
   import GroupSetting from './editors/GroupSetting.svelte';
-  import ProfileEditor from '$lib/components/ProfileEditor.svelte';
+  import ProfileEditor from '$lib/shared/ui/profile/ProfileEditor.svelte';
   import {
     FallbackImageUrl,
     profilesEqual,
     removeProfileFromCache,
-  } from '$lib/utils/profile';
-  import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
-  import Lucide from '$lib/icons/Lucide.svelte';
+  } from '$lib/shared/data/profile/profile';
+  import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
+  import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import { Save as LSave, LogOut as LLogOut } from 'lucide';
 
   let newProfile: Profile = $state({

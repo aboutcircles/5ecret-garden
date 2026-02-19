@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { wallet } from '$lib/stores/wallet.svelte';
-  import QrCode from '$lib/components/QrCode.svelte';
-  import Address from '$lib/components/Address.svelte';
-  import ConnectWallet from '$lib/components/ConnectWallet.svelte';
-  import Disclaimer from '$lib/components/Disclaimer.svelte';
-  import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
+  import { wallet } from '$lib/shared/state/wallet.svelte';
+  import QrCode from '$lib/shared/ui/primitives/QrCode.svelte';
+  import Address from '$lib/shared/ui/primitives/Address.svelte';
+  import ConnectWallet from '$lib/shared/ui/flow/ConnectWallet.svelte';
+  import Disclaimer from '$lib/shared/ui/primitives/Disclaimer.svelte';
+  import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
 </script>
 
 <PageScaffold

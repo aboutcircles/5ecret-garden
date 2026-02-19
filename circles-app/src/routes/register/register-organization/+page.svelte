@@ -1,15 +1,15 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import ActionButton from '$lib/components/ActionButton.svelte';
-  import { avatarState } from '$lib/stores/avatar.svelte';
-  import { circles } from '$lib/stores/circles';
+  import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
+  import { circles } from '$lib/shared/state/circles';
   import type { Profile } from '@aboutcircles/sdk-types';
-  import Disclaimer from '$lib/components/Disclaimer.svelte';
-  import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
-  import Lucide from '$lib/icons/Lucide.svelte';
+  import Disclaimer from '$lib/shared/ui/primitives/Disclaimer.svelte';
+  import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
+  import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import { ArrowLeft as LArrowLeft } from 'lucide';
-  import { CirclesStorage } from '$lib/utils/storage';
-  import { settings } from '$lib/stores/settings.svelte';
+  import { CirclesStorage } from '$lib/shared/utils/storage';
+  import { settings } from '$lib/shared/state/settings.svelte';
 
   let profile: Profile = $state({
     name: '',

@@ -1,9 +1,9 @@
 <script lang="ts">
   import type { GroupRow } from '@aboutcircles/sdk-types';
-  import ProfilePage from '$lib/pages/Profile.svelte';
-  import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import { popupControls } from '$lib/stores/popUp.svelte';
-  import RowFrame from '$lib/ui/RowFrame.svelte';
+  import ProfilePage from '$lib/areas/profile/ui/pages/Profile.svelte';
+  import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
+  import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
+  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
 
   interface Props {
     item: GroupRow;

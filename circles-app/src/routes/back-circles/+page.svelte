@@ -13,9 +13,9 @@
     type ContractRunner,
     type CirclesConfig,
   } from '@aboutcircles/sdk-types';
-  import { circles } from '$lib/stores/circles';
-  import { avatarState } from '$lib/stores/avatar.svelte';
-  import { gnosisConfig } from '$lib/circlesConfig';
+  import { circles } from '$lib/shared/state/circles';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
+  import { gnosisConfig } from '$lib/shared/config/circles';
 
   const HUB_V2 = '0xc12C1E50ABB450d6205Ea2C3Fa861b3B834d13e8';
   const USDC_E = '0x2a22f9c3b484c3629090FeED35F17Ff8F88f76F0';
