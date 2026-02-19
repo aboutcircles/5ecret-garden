@@ -2,16 +2,16 @@
   import {
     fetchGroupMetrics,
     type GroupMetrics,
-  } from '$lib/stores/groupMetrics.svelte';
+  } from '$lib/areas/groups/state/groupMetrics.svelte';
   import { goto } from '$app/navigation';
-  import ModernHistoryChart from '$lib/components/ModernHistoryChart.svelte';
-  import ModernPieChart from '$lib/components/ModernPieChart.svelte';
-  import GroupMetricsStats from '$lib/components/GroupMetricsStats.svelte';
-  import Avatar from '$lib/components/avatar/Avatar.svelte';
+  import ModernHistoryChart from '$lib/areas/groups/ui/components/ModernHistoryChart.svelte';
+  import ModernPieChart from '$lib/areas/groups/ui/components/ModernPieChart.svelte';
+  import GroupMetricsStats from '$lib/areas/groups/ui/components/GroupMetricsStats.svelte';
+  import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import type { PageProps } from './$types';
-  import { circles } from '$lib/stores/circles';
-  import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
-  import Lucide from '$lib/icons/Lucide.svelte';
+  import { circles } from '$lib/shared/state/circles';
+  import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
+  import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import { ArrowLeft as LArrowLeft } from 'lucide';
   import type { Address } from '@aboutcircles/sdk-types';
 

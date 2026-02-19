@@ -8,7 +8,7 @@ import {
   isOrganizationType,
   getAvatarCategory,
   getCategoryFromType,
-} from '$lib/utils/avatarHelpers';
+} from '$lib/shared/utils/avatarHelpers';
 import type { Avatar } from '@aboutcircles/sdk';
 import type { AvatarRow } from '@aboutcircles/sdk-types';
 

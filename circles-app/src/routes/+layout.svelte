@@ -9,37 +9,37 @@
 <script lang="ts">
   import '../app.css';
 
-  import { avatarState } from '$lib/stores/avatar.svelte';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
   import {
     clearSession,
     restoreSession,
     signer,
-  } from '$lib/stores/wallet.svelte';
+  } from '$lib/shared/state/wallet.svelte';
   import { page } from '$app/stores';
-  import Send from '$lib/flows/send/1_To.svelte';
+  import Send from '$lib/areas/wallet/flows/send/1_To.svelte';
   import { onDestroy, onMount } from 'svelte';
-  import { tasks } from '$lib/utils/tasks';
-  import { popupControls, popupState } from '$lib/stores/popUp.svelte';
-  import PopUp from '$lib/components/PopUp.svelte';
-  import ManageGroupMembers from '$lib/flows/manageGroupMembers/1_manageGroupMembers.svelte';
-  import { getProfile } from '$lib/utils/profile';
-  import { initTransactionHistoryStore } from '$lib/stores/transactionHistory';
-  import { initContactStore } from '$lib/stores/contacts';
-  import { initBalanceStore } from '$lib/stores/circlesBalances';
+  import { tasks } from '$lib/shared/utils/tasks';
+  import { popupControls, popupState } from '$lib/shared/state/popup/popUp.svelte';
+  import PopUp from '$lib/shared/ui/flow/PopUp.svelte';
+  import ManageGroupMembers from '$lib/areas/contacts/flows/manageGroupMembers/1_manageGroupMembers.svelte';
+  import { getProfile } from '$lib/shared/data/profile/profile';
+  import { initTransactionHistoryStore } from '$lib/shared/state/transactionHistory';
+  import { initContactStore } from '$lib/shared/state/contacts/contacts';
+  import { initBalanceStore } from '$lib/shared/state/circlesBalances';
   import { browser } from '$app/environment';
   import { PUBLIC_PLAUSIBLE_DOMAIN } from '$env/static/public';
-  import { initGroupMetricsStore } from '$lib/stores/groupMetrics.svelte';
-  import { circles } from '$lib/stores/circles';
+  import { initGroupMetricsStore } from '$lib/areas/groups/state/groupMetrics.svelte';
+  import { circles } from '$lib/shared/state/circles';
 
   import { watchAccount } from '@wagmi/core';
   import { config } from '../config';
-  import WrongNetwork from '$lib/components/WrongNetwork.svelte';
-  import BottomNav from '$lib/components/BottomNav.svelte';
+  import WrongNetwork from '$lib/shared/ui/feedback/WrongNetwork.svelte';
+  import BottomNav from '$lib/shared/ui/shell/BottomNav.svelte';
   import type { Address } from '@aboutcircles/sdk-types';
   import DefaultHeader from './DefaultHeader.svelte';
-import Toast from '$lib/components/Toast.svelte';
-import ConnectionRetryIndicator from '$lib/components/ConnectionRetryIndicator.svelte';
-import { connectionStatus } from '$lib/stores/connectionStatus.svelte';
+import Toast from '$lib/shared/ui/feedback/Toast.svelte';
+import ConnectionRetryIndicator from '$lib/shared/ui/feedback/ConnectionRetryIndicator.svelte';
+import { connectionStatus } from '$lib/shared/state/connectionStatus.svelte';
 
   const unwatch = watchAccount(config, {
     onChange(account) {

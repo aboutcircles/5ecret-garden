@@ -1,11 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { avatarState } from '$lib/stores/avatar.svelte';
-  import Lucide from '$lib/icons/Lucide.svelte';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
+  import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import { Check as LCheck, X as LX } from 'lucide';
   import type { BaseGroupAvatar } from '@aboutcircles/sdk';
   import type { Address } from '@aboutcircles/sdk-types';
-  import { runTask } from '$lib/utils/tasks';
+  import { runTask } from '$lib/shared/utils/tasks';
   import { ethers } from 'ethers';
 
   let serviceAddress: `0x${string}` = $state('0x0');

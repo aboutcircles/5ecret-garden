@@ -1,23 +1,23 @@
 <script lang="ts">
-  import ConnectSafe from '$lib/components/ConnectSafe.svelte';
+  import ConnectSafe from '$lib/areas/wallet/ui/onboarding/ConnectSafe.svelte';
   import {
     wallet,
     initNewSafeBrowserRunner,
     getSigner,
     signer,
     GNOSIS_CHAIN_ID_DEC,
-  } from '$lib/stores/wallet.svelte';
-  import WalletLoader from '$lib/components/WalletLoader.svelte';
+  } from '$lib/shared/state/wallet.svelte';
+  import WalletLoader from '$lib/shared/ui/flow/WalletLoader.svelte';
   import { onMount } from 'svelte';
   import { Sdk } from '@aboutcircles/sdk';
-  import { gnosisConfig } from '$lib/circlesConfig';
-  import { circles } from '$lib/stores/circles';
+  import { gnosisConfig } from '$lib/shared/config/circles';
+  import { circles } from '$lib/shared/state/circles';
   import type { Address } from '@aboutcircles/sdk-types';
   import { switchChain, getChainId } from '@wagmi/core';
   import { gnosis } from '@wagmi/core/chains';
   import { config } from '../../../config';
-  import { withRetry, isTransientError } from '$lib/utils/retry';
-  import { resetConnectionStatus } from '$lib/stores/connectionStatus.svelte';
+  import { withRetry, isTransientError } from '$lib/shared/utils/retry';
+  import { resetConnectionStatus } from '$lib/shared/state/connectionStatus.svelte';
 
   let chainError = $state<string | null>(null);
   let walletError = $state<string | null>(null);

@@ -1,25 +1,25 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import ActionButton from '$lib/components/ActionButton.svelte';
-  import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import { circles } from '$lib/stores/circles';
-  import { wallet } from '$lib/stores/wallet.svelte';
+  import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
+  import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
+  import { circles } from '$lib/shared/state/circles';
+  import { wallet } from '$lib/shared/state/wallet.svelte';
   import type { Profile, Address, Invitation, AllInvitationsResponse } from '@aboutcircles/sdk-types';
   import { onMount } from 'svelte';
-  import ProfileEditor from '$lib/components/ProfileEditor.svelte';
-  import { settings } from '$lib/stores/settings.svelte';
-  import { avatarState } from '$lib/stores/avatar.svelte';
-  import Disclaimer from '$lib/components/Disclaimer.svelte';
-  import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
-  import Lucide from '$lib/icons/Lucide.svelte';
+  import ProfileEditor from '$lib/shared/ui/profile/ProfileEditor.svelte';
+  import { settings } from '$lib/shared/state/settings.svelte';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
+  import Disclaimer from '$lib/shared/ui/primitives/Disclaimer.svelte';
+  import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
+  import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import {
     ArrowLeft as LArrowLeft,
     ExternalLink as LExternalLink,
     Lock as LLock,
   } from 'lucide';
-  import RowFrame from '$lib/ui/RowFrame.svelte';
-  import { CirclesStorage } from '$lib/utils/storage';
-  import { getAllInvitations } from '$lib/utils/sdkHelpers';
+  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
+  import { CirclesStorage } from '$lib/shared/utils/storage';
+  import { getAllInvitations } from '$lib/shared/utils/sdkHelpers';
 
   // All invitations from all sources (trust, escrow, at-scale)
   let allInvitations: AllInvitationsResponse | null = $state(null);

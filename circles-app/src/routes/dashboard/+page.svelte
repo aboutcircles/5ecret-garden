@@ -1,23 +1,23 @@
 <script lang="ts">
   import { CirclesConverter } from '@aboutcircles/sdk-utils';
-  import { avatarState } from '$lib/stores/avatar.svelte';
-  import { roundToDecimals } from '$lib/utils/shared';
-  import { runTask } from '$lib/utils/tasks';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
+  import { roundToDecimals } from '$lib/shared/utils/shared';
+  import { runTask } from '$lib/shared/utils/tasks';
 
   import OverviewPanel from './OverviewPanel.svelte';
   import TransactionHistoryPanel from './TransactionHistoryPanel.svelte';
   import TrustEventsPanel from './TrustEventsPanel.svelte';
-  import Tabs from '$lib/components/tabs/Tabs.svelte';
-  import Tab from '$lib/components/tabs/Tab.svelte';
+  import Tabs from '$lib/shared/ui/primitives/tabs/Tabs.svelte';
+  import Tab from '$lib/shared/ui/primitives/tabs/Tab.svelte';
 
-  import { popupControls } from '$lib/stores/popUp.svelte';
-  import Balances from '$lib/pages/Balances.svelte';
-  import { circlesBalances } from '$lib/stores/circlesBalances';
-  import { totalCirclesBalance } from '$lib/stores/totalCirclesBalance';
+  import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
+  import Balances from '$lib/areas/wallet/ui/pages/Balances.svelte';
+  import { circlesBalances } from '$lib/shared/state/circlesBalances';
+  import { totalCirclesBalance } from '$lib/shared/state/totalCirclesBalance';
 
-  import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
-  import Send from '$lib/flows/send/1_To.svelte';
-  import Profile from '$lib/pages/Profile.svelte';
+  import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
+  import Send from '$lib/areas/wallet/flows/send/1_To.svelte';
+  import Profile from '$lib/areas/profile/ui/pages/Profile.svelte';
 
   // lucide (standalone) icon nodes
   import {
@@ -25,14 +25,14 @@
     Banknote as LBanknote,
     BarChart3 as LBarChart3,
   } from 'lucide';
-  import Lucide from '$lib/icons/Lucide.svelte';
+  import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
 
-  import { circles } from '$lib/stores/circles';
-  import { initTransactionHistoryStore, refreshTransactionHistory } from '$lib/stores/transactionHistory';
+  import { circles } from '$lib/shared/state/circles';
+  import { initTransactionHistoryStore, refreshTransactionHistory } from '$lib/shared/state/transactionHistory';
   import type { CirclesEvent } from '@aboutcircles/sdk-rpc';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
-  import { getGroupName } from '$lib/stores/groupNameCache';
+  import { getGroupName } from '$lib/shared/state/groupNameCache';
   import type { Address } from '@aboutcircles/sdk-types';
 
   // Read transaction hash from URL for deep-linking

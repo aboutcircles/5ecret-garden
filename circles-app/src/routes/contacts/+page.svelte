@@ -1,21 +1,21 @@
 <script lang="ts">
-  import { contacts } from '$lib/stores/contacts';
+  import { contacts } from '$lib/shared/state/contacts/contacts';
   import Papa from 'papaparse';
-  import GenericList from '$lib/components/GenericList.svelte';
+  import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
   import ContactRow from './ContactRow.svelte';
   import { derived, writable, type Writable } from 'svelte/store';
-  import Filter from '$lib/components/Filter.svelte';
-  import AddressInput from '$lib/components/AddressInput.svelte';
-  import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
-  import Lucide from '$lib/icons/Lucide.svelte';
+  import Filter from '$lib/shared/ui/primitives/Filter.svelte';
+  import AddressInput from '$lib/shared/ui/forms/AddressInput.svelte';
+  import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
+  import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import {
     Filter as LFilter,
     Download as LDownload,
     Plus as LPlus,
   } from 'lucide';
-  import { popupControls } from '$lib/stores/popUp.svelte';
-  import ManageGroupMembers from '$lib/flows/manageGroupMembers/1_manageGroupMembers.svelte';
-  import { avatarState } from '$lib/stores/avatar.svelte';
+  import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
+  import ManageGroupMembers from '$lib/areas/contacts/flows/manageGroupMembers/1_manageGroupMembers.svelte';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';

@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { groupMetrics } from '$lib/stores/groupMetrics.svelte';
-  import { avatarState } from '$lib/stores/avatar.svelte';
-  import GroupMetricsStats from '$lib/components/GroupMetricsStats.svelte';
-  import ModernHistoryChart from '$lib/components/ModernHistoryChart.svelte';
-  import ModernPieChart from '$lib/components/ModernPieChart.svelte';
-  import TokenHoldersList from '$lib/components/TokenHoldersList.svelte';
-  import TrustNetworkSummary from '$lib/components/TrustNetworkSummary.svelte';
+  import { groupMetrics } from '$lib/areas/groups/state/groupMetrics.svelte';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
+  import GroupMetricsStats from '$lib/areas/groups/ui/components/GroupMetricsStats.svelte';
+  import ModernHistoryChart from '$lib/areas/groups/ui/components/ModernHistoryChart.svelte';
+  import ModernPieChart from '$lib/areas/groups/ui/components/ModernPieChart.svelte';
+  import TokenHoldersList from '$lib/areas/groups/ui/components/TokenHoldersList.svelte';
+  import TrustNetworkSummary from '$lib/areas/trust/ui/TrustNetworkSummary.svelte';
 </script>
 
 <div class="w-full mb-6"></div>

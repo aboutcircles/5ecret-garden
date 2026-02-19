@@ -1,11 +1,11 @@
 <script lang="ts">
-  import GenericList from '$lib/components/GenericList.svelte';
-  import { createBaseGroups, createAllGroups, createSearchGroups } from '$lib/stores/groups.svelte';
+  import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
+  import { createBaseGroups, createAllGroups, createSearchGroups } from '$lib/areas/groups/state/groups.svelte';
   import { derived, type Readable } from 'svelte/store';
   import GroupRowView from './GroupRowView.svelte';
-  import { avatarState } from '$lib/stores/avatar.svelte';
-  import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
-  import { circles } from '$lib/stores/circles';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
+  import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
+  import { circles } from '$lib/shared/state/circles';
   import type { GroupRow } from '@aboutcircles/sdk-types';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';

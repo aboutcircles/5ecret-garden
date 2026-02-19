@@ -4,7 +4,7 @@ import {
   chiadoChainConfig,
   getChainConfig,
   getChainId,
-} from '$lib/utils/chainConfig';
+} from '$lib/shared/integrations/chain/chainConfig';
 
 describe('chainConfig', () => {
   describe('gnosisChainConfig', () => {

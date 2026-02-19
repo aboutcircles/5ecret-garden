@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { getTimeAgo } from '$lib/utils/shared';
+  import { getTimeAgo } from '$lib/shared/utils/shared';
   import type { TransactionHistoryRow } from '@aboutcircles/sdk-rpc';
-  import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import { avatarState } from '$lib/stores/avatar.svelte';
-  import RowFrame from '$lib/ui/RowFrame.svelte';
+  import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
+  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
 
   interface Props {
     item: TransactionHistoryRow;

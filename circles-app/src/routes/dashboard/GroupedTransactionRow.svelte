@@ -1,19 +1,19 @@
 <script lang="ts">
-  import { getTimeAgo } from '$lib/utils/shared';
-  import type { GroupedTransaction } from '$lib/stores/transactionHistory';
-  import { getEnrichedProfile, prefetchProfilesForAddresses, profileCacheVersion, getErc20WrapperOwner } from '$lib/stores/transactionHistory';
-  import { notify } from '$lib/stores/notifications.svelte';
-  import { popupControls } from '$lib/stores/popUp.svelte';
-  import Profile from '$lib/pages/Profile.svelte';
-  import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import RowFrame from '$lib/ui/RowFrame.svelte';
-  import Lucide from '$lib/icons/Lucide.svelte';
+  import { getTimeAgo } from '$lib/shared/utils/shared';
+  import type { GroupedTransaction } from '$lib/shared/state/transactionHistory';
+  import { getEnrichedProfile, prefetchProfilesForAddresses, profileCacheVersion, getErc20WrapperOwner } from '$lib/shared/state/transactionHistory';
+  import { notify } from '$lib/shared/state/notifications.svelte';
+  import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
+  import Profile from '$lib/areas/profile/ui/pages/Profile.svelte';
+  import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
+  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
+  import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import { Flame, RefreshCw, ArrowLeftRight, ExternalLink, Copy } from 'lucide';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import type { Address } from '@aboutcircles/sdk-types';
-  import { avatarState } from '$lib/stores/avatar.svelte';
-  import { getGroupName } from '$lib/stores/groupNameCache';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
+  import { getGroupName } from '$lib/shared/state/groupNameCache';
 
   const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
