@@ -104,8 +104,9 @@
   });
 
   function goToPaymentSettings(): void {
-    popupControls.close();
-    goto('/settings?tab=payment');
+    popupControls.closeAndThen(() => {
+      void goto('/settings?tab=payment');
+    });
   }
 
   function next(): void {
