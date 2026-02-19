@@ -12,7 +12,8 @@
     "check:ui-tokens": "node scripts/ui-token-guardrails.mjs",
     "check:ui-tokens:strict": "node scripts/ui-token-guardrails.mjs --strict",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "k6:burnin": "k6 run ./k6/scenarios/burnin-wallet-first.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
