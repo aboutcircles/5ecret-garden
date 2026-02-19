@@ -41,18 +41,17 @@ export async function searchProfilesRpc(
     avatarTypes?: string[];
   }
 ): Promise<RpcSearchProfileResult[]> {
-  if (!(sdk as any)?.rpc) {
+  if (!sdk?.rpc) {
     return [];
   }
 
-  const raw = await (sdk.rpc as any).call?.('circles_searchProfiles', [
+  const list = await sdk.rpc.profile.searchProfiles(
     params.query,
     params.limit,
     params.offset ?? 0,
     params.avatarTypes,
-  ]);
+  );
 
-  const list: any[] = Array.isArray(raw?.result) ? raw.result : [];
   return list.map(normalizeSearchProfile).filter((v): v is RpcSearchProfileResult => !!v);
 }
 

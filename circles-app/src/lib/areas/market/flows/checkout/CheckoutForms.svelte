@@ -83,7 +83,7 @@
     const age = b.ageProof as any;
     birthDate = (age?.birthDate as string) ?? '';
 
-    const customer = b.customer as any;
+    const customer = (b as any).customer as any;
     givenName = (customer?.givenName as string) ?? '';
     familyName = (customer?.familyName as string) ?? '';
 
@@ -235,11 +235,11 @@
 
   // Field-level error based purely on server ValidationRequirement.path
   function fieldHasError(path: string): boolean {
-    const v = $cartState.validation;
+    const v = $cartState.validation as any;
     if (!v || !Array.isArray(v.requirements)) {
       return false;
     }
-    return v.requirements.some((r) => {
+    return v.requirements.some((r: any) => {
       const p = (r.path ?? '').toString();
       const status = (r.status ?? '').toString();
       return p === path && status !== 'ok';
@@ -476,7 +476,7 @@
       {/if}
 
       {#if validateAction.error || submitAction.error}
-        <StepAlert variant="error" className="text-xs mt-2" message={validateAction.error || submitAction.error} />
+        <StepAlert variant="error" className="text-xs mt-2" message={validateAction.error || submitAction.error || undefined} />
       {/if}
 
       <StepActionBar>

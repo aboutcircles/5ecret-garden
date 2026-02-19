@@ -48,24 +48,24 @@
         {/if}
       </div>
 
-      {#if snapshot.shippingAddress}
+      {#if shippingAddr}
         <div class="space-y-1">
           <div class="text-xs uppercase tracking-wide opacity-60">Shipping address</div>
           <div class="text-sm leading-snug">
-            {snapshot.shippingAddress.streetAddress}
-            <br />{snapshot.shippingAddress.postalCode} {snapshot.shippingAddress.addressLocality}
-            <br />{snapshot.shippingAddress.addressCountry}
+            {shippingAddr.streetAddress}
+            <br />{shippingAddr.postalCode} {shippingAddr.addressLocality}
+            <br />{shippingAddr.addressCountry}
           </div>
         </div>
       {/if}
 
-      {#if snapshot.billingAddress}
+      {#if billingAddr}
         <div class="space-y-1">
           <div class="text-xs uppercase tracking-wide opacity-60">Billing address</div>
           <div class="text-sm leading-snug">
-            {snapshot.billingAddress.streetAddress}
-            <br />{snapshot.billingAddress.postalCode} {snapshot.billingAddress.addressLocality}
-            <br />{snapshot.billingAddress.addressCountry}
+            {billingAddr.streetAddress}
+            <br />{billingAddr.postalCode} {billingAddr.addressLocality}
+            <br />{billingAddr.addressCountry}
           </div>
         </div>
       {/if}
@@ -136,7 +136,7 @@
           </div>
         </div>
       {/each}
-      {#if (snapshot.orderedItem ?? []).length === 0}
+      {#if orderedItems.length === 0}
         <div class="text-sm opacity-70">No items</div>
       {/if}
     </div>
@@ -197,7 +197,7 @@
   <div class="text-sm opacity-70">No order data</div>
 {/if}
 
-{#snippet OutboxPayloadView({ payload })}
+{#snippet OutboxPayloadView({ payload }: { payload: any })}
   {#if isKnownDownloadPayload(payload)}
     <div class="flex items-center gap-2">
       <JumpLink
@@ -261,6 +261,14 @@
     statusEvents?: OrderStatusChange[] | null;
   }
   let { snapshot, statusEvents = null }: Props = $props();
+
+  // Market SDK types are incomplete — cast sub-objects to any for property access
+  type AnyAddress = { streetAddress?: string; postalCode?: string; addressLocality?: string; addressCountry?: string };
+  type AnyPaymentDue = { price?: number; priceCurrency?: string };
+  const shippingAddr = $derived((snapshot?.shippingAddress ?? null) as AnyAddress | null);
+  const billingAddr = $derived((snapshot?.billingAddress ?? null) as AnyAddress | null);
+  const paymentDue = $derived((snapshot?.totalPaymentDue ?? null) as AnyPaymentDue | null);
+  const orderedItems = $derived(((snapshot as any)?.orderedItem ?? []) as any[]);
 
 
   type TimelineEvent = { status: string; changedAt: string };
@@ -400,8 +408,7 @@
     if (headline) return headline;
     const text = (payload?.text ?? '').toString();
     if (text) {
-      const firstLine = text.split(/?
-/)[0].trim();
+      const firstLine = text.split(/\n/)[0].trim();
       const subj = firstLine || text.trim();
       if (subj.length > 120) return subj.slice(0, 117) + '...';
       return subj || 'Message';
@@ -461,7 +468,7 @@
   }
   
   function priceDisplay(): string | null {
-    const p = snapshot?.totalPaymentDue;
+    const p = paymentDue;
     if (!p) return null;
     return formatCurrency(p.price ?? null, p.priceCurrency ?? null);
   }

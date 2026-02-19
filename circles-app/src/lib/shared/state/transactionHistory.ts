@@ -1,7 +1,8 @@
 import type { TransactionHistoryRow } from '@aboutcircles/sdk-rpc';
 import { writable, derived, get } from 'svelte/store';
 import type { Avatar, Sdk } from '@aboutcircles/sdk';
-import type { PagedResponse, EnrichedTransaction, Address } from '@aboutcircles/sdk-types';
+import type { Address } from '@aboutcircles/sdk-types';
+import type { PagedResponse, EnrichedTransaction } from '$lib/shared/utils/sdkHelpers';
 import { getTransactionHistoryEnriched } from '$lib/shared/utils/sdkHelpers';
 import { handleError } from '$lib/shared/utils/errorHandler';
 import { circles } from '$lib/shared/state/circles';

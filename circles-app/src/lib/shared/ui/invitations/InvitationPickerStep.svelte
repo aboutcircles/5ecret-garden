@@ -25,20 +25,20 @@
   {#if loading}
     <p class="text-base-content/70">Loading invitations...</p>
   {:else if invitations.length > 0}
-    {#each invitations as inviter (inviter.avatar)}
-      <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => onSelect(inviter.avatar)}>
+    {#each invitations as inviter (inviter.address)}
+      <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => onSelect(inviter.address)}>
         <div class="flex items-center gap-x-2 min-w-0">
           <input
             type="radio"
             name="inviter"
             class="radio radio-success radio-sm"
-            checked={selected === inviter.avatar}
+            checked={selected === inviter.address}
             onclick={(e) => {
               e.stopPropagation();
-              onSelect(inviter.avatar);
+              onSelect(inviter.address);
             }}
           />
-          <Avatar topInfo="Inviter" clickable={false} address={inviter.avatar} view="horizontal" />
+          <Avatar topInfo="Inviter" clickable={false} address={inviter.address} view="horizontal" />
         </div>
       </RowFrame>
     {/each}

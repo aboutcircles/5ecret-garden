@@ -14,8 +14,33 @@
     row: Component<T>;
     rowProps?: Record<string, any>;
     isInitialLoading?: boolean;
+    /** Custom key extractor. Falls back to getKeyFromItem when not provided. */
+    getKey?: (item: any) => string;
+    /** Accepted for API compatibility with VirtualList; unused in GenericList. */
+    placeholderRow?: Component<any>;
+    /** Accepted for API compatibility with VirtualList; unused in GenericList. */
+    rowHeight?: number;
+    /** Accepted for API compatibility with VirtualList; unused in GenericList. */
+    maxPlaceholderPages?: number;
+    /** Accepted for API compatibility with VirtualList; unused in GenericList. */
+    expectedPageSize?: number;
   }
-  let { store, row, rowProps = {}, isInitialLoading = false }: Props = $props();
+  let {
+    store,
+    row,
+    rowProps = {},
+    isInitialLoading = false,
+    getKey,
+    placeholderRow: _placeholderRow,
+    rowHeight: _rowHeight,
+    maxPlaceholderPages: _maxPlaceholderPages,
+    expectedPageSize: _expectedPageSize,
+  }: Props = $props();
+
+  const resolveKey = (item: any, index: number): string => {
+    if (getKey) return getKey(item);
+    return getKeyFromItem(item) + '-' + index;
+  };
 
   let anchor: HTMLElement | undefined = $state();
   let isLoadingMore = $state(false);
@@ -56,7 +81,7 @@
 </script>
 
 <div class="w-full flex flex-col gap-y-1.5 py-2" role="list">
-  {#each $store?.data ?? [] as item, index (getKeyFromItem(item) + '-' + index)}
+  {#each $store?.data ?? [] as item, index (resolveKey(item, index))}
     {@const SvelteComponent_1 = row}
     <SvelteComponent_1 {item} {...rowProps} />
   {/each}

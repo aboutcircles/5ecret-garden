@@ -34,8 +34,8 @@
       return;
     }
 
-    const seller = line.seller;
-    const sku = line.orderedItem?.sku;
+    const seller = String(line.seller ?? '');
+    const sku = String(line.orderedItem?.sku ?? '');
 
     if (!seller || !sku) {
       // If we ever hit this, the basket is malformed. Log, but don't try any other path.
@@ -108,7 +108,7 @@
     if (!basket?.items) return out;
 
     for (const line of basket.items) {
-      const snap = line.offerSnapshot;
+      const snap = (line as any).offerSnapshot;
       const price = snap?.price as number | null | undefined;
       const code = (snap?.priceCurrency ?? '') as string;
       if (price == null || !Number.isFinite(Number(price))) continue;

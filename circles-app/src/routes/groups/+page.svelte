@@ -200,7 +200,7 @@
     variant: 'primary' | 'ghost';
     disabled?: boolean;
   };
-  const actions: Action[] = [];
+  const pageActions: Action[] = [];
 </script>
 
 <PageScaffold
@@ -213,12 +213,12 @@
   headerTopGapClass="mt-4 md:mt-6"
   collapsedTopGapClass="mt-3 md:mt-4"
 >
-  <svelte:fragment slot="title">
+  {#snippet title()}
     <h1 class="h2">Groups</h1>
-  </svelte:fragment>
-  <svelte:fragment slot="meta">and Communities</svelte:fragment>
-  <svelte:fragment slot="actions">
-    {#each actions as a (a.id)}
+  {/snippet}
+  {#snippet meta()}and Communities{/snippet}
+  {#snippet actions()}
+    {#each pageActions as a (a.id)}
       <button
         type="button"
         class={`btn btn-sm ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'}`}
@@ -228,16 +228,16 @@
         <span>{a.label}</span>
       </button>
     {/each}
-  </svelte:fragment>
-  <svelte:fragment slot="collapsed-left">
+  {/snippet}
+  {#snippet collapsed_left()}
     <span
       class="text-base md:text-lg font-semibold tracking-tight text-base-content"
     >
       Groups
     </span>
-  </svelte:fragment>
-  <svelte:fragment slot="collapsed-menu">
-    {#each actions as a (a.id)}
+  {/snippet}
+  {#snippet collapsed_menu()}
+    {#each pageActions as a (a.id)}
       <button
         type="button"
         class={`btn ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'} min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3`}
@@ -247,7 +247,7 @@
         <span>{a.label}</span>
       </button>
     {/each}
-  </svelte:fragment>
+  {/snippet}
 
   {#if avatarState.isHuman}
     <div role="tablist" class="tabs tabs-bordered w-full mb-4">

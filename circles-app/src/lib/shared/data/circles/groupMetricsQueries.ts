@@ -24,12 +24,12 @@ async function queryRows(
   circlesRpc: CirclesRpc,
   payload: QueryPayload
 ): Promise<RpcRowsResult> {
-  const result = await circlesRpc.call<RpcRowsResult>('circles_query', [payload]);
+  const result: RpcRowsResult = await circlesRpc.client.call('circles_query', [payload]);
   return {
-    columns: result?.result?.columns ?? [],
-    rows: result?.result?.rows ?? [],
-    cursor: result?.result?.cursor,
-    hasMore: result?.result?.hasMore,
+    columns: result?.columns ?? [],
+    rows: result?.rows ?? [],
+    cursor: result?.cursor,
+    hasMore: result?.hasMore,
   };
 }
 

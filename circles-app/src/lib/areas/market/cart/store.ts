@@ -310,7 +310,7 @@ export async function updateBasketDetails(patch: unknown): Promise<void> {
       contactPoint: contact,
       ageProof: age,
       customer: customer,
-    });
+    } as any);
 
     cartState.update((s) => ({ ...s, basket: updated }));
   } catch (e) {

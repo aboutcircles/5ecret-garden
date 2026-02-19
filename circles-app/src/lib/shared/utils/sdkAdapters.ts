@@ -3,7 +3,8 @@
  * Provides adapters between different SDK versions and internal formats
  */
 
-import type { AggregatedTrustRelation, Profile, TrustRelationInfo, Address } from '@aboutcircles/sdk-types';
+import type { AggregatedTrustRelation, Profile, Address } from '@aboutcircles/sdk-types';
+import type { TrustRelationInfo } from '$lib/shared/utils/sdkHelpers';
 
 /**
  * Extended trust relation that includes V2 compatibility fields.

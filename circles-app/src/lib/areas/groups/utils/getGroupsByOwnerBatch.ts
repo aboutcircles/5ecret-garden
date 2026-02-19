@@ -28,10 +28,11 @@ export async function getBaseAndCmgGroupsByOwnerBatch(
 
   try {
     // New SDK returns PagedResponse<GroupRow> with { results, hasMore, nextCursor }
-    const response = await sdk.rpc.group.findGroups(100, {
+    // Cast through any due to pnpm sdk-types version split
+    const response = await (sdk.rpc as any).group.findGroups(100, {
       ownerIn: normalizedOwners,
       groupTypeIn: ['CrcV2_BaseGroupCreated'],
-    });
+    }) as { results: NewGroupRow[]; hasMore: boolean; nextCursor: string | null };
 
     // Group results by owner - access the results array from PagedResponse
     response.results.forEach((group: NewGroupRow) => {

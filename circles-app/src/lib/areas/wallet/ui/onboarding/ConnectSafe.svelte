@@ -27,9 +27,7 @@
    */
   async function querySafesByOwner(ownerAddress: string): Promise<Address[]> {
     const ownerLc = ownerAddress.toLowerCase();
-    const result = await (sdk as any).rpc.client.call<{
-      columns: string[]; rows: (string | number)[][];
-    }>('circles_query', [
+    const result: { columns: string[]; rows: (string | number)[][] } = await (sdk as any).rpc.client.call('circles_query', [
       {
         Namespace: 'V_Safe',
         Table: 'Owners',

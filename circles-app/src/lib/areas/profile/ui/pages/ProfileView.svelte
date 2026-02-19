@@ -3,10 +3,12 @@
   // Delegate to the canonical ProfilePopup wrapper to prevent drift.
   import ProfilePopup from './ProfilePopup.svelte';
   import type { Address } from '@aboutcircles/sdk-types';
-  const { address, trustVersion } = $props<{
+
+  interface Props {
     address?: Address;
-    trustVersion?: number;
-  }>();
+  }
+
+  let { address }: Props = $props();
 </script>
 
-<ProfilePopup {address} {trustVersion} />
+<ProfilePopup {address} />

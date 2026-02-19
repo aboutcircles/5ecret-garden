@@ -31,7 +31,7 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
   const offer = $derived(getFirstOffer(prod));
 
   const currentAvatar = $derived(
-    (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '').toLowerCase()
+    (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.address ?? '').toLowerCase()
   );
 
   const cartLoading = $derived($cartState.loading);
@@ -118,7 +118,7 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
       return;
     }
 
-    const seller = (product.seller || prod?.seller)?.toLowerCase();
+    const seller = (product.seller || (prod as any)?.seller)?.toLowerCase();
     const sku = product.product?.sku || (product as any).id || (product as any).productCid;
 
     if (seller && sku) {

@@ -1,7 +1,8 @@
 <script lang="ts">
   import { circles } from '$lib/shared/state/circles';
   import { getValidInviters } from '$lib/shared/utils/sdkHelpers';
-  import type { Address, ValidInvitersResponse, InviterInfo } from '@aboutcircles/sdk-types';
+  import type { Address } from '@aboutcircles/sdk-types';
+  import type { ValidInvitersResponse, InviterInfo } from '$lib/shared/utils/sdkHelpers';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import { formatEther } from 'ethers';
@@ -69,7 +70,7 @@
           clickable={!!onSelect}
           dense={true}
           noLeading={true}
-          on:click={() => handleSelect(inviter)}
+          onclick={() => handleSelect(inviter)}
         >
           <div class="min-w-0 flex-1">
             <Avatar
@@ -79,17 +80,19 @@
               bottomInfo={inviter.avatarInfo?.name ?? ''}
             />
           </div>
-          <div slot="trailing" class="flex items-center gap-2">
-            <div class="text-right">
-              <div class="text-sm font-medium tabular-nums">
-                {formatBalance(inviter.balance)} CRC
+          {#snippet trailing()}
+            <div class="flex items-center gap-2">
+              <div class="text-right">
+                <div class="text-sm font-medium tabular-nums">
+                  {formatBalance(inviter.balance)} CRC
+                </div>
+                <span class="text-xs text-success">Ready to invite</span>
               </div>
-              <span class="text-xs text-success">Ready to invite</span>
+              {#if onSelect}
+                <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" />
+              {/if}
             </div>
-            {#if onSelect}
-              <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" />
-            {/if}
-          </div>
+          {/snippet}
         </RowFrame>
       {/each}
     </div>

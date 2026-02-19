@@ -5,7 +5,7 @@ import { shortenAddress } from '$lib/shared/utils/shared';
 export async function getProfileDisplayName(address: Address | string): Promise<string> {
   const addr = String(address);
   try {
-    const profile = await getProfile(addr as Address);
+    const profile = await getProfile(addr as `0x${string}`);
     const name = profile?.name?.trim();
     if (name && name.length > 0) return name;
   } catch {

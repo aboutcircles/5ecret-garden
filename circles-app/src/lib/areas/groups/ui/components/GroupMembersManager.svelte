@@ -71,7 +71,7 @@
       return;
     }
 
-    void getProfile(group)
+    void getProfile(group as `0x${string}`)
       .then((profile) => {
         if (cancelled) return;
         groupName = profile?.name ?? null;
@@ -114,7 +114,7 @@
       const infos = await avatarDataSource.getAvatarInfoBatch(trustedAddresses);
       const nextTypes: Record<string, string | undefined> = {};
       for (const info of infos) {
-        nextTypes[String(info.avatar).toLowerCase()] = info.type;
+        if (info) nextTypes[String(info.avatar).toLowerCase()] = info.type;
       }
       trustedAvatarTypes = nextTypes;
     } catch (e) {
@@ -175,7 +175,7 @@
 
   async function getDisplayName(address: Address): Promise<string> {
     try {
-      const profile = await getProfile(address);
+      const profile = await getProfile(address as `0x${string}`);
       const name = profile?.name?.trim();
       return name && name.length > 0 ? name : shortenAddress(address);
     } catch {
@@ -218,7 +218,7 @@
     const groupAvatar = await sdk.getAvatar(group);
     await runTask({
       name: `Removing ${selectedMembers.length} trusted avatar${selectedMembers.length === 1 ? '' : 's'} from ${shortenAddress(group)} ...`,
-      promise: groupAvatar.untrust(selectedMembers),
+      promise: groupAvatar.trust.remove(selectedMembers),
     });
 
     selectedSet = new Set<Address>();
@@ -277,7 +277,6 @@
               <div class="min-w-0">
                 <Avatar
                   address={address}
-                  avatarInfo={avatarInfoFor(address)}
                   view="horizontal"
                   clickable={true}
                   bottomInfo={`${avatarTypeToReadable(trustedAvatarTypes[address.toLowerCase()])} • ${address}`}

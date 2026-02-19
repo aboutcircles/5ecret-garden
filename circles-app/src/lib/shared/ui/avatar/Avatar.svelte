@@ -12,17 +12,22 @@
   import { fade } from 'svelte/transition';
   import { circles } from '$lib/shared/state/circles';
 
+  type AvatarView = 'horizontal' | 'vertical' | 'small' | 'small_no_text';
+
   interface Props {
     address: Address | undefined;
     clickable?: boolean;
-    view: 'horizontal' | 'vertical';
+    view: AvatarView;
     pictureOverlayUrl?: string | undefined;
     topInfo?: string | undefined;
     bottomInfo?: string | undefined;
 
+    /** Show avatar type badge (human/group/org). Currently reserved for future use. */
+    showTypeInfo?: boolean;
+
     /**
      * Control whether to show placeholders for each position
-     * so the layout doesn’t shift if you sometimes use them.
+     * so the layout doesn't shift if you sometimes use them.
      */
     placeholderAvatar?: boolean;
     placeholderTop?: boolean;
@@ -36,12 +41,18 @@
     pictureOverlayUrl,
     topInfo,
     bottomInfo,
+    showTypeInfo = false,
 
     // Default placeholders to true
     placeholderAvatar = true,
     placeholderTop = true,
     placeholderBottom = true,
   }: Props = $props();
+
+  // Map compact view modes to horizontal layout with reduced placeholders
+  const effectiveView: 'horizontal' | 'vertical' = $derived(
+    view === 'small' || view === 'small_no_text' ? 'horizontal' as const : view as 'horizontal' | 'vertical'
+  );
 
   let profile: Profile | undefined = $state();
   let lastFetchedAddress: string | undefined = $state();
@@ -96,7 +107,7 @@
 
 <!-- If no profile, show skeleton loading; otherwise fade in final layout. -->
 {#if !profile}
-  {#if view === 'horizontal'}
+  {#if effectiveView === 'horizontal'}
     <div
       class="flex items-center gap-3 py-1 rounded-lg w-full animate-pulse"
       style="min-height: 48px;"
@@ -130,7 +141,7 @@
       {/if}
     </div>
   {/if}
-{:else if view === 'horizontal'}
+{:else if effectiveView === 'horizontal'}
   <!-- Fade in the final layout once profile is loaded -->
   <div transition:fade>
     <HorizontalAvatarLayout

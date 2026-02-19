@@ -51,10 +51,11 @@
       const response = await getAggregatedTrustRelationsEnriched(sdk, address);
       console.log('[TrustEventsPanel] Raw SDK response:', response);
 
-      // SDK returns mutual, trusts, trustedBy
-      let mutual = response.mutual || [];
-      let trusts = response.trusts || [];
-      let trustedBy = response.trustedBy || [];
+      // SDK returns flat results[] with relationType tags — split into buckets
+      const results = response.results || [];
+      let mutual = results.filter((r: any) => r.relationType === 'mutual').map((r: any) => ({ address: r.address, name: r.avatarInfo?.name, previewImageUrl: r.avatarInfo?.previewImageUrl }));
+      let trusts = results.filter((r: any) => r.relationType === 'trusts').map((r: any) => ({ address: r.address, name: r.avatarInfo?.name, previewImageUrl: r.avatarInfo?.previewImageUrl }));
+      let trustedBy = results.filter((r: any) => r.relationType === 'trustedBy').map((r: any) => ({ address: r.address, name: r.avatarInfo?.name, previewImageUrl: r.avatarInfo?.previewImageUrl }));
 
       const enrichedTotal = mutual.length + trusts.length + trustedBy.length;
 

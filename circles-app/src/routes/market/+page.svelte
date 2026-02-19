@@ -13,13 +13,13 @@
     import { avatarState } from '$lib/shared/state/avatar.svelte';
     import Tabs from '$lib/shared/ui/primitives/tabs/Tabs.svelte';
     import Tab from '$lib/shared/ui/primitives/tabs/Tab.svelte';
-    import {gnosisConfig} from "$lib/shared/config/circles";
+    import {gnosisMarketConfig} from "$lib/shared/config/market";
 
     // Defaults (as requested)
-    const OPERATOR: `0x${string}` = gnosisConfig.production.marketOperator;
+    const OPERATOR: `0x${string}` = gnosisMarketConfig.marketOperator as `0x${string}`;
 
-    const API_BASE = gnosisConfig.production.marketApiBase;
-    const MARKET_CHAIN_ID = gnosisConfig.production.marketChainId ?? 100;
+    const API_BASE = gnosisMarketConfig.marketApiBase;
+    const MARKET_CHAIN_ID = gnosisMarketConfig.marketChainId ?? 100;
     const SELLERS_CACHE_KEY = `market:sellers:${MARKET_CHAIN_ID}`;
     const SELLERS_CACHE_TTL_MS = 5 * 60 * 1000;
 
@@ -99,7 +99,7 @@
     // Currently fixed to the default operator.
     // ————————————————————————————————————————————
     function getScanOperators(): `0x${string}`[] {
-      return [gnosisConfig.production.marketOperator as `0x${string}`];
+      return [gnosisMarketConfig.marketOperator as `0x${string}`];
     }
 
     // Cache operator list for the current render to avoid recomputing in the template
@@ -111,7 +111,7 @@
     $effect(() => {
       const ops = scanOperators;
       if (!ops || ops.length === 0) {
-        selectedOperator = gnosisConfig.production.marketOperator as `0x${string}`;
+        selectedOperator = gnosisMarketConfig.marketOperator as `0x${string}`;
         return;
       }
       if (!selectedOperator || !ops.includes(selectedOperator)) {
@@ -129,7 +129,7 @@
     // ————————————————————————————————————————————
     // data load with pagination
     // ————————————————————————————————————————————
-    const avatarAddress = $derived((avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '') as `0x${string}` | '');
+    const avatarAddress = $derived((avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.address ?? '') as `0x${string}` | '');
     function getScanAvatars(): `0x${string}`[] {
       return sellers;
     }
@@ -161,7 +161,7 @@
       const body = (await res.json().catch(() => null)) as SellerListing[] | SellersResponse | null;
       const list: SellerListing[] = Array.isArray(body)
         ? body
-        : (body && Array.isArray((body as SellersResponse).sellers) ? (body as SellersResponse).sellers : []);
+        : (body && Array.isArray((body as SellersResponse).sellers) ? (body as SellersResponse).sellers! : []);
       const filtered = list
         .map((entry) => ({
           chainId: Number((entry as SellerListing).chainId),
@@ -194,7 +194,7 @@
           hasMore = false;
           return;
         }
-        const op = (selectedOperator ?? (gnosisConfig.production.marketOperator as `0x${string}`)) as `0x${string}`;
+        const op = (selectedOperator ?? (gnosisMarketConfig.marketOperator as `0x${string}`)) as `0x${string}`;
         const catalog = getMarketClient().catalog.forOperator(op);
         const page = await catalog.fetchCatalogPage({ avatars, pageSize: PAGE_SIZE, chainId: MARKET_CHAIN_ID });
         products = page.items;
@@ -216,7 +216,7 @@
       nextPagePlaceholders = Math.max(1, Math.min(PAGE_SIZE, 24));
       errorMsg = '';
       try {
-        const op = (selectedOperator ?? (gnosisConfig.production.marketOperator as `0x${string}`)) as `0x${string}`;
+        const op = (selectedOperator ?? (gnosisMarketConfig.marketOperator as `0x${string}`)) as `0x${string}`;
         const catalog = getMarketClient().catalog.forOperator(op);
         const page = await catalog.fetchCatalogPage({ avatars: getScanAvatars(), pageSize: PAGE_SIZE, chainId: MARKET_CHAIN_ID, cursor: nextCursor });
         products = products.concat(page.items);
@@ -267,7 +267,7 @@
       };
     });
 
-    const actions: Action[] = [
+    const pageActions: Action[] = [
       { id: 'settings-offers', label: 'Manage offers', variant: 'primary', onClick: () => goto('/settings?tab=marketplace') },
       { id: 'settings-orders', label: 'Orders', variant: 'ghost', onClick: () => goto('/settings?tab=orders') },
       { id: 'settings-sales', label: 'Sales', variant: 'ghost', onClick: () => goto('/settings?tab=sales') }
@@ -293,19 +293,19 @@
         Namespace {shortAddr(selectedOperator ?? OPERATOR)} • All offers
     {/snippet}
 
-    {#snippet headerActions()}
-        <ActionButtonBar {actions} />
+    {#snippet actions()}
+        <ActionButtonBar actions={pageActions} />
     {/snippet}
 
     <!-- Collapsed summary -->
-    {#snippet collapsedLeft()}
+    {#snippet collapsed_left()}
         <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">
       Marketplace
     </span>
     {/snippet}
 
-    {#snippet collapsedMenu()}
-        <ActionButtonDropDown {actions} />
+    {#snippet collapsed_menu()}
+        <ActionButtonDropDown actions={pageActions} />
         <!-- Basket button moved to global header -->
     {/snippet}
 

@@ -70,7 +70,7 @@
     onClick: () => void;
     variant: 'primary' | 'ghost';
   };
-  const actions: Action[] = [
+  const pageActions: Action[] = [
     {
       id: 'save',
       label: 'Save',
@@ -98,12 +98,12 @@
   headerTopGapClass="mt-4 md:mt-6"
   collapsedTopGapClass="mt-3 md:mt-4"
 >
-  <svelte:fragment slot="title">
+  {#snippet title()}
     <h1 class="h2">Settings</h1>
-  </svelte:fragment>
-  <svelte:fragment slot="meta">Profile, wallet</svelte:fragment>
-  <svelte:fragment slot="actions">
-    {#each actions as a (a.id)}
+  {/snippet}
+  {#snippet meta()}Profile, wallet{/snippet}
+  {#snippet actions()}
+    {#each pageActions as a (a.id)}
       <button
         type="button"
         class={`btn btn-sm ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'}`}
@@ -121,16 +121,16 @@
         <span>{a.label}</span>
       </button>
     {/each}
-  </svelte:fragment>
-  <svelte:fragment slot="collapsed-left">
+  {/snippet}
+  {#snippet collapsed_left()}
     <span
       class="text-base md:text-lg font-semibold tracking-tight text-base-content"
     >
       Settings
     </span>
-  </svelte:fragment>
-  <svelte:fragment slot="collapsed-menu">
-    {#each actions as a (a.id)}
+  {/snippet}
+  {#snippet collapsed_menu()}
+    {#each pageActions as a (a.id)}
       <button
         type="button"
         class={`btn ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'} min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3`}
@@ -148,7 +148,7 @@
         <span>{a.label}</span>
       </button>
     {/each}
-  </svelte:fragment>
+  {/snippet}
 
   <div
     class="flex flex-col items-center md:border rounded-lg md:px-6 md:py-8 gap-y-4 pb-24 md:pb-8"

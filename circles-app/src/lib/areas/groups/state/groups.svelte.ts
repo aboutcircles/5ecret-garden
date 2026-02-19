@@ -4,6 +4,13 @@ import type { Avatar, Sdk, HumanAvatar } from '@aboutcircles/sdk';
 import type { GroupRow } from '@aboutcircles/sdk-types';
 import { isHumanAvatar } from '$lib/shared/utils/avatarHelpers';
 
+// Local type matching sdk-types PagedResponse (not importable due to pnpm version split)
+interface GroupPagedResponse {
+  results: GroupRow[];
+  hasMore: boolean;
+  nextCursor: string | null;
+}
+
 export const createBaseGroups = async (avatar: Avatar) => {
   let isLoading = false;
   let allGroupsLoaded = false;
@@ -271,11 +278,11 @@ export const createSearchGroups = async (sdk: Sdk, query: string) => {
       console.log('[Groups] Searching groups with query:', query, 'cursor:', currentCursor);
 
       // Use findGroups with nameStartsWith filter
-      const response = await sdk.rpc.group.findGroups(
+      const response = await (sdk.rpc as any).group.findGroups(
         50, // pageSize
         { nameStartsWith: query },
         currentCursor
-      );
+      ) as GroupPagedResponse;
 
       if (response.results.length > 0) {
         currentCursor = response.nextCursor;

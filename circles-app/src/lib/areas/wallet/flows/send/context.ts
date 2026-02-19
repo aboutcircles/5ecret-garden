@@ -11,4 +11,9 @@ export type SendFlowContext = {
   selectedAsset: TokenBalance;
   amount: number | undefined;
   useWrappedBalances?: boolean;
+  fromTokens?: Address[];
+  toTokens?: Address[];
+  excludeFromTokens?: Address[];
+  excludeToTokens?: Address[];
+  maxTransfers?: number;
 };

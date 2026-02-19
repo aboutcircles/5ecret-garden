@@ -326,7 +326,7 @@
   collapsedTopGapClass="mt-3 md:mt-4"
 >
   <!-- Title -->
-  <svelte:fragment slot="title">
+  {#snippet title()}
     {#if !avatarState.isGroup}
       <button
         class="text-left"
@@ -340,20 +340,20 @@
     {:else}
       <h2 class="h2 m-0">Group overview</h2>
     {/if}
-  </svelte:fragment>
+  {/snippet}
 
   <!-- Meta -->
-  <svelte:fragment slot="meta">
+  {#snippet meta()}
     {#if !avatarState.isGroup}
       <button class="hover:underline inline-flex items-center gap-1" onclick={openBalances} type="button">
         <span>{personalToken + groupToken} tokens</span>
         <Lucide icon={LBarChart3} size={14} class="opacity-60" />
       </button>
     {/if}
-  </svelte:fragment>
+  {/snippet}
 
   <!-- Full-size quick actions -->
-  <svelte:fragment slot="actions">
+  {#snippet actions()}
     {#if !avatarState.isGroup}
       <button type="button" class="btn btn-ghost btn-sm" onclick={openSend}>
         <Lucide
@@ -379,10 +379,10 @@
         Mint {roundToDecimals(mintableAmount)} Circles
       </button>
     {/if}
-  </svelte:fragment>
+  {/snippet}
 
   <!-- Collapsed summary (balance only) -->
-  <svelte:fragment slot="collapsed-left">
+  {#snippet collapsed_left()}
     {#if !avatarState.isGroup}
       <span
         class="text-base md:text-lg font-semibold tracking-tight text-base-content"
@@ -396,10 +396,10 @@
         Group overview
       </span>
     {/if}
-  </svelte:fragment>
+  {/snippet}
 
   <!-- Collapsed dropdown content -->
-  <svelte:fragment slot="collapsed-menu">
+  {#snippet collapsed_menu()}
     <div class="grid grid-cols-1 gap-2">
       {#if avatarState.isHuman && mintableAmount >= 0.01}
         <button
@@ -444,7 +444,7 @@
         See breakdown
       </button>
     </div>
-  </svelte:fragment>
+  {/snippet}
 
   <!-- Content -->
   {#if avatarState.isGroup}

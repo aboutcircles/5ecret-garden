@@ -4,7 +4,8 @@
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import { circles } from '$lib/shared/state/circles';
   import { wallet } from '$lib/shared/state/wallet.svelte';
-  import type { Profile, Address, Invitation, AllInvitationsResponse } from '@aboutcircles/sdk-types';
+  import type { Profile, Address } from '@aboutcircles/sdk-types';
+  import type { Invitation, AllInvitationsResponse } from '$lib/shared/utils/sdkHelpers';
   import { onMount } from 'svelte';
   import ProfileEditor from '$lib/shared/ui/profile/ProfileEditor.svelte';
   import { settings } from '$lib/shared/state/settings.svelte';
@@ -60,6 +61,7 @@
         ...allInvitations.all,
         {
           address: '0x0000000000000000000000000000000000000000' as Address,
+          inviterAddress: '0x0000000000000000000000000000000000000000' as Address,
           source: 'trust' as const,
           balance: '0',
         },
@@ -115,11 +117,9 @@
   headerTopGapClass="mt-4 md:mt-6"
   collapsedTopGapClass="mt-3 md:mt-4"
 >
-  <svelte:fragment slot="title"
-    ><h1 class="h2 m-0">Register Person</h1></svelte:fragment
-  >
-  <svelte:fragment slot="meta">Step 1 of 2</svelte:fragment>
-  <svelte:fragment slot="actions">
+  {#snippet title()}<h1 class="h2 m-0">Register Person</h1>{/snippet}
+  {#snippet meta()}Step 1 of 2{/snippet}
+  {#snippet actions()}
     <button
       type="button"
       class="btn btn-ghost btn-sm"
@@ -129,7 +129,7 @@
       <Lucide icon={LArrowLeft} size={16} class="shrink-0 stroke-black" />
       <span>Back</span>
     </button>
-  </svelte:fragment>
+  {/snippet}
 
   <div class="mt-3"><Disclaimer /></div>
 
@@ -157,7 +157,7 @@
                   clickable={true}
                   dense={true}
                   noLeading={true}
-                  on:click={() => (inviterSelected = invitation.address)}
+                  onclick={() => (inviterSelected = invitation.address)}
                 >
                   <div class="flex items-center gap-x-2 min-w-0">
                     <input

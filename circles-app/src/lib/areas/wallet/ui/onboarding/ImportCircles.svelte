@@ -1,6 +1,6 @@
 <script lang="ts">
   import { CirclesStorage } from '$lib/shared/utils/storage';
-  import SeedphraseInput from './SeedphraseInput.svelte';
+  import SeedphraseInput from './components/SeedphraseInput.svelte';
   import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
   import { goto } from '$app/navigation';
   let mnemonicPhrase: string = $state('');

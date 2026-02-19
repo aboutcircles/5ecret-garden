@@ -1,8 +1,9 @@
+import type { TokenBalance } from '@aboutcircles/sdk-types';
 import type { SendFlowContext } from './context';
 import { transitiveTransfer } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
 
 class SendFlowContextState implements SendFlowContext {
-  selectedAsset = $state(transitiveTransfer());
+  selectedAsset = $state(transitiveTransfer() as TokenBalance);
   selectedAddress = $state<SendFlowContext['selectedAddress']>(undefined);
   amount = $state<SendFlowContext['amount']>(undefined);
   transitiveOnly = $state(true);

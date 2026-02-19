@@ -120,7 +120,7 @@
 </script>
 
 <EventHistoryHeatmap
-  {dataSource}
+  dataSource={dataSource as any}
   labels={{
     title: 'Trust events',
     loading: 'Loading outgoing trust history…',
@@ -134,7 +134,7 @@
       return `${trustRows.length} outgoing trust events · ${setCount} set · ${removedCount} removed`;
     },
   }}
-  searchHaystack={trustSearchHaystack}
+  searchHaystack={trustSearchHaystack as any}
   rowComponent={TrustHistoryDayEventRow as any}
   dayPopupHeaderComponent={TrustHistoryDayPopupHeader as any}
   overlays={{

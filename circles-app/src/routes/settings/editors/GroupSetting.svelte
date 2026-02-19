@@ -20,9 +20,9 @@
 
       const groupAvatar = avatarState.avatar as BaseGroupAvatar;
 
-      serviceAddress = await groupAvatar.properties.service() as Address;
-      mintHandlerAddress = await groupAvatar.properties.mintHandler();
-      feeCollectionAddress = await groupAvatar.properties.feeCollection();
+      serviceAddress = await groupAvatar.properties.service() as `0x${string}`;
+      mintHandlerAddress = await groupAvatar.properties.mintHandler() as `0x${string}`;
+      feeCollectionAddress = await groupAvatar.properties.feeCollection() as `0x${string}`;
       membershipConditions =
         await groupAvatar.properties.getMembershipConditions();
     } catch (error) {

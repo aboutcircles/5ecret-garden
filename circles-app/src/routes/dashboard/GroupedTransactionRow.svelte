@@ -540,7 +540,7 @@
     clickable={true}
     dense={true}
     noLeading={true}
-    on:click={handleRowClick}
+    onclick={handleRowClick}
   >
     <div class="w-full flex items-center justify-between">
       <div class="min-w-0 flex items-center gap-2">

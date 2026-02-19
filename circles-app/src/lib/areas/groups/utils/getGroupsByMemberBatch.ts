@@ -1,8 +1,27 @@
-import type { Address } from '@aboutcircles/sdk-types';
+import type { Address, Filter } from '@aboutcircles/sdk-types';
 import type { Sdk } from '@aboutcircles/sdk';
-import { CirclesQuery, type GroupRow, type PagedQueryParams } from '@aboutcircles/sdk-types';
-import type { GroupMembershipRow } from '@aboutcircles/sdk-types/dist/rows/groupMembershipRow';
-import { createGroupDataSource } from '$lib/shared/data/circles/groupDataSource';
+import type { GroupRow, GroupMembershipRow, PagedQueryParams } from '@aboutcircles/sdk-types';
+import { PagedQuery } from '@aboutcircles/sdk-rpc';
+
+/**
+ * Build an OR conjunction of Equals predicates to simulate an IN filter.
+ * The new SDK FilterType does not support 'In'; use Conjunction instead.
+ */
+function buildInFilter(column: string, values: string[]): Filter {
+  if (values.length === 1) {
+    return { Type: 'FilterPredicate', FilterType: 'Equals', Column: column, Value: values[0] };
+  }
+  return {
+    Type: 'Conjunction',
+    ConjunctionType: 'Or',
+    Predicates: values.map((v) => ({
+      Type: 'FilterPredicate' as const,
+      FilterType: 'Equals' as const,
+      Column: column,
+      Value: v,
+    })),
+  };
+}
 
 function chunk<T>(arr: T[], size: number): T[][] {
   const out: T[][] = [];
@@ -15,8 +34,24 @@ function chunk<T>(arr: T[], size: number): T[][] {
 export async function getGroupsByMember(sdk: Sdk, member: Address): Promise<GroupRow[]> {
   if (!sdk || !member) return [];
 
-  const groupDataSource = createGroupDataSource(sdk);
-  const membershipsQuery = groupDataSource.getGroupMemberships(member, 1000);
+  // Query GroupMemberships table for this member using PagedQuery
+  const membershipsQueryDef: PagedQueryParams = {
+    namespace: 'V_CrcV2',
+    table: 'GroupMemberships',
+    columns: ['group', 'member'],
+    filter: [
+      {
+        Type: 'FilterPredicate',
+        FilterType: 'Equals',
+        Column: 'member',
+        Value: member.toLowerCase(),
+      },
+    ],
+    sortOrder: 'DESC',
+    limit: 1000,
+  };
+
+  const membershipsQuery = new PagedQuery<GroupMembershipRow>(sdk.rpc.client, membershipsQueryDef);
   const memberships: GroupMembershipRow[] = [];
 
   while (await membershipsQuery.queryNextPage()) {
@@ -52,22 +87,17 @@ export async function getGroupsByMember(sdk: Sdk, member: Address): Promise<Grou
         'owner',
       ],
       filter: [
-        {
-          Type: 'FilterPredicate',
-          FilterType: 'In',
-          Column: 'group',
-          Value: groups.map((g) => g.toLowerCase() as Address),
-        },
+        buildInFilter('group', groups.map((g) => g.toLowerCase())),
       ],
       sortOrder: 'DESC',
       limit: 1000,
     };
 
-    const query = new CirclesQuery(sdk.circlesRpc, queryDef);
+    const query = new PagedQuery<GroupRow>(sdk.rpc.client, queryDef);
     while (await query.queryNextPage()) {
       const rows = query.currentPage?.results ?? [];
       if (rows.length === 0) break;
-      acc.push(...(rows as GroupRow[]));
+      acc.push(...rows);
     }
   }
 

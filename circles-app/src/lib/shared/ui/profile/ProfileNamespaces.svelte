@@ -27,7 +27,7 @@
     import { getProfilesBindings } from '$lib/areas/market/offers';
     import { getWalletProvider } from '$lib/shared/integrations/wallet';
     import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
-    import { gnosisConfig } from '$lib/shared/config/circles';
+    import { gnosisMarketConfig } from '$lib/shared/config/market';
 
     interface Props {
         avatar: Address;
@@ -334,7 +334,7 @@
                 throw new Error('Cannot replace link: original link has no name.');
             }
 
-            const chainId = Number(currentItem?.link?.chainId ?? gnosisConfig.production.marketChainId ?? 100);
+            const chainId = Number(currentItem?.link?.chainId ?? gnosisMarketConfig.marketChainId ?? 100);
             if (!Number.isFinite(chainId) || chainId <= 0) {
                 throw new Error('Cannot replace link: invalid chainId.');
             }
@@ -379,11 +379,13 @@
             await persistLinks(ns, next);
             editing = null;
         } catch (e: any) {
-            editing = {
-                ...editing,
-                saving: false,
-                error: String(e?.message ?? e)
-            };
+            if (editing) {
+                editing = {
+                    ...editing,
+                    saving: false,
+                    error: String(e?.message ?? e)
+                };
+            }
         }
     }
 

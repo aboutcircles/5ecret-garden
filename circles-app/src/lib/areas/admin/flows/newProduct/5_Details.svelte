@@ -91,8 +91,7 @@
 
   function parseCodes(): string[] | undefined {
     const codes = (context.codesTextarea ?? '')
-      .split('
-')
+      .split('\n')
       .map((c) => c.trim())
       .filter((c) => c.length > 0);
     return codes.length > 0 ? codes : undefined;
@@ -120,8 +119,7 @@
     };
 
     if (selectedType === 'codedispenser') {
-      const rawCodes = (context.codesTextarea ?? '').split('
-');
+      const rawCodes = (context.codesTextarea ?? '').split('\n');
       for (const code of rawCodes) {
         const trimmedEnd = code.replace(/\s+$/, '');
         if (trimmedEnd.length > 0 && /\s/.test(trimmedEnd)) {

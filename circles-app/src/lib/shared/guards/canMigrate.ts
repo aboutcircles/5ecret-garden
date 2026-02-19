@@ -1,9 +1,11 @@
-import type { AvatarRow } from '@aboutcircles/sdk-types';
+import type { AvatarInfo } from '@aboutcircles/sdk-types';
 import { get } from 'svelte/store';
 import { circles } from '$lib/shared/state/circles';
 
-export function canMigrate(avatar: AvatarRow): boolean {
-  if (!get(circles)?.v2Hub) {
+export function canMigrate(avatar: AvatarInfo): boolean {
+  const sdk = get(circles);
+  // Check that v2 hub is configured (new SDK stores it in circlesConfig)
+  if (!sdk?.circlesConfig?.v2HubAddress) {
     return false;
   }
 

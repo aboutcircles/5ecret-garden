@@ -1,6 +1,7 @@
 <script lang="ts">
   import { circles } from '$lib/shared/state/circles';
-  import type { Profile, ProfileView } from '@aboutcircles/sdk-types';
+  import type { Profile } from '@aboutcircles/sdk-types';
+  import type { ProfileView } from '$lib/shared/utils/sdkHelpers';
   import CommonConnections from '$lib/areas/contacts/ui/components/CommonConnections.svelte';
   import { contacts } from '$lib/shared/state/contacts/contacts';
   import {
@@ -155,7 +156,7 @@
     trustRow = $contacts?.data[address]?.row;
 
     // Detect group/human from type OR from profile description (fallback when type is missing)
-    const descriptionSuggestsGroup = profile?.description?.toLowerCase().includes('member of this group');
+    const descriptionSuggestsGroup = profile?.description?.toLowerCase().includes('member of this group') ?? false;
     const isGroup: boolean = otherAvatar?.type === 'CrcV2_RegisterGroup' || descriptionSuggestsGroup;
     const isHuman: boolean = otherAvatar?.type === 'CrcV2_RegisterHuman';
 
@@ -538,7 +539,7 @@
             <RowFrame
               clickable={true}
               noLeading
-              on:click={async () => {
+              onclick={async () => {
                             // Open another Profile instance in a popup (same UX as groups/contacts lists)
                             const ProfilePage = (await import('$lib/areas/profile/ui/pages/Profile.svelte')).default;
                             popupControls.open({ title: 'Profile', component: ProfilePage, props: { address: member.address } });
@@ -551,9 +552,11 @@
                   clickable={false}
                 />
               </div>
-              <div slot="trailing" class="font-medium underline flex gap-x-2">
-                <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
-              </div>
+              {#snippet trailing()}
+                <div class="font-medium underline flex gap-x-2">
+                  <img src="/chevron-right.svg" alt="Chevron Right" class="w-4" />
+                </div>
+              {/snippet}
             </RowFrame>
           {/each}
           {#if loadingMoreMembers}

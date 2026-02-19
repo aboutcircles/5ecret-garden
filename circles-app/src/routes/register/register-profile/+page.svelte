@@ -70,11 +70,9 @@
   headerTopGapClass="mt-4 md:mt-6"
   collapsedTopGapClass="mt-3 md:mt-4"
 >
-  <svelte:fragment slot="title"
-    ><h1 class="h2 m-0">Register Profile</h1></svelte:fragment
-  >
-  <svelte:fragment slot="meta">Step 1 of 1</svelte:fragment>
-  <svelte:fragment slot="actions">
+  {#snippet title()}<h1 class="h2 m-0">Register Profile</h1>{/snippet}
+  {#snippet meta()}Step 1 of 1{/snippet}
+  {#snippet actions()}
     <button
       type="button"
       class="btn btn-ghost btn-sm"
@@ -84,13 +82,13 @@
       <Lucide icon={LArrowLeft} size={16} class="shrink-0 stroke-black" />
       <span>Back</span>
     </button>
-  </svelte:fragment>
-  <svelte:fragment slot="collapsed-left">
+  {/snippet}
+  {#snippet collapsed_left()}
     <div class="truncate flex items-center gap-2">
       <span class="font-medium">Register Profile</span>
     </div>
-  </svelte:fragment>
-  <svelte:fragment slot="collapsed-menu">
+  {/snippet}
+  {#snippet collapsed_menu()}
     <button
       type="button"
       class="btn btn-ghost min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3"
@@ -100,7 +98,7 @@
       <Lucide icon={LArrowLeft} size={20} class="shrink-0 stroke-black" />
       <span>Back</span>
     </button>
-  </svelte:fragment>
+  {/snippet}
 
   <div class="mt-3">
     <Disclaimer />

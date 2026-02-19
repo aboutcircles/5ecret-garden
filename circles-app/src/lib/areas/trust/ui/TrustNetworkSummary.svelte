@@ -2,7 +2,8 @@
   import { circles } from '$lib/shared/state/circles';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { getTrustNetworkSummary } from '$lib/shared/utils/sdkHelpers';
-  import type { Address, TrustNetworkSummary } from '@aboutcircles/sdk-types';
+  import type { Address } from '@aboutcircles/sdk-types';
+  import type { TrustNetworkSummary } from '$lib/shared/utils/sdkHelpers';
   import { onMount } from 'svelte';
 
   let summary: TrustNetworkSummary | null = $state(null);

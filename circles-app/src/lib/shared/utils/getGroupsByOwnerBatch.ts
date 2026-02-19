@@ -1,6 +1,26 @@
-import type { Address } from '@aboutcircles/sdk-types';
+import type { Address, Filter } from '@aboutcircles/sdk-types';
 import type { Sdk } from '@aboutcircles/sdk';
-import { CirclesQuery, type GroupRow, type PagedQueryParams } from '@aboutcircles/sdk-types';
+import type { GroupRow, PagedQueryParams } from '@aboutcircles/sdk-types';
+import { PagedQuery } from '@aboutcircles/sdk-rpc';
+
+/**
+ * Build an OR conjunction of Equals predicates to simulate an IN filter.
+ */
+function buildInFilter(column: string, values: string[]): Filter {
+  if (values.length === 1) {
+    return { Type: 'FilterPredicate', FilterType: 'Equals', Column: column, Value: values[0] };
+  }
+  return {
+    Type: 'Conjunction',
+    ConjunctionType: 'Or',
+    Predicates: values.map((v) => ({
+      Type: 'FilterPredicate' as const,
+      FilterType: 'Equals' as const,
+      Column: column,
+      Value: v,
+    })),
+  };
+}
 
 // export async function getBaseAndCmgGroupsByOwnerBatch(
 //   sdk: Sdk,
@@ -45,23 +65,16 @@ export async function getBaseAndCmgGroupsByOwnerBatch(sdk: Sdk, owners: Address[
       'group',
       'owner',
     ],
-    filter: [{
-      Type: 'FilterPredicate',
-      FilterType: 'In',
-      Column: 'owner',
-      Value: owners.map(o => o.toLowerCase() as Address),
-    }, {
-      Type: 'FilterPredicate',
-      FilterType: 'In',
-      Column: 'type',
-      Value: ['CrcV2_BaseGroupCreated', 'CrcV2_CMGroupCreated'],
-    }],
+    filter: [
+      buildInFilter('owner', owners.map(o => o.toLowerCase())),
+      buildInFilter('type', ['CrcV2_BaseGroupCreated', 'CrcV2_CMGroupCreated']),
+    ],
     sortOrder: 'DESC',
     limit: 1000,
   };
 
-  const query = new CirclesQuery(sdk.circlesRpc, BaseQueryDefintion);
-  const results = [];
+  const query = new PagedQuery<GroupRow>(sdk.rpc.client, BaseQueryDefintion);
+  const results: GroupRow[] = [];
   const acc: Record<Address, GroupRow[]>= {};
 
   while (await query.queryNextPage()) {

@@ -35,8 +35,7 @@
 
   function parseCodes(): string[] | undefined {
     const codes = codesTextarea
-      .split('
-')
+      .split('\n')
       .map((code) => code.trim())
       .filter((code) => code.length > 0);
     return codes.length > 0 ? codes : undefined;
