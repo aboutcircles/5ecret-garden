@@ -10,6 +10,8 @@
   import { ethers, BrowserProvider, JsonRpcProvider, Wallet } from 'ethers';
   import { settings } from '$lib/stores/settings.svelte';
   import { gnosisConfig } from '$lib/circlesConfig';
+  import { getAccount } from '@wagmi/core';
+  import { config } from '../../config';
 
   let isCreating = $state(false);
   let error: string | null = $state(null);
@@ -73,13 +75,20 @@
         });
       } else {
         // Browser wallet flow (MetaMask, etc.)
+        // Use wagmi's connector provider to avoid conflicts with other wallet extensions (Phantom, etc.)
+        const account = getAccount(config);
+        const wagmiProvider = await account.connector?.getProvider();
+        if (!wagmiProvider) {
+          throw new Error('No wallet provider available');
+        }
+
         protocolKit = await Safe.init({
-          provider: window.ethereum,
+          provider: wagmiProvider as any,
           predictedSafe,
           signer: ownerAddress,
         });
 
-        provider = new BrowserProvider(window.ethereum);
+        provider = new BrowserProvider(wagmiProvider as any);
       }
 
       const safeAddress = await protocolKit.getAddress();

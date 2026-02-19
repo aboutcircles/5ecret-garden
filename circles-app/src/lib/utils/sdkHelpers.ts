@@ -109,13 +109,30 @@ export async function getTransactionHistoryEnriched(
   limit: number = 25,
   cursor?: string | null
 ): Promise<PagedResponse<EnrichedTransaction>> {
-  return getRpc(sdk).sdk.getTransactionHistoryEnriched(
-    address,
-    fromBlock,
-    toBlock,
-    limit,
-    cursor
-  );
+  // Add timeout to prevent hanging - RPC calls should complete within 15s
+  const timeoutMs = 15000;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => reject(new Error(`SDK getTransactionHistoryEnriched timed out after ${timeoutMs}ms`)), timeoutMs);
+  });
+
+  try {
+    console.log('[SDK] getTransactionHistoryEnriched calling RPC...', { address, cursor });
+    const result = await Promise.race([
+      getRpc(sdk).sdk.getTransactionHistoryEnriched(
+        address,
+        fromBlock,
+        toBlock,
+        limit,
+        cursor
+      ),
+      timeoutPromise
+    ]);
+    console.log('[SDK] getTransactionHistoryEnriched SUCCESS:', { resultCount: result.results?.length ?? 0 });
+    return result;
+  } catch (error) {
+    console.error('[SDK] getTransactionHistoryEnriched FAILED:', error);
+    throw error;
+  }
 }
 
 /**

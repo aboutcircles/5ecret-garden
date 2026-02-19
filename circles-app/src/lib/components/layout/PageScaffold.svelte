@@ -192,7 +192,7 @@
 {#if hasAnyCollapsedUI && collapsed}
   <!-- Fixed host for the collapsed control (only rendered when collapsed) -->
   <div
-    class={`fixed top-0 left-1/2 -translate-x-1/2 w-full ${maxWidthClass} z-50 pointer-events-none`}
+    class={`fixed top-0 left-1/2 -translate-x-1/2 w-full ${maxWidthClass} z-50 pointer-events-none collapsed-header-enter`}
   >
     <div class={`${fixedPaddingClass}`}>
       {#if collapsedMode === 'bar'}
@@ -361,5 +361,20 @@
 <style>
   .safe-top {
     height: env(safe-area-inset-top);
+  }
+
+  .collapsed-header-enter {
+    animation: slideInFromTop 0.2s ease-out;
+  }
+
+  @keyframes slideInFromTop {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -8px);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
   }
 </style>

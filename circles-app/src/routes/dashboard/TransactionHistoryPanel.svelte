@@ -2,9 +2,10 @@
   import GenericList from '$lib/components/GenericList.svelte';
   import GroupedTransactionRow from './GroupedTransactionRow.svelte';
   import { groupedTransactionHistory } from '$lib/stores/transactionHistory';
-  import { ChevronDown as LChevronDown, ChevronUp as LChevronUp } from 'lucide';
+  import { ChevronDown as LChevronDown, ChevronUp as LChevronUp, Flame, RefreshCw, ArrowLeftRight } from 'lucide';
   import Lucide from '$lib/icons/Lucide.svelte';
   import { browser } from '$app/environment';
+  import { writable } from 'svelte/store';
 
   interface Props {
     /** Transaction hash to highlight (from URL deep-link) */
@@ -22,6 +23,47 @@
   const LEGEND_STORAGE_KEY = 'txHistory.legendOpen';
   let showLegend = $state(
     browser ? localStorage.getItem(LEGEND_STORAGE_KEY) !== 'false' : true
+  );
+
+  // Filter: hide intermediary hops by default
+  const HIDE_HOPS_KEY = 'txHistory.hideIntermediaryHops';
+  let hideIntermediaryHops = $state(
+    browser ? localStorage.getItem(HIDE_HOPS_KEY) !== 'false' : true
+  );
+
+  function toggleHideHops() {
+    hideIntermediaryHops = !hideIntermediaryHops;
+    if (browser) {
+      localStorage.setItem(HIDE_HOPS_KEY, hideIntermediaryHops.toString());
+    }
+  }
+
+  // Create a filtered store for GenericList
+  const filteredStore = writable({
+    data: [] as typeof $groupedTransactionHistory.data,
+    next: $groupedTransactionHistory.next,
+    ended: $groupedTransactionHistory.ended,
+  });
+
+  // Update filtered store when source or filter changes
+  // Hide transactions where user was just an intermediary hop (net amount < 0.01)
+  // Uses isIntermediary flag which is more reliable than type detection
+  $effect(() => {
+    const sourceData = $groupedTransactionHistory.data;
+    const filtered = hideIntermediaryHops
+      ? sourceData.filter(tx => !tx.isIntermediary)
+      : sourceData;
+
+    filteredStore.set({
+      data: filtered,
+      next: $groupedTransactionHistory.next,
+      ended: $groupedTransactionHistory.ended,
+    });
+  });
+
+  // Count hidden transactions for UI feedback
+  const hiddenCount = $derived(
+    $groupedTransactionHistory.data.filter(tx => tx.isIntermediary).length
   );
 
   function toggleLegend() {
@@ -62,6 +104,24 @@
   });
 </script>
 
+<!-- Filter toggle -->
+<div class="flex items-center justify-between mb-2 px-1">
+  <label class="flex items-center gap-2 cursor-pointer">
+    <input
+      type="checkbox"
+      class="checkbox checkbox-xs checkbox-primary"
+      checked={hideIntermediaryHops}
+      onchange={toggleHideHops}
+    />
+    <span class="text-sm text-base-content/70">
+      Hide pass-through hops
+      {#if hiddenCount > 0 && hideIntermediaryHops}
+        <span class="text-base-content/50">({hiddenCount} hidden)</span>
+      {/if}
+    </span>
+  </label>
+</div>
+
 <!-- Collapsible Legend -->
 <div class="border border-base-300 rounded-lg mb-3 bg-base-100">
   <button
@@ -79,36 +139,36 @@
 
   {#if showLegend}
     <div class="px-3 pb-3 pt-2 border-t border-base-300">
-      <div class="grid grid-cols-2 gap-y-2 gap-x-4 text-sm">
-        <div class="flex items-center gap-2">
-          <img src="/badge-received.svg" alt="" class="w-5 h-5" />
-          <span class="text-base-content/80">Received</span>
+      <div class="grid grid-cols-2 gap-y-1.5 gap-x-3 text-xs">
+        <div class="flex items-center gap-1.5">
+          <img src="/badge-received.svg" alt="" class="w-4 h-4" />
+          <span class="text-base-content/80">Received / Minted</span>
         </div>
-        <div class="flex items-center gap-2">
-          <img src="/badge-sent.svg" alt="" class="w-5 h-5" />
+        <div class="flex items-center gap-1.5">
+          <img src="/badge-sent.svg" alt="" class="w-4 h-4" />
           <span class="text-base-content/80">Sent</span>
         </div>
-        <div class="flex items-center gap-2">
-          <!-- Match the actual mint row icon: green circle with + -->
-          <div class="w-5 h-5 rounded-full bg-gradient-to-br from-success to-success/60 flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 6v12m6-6H6" />
-            </svg>
-          </div>
-          <span class="text-base-content/80">Minted</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <!-- Match the actual burn row icon: red circle with fire -->
-          <div class="w-5 h-5 rounded-full bg-gradient-to-br from-error to-error/60 flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
-            </svg>
+        <div class="flex items-center gap-1.5">
+          <div class="w-4 h-4 rounded-full bg-error/15 flex items-center justify-center">
+            <Lucide icon={Flame} size={10} class="text-error" strokeWidth={2} />
           </div>
           <span class="text-base-content/80">Burned</span>
         </div>
+        <div class="flex items-center gap-1.5">
+          <div class="w-4 h-4 rounded-full bg-gradient-to-br from-error/15 to-success/15 flex items-center justify-center">
+            <Lucide icon={RefreshCw} size={10} class="text-base-content/70" />
+          </div>
+          <span class="text-base-content/80">Conversion</span>
+        </div>
+        <div class="flex items-center gap-1.5 col-span-2">
+          <div class="w-4 h-4 rounded-full bg-base-300/50 flex items-center justify-center">
+            <Lucide icon={ArrowLeftRight} size={10} class="text-base-content/50" />
+          </div>
+          <span class="text-base-content/80">Pass-through (trust path used)</span>
+        </div>
       </div>
-      <p class="text-xs text-base-content/50 mt-2">
-        Amounts show your net gain/loss. Click a row to see all transfers.
+      <p class="text-[11px] text-base-content/50 mt-1.5">
+        Click row to expand. Pass-throughs show routed amount.
       </p>
     </div>
   {/if}
@@ -116,7 +176,7 @@
 
 <GenericList
   row={GroupedTransactionRow}
-  store={groupedTransactionHistory}
+  store={filteredStore}
   rowProps={{ highlightTx }}
   isInitialLoading={$groupedTransactionHistory.isLoading || isSearchingForTx}
 />
