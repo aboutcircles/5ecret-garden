@@ -57,7 +57,7 @@
   });
 
   const cartLines = $derived(($cartState.basket?.items ?? []) as any[]);
-  const { findCatalogItem, imageUrlForLine } = useResolvedProducts(cartLines);
+  const { findCatalogItem, imageUrlForLine } = useResolvedProducts(() => cartLines);
 
   function hasBlockingRequirements(v: any): boolean {
     if (!v || !Array.isArray(v.requirements)) return false;

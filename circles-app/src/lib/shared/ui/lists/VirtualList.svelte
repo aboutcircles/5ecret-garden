@@ -394,7 +394,8 @@
             >
                 {#if vr.kind === 'item'}
                     <div data-list-row>
-                        <svelte:component this={row} item={vr.item} />
+                        {@const Row = row}
+                        <Row item={vr.item} />
                     </div>
                 {:else}
                     {#if placeholderRow}

@@ -176,9 +176,9 @@
       <span class="btn btn-ghost join-item no-animation">CRC</span>
     </div>
     {#if redeemAmount > maxRedeemable}
-      <label class="label">
+      <p class="label">
         <span class="label-text-alt text-error">Amount exceeds available balance</span>
-      </label>
+      </p>
     {/if}
   </div>
 

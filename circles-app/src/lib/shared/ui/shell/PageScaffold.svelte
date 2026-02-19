@@ -100,9 +100,9 @@
     return () => io.disconnect();
   });
 
-  const headerPaddingClass = usePagePadding ? '' : 'px-4 md:px-6';
-  const contentPaddingClass = usePagePadding ? '' : 'px-4 md:px-6';
-  const fixedPaddingClass = usePagePadding ? '' : 'px-4 md:px-6';
+  const headerPaddingClass = $derived(usePagePadding ? '' : 'px-4 md:px-6');
+  const contentPaddingClass = $derived(usePagePadding ? '' : 'px-4 md:px-6');
+  const fixedPaddingClass = $derived(usePagePadding ? '' : 'px-4 md:px-6');
 
   const isPopupOpen: boolean = $derived(popupState.content !== null);
 
@@ -313,8 +313,11 @@
             <div class="absolute left-0 right-0 mt-2 pointer-events-auto z-50">
               <div
                 class="bg-base-100 border shadow-xl rounded-xl p-2"
+                role="menu"
+                tabindex="0"
                 style={`--collapsed-h:${collapsedHeight}; --collapsed-h-md:${collapsedHeightMd};`}
                 onclick={onMenuClick}
+                onkeydown={(e) => { if (e.key === 'Escape') { collapsedMenuOpen = false; } }}
               >
                 {#if collapsedMenu}{@render collapsedMenu()}{/if}
               </div>

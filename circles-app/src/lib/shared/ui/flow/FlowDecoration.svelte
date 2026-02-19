@@ -5,8 +5,9 @@
     size?: 'md' | 'lg' | 'xl';
   }
   let { children, size = 'lg' }: Props = $props();
-  const widthClass =
-    size === 'xl' ? 'max-w-6xl' : size === 'lg' ? 'max-w-4xl' : 'max-w-2xl';
+  const widthClass = $derived(
+    size === 'xl' ? 'max-w-6xl' : size === 'lg' ? 'max-w-4xl' : 'max-w-2xl'
+  );
 </script>
 
 <article class={`w-full ${widthClass} mx-auto flex flex-col gap-4`}>

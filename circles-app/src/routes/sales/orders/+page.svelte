@@ -64,7 +64,9 @@
       : buildFallbackStore()
   );
 
-  const filteredStore = derived([store, query], ([$store, $query]) => {
+  // Wrap in $derived so that when the rune-based `store` changes (e.g. on auth),
+  // a fresh derived store is created that subscribes to the correct underlying store.
+  const filteredStore = $derived(derived([store, query], ([$store, $query]) => {
     const q = ($query ?? '').toLowerCase().trim();
     if (!q) return $store;
     const data = ($store?.data ?? []).filter((it) => {
@@ -76,7 +78,7 @@
       ...$store,
       data,
     };
-  });
+  }));
 
   const storeDataLength = $derived(($store?.data ?? []).length);
   const filteredDataLength = $derived(($filteredStore?.data ?? []).length);

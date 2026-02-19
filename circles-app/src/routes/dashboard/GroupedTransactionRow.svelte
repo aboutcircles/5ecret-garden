@@ -732,7 +732,7 @@
                 <span>{isCurrentUser ? 'You' : getShortName(participant)}</span>
               </button>
               {#if !isCurrentUser}
-                <ul tabindex="0" class="dropdown-content menu menu-xs bg-base-100 rounded-box shadow-lg z-20 w-32 p-1">
+                <ul tabindex="0" role="menu" class="dropdown-content menu menu-xs bg-base-100 rounded-box shadow-lg z-20 w-32 p-1">
                   <li>
                     <button onclick={(e) => copyAddress(participant, e)}>
                       <Lucide icon={Copy} size={12} />
@@ -788,7 +788,7 @@
                   <span class="truncate max-w-[90px] text-xs">{fromIsUser ? 'You' : fromName}</span>
                 </button>
                 {#if !fromIsUser && event.from}
-                  <ul tabindex="0" class="dropdown-content menu menu-xs bg-base-100 rounded-box shadow-lg z-20 w-32 p-1">
+                  <ul tabindex="0" role="menu" class="dropdown-content menu menu-xs bg-base-100 rounded-box shadow-lg z-20 w-32 p-1">
                     <li><button onclick={(e) => copyAddress(event.from, e)}><Lucide icon={Copy} size={12} /> Copy</button></li>
                     <li><button onclick={(e) => viewProfile(event.from!, e)}><Lucide icon={ExternalLink} size={12} /> View</button></li>
                   </ul>
@@ -815,7 +815,7 @@
                   <span class="truncate max-w-[90px] text-xs">{toIsUser ? 'You' : toName}</span>
                 </button>
                 {#if !toIsUser && event.to}
-                  <ul tabindex="0" class="dropdown-content menu menu-xs bg-base-100 rounded-box shadow-lg z-20 w-32 p-1">
+                  <ul tabindex="0" role="menu" class="dropdown-content menu menu-xs bg-base-100 rounded-box shadow-lg z-20 w-32 p-1">
                     <li><button onclick={(e) => copyAddress(event.to, e)}><Lucide icon={Copy} size={12} /> Copy</button></li>
                     <li><button onclick={(e) => viewProfile(event.to!, e)}><Lucide icon={ExternalLink} size={12} /> View</button></li>
                   </ul>

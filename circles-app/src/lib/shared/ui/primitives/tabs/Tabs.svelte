@@ -328,6 +328,7 @@
   <!-- Scrollable tablist -->
   <div
     role="tablist"
+    tabindex="0"
     {id}
     aria-orientation="horizontal"
     class="{tablistClasses} {variant === 'bordered' ? 'border-b border-base-300' : ''}"

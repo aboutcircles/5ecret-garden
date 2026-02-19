@@ -23,9 +23,9 @@
   });
 
   // Filter out context from other props
-  const otherProps = Object.fromEntries(
+  const otherProps = $derived(Object.fromEntries(
     Object.entries(page.props || {}).filter(([k]) => k !== 'context')
-  );
+  ));
 </script>
 
 <div class={`popup-page ${isVisible ? 'is-top' : 'is-hidden'}`} inert={!isVisible}>
