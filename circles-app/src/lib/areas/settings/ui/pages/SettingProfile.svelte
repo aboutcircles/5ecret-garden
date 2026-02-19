@@ -17,11 +17,13 @@ import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
     let {address = undefined}: Props = $props();
 
     function changeWallet() {
-        popupControls.close();
+        const target = signer.privateKey
+            ? '/connect-wallet/import-circles-garden'
+            : '/connect-wallet/connect-safe';
 
-        signer.privateKey
-            ? goto('/connect-wallet/import-circles-garden')
-            : goto('/connect-wallet/connect-safe');
+        popupControls.closeAndThen(() => {
+            void goto(target);
+        });
     }
 
     function openProfileEditor() {

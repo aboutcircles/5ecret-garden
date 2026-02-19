@@ -1,6 +1,5 @@
         <script lang="ts">
     import { derived, readable, writable, type Readable } from 'svelte/store';
-    import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
     import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
     import {createCMGroups} from '$lib/areas/groups/state';
     import type {EventRow} from '@circles-sdk/data';
@@ -24,22 +23,13 @@
     import Tabs from '$lib/shared/ui/primitives/tabs/Tabs.svelte';
     import Tab from '$lib/shared/ui/primitives/tabs/Tab.svelte';
     import { type TabIdOf } from '$lib/shared/ui/primitives/tabs/tabId';
-    import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
 
     let groups: Readable<{
         data: EventRow[];
         next: () => Promise<boolean>;
         ended: boolean;
     }> | undefined = $state();
-    const allGroupsQuery = writable('');
     let allGroupsListScopeEl: HTMLDivElement | null = $state(null);
-
-    const emptyGroupsStore = readable<{ data: EventRow[]; next: () => Promise<boolean>; ended: boolean }>({
-        data: [],
-        next: async () => true,
-        ended: true,
-    });
-    let filteredAllGroupsStore = $state<Readable<{ data: EventRow[]; next: () => Promise<boolean>; ended: boolean }>>(emptyGroupsStore);
 
     let ownedGroups: GroupRow[] = $state([]);
     let ownedGroupsLoading: boolean = $state(false);
@@ -127,34 +117,6 @@
 
         allGroupsLoadedForAvatar = avatarKey;
         void loadGroups();
-    });
-
-    $effect(() => {
-        const base = groups;
-        if (!base) {
-            filteredAllGroupsStore = emptyGroupsStore;
-            return;
-        }
-
-        const next = derived([base, allGroupsQuery], ([$base, $query]) => {
-            const q = ($query ?? '').toLowerCase().trim();
-            const rows = ($base?.data ?? []) as GroupRow[];
-            const data = q.length === 0
-                ? rows
-                : rows.filter((item) => String(item.group ?? '').toLowerCase().includes(q));
-
-            return {
-                ...$base,
-                data,
-            };
-        });
-
-        filteredAllGroupsStore = next;
-    });
-
-    const onAllGroupsSearchInputKeydown = createListInputArrowDownHandler({
-        getScope: () => allGroupsListScopeEl,
-        rowSelector: '[data-group-row]'
     });
 
     $effect(() => {
@@ -314,28 +276,14 @@
             {:else}
                 {#if groups}
                     <div data-groups-list-scope bind:this={allGroupsListScopeEl}>
-                        <ListShell
-                            query={allGroupsQuery}
-                            searchPlaceholder="Search by group address"
-                            inputDataAttribute="data-groups-search-input"
-                            onInputKeydown={onAllGroupsSearchInputKeydown}
-                            isEmpty={$groups?.data.length === 0}
-                            ended={$groups?.ended ?? false}
-                            emptyRequiresEnd={true}
-                            isNoMatches={$groups?.data.length > 0 && $filteredAllGroupsStore.data.length === 0}
-                            emptyLabel="No groups found"
-                            noMatchesLabel="No matching groups"
-                            wrapInListContainer={false}
-                        >
-                            <GenericList
-                                store={filteredAllGroupsStore}
-                                row={GroupRowView}
-                                rowHeight={64}
-                                maxPlaceholderPages={2}
-                                expectedPageSize={25}
-                                placeholderRow={AvatarRowPlaceholder}
-                            />
-                        </ListShell>
+                        <GenericList
+                            store={groups}
+                            row={GroupRowView}
+                            rowHeight={64}
+                            maxPlaceholderPages={2}
+                            expectedPageSize={25}
+                            placeholderRow={AvatarRowPlaceholder}
+                        />
                     </div>
                 {:else}
                     <div class="text-sm opacity-70">Loading…</div>
