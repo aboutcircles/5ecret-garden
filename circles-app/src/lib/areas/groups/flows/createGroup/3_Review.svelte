@@ -50,7 +50,7 @@
     {#if hasImage}
       <img
         src={ctx.profile.previewImageUrl}
-        alt="Group image"
+        alt="Group preview"
         class="w-32 h-32 rounded object-cover"
       />
     {:else}

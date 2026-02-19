@@ -217,7 +217,7 @@
   };
 
   // Keep actions lean: filter moved next to the title
-  const pageActions: Action[] = [
+  const pageActions: Action[] = $derived([
     {
       id: 'add',
       label: addLabel,
@@ -232,7 +232,7 @@
       onClick: handleExportCSV,
       variant: 'ghost',
     },
-  ];
+  ]);
 </script>
 
 <PageScaffold

@@ -92,8 +92,10 @@
   <!-- Wrap to ensure click is caught at the DOM boundary (BalanceRow doesn't emit a component 'click') -->
   <div
     role="button"
+    tabindex="0"
     class="w-full"
     onclick={() => handleSelect(transitiveTransfer())}
+    onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelect(transitiveTransfer()); } }}
   >
     <BalanceRow item={transitiveTransfer()} />
   </div>
@@ -105,7 +107,7 @@
   <div class="flex flex-col p-0 w-full overflow-x-auto gap-y-2">
     {#each $balances.data as balance (balance.tokenAddress)}
       <!-- Same wrapper for reliable clicks without changing visuals -->
-      <div role="button" class="w-full" onclick={() => handleSelect(balance)}>
+      <div role="button" tabindex="0" class="w-full" onclick={() => handleSelect(balance)} onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelect(balance); } }}>
         <BalanceRow item={balance} />
       </div>
     {/each}

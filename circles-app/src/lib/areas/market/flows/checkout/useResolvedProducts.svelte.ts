@@ -21,11 +21,12 @@ export function resetResolvedProductsCache(): void {
   resolvingKeys.clear();
 }
 
-export function useResolvedProducts(lines: any[]): {
+export function useResolvedProducts(linesOrGetter: any[] | (() => any[])): {
   findCatalogItem: (seller: string | undefined, sku: string | undefined) => AggregatedCatalogItem | undefined;
   imageUrlForLine: (line: any) => string | null;
   resolvedProducts: Record<string, AggregatedCatalogItem | null>;
 } {
+  const getLines = typeof linesOrGetter === 'function' ? linesOrGetter : () => linesOrGetter;
   function findCatalogItem(
     seller: string | undefined,
     sku: string | undefined,
@@ -55,7 +56,7 @@ export function useResolvedProducts(lines: any[]): {
     if (!operator) return;
 
     const catalog = getMarketClient().catalog.forOperator(operator);
-    for (const line of lines) {
+    for (const line of getLines()) {
       const seller = line?.seller as string | undefined;
       const sku = line?.orderedItem?.sku as string | undefined;
       const key = productKey(seller, sku);

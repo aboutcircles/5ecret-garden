@@ -69,11 +69,11 @@
         <option value="gnosis">Gnosis (Production)</option>
         <option value="chiado">Chiado (Testnet)</option>
       </select>
-      <label class="label">
+      <p class="label">
         <span class="label-text-alt text-base-content/60">
           {settings.network === 'gnosis' ? 'Main network with real CRC tokens' : 'Test network for development'}
         </span>
-      </label>
+      </p>
     </div>
 
     <!-- Rings Toggle -->

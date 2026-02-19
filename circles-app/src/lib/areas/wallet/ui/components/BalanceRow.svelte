@@ -127,6 +127,7 @@
           </button>
           <ul
             tabindex="0"
+            role="menu"
             class="dropdown-content menu menu-sm bg-base-100 rounded-box shadow z-10 w-56 p-2"
           >
             {#each actions as action (action.title)}

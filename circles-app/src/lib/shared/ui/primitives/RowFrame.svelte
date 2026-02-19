@@ -60,21 +60,7 @@
   }
 </script>
 
-<div
-  bind:this={el}
-  data-row
-  data-clickable={clickable ? '' : undefined}
-  data-selected={selected ? '' : undefined}
-  data-disabled={disabled ? '' : undefined}
-  data-dense={dense ? '' : undefined}
-  data-no-leading={noLeading ? '' : undefined}
-  class={`ui-row ${className}`}
-  role={clickable ? 'button' : 'group'}
-  tabindex={clickable && !disabled ? 0 : undefined}
-  aria-disabled={disabled ? 'true' : 'false'}
-  onkeydown={handleKeydown}
-  onclick={handleClick}
->
+{#snippet rowBody()}
   {#if !noLeading}
     <div class="ui-row__leading">
       {#if leading}{@render leading()}{/if}
@@ -91,7 +77,39 @@
   <div class="ui-row__trailing">
     {#if trailing}{@render trailing()}{/if}
   </div>
-</div>
+{/snippet}
+
+{#if clickable}
+  <div
+    bind:this={el}
+    data-row
+    data-clickable=""
+    data-selected={selected ? '' : undefined}
+    data-disabled={disabled ? '' : undefined}
+    data-dense={dense ? '' : undefined}
+    data-no-leading={noLeading ? '' : undefined}
+    class={`ui-row ${className}`}
+    role="button"
+    tabindex={disabled ? undefined : 0}
+    aria-disabled={disabled ? 'true' : 'false'}
+    onkeydown={handleKeydown}
+    onclick={handleClick}
+  >
+    {@render rowBody()}
+  </div>
+{:else}
+  <div
+    bind:this={el}
+    data-row
+    data-selected={selected ? '' : undefined}
+    data-disabled={disabled ? '' : undefined}
+    data-dense={dense ? '' : undefined}
+    data-no-leading={noLeading ? '' : undefined}
+    class={`ui-row ${className}`}
+  >
+    {@render rowBody()}
+  </div>
+{/if}
 
 <style>
   .ui-row {
