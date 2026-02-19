@@ -19,7 +19,7 @@
   }
 </script>
 
-<RowFrame clickable={true} dense={true} noLeading={true} on:click={openProfile}>
+<RowFrame clickable={true} dense={true} noLeading={true} onclick={openProfile}>
   <div class="min-w-0">
     <Avatar
       placeholderBottom={true}
@@ -32,7 +32,9 @@
     />
   </div>
 
-  <div slot="trailing" aria-hidden="true">
-    <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" />
-  </div>
+  {#snippet trailing()}
+    <div aria-hidden="true">
+      <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" />
+    </div>
+  {/snippet}
 </RowFrame>

@@ -11,7 +11,7 @@
 </script>
 
 <div aria-hidden="true">
-  <RowFrame clickable={false} dense={true} noLeading={true} style={rowStyle}>
+  <RowFrame clickable={false} dense={true} noLeading={true}>
     <div class="w-full flex items-center justify-between gap-3">
       <div class="inline-flex items-center min-w-0">
         <div class="relative inline-block">

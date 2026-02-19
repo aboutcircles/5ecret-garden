@@ -159,13 +159,16 @@
       throw new Error('Wallet not ready for pathfinding.');
     }
 
-    const excludedTokens = await $circles.getDefaultTokenExcludeList(to);
+    const sdk = $circles as any;
+    const excludedTokens = typeof sdk.getDefaultTokenExcludeList === 'function'
+      ? await sdk.getDefaultTokenExcludeList(to)
+      : [];
 
     const bigNumber = '99999999999999999999999999999999999';
     const p =
       avatarState.avatar?.avatarInfo?.version === 1
-        ? await $circles.v1Pathfinder?.getPath(avatarState.avatar.address, to, bigNumber)
-        : await $circles.v2Pathfinder?.getPath(
+        ? await sdk.v1Pathfinder?.getPath(avatarState.avatar.address, to, bigNumber)
+        : await sdk.v2Pathfinder?.getPath(
             avatarState.avatar.address,
             to,
             bigNumber,

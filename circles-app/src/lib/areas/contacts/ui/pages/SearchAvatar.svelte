@@ -2,7 +2,7 @@
   import AddressInput from '$lib/shared/ui/forms/AddressInput.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import type { Address } from '@aboutcircles/sdk-types';
-  import type { SearchResultProfile } from '@aboutcircles/sdk-rpc';
+  import type { ProfileSearchResult as SearchResultProfile } from '$lib/shared/utils/sdkHelpers';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { circles } from '$lib/shared/state/circles';
   import { contacts } from '$lib/shared/state/contacts/contacts';
@@ -11,11 +11,12 @@
 
   interface Props {
     selectedAddress?: any;
-    searchType?: 'send' | 'group' | 'contact';
+    searchType?: 'send' | 'group' | 'contact' | 'global';
     oninvite?: (avatar: any) => void;
     ontrust?: (avatar: any) => void;
     onselect?: (avatar: any) => void;
     avatarTypes?: string[];
+    inputDataAttribute?: string;
   }
 
   let {
@@ -42,23 +43,16 @@
       return [];
     }
     try {
-      // New SDK: searchByAddressOrName returns ProfileSearchResponse with { results, query, searchType, totalCount }
-      const response = await $circles.rpc.profile.searchByAddressOrName(
+      // searchByAddressOrName may return ProfileSearchResponse { results } or SearchResultProfile[]
+      // depending on SDK version resolution — handle both shapes
+      const raw: any = await $circles.rpc.profile.searchByAddressOrName(
         query,
         limit,
         offset,
         avatarTypes
       );
-      console.log('[SearchAvatar] searchByAddressOrName:', {
-        query,
-        count: response.results?.length ?? 0,
-        totalCount: response.totalCount,
-        firstResult: response.results?.[0],
-        firstResultKeys: response.results?.[0] ? Object.keys(response.results[0]) : [],
-      });
-      // Map results - extract address from namespaces keys (backend doesn't return address directly)
-      // Filter out results without addresses (can't be selected anyway)
-      return (response.results || [])
+      const results: any[] = Array.isArray(raw) ? raw : (raw.results || []);
+      return results
         .map((r: any) => {
           // Address is stored as key in namespaces object
           const address = r.address || (r.namespaces ? Object.keys(r.namespaces)[0] : undefined);
@@ -165,7 +159,7 @@
           clickable={true}
           dense={true}
           noLeading={true}
-          on:click={() => onselect && onselect(profile.address)}
+          onclick={() => onselect && onselect(profile.address)}
         >
           <div class="min-w-0">
             <Avatar
@@ -175,9 +169,11 @@
               clickable={false}
             />
           </div>
-          <div slot="trailing" aria-hidden="true">
-            <img src="/chevron-right.svg" alt="" class="icon" />
-          </div>
+          {#snippet trailing()}
+            <div aria-hidden="true">
+              <img src="/chevron-right.svg" alt="" class="icon" />
+            </div>
+          {/snippet}
         </RowFrame>
       {/each}
     </div>

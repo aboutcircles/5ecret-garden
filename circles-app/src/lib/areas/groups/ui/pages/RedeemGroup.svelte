@@ -3,6 +3,7 @@
   import { circles } from '$lib/shared/state/circles';
   import type { Address } from '@aboutcircles/sdk-types';
   import { uint256ToAddress } from '@aboutcircles/sdk-utils';
+  import type { HumanAvatar } from '@aboutcircles/sdk';
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import { onMount } from 'svelte';
   import { formatUnits, parseUnits } from 'ethers';
@@ -110,9 +111,10 @@
       console.log(`Redeeming ${redeemAmount} group tokens (${amountInWei} wei)`);
 
       // New SDK: automatic pathfinder redemption
-      if ('groupToken' in avatarState.avatar && typeof (avatarState.avatar as any).groupToken?.redeem === 'function') {
-        await (avatarState.avatar as any).groupToken.redeem(
-          asset.tokenOwner,
+      if ('groupToken' in avatarState.avatar) {
+        const human = avatarState.avatar as HumanAvatar;
+        await human.groupToken.redeem(
+          asset.tokenOwner as Address,
           amountInWei
         );
         // Clear input on success

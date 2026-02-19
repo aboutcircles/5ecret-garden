@@ -56,13 +56,13 @@
       clickable={true}
       dense={true}
       noLeading={true}
-      on:click={() => openProfile(item.avatar)}
+      onclick={() => openProfile(item.avatar)}
     >
       <div class="min-w-0">
         <Avatar address={item.avatar} clickable={true} view="horizontal" />
       </div>
 
-      <div slot="trailing" class="flex items-center gap-3 md:gap-4">
+      {#snippet trailing()}<div class="flex items-center gap-3 md:gap-4">
         <div class="text-right tabular-nums">
           <div class="font-medium">
             {formatEtherTwoDecimals(item.amount)} CRC
@@ -78,7 +78,7 @@
             min="0"
           />
         {/if}
-      </div>
+      </div>{/snippet}
     </RowFrame>
   {/each}
 </div>

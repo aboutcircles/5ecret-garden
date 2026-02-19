@@ -41,7 +41,7 @@
 
     // editability
     let readonly = $state<boolean>(true);
-    let connected = $derived((avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '').toLowerCase())
+    let connected = $derived((avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.address ?? '').toLowerCase())
     let ra = $derived((resolvedAvatar ?? '').toLowerCase());
     let isOwner = $derived(!!connected && !!ra && connected === ra);
     const hasChanges = $derived(
@@ -80,7 +80,7 @@
         try {
             // If no explicit avatar is passed, default to the currently connected avatar from app state
             const rawAvatar =
-                avatar ?? ((avatarState.avatar?.address as string | undefined) ?? (avatarState.avatar?.avatarInfo?.avatar as string | undefined) ?? '');
+                avatar ?? ((avatarState.avatar?.address as string | undefined) ?? (avatarState.avatar?.avatarInfo?.address as string | undefined) ?? '');
             const norm = normalizeAddress(rawAvatar) as Address;
             resolvedAvatar = norm;
 

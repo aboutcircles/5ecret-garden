@@ -11,7 +11,7 @@ export async function searchRemoteAvatarRows(params: {
   avatarTypes?: string[];
 }): Promise<AvatarSearchItem[]> {
   const { sdk, query, avatarTypes } = params;
-  if (!sdk?.circlesRpc) return [];
+  if (!sdk?.rpc) return [];
 
   const list = await searchProfilesRpc(sdk, {
     query,

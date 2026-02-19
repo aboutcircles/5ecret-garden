@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import type { Snippet } from 'svelte';
   import { popupState, popupControls } from '$lib/shared/state/popup/popUp.svelte';
   import { headerDropdown } from '$lib/shared/state/headerDropdown.svelte';
 
@@ -8,6 +9,31 @@
 
   type Highlight = 'soft' | 'tint';
   type CollapsedMode = 'dropdown' | 'bar';
+
+  interface Props {
+    maxWidthClass?: string;
+    contentWidthClass?: string;
+    highlight?: Highlight;
+    usePagePadding?: boolean;
+    collapsedMode?: CollapsedMode;
+    collapsedHeightClass?: string;
+    collapsedHeight?: string;
+    collapsedHeightMd?: string;
+    headerTopGapClass?: string;
+    collapsedTopGapClass?: string;
+
+    // Named snippet slots
+    title?: Snippet;
+    meta?: Snippet;
+    actions?: Snippet;
+    children?: Snippet;
+
+    // Collapsed-state snippet overrides
+    collapsed_left?: Snippet;
+    collapsed_menu?: Snippet;
+    collapsed_label?: Snippet;
+    actions_collapsed?: Snippet;
+  }
 
   let {
     maxWidthClass = 'max-w-4xl',
@@ -23,7 +49,16 @@
 
     headerTopGapClass = 'mt-4 md:mt-6',
     collapsedTopGapClass = 'mt-3 md:mt-4',
-  } = $props();
+
+    title,
+    meta,
+    actions,
+    children,
+    collapsed_left: collapsedLeft,
+    collapsed_menu: collapsedMenu,
+    collapsed_label: collapsedLabel,
+    actions_collapsed: actionsCollapsed,
+  }: Props = $props();
 
   let collapsed = $state(false);
   let hasActions = $state(false);
@@ -150,9 +185,9 @@
       <!-- Always stack title/meta and actions into separate rows -->
       <div class="flex flex-col gap-3">
         <div class="min-w-0">
-          <div class="leading-tight"><slot name="title" /></div>
+          <div class="leading-tight">{#if title}{@render title()}{/if}</div>
           <div class="mt-1 text-sm text-base-content/60">
-            <slot name="meta" />
+            {#if meta}{@render meta()}{/if}
           </div>
         </div>
 
@@ -161,7 +196,7 @@
           bind:this={actionsHost}
           use:observeActions
         >
-          <slot name="actions" />
+          {#if actions}{@render actions()}{/if}
         </div>
       </div>
 
@@ -209,13 +244,15 @@
               onclick={toggleCollapsedMenu}
             >
               <div class="min-w-0 flex items-center gap-2">
-                <slot name="collapsed-left">
+                {#if collapsedLeft}
+                  {@render collapsedLeft()}
+                {:else}
                   <span
                     class="text-base md:text-lg font-semibold tracking-tight text-base-content truncate"
                   >
-                    <slot name="title" />
+                    {#if title}{@render title()}{/if}
                   </span>
-                </slot>
+                {/if}
               </div>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -240,13 +277,15 @@
               aria-hidden="true"
             >
               <div class="min-w-0 flex items-center gap-2">
-                <slot name="collapsed-left">
+                {#if collapsedLeft}
+                  {@render collapsedLeft()}
+                {:else}
                   <span
                     class="text-base md:text-lg font-semibold tracking-tight text-base-content truncate"
                   >
-                    <slot name="title" />
+                    {#if title}{@render title()}{/if}
                   </span>
-                </slot>
+                {/if}
               </div>
             </div>
           {/if}
@@ -277,7 +316,7 @@
                 style={`--collapsed-h:${collapsedHeight}; --collapsed-h-md:${collapsedHeightMd};`}
                 onclick={onMenuClick}
               >
-                <slot name="collapsed-menu" />
+                {#if collapsedMenu}{@render collapsedMenu()}{/if}
               </div>
             </div>
           {/if}
@@ -289,7 +328,7 @@
               type="button"
               class="btn btn-primary btn-md rounded-full shadow-md pointer-events-auto"
             >
-              <slot name="collapsed-label" />
+              {#if collapsedLabel}{@render collapsedLabel()}{/if}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 class="h-4 w-4 ml-1"
@@ -308,7 +347,7 @@
             <ul
               class="dropdown-content menu menu-sm bg-base-100 rounded-box shadow z-30 w-56 p-2 pointer-events-auto"
             >
-              <slot name="actions-collapsed" />
+              {#if actionsCollapsed}{@render actionsCollapsed()}{/if}
             </ul>
           </div>
         </div>
@@ -355,7 +394,7 @@
 {/if}
 
 <section class={`mx-auto ${contentWidthClass} ${contentPaddingClass}`}>
-  <slot />
+  {#if children}{@render children()}{/if}
 </section>
 
 <style>

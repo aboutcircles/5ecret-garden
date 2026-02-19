@@ -1,6 +1,5 @@
 import type { Sdk, Avatar } from '@aboutcircles/sdk';
-import type { Address, AvatarRow, TokenBalanceRow, TrustRelationRow, AvatarInfo } from '@aboutcircles/sdk-types';
-import type { AggregatedTrustRelation } from '@aboutcircles/sdk';
+import type { Address, TokenBalanceRow, AvatarInfo, AggregatedTrustRelation, Profile } from '@aboutcircles/sdk-types';
 
 /**
  * Backward-compatible proxy helpers.
@@ -12,7 +11,9 @@ import type { AggregatedTrustRelation } from '@aboutcircles/sdk';
  * - sdk.data.getAvatarInfo() -> sdk.data.getAvatar()
  * - avatar.getBalances() -> avatar.balances.getTokenBalances()
  * - avatar.getTransactionHistory(n) -> avatar.history.getTransactions(n)
- * - sdk.data.getAggregatedTrustRelations() -> sdk.data.getTrustRelations()
+ * - sdk.data.getTrustRelations() returns AggregatedTrustRelation[]
+ * - sdk.rpc.trust.getCommonTrust() for common trust queries
+ * - sdk.rpc.profile.getProfileByCidBatch() for batch profile lookups
  */
 
 export async function dataGetAvatarInfo(
@@ -42,8 +43,9 @@ export function dataGetGroupMemberships(
   member: Address,
   limit: number
 ) {
-  // TODO: fix type - new SDK uses sdk.groups.getMembers(groupAddress, limit)
-  // This proxy may need rethinking since old SDK queried by member, new SDK queries by group
+  // New SDK uses sdk.groups.getMembers(groupAddress, limit) which queries by group, not member.
+  // This proxy is kept for backward compat but the caller should migrate to
+  // querying group memberships via PagedQuery on the GroupMemberships table.
   return (sdk as any).data?.getGroupMemberships?.(member, limit) ?? Promise.resolve([]);
 }
 
@@ -59,12 +61,11 @@ export async function avatarGetTransactionHistory(
   return await avatar.history.getTransactions(pageSize);
 }
 
-export async function rpcGetProfileByCidBatch<T = unknown>(
+export async function rpcGetProfileByCidBatch(
   sdk: Sdk,
   cids: string[]
-): Promise<T[]> {
-  const rpc = await (sdk.rpc as any).call?.('circles_getProfileByCidBatch', [cids]);
-  return rpc?.result ?? [];
+): Promise<(Profile | null)[]> {
+  return await sdk.rpc.profile.getProfileByCidBatch(cids);
 }
 
 export async function rpcGetCommonTrust(
@@ -72,6 +73,5 @@ export async function rpcGetCommonTrust(
   me: Address,
   other: Address
 ): Promise<Address[]> {
-  const resp = await (sdk.rpc as any).call?.('circles_getCommonTrust', [me, other]);
-  return (resp?.result ?? []) as Address[];
+  return await sdk.rpc.trust.getCommonTrust(me, other);
 }

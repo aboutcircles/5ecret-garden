@@ -12,11 +12,19 @@
     try {
       if (avatarState.avatar === undefined) return;
 
-      serviceAddress = await avatarState.avatar?.service();
-      mintHandlerAddress = await avatarState.avatar?.mintHandler();
-      if (avatarState.groupType === 'CrcV2_CMGroupCreated')
-        redemptionHandlerAddress =
-          await avatarState.avatar?.redemptionHandler();
+      // New SDK: group methods are in .properties / .setProperties namespaces
+      const groupAvatar = avatarState.avatar as any;
+      if (groupAvatar?.properties?.service) {
+        serviceAddress = await groupAvatar.properties.service();
+      }
+      if (groupAvatar?.properties?.mintHandler) {
+        mintHandlerAddress = await groupAvatar.properties.mintHandler();
+      }
+      // redemptionHandler may not exist in all group types -- check avatar registration type
+      const isCmGroup = (avatarState.avatar as any)?.avatarInfo?.type === 'CrcV2_CMGroupCreated';
+      if (isCmGroup && groupAvatar?.properties?.redemptionHandler) {
+        redemptionHandlerAddress = await groupAvatar.properties.redemptionHandler();
+      }
     } catch (error) {
       console.error('Error fetching contract data:', error);
     }
@@ -24,7 +32,8 @@
 
   async function handleSetService() {
     try {
-      await avatarState.avatar?.setService(serviceAddress);
+      const groupAvatar = avatarState.avatar as any;
+      await groupAvatar?.setProperties?.service(serviceAddress);
     } catch (error) {
       console.error('Failed to set service address:', error);
     }
@@ -32,7 +41,13 @@
 
   async function handleSetMintHandler() {
     try {
-      await avatarState.avatar?.setMintHandler(mintHandlerAddress);
+      // mintHandler setter may not be available in new SDK -- fall back gracefully
+      const groupAvatar = avatarState.avatar as any;
+      if (groupAvatar?.setProperties?.mintHandler) {
+        await groupAvatar.setProperties.mintHandler(mintHandlerAddress);
+      } else {
+        console.warn('setMintHandler not available in current SDK');
+      }
     } catch (error) {
       console.error('Failed to set mint handler address:', error);
     }
@@ -40,7 +55,12 @@
 
   async function handleSetRedemptionHandler() {
     try {
-      await avatarState.avatar?.setRedemptionHandler(redemptionHandlerAddress);
+      const groupAvatar = avatarState.avatar as any;
+      if (groupAvatar?.setProperties?.redemptionHandler) {
+        await groupAvatar.setProperties.redemptionHandler(redemptionHandlerAddress);
+      } else {
+        console.warn('setRedemptionHandler not available in current SDK');
+      }
     } catch (error) {
       console.error('Failed to set redemption handler address:', error);
     }
@@ -68,7 +88,7 @@
     </div>
   </label>
 
-  {#if avatarState.groupType === 'CrcV2_CMGroupCreated'}
+  {#if (avatarState.avatar as any)?.avatarInfo?.type === 'CrcV2_CMGroupCreated'}
     <label class="form-control">
       <span class="label-text">Redemption handler address</span>
       <div class="join">

@@ -6,6 +6,8 @@ import type { Avatar } from '@aboutcircles/sdk';
 import { writable } from 'svelte/store';
 
 const refreshOnEvents: Set<CirclesEventType> = new Set<CirclesEventType>([
+  'CrcV1_HubTransfer',
+  'CrcV1_Transfer',
   'CrcV2_TransferBatch',
   'CrcV2_TransferSingle',
   'CrcV2_Erc20WrapperTransfer',
@@ -63,9 +65,8 @@ export const initBalanceStore = (avatar: Avatar) => {
         return [];
       }
 
-      const allBalances = (await avatar.balances.getTokenBalances()) as unknown as TokenBalance[];
-      // Only return version 2 balances
-      return allBalances.filter((balance: any) => balance.version === 2);
+      const balances = await avatar.balances.getTokenBalances() as unknown as TokenBalance[];
+      return balances;
     } catch (e: unknown) {
       const errorMessage = e instanceof Error ? e.message : String(e);
       if (errorMessage.includes('No balances found')) {
@@ -90,12 +91,8 @@ export const initBalanceStore = (avatar: Avatar) => {
         throw new Error('No balances.getTokenBalances method available');
       }
 
-      const allBalances = (await avatar.balances.getTokenBalances()) as unknown as TokenBalance[];
-      // Only return version 2 balances
-      const v2Balances = allBalances.filter(
-        (balance: any) => balance.version === 2
-      );
-      return v2Balances;
+      const balances = await avatar.balances.getTokenBalances() as unknown as TokenBalance[];
+      return balances;
     } catch (e: unknown) {
       const errorMessage = e instanceof Error ? e.message : String(e);
       if (errorMessage.includes('No balances found')) {

@@ -143,7 +143,7 @@
             clickable={true}
             dense={true}
             noLeading={true}
-            on:click={() => selectProfile(profile)}
+            onclick={() => selectProfile(profile)}
           >
             <div class="min-w-0">
               <Avatar
@@ -153,11 +153,13 @@
                 clickable={false}
               />
             </div>
-            <div slot="trailing" aria-hidden="true">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </div>
+            {#snippet trailing()}
+              <div aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            {/snippet}
           </RowFrame>
         {/each}
       </div>

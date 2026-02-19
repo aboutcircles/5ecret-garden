@@ -1,4 +1,4 @@
-import type { CirclesConfig } from '@aboutcircles/sdk-types';
+import type { CirclesConfig } from '$lib/shared/config/circles';
 import { gnosisConfig, chiadoConfig } from '$lib/shared/config/circles';
 import type { NetworkType } from '$lib/shared/integrations/chain/chainConfig';
 
@@ -23,6 +23,8 @@ export interface NetworkSettings {
   customProfileServiceUrl?: string;
   /** Custom Pathfinder URL override */
   customPathfinderUrl?: string;
+  /** Use legacy EOA mode (no Safe) */
+  legacy?: boolean;
 }
 
 /**

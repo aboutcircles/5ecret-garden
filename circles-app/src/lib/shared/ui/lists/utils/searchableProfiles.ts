@@ -13,7 +13,7 @@ export function createProfileNameStore(addresses: Readable<Address[]>): Readable
       const key = String(addr).toLowerCase();
       names.update((current) => {
         if (current[key] !== undefined) return current;
-        getProfile(addr)
+        getProfile(addr as `0x${string}`)
           .then((profile) => {
             names.update((next) => ({ ...next, [key]: profile?.name ?? '' }));
           })

@@ -19,16 +19,14 @@ export type GatewayTrustRow = {
 };
 
 type RpcQueryResult = {
-  result?: {
-    columns?: string[];
-    rows?: any[][];
-  };
+  columns?: string[];
+  rows?: any[][];
 };
 
 export async function fetchGatewayRowsByOwner(sdk: Sdk, owner: string): Promise<GatewayListRow[]> {
-  if (!(sdk as any)?.rpc || !owner) return [];
+  if (!sdk?.rpc || !owner) return [];
 
-  const resp = await (sdk.rpc as any).call?.('circles_query', [
+  const resp: RpcQueryResult = await sdk.rpc.client.call('circles_query', [
     {
       Namespace: 'CrcV2_PaymentGateway',
       Table: 'GatewayCreated',
@@ -45,8 +43,8 @@ export async function fetchGatewayRowsByOwner(sdk: Sdk, owner: string): Promise<
     },
   ]);
 
-  const cols = resp?.result?.columns ?? [];
-  const rows = resp?.result?.rows ?? [];
+  const cols = resp?.columns ?? [];
+  const rows = resp?.rows ?? [];
 
   const idxG = cols.indexOf('gateway');
   const idxTs = cols.indexOf('timestamp');
@@ -75,9 +73,9 @@ export async function fetchActiveTrustRowsByGateway(
   gateway: string,
   nowSec: number = Math.floor(Date.now() / 1000)
 ): Promise<GatewayTrustRow[]> {
-  if (!(sdk as any)?.rpc || !gateway) return [];
+  if (!sdk?.rpc || !gateway) return [];
 
-  const resp = await (sdk.rpc as any).call?.('circles_query', [
+  const resp: RpcQueryResult = await sdk.rpc.client.call('circles_query', [
     {
       Namespace: 'CrcV2_PaymentGateway',
       Table: 'TrustUpdated',
@@ -94,8 +92,8 @@ export async function fetchActiveTrustRowsByGateway(
     },
   ]);
 
-  const cols = resp?.result?.columns ?? [];
-  const rows = resp?.result?.rows ?? [];
+  const cols = resp?.columns ?? [];
+  const rows = resp?.rows ?? [];
 
   const idxR = cols.indexOf('trustReceiver');
   const idxE = cols.indexOf('expiry');

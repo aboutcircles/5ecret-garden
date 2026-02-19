@@ -1,29 +1,141 @@
 /**
  * SDK helper utilities for new RPC methods
  * These provide optimized single-call alternatives to multiple RPC calls
+ *
+ * NOTE: The SDK packages have a pnpm dependency version split — sdk-rpc
+ * references types from a published sdk-types (0.1.5) that lacks the newer
+ * rpc-response interfaces (ProfileView, TrustNetworkSummary, etc.).
+ * We therefore re-declare thin local aliases and cast through `any` at the
+ * boundary to avoid cross-package type incompatibilities.
  */
 
 import type { Sdk } from '@aboutcircles/sdk';
-import type { CirclesRpc } from '@aboutcircles/sdk-rpc';
-import type { Address } from '@aboutcircles/sdk-types';
-import type {
-  ProfileView,
-  TrustNetworkSummary,
-  AggregatedTrustRelationsResponse,
-  AllInvitationsResponse,
-  ValidInvitersResponse,
-  EnrichedTransaction,
-  PagedResponse,
-} from '@aboutcircles/sdk-types';
+import type { Address, AvatarInfo, Profile } from '@aboutcircles/sdk-types';
+
+// ---------------------------------------------------------------------------
+// Local type declarations matching the new SDK's rpc-responses shapes.
+// Required because the app's sdk-rpc resolves to an older sdk-types that
+// does not export these interfaces.
+// ---------------------------------------------------------------------------
+
+export interface TrustStats {
+  trustsCount: number;
+  trustedByCount: number;
+}
+
+export interface ProfileView {
+  address: Address;
+  avatarInfo?: AvatarInfo;
+  profile?: Profile;
+  trustStats: TrustStats;
+  v1Balance?: string;
+  v2Balance?: string;
+}
+
+export interface TrustNetworkSummary {
+  address: Address;
+  directTrustsCount: number;
+  directTrustedByCount: number;
+  mutualTrustsCount: number;
+  mutualTrusts: Address[];
+  networkReach: number;
+}
+
+export interface TrustRelationInfo {
+  address: Address;
+  avatarInfo?: AvatarInfo;
+  relationType: 'mutual' | 'trusts' | 'trustedBy';
+}
+
+export interface AggregatedTrustRelationsResponse {
+  address: Address;
+  results: TrustRelationInfo[];
+}
+
+export interface InviterInfo {
+  address: Address;
+  balance: string;
+  avatarInfo?: AvatarInfo;
+}
+
+export interface ValidInvitersResponse {
+  address: Address;
+  results: InviterInfo[];
+  /** Alias for results -- some RPC versions return validInviters instead */
+  validInviters: InviterInfo[];
+}
+
+export interface ParticipantInfo {
+  avatarInfo?: AvatarInfo;
+  profile?: Profile | null;
+}
+
+export interface EnrichedTransaction {
+  blockNumber: number;
+  timestamp: number;
+  transactionIndex: number;
+  logIndex: number;
+  transactionHash: string;
+  event: Record<string, unknown>;
+  participants: Record<string, ParticipantInfo>;
+  // Fields that may appear flat in the RPC response (non-standard but used by the app)
+  from?: string;
+  to?: string;
+  fromProfile?: any;
+  toProfile?: any;
+  circles?: number | string;
+  attoCircles?: string;
+  crc?: number | string;
+  attoCrc?: string;
+  staticCircles?: number | string;
+  value?: string;
+  version?: number;
+  id?: string;
+  [key: string]: unknown;
+}
+
+export interface PagedResponse<T> {
+  results: T[];
+  hasMore: boolean;
+  nextCursor: string | null;
+}
+
+export type InvitationSource = 'trust' | 'escrow' | 'atScale';
+
+export interface InvitationInfo {
+  source: InvitationSource;
+  /** Primary address field -- RPC responses use this */
+  address: Address;
+  /** Alias kept for backwards compat; some RPC versions use inviterAddress */
+  inviterAddress?: Address;
+  balance?: string;
+}
+
+export type Invitation = InvitationInfo & {
+  [key: string]: unknown;
+};
+
+export interface AllInvitationsResponse {
+  address: Address;
+  trustInvitations: any[];
+  escrowInvitations: any[];
+  atScaleInvitations: any[];
+  /** Combined list of all invitations -- may be populated by RPC or constructed by caller */
+  all: Invitation[];
+  [key: string]: unknown;
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 /**
  * Type-safe accessor for SDK's RPC interface.
- * The Sdk class has `rpc: CirclesRpc` but TypeScript's deep type inference
- * through viem's complex types sometimes fails. This accessor provides
- * the typed boundary once, enabling full type safety in all helper functions.
+ * Cast through `any` because the Sdk class declares `rpc: CirclesRpc`
+ * but the underlying type references are split across two sdk-types versions.
  */
-function getRpc(sdk: Sdk): CirclesRpc {
-  return sdk.rpc as CirclesRpc;
+function getRpc(sdk: Sdk): any {
+  return sdk.rpc;
 }
 
 /**
@@ -174,7 +286,7 @@ export async function searchProfiles(
     offset,
     avatarTypes
   );
-  return response.results as ProfileSearchResult[];
+  return (response.results ?? response) as ProfileSearchResult[];
 }
 
 /**

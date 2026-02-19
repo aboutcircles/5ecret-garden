@@ -53,7 +53,7 @@
   let publishSuccessAt: number | null = $state(null);
 
   const connectedAvatar = $derived(
-    (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '').toLowerCase(),
+    (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.address ?? '').toLowerCase(),
   );
 
   const sortedBookmarks = $derived.by(() => [...bookmarkedProfiles].sort((a, b) => b.createdAt - a.createdAt));

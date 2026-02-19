@@ -74,7 +74,7 @@
     clickable={true}
     dense={true}
     noLeading={true}
-    on:click={() => handleSelect(selectedAddress as string)}
+    onclick={() => handleSelect(selectedAddress as string)}
   >
     <div class="min-w-0">
       <Avatar
@@ -84,9 +84,11 @@
         bottomInfo={shortenAddress(selectedAddress)}
       />
     </div>
-    <div slot="trailing" aria-hidden="true">
-      <img src="/chevron-right.svg" alt="" class="icon" />
-    </div>
+    {#snippet trailing()}
+      <div aria-hidden="true">
+        <img src="/chevron-right.svg" alt="" class="icon" />
+      </div>
+    {/snippet}
   </RowFrame>
 {:else}
   <p class="menu-title pl-0">{addressListTitle}</p>
@@ -98,7 +100,7 @@
           clickable={true}
           dense={true}
           noLeading={true}
-          on:click={() => handleSelect(address as Address)}
+          onclick={() => handleSelect(address as Address)}
         >
           <div class="min-w-0">
             <Avatar
@@ -108,9 +110,11 @@
               bottomInfo={shortenAddress(address)}
             />
           </div>
-          <div slot="trailing" aria-hidden="true">
-            <img src="/chevron-right.svg" alt="" class="icon" />
-          </div>
+          {#snippet trailing()}
+            <div aria-hidden="true">
+              <img src="/chevron-right.svg" alt="" class="icon" />
+            </div>
+          {/snippet}
         </RowFrame>
       {/each}
     </div>

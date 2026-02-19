@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
+  import type { Snippet } from 'svelte';
 
   interface Props {
     clickable?: boolean;
@@ -9,6 +9,16 @@
     className?: string;
     /** Collapse the leading column for rows whose content already includes its own avatar/layout. */
     noLeading?: boolean;
+    /** Click handler called when the row is interactive (clickable && !disabled). */
+    onclick?: (e: MouseEvent) => void;
+
+    // Named snippet slots
+    leading?: Snippet;
+    title?: Snippet;
+    subtitle?: Snippet;
+    meta?: Snippet;
+    trailing?: Snippet;
+    children?: Snippet;
   }
 
   let {
@@ -18,9 +28,15 @@
     dense = false,
     className = '',
     noLeading = false,
+    onclick,
+    leading,
+    title,
+    subtitle,
+    meta,
+    trailing,
+    children,
   }: Props = $props();
 
-  const dispatch = createEventDispatcher();
   let el: HTMLElement;
 
   function handleKeydown(e: KeyboardEvent): void {
@@ -40,8 +56,7 @@
     if (!isInteractive) {
       return;
     }
-    // Re-dispatch as a component event so parents can use on:click on <RowFrame>
-    dispatch('click', { originalEvent: e });
+    onclick?.(e);
   }
 </script>
 
@@ -57,24 +72,24 @@
   role={clickable ? 'button' : 'group'}
   tabindex={clickable && !disabled ? 0 : undefined}
   aria-disabled={disabled ? 'true' : 'false'}
-  on:keydown={handleKeydown}
-  on:click={handleClick}
+  onkeydown={handleKeydown}
+  onclick={handleClick}
 >
   {#if !noLeading}
     <div class="ui-row__leading">
-      <slot name="leading" />
+      {#if leading}{@render leading()}{/if}
     </div>
   {/if}
 
   <div class="ui-row__content">
-    <div class="ui-row__title"><slot name="title" /></div>
-    <div class="ui-row__subtitle"><slot name="subtitle" /></div>
-    <div class="ui-row__meta"><slot name="meta" /></div>
-    <slot />
+    <div class="ui-row__title">{#if title}{@render title()}{/if}</div>
+    <div class="ui-row__subtitle">{#if subtitle}{@render subtitle()}{/if}</div>
+    <div class="ui-row__meta">{#if meta}{@render meta()}{/if}</div>
+    {#if children}{@render children()}{/if}
   </div>
 
   <div class="ui-row__trailing">
-    <slot name="trailing" />
+    {#if trailing}{@render trailing()}{/if}
   </div>
 </div>
 

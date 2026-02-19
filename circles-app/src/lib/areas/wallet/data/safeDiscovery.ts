@@ -1,13 +1,12 @@
-import type { Address } from '@aboutcircles/sdk-types';
-import type { GroupRow } from '@aboutcircles/sdk-types';
-import type { AvatarRow, Sdk } from '@aboutcircles/sdk';
+import type { Address, AvatarInfo, GroupRow } from '@aboutcircles/sdk-types';
+import type { Sdk } from '@aboutcircles/sdk';
 import { ethers } from 'ethers';
 import { get, writable, type Readable } from 'svelte/store';
 import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/shared/utils/getGroupsByOwnerBatch';
 
 type SafeDiscoveryState = {
   safes: Address[];
-  profileBySafe: Record<string, AvatarRow | undefined>;
+  profileBySafe: Record<string, AvatarInfo | undefined>;
   groupsByOwner: Record<Address, GroupRow[]>;
   isLoading: boolean;
   error: string | null;
@@ -57,17 +56,17 @@ export async function loadSafesProfileAndGroups(
   sdk: Sdk,
   safes: Address[]
 ): Promise<{
-  profileBySafe: Record<string, AvatarRow | undefined>;
+  profileBySafe: Record<string, AvatarInfo | undefined>;
   groupsByOwner: Record<Address, GroupRow[]>;
 }> {
   const [avatarInfo, groupInfo] = await Promise.all([
-    sdk?.data?.getAvatarInfoBatch(safes) ?? [],
+    (sdk.rpc as any).avatar?.getAvatarInfoBatch(safes) ?? [],
     getBaseAndCmgGroupsByOwnerBatch(sdk, safes),
   ]);
 
-  const profileBySafe: Record<string, AvatarRow | undefined> = {};
-  avatarInfo.forEach((info) => {
-    profileBySafe[info.avatar] = info;
+  const profileBySafe: Record<string, AvatarInfo | undefined> = {};
+  (avatarInfo as AvatarInfo[]).forEach((info: AvatarInfo) => {
+    if (info) profileBySafe[info.avatar] = info;
   });
 
   return { profileBySafe, groupsByOwner: groupInfo };

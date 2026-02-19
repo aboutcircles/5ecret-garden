@@ -85,7 +85,7 @@
     try {
       const c = get(circles);
       const owner = get(wallet)?.address as string | undefined;
-      if (!c?.circlesRpc || !owner) {
+      if (!c?.rpc || !owner) {
         hasGateway = false;
         return;
       }
@@ -104,9 +104,8 @@
   });
 
   function goToPaymentSettings(): void {
-    popupControls.closeAndThen(() => {
-      void goto('/settings?tab=payment');
-    });
+    popupControls.close();
+    void goto('/settings?tab=payment');
   }
 
   function next(): void {

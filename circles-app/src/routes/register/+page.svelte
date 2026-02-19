@@ -17,15 +17,15 @@
   headerTopGapClass="mt-4 md:mt-6"
   collapsedTopGapClass="mt-3 md:mt-4"
 >
-  <svelte:fragment slot="title">
+  {#snippet title()}
     <h1 class="h2 m-0">Create Account</h1>
-  </svelte:fragment>
-  <svelte:fragment slot="meta">Takes ~2 minutes</svelte:fragment>
-  <svelte:fragment slot="collapsed-left">
+  {/snippet}
+  {#snippet meta()}Takes ~2 minutes{/snippet}
+  {#snippet collapsed_left()}
     <div class="truncate flex items-center gap-2">
       <span class="font-medium">Create Account</span>
     </div>
-  </svelte:fragment>
+  {/snippet}
 
   <!-- Warning/banner spacing -->
   <div class="mt-3">

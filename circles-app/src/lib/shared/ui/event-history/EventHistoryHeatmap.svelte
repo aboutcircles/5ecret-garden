@@ -1,7 +1,8 @@
 <script lang="ts">
   import { circles } from '$lib/shared/state/circles';
   import { get } from 'svelte/store';
-  import { CirclesQuery, type PagedQueryParams } from '@aboutcircles/sdk-types';
+  import type { PagedQueryParams } from '@aboutcircles/sdk-types';
+  import { PagedQuery } from '@aboutcircles/sdk-rpc';
   import { popupControls } from '$lib/shared/state/popup';
   import EventHistoryDayCalendar from './EventHistoryDayCalendar.svelte';
   import EventHistoryWeeklySections from './EventHistoryWeeklySections.svelte';
@@ -114,7 +115,7 @@
 
     try {
       const sdk = get(circles);
-      if (!sdk?.circlesRpc) {
+      if (!sdk?.rpc) {
         throw new Error('Circles SDK not initialized');
       }
 
@@ -129,7 +130,7 @@
         limit: source.pageSize ?? 1000,
       };
 
-      const query = new CirclesQuery<CirclesBaseEventRow>(sdk.circlesRpc, queryDefinition);
+      const query = new PagedQuery<CirclesBaseEventRow>(sdk.rpc.client, queryDefinition);
       const allRows: CirclesBaseEventRow[] = [];
 
       while (await query.queryNextPage()) {

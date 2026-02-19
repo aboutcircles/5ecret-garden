@@ -1,5 +1,6 @@
 <script lang="ts">
   import { avatarState } from '$lib/shared/state/avatar.svelte';
+  import type { HumanAvatar } from '@aboutcircles/sdk';
   import { runTask } from '$lib/shared/utils/tasks';
   import { shortenAddress } from '$lib/shared/utils/shared';
   import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
@@ -14,11 +15,11 @@
     if (!avatarState.avatar) {
       throw new Error('Avatar store not available');
     }
-    // SDK v2 change: inviteHuman() -> invite.send()
-    if ('invite' in avatarState.avatar && typeof (avatarState.avatar as any).invite?.send === 'function') {
+    if ('invite' in avatarState.avatar) {
+      const human = avatarState.avatar as HumanAvatar;
       runTask({
         name: `Inviting ${shortenAddress(address)} ...`,
-        promise: (avatarState.avatar as any).invite.send(address),
+        promise: human.invite.send(address),
       });
     } else {
       throw new Error('Invitation not supported on this avatar type');

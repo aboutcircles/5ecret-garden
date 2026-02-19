@@ -22,7 +22,7 @@
     const groupAvatar = await sdk.getAvatar(group);
     await runTask({
       name: `${shortenAddress(group)} trusts ${shortenAddress(address)} ...`,
-      promise: groupAvatar.trust(address),
+      promise: groupAvatar.trust.add(address),
     });
 
     await onTrusted?.();

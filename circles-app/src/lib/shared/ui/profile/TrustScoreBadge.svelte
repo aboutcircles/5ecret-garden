@@ -5,7 +5,7 @@
         fetchTrusteeValidation,
         getCachedTrusteeValidation,
         type TrusteeValidationResponse,
-    } from '$lib/shared/model/profile';
+    } from '$lib/shared/data/profile/trustScoreDataSource';
 
     interface Props {
         address: Address | undefined;
@@ -18,15 +18,15 @@
     let trustScoreLoading: boolean = $state(false);
     let trustScoreError: string | null = $state(null);
     let trustScoreSupported: boolean | null = $state(null);
-    let gnosisTrustScore: number | null = $state(null);
-    let overallDangerScore: number | null = $state(null);
+    let gnosisTrustScore: number | null = $state<number | null>(null);
+    let overallDangerScore: number | null = $state<number | null>(null);
     let trustScoreSummary: string = $state('');
 
     const formattedGnosisTrustScore = $derived(
-        gnosisTrustScore === null ? null : gnosisTrustScore.toFixed(1)
+        gnosisTrustScore === null ? null : (gnosisTrustScore as number).toFixed(1)
     );
     const formattedDangerScore = $derived(
-        overallDangerScore === null ? null : overallDangerScore.toFixed(2)
+        overallDangerScore === null ? null : (overallDangerScore as number).toFixed(2)
     );
     const trustScoreTitle = $derived.by(() => {
         const lines: string[] = [];

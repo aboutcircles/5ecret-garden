@@ -34,7 +34,7 @@ async function loadOneFull(address: ProfileAddress, opts?: { pinApiBase?: string
     return ensureNamespacesKeys({ name: 'Transitive transfer', previewImageUrl: '/circles-token.svg', namespaces: {}, signingKeys: {} });
   }
   const hub = sdk.circlesConfig?.v2HubAddress?.toLowerCase();
-  const migration = sdk.circlesConfig?.migrationAddress?.toLowerCase();
+  const migration = undefined;
   if (address === hub) return ensureNamespacesKeys({ name: 'Circles V2 Hub Contract', previewImageUrl: FallbackImageUrl.Logo, namespaces: {}, signingKeys: {} });
   if (address === migration) return ensureNamespacesKeys({ name: 'Circles V2 Migration Contract', previewImageUrl: FallbackImageUrl.Logo, namespaces: {}, signingKeys: {} });
 

@@ -59,13 +59,13 @@ export async function queryBalancesByAccountAndTokenPage(
     Cursor: params.cursor,
   };
 
-  const result = await circlesRpc.call<RpcRowsResult>('circles_query', [payload]);
+  const result: RpcRowsResult = await circlesRpc.client.call('circles_query', [payload]);
 
   return {
-    columns: result?.result?.columns ?? columns,
-    rows: result?.result?.rows ?? [],
-    cursor: result?.result?.cursor,
-    hasMore: result?.result?.hasMore,
+    columns: result?.columns ?? columns,
+    rows: result?.rows ?? [],
+    cursor: result?.cursor,
+    hasMore: result?.hasMore,
   };
 }
 
@@ -88,9 +88,9 @@ export async function queryVaultAddressByGroup(
     Order: [],
   };
 
-  const result = await circlesRpc.call<RpcRowsResult>('circles_query', [payload]);
+  const result: RpcRowsResult = await circlesRpc.client.call('circles_query', [payload]);
 
-  const rows = result?.result?.rows ?? [];
+  const rows = result?.rows ?? [];
   return rows.length > 0 ? (rows[0][0] as string) : null;
 }
 
@@ -113,8 +113,8 @@ export async function queryTreasuryAddressByGroup(
     Order: [],
   };
 
-  const result = await circlesRpc.call<RpcRowsResult>('circles_query', [payload]);
+  const result: RpcRowsResult = await circlesRpc.client.call('circles_query', [payload]);
 
-  const rows = result?.result?.rows ?? [];
+  const rows = result?.rows ?? [];
   return rows.length > 0 ? (rows[0][0] as string) : null;
 }

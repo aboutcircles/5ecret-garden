@@ -1,10 +1,12 @@
 <script lang="ts">
   import Profile from './Profile.svelte';
   import type { Address } from '@aboutcircles/sdk-types';
-  const { address, trustVersion } = $props<{
+
+  interface Props {
     address?: Address;
-    trustVersion?: number;
-  }>();
+  }
+
+  let { address }: Props = $props();
 </script>
 
-<Profile {address} {trustVersion} />
+<Profile {address} />

@@ -1,4 +1,14 @@
-import type { CirclesConfig } from '@aboutcircles/sdk-types';
+import type { CirclesConfig as BaseCirclesConfig } from '@aboutcircles/sdk-types';
+
+/**
+ * Extended config type that includes chainRpcUrl.
+ * The local linked sdk-types has this field, but the published 0.1.5 does not.
+ * This type bridges the gap so the config compiles against either version.
+ */
+export type CirclesConfig = BaseCirclesConfig & {
+  /** RPC URL for direct chain calls (eth_call, etc). Defaults to circlesRpcUrl if not provided */
+  chainRpcUrl?: string;
+};
 
 export const chiadoConfig: { production: CirclesConfig; rings: CirclesConfig } =
   {

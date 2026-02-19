@@ -13,8 +13,9 @@
 
   interface Props {
     item: TokenBalance;
+    onclick?: () => void;
   }
-  let { item }: Props = $props();
+  let { item, onclick: onClickProp }: Props = $props();
 
   type RowAction = {
     condition: (b: TokenBalance) => boolean;
@@ -74,6 +75,7 @@
   const dispatch = createEventDispatcher<{ click: void }>();
   function onClick() {
     dispatch('click');
+    onClickProp?.();
   }
 </script>
 
@@ -82,7 +84,7 @@
   noLeading={true}
   clickable={true}
   className="balance-row"
-  on:click={onClick}
+  onclick={onClick}
 >
   <!-- CONTENT (old layout preserved) -->
   <div class="w-full flex items-center justify-between">

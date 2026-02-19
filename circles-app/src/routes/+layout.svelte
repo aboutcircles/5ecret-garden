@@ -86,7 +86,7 @@ import { connectionStatus } from '$lib/shared/state/connectionStatus.svelte';
 
   let menuItems: { name: string; link: string }[] = $state([]);
 
-  onMount(async () => {
+  onMount(() => {
     // Global handler for uncaught promise rejections (e.g., SDK WebSocket errors)
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       const error = event.reason;
@@ -111,7 +111,7 @@ import { connectionStatus } from '$lib/shared/state/connectionStatus.svelte';
       $page.route.id !== '/connect-wallet/connect-safe' &&
       $page.route.id !== '/connect-wallet/import-circles-garden'
     ) {
-      await restoreSession();
+      void restoreSession();
     }
 
     return () => {

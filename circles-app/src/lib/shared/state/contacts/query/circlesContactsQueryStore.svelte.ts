@@ -2,10 +2,10 @@ import { createCirclesQueryStore } from '$lib/shared/state/query';
 import { circles } from '$lib/shared/state/circles';
 import type { CirclesEventType } from '@aboutcircles/sdk-rpc';
 import type {
-  TrustRelationRow,
+  AggregatedTrustRelation,
   EventRow,
   CirclesQuery,
-  AvatarRow,
+  AvatarInfo,
 } from '@aboutcircles/sdk-types';
 import type { ContactList } from '$lib/shared/state/contacts';
 import { getProfilesCoreBatch, type ProfileAddress } from '$lib/shared/model/profile';
@@ -31,48 +31,27 @@ export async function createContactsQueryStore(
   const createContactsQuery = async (): Promise<
     CirclesQuery<ContactEventRow>
   > => {
-    const query = {
-      currentPage: undefined,
-      mutable: true,
-      params: {},
-      rpc: sdk.data.rpc,
-      _calculatedColumns: [],
-      buildCursorFilter: () => [],
-      buildOrderBy: () => [],
-      combineFilters: () => [],
-      request: async () => ({ rows: [] }),
-      rowsToObjects: (rows: any[]) => rows as ContactEventRow[],
-      rowToCursor: () => '',
-      getFirstAndLastCursor: () => ({ first: '', last: '' }),
-      getSingleRow: async () => undefined,
-      async queryNextPage(
-        this: CirclesQuery<ContactEventRow>
-      ): Promise<boolean> {
-        if (this.currentPage && this.currentPage.results?.length > 0) {
-          (this as any).currentPage = {
-            results: [],
-            hasMore: false,
-          };
-          return false;
-        }
+    const contacts = await trustDataSource.getAggregatedTrustRelations(address);
+    const enrichedContacts = await enrichContactData(contacts, address, sdk);
 
-        const contacts = await trustDataSource.getAggregatedTrustRelations(address);
-        const enrichedContacts = await enrichContactData(contacts, address, sdk);
+    const contactEventRow: ContactEventRow = {
+      blockNumber: Date.now(),
+      transactionIndex: 0,
+      logIndex: 0,
+      data: enrichedContacts,
+    };
 
-        const contactEventRow: ContactEventRow = {
-          blockNumber: Date.now(),
-          transactionIndex: 0,
-          logIndex: 0,
-          data: enrichedContacts,
-        };
-
-        (this as any).currentPage = {
-          results: [contactEventRow],
+    const query: CirclesQuery<ContactEventRow> = {
+      rows: [contactEventRow],
+      hasMore: false,
+      async nextPage(): Promise<CirclesQuery<ContactEventRow>> {
+        return {
+          rows: [],
           hasMore: false,
-        };
-        return false;
+          nextPage: async () => this,
+        } as CirclesQuery<ContactEventRow>;
       },
-    } as unknown as CirclesQuery<ContactEventRow>;
+    };
     return query;
   };
 
@@ -102,7 +81,7 @@ export async function createContactsQueryStore(
 }
 
 async function enrichContactData(
-  rows: TrustRelationRow[],
+  rows: AggregatedTrustRelation[],
   ownerAddress: Address | undefined,
   sdk: Sdk
 ): Promise<ContactList> {
@@ -130,9 +109,11 @@ async function enrichContactData(
   const avatarInfos = await avatarDataSource.getAvatarInfoBatch(
     Object.keys(profileRecord) as Address[]
   );
-  const avatarInfoRecord: Record<string, AvatarRow> = {};
+  const avatarInfoRecord: Record<string, AvatarInfo> = {};
   avatarInfos.forEach((info) => {
-    avatarInfoRecord[info.avatar] = info;
+    if (info) {
+      avatarInfoRecord[info.avatar] = info;
+    }
   });
 
   Object.values(profileRecord).forEach((item) => {

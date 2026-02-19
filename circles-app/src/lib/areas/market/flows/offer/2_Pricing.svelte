@@ -67,7 +67,7 @@
 
   async function loadMyGatewaysFor(owner: Address): Promise<void> {
     const c = get(circles);
-    if (!owner || !c?.circlesRpc) {
+    if (!owner || !c?.rpc) {
       gateways = [];
       return;
     }

@@ -20,6 +20,13 @@ export function isValidSymbol(symbol: string): boolean {
   return validChars.test(symbol);
 }
 
+export function isValidOnChainName(name: string): boolean {
+  if (!name || name.trim().length === 0) return false;
+  if (Buffer.byteLength(name, 'utf8') > 32) return false;
+  const validChars = /^[0-9A-Za-z \-\_\.\(\)\'\&\+\#]+$/;
+  return validChars.test(name);
+}
+
 export function sanitizeText(input: string): string {
   return input
     .replace(/\\n/g, '\n')

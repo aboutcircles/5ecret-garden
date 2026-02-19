@@ -5,8 +5,8 @@
   import ProfilePage from '$lib/areas/profile/ui/pages/Profile.svelte';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { circles } from '$lib/shared/state/circles';
-  import type { Address, TrustRelationInfo } from '@aboutcircles/sdk-types';
-  import { getAggregatedTrustRelationsEnriched } from '$lib/shared/utils/sdkHelpers';
+  import type { Address } from '@aboutcircles/sdk-types';
+  import { getAggregatedTrustRelationsEnriched, type TrustRelationInfo } from '$lib/shared/utils/sdkHelpers';
 
   interface Props {
     otherAvatarAddress?: Address;
@@ -40,8 +40,8 @@
 
       // Combine mutual + trusts (outgoing trust) for "good" relations
       // SDK may return undefined instead of empty arrays
-      let myTrusted = [...(mine.mutual || []), ...(mine.trusts || [])];
-      let theirTrusted = [...(theirs.mutual || []), ...(theirs.trusts || [])];
+      let myTrusted = (mine.results || []).filter((r: any) => r.relationType === 'mutual' || r.relationType === 'trusts');
+      let theirTrusted = (theirs.results || []).filter((r: any) => r.relationType === 'mutual' || r.relationType === 'trusts');
 
       // Fallback: If enriched returns empty but user has trust relations (known backend bug)
       if (myTrusted.length === 0 && avatarState.avatar?.trust?.getAll) {
@@ -51,7 +51,7 @@
           if (myFallback && myFallback.length > 0) {
             myTrusted = myFallback
               .filter((r: any) => r.relation === 'mutuallyTrusts' || r.relation === 'trusts')
-              .map((r: any) => ({ address: r.objectAvatar as Address }));
+              .map((r: any) => ({ address: r.objectAvatar as Address, relationType: r.relation === 'mutuallyTrusts' ? 'mutual' as const : 'trusts' as const }));
             console.log('[CommonConnections] Fallback for me:', myTrusted.length);
           }
         } catch (e) {
@@ -69,7 +69,7 @@
             if (theirFallback && theirFallback.length > 0) {
               theirTrusted = theirFallback
                 .filter((r: any) => r.relation === 'mutuallyTrusts' || r.relation === 'trusts')
-                .map((r: any) => ({ address: r.objectAvatar as Address }));
+                .map((r: any) => ({ address: r.objectAvatar as Address, relationType: r.relation === 'mutuallyTrusts' ? 'mutual' as const : 'trusts' as const }));
               console.log('[CommonConnections] Fallback for other:', theirTrusted.length);
             }
           }
@@ -138,14 +138,16 @@
         clickable={true}
         dense={true}
         noLeading={true}
-        on:click={() => openProfile(relation.address)}
+        onclick={() => openProfile(relation.address)}
       >
         <div class="min-w-0">
           <Avatar address={relation.address} view="horizontal" clickable={false} />
         </div>
-        <div slot="trailing" aria-hidden="true">
-          <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" />
-        </div>
+        {#snippet trailing()}
+          <div aria-hidden="true">
+            <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" />
+          </div>
+        {/snippet}
       </RowFrame>
     {/each}
   </div>

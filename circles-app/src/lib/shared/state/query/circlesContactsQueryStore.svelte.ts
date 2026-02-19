@@ -6,8 +6,15 @@ import type {
   CirclesQuery,
   AvatarInfo,
   AggregatedTrustRelation,
-  TrustRelationInfo,
 } from '@aboutcircles/sdk-types';
+
+// TrustRelationInfo from AggregatedTrustRelationsResponse.results
+// Inlined to work around module resolution issues with file: linked SDK packages
+interface TrustRelationInfo {
+  address: `0x${string}`;
+  avatarInfo?: AvatarInfo;
+  relationType: 'mutual' | 'trusts' | 'trustedBy';
+}
 import type { ContactList } from '$lib/shared/state/contacts/contacts';
 import { getProfile, getCachedAvatarInfo } from '$lib/shared/data/profile/profile';
 import { get } from 'svelte/store';
@@ -59,9 +66,8 @@ export async function createContactsQueryStore(
       console.log(`[Contacts] RPC call completed in ${(performance.now() - rpcStartTime).toFixed(0)}ms`);
 
       // DEBUG: If enriched returns empty, check if fallback has data (to detect backend bug)
-      const enrichedTotal = (enrichedRelations.mutual?.length ?? 0) +
-                           (enrichedRelations.trusts?.length ?? 0) +
-                           (enrichedRelations.trustedBy?.length ?? 0);
+      const allResults = enrichedRelations.results ?? [];
+      const enrichedTotal = allResults.length;
       if (enrichedTotal === 0 && avatar && typeof avatar.trust?.getAll === 'function') {
         console.log('[Contacts] DEBUG: Enriched returned 0, checking fallback for comparison...');
         try {
@@ -89,19 +95,23 @@ export async function createContactsQueryStore(
       }
 
       // Convert TrustRelationInfo arrays to AggregatedTrustRelation format
-      // Categories: mutual (both trust each other), trusts (you trust them), trustedBy (they trust you)
+      // The response has a flat results array with relationType on each item
+      const mutualInfos = allResults.filter((r) => r.relationType === 'mutual');
+      const trustsInfos = allResults.filter((r) => r.relationType === 'trusts');
+      const trustedByInfos = allResults.filter((r) => r.relationType === 'trustedBy');
+
       const mutualRelations = adaptTrustRelationInfosToAggregated(
-        enrichedRelations.mutual || [],
+        mutualInfos,
         'mutuallyTrusts',
         avatarAddress
       );
       const trustsRelations = adaptTrustRelationInfosToAggregated(
-        enrichedRelations.trusts || [],
+        trustsInfos,
         'trusts',
         avatarAddress
       );
       const trustedByRelations = adaptTrustRelationInfosToAggregated(
-        enrichedRelations.trustedBy || [],
+        trustedByInfos,
         'trustedBy',
         avatarAddress
       );

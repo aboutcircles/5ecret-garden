@@ -90,7 +90,7 @@
     try {
       const avatar = (
         (avatarState.avatar as any)?.address ??
-        (avatarState.avatar as any)?.avatarInfo?.avatar ??
+        (avatarState.avatar as any)?.avatarInfo?.address ??
         ''
       ).toLowerCase();
 
@@ -106,7 +106,7 @@
     }
   }
 
-  const actions: Action[] = $derived([
+  const pageActions: Action[] = $derived([
     {
       id: 'signin',
       label: authed ? 'Signed in' : 'Sign in to view sales',
@@ -149,16 +149,16 @@
     Orders you received as a seller
   {/snippet}
 
-  {#snippet headerActions()}
-    <ActionButtonBar {actions} />
+  {#snippet actions()}
+    <ActionButtonBar actions={pageActions} />
   {/snippet}
 
-  {#snippet collapsedLeft()}
+  {#snippet collapsed_left()}
     <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">Sales</span>
   {/snippet}
 
-  {#snippet collapsedMenu()}
-    <ActionButtonDropDown {actions} />
+  {#snippet collapsed_menu()}
+    <ActionButtonDropDown actions={pageActions} />
   {/snippet}
 
   <section class="bg-base-100 border border-base-300 rounded-xl p-3 md:p-4">

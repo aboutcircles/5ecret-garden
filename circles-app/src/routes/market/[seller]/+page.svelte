@@ -14,7 +14,7 @@
     import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/shared/ui/shell/actions';
-    import {gnosisConfig} from "$lib/shared/config/circles";
+    import {gnosisMarketConfig} from "$lib/shared/config/market";
 
 
     // Derive seller address from SvelteKit's $page store
@@ -22,7 +22,7 @@
 
     // Current connected avatar (lowercased for comparison)
     const currentAvatar = $derived(
-      (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '').toLowerCase()
+      (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.address ?? '').toLowerCase()
     );
 
     // Seller from route params, lowercased
@@ -57,7 +57,7 @@
         const normalized = normalizeAddress(params.seller);
         sellerAddress = normalized as `0x${string}`;
 
-        const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
+        const catalog = getMarketClient().catalog.forOperator(gnosisMarketConfig.marketOperator);
         const items = await catalog.fetchSellerCatalog(normalized);
         // fetchSellerCatalog already filters by seller, but keep this defensive filter
         products = items.filter(
@@ -80,12 +80,12 @@
       openFlowPopup({
         title: 'Create Offer',
         component: OfferStep1,
-        props: { context: { operator: gnosisConfig.production.marketOperator, pinApiBase: gnosisConfig.production.marketApiBase } },
+        props: { context: { operator: gnosisMarketConfig.marketOperator, pinApiBase: gnosisMarketConfig.marketApiBase } },
         onClose: () => { void loadSellerCatalog(); }
       });
     }
 
-    const actions: Action[] = [
+    const pageActions: Action[] = [
       // { id: 'create-offer', label: 'Create Listing', variant: 'primary', onClick: openCreateListing }
     ];
 
@@ -113,19 +113,19 @@
         {/if}
     {/snippet}
 
-    {#snippet headerActions()}
-        <ActionButtonBar {actions} />
+    {#snippet actions()}
+        <ActionButtonBar actions={pageActions} />
     {/snippet}
 
     <!-- Collapsed summary -->
-    {#snippet collapsedLeft()}
+    {#snippet collapsed_left()}
         <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">
       Seller Profile
     </span>
     {/snippet}
 
-    {#snippet collapsedMenu()}
-        <ActionButtonDropDown {actions} />
+    {#snippet collapsed_menu()}
+        <ActionButtonDropDown actions={pageActions} />
     {/snippet}
 
     <!-- Seller Profile Section -->

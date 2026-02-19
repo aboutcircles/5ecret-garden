@@ -14,11 +14,23 @@ export type BasketLine = {
   imageUrl?: unknown;
 };
 
+export type PostalAddress = {
+  streetAddress?: string;
+  postalCode?: string;
+  addressLocality?: string;
+  addressCountry?: string;
+};
+
 export type Basket = {
   basketId?: string;
   buyer?: string;
   status?: string;
   items?: BasketLine[];
+  shippingAddress?: PostalAddress;
+  billingAddress?: PostalAddress;
+  contactPoint?: { email?: string; telephone?: string };
+  ageProof?: unknown;
+  requirements?: { shippingAddress?: boolean; billingAddress?: boolean; contactPoint?: boolean; ageProof?: boolean };
 };
 
 export type CartState = {

@@ -65,9 +65,9 @@
     <ConnectCircles
       address={legacy.address}
       isRegistered={legacy.isRegistered}
-      isV1={legacy.isV1}
       groups={legacy.groups}
       initSdk={legacy.initSdk}
+      sdk={sdk as Sdk}
       refreshGroupsCallback={legacy.refreshGroupsCallback}
     />
   {:else if safeOwnerAddress && sdk && initSdk}
@@ -75,7 +75,6 @@
       safeOwnerAddress={safeOwnerAddress}
       initSdk={initSdk}
       sdk={sdk}
-      safeCreationMode={safeCreationMode}
       refreshGroupsCallback={refreshGroupsCallback}
     />
   {/if}

@@ -35,7 +35,7 @@
     type OdooProductListItem,
     type CodeProductListItem,
   } from '$lib/areas/admin/services/gateway/adminClient';
-  import { gnosisConfig } from '$lib/shared/config/circles';
+  import { gnosisMarketConfig } from '$lib/shared/config/market';
   import type { Address } from '@aboutcircles/sdk-types';
   import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
   import AdminSectionCard from '$lib/areas/admin/components/AdminSectionCard.svelte';
@@ -93,7 +93,7 @@
     authError = null;
 
     try {
-      const avatar = (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '') as Address | '';
+      const avatar = (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.address ?? '') as Address | '';
       if (!avatar) {
         throw new Error('No avatar connected');
       }
@@ -102,7 +102,7 @@
         name: 'Signing in as admin...',
         promise: signInAdminWithSafe({
           avatar: avatar.toLowerCase() as Address,
-          chainId: gnosisConfig.production.marketChainId,
+          chainId: gnosisMarketConfig.marketChainId,
         }),
       });
 
@@ -212,7 +212,7 @@
         mode: 'product',
         onCancel: () => popupControls.close(),
         onDisable: product ? async () => handleDisableProduct(product) : undefined,
-        onSubmit: async (payload) => {
+        onSubmit: async (payload: any) => {
           await saveProduct(payload, product ?? null);
         },
       },
@@ -227,7 +227,7 @@
       props: {
         connections: odooConnections,
         existingProducts: unifiedProducts,
-        onExecute: async (payload) => {
+        onExecute: async (payload: any) => {
           await saveProduct(payload, null);
         },
         onCreateConnection: createConnectionInFlow,
@@ -242,7 +242,7 @@
         title: 'New Odoo connection',
         component: AdminNewConnectionSellerStep,
         props: {
-          onCreate: async (payload) => {
+          onCreate: async (payload: any) => {
             await saveConnection(payload);
           },
         },
@@ -261,7 +261,7 @@
         mode: 'connection',
         onCancel: () => popupControls.close(),
         onDisable: async () => handleDisableConnection(connection),
-        onSubmit: async (payload) => {
+        onSubmit: async (payload: any) => {
           await saveConnection(payload);
         },
       },
@@ -402,17 +402,16 @@
     <span class="text-sm opacity-70">Unified product configuration for the Market API</span>
   {/snippet}
 
-  {#snippet headerActions()}
+  {#snippet actions()}
     {#if !adminUser}
       <ActionButton
         action={connectAdminWallet}
-        loading={authLoading}
-        variant="primary"
+        disabled={authLoading}
       >
         {authLoading ? 'Connecting...' : 'Login'}
       </ActionButton>
     {:else}
-      <ActionButton action={disconnectAdmin} variant="ghost" size="sm">
+      <ActionButton action={() => Promise.resolve(disconnectAdmin())}>
         Disconnect
       </ActionButton>
     {/if}

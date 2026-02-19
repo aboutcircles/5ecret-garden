@@ -24,12 +24,10 @@
             if (!$circles || !me || !other) { loading = false; commonConnectionsCount = 0; return; }
 
             const sdk = get(circles);
-            if (!sdk?.circlesRpc) {
+            if (!sdk?.rpc) {
                 throw new Error('No circles RPC available');
             }
-            const resp = await sdk.circlesRpc.call<Address[]>('circles_getCommonTrust', [me, other]);
-            const list = (resp.result ?? [])
-                .map((addr) => addr as Address)
+            const list = (await sdk.rpc.trust.getCommonTrust(me, other))
                 .filter((addr) => addr !== me && addr !== other)
                 .sort((a, b) => a.localeCompare(b));
 

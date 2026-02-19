@@ -217,7 +217,7 @@
   };
 
   // Keep actions lean: filter moved next to the title
-  const actions: Action[] = [
+  const pageActions: Action[] = [
     {
       id: 'add',
       label: addLabel,
@@ -245,7 +245,7 @@
   headerTopGapClass="mt-4 md:mt-6"
   collapsedTopGapClass="mt-3 md:mt-4"
 >
-  <svelte:fragment slot="title">
+  {#snippet title()}
     <div class="flex items-center gap-2">
       <h1 class="h2 m-0">{titleText}</h1>
       {#if !avatarState.isGroup}
@@ -267,15 +267,15 @@
         </button>
       {/if}
     </div>
-  </svelte:fragment>
+  {/snippet}
 
-  <svelte:fragment slot="meta">
+  {#snippet meta()}
     {$filteredStore.data.length}
     {countLabel}
-  </svelte:fragment>
+  {/snippet}
 
-  <svelte:fragment slot="actions">
-    {#each actions as a (a.id)}
+  {#snippet actions()}
+    {#each pageActions as a (a.id)}
       <button
         type="button"
         class={`btn btn-sm ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'}`}
@@ -292,19 +292,19 @@
         <span>{a.label}</span>
       </button>
     {/each}
-  </svelte:fragment>
+  {/snippet}
 
-  <svelte:fragment slot="collapsed-left">
+  {#snippet collapsed_left()}
     <div class="truncate flex items-center gap-2">
       <span class="font-medium">{titleText}</span>
       <span class="text-sm text-base-content/60"
         >{$filteredStore.data.length} {countLabel}</span
       >
     </div>
-  </svelte:fragment>
+  {/snippet}
 
-  <svelte:fragment slot="collapsed-menu">
-    {#each actions as a (a.id)}
+  {#snippet collapsed_menu()}
+    {#each pageActions as a (a.id)}
       <button
         type="button"
         class={`btn ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'} min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3`}
@@ -321,7 +321,7 @@
         <span>{a.label}</span>
       </button>
     {/each}
-  </svelte:fragment>
+  {/snippet}
 
   {#if $showFilters}
     <div id={FILTER_PANEL_ID} class="mt-3 mb-3 space-y-3">

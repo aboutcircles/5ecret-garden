@@ -3,7 +3,7 @@
   import { circles } from '$lib/shared/state/circles';
   import { Sdk } from '@aboutcircles/sdk';
   import { goto } from '$app/navigation';
-  import Avatar from './avatar/Avatar.svelte';
+  import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import type { Address } from '@aboutcircles/sdk-types';
   import { CirclesStorage } from '$lib/shared/utils/storage';
   import type { GroupRow } from '@aboutcircles/sdk-types';

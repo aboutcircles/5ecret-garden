@@ -3,7 +3,7 @@
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import ImageUpload from '$lib/shared/ui/profile/components/ImageUpload.svelte';
   import type { AppProfile as Profile } from '$lib/shared/model/profile';
-  import { normalizeMarkdownInput, sanitizeText } from '$lib/shared/utils/isValid';
+  import { sanitizeText } from '$lib/shared/utils/isValid';
 
   interface Props {
     profile: Profile;
@@ -22,7 +22,7 @@
   };
 
   $effect(() => {
-    profile.name = sanitizeText(profile.name);
+    profile.name = sanitizeText(profile.name ?? '');
   });
 </script>
 
@@ -30,13 +30,13 @@
   {#if avatarState.avatar}
     <label class="form-control">
       <span class="label-text">Circles address</span>
-      <input type="text" readonly class="input input-bordered w-full" value={avatarState.avatar?.avatarInfo?.avatar} />
+      <input type="text" readonly class="input input-bordered w-full" value={avatarState.avatar?.avatarInfo?.address} />
     </label>
 
-    {#if avatarState.avatar?.avatarInfo?.v1Token && !avatarState.avatar?.avatarInfo?.v1Stopped}
+    {#if (avatarState.avatar?.avatarInfo as any)?.v1Token && !(avatarState.avatar?.avatarInfo as any)?.v1Stopped}
       <label class="form-control">
         <span class="label-text">Token address</span>
-        <input type="text" readonly class="input input-bordered w-full" value={avatarState.avatar.avatarInfo.v1Token} />
+        <input type="text" readonly class="input input-bordered w-full" value={(avatarState.avatar?.avatarInfo as any)?.v1Token} />
       </label>
     {/if}
   {/if}
