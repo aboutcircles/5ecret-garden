@@ -6,7 +6,7 @@
 
   let { page, isVisible }: Props = $props();
 
-  let context = $state(page.props?.context);
+  let context = $state<any>(undefined);
 
   // Keep context in sync with page.props.context
   $effect(() => {

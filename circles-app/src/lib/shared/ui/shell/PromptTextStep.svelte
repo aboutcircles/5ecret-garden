@@ -21,6 +21,7 @@
     onCancel,
   }: Props = $props();
 
+  // svelte-ignore state_referenced_locally
   let value = $state(initialValue);
   const error = $derived(validate?.(value) ?? null);
 

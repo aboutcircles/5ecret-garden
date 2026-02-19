@@ -32,6 +32,7 @@
   interface Props { context: OfferFlowContext; }
   let { context }: Props = $props();
 
+  // svelte-ignore state_referenced_locally
   let selectedGateway: string = $state((context.draft?.paymentGateway ?? '') as string);
   $effect(() => { selectedGateway = (context.draft?.paymentGateway ?? '') as string; });
 

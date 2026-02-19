@@ -21,6 +21,7 @@
 
   let { context, setGroup }: Props = $props();
 
+  // svelte-ignore state_referenced_locally
   let ctx: CreateGroupFlowContext = $state(context ?? $createGroupContext);
 
   function extractAddressFromTopic(topic: string | undefined): string | null {
