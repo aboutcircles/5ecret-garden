@@ -60,6 +60,7 @@
 
 <div
   data-holder-row
+  data-row-address={item.avatar}
   tabindex={0}
   role="button"
   aria-label={`Open holder ${item.avatar}`}

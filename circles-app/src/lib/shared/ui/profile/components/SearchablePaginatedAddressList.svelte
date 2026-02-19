@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onDestroy } from 'svelte';
     import type { Component } from 'svelte';
     import SearchablePaginatedList from '$lib/shared/ui/lists/SearchablePaginatedList.svelte';
     import AvatarRowPlaceholder from '$lib/shared/ui/lists/placeholders/AvatarRowPlaceholder.svelte';
@@ -6,6 +7,7 @@
     import type { Address } from '@circles-sdk/utils';
     import type { Readable } from 'svelte/store';
     import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
+    import { popupState } from '$lib/shared/state/popup';
 
     interface Props {
         addresses: Readable<Address[]>;
@@ -38,6 +40,41 @@
     const onInputArrowDown = createListInputArrowDownHandler({
         getScope: () => listScopeEl,
         rowSelector: '[data-trust-relation-row]'
+    });
+
+    let lastFocusedAddress = $state<string | null>(null);
+
+    function captureFocusedRowAddress(): void {
+        if (!listScopeEl || typeof document === 'undefined') return;
+        const active = document.activeElement as HTMLElement | null;
+        const row = active?.closest<HTMLElement>('[data-trust-relation-row][data-row-address]');
+        const inScope = !!row && listScopeEl.contains(row);
+        if (!inScope) return;
+        const addr = row?.dataset.rowAddress;
+        if (addr) lastFocusedAddress = addr;
+    }
+
+    let previousPopupDepth = $state(0);
+    const unsubscribePopup = popupState.subscribe((state) => {
+        const depth = state.content ? state.stack.length + 1 : 0;
+
+        if (depth > previousPopupDepth) {
+            captureFocusedRowAddress();
+        }
+
+        if (depth < previousPopupDepth && lastFocusedAddress && listScopeEl) {
+            requestAnimationFrame(() => {
+                if (!listScopeEl) return;
+                const row = listScopeEl.querySelector<HTMLElement>(`[data-trust-relation-row][data-row-address="${lastFocusedAddress}"]`);
+                row?.focus({ preventScroll: true });
+            });
+        }
+
+        previousPopupDepth = depth;
+    });
+
+    onDestroy(() => {
+        unsubscribePopup();
     });
 </script>
 
