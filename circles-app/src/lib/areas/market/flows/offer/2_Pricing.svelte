@@ -22,13 +22,16 @@
   interface Props { context: OfferFlowContext; }
   let { context }: Props = $props();
 
+  // svelte-ignore state_referenced_locally
   let price            = $state(context.draft?.price ?? 0);
   // Currency is fixed to CRC for this marketplace; keep state for draft but do not expose input
   let priceCurrency    = $state('CRC');
+  // svelte-ignore state_referenced_locally
   let availableDeliveryMethod = $state(context.draft?.availableDeliveryMethod ?? '');
   // Collapsible toggle for Checkout requirements
   let showRequirements = $state(false);
   // Offer-driven basket requirements (requiredSlots)
+  // svelte-ignore state_referenced_locally
   const slotState = $state<Record<string, boolean>>(deriveRequiredSlotsState(context.draft?.requiredSlots));
 
   function isChecked(key: string): boolean {
@@ -63,6 +66,7 @@
   // Payment gateway selection state
   let loadingGateways: boolean = $state(false);
   let gateways: string[] = $state([]);
+  // svelte-ignore state_referenced_locally
   let selectedGateway: string = $state((context.draft?.paymentGateway as string) ?? '');
 
   async function loadMyGatewaysFor(owner: Address): Promise<void> {

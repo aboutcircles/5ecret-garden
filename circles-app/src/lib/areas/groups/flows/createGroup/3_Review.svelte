@@ -17,6 +17,7 @@
 
   let { context, setGroup }: Props = $props();
 
+  // svelte-ignore state_referenced_locally
   let ctx: CreateGroupFlowContext = $state(context ?? $createGroupContext);
 
   const hasImage: boolean = $derived(

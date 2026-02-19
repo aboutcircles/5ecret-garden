@@ -186,7 +186,7 @@
   }
 
   // Reactive selected via store for children
-  const selectedStore = writable<string | null>(active);
+  const selectedStore = writable<string | null>(null);
   $effect(() => {
     selectedStore.set(active);
   });
@@ -205,7 +205,7 @@
     isSelected,
     select,
     selected$: selectedStore as Readable<string | null>,
-    hostId: id,
+    get hostId() { return id; },
   };
   setContext(TABS_CTX, ctx);
 

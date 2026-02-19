@@ -21,6 +21,7 @@
 
   let { context, connections, existingProducts, onExecute, onCreateConnection }: Props = $props();
 
+  // svelte-ignore state_referenced_locally
   let selectedType = $state<Exclude<'odoo' | 'codedispenser' | 'route', 'route'>>(
     (context.selectedType as any) ?? 'codedispenser'
   );

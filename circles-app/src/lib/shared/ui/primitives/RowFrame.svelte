@@ -37,7 +37,7 @@
     children,
   }: Props = $props();
 
-  let el: HTMLElement;
+  let el: HTMLElement | null = $state(null);
 
   function handleKeydown(e: KeyboardEvent): void {
     const isInteractive: boolean = clickable && !disabled;

@@ -11,3 +11,9 @@ vite.config.ts.timestamp-*
 
 # TypeScript compilation artifacts (IDE generated)
 src/**/*.js
+
+# Playwright MCP artifacts
+.playwright-mcp/
+
+# Smoke test screenshots
+smoke-test-*.png

@@ -36,10 +36,14 @@
   }: Props = $props();
 
   const chainId = 100;
+  // svelte-ignore state_referenced_locally
   let seller: string = $state(product?.seller ?? connection?.seller ?? '');
+  // svelte-ignore state_referenced_locally
   let sku: string = $state(product?.sku ?? '');
 
+  // svelte-ignore state_referenced_locally
   let odooProductCode: string = $state(product?.odoo?.odooProductCode ?? '');
+  // svelte-ignore state_referenced_locally
   let selectedConnectionKey: string = $state(
     connection
       ? `${chainId}:${connection.seller.toLowerCase()}`
@@ -47,14 +51,22 @@
         ? `${chainId}:${product.seller.toLowerCase()}`
         : ''
   );
+  // svelte-ignore state_referenced_locally
   let odooUrl: string = $state(connection?.odooUrl ?? '');
+  // svelte-ignore state_referenced_locally
   let odooDb: string = $state(connection?.odooDb ?? '');
+  // svelte-ignore state_referenced_locally
   let odooUid: number = $state(connection?.odooUid ?? 0);
   let odooKey: string = $state('');
+  // svelte-ignore state_referenced_locally
   let salePartnerId: number | null = $state(connection?.salePartnerId ?? null);
+  // svelte-ignore state_referenced_locally
   let jsonrpcTimeoutMs: number = $state(connection?.jsonrpcTimeoutMs ?? 30000);
+  // svelte-ignore state_referenced_locally
   let fulfillInheritRequestAbort: boolean = $state(connection?.fulfillInheritRequestAbort ?? false);
+  // svelte-ignore state_referenced_locally
   let odooEnabled: boolean = $state(product?.odoo?.enabled ?? true);
+  // svelte-ignore state_referenced_locally
   let connectionEnabled: boolean = $state(connection?.enabled ?? true);
 
   let saving = $state(false);

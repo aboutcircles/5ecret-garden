@@ -393,8 +393,8 @@
                 style={`transform: translateY(${vr.top}px); height: ${rowHeight}px`}
             >
                 {#if vr.kind === 'item'}
+                    {@const Row = row}
                     <div data-list-row>
-                        {@const Row = row}
                         <Row item={vr.item} />
                     </div>
                 {:else}

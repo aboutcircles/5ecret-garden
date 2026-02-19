@@ -15,7 +15,9 @@
 
   let { context }: Props = $props();
 
+  // svelte-ignore state_referenced_locally
   if (context.amount === undefined) {
+    // svelte-ignore state_referenced_locally
     context.amount = 0;
   }
 

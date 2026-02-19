@@ -21,7 +21,9 @@
   let { context, setGroup }: Props = $props();
 
   // Fallback to store if no explicit context is provided
+  // svelte-ignore state_referenced_locally
   let ctx: CreateGroupFlowContext = $state(context ?? $createGroupContext);
+  // svelte-ignore state_referenced_locally
   let initialConditionsStr: string = $state(
     (ctx.initialConditions ?? []).join(', ')
   );
