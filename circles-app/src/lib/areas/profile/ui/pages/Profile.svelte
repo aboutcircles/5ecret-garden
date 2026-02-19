@@ -613,8 +613,9 @@
         {#if otherAvatar?.type === 'CrcV2_RegisterGroup'}
             <button
                     onclick={() => {
-                    goto('/groups/metrics/' + address);
-                    popupControls.close();
+                    popupControls.closeAndThen(() => {
+                        void goto('/groups/metrics/' + address);
+                    });
                 }}
                     class="inline-flex items-center justify-center w-8 h-8 bg-base-200 border-none rounded-lg"
             >

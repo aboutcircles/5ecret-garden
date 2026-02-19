@@ -12,8 +12,9 @@
     CirclesStorage.getInstance().data = {
       privateKey: privateKey,
     };
-    popupControls.close();
-    goto('/connect-wallet/import-circles-garden');
+    popupControls.closeAndThen(() => {
+      void goto('/connect-wallet/import-circles-garden');
+    });
   }
 </script>
 
