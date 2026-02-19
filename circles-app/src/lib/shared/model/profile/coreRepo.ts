@@ -7,6 +7,7 @@ import { FallbackImageUrl } from './types';
 import { shortenAddress } from '$lib/shared/utils/shared';
 import { createAvatarDataSource } from '$lib/shared/data/circles/avatarDataSource';
 import { createProfileDataSource } from '$lib/shared/data/circles/profileDataSource';
+import type { CirclesConfig } from '$lib/shared/config/circles';
 
 // Cache of lowercased address -> Promise<AppProfileCore>
 const coreCache = new Map<ProfileAddress, Promise<AppProfileCore>>();
@@ -155,7 +156,7 @@ export async function getProfileCore(address: ProfileAddress): Promise<AppProfil
   }
   if (sdk) {
     const hub = sdk.circlesConfig?.v2HubAddress?.toLowerCase();
-    const migration = (sdk.circlesConfig as any)?.migrationAddress?.toLowerCase();
+    const migration = (sdk.circlesConfig as CirclesConfig)?.migrationAddress?.toLowerCase();
     if (addr === hub) return { name: 'Circles V2 Hub Contract', previewImageUrl: FallbackImageUrl.Logo };
     if (addr === migration) return { name: 'Circles V2 Migration Contract', previewImageUrl: FallbackImageUrl.Logo };
   }

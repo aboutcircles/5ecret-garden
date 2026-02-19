@@ -1,13 +1,11 @@
 import type { CirclesConfig as BaseCirclesConfig } from '@aboutcircles/sdk-types';
 
 /**
- * Extended config type that includes chainRpcUrl.
- * The local linked sdk-types has this field, but the published 0.1.5 does not.
- * This type bridges the gap so the config compiles against either version.
+ * Extended config that adds app-specific fields not in the SDK type.
  */
 export type CirclesConfig = BaseCirclesConfig & {
-  /** RPC URL for direct chain calls (eth_call, etc). Defaults to circlesRpcUrl if not provided */
-  chainRpcUrl?: string;
+  /** V1→V2 migration contract address (for display labels in transaction history) */
+  migrationAddress?: string;
 };
 
 export const chiadoConfig: { production: CirclesConfig; rings: CirclesConfig } =
@@ -28,6 +26,7 @@ export const chiadoConfig: { production: CirclesConfig; rings: CirclesConfig } =
       invitationEscrowAddress: '0x0000000000000000000000000000000000000000',
       invitationFarmAddress: '0x0000000000000000000000000000000000000000',
       referralsModuleAddress: '0x0000000000000000000000000000000000000000',
+      migrationAddress: '0xD44B8dcFBaDfC78EA64c55B705BFc68199B56376',
     },
     // rings are not deployed on chiado yet
     rings: {
@@ -46,6 +45,7 @@ export const chiadoConfig: { production: CirclesConfig; rings: CirclesConfig } =
       invitationEscrowAddress: '0x0000000000000000000000000000000000000000',
       invitationFarmAddress: '0x0000000000000000000000000000000000000000',
       referralsModuleAddress: '0x0000000000000000000000000000000000000000',
+      migrationAddress: '0x28141b6743c8569Ad8B20Ac09046Ba26F9Fb1c90',
     },
   };
 
@@ -70,6 +70,7 @@ export const gnosisConfig: { production: CirclesConfig; rings: CirclesConfig } =
       invitationEscrowAddress: '0x8F8B74fa13eaaff4176D061a0F98ad5c8E19c903',
       invitationFarmAddress: '0xd28b7C4f148B1F1E190840A1f7A796C5525D8902',
       referralsModuleAddress: '0x12105a9B291aF2ABb0591001155A75949b062CE5',
+      migrationAddress: '0x12E815963A0b910288C7256CAD0d345c8F5db08E',
     },
     rings: {
       circlesRpcUrl:
@@ -90,5 +91,6 @@ export const gnosisConfig: { production: CirclesConfig; rings: CirclesConfig } =
       invitationEscrowAddress: '0x0000000000000000000000000000000000000000',
       invitationFarmAddress: '0x0000000000000000000000000000000000000000',
       referralsModuleAddress: '0x0000000000000000000000000000000000000000',
+      migrationAddress: '0x12E815963A0b910288C7256CAD0d345c8F5db08E',
     },
   };
