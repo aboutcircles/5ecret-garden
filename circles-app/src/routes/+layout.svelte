@@ -14,7 +14,12 @@
   import { page } from '$app/stores';
   import { onDestroy, onMount } from 'svelte';
   import { tasks } from '$lib/shared/utils/tasks';
-  import { initPopupHistorySync, openFlowPopup, popupControls } from '$lib/shared/state/popup';
+  import {
+    initPopupHistorySync,
+    openFlowPopup,
+    popupControls,
+    popupHistoryForwardNoopTick,
+  } from '$lib/shared/state/popup';
   import Popup from '$lib/shared/ui/shell/PopupHost.svelte';
   import { initTransactionHistoryStore } from '$lib/shared/state/transactionHistory';
   import { initContactStore } from '$lib/shared/state/contacts';
@@ -94,6 +99,10 @@
   onDestroy(() => {
     unwatch?.();
     disposePopupHistorySync?.();
+    if (historyForwardNoopToastTimer) {
+      clearTimeout(historyForwardNoopToastTimer);
+      historyForwardNoopToastTimer = null;
+    }
   });
 
   interface Props {
@@ -105,6 +114,9 @@
   let menuItems: { name: string; link: string }[] = $state([]);
   let lastAvatarAddress: string | undefined = $state(undefined);
   let hasUserInteraction = $state(false);
+  let historyForwardNoopToastVisible = $state(false);
+  let lastForwardNoopTick = 0;
+  let historyForwardNoopToastTimer: ReturnType<typeof setTimeout> | null = null;
   const avatarInfo = $derived(avatarState.avatar?.avatarInfo ?? null);
 
   function isTypingTarget(target: EventTarget | null): boolean {
@@ -130,7 +142,7 @@
     void goto(target.link);
   }
 
-  onMount(async () => {
+  onMount(() => {
     disposePopupHistorySync = initPopupHistorySync();
 
     if (browser) {
@@ -147,6 +159,8 @@
         window.removeEventListener('keydown', handleGlobalKeydown);
       };
     }
+
+    return undefined;
   });
 
   // Defer initializing wallet/watchers until the user navigates beyond the landing/connect flows.
@@ -213,15 +227,16 @@
   // init stores
   $effect(() => {
     if (avatarState.avatar) {
-      initTransactionHistoryStore(avatarState.avatar);
-      initContactStore(avatarState.avatar);
-      initBalanceStore(avatarState.avatar);
+      const avatar = avatarState.avatar;
+      initTransactionHistoryStore(avatar);
+      initContactStore(avatar);
+      initBalanceStore(avatar);
       if (avatarState.groupType === 'CrcV2_BaseGroupCreated') {
         void (async () => {
           const { circles } = await import('$lib/shared/state/circles');
           const circlesValue = get(circles);
           if (circlesValue) {
-            initGroupMetricsStore(circlesValue.circlesRpc, avatarState.avatar.address);
+            initGroupMetricsStore(circlesValue.circlesRpc, avatar.address);
           }
         })();
       }
@@ -243,8 +258,27 @@
     lastAvatarAddress = currentAddress;
   });
 
+  $effect(() => {
+    const tick = $popupHistoryForwardNoopTick;
+    if (tick <= 0 || tick === lastForwardNoopTick) {
+      return;
+    }
+
+    lastForwardNoopTick = tick;
+    historyForwardNoopToastVisible = true;
+
+    if (historyForwardNoopToastTimer) {
+      clearTimeout(historyForwardNoopToastTimer);
+    }
+
+    historyForwardNoopToastTimer = setTimeout(() => {
+      historyForwardNoopToastVisible = false;
+      historyForwardNoopToastTimer = null;
+    }, 2200);
+  });
+
   // Toasts
-  let hasToasts: boolean = $derived($tasks.length > 0);
+  let hasToasts: boolean = $derived($tasks.length > 0 || historyForwardNoopToastVisible);
 </script>
 
 <svelte:head>
@@ -305,6 +339,12 @@
         {/await}
       </div>
     {/each}
+
+    {#if historyForwardNoopToastVisible}
+      <div class="alert bg-primary-content opacity-85">
+        Forward popup history is no longer available.
+      </div>
+    {/if}
   </div>
 {/if}
 
