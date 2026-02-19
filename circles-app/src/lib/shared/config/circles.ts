@@ -52,7 +52,7 @@ export const gnosisConfig: { production: AppConfig, rings: AppConfig } = {
     marketOperator: '0x20ced4ed3b1651b832a77e13e54ea5cb14c8b95b',
     marketChainId: 100,
     marketChainIdHex: "0x64",
-    circlesRpcUrl: 'https://staging.circlesubi.network/',
+    circlesRpcUrl: 'https://rpc.aboutcircles.com/',
     pathfinderUrl: 'https://pathfinder.aboutcircles.com',
     profileServiceUrl: 'https://rpc.aboutcircles.com/profiles/',
     v1HubAddress: '0x29b9a7fbb8995b2423a71cc17cf9810798f6c543',

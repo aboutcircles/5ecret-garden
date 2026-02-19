@@ -1,7 +1,7 @@
 <script lang="ts">
     import { derived, writable } from 'svelte/store';
     import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
-    import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
+    import VirtualList from '$lib/shared/ui/lists/VirtualList.svelte';
     import TransactionRow from './TransactionRow.svelte';
     import TransactionRowPlaceholder from '$lib/shared/ui/lists/placeholders/TransactionRowPlaceholder.svelte';
     import {transactionHistory} from '$lib/shared/state/transactionHistory';
@@ -50,7 +50,7 @@
         bind:this={transactionsListScopeEl}
         style={`--transaction-row-height: ${TRANSACTION_ROW_HEIGHT}px;`}
     >
-        <GenericList
+        <VirtualList
             row={TransactionRow}
             store={searchedTransactionHistory}
             rowHeight={TRANSACTION_ROW_HEIGHT}

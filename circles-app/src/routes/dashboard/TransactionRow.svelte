@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { getContext } from 'svelte';
     import { getTimeAgo } from '$lib/shared/utils/shared';
     import type { TransactionHistoryRow } from '@circles-sdk/data';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
@@ -7,9 +8,15 @@
     import { popupControls, type PopupContentDefinition } from '$lib/shared/state/popup';
     import TransactionDetailsPopup from './TransactionDetailsPopup.svelte';
     import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
+    import {
+        VIRTUAL_LIST_CONTEXT_KEY,
+        type VirtualListController,
+    } from '$lib/shared/ui/lists/utils/virtualListContext';
 
     interface Props { item: TransactionHistoryRow; }
     let { item }: Props = $props();
+
+    const virtualList = getContext<VirtualListController | undefined>(VIRTUAL_LIST_CONTEXT_KEY);
 
     const avatarAddress = $derived(avatarState.avatar?.address ?? null);
 
@@ -96,6 +103,40 @@
     });
 
     function onRowKeydown(event: KeyboardEvent): void {
+        const current = event.currentTarget as HTMLElement | null;
+        if (!current) {
+            listNavigator.onRowKeydown(event);
+            return;
+        }
+
+        const virtualIndexAttr = current?.closest<HTMLElement>('[data-virtual-index]')?.dataset.virtualIndex;
+        const virtualIndex = Number(virtualIndexAttr ?? '-1');
+        const hasVirtualIndex = Number.isFinite(virtualIndex) && virtualIndex >= 0;
+
+        if (virtualList && hasVirtualIndex) {
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                const next = Math.min(virtualList.rowCount() - 1, virtualIndex + 1);
+                if (next !== virtualIndex) {
+                    virtualList.focusIndex(next);
+                }
+                return;
+            }
+
+            if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                if (virtualIndex === 0) {
+                    focusTransactionSearchInput(current);
+                    return;
+                }
+
+                if (virtualIndex > 0) {
+                    virtualList.focusIndex(virtualIndex - 1);
+                }
+                return;
+            }
+        }
+
         listNavigator.onRowKeydown(event);
     }
 
@@ -110,6 +151,7 @@
 <!-- One cohesive horizontal block inside content; collapse RowFrame leading -->
 <div
     data-transaction-row
+    data-list-row-focusable
     tabindex={0}
     role="button"
     aria-label={`Open transaction details for ${counterpartyAddress}`}

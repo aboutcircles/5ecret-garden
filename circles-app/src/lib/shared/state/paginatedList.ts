@@ -8,9 +8,10 @@ export type PaginatedReadable<T = any> = Readable<{
 
 export function createPaginatedList<T = any>(
   source: Readable<T[]>,
-  opts: { pageSize?: number } = {}
+  opts: { pageSize?: number; initialPageCount?: number } = {}
 ): PaginatedReadable<T> {
   const pageSize = opts.pageSize ?? 25;
+  const initialPageCount = Math.max(1, opts.initialPageCount ?? 1);
 
   let full: T[] = [];
   let pageEnd = 0; // exclusive
@@ -37,7 +38,7 @@ export function createPaginatedList<T = any>(
         pageEnd = 0;
         ended = full.length === 0;
         if (!ended) {
-          pageEnd = Math.min(pageSize, full.length);
+          pageEnd = Math.min(pageSize * initialPageCount, full.length);
         }
         ended = pageEnd >= full.length;
         set({ data: full.slice(0, pageEnd), next, ended });
