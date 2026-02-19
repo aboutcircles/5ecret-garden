@@ -1,4 +1,6 @@
 <script lang="ts">
+    import type { Snippet } from 'svelte';
+
     type Props = {
         ownerAddress?: string | null;
         loading: boolean;
@@ -6,9 +8,11 @@
         items: unknown[];
         connectText: string;
         emptyText: string;
+        empty?: Snippet;
+        children?: Snippet<[unknown[]]>;
     };
 
-    let { ownerAddress, loading, error, items, connectText, emptyText }: Props = $props();
+    let { ownerAddress, loading, error, items, connectText, emptyText, empty, children }: Props = $props();
 </script>
 
 {#if !ownerAddress}
@@ -18,11 +22,11 @@
 {:else if error}
     <div class="text-sm text-error">{error}</div>
 {:else if items.length === 0}
-    <slot name="empty">
+    {#if empty}{@render empty()}{:else}
         <div class="text-sm opacity-70">{emptyText}</div>
-    </slot>
+    {/if}
 {:else}
     <div class="flex flex-col">
-        <slot {items} />
+        {@render children?.(items)}
     </div>
 {/if}

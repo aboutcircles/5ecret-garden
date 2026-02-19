@@ -13,6 +13,8 @@
       .replace(/(^-|-$)/g, '');
   }
 
+  import type { Snippet } from 'svelte';
+
   let {
     id = '',
     title = '',
@@ -22,6 +24,7 @@
     panelClass = '',
     // still accepted for compatibility; if omitted, we take it from context
     hostId = undefined as string | undefined,
+    children = undefined as Snippet | undefined,
   } = $props();
 
   // derive a stable id when not given
@@ -101,5 +104,5 @@
   hidden={!isActive}
   aria-hidden={!isActive}
 >
-  <slot />
+  {@render children?.()}
 </div>

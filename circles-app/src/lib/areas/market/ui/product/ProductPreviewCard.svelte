@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
   import Markdown from '$lib/shared/ui/content/markdown/Markdown.svelte';
 
   type SizeVariant = 'sm' | 'md';
@@ -9,6 +10,7 @@
     description?: string | null;
     imageUrl?: string | null;
     size?: SizeVariant;
+    meta?: Snippet;
   }
 
   let {
@@ -17,6 +19,7 @@
     description,
     imageUrl,
     size = 'md',
+    meta,
   }: Props = $props();
 
   const imageSizeClass = $derived(size === 'sm' ? 'w-16 h-16' : 'w-20 h-20');
@@ -44,6 +47,6 @@
       <Markdown content={description} class="prose prose-sm max-w-none text-base-content/70" />
     {/if}
 
-    <slot name="meta" />
+    {@render meta?.()}
   </div>
 </div>

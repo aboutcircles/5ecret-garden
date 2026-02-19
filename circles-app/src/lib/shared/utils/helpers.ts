@@ -1,6 +1,6 @@
 import type { Profile } from '@aboutcircles/sdk-types';
 import type { TrustRelationType } from '@aboutcircles/sdk-types';
-import type { CirclesConfig } from '@aboutcircles/sdk-types';
+import type { CirclesConfig } from '$lib/shared/config/circles';
 
 export function getTypeString(type: string): string {
   const typeMap: Record<string, string> = {

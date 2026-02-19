@@ -4,6 +4,8 @@ import type { CirclesConfig as BaseCirclesConfig } from '@aboutcircles/sdk-types
  * Extended config that adds app-specific fields not in the SDK type.
  */
 export type CirclesConfig = BaseCirclesConfig & {
+  /** RPC URL for direct chain calls (eth_call, etc). Defaults to circlesRpcUrl if not provided */
+  chainRpcUrl?: string;
   /** V1→V2 migration contract address (for display labels in transaction history) */
   migrationAddress?: string;
 };

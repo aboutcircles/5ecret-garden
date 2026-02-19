@@ -18,17 +18,21 @@
 </script>
 
 <script lang="ts">
+  import type { Snippet } from 'svelte';
+
   interface Props {
     action: () => Promise<any>;
     title?: string;
     disabled?: boolean;
     theme?: ActionButtonTheme;
+    children?: Snippet;
   }
 
   let {
     action,
     title = '',
     disabled = false,
+    children,
     theme = {
       ['Ready']: 'bg-primary text-white',
       ['Working']: 'bg-gray-200 text-black',
@@ -98,5 +102,5 @@
   {:else if buttonState === 'Done'}
     <div class="inline-block">✓</div>
   {/if}
-  <slot />
+  {@render children?.()}
 </button>
