@@ -3,14 +3,15 @@
 
   /**
    * Get the appropriate CSS classes for each notification level
+   * Uses explicit text colors for proper contrast on colored backgrounds
    */
   function getLevelClasses(level: NotificationLevel): string {
     const baseClasses = 'alert shadow-lg';
     const levelClasses: Record<NotificationLevel, string> = {
-      info: 'alert-info',
-      success: 'alert-success',
-      warning: 'alert-warning',
-      error: 'alert-error',
+      info: 'alert-info text-info-content',
+      success: 'alert-success text-success-content',
+      warning: 'alert-warning text-warning-content',
+      error: 'alert-error text-error-content',
     };
     return `${baseClasses} ${levelClasses[level]}`;
   }
@@ -37,7 +38,7 @@
       role="alert"
       aria-live="polite"
     >
-      <div class="flex items-start gap-3 w-full">
+      <div class="flex {notification.title ? 'items-start' : 'items-center'} gap-3 w-full">
         <!-- Icon -->
         <span class="text-lg flex-shrink-0" aria-hidden="true">
           {getLevelIcon(notification.level)}

@@ -19,6 +19,7 @@
   import { goto } from '$app/navigation';
   import { isGroupType, isOrganizationType } from '$lib/utils/avatarHelpers';
   import { getActiveConfig } from '$lib/stores/settings.svelte';
+  import { withRetry, isTransientError } from '$lib/utils/retry';
 
   onMount(async () => {
     const { address, privateKey } = (await getSignerFromPk()) ?? {};
@@ -62,7 +63,40 @@
 
     // Get avatar info for the target address (could be Safe or Group)
     // Enable auto event subscription for reactive updates
-    const avatar = await sdk.getAvatar(addressToConnect, true);
+    // Use retry logic for WebSocket subscription resilience
+    const avatar = await withRetry(
+      () => sdk.getAvatar(addressToConnect, true),
+      {
+        maxAttempts: 5,
+        initialDelayMs: 1000,
+        maxDelayMs: 15000,
+        updateConnectionStatus: true,
+        statusLabel: 'Avatar',
+        isRetryable: (err) => {
+          // Don't retry if avatar genuinely not found
+          if (err.message?.includes('Avatar not found') ||
+              (err as any).code === 'AVATAR_NOT_FOUND' ||
+              (err as any).code === 'SDK_AVATAR_NOT_FOUND') {
+            return false;
+          }
+          return isTransientError(err);
+        },
+        onRetry: (attempt, error, delayMs) => {
+          console.warn(
+            `[ImportCircles] Avatar subscription failed (attempt ${attempt}/5), retrying in ${Math.round(delayMs / 1000)}s:`,
+            error.message
+          );
+        },
+      }
+    ).catch((err) => {
+      // If avatar not found after retries, return null to trigger registration redirect
+      if (err.message?.includes('Avatar not found') ||
+          err.code === 'AVATAR_NOT_FOUND' ||
+          err.code === 'SDK_AVATAR_NOT_FOUND') {
+        return null;
+      }
+      throw err;
+    });
 
     if (!avatar) {
       console.error('Failed to get avatar for address:', addressToConnect);

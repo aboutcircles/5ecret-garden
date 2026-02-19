@@ -210,7 +210,7 @@
   let tablistClasses = $derived(
     [
       'tabs',
-      variant === 'bordered' ? 'tabs-bordered' : '',
+      variant === 'bordered' ? 'gap-4' : '',
       variant === 'lifted' ? 'tabs-lifted' : '',
       variant === 'boxed' ? 'tabs-boxed' : '',
       size === 'xs'
@@ -220,8 +220,8 @@
           : size === 'lg'
             ? 'tabs-lg'
             : '',
-      // make tabs horizontally scrollable when there are many
-      'overflow-x-auto whitespace-nowrap',
+      // make tabs horizontally scrollable when there are many, hide vertical overflow
+      'overflow-x-auto overflow-y-hidden whitespace-nowrap',
       // Layout: use grid only when fitted, otherwise a left-aligned flex row
       fitted
         ? 'grid grid-flow-col auto-cols-fr'
@@ -282,11 +282,6 @@
 </script>
 
 <div class="relative">
-  <!-- Full-width baseline under tabs -->
-  <div
-    class="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-base-300 z-0"
-  ></div>
-
   <!-- Left gradient and scroll button -->
   <div
     class={`pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-base-100 to-transparent transition-opacity duration-150 ${canScrollLeft ? 'opacity-100' : 'opacity-0'}`}
@@ -332,7 +327,7 @@
     role="tablist"
     {id}
     aria-orientation="horizontal"
-    class={tablistClasses}
+    class="{tablistClasses} {variant === 'bordered' ? 'border-b border-base-300' : ''}"
     onkeydown={onKeydown}
     bind:this={scroller}
     onscroll={onScroll}
@@ -342,8 +337,9 @@
         type="button"
         role="tab"
         id={`${id}-tab-${t.id}`}
-        class={`tab ${buttonSizeClass} flex-none whitespace-nowrap min-w-max max-w-[calc(100%-4rem)] overflow-hidden`}
+        class={`tab ${buttonSizeClass} flex-none whitespace-nowrap min-w-max max-w-[calc(100%-4rem)] overflow-hidden ${variant === 'bordered' ? 'border-b-2 border-transparent -mb-px' : ''}`}
         class:tab-active={active === t.id}
+        class:!border-primary={variant === 'bordered' && active === t.id}
         class:tab-disabled={t.disabled}
         aria-selected={active === t.id}
         aria-controls={`${id}-panel-${t.id}`}

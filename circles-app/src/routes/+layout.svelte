@@ -38,6 +38,8 @@
   import type { Address } from '@aboutcircles/sdk-types';
   import DefaultHeader from './DefaultHeader.svelte';
 import Toast from '$lib/components/Toast.svelte';
+import ConnectionRetryIndicator from '$lib/components/ConnectionRetryIndicator.svelte';
+import { connectionStatus } from '$lib/stores/connectionStatus.svelte';
 
   const unwatch = watchAccount(config, {
     onChange(account) {
@@ -85,6 +87,25 @@ import Toast from '$lib/components/Toast.svelte';
   let menuItems: { name: string; link: string }[] = $state([]);
 
   onMount(async () => {
+    // Global handler for uncaught promise rejections (e.g., SDK WebSocket errors)
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      const error = event.reason;
+      const message = error?.message || String(error);
+
+      // Check if it's a connection/subscription error from the SDK
+      if (message.includes('Connection interrupted') ||
+          message.includes('subscribe') ||
+          message.includes('WebSocket') ||
+          message.includes('Unauthorized')) {
+        console.error('[Global] Caught unhandled SDK error:', message);
+        // Prevent default browser error logging (we're handling it)
+        event.preventDefault();
+        // Could show a toast notification here if needed
+      }
+    };
+
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
     if (
       $page.route.id !== '/' &&
       $page.route.id !== '/connect-wallet/connect-safe' &&
@@ -92,6 +113,10 @@ import Toast from '$lib/components/Toast.svelte';
     ) {
       await restoreSession();
     }
+
+    return () => {
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
   });
 
   $effect(() => {
@@ -232,6 +257,15 @@ import Toast from '$lib/components/Toast.svelte';
 
 <!-- User notifications (errors, warnings, success messages) -->
 <Toast />
+
+<!-- Connection retry indicator - shows when WebSocket connections are being retried -->
+{#if connectionStatus.status !== 'idle' && connectionStatus.status !== 'connected'}
+  <div class="fixed top-16 left-0 right-0 z-[100] px-4 pointer-events-auto">
+    <div class="max-w-md mx-auto">
+      <ConnectionRetryIndicator />
+    </div>
+  </div>
+{/if}
 
 <style>
   /* Lift toasts above BottomNav only on small screens; keep original position on md+ */

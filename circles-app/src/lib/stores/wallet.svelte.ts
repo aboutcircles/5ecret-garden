@@ -23,6 +23,7 @@ import { privateKeyToAccount } from 'viem/accounts';
 import { gnosisChainConfig } from '$lib/utils/chainConfig';
 import { isHumanType, isGroupType, isOrganizationType } from '$lib/utils/avatarHelpers';
 import { handleError } from '$lib/utils/errorHandler';
+import { withRetry, isTransientError } from '$lib/utils/retry';
 
 export const wallet = writable<ContractRunner | undefined>();
 
@@ -51,14 +52,38 @@ export async function getSigner() {
   const connectorId = localStorage.getItem('connectorId');
   const connectors = getConnectors(config);
 
-  // Try stored connector first if present; otherwise, try a generic reconnect
+  // Try stored connector first if present; otherwise, try injected only
+  // Note: We explicitly avoid the 'safe' connector here as it requires special handling
+  // and causes JsonRpcProvider spam when MetaMask isn't connected
   const connector = connectors.find((c) => c.id == connectorId);
 
-  if (connector) {
-    await reconnect(config, { connectors: [connector] });
-  } else {
-    // Fall back to generic reconnect (e.g., injected in mobile in-app browsers)
-    await reconnect(config);
+  try {
+    if (connector) {
+      await reconnect(config, { connectors: [connector] });
+    } else {
+      // Fall back to injected connector only (MetaMask, browser wallets)
+      // Don't try safe() connector as it causes provider initialization issues
+      const injectedConnector = connectors.find((c) => c.id === 'injected');
+      if (injectedConnector) {
+        await reconnect(config, { connectors: [injectedConnector] });
+      } else {
+        // Last resort: try generic reconnect
+        await reconnect(config);
+      }
+    }
+  } catch (err: any) {
+    // reconnect() can throw even if wallet is already connected from previous session
+    // Check if we already have an account before failing
+    const existingAccount = getAccount(config);
+    if (existingAccount.address) {
+      console.log('[Wallet] reconnect() threw but account already connected:', existingAccount.address);
+      // Fall through to use existing account
+    } else {
+      // No existing account - actually disconnected
+      const error = new Error(err.message || 'Failed to reconnect wallet');
+      (error as any).code = err.code;
+      throw error;
+    }
   }
 
   const account = getAccount(config);
@@ -69,8 +94,14 @@ export async function getSigner() {
     connectorState.connected = true;
   }
 
-  // Return undefined instead of throwing; callers can decide what to do
-  return account.address?.toLowerCase() as Address | undefined;
+  // Throw if no address - allows retry logic to work
+  if (!account.address) {
+    const error = new Error('Wallet not connected. Please unlock MetaMask and connect to this site.');
+    (error as any).code = 4900; // EIP-1193: Disconnected
+    throw error;
+  }
+
+  return account.address.toLowerCase() as Address;
 }
 
 export async function getSignerFromPk() {
@@ -95,11 +126,21 @@ export async function initNewSafeContractRunner(
   const activeConfig = getActiveConfig();
   const rpcUrl = activeConfig.chainRpcUrl ?? activeConfig.circlesRpcUrl;
 
-  const runner = await SafeContractRunner.create(
-    rpcUrl,
-    privateKey as `0x${string}`,
-    safeAddress,
-    gnosisChainConfig
+  // Use retry logic for resilience against transient connection failures
+  const runner = await withRetry(
+    () => SafeContractRunner.create(rpcUrl, privateKey as `0x${string}`, safeAddress, gnosisChainConfig),
+    {
+      maxAttempts: 3,
+      initialDelayMs: 1000,
+      maxDelayMs: 5000,
+      isRetryable: isTransientError,
+      onRetry: (attempt, error, delayMs) => {
+        console.warn(
+          `[Wallet] SafeContractRunner init failed (attempt ${attempt}/3), retrying in ${Math.round(delayMs / 1000)}s:`,
+          error.message
+        );
+      },
+    }
   );
   return runner;
 }
@@ -109,15 +150,33 @@ export async function initNewSafeBrowserRunner(safeAddress: Address) {
   const activeConfig = getActiveConfig();
   const rpcUrl = activeConfig.chainRpcUrl ?? activeConfig.circlesRpcUrl;
 
-  if (!window.ethereum) {
-    throw new Error('No ethereum provider found');
+  // Get the provider from wagmi's connected connector - avoids Phantom/MetaMask conflicts
+  // when multiple wallet extensions are installed
+  const account = getAccount(config);
+  if (!account.connector) {
+    throw new Error('No wallet connector found. Please connect your wallet first.');
   }
 
-  const runner = await SafeBrowserRunner.create(
-    rpcUrl,
-    window.ethereum,
-    safeAddress,
-    gnosisChainConfig
+  const provider = await account.connector.getProvider();
+  if (!provider) {
+    throw new Error('Failed to get provider from wallet connector');
+  }
+
+  // Use retry logic for resilience against transient connection failures
+  const runner = await withRetry(
+    () => SafeBrowserRunner.create(rpcUrl, provider as any, safeAddress, gnosisChainConfig),
+    {
+      maxAttempts: 3,
+      initialDelayMs: 1000,
+      maxDelayMs: 5000,
+      isRetryable: isTransientError,
+      onRetry: (attempt, error, delayMs) => {
+        console.warn(
+          `[Wallet] SafeBrowserRunner init failed (attempt ${attempt}/3), retrying in ${Math.round(delayMs / 1000)}s:`,
+          error.message
+        );
+      },
+    }
   );
   return runner;
 }
@@ -175,7 +234,24 @@ export async function restoreSession() {
 
     // Get avatar from SDK - returns HumanAvatar, OrganisationAvatar, or BaseGroupAvatar
     // Enable auto event subscription for reactive updates
-    let avatar = await sdk.getAvatar(avatarToRestore, true);
+    // Use retry logic for WebSocket subscription resilience
+    let avatar = await withRetry(
+      () => sdk.getAvatar(avatarToRestore, true),
+      {
+        maxAttempts: 5,
+        initialDelayMs: 1000,
+        maxDelayMs: 15000,
+        isRetryable: isTransientError,
+        updateConnectionStatus: true,
+        statusLabel: 'Wallet',
+        onRetry: (attempt, error, delayMs) => {
+          console.warn(
+            `[Wallet] Avatar subscription failed (attempt ${attempt}/5), retrying in ${Math.round(delayMs / 1000)}s:`,
+            error.message
+          );
+        },
+      }
+    );
 
     if (avatar) {
       avatarState.avatar = avatar;
