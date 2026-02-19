@@ -38,24 +38,25 @@
     let memberships: GroupRow[] = $state([]);
     let membershipsLoading: boolean = $state(false);
     let membershipsError: string | null = $state(null);
+    let ownedGroupsLoadedForAvatar: string | null = $state(null);
+    let membershipsLoadedForAvatar: string | null = $state(null);
 
     const TAB_IDS = ['yours', 'memberships', 'all'] as const;
     type TabId = TabIdOf<typeof TAB_IDS>;
 
+    const ownerAddress: string | undefined = $derived(
+        (CirclesStorage.getInstance().avatar as string | undefined) ?? avatarState.avatar?.address
+    );
+
     let selectedTab: TabId = $state('yours');
     let allGroupsLoadedForAvatar: string | null = $state(null);
 
-    const hasOwnedGroups: boolean = $derived(ownedGroups.length > 0);
-    const hasMemberships: boolean = $derived(memberships.length > 0);
+    const canShowMembershipsTab: boolean = $derived(!!ownerAddress);
 
     async function loadGroups(): Promise<void> {
         if (!avatarState.avatar) return;
         groups = await createCMGroups(avatarState.avatar);
     }
-
-    const ownerAddress: string | undefined = $derived(
-        (CirclesStorage.getInstance().avatar as string | undefined) ?? avatarState.avatar?.address
-    );
 
     async function loadOwnedGroups(): Promise<void> {
         if (!$circles || !ownerAddress) {
@@ -70,6 +71,7 @@
         try {
             const result = await getBaseAndCmgGroupsByOwnerBatch($circles, [ownerAddress as any]);
             ownedGroups = result[(ownerAddress as string).toLowerCase() as any] ?? result[ownerAddress as any] ?? [];
+            ownedGroupsLoadedForAvatar = String(ownerAddress).toLowerCase();
         } catch (e) {
             ownedGroupsError = e instanceof Error ? e.message : String(e);
             ownedGroups = [];
@@ -90,6 +92,7 @@
         membershipsError = null;
         try {
             memberships = await getGroupsByMember($circles, ownerAddress as any);
+            membershipsLoadedForAvatar = String(ownerAddress).toLowerCase();
         } catch (e) {
             membershipsError = e instanceof Error ? e.message : String(e);
             memberships = [];
@@ -120,14 +123,40 @@
     });
 
     $effect(() => {
-        // Load whenever SDK or owner changes
-        void loadOwnedGroups();
+        if (!$circles || !ownerAddress) {
+            ownedGroups = [];
+            ownedGroupsError = null;
+            ownedGroupsLoading = false;
+            memberships = [];
+            membershipsError = null;
+            membershipsLoading = false;
+            ownedGroupsLoadedForAvatar = null;
+            membershipsLoadedForAvatar = null;
+            return;
+        }
+
+        const ownerKey = String(ownerAddress).toLowerCase();
+        if (ownedGroupsLoadedForAvatar !== ownerKey && !ownedGroupsLoading) {
+            void loadOwnedGroups();
+        }
+    });
+
+    $effect(() => {
+        if (selectedTab !== 'memberships' || !$circles || !ownerAddress) {
+            return;
+        }
+
+        const ownerKey = String(ownerAddress).toLowerCase();
+        if (membershipsLoadedForAvatar === ownerKey || membershipsLoading) {
+            return;
+        }
+
         void loadMemberships();
     });
 
     $effect(() => {
         const availableTabs: TabId[] = ['yours'];
-        if (hasMemberships) {
+        if (canShowMembershipsTab) {
             availableTabs.push('memberships');
         }
         availableTabs.push('all');
@@ -201,7 +230,7 @@
         <div class="w-full">
             <Tabs bind:selected={selectedTab} variant="boxed" size="sm" tabOrder={TAB_IDS as unknown as string[]}>
                 <Tab id="yours" title="My groups" />
-                {#if hasMemberships}
+                {#if canShowMembershipsTab}
                     <Tab id="memberships" title="Memberships" />
                 {/if}
                 <Tab id="all" title="All groups" />
@@ -217,9 +246,8 @@
                     items={ownedGroups}
                     connectText="Connect an avatar to see the groups you own."
                     emptyText="No groups found."
-                    let:items
                 >
-                    {#snippet empty()}
+                    <svelte:fragment slot="empty">
                         <div class="rounded-xl border border-dashed border-base-300 bg-base-200/40 p-4 space-y-3">
                             <div>
                                 <p class="text-sm font-semibold text-base-content">No groups yet</p>
@@ -254,9 +282,9 @@
                                 </a>
                             </div>
                         </div>
-                    {/snippet}
-                    {#each items as item (item.group)}
-                        <OwnedGroupRowView item={item as GroupRow} />
+                    </svelte:fragment>
+                    {#each ownedGroups as item (item.group)}
+                        <OwnedGroupRowView item={item} />
                     {/each}
                 </GroupTabPanel>
             {:else if selectedTab === 'memberships'}
@@ -267,10 +295,9 @@
                     items={memberships}
                     connectText="Connect an avatar to see the groups you are a member in."
                     emptyText="No groups found."
-                    let:items
                 >
-                    {#each items as item (item.group)}
-                        <GroupRowView item={item as GroupRow} />
+                    {#each memberships as item (item.group)}
+                        <GroupRowView item={item} />
                     {/each}
                 </GroupTabPanel>
             {:else}
