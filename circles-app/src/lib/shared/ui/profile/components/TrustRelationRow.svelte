@@ -46,6 +46,7 @@
 
 <div
     data-trust-relation-row
+    data-row-address={item}
     tabindex={0}
     role="button"
     aria-label={`Open profile for ${item}`}
