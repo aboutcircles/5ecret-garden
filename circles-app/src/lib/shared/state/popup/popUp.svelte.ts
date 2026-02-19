@@ -1,10 +1,25 @@
 import type { Component } from 'svelte';
 
 export type PopupContentDefinition<T extends Record<string, any> = any> = {
-  title: string;
+  title?: string;
+  /**
+   * If true, the popup shell will not render the title text
+   * (useful when the inner component already has its own header).
+   */
+  hideTitle?: boolean;
   component: Component<T>;
   props?: Record<string, any>;
+  key?: string | number;
   onClose?: () => void;
+  kind?: 'flow' | 'confirm' | 'inspect' | 'edit';
+  dismiss?: 'backdrop' | 'explicit' | 'confirmIfDirty';
+  isDirty?: boolean;
+  /**
+   * Groups popup entries that belong to the same flow instance.
+   * Used for flow-scoped dirty-state handling across stack navigation.
+   */
+  flowId?: string;
+  confirmDiscardMessage?: string;
 };
 
 export const popupState = $state({
@@ -33,5 +48,38 @@ export const popupControls = {
   back() {
     if (popupState.stack.length === 0) return;
     popupState.content = popupState.stack.pop() ?? null;
+  },
+
+  /**
+   * Replace the current popup content without modifying the stack.
+   */
+  replace(content: PopupContentDefinition) {
+    popupState.content = content;
+  },
+
+  /**
+   * Walk the stack backwards looking for an entry that matches `predicate`.
+   * If found, pop back to it (discarding entries above) and return true.
+   * If not found, return false and leave the stack unchanged.
+   */
+  popTo(predicate: (entry: PopupContentDefinition) => boolean): boolean {
+    // Build the full ordered list: [...stack, content]
+    const entries: PopupContentDefinition[] = popupState.content
+      ? [...popupState.stack, popupState.content]
+      : [...popupState.stack];
+
+    let foundIndex = -1;
+    for (let i = entries.length - 1; i >= 0; i--) {
+      if (predicate(entries[i])) {
+        foundIndex = i;
+        break;
+      }
+    }
+
+    if (foundIndex === -1) return false;
+
+    popupState.content = entries[foundIndex];
+    popupState.stack = entries.slice(0, foundIndex);
+    return true;
   },
 };
