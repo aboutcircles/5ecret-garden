@@ -147,16 +147,36 @@
         const rowTopInList = clamped * rowHeight;
         const rowBottomInList = rowTopInList + rowHeight;
 
+        const computeJumpScrollTop = (
+            viewportTop: number,
+            viewportHeight: number,
+            rowTop: number,
+            rowBottom: number,
+        ): number | null => {
+            // "regular list" feel: when focus reaches an edge band,
+            // jump a chunk so the focused row lands around the middle.
+            const edgeBand = Math.max(rowHeight * 2, Math.floor(viewportHeight * 0.15));
+            const targetOffset = Math.floor(viewportHeight * 0.45);
+
+            const nearTop = rowTop < viewportTop + edgeBand;
+            const nearBottom = rowBottom > viewportTop + viewportHeight - edgeBand;
+
+            if (!nearTop && !nearBottom) {
+                return null;
+            }
+
+            return Math.max(0, rowTop - targetOffset);
+        };
+
         if (!root) {
             const viewportTop = window.scrollY;
-            const viewportBottom = viewportTop + window.innerHeight;
+            const viewportHeight = window.innerHeight;
             const rowTop = window.scrollY + listRect.top + rowTopInList;
             const rowBottom = window.scrollY + listRect.top + rowBottomInList;
 
-            if (rowTop < viewportTop) {
-                window.scrollTo({ top: Math.max(0, rowTop) });
-            } else if (rowBottom > viewportBottom) {
-                window.scrollTo({ top: Math.max(0, rowBottom - window.innerHeight) });
+            const nextScrollTop = computeJumpScrollTop(viewportTop, viewportHeight, rowTop, rowBottom);
+            if (nextScrollTop !== null) {
+                window.scrollTo({ top: nextScrollTop });
             }
             return;
         }
@@ -169,12 +189,11 @@
         const rowBottom = rootEl.scrollTop + listOffsetInRoot + rowBottomInList;
 
         const viewportTop = rootEl.scrollTop;
-        const viewportBottom = viewportTop + rootEl.clientHeight;
+        const viewportHeight = rootEl.clientHeight;
 
-        if (rowTop < viewportTop) {
-            rootEl.scrollTop = Math.max(0, rowTop);
-        } else if (rowBottom > viewportBottom) {
-            rootEl.scrollTop = Math.max(0, rowBottom - rootEl.clientHeight);
+        const nextScrollTop = computeJumpScrollTop(viewportTop, viewportHeight, rowTop, rowBottom);
+        if (nextScrollTop !== null) {
+            rootEl.scrollTop = nextScrollTop;
         }
     }
 
