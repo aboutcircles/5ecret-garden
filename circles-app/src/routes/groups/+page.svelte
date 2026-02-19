@@ -1,4 +1,4 @@
-<script lang="ts">
+        <script lang="ts">
     import { derived, readable, writable, type Readable } from 'svelte/store';
     import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
     import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
@@ -53,6 +53,7 @@
     type TabId = TabIdOf<typeof TAB_IDS>;
 
     let selectedTab: TabId = $state('yours');
+    let allGroupsLoadedForAvatar: string | null = $state(null);
 
     const hasOwnedGroups: boolean = $derived(ownedGroups.length > 0);
     const hasMemberships: boolean = $derived(memberships.length > 0);
@@ -108,9 +109,24 @@
     }
 
     $effect(() => {
-        if (avatarState.avatar) {
-            loadGroups();
+        const avatar = avatarState.avatar;
+        if (!avatar) {
+            groups = undefined;
+            allGroupsLoadedForAvatar = null;
+            return;
         }
+
+        if (selectedTab !== 'all') {
+            return;
+        }
+
+        const avatarKey = String(avatar.address).toLowerCase();
+        if (allGroupsLoadedForAvatar === avatarKey && groups) {
+            return;
+        }
+
+        allGroupsLoadedForAvatar = avatarKey;
+        void loadGroups();
     });
 
     $effect(() => {
