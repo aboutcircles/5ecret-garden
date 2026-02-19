@@ -14,7 +14,7 @@
   import { page } from '$app/stores';
   import { onDestroy, onMount } from 'svelte';
   import { tasks } from '$lib/shared/utils/tasks';
-  import { openFlowPopup, popupControls } from '$lib/shared/state/popup';
+  import { initPopupHistorySync, openFlowPopup, popupControls } from '$lib/shared/state/popup';
   import Popup from '$lib/shared/ui/shell/PopupHost.svelte';
   import { initTransactionHistoryStore } from '$lib/shared/state/transactionHistory';
   import { initContactStore } from '$lib/shared/state/contacts';
@@ -30,6 +30,7 @@
   import Banner from '$lib/shared/ui/feedback/Banner.svelte';
 
   let unwatch: (() => void) | null = null;
+  let disposePopupHistorySync: (() => void) | null = null;
   let walletModule: typeof import('$lib/shared/state/wallet.svelte') | null = null;
   let walletWatcherInitialized = false;
 
@@ -92,6 +93,7 @@
 
   onDestroy(() => {
     unwatch?.();
+    disposePopupHistorySync?.();
   });
 
   interface Props {
@@ -129,6 +131,8 @@
   }
 
   onMount(async () => {
+    disposePopupHistorySync = initPopupHistorySync();
+
     if (browser) {
       const markInteraction = () => {
         hasUserInteraction = true;
