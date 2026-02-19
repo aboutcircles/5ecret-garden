@@ -6,6 +6,7 @@
     import type { TrustRelation } from '@circles-sdk/data';
     import { writable } from 'svelte/store';
     import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
+    import { usePopupListFocusRestore } from '$lib/shared/ui/profile/utils/popupListFocusRestore';
 
     interface HolderRow {
         avatar: Address;
@@ -39,6 +40,11 @@
     const onInputArrowDown = createListInputArrowDownHandler({
         getScope: () => listScopeEl,
         rowSelector: '[data-holder-row]'
+    });
+    usePopupListFocusRestore({
+        getScope: () => listScopeEl,
+        rowSelector: '[data-holder-row]',
+        rowAddressAttribute: 'data-row-address',
     });
 </script>
 

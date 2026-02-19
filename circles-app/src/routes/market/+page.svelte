@@ -1,5 +1,6 @@
 <script lang="ts">
     import {onMount} from 'svelte';
+    import { browser } from '$app/environment';
     import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
     import ProductCard from '$lib/areas/market/ui/product/ProductCard.svelte';
     import ProductCardPlaceholder from '$lib/shared/ui/lists/placeholders/ProductCardPlaceholder.svelte';
@@ -19,6 +20,8 @@
 
     const API_BASE = gnosisConfig.production.marketApiBase;
     const MARKET_CHAIN_ID = gnosisConfig.production.marketChainId ?? 100;
+    const SELLERS_CACHE_KEY = `market:sellers:${MARKET_CHAIN_ID}`;
+    const SELLERS_CACHE_TTL_MS = 5 * 60 * 1000;
 
     type ProductLike = AggregatedCatalogItem;
 
@@ -34,6 +37,38 @@
     type SellersResponse = { sellers?: SellerListing[] };
     let sellers: `0x${string}`[] = $state([]);
     let sellersLoaded = $state(false);
+
+    function readCachedSellers(): `0x${string}`[] | null {
+      if (!browser) return null;
+      try {
+        const raw = window.sessionStorage.getItem(SELLERS_CACHE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw) as { sellers?: string[]; cachedAt?: number };
+        const cachedAt = Number(parsed?.cachedAt ?? 0);
+        const age = Date.now() - cachedAt;
+        if (!Number.isFinite(cachedAt) || age > SELLERS_CACHE_TTL_MS) {
+          return null;
+        }
+        const list = Array.isArray(parsed?.sellers)
+          ? parsed.sellers.filter((v) => typeof v === 'string' && v.startsWith('0x'))
+          : [];
+        return Array.from(new Set(list.map((v) => v.toLowerCase()))) as `0x${string}`[];
+      } catch {
+        return null;
+      }
+    }
+
+    function writeCachedSellers(next: `0x${string}`[]): void {
+      if (!browser) return;
+      try {
+        window.sessionStorage.setItem(
+          SELLERS_CACHE_KEY,
+          JSON.stringify({ sellers: next, cachedAt: Date.now() }),
+        );
+      } catch {
+        // ignore cache write failures
+      }
+    }
 
     // Infinite scroll sentinel and observer
     let sentinel: HTMLDivElement | null = $state(null);
@@ -109,6 +144,14 @@
 
     async function loadSellers(): Promise<void> {
       if (sellersLoaded) return;
+
+      const cached = readCachedSellers();
+      if (cached) {
+        sellers = cached;
+        sellersLoaded = true;
+        return;
+      }
+
       const url = `${getMarketApiBase()}/api/sellers`;
       const res = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' } });
       if (!res.ok) {
@@ -116,7 +159,7 @@
         throw new Error(`Failed to load sellers (${res.status}): ${text || res.statusText}`);
       }
       const body = (await res.json().catch(() => null)) as SellerListing[] | SellersResponse | null;
-      const list = Array.isArray(body)
+      const list: SellerListing[] = Array.isArray(body)
         ? body
         : (body && Array.isArray((body as SellersResponse).sellers) ? (body as SellersResponse).sellers : []);
       const filtered = list
@@ -130,6 +173,7 @@
 
       sellers = Array.from(new Set(filtered)) as `0x${string}`[];
       sellersLoaded = true;
+      writeCachedSellers(sellers);
     }
 
     async function loadFirstPage(keepProducts: boolean = false): Promise<void> {

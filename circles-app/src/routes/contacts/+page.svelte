@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { browser } from '$app/environment';
     import {contacts} from '$lib/shared/state/contacts';
     import Papa from 'papaparse';
     import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
@@ -21,6 +22,16 @@
     import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
     import HelpPopover from '$lib/shared/ui/primitives/HelpPopover.svelte';
     import { getProfilesCoreBatch } from '$lib/shared/model/profile/coreRepo';
+
+    const CONTACTS_PAGE_SIZE = 25;
+    const CONTACTS_VISIBLE_COUNT_KEY = 'contacts:list:visible-count';
+
+    function getInitialPageCount(): number {
+        if (!browser) return 1;
+        const raw = Number(window.sessionStorage.getItem(CONTACTS_VISIBLE_COUNT_KEY) ?? '0');
+        if (!Number.isFinite(raw) || raw <= 0) return 1;
+        return Math.max(1, Math.ceil(raw / CONTACTS_PAGE_SIZE));
+    }
 
     let filterVersion = writable<number | undefined>(undefined);
     let filterRelation = writable<'mutuallyTrusts' | 'trusts' | 'trustedBy' | 'variesByVersion' | undefined>(undefined);
@@ -110,7 +121,10 @@
     });
 
     // Paginate searched results for rendering
-    const contactsPaginated = createPaginatedList(searchedAll, { pageSize: 25 });
+    const contactsPaginated = createPaginatedList(searchedAll, {
+        pageSize: CONTACTS_PAGE_SIZE,
+        initialPageCount: getInitialPageCount(),
+    });
     const contactsPaginatedWithEnd = derived([contactsPaginated, contacts], ([$paginated, $contacts]) => {
         const hasData = ($paginated?.data ?? []).length > 0;
         const showEnded = hasData ? $paginated.ended : ($contacts?.ended ?? $paginated.ended);
@@ -118,6 +132,14 @@
             ...$paginated,
             ended: showEnded,
         };
+    });
+
+    $effect(() => {
+        if (!browser) return;
+        const loadedCount = $contactsPaginatedWithEnd?.data?.length ?? 0;
+        if (loadedCount > 0) {
+            window.sessionStorage.setItem(CONTACTS_VISIBLE_COUNT_KEY, String(loadedCount));
+        }
     });
 
     $effect(() => {

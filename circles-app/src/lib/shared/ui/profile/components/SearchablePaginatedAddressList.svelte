@@ -6,6 +6,7 @@
     import type { Address } from '@circles-sdk/utils';
     import type { Readable } from 'svelte/store';
     import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
+    import { usePopupListFocusRestore } from '$lib/shared/ui/profile/utils/popupListFocusRestore';
 
     interface Props {
         addresses: Readable<Address[]>;
@@ -38,6 +39,11 @@
     const onInputArrowDown = createListInputArrowDownHandler({
         getScope: () => listScopeEl,
         rowSelector: '[data-trust-relation-row]'
+    });
+    usePopupListFocusRestore({
+        getScope: () => listScopeEl,
+        rowSelector: '[data-trust-relation-row]',
+        rowAddressAttribute: 'data-row-address',
     });
 </script>
 

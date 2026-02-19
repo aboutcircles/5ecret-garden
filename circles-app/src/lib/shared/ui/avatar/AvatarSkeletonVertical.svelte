@@ -43,7 +43,7 @@
   }
 
   .avatar-skeleton-block {
-    background: color-mix(in oklab, currentColor 16%, transparent);
+    background: hsl(var(--b3) / 0.7);
   }
 
   @media (prefers-reduced-motion: no-preference) {

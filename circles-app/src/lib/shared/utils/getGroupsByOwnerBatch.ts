@@ -50,6 +50,11 @@ export async function getBaseAndCmgGroupsByOwnerBatch(sdk: Sdk, owners: Address[
       FilterType: 'In',
       Column: 'owner',
       Value: owners.map(o => o.toLowerCase() as Address),
+    }, {
+      Type: 'FilterPredicate',
+      FilterType: 'In',
+      Column: 'type',
+      Value: ['CrcV2_BaseGroupCreated', 'CrcV2_CMGroupCreated'],
     }],
     sortOrder: 'DESC',
     limit: 1000,
