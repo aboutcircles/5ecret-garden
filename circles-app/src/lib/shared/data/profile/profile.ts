@@ -243,7 +243,11 @@ export async function getProfile(address: Address): Promise<Profile> {
   }
 
   // Not cached -> aggregator
-  const profilePromise = profileAggregator.enqueue(address);
+  // Chain .catch to self-evict on failure so future calls can retry
+  const profilePromise = profileAggregator.enqueue(address).catch((error) => {
+    profileCache.delete(address);
+    throw error;
+  });
 
   // Store it in the cache so subsequent calls don't re-enqueue
   profileCache.set(address, profilePromise);
