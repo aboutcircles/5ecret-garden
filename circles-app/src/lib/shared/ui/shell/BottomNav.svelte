@@ -8,10 +8,11 @@
     Users as LUsers,
     Layers as LLayers,
     Settings as LSettings,
+    ShoppingBag as LShoppingBag,
     Circle as LCircle,
   } from 'lucide';
 
-  type Icon = 'dashboard' | 'contacts' | 'groups' | 'settings' | 'default';
+  type Icon = 'dashboard' | 'contacts' | 'groups' | 'market' | 'settings' | 'default';
   type Item = { name: string; link: string; icon?: Icon };
 
   interface Props {
@@ -22,30 +23,27 @@
   let { items, maxWidthClass = 'max-w-4xl' }: Props = $props();
 
   function isActive(link: string): boolean {
-    return $page.url.pathname === link;
+    const path = $page.url.pathname;
+    // /market sub-paths (e.g. /market/[seller]) should highlight the Market tab
+    if (link === '/market') return path === '/market' || path.startsWith('/market/');
+    return path === link;
   }
 
   function guessIcon(name: string, link: string): Icon {
     const n = name.toLowerCase();
     const l = link.toLowerCase();
 
-    const isDashboard = n.includes('dashboard') || l.includes('/dashboard');
+    const isDashboard = n.includes('dashboard') || n.includes('wallet') || l.includes('/dashboard');
     const isContacts = n.includes('contact') || l.includes('/contacts');
     const isGroups = n.includes('group') || l.includes('/groups');
+    const isMarket = n.includes('market') || l.includes('/market');
     const isSettings = n.includes('setting') || l.includes('/settings');
 
-    if (isDashboard) {
-      return 'dashboard';
-    }
-    if (isContacts) {
-      return 'contacts';
-    }
-    if (isGroups) {
-      return 'groups';
-    }
-    if (isSettings) {
-      return 'settings';
-    }
+    if (isDashboard) return 'dashboard';
+    if (isContacts) return 'contacts';
+    if (isGroups) return 'groups';
+    if (isMarket) return 'market';
+    if (isSettings) return 'settings';
     return 'default';
   }
 
@@ -54,6 +52,7 @@
     dashboard: LHome,
     contacts: LUsers,
     groups: LLayers,
+    market: LShoppingBag,
     settings: LSettings,
     default: LCircle,
   };
