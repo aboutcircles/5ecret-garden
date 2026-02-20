@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
 import { ProfileSigningKeys } from '$lib/shared/ui/profile';
 import { AddSigningKey } from '$lib/shared/ui/profile';
   import { openStep } from '$lib/shared/flow';

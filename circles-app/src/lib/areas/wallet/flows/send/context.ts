@@ -1,5 +1,5 @@
-import type { TokenBalanceRow } from '@circles-sdk/data';
-import type { Address } from '@circles-sdk/utils';
+import type { TokenBalanceRow } from '@aboutcircles/sdk-types';
+import type { Address } from '@aboutcircles/sdk-types';
 
 export type SendFlowDataType = 'hex' | 'utf-8';
 

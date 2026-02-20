@@ -1,8 +1,8 @@
 <script lang="ts">
     import { formatUnits, parseEther } from 'ethers';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-  import type { Address } from '@circles-sdk/utils';
-  import type { TrustRelation } from '@circles-sdk/data';
+  import type { Address } from '@aboutcircles/sdk-types';
+  import type { TrustRelation } from '@aboutcircles/sdk-types';
   import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import { openProfilePopup } from '$lib/shared/ui/profile/openProfilePopup';
   function formatEtherTwoDecimals(value: bigint): string {

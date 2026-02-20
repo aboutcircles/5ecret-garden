@@ -1,8 +1,8 @@
 <script lang="ts">
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
-  import type { AvatarRow } from '@circles-sdk/data';
-  import type { Address } from '@circles-sdk/utils';
+  import type { AvatarRow } from '@aboutcircles/sdk-types';
+  import type { Address } from '@aboutcircles/sdk-types';
 
   interface Props {
     invitations?: AvatarRow[];

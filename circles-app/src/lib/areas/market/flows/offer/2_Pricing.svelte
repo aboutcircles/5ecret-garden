@@ -17,7 +17,7 @@
   import { circles } from '$lib/shared/state/circles';
   import { wallet } from '$lib/shared/state/wallet.svelte';
   import { fetchGatewayRowsByOwner } from '$lib/shared/data/circles/paymentGateways';
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
 
   interface Props { context: OfferFlowContext; }
   let { context }: Props = $props();

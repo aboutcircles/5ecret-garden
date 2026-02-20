@@ -2,7 +2,7 @@
     import { derived, readable, writable, type Readable } from 'svelte/store';
     import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
     import {createCMGroups} from '$lib/areas/groups/state';
-    import type {EventRow} from '@circles-sdk/data';
+    import type {EventRow} from '@aboutcircles/sdk-types';
     import GroupRowView from './GroupRowView.svelte';
     import AvatarRowPlaceholder from '$lib/shared/ui/lists/placeholders/AvatarRowPlaceholder.svelte';
     import OwnedGroupRowView from './OwnedGroupRowView.svelte';
@@ -19,7 +19,7 @@
     import {CirclesStorage} from '$lib/shared/utils/storage';
     import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/shared/utils/getGroupsByOwnerBatch';
     import { getGroupsByMember } from '$lib/areas/groups/utils/getGroupsByMemberBatch';
-    import type { GroupRow } from '@circles-sdk/data';
+    import type { GroupRow } from '@aboutcircles/sdk-types';
     import Tabs from '$lib/shared/ui/primitives/tabs/Tabs.svelte';
     import Tab from '$lib/shared/ui/primitives/tabs/Tab.svelte';
     import { type TabIdOf } from '$lib/shared/ui/primitives/tabs/tabId';

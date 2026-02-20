@@ -10,7 +10,7 @@
         CirclesQuery,
         type TrustRelation,
         type TrustRelationRow,
-    } from '@circles-sdk/data';
+    } from '@aboutcircles/sdk-types';
     import Untrust from '$lib/areas/contacts/ui/pages/Untrust.svelte';
     import { openAddTrustFlow } from '$lib/areas/trust/flows/addTrust/openAddTrustFlow';
     import { openSendFlowPopup } from '$lib/areas/wallet/flows/send/openSendFlowPopup';
@@ -20,7 +20,8 @@
     import {popupControls} from '$lib/shared/state/popup';
     import JumpLink from '$lib/shared/ui/content/jump/JumpLink.svelte';
     import AddressComponent from '$lib/shared/ui/primitives/Address.svelte';
-    import {uint256ToAddress, type Address} from '@circles-sdk/utils';
+    import type {Address} from '@aboutcircles/sdk-types';
+import {uint256ToAddress} from '@aboutcircles/sdk-utils';
     import SelectAmount from '$lib/areas/wallet/flows/send/3_Amount.svelte';
     import {transitiveTransfer} from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
     import {

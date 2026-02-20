@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { TokenBalanceRow } from '@circles-sdk/data';
+  import type { TokenBalanceRow } from '@aboutcircles/sdk-types';
   import type { SendFlowContext } from '$lib/areas/wallet/flows/send/context';
   import SelectAsset from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
   import SelectAmount from './3_Amount.svelte';

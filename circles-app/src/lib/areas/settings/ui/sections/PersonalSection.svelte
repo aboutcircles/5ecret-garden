@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
 import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
   import GroupSetting from '$lib/areas/settings/ui/editors/GroupSetting.svelte';
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';

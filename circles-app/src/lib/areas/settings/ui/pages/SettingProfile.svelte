@@ -7,7 +7,7 @@
     import {popupControls} from '$lib/shared/state/popup';
     import {signer} from '$lib/shared/state/wallet.svelte';
 import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
-    import type {Address as EvmAddress} from '@circles-sdk/utils';
+    import type {Address as EvmAddress} from '@aboutcircles/sdk-types';
     import {gnosisConfig} from "$lib/shared/config/circles";
 
     interface Props {

@@ -36,7 +36,7 @@
     type CodeProductListItem,
   } from '$lib/areas/admin/services/gateway/adminClient';
   import { gnosisConfig } from '$lib/shared/config/circles';
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
   import { popupControls } from '$lib/shared/state/popup';
   import AdminSectionCard from '$lib/areas/admin/components/AdminSectionCard.svelte';
   import AdminProductList from '$lib/areas/admin/components/AdminProductList.svelte';

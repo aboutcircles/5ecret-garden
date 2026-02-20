@@ -3,8 +3,8 @@
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import { formatUnits } from 'ethers';
   import { openProfilePopup } from '$lib/shared/ui/profile/openProfilePopup';
-  import type { Address } from '@circles-sdk/utils';
-  import type { TrustRelation } from '@circles-sdk/data';
+  import type { Address } from '@aboutcircles/sdk-types';
+  import type { TrustRelation } from '@aboutcircles/sdk-types';
   import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
 
   interface HolderRow {

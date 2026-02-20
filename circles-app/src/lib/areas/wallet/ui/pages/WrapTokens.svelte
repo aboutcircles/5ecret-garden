@@ -2,7 +2,7 @@
   import { ethers } from 'ethers';
   import PopupActionBar from '$lib/shared/ui/shell/PopupActionBar.svelte';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
-  import type { TokenBalanceRow } from '@circles-sdk/data';
+  import type { TokenBalanceRow } from '@aboutcircles/sdk-types';
   import BalanceRow from '$lib/areas/wallet/ui/components/BalanceRow.svelte';
   import { roundToDecimals } from '$lib/shared/utils/shared';
   import { runTask } from '$lib/shared/utils/tasks';

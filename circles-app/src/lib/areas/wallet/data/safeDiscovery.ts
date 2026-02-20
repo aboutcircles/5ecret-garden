@@ -1,6 +1,6 @@
-import type { Address } from '@circles-sdk/utils';
-import type { GroupRow } from '@circles-sdk/data';
-import type { AvatarRow, Sdk } from '@circles-sdk/sdk';
+import type { Address } from '@aboutcircles/sdk-types';
+import type { GroupRow } from '@aboutcircles/sdk-types';
+import type { AvatarRow, Sdk } from '@aboutcircles/sdk';
 import { ethers } from 'ethers';
 import { get, writable, type Readable } from 'svelte/store';
 import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/shared/utils/getGroupsByOwnerBatch';

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { derived, writable } from 'svelte/store';
-  import type { Address } from '@circles-sdk/utils';
-  import type { GroupRow, TokenBalanceRow, TransactionHistoryRow } from '@circles-sdk/data';
+  import type { Address } from '@aboutcircles/sdk-types';
+  import type { GroupRow, TokenBalanceRow, TransactionHistoryRow } from '@aboutcircles/sdk-types';
   import type { TrustRow, GatewayRow } from '$lib/areas/settings/model/gatewayTypes';
   import type { AdminUnifiedProduct, AdminProductType, AdminOdooConnection } from '$lib/areas/admin/types';
   import type { MonthlyItem, RangeOverlayEvent } from '$lib/shared/ui/event-history/types';

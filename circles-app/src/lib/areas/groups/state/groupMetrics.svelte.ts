@@ -1,6 +1,7 @@
 import { getGroupCollateral, getTreasuryAddress, getVaultAddress } from "$lib/shared/utils/vault";
-import type { CirclesRpc } from "@circles-sdk/data";
-import { uint256ToAddress, type Address } from "@circles-sdk/utils";
+import type { CirclesRpc } from "@aboutcircles/sdk-types";
+import type { Address } from "@aboutcircles/sdk-types";
+import { uint256ToAddress } from "@aboutcircles/sdk-utils";
 import { formatEther, type BigNumberish } from "ethers";
 import {
     queryAffiliateGroupChangedPage,

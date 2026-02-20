@@ -1,7 +1,7 @@
 <script lang="ts">
   import { circles } from '$lib/shared/state/circles';
   import { get } from 'svelte/store';
-  import { CirclesQuery, type PagedQueryParams } from '@circles-sdk/data';
+  import { CirclesQuery, type PagedQueryParams } from '@aboutcircles/sdk-types';
   import { popupControls } from '$lib/shared/state/popup';
   import EventHistoryDayCalendar from './EventHistoryDayCalendar.svelte';
   import EventHistoryWeeklySections from './EventHistoryWeeklySections.svelte';
@@ -119,7 +119,7 @@
       }
 
       const queryDefinition: PagedQueryParams = {
-        // `PagedQueryParams` types from `@circles-sdk/data` are stricter than our dataSource surface;
+        // `PagedQueryParams` types from `@aboutcircles/sdk-types` are stricter than our dataSource surface;
         // keep casts localized here (integration boundary).
         namespace: source.namespace as any,
         table: source.table as any,

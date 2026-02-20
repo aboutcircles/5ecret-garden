@@ -2,7 +2,7 @@
     import { avatarState } from '$lib/shared/state/avatar.svelte';
     import { runTask } from '$lib/shared/utils/tasks';
     import { shortenAddress } from '$lib/shared/utils/shared';
-    import { V1Avatar } from '@circles-sdk/sdk';
+    import { V1Avatar } from '@aboutcircles/sdk';
     import { circles } from '$lib/shared/state/circles';
     import TrustActionCard from '$lib/areas/contacts/ui/components/TrustActionCard.svelte';
     import { popupControls } from '$lib/shared/state/popup';

@@ -3,7 +3,7 @@
   import PopupActionBar from '$lib/shared/ui/shell/PopupActionBar.svelte';
   import BalanceRow from '$lib/areas/wallet/ui/components/BalanceRow.svelte';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
-  import type { TokenBalanceRow } from '@circles-sdk/data';
+  import type { TokenBalanceRow } from '@aboutcircles/sdk-types';
   import { runTask } from '$lib/shared/utils/tasks';
   import { tokenTypeToString } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
   import { popupControls } from '$lib/shared/state/popup';

@@ -1,19 +1,17 @@
 import { avatarState } from '$lib/shared/state/avatar.svelte';
-import type {
-  CirclesEvent,
-  CirclesEventType,
-  TokenBalanceRow,
-} from '@circles-sdk/data';
-import { createEventStore } from '$lib/shared/state/eventStores';
-import type { Avatar } from '@circles-sdk/sdk';
+import type { CirclesEvent, CirclesEventType } from '@aboutcircles/sdk-rpc';
+import type { TokenBalance } from '@aboutcircles/sdk-types';
+import { createEventStore } from '$lib/shared/state/eventStores/eventStoreFactory.svelte';
+import type { Avatar } from '@aboutcircles/sdk';
 import { writable } from 'svelte/store';
 
 const refreshOnEvents: Set<CirclesEventType> = new Set<CirclesEventType>([
+  'CrcV1_HubTransfer',
+  'CrcV1_Transfer',
   'CrcV2_TransferBatch',
   'CrcV2_TransferSingle',
-  'CrcV1_HubTransfer',
   'CrcV2_Erc20WrapperTransfer',
-  'CrcV1_Transfer',
+  'CrcV2_PersonalMint',
   'CrcV2_GroupMintSingle',
   'CrcV2_GroupMintBatch',
   'CrcV2_GroupRedeem',
@@ -22,14 +20,21 @@ const refreshOnEvents: Set<CirclesEventType> = new Set<CirclesEventType>([
 ] as CirclesEventType[]);
 
 let currentStoreUnsubscribe: (() => void) | undefined;
+let currentAvatarAddress: string = '';
 
 const _circlesBalances = writable<{
-  data: TokenBalanceRow[];
+  data: TokenBalance[];
   next: () => Promise<boolean>;
   ended: boolean;
 }>({ data: [], next: async () => false, ended: false });
 
 export const initBalanceStore = (avatar: Avatar) => {
+  // Early return if already initialized for this avatar
+  if (currentAvatarAddress === avatar.address) {
+    return;
+  }
+  currentAvatarAddress = avatar.address;
+
   if (currentStoreUnsubscribe) {
     currentStoreUnsubscribe();
     currentStoreUnsubscribe = undefined;
@@ -41,40 +46,68 @@ export const initBalanceStore = (avatar: Avatar) => {
     ended: false,
   });
 
-  const _initialLoad = async () => {
+  const _initialLoad = async (): Promise<TokenBalance[]> => {
     try {
-      return await avatar.getBalances();
-    } catch (e: any) {
-      if (e?.includes?.('No balances found') || e?.message?.includes?.('No balances found')) {
+      // Validate avatar is properly initialized
+      if (!avatar || typeof avatar !== 'object') {
+        console.error('[Balances] Avatar is not properly initialized:', avatar);
         return [];
       }
-      console.debug('[balances] getBalances failed (initial load)', e);
-      throw e;
+
+      // Use new SDK balances.getTokenBalances method
+      if (
+        !avatar.balances ||
+        typeof avatar.balances.getTokenBalances !== 'function'
+      ) {
+        console.error(
+          '[Balances] No balances.getTokenBalances method available on avatar'
+        );
+        return [];
+      }
+
+      const balances = await avatar.balances.getTokenBalances() as unknown as TokenBalance[];
+      return balances;
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : String(e);
+      if (errorMessage.includes('No balances found')) {
+        return [];
+      }
+      console.error('[Balances] Error loading balances:', errorMessage);
+      return [];
     }
   };
 
   const _handleEvent = async (
     event: CirclesEvent,
-    currentData: TokenBalanceRow[]
-  ) => {
+    currentData: TokenBalance[]
+  ): Promise<TokenBalance[]> => {
     if (!refreshOnEvents.has(event.$event)) return currentData;
-
     try {
-      return await avatar.getBalances();
-    } catch (e: any) {
-      if (e?.includes?.('No balances found') || e?.message?.includes?.('No balances found')) {
+      // Use new SDK balances.getTokenBalances method
+      if (
+        !avatar.balances ||
+        typeof avatar.balances.getTokenBalances !== 'function'
+      ) {
+        throw new Error('No balances.getTokenBalances method available');
+      }
+
+      const balances = await avatar.balances.getTokenBalances() as unknown as TokenBalance[];
+      return balances;
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : String(e);
+      if (errorMessage.includes('No balances found')) {
         return [];
       }
-      console.debug('[balances] getBalances failed (event refresh)', { event: event.$event }, e);
-      throw e;
+      console.error('[Balances] Error refreshing balances:', errorMessage);
+      throw new Error(`Failed to refresh balances: ${errorMessage}`);
     }
   };
 
-  const _handleNextPage = async (currentData: TokenBalanceRow[]) => {
+  const _handleNextPage = async (currentData: TokenBalance[]) => {
     return { data: currentData, ended: true };
   };
 
-  const store = createEventStore<TokenBalanceRow[]>(
+  const store = createEventStore<TokenBalance[]>(
     avatar,
     refreshOnEvents, // Use the provided events or an empty set
     _initialLoad, // Function to load the initial data

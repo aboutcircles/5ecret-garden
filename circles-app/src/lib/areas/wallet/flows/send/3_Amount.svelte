@@ -10,7 +10,7 @@
     import { TransitiveTransferTokenAddress } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
     import { ethers } from 'ethers';
     import { openStep, popToOrOpen, useAsyncAction } from '$lib/shared/flow';
-    import { CirclesConverter } from '@circles-sdk/utils';
+    import { CirclesConverter } from '@aboutcircles/sdk-utils';
     import {MAX_PATH_STEPS} from "$lib/shared/config/circles";
     import { requireSelectedAsset } from '$lib/shared/flow';
     import type { EnterAmountStepProps } from '$lib/shared/flow';

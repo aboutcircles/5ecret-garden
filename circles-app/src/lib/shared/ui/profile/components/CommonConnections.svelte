@@ -3,7 +3,7 @@
     import { avatarState } from '$lib/shared/state/avatar.svelte';
     import { circles } from '$lib/shared/state/circles';
     import { get, writable } from 'svelte/store';
-    import type { Address } from '@circles-sdk/utils';
+    import type { Address } from '@aboutcircles/sdk-types';
 
     interface Props {
         otherAvatarAddress?: Address;

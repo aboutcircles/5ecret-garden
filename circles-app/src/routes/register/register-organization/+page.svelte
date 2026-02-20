@@ -3,8 +3,8 @@
     import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
     import {avatarState} from '$lib/shared/state/avatar.svelte';
     import {circles} from '$lib/shared/state/circles';
-    import type {Avatar} from '@circles-sdk/sdk';
-    import type {Profile} from '@circles-sdk/profiles';
+    import type {Avatar} from '@aboutcircles/sdk';
+    import type {Profile} from '@aboutcircles/sdk-profiles';
     import Disclaimer from '$lib/areas/register/ui/components/RegistrationDisclaimer.svelte';
     import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
     import { ArrowLeft as LArrowLeft } from 'lucide';

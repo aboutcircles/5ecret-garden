@@ -9,12 +9,12 @@
     wallet,
   } from '$lib/shared/state/wallet.svelte';
   import { circles } from '$lib/shared/state/circles';
-  import { Sdk } from '@circles-sdk/sdk';
+  import { Sdk } from '@aboutcircles/sdk';
   import { onMount } from 'svelte';
   import { settings } from '$lib/shared/state/settings.svelte';
   import { gnosisConfig } from '$lib/shared/config/circles';
-  import type { SdkContractRunner } from '@circles-sdk/adapter';
-  import type { Address } from '@circles-sdk/utils';
+  import type { ContractRunner as SdkContractRunner } from '@aboutcircles/sdk-types';
+  import type { Address } from '@aboutcircles/sdk-types';
 
   let runner: SdkContractRunner | undefined = $state();
 

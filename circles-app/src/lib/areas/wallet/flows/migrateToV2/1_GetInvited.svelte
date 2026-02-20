@@ -8,9 +8,9 @@
   import { onMount } from 'svelte';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { circles as circlesStore } from '$lib/shared/state/circles';
-  import type { AvatarRow } from '@circles-sdk/data';
+  import type { AvatarRow } from '@aboutcircles/sdk-types';
   import { openStep } from '$lib/shared/flow';
-  import type { Profile } from '@circles-sdk/profiles';
+  import type { Profile } from '@aboutcircles/sdk-profiles';
   import { settings } from '$lib/shared/state/settings.svelte';
   import InvitationPickerStep from '$lib/shared/ui/invitations/InvitationPickerStep.svelte';
   import { requireAvatar, requireCircles } from '$lib/shared/flow';

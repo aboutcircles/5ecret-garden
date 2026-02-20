@@ -1,7 +1,7 @@
 import { getProfile } from '$lib/shared/utils/profile';
 import type { Readable } from 'svelte/store';
 import { derived, writable } from 'svelte/store';
-import type { Address } from '@circles-sdk/utils';
+import type { Address } from '@aboutcircles/sdk-types';
 
 export type ProfileNameMap = Record<string, string>;
 

@@ -1,6 +1,6 @@
 import { browser } from '$app/environment';
 import { get, writable, type Readable } from 'svelte/store';
-import type { Address } from '@circles-sdk/utils';
+import type { Address } from '@aboutcircles/sdk-types';
 import type { CidV0 } from '$lib/areas/market/offers';
 import { getProfilesBindings } from '$lib/areas/market/offers';
 import { gnosisConfig } from '$lib/shared/config/circles';

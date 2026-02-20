@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
   import { openStep } from '$lib/shared/flow';
   import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';

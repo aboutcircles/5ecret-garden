@@ -1,6 +1,6 @@
 <script lang="ts">
   import { get } from 'svelte/store';
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
   import type { SearchProfileResult } from '$lib/shared/model/profile';
   import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import StepActionButtons from '$lib/shared/ui/flow/StepActionButtons.svelte';

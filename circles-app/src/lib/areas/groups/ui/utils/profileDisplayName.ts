@@ -1,4 +1,4 @@
-import type { Address } from '@circles-sdk/utils';
+import type { Address } from '@aboutcircles/sdk-types';
 import { getProfile } from '$lib/shared/utils/profile';
 import { shortenAddress } from '$lib/shared/utils/shared';
 

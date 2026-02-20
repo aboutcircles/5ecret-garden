@@ -8,7 +8,7 @@
     import { popupControls } from '$lib/shared/state/popup';
     import Markdown from '$lib/shared/ui/content/markdown/Markdown.svelte';
     import ProfilePreviewCard from '$lib/shared/ui/profile/ProfilePreviewCard.svelte';
-    import { cidV0ToUint8Array } from '@circles-sdk/utils';
+    import { cidV0ToUint8Array } from '@aboutcircles/sdk-utils';
     import { isValidSymbol, isValidOnChainName } from '$lib/shared/utils/isValid';
     import {
         createGroupContext,

@@ -6,7 +6,7 @@
   import {wallet} from '$lib/shared/state/wallet.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import Markdown from '$lib/shared/ui/content/markdown/Markdown.svelte';
-  import type {Address} from '@circles-sdk/utils';
+  import type {Address} from '@aboutcircles/sdk-types';
 
   import ProductGallery from '$lib/areas/market/ui/product/ProductGallery.svelte';
   import ProductPreviewCard from '$lib/areas/market/ui/product/ProductPreviewCard.svelte';

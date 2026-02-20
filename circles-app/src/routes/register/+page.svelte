@@ -3,7 +3,7 @@
   import { page } from '$app/stores';
   import { circles } from '$lib/shared/state/circles';
   import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/shared/utils/getGroupsByOwnerBatch';
-  import type { Address as EvmAddress } from '@circles-sdk/utils';
+  import type { Address as EvmAddress } from '@aboutcircles/sdk-types';
   import { goto } from '$app/navigation';
   import QrCode from '$lib/shared/ui/primitives/QrCode.svelte';
   import Address from '$lib/shared/ui/primitives/Address.svelte';

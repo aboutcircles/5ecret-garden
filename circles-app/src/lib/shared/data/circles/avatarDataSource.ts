@@ -1,33 +1,32 @@
-import type { Sdk, Avatar } from '@circles-sdk/sdk';
-import type { Address } from '@circles-sdk/utils';
-import type { AvatarRow, TokenBalanceRow } from '@circles-sdk/data';
+import type { Sdk, Avatar } from '@aboutcircles/sdk';
+import type { Address, AvatarInfo, TokenBalanceRow } from '@aboutcircles/sdk-types';
 
 export interface AvatarDataSource {
-  getAvatarInfo(address: Address): Promise<AvatarRow | undefined>;
-  getAvatarInfoBatch(addresses: Address[]): Promise<AvatarRow[]>;
+  getAvatarInfo(address: Address): Promise<AvatarInfo | undefined>;
+  getAvatarInfoBatch(addresses: Address[]): Promise<(AvatarInfo | undefined)[]>;
   getBalances(avatar: Avatar): Promise<TokenBalanceRow[]>;
   getTransactionHistory(
     avatar: Avatar,
     pageSize: number
-  ): Promise<Awaited<ReturnType<Avatar['getTransactionHistory']>>>;
+  ): Promise<any>; // TODO: fix type - PagedResponse<TransactionHistoryRow>
 }
 
 export function createAvatarDataSource(sdk: Sdk): AvatarDataSource {
   return {
-    async getAvatarInfo(address: Address): Promise<AvatarRow | undefined> {
-      return await sdk.data.getAvatarInfo(address);
+    async getAvatarInfo(address: Address): Promise<AvatarInfo | undefined> {
+      return await sdk.data.getAvatar(address);
     },
-    async getAvatarInfoBatch(addresses: Address[]): Promise<AvatarRow[]> {
-      return await sdk.data.getAvatarInfoBatch(addresses);
+    async getAvatarInfoBatch(addresses: Address[]): Promise<(AvatarInfo | undefined)[]> {
+      return await Promise.all(addresses.map((a) => sdk.data.getAvatar(a)));
     },
     async getBalances(avatar: Avatar): Promise<TokenBalanceRow[]> {
-      return await avatar.getBalances();
+      return await avatar.balances.getTokenBalances();
     },
     async getTransactionHistory(
       avatar: Avatar,
       pageSize: number
-    ): Promise<Awaited<ReturnType<Avatar['getTransactionHistory']>>> {
-      return await avatar.getTransactionHistory(pageSize);
+    ): Promise<any> {
+      return await avatar.history.getTransactions(pageSize);
     },
   };
 }

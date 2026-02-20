@@ -13,7 +13,7 @@
     import Send from '$lib/areas/wallet/flows/send/1_To.svelte';
     import { openStep } from '$lib/shared/flow';
     import { openSendFlowPopup } from '$lib/areas/wallet/flows/send/openSendFlowPopup';
-    import type { TokenBalanceRow } from '@circles-sdk/data';
+    import type { TokenBalanceRow } from '@aboutcircles/sdk-types';
     import { circles } from '$lib/shared/state/circles';
     import { get } from 'svelte/store';
     import { formatEther } from 'ethers';

@@ -244,7 +244,7 @@
   import { formatCurrency } from '$lib/shared/utils/money';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import JumpLink from '$lib/shared/ui/content/jump/JumpLink.svelte';
-  import type { Address as EvmAddress } from '@circles-sdk/utils';
+  import type { Address as EvmAddress } from '@aboutcircles/sdk-types';
   import type { OrderSnapshot } from '$lib/areas/market/orders/types';
   import type { OrderStatusChange } from '$lib/areas/market/orders/types';
   import { formatTimestamp, statusLabel } from '$lib/areas/market/orders/status';

@@ -9,8 +9,8 @@
     import { loadProfileOrInit, rebaseAndSaveProfile } from '@circles-market/sdk';
     import { getProfilesBindings } from '$lib/areas/market/offers';
     import { removeProfileFromCache } from '$lib/shared/utils/profile';
-    import type {Address} from '@circles-sdk/utils';
-    import type { Profile } from '@circles-sdk/profiles';
+    import type {Address} from '@aboutcircles/sdk-types';
+    import type { Profile } from '@aboutcircles/sdk-profiles';
     import { validateProfile } from '$lib/shared/ui/profile/profileValidation';
 
     interface Props {

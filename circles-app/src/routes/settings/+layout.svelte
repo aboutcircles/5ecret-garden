@@ -26,7 +26,7 @@
   import { openFlowPopup, popupControls } from '$lib/shared/state/popup';
   import { ethers } from 'ethers';
   import { LogOut as LLogOut } from 'lucide';
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
   import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
   import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
   import type { Action } from '$lib/shared/ui/shell/actions';

@@ -19,7 +19,7 @@
   import { circles } from '$lib/shared/state/circles';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { ethers } from 'ethers';
-  import { CirclesConverter } from '@circles-sdk/utils';
+  import { CirclesConverter } from '@aboutcircles/sdk-utils';
   import {gnosisConfig} from "$lib/shared/config/circles";
 
   const paymentReference = $derived($cartState.lastCheckout?.paymentReference ?? null);

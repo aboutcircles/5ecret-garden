@@ -1,7 +1,7 @@
-import type { TokenBalanceRow } from '@circles-sdk/data';
-import type { Profile } from '@circles-sdk/profiles';
-import type { Avatar, Sdk } from '@circles-sdk/sdk';
-import type { Address } from '@circles-sdk/utils';
+import type { TokenBalanceRow } from '@aboutcircles/sdk-types';
+import type { Profile } from '@aboutcircles/sdk-profiles';
+import type { Avatar, Sdk } from '@aboutcircles/sdk';
+import type { Address } from '@aboutcircles/sdk-types';
 
 export class FlowGuardError extends Error {
   constructor(message: string) {

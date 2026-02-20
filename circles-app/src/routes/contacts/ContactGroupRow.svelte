@@ -2,9 +2,9 @@
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import { openProfilePopup } from '$lib/shared/ui/profile/openProfilePopup';
     import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
-    import type { Address } from '@circles-sdk/utils';
+    import type { Address } from '@aboutcircles/sdk-types';
     import type { AppProfileCore as Profile } from '$lib/shared/model/profile';
-    import type { AvatarRow } from '@circles-sdk/data';
+    import type { AvatarRow } from '@aboutcircles/sdk-types';
     import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
 
     interface Props {

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
   import { EventHistoryHeatmap, type EventHistoryDataSource } from '$lib/shared/ui/event-history';
   import TrustHistoryDayEventRow from '$lib/areas/trust/ui/history/TrustHistoryDayEventRow.svelte';
   import TrustHistoryDayPopupHeader from '$lib/areas/trust/ui/history/TrustHistoryDayPopupHeader.svelte';

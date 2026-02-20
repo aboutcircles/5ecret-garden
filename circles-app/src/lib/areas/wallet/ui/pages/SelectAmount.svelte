@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { TokenBalanceRow } from '@circles-sdk/data';
+  import type { TokenBalanceRow } from '@aboutcircles/sdk-types';
   import CurrencyInput from '$lib/areas/wallet/ui/components/CurrencyInput.svelte';
 
   interface Props {

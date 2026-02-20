@@ -2,13 +2,14 @@
 
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { circles } from '$lib/shared/state/circles';
-  import { type Address, uint256ToAddress } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
+import { uint256ToAddress } from '@aboutcircles/sdk-utils';
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import { onMount } from 'svelte';
   import { runTask } from '$lib/shared/utils/tasks';
   import { popupControls } from '$lib/shared/state/popup';
   import { ethers, formatUnits } from 'ethers';
-  import type { TokenBalanceRow, TrustRelation } from '@circles-sdk/data';
+  import type { TokenBalanceRow, TrustRelation } from '@aboutcircles/sdk-types';
   import { contacts } from '$lib/shared/state/contacts';
   import {
   getGroupCollateral,

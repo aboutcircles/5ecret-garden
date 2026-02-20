@@ -2,7 +2,7 @@
 <script lang="ts">
     import {createEventDispatcher} from 'svelte';
     import {runTask} from '$lib/shared/utils/tasks';
-    import type {Address} from "@circles-sdk/utils";
+    import type {Address} from "@aboutcircles/sdk-types";
     import type {CidV0} from '$lib/areas/market/offers';
     import type { ProfilesBindings } from '@circles-market/sdk';
     import { buildLinkDraft, canonicaliseLink } from '@circles-market/sdk';

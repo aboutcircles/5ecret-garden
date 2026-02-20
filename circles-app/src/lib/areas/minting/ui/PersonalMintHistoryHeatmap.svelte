@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
   import { EventHistoryHeatmap, type EventHistoryDataSource } from '$lib/shared/ui/event-history';
   import PersonalMintDayEventRow from '$lib/areas/minting/ui/history/PersonalMintDayEventRow.svelte';
 

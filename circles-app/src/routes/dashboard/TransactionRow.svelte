@@ -1,7 +1,7 @@
 <script lang="ts">
     import { getContext } from 'svelte';
     import { getTimeAgo } from '$lib/shared/utils/shared';
-    import type { TransactionHistoryRow } from '@circles-sdk/data';
+    import type { TransactionHistoryRow } from '@aboutcircles/sdk-types';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import { avatarState } from '$lib/shared/state/avatar.svelte';
     import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';

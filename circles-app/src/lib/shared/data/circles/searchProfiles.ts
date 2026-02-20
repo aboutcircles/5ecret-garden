@@ -1,5 +1,5 @@
-import type { Sdk } from '@circles-sdk/sdk';
-import type { SearchProfileResult } from '$lib/shared/model/profile';
+import type { Sdk } from '@aboutcircles/sdk';
+import type { SearchProfileResult } from '$lib/shared/model/profile/types';
 import { SEARCH_POLICY } from '$lib/shared/ui/lists/utils/searchPolicies';
 
 export type RpcSearchProfileResult = SearchProfileResult & {
@@ -41,18 +41,17 @@ export async function searchProfilesRpc(
     avatarTypes?: string[];
   }
 ): Promise<RpcSearchProfileResult[]> {
-  if (!sdk?.circlesRpc) {
+  if (!sdk?.rpc) {
     return [];
   }
 
-  const raw = await sdk.circlesRpc.call<any>('circles_searchProfiles', [
+  const list = await sdk.rpc.profile.searchProfiles(
     params.query,
     params.limit,
     params.offset ?? 0,
     params.avatarTypes,
-  ]);
+  );
 
-  const list: any[] = Array.isArray(raw?.result) ? raw.result : [];
   return list.map(normalizeSearchProfile).filter((v): v is RpcSearchProfileResult => !!v);
 }
 

@@ -6,12 +6,12 @@ import type {
   EventRow,
   CirclesQuery,
   AvatarRow,
-} from '@circles-sdk/data';
+} from '@aboutcircles/sdk-types';
 import type { ContactList } from '$lib/shared/state/contacts';
 import { getProfilesCoreBatch, type ProfileAddress } from '$lib/shared/model/profile';
 import { get } from 'svelte/store';
-import type { Address } from '@circles-sdk/utils';
-import type { Avatar, Sdk } from '@circles-sdk/sdk';
+import type { Address } from '@aboutcircles/sdk-types';
+import type { Avatar, Sdk } from '@aboutcircles/sdk';
 import { createTrustDataSource } from '$lib/shared/data/circles/trustDataSource';
 import { createAvatarDataSource } from '$lib/shared/data/circles/avatarDataSource';
 

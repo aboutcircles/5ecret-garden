@@ -54,7 +54,7 @@
 </script>
 
 <script lang="ts">
-    import type { TokenBalanceRow } from '@circles-sdk/data';
+    import type { TokenBalanceRow } from '@aboutcircles/sdk-types';
     import { writable } from 'svelte/store';
     import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
     import type { Readable } from 'svelte/store';

@@ -1,7 +1,7 @@
 <script lang="ts">
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
   import type { SendFlowContext } from '$lib/areas/wallet/flows/send/context';
-  import type { TokenBalanceRow } from '@circles-sdk/data';
+  import type { TokenBalanceRow } from '@aboutcircles/sdk-types';
   import { circlesBalances } from '$lib/shared/state/circlesBalances';
   import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import { SEND_FLOW_SCAFFOLD_BASE, SEND_POPUP_TITLE } from './constants';

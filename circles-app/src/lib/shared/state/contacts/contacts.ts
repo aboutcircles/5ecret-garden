@@ -2,11 +2,11 @@ import type {
   AvatarRow,
   CirclesEventType,
   TrustRelationRow,
-} from '@circles-sdk/data';
+} from '@aboutcircles/sdk-types';
 import type { AppProfileCore as Profile } from '$lib/shared/model/profile';
 import { writable } from 'svelte/store';
 import { createContactsQueryStore } from '$lib/shared/state/contacts/query/circlesContactsQueryStore.svelte';
-import type { Avatar } from '@circles-sdk/sdk';
+import type { Avatar } from '@aboutcircles/sdk';
 
 export type ContactListItem = {
   contactProfile: Profile;

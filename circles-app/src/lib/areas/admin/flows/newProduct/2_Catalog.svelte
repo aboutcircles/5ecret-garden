@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
   import type { AggregatedCatalogItem } from '$lib/areas/market/model';
   import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
   import { gnosisConfig } from '$lib/shared/config/circles';

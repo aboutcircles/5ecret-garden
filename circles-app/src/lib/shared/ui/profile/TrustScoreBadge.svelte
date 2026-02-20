@@ -1,6 +1,6 @@
 <script lang="ts">
     import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
-    import type { Address } from '@circles-sdk/utils';
+    import type { Address } from '@aboutcircles/sdk-types';
     import {
         fetchTrusteeValidation,
         getCachedTrusteeValidation,

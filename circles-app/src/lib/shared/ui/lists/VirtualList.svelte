@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onDestroy, setContext, tick, type Component } from 'svelte';
-    import type { EventRow, TransactionHistoryRow } from '@circles-sdk/data';
+    import type { EventRow, TransactionHistoryRow } from '@aboutcircles/sdk-types';
     import { getKeyFromItem } from '$lib/shared/state/query';
     import type { Readable } from 'svelte/store';
     import {

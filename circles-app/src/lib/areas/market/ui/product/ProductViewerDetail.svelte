@@ -6,7 +6,7 @@
   import { fetchAvailabilityFeed, fetchInventoryFeed, mapAvailabilityToLabel } from '$lib/areas/market/services';
   import type { QuantitativeValue } from '$lib/areas/market/services';
   import type { SchemaOrgOfferLite, SchemaOrgProductLite } from '$lib/areas/market/model';
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
 
   import { ipfsGatewayUrl } from '$lib/shared/utils/ipfs';
   import { sanitizeUrl } from '$lib/shared/ui/content/markdown/ast';

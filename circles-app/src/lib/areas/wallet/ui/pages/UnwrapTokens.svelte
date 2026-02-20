@@ -4,7 +4,7 @@
   import { circles } from '$lib/shared/state/circles';
   import { ethers } from 'ethers';
   import BalanceRow from '$lib/areas/wallet/ui/components/BalanceRow.svelte';
-  import type { TokenBalanceRow } from '@circles-sdk/data';
+  import type { TokenBalanceRow } from '@aboutcircles/sdk-types';
   import { roundToDecimals } from '$lib/shared/utils/shared';
   import { runTask } from '$lib/shared/utils/tasks';
   import { popupControls } from '$lib/shared/state/popup';

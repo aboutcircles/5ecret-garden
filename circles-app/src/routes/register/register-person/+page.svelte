@@ -1,12 +1,12 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
-    import type { Avatar as AvatarType } from '@circles-sdk/sdk';
+    import type { Avatar as AvatarType } from '@aboutcircles/sdk';
     import { circles } from '$lib/shared/state/circles';
     import { wallet } from '$lib/shared/state/wallet.svelte';
-    import type { AvatarRow } from '@circles-sdk/data';
-    import type { Profile } from '@circles-sdk/profiles';
+    import type { AvatarRow } from '@aboutcircles/sdk-types';
+    import type { Profile } from '@aboutcircles/sdk-profiles';
     import { onMount } from 'svelte';
-    import type { Address } from '@circles-sdk/utils';
+    import type { Address } from '@aboutcircles/sdk-types';
     import { ProfileFormStep } from '$lib/shared/ui/profile';
     import { settings } from '$lib/shared/state/settings.svelte';
     import { avatarState } from '$lib/shared/state/avatar.svelte';

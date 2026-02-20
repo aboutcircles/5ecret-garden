@@ -4,11 +4,11 @@ import {
   type EventRow,
   type GroupRow,
   type PagedQueryParams,
-} from '@circles-sdk/data';
+} from '@aboutcircles/sdk-types';
 import { get } from 'svelte/store';
 import { createCirclesQueryStore } from '$lib/shared/state/query';
 import { circles } from '$lib/shared/state/circles';
-import type { Avatar } from '@circles-sdk/sdk';
+import type { Avatar } from '@aboutcircles/sdk';
 
 const groupEvents: Set<CirclesEventType> = new Set([]);
 

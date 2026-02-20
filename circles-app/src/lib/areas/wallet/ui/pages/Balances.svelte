@@ -5,7 +5,7 @@
     import { onMount } from 'svelte';
     import BalanceRow from '$lib/areas/wallet/ui/components/BalanceRow.svelte';
     import BalanceRowPlaceholder from '$lib/shared/ui/lists/placeholders/BalanceRowPlaceholder.svelte';
-    import type {EventRow} from '@circles-sdk/data';
+    import type {EventRow} from '@aboutcircles/sdk-types';
     import Filter from '$lib/shared/ui/lists/Filter.svelte';
     import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
     import ListShell from '$lib/shared/ui/lists/ListShell.svelte';

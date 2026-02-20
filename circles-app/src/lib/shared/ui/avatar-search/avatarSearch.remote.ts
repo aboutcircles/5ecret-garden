@@ -1,4 +1,4 @@
-import type { Sdk } from '@circles-sdk/sdk';
+import type { Sdk } from '@aboutcircles/sdk';
 import { SEARCH_POLICY } from '$lib/shared/ui/lists/utils/searchPolicies';
 import { searchProfilesRpc } from '$lib/shared/data/circles/searchProfiles';
 import { computeTextRank } from './avatarSearch.rank';

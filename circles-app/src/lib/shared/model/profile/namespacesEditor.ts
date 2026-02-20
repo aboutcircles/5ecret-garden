@@ -2,7 +2,7 @@
 import type { CidV0 } from '$lib/areas/market/offers';
 import type { ProfilesBindings } from '@circles-market/sdk';
 import { loadIndex, rebaseAndSaveProfile } from '@circles-market/sdk';
-import type { Address } from '@circles-sdk/utils';
+import type { Address } from '@aboutcircles/sdk-types';
 
 export type LoadedNamespaceLink = {
     link: any;          // JSON-LD CustomDataLink as stored on IPFS

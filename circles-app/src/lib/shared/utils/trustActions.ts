@@ -1,6 +1,6 @@
 import { get } from 'svelte/store';
 import { ethers } from 'ethers';
-import type { Address } from '@circles-sdk/utils';
+import type { Address } from '@aboutcircles/sdk-types';
 
 import { avatarState } from '$lib/shared/state/avatar.svelte';
 import { circles } from '$lib/shared/state/circles';

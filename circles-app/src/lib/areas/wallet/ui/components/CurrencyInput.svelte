@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount, onDestroy } from 'svelte';
     import IMask from 'imask';
-    import type { TokenBalanceRow } from '@circles-sdk/data';
+    import type { TokenBalanceRow } from '@aboutcircles/sdk-types';
     import { TransitiveTransferTokenAddress } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
     import { roundToDecimals } from '$lib/shared/utils/shared';
     import Tooltip from "$lib/shared/ui/primitives/Tooltip.svelte";

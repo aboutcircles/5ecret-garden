@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { uint256ToAddress, CirclesConverter } from '@circles-sdk/utils';
+import { uint256ToAddress, CirclesConverter } from '@aboutcircles/sdk-utils';
 import { formatCurrency } from '$lib/shared/utils/money';
 
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';

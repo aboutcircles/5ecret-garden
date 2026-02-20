@@ -1,7 +1,7 @@
 <script lang="ts">
     import { circles } from '$lib/shared/state/circles';
     import { wallet } from '$lib/shared/state/wallet.svelte';
-    import type { Profile } from '@circles-sdk/profiles';
+    import type { Profile } from '@aboutcircles/sdk-profiles';
     import { ProfileFormStep } from '$lib/shared/ui/profile';
     import { onMount } from 'svelte';
     import Disclaimer from '$lib/areas/register/ui/components/RegistrationDisclaimer.svelte';
