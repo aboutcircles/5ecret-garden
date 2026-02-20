@@ -22,9 +22,9 @@
   let { data }: PageProps = $props();
 
   $effect(() => {
-    if ($circles?.circlesRpc) {
+    if ($circles?.rpc) {
       fetchGroupMetrics(
-        $circles.circlesRpc,
+        $circles.rpc,
         data.group as Address,
         groupMetrics
       );

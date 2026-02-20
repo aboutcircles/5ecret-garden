@@ -5,12 +5,12 @@
     import TrustRelationsList from '$lib/shared/ui/profile/components/TrustRelationsList.svelte';
     import HoldersList from '$lib/shared/ui/profile/components/HoldersList.svelte';
     import {contacts} from '$lib/shared/state/contacts';
-    import {
-        type AvatarRow,
-        CirclesQuery,
-        type TrustRelation,
-        type TrustRelationRow,
+    import type {
+        AvatarRow,
+        TrustRelation,
+        TrustRelationRow,
     } from '@aboutcircles/sdk-types';
+    import { PagedQuery } from '@aboutcircles/sdk-rpc';
     import Untrust from '$lib/areas/contacts/ui/pages/Untrust.svelte';
     import { openAddTrustFlow } from '$lib/areas/trust/flows/addTrust/openAddTrustFlow';
     import { openSendFlowPopup } from '$lib/areas/wallet/flows/send/openSendFlowPopup';
@@ -266,7 +266,7 @@ import {uint256ToAddress} from '@aboutcircles/sdk-utils';
 
         const loadMintHandler = async () => {
             try {
-                const findMintHandlerQuery = new CirclesQuery<any>(sdk.circlesRpc, {
+                const findMintHandlerQuery = new PagedQuery<any>(sdk.rpc.client, {
                     namespace: 'V_CrcV2',
                     table: 'Groups',
                     columns: ['mintHandler'],
@@ -281,7 +281,8 @@ import {uint256ToAddress} from '@aboutcircles/sdk-utils';
                     sortOrder: 'DESC',
                     limit: 1,
                 });
-                mintHandler = (await findMintHandlerQuery.getSingleRow())?.mintHandler as Address | undefined;
+                await findMintHandlerQuery.queryNextPage();
+                mintHandler = findMintHandlerQuery.currentPage?.results?.[0]?.mintHandler as Address | undefined;
             } catch (e) {
                 mintHandler = undefined;
             }
@@ -292,8 +293,8 @@ import {uint256ToAddress} from '@aboutcircles/sdk-utils';
             collateralError = null;
             try {
                 const [vaultRes, treasuryRes] = await Promise.allSettled([
-                    getVaultAddress(sdk.circlesRpc, otherAvatar!.avatar),
-                    getTreasuryAddress(sdk.circlesRpc, otherAvatar!.avatar),
+                    getVaultAddress(sdk.rpc, otherAvatar!.avatar),
+                    getTreasuryAddress(sdk.rpc, otherAvatar!.avatar),
                 ]);
                 const vaultAddress = vaultRes.status === 'fulfilled' ? vaultRes.value : null;
                 const treasuryAddress = treasuryRes.status === 'fulfilled' ? treasuryRes.value : null;
@@ -303,7 +304,7 @@ import {uint256ToAddress} from '@aboutcircles/sdk-utils';
                     collateralInTreasury = [];
                     return;
                 }
-                const balancesResult = await getGroupCollateral(sdk.circlesRpc, balanceOwner);
+                const balancesResult = await getGroupCollateral(sdk.rpc, balanceOwner);
                 collateralInTreasury = toTokenRows(balancesResult, 'tokenId');
             } catch (e: any) {
                 collateralError = e?.message ?? 'Failed to load collateral';
@@ -317,7 +318,7 @@ import {uint256ToAddress} from '@aboutcircles/sdk-utils';
             holdingsLoading = true;
             holdingsError = null;
             try {
-                const holdingsResult = await getAccountHoldings(sdk.circlesRpc, address);
+                const holdingsResult = await getAccountHoldings(sdk.rpc, address);
                 holdings = toTokenRows(holdingsResult, 'tokenId');
             } catch (e: any) {
                 holdingsError = e?.message ?? 'Failed to load holdings';
@@ -331,7 +332,7 @@ import {uint256ToAddress} from '@aboutcircles/sdk-utils';
             holdersLoading = true;
             holdersError = null;
             try {
-                const tokenHoldersResult = await getGroupTokenHolders(sdk.circlesRpc, address);
+                const tokenHoldersResult = await getGroupTokenHolders(sdk.rpc, address);
                 tokenHolders = toTokenRows(tokenHoldersResult, 'account');
             } catch (e: any) {
                 holdersError = e?.message ?? 'Failed to load holders';

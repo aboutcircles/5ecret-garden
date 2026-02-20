@@ -8,6 +8,16 @@ export type CirclesConfig = BaseCirclesConfig & {
   chainRpcUrl?: string;
   /** V1→V2 migration contract address (for display labels in transaction history) */
   migrationAddress?: string;
+  /** Market API base URL */
+  marketApiBase?: string;
+  /** Market operator address */
+  marketOperator?: string;
+  /** Market chain ID (decimal) */
+  marketChainId?: number;
+  /** Market chain ID (hex string) */
+  marketChainIdHex?: string;
+  /** IPFS gateway base URL */
+  ipfsGatewayBase?: string;
 };
 
 export const chiadoConfig: { production: CirclesConfig; rings: CirclesConfig } =

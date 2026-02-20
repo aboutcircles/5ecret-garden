@@ -48,7 +48,7 @@
 
   async function loadTrusts() {
     loadError = null;
-    if (!gatewayValid || !$circles?.circlesRpc) {
+    if (!gatewayValid || !$circles?.rpc) {
       trusts = [];
       return;
     }

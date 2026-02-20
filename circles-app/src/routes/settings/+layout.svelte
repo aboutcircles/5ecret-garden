@@ -456,7 +456,7 @@
   const shortGatewayAddr = (a?: string) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : '');
 
   async function loadMyGateways(): Promise<void> {
-    if (!gatewayOwnerAddress || !$circles?.circlesRpc) {
+    if (!gatewayOwnerAddress || !$circles?.rpc) {
       myGatewaysStoreInner.set({
         data: [],
         next: async () => true,
@@ -489,7 +489,7 @@
   $effect(() => {
     // Load gateways only when the Payment tab is visible.
     if (selectedTab !== 'payment') return;
-    if (gatewayOwnerAddress && $circles?.circlesRpc) {
+    if (gatewayOwnerAddress && $circles?.rpc) {
       void loadMyGateways();
     } else {
       myGatewaysStoreInner.set({

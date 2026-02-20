@@ -19,12 +19,12 @@
             const v1Avatar = new V1Avatar($circles!, avatarState.avatar.avatarInfo!);
             runTask({
                 name: `Untrusting V1 ${shortenAddress(address)} ...`,
-                promise: v1Avatar.untrust(address),
+                promise: v1Avatar.trust.remove(address),
             });
         } else {
             runTask({
                 name: `Untrusting V2 ${shortenAddress(address)} ...`,
-                promise: avatarState.avatar!.untrust(address),
+                promise: avatarState.avatar!.trust.remove(address),
             });
         }
         popupControls.close();

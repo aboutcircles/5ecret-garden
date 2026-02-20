@@ -146,7 +146,7 @@
 
   async function searchProfiles(q: string) {
     const sdk = get(circles);
-    if (!sdk?.circlesRpc) {
+    if (!sdk?.rpc) {
       return [];
     }
 

@@ -85,7 +85,7 @@
     try {
       const c = get(circles);
       const owner = get(wallet)?.address as string | undefined;
-      if (!c?.circlesRpc || !owner) {
+      if (!c?.rpc || !owner) {
         hasGateway = false;
         return;
       }

@@ -108,17 +108,17 @@ import { uint256ToAddress } from '@aboutcircles/sdk-utils';
     if (!$circles) return;
     
     const vaultAddress = await getVaultAddress(
-      $circles.circlesRpc,
+      $circles.rpc,
       asset.tokenOwner
     );
 
     const treasuryAddress = await getTreasuryAddress(
-      $circles.circlesRpc,
+      $circles.rpc,
       asset.tokenOwner
     );
 
     const balancesResult = await getGroupCollateral(
-      $circles.circlesRpc,
+      $circles.rpc,
       vaultAddress ?? treasuryAddress ?? ''
     );
 

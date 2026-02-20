@@ -218,7 +218,7 @@
     const groupAvatar = await sdk.getAvatar(group);
     await runTask({
       name: `Removing ${selectedMembers.length} trusted avatar${selectedMembers.length === 1 ? '' : 's'} from ${shortenAddress(group)} ...`,
-      promise: groupAvatar.untrust(selectedMembers),
+      promise: groupAvatar.trust.remove(selectedMembers),
     });
 
     selectedSet = new Set<Address>();
