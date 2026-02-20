@@ -45,13 +45,15 @@ export async function searchProfilesRpc(
     return [];
   }
 
-  const list = await sdk.rpc.profile.searchByAddressOrName(
+  const response = await sdk.rpc.profile.searchByAddressOrName(
     params.query,
     params.limit,
     params.offset ?? 0,
     params.avatarTypes,
   );
 
+  // searchByAddressOrName returns { results, hasMore, nextCursor } or plain array
+  const list: unknown[] = Array.isArray(response) ? response : ((response as any).results ?? []);
   return list.map(normalizeSearchProfile).filter((v): v is RpcSearchProfileResult => !!v);
 }
 
