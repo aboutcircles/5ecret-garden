@@ -6,7 +6,7 @@
     import type { Address } from '@aboutcircles/sdk-types';
     import type { Readable } from 'svelte/store';
     import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
-    import { usePopupListFocusRestore } from '$lib/shared/ui/profile/utils/popupListFocusRestore';
+    import { usePopupListFocusRestore } from '$lib/shared/ui/profile/utils/popupListFocusRestore.svelte';
 
     interface Props {
         addresses: Readable<Address[]>;

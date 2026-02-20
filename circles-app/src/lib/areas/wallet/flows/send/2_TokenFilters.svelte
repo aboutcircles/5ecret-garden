@@ -5,7 +5,7 @@
   import { circlesBalances } from '$lib/shared/state/circlesBalances';
   import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import { SEND_FLOW_SCAFFOLD_BASE, SEND_POPUP_TITLE } from './constants';
-  import { popupControls } from '$lib/shared/state/popup';
+  import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
   import { popToOrOpen } from '$lib/shared/flow';
   import AmountStep from './3_Amount.svelte';
   import { tick } from 'svelte';

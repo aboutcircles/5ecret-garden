@@ -5,7 +5,7 @@
   import { runTask } from '$lib/shared/utils/tasks';
   import { shortenAddress } from '$lib/shared/utils/shared';
   import TrustActionCard from '$lib/areas/contacts/ui/components/TrustActionCard.svelte';
-  import { popupControls } from '$lib/shared/state/popup';
+  import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
 
   interface Props {
     group: Address;

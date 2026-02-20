@@ -6,7 +6,7 @@
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
   import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
-  import { initContactStore } from '$lib/shared/state/contacts/contacts';
+  import { refreshContactStore } from '$lib/shared/state/contacts/contacts';
 
   interface Props {
     address: `0x${string}`;
@@ -28,7 +28,7 @@
     // Refresh the contacts list
     if (avatarState.avatar) {
       console.log('Refreshing contacts list after trust...');
-      initContactStore(avatarState.avatar);
+      refreshContactStore(avatarState.avatar);
     }
 
     popupControls.close();

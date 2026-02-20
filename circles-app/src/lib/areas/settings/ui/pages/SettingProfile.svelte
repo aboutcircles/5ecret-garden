@@ -4,7 +4,7 @@
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import QrCode from '$lib/shared/ui/primitives/QrCode.svelte';
     import { openStep } from '$lib/shared/flow';
-    import {popupControls} from '$lib/shared/state/popup';
+    import {popupControls} from '$lib/shared/state/popup/popUp.svelte';
     import {signer} from '$lib/shared/state/wallet.svelte';
 import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
     import type {Address as EvmAddress} from '@aboutcircles/sdk-types';
@@ -21,9 +21,8 @@ import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
             ? '/connect-wallet/import-circles-garden'
             : '/connect-wallet/connect-safe';
 
-        popupControls.closeAndThen(() => {
-            void goto(target);
-        });
+        popupControls.close();
+        void goto(target);
     }
 
     function openProfileEditor() {

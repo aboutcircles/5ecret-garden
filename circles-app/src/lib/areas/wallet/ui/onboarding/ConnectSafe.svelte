@@ -13,7 +13,7 @@
 
   interface Props {
     safeOwnerAddress: Address;
-    initSdk: (ownerAddress: Address) => Promise<Sdk>;
+    initSdk: (ownerAddress: Address) => Promise<Sdk | null>;
     sdk: Sdk;
     refreshGroupsCallback?: () => void;
   }

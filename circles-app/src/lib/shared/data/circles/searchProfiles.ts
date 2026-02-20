@@ -45,7 +45,7 @@ export async function searchProfilesRpc(
     return [];
   }
 
-  const list = await sdk.rpc.profile.searchProfiles(
+  const list = await sdk.rpc.profile.searchByAddressOrName(
     params.query,
     params.limit,
     params.offset ?? 0,

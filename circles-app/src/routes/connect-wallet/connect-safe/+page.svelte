@@ -141,7 +141,7 @@
       } else {
         chainError = err.message || 'Failed to connect Safe';
       }
-      return new Sdk(getActiveConfig());
+      return null;
     }
   }
 

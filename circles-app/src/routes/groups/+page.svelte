@@ -318,8 +318,10 @@
       {:else if searchQuery && filteredMyGroups}
         <!-- Client-side filtered my groups -->
         <GenericList store={filteredMyGroups} row={GroupRowView} />
-      {:else}
+      {:else if myGroups}
         <GenericList store={myGroups} row={GroupRowView} />
+      {:else}
+        <div class="p-4 text-center text-base-content/60">Loading groups...</div>
       {/if}
     {:else if searchQuery && searchedGroups}
       <!-- Server-side search results for all groups -->

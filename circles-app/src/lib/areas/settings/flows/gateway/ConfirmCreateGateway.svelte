@@ -10,7 +10,7 @@
   import { wallet } from '$lib/shared/state/wallet.svelte';
   import { runTask } from '$lib/shared/utils/tasks';
   import { isAddress } from '$lib/shared/utils/tx';
-  import { popupControls } from '$lib/shared/state/popup';
+  import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
   import { openStep, popToOrOpen } from '$lib/shared/flow';
   import type { CreateGatewayFlowContext } from './context';
   import { gnosisMarketConfig } from '$lib/shared/config/market';

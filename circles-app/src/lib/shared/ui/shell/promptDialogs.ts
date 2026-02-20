@@ -1,4 +1,4 @@
-import { popupControls } from '$lib/shared/state/popup';
+import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
 import PromptTextStep from '$lib/shared/ui/shell/PromptTextStep.svelte';
 
 export type TextPromptOptions = {

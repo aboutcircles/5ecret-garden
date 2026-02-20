@@ -6,7 +6,7 @@
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import { popToOrOpen } from '$lib/shared/flow';
-  import { popupControls } from '$lib/shared/state/popup';
+  import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
   import { addTrustRelations } from '$lib/shared/utils/trustActions';
   import { ADD_TRUST_FLOW_SCAFFOLD_BASE } from './constants';
   import PickAccounts from './1_PickAccounts.svelte';

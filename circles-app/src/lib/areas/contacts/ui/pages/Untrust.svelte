@@ -3,8 +3,9 @@
     import { runTask } from '$lib/shared/utils/tasks';
     import { shortenAddress } from '$lib/shared/utils/shared';
     import TrustActionCard from '$lib/areas/contacts/ui/components/TrustActionCard.svelte';
-    import { popupControls } from '$lib/shared/state/popup';
+    import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
     import { UNTRUST_EXPLAINER_POINTS, UNTRUST_QUICK_HELP_LINES } from '$lib/shared/content/trustRoutingCopy';
+    import { refreshContactStore } from '$lib/shared/state/contacts/contacts';
 
     interface Props { address: `0x${string}`; trustVersion?: number; }
     let { address }: Props = $props();
@@ -14,10 +15,17 @@
             throw new Error('Avatar store not available');
         }
         // New SDK handles V1+V2 untrust uniformly via trust.remove()
-        runTask({
+        await runTask({
             name: `Untrusting ${shortenAddress(address)} ...`,
             promise: avatarState.avatar!.trust.remove(address),
         });
+
+        // Wait for blockchain state to update, then refresh contacts
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        if (avatarState.avatar) {
+            refreshContactStore(avatarState.avatar);
+        }
+
         popupControls.close();
     }
 </script>

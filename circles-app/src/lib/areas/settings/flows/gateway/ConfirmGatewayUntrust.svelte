@@ -10,7 +10,7 @@
   import { wallet } from '$lib/shared/state/wallet.svelte';
   import { runTask } from '$lib/shared/utils/tasks';
   import { isAddress } from '$lib/shared/utils/tx';
-  import { popupControls } from '$lib/shared/state/popup';
+  import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
 
   interface Props {
     gateway: string;

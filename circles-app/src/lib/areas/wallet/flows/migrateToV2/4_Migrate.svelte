@@ -15,7 +15,7 @@
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { runTask } from '$lib/shared/utils/tasks';
   import { removeProfileFromCache } from '$lib/shared/utils/profile';
-  import { popupControls } from '$lib/shared/state/popup';
+  import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
   import { openStep, popToOrOpen, useAsyncAction } from '$lib/shared/flow';
   import { requireAvatar, requireCircles, requireProfile } from '$lib/shared/flow';
   import type { ReviewStepProps } from '$lib/shared/flow';

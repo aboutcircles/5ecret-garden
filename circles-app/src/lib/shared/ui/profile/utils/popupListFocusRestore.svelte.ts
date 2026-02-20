@@ -1,5 +1,4 @@
-import { onDestroy } from 'svelte';
-import { popupState } from '$lib/shared/state/popup';
+import { popupState } from '$lib/shared/state/popup/popUp.svelte';
 
 interface PopupListFocusRestoreOptions {
   getScope: () => HTMLElement | null;
@@ -40,8 +39,8 @@ export function usePopupListFocusRestore(options: PopupListFocusRestoreOptions):
     }
   }
 
-  const unsubscribePopup = popupState.subscribe((state) => {
-    const depth = state.content ? state.stack.length + 1 : 0;
+  $effect(() => {
+    const depth = popupState.content ? popupState.stack.length + 1 : 0;
 
     if (depth > previousPopupDepth) {
       captureFocusedRowAddress();
@@ -59,9 +58,5 @@ export function usePopupListFocusRestore(options: PopupListFocusRestoreOptions):
     }
 
     previousPopupDepth = depth;
-  });
-
-  onDestroy(() => {
-    unsubscribePopup();
   });
 }

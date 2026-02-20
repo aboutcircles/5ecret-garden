@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { popupControls } from '$lib/shared/state/popup';
+    import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
     import { runTask } from '$lib/shared/utils/tasks';
     import { loadProfileOrInit, rebaseAndSaveProfile } from '@circles-market/sdk';
     import type { ProfilesBindings } from '@circles-market/sdk';

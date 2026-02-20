@@ -18,8 +18,16 @@ export const connectionStatus: ConnectionState = $state({ status: 'idle' });
 
 /**
  * Update connection status - call from retry logic.
+ * Clears all variant-specific fields before applying new state
+ * to prevent stale properties from previous states leaking through.
  */
 export function setConnectionStatus(state: ConnectionState): void {
+  const conn = connectionStatus as any;
+  delete conn.message;
+  delete conn.attempt;
+  delete conn.maxAttempts;
+  delete conn.error;
+  delete conn.nextRetryMs;
   Object.assign(connectionStatus, state);
 }
 
@@ -27,39 +35,33 @@ export function setConnectionStatus(state: ConnectionState): void {
  * Reset to idle state.
  */
 export function resetConnectionStatus(): void {
-  Object.assign(connectionStatus, { status: 'idle' });
+  setConnectionStatus({ status: 'idle' });
 }
 
 /**
  * Mark as connecting (initial attempt).
  */
 export function setConnecting(message?: string): void {
-  Object.assign(connectionStatus, { status: 'connecting', message });
+  setConnectionStatus({ status: 'connecting', message });
 }
 
 /**
  * Mark as retrying with attempt info.
  */
 export function setRetrying(attempt: number, maxAttempts: number, error: string, nextRetryMs: number): void {
-  Object.assign(connectionStatus, {
-    status: 'retrying',
-    attempt,
-    maxAttempts,
-    error,
-    nextRetryMs,
-  });
+  setConnectionStatus({ status: 'retrying', attempt, maxAttempts, error, nextRetryMs });
 }
 
 /**
  * Mark as failed (all retries exhausted).
  */
 export function setFailed(error: string): void {
-  Object.assign(connectionStatus, { status: 'failed', error });
+  setConnectionStatus({ status: 'failed', error });
 }
 
 /**
  * Mark as successfully connected.
  */
 export function setConnected(): void {
-  Object.assign(connectionStatus, { status: 'connected' });
+  setConnectionStatus({ status: 'connected' });
 }

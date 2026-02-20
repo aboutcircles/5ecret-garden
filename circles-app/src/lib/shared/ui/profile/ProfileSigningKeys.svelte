@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import { popupControls, popupState } from '$lib/shared/state/popup';
+    import { popupControls, popupState } from '$lib/shared/state/popup/popUp.svelte';
     import { runTask } from '$lib/shared/utils/tasks';
 import { AddSigningKey } from '$lib/shared/ui/profile';
     import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
@@ -82,7 +82,7 @@ import { AddSigningKey } from '$lib/shared/ui/profile';
 
     $effect(() => {
         // Reload after the AddSigningKey popup closes.
-        const isClosed = $popupState.content === null;
+        const isClosed = popupState.content === null;
         if (!awaitingAddKeyClose) return;
         if (!isClosed) return;
 

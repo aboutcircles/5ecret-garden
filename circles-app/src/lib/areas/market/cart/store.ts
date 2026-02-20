@@ -92,6 +92,7 @@ async function ensureBasketId(buyer: string): Promise<string> {
   });
 
   writeBasketIdWithDevUiSurface(created.basketId);
+  cartState.update((s) => ({ ...s, basket: created }));
   return created.basketId;
 }
 

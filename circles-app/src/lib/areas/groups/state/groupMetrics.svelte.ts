@@ -59,31 +59,31 @@ export async function fetchGroupMetrics(
 ): Promise<void> {
   getMemberCount(circlesRpc, groupAddress, 'hour', '7 days').then((r) => {
     target.memberCountPerHour = r;
-  });
+  }).catch((e) => console.warn('[GroupMetrics] memberCount/hour:', e));
   getMemberCount(circlesRpc, groupAddress, 'day', '30 days').then((r) => {
     target.memberCountPerDay = r;
-  });
+  }).catch((e) => console.warn('[GroupMetrics] memberCount/day:', e));
   getMintRedeem(circlesRpc, groupAddress, 'hour', '7 days').then((r) => {
     target.mintRedeemPerHour = r;
-  });
+  }).catch((e) => console.warn('[GroupMetrics] mintRedeem/hour:', e));
   getMintRedeem(circlesRpc, groupAddress, 'day', '30 days').then((r) => {
     target.mintRedeemPerDay = r;
-  });
+  }).catch((e) => console.warn('[GroupMetrics] mintRedeem/day:', e));
   getWrapUnwrap(circlesRpc, groupAddress, 'hour', '7 days').then((r) => {
     target.wrapUnwrapPerHour = r;
-  });
+  }).catch((e) => console.warn('[GroupMetrics] wrapUnwrap/hour:', e));
   getWrapUnwrap(circlesRpc, groupAddress, 'day', '30 days').then((r) => {
     target.wrapUnwrapPerDay = r;
-  });
+  }).catch((e) => console.warn('[GroupMetrics] wrapUnwrap/day:', e));
   getCollateralInTreasury(circlesRpc, groupAddress).then((r) => {
     target.collateralInTreasury = r;
-  });
+  }).catch((e) => console.warn('[GroupMetrics] collateral:', e));
   getGroupTokenHoldersBalance(circlesRpc, groupAddress).then((r) => {
     target.tokenHolderBalance = r;
-  });
+  }).catch((e) => console.warn('[GroupMetrics] tokenHolders:', e));
   countCurrentAffiliateMembers(circlesRpc, groupAddress).then((r) => {
     target.affiliateMembersCount = r;
-  });
+  }).catch((e) => console.warn('[GroupMetrics] affiliateMembers:', e));
   const token = await getERC20Token(circlesRpc, groupAddress);
   target.erc20Token = token;
 
@@ -204,7 +204,7 @@ async function getMintRedeem(
   return result.reverse().map((row) => ({
     timestamp: new Date(row.timestamp),
     minted: Number(formatEther(row.minted)),
-    burned: Number(-formatEther(row.redeemed)),
+    burned: Number(formatEther(row.redeemed)),
     supply: Number(formatEther(row.supply)),
   }));
 }
@@ -251,7 +251,7 @@ async function getWrapUnwrap(
   return result.reverse().map((row) => ({
     timestamp: new Date(row.timestamp),
     wrapAmount: Number(formatEther(row.wrapped)),
-    unwrapAmount: Number(-formatEther(row.unwrapped)),
+    unwrapAmount: Number(formatEther(row.unwrapped)),
   }));
 }
 
@@ -376,7 +376,7 @@ async function getERC20Token(
     Order: [],
   });
 
-  return result[1]?.tokenAddress;
+  return result[0]?.tokenAddress;
 }
 
 interface AffiliateGroupChangedRow {

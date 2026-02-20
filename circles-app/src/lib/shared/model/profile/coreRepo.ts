@@ -1,7 +1,7 @@
 // src/lib/profiles/coreRepo.ts
 import { get } from 'svelte/store';
 import { circles } from '$lib/shared/state/circles';
-import { BatchAggregator } from '$lib/shared/model/profile/batchAggregator';
+import { BatchAggregator } from '$lib/shared/utils/batchAggregator';
 import type { AppProfileCore, ProfileAddress } from './types';
 import { FallbackImageUrl } from './types';
 import { shortenAddress } from '$lib/shared/utils/shared';
@@ -163,7 +163,10 @@ export async function getProfileCore(address: ProfileAddress): Promise<AppProfil
 
   const cached = coreCache.get(addr);
   if (cached) return cached;
-  const p = aggregator.enqueue(addr);
+  const p = aggregator.enqueue(addr).catch((err) => {
+    coreCache.delete(addr);
+    throw err;
+  });
   coreCache.set(addr, p);
   return p;
 }

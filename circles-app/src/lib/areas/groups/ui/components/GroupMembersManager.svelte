@@ -2,7 +2,7 @@
   import type { Address } from '@aboutcircles/sdk-types';
   import { circles } from '$lib/shared/state/circles';
   import { get, writable } from 'svelte/store';
-  import { popupControls } from '$lib/shared/state/popup';
+  import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
   import { runTask } from '$lib/shared/utils/tasks';
   import { shortenAddress } from '$lib/shared/utils/shared';
   import { getProfile } from '$lib/shared/utils/profile';

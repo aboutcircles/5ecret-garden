@@ -23,7 +23,12 @@ function parseNumericValue(raw: unknown): number {
   if (!str || str === '0') return 0;
   if (str.startsWith('0x') || str.startsWith('0X')) {
     try {
-      return Number(BigInt(str));
+      const bigVal = BigInt(str);
+      // Split into whole and fractional parts to avoid precision loss above Number.MAX_SAFE_INTEGER
+      const divisor = 1_000_000_000n; // 1e9
+      const whole = bigVal / divisor;
+      const frac = bigVal % divisor;
+      return Number(whole) * 1e9 + Number(frac);
     } catch {
       return 0;
     }
@@ -109,8 +114,7 @@ export function getErc20WrapperOwner(address: Address): Address | undefined {
 
 // Reactive counter to trigger UI updates when cache changes
 // Components can subscribe to this to re-render when profiles are fetched
-import { writable as svelteWritable } from 'svelte/store';
-export const profileCacheVersion = svelteWritable(0);
+export const profileCacheVersion = writable(0);
 
 /**
  * Get a cached profile from enriched transactions

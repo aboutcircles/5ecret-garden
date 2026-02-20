@@ -2,7 +2,7 @@
   import { getConnectors, connect } from '@wagmi/core';
   import { config } from '../../../../../config';
   import { goto } from '$app/navigation';
-  import { popupControls } from '$lib/shared/state/popup';
+  import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
   import { openStep } from '$lib/shared/flow';
   import { signer, clearSession } from '$lib/shared/state/wallet.svelte';
   import type { Address } from '@aboutcircles/sdk-types';
@@ -23,9 +23,8 @@
       } else {
         console.warn('No account returned by connector', connector?.id, result);
       }
-      popupControls.closeAndThen(() => {
-        void goto('/connect-wallet/connect-safe/');
-      });
+      popupControls.close();
+      void goto('/connect-wallet/connect-safe/');
     } catch (e) {
       console.error('Wallet connect failed', e);
       // keep popup open so user can retry
@@ -50,9 +49,8 @@
       // If a local private key is already present, reuse it without asking again
       const pk = CirclesStorage.getInstance().privateKey;
       if (pk) {
-        popupControls.closeAndThen(() => {
-          void goto('/connect-wallet/import-circles-garden');
-        });
+        popupControls.close();
+        void goto('/connect-wallet/import-circles-garden');
         return;
       }
       // Otherwise, prompt for the seed phrase

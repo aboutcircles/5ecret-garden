@@ -23,30 +23,11 @@ export async function dataGetAvatarInfo(
   return await sdk.data.getAvatar(address);
 }
 
-export async function dataGetAvatarInfoBatch(
-  sdk: Sdk,
-  addresses: Address[]
-): Promise<(AvatarInfo | undefined)[]> {
-  // New SDK doesn't have batch; fallback to sequential calls
-  return await Promise.all(addresses.map((a) => sdk.data.getAvatar(a)));
-}
-
 export async function dataGetAggregatedTrustRelations(
   sdk: Sdk,
   address: Address
 ): Promise<AggregatedTrustRelation[]> {
   return await sdk.data.getTrustRelations(address);
-}
-
-export function dataGetGroupMemberships(
-  sdk: Sdk,
-  member: Address,
-  limit: number
-) {
-  // New SDK uses sdk.groups.getMembers(groupAddress, limit) which queries by group, not member.
-  // This proxy is kept for backward compat but the caller should migrate to
-  // querying group memberships via PagedQuery on the GroupMemberships table.
-  return (sdk as any).data?.getGroupMemberships?.(member, limit) ?? Promise.resolve([]);
 }
 
 export async function avatarGetBalances(avatar: Avatar): Promise<TokenBalanceRow[]> {

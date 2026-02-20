@@ -1,6 +1,6 @@
 import type { Sdk } from '@aboutcircles/sdk';
 import type { Address, AvatarInfo } from '@aboutcircles/sdk-types';
-import { BatchAggregator } from '$lib/shared/model/profile/batchAggregator';
+import { BatchAggregator } from '$lib/shared/utils/batchAggregator';
 
 const batchers = new WeakMap<Sdk, BatchAggregator<Address, AvatarInfo | undefined>>();
 

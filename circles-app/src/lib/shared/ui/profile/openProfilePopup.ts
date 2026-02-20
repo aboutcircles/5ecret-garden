@@ -1,6 +1,6 @@
 import type { Address } from '@aboutcircles/sdk-types';
 import { normalizeEvmAddress } from '@circles-market/sdk';
-import { popupControls } from '$lib/shared/state/popup';
+import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
 import { ProfilePopup } from '$lib/areas/profile/ui/pages';
 
 type ProfilePopupOptions = {

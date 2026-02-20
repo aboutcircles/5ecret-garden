@@ -22,7 +22,7 @@
     isRegistered: boolean;
     groups?: GroupRow[];
     sdk: Sdk;
-    initSdk: (safeAddress: Address, targetAddress?: Address) => Promise<Sdk>;
+    initSdk: (safeAddress: Address, targetAddress?: Address) => Promise<Sdk | null>;
     refreshGroupsCallback?: () => void;
   }
 
@@ -57,6 +57,10 @@
     try {
       // Always create SDK with the Safe address, not the group address
       const sdk = await initSdk(address, targetAddress);
+      if (!sdk) {
+        console.error('[ConnectCircles] initSdk returned null (connection failed)');
+        return;
+      }
       $circles = sdk;
 
       // If clicking on the main safe (not a group) and it's not registered, go to registration
@@ -157,6 +161,10 @@
   async function openCreateGroup() {
     try {
       const sdk = await initSdk(address);
+      if (!sdk) {
+        console.error('[ConnectCircles] initSdk returned null (connection failed)');
+        return;
+      }
       $circles = sdk;
 
       // Initialize a fresh context with feeCollection defaulted to this safe address

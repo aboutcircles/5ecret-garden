@@ -3,7 +3,7 @@
   import { get } from 'svelte/store';
   import type { PagedQueryParams } from '@aboutcircles/sdk-types';
   import { PagedQuery } from '@aboutcircles/sdk-rpc';
-  import { popupControls } from '$lib/shared/state/popup';
+  import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
   import EventHistoryDayCalendar from './EventHistoryDayCalendar.svelte';
   import EventHistoryWeeklySections from './EventHistoryWeeklySections.svelte';
   import EventHistoryMonthlyList from './EventHistoryMonthlyList.svelte';

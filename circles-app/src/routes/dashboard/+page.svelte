@@ -64,26 +64,28 @@
     }
   });
 
-  // Active tab for dashboard - derived directly from URL (single source of truth)
-  let activeTab = $derived($page.url.searchParams.get('tab') || 'transactions');
+  // Active tab for dashboard - two-way binding with Tabs via $state.
+  // Synced from URL on navigation, synced to URL on user tab click.
+  let activeTab: string = $state($page.url.searchParams.get('tab') || 'transactions');
 
-  // Update URL when tab changes (user clicks tab)
-  function handleTabChange(newTab: string) {
+  // Sync from URL → state (handles browser back/forward, deep links)
+  $effect(() => {
+    const urlTab = $page.url.searchParams.get('tab') || 'transactions';
+    if (urlTab !== activeTab) activeTab = urlTab;
+  });
+
+  // Sync from state → URL (handles user tab clicks via bind:selected)
+  $effect(() => {
+    const currentUrlTab = $page.url.searchParams.get('tab') || 'transactions';
+    if (activeTab === currentUrlTab) return;
+
     const url = new URL(window.location.href);
-    const currentUrlTab = url.searchParams.get('tab') || 'transactions';
-
-    // Skip if URL already matches (avoid redundant navigation)
-    if (newTab === currentUrlTab) return;
-
-    url.searchParams.set('tab', newTab);
-
-    // Clear tx param when switching away from transactions tab
-    if (newTab !== 'transactions') {
+    url.searchParams.set('tab', activeTab);
+    if (activeTab !== 'transactions') {
       url.searchParams.delete('tx');
     }
-
     goto(url.toString(), { replaceState: true, keepFocus: true, noScroll: true });
-  }
+  });
 
   let mintableAmount: number = $state(0);
   let unsubscribeEvents: (() => void) | null = null;
@@ -282,12 +284,12 @@
   let personalToken: number = $derived(
     $circlesBalances?.data?.filter(
       (balance) => !isGroupToken(balance) && BigInt(balance.attoCircles) >= DUST_THRESHOLD
-    ).length
+    )?.length ?? 0
   );
   let groupToken: number = $derived(
     $circlesBalances?.data?.filter(
       (balance) => isGroupToken(balance) && BigInt(balance.attoCircles) >= DUST_THRESHOLD
-    ).length
+    )?.length ?? 0
   );
 
   function openBalances() {
@@ -448,10 +450,9 @@
   {:else}
     <div class="mb-4">
       <Tabs
-        selected={activeTab}
+        bind:selected={activeTab}
         variant="bordered"
         size="sm"
-        on:change={(e) => handleTabChange(e.detail)}
       >
         <Tab id="transactions" title="Transactions">
           <div class="pt-4">

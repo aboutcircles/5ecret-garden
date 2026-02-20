@@ -11,7 +11,7 @@
   import type { Address } from '@aboutcircles/sdk-types';
   import Trust from '$lib/areas/trust/ui/Trust.svelte';
   import type { BaseGroupAvatar } from '@aboutcircles/sdk';
-  import { initContactStore } from '$lib/shared/state/contacts/contacts';
+  import { refreshContactStore } from '$lib/shared/state/contacts/contacts';
 
   let context: AddContactFlowContext = $state({
     selectedAddress: '',
@@ -136,7 +136,7 @@
       // Refresh the contacts/members list
       if (avatarState.avatar) {
         console.log('Refreshing contacts/members list...');
-        initContactStore(avatarState.avatar);
+        refreshContactStore(avatarState.avatar);
       }
     } catch (error: any) {
       console.error('Error in handleAddMembers:', error);
