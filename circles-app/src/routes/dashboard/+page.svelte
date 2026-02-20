@@ -64,17 +64,16 @@
     }
   });
 
-  // Active tab for dashboard - two-way binding with Tabs via $state.
-  // Synced from URL on navigation, synced to URL on user tab click.
+  // Active tab — initialised from URL (deep-link / reload), then one-way
+  // synced back to URL on user tab clicks.  No URL→state effect needed:
+  // goto() uses replaceState so tab changes never create history entries,
+  // meaning browser back/forward navigates between *pages*, not tabs.
+  // The old two-effect bidirectional sync caused a race condition where the
+  // URL→state effect would overwrite user clicks before state→URL could
+  // call goto().
   let activeTab: string = $state($page.url.searchParams.get('tab') || 'transactions');
 
-  // Sync from URL → state (handles browser back/forward, deep links)
-  $effect(() => {
-    const urlTab = $page.url.searchParams.get('tab') || 'transactions';
-    if (urlTab !== activeTab) activeTab = urlTab;
-  });
-
-  // Sync from state → URL (handles user tab clicks via bind:selected)
+  // State → URL: when activeTab changes (user click via bind:selected), update URL
   $effect(() => {
     const currentUrlTab = $page.url.searchParams.get('tab') || 'transactions';
     if (activeTab === currentUrlTab) return;
