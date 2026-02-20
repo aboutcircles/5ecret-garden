@@ -5,6 +5,7 @@
   import { openStep } from '$lib/shared/flow';
   import ManageTrust from '$lib/areas/settings/flows/gateway/ManageTrust.svelte';
   import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
+  import type { Address } from '@aboutcircles/sdk-types';
 
   interface Props {
     item: GatewayRowType;
@@ -65,7 +66,7 @@
     <div class="w-full flex items-center justify-between gap-3">
       <div class="min-w-0 flex items-center gap-2">
         <Avatar
-          address={item.gateway}
+          address={item.gateway as Address}
           view="horizontal"
           clickable={true}
           bottomInfo={createdAt ? `Created ${createdAt}` : undefined}

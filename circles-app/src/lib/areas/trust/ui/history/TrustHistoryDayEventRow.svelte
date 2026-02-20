@@ -2,6 +2,7 @@
   import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import type { TrustHistoryEventRow, TrustHistoryListItem } from './types';
+  import type { Address } from '@aboutcircles/sdk-types';
 
   interface Props {
     item: TrustHistoryListItem;
@@ -52,7 +53,7 @@
 {:else}
   <RowFrame dense={true} noLeading={true}>
     <div class="min-w-0">
-      <Avatar address={item.row.trustee} view="horizontal" clickable={true} showTypeInfo={true} />
+      <Avatar address={item.row.trustee as Address} view="horizontal" clickable={true} showTypeInfo={true} />
     </div>
     {#snippet trailing()}
       <div class="text-right text-[10px]">

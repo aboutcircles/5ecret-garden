@@ -4,6 +4,7 @@
   import { openProfilePopup } from '$lib/shared/ui/profile/openProfilePopup';
   import type { TrustRow as TrustRowType } from '$lib/areas/settings/model/gatewayTypes';
   import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
+  import type { Address } from '@aboutcircles/sdk-types';
 
   type TrustRowItem = TrustRowType & {
     showRemove?: boolean;
@@ -66,7 +67,7 @@
     <div class="w-full flex items-center justify-between gap-3">
       <div class="min-w-0 flex items-center gap-2">
         <Avatar
-          address={item.trustReceiver}
+          address={item.trustReceiver as Address}
           view="horizontal"
           clickable={true}
           bottomInfo={expiryLabel}

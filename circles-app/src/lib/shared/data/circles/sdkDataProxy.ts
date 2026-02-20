@@ -10,7 +10,6 @@ import type { Address, TokenBalanceRow, AvatarInfo, AggregatedTrustRelation, Pro
  * NOTE: Adapted for @aboutcircles/sdk API surface:
  * - sdk.data.getAvatarInfo() -> sdk.data.getAvatar()
  * - avatar.getBalances() -> avatar.balances.getTokenBalances()
- * - avatar.getTransactionHistory(n) -> avatar.history.getTransactions(n)
  * - sdk.data.getTrustRelations() returns AggregatedTrustRelation[]
  * - sdk.rpc.trust.getCommonTrust() for common trust queries
  * - sdk.rpc.profile.getProfileByCidBatch() for batch profile lookups
@@ -32,14 +31,6 @@ export async function dataGetAggregatedTrustRelations(
 
 export async function avatarGetBalances(avatar: Avatar): Promise<TokenBalanceRow[]> {
   return await avatar.balances.getTokenBalances();
-}
-
-export async function avatarGetTransactionHistory(
-  avatar: Avatar,
-  pageSize: number
-): Promise<any> {
-  // TODO: fix type - returns PagedResponse<TransactionHistoryRow> now
-  return await avatar.history.getTransactions(pageSize);
 }
 
 export async function rpcGetProfileByCidBatch(

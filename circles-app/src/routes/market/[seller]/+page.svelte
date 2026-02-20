@@ -13,6 +13,7 @@
     import { avatarState } from '$lib/shared/state/avatar.svelte';
     import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
+    import type { Address } from '@aboutcircles/sdk-types';
     import type { Action } from '$lib/shared/ui/shell/actions';
     import {gnosisMarketConfig} from "$lib/shared/config/market";
 
@@ -134,7 +135,7 @@
 
             <div class="mt-4 flex items-center gap-3">
                 <Avatar
-                    address={params.seller || ''}
+                    address={(params.seller || '') as Address}
                     view="vertical"
                     clickable={false}
                 />

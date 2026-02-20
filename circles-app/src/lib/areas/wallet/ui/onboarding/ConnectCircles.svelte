@@ -39,7 +39,6 @@
   let isConnecting = $state(false);
 
   async function connectAvatar(avatarAddress?: Address) {
-    //@todo pass runner here
     // Use the safe address if no specific avatar address is provided
     const targetAddress = avatarAddress ?? address;
 

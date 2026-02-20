@@ -429,7 +429,7 @@
                             <Lucide icon={LChevronRight} size={18} />
                         {/if}
                     </div>
-                    <Avatar address={ns} view="horizontal" clickable={true} />
+                    <Avatar address={ns as Address} view="horizontal" clickable={true} />
                 </div>
                 <div class="text-xs font-medium">
                     {#if state.loading} 

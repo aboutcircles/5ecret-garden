@@ -106,10 +106,10 @@
 <FlowDecoration>
   <div class="w-full space-y-6" tabindex="-1" data-popup-initial-focus>
     <div class="flex flex-col items-center w-full sm:w-[90%] lg:w-3/5 mx-auto gap-y-3">
-      <Avatar address={gateway} view="vertical" clickable={false} />
+      <Avatar address={gateway as Address} view="vertical" clickable={false} />
 
       <div class="w-full flex justify-center">
-        <AddressComponent address={gateway} />
+        <AddressComponent address={gateway as Address} />
       </div>
 
       <div class="text-sm font-medium leading-tight text-base-content/90">Manage trust</div>

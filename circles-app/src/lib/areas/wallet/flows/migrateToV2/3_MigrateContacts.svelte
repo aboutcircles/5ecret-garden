@@ -13,6 +13,7 @@
   import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
   import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
+  import type { Address } from '@aboutcircles/sdk-types';
   import { createSearchablePaginatedList } from '$lib/shared/state/searchablePaginatedList';
   import { writable } from 'svelte/store';
 
@@ -72,7 +73,7 @@
 
   const searchable = createSearchablePaginatedList(contactStore, {
     pageSize: 100,
-    addressOf: (address) => address,
+    addressOf: (address) => address as Address,
   });
   const { searchQuery, filteredItems } = searchable;
 
@@ -152,7 +153,7 @@
             <RowFrame clickable={false} dense={true} noLeading={true}>
               <div class="min-w-0">
                 <Avatar
-                  {address}
+                  address={address as Address}
                   clickable={false}
                   view="horizontal"
                   bottomInfo={formatTrustRelation($contacts?.data[address].row.relation)}

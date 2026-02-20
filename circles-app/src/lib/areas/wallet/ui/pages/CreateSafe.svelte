@@ -1,5 +1,4 @@
 <script lang="ts">
-  // @todo double check
   import { wallet, signer } from '$lib/shared/state/wallet.svelte';
   import Safe from '@safe-global/protocol-kit';
   import type {

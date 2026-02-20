@@ -11,6 +11,7 @@
   import { runTask } from '$lib/shared/utils/tasks';
   import { isAddress } from '$lib/shared/utils/tx';
   import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
+  import type { Address } from '@aboutcircles/sdk-types';
 
   interface Props {
     gateway: string;
@@ -75,9 +76,9 @@
       title="Remove trust"
       subtitle="This will revoke trust for the following account."
     >
-      <Avatar address={trustReceiver} view="horizontal" clickable={false} bottomInfo={trustReceiver} showTypeInfo={true} />
+      <Avatar address={trustReceiver as Address} view="horizontal" clickable={false} bottomInfo={trustReceiver} showTypeInfo={true} />
       <div class="text-xs text-base-content/60">Gateway</div>
-      <Avatar address={gateway} view="horizontal" clickable={false} bottomInfo={gateway} showTypeInfo={true} />
+      <Avatar address={gateway as Address} view="horizontal" clickable={false} bottomInfo={gateway} showTypeInfo={true} />
 
       {#if !walletConnected}
         <StepAlert

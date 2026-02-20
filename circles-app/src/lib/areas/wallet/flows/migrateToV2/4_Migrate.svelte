@@ -13,6 +13,7 @@
   import MigrateContacts from './3_MigrateContacts.svelte';
   import { circles as circlesStore } from '$lib/shared/state/circles';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
+  import type { Address } from '@aboutcircles/sdk-types';
   import { runTask } from '$lib/shared/utils/tasks';
   import { removeProfileFromCache } from '$lib/shared/utils/profile';
   import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
@@ -114,7 +115,7 @@
     {:else}
       <div class="space-y-2 mt-2">
         {#each context.trustList ?? [] as address (address)}
-          <Avatar {address} view="horizontal" clickable={false} bottomInfo={address} showTypeInfo={true} />
+          <Avatar address={address as Address} view="horizontal" clickable={false} bottomInfo={address} showTypeInfo={true} />
         {/each}
       </div>
     {/if}

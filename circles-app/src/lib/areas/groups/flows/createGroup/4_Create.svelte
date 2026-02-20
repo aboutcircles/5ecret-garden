@@ -4,7 +4,6 @@
   import { wallet } from '$lib/shared/state/wallet.svelte';
   import { runTask } from '$lib/shared/utils/tasks';
   import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
-  //@todo check if works correctly
   import { cidV0ToUint8Array } from '@aboutcircles/sdk-utils';
   import { isValidName, isValidSymbol } from '$lib/shared/utils/isValid';
   import {

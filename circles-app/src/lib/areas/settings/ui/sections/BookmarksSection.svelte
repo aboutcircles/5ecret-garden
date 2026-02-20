@@ -11,6 +11,7 @@
     GripVertical as LGripVertical,
     Trash2 as LTrash2,
   } from 'lucide';
+  import type { Address } from '@aboutcircles/sdk-types';
   import {
     bookmarksStateStore,
     profileBookmarksUnpublishedChangesStore,
@@ -422,7 +423,7 @@
                   <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => openBookmarkDetails(bookmark)}>
                     <div class="min-w-0">
                       <Avatar
-                        address={bookmark.address}
+                        address={bookmark.address as Address}
                         view="horizontal"
                         bottomInfo={`Bookmarked ${formatCreatedAt(bookmark.createdAt)}`}
                         showTypeInfo={true}
@@ -495,7 +496,7 @@
                     <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => openBookmarkDetails(bookmark)}>
                       <div class="min-w-0">
                         <Avatar
-                          address={bookmark.address}
+                          address={bookmark.address as Address}
                           view="horizontal"
                           bottomInfo={`Bookmarked ${formatCreatedAt(bookmark.createdAt)}`}
                           showTypeInfo={true}

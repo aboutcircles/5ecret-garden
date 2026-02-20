@@ -6,6 +6,7 @@
     type ProfileBookmark,
   } from '$lib/areas/settings/state/profileBookmarks';
   import { openConfirmPopup } from '$lib/shared/ui/shell/confirmDialogs';
+  import type { Address } from '@aboutcircles/sdk-types';
 
   interface Props {
     bookmark: ProfileBookmark;
@@ -59,7 +60,7 @@
 
 <div class="space-y-3">
   <div class="rounded-lg border border-base-200 p-2">
-    <Avatar address={bookmark.address} view="horizontal" clickable={true} showTypeInfo={true} />
+    <Avatar address={bookmark.address as Address} view="horizontal" clickable={true} showTypeInfo={true} />
   </div>
 
   <div class="rounded-lg border border-base-200 p-3 space-y-2 text-sm">

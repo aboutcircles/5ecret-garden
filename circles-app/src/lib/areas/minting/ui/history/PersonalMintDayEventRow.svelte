@@ -2,6 +2,7 @@
   import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import type { EventHistoryListItem } from '$lib/shared/ui/event-history';
+  import type { Address } from '@aboutcircles/sdk-types';
 
   type PersonalMintRow = {
     blockNumber: number;
@@ -68,7 +69,7 @@
   <RowFrame dense={true} noLeading={true}>
     <div class="min-w-0">
       {#if item.row.human}
-        <Avatar address={item.row.human} view="horizontal" clickable={true} showTypeInfo={true} />
+        <Avatar address={item.row.human as Address} view="horizontal" clickable={true} showTypeInfo={true} />
       {:else}
         <div class="text-sm opacity-70">Unknown minter</div>
       {/if}

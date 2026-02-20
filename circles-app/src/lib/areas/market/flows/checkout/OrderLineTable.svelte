@@ -1,6 +1,7 @@
 <script lang="ts">
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import { formatCurrency } from '$lib/shared/utils/money';
+  import type { Address } from '@aboutcircles/sdk-types';
 
   interface UnitPrice {
     amount: number | null;
@@ -80,7 +81,7 @@
         <div class="flex items-center gap-2">
           <span class="uppercase tracking-wide">Seller</span>
           {#if grp.seller}
-            <Avatar view="small" address={grp.seller} clickable={false} />
+            <Avatar view="small" address={grp.seller as Address} clickable={false} />
           {:else}
             <span class="opacity-60">Unknown seller</span>
           {/if}

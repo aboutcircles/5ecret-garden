@@ -5,6 +5,7 @@
   import { formatTrustRelation } from '$lib/shared/utils/helpers';
   import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
   import type { AvatarSearchItem } from './avatarSearch.types';
+  import type { Address } from '@aboutcircles/sdk-types';
 
   const ACTIVATE_CTX_KEY = 'avatar-search-row-activate';
   type ActivateRow = (item: AvatarSearchItem) => void;
@@ -71,7 +72,7 @@
   <RowFrame clickable={true} dense={true} noLeading={true}>
     <div class="min-w-0">
       <Avatar
-        address={item.address}
+        address={item.address as Address}
         view="horizontal"
         bottomInfo={bottomInfo}
         showTypeInfo={true}

@@ -9,6 +9,7 @@
   import { adminOdooConnectionKey } from '$lib/areas/admin/helpers';
   import type { AdminOdooConnection } from '../types';
   import { shortenAddress } from '$lib/shared/utils/shared';
+  import type { Address } from '@aboutcircles/sdk-types';
 
   interface Props {
     products: AdminUnifiedProduct[];
@@ -180,7 +181,7 @@
             <div class="flex flex-col gap-3 p-3 sm:p-4 sm:flex-row sm:items-center sm:justify-between">
               <div class="min-w-0 space-y-1">
                 <div class="flex items-center gap-2 min-w-0">
-                  <Avatar address={group.seller} view="small" clickable={true} />
+                  <Avatar address={group.seller as Address} view="small" clickable={true} />
                   <span class="font-semibold truncate">{shortenAddress(group.seller)}</span>
                 </div>
                 <div class="text-xs opacity-70 truncate">{resolveGroupSubtitle(group)}</div>
