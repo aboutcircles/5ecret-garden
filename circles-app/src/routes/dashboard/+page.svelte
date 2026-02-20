@@ -28,7 +28,8 @@
   import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
 
   import { circles } from '$lib/shared/state/circles';
-  import { initTransactionHistoryStore, refreshTransactionHistory } from '$lib/shared/state/transactionHistory';
+  import { refreshTransactionHistory } from '$lib/shared/state/transactionHistory';
+  import { isHumanAvatar } from '$lib/shared/utils/avatarHelpers';
   import type { CirclesEvent } from '@aboutcircles/sdk-rpc';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
@@ -130,10 +131,9 @@
 
     try {
       // Load mintable amount for humans (non-blocking)
-      if (avatarState.isHuman && avatarState.avatar) {
+      if (avatarState.avatar && isHumanAvatar(avatarState.avatar)) {
         try {
-          const result =
-            await (avatarState.avatar as any).personalToken.getMintableAmount();
+          const result = await avatarState.avatar.personalToken.getMintableAmount();
           const amount = CirclesConverter.attoCirclesToCircles(result.amount);
           mintableAmount = amount ?? 0;
         } catch (error) {
@@ -176,15 +176,12 @@
               // Update mintable amount for personal mints
               if (
                 event.$event === 'CrcV2_PersonalMint' &&
-                avatarState.isHuman &&
-                avatarState.avatar
+                avatarState.avatar &&
+                isHumanAvatar(avatarState.avatar)
               ) {
                 try {
-                  const result =
-                    await (avatarState.avatar as any).personalToken.getMintableAmount();
-                  const amount = CirclesConverter.attoCirclesToCircles(
-                    result.amount
-                  );
+                  const result = await avatarState.avatar.personalToken.getMintableAmount();
+                  const amount = CirclesConverter.attoCirclesToCircles(result.amount);
                   mintableAmount = amount ?? 0;
                 } catch (error) {
                   console.error('Failed to update mintable amount:', error);
@@ -237,9 +234,11 @@
   });
 
   async function mintPersonalCircles() {
-    if (!avatarState.avatar || !avatarState.isHuman) {
+    if (!avatarState.avatar || !isHumanAvatar(avatarState.avatar)) {
       throw new Error('Avatar is not a human or not available');
     }
+
+    const humanAvatar = avatarState.avatar;
 
     // Set to 0 immediately for UI feedback
     mintableAmount = 0;
@@ -248,21 +247,18 @@
     try {
       await runTask({
         name: 'Minting Circles ...',
-        promise: (avatarState.avatar as any).personalToken.mint(),
+        promise: humanAvatar.personalToken.mint(),
       });
 
       // Mint succeeded — refresh transaction history so new tx appears immediately
-      // Don't rely solely on WebSocket events (they may not arrive)
       await refreshTransactionHistory();
 
       // Update mintable amount
-      if (avatarState.isHuman && avatarState.avatar) {
-        try {
-          const result = await (avatarState.avatar as any).personalToken.getMintableAmount();
-          const amount = CirclesConverter.attoCirclesToCircles(result.amount);
-          mintableAmount = amount ?? 0;
-        } catch { /* ignore */ }
-      }
+      try {
+        const result = await humanAvatar.personalToken.getMintableAmount();
+        const amount = CirclesConverter.attoCirclesToCircles(result.amount);
+        mintableAmount = amount ?? 0;
+      } catch { /* ignore */ }
     } catch {
       // runTask already handles error display
     }

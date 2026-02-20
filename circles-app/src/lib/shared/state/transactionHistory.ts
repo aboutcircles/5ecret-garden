@@ -3,7 +3,6 @@ import { writable, derived, get } from 'svelte/store';
 import type { Avatar, Sdk } from '@aboutcircles/sdk';
 import type { Address } from '@aboutcircles/sdk-types';
 import type { PagedResponse, EnrichedTransaction } from '$lib/shared/utils/sdkHelpers';
-import { getTransactionHistoryEnriched } from '$lib/shared/utils/sdkHelpers';
 import { handleError } from '$lib/shared/utils/errorHandler';
 import { circles } from '$lib/shared/state/circles';
 import { getProfile } from '$lib/shared/data/profile/profile';
@@ -97,9 +96,7 @@ export function refreshErc20WrapperCache(): void {
       }
     }
   }
-  if (added > 0) {
-    console.log(`[TxHistory] Cached ${added} ERC20 wrapper owners from balance data`);
-  }
+  // silently cached
 }
 
 /**
@@ -135,8 +132,6 @@ export async function prefetchProfilesForAddresses(addresses: (string | Address)
     .filter(addr => addr !== ZERO_ADDRESS && !enrichedProfileCache.has(addr));
 
   if (uncached.length === 0) return;
-
-  console.log(`[TxHistory] Prefetching ${uncached.length} profiles on-demand...`);
 
   const results = await Promise.all(
     uncached.map(async (addr) => {
@@ -188,8 +183,6 @@ async function prefetchProfilesForTransactions(rows: ExtendedTransactionRow[]): 
 
   if (uncachedAddresses.length === 0) return;
 
-  console.log(`[TxHistory] Pre-fetching ${uncachedAddresses.length} profiles...`);
-
   // Batch fetch all profiles (uses existing aggregator which batches efficiently)
   const profileResults = await Promise.all(
     uncachedAddresses.map(async (addr) => {
@@ -213,8 +206,6 @@ async function prefetchProfilesForTransactions(rows: ExtendedTransactionRow[]): 
       addedCount++;
     }
   }
-
-  console.log(`[TxHistory] Cached ${addedCount} profiles`);
 
   // Trigger reactive update so components re-render with new names
   if (addedCount > 0) {
@@ -298,6 +289,10 @@ function groupByTransaction(rows: ExtendedTransactionRow[], userAddress: string)
         }
       }
     }
+
+    // Round away floating-point noise from bigint→float conversion
+    // Without this, e.g. 15.00 - 1.19 may become 13.8049... instead of 13.81
+    netCircles = Math.round(netCircles * 1e10) / 1e10;
 
     // Fallback: if counterparty is still zero, find any non-zero, non-user address
     if (counterparty.toLowerCase() === ZERO_ADDRESS) {
@@ -424,22 +419,6 @@ function groupByTransaction(rows: ExtendedTransactionRow[], userAddress: string)
       (!userIsInitiator && Math.abs(netCircles) <= 0.05)  // case (b): didn't initiate, dust net
     );
 
-    // Debug: log transactions with small net that AREN'T marked as intermediary
-    if (Math.abs(netCircles) <= 0.05 && !isIntermediary && netCircles !== 0) {
-      console.log('[TxHistory] Small net NOT intermediary:', {
-        hash: hash.slice(0, 10),
-        netCircles: netCircles.toFixed(4),
-        type,
-        userParticipated: userParticipatedInEvents,
-        smallNet,
-        totalVolume: totalVolume.toFixed(2),
-        transferIn: transferInAmount.toFixed(2),
-        transferOut: transferOutAmount.toFixed(2),
-        mintAmount: mintAmount.toFixed(2),
-        eventTypes,
-      });
-    }
-
     // Detect operator-only transactions: user signed but tokens flowed between others
     const isOperatorOnly = !userParticipatedInEvents && userIsInitiator;
 
@@ -485,10 +464,7 @@ const _transactionHistory = writable<{
  * Profiles are pre-loaded and cached for efficiency
  */
 async function loadNextPage(): Promise<boolean> {
-  console.log('[TxHistory] loadNextPage called', { hasAvatar: !!currentAvatar, isLoading, hasMore });
-
   if (!currentAvatar || isLoading || !hasMore) {
-    console.log('[TxHistory] loadNextPage early return - conditions not met');
     return false;
   }
 
@@ -518,8 +494,6 @@ async function loadNextPage(): Promise<boolean> {
       'CrcV2_StreamCompleted',
     ];
 
-    console.log('[TxHistory] Fetching events via circles_events...');
-
     // Use the raw RPC client to call circles_events
     // Parameters: [address, fromBlock, toBlock, eventTypes, filterPredicates, sortAscending, limit, cursor]
     const eventsResponse = await (sdk as Sdk).rpc.client.call(
@@ -529,7 +503,6 @@ async function loadNextPage(): Promise<boolean> {
 
     // Handle both response formats (events array or results array)
     const events = eventsResponse.events || eventsResponse.results || [];
-    console.log('[TxHistory] Events RPC response:', { resultCount: events.length, hasMore: eventsResponse.hasMore });
 
     // Convert events to EnrichedTransaction format
     const response: PagedResponse<EnrichedTransaction> = {
@@ -538,20 +511,6 @@ async function loadNextPage(): Promise<boolean> {
       results: events.map((evt: unknown) => {
         const e = evt as { event: string; values: Record<string, unknown> };
         const vals = e.values || {};
-
-        // Debug: log burn events to see their structure
-        if (vals.to === ZERO_ADDRESS || (vals.to as string)?.toLowerCase() === ZERO_ADDRESS) {
-          console.log('[TxHistory] Burn event structure:', { event: e.event, vals });
-        }
-
-        // Debug: log operator info for TransferSingle events to verify extraction
-        if (e.event === 'CrcV2_TransferSingle' && vals.operator) {
-          console.log('[TxHistory] TransferSingle with operator:', {
-            operator: vals.operator,
-            from: vals.from,
-            to: vals.to,
-          });
-        }
 
         // Extract amount - check multiple possible field names
         // RPC may return hex-encoded bigints (e.g. "0x53444835ec580000")
@@ -701,7 +660,7 @@ async function loadNextPage(): Promise<boolean> {
           operator: finalOperator,
           group: finalGroup,
           id: tx.id ?? '',
-          tokenAddress: finalFrom,
+          tokenAddress: ZERO_ADDRESS as Address, // token contract unknown from circles_events; use balance data for lookups
           value: valueVal as string,
           circles: circlesAmount,
           staticCircles: staticCirclesVal ? parseFloat(staticCirclesVal as string) : 0,
@@ -709,8 +668,6 @@ async function loadNextPage(): Promise<boolean> {
           eventType,
         };
       });
-
-      console.log('[TxHistory] Mapped rows:', rows.length);
 
       // Pre-fetch profiles for all transaction participants
       // This populates enrichedProfileCache for getDisplayName() to use synchronously
@@ -757,11 +714,8 @@ async function loadNextPage(): Promise<boolean> {
  * Uses the new SDK's cursor-based pagination via avatar.history.getTransactions()
  */
 export const initTransactionHistoryStore = async (avatar: Avatar) => {
-  console.log('[TxHistory] initTransactionHistoryStore called for:', avatar?.address);
-
   // Early return if already initialized for this avatar - don't reset, don't reload
   if (currentAvatarAddress === avatar.address && currentAvatar) {
-    console.log('[TxHistory] Already initialized for this avatar, skipping');
     return;
   }
 
@@ -785,22 +739,17 @@ export const initTransactionHistoryStore = async (avatar: Avatar) => {
     return;
   }
 
-  // Validate avatar has SDK reference for RPC calls
-  // Note: Avatar objects don't expose SDK directly, so use global store as primary source
-  let sdk = get(circles);
+  // Validate SDK is available for RPC calls
+  const sdk = get(circles);
   if (!sdk?.rpc) {
-    // Fallback: try global circles store
-    sdk = get(circles);
-    if (!sdk?.rpc) {
-      console.error('[TxHistory] No SDK RPC available (neither on avatar nor global)');
-      _transactionHistory.set({
-        data: [],
-        next: async () => false,
-        ended: true,
-        isLoading: false,
-      });
-      return;
-    }
+    console.error('[TxHistory] No SDK RPC available');
+    _transactionHistory.set({
+      data: [],
+      next: async () => false,
+      ended: true,
+      isLoading: false,
+    });
+    return;
   }
 
   // Reset cursor state for new avatar
@@ -912,11 +861,8 @@ export const groupedTransactionHistory = derived(
  */
 export async function refreshTransactionHistory(): Promise<void> {
   if (!currentAvatar || !currentAvatarAddress) {
-    console.log('[TxHistory] refreshTransactionHistory: no avatar, skipping');
     return;
   }
-
-  console.log('[TxHistory] refreshTransactionHistory: resetting and refetching');
 
   // Reset pagination state
   nextCursor = null;
