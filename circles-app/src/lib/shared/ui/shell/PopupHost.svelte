@@ -107,8 +107,11 @@
             if (editable.readOnly || editable.disabled) return false;
             return true;
         }
-        if (editable instanceof HTMLTextAreaElement || editable instanceof HTMLSelectElement) {
+        if (editable instanceof HTMLTextAreaElement) {
             return !(editable.readOnly || editable.disabled);
+        }
+        if (editable instanceof HTMLSelectElement) {
+            return !editable.disabled;
         }
         return true;
     }

@@ -1,7 +1,7 @@
 <script lang="ts">
     import { tokenTypeToString, TransitiveTransferTokenAddress } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
     import { roundToDecimals } from '$lib/shared/utils/shared';
-    import type { TokenBalanceRow } from '@aboutcircles/sdk-types';
+    import type { TokenBalance } from '@aboutcircles/sdk-types';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import type { Address } from '@aboutcircles/sdk-types';
     import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
@@ -11,7 +11,7 @@
 
     interface Props {
         receiverAddress: Address | undefined;
-        asset: TokenBalanceRow;
+        asset: TokenBalance;
         amount?: number;
         textButton: string;
         data: string | undefined;
@@ -66,7 +66,7 @@
                         <Avatar
                                 address={asset?.tokenOwner}
                                 clickable={true}
-                                bottomInfo={tokenTypeToString(asset?.tokenType)}
+                                bottomInfo={tokenTypeToString(asset?.tokenType ?? "")}
                                 view="horizontal"
                         />
                     {/if}

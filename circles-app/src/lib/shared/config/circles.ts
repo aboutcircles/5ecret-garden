@@ -106,3 +106,7 @@ export const gnosisConfig: { production: CirclesConfig; rings: CirclesConfig } =
       migrationAddress: '0x12E815963A0b910288C7256CAD0d345c8F5db08E',
     },
   };
+
+
+/** Default maximum number of transfer steps in pathfinding */
+export const MAX_PATH_STEPS = 65;

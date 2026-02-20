@@ -4,13 +4,13 @@
     import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
     import type { Address } from '@aboutcircles/sdk-types';
     import type { AppProfileCore as Profile } from '$lib/shared/model/profile';
-    import type { AvatarRow } from '@aboutcircles/sdk-types';
+    import type { AvatarRow, AvatarInfo } from '@aboutcircles/sdk-types';
     import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
 
     interface Props {
         address?: Address;
         profile?: Profile;
-        avatarInfo?: AvatarRow;
+        avatarInfo?: AvatarRow | AvatarInfo;
         trustRelation?: string;
     }
     let { address, profile, avatarInfo, trustRelation = '' }: Props = $props();
@@ -61,8 +61,6 @@
         <div class="min-w-0">
             <Avatar
                 address={address}
-                {profile}
-                {avatarInfo}
                 view="horizontal"
                 bottomInfo={trustRelation}
                 showTypeInfo={false}

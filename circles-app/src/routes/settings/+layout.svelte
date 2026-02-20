@@ -174,7 +174,7 @@
   const headerTitle = $derived(avatarState.profile?.name?.trim() || 'Settings');
 
   // Profile editing is delegated to ProfileExplorer to keep a single flow.
-  const pinApiBase = gnosisConfig.production.marketApiBase;
+  const pinApiBase = gnosisConfig.production.marketApiBase ?? '';
 
   // Latest profile CID for the connected avatar (if any)
   let profileCid: string | null = $state(null);
@@ -280,13 +280,13 @@
     }
 
     try {
-      const selector = ethers.keccak256(ethers.toUtf8Bytes('stop()')).slice(0, 10);
-      const tx = await $wallet.sendTransaction!({
-        to: v1TokenAddress,
+      const selector = ethers.keccak256(ethers.toUtf8Bytes('stop()')).slice(0, 10) as `0x${string}`;
+      const tx = await $wallet.sendTransaction!([{
+        to: v1TokenAddress as `0x${string}`,
         data: selector,
         value: 0n,
-      });
-      console.log('Transaction sent:', tx.hash);
+      }]);
+      console.log('Transaction sent:', tx);
     } catch (error) {
       console.error('Error calling stop():', error);
     }
@@ -337,9 +337,9 @@
         marketLoading = false;
         return;
       }
-      const normalized = normalizeAddress(avatarAddress);
+      const normalized = normalizeAddress(avatarAddress!);
 
-      const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
+      const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator!);
       const items = await catalog.fetchSellerCatalog(normalized);
       // fetchSellerCatalog already filters by seller, but keep this defensive filter
       marketProducts = items.filter((p) => (p.seller ?? '').toLowerCase() === normalized.toLowerCase());
@@ -368,7 +368,7 @@
       component: OfferStep1,
       props: {
         context: {
-          operator: gnosisConfig.production.marketOperator,
+          operator: gnosisConfig.production.marketOperator!,
           pinApiBase: gnosisConfig.production.marketApiBase,
         },
       },
@@ -422,7 +422,17 @@
     ...actionsPersonal,
   ]);
 
-  const headerActions = $derived(
+  const actionsPayment: Action[] = [
+    {
+      id: 'create-gateway',
+      label: 'Create gateway',
+      variant: 'primary',
+      onClick: openCreateGatewayFlow,
+    },
+    ...actionsPersonal,
+  ];
+
+  const currentActions = $derived(
     selectedTab === 'marketplace'
       ? actionsMarketplace
       : selectedTab === 'orders'
@@ -512,15 +522,6 @@
     });
   }
 
-  const actionsPayment: Action[] = [
-    {
-      id: 'create-gateway',
-      label: 'Create gateway',
-      variant: 'primary',
-      onClick: openCreateGatewayFlow,
-    },
-    ...actionsPersonal,
-  ];
 </script>
 
 <PageScaffold
@@ -546,11 +547,11 @@
   {/snippet}
 
   {#snippet headerActions()}
-    <ActionButtonBar actions={headerActions} />
+    <ActionButtonBar actions={currentActions} />
   {/snippet}
 
   {#snippet collapsedMenu()}
-    <ActionButtonDropDown actions={headerActions} />
+    <ActionButtonDropDown actions={currentActions} />
   {/snippet}
 
   {#snippet collapsedLeft()}

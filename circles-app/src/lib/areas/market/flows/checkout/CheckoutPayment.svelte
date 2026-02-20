@@ -159,21 +159,13 @@
       throw new Error('Wallet not ready for pathfinding.');
     }
 
-    const excludedTokens = await $circles.getDefaultTokenExcludeList(to);
-
-    const bigNumber = '99999999999999999999999999999999999';
-    const p =
-      avatarState.avatar?.avatarInfo?.version === 1
-        ? await $circles.v1Pathfinder?.getPath(avatarState.avatar.address, to, bigNumber)
-        : await $circles.v2Pathfinder?.getPath(
-            avatarState.avatar.address,
-            to,
-            bigNumber,
-            true,
-            undefined,
-            undefined,
-            excludedTokens
-          );
+    const targetFlow = 99999999999999999999999999999999999n;
+    const p = await $circles.rpc.pathfinder.findPath({
+      from: avatarState.avatar.address,
+      to,
+      targetFlow,
+      useWrappedBalances: true,
+    });
 
     if (!p || !p.transfers?.length) {
       throw new Error('Pathfinding failed. No usable path was found.');

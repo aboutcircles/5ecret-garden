@@ -1,5 +1,5 @@
 import { sveltekit } from '@sveltejs/kit/vite';
-import { defineConfig } from 'vite';
+import { defineConfig, type PluginOption } from 'vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 export default defineConfig({
@@ -11,8 +11,8 @@ export default defineConfig({
         process: true,
       },
       protocolImports: true,
-    }),
-    sveltekit(),
+    }) as PluginOption,
+    sveltekit() as PluginOption,
   ],
   optimizeDeps: {
     esbuildOptions: {
@@ -27,6 +27,13 @@ export default defineConfig({
       // Fix SDK runner import of vite polyfill shims
       'vite-plugin-node-polyfills/shims/global': 'vite-plugin-node-polyfills/shims/global',
     },
+  },
+  ssr: {
+    // @safe-global/protocol-kit is CJS and its internal require('abitype')
+    // gets converted to a default import that ESM-only abitype doesn't export.
+    // Externalizing lets Node handle the interop at runtime.
+    // The app is SSR-disabled (ssr:false) so these aren't needed server-side.
+    external: ['@safe-global/protocol-kit', '@safe-global/safe-core-sdk-types', 'abitype'],
   },
   build: {
     rollupOptions: {

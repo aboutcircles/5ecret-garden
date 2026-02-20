@@ -296,9 +296,10 @@ async function enrichContactData(
 
   // Step 4: Attach avatar info to contacts
   Object.values(profileRecord).forEach((item) => {
-    const info = avatarInfoRecord[item.row.objectAvatar.toLowerCase()];
+    const addr = 'objectAvatar' in item.row ? item.row.objectAvatar : undefined;
+    const info = addr ? avatarInfoRecord[addr.toLowerCase()] : undefined;
     if (info) {
-      item.avatarInfo = info;
+      item.avatarInfo = info as AvatarInfo;
     }
   });
 

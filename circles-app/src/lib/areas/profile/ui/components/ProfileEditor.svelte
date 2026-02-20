@@ -22,7 +22,7 @@
   };
 
   $effect(() => {
-    profile.name = sanitizeText(profile.name);
+    profile.name = sanitizeText(profile.name ?? "");
   });
 </script>
 

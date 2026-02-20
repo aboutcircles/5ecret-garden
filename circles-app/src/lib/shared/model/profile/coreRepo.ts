@@ -7,6 +7,7 @@ import { FallbackImageUrl } from './types';
 import { shortenAddress } from '$lib/shared/utils/shared';
 import { createAvatarDataSource } from '$lib/shared/data/circles/avatarDataSource';
 import { createProfileDataSource } from '$lib/shared/data/circles/profileDataSource';
+import type { CirclesConfig } from '$lib/shared/config/circles';
 
 // Cache of lowercased address -> Promise<AppProfileCore>
 const coreCache = new Map<ProfileAddress, Promise<AppProfileCore>>();
@@ -52,7 +53,7 @@ async function fetchCoreBatch(addresses: ProfileAddress[]): Promise<Map<ProfileA
   // 1) Avatar info batch
   const avatars = await avatarDataSource.getAvatarInfoBatch(addresses);
   const addrToAvatar = new Map<string, any>();
-  for (const a of avatars) addrToAvatar.set(a.avatar.toLowerCase(), a);
+  for (const a of avatars) { if (a) addrToAvatar.set(a.avatar.toLowerCase(), a); }
 
   // 2) Collect CIDs
   const cids = [...new Set(avatars.filter((a: any) => a.cidV0).map((a: any) => a.cidV0 as string))];
@@ -62,7 +63,7 @@ async function fetchCoreBatch(addresses: ProfileAddress[]): Promise<Map<ProfileA
   const chunkSize = 50;
   for (let i = 0; i < cids.length; i += chunkSize) {
     const chunk = cids.slice(i, i + chunkSize);
-    const docs = await profileDataSource.getProfileByCidBatch<any>(chunk);
+    const docs = await profileDataSource.getProfileByCidBatch(chunk);
     chunk.forEach((cid, idx) => {
       cidToDoc[cid] = docs[idx];
     });
@@ -93,7 +94,7 @@ export async function getProfilesCoreBatch(
   // Special-cases (mirror `getProfileCore`)
   const sdk = get(circles);
   const hub = sdk?.circlesConfig?.v2HubAddress?.toLowerCase();
-  const migration = sdk?.circlesConfig?.migrationAddress?.toLowerCase();
+  const migration = (sdk?.circlesConfig as CirclesConfig | undefined)?.migrationAddress?.toLowerCase();
 
   const out = new Map<ProfileAddress, AppProfileCore>();
   const pendingFromCache: Array<Promise<void>> = [];
@@ -153,7 +154,7 @@ export async function getProfileCore(address: ProfileAddress): Promise<AppProfil
   }
   if (sdk) {
     const hub = sdk.circlesConfig?.v2HubAddress?.toLowerCase();
-    const migration = sdk.circlesConfig?.migrationAddress?.toLowerCase();
+    const migration = (sdk.circlesConfig as CirclesConfig)?.migrationAddress?.toLowerCase();
     if (addr === hub) return { name: 'Circles V2 Hub Contract', previewImageUrl: FallbackImageUrl.Logo };
     if (addr === migration) return { name: 'Circles V2 Migration Contract', previewImageUrl: FallbackImageUrl.Logo };
   }

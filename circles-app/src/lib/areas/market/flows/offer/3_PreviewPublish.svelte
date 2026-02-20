@@ -88,7 +88,7 @@
 
     const { offers: client, media } = await createOffersClientForAvatar({
       avatar: seller,
-      chainId: gnosisConfig.production.marketChainId,
+      chainId: gnosisConfig.production.marketChainId ?? 100,
       ethereum: eth,
       pinApiBase: (context as any).pinApiBase,
       gatewayUrlForCid: (cid) => ipfsGatewayUrl(cid),
@@ -116,7 +116,7 @@
         context.result = await client.appendOffer({
           avatar: seller,
           operator: context.operator,
-          chainId: gnosisConfig.production.marketChainId,
+          chainId: gnosisConfig.production.marketChainId ?? 100,
           paymentGateway: context.draft?.paymentGateway as Address,
           product: {
             sku: draft.sku,

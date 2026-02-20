@@ -4,7 +4,7 @@ import {
   buildReplacementLinkWithPayloadCid,
   replaceLoadedNamespaceLinkAt,
   type LoadedNamespaceLink,
-} from '$lib/domains/profile/model/namespacesEditor';
+} from '$lib/shared/model/profile/namespacesEditor';
 
 function mk(index: number, name = `link-${index}`): LoadedNamespaceLink {
   return {

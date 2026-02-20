@@ -29,7 +29,7 @@
       await loader.run(async () => {
         const seller = normalizeAddress(params.seller);
         const sku = params.sku;
-        const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
+        const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator!);
         const p = await catalog.fetchProductForSellerAndSku(seller, sku);
         if (!p) {
           throw new Error('Product not found for this seller / sku.');

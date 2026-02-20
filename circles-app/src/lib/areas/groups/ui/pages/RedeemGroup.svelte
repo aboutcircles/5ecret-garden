@@ -3,13 +3,15 @@
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { circles } from '$lib/shared/state/circles';
   import type { Address } from '@aboutcircles/sdk-types';
-import { uint256ToAddress } from '@aboutcircles/sdk-utils';
+  import { uint256ToAddress } from '@aboutcircles/sdk-utils';
+  import { HumanAvatar, OrganisationAvatar } from '@aboutcircles/sdk';
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import { onMount } from 'svelte';
   import { runTask } from '$lib/shared/utils/tasks';
   import { popupControls } from '$lib/shared/state/popup';
   import { ethers, formatUnits } from 'ethers';
-  import type { TokenBalanceRow, TrustRelation } from '@aboutcircles/sdk-types';
+  import type { TokenBalance } from '@aboutcircles/sdk-types';
+  import type { TrustRelationKind } from '$lib/shared/types/sdk-augment';
   import { contacts } from '$lib/shared/state/contacts';
   import {
   getGroupCollateral,
@@ -19,7 +21,7 @@ import { uint256ToAddress } from '@aboutcircles/sdk-utils';
   import CollateralTable from '$lib/areas/groups/ui/components/CollateralTable.svelte';
 
   interface Props {
-    asset: TokenBalanceRow;
+    asset: TokenBalance;
   }
 
   let { asset }: Props = $props();
@@ -29,7 +31,7 @@ import { uint256ToAddress } from '@aboutcircles/sdk-utils';
     amount: bigint; // raw wei from chain
     amountToRedeem: bigint;
     amountToRedeemInCircles: number;
-    trustRelation?: TrustRelation;
+    trustRelation?: TrustRelationKind;
   }> = $state([]);
 
   // We'll keep track of the total to redeem and whether it's valid.
@@ -39,16 +41,17 @@ import { uint256ToAddress } from '@aboutcircles/sdk-utils';
   let isModified = $state(false);
 
   const trustPriorityMap: {
-    [K in TrustRelation]: number;
+    [K in TrustRelationKind]: number;
   } = {
     selfTrusts: 1,
     mutuallyTrusts: 2,
     trusts: 3,
     trustedBy: 4,
     variesByVersion: 5,
+    untrusted: 6,
   };
 
-  function getTrustPriority(item: { trustRelation?: TrustRelation }): number {
+  function getTrustPriority(item: { trustRelation?: TrustRelationKind }): number {
     return item.trustRelation && trustPriorityMap[item.trustRelation]
       ? trustPriorityMap[item.trustRelation]
       : 6;
@@ -60,7 +63,7 @@ import { uint256ToAddress } from '@aboutcircles/sdk-utils';
     // 1) Convert the user's total redeemable (asset.circles) from wei to a floating number.
     //    If asset.circles is already a string or BigInt, adapt accordingly.
     //    Example assumes it's a BigInt or numeric string in wei:
-    const userMaxRedeem = BigInt(asset.attoCircles);
+    const userMaxRedeem = BigInt(asset.attoCircles ?? '0');
 
     // 2) Sum the amounts the user wants to redeem.
     totalToRedeem = collateralInTreasury.reduce(
@@ -109,12 +112,12 @@ import { uint256ToAddress } from '@aboutcircles/sdk-utils';
     
     const vaultAddress = await getVaultAddress(
       $circles.rpc,
-      asset.tokenOwner
+      asset.tokenOwner!
     );
 
     const treasuryAddress = await getTreasuryAddress(
       $circles.rpc,
-      asset.tokenOwner
+      asset.tokenOwner!
     );
 
     const balancesResult = await getGroupCollateral(
@@ -145,8 +148,8 @@ import { uint256ToAddress } from '@aboutcircles/sdk-utils';
 
       const item = collateralInTreasury.find((item) => item.avatar === address);
 
-      if (item) {
-        item.trustRelation = relation;
+      if (item && relation) {
+        item.trustRelation = relation as TrustRelationKind;
       }
     });
 
@@ -176,13 +179,13 @@ import { uint256ToAddress } from '@aboutcircles/sdk-utils';
     }
 
     // Execute as a long-running task and close the popup when started
+    const avatar = avatarState.avatar;
+    if (!(avatar instanceof HumanAvatar) && !(avatar instanceof OrganisationAvatar)) {
+      throw new Error('Avatar does not support group token redemption');
+    }
     await runTask({
       name: `Redeeming ${ethers.formatEther(totalToRedeem)} group tokens…`,
-      promise: avatarState.avatar.groupRedeem(
-        asset.tokenOwner,
-        collateralAddresses,
-        redeemAmounts
-      )
+      promise: avatar.groupToken.redeem(asset.tokenOwner!, totalToRedeem)
     });
 
     try {

@@ -59,29 +59,18 @@
         pathfindingFailed = false;
 
         try {
-            const excludedTokens = await sdk.getDefaultTokenExcludeList(
-                context.selectedAddress
-            );
-
-            const bigNumber = '99999999999999999999999999999999999';
-            const p =
-                avatarState.avatar?.avatarInfo?.version === 1
-                    ? await sdk.v1Pathfinder?.getPath(
-                        avatarState.avatar.address,
-                        context.selectedAddress,
-                        bigNumber
-                    )
-                    : await sdk.v2Pathfinder?.getPath(
-                        avatarState.avatar.address,
-                        context.selectedAddress,
-                        bigNumber,
-                        context.useWrappedBalances ?? true,
-                        context.fromTokens,
-                        context.toTokens,
-                        context.excludeFromTokens,
-                        context.excludeToTokens ?? excludedTokens,
-                        context.maxTransfers
-                    );
+            const targetFlow = 99999999999999999999999999999999999n;
+            const p = await sdk.rpc.pathfinder.findPath({
+                from: avatarState.avatar.address,
+                to: context.selectedAddress,
+                targetFlow,
+                useWrappedBalances: context.useWrappedBalances ?? true,
+                fromTokens: context.fromTokens,
+                toTokens: context.toTokens,
+                excludeFromTokens: context.excludeFromTokens,
+                excludeToTokens: context.excludeToTokens,
+                maxTransfers: context.maxTransfers,
+            });
 
             if (!p || !p.transfers?.length) {
                 pathfindingFailed = true;
@@ -118,7 +107,7 @@
         if (!Number.isFinite(enteredAmount) || enteredAmount <= 0) return false;
 
         if (selectedAsset.isErc20) {
-            return enteredAmount > selectedAsset.staticCircles;
+            return enteredAmount > (selectedAsset.staticCircles ?? 0);
         }
 
         if (maxAmountCircles >= 0) {
@@ -176,10 +165,10 @@
 
         const selectedAsset = requireSelectedAsset(context);
         const limit = selectedAsset.isErc20
-            ? selectedAsset.staticCircles
+            ? (selectedAsset.staticCircles ?? 0)
             : (maxAmountCircles >= 0 ? maxAmountCircles : (selectedAsset?.circles ?? 0));
 
-        if (context.amount > limit) {
+        if (context.amount > (limit ?? 0)) {
             amountError = true;
             return;
         }

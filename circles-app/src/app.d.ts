@@ -14,11 +14,9 @@ declare global {
   }
 }
 
-// MDsveX file declarations
-declare module '*.svx' {
-  import type { SvelteComponent } from 'svelte';
-  const component: typeof SvelteComponent;
-  export default component;
-}
+// Note: readable-stream and bn.js resolve to untyped modules from node_modules
+// and cannot have ambient module declarations here (TS would treat them as
+// augmentations of unresolvable modules). Their implicit-any is harmless since
+// they're consumed only by other third-party libraries.
 
 export {};

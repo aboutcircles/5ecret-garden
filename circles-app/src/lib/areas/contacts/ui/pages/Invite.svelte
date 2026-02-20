@@ -1,5 +1,6 @@
 <script lang="ts">
   import { avatarState } from '$lib/shared/state/avatar.svelte';
+  import { isHumanAvatar } from '$lib/shared/utils/avatarHelpers';
   import PopupActionBar from '$lib/shared/ui/shell/PopupActionBar.svelte';
   import { runTask } from '$lib/shared/utils/tasks';
   import { shortenAddress } from '$lib/shared/utils/shared';
@@ -12,12 +13,16 @@
   let { address }: Props = $props();
 
   async function invite() {
-    if (!avatarState.avatar) {
+    const avatar = avatarState.avatar;
+    if (!avatar) {
       throw new Error('Avatar store not available');
+    }
+    if (!isHumanAvatar(avatar)) {
+      throw new Error('Only human avatars can send invitations');
     }
     runTask({
       name: `Inviting ${shortenAddress(address)} ...`,
-      promise: avatarState.avatar!.inviteHuman(address),
+      promise: avatar.invite.send(address),
     });
     popupControls.close();
   }

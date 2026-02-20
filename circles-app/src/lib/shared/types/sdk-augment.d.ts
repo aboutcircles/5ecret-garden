@@ -43,7 +43,7 @@ declare module '@aboutcircles/sdk-types' {
 
   interface TrustRelationRow {
     /** Trust relation type */
-    relation?: TrustRelation;
+    relation?: TrustRelationKind;
     /** The other avatar in the trust relation */
     objectAvatar?: Address;
     /** Subject avatar */
@@ -53,6 +53,8 @@ declare module '@aboutcircles/sdk-types' {
   }
 
   interface AvatarRow {
+    /** Whether avatar's v1 token is stopped */
+    v1Stopped?: boolean;
     /** V1 token address (for migrated avatars) */
     v1Token?: Address;
     /** Token ID */
@@ -70,9 +72,11 @@ declare module '@aboutcircles/sdk-types' {
   }
 }
 
-/** Trust relation enum (old SDK compatibility) */
-export type TrustRelation =
+/** Trust relation kind (old SDK compatibility, superset of SDK's TrustRelationType) */
+export type TrustRelationKind =
   | 'trusts'
   | 'trustedBy'
   | 'mutuallyTrusts'
+  | 'selfTrusts'
+  | 'variesByVersion'
   | 'untrusted';

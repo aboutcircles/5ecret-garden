@@ -8,6 +8,7 @@ import { ensureProfileShape } from '@circles-profile/core';
 import { rebaseAndSaveProfile } from '@circles-market/sdk';
 import { invalidateProfileCore } from './coreRepo';
 import { createAvatarDataSource } from '$lib/shared/data/circles/avatarDataSource';
+import type { CirclesConfig } from '$lib/shared/config/circles';
 
 function norm(address: string): ProfileAddress {
   const a = address.toLowerCase();
@@ -34,7 +35,7 @@ async function loadOneFull(address: ProfileAddress, opts?: { pinApiBase?: string
     return ensureNamespacesKeys({ name: 'Transitive transfer', previewImageUrl: '/circles-token.svg', namespaces: {}, signingKeys: {} });
   }
   const hub = sdk.circlesConfig?.v2HubAddress?.toLowerCase();
-  const migration = sdk.circlesConfig?.migrationAddress?.toLowerCase();
+  const migration = (sdk.circlesConfig as CirclesConfig)?.migrationAddress?.toLowerCase();
   if (address === hub) return ensureNamespacesKeys({ name: 'Circles V2 Hub Contract', previewImageUrl: FallbackImageUrl.Logo, namespaces: {}, signingKeys: {} });
   if (address === migration) return ensureNamespacesKeys({ name: 'Circles V2 Migration Contract', previewImageUrl: FallbackImageUrl.Logo, namespaces: {}, signingKeys: {} });
 

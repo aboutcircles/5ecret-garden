@@ -3,7 +3,7 @@
     import HoldersRow from '$lib/shared/ui/profile/components/HoldersRow.svelte';
     import AvatarRowPlaceholder from '$lib/shared/ui/lists/placeholders/AvatarRowPlaceholder.svelte';
     import type { Address } from '@aboutcircles/sdk-types';
-    import type { TrustRelation } from '@aboutcircles/sdk-types';
+    import type { TrustRelationKind } from '$lib/shared/types/sdk-augment';
     import { writable } from 'svelte/store';
     import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
     import { usePopupListFocusRestore } from '$lib/shared/ui/profile/utils/popupListFocusRestore';
@@ -13,7 +13,7 @@
         amount: bigint;
         amountToRedeem: bigint;
         amountToRedeemInCircles: number;
-        trustRelation?: TrustRelation;
+        trustRelation?: TrustRelationKind;
     }
 
     interface Props {

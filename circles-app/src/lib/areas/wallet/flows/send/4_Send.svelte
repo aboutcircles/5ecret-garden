@@ -80,31 +80,26 @@
     }
 
     await runTask({
-      name: `Send ${roundToDecimals(amount)} ${tokenTypeToString(selectedAsset.tokenType)} to ${shortenAddress(selectedAddress)}...`,
+      name: `Send ${roundToDecimals(amount)} ${tokenTypeToString(selectedAsset.tokenType ?? "")} to ${shortenAddress(selectedAddress)}...`,
       promise:
         selectedAsset.tokenAddress === TransitiveTransferTokenAddress
-          ? avatar.transfer(
+          ? avatar.transfer.advanced(
             selectedAddress,
             amount,
-            undefined,
-            dataUInt8Arr,
-            context.useWrappedBalances ?? true,
-            context.fromTokens,
-            context.toTokens,
-            context.excludeFromTokens,
-            context.excludeToTokens,
-             context.maxTransfers ?? MAX_PATH_STEPS)
-          : avatar.transfer(
+            {
+              txData: dataUInt8Arr.length > 0 ? dataUInt8Arr : undefined,
+              useWrappedBalances: context.useWrappedBalances ?? true,
+              fromTokens: context.fromTokens,
+              toTokens: context.toTokens,
+              excludeFromTokens: context.excludeFromTokens,
+              excludeToTokens: context.excludeToTokens,
+              maxTransfers: context.maxTransfers ?? MAX_PATH_STEPS,
+            })
+          : avatar.transfer.direct(
             selectedAddress,
-            amount,
+            BigInt(Math.round(amount * 1e18)),
             selectedAsset.tokenAddress,
-            dataUInt8Arr,
-            context.useWrappedBalances ?? true,
-            context.fromTokens,
-            context.toTokens,
-            context.excludeFromTokens,
-            context.excludeToTokens,
-            context.maxTransfers ?? MAX_PATH_STEPS
+            dataUInt8Arr.length > 0 ? dataUInt8Arr : undefined
           ),
     });
 

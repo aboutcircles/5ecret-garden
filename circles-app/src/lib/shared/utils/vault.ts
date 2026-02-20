@@ -1,4 +1,4 @@
-import type { CirclesRpc } from "@aboutcircles/sdk-types";
+import type { CirclesRpc } from "@aboutcircles/sdk-rpc";
 import {
   type QueryFilter,
   queryBalancesByAccountAndTokenPage,

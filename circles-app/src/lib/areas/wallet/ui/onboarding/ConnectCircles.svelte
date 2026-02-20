@@ -5,12 +5,24 @@
     import {goto} from '$app/navigation';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import type {Address} from '@aboutcircles/sdk-types';
+    import {GroupType} from '@aboutcircles/sdk-types';
     import {CirclesStorage} from '$lib/shared/utils/storage';
     import type {GroupRow} from '@aboutcircles/sdk-types';
     import {settings} from '$lib/shared/state/settings.svelte';
     import { openStep } from '$lib/shared/flow';
     import CreateGroup from "$lib/areas/groups/flows/createGroup/1_CreateGroup.svelte";
     import {resetCreateGroupContext} from '$lib/areas/groups/flows/createGroup/context';
+
+    /**
+     * Map an AvatarInfo.type string to the GroupType enum.
+     * Returns undefined if the type does not correspond to a group.
+     */
+    function toGroupType(avatarType: string | undefined): GroupType | undefined {
+        if (!avatarType || !avatarType.includes('Group')) return undefined;
+        // All base groups registered via the standard factory are Standard;
+        // custom groups would need additional on-chain introspection.
+        return GroupType.Standard;
+    }
 
     interface Props {
         address: Address;
@@ -33,9 +45,12 @@
         }
         avatarState.avatar = await sdk.getAvatar(groupAddress ?? address);
         avatarState.isGroup = !!groupAddress;
-        avatarState.groupType = groupAddress
-            ? await sdk.getGroupType(groupAddress)
-            : undefined;
+        if (groupAddress) {
+            const groupInfo = await sdk.data.getAvatar(groupAddress);
+            avatarState.groupType = toGroupType(groupInfo?.type);
+        } else {
+            avatarState.groupType = undefined;
+        }
 
         CirclesStorage.getInstance().data = {
             avatar: address,
@@ -43,7 +58,6 @@
             isGroup: avatarState.isGroup,
             groupType: avatarState.groupType,
             rings: settings.ring,
-            legacy: settings.legacy,
         };
 
         goto("/dashboard")

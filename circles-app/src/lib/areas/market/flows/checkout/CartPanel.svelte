@@ -34,8 +34,8 @@
       return;
     }
 
-    const seller = line.seller;
-    const sku = line.orderedItem?.sku;
+    const seller = typeof line.seller === 'string' ? line.seller : '';
+    const sku = typeof line.orderedItem?.sku === 'string' ? line.orderedItem.sku : '';
 
     if (!seller || !sku) {
       // If we ever hit this, the basket is malformed. Log, but don't try any other path.

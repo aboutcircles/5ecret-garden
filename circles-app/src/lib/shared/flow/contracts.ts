@@ -1,4 +1,4 @@
-import type { TokenBalanceRow } from '@aboutcircles/sdk-types';
+import type { TokenBalance } from '@aboutcircles/sdk-types';
 import type { Profile } from '@aboutcircles/sdk-profiles';
 import type { Address } from '@aboutcircles/sdk-types';
 
@@ -9,7 +9,7 @@ export interface SelectTargetStepProps<
 }
 
 export interface SelectAssetStepProps<
-  TContext extends { selectedAsset?: TokenBalanceRow | undefined },
+  TContext extends { selectedAsset?: TokenBalance | undefined },
 > {
   context: TContext;
 }
@@ -17,7 +17,7 @@ export interface SelectAssetStepProps<
 export interface EnterAmountStepProps<
   TContext extends {
     amount?: number | undefined;
-    selectedAsset?: TokenBalanceRow | undefined;
+    selectedAsset?: TokenBalance | undefined;
   },
 > {
   context: TContext;

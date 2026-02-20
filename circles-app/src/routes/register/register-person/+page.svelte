@@ -37,15 +37,27 @@
         const walletAddress = requireWalletAddress($wallet?.address as Address | undefined, 'Wallet not connected');
         const sdk = requireCircles(get(circles));
 
-        invitations = await sdk.data.getInvitations(walletAddress.toLowerCase() as Address);
+        const response = await sdk.data.getAllInvitations(walletAddress.toLowerCase() as Address);
+        // Convert AllInvitationsResponse to AvatarRow[] for InvitationPickerStep
+        const allInvites = [
+            ...response.trustInvitations,
+            ...response.escrowInvitations,
+            ...response.atScaleInvitations,
+        ];
+        invitations = allInvites.map((inv) => ({
+            avatar: inv.address,
+            address: inv.address,
+            version: 2,
+            type: 'CrcV2_RegisterHuman' as const,
+        }));
         if (settings.ring) {
             invitations = [
                 ...invitations,
                 {
-                    avatar: '0x0000000000000000000000000000000000000000',
-                    timestamp: 0, transactionHash: '',
-                    version: 2, type: 'CrcV2_RegisterHuman', hasV1: true, isHuman: false,
-                    blockNumber: 0, transactionIndex: 0, logIndex: 0,
+                    avatar: '0x0000000000000000000000000000000000000000' as Address,
+                    address: '0x0000000000000000000000000000000000000000' as Address,
+                    version: 2,
+                    type: 'CrcV2_RegisterHuman' as const,
                 },
             ];
         }
@@ -55,7 +67,7 @@
         const sdk = requireCircles(get(circles));
         const inviter = requireWalletAddress(inviterSelected, 'Inviter not set');
 
-        avatarState.avatar = (await sdk.acceptInvitation(
+        avatarState.avatar = (await sdk.register.asHuman(
             inviter.toLowerCase() as Address,
             profile
         )) as AvatarType;

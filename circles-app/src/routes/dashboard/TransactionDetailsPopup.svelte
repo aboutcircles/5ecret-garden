@@ -17,7 +17,7 @@
     // Tab control removed (JSON view no longer needed)
 
     // Robust timestamp handling: support seconds and milliseconds
-    const dateTime = $derived(() => {
+    const dateTime = $derived.by(() => {
         const ts = Number(item.timestamp ?? 0);
         const ms = ts < 1e12 ? ts * 1000 : ts;
         return new Date(ms).toLocaleString();
@@ -75,7 +75,7 @@
 
     type TxEvent = Record<string, any> & { $type?: string };
 
-    const events = $derived<TxEvent[]>(() => {
+    const events = $derived.by((): TxEvent[] => {
         const raw = (item as any)?.events;
         if (!raw) {
             return [];
@@ -99,9 +99,9 @@
     });
 
     // DiscountCost aggregation: (account, id) -> total cost
-    const discountCostByAccountAndId = $derived<Map<string, bigint>>(() => {
+    const discountCostByAccountAndId = $derived.by((): Map<string, bigint> => {
         const map = new Map<string, bigint>();
-        for (const ev of events()) {
+        for (const ev of events) {
             const type = String(ev.$type ?? '');
             if (type !== 'CrcV2_DiscountCost') {
                 continue;
@@ -139,7 +139,7 @@
             return false;
         }
         const key = `${from}|${String(id)}`;
-        const expected = discountCostByAccountAndId().get(key);
+        const expected = discountCostByAccountAndId.get(key);
         if (expected === undefined) {
             return false;
         }
@@ -219,7 +219,7 @@
 
         if (Array.isArray((ev as any).Values)) {
             const vals: unknown[] = (ev as any).Values;
-            const sum = vals.reduce((acc, v) => {
+            const sum = vals.reduce((acc: number, v: unknown) => {
                 const n = toCirclesNumber(v);
                 if (n === null) {
                     return acc;
@@ -235,9 +235,9 @@
         return [];
     }
 
-    const transfers = $derived<Transfer[]>(() => {
+    const transfers = $derived.by((): Transfer[] => {
         const all: Transfer[] = [];
-        for (const ev of events()) {
+        for (const ev of events) {
             const legs = extractTransfers(ev);
             if (!legs.length) {
                 continue;
@@ -249,10 +249,10 @@
         return all;
     });
 
-    const aggregatedTransfers = $derived<AggregatedTransfer[]>(() => {
+    const aggregatedTransfers = $derived.by((): AggregatedTransfer[] => {
         const map = new Map<string, { a: string; b: string; net: number; tokenAddress: string | null }>();
 
-        for (const t of transfers()) {
+        for (const t of transfers) {
             // Exclude protocol-cost transfers from the "intended transfers" aggregation.
             // These will be shown separately in the Burns section.
             if (t.isProtocolCost) {
@@ -296,10 +296,10 @@
         return result;
     });
 
-    const aggregatedBurnTransfers = $derived<AggregatedTransfer[]>(() => {
+    const aggregatedBurnTransfers = $derived.by((): AggregatedTransfer[] => {
         const map = new Map<string, { a: string; b: string; net: number; tokenAddress: string | null }>();
 
-        for (const t of transfers()) {
+        for (const t of transfers) {
             const from = t.from.toLowerCase();
             const to = t.to.toLowerCase();
 
@@ -343,13 +343,13 @@
     });
 
     // Net amount for the current viewer, excluding protocol-cost burns
-    const netAmountForViewer = $derived<number | null>(() => {
+    const netAmountForViewer = $derived.by((): number | null => {
         const me = avatarState.avatar?.address?.toLowerCase();
         if (!me) {
             return null;
         }
         let net = 0;
-        for (const t of transfers()) {
+        for (const t of transfers) {
             if (t.isProtocolCost) {
                 continue;
             }
@@ -365,13 +365,13 @@
     });
 
     // Demurrage / protocol-cost for viewer
-    const demurrageAmount = $derived<number>(() => {
+    const demurrageAmount = $derived.by((): number => {
         const me = avatarState.avatar?.address?.toLowerCase();
         if (!me) {
             return 0;
         }
         let net = 0;
-        for (const t of transfers()) {
+        for (const t of transfers) {
             if (!t.isProtocolCost) {
                 continue;
             }
@@ -387,12 +387,12 @@
         net = normalizeTiny(net);
         return net;
     });
-    const demurrageAbs = $derived(() => Math.abs(demurrageAmount()));
+    const demurrageAbs = $derived(Math.abs(demurrageAmount));
 
     // Header amount: intended transfers (excluding protocol fees).
     // Fallback to item.circles if we have no viewer context.
-    const headerNetAmount = $derived(() => {
-        const viewerNet = netAmountForViewer();
+    const headerNetAmount = $derived.by(() => {
+        const viewerNet = netAmountForViewer;
         if (typeof viewerNet === 'number') {
             return viewerNet;
         }
@@ -400,33 +400,33 @@
         return base;
     });
 
-    const headerAbsAmount = $derived(() => Math.abs(headerNetAmount()));
-    const headerSign = $derived(() => headerNetAmount() < 0 ? '-' : headerNetAmount() > 0 ? '+' : '');
-    const signedAmount = $derived(() => `${headerSign()}${formatAmount(headerAbsAmount())}`);
-    const headerColorClass = $derived(() => {
-        if (headerNetAmount() < 0) {
+    const headerAbsAmount = $derived(Math.abs(headerNetAmount));
+    const headerSign = $derived(headerNetAmount < 0 ? '-' : headerNetAmount > 0 ? '+' : '');
+    const signedAmount = $derived(`${headerSign}${formatAmount(headerAbsAmount)}`);
+    const headerColorClass = $derived.by(() => {
+        if (headerNetAmount < 0) {
             return 'text-error';
         }
-        if (headerNetAmount() > 0) {
+        if (headerNetAmount > 0) {
             return 'text-success';
         }
         return 'text-base-content';
     });
 
-    const nonBurnTransfers = $derived(() =>
-        aggregatedTransfers().filter(t => !isZeroAddress(t.to))
+    const nonBurnTransfers = $derived.by(() =>
+        aggregatedTransfers.filter(t => !isZeroAddress(t.to))
     );
 
     // Burns are aggregated separately (including protocol-cost burns)
-    const burnTransfers = $derived(() => aggregatedBurnTransfers());
+    const burnTransfers = $derived(aggregatedBurnTransfers);
 
     let burnsOpen = $state(false);
     function toggleBurns() {
         burnsOpen = !burnsOpen;
     }
 
-    const totalBurned = $derived(() =>
-        burnTransfers().reduce((acc, t) => acc + (t?.amount ?? 0), 0)
+    const totalBurned = $derived.by(() =>
+        burnTransfers.reduce((acc: number, t: AggregatedTransfer) => acc + (t?.amount ?? 0), 0)
     );
 
     // Zero-sum swap detection for item.from vs item.to, ignoring protocol DiscountCost burns
@@ -437,7 +437,7 @@
         backwardTokenAddress: string | null;
     };
 
-    const swapSummary = $derived<SwapSummary | null>(() => {
+    const swapSummary = $derived.by((): SwapSummary | null => {
         const fromAddr = item.from?.toLowerCase();
         const toAddr = item.to?.toLowerCase();
         if (!fromAddr || !toAddr) {
@@ -446,7 +446,7 @@
 
         // Only consider swaps when there is an actual stream between from→to
         let hasStreamBetween = false;
-        for (const ev of events()) {
+        for (const ev of events) {
             const type = String(ev.$type ?? '');
             if (type !== 'CrcV2_StreamCompleted') {
                 continue;
@@ -467,7 +467,7 @@
         let outTokenAddress: string | null = null;
         let inTokenAddress: string | null = null;
 
-        for (const t of transfers()) {
+        for (const t of transfers) {
             const f = t.from.toLowerCase();
             const tt = t.to.toLowerCase();
 
@@ -510,13 +510,13 @@
     });
 
     // For non-swap directional view, pick the main token for item.from -> item.to
-    const mainTokenAddress = $derived<string | null>(() => {
+    const mainTokenAddress = $derived.by((): string | null => {
         const fromAddr = item.from?.toLowerCase();
         const toAddr = item.to?.toLowerCase();
         if (!fromAddr || !toAddr) {
             return null;
         }
-        for (const t of transfers()) {
+        for (const t of transfers) {
             const f = t.from.toLowerCase();
             const tt = t.to.toLowerCase();
             if (f === fromAddr && tt === toAddr && t.tokenAddress) {
@@ -583,20 +583,20 @@
             <div class="bg-base-100 border rounded-xl overflow-hidden divide-y">
                 <div class="p-4 flex flex-col items-center justify-center">
                     <div class="text-center">
-                        <div class={`text-3xl sm:text-4xl font-extrabold ${headerColorClass()}`}>
-                            {signedAmount()} <span class="opacity-70 text-base align-middle">CRC</span>
+                        <div class={`text-3xl sm:text-4xl font-extrabold ${headerColorClass}`}>
+                            {signedAmount} <span class="opacity-70 text-base align-middle">CRC</span>
                         </div>
                     </div>
-                    {#if demurrageAbs() > 0}
+                    {#if demurrageAbs > 0}
                         <div class="mt-1 text-sm font-semibold text-error">
-                            -{formatAmount(demurrageAbs())}
+                            -{formatAmount(demurrageAbs)}
                             <span class="opacity-70 text-xs align-middle"> CRC demurrage</span>
                         </div>
                     {/if}
                 </div>
 
                 <div class="p-3">
-                    {#if swapSummary()}
+                    {#if swapSummary}
                         <div class="space-y-2">
                             <!-- Forward leg -->
                             <div class="flex items-center justify-between gap-3">
@@ -604,8 +604,8 @@
                                     <Avatar address={item.from} view="horizontal" clickable={true} />
                                 </div>
                                 <div class="shrink-0 flex items-center gap-2 text-base-content/70">
-                                    {#if swapSummary()?.forwardTokenAddress}
-                                        <Avatar address={swapSummary().forwardTokenAddress} view="small_no_text" clickable={true} />
+                                    {#if swapSummary?.forwardTokenAddress}
+                                        <Avatar address={swapSummary.forwardTokenAddress} view="small_no_text" clickable={true} />
                                     {/if}
                                     <Lucide icon={LArrowRight} size={18} />
                                 </div>
@@ -619,8 +619,8 @@
                                     <Avatar address={item.from} view="horizontal" clickable={true} />
                                 </div>
                                 <div class="shrink-0 flex items-center gap-2 text-base-content/70">
-                                    {#if swapSummary()?.backwardTokenAddress}
-                                        <Avatar address={swapSummary().backwardTokenAddress} view="small_no_text" clickable={true} />
+                                    {#if swapSummary?.backwardTokenAddress}
+                                        <Avatar address={swapSummary.backwardTokenAddress} view="small_no_text" clickable={true} />
                                     {/if}
                                     <div class="rotate-180">
                                         <Lucide icon={LArrowRight} size={18} />
@@ -637,8 +637,8 @@
                                 <Avatar address={item.from} view="horizontal" clickable={true} />
                             </div>
                             <div class="shrink-0 flex items-center gap-2 text-base-content/70">
-                                {#if mainTokenAddress()}
-                                    <Avatar address={mainTokenAddress()} view="small_no_text" clickable={true} />
+                                {#if mainTokenAddress}
+                                    <Avatar address={mainTokenAddress} view="small_no_text" clickable={true} />
                                 {/if}
                                 <Lucide icon={LArrowRight} size={18} />
                             </div>
@@ -659,7 +659,7 @@
                 <div class="divide-y">
                     <div class="flex items-center justify-between gap-4 p-3">
                         <div class="text-sm opacity-70">Date & time</div>
-                        <div class="text-sm">{dateTime()}</div>
+                        <div class="text-sm">{dateTime}</div>
                     </div>
                     <div class="flex items-center gap-4 p-3">
                         <div class="text-sm opacity-70 shrink-0">Transaction hash</div>
@@ -678,15 +678,15 @@
                 </div>
             </div>
 
-            {#if aggregatedTransfers().length}
+            {#if aggregatedTransfers.length}
                 <div class="bg-base-100 border mt-4 rounded-xl overflow-hidden">
                     <div class="p-3 border-b">
                         <div class="text-sm opacity-70">
-                            Aggregated transfers <span class="opacity-60">({aggregatedTransfers().length})</span>
+                            Aggregated transfers <span class="opacity-60">({aggregatedTransfers.length})</span>
                         </div>
                     </div>
                     <div class="divide-y">
-                        {#each nonBurnTransfers() as t}
+                        {#each nonBurnTransfers as t}
                             <div class="px-3 py-2.5 sm:py-3 flex items-center gap-3 sm:gap-4 hover:bg-base-200/40 transition-colors">
                                 <div class="flex-1 min-w-0 flex items-center gap-2">
                                     {#if isZeroAddress(t.from)}
@@ -718,12 +718,12 @@
                                         <Avatar address={t.to} view="small_no_text" clickable={true} />
                                     </div>
                                     <div class="hidden sm:inline-flex">
-                                        <Avatar address={t.to} view="small_reverse" clickable={true} />
+                                        <Avatar address={t.to} view="small" clickable={true} />
                                     </div>
                                 </div>
                             </div>
                         {/each}
-                        {#if burnTransfers().length}
+                        {#if burnTransfers.length}
                             <button
                                     class="w-full p-3 bg-base-200/50 text-xs uppercase tracking-wide text-base-content/60 flex items-center justify-between hover:bg-base-200/70 transition-colors"
                                     onclick={toggleBurns}
@@ -731,14 +731,14 @@
                                     title={burnsOpen ? 'Hide burns' : 'Show burns'}
                             >
                                 <span>
-                                    Burns <span class="opacity-60">({burnTransfers().length})</span>
+                                    Burns <span class="opacity-60">({burnTransfers.length})</span>
                                 </span>
                                 <span class="text-[11px] normal-case opacity-80">
-                                    {formatAmount(totalBurned())} <span class="opacity-70">CRC</span>
+                                    {formatAmount(totalBurned)} <span class="opacity-70">CRC</span>
                                 </span>
                             </button>
                             {#if burnsOpen}
-                                {#each burnTransfers() as t}
+                                {#each burnTransfers as t}
                                     <div class="px-3 py-2.5 sm:py-3 flex items-center gap-3 sm:gap-4 hover:bg-base-200/40 transition-colors">
                                         <div class="flex-1 min-w-0 flex items-center gap-2">
                                             {#if isZeroAddress(t.from)}
@@ -779,7 +779,7 @@
             {/if}
 
             <TxEvents
-                events={events()}
+                events={events}
                 {eventDisplayEntries}
                 {niceKey}
                 {isOpen}

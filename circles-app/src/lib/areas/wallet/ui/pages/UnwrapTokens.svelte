@@ -4,13 +4,13 @@
   import { circles } from '$lib/shared/state/circles';
   import { ethers } from 'ethers';
   import BalanceRow from '$lib/areas/wallet/ui/components/BalanceRow.svelte';
-  import type { TokenBalanceRow } from '@aboutcircles/sdk-types';
+  import type { TokenBalance } from '@aboutcircles/sdk-types';
   import { roundToDecimals } from '$lib/shared/utils/shared';
   import { runTask } from '$lib/shared/utils/tasks';
   import { popupControls } from '$lib/shared/state/popup';
 
   interface Props {
-    asset: TokenBalanceRow;
+    asset: TokenBalance;
   }
 
   let { asset }: Props = $props();
@@ -22,7 +22,7 @@
   );
 
   async function unwrap() {
-    const tokenInfo = await $circles?.data?.getTokenInfo(asset.tokenAddress);
+    const tokenInfo = await $circles?.rpc?.token?.getTokenInfo(asset.tokenAddress);
     if (!tokenInfo) {
       return;
     }
@@ -33,7 +33,7 @@
     if (tokenInfo.type === 'CrcV2_ERC20WrapperDeployed_Inflationary') {
       runTask({
         name: `Unwrap ${roundToDecimals(amount)} static tokens ...`,
-        promise: avatarState.avatar.unwrapInflationErc20(
+        promise: avatarState.avatar.wrap.unwrapInflationary(
           asset.tokenAddress,
           BigInt(ethers.parseEther(amount.toString()))
         ),
@@ -41,7 +41,7 @@
     } else if (tokenInfo.type === 'CrcV2_ERC20WrapperDeployed_Demurraged') {
       runTask({
         name: `Unwrap ${roundToDecimals(amount)} tokens ...`,
-        promise: avatarState.avatar.unwrapDemurrageErc20(
+        promise: avatarState.avatar.wrap.unwrapDemurraged(
           asset.tokenAddress,
           BigInt(ethers.parseEther(amount.toString()))
         ),

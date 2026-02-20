@@ -1,7 +1,7 @@
 <script lang="ts">
     import { getContext } from 'svelte';
     import { getTimeAgo } from '$lib/shared/utils/shared';
-    import type { TransactionHistoryRow } from '@aboutcircles/sdk-types';
+    import type { ExtendedTransactionRow } from '$lib/shared/state/transactionHistory';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import { avatarState } from '$lib/shared/state/avatar.svelte';
     import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
@@ -13,7 +13,7 @@
         type VirtualListController,
     } from '$lib/shared/ui/lists/utils/virtualListContext';
 
-    interface Props { item: TransactionHistoryRow; }
+    interface Props { item: ExtendedTransactionRow; }
     let { item }: Props = $props();
 
     const virtualList = getContext<VirtualListController | undefined>(VIRTUAL_LIST_CONTEXT_KEY);
@@ -40,7 +40,7 @@
     const displayAmount = $derived.by(() => {
         if (!avatarAddress) return '';
         const prefix = sent ? '-' : '+';
-        return `${prefix}${formatNetCircles(item.circles)}`;
+        return `${prefix}${formatNetCircles(Number(item.circles) || 0)}`;
     });
 
     function getCounterpartyAddress(avatarAddress: string) {
@@ -163,7 +163,7 @@
         <div class="w-full flex items-center justify-between cursor-pointer">
             <div class="min-w-0">
                 <Avatar
-                        address={counterpartyAddress}
+                        address={counterpartyAddress ?? undefined}
                         view="horizontal"
                         clickable={true}
                         pictureOverlayUrl={badgeUrl ?? undefined}

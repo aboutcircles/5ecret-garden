@@ -26,7 +26,9 @@
   import { initBalanceStore } from '$lib/shared/state/circlesBalances';
   import { browser } from '$app/environment';
   import { goto } from '$app/navigation';
-  import { PUBLIC_PLAUSIBLE_DOMAIN } from '$env/static/public';
+  import { env } from '$env/dynamic/public';
+
+  const PUBLIC_PLAUSIBLE_DOMAIN = env.PUBLIC_PLAUSIBLE_DOMAIN ?? '';
   import { initGroupMetricsStore } from '$lib/areas/groups/state';
   import { circles } from '$lib/shared/state/circles';
   import type { Address } from '@aboutcircles/sdk-types';
@@ -234,11 +236,11 @@
 
   // init profile state
   $effect(() => {
-    const address = avatarState.avatar?.address;
+    const address = avatarState.avatar?.address as Address | undefined;
     if (address) {
       void (async () => {
         const { getProfile } = await import('$lib/shared/utils/profile');
-        const newProfile = await getProfile(address);
+        const newProfile = await getProfile(address as `0x${string}`);
         avatarState.profile = newProfile;
       })();
     } else {

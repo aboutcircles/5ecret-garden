@@ -53,11 +53,6 @@
     return 'Unknown';
   }
 
-  function avatarInfoFor(address: Address) {
-    const type = trustedAvatarTypes[address.toLowerCase()];
-    return type ? ({ avatar: address, type } as any) : undefined;
-  }
-
   $effect(() => {
     const sdk = $circles;
     let cancelled = false;
@@ -71,7 +66,7 @@
       return;
     }
 
-    void getProfile(group)
+    void getProfile(group as `0x${string}`)
       .then((profile) => {
         if (cancelled) return;
         groupName = profile?.name ?? null;
@@ -114,7 +109,7 @@
       const infos = await avatarDataSource.getAvatarInfoBatch(trustedAddresses);
       const nextTypes: Record<string, string | undefined> = {};
       for (const info of infos) {
-        nextTypes[String(info.avatar).toLowerCase()] = info.type;
+        if (info) nextTypes[String(info.avatar).toLowerCase()] = info.type;
       }
       trustedAvatarTypes = nextTypes;
     } catch (e) {
@@ -175,7 +170,7 @@
 
   async function getDisplayName(address: Address): Promise<string> {
     try {
-      const profile = await getProfile(address);
+      const profile = await getProfile(address as `0x${string}`);
       const name = profile?.name?.trim();
       return name && name.length > 0 ? name : shortenAddress(address);
     } catch {
@@ -277,7 +272,6 @@
               <div class="min-w-0">
                 <Avatar
                   address={address}
-                  avatarInfo={avatarInfoFor(address)}
                   view="horizontal"
                   clickable={true}
                   bottomInfo={`${avatarTypeToReadable(trustedAvatarTypes[address.toLowerCase()])} • ${address}`}

@@ -66,7 +66,7 @@
                 const entries = typeof profile.signingKeys === 'object' && profile.signingKeys ? { ...profile.signingKeys } : {};
 
                 try {
-                    const xy = hexToBytes(pk).slice(1);
+                    const xy = hexToBytes(pk as `0x${string}`).slice(1);
                     const fp = keccak256(xy).toLowerCase();
                     entries[fp] = {
                         '@context': 'https://aboutcircles.com/contexts/circles-profile/',

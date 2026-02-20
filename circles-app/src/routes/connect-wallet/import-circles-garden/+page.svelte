@@ -3,8 +3,7 @@
   import {
     clearSession,
     getSignerFromPk,
-    initPrivateKeyContractRunner,
-    initSafeSdkPrivateKeyContractRunner,
+    initNewSafeContractRunner,
     signer,
     wallet,
   } from '$lib/shared/state/wallet.svelte';
@@ -13,36 +12,30 @@
   import { onMount } from 'svelte';
   import { settings } from '$lib/shared/state/settings.svelte';
   import { gnosisConfig } from '$lib/shared/config/circles';
-  import type { ContractRunner as SdkContractRunner } from '@aboutcircles/sdk-types';
   import type { Address } from '@aboutcircles/sdk-types';
 
-  let runner: SdkContractRunner | undefined = $state();
-
   $effect(() => {
-    circles.set(
-      runner
-        ? new Sdk(
-            runner,
-            settings.ring ? gnosisConfig.rings : gnosisConfig.production
-          )
-        : undefined
-    );
+    // Create a read-only Sdk (no contractRunner) for avatar discovery
+    if (signer.address) {
+      const config = settings.ring ? gnosisConfig.rings : gnosisConfig.production;
+      circles.set(new Sdk(config));
+    }
   });
 
   async function connectCirclesGarden(address: Address) {
     if (!signer.privateKey) {
       throw new Error('No private key found');
     }
-    runner = await initSafeSdkPrivateKeyContractRunner(
+    const runner = await initNewSafeContractRunner(
       signer.privateKey,
       address
     );
     wallet.set(runner);
 
-    return new Sdk(
-      runner,
-      settings.ring ? gnosisConfig.rings : gnosisConfig.production
-    );
+    const config = settings.ring ? gnosisConfig.rings : gnosisConfig.production;
+    const sdk = new Sdk(config, runner);
+    circles.set(sdk);
+    return sdk;
   }
 
   onMount(async () => {
@@ -54,7 +47,6 @@
 
     signer.address = address;
     signer.privateKey = privateKey;
-    runner = await initPrivateKeyContractRunner(privateKey);
   });
 
   function goBack(): void {

@@ -5,6 +5,7 @@ import { gnosisConfig } from '$lib/shared/config/circles';
 import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
 import type { Basket, CartState, CheckoutResult, SdkCartItem } from './types';
 import type { BasketPatch, OrderItemPreview } from './types';
+import { toLocalBasket } from './types';
 import { readBasketId, writeBasketId } from './basketIdStorage';
 import { normalizeAddr, normalizeSku, toSdkItemsFromBasket, lineQty, normalizeImageUrl } from './basketUtils';
 import { fetchBasketById, patchBasket } from './cartHttp';
@@ -303,14 +304,14 @@ export async function updateBasketDetails(patch: unknown): Promise<void> {
     const age = stripNulls(patchObj.ageProof);
     const customer = stripNulls(patchObj.customer);
 
-    const updated = await getMarketClient().cart.setCheckoutDetails({
+    const updated = toLocalBasket(await getMarketClient().cart.setCheckoutDetails({
       basketId,
       shippingAddress: shipping,
       billingAddress: billing,
       contactPoint: contact,
       ageProof: age,
       customer: customer,
-    });
+    }));
 
     cartState.update((s) => ({ ...s, basket: updated }));
   } catch (e) {

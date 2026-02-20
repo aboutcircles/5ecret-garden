@@ -48,24 +48,24 @@
         {/if}
       </div>
 
-      {#if snapshot.shippingAddress}
+      {#if snapshotShippingAddr}
         <div class="space-y-1">
           <div class="text-xs uppercase tracking-wide opacity-60">Shipping address</div>
           <div class="text-sm leading-snug">
-            {snapshot.shippingAddress.streetAddress}
-            <br />{snapshot.shippingAddress.postalCode} {snapshot.shippingAddress.addressLocality}
-            <br />{snapshot.shippingAddress.addressCountry}
+            {snapshotShippingAddr.streetAddress}
+            <br />{snapshotShippingAddr.postalCode} {snapshotShippingAddr.addressLocality}
+            <br />{snapshotShippingAddr.addressCountry}
           </div>
         </div>
       {/if}
 
-      {#if snapshot.billingAddress}
+      {#if snapshotBillingAddr}
         <div class="space-y-1">
           <div class="text-xs uppercase tracking-wide opacity-60">Billing address</div>
           <div class="text-sm leading-snug">
-            {snapshot.billingAddress.streetAddress}
-            <br />{snapshot.billingAddress.postalCode} {snapshot.billingAddress.addressLocality}
-            <br />{snapshot.billingAddress.addressCountry}
+            {snapshotBillingAddr.streetAddress}
+            <br />{snapshotBillingAddr.postalCode} {snapshotBillingAddr.addressLocality}
+            <br />{snapshotBillingAddr.addressCountry}
           </div>
         </div>
       {/if}
@@ -136,7 +136,7 @@
           </div>
         </div>
       {/each}
-      {#if (snapshot.orderedItem ?? []).length === 0}
+      {#if (!Array.isArray(snapshot.orderedItem) || snapshot.orderedItem.length === 0)}
         <div class="text-sm opacity-70">No items</div>
       {/if}
     </div>
@@ -197,7 +197,7 @@
   <div class="text-sm opacity-70">No order data</div>
 {/if}
 
-{#snippet OutboxPayloadView({ payload })}
+{#snippet OutboxPayloadView({ payload }: { payload: any })}
   {#if isKnownDownloadPayload(payload)}
     <div class="flex items-center gap-2">
       <JumpLink
@@ -262,6 +262,9 @@
   }
   let { snapshot, statusEvents = null }: Props = $props();
 
+  type PostalAddr = { streetAddress?: string; postalCode?: string; addressLocality?: string; addressCountry?: string };
+  const snapshotShippingAddr = $derived(snapshot?.shippingAddress as PostalAddr | undefined);
+  const snapshotBillingAddr = $derived(snapshot?.billingAddress as PostalAddr | undefined);
 
   type TimelineEvent = { status: string; changedAt: string };
   let timeline: TimelineEvent[] = $state([]);
@@ -460,7 +463,7 @@
   }
   
   function priceDisplay(): string | null {
-    const p = snapshot?.totalPaymentDue;
+    const p = snapshot?.totalPaymentDue as { price?: number; priceCurrency?: string } | undefined;
     if (!p) return null;
     return formatCurrency(p.price ?? null, p.priceCurrency ?? null);
   }
@@ -545,7 +548,7 @@
         return;
       }
 
-      const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
+      const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator!);
       const prod = await catalog.fetchProductForSellerAndSku(String(evm), String(sku));
       if (!prod) {
         resolved[i] = { name: null, imageUrl: null };

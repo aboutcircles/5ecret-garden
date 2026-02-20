@@ -10,7 +10,7 @@ import {gnosisConfig} from "$lib/shared/config/circles";
  */
 export async function signInWithSafe(
   avatar: string,
-  chainId: number = gnosisConfig.production.marketChainId,
+  chainId: number = gnosisConfig.production.marketChainId ?? 100,
 ): Promise<{ address: string; chainId: number }> {
   if (!browser) {
     throw new Error('signInWithSafe() can only be used in the browser');

@@ -379,11 +379,13 @@
             await persistLinks(ns, next);
             editing = null;
         } catch (e: any) {
-            editing = {
-                ...editing,
-                saving: false,
-                error: String(e?.message ?? e)
-            };
+            if (editing) {
+                editing = {
+                    ...editing,
+                    saving: false,
+                    error: String(e?.message ?? e)
+                };
+            }
         }
     }
 
@@ -462,8 +464,7 @@
                                 <div class="shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <JumpLink
                                        className="btn btn-ghost btn-xs btn-square"
-                                       url={ipfsGatewayUrl(item.chunkCid)}
-                                       title="View on IPFS">
+                                       url={ipfsGatewayUrl(item.chunkCid)}>
                                         <Lucide icon={LExternalLink} size={14} />
                                     </JumpLink>
                                     {#if !readonly}

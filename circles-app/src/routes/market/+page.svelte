@@ -16,7 +16,7 @@
     import {gnosisConfig} from "$lib/shared/config/circles";
 
     // Defaults (as requested)
-    const OPERATOR: `0x${string}` = gnosisConfig.production.marketOperator;
+    const OPERATOR: `0x${string}` = gnosisConfig.production.marketOperator as `0x${string}`;
 
     const API_BASE = gnosisConfig.production.marketApiBase;
     const MARKET_CHAIN_ID = gnosisConfig.production.marketChainId ?? 100;
@@ -161,7 +161,7 @@
       const body = (await res.json().catch(() => null)) as SellerListing[] | SellersResponse | null;
       const list: SellerListing[] = Array.isArray(body)
         ? body
-        : (body && Array.isArray((body as SellersResponse).sellers) ? (body as SellersResponse).sellers : []);
+        : (body && Array.isArray((body as SellersResponse).sellers) ? ((body as SellersResponse).sellers ?? []) : []);
       const filtered = list
         .map((entry) => ({
           chainId: Number((entry as SellerListing).chainId),

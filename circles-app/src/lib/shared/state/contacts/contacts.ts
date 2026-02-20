@@ -1,7 +1,9 @@
 import type {
   AvatarRow,
+  AvatarInfo,
   CirclesEventType,
   TrustRelationRow,
+  AggregatedTrustRelation,
 } from '@aboutcircles/sdk-types';
 import type { AppProfileCore as Profile } from '$lib/shared/model/profile';
 import { writable } from 'svelte/store';
@@ -10,17 +12,17 @@ import type { Avatar } from '@aboutcircles/sdk';
 
 export type ContactListItem = {
   contactProfile: Profile;
-  avatarInfo?: AvatarRow;
-  row: TrustRelationRow;
+  avatarInfo?: AvatarRow | AvatarInfo;
+  row: TrustRelationRow | AggregatedTrustRelation;
 };
 
 export type ContactList = Record<string, ContactListItem>;
 
-const refreshOnEvents: Set<CirclesEventType> = new Set([
+const refreshOnEvents = new Set<string>([
   'CrcV1_Trust',
   'CrcV2_Trust',
   'CrcV2_InviteHuman',
-]);
+]) as Set<CirclesEventType>;
 
 let currentStoreUnsubscribe: (() => void) | undefined;
 let currentQuery: Promise<any> | undefined;

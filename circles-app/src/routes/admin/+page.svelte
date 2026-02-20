@@ -212,7 +212,7 @@
         mode: 'product',
         onCancel: () => popupControls.close(),
         onDisable: product ? async () => handleDisableProduct(product) : undefined,
-        onSubmit: async (payload) => {
+        onSubmit: async (payload: any) => {
           await saveProduct(payload, product ?? null);
         },
       },
@@ -227,7 +227,7 @@
       props: {
         connections: odooConnections,
         existingProducts: unifiedProducts,
-        onExecute: async (payload) => {
+        onExecute: async (payload: any) => {
           await saveProduct(payload, null);
         },
         onCreateConnection: createConnectionInFlow,
@@ -242,7 +242,7 @@
         title: 'New Odoo connection',
         component: AdminNewConnectionSellerStep,
         props: {
-          onCreate: async (payload) => {
+          onCreate: async (payload: any) => {
             await saveConnection(payload);
           },
         },
@@ -261,7 +261,7 @@
         mode: 'connection',
         onCancel: () => popupControls.close(),
         onDisable: async () => handleDisableConnection(connection),
-        onSubmit: async (payload) => {
+        onSubmit: async (payload: any) => {
           await saveConnection(payload);
         },
       },

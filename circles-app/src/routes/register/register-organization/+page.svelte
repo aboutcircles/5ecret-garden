@@ -16,7 +16,7 @@
 
     async function registerOrganization() {
         if (!$circles) throw new Error('Wallet not connected ($circles is undefined)');
-        avatarState.avatar = await $circles.registerOrganizationV2(profile) as Avatar;
+        avatarState.avatar = await $circles.register.asOrganization(profile) as Avatar;
         await goto('/dashboard');
     }
 

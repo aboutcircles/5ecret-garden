@@ -12,7 +12,7 @@
   import { fade } from 'svelte/transition';
   import { circles } from '$lib/shared/state/circles';
 
-  type AvatarView = 'horizontal' | 'vertical' | 'small' | 'small_no_text';
+  type AvatarView = 'horizontal' | 'vertical' | 'small' | 'small_no_text' | 'small_reverse';
 
   interface Props {
     address: Address | undefined;
@@ -51,7 +51,7 @@
 
   // Map compact view modes to horizontal layout with reduced placeholders
   const effectiveView: 'horizontal' | 'vertical' = $derived(
-    view === 'small' || view === 'small_no_text' ? 'horizontal' as const : view as 'horizontal' | 'vertical'
+    view === 'small' || view === 'small_no_text' || view === 'small_reverse' ? 'horizontal' as const : view as 'horizontal' | 'vertical'
   );
 
   let profile: Profile | undefined = $state();

@@ -61,13 +61,13 @@ export async function loadSafesProfileAndGroups(
   groupsByOwner: Record<Address, GroupRow[]>;
 }> {
   const [avatarInfo, groupInfo] = await Promise.all([
-    sdk?.data?.getAvatarInfoBatch(safes) ?? [],
+    Promise.all(safes.map(s => sdk?.data?.getAvatar(s))).then(results => results.filter(Boolean)) ?? [],
     getBaseAndCmgGroupsByOwnerBatch(sdk, safes),
   ]);
 
   const profileBySafe: Record<string, AvatarRow | undefined> = {};
-  avatarInfo.forEach((info) => {
-    profileBySafe[info.avatar] = info;
+  avatarInfo.forEach((info: any) => {
+    if (info) profileBySafe[info.avatar] = info;
   });
 
   return { profileBySafe, groupsByOwner: groupInfo };

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { TokenBalanceRow } from '@aboutcircles/sdk-types';
+  import type { TokenBalance } from '@aboutcircles/sdk-types';
   import type { SendFlowContext } from '$lib/areas/wallet/flows/send/context';
   import SelectAsset from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
   import SelectAmount from './3_Amount.svelte';
@@ -19,7 +19,7 @@
 
   let { context = $bindable(), returnMode = 'next' }: Props = $props();
 
-  let selectedAsset: TokenBalanceRow | undefined = $state(undefined);
+  let selectedAsset: TokenBalance | undefined = $state(undefined);
 
   onMount(() => {
     if (context?.selectedAsset) {
@@ -30,7 +30,7 @@
     }
   });
 
-  async function onselect(tokenBalanceRow: TokenBalanceRow) {
+  async function onselect(tokenBalanceRow: TokenBalance) {
     context.selectedAsset = tokenBalanceRow;
 
     if (returnMode === 'back') {

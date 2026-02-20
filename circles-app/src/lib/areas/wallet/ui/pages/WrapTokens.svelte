@@ -2,14 +2,14 @@
   import { ethers } from 'ethers';
   import PopupActionBar from '$lib/shared/ui/shell/PopupActionBar.svelte';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
-  import type { TokenBalanceRow } from '@aboutcircles/sdk-types';
+  import type { TokenBalance } from '@aboutcircles/sdk-types';
   import BalanceRow from '$lib/areas/wallet/ui/components/BalanceRow.svelte';
   import { roundToDecimals } from '$lib/shared/utils/shared';
   import { runTask } from '$lib/shared/utils/tasks';
   import { popupControls } from '$lib/shared/state/popup';
 
   interface Props {
-    asset: TokenBalanceRow;
+    asset: TokenBalance;
   }
 
   let { asset }: Props = $props();
@@ -39,7 +39,7 @@
     if (avatarState.avatar?.avatarInfo?.version !== 2) {
       throw new Error('Only supported for Avatar v2');
     }
-    const receipt = await avatarState.avatar?.wrapInflationErc20(asset.tokenAddress, sendValue);
+    const receipt = await avatarState.avatar?.wrap.asInflationary(asset.tokenAddress, sendValue);
     if (!receipt) {
       throw new Error('Failed to wrap Circles');
     }
@@ -49,7 +49,7 @@
     if (avatarState.avatar?.avatarInfo?.version !== 2) {
       throw new Error('Only supported for Avatar v2');
     }
-    const receipt = await avatarState.avatar?.wrapDemurrageErc20(asset.tokenAddress, sendValue);
+    const receipt = await avatarState.avatar?.wrap.asDemurraged(asset.tokenAddress, sendValue);
     if (!receipt) {
       throw new Error('Failed to wrap Circles');
     }

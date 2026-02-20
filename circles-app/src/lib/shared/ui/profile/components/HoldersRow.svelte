@@ -4,7 +4,7 @@
   import { formatUnits } from 'ethers';
   import { openProfilePopup } from '$lib/shared/ui/profile/openProfilePopup';
   import type { Address } from '@aboutcircles/sdk-types';
-  import type { TrustRelation } from '@aboutcircles/sdk-types';
+  import type { TrustRelationKind } from '$lib/shared/types/sdk-augment';
   import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
 
   interface HolderRow {
@@ -12,7 +12,7 @@
     amount: bigint;
     amountToRedeem: bigint;
     amountToRedeemInCircles: number;
-    trustRelation?: TrustRelation;
+    trustRelation?: TrustRelationKind;
   }
 
   interface Props {

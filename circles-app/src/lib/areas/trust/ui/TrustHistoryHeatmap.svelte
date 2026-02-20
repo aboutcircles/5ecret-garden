@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Address } from '@aboutcircles/sdk-types';
   import { EventHistoryHeatmap, type EventHistoryDataSource } from '$lib/shared/ui/event-history';
+  import type { CirclesBaseEventRow, EventHistoryRowComponent, EventHistoryDayPopupHeaderComponent } from '$lib/shared/ui/event-history/types';
   import TrustHistoryDayEventRow from '$lib/areas/trust/ui/history/TrustHistoryDayEventRow.svelte';
   import TrustHistoryDayPopupHeader from '$lib/areas/trust/ui/history/TrustHistoryDayPopupHeader.svelte';
   import { trustHistoryKnownRangeEvents } from '$lib/areas/trust/ui/history/knownRangeEvents';
@@ -108,11 +109,12 @@
       .sort((a, b) => a.startDaySec - b.startDaySec || a.endDaySec - b.endDaySec || a.title.localeCompare(b.title));
   }
 
-  function trustSearchHaystack(row: TrustHistoryEventRow): string {
+  function trustSearchHaystack(row: CirclesBaseEventRow): string {
+    const r = row as TrustHistoryEventRow;
     return [
-      String(row.trustee ?? ''),
-      String(row.transactionHash ?? ''),
-      Number(row.expiryTime) > Number(row.timestamp) ? 'trust set' : 'trust removed',
+      String(r.trustee ?? ''),
+      String(r.transactionHash ?? ''),
+      Number(r.expiryTime) > Number(r.timestamp) ? 'trust set' : 'trust removed',
     ]
       .join(' ')
       .toLowerCase();
@@ -120,7 +122,7 @@
 </script>
 
 <EventHistoryHeatmap
-  {dataSource}
+  dataSource={dataSource as EventHistoryDataSource}
   labels={{
     title: 'Trust events',
     loading: 'Loading outgoing trust history…',
@@ -135,8 +137,8 @@
     },
   }}
   searchHaystack={trustSearchHaystack}
-  rowComponent={TrustHistoryDayEventRow as any}
-  dayPopupHeaderComponent={TrustHistoryDayPopupHeader as any}
+  rowComponent={TrustHistoryDayEventRow as EventHistoryRowComponent}
+  dayPopupHeaderComponent={TrustHistoryDayPopupHeader as EventHistoryDayPopupHeaderComponent}
   overlays={{
     rangeEvents: knownRangeEvents,
     overlayLabel: 'Known events',

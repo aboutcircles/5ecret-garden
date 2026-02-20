@@ -1,4 +1,4 @@
-import type { TokenBalanceRow } from '@aboutcircles/sdk-types';
+import type { TokenBalance } from '@aboutcircles/sdk-types';
 import type { Address } from '@aboutcircles/sdk-types';
 
 export type SendFlowDataType = 'hex' | 'utf-8';
@@ -8,7 +8,7 @@ export type SendFlowContext = {
   data?: string;
   selectedAddress: Address | undefined;
   transitiveOnly: boolean;
-  selectedAsset: TokenBalanceRow;
+  selectedAsset: TokenBalance;
   fromTokens?: Address[];
   toTokens?: Address[];
   excludeFromTokens?: Address[];

@@ -54,7 +54,7 @@
 </script>
 
 <script lang="ts">
-    import type { TokenBalanceRow } from '@aboutcircles/sdk-types';
+    import type { TokenBalance } from '@aboutcircles/sdk-types';
     import { writable } from 'svelte/store';
     import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
     import type { Readable } from 'svelte/store';
@@ -69,14 +69,14 @@
 
     interface Props {
         balances: Readable<{
-            data: TokenBalanceRow[];
+            data: TokenBalance[];
             next: () => Promise<boolean>;
             ended: boolean;
         }>;
-        selectedAsset?: TokenBalanceRow | undefined;
+        selectedAsset?: TokenBalance | undefined;
         showTransitive?: boolean;
         inputDataAttribute?: string;
-        onselect: (tokenBalanceRow: TokenBalanceRow) => void;
+        onselect: (tokenBalanceRow: TokenBalance) => void;
     }
 
     let {
@@ -89,7 +89,7 @@
     const query = writable('');
     let selectAssetListScopeEl: HTMLDivElement | null = $state(null);
 
-    const handleSelect = (tokenBalanceRow: TokenBalanceRow) => {
+    const handleSelect = (tokenBalanceRow: TokenBalance) => {
         selectedAsset = tokenBalanceRow;
         onselect(tokenBalanceRow);
     };

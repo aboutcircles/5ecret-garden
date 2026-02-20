@@ -13,18 +13,18 @@
     import Send from '$lib/areas/wallet/flows/send/1_To.svelte';
     import { openStep } from '$lib/shared/flow';
     import { openSendFlowPopup } from '$lib/areas/wallet/flows/send/openSendFlowPopup';
-    import type { TokenBalanceRow } from '@aboutcircles/sdk-types';
+    import type { TokenBalance } from '@aboutcircles/sdk-types';
     import { circles } from '$lib/shared/state/circles';
     import { get } from 'svelte/store';
     import { formatEther } from 'ethers';
     import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
     import { openInfoPopup } from '$lib/shared/ui/shell/confirmDialogs';
 
-    interface Props { item: TokenBalanceRow; }
+    interface Props { item: TokenBalance; }
     let { item }: Props = $props();
 
     type RowAction = {
-        condition: (b: TokenBalanceRow) => boolean;
+        condition: (b: TokenBalance) => boolean;
         title: string;
         icon: string;
         component: any;
@@ -36,26 +36,26 @@
             title: 'Send', icon: '/send.svg', component: Send
         },
         {
-            condition: (b) => ['CrcV2_RegisterHuman', 'CrcV2_RegisterGroup'].includes(b.tokenType),
+            condition: (b) => ['CrcV2_RegisterHuman', 'CrcV2_RegisterGroup'].includes(b.tokenType ?? ''),
             title: 'Wrap', icon: '/banknotes.svg', component: WrapTokens
         },
         {
-            condition: (b) => b.tokenType === 'CrcV2_RegisterGroup',
+            condition: (b) => (b.tokenType ?? '') === 'CrcV2_RegisterGroup',
             title: 'Redeem', icon: '/redeem.svg', component: RedeemGroup
         },
         {
             condition: (b) =>
-                b.tokenType === 'CrcV1_Signup' &&
+                (b.tokenType ?? '') === 'CrcV1_Signup' &&
                 !!avatarState.avatar?.avatarInfo &&
                 avatarState.avatar?.avatarInfo?.version > 1,
             title: 'Migrate Tokens to V2', icon: '/banknotes.svg', component: MigrateTokens
         },
         {
-            condition: (b) => b.tokenType === 'CrcV2_ERC20WrapperDeployed_Demurraged',
+            condition: (b) => (b.tokenType ?? '') === 'CrcV2_ERC20WrapperDeployed_Demurraged',
             title: 'Unwrap', icon: '/banknotes.svg', component: UnwrapTokens
         },
         {
-            condition: (b) => b.tokenType === 'CrcV2_ERC20WrapperDeployed_Inflationary',
+            condition: (b) => (b.tokenType ?? '') === 'CrcV2_ERC20WrapperDeployed_Inflationary',
             title: 'Unwrap Static Circles', icon: '/banknotes.svg', component: UnwrapTokens
         },
     ];
@@ -75,7 +75,7 @@
 
     let copyIcon = $state('/copy.svg');
     function handleCopy() {
-        navigator.clipboard.writeText(item.isWrapped ? item.tokenAddress : item.tokenId);
+        navigator.clipboard.writeText(item.isWrapped ? item.tokenAddress : String(item.tokenId ?? ''));
         copyIcon = '/check.svg';
         setTimeout(() => { copyIcon = '/copy.svg'; }, 1000);
     }
@@ -113,7 +113,7 @@
         const sdk = get(circles);
         const connectedAvatar = avatarState.avatar?.address;
 
-        if (!sdk?.v2Hub) {
+        if (!sdk?.core?.hubV2) {
             await openInfoPopup({
                 title: 'Hub unavailable',
                 message: 'Circles V2 hub contract is not available.',
@@ -142,7 +142,7 @@
 
         try {
             const tokenId = BigInt(item.tokenId);
-            const balance = await sdk.v2Hub.balanceOf(connectedAvatar, tokenId);
+            const balance = await sdk?.core?.hubV2.balanceOf(connectedAvatar, tokenId);
             await openInfoPopup({
                 title: 'Circles V2 hub balance',
                 message: [
@@ -182,20 +182,20 @@
                         address={item.tokenOwner}
                         view="horizontal"
                         clickable={true}
-                        bottomInfo={tokenTypeToString(item.tokenType)}
+                        bottomInfo={tokenTypeToString(item.tokenType ?? '')}
                 />
             </div>
 
             <!-- Right: amount + dropdown actions -->
             <div class="flex items-center gap-3 md:gap-4 shrink-0">
                 <div class="text-right tabular-nums">
-                    <div class="font-medium">{formatCompactCurrency(item.circles, 'CRC')}</div>
+                    <div class="font-medium">{formatCompactCurrency(item.circles ?? 0, 'CRC')}</div>
                     <p class="text-xs text-base-content/70">
-                        {#if staticTypes.has(item.tokenType)}
-                            {roundToDecimals(item.staticCircles)} Static Circles
+                        {#if staticTypes.has(item.tokenType ?? '')}
+                            {roundToDecimals(item.staticCircles ?? 0)} Static Circles
                         {/if}
-                        {#if crcTypes.has(item.tokenType)}
-                            {roundToDecimals(item.crc)} CRC
+                        {#if crcTypes.has(item.tokenType ?? '')}
+                            {roundToDecimals(item.circles ?? 0)} CRC
                         {/if}
                     </p>
                 </div>

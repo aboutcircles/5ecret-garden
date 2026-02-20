@@ -1,4 +1,4 @@
-import type { TokenBalanceRow } from '@aboutcircles/sdk-types';
+import type { TokenBalance } from '@aboutcircles/sdk-types';
 import type { Profile } from '@aboutcircles/sdk-profiles';
 import type { Avatar, Sdk } from '@aboutcircles/sdk';
 import type { Address } from '@aboutcircles/sdk-types';
@@ -29,10 +29,10 @@ export function requireWalletAddress(
   return address ?? fail(message);
 }
 
-export function requireSelectedAsset<TContext extends { selectedAsset?: TokenBalanceRow | undefined }>(
+export function requireSelectedAsset<TContext extends { selectedAsset?: TokenBalance | undefined }>(
   context: TContext,
   message = 'Asset not selected'
-): TokenBalanceRow {
+): TokenBalance {
   return context.selectedAsset ?? fail(message);
 }
 

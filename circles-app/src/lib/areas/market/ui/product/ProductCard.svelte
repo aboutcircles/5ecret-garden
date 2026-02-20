@@ -73,15 +73,15 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
 
       const {offers} = await createOffersClientForAvatar({
         avatar: seller as any,
-        chainId: gnosisConfig.production.marketChainId,
+        chainId: gnosisConfig.production.marketChainId ?? 100,
         ethereum: eth,
-        pinApiBase: gnosisConfig.production.marketApiBase,
+        pinApiBase: gnosisConfig.production.marketApiBase ?? "",
       });
 
       await offers.tombstone({
         avatar: seller as any,
         operator: OPERATOR as any,
-        chainId: gnosisConfig.production.marketChainId,
+        chainId: gnosisConfig.production.marketChainId ?? 100,
         sku: prod?.sku ?? product.product?.sku,
       });
 
@@ -118,7 +118,7 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
       return;
     }
 
-    const seller = (product.seller || prod?.seller)?.toLowerCase();
+    const seller = product.seller?.toLowerCase();
     const sku = product.product?.sku || (product as any).id || (product as any).productCid;
 
     if (seller && sku) {
@@ -148,7 +148,7 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
       props: {
         context: {
           operator: OPERATOR,
-          pinApiBase: gnosisConfig.production.marketApiBase,
+          pinApiBase: gnosisConfig.production.marketApiBase ?? "",
           draft,
           editMode: true,
         }

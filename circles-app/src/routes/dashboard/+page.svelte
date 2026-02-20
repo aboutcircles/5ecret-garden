@@ -7,12 +7,14 @@
     import TransactionHistoryPanel from './TransactionHistoryPanel.svelte';
 
     import { popupControls } from '$lib/shared/state/popup';
+    import { ethers } from 'ethers';
     import Balances from '$lib/areas/wallet/ui/pages/Balances.svelte';
     import { circlesBalances } from '$lib/shared/state/circlesBalances';
     import { totalCirclesBalance } from '$lib/shared/state/totalCirclesBalance';
 
     import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
     import { openSendFlowPopup } from '$lib/areas/wallet/flows/send/openSendFlowPopup';
+    import { HumanAvatar } from '@aboutcircles/sdk';
 
     // lucide (standalone) icon nodes
     import { Send as LSend, Banknote as LBanknote, BarChart3 as LBarChart3 } from 'lucide';
@@ -32,30 +34,28 @@
 
     $effect(() => {
         (async () => {
-            const hasAvatar: boolean = !!avatarState.avatar;
-            const isHuman: boolean = hasAvatar && !avatarState.isGroup;
-
-            if (isHuman) {
-                const amount = await avatarState.avatar!.getMintableAmount();
-                mintableAmount = amount ?? 0;
+            const avatar = avatarState.avatar;
+            if (avatar instanceof HumanAvatar) {
+                const result = await avatar.personalToken.getMintableAmount();
+                mintableAmount = result?.amount ? parseFloat(ethers.formatEther(result.amount)) : 0;
             }
         })();
     });
 
     async function mintPersonalCircles() {
-        const hasAvatar: boolean = !!avatarState.avatar;
-        if (!hasAvatar) {
-            throw new Error('Avatar store is not available');
+        const avatar = avatarState.avatar;
+        if (!(avatar instanceof HumanAvatar)) {
+            throw new Error('Avatar is not a HumanAvatar');
         }
 
         try {
             await runTask({
                 name: 'Collecting CRC ...',
-                promise: avatarState.avatar!.personalMint(),
+                promise: avatar.personalToken.mint(),
             });
         } finally {
-            const refreshed = await avatarState.avatar!.getMintableAmount();
-            mintableAmount = refreshed ?? 0;
+            const refreshed = await avatar.personalToken.getMintableAmount();
+            mintableAmount = refreshed?.amount ? parseFloat(ethers.formatEther(refreshed.amount)) : 0;
         }
 
         mintableAmount = 0;

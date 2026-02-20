@@ -7,9 +7,11 @@
     import {contacts} from '$lib/shared/state/contacts';
     import type {
         AvatarRow,
-        TrustRelation,
+        AvatarInfo,
         TrustRelationRow,
+        AggregatedTrustRelation,
     } from '@aboutcircles/sdk-types';
+    import type { TrustRelationKind } from '$lib/shared/types/sdk-augment';
     import { PagedQuery } from '@aboutcircles/sdk-rpc';
     import Untrust from '$lib/areas/contacts/ui/pages/Untrust.svelte';
     import { openAddTrustFlow } from '$lib/areas/trust/flows/addTrust/openAddTrustFlow';
@@ -78,11 +80,11 @@ import {uint256ToAddress} from '@aboutcircles/sdk-utils';
         }
     });
 
-    let otherAvatar: AvatarRow | undefined = $state();
+    let otherAvatar: AvatarInfo | undefined = $state();
     let profile: Profile | undefined = $state();
     let mintHandler: Address | undefined = $state();
 
-    let trustRow: TrustRelationRow | undefined = $state();
+    let trustRow: TrustRelationRow | AggregatedTrustRelation | undefined = $state();
     const relationText = $derived.by(() => {
         if (!trustRow) return 'Not connected';
         const formatted = formatTrustRelation(trustRow.relation, profile);
@@ -93,7 +95,7 @@ import {uint256ToAddress} from '@aboutcircles/sdk-utils';
         amount: bigint;
         amountToRedeem: bigint;
         amountToRedeemInCircles: number;
-        trustRelation?: TrustRelation;
+        trustRelation?: TrustRelationKind;
     }> = $state([]);
     let collateralLoading: boolean = $state(false);
     let collateralError: string | null = $state(null);
@@ -103,7 +105,7 @@ import {uint256ToAddress} from '@aboutcircles/sdk-utils';
         amount: bigint;
         amountToRedeem: bigint;
         amountToRedeemInCircles: number;
-        trustRelation?: TrustRelation;
+        trustRelation?: TrustRelationKind;
     }> = $state([]);
     let holdersLoading: boolean = $state(false);
     let holdersError: string | null = $state(null);
@@ -113,7 +115,7 @@ import {uint256ToAddress} from '@aboutcircles/sdk-utils';
         amount: bigint;
         amountToRedeem: bigint;
         amountToRedeemInCircles: number;
-        trustRelation?: TrustRelation;
+        trustRelation?: TrustRelationKind;
     }> = $state([]);
     let holdingsLoading: boolean = $state(false);
     let holdingsError: string | null = $state(null);
@@ -236,7 +238,7 @@ import {uint256ToAddress} from '@aboutcircles/sdk-utils';
 
         const [other, prof] = await Promise.all([
             avatarDataSource.getAvatarInfo(address),
-            getProfile(address),
+            getProfile(address as `0x${string}`),
         ]);
         otherAvatar = other;
         profile = prof;
