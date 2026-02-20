@@ -1,4 +1,5 @@
 import { ethers } from 'ethers';
+import { uint256ToAddress, CirclesConverter } from '@circles-sdk/utils';
 import { formatCurrency } from '$lib/shared/utils/money';
 
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
@@ -24,7 +25,35 @@ export function toBigIntMaybe(v: unknown): bigint | null {
   }
 }
 
+const tokenIdKeys = new Set(['Id', 'TokenId', 'TokenID']);
+export function tokenIdToAddressMaybe(key: string, val: unknown): string | null {
+  if (!tokenIdKeys.has(key)) return null;
+  const bi = toBigIntMaybe(val);
+  if (bi === null) return null;
+  try {
+    const addr = uint256ToAddress(bi);
+    if (!isAddress(addr)) return null;
+    return addr;
+  } catch (error) {
+    console.warn('tokenIdToAddressMaybe: failed', { key, val, error });
+    return null;
+  }
+}
+
 export function addressForDisplay(key: string, val: unknown): string {
-  const addr = isAddress(val) ? (val as string) : null;
+  const addr = isAddress(val) ? (val as string) : tokenIdToAddressMaybe(key, val);
   return addr ?? '';
+}
+
+export function formatAttoCircles(val: unknown): string | null {
+  const bi = toBigIntMaybe(val);
+  if (bi === null) return null;
+  try {
+    const circles = CirclesConverter.attoCirclesToCircles(bi);
+    if (!Number.isFinite(circles)) return null;
+    return formatCurrency(circles, 'CRC');
+  } catch (error) {
+    console.warn('formatAttoCircles: failed', { val, error });
+    return null;
+  }
 }

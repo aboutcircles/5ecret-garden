@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Address } from '@aboutcircles/sdk-types';
+  import type { Address } from '@circles-sdk/utils';
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
   import { openStep } from '$lib/shared/flow';
   import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
@@ -21,7 +21,6 @@
 
   let { context, connections, existingProducts, onExecute, onCreateConnection }: Props = $props();
 
-  // svelte-ignore state_referenced_locally
   let selectedType = $state<Exclude<'odoo' | 'codedispenser' | 'route', 'route'>>(
     (context.selectedType as any) ?? 'codedispenser'
   );

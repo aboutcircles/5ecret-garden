@@ -1,14 +1,14 @@
-import type { Sdk } from '@aboutcircles/sdk';
-import type { Profile } from '@aboutcircles/sdk-types';
+import type { Sdk } from '@circles-sdk/sdk';
 
 export interface ProfileDataSource {
-  getProfileByCidBatch(cids: string[]): Promise<(Profile | null)[]>;
+  getProfileByCidBatch<T = unknown>(cids: string[]): Promise<T[]>;
 }
 
 export function createProfileDataSource(sdk: Sdk): ProfileDataSource {
   return {
-    async getProfileByCidBatch(cids: string[]): Promise<(Profile | null)[]> {
-      return await sdk.rpc.profile.getProfileByCidBatch(cids);
+    async getProfileByCidBatch<T = unknown>(cids: string[]): Promise<T[]> {
+      const rpc = await sdk.circlesRpc.call<T[]>('circles_getProfileByCidBatch', [cids]);
+      return rpc?.result ?? [];
     },
   };
 }

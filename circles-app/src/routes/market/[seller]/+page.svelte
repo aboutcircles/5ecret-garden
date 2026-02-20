@@ -2,7 +2,7 @@
     import {onMount} from 'svelte';
     import { page } from '$app/stores';
     import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
-    import {openFlowPopup, popupControls} from '$lib/shared/state/popup/popUp.svelte';
+    import {openFlowPopup, popupControls} from '$lib/shared/state/popup';
     import OfferStep1 from '$lib/areas/market/flows/offer/1_Product.svelte';
     import ProductCard from '$lib/areas/market/ui/product/ProductCard.svelte';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
@@ -14,25 +14,25 @@
     import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/shared/ui/shell/actions';
-    import {gnosisMarketConfig} from "$lib/shared/config/market";
+    import {gnosisConfig} from "$lib/shared/config/circles";
 
-
+    
     // Derive seller address from SvelteKit's $page store
     const params = $derived($page.params as { seller: string });
-
+    
     // Current connected avatar (lowercased for comparison)
     const currentAvatar = $derived(
-      (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.address ?? '').toLowerCase()
+      (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '').toLowerCase()
     );
-
+    
     // Seller from route params, lowercased
     const sellerFromRoute = $derived((params.seller ?? '').toLowerCase());
-
+    
     // True when viewing your own seller profile
     const isSelfSeller = $derived(
       !!currentAvatar && !!sellerFromRoute && currentAvatar === sellerFromRoute
     );
-
+    
     // Static API base
 
     type ProductLike = AggregatedCatalogItem;
@@ -57,7 +57,7 @@
         const normalized = normalizeAddress(params.seller);
         sellerAddress = normalized as `0x${string}`;
 
-        const catalog = getMarketClient().catalog.forOperator(gnosisMarketConfig.marketOperator);
+        const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
         const items = await catalog.fetchSellerCatalog(normalized);
         // fetchSellerCatalog already filters by seller, but keep this defensive filter
         products = items.filter(
@@ -80,12 +80,12 @@
       openFlowPopup({
         title: 'Create Offer',
         component: OfferStep1,
-        props: { context: { operator: gnosisMarketConfig.marketOperator, pinApiBase: gnosisMarketConfig.marketApiBase } },
+        props: { context: { operator: gnosisConfig.production.marketOperator, pinApiBase: gnosisConfig.production.marketApiBase } },
         onClose: () => { void loadSellerCatalog(); }
       });
     }
 
-    const pageActions: Action[] = [
+    const actions: Action[] = [
       // { id: 'create-offer', label: 'Create Listing', variant: 'primary', onClick: openCreateListing }
     ];
 
@@ -113,30 +113,30 @@
         {/if}
     {/snippet}
 
-    {#snippet actions()}
-        <ActionButtonBar actions={pageActions} />
+    {#snippet headerActions()}
+        <ActionButtonBar {actions} />
     {/snippet}
 
     <!-- Collapsed summary -->
-    {#snippet collapsed_left()}
+    {#snippet collapsedLeft()}
         <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">
       Seller Profile
     </span>
     {/snippet}
 
-    {#snippet collapsed_menu()}
-        <ActionButtonDropDown actions={pageActions} />
+    {#snippet collapsedMenu()}
+        <ActionButtonDropDown {actions} />
     {/snippet}
 
     <!-- Seller Profile Section -->
     <section class="bg-base-100 border border-base-300 rounded-xl p-4 mb-6">
         {#if sellerAddress}
-
+            
             <div class="mt-4 flex items-center gap-3">
-                <Avatar
+                <Avatar 
                     address={params.seller || ''}
-                    view="vertical"
-                    clickable={false}
+                    view="vertical" 
+                    clickable={false} 
                 />
             </div>
         {:else if errorMsg}
@@ -150,7 +150,7 @@
     {#if loading}
         <div class="flex flex-col items-center justify-center h-[50vh]">
             <div class="loading loading-spinner loading-lg" aria-label="loading"></div>
-            <div class="mt-3 text-base-content/70">Loading listings...</div>
+            <div class="mt-3 text-base-content/70">Loading listings…</div>
         </div>
     {:else if errorMsg}
         <section class="bg-base-100 border border-base-300 rounded-xl p-4">
@@ -177,8 +177,8 @@
             {:else}
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {#each products as p (p.productCid)}
-                        <ProductCard
-                          product={p}
+                        <ProductCard 
+                          product={p} 
                           showSellerInfo={false}
                           ondeleted={() => loadSellerCatalog()}
                           canTombstone={isSelfSeller}

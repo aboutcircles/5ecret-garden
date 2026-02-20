@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Address } from '@aboutcircles/sdk-types';
+  import type { Address } from '@circles-sdk/utils';
   import type { PaginatedReadable } from '$lib/shared/state/paginatedList';
   import type { MarketOrderSummaryListItem } from '$lib/areas/market/orders/ordersMappers';
   import MarketAuthListSection from '$lib/areas/settings/ui/sections/MarketAuthListSection.svelte';

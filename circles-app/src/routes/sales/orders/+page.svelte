@@ -64,9 +64,7 @@
       : buildFallbackStore()
   );
 
-  // Wrap in $derived so that when the rune-based `store` changes (e.g. on auth),
-  // a fresh derived store is created that subscribes to the correct underlying store.
-  const filteredStore = $derived(derived([store, query], ([$store, $query]) => {
+  const filteredStore = derived([store, query], ([$store, $query]) => {
     const q = ($query ?? '').toLowerCase().trim();
     if (!q) return $store;
     const data = ($store?.data ?? []).filter((it) => {
@@ -78,7 +76,7 @@
       ...$store,
       data,
     };
-  }));
+  });
 
   const storeDataLength = $derived(($store?.data ?? []).length);
   const filteredDataLength = $derived(($filteredStore?.data ?? []).length);
@@ -92,7 +90,7 @@
     try {
       const avatar = (
         (avatarState.avatar as any)?.address ??
-        (avatarState.avatar as any)?.avatarInfo?.address ??
+        (avatarState.avatar as any)?.avatarInfo?.avatar ??
         ''
       ).toLowerCase();
 
@@ -108,7 +106,7 @@
     }
   }
 
-  const pageActions: Action[] = $derived([
+  const actions: Action[] = $derived([
     {
       id: 'signin',
       label: authed ? 'Signed in' : 'Sign in to view sales',
@@ -151,16 +149,16 @@
     Orders you received as a seller
   {/snippet}
 
-  {#snippet actions()}
-    <ActionButtonBar actions={pageActions} />
+  {#snippet headerActions()}
+    <ActionButtonBar {actions} />
   {/snippet}
 
-  {#snippet collapsed_left()}
+  {#snippet collapsedLeft()}
     <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">Sales</span>
   {/snippet}
 
-  {#snippet collapsed_menu()}
-    <ActionButtonDropDown actions={pageActions} />
+  {#snippet collapsedMenu()}
+    <ActionButtonDropDown {actions} />
   {/snippet}
 
   <section class="bg-base-100 border border-base-300 rounded-xl p-3 md:p-4">

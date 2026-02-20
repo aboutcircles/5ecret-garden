@@ -1,17 +1,17 @@
 import { createCirclesQueryStore } from '$lib/shared/state/query';
 import { circles } from '$lib/shared/state/circles';
-import type { CirclesEventType } from '@aboutcircles/sdk-rpc';
 import type {
-  AggregatedTrustRelation,
+  CirclesEventType,
+  TrustRelationRow,
   EventRow,
   CirclesQuery,
-  AvatarInfo,
-} from '@aboutcircles/sdk-types';
+  AvatarRow,
+} from '@circles-sdk/data';
 import type { ContactList } from '$lib/shared/state/contacts';
 import { getProfilesCoreBatch, type ProfileAddress } from '$lib/shared/model/profile';
 import { get } from 'svelte/store';
-import type { Address } from '@aboutcircles/sdk-types';
-import type { Avatar, Sdk } from '@aboutcircles/sdk';
+import type { Address } from '@circles-sdk/utils';
+import type { Avatar, Sdk } from '@circles-sdk/sdk';
 import { createTrustDataSource } from '$lib/shared/data/circles/trustDataSource';
 import { createAvatarDataSource } from '$lib/shared/data/circles/avatarDataSource';
 
@@ -31,27 +31,48 @@ export async function createContactsQueryStore(
   const createContactsQuery = async (): Promise<
     CirclesQuery<ContactEventRow>
   > => {
-    const contacts = await trustDataSource.getAggregatedTrustRelations(address);
-    const enrichedContacts = await enrichContactData(contacts, address, sdk);
+    const query = {
+      currentPage: undefined,
+      mutable: true,
+      params: {},
+      rpc: sdk.data.rpc,
+      _calculatedColumns: [],
+      buildCursorFilter: () => [],
+      buildOrderBy: () => [],
+      combineFilters: () => [],
+      request: async () => ({ rows: [] }),
+      rowsToObjects: (rows: any[]) => rows as ContactEventRow[],
+      rowToCursor: () => '',
+      getFirstAndLastCursor: () => ({ first: '', last: '' }),
+      getSingleRow: async () => undefined,
+      async queryNextPage(
+        this: CirclesQuery<ContactEventRow>
+      ): Promise<boolean> {
+        if (this.currentPage && this.currentPage.results?.length > 0) {
+          (this as any).currentPage = {
+            results: [],
+            hasMore: false,
+          };
+          return false;
+        }
 
-    const contactEventRow: ContactEventRow = {
-      blockNumber: Date.now(),
-      transactionIndex: 0,
-      logIndex: 0,
-      data: enrichedContacts,
-    };
+        const contacts = await trustDataSource.getAggregatedTrustRelations(address);
+        const enrichedContacts = await enrichContactData(contacts, address, sdk);
 
-    const query: CirclesQuery<ContactEventRow> = {
-      rows: [contactEventRow],
-      hasMore: false,
-      async nextPage(): Promise<CirclesQuery<ContactEventRow>> {
-        return {
-          rows: [],
+        const contactEventRow: ContactEventRow = {
+          blockNumber: Date.now(),
+          transactionIndex: 0,
+          logIndex: 0,
+          data: enrichedContacts,
+        };
+
+        (this as any).currentPage = {
+          results: [contactEventRow],
           hasMore: false,
-          nextPage: async () => this,
-        } as CirclesQuery<ContactEventRow>;
+        };
+        return false;
       },
-    };
+    } as unknown as CirclesQuery<ContactEventRow>;
     return query;
   };
 
@@ -81,7 +102,7 @@ export async function createContactsQueryStore(
 }
 
 async function enrichContactData(
-  rows: AggregatedTrustRelation[],
+  rows: TrustRelationRow[],
   ownerAddress: Address | undefined,
   sdk: Sdk
 ): Promise<ContactList> {
@@ -109,11 +130,9 @@ async function enrichContactData(
   const avatarInfos = await avatarDataSource.getAvatarInfoBatch(
     Object.keys(profileRecord) as Address[]
   );
-  const avatarInfoRecord: Record<string, AvatarInfo> = {};
+  const avatarInfoRecord: Record<string, AvatarRow> = {};
   avatarInfos.forEach((info) => {
-    if (info) {
-      avatarInfoRecord[info.avatar] = info;
-    }
+    avatarInfoRecord[info.avatar] = info;
   });
 
   Object.values(profileRecord).forEach((item) => {

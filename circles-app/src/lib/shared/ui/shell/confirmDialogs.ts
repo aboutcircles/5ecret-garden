@@ -1,4 +1,4 @@
-import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
+import { popupControls } from '$lib/shared/state/popup';
 import ConfirmActionStep from '$lib/shared/ui/shell/ConfirmActionStep.svelte';
 
 type ConfirmOptions = {

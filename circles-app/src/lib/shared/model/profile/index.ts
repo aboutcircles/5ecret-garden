@@ -1,11 +1,6 @@
 export * from './types';
-export { getProfileCore, getProfilesCoreBatch, invalidateProfileCore, invalidateAllProfileCore } from './coreRepo';
-export { getProfileFull, saveProfileFull, invalidateProfileFull, invalidateAllProfileFull } from './fullRepo';
-export {
-  loadNamespaceLinks,
-  rewriteNamespaceFromLinks,
-  replaceLoadedNamespaceLinkAt,
-  applyEditableLinkMetadata,
-  type LoadedNamespaceLink,
-  type NamespaceLinksResult,
-} from './namespacesEditor';
+export * from './batchAggregator';
+export * from './coreRepo';
+export * from './fullRepo';
+export * from './namespacesEditor';
+export * from '$lib/shared/data/profile/trustScoreDataSource';

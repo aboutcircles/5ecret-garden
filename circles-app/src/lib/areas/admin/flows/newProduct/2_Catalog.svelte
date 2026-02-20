@@ -1,8 +1,8 @@
 <script lang="ts">
-  import type { Address } from '@aboutcircles/sdk-types';
+  import type { Address } from '@circles-sdk/utils';
   import type { AggregatedCatalogItem } from '$lib/areas/market/model';
   import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
-  import { gnosisMarketConfig } from '$lib/shared/config/market';
+  import { gnosisConfig } from '$lib/shared/config/circles';
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
   import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import AdminStatusBadge from '$lib/areas/admin/components/AdminStatusBadge.svelte';
@@ -83,7 +83,7 @@
     catalogError = null;
     catalogItems = [];
     try {
-      const catalog = getMarketClient().catalog.forOperator(gnosisMarketConfig.marketOperator);
+      const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
       const items = await catalog.fetchSellerCatalog(seller);
       const filtered = items.filter((p) => (p.seller ?? '').toLowerCase() === seller.toLowerCase());
       catalogItems = filtered.sort((a, b) => {

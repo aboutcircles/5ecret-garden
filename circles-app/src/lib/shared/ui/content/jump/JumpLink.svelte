@@ -1,18 +1,16 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  import { popupControls, popupState } from '$lib/shared/state/popup/popUp.svelte';
+  import { popupControls, popupState } from '$lib/shared/state/popup';
   import { jumpHref } from '$lib/shared/ui/content/markdown/jump';
   import JumpPopup from '$lib/shared/ui/content/jump/JumpPopup.svelte';
-  // popupState is a $state rune, not a Svelte store -- access it directly without $prefix
 
   interface Props {
     url: string;
     className?: string;
-    title?: string;
     children?: Snippet;
   }
 
-  let { url, className = '', title, children }: Props = $props();
+  let { url, className = '', children }: Props = $props();
 
   function isPlainLeftClick(e: MouseEvent): boolean {
     return (
@@ -26,7 +24,7 @@
 
   function onClick(e: MouseEvent) {
     if (!isPlainLeftClick(e)) return;
-    if (!popupState.content) return;
+    if (!$popupState.content) return;
 
     e.preventDefault();
     popupControls.open({
@@ -37,6 +35,6 @@
   }
 </script>
 
-<a class={className} href={jumpHref(url)} {title} onclick={onClick}>
+<a class={className} href={jumpHref(url)} onclick={onClick}>
   {@render children?.()}
 </a>

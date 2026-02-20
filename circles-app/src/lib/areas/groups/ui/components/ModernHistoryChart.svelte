@@ -16,28 +16,50 @@
 
   let canvas: HTMLCanvasElement;
   let chart: Chart<'line' | 'bar', { x: number; y: number }[]>;
+  const colorCache = new Map<string, string>();
 
   $effect(() => {
     if (chart) updateChart();
   });
 
-  // Enhanced color generation for better visual appeal
-  const generateColors = (index: number) => {
-    const baseColors = [
-      [56, 49, 139], // primary
-      [64, 82, 214], // secondary
-      [55, 205, 190], // accent
-      [111, 79, 179], // purple variant
-      [79, 142, 179], // blue variant
-      [79, 179, 159], // teal variant
-    ];
+  const themeTokens = ['--p', '--s', '--a', '--in', '--su', '--wa', '--er'];
+  function resolveThemeColor(token: string, alpha: number): string {
+    const key = `${token}:${alpha}`;
+    const cached = colorCache.get(key);
+    if (cached) return cached;
 
-    const color = baseColors[index % baseColors.length];
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      const fallback = `rgba(99, 102, 241, ${alpha})`;
+      colorCache.set(key, fallback);
+      return fallback;
+    }
+
+    const probe = document.createElement('span');
+    probe.style.color = `oklch(var(${token}) / ${alpha})`;
+    probe.style.position = 'absolute';
+    probe.style.pointerEvents = 'none';
+    probe.style.opacity = '0';
+    document.body.appendChild(probe);
+    const resolved = getComputedStyle(probe).color || `rgba(99, 102, 241, ${alpha})`;
+    probe.remove();
+    colorCache.set(key, resolved);
+    return resolved;
+  }
+
+  const generateColors = (index: number) => {
+    const token = themeTokens[index % themeTokens.length];
     return {
-      background: `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.1)`,
-      border: `rgba(${color[0]}, ${color[1]}, ${color[2]}, 1)`,
+      background: resolveThemeColor(token, 0.15),
+      border: resolveThemeColor(token, 1),
     };
   };
+
+  const gridColor = $derived(resolveThemeColor('--b3', 0.5));
+  const tickColor = $derived(resolveThemeColor('--bc', 0.7));
+  const legendColor = $derived(resolveThemeColor('--bc', 0.75));
+  const tooltipBg = $derived(resolveThemeColor('--b1', 0.95));
+  const tooltipText = $derived(resolveThemeColor('--bc', 0.9));
+  const tooltipBorder = $derived(resolveThemeColor('--b3', 0.6));
 
   function updateChart() {
     const src = resolution === 'hour' ? dataSet1 : dataSet2;
@@ -103,11 +125,11 @@
             title: { display: true, text: '' },
             grid: {
               display: true,
-              color: 'rgba(229, 231, 235, 0.5)',
+              color: gridColor,
             },
             ticks: {
               padding: 10,
-              color: 'rgba(107, 114, 128, 0.7)',
+              color: tickColor,
             },
           },
           y: {
@@ -115,41 +137,40 @@
             title: { display: true, text: label },
             grid: {
               display: true,
-              color: 'rgba(229, 231, 235, 0.5)',
+              color: gridColor,
             },
             ticks: {
               padding: 10,
-              color: 'rgba(107, 114, 128, 0.7)',
+              color: tickColor,
             },
           },
         },
         plugins: {
-          legend: {
+          legend: { 
             position: 'bottom',
             labels: {
               usePointStyle: true,
               pointStyle: 'circle',
               padding: 20,
-              color: 'rgba(107, 114, 128, 0.9)',
+              color: legendColor,
               font: {
-                size: 12,
-              },
-            },
+                size: 12
+              }
+            }
           },
           tooltip: {
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            titleColor: 'rgba(17, 24, 39, 0.9)',
-            bodyColor: 'rgba(75, 85, 99, 0.9)',
-            borderColor: 'rgba(229, 231, 235, 0.5)',
+            backgroundColor: tooltipBg,
+            titleColor: tooltipText,
+            bodyColor: tooltipText,
+            borderColor: tooltipBorder,
             borderWidth: 1,
             cornerRadius: 8,
             boxPadding: 6,
             usePointStyle: true,
             callbacks: {
               title: (items) => {
-                const x = items[0]?.parsed?.x;
-                if (x === undefined) return '';
-                const d = new Date(x as number);
+                const x = items[0].parsed.x;
+                const d = new Date(x);
                 return resolution === 'hour'
                   ? `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
                   : `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`;
@@ -165,7 +186,7 @@
           point: {
             radius: 0,
             hoverRadius: 6,
-          },
+          }
         },
       },
     });
@@ -176,12 +197,12 @@
 
 <div class="relative">
   <div class="flex items-center justify-between mb-4">
-    <h3 class="text-sm font-medium text-gray-700">{title}</h3>
+    <h3 class="text-sm font-medium text-base-content/80">{title}</h3>
     <div class="flex items-center">
-      <span class="text-xs text-gray-500 mr-2">Day/Hour</span>
+      <span class="text-xs text-base-content/70 mr-2">Day/Hour</span>
       <input
         type="checkbox"
-        class="toggle toggle-sm bg-gray-200"
+        class="toggle toggle-sm bg-base-300"
         checked={resolution === 'hour'}
         onclick={({ currentTarget }) => {
           resolution = currentTarget.checked ? 'hour' : 'day';
@@ -190,10 +211,8 @@
       />
     </div>
   </div>
-
-  <div
-    class="rounded-lg overflow-hidden bg-gradient-to-br from-transparent via-gray-50/50 to-transparent p-px min-h-[250px]"
-  >
+  
+  <div class="rounded-lg overflow-hidden bg-gradient-to-br from-transparent via-base-200/40 to-transparent p-px min-h-[250px]">
     <canvas bind:this={canvas} class="w-full h-full"></canvas>
   </div>
 </div>

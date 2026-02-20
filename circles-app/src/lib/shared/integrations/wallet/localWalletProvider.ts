@@ -1,7 +1,7 @@
 import type {WalletProvider} from '@circles-market/sdk';
 import {CirclesStorage} from '$lib/shared/utils/storage';
 import {privateKeyToAccount} from 'viem/accounts';
-import {gnosisMarketConfig} from "$lib/shared/config/market";
+import {gnosisConfig} from "$lib/shared/config/circles";
 
 // viem v2: use account.signTypedData instead of a top-level signTypedData export
 type TypedDataDefinition = {
@@ -25,7 +25,7 @@ export function createLocalWalletProvider(): WalletProvider {
     async request<T>({ method, params }: { method: string; params?: unknown[] }): Promise<T> {
       switch (method) {
         case 'eth_chainId': {
-          return gnosisMarketConfig.marketChainIdHex as unknown as T;
+          return gnosisConfig.production.marketChainIdHex as unknown as T;
         }
         case 'eth_requestAccounts': {
           return [address] as unknown as T;

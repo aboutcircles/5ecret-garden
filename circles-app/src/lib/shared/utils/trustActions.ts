@@ -1,6 +1,6 @@
 import { get } from 'svelte/store';
 import { ethers } from 'ethers';
-import type { Address } from '@aboutcircles/sdk-types';
+import type { Address } from '@circles-sdk/utils';
 
 import { avatarState } from '$lib/shared/state/avatar.svelte';
 import { circles } from '$lib/shared/state/circles';
@@ -24,7 +24,7 @@ export async function addTrustRelations(params: {
 
     await runTask({
       name: `${shortenAddress(params.actorAddress)} trusts ${trustTargets.length} avatar${trustTargets.length === 1 ? '' : 's'} ...`,
-      promise: avatarState.avatar.trust.add(trustTargets),
+      promise: avatarState.avatar.trust(trustTargets),
     });
     return;
   }
@@ -38,7 +38,7 @@ export async function addTrustRelations(params: {
     const groupAvatar = await sdk.getAvatar(params.actorAddress);
     await runTask({
       name: `${shortenAddress(params.actorAddress)} trusts ${trustTargets.length} avatar${trustTargets.length === 1 ? '' : 's'} ...`,
-      promise: groupAvatar.trust.add(trustTargets),
+      promise: groupAvatar.trust(trustTargets),
     });
     return;
   }

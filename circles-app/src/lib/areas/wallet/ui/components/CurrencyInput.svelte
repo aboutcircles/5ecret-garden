@@ -1,13 +1,13 @@
 <script lang="ts">
     import { onMount, onDestroy } from 'svelte';
     import IMask from 'imask';
-    import type { TokenBalance } from '@aboutcircles/sdk-types';
+    import type { TokenBalanceRow } from '@circles-sdk/data';
     import { TransitiveTransferTokenAddress } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
     import { roundToDecimals } from '$lib/shared/utils/shared';
     import Tooltip from "$lib/shared/ui/primitives/Tooltip.svelte";
 
     interface Props {
-        balanceRow: TokenBalance;
+        balanceRow: TokenBalanceRow;
         amount?: number;
         maxAmountCircles?: number;
         routeLoading?: boolean;
@@ -23,11 +23,11 @@
     }: Props = $props();
 
     let inputElement: HTMLInputElement | undefined = $state();
-    let mask: ReturnType<typeof IMask> | null = null;
+    let mask: IMask.InputMask<any> | null = null;
     let blurListener: (() => void) | null = null;
 
     // Single IMask config (2 decimals, no negatives)
-    const maskOptions: any = {
+    const maskOptions: IMask.AnyMaskedOptions = {
         mask: Number,
         scale: 2,
         signed: false,

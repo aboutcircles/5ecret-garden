@@ -1,53 +1,48 @@
-import type { AvatarInfo, AggregatedTrustRelation } from '@aboutcircles/sdk-types';
-import type { CirclesEventType } from '@aboutcircles/sdk-rpc';
-import type { Profile } from '@aboutcircles/sdk-types';
+import type {
+  AvatarRow,
+  CirclesEventType,
+  TrustRelationRow,
+} from '@circles-sdk/data';
+import type { AppProfileCore as Profile } from '$lib/shared/model/profile';
 import { writable } from 'svelte/store';
-import { createContactsQueryStore } from './query/circlesContactsQueryStore.svelte';
-import type { Avatar } from '@aboutcircles/sdk';
+import { createContactsQueryStore } from '$lib/shared/state/contacts/query/circlesContactsQueryStore.svelte';
+import type { Avatar } from '@circles-sdk/sdk';
 
 export type ContactListItem = {
   contactProfile: Profile;
-  avatarInfo?: AvatarInfo;
-  row: AggregatedTrustRelation;
+  avatarInfo?: AvatarRow;
+  row: TrustRelationRow;
 };
 
 export type ContactList = Record<string, ContactListItem>;
 
 const refreshOnEvents: Set<CirclesEventType> = new Set([
+  'CrcV1_Trust',
   'CrcV2_Trust',
   'CrcV2_InviteHuman',
 ]);
 
 let currentStoreUnsubscribe: (() => void) | undefined;
 let currentQuery: Promise<any> | undefined;
-let currentAvatarAddress: string | undefined;
 
 export const contacts = writable<{
   data: ContactList;
   next: () => Promise<boolean>;
   ended: boolean;
-}>({ data: {}, next: async () => true, ended: true });
+}>({ data: {}, next: async () => false, ended: false });
 
 export const initContactStore = ($avatar: Avatar) => {
-  // Skip if already initialized for this avatar
-  if (currentAvatarAddress === $avatar.address && currentQuery) {
-    return;
-  }
-
   if (currentStoreUnsubscribe) {
-    currentStoreUnsubscribe();
-    currentStoreUnsubscribe = undefined;
-  }
+		currentStoreUnsubscribe();
+		currentStoreUnsubscribe = undefined;
+	}
 
-  currentQuery = undefined;
-  currentAvatarAddress = $avatar.address;
+	currentQuery = undefined;
 
-  currentQuery = createContactsQueryStore(
-    $avatar,
-    $avatar.address,
-    refreshOnEvents
-  );
+  currentQuery = createContactsQueryStore($avatar, $avatar.address, refreshOnEvents);
   currentQuery.then((store) => {
     currentStoreUnsubscribe = store.subscribe(contacts.set);
   });
-};
+}
+
+

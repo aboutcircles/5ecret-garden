@@ -8,13 +8,13 @@
   import { onMount } from 'svelte';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { circles as circlesStore } from '$lib/shared/state/circles';
+  import type { AvatarRow } from '@circles-sdk/data';
   import { openStep } from '$lib/shared/flow';
-  import type { Profile } from '@aboutcircles/sdk-types';
+  import type { Profile } from '@circles-sdk/profiles';
   import { settings } from '$lib/shared/state/settings.svelte';
   import InvitationPickerStep from '$lib/shared/ui/invitations/InvitationPickerStep.svelte';
   import { requireAvatar, requireCircles } from '$lib/shared/flow';
   import { get } from 'svelte/store';
-  import type { AvatarRow } from '@aboutcircles/sdk-types';
 
   interface Props {
     context?: MigrateToV2Context;
@@ -35,8 +35,8 @@
     if (!avatar.avatarInfo) {
       throw new Error('Avatar info not initialized');
     }
-    canSelfMigrate = settings.ring ? true : await (sdk as any).canSelfMigrate(avatar.avatarInfo);
-    invitations = await (sdk.data as any).getInvitations((avatar.avatarInfo as any).avatar) as AvatarRow[];
+    canSelfMigrate = settings.ring ? true : await sdk.canSelfMigrate(avatar.avatarInfo);
+    invitations = await sdk.data.getInvitations(avatar.avatarInfo.avatar);
   });
   async function next() {
     openStep({
@@ -66,7 +66,7 @@
     <div class="mt-2 w-full rounded-lg p-4 border">
       <InvitationPickerStep
         {invitations}
-        onSelect={(address: string) => selectInvitation(address as `0x${string}`)}
+        onSelect={(address) => selectInvitation(address)}
       />
     </div>
   {:else}

@@ -1,9 +1,9 @@
 import { browser } from '$app/environment';
 import { get, writable, type Readable } from 'svelte/store';
-import type { Address } from '@aboutcircles/sdk-types';
+import type { Address } from '@circles-sdk/utils';
 import type { CidV0 } from '$lib/areas/market/offers';
 import { getProfilesBindings } from '$lib/areas/market/offers';
-import { gnosisMarketConfig } from '$lib/shared/config/market';
+import { gnosisConfig } from '$lib/shared/config/circles';
 import { getWalletProvider } from '$lib/shared/integrations/wallet';
 import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
 import { buildLinkDraft, canonicaliseLink, loadProfileOrInit } from '@circles-market/sdk';
@@ -429,7 +429,7 @@ function createProfileBookmarksService(repository: BookmarksRepository): Profile
     const owner = normalizeProfileAddress(ownerKey) as Address | null;
     if (!owner) return EMPTY_OWNER_STATE;
 
-    const { bindings } = getProfilesBindings({ pinApiBase: gnosisMarketConfig.marketApiBase });
+    const { bindings } = getProfilesBindings({ pinApiBase: gnosisConfig.production.marketApiBase });
     const { profile } = await loadProfileOrInit(bindings, owner);
     const namespaces =
       profile?.namespaces && typeof profile.namespaces === 'object'
@@ -688,7 +688,7 @@ function createProfileBookmarksService(repository: BookmarksRepository): Profile
         throw new Error('No valid avatar address available.');
       }
 
-      const { bindings } = getProfilesBindings({ pinApiBase: gnosisMarketConfig.marketApiBase });
+      const { bindings } = getProfilesBindings({ pinApiBase: gnosisConfig.production.marketApiBase });
       const { profile } = await loadProfileOrInit(bindings, avatar);
 
       const namespaces =
@@ -702,7 +702,7 @@ function createProfileBookmarksService(repository: BookmarksRepository): Profile
       const payloadCid = await bindings.putJsonLd(toBookmarksProfilePayload(get(current)));
 
       const ethereum = getWalletProvider();
-      const chainId = Number(gnosisMarketConfig.marketChainId ?? 100);
+      const chainId = Number(gnosisConfig.production.marketChainId ?? 100);
       const safeSigner = await getMarketClient().signers.createSafeSignerForAvatar({
         avatar,
         ethereum,

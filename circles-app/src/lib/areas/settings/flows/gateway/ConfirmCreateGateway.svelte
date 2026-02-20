@@ -13,7 +13,7 @@
   import { popupControls } from '$lib/shared/state/popup';
   import { openStep, popToOrOpen } from '$lib/shared/flow';
   import type { CreateGatewayFlowContext } from './context';
-  import { gnosisMarketConfig } from '$lib/shared/config/market';
+  import { gnosisConfig } from '$lib/shared/config/circles';
   import { getProfilesBindings } from '$lib/areas/market/offers';
   import { ensureProfileShape, cidV0ToDigest32Strict } from '@circles-profile/core';
   import { isValidOnChainName } from '$lib/shared/utils/isValid';
@@ -42,7 +42,7 @@
   const canSubmit = $derived(factoryValid && nameValid && profileNameValid);
 
   function getBindings() {
-    return getProfilesBindings({ pinApiBase: gnosisMarketConfig.marketApiBase }).bindings;
+    return getProfilesBindings({ pinApiBase: gnosisConfig.production.marketApiBase }).bindings;
   }
 
   async function createGateway() {

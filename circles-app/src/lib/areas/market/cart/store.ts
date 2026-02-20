@@ -1,7 +1,7 @@
 import { derived, get, writable } from 'svelte/store';
 import type { AggregatedCatalogItem } from '$lib/areas/market/model';
 import { pickFirstProductImageUrl } from '$lib/areas/market/services';
-import { gnosisMarketConfig } from '$lib/shared/config/market';
+import { gnosisConfig } from '$lib/shared/config/circles';
 import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
 import type { Basket, CartState, CheckoutResult, SdkCartItem } from './types';
 import type { BasketPatch, OrderItemPreview } from './types';
@@ -80,15 +80,15 @@ async function ensureBasketId(buyer: string): Promise<string> {
     cartState.update((s) => ({ ...s, basket: null }));
   }
 
-  if (!gnosisMarketConfig.marketOperator) {
-    throw new Error(`gnosisMarketConfig.marketOperator is not set.`)
+  if (!gnosisConfig.production.marketOperator) {
+    throw new Error(`gnosisConfig.production.marketOperator is not set.`)
   }
 
   const client = getMarketClient();
   const created = await client.cart.createBasket({
     buyer,
-    operator: gnosisMarketConfig.marketOperator,
-    chainId: gnosisMarketConfig.marketChainId,
+    operator: gnosisConfig.production.marketOperator,
+    chainId: gnosisConfig.production.marketChainId,
   });
 
   writeBasketIdWithDevUiSurface(created.basketId);
@@ -310,7 +310,7 @@ export async function updateBasketDetails(patch: unknown): Promise<void> {
       contactPoint: contact,
       ageProof: age,
       customer: customer,
-    } as any);
+    });
 
     cartState.update((s) => ({ ...s, basket: updated }));
   } catch (e) {
@@ -403,3 +403,4 @@ export function clearCart(): void {
   writeBasketIdWithDevUiSurface(null);
   cartState.set({ ...initialState });
 }
+

@@ -8,7 +8,6 @@ export default defineConfig({
       exclude: ['fs'],
       globals: {
         Buffer: true,
-        global: true,
         process: true,
       },
       protocolImports: true,

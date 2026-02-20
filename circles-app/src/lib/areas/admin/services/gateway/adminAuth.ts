@@ -1,8 +1,8 @@
 import {browser} from '$app/environment';
-import type {Address} from '@aboutcircles/sdk-types';
+import type {Address} from '@circles-sdk/utils';
 import {getWalletProvider} from '$lib/shared/integrations/wallet';
 import {getMarketClient} from '$lib/shared/data/market/marketClientProxy';
-import {gnosisMarketConfig} from '$lib/shared/config/market';
+import {gnosisConfig} from '$lib/shared/config/circles';
 
 export interface AdminChallengeResponse {
   challengeId: string;
@@ -25,7 +25,7 @@ export function getAdminBaseUrl(): string {
     throw new Error('getAdminClient() can only be used in the browser');
   }
 
-  const envBase = gnosisMarketConfig.marketApiBase;
+  const envBase = gnosisConfig.production.marketApiBase;
   if (!envBase) {
     throw new Error('Admin API base URL not configured');
   }
@@ -90,10 +90,10 @@ export async function signInAdminWithSafe(options: {
     throw new Error('signInAdminWithSafe() can only be used in the browser');
   }
 
-  const chainId = options.chainId ?? gnosisMarketConfig.marketChainId;
-  if (!chainId || chainId !== gnosisMarketConfig.marketChainId) {
+  const chainId = options.chainId ?? gnosisConfig.production.marketChainId;
+  if (!chainId || chainId !== gnosisConfig.production.marketChainId) {
     throw new Error(
-      `signInAdminWithSafe currently supports only Gnosis chain (${gnosisMarketConfig.marketChainId}); received ${chainId}`,
+      `signInAdminWithSafe currently supports only Gnosis chain (${gnosisConfig.production.marketChainId}); received ${chainId}`,
     );
   }
 

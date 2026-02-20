@@ -2,13 +2,11 @@
   // Compatibility wrapper to avoid duplicate implementations.
   // Delegate to the canonical ProfilePopup wrapper to prevent drift.
   import ProfilePopup from './ProfilePopup.svelte';
-  import type { Address } from '@aboutcircles/sdk-types';
-
-  interface Props {
+  import type { Address } from '@circles-sdk/utils';
+  const { address, trustVersion } = $props<{
     address?: Address;
-  }
-
-  let { address }: Props = $props();
+    trustVersion?: number;
+  }>();
 </script>
 
-<ProfilePopup {address} />
+<ProfilePopup {address} {trustVersion} />

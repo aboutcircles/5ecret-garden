@@ -44,7 +44,7 @@ export async function resolveImageToHttpUrl(
     return bindings.gatewayUrlForCid(img);
   }
 
-  // data: URL -> pin-media
+  // data: URL → pin-media
   if (isDataUrl(img)) {
     const { mime, bytes } = parseDataUrlToBytes(img);
     const cid = await bindings.pinMediaBytes(bytes, mime);

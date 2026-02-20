@@ -1,7 +1,7 @@
 import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
 import type { AggregatedCatalogItem } from '$lib/areas/market/model';
 import { pickFirstProductImageUrl } from '$lib/areas/market/services';
-import { gnosisMarketConfig } from '$lib/shared/config/market';
+import { gnosisConfig } from '$lib/shared/config/circles';
 
 type ProductKey = string;
 
@@ -21,12 +21,11 @@ export function resetResolvedProductsCache(): void {
   resolvingKeys.clear();
 }
 
-export function useResolvedProducts(linesOrGetter: any[] | (() => any[])): {
+export function useResolvedProducts(lines: any[]): {
   findCatalogItem: (seller: string | undefined, sku: string | undefined) => AggregatedCatalogItem | undefined;
   imageUrlForLine: (line: any) => string | null;
   resolvedProducts: Record<string, AggregatedCatalogItem | null>;
 } {
-  const getLines = typeof linesOrGetter === 'function' ? linesOrGetter : () => linesOrGetter;
   function findCatalogItem(
     seller: string | undefined,
     sku: string | undefined,
@@ -52,11 +51,11 @@ export function useResolvedProducts(linesOrGetter: any[] | (() => any[])): {
   }
 
   $effect(() => {
-    const operator = gnosisMarketConfig.marketOperator;
+    const operator = gnosisConfig.production.marketOperator;
     if (!operator) return;
 
     const catalog = getMarketClient().catalog.forOperator(operator);
-    for (const line of getLines()) {
+    for (const line of lines) {
       const seller = line?.seller as string | undefined;
       const sku = line?.orderedItem?.sku as string | undefined;
       const key = productKey(seller, sku);

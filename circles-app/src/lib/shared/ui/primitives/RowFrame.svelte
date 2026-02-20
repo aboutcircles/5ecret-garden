@@ -1,215 +1,172 @@
 <script lang="ts">
-  import type { Snippet } from 'svelte';
+    import type { Snippet } from 'svelte';
+    import type { HTMLAttributes } from 'svelte/elements';
 
-  interface Props {
-    clickable?: boolean;
-    selected?: boolean;
-    disabled?: boolean;
-    dense?: boolean;
-    className?: string;
-    /** Collapse the leading column for rows whose content already includes its own avatar/layout. */
-    noLeading?: boolean;
-    /** Click handler called when the row is interactive (clickable && !disabled). */
-    onclick?: (e: MouseEvent) => void;
+    type Props = Omit<HTMLAttributes<HTMLDivElement>, 'children' | 'title'> & {
+        clickable?: boolean;
+        selected?: boolean;
+        disabled?: boolean;
+        dense?: boolean;
+        className?: string;
+        /** Collapse the leading column for rows whose content already includes its own avatar/layout. */
+        noLeading?: boolean;
+        /** Optional direct click handler prop to support `onclick={...}` on the component. */
+        onclick?: (e: MouseEvent) => void;
 
-    // Named snippet slots
-    leading?: Snippet;
-    title?: Snippet;
-    subtitle?: Snippet;
-    meta?: Snippet;
-    trailing?: Snippet;
-    children?: Snippet;
-  }
+        // Svelte 5 snippet props (replacement for named slots)
+        leading?: Snippet;
+        title?: Snippet;
+        subtitle?: Snippet;
+        meta?: Snippet;
+        trailing?: Snippet;
 
-  let {
-    clickable = false,
-    selected = false,
-    disabled = false,
-    dense = false,
-    className = '',
-    noLeading = false,
-    onclick,
-    leading,
-    title,
-    subtitle,
-    meta,
-    trailing,
-    children,
-  }: Props = $props();
+        // implicit default content inside <RowFrame>...</RowFrame>
+        children?: Snippet;
+    };
 
-  let el: HTMLElement | null = $state(null);
+    let {
+        clickable = false,
+        selected = false,
+        disabled = false,
+        dense = false,
+        class: classAttr = '',
+        className = '',
+        noLeading = false,
 
-  function handleKeydown(e: KeyboardEvent): void {
-    const isInteractive: boolean = clickable && !disabled;
-    const isActivate: boolean = e.key === 'Enter' || e.key === ' ';
-    if (!isInteractive) {
-      return;
+        onclick,
+        onkeydown,
+
+        tabindex: _tabindex,
+
+        leading,
+        title,
+        subtitle,
+        meta,
+        trailing,
+        children,
+
+        ...rest
+    }: Props = $props();
+
+    let el: HTMLDivElement | null = null;
+
+    function handleKeydown(e: KeyboardEvent): void {
+        onkeydown?.(e as KeyboardEvent & { currentTarget: EventTarget & HTMLDivElement });
+
+        const isInteractive: boolean = clickable && !disabled;
+        const isActivate: boolean = e.key === 'Enter' || e.key === ' ';
+        if (!isInteractive) {
+            return;
+        }
+        if (isActivate) {
+            e.preventDefault();
+            el?.click();
+        }
     }
-    if (isActivate) {
-      e.preventDefault();
-      el?.click();
-    }
-  }
 
-  function handleClick(e: MouseEvent): void {
-    const isInteractive: boolean = clickable && !disabled;
-    if (!isInteractive) {
-      return;
+    function handleClick(e: MouseEvent): void {
+        const isInteractive: boolean = clickable && !disabled;
+        if (!isInteractive) {
+            return;
+        }
+        onclick?.(e);
     }
-    onclick?.(e);
-  }
 </script>
 
-{#snippet rowBody()}
-  {#if !noLeading}
-    <div class="ui-row__leading">
-      {#if leading}{@render leading()}{/if}
-    </div>
-  {/if}
-
-  <div class="ui-row__content">
-    <div class="ui-row__title">{#if title}{@render title()}{/if}</div>
-    <div class="ui-row__subtitle">{#if subtitle}{@render subtitle()}{/if}</div>
-    <div class="ui-row__meta">{#if meta}{@render meta()}{/if}</div>
-    {#if children}{@render children()}{/if}
-  </div>
-
-  <div class="ui-row__trailing">
-    {#if trailing}{@render trailing()}{/if}
-  </div>
-{/snippet}
-
-{#if clickable}
-  <div
+<div
+    {...rest}
     bind:this={el}
     data-row
-    data-clickable=""
+    data-clickable={clickable && !disabled ? '' : undefined}
     data-selected={selected ? '' : undefined}
     data-disabled={disabled ? '' : undefined}
     data-dense={dense ? '' : undefined}
     data-no-leading={noLeading ? '' : undefined}
-    class={`ui-row ${className}`}
-    role="button"
-    tabindex={disabled ? undefined : 0}
+    class={`ui-row ${classAttr} ${className}`.trim()
+    }
+    role="group"
     aria-disabled={disabled ? 'true' : 'false'}
     onkeydown={handleKeydown}
     onclick={handleClick}
-  >
-    {@render rowBody()}
-  </div>
-{:else}
-  <div
-    bind:this={el}
-    data-row
-    data-selected={selected ? '' : undefined}
-    data-disabled={disabled ? '' : undefined}
-    data-dense={dense ? '' : undefined}
-    data-no-leading={noLeading ? '' : undefined}
-    class={`ui-row ${className}`}
-  >
-    {@render rowBody()}
-  </div>
-{/if}
+>
+    {#if !noLeading}
+        <div class="ui-row__leading">
+            {@render leading?.()}
+        </div>
+    {/if}
+
+    <div class="ui-row__content">
+        <div class="ui-row__title">{@render title?.()}</div>
+        <div class="ui-row__subtitle">{@render subtitle?.()}</div>
+        <div class="ui-row__meta">{@render meta?.()}</div>
+        {@render children?.()}
+    </div>
+
+    <div class="ui-row__trailing">
+        {@render trailing?.()}
+    </div>
+</div>
 
 <style>
-  .ui-row {
-    --row-height: var(--row-height-md);
-    --row-pad-x: var(--row-pad-x-md);
-    --row-pad-y: var(--row-pad-y-md);
+    .ui-row {
+        --row-height: var(--row-height-md);
+        --row-pad-x: var(--row-pad-x-md);
+        --row-pad-y: var(--row-pad-y-md);
 
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
 
-    width: 100%;
-    min-height: var(--row-height);
-    box-sizing: border-box;
+        width: 100%;
+        min-height: var(--row-height);
+        box-sizing: border-box;
 
-    padding: var(--row-pad-y) var(--row-pad-x);
-    gap: var(--row-gap);
+        padding: var(--row-pad-y) var(--row-pad-x);
+        gap: var(--row-gap);
 
-    background: var(--row-bg);
-    border: 1px solid var(--row-border);
-    border-radius: var(--row-radius);
+        background: var(--row-bg);
+        border: 1px solid var(--row-border);
+        border-radius: var(--row-radius);
 
-    transition:
-      background 120ms ease,
-      border-color 120ms ease,
-      box-shadow 120ms ease,
-      transform 80ms ease;
-  }
+        transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease, transform 80ms ease;
+    }
 
-  /* collapse leading column when requested */
-  .ui-row[data-no-leading] {
-    grid-template-columns: 1fr auto;
-  }
+    /* collapse leading column when requested */
+    .ui-row[data-no-leading] {
+        grid-template-columns: 1fr auto;
+    }
 
-  .ui-row[data-clickable] {
-    cursor: pointer;
-  }
-  .ui-row[data-clickable]:hover {
-    background: var(--row-bg-hover);
-    border-color: var(--row-border-hover);
-  }
-  .ui-row[data-clickable]:active {
-    transform: translateY(0.5px);
-  }
-  .ui-row:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px var(--row-focus-ring);
-  }
+    .ui-row[data-clickable] { cursor: pointer; }
+    .ui-row[data-clickable]:hover { background: var(--row-bg-hover); border-color: var(--row-border-hover); }
+    .ui-row[data-clickable]:active { transform: translateY(0.5px); }
+    .ui-row:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--row-focus-ring); }
 
-  .ui-row[data-selected] {
-    background: var(--row-bg-selected);
-    border-color: var(--row-border-selected);
-    box-shadow: 0 0 0 2px var(--row-border-selected) inset;
-  }
+    .ui-row[data-selected] {
+        background: var(--row-bg-selected);
+        border-color: var(--row-border-selected);
+        box-shadow: 0 0 0 2px var(--row-border-selected) inset;
+    }
 
-  .ui-row[data-disabled] {
-    opacity: 0.6;
-    pointer-events: none;
-  }
+    .ui-row[data-disabled] { opacity: 0.6; pointer-events: none; }
 
-  .ui-row[data-dense] {
-    --row-height: var(--row-height-sm);
-    --row-pad-x: var(--row-pad-x-sm);
-    --row-pad-y: var(--row-pad-y-sm);
-  }
+    .ui-row[data-dense] {
+        --row-height: var(--row-height-sm);
+        --row-pad-x: var(--row-pad-x-sm);
+        --row-pad-y: var(--row-pad-y-sm);
+    }
 
-  .ui-row__leading {
-    display: flex;
-    align-items: center;
-    gap: var(--row-gap);
-  }
-  .ui-row__trailing {
-    display: flex;
-    align-items: center;
-    gap: var(--row-gap);
-  }
-  .ui-row__content {
-    min-width: 0;
-    display: grid;
-    grid-template-rows: auto auto auto;
-    gap: 2px;
-  }
-  .ui-row__title,
-  .ui-row__subtitle,
-  .ui-row__meta {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .ui-row__title {
-    font-weight: 600;
-    color: var(--row-fg-strong);
-  }
-  .ui-row__subtitle {
-    font-size: 0.875rem;
-    color: var(--row-fg-muted);
-  }
-  .ui-row__meta {
-    font-size: 0.75rem;
-    color: var(--row-fg-muted-2);
-  }
+    .ui-row__leading { display: flex; align-items: center; gap: var(--row-gap); }
+    .ui-row__trailing { display: flex; align-items: center; gap: var(--row-gap); }
+    .ui-row__content {
+        min-width: 0;
+        display: grid;
+        grid-template-rows: auto auto auto;
+        gap: 2px;
+    }
+    .ui-row__title, .ui-row__subtitle, .ui-row__meta {
+        min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .ui-row__title { font-weight: 600; color: var(--row-fg-strong); }
+    .ui-row__subtitle { font-size: 0.875rem; color: var(--row-fg-muted); }
+    .ui-row__meta { font-size: 0.75rem; color: var(--row-fg-muted-2); }
 </style>

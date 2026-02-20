@@ -1,23 +1,28 @@
 <script lang="ts">
-  import SelectAsset from './2_Asset.svelte';
+  import SelectAmount from './3_Amount.svelte';
   import type { SendFlowContext } from '$lib/areas/wallet/flows/send/context';
-  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
+  import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { circles } from '$lib/shared/state/circles';
-  import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
-  import type { TokenBalance } from '@aboutcircles/sdk-types';
+  import { openStep } from '$lib/shared/flow';
   import SearchAvatar from '$lib/areas/contacts/ui/pages/SearchAvatar.svelte';
-  import type { Address } from '@aboutcircles/sdk-types';
+  import type { Address } from '@circles-sdk/utils';
+  import { get } from 'svelte/store';
+  import type { SelectTargetStepProps } from '$lib/shared/flow';
+  import { SEND_FLOW_SCAFFOLD_BASE, SEND_POPUP_TITLE } from './constants';
+  import {
+    requireAvatar,
+    requireCircles,
+    requireWalletAddress,
+  } from '$lib/shared/flow';
 
-  interface Props {
-    context?: SendFlowContext;
-  }
+  type Props = Partial<SelectTargetStepProps<SendFlowContext>>;
 
   let {
     context = $bindable({
       selectedAddress: undefined,
       transitiveOnly: false,
-      selectedAsset: {} as TokenBalance,
+      selectedAsset: undefined as any,
       amount: undefined,
     }),
   }: Props = $props();
@@ -25,18 +30,17 @@
   async function onselect(selectedAvatar: Address) {
     context.selectedAddress = selectedAvatar;
 
-    if (
-      !$circles ||
-      !avatarState.avatar ||
-      !avatarState.avatar.avatarInfo ||
-      !context.selectedAddress
-    ) {
+    try {
+      requireCircles(get(circles));
+      requireAvatar(avatarState.avatar);
+      requireWalletAddress(context.selectedAddress, 'No address selected');
+    } catch {
       return;
     }
 
-    popupControls.open({
-      title: 'Select Asset',
-      component: SelectAsset,
+    openStep({
+      title: SEND_POPUP_TITLE,
+      component: SelectAmount,
       props: {
         context: context,
       },
@@ -44,11 +48,21 @@
   }
 </script>
 
-<FlowDecoration>
-  <SearchAvatar
-    avatarTypes={['CrcV2_RegisterHuman', 'CrcV2_RegisterOrganization']}
-    selectedAddress={context.selectedAddress}
-    {onselect}
-    searchType="send"
-  />
-</FlowDecoration>
+<FlowStepScaffold
+  {...SEND_FLOW_SCAFFOLD_BASE}
+  className="w-full"
+  step={1}
+  title="Recipient"
+  tabindex="-1"
+  data-send-step-initial-focus
+>
+  <div class="w-full">
+    <SearchAvatar
+      avatarTypes={["CrcV2_RegisterHuman","CrcV2_RegisterOrganization"]}
+      selectedAddress={context.selectedAddress}
+      inputDataAttribute="data-send-step-initial-input data-send-recipient-search-input"
+      {onselect}
+      searchType="send"
+    />
+  </div>
+</FlowStepScaffold>

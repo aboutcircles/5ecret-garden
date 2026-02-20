@@ -2,8 +2,8 @@
     import SearchablePaginatedList from '$lib/shared/ui/lists/SearchablePaginatedList.svelte';
     import HoldersRow from '$lib/shared/ui/profile/components/HoldersRow.svelte';
     import AvatarRowPlaceholder from '$lib/shared/ui/lists/placeholders/AvatarRowPlaceholder.svelte';
-    import type { Address } from '@aboutcircles/sdk-types';
-    import type { TrustRelation } from '@aboutcircles/sdk-types';
+    import type { Address } from '@circles-sdk/utils';
+    import type { TrustRelation } from '@circles-sdk/data';
     import { writable } from 'svelte/store';
     import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
     import { usePopupListFocusRestore } from '$lib/shared/ui/profile/utils/popupListFocusRestore';

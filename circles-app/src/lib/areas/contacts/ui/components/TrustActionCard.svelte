@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type { Snippet } from 'svelte';
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
@@ -15,7 +14,6 @@
     quickHelpTitle?: string;
     quickHelpLines?: string[];
     showExplainerDetails?: boolean;
-    insight?: Snippet;
   }
 
   let {
@@ -34,7 +32,6 @@
     quickHelpTitle,
     quickHelpLines = [],
     showExplainerDetails = true,
-    insight,
   }: Props = $props();
 
   const hasQuickHelp = $derived(Boolean(quickHelpTitle && quickHelpLines.length > 0));
@@ -69,7 +66,7 @@
     {/if}
   </div>
 
-  {#if insight}{@render insight()}{/if}
+  <slot name="insight"></slot>
 
   <div class="flex justify-end">
     <ActionButton action={runAction}>{cta}</ActionButton>

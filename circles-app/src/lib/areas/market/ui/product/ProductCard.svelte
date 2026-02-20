@@ -18,20 +18,20 @@
   import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
   import {getProduct, getFirstOffer, isProductOwnedBy} from '$lib/areas/market/services';
   import {productAndOfferToDraft} from '$lib/areas/market/utils/offer';
-  import {openFlowPopup, popupControls, type PopupContentDefinition} from '$lib/shared/state/popup/popUp.svelte';
+  import {openFlowPopup, popupControls, type PopupContentDefinition} from '$lib/shared/state/popup';
 import { ProductDetailsPopup } from '$lib/areas/market/ui';
   import OfferStep1 from '$lib/areas/market/flows/offer/1_Product.svelte';
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
-  import {gnosisMarketConfig} from "$lib/shared/config/market";
+  import {gnosisConfig} from "$lib/shared/config/circles";
   import { openInfoPopup } from '$lib/shared/ui/shell/confirmDialogs';
 
-  const OPERATOR = gnosisMarketConfig.marketOperator;
+  const OPERATOR = gnosisConfig.production.marketOperator;
 
   const prod = $derived(getProduct(product));
   const offer = $derived(getFirstOffer(prod));
 
   const currentAvatar = $derived(
-    (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.address ?? '').toLowerCase()
+    (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '').toLowerCase()
   );
 
   const cartLoading = $derived($cartState.loading);
@@ -73,15 +73,15 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
 
       const {offers} = await createOffersClientForAvatar({
         avatar: seller as any,
-        chainId: gnosisMarketConfig.marketChainId,
+        chainId: gnosisConfig.production.marketChainId,
         ethereum: eth,
-        pinApiBase: gnosisMarketConfig.marketApiBase,
+        pinApiBase: gnosisConfig.production.marketApiBase,
       });
 
       await offers.tombstone({
         avatar: seller as any,
         operator: OPERATOR as any,
-        chainId: gnosisMarketConfig.marketChainId,
+        chainId: gnosisConfig.production.marketChainId,
         sku: prod?.sku ?? product.product?.sku,
       });
 
@@ -118,7 +118,7 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
       return;
     }
 
-    const seller = (product.seller || (prod as any)?.seller)?.toLowerCase();
+    const seller = (product.seller || prod?.seller)?.toLowerCase();
     const sku = product.product?.sku || (product as any).id || (product as any).productCid;
 
     if (seller && sku) {
@@ -148,7 +148,7 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
       props: {
         context: {
           operator: OPERATOR,
-          pinApiBase: gnosisMarketConfig.marketApiBase,
+          pinApiBase: gnosisConfig.production.marketApiBase,
           draft,
           editMode: true,
         }

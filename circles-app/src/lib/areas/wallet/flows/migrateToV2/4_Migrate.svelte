@@ -32,7 +32,7 @@
 
     await runTask({
       name: `Migrating your Avatar ...`,
-      promise: (sdk as any).migrateAvatar(
+      promise: sdk.migrateAvatar(
         context.inviter ?? '0x0000000000000000000000000000000000000000',
         avatar.address,
         profile
@@ -42,7 +42,7 @@
     // On success, refresh local cache/state
     removeProfileFromCache(avatar.address);
     avatar.avatarInfo!.version = 2;
-    (avatar.avatarInfo as any).v1Stopped = true;
+    avatar.avatarInfo!.v1Stopped = true;
 
     popupControls.close();
   });

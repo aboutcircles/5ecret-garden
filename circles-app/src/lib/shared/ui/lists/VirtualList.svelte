@@ -1,13 +1,14 @@
 <script lang="ts">
     import { onDestroy, setContext, tick, type Component } from 'svelte';
-    import { getKeyFromItem } from '$lib/shared/state/query/circlesQueryStore';
+    import type { EventRow, TransactionHistoryRow } from '@circles-sdk/data';
+    import { getKeyFromItem } from '$lib/shared/state/query';
     import type { Readable } from 'svelte/store';
     import {
         VIRTUAL_LIST_CONTEXT_KEY,
         type VirtualListController,
     } from '$lib/shared/ui/lists/utils/virtualListContext';
 
-    interface ListStoreValue<T = Record<string, any>> {
+    interface ListStoreValue<T = EventRow | TransactionHistoryRow> {
         data: T[];
         next: () => Promise<boolean>;
         ended: boolean;
@@ -393,9 +394,8 @@
                 style={`transform: translateY(${vr.top}px); height: ${rowHeight}px`}
             >
                 {#if vr.kind === 'item'}
-                    {@const Row = row}
                     <div data-list-row>
-                        <Row item={vr.item} />
+                        <svelte:component this={row} item={vr.item} />
                     </div>
                 {:else}
                     {#if placeholderRow}

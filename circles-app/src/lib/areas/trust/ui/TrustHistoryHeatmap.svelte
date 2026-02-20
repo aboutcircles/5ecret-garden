@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Address } from '@aboutcircles/sdk-types';
+  import type { Address } from '@circles-sdk/utils';
   import { EventHistoryHeatmap, type EventHistoryDataSource } from '$lib/shared/ui/event-history';
   import TrustHistoryDayEventRow from '$lib/areas/trust/ui/history/TrustHistoryDayEventRow.svelte';
   import TrustHistoryDayPopupHeader from '$lib/areas/trust/ui/history/TrustHistoryDayPopupHeader.svelte';
@@ -120,7 +120,7 @@
 </script>
 
 <EventHistoryHeatmap
-  dataSource={dataSource as any}
+  {dataSource}
   labels={{
     title: 'Trust events',
     loading: 'Loading outgoing trust history…',
@@ -134,7 +134,7 @@
       return `${trustRows.length} outgoing trust events · ${setCount} set · ${removedCount} removed`;
     },
   }}
-  searchHaystack={trustSearchHaystack as any}
+  searchHaystack={trustSearchHaystack}
   rowComponent={TrustHistoryDayEventRow as any}
   dayPopupHeaderComponent={TrustHistoryDayPopupHeader as any}
   overlays={{

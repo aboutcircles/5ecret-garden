@@ -8,10 +8,12 @@
   }
 
   let { height, showChevron = true, dense = true }: Props = $props();
+
+  const rowStyle = $derived(height ? `min-height: ${height}px;` : undefined);
 </script>
 
 <div aria-hidden="true">
-  <RowFrame noLeading={true} dense={dense}>
+  <RowFrame noLeading={true} dense={dense} style={rowStyle}>
     <div class="w-full flex items-center justify-between">
       <div class="inline-flex items-center min-w-0 max-w-full">
         <div class="relative inline-block">

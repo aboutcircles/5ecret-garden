@@ -1,6 +1,6 @@
-import type { Profile } from '@aboutcircles/sdk-types';
-import type { TrustRelationType } from '@aboutcircles/sdk-types';
-import type { CirclesConfig } from '$lib/shared/config/circles';
+import type { AppProfileCore as Profile } from '$lib/shared/model/profile';
+import type { TrustRelation } from '@circles-sdk/data';
+import type { CirclesConfig } from '@circles-sdk/sdk';
 
 export function getTypeString(type: string): string {
   const typeMap: Record<string, string> = {
@@ -12,39 +12,32 @@ export function getTypeString(type: string): string {
   return typeMap[type ?? ''] || 'None';
 }
 
-export function formatTrustRelation(
-  relation: TrustRelationType | undefined,
-  profile?: Profile
-) {
-  // Check profile?.name not just profile - name can be null even when profile exists
-  const name = profile?.name;
+export function formatTrustRelation(relation: TrustRelation | undefined, profile?: Profile) {
   switch (relation) {
     case 'trusts':
-      return `You accept ${name ? name + '\'s' : 'their'} tokens`;
+      return `You accept ${profile ? profile.name + '’s' : 'their'} Circles`;
     case 'trustedBy':
-      return `${name ?? 'They'} accept your tokens`;
+      return profile ? `${profile.name} accepts your Circles` : 'They accept your Circles';
     case 'mutuallyTrusts':
-      return 'You accept each other\'s tokens';
+      return 'You accept each other’s Circles';
+    case 'selfTrusts':
+      return 'Self-trusted';
+    case 'variesByVersion':
+      return 'Trust relationship varies by version';
     default:
       return "You don't trust each other";
   }
 }
 
+import { gnosisConfig, chiadoConfig } from '$lib/shared/config/circles';
+
 export async function getCirclesConfig(chainId: bigint, rings: boolean) {
-  let circlesConfig: CirclesConfig;
+  let circlesConfig: CirclesConfig
   if (chainId === 100n) {
-    rings
-      ? (circlesConfig = (await import('$lib/shared/config/circles')).gnosisConfig
-          .rings)
-      : (circlesConfig = (await import('$lib/shared/config/circles')).gnosisConfig
-          .production);
+    circlesConfig = rings ? gnosisConfig.rings : gnosisConfig.production;
     return circlesConfig;
   } else if (chainId === 10200n) {
-    rings
-      ? (circlesConfig = (await import('$lib/shared/config/circles')).chiadoConfig
-          .rings)
-      : (circlesConfig = (await import('$lib/shared/config/circles')).chiadoConfig
-          .production);
+    circlesConfig = rings ? chiadoConfig.rings : chiadoConfig.production;
     return circlesConfig;
   }
   throw new Error(`Unsupported chain-id: ${chainId}`);

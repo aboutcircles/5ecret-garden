@@ -1,4 +1,4 @@
-import type { EventRow } from '@aboutcircles/sdk-types';
+import type { EventRow } from '@circles-sdk/data';
 
 export type TrustRelationLike =
   | 'mutuallyTrusts'

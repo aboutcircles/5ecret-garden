@@ -6,10 +6,12 @@
   }
 
   let { height }: Props = $props();
+
+  const rowStyle = $derived(height ? `min-height: ${height}px;` : undefined);
 </script>
 
 <div aria-hidden="true">
-  <RowFrame dense={true} noLeading={true}>
+  <RowFrame dense={true} noLeading={true} style={rowStyle}>
     <div class="w-full flex items-center justify-between">
       <div class="inline-flex items-center min-w-0">
         <div class="relative inline-block">

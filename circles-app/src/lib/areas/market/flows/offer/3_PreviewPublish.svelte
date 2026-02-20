@@ -1,12 +1,12 @@
 <script lang="ts">
   import {get} from 'svelte/store';
-  import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
+  import { popupControls } from '$lib/shared/state/popup';
   import { openStep, popToOrOpen } from '$lib/shared/flow';
   import {runTask} from '$lib/shared/utils/tasks';
   import {wallet} from '$lib/shared/state/wallet.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import Markdown from '$lib/shared/ui/content/markdown/Markdown.svelte';
-  import type {Address} from '@aboutcircles/sdk-types';
+  import type {Address} from '@circles-sdk/utils';
 
   import ProductGallery from '$lib/areas/market/ui/product/ProductGallery.svelte';
   import ProductPreviewCard from '$lib/areas/market/ui/product/ProductPreviewCard.svelte';
@@ -26,13 +26,12 @@
   import {resolveImagesToHttpUrls} from '$lib/shared/media/resolveImageUrl';
   import {createOffersClientForAvatar} from '$lib/areas/market/offers';
   import {getWalletProvider} from '$lib/shared/integrations/wallet';
-  import {gnosisMarketConfig} from "$lib/shared/config/market";
+  import {gnosisConfig} from "$lib/shared/config/circles";
   import { assertWalletCanSignForSafe } from '$lib/shared/integrations/safe/assertWalletCanSignForSafe';
 
   interface Props { context: OfferFlowContext; }
   let { context }: Props = $props();
 
-  // svelte-ignore state_referenced_locally
   let selectedGateway: string = $state((context.draft?.paymentGateway ?? '') as string);
   $effect(() => { selectedGateway = (context.draft?.paymentGateway ?? '') as string; });
 
@@ -89,7 +88,7 @@
 
     const { offers: client, media } = await createOffersClientForAvatar({
       avatar: seller,
-      chainId: gnosisMarketConfig.marketChainId,
+      chainId: gnosisConfig.production.marketChainId,
       ethereum: eth,
       pinApiBase: (context as any).pinApiBase,
       gatewayUrlForCid: (cid) => ipfsGatewayUrl(cid),
@@ -117,7 +116,7 @@
         context.result = await client.appendOffer({
           avatar: seller,
           operator: context.operator,
-          chainId: gnosisMarketConfig.marketChainId,
+          chainId: gnosisConfig.production.marketChainId,
           paymentGateway: context.draft?.paymentGateway as Address,
           product: {
             sku: draft.sku,
@@ -189,20 +188,18 @@
           imageUrl={getAllImages()[0] ?? context.draft?.image ?? undefined}
           size="md"
         >
-          {#snippet meta()}
-            <div class="text-sm space-y-2">
-              <div class="font-semibold">Payment gateway</div>
-              {#if selectedGateway}
-                <div class="flex items-center gap-2">
-                  <Avatar address={asAddress(selectedGateway)} view="small_no_text" clickable={false} />
-                  <span class="text-xs font-mono truncate">{selectedGateway}</span>
-                </div>
-              {:else}
-                <span class="opacity-70 text-sm">No payment gateway selected. Go back to Pricing to select one.</span>
-              {/if}
-              <div><strong>Price:</strong> {context.draft?.price} {context.draft?.priceCurrency}</div>
-            </div>
-          {/snippet}
+          <div slot="meta" class="text-sm space-y-2">
+            <div class="font-semibold">Payment gateway</div>
+            {#if selectedGateway}
+              <div class="flex items-center gap-2">
+                <Avatar address={asAddress(selectedGateway)} view="small_no_text" clickable={false} />
+                <span class="text-xs font-mono truncate">{selectedGateway}</span>
+              </div>
+            {:else}
+              <span class="opacity-70 text-sm">No payment gateway selected. Go back to Pricing to select one.</span>
+            {/if}
+            <div><strong>Price:</strong> {context.draft?.price} {context.draft?.priceCurrency}</div>
+          </div>
         </ProductPreviewCard>
 
         {#if getAllImages().length > 1}
@@ -237,3 +234,10 @@
     </StepActionBar>
 </div>
   </FlowStepScaffold>
+
+
+
+
+
+
+

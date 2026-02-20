@@ -2,7 +2,7 @@
 import { browser } from '$app/environment';
 import { MarketplaceClient } from '@circles-market/sdk';
 import { PersistentAuthContext } from './persistentAuthContext';
-import {gnosisMarketConfig} from "$lib/shared/config/market";
+import {gnosisConfig} from "$lib/shared/config/circles";
 
 let client: MarketplaceClient | null = null;
 
@@ -15,7 +15,7 @@ export function getMarketClient(): MarketplaceClient {
     throw new Error('getMarketClient() can only be used in the browser');
   }
   if (!client) {
-    const base = (import.meta as any)?.env?.VITE_MARKET_API_BASE || gnosisMarketConfig.marketApiBase || 'http://localhost:5084';
+    const base = (import.meta as any)?.env?.VITE_MARKET_API_BASE || gnosisConfig.production.marketApiBase || 'http://localhost:5084';
     const marketApiBase = String(base).replace(/\/$/, '');
     client = new MarketplaceClient({ marketApiBase, authContext: new PersistentAuthContext() });
   }

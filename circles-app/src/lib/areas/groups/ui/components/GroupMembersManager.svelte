@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Address } from '@aboutcircles/sdk-types';
+  import type { Address } from '@circles-sdk/utils';
   import { circles } from '$lib/shared/state/circles';
   import { get, writable } from 'svelte/store';
   import { popupControls } from '$lib/shared/state/popup';
@@ -71,7 +71,7 @@
       return;
     }
 
-    void getProfile(group as `0x${string}`)
+    void getProfile(group)
       .then((profile) => {
         if (cancelled) return;
         groupName = profile?.name ?? null;
@@ -114,7 +114,7 @@
       const infos = await avatarDataSource.getAvatarInfoBatch(trustedAddresses);
       const nextTypes: Record<string, string | undefined> = {};
       for (const info of infos) {
-        if (info) nextTypes[String(info.avatar).toLowerCase()] = info.type;
+        nextTypes[String(info.avatar).toLowerCase()] = info.type;
       }
       trustedAvatarTypes = nextTypes;
     } catch (e) {
@@ -175,7 +175,7 @@
 
   async function getDisplayName(address: Address): Promise<string> {
     try {
-      const profile = await getProfile(address as `0x${string}`);
+      const profile = await getProfile(address);
       const name = profile?.name?.trim();
       return name && name.length > 0 ? name : shortenAddress(address);
     } catch {
@@ -218,7 +218,7 @@
     const groupAvatar = await sdk.getAvatar(group);
     await runTask({
       name: `Removing ${selectedMembers.length} trusted avatar${selectedMembers.length === 1 ? '' : 's'} from ${shortenAddress(group)} ...`,
-      promise: groupAvatar.trust.remove(selectedMembers),
+      promise: groupAvatar.untrust(selectedMembers),
     });
 
     selectedSet = new Set<Address>();
@@ -277,6 +277,7 @@
               <div class="min-w-0">
                 <Avatar
                   address={address}
+                  avatarInfo={avatarInfoFor(address)}
                   view="horizontal"
                   clickable={true}
                   bottomInfo={`${avatarTypeToReadable(trustedAvatarTypes[address.toLowerCase()])} • ${address}`}

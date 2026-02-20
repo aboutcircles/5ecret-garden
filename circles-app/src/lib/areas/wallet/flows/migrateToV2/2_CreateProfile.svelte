@@ -12,7 +12,7 @@
     profilesEqual,
   } from '$lib/shared/utils/profile';
   import { openStep } from '$lib/shared/flow';
-  import type { Profile } from '@aboutcircles/sdk-types';
+  import type { Profile } from '@circles-sdk/profiles';
   import { requireAvatar } from '$lib/shared/flow';
   import type { ProfileEditStepProps } from '$lib/shared/flow';
   import { validateProfile } from '$lib/shared/ui/profile/profileValidation';

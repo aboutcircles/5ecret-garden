@@ -1,18 +1,16 @@
 import { defineConfig } from 'vitest/config';
-import { svelte } from '@sveltejs/vite-plugin-svelte';
-import { resolve } from 'path';
+import { sveltekit } from '@sveltejs/kit/vite';
 
 export default defineConfig({
-  plugins: [svelte({ hot: !process.env.VITEST })],
-  test: {
-    include: ['src/**/*.{test,spec}.{js,ts}'],
-    environment: 'jsdom',
-    globals: true,
-    setupFiles: ['./src/lib/__tests__/setup.ts'],
-  },
+  plugins: [sveltekit()],
   resolve: {
-    alias: {
-      $lib: resolve('./src/lib'),
-    },
+    conditions: ['browser'],
   },
+  test: {
+    globals: true,
+    // Use the Node environment by default to avoid requiring a DOM implementation.
+    // Individual test files can opt into jsdom via `// @vitest-environment jsdom`.
+    environment: 'node',
+    setupFiles: ['./tests/setup.ts']
+  }
 });

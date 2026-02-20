@@ -1,7 +1,7 @@
 <script lang="ts">
-  import type { Address } from '@aboutcircles/sdk-types';
-  import type { GroupRow } from '@aboutcircles/sdk-types';
-  import type { Sdk } from '@aboutcircles/sdk';
+  import type { Address } from '@circles-sdk/utils';
+  import type { GroupRow } from '@circles-sdk/data';
+  import type { Sdk } from '@circles-sdk/sdk';
   import ConnectSafe from '$lib/areas/wallet/ui/onboarding/ConnectSafe.svelte';
   import ConnectCircles from '$lib/areas/wallet/ui/onboarding/ConnectCircles.svelte';
   import WalletLoader from '$lib/areas/wallet/ui/onboarding/WalletLoader.svelte';
@@ -65,9 +65,9 @@
     <ConnectCircles
       address={legacy.address}
       isRegistered={legacy.isRegistered}
+      isV1={legacy.isV1}
       groups={legacy.groups}
       initSdk={legacy.initSdk}
-      sdk={sdk as Sdk}
       refreshGroupsCallback={legacy.refreshGroupsCallback}
     />
   {:else if safeOwnerAddress && sdk && initSdk}
@@ -75,6 +75,7 @@
       safeOwnerAddress={safeOwnerAddress}
       initSdk={initSdk}
       sdk={sdk}
+      safeCreationMode={safeCreationMode}
       refreshGroupsCallback={refreshGroupsCallback}
     />
   {/if}

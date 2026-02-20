@@ -1,4 +1,4 @@
-import type { Address } from '@aboutcircles/sdk-types';
+import type { Address } from '@circles-sdk/utils';
 import type { AggregatedCatalogItem } from '$lib/areas/market/model';
 import type { AdminProductType } from '$lib/areas/admin/types';
 

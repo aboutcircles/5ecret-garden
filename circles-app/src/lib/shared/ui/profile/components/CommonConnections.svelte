@@ -3,7 +3,7 @@
     import { avatarState } from '$lib/shared/state/avatar.svelte';
     import { circles } from '$lib/shared/state/circles';
     import { get, writable } from 'svelte/store';
-    import type { Address } from '@aboutcircles/sdk-types';
+    import type { Address } from '@circles-sdk/utils';
 
     interface Props {
         otherAvatarAddress?: Address;
@@ -24,10 +24,12 @@
             if (!$circles || !me || !other) { loading = false; commonConnectionsCount = 0; return; }
 
             const sdk = get(circles);
-            if (!sdk?.rpc) {
+            if (!sdk?.circlesRpc) {
                 throw new Error('No circles RPC available');
             }
-            const list = (await sdk.rpc.trust.getCommonTrust(me, other))
+            const resp = await sdk.circlesRpc.call<Address[]>('circles_getCommonTrust', [me, other]);
+            const list = (resp.result ?? [])
+                .map((addr) => addr as Address)
                 .filter((addr) => addr !== me && addr !== other)
                 .sort((a, b) => a.localeCompare(b));
 

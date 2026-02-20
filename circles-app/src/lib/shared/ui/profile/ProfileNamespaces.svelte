@@ -2,7 +2,7 @@
 <script lang="ts">
     import {createEventDispatcher} from 'svelte';
     import {runTask} from '$lib/shared/utils/tasks';
-    import type {Address} from "@aboutcircles/sdk-types";
+    import type {Address} from "@circles-sdk/utils";
     import type {CidV0} from '$lib/areas/market/offers';
     import type { ProfilesBindings } from '@circles-market/sdk';
     import { buildLinkDraft, canonicaliseLink } from '@circles-market/sdk';
@@ -27,7 +27,7 @@
     import { getProfilesBindings } from '$lib/areas/market/offers';
     import { getWalletProvider } from '$lib/shared/integrations/wallet';
     import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
-    import { gnosisMarketConfig } from '$lib/shared/config/market';
+    import { gnosisConfig } from '$lib/shared/config/circles';
 
     interface Props {
         avatar: Address;
@@ -334,7 +334,7 @@
                 throw new Error('Cannot replace link: original link has no name.');
             }
 
-            const chainId = Number(currentItem?.link?.chainId ?? gnosisMarketConfig.marketChainId ?? 100);
+            const chainId = Number(currentItem?.link?.chainId ?? gnosisConfig.production.marketChainId ?? 100);
             if (!Number.isFinite(chainId) || chainId <= 0) {
                 throw new Error('Cannot replace link: invalid chainId.');
             }
@@ -379,13 +379,11 @@
             await persistLinks(ns, next);
             editing = null;
         } catch (e: any) {
-            if (editing) {
-                editing = {
-                    ...editing,
-                    saving: false,
-                    error: String(e?.message ?? e)
-                };
-            }
+            editing = {
+                ...editing,
+                saving: false,
+                error: String(e?.message ?? e)
+            };
         }
     }
 

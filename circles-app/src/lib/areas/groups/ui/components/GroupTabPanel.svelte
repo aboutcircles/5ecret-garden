@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { Snippet } from 'svelte';
+    import AvatarRowPlaceholder from '$lib/shared/ui/lists/placeholders/AvatarRowPlaceholder.svelte';
 
     type Props = {
         ownerAddress?: string | null;
@@ -8,25 +8,38 @@
         items: unknown[];
         connectText: string;
         emptyText: string;
-        empty?: Snippet;
-        children?: Snippet<[unknown[]]>;
+        loadingPlaceholderCount?: number;
     };
 
-    let { ownerAddress, loading, error, items, connectText, emptyText, empty, children }: Props = $props();
+    let {
+        ownerAddress,
+        loading,
+        error,
+        items,
+        connectText,
+        emptyText,
+        loadingPlaceholderCount = 5,
+    }: Props = $props();
+
+    const placeholderItems = $derived(Array.from({ length: loadingPlaceholderCount }, (_, i) => i));
 </script>
 
 {#if !ownerAddress}
     <div class="text-sm opacity-70">{connectText}</div>
 {:else if loading}
-    <div class="text-sm opacity-70">Loading…</div>
+    <div class="flex flex-col">
+        {#each placeholderItems as index (index)}
+            <AvatarRowPlaceholder height={64} />
+        {/each}
+    </div>
 {:else if error}
     <div class="text-sm text-error">{error}</div>
 {:else if items.length === 0}
-    {#if empty}{@render empty()}{:else}
+    <slot name="empty">
         <div class="text-sm opacity-70">{emptyText}</div>
-    {/if}
+    </slot>
 {:else}
     <div class="flex flex-col">
-        {@render children?.(items)}
+        <slot {items} />
     </div>
 {/if}

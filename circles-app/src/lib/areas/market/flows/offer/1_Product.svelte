@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {popupControls} from '$lib/shared/state/popup/popUp.svelte';
+  import {popupControls} from '$lib/shared/state/popup';
   import { openStep } from '$lib/shared/flow';
   import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import StepActionButtons from '$lib/shared/ui/flow/StepActionButtons.svelte';
@@ -27,7 +27,6 @@
   // Hard guard: we must know which namespace/operator to publish under
   let hasOperator = false;
   try {
-    // svelte-ignore state_referenced_locally
     (context as any).operator = normalizeAddress(String((context as any)?.operator ?? '')); // store normalized value once
     hasOperator = true;
   } catch {
@@ -38,9 +37,7 @@
     throw new Error('Marketplace operator address is required to create an offer.');
   }
 
-  // svelte-ignore state_referenced_locally
   if (!context.draft) {
-    // svelte-ignore state_referenced_locally
     context.draft = {
       sku: '',
       name: '',
@@ -65,28 +62,18 @@
     return legacy ? [legacy] : [];
   }
 
-  // Local bindings for form inputs (intentional one-time capture from draft)
-  // svelte-ignore state_referenced_locally
+  // Local bindings for form inputs
   let sku = $state(context.draft.sku);
-  // svelte-ignore state_referenced_locally
   let name = $state(context.draft.name);
-  // svelte-ignore state_referenced_locally
   let description = $state(context.draft.description ?? '');
-  // svelte-ignore state_referenced_locally
   let images = $state<string[]>(normalizeDraftImages(context.draft));
-  // svelte-ignore state_referenced_locally
   let url = $state(context.draft.url ?? '');
-  // svelte-ignore state_referenced_locally
   let brand = $state(context.draft.brand ?? '');
-  // svelte-ignore state_referenced_locally
   let mpn = $state(context.draft.mpn ?? '');
-  // svelte-ignore state_referenced_locally
   let gtin13 = $state(context.draft.gtin13 ?? '');
-  // svelte-ignore state_referenced_locally
   let category = $state(context.draft.category ?? '');
 
   // Are we editing an existing product?
-  // svelte-ignore state_referenced_locally
   const editMode: boolean = Boolean((context as any)?.editMode);
 
   // Advanced section toggle
@@ -98,7 +85,7 @@
     try {
       const c = get(circles);
       const owner = get(wallet)?.address as string | undefined;
-      if (!c?.rpc || !owner) {
+      if (!c?.circlesRpc || !owner) {
         hasGateway = false;
         return;
       }
@@ -117,8 +104,9 @@
   });
 
   function goToPaymentSettings(): void {
-    popupControls.close();
-    void goto('/settings?tab=payment');
+    popupControls.closeAndThen(() => {
+      void goto('/settings?tab=payment');
+    });
   }
 
   function next(): void {

@@ -10,7 +10,7 @@
   // NEW: imports to resolve PayAction and open send flow (Svelte 5 runes aware)
   import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
   import { resolvePayTo } from '$lib/areas/market/services';
-  import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
+  import { popupControls } from '$lib/shared/state/popup';
   import { openStep, useAsyncAction } from '$lib/shared/flow';
   import SendFlow from '$lib/areas/wallet/flows/send/4_Send.svelte';
   import { transitiveTransfer } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
@@ -19,8 +19,8 @@
   import { circles } from '$lib/shared/state/circles';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { ethers } from 'ethers';
-  import { CirclesConverter } from '@aboutcircles/sdk-utils';
-  import {gnosisMarketConfig} from "$lib/shared/config/market";
+  import { CirclesConverter } from '@circles-sdk/utils';
+  import {gnosisConfig} from "$lib/shared/config/circles";
 
   const paymentReference = $derived($cartState.lastCheckout?.paymentReference ?? null);
   const basketId = $derived($cartState.basket?.basketId ?? null);
@@ -75,7 +75,7 @@
     const recipients = new Set<string>();
     let total = 0;
 
-    const operator = gnosisMarketConfig.marketOperator as any;
+    const operator = gnosisConfig.production.marketOperator as any;
     const catalog = getMarketClient().catalog.forOperator(operator);
     const productCache = new Map<string, any>();
 
@@ -159,16 +159,13 @@
       throw new Error('Wallet not ready for pathfinding.');
     }
 
-    const sdk = $circles as any;
-    const excludedTokens = typeof sdk.getDefaultTokenExcludeList === 'function'
-      ? await sdk.getDefaultTokenExcludeList(to)
-      : [];
+    const excludedTokens = await $circles.getDefaultTokenExcludeList(to);
 
     const bigNumber = '99999999999999999999999999999999999';
     const p =
       avatarState.avatar?.avatarInfo?.version === 1
-        ? await sdk.v1Pathfinder?.getPath(avatarState.avatar.address, to, bigNumber)
-        : await sdk.v2Pathfinder?.getPath(
+        ? await $circles.v1Pathfinder?.getPath(avatarState.avatar.address, to, bigNumber)
+        : await $circles.v2Pathfinder?.getPath(
             avatarState.avatar.address,
             to,
             bigNumber,

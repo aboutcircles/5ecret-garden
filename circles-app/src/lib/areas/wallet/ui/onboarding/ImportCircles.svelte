@@ -1,7 +1,7 @@
 <script lang="ts">
   import { CirclesStorage } from '$lib/shared/utils/storage';
-  import SeedphraseInput from './components/SeedphraseInput.svelte';
-  import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
+  import SeedphraseInput from '$lib/areas/wallet/ui/onboarding/components/SeedphraseInput.svelte';
+  import { popupControls } from '$lib/shared/state/popup';
   import { goto } from '$app/navigation';
   let mnemonicPhrase: string = $state('');
   let hasValidKey = $state(false);
@@ -12,8 +12,9 @@
     CirclesStorage.getInstance().data = {
       privateKey: privateKey,
     };
-    popupControls.close();
-    goto('/connect-wallet/import-circles-garden');
+    popupControls.closeAndThen(() => {
+      void goto('/connect-wallet/import-circles-garden');
+    });
   }
 </script>
 

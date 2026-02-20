@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Address } from '@aboutcircles/sdk-types';
+  import type { Address } from '@circles-sdk/utils';
   import { circles } from '$lib/shared/state/circles';
   import { get } from 'svelte/store';
   import { runTask } from '$lib/shared/utils/tasks';
@@ -22,7 +22,7 @@
     const groupAvatar = await sdk.getAvatar(group);
     await runTask({
       name: `${shortenAddress(group)} trusts ${shortenAddress(address)} ...`,
-      promise: groupAvatar.trust.add(address),
+      promise: groupAvatar.trust(address),
     });
 
     await onTrusted?.();

@@ -6,7 +6,7 @@
   import { fetchAvailabilityFeed, fetchInventoryFeed, mapAvailabilityToLabel } from '$lib/areas/market/services';
   import type { QuantitativeValue } from '$lib/areas/market/services';
   import type { SchemaOrgOfferLite, SchemaOrgProductLite } from '$lib/areas/market/model';
-  import type { Address } from '@aboutcircles/sdk-types';
+  import type { Address } from '@circles-sdk/utils';
 
   import { ipfsGatewayUrl } from '$lib/shared/utils/ipfs';
   import { sanitizeUrl } from '$lib/shared/ui/content/markdown/ast';
@@ -58,33 +58,31 @@
   let liveAvailability: string | null = $state(null);
   let liveInventory: QuantitativeValue | null = $state(null);
 
-  $effect(() => {
+  $effect(async () => {
     liveAvailability = null;
     liveInventory = null;
     const af = offer?.availabilityFeed;
     const inf = offer?.inventoryFeed;
-    void (async () => {
-      try {
-        if (typeof af === 'string' && af) {
-          liveAvailability = await fetchAvailabilityFeed(af);
-        }
-      } catch (e) {
-        console.warn('[feeds] availability fetch failed', { uri: af, error: e });
+    try {
+      if (typeof af === 'string' && af) {
+        liveAvailability = await fetchAvailabilityFeed(af);
       }
-      try {
-        if (typeof inf === 'string' && inf) {
-          liveInventory = await fetchInventoryFeed(inf);
-        }
-      } catch (e) {
-        console.warn('[feeds] inventory fetch failed', { uri: inf, error: e });
+    } catch (e) {
+      console.warn('[feeds] availability fetch failed', { uri: af, error: e });
+    }
+    try {
+      if (typeof inf === 'string' && inf) {
+        liveInventory = await fetchInventoryFeed(inf);
       }
-    })();
+    } catch (e) {
+      console.warn('[feeds] inventory fetch failed', { uri: inf, error: e });
+    }
   });
 
   const effectiveAvailabilityIri = $derived<string | null>(liveAvailability ?? offer?.availability ?? null);
   const availabilityUi = $derived(mapAvailabilityToLabel(effectiveAvailabilityIri));
-  const effectiveInventoryValue = $derived<number | null>(((liveInventory as any)?.value ?? (offer?.inventoryLevel as any)?.value ?? null) as number | null);
-  const effectiveInventoryUnit = $derived<string | undefined>(((liveInventory as any)?.unitCode ?? (offer?.inventoryLevel as any)?.unitCode) as string | undefined);
+  const effectiveInventoryValue = $derived<number | null>((liveInventory?.value ?? offer?.inventoryLevel?.value ?? null) as number | null);
+  const effectiveInventoryUnit = $derived<string | undefined>((liveInventory?.unitCode ?? offer?.inventoryLevel?.unitCode) as string | undefined);
 
   function availabilityBadgeClass(tone: 'success' | 'warning' | 'neutral'): string {
     if (tone === 'success') return 'badge badge-success';

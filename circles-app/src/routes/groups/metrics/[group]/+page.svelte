@@ -2,7 +2,7 @@
   import {
     fetchGroupMetrics,
     type GroupMetrics,
-  } from '$lib/areas/groups/state/groupMetrics.svelte';
+  } from '$lib/areas/groups/state';
   import { goto } from '$app/navigation';
   import ModernHistoryChart from '$lib/areas/groups/ui/components/ModernHistoryChart.svelte';
   import ModernPieChart from '$lib/areas/groups/ui/components/ModernPieChart.svelte';
@@ -11,18 +11,20 @@
   import type { PageProps } from './$types';
   import { circles } from '$lib/shared/state/circles';
   import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
-  import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import { ArrowLeft as LArrowLeft } from 'lucide';
-  import type { Address } from '@aboutcircles/sdk-types';
+  import type { Address } from '@circles-sdk/utils';
+  import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
+  import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
+  import type { Action } from '$lib/shared/ui/shell/actions';
 
   let groupMetrics: GroupMetrics = $state({});
 
   let { data }: PageProps = $props();
 
   $effect(() => {
-    if ($circles?.rpc) {
+    if ($circles?.circlesRpc) {
       fetchGroupMetrics(
-        $circles.rpc,
+        $circles.circlesRpc,
         data.group as Address,
         groupMetrics
       );
@@ -33,15 +35,7 @@
     goto('/dashboard');
   }
 
-  type Action = {
-    id: string;
-    label: string;
-    iconNode: any;
-    onClick: () => void;
-    variant: 'primary' | 'ghost';
-    disabled?: boolean;
-  };
-  const pageActions: Action[] = [
+  const actions: Action[] = [
     {
       id: 'back',
       label: 'Back to Dashboard',
@@ -63,43 +57,17 @@
   collapsedTopGapClass="mt-3 md:mt-4"
 >
   {#snippet title()}
-    <h1 class="h2 font-bold text-gray-800">Group Metrics</h1>
-    <p class="text-sm text-gray-500">Analytics and insights for your group</p>
+    <h1 class="h2 font-bold text-base-content">Group Metrics</h1>
+    <p class="text-sm text-base-content/70">Analytics and insights for your group</p>
   {/snippet}
   {#snippet meta()}
-    <Avatar address={data.group as Address} view="horizontal" />
+    <Avatar address={data.group} view="horizontal" />
   {/snippet}
-  {#snippet actions()}
-    {#each pageActions as a (a.id)}
-      <button
-        type="button"
-        class={`btn btn-sm ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'}`}
-        onclick={a.onClick}
-        aria-label={a.label}
-      >
-        <Lucide icon={a.iconNode} size={16} class="shrink-0 stroke-black" />
-        <span>{a.label}</span>
-      </button>
-    {/each}
+  {#snippet headerActions()}
+    <ActionButtonBar {actions} />
   {/snippet}
-  {#snippet collapsed_menu()}
-    {#each pageActions as a (a.id)}
-      <button
-        type="button"
-        class={`btn ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'} min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3`}
-        onclick={a.onClick}
-        aria-label={a.label}
-      >
-        <Lucide
-          icon={a.iconNode}
-          size={20}
-          class={a.variant === 'primary'
-            ? 'shrink-0 stroke-white'
-            : 'shrink-0 stroke-black'}
-        />
-        <span>{a.label}</span>
-      </button>
-    {/each}
+  {#snippet collapsedMenu()}
+    <ActionButtonDropDown {actions} />
   {/snippet}
   {#if Object.keys(groupMetrics).length > 0}
     <!-- Stats Overview -->
@@ -108,7 +76,7 @@
     <!-- Charts Grid -->
     <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
       {#if groupMetrics.priceHistoryWeek && groupMetrics.priceHistoryMonth}
-        <div class="bg-white p-6 rounded-xl border shadow-sm">
+        <div class="bg-base-100 border border-base-300 p-6 rounded-xl shadow-sm">
           <ModernHistoryChart
             dataSet1={groupMetrics.priceHistoryWeek}
             dataSet2={groupMetrics.priceHistoryMonth}
@@ -119,7 +87,7 @@
       {/if}
 
       {#if groupMetrics?.memberCountPerHour && groupMetrics.memberCountPerHour.length > 0 && groupMetrics.memberCountPerDay && groupMetrics.memberCountPerDay.length > 0}
-        <div class="bg-white p-6 rounded-xl border shadow-sm">
+        <div class="bg-base-100 border border-base-300 p-6 rounded-xl shadow-sm">
           <ModernHistoryChart
             dataSet1={groupMetrics.memberCountPerHour}
             dataSet2={groupMetrics.memberCountPerDay}
@@ -130,7 +98,7 @@
       {/if}
 
       {#if groupMetrics?.mintRedeemPerHour && groupMetrics.mintRedeemPerHour.length > 0 && groupMetrics.mintRedeemPerDay && groupMetrics.mintRedeemPerDay.length > 0}
-        <div class="bg-white p-6 rounded-xl border shadow-sm">
+        <div class="bg-base-100 border border-base-300 p-6 rounded-xl shadow-sm">
           <ModernHistoryChart
             dataSet1={groupMetrics.mintRedeemPerHour}
             dataSet2={groupMetrics.mintRedeemPerDay}
@@ -141,7 +109,7 @@
       {/if}
 
       {#if groupMetrics?.wrapUnwrapPerHour && groupMetrics.wrapUnwrapPerHour.length > 0 && groupMetrics.wrapUnwrapPerDay && groupMetrics.wrapUnwrapPerDay.length > 0}
-        <div class="bg-white p-6 rounded-xl border shadow-sm">
+        <div class="bg-base-100 border border-base-300 p-6 rounded-xl shadow-sm">
           <ModernHistoryChart
             dataSet1={groupMetrics.wrapUnwrapPerHour}
             dataSet2={groupMetrics.wrapUnwrapPerDay}
@@ -156,8 +124,8 @@
     <!-- Distribution Charts -->
     <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
       {#if groupMetrics?.collateralInTreasury && groupMetrics.collateralInTreasury.length > 0}
-        <div class="bg-white p-6 rounded-xl border shadow-sm">
-          <h2 class="text-lg font-semibold text-gray-800 mb-4">
+        <div class="bg-base-100 border border-base-300 p-6 rounded-xl shadow-sm">
+          <h2 class="text-lg font-semibold text-base-content mb-4">
             Treasury Collateral
           </h2>
           <ModernPieChart
@@ -170,8 +138,8 @@
       {/if}
 
       {#if groupMetrics?.tokenHolderBalance && groupMetrics.tokenHolderBalance.length > 0}
-        <div class="bg-white p-6 rounded-xl border shadow-sm">
-          <h2 class="text-lg font-semibold text-gray-800 mb-4">
+        <div class="bg-base-100 border border-base-300 p-6 rounded-xl shadow-sm">
+          <h2 class="text-lg font-semibold text-base-content mb-4">
             Token Distribution
           </h2>
           <ModernPieChart
@@ -185,7 +153,7 @@
     </div>
   {:else}
     <div class="flex flex-col items-center justify-center h-[50vh]">
-      <div class="text-2xl font-bold text-gray-400">
+      <div class="text-2xl font-bold text-base-content/50">
         Loading group metrics...
       </div>
     </div>

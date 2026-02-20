@@ -10,7 +10,7 @@
   import { getAddToCartState } from '$lib/areas/market/cart/addToCartUi';
   import { fetchAvailabilityFeed, fetchInventoryFeed, type QuantitativeValue } from '$lib/areas/market/services';
   import { createLoadable } from '$lib/areas/market/utils/loadable';
-  import {gnosisMarketConfig} from "$lib/shared/config/market";
+  import {gnosisConfig} from "$lib/shared/config/circles";
 
   interface Props {
     seller: string; // EVM address
@@ -28,7 +28,7 @@
   async function loadProduct(): Promise<void> {
     await loader.run(async () => {
       const s = normalizeAddress(seller);
-      const catalog = getMarketClient().catalog.forOperator(gnosisMarketConfig.marketOperator);
+      const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
       const p = await catalog.fetchProductForSellerAndSku(s, sku);
       if (!p) throw new Error('Product not found for this seller / sku.');
       return p;
@@ -43,27 +43,25 @@
   let liveAvailability = $state<string | null>(null);
   let liveInventory = $state<QuantitativeValue | null>(null);
 
-  $effect(() => {
+  $effect(async () => {
     liveAvailability = null;
     liveInventory = null;
     const af = offer?.availabilityFeed;
     const inf = offer?.inventoryFeed;
-    void (async () => {
-      try {
-        if (typeof af === 'string' && af) {
-          liveAvailability = await fetchAvailabilityFeed(af);
-        }
-      } catch (e) {
-        console.warn('[feeds] availability fetch failed', { uri: af, error: e });
+    try {
+      if (typeof af === 'string' && af) {
+        liveAvailability = await fetchAvailabilityFeed(af);
       }
-      try {
-        if (typeof inf === 'string' && inf) {
-          liveInventory = await fetchInventoryFeed(inf);
-        }
-      } catch (e) {
-        console.warn('[feeds] inventory fetch failed', { uri: inf, error: e });
+    } catch (e) {
+      console.warn('[feeds] availability fetch failed', { uri: af, error: e });
+    }
+    try {
+      if (typeof inf === 'string' && inf) {
+        liveInventory = await fetchInventoryFeed(inf);
       }
-    })();
+    } catch (e) {
+      console.warn('[feeds] inventory fetch failed', { uri: inf, error: e });
+    }
   });
   const effectiveAvailabilityIri = $derived<string | null>(
     liveAvailability ?? (product as any)?.availability ?? (product?.product as any)?.availability ?? null

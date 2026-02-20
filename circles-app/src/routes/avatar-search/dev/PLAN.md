@@ -1,4 +1,4 @@
-# Unified Avatar Search List -- Development Plan
+# Unified Avatar Search List — Development Plan
 
 ## Goal
 
@@ -7,7 +7,7 @@ Create one unified avatar search list component for the app, starting simple and
 Core behavior target:
 
 - Search across **all avatars**.
-- Prioritize avatars "close" to current user (contacts + bookmarked profiles).
+- Prioritize avatars “close” to current user (contacts + bookmarked profiles).
 - Local results update on every keypress.
 - Remote lookup is debounced by **100 ms**.
 
@@ -40,7 +40,7 @@ Core behavior target:
 - `src/lib/utils/searchableProfiles.ts`
   - Local filtering by address + resolved profile names.
 
-### Data sources for "close" list
+### Data sources for “close” list
 
 - Contacts store: `src/lib/stores/contacts.ts` (+ query store)
   - Current avatar-local trust graph list.
@@ -103,13 +103,13 @@ Use a normalized item shape:
 
 ## Implementation Phases
 
-## Phase 1 -- Route + scaffolding (done)
+## Phase 1 — Route + scaffolding (done)
 
 - Added `src/routes/avatar-search/+page.svelte`.
 - Added `src/routes/avatar-search/dev/+page.svelte`.
 - Linked top route to dev sub-route.
 
-## Phase 2 -- Minimal functional list
+## Phase 2 — Minimal functional list
 
 - Add route-local `AvatarSearchList.svelte` with:
   - input,
@@ -121,26 +121,26 @@ Use a normalized item shape:
 
 ### Phase 2 implementation status
 
-- `AvatarSearchList.svelte` implemented in `src/routes/avatar-search/dev/`
-- `AvatarSearchRow.svelte` implemented with `RowFrame` + horizontal `Avatar` + profile popup opening
-- Ranking helpers implemented in `avatarSearch.rank.ts`
-- Unified item type added in `avatarSearch.types.ts`
-- Remote query debounced to 100ms and gated behind minimum query length 2
-- Merged/deduplicated local + remote list rendered with `GenericList` + `createPaginatedList` (infinite scroll behavior)
+- ✅ `AvatarSearchList.svelte` implemented in `src/routes/avatar-search/dev/`
+- ✅ `AvatarSearchRow.svelte` implemented with `RowFrame` + horizontal `Avatar` + profile popup opening
+- ✅ Ranking helpers implemented in `avatarSearch.rank.ts`
+- ✅ Unified item type added in `avatarSearch.types.ts`
+- ✅ Remote query debounced to 100ms and gated behind minimum query length 2
+- ✅ Merged/deduplicated local + remote list rendered with `GenericList` + `createPaginatedList` (infinite scroll behavior)
 
-## Phase 3 -- Debounced remote + immediate local refresh
+## Phase 3 — Debounced remote + immediate local refresh
 
 - Introduce explicit split execution:
   - local filter synchronous per keypress,
   - remote call debounced 100ms.
 - Add cancellation/stale-result guard for race safety.
 
-## Phase 4 -- Ranking refinement
+## Phase 4 — Ranking refinement
 
 - Improve scoring (exact address, startsWith, name match tiers, trust relation hints).
 - Keep deterministic and stable sorting.
 
-## Phase 5 -- Harden + extract reusable core
+## Phase 5 — Harden + extract reusable core
 
 - Add tests for ranking/dedupe helpers.
 - Move stable generic parts into `$lib` for usage in flows currently using `SearchAvatar.svelte`.

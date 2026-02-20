@@ -72,9 +72,11 @@
     <div class="min-w-0">
       <Avatar
         address={item.address}
+        {avatarInfo}
         view="horizontal"
         bottomInfo={bottomInfo}
         showTypeInfo={true}
+        showBookmarkBadge={item.isVipBookmarked}
         clickable={true}
       />
     </div>

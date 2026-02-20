@@ -35,7 +35,10 @@ export class BatchAggregator<T, R> {
       this.queue.push({ item, resolve, reject });
 
       if (!this.batchTimeout) {
-        this.batchTimeout = setTimeout(() => this.flush(), this.options.waitTimeMs);
+        this.batchTimeout = setTimeout(
+          () => this.flush(),
+          this.options.waitTimeMs
+        );
       }
     });
   }
@@ -49,7 +52,7 @@ export class BatchAggregator<T, R> {
     const chunkSize = this.options.maxBatchSize;
     for (let i = 0; i < currentQueue.length; i += chunkSize) {
       const slice = currentQueue.slice(i, i + chunkSize);
-      const items = slice.map(q => q.item);
+      const items = slice.map((q) => q.item);
 
       let resultMap: Map<T, R>;
       try {

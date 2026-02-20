@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { SchemaOrgOfferLite, SchemaOrgProductLite } from '$lib/areas/market/model';
-  import type { Address } from '@aboutcircles/sdk-types';
+  import type { Address } from '@circles-sdk/utils';
   import ProductViewerDetail from './ProductViewerDetail.svelte';
   import ProductViewerCard from './ProductViewerCard.svelte';
 

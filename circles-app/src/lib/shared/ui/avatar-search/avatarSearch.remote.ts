@@ -1,4 +1,4 @@
-import type { Sdk } from '@aboutcircles/sdk';
+import type { Sdk } from '@circles-sdk/sdk';
 import { SEARCH_POLICY } from '$lib/shared/ui/lists/utils/searchPolicies';
 import { searchProfilesRpc } from '$lib/shared/data/circles/searchProfiles';
 import { computeTextRank } from './avatarSearch.rank';
@@ -11,7 +11,7 @@ export async function searchRemoteAvatarRows(params: {
   avatarTypes?: string[];
 }): Promise<AvatarSearchItem[]> {
   const { sdk, query, avatarTypes } = params;
-  if (!sdk?.rpc) return [];
+  if (!sdk?.circlesRpc) return [];
 
   const list = await searchProfilesRpc(sdk, {
     query,

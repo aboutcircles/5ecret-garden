@@ -35,9 +35,9 @@
     type OdooProductListItem,
     type CodeProductListItem,
   } from '$lib/areas/admin/services/gateway/adminClient';
-  import { gnosisMarketConfig } from '$lib/shared/config/market';
-  import type { Address } from '@aboutcircles/sdk-types';
-  import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
+  import { gnosisConfig } from '$lib/shared/config/circles';
+  import type { Address } from '@circles-sdk/utils';
+  import { popupControls } from '$lib/shared/state/popup';
   import AdminSectionCard from '$lib/areas/admin/components/AdminSectionCard.svelte';
   import AdminProductList from '$lib/areas/admin/components/AdminProductList.svelte';
   import AdminOdooProductEditor from '$lib/areas/admin/components/AdminOdooProductEditor.svelte';
@@ -93,16 +93,16 @@
     authError = null;
 
     try {
-      const avatar = (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.address ?? '') as Address | '';
+      const avatar = (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '') as Address | '';
       if (!avatar) {
         throw new Error('No avatar connected');
       }
 
       const verifyResult = await runTask({
-        name: 'Signing in as admin...',
+        name: 'Signing in as admin…',
         promise: signInAdminWithSafe({
           avatar: avatar.toLowerCase() as Address,
-          chainId: gnosisMarketConfig.marketChainId,
+          chainId: gnosisConfig.production.marketChainId,
         }),
       });
 
@@ -133,7 +133,7 @@
 
     try {
       routes = await runTask({
-        name: 'Loading routes...',
+        name: 'Loading routes…',
         promise: listRoutes(),
       });
     } catch (e) {
@@ -149,7 +149,7 @@
 
     try {
       odooConnections = await runTask({
-        name: 'Loading Odoo connections...',
+        name: 'Loading Odoo connections…',
         promise: listOdooConnections(),
       });
     } catch (e) {
@@ -165,7 +165,7 @@
 
     try {
       const [odoo, code] = await runTask({
-        name: 'Loading products...',
+        name: 'Loading products…',
         promise: Promise.all([
           listOdooProducts(),
           listCodeProducts(),
@@ -201,7 +201,7 @@
       ? AdminCodeProductEditor
       : AdminOdooProductEditor;
 
-    popupControls.open({
+    popupControls.open?.({
       title: product ? 'Edit product' : `New ${resolvedType === 'codedispenser' ? 'Code' : 'Odoo'} product`,
       hideTitle: true,
       component,
@@ -212,7 +212,7 @@
         mode: 'product',
         onCancel: () => popupControls.close(),
         onDisable: product ? async () => handleDisableProduct(product) : undefined,
-        onSubmit: async (payload: any) => {
+        onSubmit: async (payload) => {
           await saveProduct(payload, product ?? null);
         },
       },
@@ -221,13 +221,13 @@
   }
 
   function openNewProductWizard(): void {
-    popupControls.open({
+    popupControls.open?.({
       title: 'Product from avatar',
       component: AdminNewProductSellerStep,
       props: {
         connections: odooConnections,
         existingProducts: unifiedProducts,
-        onExecute: async (payload: any) => {
+        onExecute: async (payload) => {
           await saveProduct(payload, null);
         },
         onCreateConnection: createConnectionInFlow,
@@ -238,11 +238,11 @@
 
   function openConnectionEditor(connection?: AdminOdooConnection | null): void {
     if (!connection) {
-      popupControls.open({
+      popupControls.open?.({
         title: 'New Odoo connection',
         component: AdminNewConnectionSellerStep,
         props: {
-          onCreate: async (payload: any) => {
+          onCreate: async (payload) => {
             await saveConnection(payload);
           },
         },
@@ -251,7 +251,7 @@
       return;
     }
 
-    popupControls.open({
+    popupControls.open?.({
       title: 'Edit Odoo connection',
       hideTitle: true,
       component: AdminOdooProductEditor,
@@ -261,7 +261,7 @@
         mode: 'connection',
         onCancel: () => popupControls.close(),
         onDisable: async () => handleDisableConnection(connection),
-        onSubmit: async (payload: any) => {
+        onSubmit: async (payload) => {
           await saveConnection(payload);
         },
       },
@@ -271,7 +271,7 @@
 
   async function createConnectionInFlow(payload: { connection: OdooConnectionConfig }): Promise<AdminOdooConnection> {
     await runTask({
-      name: 'Saving Odoo connection...',
+      name: 'Saving Odoo connection…',
       promise: upsertOdooConnection(payload.connection),
     });
 
@@ -290,7 +290,7 @@
 
   async function saveConnection(payload: { connection: OdooConnectionConfig }): Promise<void> {
     await runTask({
-      name: 'Saving Odoo connection...',
+      name: 'Saving Odoo connection…',
       promise: upsertOdooConnection(payload.connection),
     });
     await loadAdminData();
@@ -319,19 +319,19 @@
 
     if (baseRoute) {
       await runTask({
-        name: product ? 'Saving route...' : 'Creating route...',
+        name: product ? 'Saving route…' : 'Creating route…',
         promise: upsertRoute(baseRoute),
       });
     }
 
     if (payload.type === 'odoo' && payload.odoo) {
       await runTask({
-        name: product ? 'Saving Odoo product...' : 'Creating Odoo product...',
+        name: product ? 'Saving Odoo product…' : 'Creating Odoo product…',
         promise: upsertOdooProduct(payload.odoo),
       });
     } else if (payload.type === 'codedispenser' && payload.code) {
       await runTask({
-        name: product ? 'Saving CodeDispenser product...' : 'Creating CodeDispenser product...',
+        name: product ? 'Saving CodeDispenser product…' : 'Creating CodeDispenser product…',
         promise: upsertCodeProduct(payload.code),
       });
     }
@@ -345,7 +345,7 @@
     if (!(await openConfirmPopup({ title: 'Disable Odoo connection', message: confirmMessage }))) return;
 
     await runTask({
-      name: 'Disabling Odoo connection...',
+      name: 'Disabling Odoo connection…',
       promise: disableOdooConnection(connection.chainId, connection.seller),
     });
     await loadAdminData();
@@ -358,17 +358,17 @@
 
     if (product.odoo) {
       await runTask({
-        name: 'Disabling Odoo product...',
+        name: 'Disabling Odoo product…',
         promise: disableOdooProduct(product.chainId, product.seller, product.sku),
       });
     } else if (product.code) {
       await runTask({
-        name: 'Disabling CodeDispenser product...',
+        name: 'Disabling CodeDispenser product…',
         promise: disableCodeProduct(product.chainId, product.seller, product.sku),
       });
     } else if (product.route) {
       await runTask({
-        name: 'Disabling route...',
+        name: 'Disabling route…',
         promise: disableRoute(product.chainId, product.seller, product.sku),
       });
     }
@@ -402,16 +402,17 @@
     <span class="text-sm opacity-70">Unified product configuration for the Market API</span>
   {/snippet}
 
-  {#snippet actions()}
+  {#snippet headerActions()}
     {#if !adminUser}
       <ActionButton
         action={connectAdminWallet}
-        disabled={authLoading}
+        loading={authLoading}
+        variant="primary"
       >
-        {authLoading ? 'Connecting...' : 'Login'}
+        {authLoading ? 'Connecting…' : 'Login'}
       </ActionButton>
     {:else}
-      <ActionButton action={() => Promise.resolve(disconnectAdmin())}>
+      <ActionButton action={disconnectAdmin} variant="ghost" size="sm">
         Disconnect
       </ActionButton>
     {/if}
@@ -438,10 +439,10 @@
             class="btn btn-outline btn-sm btn-square"
             onclick={loadAdminData}
             disabled={loadingAny}
-            aria-label={loadingAny ? 'Refreshing...' : 'Refresh'}
+            aria-label={loadingAny ? 'Refreshing…' : 'Refresh'}
           >
             <Lucide icon={LRefreshCw} size={16} class={loadingAny ? 'animate-spin' : ''} />
-            <span class="sr-only">{loadingAny ? 'Refreshing...' : 'Refresh'}</span>
+            <span class="sr-only">{loadingAny ? 'Refreshing…' : 'Refresh'}</span>
           </button>
           <button class="btn btn-primary btn-sm" onclick={openNewProductWizard}>
             Connect product
@@ -511,7 +512,7 @@
       <div class="text-xs opacity-50">
         Token expires in {adminUser?.expiresIn ?? 0}s
         {#if loadingAny}
-          <span class="ml-2">Refreshing...</span>
+          <span class="ml-2">Refreshing…</span>
         {/if}
       </div>
     {/if}

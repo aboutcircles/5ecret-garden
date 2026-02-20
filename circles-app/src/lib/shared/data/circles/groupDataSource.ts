@@ -1,30 +1,14 @@
-import type { Sdk } from '@aboutcircles/sdk';
-import type { Address, GroupMembershipRow, PagedQueryParams } from '@aboutcircles/sdk-types';
-import { PagedQuery } from '@aboutcircles/sdk-rpc';
+import type { Sdk } from '@circles-sdk/sdk';
+import type { Address } from '@circles-sdk/utils';
 
 export interface GroupDataSource {
-  getGroupMemberships(member: Address, limit: number): PagedQuery<GroupMembershipRow>;
+  getGroupMemberships(member: Address, limit: number): ReturnType<Sdk['data']['getGroupMemberships']>;
 }
 
 export function createGroupDataSource(sdk: Sdk): GroupDataSource {
   return {
-    getGroupMemberships(member: Address, limit: number): PagedQuery<GroupMembershipRow> {
-      const queryDef: PagedQueryParams = {
-        namespace: 'V_CrcV2',
-        table: 'GroupMemberships',
-        columns: ['group', 'member'],
-        filter: [
-          {
-            Type: 'FilterPredicate',
-            FilterType: 'Equals',
-            Column: 'member',
-            Value: member.toLowerCase(),
-          },
-        ],
-        sortOrder: 'DESC',
-        limit,
-      };
-      return new PagedQuery<GroupMembershipRow>(sdk.rpc.client, queryDef);
+    getGroupMemberships(member: Address, limit: number) {
+      return sdk.data.getGroupMemberships(member, limit);
     },
   };
 }

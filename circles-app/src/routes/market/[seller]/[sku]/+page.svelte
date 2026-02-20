@@ -12,7 +12,7 @@
   import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
   import { createLoadable } from '$lib/areas/market/utils/loadable';
   import { getAddToCartState } from '$lib/areas/market/cart/addToCartUi';
-  import {gnosisMarketConfig} from "$lib/shared/config/market";
+  import {gnosisConfig} from "$lib/shared/config/circles";
 
   // Derive seller and SKU from SvelteKit's $page store
     const params = $derived($page.params as { seller: string; sku: string });
@@ -29,7 +29,7 @@
       await loader.run(async () => {
         const seller = normalizeAddress(params.seller);
         const sku = params.sku;
-        const catalog = getMarketClient().catalog.forOperator(gnosisMarketConfig.marketOperator);
+        const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
         const p = await catalog.fetchProductForSellerAndSku(seller, sku);
         if (!p) {
           throw new Error('Product not found for this seller / sku.');
@@ -74,7 +74,7 @@
 >
     {#snippet title()}
         <div class="flex items-center gap-2">
-            <button
+            <button 
                 type="button"
                 onclick={goBack}
                 class="btn btn-sm btn-ghost p-0"
@@ -104,14 +104,14 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <p class="text-destructive text-center mb-4">{errorMsg}</p>
-            <button
+            <button 
                 type="button"
                 onclick={loadProduct}
                 class="btn btn-primary mr-2"
             >
                 Retry
             </button>
-            <button
+            <button 
                 type="button"
                 onclick={goBack}
                 class="btn btn-outline"
@@ -155,14 +155,14 @@
             <p class="text-base-content/70 text-center mb-4">
                 The product you're looking for might have been removed or doesn't exist.
             </p>
-            <button
+            <button 
                 type="button"
                 onclick={loadProduct}
                 class="btn btn-primary mr-2"
             >
                 Try Again
             </button>
-            <button
+            <button 
                 type="button"
                 onclick={goBack}
                 class="btn btn-outline"

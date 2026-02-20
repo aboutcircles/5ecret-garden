@@ -1,4 +1,4 @@
-import type { Address } from '@aboutcircles/sdk-types';
+import type { Address } from '@circles-sdk/utils';
 import {
   loadProfileOrInit,
   normalizeEvmAddress as normalizeAddress,

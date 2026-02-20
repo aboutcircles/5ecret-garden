@@ -1,5 +1,5 @@
 // src/lib/media/imageTools.ts
-// Shared browser-only image utilities for file -> cropped data URL, size checks, etc.
+// Shared browser-only image utilities for file → cropped data URL, size checks, etc.
 
 export const MEDIA_MAX_BYTES = 8 * 1024 * 1024; // generic 8 MiB limit
 export const AVATAR_PREFERRED_MAX_BYTES = 150 * 1024; // soft avatar budget (~150 KiB)

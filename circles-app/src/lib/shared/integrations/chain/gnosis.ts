@@ -1,5 +1,5 @@
 import type { WalletProvider } from '@circles-market/sdk';
-import {gnosisMarketConfig} from "$lib/shared/config/market";
+import {gnosisConfig} from "$lib/shared/config/circles";
 
 type AddChainParams = {
   chainId: string;
@@ -10,7 +10,7 @@ type AddChainParams = {
 };
 
 const GNOSIS_PARAMS: AddChainParams = {
-  chainId: gnosisMarketConfig.marketChainIdHex!,
+  chainId: gnosisConfig.production.marketChainIdHex!,
   chainName: 'Gnosis Chain',
   nativeCurrency: { name: 'xDAI', symbol: 'XDAI', decimals: 18 },
   rpcUrls: ['https://rpc.gnosis.gateway.fm', 'https://rpc.gnosischain.com'],
@@ -21,7 +21,7 @@ export async function ensureGnosisChain(ethereum: WalletProvider): Promise<void>
   try {
     await ethereum.request({
       method: 'wallet_switchEthereumChain',
-      params: [{ chainId: gnosisMarketConfig.marketChainIdHex }],
+      params: [{ chainId: gnosisConfig.production.marketChainIdHex }],
     });
   } catch (e: any) {
     const methodNotFound = e?.code === -32601; // local provider or unsupported

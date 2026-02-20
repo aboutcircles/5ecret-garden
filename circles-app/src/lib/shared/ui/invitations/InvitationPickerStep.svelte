@@ -1,9 +1,8 @@
 <script lang="ts">
-  import type { Snippet } from 'svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
-  import type { AvatarRow } from '@aboutcircles/sdk-types';
-  import type { Address } from '@aboutcircles/sdk-types';
+  import type { AvatarRow } from '@circles-sdk/data';
+  import type { Address } from '@circles-sdk/utils';
 
   interface Props {
     invitations?: AvatarRow[];
@@ -11,7 +10,6 @@
     selected?: Address;
     onSelect: (address: Address) => void;
     emptyText?: string;
-    empty?: Snippet;
   }
 
   let {
@@ -20,7 +18,6 @@
     selected = $bindable<Address | undefined>(),
     onSelect,
     emptyText = 'No invitations pending.',
-    empty,
   }: Props = $props();
 </script>
 
@@ -28,26 +25,26 @@
   {#if loading}
     <p class="text-base-content/70">Loading invitations...</p>
   {:else if invitations.length > 0}
-    {#each invitations as inviter (inviter.address)}
-      <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => onSelect(inviter.address)}>
+    {#each invitations as inviter (inviter.avatar)}
+      <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => onSelect(inviter.avatar)}>
         <div class="flex items-center gap-x-2 min-w-0">
           <input
             type="radio"
             name="inviter"
             class="radio radio-success radio-sm"
-            checked={selected === inviter.address}
+            checked={selected === inviter.avatar}
             onclick={(e) => {
               e.stopPropagation();
-              onSelect(inviter.address);
+              onSelect(inviter.avatar);
             }}
           />
-          <Avatar topInfo="Inviter" clickable={false} address={inviter.address} view="horizontal" />
+          <Avatar topInfo="Inviter" clickable={false} address={inviter.avatar} view="horizontal" />
         </div>
       </RowFrame>
     {/each}
   {:else}
-    {#if empty}{@render empty()}{:else}
+    <slot name="empty">
       {emptyText}
-    {/if}
+    </slot>
   {/if}
 </div>

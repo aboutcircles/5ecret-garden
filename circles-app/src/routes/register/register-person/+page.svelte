@@ -1,234 +1,133 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
-  import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
-  import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-  import { circles } from '$lib/shared/state/circles';
-  import { wallet } from '$lib/shared/state/wallet.svelte';
-  import type { Profile, Address } from '@aboutcircles/sdk-types';
-  import type { Invitation, AllInvitationsResponse } from '$lib/shared/utils/sdkHelpers';
-  import { onMount } from 'svelte';
-  import ProfileEditor from '$lib/shared/ui/profile/ProfileEditor.svelte';
-  import { settings } from '$lib/shared/state/settings.svelte';
-  import { avatarState } from '$lib/shared/state/avatar.svelte';
-  import Disclaimer from '$lib/shared/ui/primitives/Disclaimer.svelte';
-  import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
-  import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
-  import {
-    ArrowLeft as LArrowLeft,
-    ExternalLink as LExternalLink,
-    Lock as LLock,
-  } from 'lucide';
-  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
-  import { CirclesStorage } from '$lib/shared/utils/storage';
-  import { getAllInvitations } from '$lib/shared/utils/sdkHelpers';
+    import { goto } from '$app/navigation';
+    import type { Avatar as AvatarType } from '@circles-sdk/sdk';
+    import { circles } from '$lib/shared/state/circles';
+    import { wallet } from '$lib/shared/state/wallet.svelte';
+    import type { AvatarRow } from '@circles-sdk/data';
+    import type { Profile } from '@circles-sdk/profiles';
+    import { onMount } from 'svelte';
+    import type { Address } from '@circles-sdk/utils';
+    import { ProfileFormStep } from '$lib/shared/ui/profile';
+    import { settings } from '$lib/shared/state/settings.svelte';
+    import { avatarState } from '$lib/shared/state/avatar.svelte';
+    import Disclaimer from '$lib/areas/register/ui/components/RegistrationDisclaimer.svelte';
+    import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
+    import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
+    import { ArrowLeft as LArrowLeft, ExternalLink as LExternalLink, Lock as LLock } from 'lucide';
+    import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
+    import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
+    import type { Action } from '$lib/shared/ui/shell/actions';
+    import InvitationPickerStep from '$lib/shared/ui/invitations/InvitationPickerStep.svelte';
+    import { requireCircles, requireWalletAddress } from '$lib/shared/flow/guards';
+    import { get } from 'svelte/store';
 
-  // All invitations from all sources (trust, escrow, at-scale)
-  let allInvitations: AllInvitationsResponse | null = $state(null);
-  let inviterSelected: Address | undefined = $state(
-    settings.ring ? '0x0000000000000000000000000000000000000000' : undefined
-  );
-
-  let profile: Profile = $state({
-    name: '',
-    description: '',
-    previewImageUrl: '',
-    imageUrl: undefined,
-  });
-
-  // Helper to get invitation source label
-  function getSourceLabel(source: Invitation['source']): string {
-    switch (source) {
-      case 'trust': return 'Trusted you';
-      case 'escrow': return 'Escrowed CRC';
-      case 'atScale': return 'Pre-created';
-      default: return '';
-    }
-  }
-
-  onMount(async () => {
-    if (!$wallet?.address) throw new Error('Wallet not connected');
-    if (!$circles?.rpc) throw new Error('Circles SDK not initialized');
-
-    // Use getAllInvitations for unified view of all invitation sources
-    allInvitations = await getAllInvitations(
-      $circles,
-      $wallet.address.toLowerCase() as Address
+    let invitations: AvatarRow[] = $state([]);
+    let inviterSelected: Address | undefined = $state(
+        settings.ring ? '0x0000000000000000000000000000000000000000' : undefined
     );
 
-    // Add ring mode fake invitation if enabled
-    if (settings.ring && allInvitations) {
-      allInvitations.all = [
-        ...allInvitations.all,
-        {
-          address: '0x0000000000000000000000000000000000000000' as Address,
-          inviterAddress: '0x0000000000000000000000000000000000000000' as Address,
-          source: 'trust' as const,
-          balance: '0',
-        },
-      ];
-    }
-  });
+    let profile: Profile = $state({
+        name: '',
+        description: '',
+        previewImageUrl: '',
+        imageUrl: undefined,
+    });
 
-  async function registerHuman() {
-    if (!$circles)
-      throw new Error('Wallet not connected ($circles is undefined)');
-    if (!inviterSelected) throw new Error('Inviter not set');
+    onMount(async () => {
+        const walletAddress = requireWalletAddress($wallet?.address as Address | undefined, 'Wallet not connected');
+        const sdk = requireCircles(get(circles));
 
-    // Register the human
-    avatarState.avatar = (await $circles.register.asHuman(
-      inviterSelected.toLowerCase() as Address,
-      profile
-    )) as any;
+        invitations = await sdk.data.getInvitations(walletAddress.toLowerCase() as Address);
+        if (settings.ring) {
+            invitations = [
+                ...invitations,
+                {
+                    avatar: '0x0000000000000000000000000000000000000000',
+                    timestamp: 0, transactionHash: '',
+                    version: 2, type: 'CrcV2_RegisterHuman', hasV1: true, isHuman: false,
+                    blockNumber: 0, transactionIndex: 0, logIndex: 0,
+                },
+            ];
+        }
+    });
 
-    if (!avatarState.avatar) {
-      throw new Error('Failed to register human');
-    }
+    async function registerHuman() {
+        const sdk = requireCircles(get(circles));
+        const inviter = requireWalletAddress(inviterSelected, 'Inviter not set');
 
-    // Set avatar state flags for humans
-    avatarState.isGroup = false;
-    avatarState.isHuman = true;
-    avatarState.groupType = undefined;
+        avatarState.avatar = (await sdk.acceptInvitation(
+            inviter.toLowerCase() as Address,
+            profile
+        )) as AvatarType;
 
-    // Set version to 2 for SDK v2 avatars
-    if (avatarState.avatar.avatarInfo) {
-      avatarState.avatar.avatarInfo.version = 2;
+        await goto('/dashboard');
     }
 
-    // Save to storage
-    CirclesStorage.getInstance().data = {
-      avatar: avatarState.avatar.address,
-      group: undefined,
-      isGroup: false,
-      groupType: undefined,
-      rings: settings.ring,
-    };
+    function goBack() {
+        history.back();
+    }
 
-    await goto('/dashboard');
-  }
+    const actions: Action[] = [
+        { id: 'back', label: 'Back', iconNode: LArrowLeft, onClick: goBack, variant: 'ghost' }
+    ];
 </script>
 
-<PageScaffold
-  highlight="soft"
-  collapsedMode="bar"
-  collapsedHeightClass="h-12"
-  maxWidthClass="page page--lg"
-  contentWidthClass="page page--lg"
-  usePagePadding={true}
-  headerTopGapClass="mt-4 md:mt-6"
-  collapsedTopGapClass="mt-3 md:mt-4"
->
-  {#snippet title()}<h1 class="h2 m-0">Register Person</h1>{/snippet}
-  {#snippet meta()}Step 1 of 2{/snippet}
-  {#snippet actions()}
-    <button
-      type="button"
-      class="btn btn-ghost btn-sm"
-      onclick={() => history.back()}
-      aria-label="Back"
-    >
-      <Lucide icon={LArrowLeft} size={16} class="shrink-0 stroke-black" />
-      <span>Back</span>
-    </button>
-  {/snippet}
+<PageScaffold highlight="soft" collapsedMode="bar" collapsedHeightClass="h-12" maxWidthClass="page page--lg" contentWidthClass="page page--lg" usePagePadding={true} headerTopGapClass="mt-4 md:mt-6" collapsedTopGapClass="mt-3 md:mt-4">
+    {#snippet title()}<h1 class="h2 m-0">Register Person</h1>{/snippet}
+    {#snippet meta()}Step 1 of 2{/snippet}
+    {#snippet headerActions()}
+        <ActionButtonBar {actions} />
+    {/snippet}
+    {#snippet collapsedMenu()}<ActionButtonDropDown {actions} />{/snippet}
 
-  <div class="mt-3"><Disclaimer /></div>
+    <div class="mt-3"><Disclaimer /></div>
 
-  <section class="mt-4">
-    <h2
-      class="text-sm font-semibold text-base-content/70 tracking-wide uppercase"
-    >
-      Register
-    </h2>
-    <div class="mt-2 space-y-2">
-      <div
-        class="bg-base-100 border rounded-xl px-4 py-3 shadow-sm flex flex-col items-center w-full"
-      >
-        <p class="text-lg">Register person</p>
-        <div class="w-full">
-          <ul class="steps steps-vertical">
-            <li class="step step-primary">Select Inviter</li>
-          </ul>
+    <section class="mt-4">
+        <h2 class="text-sm font-semibold text-base-content/70 tracking-wide uppercase">Register</h2>
+        <div class="mt-2 space-y-2">
+            <div class="bg-base-100 border rounded-xl px-4 py-3 shadow-sm flex flex-col items-center w-full">
+                <p class="text-lg">Register person</p>
+                <div class="w-full">
+                    <ul class="steps steps-vertical">
+                        <li class="step step-primary">Select Inviter</li>
+                    </ul>
 
-          <!-- Invitations list - showing all sources (trust, escrow, at-scale) -->
-          <div class="flex flex-col gap-y-2 pl-10 text-sm">
-            {#if allInvitations && allInvitations.all.length > 0}
-              {#each allInvitations.all as invitation (invitation.address)}
-                <RowFrame
-                  clickable={true}
-                  dense={true}
-                  noLeading={true}
-                  onclick={() => (inviterSelected = invitation.address)}
-                >
-                  <div class="flex items-center gap-x-2 min-w-0">
-                    <input
-                      type="radio"
-                      name="inviter"
-                      class="radio radio-success radio-sm"
-                      checked={inviterSelected === invitation.address}
-                      onclick={(e) => {
-                        e.stopPropagation();
-                        inviterSelected = invitation.address;
-                      }}
-                    />
-                    <Avatar
-                      topInfo={getSourceLabel(invitation.source)}
-                      clickable={false}
-                      address={invitation.address}
-                      view="horizontal"
-                    />
-                  </div>
-                </RowFrame>
-              {/each}
-            {:else if allInvitations}
-              No invitations pending. <a
-                href="/link-to-telegram"
-                class="underline inline-flex items-center"
-              >
-                Get help <Lucide
-                  icon={LExternalLink}
-                  size={12}
-                  class="shrink-0 stroke-black ml-1"
-                  ariaLabel=""
-                />
-              </a>
-            {:else}
-              <span class="loading loading-spinner loading-sm"></span>
-              Loading invitations...
-            {/if}
-          </div>
+                    <!-- Invitations list -->
+                    <div class="pl-10">
+                        <InvitationPickerStep
+                            {invitations}
+                            bind:selected={inviterSelected}
+                            onSelect={(address) => (inviterSelected = address)}
+                        >
+                            <svelte:fragment slot="empty">
+                                No invitations pending. <a href="/link-to-telegram" class="underline inline-flex items-center">
+                                    Get help <Lucide icon={LExternalLink} size={12} class="shrink-0 ml-1" ariaLabel="" />
+                                </a>
+                            </svelte:fragment>
+                        </InvitationPickerStep>
+                    </div>
 
-          <ul class="steps steps-vertical mt-4">
-            <li
-              data-content="2"
-              class={`step ${inviterSelected ? 'step-primary' : ''}`}
-            >
-              Register
-            </li>
-          </ul>
+                    <ul class="steps steps-vertical mt-4">
+                        <li data-content="2" class={`step ${inviterSelected ? 'step-primary' : ''}`}>Register</li>
+                    </ul>
 
-          <div class="flex flex-col items-center gap-y-4 pl-10">
-            {#if inviterSelected}
-              <ProfileEditor bind:profile />
-              <div class="mx-auto">
-                <ActionButton
-                  action={registerHuman}
-                  disabled={profile.name.trim().length < 1}
-                >
-                  Create
-                </ActionButton>
-              </div>
-            {:else}
-              <Lucide
-                icon={LLock}
-                size={28}
-                class="shrink-0 stroke-black"
-                ariaLabel=""
-              />
-              <p>Select an inviter to continue</p>
-            {/if}
-          </div>
+                    <div class="flex flex-col items-center gap-y-4 pl-10">
+                        {#if inviterSelected}
+                            <ProfileFormStep
+                                bind:name={profile.name}
+                                bind:description={profile.description}
+                                bind:previewImageUrl={profile.previewImageUrl}
+                                bind:imageUrl={profile.imageUrl}
+                                onSubmit={registerHuman}
+                                submitLabel="Create"
+                            />
+                        {:else}
+                            <Lucide icon={LLock} size={28} class="shrink-0" ariaLabel="" />
+                            <p>Select an inviter to continue</p>
+                        {/if}
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  </section>
+    </section>
 </PageScaffold>

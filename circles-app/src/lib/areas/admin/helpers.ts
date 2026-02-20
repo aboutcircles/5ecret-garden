@@ -1,4 +1,4 @@
-import type { Address } from '@aboutcircles/sdk-types';
+import type { Address } from '@circles-sdk/utils';
 import type { CodeProductListItem, OdooProductListItem, MarketRoute } from '$lib/areas/admin/services/gateway/adminClient';
 import type { AdminUnifiedProduct } from './types';
 

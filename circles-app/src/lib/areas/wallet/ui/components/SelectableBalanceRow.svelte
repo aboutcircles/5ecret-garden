@@ -1,9 +1,9 @@
 <script lang="ts">
     import BalanceRow from '$lib/areas/wallet/ui/components/BalanceRow.svelte';
-    import type { TokenBalance } from '@aboutcircles/sdk-types';
+    import type { TokenBalanceRow } from '@circles-sdk/data';
 
     export type SelectableBalanceRowItem = {
-        balance: TokenBalance;
+        balance: TokenBalanceRow;
         onSelect: () => void;
     };
 
@@ -18,4 +18,4 @@
     }
 </script>
 
-<BalanceRow item={item.balance as any} onclick={onSelect} />
+<BalanceRow item={item.balance} on:click={onSelect} />

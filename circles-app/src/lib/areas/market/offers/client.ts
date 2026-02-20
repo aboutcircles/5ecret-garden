@@ -8,7 +8,7 @@ import {
   type MinimalOfferInput,
   type ProfilesBindings,
 } from '@circles-market/sdk';
-import type { Address } from '@aboutcircles/sdk-types';
+import type { Address } from '@circles-sdk/utils';
 import { getProfilesBindings } from '$lib/areas/market/offers';
 import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
 

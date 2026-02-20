@@ -2,7 +2,7 @@ import { browser } from '$app/environment';
 import { ensureGnosisChain } from '$lib/shared/integrations/chain/gnosis';
 import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
 import { getWalletProvider } from '$lib/shared/integrations/wallet';
-import {gnosisMarketConfig} from "$lib/shared/config/market";
+import {gnosisConfig} from "$lib/shared/config/circles";
 
 /**
  * Sign in with a Safe on the Gnosis chain.
@@ -10,15 +10,15 @@ import {gnosisMarketConfig} from "$lib/shared/config/market";
  */
 export async function signInWithSafe(
   avatar: string,
-  chainId: number = gnosisMarketConfig.marketChainId,
+  chainId: number = gnosisConfig.production.marketChainId,
 ): Promise<{ address: string; chainId: number }> {
   if (!browser) {
     throw new Error('signInWithSafe() can only be used in the browser');
   }
 
-  if (chainId !== gnosisMarketConfig.marketChainId) {
+  if (chainId !== gnosisConfig.production.marketChainId) {
     throw new Error(
-      `signInWithSafe currently supports only Gnosis chain (${gnosisMarketConfig.marketChainId}); received ${chainId}`,
+      `signInWithSafe currently supports only Gnosis chain (${gnosisConfig.production.marketChainId}); received ${chainId}`,
     );
   }
 

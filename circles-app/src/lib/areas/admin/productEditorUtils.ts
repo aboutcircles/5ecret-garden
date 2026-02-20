@@ -1,4 +1,4 @@
-import type { Address } from '@aboutcircles/sdk-types';
+import type { Address } from '@circles-sdk/utils';
 import { isAddress } from '$lib/shared/utils/tx';
 
 export function normalizeSku(value: string): string {

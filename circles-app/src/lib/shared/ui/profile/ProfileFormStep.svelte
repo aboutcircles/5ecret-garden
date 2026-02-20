@@ -16,7 +16,7 @@
     showSubmit?: boolean;
     submitLabel?: string;
     submitDisabled?: boolean;
-    onSubmit?: () => Promise<any> | void;
+    onSubmit?: () => void | Promise<void>;
     submitContainerClass?: string;
   }
 
@@ -58,7 +58,7 @@
   />
   {#if showSubmit}
     <div class={submitContainerClass}>
-      <ActionButton action={() => Promise.resolve(onSubmit?.())} disabled={isSubmitDisabled}>
+      <ActionButton action={onSubmit ?? (() => {})} disabled={isSubmitDisabled}>
         {submitLabel}
       </ActionButton>
     </div>

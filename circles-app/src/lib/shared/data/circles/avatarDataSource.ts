@@ -1,32 +1,33 @@
-import type { Sdk, Avatar } from '@aboutcircles/sdk';
-import type { Address, AvatarInfo, TokenBalanceRow } from '@aboutcircles/sdk-types';
+import type { Sdk, Avatar } from '@circles-sdk/sdk';
+import type { Address } from '@circles-sdk/utils';
+import type { AvatarRow, TokenBalanceRow } from '@circles-sdk/data';
 
 export interface AvatarDataSource {
-  getAvatarInfo(address: Address): Promise<AvatarInfo | undefined>;
-  getAvatarInfoBatch(addresses: Address[]): Promise<(AvatarInfo | undefined)[]>;
+  getAvatarInfo(address: Address): Promise<AvatarRow | undefined>;
+  getAvatarInfoBatch(addresses: Address[]): Promise<AvatarRow[]>;
   getBalances(avatar: Avatar): Promise<TokenBalanceRow[]>;
   getTransactionHistory(
     avatar: Avatar,
     pageSize: number
-  ): Promise<any>; // TODO: fix type - PagedResponse<TransactionHistoryRow>
+  ): Promise<Awaited<ReturnType<Avatar['getTransactionHistory']>>>;
 }
 
 export function createAvatarDataSource(sdk: Sdk): AvatarDataSource {
   return {
-    async getAvatarInfo(address: Address): Promise<AvatarInfo | undefined> {
-      return await sdk.data.getAvatar(address);
+    async getAvatarInfo(address: Address): Promise<AvatarRow | undefined> {
+      return await sdk.data.getAvatarInfo(address);
     },
-    async getAvatarInfoBatch(addresses: Address[]): Promise<(AvatarInfo | undefined)[]> {
-      return await Promise.all(addresses.map((a) => sdk.data.getAvatar(a)));
+    async getAvatarInfoBatch(addresses: Address[]): Promise<AvatarRow[]> {
+      return await sdk.data.getAvatarInfoBatch(addresses);
     },
     async getBalances(avatar: Avatar): Promise<TokenBalanceRow[]> {
-      return await avatar.balances.getTokenBalances();
+      return await avatar.getBalances();
     },
     async getTransactionHistory(
       avatar: Avatar,
       pageSize: number
-    ): Promise<any> {
-      return await avatar.history.getTransactions(pageSize);
+    ): Promise<Awaited<ReturnType<Avatar['getTransactionHistory']>>> {
+      return await avatar.getTransactionHistory(pageSize);
     },
   };
 }

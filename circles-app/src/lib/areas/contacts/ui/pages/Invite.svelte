@@ -1,9 +1,9 @@
 <script lang="ts">
   import { avatarState } from '$lib/shared/state/avatar.svelte';
-  import type { HumanAvatar } from '@aboutcircles/sdk';
+  import PopupActionBar from '$lib/shared/ui/shell/PopupActionBar.svelte';
   import { runTask } from '$lib/shared/utils/tasks';
   import { shortenAddress } from '$lib/shared/utils/shared';
-  import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
+  import { popupControls } from '$lib/shared/state/popup';
 
   interface Props {
     address: `0x${string}`;
@@ -15,15 +15,10 @@
     if (!avatarState.avatar) {
       throw new Error('Avatar store not available');
     }
-    if ('invite' in avatarState.avatar) {
-      const human = avatarState.avatar as HumanAvatar;
-      runTask({
-        name: `Inviting ${shortenAddress(address)} ...`,
-        promise: human.invite.send(address),
-      });
-    } else {
-      throw new Error('Invitation not supported on this avatar type');
-    }
+    runTask({
+      name: `Inviting ${shortenAddress(address)} ...`,
+      promise: avatarState.avatar!.inviteHuman(address),
+    });
     popupControls.close();
   }
 </script>
@@ -36,12 +31,12 @@
   >
     <div>
       <span>{shortenAddress(address)}</span>
-      <p class="text-xs text-gray-500">
+      <p class="text-xs text-base-content/70">
         <a
           href="https://gnosisscan.io/address/{address}"
           target="_blank"
           rel="noopener noreferrer"
-          class="text-blue-500">View on Gnosisscan</a
+          class="link link-primary">View on Gnosisscan</a
         >
       </p>
     </div>
@@ -51,11 +46,11 @@
     The person will appear in your contacts once they accept the invitation.
   </p>
 
-  <div class="modal-action">
+  <PopupActionBar>
     <button
       type="submit"
-      class="btn btn-primary"
+      class="btn btn-primary btn-sm"
       onclick={async () => await invite()}>Invite</button
     >
-  </div>
+  </PopupActionBar>
 </div>

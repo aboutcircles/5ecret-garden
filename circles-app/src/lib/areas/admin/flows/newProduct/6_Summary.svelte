@@ -1,6 +1,6 @@
 <script lang="ts">
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
-  import type { Address } from '@aboutcircles/sdk-types';
+  import type { Address } from '@circles-sdk/utils';
   import { normalizeSku } from '$lib/areas/admin/productEditorUtils';
   import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
@@ -9,7 +9,7 @@
   import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
   import StepReviewRow from '$lib/shared/ui/flow/StepReviewRow.svelte';
   import { openStep, popToOrOpen } from '$lib/shared/flow';
-  import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
+  import { popupControls } from '$lib/shared/state/popup';
   import ProductPreviewCard from '$lib/areas/market/ui/product/ProductPreviewCard.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import { getProduct, pickProductImageUrl } from '$lib/areas/market/services';

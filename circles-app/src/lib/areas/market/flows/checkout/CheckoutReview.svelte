@@ -36,7 +36,7 @@
     const contactPoint = $derived(basket?.contactPoint as any);
     const ageProof = $derived(basket?.ageProof as any);
 
-    const { findCatalogItem, imageUrlForLine } = useResolvedProducts(() => lines);
+    const { findCatalogItem, imageUrlForLine } = useResolvedProducts(lines);
 
     function getLineUnitPrice(line: any): { amount: number | null; code: string | null } {
         const snap = line?.offerSnapshot;

@@ -10,72 +10,102 @@
   import '../app.css';
 
   import { avatarState } from '$lib/shared/state/avatar.svelte';
-  import {
-    clearSession,
-    restoreSession,
-    signer,
-  } from '$lib/shared/state/wallet.svelte';
+  import { canMigrate } from '$lib/shared/guards/canMigrate';
   import { page } from '$app/stores';
-  import Send from '$lib/areas/wallet/flows/send/1_To.svelte';
   import { onDestroy, onMount } from 'svelte';
   import { tasks } from '$lib/shared/utils/tasks';
-  import { popupControls, popupState } from '$lib/shared/state/popup/popUp.svelte';
-  import PopUp from '$lib/shared/ui/flow/PopUp.svelte';
-  import ManageGroupMembers from '$lib/areas/contacts/flows/manageGroupMembers/1_manageGroupMembers.svelte';
-  import { getProfile } from '$lib/shared/data/profile/profile';
+  import {
+    initPopupHistorySync,
+    openFlowPopup,
+    popupControls,
+    popupHistoryForwardNoopTick,
+  } from '$lib/shared/state/popup';
+  import Popup from '$lib/shared/ui/shell/PopupHost.svelte';
   import { initTransactionHistoryStore } from '$lib/shared/state/transactionHistory';
-  import { initContactStore } from '$lib/shared/state/contacts/contacts';
+  import { initContactStore } from '$lib/shared/state/contacts';
   import { initBalanceStore } from '$lib/shared/state/circlesBalances';
   import { browser } from '$app/environment';
+  import { goto } from '$app/navigation';
   import { PUBLIC_PLAUSIBLE_DOMAIN } from '$env/static/public';
-  import { initGroupMetricsStore } from '$lib/areas/groups/state/groupMetrics.svelte';
+  import { initGroupMetricsStore } from '$lib/areas/groups/state';
   import { circles } from '$lib/shared/state/circles';
-
-  import { watchAccount } from '@wagmi/core';
-  import { config } from '../config';
-  import WrongNetwork from '$lib/shared/ui/feedback/WrongNetwork.svelte';
-  import BottomNav from '$lib/shared/ui/shell/BottomNav.svelte';
   import type { Address } from '@aboutcircles/sdk-types';
+  import BottomNav from '$lib/shared/ui/shell/BottomNav.svelte';
   import DefaultHeader from './DefaultHeader.svelte';
-import Toast from '$lib/shared/ui/feedback/Toast.svelte';
-import ConnectionRetryIndicator from '$lib/shared/ui/feedback/ConnectionRetryIndicator.svelte';
-import { connectionStatus } from '$lib/shared/state/connectionStatus.svelte';
+  import Banner from '$lib/shared/ui/feedback/Banner.svelte';
+  import Toast from '$lib/shared/ui/feedback/Toast.svelte';
+  import ConnectionRetryIndicator from '$lib/shared/ui/feedback/ConnectionRetryIndicator.svelte';
+  import { connectionStatus } from '$lib/shared/state/connectionStatus.svelte';
 
-  const unwatch = watchAccount(config, {
-    onChange(account) {
-      const isPrivateKeySession = signer.privateKey !== undefined;
+  let unwatch: (() => void) | null = null;
+  let disposePopupHistorySync: (() => void) | null = null;
+  let walletModule: typeof import('$lib/shared/state/wallet.svelte') | null = null;
+  let walletWatcherInitialized = false;
 
-      // Wrong network guard (only when an EOA is actually present)
-      if (account.chainId !== 100 && account.address) {
-        popupControls.open({
-          title: 'Wrong Network',
-          component: WrongNetwork,
-          props: {},
-        });
-        return;
-      }
+  function shouldBypassWalletRestore(routeId: string | null | undefined): boolean {
+    if (!routeId) return true;
+    return (
+      routeId === '/' ||
+      routeId === '/connect-wallet/connect-safe' ||
+      routeId === '/connect-wallet/import-circles-garden' ||
+      routeId === '/util' ||
+      routeId.startsWith('/kitchen-sink')
+    );
+  }
 
-      // Keep signer.address in sync with the current EOA for browser sessions
-      // (EOA != Safe; this is expected and NOT a reason to clear the session)
-      if (!isPrivateKeySession && account.address) {
-        signer.address = account.address.toLowerCase() as Address;
-        return;
-      }
+  async function getWalletModule() {
+    if (!walletModule) {
+      walletModule = await import('$lib/shared/state/wallet.svelte');
+    }
+    return walletModule;
+  }
 
-      // For private-key sessions, mismatch means "user switched account in wallet UI"
-      if (
-        isPrivateKeySession &&
-        signer.address &&
-        account.address &&
-        account.address.toLowerCase() !== signer.address.toLowerCase()
-      ) {
-        clearSession();
-      }
-    },
-  });
+  async function initWalletWatcher(): Promise<void> {
+    const { restoreSession, clearSession, signer } = await getWalletModule();
+    const { watchAccount } = await import('@wagmi/core');
+    const { config } = await import('../config');
+
+    unwatch = watchAccount(config, {
+      onChange(account) {
+        const isPrivateKeySession = signer.privateKey !== undefined;
+
+        // Wrong network guard (only when an EOA is actually present)
+        if (account.chainId !== 100 && account.address) {
+          void openWrongNetworkPopup();
+          return;
+        }
+
+        // Keep signer.address in sync with the current EOA for browser sessions
+        // (EOA != Safe; this is expected and NOT a reason to clear the session)
+        if (!isPrivateKeySession && account.address) {
+          signer.address = account.address.toLowerCase() as Address;
+          return;
+        }
+
+        // For private-key sessions, mismatch means "user switched account in wallet UI"
+        if (
+          isPrivateKeySession &&
+          signer.address &&
+          account.address &&
+          account.address.toLowerCase() !== signer.address.toLowerCase()
+        ) {
+          clearSession();
+        }
+      },
+    });
+
+    if (!shouldBypassWalletRestore($page.route.id)) {
+      await restoreSession();
+    }
+  }
 
   onDestroy(() => {
-    unwatch();
+    unwatch?.();
+    disposePopupHistorySync?.();
+    if (historyForwardNoopToastTimer) {
+      clearTimeout(historyForwardNoopToastTimer);
+      historyForwardNoopToastTimer = null;
+    }
   });
 
   interface Props {
@@ -85,33 +115,69 @@ import { connectionStatus } from '$lib/shared/state/connectionStatus.svelte';
   let { children }: Props = $props();
 
   let menuItems: { name: string; link: string }[] = $state([]);
+  let lastAvatarAddress: string | undefined = $state(undefined);
+  let hasUserInteraction = $state(false);
+  let historyForwardNoopToastVisible = $state(false);
+  let lastForwardNoopTick = 0;
+  let historyForwardNoopToastTimer: ReturnType<typeof setTimeout> | null = null;
+  const avatarInfo = $derived(avatarState.avatar?.avatarInfo ?? null);
+
+  function isTypingTarget(target: EventTarget | null): boolean {
+    if (!(target instanceof HTMLElement)) return false;
+    if (target.isContentEditable) return true;
+    const tag = target.tagName.toLowerCase();
+    return tag === 'input' || tag === 'textarea' || tag === 'select';
+  }
+
+  function handleGlobalKeydown(event: KeyboardEvent): void {
+    const hasModifier = event.ctrlKey || event.metaKey;
+    if (!hasModifier || isTypingTarget(event.target)) return;
+
+    const key = event.key;
+    if (!['1', '2', '3', '4'].includes(key)) return;
+
+    const index = Number(key) - 1;
+    const target = menuItems[index];
+    if (!target) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    void goto(target.link);
+  }
 
   onMount(() => {
+    disposePopupHistorySync = initPopupHistorySync();
+
     // Global handler for uncaught promise rejections (e.g., SDK WebSocket errors)
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       const error = event.reason;
       const message = error?.message || String(error);
 
-      // Check if it's a connection/subscription error from the SDK
       if (message.includes('Connection interrupted') ||
           message.includes('subscribe') ||
           message.includes('WebSocket') ||
           message.includes('Unauthorized')) {
         console.error('[Global] Caught unhandled SDK error:', message);
-        // Prevent default browser error logging (we're handling it)
         event.preventDefault();
-        // Could show a toast notification here if needed
       }
     };
 
     window.addEventListener('unhandledrejection', handleUnhandledRejection);
 
-    if (
-      $page.route.id !== '/' &&
-      $page.route.id !== '/connect-wallet/connect-safe' &&
-      $page.route.id !== '/connect-wallet/import-circles-garden'
-    ) {
-      void restoreSession();
+    if (browser) {
+      const markInteraction = () => {
+        hasUserInteraction = true;
+        window.removeEventListener('pointerdown', markInteraction);
+        window.removeEventListener('keydown', markInteraction);
+      };
+      window.addEventListener('pointerdown', markInteraction, { once: true });
+      window.addEventListener('keydown', markInteraction, { once: true });
+
+      window.addEventListener('keydown', handleGlobalKeydown);
+      return () => {
+        window.removeEventListener('keydown', handleGlobalKeydown);
+        window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      };
     }
 
     return () => {
@@ -119,16 +185,49 @@ import { connectionStatus } from '$lib/shared/state/connectionStatus.svelte';
     };
   });
 
+  // Defer initializing wallet/watchers until the user navigates beyond the landing/connect flows.
+  // This keeps heavy wallet dependencies out of the critical path for the first paint on `/`.
+  $effect(() => {
+    if (!browser) return;
+    if (walletWatcherInitialized || unwatch) return;
+
+    const routeId = $page.route.id;
+    if (shouldBypassWalletRestore(routeId)) {
+      return;
+    }
+
+    walletWatcherInitialized = true;
+    void initWalletWatcher();
+  });
+
+  async function openWrongNetworkPopup(): Promise<void> {
+    const { default: WrongNetwork } = await import('$lib/areas/wallet/ui/onboarding/WrongNetwork.svelte');
+    popupControls.open({
+      title: 'Wrong Network',
+      component: WrongNetwork,
+      props: {},
+    });
+  }
+
+  async function openMigratePopup(): Promise<void> {
+    const { default: MigrateToV2 } = await import('$lib/areas/wallet/flows/migrateToV2/1_GetInvited.svelte');
+    openFlowPopup({
+      title: 'Migrate to v2',
+      component: MigrateToV2,
+      props: {},
+    });
+  }
+
   $effect(() => {
     if (avatarState.avatar) {
       menuItems = [
-        { name: 'Dashboard', link: '/dashboard' },
+        { name: 'Wallet', link: '/dashboard' },
         {
           name: avatarState.isGroup ? 'Members' : 'Contacts',
           link: '/contacts',
         },
         ...(!avatarState.isGroup ? [{ name: 'Groups', link: '/groups' }] : []),
-        { name: 'Settings', link: '/settings' },
+        { name: 'Market', link: '/market' },
       ];
     }
   });
@@ -137,9 +236,11 @@ import { connectionStatus } from '$lib/shared/state/connectionStatus.svelte';
   $effect(() => {
     const address = avatarState.avatar?.address;
     if (address) {
-      getProfile(address).then((newProfile) => {
+      void (async () => {
+        const { getProfile } = await import('$lib/shared/utils/profile');
+        const newProfile = await getProfile(address);
         avatarState.profile = newProfile;
-      });
+      })();
     } else {
       avatarState.profile = undefined;
     }
@@ -164,12 +265,46 @@ import { connectionStatus } from '$lib/shared/state/connectionStatus.svelte';
     }
   });
 
+  $effect(() => {
+    const currentAddress = avatarState.avatar?.address?.toLowerCase();
+    if (lastAvatarAddress && currentAddress && lastAvatarAddress !== currentAddress) {
+      void (async () => {
+        const [{ PersistentAuthContext }, { clearCart }] = await Promise.all([
+          import('$lib/shared/integrations/market'),
+          import('$lib/areas/market/cart/store'),
+        ]);
+        new PersistentAuthContext().clear();
+        clearCart();
+      })();
+    }
+    lastAvatarAddress = currentAddress;
+  });
+
+  $effect(() => {
+    const tick = $popupHistoryForwardNoopTick;
+    if (tick <= 0 || tick === lastForwardNoopTick) {
+      return;
+    }
+
+    lastForwardNoopTick = tick;
+    historyForwardNoopToastVisible = true;
+
+    if (historyForwardNoopToastTimer) {
+      clearTimeout(historyForwardNoopToastTimer);
+    }
+
+    historyForwardNoopToastTimer = setTimeout(() => {
+      historyForwardNoopToastVisible = false;
+      historyForwardNoopToastTimer = null;
+    }, 2200);
+  });
+
   // Toasts
-  let hasToasts: boolean = $derived($tasks.length > 0);
+  let hasToasts: boolean = $derived($tasks.length > 0 || historyForwardNoopToastVisible);
 </script>
 
 <svelte:head>
-  {#if browser && PUBLIC_PLAUSIBLE_DOMAIN}
+  {#if browser && PUBLIC_PLAUSIBLE_DOMAIN && hasUserInteraction && avatarState.avatar}
     <script
       defer
       data-domain={PUBLIC_PLAUSIBLE_DOMAIN}
@@ -185,9 +320,21 @@ import { connectionStatus } from '$lib/shared/state/connectionStatus.svelte';
 {/if}
 
 <main
-  class="relative w-full min-h-screen bg-base-200 border-gray-200 overflow-hidden font-dmSans pt-4"
+  class="relative w-full min-h-screen bg-base-200 border-base-300 overflow-hidden font-dmSans pt-4"
 >
-  <div class="w-full flex flex-col items-stretch min-h-screen">
+  {#if avatarInfo && canMigrate(avatarInfo)}
+    <button class="w-full fixed top-16 z-10" onclick={() => void openMigratePopup()} onkeydown={(e) => e.key === 'Enter' && void openMigratePopup()}>
+      <Banner
+        title="Circles V2 is here!"
+        message="Migrate your avatar to Circles V2."
+        tone="info"
+        className="cursor-pointer"
+      />
+    </button>
+    <div class="h-20"></div>
+  {/if}
+
+  <div class="w-full flex flex-col items-stretch min-h-screen pb-24">
     {@render children?.()}
   </div>
 
@@ -195,40 +342,7 @@ import { connectionStatus } from '$lib/shared/state/connectionStatus.svelte';
     <BottomNav items={menuItems} />
   {/if}
 
-  <!-- Popup backdrop with pointer events -->
-  <div
-    role="button"
-    tabindex="0"
-    class={`fixed top-0 left-0 w-full h-full bg-black/50 z-[90] ${popupState.content ? 'opacity-100' : 'opacity-0 hidden'} transition duration-300 ease-in-out pointer-events-auto`}
-    style="touch-action: none;"
-    onpointerdown={(e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      popupControls.close();
-    }}
-    onmousedown={(e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      popupControls.close();
-    }}
-    ontouchstart={(e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      popupControls.close();
-    }}
-    ontouchend={(e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      popupControls.close();
-    }}
-    onclick={(e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      popupControls.close();
-    }}
-    aria-hidden={popupState.content ? 'false' : 'true'}
-  ></div>
-  <PopUp />
+  <Popup />
 </main>
 {#if hasToasts}
   <div
@@ -236,22 +350,23 @@ import { connectionStatus } from '$lib/shared/state/connectionStatus.svelte';
     class:layout-toast={!!avatarState.avatar}
   >
     {#each $tasks as task}
-      {#if task.name == 'Error'}
-        <div class="alert alert-error">
-          {#await task.promise}
-            <span class="loading loading-spinner loading-md"></span>
-          {:then error}
-            <p>{error.message}</p>
-            <pre>{error.stackTrace}</pre>
-          {/await}
-        </div>
-      {:else}
-        <div class="alert bg-primary-content opacity-85">
+      <div class="alert bg-primary-content opacity-85">
+        {#await task.promise}
           <span class="loading loading-spinner loading-md"></span>
           {task.name}
-        </div>
-      {/if}
+        {:then _}
+          <!-- task finished; toast entry will disappear when task store updates -->
+        {:catch _err}
+          <!-- errors are handled via dedicated popup flows; suppress stack traces in toast UI -->
+        {/await}
+      </div>
     {/each}
+
+    {#if historyForwardNoopToastVisible}
+      <div class="alert bg-primary-content opacity-85">
+        Forward popup history is no longer available.
+      </div>
+    {/if}
   </div>
 {/if}
 

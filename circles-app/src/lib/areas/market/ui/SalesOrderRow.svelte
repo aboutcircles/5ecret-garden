@@ -1,6 +1,6 @@
 <script lang="ts">
   import { formatTimestamp, statusLabel } from '$lib/areas/market/orders/status';
-  import { popupControls, type PopupContentDefinition } from '$lib/shared/state/popup/popUp.svelte';
+  import { popupControls, type PopupContentDefinition } from '$lib/shared/state/popup';
   import OrderDetailsPopup from '$lib/areas/market/orders/OrderDetailsPopup.svelte';
   import MarketOrderListRow from '$lib/areas/market/ui/MarketOrderListRow.svelte';
   interface Props {

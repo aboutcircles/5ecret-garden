@@ -1,125 +1,71 @@
 <script lang="ts">
-  import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
-  import { circles } from '$lib/shared/state/circles';
-  import { wallet } from '$lib/shared/state/wallet.svelte';
-  import type { Profile } from '@aboutcircles/sdk-types';
-  import { Profiles } from '@aboutcircles/sdk-profiles';
-  import { cidV0ToHex } from '@aboutcircles/sdk-utils';
-  import ProfileEditor from '$lib/shared/ui/profile/ProfileEditor.svelte';
-  import { onMount } from 'svelte';
-  import Disclaimer from '$lib/shared/ui/primitives/Disclaimer.svelte';
-  import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
-  import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
-  import { ArrowLeft as LArrowLeft } from 'lucide';
+    import { circles } from '$lib/shared/state/circles';
+    import { wallet } from '$lib/shared/state/wallet.svelte';
+    import type { Profile } from '@circles-sdk/profiles';
+    import { ProfileFormStep } from '$lib/shared/ui/profile';
+    import { onMount } from 'svelte';
+    import Disclaimer from '$lib/areas/register/ui/components/RegistrationDisclaimer.svelte';
+    import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
+    import { ArrowLeft as LArrowLeft } from 'lucide';
+    import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
+    import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
+    import type { Action } from '$lib/shared/ui/shell/actions';
+    import { requireCircles } from '$lib/shared/flow/guards';
+    import { get } from 'svelte/store';
 
-  let profile: Profile = $state({
-    name: '',
-    description: '',
-    previewImageUrl: '',
-    imageUrl: undefined,
-  });
+    let profile: Profile = $state({ name: '', description: '', previewImageUrl: '', imageUrl: undefined });
 
-  onMount(async () => {
-    if ($wallet?.address && $circles?.rpc) {
-      try {
-        // Get avatar info to see if there's an existing profile CID
-        const avatarInfo = await $circles.rpc.avatar.getAvatarInfo(
-          $wallet.address
-        );
-        if (avatarInfo?.cidV0) {
-          const profiles = new Profiles($circles.core.config.profileServiceUrl);
-          const existingProfile = await profiles.get(avatarInfo.cidV0);
-          if (existingProfile) {
-            profile = existingProfile;
-          }
+    onMount(async () => {
+        const sdk = requireCircles(get(circles));
+        if ($wallet?.address) {
+            const cid = await sdk.data?.getMetadataCidForAddress($wallet.address);
+            profile = cid ? ((await sdk.profiles?.get(cid)) ?? profile) : profile;
         }
-      } catch (error) {
-        console.warn('Could not load existing profile:', error);
-      }
-    }
-  });
+    });
 
-  async function registerProfile() {
-    if (!$circles?.core) {
-      throw new Error('Circles SDK not initialized');
-    }
-    if (!$circles.contractRunner) {
-      throw new Error('Contract runner not available');
+    async function registerProfile() {
+      const sdk = requireCircles(get(circles));
+      await sdk.createOrUpdateProfile(profile);
     }
 
-    // Step 1: Pin the profile to IPFS
-    const profiles = new Profiles($circles.core.config.profileServiceUrl);
-    const cid = await profiles.create(profile);
+    function goBack() { history.back(); }
+    const actions: Action[] = [
+      { id: 'back', label: 'Back', iconNode: LArrowLeft, onClick: goBack, variant: 'ghost' },
+    ];
+  </script>
 
-    // Step 2: Update the metadata digest in the name registry
-    const cidHex = cidV0ToHex(cid);
-    const updateTx = $circles.core.nameRegistry.updateMetadataDigest(
-      cidHex as `0x${string}`
-    );
-    await $circles.contractRunner.sendTransaction!([updateTx]);
-  }
-</script>
-
-<PageScaffold
-  highlight="soft"
-  collapsedMode="bar"
-  collapsedHeightClass="h-12"
-  maxWidthClass="page page--lg"
-  contentWidthClass="page page--lg"
-  usePagePadding={true}
-  headerTopGapClass="mt-4 md:mt-6"
-  collapsedTopGapClass="mt-3 md:mt-4"
->
+<PageScaffold highlight="soft" collapsedMode="bar" collapsedHeightClass="h-12" maxWidthClass="page page--lg" contentWidthClass="page page--lg" usePagePadding={true} headerTopGapClass="mt-4 md:mt-6" collapsedTopGapClass="mt-3 md:mt-4">
   {#snippet title()}<h1 class="h2 m-0">Register Profile</h1>{/snippet}
   {#snippet meta()}Step 1 of 1{/snippet}
-  {#snippet actions()}
-    <button
-      type="button"
-      class="btn btn-ghost btn-sm"
-      onclick={() => history.back()}
-      aria-label="Back"
-    >
-      <Lucide icon={LArrowLeft} size={16} class="shrink-0 stroke-black" />
-      <span>Back</span>
-    </button>
+  {#snippet headerActions()}
+    <ActionButtonBar {actions} />
   {/snippet}
-  {#snippet collapsed_left()}
+  {#snippet collapsedLeft()}
     <div class="truncate flex items-center gap-2">
       <span class="font-medium">Register Profile</span>
     </div>
   {/snippet}
-  {#snippet collapsed_menu()}
-    <button
-      type="button"
-      class="btn btn-ghost min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3"
-      onclick={() => history.back()}
-      aria-label="Back"
-    >
-      <Lucide icon={LArrowLeft} size={20} class="shrink-0 stroke-black" />
-      <span>Back</span>
-    </button>
-  {/snippet}
+  {#snippet collapsedMenu()}<ActionButtonDropDown {actions} />{/snippet}
 
   <div class="mt-3">
     <Disclaimer />
   </div>
 
   <section class="mt-4">
-    <h2
-      class="text-sm font-semibold text-base-content/70 tracking-wide uppercase"
-    >
-      Register
-    </h2>
+    <h2 class="text-sm font-semibold text-base-content/70 tracking-wide uppercase">Register</h2>
     <div class="mt-2 space-y-2">
       <div class="bg-base-100 border rounded-xl px-4 py-3 shadow-sm">
         <div class="flex flex-col items-center text-center gap-4">
           <img src="/person.svg" alt="person" class="w-16 h-16 rounded-xl" />
           <h3 class="text-xl font-semibold">Register profile</h3>
-          <ProfileEditor bind:profile />
-          <ActionButton
-            action={registerProfile}
-            disabled={profile.name.trim().length < 1}>Create</ActionButton
-          >
+          <ProfileFormStep
+            bind:name={profile.name}
+            bind:description={profile.description}
+            bind:previewImageUrl={profile.previewImageUrl}
+            bind:imageUrl={profile.imageUrl}
+            onSubmit={registerProfile}
+            submitLabel="Create"
+          />
         </div>
       </div>
     </div>

@@ -1,20 +1,23 @@
 <script lang="ts">
-  import FlowDecoration from '$lib/shared/ui/flow/FlowDecoration.svelte';
-  import SearchAvatar from '$lib/areas/contacts/ui/pages/SearchAvatar.svelte';
+    import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
+    import SearchAvatar from '$lib/areas/contacts/ui/pages/SearchAvatar.svelte';
+    import { ADD_CONTACT_FLOW_SCAFFOLD_BASE } from './constants';
   import Invite from '$lib/areas/contacts/ui/pages/Invite.svelte';
-  import Trust from '$lib/areas/trust/ui/Trust.svelte';
-  import { contacts } from '$lib/shared/state/contacts/contacts';
-  import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
+  import { contacts } from '$lib/shared/state/contacts';
+  import { openStep } from '$lib/shared/flow';
   import YouAlreadyTrust from './2_YouAlreadyTrust.svelte';
   import type { AddContactFlowContext } from './context';
-  import type { Address } from '@aboutcircles/sdk-types';
+  import type { Address } from '@circles-sdk/utils';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
+  import { openAddTrustFlow } from '$lib/areas/trust/flows/addTrust/openAddTrustFlow';
 
   let context: AddContactFlowContext = $state({
     selectedAddress: '0x0',
+    trustVersion: undefined,
   });
 
   function oninvite(avatar: Address) {
-    popupControls.open({
+    openStep({
       title: 'Invite someone',
       component: Invite,
       props: {
@@ -32,36 +35,44 @@
       (existingContact.row.relation === 'trusts' ||
         existingContact.row.relation === 'mutuallyTrusts')
     ) {
+      context.trustVersion = existingContact.avatarInfo?.version;
       // already trusting the account
-      popupControls.open({
-        title: 'Untrust?',
+      openStep({
+        title: 'Manage trust',
         component: YouAlreadyTrust,
         props: {
           context: context,
         },
       });
     } else {
-      popupControls.open({
-        title: 'Trust',
-        component: Trust,
-        props: {
-          address: avatar,
+      if (!avatarState.avatar) {
+        throw new Error('Avatar store not available');
+      }
+
+      openAddTrustFlow({
+        context: {
+          actorType: 'avatar',
+          actorAddress: avatarState.avatar.address,
+          selectedTrustees: [avatar],
         },
       });
     }
   }
 </script>
 
-<FlowDecoration>
-  <SearchAvatar
-    avatarTypes={[
-      'CrcV2_RegisterHuman',
-      'CrcV2_RegisterOrganization',
-      'CrcV2_RegisterGroup',
-    ]}
-    selectedAddress={context.selectedAddress}
-    {oninvite}
-    {onselect}
-    searchType="contact"
-  />
-</FlowDecoration>
+<FlowStepScaffold
+  {...ADD_CONTACT_FLOW_SCAFFOLD_BASE}
+  step={1}
+  title="Find account"
+  subtitle="Search for a person, organization, or group to add."
+>
+
+    <SearchAvatar
+      avatarTypes={["CrcV2_RegisterHuman","CrcV2_RegisterOrganization","CrcV2_RegisterGroup"]}
+      selectedAddress={context.selectedAddress}
+      {oninvite}
+      {onselect}
+      searchType="contact"
+      inputDataAttribute="data-popup-initial-input"
+    />
+  </FlowStepScaffold>

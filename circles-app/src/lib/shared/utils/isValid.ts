@@ -1,8 +1,22 @@
-//TODO: after migrate to daisyui 5, we can use directly into validators field
+ //TODO: after migrate to daisyui 5, we can use directly into validators field
+
+const utf8Len = (s: string) => new TextEncoder().encode(s).length;
 
 export function isValidName(name: string): boolean {
-  // Check length (max 32 bytes, and at least 1 character)
-  if (Buffer.byteLength(name, 'utf8') > 19) {
+  // Check length (max 19 UTF-8 bytes)
+  const maxBytes = 19;
+  if (utf8Len(name) > maxBytes) {
+    return false;
+  }
+
+  const validChars = /^[0-9A-Za-z \-\_\.\(\)\'\&\+\#]+$/;
+  return validChars.test(name);
+}
+
+export function isValidOnChainName(name: string): boolean {
+  // Check length (max 32 UTF-8 bytes)
+  const maxBytes = 32;
+  if (utf8Len(name) > maxBytes) {
     return false;
   }
 
@@ -11,20 +25,14 @@ export function isValidName(name: string): boolean {
 }
 
 export function isValidSymbol(symbol: string): boolean {
-  // Check length (max 16 bytes, and at least 1 character)
-  if (Buffer.byteLength(symbol, 'utf8') > 16) {
+  // Check length (max 16 UTF-8 bytes)
+  const maxBytes = 16;
+  if (utf8Len(symbol) > maxBytes) {
     return false;
   }
 
   const validChars = /^[0-9A-Za-z\-_]+$/;
   return validChars.test(symbol);
-}
-
-export function isValidOnChainName(name: string): boolean {
-  if (!name || name.trim().length === 0) return false;
-  if (Buffer.byteLength(name, 'utf8') > 32) return false;
-  const validChars = /^[0-9A-Za-z \-\_\.\(\)\'\&\+\#]+$/;
-  return validChars.test(name);
 }
 
 export function sanitizeText(input: string): string {
@@ -35,4 +43,17 @@ export function sanitizeText(input: string): string {
     .replace(/\\/g, '')
     .replace(/'/g, '’')
     .replace(/"/g, '”');
+}
+
+/**
+ * Normalizes user input for Markdown-capable fields (e.g. description).
+ *
+ * Important: unlike {@link sanitizeText}, this must NOT strip backslashes or
+ * rewrite quotes, because that would corrupt valid Markdown (escapes, code).
+ */
+export function normalizeMarkdownInput(input: string): string {
+  return String(input ?? '')
+    .replace(/\\n/g, '\n')
+    .replace(/\\r/g, '\r')
+    .replace(/\\t/g, '\t');
 }

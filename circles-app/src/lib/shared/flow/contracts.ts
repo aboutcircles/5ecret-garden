@@ -1,6 +1,6 @@
-import type { TokenBalanceRow } from '@aboutcircles/sdk-types';
-import type { Profile } from '@aboutcircles/sdk-types';
-import type { Address } from '@aboutcircles/sdk-types';
+import type { TokenBalanceRow } from '@circles-sdk/data';
+import type { Profile } from '@circles-sdk/profiles';
+import type { Address } from '@circles-sdk/utils';
 
 export interface SelectTargetStepProps<
   TContext extends { selectedAddress?: Address | undefined },

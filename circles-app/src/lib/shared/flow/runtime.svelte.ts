@@ -1,4 +1,4 @@
-import { popupControls, type PopupContentDefinition } from '$lib/shared/state/popup/popUp.svelte';
+import { popupControls, type PopupContentDefinition } from '$lib/shared/state/popup';
 
 export type OpenStepOptions = {
   title?: string;

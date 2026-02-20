@@ -48,24 +48,24 @@
         {/if}
       </div>
 
-      {#if shippingAddr}
+      {#if snapshot.shippingAddress}
         <div class="space-y-1">
           <div class="text-xs uppercase tracking-wide opacity-60">Shipping address</div>
           <div class="text-sm leading-snug">
-            {shippingAddr.streetAddress}
-            <br />{shippingAddr.postalCode} {shippingAddr.addressLocality}
-            <br />{shippingAddr.addressCountry}
+            {snapshot.shippingAddress.streetAddress}
+            <br />{snapshot.shippingAddress.postalCode} {snapshot.shippingAddress.addressLocality}
+            <br />{snapshot.shippingAddress.addressCountry}
           </div>
         </div>
       {/if}
 
-      {#if billingAddr}
+      {#if snapshot.billingAddress}
         <div class="space-y-1">
           <div class="text-xs uppercase tracking-wide opacity-60">Billing address</div>
           <div class="text-sm leading-snug">
-            {billingAddr.streetAddress}
-            <br />{billingAddr.postalCode} {billingAddr.addressLocality}
-            <br />{billingAddr.addressCountry}
+            {snapshot.billingAddress.streetAddress}
+            <br />{snapshot.billingAddress.postalCode} {snapshot.billingAddress.addressLocality}
+            <br />{snapshot.billingAddress.addressCountry}
           </div>
         </div>
       {/if}
@@ -136,7 +136,7 @@
           </div>
         </div>
       {/each}
-      {#if orderedItems.length === 0}
+      {#if (snapshot.orderedItem ?? []).length === 0}
         <div class="text-sm opacity-70">No items</div>
       {/if}
     </div>
@@ -197,7 +197,7 @@
   <div class="text-sm opacity-70">No order data</div>
 {/if}
 
-{#snippet OutboxPayloadView({ payload }: { payload: any })}
+{#snippet OutboxPayloadView({ payload })}
   {#if isKnownDownloadPayload(payload)}
     <div class="flex items-center gap-2">
       <JumpLink
@@ -244,16 +244,16 @@
   import { formatCurrency } from '$lib/shared/utils/money';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import JumpLink from '$lib/shared/ui/content/jump/JumpLink.svelte';
-  import type { Address as EvmAddress } from '@aboutcircles/sdk-types';
+  import type { Address as EvmAddress } from '@circles-sdk/utils';
   import type { OrderSnapshot } from '$lib/areas/market/orders/types';
   import type { OrderStatusChange } from '$lib/areas/market/orders/types';
   import { formatTimestamp, statusLabel } from '$lib/areas/market/orders/status';
   import { onMount } from 'svelte';
   import { getProduct, pickProductImageUrl } from '$lib/areas/market/services';
   import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
-  import { popupControls, type PopupContentDefinition } from '$lib/shared/state/popup/popUp.svelte';
+  import { popupControls, type PopupContentDefinition } from '$lib/shared/state/popup';
   import { ProductDetailsPopup } from '$lib/areas/market/ui';
-  import { gnosisMarketConfig } from '$lib/shared/config/market';
+  import { gnosisConfig } from '$lib/shared/config/circles';
   import { safeParse } from '$lib/shared/utils/safe';
 
   interface Props {
@@ -261,14 +261,6 @@
     statusEvents?: OrderStatusChange[] | null;
   }
   let { snapshot, statusEvents = null }: Props = $props();
-
-  // Market SDK types are incomplete — cast sub-objects to any for property access
-  type AnyAddress = { streetAddress?: string; postalCode?: string; addressLocality?: string; addressCountry?: string };
-  type AnyPaymentDue = { price?: number; priceCurrency?: string };
-  const shippingAddr = $derived((snapshot?.shippingAddress ?? null) as AnyAddress | null);
-  const billingAddr = $derived((snapshot?.billingAddress ?? null) as AnyAddress | null);
-  const paymentDue = $derived((snapshot?.totalPaymentDue ?? null) as AnyPaymentDue | null);
-  const orderedItems = $derived(((snapshot as any)?.orderedItem ?? []) as any[]);
 
 
   type TimelineEvent = { status: string; changedAt: string };
@@ -408,7 +400,7 @@
     if (headline) return headline;
     const text = (payload?.text ?? '').toString();
     if (text) {
-      const firstLine = text.split(/\n/)[0].trim();
+      const firstLine = text.split(/\r?\n/)[0].trim();
       const subj = firstLine || text.trim();
       if (subj.length > 120) return subj.slice(0, 117) + '...';
       return subj || 'Message';
@@ -468,7 +460,7 @@
   }
   
   function priceDisplay(): string | null {
-    const p = paymentDue;
+    const p = snapshot?.totalPaymentDue;
     if (!p) return null;
     return formatCurrency(p.price ?? null, p.priceCurrency ?? null);
   }
@@ -553,7 +545,7 @@
         return;
       }
 
-      const catalog = getMarketClient().catalog.forOperator(gnosisMarketConfig.marketOperator);
+      const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
       const prod = await catalog.fetchProductForSellerAndSku(String(evm), String(sku));
       if (!prod) {
         resolved[i] = { name: null, imageUrl: null };

@@ -1,6 +1,6 @@
 <script lang="ts">
   import OrderDetailsPopup from '$lib/areas/market/orders/OrderDetailsPopup.svelte';
-  import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
+  import { popupControls } from '$lib/shared/state/popup';
   import MarketOrderListRow from '$lib/areas/market/ui/MarketOrderListRow.svelte';
   import type { MarketOrderSummaryListItem } from '$lib/areas/market/orders/ordersMappers';
 
