@@ -39,6 +39,15 @@
         });
     }
 
+    function isKeyboardFocusableElement(el: HTMLElement | null): el is HTMLElement {
+        if (!el) return false;
+        if (!el.matches(FOCUSABLE_SELECTOR)) return false;
+        if (el.hasAttribute('disabled')) return false;
+        if (el.getAttribute('aria-hidden') === 'true') return false;
+        if (el.getClientRects().length === 0) return false;
+        return true;
+    }
+
     function isEditableEl(el: Element | null): boolean {
         if (!(el instanceof HTMLElement)) return false;
 
@@ -290,12 +299,15 @@
             const active = document.activeElement as HTMLElement | null;
             if (active && topPage.contains(active)) return;
 
-            const preferred = shouldAutoFocusTextInput()
-                ? (
-                    topPage.querySelector<HTMLElement>('[data-popup-initial-input], [data-send-step-initial-input]')
-                    ?? topPage.querySelector<HTMLElement>('[data-popup-initial-focus], [data-send-step-initial-focus]')
-                )
-                : topPage.querySelector<HTMLElement>('[data-popup-initial-focus], [data-send-step-initial-focus]');
+            const preferredInput = shouldAutoFocusTextInput()
+                ? topPage.querySelector<HTMLElement>('[data-popup-initial-input], [data-send-step-initial-input]')
+                : null;
+            const preferred = isKeyboardFocusableElement(preferredInput)
+                ? preferredInput
+                : Array.from(topPage.querySelectorAll<HTMLElement>('[data-popup-initial-focus], [data-send-step-initial-focus]'))
+                    .find((candidate) => isKeyboardFocusableElement(candidate))
+                    ?? getFocusableElements(topPage)[0]
+                    ?? null;
 
             if (preferred) {
                 focusElement(preferred);
