@@ -87,6 +87,8 @@
             name: address.slice(0, 6) + '...' + address.slice(-4),
             previewImageUrl: '/logo.svg',
           };
+          // Allow retry on next render (e.g., when SDK becomes available)
+          lastFetchedAddress = undefined;
         }
       });
   });

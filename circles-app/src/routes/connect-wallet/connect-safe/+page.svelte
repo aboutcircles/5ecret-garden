@@ -10,7 +10,7 @@
   import WalletLoader from '$lib/shared/ui/flow/WalletLoader.svelte';
   import { onMount } from 'svelte';
   import { Sdk } from '@aboutcircles/sdk';
-  import { gnosisConfig } from '$lib/shared/config/circles';
+  import { getActiveConfig } from '$lib/shared/state/settings.svelte';
   import { circles } from '$lib/shared/state/circles';
   import type { Address } from '@aboutcircles/sdk-types';
   import { switchChain, getChainId } from '@wagmi/core';
@@ -127,7 +127,7 @@
       // Always create runner with the Safe address
       const runner = await initNewSafeBrowserRunner(safeAddress);
       wallet.set(runner);
-      return new Sdk(gnosisConfig.production, runner);
+      return new Sdk(getActiveConfig(), runner);
     } catch (err: any) {
       console.error('Failed to connect Safe:', err);
       if (err.message?.includes('SafeProxy contract is not deployed')) {
@@ -141,13 +141,13 @@
       } else {
         chainError = err.message || 'Failed to connect Safe';
       }
-      return new Sdk(gnosisConfig.production);
+      return new Sdk(getActiveConfig());
     }
   }
 
   $effect(() => {
     if (signer.address && !$circles) {
-      circles.set(new Sdk(gnosisConfig.production));
+      circles.set(new Sdk(getActiveConfig()));
     } else if (!signer.address) {
       circles.set(undefined);
     }
