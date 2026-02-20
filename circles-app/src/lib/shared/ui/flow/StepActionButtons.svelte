@@ -52,6 +52,7 @@
     <button
       type={primaryType}
       class={primaryClass}
+      data-popup-default-action
       onclick={onPrimary}
       disabled={primaryDisabled}
     >

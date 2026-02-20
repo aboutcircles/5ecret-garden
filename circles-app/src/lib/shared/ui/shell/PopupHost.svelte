@@ -98,6 +98,28 @@
         return false;
     }
 
+    function findTopPage(): HTMLElement | null {
+        if (!popupEl) return null;
+        return popupEl.querySelector<HTMLElement>('.popup-page.is-top');
+    }
+
+    function findDefaultAction(scope: ParentNode | null): HTMLElement | null {
+        if (!scope) return null;
+        const candidates = [
+            '[data-popup-default-action]:not([disabled])',
+            'button.btn-primary:not([disabled])',
+            'button[type="submit"]:not([disabled])',
+            'input[type="submit"]:not([disabled])',
+        ];
+
+        for (const selector of candidates) {
+            const match = scope.querySelector<HTMLElement>(selector);
+            if (isKeyboardFocusableElement(match)) return match;
+        }
+
+        return null;
+    }
+
     function shouldTrackDirtyTarget(target: EventTarget | null): boolean {
         if (!(target instanceof Element)) return false;
         if (target.closest('[data-popup-dirty-ignore="true"]')) return false;
@@ -116,8 +138,11 @@
             if (editable.readOnly || editable.disabled) return false;
             return true;
         }
-        if (editable instanceof HTMLTextAreaElement || editable instanceof HTMLSelectElement) {
+        if (editable instanceof HTMLTextAreaElement) {
             return !(editable.readOnly || editable.disabled);
+        }
+        if (editable instanceof HTMLSelectElement) {
+            return !editable.disabled;
         }
         return true;
     }
@@ -199,6 +224,27 @@
 
         if (e.key === 'Escape') {
             attemptClose('escape');
+            return;
+        }
+
+        if (e.key === 'Enter') {
+            if (e.defaultPrevented || e.isComposing) return;
+            if (e.altKey || e.ctrlKey || e.metaKey) return;
+
+            // Preserve expected multiline text behavior.
+            if (isEditableTarget(e.target, e)) return;
+
+            const topPage = findTopPage();
+            if (!topPage) return;
+
+            const active = document.activeElement as HTMLElement | null;
+            if (!active || !topPage.contains(active)) return;
+
+            const defaultAction = findDefaultAction(topPage);
+            if (!defaultAction) return;
+
+            e.preventDefault();
+            defaultAction.click();
             return;
         }
 
