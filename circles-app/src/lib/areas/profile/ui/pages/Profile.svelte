@@ -92,7 +92,6 @@
 
     loadingMoreMembers = true;
     try {
-      console.log('Loading next page of members...');
       const hasResults = await memberQuery.queryNextPage();
 
       if (hasResults && memberQuery.currentPage) {
@@ -101,10 +100,6 @@
           address: row.member,
           expiryTime: row.expiryTime,
         }));
-
-        console.log(
-          `Loaded ${newMembers.length} members (hasMore: ${memberQuery.currentPage.hasMore})`
-        );
 
         members = [...(members || []), ...newMembers];
         hasMoreMembers = memberQuery.currentPage.hasMore;
@@ -132,9 +127,6 @@
     hasMoreMembers = true;
     loadingMoreMembers = false;
 
-    // Use getProfileView - single RPC call instead of multiple
-    console.log('Using optimized getProfileView() - single RPC call');
-
     const profileView = await fetchProfileView($circles!, address);
     otherAvatar = profileView.avatarInfo;
 
@@ -144,7 +136,6 @@
         const avatarInfo = await ($circles as any).rpc.avatar.getAvatarInfo(address);
         if (avatarInfo) {
           otherAvatar = avatarInfo;
-          console.log('Fetched avatar info via fallback:', avatarInfo.type);
         }
       } catch (e) {
         console.warn('Failed to fetch avatar info fallback:', e);
@@ -160,32 +151,17 @@
     const isGroup: boolean = otherAvatar?.type === 'CrcV2_RegisterGroup' || descriptionSuggestsGroup;
     const isHuman: boolean = otherAvatar?.type === 'CrcV2_RegisterHuman';
 
-    console.log('Profile initialization:', {
-      address,
-      type: otherAvatar?.type,
-      isGroup,
-      isHuman,
-      descriptionSuggestsGroup,
-    });
-
     if (isGroup) {
       // Fetch group info directly for the specific group being viewed
       const groupInfoP = (async () => {
         try {
-          console.log('Fetching group info directly for address:', address);
           // Use findGroups with groupAddressIn filter to get the specific group
           const groups = await ($circles as any).rpc.group.findGroups(1, {
             groupAddressIn: [address],
           });
-          console.log('Group data:', groups);
-
           if (groups && groups.length > 0) {
             const groupData = groups[0];
             if (groupData.memberCount !== undefined) {
-              console.log(
-                'Found group with memberCount:',
-                groupData.memberCount
-              );
               totalMemberCount = groupData.memberCount;
               return groupData;
             }
@@ -201,10 +177,6 @@
       })();
       const membersP = (async () => {
         try {
-          console.log(
-            'Using new SDK sdk.groups.getMembers() for group:',
-            otherAvatar!.avatar
-          );
           // Create a PagedQuery instance for group members
           memberQuery = ($circles as any).groups.getMembers(
             otherAvatar!.avatar,
@@ -216,12 +188,10 @@
           const hasResults = await memberQuery.queryNextPage();
           if (hasResults && memberQuery.currentPage) {
             const memberRows = memberQuery.currentPage.results;
-            console.log('Members data (first page):', memberRows);
             const mappedMembers = memberRows.map((row: any) => ({
               address: row.member,
               expiryTime: row.expiryTime,
             }));
-            console.log('Mapped members:', mappedMembers);
             hasMoreMembers = memberQuery.currentPage.hasMore;
             return mappedMembers;
           }
@@ -234,7 +204,6 @@
 
       const mintHandlerP = (async () => {
         try {
-          console.log('Using SDK rpc.group.getMintHandler()');
           // Use RPC to get mint handler for the group being viewed
           if ($circles && otherAvatar?.avatar) {
             return await ($circles as any).rpc.group.getMintHandler(otherAvatar.avatar);
@@ -248,18 +217,12 @@
 
       const collateralP = (async () => {
         try {
-          console.log(
-            'Using SDK sdk.groups.getCollateral() for group:',
-            otherAvatar!.avatar
-          );
           const collateralTokens = await ($circles as any).groups.getCollateral(
             otherAvatar!.avatar
           );
-          console.log('Collateral data:', collateralTokens);
           const filtered = collateralTokens.filter(
             (token: any) => token.isErc1155
           );
-          console.log('Filtered collateral (ERC1155 only):', filtered);
           return filtered
             .map((token: any) => ({
               avatar: token.tokenAddress,
@@ -301,15 +264,6 @@
       tokenHolders = tokenHoldersResult;
       // _groupInfoResult already set totalMemberCount in the promise
 
-      console.log('Final group data loaded:');
-      console.log('  - Total member count:', totalMemberCount);
-      console.log('  - Members loaded:', members?.length, members);
-      console.log(
-        '  - Collateral:',
-        collateralInTreasury?.length,
-        collateralInTreasury
-      );
-      console.log('  - Token holders:', tokenHolders?.length, tokenHolders);
     } else {
       members = undefined;
       // Token holders for humans are now loaded directly by the TokenHoldersList component with pagination

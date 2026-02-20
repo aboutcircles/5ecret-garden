@@ -31,10 +31,7 @@
     const sdk = $circles;
     const avatar = avatarState.avatar;
 
-    console.log('[TrustEventsPanel] Effect triggered:', { sdk: !!sdk, avatar: avatar?.address });
-
     if (!sdk || !avatar?.address) {
-      console.log('[TrustEventsPanel] Missing SDK or avatar, waiting...');
       // Keep loading state while waiting for dependencies
       // Don't set isLoading=false or trustData=null here
       return;
@@ -49,7 +46,6 @@
 
     try {
       const response = await getAggregatedTrustRelationsEnriched(sdk, address);
-      console.log('[TrustEventsPanel] Raw SDK response:', response);
 
       // SDK returns flat results[] with relationType tags — split into buckets
       const results = response.results || [];
@@ -61,10 +57,9 @@
 
       // Fallback to avatar.trust.getAll() if enriched returns empty (known backend bug)
       if (enrichedTotal === 0 && avatarState.avatar?.trust?.getAll) {
-        console.log('[TrustEventsPanel] Enriched returned 0, using avatar.trust.getAll() fallback...');
+        console.warn('[TrustEventsPanel] Enriched returned 0, using avatar.trust.getAll() fallback...');
         try {
           const allRelations = await avatarState.avatar.trust.getAll();
-          console.log('[TrustEventsPanel] Fallback returned:', allRelations?.length ?? 0);
 
           if (allRelations && allRelations.length > 0) {
             // Group relations by type
@@ -87,7 +82,6 @@
                 trustedBy.push(relation);
               }
             }
-            console.log('[TrustEventsPanel] Grouped from fallback - mutual:', mutual.length, 'trusts:', trusts.length, 'trustedBy:', trustedBy.length);
           }
         } catch (fallbackErr) {
           console.error('[TrustEventsPanel] Fallback also failed:', fallbackErr);
@@ -95,7 +89,6 @@
       }
 
       trustData = { mutual, trusts, trustedBy };
-      console.log('[TrustEventsPanel] Final trust data:', trustData);
     } catch (err) {
       console.error('[TrustEventsPanel] Failed to load trust relations:', err);
       error = 'Failed to load trust relations';

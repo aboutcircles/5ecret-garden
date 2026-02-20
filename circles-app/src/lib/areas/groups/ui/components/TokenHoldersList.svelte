@@ -46,20 +46,14 @@
   async function loadInitialData() {
     // We need the SDK for both personal and group tokens
     if (!$circles) {
-      console.log('loadInitialData skipped: no SDK');
       return;
     }
 
     // Prevent concurrent initialization
     if (isLoading) {
-      console.log('loadInitialData skipped: already loading');
       return;
     }
 
-    console.log('Loading ALL token holders data...', {
-      tokenAddress,
-      isPersonalToken,
-    });
     isLoading = true;
     error = null;
     hasError = false;
@@ -71,15 +65,9 @@
       if (isPersonalToken) {
         // Use sdk.tokens.getHolders for personal tokens
         query = ($circles as any).tokens.getHolders(tokenAddress, 1000); // Large page size
-        console.log(
-          'Created PagedQuery instance for personal token using sdk.tokens.getHolders'
-        );
       } else {
         // Use sdk.groups.getHolders for group tokens
         query = ($circles as any).groups.getHolders(tokenAddress, 1000); // Large page size
-        console.log(
-          'Created PagedQuery instance for group token using sdk.groups.getHolders'
-        );
       }
 
       const holders: HolderRow[] = [];
@@ -90,9 +78,6 @@
         pageNum++;
         if (query.currentPage) {
           holders.push(...query.currentPage.results);
-          console.log(
-            `Loaded page ${pageNum}: ${query.currentPage.results.length} holders (total: ${holders.length}, hasMore: ${query.currentPage.hasMore})`
-          );
 
           if (!query.currentPage.hasMore) {
             break;
@@ -107,12 +92,6 @@
       displayedHolders = allHolders.slice(0, pageSize);
       hasMore = allHolders.length > pageSize;
 
-      console.log('All holders loaded:', {
-        totalHolders: allHolders.length,
-        displayedHolders: displayedHolders.length,
-        hasMore,
-        pages: Math.ceil(allHolders.length / pageSize),
-      });
     } catch (err) {
       console.error('Error loading token holders:', err);
       hasError = true;
@@ -133,20 +112,12 @@
 
   function loadMore() {
     if (isLoading) {
-      console.log('loadMore already in progress');
       return;
     }
 
     if (!hasMore) {
-      console.log('loadMore skipped: no more data');
       return;
     }
-
-    console.log('Loading more holders (client-side pagination)...', {
-      currentDisplayed: displayedHolders.length,
-      total: allHolders.length,
-      currentPage,
-    });
 
     isLoading = true;
 
@@ -159,14 +130,6 @@
 
       displayedHolders = [...displayedHolders, ...newHolders];
       hasMore = endIndex < allHolders.length;
-
-      console.log('Load more complete:', {
-        newHoldersCount: newHolders.length,
-        totalDisplayed: displayedHolders.length,
-        totalAvailable: allHolders.length,
-        hasMore,
-        page: currentPage + 1,
-      });
 
       isLoading = false;
     }, 100);
@@ -187,19 +150,7 @@
     const distanceToBottom =
       target.scrollHeight - target.scrollTop - target.clientHeight;
 
-    // Only log when close to bottom to reduce noise
-    if (distanceToBottom < 300) {
-      console.log('Scroll event:', {
-        distanceToBottom: Math.round(distanceToBottom),
-        scrollThreshold,
-        isLoading,
-        hasMore,
-        shouldLoad: distanceToBottom < scrollThreshold && !isLoading && hasMore,
-      });
-    }
-
     if (distanceToBottom < scrollThreshold && !isLoading && hasMore) {
-      console.log('Triggering loadMore from scroll');
       loadMore();
     }
   }
@@ -257,7 +208,6 @@
 
     // Only initialize once when we have required dependencies
     if (hasRequiredDeps && !initialized) {
-      console.log('First initialization');
       loadInitialData();
       return;
     }
@@ -268,10 +218,6 @@
       initialized &&
       currentTokenAddress !== tokenAddress
     ) {
-      console.log('Token address changed, reloading...', {
-        old: currentTokenAddress,
-        new: tokenAddress,
-      });
       // Reset all state
       allHolders = [];
       displayedHolders = [];
@@ -299,7 +245,7 @@
       {/if}
       {#if hasMore && !isLoading}
         <button onclick={() => loadMore()} class="btn btn-sm btn-ghost">
-          Load More (Debug)
+          Load More
         </button>
       {/if}
     </div>
