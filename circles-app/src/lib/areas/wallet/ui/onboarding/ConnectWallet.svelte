@@ -1,10 +1,7 @@
 <script lang="ts">
-<<<<<<<< HEAD:circles-app/src/lib/shared/ui/flow/ConnectWallet.svelte
-========
   import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import { ChevronRight } from 'lucide';
 
->>>>>>>> 763475c10951572cae4be4f01514c892c43b7ac8:circles-app/src/lib/areas/wallet/ui/onboarding/ConnectWallet.svelte
   interface Props {
     imgUrl: string;
     header: string;
@@ -35,11 +32,7 @@
         <h2 class="font-bold md:text-lg">{header}</h2>
         {#if recommended}
           <span
-<<<<<<<< HEAD:circles-app/src/lib/shared/ui/flow/ConnectWallet.svelte
-            class={`text-white badge ${recommended === 'Connect' ? 'badge-accent' : 'badge-secondary'} badge-sm text-sm leading-none text-yellow-400`}
-========
             class={`text-white badge ${recommended === 'Connect' ? 'badge-accent' : 'badge-secondary'} badge-sm text-sm leading-none`}
->>>>>>>> 763475c10951572cae4be4f01514c892c43b7ac8:circles-app/src/lib/areas/wallet/ui/onboarding/ConnectWallet.svelte
             >★</span
           >
         {/if}
