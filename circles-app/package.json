@@ -42,6 +42,7 @@
   },
   "type": "module",
   "dependencies": {
+    "@aboutcircles/miniapp-sdk": "^0.1.0",
     "@circles-sdk/adapter": "^0.29.1",
     "@circles-sdk/adapter-ethers": "^0.29.1",
     "@circles-sdk/adapter-safe": "^0.29.1",

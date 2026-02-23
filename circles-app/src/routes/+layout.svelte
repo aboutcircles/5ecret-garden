@@ -39,9 +39,13 @@
   import BottomNav from '$lib/components/BottomNav.svelte';
   import type { Address } from '@circles-sdk/utils';
   import DefaultHeader from './DefaultHeader.svelte';
+  import { isMiniapp, initMiniapp } from '$lib/stores/miniapp.svelte';
 
   const unwatch = watchAccount(config, {
     onChange(account) {
+      // In miniapp mode the wallet comes from the parent — skip wagmi account handling
+      if (isMiniapp) return;
+
       const isPrivateKeySession = signer.privateKey !== undefined;
 
       // Wrong network guard (only when an EOA is actually present)
@@ -86,6 +90,12 @@
   let menuItems: { name: string; link: string }[] = $state([]);
 
   onMount(async () => {
+    if (isMiniapp) {
+      // Running inside an iframe — use miniapp SDK to get wallet from parent
+      initMiniapp();
+      return;
+    }
+
     if (
       $page.route.id !== '/' &&
       $page.route.id !== '/connect-wallet/connect-safe' &&
