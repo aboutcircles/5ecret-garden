@@ -80,7 +80,7 @@
       openFlowPopup({
         title: 'Create Offer',
         component: OfferStep1,
-        props: { context: { operator: gnosisConfig.production.marketOperator, pinApiBase: gnosisConfig.production.marketApiBase } },
+        props: { context: { operator: gnosisConfig.production.marketOperator, pinApiBase: gnosisConfig.production.profilePinningServiceUrl } },
         onClose: () => { void loadSellerCatalog(); }
       });
     }

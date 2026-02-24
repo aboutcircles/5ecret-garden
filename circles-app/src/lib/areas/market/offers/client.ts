@@ -127,6 +127,9 @@ export async function createOffersClientForAvatar(params: {
     gatewayUrlForCid: (cid: string) => string;
   };
 }> {
+
+  console.log("createOffersClientForAvatar", params);
+
   const { avatar, chainId, ethereum, pinApiBase, gatewayUrlForCid } = params;
   const { bindings, media } = getProfilesBindings({ pinApiBase, gatewayUrlForCid });
 
