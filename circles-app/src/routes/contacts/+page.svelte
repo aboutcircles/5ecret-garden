@@ -1,21 +1,42 @@
 <script lang="ts">
-    import {contacts} from '$lib/stores/contacts';
+    import { browser } from '$app/environment';
+    import {contacts} from '$lib/shared/state/contacts';
     import Papa from 'papaparse';
-    import GenericList from '$lib/components/GenericList.svelte';
+    import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
+    import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
     import ContactRow from './ContactRow.svelte';
+    import AvatarRowPlaceholder from '$lib/shared/ui/lists/placeholders/AvatarRowPlaceholder.svelte';
     import {derived, writable, type Writable} from 'svelte/store';
-    import Filter from '$lib/components/Filter.svelte';
-    import AddressInput from '$lib/components/AddressInput.svelte';
-    import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
-    import Lucide from '$lib/icons/Lucide.svelte';
-    import {Filter as LFilter, Download as LDownload, Plus as LPlus} from 'lucide';
-    import {popupControls} from '$lib/stores/popUp';
-    import ManageGroupMembers from '$lib/flows/manageGroupMembers/1_manageGroupMembers.svelte';
-    import {avatarState} from '$lib/stores/avatar.svelte';
+    import Filter from '$lib/shared/ui/lists/Filter.svelte';
+    import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
+    import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
+    import {Filter as LFilter, Download as LDownload, Plus as LPlus, Star} from 'lucide';
+    import { popupControls } from '$lib/shared/state/popup';
+    import {avatarState} from '$lib/shared/state/avatar.svelte';
+    import { openAddTrustFlow } from '$lib/areas/trust/flows/addTrust/openAddTrustFlow';
+    import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
+    import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
+    import type { Action } from '$lib/shared/ui/shell/actions';
+    import { goto } from '$app/navigation';
+    import { createPaginatedList } from '$lib/shared/state/paginatedList';
+    import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
+    import HelpPopover from '$lib/shared/ui/primitives/HelpPopover.svelte';
+    import { getProfilesCoreBatch } from '$lib/shared/model/profile/coreRepo';
+
+    const CONTACTS_PAGE_SIZE = 25;
+    const CONTACTS_VISIBLE_COUNT_KEY = 'contacts:list:visible-count';
+
+    function getInitialPageCount(): number {
+        if (!browser) return 1;
+        const raw = Number(window.sessionStorage.getItem(CONTACTS_VISIBLE_COUNT_KEY) ?? '0');
+        if (!Number.isFinite(raw) || raw <= 0) return 1;
+        return Math.max(1, Math.ceil(raw / CONTACTS_PAGE_SIZE));
+    }
 
     let filterVersion = writable<number | undefined>(undefined);
     let filterRelation = writable<'mutuallyTrusts' | 'trusts' | 'trustedBy' | 'variesByVersion' | undefined>(undefined);
     let searchQuery = writable<string>('');
+    let contactsListScopeEl: HTMLDivElement | null = $state(null);
 
     // Filters panel state — store to ensure reactivity in all modes
     const showFilters: Writable<boolean> = writable(false);
@@ -25,37 +46,55 @@
         showFilters.update((v) => !v);
     }
 
-    let filteredStore = derived(
-        [contacts, filterVersion, filterRelation],
-        ([$contacts, filterVersion, filterRelation]) => {
-            const filteredData = Object.entries($contacts.data)
+    const profileCoreCache = writable(new Map<string, any>());
+    const inflightProfileRequests = new Set<string>();
+
+    async function preloadProfileCores(addresses: string[]) {
+        if (addresses.length === 0) return;
+
+        const normalized = addresses.map((addr) => addr.toLowerCase());
+        const cacheSnapshot = $profileCoreCache;
+        const missing = normalized.filter((addr) => !cacheSnapshot.has(addr) && !inflightProfileRequests.has(addr));
+
+        if (missing.length === 0) return;
+
+        missing.forEach((addr) => inflightProfileRequests.add(addr));
+        try {
+            const map = await getProfilesCoreBatch(missing as any);
+            profileCoreCache.update((prev) => {
+                const next = new Map(prev);
+                for (const [addr, profile] of map.entries()) {
+                    next.set(addr.toLowerCase(), profile);
+                }
+                return next;
+            });
+        } catch (e) {
+            console.debug('[contacts] failed to preload profiles', e);
+        } finally {
+            missing.forEach((addr) => inflightProfileRequests.delete(addr));
+        }
+    }
+
+    // Build the full filtered array (not paginated)
+    const filteredAll = derived(
+        [contacts, filterVersion, filterRelation, profileCoreCache],
+        ([$contacts, $filterVersion, $filterRelation, $profileCache]) => {
+            return Object.entries($contacts.data)
                 .filter(([_, contact]) => {
                     if (avatarState.isGroup) {
-                        return contact.row.relation === "trusts";
+                        return contact.row.relation === 'trusts';
                     }
-
-                    const matchesVersion = !filterVersion || contact?.avatarInfo?.version === filterVersion;
-                    const matchesRelation = !filterRelation || contact?.row?.relation === filterRelation;
+                    const matchesVersion = !$filterVersion || contact?.avatarInfo?.version === $filterVersion;
+                    const matchesRelation = !$filterRelation || contact?.row?.relation === $filterRelation;
                     return matchesVersion && matchesRelation;
                 })
                 .sort((a, b) => {
                     const aRelation = a[1].row.relation;
                     const bRelation = b[1].row.relation;
-                    if (aRelation === 'mutuallyTrusts' && bRelation !== 'mutuallyTrusts') {
-                        return -1;
-                    }
-                    if (aRelation === 'trusts' && bRelation === 'trustedBy') {
-                        return -1;
-                    }
-                    if (aRelation === bRelation) {
-                        return 0;
-                    }
-                    if (bRelation === 'mutuallyTrusts' && aRelation !== 'mutuallyTrusts') {
-                        return 1;
-                    }
-                    if (bRelation === 'trusts' && aRelation === 'trustedBy') {
-                        return 1;
-                    }
+                    if (aRelation === 'mutuallyTrusts' && bRelation !== 'mutuallyTrusts') return -1;
+                    if (aRelation === 'trusts' && bRelation === 'trustedBy') return -1;
+                    if (bRelation === 'mutuallyTrusts' && aRelation !== 'mutuallyTrusts') return 1;
+                    if (bRelation === 'trusts' && aRelation === 'trustedBy') return 1;
                     return 0;
                 })
                 .map(([address, contact]) => ({
@@ -63,41 +102,59 @@
                     transactionIndex: 0,
                     logIndex: 0,
                     address,
-                    contact,
+                    contact: {
+                        ...contact,
+                        contactProfile: contact?.contactProfile ?? $profileCache.get(address.toLowerCase()),
+                    },
                 }));
-
-            return {
-                data: filteredData,
-                next: $contacts.next,
-                ended: $contacts.ended,
-            };
         }
     );
 
-    let searchedStore = derived(
-        [filteredStore, searchQuery],
-        ([$filteredStore, searchQuery]) => {
-            let results = $filteredStore.data.filter((item) => {
-                const name = item.contact?.contactProfile.name || '';
-                const addressMatches = item.address.toLowerCase().includes(searchQuery.toLowerCase());
-                const nameMatches = name.toLowerCase().includes(searchQuery.toLowerCase());
-                return addressMatches || nameMatches;
-            });
+    // Apply search on top of filtered
+    const searchedAll = derived([filteredAll, searchQuery], ([$filteredAll, $searchQuery]) => {
+        const q = ($searchQuery ?? '').toLowerCase();
+        if (!q) return $filteredAll;
+        return $filteredAll.filter((item) => {
+            const name = item.contact?.contactProfile?.name?.toLowerCase?.() ?? '';
+            return item.address.toLowerCase().includes(q) || name.includes(q);
+        });
+    });
 
-            if (results.length === 0) {
-                results = [];
-            }
+    // Paginate searched results for rendering
+    const contactsPaginated = createPaginatedList(searchedAll, {
+        pageSize: CONTACTS_PAGE_SIZE,
+        initialPageCount: getInitialPageCount(),
+    });
+    const contactsPaginatedWithEnd = derived([contactsPaginated, contacts], ([$paginated, $contacts]) => {
+        const hasData = ($paginated?.data ?? []).length > 0;
+        const showEnded = hasData ? $paginated.ended : ($contacts?.ended ?? $paginated.ended);
+        return {
+            ...$paginated,
+            ended: showEnded,
+        };
+    });
 
-            return {
-                data: results,
-                next: $filteredStore.next,
-                ended: $filteredStore.ended,
-            };
+    $effect(() => {
+        if (!browser) return;
+        const loadedCount = $contactsPaginatedWithEnd?.data?.length ?? 0;
+        if (loadedCount > 0) {
+            window.sessionStorage.setItem(CONTACTS_VISIBLE_COUNT_KEY, String(loadedCount));
         }
-    );
+    });
+
+    $effect(() => {
+        const addresses = $searchedAll.slice(0, 100).map((item) => item.address);
+        void preloadProfileCores(addresses);
+    });
+
+    const onSearchInputKeydown = createListInputArrowDownHandler({
+        getScope: () => contactsListScopeEl,
+        rowSelector: '[data-contact-row]'
+    });
 
     async function handleExportCSV(): Promise<void> {
-        const csvData = $filteredStore.data.map((item) => ({
+        // Export uses full filtered set (ignores pagination and current search)
+        const csvData = $filteredAll.map((item) => ({
             address: item.address,
             name: item.contact?.contactProfile.name,
         }));
@@ -113,10 +170,16 @@
     }
 
     function openAddContact() {
-        popupControls.open({
-            title: avatarState.isGroup ? 'Add Member' : 'Add Contact',
-            component: ManageGroupMembers,
-            props: {}
+        if (!avatarState.avatar) {
+            throw new Error('Avatar store not available');
+        }
+
+        openAddTrustFlow({
+            context: {
+                actorType: avatarState.isGroup ? 'group' : 'avatar',
+                actorAddress: avatarState.avatar.address,
+                selectedTrustees: [],
+            },
         });
     }
 
@@ -125,20 +188,12 @@
     let countLabel: string = $derived(avatarState.isGroup ? 'members' : 'entries');
     let addLabel: string = $derived(avatarState.isGroup ? 'Add Member' : 'Add Contact');
 
-    type Action = {
-        id: string;
-        label: string;
-        iconNode: any;
-        onClick: () => void;
-        variant: 'primary' | 'ghost';
-        disabled?: boolean
-    };
-
     // Keep actions lean: filter moved next to the title
-    const actions: Action[] = [
+    const actions: Action[] = $derived([
         {id: 'add', label: addLabel, iconNode: LPlus, onClick: openAddContact, variant: 'primary'},
+        {id: 'bookmarks-settings', label: 'Bookmarks', iconNode: Star, onClick: () => goto('/settings?tab=bookmarks'), variant: 'ghost'},
         {id: 'export', label: 'Export CSV', iconNode: LDownload, onClick: handleExportCSV, variant: 'ghost'},
-    ];
+    ]);
 </script>
 
 <PageScaffold
@@ -151,7 +206,7 @@
         headerTopGapClass="mt-4 md:mt-6"
         collapsedTopGapClass="mt-3 md:mt-4"
 >
-    <svelte:fragment slot="title">
+    {#snippet title()}
         <div class="flex items-center gap-2">
             <h1 class="h2 m-0">{titleText}</h1>
             {#if !avatarState.isGroup}
@@ -164,48 +219,30 @@
                         onclick={toggleFilters}
                         title="Filter"
                 >
-                    <Lucide icon={LFilter} size={16} class="shrink-0 stroke-black" ariaLabel=""/>
+                    <Lucide icon={LFilter} size={16} class="shrink-0" ariaLabel=""/>
                 </button>
             {/if}
         </div>
-    </svelte:fragment>
+    {/snippet}
 
-    <svelte:fragment slot="meta">
-        {$filteredStore.data.length} {countLabel}
-    </svelte:fragment>
+    {#snippet meta()}
+        {$filteredAll.length} {countLabel}
+    {/snippet}
 
-    <svelte:fragment slot="actions">
-        {#each actions as a (a.id)}
-            <button type="button" class={`btn btn-sm ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'}`}
-                    onclick={a.onClick} aria-label={a.label}>
-                <Lucide icon={a.iconNode} size={16}
-                        class={a.variant === 'primary' ? 'shrink-0 stroke-white' : 'shrink-0 stroke-black'}/>
-                <span>{a.label}</span>
-            </button>
-        {/each}
-    </svelte:fragment>
+    {#snippet headerActions()}
+        <ActionButtonBar {actions} />
+    {/snippet}
 
-    <svelte:fragment slot="collapsed-left">
+    {#snippet collapsedLeft()}
         <div class="truncate flex items-center gap-2">
             <span class="font-medium">{titleText}</span>
-            <span class="text-sm text-base-content/60">{$filteredStore.data.length} {countLabel}</span>
+            <span class="text-sm text-base-content/60">{$filteredAll.length} {countLabel}</span>
         </div>
-    </svelte:fragment>
+    {/snippet}
 
-    <svelte:fragment slot="collapsed-menu">
-        {#each actions as a (a.id)}
-            <button
-                    type="button"
-                    class={`btn ${a.variant === 'primary' ? 'btn-primary' : 'btn-ghost'} min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3`}
-                    onclick={a.onClick}
-                    aria-label={a.label}
-            >
-                <Lucide icon={a.iconNode} size={20}
-                        class={a.variant === 'primary' ? 'shrink-0 stroke-white' : 'shrink-0 stroke-black'}/>
-                <span>{a.label}</span>
-            </button>
-        {/each}
-    </svelte:fragment>
+    {#snippet collapsedMenu()}
+        <ActionButtonDropDown {actions} />
+    {/snippet}
 
     {#if $showFilters}
         <div id={FILTER_PANEL_ID} class="mt-3  mb-3 space-y-3">
@@ -218,22 +255,61 @@
                 </div>
                 <div class="flex justify-between items-center flex-wrap gap-y-4">
                     <div class="flex gap-2 items-center flex-wrap">
-                        <p class="text-sm">Relation</p>
+                        <div class="flex items-center gap-1">
+                            <p class="text-sm">Relation</p>
+                            <HelpPopover
+                                    title="Trust relations"
+                                    lines={[
+                                        'You accept = you accept their Circles.',
+                                        'Accepts you = they accept your Circles.',
+                                        'Both accept = you accept each other’s Circles.',
+                                    ]}
+                                    buttonClass="btn btn-ghost btn-xs btn-square"
+                                    widthClass="w-72"
+                            />
+                        </div>
+
                         <Filter text="All" filter={filterRelation} value={undefined}/>
-                        <Filter text="Mutual" filter={filterRelation} value={'mutuallyTrusts'}/>
-                        <Filter text="Trusted" filter={filterRelation} value={'trusts'}/>
-                        <Filter text="Trust you" filter={filterRelation} value={'trustedBy'}/>
+                        <Filter text="Both accept" filter={filterRelation} value={'mutuallyTrusts'}/>
+                        <Filter text="You accept" filter={filterRelation} value={'trusts'}/>
+                        <Filter text="Accepts you" filter={filterRelation} value={'trustedBy'}/>
                         <Filter text="Varies by version" filter={filterRelation} value={'variesByVersion'}/>
                     </div>
                     <div class="flex-grow flex justify-end">
                         <button class="mt-4 sm:mt-0" onclick={handleExportCSV}>Export CSV</button>
                     </div>
                 </div>
+
+                <p class="text-xs text-base-content/70">
+                    Trust decides which Circles you accept — and whether payments can route through your connections.
+                </p>
             {/if}
+
         </div>
     {/if}
 
-    <AddressInput bind:address={$searchQuery}/>
-
-    <GenericList store={searchedStore} row={ContactRow}/>
+    <ListShell
+        query={searchQuery}
+        searchPlaceholder="Search by address or name"
+        inputDataAttribute="data-contacts-search-input"
+        onInputKeydown={onSearchInputKeydown}
+        isEmpty={$filteredAll.length === 0}
+        ended={$contacts?.ended ?? false}
+        emptyRequiresEnd={true}
+        isNoMatches={$filteredAll.length > 0 && $searchedAll.length === 0}
+        emptyLabel={avatarState.isGroup ? 'No members' : 'No contacts'}
+        noMatchesLabel="No matches"
+        wrapInListContainer={false}
+    >
+        <div data-contacts-list-scope bind:this={contactsListScopeEl}>
+            <GenericList
+                store={contactsPaginatedWithEnd}
+                row={ContactRow}
+                rowHeight={64}
+                maxPlaceholderPages={2}
+                expectedPageSize={25}
+                placeholderRow={AvatarRowPlaceholder}
+            />
+        </div>
+    </ListShell>
 </PageScaffold>

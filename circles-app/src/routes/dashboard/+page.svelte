@@ -1,24 +1,29 @@
 <script lang="ts">
-    import { avatarState } from '$lib/stores/avatar.svelte';
-    import { roundToDecimals } from '$lib/utils/shared';
-    import { runTask } from '$lib/utils/tasks';
+    import { avatarState } from '$lib/shared/state/avatar.svelte';
+    import { roundToDecimals } from '$lib/shared/utils/shared';
+    import { runTask } from '$lib/shared/utils/tasks';
 
-    import Tabs from '$lib/components/tabs/Tabs.svelte';
-    import Tab from '$lib/components/tabs/Tab.svelte';
     import OverviewPanel from './OverviewPanel.svelte';
     import TransactionHistoryPanel from './TransactionHistoryPanel.svelte';
 
-    import { popupControls } from '$lib/stores/popUp';
-    import Balances from '$lib/pages/Balances.svelte';
-    import { circlesBalances } from '$lib/stores/circlesBalances';
-    import { totalCirclesBalance } from '$lib/stores/totalCirclesBalance';
+    import { popupControls } from '$lib/shared/state/popup';
+    import Balances from '$lib/areas/wallet/ui/pages/Balances.svelte';
+    import { circlesBalances } from '$lib/shared/state/circlesBalances';
+    import { totalCirclesBalance } from '$lib/shared/state/totalCirclesBalance';
 
-    import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
-    import Send from '$lib/flows/send/1_To.svelte';
+    import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
+    import { openSendFlowPopup } from '$lib/areas/wallet/flows/send/openSendFlowPopup';
 
     // lucide (standalone) icon nodes
     import { Send as LSend, Banknote as LBanknote, BarChart3 as LBarChart3 } from 'lucide';
-    import Lucide from '$lib/icons/Lucide.svelte';
+    import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
+    import HelpPopover from '$lib/shared/ui/primitives/HelpPopover.svelte';
+
+    const TOKEN_SOURCES_HELP = [
+        'Every person and group can issue its own Circles token.',
+        'Your balance is spread across tokens from people and groups you are connected to.',
+        'This is normal and expected in Circles.',
+    ];
 
     let mintableAmount: number = $state(0);
 
@@ -43,13 +48,15 @@
             throw new Error('Avatar store is not available');
         }
 
-        runTask({
-            name: 'Minting Circles ...',
-            promise: avatarState.avatar!.personalMint(),
-        }).finally(async () => {
+        try {
+            await runTask({
+                name: 'Collecting CRC ...',
+                promise: avatarState.avatar!.personalMint(),
+            });
+        } finally {
             const refreshed = await avatarState.avatar!.getMintableAmount();
             mintableAmount = refreshed ?? 0;
-        });
+        }
 
         mintableAmount = 0;
     }
@@ -70,16 +77,13 @@
     }
 
     function openSend() {
-        popupControls.open({
-            title: 'Send Circles',
-            component: Send,
-            props: {},
+        openSendFlowPopup({
+            selectedAddress: undefined,
+            amount: undefined,
+            transitiveOnly: true
         });
     }
 
-    // Stroke policy
-    const ghostIconStrokeClass: string = 'stroke-black';
-    const primaryIconStrokeClass: string = 'stroke-white';
 </script>
 
 <PageScaffold
@@ -93,7 +97,7 @@
         collapsedTopGapClass="mt-3 md:mt-4"
 >
     <!-- Title -->
-    <svelte:fragment slot="title">
+    {#snippet title()}
         {#if !avatarState.isGroup}
             <button class="text-left" onclick={openBalances} aria-label="Open balances breakdown">
                 <h2 class="h2 m-0">
@@ -105,40 +109,46 @@
                 Group overview
             </h2>
         {/if}
-    </svelte:fragment>
+    {/snippet}
 
     <!-- Meta -->
-    <svelte:fragment slot="meta">
+    {#snippet meta()}
         {#if !avatarState.isGroup}
-            <span class="hover:underline cursor-pointer" onclick={openBalances}>
-                {personalToken} individual tokens
-            </span>
-            <span class="mx-1.5">•</span>
-            <span class="hover:underline cursor-pointer" onclick={openBalances}>
-                {groupToken} group tokens
-            </span>
+            <button type="button" class="hover:underline cursor-pointer text-left" onclick={openBalances}>
+                From {personalToken} people
+            </button>
+            <span class="mx-1.5" aria-hidden="true">•</span>
+            <button type="button" class="hover:underline cursor-pointer text-left" onclick={openBalances}>
+                {groupToken} groups
+            </button>
+            <HelpPopover
+                title="Why so many tokens?"
+                lines={TOKEN_SOURCES_HELP}
+                buttonClass="btn btn-ghost btn-xs btn-square"
+                widthClass="w-80"
+            />
         {/if}
-    </svelte:fragment>
+    {/snippet}
 
     <!-- Full-size quick actions -->
-    <svelte:fragment slot="actions">
+    {#snippet headerActions()}
         {#if !avatarState.isGroup}
             <button type="button" class="btn btn-ghost btn-sm" onclick={openSend}>
-                <Lucide icon={LSend} size={16} class={`shrink-0 ${ghostIconStrokeClass}`} />
+                <Lucide icon={LSend} size={16} class="shrink-0" />
                 Send
             </button>
         {/if}
 
         {#if mintableAmount >= 0.01}
             <button type="button" class="btn btn-primary btn-sm" onclick={mintPersonalCircles}>
-                <Lucide icon={LBanknote} size={16} class={`shrink-0 ${primaryIconStrokeClass}`} />
+                <Lucide icon={LBanknote} size={16} class="shrink-0" />
                 Mint {roundToDecimals(mintableAmount)} Circles
             </button>
         {/if}
-    </svelte:fragment>
+    {/snippet}
 
     <!-- Collapsed summary (balance only) -->
-    <svelte:fragment slot="collapsed-left">
+    {#snippet collapsedLeft()}
         {#if !avatarState.isGroup}
         <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">
             {roundToDecimals($totalCirclesBalance)} Circles
@@ -148,10 +158,10 @@
                 Group overview
             </span>
         {/if}
-    </svelte:fragment>
+    {/snippet}
 
     <!-- Collapsed dropdown content -->
-    <svelte:fragment slot="collapsed-menu">
+    {#snippet collapsedMenu()}
         <div class="grid grid-cols-1 gap-2">
 
             {#if mintableAmount >= 0.01}
@@ -160,7 +170,7 @@
                         class="btn btn-primary min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] justify-start px-3"
                         onclick={mintPersonalCircles}
                 >
-                    <Lucide icon={LBanknote} size={20} class={`shrink-0 ${primaryIconStrokeClass}`} />
+                    <Lucide icon={LBanknote} size={20} class="shrink-0" />
                     Mint {roundToDecimals(mintableAmount)} Circles
                 </button>
             {/if}
@@ -171,7 +181,7 @@
                         class="btn btn-ghost min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] justify-start px-3"
                         onclick={openSend}
                 >
-                    <Lucide icon={LSend} size={20} class={`shrink-0 ${ghostIconStrokeClass}`} />
+                    <Lucide icon={LSend} size={20} class="shrink-0" />
                     Send
                 </button>
             {/if}
@@ -181,11 +191,11 @@
                     class="btn btn-ghost min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] justify-start px-3"
                     onclick={openBalances}
             >
-                <Lucide icon={LBarChart3} size={20} class={`shrink-0 ${ghostIconStrokeClass}`} />
+                <Lucide icon={LBarChart3} size={20} class="shrink-0" />
                 See breakdown
             </button>
         </div>
-    </svelte:fragment>
+    {/snippet}
 
     <!-- Content -->
     {#if avatarState.isGroup}
