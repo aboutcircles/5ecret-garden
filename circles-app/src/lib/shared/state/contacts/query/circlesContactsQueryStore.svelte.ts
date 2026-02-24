@@ -91,10 +91,13 @@ export async function createContactsQueryStore(
       }) => void
     ) => {
       return store.subscribe((value) => {
+        const hasLoadedSnapshot = (value.data?.length ?? 0) > 0;
         callback({
           data: value.data[0]?.data ?? {},
           next: value.next,
-          ended: value.ended,
+          // Contacts are delivered as a single aggregated snapshot row.
+          // Once that row is present, the list is effectively loaded/ended.
+          ended: value.ended || hasLoadedSnapshot,
         });
       });
     },

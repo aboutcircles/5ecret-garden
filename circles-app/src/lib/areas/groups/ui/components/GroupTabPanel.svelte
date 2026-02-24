@@ -36,7 +36,7 @@
     <div class="text-sm text-error">{error}</div>
 {:else if items.length === 0}
     <slot name="empty">
-        <div class="text-sm opacity-70">{emptyText}</div>
+        <div class="w-full py-6 text-center text-base-content/60">{emptyText}</div>
     </slot>
 {:else}
     <div class="flex flex-col">

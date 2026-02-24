@@ -294,7 +294,7 @@
                     error={membershipsError}
                     items={memberships}
                     connectText="Connect an avatar to see the groups you are a member in."
-                    emptyText="No groups found."
+                    emptyText="No group memberships"
                 >
                     {#each memberships as item (item.group)}
                         <GroupRowView item={item} />

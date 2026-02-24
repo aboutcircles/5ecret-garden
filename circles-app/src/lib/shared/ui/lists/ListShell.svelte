@@ -49,7 +49,7 @@
     ended = false,
     emptyRequiresEnd = false,
     loadingLabel = 'Loading…',
-    emptyLabel = 'No items',
+    emptyLabel = 'No entries',
     noMatchesLabel = 'No matches',
     wrapInListContainer = true,
     listRole = 'list',

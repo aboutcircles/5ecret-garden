@@ -130,6 +130,21 @@ export async function createOffersClientForAvatar(params: {
   const { avatar, chainId, ethereum, pinApiBase, gatewayUrlForCid } = params;
   const { bindings, media } = getProfilesBindings({ pinApiBase, gatewayUrlForCid });
 
+  // Keep the injected provider in sync for SDK internals that may still
+  // read window.ethereum while we explicitly pass `ethereum`.
+  if (typeof window !== 'undefined') {
+    try {
+      const descriptor = Object.getOwnPropertyDescriptor(window, 'ethereum');
+      const canAssignEthereum = !descriptor || Boolean(descriptor.writable || descriptor.set);
+      if (canAssignEthereum) {
+        (window as any).ethereum = ethereum;
+      }
+    } catch {
+      // Some wallets expose getter-only window.ethereum; ignore and continue
+      // with the explicit provider argument.
+    }
+  }
+
   const signer = await getMarketClient().signers.createSafeSignerForAvatar({
     avatar,
     ethereum,
