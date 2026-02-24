@@ -127,7 +127,9 @@
     });
     const contactsPaginatedWithEnd = derived([contactsPaginated, contacts], ([$paginated, $contacts]) => {
         const hasData = ($paginated?.data ?? []).length > 0;
-        const showEnded = hasData ? $paginated.ended : ($contacts?.ended ?? $paginated.ended);
+        const showEnded = hasData
+            ? $paginated.ended
+            : ($contacts?.ended ?? false);
         return {
             ...$paginated,
             ended: showEnded,

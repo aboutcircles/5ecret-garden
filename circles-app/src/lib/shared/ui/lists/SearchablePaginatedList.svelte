@@ -41,7 +41,7 @@
     emptyRequiresEnd = false,
     rowHeight = 64,
     pageSize = 25,
-    emptyLabel = 'No items',
+    emptyLabel = 'No entries',
     noMatchesLabel = 'No matches',
     searchPlaceholder = 'Search by address or name',
     placeholderRow

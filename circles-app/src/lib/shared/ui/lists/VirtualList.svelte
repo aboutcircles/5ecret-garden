@@ -426,6 +426,8 @@
         {#if $store?.ended}
             {#if ($store?.data ?? []).length > 0}
                 <span class="text-base-content/70">No more items</span>
+            {:else}
+                <span class="text-base-content/70">No entries</span>
             {/if}
         {:else if hasError}
             <span class="text-error">{String(displayError ?? 'Error loading items')}</span>

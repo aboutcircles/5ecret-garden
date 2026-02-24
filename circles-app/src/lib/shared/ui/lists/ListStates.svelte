@@ -20,7 +20,7 @@
     isEmpty = false,
     isNoMatches = false,
     loadingLabel = 'Loading…',
-    emptyLabel = 'No items',
+    emptyLabel = 'No entries',
     noMatchesLabel = 'No matches',
     children
   }: Props = $props();
