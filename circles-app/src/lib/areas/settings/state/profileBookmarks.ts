@@ -429,7 +429,7 @@ function createProfileBookmarksService(repository: BookmarksRepository): Profile
     const owner = normalizeProfileAddress(ownerKey) as Address | null;
     if (!owner) return EMPTY_OWNER_STATE;
 
-    const { bindings } = getProfilesBindings({ pinApiBase: gnosisConfig.production.marketApiBase });
+    const { bindings } = getProfilesBindings({ pinApiBase: gnosisConfig.production.profilePinningServiceUrl });
     const { profile } = await loadProfileOrInit(bindings, owner);
     const namespaces =
       profile?.namespaces && typeof profile.namespaces === 'object'
@@ -688,7 +688,7 @@ function createProfileBookmarksService(repository: BookmarksRepository): Profile
         throw new Error('No valid avatar address available.');
       }
 
-      const { bindings } = getProfilesBindings({ pinApiBase: gnosisConfig.production.marketApiBase });
+      const { bindings } = getProfilesBindings({ pinApiBase: gnosisConfig.production.profilePinningServiceUrl });
       const { profile } = await loadProfileOrInit(bindings, avatar);
 
       const namespaces =

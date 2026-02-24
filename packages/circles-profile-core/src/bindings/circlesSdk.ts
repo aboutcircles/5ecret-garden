@@ -33,36 +33,55 @@ export function createCirclesSdkProfilesBindings(opts: {
   }
 
   const base = (opts.pinApiBase ?? '').replace(/\/$/, '');
-  const pinUrl = base ? `${base}/api/pin` : '';
-  const pinMediaUrl = base ? `${base}/api/pin-media` : '';
+  function endpointCandidates(path: 'pin' | 'pin-media'): string[] {
+    if (!base) return [];
+    // Legacy services expose /api/* while the dedicated profile pinning service
+    // exposes routes at root (behind /profiles reverse-proxy prefix).
+    if (/\/api$/i.test(base)) {
+      return [`${base}/${path}`];
+    }
+    return [`${base}/api/${path}`, `${base}/${path}`];
+  }
+
+  const pinUrls = endpointCandidates('pin');
+  const pinMediaUrls = endpointCandidates('pin-media');
   const gateway = opts.gatewayUrlForCid ?? defaultGatewayUrlForCid;
   const MAX_JSON = opts.maxJsonBytes ?? 8 * 1024 * 1024;
   const MAX_MEDIA = opts.maxMediaBytes ?? 8 * 1024 * 1024;
 
   async function putJsonLd(obj: unknown): Promise<Cid> {
-    if (!pinUrl) throw new Error('pinApiBase not provided; cannot call /api/pin');
+    if (pinUrls.length === 0) throw new Error('pinApiBase not provided; cannot call pin endpoint');
     const enc = new TextEncoder();
     const bytes = enc.encode(JSON.stringify(obj));
     if (bytes.length > MAX_JSON) {
       throw new Error('JSON-LD too large: exceeds upload limit');
     }
-    const res = await fetch(pinUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/ld+json; charset=utf-8',
-        Accept: 'application/ld+json'
-      },
-      body: bytes
-    });
+    let lastErr = '';
+    for (const pinUrl of pinUrls) {
+      const res = await fetch(pinUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/ld+json; charset=utf-8',
+          Accept: 'application/ld+json'
+        },
+        body: bytes
+      });
 
-    if (!res.ok) {
+      if (res.ok) {
+        const body = (await res.json().catch(() => ({} as any))) as any;
+        return assertCidV0(body?.cid);
+      }
+
       let detail = '';
       try { detail = await res.text(); } catch {}
-      throw new Error(`Pin API error ${res.status}: ${detail || res.statusText}`);
-    }
+      lastErr = `Pin API error ${res.status}: ${detail || res.statusText}`;
 
-    const body = (await res.json().catch(() => ({} as any))) as any;
-    return assertCidV0(body?.cid);
+      // fallback to next candidate only when route likely mismatches
+      if (res.status !== 404 && res.status !== 405) {
+        break;
+      }
+    }
+    throw new Error(lastErr || 'Pin API request failed');
   }
 
   async function getJsonLd(cid: Cid): Promise<unknown> {
@@ -78,22 +97,29 @@ export function createCirclesSdkProfilesBindings(opts: {
   }
 
   async function pinMediaBytes(bytes: Uint8Array, mime?: string | null): Promise<Cid> {
-    if (!pinMediaUrl) throw new Error('pinApiBase not provided; cannot call /api/pin-media');
+    if (pinMediaUrls.length === 0) throw new Error('pinApiBase not provided; cannot call pin-media endpoint');
     if (bytes.length > MAX_MEDIA) {
       throw new Error('Image too large: exceeds 8 MiB upload limit. Please upload a smaller image.');
     }
-    const res = await fetch(pinMediaUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': (mime || 'application/octet-stream'), 'Accept': 'application/json' },
-      body: bytes as Uint8Array<ArrayBuffer>
-    });
-    if (!res.ok) {
+    let lastErr = '';
+    for (const pinMediaUrl of pinMediaUrls) {
+      const res = await fetch(pinMediaUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': (mime || 'application/octet-stream'), 'Accept': 'application/json' },
+        body: bytes as Uint8Array<ArrayBuffer>
+      });
+      if (res.ok) {
+        const body = await res.json().catch(() => ({} as any));
+        return assertCidV0(body?.cid);
+      }
       let detail = '';
       try { detail = await res.text(); } catch {}
-      throw new Error(`Pin API error ${res.status}: ${detail || res.statusText}`);
+      lastErr = `Pin API error ${res.status}: ${detail || res.statusText}`;
+      if (res.status !== 404 && res.status !== 405) {
+        break;
+      }
     }
-    const body = await res.json().catch(() => ({} as any));
-    return assertCidV0(body?.cid);
+    throw new Error(lastErr || 'Pin media API request failed');
   }
 
   function gatewayUrlForCid(cid: string): string {
@@ -108,7 +134,9 @@ export function createCirclesSdkProfilesBindings(opts: {
     putJsonLd,
     getJsonLd,
     async updateAvatarProfileDigest(avatar: string, profileCid: Cid): Promise<string> {
-      const avatarObj = await circlesSdk.getAvatar(avatar as any);
+      // Write-only metadata update path: avoid event subscription setup
+      // to reduce websocket subscribe timeout risk.
+      const avatarObj = await circlesSdk.getAvatar(avatar as any, false);
       const tx = await avatarObj.updateMetadata(profileCid);
       return ((tx as any)?.hash ?? '') as string;
     },

@@ -174,7 +174,7 @@
   const headerTitle = $derived(avatarState.profile?.name?.trim() || 'Settings');
 
   // Profile editing is delegated to ProfileExplorer to keep a single flow.
-  const pinApiBase = gnosisConfig.production.marketApiBase;
+  const pinApiBase = gnosisConfig.production.profilePinningServiceUrl;
 
   // Latest profile CID for the connected avatar (if any)
   let profileCid: string | null = $state(null);
@@ -369,7 +369,7 @@
       props: {
         context: {
           operator: gnosisConfig.production.marketOperator,
-          pinApiBase: gnosisConfig.production.marketApiBase,
+          pinApiBase: gnosisConfig.production.profilePinningServiceUrl,
         },
       },
       onClose: () => {

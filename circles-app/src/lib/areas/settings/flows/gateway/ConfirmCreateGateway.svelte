@@ -42,7 +42,7 @@
   const canSubmit = $derived(factoryValid && nameValid && profileNameValid);
 
   function getBindings() {
-    return getProfilesBindings({ pinApiBase: gnosisConfig.production.marketApiBase }).bindings;
+    return getProfilesBindings({ pinApiBase: gnosisConfig.production.profilePinningServiceUrl }).bindings;
   }
 
   async function createGateway() {

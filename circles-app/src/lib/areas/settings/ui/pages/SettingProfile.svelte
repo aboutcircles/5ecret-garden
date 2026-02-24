@@ -33,7 +33,7 @@ import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
             component: ProfileExplorer,
             props: {
                 avatar: address,
-                pinApiBase: gnosisConfig.production.marketApiBase,
+                pinApiBase: gnosisConfig.production.profilePinningServiceUrl,
             },
         });
     }
