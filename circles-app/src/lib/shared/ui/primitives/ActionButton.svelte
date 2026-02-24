@@ -62,7 +62,7 @@
                 }, doneStateDuration);
             })
             .catch((err) => {
-                errorMessage = err.message;
+                errorMessage = err instanceof Error ? err.message : String(err);
                 buttonState = errorTransitory ? 'Error' : 'Retry';
                 if (errorTransitory) {
                     setTimeout(() => {
