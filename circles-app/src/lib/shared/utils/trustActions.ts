@@ -35,7 +35,8 @@ export async function addTrustRelations(params: {
       throw new Error('Circles SDK not available');
     }
 
-    const groupAvatar = await sdk.getAvatar(params.actorAddress);
+    // Group trust tx does not require event subscription; avoid websocket subscribe timeout path.
+    const groupAvatar = await sdk.getAvatar(params.actorAddress, false);
     await runTask({
       name: `${shortenAddress(params.actorAddress)} trusts ${trustTargets.length} avatar${trustTargets.length === 1 ? '' : 's'} ...`,
       promise: groupAvatar.trust(trustTargets),

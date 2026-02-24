@@ -26,6 +26,7 @@
     import JumpLink from '$lib/shared/ui/content/jump/JumpLink.svelte';
     import { getProfilesBindings } from '$lib/areas/market/offers';
     import { getWalletProvider } from '$lib/shared/integrations/wallet';
+    import { ensureGnosisChain } from '$lib/shared/integrations/chain/gnosis';
     import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
     import { gnosisConfig } from '$lib/shared/config/circles';
 
@@ -341,6 +342,7 @@
 
             const avatarLower = String(avatar).toLowerCase() as Address;
             const ethereum = getWalletProvider();
+            await ensureGnosisChain(ethereum);
             const safeSigner = await getMarketClient().signers.createSafeSignerForAvatar({
                 avatar: avatarLower,
                 ethereum,

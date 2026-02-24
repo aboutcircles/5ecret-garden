@@ -19,10 +19,11 @@
     const sdk = get(circles);
     if (!sdk) throw new Error('Circles SDK not available');
 
-    const groupAvatar = await sdk.getAvatar(group);
+    // Avoid websocket subscription setup here; trust action only needs tx capabilities.
+    const groupAvatar = await sdk.getAvatar(group, false);
     await runTask({
       name: `${shortenAddress(group)} trusts ${shortenAddress(address)} ...`,
-      promise: groupAvatar.trust(address),
+      promise: groupAvatar.trust([address]),
     });
 
     await onTrusted?.();
