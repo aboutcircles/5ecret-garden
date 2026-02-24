@@ -75,7 +75,7 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
         avatar: seller as any,
         chainId: gnosisConfig.production.marketChainId,
         ethereum: eth,
-        pinApiBase: gnosisConfig.production.marketApiBase,
+        pinApiBase: gnosisConfig.production.profilePinningServiceUrl,
       });
 
       await offers.tombstone({
@@ -148,7 +148,7 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
       props: {
         context: {
           operator: OPERATOR,
-          pinApiBase: gnosisConfig.production.marketApiBase,
+          pinApiBase: gnosisConfig.production.profilePinningServiceUrl,
           draft,
           editMode: true,
         }
