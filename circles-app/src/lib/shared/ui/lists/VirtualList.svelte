@@ -387,7 +387,7 @@
 
 <div class="generic-list virtual-list w-full py-2" role="list" bind:this={listEl}>
     <div class="virtual-space" style={`height: ${totalHeight}px`}>
-        {#each virtualRows as vr (vr.kind === 'item' ? getKey(vr.item) : `placeholder-${vr.placeholderIndex}`)}
+        {#each virtualRows as vr (vr.kind === 'item' ? `${getKey(vr.item)}::${vr.index}` : `placeholder-${vr.placeholderIndex}`)}
             <div
                 class="virtual-row"
                 data-virtual-index={vr.index}
