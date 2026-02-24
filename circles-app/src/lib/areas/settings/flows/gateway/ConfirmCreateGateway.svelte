@@ -2,7 +2,8 @@
   import { ethers } from 'ethers';
 
   import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
-  import StepActionButtons from '$lib/shared/ui/flow/StepActionButtons.svelte';
+  import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
+  import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import { GATEWAY_PROFILE_FLOW_SCAFFOLD_BASE } from './constants';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
@@ -11,7 +12,7 @@
   import { runTask } from '$lib/shared/utils/tasks';
   import { isAddress } from '$lib/shared/utils/tx';
   import { popupControls } from '$lib/shared/state/popup';
-  import { openStep, popToOrOpen } from '$lib/shared/flow';
+  import { popToOrOpen } from '$lib/shared/flow';
   import type { CreateGatewayFlowContext } from './context';
   import { gnosisConfig } from '$lib/shared/config/circles';
   import { getProfilesBindings } from '$lib/areas/market/offers';
@@ -40,12 +41,16 @@
   const profileNameValid = $derived((context.profile?.name ?? '').trim().length > 0);
 
   const canSubmit = $derived(factoryValid && nameValid && profileNameValid);
+  let creatingGateway = $state(false);
 
   function getBindings() {
     return getProfilesBindings({ pinApiBase: gnosisConfig.production.profilePinningServiceUrl }).bindings;
   }
 
   async function createGateway() {
+    if (creatingGateway) {
+      return;
+    }
     if (!canSubmit) {
       return;
     }
@@ -53,79 +58,84 @@
       throw new Error('Wallet not connected.');
     }
 
-    await runTask({
-      name: 'Creating payment gateway…',
-      promise: (async () => {
-        const runner: any = $wallet;
-        const factoryAddress = context.factoryAddress as `0x${string}`;
+    creatingGateway = true;
+    try {
+      await runTask({
+        name: 'Creating payment gateway…',
+        promise: (async () => {
+          const runner: any = $wallet;
+          const factoryAddress = context.factoryAddress as `0x${string}`;
 
-        const bindings = getBindings();
+          const bindings = getBindings();
 
-        const profilePayload = ensureProfileShape({
-          '@context': 'https://aboutcircles.com/contexts/circles-profile/',
-          '@type': 'Profile',
-          name: context.profile?.name ?? '',
-          description: context.profile?.description ?? '',
-          imageUrl: context.profile?.imageUrl || undefined,
-          previewImageUrl: context.profile?.previewImageUrl || undefined,
-          namespaces: {},
-          signingKeys: {},
-        });
+          const profilePayload = ensureProfileShape({
+            '@context': 'https://aboutcircles.com/contexts/circles-profile/',
+            '@type': 'Profile',
+            name: context.profile?.name ?? '',
+            description: context.profile?.description ?? '',
+            imageUrl: context.profile?.imageUrl || undefined,
+            previewImageUrl: context.profile?.previewImageUrl || undefined,
+            namespaces: {},
+            signingKeys: {},
+          });
 
-        const profileCid = await (bindings as any).putJsonLd(profilePayload);
+          const profileCid = await (bindings as any).putJsonLd(profilePayload);
 
-        if (!profileCid) {
-          throw new Error('Failed to pin gateway profile metadata.');
-        }
+          if (!profileCid) {
+            throw new Error('Failed to pin gateway profile metadata.');
+          }
 
-        context.metadataDigest = cidV0ToDigest32Strict(profileCid);
+          context.metadataDigest = cidV0ToDigest32Strict(profileCid);
 
-        const data = factoryIface.encodeFunctionData('createGateway', [
-          context.gatewayName,
-          context.metadataDigest
-        ]);
+          const data = factoryIface.encodeFunctionData('createGateway', [
+            context.gatewayName,
+            context.metadataDigest
+          ]);
 
-        const tx = await runner.sendTransaction({
-          to: factoryAddress,
-          value: 0n,
-          data
-        });
+          const tx = await runner.sendTransaction({
+            to: factoryAddress,
+            value: 0n,
+            data
+          });
 
-        const receipt = await runner.provider.waitForTransaction(tx.hash);
-        if (!receipt) {
-          throw new Error('No transaction receipt found.');
-        }
+          const receipt = await runner.provider.waitForTransaction(tx.hash);
+          if (!receipt) {
+            throw new Error('No transaction receipt found.');
+          }
 
-        let createdGateway: string | null = null;
+          let createdGateway: string | null = null;
 
-        for (const log of receipt.logs ?? []) {
-          try {
-            const parsed = factoryIface.parseLog(log);
-            if (parsed?.name === 'GatewayCreated') {
-              const gw = (parsed.args?.[1] as string | undefined) ?? '';
-              if (gw) {
-                createdGateway = ethers.getAddress(gw);
-                break;
+          for (const log of receipt.logs ?? []) {
+            try {
+              const parsed = factoryIface.parseLog(log);
+              if (parsed?.name === 'GatewayCreated') {
+                const gw = (parsed.args?.[1] as string | undefined) ?? '';
+                if (gw) {
+                  createdGateway = ethers.getAddress(gw);
+                  break;
+                }
               }
+            } catch {
+              // ignore non-matching logs
             }
-          } catch {
-            // ignore non-matching logs
           }
-        }
 
-        if (createdGateway) {
-          try {
-            localStorage.setItem('pg_gateway', createdGateway);
-          } catch {
-            // ignore
+          if (createdGateway) {
+            try {
+              localStorage.setItem('pg_gateway', createdGateway);
+            } catch {
+              // ignore
+            }
+            onCreated?.(createdGateway);
           }
-          onCreated?.(createdGateway);
-        }
-      })()
-    });
+        })()
+      });
 
-    // Close the flow after submit (success or error)
-    popupControls.close();
+      // Close the flow after a successful submit.
+      popupControls.close();
+    } finally {
+      creatingGateway = false;
+    }
   }
 
   function editGatewayProfile() {
@@ -185,10 +195,12 @@
       </StepAlert>
     {/if}
 
-    <StepActionButtons
-      primaryLabel="Create gateway"
-      onPrimary={createGateway}
-      primaryDisabled={!canSubmit}
-    />
+    <StepActionBar>
+      {#snippet primary()}
+        <ActionButton action={createGateway} disabled={!canSubmit || creatingGateway} title="Create gateway">
+          {#snippet children()}Create gateway{/snippet}
+        </ActionButton>
+      {/snippet}
+    </StepActionBar>
   </div>
 </FlowStepScaffold>
