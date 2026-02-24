@@ -1,17 +1,47 @@
 <script lang="ts">
-    import { getTimeAgo } from '$lib/utils/shared';
+    import { getContext } from 'svelte';
+    import { getTimeAgo } from '$lib/shared/utils/shared';
     import type { TransactionHistoryRow } from '@circles-sdk/data';
-    import Avatar from '$lib/components/avatar/Avatar.svelte';
-    import { avatarState } from '$lib/stores/avatar.svelte';
-    import RowFrame from '$lib/ui/RowFrame.svelte';
+    import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
+    import { avatarState } from '$lib/shared/state/avatar.svelte';
+    import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
+    import { popupControls, type PopupContentDefinition } from '$lib/shared/state/popup';
+    import TransactionDetailsPopup from './TransactionDetailsPopup.svelte';
+    import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
+    import {
+        VIRTUAL_LIST_CONTEXT_KEY,
+        type VirtualListController,
+    } from '$lib/shared/ui/lists/utils/virtualListContext';
 
     interface Props { item: TransactionHistoryRow; }
     let { item }: Props = $props();
 
-    let counterpartyAddress = $state('');
-    let badgeUrl: string | null = $state(null);
-    let displayAmount = $state('');
-    let sent = $state(false);
+    const virtualList = getContext<VirtualListController | undefined>(VIRTUAL_LIST_CONTEXT_KEY);
+
+    const avatarAddress = $derived(avatarState.avatar?.address ?? null);
+
+    const counterpartyAddress = $derived.by(() => {
+        if (!avatarAddress) return null;
+        return getCounterpartyAddress(avatarAddress);
+    });
+
+    const topInfoText = $derived.by(() => getTopInfo());
+
+    const badgeUrl = $derived.by(() => {
+        if (!avatarAddress) return null;
+        return getBadge(avatarAddress);
+    });
+
+    const sent = $derived.by(() => {
+        if (!avatarAddress) return false;
+        return item.from.toLowerCase() === avatarAddress.toLowerCase();
+    });
+
+    const displayAmount = $derived.by(() => {
+        if (!avatarAddress) return '';
+        const prefix = sent ? '-' : '+';
+        return `${prefix}${formatNetCircles(item.circles)}`;
+    });
 
     function getCounterpartyAddress(avatarAddress: string) {
         const zero = '0x0000000000000000000000000000000000000000';
@@ -21,6 +51,11 @@
         if (item.from === zero) return lowerTo;     // mint
         if (item.to === zero) return lowerAvatar;   // burn
         return lowerFrom === lowerAvatar ? lowerTo : lowerFrom;
+    }
+
+    function getTopInfo(): string {
+        const zero = '0x0000000000000000000000000000000000000000';
+        return item.from === zero ? 'Collected CRC' : '';
     }
 
     function getBadge(avatarAddress: string) {
@@ -40,42 +75,111 @@
         return abs < 0.01 ? '< 0.01' : abs.toFixed(2);
     }
 
-    function openTx() {
-        const url = 'https://gnosisscan.io/tx/' + item.transactionHash;
-        window.open(url, '_blank', 'noopener,noreferrer');
+    function openDetails() {
+        const def: PopupContentDefinition = {
+            title: 'Transaction details',
+            component: TransactionDetailsPopup,
+            props: { item }
+        };
+        popupControls.open(def);
     }
 
-    $effect(() => {
-        if (!avatarState.avatar) return;
-        counterpartyAddress = getCounterpartyAddress(avatarState.avatar.address);
-        badgeUrl = getBadge(avatarState.avatar.address);
-        sent = item.from.toLowerCase() === avatarState.avatar.address.toLowerCase();
-        const prefix = sent ? '-' : '+';
-        displayAmount = `${prefix}${formatNetCircles(item.circles)}`;
+    function focusTransactionSearchInput(anchor?: HTMLElement | null): void {
+        const scope = anchor?.closest<HTMLElement>('[data-transactions-list-scope]')
+            ?? document.querySelector<HTMLElement>('[data-transactions-list-scope]');
+        const input = scope?.querySelector<HTMLInputElement>('[data-transactions-search-input]')
+            ?? document.querySelector<HTMLInputElement>('[data-transactions-search-input]');
+        input?.focus();
+    }
+
+    const listNavigator = createKeyboardListNavigator({
+        getRows: (anchor) => {
+            const scope = anchor?.closest<HTMLElement>('[data-transactions-list-scope]')
+                ?? document.querySelector<HTMLElement>('[data-transactions-list-scope]');
+            return Array.from((scope ?? document).querySelectorAll<HTMLElement>('[data-transaction-row]'));
+        },
+        focusInput: focusTransactionSearchInput,
+        onActivateRow: openDetails,
     });
+
+    function onRowKeydown(event: KeyboardEvent): void {
+        const current = event.currentTarget as HTMLElement | null;
+        if (!current) {
+            listNavigator.onRowKeydown(event);
+            return;
+        }
+
+        const virtualIndexAttr = current?.closest<HTMLElement>('[data-virtual-index]')?.dataset.virtualIndex;
+        const virtualIndex = Number(virtualIndexAttr ?? '-1');
+        const hasVirtualIndex = Number.isFinite(virtualIndex) && virtualIndex >= 0;
+
+        if (virtualList && hasVirtualIndex) {
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                const next = Math.min(virtualList.rowCount() - 1, virtualIndex + 1);
+                if (next !== virtualIndex) {
+                    virtualList.focusIndex(next);
+                }
+                return;
+            }
+
+            if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                if (virtualIndex === 0) {
+                    focusTransactionSearchInput(current);
+                    return;
+                }
+
+                if (virtualIndex > 0) {
+                    virtualList.focusIndex(virtualIndex - 1);
+                }
+                return;
+            }
+        }
+
+        listNavigator.onRowKeydown(event);
+    }
+
+    function onRowClick(event: MouseEvent): void {
+        listNavigator.onRowClick(event);
+        openDetails();
+    }
+
+    
 </script>
 
 <!-- One cohesive horizontal block inside content; collapse RowFrame leading -->
-<RowFrame clickable={false} dense={true} noLeading={true}>
-    <div class="w-full flex items-center justify-between">
-        <div class="min-w-0">
-            <Avatar
-                    address={counterpartyAddress}
-                    view="horizontal"
-                    clickable={true}
-                    pictureOverlayUrl={badgeUrl ?? undefined}
-                    topInfo={''}
-                    bottomInfo={getTimeAgo(item.timestamp)}
-            />
-        </div>
+<div
+    data-transaction-row
+    data-list-row-focusable
+    tabindex={0}
+    role="button"
+    aria-label={`Open transaction details for ${counterpartyAddress}`}
+    class="rounded-[var(--row-radius)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+    onkeydown={onRowKeydown}
+    onclick={onRowClick}
+>
+    <RowFrame clickable={true} dense={true} noLeading={true} style="min-height: var(--transaction-row-height, 76px);">
+        <div class="w-full flex items-center justify-between cursor-pointer">
+            <div class="min-w-0">
+                <Avatar
+                        address={counterpartyAddress}
+                        view="horizontal"
+                        clickable={true}
+                        pictureOverlayUrl={badgeUrl ?? undefined}
+                        topInfo={topInfoText}
+                        bottomInfo={getTimeAgo(item.timestamp)}
+                />
+            </div>
 
-        <div class="text-right shrink-0">
-            {#if sent}
-                <span class="text-error font-bold">{displayAmount}</span>
-            {:else}
-                <span class="text-success font-bold">{displayAmount}</span>
-            {/if}
-            <span> CRC</span>
+            <div class="text-right shrink-0">
+                {#if sent}
+                    <span class="text-error font-bold">{displayAmount}</span>
+                {:else}
+                    <span class="text-success font-bold">{displayAmount}</span>
+                {/if}
+                <span> CRC</span>
+            </div>
         </div>
-    </div>
-</RowFrame>
+    </RowFrame>
+</div>

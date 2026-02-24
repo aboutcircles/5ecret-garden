@@ -1,25 +1,76 @@
 <script lang="ts">
-  import { wallet } from '$lib/stores/wallet.svelte';
-  import QrCode from '$lib/components/QrCode.svelte';
-  import Address from '$lib/components/Address.svelte';
-  import ConnectWallet from '$lib/components/ConnectWallet.svelte';
-  import Disclaimer from '$lib/components/Disclaimer.svelte';
-  import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
+  import { wallet } from '$lib/shared/state/wallet.svelte';
+  import { page } from '$app/stores';
+  import { circles } from '$lib/shared/state/circles';
+  import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/shared/utils/getGroupsByOwnerBatch';
+  import type { Address as EvmAddress } from '@circles-sdk/utils';
+  import { goto } from '$app/navigation';
+  import QrCode from '$lib/shared/ui/primitives/QrCode.svelte';
+  import Address from '$lib/shared/ui/primitives/Address.svelte';
+  import ConnectWallet from '$lib/areas/wallet/ui/onboarding/ConnectWallet.svelte';
+  import Disclaimer from '$lib/areas/register/ui/components/RegistrationDisclaimer.svelte';
+  import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
+
+  const ownerAddress = $derived(($page.url.searchParams.get('owner') ?? '').trim().toLowerCase() as EvmAddress | '');
+  const shortAddr = (a?: string) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : '');
+
+  let ownerHasGroups: boolean = $state(false);
+  let ownerGroupsLoading: boolean = $state(false);
+
+  async function loadOwnerGroupsFlag() {
+    if (!ownerAddress || !$circles) {
+      ownerHasGroups = false;
+      return;
+    }
+    try {
+      ownerGroupsLoading = true;
+      const byOwner = await getBaseAndCmgGroupsByOwnerBatch($circles, [ownerAddress]);
+      const rows = byOwner[ownerAddress] ?? byOwner[ownerAddress.toLowerCase() as EvmAddress] ?? [];
+      ownerHasGroups = rows.length > 0;
+    } catch {
+      ownerHasGroups = false;
+    } finally {
+      ownerGroupsLoading = false;
+    }
+  }
+
+  $effect(() => {
+    void loadOwnerGroupsFlag();
+  });
+
+  function openManageGroups() {
+    if (!ownerAddress) return;
+    goto('/groups');
+  }
 </script>
 
 
 <PageScaffold highlight="soft" collapsedMode="bar" collapsedHeightClass="h-12" maxWidthClass="page page--lg" contentWidthClass="page page--lg" usePagePadding={true} headerTopGapClass="mt-4 md:mt-6" collapsedTopGapClass="mt-3 md:mt-4">
-  <svelte:fragment slot="title">
-    <h1 class="h2 m-0">Create Account</h1>
-  </svelte:fragment>
-  <svelte:fragment slot="meta">
-    Takes ~2 minutes
-  </svelte:fragment>
-  <svelte:fragment slot="collapsed-left">
+  {#snippet title()}
+    <h1 class="h2 m-0">{ownerAddress ? shortAddr(ownerAddress) : 'Create Account'}</h1>
+  {/snippet}
+  {#snippet meta()}
+    {#if ownerAddress}
+      Connected safe
+    {:else}
+      Takes ~2 minutes
+    {/if}
+  {/snippet}
+  {#snippet headerActions()}
+    {#if ownerAddress}
+      <button class="btn btn-sm btn-primary" onclick={() => goto('/register')}>Create account</button>
+      {#if ownerGroupsLoading}
+        <button class="btn btn-sm btn-ghost" disabled>Checking groups…</button>
+      {:else if ownerHasGroups}
+        <button class="btn btn-sm btn-ghost" onclick={openManageGroups}>My groups</button>
+      {/if}
+    {/if}
+  {/snippet}
+  {#snippet collapsedLeft()}
     <div class="truncate flex items-center gap-2">
-      <span class="font-medium">Create Account</span>
+      <span class="font-medium">{ownerAddress ? shortAddr(ownerAddress) : 'Create Account'}</span>
     </div>
-  </svelte:fragment>
+  {/snippet}
 
   <!-- Warning/banner spacing -->
   <div class="mt-3">

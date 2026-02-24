@@ -1,47 +1,44 @@
 <script lang="ts">
     import {goto} from '$app/navigation';
-    import ActionButton from '$lib/components/ActionButton.svelte';
-    import Disclaimer from '$lib/components/Disclaimer.svelte';
-    import {avatarState} from '$lib/stores/avatar.svelte';
-    import {circles} from '$lib/stores/circles';
-    import type {Avatar} from '@circles-sdk/sdk';
-    import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
-    import Lucide from '$lib/icons/Lucide.svelte';
+    import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
+    import Disclaimer from '$lib/areas/register/ui/components/RegistrationDisclaimer.svelte';
+    import {avatarState} from '$lib/shared/state/avatar.svelte';
+    import {circles} from '$lib/shared/state/circles';
+    import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
     import { ArrowLeft as LArrowLeft } from 'lucide';
+    import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
+    import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
+    import type { Action } from '$lib/shared/ui/shell/actions';
 
     async function registerHuman() {
         if (!$circles) {
             throw new Error('Wallet not connected ($circles is undefined)');
         }
 
-        //TODO: why need to bind it as Avatar
-        avatarState.avatar = (await $circles.registerHuman()) as Avatar;
+        avatarState.avatar = await $circles.registerHuman();
 
         await goto('/dashboard');
     }
-</script>
+
+    function goBack() { history.back(); }
+    const actions: Action[] = [
+      { id: 'back', label: 'Back', iconNode: LArrowLeft, onClick: goBack, variant: 'ghost' },
+    ];
+  </script>
 
 
 <PageScaffold highlight="soft" collapsedMode="bar" collapsedHeightClass="h-12" maxWidthClass="page page--lg" contentWidthClass="page page--lg" usePagePadding={true} headerTopGapClass="mt-4 md:mt-6" collapsedTopGapClass="mt-3 md:mt-4">
-  <svelte:fragment slot="title"><h1 class="h2 m-0">Register Person (v1)</h1></svelte:fragment>
-  <svelte:fragment slot="meta">Step 1 of 1</svelte:fragment>
-  <svelte:fragment slot="actions">
-    <button type="button" class="btn btn-ghost btn-sm" onclick={() => history.back()} aria-label="Back">
-      <Lucide icon={LArrowLeft} size={16} class="shrink-0 stroke-black" />
-      <span>Back</span>
-    </button>
-  </svelte:fragment>
-  <svelte:fragment slot="collapsed-left">
+  {#snippet title()}<h1 class="h2 m-0">Register Person (v1)</h1>{/snippet}
+  {#snippet meta()}Step 1 of 1{/snippet}
+  {#snippet headerActions()}
+    <ActionButtonBar {actions} />
+  {/snippet}
+  {#snippet collapsedLeft()}
     <div class="truncate flex items-center gap-2">
       <span class="font-medium">Register (v1)</span>
     </div>
-  </svelte:fragment>
-  <svelte:fragment slot="collapsed-menu">
-    <button type="button" class="btn btn-ghost min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] w-full justify-start px-3" onclick={() => history.back()} aria-label="Back">
-      <Lucide icon={LArrowLeft} size={20} class="shrink-0 stroke-black" />
-      <span>Back</span>
-    </button>
-  </svelte:fragment>
+  {/snippet}
+  {#snippet collapsedMenu()}<ActionButtonDropDown {actions} />{/snippet}
 
   <div class="mt-3">
     <Disclaimer/>
