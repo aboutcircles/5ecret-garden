@@ -85,7 +85,20 @@ export async function initSafeSdkBrowserContractRunner(address: Address) {
     // Ensure adapter-safe sees the same injected provider that matches
     // the currently selected wagmi connector (MetaMask/Rabby, etc.).
     if (typeof window !== 'undefined') {
-        (window as any).ethereum = getWalletProvider() as any;
+        try {
+            const descriptor = Object.getOwnPropertyDescriptor(window, 'ethereum');
+            const canAssignEthereum = !descriptor || Boolean(descriptor.writable || descriptor.set);
+
+            if (canAssignEthereum) {
+                (window as any).ethereum = getWalletProvider() as any;
+            }
+        } catch (error) {
+            // Some wallets expose window.ethereum as getter-only.
+            // In that case, fall back to the default injected provider
+            // instead of crashing wallet restore/connect.
+            // Keep this quiet in production to avoid noisy console output.
+            console.debug('Could not override window.ethereum, using default injected provider.', error);
+        }
     }
     const runner = new SafeSdkBrowserContractRunner();
     await runner.init(address);
