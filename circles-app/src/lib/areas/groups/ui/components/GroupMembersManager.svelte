@@ -2,7 +2,6 @@
   import type { Address } from '@circles-sdk/utils';
   import { circles } from '$lib/shared/state/circles';
   import { get, writable } from 'svelte/store';
-  import { popupControls } from '$lib/shared/state/popup';
   import { runTask } from '$lib/shared/utils/tasks';
   import { shortenAddress } from '$lib/shared/utils/shared';
   import { getProfile } from '$lib/shared/utils/profile';
@@ -15,7 +14,6 @@
   import { openAddTrustFlow } from '$lib/areas/trust/flows/addTrust/openAddTrustFlow';
   import { createTrustDataSource } from '$lib/shared/data/circles/trustDataSource';
   import { createAvatarDataSource } from '$lib/shared/data/circles/avatarDataSource';
-  import GroupTrustConfirmDialog from './GroupTrustConfirmDialog.svelte';
 
   interface Props {
     group: Address;
@@ -173,29 +171,20 @@
     trustedListNavigator.onRowClick(event);
   }
 
-  async function getDisplayName(address: Address): Promise<string> {
-    try {
-      const profile = await getProfile(address);
-      const name = profile?.name?.trim();
-      return name && name.length > 0 ? name : shortenAddress(address);
-    } catch {
-      return shortenAddress(address);
-    }
-  }
+  async function untrustOne(address: Address) {
+    const sdk = get(circles);
+    if (!sdk) return;
 
-  async function openTrust(address: Address) {
-    const displayName = await getDisplayName(address);
-    popupControls.open({
-      title: `Trust ${displayName}`,
-      component: GroupTrustConfirmDialog,
-      props: {
-        group,
-        address,
-        onTrusted: async () => {
-          await loadTrusted();
-        },
-      },
+    const groupAvatar = await sdk.getAvatar(group, false);
+    await runTask({
+      name: `${shortenAddress(group)} untrusts ${shortenAddress(address)} ...`,
+      promise: groupAvatar.untrust([address]),
     });
+
+    const next = new Set(selectedSet);
+    next.delete(address);
+    selectedSet = next;
+    await loadTrusted();
   }
 
   function openAddPopup() {
@@ -215,7 +204,8 @@
     const sdk = get(circles);
     if (!sdk || selectedMembers.length === 0) return;
 
-    const groupAvatar = await sdk.getAvatar(group);
+    // No event subscription needed for one-off mutating action.
+    const groupAvatar = await sdk.getAvatar(group, false);
     await runTask({
       name: `Removing ${selectedMembers.length} trusted avatar${selectedMembers.length === 1 ? '' : 's'} from ${shortenAddress(group)} ...`,
       promise: groupAvatar.untrust(selectedMembers),
@@ -287,13 +277,15 @@
                 <div class="flex items-center gap-2">
                   <button
                     type="button"
-                    class="btn btn-ghost btn-xs"
+                    class="btn btn-ghost btn-xs btn-square text-error/80 hover:text-error"
+                    aria-label="Untrust"
+                    title="Untrust"
                     onclick={(event) => {
                       event.stopPropagation();
-                      void openTrust(address);
+                      void untrustOne(address);
                     }}
                   >
-                    Trust
+                    <img src="/trash.svg" alt="" class="h-3.5 w-3.5" aria-hidden="true" />
                   </button>
                   <input
                     type="checkbox"

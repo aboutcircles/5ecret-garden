@@ -24,6 +24,7 @@ import type {GroupType} from '@circles-sdk/data';
 import {privateKeyToAccount} from 'viem/accounts';
 import { clearConnectorId, getConnectorId } from '$lib/shared/state/connector';
 import { createAvatarDataSource } from '$lib/shared/data/circles/avatarDataSource';
+import { getWalletProvider } from '$lib/shared/integrations/wallet';
 
 export const wallet = writable<SdkContractRunner | undefined>();
 
@@ -81,6 +82,11 @@ export async function initSafeSdkPrivateKeyContractRunner(privateKey: string, ad
 }
 
 export async function initSafeSdkBrowserContractRunner(address: Address) {
+    // Ensure adapter-safe sees the same injected provider that matches
+    // the currently selected wagmi connector (MetaMask/Rabby, etc.).
+    if (typeof window !== 'undefined') {
+        (window as any).ethereum = getWalletProvider() as any;
+    }
     const runner = new SafeSdkBrowserContractRunner();
     await runner.init(address);
     return runner as SdkContractRunner;
