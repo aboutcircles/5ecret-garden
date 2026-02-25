@@ -19,6 +19,8 @@
     import { formatEther } from 'ethers';
     import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
     import { openInfoPopup } from '$lib/shared/ui/shell/confirmDialogs';
+    import { openTextPromptPopup } from '$lib/shared/ui/shell/promptDialogs';
+    import { runTask } from '$lib/shared/utils/tasks';
 
     interface Props { item: TokenBalanceRow; }
     let { item }: Props = $props();
@@ -59,6 +61,8 @@
             title: 'Unwrap Static Circles', icon: '/banknotes.svg', component: UnwrapTokens
         },
     ];
+
+    const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
     function executeAction(action: RowAction) {
         if (action.title === 'Send') {
@@ -101,10 +105,18 @@
     });
 
     function onRowKeydown(event: KeyboardEvent): void {
+        const target = event.target as HTMLElement | null;
+        if (target?.closest('.dropdown')) {
+            return;
+        }
         listNavigator.onRowKeydown(event);
     }
 
     function onRowWrapperClick(event: MouseEvent): void {
+        const target = event.target as HTMLElement | null;
+        if (target?.closest('.dropdown')) {
+            return;
+        }
         listNavigator.onRowClick(event);
         onClick();
     }
@@ -158,6 +170,85 @@
             await openInfoPopup({ title: 'Balance query failed', message, tone: 'error' });
         }
     }
+
+    async function handleBurnFullBalance(): Promise<void> {
+        const sdk = get(circles);
+        const connectedAvatar = avatarState.avatar?.address;
+
+        if (!item.isErc1155) {
+            await openInfoPopup({
+                title: 'Burn unavailable',
+                message: 'Burn is only supported for ERC1155 balances.',
+                tone: 'warning',
+            });
+            return;
+        }
+
+        if (!sdk?.v2Hub) {
+            await openInfoPopup({
+                title: 'Hub unavailable',
+                message: 'Circles V2 hub contract is not available.',
+                tone: 'warning',
+            });
+            return;
+        }
+
+        if (!connectedAvatar) {
+            await openInfoPopup({
+                title: 'No avatar connected',
+                message: 'No connected avatar found.',
+                tone: 'warning',
+            });
+            return;
+        }
+
+        if (!item.tokenId) {
+            await openInfoPopup({
+                title: 'Missing token id',
+                message: 'No tokenId found for this balance row.',
+                tone: 'warning',
+            });
+            return;
+        }
+
+        const burnAmount = BigInt(item.attoCircles ?? '0');
+        if (burnAmount <= 0n) {
+            await openInfoPopup({
+                title: 'Nothing to burn',
+                message: 'This balance has no burnable amount.',
+                tone: 'warning',
+            });
+            return;
+        }
+
+        const confirmation = await openTextPromptPopup({
+            title: 'Burn full balance',
+            label: 'Type "burn burn burn" to permanently burn this token balance',
+            placeholder: 'burn burn burn',
+            confirmLabel: 'Burn',
+            cancelLabel: 'Cancel',
+            validate: (value) =>
+                value.trim() === 'burn burn burn'
+                    ? null
+                    : 'Please type exactly: burn burn burn',
+        });
+
+        if (confirmation === null || confirmation.trim() !== 'burn burn burn') {
+            return;
+        }
+
+        const tokenId = BigInt(item.tokenId);
+        runTask({
+            name: `Burning ${formatCompactCurrency(item.circles, 'CRC')}…`,
+            promise: sdk.v2Hub.safeTransferFrom(
+                connectedAvatar,
+                ZERO_ADDRESS,
+                tokenId,
+                burnAmount,
+                '0x'
+            ),
+        });
+    }
 </script>
 
 <!-- Use noLeading to collapse the empty first column; put the old "horizontal avatar row" inside content -->
@@ -201,11 +292,11 @@
                 </div>
 
                 {#if !avatarState.isGroup}
-                    <div class="dropdown dropdown-end">
+                    <div class="dropdown dropdown-end z-20" onclick={(e)=>e.stopPropagation()}>
                         <button tabindex="0" class="btn btn-ghost btn-xs" aria-label="Row actions" onclick={(e)=>e.stopPropagation()}>
                             <img src="/union.svg" alt="" class="icon" aria-hidden="true" />
                         </button>
-                        <ul class="dropdown-content menu menu-sm bg-base-100 rounded-box shadow z-10 w-56 p-2">
+                        <ul class="dropdown-content menu menu-sm bg-base-100 rounded-box shadow z-[200] w-56 p-2" onclick={(e)=>e.stopPropagation()}>
                             {#each actions as action (action.title)}
                                 {#if action.condition(item)}
                                     <li>
@@ -228,6 +319,14 @@
                                     Check hub balance
                                 </button>
                             </li>
+                            {#if item.isErc1155}
+                                <li>
+                                    <button onclick={(e)=>{ e.stopPropagation(); void handleBurnFullBalance(); }}>
+                                        <img src="/fire.svg" alt="" class="icon" aria-hidden="true" />
+                                        Burn
+                                    </button>
+                                </li>
+                            {/if}
                         </ul>
                     </div>
                 {/if}
