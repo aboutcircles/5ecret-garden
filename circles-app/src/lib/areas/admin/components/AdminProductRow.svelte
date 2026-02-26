@@ -37,6 +37,12 @@
   const poolRemaining = $derived(
     productType === 'codedispenser' ? product.code?.poolRemaining : null
   );
+  const odooLocalAvailableQty = $derived(
+    productType === 'odoo' ? product.odoo?.localAvailableQty : null
+  );
+  const odooTotalInventory = $derived(
+    productType === 'odoo' ? product.odoo?.totalInventory : null
+  );
   const hasInactiveMapping = $derived(
     mappingEnabled === false || !!revokedAt || routeEnabled === false
   );
@@ -124,6 +130,22 @@
           label={poolRemaining > 0 ? `${poolRemaining} left` : 'Empty'}
           variant={poolRemaining > 0 ? 'success' : 'warning'}
         />
+      {/if}
+      {#if productType === 'odoo'}
+        <AdminStatusBadge
+          label={
+            odooLocalAvailableQty == null
+              ? 'Local stock: fallback'
+              : `Local stock: ${odooLocalAvailableQty}`
+          }
+          variant={odooLocalAvailableQty == null ? 'neutral' : odooLocalAvailableQty > 0 ? 'success' : 'warning'}
+        />
+        {#if odooTotalInventory != null}
+          <AdminStatusBadge
+            label={`Total: ${odooTotalInventory}`}
+            variant="neutral"
+          />
+        {/if}
       {/if}
       {#if !hasMapping}
         <AdminStatusBadge label="No mapping" variant="neutral" />

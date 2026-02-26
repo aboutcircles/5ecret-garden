@@ -240,13 +240,7 @@
         const tokenId = BigInt(item.tokenId);
         runTask({
             name: `Burning ${formatCompactCurrency(item.circles, 'CRC')}…`,
-            promise: sdk.v2Hub.safeTransferFrom(
-                connectedAvatar,
-                ZERO_ADDRESS,
-                tokenId,
-                burnAmount,
-                '0x'
-            ),
+            promise: sdk.v2Hub.burn(tokenId, burnAmount, '0x'),
         });
     }
 </script>
