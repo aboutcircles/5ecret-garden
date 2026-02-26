@@ -22,6 +22,7 @@
     disableOdooConnection,
     listOdooProducts,
     upsertOdooProduct,
+    upsertOdooStock,
     disableOdooProduct,
     listCodeProducts,
     upsertCodeProduct,
@@ -302,6 +303,12 @@
       type: AdminProductType;
       route?: RouteUpsertInput;
       odoo?: OdooProductConfig;
+      odooStock?: {
+        chainId: number;
+        seller: Address;
+        sku: string;
+        availableQty: number;
+      };
       code?: CodeProductConfig;
     },
     product: AdminUnifiedProduct | null
@@ -329,6 +336,13 @@
         name: product ? 'Saving Odoo product…' : 'Creating Odoo product…',
         promise: upsertOdooProduct(payload.odoo),
       });
+
+      if (payload.odooStock) {
+        await runTask({
+          name: 'Saving local stock…',
+          promise: upsertOdooStock(payload.odooStock),
+        });
+      }
     } else if (payload.type === 'codedispenser' && payload.code) {
       await runTask({
         name: product ? 'Saving CodeDispenser product…' : 'Creating CodeDispenser product…',

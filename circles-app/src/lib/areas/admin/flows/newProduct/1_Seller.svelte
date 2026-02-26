@@ -31,6 +31,8 @@
       downloadUrlTemplate: '',
       codesTextarea: '',
       odooProductCode: '',
+      useLocalStock: false,
+      localAvailableQty: null,
       selectedConnectionKey: '',
     }),
     connections,

@@ -137,6 +137,28 @@
       formError = 'Odoo product code is required.';
       return null;
     }
+
+    let odooStock: {
+      chainId: number;
+      seller: Address;
+      sku: string;
+      availableQty: number;
+    } | undefined;
+
+    if (Boolean(context.useLocalStock)) {
+      const qty = context.localAvailableQty;
+      if (qty == null || !Number.isInteger(qty) || qty < 0) {
+        formError = 'Local stock quantity must be a whole number greater than or equal to 0.';
+        return null;
+      }
+      odooStock = {
+        chainId: context.chainId,
+        seller: normalizedSeller,
+        sku: normalizedSku,
+        availableQty: qty,
+      };
+    }
+
     const odoo = {
       chainId: context.chainId,
       seller: normalizedSeller,
@@ -144,7 +166,7 @@
       odooProductCode: (context.odooProductCode ?? '').trim(),
       enabled: Boolean(context.enabled),
     };
-    return { type: 'odoo', route, odoo };
+    return { type: 'odoo', route, odoo, odooStock };
   }
 
   async function execute(): Promise<void> {
@@ -200,6 +222,14 @@
       onChange={editDetails}
       changeLabel="Change"
     />
+    {#if (context.selectedType ?? 'codedispenser') === 'odoo'}
+      <StepReviewRow
+        label="Local stock"
+        value={context.useLocalStock ? `Enabled (${context.localAvailableQty ?? 0})` : 'Not configured'}
+        onChange={editDetails}
+        changeLabel="Change"
+      />
+    {/if}
   </StepSection>
 
   <StepSection title="Selected product" subtitle="Verify the product you are configuring.">
