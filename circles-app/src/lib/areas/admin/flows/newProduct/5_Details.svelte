@@ -4,7 +4,7 @@
   import { openStep } from '$lib/shared/flow';
   import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
-  import { NEW_PRODUCT_FLOW_SCAFFOLD_BASE } from './constants';
+  import { NEW_PRODUCT_FULFILLMENT_FLOW_SCAFFOLD_BASE } from './constants';
   import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
   import SummaryStep from './6_Summary.svelte';
   import { listOdooProductCatalog, type OdooProductCatalogItem } from '$lib/areas/admin/services/gateway/adminClient';
@@ -199,8 +199,8 @@
 </script>
 
 <FlowStepScaffold
-  {...NEW_PRODUCT_FLOW_SCAFFOLD_BASE}
-  step={5}
+  {...NEW_PRODUCT_FULFILLMENT_FLOW_SCAFFOLD_BASE}
+  step={2}
   title="Details"
   subtitle="Configure fulfillment details before review."
 >

@@ -4,7 +4,7 @@
   import { normalizeSku } from '$lib/areas/admin/productEditorUtils';
   import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
-  import { NEW_PRODUCT_FLOW_SCAFFOLD_BASE } from './constants';
+  import { NEW_PRODUCT_FULFILLMENT_FLOW_SCAFFOLD_BASE } from './constants';
   import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
   import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
   import StepReviewRow from '$lib/shared/ui/flow/StepReviewRow.svelte';
@@ -182,8 +182,8 @@
 </script>
 
 <FlowStepScaffold
-  {...NEW_PRODUCT_FLOW_SCAFFOLD_BASE}
-  step={6}
+  {...NEW_PRODUCT_FULFILLMENT_FLOW_SCAFFOLD_BASE}
+  step={3}
   title="Summary"
   subtitle="Review and apply product configuration."
 >

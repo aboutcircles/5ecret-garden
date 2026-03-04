@@ -8,7 +8,7 @@
     import { cartState, checkoutCart } from '$lib/areas/market/cart/store';
     import CartPanel from './CartPanel.svelte';
     import CheckoutForms from './CheckoutForms.svelte';
-    import CheckoutPayment from './CheckoutPayment.svelte';
+    import CheckoutPaymentPrepare from './CheckoutPaymentPrepare.svelte';
     import { useResolvedProducts } from '$lib/areas/market/flows/checkout/useResolvedProducts';
     import OrderLineTable from './OrderLineTable.svelte';
     import { formatCurrency } from '$lib/shared/utils/money';
@@ -16,8 +16,8 @@
     const checkoutAction = useAsyncAction(async () => {
         await checkoutCart();
         openStep({
-            title: 'Pay order',
-            component: CheckoutPayment,
+            title: 'Prepare payment',
+            component: CheckoutPaymentPrepare,
             props: {},
         });
     });

@@ -11,7 +11,7 @@
   import { openStep } from '$lib/shared/flow';
   import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
-  import { NEW_PRODUCT_FLOW_SCAFFOLD_BASE } from './constants';
+  import { NEW_PRODUCT_SELECTION_FLOW_SCAFFOLD_BASE } from './constants';
   import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
   import TypeStep from './3_Type.svelte';
   import type { AdminUnifiedProduct, AdminOdooConnection } from '$lib/areas/admin/types';
@@ -130,7 +130,7 @@
 </script>
 
 <FlowStepScaffold
-  {...NEW_PRODUCT_FLOW_SCAFFOLD_BASE}
+  {...NEW_PRODUCT_SELECTION_FLOW_SCAFFOLD_BASE}
   step={2}
   title="Catalog"
   subtitle="Select the product you want to offer."

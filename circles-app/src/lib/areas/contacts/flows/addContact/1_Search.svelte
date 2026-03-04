@@ -9,7 +9,7 @@
   import type { AddContactFlowContext } from './context';
   import type { Address } from '@circles-sdk/utils';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
-  import { openAddTrustFlow } from '$lib/areas/trust/flows/addTrust/openAddTrustFlow';
+  import { openTrustRelationshipFlow } from '$lib/areas/trust/flows/relationship/openTrustRelationshipFlow';
 
   let context: AddContactFlowContext = $state({
     selectedAddress: '0x0',
@@ -49,12 +49,11 @@
         throw new Error('Avatar store not available');
       }
 
-      openAddTrustFlow({
-        context: {
-          actorType: 'avatar',
-          actorAddress: avatarState.avatar.address,
-          selectedTrustees: [avatar],
-        },
+      openTrustRelationshipFlow({
+        mode: 'add',
+        actorType: 'avatar',
+        actorAddress: avatarState.avatar.address,
+        selectedTrustees: [avatar],
       });
     }
   }
