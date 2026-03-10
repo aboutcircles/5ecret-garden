@@ -16,7 +16,6 @@
   import { tasks } from '$lib/shared/utils/tasks';
   import {
     initPopupHistorySync,
-    openFlowPopup,
     popupControls,
     popupHistoryForwardNoopTick,
   } from '$lib/shared/state/popup';
@@ -33,6 +32,7 @@
   import BottomNav from '$lib/shared/ui/shell/BottomNav.svelte';
   import DefaultHeader from './DefaultHeader.svelte';
   import Banner from '$lib/shared/ui/feedback/Banner.svelte';
+  import { openMigrateToV2Flow } from '$lib/areas/wallet/flows/migrateToV2/openMigrateToV2Flow';
 
   let unwatch: (() => void) | null = null;
   let disposePopupHistorySync: (() => void) | null = null;
@@ -188,12 +188,7 @@
   }
 
   async function openMigratePopup(): Promise<void> {
-    const { default: MigrateToV2 } = await import('$lib/areas/wallet/flows/migrateToV2/1_GetInvited.svelte');
-    openFlowPopup({
-      title: 'Migrate to v2',
-      component: MigrateToV2,
-      props: {},
-    });
+    await openMigrateToV2Flow();
   }
 
   $effect(() => {
