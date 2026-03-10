@@ -9,7 +9,7 @@
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import { wallet } from '$lib/shared/state/wallet.svelte';
   import { runTask } from '$lib/shared/utils/tasks';
-  import { isAddress } from '$lib/shared/utils/tx';
+  import { isAddress, sendRunnerTransactionAndWait } from '$lib/shared/utils/tx';
   import { popupControls } from '$lib/shared/state/popup';
 
   interface Props {
@@ -46,12 +46,11 @@
       name: 'Clearing trust…',
       promise: (async () => {
         const data = gatewayIface.encodeFunctionData('clearTrust', [trustReceiver]);
-        const tx = await runner.sendTransaction({
+        await sendRunnerTransactionAndWait(runner, {
           to: gatewayAddress,
           value: 0n,
           data
-        });
-        await runner.provider.waitForTransaction(tx.hash);
+        }, { label: 'Gateway clear trust' });
         await onDone?.();
         popupControls.close();
       })()
