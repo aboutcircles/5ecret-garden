@@ -1,5 +1,6 @@
 import { compareAvatarSearchItems, computeLocalRank } from './avatarSearch.rank';
 import type { AvatarSearchItem } from './avatarSearch.types';
+import { ethers } from 'ethers';
 
 export function normalizeAvatarSearchAddress(value: string | null | undefined): string {
   return String(value ?? '').trim().toLowerCase();
@@ -70,4 +71,18 @@ export function mergeAvatarSearchRows(local: AvatarSearchItem[], remote: AvatarS
   const rows = Array.from(merged.values());
   rows.sort((a, b) => compareAvatarSearchItems(a, b, query));
   return rows;
+}
+
+export function buildDirectAddressSelectionRows(
+  queryTrimmed: string,
+  mergedRows: AvatarSearchItem[],
+): AvatarSearchItem[] | null {
+  if (!ethers.isAddress(queryTrimmed)) return null;
+
+  const normalizedQueryAddress = normalizeAvatarSearchAddress(queryTrimmed);
+  const existing = mergedRows.find(
+    (row) => normalizeAvatarSearchAddress(row.address) === normalizedQueryAddress,
+  );
+
+  return [existing ?? makeBaseAvatarSearchItem(normalizedQueryAddress)];
 }

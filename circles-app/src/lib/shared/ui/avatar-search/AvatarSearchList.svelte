@@ -13,7 +13,10 @@
   import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
   import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
   import { buildLocalAvatarSearchRows } from './avatarSearch.local';
-  import { mergeAvatarSearchRows } from './avatarSearch.merge';
+  import {
+    buildDirectAddressSelectionRows,
+    mergeAvatarSearchRows,
+  } from './avatarSearch.merge';
   import { searchRemoteAvatarRows } from './avatarSearch.remote';
   import type { AvatarSearchItem } from './avatarSearch.types';
   import AvatarSearchRow from './AvatarSearchRow.svelte';
@@ -88,6 +91,9 @@
 
   const mergedRows = $derived.by(() => mergeAvatarSearchRows(localRows, remoteRows, queryLower));
   const preferredRows = $derived.by(() => {
+    const directAddressRows = buildDirectAddressSelectionRows(queryTrimmed, mergedRows);
+    if (directAddressRows) return directAddressRows;
+
     if (queryTrimmed.length > 0) return mergedRows;
 
     const preferred = mergedRows.filter((row) => row.isVipBookmarked || row.isBookmarked || row.isContact);
