@@ -86,3 +86,12 @@ export function buildDirectAddressSelectionRows(
 
   return [existing ?? makeBaseAvatarSearchItem(normalizedQueryAddress)];
 }
+
+export function shouldAutoSelectSingleRowOnEnter(
+  key: string,
+  visibleRowCount: number,
+  isComposing = false,
+  hasInputFocus = true,
+): boolean {
+  return key === 'Enter' && !isComposing && hasInputFocus && visibleRowCount === 1;
+}

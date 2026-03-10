@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildDirectAddressSelectionRows,
   makeBaseAvatarSearchItem,
+  shouldAutoSelectSingleRowOnEnter,
 } from '$lib/shared/ui/avatar-search/avatarSearch.merge';
 
 describe('buildDirectAddressSelectionRows', () => {
@@ -28,5 +29,22 @@ describe('buildDirectAddressSelectionRows', () => {
     expect(rows).toHaveLength(1);
     expect(rows?.[0].name).toBe('Known Avatar');
     expect(rows?.[0].hasProfile).toBe(true);
+  });
+});
+
+describe('shouldAutoSelectSingleRowOnEnter', () => {
+  it('returns true only for Enter with exactly one visible row', () => {
+    expect(shouldAutoSelectSingleRowOnEnter('Enter', 1)).toBe(true);
+    expect(shouldAutoSelectSingleRowOnEnter('Enter', 0)).toBe(false);
+    expect(shouldAutoSelectSingleRowOnEnter('Enter', 2)).toBe(false);
+    expect(shouldAutoSelectSingleRowOnEnter('ArrowDown', 1)).toBe(false);
+  });
+
+  it('returns false while composing input', () => {
+    expect(shouldAutoSelectSingleRowOnEnter('Enter', 1, true)).toBe(false);
+  });
+
+  it('returns false when the search input is not focused', () => {
+    expect(shouldAutoSelectSingleRowOnEnter('Enter', 1, false, false)).toBe(false);
   });
 });
