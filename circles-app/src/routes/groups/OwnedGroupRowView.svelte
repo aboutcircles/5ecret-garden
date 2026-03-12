@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { GroupRow } from '@circles-sdk/data';
+  import type { GroupRow } from '@aboutcircles/sdk-types';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';

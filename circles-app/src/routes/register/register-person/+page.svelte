@@ -1,12 +1,12 @@
 <script lang="ts">
     import { goto } from '$app/navigation';
-    import type { Avatar as AvatarType } from '@circles-sdk/sdk';
+    import type { Avatar as AvatarType } from '@aboutcircles/sdk';
     import { circles } from '$lib/shared/state/circles';
     import { wallet } from '$lib/shared/state/wallet.svelte';
-    import type { AvatarRow } from '@circles-sdk/data';
-    import type { Profile } from '@circles-sdk/profiles';
+    import type { AvatarRow } from '@aboutcircles/sdk-types';
+    import type { Profile } from '@aboutcircles/sdk-profiles';
     import { onMount } from 'svelte';
-    import type { Address } from '@circles-sdk/utils';
+    import type { Address } from '@aboutcircles/sdk-types';
     import { ProfileFormStep } from '$lib/shared/ui/profile';
     import { settings } from '$lib/shared/state/settings.svelte';
     import { avatarState } from '$lib/shared/state/avatar.svelte';
@@ -37,15 +37,27 @@
         const walletAddress = requireWalletAddress($wallet?.address as Address | undefined, 'Wallet not connected');
         const sdk = requireCircles(get(circles));
 
-        invitations = await sdk.data.getInvitations(walletAddress.toLowerCase() as Address);
+        const response = await sdk.data.getAllInvitations(walletAddress.toLowerCase() as Address);
+        // Convert AllInvitationsResponse to AvatarRow[] for InvitationPickerStep
+        const allInvites = [
+            ...response.trustInvitations,
+            ...response.escrowInvitations,
+            ...response.atScaleInvitations,
+        ];
+        invitations = allInvites.map((inv) => ({
+            avatar: inv.address as Address,
+            address: inv.address as Address,
+            version: 2,
+            type: 'CrcV2_RegisterHuman' as const,
+        }));
         if (settings.ring) {
             invitations = [
                 ...invitations,
                 {
-                    avatar: '0x0000000000000000000000000000000000000000',
-                    timestamp: 0, transactionHash: '',
-                    version: 2, type: 'CrcV2_RegisterHuman', hasV1: true, isHuman: false,
-                    blockNumber: 0, transactionIndex: 0, logIndex: 0,
+                    avatar: '0x0000000000000000000000000000000000000000' as Address,
+                    address: '0x0000000000000000000000000000000000000000' as Address,
+                    version: 2,
+                    type: 'CrcV2_RegisterHuman' as const,
                 },
             ];
         }
@@ -55,7 +67,7 @@
         const sdk = requireCircles(get(circles));
         const inviter = requireWalletAddress(inviterSelected, 'Inviter not set');
 
-        avatarState.avatar = (await sdk.acceptInvitation(
+        avatarState.avatar = (await sdk.register.asHuman(
             inviter.toLowerCase() as Address,
             profile
         )) as AvatarType;
@@ -99,11 +111,11 @@
                             bind:selected={inviterSelected}
                             onSelect={(address) => (inviterSelected = address)}
                         >
-                            <svelte:fragment slot="empty">
+                            {#snippet empty()}
                                 No invitations pending. <a href="/link-to-telegram" class="underline inline-flex items-center">
                                     Get help <Lucide icon={LExternalLink} size={12} class="shrink-0 ml-1" ariaLabel="" />
                                 </a>
-                            </svelte:fragment>
+                            {/snippet}
                         </InvitationPickerStep>
                     </div>
 

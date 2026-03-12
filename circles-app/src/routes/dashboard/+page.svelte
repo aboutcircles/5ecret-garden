@@ -7,17 +7,22 @@
     import TransactionHistoryPanel from './TransactionHistoryPanel.svelte';
 
     import { popupControls } from '$lib/shared/state/popup';
+    import { ethers } from 'ethers';
     import Balances from '$lib/areas/wallet/ui/pages/Balances.svelte';
     import { circlesBalances } from '$lib/shared/state/circlesBalances';
     import { totalCirclesBalance } from '$lib/shared/state/totalCirclesBalance';
+    import { refreshTransactionHistory } from '$lib/shared/state/transactionHistory';
+    import { buildGroupOwnerSet } from '$lib/shared/utils/tokenClassification';
 
     import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
     import { openSendFlowPopup } from '$lib/areas/wallet/flows/send/openSendFlowPopup';
+    import { HumanAvatar } from '@aboutcircles/sdk';
 
     // lucide (standalone) icon nodes
-    import { Send as LSend, Banknote as LBanknote, BarChart3 as LBarChart3 } from 'lucide';
+    import { Send as LSend, Banknote as LBanknote, BarChart3 as LBarChart3, ArrowLeftRight as LArrowLeftRight } from 'lucide';
     import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
     import HelpPopover from '$lib/shared/ui/primitives/HelpPopover.svelte';
+    import TrustEventsPanel from './TrustEventsPanel.svelte';
 
     const TOKEN_SOURCES_HELP = [
         'Every person and group can issue its own Circles token.',
@@ -28,44 +33,59 @@
     let mintableAmount: number = $state(0);
 
     const defaultTab: string = avatarState.isGroup ? 'overview' : 'transaction-history';
-    let selectedTab: string = defaultTab;
+    let selectedTab: string = $state(defaultTab);
 
     $effect(() => {
         (async () => {
-            const hasAvatar: boolean = !!avatarState.avatar;
-            const isHuman: boolean = hasAvatar && !avatarState.isGroup;
-
-            if (isHuman) {
-                const amount = await avatarState.avatar!.getMintableAmount();
-                mintableAmount = amount ?? 0;
+            const avatar = avatarState.avatar;
+            if (avatar instanceof HumanAvatar) {
+                const result = await avatar.personalToken.getMintableAmount();
+                mintableAmount = result?.amount ? parseFloat(ethers.formatEther(result.amount)) : 0;
             }
         })();
     });
 
     async function mintPersonalCircles() {
-        const hasAvatar: boolean = !!avatarState.avatar;
-        if (!hasAvatar) {
-            throw new Error('Avatar store is not available');
+        const avatar = avatarState.avatar;
+        if (!(avatar instanceof HumanAvatar)) {
+            throw new Error('Avatar is not a HumanAvatar');
         }
 
         try {
             await runTask({
                 name: 'Collecting CRC ...',
-                promise: avatarState.avatar!.personalMint(),
+                promise: avatar.personalToken.mint(),
             });
         } finally {
-            const refreshed = await avatarState.avatar!.getMintableAmount();
-            mintableAmount = refreshed ?? 0;
+            const refreshed = await avatar.personalToken.getMintableAmount();
+            mintableAmount = refreshed?.amount ? parseFloat(ethers.formatEther(refreshed.amount)) : 0;
         }
 
         mintableAmount = 0;
+
+        // Refresh tx history so the mint appears immediately
+        refreshTransactionHistory();
     }
 
+    // Match the dust filter in Balances.svelte so the count matches the breakdown
+    const DUST_THRESHOLD = 10_000_000_000_000_000n; // 0.01 CRC
+
+    // Build group owner set from ALL balances (including dust) for accurate classification
+    let groupOwners: Set<string> = $derived(
+        buildGroupOwnerSet($circlesBalances?.data ?? [])
+    );
+
     let personalToken: number = $derived(
-        $circlesBalances?.data?.filter((balance) => !balance.isGroup).length
+        $circlesBalances?.data?.filter((balance) =>
+            !groupOwners.has(balance.tokenOwner?.toLowerCase?.() ?? '') &&
+            BigInt(balance.attoCircles) >= DUST_THRESHOLD
+        ).length
     );
     let groupToken: number = $derived(
-        $circlesBalances?.data?.filter((balance) => balance.isGroup).length
+        $circlesBalances?.data?.filter((balance) =>
+            groupOwners.has(balance.tokenOwner?.toLowerCase?.() ?? '') &&
+            BigInt(balance.attoCircles) >= DUST_THRESHOLD
+        ).length
     );
 
     function openBalances() {
@@ -114,19 +134,21 @@
     <!-- Meta -->
     {#snippet meta()}
         {#if !avatarState.isGroup}
-            <button type="button" class="hover:underline cursor-pointer text-left" onclick={openBalances}>
-                From {personalToken} people
-            </button>
-            <span class="mx-1.5" aria-hidden="true">•</span>
-            <button type="button" class="hover:underline cursor-pointer text-left" onclick={openBalances}>
-                {groupToken} groups
-            </button>
-            <HelpPopover
-                title="Why so many tokens?"
-                lines={TOKEN_SOURCES_HELP}
-                buttonClass="btn btn-ghost btn-xs btn-square"
-                widthClass="w-80"
-            />
+            <span class="inline-flex items-center flex-wrap gap-y-1">
+                <button type="button" class="hover:underline cursor-pointer text-left" onclick={openBalances}>
+                    From {personalToken} people
+                </button>
+                <span class="mx-1.5" aria-hidden="true">•</span>
+                <button type="button" class="hover:underline cursor-pointer text-left" onclick={openBalances}>
+                    {groupToken} groups
+                </button>
+                <HelpPopover
+                    title="Why so many tokens?"
+                    lines={TOKEN_SOURCES_HELP}
+                    buttonClass="btn btn-ghost btn-xs btn-square"
+                    widthClass="w-80"
+                />
+            </span>
         {/if}
     {/snippet}
 
@@ -201,6 +223,30 @@
     {#if avatarState.isGroup}
         <OverviewPanel/>
     {:else}
-        <TransactionHistoryPanel/>
+        <div role="tablist" class="tabs tabs-bordered mb-4">
+            <button
+                role="tab"
+                class="tab"
+                class:tab-active={selectedTab === 'transaction-history'}
+                onclick={() => selectedTab = 'transaction-history'}
+            >
+                Transactions
+            </button>
+            <button
+                role="tab"
+                class="tab"
+                class:tab-active={selectedTab === 'trusts'}
+                onclick={() => selectedTab = 'trusts'}
+            >
+                <Lucide icon={LArrowLeftRight} size={14} class="mr-1" />
+                Trusts
+            </button>
+        </div>
+
+        {#if selectedTab === 'transaction-history'}
+            <TransactionHistoryPanel/>
+        {:else if selectedTab === 'trusts'}
+            <TrustEventsPanel/>
+        {/if}
     {/if}
 </PageScaffold>

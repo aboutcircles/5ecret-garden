@@ -1,9 +1,8 @@
 <script lang="ts">
     import { getContext } from 'svelte';
     import { getTimeAgo } from '$lib/shared/utils/shared';
-    import type { TransactionHistoryRow } from '@circles-sdk/data';
+    import type { GroupedTransaction } from '$lib/shared/state/transactionHistory';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-    import { avatarState } from '$lib/shared/state/avatar.svelte';
     import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
     import { popupControls, type PopupContentDefinition } from '$lib/shared/state/popup';
     import TransactionDetailsPopup from './TransactionDetailsPopup.svelte';
@@ -13,62 +12,29 @@
         type VirtualListController,
     } from '$lib/shared/ui/lists/utils/virtualListContext';
 
-    interface Props { item: TransactionHistoryRow; }
+    interface Props { item: GroupedTransaction; }
     let { item }: Props = $props();
 
     const virtualList = getContext<VirtualListController | undefined>(VIRTUAL_LIST_CONTEXT_KEY);
 
-    const avatarAddress = $derived(avatarState.avatar?.address ?? null);
+    const counterpartyAddress = $derived(item.counterparty?.toLowerCase() ?? null);
 
-    const counterpartyAddress = $derived.by(() => {
-        if (!avatarAddress) return null;
-        return getCounterpartyAddress(avatarAddress);
-    });
-
-    const topInfoText = $derived.by(() => getTopInfo());
+    const topInfoText = $derived(item.hasMint ? 'Collected CRC' : '');
 
     const badgeUrl = $derived.by(() => {
-        if (!avatarAddress) return null;
-        return getBadge(avatarAddress);
+        if (item.hasMint) return '/badge-mint.svg';
+        if (item.hasBurn) return '/badge-burn.svg';
+        if (item.type === 'send') return '/badge-sent.svg';
+        if (item.type === 'receive') return '/badge-received.svg';
+        return null;
     });
 
-    const sent = $derived.by(() => {
-        if (!avatarAddress) return false;
-        return item.from.toLowerCase() === avatarAddress.toLowerCase();
-    });
+    const sent = $derived(item.netCircles < 0);
 
     const displayAmount = $derived.by(() => {
-        if (!avatarAddress) return '';
         const prefix = sent ? '-' : '+';
-        return `${prefix}${formatNetCircles(item.circles)}`;
+        return `${prefix}${formatNetCircles(Math.abs(item.netCircles))}`;
     });
-
-    function getCounterpartyAddress(avatarAddress: string) {
-        const zero = '0x0000000000000000000000000000000000000000';
-        const lowerFrom = item.from.toLowerCase();
-        const lowerTo = item.to.toLowerCase();
-        const lowerAvatar = avatarAddress.toLowerCase();
-        if (item.from === zero) return lowerTo;     // mint
-        if (item.to === zero) return lowerAvatar;   // burn
-        return lowerFrom === lowerAvatar ? lowerTo : lowerFrom;
-    }
-
-    function getTopInfo(): string {
-        const zero = '0x0000000000000000000000000000000000000000';
-        return item.from === zero ? 'Collected CRC' : '';
-    }
-
-    function getBadge(avatarAddress: string) {
-        const zero = '0x0000000000000000000000000000000000000000';
-        const lowerFrom = item.from.toLowerCase();
-        const lowerTo = item.to.toLowerCase();
-        const lowerAvatar = avatarAddress.toLowerCase();
-        if (item.from === zero) return '/badge-mint.svg';
-        if (item.to === zero) return '/badge-burn.svg';
-        if (lowerFrom === lowerAvatar) return '/badge-sent.svg';
-        if (lowerTo === lowerAvatar) return '/badge-received.svg';
-        return null;
-    }
 
     function formatNetCircles(amount: number): string {
         const abs = Math.abs(amount);
@@ -76,10 +42,16 @@
     }
 
     function openDetails() {
+        // Popup expects TransactionHistoryRow (from/to/circles).
+        // Pass the first raw event enriched with the full events array for drill-down.
+        const representative = item.events[0];
+        const popupItem = representative
+            ? { ...representative, events: item.events }
+            : item;
         const def: PopupContentDefinition = {
             title: 'Transaction details',
             component: TransactionDetailsPopup,
-            props: { item }
+            props: { item: popupItem }
         };
         popupControls.open(def);
     }
@@ -163,7 +135,7 @@
         <div class="w-full flex items-center justify-between cursor-pointer">
             <div class="min-w-0">
                 <Avatar
-                        address={counterpartyAddress}
+                        address={counterpartyAddress ?? undefined}
                         view="horizontal"
                         clickable={true}
                         pictureOverlayUrl={badgeUrl ?? undefined}
