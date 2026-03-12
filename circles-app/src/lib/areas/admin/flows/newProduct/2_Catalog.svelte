@@ -83,7 +83,7 @@
     catalogError = null;
     catalogItems = [];
     try {
-      const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
+      const catalog = getMarketClient().catalog.forOperator(String(gnosisConfig.production.marketOperator));
       const items = await catalog.fetchSellerCatalog(seller);
       const filtered = items.filter((p) => (p.seller ?? '').toLowerCase() === seller.toLowerCase());
       catalogItems = filtered.sort((a, b) => {

@@ -11,7 +11,7 @@ export interface MarketRoute {
   chainId: number;
   seller: string;
   sku: string;
-  offerType: 'odoo' | 'codedispenser' | null;
+  offerType: 'odoo' | 'codedispenser' | 'unlock' | null;
   isOneOff?: boolean;
   enabled: boolean;
 }
@@ -20,7 +20,7 @@ export interface RouteUpsertInput {
   chainId: number;
   seller: string;
   sku: string;
-  offerType: 'odoo' | 'codedispenser' | null;
+  offerType: 'odoo' | 'codedispenser' | 'unlock' | null;
   isOneOff: boolean;
   enabled: boolean;
 }
@@ -127,6 +127,42 @@ export interface CodeProductListItem {
   enabled: boolean;
   revokedAt: string | null;
   poolRemaining: number | null;
+}
+
+export type UnlockKeyManagerMode = 'buyer' | 'service' | 'fixed';
+
+export interface UnlockProductConfig {
+  chainId: number;
+  seller: Address;
+  sku: string;
+  lockAddress: Address;
+  rpcUrl: string;
+  servicePrivateKey: string;
+  durationSeconds?: number;
+  expirationUnix?: number;
+  keyManagerMode?: UnlockKeyManagerMode;
+  fixedKeyManager?: Address;
+  locksmithBase?: string;
+  locksmithToken?: string | null;
+  totalInventory: number;
+  enabled: boolean;
+}
+
+export interface UnlockProductListItem {
+  chainId: number;
+  seller: Address;
+  sku: string;
+  lockAddress: Address;
+  rpcUrl: string;
+  durationSeconds: number | null;
+  expirationUnix: number | null;
+  keyManagerMode: UnlockKeyManagerMode;
+  fixedKeyManager: Address | null;
+  locksmithBase: string | null;
+  maxSupply: number | null;
+  totalInventory: number | null;
+  enabled: boolean;
+  revokedAt: string | null;
 }
 
 // ============= API Functions =============
@@ -291,5 +327,26 @@ export async function listCodeProducts(): Promise<CodeProductListItem[]> {
 
 export async function disableCodeProduct(chainId: number, seller: string, sku: string): Promise<{ ok: true }> {
   const path = `/admin/code-products/${chainId}/${encodeURIComponent(seller)}/${encodeURIComponent(sku)}`;
+  return adminFetch<{ ok: true }>(path, { method: 'DELETE' });
+}
+
+// ============= Unlock Product Configuration =============
+
+/**
+ * Create or update an Unlock-backed product configuration
+ */
+export async function upsertUnlockProduct(config: UnlockProductConfig): Promise<void> {
+  await adminFetch<void>('/admin/unlock-products', {
+    method: 'POST',
+    body: JSON.stringify(config),
+  });
+}
+
+export async function listUnlockProducts(): Promise<UnlockProductListItem[]> {
+  return adminFetch<UnlockProductListItem[]>('/admin/unlock-products');
+}
+
+export async function disableUnlockProduct(chainId: number, seller: string, sku: string): Promise<{ ok: true }> {
+  const path = `/admin/unlock-products/${chainId}/${encodeURIComponent(seller)}/${encodeURIComponent(sku)}`;
   return adminFetch<{ ok: true }>(path, { method: 'DELETE' });
 }

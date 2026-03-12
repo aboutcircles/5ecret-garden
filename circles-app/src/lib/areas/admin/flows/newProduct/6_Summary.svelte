@@ -49,7 +49,11 @@
   });
 
   const summaryTypeLabel = $derived(
-    (context.selectedType ?? 'codedispenser') === 'codedispenser' ? 'Digital voucher code' : 'Odoo'
+    (context.selectedType ?? 'codedispenser') === 'codedispenser'
+      ? 'Digital voucher code'
+      : (context.selectedType ?? 'codedispenser') === 'unlock'
+        ? 'Unlock'
+        : 'Odoo'
   );
 
   function editSeller(): void {
@@ -78,7 +82,12 @@
 
   function editDetails(): void {
     popToOrOpen(DetailsStep, {
-      title: (context.selectedType ?? 'codedispenser') === 'odoo' ? 'Use odoo product' : 'Add codes',
+      title:
+        (context.selectedType ?? 'codedispenser') === 'odoo'
+          ? 'Use odoo product'
+          : (context.selectedType ?? 'codedispenser') === 'unlock'
+            ? 'Configure unlock'
+            : 'Add codes',
       props: { context, connections, existingProducts, onExecute, onCreateConnection },
       key: 'admin-new-product-details',
     });
@@ -123,6 +132,72 @@
         enabled: Boolean(context.enabled),
       };
       return { type: 'codedispenser', route, code };
+    }
+
+    if (selectedType === 'unlock') {
+      const lockAddress = normalizeAddress(String(context.lockAddress ?? '')) as Address | undefined;
+      if (!lockAddress) {
+        formError = 'Lock address is required.';
+        return null;
+      }
+      if (!(context.rpcUrl ?? '').trim()) {
+        formError = 'RPC URL is required.';
+        return null;
+      }
+      if (!(context.servicePrivateKey ?? '').trim()) {
+        formError = 'Service private key is required.';
+        return null;
+      }
+      const totalInventory = context.totalInventory;
+      if (totalInventory == null || !Number.isInteger(totalInventory) || totalInventory < 0) {
+        formError = 'Total inventory must be a whole number greater than or equal to 0.';
+        return null;
+      }
+
+      let durationSeconds: number | undefined;
+      let expirationUnix: number | undefined;
+      if ((context.unlockTimingMode ?? 'duration') === 'duration') {
+        const duration = context.durationSeconds;
+        if (duration == null || !Number.isInteger(duration) || duration < 0) {
+          formError = 'Duration seconds must be a whole number greater than or equal to 0.';
+          return null;
+        }
+        durationSeconds = duration;
+      } else {
+        const expiration = context.expirationUnix;
+        if (expiration == null || !Number.isInteger(expiration) || expiration < 0) {
+          formError = 'Expiration unix must be a whole number greater than or equal to 0.';
+          return null;
+        }
+        expirationUnix = expiration;
+      }
+
+      let fixedKeyManager: Address | undefined;
+      if ((context.keyManagerMode ?? 'buyer') === 'fixed') {
+        fixedKeyManager = normalizeAddress(String(context.fixedKeyManager ?? '')) as Address | undefined;
+        if (!fixedKeyManager) {
+          formError = 'Fixed key manager is required for fixed key manager mode.';
+          return null;
+        }
+      }
+
+      const unlock = {
+        chainId: context.chainId,
+        seller: normalizedSeller,
+        sku: normalizedSku,
+        lockAddress,
+        rpcUrl: (context.rpcUrl ?? '').trim(),
+        servicePrivateKey: (context.servicePrivateKey ?? '').trim(),
+        durationSeconds,
+        expirationUnix,
+        keyManagerMode: context.keyManagerMode ?? 'buyer',
+        fixedKeyManager,
+        locksmithBase: (context.locksmithBase ?? '').trim() || undefined,
+        locksmithToken: (context.locksmithToken ?? '').trim() || undefined,
+        totalInventory,
+        enabled: Boolean(context.enabled),
+      };
+      return { type: 'unlock', route, unlock };
     }
 
     const key = context.selectedConnectionKey ?? '';
@@ -218,7 +293,13 @@
     />
     <StepReviewRow
       label="Details"
-      value={(context.selectedType ?? 'codedispenser') === 'codedispenser' ? 'Code pool configuration' : 'Odoo product mapping'}
+      value={
+        (context.selectedType ?? 'codedispenser') === 'codedispenser'
+          ? 'Code pool configuration'
+          : (context.selectedType ?? 'codedispenser') === 'unlock'
+            ? 'Unlock ticket mapping'
+            : 'Odoo product mapping'
+      }
       onChange={editDetails}
       changeLabel="Change"
     />
@@ -226,6 +307,13 @@
       <StepReviewRow
         label="Local stock"
         value={context.useLocalStock ? `Enabled (${context.localAvailableQty ?? 0})` : 'Not configured'}
+        onChange={editDetails}
+        changeLabel="Change"
+      />
+    {:else if (context.selectedType ?? 'codedispenser') === 'unlock'}
+      <StepReviewRow
+        label="Inventory"
+        value={`${context.totalInventory ?? 0}`}
         onChange={editDetails}
         changeLabel="Change"
       />

@@ -25,14 +25,18 @@
       ? product.odoo?.enabled
       : productType === 'codedispenser'
         ? product.code?.enabled
-        : null
+        : productType === 'unlock'
+          ? product.unlock?.enabled
+          : null
   );
   const revokedAt = $derived(
     productType === 'odoo'
       ? product.odoo?.revokedAt
       : productType === 'codedispenser'
         ? product.code?.revokedAt
-        : null
+        : productType === 'unlock'
+          ? product.unlock?.revokedAt
+          : null
   );
   const poolRemaining = $derived(
     productType === 'codedispenser' ? product.code?.poolRemaining : null
@@ -42,6 +46,9 @@
   );
   const odooTotalInventory = $derived(
     productType === 'odoo' ? product.odoo?.totalInventory : null
+  );
+  const unlockTotalInventory = $derived(
+    productType === 'unlock' ? product.unlock?.totalInventory : null
   );
   const hasInactiveMapping = $derived(
     mappingEnabled === false || !!revokedAt || routeEnabled === false
@@ -62,7 +69,7 @@
         imageUrl = null;
         return;
       }
-      const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
+      const catalog = getMarketClient().catalog.forOperator(String(gnosisConfig.production.marketOperator));
       const item = await catalog.fetchProductForSellerAndSku(String(seller), sku);
       if (!item) {
         imageUrl = null;
@@ -146,6 +153,12 @@
             variant="neutral"
           />
         {/if}
+      {/if}
+      {#if productType === 'unlock' && unlockTotalInventory != null}
+        <AdminStatusBadge
+          label={`Total: ${unlockTotalInventory}`}
+          variant="neutral"
+        />
       {/if}
       {#if !hasMapping}
         <AdminStatusBadge label="No mapping" variant="neutral" />

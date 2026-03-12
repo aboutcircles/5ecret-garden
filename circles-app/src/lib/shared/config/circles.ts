@@ -51,7 +51,7 @@ export const chiadoConfig: { production: AppConfig, rings: AppConfig } = {
 export const gnosisConfig: { production: AppConfig, rings: AppConfig } = {
   production: {
     ipfsGatewayBase: 'https://da08cae2-8b50-45dc-80b9-48925be78ec8.myfilebase.com',
-    marketApiBase: 'https://market-api.aboutcircles.com/market/',
+    marketApiBase: 'http://localhost:18080/market/',
     profilePinningServiceUrl: 'https://staging.circlesubi.network/profiles',
     marketOperator: '0x20ced4ed3b1651b832a77e13e54ea5cb14c8b95b',
     marketChainId: 100,

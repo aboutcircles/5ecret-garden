@@ -64,6 +64,16 @@ export type RawReceiptWaitOptions = {
   label?: string;
 };
 
+export function isBenignReceiptDecodeError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+
+  const message = `${error.message ?? ''}`;
+  return (
+    message.includes('invalid value for value.index') &&
+    message.includes('BAD_DATA')
+  );
+}
+
 function parseReceiptStatus(status: unknown): number {
   if (typeof status === 'number') return status;
   if (typeof status === 'bigint') return Number(status);
