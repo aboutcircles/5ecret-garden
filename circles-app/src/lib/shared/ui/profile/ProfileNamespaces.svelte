@@ -2,7 +2,7 @@
 <script lang="ts">
     import {createEventDispatcher} from 'svelte';
     import {runTask} from '$lib/shared/utils/tasks';
-    import type {Address} from "@circles-sdk/utils";
+    import type {Address} from "@aboutcircles/sdk-types";
     import type {CidV0} from '$lib/areas/market/offers';
     import type { ProfilesBindings } from '@circles-market/sdk';
     import { buildLinkDraft, canonicaliseLink } from '@circles-market/sdk';
@@ -373,7 +373,7 @@
                 encryptionKeyFingerprint: editing.metadata.encryptionKeyFingerprint || null
             });
 
-            const preimage = canonicaliseLink(metadataApplied as any);
+            const preimage = canonicaliseLink(metadataApplied);
             const signature = await safeSigner.signBytes(preimage);
             metadataApplied.signature = signature;
 
@@ -381,11 +381,13 @@
             await persistLinks(ns, next);
             editing = null;
         } catch (e: any) {
-            editing = {
-                ...editing,
-                saving: false,
-                error: String(e?.message ?? e)
-            };
+            if (editing) {
+                editing = {
+                    ...editing,
+                    saving: false,
+                    error: String(e?.message ?? e)
+                };
+            }
         }
     }
 
@@ -464,8 +466,7 @@
                                 <div class="shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <JumpLink
                                        className="btn btn-ghost btn-xs btn-square"
-                                       url={ipfsGatewayUrl(item.chunkCid)}
-                                       title="View on IPFS">
+                                       url={ipfsGatewayUrl(item.chunkCid)}>
                                         <Lucide icon={LExternalLink} size={14} />
                                     </JumpLink>
                                     {#if !readonly}

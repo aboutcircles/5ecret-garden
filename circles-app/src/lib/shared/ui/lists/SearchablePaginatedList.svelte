@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Component } from 'svelte';
+  import type { Address } from '@aboutcircles/sdk-types';
   import { readable, writable, type Readable, type Writable } from 'svelte/store';
   import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
   import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
@@ -56,7 +57,7 @@
   $effect(() => {
     const next = createSearchablePaginatedList(items, {
       pageSize,
-      addressOf: (item) => addressOf(item) as any
+      addressOf: (item) => addressOf(item) as Address
     });
 
     searchQuery = next.searchQuery;

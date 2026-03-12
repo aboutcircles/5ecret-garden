@@ -9,7 +9,7 @@
   let { node }: Props = $props();
 </script>
 
-{#snippet renderBlock(n)}
+{#snippet renderBlock(n: Block)}
   {#if n.type === 'paragraph'}
     <p>
       {#each n.children as child}

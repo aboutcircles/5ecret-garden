@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeMarkdownInput } from '$lib/utils/isValid';
+import { normalizeMarkdownInput } from '$lib/shared/utils/isValid';
 
 describe('normalizeMarkdownInput', () => {
   it('unescapes \\n/\\r/\\t but preserves backslashes and quotes', () => {

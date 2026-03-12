@@ -1,5 +1,5 @@
 import type { WalletProvider } from '@circles-market/sdk';
-import {gnosisConfig} from "$lib/shared/config/circles";
+import { gnosisConfig } from '$lib/shared/config/circles';
 
 type AddChainParams = {
   chainId: string;
@@ -9,11 +9,14 @@ type AddChainParams = {
   blockExplorerUrls: string[];
 };
 
+// RPC URLs sourced from gnosisConfig (single source of truth)
+const chainRpc = gnosisConfig.production.chainRpcUrl ?? gnosisConfig.production.circlesRpcUrl;
+
 const GNOSIS_PARAMS: AddChainParams = {
   chainId: gnosisConfig.production.marketChainIdHex!,
   chainName: 'Gnosis Chain',
   nativeCurrency: { name: 'xDAI', symbol: 'XDAI', decimals: 18 },
-  rpcUrls: ['https://rpc.gnosis.gateway.fm', 'https://rpc.gnosischain.com'],
+  rpcUrls: [chainRpc, 'https://rpc.gnosis.gateway.fm'],
   blockExplorerUrls: ['https://gnosisscan.io'],
 };
 
