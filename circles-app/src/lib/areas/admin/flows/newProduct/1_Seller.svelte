@@ -3,7 +3,7 @@
   import { openStep } from '$lib/shared/flow';
   import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import SearchAvatar from '$lib/areas/contacts/ui/pages/SearchAvatar.svelte';
-  import { NEW_PRODUCT_FLOW_SCAFFOLD_BASE } from './constants';
+  import { NEW_PRODUCT_SELECTION_FLOW_SCAFFOLD_BASE } from './constants';
   import type { AdminUnifiedProduct, AdminOdooConnection } from '$lib/areas/admin/types';
   import type { AdminNewProductFlowContext } from './context';
   import CatalogStep from './2_Catalog.svelte';
@@ -31,6 +31,8 @@
       downloadUrlTemplate: '',
       codesTextarea: '',
       odooProductCode: '',
+      useLocalStock: false,
+      localAvailableQty: null,
       selectedConnectionKey: '',
     }),
     connections,
@@ -57,7 +59,7 @@
 </script>
 
 <FlowStepScaffold
-  {...NEW_PRODUCT_FLOW_SCAFFOLD_BASE}
+  {...NEW_PRODUCT_SELECTION_FLOW_SCAFFOLD_BASE}
   step={1}
   title="Seller"
   subtitle="Select the avatar that created the product you want to offer."

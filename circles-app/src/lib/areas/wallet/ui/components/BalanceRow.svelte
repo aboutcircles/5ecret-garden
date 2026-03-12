@@ -54,10 +54,18 @@
     });
 
     function onRowKeydown(event: KeyboardEvent): void {
+        const target = event.target as HTMLElement | null;
+        if (target?.closest('.dropdown')) {
+            return;
+        }
         listNavigator.onRowKeydown(event);
     }
 
     function onRowWrapperClick(event: MouseEvent): void {
+        const target = event.target as HTMLElement | null;
+        if (target?.closest('.dropdown')) {
+            return;
+        }
         listNavigator.onRowClick(event);
         onClick();
     }

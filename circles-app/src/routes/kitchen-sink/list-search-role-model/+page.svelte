@@ -351,6 +351,8 @@
         odooProductCode: 'C001',
         enabled: true,
         revokedAt: null,
+        totalInventory: 120,
+        localAvailableQty: 18,
       },
     },
     {

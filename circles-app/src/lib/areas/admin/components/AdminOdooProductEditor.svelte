@@ -4,6 +4,7 @@
   import {
     listOdooProductCatalog,
     type OdooConnectionConfig,
+    type OdooStockConfig,
     type OdooProductCatalogItem,
     type OdooProductConfig,
     type RouteUpsertInput,
@@ -19,6 +20,7 @@
       type?: AdminProductType;
       route?: RouteUpsertInput;
       odoo?: OdooProductConfig;
+      odooStock?: OdooStockConfig;
       connection?: OdooConnectionConfig;
     }) => Promise<void>;
     onDisable?: () => Promise<void>;
@@ -66,6 +68,11 @@
   let fulfillInheritRequestAbort: boolean = $state(connection?.fulfillInheritRequestAbort ?? false);
   // svelte-ignore state_referenced_locally
   let odooEnabled: boolean = $state(product?.odoo?.enabled ?? true);
+  // svelte-ignore state_referenced_locally
+  let localStockEnabled: boolean = $state(product?.odoo?.localAvailableQty != null);
+  let localAvailableQtyInput: string = $state(
+    product?.odoo?.localAvailableQty != null ? String(product.odoo.localAvailableQty) : ''
+  );
   // svelte-ignore state_referenced_locally
   let connectionEnabled: boolean = $state(connection?.enabled ?? true);
 
@@ -224,8 +231,22 @@
         odooProductCode: odooProductCode.trim(),
         enabled: odooEnabled,
       };
+      let odooStock: OdooStockConfig | undefined;
+      if (localStockEnabled) {
+        const parsed = Number(localAvailableQtyInput);
+        if (!Number.isFinite(parsed) || parsed < 0 || !Number.isInteger(parsed)) {
+          formError = 'Local stock must be a whole number greater than or equal to 0.';
+          return;
+        }
+        odooStock = {
+          chainId,
+          seller: normalizedSeller,
+          sku: normalizedSku,
+          availableQty: parsed,
+        };
+      }
 
-      await onSubmit({ type: 'odoo', odoo });
+      await onSubmit({ type: 'odoo', odoo, odooStock });
     } catch (error) {
       formError = error instanceof Error ? error.message : String(error);
     } finally {
@@ -463,6 +484,25 @@
       <label class="form-control">
         <span class="label-text">Product enabled</span>
         <input type="checkbox" class="checkbox checkbox-sm" bind:checked={odooEnabled} />
+      </label>
+      <label class="form-control">
+        <span class="label-text">Use local stock</span>
+        <input type="checkbox" class="checkbox checkbox-sm" bind:checked={localStockEnabled} />
+        <span class="label-text-alt text-xs opacity-70">
+          When enabled, checkout availability uses this local counter.
+        </span>
+      </label>
+      <label class="form-control">
+        <span class="label-text">Local available quantity</span>
+        <input
+          type="number"
+          class="input input-bordered input-sm"
+          min="0"
+          step="1"
+          bind:value={localAvailableQtyInput}
+          disabled={!localStockEnabled}
+          placeholder="e.g. 25"
+        />
       </label>
     </div>
   {/if}

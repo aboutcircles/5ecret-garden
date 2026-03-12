@@ -52,6 +52,7 @@
   let historyError: string | null = $state(null);
 
   let stopSse: (() => void) | null = null;
+  let destroyed = false;
   const seenKeys = new Set<string>();
   const isAuthHistoryError = $derived.by(() => {
     const msg = (historyError ?? '').toLowerCase();
@@ -84,6 +85,7 @@
       if (!buyerOrderId || typeof buyerOrderId !== 'string') return;
       loadingHistory = true;
       const history = await getOrderStatusHistory(buyerOrderId);
+      if (destroyed) return;
       statusEvents = history?.events ?? [];
       // seed de-dup set
       for (const ev of statusEvents) {
@@ -93,7 +95,7 @@
       historyError = null;
 
       // Subscribe to live SSE events for this buyer; filter this order
-      stopSse = subscribeBuyerOrderEvents(async (evt) => {
+      const unsubscribe = subscribeBuyerOrderEvents(async (evt) => {
         if (!evt || evt.orderId !== buyerOrderId || !evt.newStatus || !evt.changedAt) return;
         const key = `${evt.orderId}|${evt.newStatus}|${evt.changedAt}`;
         if (seenKeys.has(key)) return;
@@ -108,15 +110,27 @@
           }
         }
       });
+      if (destroyed) {
+        try {
+          unsubscribe();
+        } catch (e) {
+          console.debug('[orders] stop SSE failed after destroy', e);
+        }
+        return;
+      }
+      stopSse = unsubscribe;
     } catch (e: any) {
+      if (destroyed) return;
       historyError = String(e?.message ?? e);
       statusEvents = [];
     } finally {
+      if (destroyed) return;
       loadingHistory = false;
     }
   });
 
   onDestroy(() => {
+    destroyed = true;
     try {
       stopSse?.();
     } catch (e) {

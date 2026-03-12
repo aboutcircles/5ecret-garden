@@ -56,8 +56,34 @@
 
     let rangeStart = $state(0);
     let rangeEnd = $state(0);
+    let elevatedRowIndex = $state<number | null>(null);
 
     const totalHeight = $derived(Math.max(0, totalCount * rowHeight));
+
+    function findRowIndexFromTarget(target: EventTarget | null): number | null {
+        const el = target instanceof Element ? target : null;
+        const rowEl = el?.closest<HTMLElement>('[data-virtual-index]');
+        if (!rowEl) return null;
+        const value = Number(rowEl.dataset.virtualIndex);
+        return Number.isFinite(value) ? value : null;
+    }
+
+    function onVirtualSpaceFocusIn(event: FocusEvent): void {
+        elevatedRowIndex = findRowIndexFromTarget(event.target);
+    }
+
+    function onVirtualSpaceFocusOut(event: FocusEvent): void {
+        const rowIndex = findRowIndexFromTarget(event.target);
+        if (rowIndex === null) return;
+
+        const next = event.relatedTarget;
+        const nextIndex = findRowIndexFromTarget(next);
+        if (nextIndex === rowIndex) return;
+
+        if (elevatedRowIndex === rowIndex) {
+            elevatedRowIndex = null;
+        }
+    }
 
     type VirtualRow =
         | { kind: 'item'; index: number; top: number; item: any }
@@ -386,12 +412,17 @@
 </script>
 
 <div class="generic-list virtual-list w-full py-2" role="list" bind:this={listEl}>
-    <div class="virtual-space" style={`height: ${totalHeight}px`}>
+    <div
+        class="virtual-space"
+        style={`height: ${totalHeight}px`}
+        onfocusin={onVirtualSpaceFocusIn}
+        onfocusout={onVirtualSpaceFocusOut}
+    >
         {#each virtualRows as vr (vr.kind === 'item' ? `${getKey(vr.item)}::${vr.index}` : `placeholder-${vr.placeholderIndex}`)}
             <div
                 class="virtual-row"
                 data-virtual-index={vr.index}
-                style={`transform: translateY(${vr.top}px); height: ${rowHeight}px`}
+                style={`transform: translateY(${vr.top}px); height: ${rowHeight}px; z-index: ${elevatedRowIndex === vr.index ? 2 : 1}`}
             >
                 {#if vr.kind === 'item'}
                     {@const Row = row}

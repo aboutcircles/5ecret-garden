@@ -134,6 +134,8 @@ function mockNewProductContext() {
     downloadUrlTemplate: 'https://example.org/download/{code}',
     codesTextarea: 'CODE-1\nCODE-2',
     odooProductCode: 'DEMO-OD-1',
+    useLocalStock: true,
+    localAvailableQty: 25,
     selectedConnectionKey: '',
     catalogItem: {
       seller: mockAddressA,

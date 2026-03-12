@@ -4,7 +4,7 @@
   import { openStep } from '$lib/shared/flow';
   import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
-  import { NEW_PRODUCT_FLOW_SCAFFOLD_BASE } from './constants';
+  import { NEW_PRODUCT_FULFILLMENT_FLOW_SCAFFOLD_BASE } from './constants';
   import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
   import SummaryStep from './6_Summary.svelte';
   import { listOdooProductCatalog, type OdooProductCatalogItem } from '$lib/areas/admin/services/gateway/adminClient';
@@ -47,6 +47,8 @@
     if (context.downloadUrlTemplate == null) context.downloadUrlTemplate = '';
     if (context.codesTextarea == null) context.codesTextarea = '';
     if (context.odooProductCode == null) context.odooProductCode = '';
+    if (context.useLocalStock == null) context.useLocalStock = false;
+    if (context.localAvailableQty == null) context.localAvailableQty = null;
     if (context.selectedConnectionKey == null) context.selectedConnectionKey = '';
   });
 
@@ -149,6 +151,28 @@
       formError = 'Odoo product code is required.';
       return null;
     }
+
+    let odooStock: {
+      chainId: number;
+      seller: Address;
+      sku: string;
+      availableQty: number;
+    } | undefined;
+
+    if (Boolean(context.useLocalStock)) {
+      const qty = context.localAvailableQty;
+      if (qty == null || !Number.isInteger(qty) || qty < 0) {
+        formError = 'Local stock quantity must be a whole number greater than or equal to 0.';
+        return null;
+      }
+      odooStock = {
+        chainId: context.chainId,
+        seller: normalizedSeller,
+        sku: normalizedSku,
+        availableQty: qty,
+      };
+    }
+
     const odoo = {
       chainId: context.chainId,
       seller: normalizedSeller,
@@ -156,7 +180,7 @@
       odooProductCode: (context.odooProductCode ?? '').trim(),
       enabled: Boolean(context.enabled),
     };
-    return { type: 'odoo', route, odoo };
+    return { type: 'odoo', route, odoo, odooStock };
   }
 
   function goNext(): void {
@@ -175,8 +199,8 @@
 </script>
 
 <FlowStepScaffold
-  {...NEW_PRODUCT_FLOW_SCAFFOLD_BASE}
-  step={5}
+  {...NEW_PRODUCT_FULFILLMENT_FLOW_SCAFFOLD_BASE}
+  step={2}
   title="Details"
   subtitle="Configure fulfillment details before review."
 >
@@ -245,6 +269,22 @@
         {:else if selectedConnection && catalogItems.length === 0}
           <span class="label-text-alt text-xs text-warning">No products found for this connection.</span>
         {/if}
+      </label>
+      <label class="form-control">
+        <span class="label-text">Use local stock</span>
+        <input type="checkbox" class="checkbox checkbox-sm" bind:checked={context.useLocalStock} />
+      </label>
+      <label class="form-control">
+        <span class="label-text">Local available quantity</span>
+        <input
+          type="number"
+          class="input input-bordered input-sm"
+          bind:value={context.localAvailableQty}
+          min="0"
+          step="1"
+          disabled={!context.useLocalStock}
+          placeholder="e.g. 25"
+        />
       </label>
     {/if}
 

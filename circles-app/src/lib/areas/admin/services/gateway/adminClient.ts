@@ -70,6 +70,24 @@ export interface OdooProductListItem {
   odooProductCode: string;
   enabled: boolean;
   revokedAt: string | null;
+  totalInventory: number | null;
+  localAvailableQty: number | null;
+}
+
+export interface OdooStockConfig {
+  chainId: number;
+  seller: Address;
+  sku: string;
+  availableQty: number;
+}
+
+export interface OdooStockItem {
+  chainId: number;
+  seller: Address;
+  sku: string;
+  availableQty: number;
+  updatedAt?: string;
+  updatedBy: Address;
 }
 
 export interface OdooProductCatalogItem {
@@ -211,6 +229,18 @@ export async function listOdooProducts(): Promise<OdooProductListItem[]> {
 export async function disableOdooProduct(chainId: number, seller: string, sku: string): Promise<{ ok: true }> {
   const path = `/admin/odoo-products/${chainId}/${encodeURIComponent(seller)}/${encodeURIComponent(sku)}`;
   return adminFetch<{ ok: true }>(path, { method: 'DELETE' });
+}
+
+export async function upsertOdooStock(config: OdooStockConfig): Promise<OdooStockItem> {
+  return adminFetch<OdooStockItem>('/admin/odoo-stock', {
+    method: 'PUT',
+    body: JSON.stringify(config),
+  });
+}
+
+export async function getOdooStock(chainId: number, seller: string, sku: string): Promise<OdooStockItem> {
+  const path = `/admin/odoo-stock/${chainId}/${encodeURIComponent(seller)}/${encodeURIComponent(sku)}`;
+  return adminFetch<OdooStockItem>(path);
 }
 
 export async function listOdooProductCatalog(params: {

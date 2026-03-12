@@ -4,7 +4,7 @@
   import { openStep } from '$lib/shared/flow';
   import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
-  import { NEW_PRODUCT_FLOW_SCAFFOLD_BASE } from './constants';
+  import { NEW_PRODUCT_SELECTION_FLOW_SCAFFOLD_BASE } from './constants';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import DetailsStep from './5_Details.svelte';
   import CreateConnectionStep from './4_CreateOdooConnection.svelte';
@@ -61,7 +61,7 @@
 </script>
 
 <FlowStepScaffold
-  {...NEW_PRODUCT_FLOW_SCAFFOLD_BASE}
+  {...NEW_PRODUCT_SELECTION_FLOW_SCAFFOLD_BASE}
   step={3}
   title="Type"
   subtitle="Choose how this product will be fulfilled."

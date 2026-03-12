@@ -19,6 +19,8 @@ export type AdminNewProductFlowContext = {
   // odoo
   selectedConnectionKey?: string;
   odooProductCode?: string;
+  useLocalStock?: boolean;
+  localAvailableQty?: number | null;
 
   // odoo connection details (used when creating a new connection inline)
   odooUrl?: string;

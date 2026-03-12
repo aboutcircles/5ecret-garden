@@ -24,7 +24,6 @@
   import { initContactStore } from '$lib/shared/state/contacts';
   import { initBalanceStore } from '$lib/shared/state/circlesBalances';
   import { browser } from '$app/environment';
-  import { goto } from '$app/navigation';
   import { env } from '$env/dynamic/public';
 
   const PUBLIC_PLAUSIBLE_DOMAIN = env.PUBLIC_PLAUSIBLE_DOMAIN ?? '';
@@ -121,28 +120,7 @@
   let historyForwardNoopToastVisible = $state(false);
   let lastForwardNoopTick = 0;
   let historyForwardNoopToastTimer: ReturnType<typeof setTimeout> | null = null;
-  function isTypingTarget(target: EventTarget | null): boolean {
-    if (!(target instanceof HTMLElement)) return false;
-    if (target.isContentEditable) return true;
-    const tag = target.tagName.toLowerCase();
-    return tag === 'input' || tag === 'textarea' || tag === 'select';
-  }
-
-  function handleGlobalKeydown(event: KeyboardEvent): void {
-    const hasModifier = event.ctrlKey || event.metaKey;
-    if (!hasModifier || isTypingTarget(event.target)) return;
-
-    const key = event.key;
-    if (!['1', '2', '3', '4'].includes(key)) return;
-
-    const index = Number(key) - 1;
-    const target = menuItems[index];
-    if (!target) return;
-
-    event.preventDefault();
-    event.stopPropagation();
-    void goto(target.link);
-  }
+  const avatarInfo = $derived(avatarState.avatar?.avatarInfo ?? null);
 
   onMount(() => {
     disposePopupHistorySync = initPopupHistorySync();
@@ -172,11 +150,6 @@
       window.addEventListener('pointerdown', markInteraction, { once: true });
       window.addEventListener('keydown', markInteraction, { once: true });
 
-      window.addEventListener('keydown', handleGlobalKeydown);
-      return () => {
-        window.removeEventListener('keydown', handleGlobalKeydown);
-        window.removeEventListener('unhandledrejection', handleUnhandledRejection);
-      };
     }
 
     return () => {
