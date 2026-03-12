@@ -9,7 +9,7 @@
   let { node }: Props = $props();
 </script>
 
-{#snippet renderInline(n)}
+{#snippet renderInline(n: Inline)}
   {#if n.type === 'text'}
     {#if n.value.includes('\n')}
       {#each n.value.split('\n') as line, i (i)}

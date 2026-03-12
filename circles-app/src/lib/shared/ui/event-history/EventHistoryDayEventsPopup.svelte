@@ -1,8 +1,9 @@
 <script lang="ts">
   import { tick } from 'svelte';
+  import type { Readable } from 'svelte/store';
   import { writable } from 'svelte/store';
   import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
-  import { createPaginatedList } from '$lib/shared/state/paginatedList';
+  import { createPaginatedList, type PaginatedReadable } from '$lib/shared/state/paginatedList';
   import EventHistoryRowPlaceholder from '$lib/shared/ui/lists/placeholders/EventHistoryRowPlaceholder.svelte';
   import type {
     CirclesBaseEventRow,
@@ -41,11 +42,8 @@
   let histogramScrollEl: HTMLDivElement | null = $state(null);
 
   const filteredEventsStore = writable<EventHistoryListItem[]>([]);
-  const paginatedRows = createPaginatedList(filteredEventsStore as any, { pageSize: 25 });
+  const paginatedRows: PaginatedReadable<EventHistoryListItem> = createPaginatedList(filteredEventsStore, { pageSize: 25 });
   const eventKey = (item: EventHistoryListItem) => item.key;
-  const listStoreAny = paginatedRows as any;
-  const rowComponentAny = $derived(rowComponent as any);
-  const getKeyAny = eventKey as any;
 
   const dayLabel = $derived(new Date(dayStartSec * 1000).toLocaleDateString());
   const rangeLabel = $derived(
@@ -269,9 +267,9 @@
     <div class="overflow-auto rounded-lg border border-base-300 max-h-[calc(80vh-14rem)]">
       <div class="px-2">
         <GenericList
-          store={listStoreAny}
-          row={rowComponentAny}
-          getKey={getKeyAny}
+          store={paginatedRows}
+          row={rowComponent}
+          getKey={eventKey}
           rowHeight={64}
           maxPlaceholderPages={2}
           expectedPageSize={25}

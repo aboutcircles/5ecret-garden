@@ -5,7 +5,7 @@
     import type { ProfilesBindings } from '@circles-market/sdk';
     import { getProfilesBindings } from '$lib/areas/market/offers';
     import { removeProfileFromCache } from '$lib/shared/utils/profile';
-    import type { Address } from '@circles-sdk/utils';
+    import type { Address } from '@aboutcircles/sdk-types';
     import { bytesToHex, keccak256, hexToBytes } from '$lib/shared/integrations/safeSigner';
     import { secp256k1 } from '@noble/curves/secp256k1';
 
@@ -66,7 +66,7 @@
                 const entries = typeof profile.signingKeys === 'object' && profile.signingKeys ? { ...profile.signingKeys } : {};
 
                 try {
-                    const xy = hexToBytes(pk).slice(1);
+                    const xy = hexToBytes(pk as `0x${string}`).slice(1);
                     const fp = keccak256(xy).toLowerCase();
                     entries[fp] = {
                         '@context': 'https://aboutcircles.com/contexts/circles-profile/',

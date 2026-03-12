@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { uint256ToAddress, CirclesConverter } from '@circles-sdk/utils';
+import { uint256ToAddress, CirclesConverter } from '@aboutcircles/sdk-utils';
 import { formatCurrency } from '$lib/shared/utils/money';
 
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
@@ -25,7 +25,7 @@ export function toBigIntMaybe(v: unknown): bigint | null {
   }
 }
 
-const tokenIdKeys = new Set(['Id', 'TokenId', 'TokenID']);
+const tokenIdKeys = new Set(['Id', 'id', 'TokenId', 'tokenId', 'TokenID']);
 export function tokenIdToAddressMaybe(key: string, val: unknown): string | null {
   if (!tokenIdKeys.has(key)) return null;
   const bi = toBigIntMaybe(val);

@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { Component } from 'svelte';
-    import type { EventRow, TransactionHistoryRow } from '@circles-sdk/data';
+    import type { EventRow, TransactionHistoryRow } from '@aboutcircles/sdk-types';
     import type { Readable } from 'svelte/store';
     import VirtualList from '$lib/shared/ui/lists/VirtualList.svelte';
 
