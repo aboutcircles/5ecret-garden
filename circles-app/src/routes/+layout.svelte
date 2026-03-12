@@ -10,13 +10,12 @@
   import '../app.css';
 
   import { avatarState } from '$lib/shared/state/avatar.svelte';
-  import { canMigrate } from '$lib/shared/guards/canMigrate';
+
   import { page } from '$app/stores';
   import { onDestroy, onMount } from 'svelte';
   import { tasks } from '$lib/shared/utils/tasks';
   import {
     initPopupHistorySync,
-    openFlowPopup,
     popupControls,
     popupHistoryForwardNoopTick,
   } from '$lib/shared/state/popup';
@@ -26,13 +25,18 @@
   import { initBalanceStore } from '$lib/shared/state/circlesBalances';
   import { browser } from '$app/environment';
   import { goto } from '$app/navigation';
-  import { PUBLIC_PLAUSIBLE_DOMAIN } from '$env/static/public';
+  import { env } from '$env/dynamic/public';
+
+  const PUBLIC_PLAUSIBLE_DOMAIN = env.PUBLIC_PLAUSIBLE_DOMAIN ?? '';
   import { initGroupMetricsStore } from '$lib/areas/groups/state';
-  import type { Address } from '@circles-sdk/utils';
-  import { get } from 'svelte/store';
+  import { circles } from '$lib/shared/state/circles';
+  import type { Address } from '@aboutcircles/sdk-types';
   import BottomNav from '$lib/shared/ui/shell/BottomNav.svelte';
   import DefaultHeader from './DefaultHeader.svelte';
-  import Banner from '$lib/shared/ui/feedback/Banner.svelte';
+
+  import Toast from '$lib/shared/ui/feedback/Toast.svelte';
+  import ConnectionRetryIndicator from '$lib/shared/ui/feedback/ConnectionRetryIndicator.svelte';
+  import { connectionStatus } from '$lib/shared/state/connectionStatus.svelte';
 
   let unwatch: (() => void) | null = null;
   let disposePopupHistorySync: (() => void) | null = null;
@@ -117,8 +121,6 @@
   let historyForwardNoopToastVisible = $state(false);
   let lastForwardNoopTick = 0;
   let historyForwardNoopToastTimer: ReturnType<typeof setTimeout> | null = null;
-  const avatarInfo = $derived(avatarState.avatar?.avatarInfo ?? null);
-
   function isTypingTarget(target: EventTarget | null): boolean {
     if (!(target instanceof HTMLElement)) return false;
     if (target.isContentEditable) return true;
@@ -145,6 +147,22 @@
   onMount(() => {
     disposePopupHistorySync = initPopupHistorySync();
 
+    // Global handler for uncaught promise rejections (e.g., SDK WebSocket errors)
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      const error = event.reason;
+      const message = error?.message || String(error);
+
+      if (message.includes('Connection interrupted') ||
+          message.includes('subscribe') ||
+          message.includes('WebSocket') ||
+          message.includes('Unauthorized')) {
+        console.error('[Global] Caught unhandled SDK error:', message);
+        event.preventDefault();
+      }
+    };
+
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
     if (browser) {
       const markInteraction = () => {
         hasUserInteraction = true;
@@ -157,10 +175,13 @@
       window.addEventListener('keydown', handleGlobalKeydown);
       return () => {
         window.removeEventListener('keydown', handleGlobalKeydown);
+        window.removeEventListener('unhandledrejection', handleUnhandledRejection);
       };
     }
 
-    return undefined;
+    return () => {
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
   });
 
   // Defer initializing wallet/watchers until the user navigates beyond the landing/connect flows.
@@ -187,15 +208,6 @@
     });
   }
 
-  async function openMigratePopup(): Promise<void> {
-    const { default: MigrateToV2 } = await import('$lib/areas/wallet/flows/migrateToV2/1_GetInvited.svelte');
-    openFlowPopup({
-      title: 'Migrate to v2',
-      component: MigrateToV2,
-      props: {},
-    });
-  }
-
   $effect(() => {
     if (avatarState.avatar) {
       menuItems = [
@@ -212,11 +224,11 @@
 
   // init profile state
   $effect(() => {
-    const address = avatarState.avatar?.address;
+    const address = avatarState.avatar?.address as Address | undefined;
     if (address) {
       void (async () => {
         const { getProfile } = await import('$lib/shared/utils/profile');
-        const newProfile = await getProfile(address);
+        const newProfile = await getProfile(address as `0x${string}`);
         avatarState.profile = newProfile;
       })();
     } else {
@@ -224,22 +236,22 @@
     }
   });
 
-  // init stores
+  // init stores - track which avatar we've initialized for
+  let lastInitializedAvatar: string | null = null;
+
   $effect(() => {
-    if (avatarState.avatar) {
-      const avatar = avatarState.avatar;
-      initTransactionHistoryStore(avatar);
-      initContactStore(avatar);
-      initBalanceStore(avatar);
-      if (avatarState.groupType === 'CrcV2_BaseGroupCreated') {
-        void (async () => {
-          const { circles } = await import('$lib/shared/state/circles');
-          const circlesValue = get(circles);
-          if (circlesValue) {
-            initGroupMetricsStore(circlesValue.circlesRpc, avatar.address);
-          }
-        })();
-      }
+    const avatar = avatarState.avatar;
+    if (!avatar) return;
+
+    // Only init when avatar address actually changes
+    if (lastInitializedAvatar === avatar.address) return;
+    lastInitializedAvatar = avatar.address;
+
+    initTransactionHistoryStore(avatar);
+    initContactStore(avatar);
+    initBalanceStore(avatar);
+    if (avatarState.isGroup && $circles) {
+      initGroupMetricsStore($circles.rpc, avatar.address);
     }
   });
 
@@ -300,18 +312,6 @@
 <main
   class="relative w-full min-h-screen bg-base-200 border-base-300 overflow-hidden font-dmSans pt-4"
 >
-  {#if avatarInfo && canMigrate(avatarInfo)}
-    <button class="w-full fixed top-16 z-10" onclick={() => void openMigratePopup()} onkeydown={(e) => e.key === 'Enter' && void openMigratePopup()}>
-      <Banner
-        title="Circles V2 is here!"
-        message="Migrate your avatar to Circles V2."
-        tone="info"
-        className="cursor-pointer"
-      />
-    </button>
-    <div class="h-20"></div>
-  {/if}
-
   <div class="w-full flex flex-col items-stretch min-h-screen pb-24">
     {@render children?.()}
   </div>
@@ -345,6 +345,18 @@
         Forward popup history is no longer available.
       </div>
     {/if}
+  </div>
+{/if}
+
+<!-- User notifications (errors, warnings, success messages) -->
+<Toast />
+
+<!-- Connection retry indicator - shows when WebSocket connections are being retried -->
+{#if connectionStatus.status !== 'idle' && connectionStatus.status !== 'connected'}
+  <div class="fixed top-16 left-0 right-0 z-[100] px-4 pointer-events-auto">
+    <div class="max-w-md mx-auto">
+      <ConnectionRetryIndicator />
+    </div>
   </div>
 {/if}
 
