@@ -1,6 +1,6 @@
 [build]
   # Build command for SvelteKit app
-  command = "npm run build"
+  command = "pnpm run build"
   
   # Output directory for built files
   publish = "build"
@@ -17,7 +17,7 @@
 
 # Production deployment settings
 [context.production]
-  command = "npm run build"
+  command = "pnpm run build"
   publish = "build"
   
   [context.production.environment]
@@ -35,7 +35,7 @@
 
 # Deploy Preview settings (for PRs)
 [context.deploy-preview]
-  command = "npm run build"
+  command = "pnpm run build"
   publish = "build"
   
   [context.deploy-preview.environment]
@@ -54,7 +54,7 @@
 
 # Branch deploy settings
 [context.branch-deploy]
-  command = "npm run build"
+  command = "pnpm run build"
   publish = "build"
   
   [context.branch-deploy.environment]

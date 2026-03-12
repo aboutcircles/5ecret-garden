@@ -1,0 +1,3 @@
+# Root-level config: tell Netlify to look in circles-app/
+[build]
+  base = "circles-app"
