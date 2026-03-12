@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
   import type { AggregatedCatalogItem } from '$lib/areas/market/model';
   import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
   import { gnosisConfig } from '$lib/shared/config/circles';
@@ -58,7 +58,7 @@
   }
 
   function resolvePriceAmount(item: AggregatedCatalogItem): number | null {
-    const offer: any = (item as any)?.offer ?? (item as any)?.offers ?? (item as any)?.product?.offer ?? (item as any)?.product?.offers;
+    const offer = item.offer ?? item.offers ?? item.product?.offer ?? item.product?.offers;
     const pick = Array.isArray(offer) ? offer[0] : offer;
     const price = pick?.price;
     if (typeof price === 'number' && Number.isFinite(price)) return price;
@@ -83,7 +83,7 @@
     catalogError = null;
     catalogItems = [];
     try {
-      const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
+      const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator!);
       const items = await catalog.fetchSellerCatalog(seller);
       const filtered = items.filter((p) => (p.seller ?? '').toLowerCase() === seller.toLowerCase());
       catalogItems = filtered.sort((a, b) => {
@@ -111,9 +111,9 @@
   });
 
   function resolveProductTitle(item: AggregatedCatalogItem): string {
-    const nameRaw = (item as any)?.product?.name ?? '';
+    const nameRaw = item.product?.name ?? '';
     const name = typeof nameRaw === 'string' ? nameRaw.trim() : '';
-    const sku = normalizeSku((item as any)?.product?.sku ?? '') ?? String((item as any)?.product?.sku ?? '').trim();
+    const sku = normalizeSku(item.product?.sku ?? '') ?? String(item.product?.sku ?? '').trim();
     if (name) return "Fulfillment: " + name;
     return sku || 'Selected product';
   }

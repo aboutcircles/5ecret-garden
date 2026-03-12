@@ -1,10 +1,8 @@
 <script lang="ts">
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
 import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
   import GroupSetting from '$lib/areas/settings/ui/editors/GroupSetting.svelte';
-  import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import { ipfsGatewayUrl } from '$lib/shared/utils/ipfs';
-  import { canMigrate } from '$lib/shared/guards/canMigrate';
 
   type Props = {
     avatarAddress: Address | '';
@@ -15,9 +13,6 @@ import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
     profileCidLoading: boolean;
     profileCidError: string | null;
     copyProfileCid: () => Promise<void>;
-
-    migrateToV2: () => Promise<void>;
-    stopV1: () => Promise<void>;
   };
 
   let {
@@ -28,8 +23,6 @@ import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
     profileCidLoading,
     profileCidError,
     copyProfileCid,
-    migrateToV2,
-    stopV1,
   }: Props = $props();
 </script>
 
@@ -77,29 +70,3 @@ import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
   </section>
 {/if}
 
-{#if avatarState?.avatar?.avatarInfo && canMigrate(avatarState.avatar.avatarInfo)}
-  {#if avatarState?.avatar?.avatarInfo?.version === 1}
-    <section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
-      <div>
-        <h3 class="text-sm font-semibold m-0">Circles V2</h3>
-        <p class="text-xs text-base-content/70 mt-0.5">Upgrade your profile to V2.</p>
-      </div>
-      <div class="mt-3">
-        <ActionButton action={migrateToV2}>Update to Circles V2</ActionButton>
-      </div>
-    </section>
-  {/if}
-  {#if avatarState?.avatar?.avatarInfo?.v1Token && !avatarState?.avatar?.avatarInfo?.v1Stopped}
-    <section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
-      <div>
-        <h3 class="text-sm font-semibold m-0">Circles V1</h3>
-        <p class="text-xs text-base-content/70 mt-0.5">Stop your V1 account permanently.</p>
-      </div>
-      <div class="mt-3">
-        <ActionButton action={stopV1}>
-          <span class="text-orange-400">Stop V1 account permanently</span>
-        </ActionButton>
-      </div>
-    </section>
-  {/if}
-{/if}

@@ -2,7 +2,7 @@
   import OrderDetailsView from '$lib/areas/market/orders/OrderDetailsView.svelte';
   import { onMount, onDestroy } from 'svelte';
   import { getOrderStatusHistory, subscribeBuyerOrderEvents, getOrder } from '$lib/areas/market/orders/ordersQueries';
-  import type { OrderStatusChange } from '$lib/areas/market/orders/types';
+  import type { OrderStatusChange, FullOrderSnapshot, SellerOrderDto } from '$lib/areas/market/orders/types';
   import { createLoadable } from '$lib/areas/market/utils/loadable';
   import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
 
@@ -13,7 +13,7 @@
   interface Props {
     mode: 'buyer' | 'seller';
     orderId?: string;
-    snapshot?: any;
+    snapshot?: FullOrderSnapshot | null;
     showHistory?: boolean;
     showAdvanced?: boolean;
   }
@@ -26,8 +26,7 @@
     showAdvanced = true,
   }: Props = $props();
 
-  type SellerOrderDto = any;
-  const sellerLoader = createLoadable<SellerOrderDto | null>(null);
+  const sellerLoader = createLoadable<FullOrderSnapshot | null>(null);
   const sellerLoading = $derived($sellerLoader.loading);
   const sellerError = $derived($sellerLoader.error || '');
 
@@ -36,13 +35,14 @@
     return Array.isArray(x) ? x : [x];
   }
 
-  function normalizeSnapshot(x: any): any {
-    if (!x || typeof x !== 'object') return x;
-    const out: any = { ...x };
-    out.orderedItem = arrayify(out.orderedItem);
-    out.acceptedOffer = arrayify(out.acceptedOffer);
-    out.outbox = arrayify(out.outbox);
-    return out;
+  function normalizeSnapshot(x: SellerOrderDto | FullOrderSnapshot | null | undefined): FullOrderSnapshot | null {
+    if (!x || typeof x !== 'object') return null;
+    return {
+      ...x,
+      orderedItem: arrayify(x.orderedItem),
+      acceptedOffer: arrayify(x.acceptedOffer),
+      outbox: arrayify(x.outbox),
+    } as FullOrderSnapshot;
   }
 
   const jsonText: string = $derived.by(() => JSON.stringify(snapshot ?? {}, null, 2));
@@ -63,7 +63,7 @@
     if (!orderId || typeof orderId !== 'string') return;
     await sellerLoader.run(async () => {
       const market = getMarketClient();
-      const res = await market.sales.get(orderId as any);
+      const res = await market.sales.get(orderId as string & { readonly __brand: 'OrderId' });
       if (!res) throw new Error('Order not found or not associated with your seller account');
       return normalizeSnapshot(res);
     });

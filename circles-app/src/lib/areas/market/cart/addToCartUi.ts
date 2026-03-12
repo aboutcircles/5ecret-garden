@@ -23,7 +23,7 @@ export function getAddToCartState(inputs: AddToCartInputs): AddToCartState {
   const { product, currentAvatar, cartLoading } = inputs;
   const offer = inputs.offer ?? (product?.product ? getFirstOffer(product.product) : null);
   const payTo = offer ? resolvePayTo(offer) : { address: null };
-  const hasPay = !!(payTo && (payTo as any).address);
+  const hasPay = !!(payTo && payTo.address);
   const hasFulfillmentLink = !!offer?.availabilityFeed;
   const inventoryValue = inputs.inventoryValue ?? offer?.inventoryLevel?.value ?? null;
   const hasInventory = typeof inventoryValue === 'number' && Number.isFinite(inventoryValue);

@@ -9,8 +9,8 @@
     import { loadProfileOrInit, rebaseAndSaveProfile } from '@circles-market/sdk';
     import { getProfilesBindings } from '$lib/areas/market/offers';
     import { removeProfileFromCache } from '$lib/shared/utils/profile';
-    import type {Address} from '@circles-sdk/utils';
-    import type { Profile } from '@circles-sdk/profiles';
+    import type {Address} from '@aboutcircles/sdk-types';
+    import type { Profile } from '@aboutcircles/sdk-profiles';
     import { validateProfile } from '$lib/shared/ui/profile/profileValidation';
 
     interface Props {
@@ -41,7 +41,7 @@
 
     // editability
     let readonly = $state<boolean>(true);
-    let connected = $derived((avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '').toLowerCase())
+    let connected = $derived((avatarState.avatar?.address ?? '').toLowerCase())
     let ra = $derived((resolvedAvatar ?? '').toLowerCase());
     let isOwner = $derived(!!connected && !!ra && connected === ra);
     const hasChanges = $derived(
@@ -80,7 +80,7 @@
         try {
             // If no explicit avatar is passed, default to the currently connected avatar from app state
             const rawAvatar =
-                avatar ?? ((avatarState.avatar?.address as string | undefined) ?? (avatarState.avatar?.avatarInfo?.avatar as string | undefined) ?? '');
+                avatar ?? ((avatarState.avatar?.address as string | undefined) ?? '');
             const norm = normalizeAddress(rawAvatar) as Address;
             resolvedAvatar = norm;
 

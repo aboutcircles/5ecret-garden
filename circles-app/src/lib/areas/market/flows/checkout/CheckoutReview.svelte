@@ -6,6 +6,7 @@
     import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
     import { openStep, popToOrOpen, useAsyncAction } from '$lib/shared/flow';
     import { cartState, checkoutCart } from '$lib/areas/market/cart/store';
+    import type { BasketLine, PostalAddress, ContactPoint } from '$lib/areas/market/cart/types';
     import CartPanel from './CartPanel.svelte';
     import CheckoutForms from './CheckoutForms.svelte';
     import CheckoutPayment from './CheckoutPayment.svelte';
@@ -29,30 +30,31 @@
 
     const preview = $derived($cartState.orderPreview);
     const basket = $derived($cartState.basket);
-    const lines = $derived((basket?.items ?? []) as any[]);
+    const lines = $derived(basket?.items ?? []);
     const hasLines: boolean = $derived(lines.length > 0);
 
-    const shippingAddress = $derived(basket?.shippingAddress as any);
-    const contactPoint = $derived(basket?.contactPoint as any);
-    const ageProof = $derived(basket?.ageProof as any);
+    const shippingAddress = $derived(basket?.shippingAddress);
+    const contactPoint = $derived(basket?.contactPoint);
+    const ageProof = $derived(basket?.ageProof);
 
+    // svelte-ignore state_referenced_locally — lines prop is stable for this component
     const { findCatalogItem, imageUrlForLine } = useResolvedProducts(lines);
 
-    function getLineUnitPrice(line: any): { amount: number | null; code: string | null } {
+    function getLineUnitPrice(line: BasketLine): { amount: number | null; code: string | null } {
         const snap = line?.offerSnapshot;
         const price = typeof snap?.price === 'number' ? snap.price : null;
-        const code = (snap?.priceCurrency ?? null) as string | null;
+        const code = snap?.priceCurrency ?? null;
         return { amount: price, code };
     }
 
-    function getLineQuantity(line: any): number {
+    function getLineQuantity(line: BasketLine): number {
         const raw = line?.orderQuantity;
         const n = typeof raw === 'number' ? raw : Number(raw ?? 0);
         if (!Number.isFinite(n) || n < 0) return 0;
         return n;
     }
 
-    function getLineTotal(line: any): { amount: number | null; code: string | null } {
+    function getLineTotal(line: BasketLine): { amount: number | null; code: string | null } {
         const { amount, code } = getLineUnitPrice(line);
         const qty = getLineQuantity(line);
         if (amount == null || !Number.isFinite(amount) || qty <= 0) {
@@ -78,14 +80,16 @@
 
     // Prefer the server-provided preview total; fall back to the first subtotal
     type OrderTotal = { amount: number | null; code: string | null };
+    type PreviewWithTotal = { totalPaymentDue?: { price?: number; priceCurrency?: string } };
     const orderTotal: OrderTotal = $derived((() => {
-        const p = (preview as any)?.totalPaymentDue;
-        const amt = typeof p?.price === 'number' ? (p.price as number) : null;
-        const code = (p?.priceCurrency ?? null) as string | null;
+        const previewObj = preview as PreviewWithTotal | null;
+        const p = previewObj?.totalPaymentDue;
+        const amt = typeof p?.price === 'number' ? p.price : null;
+        const code = p?.priceCurrency ?? null;
         if (amt != null) return { amount: amt, code };
         if (totalsArray.length > 0) {
             const [c, t] = totalsArray[0];
-            return { amount: t, code: (c || null) as string | null };
+            return { amount: t, code: c || null };
         }
         return { amount: null, code: null };
     })());
@@ -96,8 +100,8 @@
         !!ageProof
     );
 
-    function formatShippingAddress(addr: any): string[] {
-        if (!addr || typeof addr !== 'object') return [];
+    function formatShippingAddress(addr: PostalAddress | undefined): string[] {
+        if (!addr) return [];
         const parts: string[] = [];
         if (addr.streetAddress) parts.push(String(addr.streetAddress));
         const cityLineParts: string[] = [];
@@ -108,16 +112,16 @@
         return parts;
     }
 
-    function formatContactPoint(cp: any): string[] {
-        if (!cp || typeof cp !== 'object') return [];
+    function formatContactPoint(cp: ContactPoint | undefined): string[] {
+        if (!cp) return [];
         const parts: string[] = [];
         if (cp.email) parts.push(`Email: ${cp.email}`);
         if (cp.telephone) parts.push(`Phone: ${cp.telephone}`);
         return parts;
     }
 
-    function formatAgeProof(age: any): string | null {
-        if (!age || typeof age !== 'object') return null;
+    function formatAgeProof(age: { birthDate?: string; [k: string]: unknown } | undefined): string | null {
+        if (!age) return null;
         if (!age.birthDate) return null;
         return `Birth date: ${age.birthDate}`;
     }

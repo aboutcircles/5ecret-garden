@@ -1,5 +1,5 @@
 import {browser} from '$app/environment';
-import type {Address} from '@circles-sdk/utils';
+import type {Address} from '@aboutcircles/sdk-types';
 import {getWalletProvider} from '$lib/shared/integrations/wallet';
 import {ensureGnosisChain} from '$lib/shared/integrations/chain/gnosis';
 import {getMarketClient} from '$lib/shared/data/market/marketClientProxy';

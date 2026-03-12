@@ -13,6 +13,7 @@
 
   let { bookmark }: Props = $props();
   let folders: string[] = $state([]);
+  // svelte-ignore state_referenced_locally — intentional: initialize from prop
   let selectedFolder: string = $state(bookmark.folder ?? '__none__');
 
   function formatCreatedAt(ts: number): string {

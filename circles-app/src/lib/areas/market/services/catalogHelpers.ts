@@ -8,25 +8,25 @@ import { normalizeProductImagesFromSchema } from '$lib/areas/market/services';
  * Returns the Schema.org-like product object from an AggregatedCatalogItem.
  */
 export function getProduct(item: AggregatedCatalogItem): SchemaOrgProductLite {
-  return item.product as SchemaOrgProductLite;
+  return item.product;
 }
 
 /**
  * Returns the first offer object from the product-like entity if present.
  */
-export function getFirstOffer(prod: any): SchemaOrgOfferLite | null {
+export function getFirstOffer(prod: SchemaOrgProductLite | null | undefined): SchemaOrgOfferLite | null {
   const o = prod?.offers ?? prod?.offer ?? prod?.Offers ?? prod?.Offer;
-  if (!o) return null as any;
-  if (Array.isArray(o)) return (o[0] ?? null) as any;
-  if (typeof o === 'object') return o as any;
-  return null as any;
+  if (!o) return null;
+  if (Array.isArray(o)) return o[0] ?? null;
+  if (typeof o === 'object') return o;
+  return null;
 }
 
 /**
  * Picks a representative image URL from a product-like object.
  * Accepts various shapes: string, array of strings/objects with url fields, or contentUrl-like nests.
  */
-export function pickProductImageUrl(prod: any): string | null {
+export function pickProductImageUrl(prod: SchemaOrgProductLite | null | undefined): string | null {
   const imgs = normalizeProductImagesFromSchema(prod);
   return imgs[0] ?? null;
 }
@@ -38,7 +38,7 @@ export function isProductOwnedBy(
   item: AggregatedCatalogItem,
   owner: string | null | undefined,
 ): boolean {
-  const seller = ((item as any).seller ?? '').toLowerCase();
+  const seller = (item.seller ?? '').toLowerCase();
   const o = (owner ?? '').toLowerCase();
   return !!seller && !!o && seller === o;
 }

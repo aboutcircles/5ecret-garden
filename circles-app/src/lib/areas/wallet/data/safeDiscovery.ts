@@ -1,6 +1,6 @@
-import type { Address } from '@circles-sdk/utils';
-import type { GroupRow } from '@circles-sdk/data';
-import type { AvatarRow, Sdk } from '@circles-sdk/sdk';
+import type { Address } from '@aboutcircles/sdk-types';
+import type { GroupRow } from '@aboutcircles/sdk-types';
+import type { AvatarRow, Sdk } from '@aboutcircles/sdk';
 import { ethers } from 'ethers';
 import { get, writable, type Readable } from 'svelte/store';
 import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/shared/utils/getGroupsByOwnerBatch';
@@ -11,6 +11,7 @@ type SafeDiscoveryState = {
   groupsByOwner: Record<Address, GroupRow[]>;
   isLoading: boolean;
   error: string | null;
+  warning: string | null;
 };
 
 const SAFE_CACHE_TTL_MS = 60_000;
@@ -59,18 +60,39 @@ export async function loadSafesProfileAndGroups(
 ): Promise<{
   profileBySafe: Record<string, AvatarRow | undefined>;
   groupsByOwner: Record<Address, GroupRow[]>;
+  fetchFailures: number;
 }> {
-  const [avatarInfo, groupInfo] = await Promise.all([
-    sdk?.data?.getAvatarInfoBatch(safes) ?? [],
-    getBaseAndCmgGroupsByOwnerBatch(sdk, safes),
-  ]);
+  // Fetch avatar info per-safe with individual error resilience.
+  // One failed lookup must not prevent others from succeeding.
+  // Track failures separately from "not registered" (null) results.
+  let fetchFailures = 0;
+  const avatarResults = await Promise.all(
+    safes.map(async (s) => {
+      try {
+        return await sdk?.data?.getAvatar(s);
+      } catch (e) {
+        fetchFailures++;
+        console.warn(`[SafeDiscovery] getAvatar failed for ${s}:`, (e as Error).message);
+        return null;
+      }
+    })
+  );
+  const avatarInfo = avatarResults.filter(Boolean);
+
+  // Group queries can also fail independently
+  let groupInfo: Record<Address, GroupRow[]> = {};
+  try {
+    groupInfo = await getBaseAndCmgGroupsByOwnerBatch(sdk, safes);
+  } catch (e) {
+    console.warn('[SafeDiscovery] Group batch query failed:', (e as Error).message);
+  }
 
   const profileBySafe: Record<string, AvatarRow | undefined> = {};
-  avatarInfo.forEach((info) => {
-    profileBySafe[info.avatar] = info;
+  avatarInfo.forEach((info: any) => {
+    if (info) profileBySafe[info.avatar.toLowerCase()] = info;
   });
 
-  return { profileBySafe, groupsByOwner: groupInfo };
+  return { profileBySafe, groupsByOwner: groupInfo, fetchFailures };
 }
 
 export function createSafeDiscoveryStore(
@@ -87,6 +109,7 @@ export function createSafeDiscoveryStore(
     groupsByOwner: {},
     isLoading: true,
     error: null,
+    warning: null,
   });
 
   function mergeSafes(current: Address[], incoming: Address[]): Address[] {
@@ -118,7 +141,7 @@ export function createSafeDiscoveryStore(
   }
 
   async function refresh(opts: { forceRefresh?: boolean } = {}) {
-    state.update((current) => ({ ...current, isLoading: true, error: null }));
+    state.update((current) => ({ ...current, isLoading: true, error: null, warning: null }));
 
     try {
       const fetchedSafes = await getSafesByOwner(ownerAddress, opts);
@@ -127,16 +150,31 @@ export function createSafeDiscoveryStore(
       state.update((current) => ({ ...current, safes: mergedSafes }));
 
       const currentSafes = mergedSafes.length ? mergedSafes : [];
-      const { profileBySafe, groupsByOwner } = await loadSafesProfileAndGroups(
-        sdk,
-        currentSafes
-      );
+      let result = await loadSafesProfileAndGroups(sdk, currentSafes);
+
+      // If ALL avatar lookups failed (e.g. CORS/425 "Too Early"), retry once
+      // after a short delay — these are transient network errors.
+      if (result.fetchFailures > 0 && result.fetchFailures >= currentSafes.length) {
+        console.info('[SafeDiscovery] All avatar lookups failed, retrying in 1.5s...');
+        await new Promise((r) => setTimeout(r, 1500));
+        result = await loadSafesProfileAndGroups(sdk, currentSafes);
+      }
+
+      const { profileBySafe, groupsByOwner, fetchFailures } = result;
+
+      // Only warn if fetches actually THREW (network issue), not when safes
+      // are simply unregistered (fetchFailures === 0, profileCount === 0).
+      const warning = fetchFailures > 0
+        ? 'Some profile data could not be loaded. Names and images may be incomplete.'
+        : null;
 
       state.update((current) => ({
         ...current,
         profileBySafe,
         groupsByOwner,
         isLoading: false,
+        error: null,
+        warning,
       }));
     } catch (e) {
       console.error('Failed to load safes', e);

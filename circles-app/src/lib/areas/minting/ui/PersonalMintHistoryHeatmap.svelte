@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { Address } from '@circles-sdk/utils';
-  import { EventHistoryHeatmap, type EventHistoryDataSource } from '$lib/shared/ui/event-history';
+  import type { Address } from '@aboutcircles/sdk-types';
+  import { EventHistoryHeatmap, type EventHistoryDataSource, type EventHistoryRowComponent } from '$lib/shared/ui/event-history';
   import PersonalMintDayEventRow from '$lib/areas/minting/ui/history/PersonalMintDayEventRow.svelte';
 
   type PersonalMintEventRow = {
@@ -112,7 +112,7 @@
     },
   }}
   searchHaystack={mintSearchHaystack}
-  rowComponent={PersonalMintDayEventRow as any}
+  rowComponent={PersonalMintDayEventRow as unknown as EventHistoryRowComponent}
   granularity="month"
   showGranularitySwitch={true}
   bind:eventCount
