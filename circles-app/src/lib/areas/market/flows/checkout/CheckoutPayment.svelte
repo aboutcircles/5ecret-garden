@@ -19,7 +19,7 @@
   import { circles } from '$lib/shared/state/circles';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { ethers } from 'ethers';
-  import { CirclesConverter } from '@circles-sdk/utils';
+  import { CirclesConverter } from '@aboutcircles/sdk-utils';
   import {gnosisConfig} from "$lib/shared/config/circles";
 
   const paymentReference = $derived($cartState.lastCheckout?.paymentReference ?? null);
@@ -36,7 +36,7 @@
 
   // --- Derive transfer context ---
   const basket = $derived($cartState.basket);
-  const lines = $derived((basket?.items ?? []) as any[]);
+  const lines = $derived(basket?.items ?? []);
 
   let chainWarning: string | null = $state(null);
   let transferContext: SendFlowContext | null = $state(null);
@@ -46,13 +46,16 @@
   // Determine current wallet network chainId
   $effect(() => {
     void (async () => {
-      const w = $wallet as any;
+      const w = $wallet;
       if (!w) {
         currentChainId = null;
         return;
       }
       try {
-        const net = await w.provider.getNetwork();
+        // ContractRunner.publicClient is typed as `any` in the SDK; it's
+        // typically an ethers Provider with getNetwork() when available.
+        const client = w.publicClient;
+        const net = await client?.getNetwork?.();
         // ethers v6 returns bigint chainId; normalize to number
         const cid = Number(net?.chainId);
         currentChainId = Number.isFinite(cid) ? cid : null;
@@ -75,25 +78,24 @@
     const recipients = new Set<string>();
     let total = 0;
 
-    const operator = gnosisConfig.production.marketOperator as any;
+    const operator = gnosisConfig.production.marketOperator;
+    if (!operator) throw new Error('Market operator not configured');
     const catalog = getMarketClient().catalog.forOperator(operator);
-    const productCache = new Map<string, any>();
+    const productCache = new Map<string, Record<string, unknown> | null>();
 
-    async function fetchOfferFallback(seller: string, sku: string): Promise<any | null> {
+    async function fetchOfferFallback(seller: string, sku: string): Promise<Record<string, unknown> | null> {
       const key = `${seller.toLowerCase()}::${sku.toLowerCase()}`;
       const cached = productCache.get(key);
       if (cached !== undefined) return cached;
 
       try {
         const item = await catalog.fetchProductForSellerAndSku(seller, sku);
-        const prod = (item as any)?.product;
-        const offer =
-          Array.isArray(prod?.offers) ? prod.offers[0] :
-          prod?.offer ??
-          (Array.isArray(prod?.Offers) ? prod.Offers[0] : prod?.Offer);
+        const prod = item?.product;
+        const offers = prod?.offers;
+        const offer = Array.isArray(offers) ? offers[0] : null;
 
-        productCache.set(key, offer ?? null);
-        return offer ?? null;
+        productCache.set(key, (offer as Record<string, unknown>) ?? null);
+        return (offer as Record<string, unknown>) ?? null;
       } catch (e) {
         console.debug('[checkout] failed to resolve offer from catalog', { seller, sku }, e);
         productCache.set(key, null);
@@ -129,7 +131,7 @@
       }
 
       const unitPrice = snapPrice ?? payTo.price ?? null;
-      const code = (snapCurrency ?? payTo.priceCurrency ?? null) as string | null;
+      const code = snapCurrency ?? payTo.priceCurrency ?? null;
 
       if (!payTo?.address) {
         throw new Error('Missing pay-to address on offer.');
@@ -141,7 +143,7 @@
         throw new Error(`Unsupported currency ${code || '(none)'} – only CRC supported for in-app transfer.`);
       }
 
-      recipients.add((payTo.address as string).toLowerCase());
+      recipients.add(payTo.address.toLowerCase());
       total += unitPrice * qty;
     }
 
@@ -153,27 +155,19 @@
       chainWarning = `Network mismatch: Offer requests chain ${payActionChainId}, but wallet is on ${currentChainId}.`;
     }
 
-    const to = Array.from(recipients)[0] as any;
+    const to = Array.from(recipients)[0];
 
     if (!$circles || !avatarState.avatar) {
       throw new Error('Wallet not ready for pathfinding.');
     }
 
-    const excludedTokens = await $circles.getDefaultTokenExcludeList(to);
-
-    const bigNumber = '99999999999999999999999999999999999';
-    const p =
-      avatarState.avatar?.avatarInfo?.version === 1
-        ? await $circles.v1Pathfinder?.getPath(avatarState.avatar.address, to, bigNumber)
-        : await $circles.v2Pathfinder?.getPath(
-            avatarState.avatar.address,
-            to,
-            bigNumber,
-            true,
-            undefined,
-            undefined,
-            excludedTokens
-          );
+    const targetFlow = 99999999999999999999999999999999999n;
+    const p = await $circles.rpc.pathfinder.findPath({
+      from: avatarState.avatar.address,
+      to,
+      targetFlow,
+      useWrappedBalances: true,
+    });
 
     if (!p || !p.transfers?.length) {
       throw new Error('Pathfinding failed. No usable path was found.');
@@ -212,8 +206,8 @@
 
   // Resolve once on mount (or re-run if basket or paymentReference changes)
   $effect(() => {
-    const b = $cartState.basket as any;
-    const basketId = b?.['@id'];
+    const b = $cartState.basket;
+    const basketId = (b as Record<string, unknown> | null)?.['@id'];
     const currentKey = `${basketId}:${paymentReference}`;
     if (!paymentReference || preparePaymentAction.loading || lastPreparedFor === currentKey) return;
 

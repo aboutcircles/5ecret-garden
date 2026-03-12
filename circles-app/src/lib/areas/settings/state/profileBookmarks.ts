@@ -1,6 +1,6 @@
 import { browser } from '$app/environment';
 import { get, writable, type Readable } from 'svelte/store';
-import type { Address } from '@circles-sdk/utils';
+import type { Address } from '@aboutcircles/sdk-types';
 import type { CidV0 } from '$lib/areas/market/offers';
 import { getProfilesBindings } from '$lib/areas/market/offers';
 import { gnosisConfig } from '$lib/shared/config/circles';
@@ -717,9 +717,9 @@ function createProfileBookmarksService(repository: BookmarksRepository): Profile
         signerAddress: avatar,
       });
       linkDraft['@type'] = 'CustomDataLink';
-      const preimage = canonicaliseLink(linkDraft as any);
+      const preimage = canonicaliseLink(linkDraft);
       const signature = await safeSigner.signBytes(preimage);
-      (linkDraft as any).signature = signature;
+      linkDraft.signature = signature;
 
       const linksWithoutBookmarks = existingLinks.filter(
         (link) => String((link as Record<string, unknown>)?.name ?? '') !== BOOKMARKS_LINK_NAME,

@@ -15,7 +15,7 @@
   import { fetchActiveTrustRowsByGateway } from '$lib/shared/data/circles/paymentGateways';
   import { isAddress } from '$lib/shared/utils/tx';
   import { openAddTrustFlow } from '$lib/areas/trust/flows/addTrust/openAddTrustFlow';
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
 
   import type { TrustRow } from '$lib/areas/settings/model/gatewayTypes';
 
@@ -48,7 +48,7 @@
 
   async function loadTrusts() {
     loadError = null;
-    if (!gatewayValid || !$circles?.circlesRpc) {
+    if (!gatewayValid || !$circles?.rpc) {
       trusts = [];
       return;
     }

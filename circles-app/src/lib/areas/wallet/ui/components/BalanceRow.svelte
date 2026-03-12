@@ -6,78 +6,31 @@
     import { tokenTypeToString } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
     import { crcTypes, roundToDecimals, staticTypes } from '$lib/shared/utils/shared';
     import { formatCompactCurrency } from '$lib/shared/utils/money';
-    import WrapTokens from '$lib/areas/wallet/ui/pages/WrapTokens.svelte';
-    import MigrateTokens from '$lib/areas/wallet/ui/pages/MigrateTokens.svelte';
-    import UnwrapTokens from '$lib/areas/wallet/ui/pages/UnwrapTokens.svelte';
-    import RedeemGroup from '$lib/areas/groups/ui/pages/RedeemGroup.svelte';
-    import Send from '$lib/areas/wallet/flows/send/1_To.svelte';
-    import { openStep } from '$lib/shared/flow';
-    import { openSendFlowPopup } from '$lib/areas/wallet/flows/send/openSendFlowPopup';
-    import type { TokenBalanceRow } from '@circles-sdk/data';
-    import { circles } from '$lib/shared/state/circles';
-    import { get } from 'svelte/store';
-    import { formatEther } from 'ethers';
+    import type { TokenBalance } from '@aboutcircles/sdk-types';
     import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
-    import { openInfoPopup } from '$lib/shared/ui/shell/confirmDialogs';
+    import { popupControls } from '$lib/shared/state/popup';
+    import BalanceRowActions from './BalanceRowActions.svelte';
+    import { isGroupTokenBalance } from '$lib/shared/utils/tokenClassification';
 
-    interface Props { item: TokenBalanceRow; }
+    interface Props { item: TokenBalance; }
     let { item }: Props = $props();
 
-    type RowAction = {
-        condition: (b: TokenBalanceRow) => boolean;
-        title: string;
-        icon: string;
-        component: any;
-    };
-
-    const actions: RowAction[] = [
-        {
-            condition: (b) => true,
-            title: 'Send', icon: '/send.svg', component: Send
-        },
-        {
-            condition: (b) => ['CrcV2_RegisterHuman', 'CrcV2_RegisterGroup'].includes(b.tokenType),
-            title: 'Wrap', icon: '/banknotes.svg', component: WrapTokens
-        },
-        {
-            condition: (b) => b.tokenType === 'CrcV2_RegisterGroup',
-            title: 'Redeem', icon: '/redeem.svg', component: RedeemGroup
-        },
-        {
-            condition: (b) =>
-                b.tokenType === 'CrcV1_Signup' &&
-                !!avatarState.avatar?.avatarInfo &&
-                avatarState.avatar?.avatarInfo?.version > 1,
-            title: 'Migrate Tokens to V2', icon: '/banknotes.svg', component: MigrateTokens
-        },
-        {
-            condition: (b) => b.tokenType === 'CrcV2_ERC20WrapperDeployed_Demurraged',
-            title: 'Unwrap', icon: '/banknotes.svg', component: UnwrapTokens
-        },
-        {
-            condition: (b) => b.tokenType === 'CrcV2_ERC20WrapperDeployed_Inflationary',
-            title: 'Unwrap Static Circles', icon: '/banknotes.svg', component: UnwrapTokens
-        },
-    ];
-
-    function executeAction(action: RowAction) {
-        if (action.title === 'Send') {
-            openSendFlowPopup({
-                selectedAsset: item,
-                selectedAddress: undefined,
-                amount: undefined,
-                transitiveOnly: false
-            });
-        } else {
-            openStep({ title: action.title, component: action.component, props: { asset: item } });
+    const tokenLabel = $derived.by(() => {
+        // If the tokenOwner is a group, override the generic wrapper label
+        if (isGroupTokenBalance(item) && !item.isGroup) {
+            if (item.isErc20) return 'Group Circles (Wrapped)';
+            return 'Group Circles';
         }
-    }
+        return tokenTypeToString(item.tokenType ?? '');
+    });
 
-    let copyIcon = $state('/copy.svg');
-    function handleCopy() {
-        navigator.clipboard.writeText(item.isWrapped ? item.tokenAddress : item.tokenId);
-        copyIcon = '/check.svg';
-        setTimeout(() => { copyIcon = '/copy.svg'; }, 1000);
+    function openActions(e: MouseEvent) {
+        e.stopPropagation();
+        popupControls.open({
+            title: 'Token actions',
+            component: BalanceRowActions,
+            props: { item },
+        });
     }
 
     const dispatch = createEventDispatcher<{ click: void }>();
@@ -108,56 +61,6 @@
         listNavigator.onRowClick(event);
         onClick();
     }
-
-    async function handleReadHubBalance(): Promise<void> {
-        const sdk = get(circles);
-        const connectedAvatar = avatarState.avatar?.address;
-
-        if (!sdk?.v2Hub) {
-            await openInfoPopup({
-                title: 'Hub unavailable',
-                message: 'Circles V2 hub contract is not available.',
-                tone: 'warning',
-            });
-            return;
-        }
-
-        if (!connectedAvatar) {
-            await openInfoPopup({
-                title: 'No avatar connected',
-                message: 'No connected avatar found.',
-                tone: 'warning',
-            });
-            return;
-        }
-
-        if (!item.tokenId) {
-            await openInfoPopup({
-                title: 'Missing token id',
-                message: 'No tokenId found for this balance row.',
-                tone: 'warning',
-            });
-            return;
-        }
-
-        try {
-            const tokenId = BigInt(item.tokenId);
-            const balance = await sdk.v2Hub.balanceOf(connectedAvatar, tokenId);
-            await openInfoPopup({
-                title: 'Circles V2 hub balance',
-                message: [
-                    `Avatar: ${connectedAvatar}`,
-                    `Token ID: ${item.tokenId}`,
-                    `Atto CRC: ${balance.toString()}`,
-                    `CRC: ${formatEther(balance)}`,
-                ].join('\n'),
-                tone: 'info',
-            });
-        } catch (error: any) {
-            const message = error?.message ?? 'Failed to query balance from Circles V2 hub.';
-            await openInfoPopup({ title: 'Balance query failed', message, tone: 'error' });
-        }
-    }
 </script>
 
 <!-- Use noLeading to collapse the empty first column; put the old "horizontal avatar row" inside content -->
@@ -182,54 +85,32 @@
                         address={item.tokenOwner}
                         view="horizontal"
                         clickable={true}
-                        bottomInfo={tokenTypeToString(item.tokenType)}
+                        bottomInfo={tokenLabel}
                 />
             </div>
 
             <!-- Right: amount + dropdown actions -->
             <div class="flex items-center gap-3 md:gap-4 shrink-0">
                 <div class="text-right tabular-nums">
-                    <div class="font-medium">{formatCompactCurrency(item.circles, 'CRC')}</div>
+                    <div class="font-medium">{formatCompactCurrency(item.circles ?? 0, 'CRC')}</div>
                     <p class="text-xs text-base-content/70">
-                        {#if staticTypes.has(item.tokenType)}
-                            {roundToDecimals(item.staticCircles)} Static Circles
+                        {#if staticTypes.has(item.tokenType ?? '')}
+                            {roundToDecimals(item.staticCircles ?? 0)} Static Circles
                         {/if}
-                        {#if crcTypes.has(item.tokenType)}
-                            {roundToDecimals(item.crc)} CRC
+                        {#if crcTypes.has(item.tokenType ?? '')}
+                            {roundToDecimals(item.circles ?? 0)} CRC
                         {/if}
                     </p>
                 </div>
 
                 {#if !avatarState.isGroup}
-                    <div class="dropdown dropdown-end">
-                        <button tabindex="0" class="btn btn-ghost btn-xs" aria-label="Row actions" onclick={(e)=>e.stopPropagation()}>
-                            <img src="/union.svg" alt="" class="icon" aria-hidden="true" />
-                        </button>
-                        <ul class="dropdown-content menu menu-sm bg-base-100 rounded-box shadow z-10 w-56 p-2">
-                            {#each actions as action (action.title)}
-                                {#if action.condition(item)}
-                                    <li>
-                                        <button onclick={(e)=>{ e.stopPropagation(); executeAction(action); }}>
-                                            <img src={action.icon} alt="" class="icon" aria-hidden="true" />
-                                            {action.title}
-                                        </button>
-                                    </li>
-                                {/if}
-                            {/each}
-                            <li>
-                                <button onclick={(e)=>{ e.stopPropagation(); handleCopy(); }}>
-                                    <img src={copyIcon} alt="" class="icon" aria-hidden="true" />
-                                    Copy
-                                </button>
-                            </li>
-                            <li>
-                                <button onclick={(e)=>{ e.stopPropagation(); void handleReadHubBalance(); }}>
-                                    <img src="/banknotes.svg" alt="" class="icon" aria-hidden="true" />
-                                    Check hub balance
-                                </button>
-                            </li>
-                        </ul>
-                    </div>
+                    <button
+                        class="btn btn-ghost btn-xs"
+                        aria-label="Token actions"
+                        onclick={openActions}
+                    >
+                        <img src="/union.svg" alt="" class="icon" aria-hidden="true" />
+                    </button>
                 {/if}
             </div>
         </div>

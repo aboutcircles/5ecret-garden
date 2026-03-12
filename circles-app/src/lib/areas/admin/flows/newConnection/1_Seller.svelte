@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
   import { openStep } from '$lib/shared/flow';
   import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import SearchAvatar from '$lib/areas/contacts/ui/pages/SearchAvatar.svelte';
