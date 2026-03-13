@@ -19,47 +19,34 @@
         isV1?: boolean;
         initSdk: (address: Address) => Promise<Sdk>;
         refreshGroupsCallback?: () => void;
-        disabled?: boolean;
-        onConnecting?: (busy: boolean) => void;
     }
 
-    let {address, isRegistered, groups, isV1, initSdk, refreshGroupsCallback, disabled = false, onConnecting}: Props = $props();
-
-    let connecting = $state(false);
-    let busy = $derived(connecting || disabled);
+    let {address, isRegistered, groups, isV1, initSdk, refreshGroupsCallback}: Props = $props();
 
     async function connectAvatar(groupAddress?: Address) {
-        connecting = true;
-        onConnecting?.(true);
-        try {
-            const sdk = await initSdk(address);
-            $circles = sdk;
+        const sdk = await initSdk(address);
+        $circles = sdk;
 
-            if (groupAddress === undefined && !isRegistered) {
-                await goto(`/register?owner=${address}`);
-                return;
-            }
-            avatarState.avatar = await sdk.getAvatar(groupAddress ?? address);
-            avatarState.isGroup = !!groupAddress;
-            avatarState.groupType = groupAddress
-                ? await sdk.getGroupType(groupAddress)
-                : undefined;
-
-            CirclesStorage.getInstance().data = {
-                avatar: address,
-                group: groupAddress,
-                isGroup: avatarState.isGroup,
-                groupType: avatarState.groupType,
-                rings: settings.ring,
-                legacy: settings.legacy,
-            };
-
-            goto("/dashboard")
-        } catch (e) {
-            console.error('[ConnectCircles] Failed to connect:', e);
-            connecting = false;
-            onConnecting?.(false);
+        if (groupAddress === undefined && !isRegistered) {
+            await goto(`/register?owner=${address}`);
+            return;
         }
+        avatarState.avatar = await sdk.getAvatar(groupAddress ?? address);
+        avatarState.isGroup = !!groupAddress;
+        avatarState.groupType = groupAddress
+            ? await sdk.getGroupType(groupAddress)
+            : undefined;
+
+        CirclesStorage.getInstance().data = {
+            avatar: address,
+            group: groupAddress,
+            isGroup: avatarState.isGroup,
+            groupType: avatarState.groupType,
+            rings: settings.ring,
+            legacy: settings.legacy,
+        };
+
+        goto("/dashboard")
     }
 
     async function openCreateGroup() {
@@ -85,7 +72,7 @@
     }
 </script>
 
-<div class="w-full border rounded-lg flex flex-col p-4 shadow-sm" class:opacity-50={busy} class:pointer-events-none={busy}>
+<div class="w-full border rounded-lg flex flex-col p-4 shadow-sm">
     <button
             onclick={() => connectAvatar()}
             class="flex justify-between items-center hover:bg-base-200 rounded-lg p-2"
@@ -97,9 +84,7 @@
                 view="horizontal"
         />
         <div class="btn btn-xs btn-outline btn-primary">
-            {#if connecting}
-                <span class="loading loading-spinner loading-xs"></span>
-            {:else if !isRegistered}
+            {#if !isRegistered}
                 register
             {:else if isV1}
                 V1
@@ -114,7 +99,6 @@
             <p class="font-bold text-primary">My groups</p>
             <button
                     onclick={() => openCreateGroup()}
-                    disabled={busy}
                     class="btn btn-xs btn-outline btn-primary">Create a group
             </button
             >
