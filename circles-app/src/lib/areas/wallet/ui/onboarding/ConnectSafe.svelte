@@ -10,6 +10,7 @@
 
   let searchQuery = $state('');
   let showUnregistered = $state(false);
+  let anyConnecting = $state(false);
   let safes: Address[] = $state([]);
   let profileBySafe: Record<string, AvatarRow | undefined> = $state({});
   let groupsByOwner: Record<Address, GroupRow[]> = $state({});
@@ -204,6 +205,8 @@
             groups={groupsByOwner[item.toLowerCase()] ?? []}
             initSdk={initSdk}
             refreshGroupsCallback={refreshGroupsLocal}
+            disabled={anyConnecting}
+            onConnecting={(busy) => anyConnecting = busy}
           />
         {/each}
       </div>
@@ -243,6 +246,8 @@
                 groups={[]}
                 initSdk={initSdk}
                 refreshGroupsCallback={refreshGroupsLocal}
+                disabled={anyConnecting}
+                onConnecting={(busy) => anyConnecting = busy}
               />
             {/each}
           </div>
@@ -269,6 +274,8 @@
       initSdk={initEoaSdk}
       label="Wallet"
       showGroups={false}
+      disabled={anyConnecting}
+      onConnecting={(busy) => anyConnecting = busy}
     />
   </section>
 {/if}
