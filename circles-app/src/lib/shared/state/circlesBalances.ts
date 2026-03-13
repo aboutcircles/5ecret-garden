@@ -4,6 +4,7 @@ import type { TokenBalance } from '@aboutcircles/sdk-types';
 import { createEventStore } from '$lib/shared/state/eventStores/eventStoreFactory.svelte';
 import type { Avatar } from '@aboutcircles/sdk';
 import { writable } from 'svelte/store';
+import { writeBalances, makeScopeId } from '$lib/shared/cache';
 
 const refreshOnEvents: Set<CirclesEventType> = new Set<CirclesEventType>([
   'CrcV1_HubTransfer',
@@ -46,6 +47,8 @@ export const initBalanceStore = (avatar: Avatar) => {
     ended: false,
   });
 
+  const scopeId = makeScopeId(avatar.address);
+
   const _initialLoad = async (): Promise<TokenBalance[]> => {
     try {
       // Validate avatar is properly initialized
@@ -66,6 +69,7 @@ export const initBalanceStore = (avatar: Avatar) => {
       }
 
       const balances = await avatar.balances.getTokenBalances() as unknown as TokenBalance[];
+      void writeBalances(scopeId, balances as any[]);
       return balances;
     } catch (e: unknown) {
       const errorMessage = e instanceof Error ? e.message : String(e);
@@ -92,6 +96,7 @@ export const initBalanceStore = (avatar: Avatar) => {
       }
 
       const balances = await avatar.balances.getTokenBalances() as unknown as TokenBalance[];
+      void writeBalances(scopeId, balances as any[]);
       return balances;
     } catch (e: unknown) {
       const errorMessage = e instanceof Error ? e.message : String(e);

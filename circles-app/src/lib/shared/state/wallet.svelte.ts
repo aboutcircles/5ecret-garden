@@ -26,6 +26,7 @@ import { isHumanType, isGroupType, isOrganizationType } from '$lib/shared/utils/
 import { handleError } from '$lib/shared/utils/errorHandler';
 import { withRetry, isTransientError } from '$lib/shared/utils/retry';
 import { EoaBrowserRunner } from '$lib/shared/integrations/wallet/EoaBrowserRunner';
+import { clearAll as clearCache } from '$lib/shared/cache';
 
 export const wallet = writable<ContractRunner | undefined>();
 
@@ -376,5 +377,6 @@ export async function clearSession() {
   });
   circles.set(undefined);
   CirclesStorage.getInstance().clear();
+  void clearCache();
   await goto('/');
 }
