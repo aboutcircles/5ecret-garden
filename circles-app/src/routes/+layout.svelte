@@ -20,10 +20,11 @@
     popupHistoryForwardNoopTick,
   } from '$lib/shared/state/popup';
   import Popup from '$lib/shared/ui/shell/PopupHost.svelte';
-  import { initTransactionHistoryStore } from '$lib/shared/state/transactionHistory';
+  import { initTransactionHistoryStore, transactionHistory } from '$lib/shared/state/transactionHistory';
   import { initContactStore } from '$lib/shared/state/contacts';
-  import { initBalanceStore } from '$lib/shared/state/circlesBalances';
+  import { initBalanceStore, circlesBalances } from '$lib/shared/state/circlesBalances';
   import { browser } from '$app/environment';
+  import { hydrate, makeScopeId, writeMeta } from '$lib/shared/cache';
   import { env } from '$env/dynamic/public';
 
   const PUBLIC_PLAUSIBLE_DOMAIN = env.PUBLIC_PLAUSIBLE_DOMAIN ?? '';
@@ -210,6 +211,7 @@
   });
 
   // init stores - track which avatar we've initialized for
+  // Hydrate from IDB cache first for instant UI, then live-fetch from RPC
   let lastInitializedAvatar: string | null = null;
 
   $effect(() => {
@@ -220,12 +222,42 @@
     if (lastInitializedAvatar === avatar.address) return;
     lastInitializedAvatar = avatar.address;
 
+    const scopeId = makeScopeId(avatar.address);
+
+    // 1. Hydrate from IndexedDB for instant UI on reload
+    void hydrate(scopeId).then((cached) => {
+      if (cached && cached.balances.length > 0) {
+        circlesBalances.set({
+          data: cached.balances as any[],
+          next: async () => false,
+          ended: false,
+        });
+      }
+      if (cached && cached.transactions.length > 0) {
+        transactionHistory.set({
+          data: cached.transactions as any[],
+          next: async () => false,
+          ended: false,
+          isLoading: true,
+        });
+      }
+    });
+
+    // 2. Init live stores (re-fetches from RPC, writes through to IDB)
     initTransactionHistoryStore(avatar);
     initContactStore(avatar);
     initBalanceStore(avatar);
     if (avatarState.isGroup && $circles) {
       initGroupMetricsStore($circles.rpc, avatar.address);
     }
+
+    // 3. Update meta checkpoint
+    void writeMeta({
+      scopeId,
+      blockNumber: 0,
+      dataVersion: 1,
+      lastSyncedAt: Date.now(),
+    });
   });
 
   $effect(() => {

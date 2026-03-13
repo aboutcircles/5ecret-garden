@@ -7,6 +7,7 @@ import { FallbackImageUrl } from './types';
 import { shortenAddress } from '$lib/shared/utils/shared';
 import { createAvatarDataSource } from '$lib/shared/data/circles/avatarDataSource';
 import { createProfileDataSource } from '$lib/shared/data/circles/profileDataSource';
+import { readProfile, readProfilesBatch, persistProfiles } from '$lib/shared/cache';
 import type { CirclesConfig } from '$lib/shared/config/circles';
 
 // Cache of lowercased address -> Promise<AppProfileCore>
@@ -76,6 +77,10 @@ async function fetchCoreBatch(addresses: ProfileAddress[]): Promise<Map<ProfileA
     const doc = avatar?.cidV0 ? cidToDoc[avatar.cidV0] : undefined;
     out.set(a, applyFallback(a, avatar, doc));
   }
+
+  // Write-through to IDB
+  void persistProfiles(out as Map<string, AppProfileCore>);
+
   return out;
 }
 
@@ -130,6 +135,21 @@ export async function getProfilesCoreBatch(
     toFetch.push(addr);
   }
 
+  // Tier 2: check IndexedDB for addresses not in memory cache
+  if (toFetch.length > 0) {
+    const fromIdb = await readProfilesBatch(toFetch);
+    for (const [addr, profile] of fromIdb) {
+      const pa = addr as ProfileAddress;
+      const p = Promise.resolve(profile);
+      coreCache.set(pa, p);
+      out.set(pa, profile);
+    }
+    // Remove IDB hits from toFetch
+    const stillNeeded = toFetch.filter((a) => !fromIdb.has(a));
+    toFetch.length = 0;
+    toFetch.push(...stillNeeded);
+  }
+
   if (toFetch.length > 0) {
     const fetched = await fetchCoreBatch(toFetch);
     for (const [addr, core] of fetched.entries()) {
@@ -163,6 +183,15 @@ export async function getProfileCore(address: ProfileAddress): Promise<AppProfil
 
   const cached = coreCache.get(addr);
   if (cached) return cached;
+
+  // Tier 2: check IndexedDB before hitting RPC
+  const idbProfile = await readProfile(addr);
+  if (idbProfile) {
+    const p = Promise.resolve(idbProfile);
+    coreCache.set(addr, p);
+    return idbProfile;
+  }
+
   const p = aggregator.enqueue(addr).catch((err) => {
     coreCache.delete(addr);
     throw err;

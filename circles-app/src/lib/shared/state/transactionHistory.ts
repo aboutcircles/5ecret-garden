@@ -7,6 +7,7 @@ import { handleError } from '$lib/shared/utils/errorHandler';
 import { circles } from '$lib/shared/state/circles';
 import { getProfile } from '$lib/shared/data/profile/profile';
 import { circlesBalances } from '$lib/shared/state/circlesBalances';
+import { writeTransactions, makeScopeId } from '$lib/shared/cache';
 
 const PAGE_SIZE = 100; // Fetch 100 events - they get grouped by tx hash
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
@@ -679,12 +680,19 @@ async function loadNextPage(): Promise<boolean> {
       // This populates enrichedProfileCache for getDisplayName() to use synchronously
       await prefetchProfilesForTransactions(rows);
 
-      _transactionHistory.update((state) => ({
-        data: [...state.data, ...rows],
-        next: loadNextPage,
-        ended: !response.hasMore,
-        isLoading: false,
-      }));
+      _transactionHistory.update((state) => {
+        const newData = [...state.data, ...rows];
+        // Write-through to IDB cache
+        if (currentAvatarAddress) {
+          void writeTransactions(makeScopeId(currentAvatarAddress), newData);
+        }
+        return {
+          data: newData,
+          next: loadNextPage,
+          ended: !response.hasMore,
+          isLoading: false,
+        };
+      });
 
       return true;
     } else {
