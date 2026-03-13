@@ -69,8 +69,27 @@
         ownedGroupsLoading = true;
         ownedGroupsError = null;
         try {
-            const result = await getBaseAndCmgGroupsByOwnerBatch($circles, [ownerAddress as any]);
-            ownedGroups = result[(ownerAddress as string).toLowerCase() as any] ?? result[ownerAddress as any] ?? [];
+            // Query groups the user is a member of (not just owner)
+            // The owner field is null for base groups (CrcV2_RegisterGroup),
+            // so ownership alone misses most groups.
+            const memberGroups = await getGroupsByMember($circles, ownerAddress as any);
+            // Also try owner-based query for CMG groups where user is the deployer
+            const ownedResult = await getBaseAndCmgGroupsByOwnerBatch($circles, [ownerAddress as any]);
+            const ownedList = ownedResult[(ownerAddress as string).toLowerCase() as any] ?? ownedResult[ownerAddress as any] ?? [];
+
+            // Merge: owned groups first, then member groups (dedup by group address)
+            const seen = new Set<string>();
+            const merged: GroupRow[] = [];
+            for (const g of ownedList) {
+                const key = g.group.toLowerCase();
+                if (!seen.has(key)) { seen.add(key); merged.push(g); }
+            }
+            for (const g of memberGroups) {
+                const key = g.group.toLowerCase();
+                if (!seen.has(key)) { seen.add(key); merged.push(g); }
+            }
+
+            ownedGroups = merged;
             ownedGroupsLoadedForAvatar = String(ownerAddress).toLowerCase();
         } catch (e) {
             ownedGroupsError = e instanceof Error ? e.message : String(e);

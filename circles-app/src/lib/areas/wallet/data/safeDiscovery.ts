@@ -4,6 +4,7 @@ import type { AvatarRow, Sdk } from '@circles-sdk/sdk';
 import { ethers } from 'ethers';
 import { get, writable, type Readable } from 'svelte/store';
 import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/shared/utils/getGroupsByOwnerBatch';
+import { getGroupsByMember } from '$lib/areas/groups/utils/getGroupsByMemberBatch';
 
 type SafeDiscoveryState = {
   safes: Address[];
@@ -60,7 +61,7 @@ export async function loadSafesProfileAndGroups(
   profileBySafe: Record<string, AvatarRow | undefined>;
   groupsByOwner: Record<Address, GroupRow[]>;
 }> {
-  const [avatarInfo, groupInfo] = await Promise.all([
+  const [avatarInfo, ownedGroupInfo] = await Promise.all([
     sdk?.data?.getAvatarInfoBatch(safes) ?? [],
     getBaseAndCmgGroupsByOwnerBatch(sdk, safes),
   ]);
@@ -70,7 +71,30 @@ export async function loadSafesProfileAndGroups(
     profileBySafe[info.avatar] = info;
   });
 
-  return { profileBySafe, groupsByOwner: groupInfo };
+  // Also query group memberships for each safe (owner-based query misses
+  // base groups whose owner field is null in the V_CrcV2_Groups view)
+  const groupsByOwner: Record<Address, GroupRow[]> = { ...ownedGroupInfo };
+  await Promise.all(
+    safes.map(async (safe) => {
+      try {
+        const memberGroups = await getGroupsByMember(sdk, safe);
+        const key = safe.toLowerCase() as Address;
+        const existing = groupsByOwner[key] ?? [];
+        const seen = new Set(existing.map((g) => g.group.toLowerCase()));
+        for (const g of memberGroups) {
+          if (!seen.has(g.group.toLowerCase())) {
+            existing.push(g);
+            seen.add(g.group.toLowerCase());
+          }
+        }
+        groupsByOwner[key] = existing;
+      } catch (e) {
+        console.warn(`[safeDiscovery] Failed to load memberships for ${safe}:`, e);
+      }
+    })
+  );
+
+  return { profileBySafe, groupsByOwner };
 }
 
 export function createSafeDiscoveryStore(
