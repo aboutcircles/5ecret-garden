@@ -21,10 +21,11 @@
     popupHistoryForwardNoopTick,
   } from '$lib/shared/state/popup';
   import Popup from '$lib/shared/ui/shell/PopupHost.svelte';
-  import { initTransactionHistoryStore } from '$lib/shared/state/transactionHistory';
+  import { initTransactionHistoryStore, transactionHistory } from '$lib/shared/state/transactionHistory';
   import { initContactStore } from '$lib/shared/state/contacts';
-  import { initBalanceStore } from '$lib/shared/state/circlesBalances';
+  import { initBalanceStore, circlesBalances } from '$lib/shared/state/circlesBalances';
   import { browser } from '$app/environment';
+  import { hydrate, makeScopeId, writeMeta } from '$lib/shared/cache';
   import { PUBLIC_PLAUSIBLE_DOMAIN } from '$env/static/public';
   import { initGroupMetricsStore } from '$lib/areas/groups/state';
   import type { Address } from '@circles-sdk/utils';
@@ -196,10 +197,31 @@
     }
   });
 
-  // init stores
+  // init stores (hydrate from IDB cache first, then live-fetch from RPC)
   $effect(() => {
     if (avatarState.avatar) {
       const avatar = avatarState.avatar;
+      const scopeId = makeScopeId(avatar.address);
+
+      // 1. Hydrate from IndexedDB for instant UI on reload
+      void hydrate(scopeId).then((cached) => {
+        if (cached && cached.balances.length > 0) {
+          circlesBalances.set({
+            data: cached.balances as any[],
+            next: async () => false,
+            ended: false,
+          });
+        }
+        if (cached && cached.transactions.length > 0) {
+          transactionHistory.set({
+            data: cached.transactions as any[],
+            next: async () => false,
+            ended: false,
+          });
+        }
+      });
+
+      // 2. Init live stores (re-fetches from RPC, writes through to IDB)
       initTransactionHistoryStore(avatar);
       initContactStore(avatar);
       initBalanceStore(avatar);
@@ -212,6 +234,14 @@
           }
         })();
       }
+
+      // 3. Update meta checkpoint after live stores have initialized
+      void writeMeta({
+        scopeId,
+        blockNumber: 0,
+        dataVersion: 1,
+        lastSyncedAt: Date.now(),
+      });
     }
   });
 

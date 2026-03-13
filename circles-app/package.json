@@ -70,6 +70,7 @@
     "d3-selection": "^3.0.0",
     "ethers": "^6.13.5",
     "html5-qrcode": "^2.3.8",
+    "idb": "^8.0.3",
     "imask": "^7.6.1",
     "lucide": "^0.544.0",
     "papaparse": "^5.5.2",

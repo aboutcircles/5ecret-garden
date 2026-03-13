@@ -5,6 +5,7 @@ import {
 import { createCirclesQueryStore } from '$lib/shared/state/query';
 import { writable } from 'svelte/store';
 import type { Avatar } from '@circles-sdk/sdk';
+import { writeTransactions, makeScopeId } from '$lib/shared/cache';
 
 const transferEvents: Set<CirclesEventType> = new Set([
   'CrcV1_HubTransfer',
@@ -58,6 +59,7 @@ export const initTransactionHistoryStore = (avatar: Avatar) => {
     ended: false,
   });
 
+  const scopeId = makeScopeId(avatar.address);
   const thisQuery = currentQuery;
   thisQuery?.then((store) => {
     if (thisQuery === currentQuery) {
@@ -68,6 +70,9 @@ export const initTransactionHistoryStore = (avatar: Avatar) => {
           ended: boolean;
         }) => {
           _transactionHistory.set(value);
+          if (value.data.length > 0) {
+            void writeTransactions(scopeId, value.data);
+          }
         }
       );
       currentStoreUnsubscribe = unsubscribe;

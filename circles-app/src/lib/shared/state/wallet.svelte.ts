@@ -25,6 +25,7 @@ import {privateKeyToAccount} from 'viem/accounts';
 import { clearConnectorId, getConnectorId } from '$lib/shared/state/connector';
 import { createAvatarDataSource } from '$lib/shared/data/circles/avatarDataSource';
 import { getWalletProvider } from '$lib/shared/integrations/wallet';
+import { clearAll as clearCache } from '$lib/shared/cache';
 
 export const wallet = writable<SdkContractRunner | undefined>();
 
@@ -228,5 +229,6 @@ export async function clearSession() {
     });
     circles.set(undefined);
     CirclesStorage.getInstance().clear();
+    void clearCache();
     await goto('/');
 }

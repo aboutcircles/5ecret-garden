@@ -7,6 +7,8 @@ import type { AppProfileCore as Profile } from '$lib/shared/model/profile';
 import { writable } from 'svelte/store';
 import { createContactsQueryStore } from '$lib/shared/state/contacts/query/circlesContactsQueryStore.svelte';
 import type { Avatar } from '@circles-sdk/sdk';
+import { writeTrusts, persistProfiles, makeScopeId } from '$lib/shared/cache';
+import type { ProfileAddress } from '$lib/shared/model/profile/types';
 
 export type ContactListItem = {
   contactProfile: Profile;
@@ -39,9 +41,30 @@ export const initContactStore = ($avatar: Avatar) => {
 
 	currentQuery = undefined;
 
+  const scopeId = makeScopeId($avatar.address);
   currentQuery = createContactsQueryStore($avatar, $avatar.address, refreshOnEvents);
   currentQuery.then((store) => {
-    currentStoreUnsubscribe = store.subscribe(contacts.set);
+    currentStoreUnsubscribe = store.subscribe((value: {
+      data: ContactList;
+      next: () => Promise<boolean>;
+      ended: boolean;
+    }) => {
+      contacts.set(value);
+
+      // Write-through: persist trust relations and profiles to IDB
+      const entries: ContactListItem[] = Object.values(value.data);
+      if (entries.length > 0) {
+        const trustRows = entries.map((item) => item.row);
+        void writeTrusts(scopeId, trustRows);
+
+        const profileMap = new Map<string, Profile>();
+        for (const item of entries) {
+          const addr = item.row.objectAvatar.toLowerCase() as ProfileAddress;
+          profileMap.set(addr, item.contactProfile);
+        }
+        void persistProfiles(profileMap);
+      }
+    });
   });
 }
 

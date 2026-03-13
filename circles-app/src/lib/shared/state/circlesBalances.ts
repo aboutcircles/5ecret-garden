@@ -7,6 +7,7 @@ import type {
 import { createEventStore } from '$lib/shared/state/eventStores';
 import type { Avatar } from '@circles-sdk/sdk';
 import { writable } from 'svelte/store';
+import { writeBalances, makeScopeId } from '$lib/shared/cache';
 
 const refreshOnEvents: Set<CirclesEventType> = new Set<CirclesEventType>([
   'CrcV2_TransferBatch',
@@ -41,9 +42,13 @@ export const initBalanceStore = (avatar: Avatar) => {
     ended: false,
   });
 
+  const scopeId = makeScopeId(avatar.address);
+
   const _initialLoad = async () => {
     try {
-      return await avatar.getBalances();
+      const balances = await avatar.getBalances();
+      void writeBalances(scopeId, balances);
+      return balances;
     } catch (e: any) {
       if (e?.includes?.('No balances found') || e?.message?.includes?.('No balances found')) {
         return [];
@@ -60,7 +65,9 @@ export const initBalanceStore = (avatar: Avatar) => {
     if (!refreshOnEvents.has(event.$event)) return currentData;
 
     try {
-      return await avatar.getBalances();
+      const balances = await avatar.getBalances();
+      void writeBalances(scopeId, balances);
+      return balances;
     } catch (e: any) {
       if (e?.includes?.('No balances found') || e?.message?.includes?.('No balances found')) {
         return [];
