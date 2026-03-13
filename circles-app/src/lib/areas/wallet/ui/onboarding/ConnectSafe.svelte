@@ -8,6 +8,7 @@
   import { createSafeDiscoveryStore } from '$lib/areas/wallet/data/safeDiscovery';
 
   let searchQuery = $state('');
+  let anyConnecting = $state(false);
   let safes: Address[] = $state([]);
   let profileBySafe: Record<string, AvatarRow | undefined> = $state({});
   let groupsByOwner: Record<Address, GroupRow[]> = $state({});
@@ -155,6 +156,8 @@
           groups={groupsByOwner[item.toLowerCase()] ?? []}
           initSdk={initSdk}
           refreshGroupsCallback={refreshGroupsLocal}
+          disabled={anyConnecting}
+          onConnecting={(busy) => anyConnecting = busy}
         />
       {/each}
     </div>
