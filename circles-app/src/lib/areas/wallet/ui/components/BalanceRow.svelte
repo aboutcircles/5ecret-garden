@@ -21,6 +21,11 @@
     import { openInfoPopup } from '$lib/shared/ui/shell/confirmDialogs';
     import { openTextPromptPopup } from '$lib/shared/ui/shell/promptDialogs';
     import { runTask } from '$lib/shared/utils/tasks';
+    import {
+        getPriceProfileParityCached,
+        isStaticWrappedTokenBalanceCandidate,
+        resolveStaticWrappedTokenAddress
+    } from '$lib/pricing/balancerPrice';
 
     interface Props { item: TokenBalanceRow; }
     let { item }: Props = $props();
@@ -78,6 +83,60 @@
     }
 
     let copyIcon = $state('/copy.svg');
+    let tokenPrice: string | null = $state(null);
+    let priceTokenAddress: string | undefined = $state(undefined);
+
+    let isStaticWrappedToken = $derived(
+        isStaticWrappedTokenBalanceCandidate({
+            tokenType: item?.tokenType,
+            isWrapped: item?.isWrapped,
+            tokenAddress: item?.tokenAddress
+        })
+    );
+
+    $effect(() => {
+        tokenPrice = null;
+        priceTokenAddress = undefined;
+
+        const sdk = get(circles);
+        if (!sdk) {
+            return;
+        }
+
+        let cancelled = false;
+
+        void (async () => {
+            const resolvedAddress = await resolveStaticWrappedTokenAddress({
+                tokenType: item?.tokenType,
+                isWrapped: item?.isWrapped,
+                tokenAddress: item?.tokenAddress,
+                tokenOwner: item?.tokenOwner,
+                version: item?.version,
+                sdk
+            });
+
+            if (!resolvedAddress || cancelled) {
+                return;
+            }
+
+            priceTokenAddress = resolvedAddress;
+            const price = await getPriceProfileParityCached(resolvedAddress);
+            if (!cancelled) {
+                tokenPrice = price;
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    });
+
+    function hasNumericPrice(value: string | null): boolean {
+        if (value == null) return false;
+        const parsed = Number(value);
+        return Number.isFinite(parsed);
+    }
+
     function handleCopy() {
         navigator.clipboard.writeText(item.isWrapped ? item.tokenAddress : item.tokenId);
         copyIcon = '/check.svg';
@@ -274,15 +333,20 @@
             <!-- Right: amount + dropdown actions -->
             <div class="flex items-center gap-3 md:gap-4 shrink-0">
                 <div class="text-right tabular-nums">
-                    <div class="font-medium">{formatCompactCurrency(item.circles, 'CRC')}</div>
-                    <p class="text-xs text-base-content/70">
+                    <div class="font-medium leading-tight">{formatCompactCurrency(item.circles, 'CRC')}</div>
+                    <div class="mt-0.5 flex flex-col items-end gap-0.5 text-xs text-base-content/70 leading-tight">
                         {#if staticTypes.has(item.tokenType)}
-                            {roundToDecimals(item.staticCircles)} Static Circles
+                            <span>{roundToDecimals(item.staticCircles)} Static Circles</span>
                         {/if}
                         {#if crcTypes.has(item.tokenType)}
-                            {roundToDecimals(item.crc)} CRC
+                            <span>{roundToDecimals(item.crc)} CRC</span>
                         {/if}
-                    </p>
+                    </div>
+                    {#if priceTokenAddress}
+                        <p class="mt-0.5 text-xs text-base-content/70 leading-tight">
+                            Price: <span class="font-medium text-base-content/80">{tokenPrice ?? 'Loading...'}</span>{#if hasNumericPrice(tokenPrice)} WXDAI{/if}
+                        </p>
+                    {/if}
                 </div>
 
                 {#if !avatarState.isGroup}
