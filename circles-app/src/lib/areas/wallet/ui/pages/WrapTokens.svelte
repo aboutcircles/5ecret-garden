@@ -5,7 +5,7 @@
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import BalanceRow from '$lib/areas/wallet/ui/components/BalanceRow.svelte';
   import { roundToDecimals } from '$lib/shared/utils/shared';
-  import { runTask } from '$lib/shared/utils/tasks';
+  import { executeTxSubmitFirst } from '$lib/shared/utils/txExecution';
   import { popupControls } from '$lib/shared/state/popup';
 
   interface Props {
@@ -22,17 +22,18 @@
   async function wrap() {
     const sendValue = ethers.parseEther(amount.toString());
     if (wrapType === 'Demurraged') {
-      runTask({
+      void executeTxSubmitFirst({
         name: `Wrap ${roundToDecimals(amount)} Circles as Demurraged ERC20...`,
-        promise: wrapDemurraged(sendValue),
+        submit: () => wrapDemurraged(sendValue),
+        onSubmitted: () => popupControls.close(),
       });
     } else {
-      runTask({
+      void executeTxSubmitFirst({
         name: `Wrap ${roundToDecimals(amount)} Circles as Inflationary ERC20...`,
-        promise: wrapInflationary(sendValue),
+        submit: () => wrapInflationary(sendValue),
+        onSubmitted: () => popupControls.close(),
       });
     }
-    popupControls.close();
   }
 
   async function wrapInflationary(sendValue: bigint) {

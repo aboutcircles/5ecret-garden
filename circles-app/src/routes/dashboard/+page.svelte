@@ -1,7 +1,7 @@
 <script lang="ts">
     import { avatarState } from '$lib/shared/state/avatar.svelte';
     import { roundToDecimals } from '$lib/shared/utils/shared';
-    import { runTask } from '$lib/shared/utils/tasks';
+    import { executeTxConfirmFirst } from '$lib/shared/utils/txExecution';
 
     import OverviewPanel from './OverviewPanel.svelte';
     import TransactionHistoryPanel from './TransactionHistoryPanel.svelte';
@@ -49,9 +49,9 @@
         }
 
         try {
-            await runTask({
+            await executeTxConfirmFirst({
                 name: 'Collecting CRC ...',
-                promise: avatarState.avatar!.personalMint(),
+                submit: () => avatarState.avatar!.personalMint(),
             });
         } finally {
             const refreshed = await avatarState.avatar!.getMintableAmount();

@@ -6,7 +6,7 @@
   import BalanceRow from '$lib/areas/wallet/ui/components/BalanceRow.svelte';
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import { roundToDecimals } from '$lib/shared/utils/shared';
-  import { runTask } from '$lib/shared/utils/tasks';
+  import { executeTxSubmitFirst } from '$lib/shared/utils/txExecution';
   import { popupControls } from '$lib/shared/state/popup';
 
   interface Props {
@@ -29,27 +29,29 @@
     if (!avatarState.avatar) {
       throw new Error('Avatar not loaded');
     }
+    const avatar = avatarState.avatar;
 
     if (tokenInfo.type === 'CrcV2_ERC20WrapperDeployed_Inflationary') {
-      runTask({
+      void executeTxSubmitFirst({
         name: `Unwrap ${roundToDecimals(amount)} static tokens ...`,
-        promise: avatarState.avatar.unwrapInflationErc20(
+        submit: () => avatar.unwrapInflationErc20(
           asset.tokenAddress,
           BigInt(ethers.parseEther(amount.toString()))
         ),
+        onSubmitted: () => popupControls.close(),
       });
     } else if (tokenInfo.type === 'CrcV2_ERC20WrapperDeployed_Demurraged') {
-      runTask({
+      void executeTxSubmitFirst({
         name: `Unwrap ${roundToDecimals(amount)} tokens ...`,
-        promise: avatarState.avatar.unwrapDemurrageErc20(
+        submit: () => avatar.unwrapDemurrageErc20(
           asset.tokenAddress,
           BigInt(ethers.parseEther(amount.toString()))
         ),
+        onSubmitted: () => popupControls.close(),
       });
     } else {
       throw new Error('Unsupported token type');
     }
-    popupControls.close();
   }
 </script>
 

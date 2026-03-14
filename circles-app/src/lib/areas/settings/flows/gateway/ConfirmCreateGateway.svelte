@@ -9,7 +9,7 @@
   import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
   import StepReviewRow from '$lib/shared/ui/flow/StepReviewRow.svelte';
   import { wallet } from '$lib/shared/state/wallet.svelte';
-  import { runTask } from '$lib/shared/utils/tasks';
+  import { executeTxConfirmFirst } from '$lib/shared/utils/txExecution';
   import { isAddress } from '$lib/shared/utils/tx';
   import { popupControls } from '$lib/shared/state/popup';
   import { popToOrOpen } from '$lib/shared/flow';
@@ -60,9 +60,9 @@
 
     creatingGateway = true;
     try {
-      await runTask({
+      await executeTxConfirmFirst({
         name: 'Creating payment gateway…',
-        promise: (async () => {
+        submit: async () => {
           const runner: any = $wallet;
           const factoryAddress = context.factoryAddress as `0x${string}`;
 
@@ -128,11 +128,12 @@
             }
             onCreated?.(createdGateway);
           }
-        })()
+        },
+        onSuccess: () => {
+          // Close the flow after a successful submit.
+          popupControls.close();
+        },
       });
-
-      // Close the flow after a successful submit.
-      popupControls.close();
     } finally {
       creatingGateway = false;
     }
