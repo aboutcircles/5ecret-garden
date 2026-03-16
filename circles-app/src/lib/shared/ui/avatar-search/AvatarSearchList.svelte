@@ -2,7 +2,7 @@
   import { setContext } from 'svelte';
   import { ethers } from 'ethers';
   import { get, writable } from 'svelte/store';
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
   import type { SearchProfileResult } from '$lib/shared/model/profile';
   import { circles } from '$lib/shared/state/circles';
   import { contacts } from '$lib/shared/state/contacts';

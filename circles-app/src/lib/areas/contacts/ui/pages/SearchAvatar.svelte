@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { Address } from '@circles-sdk/utils';
+    import type { Address } from '@aboutcircles/sdk-types';
     import type { SearchProfileResult } from '$lib/shared/model/profile';
     import AvatarSearchList from '$lib/shared/ui/avatar-search/AvatarSearchList.svelte';
 

@@ -6,6 +6,7 @@
   import { readable, writable } from 'svelte/store';
   import { browser } from '$app/environment';
   import { page } from '$app/stores';
+  import { replaceState } from '$app/navigation';
 
   import PersonalSection from '$lib/areas/settings/ui/sections/PersonalSection.svelte';
   import OrdersSection from '$lib/areas/settings/ui/sections/OrdersSection.svelte';
@@ -20,13 +21,11 @@
 
   // ——— Personal settings state/actions ———
   import { avatarState } from '$lib/shared/state/avatar.svelte';
-  import { clearSession, signer, wallet } from '$lib/shared/state/wallet.svelte';
+  import { clearSession, signer } from '$lib/shared/state/wallet.svelte';
   import { circles } from '$lib/shared/state/circles';
-  import MigrateToV2 from '$lib/areas/wallet/flows/migrateToV2/1_GetInvited.svelte';
   import { openFlowPopup, popupControls } from '$lib/shared/state/popup';
-  import { ethers } from 'ethers';
   import { LogOut as LLogOut } from 'lucide';
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
   import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
   import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
   import type { Action } from '$lib/shared/ui/shell/actions';
@@ -43,9 +42,10 @@
   // ——— Marketplace state/actions (connected avatar as seller) ———
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
   import type { AggregatedCatalogItem } from '$lib/areas/market/model';
+  import type { OfferFlowContext } from '$lib/areas/market/flows/offer/types';
   import OfferStep1 from '$lib/areas/market/flows/offer/1_Product.svelte';
   import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
-  import { signInWithSafe } from '$lib/areas/market/auth/signin';
+  import { signInWithSafe, isMarketAuthed } from '$lib/areas/market/auth/signin';
   import {
     getSalesBySeller,
   } from '$lib/areas/market/orders/ordersQueries';
@@ -70,20 +70,37 @@
   const TAB_IDS = ['personal', 'bookmarks', 'orders', 'sales', 'keys', 'namespaces', 'marketplace', 'payment'] as const;
   type TabId = TabIdOf<typeof TAB_IDS>;
 
+  // Friendly aliases for URL ?tab= values (e.g. ?tab=offers → marketplace)
+  const TAB_ALIASES: Record<string, TabId> = { offers: 'marketplace', profile: 'personal' };
+
   let selectedTab = $state<TabId>('personal');
 
+  // URL → tab: read ?tab= on load/navigation
   $effect(() => {
-    const fromUrl = $page.url.searchParams.get('tab');
-    selectedTab = coerceTabId(TAB_IDS, fromUrl, 'personal');
+    const raw = $page.url.searchParams.get('tab');
+    const resolved = raw && TAB_ALIASES[raw] ? TAB_ALIASES[raw] : raw;
+    selectedTab = coerceTabId(TAB_IDS, resolved, 'personal');
+  });
+
+  // Tab → URL: keep ?tab= in sync when the user clicks a tab
+  $effect(() => {
+    if (!browser) return;
+    const current = selectedTab;
+    const urlTab = $page.url.searchParams.get('tab');
+    if (current && current !== urlTab) {
+      const url = new URL($page.url);
+      url.searchParams.set('tab', current);
+      replaceState(url, {});
+    }
   });
 
 
   // Canonical orders list item model from market/orders domain.
   type OrdersListItem = MarketOrderSummaryListItem;
 
-  // Auth state must be initialized before using in $derived stores to avoid TDZ
-  let ordersAuthed = $state(false);
-  let salesAuthed = $state(false);
+  // Single auth flag for all marketplace tabs (Orders, Sales, Offers).
+  // Backed by PersistentAuthContext in localStorage — one sign-in covers all.
+  let marketAuthed = $state(browser ? isMarketAuthed() : false);
 
   function createStaticListStore<T>(data: T[] = []) {
     return readable({ data, next: async () => true, ended: true });
@@ -124,7 +141,7 @@
 
   const ordersStore = $derived(
     browser
-      ? ordersAuthed
+      ? marketAuthed
         ? buildOrdersAuthedStore()
         : buildOrdersFallbackStore()
       : buildOrdersFallbackStore(),
@@ -132,49 +149,35 @@
 
   const salesStore = $derived(
     browser
-      ? salesAuthed
+      ? marketAuthed
         ? buildSalesAuthedStore()
         : buildSalesFallbackStore()
       : buildSalesFallbackStore(),
   );
 
-  async function ensureOrdersAuthed(): Promise<void> {
+  async function ensureMarketAuthed(): Promise<void> {
     try {
       const avatar = (avatarAddress ?? '').toLowerCase();
       if (!avatar || !/^0x[a-f0-9]{40}$/.test(avatar)) {
         throw new Error('No Circles avatar address available for Safe login');
       }
       await signInWithSafe(avatar);
-      ordersAuthed = !!getMarketClient().auth.getAuthMeta();
+      marketAuthed = isMarketAuthed();
     } catch (e) {
-      console.error('[settings/orders] safe sign-in failed:', e);
-      ordersAuthed = false;
-    }
-  }
-
-  async function ensureSalesAuthed(): Promise<void> {
-    try {
-      const avatar = (avatarAddress ?? '').toLowerCase();
-      if (!avatar || !/^0x[a-f0-9]{40}$/.test(avatar)) {
-        throw new Error('No Circles avatar address available for Safe login');
-      }
-      await signInWithSafe(avatar);
-      salesAuthed = !!getMarketClient().auth.getAuthMeta();
-    } catch (e) {
-      console.error('[settings/sales] safe sign-in failed:', e);
-      salesAuthed = false;
+      console.error('[settings/market] safe sign-in failed:', e);
+      marketAuthed = false;
     }
   }
 
   // ——— Shared / personal derived state ———
   const avatarAddress = $derived(
-    (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '') as Address | '',
+    (avatarState.avatar?.address ?? '') as Address | '',
   );
 
   const headerTitle = $derived(avatarState.profile?.name?.trim() || 'Settings');
 
   // Profile editing is delegated to ProfileExplorer to keep a single flow.
-  const pinApiBase = gnosisConfig.production.profilePinningServiceUrl;
+  const pinApiBase = gnosisConfig.production.profilePinningServiceUrl ?? gnosisConfig.production.marketApiBase ?? '';
 
   // Latest profile CID for the connected avatar (if any)
   let profileCid: string | null = $state(null);
@@ -215,7 +218,7 @@
   let nsNamespaces: Record<string, string> = $state({});
 
   const connectedAvatarLower = $derived(
-    (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '').toLowerCase(),
+    (avatarState.avatar?.address ?? '').toLowerCase(),
   );
   const nsAvatarLower = $derived((nsResolvedAvatar ?? '').toLowerCase());
   const nsIsOwner = $derived(
@@ -265,33 +268,6 @@
     });
   }
 
-  async function migrateToV2() {
-    openFlowPopup({
-      title: 'Migrate to v2',
-      component: MigrateToV2,
-      props: {},
-    });
-  }
-
-  async function stopV1() {
-    const v1TokenAddress = avatarState.avatar?.avatarInfo?.v1Token;
-    if (!$wallet || !v1TokenAddress) {
-      throw new Error('Wallet or v1 token not available');
-    }
-
-    try {
-      const selector = ethers.keccak256(ethers.toUtf8Bytes('stop()')).slice(0, 10);
-      const tx = await $wallet.sendTransaction!({
-        to: v1TokenAddress,
-        data: selector,
-        value: 0n,
-      });
-      console.log('Transaction sent:', tx.hash);
-    } catch (error) {
-      console.error('Error calling stop():', error);
-    }
-  }
-
   // Delete only the locally stored private key (seed-derived). Keeps current session unless you disconnect.
   async function deleteLocalKey(): Promise<void> {
     try {
@@ -303,9 +279,7 @@
       if (!confirmDelete) return;
       CirclesStorage.getInstance().data = { privateKey: undefined };
       // Drop in-memory reference too
-      try {
-        (signer as any).privateKey = undefined;
-      } catch {}
+      signer.privateKey = undefined;
       await openInfoPopup({
         title: 'Key deleted',
         message: 'Local key deleted from this device. You remain connected until you disconnect.',
@@ -337,9 +311,9 @@
         marketLoading = false;
         return;
       }
-      const normalized = normalizeAddress(avatarAddress);
+      const normalized = normalizeAddress(avatarAddress!);
 
-      const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
+      const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator!);
       const items = await catalog.fetchSellerCatalog(normalized);
       // fetchSellerCatalog already filters by seller, but keep this defensive filter
       marketProducts = items.filter((p) => (p.seller ?? '').toLowerCase() === normalized.toLowerCase());
@@ -350,7 +324,12 @@
           : typeof err === 'string'
             ? err
             : 'Unknown error';
-      marketErrorMsg = msg;
+      // Avatars without an operator namespace have no offers — treat as empty, not error
+      if (/namespace|not found|404/i.test(msg)) {
+        marketProducts = [];
+      } else {
+        marketErrorMsg = msg;
+      }
     } finally {
       marketLoading = false;
     }
@@ -362,20 +341,45 @@
     void loadSellerCatalog();
   });
 
+  /** Delay before background refetch (gives the indexer time to process the on-chain event). */
+  const REFETCH_DELAY_MS = 15_000;
+
   function openCreateListing() {
+    const flowContext: OfferFlowContext = {
+      operator: gnosisConfig.production.marketOperator!,
+      pinApiBase: gnosisConfig.production.marketApiBase,
+      onPublished: (item) => {
+        // Optimistic: prepend new listing immediately
+        marketProducts = [item, ...marketProducts];
+      },
+    };
     openFlowPopup({
       title: 'Create Offer',
       component: OfferStep1,
-      props: {
-        context: {
-          operator: gnosisConfig.production.marketOperator,
-          pinApiBase: gnosisConfig.production.profilePinningServiceUrl,
-        },
-      },
+      props: { context: flowContext },
       onClose: () => {
-        void loadSellerCatalog();
+        // Delayed refetch for eventual consistency with the indexer
+        setTimeout(() => { void loadSellerCatalog(); }, REFETCH_DELAY_MS);
       },
     });
+  }
+
+  function handleProductUpdated(item: AggregatedCatalogItem) {
+    // Optimistic: replace the matching product in-place by SKU
+    marketProducts = marketProducts.map((p) =>
+      p.product?.sku === item.product?.sku && (p.seller ?? '').toLowerCase() === (item.seller ?? '').toLowerCase()
+        ? item
+        : p,
+    );
+    // Delayed refetch for eventual consistency
+    setTimeout(() => { void loadSellerCatalog(); }, REFETCH_DELAY_MS);
+  }
+
+  function handleProductRemoved(sku: string) {
+    // Optimistic: remove the product from the list immediately
+    marketProducts = marketProducts.filter((p) => p.product?.sku !== sku);
+    // Delayed refetch for eventual consistency
+    setTimeout(() => { void loadSellerCatalog(); }, REFETCH_DELAY_MS);
   }
 
   const actionsPersonal: Action[] = [
@@ -400,11 +404,11 @@
 
   const actionsOrders: Action[] = $derived([
     {
-      id: 'signin-orders',
-      label: ordersAuthed ? 'Signed in' : 'Sign in to view all orders',
-      variant: ordersAuthed ? 'ghost' : 'primary',
+      id: 'signin-market',
+      label: marketAuthed ? 'Signed in' : 'Sign in to marketplace',
+      variant: marketAuthed ? 'ghost' : 'primary',
       onClick: () => {
-        if (!ordersAuthed) void ensureOrdersAuthed();
+        if (!marketAuthed) void ensureMarketAuthed();
       },
     },
     ...actionsPersonal,
@@ -412,32 +416,41 @@
 
   const actionsSales: Action[] = $derived([
     {
-      id: 'signin-sales',
-      label: salesAuthed ? 'Signed in' : 'Sign in to view all sales',
-      variant: salesAuthed ? 'ghost' : 'primary',
+      id: 'signin-market',
+      label: marketAuthed ? 'Signed in' : 'Sign in to marketplace',
+      variant: marketAuthed ? 'ghost' : 'primary',
       onClick: () => {
-        if (!salesAuthed) void ensureSalesAuthed();
+        if (!marketAuthed) void ensureMarketAuthed();
       },
     },
     ...actionsPersonal,
   ]);
 
-  const headerActions = $derived(
-    selectedTab === 'marketplace'
-      ? actionsMarketplace
-      : selectedTab === 'orders'
-        ? actionsOrders
-        : selectedTab === 'sales'
-          ? actionsSales
-          : selectedTab === 'payment'
-            ? actionsPayment
-            : actionsPersonal,
+  const actionsPayment: Action[] = [
+    {
+      id: 'create-gateway',
+      label: 'Create gateway',
+      variant: 'primary',
+      onClick: openCreateGatewayFlow,
+    },
+    ...actionsPersonal,
+  ];
+
+  const currentActions = $derived(
+    !avatarAddress
+      ? []
+      : selectedTab === 'marketplace'
+        ? actionsMarketplace
+        : selectedTab === 'orders'
+          ? actionsOrders
+          : selectedTab === 'sales'
+            ? actionsSales
+            : selectedTab === 'payment'
+              ? actionsPayment
+              : actionsPersonal,
   );
 
-  if (browser) {
-    ordersAuthed = !!getMarketClient().auth.getAuthMeta();
-    salesAuthed = ordersAuthed;
-  }
+  // marketAuthed already initialized at declaration from isMarketAuthed()
 
   // ——— Payment gateways list store ———
   const myGatewaysStoreInner = writable<{ data: GatewayRow[]; next: () => Promise<boolean>; ended: boolean }>({
@@ -456,7 +469,7 @@
   const shortGatewayAddr = (a?: string) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : '');
 
   async function loadMyGateways(): Promise<void> {
-    if (!gatewayOwnerAddress || !$circles?.circlesRpc) {
+    if (!gatewayOwnerAddress || !$circles?.rpc) {
       myGatewaysStoreInner.set({
         data: [],
         next: async () => true,
@@ -489,7 +502,7 @@
   $effect(() => {
     // Load gateways only when the Payment tab is visible.
     if (selectedTab !== 'payment') return;
-    if (gatewayOwnerAddress && $circles?.circlesRpc) {
+    if (gatewayOwnerAddress && $circles?.rpc) {
       void loadMyGateways();
     } else {
       myGatewaysStoreInner.set({
@@ -512,15 +525,6 @@
     });
   }
 
-  const actionsPayment: Action[] = [
-    {
-      id: 'create-gateway',
-      label: 'Create gateway',
-      variant: 'primary',
-      onClick: openCreateGatewayFlow,
-    },
-    ...actionsPersonal,
-  ];
 </script>
 
 <PageScaffold
@@ -546,11 +550,11 @@
   {/snippet}
 
   {#snippet headerActions()}
-    <ActionButtonBar actions={headerActions} />
+    <ActionButtonBar actions={currentActions} />
   {/snippet}
 
   {#snippet collapsedMenu()}
-    <ActionButtonDropDown actions={headerActions} />
+    <ActionButtonDropDown actions={currentActions} />
   {/snippet}
 
   {#snippet collapsedLeft()}
@@ -583,23 +587,21 @@
           {profileCidLoading}
           {profileCidError}
           {copyProfileCid}
-          {migrateToV2}
-          {stopV1}
         />
       {:else if selectedTab === 'bookmarks'}
         <BookmarksSection />
       {:else if selectedTab === 'orders'}
         <OrdersSection
           {avatarAddress}
-          {ordersAuthed}
-          {ensureOrdersAuthed}
+          ordersAuthed={marketAuthed}
+          ensureOrdersAuthed={ensureMarketAuthed}
           {ordersStore}
         />
       {:else if selectedTab === 'sales'}
         <SalesSection
           {avatarAddress}
-          {salesAuthed}
-          {ensureSalesAuthed}
+          salesAuthed={marketAuthed}
+          ensureSalesAuthed={ensureMarketAuthed}
           salesStore={salesStore}
         />
       {:else if selectedTab === 'keys'}
@@ -623,6 +625,8 @@
           marketProducts={marketProducts}
           {openCreateListing}
           {loadSellerCatalog}
+          onProductUpdated={handleProductUpdated}
+          onProductRemoved={handleProductRemoved}
         />
       {:else if selectedTab === 'payment'}
         <PaymentSection

@@ -37,7 +37,7 @@
     type CodeProductListItem,
   } from '$lib/areas/admin/services/gateway/adminClient';
   import { gnosisConfig } from '$lib/shared/config/circles';
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
   import { popupControls } from '$lib/shared/state/popup';
   import AdminSectionCard from '$lib/areas/admin/components/AdminSectionCard.svelte';
   import AdminProductList from '$lib/areas/admin/components/AdminProductList.svelte';
@@ -94,7 +94,7 @@
     authError = null;
 
     try {
-      const avatar = (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '') as Address | '';
+      const avatar = (avatarState.avatar?.address ?? '') as Address | '';
       if (!avatar) {
         throw new Error('No avatar connected');
       }
@@ -213,7 +213,7 @@
         mode: 'product',
         onCancel: () => popupControls.close(),
         onDisable: product ? async () => handleDisableProduct(product) : undefined,
-        onSubmit: async (payload) => {
+        onSubmit: async (payload: any) => {
           await saveProduct(payload, product ?? null);
         },
       },
@@ -228,7 +228,7 @@
       props: {
         connections: odooConnections,
         existingProducts: unifiedProducts,
-        onExecute: async (payload) => {
+        onExecute: async (payload: any) => {
           await saveProduct(payload, null);
         },
         onCreateConnection: createConnectionInFlow,
@@ -243,7 +243,7 @@
         title: 'New Odoo connection',
         component: AdminNewConnectionSellerStep,
         props: {
-          onCreate: async (payload) => {
+          onCreate: async (payload: any) => {
             await saveConnection(payload);
           },
         },
@@ -262,7 +262,7 @@
         mode: 'connection',
         onCancel: () => popupControls.close(),
         onDisable: async () => handleDisableConnection(connection),
-        onSubmit: async (payload) => {
+        onSubmit: async (payload: any) => {
           await saveConnection(payload);
         },
       },

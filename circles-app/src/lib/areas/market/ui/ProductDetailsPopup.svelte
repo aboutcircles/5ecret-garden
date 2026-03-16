@@ -28,7 +28,7 @@
   async function loadProduct(): Promise<void> {
     await loader.run(async () => {
       const s = normalizeAddress(seller);
-      const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
+      const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator!);
       const p = await catalog.fetchProductForSellerAndSku(s, sku);
       if (!p) throw new Error('Product not found for this seller / sku.');
       return p;
@@ -43,35 +43,37 @@
   let liveAvailability = $state<string | null>(null);
   let liveInventory = $state<QuantitativeValue | null>(null);
 
-  $effect(async () => {
-    liveAvailability = null;
-    liveInventory = null;
+  $effect(() => {
     const af = offer?.availabilityFeed;
     const inf = offer?.inventoryFeed;
-    try {
-      if (typeof af === 'string' && af) {
-        liveAvailability = await fetchAvailabilityFeed(af);
+    void (async () => {
+      liveAvailability = null;
+      liveInventory = null;
+      try {
+        if (typeof af === 'string' && af) {
+          liveAvailability = await fetchAvailabilityFeed(af);
+        }
+      } catch (e) {
+        console.warn('[feeds] availability fetch failed', { uri: af, error: e });
       }
-    } catch (e) {
-      console.warn('[feeds] availability fetch failed', { uri: af, error: e });
-    }
-    try {
-      if (typeof inf === 'string' && inf) {
-        liveInventory = await fetchInventoryFeed(inf);
+      try {
+        if (typeof inf === 'string' && inf) {
+          liveInventory = await fetchInventoryFeed(inf);
+        }
+      } catch (e) {
+        console.warn('[feeds] inventory fetch failed', { uri: inf, error: e });
       }
-    } catch (e) {
-      console.warn('[feeds] inventory fetch failed', { uri: inf, error: e });
-    }
+    })();
   });
   const effectiveAvailabilityIri = $derived<string | null>(
-    liveAvailability ?? (product as any)?.availability ?? (product?.product as any)?.availability ?? null
+    liveAvailability ?? product?.availability ?? product?.product?.availability ?? null
   );
   const effectiveInventoryValue = $derived<number | null>(
-    (liveInventory?.value ?? (product as any)?.inventoryLevel?.value ?? (product?.product as any)?.inventoryLevel?.value ?? null) as number | null
+    liveInventory?.value ?? product?.inventoryLevel?.value ?? product?.product?.inventoryLevel?.value ?? null
   );
   const addState = $derived(
     getAddToCartState({
-      product: product as any,
+      product,
       offer,
       currentAvatar,
       cartLoading,

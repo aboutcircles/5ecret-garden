@@ -1,81 +1,39 @@
-import type { Address } from '@circles-sdk/utils';
-import type { Sdk } from '@circles-sdk/sdk';
-import { CirclesQuery, type GroupRow, type PagedQueryParams } from '@circles-sdk/data';
+import type { Address } from '@aboutcircles/sdk-types';
+import type { Sdk } from '@aboutcircles/sdk';
+import type { GroupRow } from '@aboutcircles/sdk-types';
 
-// export async function getBaseAndCmgGroupsByOwnerBatch(
-//   sdk: Sdk,
-//   owners: Address[]
-// ): Promise<Record<Address, GroupRow[]>> {
-//   const acc: Record<Address, GroupRow[]> = {}
-
-//   for (const owner of owners) {
-//     const query = sdk.data.findGroups(
-//       1000,
-//       {
-//         ownerEquals: owner.toLowerCase(),
-//         groupTypeIn: ['CrcV2_BaseGroupCreated', 'CrcV2_CMGroupCreated']
-//       }
-//     )
-
-//     const rows: GroupRow[] = []
-//     while (await query.queryNextPage()) {
-//       rows.push(...(query.currentPage?.results ?? []))
-//     }
-
-//     acc[owner] = rows
-//   }
-
-//   return acc
-// }
-
-export async function getBaseAndCmgGroupsByOwnerBatch(sdk: Sdk, owners: Address[]): Promise<Record<Address, GroupRow[]>> {
-  if (owners.length === 0 || !sdk) {
+/**
+ * Fetch groups that the given avatars are MEMBERS of.
+ *
+ * For each avatar address, queries group memberships via the SDK's native
+ * `circles_getGroupMemberships` RPC method.
+ *
+ * Returns minimal GroupRow objects keyed by lowercase member address.
+ * The UI components (Avatar, ConnectCircles) only need the `group` address
+ * to render — profile data is fetched separately.
+ */
+export async function getBaseAndCmgGroupsByOwnerBatch(
+  sdk: Sdk,
+  avatars: Address[]
+): Promise<Record<Address, GroupRow[]>> {
+  if (avatars.length === 0 || !sdk) {
     return {};
   }
 
-  const BaseQueryDefintion: PagedQueryParams = {
-    namespace: 'V_CrcV2',
-    table: 'Groups',
-    columns: [
-      'blockNumber',
-      'timestamp',
-      'transactionIndex',
-      'logIndex',
-      'transactionHash',
-      'group',
-      'owner',
-    ],
-    filter: [{
-      Type: 'FilterPredicate',
-      FilterType: 'In',
-      Column: 'owner',
-      Value: owners.map(o => o.toLowerCase() as Address),
-    }, {
-      Type: 'FilterPredicate',
-      FilterType: 'In',
-      Column: 'type',
-      Value: ['CrcV2_BaseGroupCreated', 'CrcV2_CMGroupCreated'],
-    }],
-    sortOrder: 'DESC',
-    limit: 1000,
-  };
+  const acc: Record<Address, GroupRow[]> = {};
 
-  const query = new CirclesQuery(sdk.circlesRpc, BaseQueryDefintion);
-  const results = [];
-  const acc: Record<Address, GroupRow[]>= {};
-
-  while (await query.queryNextPage()) {
-    const resultRows = query.currentPage?.results ?? [];
-    if (resultRows.length === 0) break;
-    results.push(...resultRows);
-  }
-
-  for (const row of results) {
-    const owner = (<any>row).owner.toLowerCase() as Address;
-    if (!acc[owner]) {
-      acc[owner] = [];
+  // Query memberships sequentially to avoid 429 rate limiting on the RPC
+  for (const avatar of avatars) {
+    const key = avatar.toLowerCase() as Address;
+    try {
+      const response = await sdk.rpc.group.getGroupMemberships(avatar, 100);
+      acc[key] = response.results.map((m) => ({
+        group: m.group as Address,
+      }) as GroupRow);
+    } catch (e) {
+      console.warn(`[getGroupsByOwnerBatch] Membership query failed for ${avatar}:`, (e as Error).message);
+      acc[key] = [];
     }
-    acc[owner].push(<GroupRow>row);
   }
 
   return acc;

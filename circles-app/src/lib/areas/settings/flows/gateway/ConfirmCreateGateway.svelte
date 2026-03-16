@@ -79,7 +79,7 @@
             signingKeys: {},
           });
 
-          const profileCid = await (bindings as any).putJsonLd(profilePayload);
+          const profileCid = await bindings.putJsonLd(profilePayload);
 
           if (!profileCid) {
             throw new Error('Failed to pin gateway profile metadata.');

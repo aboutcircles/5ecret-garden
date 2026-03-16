@@ -16,7 +16,7 @@
     import {gnosisConfig} from "$lib/shared/config/circles";
 
     // Defaults (as requested)
-    const OPERATOR: `0x${string}` = gnosisConfig.production.marketOperator;
+    const OPERATOR: `0x${string}` = gnosisConfig.production.marketOperator as `0x${string}`;
 
     const API_BASE = gnosisConfig.production.marketApiBase;
     const MARKET_CHAIN_ID = gnosisConfig.production.marketChainId ?? 100;
@@ -91,7 +91,7 @@
 
     import { shortenAddress } from '$lib/shared/utils/shared';
     import {list} from "postcss";
-    const shortAddr = (a?: string) => (a ? shortenAddress(a as any) : '');
+    const shortAddr = (a?: string) => (a ? shortenAddress(a) : '');
 
     const PAGE_SIZE = 20;
 
@@ -130,7 +130,7 @@
     // ————————————————————————————————————————————
     // data load with pagination
     // ————————————————————————————————————————————
-    const avatarAddress = $derived((avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '') as `0x${string}` | '');
+    const avatarAddress = $derived((avatarState.avatar?.address ?? '') as `0x${string}` | '');
     function getScanAvatars(): `0x${string}`[] {
       return sellers;
     }
@@ -174,6 +174,7 @@
           }];
       }
 
+
       const filtered = list
         .map((entry) => ({
           chainId: Number((entry as SellerListing).chainId),
@@ -215,7 +216,12 @@
       } catch (err: unknown) {
         const msg =
           err instanceof Error ? err.message : typeof err === 'string' ? err : 'Unknown error';
-        errorMsg = msg;
+        // Avatars without an operator namespace have no offers — treat as empty, not error
+        if (/namespace|not found|404/i.test(msg)) {
+          products = [];
+        } else {
+          errorMsg = msg;
+        }
       } finally {
         loading = false;
       }
@@ -280,9 +286,9 @@
     });
 
     const actions: Action[] = [
-      { id: 'settings-offers', label: 'Manage offers', variant: 'primary', onClick: () => goto('/settings?tab=marketplace') },
-      { id: 'settings-orders', label: 'Orders', variant: 'ghost', onClick: () => goto('/settings?tab=orders') },
-      { id: 'settings-sales', label: 'Sales', variant: 'ghost', onClick: () => goto('/settings?tab=sales') }
+      { id: 'my-offers', label: 'Offers', variant: 'primary', onClick: () => goto('/settings?tab=marketplace') },
+      { id: 'my-orders', label: 'Orders', variant: 'ghost', onClick: () => goto('/settings?tab=orders') },
+      { id: 'my-sales', label: 'Sales', variant: 'ghost', onClick: () => goto('/settings?tab=sales') },
     ];
 
 </script>

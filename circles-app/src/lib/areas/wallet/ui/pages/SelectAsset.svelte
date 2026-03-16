@@ -1,6 +1,7 @@
 <script lang="ts" module>
     import { get } from 'svelte/store';
     import { totalCirclesBalance } from '$lib/shared/state/totalCirclesBalance';
+    import type { TokenBalance } from '@aboutcircles/sdk-types';
 
     type HexAddress = `0x${string}`;
 
@@ -31,7 +32,7 @@
         }
     }
 
-    export const transitiveTransfer = () => {
+    export const transitiveTransfer = (): TokenBalance => {
         return {
             tokenOwner: TransitiveTransferTokenOwner,
             tokenType: 'TransitiveTransfer',
@@ -39,22 +40,22 @@
             staticCircles: 0,
             crc: 0,
             tokenAddress: TransitiveTransferTokenAddress,
-            tokenId: '0',
+            tokenId: 0n,
             isWrapped: false,
             isGroup: false,
             isInflationary: false,
-            staticAttoCircles: '0',
+            staticAttoCircles: 0n,
             version: 0,
-            attoCrc: '0',
-            attoCircles: '0',
+            attoCrc: 0n,
+            attoCircles: 0n,
             isErc20: false,
             isErc1155: false,
-        } as any;
+        };
     };
 </script>
 
 <script lang="ts">
-    import type { TokenBalanceRow } from '@circles-sdk/data';
+    // TokenBalance imported in module script above
     import { writable } from 'svelte/store';
     import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
     import type { Readable } from 'svelte/store';
@@ -69,14 +70,14 @@
 
     interface Props {
         balances: Readable<{
-            data: TokenBalanceRow[];
+            data: TokenBalance[];
             next: () => Promise<boolean>;
             ended: boolean;
         }>;
-        selectedAsset?: TokenBalanceRow | undefined;
+        selectedAsset?: TokenBalance | undefined;
         showTransitive?: boolean;
         inputDataAttribute?: string;
-        onselect: (tokenBalanceRow: TokenBalanceRow) => void;
+        onselect: (tokenBalanceRow: TokenBalance) => void;
     }
 
     let {
@@ -89,7 +90,7 @@
     const query = writable('');
     let selectAssetListScopeEl: HTMLDivElement | null = $state(null);
 
-    const handleSelect = (tokenBalanceRow: TokenBalanceRow) => {
+    const handleSelect = (tokenBalanceRow: TokenBalance) => {
         selectedAsset = tokenBalanceRow;
         onselect(tokenBalanceRow);
     };

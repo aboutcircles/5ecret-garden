@@ -22,6 +22,6 @@
     style={`width:${viewport.width}px;height:${viewport.height}px`}
     aria-label={`${step.title} preview (${viewport.label})`}
   >
-    <svelte:component this={step.component} {...stepProps} />
+    <step.component {...stepProps} />
   </div>
 </article>

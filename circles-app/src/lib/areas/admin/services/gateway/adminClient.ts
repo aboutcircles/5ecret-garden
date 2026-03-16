@@ -1,5 +1,5 @@
 import { browser } from '$app/environment';
-import type { Address } from '@circles-sdk/utils';
+import type { Address } from '@aboutcircles/sdk-types';
 import {
   getAdminBaseUrl,
   getAdminAuthHeader,

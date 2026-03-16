@@ -22,7 +22,7 @@
   };
 
   $effect(() => {
-    profile.name = sanitizeText(profile.name);
+    profile.name = sanitizeText(profile.name ?? "");
   });
 </script>
 
@@ -30,7 +30,7 @@
   {#if avatarState.avatar}
     <label class="form-control">
       <span class="label-text">Circles address</span>
-      <input type="text" readonly class="input input-bordered w-full" value={avatarState.avatar?.avatarInfo?.avatar} />
+      <input type="text" readonly class="input input-bordered w-full" value={avatarState.avatar?.address} />
     </label>
 
     {#if avatarState.avatar?.avatarInfo?.v1Token && !avatarState.avatar?.avatarInfo?.v1Stopped}

@@ -4,13 +4,13 @@
     import CommonConnections from '$lib/shared/ui/profile/components/CommonConnections.svelte';
     import TrustRelationsList from '$lib/shared/ui/profile/components/TrustRelationsList.svelte';
     import HoldersList from '$lib/shared/ui/profile/components/HoldersList.svelte';
-    import {contacts} from '$lib/shared/state/contacts';
-    import {
-        type AvatarRow,
-        CirclesQuery,
-        type TrustRelation,
-        type TrustRelationRow,
-    } from '@circles-sdk/data';
+    import type {
+        AvatarRow,
+        AvatarInfo,
+        AggregatedTrustRelation,
+    } from '@aboutcircles/sdk-types';
+    import type { TrustRelationKind } from '$lib/shared/types/sdk-augment';
+    import { PagedQuery } from '@aboutcircles/sdk-rpc';
     import Untrust from '$lib/areas/contacts/ui/pages/Untrust.svelte';
     import { openAddTrustFlow } from '$lib/areas/trust/flows/addTrust/openAddTrustFlow';
     import { openSendFlowPopup } from '$lib/areas/wallet/flows/send/openSendFlowPopup';
@@ -20,7 +20,8 @@
     import {popupControls} from '$lib/shared/state/popup';
     import JumpLink from '$lib/shared/ui/content/jump/JumpLink.svelte';
     import AddressComponent from '$lib/shared/ui/primitives/Address.svelte';
-    import {uint256ToAddress, type Address} from '@circles-sdk/utils';
+    import type {Address} from '@aboutcircles/sdk-types';
+import {uint256ToAddress} from '@aboutcircles/sdk-utils';
     import SelectAmount from '$lib/areas/wallet/flows/send/3_Amount.svelte';
     import {transitiveTransfer} from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
     import {
@@ -54,6 +55,7 @@
     import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
     import { Star as LStar } from 'lucide';
     import { createAvatarDataSource } from '$lib/shared/data/circles/avatarDataSource';
+    import { createTrustDataSource } from '$lib/shared/data/circles/trustDataSource';
     import {
         bookmarksStateStore,
         profileBookmarksService,
@@ -77,11 +79,12 @@
         }
     });
 
-    let otherAvatar: AvatarRow | undefined = $state();
+    let initializing = $state(true);
+    let otherAvatar: AvatarInfo | undefined = $state();
     let profile: Profile | undefined = $state();
     let mintHandler: Address | undefined = $state();
 
-    let trustRow: TrustRelationRow | undefined = $state();
+    let trustRow: AggregatedTrustRelation | undefined = $state();
     const relationText = $derived.by(() => {
         if (!trustRow) return 'Not connected';
         const formatted = formatTrustRelation(trustRow.relation, profile);
@@ -92,7 +95,7 @@
         amount: bigint;
         amountToRedeem: bigint;
         amountToRedeemInCircles: number;
-        trustRelation?: TrustRelation;
+        trustRelation?: TrustRelationKind;
     }> = $state([]);
     let collateralLoading: boolean = $state(false);
     let collateralError: string | null = $state(null);
@@ -102,7 +105,7 @@
         amount: bigint;
         amountToRedeem: bigint;
         amountToRedeemInCircles: number;
-        trustRelation?: TrustRelation;
+        trustRelation?: TrustRelationKind;
     }> = $state([]);
     let holdersLoading: boolean = $state(false);
     let holdersError: string | null = $state(null);
@@ -112,7 +115,7 @@
         amount: bigint;
         amountToRedeem: bigint;
         amountToRedeemInCircles: number;
-        trustRelation?: TrustRelation;
+        trustRelation?: TrustRelationKind;
     }> = $state([]);
     let holdingsLoading: boolean = $state(false);
     let holdingsError: string | null = $state(null);
@@ -190,12 +193,12 @@
         if (!sdk) {
             throw new Error('Circles SDK not initialized');
         }
-        const { bindings } = createCirclesSdkProfilesBindings({ circlesSdk: sdk as any });
-        return bindings as ProfilesBindings;
+        const { bindings } = createCirclesSdkProfilesBindings({ circlesSdk: sdk });
+        return bindings;
     }
 
     async function loadNamespacesFor(addr: Address): Promise<void> {
-        const norm = normalizeAddress(addr as any) as Address;
+        const norm = normalizeAddress(addr) as Address;
         namespacesFor = String(norm).toLowerCase();
         otherLoading = true;
         otherError = null;
@@ -231,16 +234,31 @@
         if (!sdk) {
             return;
         }
+        initializing = true;
         const avatarDataSource = createAvatarDataSource(sdk);
+        const trustDataSource = createTrustDataSource(sdk);
 
-        const [other, prof] = await Promise.all([
+        const myAddress = avatarState.avatar?.address;
+
+        const [other, prof, myRelations] = await Promise.all([
             avatarDataSource.getAvatarInfo(address),
-            getProfile(address),
+            getProfile(address as `0x${string}`),
+            myAddress
+                ? trustDataSource.getAggregatedTrustRelations(myAddress as Address)
+                    .catch(() => [] as AggregatedTrustRelation[])
+                : Promise.resolve([] as AggregatedTrustRelation[]),
         ]);
         otherAvatar = other;
         profile = prof;
 
-        trustRow = $contacts?.data[address]?.row;
+        // Find the trust relation between the current user and the viewed profile
+        const addrLower = address.toLowerCase();
+        trustRow = myRelations.find(
+            (r) => r.objectAvatar?.toLowerCase() === addrLower
+        );
+
+        // Core data ready — stop showing loading skeleton for trust/actions
+        initializing = false;
 
         const isGroup: boolean = otherAvatar?.type === 'CrcV2_RegisterGroup';
         const isHuman: boolean = otherAvatar?.type === 'CrcV2_RegisterHuman';
@@ -265,7 +283,7 @@
 
         const loadMintHandler = async () => {
             try {
-                const findMintHandlerQuery = new CirclesQuery<any>(sdk.circlesRpc, {
+                const findMintHandlerQuery = new PagedQuery<any>(sdk.rpc.client, {
                     namespace: 'V_CrcV2',
                     table: 'Groups',
                     columns: ['mintHandler'],
@@ -280,7 +298,8 @@
                     sortOrder: 'DESC',
                     limit: 1,
                 });
-                mintHandler = (await findMintHandlerQuery.getSingleRow())?.mintHandler as Address | undefined;
+                await findMintHandlerQuery.queryNextPage();
+                mintHandler = findMintHandlerQuery.currentPage?.results?.[0]?.mintHandler as Address | undefined;
             } catch (e) {
                 mintHandler = undefined;
             }
@@ -291,8 +310,8 @@
             collateralError = null;
             try {
                 const [vaultRes, treasuryRes] = await Promise.allSettled([
-                    getVaultAddress(sdk.circlesRpc, otherAvatar!.avatar),
-                    getTreasuryAddress(sdk.circlesRpc, otherAvatar!.avatar),
+                    getVaultAddress(sdk.rpc, otherAvatar!.avatar),
+                    getTreasuryAddress(sdk.rpc, otherAvatar!.avatar),
                 ]);
                 const vaultAddress = vaultRes.status === 'fulfilled' ? vaultRes.value : null;
                 const treasuryAddress = treasuryRes.status === 'fulfilled' ? treasuryRes.value : null;
@@ -302,7 +321,7 @@
                     collateralInTreasury = [];
                     return;
                 }
-                const balancesResult = await getGroupCollateral(sdk.circlesRpc, balanceOwner);
+                const balancesResult = await getGroupCollateral(sdk.rpc, balanceOwner);
                 collateralInTreasury = toTokenRows(balancesResult, 'tokenId');
             } catch (e: any) {
                 collateralError = e?.message ?? 'Failed to load collateral';
@@ -316,7 +335,7 @@
             holdingsLoading = true;
             holdingsError = null;
             try {
-                const holdingsResult = await getAccountHoldings(sdk.circlesRpc, address);
+                const holdingsResult = await getAccountHoldings(sdk.rpc, address);
                 holdings = toTokenRows(holdingsResult, 'tokenId');
             } catch (e: any) {
                 holdingsError = e?.message ?? 'Failed to load holdings';
@@ -330,7 +349,7 @@
             holdersLoading = true;
             holdersError = null;
             try {
-                const tokenHoldersResult = await getGroupTokenHolders(sdk.circlesRpc, address);
+                const tokenHoldersResult = await getGroupTokenHolders(sdk.rpc, address);
                 tokenHolders = toTokenRows(tokenHoldersResult, 'account');
             } catch (e: any) {
                 holdersError = e?.message ?? 'Failed to load holders';
@@ -514,7 +533,9 @@
 <div class="flex flex-col items-center w-full sm:w-[90%] lg:w-3/5 mx-auto">
     <Avatar view="vertical" clickable={false} {address}/>
 
-    {#if trustRow}
+    {#if initializing}
+        <div class="mt-2 h-5 w-32 rounded bg-base-300/50 animate-pulse"></div>
+    {:else if trustRow}
         <div class="mt-2 flex items-center gap-1">
             <span
                     class="text-sm"
@@ -541,9 +562,11 @@
     <TrustScoreBadge {address} />
 
     <div class="my-6 flex flex-row gap-x-2">
+        {#if !initializing}
         <span class="inline-flex items-center h-8 bg-base-200 rounded-lg px-2 text-sm">
             {getTypeString(otherAvatar?.type || '')}
         </span>
+        {/if}
         <AddressComponent address={address ?? '0x0'}/>
         {#if address}
             <div class="relative">
@@ -635,7 +658,10 @@
     <div class="w-[80%] sm:w-[60%] border-b border-base-300"></div>
 
     <div class="w-full flex justify-center mt-6 space-x-6">
-        {#if !avatarState.isGroup}
+        {#if initializing}
+            <div class="h-8 w-20 rounded-lg bg-base-300/50 animate-pulse"></div>
+            <div class="h-8 w-20 rounded-lg bg-base-300/50 animate-pulse"></div>
+        {:else if !avatarState.isGroup}
             <div class="flex flex-col items-center gap-1">
                 <button
                         class="btn btn-primary btn-sm"
@@ -653,7 +679,7 @@
                 </button>
             </div>
         {/if}
-        {#if otherAvatar?.type === 'CrcV2_RegisterGroup' && !!mintHandler && !avatarState.isGroup}
+        {#if !initializing && otherAvatar?.type === 'CrcV2_RegisterGroup' && !!mintHandler && !avatarState.isGroup}
             <button
                     class="btn btn-primary btn-sm"
                     onclick={() => {
@@ -680,7 +706,9 @@
                 Mint
             </button>
         {/if}
-        {#if trustRow?.relation === 'trusts'}
+        {#if initializing}
+            <!-- trust button handled in the skeleton above -->
+        {:else if trustRow?.relation === 'trusts'}
             <button
                     class="btn btn-primary btn-sm"
                     onclick={() => {

@@ -29,7 +29,7 @@
       await loader.run(async () => {
         const seller = normalizeAddress(params.seller);
         const sku = params.sku;
-        const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
+        const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator!);
         const p = await catalog.fetchProductForSellerAndSku(seller, sku);
         if (!p) {
           throw new Error('Product not found for this seller / sku.');
@@ -48,7 +48,7 @@
     const offer = $derived(product?.product ? getFirstOffer(product?.product) : null);
     const currentAvatar = $derived(avatarState?.avatar?.address?.toLowerCase());
     const cartLoading = $derived($cartState.loading);
-    const addState = $derived(getAddToCartState({ product: product as any, offer, currentAvatar, cartLoading }));
+    const addState = $derived(getAddToCartState({ product, offer, currentAvatar, cartLoading }));
 
     async function handleAddToBasket(): Promise<void> {
         if (!product) return;

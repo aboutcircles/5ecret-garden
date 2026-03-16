@@ -62,7 +62,7 @@
         imageUrl = null;
         return;
       }
-      const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
+      const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator!);
       const item = await catalog.fetchProductForSellerAndSku(String(seller), sku);
       if (!item) {
         imageUrl = null;

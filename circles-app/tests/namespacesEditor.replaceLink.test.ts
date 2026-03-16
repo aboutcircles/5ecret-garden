@@ -4,7 +4,8 @@ import {
   buildReplacementLinkWithPayloadCid,
   replaceLoadedNamespaceLinkAt,
   type LoadedNamespaceLink,
-} from '$lib/domains/profile/model/namespacesEditor';
+} from '$lib/shared/model/profile/namespacesEditor';
+import type { CustomDataLink } from '@circles-profile/core';
 
 function mk(index: number, name = `link-${index}`): LoadedNamespaceLink {
   return {
@@ -102,16 +103,23 @@ describe('buildReplacementLinkWithPayloadCid', () => {
 });
 
 describe('applyEditableLinkMetadata', () => {
-  it('applies editable metadata fields', () => {
-    const link = {
-      name: 'product/old',
-      encrypted: false,
-      encryptionAlgorithm: null,
-      encryptionKeyFingerprint: null,
-      cid: 'Qm123',
-    };
+  const baseLink: CustomDataLink = {
+    '@context': 'https://aboutcircles.com/contexts/circles-linking/',
+    '@type': 'CustomDataLink',
+    name: 'product/old',
+    cid: 'Qm123',
+    encrypted: false,
+    encryptionAlgorithm: null,
+    encryptionKeyFingerprint: null,
+    chainId: 100,
+    signerAddress: '0x0000000000000000000000000000000000000001',
+    signedAt: 1,
+    nonce: '0x00000000000000000000000000000000' as `0x${string}`,
+    signature: '',
+  };
 
-    const next = applyEditableLinkMetadata(link, {
+  it('applies editable metadata fields', () => {
+    const next = applyEditableLinkMetadata(baseLink, {
       name: 'product/new',
       encrypted: true,
       encryptionAlgorithm: 'x25519-xsalsa20-poly1305',
@@ -126,12 +134,11 @@ describe('applyEditableLinkMetadata', () => {
   });
 
   it('clears encryption fields when encrypted=false', () => {
-    const link = {
-      name: 'product/old',
+    const link: CustomDataLink = {
+      ...baseLink,
       encrypted: true,
       encryptionAlgorithm: 'algo',
       encryptionKeyFingerprint: 'fp',
-      cid: 'Qm123',
     };
 
     const next = applyEditableLinkMetadata(link, {
@@ -149,7 +156,7 @@ describe('applyEditableLinkMetadata', () => {
   it('throws for invalid name or invalid link', () => {
     expect(
       didThrow(() =>
-        applyEditableLinkMetadata(null, {
+        applyEditableLinkMetadata(null as unknown as CustomDataLink, {
           name: 'x',
           encrypted: false,
           encryptionAlgorithm: null,
@@ -161,7 +168,7 @@ describe('applyEditableLinkMetadata', () => {
     expect(
       didThrow(() =>
         applyEditableLinkMetadata(
-          { cid: 'Qm1' },
+          { cid: 'Qm1' } as unknown as CustomDataLink,
           {
             name: '   ',
             encrypted: false,

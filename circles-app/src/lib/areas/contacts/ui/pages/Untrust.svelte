@@ -2,9 +2,7 @@
     import { avatarState } from '$lib/shared/state/avatar.svelte';
     import { runTask } from '$lib/shared/utils/tasks';
     import { shortenAddress } from '$lib/shared/utils/shared';
-    import { V1Avatar } from '@circles-sdk/sdk';
-    import { circles } from '$lib/shared/state/circles';
-    import TrustActionCard from '$lib/areas/contacts/ui/components/TrustActionCard.svelte';
+        import TrustActionCard from '$lib/areas/contacts/ui/components/TrustActionCard.svelte';
     import { popupControls } from '$lib/shared/state/popup';
     import { UNTRUST_EXPLAINER_POINTS, UNTRUST_QUICK_HELP_LINES } from '$lib/shared/content/trustRoutingCopy';
 
@@ -15,18 +13,11 @@
         if (!avatarState.avatar) {
             throw new Error('Avatar store not available');
         }
-        if (trustVersion == 1) {
-            const v1Avatar = new V1Avatar($circles!, avatarState.avatar.avatarInfo!);
-            runTask({
-                name: `Untrusting V1 ${shortenAddress(address)} ...`,
-                promise: v1Avatar.untrust(address),
-            });
-        } else {
-            runTask({
-                name: `Untrusting V2 ${shortenAddress(address)} ...`,
-                promise: avatarState.avatar!.untrust(address),
-            });
-        }
+        // V1-specific trust removal not supported in new SDK; use unified V2 trust.remove
+        runTask({
+            name: `Untrusting ${trustVersion === 1 ? 'V1' : 'V2'} ${shortenAddress(address)} ...`,
+            promise: avatarState.avatar!.trust.remove(address),
+        });
         popupControls.close();
     }
 </script>

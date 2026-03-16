@@ -5,7 +5,10 @@
     import { onMount } from 'svelte';
     import BalanceRow from '$lib/areas/wallet/ui/components/BalanceRow.svelte';
     import BalanceRowPlaceholder from '$lib/shared/ui/lists/placeholders/BalanceRowPlaceholder.svelte';
-    import type {EventRow} from '@circles-sdk/data';
+    import type {EventRow, TokenBalance} from '@aboutcircles/sdk-types';
+    import { buildGroupOwnerSet } from '$lib/shared/utils/tokenClassification';
+
+    type BalanceEventRow = EventRow & TokenBalance;
     import Filter from '$lib/shared/ui/lists/Filter.svelte';
     import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
     import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
@@ -56,14 +59,16 @@
     const filteredAll = derived(
         [circlesBalances, filterVersion, filterType, filterToken],
         ([$circlesBalances, filterVersion, filterType, filterToken]) => {
-            const filteredData = Object
-                .values($circlesBalances.data)
+            const allBalances = Object.values($circlesBalances.data);
+            const groupOwners = buildGroupOwnerSet(allBalances);
+            const filteredData = allBalances
                 .filter((balance) => {
                     const matchesVersion = filterVersion === undefined || balance.version === filterVersion;
+                    const isGroup = groupOwners.has(balance.tokenOwner?.toLowerCase?.() ?? '');
                     const matchesType =
                         filterType === undefined ||
-                        (filterType === 'personal' ? !balance.isGroup :
-                            filterType === 'group' ? balance.isGroup : true);
+                        (filterType === 'personal' ? !isGroup :
+                            filterType === 'group' ? isGroup : true);
                     const matchesToken =
                         filterToken === undefined ||
                         (filterToken === 'erc20' ? balance.isErc20 :
@@ -77,7 +82,7 @@
                     transactionIndex: i,
                     logIndex: i,
                     ...balance
-                } as EventRow));
+                } as BalanceEventRow));
 
             return filteredData;
         }
@@ -87,8 +92,8 @@
         const q = ($searchQuery ?? '').toLowerCase().trim();
         if (!q) return $filteredAll;
         return $filteredAll.filter((item) => {
-            const owner = String((item as any).tokenOwner ?? '').toLowerCase();
-            const token = String((item as any).tokenAddress ?? '').toLowerCase();
+            const owner = String(item.tokenOwner ?? '').toLowerCase();
+            const token = String(item.tokenAddress ?? '').toLowerCase();
             return owner.includes(q) || token.includes(q);
         });
     });

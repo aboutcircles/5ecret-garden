@@ -8,17 +8,48 @@ export type BasketLine = {
     orderedItem?: {
       sku?: unknown;
     };
+    [k: string]: unknown;
   };
   orderQuantity?: unknown;
   quantity?: unknown;
   imageUrl?: unknown;
+  offerSnapshot?: {
+    price?: number;
+    priceCurrency?: string;
+    [k: string]: unknown;
+  };
+  [k: string]: unknown;
+};
+
+export type PostalAddress = {
+  '@type'?: string;
+  streetAddress?: string;
+  addressLocality?: string;
+  postalCode?: string;
+  addressCountry?: string;
+  [k: string]: unknown;
+};
+
+export type ContactPoint = {
+  '@type'?: string;
+  email?: string;
+  telephone?: string;
+  [k: string]: unknown;
 };
 
 export type Basket = {
-  basketId?: string;
+  basketId: string;
   buyer?: string;
-  status?: string;
-  items?: BasketLine[];
+  operator?: string;
+  chainId?: number;
+  status: string;
+  items: BasketLine[];
+  shippingAddress?: PostalAddress;
+  billingAddress?: PostalAddress;
+  contactPoint?: ContactPoint;
+  ageProof?: { '@type'?: string; birthDate?: string; [k: string]: unknown };
+  customer?: { '@type'?: string; givenName?: string; familyName?: string; [k: string]: unknown };
+  [k: string]: unknown;
 };
 
 export type CartState = {
@@ -55,3 +86,16 @@ export type SdkCartItem = {
   quantity: number;
   imageUrl?: string;
 };
+
+/**
+ * Coerce an SDK {@link import('@circles-market/cart').Basket} (which has
+ * stricter item types and an index signature) into the local {@link Basket}
+ * shape used throughout the cart module.
+ *
+ * The runtime shapes are identical -- this only exists to satisfy the
+ * structural mismatch between the SDK's `BasketItem` and the local
+ * `BasketLine` (different `offerSnapshot` / nested `orderedItem` types).
+ */
+export function toLocalBasket(sdkBasket: { basketId: string; [k: string]: unknown }): Basket {
+  return sdkBasket as unknown as Basket;
+}

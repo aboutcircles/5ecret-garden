@@ -2,7 +2,7 @@
     import { derived, readable, writable, type Readable } from 'svelte/store';
     import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
     import {createCMGroups} from '$lib/areas/groups/state';
-    import type {EventRow} from '@circles-sdk/data';
+    import type {EventRow, Address} from '@aboutcircles/sdk-types';
     import GroupRowView from './GroupRowView.svelte';
     import AvatarRowPlaceholder from '$lib/shared/ui/lists/placeholders/AvatarRowPlaceholder.svelte';
     import OwnedGroupRowView from './OwnedGroupRowView.svelte';
@@ -19,7 +19,7 @@
     import {CirclesStorage} from '$lib/shared/utils/storage';
     import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/shared/utils/getGroupsByOwnerBatch';
     import { getGroupsByMember } from '$lib/areas/groups/utils/getGroupsByMemberBatch';
-    import type { GroupRow } from '@circles-sdk/data';
+    import type { GroupRow } from '@aboutcircles/sdk-types';
     import Tabs from '$lib/shared/ui/primitives/tabs/Tabs.svelte';
     import Tab from '$lib/shared/ui/primitives/tabs/Tab.svelte';
     import { type TabIdOf } from '$lib/shared/ui/primitives/tabs/tabId';
@@ -69,8 +69,9 @@
         ownedGroupsLoading = true;
         ownedGroupsError = null;
         try {
-            const result = await getBaseAndCmgGroupsByOwnerBatch($circles, [ownerAddress as any]);
-            ownedGroups = result[(ownerAddress as string).toLowerCase() as any] ?? result[ownerAddress as any] ?? [];
+            const result = await getBaseAndCmgGroupsByOwnerBatch($circles, [ownerAddress as Address]);
+            const ownerKey = ownerAddress!.toLowerCase() as Address;
+            ownedGroups = result[ownerKey] ?? [];
             ownedGroupsLoadedForAvatar = String(ownerAddress).toLowerCase();
         } catch (e) {
             ownedGroupsError = e instanceof Error ? e.message : String(e);
@@ -91,7 +92,7 @@
         membershipsLoading = true;
         membershipsError = null;
         try {
-            memberships = await getGroupsByMember($circles, ownerAddress as any);
+            memberships = await getGroupsByMember($circles, ownerAddress as Address);
             membershipsLoadedForAvatar = String(ownerAddress).toLowerCase();
         } catch (e) {
             membershipsError = e instanceof Error ? e.message : String(e);
@@ -186,7 +187,7 @@
             },
             // Ensure state is cleared if the user closes the flow
             onClose: () => resetCreateGroupContext()
-        } as any);
+        });
     }
 
     const actions: Action[] = $derived([
@@ -247,7 +248,7 @@
                     connectText="Connect an avatar to see the groups you own."
                     emptyText="No groups found."
                 >
-                    <svelte:fragment slot="empty">
+                    {#snippet empty()}
                         <div class="rounded-xl border border-dashed border-base-300 bg-base-200/40 p-4 space-y-3">
                             <div>
                                 <p class="text-sm font-semibold text-base-content">No groups yet</p>
@@ -282,10 +283,12 @@
                                 </a>
                             </div>
                         </div>
-                    </svelte:fragment>
-                    {#each ownedGroups as item (item.group)}
-                        <OwnedGroupRowView item={item} />
-                    {/each}
+                    {/snippet}
+                    {#snippet children()}
+                        {#each ownedGroups as item (item.group)}
+                            <OwnedGroupRowView item={item} />
+                        {/each}
+                    {/snippet}
                 </GroupTabPanel>
             {:else if selectedTab === 'memberships'}
                 <GroupTabPanel
@@ -296,9 +299,11 @@
                     connectText="Connect an avatar to see the groups you are a member in."
                     emptyText="No group memberships"
                 >
-                    {#each memberships as item (item.group)}
-                        <GroupRowView item={item} />
-                    {/each}
+                    {#snippet children()}
+                        {#each memberships as item (item.group)}
+                            <GroupRowView item={item} />
+                        {/each}
+                    {/snippet}
                 </GroupTabPanel>
             {:else}
                 {#if groups}
