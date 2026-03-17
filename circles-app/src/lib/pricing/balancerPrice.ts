@@ -31,9 +31,9 @@ export const DEFAULT_CHAIN: 'GNOSIS' = 'GNOSIS';
 export const STATIC_WRAPPED_TOKEN_TYPE = 'CrcV2_ERC20WrapperDeployed_Inflationary';
 
 const DEFAULTS: Required<PriceConfig> = {
-  endpoint: (import.meta as any)?.env?.VITE_BALANCER_GRAPHQL_URL || BALANCER_GRAPHQL_URL,
-  tokenOut: (import.meta as any)?.env?.VITE_BALANCER_WXDAI_ADDRESS || GNOSIS_WXDAI,
-  swapAmount: (import.meta as any)?.env?.VITE_BALANCER_SWAP_AMOUNT || DEFAULT_SWAP_AMOUNT,
+  endpoint: import.meta.env.VITE_BALANCER_GRAPHQL_URL || BALANCER_GRAPHQL_URL,
+  tokenOut: import.meta.env.VITE_BALANCER_WXDAI_ADDRESS || GNOSIS_WXDAI,
+  swapAmount: import.meta.env.VITE_BALANCER_SWAP_AMOUNT || DEFAULT_SWAP_AMOUNT,
   chain: DEFAULT_CHAIN,
   timeoutMs: 12_000,
   max429Retries: 3,
