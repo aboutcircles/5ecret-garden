@@ -1,7 +1,8 @@
 <script lang="ts">
     import { avatarState } from '$lib/shared/state/avatar.svelte';
     import { roundToDecimals } from '$lib/shared/utils/shared';
-    import { executeTxConfirmFirst } from '$lib/shared/utils/txExecution';
+    import { runTask } from '$lib/shared/utils/tasks';
+    import { isBenignReceiptDecodeError } from '$lib/shared/utils/tx';
 
     import OverviewPanel from './OverviewPanel.svelte';
     import TransactionHistoryPanel from './TransactionHistoryPanel.svelte';
@@ -49,10 +50,15 @@
         }
 
         try {
-            await executeTxConfirmFirst({
+            await runTask({
                 name: 'Collecting CRC ...',
-                submit: () => avatarState.avatar!.personalMint(),
+                promise: avatarState.avatar!.personalMint(),
             });
+        } catch (error) {
+            if (!isBenignReceiptDecodeError(error)) {
+                throw error;
+            }
+            console.warn('Ignoring benign receipt decode error after successful mint transaction', error);
         } finally {
             const refreshed = await avatarState.avatar!.getMintableAmount();
             mintableAmount = refreshed ?? 0;

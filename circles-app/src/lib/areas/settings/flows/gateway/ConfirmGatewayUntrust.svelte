@@ -8,8 +8,8 @@
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import { wallet } from '$lib/shared/state/wallet.svelte';
-  import { executeTxConfirmFirst } from '$lib/shared/utils/txExecution';
-  import { isAddress } from '$lib/shared/utils/tx';
+  import { runTask } from '$lib/shared/utils/tasks';
+  import { isAddress, sendRunnerTransactionAndWait } from '$lib/shared/utils/tx';
   import { popupControls } from '$lib/shared/state/popup';
 
   interface Props {
@@ -42,21 +42,18 @@
     const runner: any = $wallet;
     const gatewayAddress = gateway as `0x${string}`;
 
-    await executeTxConfirmFirst({
+    await runTask({
       name: 'Clearing trust…',
-      submit: async () => {
+      promise: (async () => {
         const data = gatewayIface.encodeFunctionData('clearTrust', [trustReceiver]);
-        const tx = await runner.sendTransaction({
+        await sendRunnerTransactionAndWait(runner, {
           to: gatewayAddress,
           value: 0n,
           data
-        });
-        await runner.provider.waitForTransaction(tx.hash);
-      },
-      onSuccess: async () => {
+        }, { label: 'Gateway clear trust' });
         await onDone?.();
         popupControls.close();
-      },
+      })()
     });
   }
 

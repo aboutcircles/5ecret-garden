@@ -6,8 +6,11 @@
   import BalanceRow from '$lib/areas/wallet/ui/components/BalanceRow.svelte';
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import { roundToDecimals } from '$lib/shared/utils/shared';
-  import { executeTxSubmitFirst } from '$lib/shared/utils/txExecution';
+  import { runTask } from '$lib/shared/utils/tasks';
   import { popupControls } from '$lib/shared/state/popup';
+  import { wallet } from '$lib/shared/state/wallet.svelte';
+  import { get } from 'svelte/store';
+  import { sendRunnerTransactionAndWait } from '$lib/shared/utils/tx';
 
   interface Props {
     asset: TokenBalanceRow;
@@ -21,6 +24,19 @@
     Number.isFinite(Number(maxUnwrapAmount)) && Number(maxUnwrapAmount) > 0
   );
 
+  async function unwrapViaRunner(tokenAddress: string, amountWei: bigint): Promise<void> {
+    const runner = get(wallet) as any;
+
+    const wrapperInterface = new ethers.Interface(['function unwrap(uint256 amount)']);
+    const data = wrapperInterface.encodeFunctionData('unwrap', [amountWei]);
+
+    await sendRunnerTransactionAndWait(runner, {
+      to: tokenAddress,
+      value: 0n,
+      data,
+    }, { label: 'Unwrap transaction' });
+  }
+
   async function unwrap() {
     const tokenInfo = await $circles?.data?.getTokenInfo(asset.tokenAddress);
     if (!tokenInfo) {
@@ -29,29 +45,23 @@
     if (!avatarState.avatar) {
       throw new Error('Avatar not loaded');
     }
-    const avatar = avatarState.avatar;
+
+    const amountWei = BigInt(ethers.parseEther(amount.toString()));
 
     if (tokenInfo.type === 'CrcV2_ERC20WrapperDeployed_Inflationary') {
-      void executeTxSubmitFirst({
+      runTask({
         name: `Unwrap ${roundToDecimals(amount)} static tokens ...`,
-        submit: () => avatar.unwrapInflationErc20(
-          asset.tokenAddress,
-          BigInt(ethers.parseEther(amount.toString()))
-        ),
-        onSubmitted: () => popupControls.close(),
+        promise: unwrapViaRunner(asset.tokenAddress, amountWei),
       });
     } else if (tokenInfo.type === 'CrcV2_ERC20WrapperDeployed_Demurraged') {
-      void executeTxSubmitFirst({
+      runTask({
         name: `Unwrap ${roundToDecimals(amount)} tokens ...`,
-        submit: () => avatar.unwrapDemurrageErc20(
-          asset.tokenAddress,
-          BigInt(ethers.parseEther(amount.toString()))
-        ),
-        onSubmitted: () => popupControls.close(),
+        promise: unwrapViaRunner(asset.tokenAddress, amountWei),
       });
     } else {
       throw new Error('Unsupported token type');
     }
+    popupControls.close();
   }
 </script>
 

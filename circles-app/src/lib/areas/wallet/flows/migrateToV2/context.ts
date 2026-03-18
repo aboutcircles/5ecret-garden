@@ -8,3 +8,11 @@ export type MigrateToV2Context = {
   profile: Profile | undefined;
   trustList: string[];
 };
+
+export function createMigrateToV2Context(): MigrateToV2Context {
+  return {
+    inviter: undefined,
+    profile: { name: '' } as Profile,
+    trustList: [],
+  };
+}

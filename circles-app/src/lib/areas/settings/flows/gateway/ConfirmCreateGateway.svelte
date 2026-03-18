@@ -9,8 +9,8 @@
   import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
   import StepReviewRow from '$lib/shared/ui/flow/StepReviewRow.svelte';
   import { wallet } from '$lib/shared/state/wallet.svelte';
-  import { executeTxConfirmFirst } from '$lib/shared/utils/txExecution';
-  import { isAddress } from '$lib/shared/utils/tx';
+  import { runTask } from '$lib/shared/utils/tasks';
+  import { isAddress, sendRunnerTransactionAndWait } from '$lib/shared/utils/tx';
   import { popupControls } from '$lib/shared/state/popup';
   import { popToOrOpen } from '$lib/shared/flow';
   import type { CreateGatewayFlowContext } from './context';
@@ -60,9 +60,9 @@
 
     creatingGateway = true;
     try {
-      await executeTxConfirmFirst({
+      await runTask({
         name: 'Creating payment gateway…',
-        submit: async () => {
+        promise: (async () => {
           const runner: any = $wallet;
           const factoryAddress = context.factoryAddress as `0x${string}`;
 
@@ -92,16 +92,11 @@
             context.metadataDigest
           ]);
 
-          const tx = await runner.sendTransaction({
+          const receipt = await sendRunnerTransactionAndWait(runner, {
             to: factoryAddress,
             value: 0n,
             data
-          });
-
-          const receipt = await runner.provider.waitForTransaction(tx.hash);
-          if (!receipt) {
-            throw new Error('No transaction receipt found.');
-          }
+          }, { label: 'Create gateway transaction' });
 
           let createdGateway: string | null = null;
 
@@ -128,12 +123,11 @@
             }
             onCreated?.(createdGateway);
           }
-        },
-        onSuccess: () => {
-          // Close the flow after a successful submit.
-          popupControls.close();
-        },
+        })()
       });
+
+      // Close the flow after a successful submit.
+      popupControls.close();
     } finally {
       creatingGateway = false;
     }

@@ -15,6 +15,7 @@
   import InvitationPickerStep from '$lib/shared/ui/invitations/InvitationPickerStep.svelte';
   import { requireAvatar, requireCircles } from '$lib/shared/flow';
   import { get } from 'svelte/store';
+  import { migrationDoesNotRequireInvitation } from './invitationRequirements';
 
   interface Props {
     context?: MigrateToV2Context;
@@ -34,6 +35,10 @@
     const avatar = requireAvatar(avatarState.avatar);
     if (!avatar.avatarInfo) {
       throw new Error('Avatar info not initialized');
+    }
+    if (migrationDoesNotRequireInvitation(avatar.avatarInfo)) {
+      await next();
+      return;
     }
     canSelfMigrate = settings.ring ? true : await sdk.canSelfMigrate(avatar.avatarInfo);
     invitations = await sdk.data.getInvitations(avatar.avatarInfo.avatar);

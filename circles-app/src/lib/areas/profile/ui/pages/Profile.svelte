@@ -21,7 +21,6 @@
     import JumpLink from '$lib/shared/ui/content/jump/JumpLink.svelte';
     import AddressComponent from '$lib/shared/ui/primitives/Address.svelte';
     import {uint256ToAddress, type Address} from '@circles-sdk/utils';
-    import SelectAmount from '$lib/areas/wallet/flows/send/3_Amount.svelte';
     import {transitiveTransfer} from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
     import {
         getAccountHoldings,
@@ -657,23 +656,11 @@
             <button
                     class="btn btn-primary btn-sm"
                     onclick={() => {
-                    popupControls.open({
-                        title: 'Enter Amount',
-                        kind: 'edit',
-                        dismiss: 'explicit',
-                        component: SelectAmount,
-                        props: {
-                            asset: transitiveTransfer(),
-                            selectedAddress: mintHandler,
-                            transitiveOnly: true,
-                            amount: 0,
-                            context: {
-                                selectedAddress: mintHandler,
-                                transitiveOnly: true,
-                                selectedAsset: transitiveTransfer(),
-                                amount: 0,
-                            },
-                        },
+                    openSendFlowPopup({
+                        selectedAddress: mintHandler,
+                        selectedAsset: transitiveTransfer(),
+                        amount: undefined,
+                        transitiveOnly: true,
                     });
                 }}
             >

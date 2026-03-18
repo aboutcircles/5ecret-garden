@@ -27,14 +27,19 @@
     listCodeProducts,
     upsertCodeProduct,
     disableCodeProduct,
+    listUnlockProducts,
+    upsertUnlockProduct,
+    disableUnlockProduct,
     type MarketRoute,
     type RouteUpsertInput,
     type OdooConnectionConfig,
     type OdooConnectionListItem,
     type OdooProductConfig,
     type CodeProductConfig,
+    type UnlockProductConfig,
     type OdooProductListItem,
     type CodeProductListItem,
+    type UnlockProductListItem,
   } from '$lib/areas/admin/services/gateway/adminClient';
   import { gnosisConfig } from '$lib/shared/config/circles';
   import type { Address } from '@circles-sdk/utils';
@@ -43,6 +48,7 @@
   import AdminProductList from '$lib/areas/admin/components/AdminProductList.svelte';
   import AdminOdooProductEditor from '$lib/areas/admin/components/AdminOdooProductEditor.svelte';
   import AdminCodeProductEditor from '$lib/areas/admin/components/AdminCodeProductEditor.svelte';
+  import AdminUnlockProductEditor from '$lib/areas/admin/components/AdminUnlockProductEditor.svelte';
   import AdminNewProductSellerStep from '$lib/areas/admin/flows/newProduct/1_Seller.svelte';
   import AdminNewConnectionSellerStep from '$lib/areas/admin/flows/newConnection/1_Seller.svelte';
   import { combineAdminProducts } from '$lib/areas/admin/helpers';
@@ -72,22 +78,38 @@
   // Adapter mappings state
   let odooProducts: OdooProductListItem[] = $state([]);
   let codeProducts: CodeProductListItem[] = $state([]);
+  let unlockProducts: UnlockProductListItem[] = $state([]);
   let productsLoading: boolean = $state(false);
   let productsError: string | null = $state(null);
 
   let defaultProductType: AdminProductType = $state('odoo');
 
-  const unifiedProducts = $derived(combineAdminProducts(routes, odooProducts, codeProducts));
-  const hasRouteOnlyProducts = $derived(unifiedProducts.some((item) => !item.odoo && !item.code));
+  const unifiedProducts = $derived(combineAdminProducts(routes, odooProducts, codeProducts, unlockProducts));
+  const hasRouteOnlyProducts = $derived(unifiedProducts.some((item) => !item.odoo && !item.code && !item.unlock));
   const loadingAny = $derived(productsLoading || routesLoading || connectionsLoading);
 
   const codeProductsUnified = $derived(unifiedProducts.filter((item) => resolveAdminProductType(item) === 'codedispenser'));
   const odooProductsUnified = $derived(unifiedProducts.filter((item) => resolveAdminProductType(item) === 'odoo'));
+  const unlockProductsUnified = $derived(unifiedProducts.filter((item) => resolveAdminProductType(item) === 'unlock'));
   const routeOnlyProductsUnified = $derived(unifiedProducts.filter((item) => resolveAdminProductType(item) === 'route'));
 
-  const PRODUCT_TAB_IDS = ['codedispenser', 'odoo', 'route'] as const;
+  const PRODUCT_TAB_IDS = ['codedispenser', 'unlock', 'odoo', 'route'] as const;
   type ProductsTabId = TabIdOf<typeof PRODUCT_TAB_IDS>;
   let selectedProductsTab = $state<ProductsTabId>('codedispenser');
+
+  type SaveProductPayload = {
+    type: AdminProductType;
+    route?: RouteUpsertInput;
+    odoo?: OdooProductConfig;
+    odooStock?: {
+      chainId: number;
+      seller: Address;
+      sku: string;
+      availableQty: number;
+    };
+    code?: CodeProductConfig;
+    unlock?: UnlockProductConfig;
+  };
 
   async function connectAdminWallet(): Promise<void> {
     authLoading = true;
@@ -126,6 +148,7 @@
     odooConnections = [];
     odooProducts = [];
     codeProducts = [];
+    unlockProducts = [];
   }
 
   async function loadRoutes(): Promise<void> {
@@ -165,15 +188,17 @@
     productsError = null;
 
     try {
-      const [odoo, code] = await runTask({
+      const [odoo, code, unlock] = await runTask({
         name: 'Loading products…',
         promise: Promise.all([
           listOdooProducts(),
           listCodeProducts(),
+          listUnlockProducts(),
         ]),
       });
       odooProducts = odoo;
       codeProducts = code;
+      unlockProducts = unlock;
     } catch (e) {
       productsError = e instanceof Error ? e.message : String(e);
     } finally {
@@ -200,10 +225,18 @@
 
     const component = resolvedType === 'codedispenser'
       ? AdminCodeProductEditor
-      : AdminOdooProductEditor;
+      : resolvedType === 'unlock'
+        ? AdminUnlockProductEditor
+        : AdminOdooProductEditor;
+
+    const typeLabel = resolvedType === 'codedispenser'
+      ? 'Code'
+      : resolvedType === 'unlock'
+        ? 'Unlock'
+        : 'Odoo';
 
     popupControls.open?.({
-      title: product ? 'Edit product' : `New ${resolvedType === 'codedispenser' ? 'Code' : 'Odoo'} product`,
+      title: product ? 'Edit product' : `New ${typeLabel} product`,
       hideTitle: true,
       component,
       props: {
@@ -213,7 +246,7 @@
         mode: 'product',
         onCancel: () => popupControls.close(),
         onDisable: product ? async () => handleDisableProduct(product) : undefined,
-        onSubmit: async (payload) => {
+        onSubmit: async (payload: SaveProductPayload) => {
           await saveProduct(payload, product ?? null);
         },
       },
@@ -228,7 +261,7 @@
       props: {
         connections: odooConnections,
         existingProducts: unifiedProducts,
-        onExecute: async (payload) => {
+        onExecute: async (payload: SaveProductPayload) => {
           await saveProduct(payload, null);
         },
         onCreateConnection: createConnectionInFlow,
@@ -243,7 +276,7 @@
         title: 'New Odoo connection',
         component: AdminNewConnectionSellerStep,
         props: {
-          onCreate: async (payload) => {
+          onCreate: async (payload: { connection: OdooConnectionConfig }) => {
             await saveConnection(payload);
           },
         },
@@ -262,7 +295,7 @@
         mode: 'connection',
         onCancel: () => popupControls.close(),
         onDisable: async () => handleDisableConnection(connection),
-        onSubmit: async (payload) => {
+        onSubmit: async (payload: { connection: OdooConnectionConfig }) => {
           await saveConnection(payload);
         },
       },
@@ -299,25 +332,29 @@
   }
 
   async function saveProduct(
-    payload: {
-      type: AdminProductType;
-      route?: RouteUpsertInput;
-      odoo?: OdooProductConfig;
-      odooStock?: {
-        chainId: number;
-        seller: Address;
-        sku: string;
-        availableQty: number;
-      };
-      code?: CodeProductConfig;
-    },
+    payload: SaveProductPayload,
     product: AdminUnifiedProduct | null
   ): Promise<void> {
     const baseRoute: RouteUpsertInput | null = payload.type !== 'route'
       ? {
-        chainId: payload.type === 'odoo' ? payload.odoo!.chainId : payload.code!.chainId,
-        seller: payload.type === 'odoo' ? payload.odoo!.seller : payload.code!.seller,
-        sku: payload.type === 'odoo' ? payload.odoo!.sku : payload.code!.sku,
+        chainId:
+          payload.type === 'odoo'
+            ? payload.odoo!.chainId
+            : payload.type === 'codedispenser'
+              ? payload.code!.chainId
+              : payload.unlock!.chainId,
+        seller:
+          payload.type === 'odoo'
+            ? payload.odoo!.seller
+            : payload.type === 'codedispenser'
+              ? payload.code!.seller
+              : payload.unlock!.seller,
+        sku:
+          payload.type === 'odoo'
+            ? payload.odoo!.sku
+            : payload.type === 'codedispenser'
+              ? payload.code!.sku
+              : payload.unlock!.sku,
         offerType: payload.type,
         isOneOff: false,
         enabled: true,
@@ -347,6 +384,11 @@
       await runTask({
         name: product ? 'Saving CodeDispenser product…' : 'Creating CodeDispenser product…',
         promise: upsertCodeProduct(payload.code),
+      });
+    } else if (payload.type === 'unlock' && payload.unlock) {
+      await runTask({
+        name: product ? 'Saving Unlock product…' : 'Creating Unlock product…',
+        promise: upsertUnlockProduct(payload.unlock),
       });
     }
 
@@ -379,6 +421,11 @@
       await runTask({
         name: 'Disabling CodeDispenser product…',
         promise: disableCodeProduct(product.chainId, product.seller, product.sku),
+      });
+    } else if (product.unlock) {
+      await runTask({
+        name: 'Disabling Unlock product…',
+        promise: disableUnlockProduct(product.chainId, product.seller, product.sku),
       });
     } else if (product.route) {
       await runTask({
@@ -420,13 +467,24 @@
     {#if !adminUser}
       <ActionButton
         action={connectAdminWallet}
-        loading={authLoading}
-        variant="primary"
+        disabled={authLoading}
       >
         {authLoading ? 'Connecting…' : 'Login'}
       </ActionButton>
     {:else}
-      <ActionButton action={disconnectAdmin} variant="ghost" size="sm">
+      <ActionButton
+        action={async () => {
+          disconnectAdmin();
+        }}
+        theme={{
+          Ready: 'btn-ghost',
+          Working: 'btn-disabled',
+          Error: 'btn-warning',
+          Retry: 'btn-warning',
+          Done: 'btn-ghost',
+          Disabled: 'btn-disabled',
+        }}
+      >
         Disconnect
       </ActionButton>
     {/if}
@@ -480,6 +538,18 @@
                   onSelect={(product) => openProductEditor(product, 'codedispenser')}
                   connections={odooConnections}
                   productTypes={['codedispenser']}
+                />
+              {/if}
+            </Tab>
+
+            <Tab id="unlock" title="Unlock" badge={unlockProductsUnified.length} panelClass="pt-4">
+              {#if unlockProductsUnified.length === 0}
+                <p class="text-sm opacity-70">No Unlock products configured yet.</p>
+              {:else}
+                <AdminProductList
+                  products={unlockProductsUnified}
+                  onSelect={(product) => openProductEditor(product, 'unlock')}
+                  productTypes={['unlock']}
                 />
               {/if}
             </Tab>

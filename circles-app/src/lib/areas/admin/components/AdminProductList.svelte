@@ -21,13 +21,13 @@
   let {
     products,
     onSelect,
-    productTypes: productTypesProp = ['odoo', 'codedispenser'],
+    productTypes: productTypesProp = ['odoo', 'codedispenser', 'unlock'],
     connections = [],
     onEditConnection,
   }: Props = $props();
 
   const productTypes = $derived(
-    productTypesProp.length > 0 ? productTypesProp : (['odoo', 'codedispenser'] as AdminProductType[])
+    productTypesProp.length > 0 ? productTypesProp : (['odoo', 'codedispenser', 'unlock'] as AdminProductType[])
   );
   let selectedType: AdminProductType | null = $state(null);
 
@@ -52,7 +52,7 @@
   );
 
   const isGroupedView = $derived(
-    selectedType === 'odoo' || selectedType === 'codedispenser'
+    selectedType === 'odoo' || selectedType === 'codedispenser' || selectedType === 'unlock'
   );
 
   type SellerGroup = {
@@ -104,9 +104,19 @@
     let revoked = 0;
 
     for (const item of group.products) {
-      const mappingEnabled = item.type === 'odoo' ? item.product.odoo?.enabled : item.product.code?.enabled;
+      const mappingEnabled =
+        item.type === 'odoo'
+          ? item.product.odoo?.enabled
+          : item.type === 'codedispenser'
+            ? item.product.code?.enabled
+            : item.product.unlock?.enabled;
       if (mappingEnabled === false) disabled += 1;
-      const revokedAt = item.type === 'odoo' ? item.product.odoo?.revokedAt : item.product.code?.revokedAt;
+      const revokedAt =
+        item.type === 'odoo'
+          ? item.product.odoo?.revokedAt
+          : item.type === 'codedispenser'
+            ? item.product.code?.revokedAt
+            : item.product.unlock?.revokedAt;
       if (revokedAt) revoked += 1;
     }
 
@@ -127,6 +137,9 @@
   function resolveGroupSubtitle(group: SellerGroup): string {
     if (selectedType === 'odoo') {
       return group.connection?.odooUrl ?? 'No Odoo connection configured';
+    }
+    if (selectedType === 'unlock') {
+      return 'Unlock ticket seller';
     }
     return 'Voucher code seller';
   }

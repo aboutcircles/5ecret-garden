@@ -22,8 +22,8 @@
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { clearSession, signer, wallet } from '$lib/shared/state/wallet.svelte';
   import { circles } from '$lib/shared/state/circles';
-  import MigrateToV2 from '$lib/areas/wallet/flows/migrateToV2/1_GetInvited.svelte';
   import { openFlowPopup, popupControls } from '$lib/shared/state/popup';
+  import { openMigrateToV2Flow } from '$lib/areas/wallet/flows/migrateToV2/openMigrateToV2Flow';
   import { ethers } from 'ethers';
   import { LogOut as LLogOut } from 'lucide';
   import type { Address } from '@circles-sdk/utils';
@@ -266,11 +266,7 @@
   }
 
   async function migrateToV2() {
-    openFlowPopup({
-      title: 'Migrate to v2',
-      component: MigrateToV2,
-      props: {},
-    });
+    await openMigrateToV2Flow();
   }
 
   async function stopV1() {

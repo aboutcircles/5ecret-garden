@@ -1,5 +1,10 @@
 import type { Address } from '@circles-sdk/utils';
-import type { CodeProductListItem, OdooProductListItem, MarketRoute } from '$lib/areas/admin/services/gateway/adminClient';
+import type {
+  CodeProductListItem,
+  OdooProductListItem,
+  UnlockProductListItem,
+  MarketRoute,
+} from '$lib/areas/admin/services/gateway/adminClient';
 import type { AdminUnifiedProduct } from './types';
 
 type ProductKey = string;
@@ -16,7 +21,8 @@ export function adminOdooConnectionKey(chainId: number, seller: string): Connect
 export function combineAdminProducts(
   routes: MarketRoute[],
   odooProducts: OdooProductListItem[],
-  codeProducts: CodeProductListItem[]
+  codeProducts: CodeProductListItem[],
+  unlockProducts: UnlockProductListItem[]
 ): AdminUnifiedProduct[] {
   const productMap = new Map<ProductKey, AdminUnifiedProduct>();
 
@@ -48,6 +54,11 @@ export function combineAdminProducts(
   for (const code of codeProducts) {
     const entry = upsertBase(code.chainId, code.seller, code.sku);
     entry.code = code;
+  }
+
+  for (const unlock of unlockProducts) {
+    const entry = upsertBase(unlock.chainId, unlock.seller, unlock.sku);
+    entry.unlock = unlock;
   }
 
   return Array.from(productMap.values()).sort((a, b) => {

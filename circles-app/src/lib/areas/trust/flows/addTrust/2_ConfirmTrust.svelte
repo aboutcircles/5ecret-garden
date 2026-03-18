@@ -70,7 +70,13 @@
       {/snippet}
 
       {#snippet primary()}
-        <ActionButton action={confirm} disabled={!canConfirm} title="Confirm trust">
+        <ActionButton
+          action={confirm}
+          disabled={!canConfirm}
+          title="Confirm trust"
+          data-popup-default-action
+          data-popup-initial-focus
+        >
           {#snippet children()}Confirm{/snippet}
         </ActionButton>
       {/snippet}

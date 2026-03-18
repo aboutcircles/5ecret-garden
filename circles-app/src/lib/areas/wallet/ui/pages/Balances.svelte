@@ -1,7 +1,6 @@
 <script lang="ts">
     import { browser } from '$app/environment';
     import {circlesBalances} from '$lib/shared/state/circlesBalances';
-    import { circles } from '$lib/shared/state/circles';
     import {derived, writable, type Writable} from 'svelte/store';
     import { onMount } from 'svelte';
     import BalanceRow from '$lib/areas/wallet/ui/components/BalanceRow.svelte';
@@ -14,16 +13,17 @@
     import { CircleHelp as LCircleHelp, X as LX } from 'lucide';
     import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
     import { WHY_MANY_CIRCLES_LINES } from '$lib/shared/content/trustRoutingCopy';
-    import { quoteTokenPriceRaw, resolveStaticWrappedTokenAddress } from '$lib/pricing/balancerPrice';
+    import {
+        pickWrappedStaticTokenAddresses,
+        type WrappedStaticPriceMap,
+    } from '$lib/shared/pricing/wrappedStaticPricing';
+    import { setBalancePricingContext } from '$lib/shared/pricing/balancePricingContext';
 
     let filterVersion = writable<number | undefined>(undefined);
     let filterType = writable<'personal' | 'group' | undefined>(undefined);
     let filterToken = writable<'erc20' | 'erc1155' | undefined>(undefined);
-    let sortOrder = writable<'total' | 'price'>('total');
     let searchQuery = writable<string>('');
     let balancesListScopeEl: HTMLDivElement | null = $state(null);
-    const priceSortValues: Writable<Record<string, number | null>> = writable({});
-    const priceSortInFlight: Map<string, Promise<void>> = new Map();
 
     // Filters panel state — store to ensure reactivity in all modes
     const showFilters: Writable<boolean> = writable(false);
@@ -31,6 +31,9 @@
     const BALANCES_HELP_DISMISSED_KEY = 'balances-help-dismissed-v1';
 
     let showBalancesHelp: boolean = $state(false);
+    const wrappedStaticPrices = writable<WrappedStaticPriceMap>({});
+
+    setBalancePricingContext({ wrappedStaticPrices });
 
     function toggleFilters(): void {
         showFilters.update((v) => !v);
@@ -55,6 +58,65 @@
         if (!browser) return;
         const alreadyDismissed = localStorage.getItem(BALANCES_HELP_DISMISSED_KEY) === '1';
         showBalancesHelp = !alreadyDismissed;
+    });
+
+    let lastWrappedStaticPriceRequestKey = '';
+
+    $effect(() => {
+        if (!browser) {
+            return;
+        }
+
+        const balances = $circlesBalances?.data ?? [];
+        const addresses = pickWrappedStaticTokenAddresses(balances);
+        const requestKey = addresses.join(',');
+
+        if (requestKey === lastWrappedStaticPriceRequestKey) {
+            return;
+        }
+        lastWrappedStaticPriceRequestKey = requestKey;
+
+        if (addresses.length === 0) {
+            wrappedStaticPrices.set({});
+            return;
+        }
+
+        let cancelled = false;
+
+        (async () => {
+            try {
+                const response = await fetch('/api/prices/wrapped-static', {
+                    method: 'POST',
+                    headers: { 'content-type': 'application/json' },
+                    body: JSON.stringify({ addresses }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Price endpoint failed with status ${response.status}`);
+                }
+
+                const payload = (await response.json()) as { prices?: WrappedStaticPriceMap };
+                if (!cancelled) {
+                    wrappedStaticPrices.set(payload.prices ?? {});
+                }
+            } catch (error) {
+                console.warn('[balances] wrapped static pricing failed', error);
+                if (!cancelled) {
+                    const fallback: WrappedStaticPriceMap = {};
+                    for (const address of addresses) {
+                        fallback[address] = {
+                            priceUsd: null,
+                            source: 'balancer-v2-subgraph-token-latestUSDPrice',
+                        };
+                    }
+                    wrappedStaticPrices.set(fallback);
+                }
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
     });
 
     // Shape this like other lists so GenericList can key rows
@@ -98,83 +160,11 @@
         });
     });
 
-    function priceKeyOf(item: any): string {
-        const owner = String(item?.tokenOwner ?? '').toLowerCase();
-        const token = String(item?.tokenAddress ?? '').toLowerCase();
-        return `${owner}:${token}`;
-    }
-
-    async function ensurePriceSortValue(item: any): Promise<void> {
-        const key = priceKeyOf(item);
-        const current = $priceSortValues[key];
-        if (current !== undefined || priceSortInFlight.has(key)) {
-            return;
-        }
-
-        const sdk = $circles;
-        if (!sdk) {
-            return;
-        }
-
-        const promise = (async () => {
-            const resolved = await resolveStaticWrappedTokenAddress({
-                tokenType: item?.tokenType,
-                isWrapped: item?.isWrapped,
-                tokenAddress: item?.tokenAddress,
-                tokenOwner: item?.tokenOwner,
-                version: item?.version,
-                sdk
-            });
-
-            if (!resolved) {
-                priceSortValues.update((s) => (s[key] !== undefined ? s : { ...s, [key]: null }));
-                return;
-            }
-
-            const quoted = await quoteTokenPriceRaw(resolved);
-            const numericPrice = quoted.ok && quoted.pricePerToken != null ? quoted.pricePerToken : null;
-            priceSortValues.update((s) => ({ ...s, [key]: numericPrice }));
-        })().finally(() => {
-            priceSortInFlight.delete(key);
-        });
-
-        priceSortInFlight.set(key, promise);
-        await promise;
-    }
-
-    $effect(() => {
-        if ($sortOrder !== 'price') return;
-        if (!$circles) return;
-
-        for (const row of $searchedAll) {
-            void ensurePriceSortValue(row as any);
-        }
-    });
-
-    const sortedAll = derived([searchedAll, sortOrder, priceSortValues], ([$searchedAll, $sortOrder, $priceSortValues]) => {
-        const rows = [...$searchedAll];
-
-        if ($sortOrder === 'price') {
-            rows.sort((a: any, b: any) => {
-                const pa = $priceSortValues[priceKeyOf(a)];
-                const pb = $priceSortValues[priceKeyOf(b)];
-                const va = typeof pa === 'number' ? pa : Number.NEGATIVE_INFINITY;
-                const vb = typeof pb === 'number' ? pb : Number.NEGATIVE_INFINITY;
-                if (vb !== va) return vb - va;
-                return Number(b?.circles ?? 0) - Number(a?.circles ?? 0);
-            });
-            return rows;
-        }
-
-        rows.sort((a: any, b: any) => Number(b?.circles ?? 0) - Number(a?.circles ?? 0));
-        return rows;
-    });
-
     let filteredStore = derived(
-        [sortedAll, circlesBalances],
-        ([$sortedAll, $circlesBalances]) => {
+        [searchedAll, circlesBalances],
+        ([$searchedAll, $circlesBalances]) => {
             return {
-                data: $sortedAll,
+                data: $searchedAll,
                 next: $circlesBalances.next,
                 ended: $circlesBalances.ended
             };
@@ -235,12 +225,6 @@
                 <Filter text="All" filter={filterToken} value={undefined}/>
                 <Filter text="ERC20" filter={filterToken} value={'erc20'}/>
                 <Filter text="ERC1155" filter={filterToken} value={'erc1155'}/>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-2">
-                <p class="text-sm">Order</p>
-                <Filter text="Total" filter={sortOrder} value={'total'}/>
-                <Filter text="Price" filter={sortOrder} value={'price'}/>
             </div>
         </div>
     {/if}

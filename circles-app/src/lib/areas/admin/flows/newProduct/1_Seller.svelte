@@ -14,10 +14,11 @@
     connections: AdminOdooConnection[];
     existingProducts: AdminUnifiedProduct[];
     onExecute: (payload: {
-      type: 'odoo' | 'codedispenser';
+      type: 'odoo' | 'codedispenser' | 'unlock';
       route?: any;
       odoo?: any;
       code?: any;
+      unlock?: any;
     }) => Promise<void>;
     onCreateConnection: (payload: { connection: any }) => Promise<AdminOdooConnection>;
   }
@@ -34,6 +35,17 @@
       useLocalStock: false,
       localAvailableQty: null,
       selectedConnectionKey: '',
+      lockAddress: '',
+      rpcUrl: '',
+      servicePrivateKey: '',
+      unlockTimingMode: 'duration',
+      durationSeconds: 86400,
+      expirationUnix: null,
+      keyManagerMode: 'buyer',
+      fixedKeyManager: '',
+      locksmithBase: 'https://locksmith.unlock-protocol.com',
+      locksmithToken: '',
+      totalInventory: 0,
     }),
     connections,
     existingProducts,
