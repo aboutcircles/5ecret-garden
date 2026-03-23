@@ -3,9 +3,14 @@
     import MarkdownEditor from '$lib/shared/ui/content/markdown/MarkdownEditor.svelte';
     import {
         fileToCroppedDataUrl,
-        AVATAR_PREFERRED_MAX_BYTES,
-        MEDIA_MAX_BYTES,
     } from '$lib/shared/media/imageTools';
+    import {
+        PROFILE_IMAGE_CROP_HEIGHT,
+        PROFILE_IMAGE_CROP_WIDTH,
+        PROFILE_IMAGE_MAX_BYTES,
+        PROFILE_IMAGE_OUTPUT_MIME,
+        PROFILE_IMAGE_OUTPUT_QUALITY,
+    } from './profileImagePolicy';
 
     interface Props {
         name: string;
@@ -32,9 +37,6 @@
         onNameInput,
         nameInputDataAttribute,
     }: Props = $props();
-
-    const CROP_WIDTH = 256;
-    const CROP_HEIGHT = 256;
 
     let safeName = $derived((name ?? '').trim() || 'Unnamed profile');
 
@@ -93,22 +95,15 @@
         if (readonly) return;
 
         try {
-            const { dataUrl, bytes } = await fileToCroppedDataUrl(file, {
-                width: CROP_WIDTH,
-                height: CROP_HEIGHT,
-                mime: 'image/jpeg',
-                quality: 0.85,
-                maxBytes: MEDIA_MAX_BYTES,
+            const { dataUrl } = await fileToCroppedDataUrl(file, {
+                width: PROFILE_IMAGE_CROP_WIDTH,
+                height: PROFILE_IMAGE_CROP_HEIGHT,
+                mime: PROFILE_IMAGE_OUTPUT_MIME,
+                quality: PROFILE_IMAGE_OUTPUT_QUALITY,
+                maxBytes: PROFILE_IMAGE_MAX_BYTES,
             });
 
-            if (bytes.length > AVATAR_PREFERRED_MAX_BYTES) {
-                console.warn('Avatar image data URL exceeds ~150 KB');
-            }
-
             previewImageUrl = dataUrl;
-            if (!imageUrl) {
-                imageUrl = dataUrl;
-            }
         } catch (e) {
             console.error('[profile-avatar] failed to create image preview:', e);
         }

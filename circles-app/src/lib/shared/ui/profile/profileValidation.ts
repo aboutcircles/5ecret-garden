@@ -1,26 +1,20 @@
 import type { Profile } from '@circles-sdk/profiles';
 
-import { parseDataUrlToBytes } from '$lib/shared/media/imageTools';
+import {
+  isValidProfilePreviewImageDataUrl,
+  PROFILE_IMAGE_MAX_BYTES,
+} from '$lib/shared/ui/profile/profileImagePolicy';
+import { isDataUrl } from '$lib/shared/media/imageTools';
 
 export const PROFILE_VALIDATION_CONFIG = {
   maxNameLength: 36,
   descriptionLength: 500,
-  maxImageSizeKB: 150,
+  maxImageSizeKB: Math.floor(PROFILE_IMAGE_MAX_BYTES / 1024),
   imageUrlLength: 2000,
 };
 
 async function validateImageDataUrl(dataUrl: string): Promise<boolean> {
-  const dataUrlPattern = /^data:image\/(png|jpeg|jpg|gif|svg\+xml);base64,/;
-  if (!dataUrlPattern.test(dataUrl)) {
-    return false;
-  }
-
-  try {
-    const { bytes } = parseDataUrlToBytes(dataUrl);
-    return bytes.length <= PROFILE_VALIDATION_CONFIG.maxImageSizeKB * 1024;
-  } catch {
-    return false;
-  }
+  return isValidProfilePreviewImageDataUrl(dataUrl);
 }
 
 export async function validateProfile(profile: Profile): Promise<string[]> {
@@ -44,7 +38,14 @@ export async function validateProfile(profile: Profile): Promise<string[]> {
     }
   }
 
-  if (profile.imageUrl && (typeof profile.imageUrl !== 'string' || profile.imageUrl.length > config.imageUrlLength)) {
+  if (
+    profile.imageUrl &&
+    typeof profile.imageUrl === 'string' &&
+    isDataUrl(profile.imageUrl)
+  ) {
+    // Backward compatibility: historically some flows stored data URLs in imageUrl.
+    // Treat as valid here; previewImageUrl validation already enforces strict image limits.
+  } else if (profile.imageUrl && (typeof profile.imageUrl !== 'string' || profile.imageUrl.length > config.imageUrlLength)) {
     errors.push(`Image URL must be a string and cannot exceed ${config.imageUrlLength} characters.`);
   }
 

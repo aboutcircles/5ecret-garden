@@ -9,6 +9,10 @@
     imageDataUrls: string[];
     cropWidth?: number;
     cropHeight?: number;
+    cropMime?: string;
+    cropQuality?: number;
+    fitMime?: string;
+    fitQuality?: number;
     maxBytes?: number;
     readonly?: boolean;
     onnewimage?: (dataUrl: string) => void;
@@ -21,6 +25,10 @@
     imageDataUrls,
     cropWidth = 512,
     cropHeight = 512,
+    cropMime = 'image/jpeg',
+    cropQuality = 0.9,
+    fitMime = 'image/jpeg',
+    fitQuality = 0.9,
     maxBytes = MEDIA_MAX_BYTES,
     readonly = false,
     onnewimage,
@@ -40,6 +48,8 @@
         const res = await fileToCroppedDataUrl(file, {
           width: cropWidth,
           height: cropHeight,
+          mime: cropMime,
+          quality: cropQuality,
           maxBytes,
         });
         dataUrl = res.dataUrl;
@@ -47,6 +57,8 @@
         const res = await fileToFittedDataUrl(file, {
           maxWidth: cropWidth,
           maxHeight: cropHeight,
+          mime: fitMime,
+          quality: fitQuality,
           maxBytes,
         });
         dataUrl = res.dataUrl;
