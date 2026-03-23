@@ -2,8 +2,15 @@
   import MarkdownEditor from '$lib/shared/ui/content/markdown/MarkdownEditor.svelte';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import ImageUpload from '$lib/shared/ui/profile/components/ImageUpload.svelte';
+  import {
+    PROFILE_IMAGE_CROP_HEIGHT,
+    PROFILE_IMAGE_CROP_WIDTH,
+    PROFILE_IMAGE_MAX_BYTES,
+    PROFILE_IMAGE_OUTPUT_MIME,
+    PROFILE_IMAGE_OUTPUT_QUALITY,
+  } from '$lib/shared/ui/profile/profileImagePolicy';
   import type { AppProfile as Profile } from '$lib/shared/model/profile';
-  import { normalizeMarkdownInput, sanitizeText } from '$lib/shared/utils/isValid';
+  import { sanitizeText } from '$lib/shared/utils/isValid';
 
   interface Props {
     profile: Profile;
@@ -64,6 +71,11 @@
       <span class="label-text">Image</span>
       <ImageUpload 
         imageDataUrls={profile.previewImageUrl ? [profile.previewImageUrl] : []}
+        cropWidth={PROFILE_IMAGE_CROP_WIDTH}
+        cropHeight={PROFILE_IMAGE_CROP_HEIGHT}
+        cropMime={PROFILE_IMAGE_OUTPUT_MIME}
+        cropQuality={PROFILE_IMAGE_OUTPUT_QUALITY}
+        maxBytes={PROFILE_IMAGE_MAX_BYTES}
         onnewimage={onnewimage} 
         onclearall={oncleared} 
       />
