@@ -50,6 +50,17 @@
     if (context.useLocalStock == null) context.useLocalStock = false;
     if (context.localAvailableQty == null) context.localAvailableQty = null;
     if (context.selectedConnectionKey == null) context.selectedConnectionKey = '';
+    if (context.lockAddress == null) context.lockAddress = '';
+    if (context.rpcUrl == null) context.rpcUrl = '';
+    if (context.servicePrivateKey == null) context.servicePrivateKey = '';
+    if (context.unlockTimingMode == null) context.unlockTimingMode = 'duration';
+    if (context.durationSeconds == null) context.durationSeconds = 86400;
+    if (context.expirationUnix == null) context.expirationUnix = null;
+    if (context.keyManagerMode == null) context.keyManagerMode = 'buyer';
+    if (context.fixedKeyManager == null) context.fixedKeyManager = '';
+    if (context.locksmithBase == null) context.locksmithBase = 'https://locksmith.unlock-protocol.com';
+    if (context.locksmithToken == null) context.locksmithToken = '';
+    if (context.totalInventory == null) context.totalInventory = 0;
   });
 
   $effect(() => {
@@ -141,6 +152,72 @@
       return { type: 'codedispenser', route, code };
     }
 
+    if (selectedType === 'unlock') {
+      const lockAddress = normalizeAddress(String(context.lockAddress ?? '')) as Address | undefined;
+      if (!lockAddress) {
+        formError = 'Lock address is required.';
+        return null;
+      }
+      if (!(context.rpcUrl ?? '').trim()) {
+        formError = 'RPC URL is required.';
+        return null;
+      }
+      if (!(context.servicePrivateKey ?? '').trim()) {
+        formError = 'Service private key is required.';
+        return null;
+      }
+      const totalInventory = context.totalInventory;
+      if (totalInventory == null || !Number.isInteger(totalInventory) || totalInventory < 0) {
+        formError = 'Total inventory must be a whole number greater than or equal to 0.';
+        return null;
+      }
+
+      let durationSeconds: number | undefined;
+      let expirationUnix: number | undefined;
+      if ((context.unlockTimingMode ?? 'duration') === 'duration') {
+        const duration = context.durationSeconds;
+        if (duration == null || !Number.isInteger(duration) || duration < 0) {
+          formError = 'Duration seconds must be a whole number greater than or equal to 0.';
+          return null;
+        }
+        durationSeconds = duration;
+      } else {
+        const expiration = context.expirationUnix;
+        if (expiration == null || !Number.isInteger(expiration) || expiration < 0) {
+          formError = 'Expiration unix must be a whole number greater than or equal to 0.';
+          return null;
+        }
+        expirationUnix = expiration;
+      }
+
+      let fixedKeyManager: Address | undefined;
+      if ((context.keyManagerMode ?? 'buyer') === 'fixed') {
+        fixedKeyManager = normalizeAddress(String(context.fixedKeyManager ?? '')) as Address | undefined;
+        if (!fixedKeyManager) {
+          formError = 'Fixed key manager is required for fixed key manager mode.';
+          return null;
+        }
+      }
+
+      const unlock = {
+        chainId: context.chainId,
+        seller: normalizedSeller,
+        sku: normalizedSku,
+        lockAddress,
+        rpcUrl: (context.rpcUrl ?? '').trim(),
+        servicePrivateKey: (context.servicePrivateKey ?? '').trim(),
+        durationSeconds,
+        expirationUnix,
+        keyManagerMode: context.keyManagerMode ?? 'buyer',
+        fixedKeyManager,
+        locksmithBase: (context.locksmithBase ?? '').trim() || undefined,
+        locksmithToken: (context.locksmithToken ?? '').trim() || undefined,
+        totalInventory,
+        enabled: Boolean(context.enabled),
+      };
+      return { type: 'unlock', route, unlock };
+    }
+
     const key = context.selectedConnectionKey ?? '';
     const selectedConnection = sellerConnections.find((c) => `${context.chainId}:${String(c.seller).toLowerCase()}` === key) ?? null;
     if (!selectedConnection) {
@@ -188,6 +265,8 @@
     if (!payload) return;
     const title = (context.selectedType ?? 'codedispenser') === 'odoo'
       ? 'Use odoo product'
+      : (context.selectedType ?? 'codedispenser') === 'unlock'
+        ? 'Configure unlock'
       : 'Add codes';
     openStep({
       title,
@@ -223,6 +302,72 @@
             placeholder={`https://example.com/${'{code}'}`}
           />
           <span class="label-text-alt text-xs opacity-70">Use &lbrace;code&rbrace; as placeholder</span>
+        </label>
+        <label class="form-control">
+          <span class="label-text">Enabled</span>
+          <input type="checkbox" class="checkbox checkbox-sm" bind:checked={context.enabled} />
+        </label>
+      </div>
+    {:else if (context.selectedType ?? 'codedispenser') === 'unlock'}
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <label class="form-control">
+          <span class="label-text">Lock address *</span>
+          <input class="input input-bordered input-sm font-mono" bind:value={context.lockAddress} placeholder="0x..." data-popup-initial-input />
+        </label>
+        <label class="form-control">
+          <span class="label-text">RPC URL *</span>
+          <input class="input input-bordered input-sm" bind:value={context.rpcUrl} placeholder="https://rpc.gnosischain.com" />
+        </label>
+        <label class="form-control md:col-span-2">
+          <span class="label-text">Service private key *</span>
+          <input class="input input-bordered input-sm font-mono" type="password" bind:value={context.servicePrivateKey} placeholder="0x..." />
+        </label>
+        <label class="form-control">
+          <span class="label-text">Timing mode</span>
+          <select class="select select-bordered select-sm" bind:value={context.unlockTimingMode}>
+            <option value="duration">Duration seconds</option>
+            <option value="expiration">Expiration unix</option>
+          </select>
+        </label>
+        {#if (context.unlockTimingMode ?? 'duration') === 'duration'}
+          <label class="form-control">
+            <span class="label-text">Duration seconds *</span>
+            <input type="number" class="input input-bordered input-sm" bind:value={context.durationSeconds} min="0" step="1" />
+          </label>
+        {:else}
+          <label class="form-control">
+            <span class="label-text">Expiration unix *</span>
+            <input type="number" class="input input-bordered input-sm" bind:value={context.expirationUnix} min="0" step="1" />
+          </label>
+        {/if}
+        <label class="form-control">
+          <span class="label-text">Key manager mode</span>
+          <select class="select select-bordered select-sm" bind:value={context.keyManagerMode}>
+            <option value="buyer">buyer</option>
+            <option value="service">service</option>
+            <option value="fixed">fixed</option>
+          </select>
+        </label>
+        <label class="form-control">
+          <span class="label-text">Fixed key manager</span>
+          <input
+            class="input input-bordered input-sm font-mono"
+            bind:value={context.fixedKeyManager}
+            placeholder="0x..."
+            disabled={(context.keyManagerMode ?? 'buyer') !== 'fixed'}
+          />
+        </label>
+        <label class="form-control">
+          <span class="label-text">Locksmith base</span>
+          <input class="input input-bordered input-sm" bind:value={context.locksmithBase} placeholder="https://locksmith.unlock-protocol.com" />
+        </label>
+        <label class="form-control">
+          <span class="label-text">Locksmith token</span>
+          <input class="input input-bordered input-sm" type="password" bind:value={context.locksmithToken} placeholder="optional" />
+        </label>
+        <label class="form-control">
+          <span class="label-text">Total inventory *</span>
+          <input type="number" class="input input-bordered input-sm" bind:value={context.totalInventory} min="0" step="1" />
         </label>
         <label class="form-control">
           <span class="label-text">Enabled</span>

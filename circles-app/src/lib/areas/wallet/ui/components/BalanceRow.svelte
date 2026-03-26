@@ -21,6 +21,14 @@
     import { openInfoPopup } from '$lib/shared/ui/shell/confirmDialogs';
     import { openTextPromptPopup } from '$lib/shared/ui/shell/promptDialogs';
     import { runTask } from '$lib/shared/utils/tasks';
+    import { readable } from 'svelte/store';
+    import {
+        formatWrappedStaticUsdPrice,
+        isWrappedStaticToken,
+        normalizeAddress,
+        type WrappedStaticPriceMap,
+    } from '$lib/shared/pricing/wrappedStaticPricing';
+    import { getBalancePricingContext } from '$lib/shared/pricing/balancePricingContext';
 
     interface Props { item: TokenBalanceRow; }
     let { item }: Props = $props();
@@ -63,6 +71,18 @@
     ];
 
     const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+    const pricingContext = getBalancePricingContext();
+    const wrappedStaticPrices = pricingContext?.wrappedStaticPrices ?? readable<WrappedStaticPriceMap>({});
+
+    const wrappedStaticPriceLabel = $derived.by(() => {
+        if (!isWrappedStaticToken(item)) {
+            return null;
+        }
+
+        const tokenAddress = normalizeAddress(item.tokenAddress);
+        const price = $wrappedStaticPrices[tokenAddress]?.priceUsd ?? null;
+        return formatWrappedStaticUsdPrice(price);
+    });
 
     function executeAction(action: RowAction) {
         if (action.title === 'Send') {
@@ -281,6 +301,13 @@
                         {/if}
                         {#if crcTypes.has(item.tokenType)}
                             {roundToDecimals(item.crc)} CRC
+                        {/if}
+                        {#if isWrappedStaticToken(item)}
+                            {#if wrappedStaticPriceLabel}
+                                {' · '}{wrappedStaticPriceLabel}
+                            {:else}
+                                {' · '}No USD price
+                            {/if}
                         {/if}
                     </p>
                 </div>

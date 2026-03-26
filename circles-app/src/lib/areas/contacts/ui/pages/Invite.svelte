@@ -1,7 +1,7 @@
 <script lang="ts">
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import PopupActionBar from '$lib/shared/ui/shell/PopupActionBar.svelte';
-  import { runTask } from '$lib/shared/utils/tasks';
+  import { executeTxSubmitFirst } from '$lib/shared/utils/txExecution';
   import { shortenAddress } from '$lib/shared/utils/shared';
   import { popupControls } from '$lib/shared/state/popup';
 
@@ -15,11 +15,11 @@
     if (!avatarState.avatar) {
       throw new Error('Avatar store not available');
     }
-    runTask({
+    void executeTxSubmitFirst({
       name: `Inviting ${shortenAddress(address)} ...`,
-      promise: avatarState.avatar!.inviteHuman(address),
+      submit: () => avatarState.avatar!.inviteHuman(address),
+      onSubmitted: () => popupControls.close(),
     });
-    popupControls.close();
   }
 </script>
 

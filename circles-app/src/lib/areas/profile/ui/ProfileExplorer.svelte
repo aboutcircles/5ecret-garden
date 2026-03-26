@@ -12,6 +12,7 @@
     import type {Address} from '@circles-sdk/utils';
     import type { Profile } from '@circles-sdk/profiles';
     import { validateProfile } from '$lib/shared/ui/profile/profileValidation';
+    import { isDataUrl } from '$lib/shared/media/imageTools';
 
     interface Props {
         avatar?: Address;
@@ -118,6 +119,15 @@
 
     async function saveProfile(): Promise<void> {
         if (!resolvedAvatar) return;
+
+        // Backward compatibility: older profile editors could persist base64 data URLs in imageUrl.
+        // Keep data-url image payload in previewImageUrl and clear imageUrl to preserve URL semantics.
+        if (isDataUrl(imageUrl)) {
+            if (!previewImageUrl) {
+                previewImageUrl = imageUrl;
+            }
+            imageUrl = '';
+        }
 
         validationErrors = await validateProfile({
             name,

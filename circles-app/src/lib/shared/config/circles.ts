@@ -15,7 +15,7 @@ export const MAX_PATH_STEPS = 250;
 export const chiadoConfig: { production: AppConfig, rings: AppConfig } = {
   production: {
     ipfsGatewayBase: 'https://da08cae2-8b50-45dc-80b9-48925be78ec8.myfilebase.com',
-    marketApiBase: 'https://market-api.aboutcircles.com/market/',
+    marketApiBase: 'https://market-api.aboutcircles.com/market',
     profilePinningServiceUrl: 'https://rpc.aboutcircles.com/profiles',
     marketOperator: '0x20ced4ed3b1651b832a77e13e54ea5cb14c8b95b',
     marketChainId: 100,
@@ -56,7 +56,7 @@ export const gnosisConfig: { production: AppConfig, rings: AppConfig } = {
     marketOperator: '0x20ced4ed3b1651b832a77e13e54ea5cb14c8b95b',
     marketChainId: 100,
     marketChainIdHex: "0x64",
-    circlesRpcUrl: 'https://staging.circlesubi.network/',
+    circlesRpcUrl: 'https://rpc.circlesubi.network/',
     pathfinderUrl: 'https://pathfinder.aboutcircles.com',
     profileServiceUrl: 'https://rpc.aboutcircles.com/profiles/',
     v1HubAddress: '0x29b9a7fbb8995b2423a71cc17cf9810798f6c543',

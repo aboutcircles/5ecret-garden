@@ -1,6 +1,6 @@
 <script lang="ts">
     import { avatarState } from '$lib/shared/state/avatar.svelte';
-    import { runTask } from '$lib/shared/utils/tasks';
+    import { executeTxSubmitFirst } from '$lib/shared/utils/txExecution';
     import { shortenAddress } from '$lib/shared/utils/shared';
     import { V1Avatar } from '@circles-sdk/sdk';
     import { circles } from '$lib/shared/state/circles';
@@ -17,17 +17,18 @@
         }
         if (trustVersion == 1) {
             const v1Avatar = new V1Avatar($circles!, avatarState.avatar.avatarInfo!);
-            runTask({
+            void executeTxSubmitFirst({
                 name: `Untrusting V1 ${shortenAddress(address)} ...`,
-                promise: v1Avatar.untrust(address),
+                submit: () => v1Avatar.untrust(address),
+                onSubmitted: () => popupControls.close(),
             });
         } else {
-            runTask({
+            void executeTxSubmitFirst({
                 name: `Untrusting V2 ${shortenAddress(address)} ...`,
-                promise: avatarState.avatar!.untrust(address),
+                submit: () => avatarState.avatar!.untrust(address),
+                onSubmitted: () => popupControls.close(),
             });
         }
-        popupControls.close();
     }
 </script>
 

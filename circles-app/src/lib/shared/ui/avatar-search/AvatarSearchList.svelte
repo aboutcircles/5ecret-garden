@@ -13,7 +13,11 @@
   import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
   import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
   import { buildLocalAvatarSearchRows } from './avatarSearch.local';
-  import { mergeAvatarSearchRows } from './avatarSearch.merge';
+  import {
+    buildDirectAddressSelectionRows,
+    mergeAvatarSearchRows,
+    shouldAutoSelectSingleRowOnEnter,
+  } from './avatarSearch.merge';
   import { searchRemoteAvatarRows } from './avatarSearch.remote';
   import type { AvatarSearchItem } from './avatarSearch.types';
   import AvatarSearchRow from './AvatarSearchRow.svelte';
@@ -88,6 +92,9 @@
 
   const mergedRows = $derived.by(() => mergeAvatarSearchRows(localRows, remoteRows, queryLower));
   const preferredRows = $derived.by(() => {
+    const directAddressRows = buildDirectAddressSelectionRows(queryTrimmed, mergedRows);
+    if (directAddressRows) return directAddressRows;
+
     if (queryTrimmed.length > 0) return mergedRows;
 
     const preferred = mergedRows.filter((row) => row.isVipBookmarked || row.isBookmarked || row.isContact);
@@ -106,16 +113,33 @@
     }
   });
 
-  setContext(ACTIVATE_CTX_KEY, (item: AvatarSearchItem) => {
+  function activateItem(item: AvatarSearchItem): void {
     const key = String(item.address).toLowerCase();
     const known = resultByAddress[key];
     onselect?.(item.address as Address, known);
+  }
+
+  setContext(ACTIVATE_CTX_KEY, (item: AvatarSearchItem) => {
+    activateItem(item);
   });
 
   const onInputArrowDown = createListInputArrowDownHandler({
     getScope: () => listScopeEl,
     rowSelector: '[data-avatar-search-row]',
   });
+
+  function onSearchInputKeydown(event: KeyboardEvent): void {
+    const input = event.currentTarget instanceof HTMLInputElement ? event.currentTarget : null;
+    const hasInputFocus = !!input && document.activeElement === input;
+
+    if (shouldAutoSelectSingleRowOnEnter(event.key, preferredRows.length, event.isComposing, hasInputFocus)) {
+      event.preventDefault();
+      activateItem(preferredRows[0]);
+      return;
+    }
+
+    onInputArrowDown(event);
+  }
 
   $effect(() => {
     selectedAddress = queryText;
@@ -199,7 +223,7 @@
   <ListShell
     query={query}
     searchPlaceholder={searchPlaceholder}
-    onInputKeydown={onInputArrowDown}
+    onInputKeydown={onSearchInputKeydown}
     inputDataAttribute={inputAttributes}
     loading={false}
     error={remoteError}

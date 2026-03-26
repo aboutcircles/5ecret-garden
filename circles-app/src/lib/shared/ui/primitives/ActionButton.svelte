@@ -20,8 +20,9 @@
 <script lang="ts">
     import {RotateCcw, AlertTriangle, Check} from 'lucide';
     import Lucide from "$lib/shared/ui/icons/Lucide.svelte";
+    import type { HTMLButtonAttributes } from 'svelte/elements';
 
-    interface Props {
+    interface Props extends HTMLButtonAttributes {
         action: () => Promise<any>;
         title?: string;
         disabled?: boolean;
@@ -41,6 +42,7 @@
             ['Disabled']: 'btn-disabled',
         },
         children,
+        ...rest
     }: Props & { children?: any } = $props();
     const doneStateDuration: number = 2000;
     const errorTransitory: boolean = true;
@@ -83,6 +85,7 @@
 </script>
 
 <button
+        {...rest}
         onclick={executeAction}
         title={errorMessage ?? title}
         class="btn btn-sm inline-flex items-center gap-2 {theme[buttonState]}"

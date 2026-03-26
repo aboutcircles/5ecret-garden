@@ -22,21 +22,65 @@ type CacheEntry = {
 
 const safeCache = new Map<string, CacheEntry>();
 
-function getSafesByOwnerApiEndpoint(checksumOwnerAddress: string): string {
-  return `https://safe-transaction-gnosis-chain.safe.global/api/v1/owners/${checksumOwnerAddress}/safes/`;
-}
+type RpcQueryResult = {
+  result?: {
+    columns?: string[];
+    rows?: unknown[][];
+  };
+};
 
-async function querySafeTransactionService(ownerAddress: string): Promise<Address[]> {
-  const checksumAddress = ethers.getAddress(ownerAddress);
-  const requestUrl = getSafesByOwnerApiEndpoint(checksumAddress);
+async function querySafesByOwnerCircles(sdk: Sdk, ownerAddress: string): Promise<Address[]> {
+  if (!sdk?.circlesRpc) throw new Error('Circles SDK not initialized');
+  const ownerLc = ownerAddress.toLowerCase();
 
-  const safesByOwnerResult = await fetch(requestUrl);
-  const safesByOwner = await safesByOwnerResult.json();
+  const response = await sdk.circlesRpc.call<RpcQueryResult>('circles_query', [
+    {
+      Namespace: 'V_Safe',
+      Table: 'Owners',
+      Columns: ['safeAddress'],
+      Filter: [
+        {
+          Type: 'FilterPredicate',
+          FilterType: 'Equals',
+          Column: 'owner',
+          Value: ownerLc,
+        },
+      ],
+      Order: [],
+      Limit: 1000,
+    },
+  ]);
 
-  return (safesByOwner.safes ?? []).map((safe: string) => safe.toLowerCase() as Address);
+  const columns = response?.result?.columns ?? [];
+  const rows = response?.result?.rows ?? [];
+
+  // Find index of safeAddress column just in case ordering differs
+  const colIdx = columns.findIndex((c) => c.toLowerCase() === 'safeaddress');
+
+  const safesRaw = (colIdx >= 0 ? rows.map((r) => r[colIdx]) : rows.map((r) => r[0])).filter(
+    (v): v is string => typeof v === 'string' && v.length > 0
+  );
+
+  // Normalize, checksum and deduplicate (skip malformed values)
+  const unique = Array.from(
+    new Set(
+      safesRaw
+        .map((s) => {
+          try {
+            return ethers.getAddress(s).toLowerCase() as Address;
+          } catch {
+            return null;
+          }
+        })
+        .filter((s): s is Address => Boolean(s))
+    )
+  );
+
+  return unique;
 }
 
 export async function getSafesByOwner(
+  sdk: Sdk,
   ownerAddress: string,
   opts: { forceRefresh?: boolean } = {}
 ): Promise<Address[]> {
@@ -48,7 +92,7 @@ export async function getSafesByOwner(
     return cached.safes;
   }
 
-  const safes = await querySafeTransactionService(ownerAddress);
+  const safes = await querySafesByOwnerCircles(sdk, ownerAddress);
   safeCache.set(key, { safes, fetchedAt: Date.now() });
   return safes;
 }
@@ -121,7 +165,7 @@ export function createSafeDiscoveryStore(
     state.update((current) => ({ ...current, isLoading: true, error: null }));
 
     try {
-      const fetchedSafes = await getSafesByOwner(ownerAddress, opts);
+      const fetchedSafes = await getSafesByOwner(sdk, ownerAddress, opts);
       const currentState = get(state);
       const mergedSafes = mergeSafes(currentState.safes, fetchedSafes);
       state.update((current) => ({ ...current, safes: mergedSafes }));

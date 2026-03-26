@@ -13,6 +13,11 @@
     import { CircleHelp as LCircleHelp, X as LX } from 'lucide';
     import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
     import { WHY_MANY_CIRCLES_LINES } from '$lib/shared/content/trustRoutingCopy';
+    import {
+        pickWrappedStaticTokenAddresses,
+        type WrappedStaticPriceMap,
+    } from '$lib/shared/pricing/wrappedStaticPricing';
+    import { setBalancePricingContext } from '$lib/shared/pricing/balancePricingContext';
 
     let filterVersion = writable<number | undefined>(undefined);
     let filterType = writable<'personal' | 'group' | undefined>(undefined);
@@ -26,6 +31,9 @@
     const BALANCES_HELP_DISMISSED_KEY = 'balances-help-dismissed-v1';
 
     let showBalancesHelp: boolean = $state(false);
+    const wrappedStaticPrices = writable<WrappedStaticPriceMap>({});
+
+    setBalancePricingContext({ wrappedStaticPrices });
 
     function toggleFilters(): void {
         showFilters.update((v) => !v);
@@ -50,6 +58,65 @@
         if (!browser) return;
         const alreadyDismissed = localStorage.getItem(BALANCES_HELP_DISMISSED_KEY) === '1';
         showBalancesHelp = !alreadyDismissed;
+    });
+
+    let lastWrappedStaticPriceRequestKey = '';
+
+    $effect(() => {
+        if (!browser) {
+            return;
+        }
+
+        const balances = $circlesBalances?.data ?? [];
+        const addresses = pickWrappedStaticTokenAddresses(balances);
+        const requestKey = addresses.join(',');
+
+        if (requestKey === lastWrappedStaticPriceRequestKey) {
+            return;
+        }
+        lastWrappedStaticPriceRequestKey = requestKey;
+
+        if (addresses.length === 0) {
+            wrappedStaticPrices.set({});
+            return;
+        }
+
+        let cancelled = false;
+
+        (async () => {
+            try {
+                const response = await fetch('/api/prices/wrapped-static', {
+                    method: 'POST',
+                    headers: { 'content-type': 'application/json' },
+                    body: JSON.stringify({ addresses }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Price endpoint failed with status ${response.status}`);
+                }
+
+                const payload = (await response.json()) as { prices?: WrappedStaticPriceMap };
+                if (!cancelled) {
+                    wrappedStaticPrices.set(payload.prices ?? {});
+                }
+            } catch (error) {
+                console.warn('[balances] wrapped static pricing failed', error);
+                if (!cancelled) {
+                    const fallback: WrappedStaticPriceMap = {};
+                    for (const address of addresses) {
+                        fallback[address] = {
+                            priceUsd: null,
+                            source: 'balancer-v2-subgraph-token-latestUSDPrice',
+                        };
+                    }
+                    wrappedStaticPrices.set(fallback);
+                }
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
     });
 
     // Shape this like other lists so GenericList can key rows

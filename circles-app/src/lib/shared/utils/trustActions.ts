@@ -7,6 +7,7 @@ import { circles } from '$lib/shared/state/circles';
 import { wallet } from '$lib/shared/state/wallet.svelte';
 import { runTask } from '$lib/shared/utils/tasks';
 import { shortenAddress } from '$lib/shared/utils/shared';
+import { sendRunnerTransactionAndWait } from '$lib/shared/utils/tx';
 
 export async function addTrustRelations(params: {
   actorType: 'avatar' | 'group' | 'gateway';
@@ -61,12 +62,11 @@ export async function addTrustRelations(params: {
       name: `Updating gateway trust (${i + 1}/${trustTargets.length})…`,
       promise: (async () => {
         const data = gatewayIface.encodeFunctionData('setTrust', [trustReceiver, expiry]);
-        const tx = await runner.sendTransaction({
+        await sendRunnerTransactionAndWait(runner, {
           to: params.actorAddress,
           value: 0n,
           data,
-        });
-        await runner.provider.waitForTransaction(tx.hash);
+        }, { label: 'Gateway trust update' });
       })(),
     });
   }

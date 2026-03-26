@@ -4,7 +4,7 @@
   import BalanceRow from '$lib/areas/wallet/ui/components/BalanceRow.svelte';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import type { TokenBalanceRow } from '@circles-sdk/data';
-  import { runTask } from '$lib/shared/utils/tasks';
+  import { executeTxSubmitFirst } from '$lib/shared/utils/txExecution';
   import { tokenTypeToString } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
   import { popupControls } from '$lib/shared/state/popup';
   interface Props {
@@ -17,6 +17,7 @@
     if (!$circles || !avatarState.avatar) {
       return;
     }
+    const avatarAddress = avatarState.avatar.address;
 
     const tokenInfo = await $circles?.data?.getTokenInfo(asset.tokenAddress);
     if (!tokenInfo) {
@@ -28,14 +29,13 @@
       );
     }
 
-    runTask({
+    void executeTxSubmitFirst({
       name: `Migrate ${tokenTypeToString(asset.tokenType)} to v2...`,
-      promise: $circles.migrateV1TokensBatch(avatarState.avatar.address, [
+      submit: () => $circles.migrateV1TokensBatch(avatarAddress, [
         asset.tokenAddress,
       ]),
+      onSubmitted: () => popupControls.close(),
     });
-
-    popupControls.close();
   }
 </script>
 

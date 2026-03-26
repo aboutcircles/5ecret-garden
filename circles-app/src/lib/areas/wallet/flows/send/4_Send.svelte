@@ -8,7 +8,7 @@
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import { SEND_FLOW_SCAFFOLD_BASE } from './constants';
   import { openStep, popToOrOpen, useAsyncAction } from '$lib/shared/flow';
-  import {runTask} from '$lib/shared/utils/tasks';
+  import { executeTxConfirmFirst } from '$lib/shared/utils/txExecution';
   import {roundToDecimals, shortenAddress} from '$lib/shared/utils/shared';
   import {avatarState} from '$lib/shared/state/avatar.svelte';
   import {tokenTypeToString, TransitiveTransferTokenAddress} from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
@@ -79,36 +79,38 @@
       }
     }
 
-    await runTask({
+    await executeTxConfirmFirst({
       name: `Send ${roundToDecimals(amount)} ${tokenTypeToString(selectedAsset.tokenType)} to ${shortenAddress(selectedAddress)}...`,
-      promise:
+      submit: () =>
         selectedAsset.tokenAddress === TransitiveTransferTokenAddress
           ? avatar.transfer(
-            selectedAddress,
-            amount,
-            undefined,
-            dataUInt8Arr,
-            context.useWrappedBalances ?? true,
-            context.fromTokens,
-            context.toTokens,
-            context.excludeFromTokens,
-            context.excludeToTokens,
-             context.maxTransfers ?? MAX_PATH_STEPS)
+              selectedAddress,
+              amount,
+              undefined,
+              dataUInt8Arr,
+              context.useWrappedBalances ?? true,
+              context.fromTokens,
+              context.toTokens,
+              context.excludeFromTokens,
+              context.excludeToTokens,
+              context.maxTransfers ?? MAX_PATH_STEPS,
+            )
           : avatar.transfer(
-            selectedAddress,
-            amount,
-            selectedAsset.tokenAddress,
-            dataUInt8Arr,
-            context.useWrappedBalances ?? true,
-            context.fromTokens,
-            context.toTokens,
-            context.excludeFromTokens,
-            context.excludeToTokens,
-            context.maxTransfers ?? MAX_PATH_STEPS
-          ),
+              selectedAddress,
+              amount,
+              selectedAsset.tokenAddress,
+              dataUInt8Arr,
+              context.useWrappedBalances ?? true,
+              context.fromTokens,
+              context.toTokens,
+              context.excludeFromTokens,
+              context.excludeToTokens,
+              context.maxTransfers ?? MAX_PATH_STEPS,
+            ),
+      onSuccess: () => {
+        popupControls.close();
+      },
     });
-
-    popupControls.close();
   });
 
   function onselect() {

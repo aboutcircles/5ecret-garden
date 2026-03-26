@@ -98,6 +98,17 @@
         return false;
     }
 
+    function isInteractiveActivationTarget(el: HTMLElement | null): boolean {
+        if (!el) return false;
+        if (isEditableEl(el)) return true;
+
+        const interactive = el.closest<HTMLElement>('button, a[href], [role="button"], [role="link"]');
+        if (!interactive) return false;
+        if (interactive.hasAttribute('disabled')) return false;
+        if (interactive.getAttribute('aria-disabled') === 'true') return false;
+        return true;
+    }
+
     function findTopPage(): HTMLElement | null {
         if (!popupEl) return null;
         return popupEl.querySelector<HTMLElement>('.popup-page.is-top');
@@ -239,6 +250,10 @@
 
             const active = document.activeElement as HTMLElement | null;
             if (!active || !topPage.contains(active)) return;
+
+            // Let native/default handlers run when focus is already on an actionable control.
+            // Popup-level default-action Enter is only a fallback for non-interactive focus targets.
+            if (isInteractiveActivationTarget(active)) return;
 
             const defaultAction = findDefaultAction(topPage);
             if (!defaultAction) return;

@@ -21,8 +21,8 @@
 
   let { context, connections, existingProducts, onExecute, onCreateConnection }: Props = $props();
 
-  let selectedType = $state<Exclude<'odoo' | 'codedispenser' | 'route', 'route'>>(
-    (context.selectedType as any) ?? 'codedispenser'
+  let selectedType = $state<Exclude<import('$lib/areas/admin/types').AdminProductType, 'route'>>(
+    context.selectedType ?? 'codedispenser'
   );
 
   const normalizedSeller = $derived(
@@ -39,7 +39,9 @@
     context.selectedType = selectedType;
     const nextTitle = selectedType === 'odoo'
       ? 'Use odoo product'
-      : 'Add codes';
+      : selectedType === 'unlock'
+        ? 'Configure unlock'
+        : 'Add codes';
     if (selectedType === 'odoo' && sellerConnections.length === 0) {
       openStep({
         title: 'Connect to odoo',
@@ -79,6 +81,13 @@
         <span>
           <div class="font-medium">Odoo</div>
           <div class="text-xs opacity-70">Sync fulfillment with your Odoo inventory and dispatch workflows.</div>
+        </span>
+      </label>
+      <label class="flex items-start gap-2">
+        <input class="radio radio-sm mt-1" type="radio" name="ptype" value="unlock" bind:group={selectedType} />
+        <span>
+          <div class="font-medium">Unlock</div>
+          <div class="text-xs opacity-70">Mint one ticket NFT key per successful fulfillment run.</div>
         </span>
       </label>
 
