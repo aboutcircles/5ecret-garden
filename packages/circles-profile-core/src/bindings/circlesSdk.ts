@@ -35,12 +35,7 @@ export function createCirclesSdkProfilesBindings(opts: {
   const base = (opts.pinApiBase ?? '').replace(/\/$/, '');
   function endpointCandidates(path: 'pin' | 'pin-media'): string[] {
     if (!base) return [];
-    // Legacy services expose /api/* while the dedicated profile pinning service
-    // exposes routes at root (behind /profiles reverse-proxy prefix).
-    if (/\/api$/i.test(base)) {
-      return [`${base}/${path}`];
-    }
-    return [`${base}/api/${path}`, `${base}/${path}`];
+    return [`${base}/${path}`];
   }
 
   const pinUrls = endpointCandidates('pin');
