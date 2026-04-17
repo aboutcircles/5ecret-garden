@@ -146,7 +146,7 @@ export function createCirclesSdkProfilesBindings(opts: {
       const res = await fetch(pinMediaUrl, {
         method: 'POST',
         headers: { 'Content-Type': (mime || 'application/octet-stream'), 'Accept': 'application/json' },
-        body: bytes as Uint8Array<ArrayBuffer>
+        body: bytes as unknown as BodyInit
       });
       if (res.ok) {
         const body = await res.json().catch(() => ({} as any));

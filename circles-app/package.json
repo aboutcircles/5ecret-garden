@@ -90,18 +90,16 @@
     "qrcode": "1.5.4",
     "viem": "2.47.1"
   },
-  "pnpm": {
-    "overrides": {
-      "@aboutcircles/sdk": "^0.1.29",
-      "@aboutcircles/sdk-abis": "^0.1.29",
-      "@aboutcircles/sdk-core": "^0.1.29",
-      "@aboutcircles/sdk-pathfinder": "^0.1.29",
-      "@aboutcircles/sdk-profiles": "^0.1.29",
-      "@aboutcircles/sdk-rpc": "^0.1.29",
-      "@aboutcircles/sdk-runner": "^0.1.29",
-      "@aboutcircles/sdk-transfers": "^0.1.29",
-      "@aboutcircles/sdk-types": "^0.1.29",
-      "@aboutcircles/sdk-utils": "^0.1.29"
-    }
+  "overrides": {
+    "@aboutcircles/sdk": "^0.1.29",
+    "@aboutcircles/sdk-abis": "^0.1.29",
+    "@aboutcircles/sdk-core": "^0.1.29",
+    "@aboutcircles/sdk-pathfinder": "^0.1.29",
+    "@aboutcircles/sdk-profiles": "^0.1.29",
+    "@aboutcircles/sdk-rpc": "^0.1.29",
+    "@aboutcircles/sdk-runner": "^0.1.29",
+    "@aboutcircles/sdk-transfers": "^0.1.29",
+    "@aboutcircles/sdk-types": "^0.1.29",
+    "@aboutcircles/sdk-utils": "^0.1.29"
   }
 }
