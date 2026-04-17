@@ -71,7 +71,7 @@ export const GET: RequestHandler = async ({ url }) => {
     });
   } catch (e) {
     console.error(e);
-    return new Response(JSON.stringify({ error: 'Internal' }), {
+    return new Response(JSON.stringify({ error: 'Internal', detail: e instanceof Error ? e.message : String(e) }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
