@@ -1,11 +1,15 @@
 <script lang="ts">
   import type { EventRow } from '@circles-sdk/data';
   import ContactGroupRow from './ContactGroupRow.svelte';
-  import { formatTrustRelation } from '$lib/utils/helpers';
+  import { formatTrustRelation } from '$lib/shared/utils/helpers';
 
   interface ContactEventRow extends EventRow {
     address: string;
-    contact: any; // Type this properly based on your ContactListItem type
+    contact: {
+      contactProfile?: any;
+      avatarInfo?: any;
+      row: { relation: string };
+    };
   }
 
   interface Props {
@@ -17,5 +21,7 @@
 
 <ContactGroupRow
   address={item.address}
+  profile={item.contact?.contactProfile}
+  avatarInfo={item.contact?.avatarInfo}
   trustRelation={formatTrustRelation(item.contact.row.relation)}
 />

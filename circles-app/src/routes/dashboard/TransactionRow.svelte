@@ -1,121 +1,185 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
+    import { getContext } from 'svelte';
+    import { getTimeAgo } from '$lib/shared/utils/shared';
+    import type { TransactionHistoryRow } from '@circles-sdk/data';
+    import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
+    import { avatarState } from '$lib/shared/state/avatar.svelte';
+    import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
+    import { popupControls, type PopupContentDefinition } from '$lib/shared/state/popup';
+    import TransactionDetailsPopup from './TransactionDetailsPopup.svelte';
+    import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
+    import {
+        VIRTUAL_LIST_CONTEXT_KEY,
+        type VirtualListController,
+    } from '$lib/shared/ui/lists/utils/virtualListContext';
 
-  import { getTimeAgo } from '$lib/utils/shared';
-  import type { TransactionHistoryRow } from '@circles-sdk/data';
-  import Avatar from '$lib/components/avatar/Avatar.svelte';
-  import { avatarState } from '$lib/stores/avatar.svelte';
+    interface Props { item: TransactionHistoryRow; }
+    let { item }: Props = $props();
 
-  interface Props {
-    item: TransactionHistoryRow;
-  }
+    const virtualList = getContext<VirtualListController | undefined>(VIRTUAL_LIST_CONTEXT_KEY);
 
-  let { item }: Props = $props();
+    const avatarAddress = $derived(avatarState.avatar?.address ?? null);
 
-  let tags: string = $state('');
-  let netCircles = $state(0);
-  let counterpartyAddress = $state('');
-  let badgeUrl: string | null = $state(null);
+    const counterpartyAddress = $derived.by(() => {
+        if (!avatarAddress) return null;
+        return getCounterpartyAddress(avatarAddress);
+    });
 
+    const topInfoText = $derived.by(() => getTopInfo());
 
-  function parseEventDetails(eventsJson: string) {
-    let parsed: any[];
-    try {
-      parsed = JSON.parse(eventsJson) || [];
-    } catch (err) {
-      console.error('Failed to parse item.events:', err);
-      parsed = [];
+    const badgeUrl = $derived.by(() => {
+        if (!avatarAddress) return null;
+        return getBadge(avatarAddress);
+    });
+
+    const sent = $derived.by(() => {
+        if (!avatarAddress) return false;
+        return item.from.toLowerCase() === avatarAddress.toLowerCase();
+    });
+
+    const displayAmount = $derived.by(() => {
+        if (!avatarAddress) return '';
+        const prefix = sent ? '-' : '+';
+        return `${prefix}${formatNetCircles(item.circles)}`;
+    });
+
+    function getCounterpartyAddress(avatarAddress: string) {
+        const zero = '0x0000000000000000000000000000000000000000';
+        const lowerFrom = item.from.toLowerCase();
+        const lowerTo = item.to.toLowerCase();
+        const lowerAvatar = avatarAddress.toLowerCase();
+        if (item.from === zero) return lowerTo;     // mint
+        if (item.to === zero) return lowerAvatar;   // burn
+        return lowerFrom === lowerAvatar ? lowerTo : lowerFrom;
     }
 
-    const relevantTypes = new Set([
-      'CrcV1_Transfer',
-      'CrcV2_PersonalMint',
-      'CrcV2_DiscountCost',
-      'CrcV2_GroupMint',
-      'CrcV2_StreamCompleted',
-      'CrcV2_WithdrawDemurraged',
-      'CrcV2_WithdrawInflationary',
-      'CrcV2_DepositDemurraged',
-      'CrcV2_DepositInflationary',
-
-      'CrcV2_CollateralLockedBatch',
-      'CrcV2_CollateralLockedSingle',
-      'CrcV2_GroupRedeem',
-    ]);
-
-    // let demurrageAmount = 0n;
-    const tags: string[] = [];
-
-    for (const e of parsed) {
-      if (relevantTypes.has(e.$type) && !tags.includes(e.$type)) {
-        tags.push(e.$type);
-      }
+    function getTopInfo(): string {
+        const zero = '0x0000000000000000000000000000000000000000';
+        return item.from === zero ? 'Collected CRC' : '';
     }
 
-    return { tags };
-  }
-
-  function getCounterpartyAddress(avatarAddress: string) {
-    if (item.from === '0x0000000000000000000000000000000000000000') return item.to.toLowerCase();
-    if (item.to === '0x0000000000000000000000000000000000000000') return avatarAddress.toLowerCase();
-    if (item.from.toLowerCase() === avatarAddress) return item.to.toLowerCase();
-    return item.from.toLowerCase();
-  }
-
-  function getBadge(avatarAddress: string) {
-    if (item.from === '0x0000000000000000000000000000000000000000') return '/badge-mint.svg';
-    if (item.to === '0x0000000000000000000000000000000000000000') return '/badge-burn.svg';
-    if (item.from.toLowerCase() === avatarAddress) return '/badge-sent.svg';
-    if (item.to.toLowerCase() === avatarAddress) return '/badge-received.svg';
-    return null;
-  }
-
-  run(() => {
-    if (avatarState.avatar) {
-      const result = parseEventDetails(item.events);
-      tags = result.tags.join(', ');
-      netCircles = item.circles;
-
-      counterpartyAddress = getCounterpartyAddress(avatarState.avatar.address).toLowerCase();
-      badgeUrl = getBadge(avatarState.avatar.address);
+    function getBadge(avatarAddress: string) {
+        const zero = '0x0000000000000000000000000000000000000000';
+        const lowerFrom = item.from.toLowerCase();
+        const lowerTo = item.to.toLowerCase();
+        const lowerAvatar = avatarAddress.toLowerCase();
+        if (item.from === zero) return '/badge-mint.svg';
+        if (item.to === zero) return '/badge-burn.svg';
+        if (lowerFrom === lowerAvatar) return '/badge-sent.svg';
+        if (lowerTo === lowerAvatar) return '/badge-received.svg';
+        return null;
     }
-  });
+
+    function formatNetCircles(amount: number): string {
+        const abs = Math.abs(amount);
+        return abs < 0.01 ? '< 0.01' : abs.toFixed(2);
+    }
+
+    function openDetails() {
+        const def: PopupContentDefinition = {
+            title: 'Transaction details',
+            component: TransactionDetailsPopup,
+            props: { item }
+        };
+        popupControls.open(def);
+    }
+
+    function focusTransactionSearchInput(anchor?: HTMLElement | null): void {
+        const scope = anchor?.closest<HTMLElement>('[data-transactions-list-scope]')
+            ?? document.querySelector<HTMLElement>('[data-transactions-list-scope]');
+        const input = scope?.querySelector<HTMLInputElement>('[data-transactions-search-input]')
+            ?? document.querySelector<HTMLInputElement>('[data-transactions-search-input]');
+        input?.focus();
+    }
+
+    const listNavigator = createKeyboardListNavigator({
+        getRows: (anchor) => {
+            const scope = anchor?.closest<HTMLElement>('[data-transactions-list-scope]')
+                ?? document.querySelector<HTMLElement>('[data-transactions-list-scope]');
+            return Array.from((scope ?? document).querySelectorAll<HTMLElement>('[data-transaction-row]'));
+        },
+        focusInput: focusTransactionSearchInput,
+        onActivateRow: openDetails,
+    });
+
+    function onRowKeydown(event: KeyboardEvent): void {
+        const current = event.currentTarget as HTMLElement | null;
+        if (!current) {
+            listNavigator.onRowKeydown(event);
+            return;
+        }
+
+        const virtualIndexAttr = current?.closest<HTMLElement>('[data-virtual-index]')?.dataset.virtualIndex;
+        const virtualIndex = Number(virtualIndexAttr ?? '-1');
+        const hasVirtualIndex = Number.isFinite(virtualIndex) && virtualIndex >= 0;
+
+        if (virtualList && hasVirtualIndex) {
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                const next = Math.min(virtualList.rowCount() - 1, virtualIndex + 1);
+                if (next !== virtualIndex) {
+                    virtualList.focusIndex(next);
+                }
+                return;
+            }
+
+            if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                if (virtualIndex === 0) {
+                    focusTransactionSearchInput(current);
+                    return;
+                }
+
+                if (virtualIndex > 0) {
+                    virtualList.focusIndex(virtualIndex - 1);
+                }
+                return;
+            }
+        }
+
+        listNavigator.onRowKeydown(event);
+    }
+
+    function onRowClick(event: MouseEvent): void {
+        listNavigator.onRowClick(event);
+        openDetails();
+    }
+
+    
 </script>
 
-<a
-  class="flex items-center justify-between p-2 hover:bg-black/5 rounded-lg"
-  target="_blank"
-  href={'https://gnosisscan.io/tx/' + item.transactionHash}
+<!-- One cohesive horizontal block inside content; collapse RowFrame leading -->
+<div
+    data-transaction-row
+    data-list-row-focusable
+    tabindex={0}
+    role="button"
+    aria-label={`Open transaction details for ${counterpartyAddress}`}
+    class="rounded-[var(--row-radius)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+    onkeydown={onRowKeydown}
+    onclick={onRowClick}
 >
-  {#if avatarState.avatar}
-    <div>
-      <Avatar
-        address={counterpartyAddress}
-        view="horizontal"
-        pictureOverlayUrl={badgeUrl}
-        topInfo={tags}
-        bottomInfo={getTimeAgo(item.timestamp)}
-      />
-    </div>
-    <div class="col text-right">
-      {#if item.from.toLowerCase() === avatarState.avatar.address.toLowerCase()}
-        <span class="text-red-500 font-bold">
-          {#if netCircles.toFixed(2) === "0.00"}
-                    &lt; 0.01
-          {:else}
-                    -{netCircles.toFixed(2)}
-          {/if}
-                </span> CRC
-      {:else}
-                <span class="text-green-700 font-bold">
-                    +{netCircles.toFixed(2)}
-                </span> CRC
-      {/if}
-      <p class="text-xs text-gray-500">
-        <!-- Additional info ... -->
-      </p>
-    </div>
-  {:else}
-    <p>Loading avatar info...</p>
-  {/if}
-</a>
+    <RowFrame clickable={true} dense={true} noLeading={true} style="min-height: var(--transaction-row-height, 76px);">
+        <div class="w-full flex items-center justify-between cursor-pointer">
+            <div class="min-w-0">
+                <Avatar
+                        address={counterpartyAddress}
+                        view="horizontal"
+                        clickable={true}
+                        pictureOverlayUrl={badgeUrl ?? undefined}
+                        topInfo={topInfoText}
+                        bottomInfo={getTimeAgo(item.timestamp)}
+                />
+            </div>
+
+            <div class="text-right shrink-0">
+                {#if sent}
+                    <span class="text-error font-bold">{displayAmount}</span>
+                {:else}
+                    <span class="text-success font-bold">{displayAmount}</span>
+                {/if}
+                <span> CRC</span>
+            </div>
+        </div>
+    </RowFrame>
+</div>

@@ -1,7 +1,23 @@
 <script lang="ts">
   import Terms from './terms.svx';
+  import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
 </script>
 
-<div class="mt-28 w-full flex flex-col items-center justify-center">
-  <div class="max-w-xl flex flex-col items-center justify-center gap-y-4"><Terms /></div>
-</div>
+<PageScaffold
+  highlight="soft"
+  maxWidthClass="page page--lg"
+  contentWidthClass="page page--lg"
+  usePagePadding={true}
+  collapsedMode="bar"
+  collapsedHeightClass="h-12"
+  headerTopGapClass="mt-4 md:mt-6"
+  collapsedTopGapClass="mt-3 md:mt-4"
+>
+  {#snippet title()}
+    <h2 class="h2 m-0">Terms of use</h2>
+  {/snippet}
+
+  <div class="prose md:prose-lg max-w-3xl mx-auto px-4 md:px-6 pb-24 md:pb-32 leading-relaxed prose-headings:font-semibold prose-headings:leading-tight prose-a:underline-offset-2 hover:prose-a:underline prose-p:my-3 prose-li:my-1.5">
+    <Terms />
+  </div>
+</PageScaffold>

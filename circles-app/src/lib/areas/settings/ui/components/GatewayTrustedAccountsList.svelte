@@ -1,0 +1,56 @@
+<script lang="ts">
+  import type { Readable } from 'svelte/store';
+  import SearchablePaginatedList from '$lib/shared/ui/lists/SearchablePaginatedList.svelte';
+  import AvatarRowPlaceholder from '$lib/shared/ui/lists/placeholders/AvatarRowPlaceholder.svelte';
+  import TrustRowView from '$lib/areas/settings/ui/components/TrustRow.svelte';
+  import type { TrustRow } from '$lib/areas/settings/model/gatewayTypes';
+  import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
+
+  type TrustRowItem = TrustRow & {
+    showRemove?: boolean;
+    onRemove?: () => void;
+  };
+
+  interface Props {
+    rows: Readable<TrustRowItem[]>;
+    loading?: boolean;
+    emptyLabel?: string;
+    noMatchesLabel?: string;
+    rowHeight?: number;
+    pageSize?: number;
+  }
+
+  let {
+    rows,
+    loading = false,
+    emptyLabel = 'No trusted accounts yet.',
+    noMatchesLabel = 'No matching trusted accounts.',
+    rowHeight = 72,
+    pageSize = 25
+  }: Props = $props();
+
+  let trustListScopeEl: HTMLDivElement | null = $state(null);
+
+  const onInputArrowDown = createListInputArrowDownHandler({
+    getScope: () => trustListScopeEl,
+    rowSelector: '[data-gateway-trust-row]'
+  });
+</script>
+
+<div data-gateway-trust-list-scope bind:this={trustListScopeEl}>
+  <SearchablePaginatedList
+    items={rows}
+    row={TrustRowView}
+    getKey={(item) => String(item.trustReceiver)}
+    addressOf={(row) => String(row.trustReceiver)}
+    onInputKeydown={onInputArrowDown}
+    inputDataAttribute="data-gateway-trust-search-input"
+    {loading}
+    emptyLabel={emptyLabel}
+    noMatchesLabel={noMatchesLabel}
+    rowHeight={rowHeight}
+    pageSize={pageSize}
+    searchPlaceholder="Search by address or name"
+    placeholderRow={AvatarRowPlaceholder}
+  />
+</div>

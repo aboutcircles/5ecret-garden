@@ -1,0 +1,56 @@
+<script lang="ts">
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
+  import PopupActionBar from '$lib/shared/ui/shell/PopupActionBar.svelte';
+  import { executeTxSubmitFirst } from '$lib/shared/utils/txExecution';
+  import { shortenAddress } from '$lib/shared/utils/shared';
+  import { popupControls } from '$lib/shared/state/popup';
+
+  interface Props {
+    address: `0x${string}`;
+  }
+
+  let { address }: Props = $props();
+
+  async function invite() {
+    if (!avatarState.avatar) {
+      throw new Error('Avatar store not available');
+    }
+    void executeTxSubmitFirst({
+      name: `Inviting ${shortenAddress(address)} ...`,
+      submit: () => avatarState.avatar!.inviteHuman(address),
+      onSubmitted: () => popupControls.close(),
+    });
+  }
+</script>
+
+<div class="p-6 pt-0 mt-6">
+  <p class="mb-4">You're about to invite the following address to Circles:</p>
+
+  <div
+    class="inline-flex items-center space-x-2 border-2 p-6 rounded-2xl w-full"
+  >
+    <div>
+      <span>{shortenAddress(address)}</span>
+      <p class="text-xs text-base-content/70">
+        <a
+          href="https://gnosisscan.io/address/{address}"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="link link-primary">View on Gnosisscan</a
+        >
+      </p>
+    </div>
+  </div>
+
+  <p class="mb-4 mt-4">
+    The person will appear in your contacts once they accept the invitation.
+  </p>
+
+  <PopupActionBar>
+    <button
+      type="submit"
+      class="btn btn-primary btn-sm"
+      onclick={async () => await invite()}>Invite</button
+    >
+  </PopupActionBar>
+</div>
