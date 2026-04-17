@@ -1,6 +1,6 @@
+import { ethers } from 'ethers';
 import { compareAvatarSearchItems, computeLocalRank } from './avatarSearch.rank';
 import type { AvatarSearchItem } from './avatarSearch.types';
-import { ethers } from 'ethers';
 
 export function normalizeAvatarSearchAddress(value: string | null | undefined): string {
   return String(value ?? '').trim().toLowerCase();

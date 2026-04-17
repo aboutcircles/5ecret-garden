@@ -22,7 +22,8 @@
   }: Props = $props();
 
   let imgError: boolean = $state(false);
-  const imgUrl = $derived(profile?.previewImageUrl || '');
+  // Try previewImageUrl first, fall back to imageUrl (some profiles store image differently)
+  const imgUrl = $derived(profile?.previewImageUrl || profile?.imageUrl || '');
   function onImgError() { imgError = true; }
   // Reset image error when profile/image changes
   $effect(() => { imgUrl; imgError = false; });
@@ -67,7 +68,7 @@
         {topInfo}
       </p>
     {/if}
-    <span class="font-semibold text-base-content truncate w-full">{profile?.name}</span>
+    <span class="font-semibold text-base-content truncate w-full">{profile?.name ?? ''}</span>
     {#if bottomInfo}
       <p class="text-xs text-base-content/70 truncate w-full">
         {bottomInfo}

@@ -1,9 +1,12 @@
 <script lang="ts">
   import { avatarState } from '$lib/shared/state/avatar.svelte';
+  import { isHumanAvatar } from '$lib/shared/utils/avatarHelpers';
   import PopupActionBar from '$lib/shared/ui/shell/PopupActionBar.svelte';
   import { executeTxSubmitFirst } from '$lib/shared/utils/txExecution';
   import { shortenAddress } from '$lib/shared/utils/shared';
   import { popupControls } from '$lib/shared/state/popup';
+  import { circles } from '$lib/shared/state/circles';
+  import { get } from 'svelte/store';
 
   interface Props {
     address: `0x${string}`;
@@ -12,12 +15,17 @@
   let { address }: Props = $props();
 
   async function invite() {
-    if (!avatarState.avatar) {
+    const avatar = avatarState.avatar;
+    if (!avatar) {
       throw new Error('Avatar store not available');
     }
+    if (!isHumanAvatar(avatar)) {
+      throw new Error('Only human avatars can send invitations');
+    }
+    const sdk = get(circles);
     void executeTxSubmitFirst({
       name: `Inviting ${shortenAddress(address)} ...`,
-      submit: () => avatarState.avatar!.inviteHuman(address),
+      submit: () => avatar.invitation.invite(address).then(txs => sdk!.contractRunner!.sendTransaction!(txs)),
       onSubmitted: () => popupControls.close(),
     });
   }

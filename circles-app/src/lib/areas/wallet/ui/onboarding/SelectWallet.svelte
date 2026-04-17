@@ -5,7 +5,7 @@
   import { popupControls } from '$lib/shared/state/popup';
   import { openStep } from '$lib/shared/flow';
   import { signer, clearSession } from '$lib/shared/state/wallet.svelte';
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
   import ImportCircles from '$lib/areas/wallet/ui/onboarding/ImportCircles.svelte';
   import { CirclesStorage } from '$lib/shared/utils/storage';
   import { setConnectorId } from '$lib/shared/state/connector';
@@ -17,7 +17,7 @@
       const result = await connect(config, { connector, chainId: 100 });
       setConnectorId(connector.id);
       // Safely set signer address only if an account is returned
-      const addr0 = (result as any)?.accounts?.[0];
+      const addr0 = result.accounts[0];
       if (typeof addr0 === 'string' && addr0) {
         signer.address = addr0.toLowerCase() as Address;
       } else {

@@ -1,6 +1,7 @@
 export type { CustomDataLink } from './links';
 export type { ProfilesBindings, MediaBindings, Cid } from './namespaces';
 export { createCirclesSdkProfilesBindings } from './bindings/circlesSdk';
+export type { CirclesSdkLike } from './bindings/circlesSdk';
 export {
   fetchIpfsJson,
   ensureProfileShape,

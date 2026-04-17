@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
   import AdminProductFormBase from './AdminProductFormBase.svelte';
   import type { AdminProductType, AdminUnifiedProduct } from '../types';
   import type {

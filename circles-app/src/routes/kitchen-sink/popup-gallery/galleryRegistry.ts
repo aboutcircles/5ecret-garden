@@ -6,10 +6,6 @@ import SendAmount from '$lib/areas/wallet/flows/send/3_Amount.svelte';
 import SendReview from '$lib/areas/wallet/flows/send/4_Send.svelte';
 import { transitiveTransfer } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
 
-import MigrateInvite from '$lib/areas/wallet/flows/migrateToV2/1_GetInvited.svelte';
-import MigrateProfile from '$lib/areas/wallet/flows/migrateToV2/2_CreateProfile.svelte';
-import MigrateContacts from '$lib/areas/wallet/flows/migrateToV2/3_MigrateContacts.svelte';
-import MigrateRun from '$lib/areas/wallet/flows/migrateToV2/4_Migrate.svelte';
 
 import CreateGatewayProfile from '$lib/areas/settings/flows/gateway/CreateGatewayProfile.svelte';
 import ConfirmCreateGateway from '$lib/areas/settings/flows/gateway/ConfirmCreateGateway.svelte';
@@ -49,7 +45,7 @@ import ImportCircles from '$lib/areas/wallet/ui/onboarding/ImportCircles.svelte'
 import Balances from '$lib/areas/wallet/ui/pages/Balances.svelte';
 import WrapTokens from '$lib/areas/wallet/ui/pages/WrapTokens.svelte';
 import UnwrapTokens from '$lib/areas/wallet/ui/pages/UnwrapTokens.svelte';
-import MigrateTokens from '$lib/areas/wallet/ui/pages/MigrateTokens.svelte';
+
 import RedeemGroup from '$lib/areas/groups/ui/pages/RedeemGroup.svelte';
 
 import ProfilePopup from '$lib/areas/profile/ui/pages/ProfilePopup.svelte';
@@ -87,17 +83,6 @@ function mockSendContext() {
     dataType: 'utf-8' as const,
     data: 'Demo payment reference',
     maxTransfers: 6,
-  };
-}
-
-function mockMigrateContext() {
-  return {
-    inviter: mockAddressA,
-    profile: {
-      name: 'Demo Migrated Profile',
-      description: 'Preview profile for migration flow',
-    },
-    trustList: [mockAddressB, mockAddressC],
   };
 }
 
@@ -209,33 +194,6 @@ Step 4 (Send/Review): Re-validates recipient/asset/amount before submitting. Enc
       { id: 'send-2', title: '2_TokenFilters.svelte', purpose: 'Configure include/exclude token filters', component: SendTokenFilters, propsFactory: () => ({ context: mockSendContext() }) },
       { id: 'send-3', title: '3_Amount.svelte', purpose: 'Input amount', component: SendAmount, propsFactory: () => ({ context: mockSendContext() }) },
       { id: 'send-4', title: '4_Send.svelte', purpose: 'Review and submit', component: SendReview, propsFactory: () => ({ context: mockSendContext() }) },
-    ],
-  },
-  {
-    id: 'flow-migrate-v2',
-    kind: 'flow',
-    label: 'Wallet migrate-to-v2 flow',
-    domain: 'Wallet',
-    purpose: 'Invitation/profile/contacts migration wizard.',
-    details: `Step 1 (Get invited): Fetches invitations. If none exist, the UI either:
-- Allows self-migration when settings permit it (e.g., ring setting / sdk.canSelfMigrate), or
-- Blocks with an informational message when self-migration is not allowed.
-
-Step 2 (Create profile): Validates profile fields before continuing:
-- Name is required and max 36 characters.
-- Description max 500 characters.
-- previewImageUrl must be a data URL and under ~150KB.
-- imageUrl max length 2000.
-Invalid inputs are summarized via StepAlert, and fallback image URLs are reset when necessary.
-
-Step 3 (Migrate contacts): Presents a trust-ordered contact list with toggles. Empty selection shows an info alert. Order is maintained by trust relation.
-
-Step 4 (Migrate): Review rows link back to earlier steps for edits. On submit calls sdk.migrateAvatar, updates avatar state/version, and clears/refreshes caches as part of completing the migration.`,
-    steps: [
-      { id: 'm2v-1', title: '1_GetInvited.svelte', purpose: 'Select inviter', component: MigrateInvite, propsFactory: () => ({ context: mockMigrateContext() }) },
-      { id: 'm2v-2', title: '2_CreateProfile.svelte', purpose: 'Prepare profile', component: MigrateProfile, propsFactory: () => ({ context: mockMigrateContext() }) },
-      { id: 'm2v-3', title: '3_MigrateContacts.svelte', purpose: 'Choose contacts', component: MigrateContacts, propsFactory: () => ({ context: mockMigrateContext() }) },
-      { id: 'm2v-4', title: '4_Migrate.svelte', purpose: 'Confirm migration', component: MigrateRun, propsFactory: () => ({ context: mockMigrateContext() }) },
     ],
   },
   {
@@ -457,15 +415,6 @@ For the circles.garden path, it can reuse a saved private key if present; otherw
     step: { id: 'single-unwrap', title: 'Unwrap tokens', purpose: 'Unwrap tokens action', component: UnwrapTokens, propsFactory: () => ({ asset: transitiveTransfer() }) },
   },
   {
-    id: 'standalone-wallet-migrate-token',
-    kind: 'standalone',
-    label: 'MigrateTokens.svelte',
-    domain: 'Wallet',
-    purpose: 'Migrate v1 token popup action.',
-    details: `Migrates v1 tokens to the newer format. Only v1 tokens are accepted; attempting to migrate a v2 token results in an error state.`,
-    step: { id: 'single-migrate-token', title: 'Migrate token', purpose: 'Token migration action', component: MigrateTokens, propsFactory: () => ({ asset: transitiveTransfer() }) },
-  },
-  {
     id: 'standalone-groups-redeem',
     kind: 'standalone',
     label: 'RedeemGroup.svelte',
@@ -647,10 +596,7 @@ const entrypointsById: Record<string, string[]> = {
     'src/lib/areas/wallet/flows/send/openSendFlowPopup.ts#openSendFlowPopup',
     'src/lib/areas/profile/ui/pages/Profile.svelte#sendAction',
   ],
-  'flow-migrate-v2': [
-    'src/routes/+layout.svelte#openMigratePopup',
-    'src/routes/settings/+layout.svelte#openMigratePopup',
-  ],
+
   'flow-gateway-create': ['src/lib/areas/settings/ui/sections/PaymentSection.svelte#openCreateGatewayPopup'],
   'flow-gateway-manage-trust': ['src/lib/areas/settings/ui/components/GatewayRow.svelte#openManageTrust'],
   'flow-add-contact': ['src/routes/contacts/+page.svelte#openAddContact'],
@@ -668,7 +614,7 @@ const entrypointsById: Record<string, string[]> = {
   'standalone-wallet-balances': ['src/routes/dashboard/+page.svelte#openBalances'],
   'standalone-wallet-wrap': ['src/lib/areas/wallet/ui/components/BalanceRow.svelte#actions'],
   'standalone-wallet-unwrap': ['src/lib/areas/wallet/ui/components/BalanceRow.svelte#actions'],
-  'standalone-wallet-migrate-token': ['src/lib/areas/wallet/ui/components/BalanceRow.svelte#actions'],
+
   'standalone-groups-redeem': ['src/lib/areas/wallet/ui/components/BalanceRow.svelte#actions'],
   'standalone-profile-popup': ['src/lib/shared/ui/avatar/Avatar.svelte#openProfilePopup'],
   'standalone-contacts-untrust': ['src/lib/areas/contacts/flows/addContact/2_YouAlreadyTrust.svelte#openUntrust'],

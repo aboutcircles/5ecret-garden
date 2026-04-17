@@ -8,14 +8,14 @@
   import MarkdownEditor from '$lib/shared/ui/content/markdown/MarkdownEditor.svelte';
   import OfferStep2 from './2_Pricing.svelte';
   import type {OfferDraft, OfferFlowContext} from './types';
+  import type {Address} from '@aboutcircles/sdk-types';
   import ImageUpload from '$lib/shared/ui/profile/components/ImageUpload.svelte';
   import {normalizeEvmAddress as normalizeAddress} from '@circles-market/sdk';
   import {generateSku, isValidSku} from '$lib/areas/market/utils/offer';
-  import {get} from 'svelte/store';
   import {circles} from '$lib/shared/state/circles';
   import {wallet} from '$lib/shared/state/wallet.svelte';
+  import {avatarState} from '$lib/shared/state/avatar.svelte';
   import { fetchGatewayRowsByOwner } from '$lib/shared/data/circles/paymentGateways';
-  import {onMount} from 'svelte';
   import {goto} from '$app/navigation';
 
   interface Props {
@@ -26,8 +26,9 @@
 
   // Hard guard: we must know which namespace/operator to publish under
   let hasOperator = false;
+  // svelte-ignore state_referenced_locally — context is a shared mutable flow object, intentional one-time capture
   try {
-    (context as any).operator = normalizeAddress(String((context as any)?.operator ?? '')); // store normalized value once
+    context.operator = normalizeAddress(String(context.operator ?? '')) as Address; // store normalized value once
     hasOperator = true;
   } catch {
     hasOperator = false;
@@ -37,6 +38,7 @@
     throw new Error('Marketplace operator address is required to create an offer.');
   }
 
+  // svelte-ignore state_referenced_locally — intentional one-time initialization of shared flow context
   if (!context.draft) {
     context.draft = {
       sku: '',
@@ -62,39 +64,49 @@
     return legacy ? [legacy] : [];
   }
 
-  // Local bindings for form inputs
+  // Local bindings for form inputs (initialized from context.draft)
+  // svelte-ignore state_referenced_locally
   let sku = $state(context.draft.sku);
+  // svelte-ignore state_referenced_locally
   let name = $state(context.draft.name);
+  // svelte-ignore state_referenced_locally
   let description = $state(context.draft.description ?? '');
+  // svelte-ignore state_referenced_locally
   let images = $state<string[]>(normalizeDraftImages(context.draft));
+  // svelte-ignore state_referenced_locally
   let url = $state(context.draft.url ?? '');
+  // svelte-ignore state_referenced_locally
   let brand = $state(context.draft.brand ?? '');
+  // svelte-ignore state_referenced_locally
   let mpn = $state(context.draft.mpn ?? '');
+  // svelte-ignore state_referenced_locally
   let gtin13 = $state(context.draft.gtin13 ?? '');
+  // svelte-ignore state_referenced_locally
   let category = $state(context.draft.category ?? '');
 
   // Are we editing an existing product?
-  const editMode: boolean = Boolean((context as any)?.editMode);
+  // svelte-ignore state_referenced_locally
+  const editMode: boolean = Boolean(context.editMode);
 
   // Advanced section toggle
   let showAdvanced = $state(false);
 
   // Validate user has at least one payment gateway before proceeding in the flow
-  let hasGateway = $state(true);
-  onMount(async () => {
-    try {
-      const c = get(circles);
-      const owner = get(wallet)?.address as string | undefined;
-      if (!c?.circlesRpc || !owner) {
+  let hasGateway = $state(true); // optimistic default avoids flash
+  let gatewayChecked = $state(false);
+  $effect(() => {
+    const c = $circles;
+    const owner = $wallet?.address ?? avatarState.avatar?.address;
+    if (!c?.rpc || !owner) return; // wait until both are available
+    if (gatewayChecked) return; // only check once
+    gatewayChecked = true;
+
+    fetchGatewayRowsByOwner(c, owner as string)
+      .then((gateways) => { hasGateway = gateways.length > 0; })
+      .catch((e) => {
+        console.error('Offer step 1 gateway validation failed', e);
         hasGateway = false;
-        return;
-      }
-      const gateways = await fetchGatewayRowsByOwner(c, owner);
-      hasGateway = gateways.length > 0;
-    } catch (e) {
-      console.error('Offer step 1 gateway validation failed', e);
-      hasGateway = false;
-    }
+      });
   });
 
   // Live preview of auto-generated SKU, stored in state so we can reuse it when saving
@@ -156,7 +168,7 @@
   subtitle="Set core product information for this offer."
 >
 
-{#if $wallet?.address}
+{#if $wallet?.address || avatarState.avatar?.address}
   {#if hasGateway}
     <div class="space-y-3">
       <!-- Name first; SKU is optional and hidden under Advanced -->

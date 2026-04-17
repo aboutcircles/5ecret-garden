@@ -1,8 +1,8 @@
 // lib/profile/namespacesEditor.ts
 import type { CidV0 } from '$lib/areas/market/offers';
-import type { ProfilesBindings } from '@circles-market/sdk';
+import type { ProfilesBindings, CustomDataLink } from '@circles-market/sdk';
 import { loadIndex, rebaseAndSaveProfile } from '@circles-market/sdk';
-import type { Address } from '@circles-sdk/utils';
+import type { Address } from '@aboutcircles/sdk-types';
 
 export type LoadedNamespaceLink = {
     link: any;          // JSON-LD CustomDataLink as stored on IPFS
@@ -243,9 +243,9 @@ export type EditableLinkMetadata = {
  * Applies user-editable metadata fields to a link object.
  */
 export function applyEditableLinkMetadata(
-    link: any,
+    link: CustomDataLink,
     metadata: EditableLinkMetadata
-): any {
+): CustomDataLink {
     if (!link || typeof link !== 'object' || Array.isArray(link)) {
         throw new TypeError('Link must be a JSON object.');
     }

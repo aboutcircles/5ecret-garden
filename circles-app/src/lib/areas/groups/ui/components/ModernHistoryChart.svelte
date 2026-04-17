@@ -169,7 +169,8 @@
             usePointStyle: true,
             callbacks: {
               title: (items) => {
-                const x = items[0].parsed.x;
+                const x = items[0].parsed.x as number | null;
+                if (x == null) return '';
                 const d = new Date(x);
                 return resolution === 'hour'
                   ? `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`

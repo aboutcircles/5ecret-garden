@@ -1,9 +1,9 @@
 <script lang="ts">
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
   import { openStep } from '$lib/shared/flow';
   import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
-  import { NEW_PRODUCT_FLOW_SCAFFOLD_BASE } from './constants';
+  import { NEW_PRODUCT_FULFILLMENT_FLOW_SCAFFOLD_BASE } from './constants';
   import OdooConnectionForm from '$lib/areas/admin/components/OdooConnectionForm.svelte';
   import DetailsStep from './5_Details.svelte';
   import type { AdminNewProductFlowContext } from './context';
@@ -68,8 +68,8 @@
 </script>
 
 <FlowStepScaffold
-  {...NEW_PRODUCT_FLOW_SCAFFOLD_BASE}
-  step={4}
+  {...NEW_PRODUCT_FULFILLMENT_FLOW_SCAFFOLD_BASE}
+  step={1}
   title="Create Odoo connection"
   subtitle="Create an Odoo connection for this seller."
 >

@@ -1,8 +1,9 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
-  import type { AvatarRow } from '@circles-sdk/data';
-  import type { Address } from '@circles-sdk/utils';
+  import type { AvatarRow } from '@aboutcircles/sdk-types';
+  import type { Address } from '@aboutcircles/sdk-types';
 
   interface Props {
     invitations?: AvatarRow[];
@@ -10,6 +11,7 @@
     selected?: Address;
     onSelect: (address: Address) => void;
     emptyText?: string;
+    empty?: Snippet;
   }
 
   let {
@@ -18,6 +20,7 @@
     selected = $bindable<Address | undefined>(),
     onSelect,
     emptyText = 'No invitations pending.',
+    empty,
   }: Props = $props();
 </script>
 
@@ -25,26 +28,28 @@
   {#if loading}
     <p class="text-base-content/70">Loading invitations...</p>
   {:else if invitations.length > 0}
-    {#each invitations as inviter (inviter.avatar)}
-      <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => onSelect(inviter.avatar)}>
+    {#each invitations as inviter (inviter.address)}
+      <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => onSelect(inviter.address)}>
         <div class="flex items-center gap-x-2 min-w-0">
           <input
             type="radio"
             name="inviter"
             class="radio radio-success radio-sm"
-            checked={selected === inviter.avatar}
+            checked={selected === inviter.address}
             onclick={(e) => {
               e.stopPropagation();
-              onSelect(inviter.avatar);
+              onSelect(inviter.address);
             }}
           />
-          <Avatar topInfo="Inviter" clickable={false} address={inviter.avatar} view="horizontal" />
+          <Avatar topInfo="Inviter" clickable={false} address={inviter.address} view="horizontal" />
         </div>
       </RowFrame>
     {/each}
   {:else}
-    <slot name="empty">
+    {#if empty}
+      {@render empty()}
+    {:else}
       {emptyText}
-    </slot>
+    {/if}
   {/if}
 </div>

@@ -2,7 +2,7 @@
     import SearchablePaginatedAddressList from '$lib/shared/ui/profile/components/SearchablePaginatedAddressList.svelte';
     import { circles } from '$lib/shared/state/circles';
     import { get, writable } from 'svelte/store';
-    import type { Address } from '@circles-sdk/utils';
+    import type { Address } from '@aboutcircles/sdk-types';
     import { createTrustDataSource } from '$lib/shared/data/circles/trustDataSource';
 
     type RelationFilter = 'trusts' | 'trustedBy';

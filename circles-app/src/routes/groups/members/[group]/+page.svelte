@@ -1,7 +1,7 @@
 <script lang="ts">
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
   import { circles } from '$lib/shared/state/circles';
   import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
   import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';

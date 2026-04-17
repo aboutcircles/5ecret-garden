@@ -1,6 +1,24 @@
-import type { Sdk } from '@circles-sdk/sdk';
 import type { ProfilesBindings, MediaBindings, Cid } from '../namespaces';
-import type { Address } from '@circles-sdk/utils';
+import type { Address } from '@aboutcircles/sdk-types';
+
+/**
+ * Structural interface for the subset of the Circles SDK used by the bindings.
+ * Avoids nominal type mismatches when different package resolution paths
+ * resolve to structurally-identical but nominally-distinct Sdk classes.
+ */
+export interface CirclesSdkLike {
+  data: {
+    getAvatar(address: Address): Promise<{ cidV0?: string } | null | undefined>;
+  };
+  getAvatar(
+    address: Address,
+    autoSubscribeEvents?: boolean,
+  ): Promise<{
+    profile: {
+      updateMetadata(cid: string): Promise<{ transactionHash?: string; hash?: string } | null>;
+    };
+  }>;
+}
 
 function defaultGatewayUrlForCid(cid: string): string {
   // Align with fetchIpfsJson default gateway for consistency across packages
@@ -20,7 +38,7 @@ function assertCidV0(v: unknown): string {
 }
 
 export function createCirclesSdkProfilesBindings(opts: {
-  circlesSdk: Sdk;
+  circlesSdk: CirclesSdkLike;
   pinApiBase?: string;
   gatewayUrlForCid?: (cid: string) => string;
   maxJsonBytes?: number;    // default 8 MiB
@@ -33,13 +51,14 @@ export function createCirclesSdkProfilesBindings(opts: {
   }
 
   const base = (opts.pinApiBase ?? '').replace(/\/$/, '');
-  function endpointCandidates(path: 'pin' | 'pin-media'): string[] {
+  function endpointCandidates(path: 'pin' | 'pin-media' | 'raw'): string[] {
     if (!base) return [];
     return [`${base}/${path}`];
   }
 
   const pinUrls = endpointCandidates('pin');
   const pinMediaUrls = endpointCandidates('pin-media');
+  const rawUrls = endpointCandidates('raw');
   const gateway = opts.gatewayUrlForCid ?? defaultGatewayUrlForCid;
   const MAX_JSON = opts.maxJsonBytes ?? 8 * 1024 * 1024;
   const MAX_MEDIA = opts.maxMediaBytes ?? 8 * 1024 * 1024;
@@ -80,6 +99,32 @@ export function createCirclesSdkProfilesBindings(opts: {
   }
 
   async function getJsonLd(cid: Cid): Promise<unknown> {
+    // Prefer pinning service /raw/:cid — centralizes IPFS reads behind the
+    // service, benefits from its DB cache, and avoids hardcoded gateway URLs.
+    // Falls back to direct IPFS gateway if pinning service is unavailable.
+    //
+    // Changed 2026-02-25: previously fetched directly from IPFS gateway only.
+    // To revert to gateway-only: remove the rawUrls loop below.
+    for (const rawUrl of rawUrls.map((u) => `${u}/${cid}`)) {
+      try {
+        const res = await fetch(rawUrl, {
+          method: 'GET',
+          headers: { Accept: 'application/json, application/ld+json' },
+        });
+        if (res.ok) {
+          return await res.json();
+        }
+        // 404/405 = route mismatch, try next candidate
+        if (res.status !== 404 && res.status !== 405) {
+          break; // real error — skip to gateway fallback
+        }
+      } catch {
+        // network error — try next candidate, then gateway fallback
+      }
+    }
+
+    // Fallback: direct IPFS gateway fetch (original behavior).
+    // Used when pinApiBase is not configured or pinning service is down.
     const url = gateway(cid);
     const res = await fetch(url, {
       method: 'GET',
@@ -123,17 +168,19 @@ export function createCirclesSdkProfilesBindings(opts: {
 
   const bindings: ProfilesBindings = {
     async getLatestProfileCid(avatar: string): Promise<Cid | null> {
-      const cid = await circlesSdk.data.getMetadataCidForAddress(avatar as Address);
-      return (cid as string | null) ?? null;
+      // New SDK: sdk.data.getAvatar() returns AvatarInfo with cidV0 field
+      const avatarInfo = await circlesSdk.data.getAvatar(avatar as Address);
+      return avatarInfo?.cidV0 ?? null;
     },
     putJsonLd,
     getJsonLd,
     async updateAvatarProfileDigest(avatar: string, profileCid: Cid): Promise<string> {
       // Write-only metadata update path: avoid event subscription setup
       // to reduce websocket subscribe timeout risk.
-      const avatarObj = await circlesSdk.getAvatar(avatar as any, false);
-      const tx = await avatarObj.updateMetadata(profileCid);
-      return ((tx as any)?.hash ?? '') as string;
+      const avatarObj = await circlesSdk.getAvatar(avatar as Address, false);
+      // New SDK: updateMetadata lives on avatar.profile
+      const tx = await avatarObj.profile.updateMetadata(profileCid);
+      return tx?.hash ?? '';
     },
   };
 

@@ -23,11 +23,15 @@
   }: Props = $props();
 
   const chainId = 100;
+  // svelte-ignore state_referenced_locally — intentional: initialize form from prop
   let seller: string = $state(product?.seller ?? '');
+  // svelte-ignore state_referenced_locally
   let sku: string = $state(product?.sku ?? '');
 
+  // svelte-ignore state_referenced_locally
   let downloadUrlTemplate: string = $state(product?.code?.downloadUrlTemplate ?? '');
   let codesTextarea: string = $state('');
+  // svelte-ignore state_referenced_locally
   let codeEnabled: boolean = $state(product?.code?.enabled ?? true);
 
   let saving = $state(false);

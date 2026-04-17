@@ -230,7 +230,7 @@
     isSelected,
     select,
     selected$: selectedStore as Readable<string | null>,
-    hostId: id
+    get hostId() { return id; }
   };
   setContext(TABS_CTX, ctx);
 

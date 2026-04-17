@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 import { mount, tick, unmount } from 'svelte';
-import type { TokenBalanceRow } from '@circles-sdk/data';
+import type { TokenBalance } from '@aboutcircles/sdk-types';
 import AmountStep from '../src/lib/areas/wallet/flows/send/3_Amount.svelte';
 import { createSendFlowContext } from '../src/lib/areas/wallet/flows/send/sendFlowContext.svelte';
 
@@ -14,7 +14,17 @@ describe('send flow route changes', () => {
       circles: 5,
       staticCircles: 0,
       isErc20: false,
-    } as TokenBalanceRow;
+      isErc1155: true,
+      isWrapped: false,
+      isInflationary: false,
+      isGroup: false,
+      tokenId: '0x0000000000000000000000000000000000000000',
+      version: 2,
+      attoCircles: BigInt('5000000000000000000'),
+      staticAttoCircles: BigInt(0),
+      attoCrc: BigInt('5000000000000000000'),
+      crc: 5,
+    } satisfies TokenBalance;
 
     const assetB = {
       tokenAddress: '0x0000000000000000000000000000000000000021',
@@ -23,7 +33,17 @@ describe('send flow route changes', () => {
       circles: 12,
       staticCircles: 0,
       isErc20: false,
-    } as TokenBalanceRow;
+      isErc1155: true,
+      isWrapped: false,
+      isInflationary: false,
+      isGroup: false,
+      tokenId: '0x0000000000000000000000000000000000000000',
+      version: 2,
+      attoCircles: BigInt('12000000000000000000'),
+      staticAttoCircles: BigInt(0),
+      attoCrc: BigInt('12000000000000000000'),
+      crc: 12,
+    } satisfies TokenBalance;
 
     const context = createSendFlowContext({
       selectedAsset: assetA,

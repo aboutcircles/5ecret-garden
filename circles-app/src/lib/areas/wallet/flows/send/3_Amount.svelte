@@ -10,7 +10,7 @@
     import { TransitiveTransferTokenAddress } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
     import { ethers } from 'ethers';
     import { openStep, popToOrOpen, useAsyncAction } from '$lib/shared/flow';
-    import { CirclesConverter } from '@circles-sdk/utils';
+    import { CirclesConverter } from '@aboutcircles/sdk-utils';
     import {MAX_PATH_STEPS} from "$lib/shared/config/circles";
     import { requireSelectedAsset } from '$lib/shared/flow';
     import type { EnterAmountStepProps } from '$lib/shared/flow';
@@ -59,29 +59,18 @@
         pathfindingFailed = false;
 
         try {
-            const excludedTokens = await sdk.getDefaultTokenExcludeList(
-                context.selectedAddress
-            );
-
-            const bigNumber = '99999999999999999999999999999999999';
-            const p =
-                avatarState.avatar?.avatarInfo?.version === 1
-                    ? await sdk.v1Pathfinder?.getPath(
-                        avatarState.avatar.address,
-                        context.selectedAddress,
-                        bigNumber
-                    )
-                    : await sdk.v2Pathfinder?.getPath(
-                        avatarState.avatar.address,
-                        context.selectedAddress,
-                        bigNumber,
-                        context.useWrappedBalances ?? true,
-                        context.fromTokens,
-                        context.toTokens,
-                        context.excludeFromTokens,
-                        context.excludeToTokens ?? excludedTokens,
-                        context.maxTransfers
-                    );
+            const targetFlow = 99999999999999999999999999999999999n;
+            const p = await sdk.rpc.pathfinder.findPath({
+                from: avatarState.avatar.address,
+                to: context.selectedAddress,
+                targetFlow,
+                useWrappedBalances: context.useWrappedBalances ?? true,
+                fromTokens: context.fromTokens,
+                toTokens: context.toTokens,
+                excludeFromTokens: context.excludeFromTokens,
+                excludeToTokens: context.excludeToTokens,
+                maxTransfers: context.maxTransfers,
+            });
 
             if (!p || !p.transfers?.length) {
                 pathfindingFailed = true;
@@ -118,7 +107,7 @@
         if (!Number.isFinite(enteredAmount) || enteredAmount <= 0) return false;
 
         if (selectedAsset.isErc20) {
-            return enteredAmount > selectedAsset.staticCircles;
+            return enteredAmount > (selectedAsset.staticCircles ?? 0);
         }
 
         if (maxAmountCircles >= 0) {
@@ -176,10 +165,10 @@
 
         const selectedAsset = requireSelectedAsset(context);
         const limit = selectedAsset.isErc20
-            ? selectedAsset.staticCircles
+            ? (selectedAsset.staticCircles ?? 0)
             : (maxAmountCircles >= 0 ? maxAmountCircles : (selectedAsset?.circles ?? 0));
 
-        if (context.amount > limit) {
+        if (context.amount > (limit ?? 0)) {
             amountError = true;
             return;
         }
@@ -404,10 +393,10 @@
     </button>
 
     <SelectAmount
-            maxAmountCircles={context.selectedAsset.isErc20
-      ? context.selectedAsset.staticCircles
-      : (maxAmountCircles >= 0 ? maxAmountCircles : context.selectedAsset.circles)}
-            asset={context.selectedAsset}
+            maxAmountCircles={context.selectedAsset!.isErc20
+      ? context.selectedAsset!.staticCircles
+      : (maxAmountCircles >= 0 ? maxAmountCircles : context.selectedAsset!.circles)}
+            asset={context.selectedAsset!}
             bind:amount={context.amount}
             routeLoading={isAutoRoute && pathfindingAction.loading}
             onBackspaceAtEmpty={onAmountBackspaceAtEmpty}
@@ -481,7 +470,7 @@
 
         {#if showMoreOptions}
             <div class="p-3 border-t border-base-300 space-y-4">
-                {#if avatarState.avatar?.avatarInfo?.version === 2 && !context.selectedAsset.isErc20}
+                {#if avatarState.avatar?.avatarInfo?.version === 2 && !context.selectedAsset?.isErc20}
                     <div class="space-y-2">
                         <div class="flex items-center justify-between gap-2">
                             <label for="dataInput" class="text-sm font-semibold">Note (optional)</label>

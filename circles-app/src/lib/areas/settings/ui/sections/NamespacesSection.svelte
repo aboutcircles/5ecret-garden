@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
 import { ProfileNamespaces } from '$lib/shared/ui/profile';
   type Props = {
     avatarAddress: Address | '';
