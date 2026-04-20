@@ -26,12 +26,8 @@
     PUBLIC_ENVIRONMENT = "production"
     PUBLIC_CIRCLES_RPC_URL = "https://rpc.aboutcircles.com"
     PUBLIC_PLAUSIBLE_DOMAIN = "app.aboutcircles.com"
-    DB_PW = ""
-    DB_USER = ""
-    DB_DATABASE = ""
-    DB_HOST = ""
-    DB_PORT = ""
-    DB_SSL_MODE = ""
+    # DB_* and THE_GRAPH_API_KEY set in Netlify dashboard only
+    # (empty toml values override dashboard — do not add placeholders here)
 
 # Deploy Preview settings (for PRs)
 [context.deploy-preview]
@@ -45,12 +41,6 @@
     PUBLIC_CIRCLES_RPC_URL = "https://rpc.circlesubi.network"
     # Disable analytics for preview
     PUBLIC_PLAUSIBLE_DOMAIN = ""
-    DB_PW = ""
-    DB_USER = ""
-    DB_DATABASE = ""
-    DB_HOST = ""
-    DB_PORT = ""
-    DB_SSL_MODE = ""
 
 # Branch deploy settings
 [context.branch-deploy]
@@ -63,12 +53,6 @@
     PUBLIC_ENVIRONMENT = "staging"
     PUBLIC_CIRCLES_RPC_URL = "https://rpc.circlesubi.network"
     PUBLIC_PLAUSIBLE_DOMAIN = ""
-    DB_PW = ""
-    DB_USER = ""
-    DB_DATABASE = ""
-    DB_HOST = ""
-    DB_PORT = ""
-    DB_SSL_MODE = ""
 
 # Headers for security
 [[headers]]
