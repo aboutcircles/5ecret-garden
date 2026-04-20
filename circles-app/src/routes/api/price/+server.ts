@@ -5,7 +5,27 @@ import {
   DB_DATABASE
 } from '$env/static/private';
 import { CirclesConverter } from '@circles-sdk/utils';
-const { Client } = pkg;
+const { Pool } = pkg;
+
+// Module-level pool — reused across warm invocations in serverless (Netlify Functions)
+let pool: InstanceType<typeof Pool> | null = null;
+
+function getPool() {
+  if (!pool) {
+    pool = new Pool({
+      user: DB_USER,
+      password: DB_PW,
+      host: DB_HOST,
+      port: Number(DB_PORT),
+      database: DB_DATABASE,
+      ssl: { rejectUnauthorized: false },
+      max: 3,
+      idleTimeoutMillis: 30_000,
+      connectionTimeoutMillis: 5_000
+    });
+  }
+  return pool;
+}
 
 export const GET: RequestHandler = async ({ url }) => {
   const groupToken = url.searchParams.get('group')?.toLowerCase();
@@ -43,19 +63,8 @@ export const GET: RequestHandler = async ({ url }) => {
   ORDER BY bucket
 `;
 
-  const client = new Client({
-    user: DB_USER,
-    password: DB_PW,
-    host: DB_HOST,
-    port: Number(DB_PORT),
-    database: DB_DATABASE,
-    ssl: { rejectUnauthorized: false },
-    connectionTimeoutMillis: 5_000
-  });
-
   try {
-    await client.connect();
-    const { rows } = await client.query<{ bucket: Date; price: string }>(
+    const { rows } = await getPool().query<{ bucket: Date; price: string }>(
       sql,
       [groupToken, xdai]
     );
@@ -75,7 +84,5 @@ export const GET: RequestHandler = async ({ url }) => {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
-  } finally {
-    client.end();
   }
 };
