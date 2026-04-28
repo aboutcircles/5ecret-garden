@@ -100,17 +100,27 @@
         }
     });
 
+    // Event accessors that work with both PascalCase (raw RPC events) and
+    // camelCase (rows produced by transactionHistory.ts) shapes.
+    const eventTypeOf = (ev: TxEvent): string => String(ev.$type ?? ev.eventType ?? '');
+    const fromOf = (ev: TxEvent): unknown => ev.From ?? ev.from;
+    const toOf = (ev: TxEvent): unknown => ev.To ?? ev.to;
+    const idOf = (ev: TxEvent): unknown => ev.Id ?? ev.id;
+    const valueOf = (ev: TxEvent): unknown => ev.Value ?? ev.value;
+    const accountOf = (ev: TxEvent): unknown => ev.Account ?? ev.account;
+    const costOf = (ev: TxEvent): unknown => ev.Cost ?? ev.cost;
+
     // DiscountCost aggregation: (account, id) -> total cost
     const discountCostByAccountAndId = $derived.by((): Map<string, bigint> => {
         const map = new Map<string, bigint>();
         for (const ev of events) {
-            const type = String(ev.$type ?? '');
-            if (type !== 'CrcV2_DiscountCost') {
+            if (eventTypeOf(ev) !== 'CrcV2_DiscountCost') {
                 continue;
             }
-            const account = isAddress(ev.Account) ? String(ev.Account).toLowerCase() : null;
-            const id = ev.Id;
-            const cost = toBigIntMaybe(ev.Cost);
+            const acct = accountOf(ev);
+            const account = isAddress(acct) ? String(acct).toLowerCase() : null;
+            const id = idOf(ev);
+            const cost = toBigIntMaybe(costOf(ev));
             if (!account || id === undefined || cost === null) {
                 continue;
             }
@@ -123,20 +133,21 @@
 
     // Check whether a TransferSingle burn matches a DiscountCost (protocol fee)
     function isProtocolCostBurn(ev: TxEvent): boolean {
-        const type = String(ev.$type ?? '');
-        if (type !== 'CrcV2_TransferSingle') {
+        if (eventTypeOf(ev) !== 'CrcV2_TransferSingle') {
             return false;
         }
-        const from = isAddress(ev.From) ? String(ev.From).toLowerCase() : null;
-        const to = isAddress(ev.To) ? String(ev.To).toLowerCase() : null;
+        const fromRaw = fromOf(ev);
+        const toRaw = toOf(ev);
+        const from = isAddress(fromRaw) ? String(fromRaw).toLowerCase() : null;
+        const to = isAddress(toRaw) ? String(toRaw).toLowerCase() : null;
         if (!from || !to) {
             return false;
         }
         if (!isZeroAddress(to)) {
             return false;
         }
-        const id = ev.Id;
-        const value = toBigIntMaybe(ev.Value);
+        const id = idOf(ev);
+        const value = toBigIntMaybe(valueOf(ev));
         if (id === undefined || value === null) {
             return false;
         }
@@ -183,14 +194,23 @@
     }
 
     function extractTransfers(ev: TxEvent): Transfer[] {
-        const type = String(ev.$type ?? '');
-        const isTransferLike = /^CrcV2_Transfer/.test(type) || type === 'CrcV2_Erc20WrapperTransfer';
+        const type = eventTypeOf(ev);
+        // Treat any Transfer-flavoured CrcV2 event as transfer-like, plus camelCase
+        // synthetic types and mint variants that transactionHistory.ts emits / dev shows.
+        const isTransferLike =
+            /^CrcV2_Transfer/.test(type)
+            || type === 'CrcV2_Erc20WrapperTransfer'
+            || type === 'CrcV2_Burn'
+            || type === 'CrcV2_PersonalMint'
+            || type === 'CrcV2_GroupMint'
+            || type === 'CrcV2_GroupRedeemCollateralBurn'
+            || type === 'CrcV2_GroupRedeemCollateralReturn';
         if (!isTransferLike) {
             return [];
         }
 
-        const from = asAddressMaybe(ev.From);
-        const to = asAddressMaybe(ev.To);
+        const from = asAddressMaybe(fromOf(ev));
+        const to = asAddressMaybe(toOf(ev));
         if (!from || !to) {
             return [];
         }
@@ -198,19 +218,26 @@
             return [];
         }
 
-        const tokenAddress = tokenIdToAddressMaybe('Id', ev.Id) ?? null;
+        const tokenAddress = tokenIdToAddressMaybe('Id', idOf(ev)) ?? null;
         const protocolCost = isProtocolCostBurn(ev);
 
-        if ('Value' in ev) {
-            const amount = toCirclesNumber(ev.Value);
-            if (amount === null) {
-                return [];
-            }
-            return [{ from, to, amount, tokenAddress, isProtocolCost: protocolCost }];
+        // Prefer the human-readable `circles` field when present (camelCase rows from
+        // transactionHistory.ts already store CRC). Fall back to PascalCase Value/Values.
+        if (typeof ev.circles === 'number' && Number.isFinite(ev.circles) && ev.circles !== 0) {
+            return [{ from, to, amount: Math.abs(ev.circles), tokenAddress, isProtocolCost: protocolCost }];
         }
 
-        if (Array.isArray(ev.Values)) {
-            const vals: unknown[] = ev.Values;
+        const valueRaw = valueOf(ev);
+        if (valueRaw !== undefined && valueRaw !== null && valueRaw !== '0') {
+            const amount = toCirclesNumber(valueRaw);
+            if (amount !== null && amount > 0) {
+                return [{ from, to, amount, tokenAddress, isProtocolCost: protocolCost }];
+            }
+        }
+
+        const valuesRaw = ev.Values ?? ev.values;
+        if (Array.isArray(valuesRaw)) {
+            const vals: unknown[] = valuesRaw;
             const sum = vals.reduce((acc: number, v: unknown) => {
                 const n = toCirclesNumber(v);
                 if (n === null) {
@@ -446,12 +473,11 @@
         // Only consider swaps when there is an actual stream between from→to
         let hasStreamBetween = false;
         for (const ev of events) {
-            const type = String(ev.$type ?? '');
-            if (type !== 'CrcV2_StreamCompleted') {
+            if (eventTypeOf(ev) !== 'CrcV2_StreamCompleted') {
                 continue;
             }
-            const evFrom = asAddressMaybe(ev.From);
-            const evTo = asAddressMaybe(ev.To);
+            const evFrom = asAddressMaybe(fromOf(ev));
+            const evTo = asAddressMaybe(toOf(ev));
             if (evFrom === fromAddr && evTo === toAddr) {
                 hasStreamBetween = true;
                 break;

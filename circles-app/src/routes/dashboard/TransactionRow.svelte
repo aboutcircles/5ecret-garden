@@ -6,6 +6,8 @@
     import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
     import { popupControls, type PopupContentDefinition } from '$lib/shared/state/popup';
     import TransactionDetailsPopup from './TransactionDetailsPopup.svelte';
+    import { avatarState } from '$lib/shared/state/avatar.svelte';
+    import { ZERO_ADDRESS } from '$lib/shared/utils/tx';
     import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
     import {
         VIRTUAL_LIST_CONTEXT_KEY,
@@ -42,12 +44,30 @@
     }
 
     function openDetails() {
-        // Popup expects TransactionHistoryRow (from/to/circles).
-        // Pass the first raw event enriched with the full events array for drill-down.
+        // Popup expects a TransactionHistoryRow-shaped object. The first raw event is a
+        // poor representative for grouped transactions (it could be a small Burn/demurrage
+        // entry, which would mis-render the headline & direction). Synthesize a row from
+        // the GROUP's aggregate so the popup header shows the correct net amount,
+        // counterparty, and direction. The full events array drives the breakdowns.
         const representative = item.events[0];
-        const popupItem = representative
-            ? { ...representative, events: item.events }
-            : item;
+        const userAddr = (avatarState.avatar?.address ?? '').toLowerCase();
+        const counterparty = item.counterparty ?? null;
+        const userIsSender = item.netCircles < 0;
+        const synthFrom = userIsSender
+            ? (userAddr || representative?.from || ZERO_ADDRESS)
+            : (counterparty ?? representative?.from ?? ZERO_ADDRESS);
+        const synthTo = userIsSender
+            ? (counterparty ?? representative?.to ?? ZERO_ADDRESS)
+            : (userAddr || representative?.to || ZERO_ADDRESS);
+        const popupItem = {
+            ...(representative ?? {}),
+            from: synthFrom,
+            to: synthTo,
+            circles: Math.abs(item.netCircles),
+            timestamp: item.timestamp,
+            transactionHash: item.transactionHash,
+            events: item.events,
+        };
         const def: PopupContentDefinition = {
             title: 'Transaction details',
             component: TransactionDetailsPopup,
