@@ -1,8 +1,8 @@
 <script lang="ts">
     import { formatUnits, parseEther } from 'ethers';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-  import type { Address } from '@circles-sdk/utils';
-  import type { TrustRelation } from '@circles-sdk/data';
+  import type { Address } from '@aboutcircles/sdk-types';
+  import type { TrustRelationKind } from '$lib/shared/types/sdk-augment';
   import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import { openProfilePopup } from '$lib/shared/ui/profile/openProfilePopup';
   function formatEtherTwoDecimals(value: bigint): string {
@@ -16,7 +16,7 @@
       amount: bigint; // raw wei from chain
       amountToRedeem: bigint;
       amountToRedeemInCircles: number;
-      trustRelation?: TrustRelation;
+      trustRelation?: TrustRelationKind;
     }>;
     redeemable?: boolean;
   }
@@ -28,7 +28,7 @@
     amount: bigint;
     amountToRedeem: bigint;
     amountToRedeemInCircles: number;
-    trustRelation?: TrustRelation;
+    trustRelation?: TrustRelationKind;
   }, e: Event) {
     const input = e.target as HTMLInputElement | null;
     const newValue = parseFloat(input?.value ?? '0');

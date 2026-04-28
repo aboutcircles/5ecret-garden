@@ -5,7 +5,23 @@
     "packages/*",
     "circles-app"
   ],
+  "scripts": {
+    "dev": "npm -w circles-app run dev",
+    "build": "npm -w circles-app run build",
+    "build:digitalocean": "npm -w circles-app run build:digitalocean",
+    "preview": "npm -w circles-app run preview",
+    "check": "npm -w circles-app run check",
+    "test": "npm -w circles-app run test",
+    "test:run": "npm -w circles-app run test:run",
+    "format": "npm -w circles-app run format",
+    "build:packages": "npm --workspaces --if-present run build",
+    "clean:packages": "npm --workspaces --if-present run clean",
+    "typecheck:packages": "npm --workspaces --if-present run typecheck"
+  },
   "engines": {
     "node": ">=18"
+  },
+  "overrides": {
+    "@noble/hashes": "1.8.0"
   }
 }

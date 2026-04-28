@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import { uint256ToAddress, CirclesConverter } from '@circles-sdk/utils';
+import { uint256ToAddress, CirclesConverter } from '@aboutcircles/sdk-utils';
 import { formatCurrency } from '$lib/shared/utils/money';
 
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
@@ -25,7 +25,7 @@ export function toBigIntMaybe(v: unknown): bigint | null {
   }
 }
 
-const tokenIdKeys = new Set(['Id', 'TokenId', 'TokenID']);
+const tokenIdKeys = new Set(['Id', 'id', 'TokenId', 'tokenId', 'TokenID']);
 export function tokenIdToAddressMaybe(key: string, val: unknown): string | null {
   if (!tokenIdKeys.has(key)) return null;
   const bi = toBigIntMaybe(val);
@@ -117,7 +117,7 @@ export async function waitForReceiptRaw(
 
 export async function sendRunnerTransactionAndWait(
   runner: {
-    sendTransaction?: (tx: { to: string; value?: bigint; data?: string }) => Promise<{ hash?: string }>;
+    sendTransaction?: (...args: any[]) => Promise<any>;
     provider?: { send?: (method: string, params?: any[]) => Promise<any> };
   } | null | undefined,
   tx: { to: string; value?: bigint; data?: string },
@@ -127,8 +127,9 @@ export async function sendRunnerTransactionAndWait(
     throw new Error('Wallet runner is not available');
   }
 
-  const txResponse = await runner.sendTransaction(tx);
-  const txHash = txResponse?.hash;
+  // SDK ContractRunner.sendTransaction takes TransactionRequest[] (array)
+  const txResponse = await runner.sendTransaction([tx]);
+  const txHash = txResponse?.hash ?? txResponse?.transactionHash;
   if (!txHash) {
     throw new Error('Transaction hash missing');
   }

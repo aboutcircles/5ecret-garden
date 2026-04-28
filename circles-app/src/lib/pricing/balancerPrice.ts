@@ -1,5 +1,5 @@
 import { isAddress } from 'ethers';
-import type { Sdk } from '@circles-sdk/sdk';
+import type { Sdk } from '@aboutcircles/sdk';
 
 export type PriceFallback = 'N/A' | 'Error';
 
@@ -139,10 +139,8 @@ export function isStaticWrappedTokenBalanceCandidate(candidate: StaticWrappedCan
 }
 
 type RpcQueryResult = {
-  result?: {
-    columns?: string[];
-    rows?: unknown[][];
-  };
+  columns?: string[];
+  rows?: unknown[][];
 };
 
 const WRAPPER_LOOKUP_TTL_MS = 60_000;
@@ -155,7 +153,7 @@ function asAddressOrUndefined(value: unknown): string | undefined {
 }
 
 async function queryWrapperAddressesByAvatar(sdk: Sdk, avatar: string): Promise<string[]> {
-  const response = await sdk.circlesRpc.call<RpcQueryResult>('circles_query', [
+  const response = await sdk.rpc.client.call<unknown[], RpcQueryResult>('circles_query', [
     {
       Namespace: 'CrcV2',
       Table: 'ERC20WrapperDeployed',
@@ -177,14 +175,14 @@ async function queryWrapperAddressesByAvatar(sdk: Sdk, avatar: string): Promise<
     }
   ]);
 
-  const cols = response?.result?.columns ?? [];
-  const rows = response?.result?.rows ?? [];
+  const cols = response?.columns ?? [];
+  const rows = response?.rows ?? [];
   const idxWrapper = cols.indexOf('erc20Wrapper');
   if (idxWrapper < 0) return [];
 
   const wrappers = rows
-    .map((r) => asAddressOrUndefined(r[idxWrapper]))
-    .filter((it): it is string => !!it);
+    .map((r: unknown[]) => asAddressOrUndefined(r[idxWrapper]))
+    .filter((it: string | undefined): it is string => !!it);
 
   return Array.from(new Set(wrappers));
 }
@@ -220,7 +218,7 @@ export async function resolveStaticWrappedTokenAddress(input: StaticWrappedLooku
       }
 
       for (const candidate of wrapperCandidates) {
-        const tokenInfo = await input.sdk!.data.getTokenInfo(candidate as any);
+        const tokenInfo = await input.sdk!.rpc.token.getTokenInfo(candidate as any);
         if (tokenInfo?.type === STATIC_WRAPPED_TOKEN_TYPE) {
           wrapperLookupCache.set(owner, { value: candidate, expiresAt: Date.now() + WRAPPER_LOOKUP_TTL_MS });
           return candidate;

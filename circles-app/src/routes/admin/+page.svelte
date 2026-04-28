@@ -42,7 +42,7 @@
     type UnlockProductListItem,
   } from '$lib/areas/admin/services/gateway/adminClient';
   import { gnosisConfig } from '$lib/shared/config/circles';
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
   import { popupControls } from '$lib/shared/state/popup';
   import AdminSectionCard from '$lib/areas/admin/components/AdminSectionCard.svelte';
   import AdminProductList from '$lib/areas/admin/components/AdminProductList.svelte';
@@ -93,10 +93,6 @@
   const unlockProductsUnified = $derived(unifiedProducts.filter((item) => resolveAdminProductType(item) === 'unlock'));
   const routeOnlyProductsUnified = $derived(unifiedProducts.filter((item) => resolveAdminProductType(item) === 'route'));
 
-  const PRODUCT_TAB_IDS = ['codedispenser', 'unlock', 'odoo', 'route'] as const;
-  type ProductsTabId = TabIdOf<typeof PRODUCT_TAB_IDS>;
-  let selectedProductsTab = $state<ProductsTabId>('codedispenser');
-
   type SaveProductPayload = {
     type: AdminProductType;
     route?: RouteUpsertInput;
@@ -111,12 +107,16 @@
     unlock?: UnlockProductConfig;
   };
 
+  const PRODUCT_TAB_IDS = ['codedispenser', 'unlock', 'odoo', 'route'] as const;
+  type ProductsTabId = TabIdOf<typeof PRODUCT_TAB_IDS>;
+  let selectedProductsTab = $state<ProductsTabId>('codedispenser');
+
   async function connectAdminWallet(): Promise<void> {
     authLoading = true;
     authError = null;
 
     try {
-      const avatar = (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '') as Address | '';
+      const avatar = (avatarState.avatar?.address ?? '') as Address | '';
       if (!avatar) {
         throw new Error('No avatar connected');
       }

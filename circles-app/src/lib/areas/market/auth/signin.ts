@@ -10,7 +10,7 @@ import {gnosisConfig} from "$lib/shared/config/circles";
  */
 export async function signInWithSafe(
   avatar: string,
-  chainId: number = gnosisConfig.production.marketChainId,
+  chainId: number = gnosisConfig.production.marketChainId ?? 100,
 ): Promise<{ address: string; chainId: number }> {
   if (!browser) {
     throw new Error('signInWithSafe() can only be used in the browser');
@@ -22,6 +22,12 @@ export async function signInWithSafe(
     );
   }
 
+  // Reuse existing valid token — avoid duplicate wallet signature prompts
+  const existing = getMarketClient().auth.getAuthMeta();
+  if (existing && existing.address.toLowerCase() === avatar.toLowerCase()) {
+    return existing;
+  }
+
   const ethereum = getWalletProvider();
   await ensureGnosisChain(ethereum);
 
@@ -30,4 +36,12 @@ export async function signInWithSafe(
     ethereum,
     chainId,
   });
+}
+
+/**
+ * Check if the marketplace auth token is currently valid.
+ */
+export function isMarketAuthed(): boolean {
+  if (!browser) return false;
+  return !!getMarketClient().auth.getAuthMeta();
 }

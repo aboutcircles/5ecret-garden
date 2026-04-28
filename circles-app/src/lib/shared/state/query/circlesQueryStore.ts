@@ -2,28 +2,29 @@ import { avatarState } from '$lib/shared/state/avatar.svelte';
 import {
   createEventStore,
   type NextPageData,
-} from '$lib/shared/state/eventStores';
-import {
-  type CirclesEventType,
-  type CirclesEvent,
-  CirclesQuery,
-  type EventRow,
-} from '@circles-sdk/data';
-import type { Avatar } from '@circles-sdk/sdk';
-import { get, type Readable } from 'svelte/store';
+} from '$lib/shared/state/eventStores/eventStoreFactory.svelte';
+import type { CirclesEventType, CirclesEvent } from '@aboutcircles/sdk-rpc';
+import type { CirclesQuery, EventRow } from '@aboutcircles/sdk-types';
+import type { Avatar } from '@aboutcircles/sdk';
+import type { Readable } from 'svelte/store';
 
 /**
- * Generates a unique key for each event row based on the block number, transaction index, and log index.
+ * Generates a unique key for each event row.
  *
  * @param {T} tx - The event row for which to generate a key.
  * @returns {string} - A unique string identifier for the event row.
  */
-export function getKeyFromItem<T extends EventRow & { address?: string }>(
-  tx: T
-): string {
-  return `${tx.blockNumber}-${tx.transactionIndex}-${tx.logIndex}-${
-    tx.address || ''
-  }`;
+export function getKeyFromItem<
+  T extends EventRow & {
+    address?: string;
+    id?: string;
+    transactionHash?: string;
+  },
+>(tx: T): string {
+  if ('id' in tx && tx.id) {
+    return tx.id;
+  }
+  return `${tx.transactionHash}-${tx.transactionIndex}-${tx.blockNumber}`;
 }
 
 /**
@@ -47,7 +48,7 @@ export async function createCirclesQueryStore<T extends EventRow>(
     ended: boolean;
   }>
 > {
-  const circlesQuery = await circlesQueryFactory();
+  let circlesQuery = await circlesQueryFactory();
 
   /**
    * Merges two arrays of event rows, ensuring no duplicates based on unique keys.
@@ -67,7 +68,6 @@ export async function createCirclesQueryStore<T extends EventRow>(
 
   /**
    * Loads the initial set of data from the CirclesQuery.
-   * If no page is currently loaded, it triggers the query to fetch the first page.
    *
    * @returns {Promise<T[]>} - A promise that resolves to the initial set of event rows.
    */
@@ -75,10 +75,7 @@ export async function createCirclesQueryStore<T extends EventRow>(
     const avatarInstance = avatarState.avatar;
     if (!avatarInstance) return [];
 
-    if (!circlesQuery.currentPage?.results) {
-      await circlesQuery.queryNextPage();
-    }
-    return circlesQuery.currentPage?.results || [];
+    return circlesQuery.rows || [];
   }
 
   /**
@@ -88,15 +85,17 @@ export async function createCirclesQueryStore<T extends EventRow>(
    * @returns {Promise<NextPageData<T[]>>} - A promise that resolves to the merged data and an indication if there are more pages.
    */
   async function _handleNextPage(currentData: T[]): Promise<NextPageData<T[]>> {
-    await circlesQuery?.queryNextPage();
+    if (circlesQuery.hasMore) {
+      circlesQuery = await circlesQuery.nextPage();
+    }
     const mergedData = _mergeData(
       currentData,
-      circlesQuery.currentPage?.results || []
+      circlesQuery.rows || []
     );
 
     return {
       data: mergedData,
-      ended: circlesQuery?.currentPage?.results?.length === 0,
+      ended: !circlesQuery.hasMore,
     };
   }
 
@@ -104,19 +103,16 @@ export async function createCirclesQueryStore<T extends EventRow>(
    * Handles events and refreshes the data by reloading the current page of the CirclesQuery.
    * This function ensures the current data is merged with the new data to prevent duplication.
    *
-   * @param {CirclesEvent} event - The event that triggered the refresh.
+   * @param {CirclesEvent} _event - The event that triggered the refresh (unused, but required by interface).
    * @param {T[]} currentData - The current array of event rows.
    * @returns {Promise<T[]>} - A promise that resolves to the updated data after handling the event.
    */
   async function _handleEvent(
-    event: CirclesEvent,
+    _event: CirclesEvent,
     currentData: T[]
   ): Promise<T[]> {
-    const circlesQuery = await circlesQueryFactory();
-    if (!circlesQuery.currentPage?.results) {
-      await circlesQuery.queryNextPage();
-    }
-    const updateQuery = circlesQuery.currentPage?.results || [];
+    const refreshedQuery = await circlesQueryFactory();
+    const updateQuery = refreshedQuery.rows || [];
     return _mergeData(currentData, updateQuery);
   }
 

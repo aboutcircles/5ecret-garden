@@ -11,6 +11,11 @@ export default defineConfig({
     // Use the Node environment by default to avoid requiring a DOM implementation.
     // Individual test files can opt into jsdom via `// @vitest-environment jsdom`.
     environment: 'node',
-    setupFiles: ['./tests/setup.ts']
+    setupFiles: ['./tests/setup.ts'],
+    exclude: [
+      '**/node_modules/**',
+      '**/e2e/**',
+      '**/*.spec.ts',
+    ],
   }
 });

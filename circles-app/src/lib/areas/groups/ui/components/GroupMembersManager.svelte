@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
   import { circles } from '$lib/shared/state/circles';
   import { get, writable } from 'svelte/store';
   import { runTask } from '$lib/shared/utils/tasks';
@@ -51,11 +51,6 @@
     return 'Unknown';
   }
 
-  function avatarInfoFor(address: Address) {
-    const type = trustedAvatarTypes[address.toLowerCase()];
-    return type ? ({ avatar: address, type } as any) : undefined;
-  }
-
   $effect(() => {
     const sdk = $circles;
     let cancelled = false;
@@ -69,7 +64,7 @@
       return;
     }
 
-    void getProfile(group)
+    void getProfile(group as `0x${string}`)
       .then((profile) => {
         if (cancelled) return;
         groupName = profile?.name ?? null;
@@ -112,7 +107,7 @@
       const infos = await avatarDataSource.getAvatarInfoBatch(trustedAddresses);
       const nextTypes: Record<string, string | undefined> = {};
       for (const info of infos) {
-        nextTypes[String(info.avatar).toLowerCase()] = info.type;
+        if (info) nextTypes[String(info.avatar).toLowerCase()] = info.type;
       }
       trustedAvatarTypes = nextTypes;
     } catch (e) {
@@ -171,6 +166,16 @@
     trustedListNavigator.onRowClick(event);
   }
 
+  async function getDisplayName(address: Address): Promise<string> {
+    try {
+      const profile = await getProfile(address as `0x${string}`);
+      const name = profile?.name?.trim();
+      return name && name.length > 0 ? name : shortenAddress(address);
+    } catch {
+      return shortenAddress(address);
+    }
+  }
+
   async function untrustOne(address: Address) {
     const sdk = get(circles);
     if (!sdk) return;
@@ -178,7 +183,7 @@
     const groupAvatar = await sdk.getAvatar(group, false);
     await runTask({
       name: `${shortenAddress(group)} untrusts ${shortenAddress(address)} ...`,
-      promise: groupAvatar.untrust([address]),
+      promise: groupAvatar.trust.remove([address]),
     });
 
     const next = new Set(selectedSet);
@@ -208,7 +213,7 @@
     const groupAvatar = await sdk.getAvatar(group, false);
     await runTask({
       name: `Removing ${selectedMembers.length} trusted avatar${selectedMembers.length === 1 ? '' : 's'} from ${shortenAddress(group)} ...`,
-      promise: groupAvatar.untrust(selectedMembers),
+      promise: groupAvatar.trust.remove(selectedMembers),
     });
 
     selectedSet = new Set<Address>();
@@ -267,7 +272,6 @@
               <div class="min-w-0">
                 <Avatar
                   address={address}
-                  avatarInfo={avatarInfoFor(address)}
                   view="horizontal"
                   clickable={true}
                   bottomInfo={`${avatarTypeToReadable(trustedAvatarTypes[address.toLowerCase()])} • ${address}`}

@@ -88,9 +88,9 @@ import SettingProfile from '$lib/areas/settings/ui/pages/SettingProfile.svelte';
         return () => io.disconnect();
     });
 
-    const headerPaddingClass = usePagePadding ? '' : 'px-4 md:px-6';
-    const contentPaddingClass = usePagePadding ? '' : 'px-4 md:px-6';
-    const fixedPaddingClass = usePagePadding ? '' : 'px-4 md:px-6';
+    const headerPaddingClass = $derived(usePagePadding ? '' : 'px-4 md:px-6');
+    const contentPaddingClass = $derived(usePagePadding ? '' : 'px-4 md:px-6');
+    const fixedPaddingClass = $derived(usePagePadding ? '' : 'px-4 md:px-6');
 
     const isPopupOpen: boolean = $derived($popupState.content !== null);
 

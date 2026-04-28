@@ -22,6 +22,7 @@
     import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
     import HelpPopover from '$lib/shared/ui/primitives/HelpPopover.svelte';
     import { getProfilesCoreBatch } from '$lib/shared/model/profile/coreRepo';
+    import type { ProfileAddress } from '$lib/shared/model/profile/types';
 
     const CONTACTS_PAGE_SIZE = 25;
     const CONTACTS_VISIBLE_COUNT_KEY = 'contacts:list:visible-count';
@@ -60,7 +61,7 @@
 
         missing.forEach((addr) => inflightProfileRequests.add(addr));
         try {
-            const map = await getProfilesCoreBatch(missing as any);
+            const map = await getProfilesCoreBatch(missing as ProfileAddress[]);
             profileCoreCache.update((prev) => {
                 const next = new Map(prev);
                 for (const [addr, profile] of map.entries()) {

@@ -1,3 +1,6 @@
+<script lang="ts">
+</script>
+
 <div
   aria-hidden="true"
   class="bg-base-100 border border-base-300 rounded-xl overflow-hidden flex flex-col"

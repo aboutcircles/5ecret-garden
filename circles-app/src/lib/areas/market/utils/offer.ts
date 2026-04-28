@@ -88,9 +88,9 @@ export function productAndOfferToDraft(
   const hasCurrency = typeof offer?.priceCurrency === 'string' && offer!.priceCurrency.trim().length > 0;
   const priceCurrency = hasCurrency ? offer!.priceCurrency!.trim() : 'CRC';
 
-  const offerHasRequiredSlots = Array.isArray((offer as any)?.requiredSlots);
+  const offerHasRequiredSlots = Array.isArray(offer?.requiredSlots);
   const requiredSlots = offerHasRequiredSlots
-    ? ((offer as any).requiredSlots as unknown[])
+    ? offer!.requiredSlots!
         .map((slot) => (typeof slot === 'string' ? slot.trim() : ''))
         .filter((slot) => slot.length > 0)
     : undefined;
