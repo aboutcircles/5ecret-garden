@@ -1,12 +1,12 @@
 [build]
-  command = "cd .. && npm install && npm run build:packages && cd circles-app && npm run build"
-  publish = "build"
+  command = "npm install && npm run build:packages && npm -w circles-app run build"
+  publish = "circles-app/build"
 
 [build.environment]
   NODE_VERSION = "22.20.0"
 
 [context.deploy-preview]
-  command = "cd .. && npm install && npm run build:packages && cd circles-app && npm run build"
+  command = "npm install && npm run build:packages && npm -w circles-app run build"
 
   [context.deploy-preview.environment]
     NETLIFY_BUILD = "true"
@@ -15,7 +15,7 @@
     PUBLIC_PLAUSIBLE_DOMAIN = ""
 
 [context.branch-deploy]
-  command = "cd .. && npm install && npm run build:packages && cd circles-app && npm run build"
+  command = "npm install && npm run build:packages && npm -w circles-app run build"
 
   [context.branch-deploy.environment]
     NETLIFY_BUILD = "true"
@@ -24,7 +24,7 @@
     PUBLIC_PLAUSIBLE_DOMAIN = ""
 
 [context.production]
-  command = "cd .. && npm install && npm run build:packages && cd circles-app && npm run build"
+  command = "npm install && npm run build:packages && npm -w circles-app run build"
 
   [context.production.environment]
     NETLIFY_BUILD = "true"
