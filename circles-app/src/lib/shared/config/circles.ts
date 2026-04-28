@@ -96,7 +96,7 @@ export const gnosisConfig: { production: CirclesConfig; rings: CirclesConfig } =
       invitationFarmAddress: '0xd28b7C4f148B1F1E190840A1f7A796C5525D8902',
       referralsModuleAddress: '0x12105a9B291aF2ABb0591001155A75949b062CE5',
       referralsServiceUrl: 'https://referrals.aboutcircles.com',
-      migrationAddress: '0x12E815963A0b910288C7256CAD0d345c8F5db08E',
+      migrationAddress: '0xD44B8dcFBaDfC78EA64c55B705BFc68199B56376',
       // Market fields from dev
       ipfsGatewayBase: 'https://da08cae2-8b50-45dc-80b9-48925be78ec8.myfilebase.com',
       marketApiBase: 'https://market-api.aboutcircles.com/',
@@ -125,7 +125,7 @@ export const gnosisConfig: { production: CirclesConfig; rings: CirclesConfig } =
       invitationFarmAddress: '0x0000000000000000000000000000000000000000',
       referralsModuleAddress: '0x0000000000000000000000000000000000000000',
       referralsServiceUrl: 'https://referrals.aboutcircles.com',
-      migrationAddress: '0x12E815963A0b910288C7256CAD0d345c8F5db08E',
+      migrationAddress: '0x28141b6743c8569Ad8B20Ac09046Ba26F9Fb1c90',
       // Market fields from dev
       ipfsGatewayBase: 'https://da08cae2-8b50-45dc-80b9-48925be78ec8.myfilebase.com',
       marketApiBase: 'https://market-api.aboutcircles.com/',
@@ -138,4 +138,4 @@ export const gnosisConfig: { production: CirclesConfig; rings: CirclesConfig } =
 
 
 /** Default maximum number of transfer steps in pathfinding */
-export const MAX_PATH_STEPS = 65;
+export const MAX_PATH_STEPS = 250;
