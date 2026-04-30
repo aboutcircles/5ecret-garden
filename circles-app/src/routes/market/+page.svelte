@@ -285,7 +285,7 @@
     });
 
     const actions: Action[] = [
-      { id: 'my-offers', label: 'Offers', variant: 'primary', onClick: () => goto('/settings?tab=marketplace') },
+      { id: 'my-offers', label: 'Offers', variant: 'primary', onClick: () => goto('/settings?tab=offers') },
       { id: 'my-orders', label: 'Orders', variant: 'ghost', onClick: () => goto('/settings?tab=orders') },
       { id: 'my-sales', label: 'Sales', variant: 'ghost', onClick: () => goto('/settings?tab=sales') },
     ];

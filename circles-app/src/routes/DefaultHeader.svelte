@@ -185,7 +185,7 @@
           <li><a class="link link-hover" href="/settings?tab=bookmarks">Bookmarks</a></li>
           <li><a class="link link-hover" href="/settings?tab=orders">Orders</a></li>
           <li><a class="link link-hover" href="/settings?tab=sales">Sales</a></li>
-          <li><a class="link link-hover" href="/settings?tab=marketplace">Offers</a></li>
+          <li><a class="link link-hover" href="/settings?tab=offers">Offers</a></li>
           <li><a class="link link-hover" href="/settings?tab=payment">Payment gateways</a></li>
           <li><a class="link link-hover" href="/settings?tab=namespaces">Namespaces</a></li>
           <li><a class="link link-hover" href="/settings?tab=keys">Signing keys</a></li>

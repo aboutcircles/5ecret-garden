@@ -70,11 +70,12 @@
   import CreateGatewayProfile from '$lib/areas/settings/flows/gateway/CreateGatewayProfile.svelte';
   import { coerceTabId, type TabIdOf } from '$lib/shared/ui/primitives/tabs/tabId';
 
-  const TAB_IDS = ['personal', 'bookmarks', 'orders', 'sales', 'keys', 'namespaces', 'marketplace', 'payment'] as const;
+  const TAB_IDS = ['personal', 'bookmarks', 'orders', 'sales', 'keys', 'namespaces', 'offers', 'payment'] as const;
   type TabId = TabIdOf<typeof TAB_IDS>;
 
-  // Friendly aliases for URL ?tab= values (e.g. ?tab=offers → marketplace)
-  const TAB_ALIASES: Record<string, TabId> = { offers: 'marketplace', profile: 'personal' };
+  // Friendly aliases for URL ?tab= values. `marketplace` kept as a back-compat
+  // read alias so existing links/bookmarks still resolve; canonical id is `offers`.
+  const TAB_ALIASES: Record<string, TabId> = { marketplace: 'offers', profile: 'personal' };
 
   let selectedTab = $state<TabId>('personal');
 
@@ -88,6 +89,7 @@
   // Tab → URL: keep ?tab= in sync when the user clicks a tab
   $effect(() => {
     if (!browser) return;
+    if (!$page.url.pathname.startsWith('/settings')) return;
     const current = selectedTab;
     const urlTab = $page.url.searchParams.get('tab');
     if (current && current !== urlTab) {
@@ -364,8 +366,8 @@
   }
 
   $effect(() => {
-    // only load when the Marketplace tab is visible
-    if (selectedTab !== 'marketplace') return;
+    // only load when the Offers tab is visible
+    if (selectedTab !== 'offers') return;
     void loadSellerCatalog();
   });
 
@@ -467,7 +469,7 @@
   const currentActions = $derived(
     !avatarAddress
       ? []
-      : selectedTab === 'marketplace'
+      : selectedTab === 'offers'
         ? actionsMarketplace
         : selectedTab === 'orders'
           ? actionsOrders
@@ -598,7 +600,7 @@
         <Tab id="bookmarks" title="Bookmarks" />
         <Tab id="orders" title="Orders" />
         <Tab id="sales" title="Sales" />
-        <Tab id="marketplace" title="Offers" />
+        <Tab id="offers" title="Offers" />
         <Tab id="payment" title="Payment gateways" />
         <Tab id="namespaces" title="Applications" />
         <Tab id="keys" title="Signing keys" />
@@ -645,7 +647,7 @@
           {nsIsOwner}
           {onNamespacesChanged}
         />
-      {:else if selectedTab === 'marketplace'}
+      {:else if selectedTab === 'offers'}
         <MarketplaceSection
           {avatarAddress}
           {marketLoading}

@@ -61,16 +61,17 @@
 
     if (!hasExternal) return;
 
-    // Parent acknowledged our last request.
-    if (pendingExternalAck !== null && external === pendingExternalAck) {
+    if (pendingExternalAck !== null) {
+      // Parent acknowledged our last request — clear ack and follow.
+      if (external === pendingExternalAck) {
+        pendingExternalAck = null;
+        if (differs) active = external;
+        return;
+      }
+      // Parent moved to a value other than our pending ack (URL change,
+      // popstate, programmatic select). Treat as authoritative override
+      // so we never get stuck waiting for an ack that won't arrive.
       pendingExternalAck = null;
-      if (differs) active = external;
-      return;
-    }
-
-    // While waiting for parent to reflect the requested value, don't snap back.
-    if (pendingExternalAck !== null && active === pendingExternalAck) {
-      return;
     }
 
     if (differs) {
