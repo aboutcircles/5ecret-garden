@@ -5,12 +5,9 @@
   import PopUpPage from './PopUpPage.svelte';
   import { ArrowLeft as LArrowLeft, X as LX, type IconNode } from 'lucide';
 
-  // Use $effect to manage ESC listener - always add/remove, check condition in handler
-  // Note: Early return in $effect breaks cleanup pattern in Svelte 5
-  // Uses capture phase to intercept before child components can stopPropagation
   $effect(() => {
     function handleKeydown(e: KeyboardEvent) {
-      if (e.key === 'Escape' && popupState.content) {
+      if (e.key === 'Escape' && $popupState.content) {
         e.preventDefault();
         e.stopPropagation();
         popupControls.close();
@@ -25,16 +22,15 @@
   }
 
   function onClose() {
-    if (popupState.stack.length > 0) popupControls.back();
+    if ($popupState.stack.length > 0) popupControls.back();
     else popupControls.close();
   }
 
-  let icon: IconNode = $derived(popupState.stack.length > 0 ? LArrowLeft : LX);
+  let icon: IconNode = $derived($popupState.stack.length > 0 ? LArrowLeft : LX);
 
-  // Keep *all* pages mounted: stack + current
   let pages = $derived([
-    ...(popupState.stack ?? []),
-    ...(popupState.content ? [popupState.content] : []),
+    ...($popupState.stack ?? []),
+    ...($popupState.content ? [$popupState.content] : []),
   ]);
 
   let top = $derived(Math.max(0, pages.length - 1));
@@ -54,7 +50,7 @@
 </script>
 
 <!-- Backdrop overlay - click to close -->
-{#if popupState.content}
+{#if $popupState.content}
   <button
     class="popup-backdrop"
     onclick={handleBackdropClick}
@@ -65,7 +61,7 @@
 
 <div
   class="popup rounded-t-lg overflow-y-auto"
-  class:open={popupState.content !== null}
+  class:open={$popupState.content !== null}
   role="dialog"
   aria-modal="true"
   aria-labelledby="popup-title"
@@ -76,8 +72,8 @@
       <button
         class="btn btn-ghost btn-circle btn-sm"
         onclick={onClose}
-        aria-label={popupState.stack.length > 0 ? 'Back' : 'Close'}
-        title={popupState.stack.length > 0 ? 'Back' : 'Close'}
+        aria-label={$popupState.stack.length > 0 ? 'Back' : 'Close'}
+        title={$popupState.stack.length > 0 ? 'Back' : 'Close'}
       >
         <Lucide
           icon={icon}
@@ -87,9 +83,9 @@
         />
       </button>
 
-      {#if popupState.content?.title}
+      {#if $popupState.content?.title}
         <h2 id="popup-title" class="text-xl font-bold">
-          {popupState.content.title}
+          {$popupState.content.title}
         </h2>
       {/if}
     </div>
