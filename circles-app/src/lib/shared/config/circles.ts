@@ -17,6 +17,9 @@ export type CirclesConfig = BaseCirclesConfig & {
   marketChainIdHex?: string;
   /** IPFS gateway base URL */
   ipfsGatewayBase?: string;
+  // The metrics-exporter currently only serves from the staging subdomain even in prod use.
+  /** CRC→EUR/xDAI pricing endpoint (metrics-exporter) */
+  crcPricingApi?: string;
 };
 
 export const chiadoConfig: { production: CirclesConfig; rings: CirclesConfig } =
@@ -45,6 +48,9 @@ export const chiadoConfig: { production: CirclesConfig; rings: CirclesConfig } =
       marketOperator: '0x20ced4ed3b1651b832a77e13e54ea5cb14c8b95b',
       marketChainId: 100,
       marketChainIdHex: '0x64',
+      crcPricingApi:
+        import.meta.env.VITE_CRC_PRICING_API ||
+        'https://rpc.staging.aboutcircles.com/metrics-api/pricing',
     },
     // rings are not deployed on chiado yet
     rings: {
@@ -71,6 +77,9 @@ export const chiadoConfig: { production: CirclesConfig; rings: CirclesConfig } =
       marketOperator: '0x20ced4ed3b1651b832a77e13e54ea5cb14c8b95b',
       marketChainId: 100,
       marketChainIdHex: '0x64',
+      crcPricingApi:
+        import.meta.env.VITE_CRC_PRICING_API ||
+        'https://rpc.staging.aboutcircles.com/metrics-api/pricing',
     },
   };
 
@@ -104,6 +113,9 @@ export const gnosisConfig: { production: CirclesConfig; rings: CirclesConfig } =
       marketOperator: '0x20ced4ed3b1651b832a77e13e54ea5cb14c8b95b',
       marketChainId: 100,
       marketChainIdHex: '0x64',
+      crcPricingApi:
+        import.meta.env.VITE_CRC_PRICING_API ||
+        'https://rpc.staging.aboutcircles.com/metrics-api/pricing',
     },
     rings: {
       circlesRpcUrl:
@@ -133,6 +145,9 @@ export const gnosisConfig: { production: CirclesConfig; rings: CirclesConfig } =
       marketOperator: '0x20ced4ed3b1651b832a77e13e54ea5cb14c8b95b',
       marketChainId: 100,
       marketChainIdHex: '0x64',
+      crcPricingApi:
+        import.meta.env.VITE_CRC_PRICING_API ||
+        'https://rpc.staging.aboutcircles.com/metrics-api/pricing',
     },
   };
 

@@ -42,6 +42,15 @@
     import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
     import type { AggregatedCatalogItem } from '$lib/areas/market/model';
     import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
+    // Sales / Price history / Gateways tabs
+    import SalesPanel from '$lib/areas/profile/ui/components/SalesPanel.svelte';
+    import PriceHistoryPanel from '$lib/areas/profile/ui/components/PriceHistoryPanel.svelte';
+    import GatewaysPanel from '$lib/areas/profile/ui/components/GatewaysPanel.svelte';
+    import { fetchPaymentsByPayee, type PaymentRow } from '$lib/shared/data/circles/paymentReceived';
+    import {
+        fetchGatewayRowsByOwner,
+        type GatewayListRow,
+    } from '$lib/shared/data/circles/paymentGateways';
     // Namespaces explorer (read-only) for other profiles
     import { ProfileNamespaces } from '$lib/shared/ui/profile';
     import { loadProfileOrInit } from '@circles-market/sdk';
@@ -127,6 +136,18 @@
     // Track which seller address the current `offers` belong to (lowercased)
     let offersFor: string | null = $state(null);
 
+    // Sales tab state (PaymentReceived events filtered by payee)
+    let paymentsLoading: boolean = $state(false);
+    let paymentsError: string = $state('');
+    let payments: PaymentRow[] = $state([]);
+    let paymentsFor: string | null = $state(null);
+
+    // Gateways tab state (CrcV2_PaymentGateway.GatewayCreated rows owned by avatar)
+    let gatewaysLoading: boolean = $state(false);
+    let gatewaysError: string = $state('');
+    let gateways: GatewayListRow[] = $state([]);
+    let gatewaysFor: string | null = $state(null);
+
     async function loadOffers(): Promise<void> {
         if (!address) return;
         const seller = normalizeAddress(String(address));
@@ -176,6 +197,69 @@
         if (!offersLoading && offersFor !== want) {
             void loadOffers();
         }
+    });
+
+    async function loadPayments(): Promise<void> {
+        if (!address) return;
+        const seller = normalizeAddress(String(address));
+        if (!seller) {
+            paymentsError = 'Invalid address';
+            payments = [];
+            paymentsFor = null;
+            return;
+        }
+        // Atomic swap: keep stale data in `payments` while fetching so `availableTabIds`
+        // doesn't drop the Sales tab mid-fetch and reset `selectedTab` away from it.
+        // If the address has changed, drop the old data first.
+        if (paymentsFor !== seller) payments = [];
+        paymentsLoading = true;
+        paymentsError = '';
+        try {
+            const sdk = get(circles);
+            if (!sdk) throw new Error('Circles SDK not initialized');
+            const fresh = await fetchPaymentsByPayee(sdk, seller);
+            payments = fresh;
+            paymentsFor = seller;
+        } catch (e: any) {
+            paymentsError = e?.message || 'Failed to load sales';
+            paymentsFor = seller;
+        } finally {
+            paymentsLoading = false;
+        }
+    }
+
+    async function loadGateways(): Promise<void> {
+        if (!address) return;
+        const owner = normalizeAddress(String(address));
+        if (!owner) {
+            gatewaysError = 'Invalid address';
+            gateways = [];
+            gatewaysFor = null;
+            return;
+        }
+        if (gatewaysFor !== owner) gateways = [];
+        gatewaysLoading = true;
+        gatewaysError = '';
+        try {
+            const sdk = get(circles);
+            if (!sdk) throw new Error('Circles SDK not initialized');
+            const fresh = await fetchGatewayRowsByOwner(sdk, owner);
+            gateways = fresh;
+            gatewaysFor = owner;
+        } catch (e: any) {
+            gatewaysError = e?.message || 'Failed to load gateways';
+            gatewaysFor = owner;
+        } finally {
+            gatewaysLoading = false;
+        }
+    }
+
+    // Eagerly load payments + gateways when address changes — both gate tab visibility.
+    $effect(() => {
+        if (!address) return;
+        const want = normalizeAddress(String(address));
+        if (!paymentsLoading && paymentsFor !== want) void loadPayments();
+        if (!gatewaysLoading && gatewaysFor !== want) void loadGateways();
     });
 
     // ─────────────────────────────────────────────────────────────
@@ -383,6 +467,9 @@
         'holders',
         'holdings',
         'offers',
+        'sales',
+        'price_history',
+        'gateways',
         'explore_namespaces',
     ] as const;
     type TabId = TabIdOf<typeof TAB_IDS>;
@@ -507,6 +594,11 @@
             ids.push('holdings');
         }
         ids.push('offers');
+        if (payments.length > 0) {
+            ids.push('sales');
+            ids.push('price_history');
+        }
+        if (gateways.length > 0) ids.push('gateways');
         ids.push('explore_namespaces');
         return ids;
     })());
@@ -954,6 +1046,50 @@
             {/if}
         {/if}
     </Tab>
+
+    {#if payments.length > 0}
+        <Tab
+                id="sales"
+                title="Sales"
+                badge={payments.length}
+                panelClass={tabPanelClass}
+        >
+            <SalesPanel
+                {payments}
+                loading={paymentsLoading}
+                error={paymentsError}
+                onRetry={loadPayments}
+            />
+        </Tab>
+
+        <Tab
+                id="price_history"
+                title="Price history"
+                panelClass={tabPanelClass}
+        >
+            <PriceHistoryPanel
+                {payments}
+                loading={paymentsLoading}
+                error={paymentsError}
+            />
+        </Tab>
+    {/if}
+
+    {#if gateways.length > 0}
+        <Tab
+                id="gateways"
+                title="Gateways"
+                badge={gateways.length}
+                panelClass={tabPanelClass}
+        >
+            <GatewaysPanel
+                {gateways}
+                loading={gatewaysLoading}
+                error={gatewaysError}
+                onRetry={loadGateways}
+            />
+        </Tab>
+    {/if}
 
     <!-- Explore namespaces tab: auto-load the viewed profile's namespaces (read-only) -->
     <Tab
