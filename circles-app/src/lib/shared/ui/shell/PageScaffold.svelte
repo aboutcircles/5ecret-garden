@@ -264,7 +264,7 @@ import SettingProfile from '$lib/areas/settings/ui/pages/SettingProfile.svelte';
                         </div>
                     {/if}
                 </div>
-            {:else}
+            {:else if headerActionsCollapsed}
                 <div class="mt-3 md:mt-4 mb-3 flex justify-center">
                     <div class="dropdown">
                         <button type="button" class="btn btn-primary btn-md rounded-full shadow-md pointer-events-auto">
@@ -274,7 +274,7 @@ import SettingProfile from '$lib/areas/settings/ui/pages/SettingProfile.svelte';
                             </svg>
                         </button>
                         <ul class="dropdown-content menu menu-sm bg-base-100 rounded-box shadow z-30 w-56 p-2 pointer-events-auto">
-                            {@render headerActionsCollapsed?.()}
+                            {@render headerActionsCollapsed()}
                         </ul>
                     </div>
                 </div>
