@@ -21,17 +21,9 @@
   publish = "build"
   
   [context.production.environment]
-    # Production environment variables
     NETLIFY_BUILD = "true"
     PUBLIC_ENVIRONMENT = "production"
-    PUBLIC_CIRCLES_RPC_URL = "https://rpc.aboutcircles.com"
     PUBLIC_PLAUSIBLE_DOMAIN = "app.aboutcircles.com"
-    DB_PW = ""
-    DB_USER = ""
-    DB_DATABASE = ""
-    DB_HOST = ""
-    DB_PORT = ""
-    DB_SSL_MODE = ""
 
 # Deploy Preview settings (for PRs)
 [context.deploy-preview]
@@ -39,18 +31,9 @@
   publish = "build"
   
   [context.deploy-preview.environment]
-    # Use RPC staging for preview deployments
     NETLIFY_BUILD = "true"
     PUBLIC_ENVIRONMENT = "staging"
-    PUBLIC_CIRCLES_RPC_URL = "https://rpc.circlesubi.network"
-    # Disable analytics for preview
     PUBLIC_PLAUSIBLE_DOMAIN = ""
-    DB_PW = ""
-    DB_USER = ""
-    DB_DATABASE = ""
-    DB_HOST = ""
-    DB_PORT = ""
-    DB_SSL_MODE = ""
 
 # Branch deploy settings
 [context.branch-deploy]
@@ -58,17 +41,9 @@
   publish = "build"
   
   [context.branch-deploy.environment]
-    # Use RPC staging for feature branches
     NETLIFY_BUILD = "true"
     PUBLIC_ENVIRONMENT = "staging"
-    PUBLIC_CIRCLES_RPC_URL = "https://rpc.circlesubi.network"
     PUBLIC_PLAUSIBLE_DOMAIN = ""
-    DB_PW = ""
-    DB_USER = ""
-    DB_DATABASE = ""
-    DB_HOST = ""
-    DB_PORT = ""
-    DB_SSL_MODE = ""
 
 # Headers for security
 [[headers]]
