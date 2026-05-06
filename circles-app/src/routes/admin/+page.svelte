@@ -385,9 +385,9 @@
         await runTask({
           name: 'Removing local stock…',
           promise: deleteOdooStock(
-            payload.odoo.chainId,
-            payload.odoo.seller,
-            payload.odoo.sku,
+            product.odoo.chainId,
+            product.odoo.seller,
+            product.odoo.sku,
           ),
         });
       }
