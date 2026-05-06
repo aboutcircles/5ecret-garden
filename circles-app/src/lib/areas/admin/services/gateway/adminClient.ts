@@ -279,6 +279,11 @@ export async function getOdooStock(chainId: number, seller: string, sku: string)
   return adminFetch<OdooStockItem>(path);
 }
 
+export async function deleteOdooStock(chainId: number, seller: string, sku: string): Promise<{ ok: true }> {
+  const path = `/admin/odoo-stock/${chainId}/${encodeURIComponent(seller)}/${encodeURIComponent(sku)}`;
+  return adminFetch<{ ok: true }>(path, { method: 'DELETE' });
+}
+
 export async function listOdooProductCatalog(params: {
   chainId: number;
   seller: string;

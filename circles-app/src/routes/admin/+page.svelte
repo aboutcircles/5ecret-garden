@@ -23,6 +23,7 @@
     listOdooProducts,
     upsertOdooProduct,
     upsertOdooStock,
+    deleteOdooStock,
     disableOdooProduct,
     listCodeProducts,
     upsertCodeProduct,
@@ -378,6 +379,15 @@
         await runTask({
           name: 'Saving local stock…',
           promise: upsertOdooStock(payload.odooStock),
+        });
+      } else if (product?.odoo?.localAvailableQty != null) {
+        await runTask({
+          name: 'Removing local stock…',
+          promise: deleteOdooStock(
+            product.odoo.chainId,
+            product.odoo.seller,
+            product.odoo.sku,
+          ),
         });
       }
     } else if (payload.type === 'codedispenser' && payload.code) {
