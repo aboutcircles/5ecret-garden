@@ -90,7 +90,7 @@
   }
 </script>
 
-<div class="flex flex-col gap-3 w-full max-w-[min(92vw,56rem)]">
+<div class="w-full max-w-[min(92vw,40rem)]">
   {#if loading}
     <div class="flex items-center gap-2 text-base-content/70 py-6">
       <span class="loading loading-spinner text-primary"></span>
@@ -103,17 +103,15 @@
   {:else if product && product?.product}
     {#snippet actions()}
       {#if addState.showButton}
-        <div class="flex gap-2 w-full">
-          <button
-            type="button"
-            class="btn btn-outline w-full"
-            onclick={(e) => { e.stopPropagation(); void handleAddToBasket(); }}
-            disabled={!addState.canAdd}
-            title={addState.reason}
-          >
-            {addState.label}
-          </button>
-        </div>
+        <button
+          type="button"
+          class="btn btn-primary w-full"
+          onclick={(e) => { e.stopPropagation(); void handleAddToBasket(); }}
+          disabled={!addState.canAdd}
+          title={addState.reason}
+        >
+          {addState.label}
+        </button>
       {/if}
     {/snippet}
 
