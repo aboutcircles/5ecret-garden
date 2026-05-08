@@ -18,6 +18,7 @@
         type WrappedStaticPriceMap,
     } from '$lib/shared/pricing/wrappedStaticPricing';
     import { setBalancePricingContext } from '$lib/shared/pricing/balancePricingContext';
+    import { T } from '$lib/design-system/tokens.js';
 
     let filterVersion = writable<number | undefined>(undefined);
     let filterType = writable<'personal' | 'group' | undefined>(undefined);
@@ -179,49 +180,49 @@
 
 {#snippet balancesToolbarActions()}
     <button
-            type="button"
-            class={filterButtonClass($showFilters)}
-            aria-label={$showFilters ? 'Hide filters' : 'Show filters'}
-            aria-expanded={$showFilters}
-            aria-controls={FILTER_PANEL_ID}
-            onclick={toggleFilters}
-            title="Filter"
+        type="button"
+        style="width:34px;height:34px;border-radius:9999px;border:1px solid {$showFilters ? T.primary : T.hairline};background:{$showFilters ? T.primaryFaint : T.surface};color:{$showFilters ? T.primary : T.inkMuted};display:inline-flex;align-items:center;justify-content:center;cursor:pointer;"
+        aria-label={$showFilters ? 'Hide filters' : 'Show filters'}
+        aria-expanded={$showFilters}
+        aria-controls={FILTER_PANEL_ID}
+        onclick={toggleFilters}
+        title="Filter"
     >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
             <path d="M3 4h18v2l-7 7v5l-4 2v-7L3 6V4z"></path>
         </svg>
     </button>
 
     <button
-            type="button"
-            class="btn btn-ghost btn-sm btn-circle border border-base-300/70 bg-base-100 hover:bg-base-200"
-            aria-label="Why so many Circles?"
-            title="Why so many Circles?"
-            onclick={openBalancesHelp}
+        type="button"
+        style="width:34px;height:34px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.primary};display:inline-flex;align-items:center;justify-content:center;cursor:pointer;"
+        aria-label="Why so many Circles?"
+        title="Why so many Circles?"
+        onclick={openBalancesHelp}
     >
-        <Lucide icon={LCircleHelp} size={16} class="text-primary/80" ariaLabel="" />
+        <Lucide icon={LCircleHelp} size={14} ariaLabel="" />
     </button>
 {/snippet}
 
 {#snippet balancesToolbarBelow()}
     {#if $showFilters}
-        <div id={FILTER_PANEL_ID} class="space-y-3">
-            <div class="flex flex-wrap items-center gap-2">
-                <p class="text-sm">Version</p>
+        <div id={FILTER_PANEL_ID} style="display:flex;flex-direction:column;gap:10px;padding:10px 14px;background:{T.surfaceAlt};border:1px solid {T.hairlineSoft};border-radius:14px;margin-top:6px;">
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;">
+                <span style="font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;min-width:60px;">Version</span>
                 <Filter text="All" filter={filterVersion} value={undefined}/>
-                <Filter text="Version 1" filter={filterVersion} value={1}/>
-                <Filter text="Version 2" filter={filterVersion} value={2}/>
+                <Filter text="V1" filter={filterVersion} value={1}/>
+                <Filter text="V2" filter={filterVersion} value={2}/>
             </div>
 
-            <div class="flex flex-wrap items-center gap-2">
-                <p class="text-sm">Type</p>
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;">
+                <span style="font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;min-width:60px;">Type</span>
                 <Filter text="All" filter={filterType} value={undefined}/>
                 <Filter text="Personal" filter={filterType} value={'personal'}/>
                 <Filter text="Group" filter={filterType} value={'group'}/>
             </div>
 
-            <div class="flex flex-wrap items-center gap-2">
-                <p class="text-sm">Token</p>
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;">
+                <span style="font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;min-width:60px;">Token</span>
                 <Filter text="All" filter={filterToken} value={undefined}/>
                 <Filter text="ERC20" filter={filterToken} value={'erc20'}/>
                 <Filter text="ERC1155" filter={filterToken} value={'erc1155'}/>
@@ -247,11 +248,15 @@
 >
     <div data-balances-list-scope bind:this={balancesListScopeEl} class="relative">
         {#if showBalancesHelp}
-            <div class="absolute right-0 top-1 z-20 w-full max-w-sm rounded-xl border border-base-300 bg-base-100 p-3 shadow-lg">
-                <div class="flex items-start justify-between gap-2">
-                    <div>
-                        <div class="text-xs font-semibold text-base-content/70">Why so many Circles?</div>
-                        <ul class="mt-2 space-y-1 text-xs text-base-content/80">
+            <div style="
+                position:absolute;right:0;top:4px;z-index:20;width:100%;max-width:360px;
+                background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;
+                box-shadow:{T.shadow.md};padding:12px 14px;
+            ">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Why so many Circles?</div>
+                        <ul style="margin:8px 0 0 0;padding-left:14px;display:flex;flex-direction:column;gap:4px;font-size:11.5px;color:{T.inkBody};line-height:1.5;">
                             {#each WHY_MANY_CIRCLES_LINES as line}
                                 <li>{line}</li>
                             {/each}
@@ -259,13 +264,13 @@
                     </div>
 
                     <button
-                            type="button"
-                            class="btn btn-ghost btn-xs btn-square"
-                            aria-label="Dismiss help"
-                            title="Dismiss"
-                            onclick={dismissBalancesHelp}
+                        type="button"
+                        style="width:24px;height:24px;border-radius:9999px;border:0;background:{T.pageDeep};color:{T.inkMuted};display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;"
+                        aria-label="Dismiss help"
+                        title="Dismiss"
+                        onclick={dismissBalancesHelp}
                     >
-                        <Lucide icon={LX} size={14} class="text-base-content/70" ariaLabel="" />
+                        <Lucide icon={LX} size={12} ariaLabel="" />
                     </button>
                 </div>
             </div>

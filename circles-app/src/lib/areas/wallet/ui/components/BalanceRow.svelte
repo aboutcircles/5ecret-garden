@@ -1,7 +1,7 @@
 <script lang="ts">
-    import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
     import { createEventDispatcher } from 'svelte';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
+    import { T } from '$lib/design-system/tokens.js';
     import { avatarState } from '$lib/shared/state/avatar.svelte';
     import { tokenTypeToString } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
     import { crcTypes, roundToDecimals, staticTypes } from '$lib/shared/utils/shared';
@@ -265,97 +265,111 @@
     }
 </script>
 
-<!-- Use noLeading to collapse the empty first column; put the old "horizontal avatar row" inside content -->
 <div
     data-balance-row
     tabindex={0}
     role="button"
     aria-label={`Open actions for token ${item.tokenAddress}`}
-    class="rounded-[var(--row-radius)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+    class="balance-row"
+    style="
+        background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;
+        box-shadow:{T.shadow.xs};
+        padding:10px 14px;
+        display:flex;align-items:center;justify-content:space-between;gap:12px;
+        cursor:pointer;outline:none;
+        transition:transform .08s,background .15s,box-shadow .15s;
+    "
     onkeydown={onRowKeydown}
     onclick={onRowWrapperClick}
 >
-    <RowFrame noLeading={true} clickable={true} className="balance-row">
-        <!-- CONTENT (old layout preserved) -->
-        <div class="w-full flex items-center justify-between">
-            <!-- Left: Avatar horizontal exactly like before -->
-            <div class="min-w-0">
-                <Avatar
-                        placeholderBottom={true}
-                        placeholderTop={false}
-                        placeholderAvatar={false}
-                        address={item.tokenOwner}
-                        view="horizontal"
-                        clickable={true}
-                        bottomInfo={tokenTypeToString(item.tokenType)}
-                />
-            </div>
+    <!-- Left: Avatar -->
+    <div style="min-width:0;flex:1;">
+        <Avatar
+            placeholderBottom={true}
+            placeholderTop={false}
+            placeholderAvatar={false}
+            address={item.tokenOwner}
+            view="horizontal"
+            clickable={true}
+            bottomInfo={tokenTypeToString(item.tokenType)}
+        />
+    </div>
 
-            <!-- Right: amount + dropdown actions -->
-            <div class="flex items-center gap-3 md:gap-4 shrink-0">
-                <div class="text-right tabular-nums">
-                    <div class="font-medium">{formatCompactCurrency(item.circles, 'CRC')}</div>
-                    <p class="text-xs text-base-content/70">
-                        {#if staticTypes.has(item.tokenType)}
-                            {roundToDecimals(item.staticCircles)} Static Circles
-                        {/if}
-                        {#if crcTypes.has(item.tokenType)}
-                            {roundToDecimals(item.crc)} CRC
-                        {/if}
-                        {#if isWrappedStaticToken(item)}
-                            {#if wrappedStaticPriceLabel}
-                                {' · '}{wrappedStaticPriceLabel}
-                            {:else}
-                                {' · '}No USD price
-                            {/if}
-                        {/if}
-                    </p>
-                </div>
-
-                {#if !avatarState.isGroup}
-                    <div class="dropdown dropdown-end z-20" onclick={(e)=>e.stopPropagation()}>
-                        <button tabindex="0" class="btn btn-ghost btn-xs" aria-label="Row actions" onclick={(e)=>e.stopPropagation()}>
-                            <img src="/union.svg" alt="" class="icon" aria-hidden="true" />
-                        </button>
-                        <ul class="dropdown-content menu menu-sm bg-base-100 rounded-box shadow z-[200] w-56 p-2" onclick={(e)=>e.stopPropagation()}>
-                            {#each actions as action (action.title)}
-                                {#if action.condition(item)}
-                                    <li>
-                                        <button onclick={(e)=>{ e.stopPropagation(); executeAction(action); }}>
-                                            <img src={action.icon} alt="" class="icon" aria-hidden="true" />
-                                            {action.title}
-                                        </button>
-                                    </li>
-                                {/if}
-                            {/each}
-                            <li>
-                                <button onclick={(e)=>{ e.stopPropagation(); handleCopy(); }}>
-                                    <img src={copyIcon} alt="" class="icon" aria-hidden="true" />
-                                    Copy
-                                </button>
-                            </li>
-                            <li>
-                                <button onclick={(e)=>{ e.stopPropagation(); void handleReadHubBalance(); }}>
-                                    <img src="/banknotes.svg" alt="" class="icon" aria-hidden="true" />
-                                    Check hub balance
-                                </button>
-                            </li>
-                            {#if item.isErc1155}
-                                <li>
-                                    <button onclick={(e)=>{ e.stopPropagation(); void handleBurnFullBalance(); }}>
-                                        <img src="/fire.svg" alt="" class="icon" aria-hidden="true" />
-                                        Burn
-                                    </button>
-                                </li>
-                            {/if}
-                        </ul>
-                    </div>
+    <!-- Right: amount + dropdown actions -->
+    <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+        <div style="text-align:right;font-variant-numeric:tabular-nums;">
+            <div style="font-family:{T.fontSans};font-size:14px;font-weight:580;color:{T.ink};line-height:1.2;">{formatCompactCurrency(item.circles, 'CRC')}</div>
+            <p style="margin:2px 0 0 0;font-size:10.5px;color:{T.inkMuted};">
+                {#if staticTypes.has(item.tokenType)}
+                    {roundToDecimals(item.staticCircles)} Static
                 {/if}
-            </div>
+                {#if crcTypes.has(item.tokenType)}
+                    {roundToDecimals(item.crc)} CRC
+                {/if}
+                {#if isWrappedStaticToken(item)}
+                    {#if wrappedStaticPriceLabel}
+                        {' · '}{wrappedStaticPriceLabel}
+                    {:else}
+                        {' · '}No USD price
+                    {/if}
+                {/if}
+            </p>
         </div>
-    </RowFrame>
+
+        {#if !avatarState.isGroup}
+            <div class="dropdown dropdown-end z-20" onclick={(e)=>e.stopPropagation()}>
+                <button
+                    tabindex="0"
+                    style="width:30px;height:30px;border-radius:9999px;background:{T.pageDeep};color:{T.inkMuted};border:0;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;"
+                    aria-label="Row actions"
+                    onclick={(e)=>e.stopPropagation()}
+                >
+                    <img src="/union.svg" alt="" style="width:14px;height:14px;opacity:0.7;" aria-hidden="true" />
+                </button>
+                <ul class="dropdown-content menu menu-sm bg-base-100 rounded-box shadow z-[200] w-56 p-2" onclick={(e)=>e.stopPropagation()}>
+                    {#each actions as action (action.title)}
+                        {#if action.condition(item)}
+                            <li>
+                                <button onclick={(e)=>{ e.stopPropagation(); executeAction(action); }}>
+                                    <img src={action.icon} alt="" class="icon" aria-hidden="true" />
+                                    {action.title}
+                                </button>
+                            </li>
+                        {/if}
+                    {/each}
+                    <li>
+                        <button onclick={(e)=>{ e.stopPropagation(); handleCopy(); }}>
+                            <img src={copyIcon} alt="" class="icon" aria-hidden="true" />
+                            Copy
+                        </button>
+                    </li>
+                    <li>
+                        <button onclick={(e)=>{ e.stopPropagation(); void handleReadHubBalance(); }}>
+                            <img src="/banknotes.svg" alt="" class="icon" aria-hidden="true" />
+                            Check hub balance
+                        </button>
+                    </li>
+                    {#if item.isErc1155}
+                        <li>
+                            <button onclick={(e)=>{ e.stopPropagation(); void handleBurnFullBalance(); }}>
+                                <img src="/fire.svg" alt="" class="icon" aria-hidden="true" />
+                                Burn
+                            </button>
+                        </li>
+                    {/if}
+                </ul>
+            </div>
+        {/if}
+    </div>
 </div>
 
 <style>
-    /* rely on RowFrame for chrome; no extra paddings here */
+    .balance-row:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(15,10,30,0.06), 0 1px 3px rgba(15,10,30,0.04);
+    }
+    .balance-row:focus-visible {
+        outline: 2px solid rgba(88,73,212,0.4);
+        outline-offset: 2px;
+    }
 </style>

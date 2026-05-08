@@ -63,9 +63,9 @@
     import SelectableBalanceRow, { type SelectableBalanceRowItem } from '$lib/areas/wallet/ui/components/SelectableBalanceRow.svelte';
     import BalanceRowPlaceholder from '$lib/shared/ui/lists/placeholders/BalanceRowPlaceholder.svelte';
     import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
-    import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
     import { roundToDecimals } from '$lib/shared/utils/shared';
     import AutoRouteSummary from '$lib/areas/wallet/ui/components/AutoRouteSummary.svelte';
+    import { T } from '$lib/design-system/tokens.js';
 
     interface Props {
         balances: Readable<{
@@ -134,25 +134,33 @@
 
 {#if showTransitive}
     <button
-            type="button"
-            class="w-full text-left bg-transparent border-0 p-0"
-            data-send-step-initial-focus
-            onclick={() => handleSelect(transitiveTransfer())}
+        type="button"
+        style="width:100%;text-align:left;background:transparent;border:0;padding:0;"
+        data-send-step-initial-focus
+        onclick={() => handleSelect(transitiveTransfer())}
     >
-        <RowFrame clickable={true} noLeading={true} className="border-primary/30 bg-primary/5">
-            <div class="w-full flex items-center justify-between">
-                <div class="min-w-0">
-                    <AutoRouteSummary />
-                </div>
-                <div class="text-right text-sm text-base-content/70">
-                    {roundToDecimals(transitiveTransfer().circles)} Circles
-                </div>
+        <div style="
+            background:linear-gradient(135deg,{T.primaryFaint} 0%,{T.lilacSoft} 100%);
+            border:1px solid rgba(88,73,212,0.18);border-radius:14px;
+            box-shadow:{T.shadow.xs};
+            padding:12px 14px;
+            display:flex;align-items:center;justify-content:space-between;gap:10px;
+            cursor:pointer;
+        ">
+            <div style="min-width:0;flex:1;">
+                <AutoRouteSummary />
             </div>
-        </RowFrame>
+            <div style="text-align:right;flex-shrink:0;">
+                <div style="font-family:{T.fontSans};font-size:14px;font-weight:580;color:{T.primaryDeep};font-variant-numeric:tabular-nums;">
+                    {roundToDecimals(transitiveTransfer().circles)}
+                </div>
+                <div style="font-size:10.5px;color:{T.inkMuted};">Circles total</div>
+            </div>
+        </div>
     </button>
 {/if}
 
-<p class="menu-title pl-0 mt-4">Individual tokens</p>
+<p style="font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;margin:14px 0 6px;padding-left:2px;">Individual tokens</p>
 
 <ListShell
         query={query}

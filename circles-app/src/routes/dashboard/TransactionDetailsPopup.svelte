@@ -10,6 +10,8 @@
     import TxEvents from './TxEvents.svelte';
     import { popupControls } from '$lib/shared/state/popup';
     import JumpPopup from '$lib/shared/ui/content/jump/JumpPopup.svelte';
+    import { T } from '$lib/design-system/tokens.js';
+    import Icon from '$lib/design-system/Icon.svelte';
 
     interface Props { item: TransactionHistoryRow }
     let { item }: Props = $props();
@@ -403,14 +405,23 @@
     const headerAbsAmount = $derived(() => Math.abs(headerNetAmount()));
     const headerSign = $derived(() => headerNetAmount() < 0 ? '-' : headerNetAmount() > 0 ? '+' : '');
     const signedAmount = $derived(() => `${headerSign()}${formatAmount(headerAbsAmount())}`);
-    const headerColorClass = $derived(() => {
+    const headerColor = $derived(() => {
         if (headerNetAmount() < 0) {
-            return 'text-error';
+            return T.negative;
         }
         if (headerNetAmount() > 0) {
-            return 'text-success';
+            return T.positive;
         }
-        return 'text-base-content';
+        return T.ink;
+    });
+    const headerGradient = $derived(() => {
+        if (headerNetAmount() < 0) {
+            return `linear-gradient(160deg, ${T.coralSoft} 0%, ${T.surface} 100%)`;
+        }
+        if (headerNetAmount() > 0) {
+            return `linear-gradient(160deg, ${T.sageSoft} 0%, ${T.surface} 100%)`;
+        }
+        return `linear-gradient(160deg, ${T.lilacSoft} 0%, ${T.surface} 100%)`;
     });
 
     const nonBurnTransfers = $derived(() =>
@@ -577,217 +588,189 @@
     };
 </script>
 
-<div class="flex flex-col w-full">
-        <div class="pt-4">
-            <!-- Amount + From/To (border around tx-value block, with splitter between amount and diagram) -->
-            <div class="bg-base-100 border border-base-300 rounded-[14px] overflow-hidden divide-y divide-base-300">
-                <div class="p-4 flex flex-col items-center justify-center">
-                    <div class="text-center">
-                        <div class={`text-3xl sm:text-4xl font-extrabold ${headerColorClass()}`}>
-                            {signedAmount()} <span class="opacity-70 text-base align-middle">CRC</span>
-                        </div>
-                    </div>
-                    {#if demurrageAbs() > 0}
-                        <div class="mt-1 text-sm font-semibold text-error">
-                            -{formatAmount(demurrageAbs())}
-                            <span class="opacity-70 text-xs align-middle"> CRC demurrage</span>
-                        </div>
-                    {/if}
-                </div>
+<div style="display:flex;flex-direction:column;width:100%;gap:14px;">
+    <!-- Hero amount card -->
+    <div style="
+        background:{headerGradient()};border:1px solid {T.hairlineSoft};border-radius:18px;overflow:hidden;
+        box-shadow:{T.shadow.xs};
+    ">
+        <div style="padding:24px 16px;display:flex;flex-direction:column;align-items:center;gap:6px;">
+            <span style="font-family:{T.fontDisplay};font-size:48px;color:{headerColor()};letter-spacing:-0.02em;line-height:1;font-weight:400;">
+                {signedAmount()}<span style="font-family:{T.fontSans};font-size:16px;color:{T.inkMuted};font-weight:540;margin-left:6px;">CRC</span>
+            </span>
+            {#if demurrageAbs() > 0}
+                <span style="font-size:12px;color:{T.negative};font-weight:540;">
+                    −{formatAmount(demurrageAbs())} CRC demurrage
+                </span>
+            {/if}
+        </div>
 
-                <div class="p-3">
-                    {#if swapSummary()}
-                        <div class="space-y-2">
-                            <!-- Forward leg -->
-                            <div class="flex items-center justify-between gap-3">
-                                <div class="flex items-center gap-2 min-w-0">
-                                    <Avatar address={item.from} view="horizontal" clickable={true} />
-                                </div>
-                                <div class="shrink-0 flex items-center gap-2 text-base-content/70">
-                                    {#if swapSummary()?.forwardTokenAddress}
-                                        <Avatar address={swapSummary().forwardTokenAddress} view="small_no_text" clickable={true} />
-                                    {/if}
-                                    <Lucide icon={LArrowRight} size={18} />
-                                </div>
-                                <div class="flex items-center gap-2 min-w-0 justify-end">
-                                    <Avatar address={item.to} view="horizontal" clickable={true} />
-                                </div>
-                            </div>
-                            <!-- Return leg -->
-                            <div class="flex items-center justify-between gap-3">
-                                <div class="flex items-center gap-2 min-w-0">
-                                    <Avatar address={item.from} view="horizontal" clickable={true} />
-                                </div>
-                                <div class="shrink-0 flex items-center gap-2 text-base-content/70">
-                                    {#if swapSummary()?.backwardTokenAddress}
-                                        <Avatar address={swapSummary().backwardTokenAddress} view="small_no_text" clickable={true} />
-                                    {/if}
-                                    <div class="rotate-180">
-                                        <Lucide icon={LArrowRight} size={18} />
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-2 min-w-0 justify-end">
-                                    <Avatar address={item.to} view="horizontal" clickable={true} />
-                                </div>
-                            </div>
-                        </div>
-                    {:else}
-                        <div class="flex items-center justify-between gap-3">
-                            <div class="flex items-center gap-2 min-w-0">
-                                <Avatar address={item.from} view="horizontal" clickable={true} />
-                            </div>
-                            <div class="shrink-0 flex items-center gap-2 text-base-content/70">
-                                {#if mainTokenAddress()}
-                                    <Avatar address={mainTokenAddress()} view="small_no_text" clickable={true} />
-                                {/if}
-                                <Lucide icon={LArrowRight} size={18} />
-                            </div>
-                            <div class="flex items-center gap-2 min-w-0 justify-end">
-                                <Avatar address={item.to} view="horizontal" clickable={true} />
-                            </div>
-                        </div>
-                        <div class="mt-3 flex items-center justify-between">
-                            <div class="text-sm opacity-70">Direction</div>
-                            <div class="text-sm">{sent ? 'You sent this' : 'You received this'}</div>
-                        </div>
-                    {/if}
-                </div>
-            </div>
-
-            <!-- Table-like details -->
-            <div class="bg-base-100 border border-base-300 mt-4 rounded-[14px] overflow-hidden">
-                <div class="divide-y">
-                    <div class="flex items-center justify-between gap-4 p-3">
-                        <div class="text-sm opacity-70">Date & time</div>
-                        <div class="text-sm">{dateTime()}</div>
-                    </div>
-                    <div class="flex items-center gap-4 p-3">
-                        <div class="text-sm opacity-70 shrink-0">Transaction hash</div>
-                        <div class="flex-1 min-w-0">
-                            <div class="font-mono text-xs truncate" title={item.transactionHash}>{item.transactionHash}</div>
-                        </div>
-                        <div class="shrink-0 flex items-center gap-2">
-                            <button class="btn btn-xs btn-ghost" onclick={copyHash} title="Copy hash">
-                                <Lucide icon={LCopy} size={14} /> Copy
-                            </button>
-                            <button class="btn btn-xs btn-primary" onclick={openOnExplorer} title="Open on Gnosisscan">
-                                <Lucide icon={LExternalLink} size={14} /> Open
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {#if aggregatedTransfers().length}
-                <div class="bg-base-100 border border-base-300 mt-4 rounded-[14px] overflow-hidden">
-                    <div class="p-3 border-b">
-                        <div class="text-sm opacity-70">
-                            Aggregated transfers <span class="opacity-60">({aggregatedTransfers().length})</span>
-                        </div>
-                    </div>
-                    <div class="divide-y">
-                        {#each nonBurnTransfers() as t}
-                            <div class="px-3 py-2.5 sm:py-3 flex items-center gap-3 sm:gap-4 hover:bg-base-200/40 transition-colors">
-                                <div class="flex-1 min-w-0 flex items-center gap-2">
-                                    {#if isZeroAddress(t.from)}
-                                        <div class="w-6 h-6 rounded-full bg-success/10 flex items-center justify-center" title="Minted">
-                                            <Lucide icon={LCoins} size={14} class="text-success" />
-                                        </div>
-                                    {:else}
-                                        <div class="sm:hidden">
-                                            <Avatar address={t.from} view="small_no_text" clickable={true} />
-                                        </div>
-                                        <div class="hidden sm:inline-flex">
-                                            <Avatar address={t.from} view="small" clickable={true} />
-                                        </div>
-                                    {/if}
-                                </div>
-                                <div class="shrink-0 text-sm sm:text-base font-semibold tabular-nums">
-                                    {formatAmount(t.amount)} <span class="opacity-70">CRC</span>
-                                </div>
-                                <div class="shrink-0 flex items-center gap-2 text-base-content/70">
-                                    {#if t.tokenAddress}
-                                        <Avatar address={t.tokenAddress} view="small_no_text" clickable={true} />
-                                    {/if}
-                                    <div class="w-6 h-6 rounded-full bg-base-200/70 flex items-center justify-center">
-                                        <Lucide icon={LArrowRight} size={16} />
-                                    </div>
-                                </div>
-                                <div class="flex-1 min-w-0 flex items-center gap-2 justify-end">
-                                    <div class="sm:hidden">
-                                        <Avatar address={t.to} view="small_no_text" clickable={true} />
-                                    </div>
-                                    <div class="hidden sm:inline-flex">
-                                        <Avatar address={t.to} view="small_reverse" clickable={true} />
-                                    </div>
-                                </div>
-                            </div>
-                        {/each}
-                        {#if burnTransfers().length}
-                            <button
-                                    class="w-full p-3 bg-base-200/50 text-xs uppercase tracking-wide text-base-content/60 flex items-center justify-between hover:bg-base-200/70 transition-colors"
-                                    onclick={toggleBurns}
-                                    aria-expanded={burnsOpen}
-                                    title={burnsOpen ? 'Hide burns' : 'Show burns'}
-                            >
-                                <span>
-                                    Burns <span class="opacity-60">({burnTransfers().length})</span>
-                                </span>
-                                <span class="text-[11px] normal-case opacity-80">
-                                    {formatAmount(totalBurned())} <span class="opacity-70">CRC</span>
-                                </span>
-                            </button>
-                            {#if burnsOpen}
-                                {#each burnTransfers() as t}
-                                    <div class="px-3 py-2.5 sm:py-3 flex items-center gap-3 sm:gap-4 hover:bg-base-200/40 transition-colors">
-                                        <div class="flex-1 min-w-0 flex items-center gap-2">
-                                            {#if isZeroAddress(t.from)}
-                                                <div class="w-6 h-6 rounded-full bg-success/10 flex items-center justify-center" title="Minted">
-                                                    <Lucide icon={LCoins} size={14} class="text-success" />
-                                                </div>
-                                            {:else}
-                                                <div class="sm:hidden">
-                                                    <Avatar address={t.from} view="small_no_text" clickable={true} />
-                                                </div>
-                                                <div class="hidden sm:inline-flex">
-                                                    <Avatar address={t.from} view="small" clickable={true} />
-                                                </div>
-                                            {/if}
-                                        </div>
-                                        <div class="shrink-0 text-sm sm:text-base font-semibold tabular-nums">
-                                            {formatAmount(t.amount)} <span class="opacity-70">CRC</span>
-                                        </div>
-                                        <div class="shrink-0 flex items-center gap-2 text-base-content/70">
-                                            {#if t.tokenAddress}
-                                                <Avatar address={t.tokenAddress} view="small_no_text" clickable={true} />
-                                            {/if}
-                                            <div class="w-6 h-6 rounded-full bg-base-200/70 flex items-center justify-center">
-                                                <Lucide icon={LArrowRight} size={16} />
-                                            </div>
-                                        </div>
-                                        <div class="flex-1 min-w-0 flex items-center gap-2 justify-end">
-                                            <div class="w-6 h-6 rounded-full bg-error/10 flex items-center justify-center" title="Burned">
-                                                <Lucide icon={LFlame} size={14} class="text-error" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                {/each}
+        <div style="padding:14px 16px;border-top:1px solid {T.hairlineSoft};background:{T.surface};">
+            {#if swapSummary()}
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                    <!-- Forward leg -->
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                        <div style="min-width:0;flex:1;"><Avatar address={item.from} view="horizontal" clickable={true} /></div>
+                        <div style="display:inline-flex;align-items:center;gap:6px;color:{T.inkMuted};flex-shrink:0;">
+                            {#if swapSummary()?.forwardTokenAddress}
+                                <Avatar address={swapSummary().forwardTokenAddress} view="small_no_text" clickable={true} />
                             {/if}
-                        {/if}
+                            <Icon name="arrowRight" size={14} stroke={T.inkMuted} />
+                        </div>
+                        <div style="min-width:0;flex:1;display:flex;justify-content:flex-end;"><Avatar address={item.to} view="horizontal" clickable={true} /></div>
                     </div>
+                    <!-- Return leg -->
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                        <div style="min-width:0;flex:1;"><Avatar address={item.from} view="horizontal" clickable={true} /></div>
+                        <div style="display:inline-flex;align-items:center;gap:6px;color:{T.inkMuted};flex-shrink:0;">
+                            {#if swapSummary()?.backwardTokenAddress}
+                                <Avatar address={swapSummary().backwardTokenAddress} view="small_no_text" clickable={true} />
+                            {/if}
+                            <span style="display:inline-block;transform:rotate(180deg);"><Icon name="arrowRight" size={14} stroke={T.inkMuted} /></span>
+                        </div>
+                        <div style="min-width:0;flex:1;display:flex;justify-content:flex-end;"><Avatar address={item.to} view="horizontal" clickable={true} /></div>
+                    </div>
+                </div>
+            {:else}
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                    <div style="min-width:0;flex:1;"><Avatar address={item.from} view="horizontal" clickable={true} /></div>
+                    <div style="display:inline-flex;align-items:center;gap:6px;color:{T.inkMuted};flex-shrink:0;">
+                        {#if mainTokenAddress()}
+                            <Avatar address={mainTokenAddress()} view="small_no_text" clickable={true} />
+                        {/if}
+                        <Icon name="arrowRight" size={14} stroke={T.inkMuted} />
+                    </div>
+                    <div style="min-width:0;flex:1;display:flex;justify-content:flex-end;"><Avatar address={item.to} view="horizontal" clickable={true} /></div>
+                </div>
+                <div style="margin-top:10px;padding-top:10px;border-top:1px solid {T.hairlineSoft};display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-size:11px;color:{T.inkMuted};font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">Direction</span>
+                    <span style="font-size:12.5px;color:{T.inkBody};font-weight:540;">{sent ? 'You sent this' : 'You received this'}</span>
                 </div>
             {/if}
-
-            <TxEvents
-                events={events()}
-                {eventDisplayEntries}
-                {niceKey}
-                {isOpen}
-                {toggleOpen}
-                {eventsListOpen}
-                {toggleEventsList}
-            />
         </div>
+    </div>
+
+    <!-- Details table -->
+    <div style="background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;overflow:hidden;">
+        <div style="padding:10px 14px;border-bottom:1px solid {T.hairlineSoft};display:flex;align-items:center;justify-content:space-between;gap:8px;">
+            <span style="font-size:11px;color:{T.inkMuted};font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">Date &amp; time</span>
+            <span style="font-size:12.5px;color:{T.ink};">{dateTime()}</span>
+        </div>
+        <div style="padding:10px 14px;display:flex;align-items:center;gap:10px;">
+            <span style="font-size:11px;color:{T.inkMuted};font-weight:600;letter-spacing:0.06em;text-transform:uppercase;flex-shrink:0;">Tx hash</span>
+            <div style="flex:1;min-width:0;">
+                <div style="font-family:{T.fontMono};font-size:11px;color:{T.inkBody};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title={item.transactionHash}>{item.transactionHash}</div>
+            </div>
+            <div style="flex-shrink:0;display:inline-flex;align-items:center;gap:4px;">
+                <button
+                    type="button"
+                    style="display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.inkMuted};font-size:11px;font-weight:540;cursor:pointer;"
+                    onclick={copyHash}
+                    title="Copy hash"
+                ><Icon name="copy" size={10} stroke={T.inkMuted} /> Copy</button>
+                <button
+                    type="button"
+                    style="display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px;border-radius:9999px;border:0;background:{T.primary};color:#fff;font-size:11px;font-weight:580;cursor:pointer;box-shadow:0 2px 6px rgba(88,73,212,0.2);"
+                    onclick={openOnExplorer}
+                    title="Open on Gnosisscan"
+                ><Icon name="external" size={10} stroke="#fff" /> Open</button>
+            </div>
+        </div>
+    </div>
+
+    {#if aggregatedTransfers().length}
+        <div style="background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;overflow:hidden;">
+            <div style="padding:10px 14px;border-bottom:1px solid {T.hairlineSoft};">
+                <span style="font-size:11px;color:{T.inkMuted};font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">
+                    Aggregated transfers <span style="color:{T.inkFaint};">({aggregatedTransfers().length})</span>
+                </span>
+            </div>
+            {#each nonBurnTransfers() as t, ri (ri)}
+                <div style="padding:10px 14px;{ri > 0 ? `border-top:1px solid ${T.hairlineSoft};` : ''}display:flex;align-items:center;gap:10px;">
+                    <div style="flex:1;min-width:0;display:flex;align-items:center;gap:6px;">
+                        {#if isZeroAddress(t.from)}
+                            <div style="width:24px;height:24px;border-radius:9999px;background:{T.sageSoft};display:inline-flex;align-items:center;justify-content:center;" title="Minted">
+                                <Lucide icon={LCoins} size={12} class="text-success" />
+                            </div>
+                        {:else}
+                            <Avatar address={t.from} view="small" clickable={true} />
+                        {/if}
+                    </div>
+                    <span style="flex-shrink:0;font-size:13px;font-weight:580;color:{T.ink};font-variant-numeric:tabular-nums;">
+                        {formatAmount(t.amount)}<span style="color:{T.inkMuted};font-weight:540;margin-left:3px;">CRC</span>
+                    </span>
+                    <div style="flex-shrink:0;display:inline-flex;align-items:center;gap:6px;color:{T.inkMuted};">
+                        {#if t.tokenAddress}
+                            <Avatar address={t.tokenAddress} view="small_no_text" clickable={true} />
+                        {/if}
+                        <div style="width:22px;height:22px;border-radius:9999px;background:{T.pageDeep};display:inline-flex;align-items:center;justify-content:center;">
+                            <Icon name="arrowRight" size={11} stroke={T.inkMuted} />
+                        </div>
+                    </div>
+                    <div style="flex:1;min-width:0;display:flex;justify-content:flex-end;">
+                        <Avatar address={t.to} view="small_reverse" clickable={true} />
+                    </div>
+                </div>
+            {/each}
+            {#if burnTransfers().length}
+                <button
+                    type="button"
+                    style="width:100%;padding:10px 14px;border-top:1px solid {T.hairlineSoft};background:{T.surfaceAlt};border-left:0;border-right:0;border-bottom:0;cursor:pointer;display:flex;align-items:center;justify-content:space-between;color:{T.inkMuted};"
+                    onclick={toggleBurns}
+                    aria-expanded={burnsOpen}
+                    title={burnsOpen ? 'Hide burns' : 'Show burns'}
+                >
+                    <span style="font-size:11px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">
+                        Burns <span style="color:{T.inkFaint};">({burnTransfers().length})</span>
+                    </span>
+                    <span style="font-size:11.5px;color:{T.inkBody};font-variant-numeric:tabular-nums;">
+                        {formatAmount(totalBurned())}<span style="color:{T.inkMuted};margin-left:3px;">CRC</span>
+                    </span>
+                </button>
+                {#if burnsOpen}
+                    {#each burnTransfers() as t (t.from + t.to + t.amount)}
+                        <div style="padding:10px 14px;border-top:1px solid {T.hairlineSoft};display:flex;align-items:center;gap:10px;">
+                            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:6px;">
+                                {#if isZeroAddress(t.from)}
+                                    <div style="width:24px;height:24px;border-radius:9999px;background:{T.sageSoft};display:inline-flex;align-items:center;justify-content:center;">
+                                        <Lucide icon={LCoins} size={12} class="text-success" />
+                                    </div>
+                                {:else}
+                                    <Avatar address={t.from} view="small" clickable={true} />
+                                {/if}
+                            </div>
+                            <span style="flex-shrink:0;font-size:13px;font-weight:580;color:{T.ink};font-variant-numeric:tabular-nums;">
+                                {formatAmount(t.amount)}<span style="color:{T.inkMuted};font-weight:540;margin-left:3px;">CRC</span>
+                            </span>
+                            <div style="flex-shrink:0;display:inline-flex;align-items:center;gap:6px;color:{T.inkMuted};">
+                                {#if t.tokenAddress}
+                                    <Avatar address={t.tokenAddress} view="small_no_text" clickable={true} />
+                                {/if}
+                                <div style="width:22px;height:22px;border-radius:9999px;background:{T.pageDeep};display:inline-flex;align-items:center;justify-content:center;">
+                                    <Icon name="arrowRight" size={11} stroke={T.inkMuted} />
+                                </div>
+                            </div>
+                            <div style="flex:1;min-width:0;display:flex;justify-content:flex-end;">
+                                <div style="width:24px;height:24px;border-radius:9999px;background:{T.negativeSoft};display:inline-flex;align-items:center;justify-content:center;" title="Burned">
+                                    <Lucide icon={LFlame} size={12} class="text-error" />
+                                </div>
+                            </div>
+                        </div>
+                    {/each}
+                {/if}
+            {/if}
+        </div>
+    {/if}
+
+    <TxEvents
+        events={events()}
+        {eventDisplayEntries}
+        {niceKey}
+        {isOpen}
+        {toggleOpen}
+        {eventsListOpen}
+        {toggleEventsList}
+    />
 </div>
 
 <style>

@@ -24,6 +24,7 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import {gnosisConfig} from "$lib/shared/config/circles";
   import { openInfoPopup } from '$lib/shared/ui/shell/confirmDialogs';
+  import { T } from '$lib/design-system/tokens.js';
 
   const OPERATOR = gnosisConfig.production.marketOperator;
 
@@ -169,12 +170,10 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
   {#if isOwner && canTombstone}
     <button
         type="button"
-        class="btn btn-sm btn-ghost"
+        style="height:30px;padding:0 12px;border-radius:9999px;border:0;background:transparent;color:{T.inkMuted};font-size:12px;font-weight:540;cursor:pointer;"
         onclick={(e) => { e.stopPropagation(); handleEdit(); }}
         title="Edit listing"
-    >
-      Edit
-    </button>
+    >Edit</button>
     <ActionButton
       action={handleTombstone}
       title="Remove listing"
@@ -194,13 +193,11 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
   {#if addState.showButton}
     <button
         type="button"
-        class="btn btn-sm btn-primary"
+        style="height:30px;padding:0 14px;border-radius:9999px;border:0;cursor:{addState.canAdd ? 'pointer' : 'not-allowed'};background:{addState.canAdd ? T.primary : T.pageDeep};color:{addState.canAdd ? '#fff' : T.inkMuted};font-size:12px;font-weight:580;box-shadow:{addState.canAdd ? '0 2px 6px rgba(88,73,212,0.2)' : 'none'};"
         onclick={(e) => { e.stopPropagation(); handleAddToBasket(); }}
         disabled={!addState.canAdd}
         title={addState.reason}
-    >
-      {addState.label}
-    </button>
+    >{addState.label}</button>
   {/if}
 {/snippet}
 

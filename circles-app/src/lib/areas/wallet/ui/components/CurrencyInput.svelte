@@ -5,6 +5,7 @@
     import { TransitiveTransferTokenAddress } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
     import { roundToDecimals } from '$lib/shared/utils/shared';
     import Tooltip from "$lib/shared/ui/primitives/Tooltip.svelte";
+    import { T } from '$lib/design-system/tokens.js';
 
     interface Props {
         balanceRow: TokenBalanceRow;
@@ -130,46 +131,51 @@
     }
 </script>
 
-<div class="mt-3 rounded-2xl bg-base-200/60 p-4 space-y-3">
-    <div class="text-xs font-semibold uppercase tracking-wide text-base-content/70">Amount</div>
+<div style="
+    background:{T.surfaceAlt};border:1px solid {T.hairlineSoft};border-radius:18px;
+    padding:14px 16px;display:flex;flex-direction:column;gap:10px;
+">
+    <div style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Amount</div>
 
-    <div class="flex items-baseline gap-2">
+    <div style="display:flex;align-items:baseline;gap:8px;">
         <input
-                bind:this={inputElement}
-                data-send-amount-input
-                data-send-step-initial-input
-                type="text"
-                inputmode="decimal"
-                autocomplete="off"
-                autocorrect="off"
-                spellcheck="false"
-                placeholder="0.00"
-                class="w-full bg-transparent border-0 p-0 text-4xl font-semibold placeholder-base-content/30 focus:outline-none focus-visible:outline-none focus:ring-0"
-                style="caret-color: currentColor;"
-                onkeydown={onAmountKeydown}
+            bind:this={inputElement}
+            data-send-amount-input
+            data-send-step-initial-input
+            type="text"
+            inputmode="decimal"
+            autocomplete="off"
+            autocorrect="off"
+            spellcheck="false"
+            placeholder="0.00"
+            style="
+                flex:1;min-width:0;background:transparent;border:0;padding:0;outline:none;
+                font-family:{T.fontDisplay};font-size:42px;letter-spacing:-0.02em;line-height:1;
+                color:{T.ink};font-weight:400;
+                caret-color:{T.primary};
+            "
+            onkeydown={onAmountKeydown}
         />
-        <span class="text-xl md:text-2xl text-base-content/45 font-medium">Circles</span>
+        <span style="font-family:{T.fontSans};font-size:18px;color:{T.inkMuted};font-weight:540;flex-shrink:0;">CRC</span>
     </div>
 
-    <div class="flex items-center justify-between gap-3 text-sm">
-        <div class="text-base-content/70">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div style="font-size:11.5px;color:{T.inkMuted};display:inline-flex;align-items:center;gap:4px;">
             {#if isAutoRoute}
-                <span class="inline-flex items-center gap-1">
-                    Route cap
-                    {#if routeLoading}
-                        <span class="loading loading-spinner loading-xs" aria-label="Loading route cap"></span>
-                    {/if}
-                </span>
-                : {routeCapDisplay}
-                <span class="text-base-content/55 ml-1">
-                    <Tooltip content="Availability depends on your trust network and routing limits."/>
-                </span>
+                Route cap
+                {#if routeLoading}
+                    <span class="loading loading-spinner loading-xs" style="color:{T.primary};" aria-label="Loading route cap"></span>
+                {/if}
+                <span style="color:{T.ink};font-weight:540;font-variant-numeric:tabular-nums;">{routeCapDisplay}</span>
+                <Tooltip content="Availability depends on your trust network and routing limits." />
             {:else}
-                Available: {roundToDecimals(balanceRow.circles)}
+                Available <span style="color:{T.ink};font-weight:540;font-variant-numeric:tabular-nums;">{roundToDecimals(balanceRow.circles)}</span>
             {/if}
         </div>
-        <button class="btn btn-xs btn-ghost" onclick={setMaxAmount}>
-            Use max
-        </button>
+        <button
+            type="button"
+            style="height:26px;padding:0 12px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.ink};font-size:11.5px;font-weight:540;cursor:pointer;"
+            onclick={setMaxAmount}
+        >Use max</button>
     </div>
 </div>
