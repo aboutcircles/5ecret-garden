@@ -1,8 +1,8 @@
 <script lang="ts">
     import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
-    import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
     import { CREATE_GROUP_FLOW_SCAFFOLD_BASE } from './constants';
     import Tooltip from '$lib/shared/ui/primitives/Tooltip.svelte';
+    import { T } from '$lib/design-system/tokens.js';
     import { ethers } from 'ethers';
     import { openStep } from '$lib/shared/flow';
     import ReviewStep from './4_Create.svelte';
@@ -117,127 +117,136 @@
   subtitle="Name, symbol, description, and image."
 >
 
-    <p class="text-sm text-base-content/70 mt-1">
-        Choose a fast lane setup or configure advanced settings.
-    </p>
+    <p style="font-size:12.5px;color:{T.inkMuted};margin:0;">Choose a setup mode for your group.</p>
 
-    <div class="mt-4 space-y-3">
-        <label class="flex items-start gap-3 p-3 rounded-xl border border-base-300 cursor-pointer">
+    <!-- Mode selector -->
+    <div style="display:flex;flex-direction:column;gap:8px;">
+        <label style="
+            display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:14px;cursor:pointer;
+            border:1px solid {mode === 'fast' ? 'rgba(88,73,212,0.25)' : T.hairlineSoft};
+            background:{mode === 'fast' ? T.primaryFaint : T.surface};
+            transition:background .12s,border-color .12s;
+        ">
             <input
                 type="radio"
                 name="group-settings-mode"
-                class="radio radio-xs mt-1"
+                style="accent-color:{T.primary};margin-top:2px;flex-shrink:0;"
                 checked={mode === 'fast'}
                 onchange={() => (mode = 'fast')}
                 data-popup-initial-input
             />
             <div>
-                <div class="text-sm font-semibold">Simple</div>
-                <div class="text-xs text-base-content/70">
-                    Use your wallet for fee collection, no service contract, no initial conditions.
-                </div>
+                <div style="font-size:13px;font-weight:580;color:{T.ink};">Simple</div>
+                <div style="font-size:11.5px;color:{T.inkMuted};margin-top:2px;line-height:1.4;">Use your wallet for fee collection, no service contract, no initial conditions.</div>
             </div>
         </label>
-        <label class="flex items-start gap-3 p-3 rounded-xl border border-base-300 cursor-pointer">
+
+        <label style="
+            display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:14px;cursor:pointer;
+            border:1px solid {mode === 'advanced' ? 'rgba(88,73,212,0.25)' : T.hairlineSoft};
+            background:{mode === 'advanced' ? T.primaryFaint : T.surface};
+            transition:background .12s,border-color .12s;
+        ">
             <input
                 type="radio"
                 name="group-settings-mode"
-                class="radio radio-xs mt-1"
+                style="accent-color:{T.primary};margin-top:2px;flex-shrink:0;"
                 checked={mode === 'advanced'}
                 onchange={() => (mode = 'advanced')}
             />
             <div>
-                <div class="text-sm font-semibold">Advanced</div>
-                <div class="text-xs text-base-content/70">
-                    Set custom service and fee collection addresses and initial conditions.
-                </div>
+                <div style="font-size:13px;font-weight:580;color:{T.ink};">Advanced</div>
+                <div style="font-size:11.5px;color:{T.inkMuted};margin-top:2px;line-height:1.4;">Set custom service and fee collection addresses and initial conditions.</div>
             </div>
         </label>
     </div>
 
     {#if mode === 'advanced'}
-        <!-- Row: Service -->
-        <label class="form-control mt-4">
-            <div class="label">
-          <span class="label-text">
-            Service <Tooltip content="Service contract address for the group." />
-          </span>
-            </div>
-            <input
+        <div style="display:flex;flex-direction:column;gap:12px;">
+            <!-- Service -->
+            <div style="display:flex;flex-direction:column;gap:6px;">
+                <label style="font-size:12px;font-weight:600;color:{T.inkMuted};letter-spacing:0.04em;text-transform:uppercase;display:flex;align-items:center;gap:4px;">
+                    Service <Tooltip content="Service contract address for the group." />
+                </label>
+                <input
                     type="text"
-                    class="input input-bordered w-full"
+                    style="width:100%;padding:10px 14px;border:1px solid {!serviceLooksValid && ctx.service ? T.negative : T.hairline};border-radius:10px;font-family:{T.fontMono};font-size:12px;color:{T.ink};background:{T.surface};box-sizing:border-box;"
                     bind:value={ctx.service}
                     placeholder="0x…"
-            />
-            <div class="h-5 text-xs pt-1" class:text-error={!serviceLooksValid} class:text-success={serviceLooksValid}>
-                {#if serviceLooksValid}Looks good{/if}{#if !serviceLooksValid}Invalid address{/if}
+                />
+                {#if ctx.service && !serviceLooksValid}
+                    <div style="font-size:11.5px;color:{T.negative};">Invalid address</div>
+                {:else if serviceLooksValid}
+                    <div style="font-size:11.5px;color:{T.positive};">Looks good</div>
+                {/if}
             </div>
-        </label>
 
-        <!-- Row: Fee collection -->
-        <label class="form-control">
-            <div class="label">
-          <span class="label-text">
-            Fee collection <Tooltip content="Where fees are collected to." />
-          </span>
-            </div>
-            <input
+            <!-- Fee collection -->
+            <div style="display:flex;flex-direction:column;gap:6px;">
+                <label style="font-size:12px;font-weight:600;color:{T.inkMuted};letter-spacing:0.04em;text-transform:uppercase;display:flex;align-items:center;gap:4px;">
+                    Fee collection <Tooltip content="Where fees are collected to." />
+                </label>
+                <input
                     type="text"
-                    class="input input-bordered w-full"
+                    style="width:100%;padding:10px 14px;border:1px solid {!feeLooksValid && ctx.feeCollection ? T.negative : T.hairline};border-radius:10px;font-family:{T.fontMono};font-size:12px;color:{T.ink};background:{T.surface};box-sizing:border-box;"
                     bind:value={ctx.feeCollection}
                     placeholder="0x…"
-            />
-            <div class="h-5 text-xs pt-1" class:text-error={!feeLooksValid} class:text-success={feeLooksValid}>
-                {#if feeLooksValid}Looks good{/if}{#if !feeLooksValid}Invalid address{/if}
+                />
+                {#if ctx.feeCollection && !feeLooksValid}
+                    <div style="font-size:11.5px;color:{T.negative};">Invalid address</div>
+                {:else if feeLooksValid}
+                    <div style="font-size:11.5px;color:{T.positive};">Looks good</div>
+                {/if}
             </div>
-        </label>
 
-        <!-- Row: Initial conditions -->
-        <label class="form-control">
-            <div class="label">
-          <span class="label-text">
-            Initial conditions
-            <Tooltip content="Comma-separated list of addresses added at creation time." />
-          </span>
-            </div>
-            <input
+            <!-- Initial conditions -->
+            <div style="display:flex;flex-direction:column;gap:6px;">
+                <label style="font-size:12px;font-weight:600;color:{T.inkMuted};letter-spacing:0.04em;text-transform:uppercase;display:flex;align-items:center;gap:4px;">
+                    Initial conditions <Tooltip content="Comma-separated list of addresses added at creation time." />
+                </label>
+                <input
                     type="text"
-                    class="input input-bordered w-full"
+                    style="width:100%;padding:10px 14px;border:1px solid {T.hairline};border-radius:10px;font-family:{T.fontMono};font-size:12px;color:{T.ink};background:{T.surface};box-sizing:border-box;"
                     bind:value={initialConditionsStr}
                     placeholder="0xabc…, 0xdef…"
-            />
-        </label>
+                />
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <span style="font-size:11.5px;color:{T.inkMuted};">{parsed.valid.length} valid</span>
+                    {#if parsed.invalid.length > 0}
+                        <span style="font-size:11.5px;color:{T.negative};">{parsed.invalid.length} invalid</span>
+                    {/if}
+                </div>
 
-        <!-- Row: Tiny summary -->
-        <div class="mt-2 text-sm flex items-center gap-3">
-            <span class="text-base-content/60">{parsed.valid.length} valid</span>
-            {#if parsed.invalid.length > 0}
-                <span class="text-error">{parsed.invalid.length} invalid</span>
-            {/if}
+                {#if parsed.valid.length > 0}
+                    <div style="display:flex;flex-wrap:wrap;gap:4px;">
+                        {#each parsed.valid as addr}
+                            <span style="padding:2px 8px;border-radius:9999px;border:1px solid {T.hairline};font-family:{T.fontMono};font-size:10px;color:{T.inkMuted};">{addr.slice(0,10)}…</span>
+                        {/each}
+                    </div>
+                {/if}
+
+                {#if parsed.invalid.length > 0}
+                    <div style="display:flex;flex-wrap:wrap;gap:4px;">
+                        {#each parsed.invalid as bad}
+                            <span style="padding:2px 8px;border-radius:9999px;background:{T.negativeSoft};color:{T.negative};font-family:{T.fontMono};font-size:10px;">{bad.slice(0,10)}…</span>
+                        {/each}
+                    </div>
+                {/if}
+            </div>
         </div>
-
-        {#if parsed.valid.length > 0}
-            <div class="mt-2 flex flex-wrap gap-2">
-                {#each parsed.valid as addr}
-                    <span class="badge badge-outline">{addr}</span>
-                {/each}
-            </div>
-        {/if}
-
-        {#if parsed.invalid.length > 0}
-            <div class="mt-2 flex flex-wrap gap-2">
-                {#each parsed.invalid as bad}
-                    <span class="badge badge-error">{bad}</span>
-                {/each}
-            </div>
-        {/if}
     {/if}
 
-    <StepActionBar>
-        {#snippet primary()}
-            <button type="button" class="btn btn-primary btn-sm" disabled={!canContinue} onclick={next}>
-                Continue
-            </button>
-        {/snippet}
-    </StepActionBar>
+    <div style="display:flex;justify-content:flex-end;margin-top:4px;">
+        <button
+            type="button"
+            style="
+                height:44px;padding:0 24px;border-radius:9999px;border:0;cursor:{canContinue ? 'pointer' : 'not-allowed'};
+                background:{canContinue ? T.primary : T.pageDeep};color:{canContinue ? '#fff' : T.inkMuted};
+                font-family:{T.fontSans};font-size:14px;font-weight:580;
+                box-shadow:{canContinue ? '0 4px 12px rgba(88,73,212,0.25)' : 'none'};
+            "
+            disabled={!canContinue}
+            onclick={next}
+        >Continue</button>
+    </div>
     </FlowStepScaffold>

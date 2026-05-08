@@ -10,6 +10,7 @@
   import AmountStep from './3_Amount.svelte';
   import { tick } from 'svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
+  import { T } from '$lib/design-system/tokens.js';
 
   type ReturnMode = 'next' | 'back';
 
@@ -142,62 +143,96 @@
   title="Token filters"
   subtitle="Choose which source tokens are allowed in auto routing."
 >
-  <div class="space-y-3">
+  <div style="display:flex;flex-direction:column;gap:10px;">
+    <!-- Search input -->
     <input
       type="text"
-      class="input input-bordered input-sm w-full"
+      style="
+        width:100%;padding:10px 14px;border:1px solid {T.hairline};border-radius:10px;
+        font-family:{T.fontSans};font-size:13px;color:{T.ink};background:{T.surface};
+        box-sizing:border-box;
+      "
       placeholder="Search by token or owner address"
       bind:value={query}
       data-send-step-initial-focus
     />
 
-    <div class="flex items-center justify-between text-xs text-base-content/70">
-      <span>Included: {includeSet.size} · Excluded: {excludeSet.size}</span>
-      <div class="join">
-        <button type="button" class="btn btn-ghost btn-xs join-item" onclick={includeAll}>Include all</button>
-        <button type="button" class="btn btn-ghost btn-xs join-item" onclick={excludeAll}>Exclude all</button>
+    <!-- Stats + bulk actions -->
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 2px;">
+      <span style="font-size:11.5px;color:{T.inkMuted};">
+        Included: <strong style="color:{T.positive};">{includeSet.size}</strong>
+        · Excluded: <strong style="color:{T.warning};">{excludeSet.size}</strong>
+      </span>
+      <div style="display:flex;gap:4px;">
+        <button
+          type="button"
+          style="height:26px;padding:0 10px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.inkMuted};font-size:11px;font-weight:540;cursor:pointer;"
+          onclick={includeAll}
+        >Include all</button>
+        <button
+          type="button"
+          style="height:26px;padding:0 10px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.inkMuted};font-size:11px;font-weight:540;cursor:pointer;"
+          onclick={excludeAll}
+        >Exclude all</button>
       </div>
     </div>
 
-    <div class="max-h-72 overflow-y-auto border border-base-300 rounded-lg divide-y divide-base-300">
+    <!-- Token list -->
+    <div style="max-height:288px;overflow-y:auto;border:1px solid {T.hairlineSoft};border-radius:14px;background:{T.surface};">
       {#if tokenOptions.length === 0}
-        <div class="p-3 text-sm text-base-content/70">No matching tokens found.</div>
+        <div style="padding:16px 14px;font-size:12.5px;color:{T.inkMuted};">No matching tokens found.</div>
       {:else}
-        {#each tokenOptions as item (String(item.tokenAddress))}
+        {#each tokenOptions as item, i (String(item.tokenAddress))}
           {@const tokenAddress = String(item.tokenAddress ?? '')}
           {@const key = tokenAddress.toLowerCase()}
-          <div class="p-3 flex items-center justify-between gap-2">
-            <div class="min-w-0">
+          {@const isIncluded = includeSet.has(key)}
+          {@const isExcluded = excludeSet.has(key)}
+          <div style="
+            padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;
+            {i > 0 ? `border-top:1px solid ${T.hairlineSoft};` : ''}
+          ">
+            <div style="min-width:0;flex:1;">
               <Avatar address={item.tokenOwner} clickable={true} view="horizontal" />
-              <div class="text-xs text-base-content/65 break-all mt-1">{tokenAddress}</div>
+              <div style="font-family:{T.fontMono};font-size:10px;color:{T.inkFaint};word-break:break-all;margin-top:2px;line-height:1.3;">{tokenAddress.slice(0,20)}…</div>
             </div>
-            <div class="join">
+            <div style="display:flex;gap:4px;flex-shrink:0;">
               <button
                 type="button"
-                class="btn btn-xs join-item"
-                class:btn-success={includeSet.has(key)}
-                class:btn-ghost={!includeSet.has(key)}
+                style="
+                  height:26px;padding:0 10px;border-radius:9999px;font-size:11px;font-weight:540;cursor:pointer;
+                  border:1px solid {isIncluded ? T.positive : T.hairline};
+                  background:{isIncluded ? T.positiveSoft : T.surface};
+                  color:{isIncluded ? T.positive : T.inkMuted};
+                "
                 onclick={() => setInclude(tokenAddress)}
-              >
-                Include
-              </button>
+              >Include</button>
               <button
                 type="button"
-                class="btn btn-xs join-item"
-                class:btn-warning={excludeSet.has(key)}
-                class:btn-ghost={!excludeSet.has(key)}
+                style="
+                  height:26px;padding:0 10px;border-radius:9999px;font-size:11px;font-weight:540;cursor:pointer;
+                  border:1px solid {isExcluded ? T.warning : T.hairline};
+                  background:{isExcluded ? T.warningSoft : T.surface};
+                  color:{isExcluded ? T.warning : T.inkMuted};
+                "
                 onclick={() => setExclude(tokenAddress)}
-              >
-                Exclude
-              </button>
+              >Exclude</button>
             </div>
           </div>
         {/each}
       {/if}
     </div>
 
-    <div class="mt-4 flex justify-end">
-      <button type="button" class="btn btn-primary btn-sm" onclick={applyFilters}>Apply</button>
+    <div style="display:flex;justify-content:flex-end;">
+      <button
+        type="button"
+        style="
+          height:44px;padding:0 24px;border-radius:9999px;border:0;cursor:pointer;
+          background:{T.primary};color:#fff;
+          font-family:{T.fontSans};font-size:14px;font-weight:580;
+          box-shadow:0 4px 12px rgba(88,73,212,0.25);
+        "
+        onclick={applyFilters}
+      >Apply filters</button>
     </div>
   </div>
 </FlowStepScaffold>

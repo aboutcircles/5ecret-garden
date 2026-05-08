@@ -19,13 +19,13 @@
     import { openProfilePopup } from '$lib/shared/ui/profile/openProfilePopup';
     import ToStep from './1_To.svelte';
     import TokenFiltersStep from './2_TokenFilters.svelte';
-    import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
         import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
     import HelpPopover from '$lib/shared/ui/primitives/HelpPopover.svelte';
     import { SEND_POPUP_TITLE } from './constants';
-    import ChangeButton from '$lib/areas/wallet/ui/components/ChangeButton.svelte';
     import { AUTO_ROUTE_HELP_LINES } from '$lib/shared/content/trustRoutingCopy';
+    import { T } from '$lib/design-system/tokens.js';
+    import Icon from '$lib/design-system/Icon.svelte';
 
     type Props = EnterAmountStepProps<SendFlowContext>;
 
@@ -348,59 +348,65 @@
   aria-label="Send amount step"
 >
 
+    <!-- To card -->
     <button
         type="button"
-        class="w-full text-left bg-transparent border-0 p-0"
+        style="width:100%;text-align:left;background:transparent;border:0;padding:0;"
         onclick={editRecipient}
         data-send-step-initial-focus
     >
-        <RowFrame clickable={true} noLeading={true}>
-            <div class="w-full flex items-center justify-between gap-3">
-                <div class="min-w-0">
-                    <div class="menu-title p-0">To</div>
-                    <Avatar address={context.selectedAddress} clickable={true} view="horizontal" />
-                </div>
-                <ChangeButton />
+        <div style="
+            background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;
+            padding:10px 14px;box-shadow:{T.shadow.xs};
+            display:flex;align-items:center;justify-content:space-between;gap:12px;
+            cursor:pointer;transition:background .12s;
+        ">
+            <div style="min-width:0;flex:1;">
+                <div style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px;">To</div>
+                <Avatar address={context.selectedAddress} clickable={false} view="horizontal" />
             </div>
-        </RowFrame>
+            <div style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:9999px;background:{T.pageDeep};color:{T.inkMuted};font-size:11px;font-weight:540;flex-shrink:0;">
+                <Icon name="edit" size={10} stroke={T.inkMuted} />
+                Change
+            </div>
+        </div>
     </button>
 
+    <!-- Token filters card -->
     <button
         type="button"
-        class="w-full text-left bg-transparent border-0 p-0 mt-1"
+        style="width:100%;text-align:left;background:transparent;border:0;padding:0;"
         onclick={tryAnotherToken}
     >
-        <RowFrame clickable={true} noLeading={true}>
-            <div class="w-full flex items-center justify-between gap-3">
-                <div class="min-w-0">
-                    <div class="menu-title p-0">Token filters</div>
-                    {#if isAutoRoute}
-                        <div class="flex items-center gap-1.5">
-                            <span class="font-medium">Auto route</span>
-                            <HelpPopover
-                                title="Auto route"
-                                lines={AUTO_ROUTE_HELP_LINES}
-                                widthClass="w-72"
-                            />
-                        </div>
-                        <div class="text-xs text-base-content/70">
-                            {#if context.fromTokens?.length || context.excludeFromTokens?.length}
-                                Include {context.fromTokens?.length ?? 0}, exclude {context.excludeFromTokens?.length ?? 0}
-                            {:else}
-                                Uses default trusted token routing
-                            {/if}
-                        </div>
-                    {:else}
-                        <Avatar
-                                address={context.selectedAsset?.tokenOwner}
-                                clickable={true}
-                                view="horizontal"
-                        />
-                    {/if}
-                </div>
-                <ChangeButton />
+        <div style="
+            background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;
+            padding:10px 14px;box-shadow:{T.shadow.xs};
+            display:flex;align-items:center;justify-content:space-between;gap:12px;
+            cursor:pointer;transition:background .12s;
+        ">
+            <div style="min-width:0;flex:1;">
+                <div style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px;">Token filters</div>
+                {#if isAutoRoute}
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <span style="font-size:13px;font-weight:540;color:{T.ink};">Auto route</span>
+                        <HelpPopover title="Auto route" lines={AUTO_ROUTE_HELP_LINES} widthClass="w-72" />
+                    </div>
+                    <div style="font-size:11.5px;color:{T.inkMuted};margin-top:1px;">
+                        {#if context.fromTokens?.length || context.excludeFromTokens?.length}
+                            Include {context.fromTokens?.length ?? 0}, exclude {context.excludeFromTokens?.length ?? 0}
+                        {:else}
+                            Default trusted token routing
+                        {/if}
+                    </div>
+                {:else}
+                    <Avatar address={context.selectedAsset?.tokenOwner} clickable={false} view="horizontal" />
+                {/if}
             </div>
-        </RowFrame>
+            <div style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:9999px;background:{T.pageDeep};color:{T.inkMuted};font-size:11px;font-weight:540;flex-shrink:0;">
+                <Icon name="edit" size={10} stroke={T.inkMuted} />
+                Change
+            </div>
+        </div>
     </button>
 
     <SelectAmount
@@ -414,118 +420,97 @@
     />
 
     {#if pathfindingAction.error}
-        <StepAlert
-                variant="error"
-                message={pathfindingAction.error}
-        />
+        <StepAlert variant="error" message={pathfindingAction.error} />
     {/if}
 
     {#if pathfindingFailed}
-        <StepAlert
-            variant="warning"
-            className="mt-3"
-            title="Route not available yet"
-            message="Your current trust network cannot route this payment yet."
-        >
+        <StepAlert variant="warning" title="Route not available yet" message="Your current trust network cannot route this payment yet.">
             {#snippet action()}
-                <div class="flex flex-wrap gap-2">
-                    <button type="button" class="btn btn-xs btn-outline" onclick={openSelectedProfile}>Add trust</button>
-                    <button type="button" class="btn btn-xs btn-ghost" onclick={pickAnotherRecipient}>Pick another recipient</button>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                    <button type="button" style="height:28px;padding:0 12px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.ink};font-size:11.5px;font-weight:540;cursor:pointer;" onclick={openSelectedProfile}>Add trust</button>
+                    <button type="button" style="height:28px;padding:0 12px;border-radius:9999px;border:0;background:transparent;color:{T.inkMuted};font-size:11.5px;cursor:pointer;" onclick={pickAnotherRecipient}>Pick another</button>
                 </div>
             {/snippet}
         </StepAlert>
     {:else if amountError || exceedsKnownTransferLimit}
-        <StepAlert
-            variant="warning"
-            className="mt-3"
-            title="Amount exceeds route capacity"
-            message={maxAmountText ? `Right now your network can route up to ${maxAmountText} Circles.` : 'Try a smaller amount or adjust the route above.'}
-        >
+        <StepAlert variant="warning" title="Amount exceeds route capacity" message={maxAmountText ? `Your network can route up to ${maxAmountText} CRC right now.` : 'Try a smaller amount or adjust the route above.'}>
             {#snippet action()}
-                <div class="flex flex-wrap gap-2">
+                <div style="display:flex;flex-wrap:wrap;gap:6px;">
                     {#if maxAmountText}
-                        <button type="button" class="btn btn-xs btn-outline" onclick={applyMaxAmount}>Use max ({maxAmountText})</button>
+                        <button type="button" style="height:28px;padding:0 12px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.ink};font-size:11.5px;font-weight:540;cursor:pointer;" onclick={applyMaxAmount}>Use max ({maxAmountText})</button>
                     {/if}
-                    <button type="button" class="btn btn-xs btn-ghost" onclick={focusAmountInput}>Lower amount</button>
+                    <button type="button" style="height:28px;padding:0 12px;border-radius:9999px;border:0;background:transparent;color:{T.inkMuted};font-size:11.5px;cursor:pointer;" onclick={focusAmountInput}>Lower amount</button>
                 </div>
             {/snippet}
         </StepAlert>
     {:else if zeroAmountError}
-        <StepAlert variant="warning" className="mt-3" title="Enter an amount" message="Amount must be greater than 0." />
+        <StepAlert variant="warning" title="Enter an amount" message="Amount must be greater than 0." />
     {:else if routeValidationError}
-        <StepAlert
-            variant="warning"
-            className="mt-3"
-            title="Route not ready"
-            message="Wait for routing to finish or retry route calculation."
-        >
+        <StepAlert variant="warning" title="Route not ready" message="Wait for routing to finish or retry.">
             {#snippet action()}
-                <button type="button" class="btn btn-xs btn-ghost" onclick={retryRouteCalculation}>Retry route</button>
+                <button type="button" style="height:28px;padding:0 12px;border-radius:9999px;border:0;background:transparent;color:{T.inkMuted};font-size:11.5px;cursor:pointer;" onclick={retryRouteCalculation}>Retry route</button>
             {/snippet}
         </StepAlert>
     {/if}
 
-    <div class="mt-4 border border-base-300 rounded-xl overflow-hidden bg-base-100">
+    <!-- More options accordion -->
+    <div style="border:1px solid {T.hairlineSoft};border-radius:14px;overflow:hidden;background:{T.surface};">
         <button
-                type="button"
-                class="w-full px-3 py-2 flex items-center justify-between text-left hover:bg-base-200/60"
-                aria-expanded={showMoreOptions}
-                onclick={() => (showMoreOptions = !showMoreOptions)}
+            type="button"
+            style="width:100%;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;text-align:left;background:transparent;border:0;cursor:pointer;"
+            aria-expanded={showMoreOptions}
+            onclick={() => (showMoreOptions = !showMoreOptions)}
         >
             <div>
-                <div class="text-sm font-semibold">More options</div>
-                <div class="text-xs text-base-content/70">Add note or adjust routing</div>
+                <div style="font-size:13px;font-weight:540;color:{T.ink};">More options</div>
+                <div style="font-size:11.5px;color:{T.inkMuted};margin-top:1px;">Add note or adjust routing</div>
             </div>
-            <span class="text-base-content/70 text-sm">{showMoreOptions ? '▾' : '▸'}</span>
+            <Icon name={showMoreOptions ? 'chevronDown' : 'chevronRight'} size={14} stroke={T.inkMuted} />
         </button>
 
         {#if showMoreOptions}
-            <div class="p-3 border-t border-base-300 space-y-4">
+            <div style="padding:12px 14px;border-top:1px solid {T.hairlineSoft};display:flex;flex-direction:column;gap:14px;">
                 {#if avatarState.avatar?.avatarInfo?.version === 2 && !context.selectedAsset.isErc20}
-                    <div class="space-y-2">
-                        <div class="flex items-center justify-between gap-2">
-                            <label for="dataInput" class="text-sm font-semibold">Note (optional)</label>
-                            <div class="join">
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                            <label for="dataInput" style="font-size:12.5px;font-weight:540;color:{T.ink};">Note (optional)</label>
+                            <div style="display:flex;gap:4px;">
                                 <button
-                                        type="button"
-                                        class="btn btn-xs join-item"
-                                        class:btn-primary={context.dataType === 'utf-8'}
-                                        class:btn-ghost={context.dataType !== 'utf-8'}
-                                        onclick={() => (context.dataType = 'utf-8')}
+                                    type="button"
+                                    style="height:24px;padding:0 10px;border-radius:9999px;border:1px solid {context.dataType === 'utf-8' ? T.primary : T.hairline};background:{context.dataType === 'utf-8' ? T.primaryFaint : T.surface};color:{context.dataType === 'utf-8' ? T.primary : T.inkMuted};font-size:11px;font-weight:540;cursor:pointer;"
+                                    onclick={() => (context.dataType = 'utf-8')}
                                 >UTF-8</button>
                                 <button
-                                        type="button"
-                                        class="btn btn-xs join-item"
-                                        class:btn-primary={context.dataType === 'hex'}
-                                        class:btn-ghost={context.dataType !== 'hex'}
-                                        onclick={() => (context.dataType = 'hex')}
+                                    type="button"
+                                    style="height:24px;padding:0 10px;border-radius:9999px;border:1px solid {context.dataType === 'hex' ? T.primary : T.hairline};background:{context.dataType === 'hex' ? T.primaryFaint : T.surface};color:{context.dataType === 'hex' ? T.primary : T.inkMuted};font-size:11px;font-weight:540;cursor:pointer;"
+                                    onclick={() => (context.dataType = 'hex')}
                                 >Hex</button>
                             </div>
                         </div>
                         <textarea
-                                id="dataInput"
-                                class="textarea textarea-bordered w-full"
-                                rows="3"
-                                placeholder="Add a note for this transfer"
-                                bind:value={context.data}
+                            id="dataInput"
+                            style="width:100%;padding:10px 12px;border:1px solid {T.hairline};border-radius:10px;font-family:{T.fontSans};font-size:12.5px;color:{T.ink};background:{T.surfaceAlt};resize:vertical;min-height:72px;box-sizing:border-box;"
+                            rows="3"
+                            placeholder="Add a note for this transfer"
+                            bind:value={context.data}
                         ></textarea>
                     </div>
                 {/if}
 
                 {#if context.selectedAsset?.tokenAddress === TransitiveTransferTokenAddress && !pathfindingAction.loading}
-                    <div class="space-y-2">
-                        <div class="text-sm font-semibold">Advanced routing</div>
-                        <div class="flex items-center gap-2 mt-1">
-                            <label for="maxTransfersAdvanced" class="text-sm font-medium whitespace-nowrap">Max. transfers</label>
+                    <div style="display:flex;flex-direction:column;gap:6px;">
+                        <div style="font-size:12.5px;font-weight:540;color:{T.ink};">Advanced routing</div>
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <label for="maxTransfersAdvanced" style="font-size:12px;color:{T.inkMuted};white-space:nowrap;">Max. transfers</label>
                             <input
-                                    id="maxTransfersAdvanced"
-                                    type="number"
-                                    min="1"
-                                    max="1000"
-                                    class="input input-bordered input-sm w-24"
-                                    value={context.maxTransfers}
-                                    onblur={onMaxTransfersChange}
-                                    onkeydown={(e) => e.key === 'Enter' && onMaxTransfersChange(e)}
+                                id="maxTransfersAdvanced"
+                                type="number"
+                                min="1"
+                                max="1000"
+                                style="width:80px;padding:6px 10px;border:1px solid {T.hairline};border-radius:8px;font-family:{T.fontSans};font-size:12.5px;color:{T.ink};background:{T.surface};"
+                                value={context.maxTransfers}
+                                onblur={onMaxTransfersChange}
+                                onkeydown={(e) => e.key === 'Enter' && onMaxTransfersChange(e)}
                             />
                         </div>
                     </div>
@@ -534,12 +519,18 @@
         {/if}
     </div>
 
-    <div class="mt-6 flex justify-end">
+    <div style="display:flex;justify-content:flex-end;margin-top:8px;">
         <button
-                type="button"
-                class="btn btn-primary btn-sm"
-                disabled={!canContinue}
-                onclick={handleSelect}
+            type="button"
+            style="
+                height:44px;padding:0 24px;border-radius:9999px;border:0;cursor:{canContinue ? 'pointer' : 'not-allowed'};
+                background:{canContinue ? T.primary : T.pageDeep};color:{canContinue ? '#fff' : T.inkMuted};
+                font-family:{T.fontSans};font-size:14px;font-weight:580;letter-spacing:-0.005em;
+                box-shadow:{canContinue ? '0 4px 12px rgba(88,73,212,0.25)' : 'none'};
+                transition:background .15s,box-shadow .15s;
+            "
+            disabled={!canContinue}
+            onclick={handleSelect}
         >
             Continue
         </button>

@@ -1,8 +1,6 @@
 <script lang="ts">
   import type { Address } from '@circles-sdk/utils';
   import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
-  import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
-  import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import { popToOrOpen } from '$lib/shared/flow';
@@ -11,6 +9,7 @@
   import { ADD_TRUST_FLOW_SCAFFOLD_BASE } from './constants';
   import PickAccounts from './1_PickAccounts.svelte';
   import type { AddTrustFlowContext } from './context';
+  import { T } from '$lib/design-system/tokens.js';
 
   interface Props {
     context: AddTrustFlowContext;
@@ -44,42 +43,50 @@
 </script>
 
 <FlowStepScaffold {...ADD_TRUST_FLOW_SCAFFOLD_BASE} step={2} title="Confirm trust" subtitle="Review your selection before confirming.">
-  <div class="space-y-4">
-    <StepSection
-      title={`Selected accounts (${selected.length})`}
-      subtitle="Trust means you accept Circles from these accounts."
-    >
+  <div style="display:flex;flex-direction:column;gap:14px;">
+
+    <!-- Info note -->
+    <div style="font-size:12px;color:{T.inkMuted};padding:0 2px;line-height:1.5;">
+      Trusting means you accept Circles issued by {selected.length === 1 ? 'this account' : 'these accounts'}.
+    </div>
+
+    <!-- Accounts card -->
+    <div style="border:1px solid {T.hairlineSoft};border-radius:14px;overflow:hidden;background:{T.surface};">
+      <div style="padding:8px 14px;border-bottom:1px solid {T.hairlineSoft};font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">
+        {selected.length === 1 ? 'Account' : `Accounts (${selected.length})`}
+      </div>
+
       {#if selected.length === 0}
-        <div class="text-sm opacity-70">No accounts selected.</div>
+        <div style="padding:14px;font-size:12.5px;color:{T.inkMuted};">No accounts selected.</div>
       {:else}
-        <div class="w-full flex flex-col gap-y-1.5" role="list">
-          {#each selected as address (address)}
-            <div class="rounded-[var(--row-radius)]" role="listitem">
+        <div style="display:flex;flex-direction:column;" role="list">
+          {#each selected as address, i (address)}
+            <div style="padding:10px 14px;{i > 0 ? `border-top:1px solid ${T.hairlineSoft};` : ''}" role="listitem">
               <Avatar {address} view="horizontal" clickable={false} showTypeInfo={true} />
             </div>
           {/each}
         </div>
       {/if}
-    </StepSection>
+    </div>
 
-    <StepActionBar>
-      {#snippet secondary()}
-        <button type="button" class="btn btn-ghost btn-sm" onclick={changeSelection}>
-          Change selection
-        </button>
-      {/snippet}
+    <!-- Actions -->
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <button
+        type="button"
+        style="height:36px;padding:0 16px;border-radius:9999px;border:0;background:transparent;color:{T.inkMuted};font-size:13px;cursor:pointer;"
+        onclick={changeSelection}
+      >Change selection</button>
 
-      {#snippet primary()}
-        <ActionButton
-          action={confirm}
-          disabled={!canConfirm}
-          title="Confirm trust"
-          data-popup-default-action
-          data-popup-initial-focus
-        >
-          {#snippet children()}Confirm{/snippet}
-        </ActionButton>
-      {/snippet}
-    </StepActionBar>
+      <ActionButton
+        action={confirm}
+        disabled={!canConfirm}
+        title="Confirm trust"
+        data-popup-default-action
+        data-popup-initial-focus
+        class="btn btn-primary"
+      >
+        {#snippet children()}Confirm trust{/snippet}
+      </ActionButton>
+    </div>
   </div>
 </FlowStepScaffold>

@@ -1,6 +1,5 @@
 <script lang="ts">
     import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
-    import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
     import { CREATE_GROUP_FLOW_SCAFFOLD_BASE } from './constants';
     import OnChainNameSection from '$lib/shared/ui/flow/OnChainNameSection.svelte';
     import Tooltip from '$lib/shared/ui/primitives/Tooltip.svelte';
@@ -9,6 +8,7 @@
     import { openStep } from '$lib/shared/flow';
     import { wallet } from '$lib/shared/state/wallet.svelte';
     import Settings from './2_Settings.svelte';
+    import { T } from '$lib/design-system/tokens.js';
     import {
         createGroupContext,
         type CreateGroupFlowContext
@@ -87,27 +87,34 @@
   subtitle="Choose simple defaults or configure advanced group settings."
 >
 
-    <p class="text-sm text-base-content/70 mt-1">Name, symbol, description and image.</p>
+    <p style="font-size:12.5px;color:{T.inkMuted};margin:0;">Name, symbol, description and image.</p>
 
-    <div class="space-y-4">
-        <label class="form-control">
-            <div class="label">
-                <span class="label-text">Symbol <Tooltip content="Short currency symbol (e.g., CRC)." /></span>
-            </div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+        <!-- Symbol -->
+        <div style="display:flex;flex-direction:column;gap:6px;">
+            <label style="font-size:12px;font-weight:600;color:{T.inkMuted};letter-spacing:0.04em;text-transform:uppercase;display:flex;align-items:center;gap:4px;">
+                Symbol <Tooltip content="Short currency symbol (e.g., CRC)." />
+            </label>
             <input
                 required
                 type="text"
-                class="input input-sm input-bordered w-full"
+                style="
+                    width:100%;padding:10px 14px;border:1px solid {showSymbolInvalid ? T.negative : T.hairline};border-radius:10px;
+                    font-family:{T.fontSans};font-size:13px;color:{T.ink};background:{T.surface};
+                    box-sizing:border-box;transition:border-color .15s;
+                "
                 bind:value={ctx.profile.symbol}
                 placeholder="CRC…"
                 data-popup-initial-input
             />
-            <div class="h-5 text-xs text-error pt-1">{#if showSymbolInvalid}Invalid symbol{/if}</div>
-        </label>
+            {#if showSymbolInvalid}
+                <div style="font-size:11.5px;color:{T.negative};">Invalid symbol</div>
+            {/if}
+        </div>
 
-        <div class="space-y-2">
-            <div class="text-sm font-semibold">Group profile</div>
-
+        <!-- Group profile -->
+        <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="font-size:12px;font-weight:600;color:{T.inkMuted};letter-spacing:0.04em;text-transform:uppercase;">Group profile</div>
             <ProfileFormStep
                 bind:name={ctx.profile.name}
                 bind:description={ctx.profile.description}
@@ -116,11 +123,9 @@
                 nameLabel="Profile name"
                 showSubmit={false}
             />
-            <div class="h-5 text-xs text-error pt-1">
-                {#if !profileNameValid}
-                    Profile name is required and must be at most {PROFILE_NAME_MAX_LENGTH} characters.
-                {/if}
-            </div>
+            {#if !profileNameValid && profileNameTrimmed.length > 0}
+                <div style="font-size:11.5px;color:{T.negative};">Profile name is required (max {PROFILE_NAME_MAX_LENGTH} chars).</div>
+            {/if}
         </div>
 
         <OnChainNameSection
@@ -131,11 +136,17 @@
         />
     </div>
 
-    <StepActionBar>
-        {#snippet primary()}
-            <button type="button" class="btn btn-primary btn-sm" disabled={!canContinue} onclick={next}>
-                Continue
-            </button>
-        {/snippet}
-    </StepActionBar>
+    <div style="display:flex;justify-content:flex-end;margin-top:4px;">
+        <button
+            type="button"
+            style="
+                height:44px;padding:0 24px;border-radius:9999px;border:0;cursor:{canContinue ? 'pointer' : 'not-allowed'};
+                background:{canContinue ? T.primary : T.pageDeep};color:{canContinue ? '#fff' : T.inkMuted};
+                font-family:{T.fontSans};font-size:14px;font-weight:580;
+                box-shadow:{canContinue ? '0 4px 12px rgba(88,73,212,0.25)' : 'none'};
+            "
+            disabled={!canContinue}
+            onclick={next}
+        >Continue</button>
+    </div>
     </FlowStepScaffold>

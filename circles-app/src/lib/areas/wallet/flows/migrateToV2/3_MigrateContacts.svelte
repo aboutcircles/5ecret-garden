@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
-  import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
   import { MIGRATE_FLOW_SCAFFOLD_BASE } from './constants';
   import type { MigrateToV2Context } from '$lib/areas/wallet/flows/migrateToV2/context';
   import Migrate from './4_Migrate.svelte';
@@ -11,8 +10,8 @@
   import { openStep } from '$lib/shared/flow';
   import type { ReviewStepProps } from '$lib/shared/flow';
   import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
-  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
+  import { T } from '$lib/design-system/tokens.js';
   import { createSearchablePaginatedList } from '$lib/shared/state/searchablePaginatedList';
   import { writable } from 'svelte/store';
 
@@ -117,10 +116,11 @@
   subtitle="Choose which trusted contacts to migrate to V2."
 >
 
-  <p class="text-base-content/70 mt-2">
-    Select the contacts you want to keep in your new Circles V2 profile.
+  <p style="font-size:12.5px;color:{T.inkMuted};margin:0;">
+    Select the contacts to keep in your new Circles V2 profile.
   </p>
-  <div class="mt-6" role="group" aria-label="Migrate contacts list">
+
+  <div role="group" aria-label="Migrate contacts list">
     <ListShell
       query={searchQuery}
       searchPlaceholder="Search by address or name"
@@ -137,8 +137,13 @@
       wrapInListContainer={false}
       data-contacts-list-scope
     >
-      <div bind:this={contactsListEl} class="w-full flex flex-col gap-y-1.5" role="list">
+      <div
+        bind:this={contactsListEl}
+        style="display:flex;flex-direction:column;gap:4px;margin-top:6px;"
+        role="list"
+      >
         {#each $filteredItems as address (address)}
+          {@const isSelected = selectedAddresses.includes(address)}
           <div
             tabindex={0}
             data-migrate-contact-row
@@ -146,43 +151,47 @@
             onkeydown={listNavigator.onRowKeydown}
             onclick={onRowClick}
             role="button"
-            aria-pressed={selectedAddresses.includes(address) ? 'true' : 'false'}
+            aria-pressed={isSelected ? 'true' : 'false'}
             aria-label={`Contact ${address}`}
-            class="rounded-[var(--row-radius)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            style="
+              padding:10px 12px;border-radius:12px;cursor:pointer;
+              background:{isSelected ? T.primaryFaint : T.surface};
+              border:1px solid {isSelected ? 'rgba(88,73,212,0.2)' : T.hairlineSoft};
+              display:flex;align-items:center;justify-content:space-between;gap:10px;
+              transition:background .1s,border-color .1s;
+            "
           >
-            <RowFrame clickable={false} dense={true} noLeading={true}>
-              <div class="min-w-0">
-                <Avatar
-                  {address}
-                  clickable={false}
-                  view="horizontal"
-                  bottomInfo={formatTrustRelation($contacts?.data[address].row.relation)}
-                  showTypeInfo={true}
-                />
-              </div>
-              {#snippet trailing()}
-                <input
-                  type="checkbox"
-                  class="checkbox checkbox-sm"
-                  checked={selectedAddresses.includes(address)}
-                  onchange={(event) => onToggleSelectedFromCheckbox(address, event)}
-                />
-              {/snippet}
-            </RowFrame>
+            <div style="min-width:0;flex:1;">
+              <Avatar
+                {address}
+                clickable={false}
+                view="horizontal"
+                bottomInfo={formatTrustRelation($contacts?.data[address].row.relation)}
+                showTypeInfo={true}
+              />
+            </div>
+            <input
+              type="checkbox"
+              style="width:16px;height:16px;accent-color:{T.primary};flex-shrink:0;cursor:pointer;"
+              checked={isSelected}
+              onchange={(event) => onToggleSelectedFromCheckbox(address, event)}
+            />
           </div>
         {/each}
       </div>
     </ListShell>
   </div>
-  <StepActionBar>
-    {#snippet primary()}
-      <button
-        type="submit"
-        class="btn btn-primary btn-sm"
-        onclick={() => next()}
-      >
-        Continue
-      </button>
-    {/snippet}
-  </StepActionBar>
+
+  <div style="display:flex;justify-content:flex-end;margin-top:8px;">
+    <button
+      type="submit"
+      style="
+        height:44px;padding:0 24px;border-radius:9999px;border:0;cursor:pointer;
+        background:{T.primary};color:#fff;
+        font-family:{T.fontSans};font-size:14px;font-weight:580;
+        box-shadow:0 4px 12px rgba(88,73,212,0.25);
+      "
+      onclick={() => next()}
+    >Continue</button>
+  </div>
 </FlowStepScaffold>
