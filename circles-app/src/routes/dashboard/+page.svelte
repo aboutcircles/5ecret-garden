@@ -18,6 +18,7 @@
     import { openSendFlowPopup } from '$lib/areas/wallet/flows/send/openSendFlowPopup';
     import { openAddTrustFlow } from '$lib/areas/trust/flows/addTrust/openAddTrustFlow';
     import ReceivePopup from './ReceivePopup.svelte';
+    import MintPopup from './MintPopup.svelte';
 
     import { T } from '$lib/design-system/tokens.js';
     import Icon from '$lib/design-system/Icon.svelte';
@@ -36,16 +37,21 @@
         })();
     });
 
+    function openMintPopup() {
+        popupControls.open({
+            title: 'Daily mint',
+            kind: 'inspect',
+            component: MintPopup,
+            props: {
+                initialAmount: mintableAmount,
+                onMinted: (next: number) => { mintableAmount = next; },
+            },
+        });
+    }
+
     async function mintPersonalCircles() {
-        if (!avatarState.avatar) throw new Error('Avatar store is not available');
-        try {
-            await runTask({ name: 'Collecting CRC ...', promise: avatarState.avatar!.personalMint() });
-        } catch (error) {
-            if (!isBenignReceiptDecodeError(error)) throw error;
-        } finally {
-            const refreshed = await avatarState.avatar!.getMintableAmount();
-            mintableAmount = refreshed ?? 0;
-        }
+        // kept for back-compat with the legend dot button; routes to popup
+        openMintPopup();
     }
 
     let personalToken: number = $derived(
@@ -223,13 +229,13 @@
                     </div>
                 </div>
                 <button
-                    onclick={mintPersonalCircles}
+                    onclick={openMintPopup}
                     style="
                         height:32px;padding:0 14px;border-radius:9999px;
                         background:{T.primary};color:#fff;border:0;cursor:pointer;
                         font-family:{T.fontSans};font-size:13px;font-weight:540;
                         white-space:nowrap;flex-shrink:0;
-                        box-shadow:0 1px 0 rgba(255,255,255,0.18) inset, 0 1px 2px rgba(15,10,30,0.12);
+                        box-shadow:0 4px 12px rgba(88,73,212,0.25),0 1px 0 rgba(255,255,255,0.18) inset;
                     "
                 >Mint</button>
             </div>
