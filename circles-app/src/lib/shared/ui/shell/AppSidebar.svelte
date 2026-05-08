@@ -3,18 +3,20 @@
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import {
-    Home as LHome,
+    Wallet as LWallet,
+    Send as LSend,
     Users as LUsers,
     Layers as LLayers,
     ShoppingBag as LShoppingBag,
     Settings as LSettings,
-    Send as LSend,
+    Sparkles as LSparkles,
+    Info as LInfo,
     ChevronDown as LChevronDown,
   } from 'lucide';
   import { popupControls } from '$lib/shared/state/popup';
 
   const NAV_ITEMS = [
-    { label: 'Wallet',   href: '/dashboard', icon: LHome },
+    { label: 'Wallet',   href: '/dashboard', icon: LWallet },
     { label: 'Contacts', href: '/contacts',  icon: LUsers },
     { label: 'Groups',   href: '/groups',    icon: LLayers },
     { label: 'Market',   href: '/market',    icon: LShoppingBag },
@@ -43,88 +45,107 @@
 
 <!-- Desktop-only sidebar; hidden on mobile -->
 <aside
-  class="hidden md:flex flex-col w-[240px] shrink-0 h-full bg-base-100"
-  style="border-right: 1px solid rgba(31,17,70,0.06);"
+  class="hidden md:flex flex-col shrink-0 h-full"
+  style="
+    width:248px;background:#FFFFFF;
+    border-right:1px solid rgba(31,17,70,0.05);
+    padding:20px 14px 18px;gap:18px;
+  "
 >
   <!-- Logo row -->
-  <div class="flex items-center gap-2 px-5 h-[60px] shrink-0" style="border-bottom: 1px solid rgba(31,17,70,0.05);">
-    <img src="/logo.svg" alt="Circles" class="w-7 h-7" />
-    <span class="font-semibold text-[15px] tracking-tight text-base-content">Circles</span>
-    <span class="text-[10px] px-1.5 py-0.5 rounded-full font-semibold tracking-wider uppercase ml-0.5"
-      style="background:rgba(31,17,70,0.06);color:rgba(15,10,30,0.40);">beta</span>
+  <div style="padding:4px 10px 0;display:flex;align-items:center;gap:8px;">
+    <img src="/logo.svg" alt="Circles" class="w-[26px] h-[26px]" />
+    <span style="font-family:'Inter Tight',sans-serif;font-size:11px;color:rgba(15,10,30,0.40);padding:2px 7px;border-radius:9999px;background:#EFEDE7;font-weight:580;letter-spacing:0.04em;text-transform:lowercase;">beta</span>
   </div>
 
-  <!-- Account button -->
+  <!-- Account picker -->
   {#if avatar}
-    <div class="px-3 pt-3 pb-2">
-      <button
-        onclick={openProfile}
-        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors hover:bg-base-200 cursor-pointer"
-        style="border: 1px solid rgba(31,17,70,0.07);"
-      >
-        {#if avatarState.profile?.previewImageUrl}
-          <img
-            src={avatarState.profile.previewImageUrl}
-            alt="avatar"
-            class="w-8 h-8 rounded-full object-cover shrink-0"
-          />
-        {:else}
-          <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0">
-            <span class="text-[13px] font-semibold text-primary-content">{initial}</span>
-          </div>
-        {/if}
-        <div class="flex-1 min-w-0">
-          <div class="text-[13.5px] font-[580] truncate text-base-content">{profile?.name ?? 'My Account'}</div>
-          <div class="text-[11px] font-mono truncate" style="color:rgba(15,10,30,0.45);">
-            {avatar.address.slice(0, 6)}…{avatar.address.slice(-4)}
-          </div>
+    <button
+      onclick={openProfile}
+      class="cursor-pointer text-left transition-colors hover:bg-base-200"
+      style="
+        margin:0 4px;padding:10px 12px;display:flex;align-items:center;gap:10px;
+        background:#FBFAF7;border:1px solid rgba(31,17,70,0.08);border-radius:14px;
+      "
+    >
+      {#if avatarState.profile?.previewImageUrl}
+        <img src={avatarState.profile.previewImageUrl} alt="avatar" class="w-8 h-8 rounded-full object-cover shrink-0" />
+      {:else}
+        <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0">
+          <span class="text-[13px] font-semibold text-primary-content">{initial}</span>
         </div>
-        <Lucide icon={LChevronDown} size={14} class="shrink-0 opacity-40" ariaLabel="" />
-      </button>
-    </div>
-
-    <!-- Send CTA -->
-    <div class="px-3 pb-3">
-      <button
-        onclick={openSend}
-        class="w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-primary text-primary-content text-[14px] font-[580] transition-opacity hover:opacity-90 active:scale-[0.98] cursor-pointer"
-      >
-        <Lucide icon={LSend} size={15} class="shrink-0" ariaLabel="" />
-        Send
-      </button>
-    </div>
+      {/if}
+      <div class="flex-1 min-w-0">
+        <div style="font-family:'Inter Tight',sans-serif;font-size:13.5px;font-weight:580;color:#0F0A1E;" class="truncate">{profile?.name ?? 'My Account'}</div>
+        <div style="font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;font-size:11px;color:rgba(15,10,30,0.62);" class="truncate">
+          {avatar.address.slice(0, 6)}…{avatar.address.slice(-4)}
+        </div>
+      </div>
+      <Lucide icon={LChevronDown} size={16} class="shrink-0" ariaLabel="" />
+    </button>
   {/if}
 
-  <!-- Nav items -->
-  <nav class="flex-1 px-3 flex flex-col gap-0.5 overflow-y-auto">
+  <!-- Nav -->
+  <nav style="display:flex;flex-direction:column;gap:2px;padding:0 4px;">
     {#each NAV_ITEMS as item}
       {@const active = isActive(item.href)}
       <a
         href={item.href}
-        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13.5px] transition-colors no-underline"
-        style="{active
-          ? 'background:#EAE7FB;color:#352899;font-weight:580;'
-          : 'color:#2A1F4A;font-weight:500;'}"
+        class="no-underline cursor-pointer transition-colors"
+        style="
+          display:flex;align-items:center;gap:11px;
+          padding:9px 12px;border-radius:10px;
+          background:{active ? '#EAE7FB' : 'transparent'};
+          color:{active ? '#352899' : '#2A1F4A'};
+          font-family:'Inter Tight',sans-serif;font-size:13.5px;font-weight:{active ? 580 : 500};
+        "
       >
         <Lucide icon={item.icon} size={17} class="shrink-0" ariaLabel="" />
-        {item.label}
+        <span style="flex:1;">{item.label}</span>
       </a>
     {/each}
 
     <a
       href="/settings"
-      class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13.5px] transition-colors no-underline"
-      style="{$page.url.pathname.startsWith('/settings')
-        ? 'background:#EAE7FB;color:#352899;font-weight:580;'
-        : 'color:#2A1F4A;font-weight:500;'}"
+      class="no-underline cursor-pointer transition-colors"
+      style="
+        display:flex;align-items:center;gap:11px;
+        padding:9px 12px;border-radius:10px;
+        background:{$page.url.pathname.startsWith('/settings') ? '#EAE7FB' : 'transparent'};
+        color:{$page.url.pathname.startsWith('/settings') ? '#352899' : '#2A1F4A'};
+        font-family:'Inter Tight',sans-serif;font-size:13.5px;font-weight:{$page.url.pathname.startsWith('/settings') ? 580 : 500};
+      "
     >
       <Lucide icon={LSettings} size={17} class="shrink-0" ariaLabel="" />
-      Settings
+      <span style="flex:1;">Settings</span>
     </a>
   </nav>
 
+  <!-- Send CTA -->
+  {#if avatar}
+    <div style="margin:0 4px;">
+      <button
+        onclick={openSend}
+        class="cursor-pointer transition-opacity hover:opacity-90 active:scale-[0.98]"
+        style="
+          width:100%;height:40px;border-radius:9999px;border:0;
+          background:#5849D4;color:#FFFFFF;
+          display:flex;align-items:center;justify-content:center;gap:8px;
+          font-family:'Inter Tight',sans-serif;font-size:14px;font-weight:540;
+          box-shadow:0 1px 0 rgba(255,255,255,0.18) inset, 0 1px 2px rgba(15,10,30,0.12);
+        "
+      >
+        <Lucide icon={LSend} size={15} class="shrink-0" ariaLabel="" />
+        Send Circles
+      </button>
+    </div>
+  {/if}
+
   <!-- Footer -->
-  <div class="px-5 py-4 shrink-0" style="border-top: 1px solid rgba(31,17,70,0.05);">
-    <p class="text-[11.5px]" style="color:rgba(15,10,30,0.38);">Circles v2 · Gnosis Chain</p>
+  <div style="margin-top:auto;padding:8px 8px 0;border-top:1px solid rgba(31,17,70,0.05);">
+    <div style="display:flex;align-items:center;gap:8px;padding-top:10px;">
+      <Lucide icon={LInfo} size={14} class="shrink-0" ariaLabel="" />
+      <span style="font-size:11.5px;color:rgba(15,10,30,0.40);">Circles v2 · Gnosis Chain</span>
+    </div>
   </div>
 </aside>

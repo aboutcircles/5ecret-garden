@@ -126,29 +126,30 @@
 </script>
 
 <!-- Mobile-only clean header; desktop uses AppSidebar -->
-<header class="md:hidden sticky top-0 z-20 bg-base-100 flex items-center h-14 px-4 gap-1 shrink-0"
-  style="border-bottom: 1px solid rgba(31,17,70,0.08);">
+<header class="md:hidden sticky top-0 z-20 flex items-center h-14 px-[18px] gap-1.5 shrink-0"
+  style="background:#F6F5F2;">
 
   <!-- Logo -->
   <a href={homeLink} class="flex items-center gap-2 flex-1 no-underline">
-    <img src="/logo.svg" alt="Circles" class="w-7 h-7" />
-    <span class="font-semibold text-[15px] tracking-tight text-base-content">Circles</span>
-    <span class="text-[10px] px-1.5 py-0.5 rounded-full font-semibold tracking-wider uppercase"
-      style="background:rgba(31,17,70,0.06);color:rgba(15,10,30,0.45);">beta</span>
+    <img src="/logo.svg" alt="Circles" class="w-[22px] h-[22px]" />
+    <span class="font-semibold text-[15px] tracking-tight" style="color:#0F0A1E;">Circles</span>
+    <span class="text-[10px] px-1.5 py-0.5 rounded-full font-[580] tracking-wider lowercase"
+      style="background:#EFEDE7;color:rgba(15,10,30,0.40);">beta</span>
   </a>
 
   <!-- Cart (market page or has items) -->
   {#if isMarketPage || $cartItemCount > 0}
     <button
       type="button"
-      class="relative btn btn-ghost btn-circle btn-sm"
+      class="relative cursor-pointer flex items-center justify-center"
       onclick={openBasket}
       disabled={$cartItemCount === 0}
       aria-label="Open basket"
+      style="width:36px;height:36px;border-radius:9999px;background:#FFFFFF;border:1px solid rgba(31,17,70,0.08);box-shadow:0 1px 2px rgba(15,10,30,0.04);"
     >
-      <Lucide icon={LBag} size={18} ariaLabel="" />
+      <Lucide icon={LBag} size={16} ariaLabel="" />
       {#if $cartItemCount > 0}
-        <span class="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary text-primary-content text-[9px] font-bold flex items-center justify-center">
+        <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-primary-content text-[9px] font-bold flex items-center justify-center">
           {$cartItemCount}
         </span>
       {/if}
@@ -158,23 +159,25 @@
   <!-- Search -->
   <button
     type="button"
-    class="btn btn-ghost btn-circle btn-sm"
+    class="cursor-pointer flex items-center justify-center"
     aria-label="Search (Ctrl/Cmd+K)"
     onclick={onSearchButtonClick}
     onkeydown={onSearchButtonKeydown}
+    style="width:36px;height:36px;border-radius:9999px;background:#FFFFFF;border:1px solid rgba(31,17,70,0.08);box-shadow:0 1px 2px rgba(15,10,30,0.04);"
   >
-    <Lucide icon={LSearch} size={18} ariaLabel="" />
+    <Lucide icon={LSearch} size={16} ariaLabel="" />
   </button>
 
   <!-- Hamburger menu -->
   <details class="dropdown dropdown-end flex-none" bind:this={menuEl}>
     <summary
-      class="btn btn-ghost btn-circle btn-sm"
+      class="flex items-center justify-center list-none cursor-pointer"
       aria-haspopup="menu"
       aria-expanded={menuEl?.open ? 'true' : 'false'}
+      style="width:36px;height:36px;border-radius:9999px;background:#FFFFFF;border:1px solid rgba(31,17,70,0.08);box-shadow:0 1px 2px rgba(15,10,30,0.04);"
     >
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-        class="inline-block h-5 w-5 stroke-current">
+        class="inline-block w-4 h-4 stroke-current">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
           d="M4 6h16M4 12h16M4 18h16" />
       </svg>

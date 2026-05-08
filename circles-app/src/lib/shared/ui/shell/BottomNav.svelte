@@ -1,6 +1,5 @@
 <script lang="ts">
   import { page } from '$app/stores';
-  import { popupState } from '$lib/shared/state/popup';
   import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import {
     Home as LHome,
@@ -53,14 +52,19 @@
   const rightItems = $derived(items.slice(midpoint));
 </script>
 
-<!-- Full-width bottom tab bar — mobile only; hidden on md+ -->
+<!-- Floating pill bottom tab bar — mobile only; hidden on md+ -->
 <nav
-  class="md:hidden shrink-0 bg-base-100"
-  style="border-top: 1px solid rgba(31,17,70,0.08); padding-bottom: env(safe-area-inset-bottom);"
+  class="md:hidden fixed left-3 right-3 z-40 pointer-events-none"
+  style="bottom: max(20px, calc(env(safe-area-inset-bottom) + 14px));"
   aria-label="Main navigation"
 >
-  <div class="flex items-stretch h-[56px]">
-
+  <div
+    class="pointer-events-auto flex items-center justify-between p-1.5 mx-auto max-w-md"
+    style="
+      height:64px;background:#FFFFFF;border-radius:9999px;
+      box-shadow:0 6px 18px rgba(15,10,30,0.10), 0 24px 48px rgba(15,10,30,0.12), 0 0 0 1px rgba(15,10,30,0.04);
+    "
+  >
     <!-- Left nav items -->
     {#each leftItems as item (item.link)}
       {@const kind   = item.icon ?? guessIcon(item.name, item.link)}
@@ -69,25 +73,35 @@
       <a
         href={item.link}
         aria-current={active ? 'page' : undefined}
-        class="flex-1 flex flex-col items-center justify-center gap-[3px] no-underline transition-colors"
-        style="color:{active ? 'oklch(var(--p))' : 'rgba(15,10,30,0.42)'};"
+        class="flex-1 no-underline"
+        style="
+          height:52px;border-radius:9999px;
+          display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+          background:{active ? '#EAE7FB' : 'transparent'};
+          color:{active ? '#352899' : 'rgba(15,10,30,0.48)'};
+          transition:background .14s, color .14s;
+        "
       >
-        <Lucide {icon} size={21} class="shrink-0" ariaLabel="" />
-        <span class="text-[10px] font-[520] leading-none">{item.name}</span>
+        <Lucide {icon} size={19} class="shrink-0" ariaLabel="" />
+        <span class="text-[10px] font-[580] leading-none">{item.name}</span>
       </a>
     {/each}
 
     <!-- Centre Send FAB -->
-    <div class="flex items-center justify-center px-3">
-      <button
-        onclick={onSend}
-        class="w-[50px] h-[50px] rounded-full bg-primary text-primary-content flex items-center justify-center transition-transform active:scale-95 cursor-pointer -translate-y-2"
-        style="box-shadow:0 4px 14px rgba(88,73,212,0.35);"
-        aria-label="Send"
-      >
-        <Lucide icon={LSend} size={21} class="shrink-0" ariaLabel="" />
-      </button>
-    </div>
+    <button
+      onclick={onSend}
+      class="cursor-pointer transition-transform active:scale-95 mx-1"
+      style="
+        width:52px;height:52px;border-radius:9999px;border:0;
+        background:#5849D4;color:#FFFFFF;
+        display:inline-flex;align-items:center;justify-content:center;
+        box-shadow:0 4px 14px rgba(88,73,212,0.5), inset 0 1px 0 rgba(255,255,255,0.18);
+        flex-shrink:0;
+      "
+      aria-label="Send"
+    >
+      <Lucide icon={LSend} size={22} class="shrink-0" ariaLabel="" />
+    </button>
 
     <!-- Right nav items -->
     {#each rightItems as item (item.link)}
@@ -97,13 +111,18 @@
       <a
         href={item.link}
         aria-current={active ? 'page' : undefined}
-        class="flex-1 flex flex-col items-center justify-center gap-[3px] no-underline transition-colors"
-        style="color:{active ? 'oklch(var(--p))' : 'rgba(15,10,30,0.42)'};"
+        class="flex-1 no-underline"
+        style="
+          height:52px;border-radius:9999px;
+          display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+          background:{active ? '#EAE7FB' : 'transparent'};
+          color:{active ? '#352899' : 'rgba(15,10,30,0.48)'};
+          transition:background .14s, color .14s;
+        "
       >
-        <Lucide {icon} size={21} class="shrink-0" ariaLabel="" />
-        <span class="text-[10px] font-[520] leading-none">{item.name}</span>
+        <Lucide {icon} size={19} class="shrink-0" ariaLabel="" />
+        <span class="text-[10px] font-[580] leading-none">{item.name}</span>
       </a>
     {/each}
-
   </div>
 </nav>

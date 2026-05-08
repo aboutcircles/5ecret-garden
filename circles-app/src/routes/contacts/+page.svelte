@@ -1,27 +1,20 @@
 <script lang="ts">
     import { browser } from '$app/environment';
-    import {contacts} from '$lib/shared/state/contacts';
+    import { contacts } from '$lib/shared/state/contacts';
     import Papa from 'papaparse';
     import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
-    import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
     import ContactRow from './ContactRow.svelte';
     import AvatarRowPlaceholder from '$lib/shared/ui/lists/placeholders/AvatarRowPlaceholder.svelte';
-    import {derived, writable, type Writable} from 'svelte/store';
-    import Filter from '$lib/shared/ui/lists/Filter.svelte';
-    import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
-    import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
-    import {Filter as LFilter, Download as LDownload, Plus as LPlus, Star} from 'lucide';
-    import { popupControls } from '$lib/shared/state/popup';
-    import {avatarState} from '$lib/shared/state/avatar.svelte';
+    import { derived, writable, type Writable } from 'svelte/store';
+    import { avatarState } from '$lib/shared/state/avatar.svelte';
     import { openAddTrustFlow } from '$lib/areas/trust/flows/addTrust/openAddTrustFlow';
-    import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
-    import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
-    import type { Action } from '$lib/shared/ui/shell/actions';
     import { goto } from '$app/navigation';
     import { createPaginatedList } from '$lib/shared/state/paginatedList';
     import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
-    import HelpPopover from '$lib/shared/ui/primitives/HelpPopover.svelte';
     import { getProfilesCoreBatch } from '$lib/shared/model/profile/coreRepo';
+
+    import { T } from '$lib/design-system/tokens.js';
+    import Icon from '$lib/design-system/Icon.svelte';
 
     const CONTACTS_PAGE_SIZE = 25;
     const CONTACTS_VISIBLE_COUNT_KEY = 'contacts:list:visible-count';
@@ -33,29 +26,18 @@
         return Math.max(1, Math.ceil(raw / CONTACTS_PAGE_SIZE));
     }
 
-    let filterVersion = writable<number | undefined>(undefined);
-    let filterRelation = writable<'mutuallyTrusts' | 'trusts' | 'trustedBy' | 'variesByVersion' | undefined>(undefined);
+    let activeRelation: Writable<'all' | 'mutuallyTrusts' | 'trustedBy' | 'trusts'> = writable('all');
     let searchQuery = writable<string>('');
     let contactsListScopeEl: HTMLDivElement | null = $state(null);
-
-    // Filters panel state — store to ensure reactivity in all modes
-    const showFilters: Writable<boolean> = writable(false);
-    const FILTER_PANEL_ID: string = 'contacts-filters';
-
-    function toggleFilters(): void {
-        showFilters.update((v) => !v);
-    }
 
     const profileCoreCache = writable(new Map<string, any>());
     const inflightProfileRequests = new Set<string>();
 
     async function preloadProfileCores(addresses: string[]) {
         if (addresses.length === 0) return;
-
         const normalized = addresses.map((addr) => addr.toLowerCase());
         const cacheSnapshot = $profileCoreCache;
         const missing = normalized.filter((addr) => !cacheSnapshot.has(addr) && !inflightProfileRequests.has(addr));
-
         if (missing.length === 0) return;
 
         missing.forEach((addr) => inflightProfileRequests.add(addr));
@@ -75,26 +57,22 @@
         }
     }
 
-    // Build the full filtered array (not paginated)
     const filteredAll = derived(
-        [contacts, filterVersion, filterRelation, profileCoreCache],
-        ([$contacts, $filterVersion, $filterRelation, $profileCache]) => {
+        [contacts, activeRelation, profileCoreCache],
+        ([$contacts, $activeRelation, $profileCache]) => {
             return Object.entries($contacts.data)
                 .filter(([_, contact]) => {
-                    if (avatarState.isGroup) {
-                        return contact.row.relation === 'trusts';
-                    }
-                    const matchesVersion = !$filterVersion || contact?.avatarInfo?.version === $filterVersion;
-                    const matchesRelation = !$filterRelation || contact?.row?.relation === $filterRelation;
-                    return matchesVersion && matchesRelation;
+                    if (avatarState.isGroup) return contact.row.relation === 'trusts';
+                    if ($activeRelation === 'all') return true;
+                    return contact?.row?.relation === $activeRelation;
                 })
                 .sort((a, b) => {
-                    const aRelation = a[1].row.relation;
-                    const bRelation = b[1].row.relation;
-                    if (aRelation === 'mutuallyTrusts' && bRelation !== 'mutuallyTrusts') return -1;
-                    if (aRelation === 'trusts' && bRelation === 'trustedBy') return -1;
-                    if (bRelation === 'mutuallyTrusts' && aRelation !== 'mutuallyTrusts') return 1;
-                    if (bRelation === 'trusts' && aRelation === 'trustedBy') return 1;
+                    const aRel = a[1].row.relation;
+                    const bRel = b[1].row.relation;
+                    if (aRel === 'mutuallyTrusts' && bRel !== 'mutuallyTrusts') return -1;
+                    if (aRel === 'trusts' && bRel === 'trustedBy') return -1;
+                    if (bRel === 'mutuallyTrusts' && aRel !== 'mutuallyTrusts') return 1;
+                    if (bRel === 'trusts' && aRel === 'trustedBy') return 1;
                     return 0;
                 })
                 .map(([address, contact]) => ({
@@ -110,7 +88,6 @@
         }
     );
 
-    // Apply search on top of filtered
     const searchedAll = derived([filteredAll, searchQuery], ([$filteredAll, $searchQuery]) => {
         const q = ($searchQuery ?? '').toLowerCase();
         if (!q) return $filteredAll;
@@ -120,28 +97,19 @@
         });
     });
 
-    // Paginate searched results for rendering
     const contactsPaginated = createPaginatedList(searchedAll, {
         pageSize: CONTACTS_PAGE_SIZE,
         initialPageCount: getInitialPageCount(),
     });
     const contactsPaginatedWithEnd = derived([contactsPaginated, contacts], ([$paginated, $contacts]) => {
         const hasData = ($paginated?.data ?? []).length > 0;
-        const showEnded = hasData
-            ? $paginated.ended
-            : ($contacts?.ended ?? false);
-        return {
-            ...$paginated,
-            ended: showEnded,
-        };
+        return { ...$paginated, ended: hasData ? $paginated.ended : ($contacts?.ended ?? false) };
     });
 
     $effect(() => {
         if (!browser) return;
         const loadedCount = $contactsPaginatedWithEnd?.data?.length ?? 0;
-        if (loadedCount > 0) {
-            window.sessionStorage.setItem(CONTACTS_VISIBLE_COUNT_KEY, String(loadedCount));
-        }
+        if (loadedCount > 0) window.sessionStorage.setItem(CONTACTS_VISIBLE_COUNT_KEY, String(loadedCount));
     });
 
     $effect(() => {
@@ -155,27 +123,23 @@
     });
 
     async function handleExportCSV(): Promise<void> {
-        // Export uses full filtered set (ignores pagination and current search)
         const csvData = $filteredAll.map((item) => ({
             address: item.address,
-            name: item.contact?.contactProfile.name,
+            name: item.contact?.contactProfile?.name,
         }));
         const csv = Papa.unparse(csvData);
         const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', `members-${$filterRelation || 'all'}.csv`);
+        link.setAttribute('download', `contacts-${$activeRelation || 'all'}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
     }
 
     function openAddContact() {
-        if (!avatarState.avatar) {
-            throw new Error('Avatar store not available');
-        }
-
+        if (!avatarState.avatar) return;
         openAddTrustFlow({
             context: {
                 actorType: avatarState.isGroup ? 'group' : 'avatar',
@@ -185,7 +149,6 @@
         });
     }
 
-    // Trust relation counts (unfiltered, for chips)
     const trustCounts = derived(contacts, ($c) => {
         const entries = Object.values($c?.data ?? {}) as any[];
         return {
@@ -193,166 +156,128 @@
             mutual: entries.filter(e => e.row?.relation === 'mutuallyTrusts').length,
             trustedBy: entries.filter(e => e.row?.relation === 'trustedBy').length,
             trusts: entries.filter(e => e.row?.relation === 'trusts').length,
-            varies: entries.filter(e => e.row?.relation === 'variesByVersion').length,
         };
     });
 
-    // Dynamic labels for group context
-    let titleText: string = $derived(avatarState.isGroup ? 'Members' : 'Contacts');
-    let countLabel: string = $derived(avatarState.isGroup ? 'members' : 'entries');
-    let addLabel: string = $derived(avatarState.isGroup ? 'Add Member' : 'Add Contact');
+    const titleText: string = $derived(avatarState.isGroup ? 'Members' : 'People');
+    const countLabel: string = $derived(avatarState.isGroup ? 'members' : 'in your network');
 
-    // Keep actions lean: filter moved next to the title
-    const actions: Action[] = $derived([
-        {id: 'add', label: addLabel, iconNode: LPlus, onClick: openAddContact, variant: 'primary'},
-        {id: 'bookmarks-settings', label: 'Bookmarks', iconNode: Star, onClick: () => goto('/settings?tab=bookmarks'), variant: 'ghost'},
-        {id: 'export', label: 'Export CSV', iconNode: LDownload, onClick: handleExportCSV, variant: 'ghost'},
+    const chips = $derived([
+        { key: 'all',            label: 'All',         count: $trustCounts.total,     bg: T.pageDeep,    color: T.inkBody,     dot: T.inkMuted },
+        { key: 'mutuallyTrusts', label: 'Mutual',      count: $trustCounts.mutual,    bg: T.sageSoft,    color: '#1F5E37',     dot: T.sage },
+        { key: 'trustedBy',      label: 'Trusts you',  count: $trustCounts.trustedBy, bg: T.primarySoft, color: T.primaryDeep, dot: T.primary },
+        { key: 'trusts',         label: 'You trust',   count: $trustCounts.trusts,    bg: T.coralSoft,   color: '#8A3A1E',     dot: T.coral },
     ]);
 </script>
 
-<PageScaffold
-        highlight="soft"
-        collapsedMode="bar"
-        collapsedHeightClass="h-12"
-        maxWidthClass="page page--lg"
-        contentWidthClass="page page--lg"
-        usePagePadding={true}
->
-    {#snippet title()}
-        <div class="flex items-center gap-2">
-            <h1 class="h2 m-0">{titleText}</h1>
+<div style="background:{T.page};min-height:100%;width:100%;font-family:{T.fontSans};color:{T.inkBody};">
+    <div style="padding:8px 18px 24px;" class="md:!p-9 md:max-w-[1280px] md:mx-auto">
+
+        <!-- Page title -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0 14px;">
+            <div style="display:flex;flex-direction:column;gap:2px;">
+                <span style="font-family:{T.fontDisplay};font-size:32px;color:{T.ink};letter-spacing:-0.02em;line-height:1;font-weight:400;">{titleText}</span>
+                <span style="font-size:12.5px;color:{T.inkMuted};">{$trustCounts.total} {countLabel}</span>
+            </div>
+            <button
+                onclick={openAddContact}
+                style="
+                    height:40px;padding:0 14px;border-radius:9999px;
+                    background:{T.primary};color:#fff;border:0;cursor:pointer;
+                    display:inline-flex;align-items:center;gap:6px;
+                    font-family:{T.fontSans};font-size:13.5px;font-weight:540;
+                    box-shadow:0 1px 0 rgba(255,255,255,0.18) inset, 0 1px 2px rgba(15,10,30,0.12);
+                "
+            >
+                <Icon name="plus" size={15} stroke="#fff" strokeWidth={2.0} />
+                {avatarState.isGroup ? 'Add member' : 'Trust someone'}
+            </button>
+        </div>
+
+        <!-- Search -->
+        <div style="
+            height:42px;padding:0 14px;border-radius:9999px;
+            background:{T.surface};border:1px solid {T.hairline};
+            display:flex;align-items:center;gap:10px;margin-top:6px;
+        ">
+            <Icon name="search" size={16} stroke={T.inkMuted} />
+            <input
+                bind:value={$searchQuery}
+                placeholder="Search people, addresses, ENS…"
+                data-contacts-search-input
+                onkeydown={onSearchInputKeydown}
+                style="
+                    border:0;outline:none;background:transparent;flex:1;
+                    font-family:{T.fontSans};font-size:13.5px;color:{T.ink};
+                "
+            />
             {#if !avatarState.isGroup}
                 <button
-                        type="button"
-                        class="btn btn-ghost btn-xs p-1"
-                        aria-label={$showFilters ? 'Hide filters' : 'Show filters'}
-                        aria-expanded={$showFilters}
-                        aria-controls={FILTER_PANEL_ID}
-                        onclick={toggleFilters}
-                        title="Filter"
+                    onclick={handleExportCSV}
+                    aria-label="Export as CSV"
+                    title="Export CSV"
+                    style="background:transparent;border:0;padding:0;cursor:pointer;display:inline-flex;align-items:center;color:{T.inkMuted};"
                 >
-                    <Lucide icon={LFilter} size={16} class="shrink-0" ariaLabel=""/>
+                    <Icon name="download" size={15} stroke={T.inkMuted} />
                 </button>
             {/if}
         </div>
-    {/snippet}
 
-    {#snippet meta()}
-        {$filteredAll.length} {countLabel}
-    {/snippet}
-
-    {#snippet headerActions()}
-        <ActionButtonBar {actions} />
-    {/snippet}
-
-    {#snippet collapsedLeft()}
-        <div class="truncate flex items-center gap-2">
-            <span class="font-medium">{titleText}</span>
-            <span class="text-sm text-base-content/60">{$filteredAll.length} {countLabel}</span>
-        </div>
-    {/snippet}
-
-    {#snippet collapsedMenu()}
-        <ActionButtonDropDown {actions} />
-    {/snippet}
-
-    {#if $showFilters}
-        <div id={FILTER_PANEL_ID} class="mt-3  mb-3 space-y-3">
-            {#if !avatarState.isGroup}
-                <div class="flex gap-x-2 items-center flex-wrap">
-                    <p class="text-sm">Version</p>
-                    <Filter text="All" filter={filterVersion} value={undefined}/>
-                    <Filter text="Version 1" filter={filterVersion} value={1}/>
-                    <Filter text="Version 2" filter={filterVersion} value={2}/>
-                </div>
-                <div class="flex justify-between items-center flex-wrap gap-y-4">
-                    <div class="flex gap-2 items-center flex-wrap">
-                        <div class="flex items-center gap-1">
-                            <p class="text-sm">Relation</p>
-                            <HelpPopover
-                                    title="Trust relations"
-                                    lines={[
-                                        'You accept = you accept their Circles.',
-                                        'Accepts you = they accept your Circles.',
-                                        'Both accept = you accept each other’s Circles.',
-                                    ]}
-                                    buttonClass="btn btn-ghost btn-xs btn-square"
-                                    widthClass="w-72"
-                            />
-                        </div>
-
-                        <Filter text="All" filter={filterRelation} value={undefined}/>
-                        <Filter text="Both accept" filter={filterRelation} value={'mutuallyTrusts'}/>
-                        <Filter text="You accept" filter={filterRelation} value={'trusts'}/>
-                        <Filter text="Accepts you" filter={filterRelation} value={'trustedBy'}/>
-                        <Filter text="Varies by version" filter={filterRelation} value={'variesByVersion'}/>
-                    </div>
-                    <div class="flex-grow flex justify-end">
-                        <button class="mt-4 sm:mt-0" onclick={handleExportCSV}>Export CSV</button>
-                    </div>
-                </div>
-
-                <p class="text-xs text-base-content/70">
-                    Trust decides which Circles you accept — and whether payments can route through your connections.
-                </p>
-            {/if}
-
-        </div>
-    {/if}
-
-    <!-- Trust relation chips (non-group only) -->
-    {#if !avatarState.isGroup}
-        <div class="flex gap-2 overflow-x-auto pb-1 mb-3 -mx-0.5 px-0.5" style="scrollbar-width:none;">
-            {#each [
-                { key: undefined,            label: 'All',         count: $trustCounts.total,    bg: '#F6F5F2',  color: 'rgba(15,10,30,0.70)', activeBg: '#5849D4', activeColor: '#fff' },
-                { key: 'mutuallyTrusts',     label: 'Both accept', count: $trustCounts.mutual,   bg: '#F6F5F2',  color: 'rgba(15,10,30,0.70)', activeBg: '#DCEBDF', activeColor: '#2D8A52' },
-                { key: 'trustedBy',          label: 'Accepts you', count: $trustCounts.trustedBy, bg: '#F6F5F2', color: 'rgba(15,10,30,0.70)', activeBg: '#EEEBFA', activeColor: '#5849D4' },
-                { key: 'trusts',             label: 'You accept',  count: $trustCounts.trusts,   bg: '#F6F5F2',  color: 'rgba(15,10,30,0.70)', activeBg: '#FBEFCB', activeColor: '#B07014' },
-            ] as chip}
-                {#if chip.count > 0 || chip.key === undefined}
-                    {@const isActive = $filterRelation === chip.key}
+        <!-- Trust chips -->
+        {#if !avatarState.isGroup}
+            <div style="display:flex;align-items:center;gap:8px;margin-top:14px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;">
+                {#each chips as c}
+                    {@const isActive = $activeRelation === c.key}
                     <button
                         type="button"
-                        class="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold border-0 cursor-pointer transition-all"
-                        style={isActive
-                            ? `background:${chip.activeBg};color:${chip.activeColor};`
-                            : `background:${chip.bg};color:${chip.color};`}
-                        onclick={() => filterRelation.set(chip.key as any)}
+                        onclick={() => activeRelation.set(c.key as any)}
+                        style="
+                            flex:0 0 auto;padding:10px 14px;border-radius:14px;cursor:pointer;
+                            background:{c.bg};
+                            border:{isActive ? `1.5px solid ${c.dot}` : '1.5px solid transparent'};
+                            min-width:108px;text-align:left;
+                            transition:transform .08s, box-shadow .15s;
+                        "
                     >
-                        {chip.label}
-                        {#if chip.count > 0}
-                            <span class="opacity-60 font-normal">{chip.count}</span>
-                        {/if}
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <span style="width:6px;height:6px;border-radius:3px;background:{c.dot};display:inline-block;"></span>
+                            <span style="font-size:11px;font-weight:580;color:{c.color};">{c.label}</span>
+                        </div>
+                        <div style="font-family:{T.fontDisplay};font-size:24px;color:{T.ink};margin-top:2px;line-height:1;letter-spacing:-0.015em;font-weight:400;">{c.count}</div>
                     </button>
-                {/if}
-            {/each}
-        </div>
-    {/if}
-
-    <ListShell
-        query={searchQuery}
-        searchPlaceholder="Search by address or name"
-        inputDataAttribute="data-contacts-search-input"
-        onInputKeydown={onSearchInputKeydown}
-        isEmpty={$filteredAll.length === 0}
-        ended={$contacts?.ended ?? false}
-        emptyRequiresEnd={true}
-        isNoMatches={$filteredAll.length > 0 && $searchedAll.length === 0}
-        emptyLabel={avatarState.isGroup ? 'No members' : 'No contacts'}
-        noMatchesLabel="No matches"
-        wrapInListContainer={false}
-    >
-        <div class="bg-base-100 border border-base-300 rounded-[16px] overflow-hidden" style="box-shadow:0 1px 4px rgba(15,10,30,0.04);">
-            <div data-contacts-list-scope bind:this={contactsListScopeEl}>
-                <GenericList
-                    store={contactsPaginatedWithEnd}
-                    row={ContactRow}
-                    rowHeight={64}
-                    maxPlaceholderPages={2}
-                    expectedPageSize={25}
-                    placeholderRow={AvatarRowPlaceholder}
-                />
+                {/each}
             </div>
-        </div>
-    </ListShell>
-</PageScaffold>
+        {/if}
+
+        <!-- Section heading -->
+        <span style="display:block;font-size:11.5px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;margin-top:18px;margin-bottom:8px;padding-left:4px;">
+            {avatarState.isGroup ? 'All members' : 'All people'}
+        </span>
+
+        <!-- People list -->
+        {#if $filteredAll.length === 0 && ($contacts?.ended ?? false)}
+            <div style="background:{T.surface};border-radius:18px;border:1px solid {T.hairlineSoft};padding:32px 16px;text-align:center;">
+                <span style="font-size:13.5px;color:{T.inkMuted};">{avatarState.isGroup ? 'No members yet' : 'No contacts yet'}</span>
+            </div>
+        {:else if $filteredAll.length > 0 && $searchedAll.length === 0}
+            <div style="background:{T.surface};border-radius:18px;border:1px solid {T.hairlineSoft};padding:32px 16px;text-align:center;">
+                <span style="font-size:13.5px;color:{T.inkMuted};">No matches</span>
+            </div>
+        {:else}
+            <div style="background:{T.surface};border-radius:18px;border:1px solid {T.hairlineSoft};overflow:hidden;box-shadow:{T.shadow.xs};">
+                <div data-contacts-list-scope bind:this={contactsListScopeEl}>
+                    <GenericList
+                        store={contactsPaginatedWithEnd}
+                        row={ContactRow}
+                        rowHeight={64}
+                        maxPlaceholderPages={2}
+                        expectedPageSize={25}
+                        placeholderRow={AvatarRowPlaceholder}
+                    />
+                </div>
+            </div>
+        {/if}
+
+        <div style="height:24px;"></div>
+    </div>
+</div>

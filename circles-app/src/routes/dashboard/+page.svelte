@@ -5,40 +5,25 @@
     import { isBenignReceiptDecodeError } from '$lib/shared/utils/tx';
 
     import OverviewPanel from './OverviewPanel.svelte';
-    import TransactionHistoryPanel from './TransactionHistoryPanel.svelte';
+    import TransactionRow from './TransactionRow.svelte';
+    import VirtualList from '$lib/shared/ui/lists/VirtualList.svelte';
+    import TransactionRowPlaceholder from '$lib/shared/ui/lists/placeholders/TransactionRowPlaceholder.svelte';
 
     import { popupControls } from '$lib/shared/state/popup';
     import Balances from '$lib/areas/wallet/ui/pages/Balances.svelte';
     import { circlesBalances } from '$lib/shared/state/circlesBalances';
     import { totalCirclesBalance } from '$lib/shared/state/totalCirclesBalance';
+    import { transactionHistory } from '$lib/shared/state/transactionHistory';
 
-    import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
     import { openSendFlowPopup } from '$lib/areas/wallet/flows/send/openSendFlowPopup';
     import { openAddTrustFlow } from '$lib/areas/trust/flows/addTrust/openAddTrustFlow';
-
-    import {
-        Send as LSend,
-        Banknote as LBanknote,
-        ArrowDownLeft as LArrowDownLeft,
-        UserPlus as LUserPlus,
-        ScanLine as LScanLine,
-    } from 'lucide';
-    import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
-    import HelpPopover from '$lib/shared/ui/primitives/HelpPopover.svelte';
     import ReceivePopup from './ReceivePopup.svelte';
 
-    const TOKEN_SOURCES_HELP = [
-        'Every person and group can issue its own Circles token.',
-        'Your balance is spread across tokens from people and groups you are connected to.',
-        'This is normal and expected in Circles.',
-    ];
-
-    const firstName: string = $derived(
-        avatarState.profile?.name?.trim().split(/\s+/)[0] ?? ''
-    );
+    import { T } from '$lib/design-system/tokens.js';
+    import Icon from '$lib/design-system/Icon.svelte';
+    import Pill from '$lib/design-system/Pill.svelte';
 
     let mintableAmount: number = $state(0);
-    let activityFilter = $state<'all' | 'received' | 'sent' | 'mints'>('all');
 
     $effect(() => {
         (async () => {
@@ -57,12 +42,10 @@
             await runTask({ name: 'Collecting CRC ...', promise: avatarState.avatar!.personalMint() });
         } catch (error) {
             if (!isBenignReceiptDecodeError(error)) throw error;
-            console.warn('Ignoring benign receipt decode error after successful mint transaction', error);
         } finally {
             const refreshed = await avatarState.avatar!.getMintableAmount();
             mintableAmount = refreshed ?? 0;
         }
-        mintableAmount = 0;
     }
 
     let personalToken: number = $derived(
@@ -81,15 +64,12 @@
     function openBalances() {
         popupControls.open({ title: 'Balance breakdown', component: Balances, props: {} });
     }
-
     function openSend() {
         openSendFlowPopup({ selectedAddress: undefined, amount: undefined, transitiveOnly: true });
     }
-
     function openReceive() {
         popupControls.open({ title: 'Receive', component: ReceivePopup, props: {} });
     }
-
     function openTrust() {
         if (!avatarState.avatar) return;
         openAddTrustFlow({
@@ -101,250 +81,195 @@
         });
     }
 
-    function openScanQR() {
-        openSendFlowPopup({ selectedAddress: undefined, amount: undefined, transitiveOnly: true });
-    }
+    // Sparkline (dummy points)
+    const sparkPoints = [22, 24, 24, 23, 24, 24, 24];
+    const sparkW = 220, sparkH = 70, sparkPad = 8;
+    const sparkMax = Math.max(...sparkPoints) + 4;
+    const sparkMin = Math.min(...sparkPoints) - 4;
+    const sparkXs = sparkPoints.map((_, i) => sparkPad + (i * (sparkW - sparkPad * 2)) / (sparkPoints.length - 1));
+    const sparkYs = sparkPoints.map((v) => sparkH - sparkPad - ((v - sparkMin) / (sparkMax - sparkMin)) * (sparkH - sparkPad * 2));
+    const sparkD = sparkXs.map((x, i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${sparkYs[i].toFixed(1)}`).join(' ');
+    const sparkArea = sparkD + ` L${sparkXs[sparkXs.length - 1]},${sparkH - sparkPad} L${sparkXs[0]},${sparkH - sparkPad} Z`;
+
+    const TRANSACTION_ROW_HEIGHT = 76;
 </script>
 
-<PageScaffold
-    highlight="soft"
-    maxWidthClass="page page--lg"
-    contentWidthClass="page page--lg"
-    usePagePadding={true}
-    collapsedMode="bar"
-    collapsedHeightClass="h-12"
-    headerCardStyle="background:radial-gradient(120% 140% at 100% 0%, #EEEBFA 0%, #FFFFFF 62%);"
->
-    {#snippet title()}
-        {#if !avatarState.isGroup}
-            <div class="pr-14">
-                <div class="text-[10.5px] font-semibold tracking-[0.10em] uppercase mb-1" style="color:rgba(15,10,30,0.42);">
-                    Welcome back{#if firstName}, {firstName}{/if}
+<div style="background:{T.page};min-height:100%;width:100%;font-family:{T.fontSans};color:{T.inkBody};">
+
+{#if avatarState.isGroup}
+    <div class="px-4 md:px-9 py-4 md:py-7 max-w-[1280px] mx-auto">
+        <OverviewPanel/>
+    </div>
+{:else}
+    <!-- Mobile: 18px padding. Desktop: 36px. -->
+    <div style="padding:8px 18px 24px;" class="md:!p-9 md:max-w-[1280px] md:mx-auto">
+
+        <!-- ─── HERO CARD ─────────────────────────────────────────────── -->
+        <div
+            class="hero-card"
+            style="
+                padding:24px 22px 22px;
+                border-radius:24px;
+                background:radial-gradient(120% 140% at 100% 0%, {T.lilacSoft} 0%, {T.surface} 65%);
+                border:1px solid {T.hairlineSoft};
+                box-shadow:{T.shadow.sm};
+                overflow:hidden;
+            "
+        >
+            <!-- TOP ROW: eyebrow + sparkline (mobile: more btn) -->
+            <div class="hero-top" style="display:flex;align-items:flex-start;justify-content:space-between;gap:24px;">
+                <div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;">
+                    <span style="font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Total balance</span>
+                    <div style="margin-top:2px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                        <Pill color="sage">+ 24.00 today</Pill>
+                    </div>
                 </div>
-                <div class="text-[13px] font-medium mb-1.5" style="color:rgba(15,10,30,0.55);">Your Circle</div>
-                <button class="text-left group" onclick={openBalances} aria-label="Open balances breakdown">
-                    <span class="h1-display block group-hover:opacity-80 transition-opacity">
-                        {roundToDecimals($totalCirclesBalance)}<span style="font-family:'Inter Tight',sans-serif;font-size:0.42em;font-weight:500;opacity:0.55;margin-left:0.35em;vertical-align:0.1em;letter-spacing:0;">CRC</span>
-                    </span>
-                </button>
-                <!-- Dummy sparkline -->
-                <div class="mt-3" style="opacity:0.55;">
-                    <svg width="100%" height="28" viewBox="0 0 240 28" preserveAspectRatio="none" fill="none" aria-hidden="true">
+
+                <!-- Sparkline visible on desktop only -->
+                <div class="hero-spark" style="display:none;text-align:right;flex-shrink:0;">
+                    <div style="font-size:11.5px;color:{T.inkMuted};font-weight:580;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:4px;">7-day mint</div>
+                    <svg width={sparkW} height={sparkH}>
                         <defs>
-                            <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stop-color="#5849D4" stop-opacity="0.14"/>
-                                <stop offset="100%" stop-color="#5849D4" stop-opacity="0"/>
+                            <linearGradient id="dashSpark" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color={T.primary} stop-opacity="0.25" />
+                                <stop offset="100%" stop-color={T.primary} stop-opacity="0" />
                             </linearGradient>
                         </defs>
-                        <path d="M0,24 C24,22 48,19 72,15 C96,11 120,17 144,13 C168,9 192,11 216,6 L240,3"
-                              stroke="#5849D4" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M0,24 C24,22 48,19 72,15 C96,11 120,17 144,13 C168,9 192,11 216,6 L240,3 L240,28 L0,28 Z"
-                              fill="url(#sparkGrad)"/>
+                        <path d={sparkArea} fill="url(#dashSpark)" />
+                        <path d={sparkD} stroke={T.primary} stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+                        {#each sparkXs as x, i}
+                            <circle cx={x} cy={sparkYs[i]} r={i === sparkXs.length - 1 ? 3 : 1.5} fill={T.primary} />
+                        {/each}
                     </svg>
                 </div>
             </div>
-        {:else}
-            <h2 class="h2 m-0">Group overview</h2>
-        {/if}
-    {/snippet}
 
-    {#snippet meta()}
-        {#if !avatarState.isGroup}
-            <button type="button" class="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer text-left" onclick={openBalances}>
-                <span class="flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background:#E8896A;"></span>
-                    <span class="text-[13px]"><b>{personalToken}</b> people</span>
-                </span>
-                <span style="color:rgba(15,10,30,0.20);">·</span>
-                <span class="flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background:#5849D4;"></span>
-                    <span class="text-[13px]"><b>{groupToken}</b> groups</span>
-                </span>
-                <HelpPopover
-                    title="Why so many tokens?"
-                    lines={TOKEN_SOURCES_HELP}
-                    buttonClass="btn btn-ghost btn-xs btn-square"
-                    widthClass="w-80"
-                />
-            </button>
-        {/if}
-    {/snippet}
-
-    {#snippet headerActions()}
-        {#if !avatarState.isGroup}
-            <div class="w-full grid grid-cols-2 gap-2">
-                <button
-                    type="button"
-                    class="flex items-center gap-2.5 px-4 py-2.5 rounded-full font-semibold text-[13px] text-white cursor-pointer transition-opacity hover:opacity-90"
-                    style="background:#5849D4;"
-                    onclick={openSend}
-                >
-                    <Lucide icon={LSend} size={16} class="shrink-0" />
-                    <span>Send</span>
-                </button>
-                <button
-                    type="button"
-                    class="flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-base-100 border border-base-300 font-semibold text-[13px] cursor-pointer hover:bg-base-200 transition-colors"
-                    onclick={openReceive}
-                >
-                    <Lucide icon={LArrowDownLeft} size={16} class="shrink-0" />
-                    <span>Receive</span>
-                </button>
-                <button
-                    type="button"
-                    class="flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-base-100 border border-base-300 font-semibold text-[13px] cursor-pointer hover:bg-base-200 transition-colors"
-                    onclick={openTrust}
-                >
-                    <Lucide icon={LUserPlus} size={16} class="shrink-0" />
-                    <span>Trust</span>
-                </button>
-                <button
-                    type="button"
-                    class="flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-base-100 border border-base-300 font-semibold text-[13px] cursor-pointer hover:bg-base-200 transition-colors"
-                    onclick={openScanQR}
-                >
-                    <Lucide icon={LScanLine} size={16} class="shrink-0" />
-                    <span>Scan</span>
-                </button>
-            </div>
-        {/if}
-    {/snippet}
-
-    {#snippet collapsedLeft()}
-        {#if !avatarState.isGroup}
-            <span class="font-display text-[1.15rem] font-normal tracking-tight text-base-content">
-                {roundToDecimals($totalCirclesBalance)} CRC
-            </span>
-        {:else}
-            <span class="font-display text-[1.15rem] font-normal tracking-tight text-base-content">
-                Group overview
-            </span>
-        {/if}
-    {/snippet}
-
-    {#snippet collapsedMenu()}
-        <div class="grid grid-cols-1 gap-2">
-            {#if mintableAmount >= 0.01}
-                <button type="button"
-                    class="btn btn-primary min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] justify-start px-3"
-                    onclick={mintPersonalCircles}>
-                    <Lucide icon={LBanknote} size={20} class="shrink-0" />
-                    Mint {roundToDecimals(mintableAmount)} Circles
-                </button>
-            {/if}
-            {#if !avatarState.isGroup}
-                <button type="button"
-                    class="btn btn-ghost min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] justify-start px-3"
-                    onclick={openSend}>
-                    <Lucide icon={LSend} size={20} class="shrink-0" />
-                    Send
-                </button>
-                <button type="button"
-                    class="btn btn-ghost min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] justify-start px-3"
-                    onclick={openReceive}>
-                    <Lucide icon={LArrowDownLeft} size={20} class="shrink-0" />
-                    Receive
-                </button>
-            {/if}
-        </div>
-    {/snippet}
-
-    <!-- Balance breakdown bar -->
-    {#if !avatarState.isGroup && ($circlesBalances?.data?.length ?? 0) > 0}
-        <div class="grid grid-cols-2 sm:grid-cols-3 bg-base-100 border border-base-300 rounded-[14px] overflow-hidden mb-4"
-             style="box-shadow:0 1px 2px rgba(15,10,30,0.04);">
-            <button type="button"
-                class="flex flex-col gap-1.5 p-4 border-r border-base-300 text-left hover:bg-base-200 transition-colors"
-                onclick={openBalances}>
-                <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-sm shrink-0" style="background:#F4D27A;"></span>
-                    <span class="text-[10.5px] font-semibold tracking-[0.07em] uppercase" style="color:rgba(15,10,30,0.50);">Personal</span>
-                </div>
-                <div class="font-mono text-[15px] font-semibold tabular-nums leading-none">
-                    {roundToDecimals(personalBalance)}<span class="text-[10px] font-normal opacity-50 ml-0.5">CRC</span>
-                </div>
-                <div class="text-[11.5px]" style="color:rgba(15,10,30,0.50);">{personalToken} issuers</div>
-            </button>
-
-            <button type="button"
-                class="flex flex-col gap-1.5 p-4 sm:border-r border-base-300 text-left hover:bg-base-200 transition-colors"
-                onclick={openBalances}>
-                <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-sm shrink-0" style="background:#5849D4;"></span>
-                    <span class="text-[10.5px] font-semibold tracking-[0.07em] uppercase" style="color:rgba(15,10,30,0.50);">Groups</span>
-                </div>
-                <div class="font-mono text-[15px] font-semibold tabular-nums leading-none">
-                    {roundToDecimals(groupBalance)}<span class="text-[10px] font-normal opacity-50 ml-0.5">CRC</span>
-                </div>
-                <div class="text-[11.5px]" style="color:rgba(15,10,30,0.50);">{groupToken} groups</div>
-            </button>
-
-            {#if mintableAmount >= 0.01}
-                <button type="button"
-                    class="flex flex-col gap-1.5 p-4 col-span-2 sm:col-span-1 border-t sm:border-t-0 border-base-300 text-left hover:bg-base-200 transition-colors"
-                    onclick={mintPersonalCircles}>
-                    <div class="flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-sm shrink-0" style="background:#7BA887;"></span>
-                        <span class="text-[10.5px] font-semibold tracking-[0.07em] uppercase" style="color:rgba(15,10,30,0.50);">Mintable now</span>
-                    </div>
-                    <div class="font-mono text-[15px] font-semibold tabular-nums leading-none text-success">
-                        {roundToDecimals(mintableAmount)}<span class="text-[10px] font-normal opacity-60 ml-0.5">CRC</span>
-                    </div>
-                    <div class="text-[11.5px] font-semibold" style="color:#2D8A52;">Mint →</div>
-                </button>
-            {/if}
-        </div>
-    {/if}
-
-    {#if avatarState.isGroup}
-        <OverviewPanel/>
-    {:else}
-        <!-- Mintable nudge card -->
-        {#if mintableAmount >= 0.01}
+            <!-- BIG NUMBER -->
             <button
-                type="button"
-                class="w-full text-left rounded-[14px] mb-4 px-4 py-3.5 flex items-center justify-between cursor-pointer transition-opacity hover:opacity-90"
-                style="background:linear-gradient(160deg,#FBE3D8 0%,#EEEBFA 100%);"
-                onclick={mintPersonalCircles}
+                onclick={openBalances}
+                aria-label="Open balance breakdown"
+                style="
+                    background:transparent;border:0;padding:0;cursor:pointer;text-align:left;display:block;
+                    margin-top:14px;
+                "
             >
-                <div>
-                    <div class="text-[10.5px] font-semibold tracking-[0.07em] uppercase mb-0.5" style="color:rgba(15,10,30,0.50);">Available to mint</div>
-                    <div class="font-mono text-[18px] font-semibold tabular-nums leading-tight" style="color:#5849D4;">
-                        {roundToDecimals(mintableAmount)} <span class="text-[13px] font-medium opacity-60">CRC</span>
+                <span style="font-family:{T.fontDisplay};font-size:64px;line-height:1;color:{T.ink};letter-spacing:-0.025em;font-weight:400;">
+                    {roundToDecimals($totalCirclesBalance)}<span style="margin-left:8px;font-family:{T.fontSans};font-size:16px;font-weight:500;color:{T.inkMuted};">CRC</span>
+                </span>
+            </button>
+
+            <!-- LEGEND DOTS -->
+            <div style="display:flex;align-items:center;gap:14px;margin-top:14px;flex-wrap:wrap;">
+                <button onclick={openBalances} style="background:transparent;border:0;padding:0;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                    <span style="width:6px;height:6px;border-radius:3px;background:{T.coral};display:inline-block;"></span>
+                    <span style="font-size:13px;color:{T.inkBody};"><b style="color:{T.ink};">{personalToken}</b> people</span>
+                </button>
+                <span style="color:{T.inkFaint};">·</span>
+                <button onclick={openBalances} style="background:transparent;border:0;padding:0;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                    <span style="width:6px;height:6px;border-radius:3px;background:{T.primary};display:inline-block;"></span>
+                    <span style="font-size:13px;color:{T.inkBody};"><b style="color:{T.ink};">{groupToken}</b> groups</span>
+                </button>
+                {#if mintableAmount >= 0.01}
+                    <span style="color:{T.inkFaint};">·</span>
+                    <button onclick={mintPersonalCircles} style="background:transparent;border:0;padding:0;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                        <span style="width:6px;height:6px;border-radius:3px;background:{T.sage};display:inline-block;"></span>
+                        <span style="font-size:13px;color:{T.inkBody};">mintable <b style="color:{T.ink};">{roundToDecimals(mintableAmount)}</b></span>
+                    </button>
+                {/if}
+            </div>
+
+            <!-- ACTION ROW -->
+            <div style="display:flex;align-items:center;gap:8px;margin-top:18px;">
+                {#each [
+                    { label: 'Send',    icon: 'send',    primary: true,  onClick: openSend },
+                    { label: 'Receive', icon: 'receive', primary: false, onClick: openReceive },
+                    { label: 'Trust',   icon: 'trust',   primary: false, onClick: openTrust },
+                    { label: 'Scan',    icon: 'scan',    primary: false, onClick: openSend },
+                ] as a}
+                    <button
+                        onclick={a.onClick}
+                        style="
+                            flex:1;height:56px;border-radius:16px;cursor:pointer;
+                            background:{a.primary ? T.primary : T.surface};
+                            border:{a.primary ? 'none' : `1px solid ${T.hairline}`};
+                            color:{a.primary ? '#fff' : T.ink};
+                            display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+                            box-shadow:{a.primary ? '0 4px 12px rgba(88,73,212,0.3)' : 'none'};
+                            transition:transform .08s, box-shadow .15s;
+                        "
+                    >
+                        <Icon name={a.icon} size={18} stroke={a.primary ? '#fff' : T.inkBody} strokeWidth={1.8} />
+                        <span style="font-size:11px;font-weight:580;">{a.label}</span>
+                    </button>
+                {/each}
+            </div>
+        </div>
+
+        <!-- ─── MINTABLE NUDGE ────────────────────────────────────────── -->
+        {#if mintableAmount >= 0.01}
+            <div style="
+                margin-top:14px;padding:14px 16px;border-radius:18px;
+                background:linear-gradient(160deg,{T.coralSoft} 0%,{T.lilacSoft} 100%);
+                display:flex;align-items:center;gap:12px;
+            ">
+                <div style="width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,0.6);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <Icon name="sparkle" size={20} stroke={T.coral} strokeWidth={2} />
+                </div>
+                <div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:0;">
+                    <span style="font-size:11px;font-weight:600;color:#8A3A1E;letter-spacing:0.04em;text-transform:uppercase;">Ready to mint</span>
+                    <div style="display:flex;align-items:baseline;gap:6px;">
+                        <span style="font-family:{T.fontDisplay};font-size:22px;color:{T.ink};line-height:1;letter-spacing:-0.015em;">{roundToDecimals(mintableAmount)}</span>
+                        <span style="font-size:11px;color:{T.inkMuted};font-weight:500;">CRC growing</span>
                     </div>
                 </div>
-                <div class="font-semibold text-[13px]" style="color:#5849D4;">Mint →</div>
-            </button>
+                <button
+                    onclick={mintPersonalCircles}
+                    style="
+                        height:32px;padding:0 14px;border-radius:9999px;
+                        background:{T.primary};color:#fff;border:0;cursor:pointer;
+                        font-family:{T.fontSans};font-size:13px;font-weight:540;
+                        white-space:nowrap;flex-shrink:0;
+                        box-shadow:0 1px 0 rgba(255,255,255,0.18) inset, 0 1px 2px rgba(15,10,30,0.12);
+                    "
+                >Mint</button>
+            </div>
         {/if}
 
-        <!-- Activity card -->
-        <div class="bg-base-100 border border-base-300 rounded-[20px] overflow-hidden"
-             style="box-shadow:0 1px 4px rgba(15,10,30,0.04);">
-            <div class="px-4 pt-3.5 pb-3 border-b border-base-300">
-                <div class="flex items-center justify-between mb-2.5">
-                    <span class="text-[10.5px] font-semibold tracking-[0.07em] uppercase" style="color:rgba(15,10,30,0.45);">Activity</span>
-                </div>
-                <div class="flex gap-1.5 overflow-x-auto" style="scrollbar-width:none;">
-                    {#each [
-                        { key: 'all',      label: 'All' },
-                        { key: 'received', label: 'Received' },
-                        { key: 'sent',     label: 'Sent' },
-                        { key: 'mints',    label: 'Mints' },
-                    ] as tab}
-                        <button
-                            type="button"
-                            class="flex-shrink-0 px-3 py-1.5 rounded-full text-[11.5px] font-semibold border-0 cursor-pointer transition-all"
-                            style={activityFilter === tab.key
-                                ? 'background:#5849D4;color:#fff;'
-                                : 'background:#F6F5F2;color:rgba(15,10,30,0.65);'}
-                            onclick={() => activityFilter = tab.key as typeof activityFilter}
-                        >
-                            {tab.label}
-                        </button>
-                    {/each}
-                </div>
-            </div>
-            <TransactionHistoryPanel filter={activityFilter} />
+        <!-- ─── ACTIVITY HEADING ──────────────────────────────────────── -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:22px;margin-bottom:10px;padding:0 4px;">
+            <span style="font-size:12px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Activity</span>
         </div>
-    {/if}
-</PageScaffold>
+
+        <!-- ─── ACTIVITY LIST ─────────────────────────────────────────── -->
+        <div
+            data-transactions-list-scope
+            style="
+                background:{T.surface};border-radius:20px;border:1px solid {T.hairlineSoft};overflow:hidden;
+                box-shadow:{T.shadow.xs};
+                --transaction-row-height: {TRANSACTION_ROW_HEIGHT}px;
+            "
+        >
+            <VirtualList
+                row={TransactionRow}
+                store={transactionHistory}
+                rowHeight={TRANSACTION_ROW_HEIGHT}
+                maxPlaceholderPages={2}
+                expectedPageSize={25}
+                eagerLoadMultiplier={2}
+                placeholderRow={TransactionRowPlaceholder}
+            />
+        </div>
+
+        <div style="height:24px;"></div>
+    </div>
+{/if}
+
+</div>
+
+<style>
+    /* Reveal sparkline on desktop only */
+    @media (min-width: 768px) {
+        :global(.hero-card .hero-spark) { display: block !important; }
+        :global(.hero-card) { padding: 28px 32px 24px !important; }
+    }
+</style>

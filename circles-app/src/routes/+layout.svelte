@@ -293,8 +293,11 @@
     {/if}
 
     <!-- Scrollable content -->
-    <main class="flex-1 overflow-y-auto relative">
-      <div class="w-full flex flex-col items-stretch min-h-full">
+    <main
+      class="flex-1 overflow-y-auto relative"
+      style="--bottom-nav-clearance: {avatarState.avatar ? '110px' : '0px'};"
+    >
+      <div class="w-full flex flex-col items-stretch min-h-full md:!pb-0" style="padding-bottom: var(--bottom-nav-clearance);">
         {@render children?.()}
       </div>
     </main>

@@ -1,19 +1,15 @@
 <script lang="ts">
     import {onMount} from 'svelte';
     import { browser } from '$app/environment';
-    import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
     import ProductCard from '$lib/areas/market/ui/product/ProductCard.svelte';
     import ProductCardPlaceholder from '$lib/shared/ui/lists/placeholders/ProductCardPlaceholder.svelte';
     import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
     import type { AggregatedCatalogItem } from '$lib/areas/market/model';
-    import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
-    import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
-    import type { Action } from '$lib/shared/ui/shell/actions';
     import { goto } from '$app/navigation';
     import { avatarState } from '$lib/shared/state/avatar.svelte';
-    import Tabs from '$lib/shared/ui/primitives/tabs/Tabs.svelte';
-    import Tab from '$lib/shared/ui/primitives/tabs/Tab.svelte';
     import {gnosisConfig} from "$lib/shared/config/circles";
+    import { T } from '$lib/design-system/tokens.js';
+    import Icon from '$lib/design-system/Icon.svelte';
 
     // Defaults (as requested)
     const OPERATOR: `0x${string}` = gnosisConfig.production.marketOperator;
@@ -278,138 +274,111 @@
       };
     });
 
-    const actions: Action[] = [
-      { id: 'settings-offers', label: 'Manage offers', variant: 'primary', onClick: () => goto('/settings?tab=marketplace') },
-      { id: 'settings-orders', label: 'Orders', variant: 'ghost', onClick: () => goto('/settings?tab=orders') },
-      { id: 'settings-sales', label: 'Sales', variant: 'ghost', onClick: () => goto('/settings?tab=sales') }
-    ];
 
 </script>
 
-<PageScaffold
-        highlight="soft"
-        collapsedMode="bar"
-        collapsedHeightClass="h-12"
-        maxWidthClass="page page--lg"
-        contentWidthClass="page page--lg"
-        usePagePadding={true}
->
-    {#snippet title()}
-        <h1 class="h2 m-0">Marketplace</h1>
-    {/snippet}
+<div style="background:{T.page};min-height:100%;width:100%;font-family:{T.fontSans};color:{T.inkBody};">
+    <div style="padding:8px 18px 24px;" class="md:!p-9 md:max-w-[1280px] md:mx-auto">
 
-    {#snippet meta()}
-        Namespace {shortAddr(selectedOperator ?? OPERATOR)} • All offers
-    {/snippet}
+        <!-- Page title -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0 14px;">
+            <div style="display:flex;flex-direction:column;gap:2px;min-width:0;">
+                <span style="font-family:{T.fontDisplay};font-size:32px;color:{T.ink};letter-spacing:-0.02em;line-height:1;font-weight:400;">Market</span>
+                <span style="font-size:12.5px;color:{T.inkMuted};">{products.length}{hasMore ? '+' : ''} offers · {shortAddr(selectedOperator ?? OPERATOR)}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                <button
+                    onclick={() => goto('/settings?tab=marketplace')}
+                    style="
+                        height:40px;padding:0 14px;border-radius:9999px;
+                        background:{T.surface};color:{T.ink};border:1px solid {T.hairline};cursor:pointer;
+                        display:inline-flex;align-items:center;gap:6px;
+                        font-family:{T.fontSans};font-size:13.5px;font-weight:540;
+                        box-shadow:{T.shadow.xs};
+                    "
+                    class="hidden md:inline-flex"
+                >
+                    Manage offers
+                </button>
+                <button
+                    onclick={() => goto('/settings?tab=marketplace')}
+                    style="
+                        height:40px;padding:0 14px;border-radius:9999px;
+                        background:{T.primary};color:#fff;border:0;cursor:pointer;
+                        display:inline-flex;align-items:center;gap:6px;
+                        font-family:{T.fontSans};font-size:13.5px;font-weight:540;
+                        box-shadow:0 1px 0 rgba(255,255,255,0.18) inset, 0 1px 2px rgba(15,10,30,0.12);
+                    "
+                >
+                    <Icon name="plus" size={15} stroke="#fff" strokeWidth={2.0} />
+                    Post offer
+                </button>
+            </div>
+        </div>
 
-    {#snippet headerActions()}
-        <ActionButtonBar {actions} />
-    {/snippet}
-
-    <!-- Collapsed summary -->
-    {#snippet collapsedLeft()}
-        <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">
-      Marketplace
-    </span>
-    {/snippet}
-
-    {#snippet collapsedMenu()}
-        <ActionButtonDropDown {actions} />
-        <!-- Basket button moved to global header -->
-    {/snippet}
-
-    {#if loading && products.length === 0}
-        <section class="bg-base-100 border border-base-300 rounded-xl p-4">
-            <!-- Stable skeleton grid to prevent layout jumps -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" data-sveltekit-preload-data="hover">
+        <!-- Body -->
+        {#if loading && products.length === 0}
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
                 {#each Array(6) as _, i}
-                    <div class="bg-base-100 border border-base-300 rounded-xl overflow-hidden flex flex-col">
-                        <!-- Image placeholder (fixed height) -->
-                        <div class="w-full h-44 skeleton"></div>
-
-                        <!-- Body -->
-                        <div class="p-3 flex flex-col gap-1">
-                            <!-- Title (2 lines reserved) -->
-                            <div class="min-h-[3rem]">
-                                <div class="skeleton h-4 w-3/4 mb-2"></div>
-                                <div class="skeleton h-4 w-1/2"></div>
-                            </div>
-
-                            <!-- Price row (reserved height) -->
-                            <div class="min-h-[1.5rem] flex items-center justify-between">
-                                <div class="skeleton h-4 w-16"></div>
-                                <div class="skeleton h-5 w-20 rounded-full"></div>
-                            </div>
-
-                            <!-- Meta row (reserved height) -->
-                            <div class="min-h-[1.5rem] flex items-center">
-                                <div class="skeleton h-4 w-24"></div>
-                            </div>
-
-                            <!-- Actions row (reserved height) -->
-                            <div class="min-h-[2.25rem] flex items-center justify-between mt-2">
-                                <div class="inline-flex gap-2 items-center">
-                                    <div class="skeleton h-8 w-28 rounded-lg"></div>
-                                </div>
-                                <div class="skeleton h-8 w-16 rounded-lg"></div>
+                    <div style="border-radius:18px;background:{T.surface};border:1px solid {T.hairlineSoft};overflow:hidden;" class="animate-pulse">
+                        <div style="height:140px;background:{T.pageDeep};"></div>
+                        <div style="padding:14px;">
+                            <div style="height:14px;width:75%;background:{T.pageDeep};border-radius:6px;margin-bottom:6px;"></div>
+                            <div style="height:11px;width:45%;background:{T.pageDeep};border-radius:5px;"></div>
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:14px;border-top:1px solid {T.hairlineSoft};">
+                                <div style="height:16px;width:35%;background:{T.pageDeep};border-radius:6px;"></div>
+                                <div style="height:28px;width:54px;background:{T.pageDeep};border-radius:9999px;"></div>
                             </div>
                         </div>
                     </div>
                 {/each}
             </div>
-        </section>
-    {:else if errorMsg}
-        <div class="alert alert-error">
-            <span class="font-semibold">Failed to load:</span>&nbsp;{errorMsg}
-        </div>
-    {:else}
-        <section class="bg-base-100 border border-base-300 rounded-xl p-4">
-            <!-- Operators tabs -->
-            {#if scanOperators.length > 1}
-              <div class="mb-3 flex items-center justify-between gap-2">
-                <div class="flex-1 min-w-0">
-                  <Tabs bind:selected={selectedOperator} size="sm" variant="bordered">
-                    {#each scanOperators as op (op)}
-                      <Tab id={op} title={shortAddr(op)} />
+        {:else if errorMsg}
+            <div style="
+                padding:14px 16px;border-radius:14px;
+                background:{T.negativeSoft};border:1px solid rgba(196,68,48,0.15);color:{T.negative};
+                font-size:13.5px;
+            ">
+                <b>Failed to load:</b> {errorMsg}
+            </div>
+        {:else if products.length === 0}
+            <div style="background:{T.surface};border-radius:18px;border:1px solid {T.hairlineSoft};padding:32px 16px;text-align:center;">
+                <span style="font-size:13.5px;color:{T.inkMuted};">No offers yet</span>
+            </div>
+        {:else}
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4" data-sveltekit-preload-data="hover">
+                {#each products as p (p.productCid)}
+                    <ProductCard
+                        product={p}
+                        showSellerInfo={true}
+                        ondeleted={() => loadFirstPage()}
+                    />
+                {/each}
+                {#if nextPagePlaceholders > 0}
+                    {#each Array.from({ length: nextPagePlaceholders }) as _, i}
+                        <ProductCardPlaceholder />
                     {/each}
-                  </Tabs>
-                </div>
-                {#if loading && products.length > 0}
-                  <div class="ml-2 flex-none">
-                    <div class="loading loading-spinner loading-xs" aria-label="loading"></div>
-                  </div>
                 {/if}
-              </div>
+            </div>
+            {#if hasMore}
+                <div bind:this={sentinel} class="h-2 w-full"></div>
+                <div style="display:flex;justify-content:center;margin-top:18px;">
+                    <button
+                        onclick={loadNextPage}
+                        disabled={loading}
+                        style="
+                            height:38px;padding:0 18px;border-radius:9999px;
+                            background:{T.surface};color:{T.inkBody};border:1px solid {T.hairline};cursor:pointer;
+                            font-family:{T.fontSans};font-size:13px;font-weight:540;
+                            opacity:{loading ? 0.5 : 1};
+                        "
+                    >
+                        {loading ? 'Loading…' : 'Load more'}
+                    </button>
+                </div>
             {/if}
+        {/if}
 
-            {#if products.length === 0}
-                <div class="text-sm opacity-60">No products returned by the API.</div>
-            {:else}
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" data-sveltekit-preload-data="hover">
-                    {#each products as p (p.productCid)}
-                        <ProductCard
-                            product={p}
-                            showSellerInfo={true}
-                            ondeleted={() => loadFirstPage()}
-                        />
-                    {/each}
-                    {#if nextPagePlaceholders > 0}
-                        {#each Array.from({ length: nextPagePlaceholders }) as _, i}
-                            <ProductCardPlaceholder />
-                        {/each}
-                    {/if}
-                </div>
-                {#if hasMore}
-                    <!-- Infinite scroll sentinel: observed by IntersectionObserver to auto-load next page -->
-                    <div bind:this={sentinel} class="h-2 w-full"></div>
-                    <!-- Fallback manual button for accessibility -->
-                    <div class="flex justify-center mt-4">
-                        <button class="btn btn-outline" disabled={loading} onclick={loadNextPage}>
-                            {loading ? 'Loading…' : 'Load more'}
-                        </button>
-                    </div>
-                {/if}
-            {/if}
-        </section>
-    {/if}
-</PageScaffold>
+        <div style="height:24px;"></div>
+    </div>
+</div>
