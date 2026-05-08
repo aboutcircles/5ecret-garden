@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { T } from '$lib/design-system/tokens.js';
+  import Icon from '$lib/design-system/Icon.svelte';
+
   interface Props {
     value?: string;
     sourceValue?: string;
@@ -44,29 +47,32 @@
   });
 </script>
 
-<div class="border border-base-200 rounded-xl p-3">
+<div style="border:1px solid {T.hairlineSoft};border-radius:14px;background:{T.surfaceAlt};padding:14px 16px;">
   <button
     type="button"
-    class="flex items-center justify-between w-full text-xs font-semibold text-left"
     onclick={() => (open = !open)}
+    style="
+      display:flex;align-items:center;justify-content:space-between;width:100%;
+      background:transparent;border:0;padding:0;cursor:pointer;text-align:left;
+    "
   >
-    <span>On-chain name</span>
-    <span class={open ? 'rotate-180 transition-transform' : 'transition-transform'}>
-      <img src="/chevron-down.svg" alt="Toggle" class="w-4 h-4" />
+    <span style="font-size:13px;font-weight:580;color:{T.ink};">On-chain name</span>
+    <span style="display:inline-flex;color:{T.inkMuted};transform:rotate({open ? 180 : 0}deg);transition:transform .15s;">
+      <Icon name="chevronDown" size={14} stroke={T.inkMuted} />
     </span>
   </button>
 
-  <div class="mt-1 text-xs text-base-content/60">
+  <div style="margin-top:6px;font-size:12px;color:{T.inkMuted};">
     {#if value}
-      {value}
+      <span style="font-family:{T.fontMono};color:{T.inkBody};">{value}</span>
     {:else}
       {summaryWhenEmpty}
     {/if}
   </div>
 
   {#if open}
-    <div class="mt-3 space-y-2">
-      <label class="flex items-center gap-2 text-xs">
+    <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px;">
+      <label style="display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:{T.inkBody};cursor:pointer;">
         <input
           type="checkbox"
           class="checkbox checkbox-xs"
@@ -79,20 +85,21 @@
         Set on-chain name manually
       </label>
 
-      <label class="form-control w-full">
-        <span class="label-text text-xs">On-chain name</span>
+      <div>
+        <span style="font-size:11px;font-weight:580;color:{T.inkMuted};letter-spacing:0.04em;text-transform:uppercase;">On-chain name</span>
         <input
-          class="input input-sm input-bordered w-full"
+          class="input input-sm input-bordered w-full mt-1.5"
           bind:value
           {placeholder}
           disabled={!manual}
         />
-      </label>
-      <p class="text-xs text-base-content/60">
+      </div>
+
+      <p style="font-size:11.5px;color:{T.inkMuted};line-height:1.5;margin:0;">
         On-chain names follow stricter rules (ASCII only, max 32 characters).
       </p>
       {#if invalid}
-        <p class="text-xs text-error">{invalidMessage}</p>
+        <p style="font-size:11.5px;color:{T.negative};margin:0;">{invalidMessage}</p>
       {/if}
     </div>
   {/if}

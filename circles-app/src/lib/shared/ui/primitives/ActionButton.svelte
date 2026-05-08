@@ -88,7 +88,7 @@
         {...rest}
         onclick={executeAction}
         title={errorMessage ?? title}
-        class="btn btn-sm inline-flex items-center gap-2 {theme[buttonState]}"
+        class="btn inline-flex items-center gap-2 {theme[buttonState]}"
 >
     {#if buttonState === 'Working'}
         <span class="loading loading-spinner loading-xs"></span>

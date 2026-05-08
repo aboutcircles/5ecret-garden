@@ -25,12 +25,12 @@
     onPrimary,
     primaryDisabled = false,
     primaryType = 'button',
-    primaryClass = 'btn btn-primary btn-sm',
+    primaryClass = 'btn btn-primary w-full sm:w-auto sm:min-w-[140px]',
     secondaryLabel,
     onSecondary,
     secondaryDisabled = false,
     secondaryType = 'button',
-    secondaryClass = 'btn btn-ghost btn-sm',
+    secondaryClass = 'btn btn-ghost w-full sm:w-auto',
   }: Props = $props();
 </script>
 
