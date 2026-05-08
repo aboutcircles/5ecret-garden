@@ -99,21 +99,18 @@
         usePagePadding={true}
         collapsedMode="bar"
         collapsedHeightClass="h-12"
-        headerTopGapClass="mt-4 md:mt-6"
-        collapsedTopGapClass="mt-3 md:mt-4"
 >
     <!-- Title -->
     {#snippet title()}
         {#if !avatarState.isGroup}
-            <button class="text-left" onclick={openBalances} aria-label="Open balances breakdown">
-                <h2 class="h2 m-0">
-                    {roundToDecimals($totalCirclesBalance)} Circles
-                </h2>
+            <button class="text-left group" onclick={openBalances} aria-label="Open balances breakdown">
+                <span class="h1-display block group-hover:opacity-80 transition-opacity">
+                    {roundToDecimals($totalCirclesBalance)}
+                    <span style="font-size:0.55em;opacity:0.7;vertical-align:baseline;letter-spacing:0;">CRC</span>
+                </span>
             </button>
         {:else}
-            <h2 class="h2 m-0">
-                Group overview
-            </h2>
+            <h2 class="h2 m-0">Group overview</h2>
         {/if}
     {/snippet}
 
@@ -156,11 +153,11 @@
     <!-- Collapsed summary (balance only) -->
     {#snippet collapsedLeft()}
         {#if !avatarState.isGroup}
-        <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">
-            {roundToDecimals($totalCirclesBalance)} Circles
-        </span>
+            <span class="font-display text-[1.15rem] font-normal tracking-tight text-base-content">
+                {roundToDecimals($totalCirclesBalance)} CRC
+            </span>
         {:else}
-            <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">
+            <span class="font-display text-[1.15rem] font-normal tracking-tight text-base-content">
                 Group overview
             </span>
         {/if}

@@ -23,7 +23,7 @@ import SettingProfile from '$lib/areas/settings/ui/pages/SettingProfile.svelte';
         collapsedHeightMd = '3.5rem',
 
         headerTopGapClass = 'mt-4 md:mt-6',
-        collapsedTopGapClass = 'mt-3 md:mt-4',
+        collapsedTopGapClass = 'mt-14 md:mt-4',
 
         // Svelte 5 snippet props (replacement for named slots)
         title,
@@ -142,10 +142,11 @@ import SettingProfile from '$lib/areas/settings/ui/pages/SettingProfile.svelte';
     <div class="safe-top" aria-hidden="true"></div>
 
     <div class={`mx-auto ${maxWidthClass} ${headerPaddingClass}`}>
-        <div class={`rounded-2xl ${highlight === 'soft'
-            ? 'bg-base-100 border shadow-sm'
-            : 'bg-base-100 ring-1 ring-base-300'}
-            px-5 md:px-6 py-4 md:py-5 ${headerTopGapClass} relative`}><!-- NOTE: relative for absolute avatar -->
+        <div class={`rounded-[14px] ${highlight === 'soft'
+            ? 'bg-base-100 border border-base-300'
+            : 'bg-base-100 border border-base-300 ring-1 ring-primary/10'}
+            px-5 md:px-6 py-5 md:py-6 ${headerTopGapClass} relative`}
+          style="box-shadow:0 1px 4px rgba(15,10,30,0.04),0 4px 16px rgba(15,10,30,0.04);"><!-- NOTE: relative for absolute avatar -->
             <!-- Always stack title/meta and actions into separate rows -->
             <div class="flex flex-col gap-3">
                 <div class="min-w-0">
@@ -183,8 +184,8 @@ import SettingProfile from '$lib/areas/settings/ui/pages/SettingProfile.svelte';
 </header>
 
 {#if hasAnyCollapsedUI && collapsed}
-    <!-- Fixed host for the collapsed control (only rendered when collapsed) -->
-    <div class={`fixed top-0 left-1/2 -translate-x-1/2 w-full ${maxWidthClass} z-50 pointer-events-none`}>
+    <!-- Fixed host for the collapsed control (only rendered when collapsed; hidden on desktop where sidebar provides nav context) -->
+    <div class={`fixed top-0 left-1/2 -translate-x-1/2 w-full ${maxWidthClass} z-50 pointer-events-none md:hidden`}>
         <div class={`${fixedPaddingClass}`}>
 
             {#if collapsedMode === 'bar'}
@@ -285,7 +286,7 @@ import SettingProfile from '$lib/areas/settings/ui/pages/SettingProfile.svelte';
     {#if collapsedMenuOpen && hasActions}
         <button
             type="button"
-            class="fixed inset-0 bg-black/50 transition-opacity duration-300 z-40 pointer-events-auto"
+            class="fixed inset-0 bg-black/50 transition-opacity duration-300 z-40 pointer-events-auto md:hidden"
             aria-label="Close menu"
             style="touch-action: none;"
             onpointerdown={(e) => { e.stopPropagation(); e.preventDefault(); closeMenu(); }}

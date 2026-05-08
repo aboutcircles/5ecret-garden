@@ -68,7 +68,20 @@
 
 /* Typography */
 .h2 {
-    @apply text-2xl font-bold md:text-3xl;
+    font-family: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+    font-size: clamp(1.9rem, 4vw, 2.5rem);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+}
+
+/* Balance / hero number — larger Instrument Serif */
+.h1-display {
+    font-family: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+    font-size: clamp(2.75rem, 6vw, 3.75rem);
+    font-weight: 400;
+    letter-spacing: -0.025em;
+    line-height: 1;
 }
 
 .muted { @apply text-base-content/70; }
