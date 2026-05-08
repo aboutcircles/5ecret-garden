@@ -29,27 +29,43 @@ type RpcQueryResult = {
   };
 };
 
+async function withTimeout<T>(label: string, ms: number, p: Promise<T>): Promise<T> {
+  return await Promise.race([
+    p,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`Timed out after ${ms}ms: ${label}`)), ms),
+    ),
+  ]);
+}
+
 async function querySafesByOwnerCircles(sdk: Sdk, ownerAddress: string): Promise<Address[]> {
   if (!sdk?.circlesRpc) throw new Error('Circles SDK not initialized');
   const ownerLc = ownerAddress.toLowerCase();
 
-  const response = await sdk.circlesRpc.call<RpcQueryResult>('circles_query', [
-    {
-      Namespace: 'V_Safe',
-      Table: 'Owners',
-      Columns: ['safeAddress'],
-      Filter: [
-        {
-          Type: 'FilterPredicate',
-          FilterType: 'Equals',
-          Column: 'owner',
-          Value: ownerLc,
-        },
-      ],
-      Order: [],
-      Limit: 1000,
-    },
-  ]);
+  console.log('[safeDiscovery] circles_query V_Safe.Owners owner=', ownerLc);
+  const t0 = performance.now();
+  const response = await withTimeout(
+    'circles_query V_Safe.Owners',
+    20_000,
+    sdk.circlesRpc.call<RpcQueryResult>('circles_query', [
+      {
+        Namespace: 'V_Safe',
+        Table: 'Owners',
+        Columns: ['safeAddress'],
+        Filter: [
+          {
+            Type: 'FilterPredicate',
+            FilterType: 'Equals',
+            Column: 'owner',
+            Value: ownerLc,
+          },
+        ],
+        Order: [],
+        Limit: 1000,
+      },
+    ]),
+  );
+  console.log('[safeDiscovery] circles_query done in', Math.round(performance.now() - t0), 'ms');
 
   const columns = response?.result?.columns ?? [];
   const rows = response?.result?.rows ?? [];
@@ -104,10 +120,13 @@ export async function loadSafesProfileAndGroups(
   profileBySafe: Record<string, AvatarRow | undefined>;
   groupsByOwner: Record<Address, GroupRow[]>;
 }> {
+  console.log('[safeDiscovery] loadSafesProfileAndGroups for', safes.length, 'safes');
+  const t0 = performance.now();
   const [avatarInfo, groupInfo] = await Promise.all([
-    sdk?.data?.getAvatarInfoBatch(safes) ?? [],
-    getBaseAndCmgGroupsByOwnerBatch(sdk, safes),
+    withTimeout('getAvatarInfoBatch', 20_000, Promise.resolve(sdk?.data?.getAvatarInfoBatch(safes) ?? [])),
+    withTimeout('getBaseAndCmgGroupsByOwnerBatch', 20_000, getBaseAndCmgGroupsByOwnerBatch(sdk, safes)),
   ]);
+  console.log('[safeDiscovery] loadSafesProfileAndGroups done in', Math.round(performance.now() - t0), 'ms');
 
   const profileBySafe: Record<string, AvatarRow | undefined> = {};
   avatarInfo.forEach((info) => {
@@ -162,10 +181,12 @@ export function createSafeDiscoveryStore(
   }
 
   async function refresh(opts: { forceRefresh?: boolean } = {}) {
+    console.log('[safeDiscovery] refresh start, owner=', ownerAddress, 'forceRefresh=', !!opts.forceRefresh);
     state.update((current) => ({ ...current, isLoading: true, error: null }));
 
     try {
       const fetchedSafes = await getSafesByOwner(sdk, ownerAddress, opts);
+      console.log('[safeDiscovery] fetched', fetchedSafes.length, 'safes');
       const currentState = get(state);
       const mergedSafes = mergeSafes(currentState.safes, fetchedSafes);
       state.update((current) => ({ ...current, safes: mergedSafes }));
@@ -176,6 +197,7 @@ export function createSafeDiscoveryStore(
         currentSafes
       );
 
+      console.log('[safeDiscovery] refresh complete, isLoading=false');
       state.update((current) => ({
         ...current,
         profileBySafe,
@@ -183,11 +205,14 @@ export function createSafeDiscoveryStore(
         isLoading: false,
       }));
     } catch (e) {
-      console.error('Failed to load safes', e);
+      console.error('[safeDiscovery] refresh failed:', e);
+      const msg = (e as Error)?.message ?? '';
       state.update((current) => ({
         ...current,
         isLoading: false,
-        error: 'Could not load your Safes. Please try again.',
+        error: msg.startsWith('Timed out')
+          ? `${msg}. The Circles RPC isn't responding — please try again.`
+          : 'Could not load your Safes. Please try again.',
       }));
     }
   }
