@@ -615,33 +615,57 @@
                                     box-shadow:{T.shadow.md};padding:14px;display:flex;flex-direction:column;gap:10px;
                                 "
                             >
-                                <div style="font-size:12px;font-weight:600;color:{T.ink};letter-spacing:-0.005em;">Profile bookmark</div>
+                                <div style="font-size:13px;font-weight:580;color:{T.ink};letter-spacing:-0.005em;">Profile bookmark</div>
 
                                 <div style="display:flex;flex-direction:column;gap:6px;">
-                                    <span style="font-size:10.5px;font-weight:580;color:{T.inkMuted};letter-spacing:0.04em;text-transform:uppercase;">Folder</span>
+                                    <span style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Folder</span>
                                     {#if bookmarkFolders.length > 0}
-                                        <select class="select select-bordered select-sm w-full" bind:value={bookmarkFolderSelection}>
+                                        <select
+                                            style="width:100%;padding:8px 12px;border:1px solid {T.hairline};border-radius:10px;font-family:{T.fontSans};font-size:12.5px;color:{T.ink};background:{T.surface};box-sizing:border-box;cursor:pointer;"
+                                            bind:value={bookmarkFolderSelection}
+                                        >
                                             <option value="">No folder</option>
                                             {#each bookmarkFolders as folder (folder)}
                                                 <option value={folder}>{folder}</option>
                                             {/each}
                                         </select>
                                     {:else}
-                                        <div style="font-size:11.5px;color:{T.inkMuted};">No folders yet. Create one below.</div>
+                                        <div style="font-size:11.5px;color:{T.inkMuted};">No folders yet — create one below.</div>
                                     {/if}
-                                    <input class="input input-sm input-bordered w-full" type="text" maxlength="64"
-                                           placeholder="Create folder (e.g. Friends)" bind:value={newBookmarkFolderInput} />
+                                    <input
+                                        type="text"
+                                        maxlength="64"
+                                        placeholder="Create folder (e.g. Friends)"
+                                        bind:value={newBookmarkFolderInput}
+                                        style="width:100%;padding:8px 12px;border:1px solid {T.hairline};border-radius:10px;font-family:{T.fontSans};font-size:12.5px;color:{T.ink};background:{T.surface};box-sizing:border-box;"
+                                    />
                                 </div>
 
-                                <textarea class="textarea textarea-sm textarea-bordered w-full" rows={3}
-                                          placeholder="Add a note (optional)" bind:value={bookmarkNoteInput}></textarea>
+                                <textarea
+                                    rows={3}
+                                    placeholder="Add a note (optional)"
+                                    bind:value={bookmarkNoteInput}
+                                    style="width:100%;padding:9px 12px;border:1px solid {T.hairline};border-radius:10px;font-family:{T.fontSans};font-size:12.5px;color:{T.ink};background:{T.surface};box-sizing:border-box;resize:vertical;min-height:64px;"
+                                ></textarea>
 
-                                <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;">
-                                    <button class="btn btn-ghost btn-sm" type="button" onclick={() => (showBookmarkEditor = false)}>Cancel</button>
+                                <div style="display:flex;align-items:center;justify-content:flex-end;gap:4px;flex-wrap:wrap;">
+                                    <button
+                                        type="button"
+                                        style="height:30px;padding:0 12px;border-radius:9999px;border:0;background:transparent;color:{T.inkMuted};font-size:12px;cursor:pointer;"
+                                        onclick={() => (showBookmarkEditor = false)}
+                                    >Cancel</button>
                                     {#if isBookmarked}
-                                        <button class="btn btn-ghost btn-sm" type="button" onclick={removeBookmark}>Remove</button>
+                                        <button
+                                            type="button"
+                                            style="height:30px;padding:0 12px;border-radius:9999px;border:0;background:transparent;color:{T.negative};font-size:12px;font-weight:540;cursor:pointer;"
+                                            onclick={removeBookmark}
+                                        >Remove</button>
                                     {/if}
-                                    <button class="btn btn-primary btn-sm" type="button" onclick={saveBookmarkWithCurrentNote}>Save</button>
+                                    <button
+                                        type="button"
+                                        style="height:30px;padding:0 14px;border-radius:9999px;border:0;cursor:pointer;background:{T.primary};color:#fff;font-size:12px;font-weight:580;box-shadow:0 2px 6px rgba(88,73,212,0.2);"
+                                        onclick={saveBookmarkWithCurrentNote}
+                                    >Save</button>
                                 </div>
                             </div>
                         {/if}
@@ -844,9 +868,12 @@
         >
             <div class="w-full">
                 {#if collateralLoading}
-                    <div class="w-full py-6 text-center text-base-content/60">Loading…</div>
+                    <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:24px 0;color:{T.inkMuted};font-size:12.5px;">
+                        <span class="loading loading-spinner loading-sm" style="color:{T.primary};"></span>
+                        Loading…
+                    </div>
                 {:else if collateralError}
-                    <div class="w-full py-6 text-center text-error">{collateralError}</div>
+                    <div style="background:{T.negativeSoft};border:1px solid rgba(196,68,48,0.2);border-radius:10px;padding:8px 12px;font-size:12px;color:{T.inkBody};">{collateralError}</div>
                 {:else}
                     <HoldersList
                             holders={collateralInTreasury}
@@ -868,9 +895,12 @@
         >
             <div class="w-full">
                 {#if holdersLoading}
-                    <div class="w-full py-6 text-center text-base-content/60">Loading…</div>
+                    <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:24px 0;color:{T.inkMuted};font-size:12.5px;">
+                        <span class="loading loading-spinner loading-sm" style="color:{T.primary};"></span>
+                        Loading…
+                    </div>
                 {:else if holdersError}
-                    <div class="w-full py-6 text-center text-error">{holdersError}</div>
+                    <div style="background:{T.negativeSoft};border:1px solid rgba(196,68,48,0.2);border-radius:10px;padding:8px 12px;font-size:12px;color:{T.inkBody};">{holdersError}</div>
                 {:else}
                     <HoldersList holders={tokenHolders} />
                 {/if}
@@ -887,9 +917,12 @@
         >
             <div class="w-full">
                 {#if holdingsLoading}
-                    <div class="w-full py-6 text-center text-base-content/60">Loading…</div>
+                    <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:24px 0;color:{T.inkMuted};font-size:12.5px;">
+                        <span class="loading loading-spinner loading-sm" style="color:{T.primary};"></span>
+                        Loading…
+                    </div>
                 {:else if holdingsError}
-                    <div class="w-full py-6 text-center text-error">{holdingsError}</div>
+                    <div style="background:{T.negativeSoft};border:1px solid rgba(196,68,48,0.2);border-radius:10px;padding:8px 12px;font-size:12px;color:{T.inkBody};">{holdingsError}</div>
                 {:else}
                     <HoldersList holders={holdings} />
                 {/if}
@@ -905,20 +938,24 @@
             panelClass={tabPanelClass}
     >
         {#if offersLoading}
-            <div class="flex items-center gap-2 text-base-content/70 py-2">
-                <span class="loading loading-spinner loading-sm"></span>
+            <div style="display:flex;align-items:center;gap:8px;padding:8px 0;color:{T.inkMuted};font-size:12.5px;">
+                <span class="loading loading-spinner loading-sm" style="color:{T.primary};"></span>
                 <span>Loading offers…</span>
             </div>
         {:else if offersError}
-            <div class="alert alert-warning">
-                <span>{offersError}</span>
-                <button class="btn btn-xs ml-2" onclick={loadOffers}>Retry</button>
+            <div style="background:{T.warningSoft};border:1px solid rgba(176,112,20,0.2);border-radius:10px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+                <span style="font-size:12px;color:{T.inkBody};">{offersError}</span>
+                <button
+                    type="button"
+                    style="height:24px;padding:0 10px;border-radius:9999px;border:1px solid {T.warning};background:{T.surface};color:{T.warning};font-size:11px;font-weight:540;cursor:pointer;"
+                    onclick={loadOffers}
+                >Retry</button>
             </div>
         {:else}
             {#if offers.length === 0}
-                <div class="text-sm opacity-70">No offers</div>
+                <div style="font-size:12.5px;color:{T.inkMuted};padding:8px 0;">No offers</div>
             {:else}
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" data-sveltekit-preload-data="hover">
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;" data-sveltekit-preload-data="hover">
                     {#each offers as p (p.productCid ?? p.linkKeccak ?? p.indexInChunk)}
                         <ProductCard
                                 product={p}
@@ -937,20 +974,20 @@
             title="Namespaces"
             panelClass={tabPanelClass}
     >
-        <div class="space-y-3">
+        <div style="display:flex;flex-direction:column;gap:10px;">
             {#if otherError}
-                <div class="alert alert-error text-sm">{otherError}</div>
+                <div style="background:{T.negativeSoft};border:1px solid rgba(196,68,48,0.2);border-radius:10px;padding:8px 12px;font-size:12px;color:{T.inkBody};">{otherError}</div>
             {/if}
 
             {#if otherLoading}
-                <div class="flex items-center gap-2 text-base-content/70 py-2">
-                    <span class="loading loading-spinner loading-sm"></span>
+                <div style="display:flex;align-items:center;gap:8px;padding:8px 0;color:{T.inkMuted};font-size:12.5px;">
+                    <span class="loading loading-spinner loading-sm" style="color:{T.primary};"></span>
                     <span>Loading namespaces…</span>
                 </div>
             {:else if otherResolvedAvatar}
                 <ProfileNamespaces avatar={otherResolvedAvatar} namespaces={otherNamespaces} readonly={true} />
             {:else}
-                <div class="text-sm opacity-60">No avatar selected.</div>
+                <div style="font-size:12.5px;color:{T.inkMuted};">No avatar selected.</div>
             {/if}
         </div>
     </Tab>
