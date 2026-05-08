@@ -95,6 +95,9 @@
 .btn-sm:not(.btn-circle):not(.btn-square) { padding-left: 1rem; padding-right: 1rem; }
 .btn-xs:not(.btn-circle):not(.btn-square) { padding-left: 0.75rem; padding-right: 0.75rem; }
 
+/* --rounded-btn also affects inputs in DaisyUI — reset them to a sensible radius */
+.input, .textarea, .select, input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), textarea, select { border-radius: 12px !important; }
+
 /* Row tokens */
 :root {
     --row-height-sm: 44px;
