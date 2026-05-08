@@ -172,13 +172,13 @@
                 />
             </div>
 
-            <div class="text-right shrink-0">
-                {#if sent}
-                    <span class="text-error font-bold">{displayAmount}</span>
-                {:else}
-                    <span class="text-success font-bold">{displayAmount}</span>
-                {/if}
-                <span> CRC</span>
+            <div class="text-right shrink-0 flex flex-col items-end">
+                <span
+                    class="font-mono text-[0.95rem] font-semibold tabular-nums leading-tight"
+                    class:text-error={sent}
+                    class:text-success={!sent}
+                >{displayAmount}</span>
+                <span class="text-[0.7rem] font-medium tracking-wide opacity-50 leading-none mt-0.5">CRC</span>
             </div>
         </div>
     </RowFrame>

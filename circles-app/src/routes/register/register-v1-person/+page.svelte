@@ -27,7 +27,7 @@
   </script>
 
 
-<PageScaffold highlight="soft" collapsedMode="bar" collapsedHeightClass="h-12" maxWidthClass="page page--lg" contentWidthClass="page page--lg" usePagePadding={true} headerTopGapClass="mt-4 md:mt-6" collapsedTopGapClass="mt-3 md:mt-4">
+<PageScaffold highlight="soft" collapsedMode="bar" collapsedHeightClass="h-12" maxWidthClass="page page--lg" contentWidthClass="page page--lg" usePagePadding={true}>
   {#snippet title()}<h1 class="h2 m-0">Register Person (v1)</h1>{/snippet}
   {#snippet meta()}Step 1 of 1{/snippet}
   {#snippet headerActions()}

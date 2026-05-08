@@ -526,8 +526,6 @@
   usePagePadding={true}
   collapsedMode="bar"
   collapsedHeightClass="h-12"
-  headerTopGapClass="mt-4 md:mt-6"
-  collapsedTopGapClass="mt-3 md:mt-4"
 >
   {#snippet title()}
     <h1 class="h2">{headerTitle}</h1>

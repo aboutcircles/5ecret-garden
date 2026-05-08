@@ -104,18 +104,19 @@
     --row-gap: 12px;
     --row-radius: 12px;
 
-    --row-bg: var(--p);
-    --row-bg-hover: var(--p,96);
-    --row-bg-selected: var(--p,96);
+    /* DaisyUI v4 stores OKLCH channel triplets; wrap with oklch() to get a valid color */
+    --row-bg: oklch(var(--b1));
+    --row-bg-hover: oklch(var(--b2));
+    --row-bg-selected: color-mix(in oklch, oklch(var(--p)) 12%, oklch(var(--b1)));
 
-    --row-border: color-mix(in oklch, var(--bc) 12%, transparent);
-    --row-border-hover: color-mix(in oklch, var(--bc) 20%, transparent);
-    --row-border-selected: var(--p);
-    --row-focus-ring: color-mix(in oklch, var(--p) 35%, transparent);
+    --row-border: color-mix(in oklch, oklch(var(--bc)) 12%, transparent);
+    --row-border-hover: color-mix(in oklch, oklch(var(--bc)) 20%, transparent);
+    --row-border-selected: oklch(var(--p));
+    --row-focus-ring: color-mix(in oklch, oklch(var(--p)) 35%, transparent);
 
-    --row-fg-strong: var(--bc);
-    --row-fg-muted: color-mix(in oklch, var(--bc) 70%, transparent);
-    --row-fg-muted-2: color-mix(in oklch, var(--bc) 60%, transparent);
+    --row-fg-strong: oklch(var(--bc));
+    --row-fg-muted: color-mix(in oklch, oklch(var(--bc)) 70%, transparent);
+    --row-fg-muted-2: color-mix(in oklch, oklch(var(--bc)) 60%, transparent);
 }
 
 /* Don’t force a fixed `height` on table rows; it can clip content when cells wrap or async content appears. */
@@ -134,16 +135,16 @@ html {
     --row-gap: 12px;
     --row-radius: 12px;
 
-    --row-bg: var(--p);
-    --row-bg-hover: var(--p,96);
-    --row-bg-selected: var(--p,96);
+    --row-bg: oklch(var(--b1));
+    --row-bg-hover: oklch(var(--b2));
+    --row-bg-selected: color-mix(in oklch, oklch(var(--p)) 12%, oklch(var(--b1)));
 
-    --row-border: color-mix(in oklch, var(--bc) 12%, transparent);
-    --row-border-hover: color-mix(in oklch, var(--bc) 20%, transparent);
-    --row-border-selected: var(--p);
-    --row-focus-ring: color-mix(in oklch, var(--p) 35%, transparent);
+    --row-border: color-mix(in oklch, oklch(var(--bc)) 12%, transparent);
+    --row-border-hover: color-mix(in oklch, oklch(var(--bc)) 20%, transparent);
+    --row-border-selected: oklch(var(--p));
+    --row-focus-ring: color-mix(in oklch, oklch(var(--p)) 35%, transparent);
 
-    --row-fg-strong: var(--bc);
-    --row-fg-muted: color-mix(in oklch, var(--bc) 70%, transparent);
-    --row-fg-muted-2: color-mix(in oklch, var(--bc) 60%, transparent);
+    --row-fg-strong: oklch(var(--bc));
+    --row-fg-muted: color-mix(in oklch, oklch(var(--bc)) 70%, transparent);
+    --row-fg-muted-2: color-mix(in oklch, oklch(var(--bc)) 60%, transparent);
 }

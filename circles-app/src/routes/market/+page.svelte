@@ -90,7 +90,6 @@
     });
 
     import { shortenAddress } from '$lib/shared/utils/shared';
-    import {list} from "postcss";
     const shortAddr = (a?: string) => (a ? shortenAddress(a as any) : '');
 
     const PAGE_SIZE = 20;
