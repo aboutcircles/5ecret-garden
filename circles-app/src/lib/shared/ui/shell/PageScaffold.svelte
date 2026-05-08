@@ -24,6 +24,7 @@ import SettingProfile from '$lib/areas/settings/ui/pages/SettingProfile.svelte';
 
         headerTopGapClass = 'mt-4 md:mt-6',
         collapsedTopGapClass = 'mt-14 md:mt-4',
+        headerCardStyle = '',
 
         // Svelte 5 snippet props (replacement for named slots)
         title,
@@ -46,6 +47,7 @@ import SettingProfile from '$lib/areas/settings/ui/pages/SettingProfile.svelte';
         collapsedHeightMd?: string;
         headerTopGapClass?: string;
         collapsedTopGapClass?: string;
+        headerCardStyle?: string;
         title?: Snippet;
         meta?: Snippet;
         headerActions?: Snippet;
@@ -146,7 +148,7 @@ import SettingProfile from '$lib/areas/settings/ui/pages/SettingProfile.svelte';
             ? 'bg-base-100 border border-base-300'
             : 'bg-base-100 border border-base-300 ring-1 ring-primary/10'}
             px-5 md:px-6 py-5 md:py-6 ${headerTopGapClass} relative`}
-          style="box-shadow:0 1px 4px rgba(15,10,30,0.04),0 4px 16px rgba(15,10,30,0.04);"><!-- NOTE: relative for absolute avatar -->
+          style="box-shadow:0 1px 4px rgba(15,10,30,0.04),0 4px 16px rgba(15,10,30,0.04);{headerCardStyle}"><!-- NOTE: relative for absolute avatar -->
             <!-- Always stack title/meta and actions into separate rows -->
             <div class="flex flex-col gap-3">
                 <div class="min-w-0">

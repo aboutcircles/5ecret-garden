@@ -160,25 +160,33 @@
     onclick={onRowClick}
 >
     <RowFrame clickable={true} dense={true} noLeading={true} style="min-height: var(--transaction-row-height, 76px);">
-        <div class="w-full flex items-center justify-between cursor-pointer">
-            <div class="min-w-0">
+        <div class="w-full flex items-center justify-between gap-3 cursor-pointer">
+            <!-- Avatar + colored type badge -->
+            <div class="relative shrink-0">
                 <Avatar
-                        address={counterpartyAddress}
-                        view="horizontal"
-                        clickable={true}
-                        pictureOverlayUrl={badgeUrl ?? undefined}
-                        topInfo={topInfoText}
-                        bottomInfo={getTimeAgo(item.timestamp)}
+                    address={counterpartyAddress}
+                    view="horizontal"
+                    clickable={true}
+                    pictureOverlayUrl={badgeUrl ?? undefined}
+                    topInfo={topInfoText}
+                    bottomInfo={getTimeAgo(item.timestamp)}
                 />
+                <!-- Colored indicator dot -->
+                <span
+                    class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white flex items-center justify-center"
+                    style={item.from === '0x0000000000000000000000000000000000000000'
+                        ? 'background:#F4D27A;'
+                        : sent ? 'background:#E8896A;' : 'background:#7BA887;'}
+                    aria-hidden="true"
+                ></span>
             </div>
 
             <div class="text-right shrink-0 flex flex-col items-end">
                 <span
                     class="font-mono text-[0.95rem] font-semibold tabular-nums leading-tight"
-                    class:text-error={sent}
-                    class:text-success={!sent}
+                    style={sent ? 'color:#C44430;' : 'color:#2D8A52;'}
                 >{displayAmount}</span>
-                <span class="text-[0.7rem] font-medium tracking-wide opacity-50 leading-none mt-0.5">CRC</span>
+                <span class="text-[0.7rem] font-medium tracking-wide opacity-40 leading-none mt-0.5">CRC</span>
             </div>
         </div>
     </RowFrame>

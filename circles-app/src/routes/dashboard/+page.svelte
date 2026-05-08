@@ -15,8 +15,7 @@
     import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
     import { openSendFlowPopup } from '$lib/areas/wallet/flows/send/openSendFlowPopup';
 
-    // lucide (standalone) icon nodes
-    import { Send as LSend, Banknote as LBanknote, BarChart3 as LBarChart3 } from 'lucide';
+    import { Send as LSend, Banknote as LBanknote } from 'lucide';
     import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
     import HelpPopover from '$lib/shared/ui/primitives/HelpPopover.svelte';
 
@@ -28,14 +27,10 @@
 
     let mintableAmount: number = $state(0);
 
-    const defaultTab: string = avatarState.isGroup ? 'overview' : 'transaction-history';
-    let selectedTab: string = defaultTab;
-
     $effect(() => {
         (async () => {
             const hasAvatar: boolean = !!avatarState.avatar;
             const isHuman: boolean = hasAvatar && !avatarState.isGroup;
-
             if (isHuman) {
                 const amount = await avatarState.avatar!.getMintableAmount();
                 mintableAmount = amount ?? 0;
@@ -44,113 +39,102 @@
     });
 
     async function mintPersonalCircles() {
-        const hasAvatar: boolean = !!avatarState.avatar;
-        if (!hasAvatar) {
-            throw new Error('Avatar store is not available');
-        }
-
+        if (!avatarState.avatar) throw new Error('Avatar store is not available');
         try {
-            await runTask({
-                name: 'Collecting CRC ...',
-                promise: avatarState.avatar!.personalMint(),
-            });
+            await runTask({ name: 'Collecting CRC ...', promise: avatarState.avatar!.personalMint() });
         } catch (error) {
-            if (!isBenignReceiptDecodeError(error)) {
-                throw error;
-            }
+            if (!isBenignReceiptDecodeError(error)) throw error;
             console.warn('Ignoring benign receipt decode error after successful mint transaction', error);
         } finally {
             const refreshed = await avatarState.avatar!.getMintableAmount();
             mintableAmount = refreshed ?? 0;
         }
-
         mintableAmount = 0;
     }
 
     let personalToken: number = $derived(
-        $circlesBalances?.data?.filter((balance) => !balance.isGroup).length
+        $circlesBalances?.data?.filter((b) => !b.isGroup).length ?? 0
     );
     let groupToken: number = $derived(
-        $circlesBalances?.data?.filter((balance) => balance.isGroup).length
+        $circlesBalances?.data?.filter((b) => b.isGroup).length ?? 0
+    );
+    let personalBalance: number = $derived(
+        $circlesBalances?.data?.filter((b) => !b.isGroup).reduce((s, b) => s + (b.circles ?? 0), 0) ?? 0
+    );
+    let groupBalance: number = $derived(
+        $circlesBalances?.data?.filter((b) => b.isGroup).reduce((s, b) => s + (b.circles ?? 0), 0) ?? 0
     );
 
     function openBalances() {
-        popupControls.open({
-            title: 'Balance breakdown',
-            component: Balances,
-            props: {}
-        });
+        popupControls.open({ title: 'Balance breakdown', component: Balances, props: {} });
     }
 
     function openSend() {
-        openSendFlowPopup({
-            selectedAddress: undefined,
-            amount: undefined,
-            transitiveOnly: true
-        });
+        openSendFlowPopup({ selectedAddress: undefined, amount: undefined, transitiveOnly: true });
     }
-
 </script>
 
 <PageScaffold
-        highlight="soft"
-        maxWidthClass="page page--lg"
-        contentWidthClass="page page--lg"
-        usePagePadding={true}
-        collapsedMode="bar"
-        collapsedHeightClass="h-12"
+    highlight="soft"
+    maxWidthClass="page page--lg"
+    contentWidthClass="page page--lg"
+    usePagePadding={true}
+    collapsedMode="bar"
+    collapsedHeightClass="h-12"
+    headerCardStyle="background:radial-gradient(120% 140% at 100% 0%, #EEEBFA 0%, #FFFFFF 62%);"
 >
-    <!-- Title -->
     {#snippet title()}
         {#if !avatarState.isGroup}
-            <button class="text-left group" onclick={openBalances} aria-label="Open balances breakdown">
-                <span class="h1-display block group-hover:opacity-80 transition-opacity">
-                    {roundToDecimals($totalCirclesBalance)}
-                    <span style="font-size:0.55em;opacity:0.7;vertical-align:baseline;letter-spacing:0;">CRC</span>
-                </span>
-            </button>
+            <div>
+                <div class="text-[11px] font-semibold tracking-[0.08em] uppercase mb-1" style="color:rgba(15,10,30,0.50);">Total balance</div>
+                <button class="text-left group" onclick={openBalances} aria-label="Open balances breakdown">
+                    <span class="h1-display block group-hover:opacity-80 transition-opacity">
+                        {roundToDecimals($totalCirclesBalance)}<span style="font-family:'Inter Tight',sans-serif;font-size:0.42em;font-weight:500;opacity:0.55;margin-left:0.35em;vertical-align:0.1em;letter-spacing:0;">CRC</span>
+                    </span>
+                </button>
+            </div>
         {:else}
             <h2 class="h2 m-0">Group overview</h2>
         {/if}
     {/snippet}
 
-    <!-- Meta -->
     {#snippet meta()}
         {#if !avatarState.isGroup}
-            <button type="button" class="hover:underline cursor-pointer text-left" onclick={openBalances}>
-                From {personalToken} people
+            <button type="button" class="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer text-left" onclick={openBalances}>
+                <span class="flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background:#E8896A;"></span>
+                    <span class="text-[13px]"><b>{personalToken}</b> people</span>
+                </span>
+                <span style="color:rgba(15,10,30,0.20);">·</span>
+                <span class="flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background:#5849D4;"></span>
+                    <span class="text-[13px]"><b>{groupToken}</b> groups</span>
+                </span>
+                <HelpPopover
+                    title="Why so many tokens?"
+                    lines={TOKEN_SOURCES_HELP}
+                    buttonClass="btn btn-ghost btn-xs btn-square"
+                    widthClass="w-80"
+                />
             </button>
-            <span class="mx-1.5" aria-hidden="true">•</span>
-            <button type="button" class="hover:underline cursor-pointer text-left" onclick={openBalances}>
-                {groupToken} groups
-            </button>
-            <HelpPopover
-                title="Why so many tokens?"
-                lines={TOKEN_SOURCES_HELP}
-                buttonClass="btn btn-ghost btn-xs btn-square"
-                widthClass="w-80"
-            />
         {/if}
     {/snippet}
 
-    <!-- Full-size quick actions -->
     {#snippet headerActions()}
         {#if !avatarState.isGroup}
             <button type="button" class="btn btn-ghost btn-sm" onclick={openSend}>
-                <Lucide icon={LSend} size={16} class="shrink-0" />
+                <Lucide icon={LSend} size={15} class="shrink-0" />
                 Send
             </button>
         {/if}
-
         {#if mintableAmount >= 0.01}
             <button type="button" class="btn btn-primary btn-sm" onclick={mintPersonalCircles}>
-                <Lucide icon={LBanknote} size={16} class="shrink-0" />
+                <Lucide icon={LBanknote} size={15} class="shrink-0" />
                 Mint {roundToDecimals(mintableAmount)} Circles
             </button>
         {/if}
     {/snippet}
 
-    <!-- Collapsed summary (balance only) -->
     {#snippet collapsedLeft()}
         {#if !avatarState.isGroup}
             <span class="font-display text-[1.15rem] font-normal tracking-tight text-base-content">
@@ -163,44 +147,74 @@
         {/if}
     {/snippet}
 
-    <!-- Collapsed dropdown content -->
     {#snippet collapsedMenu()}
         <div class="grid grid-cols-1 gap-2">
-
             {#if mintableAmount >= 0.01}
-                <button
-                        type="button"
-                        class="btn btn-primary min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] justify-start px-3"
-                        onclick={mintPersonalCircles}
-                >
+                <button type="button"
+                    class="btn btn-primary min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] justify-start px-3"
+                    onclick={mintPersonalCircles}>
                     <Lucide icon={LBanknote} size={20} class="shrink-0" />
                     Mint {roundToDecimals(mintableAmount)} Circles
                 </button>
             {/if}
-
             {#if !avatarState.isGroup}
-                <button
-                        type="button"
-                        class="btn btn-ghost min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] justify-start px-3"
-                        onclick={openSend}
-                >
+                <button type="button"
+                    class="btn btn-ghost min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] justify-start px-3"
+                    onclick={openSend}>
                     <Lucide icon={LSend} size={20} class="shrink-0" />
                     Send
                 </button>
             {/if}
-
-            <button
-                    type="button"
-                    class="btn btn-ghost min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] justify-start px-3"
-                    onclick={openBalances}
-            >
-                <Lucide icon={LBarChart3} size={20} class="shrink-0" />
-                See breakdown
-            </button>
         </div>
     {/snippet}
 
-    <!-- Content -->
+    <!-- Balance breakdown bar -->
+    {#if !avatarState.isGroup && ($circlesBalances?.data?.length ?? 0) > 0}
+        <div class="grid grid-cols-2 sm:grid-cols-3 bg-base-100 border border-base-300 rounded-[14px] overflow-hidden mb-4"
+             style="box-shadow:0 1px 2px rgba(15,10,30,0.04);">
+            <button type="button"
+                class="flex flex-col gap-1.5 p-4 border-r border-base-300 text-left hover:bg-base-200 transition-colors"
+                onclick={openBalances}>
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-sm shrink-0" style="background:#F4D27A;"></span>
+                    <span class="text-[10.5px] font-semibold tracking-[0.07em] uppercase" style="color:rgba(15,10,30,0.50);">Personal</span>
+                </div>
+                <div class="font-mono text-[15px] font-semibold tabular-nums leading-none">
+                    {roundToDecimals(personalBalance)}<span class="text-[10px] font-normal opacity-50 ml-0.5">CRC</span>
+                </div>
+                <div class="text-[11.5px]" style="color:rgba(15,10,30,0.50);">{personalToken} issuers</div>
+            </button>
+
+            <button type="button"
+                class="flex flex-col gap-1.5 p-4 sm:border-r border-base-300 text-left hover:bg-base-200 transition-colors"
+                onclick={openBalances}>
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-sm shrink-0" style="background:#5849D4;"></span>
+                    <span class="text-[10.5px] font-semibold tracking-[0.07em] uppercase" style="color:rgba(15,10,30,0.50);">Groups</span>
+                </div>
+                <div class="font-mono text-[15px] font-semibold tabular-nums leading-none">
+                    {roundToDecimals(groupBalance)}<span class="text-[10px] font-normal opacity-50 ml-0.5">CRC</span>
+                </div>
+                <div class="text-[11.5px]" style="color:rgba(15,10,30,0.50);">{groupToken} groups</div>
+            </button>
+
+            {#if mintableAmount >= 0.01}
+                <button type="button"
+                    class="flex flex-col gap-1.5 p-4 col-span-2 sm:col-span-1 border-t sm:border-t-0 border-base-300 text-left hover:bg-base-200 transition-colors"
+                    onclick={mintPersonalCircles}>
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-sm shrink-0" style="background:#7BA887;"></span>
+                        <span class="text-[10.5px] font-semibold tracking-[0.07em] uppercase" style="color:rgba(15,10,30,0.50);">Mintable now</span>
+                    </div>
+                    <div class="font-mono text-[15px] font-semibold tabular-nums leading-none text-success">
+                        {roundToDecimals(mintableAmount)}<span class="text-[10px] font-normal opacity-60 ml-0.5">CRC</span>
+                    </div>
+                    <div class="text-[11.5px] font-semibold" style="color:#2D8A52;">Mint →</div>
+                </button>
+            {/if}
+        </div>
+    {/if}
+
     {#if avatarState.isGroup}
         <OverviewPanel/>
     {:else}

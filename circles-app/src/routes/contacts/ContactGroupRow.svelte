@@ -12,8 +12,9 @@
         profile?: Profile;
         avatarInfo?: AvatarRow;
         trustRelation?: string;
+        relation?: string;
     }
-    let { address, profile, avatarInfo, trustRelation = '' }: Props = $props();
+    let { address, profile, avatarInfo, trustRelation = '', relation = '' }: Props = $props();
 
     function openProfile() {
         if (!address) return;
@@ -46,6 +47,16 @@
         listNavigator.onRowClick(event);
         openProfile();
     }
+
+    const pillConfig = $derived.by(() => {
+        switch (relation) {
+            case 'mutuallyTrusts':  return { label: 'Both accept', bg: '#DCEBDF', color: '#2D8A52' };
+            case 'trusts':          return { label: 'You accept',  bg: '#FBEFCB', color: '#B07014' };
+            case 'trustedBy':       return { label: 'Accepts you', bg: '#EEEBFA', color: '#5849D4' };
+            case 'variesByVersion': return { label: 'Varies',      bg: '#F6F5F2', color: 'rgba(15,10,30,0.55)' };
+            default: return null;
+        }
+    });
 </script>
 
 <div
@@ -58,7 +69,7 @@
     onclick={onRowClick}
 >
     <RowFrame clickable={true} dense={true} noLeading={true}>
-        <div class="min-w-0">
+        <div class="min-w-0 flex-1">
             <Avatar
                 address={address}
                 {profile}
@@ -69,8 +80,16 @@
                 clickable={true}
             />
         </div>
-        {#snippet trailing()}<div aria-hidden="true">
-            <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" aria-hidden="true" />
-        </div>{/snippet}
+        {#snippet trailing()}
+            <div class="flex items-center gap-2 shrink-0">
+                {#if pillConfig}
+                    <span
+                        class="hidden sm:inline-flex text-[10.5px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap"
+                        style="background:{pillConfig.bg};color:{pillConfig.color};"
+                    >{pillConfig.label}</span>
+                {/if}
+                <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-40" aria-hidden="true" />
+            </div>
+        {/snippet}
     </RowFrame>
 </div>
