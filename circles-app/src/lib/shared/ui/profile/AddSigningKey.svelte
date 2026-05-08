@@ -8,6 +8,7 @@
     import type { Address } from '@circles-sdk/utils';
     import { bytesToHex, keccak256, hexToBytes } from '$lib/shared/integrations/safeSigner';
     import { secp256k1 } from '@noble/curves/secp256k1';
+    import { T } from '$lib/design-system/tokens.js';
 
     interface Props {
         avatar: Address | null;
@@ -124,66 +125,93 @@
     }
 </script>
 
-<div class="space-y-3">
-    <div class="text-sm opacity-70">
+<div style="display:flex;flex-direction:column;gap:14px;">
+    <p style="margin:0;font-size:12.5px;color:{T.inkMuted};line-height:1.5;">
         Add a new signing key to your profile. Only the public key is stored. Keep private keys safe.
-    </div>
+    </p>
 
     {#if error}
-        <div class="alert alert-warning text-xs">{error}</div>
+        <div style="background:{T.warningSoft};border:1px solid rgba(176,112,20,0.2);border-radius:10px;padding:8px 12px;font-size:11.5px;color:{T.inkBody};">{error}</div>
     {/if}
 
-    <div class="rounded-md p-2 bg-base-100/60 space-y-2">
-        <div class="flex items-center justify-between">
-            <div class="text-xs font-semibold">Create in browser</div>
-            <button class="btn btn-xs btn-outline" onclick={onGenerate}>Generate key pair</button>
+    <!-- Generator card -->
+    <div style="background:{T.surfaceAlt};border:1px solid {T.hairlineSoft};border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+            <span style="font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Create in browser</span>
+            <button
+                type="button"
+                style="height:28px;padding:0 12px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.ink};font-size:11.5px;font-weight:540;cursor:pointer;"
+                onclick={onGenerate}
+            >Generate key pair</button>
         </div>
 
         {#if privateKey}
-            <div class="mt-1 text-[11px] opacity-70 flex items-center justify-between">
-                <span>Private key (keep secret)</span>
-                <label class="flex items-center gap-2 text-[11px]">
-                    <input type="checkbox" class="toggle toggle-xs" bind:checked={showPrivate}>
-                    <span>Show private key</span>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                <span style="font-size:10.5px;color:{T.inkMuted};">Private key (keep secret)</span>
+                <label style="display:inline-flex;align-items:center;gap:6px;font-size:10.5px;color:{T.inkMuted};cursor:pointer;">
+                    <input type="checkbox" style="accent-color:{T.primary};" bind:checked={showPrivate}>
+                    Show
                 </label>
             </div>
-            <div class="flex items-center gap-2">
+            <div style="display:flex;align-items:center;gap:6px;">
                 {#if showPrivate}
-                    <code class="break-all text-[11px] block flex-1">{privateKey}</code>
+                    <code style="flex:1;min-width:0;word-break:break-all;font-family:{T.fontMono};font-size:10.5px;color:{T.ink};line-height:1.5;">{privateKey}</code>
                 {:else}
-                    <code class="break-all text-[11px] block flex-1 select-none">••••••••••••••••••••••••••••••••••••••</code>
+                    <code style="flex:1;min-width:0;word-break:break-all;font-family:{T.fontMono};font-size:10.5px;color:{T.inkSubtle};user-select:none;">••••••••••••••••••••••••••••••••••••••</code>
                 {/if}
-                <button class="btn btn-xs" title="Copy private key" onclick={() => copyToClipboard(privateKey || '', 'private')}>
-                    {copied === 'private' ? 'Copied' : 'Copy'}
-                </button>
+                <button
+                    type="button"
+                    style="flex-shrink:0;height:24px;padding:0 10px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.inkMuted};font-size:10.5px;font-weight:540;cursor:pointer;"
+                    title="Copy private key"
+                    onclick={() => copyToClipboard(privateKey || '', 'private')}
+                >{copied === 'private' ? 'Copied' : 'Copy'}</button>
             </div>
         {/if}
 
         {#if fingerprint}
-            <div class="mt-1 text-[11px] opacity-70 flex items-center justify-between">
-                <span>Fingerprint</span>
-                <button class="btn btn-ghost btn-xs" onclick={() => copyToClipboard(fingerprint || '', 'fingerprint')}>
-                    {copied === 'fingerprint' ? 'Copied' : 'Copy'}
-                </button>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                <span style="font-size:10.5px;color:{T.inkMuted};">Fingerprint</span>
+                <button
+                    type="button"
+                    style="height:22px;padding:0 8px;border-radius:9999px;border:0;background:transparent;color:{T.inkMuted};font-size:10.5px;cursor:pointer;"
+                    onclick={() => copyToClipboard(fingerprint || '', 'fingerprint')}
+                >{copied === 'fingerprint' ? 'Copied' : 'Copy'}</button>
             </div>
-            <code class="break-all text-[11px] block">{fingerprint}</code>
+            <code style="word-break:break-all;font-family:{T.fontMono};font-size:10.5px;color:{T.ink};line-height:1.5;">{fingerprint}</code>
         {/if}
     </div>
 
-    <label class="form-control">
-        <span class="label-text text-xs">Public key (uncompressed 0x04…)</span>
-        <div class="flex items-center gap-2">
-            <input class="input input-sm input-bordered font-mono flex-1" bind:value={publicKey} placeholder="0x04…" />
+    <label style="display:flex;flex-direction:column;gap:6px;">
+        <span style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Public key (uncompressed 0x04…)</span>
+        <div style="display:flex;align-items:center;gap:6px;">
+            <input
+                style="flex:1;min-width:0;padding:9px 12px;border:1px solid {T.hairline};border-radius:10px;font-family:{T.fontMono};font-size:11px;color:{T.ink};background:{T.surface};box-sizing:border-box;"
+                bind:value={publicKey}
+                placeholder="0x04…"
+            />
             {#if publicKey.trim()}
-                <button class="btn btn-ghost btn-xs" onclick={() => copyToClipboard(publicKey.trim(), 'public')}>
-                    {copied === 'public' ? 'Copied' : 'Copy'}
-                </button>
+                <button
+                    type="button"
+                    style="flex-shrink:0;height:30px;padding:0 12px;border-radius:9999px;border:0;background:transparent;color:{T.inkMuted};font-size:11.5px;cursor:pointer;"
+                    onclick={() => copyToClipboard(publicKey.trim(), 'public')}
+                >{copied === 'public' ? 'Copied' : 'Copy'}</button>
             {/if}
         </div>
     </label>
 
-    <div class="flex justify-end gap-2 pt-2">
-        <button class="btn btn-ghost btn-sm" onclick={onCancel} disabled={saving}>Cancel</button>
-        <button class="btn btn-primary btn-sm" onclick={onSave} disabled={saving || !publicKey.trim() || !avatar}>Save</button>
+    <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:4px;">
+        <button
+            type="button"
+            style="height:36px;padding:0 14px;border-radius:9999px;border:0;background:transparent;color:{T.inkMuted};font-size:13px;cursor:{saving ? 'not-allowed' : 'pointer'};"
+            onclick={onCancel}
+            disabled={saving}
+        >Cancel</button>
+        {@const canSave = !saving && !!publicKey.trim() && !!avatar}
+        <button
+            type="button"
+            style="height:36px;padding:0 18px;border-radius:9999px;border:0;cursor:{canSave ? 'pointer' : 'not-allowed'};background:{canSave ? T.primary : T.pageDeep};color:{canSave ? '#fff' : T.inkMuted};font-size:13px;font-weight:580;box-shadow:{canSave ? '0 4px 12px rgba(88,73,212,0.25)' : 'none'};"
+            onclick={onSave}
+            disabled={!canSave}
+        >Save</button>
     </div>
 </div>

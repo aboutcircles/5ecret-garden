@@ -3,6 +3,7 @@
   import type { Snippet } from 'svelte';
   import { writable, type Readable } from 'svelte/store';
   import { TABS_CTX, type TabRegistration, type TabsContext } from './tabs.context';
+  import { T } from '$lib/design-system/tokens.js';
 
   let uidCounter = 0;
   function nextUid() {
@@ -336,33 +337,43 @@
   });
 </script>
 
-<div class="relative" bind:this={tabsNavEl}>
-  <div class="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-base-300 z-0"></div>
+<div class="relative" bind:this={tabsNavEl} style="position:relative;">
+  <div style="pointer-events:none;position:absolute;left:0;right:0;bottom:0;height:1px;background:{T.hairlineSoft};z-index:0;"></div>
 
   <div class={`pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-base-100 to-transparent transition-opacity duration-150 ${canScrollLeft ? 'opacity-100' : 'opacity-0'}`}></div>
-  <div class={`pointer-events-none absolute left-0 bottom-0 w-10 h-6 bg-gradient-to-b from-base-100 to-transparent transition-opacity duration-150 z-10 ${canScrollLeft ? 'opacity-100' : 'opacity-0'}`}></div>
   <!-- Intentionally excluded from keyboard tab order: tabs are fully keyboard navigable via tab buttons + arrow keys. -->
   <button
       type="button"
-      class={`btn btn-ghost btn-xs absolute left-1 top-1/2 -translate-y-1/2 z-10 ${canScrollLeft ? '' : 'opacity-0 pointer-events-none'}`}
+      style="
+        position:absolute;left:4px;top:50%;transform:translateY(-50%);z-index:10;
+        width:24px;height:24px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.inkMuted};
+        display:inline-flex;align-items:center;justify-content:center;cursor:pointer;
+        opacity:{canScrollLeft ? 1 : 0};pointer-events:{canScrollLeft ? 'auto' : 'none'};
+        transition:opacity .15s;
+      "
       aria-hidden={!canScrollLeft}
       tabindex={-1}
       onclick={() => nudge(-1)}
   >
-    <img src="/chevron-right.svg" alt="Scroll left" class="w-4 h-4 rotate-180" />
+    <img src="/chevron-right.svg" alt="Scroll left" style="width:11px;height:11px;transform:rotate(180deg);opacity:0.7;" />
   </button>
 
   <div class={`pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-base-100 to-transparent transition-opacity duration-150 ${canScrollRight ? 'opacity-100' : 'opacity-0'}`}></div>
-  <div class={`pointer-events-none absolute right-0 bottom-0 w-10 h-6 bg-gradient-to-b from-base-100 to-transparent transition-opacity duration-150 z-10 ${canScrollRight ? 'opacity-100' : 'opacity-0'}`}></div>
   <!-- Intentionally excluded from keyboard tab order: tabs are fully keyboard navigable via tab buttons + arrow keys. -->
   <button
       type="button"
-      class={`btn btn-ghost btn-xs absolute right-1 top-1/2 -translate-y-1/2 z-10 ${canScrollRight ? '' : 'opacity-0 pointer-events-none'}`}
+      style="
+        position:absolute;right:4px;top:50%;transform:translateY(-50%);z-index:10;
+        width:24px;height:24px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.inkMuted};
+        display:inline-flex;align-items:center;justify-content:center;cursor:pointer;
+        opacity:{canScrollRight ? 1 : 0};pointer-events:{canScrollRight ? 'auto' : 'none'};
+        transition:opacity .15s;
+      "
       aria-hidden={!canScrollRight}
       tabindex={-1}
       onclick={() => nudge(1)}
   >
-    <img src="/chevron-right.svg" alt="Scroll right" class="w-4 h-4" />
+    <img src="/chevron-right.svg" alt="Scroll right" style="width:11px;height:11px;opacity:0.7;" />
   </button>
 
   <div
@@ -381,9 +392,9 @@
           role="tab"
           id={`${id}-tab-${t.id}`}
           data-popup-initial-focus={active === t.id ? 'true' : undefined}
-          class={`tab ${buttonSizeClass} flex-none whitespace-nowrap min-w-max max-w-[calc(100%-4rem)] overflow-hidden`}
-          class:tab-active={active === t.id}
-          class:tab-disabled={t.disabled}
+          class={`tab-pill ${buttonSizeClass}`}
+          class:tab-pill-active={active === t.id}
+          class:tab-pill-disabled={t.disabled}
           aria-selected={active === t.id}
           aria-controls={`${id}-panel-${t.id}`}
           tabindex={active === t.id ? 0 : -1}
@@ -391,13 +402,33 @@
           onclick={() => { select(t.id); }}
           data-tab-id={t.id}
           aria-label={t.badge !== undefined ? `${t.title} (${t.badge})` : t.title}
+          style="
+            flex:none;white-space:nowrap;min-width:max-content;max-width:calc(100% - 4rem);overflow:hidden;
+            padding:0 14px;background:transparent;border:0;cursor:{t.disabled ? 'not-allowed' : 'pointer'};
+            font-family:{T.fontSans};font-size:13px;font-weight:540;letter-spacing:-0.005em;
+            color:{active === t.id ? T.ink : (t.disabled ? T.inkFaint : T.inkMuted)};
+            position:relative;
+            display:inline-flex;align-items:center;justify-content:center;
+            transition:color .15s;
+          "
       >
-                <span class="inline-flex items-center gap-2 max-w-full">
-                    <span class="truncate">{t.title}</span>
-                  {#if t.badge !== undefined}
-                        <span class="badge badge-sm flex-none">{t.badge}</span>
-                    {/if}
-                </span>
+        <span style="display:inline-flex;align-items:center;gap:6px;max-width:100%;">
+          <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{t.title}</span>
+          {#if t.badge !== undefined}
+            <span style="
+              display:inline-flex;align-items:center;flex:none;padding:1px 7px;border-radius:9999px;
+              background:{active === t.id ? T.primaryFaint : T.pageDeep};
+              color:{active === t.id ? T.primary : T.inkMuted};
+              font-size:10px;font-weight:580;letter-spacing:0.02em;
+            ">{t.badge}</span>
+          {/if}
+        </span>
+        {#if active === t.id}
+          <span style="
+            position:absolute;left:14px;right:14px;bottom:-1px;height:2px;
+            background:{T.ink};border-radius:2px 2px 0 0;
+          " aria-hidden="true"></span>
+        {/if}
       </button>
     {/each}
   </div>
