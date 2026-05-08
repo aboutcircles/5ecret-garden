@@ -628,11 +628,13 @@
     <div style="margin-top:36px;display:flex;flex-direction:column;gap:20px;">
       <h3 style="margin:0 0 8px;font-size:13px;font-weight:600;color:{T.inkMuted};letter-spacing:0.08em;text-transform:uppercase;">1. Sketch the shell</h3>
       <pre style="margin:0;padding:14px 16px;border-radius:12px;background:{T.ink};color:#E8E3F0;font-family:{T.fontMono};font-size:12.5px;line-height:1.6;overflow:auto;white-space:pre;"><code>&lt;AppShell active="groups"
-  top={{'{'}#snippet top(){'}'}&lt;TopBar
-    eyebrow="Groups / Berlin Coop"
-    title="Berlin Coop"
-    subtitle="1,284 members · Mutual-aid coop in Kreuzberg"
-  /&gt;{'{/snippet}'}}&gt;
+  top={'{'}#snippet top(){'}'}
+    &lt;TopBar
+      eyebrow="Groups / Berlin Coop"
+      title="Berlin Coop"
+      subtitle="1,284 members · Mutual-aid coop in Kreuzberg"
+    /&gt;
+  {'{/snippet}'}&gt;
   &lt;Stack gap={'{'}20{'}'}&gt;
     &lt;!-- hero, stats, members, treasury, activity --&gt;
   &lt;/Stack&gt;

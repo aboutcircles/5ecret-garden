@@ -43,6 +43,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  body {
+    font-family: 'Inter Tight', 'Inter', -apple-system, system-ui, sans-serif;
+  }
+}
+
 /* Layout helpers */
 .page {
     @apply w-full mx-auto px-4 sm:px-6;

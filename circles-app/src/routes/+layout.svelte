@@ -29,6 +29,7 @@
   import type { Address } from '@circles-sdk/utils';
   import { get } from 'svelte/store';
   import BottomNav from '$lib/shared/ui/shell/BottomNav.svelte';
+  import AppSidebar from '$lib/shared/ui/shell/AppSidebar.svelte';
   import DefaultHeader from './DefaultHeader.svelte';
   import Banner from '$lib/shared/ui/feedback/Banner.svelte';
   import { openMigrateToV2Flow } from '$lib/areas/wallet/flows/migrateToV2/openMigrateToV2Flow';
@@ -65,20 +66,16 @@
       onChange(account) {
         const isPrivateKeySession = signer.privateKey !== undefined;
 
-        // Wrong network guard (only when an EOA is actually present)
         if (account.chainId !== 100 && account.address) {
           void openWrongNetworkPopup();
           return;
         }
 
-        // Keep signer.address in sync with the current EOA for browser sessions
-        // (EOA != Safe; this is expected and NOT a reason to clear the session)
         if (!isPrivateKeySession && account.address) {
           signer.address = account.address.toLowerCase() as Address;
           return;
         }
 
-        // For private-key sessions, mismatch means "user switched account in wallet UI"
         if (
           isPrivateKeySession &&
           signer.address &&
@@ -129,14 +126,11 @@
       };
       window.addEventListener('pointerdown', markInteraction, { once: true });
       window.addEventListener('keydown', markInteraction, { once: true });
-
     }
 
     return undefined;
   });
 
-  // Defer initializing wallet/watchers until the user navigates beyond the landing/connect flows.
-  // This keeps heavy wallet dependencies out of the critical path for the first paint on `/`.
   $effect(() => {
     if (!browser) return;
     if (walletWatcherInitialized || unwatch) return;
@@ -161,6 +155,11 @@
 
   async function openMigratePopup(): Promise<void> {
     await openMigrateToV2Flow();
+  }
+
+  async function openSend(): Promise<void> {
+    const { openSendFlowPopup } = await import('$lib/areas/wallet/flows/send/openSendFlowPopup');
+    void openSendFlowPopup();
   }
 
   $effect(() => {
@@ -244,7 +243,6 @@
     }, 2200);
   });
 
-  // Toasts
   let hasToasts: boolean = $derived($tasks.length > 0 || historyForwardNoopToastVisible);
 </script>
 
@@ -258,51 +256,72 @@
   {/if}
 </svelte:head>
 
-{#if avatarState.avatar}
-  <DefaultHeader homeLink="/dashboard" />
-{:else}
-  <DefaultHeader homeLink="/" />
-{/if}
+<!-- Full-height responsive shell -->
+<div class="flex h-dvh overflow-hidden bg-base-200">
 
-<main
-  class="relative w-full min-h-screen bg-base-200 border-base-300 overflow-hidden font-dmSans pt-4"
->
-  {#if avatarInfo && canMigrate(avatarInfo)}
-    <button class="w-full fixed top-16 z-10" onclick={() => void openMigratePopup()} onkeydown={(e) => e.key === 'Enter' && void openMigratePopup()}>
-      <Banner
-        title="Circles V2 is here!"
-        message="Migrate your avatar to Circles V2."
-        tone="info"
-        className="cursor-pointer"
-      />
-    </button>
-    <div class="h-20"></div>
-  {/if}
-
-  <div class="w-full flex flex-col items-stretch min-h-screen pb-24">
-    {@render children?.()}
-  </div>
-
+  <!-- Desktop sidebar (md+) -->
   {#if avatarState.avatar}
-    <BottomNav items={menuItems} />
+    <AppSidebar />
   {/if}
 
-  <Popup />
-</main>
+  <!-- Right side: mobile header + scrollable content + mobile bottom nav -->
+  <div class="flex flex-col flex-1 min-h-0 overflow-hidden">
+
+    <!-- Mobile header (hidden on md+, always rendered for non-avatar routes too) -->
+    {#if avatarState.avatar}
+      <DefaultHeader homeLink="/dashboard" />
+    {:else}
+      <DefaultHeader homeLink="/" />
+    {/if}
+
+    <!-- Migrate banner -->
+    {#if avatarInfo && canMigrate(avatarInfo)}
+      <div class="shrink-0 w-full">
+        <button
+          class="w-full"
+          onclick={() => void openMigratePopup()}
+          onkeydown={(e) => e.key === 'Enter' && void openMigratePopup()}
+        >
+          <Banner
+            title="Circles V2 is here!"
+            message="Migrate your avatar to Circles V2."
+            tone="info"
+            className="cursor-pointer"
+          />
+        </button>
+      </div>
+    {/if}
+
+    <!-- Scrollable content -->
+    <main class="flex-1 overflow-y-auto relative">
+      <div class="w-full flex flex-col items-stretch min-h-full">
+        {@render children?.()}
+      </div>
+    </main>
+
+    <!-- Mobile bottom nav -->
+    {#if avatarState.avatar}
+      <BottomNav items={menuItems} onSend={openSend} />
+    {/if}
+
+  </div>
+</div>
+
+<!-- Popup overlay (fixed, viewport-level) -->
+<Popup />
+
+<!-- Toasts -->
 {#if hasToasts}
-  <div
-    class="toast toast-bottom toast-end z-[60]"
-    class:layout-toast={!!avatarState.avatar}
-  >
+  <div class="toast toast-bottom toast-end z-[200]">
     {#each $tasks as task}
       <div class="alert bg-primary-content opacity-85">
         {#await task.promise}
           <span class="loading loading-spinner loading-md"></span>
           {task.name}
         {:then _}
-          <!-- task finished; toast entry will disappear when task store updates -->
+          <!-- task finished -->
         {:catch _err}
-          <!-- errors are handled via dedicated popup flows; suppress stack traces in toast UI -->
+          <!-- errors handled via popup flows -->
         {/await}
       </div>
     {/each}
@@ -314,14 +333,3 @@
     {/if}
   </div>
 {/if}
-
-<style>
-  /* Lift toasts above BottomNav only on small screens; keep original position on md+ */
-  @media (max-width: 767px) {
-    :global(.layout-toast) {
-      /* BottomNav uses bottom: calc(safe-area + 16px) and has a tall pill.
-               96px keeps toasts comfortably above it. */
-      bottom: calc(env(safe-area-inset-bottom) + 96px) !important;
-    }
-  }
-</style>

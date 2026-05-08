@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { dev } from '$app/environment';
   import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
-  import { Search as LSearch } from 'lucide';
+  import { Search as LSearch, ShoppingBag as LBag } from 'lucide';
   interface Props {
     homeLink?: string;
   }
@@ -41,7 +41,6 @@
       title: 'Basket',
       component: CartPanel,
       props: {
-        // No catalog available in global header context
         catalog: [],
       },
     });
@@ -108,10 +107,8 @@
     onSearchButtonClick();
   }
 
-  // Close on route changes
   $effect(() => {
-    // react to URL changes
-    const _ = $page.url.pathname; // touch dependency
+    const _ = $page.url.pathname;
     closeMenu();
   });
 
@@ -128,57 +125,64 @@
   });
 </script>
 
-<div class="navbar bg-base-100 px-4 sticky top-0 z-10">
-  <div class="flex-1">
-    <a class="flex items-center text-xl font-bold" href={homeLink}>
-      <img src="/logo.svg" alt="Circles" class="w-8 h-8" />
-      <span class="inline-block overflow-hidden text-primary">
-        Circles
-        <span class="ml-1 text-xs font-semibold text-base-content/60">(beta)</span>
-      </span>
-    </a>
-  </div>
+<!-- Mobile-only clean header; desktop uses AppSidebar -->
+<header class="md:hidden sticky top-0 z-20 bg-base-100 flex items-center h-14 px-4 gap-1 shrink-0"
+  style="border-bottom: 1px solid rgba(31,17,70,0.08);">
+
+  <!-- Logo -->
+  <a href={homeLink} class="flex items-center gap-2 flex-1 no-underline">
+    <img src="/logo.svg" alt="Circles" class="w-7 h-7" />
+    <span class="font-semibold text-[15px] tracking-tight text-base-content">Circles</span>
+    <span class="text-[10px] px-1.5 py-0.5 rounded-full font-semibold tracking-wider uppercase"
+      style="background:rgba(31,17,70,0.06);color:rgba(15,10,30,0.45);">beta</span>
+  </a>
+
+  <!-- Cart (market page or has items) -->
   {#if isMarketPage || $cartItemCount > 0}
     <button
       type="button"
-      class="btn btn-sm btn-ghost mr-2"
+      class="relative btn btn-ghost btn-circle btn-sm"
       onclick={openBasket}
       disabled={$cartItemCount === 0}
+      aria-label="Open basket"
     >
-      Basket ({$cartItemCount})
+      <Lucide icon={LBag} size={18} ariaLabel="" />
+      {#if $cartItemCount > 0}
+        <span class="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary text-primary-content text-[9px] font-bold flex items-center justify-center">
+          {$cartItemCount}
+        </span>
+      {/if}
     </button>
   {/if}
+
+  <!-- Search -->
   <button
     type="button"
-    class="btn btn-circle btn-ghost btn-sm mr-1"
-    aria-label="Search"
-    title="Search (Ctrl/Cmd+K)"
+    class="btn btn-ghost btn-circle btn-sm"
+    aria-label="Search (Ctrl/Cmd+K)"
     onclick={onSearchButtonClick}
     onkeydown={onSearchButtonKeydown}
   >
-    <Lucide icon={LSearch} size={16} ariaLabel="" />
+    <Lucide icon={LSearch} size={18} ariaLabel="" />
   </button>
+
+  <!-- Hamburger menu -->
   <details class="dropdown dropdown-end flex-none" bind:this={menuEl}>
-    <summary class="btn btn-circle btn-ghost btn-sm" aria-haspopup="menu" aria-expanded={menuEl?.open ? 'true' : 'false'}
-      ><svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        class="inline-block h-5 w-5 stroke-current"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"
-        ></path>
-      </svg></summary
+    <summary
+      class="btn btn-ghost btn-circle btn-sm"
+      aria-haspopup="menu"
+      aria-expanded={menuEl?.open ? 'true' : 'false'}
     >
-    <ul
-      class="menu dropdown-content bg-base-100 rounded-box z-[1] w-64 p-2 shadow"
-    >
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+        class="inline-block h-5 w-5 stroke-current">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+          d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </summary>
+    <ul class="menu dropdown-content bg-base-100 z-[1] w-64 p-2 mt-1"
+      style="border-radius:14px;box-shadow:0 4px 24px rgba(15,10,30,0.12);border:1px solid rgba(31,17,70,0.08);">
       <li>
-        <a class="link link-hover" href="/settings">Settings</a>
+        <a class="link link-hover rounded-lg" href="/settings">Settings</a>
         <ul>
           <li><a class="link link-hover" href="/settings?tab=personal">Profile</a></li>
           <li><a class="link link-hover" href="/settings?tab=bookmarks">Bookmarks</a></li>
@@ -191,13 +195,10 @@
         </ul>
       </li>
       <li><a class="link link-hover" href="/terms">Terms of use</a></li>
-      <li>
-        <a class="link link-hover" href="/privacy-policy">Privacy policy</a>
-      </li>
+      <li><a class="link link-hover" href="/privacy-policy">Privacy policy</a></li>
       {#if dev}
         <li><a class="link link-hover" href="/kitchen-sink">Kitchen sink</a></li>
       {/if}
     </ul>
   </details>
-</div>
-
+</header>

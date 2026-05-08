@@ -458,13 +458,17 @@
 
     <div
         bind:this={popupEl}
-        class="popup rounded-t-lg overflow-y-auto"
+        class="popup overflow-y-auto"
         role="dialog"
         aria-modal="true"
         aria-labelledby={showTitle ? 'popup-title' : undefined}
         aria-label={!showTitle ? ($popupState.content?.title ?? 'Popup') : undefined}
     >
-        <div class="w-full max-w-4xl mx-auto p-6">
+        <!-- Drag handle -->
+        <div class="flex justify-center pt-3 pb-1 shrink-0">
+            <span style="width:36px;height:4px;border-radius:2px;background:rgba(15,10,30,0.15);display:block;"></span>
+        </div>
+        <div class="w-full max-w-4xl mx-auto px-6 pb-6">
             <!-- Header -->
             <div class="flex items-center gap-3 mb-4">
                 <button
@@ -523,7 +527,9 @@
     .popup-backdrop {
         position: absolute;
         inset: 0;
-        background: rgba(0, 0, 0, 0.35);
+        background: rgba(15, 10, 30, 0.55);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
         border: none;
         padding: 0;
         margin: 0;
@@ -543,17 +549,17 @@
         bottom: 0;
         left: 0;
         width: 100%;
-        max-height: 80%;
-        min-height: 80%;
+        max-height: 88%;
+        min-height: 60%;
         display: flex;
         flex-direction: column;
         align-items: center;
         background: oklch(var(--b1));
-        border-top: 1px solid oklch(var(--b3) / 0.55);
-        border-top-left-radius: 16px;
-        border-top-right-radius: 16px;
-        box-shadow: 0 -8px 24px oklch(var(--bc) / 0.08);
-        transition: transform .3s ease, opacity .3s ease;
+        border-top: 1px solid rgba(31, 17, 70, 0.06);
+        border-top-left-radius: 28px;
+        border-top-right-radius: 28px;
+        box-shadow: 0 -8px 40px rgba(15, 10, 30, 0.18);
+        transition: transform .32s cubic-bezier(0.32, 0.72, 0, 1), opacity .28s ease;
         transform: translateY(100%);
         opacity: 0;
         z-index: 101;
