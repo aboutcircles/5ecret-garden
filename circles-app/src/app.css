@@ -63,7 +63,24 @@
 
 /* Sections */
 .section {
-    @apply w-full bg-base-100 border border-base-300 rounded-lg p-4 md:p-6 shadow-sm;
+    @apply w-full;
+    background: #FFFFFF;
+    border: 1px solid rgba(31, 17, 70, 0.05);
+    border-radius: 16px;
+    padding: 16px 18px;
+    box-shadow: 0 1px 2px rgba(15, 10, 30, 0.04);
+}
+@media (min-width: 768px) {
+    .section { padding: 20px 22px; }
+}
+
+/* Apply settings card styling to inline-class section blocks used across settings/profile sections */
+[data-settings-shell] section.bg-base-100,
+[data-settings-shell] .bg-base-100.border.border-base-300.rounded-xl {
+    background: #FFFFFF !important;
+    border-color: rgba(31, 17, 70, 0.05) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 1px 2px rgba(15, 10, 30, 0.04);
 }
 
 /* Typography */

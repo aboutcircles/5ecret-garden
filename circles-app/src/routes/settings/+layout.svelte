@@ -1,11 +1,10 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
-  import Tabs from '$lib/shared/ui/primitives/tabs/Tabs.svelte';
-  import Tab from '$lib/shared/ui/primitives/tabs/Tab.svelte';
   import { readable, writable } from 'svelte/store';
   import { browser } from '$app/environment';
   import { page } from '$app/stores';
+  import { T } from '$lib/design-system/tokens.js';
+  import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
 
   import PersonalSection from '$lib/areas/settings/ui/sections/PersonalSection.svelte';
   import OrdersSection from '$lib/areas/settings/ui/sections/OrdersSection.svelte';
@@ -27,8 +26,6 @@
   import { ethers } from 'ethers';
   import { LogOut as LLogOut } from 'lucide';
   import type { Address } from '@circles-sdk/utils';
-  import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
-  import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
   import type { Action } from '$lib/shared/ui/shell/actions';
   import { getProfilesBindings } from '$lib/areas/market/offers';
   import { CirclesStorage } from '$lib/shared/utils/storage';
@@ -69,6 +66,22 @@
 
   const TAB_IDS = ['personal', 'bookmarks', 'orders', 'sales', 'keys', 'namespaces', 'marketplace', 'payment'] as const;
   type TabId = TabIdOf<typeof TAB_IDS>;
+
+  const TAB_LABELS: Record<TabId, string> = {
+    personal: 'Profile',
+    bookmarks: 'Bookmarks',
+    orders: 'Orders',
+    sales: 'Sales',
+    keys: 'Signing keys',
+    namespaces: 'Applications',
+    marketplace: 'Offers',
+    payment: 'Payment gateways',
+  };
+
+  const TAB_ORDER: TabId[] = [
+    'personal', 'bookmarks', 'orders', 'sales',
+    'marketplace', 'payment', 'namespaces', 'keys',
+  ];
 
   let selectedTab = $state<TabId>('personal');
 
@@ -519,55 +532,69 @@
   ];
 </script>
 
-<PageScaffold
-  highlight="soft"
-  maxWidthClass="page page--lg"
-  contentWidthClass="page page--lg"
-  usePagePadding={true}
-  collapsedMode="bar"
-  collapsedHeightClass="h-12"
->
-  {#snippet title()}
-    <h1 class="h2">{headerTitle}</h1>
-  {/snippet}
+<div data-settings-shell style="background:{T.page};min-height:100%;width:100%;font-family:{T.fontSans};color:{T.inkBody};">
+  <div style="padding:8px 18px 24px;" class="md:!p-9 md:max-w-[1280px] md:mx-auto">
 
-  {#snippet meta()}
-    {#if avatarAddress}
-      <span class="font-mono text-xs text-base-content/70 select-all">{avatarAddress}</span>
-    {:else}
-      Profile, wallet, marketplace
-    {/if}
-  {/snippet}
+    <!-- Page header -->
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:8px 0 14px;">
+      <div style="display:flex;flex-direction:column;gap:3px;min-width:0;">
+        <span style="font-family:{T.fontDisplay};font-size:32px;color:{T.ink};letter-spacing:-0.02em;line-height:1;font-weight:400;">{headerTitle}</span>
+        {#if avatarAddress}
+          <span style="font-family:{T.fontMono};font-size:11px;color:{T.inkMuted};letter-spacing:0.02em;" class="select-all break-all">{avatarAddress}</span>
+        {:else}
+          <span style="font-size:12.5px;color:{T.inkMuted};">Profile, wallet, marketplace</span>
+        {/if}
+      </div>
 
-  {#snippet headerActions()}
-    <ActionButtonBar actions={headerActions} />
-  {/snippet}
-
-  {#snippet collapsedMenu()}
-    <ActionButtonDropDown actions={headerActions} />
-  {/snippet}
-
-  {#snippet collapsedLeft()}
-    <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">
-      {headerTitle}
-    </span>
-  {/snippet}
-
-  <div class="flex flex-col items-center rounded-md px-3 py-4 md:px-4 md:py-5 gap-y-3">
-    <div class="w-full">
-      <Tabs bind:selected={selectedTab} variant="boxed" size="sm">
-        <Tab id="personal" title="Profile" />
-        <Tab id="bookmarks" title="Bookmarks" />
-        <Tab id="orders" title="Orders" />
-        <Tab id="sales" title="Sales" />
-        <Tab id="marketplace" title="Offers" />
-        <Tab id="payment" title="Payment gateways" />
-        <Tab id="namespaces" title="Applications" />
-        <Tab id="keys" title="Signing keys" />
-      </Tabs>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+        {#each headerActions.filter(Boolean) as a, i (a?.id ?? a?.label ?? i)}
+          <button
+            type="button"
+            onclick={a.onClick}
+            disabled={!!a?.disabled}
+            aria-label={a.label}
+            style="
+              height:38px;padding:0 14px;border-radius:9999px;cursor:pointer;
+              {a.variant === 'primary'
+                ? `background:${T.primary};color:#fff;border:0;box-shadow:0 4px 12px rgba(88,73,212,0.25),0 1px 0 rgba(255,255,255,0.18) inset;`
+                : `background:${T.surface};color:${T.ink};border:1px solid ${T.hairline};box-shadow:${T.shadow.xs};`}
+              display:inline-flex;align-items:center;gap:6px;
+              font-family:{T.fontSans};font-size:13px;font-weight:540;
+              opacity:{a?.disabled ? 0.5 : 1};
+            "
+          >
+            {#if a.iconNode}
+              <Lucide icon={a.iconNode} size={14} class="shrink-0" />
+            {/if}
+            <span>{a.label}</span>
+          </button>
+        {/each}
+      </div>
     </div>
 
-    <div class="flex flex-col w-full gap-y-4">
+    <!-- Pill tabs -->
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:18px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;">
+      {#each TAB_ORDER as id}
+        {@const active = selectedTab === id}
+        <button
+          type="button"
+          onclick={() => selectedTab = id}
+          style="
+            padding:8px 14px;border-radius:9999px;flex:0 0 auto;cursor:pointer;
+            background:{active ? T.ink : T.surface};
+            color:{active ? '#fff' : T.inkBody};
+            border:{active ? 'none' : `1px solid ${T.hairline}`};
+            font-family:{T.fontSans};font-size:12.5px;font-weight:580;
+            box-shadow:{active ? 'none' : T.shadow.xs};
+            transition:background .12s,color .12s;
+            white-space:nowrap;
+          "
+        >{TAB_LABELS[id]}</button>
+      {/each}
+    </div>
+
+    <!-- Section content -->
+    <div style="display:flex;flex-direction:column;gap:14px;">
       {#if selectedTab === 'personal'}
         <PersonalSection
           {avatarAddress}
@@ -628,10 +655,12 @@
           onReloadGateways={loadMyGateways}
         />
       {:else}
-        <div class="p-4 text-sm opacity-70">Select a tab.</div>
+        <div style="padding:20px;text-align:center;color:{T.inkMuted};font-size:13px;">Select a tab.</div>
       {/if}
 
       {@render children?.()}
     </div>
+
+    <div style="height:24px;"></div>
   </div>
-</PageScaffold>
+</div>
