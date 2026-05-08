@@ -45,7 +45,7 @@ module.exports = {
           error: '#C44430',
           'error-content': '#FFFFFF',
           '--rounded-box': '14px',
-          '--rounded-btn': '10px',
+          '--rounded-btn': '9999px',
           '--rounded-badge': '9999px',
           '--tab-border': '1px',
           '--border-btn': '1px',

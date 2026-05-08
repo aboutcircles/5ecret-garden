@@ -8,6 +8,7 @@
     } from '$lib/shared/state/popup';
     import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
     import { ArrowLeft as LArrowLeft, X as LX } from 'lucide';
+    import { T } from '$lib/design-system/tokens.js';
     import { focusElement, shouldAutoFocusTextInput } from '$lib/shared/ui/focus/focusPolicy';
     import CloseConfirmStep from '$lib/shared/ui/shell/CloseConfirmStep.svelte';
 
@@ -468,26 +469,32 @@
         <div class="flex justify-center pt-3 pb-1 shrink-0">
             <span style="width:36px;height:4px;border-radius:2px;background:rgba(15,10,30,0.15);display:block;"></span>
         </div>
-        <div class="w-full max-w-4xl mx-auto px-6 pb-6">
+        <div class="w-full max-w-4xl mx-auto px-5 pb-6">
             <!-- Header -->
-            <div class="flex items-center gap-3 mb-4">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
                 <button
-                        data-popup-close-control
-                        class="btn btn-ghost btn-circle btn-sm"
-                        onclick={onClose}
-                        aria-label={$popupState.stack.length > 0 ? 'Back' : 'Close'}
-                        title={$popupState.stack.length > 0 ? 'Back' : 'Close'}
+                    data-popup-close-control
+                    onclick={onClose}
+                    aria-label={$popupState.stack.length > 0 ? 'Back' : 'Close'}
+                    title={$popupState.stack.length > 0 ? 'Back' : 'Close'}
+                    style="
+                        width:32px;height:32px;border-radius:9999px;border:0;
+                        background:{T.pageDeep};color:{T.inkBody};
+                        display:inline-flex;align-items:center;justify-content:center;
+                        cursor:pointer;flex-shrink:0;
+                        transition:background .12s;
+                    "
                 >
                     <Lucide
-                            icon={$popupState.stack.length > 0 ? LArrowLeft : LX}
-                            size={16}
-                            class="shrink-0"
-                            ariaLabel=""
+                        icon={$popupState.stack.length > 0 ? LArrowLeft : LX}
+                        size={15}
+                        class="shrink-0"
+                        ariaLabel=""
                     />
                 </button>
 
                 {#if showTitle}
-                    <h2 id="popup-title" class="text-xl font-bold">
+                    <h2 id="popup-title" style="font-family:{T.fontSans};font-size:16px;font-weight:620;color:{T.ink};letter-spacing:-0.01em;margin:0;">
                         {popupTitleText}
                     </h2>
                 {/if}
@@ -549,16 +556,16 @@
         bottom: 0;
         left: 0;
         width: 100%;
-        max-height: 88%;
-        min-height: 60%;
+        max-height: 92%;
+        min-height: 40%;
         display: flex;
         flex-direction: column;
         align-items: center;
-        background: oklch(var(--b1));
+        background: #FFFFFF;
         border-top: 1px solid rgba(31, 17, 70, 0.06);
         border-top-left-radius: 28px;
         border-top-right-radius: 28px;
-        box-shadow: 0 -8px 40px rgba(15, 10, 30, 0.18);
+        box-shadow: 0 -4px 24px rgba(15, 10, 30, 0.10), 0 -1px 0 rgba(31, 17, 70, 0.06);
         transition: transform .32s cubic-bezier(0.32, 0.72, 0, 1), opacity .28s ease;
         transform: translateY(100%);
         opacity: 0;

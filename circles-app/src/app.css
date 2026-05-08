@@ -90,6 +90,11 @@
 .icon { @apply w-4 h-4 shrink-0; }
 .back-btn { @apply btn btn-ghost btn-sm; }
 
+/* Ensure pill-shaped buttons have generous horizontal padding */
+.btn:not(.btn-circle):not(.btn-square) { padding-left: 1.25rem; padding-right: 1.25rem; }
+.btn-sm:not(.btn-circle):not(.btn-square) { padding-left: 1rem; padding-right: 1rem; }
+.btn-xs:not(.btn-circle):not(.btn-square) { padding-left: 0.75rem; padding-right: 0.75rem; }
+
 /* Row tokens */
 :root {
     --row-height-sm: 44px;

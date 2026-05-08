@@ -11,6 +11,9 @@
     import { T } from '$lib/design-system/tokens.js';
     import Icon from '$lib/design-system/Icon.svelte';
 
+    const CATEGORIES = ['All', 'Goods', 'Food', 'Services', 'Time', 'Events'];
+    let activeCategory = $state('All');
+
     // Defaults (as requested)
     const OPERATOR: `0x${string}` = gnosisConfig.production.marketOperator;
 
@@ -284,13 +287,13 @@
         <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0 14px;">
             <div style="display:flex;flex-direction:column;gap:2px;min-width:0;">
                 <span style="font-family:{T.fontDisplay};font-size:32px;color:{T.ink};letter-spacing:-0.02em;line-height:1;font-weight:400;">Market</span>
-                <span style="font-size:12.5px;color:{T.inkMuted};">{products.length}{hasMore ? '+' : ''} offers · {shortAddr(selectedOperator ?? OPERATOR)}</span>
+                <span style="font-size:12.5px;color:{T.inkMuted};">{products.length}{hasMore ? '+' : ''} offers available</span>
             </div>
-            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
                 <button
                     onclick={() => goto('/settings?tab=marketplace')}
                     style="
-                        height:40px;padding:0 14px;border-radius:9999px;
+                        height:40px;padding:0 16px;border-radius:9999px;
                         background:{T.surface};color:{T.ink};border:1px solid {T.hairline};cursor:pointer;
                         display:inline-flex;align-items:center;gap:6px;
                         font-family:{T.fontSans};font-size:13.5px;font-weight:540;
@@ -303,17 +306,37 @@
                 <button
                     onclick={() => goto('/settings?tab=marketplace')}
                     style="
-                        height:40px;padding:0 14px;border-radius:9999px;
+                        height:40px;padding:0 16px;border-radius:9999px;
                         background:{T.primary};color:#fff;border:0;cursor:pointer;
                         display:inline-flex;align-items:center;gap:6px;
                         font-family:{T.fontSans};font-size:13.5px;font-weight:540;
-                        box-shadow:0 1px 0 rgba(255,255,255,0.18) inset, 0 1px 2px rgba(15,10,30,0.12);
+                        box-shadow:0 4px 12px rgba(88,73,212,0.25),0 1px 0 rgba(255,255,255,0.18) inset;
                     "
                 >
-                    <Icon name="plus" size={15} stroke="#fff" strokeWidth={2.0} />
+                    <Icon name="plus" size={15} stroke="#fff" strokeWidth={2.2} />
                     Post offer
                 </button>
             </div>
+        </div>
+
+        <!-- Category filter chips -->
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:16px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;">
+            {#each CATEGORIES as cat}
+                {@const active = activeCategory === cat}
+                <button
+                    type="button"
+                    onclick={() => activeCategory = cat}
+                    style="
+                        padding:7px 16px;border-radius:9999px;flex:0 0 auto;cursor:pointer;
+                        background:{active ? T.ink : T.surface};
+                        color:{active ? '#fff' : T.inkBody};
+                        border:{active ? 'none' : `1px solid ${T.hairline}`};
+                        font-family:{T.fontSans};font-size:12.5px;font-weight:580;
+                        box-shadow:{active ? 'none' : T.shadow.xs};
+                        transition:background .12s,color .12s;
+                    "
+                >{cat}</button>
+            {/each}
         </div>
 
         <!-- Body -->

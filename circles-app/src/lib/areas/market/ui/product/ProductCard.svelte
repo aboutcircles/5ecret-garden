@@ -169,7 +169,7 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
   {#if isOwner && canTombstone}
     <button
         type="button"
-        class="btn btn-sm btn-outline"
+        class="btn btn-sm btn-ghost"
         onclick={(e) => { e.stopPropagation(); handleEdit(); }}
         title="Edit listing"
     >
@@ -179,12 +179,12 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
       action={handleTombstone}
       title="Remove listing"
       theme={{
-        Ready: 'btn-outline btn-error',
-        Working: 'btn-disabled',
-        Error: 'btn-warning',
-        Retry: 'btn-warning',
-        Done: 'btn-success',
-        Disabled: 'btn-disabled'
+        Ready: 'btn-outline btn-error btn-sm',
+        Working: 'btn-disabled btn-sm',
+        Error: 'btn-warning btn-sm',
+        Retry: 'btn-warning btn-sm',
+        Done: 'btn-success btn-sm',
+        Disabled: 'btn-disabled btn-sm'
       }}
     >
       {#snippet children()}Remove{/snippet}
@@ -194,22 +194,29 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
   {#if addState.showButton}
     <button
         type="button"
-        class="btn btn-sm btn-outline"
+        class="btn btn-sm btn-primary"
         onclick={(e) => { e.stopPropagation(); handleAddToBasket(); }}
         disabled={!addState.canAdd}
-            title={addState.reason}
-          >
-            {addState.label}
+        title={addState.reason}
+    >
+      {addState.label}
     </button>
   {/if}
 {/snippet}
 
 {#if product}
   <div
-      class="product-card-root bg-base-100 border border-base-300 rounded-xl overflow-hidden flex flex-col hover:shadow-md transition-shadow cursor-pointer"
+      class="product-card-root"
       role="button"
       tabindex="0"
       aria-label={`Open product details: ${prod?.name ?? product?.product?.name ?? 'Product'}`}
+      style="
+        border-radius:18px;overflow:hidden;
+        background:#FFFFFF;border:1px solid rgba(31,17,70,0.05);
+        box-shadow:0 1px 2px rgba(15,10,30,0.04);
+        display:flex;flex-direction:column;cursor:pointer;
+        transition:box-shadow .18s,transform .18s;
+      "
       onclick={(e) => handleProductClick(e)}
       onkeydown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
