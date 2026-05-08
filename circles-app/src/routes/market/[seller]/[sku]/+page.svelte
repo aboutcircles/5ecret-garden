@@ -13,6 +13,7 @@
   import { createLoadable } from '$lib/areas/market/utils/loadable';
   import { getAddToCartState } from '$lib/areas/market/cart/addToCartUi';
   import {gnosisConfig} from "$lib/shared/config/circles";
+  import { T } from '$lib/design-system/tokens.js';
 
   // Derive seller and SKU from SvelteKit's $page store
     const params = $derived($page.params as { seller: string; sku: string });
@@ -89,47 +90,46 @@
     <!-- Basket button moved to global header -->
 
     {#if loading}
-        <div class="flex flex-col items-center justify-center p-8">
-            <svg class="animate-spin h-12 w-12 text-primary mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <p class="text-base-content/70">Loading product details...</p>
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 16px;gap:14px;">
+            <span class="loading loading-spinner loading-lg" style="color:{T.primary};" aria-hidden="true"></span>
+            <p style="font-size:13px;color:{T.inkMuted};margin:0;">Loading product…</p>
         </div>
     {:else if errorMsg}
-        <div class="flex flex-col items-center justify-center p-8">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-destructive mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p class="text-destructive text-center mb-4">{errorMsg}</p>
-            <button 
-                type="button"
-                onclick={loadProduct}
-                class="btn btn-primary mr-2"
-            >
-                Retry
-            </button>
-            <button 
-                type="button"
-                onclick={goBack}
-                class="btn btn-outline"
-            >
-                Go Back
-            </button>
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 16px;gap:12px;">
+            <div style="width:56px;height:56px;border-radius:16px;background:{T.warningSoft};display:inline-flex;align-items:center;justify-content:center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke={T.warning}>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <p style="font-size:13px;color:{T.inkBody};text-align:center;max-width:360px;line-height:1.5;margin:0;">{errorMsg}</p>
+            <div style="display:flex;gap:8px;">
+                <button
+                    type="button"
+                    style="height:36px;padding:0 18px;border-radius:9999px;border:0;cursor:pointer;background:{T.primary};color:#fff;font-size:13px;font-weight:580;box-shadow:0 4px 12px rgba(88,73,212,0.25);"
+                    onclick={loadProduct}
+                >Retry</button>
+                <button
+                    type="button"
+                    style="height:36px;padding:0 18px;border-radius:9999px;border:1px solid {T.hairline};cursor:pointer;background:{T.surface};color:{T.ink};font-size:13px;font-weight:540;"
+                    onclick={goBack}
+                >Go back</button>
+            </div>
         </div>
     {:else if product && product?.product}
         {#snippet actions()}
-            <div class="flex gap-2 w-full">
-                <button
-                    type="button"
-                    class="btn btn-outline w-full"
-                    onclick={(e) => { e.stopPropagation(); void handleAddToBasket(); }}
-                    disabled={!addState.canAdd}
-                    title={addState.reason}
-                >
-                    {addState.label}
-                </button>
-            </div>
+            <button
+                type="button"
+                style="
+                    width:100%;height:48px;padding:0 24px;border-radius:9999px;border:0;
+                    cursor:{addState.canAdd ? 'pointer' : 'not-allowed'};
+                    background:{addState.canAdd ? T.primary : T.pageDeep};color:{addState.canAdd ? '#fff' : T.inkMuted};
+                    font-family:{T.fontSans};font-size:14px;font-weight:580;
+                    box-shadow:{addState.canAdd ? '0 6px 16px rgba(88,73,212,0.3)' : 'none'};
+                "
+                onclick={(e) => { e.stopPropagation(); void handleAddToBasket(); }}
+                disabled={!addState.canAdd}
+                title={addState.reason}
+            >{addState.label}</button>
         {/snippet}
 
         <ProductViewer
@@ -144,29 +144,28 @@
             actions={actions}
         />
     {:else if !loading && !errorMsg}
-        <!-- Product not found -->
-        <div class="flex flex-col items-center justify-center p-8">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-base-content/30 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p class="text-lg font-medium mb-2">Product not found</p>
-            <p class="text-base-content/70 text-center mb-4">
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 16px;gap:12px;">
+            <div style="width:64px;height:64px;border-radius:18px;background:{T.surfaceAlt};display:inline-flex;align-items:center;justify-content:center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24" stroke={T.inkFaint}>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <p style="font-family:{T.fontDisplay};font-size:22px;color:{T.ink};margin:0;letter-spacing:-0.01em;">Product not found</p>
+            <p style="font-size:12.5px;color:{T.inkMuted};text-align:center;max-width:320px;line-height:1.5;margin:0;">
                 The product you're looking for might have been removed or doesn't exist.
             </p>
-            <button 
-                type="button"
-                onclick={loadProduct}
-                class="btn btn-primary mr-2"
-            >
-                Try Again
-            </button>
-            <button 
-                type="button"
-                onclick={goBack}
-                class="btn btn-outline"
-            >
-                Browse Products
-            </button>
+            <div style="display:flex;gap:8px;">
+                <button
+                    type="button"
+                    style="height:36px;padding:0 18px;border-radius:9999px;border:0;cursor:pointer;background:{T.primary};color:#fff;font-size:13px;font-weight:580;box-shadow:0 4px 12px rgba(88,73,212,0.25);"
+                    onclick={loadProduct}
+                >Try again</button>
+                <button
+                    type="button"
+                    style="height:36px;padding:0 18px;border-radius:9999px;border:1px solid {T.hairline};cursor:pointer;background:{T.surface};color:{T.ink};font-size:13px;font-weight:540;"
+                    onclick={goBack}
+                >Browse products</button>
+            </div>
         </div>
     {/if}
 </PageScaffold>
