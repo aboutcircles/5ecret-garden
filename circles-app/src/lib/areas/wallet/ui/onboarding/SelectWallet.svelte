@@ -9,9 +9,16 @@
   import ImportCircles from '$lib/areas/wallet/ui/onboarding/ImportCircles.svelte';
   import { CirclesStorage } from '$lib/shared/utils/storage';
   import { setConnectorId } from '$lib/shared/state/connector';
+  import { T } from '$lib/design-system/tokens.js';
+  import Icon from '$lib/design-system/Icon.svelte';
+
   const connectors = getConnectors(config);
+  let connectingId: string | null = $state(null);
+  let connectError: string | null = $state(null);
 
   async function handleConnect(connector: ReturnType<typeof getConnectors>[number]) {
+    connectingId = connector.id;
+    connectError = null;
     try {
       await clearSession();
       const result = await connect(config, { connector, chainId: 100 });
@@ -25,42 +32,160 @@
       popupControls.closeAndThen(() => {
         void goto('/connect-wallet/connect-safe/');
       });
-    } catch (e) {
+    } catch (e: any) {
+      connectError = e?.shortMessage ?? e?.message ?? 'Connection cancelled';
       console.error('Wallet connect failed', e);
+    } finally {
+      connectingId = null;
     }
+  }
+
+  async function openMagicWords() {
+    const pk = CirclesStorage.getInstance().privateKey;
+    if (pk) {
+      popupControls.closeAndThen(() => {
+        void goto('/connect-wallet/import-circles-garden');
+      });
+      return;
+    }
+    openStep({
+      component: ImportCircles,
+      title: 'Use circles magic words',
+    });
+  }
+
+  function tintFor(name: string): { bg: string; ink: string; glyph: string } {
+    const lower = name.toLowerCase();
+    if (lower.includes('metamask')) return { bg: '#FBE3D8', ink: '#8A3A1E', glyph: '🦊' };
+    if (lower.includes('walletconnect')) return { bg: '#EAE7FB', ink: T.primaryDeep, glyph: '🔗' };
+    if (lower.includes('coinbase')) return { bg: '#EEEBFA', ink: T.primaryDeep, glyph: '🔵' };
+    if (lower.includes('safe')) return { bg: '#DCEBDF', ink: '#1F5E37', glyph: '🛡' };
+    if (lower.includes('rabby')) return { bg: '#FBEFCB', ink: '#7B5215', glyph: '🐰' };
+    if (lower.includes('injected') || lower.includes('browser')) return { bg: T.pageDeep, ink: T.inkBody, glyph: '🌐' };
+    return { bg: T.pageDeep, ink: T.inkBody, glyph: '👛' };
   }
 </script>
 
-<div class="flex flex-col gap-2 py-1">
-  {#each connectors as connector}
-    <button
-      id={connector.id}
-      onclick={() => handleConnect(connector)}
-      class="flex w-full items-center gap-3 px-4 py-3.5 rounded-[14px] border border-base-300 bg-base-100 hover:bg-base-200 transition-colors text-left"
-    >
-      <span class="font-medium text-base-content">{connector.name}</span>
-    </button>
-  {/each}
-
-  <button
-    class="flex w-full items-center gap-3 px-4 py-3.5 rounded-[14px] border border-base-300 bg-base-100 hover:bg-base-200 transition-colors text-left"
-    onclick={async () => {
-      const pk = CirclesStorage.getInstance().privateKey;
-      if (pk) {
-        popupControls.closeAndThen(() => {
-          void goto('/connect-wallet/import-circles-garden');
-        });
-        return;
-      }
-      openStep({
-        component: ImportCircles,
-        title: 'Use circles magic words',
-      });
-    }}
-  >
-    <div class="flex flex-col gap-0.5">
-      <span class="font-medium text-base-content">Circles.garden</span>
-      <span class="text-xs text-base-content/50">Import with seed phrase</span>
+<div style="display:flex;flex-direction:column;gap:14px;padding-bottom:4px;">
+  <!-- Hero / intro -->
+  <div style="
+    border-radius:18px;padding:20px 18px 18px;
+    background:linear-gradient(160deg,{T.lilacSoft} 0%,{T.coralSoft} 60%,{T.butterSoft} 100%);
+    position:relative;overflow:hidden;
+  ">
+    <div style="display:flex;flex-direction:column;gap:4px;position:relative;">
+      <span style="
+        display:inline-flex;align-items:center;align-self:flex-start;
+        padding:3px 10px;border-radius:9999px;
+        background:{T.ink};color:{T.butter};
+        font-size:10.5px;font-weight:580;letter-spacing:0.04em;text-transform:lowercase;
+      ">connect</span>
+      <span style="font-family:{T.fontDisplay};font-size:26px;color:{T.ink};letter-spacing:-0.02em;line-height:1.1;margin-top:6px;">
+        Pick your wallet
+      </span>
+      <span style="font-size:13px;color:{T.inkBody};line-height:1.5;">
+        Choose how you'd like to sign into Circles. You can change this later.
+      </span>
     </div>
-  </button>
+  </div>
+
+  {#if connectError}
+    <div style="
+      padding:12px 14px;border-radius:12px;
+      background:{T.negativeSoft};border:1px solid rgba(196,68,48,0.18);
+      display:flex;align-items:center;gap:8px;
+    ">
+      <Icon name="info" size={14} stroke={T.negative} strokeWidth={2} />
+      <span style="font-size:12.5px;color:{T.negative};">{connectError}</span>
+    </div>
+  {/if}
+
+  <!-- Wallet connectors -->
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    {#each connectors as connector}
+      {@const tint = tintFor(connector.name)}
+      {@const isConnecting = connectingId === connector.id}
+      <button
+        id={connector.id}
+        type="button"
+        disabled={isConnecting || !!connectingId}
+        onclick={() => handleConnect(connector)}
+        style="
+          display:flex;align-items:center;gap:14px;width:100%;
+          padding:14px 16px;border-radius:16px;cursor:pointer;text-align:left;
+          background:{T.surface};border:1px solid {T.hairlineSoft};
+          box-shadow:{T.shadow.xs};
+          transition:transform .08s,border-color .15s,box-shadow .15s;
+          opacity:{!isConnecting && connectingId ? 0.5 : 1};
+        "
+      >
+        <div style="
+          width:42px;height:42px;border-radius:13px;flex-shrink:0;
+          background:{tint.bg};color:{tint.ink};
+          display:inline-flex;align-items:center;justify-content:center;
+          font-size:20px;line-height:1;
+        ">{tint.glyph}</div>
+
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;">
+          <span style="font-family:{T.fontSans};font-size:14px;font-weight:580;color:{T.ink};letter-spacing:-0.005em;">
+            {connector.name}
+          </span>
+          <span style="font-size:11.5px;color:{T.inkMuted};">
+            {connector.type === 'injected' ? 'Browser extension' : connector.type === 'walletConnect' ? 'Mobile QR / deep link' : 'External wallet'}
+          </span>
+        </div>
+
+        {#if isConnecting}
+          <span class="loading loading-spinner loading-xs" style="color:{T.primary};"></span>
+        {:else}
+          <Icon name="chevronRight" size={14} stroke={T.inkFaint} />
+        {/if}
+      </button>
+    {/each}
+
+    <!-- Divider -->
+    <div style="display:flex;align-items:center;gap:8px;margin:6px 4px;">
+      <span style="flex:1;height:1px;background:{T.hairlineSoft};"></span>
+      <span style="font-size:10.5px;font-weight:580;color:{T.inkSubtle};letter-spacing:0.06em;text-transform:uppercase;">or</span>
+      <span style="flex:1;height:1px;background:{T.hairlineSoft};"></span>
+    </div>
+
+    <!-- Circles.garden / magic words -->
+    <button
+      type="button"
+      onclick={openMagicWords}
+      style="
+        display:flex;align-items:center;gap:14px;width:100%;
+        padding:14px 16px;border-radius:16px;cursor:pointer;text-align:left;
+        background:{T.surface};border:1px solid {T.hairlineSoft};
+        box-shadow:{T.shadow.xs};
+        transition:transform .08s,border-color .15s,box-shadow .15s;
+      "
+    >
+      <div style="
+        width:42px;height:42px;border-radius:13px;flex-shrink:0;
+        background:{T.coralSoft};color:#8A3A1E;
+        display:inline-flex;align-items:center;justify-content:center;
+      ">
+        <Icon name="sparkle" size={18} stroke="#8A3A1E" strokeWidth={2} />
+      </div>
+
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;">
+        <span style="font-family:{T.fontSans};font-size:14px;font-weight:580;color:{T.ink};letter-spacing:-0.005em;">
+          Circles.garden
+        </span>
+        <span style="font-size:11.5px;color:{T.inkMuted};">Import with magic words (seed phrase)</span>
+      </div>
+
+      <Icon name="chevronRight" size={14} stroke={T.inkFaint} />
+    </button>
+  </div>
+
+  <!-- Footer info -->
+  <div style="display:flex;align-items:flex-start;gap:8px;padding:4px 4px 0;">
+    <Icon name="shield" size={13} stroke={T.inkMuted} style="flex-shrink:0;margin-top:2px;" />
+    <span style="font-size:11.5px;color:{T.inkMuted};line-height:1.5;">
+      Circles never sees your private keys. Your wallet signs every action.
+    </span>
+  </div>
 </div>

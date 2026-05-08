@@ -11,6 +11,8 @@
     import { openStep } from '$lib/shared/flow';
     import CreateGroup from "$lib/areas/groups/flows/createGroup/1_CreateGroup.svelte";
     import {resetCreateGroupContext} from '$lib/areas/groups/flows/createGroup/context';
+    import { T } from '$lib/design-system/tokens.js';
+    import Icon from '$lib/design-system/Icon.svelte';
 
     interface Props {
         address: Address;
@@ -52,16 +54,13 @@
     async function openCreateGroup() {
         const sdk = await initSdk(address);
         $circles = sdk;
-
         resetCreateGroupContext(address as `0x${string}`);
-
         openStep({
             title: "Create group",
             component: CreateGroup,
             props: {
-                setGroup: async (address: string) => {
-                    console.log(`Open the new group avatar dashboard. Address:`, address);
-                    refreshGroupsCallback?.()
+                setGroup: async (_address: string) => {
+                    refreshGroupsCallback?.();
                 }
             },
             onClose: () => resetCreateGroupContext()
@@ -71,18 +70,30 @@
     const versionLabel = $derived(
         !isRegistered ? 'Not registered' : isV1 ? 'v1' : 'v2'
     );
-    const versionBadgeClass = $derived(
-        !isRegistered ? 'badge-warning' : isV1 ? 'badge-neutral' : 'badge-primary'
+    const versionPalette = $derived(
+        !isRegistered
+            ? { bg: T.warningSoft, fg: T.warning }
+            : isV1
+                ? { bg: T.pageDeep, fg: T.inkBody }
+                : { bg: T.primarySoft, fg: T.primaryDeep }
     );
 </script>
 
-<div class="w-full bg-base-100 border border-base-300 rounded-[14px] flex flex-col overflow-hidden shadow-sm">
-    <!-- Safe row -->
+<div style="
+    width:100%;background:{T.surface};border:1px solid {T.hairlineSoft};
+    border-radius:16px;overflow:hidden;box-shadow:{T.shadow.xs};
+    display:flex;flex-direction:column;
+">
     <button
         onclick={() => connectAvatar()}
-        class="flex items-center justify-between gap-3 px-4 py-3 hover:bg-base-200 transition-colors text-left w-full"
+        style="
+            display:flex;align-items:center;justify-content:space-between;gap:12px;
+            padding:14px 16px;width:100%;background:transparent;border:0;cursor:pointer;text-align:left;
+            transition:background .12s;
+        "
+        class="hover:bg-base-200"
     >
-        <div class="min-w-0 flex-1">
+        <div style="min-width:0;flex:1;">
             <Avatar
                 topInfo={settings.legacy ? 'Connected Wallet' : 'Safe'}
                 {address}
@@ -90,27 +101,43 @@
                 view="horizontal"
             />
         </div>
-        <span class={`badge badge-sm shrink-0 ${versionBadgeClass}`}>{versionLabel}</span>
+        <span style="
+            display:inline-flex;align-items:center;flex-shrink:0;
+            padding:3px 9px;border-radius:9999px;
+            background:{versionPalette.bg};color:{versionPalette.fg};
+            font-family:{T.fontSans};font-size:10.5px;font-weight:580;letter-spacing:0.02em;
+        ">{versionLabel}</span>
     </button>
 
     {#if !isV1}
-        <!-- Groups section -->
-        <div class="border-t border-base-300 px-4 py-3 space-y-2">
-            <div class="flex items-center justify-between">
-                <span class="text-sm font-semibold text-base-content/70">My groups</span>
+        <div style="border-top:1px solid {T.hairlineSoft};padding:12px 16px 14px;display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:10.5px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">My groups</span>
                 <button
                     onclick={() => openCreateGroup()}
-                    class="btn btn-xs btn-ghost text-primary"
+                    style="
+                        display:inline-flex;align-items:center;gap:4px;
+                        height:24px;padding:0 10px;border-radius:9999px;
+                        background:{T.primarySoft};color:{T.primaryDeep};border:0;cursor:pointer;
+                        font-family:{T.fontSans};font-size:11px;font-weight:580;
+                    "
                 >
-                    + Create group
+                    <Icon name="plus" size={11} stroke={T.primaryDeep} strokeWidth={2.2} />
+                    Create
                 </button>
             </div>
 
-            <div class="space-y-1 pl-2">
+            <div style="display:flex;flex-direction:column;gap:2px;">
                 {#each groups ?? [] as group}
                     <button
-                        class="flex w-full items-center gap-3 px-3 py-2 hover:bg-base-200 rounded-lg transition-colors text-left"
                         onclick={() => connectAvatar(group.group)}
+                        style="
+                            display:flex;align-items:center;gap:10px;width:100%;
+                            padding:8px 10px;border-radius:10px;
+                            background:transparent;border:0;cursor:pointer;text-align:left;
+                            transition:background .1s;
+                        "
+                        class="hover:bg-base-200"
                     >
                         <Avatar
                             address={group.group}
@@ -121,7 +148,7 @@
                     </button>
                 {/each}
                 {#if (groups ?? []).length === 0}
-                    <p class="text-sm text-base-content/50 py-1">No groups yet.</p>
+                    <span style="font-size:12px;color:{T.inkMuted};padding:6px 10px;">No groups yet.</span>
                 {/if}
             </div>
         </div>

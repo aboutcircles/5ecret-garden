@@ -1,7 +1,8 @@
 <script lang="ts">
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
+  import { T } from '$lib/design-system/tokens.js';
+  import Icon from '$lib/design-system/Icon.svelte';
 
   interface Props {
     address: `0x${string}`;
@@ -41,25 +42,45 @@
   }
 </script>
 
-<div class="flex flex-col gap-y-4 mt-8">
-  <p>{intro}</p>
+<div style="display:flex;flex-direction:column;gap:14px;">
+  <p style="margin:0;font-size:13.5px;color:{T.inkBody};line-height:1.5;">{intro}</p>
 
-  <RowFrame clickable={false} dense={true} noLeading={true}>
-    <div class="min-w-0">
-      <Avatar {address} clickable={false} view="horizontal" bottomInfo={address} />
+  <!-- Recipient card -->
+  <div style="
+    background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;
+    padding:14px 16px;box-shadow:{T.shadow.xs};
+  ">
+    <Avatar {address} clickable={false} view="horizontal" bottomInfo={address} />
+  </div>
+
+  <!-- Warning card -->
+  <div style="
+    background:{T.warningSoft};border:1px solid rgba(176,112,20,0.20);border-radius:14px;
+    padding:14px 16px;display:flex;flex-direction:column;gap:10px;
+  ">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="
+        width:24px;height:24px;border-radius:8px;flex-shrink:0;
+        background:rgba(255,255,255,0.55);
+        display:inline-flex;align-items:center;justify-content:center;
+      ">
+        <Icon name="info" size={12} stroke={T.warning} strokeWidth={2} />
+      </div>
+      <span style="font-size:11px;font-weight:600;color:{T.warning};letter-spacing:0.04em;text-transform:uppercase;">What this means</span>
     </div>
-  </RowFrame>
-
-  <div class="rounded-xl border border-warning/30 bg-warning/10 p-3">
-    <div class="text-xs font-semibold text-base-content/60 mb-1">What this means</div>
-    <p class="text-sm text-base-content/85">{warning}</p>
+    <p style="margin:0;font-size:13px;color:{T.inkBody};line-height:1.5;">{warning}</p>
 
     {#if hasQuickHelp}
-      <details class="mt-2 rounded-lg border border-warning/20 bg-base-100/70 p-2">
-        <summary class="cursor-pointer text-xs font-semibold text-base-content/75">{quickHelpTitle}</summary>
-        <ul class="mt-2 space-y-1 text-xs text-base-content/80">
+      <details style="
+        background:rgba(255,255,255,0.55);border:1px solid rgba(176,112,20,0.18);border-radius:10px;
+        padding:10px 12px;
+      ">
+        <summary style="cursor:pointer;font-size:12px;font-weight:580;color:{T.inkBody};list-style:none;">
+          {quickHelpTitle}
+        </summary>
+        <ul style="margin:8px 0 0;padding-left:16px;display:flex;flex-direction:column;gap:4px;">
           {#each quickHelpLines as line}
-            <li>{line}</li>
+            <li style="font-size:12px;color:{T.inkBody};line-height:1.45;">{line}</li>
           {/each}
         </ul>
       </details>
@@ -68,18 +89,31 @@
 
   <slot name="insight"></slot>
 
-  <div class="flex justify-end">
-    <ActionButton action={runAction}>{cta}</ActionButton>
+  <!-- Action -->
+  <div style="display:flex;justify-content:flex-end;">
+    <ActionButton
+      action={runAction}
+      class="btn w-full sm:w-auto sm:min-w-[140px]"
+    >{cta}</ActionButton>
   </div>
 
   {#if showExplainerDetails}
-    <details class="bg-base-100 border border-base-300 rounded-xl p-3">
-      <summary class="cursor-pointer text-sm font-semibold">{explainerTitle}</summary>
-      <ul class="list-disc list-inside mt-2 text-sm text-base-content/80 space-y-1">
+    <details style="
+      background:{T.surfaceAlt};border:1px solid {T.hairlineSoft};border-radius:14px;
+      padding:14px 16px;
+    ">
+      <summary style="cursor:pointer;font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;list-style:none;">
+        {explainerTitle}
+      </summary>
+      <ul style="margin:10px 0 0;padding-left:16px;display:flex;flex-direction:column;gap:5px;">
         {#each explainerPoints as point}
-          <li>{point}</li>
+          <li style="font-size:12.5px;color:{T.inkBody};line-height:1.5;">{point}</li>
         {/each}
       </ul>
     </details>
   {/if}
 </div>
+
+<style>
+  details summary::-webkit-details-marker { display: none; }
+</style>
