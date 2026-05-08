@@ -4,8 +4,8 @@
     import type { TransactionHistoryRow } from '@circles-sdk/data';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import { avatarState } from '$lib/shared/state/avatar.svelte';
-    import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
     import { popupControls, type PopupContentDefinition } from '$lib/shared/state/popup';
+    import { T } from '$lib/design-system/tokens.js';
     import TransactionDetailsPopup from './TransactionDetailsPopup.svelte';
     import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
     import {
@@ -148,46 +148,36 @@
     
 </script>
 
-<!-- One cohesive horizontal block inside content; collapse RowFrame leading -->
 <div
     data-transaction-row
     data-list-row-focusable
     tabindex={0}
     role="button"
     aria-label={`Open transaction details for ${counterpartyAddress}`}
-    class="rounded-[var(--row-radius)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+    class="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+    style="
+        display:flex;align-items:center;gap:12px;padding:14px 20px;
+        min-height:var(--transaction-row-height,76px);cursor:pointer;
+        border-bottom:1px solid {T.hairlineSoft};box-sizing:border-box;
+        transition:background .1s;
+    "
     onkeydown={onRowKeydown}
     onclick={onRowClick}
 >
-    <RowFrame clickable={true} dense={true} noLeading={true} style="min-height: var(--transaction-row-height, 76px);">
-        <div class="w-full flex items-center justify-between gap-3 cursor-pointer">
-            <!-- Avatar + colored type badge -->
-            <div class="relative shrink-0">
-                <Avatar
-                    address={counterpartyAddress}
-                    view="horizontal"
-                    clickable={true}
-                    pictureOverlayUrl={badgeUrl ?? undefined}
-                    topInfo={topInfoText}
-                    bottomInfo={getTimeAgo(item.timestamp)}
-                />
-                <!-- Colored indicator dot -->
-                <span
-                    class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white flex items-center justify-center"
-                    style={item.from === '0x0000000000000000000000000000000000000000'
-                        ? 'background:#F4D27A;'
-                        : sent ? 'background:#E8896A;' : 'background:#7BA887;'}
-                    aria-hidden="true"
-                ></span>
-            </div>
-
-            <div class="text-right shrink-0 flex flex-col items-end">
-                <span
-                    class="font-mono text-[0.95rem] font-semibold tabular-nums leading-tight"
-                    style={sent ? 'color:#C44430;' : 'color:#2D8A52;'}
-                >{displayAmount}</span>
-                <span class="text-[0.7rem] font-medium tracking-wide opacity-40 leading-none mt-0.5">CRC</span>
-            </div>
+    <div style="flex:1;min-width:0;">
+        <Avatar
+            address={counterpartyAddress}
+            view="horizontal"
+            clickable={false}
+            pictureOverlayUrl={badgeUrl ?? undefined}
+            topInfo={topInfoText}
+            bottomInfo={getTimeAgo(item.timestamp)}
+        />
+    </div>
+    <div style="text-align:right;flex-shrink:0;">
+        <div style="font-family:{T.fontMono};font-size:14px;font-weight:600;color:{sent ? T.negative : T.positive};font-variant-numeric:tabular-nums;">
+            {displayAmount}
         </div>
-    </RowFrame>
+        <div style="font-size:11px;color:{T.inkMuted};font-weight:500;margin-top:1px;">CRC</div>
+    </div>
 </div>

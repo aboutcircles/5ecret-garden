@@ -1,8 +1,9 @@
 <script lang="ts">
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
+    import Icon from '$lib/design-system/Icon.svelte';
     import { openProfilePopup } from '$lib/shared/ui/profile/openProfilePopup';
-    import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
     import type { Address } from '@circles-sdk/utils';
+    import { T } from '$lib/design-system/tokens.js';
     import type { AppProfileCore as Profile } from '$lib/shared/model/profile';
     import type { AvatarRow } from '@circles-sdk/data';
     import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
@@ -64,32 +65,31 @@
     tabindex={0}
     role="button"
     aria-label={`Open profile for ${address ?? 'contact'}`}
-    class="rounded-[var(--row-radius)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+    class="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+    style="
+        display:flex;align-items:center;gap:12px;padding:14px 20px;
+        min-height:64px;cursor:pointer;
+        border-bottom:1px solid {T.hairlineSoft};box-sizing:border-box;
+        transition:background .1s;
+    "
     onkeydown={onRowKeydown}
     onclick={onRowClick}
 >
-    <RowFrame clickable={true} dense={true} noLeading={true}>
-        <div class="min-w-0 flex-1">
-            <Avatar
-                address={address}
-                {profile}
-                {avatarInfo}
-                view="horizontal"
-                bottomInfo={trustRelation}
-                showTypeInfo={false}
-                clickable={true}
-            />
-        </div>
-        {#snippet trailing()}
-            <div class="flex items-center gap-2 shrink-0">
-                {#if pillConfig}
-                    <span
-                        class="hidden sm:inline-flex text-[10.5px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap"
-                        style="background:{pillConfig.bg};color:{pillConfig.color};"
-                    >{pillConfig.label}</span>
-                {/if}
-                <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-40" aria-hidden="true" />
-            </div>
-        {/snippet}
-    </RowFrame>
+    <div style="flex:1;min-width:0;">
+        <Avatar
+            address={address}
+            {profile}
+            {avatarInfo}
+            view="horizontal"
+            bottomInfo={trustRelation}
+            showTypeInfo={false}
+            clickable={false}
+        />
+    </div>
+    {#if pillConfig}
+        <span
+            style="flex-shrink:0;display:inline-flex;align-items:center;padding:3px 10px;border-radius:9999px;font-size:10.5px;font-weight:580;white-space:nowrap;background:{pillConfig.bg};color:{pillConfig.color};"
+        >{pillConfig.label}</span>
+    {/if}
+    <Icon name="chevronRight" size={14} stroke={T.inkFaint} />
 </div>
