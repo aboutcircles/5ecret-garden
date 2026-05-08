@@ -14,10 +14,18 @@
 
     import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
     import { openSendFlowPopup } from '$lib/areas/wallet/flows/send/openSendFlowPopup';
+    import { openAddTrustFlow } from '$lib/areas/trust/flows/addTrust/openAddTrustFlow';
 
-    import { Send as LSend, Banknote as LBanknote } from 'lucide';
+    import {
+        Send as LSend,
+        Banknote as LBanknote,
+        ArrowDownLeft as LArrowDownLeft,
+        UserPlus as LUserPlus,
+        ScanLine as LScanLine,
+    } from 'lucide';
     import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
     import HelpPopover from '$lib/shared/ui/primitives/HelpPopover.svelte';
+    import ReceivePopup from './ReceivePopup.svelte';
 
     const TOKEN_SOURCES_HELP = [
         'Every person and group can issue its own Circles token.',
@@ -72,6 +80,25 @@
     function openSend() {
         openSendFlowPopup({ selectedAddress: undefined, amount: undefined, transitiveOnly: true });
     }
+
+    function openReceive() {
+        popupControls.open({ title: 'Receive', component: ReceivePopup, props: {} });
+    }
+
+    function openTrust() {
+        if (!avatarState.avatar) return;
+        openAddTrustFlow({
+            context: {
+                actorType: avatarState.isGroup ? 'group' : 'avatar',
+                actorAddress: avatarState.avatar.address,
+                selectedTrustees: [],
+            },
+        });
+    }
+
+    function openScanQR() {
+        openSendFlowPopup({ selectedAddress: undefined, amount: undefined, transitiveOnly: true });
+    }
 </script>
 
 <PageScaffold
@@ -122,16 +149,41 @@
 
     {#snippet headerActions()}
         {#if !avatarState.isGroup}
-            <button type="button" class="btn btn-ghost btn-sm" onclick={openSend}>
-                <Lucide icon={LSend} size={15} class="shrink-0" />
-                Send
-            </button>
-        {/if}
-        {#if mintableAmount >= 0.01}
-            <button type="button" class="btn btn-primary btn-sm" onclick={mintPersonalCircles}>
-                <Lucide icon={LBanknote} size={15} class="shrink-0" />
-                Mint {roundToDecimals(mintableAmount)} Circles
-            </button>
+            <div class="w-full grid grid-cols-4 gap-2">
+                <button
+                    type="button"
+                    class="flex flex-col items-center justify-center gap-1.5 py-3.5 px-1 rounded-[12px] text-white font-semibold text-[11px] cursor-pointer transition-opacity hover:opacity-90"
+                    style="background:#5849D4;"
+                    onclick={openSend}
+                >
+                    <Lucide icon={LSend} size={17} class="shrink-0" />
+                    <span>Send</span>
+                </button>
+                <button
+                    type="button"
+                    class="flex flex-col items-center justify-center gap-1.5 py-3.5 px-1 rounded-[12px] bg-base-100 border border-base-300 font-semibold text-[11px] cursor-pointer hover:bg-base-200 transition-colors"
+                    onclick={openReceive}
+                >
+                    <Lucide icon={LArrowDownLeft} size={17} class="shrink-0" />
+                    <span>Receive</span>
+                </button>
+                <button
+                    type="button"
+                    class="flex flex-col items-center justify-center gap-1.5 py-3.5 px-1 rounded-[12px] bg-base-100 border border-base-300 font-semibold text-[11px] cursor-pointer hover:bg-base-200 transition-colors"
+                    onclick={openTrust}
+                >
+                    <Lucide icon={LUserPlus} size={17} class="shrink-0" />
+                    <span>Trust</span>
+                </button>
+                <button
+                    type="button"
+                    class="flex flex-col items-center justify-center gap-1.5 py-3.5 px-1 rounded-[12px] bg-base-100 border border-base-300 font-semibold text-[11px] cursor-pointer hover:bg-base-200 transition-colors"
+                    onclick={openScanQR}
+                >
+                    <Lucide icon={LScanLine} size={17} class="shrink-0" />
+                    <span>Scan</span>
+                </button>
+            </div>
         {/if}
     {/snippet}
 
@@ -163,6 +215,12 @@
                     onclick={openSend}>
                     <Lucide icon={LSend} size={20} class="shrink-0" />
                     Send
+                </button>
+                <button type="button"
+                    class="btn btn-ghost min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] justify-start px-3"
+                    onclick={openReceive}>
+                    <Lucide icon={LArrowDownLeft} size={20} class="shrink-0" />
+                    Receive
                 </button>
             {/if}
         </div>
@@ -218,6 +276,31 @@
     {#if avatarState.isGroup}
         <OverviewPanel/>
     {:else}
-        <TransactionHistoryPanel/>
+        <!-- Mintable nudge card -->
+        {#if mintableAmount >= 0.01}
+            <button
+                type="button"
+                class="w-full text-left rounded-[14px] mb-4 px-4 py-3.5 flex items-center justify-between cursor-pointer transition-opacity hover:opacity-90"
+                style="background:linear-gradient(160deg,#FBE3D8 0%,#EEEBFA 100%);"
+                onclick={mintPersonalCircles}
+            >
+                <div>
+                    <div class="text-[10.5px] font-semibold tracking-[0.07em] uppercase mb-0.5" style="color:rgba(15,10,30,0.50);">Available to mint</div>
+                    <div class="font-mono text-[18px] font-semibold tabular-nums leading-tight" style="color:#5849D4;">
+                        {roundToDecimals(mintableAmount)} <span class="text-[13px] font-medium opacity-60">CRC</span>
+                    </div>
+                </div>
+                <div class="font-semibold text-[13px]" style="color:#5849D4;">Mint →</div>
+            </button>
+        {/if}
+
+        <!-- Activity card -->
+        <div class="bg-base-100 border border-base-300 rounded-[20px] overflow-hidden"
+             style="box-shadow:0 1px 4px rgba(15,10,30,0.04);">
+            <div class="px-4 pt-3.5 pb-2 border-b border-base-300">
+                <span class="text-[10.5px] font-semibold tracking-[0.07em] uppercase" style="color:rgba(15,10,30,0.45);">Activity</span>
+            </div>
+            <TransactionHistoryPanel/>
+        </div>
     {/if}
 </PageScaffold>

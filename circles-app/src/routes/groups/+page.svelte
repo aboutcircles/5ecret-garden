@@ -14,6 +14,7 @@
     import {openFlowPopup} from '$lib/shared/state/popup';
     import CreateGroup from '$lib/areas/groups/flows/createGroup/1_CreateGroup.svelte';
     import GroupTabPanel from '$lib/areas/groups/ui/components/GroupTabPanel.svelte';
+    import GroupCard from './GroupCard.svelte';
     import {resetCreateGroupContext} from '$lib/areas/groups/flows/createGroup/context';
     import {circles} from '$lib/shared/state/circles';
     import {CirclesStorage} from '$lib/shared/utils/storage';
@@ -224,80 +225,78 @@
         <ActionButtonDropDown {actions}/>
     {/snippet}
 
-    <div class="flex flex-col items-center rounded-md px-3 py-4 md:px-4 md:py-5 gap-y-3">
-        <div class="w-full">
-            <Tabs bind:selected={selectedTab} variant="boxed" size="sm" tabOrder={TAB_IDS as unknown as string[]}>
-                <Tab id="yours" title="My groups" />
-                {#if canShowMembershipsTab}
-                    <Tab id="memberships" title="Memberships" />
-                {/if}
-                <Tab id="all" title="All groups" />
-            </Tabs>
-        </div>
+    <div class="flex flex-col gap-y-3">
+        <Tabs bind:selected={selectedTab} variant="boxed" size="sm" tabOrder={TAB_IDS as unknown as string[]}>
+            <Tab id="yours" title="My groups" />
+            {#if canShowMembershipsTab}
+                <Tab id="memberships" title="Memberships" />
+            {/if}
+            <Tab id="all" title="All groups" />
+        </Tabs>
 
-        <div class="flex flex-col w-full gap-y-4">
+        <div class="w-full">
             {#if selectedTab === 'yours'}
-                <GroupTabPanel
-                    ownerAddress={ownerAddress}
-                    loading={ownedGroupsLoading}
-                    error={ownedGroupsError}
-                    items={ownedGroups}
-                    connectText="Connect an avatar to see the groups you own."
-                    emptyText="No groups found."
-                >
-                    <svelte:fragment slot="empty">
-                        <div class="rounded-xl border border-dashed border-base-300 bg-base-200/40 p-4 space-y-3">
-                            <div>
-                                <p class="text-sm font-semibold text-base-content">No groups yet</p>
-                                <p class="text-sm text-base-content/70">
-                                    Create a group to start coordinating with others, or explore existing groups.
-                                </p>
-                            </div>
-                            <div class="flex flex-wrap gap-4 text-sm">
-                                <a
-                                    href="/groups"
-                                    class="link link-primary"
-                                    onclick={(event) => {
-                                        event.preventDefault();
-                                        selectedTab = 'all';
-                                    }}
-                                >
-                                    Browse all groups
-                                </a>
-                                <a
-                                    href="/groups#create"
-                                    class="link link-primary"
-                                    class:opacity-50={!canCreateGroup}
-                                    class:pointer-events-none={!canCreateGroup}
-                                    aria-disabled={!canCreateGroup}
-                                    onclick={(event) => {
-                                        event.preventDefault();
-                                        if (!canCreateGroup) return;
-                                        void openCreateGroup();
-                                    }}
-                                >
-                                    Create a group
-                                </a>
-                            </div>
+                {#if !ownerAddress}
+                    <p class="text-sm opacity-70">Connect an avatar to see the groups you own.</p>
+                {:else if ownedGroupsLoading}
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {#each Array(4) as _, i (i)}
+                            <div class="rounded-[16px] bg-base-200 animate-pulse h-[120px]"></div>
+                        {/each}
+                    </div>
+                {:else if ownedGroupsError}
+                    <p class="text-sm text-error">{ownedGroupsError}</p>
+                {:else if ownedGroups.length === 0}
+                    <div class="rounded-xl border border-dashed border-base-300 bg-base-200/40 p-4 space-y-3">
+                        <div>
+                            <p class="text-sm font-semibold text-base-content">No groups yet</p>
+                            <p class="text-sm text-base-content/70">
+                                Create a group to start coordinating with others, or explore existing groups.
+                            </p>
                         </div>
-                    </svelte:fragment>
-                    {#each ownedGroups as item (item.group)}
-                        <OwnedGroupRowView item={item} />
-                    {/each}
-                </GroupTabPanel>
+                        <div class="flex flex-wrap gap-4 text-sm">
+                            <a href="/groups" class="link link-primary"
+                               onclick={(e) => { e.preventDefault(); selectedTab = 'all'; }}>
+                                Browse all groups
+                            </a>
+                            <a href="/groups#create" class="link link-primary"
+                               class:opacity-50={!canCreateGroup}
+                               class:pointer-events-none={!canCreateGroup}
+                               aria-disabled={!canCreateGroup}
+                               onclick={(e) => { e.preventDefault(); if (canCreateGroup) void openCreateGroup(); }}>
+                                Create a group
+                            </a>
+                        </div>
+                    </div>
+                {:else}
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {#each ownedGroups as item, i (item.group)}
+                            <GroupCard {item} variant="owned" gradientIndex={i} />
+                        {/each}
+                    </div>
+                {/if}
+
             {:else if selectedTab === 'memberships'}
-                <GroupTabPanel
-                    ownerAddress={ownerAddress}
-                    loading={membershipsLoading}
-                    error={membershipsError}
-                    items={memberships}
-                    connectText="Connect an avatar to see the groups you are a member in."
-                    emptyText="No group memberships"
-                >
-                    {#each memberships as item (item.group)}
-                        <GroupRowView item={item} />
-                    {/each}
-                </GroupTabPanel>
+                {#if !ownerAddress}
+                    <p class="text-sm opacity-70">Connect an avatar to see the groups you are a member in.</p>
+                {:else if membershipsLoading}
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {#each Array(4) as _, i (i)}
+                            <div class="rounded-[16px] bg-base-200 animate-pulse h-[120px]"></div>
+                        {/each}
+                    </div>
+                {:else if membershipsError}
+                    <p class="text-sm text-error">{membershipsError}</p>
+                {:else if memberships.length === 0}
+                    <p class="text-sm opacity-70 py-4 text-center">No group memberships</p>
+                {:else}
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {#each memberships as item, i (item.group)}
+                            <GroupCard {item} variant="member" gradientIndex={i} />
+                        {/each}
+                    </div>
+                {/if}
+
             {:else}
                 {#if groups}
                     <div data-groups-list-scope bind:this={allGroupsListScopeEl}>

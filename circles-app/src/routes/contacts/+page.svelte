@@ -185,6 +185,18 @@
         });
     }
 
+    // Trust relation counts (unfiltered, for chips)
+    const trustCounts = derived(contacts, ($c) => {
+        const entries = Object.values($c?.data ?? {}) as any[];
+        return {
+            total: entries.length,
+            mutual: entries.filter(e => e.row?.relation === 'mutuallyTrusts').length,
+            trustedBy: entries.filter(e => e.row?.relation === 'trustedBy').length,
+            trusts: entries.filter(e => e.row?.relation === 'trusts').length,
+            varies: entries.filter(e => e.row?.relation === 'variesByVersion').length,
+        };
+    });
+
     // Dynamic labels for group context
     let titleText: string = $derived(avatarState.isGroup ? 'Members' : 'Contacts');
     let countLabel: string = $derived(avatarState.isGroup ? 'members' : 'entries');
@@ -285,6 +297,35 @@
                 </p>
             {/if}
 
+        </div>
+    {/if}
+
+    <!-- Trust relation chips (non-group only) -->
+    {#if !avatarState.isGroup}
+        <div class="flex gap-2 overflow-x-auto pb-1 mb-3 -mx-0.5 px-0.5" style="scrollbar-width:none;">
+            {#each [
+                { key: undefined,            label: 'All',         count: $trustCounts.total,    bg: '#F6F5F2',  color: 'rgba(15,10,30,0.70)', activeBg: '#5849D4', activeColor: '#fff' },
+                { key: 'mutuallyTrusts',     label: 'Both accept', count: $trustCounts.mutual,   bg: '#F6F5F2',  color: 'rgba(15,10,30,0.70)', activeBg: '#DCEBDF', activeColor: '#2D8A52' },
+                { key: 'trustedBy',          label: 'Accepts you', count: $trustCounts.trustedBy, bg: '#F6F5F2', color: 'rgba(15,10,30,0.70)', activeBg: '#EEEBFA', activeColor: '#5849D4' },
+                { key: 'trusts',             label: 'You accept',  count: $trustCounts.trusts,   bg: '#F6F5F2',  color: 'rgba(15,10,30,0.70)', activeBg: '#FBEFCB', activeColor: '#B07014' },
+            ] as chip}
+                {#if chip.count > 0 || chip.key === undefined}
+                    {@const isActive = $filterRelation === chip.key}
+                    <button
+                        type="button"
+                        class="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold border-0 cursor-pointer transition-all"
+                        style={isActive
+                            ? `background:${chip.activeBg};color:${chip.activeColor};`
+                            : `background:${chip.bg};color:${chip.color};`}
+                        onclick={() => filterRelation.set(chip.key as any)}
+                    >
+                        {chip.label}
+                        {#if chip.count > 0}
+                            <span class="opacity-60 font-normal">{chip.count}</span>
+                        {/if}
+                    </button>
+                {/if}
+            {/each}
         </div>
     {/if}
 
