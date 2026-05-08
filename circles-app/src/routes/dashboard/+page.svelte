@@ -33,7 +33,12 @@
         'This is normal and expected in Circles.',
     ];
 
+    const firstName: string = $derived(
+        avatarState.profile?.name?.trim().split(/\s+/)[0] ?? ''
+    );
+
     let mintableAmount: number = $state(0);
+    let activityFilter = $state<'all' | 'received' | 'sent' | 'mints'>('all');
 
     $effect(() => {
         (async () => {
@@ -112,13 +117,31 @@
 >
     {#snippet title()}
         {#if !avatarState.isGroup}
-            <div>
-                <div class="text-[11px] font-semibold tracking-[0.08em] uppercase mb-1" style="color:rgba(15,10,30,0.50);">Total balance</div>
+            <div class="pr-14">
+                <div class="text-[10.5px] font-semibold tracking-[0.10em] uppercase mb-1" style="color:rgba(15,10,30,0.42);">
+                    Welcome back{#if firstName}, {firstName}{/if}
+                </div>
+                <div class="text-[13px] font-medium mb-1.5" style="color:rgba(15,10,30,0.55);">Your Circle</div>
                 <button class="text-left group" onclick={openBalances} aria-label="Open balances breakdown">
                     <span class="h1-display block group-hover:opacity-80 transition-opacity">
                         {roundToDecimals($totalCirclesBalance)}<span style="font-family:'Inter Tight',sans-serif;font-size:0.42em;font-weight:500;opacity:0.55;margin-left:0.35em;vertical-align:0.1em;letter-spacing:0;">CRC</span>
                     </span>
                 </button>
+                <!-- Dummy sparkline -->
+                <div class="mt-3" style="opacity:0.55;">
+                    <svg width="100%" height="28" viewBox="0 0 240 28" preserveAspectRatio="none" fill="none" aria-hidden="true">
+                        <defs>
+                            <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#5849D4" stop-opacity="0.14"/>
+                                <stop offset="100%" stop-color="#5849D4" stop-opacity="0"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M0,24 C24,22 48,19 72,15 C96,11 120,17 144,13 C168,9 192,11 216,6 L240,3"
+                              stroke="#5849D4" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M0,24 C24,22 48,19 72,15 C96,11 120,17 144,13 C168,9 192,11 216,6 L240,3 L240,28 L0,28 Z"
+                              fill="url(#sparkGrad)"/>
+                    </svg>
+                </div>
             </div>
         {:else}
             <h2 class="h2 m-0">Group overview</h2>
@@ -149,38 +172,38 @@
 
     {#snippet headerActions()}
         {#if !avatarState.isGroup}
-            <div class="w-full grid grid-cols-4 gap-2">
+            <div class="w-full grid grid-cols-2 gap-2">
                 <button
                     type="button"
-                    class="flex flex-col items-center justify-center gap-1.5 py-3.5 px-1 rounded-[12px] text-white font-semibold text-[11px] cursor-pointer transition-opacity hover:opacity-90"
+                    class="flex items-center gap-2.5 px-4 py-2.5 rounded-full font-semibold text-[13px] text-white cursor-pointer transition-opacity hover:opacity-90"
                     style="background:#5849D4;"
                     onclick={openSend}
                 >
-                    <Lucide icon={LSend} size={17} class="shrink-0" />
+                    <Lucide icon={LSend} size={16} class="shrink-0" />
                     <span>Send</span>
                 </button>
                 <button
                     type="button"
-                    class="flex flex-col items-center justify-center gap-1.5 py-3.5 px-1 rounded-[12px] bg-base-100 border border-base-300 font-semibold text-[11px] cursor-pointer hover:bg-base-200 transition-colors"
+                    class="flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-base-100 border border-base-300 font-semibold text-[13px] cursor-pointer hover:bg-base-200 transition-colors"
                     onclick={openReceive}
                 >
-                    <Lucide icon={LArrowDownLeft} size={17} class="shrink-0" />
+                    <Lucide icon={LArrowDownLeft} size={16} class="shrink-0" />
                     <span>Receive</span>
                 </button>
                 <button
                     type="button"
-                    class="flex flex-col items-center justify-center gap-1.5 py-3.5 px-1 rounded-[12px] bg-base-100 border border-base-300 font-semibold text-[11px] cursor-pointer hover:bg-base-200 transition-colors"
+                    class="flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-base-100 border border-base-300 font-semibold text-[13px] cursor-pointer hover:bg-base-200 transition-colors"
                     onclick={openTrust}
                 >
-                    <Lucide icon={LUserPlus} size={17} class="shrink-0" />
+                    <Lucide icon={LUserPlus} size={16} class="shrink-0" />
                     <span>Trust</span>
                 </button>
                 <button
                     type="button"
-                    class="flex flex-col items-center justify-center gap-1.5 py-3.5 px-1 rounded-[12px] bg-base-100 border border-base-300 font-semibold text-[11px] cursor-pointer hover:bg-base-200 transition-colors"
+                    class="flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-base-100 border border-base-300 font-semibold text-[13px] cursor-pointer hover:bg-base-200 transition-colors"
                     onclick={openScanQR}
                 >
-                    <Lucide icon={LScanLine} size={17} class="shrink-0" />
+                    <Lucide icon={LScanLine} size={16} class="shrink-0" />
                     <span>Scan</span>
                 </button>
             </div>
@@ -297,10 +320,31 @@
         <!-- Activity card -->
         <div class="bg-base-100 border border-base-300 rounded-[20px] overflow-hidden"
              style="box-shadow:0 1px 4px rgba(15,10,30,0.04);">
-            <div class="px-4 pt-3.5 pb-2 border-b border-base-300">
-                <span class="text-[10.5px] font-semibold tracking-[0.07em] uppercase" style="color:rgba(15,10,30,0.45);">Activity</span>
+            <div class="px-4 pt-3.5 pb-3 border-b border-base-300">
+                <div class="flex items-center justify-between mb-2.5">
+                    <span class="text-[10.5px] font-semibold tracking-[0.07em] uppercase" style="color:rgba(15,10,30,0.45);">Activity</span>
+                </div>
+                <div class="flex gap-1.5 overflow-x-auto" style="scrollbar-width:none;">
+                    {#each [
+                        { key: 'all',      label: 'All' },
+                        { key: 'received', label: 'Received' },
+                        { key: 'sent',     label: 'Sent' },
+                        { key: 'mints',    label: 'Mints' },
+                    ] as tab}
+                        <button
+                            type="button"
+                            class="flex-shrink-0 px-3 py-1.5 rounded-full text-[11.5px] font-semibold border-0 cursor-pointer transition-all"
+                            style={activityFilter === tab.key
+                                ? 'background:#5849D4;color:#fff;'
+                                : 'background:#F6F5F2;color:rgba(15,10,30,0.65);'}
+                            onclick={() => activityFilter = tab.key as typeof activityFilter}
+                        >
+                            {tab.label}
+                        </button>
+                    {/each}
+                </div>
             </div>
-            <TransactionHistoryPanel/>
+            <TransactionHistoryPanel filter={activityFilter} />
         </div>
     {/if}
 </PageScaffold>
