@@ -6,16 +6,19 @@
   import type { Address as EvmAddress } from '@circles-sdk/utils';
   import { goto } from '$app/navigation';
   import QrCode from '$lib/shared/ui/primitives/QrCode.svelte';
-  import Address from '$lib/shared/ui/primitives/Address.svelte';
   import ConnectWallet from '$lib/areas/wallet/ui/onboarding/ConnectWallet.svelte';
   import Disclaimer from '$lib/areas/register/ui/components/RegistrationDisclaimer.svelte';
-  import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
+  import { T } from '$lib/design-system/tokens.js';
+  import Icon from '$lib/design-system/Icon.svelte';
 
   const ownerAddress = $derived(($page.url.searchParams.get('owner') ?? '').trim().toLowerCase() as EvmAddress | '');
   const shortAddr = (a?: string) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : '');
+  const fullAddr = $derived($wallet?.address ?? ownerAddress ?? '');
 
   let ownerHasGroups: boolean = $state(false);
   let ownerGroupsLoading: boolean = $state(false);
+  let copied = $state(false);
+  let copyTimer: ReturnType<typeof setTimeout> | null = null;
 
   async function loadOwnerGroupsFlag() {
     if (!ownerAddress || !$circles) {
@@ -34,56 +37,72 @@
     }
   }
 
-  $effect(() => {
-    void loadOwnerGroupsFlag();
-  });
+  $effect(() => { void loadOwnerGroupsFlag(); });
 
-  function openManageGroups() {
-    if (!ownerAddress) return;
-    goto('/groups');
+  async function copyAddr() {
+    if (!fullAddr) return;
+    await navigator.clipboard.writeText(String(fullAddr));
+    copied = true;
+    if (copyTimer) clearTimeout(copyTimer);
+    copyTimer = setTimeout(() => { copied = false; }, 1500);
   }
 </script>
 
+<div style="background:{T.page};min-height:100%;width:100%;font-family:{T.fontSans};color:{T.inkBody};">
+  <div style="padding:8px 18px 24px;" class="md:!p-9 md:max-w-[1280px] md:mx-auto">
 
-<PageScaffold highlight="soft" collapsedMode="bar" collapsedHeightClass="h-12" maxWidthClass="page page--lg" contentWidthClass="page page--lg" usePagePadding={true}>
-  {#snippet title()}
-    <h1 class="h2 m-0">{ownerAddress ? shortAddr(ownerAddress) : 'Create Account'}</h1>
-  {/snippet}
-  {#snippet meta()}
-    {#if ownerAddress}
-      Connected safe
-    {:else}
-      Takes ~2 minutes
-    {/if}
-  {/snippet}
-  {#snippet headerActions()}
-    {#if ownerAddress}
-      <button class="btn btn-sm btn-primary" onclick={() => goto('/register')}>Create account</button>
-      {#if ownerGroupsLoading}
-        <button class="btn btn-sm btn-ghost" disabled>Checking groups…</button>
-      {:else if ownerHasGroups}
-        <button class="btn btn-sm btn-ghost" onclick={openManageGroups}>My groups</button>
-      {/if}
-    {/if}
-  {/snippet}
-  {#snippet collapsedLeft()}
-    <div class="truncate flex items-center gap-2">
-      <span class="font-medium">{ownerAddress ? shortAddr(ownerAddress) : 'Create Account'}</span>
-    </div>
-  {/snippet}
-
-  <!-- Warning/banner spacing -->
-  <div class="mt-3">
-    <Disclaimer />
-  </div>
-
-  <!-- Register section -->
-  <section class="mt-4">
-    <h2 class="text-sm font-semibold text-base-content/70 tracking-wide uppercase">Register</h2>
-    <div class="mt-2 space-y-2">
-      <div class="text-md text-base-content/70">
-        You're not yet signed up to Circles. Choose an account type that matches your needs.
+    <!-- Page header -->
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:8px 0 14px;">
+      <div style="display:flex;flex-direction:column;gap:3px;min-width:0;">
+        <span style="font-family:{T.fontDisplay};font-size:32px;color:{T.ink};letter-spacing:-0.02em;line-height:1;font-weight:400;">
+          {ownerAddress ? 'Choose account type' : 'Create account'}
+        </span>
+        <span style="font-size:12.5px;color:{T.inkMuted};">
+          {ownerAddress ? `Connected · ${shortAddr(ownerAddress)}` : 'Takes about 2 minutes'}
+        </span>
       </div>
+
+      {#if ownerAddress}
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+          {#if ownerGroupsLoading}
+            <span style="
+              display:inline-flex;align-items:center;
+              height:38px;padding:0 14px;border-radius:9999px;
+              background:{T.surface};color:{T.inkMuted};border:1px solid {T.hairline};
+              font-size:13px;
+            ">
+              <span class="loading loading-spinner loading-xs mr-2"></span>
+              Checking groups…
+            </span>
+          {:else if ownerHasGroups}
+            <button
+              type="button"
+              onclick={() => goto('/groups')}
+              style="
+                height:38px;padding:0 14px;border-radius:9999px;cursor:pointer;
+                background:{T.surface};color:{T.ink};border:1px solid {T.hairline};
+                display:inline-flex;align-items:center;gap:6px;
+                font-family:{T.fontSans};font-size:13px;font-weight:540;
+                box-shadow:{T.shadow.xs};
+              "
+            >My groups</button>
+          {/if}
+        </div>
+      {/if}
+    </div>
+
+    <!-- Disclaimer -->
+    <Disclaimer />
+
+    <!-- Register section -->
+    <section style="margin-top:18px;display:flex;flex-direction:column;gap:8px;">
+      <div style="display:flex;flex-direction:column;gap:2px;padding:0 4px;margin-bottom:4px;">
+        <span style="font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Register</span>
+        <span style="font-size:13px;color:{T.inkBody};line-height:1.5;">
+          You're not yet signed up to Circles. Choose an account type that matches your needs.
+        </span>
+      </div>
+
       <ConnectWallet
         imgUrl="/person.svg"
         header="Human"
@@ -94,16 +113,15 @@
       <ConnectWallet
         imgUrl="/organization.svg"
         header="Organization"
-        desc="Register as an organization if you're a business"
+        desc="Register as an organization if you're a business or collective"
         route="/register/register-organization"
       />
-    </div>
-  </section>
+    </section>
 
-  <!-- Advanced section -->
-  <section class="mt-4">
-    <h2 class="text-sm font-semibold text-base-content/70 tracking-wide uppercase">Advanced</h2>
-    <div class="mt-2 space-y-2">
+    <!-- Advanced section -->
+    <section style="margin-top:18px;display:flex;flex-direction:column;gap:8px;">
+      <span style="font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;padding:0 4px;margin-bottom:4px;">Advanced</span>
+
       <ConnectWallet
         imgUrl="/person.svg"
         header="Human (v1)"
@@ -116,18 +134,47 @@
         desc="Create only a profile for the connected address, but no Circles account"
         route="/register/register-profile"
       />
-    </div>
-  </section>
+    </section>
 
-  <!-- QR section -->
-  <section class="mt-8">
-    <div class="text-center">
-      <div class="text-xs text-base-content/70 mb-2">
-        <Address address={$wallet?.address ?? '0x0'} />
-      </div>
-      <div class="inline-block bg-base-100 border rounded-xl p-3">
-        <QrCode value={$wallet?.address} />
-      </div>
-    </div>
-  </section>
-</PageScaffold>
+    <!-- QR section: address + invitation -->
+    {#if fullAddr}
+      <section style="
+        margin-top:24px;border-radius:22px;overflow:hidden;
+        background:{T.ink};color:{T.butter};
+        padding:24px 22px;display:flex;flex-direction:column;align-items:center;gap:16px;
+      ">
+        <div style="background:#fff;border-radius:14px;padding:16px;display:inline-flex;">
+          <QrCode value={fullAddr} />
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:center;">
+          <span style="font-size:11px;font-weight:600;color:rgba(251,227,216,0.7);letter-spacing:0.06em;text-transform:uppercase;">Your address</span>
+          <span style="font-family:{T.fontMono};font-size:11.5px;color:rgba(251,227,216,0.85);text-align:center;word-break:break-all;max-width:280px;line-height:1.5;">
+            {fullAddr}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          onclick={copyAddr}
+          style="
+            height:38px;padding:0 18px;border-radius:9999px;cursor:pointer;
+            background:rgba(255,255,255,0.08);color:{T.butter};border:1px solid rgba(255,255,255,0.12);
+            display:inline-flex;align-items:center;gap:7px;
+            font-family:{T.fontSans};font-size:13px;font-weight:540;
+            transition:background .12s;
+          "
+        >
+          <Icon name={copied ? 'check' : 'copy'} size={13} stroke={T.butter} strokeWidth={2} />
+          {copied ? 'Copied!' : 'Copy address'}
+        </button>
+
+        <span style="font-size:11px;color:rgba(251,227,216,0.55);text-align:center;line-height:1.5;max-width:300px;">
+          Share this with someone who already uses Circles to receive an invitation.
+        </span>
+      </section>
+    {/if}
+
+    <div style="height:24px;"></div>
+  </div>
+</div>
