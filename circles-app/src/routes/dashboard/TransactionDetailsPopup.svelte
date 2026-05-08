@@ -580,7 +580,7 @@
 <div class="flex flex-col w-full">
         <div class="pt-4">
             <!-- Amount + From/To (border around tx-value block, with splitter between amount and diagram) -->
-            <div class="bg-base-100 border rounded-xl overflow-hidden divide-y">
+            <div class="bg-base-100 border border-base-300 rounded-[14px] overflow-hidden divide-y divide-base-300">
                 <div class="p-4 flex flex-col items-center justify-center">
                     <div class="text-center">
                         <div class={`text-3xl sm:text-4xl font-extrabold ${headerColorClass()}`}>
@@ -655,7 +655,7 @@
             </div>
 
             <!-- Table-like details -->
-            <div class="bg-base-100 border mt-4 rounded-xl overflow-hidden">
+            <div class="bg-base-100 border border-base-300 mt-4 rounded-[14px] overflow-hidden">
                 <div class="divide-y">
                     <div class="flex items-center justify-between gap-4 p-3">
                         <div class="text-sm opacity-70">Date & time</div>
@@ -679,7 +679,7 @@
             </div>
 
             {#if aggregatedTransfers().length}
-                <div class="bg-base-100 border mt-4 rounded-xl overflow-hidden">
+                <div class="bg-base-100 border border-base-300 mt-4 rounded-[14px] overflow-hidden">
                     <div class="p-3 border-b">
                         <div class="text-sm opacity-70">
                             Aggregated transfers <span class="opacity-60">({aggregatedTransfers().length})</span>

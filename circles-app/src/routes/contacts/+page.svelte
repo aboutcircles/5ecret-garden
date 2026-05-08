@@ -342,15 +342,17 @@
         noMatchesLabel="No matches"
         wrapInListContainer={false}
     >
-        <div data-contacts-list-scope bind:this={contactsListScopeEl}>
-            <GenericList
-                store={contactsPaginatedWithEnd}
-                row={ContactRow}
-                rowHeight={64}
-                maxPlaceholderPages={2}
-                expectedPageSize={25}
-                placeholderRow={AvatarRowPlaceholder}
-            />
+        <div class="bg-base-100 border border-base-300 rounded-[16px] overflow-hidden" style="box-shadow:0 1px 4px rgba(15,10,30,0.04);">
+            <div data-contacts-list-scope bind:this={contactsListScopeEl}>
+                <GenericList
+                    store={contactsPaginatedWithEnd}
+                    row={ContactRow}
+                    rowHeight={64}
+                    maxPlaceholderPages={2}
+                    expectedPageSize={25}
+                    placeholderRow={AvatarRowPlaceholder}
+                />
+            </div>
         </div>
     </ListShell>
 </PageScaffold>

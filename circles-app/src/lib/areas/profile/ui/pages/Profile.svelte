@@ -370,6 +370,15 @@
     const tabPanelClass = 'p-4 bg-base-100 border-none';
 
     let selectedTab = $state<TabId>('common_connections');
+
+    function trustPillConfig(relation: string | undefined) {
+        switch (relation) {
+            case 'mutuallyTrusts': return { label: 'Both accept', bg: '#DCEBDF', color: '#2D8A52' };
+            case 'trusts':         return { label: 'You accept',  bg: '#FBEFCB', color: '#B07014' };
+            case 'trustedBy':      return { label: 'Accepts you', bg: '#EEEBFA', color: '#5849D4' };
+            default: return null;
+        }
+    }
     let commonConnectionsCount = $state(0);
     let trustsCount = $state(0);
     let trustedByCount = $state(0);
@@ -510,37 +519,39 @@
 
 </script>
 
-<div class="flex flex-col items-center w-full sm:w-[90%] lg:w-3/5 mx-auto">
-    <Avatar view="vertical" clickable={false} {address}/>
+<div class="w-full">
+    <!-- Gradient hero card -->
+    <div class="rounded-[16px] overflow-hidden mb-4" style="background:linear-gradient(160deg,#EEEBFA 0%,#FBE3D8 55%,#FBEFCB 100%);">
+        <div class="flex flex-col items-center px-4 pt-8 pb-5">
+            <Avatar view="vertical" clickable={false} {address}/>
 
-    {#if trustRow}
-        <div class="mt-2 flex items-center gap-1">
-            <span
-                    class="text-sm"
-                    class:text-green-600={trustRow?.relation === 'trusts' || trustRow?.relation === 'trustedBy' || trustRow?.relation === 'mutuallyTrusts'}
-            >
-                {relationText}
-            </span>
-
-            <HelpPopover
+            <div class="mt-2 flex items-center gap-1.5 flex-wrap justify-center">
+                {#if trustRow}
+                    {@const pill = trustPillConfig(trustRow.relation)}
+                    {#if pill}
+                        <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full"
+                              style="background:rgba(255,255,255,0.7);color:{pill.color};">
+                            {pill.label}
+                        </span>
+                    {:else}
+                        <span class="text-sm" style="color:rgba(15,10,30,0.55);">{relationText}</span>
+                    {/if}
+                {:else}
+                    <span class="text-sm" style="color:rgba(15,10,30,0.45);">Not connected</span>
+                {/if}
+                <HelpPopover
                     title="Trust & routing"
                     lines={TRUST_ROUTING_HELP_LINES}
-                    buttonClass="btn btn-ghost btn-xs btn-square"
+                    buttonClass="btn btn-ghost btn-xs btn-square opacity-50"
                     widthClass="w-80"
-            />
+                />
+            </div>
         </div>
-    {:else}
-        <span class="text-sm text-base-content/70">Not connected</span>
-    {/if}
-
-    <div class="text-xs text-base-content/60 mt-1">
-        Trust = you accept Circles from this account.
     </div>
 
-    <TrustScoreBadge {address} />
-
-    <div class="my-6 flex flex-row gap-x-2">
-        <span class="inline-flex items-center h-8 bg-base-200 rounded-lg px-2 text-sm">
+    <!-- Address / metadata row -->
+    <div class="flex items-center justify-center gap-1.5 flex-wrap mb-4">
+        <span class="inline-flex items-center h-7 bg-base-200 rounded-lg px-2 text-xs font-medium">
             {getTypeString(otherAvatar?.type || '')}
         </span>
         <AddressComponent address={address ?? '0x0'}/>
@@ -548,13 +559,13 @@
             <div class="relative">
                 <button
                         type="button"
-                        class="inline-flex items-center justify-center w-8 h-8 bg-base-200 border-none rounded-lg leading-none"
+                        class="inline-flex items-center justify-center w-7 h-7 bg-base-200 border-none rounded-lg"
                         onclick={openBookmarkEditor}
                         bind:this={bookmarkButtonEl}
                         aria-label={isBookmarked ? 'Edit profile bookmark' : 'Bookmark profile'}
                         title={isBookmarked ? 'Edit bookmark' : 'Bookmark profile'}
                 >
-                    <Lucide icon={LStar} size={16} class={isBookmarked ? 'text-yellow-500 fill-yellow-500' : 'text-base-content/60'} />
+                    <Lucide icon={LStar} size={14} class={isBookmarked ? 'text-yellow-500 fill-yellow-500' : 'text-base-content/50'} />
                 </button>
 
                 {#if showBookmarkEditor}
@@ -566,10 +577,7 @@
                         <div class="space-y-1">
                             <div class="text-[11px] opacity-70">Folder</div>
                             {#if bookmarkFolders.length > 0}
-                                <select
-                                        class="select select-bordered select-sm w-full"
-                                        bind:value={bookmarkFolderSelection}
-                                >
+                                <select class="select select-bordered select-sm w-full" bind:value={bookmarkFolderSelection}>
                                     <option value="">No folder</option>
                                     {#each bookmarkFolders as folder (folder)}
                                         <option value={folder}>{folder}</option>
@@ -578,32 +586,17 @@
                             {:else}
                                 <div class="text-xs opacity-60">No folders yet. Create one below.</div>
                             {/if}
-                            <input
-                                    class="input input-bordered input-sm w-full"
-                                    type="text"
-                                    maxlength="64"
-                                    placeholder="Create folder (e.g. Friends)"
-                                    bind:value={newBookmarkFolderInput}
-                            />
+                            <input class="input input-bordered input-sm w-full" type="text" maxlength="64"
+                                   placeholder="Create folder (e.g. Friends)" bind:value={newBookmarkFolderInput} />
                         </div>
-                        <textarea
-                                class="textarea textarea-bordered textarea-sm w-full"
-                                rows={3}
-                                placeholder="Add a note (optional)"
-                                bind:value={bookmarkNoteInput}
-                        ></textarea>
+                        <textarea class="textarea textarea-bordered textarea-sm w-full" rows={3}
+                                  placeholder="Add a note (optional)" bind:value={bookmarkNoteInput}></textarea>
                         <div class="flex items-center justify-end gap-2">
-                            <button class="btn btn-ghost btn-xs" type="button" onclick={() => (showBookmarkEditor = false)}>
-                                Cancel
-                            </button>
+                            <button class="btn btn-ghost btn-xs" type="button" onclick={() => (showBookmarkEditor = false)}>Cancel</button>
                             {#if isBookmarked}
-                                <button class="btn btn-ghost btn-xs" type="button" onclick={removeBookmark}>
-                                    Remove
-                                </button>
+                                <button class="btn btn-ghost btn-xs" type="button" onclick={removeBookmark}>Remove</button>
                             {/if}
-                            <button class="btn btn-primary btn-xs" type="button" onclick={saveBookmarkWithCurrentNote}>
-                                Save
-                            </button>
+                            <button class="btn btn-primary btn-xs" type="button" onclick={saveBookmarkWithCurrentNote}>Save</button>
                         </div>
                     </div>
                 {/if}
@@ -611,140 +604,63 @@
         {/if}
         {#if otherAvatar?.type === 'CrcV2_RegisterGroup'}
             <button
-                    onclick={() => {
-                    popupControls.closeAndThen(() => {
-                        void goto('/groups/metrics/' + address);
-                    });
-                }}
-                    class="inline-flex items-center justify-center w-8 h-8 bg-base-200 border-none rounded-lg"
+                    onclick={() => { popupControls.closeAndThen(() => { void goto('/groups/metrics/' + address); }); }}
+                    class="inline-flex items-center justify-center w-7 h-7 bg-base-200 border-none rounded-lg"
             >
-                <img src="/chart.svg" alt="Chart" class="w-4"/>
+                <img src="/chart.svg" alt="Chart" class="w-3.5"/>
             </button>
         {/if}
         {#if address}
-            <JumpLink
-                    url={'https://gnosisscan.io/address/' + address}
-                    className="inline-flex items-center justify-center w-8 h-8 bg-base-200 border-none rounded-lg"
-            >
-                <img src="/external.svg" alt="External Link" class="w-4"/>
+            <JumpLink url={'https://gnosisscan.io/address/' + address}
+                      className="inline-flex items-center justify-center w-7 h-7 bg-base-200 border-none rounded-lg">
+                <img src="/external.svg" alt="External Link" class="w-3.5"/>
             </JumpLink>
         {/if}
     </div>
 
-    <div class="w-[80%] sm:w-[60%] border-b border-base-300"></div>
+    <TrustScoreBadge {address} />
 
-    <div class="w-full flex justify-center mt-6 space-x-6">
+    <!-- Action buttons -->
+    <div class="flex gap-2 mt-3 mb-2">
         {#if !avatarState.isGroup}
-            <div class="flex flex-col items-center gap-1">
-                <button
-                        class="btn btn-primary btn-sm"
-                        onclick={() => {
-                    openSendFlowPopup({
-                        selectedAddress: otherAvatar?.avatar,
-                        selectedAsset: transitiveTransfer(),
-                        amount: undefined,
-                        transitiveOnly: true
-                    });
-                }}
-                >
-                    <img src="/send-new.svg" alt="Send" class="w-5 h-5"/>
-                    Send
-                </button>
-            </div>
+            <button
+                    class="flex-1 btn btn-primary btn-sm"
+                    onclick={() => { openSendFlowPopup({ selectedAddress: otherAvatar?.avatar, selectedAsset: transitiveTransfer(), amount: undefined, transitiveOnly: true }); }}
+            >
+                <img src="/send-new.svg" alt="" class="w-4 h-4 brightness-[100] invert" aria-hidden="true"/>
+                Send
+            </button>
         {/if}
         {#if otherAvatar?.type === 'CrcV2_RegisterGroup' && !!mintHandler && !avatarState.isGroup}
             <button
-                    class="btn btn-primary btn-sm"
-                    onclick={() => {
-                    openSendFlowPopup({
-                        selectedAddress: mintHandler,
-                        selectedAsset: transitiveTransfer(),
-                        amount: undefined,
-                        transitiveOnly: true,
-                    });
-                }}
+                    class="flex-1 btn btn-primary btn-sm"
+                    onclick={() => { openSendFlowPopup({ selectedAddress: mintHandler, selectedAsset: transitiveTransfer(), amount: undefined, transitiveOnly: true }); }}
             >
                 Mint
             </button>
         {/if}
         {#if trustRow?.relation === 'trusts'}
-            <button
-                    class="btn btn-primary btn-sm"
-                    onclick={() => {
-                    popupControls.open({
-                        title: !avatarState.isGroup ? "Untrust" : "Remove member",
-                        kind: 'confirm',
-                        dismiss: 'explicit',
-                        component: Untrust,
-                        props: {
-                            address: address,
-                            trustVersion: trustVersion,
-                        },
-                    });
-                }}
-            >
-                {!avatarState.isGroup ? "Untrust" : "Remove member"}
+            <button class="flex-1 btn btn-outline btn-sm"
+                    onclick={() => { popupControls.open({ title: !avatarState.isGroup ? 'Untrust' : 'Remove member', kind: 'confirm', dismiss: 'explicit', component: Untrust, props: { address, trustVersion } }); }}>
+                {!avatarState.isGroup ? 'Untrust' : 'Remove member'}
             </button>
         {:else if trustRow?.relation === 'mutuallyTrusts'}
-            <button
-                    class="btn btn-primary btn-sm"
-                    onclick={() => {
-                    popupControls.open({
-                        title: !avatarState.isGroup ? "Untrust" : "Remove member",
-                        kind: 'confirm',
-                        dismiss: 'explicit',
-                        component: Untrust,
-                        props: {
-                            address: address,
-                        },
-                    });
-                }}
-            >
-                {!avatarState.isGroup ? "Untrust" : "Remove member"}
+            <button class="flex-1 btn btn-outline btn-sm"
+                    onclick={() => { popupControls.open({ title: !avatarState.isGroup ? 'Untrust' : 'Remove member', kind: 'confirm', dismiss: 'explicit', component: Untrust, props: { address } }); }}>
+                {!avatarState.isGroup ? 'Untrust' : 'Remove member'}
             </button>
         {:else if trustRow?.relation === 'trustedBy'}
-            <button
-                    class="btn btn-primary btn-sm"
-                    onclick={() => {
-                    if (!address) return;
-                    if (!avatarState.avatar) {
-                        throw new Error('Avatar store not available');
-                    }
-
-                    openAddTrustFlow({
-                        context: {
-                            actorType: avatarState.isGroup ? 'group' : 'avatar',
-                            actorAddress: avatarState.avatar.address,
-                            selectedTrustees: [address],
-                        },
-                    });
-                }}
-            >
-                {!avatarState.isGroup ? "Trust back" : "Add as member"}
+            <button class="flex-1 btn btn-primary btn-sm"
+                    onclick={() => { if (!address || !avatarState.avatar) return; openAddTrustFlow({ context: { actorType: avatarState.isGroup ? 'group' : 'avatar', actorAddress: avatarState.avatar.address, selectedTrustees: [address] } }); }}>
+                {!avatarState.isGroup ? 'Trust back' : 'Add as member'}
             </button>
         {:else}
-            <button
-                    class="btn btn-primary btn-sm"
-                    onclick={() => {
-                    if (!address) return;
-                    if (!avatarState.avatar) {
-                        throw new Error('Avatar store not available');
-                    }
-
-                    openAddTrustFlow({
-                        context: {
-                            actorType: avatarState.isGroup ? 'group' : 'avatar',
-                            actorAddress: avatarState.avatar.address,
-                            selectedTrustees: [address],
-                        },
-                    });
-                }}
-            >
-                {!avatarState.isGroup ? "Trust" : "Add as member"}
+            <button class="flex-1 btn btn-primary btn-sm"
+                    onclick={() => { if (!address || !avatarState.avatar) return; openAddTrustFlow({ context: { actorType: avatarState.isGroup ? 'group' : 'avatar', actorAddress: avatarState.avatar.address, selectedTrustees: [address] } }); }}>
+                {!avatarState.isGroup ? 'Trust' : 'Add as member'}
             </button>
         {/if}
     </div>
-
 </div>
 
 <Tabs
