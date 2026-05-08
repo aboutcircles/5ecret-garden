@@ -18,8 +18,8 @@
   }
 </script>
 
-<p class="font-normal text-black/60 text-base">
-  Please enter or paste your keyphrase from circles.garden below.
+<p class="text-sm text-base-content/60 mb-4">
+  Enter or paste your seed phrase from circles.garden below.
 </p>
 <SeedphraseInput
   bind:isValidMnemonic={hasValidKey}
@@ -29,7 +29,8 @@
 />
 <button
   onclick={savePrivateKey}
-  class="btn btn-sm mt-4"
+  class="btn btn-primary btn-sm mt-4 w-full"
   class:btn-disabled={!hasValidKey}
-  >Import
+>
+  Import
 </button>

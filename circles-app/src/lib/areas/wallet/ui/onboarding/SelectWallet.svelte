@@ -16,7 +16,6 @@
       await clearSession();
       const result = await connect(config, { connector, chainId: 100 });
       setConnectorId(connector.id);
-      // Safely set signer address only if an account is returned
       const addr0 = (result as any)?.accounts?.[0];
       if (typeof addr0 === 'string' && addr0) {
         signer.address = addr0.toLowerCase() as Address;
@@ -28,26 +27,24 @@
       });
     } catch (e) {
       console.error('Wallet connect failed', e);
-      // keep popup open so user can retry
     }
   }
 </script>
 
-<div class="list max-w-md mx-auto">
+<div class="flex flex-col gap-2 py-1">
   {#each connectors as connector}
     <button
-      class="list-row flex w-full justify-between items-center btn btn-sm my-2"
       id={connector.id}
       onclick={() => handleConnect(connector)}
+      class="flex w-full items-center gap-3 px-4 py-3.5 rounded-[14px] border border-base-300 bg-base-100 hover:bg-base-200 transition-colors text-left"
     >
-      {connector.name}
+      <span class="font-medium text-base-content">{connector.name}</span>
     </button>
   {/each}
 
   <button
-    class="list-row flex w-full justify-between items-center btn btn-sm my-2"
+    class="flex w-full items-center gap-3 px-4 py-3.5 rounded-[14px] border border-base-300 bg-base-100 hover:bg-base-200 transition-colors text-left"
     onclick={async () => {
-      // If a local private key is already present, reuse it without asking again
       const pk = CirclesStorage.getInstance().privateKey;
       if (pk) {
         popupControls.closeAndThen(() => {
@@ -55,13 +52,15 @@
         });
         return;
       }
-      // Otherwise, prompt for the seed phrase
       openStep({
         component: ImportCircles,
         title: 'Use circles magic words',
       });
     }}
   >
-    Circles.garden
+    <div class="flex flex-col gap-0.5">
+      <span class="font-medium text-base-content">Circles.garden</span>
+      <span class="text-xs text-base-content/50">Import with seed phrase</span>
+    </div>
   </button>
 </div>

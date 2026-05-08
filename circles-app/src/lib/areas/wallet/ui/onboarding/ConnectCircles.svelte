@@ -53,7 +53,6 @@
         const sdk = await initSdk(address);
         $circles = sdk;
 
-        // Initialize a fresh context with feeCollection defaulted to this safe address
         resetCreateGroupContext(address as `0x${string}`);
 
         openStep({
@@ -61,65 +60,70 @@
             component: CreateGroup,
             props: {
                 setGroup: async (address: string) => {
-                    // On success, navigate into the new group#
                     console.log(`Open the new group avatar dashboard. Address:`, address);
                     refreshGroupsCallback?.()
                 }
             },
-            // Ensure state is cleared if the user closes the flow
             onClose: () => resetCreateGroupContext()
         });
     }
+
+    const versionLabel = $derived(
+        !isRegistered ? 'Not registered' : isV1 ? 'v1' : 'v2'
+    );
+    const versionBadgeClass = $derived(
+        !isRegistered ? 'badge-warning' : isV1 ? 'badge-neutral' : 'badge-primary'
+    );
 </script>
 
-<div class="w-full border rounded-lg flex flex-col p-4 shadow-sm">
+<div class="w-full bg-base-100 border border-base-300 rounded-[14px] flex flex-col overflow-hidden shadow-sm">
+    <!-- Safe row -->
     <button
-            onclick={() => connectAvatar()}
-            class="flex justify-between items-center hover:bg-base-200 rounded-lg p-2"
+        onclick={() => connectAvatar()}
+        class="flex items-center justify-between gap-3 px-4 py-3 hover:bg-base-200 transition-colors text-left w-full"
     >
-        <Avatar
+        <div class="min-w-0 flex-1">
+            <Avatar
                 topInfo={settings.legacy ? 'Connected Wallet' : 'Safe'}
                 {address}
                 clickable={false}
                 view="horizontal"
-        />
-        <div class="btn btn-xs btn-outline btn-primary">
-            {#if !isRegistered}
-                register
-            {:else if isV1}
-                V1
-            {:else}
-                V2
-            {/if}
+            />
         </div>
-    </button
-    >
+        <span class={`badge badge-sm shrink-0 ${versionBadgeClass}`}>{versionLabel}</span>
+    </button>
+
     {#if !isV1}
-        <div class="w-full flex gap-x-2 items-center justify-between mt-6 px-2">
-            <p class="font-bold text-primary">My groups</p>
-            <button
-                    onclick={() => openCreateGroup()}
-                    class="btn btn-xs btn-outline btn-primary">Create a group
-            </button
-            >
-        </div>
-        <div class="w-full pl-6 flex flex-col gap-y-2 mt-2">
-            {#each groups ?? [] as group}
+        <!-- Groups section -->
+        <div class="border-t border-base-300 px-4 py-3 space-y-2">
+            <div class="flex items-center justify-between">
+                <span class="text-sm font-semibold text-base-content/70">My groups</span>
                 <button
-                        class="flex w-full hover:bg-base-200 rounded-lg p-2"
-                        onclick={() => connectAvatar(group.group)}
+                    onclick={() => openCreateGroup()}
+                    class="btn btn-xs btn-ghost text-primary"
                 >
-                    <Avatar
+                    + Create group
+                </button>
+            </div>
+
+            <div class="space-y-1 pl-2">
+                {#each groups ?? [] as group}
+                    <button
+                        class="flex w-full items-center gap-3 px-3 py-2 hover:bg-base-200 rounded-lg transition-colors text-left"
+                        onclick={() => connectAvatar(group.group)}
+                    >
+                        <Avatar
                             address={group.group}
                             clickable={false}
                             view="horizontal"
                             topInfo={group.group}
-                    />
-                </button>
-            {/each}
-            {#if (groups ?? []).length === 0}
-                <p class="text-sm">No groups available.</p>
-            {/if}
+                        />
+                    </button>
+                {/each}
+                {#if (groups ?? []).length === 0}
+                    <p class="text-sm text-base-content/50 py-1">No groups yet.</p>
+                {/if}
+            </div>
         </div>
     {/if}
 </div>

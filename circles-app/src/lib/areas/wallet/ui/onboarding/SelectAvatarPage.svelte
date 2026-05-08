@@ -48,11 +48,11 @@
 </script>
 
 <div class={`page page-pt page-stack ${sizeClass}`}>
-  <div class="toolbar">
+  <div class="flex items-center gap-2">
     <button type="button" class="back-btn" aria-label="Back" onclick={onBack}>
-      <img src="/arrow-left.svg" alt="Back" class="icon mr-4" />
-      <h1 class="h2">{title}</h1>
+      <img src="/arrow-left.svg" alt="Back" class="icon" />
     </button>
+    <h1 class="h2">{title}</h1>
     <div class="flex-grow"></div>
     <SettingsDropdown />
   </div>
