@@ -89,6 +89,13 @@
 
     if (!shouldBypassWalletRestore($page.route.id)) {
       await restoreSession();
+
+      // If restore completed but didn't yield an avatar, the user is not
+      // logged in for this route — bounce them to the landing page.
+      if (!avatarState.avatar && !shouldBypassWalletRestore($page.route.id)) {
+        const { goto } = await import('$app/navigation');
+        await goto('/');
+      }
     }
   }
 
@@ -142,6 +149,24 @@
 
     walletWatcherInitialized = true;
     void initWalletWatcher();
+  });
+
+  // Auth guard: once the wallet watcher has initialized, if we land on a
+  // protected route without an avatar (e.g. session cleared or never logged
+  // in), redirect to the landing page so the user can connect.
+  $effect(() => {
+    if (!browser) return;
+    if (!walletWatcherInitialized) return;
+
+    const routeId = $page.route.id;
+    if (shouldBypassWalletRestore(routeId)) return;
+
+    if (!avatarState.avatar && routeId !== '/register') {
+      void (async () => {
+        const { goto } = await import('$app/navigation');
+        await goto('/');
+      })();
+    }
   });
 
   async function openWrongNetworkPopup(): Promise<void> {
