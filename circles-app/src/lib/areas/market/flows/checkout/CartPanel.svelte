@@ -123,6 +123,15 @@
 
   // Whether the current basket has been checked out
   const isCheckedOut = $derived.by(() => $cartState.basket?.status === 'CheckedOut');
+
+  const checkoutDisabled = $derived(
+    checkoutAction.loading ||
+    $cartState.loading ||
+    !$cartState.basket ||
+    !$cartState.basket.items ||
+    $cartState.basket.items.length === 0 ||
+    isCheckedOut
+  );
 </script>
 
 <FlowStepScaffold
@@ -204,18 +213,17 @@
     {/if}
 
     <div style="display:flex;justify-content:flex-end;margin-top:4px;">
-      {@const disabled = checkoutAction.loading || $cartState.loading || !$cartState.basket || !$cartState.basket.items || $cartState.basket.items.length === 0 || isCheckedOut}
       <button
         type="button"
         style="
-          height:44px;padding:0 24px;border-radius:9999px;border:0;cursor:{disabled ? 'not-allowed' : 'pointer'};
-          background:{disabled ? T.pageDeep : T.primary};color:{disabled ? T.inkMuted : '#fff'};
+          height:44px;padding:0 24px;border-radius:9999px;border:0;cursor:{checkoutDisabled ? 'not-allowed' : 'pointer'};
+          background:{checkoutDisabled ? T.pageDeep : T.primary};color:{checkoutDisabled ? T.inkMuted : '#fff'};
           font-family:{T.fontSans};font-size:14px;font-weight:580;
-          box-shadow:{disabled ? 'none' : '0 4px 12px rgba(88,73,212,0.25)'};
+          box-shadow:{checkoutDisabled ? 'none' : '0 4px 12px rgba(88,73,212,0.25)'};
           display:inline-flex;align-items:center;gap:8px;
         "
         onclick={() => openCheckoutFlow()}
-        {disabled}
+        disabled={checkoutDisabled}
       >
         {#if checkoutAction.loading}<span class="loading loading-spinner loading-xs"></span>{/if}
         {checkoutAction.loading ? 'Checking…' : 'Checkout'}

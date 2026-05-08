@@ -9,6 +9,8 @@
   import { openStep } from '$lib/shared/flow';
   import CreateGatewayProfile from '$lib/areas/settings/flows/gateway/CreateGatewayProfile.svelte';
   import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
+  import { T } from '$lib/design-system/tokens.js';
+  import Icon from '$lib/design-system/Icon.svelte';
 
   type ListValue = { data: any[]; next: () => Promise<boolean>; ended: boolean };
 
@@ -65,33 +67,36 @@
   }
 </script>
 
-<section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
-  <div class="flex items-center justify-between">
-    <div>
-      <h3 class="text-sm font-semibold m-0">Payment gateways</h3>
-      <p class="text-xs text-base-content/70 mt-0.5">
-        {#if gatewayOwnerAddress}
-          Owner {shortGatewayAddr(gatewayOwnerAddress)}.
-        {:else}
-          Connect an avatar to manage gateways.
-        {/if}
-      </p>
-    </div>
-    {#if gatewayOwnerAddress && circlesReady}
-      <button type="button" class="btn btn-sm btn-primary" onclick={openCreateGatewayFlow}>
-        Create gateway
-      </button>
-    {/if}
+<section style="background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;padding:14px 16px;width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+  <div style="min-width:0;">
+    <h3 style="font-family:{T.fontSans};font-size:13px;font-weight:580;color:{T.ink};margin:0;">Payment gateways</h3>
+    <p style="font-size:11.5px;color:{T.inkMuted};margin:2px 0 0 0;">
+      {#if gatewayOwnerAddress}
+        Owner <span style="font-family:{T.fontMono};color:{T.inkBody};">{shortGatewayAddr(gatewayOwnerAddress)}</span>
+      {:else}
+        Connect an avatar to manage gateways.
+      {/if}
+    </p>
   </div>
+  {#if gatewayOwnerAddress && circlesReady}
+    <button
+      type="button"
+      style="display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:9999px;border:0;cursor:pointer;background:{T.primary};color:#fff;font-size:12.5px;font-weight:580;box-shadow:0 4px 12px rgba(88,73,212,0.25);"
+      onclick={openCreateGatewayFlow}
+    ><Icon name="plus" size={11} stroke="#fff" strokeWidth={2.4} /> Create gateway</button>
+  {/if}
 </section>
 
-<section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
+<section style="background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;padding:14px 16px;width:100%;">
   {#if !gatewayOwnerAddress}
-    <div class="text-sm opacity-70">Connect an avatar to see your payment gateways.</div>
+    <div style="font-size:12.5px;color:{T.inkMuted};">Connect an avatar to see your payment gateways.</div>
   {:else if !circlesReady}
-    <div class="text-sm opacity-70">Connect an avatar to load your gateways.</div>
+    <div style="font-size:12.5px;color:{T.inkMuted};">Connect an avatar to load your gateways.</div>
   {:else if loadingGateways}
-    <div class="loading loading-spinner loading-md"></div>
+    <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:{T.inkMuted};">
+      <span class="loading loading-spinner loading-sm" style="color:{T.primary};"></span>
+      Loading gateways…
+    </div>
   {:else}
     <div data-payment-gateway-list-scope bind:this={gatewaysListScopeEl}>
       <ListShell

@@ -1,6 +1,8 @@
 <script lang="ts">
   import type { Address } from '@circles-sdk/utils';
   import ProductCard from '$lib/areas/market/ui/product/ProductCard.svelte';
+  import { T } from '$lib/design-system/tokens.js';
+  import Icon from '$lib/design-system/Icon.svelte';
 
   type Props = {
     avatarAddress: Address | '';
@@ -21,63 +23,54 @@
   }: Props = $props();
 </script>
 
-<section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
-  <div class="flex items-center justify-between">
-    <div>
-      <h3 class="text-sm font-semibold m-0">Offers</h3>
-      <p class="text-xs text-base-content/70 mt-0.5">Manage the offers you publish.</p>
-    </div>
-    {#if avatarAddress}
-      <button class="btn btn-primary btn-sm" onclick={openCreateListing}>Create listing</button>
-    {/if}
+<section style="background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;padding:14px 16px;width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+  <div style="min-width:0;">
+    <h3 style="font-family:{T.fontSans};font-size:13px;font-weight:580;color:{T.ink};margin:0;">Offers</h3>
+    <p style="font-size:11.5px;color:{T.inkMuted};margin:2px 0 0 0;">Manage the offers you publish.</p>
   </div>
+  {#if avatarAddress}
+    <button
+      type="button"
+      style="display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:9999px;border:0;cursor:pointer;background:{T.primary};color:#fff;font-size:12.5px;font-weight:580;box-shadow:0 4px 12px rgba(88,73,212,0.25);"
+      onclick={openCreateListing}
+    ><Icon name="plus" size={11} stroke="#fff" strokeWidth={2.4} /> Create listing</button>
+  {/if}
 </section>
 
 {#if !avatarAddress}
-  <section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
-    <div class="text-sm opacity-70">Connect a Circles avatar to see your marketplace listings.</div>
+  <section style="background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;padding:14px 16px;width:100%;">
+    <div style="font-size:12.5px;color:{T.inkMuted};">Connect a Circles avatar to see your marketplace listings.</div>
   </section>
 {:else}
   {#if marketLoading}
-    <div class="flex flex-col items-center justify-center h-[50vh]">
-      <div class="loading loading-spinner loading-lg" aria-label="loading"></div>
-      <div class="mt-3 text-base-content/70">Loading listings…</div>
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:30vh;gap:10px;">
+      <div class="loading loading-spinner loading-lg" style="color:{T.primary};" aria-label="loading"></div>
+      <div style="font-size:12.5px;color:{T.inkMuted};">Loading listings…</div>
     </div>
   {:else if marketErrorMsg}
-    <section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
-      <div class="alert alert-error"><span class="font-semibold">Failed to load:</span>&nbsp;{marketErrorMsg}</div>
+    <section style="background:{T.negativeSoft};border:1px solid rgba(196,68,48,0.2);border-radius:14px;padding:12px 14px;width:100%;font-size:12px;color:{T.inkBody};">
+      <strong>Failed to load:</strong> {marketErrorMsg}
     </section>
   {:else}
-    <section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
-      <div class="flex items-center justify-between mb-3">
-        <div>
-          <h3 class="text-sm font-semibold m-0">Listings</h3>
-          <p class="text-xs text-base-content/70 mt-0.5">
-            {marketProducts.length ? `${marketProducts.length} active listing(s).` : 'No active listings yet.'}
-          </p>
-        </div>
+    <section style="background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;padding:14px 16px;width:100%;">
+      <div style="margin-bottom:10px;">
+        <h3 style="font-family:{T.fontSans};font-size:13px;font-weight:580;color:{T.ink};margin:0;">Listings</h3>
+        <p style="font-size:11.5px;color:{T.inkMuted};margin:2px 0 0 0;">
+          {marketProducts.length ? `${marketProducts.length} active listing${marketProducts.length === 1 ? '' : 's'}.` : 'No active listings yet.'}
+        </p>
       </div>
 
       {#if marketProducts.length === 0}
-        <div class="text-center py-8 opacity-60">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-12 w-12 mx-auto mb-2 text-base-content/30"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-            />
-          </svg>
-          <div>No listings found for this seller</div>
+        <div style="text-align:center;padding:40px 0;display:flex;flex-direction:column;align-items:center;gap:10px;">
+          <div style="width:56px;height:56px;border-radius:16px;background:{T.surfaceAlt};display:inline-flex;align-items:center;justify-content:center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke={T.inkFaint}>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+          </div>
+          <div style="font-size:12.5px;color:{T.inkMuted};">No listings found for this seller</div>
         </div>
       {:else}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;">
           {#each marketProducts as p (p.productCid)}
             <ProductCard
               product={p}

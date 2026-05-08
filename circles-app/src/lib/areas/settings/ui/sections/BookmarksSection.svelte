@@ -22,6 +22,7 @@
   import BookmarkDetailsPopup from './BookmarkDetailsPopup.svelte';
   import { runTask } from '$lib/shared/utils/tasks';
   import { openConfirmPopup } from '$lib/shared/ui/shell/confirmDialogs';
+  import { T } from '$lib/design-system/tokens.js';
 
   type FolderNode = {
     name: string;
@@ -325,62 +326,67 @@
   }
 </script>
 
-<section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
-  <div class="flex items-start justify-between gap-3">
-    <div>
-      <h3 class="text-sm font-semibold m-0">Bookmarks</h3>
-      <p class="text-xs text-base-content/70 mt-0.5">Local bookmarks are authoritative. Load/save profile data manually.</p>
+<section style="background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;padding:14px 16px;width:100%;">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+    <div style="min-width:0;flex:1;">
+      <h3 style="font-family:{T.fontSans};font-size:13px;font-weight:580;color:{T.ink};margin:0;">Bookmarks</h3>
+      <p style="font-size:11.5px;color:{T.inkMuted};margin:2px 0 0 0;line-height:1.5;">Local bookmarks are authoritative. Load/save profile data manually.</p>
       {#if connectedAvatar}
-        <p class="text-[11px] text-base-content/60 mt-1 font-mono break-all">{connectedAvatar}</p>
+        <p style="font-family:{T.fontMono};font-size:10.5px;color:{T.inkSubtle};margin:4px 0 0 0;word-break:break-all;">{connectedAvatar}</p>
       {/if}
     </div>
 
-    <div class="flex items-center gap-2">
-      <button class="btn btn-sm btn-ghost" type="button" onclick={loadFromProfile} disabled={!connectedAvatar || loadingFromProfile}>
-        {#if loadingFromProfile}
-          <span class="loading loading-spinner loading-xs"></span>
-        {/if}
+    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap;">
+      <button
+        type="button"
+        style="display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 14px;border-radius:9999px;border:0;background:transparent;color:{T.inkMuted};font-size:12px;font-weight:540;cursor:{(!connectedAvatar || loadingFromProfile) ? 'not-allowed' : 'pointer'};opacity:{(!connectedAvatar || loadingFromProfile) ? 0.5 : 1};"
+        onclick={loadFromProfile}
+        disabled={!connectedAvatar || loadingFromProfile}
+      >
+        {#if loadingFromProfile}<span class="loading loading-spinner loading-xs"></span>{/if}
         Load from profile
       </button>
 
       <button
-        class={`btn btn-sm ${hasUnpublishedProfileChanges ? 'btn-primary' : 'btn-ghost'}`}
         type="button"
+        style="display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 14px;border-radius:9999px;border:0;cursor:{(!connectedAvatar || publishing || !hasUnpublishedProfileChanges) ? 'not-allowed' : 'pointer'};background:{hasUnpublishedProfileChanges ? T.primary : T.pageDeep};color:{hasUnpublishedProfileChanges ? '#fff' : T.inkMuted};font-size:12px;font-weight:580;box-shadow:{hasUnpublishedProfileChanges ? '0 4px 12px rgba(88,73,212,0.25)' : 'none'};opacity:{(!connectedAvatar || publishing || !hasUnpublishedProfileChanges) ? 0.5 : 1};"
         onclick={publishInProfile}
         disabled={!connectedAvatar || publishing || !hasUnpublishedProfileChanges}
       >
-        {#if publishing}
-          <span class="loading loading-spinner loading-xs"></span>
-        {/if}
+        {#if publishing}<span class="loading loading-spinner loading-xs"></span>{/if}
         Save to profile
       </button>
     </div>
   </div>
 </section>
 
-<section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
-  <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3">
-    <div class="text-xs text-base-content/70">Drag bookmark items via the grip into folders</div>
-    <div class="flex items-center gap-2 flex-wrap justify-end">
+<section style="background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;padding:14px 16px;width:100%;">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+    <div style="font-size:11.5px;color:{T.inkMuted};">Drag bookmarks via the grip into folders</div>
+    <div style="display:flex;align-items:center;gap:6px;">
       <input
-        class="input input-bordered input-xs w-40"
+        style="width:160px;padding:6px 10px;border:1px solid {T.hairline};border-radius:9999px;font-family:{T.fontSans};font-size:11.5px;color:{T.ink};background:{T.surface};box-sizing:border-box;"
         type="text"
         maxlength="64"
-        placeholder="New folder (e.g. Work/DAO)"
+        placeholder="New folder (e.g. Work)"
         bind:value={newFolderName}
       />
-      <button class="btn btn-xs" type="button" onclick={createFolder}>Add</button>
+      <button
+        type="button"
+        style="height:28px;padding:0 12px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.ink};font-size:11px;font-weight:540;cursor:pointer;"
+        onclick={createFolder}
+      >Add</button>
     </div>
   </div>
 
   {#if loadError}
-    <div class="alert alert-error py-2 text-xs mb-2">{loadError}</div>
+    <div style="background:{T.negativeSoft};border:1px solid rgba(196,68,48,0.2);border-radius:10px;padding:8px 12px;font-size:11.5px;color:{T.inkBody};margin-bottom:10px;">{loadError}</div>
   {:else if publishError}
-    <div class="alert alert-error py-2 text-xs mb-2">{publishError}</div>
+    <div style="background:{T.negativeSoft};border:1px solid rgba(196,68,48,0.2);border-radius:10px;padding:8px 12px;font-size:11.5px;color:{T.inkBody};margin-bottom:10px;">{publishError}</div>
   {:else if loadSuccessAt}
-    <div class="alert alert-success py-2 text-xs mb-2">Bookmarks loaded from profile (new entries only).</div>
+    <div style="background:{T.sageSoft};border:1px solid rgba(45,138,82,0.2);border-radius:10px;padding:8px 12px;font-size:11.5px;color:{T.inkBody};margin-bottom:10px;">Bookmarks loaded from profile (new entries only).</div>
   {:else if publishSuccessAt}
-    <div class="alert alert-success py-2 text-xs mb-2">Bookmarks saved to profile.</div>
+    <div style="background:{T.sageSoft};border:1px solid rgba(45,138,82,0.2);border-radius:10px;padding:8px 12px;font-size:11.5px;color:{T.inkBody};margin-bottom:10px;">Bookmarks saved to profile.</div>
   {/if}
 
   <div class="space-y-2">

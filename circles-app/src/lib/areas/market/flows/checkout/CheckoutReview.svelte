@@ -97,6 +97,8 @@
         !!ageProof
     );
 
+    const finalizeDisabled = $derived(checkoutAction.loading || $cartState.loading);
+
     function formatShippingAddress(addr: any): string[] {
         if (!addr || typeof addr !== 'object') return [];
         const parts: string[] = [];
@@ -235,19 +237,18 @@
 
         <!-- Action -->
         <div style="display:flex;justify-content:flex-end;margin-top:4px;">
-            {@const disabled = checkoutAction.loading || $cartState.loading}
             <button
                 type="button"
                 style="
-                    height:48px;padding:0 26px;border-radius:9999px;border:0;cursor:{disabled ? 'wait' : 'pointer'};
+                    height:48px;padding:0 26px;border-radius:9999px;border:0;cursor:{finalizeDisabled ? 'wait' : 'pointer'};
                     background:{T.primary};color:#fff;
                     font-family:{T.fontSans};font-size:14.5px;font-weight:580;
                     box-shadow:0 6px 16px rgba(88,73,212,0.3);
                     display:inline-flex;align-items:center;gap:8px;
-                    opacity:{disabled ? 0.7 : 1};
+                    opacity:{finalizeDisabled ? 0.7 : 1};
                 "
                 onclick={finalizeCheckout}
-                {disabled}
+                disabled={finalizeDisabled}
             >
                 {#if checkoutAction.loading}<span class="loading loading-spinner loading-xs"></span>{/if}
                 {checkoutAction.loading ? 'Creating order…' : 'Confirm & pay'}

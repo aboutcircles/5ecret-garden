@@ -24,6 +24,7 @@
 
   const paymentReference = $derived($cartState.lastCheckout?.paymentReference ?? null);
   const basketId = $derived($cartState.basket?.basketId ?? null);
+  // payDisabled is computed below once preparePaymentAction is in scope
 
   // Do NOT include orderKey in any QR codes or UI. Prefer non-secret paymentReference.
   const paymentQrValue = $derived(
@@ -286,18 +287,17 @@
         </div>
       {/if}
 
-      {@const disabled = !transferContext || preparePaymentAction.loading}
       <button
         type="button"
         style="
-          height:48px;padding:0 24px;border-radius:9999px;border:0;cursor:{disabled ? 'not-allowed' : 'pointer'};
-          background:{disabled ? T.pageDeep : T.primary};color:{disabled ? T.inkMuted : '#fff'};
+          height:48px;padding:0 24px;border-radius:9999px;border:0;cursor:{(!transferContext || preparePaymentAction.loading) ? 'not-allowed' : 'pointer'};
+          background:{(!transferContext || preparePaymentAction.loading) ? T.pageDeep : T.primary};color:{(!transferContext || preparePaymentAction.loading) ? T.inkMuted : '#fff'};
           font-family:{T.fontSans};font-size:14px;font-weight:580;
-          box-shadow:{disabled ? 'none' : '0 6px 16px rgba(88,73,212,0.3)'};
+          box-shadow:{(!transferContext || preparePaymentAction.loading) ? 'none' : '0 6px 16px rgba(88,73,212,0.3)'};
           display:inline-flex;align-items:center;justify-content:center;gap:8px;
           width:100%;
         "
-        {disabled}
+        disabled={!transferContext || preparePaymentAction.loading}
         onclick={openTransferFlow}
       >
         {#if preparePaymentAction.loading}<span class="loading loading-spinner loading-xs"></span>{/if}
