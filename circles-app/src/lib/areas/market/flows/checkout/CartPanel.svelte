@@ -11,10 +11,10 @@
   import {formatCurrency} from '$lib/shared/utils/money';
   import OrderLineTable from './OrderLineTable.svelte';
   import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
-  import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
   import { CHECKOUT_FLOW_SCAFFOLD_BASE } from './constants';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import { resetResolvedProductsCache, useResolvedProducts } from '$lib/areas/market/flows/checkout/useResolvedProducts';
+  import { T } from '$lib/design-system/tokens.js';
 
   async function handleQuantityChange(
     itemIdx: number,
@@ -144,73 +144,82 @@
   {/if}
 
   {#if !$cartState.basket || !$cartState.basket.items || $cartState.basket.items.length === 0}
-    <div class="p-4 text-sm opacity-70">
+    <div style="
+      background:{T.surfaceAlt};border:1px solid {T.hairlineSoft};border-radius:14px;
+      padding:24px;font-size:13px;color:{T.inkMuted};text-align:center;
+    ">
       Your basket is empty.
     </div>
   {:else}
-    <div class="space-y-2">
-      <OrderLineTable
-        lines={cartLines}
-        {findCatalogItem}
-        {imageUrlForLine}
-        getLineQuantity={(line) => Number(line?.orderQuantity ?? 0)}
-        getLineUnitPrice={(line) => ({
-          amount: typeof line?.offerSnapshot?.price === 'number' ? line.offerSnapshot.price : null,
-          code: typeof line?.offerSnapshot?.priceCurrency === 'string' ? line.offerSnapshot.priceCurrency : null,
-        })}
-        getLineTotal={(line) => ({
-          amount: typeof line?.offerSnapshot?.price === 'number'
-            ? (line.offerSnapshot.price * Number(line?.orderQuantity ?? 0))
-            : null,
-          code: typeof line?.offerSnapshot?.priceCurrency === 'string' ? line.offerSnapshot.priceCurrency : null,
-        })}
-        editable={!isCheckedOut}
-        onQuantityChange={(idx, value) => {
-          void handleQuantityChange(idx, value);
-        }}
-        onRemove={handleRemove}
-      />
-    </div>
+    <OrderLineTable
+      lines={cartLines}
+      {findCatalogItem}
+      {imageUrlForLine}
+      getLineQuantity={(line) => Number(line?.orderQuantity ?? 0)}
+      getLineUnitPrice={(line) => ({
+        amount: typeof line?.offerSnapshot?.price === 'number' ? line.offerSnapshot.price : null,
+        code: typeof line?.offerSnapshot?.priceCurrency === 'string' ? line.offerSnapshot.priceCurrency : null,
+      })}
+      getLineTotal={(line) => ({
+        amount: typeof line?.offerSnapshot?.price === 'number'
+          ? (line.offerSnapshot.price * Number(line?.orderQuantity ?? 0))
+          : null,
+        code: typeof line?.offerSnapshot?.priceCurrency === 'string' ? line.offerSnapshot.priceCurrency : null,
+      })}
+      editable={!isCheckedOut}
+      onQuantityChange={(idx, value) => {
+        void handleQuantityChange(idx, value);
+      }}
+      onRemove={handleRemove}
+    />
 
-    <!-- totals -->
-    <div class="mt-3 border-t border-base-300 pt-3 text-sm space-y-1">
+    <!-- Totals card -->
+    <div style="
+      background:{T.surfaceAlt};border:1px solid {T.hairlineSoft};border-radius:14px;
+      padding:12px 14px;display:flex;flex-direction:column;gap:6px;
+    ">
       {#if perCurrency.size === 0}
-        <div class="opacity-70">No priced items.</div>
+        <div style="font-size:12.5px;color:{T.inkMuted};">No priced items.</div>
       {:else}
         {#each Array.from(perCurrency.entries()) as [code, total]}
-          <div class="flex justify-between">
-            <span>Total {#if code}( {code} ){/if}</span>
-            <span class="font-semibold">{total.toFixed(2)} {code}</span>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;">
+            <span style="font-size:12.5px;color:{T.inkMuted};">Total{#if code} ({code}){/if}</span>
+            <span style="font-family:{T.fontDisplay};font-size:18px;color:{T.ink};letter-spacing:-0.01em;">
+              {total.toFixed(2)} <span style="font-family:{T.fontSans};font-size:12px;color:{T.inkMuted};font-weight:540;">{code}</span>
+            </span>
           </div>
         {/each}
       {/if}
     </div>
 
     {#if $cartState.basket?.status === 'CheckedOut' && $cartState.lastCheckout?.paymentReference}
-      <div class="mt-3 alert alert-success text-xs">
-        <span>Payment reference:</span>
-        <code class="ml-1 break-all">{$cartState.lastCheckout.paymentReference}</code>
+      <div style="
+        background:{T.sageSoft};border:1px solid rgba(45,138,82,0.18);border-radius:12px;
+        padding:10px 14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+        font-size:11.5px;color:{T.inkBody};
+      ">
+        <span style="font-weight:540;">Payment reference:</span>
+        <code style="font-family:{T.fontMono};font-size:11px;color:{T.ink};word-break:break-all;">{$cartState.lastCheckout.paymentReference}</code>
       </div>
     {/if}
 
-    <StepActionBar>
-      {#snippet primary()}
-        <button
-          type="button"
-          class="btn btn-sm btn-primary"
-          onclick={() => openCheckoutFlow()}
-          disabled={
-            checkoutAction.loading ||
-            $cartState.loading ||
-            !$cartState.basket ||
-            !$cartState.basket.items ||
-            $cartState.basket.items.length === 0 ||
-            isCheckedOut
-          }
-        >
-          {checkoutAction.loading ? 'Checking...' : 'Checkout'}
-        </button>
-      {/snippet}
-    </StepActionBar>
+    <div style="display:flex;justify-content:flex-end;margin-top:4px;">
+      {@const disabled = checkoutAction.loading || $cartState.loading || !$cartState.basket || !$cartState.basket.items || $cartState.basket.items.length === 0 || isCheckedOut}
+      <button
+        type="button"
+        style="
+          height:44px;padding:0 24px;border-radius:9999px;border:0;cursor:{disabled ? 'not-allowed' : 'pointer'};
+          background:{disabled ? T.pageDeep : T.primary};color:{disabled ? T.inkMuted : '#fff'};
+          font-family:{T.fontSans};font-size:14px;font-weight:580;
+          box-shadow:{disabled ? 'none' : '0 4px 12px rgba(88,73,212,0.25)'};
+          display:inline-flex;align-items:center;gap:8px;
+        "
+        onclick={() => openCheckoutFlow()}
+        {disabled}
+      >
+        {#if checkoutAction.loading}<span class="loading loading-spinner loading-xs"></span>{/if}
+        {checkoutAction.loading ? 'Checking…' : 'Checkout'}
+      </button>
+    </div>
   {/if}
 </FlowStepScaffold>

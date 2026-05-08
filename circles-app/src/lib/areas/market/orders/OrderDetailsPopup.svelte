@@ -5,6 +5,7 @@
   import type { OrderStatusChange } from '$lib/areas/market/orders/types';
   import { createLoadable } from '$lib/areas/market/utils/loadable';
   import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
+  import { T } from '$lib/design-system/tokens.js';
 
   // Security: Do NOT accept or render order keys in the UI. Instead, this popup
   // expects a full snapshot to be provided by the caller (e.g., from an
@@ -140,15 +141,15 @@
   });
 </script>
 
-<div class="flex flex-col gap-3 w-full max-w-[min(92vw,52rem)]">
+<div style="display:flex;flex-direction:column;gap:12px;width:100%;max-width:min(92vw,52rem);">
   {#if mode === 'seller' && sellerLoading}
-    <div class="flex items-center gap-2 text-base-content/70 py-6">
-      <span class="loading loading-spinner text-primary"></span>
-      <span>Loading order…</span>
+    <div style="display:flex;align-items:center;gap:10px;color:{T.inkMuted};padding:24px 0;">
+      <span class="loading loading-spinner" style="color:{T.primary};"></span>
+      <span style="font-size:13px;">Loading order…</span>
     </div>
   {:else if mode === 'seller' && sellerError}
-    <div class="alert alert-warning">
-      <span>{sellerError}</span>
+    <div style="background:{T.warningSoft};border:1px solid rgba(176,112,20,0.2);border-radius:12px;padding:12px 14px;font-size:12.5px;color:{T.inkBody};">
+      {sellerError}
     </div>
   {:else}
     <OrderDetailsView {snapshot} {statusEvents} />
@@ -156,20 +157,34 @@
 
   {#if showHistory && historyError}
     {#if isAuthHistoryError}
-      <div class="alert alert-warning mt-1 text-sm">
+      <div style="
+        background:{T.warningSoft};border:1px solid rgba(176,112,20,0.2);border-radius:12px;
+        padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;
+        font-size:12.5px;color:{T.inkBody};
+      ">
         <span>Sign in to view order status history.</span>
-        <a class="btn btn-xs btn-primary" href="/settings?tab=orders">Sign in</a>
+        <a
+          href="/settings?tab=orders"
+          style="
+            display:inline-flex;align-items:center;
+            height:28px;padding:0 12px;border-radius:9999px;
+            background:{T.primary};color:#fff;
+            font-size:11.5px;font-weight:540;text-decoration:none;
+          "
+        >Sign in</a>
       </div>
     {:else}
-      <div class="text-xs text-error mt-1">Failed to load status history: {historyError}</div>
+      <div style="font-size:11.5px;color:{T.negative};">Failed to load status history: {historyError}</div>
     {/if}
   {/if}
 
   {#if showAdvanced}
-    <details class="mt-2">
-      <summary class="cursor-pointer text-sm opacity-70 hover:opacity-100">Advanced details</summary>
-      <div class="bg-base-100 border rounded-xl shadow-sm overflow-hidden mt-2">
-        <pre class="m-0 p-4 text-xs overflow-auto"><code>{jsonText}</code></pre>
+    <details style="margin-top:4px;">
+      <summary style="cursor:pointer;font-size:11.5px;color:{T.inkMuted};font-weight:540;letter-spacing:0.02em;list-style:none;padding:6px 0;">
+        Advanced details
+      </summary>
+      <div style="background:{T.surfaceAlt};border:1px solid {T.hairlineSoft};border-radius:12px;overflow:hidden;margin-top:6px;">
+        <pre style="margin:0;padding:14px;font-family:{T.fontMono};font-size:11px;color:{T.ink};overflow:auto;line-height:1.5;"><code>{jsonText}</code></pre>
       </div>
     </details>
   {/if}

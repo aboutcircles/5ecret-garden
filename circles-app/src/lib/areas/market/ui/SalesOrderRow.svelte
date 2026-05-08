@@ -3,6 +3,7 @@
   import { popupControls, type PopupContentDefinition } from '$lib/shared/state/popup';
   import OrderDetailsPopup from '$lib/areas/market/orders/OrderDetailsPopup.svelte';
   import MarketOrderListRow from '$lib/areas/market/ui/MarketOrderListRow.svelte';
+  import { T } from '$lib/design-system/tokens.js';
   interface Props {
     item: {
       key: string;
@@ -38,15 +39,20 @@
 </script>
 
 <MarketOrderListRow onOpen={openPopup} srLabel="Sales order">
-  <div class="font-mono text-sm truncate" title={item.orderNumber}>{item.orderNumber}</div>
-  <div class="text-xs text-base-content/70 flex items-center gap-2 mt-0.5">
+  <div style="font-family:{T.fontMono};font-size:12.5px;color:{T.ink};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title={item.orderNumber}>{item.orderNumber}</div>
+  <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:{T.inkMuted};flex-wrap:wrap;">
     {#if statusText}
-      <span class="badge badge-ghost badge-sm whitespace-nowrap">{statusText}</span>
+      <span style="
+        display:inline-flex;align-items:center;
+        padding:2px 8px;border-radius:9999px;
+        background:{T.pageDeep};color:{T.inkBody};
+        font-size:10px;font-weight:540;letter-spacing:0.02em;white-space:nowrap;
+      ">{statusText}</span>
     {/if}
-    <span>{dateText}</span>
+    <span style="white-space:nowrap;">{dateText}</span>
     {#if payRefText}
-      <span class="opacity-60">•</span>
-      <span class="truncate max-w-[22rem]" title={payRefText}>Pay ref: {payRefText}</span>
+      <span style="color:{T.inkFaint};">•</span>
+      <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:18rem;font-family:{T.fontMono};font-size:10.5px;" title={payRefText}>Ref: {payRefText}</span>
     {/if}
   </div>
 </MarketOrderListRow>
