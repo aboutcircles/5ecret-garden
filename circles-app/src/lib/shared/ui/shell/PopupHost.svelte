@@ -469,9 +469,9 @@
         <div class="popup-handle flex justify-center pt-3 pb-1 shrink-0">
             <span style="width:36px;height:4px;border-radius:2px;background:rgba(15,10,30,0.15);display:block;"></span>
         </div>
-        <div class="w-full max-w-4xl mx-auto px-5 pb-6">
+        <div class="popup-inner w-full max-w-4xl mx-auto px-5 pb-6">
             <!-- Header -->
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+            <div class="popup-header" style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
                 <button
                     data-popup-close-control
                     onclick={onClose}
@@ -606,6 +606,20 @@
         }
         .popup-handle {
             display: none;
+        }
+        .popup-inner {
+            padding-bottom: 32px;
+        }
+        /* Sticky header so the close/back affordance stays reachable in long flows */
+        .popup-header {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: #FFFFFF;
+            padding-top: 20px;
+            padding-bottom: 14px;
+            margin-bottom: 12px !important;
+            border-bottom: 1px solid rgba(31, 17, 70, 0.06);
         }
     }
 </style>
