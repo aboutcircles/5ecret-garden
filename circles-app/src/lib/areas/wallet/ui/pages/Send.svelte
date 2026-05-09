@@ -59,20 +59,14 @@
 </script>
 
 <div style="display:flex;flex-direction:column;gap:14px;">
-    <!-- Big dark "Sending" card -->
+    <!-- Big light "Sending" card -->
     <div style="
         position:relative;overflow:hidden;
         padding:24px 22px;border-radius:22px;
-        background:{T.ink};color:#fff;
+        background:radial-gradient(120% 140% at 100% 0%, {T.lilacSoft} 0%, {T.surface} 65%);
+        border:1px solid {T.hairlineSoft};
+        box-shadow:{T.shadow.sm};
     ">
-        <!-- Glow accent -->
-        <div style="
-            position:absolute;top:-40px;right:-40px;
-            width:180px;height:180px;border-radius:50%;
-            background:radial-gradient(circle,rgba(88,73,212,0.55) 0%,transparent 70%);
-            pointer-events:none;
-        "></div>
-
         <!-- Sending header -->
         <button
             type="button"
@@ -83,17 +77,17 @@
                 position:relative;
             "
         >
-            <span style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.7);letter-spacing:0.06em;text-transform:uppercase;">Sending</span>
+            <span style="font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Sending</span>
             <div style="display:flex;align-items:baseline;gap:10px;">
-                <span style="font-family:{T.fontDisplay};font-size:56px;color:#fff;letter-spacing:-0.025em;line-height:1;font-weight:400;font-variant-numeric:tabular-nums;">
+                <span style="font-family:{T.fontDisplay};font-size:56px;color:{T.ink};letter-spacing:-0.025em;line-height:1;font-weight:400;font-variant-numeric:tabular-nums;">
                     {roundToDecimals(amount)}
                 </span>
-                <span style="font-size:16px;font-weight:500;color:rgba(255,255,255,0.7);">CRC</span>
+                <span style="font-size:16px;font-weight:500;color:{T.inkMuted};">CRC</span>
             </div>
         </button>
 
         <!-- Divider -->
-        <div style="height:1px;background:rgba(255,255,255,0.12);margin:18px 0;position:relative;"></div>
+        <div style="height:1px;background:{T.hairlineSoft};margin:18px 0;position:relative;"></div>
 
         <!-- Sender → receiver path -->
         <button
@@ -105,13 +99,13 @@
                 position:relative;
             "
         >
-            <div style="flex-shrink:0;width:40px;height:40px;border-radius:50%;border:2px solid rgba(255,255,255,0.18);overflow:hidden;background:{T.surface};">
+            <div style="flex-shrink:0;width:40px;height:40px;border-radius:50%;border:2px solid {T.surface};box-shadow:0 0 0 1px {T.hairline};overflow:hidden;background:{T.surface};">
                 <Avatar address={senderAddress} view="small_no_text" clickable={false} />
             </div>
 
             <div style="flex:1;display:flex;align-items:center;justify-content:center;">
                 <svg width="100%" height="20" viewBox="0 0 200 20" preserveAspectRatio="none" style="display:block;">
-                    <line x1="0" y1="10" x2="200" y2="10" stroke="rgba(255,255,255,0.25)" stroke-width="2" stroke-dasharray="3 4" />
+                    <line x1="0" y1="10" x2="200" y2="10" stroke="rgba(31,17,70,0.18)" stroke-width="2" stroke-dasharray="3 4" />
                     {#if isAutoRoute}
                         <circle cx="60" cy="10" r="3.5" fill={T.coral} />
                         <circle cx="140" cy="10" r="3.5" fill={T.lilac} />
@@ -119,18 +113,18 @@
                 </svg>
             </div>
 
-            <div style="flex-shrink:0;width:40px;height:40px;border-radius:50%;border:2px solid rgba(255,255,255,0.18);overflow:hidden;background:{T.surface};">
+            <div style="flex-shrink:0;width:40px;height:40px;border-radius:50%;border:2px solid {T.surface};box-shadow:0 0 0 1px {T.hairline};overflow:hidden;background:{T.surface};">
                 <Avatar address={receiverAddress} view="small_no_text" clickable={false} />
             </div>
         </button>
 
         <!-- Captions under avatars -->
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:0 2px;">
-            <span style="font-size:11px;color:rgba(255,255,255,0.6);">you</span>
-            <span style="font-size:11px;color:rgba(255,255,255,0.6);">
+            <span style="font-size:11px;color:{T.inkMuted};">you</span>
+            <span style="font-size:11px;color:{T.inkMuted};">
                 {isAutoRoute ? 'via trust path' : 'direct'}
             </span>
-            <span style="font-size:11px;color:rgba(255,255,255,0.6);font-family:{T.fontMono};">
+            <span style="font-size:11px;color:{T.inkMuted};font-family:{T.fontMono};">
                 {receiverAddress ? shortenAddress(receiverAddress) : '—'}
             </span>
         </div>

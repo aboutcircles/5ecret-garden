@@ -142,16 +142,17 @@
     {#if fullAddr}
       <section style="
         margin-top:24px;border-radius:22px;overflow:hidden;
-        background:{T.ink};color:{T.butter};
+        background:{T.surface};border:1px solid {T.hairlineSoft};
         padding:24px 22px;display:flex;flex-direction:column;align-items:center;gap:16px;
+        box-shadow:{T.shadow.xs};
       ">
-        <div style="background:#fff;border-radius:14px;padding:16px;display:inline-flex;">
+        <div style="display:inline-flex;">
           <QrCode value={fullAddr} />
         </div>
 
         <div style="display:flex;flex-direction:column;gap:4px;align-items:center;">
-          <span style="font-size:11px;font-weight:600;color:rgba(251,227,216,0.7);letter-spacing:0.06em;text-transform:uppercase;">Your address</span>
-          <span style="font-family:{T.fontMono};font-size:11.5px;color:rgba(251,227,216,0.85);text-align:center;word-break:break-all;max-width:280px;line-height:1.5;">
+          <span style="font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Your address</span>
+          <span style="font-family:{T.fontMono};font-size:11.5px;color:{T.ink};text-align:center;word-break:break-all;max-width:280px;line-height:1.5;font-weight:540;">
             {fullAddr}
           </span>
         </div>
@@ -161,17 +162,18 @@
           onclick={copyAddr}
           style="
             height:38px;padding:0 18px;border-radius:9999px;cursor:pointer;
-            background:rgba(255,255,255,0.08);color:{T.butter};border:1px solid rgba(255,255,255,0.12);
+            background:{copied ? T.sageSoft : T.surface};color:{copied ? T.positive : T.ink};border:1px solid {copied ? T.sage : T.hairline};
             display:inline-flex;align-items:center;gap:7px;
             font-family:{T.fontSans};font-size:13px;font-weight:540;
-            transition:background .12s;
+            box-shadow:{T.shadow.xs};
+            transition:background .12s,color .12s,border-color .12s;
           "
         >
-          <Icon name={copied ? 'check' : 'copy'} size={13} stroke={T.butter} strokeWidth={2} />
+          <Icon name={copied ? 'check' : 'copy'} size={13} stroke={copied ? T.positive : T.inkBody} strokeWidth={2} />
           {copied ? 'Copied!' : 'Copy address'}
         </button>
 
-        <span style="font-size:11px;color:rgba(251,227,216,0.55);text-align:center;line-height:1.5;max-width:300px;">
+        <span style="font-size:11px;color:{T.inkMuted};text-align:center;line-height:1.5;max-width:300px;">
           Share this with someone who already uses Circles to receive an invitation.
         </span>
       </section>

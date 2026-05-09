@@ -6,6 +6,7 @@
 
     const address = $derived(avatarState.avatar?.address ?? '');
     const shortAddr = $derived(address ? `${address.slice(0, 6)}…${address.slice(-4)}` : '');
+    const displayName = $derived(avatarState.profile?.name ?? 'My Wallet');
 
     let copied = $state(false);
     let copyTimer: ReturnType<typeof setTimeout> | null = null;
@@ -28,62 +29,69 @@
     }
 </script>
 
-<div style="display:flex;flex-direction:column;gap:16px;padding-bottom:4px;">
-    <!-- Dark ink QR card -->
+<div style="display:flex;flex-direction:column;gap:14px;padding-bottom:4px;">
+    <!-- Light QR card -->
     <div style="
-        background:{T.ink};color:{T.butter};border-radius:22px;padding:28px 24px 24px;
+        background:{T.surface};border:1px solid {T.hairlineSoft};
+        border-radius:22px;padding:24px;
         display:flex;flex-direction:column;align-items:center;gap:18px;
+        box-shadow:{T.shadow.xs};
     ">
-        <!-- QR Code -->
-        <div style="background:#fff;border-radius:14px;padding:16px;display:inline-flex;">
+        <!-- Display name -->
+        <span style="font-family:{T.fontDisplay};font-size:26px;color:{T.ink};letter-spacing:-0.02em;line-height:1;font-weight:400;">
+            {displayName}
+        </span>
+
+        <!-- QR -->
+        <div style="display:inline-flex;">
             <QrCode value={address} />
         </div>
 
-        <!-- Name + address -->
-        <div style="display:flex;flex-direction:column;gap:4px;align-items:center;text-align:center;">
-            <span style="font-family:{T.fontDisplay};font-size:22px;letter-spacing:-0.01em;">
-                {avatarState.profile?.name ?? 'My Wallet'}
-            </span>
-            <span style="font-family:{T.fontMono};font-size:11.5px;opacity:0.6;">{shortAddr}</span>
+        <!-- Wallet address row -->
+        <div style="
+            width:100%;padding:12px 14px;border-radius:14px;
+            background:{T.surfaceAlt};border:1px solid {T.hairlineSoft};
+            display:flex;align-items:center;gap:12px;
+        ">
+            <div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:0;">
+                <span style="font-size:10.5px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Wallet address</span>
+                <span style="font-family:{T.fontMono};font-size:12.5px;color:{T.ink};font-weight:540;">{shortAddr}</span>
+            </div>
+            <button
+                type="button"
+                onclick={copyAddress}
+                aria-label={copied ? 'Address copied' : 'Copy address'}
+                title={copied ? 'Copied!' : 'Copy address'}
+                style="
+                    width:36px;height:36px;border-radius:9999px;cursor:pointer;
+                    background:{copied ? T.sageSoft : T.surface};
+                    color:{copied ? T.positive : T.inkBody};
+                    border:1px solid {copied ? T.sage : T.hairline};
+                    display:inline-flex;align-items:center;justify-content:center;
+                    flex-shrink:0;
+                    transition:background .15s,color .15s,border-color .15s;
+                "
+            >
+                <Icon name={copied ? 'check' : 'copy'} size={15} stroke={copied ? T.positive : T.inkBody} />
+            </button>
+            <button
+                type="button"
+                onclick={shareAddress}
+                aria-label="Share address"
+                title="Share address"
+                style="
+                    width:36px;height:36px;border-radius:9999px;cursor:pointer;
+                    background:{T.surface};color:{T.inkBody};border:1px solid {T.hairline};
+                    display:inline-flex;align-items:center;justify-content:center;
+                    flex-shrink:0;
+                "
+            >
+                <Icon name="share" size={15} stroke={T.inkBody} />
+            </button>
         </div>
     </div>
 
-    <!-- Copy / Share buttons -->
-    <div style="display:flex;align-items:center;gap:8px;">
-        <button
-            type="button"
-            onclick={copyAddress}
-            style="
-                flex:1;height:44px;border-radius:9999px;cursor:pointer;
-                background:{copied ? T.sageSoft : T.surface};
-                color:{copied ? T.positive : T.ink};
-                border:1px solid {copied ? T.sage : T.hairline};
-                display:inline-flex;align-items:center;justify-content:center;gap:8px;
-                font-family:{T.fontSans};font-size:13.5px;font-weight:540;
-                box-shadow:{T.shadow.xs};
-                transition:background .15s,color .15s,border-color .15s;
-            "
-        >
-            <Icon name={copied ? 'check' : 'copy'} size={15} stroke={copied ? T.positive : T.inkBody} />
-            {copied ? 'Copied!' : 'Copy address'}
-        </button>
-        <button
-            type="button"
-            onclick={shareAddress}
-            style="
-                flex:1;height:44px;border-radius:9999px;cursor:pointer;
-                background:{T.primary};color:#fff;border:0;
-                display:inline-flex;align-items:center;justify-content:center;gap:8px;
-                font-family:{T.fontSans};font-size:13.5px;font-weight:540;
-                box-shadow:0 4px 12px rgba(88,73,212,0.25),0 1px 0 rgba(255,255,255,0.18) inset;
-            "
-        >
-            <Icon name="share" size={15} stroke="#fff" />
-            Share
-        </button>
-    </div>
-
-    <!-- Info footnote -->
+    <!-- Trust-path info footer -->
     <div style="display:flex;align-items:flex-start;gap:8px;padding:0 2px;">
         <Icon name="info" size={13} stroke={T.inkMuted} style="flex-shrink:0;margin-top:2px;" />
         <span style="font-size:11.5px;color:{T.inkMuted};line-height:1.5;">
