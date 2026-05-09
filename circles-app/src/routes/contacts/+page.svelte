@@ -15,6 +15,7 @@
 
     import { T } from '$lib/design-system/tokens.js';
     import Icon from '$lib/design-system/Icon.svelte';
+    import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
 
     const CONTACTS_PAGE_SIZE = 25;
     const CONTACTS_VISIBLE_COUNT_KEY = 'contacts:list:visible-count';
@@ -159,6 +160,16 @@
         };
     });
 
+    let dismissedCalloutAddr = $state<string | null>(null);
+
+    const pendingTrustCallout = derived(contacts, ($c) => {
+        if (avatarState.isGroup) return null;
+        const entry = Object.entries($c?.data ?? {}).find(([_, c]) => c.row?.relation === 'trustedBy');
+        if (!entry) return null;
+        const [addr, contact] = entry;
+        return { addr, contact };
+    });
+
     const titleText: string = $derived(avatarState.isGroup ? 'Members' : 'People');
     const countLabel: string = $derived(avatarState.isGroup ? 'members' : 'in your network');
 
@@ -246,6 +257,33 @@
                         <div style="font-family:{T.fontDisplay};font-size:24px;color:{T.ink};margin-top:2px;line-height:1;letter-spacing:-0.015em;font-weight:400;">{c.count}</div>
                     </button>
                 {/each}
+            </div>
+        {/if}
+
+        <!-- Pending trust-back callout -->
+        {#if $pendingTrustCallout && $pendingTrustCallout.addr !== dismissedCalloutAddr}
+            {@const ct = $pendingTrustCallout}
+            {@const profile = ct.contact.contactProfile}
+            <div style="margin-top:14px;padding:12px 14px;border-radius:16px;background:{T.surface};border:1px solid {T.hairlineSoft};display:flex;align-items:center;gap:12px;box-shadow:{T.shadow.xs};">
+                <div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <Avatar address={ct.addr as any} profile={profile} view="small_no_text" />
+                </div>
+                <div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:0;">
+                    <span style="font-size:13.5px;font-weight:540;color:{T.ink};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{profile?.name ?? (ct.addr.slice(0,8) + '…')} trusted you</span>
+                    <span style="font-size:11.5px;color:{T.inkMuted};">trust back?</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                    <button
+                        onclick={() => { if (avatarState.avatar) openAddTrustFlow({ context: { actorType: 'avatar', actorAddress: avatarState.avatar.address, selectedTrustees: [ct.addr as any] } }); }}
+                        style="width:32px;height:32px;border-radius:9999px;background:{T.sageSoft};border:0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;"
+                        aria-label="Trust back"
+                    ><Icon name="check" size={15} stroke={T.positive} strokeWidth={2.2} /></button>
+                    <button
+                        onclick={() => { dismissedCalloutAddr = ct.addr; }}
+                        style="width:32px;height:32px;border-radius:9999px;background:{T.pageDeep};border:0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;"
+                        aria-label="Dismiss"
+                    ><Icon name="close" size={15} stroke={T.inkBody} strokeWidth={2.2} /></button>
+                </div>
             </div>
         {/if}
 
