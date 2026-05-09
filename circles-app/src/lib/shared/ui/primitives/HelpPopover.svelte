@@ -1,40 +1,46 @@
 <script lang="ts">
   import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import { Info as LInfo } from 'lucide';
+  import { T } from '$lib/design-system/tokens.js';
 
   interface Props {
     title: string;
     lines: string[];
     align?: 'start' | 'end';
     widthClass?: string;
-    buttonClass?: string;
-    contentClass?: string;
   }
 
   let {
     title,
     lines,
     align = 'end',
-    widthClass = 'w-80',
-    buttonClass = 'btn btn-ghost btn-xs btn-square',
-    contentClass = 'bg-base-100 border border-base-300 rounded-xl shadow-lg p-3'
   }: Props = $props();
 </script>
 
-<details class={`dropdown ${align === 'end' ? 'dropdown-end' : 'dropdown-start'}`.trim()}>
+<details style="position:relative;display:inline-block;">
   <summary
-    class={`${buttonClass} list-none`.trim()}
+    style="
+      width:24px;height:24px;border-radius:9999px;border:0;
+      background:transparent;cursor:pointer;
+      display:inline-flex;align-items:center;justify-content:center;
+      list-style:none;
+    "
     aria-label={title}
     title={title}
   >
-    <Lucide icon={LInfo} size={16} class="text-base-content/40 hover:text-base-content/70" ariaLabel="" />
+    <Lucide icon={LInfo} size={15} style="color:{T.inkFaint};" ariaLabel="" />
   </summary>
 
-  <div class={`dropdown-content z-50 mt-2 ${widthClass} ${contentClass}`.trim()}>
-    <div class="text-xs font-semibold text-base-content/70">{title}</div>
-    <ul class="mt-2 space-y-1 text-xs text-base-content/80">
+  <div style="
+    position:absolute;{align === 'end' ? 'right:0' : 'left:0'};top:calc(100% + 6px);
+    z-index:50;width:280px;
+    background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;
+    box-shadow:{T.shadow.xs};padding:12px 14px;
+  ">
+    <div style="font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.05em;text-transform:uppercase;margin-bottom:8px;">{title}</div>
+    <ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px;">
       {#each lines as line}
-        <li>{line}</li>
+        <li style="font-size:12px;color:{T.inkBody};line-height:1.5;">{line}</li>
       {/each}
     </ul>
   </div>

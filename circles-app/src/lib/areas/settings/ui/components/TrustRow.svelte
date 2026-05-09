@@ -1,9 +1,9 @@
 <script lang="ts">
-  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import { openProfilePopup } from '$lib/shared/ui/profile/openProfilePopup';
   import type { TrustRow as TrustRowType } from '$lib/areas/settings/model/gatewayTypes';
   import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
+  import { T } from '$lib/design-system/tokens.js';
 
   type TrustRowItem = TrustRowType & {
     showRemove?: boolean;
@@ -50,7 +50,6 @@
     listNavigator.onRowClick(event);
     openProfile();
   }
-
 </script>
 
 <div
@@ -58,37 +57,31 @@
   tabindex={0}
   role="button"
   aria-label={`Open trusted account ${item.trustReceiver}`}
-  class="rounded-[var(--row-radius)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+  style="background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:12px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;transition:box-shadow 0.15s;"
   onkeydown={onRowKeydown}
   onclick={onRowClick}
 >
-  <RowFrame clickable={false} dense={true} noLeading={true}>
-    <div class="w-full flex items-center justify-between gap-3">
-      <div class="min-w-0 flex items-center gap-2">
-        <Avatar
-          address={item.trustReceiver}
-          view="horizontal"
-          clickable={true}
-          bottomInfo={expiryLabel}
-          showTypeInfo={true}
-        />
-      </div>
+  <div style="min-width:0;flex:1;">
+    <Avatar
+      address={item.trustReceiver}
+      view="horizontal"
+      clickable={true}
+      bottomInfo={expiryLabel}
+      showTypeInfo={true}
+    />
+  </div>
 
-      <div class="flex items-center gap-2 text-right shrink-0">
-        {#if item.showRemove}
-          <button
-            type="button"
-            class="btn btn-ghost btn-xs btn-square text-error/80 hover:text-error"
-            aria-label="Remove trust"
-            onclick={(event) => {
-              event.stopPropagation();
-              item.onRemove?.();
-            }}
-          >
-            <img src="/trash.svg" alt="" class="h-3.5 w-3.5" aria-hidden="true" />
-          </button>
-        {/if}
-      </div>
-    </div>
-  </RowFrame>
+  {#if item.showRemove}
+    <button
+      type="button"
+      style="flex-shrink:0;width:28px;height:28px;border-radius:9999px;border:1px solid rgba(196,68,48,0.2);background:{T.negativeSoft};color:{T.negative};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;"
+      aria-label="Remove trust"
+      onclick={(event) => {
+        event.stopPropagation();
+        item.onRemove?.();
+      }}
+    >
+      <img src="/trash.svg" alt="" style="width:13px;height:13px;" aria-hidden="true" />
+    </button>
+  {/if}
 </div>

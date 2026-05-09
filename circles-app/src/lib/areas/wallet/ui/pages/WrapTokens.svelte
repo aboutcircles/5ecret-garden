@@ -1,12 +1,12 @@
 <script lang="ts">
   import { ethers } from 'ethers';
-  import PopupActionBar from '$lib/shared/ui/shell/PopupActionBar.svelte';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import type { TokenBalanceRow } from '@circles-sdk/data';
   import BalanceRow from '$lib/areas/wallet/ui/components/BalanceRow.svelte';
   import { roundToDecimals } from '$lib/shared/utils/shared';
   import { executeTxSubmitFirst } from '$lib/shared/utils/txExecution';
   import { popupControls } from '$lib/shared/state/popup';
+  import { T } from '$lib/design-system/tokens.js';
 
   interface Props {
     asset: TokenBalanceRow;
@@ -41,9 +41,7 @@
       throw new Error('Only supported for Avatar v2');
     }
     const receipt = await avatarState.avatar?.wrapInflationErc20(asset.tokenAddress, sendValue);
-    if (!receipt) {
-      throw new Error('Failed to wrap Circles');
-    }
+    if (!receipt) throw new Error('Failed to wrap Circles');
   }
 
   async function wrapDemurraged(sendValue: bigint) {
@@ -51,88 +49,74 @@
       throw new Error('Only supported for Avatar v2');
     }
     const receipt = await avatarState.avatar?.wrapDemurrageErc20(asset.tokenAddress, sendValue);
-    if (!receipt) {
-      throw new Error('Failed to wrap Circles');
-    }
+    if (!receipt) throw new Error('Failed to wrap Circles');
   }
+
+  const eyebrow = `font-size:10px;font-weight:600;color:${T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;margin:0 0 6px 2px;display:block;`;
+  const inputStyle = `width:100%;padding:10px 14px;border:1px solid ${T.hairline};border-radius:10px;font-family:${T.fontSans};font-size:13px;color:${T.ink};background:${T.surface};box-sizing:border-box;`;
 </script>
 
-<div class="p-6 pt-0">
-  <div class="form-control mb-4">
-    <p class="menu-title pl-0">Token</p>
+<div style="display:flex;flex-direction:column;gap:14px;padding:0 0 4px;">
+  <div style="background:{T.surfaceAlt};border:1px solid {T.hairlineSoft};border-radius:14px;padding:10px 12px;">
+    <span style={eyebrow}>Token</span>
     <BalanceRow item={asset} />
   </div>
 
-  <div class="form-control mb-2">
-    <p class="menu-title pl-0">Amount</p>
+  <div>
+    <span style={eyebrow}>Amount</span>
     <input
       type="number"
       step="0.01"
       min="0"
       max={asset.circles}
       placeholder="0.00"
-      class="input input-bordered w-full"
+      style={inputStyle}
       bind:value={amount}
     />
+    <div style="display:flex;justify-content:flex-end;margin-top:6px;">
+      <button
+        type="button"
+        style="height:24px;padding:0 10px;border-radius:9999px;border:1px solid {T.hairline};background:transparent;color:{T.inkMuted};font-size:11px;cursor:pointer;"
+        onclick={() => (amount = Number(asset.circles || 0))}
+      >Use max</button>
+    </div>
   </div>
 
-  <div class="flex justify-end mb-4">
-    <button
-      type="button"
-      class="btn btn-ghost btn-xs"
-      onclick={() => (amount = Number(asset.circles || 0))}
-    >
-      Use max
-    </button>
-  </div>
+  <p style="font-size:12px;color:{T.inkMuted};margin:0;line-height:1.5;">
+    Wrapping creates a transferable token. You can unwrap anytime.
+  </p>
 
-  <div class="form-control mb-4">
-    <p class="text-xs text-base-content/70">
-      Wrapping creates a transferable token. You can unwrap anytime.
-    </p>
-  </div>
-
-  <div class="form-control mb-4">
-    <button
-      type="button"
-      class="btn btn-ghost btn-sm justify-between"
-      aria-expanded={showAdvanced}
-      onclick={() => (showAdvanced = !showAdvanced)}
-    >
+  <!-- Advanced toggle -->
+  <details style="background:{T.surfaceAlt};border:1px solid {T.hairlineSoft};border-radius:12px;overflow:hidden;">
+    <summary style="padding:10px 14px;font-size:13px;font-weight:540;color:{T.ink};cursor:pointer;display:flex;align-items:center;justify-content:space-between;list-style:none;">
       <span>Advanced</span>
-      <span class="text-xs">{showAdvanced ? 'Hide' : 'Show'}</span>
-    </button>
-
-    {#if showAdvanced}
-      <div class="mt-2">
-        <p class="menu-title pl-0">Type</p>
-        <div class="flex space-x-4">
-          <label class="cursor-pointer flex items-center">
-            <input
-              type="radio"
-              name="wrapType"
-              value="Static"
-              bind:group={wrapType}
-              class="radio radio-primary"
-            />
-            <span class="ml-2">Static</span>
-          </label>
-          <label class="cursor-pointer flex items-center">
-            <input
-              type="radio"
-              name="wrapType"
-              value="Demurraged"
-              bind:group={wrapType}
-              class="radio radio-primary"
-            />
-            <span class="ml-2">Demurraged</span>
-          </label>
-        </div>
+      <span style="font-size:11px;color:{T.inkMuted};">{showAdvanced ? 'Hide' : 'Show'}</span>
+    </summary>
+    <div style="padding:0 14px 14px;display:flex;flex-direction:column;gap:10px;" onmouseenter={() => (showAdvanced = true)}>
+      <span style={eyebrow}>Type</span>
+      <div style="display:flex;gap:16px;">
+        <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:{T.ink};">
+          <input type="radio" name="wrapType" value="Static" bind:group={wrapType} style="accent-color:{T.primary};" />
+          Static
+        </label>
+        <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:{T.ink};">
+          <input type="radio" name="wrapType" value="Demurraged" bind:group={wrapType} style="accent-color:{T.primary};" />
+          Demurraged
+        </label>
       </div>
-    {/if}
-  </div>
+    </div>
+  </details>
 
-  <PopupActionBar>
-    <button type="submit" class="btn btn-primary btn-sm" onclick={wrap} disabled={!canWrap}>Wrap</button>
-  </PopupActionBar>
+  <div style="display:flex;justify-content:flex-end;margin-top:4px;">
+    <button
+      type="button"
+      style="height:40px;padding:0 22px;border-radius:9999px;border:0;background:{canWrap ? T.primary : T.pageDeep};color:{canWrap ? '#fff' : T.inkMuted};font-size:13px;font-weight:580;cursor:{canWrap ? 'pointer' : 'not-allowed'};box-shadow:{canWrap ? '0 4px 12px rgba(88,73,212,0.25)' : 'none'};"
+      onclick={wrap}
+      disabled={!canWrap}
+    >Wrap</button>
+  </div>
 </div>
+
+<style>
+  summary::-webkit-details-marker { display: none; }
+</style>

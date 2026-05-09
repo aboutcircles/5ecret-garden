@@ -18,76 +18,45 @@
   import { wallet } from '$lib/shared/state/wallet.svelte';
   import { fetchGatewayRowsByOwner } from '$lib/shared/data/circles/paymentGateways';
   import type { Address } from '@circles-sdk/utils';
+  import { T } from '$lib/design-system/tokens.js';
 
   interface Props { context: OfferFlowContext; }
   let { context }: Props = $props();
 
   let price            = $state(context.draft?.price ?? 0);
-  // Currency is fixed to CRC for this marketplace; keep state for draft but do not expose input
   let priceCurrency    = $state('CRC');
   let availableDeliveryMethod = $state(context.draft?.availableDeliveryMethod ?? '');
-  // Collapsible toggle for Checkout requirements
   let showRequirements = $state(false);
-  // Offer-driven basket requirements (requiredSlots)
   const slotState = $state<Record<string, boolean>>(deriveRequiredSlotsState(context.draft?.requiredSlots));
 
-  function isChecked(key: string): boolean {
-    return Boolean(slotState[key]);
-  }
-
-  function toggleKey(key: string, checked: boolean): void {
-    slotState[key] = checked;
-  }
-
-  function areAllChecked(keys: string[]): boolean {
-    return keys.every((key) => Boolean(slotState[key]));
-  }
-
-  function toggleAll(keys: string[], checked: boolean): void {
-    for (const key of keys) {
-      slotState[key] = checked;
-    }
-  }
-
+  function isChecked(key: string): boolean { return Boolean(slotState[key]); }
+  function toggleKey(key: string, checked: boolean): void { slotState[key] = checked; }
+  function areAllChecked(keys: string[]): boolean { return keys.every((key) => Boolean(slotState[key])); }
+  function toggleAll(keys: string[], checked: boolean): void { for (const key of keys) slotState[key] = checked; }
   function handleGroupToggle(keys: string[], event: Event): void {
     const target = event.currentTarget as HTMLInputElement | null;
     toggleAll(keys, Boolean(target?.checked));
   }
-
   function handleItemToggle(key: string, event: Event): void {
     const target = event.currentTarget as HTMLInputElement | null;
     toggleKey(key, Boolean(target?.checked));
   }
 
-
-  // Payment gateway selection state
   let loadingGateways: boolean = $state(false);
   let gateways: string[] = $state([]);
   let selectedGateway: string = $state((context.draft?.paymentGateway as string) ?? '');
 
   async function loadMyGatewaysFor(owner: Address): Promise<void> {
     const c = get(circles);
-    if (!owner || !c?.circlesRpc) {
-      gateways = [];
-      return;
-    }
+    if (!owner || !c?.circlesRpc) { gateways = []; return; }
     try {
       loadingGateways = true;
       const rows = await fetchGatewayRowsByOwner(c, owner);
-      gateways = rows
-        .map((row) => row.gateway)
-        .filter((g) => g.length > 0)
-        .map((g) => g.toLowerCase());
-
-      // Preselect existing draft gateway or the first one
+      gateways = rows.map((row) => row.gateway).filter((g) => g.length > 0).map((g) => g.toLowerCase());
       const current = (context.draft?.paymentGateway ?? '').toString().toLowerCase();
-      if (current && gateways.includes(current)) {
-        selectedGateway = current;
-      } else if (gateways.length > 0) {
-        selectedGateway = gateways[0];
-      } else {
-        selectedGateway = '';
-      }
+      if (current && gateways.includes(current)) selectedGateway = current;
+      else if (gateways.length > 0) selectedGateway = gateways[0];
+      else selectedGateway = '';
     } catch (e) {
       console.error('loadMyGatewaysFor', e);
       gateways = [];
@@ -106,11 +75,8 @@
   function asAddress(s: string | undefined): Address | undefined { return s as unknown as Address; }
 
   function next(): void {
-    const priceOk = Number(price) > 0;
-    const gwOk = !!selectedGateway;
-
-    if (!priceOk) { throw new Error('Price must be > 0.'); }
-    if (!gwOk) { throw new Error('Select a payment gateway.'); }
+    if (!Number(price) || Number(price) <= 0) throw new Error('Price must be > 0.');
+    if (!selectedGateway) throw new Error('Select a payment gateway.');
 
     context.draft = {
       ...context.draft!,
@@ -121,11 +87,7 @@
       requiredSlots: computeRequiredSlotsFromSelections(slotState),
     };
 
-    openStep({
-      title: 'Offer • Preview & Publish',
-      component: OfferStep3,
-      props: { context }
-    });
+    openStep({ title: 'Offer • Preview & Publish', component: OfferStep3, props: { context } });
   }
 
   function normalizeText(value: unknown): string {
@@ -133,7 +95,6 @@
     return typeof value === 'string' ? value.trim() : String(value).trim();
   }
 
-  // Persist form state into the shared draft reactively to avoid losing data when navigating back
   $effect(() => {
     context.draft = {
       ...context.draft!,
@@ -144,6 +105,10 @@
       requiredSlots: computeRequiredSlotsFromSelections(slotState),
     };
   });
+
+  const eyebrow = `font-size:10px;font-weight:600;color:${T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;margin:0 0 6px 2px;display:block;`;
+  const inputStyle = `width:100%;padding:10px 14px;border:1px solid ${T.hairline};border-radius:10px;font-family:${T.fontSans};font-size:13px;color:${T.ink};background:${T.surface};box-sizing:border-box;`;
+  const selectStyle = `width:100%;padding:10px 14px;border:1px solid ${T.hairline};border-radius:10px;font-family:${T.fontSans};font-size:13px;color:${T.ink};background:${T.surface};box-sizing:border-box;appearance:auto;`;
 </script>
 
 <FlowStepScaffold
@@ -153,41 +118,32 @@
   subtitle="Define price, gateway, and checkout requirements."
 >
 
-<div class="space-y-3">
-  <!-- Price row: currency fixed to CRC -->
-  <label class="form-control">
-    <span class="label-text">Price (CRC)</span>
-    <input class="input input-bordered" type="number" step="0.01" min="0" bind:value={price} data-popup-initial-input />
-  </label>
+<div style="display:flex;flex-direction:column;gap:14px;">
+  <div>
+    <span style={eyebrow}>Price (CRC)</span>
+    <input style={inputStyle} type="number" step="0.01" min="0" bind:value={price} data-popup-initial-input />
+  </div>
 
-  <!-- Payment gateway row -->
-  <div class="form-control">
-    <div class="label">
-      <span class="label-text">Payment gateway</span>
-    </div>
+  <div>
+    <span style={eyebrow}>Payment gateway</span>
     {#if loadingGateways}
-      <div class="opacity-70 text-sm">Loading…</div>
+      <div style="font-size:13px;color:{T.inkMuted};">Loading…</div>
     {:else if gateways.length === 0}
       <StepAlert variant="info">
-        <span class="text-sm">
+        <span style="font-size:12.5px;">
           No gateways found.
-          <a class="link ml-1" href="/settings?tab=payment" target="_blank">Create one</a>
+          <a style="color:{T.primary};text-decoration:underline;" href="/settings?tab=payment" target="_blank">Create one</a>
           and come back.
         </span>
       </StepAlert>
     {:else}
-      <PaymentGatewayDropdown
-        options={gateways}
-        bind:value={selectedGateway}
-        ariaLabel="Select payment gateway"
-      />
+      <PaymentGatewayDropdown options={gateways} bind:value={selectedGateway} ariaLabel="Select payment gateway" />
     {/if}
   </div>
 
-  <!-- Delivery method row -->
-  <label class="form-control">
-    <span class="label-text">Delivery method (optional)</span>
-    <select class="select select-bordered" bind:value={availableDeliveryMethod}>
+  <div>
+    <span style={eyebrow}>Delivery method (optional)</span>
+    <select style={selectStyle} bind:value={availableDeliveryMethod}>
       <option value="">Not specified</option>
       <option value="http://purl.org/goodrelations/v1#DeliveryModePickUp">Pick up</option>
       <option value="http://purl.org/goodrelations/v1#DeliveryModeOwnFleet">Own fleet</option>
@@ -197,73 +153,71 @@
       <option value="http://purl.org/goodrelations/v1#DeliveryModeUPS">UPS</option>
       <option value="http://purl.org/goodrelations/v1#DeliveryModeFedEx">FedEx</option>
     </select>
-  </label>
+  </div>
 
-  <!-- Offer-driven basket requirements (collapsible) -->
-  <div class="collapse bg-base-200 mt-2">
-    <input type="checkbox" bind:checked={showRequirements} />
-    <div class="collapse-title text-md font-medium">Checkout requirements</div>
-    <div class="collapse-content space-y-3">
+  <!-- Checkout requirements (collapsible) -->
+  <details style="background:{T.surfaceAlt};border:1px solid {T.hairlineSoft};border-radius:12px;overflow:hidden;">
+    <summary style="padding:10px 14px;font-size:13px;font-weight:540;color:{T.ink};cursor:pointer;display:flex;align-items:center;justify-content:space-between;list-style:none;">
+      <span>Checkout requirements</span>
+      <span style="font-size:11px;color:{T.inkMuted};">Optional</span>
+    </summary>
+    <div style="padding:0 14px 14px;display:flex;flex-direction:column;gap:14px;">
       {#each REQUIRED_SLOT_GROUPS as group (group.id)}
-        <div class={group.layout === 'tree' ? 'mt-3 space-y-2' : 'space-y-2'}>
-          <label class="label cursor-pointer justify-start gap-2">
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;">
             <input
               type="checkbox"
-              class="checkbox"
+              style="accent-color:{T.primary};width:14px;height:14px;cursor:pointer;"
               checked={areAllChecked(group.allKeys)}
               onchange={(event) => handleGroupToggle(group.allKeys, event)}
             />
-            <span class="label-text font-semibold">{group.title}</span>
+            <span style="font-size:13px;font-weight:580;color:{T.ink};">{group.title}</span>
           </label>
 
           {#if group.layout === 'grid'}
-            <div class="pl-6 border-l border-base-200 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div style="padding-left:20px;border-left:2px solid {T.hairlineSoft};display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;">
               {#each group.items as item (item.key)}
-                <label class="label cursor-pointer justify-start gap-2">
+                <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;">
                   <input
                     type="checkbox"
-                    class="checkbox checkbox-sm"
+                    style="accent-color:{T.primary};width:13px;height:13px;cursor:pointer;"
                     checked={isChecked(item.key)}
                     onchange={(event) => handleItemToggle(item.key, event)}
                     data-slot={item.slot}
                   />
-                  <span class="label-text">{item.label}</span>
-                  <span class="label-text-alt opacity-70">({item.slot})</span>
+                  <span style="font-size:12.5px;color:{T.ink};">{item.label}</span>
+                  <span style="font-size:11px;color:{T.inkMuted};">({item.slot})</span>
                 </label>
               {/each}
             </div>
           {:else}
-            <div class="pl-6 border-l border-base-200 space-y-2" role="tree" aria-label={group.treeLabel}>
+            <div style="padding-left:20px;border-left:2px solid {T.hairlineSoft};display:flex;flex-direction:column;gap:6px;" role="tree" aria-label={group.treeLabel}>
               {#if group.parent}
                 <div data-slot-node data-slot={group.parent.slot}>
-                  <label class="label cursor-pointer justify-start gap-2">
+                  <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;">
                     <input
                       type="checkbox"
-                      class="checkbox checkbox-sm"
+                      style="accent-color:{T.primary};width:13px;height:13px;cursor:pointer;"
                       checked={isChecked(group.parent.key)}
                       onchange={(event) => handleGroupToggle(group.allKeys, event)}
                       data-slot={group.parent.slot}
                     />
-                    <span class="label-text">{group.parent.label}</span>
-                    <span class="label-text-alt opacity-70">({group.parent.slot})</span>
+                    <span style="font-size:12.5px;color:{T.ink};">{group.parent.label}</span>
+                    <span style="font-size:11px;color:{T.inkMuted};">({group.parent.slot})</span>
                   </label>
-                  <div
-                    class="pl-6 border-l border-base-200 space-y-2"
-                    role="group"
-                    data-slot-children-of={group.parent.slot}
-                  >
+                  <div style="padding-left:20px;border-left:2px solid {T.hairlineSoft};margin-top:6px;display:flex;flex-direction:column;gap:6px;" role="group" data-slot-children-of={group.parent.slot}>
                     {#each group.items as item (item.key)}
-                      <label class="label cursor-pointer justify-start gap-2">
+                      <label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;">
                         <input
                           type="checkbox"
-                          class="checkbox checkbox-sm"
+                          style="accent-color:{T.primary};width:13px;height:13px;cursor:pointer;"
                           checked={isChecked(item.key)}
                           onchange={(event) => handleItemToggle(item.key, event)}
                           data-slot={item.slot}
                           data-parent-slot={item.parentSlot}
                         />
-                        <span class="label-text">{item.label}</span>
-                        <span class="label-text-alt opacity-70">({item.slot})</span>
+                        <span style="font-size:12.5px;color:{T.ink};">{item.label}</span>
+                        <span style="font-size:11px;color:{T.inkMuted};">({item.slot})</span>
                       </label>
                     {/each}
                   </div>
@@ -274,9 +228,13 @@
         </div>
       {/each}
     </div>
-  </div>
+  </details>
 
-    <StepActionButtons primaryLabel="Continue" onPrimary={next} />
+  <StepActionButtons primaryLabel="Continue" onPrimary={next} />
 </div>
 
 </FlowStepScaffold>
+
+<style>
+  summary::-webkit-details-marker { display: none; }
+</style>

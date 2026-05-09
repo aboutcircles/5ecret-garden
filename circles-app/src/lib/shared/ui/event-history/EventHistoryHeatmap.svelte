@@ -22,6 +22,7 @@
     RangeOverlayEvent,
     WeeklyBucket,
   } from './types';
+  import { T } from '$lib/design-system/tokens.js';
 
   interface Props {
     dataSource: EventHistoryDataSource;
@@ -84,28 +85,20 @@
   });
   const selectedKnownRangeEvents = $derived(knownRangeEvents.filter((event) => selectedOverlayIds.includes(event.id)));
 
-  $effect(() => {
-    eventCount = rows.length;
-  });
+  $effect(() => { eventCount = rows.length; });
 
   $effect(() => {
     const knownIds = knownRangeEvents.map((event) => event.id);
-
     if (!initializedOverlaySelection && knownIds.length > 0) {
       selectedOverlayIds = knownIds;
       initializedOverlaySelection = true;
       return;
     }
-
     const filtered = selectedOverlayIds.filter((id) => knownIds.includes(id));
-    if (filtered.length !== selectedOverlayIds.length) {
-      selectedOverlayIds = filtered;
-    }
+    if (filtered.length !== selectedOverlayIds.length) selectedOverlayIds = filtered;
   });
 
-  $effect(() => {
-    void loadEvents(dataSource);
-  });
+  $effect(() => { void loadEvents(dataSource); });
 
   async function loadEvents(source: EventHistoryDataSource): Promise<void> {
     const localRequestId = ++requestId;
@@ -114,13 +107,9 @@
 
     try {
       const sdk = get(circles);
-      if (!sdk?.circlesRpc) {
-        throw new Error('Circles SDK not initialized');
-      }
+      if (!sdk?.circlesRpc) throw new Error('Circles SDK not initialized');
 
       const queryDefinition: PagedQueryParams = {
-        // `PagedQueryParams` types from `@circles-sdk/data` are stricter than our dataSource surface;
-        // keep casts localized here (integration boundary).
         namespace: source.namespace as any,
         table: source.table as any,
         columns: source.columns ?? [],
@@ -139,18 +128,13 @@
       }
 
       if (localRequestId !== requestId) return;
-
-      rows = allRows
-        .slice()
-        .sort((a, b) => timestampFor(a, source) - timestampFor(b, source));
+      rows = allRows.slice().sort((a, b) => timestampFor(a, source) - timestampFor(b, source));
     } catch (e: any) {
       if (localRequestId !== requestId) return;
       rows = [];
       error = e?.message ?? 'Failed to load event history';
     } finally {
-      if (localRequestId === requestId) {
-        loading = false;
-      }
+      if (localRequestId === requestId) loading = false;
     }
   }
 
@@ -159,9 +143,7 @@
   }
 
   function timestampFor(row: CirclesBaseEventRow, source: EventHistoryDataSource): number {
-    if (source.getTimestampSec) {
-      return toNumber(source.getTimestampSec(row));
-    }
+    if (source.getTimestampSec) return toNumber(source.getTimestampSec(row));
     return toNumber(row.timestamp);
   }
 
@@ -174,20 +156,9 @@
 
   function startOfBucketSec(tsSec: number, g: Granularity): number {
     const d = new Date(tsSec * 1000);
-
-    if (g === 'month') {
-      d.setUTCHours(0, 0, 0, 0);
-      d.setUTCDate(1);
-      return Math.floor(d.getTime() / 1000);
-    }
-
-    d.setUTCHours(0, 0, 0, 0);
-
-    if (g === 'week') {
-      const weekday = (d.getUTCDay() + 6) % 7;
-      d.setUTCDate(d.getUTCDate() - weekday);
-    }
-
+    if (g === 'month') { d.setUTCHours(0,0,0,0); d.setUTCDate(1); return Math.floor(d.getTime() / 1000); }
+    d.setUTCHours(0,0,0,0);
+    if (g === 'week') { const weekday = (d.getUTCDay() + 6) % 7; d.setUTCDate(d.getUTCDate() - weekday); }
     return Math.floor(d.getTime() / 1000);
   }
 
@@ -201,36 +172,27 @@
   }
 
   function startOfMonthSec(tsSec: number): number {
-    const d = new Date(tsSec * 1000);
-    d.setUTCHours(0, 0, 0, 0);
-    d.setUTCDate(1);
+    const d = new Date(tsSec * 1000); d.setUTCHours(0,0,0,0); d.setUTCDate(1);
     return Math.floor(d.getTime() / 1000);
   }
 
   function startOfWeekSec(tsSec: number): number {
-    const d = new Date(tsSec * 1000);
-    d.setUTCHours(0, 0, 0, 0);
-    const weekday = (d.getUTCDay() + 6) % 7;
-    d.setUTCDate(d.getUTCDate() - weekday);
+    const d = new Date(tsSec * 1000); d.setUTCHours(0,0,0,0);
+    const weekday = (d.getUTCDay() + 6) % 7; d.setUTCDate(d.getUTCDate() - weekday);
     return Math.floor(d.getTime() / 1000);
   }
 
   function nextMonthStartSec(tsSec: number): number {
-    const d = new Date(tsSec * 1000);
-    d.setUTCMonth(d.getUTCMonth() + 1);
-    d.setUTCDate(1);
-    d.setUTCHours(0, 0, 0, 0);
+    const d = new Date(tsSec * 1000); d.setUTCMonth(d.getUTCMonth() + 1); d.setUTCDate(1); d.setUTCHours(0,0,0,0);
     return Math.floor(d.getTime() / 1000);
   }
 
   function getCellCount(tsSec: number, counts: Map<number, number>): number {
-    const bucketStart = startOfBucketSec(tsSec, 'day');
-    return counts.get(bucketStart) ?? 0;
+    return counts.get(startOfBucketSec(tsSec, 'day')) ?? 0;
   }
 
   function buildMonthCalendars(input: CirclesBaseEventRow[], counts: Map<number, number>): MonthCalendar[] {
     if (input.length === 0) return [];
-
     const firstTs = timestampFor(input[0], dataSource);
     const lastTs = timestampFor(input[input.length - 1], dataSource);
     const firstMonth = startOfMonthSec(firstTs);
@@ -243,36 +205,27 @@
       const monthEnd = nextMonthStartSec(month) - 1;
       const gridStart = startOfWeekSec(month);
       const gridEnd = startOfWeekSec(monthEnd) + 6 * 24 * 60 * 60;
-
       const weeks: CalendarCell[][] = [];
       let cursor = gridStart;
 
       while (cursor <= gridEnd) {
         const week: CalendarCell[] = [];
-        for (let i = 0; i < 7; i += 1) {
+        for (let i = 0; i < 7; i++) {
           const current = cursor + i * 24 * 60 * 60;
           const currentDate = new Date(current * 1000);
           const inCurrentMonth = currentDate.getUTCMonth() === monthDate.getUTCMonth();
-          week.push({
-            tsSec: current,
-            dayOfMonth: currentDate.getUTCDate(),
-            inCurrentMonth,
-            count: inCurrentMonth ? getCellCount(current, counts) : 0,
-          });
+          week.push({ tsSec: current, dayOfMonth: currentDate.getUTCDate(), inCurrentMonth, count: inCurrentMonth ? getCellCount(current, counts) : 0 });
         }
         weeks.push(week);
         cursor += 7 * 24 * 60 * 60;
       }
-
       out.push({ key: String(month), label: monthLabel, weeks });
     }
-
     return out;
   }
 
   function buildWeeklySections(input: CirclesBaseEventRow[], counts: Map<number, number>): MonthWeeklySection[] {
     if (input.length === 0) return [];
-
     const firstTs = timestampFor(input[0], dataSource);
     const lastTs = timestampFor(input[input.length - 1], dataSource);
     const firstMonth = startOfMonthSec(firstTs);
@@ -286,44 +239,30 @@
       const firstWeek = startOfWeekSec(month);
       const lastWeek = startOfWeekSec(monthEnd);
       const weeks: WeeklyBucket[] = [];
-
       for (let w = firstWeek; w <= lastWeek; w += 7 * 24 * 60 * 60) {
         weeks.push({ startSec: w, count: counts.get(w) ?? 0 });
       }
-
       out.push({ key: String(month), label: monthLabel, weeks });
     }
-
     return out;
   }
 
   function buildMonthlyItems(input: CirclesBaseEventRow[], counts: Map<number, number>): MonthlyItem[] {
     if (input.length === 0) return [];
-
     const firstTs = timestampFor(input[0], dataSource);
     const lastTs = timestampFor(input[input.length - 1], dataSource);
     const firstMonth = startOfMonthSec(firstTs);
     const lastMonth = startOfMonthSec(lastTs);
     const out: MonthlyItem[] = [];
-
     for (let month = firstMonth; month <= lastMonth; month = nextMonthStartSec(month)) {
       const d = new Date(month * 1000);
-      out.push({
-        startSec: month,
-        label: d.toLocaleString(undefined, { month: 'long', year: 'numeric' }),
-        count: counts.get(month) ?? 0,
-      });
+      out.push({ startSec: month, label: d.toLocaleString(undefined, { month: 'long', year: 'numeric' }), count: counts.get(month) ?? 0 });
     }
-
     return out;
   }
 
   function toggleKnownEventSelection(eventId: string, enabled: boolean): void {
-    if (enabled) {
-      if (selectedOverlayIds.includes(eventId)) return;
-      selectedOverlayIds = [...selectedOverlayIds, eventId];
-      return;
-    }
+    if (enabled) { if (!selectedOverlayIds.includes(eventId)) selectedOverlayIds = [...selectedOverlayIds, eventId]; return; }
     selectedOverlayIds = selectedOverlayIds.filter((id) => id !== eventId);
   }
 
@@ -332,20 +271,13 @@
   }
 
   function setKnownEventsSelectionAll(enabled: boolean): void {
-    if (enabled) {
-      selectedOverlayIds = [...knownRangeEvents.map((event) => event.id)];
-      return;
-    }
-    selectedOverlayIds = [];
+    selectedOverlayIds = enabled ? [...knownRangeEvents.map((event) => event.id)] : [];
   }
 
   function setKnownEventsSelectionFiltered(enabled: boolean): void {
     const filteredIds = filteredKnownRangeEvents.map((event) => event.id);
-    if (enabled) {
-      selectedOverlayIds = Array.from(new Set([...selectedOverlayIds, ...filteredIds]));
-      return;
-    }
-    selectedOverlayIds = selectedOverlayIds.filter((id) => !filteredIds.includes(id));
+    if (enabled) selectedOverlayIds = Array.from(new Set([...selectedOverlayIds, ...filteredIds]));
+    else selectedOverlayIds = selectedOverlayIds.filter((id) => !filteredIds.includes(id));
   }
 
   function onSelectMonth(monthStartSec: number): void {
@@ -364,105 +296,71 @@
       const ts = timestampFor(row, dataSource);
       return ts >= dayStartSec && ts < dayEndSec;
     });
-
     popupControls.open({
       title: labels.dayPopupTitle?.(dayStartSec, events as any) ?? labels.title ?? 'Events',
       component: EventHistoryDayEventsPopup,
-      props: {
-        dayStartSec,
-        dayEndSec,
-        events,
-        labels,
-        searchHaystack,
-        getTimestampSec: dataSource.getTimestampSec,
-        rowComponent,
-        dayPopupHeaderComponent,
-      },
+      props: { dayStartSec, dayEndSec, events, labels, searchHaystack, getTimestampSec: dataSource.getTimestampSec, rowComponent, dayPopupHeaderComponent },
     });
   }
 
   const summaryText = $derived(labels.summary?.(rows as any) ?? `${rows.length} event${rows.length === 1 ? '' : 's'}`);
+
+  const pillBase = `height:28px;padding:0 12px;border-radius:9999px;border:1px solid ${T.hairline};font-size:11.5px;cursor:pointer;`;
 </script>
 
-<div class="space-y-3">
-  <div class="flex items-start justify-between gap-2">
+<div style="display:flex;flex-direction:column;gap:12px;">
+  <!-- Controls row -->
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
     {#if showGranularitySwitch}
-      <div class="join">
-        <button
-          class="btn btn-xs join-item"
-          class:btn-primary={granularity === 'day'}
-          class:btn-ghost={granularity !== 'day'}
-          onclick={() => (granularity = 'day')}
-        >
-          Day
-        </button>
-        <button
-          class="btn btn-xs join-item"
-          class:btn-primary={granularity === 'week'}
-          class:btn-ghost={granularity !== 'week'}
-          onclick={() => (granularity = 'week')}
-        >
-          Week
-        </button>
-        <button
-          class="btn btn-xs join-item"
-          class:btn-primary={granularity === 'month'}
-          class:btn-ghost={granularity !== 'month'}
-          onclick={() => (granularity = 'month')}
-        >
-          Month
-        </button>
+      <div style="display:flex;gap:4px;background:{T.surfaceAlt};border:1px solid {T.hairlineSoft};border-radius:9999px;padding:3px;">
+        {#each ['day', 'week', 'month'] as g}
+          <button
+            style="height:26px;padding:0 12px;border-radius:9999px;border:0;font-size:11.5px;font-weight:{granularity === g ? 580 : 400};background:{granularity === g ? T.surface : 'transparent'};color:{granularity === g ? T.ink : T.inkMuted};cursor:pointer;box-shadow:{granularity === g ? T.shadow.xs : 'none'};transition:all 0.1s;"
+            onclick={() => (granularity = g as Granularity)}
+          >{g.charAt(0).toUpperCase() + g.slice(1)}</button>
+        {/each}
       </div>
     {/if}
 
     {#if knownRangeEvents.length > 0}
-      <details class="dropdown dropdown-end">
-        <summary class="btn btn-xs">
+      <details style="position:relative;">
+        <summary style="{pillBase}background:{T.surface};color:{T.ink};display:inline-flex;align-items:center;gap:6px;list-style:none;cursor:pointer;">
           {overlayLabel} ({selectedKnownRangeEvents.length}/{knownRangeEvents.length})
         </summary>
-        <div class="dropdown-content z-[20] mt-2 w-80 rounded-box border border-base-300 bg-base-100 p-2 shadow-lg">
-          <div class="space-y-2">
-            <input
-              type="text"
-              class="input input-xs input-bordered w-full"
-              placeholder={overlaySearchPlaceholder}
-              bind:value={overlayQuery}
-            />
+        <div style="
+          position:absolute;right:0;top:calc(100% + 6px);
+          z-index:20;width:300px;
+          background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;
+          box-shadow:{T.shadow.xs};padding:10px;
+          display:flex;flex-direction:column;gap:8px;
+        ">
+          <input
+            type="text"
+            style="width:100%;padding:8px 10px;border:1px solid {T.hairline};border-radius:8px;font-family:{T.fontSans};font-size:12px;color:{T.ink};background:{T.surface};box-sizing:border-box;"
+            placeholder={overlaySearchPlaceholder}
+            bind:value={overlayQuery}
+          />
 
-            <div class="flex flex-wrap items-center gap-1">
-              <button type="button" class="btn btn-xs btn-ghost" onclick={() => setKnownEventsSelectionAll(true)}>
-                All
-              </button>
-              <button type="button" class="btn btn-xs btn-ghost" onclick={() => setKnownEventsSelectionAll(false)}>
-                None
-              </button>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;">
+            {#each [['All', true, true], ['None', false, true], ['Select filtered', true, false], ['Clear filtered', false, false]] as [label, enabled, isAll]}
               <button
                 type="button"
-                class="btn btn-xs btn-ghost"
-                onclick={() => setKnownEventsSelectionFiltered(true)}
-              >
-                Select filtered
-              </button>
-              <button
-                type="button"
-                class="btn btn-xs btn-ghost"
-                onclick={() => setKnownEventsSelectionFiltered(false)}
-              >
-                Clear filtered
-              </button>
-            </div>
+                style="{pillBase}background:{T.surfaceAlt};color:{T.inkMuted};"
+                onclick={() => isAll ? setKnownEventsSelectionAll(Boolean(enabled)) : setKnownEventsSelectionFiltered(Boolean(enabled))}
+              >{label}</button>
+            {/each}
           </div>
 
-          <div class="max-h-72 overflow-auto space-y-1 mt-2 pr-1">
+          <div style="max-height:260px;overflow:auto;display:flex;flex-direction:column;gap:2px;">
             {#if filteredKnownRangeEvents.length === 0}
-              <div class="text-xs opacity-60 p-2">No matching events.</div>
+              <div style="font-size:11.5px;color:{T.inkMuted};padding:8px;">No matching events.</div>
             {/if}
 
             {#each filteredKnownRangeEvents as event (event.id)}
-              <label class="flex items-start gap-2 rounded-md p-2 hover:bg-base-200/40 cursor-pointer">
+              <label style="display:flex;align-items:flex-start;gap:8px;padding:6px 4px;border-radius:8px;cursor:pointer;">
                 <input
                   type="checkbox"
-                  class="checkbox checkbox-xs mt-0.5"
+                  style="accent-color:{T.primary};width:13px;height:13px;margin-top:2px;cursor:pointer;flex-shrink:0;"
                   checked={selectedOverlayIds.includes(event.id)}
                   onchange={(e) =>
                     toggleKnownEventSelection(
@@ -470,11 +368,11 @@
                       e.currentTarget instanceof HTMLInputElement ? e.currentTarget.checked : false
                     )}
                 />
-                <span class="min-w-0 text-xs">
-                  <span class="font-medium block">{event.title}</span>
-                  <span class="opacity-70 block">{formatKnownEventRange(event)}</span>
+                <span style="min-width:0;display:flex;flex-direction:column;gap:2px;">
+                  <span style="font-size:12px;font-weight:540;color:{T.ink};">{event.title}</span>
+                  <span style="font-size:11px;color:{T.inkMuted};">{formatKnownEventRange(event)}</span>
                   {#if event.description}
-                    <span class="opacity-60 block">{event.description}</span>
+                    <span style="font-size:11px;color:{T.inkSubtle};">{event.description}</span>
                   {/if}
                 </span>
               </label>
@@ -486,52 +384,40 @@
   </div>
 
   {#if loading}
-    <div class="flex items-center gap-2 text-base-content/70 py-2">
-      <span class="loading loading-spinner loading-sm"></span>
-      <span>{labels.loading ?? 'Loading event history…'}</span>
+    <div style="display:flex;align-items:center;gap:8px;color:{T.inkMuted};padding:8px 0;">
+      <span class="loading loading-spinner loading-sm" style="color:{T.primary};"></span>
+      <span style="font-size:12.5px;">{labels.loading ?? 'Loading event history…'}</span>
     </div>
   {:else if error}
-    <div class="alert alert-warning py-2">
-      <span class="text-sm">{error}</span>
+    <div style="background:{T.warningSoft};border:1px solid rgba(176,112,20,0.2);border-radius:10px;padding:8px 12px;font-size:12.5px;color:{T.inkBody};">
+      {error}
     </div>
   {:else if rows.length === 0}
-    <div class="text-sm opacity-70">{labels.empty ?? 'No events found.'}</div>
+    <div style="font-size:12.5px;color:{T.inkMuted};">{labels.empty ?? 'No events found.'}</div>
   {:else}
-    <div class="text-xs opacity-70">{summaryText}</div>
+    <div style="font-size:11.5px;color:{T.inkMuted};">{summaryText}</div>
 
     {#if granularity === 'day'}
-      <EventHistoryDayCalendar
-        {monthCalendars}
-        {maxBucketCount}
-        rangeEvents={selectedKnownRangeEvents}
-        {selectedDayTsSec}
-        onSelectDay={onSelectDay}
-      />
+      <EventHistoryDayCalendar {monthCalendars} {maxBucketCount} rangeEvents={selectedKnownRangeEvents} {selectedDayTsSec} onSelectDay={onSelectDay} />
     {:else if granularity === 'week'}
-      <EventHistoryWeeklySections
-        {weeklySections}
-        {maxBucketCount}
-        rangeEvents={selectedKnownRangeEvents}
-        {selectedWeekStartSec}
-        onSelectWeek={onSelectWeek}
-      />
+      <EventHistoryWeeklySections {weeklySections} {maxBucketCount} rangeEvents={selectedKnownRangeEvents} {selectedWeekStartSec} onSelectWeek={onSelectWeek} />
     {:else}
-      <EventHistoryMonthlyList
-        {monthlyItems}
-        {maxBucketCount}
-        rangeEvents={selectedKnownRangeEvents}
-        onSelectMonth={onSelectMonth}
-      />
+      <EventHistoryMonthlyList {monthlyItems} {maxBucketCount} rangeEvents={selectedKnownRangeEvents} onSelectMonth={onSelectMonth} />
     {/if}
 
-    <div class="flex items-center gap-2 text-[11px] opacity-70">
+    <!-- Legend -->
+    <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:{T.inkMuted};">
       <span>Less</span>
-      <div class="w-3 h-3 rounded-sm bg-base-300/50"></div>
-      <div class="w-3 h-3 rounded-sm bg-primary/25"></div>
-      <div class="w-3 h-3 rounded-sm bg-primary/55"></div>
-      <div class="w-3 h-3 rounded-sm bg-primary/80"></div>
-      <div class="w-3 h-3 rounded-sm bg-primary"></div>
+      <div style="width:12px;height:12px;border-radius:4px;background:{T.surfaceAlt};border:1px solid {T.hairlineSoft};"></div>
+      <div style="width:12px;height:12px;border-radius:4px;background:rgba(88,73,212,0.15);"></div>
+      <div style="width:12px;height:12px;border-radius:4px;background:rgba(88,73,212,0.4);"></div>
+      <div style="width:12px;height:12px;border-radius:4px;background:rgba(88,73,212,0.7);"></div>
+      <div style="width:12px;height:12px;border-radius:4px;background:{T.primary};"></div>
       <span>More</span>
     </div>
   {/if}
 </div>
+
+<style>
+  summary::-webkit-details-marker { display: none; }
+</style>

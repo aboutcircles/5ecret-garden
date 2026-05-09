@@ -6,9 +6,10 @@
     import { openStep } from '$lib/shared/flow';
     import {popupControls} from '$lib/shared/state/popup';
     import {signer} from '$lib/shared/state/wallet.svelte';
-import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
+    import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
     import type {Address as EvmAddress} from '@circles-sdk/utils';
     import {gnosisConfig} from "$lib/shared/config/circles";
+    import { T } from '$lib/design-system/tokens.js';
 
     interface Props {
         address: EvmAddress | undefined;
@@ -39,36 +40,26 @@ import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
     }
 </script>
 
-<div
-        class="flex flex-col items-center w-full sm:w-[90%] lg:w-3/5 mx-auto gap-y-4 mt-10"
->
-    <Avatar view="vertical" clickable={false} {address}/>
+<div style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:24px 0 8px;">
+  <Avatar view="vertical" clickable={false} {address} />
 
-    <!-- Address chip on its own line -->
-    {#if address}
-        <div class="w-full flex justify-center">
-            <Address {address} />
-        </div>
-    {/if}
+  {#if address}
+    <Address {address} />
+  {/if}
 
-    <!-- Buttons row below, centered -->
-    <div class="flex flex-wrap justify-center gap-2">
-        <button
-            onclick={changeWallet}
-            class="btn btn-sm btn-primary"
-        >
-            Change Avatar
-        </button>
-        <button
-            type="button"
-            class="btn btn-sm btn-outline"
-            onclick={openProfileEditor}
-        >
-            Edit profile
-        </button>
-    </div>
+  <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;">
+    <button
+      onclick={changeWallet}
+      style="height:36px;padding:0 18px;border-radius:9999px;border:0;background:{T.primary};color:#fff;font-size:13px;font-weight:580;cursor:pointer;box-shadow:0 4px 12px rgba(88,73,212,0.25);"
+    >Change Avatar</button>
+    <button
+      type="button"
+      style="height:36px;padding:0 18px;border-radius:9999px;border:1px solid {T.hairline};background:transparent;color:{T.ink};font-size:13px;cursor:pointer;"
+      onclick={openProfileEditor}
+    >Edit profile</button>
+  </div>
 
-    <div class="shadow-lg rounded-lg">
-        <QrCode value={address}/>
-    </div>
+  <div style="border-radius:16px;overflow:hidden;box-shadow:{T.shadow.xs};">
+    <QrCode value={address} />
+  </div>
 </div>

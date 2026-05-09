@@ -6,7 +6,6 @@
   import { shortenAddress } from '$lib/shared/utils/shared';
   import { getProfile } from '$lib/shared/utils/profile';
   import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
-  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import { createSearchablePaginatedList } from '$lib/shared/state/searchablePaginatedList';
@@ -14,6 +13,7 @@
   import { openAddTrustFlow } from '$lib/areas/trust/flows/addTrust/openAddTrustFlow';
   import { createTrustDataSource } from '$lib/shared/data/circles/trustDataSource';
   import { createAvatarDataSource } from '$lib/shared/data/circles/avatarDataSource';
+  import { T } from '$lib/design-system/tokens.js';
 
   interface Props {
     group: Address;
@@ -59,38 +59,19 @@
   $effect(() => {
     const sdk = $circles;
     let cancelled = false;
-    if (!group) {
-      groupName = null;
-      return;
-    }
-
-    if (!sdk) {
-      // Retry automatically once SDK becomes available.
-      return;
-    }
+    if (!group) { groupName = null; return; }
+    if (!sdk) return;
 
     void getProfile(group)
-      .then((profile) => {
-        if (cancelled) return;
-        groupName = profile?.name ?? null;
-      })
-      .catch(() => {
-        if (cancelled) return;
-        groupName = null;
-      });
+      .then((profile) => { if (cancelled) return; groupName = profile?.name ?? null; })
+      .catch(() => { if (cancelled) return; groupName = null; });
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   });
 
   async function loadTrusted() {
     const sdk = get(circles);
-    if (!sdk) {
-      trusted = [];
-      trustedAvatarTypes = {};
-      return;
-    }
+    if (!sdk) { trusted = []; trustedAvatarTypes = {}; return; }
 
     loading = true;
     error = null;
@@ -127,24 +108,19 @@
 
   $effect(() => {
     const sdk = $circles;
-
     if (!group || !sdk) {
       trusted = [];
       trustedAvatarTypes = {};
       trustedStore.set([]);
       return;
     }
-
     void loadTrusted();
   });
 
   function toggleSelected(address: Address, checked: boolean) {
     const next = new Set(selectedSet);
-    if (checked) {
-      next.add(address);
-    } else {
-      next.delete(address);
-    }
+    if (checked) next.add(address);
+    else next.delete(address);
     selectedSet = next;
   }
 
@@ -153,9 +129,7 @@
     toggleSelected(address, Boolean(el?.checked));
   }
 
-  function focusSearchInput() {
-    searchInputEl?.focus();
-  }
+  function focusSearchInput() { searchInputEl?.focus(); }
 
   const trustedListNavigator = createKeyboardListNavigator({
     getRows: () => Array.from(trustedListEl?.querySelectorAll<HTMLElement>('[data-trusted-row]') ?? []),
@@ -174,13 +148,11 @@
   async function untrustOne(address: Address) {
     const sdk = get(circles);
     if (!sdk) return;
-
     const groupAvatar = await sdk.getAvatar(group, false);
     await runTask({
       name: `${shortenAddress(group)} untrusts ${shortenAddress(address)} ...`,
       promise: groupAvatar.untrust([address]),
     });
-
     const next = new Set(selectedSet);
     next.delete(address);
     selectedSet = next;
@@ -189,52 +161,45 @@
 
   function openAddPopup() {
     openAddTrustFlow({
-      context: {
-        actorType: 'group',
-        actorAddress: group,
-        selectedTrustees: [],
-      },
-      onCompleted: async () => {
-        await loadTrusted();
-      },
+      context: { actorType: 'group', actorAddress: group, selectedTrustees: [] },
+      onCompleted: async () => { await loadTrusted(); },
     });
   }
 
   async function removeSelected() {
     const sdk = get(circles);
     if (!sdk || selectedMembers.length === 0) return;
-
-    // No event subscription needed for one-off mutating action.
     const groupAvatar = await sdk.getAvatar(group, false);
     await runTask({
       name: `Removing ${selectedMembers.length} trusted avatar${selectedMembers.length === 1 ? '' : 's'} from ${shortenAddress(group)} ...`,
       promise: groupAvatar.untrust(selectedMembers),
     });
-
     selectedSet = new Set<Address>();
     await loadTrusted();
   }
 </script>
 
-<div class="space-y-3">
-  <div class="flex items-center justify-between">
+<div style="display:flex;flex-direction:column;gap:12px;">
+  <!-- Header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
     <div>
-      <div class="text-sm font-semibold">{groupDisplayName} members</div>
-      <div class="text-xs opacity-70">Manage trusted avatars for this group.</div>
+      <div style="font-size:13px;font-weight:580;color:{T.ink};">{groupDisplayName} members</div>
+      <div style="font-size:11.5px;color:{T.inkMuted};margin-top:2px;">Manage trusted avatars for this group.</div>
     </div>
-    <div class="flex items-center gap-2">
+    <div style="display:flex;align-items:center;gap:8px;">
       {#if selectedCount > 0}
         <ActionButton action={removeSelected}>
           Remove {selectedCount} member{selectedCount === 1 ? '' : 's'}
         </ActionButton>
       {/if}
-      <button class="btn btn-sm btn-primary" onclick={openAddPopup}>
-        Add
-      </button>
+      <button
+        style="height:32px;padding:0 16px;border-radius:9999px;border:0;background:{T.primary};color:#fff;font-size:12.5px;font-weight:580;cursor:pointer;"
+        onclick={openAddPopup}
+      >Add</button>
     </div>
   </div>
 
-  <div class="text-xs opacity-70">{trusted.length} trusted avatar{trusted.length === 1 ? '' : 's'}</div>
+  <div style="font-size:11.5px;color:{T.inkMuted};">{trusted.length} trusted avatar{trusted.length === 1 ? '' : 's'}</div>
 
   <div role="group" aria-label="Search trusted avatars">
     <ListShell
@@ -250,7 +215,7 @@
       noMatchesLabel="No matches"
       wrapInListContainer={false}
     >
-      <div bind:this={trustedListEl} class="w-full flex flex-col gap-y-1.5" role="list">
+      <div bind:this={trustedListEl} style="display:flex;flex-direction:column;gap:6px;width:100%;" role="list">
         {#each $filteredItems as address (address)}
           <div
             tabindex={0}
@@ -261,45 +226,37 @@
             role="button"
             aria-pressed={selectedSet.has(address) ? 'true' : 'false'}
             aria-label={`Trusted member ${address}`}
-            class="rounded-[var(--row-radius)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            style="background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;cursor:pointer;"
           >
-            <RowFrame clickable={false} dense={true} noLeading={true}>
-              <div class="min-w-0">
-                <Avatar
-                  address={address}
-                  avatarInfo={avatarInfoFor(address)}
-                  view="horizontal"
-                  clickable={true}
-                  bottomInfo={`${avatarTypeToReadable(trustedAvatarTypes[address.toLowerCase()])} • ${address}`}
-                />
-              </div>
-              {#snippet trailing()}
-                <div class="flex items-center gap-2">
-                  <button
-                    type="button"
-                    class="btn btn-ghost btn-xs btn-square text-error/80 hover:text-error"
-                    aria-label="Untrust"
-                    title="Untrust"
-                    onclick={(event) => {
-                      event.stopPropagation();
-                      void untrustOne(address);
-                    }}
-                  >
-                    <img src="/trash.svg" alt="" class="h-3.5 w-3.5" aria-hidden="true" />
-                  </button>
-                  <input
-                    type="checkbox"
-                    class="checkbox checkbox-sm"
-                    checked={selectedSet.has(address)}
-                    onchange={(e) => onToggleSelectedFromCheckbox(address, e)}
-                  />
-                </div>
-              {/snippet}
-            </RowFrame>
+            <div style="min-width:0;flex:1;">
+              <Avatar
+                address={address}
+                avatarInfo={avatarInfoFor(address)}
+                view="horizontal"
+                clickable={true}
+                bottomInfo={`${avatarTypeToReadable(trustedAvatarTypes[address.toLowerCase()])} • ${address}`}
+              />
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+              <button
+                type="button"
+                style="width:28px;height:28px;border-radius:9999px;border:1px solid rgba(196,68,48,0.2);background:{T.negativeSoft};color:{T.negative};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;"
+                aria-label="Untrust"
+                title="Untrust"
+                onclick={(event) => { event.stopPropagation(); void untrustOne(address); }}
+              >
+                <img src="/trash.svg" alt="" style="width:13px;height:13px;" aria-hidden="true" />
+              </button>
+              <input
+                type="checkbox"
+                style="width:15px;height:15px;accent-color:{T.primary};cursor:pointer;"
+                checked={selectedSet.has(address)}
+                onchange={(e) => onToggleSelectedFromCheckbox(address, e)}
+              />
+            </div>
           </div>
         {/each}
       </div>
     </ListShell>
   </div>
 </div>
-
