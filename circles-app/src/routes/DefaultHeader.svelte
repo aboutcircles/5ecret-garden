@@ -169,39 +169,54 @@
   </button>
 
   <!-- Hamburger menu -->
-  <details class="dropdown dropdown-end flex-none" bind:this={menuEl}>
+  <details class="defaultheader-menu flex-none" bind:this={menuEl}>
     <summary
-      class="flex items-center justify-center list-none cursor-pointer"
+      style="width:36px;height:36px;border-radius:9999px;background:#FFFFFF;border:1px solid rgba(31,17,70,0.08);box-shadow:0 1px 2px rgba(15,10,30,0.04);display:flex;align-items:center;justify-content:center;list-style:none;cursor:pointer;"
       aria-haspopup="menu"
       aria-expanded={menuEl?.open ? 'true' : 'false'}
-      style="width:36px;height:36px;border-radius:9999px;background:#FFFFFF;border:1px solid rgba(31,17,70,0.08);box-shadow:0 1px 2px rgba(15,10,30,0.04);"
     >
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-        class="inline-block w-4 h-4 stroke-current">
+        style="width:16px;height:16px;stroke:currentColor;">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
           d="M4 6h16M4 12h16M4 18h16" />
       </svg>
     </summary>
-    <ul class="menu dropdown-content bg-base-100 z-[1] w-64 p-2 mt-1"
-      style="border-radius:14px;box-shadow:0 4px 24px rgba(15,10,30,0.12);border:1px solid rgba(31,17,70,0.08);">
+    <ul style="position:absolute;right:0;top:calc(100% + 6px);z-index:1;width:256px;background:#FFFFFF;border-radius:14px;box-shadow:0 4px 24px rgba(15,10,30,0.12);border:1px solid rgba(31,17,70,0.08);padding:8px;list-style:none;margin:0;">
       <li>
-        <a class="link link-hover rounded-lg" href="/settings">Settings</a>
-        <ul>
-          <li><a class="link link-hover" href="/settings?tab=personal">Profile</a></li>
-          <li><a class="link link-hover" href="/settings?tab=bookmarks">Bookmarks</a></li>
-          <li><a class="link link-hover" href="/settings?tab=orders">Orders</a></li>
-          <li><a class="link link-hover" href="/settings?tab=sales">Sales</a></li>
-          <li><a class="link link-hover" href="/settings?tab=marketplace">Offers</a></li>
-          <li><a class="link link-hover" href="/settings?tab=payment">Payment gateways</a></li>
-          <li><a class="link link-hover" href="/settings?tab=namespaces">Namespaces</a></li>
-          <li><a class="link link-hover" href="/settings?tab=keys">Signing keys</a></li>
+        <a class="defaultheader-link" href="/settings">Settings</a>
+        <ul style="list-style:none;padding:0;margin:0;">
+          <li><a class="defaultheader-link" href="/settings?tab=personal">Profile</a></li>
+          <li><a class="defaultheader-link" href="/settings?tab=bookmarks">Bookmarks</a></li>
+          <li><a class="defaultheader-link" href="/settings?tab=orders">Orders</a></li>
+          <li><a class="defaultheader-link" href="/settings?tab=sales">Sales</a></li>
+          <li><a class="defaultheader-link" href="/settings?tab=marketplace">Offers</a></li>
+          <li><a class="defaultheader-link" href="/settings?tab=payment">Payment gateways</a></li>
+          <li><a class="defaultheader-link" href="/settings?tab=namespaces">Namespaces</a></li>
+          <li><a class="defaultheader-link" href="/settings?tab=keys">Signing keys</a></li>
         </ul>
       </li>
-      <li><a class="link link-hover" href="/terms">Terms of use</a></li>
-      <li><a class="link link-hover" href="/privacy-policy">Privacy policy</a></li>
+      <li><a class="defaultheader-link" href="/terms">Terms of use</a></li>
+      <li><a class="defaultheader-link" href="/privacy-policy">Privacy policy</a></li>
       {#if dev}
-        <li><a class="link link-hover" href="/kitchen-sink">Kitchen sink</a></li>
+        <li><a class="defaultheader-link" href="/kitchen-sink">Kitchen sink</a></li>
       {/if}
     </ul>
   </details>
 </header>
+
+<style>
+  .defaultheader-menu {
+    position: relative;
+  }
+  .defaultheader-link {
+    display: block;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #2A1F4A;
+    text-decoration: none;
+  }
+  .defaultheader-link:hover {
+    background: rgba(0,0,0,0.04);
+  }
+</style>

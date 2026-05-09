@@ -2,33 +2,34 @@
   import GalleryRow from './GalleryRow.svelte';
   import { popupGalleryEntries } from './galleryRegistry';
   import type { ViewportMode } from './types';
+  import { T } from '$lib/design-system/tokens';
 
   const entries = popupGalleryEntries;
   let viewportMode = $state<ViewportMode>('phone');
 </script>
 
-<section class="sticky top-2 z-20 rounded-xl border border-base-300 bg-base-100/95 backdrop-blur p-4 space-y-2">
+<section style="position:sticky;top:8px;z-index:20;border-radius:14px;border:1px solid {T.hairlineSoft};background:{T.surface};padding:16px;display:flex;flex-direction:column;gap:8px;backdrop-filter:blur(8px);">
   <div class="flex flex-wrap items-start justify-between gap-3">
     <div>
-      <h2 class="text-lg font-semibold">Popup Gallery</h2>
-      <p class="text-sm opacity-75">
+      <h2 style="font-size:16px;font-weight:580;margin:0;">Popup Gallery</h2>
+      <p style="font-size:13px;color:{T.inkMuted};margin:0;">
         Interactive inventory of popup flows and standalone popup pages. All pages auto-embed inline and can also open in the popup host.
       </p>
     </div>
 
-    <div class="join" role="tablist" aria-label="Viewport mode">
+    <div role="tablist" aria-label="Viewport mode" style="display:flex;gap:4px;">
       <button
-        class="btn btn-sm join-item"
-        class:btn-primary={viewportMode === 'phone'}
-        class:btn-ghost={viewportMode !== 'phone'}
+        style={viewportMode === 'phone'
+          ? `height:32px;padding:0 14px;border-radius:9999px;border:0;background:${T.primary};color:#fff;font-size:12.5px;font-weight:580;cursor:pointer;`
+          : `height:32px;padding:0 14px;border-radius:9999px;border:0;background:transparent;color:${T.inkMuted};font-size:12.5px;font-weight:580;cursor:pointer;`}
         onclick={() => (viewportMode = 'phone')}
       >
         Phone
       </button>
       <button
-        class="btn btn-sm join-item"
-        class:btn-primary={viewportMode === 'tablet'}
-        class:btn-ghost={viewportMode !== 'tablet'}
+        style={viewportMode === 'tablet'
+          ? `height:32px;padding:0 14px;border-radius:9999px;border:0;background:${T.primary};color:#fff;font-size:12.5px;font-weight:580;cursor:pointer;`
+          : `height:32px;padding:0 14px;border-radius:9999px;border:0;background:transparent;color:${T.inkMuted};font-size:12.5px;font-weight:580;cursor:pointer;`}
         onclick={() => (viewportMode = 'tablet')}
       >
         Tablet
@@ -37,7 +38,7 @@
   </div>
 </section>
 
-<div class="space-y-4">
+<div style="display:flex;flex-direction:column;gap:16px;">
   {#each entries as entry (entry.id)}
     <GalleryRow {entry} {viewportMode} />
   {/each}

@@ -152,14 +152,14 @@
   {/snippet}
 
   {#snippet collapsedLeft()}
-    <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">Sales</span>
+    <span style="font-size:1rem;font-weight:600;letter-spacing:-0.015em;color:#0F0A1E;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Sales</span>
   {/snippet}
 
   {#snippet collapsedMenu()}
     <ActionButtonDropDown {actions} />
   {/snippet}
 
-  <section class="bg-base-100 border border-base-300 rounded-xl p-3 md:p-4">
+  <section style="background:#FFFFFF;border:1px solid rgba(31,17,70,0.05);border-radius:12px;padding:12px;">
     <ListShell
       query={query}
       searchPlaceholder="Search by order id or payment reference"

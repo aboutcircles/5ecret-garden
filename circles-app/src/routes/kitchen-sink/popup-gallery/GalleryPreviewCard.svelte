@@ -6,6 +6,8 @@
     viewportMode: ViewportMode;
   }
 
+  import { T } from '$lib/design-system/tokens';
+
   let { step, viewportMode }: Props = $props();
 
   const stepProps = $derived(step.propsFactory ? step.propsFactory() : {});
@@ -16,10 +18,9 @@
   );
 </script>
 
-<article class="shrink-0 p-0 overflow-auto">
+<article style="flex-shrink:0;padding:0;overflow:auto;">
   <div
-    class="rounded-md border border-base-300 bg-base-100 overflow-auto"
-    style={`width:${viewport.width}px;height:${viewport.height}px`}
+    style={`border-radius:6px;border:1px solid ${T.hairlineSoft};background:${T.surface};overflow:auto;width:${viewport.width}px;height:${viewport.height}px`}
     aria-label={`${step.title} preview (${viewport.label})`}
   >
     <svelte:component this={step.component} {...stepProps} />

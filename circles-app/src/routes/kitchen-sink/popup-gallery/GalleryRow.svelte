@@ -7,36 +7,38 @@
     viewportMode: ViewportMode;
   }
 
+  import { T } from '$lib/design-system/tokens';
+
   let { entry, viewportMode }: Props = $props();
 
   const steps = $derived(entry.kind === 'flow' ? entry.steps : [entry.step]);
 </script>
 
 <section
-  class="rounded-xl border border-base-300 bg-base-100 p-4 space-y-3"
+  style="border-radius:14px;border:1px solid {T.hairlineSoft};background:{T.surface};padding:16px;display:flex;flex-direction:column;gap:12px;"
   data-popup-gallery-row={entry.id}
   data-popup-gallery-kind={entry.kind}
 >
   <div class="flex flex-wrap items-start justify-between gap-3">
     <div>
-      <h3 class="text-base font-semibold">{entry.label}</h3>
-      <p class="text-xs opacity-70 mt-1">{entry.purpose}</p>
+      <h3 style="font-size:13px;font-weight:500;margin:0;">{entry.label}</h3>
+      <p style="font-size:11.5px;color:{T.inkMuted};margin-top:4px;">{entry.purpose}</p>
 
       {#if entry.details}
-        <details class="mt-2">
-          <summary class="text-xs font-semibold opacity-80 cursor-pointer select-none">Flow details</summary>
-          <div class="mt-2 text-xs opacity-80 whitespace-pre-wrap leading-relaxed">{entry.details}</div>
+        <details style="margin-top:8px;">
+          <summary style="font-size:11.5px;font-weight:580;color:{T.inkMuted};cursor:pointer;user-select:none;">Flow details</summary>
+          <div style="margin-top:8px;font-size:11.5px;color:{T.inkMuted};white-space:pre-wrap;line-height:1.5;">{entry.details}</div>
         </details>
       {/if}
     </div>
-    <div class="flex items-center gap-2">
-      <span class="badge badge-outline badge-sm">{entry.domain}</span>
-      <span class="badge badge-ghost badge-sm">{entry.kind === 'flow' ? `${steps.length} steps` : 'standalone'}</span>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="display:inline-block;border:1px solid {T.hairline};color:{T.inkMuted};border-radius:9999px;padding:2px 8px;font-size:11px;font-weight:540;">{entry.domain}</span>
+      <span style="display:inline-block;border:1px solid {T.hairline};color:{T.inkMuted};border-radius:9999px;padding:2px 8px;font-size:11px;font-weight:540;">{entry.kind === 'flow' ? `${steps.length} steps` : 'standalone'}</span>
     </div>
   </div>
 
-  <div class="overflow-x-auto">
-    <div class="flex gap-3 min-w-max pb-1">
+  <div style="overflow-x:auto;">
+    <div style="display:flex;gap:12px;min-width:max-content;padding-bottom:4px;">
       {#each steps as step (step.id)}
         <GalleryPreviewCard {step} {viewportMode} />
       {/each}
@@ -44,11 +46,11 @@
   </div>
 
   {#if entry.entrypoints?.length}
-    <div class="rounded-lg border border-base-300 bg-base-50/40 p-3">
-      <div class="text-[11px] font-semibold uppercase tracking-wide opacity-60 mb-2">Entrypoints</div>
-      <ul class="space-y-1">
+    <div style="border-radius:8px;border:1px solid {T.hairlineSoft};padding:12px;background:{T.pageDeep};">
+      <div style="font-size:11px;font-weight:580;text-transform:uppercase;letter-spacing:0.05em;color:{T.inkMuted};margin-bottom:8px;">Entrypoints</div>
+      <ul style="display:flex;flex-direction:column;gap:4px;list-style:none;margin:0;padding:0;">
         {#each entry.entrypoints as ep}
-          <li class="text-xs font-mono opacity-80 break-all">{ep}</li>
+          <li style="font-size:11.5px;font-family:monospace;color:{T.inkMuted};word-break:break-all;">{ep}</li>
         {/each}
       </ul>
     </div>

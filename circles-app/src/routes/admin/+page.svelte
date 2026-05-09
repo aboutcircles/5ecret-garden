@@ -508,7 +508,7 @@
         description="Connect an allowlisted admin wallet to manage market configuration."
       >
         {#if authError}
-          <p class="text-error text-sm">{authError}</p>
+          <p style="color:#C44430;font-size:14px;">{authError}</p>
         {/if}
       </AdminSectionCard>
     {:else}
@@ -519,25 +519,25 @@
       >
         {#snippet actions()}
           <button
-            class="btn btn-outline btn-sm btn-square"
+            style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;border:1px solid rgba(31,17,70,0.08);background:#FFFFFF;color:#2A1F4A;cursor:pointer;"
             onclick={loadAdminData}
             disabled={loadingAny}
             aria-label={loadingAny ? 'Refreshing…' : 'Refresh'}
           >
             <Lucide icon={LRefreshCw} size={16} class={loadingAny ? 'animate-spin' : ''} />
-            <span class="sr-only">{loadingAny ? 'Refreshing…' : 'Refresh'}</span>
+            <span style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0;">{loadingAny ? 'Refreshing…' : 'Refresh'}</span>
           </button>
-          <button class="btn btn-primary btn-sm" onclick={openNewProductWizard}>
+          <button style="height:30px;padding:0 14px;border-radius:9999px;border:0;background:#5849D4;color:#fff;font-size:13px;font-weight:580;cursor:pointer;box-shadow:0 2px 6px rgba(88,73,212,0.2);" onclick={openNewProductWizard}>
             Connect product
           </button>
         {/snippet}
         {#if hasRouteOnlyProducts}
-          <p class="text-xs text-warning mt-1">
+          <p style="font-size:11px;color:#B07014;margin-top:4px;">
             Some SKUs only have a route configured. Open them to add the missing product adapter.
           </p>
         {/if}
         {#if productsError || routesError || connectionsError}
-          <p class="text-error text-sm">{productsError || routesError || connectionsError}</p>
+          <p style="color:#C44430;font-size:14px;">{productsError || routesError || connectionsError}</p>
         {:else}
           <Tabs bind:selected={selectedProductsTab} variant="boxed" size="sm" class="w-full p-0">
             <Tab id="codedispenser" title="Voucher codes" badge={codeProductsUnified.length} panelClass="pt-4">
@@ -571,7 +571,7 @@
                   Odoo connections are shown per seller below. Click a seller group to review products.
                 </div>
                 <div class="flex items-center gap-2">
-                  <button class="btn btn-outline btn-xs" onclick={() => openConnectionEditor(null)}>
+                  <button style="height:26px;padding:0 12px;border-radius:9999px;border:1px solid rgba(31,17,70,0.08);background:#FFFFFF;color:#2A1F4A;font-size:12px;font-weight:540;cursor:pointer;" onclick={() => openConnectionEditor(null)}>
                     New connection
                   </button>
                 </div>

@@ -75,23 +75,24 @@
     getScope: () => demoListScopeEl,
     rowSelector: '[data-demo-generic-row]'
   });
+  import { T } from '$lib/design-system/tokens';
 </script>
 
-<section class="rounded-xl border border-base-300 bg-base-100 p-4 space-y-4">
-  <h2 class="text-lg font-semibold">Lists & Loading</h2>
+<section style="border-radius:14px;border:1px solid {T.hairlineSoft};background:{T.surface};padding:16px;display:flex;flex-direction:column;gap:16px;">
+  <h2 style="font-size:16px;font-weight:580;margin:0;">Lists & Loading</h2>
 
-  <div class="space-y-2">
-    <h3 class="font-medium">Skeleton states</h3>
-    <div class="space-y-2">
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <h3 style="font-size:13px;font-weight:500;margin:0;">Skeleton states</h3>
+    <div style="display:flex;flex-direction:column;gap:8px;">
       <BalanceRowSkeleton />
       <BalanceRowSkeleton height={56} />
     </div>
   </div>
 
-  <div class="space-y-2">
-    <h3 class="font-medium">GenericList with paged loading</h3>
-    <p class="text-sm opacity-70">Scroll list: additional rows are loaded via the demo store.</p>
-    <div class="max-h-80 overflow-auto rounded-lg border border-base-300 p-2" data-demo-list-scope bind:this={demoListScopeEl}>
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <h3 style="font-size:13px;font-weight:500;margin:0;">GenericList with paged loading</h3>
+    <p style="font-size:13px;color:{T.inkMuted};margin:0;">Scroll list: additional rows are loaded via the demo store.</p>
+    <div style="max-height:320px;overflow:auto;border-radius:8px;border:1px solid {T.hairlineSoft};padding:8px;" data-demo-list-scope bind:this={demoListScopeEl}>
       <ListShell
         query={query}
         searchPlaceholder="Search demo rows"

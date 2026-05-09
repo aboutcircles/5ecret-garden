@@ -72,18 +72,18 @@
         usePagePadding={true}
 >
     {#snippet title()}
-        <div class="flex items-center gap-2">
-            <button 
+        <div style="display:flex;align-items:center;gap:8px;">
+            <button
                 type="button"
                 onclick={goBack}
-                class="btn btn-sm btn-ghost p-0"
+                style="background:transparent;border:0;padding:0;cursor:pointer;display:inline-flex;align-items:center;color:#2A1F4A;"
                 aria-label="Go back"
             >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" style="width:20px;height:20px;" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd" />
                 </svg>
             </button>
-            <h1 class="text-xl font-semibold truncate">{product?.product?.name || 'Product Details'}</h1>
+            <h1 style="font-size:20px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:0;">{product?.product?.name || 'Product Details'}</h1>
         </div>
     {/snippet}
 
@@ -91,7 +91,9 @@
 
     {#if loading}
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 16px;gap:14px;">
-            <span class="loading loading-spinner loading-lg" style="color:{T.primary};" aria-hidden="true"></span>
+            <svg class="sku-spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="width:32px;height:32px;color:{T.primary};" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="32" stroke-dashoffset="12" stroke-linecap="round"/>
+            </svg>
             <p style="font-size:13px;color:{T.inkMuted};margin:0;">Loading product…</p>
         </div>
     {:else if errorMsg}
@@ -169,3 +171,8 @@
         </div>
     {/if}
 </PageScaffold>
+
+<style>
+  @keyframes sku-spin { to { transform: rotate(360deg); } }
+  .sku-spinner { animation: sku-spin 0.8s linear infinite; }
+</style>

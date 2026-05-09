@@ -7,6 +7,7 @@
   }
 
   let { item }: { item: DemoItem } = $props();
+  import { T } from '$lib/design-system/tokens';
 
   function focusDemoSearchInput(current: HTMLElement): void {
     const scope = current.closest<HTMLElement>('[data-demo-list-scope]');
@@ -42,12 +43,12 @@
   tabindex={0}
   role="button"
   aria-label={`Open ${item.title}`}
-  class="rounded-lg border border-base-300 bg-base-100 px-3 py-2 flex items-center justify-between gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+  style="border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:12px;outline:none;"
   onkeydown={onRowKeydown}
 >
-  <div class="min-w-0">
-    <div class="font-medium truncate">{item.title}</div>
-    <div class="text-xs opacity-70 truncate">{item.subtitle}</div>
+  <div style="min-width:0;">
+    <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{item.title}</div>
+    <div style="font-size:11.5px;color:{T.inkMuted};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{item.subtitle}</div>
   </div>
-  <div class="text-sm tabular-nums">{item.amount}</div>
+  <div style="font-size:13px;font-variant-numeric:tabular-nums;">{item.amount}</div>
 </div>

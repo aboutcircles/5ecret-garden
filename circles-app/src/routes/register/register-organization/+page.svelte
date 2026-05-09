@@ -87,7 +87,7 @@
           />
         </label>
 
-        <ActionButton action={registerOrganization} disabled={profile.name.trim().length < 1} class="btn btn-primary w-full">Create organization</ActionButton>
+        <ActionButton action={registerOrganization} disabled={profile.name.trim().length < 1}>Create organization</ActionButton>
       </div>
     </div>
   </section>

@@ -17,6 +17,7 @@
 
   let { item }: Props = $props();
   const incoming = $derived.by(() => item.direction === 'in' || item.direction === 'mint');
+  import { T } from '$lib/design-system/tokens';
 </script>
 
 <RowFrame clickable={true} dense={true} noLeading={true}>
@@ -28,7 +29,7 @@
         <div class="truncate text-xs opacity-70">{item.timeAgo} • {item.counterpartyAddress}</div>
       </div>
     </div>
-    <div class={`shrink-0 text-sm font-semibold ${incoming ? 'text-success' : 'text-error'}`}>
+    <div style={`flex-shrink:0;font-size:13px;font-weight:580;color:${incoming ? T.positive : T.negative};`}>
       {incoming ? '+' : '-'}{item.amount.toFixed(2)} CRC
     </div>
   </div>

@@ -40,17 +40,17 @@
   {/snippet}
   {#snippet collapsedMenu()}<ActionButtonDropDown {actions} />{/snippet}
 
-  <div class="mt-3">
+  <div style="margin-top:12px;">
     <Disclaimer/>
   </div>
 
-  <section class="mt-4">
-    <h2 class="text-sm font-semibold text-base-content/70 tracking-wide uppercase">Register</h2>
-    <div class="mt-2 space-y-2">
-      <div class="bg-base-100 border rounded-xl px-4 py-3 shadow-sm">
-        <div class="flex flex-col items-center text-center gap-4">
-          <img src="/person.svg" alt="Shoes" class="w-16 h-16 rounded-xl"/>
-          <h3 class="text-xl font-semibold">Register person</h3>
+  <section style="margin-top:16px;">
+    <h2 style="font-size:11px;font-weight:600;color:rgba(15,10,30,0.62);letter-spacing:0.06em;text-transform:uppercase;margin:0 0 8px 0;">Register</h2>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div style="background:#FFFFFF;border:1px solid rgba(31,17,70,0.08);border-radius:12px;padding:16px 12px;box-shadow:0 1px 2px rgba(15,10,30,0.04);">
+        <div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px;">
+          <img src="/person.svg" alt="Shoes" style="width:64px;height:64px;border-radius:12px;"/>
+          <h3 style="font-size:20px;font-weight:600;margin:0;">Register person</h3>
           <div>
             <ActionButton action={registerHuman}>Create</ActionButton>
           </div>

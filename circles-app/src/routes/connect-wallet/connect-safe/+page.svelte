@@ -160,15 +160,15 @@
 
 {#if (!signer.address || !$circles) && !initInFlight}
   <div class="page page--md mx-auto mt-4 px-4">
-    <div class="rounded-xl border border-base-300 bg-base-100 p-4 space-y-3">
-      <p class="text-sm">
+    <div style="border-radius:12px;border:1px solid rgba(31,17,70,0.05);background:#FFFFFF;padding:16px;display:flex;flex-direction:column;gap:12px;">
+      <p style="font-size:14px;margin:0;">
         {#if initError}
-          Wallet init failed: <span class="text-error">{initError}</span>
+          Wallet init failed: <span style="color:#C44430;">{initError}</span>
         {:else}
           Wallet didn't finish connecting. Try again?
         {/if}
       </p>
-      <button type="button" class="btn btn-sm btn-primary" onclick={() => bootstrapRunner()}>
+      <button type="button" style="height:32px;padding:0 16px;border-radius:9999px;border:0;background:#5849D4;color:#fff;font-size:13px;font-weight:580;cursor:pointer;display:inline-flex;align-items:center;width:fit-content;" onclick={() => bootstrapRunner()}>
         Retry
       </button>
     </div>

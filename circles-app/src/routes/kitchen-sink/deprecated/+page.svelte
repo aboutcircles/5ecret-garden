@@ -1,6 +1,10 @@
-<section class="rounded-xl border border-warning/40 bg-base-100 p-4 space-y-4">
-  <h2 class="text-lg font-semibold">Deprecated Showcase</h2>
-  <p class="text-sm opacity-75">
+<script lang="ts">
+  import { T } from '$lib/design-system/tokens';
+</script>
+
+<section style="border-radius:14px;border:1px solid rgba(176,112,20,0.4);background:{T.surface};padding:16px;display:flex;flex-direction:column;gap:16px;">
+  <h2 style="font-size:16px;font-weight:580;margin:0;">Deprecated Showcase</h2>
+  <p style="font-size:13px;color:{T.inkMuted};margin:0;">
     These kitchen sink pages are kept temporarily for migration/reference, but are no longer part of the active
     golden-pattern surface.
   </p>

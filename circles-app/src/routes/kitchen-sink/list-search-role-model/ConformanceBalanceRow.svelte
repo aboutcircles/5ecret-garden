@@ -15,6 +15,8 @@
     item: ConformanceBalanceRowItem;
   }
 
+  import { T } from '$lib/design-system/tokens';
+
   let { item }: Props = $props();
 </script>
 
@@ -35,7 +37,7 @@
           <div class="text-xs opacity-70">{item.secondaryAmount.toFixed(2)} secondary</div>
         {/if}
       </div>
-      <button type="button" class="btn btn-ghost btn-xs" aria-label="Row actions">
+      <button type="button" style="height:26px;padding:0 10px;border-radius:9999px;border:0;background:transparent;color:{T.inkMuted};font-size:11.5px;font-weight:540;cursor:pointer;" aria-label="Row actions">
         <img src="/union.svg" alt="" class="h-4 w-4" />
       </button>
     </div>

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { T } from '$lib/design-system/tokens.js';
+
   interface Props {
     title: string;
     message?: string;
@@ -8,19 +10,19 @@
 
   let { title, message = '', tone = 'info', className = '' }: Props = $props();
 
-  const toneClasses = {
-    info: 'bg-info/10 border-info/40 text-base-content',
-    success: 'bg-success/10 border-success/40 text-base-content',
-    warning: 'bg-warning/10 border-warning/40 text-base-content',
-    error: 'bg-error/10 border-error/40 text-base-content',
+  const toneStyles = {
+    info:    { bg: T.primaryFaint,  border: T.primary,   color: T.inkBody },
+    success: { bg: T.positiveSoft,  border: T.positive,  color: T.inkBody },
+    warning: { bg: T.warningSoft,   border: T.warning,   color: T.inkBody },
+    error:   { bg: T.negativeSoft,  border: T.negative,  color: T.inkBody },
   } as const;
 
-  const resolvedToneClass = $derived(toneClasses[tone]);
+  const resolvedStyle = $derived(toneStyles[tone]);
 </script>
 
-<div class={`w-full flex flex-col border-t-4 mb-4 rounded-b px-4 py-3 shadow-md ${resolvedToneClass} ${className}`.trim()}>
-  <p class="font-bold">{title}</p>
+<div style={`width:100%;display:flex;flex-direction:column;border-top:4px solid ${resolvedStyle.border};margin-bottom:16px;border-radius:0 0 6px 6px;padding:12px 16px;box-shadow:0 2px 6px rgba(15,10,30,0.06);background:${resolvedStyle.bg};color:${resolvedStyle.color};`}>
+  <p style="font-weight:700;margin:0;">{title}</p>
   {#if message}
-    <p class="text-sm text-base-content/80">{message}</p>
+    <p style="font-size:14px;color:{T.inkMuted};margin:4px 0 0 0;">{message}</p>
   {/if}
 </div>

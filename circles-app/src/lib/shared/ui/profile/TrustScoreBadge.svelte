@@ -6,6 +6,7 @@
         getCachedTrusteeValidation,
         type TrusteeValidationResponse,
     } from '$lib/shared/model/profile';
+    import { T } from '$lib/design-system/tokens.js';
 
     interface Props {
         address: Address | undefined;
@@ -119,18 +120,23 @@
     });
 </script>
 
-<div class="mt-1 h-6 flex items-center justify-center">
+<div style="margin-top:4px;height:24px;display:flex;align-items:center;justify-content:center;">
     {#if trustScoreLoading}
-        <div class="h-4 w-40 rounded bg-base-200 animate-pulse" aria-hidden="true"></div>
+        <div class="trustscore-pulse" style="height:16px;width:160px;border-radius:4px;background:{T.pageDeep};" aria-hidden="true"></div>
     {:else if trustScoreError}
-        <span class="text-xs text-base-content/55">Trust score unavailable</span>
+        <span style="font-size:12px;color:{T.inkSubtle};">Trust score unavailable</span>
     {:else if trustScoreSupported === false}
-        <span class="text-xs text-base-content/60">Trust score not supported</span>
+        <span style="font-size:12px;color:{T.inkMuted};">Trust score not supported</span>
     {:else if formattedGnosisTrustScore !== null}
-        <span class="text-xs text-base-content/70" title={trustScoreTitle}>
-            Trust score: <span class="font-semibold text-base-content">{formattedGnosisTrustScore}</span>
+        <span style="font-size:12px;color:{T.inkMuted};" title={trustScoreTitle}>
+            Trust score: <span style="font-weight:600;color:{T.ink};">{formattedGnosisTrustScore}</span>
         </span>
     {:else}
-        <span class="text-xs text-base-content/45">&nbsp;</span>
+        <span style="font-size:12px;color:{T.inkFaint};">&nbsp;</span>
     {/if}
 </div>
+
+<style>
+  @keyframes trustscore-pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+  .trustscore-pulse { animation: trustscore-pulse 1.5s ease-in-out infinite; }
+</style>

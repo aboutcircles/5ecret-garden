@@ -3,11 +3,13 @@
     item: any;
   }
 
+  import { T } from '$lib/design-system/tokens';
+
   let { item }: Props = $props();
   const row = $derived(item?.row ?? {});
 </script>
 
-<div class="px-2 py-2 border-b border-base-200 text-xs">
-  <div class="font-medium">{row?.$event ?? 'Event'}</div>
-  <div class="opacity-70 break-all">{row?.transactionHash ?? '0x…'}</div>
+<div style="padding:8px;border-bottom:1px solid {T.hairlineSoft};font-size:11.5px;">
+  <div style="font-weight:500;">{row?.$event ?? 'Event'}</div>
+  <div style="color:{T.inkMuted};word-break:break-all;">{row?.transactionHash ?? '0x…'}</div>
 </div>

@@ -19,45 +19,26 @@
   let canvas: HTMLCanvasElement;
   let chart: Chart<'doughnut', number[], string>;
   let chartData: any;
-  const colorCache = new Map<string, string>();
 
-  const themeTokens = ['--p', '--s', '--a', '--in', '--su', '--wa', '--er'];
+  const palette = [
+    { bg: 'rgba(88,73,212,0.25)',  border: '#5849D4' },
+    { bg: 'rgba(123,168,135,0.25)', border: '#7BA887' },
+    { bg: 'rgba(232,137,106,0.25)', border: '#E8896A' },
+    { bg: 'rgba(244,210,122,0.25)', border: '#F4D27A' },
+    { bg: 'rgba(184,174,234,0.25)', border: '#B8AEEA' },
+    { bg: 'rgba(212,120,159,0.25)', border: '#D4789F' },
+    { bg: 'rgba(176,112,20,0.25)',  border: '#B07014' },
+  ];
 
-  function resolveThemeColor(token: string, alpha: number): string {
-    const key = `${token}:${alpha}`;
-    const cached = colorCache.get(key);
-    if (cached) return cached;
+  const generateColors = (index: number) => ({
+    background: palette[index % palette.length].bg,
+    border: palette[index % palette.length].border,
+  });
 
-    if (typeof window === 'undefined' || typeof document === 'undefined') {
-      const fallback = `rgba(99, 102, 241, ${alpha})`;
-      colorCache.set(key, fallback);
-      return fallback;
-    }
-
-    const probe = document.createElement('span');
-    probe.style.color = `oklch(var(${token}) / ${alpha})`;
-    probe.style.position = 'absolute';
-    probe.style.pointerEvents = 'none';
-    probe.style.opacity = '0';
-    document.body.appendChild(probe);
-    const resolved = getComputedStyle(probe).color || `rgba(99, 102, 241, ${alpha})`;
-    probe.remove();
-    colorCache.set(key, resolved);
-    return resolved;
-  }
-
-  const generateColors = (index: number) => {
-    const token = themeTokens[index % themeTokens.length];
-    return {
-      background: resolveThemeColor(token, 0.25),
-      border: resolveThemeColor(token, 1),
-    };
-  };
-
-  const legendColor = $derived(resolveThemeColor('--bc', 0.75));
-  const tooltipBg = $derived(resolveThemeColor('--b1', 0.95));
-  const tooltipText = $derived(resolveThemeColor('--bc', 0.9));
-  const tooltipBorder = $derived(resolveThemeColor('--b3', 0.6));
+  const legendColor = T.inkMuted;
+  const tooltipBg = T.surface;
+  const tooltipText = T.inkBody;
+  const tooltipBorder = T.hairline;
 
   $effect(() => {
     chartData = {

@@ -96,7 +96,7 @@
   {/snippet}
 
   {#snippet collapsedLeft()}
-    <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">
+    <span style="font-size:1rem;font-weight:600;letter-spacing:-0.015em;color:#0F0A1E;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
       {groupTitle}
     </span>
   {/snippet}
@@ -106,12 +106,12 @@
   {/snippet}
 
   {#if group}
-    <section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
+    <section style="background:#FFFFFF;border:1px solid rgba(31,17,70,0.05);border-radius:12px;padding:16px;width:100%;">
       <GroupMembersManager group={group} />
     </section>
   {:else}
-    <section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
-      <div class="text-sm opacity-70">Invalid group route.</div>
+    <section style="background:#FFFFFF;border:1px solid rgba(31,17,70,0.05);border-radius:12px;padding:16px;width:100%;">
+      <div style="font-size:14px;opacity:0.7;">Invalid group route.</div>
     </section>
   {/if}
 </PageScaffold>

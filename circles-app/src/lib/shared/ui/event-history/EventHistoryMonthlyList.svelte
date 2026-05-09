@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { MonthlyItem, RangeOverlayEvent } from './types';
+  import { T } from '$lib/design-system/tokens.js';
 
   interface Props {
     monthlyItems: MonthlyItem[];
@@ -10,14 +11,14 @@
 
   let { monthlyItems, maxBucketCount, rangeEvents = [], onSelectMonth }: Props = $props();
 
-  function intensityClass(count: number, max: number): string {
-    if (count <= 0 || max <= 0) return 'bg-base-300/50';
+  function intensityStyle(count: number, max: number): string {
+    if (count <= 0 || max <= 0) return 'background:rgba(0,0,0,0.08);';
     const ratio = count / max;
-    if (ratio <= 0.2) return 'bg-primary/25';
-    if (ratio <= 0.4) return 'bg-primary/40';
-    if (ratio <= 0.6) return 'bg-primary/55';
-    if (ratio <= 0.8) return 'bg-primary/70';
-    return 'bg-primary';
+    if (ratio <= 0.2) return 'background:rgba(88,73,212,0.25);';
+    if (ratio <= 0.4) return 'background:rgba(88,73,212,0.40);';
+    if (ratio <= 0.6) return 'background:rgba(88,73,212,0.55);';
+    if (ratio <= 0.8) return 'background:rgba(88,73,212,0.70);';
+    return `background:${T.primary};`;
   }
 
   function nextMonthStartSec(monthStartSec: number): number {
@@ -47,30 +48,31 @@
   }
 </script>
 
-<div class="rounded-lg border border-base-300 overflow-auto max-h-[calc(80vh-14rem)]">
-  <ul class="divide-y divide-base-300">
+<div style="border-radius:10px;border:1px solid {T.hairlineSoft};overflow:auto;max-height:calc(80vh - 14rem);">
+  <ul style="list-style:none;margin:0;padding:0;">
     {#each monthlyItems as month (`month-${month.startSec}`)}
       {@const overlappingEvents = monthRangeEvents(month.startSec)}
-      <li>
+      <li style="border-top:1px solid {T.hairlineSoft};">
         <button
           type="button"
-          class="w-full px-3 py-2 flex items-center justify-between text-sm hover:bg-base-200/40"
+          class="monthlylist-row"
+          style="width:100%;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;font-size:14px;background:none;border:0;cursor:pointer;text-align:left;"
           onclick={() => onSelectMonth?.(month.startSec)}
         >
-          <span class="min-w-0 pr-2">
-            <span class="block">{month.label}</span>
+          <span style="min-width:0;padding-right:8px;">
+            <span style="display:block;">{month.label}</span>
             {#if overlappingEvents.length > 0}
-              <span class="mt-1 block space-y-1">
+              <span style="margin-top:4px;display:flex;flex-direction:column;gap:4px;">
                 {#each overlappingEvents.slice(0, 2) as event (`month-${month.startSec}-${event.id}`)}
                   <span
-                    class={`block h-[4px] bg-secondary/90 ${isMonthRangeStart(event, month.startSec) ? 'rounded-l-full' : ''} ${isMonthRangeEnd(event, month.startSec) ? 'rounded-r-full' : ''}`}
+                    style={`display:block;height:4px;background:rgba(88,73,212,0.7);${isMonthRangeStart(event, month.startSec) ? 'border-radius:9999px 0 0 9999px;' : ''}${isMonthRangeEnd(event, month.startSec) ? 'border-radius:0 9999px 9999px 0;' : ''}`}
                     title={`${event.title} (${formatEventRange(event)})`}
                   ></span>
                 {/each}
               </span>
             {/if}
           </span>
-          <span class={`px-2 py-1 rounded-md text-xs ${intensityClass(month.count, maxBucketCount)}`}>
+          <span style="padding:4px 8px;border-radius:6px;font-size:12px;{intensityStyle(month.count, maxBucketCount)}">
             {month.count} event{month.count === 1 ? '' : 's'}
           </span>
         </button>
@@ -78,3 +80,7 @@
     {/each}
   </ul>
 </div>
+
+<style>
+  .monthlylist-row:hover { background: rgba(0,0,0,0.04); }
+</style>

@@ -74,14 +74,6 @@
     .section { padding: 20px 22px; }
 }
 
-/* Apply settings card styling to inline-class section blocks used across settings/profile sections */
-[data-settings-shell] section.bg-base-100,
-[data-settings-shell] .bg-base-100.border.border-base-300.rounded-xl {
-    background: #FFFFFF !important;
-    border-color: rgba(31, 17, 70, 0.05) !important;
-    border-radius: 16px !important;
-    box-shadow: 0 1px 2px rgba(15, 10, 30, 0.04);
-}
 
 /* Typography */
 .h2 {
@@ -101,19 +93,19 @@
     line-height: 1;
 }
 
-.muted { @apply text-base-content/70; }
+.muted { color: rgba(15,10,30,0.62); }
 
 /* Icons & buttons */
-.icon { @apply w-4 h-4 shrink-0; }
-.back-btn { @apply btn btn-ghost btn-sm; }
+.icon { width: 1rem; height: 1rem; flex-shrink: 0; }
+.back-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    height: 32px; min-width: 32px; padding: 0 8px;
+    border-radius: 9999px; border: 0; background: transparent;
+    color: rgba(15,10,30,0.62); cursor: pointer;
+}
 
-/* Ensure pill-shaped buttons have generous horizontal padding */
-.btn:not(.btn-circle):not(.btn-square) { padding-left: 1.25rem; padding-right: 1.25rem; }
-.btn-sm:not(.btn-circle):not(.btn-square) { padding-left: 1rem; padding-right: 1rem; }
-.btn-xs:not(.btn-circle):not(.btn-square) { padding-left: 0.75rem; padding-right: 0.75rem; }
-
-/* --rounded-btn also affects inputs in DaisyUI — reset them to a sensible radius */
-.input, .textarea, .select, input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), textarea, select { border-radius: 12px !important; }
+/* Ensure native inputs have a sensible border-radius */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), textarea, select { border-radius: 8px; }
 
 /* Row tokens */
 :root {
@@ -129,19 +121,18 @@
     --row-gap: 12px;
     --row-radius: 12px;
 
-    /* DaisyUI v4 stores OKLCH channel triplets; wrap with oklch() to get a valid color */
-    --row-bg: oklch(var(--b1));
-    --row-bg-hover: oklch(var(--b2));
-    --row-bg-selected: color-mix(in oklch, oklch(var(--p)) 12%, oklch(var(--b1)));
+    --row-bg: #FFFFFF;
+    --row-bg-hover: #EFEDE7;
+    --row-bg-selected: #EAE7FB;
 
-    --row-border: color-mix(in oklch, oklch(var(--bc)) 12%, transparent);
-    --row-border-hover: color-mix(in oklch, oklch(var(--bc)) 20%, transparent);
-    --row-border-selected: oklch(var(--p));
-    --row-focus-ring: color-mix(in oklch, oklch(var(--p)) 35%, transparent);
+    --row-border: rgba(31,17,70,0.05);
+    --row-border-hover: rgba(31,17,70,0.08);
+    --row-border-selected: #5849D4;
+    --row-focus-ring: rgba(88,73,212,0.35);
 
-    --row-fg-strong: oklch(var(--bc));
-    --row-fg-muted: color-mix(in oklch, oklch(var(--bc)) 70%, transparent);
-    --row-fg-muted-2: color-mix(in oklch, oklch(var(--bc)) 60%, transparent);
+    --row-fg-strong: #0F0A1E;
+    --row-fg-muted: rgba(15,10,30,0.62);
+    --row-fg-muted-2: rgba(15,10,30,0.40);
 }
 
 /* Don’t force a fixed `height` on table rows; it can clip content when cells wrap or async content appears. */
@@ -149,7 +140,7 @@
     min-height: var(--row-height-md);
 }
 
-/* Fallback */
+/* Fallback (mirrors :root above) */
 html {
     --row-height-sm: 44px;
     --row-height-md: 56px;
@@ -160,16 +151,16 @@ html {
     --row-gap: 12px;
     --row-radius: 12px;
 
-    --row-bg: oklch(var(--b1));
-    --row-bg-hover: oklch(var(--b2));
-    --row-bg-selected: color-mix(in oklch, oklch(var(--p)) 12%, oklch(var(--b1)));
+    --row-bg: #FFFFFF;
+    --row-bg-hover: #EFEDE7;
+    --row-bg-selected: #EAE7FB;
 
-    --row-border: color-mix(in oklch, oklch(var(--bc)) 12%, transparent);
-    --row-border-hover: color-mix(in oklch, oklch(var(--bc)) 20%, transparent);
-    --row-border-selected: oklch(var(--p));
-    --row-focus-ring: color-mix(in oklch, oklch(var(--p)) 35%, transparent);
+    --row-border: rgba(31,17,70,0.05);
+    --row-border-hover: rgba(31,17,70,0.08);
+    --row-border-selected: #5849D4;
+    --row-focus-ring: rgba(88,73,212,0.35);
 
-    --row-fg-strong: oklch(var(--bc));
-    --row-fg-muted: color-mix(in oklch, oklch(var(--bc)) 70%, transparent);
-    --row-fg-muted-2: color-mix(in oklch, oklch(var(--bc)) 60%, transparent);
+    --row-fg-strong: #0F0A1E;
+    --row-fg-muted: rgba(15,10,30,0.62);
+    --row-fg-muted-2: rgba(15,10,30,0.40);
 }

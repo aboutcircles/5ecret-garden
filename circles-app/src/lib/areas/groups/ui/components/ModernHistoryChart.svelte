@@ -17,50 +17,28 @@
 
   let canvas: HTMLCanvasElement;
   let chart: Chart<'line' | 'bar', { x: number; y: number }[]>;
-  const colorCache = new Map<string, string>();
-
   $effect(() => {
     if (chart) updateChart();
   });
 
-  const themeTokens = ['--p', '--s', '--a', '--in', '--su', '--wa', '--er'];
-  function resolveThemeColor(token: string, alpha: number): string {
-    const key = `${token}:${alpha}`;
-    const cached = colorCache.get(key);
-    if (cached) return cached;
+  const palette = [
+    { bg: 'rgba(88,73,212,0.15)',  border: '#5849D4' },
+    { bg: 'rgba(123,168,135,0.15)', border: '#7BA887' },
+    { bg: 'rgba(232,137,106,0.15)', border: '#E8896A' },
+    { bg: 'rgba(244,210,122,0.15)', border: '#F4D27A' },
+    { bg: 'rgba(184,174,234,0.15)', border: '#B8AEEA' },
+    { bg: 'rgba(212,120,159,0.15)', border: '#D4789F' },
+    { bg: 'rgba(176,112,20,0.15)',  border: '#B07014' },
+  ];
 
-    if (typeof window === 'undefined' || typeof document === 'undefined') {
-      const fallback = `rgba(99, 102, 241, ${alpha})`;
-      colorCache.set(key, fallback);
-      return fallback;
-    }
+  const generateColors = (index: number) => palette[index % palette.length];
 
-    const probe = document.createElement('span');
-    probe.style.color = `oklch(var(${token}) / ${alpha})`;
-    probe.style.position = 'absolute';
-    probe.style.pointerEvents = 'none';
-    probe.style.opacity = '0';
-    document.body.appendChild(probe);
-    const resolved = getComputedStyle(probe).color || `rgba(99, 102, 241, ${alpha})`;
-    probe.remove();
-    colorCache.set(key, resolved);
-    return resolved;
-  }
-
-  const generateColors = (index: number) => {
-    const token = themeTokens[index % themeTokens.length];
-    return {
-      background: resolveThemeColor(token, 0.15),
-      border: resolveThemeColor(token, 1),
-    };
-  };
-
-  const gridColor = $derived(resolveThemeColor('--b3', 0.5));
-  const tickColor = $derived(resolveThemeColor('--bc', 0.7));
-  const legendColor = $derived(resolveThemeColor('--bc', 0.75));
-  const tooltipBg = $derived(resolveThemeColor('--b1', 0.95));
-  const tooltipText = $derived(resolveThemeColor('--bc', 0.9));
-  const tooltipBorder = $derived(resolveThemeColor('--b3', 0.6));
+  const gridColor = 'rgba(31,17,70,0.08)';
+  const tickColor = T.inkMuted;
+  const legendColor = T.inkMuted;
+  const tooltipBg = T.surface;
+  const tooltipText = T.inkBody;
+  const tooltipBorder = T.hairline;
 
   function updateChart() {
     const src = resolution === 'hour' ? dataSet1 : dataSet2;

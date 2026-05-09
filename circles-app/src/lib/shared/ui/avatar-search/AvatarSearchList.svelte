@@ -281,3 +281,8 @@
     {/if}
   </ListShell>
 </div>
+
+<style>
+  @keyframes avatarsearchlist-spin { from {} to { transform: rotate(360deg); } }
+  .avatarsearchlist-spin { animation: avatarsearchlist-spin 0.8s linear infinite; }
+</style>

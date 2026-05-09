@@ -385,7 +385,7 @@
 
   {#if loading}
     <div style="display:flex;align-items:center;gap:8px;color:{T.inkMuted};padding:8px 0;">
-      <span class="loading loading-spinner loading-sm" style="color:{T.primary};"></span>
+      <svg class="eventheatmap-spin" style="width:16px;height:16px;color:{T.primary};" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>
       <span style="font-size:12.5px;">{labels.loading ?? 'Loading event history…'}</span>
     </div>
   {:else if error}
@@ -420,4 +420,6 @@
 
 <style>
   summary::-webkit-details-marker { display: none; }
+  @keyframes eventheatmap-spin { from {} to { transform: rotate(360deg); } }
+  .eventheatmap-spin { animation: eventheatmap-spin 0.8s linear infinite; }
 </style>

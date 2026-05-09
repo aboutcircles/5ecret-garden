@@ -118,7 +118,7 @@
 
     <!-- Collapsed summary -->
     {#snippet collapsedLeft()}
-        <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">
+        <span style="font-size:1rem;font-weight:600;letter-spacing:-0.015em;color:#0F0A1E;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
       Seller Profile
     </span>
     {/snippet}
@@ -151,7 +151,9 @@
     <!-- Listings Section -->
     {#if loading}
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:40vh;gap:10px;">
-            <div class="loading loading-spinner loading-lg" style="color:{T.primary};" aria-label="loading"></div>
+            <svg class="seller-spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="width:32px;height:32px;color:{T.primary};" aria-label="loading">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="32" stroke-dashoffset="12" stroke-linecap="round"/>
+        </svg>
             <div style="font-size:12.5px;color:{T.inkMuted};">Loading listings…</div>
         </div>
     {:else if errorMsg}
@@ -195,3 +197,8 @@
         </section>
     {/if}
 </PageScaffold>
+
+<style>
+  @keyframes seller-spin { to { transform: rotate(360deg); } }
+  .seller-spinner { animation: seller-spin 0.8s linear infinite; }
+</style>
