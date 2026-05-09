@@ -42,62 +42,79 @@ export type GroupMetrics = {
     priceHistoryWeek?: Array<{ timestamp: Date; price: number }>;
     priceHistoryMonth?: Array<{ timestamp: Date; price: number }>;
     affiliateMembersCount?: number;
+    loading?: boolean;
+    errors?: string[];
 }
 
 export let groupMetrics: GroupMetrics = $state({});
+
+function pushError(target: GroupMetrics, label: string, e: unknown): void {
+    const msg = e instanceof Error ? e.message : String(e);
+    (target.errors ??= []).push(`${label}: ${msg}`);
+}
 
 export async function fetchGroupMetrics(
     circlesRpc: CirclesRpc,
     groupAddress: Address,
     target: GroupMetrics
 ): Promise<void> {
-    getMemberCount(circlesRpc, groupAddress, 'hour', '7 days').then(r => {
-        target.memberCountPerHour = r
-    });
-    getMemberCount(circlesRpc, groupAddress, 'day', '30 days').then(r => {
-        target.memberCountPerDay = r
-    });
-    getMintRedeem(circlesRpc, groupAddress, 'hour', '7 days').then(r => {
-        target.mintRedeemPerHour = r
-    });
-    getMintRedeem(circlesRpc, groupAddress, 'day', '30 days').then(r => {
-        target.mintRedeemPerDay = r
-    });
-    getWrapUnwrap(circlesRpc, groupAddress, 'hour', '7 days').then(r => {
-        target.wrapUnwrapPerHour = r
-    });
-    getWrapUnwrap(circlesRpc, groupAddress, 'day', '30 days').then(r => {
-        target.wrapUnwrapPerDay = r
-    });
-    getCollateralInTreasury(circlesRpc, groupAddress).then(r => {
-        target.collateralInTreasury = r
-    });
-    getGroupTokenHoldersBalance(circlesRpc, groupAddress).then(r => {
-        target.tokenHolderBalance = r
-    });
-    countCurrentAffiliateMembers(circlesRpc, groupAddress).then(r => {
-        target.affiliateMembersCount = r
-    });
-    const token = await getERC20Token(circlesRpc, groupAddress);
-    target.erc20Token = token;
+    target.loading = true;
+    target.errors = [];
 
-    if (token) {
-        const base = `/api/price/?group=${encodeURIComponent(token)}`;
-        const [week, month] = await Promise.all([
-            fetch(`${base}&period=7 days&resolution=hour`).then(r => r.ok ? r.json() : []),
-            fetch(`${base}&period=30 days&resolution=day`).then(r => r.ok ? r.json() : []),
-        ]);
+    const tasks: Array<Promise<unknown>> = [
+        getMemberCount(circlesRpc, groupAddress, 'hour', '7 days')
+            .then(r => { target.memberCountPerHour = r; })
+            .catch(e => pushError(target, 'memberCountPerHour', e)),
+        getMemberCount(circlesRpc, groupAddress, 'day', '30 days')
+            .then(r => { target.memberCountPerDay = r; })
+            .catch(e => pushError(target, 'memberCountPerDay', e)),
+        getMintRedeem(circlesRpc, groupAddress, 'hour', '7 days')
+            .then(r => { target.mintRedeemPerHour = r; })
+            .catch(e => pushError(target, 'mintRedeemPerHour', e)),
+        getMintRedeem(circlesRpc, groupAddress, 'day', '30 days')
+            .then(r => { target.mintRedeemPerDay = r; })
+            .catch(e => pushError(target, 'mintRedeemPerDay', e)),
+        getWrapUnwrap(circlesRpc, groupAddress, 'hour', '7 days')
+            .then(r => { target.wrapUnwrapPerHour = r; })
+            .catch(e => pushError(target, 'wrapUnwrapPerHour', e)),
+        getWrapUnwrap(circlesRpc, groupAddress, 'day', '30 days')
+            .then(r => { target.wrapUnwrapPerDay = r; })
+            .catch(e => pushError(target, 'wrapUnwrapPerDay', e)),
+        getCollateralInTreasury(circlesRpc, groupAddress)
+            .then(r => { target.collateralInTreasury = r; })
+            .catch(e => pushError(target, 'collateralInTreasury', e)),
+        getGroupTokenHoldersBalance(circlesRpc, groupAddress)
+            .then(r => { target.tokenHolderBalance = r; })
+            .catch(e => pushError(target, 'tokenHolderBalance', e)),
+        countCurrentAffiliateMembers(circlesRpc, groupAddress)
+            .then(r => { target.affiliateMembersCount = r; })
+            .catch(e => pushError(target, 'affiliateMembersCount', e)),
+        (async () => {
+            try {
+                const token = await getERC20Token(circlesRpc, groupAddress);
+                target.erc20Token = token;
+                if (!token) return;
+                const base = `/api/price/?group=${encodeURIComponent(token)}`;
+                const [week, month] = await Promise.all([
+                    fetch(`${base}&period=7 days&resolution=hour`).then(r => r.ok ? r.json() : []),
+                    fetch(`${base}&period=30 days&resolution=day`).then(r => r.ok ? r.json() : []),
+                ]);
+                target.priceHistoryWeek = week?.map((p: { timestamp: string; price: string }) => ({
+                    timestamp: new Date(p.timestamp),
+                    price: Number(p.price)
+                }));
+                target.priceHistoryMonth = month?.map((p: { timestamp: string; price: string }) => ({
+                    timestamp: new Date(p.timestamp),
+                    price: Number(p.price)
+                }));
+            } catch (e) {
+                pushError(target, 'priceHistory', e);
+            }
+        })(),
+    ];
 
-        target.priceHistoryWeek = week?.map((p: { timestamp: string; price: string }) => ({
-            timestamp: new Date(p.timestamp),
-            price: Number(p.price)
-        }));
-
-        target.priceHistoryMonth = month?.map((p: { timestamp: string; price: string }) => ({
-            timestamp: new Date(p.timestamp),
-            price: Number(p.price)
-        }));
-    }
+    await Promise.allSettled(tasks);
+    target.loading = false;
 }
 
 

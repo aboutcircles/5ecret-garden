@@ -24,13 +24,25 @@
 
   $effect(() => {
     if ($circles?.circlesRpc) {
-      fetchGroupMetrics(
+      void fetchGroupMetrics(
         $circles.circlesRpc,
         data.group as Address,
         groupMetrics
       );
     }
   });
+
+  function retryMetrics() {
+    if (!$circles?.circlesRpc) return;
+    void fetchGroupMetrics($circles.circlesRpc, data.group as Address, groupMetrics);
+  }
+
+  const hasData = $derived(
+    !!groupMetrics.memberCountPerHour ||
+    !!groupMetrics.mintRedeemPerHour ||
+    !!groupMetrics.tokenHolderBalance ||
+    !!groupMetrics.collateralInTreasury,
+  );
 
   function backToDashboard() {
     goto('/dashboard');
@@ -68,7 +80,19 @@
   {#snippet collapsedMenu()}
     <ActionButtonDropDown {actions} />
   {/snippet}
-  {#if Object.keys(groupMetrics).length > 0}
+  {#if groupMetrics.loading === false && groupMetrics.errors?.length && !hasData}
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;height:50vh;padding:24px;text-align:center;">
+      <div style="font-size:15px;font-weight:600;color:{T.ink};">Couldn't load group metrics</div>
+      <div style="font-size:12.5px;color:{T.inkMuted};max-width:380px;line-height:1.5;">
+        {groupMetrics.errors[0]}
+      </div>
+      <button
+        type="button"
+        onclick={retryMetrics}
+        style="height:36px;padding:0 16px;border-radius:9999px;background:{T.primary};color:#fff;border:0;cursor:pointer;font-family:{T.fontSans};font-size:13px;font-weight:540;"
+      >Retry</button>
+    </div>
+  {:else if hasData}
     <!-- Stats Overview -->
     <GroupMetricsStats {groupMetrics} />
 

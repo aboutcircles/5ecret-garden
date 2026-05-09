@@ -1,14 +1,41 @@
 <script lang="ts">
-    import { groupMetrics } from '$lib/areas/groups/state';
+    import { fetchGroupMetrics, groupMetrics } from '$lib/areas/groups/state';
     import GroupMetricsStats from '$lib/areas/groups/ui/components/GroupMetricsStats.svelte';
     import ModernHistoryChart from '$lib/areas/groups/ui/components/ModernHistoryChart.svelte';
     import ModernPieChart from '$lib/areas/groups/ui/components/ModernPieChart.svelte';
     import { T } from '$lib/design-system/tokens.js';
+    import { circles } from '$lib/shared/state/circles';
+    import { avatarState } from '$lib/shared/state/avatar.svelte';
+    import type { Address } from '@circles-sdk/utils';
+
+    function retryMetrics() {
+        if (!$circles?.circlesRpc || !avatarState.avatar?.address) return;
+        void fetchGroupMetrics($circles.circlesRpc, avatarState.avatar.address as Address, groupMetrics);
+    }
+
+    const hasData = $derived(
+        !!groupMetrics.memberCountPerHour ||
+        !!groupMetrics.mintRedeemPerHour ||
+        !!groupMetrics.tokenHolderBalance ||
+        !!groupMetrics.collateralInTreasury,
+    );
 </script>
 
 <div style="width:100%;margin-bottom:24px;"></div>
 
-{#if Object.keys(groupMetrics).length > 0}
+{#if groupMetrics.loading === false && groupMetrics.errors?.length && !hasData}
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;height:50vh;padding:24px;text-align:center;">
+        <div style="font-size:15px;font-weight:600;color:{T.ink};">Couldn't load group metrics</div>
+        <div style="font-size:12.5px;color:{T.inkMuted};max-width:380px;line-height:1.5;">
+            {groupMetrics.errors[0]}
+        </div>
+        <button
+            type="button"
+            onclick={retryMetrics}
+            style="height:36px;padding:0 16px;border-radius:9999px;background:{T.primary};color:#fff;border:0;cursor:pointer;font-family:{T.fontSans};font-size:13px;font-weight:540;"
+        >Retry</button>
+    </div>
+{:else if hasData}
     <GroupMetricsStats {groupMetrics} />
 
     <div style="width:100%;display:grid;grid-template-columns:repeat(2,1fr);gap:24px;margin-bottom:40px;margin-top:24px;">

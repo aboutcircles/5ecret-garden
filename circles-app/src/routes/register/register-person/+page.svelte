@@ -22,6 +22,8 @@
     import { get } from 'svelte/store';
 
     let invitations: AvatarRow[] = $state([]);
+    let invitationsLoading: boolean = $state(true);
+    let invitationsError: string | null = $state(null);
     let inviterSelected: Address | undefined = $state(
         settings.ring ? '0x0000000000000000000000000000000000000000' : undefined
     );
@@ -33,22 +35,34 @@
         imageUrl: undefined,
     });
 
-    onMount(async () => {
-        const walletAddress = requireWalletAddress($wallet?.address as Address | undefined, 'Wallet not connected');
-        const sdk = requireCircles(get(circles));
-
-        invitations = await sdk.data.getInvitations(walletAddress.toLowerCase() as Address);
-        if (settings.ring) {
-            invitations = [
-                ...invitations,
-                {
-                    avatar: '0x0000000000000000000000000000000000000000',
-                    timestamp: 0, transactionHash: '',
-                    version: 2, type: 'CrcV2_RegisterHuman', hasV1: true, isHuman: false,
-                    blockNumber: 0, transactionIndex: 0, logIndex: 0,
-                },
-            ];
+    async function loadInvitations(): Promise<void> {
+        invitationsLoading = true;
+        invitationsError = null;
+        try {
+            const walletAddress = requireWalletAddress($wallet?.address as Address | undefined, 'Wallet not connected');
+            const sdk = requireCircles(get(circles));
+            const fetched = await sdk.data.getInvitations(walletAddress.toLowerCase() as Address);
+            invitations = settings.ring
+                ? [
+                    ...fetched,
+                    {
+                        avatar: '0x0000000000000000000000000000000000000000',
+                        timestamp: 0, transactionHash: '',
+                        version: 2, type: 'CrcV2_RegisterHuman', hasV1: true, isHuman: false,
+                        blockNumber: 0, transactionIndex: 0, logIndex: 0,
+                    },
+                  ]
+                : fetched;
+        } catch (e) {
+            invitationsError = e instanceof Error ? e.message : String(e);
+            invitations = [];
+        } finally {
+            invitationsLoading = false;
         }
+    }
+
+    onMount(() => {
+        void loadInvitations();
     });
 
     async function registerHuman() {
@@ -97,15 +111,29 @@
 
                     <!-- Invitations list -->
                     <div style="padding-left:28px;">
-                        <InvitationPickerStep
-                            {invitations}
-                            bind:selected={inviterSelected}
-                            onSelect={(address) => (inviterSelected = address)}
-                        >
-                            <svelte:fragment slot="empty">
-                                No invitations pending. Ask someone who already uses Circles to invite you.
-                            </svelte:fragment>
-                        </InvitationPickerStep>
+                        {#if invitationsLoading}
+                            <div style="font-size:13px;color:rgba(15,10,30,0.55);padding:12px 0;">Loading invitations…</div>
+                        {:else if invitationsError}
+                            <div style="display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:12px;background:rgba(196,68,48,0.06);border:1px solid rgba(196,68,48,0.18);">
+                                <span style="font-size:13px;font-weight:540;color:#7a2a1c;">Couldn't load invitations</span>
+                                <span style="font-size:12px;color:rgba(15,10,30,0.7);">{invitationsError}</span>
+                                <button
+                                    type="button"
+                                    onclick={loadInvitations}
+                                    style="align-self:flex-start;height:30px;padding:0 14px;border-radius:9999px;border:1px solid rgba(15,10,30,0.12);background:#FFFFFF;color:rgba(15,10,30,0.85);font-size:12px;font-weight:540;cursor:pointer;"
+                                >Retry</button>
+                            </div>
+                        {:else}
+                            <InvitationPickerStep
+                                {invitations}
+                                bind:selected={inviterSelected}
+                                onSelect={(address) => (inviterSelected = address)}
+                            >
+                                <svelte:fragment slot="empty">
+                                    No invitations pending. Ask someone who already uses Circles to invite you.
+                                </svelte:fragment>
+                            </InvitationPickerStep>
+                        {/if}
                     </div>
 
                     <ol style="list-style:none;padding:0;margin:16px 0 0 0;display:flex;flex-direction:column;gap:4px;">

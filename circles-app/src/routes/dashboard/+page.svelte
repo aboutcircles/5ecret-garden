@@ -67,6 +67,10 @@
         $circlesBalances?.data?.filter((b) => b.isGroup).reduce((s, b) => s + (b.circles ?? 0), 0) ?? 0
     );
 
+    const balanceLoaded = $derived(
+        ($circlesBalances?.data?.length ?? 0) > 0 || ($circlesBalances?.ended ?? false),
+    );
+
     function openBalances() {
         popupControls.open({ title: 'Balance breakdown', component: Balances, props: {} });
     }
@@ -152,13 +156,21 @@
                     margin-top:14px;
                 "
             >
-                <span style="font-family:{T.fontDisplay};font-size:64px;line-height:1;color:{T.ink};letter-spacing:-0.025em;font-weight:400;">
-                    {roundToDecimals($totalCirclesBalance)}<span style="margin-left:8px;font-family:{T.fontSans};font-size:16px;font-weight:500;color:{T.inkMuted};">CRC</span>
+                <span style="font-family:{T.fontDisplay};font-size:64px;line-height:1;color:{T.ink};letter-spacing:-0.025em;font-weight:400;display:inline-flex;align-items:baseline;">
+                    {#if balanceLoaded}
+                        {roundToDecimals($totalCirclesBalance)}
+                    {:else}
+                        <span class="balance-skel" style="display:inline-block;width:160px;height:0.7em;background:rgba(15,10,30,0.08);border-radius:10px;"></span>
+                    {/if}
+                    <span style="margin-left:8px;font-family:{T.fontSans};font-size:16px;font-weight:500;color:{T.inkMuted};">CRC</span>
                 </span>
             </button>
 
             <!-- LEGEND DOTS -->
-            <div style="display:flex;align-items:center;gap:14px;margin-top:14px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:14px;margin-top:14px;flex-wrap:wrap;min-height:18px;">
+                {#if !balanceLoaded}
+                    <span class="balance-skel" style="display:inline-block;width:200px;height:14px;background:rgba(15,10,30,0.06);border-radius:7px;"></span>
+                {:else}
                 <button onclick={openBalances} style="background:transparent;border:0;padding:0;cursor:pointer;display:flex;align-items:center;gap:6px;">
                     <span style="width:6px;height:6px;border-radius:3px;background:{T.coral};display:inline-block;"></span>
                     <span style="font-size:13px;color:{T.inkBody};"><b style="color:{T.ink};">{personalToken}</b> people</span>
@@ -174,6 +186,7 @@
                         <span style="width:6px;height:6px;border-radius:3px;background:{T.sage};display:inline-block;"></span>
                         <span style="font-size:13px;color:{T.inkBody};">mintable <b style="color:{T.ink};">{roundToDecimals(mintableAmount)}</b></span>
                     </button>
+                {/if}
                 {/if}
             </div>
 
@@ -267,5 +280,12 @@
 <style>
     @media (min-width: 768px) {
         :global(.hero-card) { padding: 28px 32px 24px !important; }
+    }
+    @keyframes balance-skel-pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+    :global(.balance-skel) {
+        animation: balance-skel-pulse 1.6s ease-in-out infinite;
     }
 </style>
