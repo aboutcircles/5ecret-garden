@@ -532,7 +532,7 @@
 
 </script>
 
-<div class="w-full">
+<div style="width:100%;">
     <!-- Hero card: gradient banner + avatar overlap -->
     <div style="border-radius:20px;overflow:hidden;background:{T.surface};border:1px solid {T.hairlineSoft};box-shadow:{T.shadow.xs};margin-bottom:14px;">
         <!-- Gradient banner -->
@@ -679,7 +679,7 @@
                             onclick={() => { popupControls.closeAndThen(() => { void goto('/groups/metrics/' + address); }); }}
                             style="width:24px;height:24px;border-radius:9999px;background:{T.pageDeep};border:0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;"
                         >
-                            <img src="/chart.svg" alt="" class="w-3" aria-hidden="true" />
+                            <img src="/chart.svg" alt="" style="width:12px;" aria-hidden="true" />
                         </button>
                     {/if}
 
@@ -781,7 +781,7 @@
         bind:selected={selectedTab}
         variant="boxed"
         size="sm"
-        class="w-full p-0 mt-6"
+        style="width:100%;padding:0;margin-top:24px;"
         fitted={false}
         tabOrder={tabOrder}
 >
@@ -791,7 +791,7 @@
             badge={commonConnectionsCount}
             panelClass={tabPanelClass}
     >
-        <div class="w-full">
+        <div style="width:100%;">
             <CommonConnections
                     otherAvatarAddress={otherAvatar?.avatar}
                     bind:commonConnectionsCount
@@ -805,7 +805,7 @@
             badge={trustsCount}
             panelClass={tabPanelClass}
     >
-        <div class="w-full">
+        <div style="width:100%;">
             <TrustRelationsList
                     avatarAddress={otherAvatar?.avatar}
                     relation="trusts"
@@ -820,7 +820,7 @@
             badge={trustedByCount}
             panelClass={tabPanelClass}
     >
-        <div class="w-full">
+        <div style="width:100%;">
             <TrustRelationsList
                     avatarAddress={otherAvatar?.avatar}
                     relation="trustedBy"
@@ -835,7 +835,7 @@
             badge={trustHistoryEventCount}
             panelClass={tabPanelClass}
     >
-        <div class="w-full">
+        <div style="width:100%;">
             <TrustHistoryHeatmap
                     address={address}
                     granularity="month"
@@ -851,7 +851,7 @@
             badge={mintingHistoryEventCount}
             panelClass={tabPanelClass}
     >
-        <div class="w-full">
+        <div style="width:100%;">
             <PersonalMintHistoryHeatmap
                     address={address}
                     bind:eventCount={mintingHistoryEventCount}
@@ -866,10 +866,10 @@
                 badge={collateralInTreasury.length}
                 panelClass={tabPanelClass}
         >
-            <div class="w-full">
+            <div style="width:100%;">
                 {#if collateralLoading}
                     <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:24px 0;color:{T.inkMuted};font-size:12.5px;">
-                        <span class="loading loading-spinner loading-sm" style="color:{T.primary};"></span>
+                        <svg class="pf-spin" style="width:18px;height:18px;color:{T.primary};" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>
                         Loading…
                     </div>
                 {:else if collateralError}
@@ -893,10 +893,10 @@
                 badge={tokenHolders.length}
                 panelClass={tabPanelClass}
         >
-            <div class="w-full">
+            <div style="width:100%;">
                 {#if holdersLoading}
                     <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:24px 0;color:{T.inkMuted};font-size:12.5px;">
-                        <span class="loading loading-spinner loading-sm" style="color:{T.primary};"></span>
+                        <svg class="pf-spin" style="width:18px;height:18px;color:{T.primary};" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>
                         Loading…
                     </div>
                 {:else if holdersError}
@@ -915,10 +915,10 @@
                 badge={holdings.length}
                 panelClass={tabPanelClass}
         >
-            <div class="w-full">
+            <div style="width:100%;">
                 {#if holdingsLoading}
                     <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:24px 0;color:{T.inkMuted};font-size:12.5px;">
-                        <span class="loading loading-spinner loading-sm" style="color:{T.primary};"></span>
+                        <svg class="pf-spin" style="width:18px;height:18px;color:{T.primary};" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>
                         Loading…
                     </div>
                 {:else if holdingsError}
@@ -939,7 +939,7 @@
     >
         {#if offersLoading}
             <div style="display:flex;align-items:center;gap:8px;padding:8px 0;color:{T.inkMuted};font-size:12.5px;">
-                <span class="loading loading-spinner loading-sm" style="color:{T.primary};"></span>
+                <svg class="pf-spin" style="width:18px;height:18px;color:{T.primary};" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>
                 <span>Loading offers…</span>
             </div>
         {:else if offersError}
@@ -981,7 +981,7 @@
 
             {#if otherLoading}
                 <div style="display:flex;align-items:center;gap:8px;padding:8px 0;color:{T.inkMuted};font-size:12.5px;">
-                    <span class="loading loading-spinner loading-sm" style="color:{T.primary};"></span>
+                    <svg class="pf-spin" style="width:18px;height:18px;color:{T.primary};" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>
                     <span>Loading namespaces…</span>
                 </div>
             {:else if otherResolvedAvatar}
@@ -993,3 +993,8 @@
     </Tab>
 
 </Tabs>
+
+<style>
+  @keyframes pf-spin { from {} to { transform: rotate(360deg); } }
+  .pf-spin { animation: pf-spin 0.8s linear infinite; }
+</style>

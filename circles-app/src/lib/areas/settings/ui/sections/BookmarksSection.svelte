@@ -3,7 +3,6 @@
   import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { openStep } from '$lib/shared/flow';
-  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import {
     ChevronDown as LChevronDown,
     ChevronRight as LChevronRight,
@@ -343,7 +342,7 @@
         onclick={loadFromProfile}
         disabled={!connectedAvatar || loadingFromProfile}
       >
-        {#if loadingFromProfile}<span class="loading loading-spinner loading-xs"></span>{/if}
+        {#if loadingFromProfile}<svg class="bs-spin" style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>{/if}
         Load from profile
       </button>
 
@@ -353,7 +352,7 @@
         onclick={publishInProfile}
         disabled={!connectedAvatar || publishing || !hasUnpublishedProfileChanges}
       >
-        {#if publishing}<span class="loading loading-spinner loading-xs"></span>{/if}
+        {#if publishing}<svg class="bs-spin" style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>{/if}
         Save to profile
       </button>
     </div>
@@ -389,32 +388,32 @@
     <div style="background:{T.sageSoft};border:1px solid rgba(45,138,82,0.2);border-radius:10px;padding:8px 12px;font-size:11.5px;color:{T.inkBody};margin-bottom:10px;">Bookmarks saved to profile.</div>
   {/if}
 
-  <div class="space-y-2">
+  <div style="display:flex;flex-direction:column;gap:8px;">
     {#if sortedBookmarks.length === 0 && folders.length === 0}
-      <div class="text-sm opacity-70 mb-2">
+      <div style="font-size:13px;opacity:0.7;margin-bottom:8px;">
         No profile bookmarks yet. Open a profile popup and tap the star to save it.
       </div>
     {/if}
 
       <div
-        class={`rounded-lg border border-base-200 ${dragOverFolder === '__none__' ? 'bg-base-200/30' : ''}`}
+        style="border-radius:8px;border:1px solid {T.hairlineSoft};background:{dragOverFolder === '__none__' ? T.pageDeep : 'transparent'};"
         role="region"
         aria-label="Unsorted bookmarks drop zone"
         ondragover={(event) => onFolderDragOver(event, '__none__')}
         ondragleave={() => onFolderDragLeave('__none__')}
         ondrop={(event) => onFolderDrop(event, undefined)}
       >
-        <div class="px-2 py-2 flex items-center justify-between text-xs font-semibold">
-          <span class="inline-flex items-center gap-1.5"><Lucide icon={LFolder} size={14} />Unsorted</span>
-          <span class="opacity-60">{uncategorizedBookmarks.length}</span>
+        <div style="padding:8px;display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:600;">
+          <span style="display:inline-flex;align-items:center;gap:6px;"><Lucide icon={LFolder} size={14} />Unsorted</span>
+          <span style="opacity:0.6;">{uncategorizedBookmarks.length}</span>
         </div>
 
         {#if uncategorizedBookmarks.length > 0}
-          <div class="divide-y divide-base-200">
+          <div>
             {#each uncategorizedBookmarks as bookmark (bookmark.address)}
-              <div class="py-1.5 px-2 flex items-center gap-2">
+              <div style="padding:6px 8px;display:flex;align-items:center;gap:8px;border-top:1px solid {T.hairlineSoft};">
                 <button
-                  class="btn btn-ghost btn-xs btn-square shrink-0 self-center cursor-grab active:cursor-grabbing"
+                  style="width:24px;height:24px;border-radius:6px;border:0;background:transparent;cursor:grab;flex-shrink:0;align-self:center;display:inline-flex;align-items:center;justify-content:center;"
                   type="button"
                   title="Drag bookmark"
                   draggable="true"
@@ -424,22 +423,18 @@
                   <Lucide icon={LGripVertical} size={14} />
                 </button>
 
-                <div class="flex-1 min-w-0">
-                  <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => openBookmarkDetails(bookmark)}>
-                    <div class="min-w-0">
-                      <Avatar
-                        address={bookmark.address}
-                        view="horizontal"
-                        bottomInfo={`Bookmarked ${formatCreatedAt(bookmark.createdAt)}`}
-                        showTypeInfo={true}
-                        clickable={true}
-                      />
-                    </div>
-                    {#snippet trailing()}
-                      <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" aria-hidden="true" />
-                    {/snippet}
-                  </RowFrame>
-                </div>
+                <button type="button" style="flex:1;min-width:0;display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:10px;background:{T.surface};border:1px solid {T.hairlineSoft};cursor:pointer;width:100%;box-sizing:border-box;outline:none;" onclick={() => openBookmarkDetails(bookmark)}>
+                  <div style="min-width:0;flex:1;">
+                    <Avatar
+                      address={bookmark.address}
+                      view="horizontal"
+                      bottomInfo={`Bookmarked ${formatCreatedAt(bookmark.createdAt)}`}
+                      showTypeInfo={true}
+                      clickable={true}
+                    />
+                  </div>
+                  <img src="/chevron-right.svg" alt="" style="width:16px;height:16px;opacity:0.7;flex-shrink:0;" aria-hidden="true" />
+                </button>
               </div>
             {/each}
           </div>
@@ -448,31 +443,31 @@
 
       {#each folderRows as folderRow (folderRow.path)}
         <div
-          class={`rounded-lg border border-base-200 ${dragOverFolder === folderRow.path ? 'bg-base-200/30' : ''}`}
+          style="border-radius:8px;border:1px solid {T.hairlineSoft};background:{dragOverFolder === folderRow.path ? T.pageDeep : 'transparent'};"
           role="region"
           aria-label={`Folder ${folderRow.name} drop zone`}
           ondragover={(event) => onFolderDragOver(event, folderRow.path)}
           ondragleave={() => onFolderDragLeave(folderRow.path)}
           ondrop={(event) => onFolderDrop(event, folderRow.path)}
         >
-          <div class="w-full px-2 py-2 flex items-center gap-1">
+          <div style="width:100%;padding:8px;display:flex;align-items:center;gap:4px;">
             <button
-              class="flex-1 min-w-0 text-left flex items-center justify-between gap-2 hover:bg-base-200/30 rounded"
+              style="flex:1;min-width:0;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:8px;border:0;background:transparent;cursor:pointer;padding:4px;border-radius:6px;"
               type="button"
               onclick={() => toggleFolder(folderRow.path)}
             >
-              <span class="inline-flex items-center gap-1.5 min-w-0" style={`padding-left: ${folderRow.depth * 0.9}rem`}>
+              <span style="display:inline-flex;align-items:center;gap:6px;min-width:0;padding-left:{folderRow.depth * 14}px;">
                 <Lucide icon={isFolderExpanded(folderRow.path) ? LChevronDown : LChevronRight} size={14} />
                 <Lucide icon={LFolder} size={14} />
-                <span class="text-sm truncate">{folderRow.name}</span>
+                <span style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{folderRow.name}</span>
               </span>
-              <span class="text-xs text-base-content/60">
+              <span style="font-size:11px;color:{T.inkMuted};flex-shrink:0;">
                 {folderRow.bookmarkCount}{#if folderRow.childCount > 0} • {folderRow.childCount} subfolders{/if}
               </span>
             </button>
 
             <button
-              class="btn btn-ghost btn-xs btn-square"
+              style="width:24px;height:24px;border-radius:6px;border:0;background:transparent;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:{T.inkMuted};"
               type="button"
               disabled={folderRow.path.toLowerCase() === VIP_BOOKMARK_FOLDER.toLowerCase()}
               title="Delete folder"
@@ -483,11 +478,11 @@
           </div>
 
           {#if isFolderExpanded(folderRow.path) && bookmarksForFolder(folderRow.path).length > 0}
-            <div class="divide-y divide-base-200">
+            <div>
               {#each bookmarksForFolder(folderRow.path) as bookmark (bookmark.address)}
-                <div class="py-1.5 px-2 flex items-center gap-2">
+                <div style="padding:6px 8px;display:flex;align-items:center;gap:8px;border-top:1px solid {T.hairlineSoft};">
                   <button
-                    class="btn btn-ghost btn-xs btn-square shrink-0 self-center cursor-grab active:cursor-grabbing"
+                    style="width:24px;height:24px;border-radius:6px;border:0;background:transparent;cursor:grab;flex-shrink:0;align-self:center;display:inline-flex;align-items:center;justify-content:center;"
                     type="button"
                     title="Drag bookmark"
                     draggable="true"
@@ -497,22 +492,18 @@
                     <Lucide icon={LGripVertical} size={14} />
                   </button>
 
-                  <div class="flex-1 min-w-0">
-                    <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => openBookmarkDetails(bookmark)}>
-                      <div class="min-w-0">
-                        <Avatar
-                          address={bookmark.address}
-                          view="horizontal"
-                          bottomInfo={`Bookmarked ${formatCreatedAt(bookmark.createdAt)}`}
-                          showTypeInfo={true}
-                          clickable={true}
-                        />
-                      </div>
-                      {#snippet trailing()}
-                        <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" aria-hidden="true" />
-                      {/snippet}
-                    </RowFrame>
-                  </div>
+                  <button type="button" style="flex:1;min-width:0;display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:10px;background:{T.surface};border:1px solid {T.hairlineSoft};cursor:pointer;width:100%;box-sizing:border-box;outline:none;" onclick={() => openBookmarkDetails(bookmark)}>
+                    <div style="min-width:0;flex:1;">
+                      <Avatar
+                        address={bookmark.address}
+                        view="horizontal"
+                        bottomInfo={`Bookmarked ${formatCreatedAt(bookmark.createdAt)}`}
+                        showTypeInfo={true}
+                        clickable={true}
+                      />
+                    </div>
+                    <img src="/chevron-right.svg" alt="" style="width:16px;height:16px;opacity:0.7;flex-shrink:0;" aria-hidden="true" />
+                  </button>
                 </div>
               {/each}
             </div>
@@ -521,4 +512,9 @@
       {/each}
   </div>
 </section>
+
+<style>
+  @keyframes bs-spin { from {} to { transform: rotate(360deg); } }
+  .bs-spin { animation: bs-spin 0.8s linear infinite; }
+</style>
 

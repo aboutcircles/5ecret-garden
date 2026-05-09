@@ -1,118 +1,111 @@
 <script lang="ts">
+    import { T } from '$lib/design-system/tokens.js';
+
     interface Props {
         images: string[];
     }
 
     let { images }: Props = $props();
 
-    // State for current image index
     let currentIndex: number = $state(0);
-    const originalIndex: number = 0; // Always remember the first image
-    
+    const originalIndex: number = 0;
+
     const imageUrls = $derived(Array.isArray(images) ? images : []);
-    
-    // Handle image selection
+
     function selectImage(index: number): void {
         currentIndex = index;
     }
-    
-    // Navigate to previous image
+
     function prevImage(): void {
         if (imageUrls.length <= 1) return;
         currentIndex = currentIndex > 0 ? currentIndex - 1 : imageUrls.length - 1;
     }
-    
-    // Navigate to next image
+
     function nextImage(): void {
         if (imageUrls.length <= 1) return;
         currentIndex = currentIndex < imageUrls.length - 1 ? currentIndex + 1 : 0;
     }
-    
-    // Reset to original first image
+
     function resetToOriginal(): void {
         currentIndex = originalIndex;
     }
 </script>
 
 {#if imageUrls.length > 0}
-    <div class="image-gallery">
+    <div>
         <!-- Main Image Display -->
-        <div class="relative group" role="button" tabindex="0" onclick={nextImage} onkeydown={(e) => { const k=e.key; if (k==='Enter' || k===' ') { e.preventDefault(); nextImage(); }}} >
-            <img 
+        <div class="pg-group" style="position:relative;" role="button" tabindex="0" onclick={nextImage} onkeydown={(e) => { const k=e.key; if (k==='Enter' || k===' ') { e.preventDefault(); nextImage(); }}} >
+            <img
                 src={imageUrls[currentIndex]}
                 alt={`Product image ${currentIndex + 1}`}
-                class="w-full h-64 md:h-96 object-cover rounded-lg cursor-pointer transition-opacity duration-200"
+                style="width:100%;height:256px;object-fit:cover;border-radius:8px;cursor:pointer;display:block;"
             />
-            
+
             <!-- Navigation Arrows -->
             {#if imageUrls.length > 1}
                 <button
                     onclick={(e) => {prevImage(); e.stopPropagation();}}
-                    class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-black/70"
+                    class="pg-nav-btn"
+                    style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:#fff;padding:8px;border-radius:9999px;border:0;cursor:pointer;display:flex;align-items:center;justify-content:center;"
                     aria-label="Previous image"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" style="width:20px;height:20px;" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
                     </svg>
                 </button>
-                
+
                 <button
                     onclick={(e) => {nextImage(); e.stopPropagation();}}
-                    class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-black/70"
+                    class="pg-nav-btn"
+                    style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:#fff;padding:8px;border-radius:9999px;border:0;cursor:pointer;display:flex;align-items:center;justify-content:center;"
                     aria-label="Next image"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" style="width:20px;height:20px;" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
                     </svg>
                 </button>
             {/if}
-            
+
             <!-- Image Counter -->
-            <div class="absolute bottom-2 right-2 bg-black/50 text-white px-2 py-1 rounded text-xs">
+            <div style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.5);color:#fff;padding:2px 8px;border-radius:4px;font-size:12px;">
                 {currentIndex + 1} / {imageUrls.length}
             </div>
         </div>
-        
+
         <!-- Thumbnail Strip -->
         {#if imageUrls.length > 1}
-            <div class="flex gap-2 mt-4 overflow-x-auto pb-2">
+            <div style="display:flex;gap:8px;margin-top:16px;overflow-x:auto;padding-bottom:8px;">
                 {#each imageUrls as url, index}
                     <button
                         onclick={() => selectImage(index)}
-                        class={`flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
-                            currentIndex === index 
-                                ? 'border-primary scale-105' 
-                                : 'border-base-300 hover:border-primary/50'
-                        }`}
+                        style="flex-shrink:0;width:64px;height:64px;border-radius:8px;overflow:hidden;border:2px solid {currentIndex === index ? T.primary : T.hairlineSoft};cursor:pointer;padding:0;transition:border-color 0.2s,transform 0.2s;transform:{currentIndex === index ? 'scale(1.05)' : 'scale(1)'};"
                         aria-label={`View image ${index + 1}`}
                     >
                         <img
                             src={url}
                             alt={`Thumbnail ${index + 1}`}
-                            class="w-full h-full object-cover"
+                            style="width:100%;height:100%;object-fit:cover;display:block;"
                         />
                     </button>
                 {/each}
-                
-                <!-- Reset to Original Button (only show if not on first image) -->
+
                 {#if currentIndex !== originalIndex}
                     <button
                         onclick={resetToOriginal}
-                        class="flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-lg border-2 border-base-300 flex items-center justify-center hover:border-primary/50 transition-all duration-200"
+                        style="flex-shrink:0;width:64px;height:64px;border-radius:8px;border:2px solid {T.hairlineSoft};display:flex;align-items:center;justify-content:center;cursor:pointer;background:transparent;"
                         aria-label="Reset to original image"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-base-content/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" style="width:24px;height:24px;color:{T.inkMuted};" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
                     </button>
                 {/if}
             </div>
         {:else}
-            <!-- Single Image - Show reset button anyway -->
-            <div class="flex gap-2 mt-4">
+            <div style="display:flex;gap:8px;margin-top:16px;">
                 <button
                     onclick={resetToOriginal}
-                    class="px-3 py-1 text-xs bg-base-200 hover:bg-base-300 rounded-lg transition-colors duration-200"
+                    style="padding:4px 12px;font-size:12px;background:{T.pageDeep};border:0;border-radius:8px;cursor:pointer;color:{T.inkBody};"
                     aria-label="Reset image"
                 >
                     Reset Image
@@ -121,10 +114,15 @@
         {/if}
     </div>
 {:else}
-    <div class="bg-base-200 border border-base-300 rounded-lg p-8 text-center">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-2 text-base-content/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <div style="background:{T.pageDeep};border:1px solid {T.hairlineSoft};border-radius:8px;padding:32px;text-align:center;">
+        <svg xmlns="http://www.w3.org/2000/svg" style="width:48px;height:48px;margin:0 auto 8px;color:{T.inkFaint};display:block;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
-        <p class="text-sm text-base-content/60">No images available</p>
+        <p style="font-size:13px;color:{T.inkMuted};">No images available</p>
     </div>
 {/if}
+
+<style>
+  .pg-group .pg-nav-btn { opacity: 0; transition: opacity 0.2s; }
+  .pg-group:hover .pg-nav-btn { opacity: 1; }
+</style>
