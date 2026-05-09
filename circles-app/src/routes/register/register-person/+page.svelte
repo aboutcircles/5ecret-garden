@@ -13,7 +13,7 @@
     import Disclaimer from '$lib/areas/register/ui/components/RegistrationDisclaimer.svelte';
     import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
     import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
-    import { ArrowLeft as LArrowLeft, ExternalLink as LExternalLink, Lock as LLock } from 'lucide';
+    import { ArrowLeft as LArrowLeft, Lock as LLock } from 'lucide';
     import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/shared/ui/shell/actions';
@@ -103,9 +103,7 @@
                             onSelect={(address) => (inviterSelected = address)}
                         >
                             <svelte:fragment slot="empty">
-                                No invitations pending. <a href="/link-to-telegram" style="text-decoration:underline;display:inline-flex;align-items:center;">
-                                    Get help <Lucide icon={LExternalLink} size={12} class="shrink-0 ml-1" ariaLabel="" />
-                                </a>
+                                No invitations pending. Ask someone who already uses Circles to invite you.
                             </svelte:fragment>
                         </InvitationPickerStep>
                     </div>

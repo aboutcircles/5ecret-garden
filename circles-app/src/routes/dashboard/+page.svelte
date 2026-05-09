@@ -39,7 +39,7 @@
 
     function openMintPopup() {
         popupControls.open({
-            title: 'Daily mint',
+            title: 'Mint',
             kind: 'inspect',
             component: MintPopup,
             props: {

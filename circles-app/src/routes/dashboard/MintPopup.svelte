@@ -51,7 +51,7 @@
   const lastMintLabel = $derived(
     lastMintedAt
       ? `Minted at ${lastMintedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-      : 'CRC growing in real time',
+      : 'Accruing hourly',
   );
 </script>
 
@@ -79,7 +79,7 @@
         padding:4px 12px;border-radius:9999px;
         background:rgba(0,0,0,0.25);color:#FBE3D8;
         font-family:{T.fontSans};font-size:11px;font-weight:580;letter-spacing:0.02em;
-      ">{mintableAmount < 0.01 ? 'All caught up' : 'Available to mint'}</span>
+      ">{mintableAmount < 0.01 ? 'Nothing to mint' : 'Available to mint'}</span>
 
       <span style="font-family:{T.fontDisplay};font-size:84px;line-height:1;color:#fff;letter-spacing:-0.03em;font-weight:400;margin-top:6px;">
         {displayAmount}
@@ -138,9 +138,6 @@
     {/if}
   </button>
 
-  <span style="font-size:11px;color:{T.inkSubtle};text-align:center;margin-top:-6px;">
-    Gas-free · settled in &lt; 1s
-  </span>
 </div>
 
 <style>

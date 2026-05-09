@@ -214,7 +214,7 @@
             <Icon name="search" size={16} stroke={T.inkMuted} />
             <input
                 bind:value={$searchQuery}
-                placeholder="Search people, addresses, ENS…"
+                placeholder="Search people or addresses"
                 data-contacts-search-input
                 onkeydown={onSearchInputKeydown}
                 style="

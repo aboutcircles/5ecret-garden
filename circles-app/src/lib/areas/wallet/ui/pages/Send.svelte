@@ -46,7 +46,6 @@
         const rows: Array<{ k: string; v: string; pill?: string }> = [
             { k: 'Network', v: 'Gnosis Chain · L2' },
             { k: 'Route', v: isAutoRoute ? 'Auto route' : (tokenTypeToString(asset?.tokenType) ?? '—') },
-            { k: 'Gas', v: 'Gas-free', pill: 'sponsored' },
         ];
         if (data) {
             rows.push({

@@ -56,7 +56,7 @@
   <div style="display:flex;align-items:flex-start;gap:8px;padding:0 4px;">
     <Icon name="shield" size={13} stroke={T.inkMuted} style="flex-shrink:0;margin-top:2px;" />
     <span style="font-size:11.5px;color:{T.inkMuted};line-height:1.5;">
-      Your seed phrase stays on this device. Circles never sees it.
+      Your seed phrase is stored only in this browser's local storage on this device. Circles servers never see it.
     </span>
   </div>
 

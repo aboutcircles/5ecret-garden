@@ -187,7 +187,7 @@
   <div style="display:flex;align-items:flex-start;gap:8px;padding:4px 4px 0;">
     <Icon name="shield" size={13} stroke={T.inkMuted} style="flex-shrink:0;margin-top:2px;" />
     <span style="font-size:11.5px;color:{T.inkMuted};line-height:1.5;">
-      Circles never sees your private keys. Your wallet signs every action.
+      Your wallet signs every action. Keys stay with your wallet — Circles servers never see them.
     </span>
   </div>
 </div>
