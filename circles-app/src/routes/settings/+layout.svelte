@@ -431,6 +431,16 @@
     ...actionsPersonal,
   ]);
 
+  const actionsPayment: Action[] = [
+    {
+      id: 'create-gateway',
+      label: 'Create gateway',
+      variant: 'primary',
+      onClick: openCreateGatewayFlow,
+    },
+    ...actionsPersonal,
+  ];
+
   const headerActions = $derived(
     selectedTab === 'marketplace'
       ? actionsMarketplace
@@ -521,15 +531,6 @@
     });
   }
 
-  const actionsPayment: Action[] = [
-    {
-      id: 'create-gateway',
-      label: 'Create gateway',
-      variant: 'primary',
-      onClick: openCreateGatewayFlow,
-    },
-    ...actionsPersonal,
-  ];
 </script>
 
 <div data-settings-shell style="background:{T.page};min-height:100%;width:100%;font-family:{T.fontSans};color:{T.inkBody};">

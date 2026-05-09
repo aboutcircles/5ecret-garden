@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Chart from 'chart.js/auto';
+  import { T } from '$lib/design-system/tokens.js';
 
   interface Props {
     data: Array<Record<string, any>>;
