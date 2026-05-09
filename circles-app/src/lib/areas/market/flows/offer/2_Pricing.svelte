@@ -44,6 +44,7 @@
 
   let loadingGateways: boolean = $state(false);
   let gateways: string[] = $state([]);
+  let gatewaysError: string | null = $state(null);
   let selectedGateway: string = $state((context.draft?.paymentGateway as string) ?? '');
 
   async function loadMyGatewaysFor(owner: Address): Promise<void> {
@@ -51,6 +52,7 @@
     if (!owner || !c?.circlesRpc) { gateways = []; return; }
     try {
       loadingGateways = true;
+      gatewaysError = null;
       const rows = await fetchGatewayRowsByOwner(c, owner);
       gateways = rows.map((row) => row.gateway).filter((g) => g.length > 0).map((g) => g.toLowerCase());
       const current = (context.draft?.paymentGateway ?? '').toString().toLowerCase();
@@ -58,7 +60,7 @@
       else if (gateways.length > 0) selectedGateway = gateways[0];
       else selectedGateway = '';
     } catch (e) {
-      console.error('loadMyGatewaysFor', e);
+      gatewaysError = e instanceof Error ? e.message : String(e);
       gateways = [];
       selectedGateway = '';
     } finally {
@@ -128,6 +130,13 @@
     <span style={eyebrow}>Payment gateway</span>
     {#if loadingGateways}
       <div style="height:40px;border-radius:10px;background:{T.surfaceAlt};border:1px solid {T.hairlineSoft};animation:pricing-skel 1.6s ease-in-out infinite;"></div>
+    {:else if gatewaysError}
+      <StepAlert variant="error">
+        <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start;">
+          <span style="font-size:12.5px;">Couldn't load gateways: {gatewaysError}</span>
+          <button type="button" onclick={() => { const owner = get(wallet)?.address as Address | undefined; if (owner) void loadMyGatewaysFor(owner); }} style="height:26px;padding:0 12px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.ink};font-size:11.5px;font-weight:540;cursor:pointer;">Retry</button>
+        </div>
+      </StepAlert>
     {:else if gateways.length === 0}
       <StepAlert variant="info">
         <span style="font-size:12.5px;">

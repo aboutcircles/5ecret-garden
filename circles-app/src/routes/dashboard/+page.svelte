@@ -30,9 +30,14 @@
         (async () => {
             const hasAvatar: boolean = !!avatarState.avatar;
             const isHuman: boolean = hasAvatar && !avatarState.isGroup;
-            if (isHuman) {
+            if (!isHuman) return;
+            try {
                 const amount = await avatarState.avatar!.getMintableAmount();
                 mintableAmount = amount ?? 0;
+            } catch (e) {
+                // Mintable nudge is non-blocking; surface as 0 (no nudge) and log for debugging.
+                console.debug('[dashboard] failed to fetch mintable amount', e);
+                mintableAmount = 0;
             }
         })();
     });
