@@ -195,7 +195,7 @@
                     <button
                         onclick={a.onClick}
                         style="
-                            flex:1;height:56px;border-radius:16px;cursor:pointer;
+                            flex:1;height:72px;border-radius:16px;cursor:pointer;
                             background:{a.primary ? T.primary : T.surface};
                             border:{a.primary ? 'none' : `1px solid ${T.hairline}`};
                             color:{a.primary ? '#fff' : T.ink};
@@ -243,7 +243,7 @@
 
         <!-- ─── ACTIVITY HEADING ──────────────────────────────────────── -->
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:22px;margin-bottom:10px;padding:0 4px;">
-            <span style="font-size:12px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Activity</span>
+            <span style="font-size:12px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Today</span>
         </div>
 
         <!-- ─── ACTIVITY LIST ─────────────────────────────────────────── -->

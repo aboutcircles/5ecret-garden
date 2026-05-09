@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from '$app/stores';
   import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
+  import { T } from '$lib/design-system/tokens';
   import {
     Home as LHome,
     Users as LUsers,
@@ -61,7 +62,7 @@
   <div
     class="pointer-events-auto flex items-center justify-between p-1.5 mx-auto max-w-md"
     style="
-      height:64px;background:#FFFFFF;border-radius:9999px;
+      height:64px;background:{T.surface};border-radius:9999px;
       box-shadow:0 6px 18px rgba(15,10,30,0.10), 0 24px 48px rgba(15,10,30,0.12), 0 0 0 1px rgba(15,10,30,0.04);
     "
   >
@@ -77,8 +78,8 @@
         style="
           height:52px;border-radius:9999px;
           display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-          background:{active ? '#EAE7FB' : 'transparent'};
-          color:{active ? '#352899' : 'rgba(15,10,30,0.48)'};
+          background:{active ? T.primarySoft : 'transparent'};
+          color:{active ? T.primaryDeep : 'rgba(15,10,30,0.48)'};
           transition:background .14s, color .14s;
         "
       >
@@ -93,7 +94,7 @@
       class="cursor-pointer transition-transform active:scale-95 mx-1"
       style="
         width:52px;height:52px;border-radius:9999px;border:0;
-        background:#5849D4;color:#FFFFFF;
+        background:{T.primary};color:{T.surface};
         display:inline-flex;align-items:center;justify-content:center;
         box-shadow:0 4px 14px rgba(88,73,212,0.5), inset 0 1px 0 rgba(255,255,255,0.18);
         flex-shrink:0;
@@ -115,8 +116,8 @@
         style="
           height:52px;border-radius:9999px;
           display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-          background:{active ? '#EAE7FB' : 'transparent'};
-          color:{active ? '#352899' : 'rgba(15,10,30,0.48)'};
+          background:{active ? T.primarySoft : 'transparent'};
+          color:{active ? T.primaryDeep : 'rgba(15,10,30,0.48)'};
           transition:background .14s, color .14s;
         "
       >
