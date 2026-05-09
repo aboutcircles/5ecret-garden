@@ -22,6 +22,7 @@
   import AdvancedDetails from '$lib/shared/ui/flow/AdvancedDetails.svelte';
   import type { ReviewStepProps } from '$lib/shared/flow';
   import CreateGatewayProfile from './CreateGatewayProfile.svelte';
+  import { T } from '$lib/design-system/tokens.js';
 
   type Props = ReviewStepProps<CreateGatewayFlowContext> & {
     onCreated?: (gateway: string) => void;
@@ -147,8 +148,8 @@
   subtitle="Review receiver details before updating trust."
 >
 
-  <div class="space-y-4">
-    <p class="text-sm text-base-content/70">
+  <div style="display:flex;flex-direction:column;gap:16px;">
+    <p style="font-size:13px;color:{T.inkMuted};margin:0;">
       Please confirm the details of the payment gateway before creating it.
     </p>
 
@@ -164,27 +165,27 @@
     </StepSection>
 
     <AdvancedDetails title="Advanced gateway details" subtitle="Factory + on-chain name">
-      <div class="flex flex-col gap-1">
-        <span class="text-xs text-base-content/60">On-chain name</span>
-        <span class="text-sm font-semibold">{context.gatewayName}</span>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:11px;color:{T.inkMuted};">On-chain name</span>
+        <span style="font-size:13px;font-weight:600;color:{T.ink};">{context.gatewayName}</span>
       </div>
-      <div class="text-sm">
-        <div class="text-base-content/70">Factory</div>
-        <div class="font-mono break-all">{context.factoryAddress}</div>
+      <div style="font-size:13px;">
+        <div style="color:{T.inkMuted};">Factory</div>
+        <div style="font-family:{T.fontMono};word-break:break-all;color:{T.ink};">{context.factoryAddress}</div>
       </div>
     </AdvancedDetails>
 
     {#if !factoryValid || !nameValid || !profileNameValid}
-      <StepAlert variant="warning" className="text-xs">
-        <ul class="list-disc list-inside">
+      <StepAlert variant="warning">
+        <ul style="margin:0;padding-left:16px;display:flex;flex-direction:column;gap:4px;">
           {#if !nameValid}
-            <li>On-chain name is required and must follow the on-chain naming rules.</li>
+            <li style="font-size:12px;">On-chain name is required and must follow the on-chain naming rules.</li>
           {/if}
           {#if !profileNameValid}
-            <li>Gateway profile name is required.</li>
+            <li style="font-size:12px;">Gateway profile name is required.</li>
           {/if}
           {#if !factoryValid}
-            <li>Factory address is invalid.</li>
+            <li style="font-size:12px;">Factory address is invalid.</li>
           {/if}
         </ul>
       </StepAlert>

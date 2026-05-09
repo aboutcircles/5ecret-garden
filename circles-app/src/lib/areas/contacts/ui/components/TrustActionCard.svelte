@@ -93,7 +93,7 @@
   <div style="display:flex;justify-content:flex-end;">
     <ActionButton
       action={runAction}
-      class="btn w-full sm:w-auto sm:min-w-[140px]"
+      style="width:100%;"
     >{cta}</ActionButton>
   </div>
 

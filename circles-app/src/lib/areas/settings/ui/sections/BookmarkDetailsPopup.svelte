@@ -81,7 +81,7 @@
     <div style="padding:12px 14px;display:flex;flex-direction:column;gap:8px;">
       <span style="font-size:10.5px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Folder</span>
       <div style="display:flex;align-items:center;gap:8px;">
-        <select class="select select-bordered select-sm flex-1" bind:value={selectedFolder}>
+        <select style="flex:1;height:32px;padding:0 10px;border:1px solid {T.hairline};border-radius:9px;background:{T.surface};font-family:{T.fontSans};font-size:13px;color:{T.ink};outline:none;" bind:value={selectedFolder}>
           <option value="__none__">No folder</option>
           {#each folders as folder (folder)}
             <option value={folder}>{folder}</option>
@@ -117,9 +117,9 @@
   <!-- Actions -->
   <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:4px;flex-wrap:wrap;">
     {#if bookmark.note}
-      <button class="btn btn-ghost btn-sm" type="button" onclick={clearNote}>Clear note</button>
+      <button style="height:32px;padding:0 14px;border-radius:9999px;border:0;background:transparent;color:{T.inkMuted};cursor:pointer;font-family:{T.fontSans};font-size:13px;" type="button" onclick={clearNote}>Clear note</button>
     {/if}
-    <button class="btn btn-ghost btn-sm" type="button" onclick={removeBookmark} style="color:{T.negative};">
+    <button style="height:32px;padding:0 14px;border-radius:9999px;border:0;background:transparent;color:{T.negative};cursor:pointer;font-family:{T.fontSans};font-size:13px;" type="button" onclick={removeBookmark}>
       Remove bookmark
     </button>
   </div>

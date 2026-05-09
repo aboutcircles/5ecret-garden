@@ -1,10 +1,10 @@
 <script lang="ts">
-  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import type { GatewayRow as GatewayRowType } from '$lib/areas/settings/model/gatewayTypes';
   import { openStep } from '$lib/shared/flow';
   import ManageTrust from '$lib/areas/settings/flows/gateway/ManageTrust.svelte';
   import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
+  import { T } from '$lib/design-system/tokens.js';
 
   interface Props {
     item: GatewayRowType;
@@ -57,25 +57,19 @@
   tabindex={0}
   role="button"
   aria-label={`Manage trust for gateway ${item.gateway}`}
-  class="rounded-[var(--row-radius)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+  style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;background:{T.surface};border:1px solid {T.hairlineSoft};cursor:pointer;width:100%;box-sizing:border-box;transition:background 120ms ease,border-color 120ms ease;outline:none;"
   onkeydown={onRowKeydown}
   onclick={onRowClick}
 >
-  <RowFrame clickable={true} dense={true} noLeading={true}>
-    <div class="w-full flex items-center justify-between gap-3">
-      <div class="min-w-0 flex items-center gap-2">
-        <Avatar
-          address={item.gateway}
-          view="horizontal"
-          clickable={true}
-          bottomInfo={createdAt ? `Created ${createdAt}` : undefined}
-        />
-      </div>
-      {#snippet trailing()}
-        <div aria-hidden="true">
-          <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" aria-hidden="true" />
-        </div>
-      {/snippet}
-    </div>
-  </RowFrame>
+  <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;">
+    <Avatar
+      address={item.gateway}
+      view="horizontal"
+      clickable={true}
+      bottomInfo={createdAt ? `Created ${createdAt}` : undefined}
+    />
+  </div>
+  <div aria-hidden="true">
+    <img src="/chevron-right.svg" alt="" style="width:16px;height:16px;opacity:0.7;" aria-hidden="true" />
+  </div>
 </div>

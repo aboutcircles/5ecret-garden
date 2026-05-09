@@ -66,7 +66,7 @@
   <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">
     <ActionButton
       action={invite}
-      class="btn btn-primary w-full"
+      style="width:100%;"
       data-popup-default-action
     >Invite</ActionButton>
   </div>
