@@ -1,8 +1,8 @@
 <script lang="ts">
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import type { AvatarRow } from '@circles-sdk/data';
   import type { Address } from '@circles-sdk/utils';
+  import { T } from '$lib/design-system/tokens.js';
 
   interface Props {
     invitations?: AvatarRow[];
@@ -21,26 +21,30 @@
   }: Props = $props();
 </script>
 
-<div class="flex flex-col gap-y-2 text-sm">
+<div style="display:flex;flex-direction:column;gap:8px;font-size:13px;">
   {#if loading}
-    <p class="text-base-content/70">Loading invitations...</p>
+    <p style="color:{T.inkMuted};margin:0;">Loading invitations...</p>
   {:else if invitations.length > 0}
     {#each invitations as inviter (inviter.avatar)}
-      <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => onSelect(inviter.avatar)}>
-        <div class="flex items-center gap-x-2 min-w-0">
-          <input
-            type="radio"
-            name="inviter"
-            class="radio radio-success radio-sm"
-            checked={selected === inviter.avatar}
-            onclick={(e) => {
-              e.stopPropagation();
-              onSelect(inviter.avatar);
-            }}
-          />
+      <button
+        type="button"
+        style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;background:{T.surface};border:1px solid {T.hairlineSoft};cursor:pointer;width:100%;box-sizing:border-box;text-align:left;outline:none;"
+        onclick={() => onSelect(inviter.avatar)}
+      >
+        <input
+          type="radio"
+          name="inviter"
+          style="width:14px;height:14px;accent-color:{T.primary};flex-shrink:0;"
+          checked={selected === inviter.avatar}
+          onclick={(e) => {
+            e.stopPropagation();
+            onSelect(inviter.avatar);
+          }}
+        />
+        <div style="min-width:0;flex:1;">
           <Avatar topInfo="Inviter" clickable={false} address={inviter.avatar} view="horizontal" />
         </div>
-      </RowFrame>
+      </button>
     {/each}
   {:else}
     <slot name="empty">

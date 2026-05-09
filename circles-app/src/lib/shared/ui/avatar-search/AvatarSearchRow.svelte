@@ -1,10 +1,10 @@
 <script lang="ts">
   import { getContext } from 'svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import { formatTrustRelation } from '$lib/shared/utils/helpers';
   import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
   import type { AvatarSearchItem } from './avatarSearch.types';
+  import { T } from '$lib/design-system/tokens.js';
 
   const ACTIVATE_CTX_KEY = 'avatar-search-row-activate';
   type ActivateRow = (item: AvatarSearchItem) => void;
@@ -64,24 +64,22 @@
   tabindex={0}
   role="button"
   aria-label={`Open profile for ${item.address}`}
-  class="rounded-[var(--row-radius)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+  style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;background:{T.surface};border:1px solid {T.hairlineSoft};cursor:pointer;width:100%;box-sizing:border-box;outline:none;"
   onkeydown={onRowKeydown}
   onclick={onRowClick}
 >
-  <RowFrame clickable={true} dense={true} noLeading={true}>
-    <div class="min-w-0">
-      <Avatar
-        address={item.address}
-        {avatarInfo}
-        view="horizontal"
-        bottomInfo={bottomInfo}
-        showTypeInfo={true}
-        showBookmarkBadge={item.isVipBookmarked}
-        clickable={true}
-      />
-    </div>
-    {#snippet trailing()}<div aria-hidden="true">
-      <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" aria-hidden="true" />
-    </div>{/snippet}
-  </RowFrame>
+  <div style="flex:1;min-width:0;">
+    <Avatar
+      address={item.address}
+      {avatarInfo}
+      view="horizontal"
+      bottomInfo={bottomInfo}
+      showTypeInfo={true}
+      showBookmarkBadge={item.isVipBookmarked}
+      clickable={true}
+    />
+  </div>
+  <div aria-hidden="true">
+    <img src="/chevron-right.svg" alt="" style="width:16px;height:16px;opacity:0.7;" aria-hidden="true" />
+  </div>
 </div>

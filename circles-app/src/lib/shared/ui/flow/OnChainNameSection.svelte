@@ -75,7 +75,7 @@
       <label style="display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:{T.inkBody};cursor:pointer;">
         <input
           type="checkbox"
-          class="checkbox checkbox-xs"
+          style="width:14px;height:14px;accent-color:{T.primary};"
           checked={manual}
           onchange={(e) => {
             manual = (e.currentTarget as HTMLInputElement).checked;
@@ -88,7 +88,7 @@
       <div>
         <span style="font-size:11px;font-weight:580;color:{T.inkMuted};letter-spacing:0.04em;text-transform:uppercase;">On-chain name</span>
         <input
-          class="input input-sm input-bordered w-full mt-1.5"
+          style="width:100%;height:32px;padding:0 10px;border:1px solid {T.hairline};border-radius:8px;font-family:{T.fontSans};font-size:13px;color:{T.ink};background:{T.surface};outline:none;margin-top:6px;"
           bind:value
           {placeholder}
           disabled={!manual}
