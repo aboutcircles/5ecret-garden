@@ -94,7 +94,7 @@
 <div style="width:100%;max-width:min(92vw,40rem);">
   {#if loading}
     <div style="display:flex;align-items:center;gap:10px;color:{T.inkMuted};padding:24px 0;">
-      <span class="loading loading-spinner" style="color:{T.primary};"></span>
+      <svg class="pdp-spin" style="width:20px;height:20px;color:{T.primary};" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>
       <span style="font-size:13px;">Loading product…</span>
     </div>
   {:else if errorMsg}
@@ -135,3 +135,8 @@
     <div style="font-size:12.5px;color:{T.inkMuted};">Product data not available</div>
   {/if}
 </div>
+
+<style>
+  @keyframes pdp-spin { from {} to { transform: rotate(360deg); } }
+  .pdp-spin { animation: pdp-spin 0.8s linear infinite; }
+</style>

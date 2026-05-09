@@ -91,7 +91,7 @@ import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
       <h3 style="font-family:{T.fontSans};font-size:13px;font-weight:580;color:{T.ink};margin:0;">Circles V2</h3>
       <p style="font-size:11.5px;color:{T.inkMuted};margin:2px 0 0 0;">Upgrade your profile to V2.</p>
       <div style="margin-top:10px;">
-        <ActionButton action={migrateToV2} class="btn btn-primary">Update to Circles V2</ActionButton>
+        <ActionButton action={migrateToV2}>Update to Circles V2</ActionButton>
       </div>
     </section>
   {/if}
@@ -103,7 +103,7 @@ import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
       <h3 style="font-family:{T.fontSans};font-size:13px;font-weight:580;color:{T.ink};margin:0;">Circles V1</h3>
       <p style="font-size:11.5px;color:{T.inkMuted};margin:2px 0 0 0;">Stop your V1 account permanently. This cannot be undone.</p>
       <div style="margin-top:10px;">
-        <ActionButton action={stopV1} class="btn btn-outline">
+        <ActionButton action={stopV1} variant="ghost">
           <span style="color:{T.warning};font-weight:540;">Stop V1 account permanently</span>
         </ActionButton>
       </div>

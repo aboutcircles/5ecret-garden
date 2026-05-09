@@ -91,7 +91,7 @@
             padding:14px 16px;width:100%;background:transparent;border:0;cursor:pointer;text-align:left;
             transition:background .12s;
         "
-        class="hover:bg-base-200"
+        class="cc-hover"
     >
         <div style="min-width:0;flex:1;">
             <Avatar
@@ -137,7 +137,7 @@
                             background:transparent;border:0;cursor:pointer;text-align:left;
                             transition:background .1s;
                         "
-                        class="hover:bg-base-200"
+                        class="cc-hover"
                     >
                         <Avatar
                             address={group.group}
@@ -154,3 +154,7 @@
         </div>
     {/if}
 </div>
+
+<style>
+  .cc-hover:hover { background: rgba(0,0,0,0.04); }
+</style>

@@ -67,7 +67,7 @@
 
   {#if !invitations}
     <div style="display:flex;align-items:center;gap:8px;padding:4px 0;">
-      <span class="loading loading-spinner loading-xs" style="color:{T.primary};"></span>
+      <svg class="gi-spin" style="width:12px;height:12px;color:{T.primary};" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>
       <span style="font-size:12.5px;color:{T.inkMuted};">Loading invitations…</span>
     </div>
   {:else if invitations.length > 0}
@@ -92,3 +92,8 @@
     {/if}
   {/if}
 </FlowStepScaffold>
+
+<style>
+  @keyframes gi-spin { from {} to { transform: rotate(360deg); } }
+  .gi-spin { animation: gi-spin 0.8s linear infinite; }
+</style>

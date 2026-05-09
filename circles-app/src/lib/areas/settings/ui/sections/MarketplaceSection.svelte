@@ -44,7 +44,7 @@
 {:else}
   {#if marketLoading}
     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:30vh;gap:10px;">
-      <div class="loading loading-spinner loading-lg" style="color:{T.primary};" aria-label="loading"></div>
+      <svg class="ms-spin" style="width:32px;height:32px;color:{T.primary};" viewBox="0 0 24 24" fill="none" aria-label="loading"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>
       <div style="font-size:12.5px;color:{T.inkMuted};">Loading listings…</div>
     </div>
   {:else if marketErrorMsg}
@@ -84,3 +84,8 @@
     </section>
   {/if}
 {/if}
+
+<style>
+  @keyframes ms-spin { from {} to { transform: rotate(360deg); } }
+  .ms-spin { animation: ms-spin 0.8s linear infinite; }
+</style>

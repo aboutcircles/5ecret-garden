@@ -165,10 +165,15 @@
       disabled={migrateAction.loading}
     >
       {#if migrateAction.loading}
-        <span class="loading loading-spinner loading-xs"></span>
+        <svg class="mg-spin" style="width:12px;height:12px;" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>
       {/if}
       {migrateAction.loading ? 'Migrating…' : 'Migrate to V2'}
     </button>
   </div>
   </FlowStepScaffold>
+
+<style>
+  @keyframes mg-spin { from {} to { transform: rotate(360deg); } }
+  .mg-spin { animation: mg-spin 0.8s linear infinite; }
+</style>
 

@@ -37,7 +37,7 @@ import { ProfileNamespaces } from '$lib/shared/ui/profile';
     <div style="background:{T.negativeSoft};border:1px solid rgba(196,68,48,0.2);border-radius:10px;padding:8px 12px;font-size:12px;color:{T.inkBody};">{nsError}</div>
   {:else if nsLoading}
     <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:{T.inkMuted};">
-      <span class="loading loading-spinner loading-xs" style="color:{T.primary};"></span>
+      <svg class="ns-spin" style="width:12px;height:12px;color:{T.primary};" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>
       Loading…
     </div>
   {:else if nsResolvedAvatar}
@@ -52,3 +52,8 @@ import { ProfileNamespaces } from '$lib/shared/ui/profile';
     <div style="font-size:12.5px;color:{T.inkMuted};">No avatar resolved.</div>
   {/if}
 </section>
+
+<style>
+  @keyframes ns-spin { from {} to { transform: rotate(360deg); } }
+  .ns-spin { animation: ns-spin 0.8s linear infinite; }
+</style>

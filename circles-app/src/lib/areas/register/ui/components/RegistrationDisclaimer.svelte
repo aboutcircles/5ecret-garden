@@ -1,11 +1,10 @@
 <script lang="ts">
+  import { T } from '$lib/design-system/tokens.js';
   let visible = $state(true);
 </script>
 
 {#if visible}
-  <div
-    class="w-full rounded-lg bg-yellow-100 border border-yellow-400 p-3 text-sm text-yellow-800 flex justify-between items-start"
-  >
+  <div style="width:100%;border-radius:8px;background:{T.butterSoft};border:1px solid rgba(176,112,20,0.35);padding:12px;font-size:12.5px;color:rgba(120,70,0,0.9);display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
     <span>
       ⚠️ ANY DATA YOU SUBMIT WHEN CREATING YOUR CIRCLES PROFILE WILL BE
       PERMANENTLY STORED ON THE PUBLIC AND DECENTRALISED INTERPLANETARY FILE
@@ -14,13 +13,14 @@
       NOT SUBMIT IT THROUGH THE APP. FOR MORE DETAILS, PLEASE REVIEW THE <a
         href="/privacy-policy"
         target="_blank"
-        class="underline">PRIVACY NOTICE</a
+        style="text-decoration:underline;color:inherit;">PRIVACY NOTICE</a
       >
-      AND <a href="/terms" target="_blank" class="underline">TERMS OF USE</a>.
+      AND <a href="/terms" target="_blank" style="text-decoration:underline;color:inherit;">TERMS OF USE</a>.
     </span>
     <button
+      type="button"
       onclick={() => (visible = false)}
-      class="ml-4 px-2 py-1 bg-yellow-200 hover:bg-yellow-300 rounded"
+      style="flex-shrink:0;margin-left:4px;padding:2px 8px;border-radius:6px;border:1px solid rgba(176,112,20,0.35);background:rgba(176,112,20,0.1);cursor:pointer;font-size:12px;color:rgba(120,70,0,0.9);font-family:{T.fontSans};"
     >
       Dismiss
     </button>

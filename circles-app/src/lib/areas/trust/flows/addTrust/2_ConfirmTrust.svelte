@@ -83,7 +83,6 @@
         title="Confirm trust"
         data-popup-default-action
         data-popup-initial-focus
-        class="btn btn-primary"
       >
         {#snippet children()}Confirm trust{/snippet}
       </ActionButton>

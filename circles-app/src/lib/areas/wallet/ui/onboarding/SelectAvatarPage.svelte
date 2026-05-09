@@ -6,6 +6,7 @@
   import ConnectCircles from '$lib/areas/wallet/ui/onboarding/ConnectCircles.svelte';
   import WalletLoader from '$lib/areas/wallet/ui/onboarding/WalletLoader.svelte';
   import SettingsDropdown from '$lib/areas/settings/ui/SettingsDropdown.svelte';
+  import { T } from '$lib/design-system/tokens.js';
 
   type InitSdk = (address: Address) => Promise<Sdk>;
 
@@ -48,16 +49,16 @@
 </script>
 
 <div class={`page page-pt page-stack ${sizeClass}`}>
-  <div class="flex items-center gap-2">
-    <button type="button" class="back-btn" aria-label="Back" onclick={onBack}>
-      <img src="/arrow-left.svg" alt="Back" class="icon" />
+  <div style="display:flex;align-items:center;gap:8px;">
+    <button type="button" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:9999px;border:0;background:transparent;cursor:pointer;color:{T.inkMuted};" aria-label="Back" onclick={onBack}>
+      <img src="/arrow-left.svg" alt="Back" style="width:16px;height:16px;flex-shrink:0;" />
     </button>
     <h1 class="h2">{title}</h1>
-    <div class="flex-grow"></div>
+    <div style="flex:1;"></div>
     <SettingsDropdown />
   </div>
 
-  <p class="muted">{helperText}</p>
+  <p style="font-size:13px;color:{T.inkMuted};">{helperText}</p>
 
   {#if isLoading}
     <WalletLoader />
