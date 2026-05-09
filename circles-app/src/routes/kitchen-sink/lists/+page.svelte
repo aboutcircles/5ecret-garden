@@ -6,6 +6,7 @@
   import BalanceRowSkeleton from '$lib/areas/wallet/ui/components/BalanceRowSkeleton.svelte';
   import DemoGenericRow from '../DemoGenericRow.svelte';
   import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
+  import { T } from '$lib/design-system/tokens';
 
   type DemoItem = {
     id: string;
@@ -75,7 +76,6 @@
     getScope: () => demoListScopeEl,
     rowSelector: '[data-demo-generic-row]'
   });
-  import { T } from '$lib/design-system/tokens';
 </script>
 
 <section style="border-radius:14px;border:1px solid {T.hairlineSoft};background:{T.surface};padding:16px;display:flex;flex-direction:column;gap:16px;">

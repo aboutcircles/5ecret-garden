@@ -6,8 +6,9 @@
     amount: string;
   }
 
-  let { item }: { item: DemoItem } = $props();
   import { T } from '$lib/design-system/tokens';
+
+  let { item }: { item: DemoItem } = $props();
 
   function focusDemoSearchInput(current: HTMLElement): void {
     const scope = current.closest<HTMLElement>('[data-demo-list-scope]');

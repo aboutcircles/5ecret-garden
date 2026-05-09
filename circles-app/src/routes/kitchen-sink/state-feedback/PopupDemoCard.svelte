@@ -5,8 +5,9 @@
     step?: number;
   }
 
-  let { step = 1 }: Props = $props();
   import { T } from '$lib/design-system/tokens';
+
+  let { step = 1 }: Props = $props();
 
   function openNext() {
     const currentComponent = $popupState.content?.component;

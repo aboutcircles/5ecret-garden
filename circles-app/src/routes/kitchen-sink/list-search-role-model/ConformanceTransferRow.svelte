@@ -15,21 +15,22 @@
     item: ConformanceTransferRowItem;
   }
 
+  import { T } from '$lib/design-system/tokens';
+
   let { item }: Props = $props();
   const incoming = $derived.by(() => item.direction === 'in' || item.direction === 'mint');
-  import { T } from '$lib/design-system/tokens';
 </script>
 
 <RowFrame clickable={true} dense={true} noLeading={true}>
-  <div class="w-full flex items-center justify-between gap-3">
-    <div class="min-w-0 flex items-center gap-2">
-      <img src={incoming ? '/badge-received.svg' : '/badge-sent.svg'} alt="" class="h-6 w-6" />
-      <div class="min-w-0">
-        <div class="truncate text-sm font-medium">{item.counterpartyName}</div>
-        <div class="truncate text-xs opacity-70">{item.timeAgo} • {item.counterpartyAddress}</div>
+  <div style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+    <div style="min-width:0;display:flex;align-items:center;gap:8px;">
+      <img src={incoming ? '/badge-received.svg' : '/badge-sent.svg'} alt="" style="width:24px;height:24px;" />
+      <div style="min-width:0;">
+        <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:500;">{item.counterpartyName}</div>
+        <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px;color:{T.inkMuted};">{item.timeAgo} • {item.counterpartyAddress}</div>
       </div>
     </div>
-    <div style={`flex-shrink:0;font-size:13px;font-weight:580;color:${incoming ? T.positive : T.negative};`}>
+    <div style="flex-shrink:0;font-size:13px;font-weight:580;color:{incoming ? T.positive : T.negative};">
       {incoming ? '+' : '-'}{item.amount.toFixed(2)} CRC
     </div>
   </div>
