@@ -564,7 +564,7 @@
 
             <!-- Name + help -->
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-                <span style="font-family:{T.fontDisplay};font-size:26px;color:{T.ink};letter-spacing:-0.02em;line-height:1.1;">
+                <span style="font-family:{T.fontDisplay};font-size:28px;color:{T.ink};letter-spacing:-0.02em;line-height:1.1;">
                     {profile?.name ?? (address ? shortenAddress(address) : 'Loading…')}
                 </span>
                 <HelpPopover
