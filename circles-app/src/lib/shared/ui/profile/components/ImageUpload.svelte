@@ -4,6 +4,7 @@
     fileToFittedDataUrl,
     MEDIA_MAX_BYTES,
   } from '$lib/shared/media/imageTools';
+  import { T } from '$lib/design-system/tokens.js';
 
   interface Props {
     imageDataUrls: string[];
@@ -137,18 +138,24 @@
   }
 </script>
 
-<div class="space-y-2">
+<div style="display:flex;flex-direction:column;gap:8px;">
+  <!-- Drop zone -->
   <div
     role="button"
     tabindex="0"
-    class="border border-dashed rounded-md p-3 text-xs flex flex-col gap-2 cursor-pointer"
-    class:border-primary={dragging}
+    style="
+      border:1.5px dashed {dragging ? T.primary : T.hairline};
+      border-radius:12px;
+      padding:16px 14px;
+      background:{dragging ? T.primaryFaint : T.surfaceAlt};
+      display:flex;flex-direction:column;gap:6px;
+      cursor:{readonly ? 'default' : 'pointer'};
+      transition:border-color 0.15s,background 0.15s;
+    "
     onclick={handleClickSelect}
     onkeydown={(e) => {
       const key = e.key;
-      const isEnter = key === 'Enter';
-      const isSpace = key === ' ';
-      if (isEnter || isSpace) {
+      if (key === 'Enter' || key === ' ') {
         e.preventDefault();
         handleClickSelect();
       }
@@ -157,60 +164,66 @@
     ondragleave={handleDragLeave}
     ondrop={handleDrop}
   >
-    <div class="flex items-center justify-between gap-2">
-      <span class="font-semibold">Upload images</span>
-      <span class="opacity-60">
-        JPEG/PNG, up to {Math.round(maxBytes / (1024 * 1024))} MiB each
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <span style="font-size:12.5px;font-weight:580;color:{T.ink};">Upload image</span>
+      <span style="font-size:11px;color:{T.inkMuted};">
+        JPEG/PNG · up to {Math.round(maxBytes / (1024 * 1024))} MiB
       </span>
     </div>
-    <div class="opacity-70">
-      Click to select files or drag &amp; drop them here. Images are cropped to
-      {cropWidth}×{cropHeight}px.
+    <div style="font-size:11.5px;color:{T.inkSubtle};line-height:1.5;">
+      {#if readonly}
+        Image upload is disabled.
+      {:else}
+        Click to select or drag &amp; drop. Cropped to {cropWidth}×{cropHeight}px.
+      {/if}
     </div>
 
     <input
       bind:this={fileInput}
       type="file"
       accept="image/*"
-      class="hidden"
+      style="display:none;"
       multiple
       onchange={handleFileInput}
     />
   </div>
 
   {#if imageDataUrls?.length}
-    <div class="flex justify-between items-center mt-1 text-xs">
-      <span class="opacity-70">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <span style="font-size:11px;color:{T.inkMuted};">
         {imageDataUrls.length} image{imageDataUrls.length === 1 ? '' : 's'}
       </span>
       {#if !readonly}
         <button
           type="button"
-          class="btn btn-ghost btn-xs"
+          style="height:24px;padding:0 10px;border-radius:9999px;border:1px solid {T.hairline};background:transparent;color:{T.inkMuted};font-size:11px;cursor:pointer;"
           onclick={clearAll}
-        >
-          Clear all
-        </button>
+        >Clear all</button>
       {/if}
     </div>
 
-    <div class="mt-2 grid grid-cols-3 sm:grid-cols-4 gap-2">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
       {#each imageDataUrls as url, idx}
-        <div class="relative group rounded-md overflow-hidden border border-base-300">
+        <div style="position:relative;border-radius:10px;overflow:hidden;border:1px solid {T.hairlineSoft};">
           <img
             src={url}
-            alt={`image-${idx}`}
-            class="w-full h-24 object-cover"
+            alt="upload-{idx}"
+            style="width:100%;height:80px;object-fit:cover;display:block;"
             loading="lazy"
           />
           {#if !readonly}
             <button
               type="button"
-              class="absolute top-1 right-1 btn btn-xs btn-circle btn-error opacity-0 group-hover:opacity-100 transition-opacity"
-              onclick={(e) => {removeAt(idx); e.stopPropagation();}}
-            >
-              ✕
-            </button>
+              style="
+                position:absolute;top:4px;right:4px;
+                width:20px;height:20px;border-radius:9999px;
+                border:0;background:rgba(15,10,30,0.55);
+                color:#fff;font-size:10px;line-height:1;
+                cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
+              "
+              onclick={(e) => { removeAt(idx); e.stopPropagation(); }}
+              aria-label="Remove image"
+            >✕</button>
           {/if}
         </div>
       {/each}

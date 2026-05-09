@@ -11,6 +11,7 @@
   } from '$lib/shared/ui/profile/profileImagePolicy';
   import type { AppProfile as Profile } from '$lib/shared/model/profile';
   import { sanitizeText } from '$lib/shared/utils/isValid';
+  import { T } from '$lib/design-system/tokens.js';
 
   interface Props {
     profile: Profile;
@@ -31,53 +32,57 @@
   $effect(() => {
     profile.name = sanitizeText(profile.name);
   });
+
+  const inputStyle = `width:100%;padding:10px 14px;border:1px solid ${T.hairline};border-radius:10px;font-family:${T.fontSans};font-size:13px;color:${T.ink};background:${T.surface};box-sizing:border-box;`;
+  const readonlyInputStyle = `width:100%;padding:10px 14px;border:1px solid ${T.hairlineSoft};border-radius:10px;font-family:${T.fontMono};font-size:11.5px;color:${T.inkMuted};background:${T.surfaceAlt};box-sizing:border-box;`;
+  const eyebrowStyle = `font-size:10px;font-weight:600;color:${T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;margin:0 0 6px 2px;display:block;`;
 </script>
 
-<div class="space-y-4">
+<div style="display:flex;flex-direction:column;gap:16px;">
   {#if avatarState.avatar}
-    <label class="form-control">
-      <span class="label-text">Circles address</span>
-      <input type="text" readonly class="input input-bordered w-full" value={avatarState.avatar?.avatarInfo?.avatar} />
+    <label style="display:flex;flex-direction:column;">
+      <span style={eyebrowStyle}>Circles address</span>
+      <input type="text" readonly style={readonlyInputStyle} value={avatarState.avatar?.avatarInfo?.avatar} />
     </label>
 
     {#if avatarState.avatar?.avatarInfo?.v1Token && !avatarState.avatar?.avatarInfo?.v1Stopped}
-      <label class="form-control">
-        <span class="label-text">Token address</span>
-        <input type="text" readonly class="input input-bordered w-full" value={avatarState.avatar.avatarInfo.v1Token} />
+      <label style="display:flex;flex-direction:column;">
+        <span style={eyebrowStyle}>Token address</span>
+        <input type="text" readonly style={readonlyInputStyle} value={avatarState.avatar.avatarInfo.v1Token} />
       </label>
     {/if}
   {/if}
 
   {#if showCustomizableFields}
-    <label class="form-control">
-      <span class="label-text">Name</span>
-      <input id="name" type="text" class="input input-bordered w-full" bind:value={profile.name} placeholder="Name" />
+    <label style="display:flex;flex-direction:column;">
+      <span style={eyebrowStyle}>Name</span>
+      <input id="name" type="text" style={inputStyle} bind:value={profile.name} placeholder="Name" />
     </label>
 
-    <label class="form-control">
-      <span class="label-text">Description</span>
+    <div style="display:flex;flex-direction:column;">
+      <span style={eyebrowStyle}>Description</span>
       <MarkdownEditor
         bind:value={profile.description}
         placeholder="Write a description (Markdown supported)…"
       />
+    </div>
+
+    <label style="display:flex;flex-direction:column;">
+      <span style={eyebrowStyle}>Location</span>
+      <input type="text" style={inputStyle} bind:value={profile.location} placeholder="Location" />
     </label>
 
-    <label class="form-control">
-      <span class="label-text">Location</span>
-      <input type="text" class="input input-bordered w-full" bind:value={profile.location} placeholder="Location" />
-    </label>
-
-    <div>
-      <span class="label-text">Image</span>
-      <ImageUpload 
+    <div style="display:flex;flex-direction:column;">
+      <span style={eyebrowStyle}>Image</span>
+      <ImageUpload
         imageDataUrls={profile.previewImageUrl ? [profile.previewImageUrl] : []}
         cropWidth={PROFILE_IMAGE_CROP_WIDTH}
         cropHeight={PROFILE_IMAGE_CROP_HEIGHT}
         cropMime={PROFILE_IMAGE_OUTPUT_MIME}
         cropQuality={PROFILE_IMAGE_OUTPUT_QUALITY}
         maxBytes={PROFILE_IMAGE_MAX_BYTES}
-        onnewimage={onnewimage} 
-        onclearall={oncleared} 
+        onnewimage={onnewimage}
+        onclearall={oncleared}
       />
     </div>
   {/if}
