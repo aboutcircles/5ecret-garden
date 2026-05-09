@@ -1,11 +1,11 @@
 <script lang="ts">
-  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import { formatUnits } from 'ethers';
   import { openProfilePopup } from '$lib/shared/ui/profile/openProfilePopup';
   import type { Address } from '@circles-sdk/utils';
   import type { TrustRelation } from '@circles-sdk/data';
   import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
+  import { T } from '$lib/design-system/tokens.js';
 
   interface HolderRow {
     avatar: Address;
@@ -64,16 +64,14 @@
   tabindex={0}
   role="button"
   aria-label={`Open holder ${item.avatar}`}
-  class="rounded-[var(--row-radius)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+  style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;background:{T.surface};border:1px solid {T.hairlineSoft};cursor:pointer;width:100%;box-sizing:border-box;outline:none;"
   onkeydown={onRowKeydown}
   onclick={onRowClick}
 >
-  <RowFrame clickable={true} dense={true} noLeading={true}>
-    <div class="min-w-0">
-      <Avatar address={item.avatar} clickable={true} view="horizontal" showTypeInfo={true} />
-    </div>
-    {#snippet trailing()}<div class="text-right tabular-nums">
-      <div class="font-medium">{formatAmount(item.amount)} CRC</div>
-    </div>{/snippet}
-  </RowFrame>
+  <div style="flex:1;min-width:0;">
+    <Avatar address={item.avatar} clickable={true} view="horizontal" showTypeInfo={true} />
+  </div>
+  <div style="text-align:right;font-variant-numeric:tabular-nums;">
+    <div style="font-size:13px;font-weight:500;color:{T.ink};">{formatAmount(item.amount)} CRC</div>
+  </div>
 </div>

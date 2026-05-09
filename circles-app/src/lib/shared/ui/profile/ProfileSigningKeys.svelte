@@ -11,6 +11,7 @@ import { AddSigningKey } from '$lib/shared/ui/profile';
     import { getProfilesBindings } from '$lib/areas/market/offers';
     import { removeProfileFromCache } from '$lib/shared/utils/profile';
     import type { Address } from '@circles-sdk/utils';
+    import { T } from '$lib/design-system/tokens.js';
 
     interface Props {
         avatar: Address | null;
@@ -129,19 +130,19 @@ import { AddSigningKey } from '$lib/shared/ui/profile';
 </script>
 
 {#if error}
-    <div class="alert alert-error text-xs">{error}</div>
+    <div style="font-size:12px;color:{T.negative};background:{T.negativeSoft};border:1px solid rgba(196,68,48,0.18);border-radius:10px;padding:10px 14px;">{error}</div>
 {/if}
 
-<section class="bg-base-100 border border-base-300 rounded-xl p-4 shadow-sm">
+<section style="background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;padding:16px;box-shadow:{T.shadow.xs};">
     {#if showHeader}
-        <div class="flex justify-between items-center mb-2">
-            <div class="flex items-center gap-2">
-                <h3 class="font-semibold text-sm m-0">Signing keys</h3>
-                <span class="text-[11px] opacity-60">Operator/app keys</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+                <h3 style="font-size:13px;font-weight:600;color:{T.ink};margin:0;">Signing keys</h3>
+                <span style="font-size:11px;color:{T.inkMuted};">Operator/app keys</span>
             </div>
             {#if !readonly}
-                <button class="btn btn-xs" onclick={handleAddSigningKey}>
-                    <Lucide icon={LPlus} size={16} class="shrink-0 stroke-current" ariaLabel="" />
+                <button style="display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 12px;border-radius:9999px;border:1px solid {T.hairline};background:transparent;color:{T.ink};cursor:pointer;font-family:{T.fontSans};font-size:12px;" onclick={handleAddSigningKey}>
+                    <Lucide icon={LPlus} size={14} ariaLabel="" />
                     Add signing key
                 </button>
             {/if}
@@ -149,19 +150,19 @@ import { AddSigningKey } from '$lib/shared/ui/profile';
     {/if}
 
     {#if loading}
-        <div class="text-sm opacity-70">Loading…</div>
+        <div style="font-size:13px;color:{T.inkMuted};">Loading…</div>
     {:else}
-        <ul class="space-y-1">
+        <ul style="display:flex;flex-direction:column;gap:4px;list-style:none;margin:0;padding:0;">
             {#each Object.entries(signingKeys) as [fp, meta] (fp)}
-                <li class="flex justify-between items-center text-xs">
-                    <code class="truncate">{fp}</code>
-                    <div class="flex items-center gap-2">
+                <li style="display:flex;justify-content:space-between;align-items:center;font-size:11px;">
+                    <code style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:{T.fontMono};color:{T.ink};">{fp}</code>
+                    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
                         {#if !readonly}
-                            <button class="btn btn-ghost btn-xs" title="Revoke" onclick={() => revokeSigningKey(fp)}>
-                                <Lucide icon={LBan} size={14} class="shrink-0 stroke-current" ariaLabel="" />
+                            <button style="width:26px;height:26px;border-radius:8px;border:0;background:transparent;color:{T.inkMuted};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;" title="Revoke" onclick={() => revokeSigningKey(fp)}>
+                                <Lucide icon={LBan} size={14} ariaLabel="" />
                             </button>
-                            <button class="btn btn-ghost btn-xs" title="Remove" onclick={() => removeSigningKey(fp)}>
-                                <Lucide icon={LTrash2} size={14} class="shrink-0 stroke-current" ariaLabel="" />
+                            <button style="width:26px;height:26px;border-radius:8px;border:0;background:transparent;color:{T.inkMuted};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;" title="Remove" onclick={() => removeSigningKey(fp)}>
+                                <Lucide icon={LTrash2} size={14} ariaLabel="" />
                             </button>
                         {/if}
                     </div>
@@ -170,13 +171,13 @@ import { AddSigningKey } from '$lib/shared/ui/profile';
         </ul>
 
         {#if Object.keys(signingKeys).length === 0}
-            <div class="text-sm opacity-70">No signing keys.</div>
+            <div style="font-size:13px;color:{T.inkMuted};">No signing keys.</div>
         {/if}
     {/if}
 </section>
 
 {#if !readonly && showHeader}
-    <div class="flex justify-end">
-        <button class="btn btn-primary btn-sm" onclick={saveSigningKeys} disabled={loading || !avatar}>Save</button>
+    <div style="display:flex;justify-content:flex-end;">
+        <button style="height:32px;padding:0 16px;border-radius:9999px;border:0;background:{T.primary};color:#fff;cursor:pointer;font-family:{T.fontSans};font-size:13px;font-weight:580;box-shadow:0 4px 12px rgba(88,73,212,0.25);" onclick={saveSigningKeys} disabled={loading || !avatar}>Save</button>
     </div>
 {/if}

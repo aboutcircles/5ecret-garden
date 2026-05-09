@@ -7,10 +7,11 @@
   interface Props {
     url: string;
     className?: string;
+    style?: string;
     children?: Snippet;
   }
 
-  let { url, className = '', children }: Props = $props();
+  let { url, className = '', style, children }: Props = $props();
 
   function isPlainLeftClick(e: MouseEvent): boolean {
     return (
@@ -35,6 +36,6 @@
   }
 </script>
 
-<a class={className} href={jumpHref(url)} onclick={onClick}>
+<a class={className} {style} href={jumpHref(url)} onclick={onClick}>
   {@render children?.()}
 </a>

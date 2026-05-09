@@ -29,6 +29,7 @@
     import { ensureGnosisChain } from '$lib/shared/integrations/chain/gnosis';
     import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
     import { gnosisConfig } from '$lib/shared/config/circles';
+    import { T } from '$lib/design-system/tokens.js';
 
     interface Props {
         avatar: Address;
@@ -416,13 +417,13 @@
     }
 </script>
 
-<div class="space-y-2">
+<div style="display:flex;flex-direction:column;gap:8px;">
     {#each Object.keys(namespaces) as ns (ns)}
         {@const state = perNamespace[ns] ?? { loading: false, error: null, links: [], expanded: false }}
-        <div class="rounded-md border border-base-content/10 bg-base-200/30 overflow-hidden">
-            <button class="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-base-200/50 transition-colors" onclick={() => toggleNamespace(ns)}>
-                <div class="flex items-center gap-3">
-                    <div class="text-base-content/50">
+        <div style="border-radius:10px;border:1px solid {T.hairlineSoft};background:{T.pageDeep};overflow:hidden;">
+            <button style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:10px 16px;text-align:left;border:0;background:transparent;cursor:pointer;" onclick={() => toggleNamespace(ns)}>
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="color:{T.inkMuted};">
                         {#if state.expanded}
                             <Lucide icon={LChevronDown} size={18} />
                         {:else}
@@ -431,52 +432,56 @@
                     </div>
                     <Avatar address={ns} view="horizontal" clickable={true} />
                 </div>
-                <div class="text-xs font-medium">
-                    {#if state.loading} 
-                        <span class="loading loading-spinner loading-xs text-primary"></span>
-                    {:else if state.error} 
-                        <span class="text-error">{state.error}</span>
-                    {:else} 
-                        <span class="opacity-50">{state.links.length} items</span>
+                <div style="font-size:11px;font-weight:500;">
+                    {#if state.loading}
+                        <svg class="pn-spin" style="width:12px;height:12px;color:{T.primary};" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/>
+                        </svg>
+                    {:else if state.error}
+                        <span style="color:{T.negative};">{state.error}</span>
+                    {:else}
+                        <span style="opacity:0.5;">{state.links.length} items</span>
                     {/if}
                 </div>
             </button>
 
             {#if state.expanded}
-                <div class="px-2 pb-2 space-y-1 bg-base-100/40 border-t border-base-content/5">
+                <div style="padding:8px;display:flex;flex-direction:column;gap:4px;background:rgba(255,255,255,0.4);border-top:1px solid {T.hairlineSoft};">
                     {#each state.links as item, i (i)}
-                        <div class="rounded-lg hover:bg-base-200/80 transition-all group">
-                            <div class="flex items-center justify-between gap-3 px-3 py-2">
-                                <div class="min-w-0 flex-1">
-                                    <div class="flex items-center gap-2 mb-0.5">
-                                        <span class="text-xs font-semibold truncate">
+                        <div style="border-radius:8px;">
+                            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 12px;">
+                                <div style="min-width:0;flex:1;">
+                                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+                                        <span style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:{T.ink};">
                                             {item.link.name || 'Unnamed Link'}
                                         </span>
-                                        <span class="text-[10px] font-mono opacity-30 truncate">
+                                        <span style="font-size:10px;font-family:{T.fontMono};opacity:0.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                                             {prettyIpfsCid(item.chunkCid)}
                                         </span>
                                     </div>
-                                    <div class="text-[11px] opacity-60 truncate">
+                                    <div style="font-size:11px;opacity:0.6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:{T.inkBody};">
                                         {typeof item.link === 'object' ? JSON.stringify(item.link) : item.link}
                                     </div>
                                 </div>
-                                
-                                <div class="shrink-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+
+                                <div style="flex-shrink:0;display:flex;align-items:center;gap:4px;">
                                     <JumpLink
-                                       className="btn btn-ghost btn-xs btn-square"
+                                       style="width:24px;height:24px;border-radius:7px;border:0;background:transparent;color:{T.inkMuted};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;"
                                        url={ipfsGatewayUrl(item.chunkCid)}
                                        title="View on IPFS">
                                         <Lucide icon={LExternalLink} size={14} />
                                     </JumpLink>
                                     {#if !readonly}
-                                        <button class="btn btn-ghost btn-xs btn-square"
-                                                title="Edit"
-                                                onclick={() => startEdit(ns, i)}>
+                                        <button
+                                            style="width:24px;height:24px;border-radius:7px;border:0;background:transparent;color:{T.inkMuted};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;"
+                                            title="Edit"
+                                            onclick={() => startEdit(ns, i)}>
                                             <Lucide icon={LPencil} size={14} />
                                         </button>
-                                        <button class="btn btn-ghost btn-xs btn-square text-error/70 hover:text-error"
-                                                title="Remove"
-                                                onclick={() => removeLink(ns, i)}>
+                                        <button
+                                            style="width:24px;height:24px;border-radius:7px;border:0;background:transparent;color:{T.negative};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;"
+                                            title="Remove"
+                                            onclick={() => removeLink(ns, i)}>
                                             <Lucide icon={LTrash2} size={14} />
                                         </button>
                                     {/if}
@@ -484,54 +489,54 @@
                             </div>
 
                             {#if isEditing(ns, i) && editing}
-                                <div class="px-3 pb-3 space-y-2">
-                                    <div class="rounded-md border border-base-content/10 bg-base-100/50">
+                                <div style="padding:12px;display:flex;flex-direction:column;gap:8px;">
+                                    <div style="border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};">
                                         <button
                                             type="button"
-                                            class="w-full px-3 py-2 text-left text-xs font-semibold flex items-center justify-between"
+                                            style="width:100%;padding:10px 12px;text-align:left;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:space-between;border:0;background:transparent;cursor:pointer;color:{T.ink};"
                                             onclick={() => toggleMetadataEditor(ns, i)}
                                             disabled={editing.saving}
                                         >
                                             <span>Edit link metadata</span>
-                                            <span class="opacity-70">{editing.showMetadata ? 'Hide' : 'Show'}</span>
+                                            <span style="opacity:0.7;">{editing.showMetadata ? 'Hide' : 'Show'}</span>
                                         </button>
                                         {#if editing.showMetadata}
-                                            <div class="px-3 pb-3 grid grid-cols-1 md:grid-cols-2 gap-2">
-                                                <label class="form-control md:col-span-2">
-                                                    <span class="label-text text-xs">name</span>
+                                            <div style="padding:12px;display:flex;flex-direction:column;gap:8px;">
+                                                <label style="display:flex;flex-direction:column;gap:4px;">
+                                                    <span style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">name</span>
                                                     <input
-                                                        class="input input-bordered input-sm"
+                                                        style="height:32px;padding:0 10px;border:1px solid {T.hairline};border-radius:8px;font-family:{T.fontSans};font-size:12px;color:{T.ink};background:{T.surface};outline:none;"
                                                         value={editing.metadata.name}
                                                         oninput={(e) => updateMetadataField(ns, i, 'name', (e.currentTarget as HTMLInputElement).value)}
                                                         disabled={editing.saving}
                                                     />
                                                 </label>
 
-                                                <label class="label cursor-pointer justify-start gap-2 md:col-span-2">
+                                                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
                                                     <input
                                                         type="checkbox"
-                                                        class="checkbox checkbox-xs"
+                                                        style="width:14px;height:14px;accent-color:{T.primary};"
                                                         checked={editing.metadata.encrypted}
                                                         onchange={(e) => updateMetadataEncrypted(ns, i, (e.currentTarget as HTMLInputElement).checked)}
                                                         disabled={editing.saving}
                                                     />
-                                                    <span class="label-text text-xs">encrypted</span>
+                                                    <span style="font-size:11px;color:{T.inkBody};">encrypted</span>
                                                 </label>
 
-                                                <label class="form-control">
-                                                    <span class="label-text text-xs">encryptionAlgorithm</span>
+                                                <label style="display:flex;flex-direction:column;gap:4px;">
+                                                    <span style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">encryptionAlgorithm</span>
                                                     <input
-                                                        class="input input-bordered input-sm"
+                                                        style="height:32px;padding:0 10px;border:1px solid {T.hairline};border-radius:8px;font-family:{T.fontSans};font-size:12px;color:{T.ink};background:{T.surface};outline:none;"
                                                         value={editing.metadata.encryptionAlgorithm}
                                                         oninput={(e) => updateMetadataField(ns, i, 'encryptionAlgorithm', (e.currentTarget as HTMLInputElement).value)}
                                                         disabled={editing.saving || !editing.metadata.encrypted}
                                                     />
                                                 </label>
 
-                                                <label class="form-control">
-                                                    <span class="label-text text-xs">encryptionKeyFingerprint</span>
+                                                <label style="display:flex;flex-direction:column;gap:4px;">
+                                                    <span style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">encryptionKeyFingerprint</span>
                                                     <input
-                                                        class="input input-bordered input-sm"
+                                                        style="height:32px;padding:0 10px;border:1px solid {T.hairline};border-radius:8px;font-family:{T.fontSans};font-size:12px;color:{T.ink};background:{T.surface};outline:none;"
                                                         value={editing.metadata.encryptionKeyFingerprint}
                                                         oninput={(e) => updateMetadataField(ns, i, 'encryptionKeyFingerprint', (e.currentTarget as HTMLInputElement).value)}
                                                         disabled={editing.saving || !editing.metadata.encrypted}
@@ -541,29 +546,31 @@
                                         {/if}
                                     </div>
 
-                                    <div class="text-[11px] opacity-60 font-mono break-all">
+                                    <div style="font-size:11px;opacity:0.6;font-family:{T.fontMono};word-break:break-all;">
                                         Source payload CID: {editing.sourceCid || '—'}
                                     </div>
                                     <textarea
-                                        class="textarea textarea-bordered textarea-sm font-mono w-full"
+                                        style="width:100%;padding:10px;border:1px solid {T.hairline};border-radius:8px;font-family:{T.fontMono};font-size:12px;color:{T.ink};background:{T.surface};outline:none;resize:vertical;"
                                         rows="10"
                                         value={editing.draft}
                                         oninput={(e) => onEditPayloadInput(ns, i, e)}
                                         disabled={editing.loadingPayload || editing.saving}
                                     ></textarea>
                                     {#if editing.loadingPayload}
-                                        <div class="text-xs opacity-70 flex items-center gap-1.5">
-                                            <span class="loading loading-spinner loading-xs"></span>
+                                        <div style="font-size:11px;opacity:0.7;display:flex;align-items:center;gap:6px;">
+                                            <svg class="pn-spin" style="width:11px;height:11px;" viewBox="0 0 24 24" fill="none">
+                                                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/>
+                                            </svg>
                                             Loading payload from IPFS…
                                         </div>
                                     {/if}
                                     {#if editing.error}
-                                        <div class="text-xs text-error">{editing.error}</div>
+                                        <div style="font-size:11px;color:{T.negative};">{editing.error}</div>
                                     {/if}
-                                    <div class="flex items-center justify-end gap-2">
+                                    <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;">
                                         <button
                                             type="button"
-                                            class="btn btn-ghost btn-xs"
+                                            style="height:28px;padding:0 12px;border-radius:9999px;border:0;background:transparent;color:{T.inkMuted};cursor:pointer;font-family:{T.fontSans};font-size:12px;"
                                             onclick={() => cancelEdit(ns, i)}
                                             disabled={editing.saving}
                                         >
@@ -571,12 +578,14 @@
                                         </button>
                                         <button
                                             type="button"
-                                            class="btn btn-primary btn-xs"
+                                            style="display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 12px;border-radius:9999px;border:0;background:{T.primary};color:#fff;cursor:pointer;font-family:{T.fontSans};font-size:12px;font-weight:580;"
                                             onclick={() => saveEditedLink(ns, i)}
                                             disabled={editing.saving || editing.loadingPayload}
                                         >
                                             {#if editing.saving}
-                                                <span class="loading loading-spinner loading-xs"></span>
+                                                <svg class="pn-spin" style="width:11px;height:11px;" viewBox="0 0 24 24" fill="none">
+                                                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/>
+                                                </svg>
                                             {/if}
                                             Save replacement
                                         </button>
@@ -586,10 +595,15 @@
                         </div>
                     {/each}
                     {#if state.links.length === 0 && !state.loading}
-                        <div class="py-4 text-center text-xs opacity-40 italic">No links found in this namespace.</div>
+                        <div style="padding:16px 12px;text-align:center;font-size:11px;opacity:0.4;font-style:italic;">No links found in this namespace.</div>
                     {/if}
                 </div>
             {/if}
         </div>
     {/each}
 </div>
+
+<style>
+  @keyframes pn-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .pn-spin { animation: pn-spin 0.9s linear infinite; }
+</style>
