@@ -1,6 +1,7 @@
 <script lang="ts">
   import AdminProductFormBase from './AdminProductFormBase.svelte';
   import type { AdminProductType, AdminUnifiedProduct, AdminOdooConnection } from '../types';
+  import { T } from '$lib/design-system/tokens.js';
   import {
     listOdooProductCatalog,
     type OdooConnectionConfig,
@@ -271,26 +272,26 @@
   }
 >
   {#if formError}
-    <p class="text-error text-sm">{formError}</p>
+    <p style="color:{T.negative};font-size:13px;">{formError}</p>
   {/if}
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-    <label class="form-control">
-      <span class="label-text">Seller address *</span>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+    <label style="display:flex;flex-direction:column;gap:4px;">
+      <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Seller address *</span>
       <input
         type="text"
-        class="input input-bordered input-sm font-mono"
+        style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontMono};outline:none;box-sizing:border-box;width:100%;"
         bind:value={seller}
         placeholder="0x..."
         disabled={!isConnectionMode && hasConnectionChoice}
       />
     </label>
     {#if !isConnectionMode}
-      <label class="form-control">
-        <span class="label-text">SKU *</span>
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">SKU *</span>
         <input
           type="text"
-          class="input input-bordered input-sm font-mono"
+          style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontMono};outline:none;box-sizing:border-box;width:100%;"
           bind:value={sku}
           placeholder="voucher-10"
         />
@@ -299,72 +300,72 @@
   </div>
 
   {#if !isConnectionMode && hasConnectionChoice}
-    <div class="divider text-xs">Connection</div>
-    <label class="form-control">
-      <span class="label-text">Use existing connection</span>
-      <select class="select select-bordered select-sm" bind:value={selectedConnectionKey}>
+    <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:{T.inkMuted};"><span style="flex:1;height:1px;background:{T.hairlineSoft};"></span>Connection<span style="flex:1;height:1px;background:{T.hairlineSoft};"></span></div>
+    <label style="display:flex;flex-direction:column;gap:4px;">
+      <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Use existing connection</span>
+      <select style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" bind:value={selectedConnectionKey}>
         <option value="" disabled={needsConnectionSelection}>Select connection</option>
         {#each connectionOptions as option (option.key)}
           <option value={option.key}>{option.label}</option>
         {/each}
       </select>
-      <span class="label-text-alt text-xs opacity-70">Odoo products require a connection.</span>
+      <span style="font-size:11px;opacity:0.7;">Odoo products require a connection.</span>
     </label>
   {/if}
 
   {#if isConnectionMode}
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <label class="form-control">
-        <span class="label-text">Odoo URL *</span>
-        <input class="input input-bordered input-sm" bind:value={odooUrl} placeholder="https://your-odoo" />
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Odoo URL *</span>
+        <input style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" bind:value={odooUrl} placeholder="https://your-odoo" />
       </label>
-      <label class="form-control">
-        <span class="label-text">Database *</span>
-        <input class="input input-bordered input-sm" bind:value={odooDb} />
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Database *</span>
+        <input style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" bind:value={odooDb} />
       </label>
-      <label class="form-control">
-        <span class="label-text">UID *</span>
-        <input type="number" class="input input-bordered input-sm" bind:value={odooUid} />
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">UID *</span>
+        <input type="number" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" bind:value={odooUid} />
       </label>
-      <label class="form-control">
-        <span class="label-text">API key *</span>
-        <input type="password" class="input input-bordered input-sm" bind:value={odooKey} />
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">API key *</span>
+        <input type="password" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" bind:value={odooKey} />
       </label>
-      <label class="form-control">
-        <span class="label-text">Sale partner ID</span>
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Sale partner ID</span>
         <input
           type="number"
-          class="input input-bordered input-sm"
+          style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;"
           bind:value={salePartnerId}
         />
       </label>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <label class="form-control">
-        <span class="label-text">JSON-RPC timeout (ms)</span>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">JSON-RPC timeout (ms)</span>
         <input
           type="number"
-          class="input input-bordered input-sm"
+          style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;"
           bind:value={jsonrpcTimeoutMs}
           min="1000"
         />
       </label>
-      <label class="form-control">
-        <span class="label-text">Fulfill inherit request abort</span>
-        <input type="checkbox" class="checkbox checkbox-sm" bind:checked={fulfillInheritRequestAbort} />
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Fulfill inherit request abort</span>
+        <input type="checkbox" style="width:14px;height:14px;accent-color:{T.primary};" bind:checked={fulfillInheritRequestAbort} />
       </label>
-      <label class="form-control">
-        <span class="label-text">Connection enabled</span>
-        <input type="checkbox" class="checkbox checkbox-sm" bind:checked={connectionEnabled} />
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Connection enabled</span>
+        <input type="checkbox" style="width:14px;height:14px;accent-color:{T.primary};" bind:checked={connectionEnabled} />
       </label>
     </div>
   {:else}
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <label class="form-control">
-        <span class="label-text">Odoo product code *</span>
-        <div class="dropdown dropdown-bottom w-full" class:dropdown-open={catalogOpen}>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Odoo product code *</span>
+        <div style="position:relative;width:100%;">
           <input
-            class="input input-bordered input-sm font-mono w-full"
+            style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontMono};outline:none;box-sizing:border-box;width:100%;"
             bind:value={odooProductCode}
             placeholder="Select from catalog or paste code"
             onfocus={async () => {
@@ -382,30 +383,30 @@
           />
 
           {#if catalogOpen}
-            <div class="dropdown-content z-[50] card card-compact w-full bg-base-100 shadow border border-base-300 mt-1">
-              <div class="card-body gap-2">
+            <div style="position:absolute;z-index:50;width:100%;background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:10px;box-shadow:{T.shadow.xs};margin-top:4px;">
+              <div style="padding:10px;display:flex;flex-direction:column;gap:8px;">
                 <input
-                  class="input input-bordered input-xs"
+                  style="height:28px;padding:0 8px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;"
                   bind:value={catalogSearch}
                   placeholder="Search by name, code, barcode"
                 />
 
                 {#if !selectedConnection}
-                  <p class="text-xs text-warning">Select a connection first.</p>
+                  <p style="font-size:11px;color:{T.warning};">Select a connection first.</p>
                 {:else if catalogError}
-                  <p class="text-xs text-error break-words">{catalogError}</p>
+                  <p style="font-size:11px;color:{T.negative};word-break:break-words;">{catalogError}</p>
                 {:else if catalogLoading && catalogItems.length === 0}
-                  <p class="text-xs opacity-70">Loading…</p>
+                  <p style="font-size:11px;opacity:0.7;">Loading…</p>
                 {:else if filteredCatalogItems.length === 0}
-                  <p class="text-xs opacity-70">No matches in loaded catalog.</p>
+                  <p style="font-size:11px;opacity:0.7;">No matches in loaded catalog.</p>
                 {:else}
-                  <div class="max-h-64 overflow-auto">
-                    <ul class="menu menu-sm bg-base-100 w-full">
+                  <div style="max-height:256px;overflow:auto;">
+                    <ul style="list-style:none;margin:0;padding:0;width:100%;">
                       {#each filteredCatalogItems.slice(0, 100) as item (item.id)}
                         <li>
                           <button
                             type="button"
-                            class="justify-between"
+                            style="display:flex;justify-content:space-between;align-items:center;width:100%;padding:4px 8px;border:0;background:transparent;cursor:pointer;border-radius:6px;font-family:{T.fontSans};font-size:12px;"
                             onclick={() => {
                               if (!item.default_code) return;
                               odooProductCode = item.default_code;
@@ -413,11 +414,11 @@
                               catalogOpen = false;
                             }}
                           >
-                            <span class="flex flex-col items-start">
-                              <span class="font-mono">{item.default_code}</span>
-                              <span class="text-xs opacity-70">{item.display_name}</span>
+                            <span style="display:flex;flex-direction:column;align-items:flex-start;">
+                              <span style="font-family:{T.fontMono};">{item.default_code}</span>
+                              <span style="font-size:11px;opacity:0.7;">{item.display_name}</span>
                             </span>
-                            <span class="text-xs opacity-70">{item.qty_available}</span>
+                            <span style="font-size:11px;opacity:0.7;">{item.qty_available}</span>
                           </button>
                         </li>
                       {/each}
@@ -427,7 +428,7 @@
                   {#if catalogHasMore}
                     <button
                       type="button"
-                      class="btn btn-ghost btn-xs"
+                      style="height:24px;padding:0 10px;border-radius:9999px;border:0;background:transparent;color:{T.inkMuted};cursor:pointer;font-family:{T.fontSans};font-size:11px;"
                       disabled={catalogLoading}
                       onclick={async () => {
                         await loadCatalogPage(false);
@@ -442,48 +443,48 @@
           {/if}
         </div>
       </label>
-      <label class="form-control">
-        <span class="label-text">Connection URL</span>
-        <input class="input input-bordered input-sm" bind:value={odooUrl} disabled={true} />
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Connection URL</span>
+        <input style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" bind:value={odooUrl} disabled={true} />
       </label>
-      <label class="form-control">
-        <span class="label-text">Database</span>
-        <input class="input input-bordered input-sm" bind:value={odooDb} disabled={true} />
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Database</span>
+        <input style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" bind:value={odooDb} disabled={true} />
       </label>
-      <label class="form-control">
-        <span class="label-text">UID</span>
-        <input type="number" class="input input-bordered input-sm" bind:value={odooUid} disabled={true} />
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">UID</span>
+        <input type="number" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" bind:value={odooUid} disabled={true} />
       </label>
-      <label class="form-control">
-        <span class="label-text">Sale partner ID</span>
-        <input type="number" class="input input-bordered input-sm" bind:value={salePartnerId} disabled={true} />
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Sale partner ID</span>
+        <input type="number" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" bind:value={salePartnerId} disabled={true} />
       </label>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <label class="form-control">
-        <span class="label-text">JSON-RPC timeout (ms)</span>
-        <input type="number" class="input input-bordered input-sm" bind:value={jsonrpcTimeoutMs} disabled={true} />
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">JSON-RPC timeout (ms)</span>
+        <input type="number" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" bind:value={jsonrpcTimeoutMs} disabled={true} />
       </label>
-      <label class="form-control">
-        <span class="label-text">Fulfill inherit request abort</span>
-        <input type="checkbox" class="checkbox checkbox-sm" bind:checked={fulfillInheritRequestAbort} disabled={true} />
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Fulfill inherit request abort</span>
+        <input type="checkbox" style="width:14px;height:14px;accent-color:{T.primary};" bind:checked={fulfillInheritRequestAbort} disabled={true} />
       </label>
-      <label class="form-control">
-        <span class="label-text">Product enabled</span>
-        <input type="checkbox" class="checkbox checkbox-sm" bind:checked={odooEnabled} />
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Product enabled</span>
+        <input type="checkbox" style="width:14px;height:14px;accent-color:{T.primary};" bind:checked={odooEnabled} />
       </label>
-      <label class="form-control">
-        <span class="label-text">Use local stock</span>
-        <input type="checkbox" class="checkbox checkbox-sm" bind:checked={localStockEnabled} />
-        <span class="label-text-alt text-xs opacity-70">
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Use local stock</span>
+        <input type="checkbox" style="width:14px;height:14px;accent-color:{T.primary};" bind:checked={localStockEnabled} />
+        <span style="font-size:11px;opacity:0.7;">
           When enabled, checkout availability uses this local counter.
         </span>
       </label>
-      <label class="form-control">
-        <span class="label-text">Local available quantity</span>
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Local available quantity</span>
         <input
           type="number"
-          class="input input-bordered input-sm"
+          style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;"
           min="0"
           step="1"
           bind:value={localAvailableQtyInput}
@@ -495,16 +496,16 @@
   {/if}
 
   {#if !isConnectionMode && needsConnectionSelection}
-    <p class="text-xs text-warning">
+    <p style="font-size:11px;color:{T.warning};">
       Select a connection first. You can create a new connection from the Odoo connections section.
     </p>
   {/if}
 
   {#if product && onDisable}
-    <div class="divider text-xs">Danger zone</div>
+    <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:{T.inkMuted};"><span style="flex:1;height:1px;background:{T.hairlineSoft};"></span>Danger zone<span style="flex:1;height:1px;background:{T.hairlineSoft};"></span></div>
     <button
       type="button"
-      class="btn btn-outline btn-error btn-sm"
+      style="height:32px;padding:0 14px;border-radius:9999px;border:1px solid rgba(196,68,48,0.3);background:transparent;color:{T.negative};cursor:pointer;font-family:{T.fontSans};font-size:12.5px;"
       onclick={async () => {
         saving = true;
         try {
@@ -520,10 +521,10 @@
   {/if}
 
   {#if isConnectionMode && connection && onDisable}
-    <div class="divider text-xs">Danger zone</div>
+    <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:{T.inkMuted};"><span style="flex:1;height:1px;background:{T.hairlineSoft};"></span>Danger zone<span style="flex:1;height:1px;background:{T.hairlineSoft};"></span></div>
     <button
       type="button"
-      class="btn btn-outline btn-error btn-sm"
+      style="height:32px;padding:0 14px;border-radius:9999px;border:1px solid rgba(196,68,48,0.3);background:transparent;color:{T.negative};cursor:pointer;font-family:{T.fontSans};font-size:12.5px;"
       onclick={async () => {
         saving = true;
         try {

@@ -3,6 +3,7 @@
   import type { AdminProductType, AdminUnifiedProduct } from '../types';
   import type { CodeProductConfig, RouteUpsertInput } from '$lib/areas/admin/services/gateway/adminClient';
   import { normalizeAddressInput, normalizeSku } from '../productEditorUtils';
+  import { T } from '$lib/design-system/tokens.js';
 
   interface Props {
     product?: AdminUnifiedProduct | null;
@@ -80,51 +81,51 @@
   submitLabel={product ? 'Save changes' : 'Create product'}
 >
   {#if formError}
-    <p class="text-error text-sm">{formError}</p>
+    <p style="color:{T.negative};font-size:13px;">{formError}</p>
   {/if}
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-    <label class="form-control">
-      <span class="label-text">Seller address *</span>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+    <label style="display:flex;flex-direction:column;gap:4px;">
+      <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Seller address *</span>
       <input
         type="text"
-        class="input input-bordered input-sm font-mono"
+        style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontMono};outline:none;box-sizing:border-box;width:100%;"
         bind:value={seller}
         placeholder="0x..."
       />
     </label>
-    <label class="form-control">
-      <span class="label-text">SKU *</span>
+    <label style="display:flex;flex-direction:column;gap:4px;">
+      <span style="font-size:12px;font-weight:500;color:{T.inkBody};">SKU *</span>
       <input
         type="text"
-        class="input input-bordered input-sm font-mono"
+        style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontMono};outline:none;box-sizing:border-box;width:100%;"
         bind:value={sku}
         placeholder="voucher-10"
       />
     </label>
   </div>
 
-  <div class="divider text-xs">Code dispenser</div>
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-    <label class="form-control">
-      <span class="label-text">Download URL template</span>
+  <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:{T.inkMuted};"><span style="flex:1;height:1px;background:{T.hairlineSoft};"></span>Code dispenser<span style="flex:1;height:1px;background:{T.hairlineSoft};"></span></div>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+    <label style="display:flex;flex-direction:column;gap:4px;">
+      <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Download URL template</span>
       <input
-        class="input input-bordered input-sm"
+        style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;"
         bind:value={downloadUrlTemplate}
         placeholder={`https://example.com/${'{code}'}`}
       />
-      <span class="label-text-alt text-xs opacity-70">Use &lbrace;code&rbrace; as placeholder</span>
+      <span style="font-size:11px;opacity:0.7;">Use &lbrace;code&rbrace; as placeholder</span>
     </label>
   </div>
-  <label class="form-control">
-    <span class="label-text">Seed codes (one per line)</span>
-    <textarea class="textarea textarea-bordered textarea-sm font-mono" rows="3" bind:value={codesTextarea}></textarea>
+  <label style="display:flex;flex-direction:column;gap:4px;">
+    <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Seed codes (one per line)</span>
+    <textarea style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:13px;font-family:{T.fontMono};outline:none;box-sizing:border-box;resize:vertical;" rows="3" bind:value={codesTextarea}></textarea>
   </label>
   {#if product && onDisable}
-    <div class="divider text-xs">Danger zone</div>
+    <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:{T.inkMuted};"><span style="flex:1;height:1px;background:{T.hairlineSoft};"></span>Danger zone<span style="flex:1;height:1px;background:{T.hairlineSoft};"></span></div>
     <button
       type="button"
-      class="btn btn-outline btn-error btn-sm"
+      style="height:32px;padding:0 14px;border-radius:9999px;border:1px solid rgba(196,68,48,0.3);background:transparent;color:{T.negative};cursor:pointer;font-family:{T.fontSans};font-size:12.5px;"
       onclick={async () => {
         saving = true;
         try {
@@ -139,8 +140,8 @@
     </button>
   {/if}
 
-  <label class="form-control">
-    <span class="label-text">Enabled</span>
-    <input type="checkbox" class="checkbox checkbox-sm" bind:checked={codeEnabled} />
+  <label style="display:flex;flex-direction:column;gap:4px;">
+    <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Enabled</span>
+    <input type="checkbox" style="width:14px;height:14px;accent-color:{T.primary};" bind:checked={codeEnabled} />
   </label>
 </AdminProductFormBase>

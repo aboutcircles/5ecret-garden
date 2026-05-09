@@ -10,6 +10,7 @@
   import { listOdooProductCatalog, type OdooProductCatalogItem } from '$lib/areas/admin/services/gateway/adminClient';
   import type { AdminNewProductFlowContext } from './context';
   import type { AdminOdooConnection, AdminUnifiedProduct } from '$lib/areas/admin/types';
+  import { T } from '$lib/design-system/tokens.js';
 
   interface Props {
     context: AdminNewProductFlowContext;
@@ -289,110 +290,110 @@
     {/if}
 
     {#if (context.selectedType ?? 'codedispenser') === 'codedispenser'}
-      <label class="form-control">
-        <span class="label-text">Seed codes (one per line)</span>
-        <textarea class="textarea textarea-bordered textarea-sm font-mono" rows="3" bind:value={context.codesTextarea} data-popup-initial-input></textarea>
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Seed codes (one per line)</span>
+        <textarea style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:13px;font-family:{T.fontMono};outline:none;box-sizing:border-box;resize:vertical;" rows="3" bind:value={context.codesTextarea} data-popup-initial-input></textarea>
       </label>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <label class="form-control">
-          <span class="label-text">Download URL template</span>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+        <label style="display:flex;flex-direction:column;gap:4px;">
+          <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Download URL template</span>
           <input
-            class="input input-bordered input-sm"
+            style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;"
             bind:value={context.downloadUrlTemplate}
             placeholder={`https://example.com/${'{code}'}`}
           />
-          <span class="label-text-alt text-xs opacity-70">Use &lbrace;code&rbrace; as placeholder</span>
+          <span style="font-size:11px;opacity:0.7;">Use &lbrace;code&rbrace; as placeholder</span>
         </label>
-        <label class="form-control">
-          <span class="label-text">Enabled</span>
-          <input type="checkbox" class="checkbox checkbox-sm" bind:checked={context.enabled} />
+        <label style="display:flex;flex-direction:column;gap:4px;">
+          <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Enabled</span>
+          <input type="checkbox" style="width:14px;height:14px;accent-color:{T.primary};" bind:checked={context.enabled} />
         </label>
       </div>
     {:else if (context.selectedType ?? 'codedispenser') === 'unlock'}
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <label class="form-control">
-          <span class="label-text">Lock address *</span>
-          <input class="input input-bordered input-sm font-mono" bind:value={context.lockAddress} placeholder="0x..." data-popup-initial-input />
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+        <label style="display:flex;flex-direction:column;gap:4px;">
+          <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Lock address *</span>
+          <input style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontMono};outline:none;box-sizing:border-box;width:100%;" bind:value={context.lockAddress} placeholder="0x..." data-popup-initial-input />
         </label>
-        <label class="form-control">
-          <span class="label-text">RPC URL *</span>
-          <input class="input input-bordered input-sm" bind:value={context.rpcUrl} placeholder="https://rpc.gnosischain.com" />
+        <label style="display:flex;flex-direction:column;gap:4px;">
+          <span style="font-size:12px;font-weight:500;color:{T.inkBody};">RPC URL *</span>
+          <input style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" bind:value={context.rpcUrl} placeholder="https://rpc.gnosischain.com" />
         </label>
-        <label class="form-control md:col-span-2">
-          <span class="label-text">Service private key *</span>
-          <input class="input input-bordered input-sm font-mono" type="password" bind:value={context.servicePrivateKey} placeholder="0x..." />
+        <label style="display:flex;flex-direction:column;gap:4px;grid-column:span 2;">
+          <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Service private key *</span>
+          <input style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontMono};outline:none;box-sizing:border-box;width:100%;" type="password" bind:value={context.servicePrivateKey} placeholder="0x..." />
         </label>
-        <label class="form-control">
-          <span class="label-text">Timing mode</span>
-          <select class="select select-bordered select-sm" bind:value={context.unlockTimingMode}>
+        <label style="display:flex;flex-direction:column;gap:4px;">
+          <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Timing mode</span>
+          <select style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" bind:value={context.unlockTimingMode}>
             <option value="duration">Duration seconds</option>
             <option value="expiration">Expiration unix</option>
           </select>
         </label>
         {#if (context.unlockTimingMode ?? 'duration') === 'duration'}
-          <label class="form-control">
-            <span class="label-text">Duration seconds *</span>
-            <input type="number" class="input input-bordered input-sm" bind:value={context.durationSeconds} min="0" step="1" />
+          <label style="display:flex;flex-direction:column;gap:4px;">
+            <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Duration seconds *</span>
+            <input type="number" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" bind:value={context.durationSeconds} min="0" step="1" />
           </label>
         {:else}
-          <label class="form-control">
-            <span class="label-text">Expiration unix *</span>
-            <input type="number" class="input input-bordered input-sm" bind:value={context.expirationUnix} min="0" step="1" />
+          <label style="display:flex;flex-direction:column;gap:4px;">
+            <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Expiration unix *</span>
+            <input type="number" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" bind:value={context.expirationUnix} min="0" step="1" />
           </label>
         {/if}
-        <label class="form-control">
-          <span class="label-text">Key manager mode</span>
-          <select class="select select-bordered select-sm" bind:value={context.keyManagerMode}>
+        <label style="display:flex;flex-direction:column;gap:4px;">
+          <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Key manager mode</span>
+          <select style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" bind:value={context.keyManagerMode}>
             <option value="buyer">buyer</option>
             <option value="service">service</option>
             <option value="fixed">fixed</option>
           </select>
         </label>
-        <label class="form-control">
-          <span class="label-text">Fixed key manager</span>
+        <label style="display:flex;flex-direction:column;gap:4px;">
+          <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Fixed key manager</span>
           <input
-            class="input input-bordered input-sm font-mono"
+            style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontMono};outline:none;box-sizing:border-box;width:100%;"
             bind:value={context.fixedKeyManager}
             placeholder="0x..."
             disabled={(context.keyManagerMode ?? 'buyer') !== 'fixed'}
           />
         </label>
-        <label class="form-control">
-          <span class="label-text">Locksmith base</span>
-          <input class="input input-bordered input-sm" bind:value={context.locksmithBase} placeholder="https://locksmith.unlock-protocol.com" />
+        <label style="display:flex;flex-direction:column;gap:4px;">
+          <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Locksmith base</span>
+          <input style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" bind:value={context.locksmithBase} placeholder="https://locksmith.unlock-protocol.com" />
         </label>
-        <label class="form-control">
-          <span class="label-text">Locksmith token</span>
-          <input class="input input-bordered input-sm" type="password" bind:value={context.locksmithToken} placeholder="optional" />
+        <label style="display:flex;flex-direction:column;gap:4px;">
+          <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Locksmith token</span>
+          <input style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" type="password" bind:value={context.locksmithToken} placeholder="optional" />
         </label>
-        <label class="form-control">
-          <span class="label-text">Total inventory *</span>
-          <input type="number" class="input input-bordered input-sm" bind:value={context.totalInventory} min="0" step="1" />
+        <label style="display:flex;flex-direction:column;gap:4px;">
+          <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Total inventory *</span>
+          <input type="number" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" bind:value={context.totalInventory} min="0" step="1" />
         </label>
-        <label class="form-control">
-          <span class="label-text">Enabled</span>
-          <input type="checkbox" class="checkbox checkbox-sm" bind:checked={context.enabled} />
+        <label style="display:flex;flex-direction:column;gap:4px;">
+          <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Enabled</span>
+          <input type="checkbox" style="width:14px;height:14px;accent-color:{T.primary};" bind:checked={context.enabled} />
         </label>
       </div>
     {:else}
-      <label class="form-control">
-        <span class="label-text">Odoo connection *</span>
-        <select class="select select-bordered select-sm" bind:value={context.selectedConnectionKey} data-popup-initial-input>
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Odoo connection *</span>
+        <select style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" bind:value={context.selectedConnectionKey} data-popup-initial-input>
           <option value="" disabled={true}>Select connection</option>
           {#each sellerConnections as c (`${c.chainId}:${String(c.seller).toLowerCase()}`)}
             <option value={`${c.chainId}:${String(c.seller).toLowerCase()}`}>{c.odooUrl} · {c.odooDb}</option>
           {/each}
         </select>
         {#if sellerConnections.length === 0}
-          <span class="label-text-alt text-xs text-warning">
+          <span style="font-size:11px;color:{T.warning};">
             No Odoo connection found for this seller.
           </span>
         {/if}
       </label>
-      <label class="form-control">
-        <span class="label-text">Odoo product code *</span>
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Odoo product code *</span>
         <select
-          class="select select-bordered select-sm font-mono"
+          style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontMono};outline:none;box-sizing:border-box;width:100%;"
           bind:value={context.odooProductCode}
           disabled={!selectedConnection || catalogLoading}
         >
@@ -406,24 +407,24 @@
           {/each}
         </select>
         {#if catalogLoading}
-          <span class="label-text-alt text-xs opacity-70">Loading catalog…</span>
+          <span style="font-size:11px;opacity:0.7;">Loading catalog…</span>
         {:else if catalogError}
-          <span class="label-text-alt text-xs text-error break-words">
+          <span style="font-size:11px;color:{T.negative};word-break:break-words;">
             {catalogError}
           </span>
         {:else if selectedConnection && catalogItems.length === 0}
-          <span class="label-text-alt text-xs text-warning">No products found for this connection.</span>
+          <span style="font-size:11px;color:{T.warning};">No products found for this connection.</span>
         {/if}
       </label>
-      <label class="form-control">
-        <span class="label-text">Use local stock</span>
-        <input type="checkbox" class="checkbox checkbox-sm" bind:checked={context.useLocalStock} />
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Use local stock</span>
+        <input type="checkbox" style="width:14px;height:14px;accent-color:{T.primary};" bind:checked={context.useLocalStock} />
       </label>
-      <label class="form-control">
-        <span class="label-text">Local available quantity</span>
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Local available quantity</span>
         <input
           type="number"
-          class="input input-bordered input-sm"
+          style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;"
           bind:value={context.localAvailableQty}
           min="0"
           step="1"
@@ -435,7 +436,7 @@
 
     <StepActionBar>
       {#snippet primary()}
-        <button class="btn btn-primary btn-sm" type="button" onclick={goNext}>Review</button>
+        <button style="height:32px;padding:0 14px;border-radius:9999px;border:0;background:{T.primary};color:#fff;cursor:pointer;font-family:{T.fontSans};font-size:12.5px;font-weight:580;" type="button" onclick={goNext}>Review</button>
       {/snippet}
     </StepActionBar>
   </FlowStepScaffold>
