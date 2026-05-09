@@ -97,7 +97,7 @@
 
     <OnChainNameSection
       bind:value={ctx.gatewayName}
-      sourceValue={ctx.profile?.name ?? ‘’}
+      sourceValue={ctx.profile?.name ?? ''}
       placeholder="My Shop"
       invalid={hasName && !onChainNameValid}
     />
