@@ -46,7 +46,7 @@
         if (abs < 0.01) {
             return '< 0.01';
         }
-        return abs.toFixed(2);
+        return abs.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     function normalizeTiny(v: number, eps: number = 1e-9): number {
@@ -423,6 +423,16 @@
         }
         return `linear-gradient(160deg, ${T.lilacSoft} 0%, ${T.surface} 100%)`;
     });
+    const headerEyebrow = $derived(() => {
+        const fromIsZero = isZeroAddress(item.from);
+        const toIsZero = isZeroAddress(item.to);
+        if (fromIsZero) return 'You minted';
+        if (toIsZero) return 'You burned';
+        const net = headerNetAmount();
+        if (net > 0) return 'You received';
+        if (net < 0) return 'You sent';
+        return 'Transaction';
+    });
 
     const nonBurnTransfers = $derived(() =>
         aggregatedTransfers().filter(t => !isZeroAddress(t.to))
@@ -595,6 +605,9 @@
         box-shadow:{T.shadow.xs};
     ">
         <div style="padding:24px 16px;display:flex;flex-direction:column;align-items:center;gap:6px;">
+            <span style="font-size:11.5px;font-weight:600;color:{headerColor()};letter-spacing:0.06em;text-transform:uppercase;opacity:0.85;">
+                {headerEyebrow()}
+            </span>
             <span style="font-family:{T.fontDisplay};font-size:48px;color:{headerColor()};letter-spacing:-0.02em;line-height:1;font-weight:400;">
                 {signedAmount()}<span style="font-family:{T.fontSans};font-size:16px;color:{T.inkMuted};font-weight:540;margin-left:6px;">CRC</span>
             </span>
