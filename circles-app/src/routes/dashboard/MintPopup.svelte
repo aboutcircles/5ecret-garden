@@ -101,7 +101,7 @@
       <span style="font-size:11px;font-weight:600;color:#7B5215;letter-spacing:0.04em;text-transform:uppercase;">How this works</span>
     </div>
     <span style="font-size:12.5px;color:{T.inkBody};line-height:1.55;">
-      You accrue <b>1 CRC per hour</b>. Mint regularly — after 14 days without minting, accrual pauses and the missed time is forfeit.
+      You accrue <b>1 CRC per hour</b>. Mint regularly — after 14 days without minting, accrual pauses.
     </span>
   </div>
 
