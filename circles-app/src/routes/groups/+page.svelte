@@ -178,7 +178,7 @@
                 padding:20px;border-radius:24px;margin-top:6px;
                 background:linear-gradient(120deg,{T.lilacSoft} 0%,{T.coralSoft} 70%,{T.butterSoft} 100%);
             ">
-                <span style="font-size:11.5px;font-weight:580;color:{T.ink};background:{T.ink};padding:3px 9px;border-radius:9999px;color:{T.butter};">Get started</span>
+                <span style="display:inline-block;font-size:11.5px;font-weight:580;background:{T.ink};color:{T.butter};padding:3px 9px;border-radius:9999px;">Get started</span>
                 <h3 style="margin:10px 0 4px;font-family:{T.fontDisplay};font-size:28px;font-weight:400;color:{T.ink};letter-spacing:-0.02em;line-height:1.1;">Start your own currency</h3>
                 <p style="margin:0;font-size:13px;color:{T.inkBody};line-height:1.45;">Create a group to coordinate with your community — pool credit, organize mutual aid, or experiment.</p>
                 <div style="display:flex;align-items:center;gap:10px;margin-top:14px;">
