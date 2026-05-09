@@ -1,6 +1,7 @@
 <script lang="ts">
   import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import type { Address } from '@circles-sdk/utils';
+  import { T } from '$lib/design-system/tokens';
 
   export interface ConformanceBalanceRowItem {
     id: string;
@@ -15,30 +16,28 @@
     item: ConformanceBalanceRowItem;
   }
 
-  import { T } from '$lib/design-system/tokens';
-
   let { item }: Props = $props();
 </script>
 
 <RowFrame noLeading={true} clickable={true} dense={true}>
-  <div class="w-full flex items-center justify-between gap-3">
-    <div class="min-w-0 flex items-center gap-2">
-      <img src={item.tokenType === 'Wrapped CRC' ? '/wrapped.svg' : '/circles-token.svg'} alt="" class="h-6 w-6" />
-      <div class="min-w-0">
-        <div class="truncate text-sm font-medium">{item.ownerName}</div>
-        <div class="truncate text-xs opacity-70">{item.tokenType} • {item.ownerAddress}</div>
+  <div style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+    <div style="min-width:0;display:flex;align-items:center;gap:8px;">
+      <img src={item.tokenType === 'Wrapped CRC' ? '/wrapped.svg' : '/circles-token.svg'} alt="" style="width:24px;height:24px;" />
+      <div style="min-width:0;">
+        <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:500;">{item.ownerName}</div>
+        <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px;color:{T.inkMuted};">{item.tokenType} • {item.ownerAddress}</div>
       </div>
     </div>
 
-    <div class="flex items-center gap-2 shrink-0">
-      <div class="text-right">
-        <div class="text-sm font-semibold">{item.circles.toFixed(2)} CRC</div>
+    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+      <div style="text-align:right;">
+        <div style="font-size:13px;font-weight:580;">{item.circles.toFixed(2)} CRC</div>
         {#if item.secondaryAmount != null}
-          <div class="text-xs opacity-70">{item.secondaryAmount.toFixed(2)} secondary</div>
+          <div style="font-size:11.5px;color:{T.inkMuted};">{item.secondaryAmount.toFixed(2)} secondary</div>
         {/if}
       </div>
       <button type="button" style="height:26px;padding:0 10px;border-radius:9999px;border:0;background:transparent;color:{T.inkMuted};font-size:11.5px;font-weight:540;cursor:pointer;" aria-label="Row actions">
-        <img src="/union.svg" alt="" class="h-4 w-4" />
+        <img src="/union.svg" alt="" style="width:16px;height:16px;" />
       </button>
     </div>
   </div>
