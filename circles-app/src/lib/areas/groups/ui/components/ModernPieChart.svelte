@@ -130,6 +130,6 @@
   });
 </script>
 
-<div class="rounded-lg overflow-hidden p-4 min-h-[250px]">
-  <canvas bind:this={canvas} class="w-full h-full"></canvas>
+<div style="border-radius:8px;overflow:hidden;padding:16px;min-height:250px;">
+  <canvas bind:this={canvas} style="width:100%;height:100%;"></canvas>
 </div>

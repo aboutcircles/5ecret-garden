@@ -164,7 +164,7 @@
             {#if isAutoRoute}
                 Route cap
                 {#if routeLoading}
-                    <span class="loading loading-spinner loading-xs" style="color:{T.primary};" aria-label="Loading route cap"></span>
+                    <svg class="ci-spin" style="width:12px;height:12px;color:{T.primary};" viewBox="0 0 24 24" fill="none" aria-label="Loading route cap"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>
                 {/if}
                 <span style="color:{T.ink};font-weight:540;font-variant-numeric:tabular-nums;">{routeCapDisplay}</span>
                 <Tooltip content="Availability depends on your trust network and routing limits." />
@@ -179,3 +179,8 @@
         >Use max</button>
     </div>
 </div>
+
+<style>
+  @keyframes ci-spin { from {} to { transform: rotate(360deg); } }
+  .ci-spin { animation: ci-spin 0.8s linear infinite; }
+</style>

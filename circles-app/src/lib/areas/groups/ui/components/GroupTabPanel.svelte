@@ -1,5 +1,6 @@
 <script lang="ts">
     import AvatarRowPlaceholder from '$lib/shared/ui/lists/placeholders/AvatarRowPlaceholder.svelte';
+    import { T } from '$lib/design-system/tokens.js';
 
     type Props = {
         ownerAddress?: string | null;
@@ -25,21 +26,21 @@
 </script>
 
 {#if !ownerAddress}
-    <div class="text-sm opacity-70">{connectText}</div>
+    <div style="font-size:13px;opacity:0.7;">{connectText}</div>
 {:else if loading}
-    <div class="flex flex-col">
+    <div style="display:flex;flex-direction:column;">
         {#each placeholderItems as index (index)}
             <AvatarRowPlaceholder height={64} />
         {/each}
     </div>
 {:else if error}
-    <div class="text-sm text-error">{error}</div>
+    <div style="font-size:13px;color:{T.negative};">{error}</div>
 {:else if items.length === 0}
     <slot name="empty">
-        <div class="w-full py-6 text-center text-base-content/60">{emptyText}</div>
+        <div style="width:100%;padding:24px 0;text-align:center;color:{T.inkMuted};">{emptyText}</div>
     </slot>
 {:else}
-    <div class="flex flex-col">
+    <div style="display:flex;flex-direction:column;">
         <slot {items} />
     </div>
 {/if}
