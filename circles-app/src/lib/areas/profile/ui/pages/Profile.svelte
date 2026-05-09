@@ -4,6 +4,7 @@
     import CommonConnections from '$lib/shared/ui/profile/components/CommonConnections.svelte';
     import TrustRelationsList from '$lib/shared/ui/profile/components/TrustRelationsList.svelte';
     import HoldersList from '$lib/shared/ui/profile/components/HoldersList.svelte';
+    import AvatarRowPlaceholder from '$lib/shared/ui/lists/placeholders/AvatarRowPlaceholder.svelte';
     import {contacts} from '$lib/shared/state/contacts';
     import {
         type AvatarRow,
@@ -868,9 +869,10 @@
         >
             <div style="width:100%;">
                 {#if collateralLoading}
-                    <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:24px 0;color:{T.inkMuted};font-size:12.5px;">
-                        <svg class="pf-spin" style="width:18px;height:18px;color:{T.primary};" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>
-                        Loading…
+                    <div style="display:flex;flex-direction:column;">
+                        {#each Array(4) as _, i (i)}
+                            <AvatarRowPlaceholder />
+                        {/each}
                     </div>
                 {:else if collateralError}
                     <div style="background:{T.negativeSoft};border:1px solid rgba(196,68,48,0.2);border-radius:10px;padding:8px 12px;font-size:12px;color:{T.inkBody};">{collateralError}</div>
@@ -895,9 +897,10 @@
         >
             <div style="width:100%;">
                 {#if holdersLoading}
-                    <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:24px 0;color:{T.inkMuted};font-size:12.5px;">
-                        <svg class="pf-spin" style="width:18px;height:18px;color:{T.primary};" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>
-                        Loading…
+                    <div style="display:flex;flex-direction:column;">
+                        {#each Array(4) as _, i (i)}
+                            <AvatarRowPlaceholder />
+                        {/each}
                     </div>
                 {:else if holdersError}
                     <div style="background:{T.negativeSoft};border:1px solid rgba(196,68,48,0.2);border-radius:10px;padding:8px 12px;font-size:12px;color:{T.inkBody};">{holdersError}</div>
@@ -917,9 +920,10 @@
         >
             <div style="width:100%;">
                 {#if holdingsLoading}
-                    <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:24px 0;color:{T.inkMuted};font-size:12.5px;">
-                        <svg class="pf-spin" style="width:18px;height:18px;color:{T.primary};" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>
-                        Loading…
+                    <div style="display:flex;flex-direction:column;">
+                        {#each Array(4) as _, i (i)}
+                            <AvatarRowPlaceholder />
+                        {/each}
                     </div>
                 {:else if holdingsError}
                     <div style="background:{T.negativeSoft};border:1px solid rgba(196,68,48,0.2);border-radius:10px;padding:8px 12px;font-size:12px;color:{T.inkBody};">{holdingsError}</div>

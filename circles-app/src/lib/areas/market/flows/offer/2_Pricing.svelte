@@ -127,7 +127,7 @@
   <div>
     <span style={eyebrow}>Payment gateway</span>
     {#if loadingGateways}
-      <div style="font-size:13px;color:{T.inkMuted};">Loading…</div>
+      <div style="height:40px;border-radius:10px;background:{T.surfaceAlt};border:1px solid {T.hairlineSoft};animation:pricing-skel 1.6s ease-in-out infinite;"></div>
     {:else if gateways.length === 0}
       <StepAlert variant="info">
         <span style="font-size:12.5px;">
@@ -237,4 +237,8 @@
 
 <style>
   summary::-webkit-details-marker { display: none; }
+  @keyframes pricing-skel {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+  }
 </style>

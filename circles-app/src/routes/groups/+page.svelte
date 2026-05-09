@@ -300,7 +300,11 @@
                         />
                     </div>
                 {:else}
-                    <span style="font-size:13.5px;color:{T.inkMuted};">Loading…</span>
+                    <div style="background:{T.surface};border-radius:18px;border:1px solid {T.hairlineSoft};overflow:hidden;box-shadow:{T.shadow.xs};">
+                        {#each Array(4) as _, i (i)}
+                            <AvatarRowPlaceholder />
+                        {/each}
+                    </div>
                 {/if}
             {/if}
         </div>

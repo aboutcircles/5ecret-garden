@@ -93,9 +93,10 @@
   {:else if !circlesReady}
     <div style="font-size:12.5px;color:{T.inkMuted};">Connect an avatar to load your gateways.</div>
   {:else if loadingGateways}
-    <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:{T.inkMuted};">
-      <svg class="ps-spin" style="width:16px;height:16px;color:{T.primary};" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>
-      Loading gateways…
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      {#each Array(3) as _, i (i)}
+        <GatewayRowPlaceholder />
+      {/each}
     </div>
   {:else}
     <div data-payment-gateway-list-scope bind:this={gatewaysListScopeEl}>

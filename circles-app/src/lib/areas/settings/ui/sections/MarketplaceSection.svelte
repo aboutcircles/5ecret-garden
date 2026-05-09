@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Address } from '@circles-sdk/utils';
   import ProductCard from '$lib/areas/market/ui/product/ProductCard.svelte';
+  import ProductCardPlaceholder from '$lib/shared/ui/lists/placeholders/ProductCardPlaceholder.svelte';
   import { T } from '$lib/design-system/tokens.js';
   import Icon from '$lib/design-system/Icon.svelte';
 
@@ -43,9 +44,10 @@
   </section>
 {:else}
   {#if marketLoading}
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:30vh;gap:10px;">
-      <svg class="ms-spin" style="width:32px;height:32px;color:{T.primary};" viewBox="0 0 24 24" fill="none" aria-label="loading"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>
-      <div style="font-size:12.5px;color:{T.inkMuted};">Loading listings…</div>
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+      {#each Array(6) as _, i (i)}
+        <ProductCardPlaceholder />
+      {/each}
     </div>
   {:else if marketErrorMsg}
     <section style="background:{T.negativeSoft};border:1px solid rgba(196,68,48,0.2);border-radius:14px;padding:12px 14px;width:100%;font-size:12px;color:{T.inkBody};">
