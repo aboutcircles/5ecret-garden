@@ -9,6 +9,7 @@
   import { adminOdooConnectionKey } from '$lib/areas/admin/helpers';
   import type { AdminOdooConnection } from '../types';
   import { shortenAddress } from '$lib/shared/utils/shared';
+  import { T } from '$lib/design-system/tokens';
 
   interface Props {
     products: AdminUnifiedProduct[];
@@ -168,7 +169,7 @@
   });
 </script>
 
-<div class="space-y-3">
+<div style="display:flex;flex-direction:column;gap:12px;">
   {#if productTypes.length > 1}
     <Tabs bind:selected={selectedType} size="sm" variant="boxed">
       {#each productTypes as type}
@@ -178,72 +179,74 @@
   {/if}
 
   {#if filteredProducts.length === 0}
-    <p class="text-sm opacity-70">
+    <p style="font-size:13px;color:{T.inkMuted};">
       No {adminProductTypeLabels[selectedType ?? 'odoo']} products yet.
     </p>
   {:else if isGroupedView}
-    <div class="space-y-3">
+    <div style="display:flex;flex-direction:column;gap:12px;">
       {#each groupedProducts() as group (group.key)}
         {@const summary = summarizeGroup(group)}
         <details
-          class="group rounded-xl border bg-base-100"
+          style="border-radius:14px;border:1px solid {T.hairlineSoft};background:{T.surface};"
           bind:open={expandedGroups[group.key]}
         >
-          <summary class="list-none cursor-pointer">
-            <div class="flex flex-col gap-3 p-3 sm:p-4 sm:flex-row sm:items-center sm:justify-between">
-              <div class="min-w-0 space-y-1">
-                <div class="flex items-center gap-2 min-w-0">
-                  <Avatar address={group.seller} view="small" clickable={true} />
-                  <span class="font-semibold truncate">{shortenAddress(group.seller)}</span>
+          <summary style="list-style:none;cursor:pointer;">
+            <div style="display:flex;flex-direction:column;gap:12px;padding:12px 16px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+                <div style="min-width:0;display:flex;flex-direction:column;gap:4px;">
+                  <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+                    <Avatar address={group.seller} view="small" clickable={true} />
+                    <span style="font-weight:580;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{shortenAddress(group.seller)}</span>
+                  </div>
+                  <div style="font-size:11.5px;color:{T.inkMuted};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{resolveGroupSubtitle(group)}</div>
+                  <div style="font-size:11.5px;color:{T.inkSubtle};">{resolveGroupMeta(group)}</div>
                 </div>
-                <div class="text-xs opacity-70 truncate">{resolveGroupSubtitle(group)}</div>
-                <div class="text-xs opacity-60">{resolveGroupMeta(group)}</div>
-              </div>
-              <div class="flex flex-col items-start sm:items-end gap-2">
-                {#if selectedType === 'odoo'}
-                  <button
-                    type="button"
-                    class="btn btn-xs btn-outline"
-                    onclick={(event) => {
-                      event.preventDefault();
-                      onEditConnection?.(group.connection ?? null);
-                    }}
-                  >
-                    {group.connection ? 'Edit connection' : 'Add connection'}
-                  </button>
-                {/if}
-                <div class="flex flex-wrap items-center gap-1.5 justify-start sm:justify-end">
-                  <AdminStatusBadge
-                    label={`Products ${group.products.length}`}
-                    variant="neutral"
-                  />
-                  <AdminStatusBadge
-                    label={summary.label}
-                    variant={summary.variant}
-                  />
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
                   {#if selectedType === 'odoo'}
-                    {#if group.connection}
-                      <AdminStatusBadge
-                        label={group.connection.enabled ? 'Conn on' : 'Conn off'}
-                        variant={group.connection.enabled ? 'success' : 'warning'}
-                      />
-                      {#if group.connection.revokedAt}
-                        <AdminStatusBadge label="Revoked" variant="warning" />
-                      {/if}
-                    {:else}
-                      <AdminStatusBadge label="No connection" variant="warning" />
-                    {/if}
+                    <button
+                      type="button"
+                      style="height:26px;padding:0 10px;border-radius:9999px;border:1px solid {T.hairline};background:transparent;color:{T.inkBody};font-size:11.5px;font-weight:580;cursor:pointer;"
+                      onclick={(event) => {
+                        event.preventDefault();
+                        onEditConnection?.(group.connection ?? null);
+                      }}
+                    >
+                      {group.connection ? 'Edit connection' : 'Add connection'}
+                    </button>
                   {/if}
+                  <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;justify-content:flex-end;">
+                    <AdminStatusBadge
+                      label={`Products ${group.products.length}`}
+                      variant="neutral"
+                    />
+                    <AdminStatusBadge
+                      label={summary.label}
+                      variant={summary.variant}
+                    />
+                    {#if selectedType === 'odoo'}
+                      {#if group.connection}
+                        <AdminStatusBadge
+                          label={group.connection.enabled ? 'Conn on' : 'Conn off'}
+                          variant={group.connection.enabled ? 'success' : 'warning'}
+                        />
+                        {#if group.connection.revokedAt}
+                          <AdminStatusBadge label="Revoked" variant="warning" />
+                        {/if}
+                      {:else}
+                        <AdminStatusBadge label="No connection" variant="warning" />
+                      {/if}
+                    {/if}
+                  </div>
                 </div>
               </div>
             </div>
           </summary>
-          <div class="px-3 pb-2 sm:px-4">
-            <div class="text-xs text-base-content/50 flex items-center gap-2">
-              <span class="uppercase tracking-wide">Seller products</span>
+          <div style="padding:0 16px 8px;">
+            <div style="font-size:11.5px;color:{T.inkFaint};display:flex;align-items:center;gap:8px;">
+              <span style="text-transform:uppercase;letter-spacing:0.06em;">Seller products</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                class={`h-3.5 w-3.5 shrink-0 transition-transform ${expandedGroups[group.key] ? 'rotate-180' : ''}`}
+                style="width:14px;height:14px;flex-shrink:0;transition:transform 0.2s;{expandedGroups[group.key] ? 'transform:rotate(180deg);' : ''}"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -253,8 +256,8 @@
               </svg>
             </div>
           </div>
-          <div class="px-3 pb-3 sm:px-4 sm:pb-4">
-            <div class="space-y-2">
+          <div style="padding:0 16px 16px;">
+            <div style="display:flex;flex-direction:column;gap:8px;">
               {#each group.products as item (item.product.key)}
                 <AdminProductRow
                   product={item.product}

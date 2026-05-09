@@ -282,7 +282,7 @@
 </svelte:head>
 
 <!-- Full-height responsive shell -->
-<div class="flex h-dvh overflow-hidden bg-base-200">
+<div class="flex h-dvh overflow-hidden" style="background:#EFEDE7;">
 
   <!-- Desktop sidebar (md+) -->
   {#if avatarState.avatar}
@@ -340,11 +340,13 @@
 
 <!-- Toasts -->
 {#if hasToasts}
-  <div class="toast toast-bottom toast-end z-[200]">
+  <div style="position:fixed;bottom:16px;right:16px;z-index:200;display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
     {#each $tasks as task}
-      <div class="alert bg-primary-content opacity-85">
+      <div style="background:#EAE7FB;border:1px solid rgba(88,73,212,0.2);border-radius:10px;padding:12px 14px;font-size:12.5px;color:#2A1F4A;display:flex;align-items:center;gap:8px;opacity:0.85;">
         {#await task.promise}
-          <span class="loading loading-spinner loading-md"></span>
+          <svg class="layout-spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="width:16px;height:16px;flex-shrink:0;" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="32" stroke-dashoffset="12" stroke-linecap="round"/>
+          </svg>
           {task.name}
         {:then _}
           <!-- task finished -->
@@ -355,9 +357,14 @@
     {/each}
 
     {#if historyForwardNoopToastVisible}
-      <div class="alert bg-primary-content opacity-85">
+      <div style="background:#EAE7FB;border:1px solid rgba(88,73,212,0.2);border-radius:10px;padding:12px 14px;font-size:12.5px;color:#2A1F4A;opacity:0.85;">
         Forward popup history is no longer available.
       </div>
     {/if}
   </div>
 {/if}
+
+<style>
+  @keyframes layout-spin { to { transform: rotate(360deg); } }
+  .layout-spinner { animation: layout-spin 0.8s linear infinite; color: #5849D4; }
+</style>

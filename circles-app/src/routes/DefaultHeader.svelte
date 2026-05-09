@@ -149,7 +149,7 @@
     >
       <Lucide icon={LBag} size={16} ariaLabel="" />
       {#if $cartItemCount > 0}
-        <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-primary-content text-[9px] font-bold flex items-center justify-center">
+        <span style="position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:9999px;background:#5849D4;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;">
           {$cartItemCount}
         </span>
       {/if}

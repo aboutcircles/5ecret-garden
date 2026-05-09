@@ -10,6 +10,7 @@
   import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
   import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
   import type { Action } from '$lib/shared/ui/shell/actions';
+  import { T } from '$lib/design-system/tokens.js';
 
   const shellActionItems: Action[] = [
     { id: 'refresh', label: 'Refresh', iconNode: LRefreshCw, variant: 'ghost', onClick: () => {} },
@@ -17,16 +18,16 @@
   ];
 </script>
 
-<section class="rounded-xl border border-base-300 bg-base-100 p-4 space-y-4">
-  <h2 class="text-lg font-semibold">Golden Components & Layouts</h2>
-  <p class="text-sm opacity-75">
+<section style="border-radius:14px;border:1px solid {T.hairlineSoft};background:{T.surface};padding:16px;display:flex;flex-direction:column;gap:16px;">
+  <h2 style="font-size:16px;font-weight:580;margin:0;">Golden Components & Layouts</h2>
+  <p style="font-size:13px;color:{T.inkMuted};margin:0;">
     Curated primitives aligned with the send-flow pattern and clean base pages. These are the canonical references for
     new and refactored flows.
   </p>
 
-  <div class="space-y-2">
-    <h3 class="font-medium">Flow orientation + validation feedback + CTA bar</h3>
-    <div class="rounded-xl border border-base-300 bg-base-200/20 p-3 space-y-3">
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <h3 style="font-size:13px;font-weight:500;margin:0;">Flow orientation + validation feedback + CTA bar</h3>
+    <div style="border-radius:14px;border:1px solid {T.hairlineSoft};background:{T.pageDeep};padding:12px;display:flex;flex-direction:column;gap:12px;">
       <FlowStepHeader
         step={2}
         total={3}
@@ -43,40 +44,46 @@
       </FlowDecoration>
       <StepActionBar>
         {#snippet secondary()}
-          <button class="btn btn-ghost">Back</button>
+          <button style="height:36px;padding:0 18px;border-radius:9999px;border:0;background:transparent;color:{T.inkMuted};font-size:13px;font-weight:580;cursor:pointer;">Back</button>
         {/snippet}
         {#snippet primary()}
-          <button class="btn btn-primary">Continue</button>
+          <button style="height:36px;padding:0 18px;border-radius:9999px;border:0;background:{T.primary};color:#fff;font-size:13px;font-weight:580;cursor:pointer;box-shadow:0 4px 12px rgba(88,73,212,0.25);">Continue</button>
         {/snippet}
       </StepActionBar>
     </div>
   </div>
 
-  <div class="space-y-2">
-    <h3 class="font-medium">RowFrame (canonical row layout)</h3>
-    <div class="rounded-xl border border-base-300 bg-base-200/20 p-3 space-y-2">
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <h3 style="font-size:13px;font-weight:500;margin:0;">RowFrame (canonical row layout)</h3>
+    <div style="border-radius:14px;border:1px solid {T.hairlineSoft};background:{T.pageDeep};padding:12px;display:flex;flex-direction:column;gap:8px;">
       <RowFrame clickable={true}>
-        {#snippet leading()}<div class="avatar placeholder"><div class="bg-neutral text-neutral-content rounded-full w-8"><span>U</span></div></div>{/snippet}
+        {#snippet leading()}
+          <div style="width:32px;height:32px;border-radius:9999px;background:{T.pageDeep};color:{T.inkMuted};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:580;">U</div>
+        {/snippet}
         {#snippet title()}Default row{/snippet}
         {#snippet subtitle()}Leading + content + trailing action{/snippet}
         {#snippet meta()}Meta{/snippet}
-        {#snippet trailing()}<button class="btn btn-xs btn-outline">Action</button>{/snippet}
+        {#snippet trailing()}
+          <button style="height:26px;padding:0 10px;border-radius:9999px;border:1px solid {T.hairline};background:transparent;color:{T.inkBody};font-size:11.5px;font-weight:540;cursor:pointer;">Action</button>
+        {/snippet}
       </RowFrame>
 
       <RowFrame dense={true} selected={true}>
         {#snippet title()}Dense selected row{/snippet}
         {#snippet subtitle()}Used in compact/selectable lists{/snippet}
-        {#snippet trailing()}<span class="badge badge-primary badge-sm">Selected</span>{/snippet}
+        {#snippet trailing()}
+          <span style="display:inline-block;background:rgba(88,73,212,0.12);color:{T.primaryDeep};border-radius:9999px;padding:2px 8px;font-size:11px;font-weight:580;">Selected</span>
+        {/snippet}
       </RowFrame>
     </div>
   </div>
 
-  <div class="space-y-2">
-    <h3 class="font-medium">Clean base page shell (PageScaffold)</h3>
-    <div class="rounded-xl border border-base-300 bg-base-200/20 py-3">
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <h3 style="font-size:13px;font-weight:500;margin:0;">Clean base page shell (PageScaffold)</h3>
+    <div style="border-radius:14px;border:1px solid {T.hairlineSoft};background:{T.pageDeep};padding:12px 0;">
       <PageScaffold maxWidthClass="max-w-4xl" contentWidthClass="max-w-4xl" highlight="tint" collapsedMode="bar">
         {#snippet title()}
-          <h3 class="text-xl font-semibold">Clean base page</h3>
+          <h3 style="font-size:18px;font-weight:580;margin:0;">Clean base page</h3>
         {/snippet}
 
         {#snippet meta()}
@@ -92,7 +99,7 @@
         {/snippet}
 
         <FlowDecoration size="sm">
-          <p class="text-sm opacity-80">Use this as the default page-level composition baseline.</p>
+          <p style="font-size:13px;color:{T.inkMuted};margin:0;">Use this as the default page-level composition baseline.</p>
         </FlowDecoration>
       </PageScaffold>
     </div>

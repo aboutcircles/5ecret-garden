@@ -145,11 +145,11 @@
   <!-- Title and close button are provided by the popup shell; remove duplicates here -->
 
   {#if $cartState.lastError}
-    <StepAlert variant="error" className="text-xs" message={$cartState.lastError} />
+    <StepAlert variant="error" message={$cartState.lastError} />
   {/if}
 
   {#if checkoutAction.error}
-    <StepAlert variant="error" className="text-xs" message={checkoutAction.error} />
+    <StepAlert variant="error" message={checkoutAction.error} />
   {/if}
 
   {#if !$cartState.basket || !$cartState.basket.items || $cartState.basket.items.length === 0}
@@ -225,9 +225,13 @@
         onclick={() => openCheckoutFlow()}
         disabled={checkoutDisabled}
       >
-        {#if checkoutAction.loading}<span class="loading loading-spinner loading-xs"></span>{/if}
+        {#if checkoutAction.loading}<svg class="cartpanel-spin" style="width:14px;height:14px;color:#fff;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>{/if}
         {checkoutAction.loading ? 'Checking…' : 'Checkout'}
       </button>
     </div>
   {/if}
 </FlowStepScaffold>
+
+<style>
+@keyframes cartpanel-spin{from{}to{transform:rotate(360deg)}}.cartpanel-spin{animation:cartpanel-spin 0.8s linear infinite;}
+</style>

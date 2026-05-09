@@ -18,31 +18,33 @@
   }: Props = $props();
 </script>
 
-<div class={`avatar-skeleton inline-flex items-center min-w-0 max-w-full ${reverse ? 'flex-row-reverse' : ''}`}>
-  <div class="relative inline-block shrink-0">
+<div class="avatar-skeleton" style={`display:inline-flex;align-items:center;min-width:0;max-width:100%;${reverse ? 'flex-direction:row-reverse;' : ''}`}>
+  <div style="position:relative;display:inline-block;flex-shrink:0;">
     {#if showAvatar}
-      <div class="avatar-skeleton-block w-10 h-10 rounded-full block" aria-hidden="true"></div>
+      <div class="avatar-skeleton-block" style="width:40px;height:40px;border-radius:9999px;display:block;" aria-hidden="true"></div>
     {/if}
     {#if showBookmarkBadge}
       <span
-        class="absolute -top-1 -right-1 inline-flex h-4 w-4 items-center justify-center rounded-full avatar-skeleton-block"
+        class="avatar-skeleton-block"
+        style="position:absolute;top:-4px;right:-4px;display:inline-flex;width:16px;height:16px;align-items:center;justify-content:center;border-radius:9999px;"
         aria-hidden="true"
       ></span>
     {/if}
     {#if showOverlay}
       <span
-        class="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border border-base-100 avatar-skeleton-block"
+        class="avatar-skeleton-block"
+        style="position:absolute;bottom:-4px;right:-4px;width:20px;height:20px;border-radius:9999px;border:1px solid rgba(0,0,0,0.06);"
         aria-hidden="true"
       ></span>
     {/if}
   </div>
-  <div class={`flex flex-col gap-y-0.5 min-w-0 ${reverse ? 'items-end pr-4 text-right' : 'items-start pl-4'}`}>
+  <div style={`display:flex;flex-direction:column;gap:2px;min-width:0;${reverse ? 'align-items:flex-end;padding-right:16px;text-align:right;' : 'align-items:flex-start;padding-left:16px;'}`}>
     {#if showTop}
-      <div class="avatar-skeleton-block h-4 rounded w-20" aria-hidden="true"></div>
+      <div class="avatar-skeleton-block" style="height:16px;border-radius:4px;width:80px;" aria-hidden="true"></div>
     {/if}
-    <div class="avatar-skeleton-block h-6 rounded w-28 max-w-full" aria-hidden="true"></div>
+    <div class="avatar-skeleton-block" style="height:24px;border-radius:4px;width:112px;max-width:100%;" aria-hidden="true"></div>
     {#if showBottom}
-      <div class="avatar-skeleton-block h-4 rounded w-24 max-w-full" aria-hidden="true"></div>
+      <div class="avatar-skeleton-block" style="height:16px;border-radius:4px;width:96px;max-width:100%;" aria-hidden="true"></div>
     {/if}
   </div>
 </div>

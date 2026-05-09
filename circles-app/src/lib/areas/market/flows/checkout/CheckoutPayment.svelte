@@ -300,9 +300,13 @@
         disabled={!transferContext || preparePaymentAction.loading}
         onclick={openTransferFlow}
       >
-        {#if preparePaymentAction.loading}<span class="loading loading-spinner loading-xs"></span>{/if}
+        {#if preparePaymentAction.loading}<svg class="checkoutpayment-spin" style="width:14px;height:14px;color:#fff;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>{/if}
         {preparePaymentAction.loading ? 'Preparing path…' : 'Pay with Circles in-app'}
       </button>
     </div>
   </div>
   </FlowStepScaffold>
+
+<style>
+@keyframes checkoutpayment-spin{from{}to{transform:rotate(360deg)}}.checkoutpayment-spin{animation:checkoutpayment-spin 0.8s linear infinite;}
+</style>

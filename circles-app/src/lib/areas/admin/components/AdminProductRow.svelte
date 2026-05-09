@@ -8,6 +8,7 @@
   import { getProduct, pickProductImageUrl } from '$lib/areas/market/services';
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
   import { onMount } from 'svelte';
+  import { T } from '$lib/design-system/tokens';
 
   interface Props {
     product: AdminUnifiedProduct;
@@ -93,17 +94,17 @@
 </script>
 
 <RowFrame
-  className="bg-base-100"
+  style="background:{T.surface};"
   dense={true}
   clickable={true}
   onclick={() => onSelect?.(product)}
 >
   {#snippet leading()}
-    <div class="w-10 h-10 rounded-md bg-base-200 overflow-hidden shrink-0 flex items-center justify-center">
+    <div style="width:40px;height:40px;border-radius:8px;background:{T.pageDeep};overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
       {#if imageUrl}
-        <img src={imageUrl} alt="" class="w-10 h-10 object-cover" />
+        <img src={imageUrl} alt="" style="width:40px;height:40px;object-fit:cover;" />
       {:else}
-        <span class="text-[10px] opacity-60">No image</span>
+        <span style="font-size:10px;color:{T.inkFaint};">No image</span>
       {/if}
     </div>
   {/snippet}
@@ -114,7 +115,7 @@
 
   {#snippet subtitle()}
     {#if !hideSeller}
-      <div class="min-w-0">
+      <div style="min-width:0;">
         <Avatar address={product.seller} view="small" clickable={true} />
       </div>
     {/if}
@@ -125,7 +126,7 @@
   {/snippet}
 
   {#snippet trailing()}
-    <div class="flex items-center gap-2 flex-wrap justify-end">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
       {#if needsAdapterLabel}
         <AdminStatusBadge
           label={needsAdapterLabel}

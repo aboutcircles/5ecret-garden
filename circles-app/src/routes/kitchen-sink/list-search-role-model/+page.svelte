@@ -31,6 +31,7 @@
   import AdminProductList from '$lib/areas/admin/components/AdminProductList.svelte';
   import EventHistoryMonthlyList from '$lib/shared/ui/event-history/EventHistoryMonthlyList.svelte';
   import TxEvents from '../../dashboard/TxEvents.svelte';
+  import { T } from '$lib/design-system/tokens.js';
 
   type DemoContactRow = {
     blockNumber: number;
@@ -401,17 +402,17 @@
   }
 </script>
 
-<section class="rounded-xl border border-base-300 bg-base-100 p-4 space-y-6">
-  <div class="space-y-1">
-    <h2 class="text-lg font-semibold">List/Search Kitchen Sink</h2>
-    <p class="text-sm opacity-75">
+<section style="border-radius:14px;border:1px solid {T.hairlineSoft};background:{T.surface};padding:16px;display:flex;flex-direction:column;gap:24px;">
+  <div style="display:flex;flex-direction:column;gap:4px;">
+    <h2 style="font-size:16px;font-weight:580;margin:0;">List/Search Kitchen Sink</h2>
+    <p style="font-size:13px;color:{T.inkMuted};margin:0;">
       One demo per list type in the inventory report, using production row components and realistic behavior.
     </p>
   </div>
 
-  <div class="grid gap-4 lg:grid-cols-2">
-    <section class="rounded-xl border border-base-300 p-3 space-y-2">
-      <h3 class="font-medium">Contacts list (ContactRow)</h3>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
+    <section style="border-radius:14px;border:1px solid {T.hairlineSoft};padding:12px;display:flex;flex-direction:column;gap:8px;">
+      <h3 style="font-size:13px;font-weight:500;margin:0;">Contacts list (ContactRow)</h3>
       <ListShell query={contactsQuery} searchPlaceholder="Search contacts" wrapInListContainer={false}>
         <GenericList
           store={contactsPaginated}
@@ -424,8 +425,8 @@
       </ListShell>
     </section>
 
-    <section class="rounded-xl border border-base-300 p-3 space-y-2">
-      <h3 class="font-medium">Wallet balances (BalanceRow)</h3>
+    <section style="border-radius:14px;border:1px solid {T.hairlineSoft};padding:12px;display:flex;flex-direction:column;gap:8px;">
+      <h3 style="font-size:13px;font-weight:500;margin:0;">Wallet balances (BalanceRow)</h3>
       <GenericList
         store={balanceStore}
         row={BalanceRow}
@@ -437,9 +438,9 @@
     </section>
   </div>
 
-  <div class="grid gap-4 lg:grid-cols-2">
-    <section class="rounded-xl border border-base-300 p-3 space-y-2">
-      <h3 class="font-medium">Transaction history (TransactionRow)</h3>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
+    <section style="border-radius:14px;border:1px solid {T.hairlineSoft};padding:12px;display:flex;flex-direction:column;gap:8px;">
+      <h3 style="font-size:13px;font-weight:500;margin:0;">Transaction history (TransactionRow)</h3>
       <GenericList
         store={transactionStore}
         row={TransactionRow}
@@ -451,8 +452,8 @@
       />
     </section>
 
-    <section class="rounded-xl border border-base-300 p-3 space-y-2">
-      <h3 class="font-medium">Groups list (GroupRowView)</h3>
+    <section style="border-radius:14px;border:1px solid {T.hairlineSoft};padding:12px;display:flex;flex-direction:column;gap:8px;">
+      <h3 style="font-size:13px;font-weight:500;margin:0;">Groups list (GroupRowView)</h3>
       <GenericList
         store={groupsStore}
         row={GroupRowView}
@@ -465,9 +466,9 @@
     </section>
   </div>
 
-  <div class="grid gap-4 lg:grid-cols-2">
-    <section class="rounded-xl border border-base-300 p-3 space-y-2">
-      <h3 class="font-medium">Sales orders (SalesOrderRow)</h3>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
+    <section style="border-radius:14px;border:1px solid {T.hairlineSoft};padding:12px;display:flex;flex-direction:column;gap:8px;">
+      <h3 style="font-size:13px;font-weight:500;margin:0;">Sales orders (SalesOrderRow)</h3>
       <GenericList
         store={salesOrderStore}
         row={SalesOrderRow}
@@ -479,8 +480,8 @@
       />
     </section>
 
-    <section class="rounded-xl border border-base-300 p-3 space-y-2">
-      <h3 class="font-medium">Avatar search dev list (AvatarSearchRow)</h3>
+    <section style="border-radius:14px;border:1px solid {T.hairlineSoft};padding:12px;display:flex;flex-direction:column;gap:8px;">
+      <h3 style="font-size:13px;font-weight:500;margin:0;">Avatar search dev list (AvatarSearchRow)</h3>
       <ListShell query={avatarSearchQuery} searchPlaceholder="Search avatar results" wrapInListContainer={false}>
         <GenericList
           store={avatarSearchPaginated}
@@ -494,14 +495,14 @@
     </section>
   </div>
 
-  <div class="grid gap-4 lg:grid-cols-2">
-    <section class="rounded-xl border border-base-300 p-3 space-y-2">
-      <h3 class="font-medium">Gateway trusted accounts (TrustRow)</h3>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
+    <section style="border-radius:14px;border:1px solid {T.hairlineSoft};padding:12px;display:flex;flex-direction:column;gap:8px;">
+      <h3 style="font-size:13px;font-weight:500;margin:0;">Gateway trusted accounts (TrustRow)</h3>
       <GatewayTrustedAccountsList rows={gatewayTrustedRows} />
     </section>
 
-    <section class="rounded-xl border border-base-300 p-3 space-y-2">
-      <h3 class="font-medium">Payment gateways (GatewayRow)</h3>
+    <section style="border-radius:14px;border:1px solid {T.hairlineSoft};padding:12px;display:flex;flex-direction:column;gap:8px;">
+      <h3 style="font-size:13px;font-weight:500;margin:0;">Payment gateways (GatewayRow)</h3>
       <GenericList
         store={gatewayStore}
         row={GatewayRowView}
@@ -513,9 +514,9 @@
     </section>
   </div>
 
-  <div class="grid gap-4 lg:grid-cols-2">
-    <section class="rounded-xl border border-base-300 p-3 space-y-2">
-      <h3 class="font-medium">Holders list (HoldersRow)</h3>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
+    <section style="border-radius:14px;border:1px solid {T.hairlineSoft};padding:12px;display:flex;flex-direction:column;gap:8px;">
+      <h3 style="font-size:13px;font-weight:500;margin:0;">Holders list (HoldersRow)</h3>
       <GenericList
         store={holderStore}
         row={HoldersRow}
@@ -527,37 +528,37 @@
       />
     </section>
 
-    <section class="rounded-xl border border-base-300 p-3 space-y-2">
-      <h3 class="font-medium">Trust relations (SearchablePaginatedAddressList)</h3>
+    <section style="border-radius:14px;border:1px solid {T.hairlineSoft};padding:12px;display:flex;flex-direction:column;gap:8px;">
+      <h3 style="font-size:13px;font-weight:500;margin:0;">Trust relations (SearchablePaginatedAddressList)</h3>
       <SearchablePaginatedAddressList addresses={trustRelationsStore} emptyLabel="No trust relations" />
     </section>
   </div>
 
-  <section class="rounded-xl border border-base-300 p-3 space-y-2">
-    <h3 class="font-medium">RPC avatar search list (SearchAvatar)</h3>
+  <section style="border-radius:14px;border:1px solid {T.hairlineSoft};padding:12px;display:flex;flex-direction:column;gap:8px;">
+    <h3 style="font-size:13px;font-weight:500;margin:0;">RPC avatar search list (SearchAvatar)</h3>
     <SearchAvatar searchType="contact" />
   </section>
 
-  <div class="grid gap-4 lg:grid-cols-2">
-    <section class="rounded-xl border border-base-300 p-3 space-y-2">
-      <h3 class="font-medium">Admin catalog selection (AdminProductRow)</h3>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
+    <section style="border-radius:14px;border:1px solid {T.hairlineSoft};padding:12px;display:flex;flex-direction:column;gap:8px;">
+      <h3 style="font-size:13px;font-weight:500;margin:0;">Admin catalog selection (AdminProductRow)</h3>
       <AdminProductRow product={adminCatalogRow} productType={adminCatalogType} />
     </section>
 
-    <section class="rounded-xl border border-base-300 p-3 space-y-2">
-      <h3 class="font-medium">Admin grouped product list (AdminProductList)</h3>
+    <section style="border-radius:14px;border:1px solid {T.hairlineSoft};padding:12px;display:flex;flex-direction:column;gap:8px;">
+      <h3 style="font-size:13px;font-weight:500;margin:0;">Admin grouped product list (AdminProductList)</h3>
       <AdminProductList products={adminProducts} connections={adminConnections} />
     </section>
   </div>
 
-  <div class="grid gap-4 lg:grid-cols-2">
-    <section class="rounded-xl border border-base-300 p-3 space-y-2">
-      <h3 class="font-medium">Event history monthly list (EventHistoryMonthlyList)</h3>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
+    <section style="border-radius:14px;border:1px solid {T.hairlineSoft};padding:12px;display:flex;flex-direction:column;gap:8px;">
+      <h3 style="font-size:13px;font-weight:500;margin:0;">Event history monthly list (EventHistoryMonthlyList)</h3>
       <EventHistoryMonthlyList monthlyItems={monthlyItems} maxBucketCount={6} rangeEvents={rangeEvents} />
     </section>
 
-    <section class="rounded-xl border border-base-300 p-3 space-y-2">
-      <h3 class="font-medium">Transaction event table (TxEvents)</h3>
+    <section style="border-radius:14px;border:1px solid {T.hairlineSoft};padding:12px;display:flex;flex-direction:column;gap:8px;">
+      <h3 style="font-size:13px;font-weight:500;margin:0;">Transaction event table (TxEvents)</h3>
       <TxEvents
         events={txEvents}
         eventDisplayEntries={eventDisplayEntries}

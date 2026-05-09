@@ -150,7 +150,7 @@ import SettingProfile from '$lib/areas/settings/ui/pages/SettingProfile.svelte';
             <div class="flex flex-col gap-3">
                 <div class="min-w-0">
                     <div class="leading-tight">{@render title?.()}</div>
-                    <div class="mt-1 text-sm text-base-content/60">{@render meta?.()}</div>
+                    <div style="margin-top:4px;font-size:14px;color:rgba(15,10,30,0.40);">{@render meta?.()}</div>
                 </div>
 
                 <div class="flex items-center gap-2 flex-wrap mt-4" bind:this={actionsHost} use:observeActions>
@@ -203,7 +203,7 @@ import SettingProfile from '$lib/areas/settings/ui/pages/SettingProfile.svelte';
                                 {#if collapsedLeft}
                                     {@render collapsedLeft()}
                                 {:else}
-                                    <span class="text-base md:text-lg font-semibold tracking-tight text-base-content truncate">
+                                    <span style="font-size:1rem;font-weight:600;letter-spacing:-0.015em;color:#0F0A1E;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                                         {@render title?.()}
                                     </span>
                                 {/if}
@@ -225,7 +225,7 @@ import SettingProfile from '$lib/areas/settings/ui/pages/SettingProfile.svelte';
                                 {#if collapsedLeft}
                                     {@render collapsedLeft()}
                                 {:else}
-                                    <span class="text-base md:text-lg font-semibold tracking-tight text-base-content truncate">
+                                    <span style="font-size:1rem;font-weight:600;letter-spacing:-0.015em;color:#0F0A1E;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                                         {@render title?.()}
                                     </span>
                                 {/if}

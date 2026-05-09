@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { AppProfileCore as Profile } from '$lib/shared/model/profile';
   import Markdown from '$lib/shared/ui/content/markdown/Markdown.svelte';
+  import { T } from '$lib/design-system/tokens.js';
 
   interface Props {
     profile: Profile | undefined;
@@ -17,23 +18,23 @@
   $effect(() => { imgUrl; imgError = false; });
 </script>
 
-<div class="w-full flex flex-col items-center text-center">
-  <button class="cursor-pointer" {onclick}>
-    <span class="relative inline-flex">
+<div style="width:100%;display:flex;flex-direction:column;align-items:center;text-align:center;">
+  <button style="cursor:pointer;background:none;border:0;padding:0;" {onclick}>
+    <span style="position:relative;display:inline-flex;">
       {#if imgUrl && !imgError}
         <img
           src={imgUrl}
           alt={profile?.name ?? 'Profile avatar'}
-          class="w-20 h-20 object-cover rounded-full"
+          style="width:80px;height:80px;object-fit:cover;border-radius:9999px;"
           onerror={onImgError}
         />
       {:else}
-        <img src="/logo.svg" alt="Fallback" class="w-20 h-20 object-cover rounded-full" />
+        <img src="/logo.svg" alt="Fallback" style="width:80px;height:80px;object-fit:cover;border-radius:9999px;" />
       {/if}
 
       {#if showBookmarkBadge}
         <span
-          class="absolute -top-1 -right-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-warning text-warning-content text-[11px] leading-none font-bold border border-base-100"
+          style="position:absolute;top:-4px;right:-4px;display:inline-flex;width:20px;height:20px;align-items:center;justify-content:center;border-radius:9999px;background:{T.warning};color:{T.surface};font-size:11px;line-height:1;font-weight:700;border:1px solid {T.surface};"
           aria-label="Bookmarked"
           title="Bookmarked"
         >
@@ -42,10 +43,10 @@
       {/if}
     </span>
   </button>
-  <div class="flex flex-col items-center p-4 gap-y-0.5">
-    <span class="font-semibold text-base-content">{profile?.name}</span>
+  <div style="display:flex;flex-direction:column;align-items:center;padding:16px;gap:2px;">
+    <span style="font-weight:600;color:{T.ink};">{profile?.name}</span>
     {#if profile?.description}
-      <Markdown content={profile.description} class="prose prose-sm max-w-none text-base-content/70 mt-0" />
+      <Markdown content={profile.description} style="font-size:13px;line-height:1.6;color:{T.inkMuted};max-width:none;margin-top:0;" />
     {/if}
   </div>
 </div>

@@ -2,6 +2,7 @@
   import { popupControls, popupState } from '$lib/shared/state/popup';
   import { runTask, tasks } from '$lib/shared/utils/tasks';
   import PopupDemoCard from './PopupDemoCard.svelte';
+  import { T } from '$lib/design-system/tokens.js';
 
   const openPopup = () => {
     popupControls.open({
@@ -44,36 +45,36 @@
   const popupDepth = $derived($popupState.stack.length + ($popupState.content ? 1 : 0));
 </script>
 
-<section class="rounded-xl border border-base-300 bg-base-100 p-4 space-y-4">
-  <h2 class="text-lg font-semibold">State & Feedback</h2>
+<section style="border-radius:14px;border:1px solid {T.hairlineSoft};background:{T.surface};padding:16px;display:flex;flex-direction:column;gap:16px;">
+  <h2 style="font-size:16px;font-weight:580;margin:0;">State & Feedback</h2>
 
-  <div class="rounded-lg border border-base-300 p-3 bg-base-200/30 text-sm">
+  <div style="border-radius:8px;border:1px solid {T.hairlineSoft};padding:12px;background:{T.pageDeep};font-size:13px;">
     <div><strong>Popup depth:</strong> {popupDepth}</div>
     <div><strong>Active tasks:</strong> {activeTaskCount}</div>
   </div>
 
-  <div class="space-y-2">
-    <h3 class="font-medium">Popup store controls (`popupControls`)</h3>
-    <p class="text-sm opacity-70">
-      <strong>Open + replace</strong> first opens “Original popup”, then immediately swaps current popup content with
-      “Replaced popup” without adding another back-stack entry.
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <h3 style="font-size:13px;font-weight:500;margin:0;">Popup store controls (`popupControls`)</h3>
+    <p style="font-size:13px;color:{T.inkMuted};margin:0;">
+      <strong>Open + replace</strong> first opens "Original popup", then immediately swaps current popup content with
+      "Replaced popup" without adding another back-stack entry.
     </p>
-    <div class="flex flex-wrap gap-2">
-      <button class="btn btn-sm btn-primary" onclick={openPopup}>Open popup</button>
-      <button class="btn btn-sm btn-outline" onclick={openReplacedPopup}>Open + replace</button>
-      <button class="btn btn-sm btn-outline" onclick={() => popupControls.back()}>Back</button>
-      <button class="btn btn-sm btn-ghost" onclick={() => popupControls.close()}>Close all</button>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+      <button style="height:32px;padding:0 14px;border-radius:9999px;border:0;background:{T.primary};color:#fff;font-size:12.5px;font-weight:580;cursor:pointer;" onclick={openPopup}>Open popup</button>
+      <button style="height:32px;padding:0 14px;border-radius:9999px;border:1px solid {T.hairline};background:transparent;color:{T.inkBody};font-size:12.5px;font-weight:580;cursor:pointer;" onclick={openReplacedPopup}>Open + replace</button>
+      <button style="height:32px;padding:0 14px;border-radius:9999px;border:1px solid {T.hairline};background:transparent;color:{T.inkBody};font-size:12.5px;font-weight:580;cursor:pointer;" onclick={() => popupControls.back()}>Back</button>
+      <button style="height:32px;padding:0 14px;border-radius:9999px;border:0;background:transparent;color:{T.inkMuted};font-size:12.5px;font-weight:580;cursor:pointer;" onclick={() => popupControls.close()}>Close all</button>
     </div>
   </div>
 
-  <div class="space-y-2">
-    <h3 class="font-medium">Task feedback (`runTask` + `tasks`)</h3>
-    <p class="text-sm opacity-70">
+  <div style="display:flex;flex-direction:column;gap:8px;">
+    <h3 style="font-size:13px;font-weight:500;margin:0;">Task feedback (`runTask` + `tasks`)</h3>
+    <p style="font-size:13px;color:{T.inkMuted};margin:0;">
       Success task exercises loading toasts. Failing task also demonstrates centralized error popup handling.
     </p>
-    <div class="flex flex-wrap gap-2">
-      <button class="btn btn-sm btn-primary" onclick={startSuccessTask}>Start success task</button>
-      <button class="btn btn-sm btn-warning" onclick={startFailTask}>Start failing task</button>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+      <button style="height:32px;padding:0 14px;border-radius:9999px;border:0;background:{T.primary};color:#fff;font-size:12.5px;font-weight:580;cursor:pointer;" onclick={startSuccessTask}>Start success task</button>
+      <button style="height:32px;padding:0 14px;border-radius:9999px;border:1px solid rgba(176,112,20,0.4);background:{T.warningSoft};color:{T.warning};font-size:12.5px;font-weight:580;cursor:pointer;" onclick={startFailTask}>Start failing task</button>
     </div>
   </div>
 </section>

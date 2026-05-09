@@ -15,6 +15,7 @@
   import { circles } from '$lib/shared/state/circles';
   import { normalizeEvmAddress } from '@circles-market/sdk';
   import { getAvatarInfoBatched } from '$lib/shared/data/circles/avatarInfoBatcher';
+  import { T } from '$lib/design-system/tokens.js';
 
   const avatarInfoCache = new Map<string, Promise<AvatarRow | undefined>>();
 
@@ -228,22 +229,22 @@
         />
     </div>
 {:else if view === 'small' || view === 'small_no_text'}
-    <div class="inline-flex items-center gap-2" transition:fade>
+    <div style="display:inline-flex;align-items:center;gap:8px;" transition:fade>
         <button
-            class="cursor-pointer inline-flex items-center"
+            style="cursor:pointer;display:inline-flex;align-items:center;background:none;border:0;padding:0;"
             onclick={openAvatar}
             aria-label={tooltipText}
             title={tooltipText}
         >
-            <span class="relative inline-flex">
+            <span style="position:relative;display:inline-flex;">
                 <img
                     src={profile?.previewImageUrl}
                     alt="User Icon"
-                    class="w-6 h-6 object-cover rounded-full"
+                    style="width:24px;height:24px;object-fit:cover;border-radius:9999px;"
                 />
                 {#if effectiveShowBookmarkBadge}
                     <span
-                        class="absolute -top-1 -right-1 inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-warning text-warning-content text-[9px] leading-none font-bold border border-base-100"
+                        style="position:absolute;top:-4px;right:-4px;display:inline-flex;width:14px;height:14px;align-items:center;justify-content:center;border-radius:9999px;background:{T.warning};color:{T.surface};font-size:9px;line-height:1;font-weight:700;border:1px solid {T.surface};"
                         aria-label="Bookmarked"
                         title="Bookmarked"
                     >
@@ -253,27 +254,27 @@
             </span>
         </button>
         {#if view === 'small'}
-            <span class="text-sm font-medium truncate max-w-[12rem] align-middle">{profile?.name}</span>
+            <span style="font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:12rem;vertical-align:middle;">{profile?.name}</span>
         {/if}
     </div>
 {:else if view === 'small_reverse'}
-    <div class="inline-flex items-center gap-2" transition:fade>
-        <span class="text-sm font-medium truncate max-w-[12rem] align-middle text-right">{profile?.name}</span>
+    <div style="display:inline-flex;align-items:center;gap:8px;" transition:fade>
+        <span style="font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:12rem;vertical-align:middle;text-align:right;">{profile?.name}</span>
         <button
-            class="cursor-pointer inline-flex items-center"
+            style="cursor:pointer;display:inline-flex;align-items:center;background:none;border:0;padding:0;"
             onclick={openAvatar}
             aria-label={tooltipText}
             title={tooltipText}
         >
-            <span class="relative inline-flex">
+            <span style="position:relative;display:inline-flex;">
                 <img
                     src={profile?.previewImageUrl}
                     alt="User Icon"
-                    class="w-6 h-6 object-cover rounded-full"
+                    style="width:24px;height:24px;object-fit:cover;border-radius:9999px;"
                 />
                 {#if effectiveShowBookmarkBadge}
                     <span
-                        class="absolute -top-1 -right-1 inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-warning text-warning-content text-[9px] leading-none font-bold border border-base-100"
+                        style="position:absolute;top:-4px;right:-4px;display:inline-flex;width:14px;height:14px;align-items:center;justify-content:center;border-radius:9999px;background:{T.warning};color:{T.surface};font-size:9px;line-height:1;font-weight:700;border:1px solid {T.surface};"
                         aria-label="Bookmarked"
                         title="Bookmarked"
                     >

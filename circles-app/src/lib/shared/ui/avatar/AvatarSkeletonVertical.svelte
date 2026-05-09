@@ -14,24 +14,25 @@
   }: Props = $props();
 </script>
 
-<div class="avatar-skeleton w-full flex flex-col items-center text-center">
-  <span class="relative inline-flex">
+<div class="avatar-skeleton" style="width:100%;display:flex;flex-direction:column;align-items:center;text-align:center;">
+  <span style="position:relative;display:inline-flex;">
     {#if showAvatar}
-      <div class="avatar-skeleton-block w-20 h-20 rounded-full" aria-hidden="true"></div>
+      <div class="avatar-skeleton-block" style="width:80px;height:80px;border-radius:9999px;" aria-hidden="true"></div>
     {/if}
     {#if showBookmarkBadge}
       <span
-        class="absolute -top-1 -right-1 inline-flex h-5 w-5 items-center justify-center rounded-full avatar-skeleton-block"
+        class="avatar-skeleton-block"
+        style="position:absolute;top:-4px;right:-4px;display:inline-flex;width:20px;height:20px;align-items:center;justify-content:center;border-radius:9999px;"
         aria-hidden="true"
       ></span>
     {/if}
   </span>
-  <div class="flex flex-col items-center p-4 gap-y-0.5 w-full">
+  <div style="display:flex;flex-direction:column;align-items:center;padding:16px;gap:2px;width:100%;">
     {#if showTop}
-      <div class="avatar-skeleton-block h-6 rounded w-28 max-w-full" aria-hidden="true"></div>
+      <div class="avatar-skeleton-block" style="height:24px;border-radius:4px;width:112px;max-width:100%;" aria-hidden="true"></div>
     {/if}
     {#if showBottom}
-      <div class="avatar-skeleton-block h-4 rounded w-40 max-w-full" aria-hidden="true"></div>
+      <div class="avatar-skeleton-block" style="height:16px;border-radius:4px;width:160px;max-width:100%;" aria-hidden="true"></div>
     {/if}
   </div>
 </div>
@@ -43,7 +44,7 @@
   }
 
   .avatar-skeleton-block {
-    background: hsl(var(--b3) / 0.7);
+    background: rgba(0,0,0,0.08);
   }
 
   @media (prefers-reduced-motion: no-preference) {

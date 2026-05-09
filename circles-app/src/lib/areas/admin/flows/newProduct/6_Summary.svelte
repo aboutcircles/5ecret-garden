@@ -19,6 +19,7 @@
   import DetailsStep from './5_Details.svelte';
   import type { AdminNewProductFlowContext } from './context';
   import type { AdminOdooConnection, AdminUnifiedProduct } from '$lib/areas/admin/types';
+  import { T } from '$lib/design-system/tokens';
 
   interface Props {
     context: AdminNewProductFlowContext;
@@ -332,12 +333,12 @@
 
   <StepActionBar>
     {#snippet secondary()}
-      <button class="btn btn-outline btn-sm" type="button" onclick={() => popupControls.close()} disabled={executing}>
+      <button style="height:32px;padding:0 18px;border-radius:9999px;border:1px solid {T.hairline};background:transparent;color:{T.inkBody};font-size:12.5px;font-weight:580;cursor:pointer;" type="button" onclick={() => popupControls.close()} disabled={executing}>
         Cancel
       </button>
     {/snippet}
     {#snippet primary()}
-      <button class="btn btn-primary btn-sm" type="button" onclick={execute} disabled={executing}>
+      <button style="height:32px;padding:0 18px;border-radius:9999px;border:0;background:{T.primary};color:#fff;font-size:12.5px;font-weight:580;cursor:pointer;box-shadow:0 4px 12px rgba(88,73,212,0.25);" type="button" onclick={execute} disabled={executing}>
         {executing ? 'Applying…' : 'Confirm & apply'}
       </button>
     {/snippet}

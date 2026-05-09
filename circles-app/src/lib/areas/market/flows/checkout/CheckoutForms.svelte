@@ -481,9 +481,13 @@
           data-skip-blur-validation="true"
           disabled={submitAction.loading}
         >
-          {#if submitAction.loading}<span class="loading loading-spinner loading-xs"></span>{/if}
+          {#if submitAction.loading}<svg class="checkoutforms-spin" style="width:14px;height:14px;color:#fff;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>{/if}
           {submitAction.loading ? 'Checking…' : 'Continue'}
         </button>
       </div>
     </div>
   </FlowStepScaffold>
+
+<style>
+@keyframes checkoutforms-spin{from{}to{transform:rotate(360deg)}}.checkoutforms-spin{animation:checkoutforms-spin 0.8s linear infinite;}
+</style>

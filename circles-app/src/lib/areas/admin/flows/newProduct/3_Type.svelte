@@ -10,6 +10,7 @@
   import CreateConnectionStep from './4_CreateOdooConnection.svelte';
   import type { AdminNewProductFlowContext } from './context';
   import type { AdminOdooConnection, AdminUnifiedProduct } from '$lib/areas/admin/types';
+  import { T } from '$lib/design-system/tokens';
 
   interface Props {
     context: AdminNewProductFlowContext;
@@ -68,26 +69,26 @@
   subtitle="Choose how this product will be fulfilled."
 >
 
-    <div class="space-y-3">
-      <label class="flex items-start gap-2">
-        <input class="radio radio-sm mt-1" type="radio" name="ptype" value="codedispenser" bind:group={selectedType} data-popup-initial-input />
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;">
+        <input style="margin-top:4px;" type="radio" name="ptype" value="codedispenser" bind:group={selectedType} data-popup-initial-input />
         <span>
-          <div class="font-medium">Digital voucher code</div>
-          <div class="text-xs opacity-70">Serve a finite pool of codes and optionally a download URL per purchase.</div>
+          <div style="font-weight:500;color:{T.ink};">Digital voucher code</div>
+          <div style="font-size:11.5px;color:{T.inkMuted};">Serve a finite pool of codes and optionally a download URL per purchase.</div>
         </span>
       </label>
-      <label class="flex items-start gap-2">
-        <input class="radio radio-sm mt-1" type="radio" name="ptype" value="odoo" bind:group={selectedType} />
+      <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;">
+        <input style="margin-top:4px;" type="radio" name="ptype" value="odoo" bind:group={selectedType} />
         <span>
-          <div class="font-medium">Odoo</div>
-          <div class="text-xs opacity-70">Sync fulfillment with your Odoo inventory and dispatch workflows.</div>
+          <div style="font-weight:500;color:{T.ink};">Odoo</div>
+          <div style="font-size:11.5px;color:{T.inkMuted};">Sync fulfillment with your Odoo inventory and dispatch workflows.</div>
         </span>
       </label>
-      <label class="flex items-start gap-2">
-        <input class="radio radio-sm mt-1" type="radio" name="ptype" value="unlock" bind:group={selectedType} />
+      <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;">
+        <input style="margin-top:4px;" type="radio" name="ptype" value="unlock" bind:group={selectedType} />
         <span>
-          <div class="font-medium">Unlock</div>
-          <div class="text-xs opacity-70">Mint one ticket NFT key per successful fulfillment run.</div>
+          <div style="font-weight:500;color:{T.ink};">Unlock</div>
+          <div style="font-size:11.5px;color:{T.inkMuted};">Mint one ticket NFT key per successful fulfillment run.</div>
         </span>
       </label>
 
@@ -100,7 +101,7 @@
 
       <StepActionBar>
         {#snippet primary()}
-          <button class="btn btn-primary btn-sm" type="button" onclick={goNext}>Continue</button>
+          <button style="height:32px;padding:0 18px;border-radius:9999px;border:0;background:{T.primary};color:#fff;font-size:12.5px;font-weight:580;cursor:pointer;box-shadow:0 4px 12px rgba(88,73,212,0.25);" type="button" onclick={goNext}>Continue</button>
         {/snippet}
       </StepActionBar>
     </div>

@@ -62,7 +62,7 @@
   {#if avatar}
     <button
       onclick={openProfile}
-      class="cursor-pointer text-left transition-colors hover:bg-base-200"
+      class="cursor-pointer text-left transition-colors appsidebar-account-btn"
       style="
         margin:0 4px;padding:10px 12px;display:flex;align-items:center;gap:10px;
         background:#FBFAF7;border:1px solid rgba(31,17,70,0.08);border-radius:14px;
@@ -71,8 +71,8 @@
       {#if avatarState.profile?.previewImageUrl}
         <img src={avatarState.profile.previewImageUrl} alt="avatar" class="w-8 h-8 rounded-full object-cover shrink-0" />
       {:else}
-        <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0">
-          <span class="text-[13px] font-semibold text-primary-content">{initial}</span>
+        <div style="width:32px;height:32px;border-radius:9999px;background:#5849D4;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <span style="font-size:13px;font-weight:600;color:#fff;">{initial}</span>
         </div>
       {/if}
       <div class="flex-1 min-w-0">
@@ -149,3 +149,9 @@
     </div>
   </div>
 </aside>
+
+<style>
+  .appsidebar-account-btn:hover {
+    background: rgba(0,0,0,0.04);
+  }
+</style>

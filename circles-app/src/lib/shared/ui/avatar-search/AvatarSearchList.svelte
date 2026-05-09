@@ -243,7 +243,7 @@
       {/if}
       {#if remoteLoading}
         <span style="display:inline-flex;align-items:center;gap:4px;">
-          <span class="loading loading-spinner loading-xs" style="color:{T.primary};" aria-hidden="true"></span>
+          <svg class="avatarsearchlist-spin" style="width:12px;height:12px;color:{T.primary};" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>
           <span>Searching network…</span>
         </span>
       {/if}

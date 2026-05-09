@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { AppProfileCore as Profile } from '$lib/shared/model/profile';
+  import { T } from '$lib/design-system/tokens.js';
 
   interface Props {
     profile: Profile | undefined;
@@ -28,23 +29,23 @@
   $effect(() => { imgUrl; imgError = false; });
 </script>
 
-<div class={`inline-flex items-center min-w-0 max-w-full ${reverse ? 'flex-row-reverse' : ''}`}>
-  <button class="cursor-pointer shrink-0" {onclick}>
-      <div class="relative inline-block">
+<div style={`display:inline-flex;align-items:center;min-width:0;max-width:100%;${reverse ? 'flex-direction:row-reverse;' : ''}`}>
+  <button style="cursor:pointer;flex-shrink:0;background:none;border:0;padding:0;" {onclick}>
+      <div style="position:relative;display:inline-block;">
         {#if imgUrl && !imgError}
           <img
             src={imgUrl}
             alt={profile?.name ?? 'Profile avatar'}
-            class="w-10 h-10 object-cover rounded-full block"
+            style="width:40px;height:40px;object-fit:cover;border-radius:9999px;display:block;"
             onerror={onImgError}
           />
         {:else}
-          <img src="/logo.svg" alt="Fallback" class="w-10 h-10 object-cover rounded-full block" />
+          <img src="/logo.svg" alt="Fallback" style="width:40px;height:40px;object-fit:cover;border-radius:9999px;display:block;" />
         {/if}
 
         {#if showBookmarkBadge}
           <span
-            class="absolute -top-1 -right-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-warning text-warning-content text-[10px] leading-none font-bold border border-base-100"
+            style="position:absolute;top:-4px;right:-4px;display:inline-flex;width:16px;height:16px;align-items:center;justify-content:center;border-radius:9999px;background:{T.warning};color:{T.surface};font-size:10px;line-height:1;font-weight:700;border:1px solid {T.surface};"
             aria-label="Bookmarked"
             title="Bookmarked"
           >
@@ -56,20 +57,20 @@
         <img
           src={pictureOverlayUrl}
           alt="Overlay"
-          class="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border border-base-100 bg-base-100 block"
+          style="position:absolute;bottom:-4px;right:-4px;width:20px;height:20px;border-radius:9999px;border:1px solid {T.surface};background:{T.surface};display:block;"
         />
       {/if}
     </div>
   </button>
-  <div class={`flex flex-col gap-y-0.5 min-w-0 ${reverse ? 'items-end pr-4 text-right' : 'items-start pl-4'}`}>
+  <div style={`display:flex;flex-direction:column;gap:2px;min-width:0;${reverse ? 'align-items:flex-end;padding-right:16px;text-align:right;' : 'align-items:flex-start;padding-left:16px;'}`}>
     {#if topInfo}
-      <p class="text-xs text-base-content/70 truncate w-full">
+      <p style="font-size:12px;color:{T.inkMuted};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%;margin:0;">
         {topInfo}
       </p>
     {/if}
-    <span class="font-semibold text-base-content truncate w-full">{profile?.name}</span>
+    <span style="font-weight:600;color:{T.ink};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%;">{profile?.name}</span>
     {#if bottomInfo}
-      <p class="text-xs text-base-content/70 truncate w-full">
+      <p style="font-size:12px;color:{T.inkMuted};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%;margin:0;">
         {bottomInfo}
       </p>
     {/if}

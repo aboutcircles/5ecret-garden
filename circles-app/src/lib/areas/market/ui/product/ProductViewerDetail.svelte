@@ -175,7 +175,7 @@
   <!-- Description -->
   {#if product?.description}
     <div style="font-size:13.5px;color:{T.inkBody};line-height:1.55;">
-      <Markdown content={product.description} class="prose prose-sm max-w-none" />
+      <Markdown content={product.description} />
     </div>
   {/if}
 
