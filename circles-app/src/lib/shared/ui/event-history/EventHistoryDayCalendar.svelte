@@ -1,6 +1,7 @@
 <script lang="ts">
   import { tick } from 'svelte';
   import type { MonthCalendar, RangeOverlayEvent } from './types';
+  import { T } from '$lib/design-system/tokens.js';
 
   interface Props {
     monthCalendars: MonthCalendar[];
@@ -20,14 +21,14 @@
 
   let containerEl: HTMLDivElement | null = $state(null);
 
-  function intensityClass(count: number, max: number): string {
-    if (count <= 0 || max <= 0) return 'bg-base-300/50';
+  function intensityStyle(count: number, max: number): string {
+    if (count <= 0 || max <= 0) return 'background:rgba(0,0,0,0.06);';
     const ratio = count / max;
-    if (ratio <= 0.2) return 'bg-primary/25';
-    if (ratio <= 0.4) return 'bg-primary/40';
-    if (ratio <= 0.6) return 'bg-primary/55';
-    if (ratio <= 0.8) return 'bg-primary/70';
-    return 'bg-primary';
+    if (ratio <= 0.2) return 'background:rgba(88,73,212,0.18);';
+    if (ratio <= 0.4) return 'background:rgba(88,73,212,0.32);';
+    if (ratio <= 0.6) return 'background:rgba(88,73,212,0.48);';
+    if (ratio <= 0.8) return 'background:rgba(88,73,212,0.65);';
+    return 'background:rgba(88,73,212,1);color:#fff;';
   }
 
   function dayRangeEvents(tsSec: number): RangeOverlayEvent[] {
@@ -67,35 +68,35 @@
   }
 </script>
 
-<div class="rounded-lg border border-base-300 p-3 overflow-auto max-h-[calc(80vh-14rem)]" bind:this={containerEl}>
-  <div class="space-y-4 min-w-max">
+<div style="border-radius:8px;border:1px solid {T.hairlineSoft};padding:12px;overflow:auto;max-height:calc(80vh - 14rem);" bind:this={containerEl}>
+  <div style="display:flex;flex-direction:column;gap:16px;min-width:max-content;">
     {#each monthCalendars as month (month.key)}
-      <section class="space-y-1">
-        <div class="text-sm font-medium">{month.label}</div>
-        <div class="grid grid-cols-7 gap-1 text-[10px] opacity-60 pl-[2px]">
+      <section style="display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:13px;font-weight:500;">{month.label}</div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;font-size:10px;opacity:0.6;padding-left:2px;">
           <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
         </div>
 
-        <div class="space-y-1">
+        <div style="display:flex;flex-direction:column;gap:4px;">
           {#each month.weeks as week, weekIndex (`${month.key}-${weekIndex}`)}
-            <div class="grid grid-cols-7 gap-1">
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">
               {#each week as cell (`${month.key}-${cell.tsSec}`)}
                 {@const cellRangeEvents = cell.inCurrentMonth ? dayRangeEvents(cell.tsSec) : []}
                 <button
                   type="button"
                   data-day-start={cell.tsSec}
-                  class={`relative w-9 h-9 rounded-md border border-base-300 p-1 text-[10px] flex items-start justify-end overflow-hidden ${cell.inCurrentMonth ? intensityClass(cell.count, maxBucketCount) : 'bg-base-200/40 text-base-content/40'}`}
+                  style="position:relative;width:36px;height:36px;border-radius:6px;border:1px solid {T.hairlineSoft};padding:4px;font-size:10px;display:flex;align-items:flex-start;justify-content:flex-end;overflow:hidden;cursor:pointer;{cell.inCurrentMonth ? intensityStyle(cell.count, maxBucketCount) : 'background:rgba(0,0,0,0.04);color:rgba(0,0,0,0.3);'}"
                   title={cell.inCurrentMonth ? cellTitle(cell.tsSec, cell.count, cellRangeEvents) : ''}
                   aria-label={cell.inCurrentMonth ? cellTitle(cell.tsSec, cell.count, cellRangeEvents) : 'Outside month'}
                   onclick={() => cell.inCurrentMonth && onSelectDay?.(cell.tsSec)}
                 >
-                  <span class="relative z-[1]">{cell.dayOfMonth}</span>
+                  <span style="position:relative;z-index:1;">{cell.dayOfMonth}</span>
 
                   {#if cellRangeEvents.length > 0}
-                    <div class="absolute inset-x-0 bottom-1 px-[2px] space-y-[2px]">
+                    <div style="position:absolute;left:0;right:0;bottom:4px;padding:0 2px;display:flex;flex-direction:column;gap:2px;">
                       {#each cellRangeEvents.slice(0, 2) as event (`${cell.tsSec}-${event.id}`)}
                         <div
-                          class={`h-[4px] bg-secondary/90 ${isRangeStart(event, cell.tsSec) ? 'rounded-l-full' : ''} ${isRangeEnd(event, cell.tsSec) ? 'rounded-r-full' : ''}`}
+                          style="height:4px;background:rgba(16,185,129,0.9);{isRangeStart(event, cell.tsSec) ? 'border-radius:9999px 0 0 9999px;' : ''}{isRangeEnd(event, cell.tsSec) ? 'border-radius:0 9999px 9999px 0;' : ''}"
                           title={`${event.title} (${formatEventRange(event)})`}
                         ></div>
                       {/each}
@@ -110,15 +111,15 @@
     {/each}
 
     {#if rangeEvents.length > 0}
-      <section class="pt-1 space-y-1">
-        <div class="text-[11px] opacity-70">Known events</div>
-        <div class="space-y-1">
+      <section style="padding-top:4px;display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:11px;opacity:0.7;">Known events</div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
           {#each rangeEvents as event (event.id)}
-            <div class="text-[11px] rounded-md border border-base-300 p-2">
-              <div class="font-medium">{event.title}</div>
-              <div class="opacity-70">{formatEventRange(event)}</div>
+            <div style="font-size:11px;border-radius:6px;border:1px solid {T.hairlineSoft};padding:8px;">
+              <div style="font-weight:500;">{event.title}</div>
+              <div style="opacity:0.7;">{formatEventRange(event)}</div>
               {#if event.description}
-                <div class="opacity-60">{event.description}</div>
+                <div style="opacity:0.6;">{event.description}</div>
               {/if}
             </div>
           {/each}

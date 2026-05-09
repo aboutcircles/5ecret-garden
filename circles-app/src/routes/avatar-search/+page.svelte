@@ -1,5 +1,6 @@
 <script lang="ts">
   import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
+  import { T } from '$lib/design-system/tokens.js';
 </script>
 
 <PageScaffold
@@ -18,15 +19,15 @@
     Unified avatar search list test route
   {/snippet}
 
-  <section class="rounded-xl border border-base-300 bg-base-100 p-4">
-    <p class="text-sm text-base-content/80 m-0">
+  <section style="border-radius:14px;border:1px solid {T.hairlineSoft};background:{T.surface};padding:16px;">
+    <p style="font-size:13px;color:{T.inkBody};margin:0;">
       This route is the isolated development area for the new unified avatar search list.
     </p>
-    <p class="text-sm text-base-content/60 mt-2 mb-0">
+    <p style="font-size:13px;color:{T.inkMuted};margin-top:8px;margin-bottom:0;">
       Planning and implementation notes live in <code>src/routes/avatar-search/dev/PLAN.md</code>.
     </p>
-    <div class="mt-3">
-      <a class="btn btn-sm btn-primary" href="/avatar-search/dev">Open development sub-route</a>
+    <div style="margin-top:12px;">
+      <a style="display:inline-flex;align-items:center;height:32px;padding:0 14px;border-radius:9999px;border:0;background:{T.primary};color:#fff;text-decoration:none;font-size:13px;font-weight:580;" href="/avatar-search/dev">Open development sub-route</a>
     </div>
   </section>
 </PageScaffold>

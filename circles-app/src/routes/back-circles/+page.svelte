@@ -12,6 +12,7 @@
   import {circles} from "$lib/shared/state/circles";
   import {avatarState} from "$lib/shared/state/avatar.svelte";
   import {circlesConfig} from "@circles-sdk/sdk";
+  import { T } from '$lib/design-system/tokens.js';
 
   const HUB_V2 = "0xc12C1E50ABB450d6205Ea2C3Fa861b3B834d13e8";
   const USDC_E = "0x2a22f9c3b484c3629090FeED35F17Ff8F88f76F0";
@@ -146,20 +147,20 @@
   });
 </script>
 
-<div class="flex flex-col items-center p-6 gap-4 max-w-xl mx-auto">
-  <div class="card w-full shadow-xl">
-    <div class="card-body space-y-4">
+<div style="display:flex;flex-direction:column;align-items:center;padding:24px;gap:16px;max-width:576px;margin:0 auto;">
+  <div style="width:100%;background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:16px;box-shadow:{T.shadow.xs};">
+    <div style="padding:24px;display:flex;flex-direction:column;gap:16px;">
 
-      <h2 class="card-title">Personal Circles Backing</h2>
+      <h2 style="font-size:18px;font-weight:600;margin:0;">Personal Circles Backing</h2>
 
-      <label class="form-control w-full">
-        <span class="label-text">Safe address</span>
-        <input class="input input-bordered w-full" bind:value={safeAddress} placeholder="0x..."/>
+      <label style="display:flex;flex-direction:column;gap:4px;width:100%;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Safe address</span>
+        <input style="width:100%;height:36px;padding:0 12px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:13px;font-family:{T.fontSans};outline:none;box-sizing:border-box;" bind:value={safeAddress} placeholder="0x..."/>
       </label>
 
-      <label class="form-control w-full">
-        <span class="label-text">Backing asset</span>
-        <select class="select select-bordered w-full" bind:value={backingAsset}>
+      <label style="display:flex;flex-direction:column;gap:4px;width:100%;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Backing asset</span>
+        <select style="width:100%;height:36px;padding:0 12px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:13px;font-family:{T.fontSans};outline:none;box-sizing:border-box;" bind:value={backingAsset}>
           <option value="0x0000000000000000000000008e5bbbb09ed1ebde8674cda39a0c169401db4252">WBTC</option>
           <option value="0x0000000000000000000000006a023ccd1ff6f2045c3309768ead9e68f978f6e1">WETH</option>
           <option value="0x0000000000000000000000009c58bacc331c9aa871afd802db6379a98e80cedb">GNO</option>
@@ -167,34 +168,28 @@
         </select>
       </label>
 
-      <div class="flex gap-3">
-        <button class="btn btn-primary flex-1" onclick={connect}>
+      <div style="display:flex;gap:12px;">
+        <button style="flex:1;height:40px;border-radius:9999px;border:0;background:{T.primary};color:#fff;cursor:pointer;font-family:{T.fontSans};font-size:14px;font-weight:580;" onclick={connect}>
           {runner ? "Connected" : "Connect Wallet"}
         </button>
-        <button class="btn btn-outline flex-1" onclick={run} disabled={!runner}>
+        <button style="flex:1;height:40px;border-radius:9999px;border:1px solid {T.hairlineSoft};background:transparent;color:{T.inkBody};cursor:pointer;font-family:{T.fontSans};font-size:14px;" onclick={run} disabled={!runner}>
           Run Flow
         </button>
       </div>
 
       {#if circlesBacking}
-        <div class="alert alert-info break-all">
+        <div style="font-size:12px;color:{T.primary};background:{T.lilacSoft};border:1px solid rgba(88,73,212,0.18);border-radius:10px;padding:10px 14px;word-break:break-all;">
           CirclesBacking: {circlesBacking}
         </div>
       {/if}
 
       {#if txHash}
-        <div class="alert alert-success break-all">
+        <div style="font-size:12px;color:{T.positive};background:{T.sageSoft};border:1px solid rgba(34,197,94,0.18);border-radius:10px;padding:10px 14px;word-break:break-all;">
           Tx: {txHash}
         </div>
       {/if}
 
-      <pre class="p-3 border-2 rounded-md h-48 overflow-y-auto whitespace-pre-wrap text-xs">{log}</pre>
+      <pre style="padding:12px;border:2px solid {T.hairlineSoft};border-radius:8px;height:192px;overflow-y:auto;white-space:pre-wrap;font-size:11px;font-family:{T.fontMono};">{log}</pre>
     </div>
   </div>
 </div>
-
-<style>
-    .alert {
-        word-break: break-word;
-    }
-</style>

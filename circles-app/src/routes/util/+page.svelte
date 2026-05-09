@@ -1,5 +1,6 @@
 <script lang="ts">
   import * as bip39 from 'bip39';
+  import { T } from '$lib/design-system/tokens.js';
   import { Wallet } from 'ethers';
 
   let mnemonicInput: string = $state('');
@@ -73,31 +74,31 @@
 </script>
 
 <div class="page page--lg py-6">
-  <h1 class="text-2xl font-semibold">Utility: BIP39 Key Helper</h1>
-  <p class="mt-2 text-sm opacity-80">
+  <h1 style="font-size:22px;font-weight:600;margin:0;">Utility: BIP39 Key Helper</h1>
+  <p style="margin-top:8px;font-size:13px;opacity:0.8;">
     Generate a random 24-word mnemonic and derive the corresponding EOA address and hex private key.
   </p>
 
-  <div class="alert alert-warning mt-4 text-sm">
+  <div style="margin-top:16px;font-size:13px;background:{T.warningSoft};border:1px solid rgba(245,158,11,0.18);border-radius:10px;padding:10px 14px;color:{T.warning};">
     <span>
       Sensitive data warning: do not use generated keys with real funds unless you understand the risk.
     </span>
   </div>
 
-  <section class="mt-5 bg-base-100 border border-base-300 rounded-xl p-4 space-y-3">
-    <div class="flex flex-wrap gap-2">
-      <button class="btn btn-primary" type="button" onclick={generateMnemonic}>
+  <section style="margin-top:20px;background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;">
+    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+      <button style="height:36px;padding:0 18px;border-radius:9999px;border:0;background:{T.primary};color:#fff;cursor:pointer;font-family:{T.fontSans};font-size:13px;font-weight:580;" type="button" onclick={generateMnemonic}>
         Generate random 24-word phrase
       </button>
       <button
-        class="btn btn-ghost"
+        style="height:36px;padding:0 18px;border-radius:9999px;border:0;background:transparent;color:{T.inkMuted};cursor:pointer;font-family:{T.fontSans};font-size:13px;"
         type="button"
         onclick={() => deriveFromMnemonic(mnemonicInput)}
       >
         Derive from phrase
       </button>
       <button
-        class="btn btn-ghost"
+        style="height:36px;padding:0 18px;border-radius:9999px;border:0;background:transparent;color:{T.inkMuted};cursor:pointer;font-family:{T.fontSans};font-size:13px;"
         type="button"
         onclick={() => {
           mnemonicInput = '';
@@ -113,60 +114,60 @@
       </button>
     </div>
 
-    <label class="form-control">
-      <span class="label-text">Mnemonic phrase</span>
+    <label style="display:flex;flex-direction:column;gap:4px;">
+      <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Mnemonic phrase</span>
       <textarea
-        class="textarea textarea-bordered min-h-28"
+        style="width:100%;min-height:112px;padding:8px 12px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:13px;font-family:{T.fontSans};outline:none;box-sizing:border-box;resize:vertical;"
         bind:value={mnemonicInput}
         oninput={(e) => deriveFromMnemonic((e.currentTarget as HTMLTextAreaElement).value)}
         placeholder="Paste or generate a 12/24 word BIP39 phrase"
       ></textarea>
     </label>
 
-    <div class="text-xs opacity-70">Word count: {mnemonicWordsCount}</div>
+    <div style="font-size:11px;opacity:0.7;">Word count: {mnemonicWordsCount}</div>
 
     {#if error}
-      <div class="alert alert-error text-sm"><span>{error}</span></div>
+      <div style="font-size:13px;color:{T.negative};background:{T.negativeSoft};border:1px solid rgba(196,68,48,0.18);border-radius:10px;padding:10px 14px;"><span>{error}</span></div>
     {/if}
 
-    <div class="space-y-2">
+    <div style="display:flex;flex-direction:column;gap:8px;">
       <div>
-        <div class="flex items-center justify-between gap-2 mb-1">
-          <div class="text-xs uppercase opacity-60">Entropy (hex)</div>
-          <button class="btn btn-xs btn-ghost" type="button" onclick={() => copyValue('Entropy', entropyHex)}>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;">
+          <div style="font-size:10px;text-transform:uppercase;opacity:0.6;">Entropy (hex)</div>
+          <button style="height:24px;padding:0 10px;border-radius:9999px;border:0;background:transparent;color:{T.inkMuted};cursor:pointer;font-family:{T.fontSans};font-size:11px;" type="button" onclick={() => copyValue('Entropy', entropyHex)}>
             Copy
           </button>
         </div>
-        <pre class="bg-base-200 rounded p-2 text-xs overflow-x-auto">{entropyHex || '-'}</pre>
+        <pre style="background:{T.pageDeep};border-radius:6px;padding:8px;font-size:11px;overflow-x:auto;font-family:{T.fontMono};">{entropyHex || '-'}</pre>
       </div>
 
       <div>
-        <div class="flex items-center justify-between gap-2 mb-1">
-          <div class="text-xs uppercase opacity-60">EOA address</div>
-          <button class="btn btn-xs btn-ghost" type="button" onclick={() => copyValue('Address', address)}>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;">
+          <div style="font-size:10px;text-transform:uppercase;opacity:0.6;">EOA address</div>
+          <button style="height:24px;padding:0 10px;border-radius:9999px;border:0;background:transparent;color:{T.inkMuted};cursor:pointer;font-family:{T.fontSans};font-size:11px;" type="button" onclick={() => copyValue('Address', address)}>
             Copy
           </button>
         </div>
-        <pre class="bg-base-200 rounded p-2 text-xs overflow-x-auto">{address || '-'}</pre>
+        <pre style="background:{T.pageDeep};border-radius:6px;padding:8px;font-size:11px;overflow-x:auto;font-family:{T.fontMono};">{address || '-'}</pre>
       </div>
 
       <div>
-        <div class="flex items-center justify-between gap-2 mb-1">
-          <div class="text-xs uppercase opacity-60">Hex private key</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;">
+          <div style="font-size:10px;text-transform:uppercase;opacity:0.6;">Hex private key</div>
           <button
-            class="btn btn-xs btn-ghost"
+            style="height:24px;padding:0 10px;border-radius:9999px;border:0;background:transparent;color:{T.inkMuted};cursor:pointer;font-family:{T.fontSans};font-size:11px;"
             type="button"
             onclick={() => copyValue('Private key', privateKey)}
           >
             Copy
           </button>
         </div>
-        <pre class="bg-base-200 rounded p-2 text-xs overflow-x-auto">{privateKey || '-'}</pre>
+        <pre style="background:{T.pageDeep};border-radius:6px;padding:8px;font-size:11px;overflow-x:auto;font-family:{T.fontMono};">{privateKey || '-'}</pre>
       </div>
     </div>
 
     {#if copied}
-      <div class="text-xs text-success">{copied}</div>
+      <div style="font-size:11px;color:{T.positive};">{copied}</div>
     {/if}
   </section>
 </div>

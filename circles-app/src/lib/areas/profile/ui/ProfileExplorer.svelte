@@ -13,6 +13,7 @@
     import type { Profile } from '@circles-sdk/profiles';
     import { validateProfile } from '$lib/shared/ui/profile/profileValidation';
     import { isDataUrl } from '$lib/shared/media/imageTools';
+    import { T } from '$lib/design-system/tokens.js';
 
     interface Props {
         avatar?: Address;
@@ -169,15 +170,15 @@
     });
 </script>
 
-<div class="space-y-4">
+<div style="display:flex;flex-direction:column;gap:16px;">
     {#if error}
-        <div class="alert alert-error text-xs">{error}</div>
+        <div style="font-size:12px;color:{T.negative};background:{T.negativeSoft};border:1px solid rgba(196,68,48,0.18);border-radius:10px;padding:10px 14px;">{error}</div>
     {/if}
 
     {#if validationErrors && validationErrors.length > 0}
-        <div class="alert alert-error text-xs">
-            <div class="font-semibold">Profile validation error</div>
-            <ul class="list-disc ml-4">
+        <div style="font-size:12px;color:{T.negative};background:{T.negativeSoft};border:1px solid rgba(196,68,48,0.18);border-radius:10px;padding:10px 14px;">
+            <div style="font-weight:600;">Profile validation error</div>
+            <ul style="list-style:disc;margin-left:16px;">
                 {#each validationErrors as ve}
                     <li>{ve}</li>
                 {/each}
@@ -186,7 +187,7 @@
     {/if}
 
     <!-- Header editor panel -->
-    <section class="bg-base-100 border border-base-300 rounded-xl p-4 shadow-sm">
+    <section style="background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;padding:16px;box-shadow:{T.shadow.xs};">
         <ProfileFormStep
             bind:name
             bind:description
@@ -199,9 +200,9 @@
     </section>
 
     {#if isOwner}
-        <div class="sticky bottom-0 z-10 bg-base-100/90 backdrop-blur border border-base-300 rounded-xl p-3 flex items-center justify-end gap-2">
-            <button class="btn btn-ghost btn-sm" type="button" onclick={resetChanges} disabled={!hasChanges}>Cancel</button>
-            <button class="btn btn-primary btn-sm" type="button" onclick={saveProfile} disabled={!canSave}>Save</button>
+        <div style="position:sticky;bottom:0;z-index:10;background:rgba(255,255,255,0.9);backdrop-filter:blur(8px);border:1px solid {T.hairlineSoft};border-radius:14px;padding:12px;display:flex;align-items:center;justify-content:flex-end;gap:8px;">
+            <button style="height:32px;padding:0 14px;border-radius:9999px;border:0;background:transparent;color:{T.inkMuted};cursor:pointer;font-family:{T.fontSans};font-size:13px;" type="button" onclick={resetChanges} disabled={!hasChanges}>Cancel</button>
+            <button style="height:32px;padding:0 14px;border-radius:9999px;border:0;background:{T.primary};color:#fff;cursor:pointer;font-family:{T.fontSans};font-size:13px;font-weight:580;box-shadow:0 4px 12px rgba(88,73,212,0.25);" type="button" onclick={saveProfile} disabled={!canSave}>Save</button>
         </div>
     {/if}
 </div>

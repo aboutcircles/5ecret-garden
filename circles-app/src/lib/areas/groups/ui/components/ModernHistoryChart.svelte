@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Chart from 'chart.js/auto';
+  import { T } from '$lib/design-system/tokens.js';
 
   interface Props {
     dataSet1: Array<Record<string, any> & { timestamp: Date }>;
@@ -195,14 +196,14 @@
   });
 </script>
 
-<div class="relative">
-  <div class="flex items-center justify-between mb-4">
-    <h3 class="text-sm font-medium text-base-content/80">{title}</h3>
-    <div class="flex items-center">
-      <span class="text-xs text-base-content/70 mr-2">Day/Hour</span>
+<div style="position:relative;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    <h3 style="font-size:13px;font-weight:500;color:{T.inkBody};margin:0;">{title}</h3>
+    <div style="display:flex;align-items:center;">
+      <span style="font-size:11px;color:{T.inkMuted};margin-right:8px;">Day/Hour</span>
       <input
         type="checkbox"
-        class="toggle toggle-sm bg-base-300"
+        style="width:32px;height:18px;accent-color:{T.primary};"
         checked={resolution === 'hour'}
         onclick={({ currentTarget }) => {
           resolution = currentTarget.checked ? 'hour' : 'day';
@@ -211,8 +212,8 @@
       />
     </div>
   </div>
-  
-  <div class="rounded-lg overflow-hidden bg-gradient-to-br from-transparent via-base-200/40 to-transparent p-px min-h-[250px]">
-    <canvas bind:this={canvas} class="w-full h-full"></canvas>
+
+  <div style="border-radius:10px;overflow:hidden;background:{T.pageDeep};min-height:250px;">
+    <canvas bind:this={canvas} style="width:100%;height:100%;"></canvas>
   </div>
 </div>
