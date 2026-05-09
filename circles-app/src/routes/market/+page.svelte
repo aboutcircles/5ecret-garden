@@ -11,9 +11,6 @@
     import { T } from '$lib/design-system/tokens.js';
     import Icon from '$lib/design-system/Icon.svelte';
 
-    const CATEGORIES = ['All', 'Goods', 'Food', 'Services', 'Time', 'Events'];
-    let activeCategory = $state('All');
-
     // Defaults (as requested)
     const OPERATOR: `0x${string}` = gnosisConfig.production.marketOperator;
 
@@ -317,26 +314,6 @@
                     Post offer
                 </button>
             </div>
-        </div>
-
-        <!-- Category filter chips -->
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:16px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;">
-            {#each CATEGORIES as cat}
-                {@const active = activeCategory === cat}
-                <button
-                    type="button"
-                    onclick={() => activeCategory = cat}
-                    style="
-                        padding:7px 16px;border-radius:9999px;flex:0 0 auto;cursor:pointer;
-                        background:{active ? T.ink : T.surface};
-                        color:{active ? '#fff' : T.inkBody};
-                        border:{active ? 'none' : `1px solid ${T.hairline}`};
-                        font-family:{T.fontSans};font-size:12.5px;font-weight:580;
-                        box-shadow:{active ? 'none' : T.shadow.xs};
-                        transition:background .12s,color .12s;
-                    "
-                >{cat}</button>
-            {/each}
         </div>
 
         <!-- Body -->

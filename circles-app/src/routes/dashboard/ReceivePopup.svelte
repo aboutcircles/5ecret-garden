@@ -48,22 +48,6 @@
         </div>
     </div>
 
-    <!-- Request a specific amount row -->
-    <div style="
-        padding:14px 16px;border-radius:14px;
-        background:{T.surfaceAlt};border:1px solid {T.hairlineSoft};
-        display:flex;align-items:center;gap:12px;cursor:pointer;
-    ">
-        <div style="width:32px;height:32px;border-radius:9px;background:{T.primarySoft};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <Icon name="sparkle" size={15} stroke={T.primary} strokeWidth={2} />
-        </div>
-        <div style="flex:1;min-width:0;">
-            <div style="font-size:13px;font-weight:580;color:{T.ink};">Request a specific amount</div>
-            <div style="font-size:11.5px;color:{T.inkMuted};margin-top:1px;">Generates a payment link with amount</div>
-        </div>
-        <Icon name="chevronRight" size={14} stroke={T.inkFaint} />
-    </div>
-
     <!-- Copy / Share buttons -->
     <div style="display:flex;align-items:center;gap:8px;">
         <button
