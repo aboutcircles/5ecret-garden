@@ -97,6 +97,15 @@
         }
     }
 
+    let menuOpen = $state(false);
+
+    $effect(() => {
+        if (!menuOpen) return;
+        const close = () => { menuOpen = false; };
+        const timer = setTimeout(() => window.addEventListener('click', close, { once: true }), 0);
+        return () => { clearTimeout(timer); window.removeEventListener('click', close); };
+    });
+
     let copyIcon = $state('/copy.svg');
     function handleCopy() {
         navigator.clipboard.writeText(item.isWrapped ? item.tokenAddress : item.tokenId);
@@ -126,7 +135,7 @@
 
     function onRowKeydown(event: KeyboardEvent): void {
         const target = event.target as HTMLElement | null;
-        if (target?.closest('.dropdown')) {
+        if (target?.closest('[data-row-menu]')) {
             return;
         }
         listNavigator.onRowKeydown(event);
@@ -134,7 +143,7 @@
 
     function onRowWrapperClick(event: MouseEvent): void {
         const target = event.target as HTMLElement | null;
-        if (target?.closest('.dropdown')) {
+        if (target?.closest('[data-row-menu]')) {
             return;
         }
         listNavigator.onRowClick(event);
@@ -317,47 +326,63 @@
         </div>
 
         {#if !avatarState.isGroup}
-            <div class="dropdown dropdown-end z-20" onclick={(e)=>e.stopPropagation()}>
+            <div data-row-menu style="position:relative;z-index:20;" onclick={(e)=>e.stopPropagation()}>
                 <button
-                    tabindex="0"
                     style="width:30px;height:30px;border-radius:9999px;background:{T.pageDeep};color:{T.inkMuted};border:0;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;"
                     aria-label="Row actions"
-                    onclick={(e)=>e.stopPropagation()}
+                    onclick={(e)=>{ e.stopPropagation(); menuOpen = !menuOpen; }}
                 >
                     <img src="/union.svg" alt="" style="width:14px;height:14px;opacity:0.7;" aria-hidden="true" />
                 </button>
-                <ul class="dropdown-content menu menu-sm bg-base-100 rounded-box shadow z-[200] w-56 p-2" onclick={(e)=>e.stopPropagation()}>
-                    {#each actions as action (action.title)}
-                        {#if action.condition(item)}
+                {#if menuOpen}
+                    <ul
+                        style="position:absolute;right:0;top:calc(100% + 4px);background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:12px;box-shadow:{T.shadow.xs};z-index:200;width:224px;padding:8px;list-style:none;margin:0;"
+                        onclick={(e)=>e.stopPropagation()}
+                    >
+                        {#each actions as action (action.title)}
+                            {#if action.condition(item)}
+                                <li>
+                                    <button
+                                        style="display:flex;align-items:center;gap:8px;width:100%;padding:7px 10px;border:0;background:transparent;border-radius:8px;cursor:pointer;font-size:13px;color:{T.inkBody};font-family:{T.fontSans};text-align:left;"
+                                        onclick={(e)=>{ e.stopPropagation(); menuOpen = false; executeAction(action); }}
+                                    >
+                                        <img src={action.icon} alt="" style="width:16px;height:16px;" aria-hidden="true" />
+                                        {action.title}
+                                    </button>
+                                </li>
+                            {/if}
+                        {/each}
+                        <li>
+                            <button
+                                style="display:flex;align-items:center;gap:8px;width:100%;padding:7px 10px;border:0;background:transparent;border-radius:8px;cursor:pointer;font-size:13px;color:{T.inkBody};font-family:{T.fontSans};text-align:left;"
+                                onclick={(e)=>{ e.stopPropagation(); menuOpen = false; handleCopy(); }}
+                            >
+                                <img src={copyIcon} alt="" style="width:16px;height:16px;" aria-hidden="true" />
+                                Copy
+                            </button>
+                        </li>
+                        <li>
+                            <button
+                                style="display:flex;align-items:center;gap:8px;width:100%;padding:7px 10px;border:0;background:transparent;border-radius:8px;cursor:pointer;font-size:13px;color:{T.inkBody};font-family:{T.fontSans};text-align:left;"
+                                onclick={(e)=>{ e.stopPropagation(); menuOpen = false; void handleReadHubBalance(); }}
+                            >
+                                <img src="/banknotes.svg" alt="" style="width:16px;height:16px;" aria-hidden="true" />
+                                Check hub balance
+                            </button>
+                        </li>
+                        {#if item.isErc1155}
                             <li>
-                                <button onclick={(e)=>{ e.stopPropagation(); executeAction(action); }}>
-                                    <img src={action.icon} alt="" class="icon" aria-hidden="true" />
-                                    {action.title}
+                                <button
+                                    style="display:flex;align-items:center;gap:8px;width:100%;padding:7px 10px;border:0;background:transparent;border-radius:8px;cursor:pointer;font-size:13px;color:{T.negative};font-family:{T.fontSans};text-align:left;"
+                                    onclick={(e)=>{ e.stopPropagation(); menuOpen = false; void handleBurnFullBalance(); }}
+                                >
+                                    <img src="/fire.svg" alt="" style="width:16px;height:16px;" aria-hidden="true" />
+                                    Burn
                                 </button>
                             </li>
                         {/if}
-                    {/each}
-                    <li>
-                        <button onclick={(e)=>{ e.stopPropagation(); handleCopy(); }}>
-                            <img src={copyIcon} alt="" class="icon" aria-hidden="true" />
-                            Copy
-                        </button>
-                    </li>
-                    <li>
-                        <button onclick={(e)=>{ e.stopPropagation(); void handleReadHubBalance(); }}>
-                            <img src="/banknotes.svg" alt="" class="icon" aria-hidden="true" />
-                            Check hub balance
-                        </button>
-                    </li>
-                    {#if item.isErc1155}
-                        <li>
-                            <button onclick={(e)=>{ e.stopPropagation(); void handleBurnFullBalance(); }}>
-                                <img src="/fire.svg" alt="" class="icon" aria-hidden="true" />
-                                Burn
-                            </button>
-                        </li>
-                    {/if}
-                </ul>
+                    </ul>
+                {/if}
             </div>
         {/if}
     </div>
