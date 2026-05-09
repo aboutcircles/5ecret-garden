@@ -1,13 +1,13 @@
 
 {#if snapshot}
-  <section class="w-full bg-base-100 border rounded-xl shadow-sm overflow-hidden">
-    <div class="p-4 md:p-5 flex items-start justify-between gap-4">
+  <section style="width:100%;background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;box-shadow:{T.shadow.xs};overflow:hidden;">
+    <div style="padding:16px 20px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
       <!-- Left: status + order meta -->
-      <div class="min-w-0 flex-1">
-        <div class="flex items-center gap-2">
-          <span class="font-mono text-xs opacity-70 truncate" title={snapshot.orderNumber}>{snapshot.orderNumber}</span>
+      <div style="min-width:0;flex:1;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-family:{T.fontMono};font-size:11px;opacity:0.7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title={snapshot.orderNumber}>{snapshot.orderNumber}</span>
         </div>
-        <div class="mt-1 text-xs opacity-70">
+        <div style="margin-top:4px;font-size:12px;opacity:0.7;">
           {#if orderDate()}
             {formatTimestamp(orderDate())}
           {/if}
@@ -15,16 +15,16 @@
       </div>
       <!-- Right: prominent total amount like an invoice -->
       {#if priceDisplay()}
-        <div class="shrink-0 bg-base-200/60 rounded-lg px-4 py-3 text-right">
-          <div class="text-[10px] uppercase tracking-wide opacity-60">Total</div>
-          <div class="text-xl font-semibold leading-none">{priceDisplay()}</div>
+        <div style="flex-shrink:0;background:{T.pageDeep};border-radius:10px;padding:10px 16px;text-align:right;">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.06em;opacity:0.6;color:{T.inkMuted};">Total</div>
+          <div style="font-size:20px;font-weight:600;line-height:1;color:{T.ink};">{priceDisplay()}</div>
         </div>
       {/if}
     </div>
 
-    <div class="px-4 md:px-5 pb-4 md:pb-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="space-y-1">
-        <div class="text-xs uppercase tracking-wide opacity-60">Customer</div>
+    <div style="padding:0 20px 16px;display:flex;flex-direction:column;gap:16px;">
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Customer</div>
         {#if evmFromEip155(getSchemaId(snapshot.customer))}
           <Avatar
             view="horizontal"
@@ -32,11 +32,11 @@
             bottomInfo={String(evmFromEip155(getSchemaId(snapshot.customer)))}
           />
         {:else}
-          <div class="font-mono text-sm break-all">{partyId(getSchemaId(snapshot.customer))}</div>
+          <div style="font-family:{T.fontMono};font-size:13px;word-break:break-all;color:{T.ink};">{partyId(getSchemaId(snapshot.customer))}</div>
         {/if}
       </div>
-      <div class="space-y-1">
-        <div class="text-xs uppercase tracking-wide opacity-60">Broker</div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <div style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Broker</div>
         {#if evmFromEip155(getSchemaId(snapshot.broker))}
           <Avatar
             view="horizontal"
@@ -44,14 +44,14 @@
             bottomInfo={String(evmFromEip155(getSchemaId(snapshot.broker)))}
           />
         {:else}
-          <div class="font-mono text-sm break-all">{partyId(getSchemaId(snapshot.broker))}</div>
+          <div style="font-family:{T.fontMono};font-size:13px;word-break:break-all;color:{T.ink};">{partyId(getSchemaId(snapshot.broker))}</div>
         {/if}
       </div>
 
       {#if snapshot.shippingAddress}
-        <div class="space-y-1">
-          <div class="text-xs uppercase tracking-wide opacity-60">Shipping address</div>
-          <div class="text-sm leading-snug">
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Shipping address</div>
+          <div style="font-size:14px;line-height:1.4;color:{T.inkBody};">
             {snapshot.shippingAddress.streetAddress}
             <br />{snapshot.shippingAddress.postalCode} {snapshot.shippingAddress.addressLocality}
             <br />{snapshot.shippingAddress.addressCountry}
@@ -60,9 +60,9 @@
       {/if}
 
       {#if snapshot.billingAddress}
-        <div class="space-y-1">
-          <div class="text-xs uppercase tracking-wide opacity-60">Billing address</div>
-          <div class="text-sm leading-snug">
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Billing address</div>
+          <div style="font-size:14px;line-height:1.4;color:{T.inkBody};">
             {snapshot.billingAddress.streetAddress}
             <br />{snapshot.billingAddress.postalCode} {snapshot.billingAddress.addressLocality}
             <br />{snapshot.billingAddress.addressCountry}
@@ -71,58 +71,58 @@
       {/if}
     </div>
 
-    <div class="px-4 md:px-5 py-3 border-t text-xs uppercase tracking-wide opacity-60">Items</div>
-    <div class="px-4 md:px-5 pb-4 md:pb-5 flex flex-col gap-3">
+    <div style="padding:12px 20px;border-top:1px solid {T.hairlineSoft};font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Items</div>
+    <div style="padding:0 20px 16px;display:flex;flex-direction:column;gap:12px;">
       {#each sellerGroups as grp, gi (gi)}
         <!-- Seller header -->
-        <div class="border rounded-lg overflow-hidden bg-base-100/80 shadow-sm">
-          <div class="px-3 py-2 border-b bg-base-200/60 flex items-center justify-between">
-            <div class="min-w-0">
+        <div style="border:1px solid {T.hairlineSoft};border-radius:10px;overflow:hidden;background:rgba(255,255,255,0.8);box-shadow:{T.shadow.xs};">
+          <div style="padding:8px 12px;border-bottom:1px solid {T.hairlineSoft};background:{T.pageDeep};display:flex;align-items:center;justify-content:space-between;">
+            <div style="min-width:0;">
               {#if grp.evm}
                 <Avatar view="horizontal" address={grp.evm} bottomInfo={shortAddr(grp.evm)} />
               {:else}
-                <div class="text-xs uppercase tracking-wide opacity-60">Seller</div>
-                <div class="font-mono text-sm break-all">{grp.sellerId ?? 'Unknown'}</div>
+                <div style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Seller</div>
+                <div style="font-family:{T.fontMono};font-size:13px;word-break:break-all;color:{T.ink};">{grp.sellerId ?? 'Unknown'}</div>
               {/if}
             </div>
-            <div class="shrink-0 text-[11px] opacity-60">{grp.indices.length} item{grp.indices.length === 1 ? '' : 's'}</div>
+            <div style="flex-shrink:0;font-size:11px;opacity:0.6;">{grp.indices.length} item{grp.indices.length === 1 ? '' : 's'}</div>
           </div>
 
           <!-- Lines for this seller -->
-          <div class="divide-y divide-base-200">
+          <div style="display:flex;flex-direction:column;">
             {#each grp.indices as i}
-              <div class="px-3 py-2 bg-base-200/20 cursor-pointer hover:bg-base-200/40 focus:outline-none focus:ring-2 focus:ring-primary/40"
+              <div style="padding:8px 12px;background:rgba(0,0,0,0.02);cursor:pointer;border-top:1px solid {T.hairlineSoft};"
                    role="button" tabindex="0"
                    onclick={() => goToOffer(i)}
                    onkeydown={(e) => onKeyGoToOffer(e, i)}>
-                <div class="flex items-start justify-between gap-3">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
                   <!-- Left: thumbnail + title -->
-                  <div class="flex items-center gap-3 min-w-0">
-                    <div class="w-14 h-14 rounded bg-base-200 overflow-hidden shrink-0 flex items-center justify-center">
+                  <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+                    <div style="width:56px;height:56px;border-radius:6px;background:{T.pageDeep};overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
                       {#if resolved[i]?.imageUrl}
                         <img src={resolved[i]?.imageUrl || ''}
                              alt={resolved[i]?.name ?? lineAt(i)?.orderedItem?.sku ?? 'Product image'}
-                             class="w-14 h-14 object-cover" />
+                             style="width:56px;height:56px;object-fit:cover;" />
                       {:else}
-                        <span class="text-[10px] opacity-60">No image</span>
+                        <span style="font-size:10px;opacity:0.6;">No image</span>
                       {/if}
                     </div>
 
-                    <div class="min-w-0">
-                      <div class="font-semibold truncate">{resolved[i]?.name || lineAt(i)?.orderedItem?.name || lineAt(i)?.orderedItem?.sku || 'Item'}</div>
-                      <div class="text-xs opacity-70 mt-0.5">Qty: {lineAt(i)?.orderQuantity ?? 1}</div>
+                    <div style="min-width:0;">
+                      <div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:{T.ink};">{resolved[i]?.name || lineAt(i)?.orderedItem?.name || lineAt(i)?.orderedItem?.sku || 'Item'}</div>
+                      <div style="font-size:12px;opacity:0.7;margin-top:2px;color:{T.inkMuted};">Qty: {lineAt(i)?.orderQuantity ?? 1}</div>
                       {#if lineAt(i)?.productCid}
-                        <div class="font-mono text-[11px] opacity-70 break-all">{lineAt(i)?.productCid}</div>
+                        <div style="font-family:{T.fontMono};font-size:11px;opacity:0.7;word-break:break-all;">{lineAt(i)?.productCid}</div>
                       {/if}
                     </div>
                   </div>
 
                   <!-- Right: prices -->
-                  <div class="text-right shrink-0">
+                  <div style="text-align:right;flex-shrink:0;">
                     {#if unitPrice(i).amount != null}
-                      <div class="text-xs opacity-70">{formatCurrency(unitPrice(i).amount, unitPrice(i).code)} each</div>
+                      <div style="font-size:12px;opacity:0.7;color:{T.inkMuted};">{formatCurrency(unitPrice(i).amount, unitPrice(i).code)} each</div>
                     {/if}
-                    <div class="font-semibold">
+                    <div style="font-weight:600;color:{T.ink};">
                       {#if lineTotal(i).amount != null}
                         {formatCurrency(lineTotal(i).amount, lineTotal(i).code)}
                       {:else}
@@ -137,25 +137,25 @@
         </div>
       {/each}
       {#if (snapshot.orderedItem ?? []).length === 0}
-        <div class="text-sm opacity-70">No items</div>
+        <div style="font-size:14px;opacity:0.7;color:{T.inkMuted};">No items</div>
       {/if}
     </div>
 
-    <div class="px-4 md:px-5 pt-3 border-t text-xs uppercase tracking-wide opacity-60">
+    <div style="padding:12px 20px;border-top:1px solid {T.hairlineSoft};font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">
       Status history
     </div>
-    <div class="px-4 md:px-5 pb-3 flex flex-col gap-1.5 text-sm">
+    <div style="padding:0 20px 12px;display:flex;flex-direction:column;gap:6px;font-size:14px;">
       {#if timeline.length === 0}
-        <div class="text-xs opacity-70">No status changes recorded.</div>
+        <div style="font-size:12px;opacity:0.7;color:{T.inkMuted};">No status changes recorded.</div>
       {:else}
         {#each timeline as evt, idx}
-          <div class="flex items-start gap-2">
-            <div class="mt-1 w-2 h-2 rounded-full {idx === timeline.length - 1 ? 'bg-primary' : 'bg-base-300'}"></div>
-            <div class="flex flex-col">
-              <div class="font-medium">
+          <div style="display:flex;align-items:flex-start;gap:8px;">
+            <div style="margin-top:4px;width:8px;height:8px;border-radius:50%;flex-shrink:0;background:{idx === timeline.length - 1 ? T.primary : T.hairline};"></div>
+            <div style="display:flex;flex-direction:column;">
+              <div style="font-weight:500;color:{T.ink};">
                 {statusLabel(evt.status) ?? evt.status}
               </div>
-              <div class="text-xs opacity-70">
+              <div style="font-size:12px;opacity:0.7;color:{T.inkMuted};">
                 {formatTimestamp(evt.changedAt)}
               </div>
             </div>
@@ -165,24 +165,24 @@
     </div>
 
     {#if snapshot?.outbox && snapshot.outbox.length > 0}
-      <div class="px-4 md:px-5 pt-3 border-t text-xs uppercase tracking-wide opacity-60">
+      <div style="padding:12px 20px;border-top:1px solid {T.hairlineSoft};font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">
         Messages
       </div>
-      <div class="px-4 md:px-5 pb-3 flex flex-col gap-2 text-sm">
+      <div style="padding:0 20px 12px;display:flex;flex-direction:column;gap:8px;font-size:14px;">
         {#each snapshot.outbox as item}
-          <div class="border rounded-lg bg-base-100/60 p-2 space-y-1">
-            <div class="flex items-center justify-between gap-2">
-              <div class="flex items-center gap-2">
+          <div style="border:1px solid {T.hairlineSoft};border-radius:10px;background:rgba(255,255,255,0.6);padding:8px;display:flex;flex-direction:column;gap:4px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <div style="display:flex;align-items:center;gap:8px;">
                 {#if !isMessagePayload(item.payload)}
-                  <span class={`badge badge-xs ${badgeForOutbox(item.payload)}`}>
+                  <span style="font-size:10px;padding:2px 6px;border-radius:4px;background:{T.pageDeep};color:{T.inkMuted};font-family:{T.fontSans};">
                     {outboxLabel(item.payload)}
                   </span>
                 {/if}
                 {#if item.source}
-                  <span class="text-[11px] opacity-60">{item.source}</span>
+                  <span style="font-size:11px;opacity:0.6;color:{T.inkMuted};">{item.source}</span>
                 {/if}
               </div>
-              <span class="text-[11px] opacity-60">
+              <span style="font-size:11px;opacity:0.6;color:{T.inkMuted};">
                 {formatTimestamp(item.createdAt)}
               </span>
             </div>
@@ -194,46 +194,46 @@
     {/if}
   </section>
 {:else}
-  <div class="text-sm opacity-70">No order data</div>
+  <div style="font-size:14px;opacity:0.7;color:{T.inkMuted};">No order data</div>
 {/if}
 
 {#snippet OutboxPayloadView({ payload })}
   {#if isKnownDownloadPayload(payload)}
-    <div class="flex items-center gap-2">
+    <div style="display:flex;align-items:center;gap:8px;">
       <JumpLink
-        className="btn btn-xs btn-primary"
+        style="display:inline-flex;align-items:center;height:36px;padding:0 18px;border-radius:9999px;border:0;background:{T.primary};color:#fff;text-decoration:none;font-family:{T.fontSans};font-size:13px;font-weight:580;box-shadow:0 4px 12px rgba(88,73,212,0.25);"
         url={payload.downloadUrl || payload.contentUrl}
       >
         Download
       </JumpLink>
       {#if payload.expiresAt}
-        <span class="text-[11px] opacity-70">
+        <span style="font-size:11px;opacity:0.7;color:{T.inkMuted};">
           Expires: {formatTimestamp(payload.expiresAt)}
         </span>
       {/if}
     </div>
   {:else if isVoucherPayload(payload)}
-    <div class="text-xs flex items-start gap-2">
-      <span class="opacity-70 shrink-0 mt-0.5">Codes:</span>
-      <ul class="m-0 p-0 list-none space-y-1.5">
+    <div style="font-size:12px;display:flex;align-items:flex-start;gap:8px;">
+      <span style="opacity:0.7;flex-shrink:0;margin-top:2px;color:{T.inkMuted};">Codes:</span>
+      <ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;">
         {#each voucherCodes(payload) as c}
-          <li class="max-w-full">
-            <code class="font-mono text-[11px] break-all inline-block max-w-full px-1.5 py-1 bg-base-200/80 border border-base-300 rounded">{c}</code>
+          <li style="max-width:100%;">
+            <code style="font-family:{T.fontMono};font-size:11px;word-break:break-all;display:inline-block;max-width:100%;padding:2px 6px;background:{T.pageDeep};border:1px solid {T.hairlineSoft};border-radius:4px;">{c}</code>
           </li>
         {/each}
       </ul>
     </div>
   {:else if isMessagePayload(payload)}
-    <div class="flex flex-col gap-1.5">
-      <div class="text-sm font-semibold">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div style="font-size:14px;font-weight:600;color:{T.ink};">
         {messageSubject(payload)}
       </div>
       {#if payload.text}
-        <div class="text-sm leading-relaxed whitespace-pre-line opacity-90">{payload.text}</div>
+        <div style="font-size:14px;line-height:1.6;white-space:pre-line;opacity:0.9;color:{T.inkBody};">{payload.text}</div>
       {/if}
     </div>
   {:else}
-    <pre class="text-[11px] bg-base-200/80 rounded-md p-2 overflow-auto">{JSON.stringify(payload, null, 2)}</pre>
+    <pre style="font-size:11px;background:{T.pageDeep};border-radius:8px;padding:8px;overflow:auto;">{JSON.stringify(payload, null, 2)}</pre>
   {/if}
 {/snippet}
 
@@ -241,6 +241,7 @@
 </style>
 
 <script lang="ts">
+  import { T } from '$lib/design-system/tokens.js';
   import { formatCurrency } from '$lib/shared/utils/money';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import JumpLink from '$lib/shared/ui/content/jump/JumpLink.svelte';
