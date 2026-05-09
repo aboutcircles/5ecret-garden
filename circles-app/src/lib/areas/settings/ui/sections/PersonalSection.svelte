@@ -17,6 +17,7 @@ import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
     profileCidLoading: boolean;
     profileCidError: string | null;
     copyProfileCid: () => Promise<void>;
+    loadProfileCid?: () => Promise<void>;
 
     migrateToV2: () => Promise<void>;
     stopV1: () => Promise<void>;
@@ -30,6 +31,7 @@ import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
     profileCidLoading,
     profileCidError,
     copyProfileCid,
+    loadProfileCid,
     migrateToV2,
     stopV1,
   }: Props = $props();
@@ -57,7 +59,12 @@ import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
       <span style="font-size:12px;color:{T.inkMuted};">No profile yet</span>
     {/if}
     {#if profileCidError}
-      <span style="font-size:11.5px;color:{T.negative};">{profileCidError}</span>
+      <div style="display:flex;align-items:center;gap:8px;flex-basis:100%;margin-top:6px;padding:8px 10px;border-radius:8px;background:{T.negativeSoft};border:1px solid rgba(196,68,48,0.2);">
+        <span style="font-size:11.5px;color:{T.inkBody};flex:1;">{profileCidError}</span>
+        {#if loadProfileCid}
+          <button type="button" onclick={() => void loadProfileCid()} style="height:24px;padding:0 10px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.ink};font-size:11px;font-weight:540;cursor:pointer;">Retry</button>
+        {/if}
+      </div>
     {/if}
   </div>
 </section>

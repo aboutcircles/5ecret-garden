@@ -86,7 +86,12 @@
     rowSelector: '[data-market-order-row]'
   });
 
+  let signInError: string | null = $state(null);
+  let signInPending: boolean = $state(false);
+
   async function ensureAuthed() {
+    signInPending = true;
+    signInError = null;
     try {
       const avatar = (
         (avatarState.avatar as any)?.address ??
@@ -101,8 +106,10 @@
       await signInWithSafe(avatar);
       authed = !!getMarketClient().auth.getAuthMeta();
     } catch (e) {
-      console.error('[sales] safe sign-in failed:', e);
+      signInError = e instanceof Error ? e.message : String(e);
       authed = false;
+    } finally {
+      signInPending = false;
     }
   }
 
@@ -158,6 +165,16 @@
   {#snippet collapsedMenu()}
     <ActionButtonDropDown {actions} />
   {/snippet}
+
+  {#if signInError}
+    <section style="background:#FFFFFF;border:1px solid rgba(196,68,48,0.2);border-radius:12px;padding:14px 16px;margin-bottom:12px;display:flex;flex-direction:column;gap:10px;align-items:flex-start;">
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:13.5px;font-weight:580;color:#0F0A1E;">Couldn't sign in</span>
+        <span style="font-size:12px;color:rgba(15,10,30,0.62);">{signInError}</span>
+      </div>
+      <button type="button" disabled={signInPending} onclick={() => void ensureAuthed()} style="height:32px;padding:0 14px;border-radius:9999px;border:1px solid rgba(15,10,30,0.12);background:#FFFFFF;color:#0F0A1E;font-size:12.5px;font-weight:540;cursor:{signInPending ? 'not-allowed' : 'pointer'};opacity:{signInPending ? 0.6 : 1};">{signInPending ? 'Signing in…' : 'Retry sign-in'}</button>
+    </section>
+  {/if}
 
   <section style="background:#FFFFFF;border:1px solid rgba(31,17,70,0.05);border-radius:12px;padding:12px;">
     <ListShell

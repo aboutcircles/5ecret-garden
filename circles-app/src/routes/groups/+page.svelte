@@ -249,7 +249,13 @@
                         {/each}
                     </div>
                 {:else if ownedGroupsError}
-                    <p style="font-size:13.5px;color:{T.negative};">{ownedGroupsError}</p>
+                    <div style="background:{T.surface};border-radius:18px;border:1px solid rgba(196,68,48,0.2);padding:18px 16px;display:flex;flex-direction:column;gap:10px;align-items:flex-start;">
+                        <div style="display:flex;flex-direction:column;gap:4px;">
+                            <span style="font-size:13.5px;font-weight:580;color:{T.ink};">Couldn't load your groups</span>
+                            <span style="font-size:12px;color:{T.inkMuted};">{ownedGroupsError}</span>
+                        </div>
+                        <button type="button" onclick={loadOwnedGroups} style="height:32px;padding:0 14px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.ink};font-size:12.5px;font-weight:540;cursor:pointer;">Retry</button>
+                    </div>
                 {:else if ownedGroups.length > 0}
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
                         {#each ownedGroups as item, i (item.group)}
@@ -270,7 +276,13 @@
                         {/each}
                     </div>
                 {:else if membershipsError}
-                    <p style="font-size:13.5px;color:{T.negative};">{membershipsError}</p>
+                    <div style="background:{T.surface};border-radius:18px;border:1px solid rgba(196,68,48,0.2);padding:18px 16px;display:flex;flex-direction:column;gap:10px;align-items:flex-start;">
+                        <div style="display:flex;flex-direction:column;gap:4px;">
+                            <span style="font-size:13.5px;font-weight:580;color:{T.ink};">Couldn't load memberships</span>
+                            <span style="font-size:12px;color:{T.inkMuted};">{membershipsError}</span>
+                        </div>
+                        <button type="button" onclick={loadMemberships} style="height:32px;padding:0 14px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.ink};font-size:12.5px;font-weight:540;cursor:pointer;">Retry</button>
+                    </div>
                 {:else if memberships.length === 0}
                     <div style="background:{T.surface};border-radius:18px;border:1px solid {T.hairlineSoft};padding:24px 16px;text-align:center;">
                         <span style="font-size:13.5px;color:{T.inkMuted};">No group memberships</span>

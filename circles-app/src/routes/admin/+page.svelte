@@ -537,7 +537,12 @@
           </p>
         {/if}
         {#if productsError || routesError || connectionsError}
-          <p style="color:#C44430;font-size:14px;">{productsError || routesError || connectionsError}</p>
+          <div style="background:#FFFFFF;border:1px solid rgba(196,68,48,0.2);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;align-items:flex-start;">
+            {#if productsError}<span style="color:#0F0A1E;font-size:13px;">Products: {productsError}</span>{/if}
+            {#if routesError}<span style="color:#0F0A1E;font-size:13px;">Routes: {routesError}</span>{/if}
+            {#if connectionsError}<span style="color:#0F0A1E;font-size:13px;">Connections: {connectionsError}</span>{/if}
+            <button type="button" onclick={loadAdminData} disabled={loadingAny} style="height:30px;padding:0 12px;border-radius:9999px;border:1px solid rgba(31,17,70,0.12);background:#FFFFFF;color:#0F0A1E;font-size:12.5px;font-weight:540;cursor:{loadingAny ? 'not-allowed' : 'pointer'};opacity:{loadingAny ? 0.6 : 1};">{loadingAny ? 'Retrying…' : 'Retry'}</button>
+          </div>
         {:else}
           <Tabs bind:selected={selectedProductsTab} variant="boxed" size="sm" class="w-full p-0">
             <Tab id="codedispenser" title="Voucher codes" badge={codeProductsUnified.length} panelClass="pt-4">

@@ -157,10 +157,12 @@
             <div style="font-size:12.5px;color:{T.inkMuted};">Loading listings…</div>
         </div>
     {:else if errorMsg}
-        <section style="background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;padding:14px 16px;">
-            <div style="background:{T.negativeSoft};border:1px solid rgba(196,68,48,0.2);border-radius:10px;padding:10px 12px;font-size:12.5px;color:{T.inkBody};">
-                <strong>Failed to load:</strong> {errorMsg}
+        <section style="background:{T.surface};border:1px solid rgba(196,68,48,0.2);border-radius:14px;padding:18px 16px;display:flex;flex-direction:column;gap:10px;align-items:flex-start;">
+            <div style="display:flex;flex-direction:column;gap:4px;">
+                <span style="font-size:13.5px;font-weight:580;color:{T.ink};">Couldn't load this seller's listings</span>
+                <span style="font-size:12px;color:{T.inkMuted};">{errorMsg}</span>
             </div>
+            <button type="button" onclick={() => loadSellerCatalog()} style="height:32px;padding:0 14px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.ink};font-size:12.5px;font-weight:540;cursor:pointer;">Retry</button>
         </section>
     {:else}
         <section style="background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;padding:14px 16px;">

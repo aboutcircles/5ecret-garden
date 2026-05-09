@@ -50,8 +50,12 @@
       {/each}
     </div>
   {:else if marketErrorMsg}
-    <section style="background:{T.negativeSoft};border:1px solid rgba(196,68,48,0.2);border-radius:14px;padding:12px 14px;width:100%;font-size:12px;color:{T.inkBody};">
-      <strong>Failed to load:</strong> {marketErrorMsg}
+    <section style="background:{T.surface};border:1px solid rgba(196,68,48,0.2);border-radius:14px;padding:18px 16px;width:100%;display:flex;flex-direction:column;gap:10px;align-items:flex-start;">
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:13.5px;font-weight:580;color:{T.ink};">Couldn't load your listings</span>
+        <span style="font-size:12px;color:{T.inkMuted};">{marketErrorMsg}</span>
+      </div>
+      <button type="button" onclick={() => void loadSellerCatalog()} style="height:32px;padding:0 14px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.ink};font-size:12.5px;font-weight:540;cursor:pointer;">Retry</button>
     </section>
   {:else}
     <section style="background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;padding:14px 16px;width:100%;">

@@ -604,6 +604,7 @@
           {profileCidLoading}
           {profileCidError}
           {copyProfileCid}
+          {loadProfileCid}
           {migrateToV2}
           {stopV1}
         />
@@ -635,6 +636,7 @@
           {nsNamespaces}
           {nsIsOwner}
           {onNamespacesChanged}
+          reload={loadNamespacesProfile}
         />
       {:else if selectedTab === 'marketplace'}
         <MarketplaceSection

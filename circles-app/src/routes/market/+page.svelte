@@ -335,11 +335,15 @@
             </div>
         {:else if errorMsg}
             <div style="
-                padding:14px 16px;border-radius:14px;
-                background:{T.negativeSoft};border:1px solid rgba(196,68,48,0.15);color:{T.negative};
-                font-size:13.5px;
+                padding:18px 16px;border-radius:14px;
+                background:{T.surface};border:1px solid rgba(196,68,48,0.2);
+                display:flex;flex-direction:column;gap:10px;align-items:flex-start;
             ">
-                <b>Failed to load:</b> {errorMsg}
+                <div style="display:flex;flex-direction:column;gap:4px;">
+                    <span style="font-size:13.5px;font-weight:580;color:{T.ink};">Couldn't load offers</span>
+                    <span style="font-size:12px;color:{T.inkMuted};">{errorMsg}</span>
+                </div>
+                <button type="button" onclick={() => loadFirstPage()} style="height:32px;padding:0 14px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.ink};font-size:12.5px;font-weight:540;cursor:pointer;">Retry</button>
             </div>
         {:else if products.length === 0}
             <div style="background:{T.surface};border-radius:18px;border:1px solid {T.hairlineSoft};padding:32px 16px;text-align:center;">
