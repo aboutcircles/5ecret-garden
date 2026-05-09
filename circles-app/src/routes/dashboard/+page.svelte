@@ -87,15 +87,22 @@
         });
     }
 
-    // Sparkline (dummy points)
-    const sparkPoints = [22, 24, 24, 23, 24, 24, 24];
-    const sparkW = 220, sparkH = 70, sparkPad = 8;
-    const sparkMax = Math.max(...sparkPoints) + 4;
-    const sparkMin = Math.min(...sparkPoints) - 4;
-    const sparkXs = sparkPoints.map((_, i) => sparkPad + (i * (sparkW - sparkPad * 2)) / (sparkPoints.length - 1));
-    const sparkYs = sparkPoints.map((v) => sparkH - sparkPad - ((v - sparkMin) / (sparkMax - sparkMin)) * (sparkH - sparkPad * 2));
-    const sparkD = sparkXs.map((x, i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${sparkYs[i].toFixed(1)}`).join(' ');
-    const sparkArea = sparkD + ` L${sparkXs[sparkXs.length - 1]},${sparkH - sparkPad} L${sparkXs[0]},${sparkH - sparkPad} Z`;
+    const todayNet: number = $derived.by(() => {
+        const avatar = avatarState.avatar?.address?.toLowerCase();
+        if (!avatar) return 0;
+        const rows = $transactionHistory?.data ?? [];
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+        const startTs = Math.floor(startOfDay.getTime() / 1000);
+        let net = 0;
+        for (const item of rows) {
+            if ((item.timestamp ?? 0) < startTs) continue;
+            const isSent = (item.from ?? '').toLowerCase() === avatar;
+            const amount = Math.abs(item.circles ?? 0);
+            net += isSent ? -amount : amount;
+        }
+        return net;
+    });
 
     const TRANSACTION_ROW_HEIGHT = 76;
 </script>
@@ -122,31 +129,17 @@
                 overflow:hidden;
             "
         >
-            <!-- TOP ROW: eyebrow + sparkline (mobile: more btn) -->
+            <!-- TOP ROW: eyebrow + today's net (when non-zero) -->
             <div class="hero-top" style="display:flex;align-items:flex-start;justify-content:space-between;gap:24px;">
                 <div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;">
                     <span style="font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Total balance</span>
-                    <div style="margin-top:2px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                        <Pill color="sage">+ 24.00 today</Pill>
-                    </div>
-                </div>
-
-                <!-- Sparkline visible on desktop only -->
-                <div class="hero-spark" style="display:none;text-align:right;flex-shrink:0;">
-                    <div style="font-size:11.5px;color:{T.inkMuted};font-weight:580;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:4px;">7-day mint</div>
-                    <svg width={sparkW} height={sparkH}>
-                        <defs>
-                            <linearGradient id="dashSpark" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stop-color={T.primary} stop-opacity="0.25" />
-                                <stop offset="100%" stop-color={T.primary} stop-opacity="0" />
-                            </linearGradient>
-                        </defs>
-                        <path d={sparkArea} fill="url(#dashSpark)" />
-                        <path d={sparkD} stroke={T.primary} stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round" />
-                        {#each sparkXs as x, i}
-                            <circle cx={x} cy={sparkYs[i]} r={i === sparkXs.length - 1 ? 3 : 1.5} fill={T.primary} />
-                        {/each}
-                    </svg>
+                    {#if Math.abs(todayNet) >= 0.01}
+                        <div style="margin-top:2px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                            <Pill color={todayNet >= 0 ? 'sage' : 'coral'}>
+                                {todayNet >= 0 ? '+' : '−'} {roundToDecimals(Math.abs(todayNet))} today
+                            </Pill>
+                        </div>
+                    {/if}
                 </div>
             </div>
 
@@ -190,7 +183,6 @@
                     { label: 'Send',    icon: 'send',    primary: true,  onClick: openSend },
                     { label: 'Receive', icon: 'receive', primary: false, onClick: openReceive },
                     { label: 'Trust',   icon: 'trust',   primary: false, onClick: openTrust },
-                    { label: 'Scan',    icon: 'scan',    primary: false, onClick: openSend },
                 ] as a}
                     <button
                         onclick={a.onClick}
@@ -273,9 +265,7 @@
 </div>
 
 <style>
-    /* Reveal sparkline on desktop only */
     @media (min-width: 768px) {
-        :global(.hero-card .hero-spark) { display: block !important; }
         :global(.hero-card) { padding: 28px 32px 24px !important; }
     }
 </style>
