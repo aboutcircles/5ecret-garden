@@ -73,7 +73,9 @@
     "
   >
     {#if isSwitching}
-      <span class="loading loading-spinner loading-sm"></span>
+      <svg class="wn-spin" style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/>
+      </svg>
       Switching…
     {:else}
       Switch to Gnosis Chain
@@ -84,3 +86,8 @@
     Chain ID 100 · xDAI
   </span>
 </div>
+
+<style>
+  @keyframes wn-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .wn-spin { animation: wn-spin 0.9s linear infinite; }
+</style>

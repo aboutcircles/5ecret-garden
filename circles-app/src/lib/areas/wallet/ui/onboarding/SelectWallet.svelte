@@ -136,7 +136,9 @@
         </div>
 
         {#if isConnecting}
-          <span class="loading loading-spinner loading-xs" style="color:{T.primary};"></span>
+          <svg class="sw-spin" style="width:12px;height:12px;color:{T.primary};flex-shrink:0;" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/>
+          </svg>
         {:else}
           <Icon name="chevronRight" size={14} stroke={T.inkFaint} />
         {/if}
@@ -189,3 +191,8 @@
     </span>
   </div>
 </div>
+
+<style>
+  @keyframes sw-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .sw-spin { animation: sw-spin 0.9s linear infinite; }
+</style>
