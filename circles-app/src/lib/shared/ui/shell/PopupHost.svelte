@@ -465,8 +465,8 @@
         aria-labelledby={showTitle ? 'popup-title' : undefined}
         aria-label={!showTitle ? ($popupState.content?.title ?? 'Popup') : undefined}
     >
-        <!-- Drag handle -->
-        <div class="flex justify-center pt-3 pb-1 shrink-0">
+        <!-- Drag handle (mobile bottom-sheet affordance only) -->
+        <div class="popup-handle flex justify-center pt-3 pb-1 shrink-0">
             <span style="width:36px;height:4px;border-radius:2px;background:rgba(15,10,30,0.15);display:block;"></span>
         </div>
         <div class="w-full max-w-4xl mx-auto px-5 pb-6">
@@ -582,4 +582,30 @@
     .popup-page { position: relative; }
     .popup-page.is-hidden { display: none; }
     .popup-page.is-top { display: block; }
+
+    /* Desktop: right-anchored slide panel */
+    @media (min-width: 768px) {
+        .popup {
+            top: 0;
+            bottom: 0;
+            left: auto;
+            right: 0;
+            width: 100%;
+            max-width: 520px;
+            max-height: 100%;
+            min-height: 100%;
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+            border-top: 0;
+            border-left: 1px solid rgba(31, 17, 70, 0.06);
+            box-shadow: -8px 0 32px rgba(15, 10, 30, 0.12), -1px 0 0 rgba(31, 17, 70, 0.06);
+            transform: translateX(100%);
+        }
+        .popup-shell.open .popup {
+            transform: translateX(0);
+        }
+        .popup-handle {
+            display: none;
+        }
+    }
 </style>
