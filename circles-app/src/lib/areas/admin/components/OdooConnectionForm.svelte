@@ -1,5 +1,6 @@
 <script lang="ts">
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
+  import { T } from '$lib/design-system/tokens.js';
   import type { Address } from '@circles-sdk/utils';
   import AdminProductFormBase from '$lib/areas/admin/components/AdminProductFormBase.svelte';
   import { normalizeAddressInput } from '$lib/areas/admin/productEditorUtils';
@@ -97,50 +98,50 @@
   {/if}
 
   <StepSection title="Odoo connection">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <label class="form-control">
-        <span class="label-text">Odoo URL *</span>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Odoo URL *</span>
         <input
-          class="input input-bordered input-sm"
+          style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;"
           bind:value={value.odooUrl}
           placeholder="https://your-odoo"
           data-popup-initial-input
         />
       </label>
-      <label class="form-control">
-        <span class="label-text">Database *</span>
-        <input class="input input-bordered input-sm" bind:value={value.odooDb} />
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Database *</span>
+        <input style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" bind:value={value.odooDb} />
       </label>
-      <label class="form-control">
-        <span class="label-text">UID *</span>
-        <input type="number" class="input input-bordered input-sm" bind:value={value.odooUid} />
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">UID *</span>
+        <input type="number" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" bind:value={value.odooUid} />
       </label>
-      <label class="form-control">
-        <span class="label-text">API key *</span>
-        <input type="password" class="input input-bordered input-sm" bind:value={value.odooKey} />
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">API key *</span>
+        <input type="password" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" bind:value={value.odooKey} />
       </label>
-      <label class="form-control">
-        <span class="label-text">Sale partner ID</span>
-        <input type="number" class="input input-bordered input-sm" bind:value={value.salePartnerId} />
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Sale partner ID</span>
+        <input type="number" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" bind:value={value.salePartnerId} />
       </label>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <label class="form-control">
-        <span class="label-text">JSON-RPC timeout (ms)</span>
-        <input type="number" class="input input-bordered input-sm" bind:value={value.jsonrpcTimeoutMs} min="1000" />
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px;">
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">JSON-RPC timeout (ms)</span>
+        <input type="number" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" bind:value={value.jsonrpcTimeoutMs} min="1000" />
       </label>
-      <label class="form-control">
-        <span class="label-text">Fulfill inherit request abort</span>
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Fulfill inherit request abort</span>
         <input
           type="checkbox"
-          class="checkbox checkbox-sm"
+          style="width:14px;height:14px;accent-color:{T.primary};"
           bind:checked={value.fulfillInheritRequestAbort}
         />
       </label>
-      <label class="form-control">
-        <span class="label-text">Connection enabled</span>
-        <input type="checkbox" class="checkbox checkbox-sm" bind:checked={value.enabled} />
+      <label style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Connection enabled</span>
+        <input type="checkbox" style="width:14px;height:14px;accent-color:{T.primary};" bind:checked={value.enabled} />
       </label>
     </div>
   </StepSection>
