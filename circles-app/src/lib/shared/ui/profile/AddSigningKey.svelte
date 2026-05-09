@@ -25,6 +25,8 @@
     let showPrivate = $state(false);
     let copied = $state<null | 'private' | 'public' | 'fingerprint'>(null);
 
+    let canSave = $derived(!saving && !!publicKey.trim() && !!avatar);
+
     function getBindings(): ProfilesBindings {
         return getProfilesBindings({ pinApiBase }).bindings;
     }
@@ -206,7 +208,6 @@
             onclick={onCancel}
             disabled={saving}
         >Cancel</button>
-        {@const canSave = !saving && !!publicKey.trim() && !!avatar}
         <button
             type="button"
             style="height:36px;padding:0 18px;border-radius:9999px;border:0;cursor:{canSave ? 'pointer' : 'not-allowed'};background:{canSave ? T.primary : T.pageDeep};color:{canSave ? '#fff' : T.inkMuted};font-size:13px;font-weight:580;box-shadow:{canSave ? '0 4px 12px rgba(88,73,212,0.25)' : 'none'};"
