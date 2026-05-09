@@ -2,6 +2,7 @@
   import { onMount, tick } from 'svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import type { Address } from '@circles-sdk/utils';
+  import { T } from '$lib/design-system/tokens.js';
 
   type Props = {
     options: string[];
@@ -167,11 +168,11 @@
   });
 </script>
 
-<div class="relative w-full" bind:this={rootEl}>
+<div style="position:relative;width:100%;" bind:this={rootEl}>
   <button
     bind:this={triggerEl}
     type="button"
-    class="btn btn-outline w-full justify-between normal-case font-normal"
+    style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:10px 14px;border:1px solid {T.hairline};border-radius:10px;background:{T.surface};cursor:pointer;font-family:{T.fontSans};font-size:13px;color:{T.ink};text-align:left;opacity:{disabled ? 0.6 : 1};"
     aria-haspopup="listbox"
     aria-expanded={open}
     aria-label={ariaLabel}
@@ -180,7 +181,7 @@
     onkeydown={onTriggerKeydown}
   >
     {#if value}
-      <span class="min-w-0 flex-1 text-left">
+      <span style="min-width:0;flex:1;text-align:left;">
         <Avatar
           address={asAddress(value)}
           view="horizontal"
@@ -189,13 +190,13 @@
         />
       </span>
     {:else}
-      <span class="opacity-70">{placeholder}</span>
+      <span style="opacity:0.7;color:{T.inkMuted};">{placeholder}</span>
     {/if}
   </button>
 
   {#if open}
     <ul
-      class="menu bg-base-100 rounded-box z-[20] mt-1 w-full border border-base-300 p-2 shadow"
+      style="position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:20;background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:12px;padding:8px;box-shadow:{T.shadow.xs};list-style:none;margin:0;"
       role="listbox"
       aria-label={ariaLabel}
       onkeydown={onListKeydown}
@@ -206,16 +207,12 @@
           <button
             type="button"
             data-gateway-option={index}
-            class="gateway-option"
+            class="gw-option"
             tabindex={index === activeIndex ? 0 : -1}
             data-active={index === activeIndex ? 'true' : 'false'}
             onclick={() => selectIndex(index)}
-            onfocus={() => {
-              activeIndex = index;
-            }}
-            onmouseenter={() => {
-              activeIndex = index;
-            }}
+            onfocus={() => { activeIndex = index; }}
+            onmouseenter={() => { activeIndex = index; }}
           >
             <Avatar address={asAddress(option)} view="horizontal" bottomInfo={option} clickable={false} />
           </button>
@@ -226,20 +223,20 @@
 </div>
 
 <style>
-  .gateway-option {
-    background: transparent !important;
-    color: inherit !important;
+  .gw-option {
+    display: block;
+    width: 100%;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
   }
-
-  .gateway-option:hover,
-  .gateway-option:focus-visible,
-  .gateway-option[data-active='true'] {
-    background: color-mix(in oklab, var(--fallback-b2, oklch(var(--b2))), #000 6%) !important;
-    color: inherit !important;
+  .gw-option:hover,
+  .gw-option:focus-visible,
+  .gw-option[data-active='true'] {
+    background: rgba(88,73,212,0.06);
     outline: none;
-  }
-
-  .gateway-option :global(*) {
-    color: inherit;
   }
 </style>

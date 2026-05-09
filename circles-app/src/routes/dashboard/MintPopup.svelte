@@ -127,7 +127,9 @@
     "
   >
     {#if isMinting}
-      <span class="loading loading-spinner loading-sm"></span>
+      <svg class="mp-spin" style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/>
+      </svg>
       Minting…
     {:else if mintableAmount < 0.01}
       Nothing to mint yet
@@ -141,3 +143,8 @@
     Gas-free · settled in &lt; 1s
   </span>
 </div>
+
+<style>
+  @keyframes mp-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .mp-spin { animation: mp-spin 0.9s linear infinite; }
+</style>

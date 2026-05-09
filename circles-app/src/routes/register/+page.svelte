@@ -71,7 +71,9 @@
               background:{T.surface};color:{T.inkMuted};border:1px solid {T.hairline};
               font-size:13px;
             ">
-              <span class="loading loading-spinner loading-xs mr-2"></span>
+              <svg class="reg-spin" style="width:12px;height:12px;margin-right:8px;" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/>
+              </svg>
               Checking groups…
             </span>
           {:else if ownerHasGroups}
@@ -178,3 +180,8 @@
     <div style="height:24px;"></div>
   </div>
 </div>
+
+<style>
+  @keyframes reg-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .reg-spin { animation: reg-spin 0.9s linear infinite; }
+</style>

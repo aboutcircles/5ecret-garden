@@ -28,6 +28,7 @@
   import {getWalletProvider} from '$lib/shared/integrations/wallet';
   import {gnosisConfig} from "$lib/shared/config/circles";
   import { assertWalletCanSignForSafe } from '$lib/shared/integrations/safe/assertWalletCanSignForSafe';
+  import { T } from '$lib/design-system/tokens.js';
 
   interface Props { context: OfferFlowContext; }
   let { context }: Props = $props();
@@ -172,15 +173,15 @@
     <StepAlert variant="warning" className="mb-2" message="Draft has missing or invalid fields." />
 {/if}
 
-<div class="space-y-2">
+<div style="display:flex;flex-direction:column;gap:8px;">
     <StepSection title="Review" subtitle="Check core product and pricing details.">
-      <div class="space-y-3">
+      <div style="display:flex;flex-direction:column;gap:12px;">
         <StepReviewRow label="Product" value={context.draft?.name ?? '—'} onChange={editProduct} changeLabel="Edit" />
         <StepReviewRow label="Pricing" value={`${context.draft?.price ?? '—'} ${context.draft?.priceCurrency ?? ''}`.trim()} onChange={editPricing} changeLabel="Edit" />
       </div>
     </StepSection>
 
-    <div class="bg-base-100 border rounded-lg p-3 space-y-3">
+    <div style="background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:12px;">
         <ProductPreviewCard
           title={context.draft?.name ?? '—'}
           subtitle={context.draft?.sku ? `SKU: ${context.draft?.sku}` : undefined}
@@ -188,22 +189,22 @@
           imageUrl={getAllImages()[0] ?? context.draft?.image ?? undefined}
           size="md"
         >
-          <div slot="meta" class="text-sm space-y-2">
-            <div class="font-semibold">Payment gateway</div>
+          <div slot="meta" style="font-size:13px;display:flex;flex-direction:column;gap:8px;">
+            <div style="font-weight:600;color:{T.ink};">Payment gateway</div>
             {#if selectedGateway}
-              <div class="flex items-center gap-2">
+              <div style="display:flex;align-items:center;gap:8px;">
                 <Avatar address={asAddress(selectedGateway)} view="small_no_text" clickable={false} />
-                <span class="text-xs font-mono truncate">{selectedGateway}</span>
+                <span style="font-size:11px;font-family:{T.fontMono};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:{T.ink};">{selectedGateway}</span>
               </div>
             {:else}
-              <span class="opacity-70 text-sm">No payment gateway selected. Go back to Pricing to select one.</span>
+              <span style="opacity:0.7;font-size:13px;color:{T.inkMuted};">No payment gateway selected. Go back to Pricing to select one.</span>
             {/if}
-            <div><strong>Price:</strong> {context.draft?.price} {context.draft?.priceCurrency}</div>
+            <div style="color:{T.inkBody};"><strong>Price:</strong> {context.draft?.price} {context.draft?.priceCurrency}</div>
           </div>
         </ProductPreviewCard>
 
         {#if getAllImages().length > 1}
-          <div class="mt-2">
+          <div style="margin-top:8px;">
             <ProductGallery images={getAllImages()} />
           </div>
         {/if}
@@ -211,17 +212,17 @@
 
     <StepSection title="Delivery & checkout" subtitle="Confirm delivery method and required checkout info.">
       {#if context.draft?.availableDeliveryMethod}
-        <div class="truncate"><strong>Delivery method:</strong> {context.draft?.availableDeliveryMethod}</div>
+        <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;color:{T.inkBody};"><strong>Delivery method:</strong> {context.draft?.availableDeliveryMethod}</div>
       {:else}
-        <div class="text-sm text-base-content/70">No delivery method specified.</div>
+        <div style="font-size:13px;color:{T.inkMuted};">No delivery method specified.</div>
       {/if}
       {#if Array.isArray(context.draft?.requiredSlots) && context.draft?.requiredSlots.length > 0}
-        <div class="truncate">
+        <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;color:{T.inkBody};">
           <strong>Checkout requirements:</strong>
           {context.draft?.requiredSlots.join(', ')}
         </div>
       {:else}
-        <div class="text-sm text-base-content/70">No checkout requirements specified.</div>
+        <div style="font-size:13px;color:{T.inkMuted};">No checkout requirements specified.</div>
       {/if}
     </StepSection>
 
