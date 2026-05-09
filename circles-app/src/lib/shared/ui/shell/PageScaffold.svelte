@@ -144,11 +144,8 @@ import SettingProfile from '$lib/areas/settings/ui/pages/SettingProfile.svelte';
     <div class="safe-top" aria-hidden="true"></div>
 
     <div class={`mx-auto ${maxWidthClass} ${headerPaddingClass}`}>
-        <div class={`rounded-[14px] ${highlight === 'soft'
-            ? 'bg-base-100 border border-base-300'
-            : 'bg-base-100 border border-base-300 ring-1 ring-primary/10'}
-            px-5 md:px-6 py-5 md:py-6 ${headerTopGapClass} relative`}
-          style="box-shadow:0 1px 4px rgba(15,10,30,0.04),0 4px 16px rgba(15,10,30,0.04);{headerCardStyle}"><!-- NOTE: relative for absolute avatar -->
+        <div class={`rounded-[14px] px-5 md:px-6 py-5 md:py-6 ${headerTopGapClass} relative`}
+          style="background:var(--color-surface,#fff);border:1px solid var(--color-hairline-soft,rgba(15,10,30,0.08));box-shadow:0 1px 4px rgba(15,10,30,0.04),0 4px 16px rgba(15,10,30,0.04);{headerCardStyle}"><!-- NOTE: relative for absolute avatar -->
             <!-- Always stack title/meta and actions into separate rows -->
             <div class="flex flex-col gap-3">
                 <div class="min-w-0">
@@ -196,8 +193,8 @@ import SettingProfile from '$lib/areas/settings/ui/pages/SettingProfile.svelte';
                         <!-- Entire bar is clickable when actions exist -->
                         <button
                                 type="button"
-                                class={`w-full bg-base-100 border shadow-sm rounded-xl pl-3 md:pl-4 pr-14 md:pr-16 ${collapsedHeightClass}
-                                flex items-center justify-between gap-3 pointer-events-auto cursor-pointer`}
+                                class={`w-full rounded-xl pl-3 md:pl-4 pr-14 md:pr-16 ${collapsedHeightClass} flex items-center justify-between gap-3 pointer-events-auto cursor-pointer`}
+                                style="background:var(--color-surface,#fff);border:1px solid var(--color-hairline-soft,rgba(15,10,30,0.08));box-shadow:0 1px 4px rgba(15,10,30,0.04);"
                                 aria-expanded={collapsedMenuOpen}
                                 aria-label="Toggle quick actions"
                                 onclick={toggleCollapsedMenu}
@@ -220,8 +217,8 @@ import SettingProfile from '$lib/areas/settings/ui/pages/SettingProfile.svelte';
                     {:else}
                         <!-- Non-interactive bar when there are no actions -->
                         <div
-                                class={`w-full bg-base-100 border shadow-sm rounded-xl pl-3 md:pl-4 pr-14 md:pr-16 ${collapsedHeightClass}
-                                flex items-center justify-between gap-3 pointer-events-auto cursor-default`}
+                                class={`w-full rounded-xl pl-3 md:pl-4 pr-14 md:pr-16 ${collapsedHeightClass} flex items-center justify-between gap-3 pointer-events-auto cursor-default`}
+                                style="background:var(--color-surface,#fff);border:1px solid var(--color-hairline-soft,rgba(15,10,30,0.08));box-shadow:0 1px 4px rgba(15,10,30,0.04);"
                                 aria-hidden="true"
                         >
                             <div class="min-w-0 flex items-center gap-2">
@@ -258,8 +255,7 @@ import SettingProfile from '$lib/areas/settings/ui/pages/SettingProfile.svelte';
                     {#if collapsedMenuOpen && hasActions}
                         <div class="absolute left-0 right-0 mt-2 pointer-events-auto z-50">
                             <div
-                                    class="bg-base-100 border shadow-xl rounded-xl p-2"
-                                    style={`--collapsed-h:${collapsedHeight}; --collapsed-h-md:${collapsedHeightMd};`}
+                                    style="background:var(--color-surface,#fff);border:1px solid var(--color-hairline-soft,rgba(15,10,30,0.08));border-radius:14px;box-shadow:0 8px 24px rgba(15,10,30,0.12);padding:8px;--collapsed-h:{collapsedHeight};--collapsed-h-md:{collapsedHeightMd};"
                                     use:closeOnMenuSelection
                             >
                                 {@render collapsedMenu?.()}
@@ -269,17 +265,17 @@ import SettingProfile from '$lib/areas/settings/ui/pages/SettingProfile.svelte';
                 </div>
             {:else if headerActionsCollapsed}
                 <div class="mt-3 md:mt-4 mb-3 flex justify-center">
-                    <div class="dropdown">
-                        <button type="button" class="btn btn-primary btn-md rounded-full shadow-md pointer-events-auto">
+                    <details style="position:relative;">
+                        <summary style="height:40px;padding:0 20px;border-radius:9999px;border:0;background:var(--color-primary,#5849d4);color:#fff;font-size:13px;font-weight:580;cursor:pointer;display:inline-flex;align-items:center;gap:6px;list-style:none;box-shadow:0 4px 12px rgba(88,73,212,0.3);pointer-events:auto;">
                             {@render collapsedLabel?.()}
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <svg xmlns="http://www.w3.org/2000/svg" style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6" />
                             </svg>
-                        </button>
-                        <ul class="dropdown-content menu menu-sm bg-base-100 rounded-box shadow z-30 w-56 p-2 pointer-events-auto">
+                        </summary>
+                        <ul style="position:absolute;left:50%;transform:translateX(-50%);top:calc(100% + 6px);z-index:30;width:224px;background:var(--color-surface,#fff);border:1px solid var(--color-hairline-soft,rgba(15,10,30,0.08));border-radius:14px;box-shadow:0 8px 24px rgba(15,10,30,0.12);padding:6px;list-style:none;margin:0;pointer-events:auto;">
                             {@render headerActionsCollapsed()}
                         </ul>
-                    </div>
+                    </details>
                 </div>
             {/if}
         </div>
