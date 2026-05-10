@@ -51,16 +51,18 @@
   <!-- What happens -->
   <div style="display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:14px;background:{T.pageDeep};">
     <span style="font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">What happens</span>
-    {#each [
-      ['shield', "mia can pay you with their CRC, routing through your network"],
-      ['sparkle',"If mia trusts you back, you're <b>mutual</b> and the path is bidirectional"],
-      ['info',   "It does <b>not</b> move money. Trust is a permission, not a transfer"],
-    ] as [icon, text]}
-      <div style="display:flex;align-items:flex-start;gap:10px;">
-        <Icon name={icon} size={14} stroke={T.primary} style="flex-shrink:0;margin-top:2px;" />
-        <span style="font-size:12.5px;color:{T.inkBody};line-height:1.5;">{@html text}</span>
-      </div>
-    {/each}
+    <div style="display:flex;align-items:flex-start;gap:10px;">
+      <Icon name="shield" size={14} stroke={T.primary} style="flex-shrink:0;margin-top:2px;" />
+      <span style="font-size:12.5px;color:{T.inkBody};line-height:1.5;">mia can pay you with their CRC, routing through your network</span>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:10px;">
+      <Icon name="sparkle" size={14} stroke={T.primary} style="flex-shrink:0;margin-top:2px;" />
+      <span style="font-size:12.5px;color:{T.inkBody};line-height:1.5;">If mia trusts you back, you're <b>mutual</b> and the path is bidirectional</span>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:10px;">
+      <Icon name="info" size={14} stroke={T.primary} style="flex-shrink:0;margin-top:2px;" />
+      <span style="font-size:12.5px;color:{T.inkBody};line-height:1.5;">It does <b>not</b> move money. Trust is a permission, not a transfer</span>
+    </div>
   </div>
 
   <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 4px 0;">

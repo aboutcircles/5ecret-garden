@@ -26,7 +26,6 @@
 
   function onClick(e: MouseEvent) {
     if (!isPlainLeftClick(e)) return;
-    if (!$popupState.content) return;
 
     e.preventDefault();
     popupControls.open({

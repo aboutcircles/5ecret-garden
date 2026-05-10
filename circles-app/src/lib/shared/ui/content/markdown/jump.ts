@@ -1,3 +1,3 @@
 export function jumpHref(destination: string): string {
-  return destination;
+  return `/jump?to=${encodeURIComponent(destination)}`;
 }
