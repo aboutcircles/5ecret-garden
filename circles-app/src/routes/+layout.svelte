@@ -44,9 +44,7 @@
     return (
       routeId === '/' ||
       routeId === '/connect-wallet/connect-safe' ||
-      routeId === '/connect-wallet/import-circles-garden' ||
-      routeId === '/util' ||
-      routeId.startsWith('/kitchen-sink')
+      routeId === '/connect-wallet/import-circles-garden'
     );
   }
 

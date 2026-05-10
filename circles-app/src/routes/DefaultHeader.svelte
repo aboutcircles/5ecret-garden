@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { dev } from '$app/environment';
   import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import { Search as LSearch, ShoppingBag as LBag } from 'lucide';
   interface Props {
@@ -197,9 +196,6 @@
       </li>
       <li><a class="defaultheader-link" href="/terms">Terms of use</a></li>
       <li><a class="defaultheader-link" href="/privacy-policy">Privacy policy</a></li>
-      {#if dev}
-        <li><a class="defaultheader-link" href="/kitchen-sink">Kitchen sink</a></li>
-      {/if}
     </ul>
   </details>
 </header>
