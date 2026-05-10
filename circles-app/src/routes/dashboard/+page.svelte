@@ -241,7 +241,7 @@
                 <button
                     onclick={openMintPopup}
                     style="
-                        height:32px;padding:0 14px;border-radius:9999px;
+                        height:44px;padding:0 18px;border-radius:9999px;
                         background:{T.primary};color:#fff;border:0;cursor:pointer;
                         font-family:{T.fontSans};font-size:13px;font-weight:540;
                         white-space:nowrap;flex-shrink:0;

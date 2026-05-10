@@ -588,7 +588,8 @@
                     <button
                         type="button"
                         onclick={copyAddress}
-                        title="Copy address"
+                        aria-label={copiedAddr ? 'Address copied' : 'Copy address'}
+                        title={copiedAddr ? 'Copied!' : 'Copy address'}
                         style="display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 10px;border-radius:9999px;background:{copiedAddr ? T.sageSoft : T.pageDeep};color:{copiedAddr ? T.positive : T.inkBody};border:0;cursor:pointer;font-family:{T.fontMono};font-size:11px;letter-spacing:0.02em;transition:background .15s,color .15s;"
                     >
                         {shortenAddress(address)}
@@ -686,6 +687,7 @@
 
                     <JumpLink
                         url={'https://gnosisscan.io/address/' + address}
+                        ariaLabel="View on GnosisScan"
                         className="inline-flex items-center justify-center"
                     >
                         <span style="width:24px;height:24px;border-radius:9999px;background:{T.pageDeep};display:inline-flex;align-items:center;justify-content:center;">

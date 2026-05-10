@@ -8,10 +8,11 @@
     url: string;
     className?: string;
     style?: string;
+    ariaLabel?: string;
     children?: Snippet;
   }
 
-  let { url, className = '', style, children }: Props = $props();
+  let { url, className = '', style, ariaLabel, children }: Props = $props();
 
   function isPlainLeftClick(e: MouseEvent): boolean {
     return (
@@ -36,6 +37,6 @@
   }
 </script>
 
-<a class={className} {style} href={jumpHref(url)} onclick={onClick}>
+<a class={className} {style} href={jumpHref(url)} aria-label={ariaLabel} title={ariaLabel} onclick={onClick}>
   {@render children?.()}
 </a>

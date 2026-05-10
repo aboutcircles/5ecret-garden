@@ -558,6 +558,9 @@
         width: 100%;
         max-height: 92%;
         min-height: 40%;
+        /* iOS home-indicator safe-area: extend padding below content
+           so the action button doesn't sit under the indicator */
+        padding-bottom: env(safe-area-inset-bottom);
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -571,6 +574,8 @@
         opacity: 0;
         z-index: 101;
         pointer-events: auto;
+        /* Prevent rubber-band scroll on the body when popup is open */
+        overscroll-behavior: contain;
     }
 
     .popup-shell.open .popup {

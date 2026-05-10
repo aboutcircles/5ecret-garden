@@ -27,7 +27,7 @@
     <button
       onclick={() => onchange?.(item.id)}
       style="
-        height: 32px; padding: 0 14px; border-radius: 9999px; border: 0; cursor: pointer;
+        height: 36px; padding: 0 14px; border-radius: 9999px; border: 0; cursor: pointer;
         background: {active ? T.surface : 'transparent'};
         box-shadow: {active ? T.shadow.xs : 'none'};
         color: {active ? T.ink : T.inkMuted};

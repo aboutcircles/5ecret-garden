@@ -104,6 +104,37 @@
     color: rgba(15,10,30,0.62); cursor: pointer;
 }
 
+/*
+ * A11y: Default focus-visible ring on all interactive elements.
+ * Tailwind utilities (focus-visible:ring-*) and inline rules can still
+ * override per-component. This catches the long tail of inline-styled
+ * <button>s across the app that have border:0 and no focus indicator.
+ */
+button:focus-visible,
+a:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible,
+[role="button"]:focus-visible,
+[role="link"]:focus-visible,
+[role="tab"]:focus-visible {
+    outline: 2px solid rgba(88,73,212,0.55);
+    outline-offset: 2px;
+    border-radius: inherit;
+}
+
+/*
+ * A11y: honour prefers-reduced-motion. Disable the popup slide
+ * animation, skeleton pulses, and any decorative transition longer
+ * than ~80ms. Rendering still works; just no motion.
+ */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
 /* Ensure native inputs have a sensible border-radius */
 input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), textarea, select { border-radius: 8px; }
 

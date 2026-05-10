@@ -63,7 +63,7 @@
                 aria-label={copied ? 'Address copied' : 'Copy address'}
                 title={copied ? 'Copied!' : 'Copy address'}
                 style="
-                    width:36px;height:36px;border-radius:9999px;cursor:pointer;
+                    width:44px;height:44px;border-radius:9999px;cursor:pointer;
                     background:{copied ? T.sageSoft : T.surface};
                     color:{copied ? T.positive : T.inkBody};
                     border:1px solid {copied ? T.sage : T.hairline};
@@ -80,7 +80,7 @@
                 aria-label="Share address"
                 title="Share address"
                 style="
-                    width:36px;height:36px;border-radius:9999px;cursor:pointer;
+                    width:44px;height:44px;border-radius:9999px;cursor:pointer;
                     background:{T.surface};color:{T.inkBody};border:1px solid {T.hairline};
                     display:inline-flex;align-items:center;justify-content:center;
                     flex-shrink:0;
