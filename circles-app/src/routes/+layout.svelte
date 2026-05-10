@@ -191,7 +191,7 @@
       menuItems = [
         { name: 'Wallet', link: '/dashboard' },
         {
-          name: avatarState.isGroup ? 'Members' : 'People',
+          name: avatarState.isGroup ? 'Members' : 'Contacts',
           link: '/contacts',
         },
         ...(!avatarState.isGroup ? [{ name: 'Groups', link: '/groups' }] : []),

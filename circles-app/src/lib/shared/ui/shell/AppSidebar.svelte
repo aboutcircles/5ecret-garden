@@ -17,7 +17,7 @@
 
   const NAV_ITEMS = [
     { label: 'Wallet',   href: '/dashboard', icon: LWallet },
-    { label: 'People',   href: '/contacts',  icon: LUsers },
+    { label: 'Contacts', href: '/contacts',  icon: LUsers },
     { label: 'Groups',   href: '/groups',    icon: LLayers },
     { label: 'Market',   href: '/market',    icon: LShoppingBag },
   ];

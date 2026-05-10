@@ -170,7 +170,7 @@
         return { addr, contact };
     });
 
-    const titleText: string = $derived(avatarState.isGroup ? 'Members' : 'People');
+    const titleText: string = $derived(avatarState.isGroup ? 'Members' : 'Contacts');
     const countLabel: string = $derived(avatarState.isGroup ? 'members' : 'in your network');
 
     const chips = $derived([
