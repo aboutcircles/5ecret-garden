@@ -11,13 +11,13 @@
     Settings as LSettings,
     Sparkles as LSparkles,
     Info as LInfo,
-    ChevronDown as LChevronDown,
+    UserCircle as LUserCircle,
   } from 'lucide';
   import { popupControls } from '$lib/shared/state/popup';
 
   const NAV_ITEMS = [
     { label: 'Wallet',   href: '/dashboard', icon: LWallet },
-    { label: 'Contacts', href: '/contacts',  icon: LUsers },
+    { label: 'People',   href: '/contacts',  icon: LUsers },
     { label: 'Groups',   href: '/groups',    icon: LLayers },
     { label: 'Market',   href: '/market',    icon: LShoppingBag },
   ];
@@ -81,7 +81,7 @@
           {avatar.address.slice(0, 6)}…{avatar.address.slice(-4)}
         </div>
       </div>
-      <Lucide icon={LChevronDown} size={16} class="shrink-0" ariaLabel="" />
+      <Lucide icon={LUserCircle} size={16} class="shrink-0" ariaLabel="" />
     </button>
   {/if}
 
