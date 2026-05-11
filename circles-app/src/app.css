@@ -78,7 +78,7 @@
 /* Typography */
 .h2 {
     font-family: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
-    font-size: clamp(1.9rem, 4vw, 2.5rem);
+    font-size: 32px;
     font-weight: 400;
     letter-spacing: -0.02em;
     line-height: 1.1;

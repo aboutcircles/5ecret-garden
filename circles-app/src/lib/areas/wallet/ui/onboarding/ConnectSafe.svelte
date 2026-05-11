@@ -78,7 +78,7 @@
 
 <section style="display:flex;flex-direction:column;gap:16px;">
   <div style="display:flex;flex-direction:column;gap:4px;">
-    <h2 style="font-family:{T.fontDisplay};font-size:20px;font-weight:650;color:{T.ink};letter-spacing:-0.02em;margin:0;">Safes</h2>
+    <h2 style="font-family:{T.fontDisplay};font-size:22px;font-weight:500;color:{T.ink};letter-spacing:-0.015em;margin:0;">Safes</h2>
     <p style="font-size:13px;color:{T.inkMuted};margin:0;">
       Choose which Safe you want to use as your active avatar.
     </p>
@@ -159,7 +159,7 @@
 
 <section style="display:flex;flex-direction:column;gap:12px;">
   <div style="display:flex;flex-direction:column;gap:4px;">
-    <h3 style="font-family:{T.fontDisplay};font-size:17px;font-weight:650;color:{T.ink};letter-spacing:-0.01em;margin:0;">Need a new Safe?</h3>
+    <h3 style="font-family:{T.fontSans};font-size:16px;font-weight:600;color:{T.ink};letter-spacing:-0.005em;margin:0;">Need a new Safe?</h3>
     <p style="font-size:13px;color:{T.inkMuted};margin:0;">
       Create a Safe in-app and it will appear in your list automatically.
     </p>
