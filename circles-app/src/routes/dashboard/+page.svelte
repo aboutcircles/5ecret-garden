@@ -205,7 +205,7 @@
                     <button
                         onclick={a.onClick}
                         style="
-                            flex:1;height:72px;border-radius:16px;cursor:pointer;
+                            flex:1;height:56px;border-radius:16px;cursor:pointer;
                             background:{a.primary ? T.primary : T.surface};
                             border:{a.primary ? 'none' : `1px solid ${T.hairline}`};
                             color:{a.primary ? '#fff' : T.ink};
