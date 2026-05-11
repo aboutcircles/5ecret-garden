@@ -161,7 +161,7 @@
                     margin-top:14px;
                 "
             >
-                <span style="font-family:{T.fontDisplay};font-size:64px;line-height:1;color:{T.ink};letter-spacing:-0.025em;font-weight:400;display:inline-flex;align-items:baseline;">
+                <span style="font-family:{T.fontDisplay};font-size:64px;line-height:1.05;color:{T.ink};letter-spacing:-0.015em;font-weight:500;display:inline-flex;align-items:baseline;">
                     {#if balanceLoaded}
                         {roundToDecimals($totalCirclesBalance)}
                     {:else}

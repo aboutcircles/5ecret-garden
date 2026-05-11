@@ -81,7 +81,7 @@
         font-family:{T.fontSans};font-size:11px;font-weight:580;letter-spacing:0.02em;
       ">{mintableAmount < 0.01 ? 'Nothing to mint' : 'Available to mint'}</span>
 
-      <span style="font-family:{T.fontDisplay};font-size:84px;line-height:1;color:#fff;letter-spacing:-0.03em;font-weight:400;margin-top:6px;">
+      <span style="font-family:{T.fontDisplay};font-size:84px;line-height:1.05;color:#fff;letter-spacing:-0.02em;font-weight:500;margin-top:6px;">
         {displayAmount}
       </span>
       <span style="font-size:13px;color:rgba(255,255,255,0.85);font-family:{T.fontMono};">

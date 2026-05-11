@@ -77,20 +77,20 @@
 
 /* Typography */
 .h2 {
-    font-family: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+    font-family: 'DM Sans', 'Inter Tight', 'Inter', -apple-system, system-ui, sans-serif;
     font-size: 32px;
-    font-weight: 400;
-    letter-spacing: -0.02em;
-    line-height: 1.1;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
 }
 
-/* Balance / hero number — larger Instrument Serif */
+/* Balance / hero number — larger DM Sans */
 .h1-display {
-    font-family: 'Instrument Serif', 'Iowan Old Style', Georgia, serif;
+    font-family: 'DM Sans', 'Inter Tight', 'Inter', -apple-system, system-ui, sans-serif;
     font-size: clamp(2.75rem, 6vw, 3.75rem);
-    font-weight: 400;
-    letter-spacing: -0.025em;
-    line-height: 1;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    line-height: 1.05;
 }
 
 .muted { color: rgba(15,10,30,0.62); }

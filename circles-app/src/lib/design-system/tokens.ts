@@ -30,7 +30,7 @@ export const T = {
   negative:     '#C44430',  negativeSoft: '#FBE2DC',
   warning:      '#B07014',  warningSoft:  '#F8ECCC',
 
-  fontDisplay:  '"Instrument Serif", "Iowan Old Style", Georgia, serif',
+  fontDisplay:  '"DM Sans", "Inter Tight", "Inter", -apple-system, system-ui, sans-serif',
   fontSans:     '"Inter Tight", "Inter", -apple-system, "SF Pro Text", system-ui, sans-serif',
   fontMono:     '"JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace',
 

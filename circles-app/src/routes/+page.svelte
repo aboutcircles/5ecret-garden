@@ -57,8 +57,8 @@
 
     <!-- Headline -->
     <h1 style="
-      font-family:{T.fontDisplay};font-size:48px;letter-spacing:-0.025em;line-height:1.05;
-      color:{T.ink};margin:0 0 14px;max-width:560px;font-weight:400;
+      font-family:{T.fontDisplay};font-size:48px;letter-spacing:-0.015em;line-height:1.1;
+      color:{T.ink};margin:0 0 14px;max-width:560px;font-weight:600;
     " class="md:!text-[60px]">
       Money, reimagined.
     </h1>
