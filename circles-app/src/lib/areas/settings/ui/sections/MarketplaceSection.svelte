@@ -90,8 +90,3 @@
     </section>
   {/if}
 {/if}
-
-<style>
-  @keyframes ms-spin { from {} to { transform: rotate(360deg); } }
-  .ms-spin { animation: ms-spin 0.8s linear infinite; }
-</style>

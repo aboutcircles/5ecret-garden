@@ -125,8 +125,3 @@
     </div>
   {/if}
 </section>
-
-<style>
-  @keyframes ps-spin { from {} to { transform: rotate(360deg); } }
-  .ps-spin { animation: ps-spin 0.8s linear infinite; }
-</style>
