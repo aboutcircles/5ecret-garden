@@ -5,6 +5,9 @@
     "packages/*",
     "circles-app"
   ],
+  "scripts": {
+    "build:packages": "npm --workspaces --if-present run build"
+  },
   "engines": {
     "node": ">=18"
   }
