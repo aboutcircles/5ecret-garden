@@ -13,21 +13,6 @@
   import { deriveFormRequirements } from '$lib/areas/market/flows/checkout/requiredSlots';
   import CheckoutReview from './CheckoutReview.svelte';
 
-  /** Shape of a single requirement entry in the server validation response. */
-  interface ValidationRequirement {
-    slot?: string;
-    path?: string;
-    status?: string;
-    blocking?: boolean;
-    [k: string]: unknown;
-  }
-
-  /** Shape of the server validation response. */
-  interface ValidationResponse {
-    requirements?: ValidationRequirement[];
-    [k: string]: unknown;
-  }
-
   // This component shows only the address/details step.
 
   const validateAction = useAsyncAction(async () => {
@@ -79,34 +64,34 @@
       return;
     }
 
-    const addr = b.shippingAddress;
-    shippingStreet = addr?.streetAddress ?? '';
-    shippingLocality = addr?.addressLocality ?? '';
-    shippingPostal = addr?.postalCode ?? '';
-    shippingCountry = addr?.addressCountry ?? '';
+    const addr = b.shippingAddress as any;
+    shippingStreet = (addr?.streetAddress as string) ?? '';
+    shippingLocality = (addr?.addressLocality as string) ?? '';
+    shippingPostal = (addr?.postalCode as string) ?? '';
+    shippingCountry = (addr?.addressCountry as string) ?? '';
 
-    const bill = b.billingAddress;
-    billingStreet = bill?.streetAddress ?? '';
-    billingLocality = bill?.addressLocality ?? '';
-    billingPostal = bill?.postalCode ?? '';
-    billingCountry = bill?.addressCountry ?? '';
+    const bill = b.billingAddress as any;
+    billingStreet = (bill?.streetAddress as string) ?? '';
+    billingLocality = (bill?.addressLocality as string) ?? '';
+    billingPostal = (bill?.postalCode as string) ?? '';
+    billingCountry = (bill?.addressCountry as string) ?? '';
 
-    const contact = b.contactPoint;
-    contactEmail = contact?.email ?? '';
-    contactPhone = contact?.telephone ?? '';
+    const contact = b.contactPoint as any;
+    contactEmail = (contact?.email as string) ?? '';
+    contactPhone = (contact?.telephone as string) ?? '';
 
-    const age = b.ageProof;
-    birthDate = age?.birthDate ?? '';
+    const age = b.ageProof as any;
+    birthDate = (age?.birthDate as string) ?? '';
 
-    const customer = b.customer;
-    givenName = customer?.givenName ?? '';
-    familyName = customer?.familyName ?? '';
+    const customer = b.customer as any;
+    givenName = (customer?.givenName as string) ?? '';
+    familyName = (customer?.familyName as string) ?? '';
 
     formInitialised = true;
   });
 
   async function persistDetails(): Promise<void> {
-    const patch: Record<string, unknown> = {};
+    const patch: any = {};
 
     // Only send objects when user provided something or when currently required
     const shipGroupRequired = shippingRequired;
@@ -184,13 +169,12 @@
   }
 
   // True if the current validation result says shipping address is still required
-  function needsShippingFromValidation(v: unknown): boolean {
-    const vObj = v as ValidationResponse | null;
-    if (!vObj || !Array.isArray(vObj.requirements)) {
+  function needsShippingFromValidation(v: any): boolean {
+    if (!v || !Array.isArray(v.requirements)) {
       return false;
     }
-    return vObj.requirements.some(
-      (r) =>
+    return v.requirements.some(
+      (r: any) =>
         (r.slot ?? '') === 'shippingAddress' &&
         (r.status ?? '').toString() != 'ok'
     );
@@ -203,8 +187,7 @@
     const out = new Set<string>();
     const items = $cartState.basket?.items ?? [];
     for (const it of items) {
-      const requiredSlots = it?.offerSnapshot?.requiredSlots;
-      const slots: unknown = requiredSlots;
+      const slots = (it as any)?.offerSnapshot?.requiredSlots as unknown;
       if (Array.isArray(slots)) {
         for (const s of slots) {
           const key = typeof s === 'string' ? s.trim() : '';
@@ -215,13 +198,12 @@
     return out;
   }
 
-  function requiredSlotsFromValidation(v: unknown): Set<string> {
+  function requiredSlotsFromValidation(v: any): Set<string> {
     const out = new Set<string>();
-    const vObj = v as { requirements?: ValidationRequirement[] } | null;
-    if (!vObj || !Array.isArray(vObj.requirements)) return out;
-    for (const r of vObj.requirements) {
+    if (!v || !Array.isArray(v.requirements)) return out;
+    for (const r of v.requirements) {
       const status = (r?.status ?? '').toString();
-      const blocking = !!r?.blocking;
+      const blocking = !!(r as any)?.blocking;
       const slot = (r?.slot ?? '').toString();
       if (blocking && status !== 'ok' && slot) {
         out.add(slot);
@@ -253,7 +235,7 @@
 
   // Field-level error based purely on server ValidationRequirement.path
   function fieldHasError(path: string): boolean {
-    const v = $cartState.validation as ValidationResponse | null;
+    const v = $cartState.validation;
     if (!v || !Array.isArray(v.requirements)) {
       return false;
     }
@@ -264,10 +246,9 @@
     });
   }
 
-  function hasBlockingUnmet(v: unknown): boolean {
-    const vObj = v as ValidationResponse | null;
-    if (!vObj || !Array.isArray(vObj.requirements)) return false;
-    return vObj.requirements.some((r) => !!r?.blocking && (r?.status ?? '') !== 'ok');
+  function hasBlockingUnmet(v: any): boolean {
+    if (!v || !Array.isArray(v.requirements)) return false;
+    return v.requirements.some((r: any) => !!r?.blocking && (r?.status ?? '') !== 'ok');
   }
 
   async function goToReview(): Promise<void> {
@@ -495,7 +476,7 @@
       {/if}
 
       {#if validateAction.error || submitAction.error}
-        <StepAlert variant="error" className="text-xs mt-2" message={validateAction.error || submitAction.error || undefined} />
+        <StepAlert variant="error" className="text-xs mt-2" message={validateAction.error || submitAction.error} />
       {/if}
 
       <StepActionBar>

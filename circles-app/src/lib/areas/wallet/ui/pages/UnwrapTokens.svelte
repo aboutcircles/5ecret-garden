@@ -4,16 +4,16 @@
   import { circles } from '$lib/shared/state/circles';
   import { ethers } from 'ethers';
   import BalanceRow from '$lib/areas/wallet/ui/components/BalanceRow.svelte';
-  import type { TokenBalance } from '@aboutcircles/sdk-types';
+  import type { TokenBalanceRow } from '@circles-sdk/data';
   import { roundToDecimals } from '$lib/shared/utils/shared';
-  import { executeTxSubmitFirst } from '$lib/shared/utils/txExecution';
+  import { runTask } from '$lib/shared/utils/tasks';
   import { popupControls } from '$lib/shared/state/popup';
   import { wallet } from '$lib/shared/state/wallet.svelte';
   import { get } from 'svelte/store';
   import { sendRunnerTransactionAndWait } from '$lib/shared/utils/tx';
 
   interface Props {
-    asset: TokenBalance;
+    asset: TokenBalanceRow;
   }
 
   let { asset }: Props = $props();
@@ -38,32 +38,30 @@
   }
 
   async function unwrap() {
-    const tokenInfo = await $circles?.rpc?.token?.getTokenInfo(asset.tokenAddress);
+    const tokenInfo = await $circles?.data?.getTokenInfo(asset.tokenAddress);
     if (!tokenInfo) {
       return;
     }
     if (!avatarState.avatar) {
       throw new Error('Avatar not loaded');
     }
-    const avatar = avatarState.avatar;
 
     const amountWei = BigInt(ethers.parseEther(amount.toString()));
 
     if (tokenInfo.type === 'CrcV2_ERC20WrapperDeployed_Inflationary') {
-      void executeTxSubmitFirst({
+      runTask({
         name: `Unwrap ${roundToDecimals(amount)} static tokens ...`,
-        submit: () => unwrapViaRunner(asset.tokenAddress, amountWei),
-        onSubmitted: () => popupControls.close(),
+        promise: unwrapViaRunner(asset.tokenAddress, amountWei),
       });
     } else if (tokenInfo.type === 'CrcV2_ERC20WrapperDeployed_Demurraged') {
-      void executeTxSubmitFirst({
+      runTask({
         name: `Unwrap ${roundToDecimals(amount)} tokens ...`,
-        submit: () => unwrapViaRunner(asset.tokenAddress, amountWei),
-        onSubmitted: () => popupControls.close(),
+        promise: unwrapViaRunner(asset.tokenAddress, amountWei),
       });
     } else {
       throw new Error('Unsupported token type');
     }
+    popupControls.close();
   }
 </script>
 

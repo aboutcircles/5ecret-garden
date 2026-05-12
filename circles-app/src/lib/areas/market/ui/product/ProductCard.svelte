@@ -1,16 +1,15 @@
 <script lang="ts">
-  import type {AggregatedCatalogItem, Address} from '$lib/areas/market/model';
+  import type {AggregatedCatalogItem} from '$lib/areas/market/model';
   import ProductViewer from '$lib/areas/market/ui/product/ProductViewer.svelte';
 
   interface Props {
     product: AggregatedCatalogItem;
     showSellerInfo?: boolean;
     ondeleted?: () => void;
-    onupdated?: (item: AggregatedCatalogItem) => void;
     canTombstone?: boolean;
   }
 
-  let {product, showSellerInfo, ondeleted, onupdated, canTombstone = false}: Props = $props();
+  let {product, showSellerInfo, ondeleted, canTombstone = false}: Props = $props();
 
   import {avatarState} from '$lib/shared/state/avatar.svelte';
   import {cartState, addToCart} from '$lib/areas/market/cart/store';
@@ -32,7 +31,7 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
   const offer = $derived(getFirstOffer(prod));
 
   const currentAvatar = $derived(
-    (avatarState.avatar?.address ?? '').toLowerCase()
+    (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '').toLowerCase()
   );
 
   const cartLoading = $derived($cartState.loading);
@@ -41,10 +40,10 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
 
   import { getAddToCartState } from '$lib/areas/market/cart/addToCartUi';
   const effectiveAvailabilityIri = $derived<string | null>(
-    product?.availability ?? product?.product?.availability ?? null
+    (product as any)?.availability ?? (product?.product as any)?.availability ?? null
   );
   const effectiveInventoryValue = $derived<number | null>(
-    product?.inventoryLevel?.value ?? product?.product?.inventoryLevel?.value ?? null
+    ((product as any)?.inventoryLevel?.value ?? (product?.product as any)?.inventoryLevel?.value ?? null) as number | null
   );
   const addState = $derived(
     getAddToCartState({
@@ -70,19 +69,19 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
     try {
       const eth = getWalletProvider();
 
-      const seller = normalizeAddress(product.seller) as Address;
+      const seller = normalizeAddress(product.seller as string) as typeof product.seller;
 
       const {offers} = await createOffersClientForAvatar({
-        avatar: seller,
-        chainId: gnosisConfig.production.marketChainId ?? 100,
+        avatar: seller as any,
+        chainId: gnosisConfig.production.marketChainId,
         ethereum: eth,
-        pinApiBase: gnosisConfig.production.marketApiBase,
+        pinApiBase: gnosisConfig.production.profilePinningServiceUrl,
       });
 
       await offers.tombstone({
-        avatar: seller,
-        operator: OPERATOR as Address,
-        chainId: gnosisConfig.production.marketChainId ?? 100,
+        avatar: seller as any,
+        operator: OPERATOR as any,
+        chainId: gnosisConfig.production.marketChainId,
         sku: prod?.sku ?? product.product?.sku,
       });
 
@@ -119,8 +118,8 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
       return;
     }
 
-    const seller = product.seller?.toLowerCase();
-    const sku = product.product?.sku || product.id || product.productCid;
+    const seller = (product.seller || prod?.seller)?.toLowerCase();
+    const sku = product.product?.sku || (product as any).id || (product as any).productCid;
 
     if (seller && sku) {
       const def: PopupContentDefinition = {
@@ -138,8 +137,8 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
       return;
     }
 
-    const productCore = getProduct(product);
-    const firstOffer = getFirstOffer(productCore);
+    const productCore = getProduct(product) as any;
+    const firstOffer = getFirstOffer(productCore) as any;
 
     const draft = productAndOfferToDraft(productCore, firstOffer);
 
@@ -149,12 +148,17 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
       props: {
         context: {
           operator: OPERATOR,
-          pinApiBase: gnosisConfig.production.marketApiBase,
+          pinApiBase: gnosisConfig.production.profilePinningServiceUrl,
           draft,
           editMode: true,
-          onPublished: onupdated,
         }
       },
+      onClose: () => {
+        try {
+          ondeleted?.();
+        } catch {
+        }
+      }
     });
   }
 

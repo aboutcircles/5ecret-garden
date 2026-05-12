@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Address } from '@aboutcircles/sdk-types';
+  import type { Address } from '@circles-sdk/utils';
 
   import { openProfilePopup } from '$lib/shared/ui/profile/openProfilePopup';
   import TrustHistoryHeatmap from '$lib/areas/trust/ui/TrustHistoryHeatmap.svelte';

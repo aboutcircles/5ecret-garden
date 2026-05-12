@@ -1,5 +1,5 @@
 import { browser } from '$app/environment';
-import type { Address } from '@aboutcircles/sdk-types';
+import type { Address } from '@circles-sdk/utils';
 import {
   getAdminBaseUrl,
   getAdminAuthHeader,
@@ -168,31 +168,6 @@ export interface UnlockProductListItem {
 // ============= API Functions =============
 
 /**
- * Typed error for admin API responses. Carries the HTTP status so callers can
- * distinguish 401 (re-auth required) from 403 (authenticated but not allowlisted)
- * from other failures, and short-circuit batched loads on auth failure.
- */
-export class AdminApiError extends Error {
-  readonly status: number;
-  readonly body: string;
-  readonly method: string;
-  readonly path: string;
-
-  constructor(method: string, path: string, status: number, body: string) {
-    super(`${method} ${path} failed (${status}): ${body}`);
-    this.name = 'AdminApiError';
-    this.status = status;
-    this.body = body;
-    this.method = method;
-    this.path = path;
-  }
-
-  isAuthFailure(): boolean {
-    return this.status === 401 || this.status === 403;
-  }
-}
-
-/**
  * Get the admin API base URL - re-exported for convenience
  */
 function getBaseUrl(): string {
@@ -207,8 +182,7 @@ async function adminFetch<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const baseUrl = getBaseUrl();
-  const method = options.method ?? 'GET';
-
+  
   const res = await fetch(`${baseUrl}${path}`, {
     ...options,
     headers: {
@@ -220,7 +194,7 @@ async function adminFetch<T>(
 
   if (!res.ok) {
     const text = await res.text().catch(() => '');
-    throw new AdminApiError(method, path, res.status, text);
+    throw new Error(`${options.method ?? 'GET'} ${path} failed (${res.status}): ${text}`);
   }
 
   return res.json() as Promise<T>;
@@ -334,7 +308,7 @@ export async function listOdooProductCatalog(params: {
 
   if (!res.ok) {
     const text = await res.text().catch(() => '');
-    throw new AdminApiError('GET', '/admin/odoo-product-catalog', res.status, text);
+    throw new Error(`GET /admin/odoo-product-catalog failed (${res.status}): ${text}`);
   }
 
   return res.json() as Promise<OdooProductCatalogResponse>;

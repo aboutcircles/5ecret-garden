@@ -4,12 +4,14 @@
     Contract, ethers, keccak256,
     parseUnits,
     toBigInt, toUtf8Bytes,
-    type TransactionRequest,
   } from "ethers";
-  import type { ContractRunner as SdkContractRunner, Address } from "@aboutcircles/sdk-types";
+  import {
+    type TransactionRequest,
+    type SdkContractRunner
+  } from "@circles-sdk/adapter";
   import {circles} from "$lib/shared/state/circles";
   import {avatarState} from "$lib/shared/state/avatar.svelte";
-  import {circlesConfig} from "@aboutcircles/sdk-core";
+  import {circlesConfig} from "@circles-sdk/sdk";
 
   const HUB_V2 = "0xc12C1E50ABB450d6205Ea2C3Fa861b3B834d13e8";
   const USDC_E = "0x2a22f9c3b484c3629090FeED35F17Ff8F88f76F0";
@@ -120,15 +122,15 @@
     // Send the batch transaction
     const batch = runner.sendBatchTransaction!();
 
-    batch.addTransaction({
-      to: USDC_E as Address,
+    batch.addTransaction(<TransactionRequest>{
+      to: USDC_E,
       value: 0n,
-      data: approveData as `0x${string}`
+      data: approveData
     });
-    batch.addTransaction({
-      to: HUB_V2 as Address,
+    batch.addTransaction(<TransactionRequest>{
+      to: HUB_V2,
       value: 0n,
-      data: transferData as `0x${string}`
+      data: transferData
     });
 
     const receipt = await batch.run();

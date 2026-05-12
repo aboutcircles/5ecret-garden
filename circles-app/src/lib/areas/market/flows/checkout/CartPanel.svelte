@@ -34,8 +34,8 @@
       return;
     }
 
-    const seller = typeof line.seller === 'string' ? line.seller : '';
-    const sku = typeof line.orderedItem?.sku === 'string' ? line.orderedItem.sku : '';
+    const seller = line.seller;
+    const sku = line.orderedItem?.sku;
 
     if (!seller || !sku) {
       // If we ever hit this, the basket is malformed. Log, but don't try any other path.
@@ -56,15 +56,13 @@
     }
   });
 
-  const cartLines = $derived($cartState.basket?.items ?? []);
-  // svelte-ignore state_referenced_locally — cartLines is $derived, hook reacts internally
+  const cartLines = $derived(($cartState.basket?.items ?? []) as any[]);
   const { findCatalogItem, imageUrlForLine } = useResolvedProducts(cartLines);
 
-  function hasBlockingRequirements(v: unknown): boolean {
-    const vObj = v as { requirements?: { blocking?: boolean; status?: string }[] } | null;
-    if (!vObj || !Array.isArray(vObj.requirements)) return false;
-    return vObj.requirements.some(
-      (r) => !!r?.blocking && (r?.status ?? '').toString() !== 'ok',
+  function hasBlockingRequirements(v: any): boolean {
+    if (!v || !Array.isArray(v.requirements)) return false;
+    return v.requirements.some(
+      (r: any) => !!r?.blocking && (r?.status ?? '').toString() !== 'ok',
     );
   }
 
@@ -111,8 +109,8 @@
 
     for (const line of basket.items) {
       const snap = line.offerSnapshot;
-      const price = snap?.price;
-      const code = snap?.priceCurrency ?? '';
+      const price = snap?.price as number | null | undefined;
+      const code = (snap?.priceCurrency ?? '') as string;
       if (price == null || !Number.isFinite(Number(price))) continue;
       const qty = Number(line.orderQuantity || 0) || 0;
       const key = code || '';

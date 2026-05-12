@@ -12,7 +12,6 @@
   import { page } from '$app/stores';
   import { openFlowPopup, popupControls, popupState } from '$lib/shared/state/popup';
   import { writable, type Unsubscriber } from 'svelte/store';
-  import { avatarState } from '$lib/shared/state/avatar.svelte';
   import GlobalAvatarSearchPopup from '$lib/shared/ui/avatar-search/GlobalAvatarSearchPopup.svelte';
 
   const cartItemCount = writable(0);
@@ -185,26 +184,12 @@
           <li><a class="link link-hover" href="/settings?tab=bookmarks">Bookmarks</a></li>
           <li><a class="link link-hover" href="/settings?tab=orders">Orders</a></li>
           <li><a class="link link-hover" href="/settings?tab=sales">Sales</a></li>
-          <li><a class="link link-hover" href="/settings?tab=offers">Offers</a></li>
+          <li><a class="link link-hover" href="/settings?tab=marketplace">Offers</a></li>
           <li><a class="link link-hover" href="/settings?tab=payment">Payment gateways</a></li>
           <li><a class="link link-hover" href="/settings?tab=namespaces">Namespaces</a></li>
           <li><a class="link link-hover" href="/settings?tab=keys">Signing keys</a></li>
         </ul>
       </li>
-      {#if avatarState.avatar}
-        <li>
-          <button
-            class="link link-hover text-error"
-            onclick={async () => {
-              closeMenu();
-              const { clearSession } = await import('$lib/shared/state/wallet.svelte');
-              clearSession();
-            }}
-          >
-            Disconnect
-          </button>
-        </li>
-      {/if}
       <li><a class="link link-hover" href="/terms">Terms of use</a></li>
       <li>
         <a class="link link-hover" href="/privacy-policy">Privacy policy</a>

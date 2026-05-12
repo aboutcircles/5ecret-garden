@@ -4,10 +4,7 @@
     stackTrace?: string;
   }
 
-  let {
-    errorMessage = 'An unexpected error occurred.',
-    stackTrace = '',
-  }: Props = $props();
+  let { errorMessage = 'An unexpected error occurred.', stackTrace = '' }: Props = $props();
 </script>
 
 <!-- Modal Content -->

@@ -2,7 +2,7 @@
     import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import { openProfilePopup } from '$lib/shared/ui/profile/openProfilePopup';
-    import type { Address } from '@aboutcircles/sdk-types';
+    import type { Address } from '@circles-sdk/utils';
     import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
 
     interface Props {

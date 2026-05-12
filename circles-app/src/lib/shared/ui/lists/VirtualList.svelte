@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onDestroy, setContext, tick, type Component } from 'svelte';
-    import type { EventRow, TransactionHistoryRow } from '@aboutcircles/sdk-types';
+    import type { EventRow, TransactionHistoryRow } from '@circles-sdk/data';
     import { getKeyFromItem } from '$lib/shared/state/query';
     import type { Readable } from 'svelte/store';
     import {
@@ -43,7 +43,7 @@
     let localError = $state<string | null>(null);
     let isLoadingNext = $state(false);
 
-    const storeError = $derived<string | null>($store?.error ?? null);
+    const storeError = $derived<string | null>(($store as any)?.error ?? null);
     const displayError = $derived<string | null>(storeError ?? localError);
     const hasError = $derived<boolean>(!!displayError);
 
@@ -425,9 +425,8 @@
                 style={`transform: translateY(${vr.top}px); height: ${rowHeight}px; z-index: ${elevatedRowIndex === vr.index ? 2 : 1}`}
             >
                 {#if vr.kind === 'item'}
-                    {@const Row = row}
                     <div data-list-row>
-                        <Row item={vr.item} />
+                        <svelte:component this={row} item={vr.item} />
                     </div>
                 {:else}
                     {#if placeholderRow}

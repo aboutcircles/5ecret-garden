@@ -21,7 +21,6 @@
     onCancel,
   }: Props = $props();
 
-  // svelte-ignore state_referenced_locally — intentional: initialize editable state from prop
   let value = $state(initialValue);
   const error = $derived(validate?.(value) ?? null);
 

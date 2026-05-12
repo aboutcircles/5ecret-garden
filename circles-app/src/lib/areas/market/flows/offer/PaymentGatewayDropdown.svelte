@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-  import type { Address } from '@aboutcircles/sdk-types';
+  import type { Address } from '@circles-sdk/utils';
 
   type Props = {
     options: string[];

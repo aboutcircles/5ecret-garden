@@ -8,7 +8,6 @@ import { ensureProfileShape } from '@circles-profile/core';
 import { rebaseAndSaveProfile } from '@circles-market/sdk';
 import { invalidateProfileCore } from './coreRepo';
 import { createAvatarDataSource } from '$lib/shared/data/circles/avatarDataSource';
-import type { CirclesConfig } from '$lib/shared/config/circles';
 
 function norm(address: string): ProfileAddress {
   const a = address.toLowerCase();
@@ -19,7 +18,7 @@ function norm(address: string): ProfileAddress {
 function ensureNamespacesKeys(p: any): AppProfile {
   const out = ensureProfileShape(p) as AppProfile;
   if (!out.namespaces) out.namespaces = {};
-  if (!out.signingKeys) out.signingKeys = {};
+  if (!out.signingKeys) out.signingKeys = {} as any;
   return out;
 }
 
@@ -35,7 +34,7 @@ async function loadOneFull(address: ProfileAddress, opts?: { pinApiBase?: string
     return ensureNamespacesKeys({ name: 'Transitive transfer', previewImageUrl: '/circles-token.svg', namespaces: {}, signingKeys: {} });
   }
   const hub = sdk.circlesConfig?.v2HubAddress?.toLowerCase();
-  const migration = (sdk.circlesConfig as CirclesConfig)?.migrationAddress?.toLowerCase();
+  const migration = sdk.circlesConfig?.migrationAddress?.toLowerCase();
   if (address === hub) return ensureNamespacesKeys({ name: 'Circles V2 Hub Contract', previewImageUrl: FallbackImageUrl.Logo, namespaces: {}, signingKeys: {} });
   if (address === migration) return ensureNamespacesKeys({ name: 'Circles V2 Migration Contract', previewImageUrl: FallbackImageUrl.Logo, namespaces: {}, signingKeys: {} });
 
@@ -76,10 +75,7 @@ export async function getProfileFull(address: ProfileAddress, opts?: { pinApiBas
   const addr = norm(address);
   let p = fullCache.get(addr);
   if (!p) {
-    p = loadOneFull(addr, opts).catch((err) => {
-      fullCache.delete(addr);
-      throw err;
-    });
+    p = loadOneFull(addr, opts);
     fullCache.set(addr, p);
   }
   return await p;
@@ -110,10 +106,10 @@ export async function saveProfileFull(args: {
   mutate(profile);
 
   // Save and update digest
-  const profileCid = await rebaseAndSaveProfile(bindings, addr, (p: any) => {
+  const profileCid = await rebaseAndSaveProfile(bindings as any, addr, (p: any) => {
     Object.assign(p, profile);
   });
-  const txHash = (await bindings.updateAvatarProfileDigest(addr, profileCid)) || undefined;
+  const txHash = await (bindings as any).updateAvatarProfileDigest(addr, profileCid);
 
   // Invalidate caches (both full and core)
   invalidateProfileFull(addr);

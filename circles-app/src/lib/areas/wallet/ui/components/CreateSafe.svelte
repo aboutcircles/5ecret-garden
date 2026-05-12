@@ -25,7 +25,7 @@
   } = $props();
 
   onMount(() => {
-    hasProvider = typeof window !== 'undefined' && !!window.ethereum;
+    hasProvider = typeof window !== 'undefined' && !!(window as any).ethereum;
   });
 
   async function createSafe() {
@@ -40,7 +40,7 @@
       return;
     }
 
-    if (!useLocalPrivateKey && (typeof window === 'undefined' || !window.ethereum)) {
+    if (!useLocalPrivateKey && (typeof window === 'undefined' || !(window as any).ethereum)) {
       error = 'No Ethereum provider found. Please connect a browser wallet.';
       isCreating = false;
       return;
@@ -53,7 +53,7 @@
 
       const txProvider = useLocalPrivateKey
         ? new ethers.JsonRpcProvider(rpcUrl)
-        : new ethers.BrowserProvider(window.ethereum!);
+        : new ethers.BrowserProvider((window as any).ethereum);
 
       const txSigner = useLocalPrivateKey
         ? new ethers.Wallet(privateKey as `0x${string}`, txProvider)
@@ -79,7 +79,7 @@
       console.log(predictedSafe);
 
       const protocolKit = await Safe.init({
-        provider: useLocalPrivateKey ? rpcUrl : window.ethereum!,
+        provider: useLocalPrivateKey ? rpcUrl : (window as any).ethereum,
         predictedSafe,
         signer: useLocalPrivateKey ? (privateKey as `0x${string}`) : ownerAddress,
       });

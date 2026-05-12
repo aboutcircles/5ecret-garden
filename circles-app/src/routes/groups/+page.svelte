@@ -2,7 +2,7 @@
     import { derived, readable, writable, type Readable } from 'svelte/store';
     import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
     import {createCMGroups} from '$lib/areas/groups/state';
-    import type {EventRow, Address} from '@aboutcircles/sdk-types';
+    import type {EventRow} from '@circles-sdk/data';
     import GroupRowView from './GroupRowView.svelte';
     import AvatarRowPlaceholder from '$lib/shared/ui/lists/placeholders/AvatarRowPlaceholder.svelte';
     import OwnedGroupRowView from './OwnedGroupRowView.svelte';
@@ -19,7 +19,7 @@
     import {CirclesStorage} from '$lib/shared/utils/storage';
     import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/shared/utils/getGroupsByOwnerBatch';
     import { getGroupsByMember } from '$lib/areas/groups/utils/getGroupsByMemberBatch';
-    import type { GroupRow } from '@aboutcircles/sdk-types';
+    import type { GroupRow } from '@circles-sdk/data';
     import Tabs from '$lib/shared/ui/primitives/tabs/Tabs.svelte';
     import Tab from '$lib/shared/ui/primitives/tabs/Tab.svelte';
     import { type TabIdOf } from '$lib/shared/ui/primitives/tabs/tabId';
@@ -69,26 +69,8 @@
         ownedGroupsLoading = true;
         ownedGroupsError = null;
         try {
-            // Query groups the user is a member of (not just owner)
-            const memberGroups = await getGroupsByMember($circles, ownerAddress as Address);
-            // Also try owner-based query for CMG groups where user is the deployer
-            const ownedResult = await getBaseAndCmgGroupsByOwnerBatch($circles, [ownerAddress as Address]);
-            const ownerKey = ownerAddress!.toLowerCase() as Address;
-            const ownedList = ownedResult[ownerKey] ?? [];
-
-            // Merge: owned groups first, then member groups (dedup by group address)
-            const seen = new Set<string>();
-            const merged: GroupRow[] = [];
-            for (const g of ownedList) {
-                const key = g.group.toLowerCase();
-                if (!seen.has(key)) { seen.add(key); merged.push(g); }
-            }
-            for (const g of memberGroups) {
-                const key = g.group.toLowerCase();
-                if (!seen.has(key)) { seen.add(key); merged.push(g); }
-            }
-
-            ownedGroups = merged;
+            const result = await getBaseAndCmgGroupsByOwnerBatch($circles, [ownerAddress as any]);
+            ownedGroups = result[(ownerAddress as string).toLowerCase() as any] ?? result[ownerAddress as any] ?? [];
             ownedGroupsLoadedForAvatar = String(ownerAddress).toLowerCase();
         } catch (e) {
             ownedGroupsError = e instanceof Error ? e.message : String(e);
@@ -109,7 +91,7 @@
         membershipsLoading = true;
         membershipsError = null;
         try {
-            memberships = await getGroupsByMember($circles, ownerAddress as Address);
+            memberships = await getGroupsByMember($circles, ownerAddress as any);
             membershipsLoadedForAvatar = String(ownerAddress).toLowerCase();
         } catch (e) {
             membershipsError = e instanceof Error ? e.message : String(e);
@@ -204,7 +186,7 @@
             },
             // Ensure state is cleared if the user closes the flow
             onClose: () => resetCreateGroupContext()
-        });
+        } as any);
     }
 
     const actions: Action[] = $derived([
@@ -265,7 +247,7 @@
                     connectText="Connect an avatar to see the groups you own."
                     emptyText="No groups found."
                 >
-                    {#snippet empty()}
+                    <svelte:fragment slot="empty">
                         <div class="rounded-xl border border-dashed border-base-300 bg-base-200/40 p-4 space-y-3">
                             <div>
                                 <p class="text-sm font-semibold text-base-content">No groups yet</p>
@@ -300,12 +282,10 @@
                                 </a>
                             </div>
                         </div>
-                    {/snippet}
-                    {#snippet children()}
-                        {#each ownedGroups as item (item.group)}
-                            <OwnedGroupRowView item={item} />
-                        {/each}
-                    {/snippet}
+                    </svelte:fragment>
+                    {#each ownedGroups as item (item.group)}
+                        <OwnedGroupRowView item={item} />
+                    {/each}
                 </GroupTabPanel>
             {:else if selectedTab === 'memberships'}
                 <GroupTabPanel
@@ -316,11 +296,9 @@
                     connectText="Connect an avatar to see the groups you are a member in."
                     emptyText="No group memberships"
                 >
-                    {#snippet children()}
-                        {#each memberships as item (item.group)}
-                            <GroupRowView item={item} />
-                        {/each}
-                    {/snippet}
+                    {#each memberships as item (item.group)}
+                        <GroupRowView item={item} />
+                    {/each}
                 </GroupTabPanel>
             {:else}
                 {#if groups}

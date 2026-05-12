@@ -1,7 +1,7 @@
-import type { TokenBalance } from '@aboutcircles/sdk-types';
-import type { Profile } from '@aboutcircles/sdk-profiles';
-import type { Avatar, Sdk } from '@aboutcircles/sdk';
-import type { Address } from '@aboutcircles/sdk-types';
+import type { TokenBalanceRow } from '@circles-sdk/data';
+import type { Profile } from '@circles-sdk/profiles';
+import type { Avatar, Sdk } from '@circles-sdk/sdk';
+import type { Address } from '@circles-sdk/utils';
 
 export class FlowGuardError extends Error {
   constructor(message: string) {
@@ -29,10 +29,10 @@ export function requireWalletAddress(
   return address ?? fail(message);
 }
 
-export function requireSelectedAsset<TContext extends { selectedAsset?: TokenBalance | undefined }>(
+export function requireSelectedAsset<TContext extends { selectedAsset?: TokenBalanceRow | undefined }>(
   context: TContext,
   message = 'Asset not selected'
-): TokenBalance {
+): TokenBalanceRow {
   return context.selectedAsset ?? fail(message);
 }
 

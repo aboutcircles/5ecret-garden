@@ -1,38 +1,51 @@
 [build]
-  base = "circles-app"
-  command = "cd .. && npm install && npm run build:packages && cd circles-app && npm run build"
+  # Build command for SvelteKit app
+  command = "npm run build"
+  
+  # Output directory for built files
   publish = "build"
+  
+  # Base directory (root of the app)
+  base = "circles-app"
 
 [build.environment]
+  # Node version
   NODE_VERSION = "22.20.0"
+  
+  # NPM version
+  NPM_VERSION = "10.8.2"
 
-[context.deploy-preview]
-  command = "cd .. && npm install && npm run build:packages && cd circles-app && npm run build"
-
-  [context.deploy-preview.environment]
-    NETLIFY_BUILD = "true"
-    PUBLIC_ENVIRONMENT = "staging"
-    PUBLIC_CIRCLES_RPC_URL = "https://staging.circlesubi.network"
-    PUBLIC_PLAUSIBLE_DOMAIN = ""
-
-[context.branch-deploy]
-  command = "cd .. && npm install && npm run build:packages && cd circles-app && npm run build"
-
-  [context.branch-deploy.environment]
-    NETLIFY_BUILD = "true"
-    PUBLIC_ENVIRONMENT = "staging"
-    PUBLIC_CIRCLES_RPC_URL = "https://staging.circlesubi.network"
-    PUBLIC_PLAUSIBLE_DOMAIN = ""
-
+# Production deployment settings
 [context.production]
-  command = "cd .. && npm install && npm run build:packages && cd circles-app && npm run build"
-
+  command = "npm run build"
+  publish = "build"
+  
   [context.production.environment]
     NETLIFY_BUILD = "true"
     PUBLIC_ENVIRONMENT = "production"
-    PUBLIC_CIRCLES_RPC_URL = "https://rpc.aboutcircles.com"
     PUBLIC_PLAUSIBLE_DOMAIN = "app.aboutcircles.com"
 
+# Deploy Preview settings (for PRs)
+[context.deploy-preview]
+  command = "npm run build"
+  publish = "build"
+  
+  [context.deploy-preview.environment]
+    NETLIFY_BUILD = "true"
+    PUBLIC_ENVIRONMENT = "staging"
+    PUBLIC_PLAUSIBLE_DOMAIN = ""
+
+# Branch deploy settings
+[context.branch-deploy]
+  command = "npm run build"
+  publish = "build"
+  
+  [context.branch-deploy.environment]
+    NETLIFY_BUILD = "true"
+    PUBLIC_ENVIRONMENT = "staging"
+    PUBLIC_PLAUSIBLE_DOMAIN = ""
+
+# Headers for security
 [[headers]]
   for = "/*"
   [headers.values]
@@ -41,6 +54,7 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "geolocation=(), microphone=(), camera=()"
 
+# Cache static assets
 [[headers]]
   for = "/build/*"
   [headers.values]

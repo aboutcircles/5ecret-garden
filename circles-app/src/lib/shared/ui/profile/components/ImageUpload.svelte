@@ -37,6 +37,7 @@
     mode = 'crop',
   }: Props = $props();
 
+  let fileInput: HTMLInputElement | undefined = $state();
   let dragging = $state(false);
 
   async function processFile(file: File): Promise<void> {
@@ -86,6 +87,13 @@
     }
   }
 
+  function handleClickSelect(): void {
+    if (readonly) return;
+    if (!fileInput) return;
+    fileInput.value = '';
+    fileInput.click();
+  }
+
   function handleDragOver(event: DragEvent): void {
     if (readonly) return;
     event.preventDefault();
@@ -130,24 +138,25 @@
 </script>
 
 <div class="space-y-2">
-  <!-- Native <label> wrapping a hidden <input type="file"> — the browser opens
-       the file picker on click without any JS .click() call, which avoids
-       Svelte 5 event delegation + user-activation issues in popups. -->
-  <label
+  <div
+    role="button"
+    tabindex="0"
     class="border border-dashed rounded-md p-3 text-xs flex flex-col gap-2 cursor-pointer"
     class:border-primary={dragging}
+    onclick={handleClickSelect}
+    onkeydown={(e) => {
+      const key = e.key;
+      const isEnter = key === 'Enter';
+      const isSpace = key === ' ';
+      if (isEnter || isSpace) {
+        e.preventDefault();
+        handleClickSelect();
+      }
+    }}
     ondragover={handleDragOver}
     ondragleave={handleDragLeave}
     ondrop={handleDrop}
   >
-    <input
-      type="file"
-      accept="image/*"
-      multiple
-      class="sr-only"
-      disabled={readonly}
-      onchange={handleFileInput}
-    />
     <div class="flex items-center justify-between gap-2">
       <span class="font-semibold">Upload images</span>
       <span class="opacity-60">
@@ -158,7 +167,16 @@
       Click to select files or drag &amp; drop them here. Images are cropped to
       {cropWidth}×{cropHeight}px.
     </div>
-  </label>
+
+    <input
+      bind:this={fileInput}
+      type="file"
+      accept="image/*"
+      class="hidden"
+      multiple
+      onchange={handleFileInput}
+    />
+  </div>
 
   {#if imageDataUrls?.length}
     <div class="flex justify-between items-center mt-1 text-xs">

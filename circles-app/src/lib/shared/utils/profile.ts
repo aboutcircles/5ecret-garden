@@ -3,18 +3,17 @@ export { FallbackImageUrl } from '$lib/shared/model/profile';
 export { getProfileCore as getProfile } from '$lib/shared/model/profile';
 import { invalidateProfileCore, invalidateProfileFull } from '$lib/shared/model/profile';
 export { invalidateProfileFull } from '$lib/shared/model/profile';
-import type { ProfileAddress } from '$lib/shared/model/profile';
 
 export type { AppProfileCore as Profile } from '$lib/shared/model/profile';
 
 export function removeProfileFromCache(address: string) {
   try {
-    invalidateProfileCore(address as ProfileAddress);
+    invalidateProfileCore(address as any);
   } catch (e) {
     console.debug('[profile] invalidate core failed', e);
   }
   try {
-    invalidateProfileFull(address as ProfileAddress);
+    invalidateProfileFull(address as any);
   } catch (e) {
     console.debug('[profile] invalidate full failed', e);
   }

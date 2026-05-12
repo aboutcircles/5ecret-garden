@@ -64,7 +64,6 @@
       : buildFallbackStore()
   );
 
-  // svelte-ignore state_referenced_locally — store is $derived, derived() subscribes reactively
   const filteredStore = derived([store, query], ([$store, $query]) => {
     const q = ($query ?? '').toLowerCase().trim();
     if (!q) return $store;
@@ -90,8 +89,8 @@
   async function ensureAuthed() {
     try {
       const avatar = (
-        avatarState.avatar?.address ??
-        avatarState.avatar?.avatarInfo?.avatar ??
+        (avatarState.avatar as any)?.address ??
+        (avatarState.avatar as any)?.avatarInfo?.avatar ??
         ''
       ).toLowerCase();
 

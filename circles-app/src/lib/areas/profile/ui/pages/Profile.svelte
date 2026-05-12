@@ -4,13 +4,13 @@
     import CommonConnections from '$lib/shared/ui/profile/components/CommonConnections.svelte';
     import TrustRelationsList from '$lib/shared/ui/profile/components/TrustRelationsList.svelte';
     import HoldersList from '$lib/shared/ui/profile/components/HoldersList.svelte';
-    import type {
-        AvatarRow,
-        AvatarInfo,
-        AggregatedTrustRelation,
-    } from '@aboutcircles/sdk-types';
-    import type { TrustRelationKind } from '$lib/shared/types/sdk-augment';
-    import { PagedQuery } from '@aboutcircles/sdk-rpc';
+    import {contacts} from '$lib/shared/state/contacts';
+    import {
+        type AvatarRow,
+        CirclesQuery,
+        type TrustRelation,
+        type TrustRelationRow,
+    } from '@circles-sdk/data';
     import Untrust from '$lib/areas/contacts/ui/pages/Untrust.svelte';
     import { openAddTrustFlow } from '$lib/areas/trust/flows/addTrust/openAddTrustFlow';
     import { openSendFlowPopup } from '$lib/areas/wallet/flows/send/openSendFlowPopup';
@@ -20,9 +20,7 @@
     import {popupControls} from '$lib/shared/state/popup';
     import JumpLink from '$lib/shared/ui/content/jump/JumpLink.svelte';
     import AddressComponent from '$lib/shared/ui/primitives/Address.svelte';
-    import type {Address} from '@aboutcircles/sdk-types';
-    import {uint256ToAddress} from '@aboutcircles/sdk-utils';
-    import SelectAmount from '$lib/areas/wallet/flows/send/3_Amount.svelte';
+    import {uint256ToAddress, type Address} from '@circles-sdk/utils';
     import {transitiveTransfer} from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
     import {
         getAccountHoldings,
@@ -42,15 +40,6 @@
     import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
     import type { AggregatedCatalogItem } from '$lib/areas/market/model';
     import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
-    // Sales / Price history / Gateways tabs
-    import SalesPanel from '$lib/areas/profile/ui/components/SalesPanel.svelte';
-    import PriceHistoryPanel from '$lib/areas/profile/ui/components/PriceHistoryPanel.svelte';
-    import GatewaysPanel from '$lib/areas/profile/ui/components/GatewaysPanel.svelte';
-    import { fetchPaymentsByPayee, type PaymentRow } from '$lib/shared/data/circles/paymentReceived';
-    import {
-        fetchGatewayRowsByOwner,
-        type GatewayListRow,
-    } from '$lib/shared/data/circles/paymentGateways';
     // Namespaces explorer (read-only) for other profiles
     import { ProfileNamespaces } from '$lib/shared/ui/profile';
     import { loadProfileOrInit } from '@circles-market/sdk';
@@ -64,7 +53,6 @@
     import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
     import { Star as LStar } from 'lucide';
     import { createAvatarDataSource } from '$lib/shared/data/circles/avatarDataSource';
-    import { createTrustDataSource } from '$lib/shared/data/circles/trustDataSource';
     import {
         bookmarksStateStore,
         profileBookmarksService,
@@ -88,12 +76,11 @@
         }
     });
 
-    let initializing = $state(true);
-    let otherAvatar: AvatarInfo | undefined = $state();
+    let otherAvatar: AvatarRow | undefined = $state();
     let profile: Profile | undefined = $state();
     let mintHandler: Address | undefined = $state();
 
-    let trustRow: AggregatedTrustRelation | undefined = $state();
+    let trustRow: TrustRelationRow | undefined = $state();
     const relationText = $derived.by(() => {
         if (!trustRow) return 'Not connected';
         const formatted = formatTrustRelation(trustRow.relation, profile);
@@ -104,7 +91,7 @@
         amount: bigint;
         amountToRedeem: bigint;
         amountToRedeemInCircles: number;
-        trustRelation?: TrustRelationKind;
+        trustRelation?: TrustRelation;
     }> = $state([]);
     let collateralLoading: boolean = $state(false);
     let collateralError: string | null = $state(null);
@@ -114,7 +101,7 @@
         amount: bigint;
         amountToRedeem: bigint;
         amountToRedeemInCircles: number;
-        trustRelation?: TrustRelationKind;
+        trustRelation?: TrustRelation;
     }> = $state([]);
     let holdersLoading: boolean = $state(false);
     let holdersError: string | null = $state(null);
@@ -124,7 +111,7 @@
         amount: bigint;
         amountToRedeem: bigint;
         amountToRedeemInCircles: number;
-        trustRelation?: TrustRelationKind;
+        trustRelation?: TrustRelation;
     }> = $state([]);
     let holdingsLoading: boolean = $state(false);
     let holdingsError: string | null = $state(null);
@@ -135,18 +122,6 @@
     let offers: AggregatedCatalogItem[] = $state([]);
     // Track which seller address the current `offers` belong to (lowercased)
     let offersFor: string | null = $state(null);
-
-    // Sales tab state (PaymentReceived events filtered by payee)
-    let paymentsLoading: boolean = $state(false);
-    let paymentsError: string = $state('');
-    let payments: PaymentRow[] = $state([]);
-    let paymentsFor: string | null = $state(null);
-
-    // Gateways tab state (CrcV2_PaymentGateway.GatewayCreated rows owned by avatar)
-    let gatewaysLoading: boolean = $state(false);
-    let gatewaysError: string = $state('');
-    let gateways: GatewayListRow[] = $state([]);
-    let gatewaysFor: string | null = $state(null);
 
     async function loadOffers(): Promise<void> {
         if (!address) return;
@@ -199,69 +174,6 @@
         }
     });
 
-    async function loadPayments(): Promise<void> {
-        if (!address) return;
-        const seller = normalizeAddress(String(address));
-        if (!seller) {
-            paymentsError = 'Invalid address';
-            payments = [];
-            paymentsFor = null;
-            return;
-        }
-        // Atomic swap: keep stale data in `payments` while fetching so `availableTabIds`
-        // doesn't drop the Sales tab mid-fetch and reset `selectedTab` away from it.
-        // If the address has changed, drop the old data first.
-        if (paymentsFor !== seller) payments = [];
-        paymentsLoading = true;
-        paymentsError = '';
-        try {
-            const sdk = get(circles);
-            if (!sdk) throw new Error('Circles SDK not initialized');
-            const fresh = await fetchPaymentsByPayee(sdk, seller);
-            payments = fresh;
-            paymentsFor = seller;
-        } catch (e: any) {
-            paymentsError = e?.message || 'Failed to load sales';
-            paymentsFor = seller;
-        } finally {
-            paymentsLoading = false;
-        }
-    }
-
-    async function loadGateways(): Promise<void> {
-        if (!address) return;
-        const owner = normalizeAddress(String(address));
-        if (!owner) {
-            gatewaysError = 'Invalid address';
-            gateways = [];
-            gatewaysFor = null;
-            return;
-        }
-        if (gatewaysFor !== owner) gateways = [];
-        gatewaysLoading = true;
-        gatewaysError = '';
-        try {
-            const sdk = get(circles);
-            if (!sdk) throw new Error('Circles SDK not initialized');
-            const fresh = await fetchGatewayRowsByOwner(sdk, owner);
-            gateways = fresh;
-            gatewaysFor = owner;
-        } catch (e: any) {
-            gatewaysError = e?.message || 'Failed to load gateways';
-            gatewaysFor = owner;
-        } finally {
-            gatewaysLoading = false;
-        }
-    }
-
-    // Eagerly load payments + gateways when address changes — both gate tab visibility.
-    $effect(() => {
-        if (!address) return;
-        const want = normalizeAddress(String(address));
-        if (!paymentsLoading && paymentsFor !== want) void loadPayments();
-        if (!gatewaysLoading && gatewaysFor !== want) void loadGateways();
-    });
-
     // ─────────────────────────────────────────────────────────────
     // Namespaces explorer for the displayed profile (auto-load)
     // ─────────────────────────────────────────────────────────────
@@ -277,12 +189,12 @@
         if (!sdk) {
             throw new Error('Circles SDK not initialized');
         }
-        const { bindings } = createCirclesSdkProfilesBindings({ circlesSdk: sdk });
-        return bindings;
+        const { bindings } = createCirclesSdkProfilesBindings({ circlesSdk: sdk as any });
+        return bindings as ProfilesBindings;
     }
 
     async function loadNamespacesFor(addr: Address): Promise<void> {
-        const norm = normalizeAddress(addr) as Address;
+        const norm = normalizeAddress(addr as any) as Address;
         namespacesFor = String(norm).toLowerCase();
         otherLoading = true;
         otherError = null;
@@ -318,31 +230,16 @@
         if (!sdk) {
             return;
         }
-        initializing = true;
         const avatarDataSource = createAvatarDataSource(sdk);
-        const trustDataSource = createTrustDataSource(sdk);
 
-        const myAddress = avatarState.avatar?.address;
-
-        const [other, prof, myRelations] = await Promise.all([
+        const [other, prof] = await Promise.all([
             avatarDataSource.getAvatarInfo(address),
-            getProfile(address as `0x${string}`),
-            myAddress
-                ? trustDataSource.getAggregatedTrustRelations(myAddress as Address)
-                    .catch(() => [] as AggregatedTrustRelation[])
-                : Promise.resolve([] as AggregatedTrustRelation[]),
+            getProfile(address),
         ]);
         otherAvatar = other;
         profile = prof;
 
-        // Find the trust relation between the current user and the viewed profile
-        const addrLower = address.toLowerCase();
-        trustRow = myRelations.find(
-            (r) => r.objectAvatar?.toLowerCase() === addrLower
-        );
-
-        // Core data ready — stop showing loading skeleton for trust/actions
-        initializing = false;
+        trustRow = $contacts?.data[address]?.row;
 
         const isGroup: boolean = otherAvatar?.type === 'CrcV2_RegisterGroup';
         const isHuman: boolean = otherAvatar?.type === 'CrcV2_RegisterHuman';
@@ -367,7 +264,7 @@
 
         const loadMintHandler = async () => {
             try {
-                const findMintHandlerQuery = new PagedQuery<any>(sdk.rpc.client, {
+                const findMintHandlerQuery = new CirclesQuery<any>(sdk.circlesRpc, {
                     namespace: 'V_CrcV2',
                     table: 'Groups',
                     columns: ['mintHandler'],
@@ -382,8 +279,7 @@
                     sortOrder: 'DESC',
                     limit: 1,
                 });
-                await findMintHandlerQuery.queryNextPage();
-                mintHandler = findMintHandlerQuery.currentPage?.results?.[0]?.mintHandler as Address | undefined;
+                mintHandler = (await findMintHandlerQuery.getSingleRow())?.mintHandler as Address | undefined;
             } catch (e) {
                 mintHandler = undefined;
             }
@@ -394,8 +290,8 @@
             collateralError = null;
             try {
                 const [vaultRes, treasuryRes] = await Promise.allSettled([
-                    getVaultAddress(sdk.rpc, otherAvatar!.avatar),
-                    getTreasuryAddress(sdk.rpc, otherAvatar!.avatar),
+                    getVaultAddress(sdk.circlesRpc, otherAvatar!.avatar),
+                    getTreasuryAddress(sdk.circlesRpc, otherAvatar!.avatar),
                 ]);
                 const vaultAddress = vaultRes.status === 'fulfilled' ? vaultRes.value : null;
                 const treasuryAddress = treasuryRes.status === 'fulfilled' ? treasuryRes.value : null;
@@ -405,7 +301,7 @@
                     collateralInTreasury = [];
                     return;
                 }
-                const balancesResult = await getGroupCollateral(sdk.rpc, balanceOwner);
+                const balancesResult = await getGroupCollateral(sdk.circlesRpc, balanceOwner);
                 collateralInTreasury = toTokenRows(balancesResult, 'tokenId');
             } catch (e: any) {
                 collateralError = e?.message ?? 'Failed to load collateral';
@@ -419,7 +315,7 @@
             holdingsLoading = true;
             holdingsError = null;
             try {
-                const holdingsResult = await getAccountHoldings(sdk.rpc, address);
+                const holdingsResult = await getAccountHoldings(sdk.circlesRpc, address);
                 holdings = toTokenRows(holdingsResult, 'tokenId');
             } catch (e: any) {
                 holdingsError = e?.message ?? 'Failed to load holdings';
@@ -433,7 +329,7 @@
             holdersLoading = true;
             holdersError = null;
             try {
-                const tokenHoldersResult = await getGroupTokenHolders(sdk.rpc, address);
+                const tokenHoldersResult = await getGroupTokenHolders(sdk.circlesRpc, address);
                 tokenHolders = toTokenRows(tokenHoldersResult, 'account');
             } catch (e: any) {
                 holdersError = e?.message ?? 'Failed to load holders';
@@ -467,9 +363,6 @@
         'holders',
         'holdings',
         'offers',
-        'sales',
-        'price_history',
-        'gateways',
         'explore_namespaces',
     ] as const;
     type TabId = TabIdOf<typeof TAB_IDS>;
@@ -594,11 +487,6 @@
             ids.push('holdings');
         }
         ids.push('offers');
-        if (payments.length > 0) {
-            ids.push('sales');
-            ids.push('price_history');
-        }
-        if (gateways.length > 0) ids.push('gateways');
         ids.push('explore_namespaces');
         return ids;
     })());
@@ -625,9 +513,7 @@
 <div class="flex flex-col items-center w-full sm:w-[90%] lg:w-3/5 mx-auto">
     <Avatar view="vertical" clickable={false} {address}/>
 
-    {#if initializing}
-        <div class="mt-2 h-5 w-32 rounded bg-base-300/50 animate-pulse"></div>
-    {:else if trustRow}
+    {#if trustRow}
         <div class="mt-2 flex items-center gap-1">
             <span
                     class="text-sm"
@@ -654,11 +540,9 @@
     <TrustScoreBadge {address} />
 
     <div class="my-6 flex flex-row gap-x-2">
-        {#if !initializing}
         <span class="inline-flex items-center h-8 bg-base-200 rounded-lg px-2 text-sm">
             {getTypeString(otherAvatar?.type || '')}
         </span>
-        {/if}
         <AddressComponent address={address ?? '0x0'}/>
         {#if address}
             <div class="relative">
@@ -750,10 +634,7 @@
     <div class="w-[80%] sm:w-[60%] border-b border-base-300"></div>
 
     <div class="w-full flex justify-center mt-6 space-x-6">
-        {#if initializing}
-            <div class="h-8 w-20 rounded-lg bg-base-300/50 animate-pulse"></div>
-            <div class="h-8 w-20 rounded-lg bg-base-300/50 animate-pulse"></div>
-        {:else if !avatarState.isGroup}
+        {#if !avatarState.isGroup}
             <div class="flex flex-col items-center gap-1">
                 <button
                         class="btn btn-primary btn-sm"
@@ -771,7 +652,7 @@
                 </button>
             </div>
         {/if}
-        {#if !initializing && otherAvatar?.type === 'CrcV2_RegisterGroup' && !!mintHandler && !avatarState.isGroup}
+        {#if otherAvatar?.type === 'CrcV2_RegisterGroup' && !!mintHandler && !avatarState.isGroup}
             <button
                     class="btn btn-primary btn-sm"
                     onclick={() => {
@@ -786,9 +667,7 @@
                 Mint
             </button>
         {/if}
-        {#if initializing}
-            <!-- trust button handled in the skeleton above -->
-        {:else if trustRow?.relation === 'trusts'}
+        {#if trustRow?.relation === 'trusts'}
             <button
                     class="btn btn-primary btn-sm"
                     onclick={() => {
@@ -1046,50 +925,6 @@
             {/if}
         {/if}
     </Tab>
-
-    {#if payments.length > 0}
-        <Tab
-                id="sales"
-                title="Sales"
-                badge={payments.length}
-                panelClass={tabPanelClass}
-        >
-            <SalesPanel
-                {payments}
-                loading={paymentsLoading}
-                error={paymentsError}
-                onRetry={loadPayments}
-            />
-        </Tab>
-
-        <Tab
-                id="price_history"
-                title="Price history"
-                panelClass={tabPanelClass}
-        >
-            <PriceHistoryPanel
-                {payments}
-                loading={paymentsLoading}
-                error={paymentsError}
-            />
-        </Tab>
-    {/if}
-
-    {#if gateways.length > 0}
-        <Tab
-                id="gateways"
-                title="Gateways"
-                badge={gateways.length}
-                panelClass={tabPanelClass}
-        >
-            <GatewaysPanel
-                {gateways}
-                loading={gatewaysLoading}
-                error={gatewaysError}
-                onRetry={loadGateways}
-            />
-        </Tab>
-    {/if}
 
     <!-- Explore namespaces tab: auto-load the viewed profile's namespaces (read-only) -->
     <Tab

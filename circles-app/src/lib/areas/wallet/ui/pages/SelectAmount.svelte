@@ -1,9 +1,9 @@
 <script lang="ts">
-  import type { TokenBalance } from '@aboutcircles/sdk-types';
+  import type { TokenBalanceRow } from '@circles-sdk/data';
   import CurrencyInput from '$lib/areas/wallet/ui/components/CurrencyInput.svelte';
 
   interface Props {
-    asset: TokenBalance;
+    asset: TokenBalanceRow;
     amount?: number;
     maxAmountCircles?: number;
     routeLoading?: boolean;

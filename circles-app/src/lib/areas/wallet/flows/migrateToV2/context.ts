@@ -1,4 +1,4 @@
-import type { Profile } from '@aboutcircles/sdk-types';
+import type { Profile } from '@circles-sdk/profiles';
 
 export type MigrateToV2Context = {
   inviter:

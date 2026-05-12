@@ -4,29 +4,6 @@
     resolveAdminProductType,
     type AdminUnifiedProduct
   } from '$lib/areas/admin/types';
-  import type { OdooProductListItem, CodeProductListItem } from '$lib/areas/admin/services/gateway/adminClient';
-
-  const sampleOdoo: OdooProductListItem = {
-    chainId: 100,
-    seller: '0x2222222222222222222222222222222222222222',
-    sku: 'ODOO-001',
-    odooProductCode: 'DEMO-ODOO',
-    enabled: true,
-    revokedAt: null,
-    totalInventory: null,
-    localAvailableQty: null,
-  };
-
-  const sampleCode: CodeProductListItem = {
-    chainId: 100,
-    seller: '0x3333333333333333333333333333333333333333',
-    sku: 'CODE-001',
-    poolId: 'demo-pool',
-    downloadUrlTemplate: null,
-    enabled: true,
-    revokedAt: null,
-    poolRemaining: null,
-  };
 
   const sampleProducts: AdminUnifiedProduct[] = [
     {
@@ -40,14 +17,14 @@
       chainId: 100,
       seller: '0x2222222222222222222222222222222222222222',
       sku: 'ODOO-001',
-      odoo: sampleOdoo
+      odoo: {} as any
     },
     {
       key: 'prod-code',
       chainId: 100,
       seller: '0x3333333333333333333333333333333333333333',
       sku: 'CODE-001',
-      code: sampleCode
+      code: {} as any
     }
   ];
 

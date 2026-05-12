@@ -9,7 +9,7 @@
     title: string;
     subtitle?: string;
     labels?: readonly string[];
-    size?: 'sm' | 'md' | 'lg' | 'xl';
+    size?: 'md' | 'lg' | 'xl';
     className?: string;
     children?: Snippet;
   }

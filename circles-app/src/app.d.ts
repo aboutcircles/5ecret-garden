@@ -10,13 +10,8 @@ declare global {
   }
 
   interface Window {
-    ethereum?: import('ethers').Eip1193Provider | undefined;
+    ethereum: any;
   }
 }
-
-// Note: readable-stream and bn.js resolve to untyped modules from node_modules
-// and cannot have ambient module declarations here (TS would treat them as
-// augmentations of unresolvable modules). Their implicit-any is harmless since
-// they're consumed only by other third-party libraries.
 
 export {};

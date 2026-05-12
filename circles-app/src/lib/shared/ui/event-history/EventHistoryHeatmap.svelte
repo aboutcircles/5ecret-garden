@@ -1,8 +1,7 @@
 <script lang="ts">
   import { circles } from '$lib/shared/state/circles';
   import { get } from 'svelte/store';
-  import type { PagedQueryParams, Filter } from '@aboutcircles/sdk-types';
-  import { PagedQuery } from '@aboutcircles/sdk-rpc';
+  import { CirclesQuery, type PagedQueryParams } from '@circles-sdk/data';
   import { popupControls } from '$lib/shared/state/popup';
   import EventHistoryDayCalendar from './EventHistoryDayCalendar.svelte';
   import EventHistoryWeeklySections from './EventHistoryWeeklySections.svelte';
@@ -115,33 +114,28 @@
 
     try {
       const sdk = get(circles);
-      if (!sdk?.rpc) {
+      if (!sdk?.circlesRpc) {
         throw new Error('Circles SDK not initialized');
       }
 
-      // PagedQueryParams types from @aboutcircles/sdk-types are structurally compatible
-      // at runtime but our CirclesQueryFilter uses different discriminants (FilterGroup vs Conjunction).
-      // Cast filter array at the integration boundary.
       const queryDefinition: PagedQueryParams = {
-        namespace: source.namespace,
-        table: source.table,
+        // `PagedQueryParams` types from `@circles-sdk/data` are stricter than our dataSource surface;
+        // keep casts localized here (integration boundary).
+        namespace: source.namespace as any,
+        table: source.table as any,
         columns: source.columns ?? [],
-        filter: (source.baseFilter ?? []) as unknown as Filter[],
+        filter: (source.baseFilter ?? []) as any,
         sortOrder: source.sortOrder ?? 'ASC',
         limit: source.pageSize ?? 1000,
       };
 
-      const query = new PagedQuery<CirclesBaseEventRow>(sdk.rpc.client, queryDefinition);
+      const query = new CirclesQuery<CirclesBaseEventRow>(sdk.circlesRpc, queryDefinition);
       const allRows: CirclesBaseEventRow[] = [];
-      const MAX_PAGES = 50;
-      let pageCount = 0;
 
       while (await query.queryNextPage()) {
         const pageRows = query.currentPage?.results ?? [];
         if (pageRows.length === 0) break;
         allRows.push(...pageRows);
-        pageCount++;
-        if (!query.currentPage?.hasMore || pageCount >= MAX_PAGES) break;
       }
 
       if (localRequestId !== requestId) return;
@@ -372,7 +366,7 @@
     });
 
     popupControls.open({
-      title: labels.dayPopupTitle?.(dayStartSec, events) ?? labels.title ?? 'Events',
+      title: labels.dayPopupTitle?.(dayStartSec, events as any) ?? labels.title ?? 'Events',
       component: EventHistoryDayEventsPopup,
       props: {
         dayStartSec,
@@ -387,7 +381,7 @@
     });
   }
 
-  const summaryText = $derived(labels.summary?.(rows) ?? `${rows.length} event${rows.length === 1 ? '' : 's'}`);
+  const summaryText = $derived(labels.summary?.(rows as any) ?? `${rows.length} event${rows.length === 1 ? '' : 's'}`);
 </script>
 
 <div class="space-y-3">

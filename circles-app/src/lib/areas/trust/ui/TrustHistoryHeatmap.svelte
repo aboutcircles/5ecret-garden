@@ -1,7 +1,6 @@
 <script lang="ts">
-  import type { Address } from '@aboutcircles/sdk-types';
+  import type { Address } from '@circles-sdk/utils';
   import { EventHistoryHeatmap, type EventHistoryDataSource } from '$lib/shared/ui/event-history';
-  import type { CirclesBaseEventRow, EventHistoryRowComponent, EventHistoryDayPopupHeaderComponent } from '$lib/shared/ui/event-history/types';
   import TrustHistoryDayEventRow from '$lib/areas/trust/ui/history/TrustHistoryDayEventRow.svelte';
   import TrustHistoryDayPopupHeader from '$lib/areas/trust/ui/history/TrustHistoryDayPopupHeader.svelte';
   import { trustHistoryKnownRangeEvents } from '$lib/areas/trust/ui/history/knownRangeEvents';
@@ -109,12 +108,11 @@
       .sort((a, b) => a.startDaySec - b.startDaySec || a.endDaySec - b.endDaySec || a.title.localeCompare(b.title));
   }
 
-  function trustSearchHaystack(row: CirclesBaseEventRow): string {
-    const r = row as TrustHistoryEventRow;
+  function trustSearchHaystack(row: TrustHistoryEventRow): string {
     return [
-      String(r.trustee ?? ''),
-      String(r.transactionHash ?? ''),
-      Number(r.expiryTime) > Number(r.timestamp) ? 'trust set' : 'trust removed',
+      String(row.trustee ?? ''),
+      String(row.transactionHash ?? ''),
+      Number(row.expiryTime) > Number(row.timestamp) ? 'trust set' : 'trust removed',
     ]
       .join(' ')
       .toLowerCase();
@@ -122,7 +120,7 @@
 </script>
 
 <EventHistoryHeatmap
-  dataSource={dataSource as EventHistoryDataSource}
+  {dataSource}
   labels={{
     title: 'Trust events',
     loading: 'Loading outgoing trust history…',
@@ -137,8 +135,8 @@
     },
   }}
   searchHaystack={trustSearchHaystack}
-  rowComponent={TrustHistoryDayEventRow as EventHistoryRowComponent}
-  dayPopupHeaderComponent={TrustHistoryDayPopupHeader as EventHistoryDayPopupHeaderComponent}
+  rowComponent={TrustHistoryDayEventRow as any}
+  dayPopupHeaderComponent={TrustHistoryDayPopupHeader as any}
   overlays={{
     rangeEvents: knownRangeEvents,
     overlayLabel: 'Known events',

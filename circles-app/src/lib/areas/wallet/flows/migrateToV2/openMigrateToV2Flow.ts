@@ -10,15 +10,13 @@ import GetInvitedStep from './1_GetInvited.svelte';
 import CreateProfileStep from './2_CreateProfile.svelte';
 
 export async function openMigrateToV2Flow(): Promise<void> {
-  requireCircles(get(circlesStore)); // ensure SDK is available
+  const sdk = requireCircles(get(circlesStore));
   const avatar = requireAvatar(avatarState.avatar);
   const avatarInfo = avatar.avatarInfo;
-  // New SDK has no canSelfMigrate(); check inline if avatar has active v1 token
-  const info = avatarInfo as any;
   const canSelfMigrate = avatarInfo
     ? settings.ring
       ? true
-      : (info?.version === 1 || (info?.hasV1 === true && info?.v1Stopped !== true))
+      : await sdk.canSelfMigrate(avatarInfo)
     : false;
 
   const skipInvitationStep = migrationCanStartAtProfile(avatarInfo, canSelfMigrate);

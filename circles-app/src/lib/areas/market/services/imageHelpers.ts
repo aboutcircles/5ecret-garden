@@ -1,14 +1,12 @@
 // src/lib/market/imageHelpers.ts
 // Central helpers to normalize product images from various schema-like shapes.
 
-import type { SchemaOrgProductLite } from '$lib/areas/market/model';
-
-export function normalizeProductImagesFromSchema(prod: SchemaOrgProductLite | null | undefined): string[] {
+export function normalizeProductImagesFromSchema(prod: any): string[] {
   if (!prod) return [];
 
   const urls: string[] = [];
 
-  const primary: unknown = prod.image ?? null;
+  const primary: any = (prod as any)?.image ?? (prod as any)?.images ?? null;
 
   const push = (u: unknown) => {
     if (typeof u === 'string') {
@@ -17,15 +15,13 @@ export function normalizeProductImagesFromSchema(prod: SchemaOrgProductLite | nu
     }
   };
 
-  const extractFromObject = (img: Record<string, unknown>) => {
+  const extractFromObject = (img: any) => {
     if (!img || typeof img !== 'object') return;
     push(img.url);
     push(img.Url);
     push(img.contentUrl);
-    const nested = img.object as Record<string, unknown> | undefined;
-    const nestedCap = img.Object as Record<string, unknown> | undefined;
-    push(nested?.contentUrl);
-    push(nestedCap?.ContentUrl);
+    push(img.object?.contentUrl);
+    push(img.Object?.ContentUrl);
   };
 
   if (typeof primary === 'string') {
@@ -39,13 +35,13 @@ export function normalizeProductImagesFromSchema(prod: SchemaOrgProductLite | nu
       }
     }
   } else if (primary && typeof primary === 'object') {
-    extractFromObject(primary as Record<string, unknown>);
+    extractFromObject(primary);
   }
 
   // Fallbacks – some backends use imageUrl / ImageUrl
   if (urls.length === 0) {
-    push(prod.imageUrl);
-    push(prod.ImageUrl);
+    push((prod as any)?.imageUrl);
+    push((prod as any)?.ImageUrl);
   }
 
   // De-duplicate while preserving order
@@ -57,7 +53,7 @@ export function normalizeProductImagesFromSchema(prod: SchemaOrgProductLite | nu
   });
 }
 
-export function pickFirstProductImageUrl(prod: SchemaOrgProductLite | null | undefined): string | null {
+export function pickFirstProductImageUrl(prod: any): string | null {
   const imgs = normalizeProductImagesFromSchema(prod);
   return imgs[0] ?? null;
 }
