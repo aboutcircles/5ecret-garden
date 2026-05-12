@@ -1,0 +1,71 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Build workspace packages in dependency order
+      - name: Build @circles-market/core + @circles-profile/core
+        run: |
+          npm run build --workspace=packages/circles-market-core
+          npm run build --workspace=packages/circles-profile-core
+
+      - name: Build remaining market packages
+        run: |
+          npm run build --workspace=packages/circles-market-auth
+          npm run build --workspace=packages/circles-market-cart
+          npm run build --workspace=packages/circles-market-catalog
+          npm run build --workspace=packages/circles-market-offers
+          npm run build --workspace=packages/circles-market-orders
+          npm run build --workspace=packages/circles-market-sales
+          npm run build --workspace=packages/circles-market-session
+          npm run build --workspace=packages/circles-market-signers
+
+      - name: Build @circles-market/sdk
+        run: npm run build --workspace=packages/circles-market-sdk
+
+      - name: Build circles-app (static)
+        run: npm run build --workspace=circles-app
+
+      - name: Prepare deployment
+        run: |
+          cp circles-app/build/200.html circles-app/build/404.html
+          cp circles-app/build/200.html circles-app/build/index.html
+          echo "circles.leinss.xyz" > circles-app/build/CNAME
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: circles-app/build
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

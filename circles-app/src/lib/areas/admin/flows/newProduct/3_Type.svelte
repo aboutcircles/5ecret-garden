@@ -1,10 +1,10 @@
 <script lang="ts">
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
   import { openStep } from '$lib/shared/flow';
   import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
-  import { NEW_PRODUCT_FLOW_SCAFFOLD_BASE } from './constants';
+  import { NEW_PRODUCT_SELECTION_FLOW_SCAFFOLD_BASE } from './constants';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import DetailsStep from './5_Details.svelte';
   import CreateConnectionStep from './4_CreateOdooConnection.svelte';
@@ -21,6 +21,7 @@
 
   let { context, connections, existingProducts, onExecute, onCreateConnection }: Props = $props();
 
+  // svelte-ignore state_referenced_locally — intentional: initialize from flow context
   let selectedType = $state<Exclude<import('$lib/areas/admin/types').AdminProductType, 'route'>>(
     context.selectedType ?? 'codedispenser'
   );
@@ -62,7 +63,7 @@
 </script>
 
 <FlowStepScaffold
-  {...NEW_PRODUCT_FLOW_SCAFFOLD_BASE}
+  {...NEW_PRODUCT_SELECTION_FLOW_SCAFFOLD_BASE}
   step={3}
   title="Type"
   subtitle="Choose how this product will be fulfilled."

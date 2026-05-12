@@ -15,7 +15,7 @@
     header,
     desc,
     route,
-    recommended = undefined
+    recommended = undefined,
   }: Props = $props();
 </script>
 

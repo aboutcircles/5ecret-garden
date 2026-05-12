@@ -1,5 +1,4 @@
 <script lang="ts">
-  import Untrust from '$lib/areas/contacts/ui/pages/Untrust.svelte';
   import type { AddContactFlowContext } from '$lib/areas/contacts/flows/addContact/context';
   import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
@@ -7,9 +6,10 @@
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import AdvancedDetails from '$lib/shared/ui/flow/AdvancedDetails.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-  import { openStep, popToOrOpen } from '$lib/shared/flow';
+  import { popToOrOpen } from '$lib/shared/flow';
   import { popupControls } from '$lib/shared/state/popup';
   import SearchStep from './1_Search.svelte';
+  import { openTrustRelationshipFlow } from '$lib/areas/trust/flows/relationship/openTrustRelationshipFlow';
 
   interface Props {
     context: AddContactFlowContext;
@@ -53,13 +53,12 @@
         class="btn btn-error btn-outline btn-sm"
         onclick={() => {
           popupControls.close();
-          openStep({
-            title: 'Untrust',
-            component: Untrust,
-            props: {
-              address: context.selectedAddress,
-              trustVersion: context.trustVersion,
-            },
+          openTrustRelationshipFlow({
+            mode: 'remove',
+            actorType: 'avatar',
+            actorAddress: context.selectedAddress,
+            trustReceiver: context.selectedAddress,
+            trustVersion: context.trustVersion,
           });
         }}
       >

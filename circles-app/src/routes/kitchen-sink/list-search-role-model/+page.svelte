@@ -1,7 +1,7 @@
 <script lang="ts">
   import { derived, writable } from 'svelte/store';
-  import type { Address } from '@circles-sdk/utils';
-  import type { GroupRow, TokenBalanceRow, TransactionHistoryRow } from '@circles-sdk/data';
+  import type { Address } from '@aboutcircles/sdk-types';
+  import type { GroupRow, TokenBalance, TransactionHistoryRow } from '@aboutcircles/sdk-types';
   import type { TrustRow, GatewayRow } from '$lib/areas/settings/model/gatewayTypes';
   import type { AdminUnifiedProduct, AdminProductType, AdminOdooConnection } from '$lib/areas/admin/types';
   import type { MonthlyItem, RangeOverlayEvent } from '$lib/shared/ui/event-history/types';
@@ -93,7 +93,7 @@
   const contactsPaginated = createPaginatedList(contactsFiltered, { pageSize: 4 });
 
   // Balances list demo
-  const balanceRows: TokenBalanceRow[] = [
+  const balanceRows: TokenBalance[] = [
     {
       tokenOwner: demoAddresses[0],
       tokenType: 'CrcV2_RegisterHuman',
@@ -101,12 +101,17 @@
       staticCircles: 0,
       crc: 245.23,
       isWrapped: false,
+      isInflationary: false,
+      isGroup: false,
+      isErc20: false,
+      isErc1155: true,
       tokenAddress: demoAddresses[0],
-      tokenId: 'CRC',
-      blockNumber: 1,
-      transactionIndex: 0,
-      logIndex: 0,
-    } as TokenBalanceRow,
+      tokenId: '0x0000000000000000000000000000000000000000',
+      version: 2,
+      attoCircles: BigInt('245230000000000000000'),
+      staticAttoCircles: BigInt(0),
+      attoCrc: BigInt('245230000000000000000'),
+    } satisfies TokenBalance,
     {
       tokenOwner: demoAddresses[2],
       tokenType: 'CrcV2_ERC20WrapperDeployed_Inflationary',
@@ -114,12 +119,17 @@
       staticCircles: 61.12,
       crc: 30.75,
       isWrapped: true,
+      isInflationary: true,
+      isGroup: false,
+      isErc20: true,
+      isErc1155: false,
       tokenAddress: demoAddresses[2],
-      tokenId: 'WCRC',
-      blockNumber: 2,
-      transactionIndex: 0,
-      logIndex: 0,
-    } as TokenBalanceRow,
+      tokenId: '0x0000000000000000000000000000000000000000',
+      version: 2,
+      attoCircles: BigInt('91870000000000000000'),
+      staticAttoCircles: BigInt('61120000000000000000'),
+      attoCrc: BigInt('30750000000000000000'),
+    } satisfies TokenBalance,
     {
       tokenOwner: demoAddresses[3],
       tokenType: 'CrcV2_RegisterGroup',
@@ -127,35 +137,75 @@
       staticCircles: 120.5,
       crc: 291.51,
       isWrapped: false,
+      isInflationary: false,
+      isGroup: true,
+      isErc20: false,
+      isErc1155: true,
       tokenAddress: demoAddresses[3],
-      tokenId: 'GCRC',
-      blockNumber: 3,
-      transactionIndex: 0,
-      logIndex: 0,
-    } as TokenBalanceRow,
+      tokenId: '0x0000000000000000000000000000000000000000',
+      version: 2,
+      attoCircles: BigInt('412010000000000000000'),
+      staticAttoCircles: BigInt('120500000000000000000'),
+      attoCrc: BigInt('291510000000000000000'),
+    } satisfies TokenBalance,
   ];
   const balanceStore = createStaticStore(balanceRows);
 
   // Transaction history list demo
-  const transactionRows: TransactionHistoryRow[] = [
+  // Note: TransactionRow.svelte in the dashboard uses ExtendedTransactionRow (which adds circles: number).
+  // For the kitchen sink, we cast to satisfy the generic list while providing compatible data.
+  const transactionRows = [
     {
       from: demoAddresses[0],
       to: demoAddresses[1],
       circles: 24.5,
       timestamp: Math.floor(Date.now() / 1000) - 3600,
-    } as TransactionHistoryRow,
+      blockNumber: 1,
+      transactionIndex: 0,
+      logIndex: 0,
+      transactionHash: '0xabc1' as `0x${string}`,
+      version: 2,
+      value: '24500000000000000000',
+      attoCircles: '24500000000000000000',
+      crc: '24.5',
+      attoCrc: '24500000000000000000',
+      staticCircles: '0',
+      staticAttoCircles: '0',
+    },
     {
       from: demoAddresses[2],
       to: demoAddresses[0],
       circles: 5.75,
       timestamp: Math.floor(Date.now() / 1000) - 8600,
-    } as TransactionHistoryRow,
+      blockNumber: 2,
+      transactionIndex: 0,
+      logIndex: 0,
+      transactionHash: '0xabc2' as `0x${string}`,
+      version: 2,
+      value: '5750000000000000000',
+      attoCircles: '5750000000000000000',
+      crc: '5.75',
+      attoCrc: '5750000000000000000',
+      staticCircles: '0',
+      staticAttoCircles: '0',
+    },
     {
       from: '0x0000000000000000000000000000000000000000' as Address,
       to: demoAddresses[0],
       circles: 30.0,
       timestamp: Math.floor(Date.now() / 1000) - 21600,
-    } as TransactionHistoryRow,
+      blockNumber: 3,
+      transactionIndex: 0,
+      logIndex: 0,
+      transactionHash: '0xabc3' as `0x${string}`,
+      version: 2,
+      value: '30000000000000000000',
+      attoCircles: '30000000000000000000',
+      crc: '30.0',
+      attoCrc: '30000000000000000000',
+      staticCircles: '0',
+      staticAttoCircles: '0',
+    },
   ];
   const transactionStore = createStaticStore(transactionRows);
 

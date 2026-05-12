@@ -1,4 +1,4 @@
-import type { Address } from '@circles-sdk/utils';
+import type { Address } from '@aboutcircles/sdk-types';
 import type { Readable, Writable } from 'svelte/store';
 import { derived, writable } from 'svelte/store';
 import { createPaginatedList } from '$lib/shared/state/paginatedList';

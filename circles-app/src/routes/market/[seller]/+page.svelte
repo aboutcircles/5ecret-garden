@@ -22,7 +22,7 @@
     
     // Current connected avatar (lowercased for comparison)
     const currentAvatar = $derived(
-      (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '').toLowerCase()
+      (avatarState.avatar?.address ?? '').toLowerCase()
     );
     
     // Seller from route params, lowercased
@@ -42,7 +42,7 @@
     let products: ProductLike[] = $state([]);
     let sellerAddress: `0x${string}` | null = $state(null);
 
-    const shortAddr = (a?: string) => (a ? shortenAddress(a as any) : '');
+    const shortAddr = (a?: string) => (a ? shortenAddress(a) : '');
 
     // ————————————————————————————————————————————
     // data load
@@ -57,7 +57,7 @@
         const normalized = normalizeAddress(params.seller);
         sellerAddress = normalized as `0x${string}`;
 
-        const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
+        const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator!);
         const items = await catalog.fetchSellerCatalog(normalized);
         // fetchSellerCatalog already filters by seller, but keep this defensive filter
         products = items.filter(
@@ -80,7 +80,7 @@
       openFlowPopup({
         title: 'Create Offer',
         component: OfferStep1,
-        props: { context: { operator: gnosisConfig.production.marketOperator, pinApiBase: gnosisConfig.production.profilePinningServiceUrl } },
+        props: { context: { operator: gnosisConfig.production.marketOperator, pinApiBase: gnosisConfig.production.marketApiBase } },
         onClose: () => { void loadSellerCatalog(); }
       });
     }

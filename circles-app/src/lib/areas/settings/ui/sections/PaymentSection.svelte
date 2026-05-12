@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
   import type { Readable } from 'svelte/store';
   import { derived, writable } from 'svelte/store';
   import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
