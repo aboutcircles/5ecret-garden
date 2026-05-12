@@ -1,5 +1,6 @@
 import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
 import type { Basket, BasketPatch, OrderItemPreview } from './types';
+import { toLocalBasket } from './types';
 import { normalizeAddr, normalizeSku, normalizeImageUrl } from './basketUtils';
 
 type BasketPatchItem = {
@@ -122,17 +123,17 @@ export async function patchBasket(basketId: string, patch: BasketPatch): Promise
       }))
       .filter((x) => x.seller && x.sku && x.quantity > 0);
 
-    updated = await client.cart.setItems({ basketId, items });
+    updated = toLocalBasket(await client.cart.setItems({ basketId, items }));
   }
 
   if (hasDetailsPatch) {
-    updated = await client.cart.setCheckoutDetails({
+    updated = toLocalBasket(await client.cart.setCheckoutDetails({
       basketId,
       shippingAddress: patch.shippingAddress ?? undefined,
       billingAddress: patch.billingAddress ?? undefined,
       contactPoint: patch.contactPoint ?? undefined,
       ageProof: patch.ageProof ?? undefined,
-    });
+    }));
   }
 
   if (!updated) {

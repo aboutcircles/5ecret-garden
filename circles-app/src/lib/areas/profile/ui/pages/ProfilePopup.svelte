@@ -1,6 +1,6 @@
 <script lang="ts">
   import Profile from './Profile.svelte';
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
   const { address, trustVersion } = $props<{
     address?: Address;
     trustVersion?: number;

@@ -47,3 +47,4 @@ vite.config.ts.timestamp-*
 
 # Do NOT ignore lockfiles; they should be committed
 # (package-lock.json, yarn.lock, pnpm-lock.yaml)
+test-results/

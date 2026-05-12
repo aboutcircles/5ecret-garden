@@ -35,7 +35,7 @@ export function createLocalWalletProvider(): WalletProvider {
           if (!typedDataJson) throw new Error('eth_signTypedData_v4 requires typed data JSON');
           // We ignore maybeOwner and always sign with the local key's account
           const typed = JSON.parse(typedDataJson) as TypedDataDefinition;
-          const signature = await account.signTypedData(typed as any);
+          const signature = await account.signTypedData(typed as Parameters<typeof account.signTypedData>[0]);
           return signature as unknown as T;
         }
         default: {

@@ -1,5 +1,5 @@
-import type { CirclesEvent, CirclesEventType } from '@circles-sdk/data';
-import type { Avatar } from '@circles-sdk/sdk';
+import type { CirclesEvent, CirclesEventType } from '@aboutcircles/sdk-rpc';
+import type { Avatar } from '@aboutcircles/sdk';
 import { readable, type Readable } from 'svelte/store';
 
 // Type Definitions
@@ -63,13 +63,16 @@ export function createEventStore<T>(
   handleEvent: EventHandler<T>,
   handleNextPage: NextPageFunction<T>,
   initialData: T,
-  dataComparator?: T extends Array<infer U> ? (a: U, b: U) => number : undefined,
+  dataComparator?: T extends Array<infer U>
+    ? (a: U, b: U) => number
+    : undefined,
   debounceDelay = 50
 ): Readable<{ data: T; next: () => Promise<boolean>; ended: boolean }> {
   let timeout: any;
   let lastEvent: CirclesEvent | null = null;
   let finished = false;
   let storeData = initialData;
+  let unsubscribeFromEvents: (() => void) | undefined;
 
   return readable<{ data: T; next: () => Promise<boolean>; ended: boolean }>(
     {
@@ -95,10 +98,10 @@ export function createEventStore<T>(
       }
 
       /**
-     * Loads the next page of data by calling `handleNextPage` and updates the store.
-     *
-     * @returns {Promise<boolean>} - A promise resolving to whether pagination has ended.
-     */
+       * Loads the next page of data by calling `handleNextPage` and updates the store.
+       *
+       * @returns {Promise<boolean>} - A promise resolving to whether pagination has ended.
+       */
       async function next(): Promise<boolean> {
         await initialPromise;
         const { data, ended } = await handleNextPage(storeData);
@@ -110,8 +113,8 @@ export function createEventStore<T>(
       setData(storeData); // Initialize the store with the initial data
 
       /**
-     * Processes debounced events and updates the store's data.
-     */
+       * Processes debounced events and updates the store's data.
+       */
       const processEvents = async () => {
         if (!lastEvent) return;
         const data = await handleEvent(lastEvent, storeData);
@@ -120,12 +123,14 @@ export function createEventStore<T>(
       };
 
       /**
-     * Handles incoming events by debouncing their processing.
-     *
-     * @param {CirclesEvent} event - The event to process.
-     */
+       * Handles incoming events by debouncing their processing.
+       *
+       * @param {CirclesEvent} event - The event to process.
+       */
       const eventHandler = (event: CirclesEvent) => {
-        if (!eventTypes.has(event.$event)) return;
+        if (!eventTypes.has(event.$event)) {
+          return;
+        }
         lastEvent = event;
 
         if (timeout) {
@@ -147,13 +152,29 @@ export function createEventStore<T>(
 
       // Load the initial data and subscribe to events
       initialLoad()
-        .then((data) => setData(data))
+        .then((data) => {
+          setData(data);
+        })
         .then(() => resolveInitialLoad?.())
-        .then(() => avatar.events.subscribe(eventHandler))
-        .catch((e) => console.error('Failed to initialize store', e));
+        .then(() => {
+          unsubscribeFromEvents = avatar.events.subscribe(eventHandler);
+        })
+        .catch((e) => {
+          console.error('[EventStore] Failed to initialize store', e);
+          // Mark as ended so consumers (VirtualList) stop showing skeletons
+          finished = true;
+          set({ data: storeData, next: next, ended: true });
+          resolveInitialLoad?.();
+        });
 
       return () => {
-        avatar.unsubscribeFromEvents();
+        if (unsubscribeFromEvents) {
+          unsubscribeFromEvents();
+          unsubscribeFromEvents = undefined;
+        }
+        if (timeout) {
+          clearTimeout(timeout);
+        }
       };
     }
   );

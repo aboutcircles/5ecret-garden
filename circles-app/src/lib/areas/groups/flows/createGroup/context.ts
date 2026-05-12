@@ -1,5 +1,5 @@
 import { writable } from 'svelte/store';
-import type { Address } from '@circles-sdk/utils';
+import type { Address } from '@aboutcircles/sdk-types';
 
 /** Minimal shape accepted by profiles.create() for group profiles */
 export type GroupProfileShape = {

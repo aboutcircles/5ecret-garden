@@ -58,7 +58,7 @@
   />
   {#if showSubmit}
     <div class={submitContainerClass}>
-      <ActionButton action={onSubmit ?? (() => {})} disabled={isSubmitDisabled}>
+      <ActionButton action={onSubmit ?? (async () => {})} disabled={isSubmitDisabled}>
         {submitLabel}
       </ActionButton>
     </div>

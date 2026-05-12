@@ -1,7 +1,8 @@
 <script lang="ts">
     import { circles } from '$lib/shared/state/circles';
     import { wallet } from '$lib/shared/state/wallet.svelte';
-    import type { Profile } from '@circles-sdk/profiles';
+    import { avatarState } from '$lib/shared/state/avatar.svelte';
+    import type { Profile } from '@aboutcircles/sdk-profiles';
     import { ProfileFormStep } from '$lib/shared/ui/profile';
     import { onMount } from 'svelte';
     import Disclaimer from '$lib/areas/register/ui/components/RegistrationDisclaimer.svelte';
@@ -18,14 +19,18 @@
     onMount(async () => {
         const sdk = requireCircles(get(circles));
         if ($wallet?.address) {
-            const cid = await sdk.data?.getMetadataCidForAddress($wallet.address);
+            const info = await sdk.data?.getAvatar($wallet.address);
+            const cid = info?.cidV0Digest;
             profile = cid ? ((await sdk.profiles?.get(cid)) ?? profile) : profile;
         }
     });
 
     async function registerProfile() {
       const sdk = requireCircles(get(circles));
-      await sdk.createOrUpdateProfile(profile);
+      const cid = await sdk.profiles.create(profile);
+      if (avatarState.avatar) {
+        await avatarState.avatar.profile.updateMetadata(cid);
+      }
     }
 
     function goBack() { history.back(); }

@@ -5,7 +5,7 @@
   import { safeStringify } from '$lib/shared/utils/json';
   import { addressForDisplay, formatAttoCircles, isAddress } from '$lib/shared/utils/tx';
 
-  export type TxEvent = Record<string, any> & { $type?: string };
+  export type TxEvent = Record<string, any> & { $type?: string; eventType?: string; logIndex?: number; LogIndex?: number };
 
   interface Props {
     events: TxEvent[];
@@ -25,6 +25,20 @@
     eventsListOpen,
     toggleEventsList,
   }: Props = $props();
+
+  /** Strip CrcV2_/Crc_ prefix and split PascalCase into readable words */
+  function eventLabel(ev: TxEvent): string {
+    const raw = ev.$type ?? ev.eventType;
+    if (!raw) return 'Event';
+    return raw
+      .replace(/^CrcV2_/, '')
+      .replace(/^Crc_/, '')
+      .replace(/([a-z0-9])([A-Z])/g, '$1 $2');
+  }
+
+  function eventLogIndex(ev: TxEvent): number | undefined {
+    return ev.LogIndex ?? ev.logIndex;
+  }
 </script>
 
 {#if events.length}
@@ -71,10 +85,12 @@
                   <Lucide icon={LArrowRight} size={14} />
                 </div>
                 <div class="text-sm font-medium truncate">
-                  {ev.$type ?? 'Event'} <span class="opacity-60">#{i + 1}</span>
+                  {eventLabel(ev)} <span class="opacity-60">#{i + 1}</span>
                 </div>
               </div>
-              <div class="text-xs opacity-60 shrink-0">Log {ev.LogIndex ?? '-'}</div>
+              <div class="text-xs opacity-40 shrink-0">
+                {ev.$type ?? ev.eventType ?? ''}
+              </div>
             </div>
             {#if isOpen(i)}
               <div class="mt-2 overflow-x-auto">
@@ -90,7 +106,9 @@
                       <tr>
                         <td class="whitespace-nowrap opacity-70">{niceKey(k)}</td>
                         <td class="align-middle">
-                          {#if k === 'Value' && formatAttoCircles(v)}
+                          {#if v == null || v === undefined}
+                            <span class="opacity-40">—</span>
+                          {:else if (k === 'Value' || k === 'value' || k === 'Cost' || k === 'cost') && formatAttoCircles(v)}
                             <span>{formatAttoCircles(v)}</span>
                           {:else if isAddress(v) || addressForDisplay(k, v)}
                             {#if addressForDisplay(k, v)}

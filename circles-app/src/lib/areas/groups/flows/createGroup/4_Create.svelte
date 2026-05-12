@@ -6,9 +6,7 @@
     import { wallet } from '$lib/shared/state/wallet.svelte';
     import { runTask } from '$lib/shared/utils/tasks';
     import { popupControls } from '$lib/shared/state/popup';
-    import Markdown from '$lib/shared/ui/content/markdown/Markdown.svelte';
     import ProfilePreviewCard from '$lib/shared/ui/profile/ProfilePreviewCard.svelte';
-    import { cidV0ToUint8Array } from '@circles-sdk/utils';
     import { isValidSymbol, isValidOnChainName } from '$lib/shared/utils/isValid';
     import {
         createGroupContext,
@@ -16,7 +14,7 @@
         resetCreateGroupContext
     } from './context';
     import { assertWalletCanSignForSafe } from '$lib/shared/integrations/safe/assertWalletCanSignForSafe';
-  import type { AddressLike } from 'ethers';
+    import type { Address } from '@aboutcircles/sdk-types';
     import AdvancedDetails from '$lib/shared/ui/flow/AdvancedDetails.svelte';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
 
@@ -36,14 +34,6 @@
             ctx = context as CreateGroupFlowContext;
         }
     });
-
-    function extractAddressFromTopic(topic: string | undefined): string | null {
-        const looksRight: boolean = typeof topic === 'string' && topic.startsWith('0x') && topic.length === 66;
-        if (!looksRight) { return null; }
-        const safeTopic = topic as string;
-        const addr = '0x' + safeTopic.slice(26);
-        return addr.toLowerCase();
-    }
 
     async function createGroup() {
         const hasSdk: boolean = !!$circles;
@@ -68,34 +58,22 @@
                 // Kept inside runTask so failures open the global dismissable error popup.
                 await assertWalletCanSignForSafe(String($wallet.address));
 
-                const CID = await $circles.profiles?.create(ctx.profile);
-                if (!CID) { throw new Error('Failed to create profile CID'); }
-                ctx.cid = CID;
-
                 console.log($wallet.address, ctx);
-                const tx = await $circles.baseGroupFactory?.createBaseGroup(
-                    $wallet.address as AddressLike,
+                const ownerAddress: `0x${string}` = $wallet.address as `0x${string}`;
+
+                // sdk.register.asGroup handles profile CID creation, on-chain registration,
+                // and returns the resulting BaseGroupAvatar directly.
+                const groupAvatar = await $circles.register.asGroup(
+                    ownerAddress,
                     ctx.service,
                     ctx.feeCollection,
                     ctx.initialConditions,
                     onChainName,
                     ctx.profile.symbol,
-                    cidV0ToUint8Array(CID)
+                    ctx.profile
                 );
-                if (!tx) { throw new Error('Failed to submit createBaseGroup transaction'); }
 
-                const receipt = await tx.wait();
-                const logs = (receipt as any)?.logs ?? [];
-                let groupAddress: string | null = null;
-
-                for (const log of logs) {
-                    const topic = (log?.topics && log.topics[1]) as string | undefined;
-                    const addr = extractAddressFromTopic(topic);
-                    const ok: boolean = !!addr && addr.length === 42;
-                    if (ok) { groupAddress = addr!; break; }
-                }
-
-                if (!groupAddress) { throw new Error('Could not extract group address from receipt'); }
+                const groupAddress = groupAvatar.address;
 
                 // Notify caller (e.g., ConnectCircles) so it can connect the new group and navigate
                 try {
@@ -105,7 +83,7 @@
                 }
 
                 // Reset context so a new flow starts clean next time
-                resetCreateGroupContext($wallet.address as `0x${string}`);
+                resetCreateGroupContext(ownerAddress);
 
                 return groupAddress;
             })()

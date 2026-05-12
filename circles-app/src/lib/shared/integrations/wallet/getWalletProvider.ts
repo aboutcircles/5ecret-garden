@@ -20,7 +20,7 @@ function chooseInjectedProvider(
 
   const providers = Array.isArray(injected.providers) ? injected.providers : [];
   if (providers.length === 0) {
-    return injected?.request ? injected : undefined;
+    return injected;
   }
 
   const normalized = normalizeConnectorId(connectorId);
@@ -41,7 +41,7 @@ function chooseInjectedProvider(
   }
 
   // Fallback: first valid EIP-1193 provider.
-  return providers.find((p) => typeof p?.request === 'function') ?? (injected?.request ? injected : undefined);
+  return providers.find((p) => typeof p?.request === 'function') ?? injected;
 }
 
 /**
@@ -55,7 +55,7 @@ export function getWalletProvider(): WalletProvider {
     return createLocalWalletProvider();
   }
 
-  const injected = (typeof window !== 'undefined' ? (window as any).ethereum : undefined) as
+  const injected = (typeof window !== 'undefined' ? window.ethereum : undefined) as
     | (InjectedProviderLike & { providers?: InjectedProviderLike[] })
     | undefined;
 

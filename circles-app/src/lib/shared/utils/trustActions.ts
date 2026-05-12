@@ -1,6 +1,6 @@
 import { get } from 'svelte/store';
 import { ethers } from 'ethers';
-import type { Address } from '@circles-sdk/utils';
+import type { Address } from '@aboutcircles/sdk-types';
 
 import { avatarState } from '$lib/shared/state/avatar.svelte';
 import { circles } from '$lib/shared/state/circles';
@@ -25,7 +25,7 @@ export async function addTrustRelations(params: {
 
     await runTask({
       name: `${shortenAddress(params.actorAddress)} trusts ${trustTargets.length} avatar${trustTargets.length === 1 ? '' : 's'} ...`,
-      promise: avatarState.avatar.trust(trustTargets),
+      promise: avatarState.avatar.trust.add(trustTargets),
     });
     return;
   }
@@ -40,14 +40,14 @@ export async function addTrustRelations(params: {
     const groupAvatar = await sdk.getAvatar(params.actorAddress, false);
     await runTask({
       name: `${shortenAddress(params.actorAddress)} trusts ${trustTargets.length} avatar${trustTargets.length === 1 ? '' : 's'} ...`,
-      promise: groupAvatar.trust(trustTargets),
+      promise: groupAvatar.trust.add(trustTargets),
     });
     return;
   }
 
   // gateway
-  const runner = get(wallet) as any;
-  if (!runner) {
+  const runner = get(wallet);
+  if (!runner?.sendTransaction) {
     throw new Error('Wallet not connected.');
   }
 

@@ -1,13 +1,13 @@
 <script lang="ts">
     import { onMount, onDestroy } from 'svelte';
     import IMask from 'imask';
-    import type { TokenBalanceRow } from '@circles-sdk/data';
+    import type { TokenBalance } from '@aboutcircles/sdk-types';
     import { TransitiveTransferTokenAddress } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
     import { roundToDecimals } from '$lib/shared/utils/shared';
     import Tooltip from "$lib/shared/ui/primitives/Tooltip.svelte";
 
     interface Props {
-        balanceRow: TokenBalanceRow;
+        balanceRow: TokenBalance;
         amount?: number;
         maxAmountCircles?: number;
         routeLoading?: boolean;
@@ -23,11 +23,12 @@
     }: Props = $props();
 
     let inputElement: HTMLInputElement | undefined = $state();
-    let mask: IMask.InputMask<any> | null = null;
+    let mask: any = null;
     let blurListener: (() => void) | null = null;
 
     // Single IMask config (2 decimals, no negatives)
-    const maskOptions: IMask.AnyMaskedOptions = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const maskOptions: any = {
         mask: Number,
         scale: 2,
         signed: false,
@@ -40,12 +41,12 @@
         // placeholderChar: '_',  // <-- removed on purpose
     };
 
-    let maxDisplayAmount = $derived(maxAmountCircles >= 0 ? maxAmountCircles : balanceRow.circles);
+    let maxDisplayAmount = $derived(maxAmountCircles >= 0 ? maxAmountCircles : (balanceRow.circles ?? 0));
     let isAutoRoute = $derived(balanceRow?.tokenAddress === TransitiveTransferTokenAddress);
     let routeCapDisplay = $derived(
         routeLoading
             ? '- / -'
-            : `${roundToDecimals(maxDisplayAmount)} / ${roundToDecimals(balanceRow.circles)}`
+            : `${roundToDecimals(maxDisplayAmount)} / ${roundToDecimals(balanceRow.circles ?? 0)}`
     );
 
     function clampToMax(n: number): number {
@@ -165,7 +166,7 @@
                     <Tooltip content="Availability depends on your trust network and routing limits."/>
                 </span>
             {:else}
-                Available: {roundToDecimals(balanceRow.circles)}
+                Available: {roundToDecimals(balanceRow.circles ?? 0)}
             {/if}
         </div>
         <button class="btn btn-xs btn-ghost" onclick={setMaxAmount}>

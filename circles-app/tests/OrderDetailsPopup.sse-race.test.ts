@@ -2,9 +2,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import { mount, tick, unmount } from 'svelte';
 
-const getOrderStatusHistoryMock = vi.fn();
-const subscribeBuyerOrderEventsMock = vi.fn();
-const getOrderMock = vi.fn();
+const { getOrderStatusHistoryMock, subscribeBuyerOrderEventsMock, getOrderMock } = vi.hoisted(() => ({
+  getOrderStatusHistoryMock: vi.fn(),
+  subscribeBuyerOrderEventsMock: vi.fn(),
+  getOrderMock: vi.fn(),
+}));
 
 vi.mock('../src/lib/areas/market/orders/ordersQueries', () => ({
   getOrderStatusHistory: getOrderStatusHistoryMock,
@@ -50,11 +52,13 @@ describe('OrderDetailsPopup SSE subscription lifecycle', () => {
     unmount(component);
 
     // Late resolution should not leave an active subscription behind.
+    // The component checks `destroyed` after await, so it bails out
+    // entirely — never subscribing to SSE events.
     historyDeferred.resolve({ events: [] });
     await tick();
 
-    expect(subscribeBuyerOrderEventsMock).toHaveBeenCalledTimes(1);
-    expect(unsubscribe).toHaveBeenCalledTimes(1);
+    expect(subscribeBuyerOrderEventsMock).toHaveBeenCalledTimes(0);
+    expect(unsubscribe).toHaveBeenCalledTimes(0);
 
     target.remove();
   });
