@@ -1,8 +1,7 @@
 import { getProfile } from '$lib/shared/utils/profile';
 import type { Readable } from 'svelte/store';
 import { derived, writable } from 'svelte/store';
-import type { Address } from '@aboutcircles/sdk-types';
-import type { ProfileAddress } from '$lib/shared/model/profile';
+import type { Address } from '@circles-sdk/utils';
 
 export type ProfileNameMap = Record<string, string>;
 
@@ -14,7 +13,7 @@ export function createProfileNameStore(addresses: Readable<Address[]>): Readable
       const key = String(addr).toLowerCase();
       names.update((current) => {
         if (current[key] !== undefined) return current;
-        getProfile(addr as ProfileAddress)
+        getProfile(addr)
           .then((profile) => {
             names.update((next) => ({ ...next, [key]: profile?.name ?? '' }));
           })

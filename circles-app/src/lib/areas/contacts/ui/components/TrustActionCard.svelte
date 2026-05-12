@@ -3,8 +3,6 @@
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
 
-  import type { Snippet } from 'svelte';
-
   interface Props {
     address: `0x${string}`;
     intro: string;
@@ -16,7 +14,6 @@
     quickHelpTitle?: string;
     quickHelpLines?: string[];
     showExplainerDetails?: boolean;
-    insight?: Snippet;
   }
 
   let {
@@ -27,7 +24,7 @@
     action,
     explainerTitle = 'More details (optional)',
     explainerPoints = [
-      "Trust is on/off: you either accept this account's Circles or you don't.",
+      'Trust is on/off: you either accept this account’s Circles or you don’t.',
       'Trust is one-way: they need to trust you separately.',
       'Trust enables routing. When payments route through the network, the mix of Circles you hold can change (your total stays the same).',
       'If you end up holding Circles that are hard to spend, you can untrust to stop accepting more through this connection.',
@@ -35,7 +32,6 @@
     quickHelpTitle,
     quickHelpLines = [],
     showExplainerDetails = true,
-    insight,
   }: Props = $props();
 
   const hasQuickHelp = $derived(Boolean(quickHelpTitle && quickHelpLines.length > 0));
@@ -70,7 +66,7 @@
     {/if}
   </div>
 
-  {@render insight?.()}
+  <slot name="insight"></slot>
 
   <div class="flex justify-end">
     <ActionButton action={runAction}>{cta}</ActionButton>

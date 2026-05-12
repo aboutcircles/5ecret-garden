@@ -135,6 +135,7 @@
       emptyLabel="No contacts to migrate"
       noMatchesLabel="No matches"
       wrapInListContainer={false}
+      data-contacts-list-scope
     >
       <div bind:this={contactsListEl} class="w-full flex flex-col gap-y-1.5" role="list">
         {#each $filteredItems as address (address)}

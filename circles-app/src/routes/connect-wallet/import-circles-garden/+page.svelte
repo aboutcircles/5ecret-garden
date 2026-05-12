@@ -3,39 +3,46 @@
   import {
     clearSession,
     getSignerFromPk,
-    initNewSafeContractRunner,
+    initPrivateKeyContractRunner,
+    initSafeSdkPrivateKeyContractRunner,
     signer,
     wallet,
   } from '$lib/shared/state/wallet.svelte';
   import { circles } from '$lib/shared/state/circles';
-  import { Sdk } from '@aboutcircles/sdk';
+  import { Sdk } from '@circles-sdk/sdk';
   import { onMount } from 'svelte';
   import { settings } from '$lib/shared/state/settings.svelte';
   import { gnosisConfig } from '$lib/shared/config/circles';
-  import type { Address } from '@aboutcircles/sdk-types';
+  import type { SdkContractRunner } from '@circles-sdk/adapter';
+  import type { Address } from '@circles-sdk/utils';
+
+  let runner: SdkContractRunner | undefined = $state();
 
   $effect(() => {
-    // Create a read-only Sdk (no contractRunner) for avatar discovery
-    if (signer.address) {
-      const config = settings.ring ? gnosisConfig.rings : gnosisConfig.production;
-      circles.set(new Sdk(config));
-    }
+    circles.set(
+      runner
+        ? new Sdk(
+            runner,
+            settings.ring ? gnosisConfig.rings : gnosisConfig.production
+          )
+        : undefined
+    );
   });
 
   async function connectCirclesGarden(address: Address) {
     if (!signer.privateKey) {
       throw new Error('No private key found');
     }
-    const runner = await initNewSafeContractRunner(
+    runner = await initSafeSdkPrivateKeyContractRunner(
       signer.privateKey,
       address
     );
     wallet.set(runner);
 
-    const config = settings.ring ? gnosisConfig.rings : gnosisConfig.production;
-    const sdk = new Sdk(config, runner);
-    circles.set(sdk);
-    return sdk;
+    return new Sdk(
+      runner,
+      settings.ring ? gnosisConfig.rings : gnosisConfig.production
+    );
   }
 
   onMount(async () => {
@@ -47,6 +54,7 @@
 
     signer.address = address;
     signer.privateKey = privateKey;
+    runner = await initPrivateKeyContractRunner(privateKey);
   });
 
   function goBack(): void {

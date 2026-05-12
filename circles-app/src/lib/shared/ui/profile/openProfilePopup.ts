@@ -1,4 +1,4 @@
-import type { Address } from '@aboutcircles/sdk-types';
+import type { Address } from '@circles-sdk/utils';
 import { normalizeEvmAddress } from '@circles-market/sdk';
 import { popupControls } from '$lib/shared/state/popup';
 import { ProfilePopup } from '$lib/areas/profile/ui/pages';

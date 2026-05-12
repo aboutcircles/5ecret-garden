@@ -1,0 +1,82 @@
+{
+  "@type": "Order",
+  "broker": {
+    "@id": "eip155:100:0x20ced4ed3b1651b832a77e13e54ea5cb14c8b95b",
+    "@type": "Organization"
+  },
+  "outbox": [],
+  "@context": "https://schema.org/",
+  "customer": {
+    "@id": "eip155:100:0xe709edb5d0f4188e0d0870d091b174214e91c84d",
+    "@type": "Person",
+    "givenName": "leire",
+    "familyName": "diez"
+  },
+  "orderDate": "2026-02-27T16:54:12.6966198+00:00",
+  "paymentUrl": null,
+  "downloadUrl": null,
+  "orderNumber": "ord_409A0825F9CDE88789161BE291B7154E",
+  "orderStatus": "https://schema.org/OrderPaymentDue",
+  "orderedItem": [
+    {
+      "@type": "OrderItem",
+      "productCid": "QmRPw4moBZ9yWLQ6f243Lda9Af4pz9Tw5LzG8tjfRBi2zD",
+      "orderedItem": {
+        "sku": "gnosis-cap-ki84y",
+        "@type": "Product"
+      },
+      "orderQuantity": 1
+    }
+  ],
+  "voucherCode": null,
+  "acceptedOffer": [
+    {
+      "@type": "Offer",
+      "price": 2500,
+      "seller": {
+        "@id": "eip155:100:0x435587e35ada26778b6db0194951a70725c33f43",
+        "@type": "Organization"
+      },
+      "isOneOff": false,
+      "priceCurrency": "CRC",
+      "requiredSlots": [
+        "customer",
+        "contactPoint.email",
+        "contactPoint.telephone",
+        "shippingAddress",
+        "shippingAddress.streetAddress",
+        "shippingAddress.addressLocality",
+        "shippingAddress.postalCode",
+        "shippingAddress.addressCountry"
+      ],
+      "fulfillmentTrigger": null,
+      "fulfillmentEndpoint": null,
+      "availableDeliveryMethod": null
+    }
+  ],
+  "sellerContact": {
+    "@type": "ContactPoint",
+    "email": "leirediezlarrea@gmail.com",
+    "telephone": "+34676036246"
+  },
+  "billingAddress": {
+    "@type": "PostalAddress",
+    "postalCode": "48630",
+    "streetAddress": "ondargane 9b 2c",
+    "addressCountry": "es",
+    "addressLocality": "Gorliz"
+  },
+  "shippingAddress": {
+    "@type": "PostalAddress",
+    "postalCode": "48630",
+    "streetAddress": "ondargane 9b 2c",
+    "addressCountry": "es",
+    "addressLocality": "Gorliz"
+  },
+  "totalPaymentDue": {
+    "@type": "PriceSpecification",
+    "price": 2500,
+    "priceCurrency": "CRC"
+  },
+  "paymentReference": "pay_42E690D111E0628E4E2FA5FFECEB26E4"
+}

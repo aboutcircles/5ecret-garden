@@ -6,7 +6,7 @@
   import { circles } from '$lib/shared/state/circles';
   import { openStep } from '$lib/shared/flow';
   import SearchAvatar from '$lib/areas/contacts/ui/pages/SearchAvatar.svelte';
-  import type { Address } from '@aboutcircles/sdk-types';
+  import type { Address } from '@circles-sdk/utils';
   import { get } from 'svelte/store';
   import type { SelectTargetStepProps } from '$lib/shared/flow';
   import { SEND_FLOW_SCAFFOLD_BASE, SEND_POPUP_TITLE } from './constants';
@@ -22,7 +22,7 @@
     context = $bindable({
       selectedAddress: undefined,
       transitiveOnly: false,
-      selectedAsset: undefined,
+      selectedAsset: undefined as any,
       amount: undefined,
     }),
   }: Props = $props();

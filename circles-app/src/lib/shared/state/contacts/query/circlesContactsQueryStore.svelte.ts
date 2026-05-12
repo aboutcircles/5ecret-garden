@@ -2,17 +2,16 @@ import { createCirclesQueryStore } from '$lib/shared/state/query';
 import { circles } from '$lib/shared/state/circles';
 import type {
   CirclesEventType,
-  AggregatedTrustRelation,
+  TrustRelationRow,
   EventRow,
   CirclesQuery,
   AvatarRow,
-  AvatarInfo,
-} from '@aboutcircles/sdk-types';
+} from '@circles-sdk/data';
 import type { ContactList } from '$lib/shared/state/contacts';
 import { getProfilesCoreBatch, type ProfileAddress } from '$lib/shared/model/profile';
 import { get } from 'svelte/store';
-import type { Address } from '@aboutcircles/sdk-types';
-import type { Avatar, Sdk } from '@aboutcircles/sdk';
+import type { Address } from '@circles-sdk/utils';
+import type { Avatar, Sdk } from '@circles-sdk/sdk';
 import { createTrustDataSource } from '$lib/shared/data/circles/trustDataSource';
 import { createAvatarDataSource } from '$lib/shared/data/circles/avatarDataSource';
 
@@ -32,29 +31,48 @@ export async function createContactsQueryStore(
   const createContactsQuery = async (): Promise<
     CirclesQuery<ContactEventRow>
   > => {
-    // Fetch contacts eagerly so the CirclesQuery has data on .rows immediately
-    const contacts = await trustDataSource.getAggregatedTrustRelations(address);
-    const enrichedContacts = await enrichContactData(contacts, address, sdk);
+    const query = {
+      currentPage: undefined,
+      mutable: true,
+      params: {},
+      rpc: sdk.data.rpc,
+      _calculatedColumns: [],
+      buildCursorFilter: () => [],
+      buildOrderBy: () => [],
+      combineFilters: () => [],
+      request: async () => ({ rows: [] }),
+      rowsToObjects: (rows: any[]) => rows as ContactEventRow[],
+      rowToCursor: () => '',
+      getFirstAndLastCursor: () => ({ first: '', last: '' }),
+      getSingleRow: async () => undefined,
+      async queryNextPage(
+        this: CirclesQuery<ContactEventRow>
+      ): Promise<boolean> {
+        if (this.currentPage && this.currentPage.results?.length > 0) {
+          (this as any).currentPage = {
+            results: [],
+            hasMore: false,
+          };
+          return false;
+        }
 
-    const contactEventRow: ContactEventRow = {
-      blockNumber: Date.now(),
-      transactionIndex: 0,
-      logIndex: 0,
-      data: enrichedContacts,
-    };
+        const contacts = await trustDataSource.getAggregatedTrustRelations(address);
+        const enrichedContacts = await enrichContactData(contacts, address, sdk);
 
-    const query: CirclesQuery<ContactEventRow> = {
-      rows: [contactEventRow],
-      hasMore: false,
-      async nextPage(): Promise<CirclesQuery<ContactEventRow>> {
-        // No further pages — return empty result
-        return {
-          rows: [],
-          hasMore: false,
-          nextPage: this.nextPage,
+        const contactEventRow: ContactEventRow = {
+          blockNumber: Date.now(),
+          transactionIndex: 0,
+          logIndex: 0,
+          data: enrichedContacts,
         };
+
+        (this as any).currentPage = {
+          results: [contactEventRow],
+          hasMore: false,
+        };
+        return false;
       },
-    };
+    } as unknown as CirclesQuery<ContactEventRow>;
     return query;
   };
 
@@ -87,56 +105,43 @@ export async function createContactsQueryStore(
 }
 
 async function enrichContactData(
-  rows: AggregatedTrustRelation[],
+  rows: TrustRelationRow[],
   ownerAddress: Address | undefined,
   sdk: Sdk
 ): Promise<ContactList> {
   const profileRecord: ContactList = {};
 
-  // Normalize comparison so mixed-case addresses don't leak the owner through
-  const ownerLower = ownerAddress?.toLowerCase();
-  const filteredRows = ownerLower
-    ? rows.filter((row) => row.objectAvatar?.toLowerCase() !== ownerLower)
+  const filteredRows = ownerAddress
+    ? rows.filter((row) => row.objectAvatar !== ownerAddress)
     : rows;
 
   // Avoid N+1 profile fetches by using the existing batched core-profile pipeline.
-  const addresses = [...new Set(filteredRows.map((r) => r.objectAvatar).filter(Boolean))];
-  const normalized = addresses.map((a) => a!.toLowerCase() as ProfileAddress);
-
-  let profileByAddress: Map<ProfileAddress, any>;
-  try {
-    profileByAddress = await getProfilesCoreBatch(normalized);
-  } catch (e) {
-    console.warn('[Contacts] Profile batch fetch failed, proceeding without profiles:', e);
-    profileByAddress = new Map();
-  }
-
+  const addresses = [...new Set(filteredRows.map((r) => r.objectAvatar))];
+  const normalized = addresses.map((a) => a.toLowerCase() as ProfileAddress);
+  const profileByAddress = await getProfilesCoreBatch(normalized);
   for (const row of filteredRows) {
-    if (!row.objectAvatar) continue;
     const profile = profileByAddress.get(row.objectAvatar.toLowerCase() as ProfileAddress);
-    // Always add the contact — profile enrichment is optional
-    profileRecord[row.objectAvatar] = {
-      contactProfile: profile ?? { name: row.objectAvatar },
-      row: row,
-    };
+    if (profile) {
+      profileRecord[row.objectAvatar] = {
+        contactProfile: profile,
+        row: row,
+      };
+    }
   }
 
   const avatarDataSource = createAvatarDataSource(sdk);
   const avatarInfos = await avatarDataSource.getAvatarInfoBatch(
     Object.keys(profileRecord) as Address[]
   );
-  const avatarInfoRecord: Record<string, AvatarInfo> = {};
+  const avatarInfoRecord: Record<string, AvatarRow> = {};
   avatarInfos.forEach((info) => {
-    // Key by lowercase so lookup is case-insensitive
-    if (info) avatarInfoRecord[info.avatar.toLowerCase()] = info;
+    avatarInfoRecord[info.avatar] = info;
   });
 
   Object.values(profileRecord).forEach((item) => {
-    const info = item.row.objectAvatar
-      ? avatarInfoRecord[item.row.objectAvatar.toLowerCase()]
-      : undefined;
+    const info = avatarInfoRecord[item.row.objectAvatar];
     if (info) {
-      item.avatarInfo = info as unknown as AvatarRow;
+      item.avatarInfo = info;
     }
   });
 

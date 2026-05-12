@@ -23,12 +23,9 @@
     import type { HTMLButtonAttributes } from 'svelte/elements';
 
     interface Props extends HTMLButtonAttributes {
-        action: () => Promise<any> | void;
+        action: () => Promise<any>;
         title?: string;
         disabled?: boolean;
-        loading?: boolean;
-        variant?: 'primary' | 'ghost' | 'outline' | 'secondary' | 'error' | 'warning' | 'success' | 'info';
-        size?: 'xs' | 'sm' | 'md' | 'lg';
         theme?: ActionButtonTheme;
     }
 
@@ -36,11 +33,8 @@
         action,
         title = '',
         disabled = false,
-        loading = false,
-        variant,
-        size,
         theme = {
-            ['Ready']: variant ? `btn-${variant}` : 'btn-primary',
+            ['Ready']: 'btn-primary',
             ['Working']: 'btn-disabled',
             ['Error']: 'btn-warning',
             ['Retry']: 'btn-warning',
@@ -57,12 +51,11 @@
     let errorMessage: string = $state('');
 
     const executeAction = () => {
-        if (disabled || loading || buttonState === 'Done' || buttonState == 'Working') {
+        if (disabled || buttonState === 'Done' || buttonState == 'Working') {
             return;
         }
         buttonState = 'Working';
-        const result = action();
-        (result instanceof Promise ? result : Promise.resolve())
+        action()
             .then(() => {
                 buttonState = 'Done';
                 setTimeout(() => {
@@ -95,9 +88,9 @@
         {...rest}
         onclick={executeAction}
         title={errorMessage ?? title}
-        class="btn {size ? `btn-${size}` : 'btn-sm'} inline-flex items-center gap-2 {theme[loading ? 'Working' : buttonState]}"
+        class="btn btn-sm inline-flex items-center gap-2 {theme[buttonState]}"
 >
-    {#if loading || buttonState === 'Working'}
+    {#if buttonState === 'Working'}
         <span class="loading loading-spinner loading-xs"></span>
     {:else if buttonState === 'Retry'}
         <Lucide icon={RotateCcw} size={16}/>

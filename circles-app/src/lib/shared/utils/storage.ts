@@ -1,5 +1,12 @@
-import type { Address } from '@aboutcircles/sdk-types';
-import type { WalletType } from '$lib/shared/utils/walletType';
+import type { Address } from '@circles-sdk/utils';
+
+type WalletType =
+  | 'safe'
+  | 'safe+group'
+  | 'injected'
+  | 'injected+group'
+  | 'circles'
+  | 'circles+group';
 
 export interface StorageSchema {
   version: number;
@@ -10,10 +17,15 @@ export interface StorageSchema {
   groupType?: string;
   privateKey?: string;
   rings?: boolean;
+  legacy?: boolean;
 }
 
 const STORAGE_KEY = 'Circles.Storage';
 const CURRENT_VERSION = 1;
+
+function canUseLocalStorage(): boolean {
+  return typeof localStorage !== 'undefined';
+}
 
 export class CirclesStorage {
   private static instance: CirclesStorage;
@@ -30,6 +42,8 @@ export class CirclesStorage {
   }
 
   private migrate() {
+    if (!canUseLocalStorage()) return;
+
     const data = this.read();
 
     if (data?.version === CURRENT_VERSION) return;
@@ -42,19 +56,12 @@ export class CirclesStorage {
       groupType: localStorage.getItem('groupType') || undefined,
       privateKey: localStorage.getItem('privateKey') || undefined,
       ...data,
-      version: CURRENT_VERSION,
+      version: CURRENT_VERSION
     };
 
     this.write(migratedData);
 
-    [
-      'walletType',
-      'avatar',
-      'group',
-      'isGroup',
-      'groupType',
-      'privateKey',
-    ].forEach((key) => {
+    ['walletType', 'avatar', 'group', 'isGroup', 'groupType', 'privateKey'].forEach(key => {
       localStorage.removeItem(key);
     });
   }
@@ -98,15 +105,22 @@ export class CirclesStorage {
     return this.data.rings;
   }
 
+  get legacy(): boolean | undefined {
+    return this.data.legacy;
+  }
+
   clear() {
+    if (!canUseLocalStorage()) return;
     localStorage.removeItem(STORAGE_KEY);
   }
 
   private write(data: StorageSchema) {
+    if (!canUseLocalStorage()) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }
 
   private read(): StorageSchema | undefined {
+    if (!canUseLocalStorage()) return undefined;
     const stored = localStorage.getItem(STORAGE_KEY);
     return stored ? JSON.parse(stored) : undefined;
   }

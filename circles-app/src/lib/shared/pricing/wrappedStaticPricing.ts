@@ -1,4 +1,4 @@
-import type { TokenBalance } from '@aboutcircles/sdk-types';
+import type { TokenBalanceRow } from '@circles-sdk/data';
 
 export const WRAPPED_STATIC_TOKEN_TYPE = 'CrcV2_ERC20WrapperDeployed_Inflationary';
 
@@ -9,7 +9,7 @@ export type WrappedStaticPriceResult = {
 
 export type WrappedStaticPriceMap = Record<string, WrappedStaticPriceResult>;
 
-export function isWrappedStaticToken(balance: TokenBalance): boolean {
+export function isWrappedStaticToken(balance: TokenBalanceRow): boolean {
   return balance.tokenType === WRAPPED_STATIC_TOKEN_TYPE && balance.isErc20 === true;
 }
 
@@ -17,7 +17,7 @@ export function normalizeAddress(address: string): string {
   return address.toLowerCase();
 }
 
-export function pickWrappedStaticTokenAddresses(balances: TokenBalance[]): string[] {
+export function pickWrappedStaticTokenAddresses(balances: TokenBalanceRow[]): string[] {
   const unique = new Set<string>();
 
   for (const balance of balances) {

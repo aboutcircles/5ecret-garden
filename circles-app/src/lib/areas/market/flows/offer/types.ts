@@ -1,5 +1,4 @@
-import type {Address} from "@aboutcircles/sdk-types";
-import type {AggregatedCatalogItem} from '$lib/areas/market/model';
+import type {Address} from "@circles-sdk/utils";
 
 export type OfferDraft = {
   // Product
@@ -36,6 +35,4 @@ export interface OfferFlowContext {
   result?: unknown;       // optional: store appendOffer result
   pinApiBase?: string;    // ← NEW: market API base for pinning
   editMode?: boolean;     // ← when true, the flow edits an existing product (e.g., lock SKU)
-  /** Optimistic UI callback: called with a synthetic AggregatedCatalogItem after successful publish/update. */
-  onPublished?: (item: AggregatedCatalogItem) => void;
 }

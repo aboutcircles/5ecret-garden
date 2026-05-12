@@ -1,14 +1,14 @@
 import {
   type CirclesEventType,
+  CirclesQuery,
   type EventRow,
   type GroupRow,
   type PagedQueryParams,
-} from '@aboutcircles/sdk-types';
-import { PagedQuery } from '@aboutcircles/sdk-rpc';
+} from '@circles-sdk/data';
 import { get } from 'svelte/store';
-import { createCirclesQueryStore, pagedQueryToCirclesQuery } from '$lib/shared/state/query';
+import { createCirclesQueryStore } from '$lib/shared/state/query';
 import { circles } from '$lib/shared/state/circles';
-import type { Avatar } from '@aboutcircles/sdk';
+import type { Avatar } from '@circles-sdk/sdk';
 
 const groupEvents: Set<CirclesEventType> = new Set([]);
 
@@ -26,30 +26,16 @@ export const createCMGroups = (avatar: Avatar) => {
     columns: [],
     sortOrder: 'DESC',
     filter: [{
-      Type: 'Conjunction',
-      ConjunctionType: 'Or',
-      Predicates: [
-        {
-          Type: 'FilterPredicate',
-          FilterType: 'Equals',
-          Column: 'type',
-          Value: 'CrcV2_BaseGroupCreated',
-        },
-        {
-          Type: 'FilterPredicate',
-          FilterType: 'Equals',
-          Column: 'type',
-          Value: 'CrcV2_CMGroupCreated',
-        },
-      ],
+      Type: 'FilterPredicate',
+      FilterType: 'In',
+      Column: 'type',
+      Value: ['CrcV2_BaseGroupCreated', 'CrcV2_CMGroupCreated'],
     }],
   };
 
   return createCirclesQueryStore<GroupRow>(
     avatar,
-    async () => pagedQueryToCirclesQuery(
-      new PagedQuery<GroupRow>(circlesInstance.rpc.client, queryDefinition)
-    ),
+    async () => new CirclesQuery<GroupRow>(circlesInstance.circlesRpc, queryDefinition),
     groupEvents,
   );
 };

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
-  import type { Address } from '@aboutcircles/sdk-types';
+  import type { Address } from '@circles-sdk/utils';
   import AdminProductFormBase from '$lib/areas/admin/components/AdminProductFormBase.svelte';
   import { normalizeAddressInput } from '$lib/areas/admin/productEditorUtils';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';

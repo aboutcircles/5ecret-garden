@@ -48,15 +48,14 @@
     runActivate();
   }
 
-  const bottomInfo = $derived(item.trustRelation ? formatTrustRelation(item.trustRelation) : '');
+  const bottomInfo = $derived(item.trustRelation ? formatTrustRelation(item.trustRelation as any) : '');
 
-  /** Pre-computed avatar info shape for potential future use (Avatar component doesn't consume it yet) */
-  const avatarInfo = $derived.by((): { avatar: string; type: string } | undefined => {
+  const avatarInfo = $derived.by(() => {
     if (!item.avatarType) return undefined;
     return {
       avatar: item.address,
       type: item.avatarType,
-    };
+    } as any;
   });
 </script>
 
@@ -73,9 +72,11 @@
     <div class="min-w-0">
       <Avatar
         address={item.address}
+        {avatarInfo}
         view="horizontal"
         bottomInfo={bottomInfo}
         showTypeInfo={true}
+        showBookmarkBadge={item.isVipBookmarked}
         clickable={true}
       />
     </div>

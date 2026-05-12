@@ -9,7 +9,7 @@
   import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
   import StepReviewRow from '$lib/shared/ui/flow/StepReviewRow.svelte';
   import { wallet } from '$lib/shared/state/wallet.svelte';
-  import { executeTxConfirmFirst } from '$lib/shared/utils/txExecution';
+  import { runTask } from '$lib/shared/utils/tasks';
   import { isAddress, sendRunnerTransactionAndWait } from '$lib/shared/utils/tx';
   import { popupControls } from '$lib/shared/state/popup';
   import { popToOrOpen } from '$lib/shared/flow';
@@ -60,9 +60,9 @@
 
     creatingGateway = true;
     try {
-      await executeTxConfirmFirst({
+      await runTask({
         name: 'Creating payment gateway…',
-        submit: async () => {
+        promise: (async () => {
           const runner: any = $wallet;
           const factoryAddress = context.factoryAddress as `0x${string}`;
 
@@ -79,7 +79,7 @@
             signingKeys: {},
           });
 
-          const profileCid = await bindings.putJsonLd(profilePayload);
+          const profileCid = await (bindings as any).putJsonLd(profilePayload);
 
           if (!profileCid) {
             throw new Error('Failed to pin gateway profile metadata.');
@@ -123,12 +123,11 @@
             }
             onCreated?.(createdGateway);
           }
-        },
-        onSuccess: () => {
-          // Close the flow after a successful submit.
-          popupControls.close();
-        },
+        })()
       });
+
+      // Close the flow after a successful submit.
+      popupControls.close();
     } finally {
       creatingGateway = false;
     }

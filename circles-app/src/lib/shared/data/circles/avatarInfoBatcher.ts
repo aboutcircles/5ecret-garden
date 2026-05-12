@@ -1,21 +1,22 @@
-import type { Sdk } from '@aboutcircles/sdk';
-import type { Address, AvatarInfo } from '@aboutcircles/sdk-types';
+import type { Sdk } from '@circles-sdk/sdk';
+import type { Address } from '@circles-sdk/utils';
+import type { AvatarRow } from '@circles-sdk/data';
 import { BatchAggregator } from '$lib/shared/model/profile/batchAggregator';
 
-const batchers = new WeakMap<Sdk, BatchAggregator<Address, AvatarInfo | undefined>>();
+const batchers = new WeakMap<Sdk, BatchAggregator<Address, AvatarRow | undefined>>();
 
-function ensureBatcher(sdk: Sdk): BatchAggregator<Address, AvatarInfo | undefined> {
+function ensureBatcher(sdk: Sdk): BatchAggregator<Address, AvatarRow | undefined> {
   const existing = batchers.get(sdk);
   if (existing) return existing;
 
-  const batcher = new BatchAggregator<Address, AvatarInfo | undefined>({
+  const batcher = new BatchAggregator<Address, AvatarRow | undefined>({
     waitTimeMs: 20,
     maxBatchSize: 50,
     fetchFunction: async (addresses: Address[]) => {
-      const rows = await sdk.rpc.avatar.getAvatarInfoBatch(addresses);
-      const map = new Map<Address, AvatarInfo | undefined>();
+      const rows = await sdk.data.getAvatarInfoBatch(addresses);
+      const map = new Map<Address, AvatarRow | undefined>();
       addresses.forEach((addr) => map.set(addr, undefined));
-      rows.forEach((row: AvatarInfo) => map.set(row.avatar as Address, row));
+      rows.forEach((row) => map.set(row.avatar as Address, row));
       return map;
     },
   });
@@ -27,6 +28,6 @@ function ensureBatcher(sdk: Sdk): BatchAggregator<Address, AvatarInfo | undefine
 export function getAvatarInfoBatched(
   sdk: Sdk,
   address: Address
-): Promise<AvatarInfo | undefined> {
+): Promise<AvatarRow | undefined> {
   return ensureBatcher(sdk).enqueue(address);
 }

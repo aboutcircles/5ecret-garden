@@ -9,11 +9,13 @@
   import { derived, writable } from 'svelte/store';
   import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import { circles } from '$lib/shared/state/circles';
+  import { openStep } from '$lib/shared/flow';
+  import ConfirmGatewayUntrust from '$lib/areas/settings/flows/gateway/ConfirmGatewayUntrust.svelte';
   import GatewayTrustedAccountsList from '$lib/areas/settings/ui/components/GatewayTrustedAccountsList.svelte';
   import { fetchActiveTrustRowsByGateway } from '$lib/shared/data/circles/paymentGateways';
   import { isAddress } from '$lib/shared/utils/tx';
-  import { openTrustRelationshipFlow } from '$lib/areas/trust/flows/relationship/openTrustRelationshipFlow';
-  import type { Address } from '@aboutcircles/sdk-types';
+  import { openAddTrustFlow } from '$lib/areas/trust/flows/addTrust/openAddTrustFlow';
+  import type { Address } from '@circles-sdk/utils';
 
   import type { TrustRow } from '$lib/areas/settings/model/gatewayTypes';
 
@@ -46,7 +48,7 @@
 
   async function loadTrusts() {
     loadError = null;
-    if (!gatewayValid || !$circles?.rpc) {
+    if (!gatewayValid || !$circles?.circlesRpc) {
       trusts = [];
       return;
     }
@@ -71,12 +73,13 @@
 
   function openAddTrust() {
     if (!gatewayValid) return;
-    openTrustRelationshipFlow({
-      mode: 'add',
-      actorType: 'gateway',
-      actorAddress: gateway as Address,
-      selectedTrustees: [],
-      gatewayExpiry: (1n << 96n) - 1n,
+    openAddTrustFlow({
+      context: {
+        actorType: 'gateway',
+        actorAddress: gateway as Address,
+        selectedTrustees: [],
+        gatewayExpiry: (1n << 96n) - 1n,
+      },
       onCompleted: async () => {
         await loadTrusts();
       },
@@ -85,14 +88,17 @@
 
   function openRemoveTrust(trustReceiver: string) {
     if (!gatewayValid) return;
-    openTrustRelationshipFlow({
-      mode: 'remove',
-      actorType: 'gateway',
-      actorAddress: gateway as Address,
-      trustReceiver: trustReceiver as Address,
-      onCompleted: async () => {
-        await loadTrusts();
+    openStep({
+      title: 'Remove trust',
+      component: ConfirmGatewayUntrust,
+      props: {
+        gateway,
+        trustReceiver,
+        onDone: async () => {
+          await loadTrusts();
+        }
       },
+      key: `pg-untrust:${gateway}:${trustReceiver}`
     });
   }
 </script>
