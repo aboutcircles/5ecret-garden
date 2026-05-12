@@ -1,7 +1,6 @@
 import { sveltekit } from '@sveltejs/kit/vite';
-import { defineConfig } from 'vite';
+import { defineConfig, type PluginOption } from 'vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
-import { fileURLToPath, URL } from 'node:url';
 
 export default defineConfig({
   plugins: [
@@ -12,25 +11,22 @@ export default defineConfig({
         process: true,
       },
       protocolImports: true,
-    }),
-    sveltekit(),
+    }) as PluginOption,
+    sveltekit() as PluginOption,
   ],
-  resolve: {
-    alias: {
-      // Map the local SDK package for dev/build without publishing
-      '@circles-market/sdk': fileURLToPath(new URL('../packages/circles-market-sdk/src/index.ts', import.meta.url)),
-      // Component packages during split (point to source shims)
-      '@circles-market/core': fileURLToPath(new URL('../packages/circles-market-core/src/index.ts', import.meta.url)),
-      '@circles-market/session': fileURLToPath(new URL('../packages/circles-market-session/src/index.ts', import.meta.url)),
-      '@circles-market/catalog': fileURLToPath(new URL('../packages/circles-market-catalog/src/index.ts', import.meta.url)),
-      '@circles-market/cart': fileURLToPath(new URL('../packages/circles-market-cart/src/index.ts', import.meta.url)),
-      '@circles-market/orders': fileURLToPath(new URL('../packages/circles-market-orders/src/index.ts', import.meta.url)),
-      '@circles-market/signers': fileURLToPath(new URL('../packages/circles-market-signers/src/index.ts', import.meta.url)),
-      '@circles-market/auth': fileURLToPath(new URL('../packages/circles-market-auth/src/index.ts', import.meta.url)),
-      '@circles-market/offers': fileURLToPath(new URL('../packages/circles-market-offers/src/index.ts', import.meta.url)),
-      '@circles-market/sales': fileURLToPath(new URL('../packages/circles-market-sales/src/index.ts', import.meta.url)),
-      // Map the local profile core package
-      '@circles-profile/core': fileURLToPath(new URL('../packages/circles-profile-core/src/index.ts', import.meta.url)),
+  optimizeDeps: {
+    esbuildOptions: {
+      // Node.js global to browser globalThis
+      define: {
+        global: 'globalThis',
+      },
     },
+  },
+  ssr: {
+    // @safe-global/protocol-kit is CJS and its internal require('abitype')
+    // gets converted to a default import that ESM-only abitype doesn't export.
+    // Externalizing lets Node handle the interop at runtime.
+    // The app is SSR-disabled (ssr:false) so these aren't needed server-side.
+    external: ['@safe-global/protocol-kit', '@safe-global/safe-core-sdk-types', 'abitype'],
   },
 });

@@ -1,6 +1,8 @@
 <script lang="ts">
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
+  import type { AggregatedCatalogItem } from '$lib/areas/market/model';
   import ProductCard from '$lib/areas/market/ui/product/ProductCard.svelte';
+  import { browser } from '$app/environment';
 
   type Props = {
     avatarAddress: Address | '';
@@ -9,6 +11,8 @@
     marketProducts: any[];
     openCreateListing: () => void;
     loadSellerCatalog: () => Promise<void>;
+    onProductUpdated?: (item: AggregatedCatalogItem) => void;
+    onProductRemoved?: (sku: string) => void;
   };
 
   let {
@@ -18,7 +22,13 @@
     marketProducts,
     openCreateListing,
     loadSellerCatalog,
+    onProductUpdated,
+    onProductRemoved,
   }: Props = $props();
+
+  // Avoid "Connect" flash: check localStorage for a saved session before
+  // concluding there is no avatar. The wallet restore takes a moment.
+  const hasSavedSession = browser && !!window.localStorage.getItem('Circles.Storage');
 </script>
 
 <section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
@@ -33,7 +43,12 @@
   </div>
 </section>
 
-{#if !avatarAddress}
+{#if !avatarAddress && hasSavedSession}
+  <div class="flex flex-col items-center justify-center py-12">
+    <div class="loading loading-spinner loading-md" aria-label="loading"></div>
+    <div class="mt-2 text-sm text-base-content/70">Restoring session…</div>
+  </div>
+{:else if !avatarAddress}
   <section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
     <div class="text-sm opacity-70">Connect a Circles avatar to see your marketplace listings.</div>
   </section>
@@ -78,11 +93,19 @@
         </div>
       {:else}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {#each marketProducts as p (p.productCid)}
+          {#each marketProducts as p (p.product?.sku ?? p.productCid)}
             <ProductCard
               product={p}
               showSellerInfo={false}
-              ondeleted={() => loadSellerCatalog()}
+              ondeleted={() => {
+                const sku = p.product?.sku;
+                if (sku && onProductRemoved) {
+                  onProductRemoved(sku);
+                } else {
+                  void loadSellerCatalog();
+                }
+              }}
+              onupdated={onProductUpdated}
               canTombstone={true}
             />
           {/each}

@@ -48,24 +48,24 @@
         {/if}
       </div>
 
-      {#if snapshot.shippingAddress}
+      {#if snapshotShippingAddr}
         <div class="space-y-1">
           <div class="text-xs uppercase tracking-wide opacity-60">Shipping address</div>
           <div class="text-sm leading-snug">
-            {snapshot.shippingAddress.streetAddress}
-            <br />{snapshot.shippingAddress.postalCode} {snapshot.shippingAddress.addressLocality}
-            <br />{snapshot.shippingAddress.addressCountry}
+            {snapshotShippingAddr.streetAddress}
+            <br />{snapshotShippingAddr.postalCode} {snapshotShippingAddr.addressLocality}
+            <br />{snapshotShippingAddr.addressCountry}
           </div>
         </div>
       {/if}
 
-      {#if snapshot.billingAddress}
+      {#if snapshotBillingAddr}
         <div class="space-y-1">
           <div class="text-xs uppercase tracking-wide opacity-60">Billing address</div>
           <div class="text-sm leading-snug">
-            {snapshot.billingAddress.streetAddress}
-            <br />{snapshot.billingAddress.postalCode} {snapshot.billingAddress.addressLocality}
-            <br />{snapshot.billingAddress.addressCountry}
+            {snapshotBillingAddr.streetAddress}
+            <br />{snapshotBillingAddr.postalCode} {snapshotBillingAddr.addressLocality}
+            <br />{snapshotBillingAddr.addressCountry}
           </div>
         </div>
       {/if}
@@ -136,7 +136,7 @@
           </div>
         </div>
       {/each}
-      {#if (snapshot.orderedItem ?? []).length === 0}
+      {#if (!Array.isArray(snapshot.orderedItem) || snapshot.orderedItem.length === 0)}
         <div class="text-sm opacity-70">No items</div>
       {/if}
     </div>
@@ -197,7 +197,7 @@
   <div class="text-sm opacity-70">No order data</div>
 {/if}
 
-{#snippet OutboxPayloadView({ payload })}
+{#snippet OutboxPayloadView({ payload }: { payload: any })}
   {#if isKnownDownloadPayload(payload)}
     <div class="flex items-center gap-2">
       <JumpLink
@@ -244,8 +244,8 @@
   import { formatCurrency } from '$lib/shared/utils/money';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import JumpLink from '$lib/shared/ui/content/jump/JumpLink.svelte';
-  import type { Address as EvmAddress } from '@circles-sdk/utils';
-  import type { OrderSnapshot } from '$lib/areas/market/orders/types';
+  import type { Address as EvmAddress } from '@aboutcircles/sdk-types';
+  import type { FullOrderSnapshot, SchemaOrgOrderItem, SchemaOrgAcceptedOffer } from '$lib/areas/market/orders/types';
   import type { OrderStatusChange } from '$lib/areas/market/orders/types';
   import { formatTimestamp, statusLabel } from '$lib/areas/market/orders/status';
   import { onMount } from 'svelte';
@@ -257,11 +257,13 @@
   import { safeParse } from '$lib/shared/utils/safe';
 
   interface Props {
-    snapshot: OrderSnapshot | null | undefined;
+    snapshot: FullOrderSnapshot | null | undefined;
     statusEvents?: OrderStatusChange[] | null;
   }
   let { snapshot, statusEvents = null }: Props = $props();
 
+  const snapshotShippingAddr = $derived(snapshot?.shippingAddress);
+  const snapshotBillingAddr = $derived(snapshot?.billingAddress);
 
   type TimelineEvent = { status: string; changedAt: string };
   let timeline: TimelineEvent[] = $state([]);
@@ -286,7 +288,7 @@
     if (history.length > 0) {
       const first = history[0];
       const initialStatus = (first.oldStatus && String(first.oldStatus)) || null;
-      const initialTime = (snapshot as any)?.orderDate ?? first.changedAt;
+      const initialTime = snapshot?.orderDate ?? first.changedAt;
       if (initialStatus) {
         events.push({ status: initialStatus, changedAt: String(initialTime) });
       }
@@ -295,10 +297,10 @@
       }
     } else {
       // No history available — fall back to a single entry using the snapshot info.
-      if ((snapshot as any)?.orderStatus && (snapshot as any)?.orderDate) {
+      if (snapshot?.orderStatus && snapshot?.orderDate) {
         events.push({
-          status: (snapshot as any).orderStatus,
-          changedAt: (snapshot as any).orderDate,
+          status: snapshot.orderStatus,
+          changedAt: snapshot.orderDate,
         });
       }
     }
@@ -416,12 +418,12 @@
     return 'badge-ghost';
   }
 
-  function getSchemaId(x: any): string | null {
+  function getSchemaId(x: Record<string, unknown> | string | null | undefined): string | null {
     return safeParse(
       'getSchemaId',
       () => {
         if (x && typeof x === 'object') {
-          const v = (x as any)['@id'];
+          const v = x['@id'];
           return typeof v === 'string' ? v : null;
         }
         return null;
@@ -432,7 +434,7 @@
 
   // Extract an EVM address from an eip155-style Schema.org @id (e.g. eip155:100:0xabc...)
   function evmFromEip155(id: string | null | undefined): EvmAddress | undefined {
-    if (!id || typeof id !== 'string') return null as any;
+    if (!id || typeof id !== 'string') return undefined;
     const parts = id.split(':');
     if (parts.length >= 3) {
       const addr = parts[2];
@@ -443,7 +445,7 @@
   
   // Shorten an EVM address like 0x1234...ABCD
   function shortAddr(addr?: EvmAddress | string | null): string {
-    const a = typeof addr === 'string' ? addr : (addr as any) ?? '';
+    const a = typeof addr === 'string' ? addr : '';
     if (!a || a.length < 10) return String(a || '');
     return a.slice(0, 6) + '...' + a.slice(-4);
   }
@@ -452,7 +454,7 @@
     return safeParse(
       'orderDate',
       () => {
-        const d = (snapshot as any)?.orderDate;
+        const d = snapshot?.orderDate;
         return typeof d === 'string' ? d : null;
       },
       null
@@ -470,7 +472,7 @@
     return safeParse(
       'sellerIdForIndex',
       () => {
-        const offer = (snapshot as any)?.acceptedOffer?.[i];
+        const offer = snapshot?.acceptedOffer?.[i];
         const sellerObj = offer?.seller;
         return getSchemaId(sellerObj);
       },
@@ -486,17 +488,17 @@
     return safeParse(
       'skuForIndex',
       () => {
-        const sku = (snapshot as any)?.orderedItem?.[i]?.orderedItem?.sku;
+        const sku = snapshot?.orderedItem?.[i]?.orderedItem?.sku;
         return typeof sku === 'string' && sku ? sku : null;
       },
       null
     );
   }
 
-  function lineAt(i: number): any {
+  function lineAt(i: number): SchemaOrgOrderItem | null {
     return safeParse(
       'lineAt',
-      () => (snapshot as any)?.orderedItem?.[i] ?? null,
+      () => snapshot?.orderedItem?.[i] ?? null,
       null
     );
   }
@@ -512,9 +514,9 @@
     return safeParse(
       'unitPrice',
       () => {
-        const offer = (snapshot as any)?.acceptedOffer?.[i];
-        const amt = typeof offer?.price === 'number' ? (offer.price as number) : null;
-        const code = (offer?.priceCurrency ?? null) as string | null;
+        const offer = snapshot?.acceptedOffer?.[i];
+        const amt = typeof offer?.price === 'number' ? offer.price : null;
+        const code = offer?.priceCurrency ?? null;
         return { amount: amt, code };
       },
       { amount: null, code: null }
@@ -539,20 +541,21 @@
       }
 
       // Prefer direct imageUrl from snapshot if present
-      const direct = typeof lineAt(i)?.imageUrl === 'string' ? lineAt(i).imageUrl.trim() : '';
+      const lineItem = lineAt(i);
+      const direct = typeof lineItem?.imageUrl === 'string' ? lineItem.imageUrl.trim() : '';
       if (direct) {
         resolved[i] = { name: lineAt(i)?.orderedItem?.name ?? null, imageUrl: direct };
         return;
       }
 
-      const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator);
+      const catalog = getMarketClient().catalog.forOperator(gnosisConfig.production.marketOperator!);
       const prod = await catalog.fetchProductForSellerAndSku(String(evm), String(sku));
       if (!prod) {
         resolved[i] = { name: null, imageUrl: null };
         return;
       }
       const p = getProduct(prod);
-      const name = (p as any)?.name ?? null;
+      const name = p?.name ?? null;
       const imageUrl = pickProductImageUrl(p);
       resolved[i] = { name, imageUrl };
     } catch (e) {
@@ -574,11 +577,11 @@
       sellerGroups = [];
       return;
     }
-    const items = (snapshot as any)?.orderedItem ?? [];
+    const items = snapshot?.orderedItem ?? [];
 
     // Recompute seller groups from current snapshot
     const map = new Map<string, number[]>();
-    items.forEach((_: any, idx: number) => {
+    items.forEach((_: SchemaOrgOrderItem, idx: number) => {
       const sid = sellerIdForIndex(idx);
       const key = sid || '__unknown__';
       const arr = map.get(key) ?? [];
@@ -591,7 +594,7 @@
     });
 
     // Keep existing resolutions when possible; only resolve missing ones
-    items.forEach((_: any, idx: number) => {
+    items.forEach((_: SchemaOrgOrderItem, idx: number) => {
       if (!resolved[idx]) {
         // Fire and forget; state updates when finished
         resolveLine(idx);

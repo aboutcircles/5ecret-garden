@@ -1,4 +1,4 @@
-import type { Profile } from '@circles-sdk/profiles';
+import type { Profile } from '@aboutcircles/sdk-profiles';
 
 import {
   isValidProfilePreviewImageDataUrl,

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
   import { popToOrOpen } from '$lib/shared/flow';
   import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
   import { NEW_CONNECTION_FLOW_SCAFFOLD_BASE } from './constants';

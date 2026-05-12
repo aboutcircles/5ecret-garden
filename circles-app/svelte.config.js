@@ -1,5 +1,5 @@
-import adapter from '@sveltejs/adapter-node';
-import adapterNetlify from '@sveltejs/adapter-netlify';
+import adapterNode from '@sveltejs/adapter-node';
+import adapterStatic from '@sveltejs/adapter-static';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import { mdsvex } from 'mdsvex';
 
@@ -9,30 +9,12 @@ const config = {
   compilerOptions: {
     runes: true,
   },
-  // Consult https://kit.svelte.dev/docs/integrations#preprocessors
-  // for more information about preprocessors
   preprocess: [vitePreprocess(), mdsvex()],
 
   kit: {
-    // adapter-auto only supports some environments, see https://kit.svelte.dev/docs/adapter-auto for a list.
-    // If your environment is not supported, or you settled on a specific environment, switch out the adapter.
-    // See https://kit.svelte.dev/docs/adapters for more information about adapters.
-    adapter: process.env.NETLIFY_BUILD === 'true'
-      ? adapterNetlify()
-      : adapter(),
-    alias: {
-      '@circles-market/sdk': '../packages/circles-market-sdk/src',
-      '@circles-market/core': '../packages/circles-market-core/src',
-      '@circles-market/session': '../packages/circles-market-session/src',
-      '@circles-market/catalog': '../packages/circles-market-catalog/src',
-      '@circles-market/cart': '../packages/circles-market-cart/src',
-      '@circles-market/orders': '../packages/circles-market-orders/src',
-      '@circles-market/signers': '../packages/circles-market-signers/src',
-      '@circles-market/auth': '../packages/circles-market-auth/src',
-      '@circles-market/offers': '../packages/circles-market-offers/src',
-      '@circles-market/sales': '../packages/circles-market-sales/src',
-      '@circles-profile/core': '../packages/circles-profile-core/src'
-    }
+    adapter: process.env.ADAPTER === 'node'
+      ? adapterNode()
+      : adapterStatic({ fallback: '200.html' }),
   },
 };
 

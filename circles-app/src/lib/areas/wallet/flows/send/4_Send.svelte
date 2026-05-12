@@ -13,6 +13,7 @@
   import {avatarState} from '$lib/shared/state/avatar.svelte';
   import {tokenTypeToString, TransitiveTransferTokenAddress} from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
   import {popupControls} from '$lib/shared/state/popup';
+  import {refreshTransactionHistory} from '$lib/shared/state/transactionHistory';
   import {MAX_PATH_STEPS} from "$lib/shared/config/circles";
   import {
     requireAmount,
@@ -80,34 +81,29 @@
     }
 
     await executeTxConfirmFirst({
-      name: `Send ${roundToDecimals(amount)} ${tokenTypeToString(selectedAsset.tokenType)} to ${shortenAddress(selectedAddress)}...`,
+      name: `Send ${roundToDecimals(amount)} ${tokenTypeToString(selectedAsset.tokenType ?? "")} to ${shortenAddress(selectedAddress)}...`,
       submit: () =>
         selectedAsset.tokenAddress === TransitiveTransferTokenAddress
-          ? avatar.transfer(
-              selectedAddress,
-              amount,
-              undefined,
-              dataUInt8Arr,
-              context.useWrappedBalances ?? true,
-              context.fromTokens,
-              context.toTokens,
-              context.excludeFromTokens,
-              context.excludeToTokens,
-              context.maxTransfers ?? MAX_PATH_STEPS,
-            )
-          : avatar.transfer(
-              selectedAddress,
-              amount,
-              selectedAsset.tokenAddress,
-              dataUInt8Arr,
-              context.useWrappedBalances ?? true,
-              context.fromTokens,
-              context.toTokens,
-              context.excludeFromTokens,
-              context.excludeToTokens,
-              context.maxTransfers ?? MAX_PATH_STEPS,
-            ),
+          ? avatar.transfer.advanced(
+            selectedAddress,
+            BigInt(Math.round(amount * 1e18)),
+            {
+              txData: dataUInt8Arr.length > 0 ? dataUInt8Arr : undefined,
+              useWrappedBalances: context.useWrappedBalances ?? true,
+              fromTokens: context.fromTokens,
+              toTokens: context.toTokens,
+              excludeFromTokens: context.excludeFromTokens,
+              excludeToTokens: context.excludeToTokens,
+              maxTransfers: context.maxTransfers ?? MAX_PATH_STEPS,
+            })
+          : avatar.transfer.direct(
+            selectedAddress,
+            BigInt(Math.round(amount * 1e18)),
+            selectedAsset.tokenAddress,
+            dataUInt8Arr.length > 0 ? dataUInt8Arr : undefined
+          ),
       onSuccess: () => {
+        refreshTransactionHistory();
         popupControls.close();
       },
     });
@@ -162,7 +158,7 @@
   data-send-step-initial-focus
 >
     <Send
-        asset={context.selectedAsset}
+        asset={context.selectedAsset!}
         amount={context.amount}
         receiverAddress={context.selectedAddress}
         textButton="Send Circles"

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
-    import type { Address } from '@circles-sdk/utils';
+    import type { Address } from '@aboutcircles/sdk-types';
     import {
         fetchTrusteeValidation,
         getCachedTrusteeValidation,
@@ -22,12 +22,14 @@
     let overallDangerScore: number | null = $state(null);
     let trustScoreSummary: string = $state('');
 
-    const formattedGnosisTrustScore = $derived(
-        gnosisTrustScore === null ? null : gnosisTrustScore.toFixed(1)
-    );
-    const formattedDangerScore = $derived(
-        overallDangerScore === null ? null : overallDangerScore.toFixed(2)
-    );
+    const formattedGnosisTrustScore = $derived.by(() => {
+        const score = gnosisTrustScore;
+        return score === null ? null : score.toFixed(1);
+    });
+    const formattedDangerScore = $derived.by(() => {
+        const score = overallDangerScore;
+        return score === null ? null : score.toFixed(2);
+    });
     const trustScoreTitle = $derived.by(() => {
         const lines: string[] = [];
         if (trustScoreSummary) lines.push(trustScoreSummary);

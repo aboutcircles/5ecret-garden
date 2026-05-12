@@ -1,6 +1,8 @@
 <script lang="ts">
     import AvatarRowPlaceholder from '$lib/shared/ui/lists/placeholders/AvatarRowPlaceholder.svelte';
 
+    import type { Snippet } from 'svelte';
+
     type Props = {
         ownerAddress?: string | null;
         loading: boolean;
@@ -9,6 +11,8 @@
         connectText: string;
         emptyText: string;
         loadingPlaceholderCount?: number;
+        empty?: Snippet;
+        children?: Snippet<[{ items: unknown[] }]>;
     };
 
     let {
@@ -19,6 +23,8 @@
         connectText,
         emptyText,
         loadingPlaceholderCount = 5,
+        empty,
+        children,
     }: Props = $props();
 
     const placeholderItems = $derived(Array.from({ length: loadingPlaceholderCount }, (_, i) => i));
@@ -35,11 +41,15 @@
 {:else if error}
     <div class="text-sm text-error">{error}</div>
 {:else if items.length === 0}
-    <slot name="empty">
+    {#if empty}
+        {@render empty()}
+    {:else}
         <div class="w-full py-6 text-center text-base-content/60">{emptyText}</div>
-    </slot>
+    {/if}
 {:else}
     <div class="flex flex-col">
-        <slot {items} />
+        {#if children}
+            {@render children({ items })}
+        {/if}
     </div>
 {/if}

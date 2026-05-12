@@ -11,40 +11,21 @@
   import GetInvited from './1_GetInvited.svelte';
   import CreateProfile from './2_CreateProfile.svelte';
   import MigrateContacts from './3_MigrateContacts.svelte';
-  import { circles as circlesStore } from '$lib/shared/state/circles';
-  import { avatarState } from '$lib/shared/state/avatar.svelte';
-  import { runTask } from '$lib/shared/utils/tasks';
-  import { removeProfileFromCache } from '$lib/shared/utils/profile';
   import { popupControls } from '$lib/shared/state/popup';
-  import { openStep, popToOrOpen, useAsyncAction } from '$lib/shared/flow';
-  import { requireAvatar, requireCircles, requireProfile } from '$lib/shared/flow';
+  import { popToOrOpen, useAsyncAction } from '$lib/shared/flow';
   import type { ReviewStepProps } from '$lib/shared/flow';
-  import { get } from 'svelte/store';
 
   type Props = ReviewStepProps<MigrateToV2Context>;
 
   let { context }: Props = $props();
 
   const migrateAction = useAsyncAction(async () => {
-    const sdk = requireCircles(get(circlesStore));
-    const avatar = requireAvatar(avatarState.avatar);
-    const profile = requireProfile(context.profile);
-
-    await runTask({
-      name: `Migrating your Avatar ...`,
-      promise: sdk.migrateAvatar(
-        context.inviter ?? '0x0000000000000000000000000000000000000000',
-        avatar.address,
-        profile
-      ),
-    });
-
-    // On success, refresh local cache/state
-    removeProfileFromCache(avatar.address);
-    avatar.avatarInfo!.version = 2;
-    avatar.avatarInfo!.v1Stopped = true;
-
-    popupControls.close();
+    // TODO: New SDK (@aboutcircles/sdk) does not expose migrateAvatar().
+    // Migration requires direct contract interaction with the migration contract.
+    // Implement when SDK adds support.
+    throw new Error(
+      'Avatar migration is not yet supported by the new SDK. Please use the legacy app to migrate.'
+    );
   });
 
   const selectedContactsCount = $derived(context.trustList?.length ?? 0);

@@ -1,11 +1,11 @@
 <script lang="ts">
-    import type { TransactionHistoryRow } from '@circles-sdk/data';
+    import type { TransactionHistoryRow } from '@aboutcircles/sdk-types';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import { avatarState } from '$lib/shared/state/avatar.svelte';
     // Lucide icons are node definitions (arrays). Use the local Lucide wrapper to render them.
     import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
     import { ArrowRight as LArrowRight, ExternalLink as LExternalLink, Flame as LFlame, Coins as LCoins, Copy as LCopy } from 'lucide';
-    import { CirclesConverter } from '@circles-sdk/utils';
+    import { CirclesConverter } from '@aboutcircles/sdk-utils';
     import { isAddress, isZeroAddress, toBigIntMaybe, tokenIdToAddressMaybe } from '$lib/shared/utils/tx';
     import TxEvents from './TxEvents.svelte';
     import { popupControls } from '$lib/shared/state/popup';
@@ -17,7 +17,7 @@
     // Tab control removed (JSON view no longer needed)
 
     // Robust timestamp handling: support seconds and milliseconds
-    const dateTime = $derived(() => {
+    const dateTime = $derived.by(() => {
         const ts = Number(item.timestamp ?? 0);
         const ms = ts < 1e12 ? ts * 1000 : ts;
         return new Date(ms).toLocaleString();
@@ -75,8 +75,11 @@
 
     type TxEvent = Record<string, any> & { $type?: string };
 
-    const events = $derived<TxEvent[]>(() => {
-        const raw = (item as any)?.events;
+    // TransactionHistoryRow doesn't declare `events` but the RPC response includes it at runtime
+    type ItemWithEvents = TransactionHistoryRow & { events?: unknown };
+
+    const events = $derived.by((): TxEvent[] => {
+        const raw = (item as ItemWithEvents)?.events;
         if (!raw) {
             return [];
         }
@@ -92,23 +95,32 @@
                 return raw;
             }
             return [];
-        } catch (e) {
-            console.warn('Failed to parse events from transaction item', e);
+        } catch {
             return [];
         }
     });
 
+    // Event accessors that work with both PascalCase (raw RPC events) and
+    // camelCase (rows produced by transactionHistory.ts) shapes.
+    const eventTypeOf = (ev: TxEvent): string => String(ev.$type ?? ev.eventType ?? '');
+    const fromOf = (ev: TxEvent): unknown => ev.From ?? ev.from;
+    const toOf = (ev: TxEvent): unknown => ev.To ?? ev.to;
+    const idOf = (ev: TxEvent): unknown => ev.Id ?? ev.id;
+    const valueOf = (ev: TxEvent): unknown => ev.Value ?? ev.value;
+    const accountOf = (ev: TxEvent): unknown => ev.Account ?? ev.account;
+    const costOf = (ev: TxEvent): unknown => ev.Cost ?? ev.cost;
+
     // DiscountCost aggregation: (account, id) -> total cost
-    const discountCostByAccountAndId = $derived<Map<string, bigint>>(() => {
+    const discountCostByAccountAndId = $derived.by((): Map<string, bigint> => {
         const map = new Map<string, bigint>();
-        for (const ev of events()) {
-            const type = String(ev.$type ?? '');
-            if (type !== 'CrcV2_DiscountCost') {
+        for (const ev of events) {
+            if (eventTypeOf(ev) !== 'CrcV2_DiscountCost') {
                 continue;
             }
-            const account = isAddress((ev as any).Account) ? String((ev as any).Account).toLowerCase() : null;
-            const id = (ev as any).Id;
-            const cost = toBigIntMaybe((ev as any).Cost);
+            const acct = accountOf(ev);
+            const account = isAddress(acct) ? String(acct).toLowerCase() : null;
+            const id = idOf(ev);
+            const cost = toBigIntMaybe(costOf(ev));
             if (!account || id === undefined || cost === null) {
                 continue;
             }
@@ -121,25 +133,26 @@
 
     // Check whether a TransferSingle burn matches a DiscountCost (protocol fee)
     function isProtocolCostBurn(ev: TxEvent): boolean {
-        const type = String(ev.$type ?? '');
-        if (type !== 'CrcV2_TransferSingle') {
+        if (eventTypeOf(ev) !== 'CrcV2_TransferSingle') {
             return false;
         }
-        const from = isAddress((ev as any).From) ? String((ev as any).From).toLowerCase() : null;
-        const to = isAddress((ev as any).To) ? String((ev as any).To).toLowerCase() : null;
+        const fromRaw = fromOf(ev);
+        const toRaw = toOf(ev);
+        const from = isAddress(fromRaw) ? String(fromRaw).toLowerCase() : null;
+        const to = isAddress(toRaw) ? String(toRaw).toLowerCase() : null;
         if (!from || !to) {
             return false;
         }
         if (!isZeroAddress(to)) {
             return false;
         }
-        const id = (ev as any).Id;
-        const value = toBigIntMaybe((ev as any).Value);
+        const id = idOf(ev);
+        const value = toBigIntMaybe(valueOf(ev));
         if (id === undefined || value === null) {
             return false;
         }
         const key = `${from}|${String(id)}`;
-        const expected = discountCostByAccountAndId().get(key);
+        const expected = discountCostByAccountAndId.get(key);
         if (expected === undefined) {
             return false;
         }
@@ -169,20 +182,10 @@
             try {
                 const circles = CirclesConverter.attoCirclesToCircles(bi);
                 if (!Number.isFinite(circles)) {
-                    console.warn('toCirclesNumber: non-finite result from atto value', {
-                        value: val,
-                        bigint: bi.toString(),
-                        circles
-                    });
                     return null;
                 }
                 return circles;
-            } catch (error) {
-                console.warn('toCirclesNumber: failed to convert atto value via CirclesConverter', {
-                    value: val,
-                    bigint: bi.toString(),
-                    error
-                });
+            } catch {
                 return null;
             }
         }
@@ -191,14 +194,23 @@
     }
 
     function extractTransfers(ev: TxEvent): Transfer[] {
-        const type = String(ev.$type ?? '');
-        const isTransferLike = /^CrcV2_Transfer/.test(type) || type === 'CrcV2_Erc20WrapperTransfer';
+        const type = eventTypeOf(ev);
+        // Treat any Transfer-flavoured CrcV2 event as transfer-like, plus camelCase
+        // synthetic types and mint variants that transactionHistory.ts emits / dev shows.
+        const isTransferLike =
+            /^CrcV2_Transfer/.test(type)
+            || type === 'CrcV2_Erc20WrapperTransfer'
+            || type === 'CrcV2_Burn'
+            || type === 'CrcV2_PersonalMint'
+            || type === 'CrcV2_GroupMint'
+            || type === 'CrcV2_GroupRedeemCollateralBurn'
+            || type === 'CrcV2_GroupRedeemCollateralReturn';
         if (!isTransferLike) {
             return [];
         }
 
-        const from = asAddressMaybe(ev.From);
-        const to = asAddressMaybe(ev.To);
+        const from = asAddressMaybe(fromOf(ev));
+        const to = asAddressMaybe(toOf(ev));
         if (!from || !to) {
             return [];
         }
@@ -206,20 +218,27 @@
             return [];
         }
 
-        const tokenAddress = tokenIdToAddressMaybe('Id', (ev as any).Id) ?? null;
+        const tokenAddress = tokenIdToAddressMaybe('Id', idOf(ev)) ?? null;
         const protocolCost = isProtocolCostBurn(ev);
 
-        if ('Value' in ev) {
-            const amount = toCirclesNumber((ev as any).Value);
-            if (amount === null) {
-                return [];
-            }
-            return [{ from, to, amount, tokenAddress, isProtocolCost: protocolCost }];
+        // Prefer the human-readable `circles` field when present (camelCase rows from
+        // transactionHistory.ts already store CRC). Fall back to PascalCase Value/Values.
+        if (typeof ev.circles === 'number' && Number.isFinite(ev.circles) && ev.circles !== 0) {
+            return [{ from, to, amount: Math.abs(ev.circles), tokenAddress, isProtocolCost: protocolCost }];
         }
 
-        if (Array.isArray((ev as any).Values)) {
-            const vals: unknown[] = (ev as any).Values;
-            const sum = vals.reduce((acc, v) => {
+        const valueRaw = valueOf(ev);
+        if (valueRaw !== undefined && valueRaw !== null && valueRaw !== '0') {
+            const amount = toCirclesNumber(valueRaw);
+            if (amount !== null && amount > 0) {
+                return [{ from, to, amount, tokenAddress, isProtocolCost: protocolCost }];
+            }
+        }
+
+        const valuesRaw = ev.Values ?? ev.values;
+        if (Array.isArray(valuesRaw)) {
+            const vals: unknown[] = valuesRaw;
+            const sum = vals.reduce((acc: number, v: unknown) => {
                 const n = toCirclesNumber(v);
                 if (n === null) {
                     return acc;
@@ -235,9 +254,9 @@
         return [];
     }
 
-    const transfers = $derived<Transfer[]>(() => {
+    const transfers = $derived.by((): Transfer[] => {
         const all: Transfer[] = [];
-        for (const ev of events()) {
+        for (const ev of events) {
             const legs = extractTransfers(ev);
             if (!legs.length) {
                 continue;
@@ -249,10 +268,10 @@
         return all;
     });
 
-    const aggregatedTransfers = $derived<AggregatedTransfer[]>(() => {
+    const aggregatedTransfers = $derived.by((): AggregatedTransfer[] => {
         const map = new Map<string, { a: string; b: string; net: number; tokenAddress: string | null }>();
 
-        for (const t of transfers()) {
+        for (const t of transfers) {
             // Exclude protocol-cost transfers from the "intended transfers" aggregation.
             // These will be shown separately in the Burns section.
             if (t.isProtocolCost) {
@@ -296,10 +315,10 @@
         return result;
     });
 
-    const aggregatedBurnTransfers = $derived<AggregatedTransfer[]>(() => {
+    const aggregatedBurnTransfers = $derived.by((): AggregatedTransfer[] => {
         const map = new Map<string, { a: string; b: string; net: number; tokenAddress: string | null }>();
 
-        for (const t of transfers()) {
+        for (const t of transfers) {
             const from = t.from.toLowerCase();
             const to = t.to.toLowerCase();
 
@@ -343,13 +362,13 @@
     });
 
     // Net amount for the current viewer, excluding protocol-cost burns
-    const netAmountForViewer = $derived<number | null>(() => {
+    const netAmountForViewer = $derived.by((): number | null => {
         const me = avatarState.avatar?.address?.toLowerCase();
         if (!me) {
             return null;
         }
         let net = 0;
-        for (const t of transfers()) {
+        for (const t of transfers) {
             if (t.isProtocolCost) {
                 continue;
             }
@@ -365,13 +384,13 @@
     });
 
     // Demurrage / protocol-cost for viewer
-    const demurrageAmount = $derived<number>(() => {
+    const demurrageAmount = $derived.by((): number => {
         const me = avatarState.avatar?.address?.toLowerCase();
         if (!me) {
             return 0;
         }
         let net = 0;
-        for (const t of transfers()) {
+        for (const t of transfers) {
             if (!t.isProtocolCost) {
                 continue;
             }
@@ -387,46 +406,53 @@
         net = normalizeTiny(net);
         return net;
     });
-    const demurrageAbs = $derived(() => Math.abs(demurrageAmount()));
+    const demurrageAbs = $derived(Math.abs(demurrageAmount));
 
     // Header amount: intended transfers (excluding protocol fees).
-    // Fallback to item.circles if we have no viewer context.
-    const headerNetAmount = $derived(() => {
-        const viewerNet = netAmountForViewer();
-        if (typeof viewerNet === 'number') {
-            return viewerNet;
+    // Fallback to item.circles when no sub-events are available (flat SDK rows).
+    const headerNetAmount = $derived.by(() => {
+        // If we have sub-events with real transfer data, use that
+        if (transfers.length > 0 && typeof netAmountForViewer === 'number') {
+            return netAmountForViewer;
         }
+        // Flat row from SDK — use circles field directly, apply sign based on direction
         const base = typeof item.circles === 'number' ? item.circles : Number(item.circles ?? 0);
-        return base;
+        return sent ? -base : base;
     });
 
-    const headerAbsAmount = $derived(() => Math.abs(headerNetAmount()));
-    const headerSign = $derived(() => headerNetAmount() < 0 ? '-' : headerNetAmount() > 0 ? '+' : '');
-    const signedAmount = $derived(() => `${headerSign()}${formatAmount(headerAbsAmount())}`);
-    const headerColorClass = $derived(() => {
-        if (headerNetAmount() < 0) {
+    const headerAbsAmount = $derived(Math.abs(headerNetAmount));
+    const headerSign = $derived(headerNetAmount < 0 ? '-' : headerNetAmount > 0 ? '+' : '');
+    const signedAmount = $derived.by(() => {
+        const fmt = formatAmount(headerAbsAmount);
+        if (fmt.startsWith('<') || fmt.startsWith('~')) {
+            return `${headerSign} ${fmt}`;
+        }
+        return `${headerSign}${fmt}`;
+    });
+    const headerColorClass = $derived.by(() => {
+        if (headerNetAmount < 0) {
             return 'text-error';
         }
-        if (headerNetAmount() > 0) {
+        if (headerNetAmount > 0) {
             return 'text-success';
         }
         return 'text-base-content';
     });
 
-    const nonBurnTransfers = $derived(() =>
-        aggregatedTransfers().filter(t => !isZeroAddress(t.to))
+    const nonBurnTransfers = $derived.by(() =>
+        aggregatedTransfers.filter(t => !isZeroAddress(t.to))
     );
 
     // Burns are aggregated separately (including protocol-cost burns)
-    const burnTransfers = $derived(() => aggregatedBurnTransfers());
+    const burnTransfers = $derived(aggregatedBurnTransfers);
 
     let burnsOpen = $state(false);
     function toggleBurns() {
         burnsOpen = !burnsOpen;
     }
 
-    const totalBurned = $derived(() =>
-        burnTransfers().reduce((acc, t) => acc + (t?.amount ?? 0), 0)
+    const totalBurned = $derived.by(() =>
+        burnTransfers.reduce((acc: number, t: AggregatedTransfer) => acc + (t?.amount ?? 0), 0)
     );
 
     // Zero-sum swap detection for item.from vs item.to, ignoring protocol DiscountCost burns
@@ -437,7 +463,7 @@
         backwardTokenAddress: string | null;
     };
 
-    const swapSummary = $derived<SwapSummary | null>(() => {
+    const swapSummary = $derived.by((): SwapSummary | null => {
         const fromAddr = item.from?.toLowerCase();
         const toAddr = item.to?.toLowerCase();
         if (!fromAddr || !toAddr) {
@@ -446,13 +472,12 @@
 
         // Only consider swaps when there is an actual stream between from→to
         let hasStreamBetween = false;
-        for (const ev of events()) {
-            const type = String(ev.$type ?? '');
-            if (type !== 'CrcV2_StreamCompleted') {
+        for (const ev of events) {
+            if (eventTypeOf(ev) !== 'CrcV2_StreamCompleted') {
                 continue;
             }
-            const evFrom = asAddressMaybe((ev as any).From);
-            const evTo = asAddressMaybe((ev as any).To);
+            const evFrom = asAddressMaybe(fromOf(ev));
+            const evTo = asAddressMaybe(toOf(ev));
             if (evFrom === fromAddr && evTo === toAddr) {
                 hasStreamBetween = true;
                 break;
@@ -467,7 +492,7 @@
         let outTokenAddress: string | null = null;
         let inTokenAddress: string | null = null;
 
-        for (const t of transfers()) {
+        for (const t of transfers) {
             const f = t.from.toLowerCase();
             const tt = t.to.toLowerCase();
 
@@ -510,13 +535,13 @@
     });
 
     // For non-swap directional view, pick the main token for item.from -> item.to
-    const mainTokenAddress = $derived<string | null>(() => {
+    const mainTokenAddress = $derived.by((): string | null => {
         const fromAddr = item.from?.toLowerCase();
         const toAddr = item.to?.toLowerCase();
         if (!fromAddr || !toAddr) {
             return null;
         }
-        for (const t of transfers()) {
+        for (const t of transfers) {
             const f = t.from.toLowerCase();
             const tt = t.to.toLowerCase();
             if (f === fromAddr && tt === toAddr && t.tokenAddress) {
@@ -546,18 +571,39 @@
     }
 
     const niceKey = (k: string) => {
-        if (k === '$type') {
-            return 'Type';
+        if (k === '$type' || k === 'eventType') {
+            return 'event Type';
         }
-        return k
+        // Capitalize first letter, then split camelCase/PascalCase
+        const spaced = k
             .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
             .replace(/^Id$/i, 'ID');
+        return spaced.charAt(0).toUpperCase() + spaced.slice(1);
     };
 
-    const primaryOrder = ['$', '$type', 'Emitter', 'Operator', 'From', 'To', 'Account', 'Sender', 'Receiver', 'Group', 'Id', 'Value', 'Cost', 'Amount', 'BatchIndex', 'LogIndex'];
-    const hiddenKeys = new Set(['BlockNumber', 'Timestamp', 'TransactionIndex', 'TransactionHash']);
+    // Support both PascalCase (old SDK) and camelCase (Nethermind RPC) event keys
+    const primaryOrder = [
+        '$', '$type', 'eventType',
+        'Emitter', 'emitter', 'Operator', 'operator',
+        'From', 'from', 'To', 'to',
+        'Account', 'account', 'Sender', 'sender', 'Receiver', 'receiver',
+        'Group', 'group', 'Id', 'id',
+        'Value', 'value', 'Cost', 'cost', 'Amount', 'amount',
+        'BatchIndex', 'batchIndex', 'LogIndex', 'logIndex',
+    ];
+    const hiddenKeys = new Set([
+        'BlockNumber', 'blockNumber',
+        'Timestamp', 'timestamp',
+        'TransactionIndex', 'transactionIndex',
+        'TransactionHash', 'transactionHash',
+        // Redundant with the header event label
+        '$type', 'eventType',
+        // Internal fields already shown elsewhere
+        'circles', 'crc', 'staticCircles', 'version',
+    ]);
     const eventDisplayEntries = (ev: TxEvent): [string, any][] => {
-        const entries: [string, any][] = Object.entries(ev).filter(([k]) => !hiddenKeys.has(k));
+        const entries: [string, any][] = Object.entries(ev)
+            .filter(([k, v]) => !hiddenKeys.has(k) && v !== undefined && v !== null);
         const orderIndex = (k: string) => {
             const idx = primaryOrder.indexOf(k);
             if (idx === -1) {
@@ -583,20 +629,20 @@
             <div class="bg-base-100 border rounded-xl overflow-hidden divide-y">
                 <div class="p-4 flex flex-col items-center justify-center">
                     <div class="text-center">
-                        <div class={`text-3xl sm:text-4xl font-extrabold ${headerColorClass()}`}>
-                            {signedAmount()} <span class="opacity-70 text-base align-middle">CRC</span>
+                        <div class={`text-3xl sm:text-4xl font-extrabold ${headerColorClass}`}>
+                            {signedAmount} <span class="opacity-70 text-base align-middle">CRC</span>
                         </div>
                     </div>
-                    {#if demurrageAbs() > 0}
+                    {#if demurrageAbs > 0}
                         <div class="mt-1 text-sm font-semibold text-error">
-                            -{formatAmount(demurrageAbs())}
+                            -{formatAmount(demurrageAbs)}
                             <span class="opacity-70 text-xs align-middle"> CRC demurrage</span>
                         </div>
                     {/if}
                 </div>
 
                 <div class="p-3">
-                    {#if swapSummary()}
+                    {#if swapSummary}
                         <div class="space-y-2">
                             <!-- Forward leg -->
                             <div class="flex items-center justify-between gap-3">
@@ -604,8 +650,8 @@
                                     <Avatar address={item.from} view="horizontal" clickable={true} />
                                 </div>
                                 <div class="shrink-0 flex items-center gap-2 text-base-content/70">
-                                    {#if swapSummary()?.forwardTokenAddress}
-                                        <Avatar address={swapSummary().forwardTokenAddress} view="small_no_text" clickable={true} />
+                                    {#if swapSummary?.forwardTokenAddress}
+                                        <Avatar address={swapSummary.forwardTokenAddress} view="small_no_text" clickable={true} />
                                     {/if}
                                     <Lucide icon={LArrowRight} size={18} />
                                 </div>
@@ -619,8 +665,8 @@
                                     <Avatar address={item.from} view="horizontal" clickable={true} />
                                 </div>
                                 <div class="shrink-0 flex items-center gap-2 text-base-content/70">
-                                    {#if swapSummary()?.backwardTokenAddress}
-                                        <Avatar address={swapSummary().backwardTokenAddress} view="small_no_text" clickable={true} />
+                                    {#if swapSummary?.backwardTokenAddress}
+                                        <Avatar address={swapSummary.backwardTokenAddress} view="small_no_text" clickable={true} />
                                     {/if}
                                     <div class="rotate-180">
                                         <Lucide icon={LArrowRight} size={18} />
@@ -637,8 +683,8 @@
                                 <Avatar address={item.from} view="horizontal" clickable={true} />
                             </div>
                             <div class="shrink-0 flex items-center gap-2 text-base-content/70">
-                                {#if mainTokenAddress()}
-                                    <Avatar address={mainTokenAddress()} view="small_no_text" clickable={true} />
+                                {#if mainTokenAddress}
+                                    <Avatar address={mainTokenAddress} view="small_no_text" clickable={true} />
                                 {/if}
                                 <Lucide icon={LArrowRight} size={18} />
                             </div>
@@ -659,7 +705,7 @@
                 <div class="divide-y">
                     <div class="flex items-center justify-between gap-4 p-3">
                         <div class="text-sm opacity-70">Date & time</div>
-                        <div class="text-sm">{dateTime()}</div>
+                        <div class="text-sm">{dateTime}</div>
                     </div>
                     <div class="flex items-center gap-4 p-3">
                         <div class="text-sm opacity-70 shrink-0">Transaction hash</div>
@@ -678,15 +724,15 @@
                 </div>
             </div>
 
-            {#if aggregatedTransfers().length}
+            {#if aggregatedTransfers.length}
                 <div class="bg-base-100 border mt-4 rounded-xl overflow-hidden">
                     <div class="p-3 border-b">
                         <div class="text-sm opacity-70">
-                            Aggregated transfers <span class="opacity-60">({aggregatedTransfers().length})</span>
+                            Aggregated transfers <span class="opacity-60">({aggregatedTransfers.length})</span>
                         </div>
                     </div>
                     <div class="divide-y">
-                        {#each nonBurnTransfers() as t}
+                        {#each nonBurnTransfers as t}
                             <div class="px-3 py-2.5 sm:py-3 flex items-center gap-3 sm:gap-4 hover:bg-base-200/40 transition-colors">
                                 <div class="flex-1 min-w-0 flex items-center gap-2">
                                     {#if isZeroAddress(t.from)}
@@ -718,12 +764,12 @@
                                         <Avatar address={t.to} view="small_no_text" clickable={true} />
                                     </div>
                                     <div class="hidden sm:inline-flex">
-                                        <Avatar address={t.to} view="small_reverse" clickable={true} />
+                                        <Avatar address={t.to} view="small" clickable={true} />
                                     </div>
                                 </div>
                             </div>
                         {/each}
-                        {#if burnTransfers().length}
+                        {#if burnTransfers.length}
                             <button
                                     class="w-full p-3 bg-base-200/50 text-xs uppercase tracking-wide text-base-content/60 flex items-center justify-between hover:bg-base-200/70 transition-colors"
                                     onclick={toggleBurns}
@@ -731,14 +777,14 @@
                                     title={burnsOpen ? 'Hide burns' : 'Show burns'}
                             >
                                 <span>
-                                    Burns <span class="opacity-60">({burnTransfers().length})</span>
+                                    Burns <span class="opacity-60">({burnTransfers.length})</span>
                                 </span>
                                 <span class="text-[11px] normal-case opacity-80">
-                                    {formatAmount(totalBurned())} <span class="opacity-70">CRC</span>
+                                    {formatAmount(totalBurned)} <span class="opacity-70">CRC</span>
                                 </span>
                             </button>
                             {#if burnsOpen}
-                                {#each burnTransfers() as t}
+                                {#each burnTransfers as t}
                                     <div class="px-3 py-2.5 sm:py-3 flex items-center gap-3 sm:gap-4 hover:bg-base-200/40 transition-colors">
                                         <div class="flex-1 min-w-0 flex items-center gap-2">
                                             {#if isZeroAddress(t.from)}
@@ -779,7 +825,7 @@
             {/if}
 
             <TxEvents
-                events={events()}
+                events={events}
                 {eventDisplayEntries}
                 {niceKey}
                 {isOpen}
