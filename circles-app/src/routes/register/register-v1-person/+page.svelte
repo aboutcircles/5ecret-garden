@@ -9,13 +9,17 @@
     import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
     import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/shared/ui/shell/actions';
+    import type { Address } from '@aboutcircles/sdk-types';
+
+    const ZERO_ADDRESS: Address = '0x0000000000000000000000000000000000000000';
 
     async function registerHuman() {
         if (!$circles) {
             throw new Error('Wallet not connected ($circles is undefined)');
         }
 
-        avatarState.avatar = await $circles.registerHuman();
+        // V1 registration: register as human with zero-address inviter (self-register)
+        avatarState.avatar = await $circles.register.asHuman(ZERO_ADDRESS, '');
 
         await goto('/dashboard');
     }

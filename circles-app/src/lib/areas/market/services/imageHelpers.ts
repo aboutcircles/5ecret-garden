@@ -1,12 +1,14 @@
 // src/lib/market/imageHelpers.ts
 // Central helpers to normalize product images from various schema-like shapes.
 
-export function normalizeProductImagesFromSchema(prod: any): string[] {
+import type { SchemaOrgProductLite } from '$lib/areas/market/model';
+
+export function normalizeProductImagesFromSchema(prod: SchemaOrgProductLite | null | undefined): string[] {
   if (!prod) return [];
 
   const urls: string[] = [];
 
-  const primary: any = (prod as any)?.image ?? (prod as any)?.images ?? null;
+  const primary: unknown = prod.image ?? null;
 
   const push = (u: unknown) => {
     if (typeof u === 'string') {
@@ -15,13 +17,15 @@ export function normalizeProductImagesFromSchema(prod: any): string[] {
     }
   };
 
-  const extractFromObject = (img: any) => {
+  const extractFromObject = (img: Record<string, unknown>) => {
     if (!img || typeof img !== 'object') return;
     push(img.url);
     push(img.Url);
     push(img.contentUrl);
-    push(img.object?.contentUrl);
-    push(img.Object?.ContentUrl);
+    const nested = img.object as Record<string, unknown> | undefined;
+    const nestedCap = img.Object as Record<string, unknown> | undefined;
+    push(nested?.contentUrl);
+    push(nestedCap?.ContentUrl);
   };
 
   if (typeof primary === 'string') {
@@ -35,13 +39,13 @@ export function normalizeProductImagesFromSchema(prod: any): string[] {
       }
     }
   } else if (primary && typeof primary === 'object') {
-    extractFromObject(primary);
+    extractFromObject(primary as Record<string, unknown>);
   }
 
   // Fallbacks – some backends use imageUrl / ImageUrl
   if (urls.length === 0) {
-    push((prod as any)?.imageUrl);
-    push((prod as any)?.ImageUrl);
+    push(prod.imageUrl);
+    push(prod.ImageUrl);
   }
 
   // De-duplicate while preserving order
@@ -53,7 +57,7 @@ export function normalizeProductImagesFromSchema(prod: any): string[] {
   });
 }
 
-export function pickFirstProductImageUrl(prod: any): string | null {
+export function pickFirstProductImageUrl(prod: SchemaOrgProductLite | null | undefined): string | null {
   const imgs = normalizeProductImagesFromSchema(prod);
   return imgs[0] ?? null;
 }

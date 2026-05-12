@@ -41,9 +41,10 @@
     type OdooProductListItem,
     type CodeProductListItem,
     type UnlockProductListItem,
+    AdminApiError,
   } from '$lib/areas/admin/services/gateway/adminClient';
   import { gnosisConfig } from '$lib/shared/config/circles';
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
   import { popupControls } from '$lib/shared/state/popup';
   import AdminSectionCard from '$lib/areas/admin/components/AdminSectionCard.svelte';
   import AdminProductList from '$lib/areas/admin/components/AdminProductList.svelte';
@@ -94,10 +95,6 @@
   const unlockProductsUnified = $derived(unifiedProducts.filter((item) => resolveAdminProductType(item) === 'unlock'));
   const routeOnlyProductsUnified = $derived(unifiedProducts.filter((item) => resolveAdminProductType(item) === 'route'));
 
-  const PRODUCT_TAB_IDS = ['codedispenser', 'unlock', 'odoo', 'route'] as const;
-  type ProductsTabId = TabIdOf<typeof PRODUCT_TAB_IDS>;
-  let selectedProductsTab = $state<ProductsTabId>('codedispenser');
-
   type SaveProductPayload = {
     type: AdminProductType;
     route?: RouteUpsertInput;
@@ -112,12 +109,16 @@
     unlock?: UnlockProductConfig;
   };
 
+  const PRODUCT_TAB_IDS = ['codedispenser', 'unlock', 'odoo', 'route'] as const;
+  type ProductsTabId = TabIdOf<typeof PRODUCT_TAB_IDS>;
+  let selectedProductsTab = $state<ProductsTabId>('codedispenser');
+
   async function connectAdminWallet(): Promise<void> {
     authLoading = true;
     authError = null;
 
     try {
-      const avatar = (avatarState.avatar?.address ?? avatarState.avatar?.avatarInfo?.avatar ?? '') as Address | '';
+      const avatar = (avatarState.avatar?.address ?? '') as Address | '';
       if (!avatar) {
         throw new Error('No avatar connected');
       }
@@ -152,6 +153,11 @@
     unlockProducts = [];
   }
 
+  // Each loader stores its own error state for the UI. On auth failure (401/403)
+  // it re-throws so `loadAdminData` can short-circuit the remaining loaders —
+  // a parallel volley of admin GETs against an unauthorised user trips the
+  // CrowdSec http-admin-interface-probing scenario (capacity=2 on 403/404 of
+  // admin paths) and bans the IP for 168h. One sequential request = one event.
   async function loadRoutes(): Promise<void> {
     routesLoading = true;
     routesError = null;
@@ -163,6 +169,7 @@
       });
     } catch (e) {
       routesError = e instanceof Error ? e.message : String(e);
+      if (e instanceof AdminApiError && e.isAuthFailure()) throw e;
     } finally {
       routesLoading = false;
     }
@@ -179,6 +186,7 @@
       });
     } catch (e) {
       connectionsError = e instanceof Error ? e.message : String(e);
+      if (e instanceof AdminApiError && e.isAuthFailure()) throw e;
     } finally {
       connectionsLoading = false;
     }
@@ -189,26 +197,49 @@
     productsError = null;
 
     try {
-      const [odoo, code, unlock] = await runTask({
-        name: 'Loading products…',
-        promise: Promise.all([
-          listOdooProducts(),
-          listCodeProducts(),
-          listUnlockProducts(),
-        ]),
+      // Stage into locals; assign all three atomically on full success.
+      // Avoids mixing fresh + stale arrays in `unifiedProducts` ($derived),
+      // which feeds the new-product wizard's duplicate-detection list.
+      const odoo = await runTask({
+        name: 'Loading Odoo products…',
+        promise: listOdooProducts(),
+      });
+      const code = await runTask({
+        name: 'Loading code products…',
+        promise: listCodeProducts(),
+      });
+      const unlock = await runTask({
+        name: 'Loading Unlock products…',
+        promise: listUnlockProducts(),
       });
       odooProducts = odoo;
       codeProducts = code;
       unlockProducts = unlock;
     } catch (e) {
       productsError = e instanceof Error ? e.message : String(e);
+      if (e instanceof AdminApiError && e.isAuthFailure()) throw e;
     } finally {
       productsLoading = false;
     }
   }
 
   async function loadAdminData(): Promise<void> {
-    await Promise.all([loadRoutes(), loadConnections(), loadProducts()]);
+    try {
+      await loadRoutes();
+      await loadConnections();
+      await loadProducts();
+    } catch (e) {
+      // A loader re-threw an auth failure to short-circuit the chain.
+      // Per-loader error state is already populated for the UI.
+      // For 401 (token unusable: stale, expired, or invalidated) drop back to
+      // the login card so the user has a clear re-auth path. For 403 we keep
+      // the session — the token is valid, the addr is just not on the admin
+      // allowlist, and re-auth would mint the same unprivileged token.
+      if (e instanceof AdminApiError && e.status === 401) {
+        clearAdminToken();
+        adminUser = null;
+      }
+    }
   }
 
   function openProductEditor(
@@ -381,7 +412,6 @@
           promise: upsertOdooStock(payload.odooStock),
         });
       } else if (product?.odoo?.localAvailableQty != null) {
-        // Stock was previously set but now being turned off — delete the record
         await runTask({
           name: 'Removing local stock…',
           promise: deleteOdooStock(

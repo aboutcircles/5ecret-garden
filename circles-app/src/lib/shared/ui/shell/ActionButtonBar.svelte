@@ -1,8 +1,9 @@
 <script lang="ts">
+import type { ActionButton } from '$lib/shared/ui/shell/action-buttons';
 import Lucide from "$lib/shared/ui/icons/Lucide.svelte";
 
 // Default to empty array and filter out invalid entries to avoid runtime errors
-let { actions = [] as any[] } = $props();
+let { actions = [] as ActionButton[] }: { actions?: ActionButton[] } = $props();
 
 </script>
 {#each actions.filter(Boolean) as a, i (a?.id ?? a?.label ?? i)}

@@ -1,6 +1,6 @@
 import type { AppProfileCore as Profile } from '$lib/shared/model/profile';
-import type { TrustRelation } from '@circles-sdk/data';
-import type { CirclesConfig } from '@circles-sdk/sdk';
+import type { TrustRelationKind } from '$lib/shared/types/sdk-augment';
+import type { CirclesConfig } from '$lib/shared/config/circles';
 
 export function getTypeString(type: string): string {
   const typeMap: Record<string, string> = {
@@ -12,7 +12,7 @@ export function getTypeString(type: string): string {
   return typeMap[type ?? ''] || 'None';
 }
 
-export function formatTrustRelation(relation: TrustRelation | undefined, profile?: Profile) {
+export function formatTrustRelation(relation: TrustRelationKind | string | undefined, profile?: Profile) {
   switch (relation) {
     case 'trusts':
       return `You accept ${profile ? profile.name + '’s' : 'their'} Circles`;

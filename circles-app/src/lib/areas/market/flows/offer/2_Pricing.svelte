@@ -12,23 +12,22 @@
     deriveRequiredSlotsState,
     computeRequiredSlotsFromSelections
   } from '$lib/areas/market/flows/checkout/requiredSlots';
-  import { get } from 'svelte/store';
-  import { onMount } from 'svelte';
   import { circles } from '$lib/shared/state/circles';
   import { wallet } from '$lib/shared/state/wallet.svelte';
+  import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { fetchGatewayRowsByOwner } from '$lib/shared/data/circles/paymentGateways';
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
 
   interface Props { context: OfferFlowContext; }
   let { context }: Props = $props();
 
+  // svelte-ignore state_referenced_locally — intentional: initialize form from context.draft
   let price            = $state(context.draft?.price ?? 0);
-  // Currency is fixed to CRC for this marketplace; keep state for draft but do not expose input
   let priceCurrency    = $state('CRC');
+  // svelte-ignore state_referenced_locally
   let availableDeliveryMethod = $state(context.draft?.availableDeliveryMethod ?? '');
-  // Collapsible toggle for Checkout requirements
   let showRequirements = $state(false);
-  // Offer-driven basket requirements (requiredSlots)
+  // svelte-ignore state_referenced_locally
   const slotState = $state<Record<string, boolean>>(deriveRequiredSlotsState(context.draft?.requiredSlots));
 
   function isChecked(key: string): boolean {
@@ -63,11 +62,14 @@
   // Payment gateway selection state
   let loadingGateways: boolean = $state(false);
   let gateways: string[] = $state([]);
+  // svelte-ignore state_referenced_locally
   let selectedGateway: string = $state((context.draft?.paymentGateway as string) ?? '');
 
-  async function loadMyGatewaysFor(owner: Address): Promise<void> {
-    const c = get(circles);
-    if (!owner || !c?.circlesRpc) {
+  let gatewaysLoaded = $state(false);
+
+  async function loadMyGatewaysFor(owner: string): Promise<void> {
+    const c = $circles;
+    if (!owner || !c?.rpc) {
       gateways = [];
       return;
     }
@@ -97,10 +99,12 @@
     }
   }
 
-  onMount(async () => {
-    const walletVal = get(wallet);
-    const sellerRaw = walletVal?.address as Address | undefined;
-    if (sellerRaw) await loadMyGatewaysFor(sellerRaw as Address);
+  // Reactive: re-runs when wallet/avatar becomes available
+  $effect(() => {
+    const owner = $wallet?.address ?? avatarState.avatar?.address;
+    if (!owner || gatewaysLoaded) return;
+    gatewaysLoaded = true;
+    void loadMyGatewaysFor(owner as string);
   });
 
   function asAddress(s: string | undefined): Address | undefined { return s as unknown as Address; }

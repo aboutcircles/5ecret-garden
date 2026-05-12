@@ -2,7 +2,7 @@
     import VirtualList from '$lib/shared/ui/lists/VirtualList.svelte';
     import TransactionRow from './TransactionRow.svelte';
     import TransactionRowPlaceholder from '$lib/shared/ui/lists/placeholders/TransactionRowPlaceholder.svelte';
-    import {transactionHistory} from '$lib/shared/state/transactionHistory';
+    import {groupedTransactionHistory as transactionHistory} from '$lib/shared/state/transactionHistory';
 
     const TRANSACTION_ROW_HEIGHT = 76;
     let transactionsListScopeEl: HTMLDivElement | null = $state(null);

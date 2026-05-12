@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
   import type { ValidationIssue } from '$lib/shared/validation/issues';
 
   interface Props {
@@ -7,9 +8,10 @@
     field?: { issues: ValidationIssue[] };
     required?: boolean;
     issues?: ValidationIssue[];
+    children?: Snippet;
   }
 
-  let { label, help, field, required = false, issues }: Props = $props();
+  let { label, help, field, required = false, issues, children }: Props = $props();
 
   const resolvedIssues = $derived(issues ?? field?.issues ?? []);
   const hasIssues = $derived(resolvedIssues.length > 0);
@@ -22,7 +24,7 @@
       {label}{required ? ' *' : ''}
     </span>
   {/if}
-  <slot />
+  {@render children?.()}
   {#if help || hasIssues}
     <span class={`label-text-alt ${hasIssues ? 'text-error' : 'text-base-content/60'}`}>
       {hasIssues ? issueMessage : help}

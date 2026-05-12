@@ -8,9 +8,9 @@
   import { onMount } from 'svelte';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { circles as circlesStore } from '$lib/shared/state/circles';
-  import type { AvatarRow } from '@circles-sdk/data';
+  import type { AvatarRow, AvatarInfo } from '@aboutcircles/sdk-types';
   import { openStep } from '$lib/shared/flow';
-  import type { Profile } from '@circles-sdk/profiles';
+  import type { Profile } from '@aboutcircles/sdk-profiles';
   import { settings } from '$lib/shared/state/settings.svelte';
   import InvitationPickerStep from '$lib/shared/ui/invitations/InvitationPickerStep.svelte';
   import { requireAvatar, requireCircles } from '$lib/shared/flow';
@@ -36,12 +36,28 @@
     if (!avatar.avatarInfo) {
       throw new Error('Avatar info not initialized');
     }
+    // V1 organizations can skip the invitation step entirely
     if (migrationDoesNotRequireInvitation(avatar.avatarInfo)) {
       await next();
       return;
     }
-    canSelfMigrate = settings.ring ? true : await sdk.canSelfMigrate(avatar.avatarInfo);
-    invitations = await sdk.data.getInvitations(avatar.avatarInfo.avatar);
+    // Ring environment always allows self-migration; otherwise check if avatar has active v1 token.
+    const info = avatar.avatarInfo as unknown as AvatarInfo | undefined;
+    canSelfMigrate = settings.ring
+      ? true
+      : (info?.version === 1 || (info?.hasV1 === true && info?.v1Stopped !== true));
+    const response = await sdk.data.getAllInvitations(avatar.address);
+    const allInvites = [
+      ...response.trustInvitations,
+      ...response.escrowInvitations,
+      ...response.atScaleInvitations,
+    ];
+    invitations = allInvites.map((inv) => ({
+      avatar: inv.address,
+      address: inv.address,
+      version: 2,
+      type: 'CrcV2_RegisterHuman' as const,
+    }));
   });
   async function next() {
     openStep({
@@ -71,7 +87,7 @@
     <div class="mt-2 w-full rounded-lg p-4 border">
       <InvitationPickerStep
         {invitations}
-        onSelect={(address) => selectInvitation(address)}
+        onSelect={(address) => selectInvitation(address as `0x${string}`)}
       />
     </div>
   {:else}

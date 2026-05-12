@@ -8,7 +8,7 @@ import {
   type MinimalOfferInput,
   type ProfilesBindings,
 } from '@circles-market/sdk';
-import type { Address } from '@circles-sdk/utils';
+import type { Address } from '@aboutcircles/sdk-types';
 import { getProfilesBindings } from '$lib/areas/market/offers';
 import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
 
@@ -140,7 +140,7 @@ export async function createOffersClientForAvatar(params: {
       const descriptor = Object.getOwnPropertyDescriptor(window, 'ethereum');
       const canAssignEthereum = !descriptor || Boolean(descriptor.writable || descriptor.set);
       if (canAssignEthereum) {
-        (window as any).ethereum = ethereum;
+        window.ethereum = ethereum;
       }
     } catch {
       // Some wallets expose getter-only window.ethereum; ignore and continue

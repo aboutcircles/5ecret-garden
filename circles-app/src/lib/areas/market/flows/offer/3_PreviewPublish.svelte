@@ -4,9 +4,10 @@
   import { openStep, popToOrOpen } from '$lib/shared/flow';
   import {runTask} from '$lib/shared/utils/tasks';
   import {wallet} from '$lib/shared/state/wallet.svelte';
+  import {avatarState} from '$lib/shared/state/avatar.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import Markdown from '$lib/shared/ui/content/markdown/Markdown.svelte';
-  import type {Address} from '@circles-sdk/utils';
+  import type {Address} from '@aboutcircles/sdk-types';
 
   import ProductGallery from '$lib/areas/market/ui/product/ProductGallery.svelte';
   import ProductPreviewCard from '$lib/areas/market/ui/product/ProductPreviewCard.svelte';
@@ -32,6 +33,7 @@
   interface Props { context: OfferFlowContext; }
   let { context }: Props = $props();
 
+  // svelte-ignore state_referenced_locally
   let selectedGateway: string = $state((context.draft?.paymentGateway ?? '') as string);
   $effect(() => { selectedGateway = (context.draft?.paymentGateway ?? '') as string; });
 
@@ -39,7 +41,7 @@
 
   const hasOperator = $derived.by(() => {
     try {
-      normalizeAddress(String((context as any).operator ?? ''));
+      normalizeAddress(String(context.operator ?? ''));
       return true;
     } catch {
       return false;
@@ -73,8 +75,7 @@
 
     const draft = context.draft!;
 
-    const walletVal = get(wallet);
-    const sellerRaw = walletVal?.address as Address | undefined;
+    const sellerRaw = (get(wallet)?.address ?? avatarState.avatar?.address) as Address | undefined;
     let seller: Address;
     try {
       seller = normalizeAddress(String(sellerRaw)) as Address;
@@ -88,9 +89,9 @@
 
     const { offers: client, media } = await createOffersClientForAvatar({
       avatar: seller,
-      chainId: gnosisConfig.production.marketChainId,
+      chainId: gnosisConfig.production.marketChainId ?? 100,
       ethereum: eth,
-      pinApiBase: (context as any).pinApiBase,
+      pinApiBase: context.pinApiBase,
       gatewayUrlForCid: (cid) => ipfsGatewayUrl(cid),
     });
 
@@ -98,10 +99,12 @@
     const hasLegacyImage = typeof draft.image === 'string' && draft.image.length > 0;
     const productImages = hasImagesArray ? draft.images : (hasLegacyImage ? [draft.image] : undefined);
 
+    // Hoist so we can use it for optimistic update after runTask completes
+    let finalImageUrls: string[] | undefined = undefined;
+
     await runTask({
-      name: 'Publishing offer…',
+      name: context.editMode ? 'Updating offer…' : 'Publishing offer…',
       promise: (async () => {
-        let finalImageUrls: string[] | undefined = undefined;
         if (Array.isArray(productImages) && productImages.length > 0) {
           if (!media) {
             throw new Error('Media pinning not available (missing pinApiBase).');
@@ -116,7 +119,7 @@
         context.result = await client.appendOffer({
           avatar: seller,
           operator: context.operator,
-          chainId: gnosisConfig.production.marketChainId,
+          chainId: gnosisConfig.production.marketChainId ?? 100,
           paymentGateway: context.draft?.paymentGateway as Address,
           product: {
             sku: draft.sku,
@@ -144,6 +147,40 @@
       })(),
     });
 
+    // Optimistic UI: build a synthetic catalog item and notify parent
+    // so the product list updates immediately instead of waiting for
+    // the market API indexer to process the on-chain event.
+    if (typeof context.onPublished === 'function') {
+      const result = context.result as Record<string, any> | undefined;
+      context.onPublished({
+        seller: seller as `0x${string}`,
+        productCid: result?.productCid ?? '',
+        publishedAt: Math.floor(Date.now() / 1000),
+        linkKeccak: result?.linkKeccak ?? '',
+        indexInChunk: 0,
+        product: {
+          '@context': ['https://schema.org/'],
+          '@type': 'Product',
+          sku: draft.sku,
+          name: draft.name,
+          description: draft.description || undefined,
+          image: finalImageUrls ?? draft.images,
+          url: draft.url || undefined,
+          brand: draft.brand || undefined,
+          mpn: draft.mpn || undefined,
+          gtin13: draft.gtin13 || undefined,
+          category: draft.category || undefined,
+          offers: [{
+            '@type': 'Offer',
+            price: Number(draft.price),
+            priceCurrency: draft.priceCurrency!,
+            url: draft.url || undefined,
+            availableDeliveryMethod: draft.availableDeliveryMethod || undefined,
+          }],
+        },
+      });
+    }
+
     popupControls.close();
   }
 
@@ -164,8 +201,8 @@
 <FlowStepScaffold
   {...OFFER_FLOW_SCAFFOLD_BASE}
   step={3}
-  title="Preview & Publish"
-  subtitle="Review your offer details before publishing."
+  title={context.editMode ? 'Preview & Update' : 'Preview & Publish'}
+  subtitle={context.editMode ? 'Review your changes before updating.' : 'Review your offer details before publishing.'}
 >
 
 {#if !requiredOk}
@@ -188,18 +225,20 @@
           imageUrl={getAllImages()[0] ?? context.draft?.image ?? undefined}
           size="md"
         >
-          <div slot="meta" class="text-sm space-y-2">
-            <div class="font-semibold">Payment gateway</div>
-            {#if selectedGateway}
-              <div class="flex items-center gap-2">
-                <Avatar address={asAddress(selectedGateway)} view="small_no_text" clickable={false} />
-                <span class="text-xs font-mono truncate">{selectedGateway}</span>
-              </div>
-            {:else}
-              <span class="opacity-70 text-sm">No payment gateway selected. Go back to Pricing to select one.</span>
-            {/if}
-            <div><strong>Price:</strong> {context.draft?.price} {context.draft?.priceCurrency}</div>
-          </div>
+          {#snippet meta()}
+            <div class="text-sm space-y-2">
+              <div class="font-semibold">Payment gateway</div>
+              {#if selectedGateway}
+                <div class="flex items-center gap-2">
+                  <Avatar address={asAddress(selectedGateway)} view="small_no_text" clickable={false} />
+                  <span class="text-xs font-mono truncate">{selectedGateway}</span>
+                </div>
+              {:else}
+                <span class="opacity-70 text-sm">No payment gateway selected. Go back to Pricing to select one.</span>
+              {/if}
+              <div><strong>Price:</strong> {context.draft?.price} {context.draft?.priceCurrency}</div>
+            </div>
+          {/snippet}
         </ProductPreviewCard>
 
         {#if getAllImages().length > 1}
@@ -227,8 +266,8 @@
 
     <StepActionBar>
       {#snippet primary()}
-          <ActionButton action={publish} disabled={!requiredOk} title="Publish">
-            {#snippet children()}Publish{/snippet}
+          <ActionButton action={publish} disabled={!requiredOk} title={context.editMode ? 'Update' : 'Publish'}>
+            {#snippet children()}{context.editMode ? 'Update' : 'Publish'}{/snippet}
           </ActionButton>
       {/snippet}
     </StepActionBar>
