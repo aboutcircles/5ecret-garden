@@ -11,7 +11,7 @@
     }
     let { filter = 'all' }: Props = $props();
 
-    const TRANSACTION_ROW_HEIGHT = 76;
+    const TRANSACTION_ROW_HEIGHT = 84;
     let transactionsListScopeEl: HTMLDivElement | null = $state(null);
 
     const ZERO = '0x0000000000000000000000000000000000000000';

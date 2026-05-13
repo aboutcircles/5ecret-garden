@@ -156,5 +156,7 @@
 </div>
 
 <style>
-  .cc-hover:hover { background: rgba(0,0,0,0.04); }
+  .cc-hover { transition: background .12s; }
+  .cc-hover:hover { background: #EFEDE7; }
+  .cc-hover:focus-visible { background: #EFEDE7; }
 </style>

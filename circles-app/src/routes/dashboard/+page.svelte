@@ -113,7 +113,7 @@
         return net;
     });
 
-    const TRANSACTION_ROW_HEIGHT = 76;
+    const TRANSACTION_ROW_HEIGHT = 84;
 </script>
 
 <div style="background:{T.page};min-height:100%;width:100%;font-family:{T.fontSans};color:{T.inkBody};">

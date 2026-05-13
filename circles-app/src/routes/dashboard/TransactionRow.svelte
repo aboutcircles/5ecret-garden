@@ -144,8 +144,6 @@
         listNavigator.onRowClick(event);
         openDetails();
     }
-
-    
 </script>
 
 <div
@@ -154,12 +152,12 @@
     tabindex={0}
     role="button"
     aria-label={`Open transaction details for ${counterpartyAddress}`}
-    class="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+    class="tr-row focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
     style="
-        display:flex;align-items:center;gap:12px;padding:14px 20px;
-        min-height:var(--transaction-row-height,76px);cursor:pointer;
+        display:flex;align-items:center;gap:12px;padding:12px 20px;
+        min-height:var(--transaction-row-height,84px);cursor:pointer;
         border-bottom:1px solid {T.hairlineSoft};box-sizing:border-box;
-        transition:background .1s;
+        transition:background .12s;
     "
     onkeydown={onRowKeydown}
     onclick={onRowClick}
@@ -181,3 +179,8 @@
         <div style="font-size:11px;color:{T.inkMuted};font-weight:500;margin-top:1px;">CRC</div>
     </div>
 </div>
+
+<style>
+  .tr-row:hover { background: #EFEDE7; }
+  .tr-row:focus-visible { background: #EFEDE7; }
+</style>
