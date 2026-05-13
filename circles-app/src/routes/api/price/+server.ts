@@ -1,13 +1,17 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import pkg from 'pg';
-import {
-  DB_USER, DB_PW, DB_HOST, DB_PORT,
-  DB_DATABASE
-} from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { CirclesConverter } from '@circles-sdk/utils';
 const { Client } = pkg;
 
 export const GET: RequestHandler = async ({ url }) => {
+  const { DB_USER, DB_PW, DB_HOST, DB_PORT, DB_DATABASE } = env;
+  if (!DB_USER || !DB_PW || !DB_HOST || !DB_PORT || !DB_DATABASE) {
+    return new Response(JSON.stringify({ error: 'Price history not configured' }), {
+      status: 503, headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
   const groupToken = url.searchParams.get('group')?.toLowerCase();
   const xdai = '0xe91d153e0b41518a2ce8dd3d7944fa863463a97d'
   let resolution = url.searchParams.get('resolution') ?? 'hour';
