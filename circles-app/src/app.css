@@ -122,6 +122,21 @@ a:focus-visible,
 }
 
 /*
+ * Subtle hover lift for all interactive buttons.
+ * :where() keeps specificity at zero so per-component rules win.
+ */
+:where(button):not([disabled]) {
+  transition: box-shadow 180ms ease-out, background 180ms ease-out;
+}
+:where(button):not([disabled]):hover {
+  box-shadow: 0 2px 10px rgba(15,10,30,0.09);
+}
+:where(button):not([disabled]):active {
+  box-shadow: 0 1px 3px rgba(15,10,30,0.05);
+  transition-duration: 60ms;
+}
+
+/*
  * A11y: honour prefers-reduced-motion. Disable the popup slide
  * animation, skeleton pulses, and any decorative transition longer
  * than ~80ms. Rendering still works; just no motion.

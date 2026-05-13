@@ -89,7 +89,7 @@
         style="
             display:flex;align-items:center;justify-content:space-between;gap:12px;
             padding:14px 16px;width:100%;background:transparent;border:0;cursor:pointer;text-align:left;
-            transition:background .12s;
+            transition:background 180ms ease-out,box-shadow 180ms ease-out;
         "
         class="cc-hover"
     >
@@ -135,7 +135,7 @@
                             display:flex;align-items:center;gap:10px;width:100%;
                             padding:8px 10px;border-radius:10px;
                             background:transparent;border:0;cursor:pointer;text-align:left;
-                            transition:background .1s;
+                            transition:background 180ms ease-out,box-shadow 180ms ease-out;
                         "
                         class="cc-hover"
                     >
@@ -156,7 +156,7 @@
 </div>
 
 <style>
-  .cc-hover { transition: background 180ms ease-out; }
-  .cc-hover:hover { background: #F6F5F2; }
-  .cc-hover:focus-visible { background: #F6F5F2; }
+  .cc-hover { transition: background 180ms ease-out, box-shadow 180ms ease-out; }
+  .cc-hover:hover { background: #F6F5F2 !important; box-shadow: 0 2px 10px rgba(15,10,30,0.08); }
+  .cc-hover:focus-visible { background: #F6F5F2 !important; }
 </style>
