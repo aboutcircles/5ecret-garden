@@ -275,14 +275,14 @@
                 <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
                     <button
                         onclick={() => { if (avatarState.avatar) openAddTrustFlow({ context: { actorType: 'avatar', actorAddress: avatarState.avatar.address, selectedTrustees: [ct.addr as any] } }); }}
-                        style="width:44px;height:44px;border-radius:9999px;background:{T.sageSoft};border:0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;"
+                        style="width:32px;height:32px;border-radius:9999px;background:{T.sageSoft};border:0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;"
                         aria-label="Trust back"
-                    ><Icon name="check" size={15} stroke={T.positive} strokeWidth={2.2} /></button>
+                    ><Icon name="check" size={14} stroke={T.positive} strokeWidth={2.2} /></button>
                     <button
                         onclick={() => { dismissedCalloutAddr = ct.addr; }}
-                        style="width:44px;height:44px;border-radius:9999px;background:{T.pageDeep};border:0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;"
+                        style="width:32px;height:32px;border-radius:9999px;background:{T.pageDeep};border:0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;"
                         aria-label="Dismiss"
-                    ><Icon name="close" size={15} stroke={T.inkBody} strokeWidth={2.2} /></button>
+                    ><Icon name="close" size={14} stroke={T.inkBody} strokeWidth={2.2} /></button>
                 </div>
             </div>
         {/if}

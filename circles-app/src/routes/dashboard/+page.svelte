@@ -254,6 +254,7 @@
         <!-- ─── ACTIVITY HEADING ──────────────────────────────────────── -->
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:22px;margin-bottom:10px;padding:0 4px;">
             <span style="font-size:12px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Today</span>
+            <a href="/dashboard" style="font-family:{T.fontSans};font-size:12.5px;font-weight:580;color:{T.primary};text-decoration:none;">See all →</a>
         </div>
 
         <!-- ─── ACTIVITY LIST ─────────────────────────────────────────── -->

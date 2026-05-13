@@ -531,19 +531,22 @@
         }
     });
 
+    const connectionsCount = $derived(trustsCount > 0 ? trustsCount : undefined);
+    const groupsCount = $derived<number | undefined>(undefined);
+
 </script>
 
 <div style="width:100%;">
     <!-- Hero card: gradient banner + avatar overlap -->
     <div style="border-radius:20px;overflow:hidden;background:{T.surface};border:1px solid {T.hairlineSoft};box-shadow:{T.shadow.xs};margin-bottom:14px;">
         <!-- Gradient banner -->
-        <div style="height:84px;background:linear-gradient(115deg,{T.coralSoft} 0%,{T.lilacSoft} 55%,{T.butterSoft} 100%);"></div>
+        <div style="height:110px;background:linear-gradient(115deg,{T.coralSoft} 0%,{T.lilacSoft} 55%,{T.butterSoft} 100%);"></div>
 
         <!-- Profile content -->
         <div style="padding:0 18px 18px;display:flex;flex-direction:column;gap:10px;">
             <!-- Avatar (overlaps banner) + trust pill on right -->
-            <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:-32px;">
-                <div style="width:72px;height:72px;border-radius:50%;border:4px solid {T.surface};background:{T.surface};overflow:hidden;flex-shrink:0;box-shadow:{T.shadow.xs};">
+            <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:-40px;">
+                <div style="width:80px;height:80px;border-radius:50%;border:4px solid {T.surface};background:{T.surface};overflow:hidden;flex-shrink:0;box-shadow:{T.shadow.xs};">
                     {#if profile?.previewImageUrl}
                         <img src={profile.previewImageUrl} alt={profile?.name ?? 'avatar'} style="width:100%;height:100%;object-fit:cover;display:block;" />
                     {:else}
@@ -565,7 +568,7 @@
 
             <!-- Name + help -->
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-                <span style="font-family:{T.fontDisplay};font-size:28px;color:{T.ink};letter-spacing:-0.02em;line-height:1.1;">
+                <span style="font-family:{T.fontDisplay};font-size:30px;color:{T.ink};letter-spacing:-0.02em;line-height:1.1;">
                     {profile?.name ?? (address ? shortenAddress(address) : 'Loading…')}
                 </span>
                 <HelpPopover
@@ -774,6 +777,30 @@
                             : (!avatarState.isGroup ? 'Trust' : 'Add as member')}
                     </button>
                 {/if}
+            </div>
+
+            <!-- Stat bar -->
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid {T.hairlineSoft};margin:0 -18px -18px;">
+                <!-- stat 1 -->
+                <div style="display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-right:1px solid {T.hairlineSoft};">
+                    <span style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Connections</span>
+                    <span style="font-family:{T.fontDisplay};font-size:22px;color:{T.ink};letter-spacing:-0.015em;line-height:1;">{connectionsCount ?? '—'}</span>
+                </div>
+                <!-- stat 2 -->
+                <div style="display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-right:1px solid {T.hairlineSoft};">
+                    <span style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Trusted by</span>
+                    <span style="font-family:{T.fontDisplay};font-size:22px;color:{T.ink};letter-spacing:-0.015em;line-height:1;">{trustedByCount ?? '—'}</span>
+                </div>
+                <!-- stat 3 -->
+                <div style="display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-right:1px solid {T.hairlineSoft};">
+                    <span style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Groups</span>
+                    <span style="font-family:{T.fontDisplay};font-size:22px;color:{T.ink};letter-spacing:-0.015em;line-height:1;">{groupsCount ?? '—'}</span>
+                </div>
+                <!-- stat 4 -->
+                <div style="display:flex;flex-direction:column;gap:2px;padding:14px 16px;">
+                    <span style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Circle depth</span>
+                    <span style="font-family:{T.fontDisplay};font-size:22px;color:{T.ink};letter-spacing:-0.015em;line-height:1;">—</span>
+                </div>
             </div>
         </div>
     </div>

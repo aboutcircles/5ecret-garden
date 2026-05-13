@@ -14,6 +14,7 @@
     UserCircle as LUserCircle,
   } from 'lucide';
   import { popupControls } from '$lib/shared/state/popup';
+  import { T } from '$lib/design-system/tokens.js';
 
   const NAV_ITEMS = [
     { label: 'Wallet',   href: '/dashboard', icon: LWallet },
@@ -47,15 +48,15 @@
 <aside
   class="hidden md:flex flex-col shrink-0 h-full"
   style="
-    width:248px;background:#FFFFFF;
-    border-right:1px solid rgba(31,17,70,0.05);
+    width:248px;background:{T.surface};
+    border-right:1px solid {T.hairlineSoft};
     padding:20px 14px 18px;gap:18px;
   "
 >
   <!-- Logo row -->
   <div style="padding:4px 10px 0;display:flex;align-items:center;gap:8px;">
     <img src="/logo.svg" alt="Circles" class="w-[26px] h-[26px]" />
-    <span style="font-family:'Inter Tight',sans-serif;font-size:11px;color:rgba(15,10,30,0.40);padding:2px 7px;border-radius:9999px;background:#EFEDE7;font-weight:580;letter-spacing:0.04em;text-transform:lowercase;">beta</span>
+    <span style="font-family:{T.fontSans};font-size:11px;color:{T.inkFaint};padding:2px 7px;border-radius:9999px;background:{T.pageDeep};font-weight:580;letter-spacing:0.04em;text-transform:lowercase;">beta</span>
   </div>
 
   <!-- Account picker -->
@@ -65,19 +66,19 @@
       class="cursor-pointer text-left transition-colors appsidebar-account-btn"
       style="
         margin:0 4px;padding:10px 12px;display:flex;align-items:center;gap:10px;
-        background:#FBFAF7;border:1px solid rgba(31,17,70,0.08);border-radius:14px;
+        background:{T.surfaceAlt};border:1px solid {T.hairline};border-radius:14px;
       "
     >
       {#if avatarState.profile?.previewImageUrl}
         <img src={avatarState.profile.previewImageUrl} alt="avatar" class="w-8 h-8 rounded-full object-cover shrink-0" />
       {:else}
-        <div style="width:32px;height:32px;border-radius:9999px;background:#5849D4;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <div style="width:32px;height:32px;border-radius:9999px;background:{T.primary};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
           <span style="font-size:13px;font-weight:600;color:#fff;">{initial}</span>
         </div>
       {/if}
       <div class="flex-1 min-w-0">
-        <div style="font-family:'Inter Tight',sans-serif;font-size:13.5px;font-weight:580;color:#0F0A1E;" class="truncate">{profile?.name ?? 'My Account'}</div>
-        <div style="font-family:'JetBrains Mono',ui-monospace,Menlo,monospace;font-size:11px;color:rgba(15,10,30,0.62);" class="truncate">
+        <div style="font-family:{T.fontSans};font-size:13.5px;font-weight:580;color:{T.ink};" class="truncate">{profile?.name ?? 'My Account'}</div>
+        <div style="font-family:{T.fontMono};font-size:11px;color:{T.inkMuted};" class="truncate">
           {avatar.address.slice(0, 6)}…{avatar.address.slice(-4)}
         </div>
       </div>
@@ -95,9 +96,9 @@
         style="
           display:flex;align-items:center;gap:11px;
           padding:9px 12px;border-radius:10px;
-          background:{active ? '#EAE7FB' : 'transparent'};
-          color:{active ? '#352899' : '#2A1F4A'};
-          font-family:'Inter Tight',sans-serif;font-size:13.5px;font-weight:{active ? 580 : 500};
+          background:{active ? T.primarySoft : 'transparent'};
+          color:{active ? T.primaryDeep : T.inkBody};
+          font-family:{T.fontSans};font-size:13.5px;font-weight:{active ? 580 : 500};
         "
       >
         <Lucide icon={item.icon} size={17} class="shrink-0" ariaLabel="" />
@@ -111,9 +112,9 @@
       style="
         display:flex;align-items:center;gap:11px;
         padding:9px 12px;border-radius:10px;
-        background:{$page.url.pathname.startsWith('/settings') ? '#EAE7FB' : 'transparent'};
-        color:{$page.url.pathname.startsWith('/settings') ? '#352899' : '#2A1F4A'};
-        font-family:'Inter Tight',sans-serif;font-size:13.5px;font-weight:{$page.url.pathname.startsWith('/settings') ? 580 : 500};
+        background:{$page.url.pathname.startsWith('/settings') ? T.primarySoft : 'transparent'};
+        color:{$page.url.pathname.startsWith('/settings') ? T.primaryDeep : T.inkBody};
+        font-family:{T.fontSans};font-size:13.5px;font-weight:{$page.url.pathname.startsWith('/settings') ? 580 : 500};
       "
     >
       <Lucide icon={LSettings} size={17} class="shrink-0" ariaLabel="" />
@@ -129,9 +130,9 @@
         class="cursor-pointer send-cta"
         style="
           width:100%;height:40px;border-radius:9999px;border:0;
-          background:#5849D4;color:#FFFFFF;
+          background:{T.primary};color:{T.surface};
           display:flex;align-items:center;justify-content:center;gap:8px;
-          font-family:'Inter Tight',sans-serif;font-size:14px;font-weight:540;
+          font-family:{T.fontSans};font-size:14px;font-weight:540;
           box-shadow:0 1px 0 rgba(255,255,255,0.18) inset, 0 1px 2px rgba(15,10,30,0.12);
         "
       >
@@ -142,10 +143,10 @@
   {/if}
 
   <!-- Footer -->
-  <div style="margin-top:auto;padding:8px 8px 0;border-top:1px solid rgba(31,17,70,0.05);">
+  <div style="margin-top:auto;padding:8px 8px 0;border-top:1px solid {T.hairlineSoft};">
     <div style="display:flex;align-items:center;gap:8px;padding-top:10px;">
       <Lucide icon={LInfo} size={14} class="shrink-0" ariaLabel="" />
-      <span style="font-size:11.5px;color:rgba(15,10,30,0.40);">Circles v2 · Gnosis Chain</span>
+      <span style="font-size:11.5px;color:{T.inkFaint};">Circles v2 · Gnosis Chain</span>
     </div>
   </div>
 </aside>
