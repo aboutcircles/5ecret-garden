@@ -181,6 +181,7 @@
 </div>
 
 <style>
-  .tr-row:hover { background: #EFEDE7; }
-  .tr-row:focus-visible { background: #EFEDE7; }
+  .tr-row { transition: background 180ms ease-out; }
+  .tr-row:hover { background: #F6F5F2; }
+  .tr-row:focus-visible { background: #F6F5F2; }
 </style>

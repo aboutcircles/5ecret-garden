@@ -64,7 +64,7 @@
   tabindex={0}
   role="button"
   aria-label={`Open holder ${item.avatar}`}
-  style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;background:{T.surface};border:1px solid {T.hairlineSoft};cursor:pointer;width:100%;box-sizing:border-box;outline:none;"
+  style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:12px;background:{T.surface};border:1px solid {T.hairlineSoft};cursor:pointer;width:100%;box-sizing:border-box;outline:none;transition:background 180ms ease-out, border-color 180ms ease-out;"
   onkeydown={onRowKeydown}
   onclick={onRowClick}
 >
@@ -75,3 +75,11 @@
     <div style="font-size:13px;font-weight:500;color:{T.ink};">{formatAmount(item.amount)} CRC</div>
   </div>
 </div>
+
+<style>
+  [data-holder-row]:hover,
+  [data-holder-row]:focus-visible {
+    background: #F6F5F2 !important;
+    border-color: rgba(31,17,70,0.12) !important;
+  }
+</style>

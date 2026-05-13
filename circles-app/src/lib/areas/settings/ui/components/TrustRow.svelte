@@ -57,7 +57,7 @@
   tabindex={0}
   role="button"
   aria-label={`Open trusted account ${item.trustReceiver}`}
-  style="background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:12px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;transition:box-shadow 0.15s;"
+  style="background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:12px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;transition:background 180ms ease-out, border-color 180ms ease-out, box-shadow 0.15s;"
   onkeydown={onRowKeydown}
   onclick={onRowClick}
 >
@@ -85,3 +85,11 @@
     </button>
   {/if}
 </div>
+
+<style>
+  [data-gateway-trust-row]:hover,
+  [data-gateway-trust-row]:focus-visible {
+    background: #F6F5F2 !important;
+    border-color: rgba(31,17,70,0.12) !important;
+  }
+</style>

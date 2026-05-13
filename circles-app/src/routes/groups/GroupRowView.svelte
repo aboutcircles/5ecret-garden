@@ -50,7 +50,7 @@
         display:flex;align-items:center;gap:12px;padding:14px 20px;
         min-height:64px;cursor:pointer;
         border-bottom:1px solid {T.hairlineSoft};box-sizing:border-box;
-        transition:background .1s;
+        transition:background 180ms ease-out;
     "
     onkeydown={onRowKeydown}
     onclick={onRowClick}
@@ -68,3 +68,8 @@
     </div>
     <Icon name="chevronRight" size={14} stroke={T.inkFaint} />
 </div>
+
+<style>
+  [data-group-row]:hover,
+  [data-group-row]:focus-visible { background: #F6F5F2; }
+</style>

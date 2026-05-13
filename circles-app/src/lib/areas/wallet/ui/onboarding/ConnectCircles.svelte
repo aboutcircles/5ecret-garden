@@ -156,7 +156,7 @@
 </div>
 
 <style>
-  .cc-hover { transition: background .12s; }
-  .cc-hover:hover { background: #EFEDE7; }
-  .cc-hover:focus-visible { background: #EFEDE7; }
+  .cc-hover { transition: background 180ms ease-out; }
+  .cc-hover:hover { background: #F6F5F2; }
+  .cc-hover:focus-visible { background: #F6F5F2; }
 </style>
