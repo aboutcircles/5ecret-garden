@@ -133,8 +133,9 @@ export async function loadSafesProfileAndGroups(
     if (info) profileBySafe[info.avatar.toLowerCase()] = info;
   });
 
-  // Also query group memberships for each safe (owner-based query misses
-  // base groups whose owner field is null in the V_CrcV2_Groups view)
+  // Add memberships: covers groups where the Safe is a member but not owner,
+  // plus legacy CrcV2_RegisterGroup rows (null owner in V_CrcV2_Groups, so
+  // the owner-filter above can't match them).
   const groupsByOwner: Record<Address, GroupRow[]> = { ...ownedGroupInfo };
   await Promise.all(
     safes.map(async (safe) => {
