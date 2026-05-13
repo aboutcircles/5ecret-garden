@@ -122,21 +122,20 @@ a:focus-visible,
 }
 
 /*
- * Subtle hover lift for all interactive buttons.
- * Transform-based so it works even when inline styles set their own box-shadow.
- * :where() keeps specificity at zero so per-component rules win.
+ * Subtle hover glow for all interactive buttons.
+ * No transform/translate — just shadow + brightness so nothing bounces.
+ * :where() keeps specificity at zero so per-component rules always win.
  */
 :where(button):not([disabled]) {
-  transition: transform 180ms ease-out, box-shadow 180ms ease-out, background 180ms ease-out, filter 180ms ease-out;
+  transition: box-shadow 200ms ease-out, background 200ms ease-out, filter 200ms ease-out, border-color 200ms ease-out, opacity 200ms ease-out;
 }
 :where(button):not([disabled]):hover {
-  transform: translateY(-1px);
   box-shadow: 0 4px 14px rgba(15,10,30,0.10);
-  filter: brightness(1.03);
+  filter: brightness(1.04);
 }
 :where(button):not([disabled]):active {
-  transform: translateY(0);
-  filter: brightness(0.98);
+  filter: brightness(0.96);
+  box-shadow: 0 1px 3px rgba(15,10,30,0.06);
   transition-duration: 60ms;
 }
 
