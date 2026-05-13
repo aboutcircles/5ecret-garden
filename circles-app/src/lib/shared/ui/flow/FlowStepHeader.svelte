@@ -45,7 +45,7 @@
           height:3px;flex:1;border-radius:9999px;
           background:{index <= activeIndex ? T.primary : T.pageDeep};
           opacity:{index <= activeIndex ? 1 : 0.6};
-          transition:background .15s;
+          transition:background .15s ease-out;
         "></span>
       {/each}
     </div>
@@ -60,7 +60,7 @@
           font-weight:{index === activeIndex ? 580 : 500};
           letter-spacing:0.02em;
           white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-          transition:color .15s;
+          transition:color .15s ease-out;
         ">{label}</span>
       {/each}
     </div>

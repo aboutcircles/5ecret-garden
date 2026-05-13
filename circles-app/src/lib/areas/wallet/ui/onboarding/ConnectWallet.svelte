@@ -52,7 +52,7 @@
     width:100%;padding:16px 18px;border-radius:18px;
     background:{palette.bg};border:1px solid {palette.border};
     box-shadow:{T.shadow.xs};
-    transition:transform .08s,background .15s,box-shadow .15s;
+    transition:transform .08s ease-out,background .15s ease-out,box-shadow .15s ease-out;
     text-decoration:none;
   "
 >

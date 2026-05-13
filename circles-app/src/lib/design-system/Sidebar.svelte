@@ -66,7 +66,7 @@
         color: {isActive ? T.primaryDeep : T.inkBody};
         border: 0; cursor: pointer; text-align: left;
         font-family: {T.fontSans}; font-size: 13.5px; font-weight: {isActive ? 580 : 500};
-        transition: background .12s;
+        transition: background .12s ease-out;
       ">
         <Icon name={s.icon} size={17} strokeWidth={isActive ? 1.9 : 1.6} stroke={isActive ? T.primary : T.inkMuted} />
         <span style="flex: 1;">{s.label}</span>

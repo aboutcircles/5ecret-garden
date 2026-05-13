@@ -359,7 +359,7 @@
             background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;
             padding:10px 14px;box-shadow:{T.shadow.xs};
             display:flex;align-items:center;justify-content:space-between;gap:12px;
-            cursor:pointer;transition:background .12s;
+            cursor:pointer;transition:background .12s ease-out;
         ">
             <div style="min-width:0;flex:1;">
                 <div style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px;">To</div>
@@ -382,7 +382,7 @@
             background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;
             padding:10px 14px;box-shadow:{T.shadow.xs};
             display:flex;align-items:center;justify-content:space-between;gap:12px;
-            cursor:pointer;transition:background .12s;
+            cursor:pointer;transition:background .12s ease-out;
         ">
             <div style="min-width:0;flex:1;">
                 <div style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px;">Token filters</div>
@@ -527,7 +527,7 @@
                 background:{canContinue ? T.primary : T.pageDeep};color:{canContinue ? '#fff' : T.inkMuted};
                 font-family:{T.fontSans};font-size:14px;font-weight:580;letter-spacing:-0.005em;
                 box-shadow:{canContinue ? '0 4px 12px rgba(88,73,212,0.25)' : 'none'};
-                transition:background .15s,box-shadow .15s;
+                transition:background .15s ease-out,box-shadow .15s ease-out;
             "
             disabled={!canContinue}
             onclick={handleSelect}

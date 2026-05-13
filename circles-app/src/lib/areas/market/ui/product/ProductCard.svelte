@@ -212,7 +212,7 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
         background:#FFFFFF;border:1px solid rgba(31,17,70,0.05);
         box-shadow:0 1px 2px rgba(15,10,30,0.04);
         display:flex;flex-direction:column;cursor:pointer;
-        transition:box-shadow .18s,transform .18s;
+        transition:box-shadow .18s ease-out,transform .18s ease-out;
       "
       onclick={(e) => handleProductClick(e)}
       onkeydown={(e) => {

@@ -74,7 +74,7 @@
       font-family:{T.fontSans};font-size:14.5px;font-weight:580;letter-spacing:-0.005em;
       box-shadow:{hasValidKey ? '0 6px 18px rgba(88,73,212,0.32),0 1px 0 rgba(255,255,255,0.18) inset' : 'none'};
       opacity:{hasValidKey ? 1 : 0.85};
-      transition:background .15s,color .15s,box-shadow .15s;
+      transition:background .15s ease-out,color .15s ease-out,box-shadow .15s ease-out;
     "
   >
     Import

@@ -51,7 +51,7 @@
   <div style="
     flex:1;min-width:0;display:flex;align-items:center;gap:8px;
     background:{T.surface};border:1px solid {T.hairline};border-radius:9999px;
-    padding:0 14px;height:38px;transition:border-color .15s,box-shadow .15s;
+    padding:0 14px;height:38px;transition:border-color .15s ease-out,box-shadow .15s ease-out;
   ">
     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke={T.inkMuted} stroke-width="1.8" aria-hidden="true">
       <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m1.1-4.4a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z" />

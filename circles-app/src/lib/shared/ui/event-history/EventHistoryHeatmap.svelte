@@ -315,7 +315,7 @@
       <div style="display:flex;gap:4px;background:{T.surfaceAlt};border:1px solid {T.hairlineSoft};border-radius:9999px;padding:3px;">
         {#each ['day', 'week', 'month'] as g}
           <button
-            style="height:26px;padding:0 12px;border-radius:9999px;border:0;font-size:11.5px;font-weight:{granularity === g ? 580 : 400};background:{granularity === g ? T.surface : 'transparent'};color:{granularity === g ? T.ink : T.inkMuted};cursor:pointer;box-shadow:{granularity === g ? T.shadow.xs : 'none'};transition:all 0.1s;"
+            style="height:26px;padding:0 12px;border-radius:9999px;border:0;font-size:11.5px;font-weight:{granularity === g ? 580 : 400};background:{granularity === g ? T.surface : 'transparent'};color:{granularity === g ? T.ink : T.inkMuted};cursor:pointer;box-shadow:{granularity === g ? T.shadow.xs : 'none'};transition:all 0.1s ease-out;"
             onclick={() => (granularity = g as Granularity)}
           >{g.charAt(0).toUpperCase() + g.slice(1)}</button>
         {/each}

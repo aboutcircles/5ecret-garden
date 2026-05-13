@@ -158,7 +158,7 @@
               background:{isSelected ? T.primaryFaint : T.surface};
               border:1px solid {isSelected ? 'rgba(88,73,212,0.2)' : T.hairlineSoft};
               display:flex;align-items:center;justify-content:space-between;gap:10px;
-              transition:background .1s,border-color .1s;
+              transition:background .1s ease-out,border-color .1s ease-out;
             "
           >
             <div style="min-width:0;flex:1;">

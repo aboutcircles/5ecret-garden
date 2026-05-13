@@ -246,7 +246,7 @@
               <span style="text-transform:uppercase;letter-spacing:0.06em;">Seller products</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                style="width:14px;height:14px;flex-shrink:0;transition:transform 0.2s;{expandedGroups[group.key] ? 'transform:rotate(180deg);' : ''}"
+                style="width:14px;height:14px;flex-shrink:0;transition:transform 0.2s ease-out;{expandedGroups[group.key] ? 'transform:rotate(180deg);' : ''}"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"

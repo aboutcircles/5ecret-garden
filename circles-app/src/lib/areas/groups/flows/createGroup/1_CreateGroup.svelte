@@ -101,7 +101,7 @@
                 style="
                     width:100%;padding:10px 14px;border:1px solid {showSymbolInvalid ? T.negative : T.hairline};border-radius:10px;
                     font-family:{T.fontSans};font-size:13px;color:{T.ink};background:{T.surface};
-                    box-sizing:border-box;transition:border-color .15s;
+                    box-sizing:border-box;transition:border-color .15s ease-out;
                 "
                 bind:value={ctx.profile.symbol}
                 placeholder="CRC…"

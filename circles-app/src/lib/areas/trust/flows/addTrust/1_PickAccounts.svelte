@@ -348,7 +348,7 @@
                       padding:8px 10px;border-radius:10px;cursor:pointer;
                       display:flex;align-items:center;justify-content:space-between;gap:8px;
                       background:{alreadyAdded ? T.primaryFaint : 'transparent'};
-                      transition:background .1s;
+                      transition:background .1s ease-out;
                     "
                   >
                     <div style="min-width:0;flex:1;">

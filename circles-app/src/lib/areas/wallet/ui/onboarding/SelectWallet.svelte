@@ -115,7 +115,7 @@
           padding:14px 16px;border-radius:16px;cursor:pointer;text-align:left;
           background:{T.surface};border:1px solid {T.hairlineSoft};
           box-shadow:{T.shadow.xs};
-          transition:transform .08s,border-color .15s,box-shadow .15s;
+          transition:transform .08s ease-out,border-color .15s ease-out,box-shadow .15s ease-out;
           opacity:{!isConnecting && connectingId ? 0.5 : 1};
         "
       >

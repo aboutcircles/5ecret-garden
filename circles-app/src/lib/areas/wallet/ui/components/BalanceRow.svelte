@@ -286,7 +286,7 @@
         padding:10px 14px;
         display:flex;align-items:center;justify-content:space-between;gap:12px;
         cursor:pointer;outline:none;
-        transition:transform .08s,background .15s,box-shadow .15s;
+        transition:transform .08s ease-out,background .15s ease-out,box-shadow .15s ease-out;
     "
     onkeydown={onRowKeydown}
     onclick={onRowWrapperClick}

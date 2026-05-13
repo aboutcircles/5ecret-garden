@@ -349,7 +349,7 @@
         width:24px;height:24px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.inkMuted};
         display:inline-flex;align-items:center;justify-content:center;cursor:pointer;
         opacity:{canScrollLeft ? 1 : 0};pointer-events:{canScrollLeft ? 'auto' : 'none'};
-        transition:opacity .15s;
+        transition:opacity .15s ease-out;
       "
       aria-hidden={!canScrollLeft}
       tabindex={-1}
@@ -367,7 +367,7 @@
         width:24px;height:24px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.inkMuted};
         display:inline-flex;align-items:center;justify-content:center;cursor:pointer;
         opacity:{canScrollRight ? 1 : 0};pointer-events:{canScrollRight ? 'auto' : 'none'};
-        transition:opacity .15s;
+        transition:opacity .15s ease-out;
       "
       aria-hidden={!canScrollRight}
       tabindex={-1}
@@ -409,7 +409,7 @@
             color:{active === t.id ? T.ink : (t.disabled ? T.inkFaint : T.inkMuted)};
             position:relative;
             display:inline-flex;align-items:center;justify-content:center;
-            transition:color .15s;
+            transition:color .15s ease-out;
           "
       >
         <span style="display:inline-flex;align-items:center;gap:6px;max-width:100%;">

@@ -184,7 +184,7 @@
             font-family:{T.fontSans};font-size:15px;font-weight:580;letter-spacing:-0.005em;
             box-shadow:{submitDisabled ? 'none' : '0 6px 18px rgba(88,73,212,0.32),0 1px 0 rgba(255,255,255,0.18) inset'};
             opacity:{submitDisabled ? 0.85 : 1};
-            transition:transform .08s,box-shadow .15s;
+            transition:transform .08s ease-out,box-shadow .15s ease-out;
         "
     >
         <Icon name="send" size={16} stroke={submitDisabled ? T.inkMuted : '#fff'} strokeWidth={2} />

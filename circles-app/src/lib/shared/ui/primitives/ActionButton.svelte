@@ -97,7 +97,7 @@
     {...rest}
     onclick={executeAction}
     title={errorMessage || title}
-    style="display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 18px;border-radius:9999px;font-family:{T.fontSans};font-size:13px;font-weight:580;transition:opacity 0.15s;{stateStyle()}"
+    style="display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 18px;border-radius:9999px;font-family:{T.fontSans};font-size:13px;font-weight:580;transition:opacity 0.15s ease-out;{stateStyle()}"
 >
     {#if buttonState === 'Working'}
         <svg class="ab-spin" style="width:14px;height:14px;flex-shrink:0;" viewBox="0 0 24 24" fill="none">

@@ -49,6 +49,6 @@
 
 <style>
   summary::-webkit-details-marker { display: none; }
-  details[open] :global(.advanced-chevron) { transform: rotate(180deg); transition: transform .15s; }
-  :global(.advanced-chevron) { transition: transform .15s; }
+  details[open] :global(.advanced-chevron) { transform: rotate(180deg); transition: transform .15s ease-out; }
+  :global(.advanced-chevron) { transition: transform .15s ease-out; }
 </style>

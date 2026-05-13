@@ -78,7 +78,7 @@
                 {#each imageUrls as url, index}
                     <button
                         onclick={() => selectImage(index)}
-                        style="flex-shrink:0;width:64px;height:64px;border-radius:8px;overflow:hidden;border:2px solid {currentIndex === index ? T.primary : T.hairlineSoft};cursor:pointer;padding:0;transition:border-color 0.2s,transform 0.2s;transform:{currentIndex === index ? 'scale(1.05)' : 'scale(1)'};"
+                        style="flex-shrink:0;width:64px;height:64px;border-radius:8px;overflow:hidden;border:2px solid {currentIndex === index ? T.primary : T.hairlineSoft};cursor:pointer;padding:0;transition:border-color 0.2s ease-out,transform 0.2s ease-out;transform:{currentIndex === index ? 'scale(1.05)' : 'scale(1)'};"
                         aria-label={`View image ${index + 1}`}
                     >
                         <img
@@ -123,6 +123,6 @@
 {/if}
 
 <style>
-  .pg-group .pg-nav-btn { opacity: 0; transition: opacity 0.2s; }
+  .pg-group .pg-nav-btn { opacity: 0; transition: opacity 0.2s ease-out; }
   .pg-group:hover .pg-nav-btn { opacity: 1; }
 </style>

@@ -20,7 +20,7 @@
     background: {T.surface}; border-radius: {T.radius.lg}px;
     padding: {pad}; box-shadow: {T.shadow.sm};
     border: 1px solid {T.hairlineSoft};
-    {interactive ? 'cursor: pointer; transition: box-shadow .18s, transform .18s;' : ''}
+    {interactive ? 'cursor: pointer; transition: box-shadow .18s ease-out, transform .18s ease-out;' : ''}
     {style}
   "
 >{@render children?.()}</div>

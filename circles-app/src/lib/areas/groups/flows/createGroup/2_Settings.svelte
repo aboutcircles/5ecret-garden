@@ -125,7 +125,7 @@
             display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:14px;cursor:pointer;
             border:1px solid {mode === 'fast' ? 'rgba(88,73,212,0.25)' : T.hairlineSoft};
             background:{mode === 'fast' ? T.primaryFaint : T.surface};
-            transition:background .12s,border-color .12s;
+            transition:background .12s ease-out,border-color .12s ease-out;
         ">
             <input
                 type="radio"
@@ -145,7 +145,7 @@
             display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:14px;cursor:pointer;
             border:1px solid {mode === 'advanced' ? 'rgba(88,73,212,0.25)' : T.hairlineSoft};
             background:{mode === 'advanced' ? T.primaryFaint : T.surface};
-            transition:background .12s,border-color .12s;
+            transition:background .12s ease-out,border-color .12s ease-out;
         ">
             <input
                 type="radio"

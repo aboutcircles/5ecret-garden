@@ -159,6 +159,6 @@
 
 <style>
   .gms-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
-  .gms-card { transition: box-shadow 0.2s, transform 0.2s; }
+  .gms-card { transition: box-shadow 0.2s ease-out, transform 0.2s ease-out; }
   .gms-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.06); transform: translateY(-1px); }
 </style>

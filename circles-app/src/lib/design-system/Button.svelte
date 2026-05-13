@@ -43,7 +43,7 @@
     letter-spacing: -0.005em; cursor: {disabled ? 'not-allowed' : 'pointer'};
     display: inline-flex; align-items: center; justify-content: center; gap: {sizes.gap}px;
     width: {full ? '100%' : 'auto'}; opacity: {disabled ? 0.5 : 1};
-    transition: transform .08s, box-shadow .15s, background .15s;
+    transition: transform .08s ease-out, box-shadow .15s ease-out, background .15s ease-out;
     white-space: nowrap;
     {style}
   "

@@ -593,7 +593,7 @@
                         onclick={copyAddress}
                         aria-label={copiedAddr ? 'Address copied' : 'Copy address'}
                         title={copiedAddr ? 'Copied!' : 'Copy address'}
-                        style="display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 10px;border-radius:9999px;background:{copiedAddr ? T.sageSoft : T.pageDeep};color:{copiedAddr ? T.positive : T.inkBody};border:0;cursor:pointer;font-family:{T.fontMono};font-size:11px;letter-spacing:0.02em;transition:background .15s,color .15s;"
+                        style="display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 10px;border-radius:9999px;background:{copiedAddr ? T.sageSoft : T.pageDeep};color:{copiedAddr ? T.positive : T.inkBody};border:0;cursor:pointer;font-family:{T.fontMono};font-size:11px;letter-spacing:0.02em;transition:background .15s ease-out,color .15s ease-out;"
                     >
                         {shortenAddress(address)}
                         <Icon name={copiedAddr ? 'check' : 'copy'} size={11} stroke={copiedAddr ? T.positive : T.inkMuted} strokeWidth={2} />

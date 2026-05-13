@@ -57,7 +57,7 @@
     "
   >
     <span style="font-size:13px;font-weight:580;color:{T.ink};">On-chain name</span>
-    <span style="display:inline-flex;color:{T.inkMuted};transform:rotate({open ? 180 : 0}deg);transition:transform .15s;">
+    <span style="display:inline-flex;color:{T.inkMuted};transform:rotate({open ? 180 : 0}deg);transition:transform .15s ease-out;">
       <Icon name="chevronDown" size={14} stroke={T.inkMuted} />
     </span>
   </button>
