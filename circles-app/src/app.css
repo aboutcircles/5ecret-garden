@@ -129,11 +129,11 @@ a:focus-visible,
 :where(button):not([disabled]) {
   transition: box-shadow 200ms ease-out, background 200ms ease-out, filter 200ms ease-out, border-color 200ms ease-out, opacity 200ms ease-out;
 }
-:where(button):not([disabled]):hover {
+:where(button):not([disabled]):not(.btn-naked):hover {
   box-shadow: 0 4px 14px rgba(15,10,30,0.10);
   filter: brightness(1.04);
 }
-:where(button):not([disabled]):active {
+:where(button):not([disabled]):not(.btn-naked):active {
   filter: brightness(0.96);
   box-shadow: 0 1px 3px rgba(15,10,30,0.06);
   transition-duration: 60ms;
