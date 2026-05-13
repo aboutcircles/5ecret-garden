@@ -3,37 +3,47 @@ import type { Sdk } from '@aboutcircles/sdk';
 import type { GroupRow } from '@aboutcircles/sdk-types';
 
 /**
- * Fetch groups that the given avatars are MEMBERS of.
+ * Fetch base and CMG groups OWNED by the given avatars.
  *
- * For each avatar address, queries group memberships via the SDK's native
- * `circles_getGroupMemberships` RPC method.
+ * Queries `V_CrcV2.Groups` via `sdk.rpc.group.getGroups()` filtered by
+ * `owner IN avatars`. The SDK's `findGroups()` RPC does not honor `ownerIn`
+ * server-side; `getGroups()` runs a `circles_paginated_query` that does.
  *
- * Returns minimal GroupRow objects keyed by lowercase member address.
- * The UI components (Avatar, ConnectCircles) only need the `group` address
- * to render — profile data is fetched separately.
+ * Returns groups keyed by lowercase owner address. Owners with no owned
+ * groups map to an empty array.
  */
 export async function getBaseAndCmgGroupsByOwnerBatch(
   sdk: Sdk,
-  avatars: Address[]
+  owners: Address[]
 ): Promise<Record<Address, GroupRow[]>> {
-  if (avatars.length === 0 || !sdk) {
+  if (owners.length === 0 || !sdk) {
     return {};
   }
 
+  const normalizedOwners = owners.map((o) => o.toLowerCase() as Address);
   const acc: Record<Address, GroupRow[]> = {};
+  for (const owner of normalizedOwners) {
+    acc[owner] = [];
+  }
 
-  // Query memberships sequentially to avoid 429 rate limiting on the RPC
-  for (const avatar of avatars) {
-    const key = avatar.toLowerCase() as Address;
-    try {
-      const response = await sdk.rpc.group.getGroupMemberships(avatar, 100);
-      acc[key] = response.results.map((m) => ({
-        group: m.group as Address,
-      }) as GroupRow);
-    } catch (e) {
-      console.warn(`[getGroupsByOwnerBatch] Membership query failed for ${avatar}:`, (e as Error).message);
-      acc[key] = [];
+  try {
+    const query = sdk.rpc.group.getGroups(1000, {
+      ownerIn: normalizedOwners,
+      groupTypeIn: ['CrcV2_BaseGroupCreated', 'CrcV2_CMGroupCreated'],
+    });
+
+    while (await query.queryNextPage()) {
+      const rows = query.currentPage?.results ?? [];
+      for (const row of rows) {
+        const ownerKey = (row.owner ?? '').toLowerCase() as Address;
+        if (acc[ownerKey]) {
+          acc[ownerKey].push(row);
+        }
+      }
+      if (!query.currentPage?.hasMore) break;
     }
+  } catch (e) {
+    console.warn(`[getGroupsByOwnerBatch] Query failed:`, (e as Error).message);
   }
 
   return acc;
