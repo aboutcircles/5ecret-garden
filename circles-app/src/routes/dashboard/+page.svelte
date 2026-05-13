@@ -210,8 +210,8 @@
                             border:{a.primary ? 'none' : `1px solid ${T.hairline}`};
                             color:{a.primary ? '#fff' : T.ink};
                             display:flex;flex-direction:row;align-items:center;justify-content:center;gap:8px;
-                            box-shadow:{a.primary ? '0 4px 12px rgba(88,73,212,0.3)' : 'none'};
-                            transition:transform .08s, box-shadow .15s;
+                            {a.primary ? 'box-shadow:0 4px 12px rgba(88,73,212,0.3);' : ''}
+                            transition:transform 180ms ease-out, box-shadow 180ms ease-out, background 180ms ease-out;
                         "
                     >
                         <Icon name={a.icon} size={18} stroke={a.primary ? '#fff' : T.inkBody} strokeWidth={1.8} />

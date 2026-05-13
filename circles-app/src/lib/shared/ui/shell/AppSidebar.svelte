@@ -126,7 +126,7 @@
     <div style="margin:0 4px;">
       <button
         onclick={openSend}
-        class="cursor-pointer transition-opacity hover:opacity-90 active:scale-[0.98]"
+        class="cursor-pointer send-cta active:scale-[0.98]"
         style="
           width:100%;height:40px;border-radius:9999px;border:0;
           background:#5849D4;color:#FFFFFF;
@@ -153,5 +153,17 @@
 <style>
   .appsidebar-account-btn:hover {
     background: rgba(0,0,0,0.04);
+  }
+  .send-cta {
+    transition: transform 180ms ease-out, box-shadow 180ms ease-out, filter 180ms ease-out;
+  }
+  .send-cta:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.18) inset, 0 6px 16px rgba(88,73,212,0.32) !important;
+    filter: brightness(1.06);
+  }
+  .send-cta:active {
+    transform: translateY(0);
+    transition-duration: 60ms;
   }
 </style>
