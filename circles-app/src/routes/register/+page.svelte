@@ -166,7 +166,7 @@
             display:inline-flex;align-items:center;gap:7px;
             font-family:{T.fontSans};font-size:13px;font-weight:540;
             box-shadow:{T.shadow.xs};
-            transition:background .12s,color .12s,border-color .12s;
+            transition:background .12s ease-out,color .12s ease-out,border-color .12s ease-out;
           "
         >
           <Icon name={copied ? 'check' : 'copy'} size={13} stroke={copied ? T.positive : T.inkBody} strokeWidth={2} />

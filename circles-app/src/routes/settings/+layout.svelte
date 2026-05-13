@@ -587,7 +587,7 @@
             border:{active ? 'none' : `1px solid ${T.hairline}`};
             font-family:{T.fontSans};font-size:12.5px;font-weight:580;
             box-shadow:{active ? 'none' : T.shadow.xs};
-            transition:background .12s,color .12s;
+            transition:background .12s ease-out,color .12s ease-out;
             white-space:nowrap;
           "
         >{TAB_LABELS[id]}</button>

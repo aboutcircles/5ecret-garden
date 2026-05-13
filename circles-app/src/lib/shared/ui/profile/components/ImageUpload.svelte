@@ -150,7 +150,7 @@
       background:{dragging ? T.primaryFaint : T.surfaceAlt};
       display:flex;flex-direction:column;gap:6px;
       cursor:{readonly ? 'default' : 'pointer'};
-      transition:border-color 0.15s,background 0.15s;
+      transition:border-color 0.15s ease-out,background 0.15s ease-out;
     "
     onclick={handleClickSelect}
     onkeydown={(e) => {

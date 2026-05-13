@@ -80,7 +80,7 @@
           display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
           background:{active ? T.primarySoft : 'transparent'};
           color:{active ? T.primaryDeep : 'rgba(15,10,30,0.48)'};
-          transition:background .14s, color .14s;
+          transition:background .14s ease-out, color .14s ease-out;
         "
       >
         <Lucide {icon} size={19} class="shrink-0" ariaLabel="" />
@@ -118,7 +118,7 @@
           display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
           background:{active ? T.primarySoft : 'transparent'};
           color:{active ? T.primaryDeep : 'rgba(15,10,30,0.48)'};
-          transition:background .14s, color .14s;
+          transition:background .14s ease-out, color .14s ease-out;
         "
       >
         <Lucide {icon} size={19} class="shrink-0" ariaLabel="" />

@@ -247,7 +247,7 @@
                             background:{c.bg};
                             border:{isActive ? `1.5px solid ${c.dot}` : '1.5px solid transparent'};
                             min-width:108px;text-align:left;
-                            transition:transform .08s, box-shadow .15s;
+                            transition:transform .08s ease-out, box-shadow .15s ease-out;
                         "
                     >
                         <div style="display:flex;align-items:center;gap:6px;">

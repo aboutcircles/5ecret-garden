@@ -45,7 +45,7 @@
       <div style="font-size:14px;color:rgba(15,10,30,0.62);">
         Events <span style="opacity:0.6;">({events.length})</span>
       </div>
-      <div style="transition:transform 0.2s;color:rgba(15,10,30,0.62);transform:{eventsListOpen ? 'rotate(90deg)' : 'none'};">
+      <div style="transition:transform 0.2s ease-out;color:rgba(15,10,30,0.62);transform:{eventsListOpen ? 'rotate(90deg)' : 'none'};">
         <Lucide icon={LArrowRight} size={14} />
       </div>
     </div>
@@ -67,7 +67,7 @@
               onclick={() => toggleOpen(i)}
             >
               <div style="display:flex;align-items:center;gap:8px;min-width:0;">
-                <div style="transition:transform 0.2s;color:rgba(15,10,30,0.62);transform:{isOpen(i) ? 'rotate(90deg)' : 'none'};">
+                <div style="transition:transform 0.2s ease-out;color:rgba(15,10,30,0.62);transform:{isOpen(i) ? 'rotate(90deg)' : 'none'};">
                   <Lucide icon={LArrowRight} size={14} />
                 </div>
                 <div style="font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">

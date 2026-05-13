@@ -157,7 +157,7 @@
         display:flex;align-items:center;gap:12px;padding:12px 20px;
         min-height:var(--transaction-row-height,84px);cursor:pointer;
         border-bottom:1px solid {T.hairlineSoft};box-sizing:border-box;
-        transition:background .12s;
+        transition:background .12s ease-out;
     "
     onkeydown={onRowKeydown}
     onclick={onRowClick}

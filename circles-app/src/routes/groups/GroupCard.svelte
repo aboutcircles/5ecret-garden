@@ -42,7 +42,7 @@
         background:{T.surface};
         border:1px solid {T.hairlineSoft};border-radius:18px;
         overflow:hidden;box-shadow:{T.shadow.xs};
-        transition:box-shadow .18s, transform .18s;
+        transition:box-shadow .18s ease-out, transform .18s ease-out;
         display:flex;flex-direction:column;
     "
 >

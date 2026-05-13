@@ -122,7 +122,7 @@
         ? 'none'
         : '0 8px 24px rgba(88,73,212,0.35),0 1px 0 rgba(255,255,255,0.18) inset'};
       opacity:{isMinting ? 0.7 : 1};
-      transition:transform .08s,box-shadow .15s;
+      transition:transform .08s ease-out,box-shadow .15s ease-out;
     "
   >
     {#if isMinting}

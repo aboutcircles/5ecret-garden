@@ -81,7 +81,7 @@
         display:inline-flex;align-items:center;gap:8px;
         font-family:{T.fontSans};font-size:15.5px;font-weight:580;letter-spacing:-0.005em;
         box-shadow:0 8px 24px rgba(88,73,212,0.35),0 1px 0 rgba(255,255,255,0.18) inset;
-        transition:transform .08s,box-shadow .15s;
+        transition:transform .08s ease-out,box-shadow .15s ease-out;
       "
     >
       <Icon name="sparkle" size={16} stroke="#fff" strokeWidth={2} />

@@ -482,7 +482,7 @@
                         background:{T.pageDeep};color:{T.inkBody};
                         display:inline-flex;align-items:center;justify-content:center;
                         cursor:pointer;flex-shrink:0;
-                        transition:background .12s;
+                        transition:background .12s ease-out;
                     "
                 >
                     <Lucide

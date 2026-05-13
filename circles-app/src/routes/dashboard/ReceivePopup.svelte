@@ -69,7 +69,7 @@
                     border:1px solid {copied ? T.sage : T.hairline};
                     display:inline-flex;align-items:center;justify-content:center;
                     flex-shrink:0;
-                    transition:background .15s,color .15s,border-color .15s;
+                    transition:background .15s ease-out,color .15s ease-out,border-color .15s ease-out;
                 "
             >
                 <Icon name={copied ? 'check' : 'copy'} size={15} stroke={copied ? T.positive : T.inkBody} />
