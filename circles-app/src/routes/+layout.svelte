@@ -38,6 +38,10 @@
   let disposePopupHistorySync: (() => void) | null = null;
   let walletModule: typeof import('$lib/shared/state/wallet.svelte') | null = null;
   let walletWatcherInitialized = false;
+  // Flips to true only after initWalletWatcher() fully resolves (success or
+  // failure). The auth-guard effect must wait for this before redirecting, or
+  // it races against restoreSession and bounces logged-in users to "/".
+  let walletRestoreCompleted = $state(false);
 
   function shouldBypassWalletRestore(routeId: string | null | undefined): boolean {
     if (!routeId) return true;
@@ -147,7 +151,9 @@
     }
 
     walletWatcherInitialized = true;
-    void initWalletWatcher();
+    void initWalletWatcher().finally(() => {
+      walletRestoreCompleted = true;
+    });
   });
 
   // Auth guard: once the wallet watcher has initialized, if we land on a
@@ -155,7 +161,7 @@
   // in), redirect to the landing page so the user can connect.
   $effect(() => {
     if (!browser) return;
-    if (!walletWatcherInitialized) return;
+    if (!walletRestoreCompleted) return;
 
     const routeId = $page.route.id;
     if (shouldBypassWalletRestore(routeId)) return;
