@@ -47,6 +47,7 @@
     if (!routeId) return true;
     return (
       routeId === '/' ||
+      routeId.startsWith('/register') ||
       routeId === '/connect-wallet/connect-safe' ||
       routeId === '/connect-wallet/import-circles-garden' ||
       routeId === '/jump'
