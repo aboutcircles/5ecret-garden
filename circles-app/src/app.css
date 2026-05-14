@@ -59,6 +59,7 @@
 .page--xl { @apply max-w-6xl; }
 
 .page-pt { @apply pt-6; }
+.page-pb { @apply pb-16; }
 .page-stack { @apply flex flex-col gap-y-6; }
 
 /* Sections */

@@ -53,7 +53,7 @@
   );
 </script>
 
-<div class={`page page-pt page-stack ${sizeClass}`} style="position:relative;">
+<div class={`page page-pt page-pb page-stack ${sizeClass}`} style="position:relative;">
 
   <!-- Soft gradient that bridges visually from the landing page -->
   <div style="
