@@ -166,7 +166,7 @@
     const routeId = $page.route.id;
     if (shouldBypassWalletRestore(routeId)) return;
 
-    if (!avatarState.avatar && routeId !== '/register') {
+    if (!avatarState.avatar && !routeId?.startsWith('/register')) {
       void (async () => {
         const { goto } = await import('$app/navigation');
         await goto('/');
