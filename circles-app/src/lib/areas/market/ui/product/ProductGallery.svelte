@@ -101,16 +101,6 @@
                     </button>
                 {/if}
             </div>
-        {:else}
-            <div style="display:flex;gap:8px;margin-top:16px;">
-                <button
-                    onclick={resetToOriginal}
-                    style="padding:4px 12px;font-size:12px;background:{T.pageDeep};border:0;border-radius:8px;cursor:pointer;color:{T.inkBody};"
-                    aria-label="Reset image"
-                >
-                    Reset Image
-                </button>
-            </div>
         {/if}
     </div>
 {:else}
