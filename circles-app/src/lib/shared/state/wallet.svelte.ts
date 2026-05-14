@@ -106,65 +106,47 @@ export async function initSafeSdkBrowserContractRunner(address: Address) {
 }
 
 export async function restoreSession() {
-    const RS = '[restoreSession]';
     try {
         const privateKey = CirclesStorage.getInstance().privateKey;
         const savedAvatar = CirclesStorage.getInstance().avatar;
         const rings: boolean = CirclesStorage.getInstance().rings ? true : false;
         const legacy = CirclesStorage.getInstance().legacy;
 
-        console.log(`${RS} start — path:`, {
-            hasPK: !!privateKey,
-            savedAvatar,
-            legacy,
-            rings,
-            windowEthereum: typeof window !== 'undefined' ? !!(window as any).ethereum : 'SSR',
-        });
-
         let runner: SdkContractRunner | undefined;
 
         if (privateKey && savedAvatar) {
-            console.log(`${RS} → branch: Safe+PK`);
+            // Safe + PK path
             runner = await initSafeSdkPrivateKeyContractRunner(privateKey, savedAvatar);
             const account = privateKeyToAccount(privateKey as `0x${string}`);
             signer.address = account.address?.toLowerCase() as Address;
             signer.privateKey = privateKey;
-            console.log(`${RS} Safe+PK runner ready, address:`, runner.address);
         } else if (legacy) {
-            console.log(`${RS} → branch: legacy EOA`);
+            // Legacy browser provider (EOA flow)
             runner = await initBrowserProviderContractRunner();
             signer.privateKey = undefined;
-            console.log(`${RS} legacy runner ready, address:`, runner.address);
 
             // Best-effort resolve the EOA immediately
             try {
-                console.log(`${RS} getSigner (legacy) start`);
                 const addr = await getSigner();
-                console.log(`${RS} getSigner (legacy) resolved:`, addr);
                 if (addr) {
                     signer.address = addr;
                 }
             } catch (e) {
-                console.warn(`${RS} getSigner failed during legacy restore:`, e);
+                console.warn('getSigner failed during legacy restore:', e);
             }
         } else if (savedAvatar) {
-            console.log(`${RS} → branch: Safe+browser-provider`);
-            console.log(`${RS} window.ethereum at branch entry:`, !!(window as any)?.ethereum);
-
+            // Safe + browser provider (EOA != Safe)
             runner = await initSafeSdkBrowserContractRunner(savedAvatar);
             signer.privateKey = undefined;
-            console.log(`${RS} Safe runner ready, address:`, runner.address);
 
             // IMPORTANT: resolve current EOA eagerly so features that need the owner have it
             try {
-                console.log(`${RS} getSigner (Safe) start`);
                 const addr = await getSigner();
-                console.log(`${RS} getSigner (Safe) resolved:`, addr);
                 if (addr) {
                     signer.address = addr;
                 }
             } catch (e) {
-                console.warn(`${RS} getSigner failed during Safe restore:`, e);
+                console.warn('getSigner failed during Safe restore:', e);
             }
         } else {
             throw new Error('No private key, rings, legacy or saved avatar found in localStorage');
@@ -195,22 +177,16 @@ export async function restoreSession() {
                 ?? savedAvatar
                 ?? runner.address) as Address;
 
-        console.log(`${RS} avatarToRestore:`, avatarToRestore, '(savedAvatar:', savedAvatar, ', savedGroup:', savedGroup, ')');
-
         const avatarDataSource = createAvatarDataSource(sdk);
-        console.log(`${RS} getAvatarInfo start`);
         const avatarInfo = await avatarDataSource.getAvatarInfo(avatarToRestore);
-        console.log(`${RS} getAvatarInfo result:`, avatarInfo ? 'found' : 'null/undefined');
 
         if (avatarInfo) {
             avatarState.avatar = await sdk.getAvatar(avatarToRestore);
-            console.log(`${RS} ✓ session restored for`, avatarToRestore);
         } else {
-            console.warn(`${RS} avatarInfo not found — redirecting to /register`);
             await goto('/register');
         }
     } catch (error) {
-        console.error(`${RS} ✗ threw, calling clearSession:`, error);
+        console.error('Failed to restore wallet:', error);
         clearSession();
     }
 }
