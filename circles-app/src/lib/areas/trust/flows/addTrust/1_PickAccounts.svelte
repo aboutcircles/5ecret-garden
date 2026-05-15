@@ -68,6 +68,7 @@
 
   const isEmptySelection = $derived(selected.length === 0);
   const selectedSet = $derived(new Set(selected.map((a) => a.address.toLowerCase())));
+  const queryIsAddress = $derived(isAddress($query.trim()));
 
   function asAddress(value: unknown): Address {
     return String(value).toLowerCase() as Address;
@@ -439,6 +440,8 @@
 
       {#if !isEmptySelection}
         <StepActionButtons primaryLabel="Continue" onPrimary={goNext} />
+      {:else if queryIsAddress && !$searchOpen}
+        <StepActionButtons primaryLabel="Continue" onPrimary={() => addPicked(asAddress($query.trim()))} />
       {/if}
     </div>
   </div>
