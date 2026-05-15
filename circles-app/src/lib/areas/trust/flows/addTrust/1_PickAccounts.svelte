@@ -95,18 +95,21 @@
     searchInputEl?.focus();
   }
 
+  function activateSearchRow(row: HTMLElement | null) {
+    const addr = row?.dataset?.searchResultAddress;
+    if (!addr) return;
+    addPicked(asAddress(addr), row?.dataset?.searchResultAvatarType);
+  }
+
   const searchListNavigator = createKeyboardListNavigator({
     getRows: () => Array.from(overlayEl?.querySelectorAll<HTMLElement>('[data-search-result-row]') ?? []),
     focusInput: focusSearchInput,
-    onActivateRow: (row) => {
-      const addr = row.dataset.searchResultAddress;
-      if (!addr) return;
-      addPicked(asAddress(addr), row.dataset.searchResultAvatarType);
-    },
+    onActivateRow: (row) => activateSearchRow(row),
   });
 
   function onSearchResultRowClick(event: MouseEvent) {
     searchListNavigator.onRowClick(event);
+    activateSearchRow(event.currentTarget as HTMLElement | null);
   }
 
   const pickedListNavigator = createKeyboardListNavigator({
