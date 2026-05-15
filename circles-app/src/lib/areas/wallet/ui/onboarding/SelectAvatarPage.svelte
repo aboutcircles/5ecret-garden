@@ -33,8 +33,8 @@
   }
 
   let {
-    title = 'Choose your Circles wallet',
-    helperText = 'Select a Safe wallet below to continue, or create a new one to get started.',
+    title = 'Choose your Circles account',
+    helperText = 'Select an account below to continue, or create a new one to get started.',
     sizeClass = 'page--lg',
     isLoading,
     safeOwnerAddress,
