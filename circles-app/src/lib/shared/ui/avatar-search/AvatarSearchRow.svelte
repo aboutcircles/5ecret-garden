@@ -80,9 +80,14 @@
   function startEditNote(event: MouseEvent | KeyboardEvent): void {
     event.preventDefault();
     event.stopPropagation();
+    cancellingEdit = false;
     noteDraft = note;
     editingNote = true;
     queueMicrotask(() => noteInputEl?.focus());
+  }
+
+  function markCancelOnMousedown(): void {
+    cancellingEdit = true;
   }
 
   function commitNote(): void {
@@ -150,13 +155,26 @@
       </div>
       {#snippet trailing()}
         <div class="flex items-center gap-1" onclick={(e) => e.stopPropagation()} role="presentation">
-          {#if isFavorite}
+          {#if isFavorite && editingNote}
             <button
               type="button"
               class="btn btn-ghost btn-xs btn-square text-base-content/60 hover:text-base-content"
-              aria-label={editingNote ? 'Cancel editing nickname' : 'Edit nickname'}
-              title={editingNote ? 'Cancel editing nickname' : 'Edit nickname'}
-              onclick={(e) => (editingNote ? cancelEditNote() : startEditNote(e))}
+              aria-label="Cancel editing nickname"
+              title="Cancel editing nickname"
+              onmousedown={markCancelOnMousedown}
+              onclick={cancelEditNote}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" class="h-4 w-4" aria-hidden="true">
+                <path d="M5 5l10 10M15 5L5 15" />
+              </svg>
+            </button>
+          {:else if isFavorite}
+            <button
+              type="button"
+              class="btn btn-ghost btn-xs btn-square text-base-content/60 hover:text-base-content"
+              aria-label="Edit nickname"
+              title="Edit nickname"
+              onclick={startEditNote}
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4" aria-hidden="true">
                 <path d="M2.695 14.762l-1.262 3.155a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.886L17.5 5.501a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
