@@ -106,7 +106,7 @@
     });
 
     $effect(() => {
-        if (selectedTab !== 'memberships' || !$circles || !ownerAddress) return;
+        if (!$circles || !ownerAddress) return;
         const ownerKey = String(ownerAddress).toLowerCase();
         if (membershipsLoadedForAvatar === ownerKey || membershipsLoading) return;
         void loadMemberships();
@@ -172,8 +172,8 @@
             </button>
         </div>
 
-        <!-- Featured card (only on My groups tab when no groups) -->
-        {#if selectedTab === 'yours' && ownedGroups.length === 0 && !ownedGroupsLoading}
+        <!-- Featured card: only when the user has no group activity at all (owns none, joined none) -->
+        {#if selectedTab === 'yours' && ownedGroups.length === 0 && memberships.length === 0 && !ownedGroupsLoading && !membershipsLoading}
             <div style="
                 padding:20px;border-radius:24px;margin-top:6px;
                 background:linear-gradient(120deg,{T.lilacSoft} 0%,{T.coralSoft} 70%,{T.butterSoft} 100%);
