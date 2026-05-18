@@ -13,6 +13,7 @@
   import JumpLink from '$lib/shared/ui/content/jump/JumpLink.svelte';
   import { T } from '$lib/design-system/tokens.js';
   import Icon from '$lib/design-system/Icon.svelte';
+  import { settings } from '$lib/shared/state/settings.svelte';
 
   interface Meta {
     publishedAt?: number;
@@ -215,7 +216,7 @@
   {/if}
 
   <!-- External links -->
-  {#if productUrlSafe || ipfsUrlSafe}
+  {#if productUrlSafe || (settings.advancedMode && ipfsUrlSafe)}
     <div style="display:flex;flex-wrap:wrap;gap:6px;">
       {#if productUrlSafe}
         <JumpLink className="" url={productUrlSafe}>
@@ -231,7 +232,7 @@
           </span>
         </JumpLink>
       {/if}
-      {#if ipfsUrlSafe}
+      {#if settings.advancedMode && ipfsUrlSafe}
         <JumpLink className="" url={ipfsUrlSafe}>
           <span style="
             display:inline-flex;align-items:center;gap:6px;
@@ -249,7 +250,7 @@
   {/if}
 
   <!-- Meta -->
-  {#if showMeta && meta}
+  {#if settings.advancedMode && showMeta && meta}
     <div style="display:flex;flex-wrap:wrap;gap:14px;padding:0 2px;font-size:11px;color:{T.inkSubtle};font-family:{T.fontMono};">
       {#if publishedDateText}
         <div>Published: {publishedDateText}</div>
