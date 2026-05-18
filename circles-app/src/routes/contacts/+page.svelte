@@ -68,6 +68,19 @@
         }
     }
 
+    // Per-address memo: keeps the same item object reference across derivations
+    // when neither the underlying contact nor the profile-cache entry changed.
+    // Without this, every page load rebuilds every item object, ContactRow's
+    // `item` prop gets a fresh reference, and Avatar/ContactGroupRow flicker.
+    type ContactItem = {
+        blockNumber: number;
+        transactionIndex: number;
+        logIndex: number;
+        address: string;
+        contact: any;
+    };
+    const itemMemo = new Map<string, { item: ContactItem; contactRef: any; profileRef: any }>();
+
     // Build the full filtered array (not paginated)
     const filteredAll = derived(
         [contacts, filterVersion, filterRelation, profileCoreCache],
@@ -90,19 +103,27 @@
                     if (bRelation === 'trusts' && aRelation === 'trustedBy') return 1;
                     return 0;
                 })
-                .map(([address, contact]) => ({
-                    // Stable per-address fake EventRow fields so VirtualList's
-                    // default key function doesn't see a fresh blockNumber on
-                    // every derivation (which would remount every row).
-                    blockNumber: 0,
-                    transactionIndex: 0,
-                    logIndex: 0,
-                    address,
-                    contact: {
-                        ...contact,
-                        contactProfile: contact?.contactProfile ?? $profileCache.get(address.toLowerCase()),
-                    },
-                }));
+                .map(([address, contact]) => {
+                    const profileRef = $profileCache.get(address.toLowerCase());
+                    const cached = itemMemo.get(address);
+                    if (cached && cached.contactRef === contact && cached.profileRef === profileRef) {
+                        return cached.item;
+                    }
+                    const contactFinal = contact?.contactProfile
+                        ? contact
+                        : profileRef
+                          ? { ...contact, contactProfile: profileRef }
+                          : contact;
+                    const item: ContactItem = {
+                        blockNumber: 0,
+                        transactionIndex: 0,
+                        logIndex: 0,
+                        address,
+                        contact: contactFinal,
+                    };
+                    itemMemo.set(address, { item, contactRef: contact, profileRef });
+                    return item;
+                });
         }
     );
 
