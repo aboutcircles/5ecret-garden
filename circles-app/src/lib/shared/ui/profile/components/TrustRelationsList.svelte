@@ -121,7 +121,10 @@
 
                 const total = await groupDataSource
                     .getGroupMemberCount(avatarAddress)
-                    .catch(() => null);
+                    .catch((e) => {
+                        console.warn('[TrustRelationsList] getGroupMemberCount failed', avatarAddress, e);
+                        return null;
+                    });
                 if (generation !== loadGeneration) return;
                 if (typeof total === 'number') {
                     totalKnownCount = total;

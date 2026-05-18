@@ -96,22 +96,29 @@
     // Skip if we already fetched for this address
     if (address === lastFetchedAddress && fetchedProfile) return;
 
-    lastFetchedAddress = address;
+    // Capture the address at dispatch time. `address` is a live $props()
+    // proxy — reading it inside the async callbacks below would return the
+    // current value at callback time, not at fetch dispatch. With concurrent
+    // prefetches that race is real: A's resolved profile could be committed
+    // as B's when the row recycles before A's fetch completes.
+    const capturedAddress = address;
+    lastFetchedAddress = capturedAddress;
 
-    getProfile(address as `0x${string}`)
+    getProfile(capturedAddress as `0x${string}`)
       .then((newProfile) => {
-        // Only update if address hasn't changed during fetch
-        if (address === lastFetchedAddress) {
+        if (capturedAddress === lastFetchedAddress) {
           fetchedProfile = newProfile;
         }
       })
-      .catch(() => {
-        if (address === lastFetchedAddress) {
+      .catch((err) => {
+        if (capturedAddress === lastFetchedAddress) {
+          console.warn('[Avatar] getProfile failed', capturedAddress, err);
           fetchedProfile = {
-            name: address ? (address.slice(0, 6) + '...' + address.slice(-4)) : 'Unknown',
+            name: capturedAddress.slice(0, 6) + '...' + capturedAddress.slice(-4),
             previewImageUrl: '/logo.svg',
           };
-          // Allow retry on next render (e.g., when SDK becomes available)
+          // Clear so the next render (e.g. when SDK becomes available)
+          // can retry the fetch for this address.
           lastFetchedAddress = undefined;
         }
       });

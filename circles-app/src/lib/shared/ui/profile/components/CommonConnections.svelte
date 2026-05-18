@@ -51,6 +51,7 @@
             commonConnectionsCount = list.length;
         } catch (e) {
             if (generation !== loadGeneration) return;
+            console.warn('[CommonConnections] load failed', e);
             error = e instanceof Error ? e.message : 'Failed to load connections';
             rowsStore.set([]);
             commonConnectionsCount = 0;
