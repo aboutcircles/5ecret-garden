@@ -5,7 +5,7 @@ import type { Address } from '@aboutcircles/sdk-types';
 import type { PagedResponse, EnrichedTransaction } from '$lib/shared/utils/sdkHelpers';
 import { handleError } from '$lib/shared/utils/errorHandler';
 import { circles } from '$lib/shared/state/circles';
-import { getProfile } from '$lib/shared/data/profile/profile';
+import { getProfile } from '$lib/shared/utils/profile';
 import { circlesBalances } from '$lib/shared/state/circlesBalances';
 import { writeTransactions, makeScopeId } from '$lib/shared/cache';
 
@@ -137,7 +137,7 @@ export async function prefetchProfilesForAddresses(addresses: (string | Address)
   const results = await Promise.all(
     uncached.map(async (addr) => {
       try {
-        const profile = await getProfile(addr as Address);
+        const profile = await getProfile(addr as `0x${string}`);
         return { addr, profile };
       } catch {
         return { addr, profile: null };
@@ -188,7 +188,7 @@ async function prefetchProfilesForTransactions(rows: ExtendedTransactionRow[]): 
   const profileResults = await Promise.all(
     uncachedAddresses.map(async (addr) => {
       try {
-        const profile = await getProfile(addr as Address);
+        const profile = await getProfile(addr as `0x${string}`);
         return { addr, profile };
       } catch {
         return { addr, profile: null };

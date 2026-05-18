@@ -1,6 +1,8 @@
 // Thin shim around the new profiles module (core + full repos)
 export { FallbackImageUrl } from '$lib/shared/model/profile';
 export { getProfileCore as getProfile } from '$lib/shared/model/profile';
+export { getResolvedProfileCore as getResolvedProfile } from '$lib/shared/model/profile';
+export { getProfilesCoreBatch } from '$lib/shared/model/profile';
 import { invalidateProfileCore, invalidateProfileFull } from '$lib/shared/model/profile';
 export { invalidateProfileFull } from '$lib/shared/model/profile';
 import type { ProfileAddress } from '$lib/shared/model/profile';
