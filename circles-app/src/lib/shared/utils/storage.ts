@@ -18,10 +18,11 @@ export interface StorageSchema {
   privateKey?: string;
   rings?: boolean;
   legacy?: boolean;
+  advancedMode?: boolean;
 }
 
 const STORAGE_KEY = 'Circles.Storage';
-const CURRENT_VERSION = 1;
+const CURRENT_VERSION = 2;
 
 function canUseLocalStorage(): boolean {
   return typeof localStorage !== 'undefined';
@@ -48,6 +49,7 @@ export class CirclesStorage {
 
     if (data?.version === CURRENT_VERSION) return;
 
+    // v1: consolidate legacy flat keys into JSON blob
     const migratedData: StorageSchema = {
       walletType: localStorage.getItem('walletType') as WalletType,
       avatar: localStorage.getItem('avatar') as Address,
@@ -56,6 +58,7 @@ export class CirclesStorage {
       groupType: localStorage.getItem('groupType') || undefined,
       privateKey: localStorage.getItem('privateKey') || undefined,
       ...data,
+      advancedMode: data?.advancedMode ?? false,
       version: CURRENT_VERSION
     };
 
@@ -107,6 +110,10 @@ export class CirclesStorage {
 
   get legacy(): boolean | undefined {
     return this.data.legacy;
+  }
+
+  get advancedMode(): boolean {
+    return this.data.advancedMode ?? false;
   }
 
   clear() {

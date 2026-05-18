@@ -7,6 +7,7 @@ import { AddSigningKey } from '$lib/shared/ui/profile';
   import { CirclesStorage } from '$lib/shared/utils/storage';
   import { T } from '$lib/design-system/tokens.js';
   import Icon from '$lib/design-system/Icon.svelte';
+  import { settings } from '$lib/shared/state/settings.svelte';
 
   type Props = {
     avatarAddress: Address | '';
@@ -67,7 +68,7 @@ import { AddSigningKey } from '$lib/shared/ui/profile';
     />
   </section>
 
-  {#if hasLocalPrivateKey}
+  {#if settings.advancedMode && hasLocalPrivateKey}
     <section style="background:{T.warningSoft};border:1px solid rgba(176,112,20,0.2);border-radius:14px;padding:14px 16px;width:100%;">
       <h3 style="font-family:{T.fontSans};font-size:13px;font-weight:580;color:{T.ink};margin:0;">Security</h3>
       <p style="font-size:11.5px;color:{T.inkBody};margin:2px 0 0 0;line-height:1.5;">

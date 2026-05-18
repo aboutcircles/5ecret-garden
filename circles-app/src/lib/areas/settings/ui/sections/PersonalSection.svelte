@@ -7,6 +7,7 @@ import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
   import { canMigrate } from '$lib/shared/guards/canMigrate';
   import { T } from '$lib/design-system/tokens.js';
   import Icon from '$lib/design-system/Icon.svelte';
+  import { settings } from '$lib/shared/state/settings.svelte';
 
   type Props = {
     avatarAddress: Address | '';
@@ -37,6 +38,7 @@ import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
   }: Props = $props();
 </script>
 
+{#if settings.advancedMode}
 <section style="background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;padding:14px 16px;width:100%;">
   <h3 style="font-family:{T.fontSans};font-size:13px;font-weight:580;color:{T.ink};margin:0 0 6px 0;">Profile CID</h3>
   <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;">
@@ -68,6 +70,7 @@ import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
     {/if}
   </div>
 </section>
+{/if}
 
 {#if avatarAddress}
   <section style="background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;padding:14px 16px;width:100%;">
@@ -79,7 +82,7 @@ import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
   </section>
 {/if}
 
-{#if avatarState?.isGroup}
+{#if settings.advancedMode && avatarState?.isGroup}
   <section style="background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;padding:14px 16px;width:100%;">
     <h3 style="font-family:{T.fontSans};font-size:13px;font-weight:580;color:{T.ink};margin:0;">Advanced group settings</h3>
     <p style="font-size:11.5px;color:{T.inkMuted};margin:2px 0 0 0;">Group-specific configuration.</p>
@@ -89,7 +92,7 @@ import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
   </section>
 {/if}
 
-{#if avatarState?.avatar?.avatarInfo && canMigrate(avatarState.avatar.avatarInfo)}
+{#if settings.advancedMode && avatarState?.avatar?.avatarInfo && canMigrate(avatarState.avatar.avatarInfo)}
   {#if avatarState?.avatar?.avatarInfo?.version === 1}
     <section style="
       background:linear-gradient(135deg,{T.primaryFaint} 0%,{T.lilacSoft} 100%);

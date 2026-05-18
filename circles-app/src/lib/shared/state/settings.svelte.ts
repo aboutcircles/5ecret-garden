@@ -14,5 +14,11 @@ export const settings = $state({
 	},
 	set legacy(value: boolean) {
 		storage.data = { legacy: value };
-	}
+	},
+	get advancedMode() {
+		return storage.advancedMode;
+	},
+	set advancedMode(value: boolean) {
+		storage.data = { advancedMode: value };
+	},
 });

@@ -63,6 +63,7 @@
   import type { PaginatedReadable } from '$lib/shared/state/paginatedList';
   import CreateGatewayProfile from '$lib/areas/settings/flows/gateway/CreateGatewayProfile.svelte';
   import { coerceTabId, type TabIdOf } from '$lib/shared/ui/primitives/tabs/tabId';
+  import { settings } from '$lib/shared/state/settings.svelte';
 
   const TAB_IDS = ['personal', 'bookmarks', 'orders', 'sales', 'keys', 'namespaces', 'marketplace', 'payment'] as const;
   type TabId = TabIdOf<typeof TAB_IDS>;
@@ -82,6 +83,11 @@
     'personal', 'bookmarks', 'orders', 'sales',
     'marketplace', 'payment', 'namespaces', 'keys',
   ];
+
+  const ADVANCED_TABS = new Set<TabId>(['keys', 'namespaces', 'payment']);
+  const visibleTabs = $derived(
+    settings.advancedMode ? TAB_ORDER : TAB_ORDER.filter(id => !ADVANCED_TABS.has(id))
+  );
 
   let selectedTab = $state<TabId>('personal');
 
@@ -575,7 +581,7 @@
 
     <!-- Pill tabs -->
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:18px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;">
-      {#each TAB_ORDER as id}
+      {#each visibleTabs as id}
         {@const active = selectedTab === id}
         <button
           type="button"
@@ -609,6 +615,25 @@
           {migrateToV2}
           {stopV1}
         />
+        {#if settings.advancedMode}
+          <section style="background:{T.pageDeep};border:1px solid {T.hairlineSoft};border-radius:14px;padding:14px 16px;width:100%;">
+            <h3 style="font-family:{T.fontSans};font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;margin:0 0 12px;">Advanced</h3>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-bottom:10px;">
+              <input type="checkbox" style="accent-color:{T.primary};width:14px;height:14px;cursor:pointer;" checked={settings.legacy} onchange={() => settings.legacy = !settings.legacy} />
+              <div>
+                <span style="font-size:13px;color:{T.ink};font-weight:540;">Legacy mode</span>
+                <span style="font-size:11.5px;color:{T.inkMuted};margin-left:8px;">Use your EOA to control your avatar</span>
+              </div>
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+              <input type="checkbox" style="accent-color:{T.primary};width:14px;height:14px;cursor:pointer;" checked={settings.ring} onchange={() => settings.ring = !settings.ring} />
+              <div>
+                <span style="font-size:13px;color:{T.ink};font-weight:540;">Rings network</span>
+                <span style="font-size:11.5px;color:{T.inkMuted};margin-left:8px;">Use the staging/rings deployment</span>
+              </div>
+            </label>
+          </section>
+        {/if}
       {:else if selectedTab === 'bookmarks'}
         <BookmarksSection />
       {:else if selectedTab === 'orders'}
@@ -664,6 +689,14 @@
       {@render children?.()}
     </div>
 
-    <div style="height:24px;"></div>
+    <div style="height:24px;display:flex;align-items:center;justify-content:flex-end;padding:0 4px;">
+      <button
+        type="button"
+        onclick={() => settings.advancedMode = !settings.advancedMode}
+        style="background:none;border:none;cursor:pointer;padding:4px 8px;font-size:10px;color:{settings.advancedMode ? T.primary : T.hairline};font-family:{T.fontMono};opacity:0.4;"
+        title=""
+        aria-label="Toggle advanced mode"
+      >{settings.advancedMode ? '● advanced' : '●'}</button>
+    </div>
   </div>
 </div>
