@@ -307,7 +307,7 @@
                 row={ContactRow}
                 rowHeight={64}
                 maxPlaceholderPages={2}
-                expectedPageSize={avatarState.isGroup ? 100 : 25}
+                expectedPageSize={25}
                 eagerLoadMultiplier={2}
                 placeholderRow={AvatarRowPlaceholder}
             />

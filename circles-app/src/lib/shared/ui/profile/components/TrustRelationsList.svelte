@@ -17,7 +17,9 @@
 
     let { avatarAddress, relation, count = $bindable(0) }: Props = $props();
 
-    const GROUP_MEMBERS_PAGE_SIZE = 100;
+    // Match the transaction-history page size so the Trusts tab renders
+    // its first batch of members quickly; remaining pages stream in.
+    const GROUP_MEMBERS_PAGE_SIZE = 25;
 
     let loading = $state(true);
     let error: string | null = $state(null);

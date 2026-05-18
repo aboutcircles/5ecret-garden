@@ -32,7 +32,9 @@ export async function createContactsQueryStore(
   const trustDataSource = createTrustDataSource(sdk);
   const groupDataSource = createGroupDataSource(sdk);
 
-  const GROUP_MEMBERS_PAGE_SIZE = 100;
+  // Match the transaction-history page size for a fast first paint; further
+  // pages stream in via VirtualList's scroll-driven prefetch.
+  const GROUP_MEMBERS_PAGE_SIZE = 25;
 
   const createContactsQuery = async (): Promise<
     CirclesQuery<ContactEventRow>

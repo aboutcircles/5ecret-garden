@@ -79,7 +79,9 @@
     };
   });
 
-  const GROUP_MEMBERS_PAGE_SIZE = 100;
+  // Match the transaction-history page size so the first batch of members
+  // renders quickly; remaining pages fill in the background.
+  const GROUP_MEMBERS_PAGE_SIZE = 25;
   let loadGeneration = 0;
 
   async function loadTrusted() {
