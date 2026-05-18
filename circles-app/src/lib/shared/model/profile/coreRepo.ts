@@ -13,6 +13,23 @@ import type { CirclesConfig } from '$lib/shared/config/circles';
 // Cache of lowercased address -> Promise<AppProfileCore>
 const coreCache = new Map<ProfileAddress, Promise<AppProfileCore>>();
 
+// Synchronously-readable cache of already-resolved profiles. Lets Avatar
+// (and other UI) seed its initial state without flashing a skeleton when
+// the profile has already been fetched into memory.
+const resolvedCoreCache = new Map<ProfileAddress, AppProfileCore>();
+
+function rememberResolved(addr: ProfileAddress, profile: AppProfileCore): void {
+  resolvedCoreCache.set(addr, profile);
+}
+
+export function getResolvedProfileCore(address: string): AppProfileCore | undefined {
+  try {
+    return resolvedCoreCache.get(norm(address));
+  } catch {
+    return undefined;
+  }
+}
+
 function norm(address: string): ProfileAddress {
   const a = address.toLowerCase();
   if (!/^0x[0-9a-f]{40}$/.test(a)) throw new Error(`Invalid address: ${address}`);
@@ -75,7 +92,9 @@ async function fetchCoreBatch(addresses: ProfileAddress[]): Promise<Map<ProfileA
   for (const a of addresses) {
     const avatar = addrToAvatar.get(a);
     const doc = avatar?.cidV0 ? cidToDoc[avatar.cidV0] : undefined;
-    out.set(a, applyFallback(a, avatar, doc));
+    const profile = applyFallback(a, avatar, doc);
+    out.set(a, profile);
+    rememberResolved(a, profile);
   }
 
   // Write-through to IDB
@@ -107,21 +126,31 @@ export async function getProfilesCoreBatch(
 
   for (const addr of unique) {
     if (addr === '0x0000000000000000000000000000000000000001') {
-      const p = Promise.resolve({ name: 'Transitive transfer', previewImageUrl: '/circles-token.svg' });
-      coreCache.set(addr, p);
-      pendingFromCache.push(p.then((v) => void out.set(addr, v)));
+      const profile: AppProfileCore = { name: 'Transitive transfer', previewImageUrl: '/circles-token.svg' };
+      coreCache.set(addr, Promise.resolve(profile));
+      rememberResolved(addr, profile);
+      out.set(addr, profile);
       continue;
     }
     if (hub && addr === hub) {
-      const p = Promise.resolve({ name: 'Circles V2 Hub Contract', previewImageUrl: FallbackImageUrl.Logo });
-      coreCache.set(addr, p);
-      pendingFromCache.push(p.then((v) => void out.set(addr, v)));
+      const profile: AppProfileCore = { name: 'Circles V2 Hub Contract', previewImageUrl: FallbackImageUrl.Logo };
+      coreCache.set(addr, Promise.resolve(profile));
+      rememberResolved(addr, profile);
+      out.set(addr, profile);
       continue;
     }
     if (migration && addr === migration) {
-      const p = Promise.resolve({ name: 'Circles V2 Migration Contract', previewImageUrl: FallbackImageUrl.Logo });
-      coreCache.set(addr, p);
-      pendingFromCache.push(p.then((v) => void out.set(addr, v)));
+      const profile: AppProfileCore = { name: 'Circles V2 Migration Contract', previewImageUrl: FallbackImageUrl.Logo };
+      coreCache.set(addr, Promise.resolve(profile));
+      rememberResolved(addr, profile);
+      out.set(addr, profile);
+      continue;
+    }
+
+    // Synchronous resolved hit — avoids the awaited Promise.then() roundtrip
+    const sync = resolvedCoreCache.get(addr);
+    if (sync) {
+      out.set(addr, sync);
       continue;
     }
 
@@ -140,8 +169,8 @@ export async function getProfilesCoreBatch(
     const fromIdb = await readProfilesBatch(toFetch);
     for (const [addr, profile] of fromIdb) {
       const pa = addr as ProfileAddress;
-      const p = Promise.resolve(profile);
-      coreCache.set(pa, p);
+      coreCache.set(pa, Promise.resolve(profile));
+      rememberResolved(pa, profile);
       out.set(pa, profile);
     }
     // Remove IDB hits from toFetch
@@ -153,8 +182,8 @@ export async function getProfilesCoreBatch(
   if (toFetch.length > 0) {
     const fetched = await fetchCoreBatch(toFetch);
     for (const [addr, core] of fetched.entries()) {
-      const p = Promise.resolve(core);
-      coreCache.set(addr, p);
+      coreCache.set(addr, Promise.resolve(core));
+      // fetchCoreBatch already calls rememberResolved internally
       out.set(addr, core);
     }
   }
@@ -187,23 +216,31 @@ export async function getProfileCore(address: ProfileAddress): Promise<AppProfil
   // Tier 2: check IndexedDB before hitting RPC
   const idbProfile = await readProfile(addr);
   if (idbProfile) {
-    const p = Promise.resolve(idbProfile);
-    coreCache.set(addr, p);
+    coreCache.set(addr, Promise.resolve(idbProfile));
+    rememberResolved(addr, idbProfile);
     return idbProfile;
   }
 
-  const p = aggregator.enqueue(addr).catch((err) => {
-    coreCache.delete(addr);
-    throw err;
-  });
+  const p = aggregator.enqueue(addr)
+    .then((resolved) => {
+      rememberResolved(addr, resolved);
+      return resolved;
+    })
+    .catch((err) => {
+      coreCache.delete(addr);
+      throw err;
+    });
   coreCache.set(addr, p);
   return p;
 }
 
 export function invalidateProfileCore(address: ProfileAddress): void {
-  coreCache.delete(norm(address));
+  const a = norm(address);
+  coreCache.delete(a);
+  resolvedCoreCache.delete(a);
 }
 
 export function invalidateAllProfileCore(): void {
   coreCache.clear();
+  resolvedCoreCache.clear();
 }

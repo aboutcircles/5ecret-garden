@@ -5,6 +5,8 @@
   import { formatEther } from 'ethers';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
+  import { getProfilesCoreBatch } from '$lib/shared/utils/profile';
+  import type { ProfileAddress } from '$lib/shared/model/profile';
 
   interface Props {
     tokenAddress: Address;
@@ -15,192 +17,118 @@
 
   // Union type for holders - can be either personal token holders or group token holders
   type HolderRow = TokenHolderRow | GroupTokenHolderRow;
+  type HolderQuery = {
+    queryNextPage(): Promise<boolean>;
+    currentPage?: { results: HolderRow[]; hasMore: boolean };
+  };
 
-  let allHolders: HolderRow[] = $state([]); // All holders from backend
-  let displayedHolders: HolderRow[] = $state([]); // Holders currently displayed
+  // Lazy pagination: fetch one page at a time and batch-prefetch its profiles
+  // before the Avatars mount. Avoids the prior eager `while (queryNextPage())`
+  // drain that loaded every holder on first render and queued an avatar fetch
+  // per row.
+  let displayedHolders: HolderRow[] = $state([]);
   let isLoading: boolean = $state(false);
   let hasMore: boolean = $state(true);
-  let lastScrollTime: number = 0;
-  let scrollThrottle: number = 500; // ms between scroll checks
   let initialized: boolean = $state(false);
   let currentTokenAddress: Address | undefined = $state(undefined);
-  let pageSize: number = 50;
-  let currentPage: number = 0;
+  const PAGE_SIZE = 50;
   let error: string | null = $state(null);
   let hasError: boolean = $state(false);
+  let activeQuery: HolderQuery | null = null;
+  let loadGeneration = 0;
+
+  function getHolderAddress(holder: HolderRow): Address {
+    return isPersonalTokenHolder(holder) ? holder.account : holder.holder;
+  }
+
+  function primeProfiles(rows: HolderRow[]): void {
+    if (rows.length === 0) return;
+    const addrs = rows.map((r) => getHolderAddress(r) as unknown as ProfileAddress);
+    void getProfilesCoreBatch(addrs).catch(() => {});
+  }
+
+  async function loadNextPage(generation: number): Promise<void> {
+    if (!activeQuery) return;
+    const hasPage = await activeQuery.queryNextPage();
+    if (generation !== loadGeneration) return;
+    if (!hasPage || !activeQuery.currentPage) {
+      hasMore = false;
+      return;
+    }
+    const page = activeQuery.currentPage;
+    primeProfiles(page.results);
+    displayedHolders = [...displayedHolders, ...page.results];
+    hasMore = page.hasMore;
+  }
 
   async function loadInitialData() {
-    // We need the SDK for both personal and group tokens
-    if (!$circles) {
-      console.log('loadInitialData skipped: no SDK');
-      return;
-    }
+    if (!$circles) return;
+    if (isLoading) return;
 
-    // Prevent concurrent initialization
-    if (isLoading) {
-      console.log('loadInitialData skipped: already loading');
-      return;
-    }
-
-    console.log('Loading ALL token holders data...', {
-      tokenAddress,
-      isPersonalToken,
-    });
+    const generation = ++loadGeneration;
     isLoading = true;
     error = null;
     hasError = false;
+    displayedHolders = [];
+    hasMore = true;
+    activeQuery = null;
 
     try {
-      // Get the PagedQuery from the SDK based on token type.
-      // sdk.tokens.getHolders returns Promise<PagedResponse> (single page),
-      // sdk.groups.getHolders returns PagedQuery (iterable).
-      // Both support the queryNextPage() / currentPage pattern at runtime.
-      let query: { queryNextPage(): Promise<boolean>; currentPage?: { results: HolderRow[]; hasMore: boolean } };
+      activeQuery = isPersonalToken
+        ? ($circles.tokens.getHolders(tokenAddress, PAGE_SIZE) as unknown as HolderQuery)
+        : ($circles.groups.getHolders(tokenAddress, PAGE_SIZE) as unknown as HolderQuery);
 
-      if (isPersonalToken) {
-        // Use sdk.tokens.getHolders for personal tokens
-        query = $circles.tokens.getHolders(tokenAddress, 1000) as unknown as typeof query;
-        console.log(
-          'Created PagedQuery instance for personal token using sdk.tokens.getHolders'
-        );
-      } else {
-        // Use sdk.groups.getHolders for group tokens
-        query = $circles.groups.getHolders(tokenAddress, 1000) as unknown as typeof query;
-        console.log(
-          'Created PagedQuery instance for group token using sdk.groups.getHolders'
-        );
-      }
-
-      const holders: HolderRow[] = [];
-      let pageNum = 0;
-
-      // Fetch ALL pages from backend
-      while (await query.queryNextPage()) {
-        pageNum++;
-        if (query.currentPage) {
-          holders.push(...query.currentPage.results);
-          console.log(
-            `Loaded page ${pageNum}: ${query.currentPage.results.length} holders (total: ${holders.length}, hasMore: ${query.currentPage.hasMore})`
-          );
-
-          if (!query.currentPage.hasMore) {
-            break;
-          }
-        }
-      }
-
-      allHolders = holders;
-      currentPage = 0;
-
-      // Display first page
-      displayedHolders = allHolders.slice(0, pageSize);
-      hasMore = allHolders.length > pageSize;
-
-      console.log('All holders loaded:', {
-        totalHolders: allHolders.length,
-        displayedHolders: displayedHolders.length,
-        hasMore,
-        pages: Math.ceil(allHolders.length / pageSize),
-      });
+      await loadNextPage(generation);
     } catch (err) {
+      if (generation !== loadGeneration) return;
       console.error('Error loading token holders:', err);
       hasError = true;
-      error =
-        err instanceof Error ? err.message : 'Failed to load token holders';
-      // Clear holders on error
-      allHolders = [];
+      error = err instanceof Error ? err.message : 'Failed to load token holders';
       displayedHolders = [];
       hasMore = false;
     } finally {
-      // CRITICAL: Always set these in finally to prevent infinite loop
-      // Even on error, we need to record which token we attempted to load
-      currentTokenAddress = tokenAddress;
-      initialized = true;
-      isLoading = false;
+      if (generation === loadGeneration) {
+        currentTokenAddress = tokenAddress;
+        initialized = true;
+        isLoading = false;
+      }
     }
   }
 
-  function loadMore() {
-    if (isLoading) {
-      console.log('loadMore already in progress');
-      return;
-    }
-
-    if (!hasMore) {
-      console.log('loadMore skipped: no more data');
-      return;
-    }
-
-    console.log('Loading more holders (client-side pagination)...', {
-      currentDisplayed: displayedHolders.length,
-      total: allHolders.length,
-      currentPage,
-    });
-
+  async function loadMore() {
+    if (isLoading || !hasMore || !activeQuery) return;
+    const generation = loadGeneration;
     isLoading = true;
-
-    // Simulate slight delay for UX
-    setTimeout(() => {
-      currentPage++;
-      const startIndex = currentPage * pageSize;
-      const endIndex = startIndex + pageSize;
-      const newHolders = allHolders.slice(startIndex, endIndex);
-
-      displayedHolders = [...displayedHolders, ...newHolders];
-      hasMore = endIndex < allHolders.length;
-
-      console.log('Load more complete:', {
-        newHoldersCount: newHolders.length,
-        totalDisplayed: displayedHolders.length,
-        totalAvailable: allHolders.length,
-        hasMore,
-        page: currentPage + 1,
-      });
-
-      isLoading = false;
-    }, 100);
+    try {
+      await loadNextPage(generation);
+    } catch (err) {
+      if (generation !== loadGeneration) return;
+      console.warn('Error loading next holders page:', err);
+    } finally {
+      if (generation === loadGeneration) isLoading = false;
+    }
   }
+
+  const SCROLL_THROTTLE_MS = 500;
+  let lastScrollTime = 0;
 
   function handleScroll(event: Event) {
     const now = Date.now();
-
-    // Throttle scroll events
-    if (now - lastScrollTime < scrollThrottle) {
-      return;
-    }
+    if (now - lastScrollTime < SCROLL_THROTTLE_MS) return;
     lastScrollTime = now;
 
     const target = event.target as HTMLDivElement;
-    const scrollThreshold = 100; // Start loading 100px before reaching bottom
-
     const distanceToBottom =
       target.scrollHeight - target.scrollTop - target.clientHeight;
 
-    // Only log when close to bottom to reduce noise
-    if (distanceToBottom < 300) {
-      console.log('Scroll event:', {
-        distanceToBottom: Math.round(distanceToBottom),
-        scrollThreshold,
-        isLoading,
-        hasMore,
-        shouldLoad: distanceToBottom < scrollThreshold && !isLoading && hasMore,
-      });
-    }
-
-    if (distanceToBottom < scrollThreshold && !isLoading && hasMore) {
-      console.log('Triggering loadMore from scroll');
-      loadMore();
+    if (distanceToBottom < 100 && !isLoading && hasMore) {
+      void loadMore();
     }
   }
 
   // Helper to check if holder is a personal token holder
   function isPersonalTokenHolder(holder: HolderRow): holder is TokenHolderRow {
     return 'account' in holder;
-  }
-
-  // Get holder address from either type
-  function getHolderAddress(holder: HolderRow): Address {
-    return isPersonalTokenHolder(holder) ? holder.account : holder.holder;
   }
 
   // Get demurraged balance from either type
@@ -241,38 +169,16 @@
   }
 
   $effect(() => {
-    // Check if we have the required dependencies (just SDK and tokenAddress now)
-    const hasRequiredDeps = $circles && tokenAddress;
+    if (!$circles || !tokenAddress) return;
 
-    // Only initialize once when we have required dependencies
-    if (hasRequiredDeps && !initialized) {
-      console.log('First initialization');
-      loadInitialData();
+    if (!initialized) {
+      void loadInitialData();
       return;
     }
 
-    // Reload only if the token address actually changed
-    if (
-      hasRequiredDeps &&
-      initialized &&
-      currentTokenAddress !== tokenAddress
-    ) {
-      console.log('Token address changed, reloading...', {
-        old: currentTokenAddress,
-        new: tokenAddress,
-      });
-      // Reset all state
-      allHolders = [];
-      displayedHolders = [];
-      hasMore = true;
-      currentPage = 0;
-      error = null;
-      hasError = false;
-      // Set initialized to false BEFORE calling loadInitialData
-      // This is safe because loadInitialData will set it back to true in the finally block
+    if (currentTokenAddress !== tokenAddress) {
       initialized = false;
-      // Call loadInitialData - it will set initialized back to true when done (success or error)
-      loadInitialData();
+      void loadInitialData();
     }
   });
 </script>
@@ -391,7 +297,7 @@
 
     {#if !hasMore && displayedHolders.length > 0}
       <div class="p-4 text-center text-sm text-gray-500">
-        All {allHolders.length} holders loaded
+        All {displayedHolders.length} holders loaded
       </div>
     {/if}
   </div>

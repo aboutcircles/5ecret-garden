@@ -1,6 +1,6 @@
 <script lang="ts">
   import ProfilePage from '$lib/areas/profile/ui/pages/Profile.svelte';
-  import { getProfile } from '$lib/shared/data/profile/profile';
+  import { getProfile, getResolvedProfile } from '$lib/shared/utils/profile';
   import HorizontalAvatarLayout from './HorizontalAvatarLayout.svelte';
   import VerticalAvatarLayout from './VerticalAvatarLayout.svelte';
   import {
@@ -9,7 +9,6 @@
   } from '$lib/shared/state/popup/popUp.svelte';
   import type { Address } from '@aboutcircles/sdk-types';
   import type { Profile } from '@aboutcircles/sdk-types';
-  import { fade } from 'svelte/transition';
   import { circles } from '$lib/shared/state/circles';
 
   type AvatarView = 'horizontal' | 'vertical' | 'small' | 'small_no_text' | 'small_reverse';
@@ -24,6 +23,14 @@
 
     /** Show avatar type badge (human/group/org). Currently reserved for future use. */
     showTypeInfo?: boolean;
+
+    /**
+     * Pre-fetched profile. When provided, Avatar renders this directly and
+     * skips its own getProfile() fetch. Callers that already batch-load
+     * profiles (e.g. the contacts list) should pass it through so each row
+     * doesn't queue an independent network request.
+     */
+    profile?: Profile | undefined;
 
     /**
      * Control whether to show placeholders for each position
@@ -42,6 +49,7 @@
     topInfo,
     bottomInfo,
     showTypeInfo = false,
+    profile: providedProfile,
 
     // Default placeholders to true
     placeholderAvatar = true,
@@ -54,39 +62,63 @@
     view === 'small' || view === 'small_no_text' || view === 'small_reverse' ? 'horizontal' as const : view as 'horizontal' | 'vertical'
   );
 
-  let profile: Profile | undefined = $state();
-  let lastFetchedAddress: string | undefined = $state();
+  // Seed from the sync resolved-profile cache so a remount (e.g. a virtualized
+  // row scrolling back into range) doesn't flash a loading skeleton for a
+  // profile we already know.
+  let fetchedProfile: Profile | undefined = $state(
+    address ? getResolvedProfile(address) : undefined
+  );
+  let lastFetchedAddress: string | undefined = $state(
+    fetchedProfile && address ? address : undefined
+  );
+
+  // Prefer a profile passed in by the parent (e.g. the contacts list, which
+  // already batch-fetched profiles) over the locally-fetched one. Falling back
+  // to the parent-provided profile when our own fetch hasn't resolved yet
+  // avoids the per-row queue + skeleton flash that made large lists flicker.
+  const profile = $derived(providedProfile ?? fetchedProfile);
 
   // Derive SDK availability for proper reactive tracking
   let sdk = $derived($circles);
 
   $effect(() => {
-    // Reset profile when address changes to show loading skeleton
+    // If the parent already gave us a profile, skip the internal fetch entirely.
+    if (providedProfile) return;
+
+    // Reset profile when address changes — but prefer the sync cache so we
+    // don't flash a skeleton when the new address is already known.
     if (address !== lastFetchedAddress) {
-      profile = undefined;
+      fetchedProfile = address ? getResolvedProfile(address) : undefined;
     }
 
     if (!address || !sdk) return;
 
     // Skip if we already fetched for this address
-    if (address === lastFetchedAddress && profile) return;
+    if (address === lastFetchedAddress && fetchedProfile) return;
 
-    lastFetchedAddress = address;
+    // Capture the address at dispatch time. `address` is a live $props()
+    // proxy — reading it inside the async callbacks below would return the
+    // current value at callback time, not at fetch dispatch. With concurrent
+    // prefetches that race is real: A's resolved profile could be committed
+    // as B's when the row recycles before A's fetch completes.
+    const capturedAddress = address;
+    lastFetchedAddress = capturedAddress;
 
-    getProfile(address)
+    getProfile(capturedAddress as `0x${string}`)
       .then((newProfile) => {
-        // Only update if address hasn't changed during fetch
-        if (address === lastFetchedAddress) {
-          profile = newProfile;
+        if (capturedAddress === lastFetchedAddress) {
+          fetchedProfile = newProfile;
         }
       })
-      .catch(() => {
-        if (address === lastFetchedAddress) {
-          profile = {
-            name: address ? (address.slice(0, 6) + '...' + address.slice(-4)) : 'Unknown',
+      .catch((err) => {
+        if (capturedAddress === lastFetchedAddress) {
+          console.warn('[Avatar] getProfile failed', capturedAddress, err);
+          fetchedProfile = {
+            name: capturedAddress.slice(0, 6) + '...' + capturedAddress.slice(-4),
             previewImageUrl: '/logo.svg',
           };
-          // Allow retry on next render (e.g., when SDK becomes available)
+          // Clear so the next render (e.g. when SDK becomes available)
+          // can retry the fetch for this address.
           lastFetchedAddress = undefined;
         }
       });
@@ -106,7 +138,10 @@
   }
 </script>
 
-<!-- If no profile, show skeleton loading; otherwise fade in final layout. -->
+<!-- If no profile, show skeleton loading; otherwise render the final layout.
+     No fade transition: in virtualized lists, rows scroll in and out of the
+     render range frequently, and a fade-in animation on every re-mount looks
+     like the list is flickering. -->
 {#if !profile}
   {#if effectiveView === 'horizontal'}
     <div
@@ -143,18 +178,13 @@
     </div>
   {/if}
 {:else if effectiveView === 'horizontal'}
-  <!-- Fade in the final layout once profile is loaded -->
-  <div transition:fade>
-    <HorizontalAvatarLayout
-      {pictureOverlayUrl}
-      onclick={openAvatar}
-      {profile}
-      {topInfo}
-      {bottomInfo}
-    />
-  </div>
+  <HorizontalAvatarLayout
+    {pictureOverlayUrl}
+    onclick={openAvatar}
+    {profile}
+    {topInfo}
+    {bottomInfo}
+  />
 {:else}
-  <div transition:fade>
-    <VerticalAvatarLayout onclick={openAvatar} {profile} />
-  </div>
+  <VerticalAvatarLayout onclick={openAvatar} {profile} />
 {/if}

@@ -61,6 +61,7 @@
         <div class="min-w-0">
             <Avatar
                 address={address}
+                profile={profile}
                 view="horizontal"
                 bottomInfo={trustRelation}
                 showTypeInfo={false}
