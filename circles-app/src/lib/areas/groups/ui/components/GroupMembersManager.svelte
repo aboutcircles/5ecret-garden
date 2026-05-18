@@ -79,6 +79,9 @@
     };
   });
 
+  const GROUP_MEMBERS_PAGE_SIZE = 100;
+  let loadGeneration = 0;
+
   async function loadTrusted() {
     const sdk = get(circles);
     if (!sdk) {
@@ -87,35 +90,73 @@
       return;
     }
 
+    const generation = ++loadGeneration;
     loading = true;
     error = null;
+    trusted = [];
+    trustedAvatarTypes = {};
+    trustedStore.set([]);
+
     try {
       const groupDataSource = createGroupDataSource(sdk);
       const avatarDataSource = createAvatarDataSource(sdk);
-      const memberRows = await groupDataSource.getGroupMembers(group);
-      const trustedAddresses = Array.from(
-        new Set(
-          memberRows
-            .map((row) => row.member as Address)
-            .filter((addr) => addr.toLowerCase() !== group.toLowerCase())
-        )
-      ).sort((a, b) => a.localeCompare(b));
-      trusted = trustedAddresses;
-      trustedStore.set(trusted);
+      const seen = new Set<string>();
+      let cursor: string | null = null;
+      let first = true;
 
-      const infos = await avatarDataSource.getAvatarInfoBatch(trustedAddresses);
-      const nextTypes: Record<string, string | undefined> = {};
-      for (const info of infos) {
-        if (info) nextTypes[String(info.avatar).toLowerCase()] = info.type;
-      }
-      trustedAvatarTypes = nextTypes;
+      do {
+        const page = await groupDataSource.getGroupMembersPage(
+          group,
+          cursor,
+          GROUP_MEMBERS_PAGE_SIZE
+        );
+        if (generation !== loadGeneration) return;
+
+        const newAddrs: Address[] = [];
+        for (const row of page.results) {
+          const addr = row.member as Address;
+          const key = addr.toLowerCase();
+          if (key === group.toLowerCase()) continue;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          newAddrs.push(addr);
+        }
+
+        if (newAddrs.length > 0) {
+          trusted = trusted.concat(newAddrs);
+          trustedStore.set(trusted);
+
+          // Enrich this page's addresses with avatar types in the background;
+          // rows render immediately and the type label fills in when ready.
+          void (async () => {
+            try {
+              const infos = await avatarDataSource.getAvatarInfoBatch(newAddrs);
+              if (generation !== loadGeneration) return;
+              const next: Record<string, string | undefined> = { ...trustedAvatarTypes };
+              for (const info of infos) {
+                if (info) next[String(info.avatar).toLowerCase()] = info.type;
+              }
+              trustedAvatarTypes = next;
+            } catch (e) {
+              console.debug('[GroupMembersManager] avatar info batch failed', e);
+            }
+          })();
+        }
+
+        if (first) {
+          loading = false;
+          first = false;
+        }
+        cursor = page.nextCursor;
+      } while (cursor);
     } catch (e) {
+      if (generation !== loadGeneration) return;
       error = e instanceof Error ? e.message : String(e);
       trusted = [];
       trustedAvatarTypes = {};
       trustedStore.set([]);
     } finally {
-      loading = false;
+      if (generation === loadGeneration) loading = false;
     }
   }
 

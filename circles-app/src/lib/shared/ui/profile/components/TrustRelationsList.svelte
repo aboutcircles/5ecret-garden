@@ -17,24 +17,26 @@
 
     let { avatarAddress, relation, count = $bindable(0) }: Props = $props();
 
+    const GROUP_MEMBERS_PAGE_SIZE = 100;
+
     let loading = $state(true);
     let error: string | null = $state(null);
-    let rows: Address[] = $state([]);
     const rowsStore = writable<Address[]>([]);
+    let loadGeneration = 0;
 
     async function loadRelations(): Promise<void> {
+        const generation = ++loadGeneration;
         loading = true;
         error = null;
-        rows = [];
+        rowsStore.set([]);
+        count = 0;
+
         try {
             const sdk = get(circles);
             if (!sdk || !avatarAddress) {
                 loading = false;
-                count = 0;
                 return;
             }
-
-            const list: Address[] = [];
 
             // For groups the "Trusts" tab is the member list, sourced from V_CrcV2.GroupMemberships.
             // The trust-relations view doesn't include the group→member edges under the new SDK.
@@ -42,54 +44,76 @@
                 console.warn('[TrustRelationsList] getAvatar failed; defaulting to trust path', e);
                 return null;
             });
+            if (generation !== loadGeneration) return;
             const subjectIsGroup = isGroupType(avatarInfo?.type);
 
             if (relation === 'trusts' && subjectIsGroup) {
                 const groupDataSource = createGroupDataSource(sdk);
-                const members = await groupDataSource.getGroupMembers(avatarAddress);
-                list.push(
-                    ...members
-                        .map((row) => row.member as Address)
-                        .filter((addr) => addr !== avatarAddress)
-                );
-            } else {
-                const trustDataSource = createTrustDataSource(sdk);
-                const relations = await trustDataSource.getAggregatedTrustRelations(avatarAddress);
-                if (relation === 'trusts') {
-                    list.push(
-                        ...relations
-                            .filter((row) => row.relation === 'trusts' || row.relation === 'mutuallyTrusts')
-                            .filter((row) => row.objectAvatar !== avatarAddress)
-                            .map((row) => row.objectAvatar as Address)
+                const seen = new Set<string>();
+                let cursor: string | null = null;
+                let first = true;
+
+                do {
+                    const page = await groupDataSource.getGroupMembersPage(
+                        avatarAddress,
+                        cursor,
+                        GROUP_MEMBERS_PAGE_SIZE
                     );
-                } else {
-                    list.push(
-                        ...relations
-                            .filter((row) => row.relation === 'trustedBy' || row.relation === 'mutuallyTrusts')
-                            .filter((row) => row.objectAvatar !== avatarAddress)
-                            .map((row) => row.objectAvatar as Address)
-                    );
-                }
+                    if (generation !== loadGeneration) return;
+
+                    const newAddrs: Address[] = [];
+                    for (const row of page.results) {
+                        const addr = row.member as Address;
+                        const key = addr.toLowerCase();
+                        if (addr.toLowerCase() === avatarAddress.toLowerCase()) continue;
+                        if (seen.has(key)) continue;
+                        seen.add(key);
+                        newAddrs.push(addr);
+                    }
+                    rowsStore.update((prev) => prev.concat(newAddrs));
+                    count = get(rowsStore).length;
+
+                    if (first) {
+                        loading = false;
+                        first = false;
+                    }
+                    cursor = page.nextCursor;
+                } while (cursor);
+                return;
             }
 
-            const unique = Array.from(new Set(list))
-                .filter((addr) => addr !== avatarAddress)
-                .sort((a, b) => a.localeCompare(b));
+            const trustDataSource = createTrustDataSource(sdk);
+            const relations = await trustDataSource.getAggregatedTrustRelations(avatarAddress);
+            if (generation !== loadGeneration) return;
 
-            rows = unique;
-            rowsStore.set(rows);
-            count = rows.length;
+            const filtered =
+                relation === 'trusts'
+                    ? relations.filter(
+                          (row) => row.relation === 'trusts' || row.relation === 'mutuallyTrusts'
+                      )
+                    : relations.filter(
+                          (row) => row.relation === 'trustedBy' || row.relation === 'mutuallyTrusts'
+                      );
+            const list = filtered
+                .map((row) => row.objectAvatar as Address)
+                .filter((addr) => addr !== avatarAddress);
+            const unique = Array.from(new Set(list)).sort((a, b) => a.localeCompare(b));
+            rowsStore.set(unique);
+            count = unique.length;
         } catch (e) {
+            if (generation !== loadGeneration) return;
             error = e instanceof Error ? e.message : 'Failed to load trust relations';
-            rows = [];
             rowsStore.set([]);
             count = 0;
         } finally {
-            loading = false;
+            if (generation === loadGeneration) loading = false;
         }
     }
 
     $effect(() => {
+        // re-run on avatarAddress / relation change
+        avatarAddress;
+        relation;
         void loadRelations();
     });
 

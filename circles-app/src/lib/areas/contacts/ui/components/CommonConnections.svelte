@@ -1,6 +1,7 @@
 <script lang="ts">
   import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
+  import InlineSpinner from '$lib/shared/ui/lists/InlineSpinner.svelte';
   import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
   import ProfilePage from '$lib/areas/profile/ui/pages/Profile.svelte';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
@@ -133,7 +134,7 @@
 </script>
 
 {#if loading}
-  <div class="w-full py-6 text-center text-base-content/60">Loading…</div>
+  <InlineSpinner />
 {:else if error}
   <div class="w-full py-6 text-center text-error">{error}</div>
 {:else if rows.length === 0}

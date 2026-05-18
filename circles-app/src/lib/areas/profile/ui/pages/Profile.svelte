@@ -65,6 +65,7 @@
     import { Star as LStar } from 'lucide';
     import { createAvatarDataSource } from '$lib/shared/data/circles/avatarDataSource';
     import { createTrustDataSource } from '$lib/shared/data/circles/trustDataSource';
+    import InlineSpinner from '$lib/shared/ui/lists/InlineSpinner.svelte';
     import {
         bookmarksStateStore,
         profileBookmarksService,
@@ -960,7 +961,7 @@
         >
             <div class="w-full">
                 {#if collateralLoading}
-                    <div class="w-full py-6 text-center text-base-content/60">Loading…</div>
+                    <InlineSpinner />
                 {:else if collateralError}
                     <div class="w-full py-6 text-center text-error">{collateralError}</div>
                 {:else}
@@ -984,7 +985,7 @@
         >
             <div class="w-full">
                 {#if holdersLoading}
-                    <div class="w-full py-6 text-center text-base-content/60">Loading…</div>
+                    <InlineSpinner />
                 {:else if holdersError}
                     <div class="w-full py-6 text-center text-error">{holdersError}</div>
                 {:else}
@@ -1003,7 +1004,7 @@
         >
             <div class="w-full">
                 {#if holdingsLoading}
-                    <div class="w-full py-6 text-center text-base-content/60">Loading…</div>
+                    <InlineSpinner />
                 {:else if holdingsError}
                     <div class="w-full py-6 text-center text-error">{holdingsError}</div>
                 {:else}
