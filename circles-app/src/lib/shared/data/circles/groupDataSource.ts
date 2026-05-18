@@ -2,8 +2,21 @@ import type { Sdk } from '@aboutcircles/sdk';
 import type { Address, GroupMembershipRow, PagedQueryParams } from '@aboutcircles/sdk-types';
 import { PagedQuery } from '@aboutcircles/sdk-rpc';
 
+export interface GroupMembersPage {
+  results: GroupMembershipRow[];
+  hasMore: boolean;
+  nextCursor: string | null;
+}
+
 export interface GroupDataSource {
   getGroupMemberships(member: Address, limit: number): PagedQuery<GroupMembershipRow>;
+  /** Single page — for progressive scroll-loading. */
+  getGroupMembersPage(
+    group: Address,
+    cursor: string | null,
+    pageSize?: number
+  ): Promise<GroupMembersPage>;
+  /** Exhaustive fetch — for callers that need the full member set in one shot. */
   getGroupMembers(group: Address, pageSize?: number): Promise<GroupMembershipRow[]>;
 }
 
@@ -26,6 +39,19 @@ export function createGroupDataSource(sdk: Sdk): GroupDataSource {
         limit,
       };
       return new PagedQuery<GroupMembershipRow>(sdk.rpc.client, queryDef);
+    },
+
+    async getGroupMembersPage(
+      group: Address,
+      cursor: string | null,
+      pageSize = 100
+    ): Promise<GroupMembersPage> {
+      const page = await sdk.rpc.group.getGroupMembers(group, pageSize, cursor);
+      return {
+        results: page.results,
+        hasMore: page.hasMore,
+        nextCursor: page.hasMore ? page.nextCursor ?? null : null,
+      };
     },
 
     async getGroupMembers(group: Address, pageSize = 100): Promise<GroupMembershipRow[]> {
