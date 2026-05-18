@@ -57,13 +57,12 @@
   <!-- Logo row -->
   <div style="padding:4px 10px 0;display:flex;align-items:center;gap:8px;">
     <img src="/logo.svg" alt="Circles" class="w-[26px] h-[26px]" />
-    <button
-      type="button"
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <span
       onclick={() => settings.advancedMode = !settings.advancedMode}
-      title=""
-      aria-label="beta"
-      style="font-family:{T.fontSans};font-size:11px;color:{settings.advancedMode ? T.primary : T.inkFaint};padding:2px 7px;border-radius:9999px;border:0;background:{settings.advancedMode ? T.primaryFaint : T.pageDeep};font-weight:580;letter-spacing:0.04em;text-transform:lowercase;cursor:default;"
-    >beta</button>
+      style="font-family:{T.fontSans};font-size:11px;color:{settings.advancedMode ? T.primary : T.inkFaint};padding:2px 7px;border-radius:9999px;background:{settings.advancedMode ? T.primaryFaint : T.pageDeep};font-weight:580;letter-spacing:0.04em;text-transform:lowercase;"
+    >beta</span>
   </div>
 
   <!-- Account picker -->
