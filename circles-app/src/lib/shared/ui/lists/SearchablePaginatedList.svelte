@@ -23,6 +23,7 @@
 
     rowHeight?: number;
     pageSize?: number;
+    totalKnownCount?: number;
 
     emptyLabel?: string;
     noMatchesLabel?: string;
@@ -42,6 +43,7 @@
     emptyRequiresEnd = false,
     rowHeight = 64,
     pageSize = 25,
+    totalKnownCount,
     emptyLabel = 'No entries',
     noMatchesLabel = 'No matches',
     searchPlaceholder = 'Search by address or name',
@@ -87,6 +89,7 @@
     rowHeight={rowHeight}
     maxPlaceholderPages={2}
     expectedPageSize={pageSize}
+    {totalKnownCount}
     {placeholderRow}
   />
 </ListShell>

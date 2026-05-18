@@ -21,6 +21,7 @@
         expectedPageSize?: number;
         eagerLoadMultiplier?: number;
         overscan?: number;
+        totalKnownCount?: number;
     }
 
     let {
@@ -33,6 +34,7 @@
         expectedPageSize,
         eagerLoadMultiplier = 2,
         overscan = 8,
+        totalKnownCount,
     }: Props = $props();
 </script>
 
@@ -46,4 +48,5 @@
     {expectedPageSize}
     {eagerLoadMultiplier}
     {overscan}
+    {totalKnownCount}
 />
