@@ -1,4 +1,3 @@
-import { avatarState } from '$lib/shared/state/avatar.svelte';
 import type { CirclesEvent, CirclesEventType } from '@aboutcircles/sdk-rpc';
 import type { TokenBalance } from '@aboutcircles/sdk-types';
 import { createEventStore } from '$lib/shared/state/eventStores/eventStoreFactory.svelte';
@@ -7,18 +6,14 @@ import { writable } from 'svelte/store';
 import { writeBalances, makeScopeId } from '$lib/shared/cache';
 
 const refreshOnEvents: Set<CirclesEventType> = new Set<CirclesEventType>([
-  'CrcV1_HubTransfer',
-  'CrcV1_Transfer',
+  'CrcV2_Transfer',
   'CrcV2_TransferBatch',
   'CrcV2_TransferSingle',
-  'CrcV2_Erc20WrapperTransfer',
   'CrcV2_PersonalMint',
-  'CrcV2_GroupMintSingle',
-  'CrcV2_GroupMintBatch',
-  'CrcV2_GroupRedeem',
+  'CrcV2_GroupMint',
   'CrcV2_GroupRedeemCollateralReturn',
   'CrcV2_GroupRedeemCollateralBurn',
-] as CirclesEventType[]);
+]);
 
 let currentStoreUnsubscribe: (() => void) | undefined;
 let currentAvatarAddress: string = '';

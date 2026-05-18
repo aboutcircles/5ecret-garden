@@ -12,8 +12,8 @@
   import { createSearchablePaginatedList } from '$lib/shared/state/searchablePaginatedList';
   import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
   import { openAddTrustFlow } from '$lib/areas/trust/flows/addTrust/openAddTrustFlow';
-  import { createTrustDataSource } from '$lib/shared/data/circles/trustDataSource';
   import { createAvatarDataSource } from '$lib/shared/data/circles/avatarDataSource';
+  import { createGroupDataSource } from '$lib/shared/data/circles/groupDataSource';
 
   interface Props {
     group: Address;
@@ -90,14 +90,13 @@
     loading = true;
     error = null;
     try {
-      const trustDataSource = createTrustDataSource(sdk);
+      const groupDataSource = createGroupDataSource(sdk);
       const avatarDataSource = createAvatarDataSource(sdk);
-      const relations = await trustDataSource.getAggregatedTrustRelations(group);
+      const memberRows = await groupDataSource.getGroupMembers(group);
       const trustedAddresses = Array.from(
         new Set(
-          relations
-            .filter((row) => row.relation === 'trusts' || row.relation === 'mutuallyTrusts')
-            .map((row) => row.objectAvatar as Address)
+          memberRows
+            .map((row) => row.member as Address)
             .filter((addr) => addr.toLowerCase() !== group.toLowerCase())
         )
       ).sort((a, b) => a.localeCompare(b));
