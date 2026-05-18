@@ -7,6 +7,8 @@
   import { circles } from '$lib/shared/state/circles';
   import type { Address } from '@aboutcircles/sdk-types';
   import { getAggregatedTrustRelationsEnriched, type TrustRelationInfo } from '$lib/shared/utils/sdkHelpers';
+  import { createGroupDataSource } from '$lib/shared/data/circles/groupDataSource';
+  import { isGroupType } from '$lib/shared/utils/avatarHelpers';
 
   interface Props {
     otherAvatarAddress?: Address;
@@ -32,47 +34,58 @@
         return;
       }
 
-      // Use enriched trust relations - includes avatar info in single call
-      const [mine, theirs] = await Promise.all([
-        getAggregatedTrustRelationsEnriched($circles, me),
-        getAggregatedTrustRelationsEnriched($circles, other),
-      ]);
+      // For groups the "trusts" set IS the member list, sourced from
+      // V_CrcV2.GroupMemberships. The trust-relations view doesn't include
+      // group→member edges under the new SDK.
+      const groupDataSource = createGroupDataSource($circles);
 
-      // Combine mutual + trusts (outgoing trust) for "good" relations
-      // SDK may return undefined instead of empty arrays
-      let myTrusted = (mine.results || []).filter((r: any) => r.relationType === 'mutual' || r.relationType === 'trusts');
-      let theirTrusted = (theirs.results || []).filter((r: any) => r.relationType === 'mutual' || r.relationType === 'trusts');
-
-      // Fallback: If enriched returns empty but user has trust relations (known backend bug)
-      if (myTrusted.length === 0 && avatarState.avatar?.trust?.getAll) {
-        try {
-          const myFallback = await avatarState.avatar.trust.getAll();
-          if (myFallback && myFallback.length > 0) {
-            myTrusted = myFallback
-              .filter((r: any) => r.relation === 'mutuallyTrusts' || r.relation === 'trusts')
-              .map((r: any) => ({ address: r.objectAvatar as Address, relationType: r.relation === 'mutuallyTrusts' ? 'mutual' as const : 'trusts' as const }));
-          }
-        } catch {
-          // Fallback failed — continue with empty list
+      const trustedAddressesFor = async (
+        addr: Address,
+        isSelf: boolean
+      ): Promise<TrustRelationInfo[]> => {
+        const info = await $circles.data.getAvatar(addr).catch((e) => {
+          console.warn('[CommonConnections] getAvatar failed; defaulting to trust path', e);
+          return null;
+        });
+        if (isGroupType(info?.type)) {
+          const members = await groupDataSource.getGroupMembers(addr);
+          return members.map((row) => ({
+            address: row.member as Address,
+            relationType: 'trusts' as const,
+          }));
         }
-      }
 
-      if (theirTrusted.length === 0) {
-        try {
-          // Get an avatar instance for the other address to access trust.getAll()
-          const otherAvatar = await $circles.getAvatar(other);
-          if (otherAvatar?.trust?.getAll) {
-            const theirFallback = await otherAvatar.trust.getAll();
-            if (theirFallback && theirFallback.length > 0) {
-              theirTrusted = theirFallback
+        const enriched = await getAggregatedTrustRelationsEnriched($circles, addr);
+        let trusted = (enriched.results || []).filter(
+          (r: any) => r.relationType === 'mutual' || r.relationType === 'trusts'
+        );
+
+        // Fallback: If enriched returns empty but the avatar has trust relations (known backend bug)
+        if (trusted.length === 0) {
+          try {
+            const avatarInstance = isSelf
+              ? avatarState.avatar
+              : await $circles.getAvatar(addr);
+            const fallback = await avatarInstance?.trust?.getAll?.();
+            if (fallback && fallback.length > 0) {
+              trusted = fallback
                 .filter((r: any) => r.relation === 'mutuallyTrusts' || r.relation === 'trusts')
-                .map((r: any) => ({ address: r.objectAvatar as Address, relationType: r.relation === 'mutuallyTrusts' ? 'mutual' as const : 'trusts' as const }));
+                .map((r: any) => ({
+                  address: r.objectAvatar as Address,
+                  relationType: r.relation === 'mutuallyTrusts' ? 'mutual' as const : 'trusts' as const,
+                }));
             }
+          } catch {
+            // Fallback failed — continue with empty list
           }
-        } catch {
-          // Fallback failed — continue with empty list
         }
-      }
+        return trusted;
+      };
+
+      const [myTrusted, theirTrusted] = await Promise.all([
+        trustedAddressesFor(me, true),
+        trustedAddressesFor(other, false),
+      ]);
 
       // SDK may return `objectAvatar` instead of `address` in some cases
       // CRITICAL: Normalize to lowercase for comparison - addresses can have different checksums

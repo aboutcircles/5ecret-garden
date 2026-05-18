@@ -4,6 +4,8 @@
     import { get, writable } from 'svelte/store';
     import type { Address } from '@aboutcircles/sdk-types';
     import { createTrustDataSource } from '$lib/shared/data/circles/trustDataSource';
+    import { createGroupDataSource } from '$lib/shared/data/circles/groupDataSource';
+    import { isGroupType } from '$lib/shared/utils/avatarHelpers';
 
     type RelationFilter = 'trusts' | 'trustedBy';
 
@@ -31,25 +33,43 @@
                 count = 0;
                 return;
             }
-            const trustDataSource = createTrustDataSource(sdk);
 
             const list: Address[] = [];
 
-            const relations = await trustDataSource.getAggregatedTrustRelations(avatarAddress);
-            if (relation === 'trusts') {
+            // For groups the "Trusts" tab is the member list, sourced from V_CrcV2.GroupMemberships.
+            // The trust-relations view doesn't include the group→member edges under the new SDK.
+            const avatarInfo = await sdk.data.getAvatar(avatarAddress).catch((e) => {
+                console.warn('[TrustRelationsList] getAvatar failed; defaulting to trust path', e);
+                return null;
+            });
+            const subjectIsGroup = isGroupType(avatarInfo?.type);
+
+            if (relation === 'trusts' && subjectIsGroup) {
+                const groupDataSource = createGroupDataSource(sdk);
+                const members = await groupDataSource.getGroupMembers(avatarAddress);
                 list.push(
-                    ...relations
-                        .filter((row) => row.relation === 'trusts' || row.relation === 'mutuallyTrusts')
-                        .filter((row) => row.objectAvatar !== avatarAddress)
-                        .map((row) => row.objectAvatar as Address)
+                    ...members
+                        .map((row) => row.member as Address)
+                        .filter((addr) => addr !== avatarAddress)
                 );
             } else {
-                list.push(
-                    ...relations
-                        .filter((row) => row.relation === 'trustedBy' || row.relation === 'mutuallyTrusts')
-                        .filter((row) => row.objectAvatar !== avatarAddress)
-                        .map((row) => row.objectAvatar as Address)
-                );
+                const trustDataSource = createTrustDataSource(sdk);
+                const relations = await trustDataSource.getAggregatedTrustRelations(avatarAddress);
+                if (relation === 'trusts') {
+                    list.push(
+                        ...relations
+                            .filter((row) => row.relation === 'trusts' || row.relation === 'mutuallyTrusts')
+                            .filter((row) => row.objectAvatar !== avatarAddress)
+                            .map((row) => row.objectAvatar as Address)
+                    );
+                } else {
+                    list.push(
+                        ...relations
+                            .filter((row) => row.relation === 'trustedBy' || row.relation === 'mutuallyTrusts')
+                            .filter((row) => row.objectAvatar !== avatarAddress)
+                            .map((row) => row.objectAvatar as Address)
+                    );
+                }
             }
 
             const unique = Array.from(new Set(list))

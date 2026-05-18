@@ -15,6 +15,8 @@ import type { Address } from '@aboutcircles/sdk-types';
 import type { Avatar, Sdk } from '@aboutcircles/sdk';
 import { createTrustDataSource } from '$lib/shared/data/circles/trustDataSource';
 import { createAvatarDataSource } from '$lib/shared/data/circles/avatarDataSource';
+import { createGroupDataSource } from '$lib/shared/data/circles/groupDataSource';
+import { isGroupType } from '$lib/shared/utils/avatarHelpers';
 
 interface ContactEventRow extends EventRow {
   data: ContactList;
@@ -28,12 +30,30 @@ export async function createContactsQueryStore(
   const sdk = get(circles);
   if (!sdk) throw new Error('SDK not initialized');
   const trustDataSource = createTrustDataSource(sdk);
+  const groupDataSource = createGroupDataSource(sdk);
 
   const createContactsQuery = async (): Promise<
     CirclesQuery<ContactEventRow>
   > => {
-    // Fetch contacts eagerly so the CirclesQuery has data on .rows immediately
-    const contacts = await trustDataSource.getAggregatedTrustRelations(address);
+    // Resolve the avatar type lazily so a race during init (avatarInfo not yet
+    // attached) doesn't lock the store onto the wrong path for the lifetime of
+    // the subscription. If avatarInfo is missing, fetch it from the SDK.
+    let avatarType: string | undefined = avatar.avatarInfo?.type;
+    if (!avatarType) {
+      const info = await sdk.data.getAvatar(address).catch((e) => {
+        console.warn('[Contacts] getAvatar lookup failed; defaulting to trust path', e);
+        return null;
+      });
+      avatarType = info?.type;
+    }
+    const subjectIsGroup = isGroupType(avatarType);
+
+    // Group members live in V_CrcV2.GroupMemberships, not the trust-relations view.
+    // For human/org avatars the trust path is correct; for groups it returns the
+    // inverse (counterparties trusting the group) and misses actual members.
+    const contacts = subjectIsGroup
+      ? await fetchGroupMembersAsRelations(groupDataSource, address)
+      : await trustDataSource.getAggregatedTrustRelations(address);
     const enrichedContacts = await enrichContactData(contacts, address, sdk);
 
     const contactEventRow: ContactEventRow = {
@@ -141,4 +161,17 @@ async function enrichContactData(
   });
 
   return profileRecord;
+}
+
+async function fetchGroupMembersAsRelations(
+  groupDataSource: ReturnType<typeof createGroupDataSource>,
+  group: Address
+): Promise<AggregatedTrustRelation[]> {
+  const members = await groupDataSource.getGroupMembers(group);
+  return members.map((row) => ({
+    subjectAvatar: row.group as Address,
+    relation: 'trusts' as const,
+    objectAvatar: row.member as Address,
+    timestamp: row.timestamp,
+  }));
 }
