@@ -91,7 +91,10 @@
                     return 0;
                 })
                 .map(([address, contact]) => ({
-                    blockNumber: Date.now(),
+                    // Stable per-address fake EventRow fields so VirtualList's
+                    // default key function doesn't see a fresh blockNumber on
+                    // every derivation (which would remount every row).
+                    blockNumber: 0,
                     transactionIndex: 0,
                     logIndex: 0,
                     address,
@@ -332,6 +335,7 @@
             <GenericList
                 store={listStore}
                 row={ContactRow}
+                getKey={(item) => item.address}
                 rowHeight={64}
                 maxPlaceholderPages={2}
                 expectedPageSize={25}

@@ -433,7 +433,7 @@
         onfocusin={onVirtualSpaceFocusIn}
         onfocusout={onVirtualSpaceFocusOut}
     >
-        {#each virtualRows as vr (vr.kind === 'item' ? `${getKey(vr.item)}::${vr.index}` : `placeholder-${vr.placeholderIndex}`)}
+        {#each virtualRows as vr (vr.kind === 'item' ? getKey(vr.item) : `placeholder-${vr.placeholderIndex}`)}
             <div
                 class="virtual-row"
                 data-virtual-index={vr.index}
