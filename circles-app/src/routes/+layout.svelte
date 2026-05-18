@@ -13,7 +13,7 @@
   import { canMigrate } from '$lib/shared/guards/canMigrate';
   import { page } from '$app/stores';
   import { onDestroy, onMount } from 'svelte';
-  import { tasks } from '$lib/shared/utils/tasks';
+  import { tasks, completedTasks } from '$lib/shared/utils/tasks';
   import {
     initPopupHistorySync,
     popupControls,
@@ -274,7 +274,7 @@
     }, 2200);
   });
 
-  let hasToasts: boolean = $derived($tasks.length > 0 || historyForwardNoopToastVisible);
+  let hasToasts: boolean = $derived($tasks.length > 0 || $completedTasks.length > 0 || historyForwardNoopToastVisible);
 </script>
 
 <svelte:head>
@@ -359,6 +359,15 @@
         {:catch _err}
           <!-- errors handled via popup flows -->
         {/await}
+      </div>
+    {/each}
+
+    {#each $completedTasks as done (done.id)}
+      <div style="background:#E6F4EC;border:1px solid rgba(31,138,84,0.25);border-radius:10px;padding:12px 14px;font-size:12.5px;color:#15412B;display:flex;align-items:center;gap:8px;">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="width:16px;height:16px;flex-shrink:0;color:#1F8A54;" aria-hidden="true">
+          <path stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+        {done.name}
       </div>
     {/each}
 
