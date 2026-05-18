@@ -11,15 +11,28 @@ export type CompletedTask = { id: number; name: string };
 
 export const completedTasks = writable<CompletedTask[]>([]);
 
-const SUCCESS_TOAST_MS = 3500;
+const SUCCESS_TOAST_MS = 5000;
 let completedSeq = 0;
+
+const dismissTimers = new Map<number, ReturnType<typeof setTimeout>>();
+
+export function dismissCompletedTask(id: number): void {
+  const timer = dismissTimers.get(id);
+  if (timer) {
+    clearTimeout(timer);
+    dismissTimers.delete(id);
+  }
+  completedTasks.update((current) => current.filter((t) => t.id !== id));
+}
 
 function pushCompleted(name: string): void {
   const id = ++completedSeq;
   completedTasks.update((current) => [...current, { id, name }]);
-  setTimeout(() => {
+  const timer = setTimeout(() => {
+    dismissTimers.delete(id);
     completedTasks.update((current) => current.filter((t) => t.id !== id));
   }, SUCCESS_TOAST_MS);
+  dismissTimers.set(id, timer);
 }
 
 async function showErrorPopup(err: Error): Promise<void> {

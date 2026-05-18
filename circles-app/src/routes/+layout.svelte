@@ -13,7 +13,9 @@
   import { canMigrate } from '$lib/shared/guards/canMigrate';
   import { page } from '$app/stores';
   import { onDestroy, onMount } from 'svelte';
-  import { tasks, completedTasks } from '$lib/shared/utils/tasks';
+  import { fly, fade } from 'svelte/transition';
+  import { quintOut } from 'svelte/easing';
+  import { tasks, completedTasks, dismissCompletedTask } from '$lib/shared/utils/tasks';
   import {
     initPopupHistorySync,
     popupControls,
@@ -274,7 +276,9 @@
     }, 2200);
   });
 
-  let hasToasts: boolean = $derived($tasks.length > 0 || $completedTasks.length > 0 || historyForwardNoopToastVisible);
+  function formatDoneName(name: string): string {
+    return name.replace(/[.…\s]+$/u, '');
+  }
 </script>
 
 <svelte:head>
@@ -345,41 +349,80 @@
 <Popup />
 
 <!-- Toasts -->
-{#if hasToasts}
-  <div style="position:fixed;bottom:16px;right:16px;z-index:200;display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
-    {#each $tasks as task}
-      <div style="background:#EAE7FB;border:1px solid rgba(88,73,212,0.2);border-radius:10px;padding:12px 14px;font-size:12.5px;color:#2A1F4A;display:flex;align-items:center;gap:8px;opacity:0.85;">
-        {#await task.promise}
-          <svg class="layout-spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="width:16px;height:16px;flex-shrink:0;" aria-hidden="true">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="32" stroke-dashoffset="12" stroke-linecap="round"/>
-          </svg>
-          {task.name}
-        {:then _}
-          <!-- task finished -->
-        {:catch _err}
-          <!-- errors handled via popup flows -->
-        {/await}
-      </div>
-    {/each}
-
-    {#each $completedTasks as done (done.id)}
-      <div style="background:#E6F4EC;border:1px solid rgba(31,138,84,0.25);border-radius:10px;padding:12px 14px;font-size:12.5px;color:#15412B;display:flex;align-items:center;gap:8px;">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="width:16px;height:16px;flex-shrink:0;color:#1F8A54;" aria-hidden="true">
-          <path stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+<div style="position:fixed;bottom:16px;right:16px;z-index:200;display:flex;flex-direction:column;gap:8px;align-items:flex-end;pointer-events:none;">
+  {#each $tasks as task (task)}
+    <div
+      style="background:#EAE7FB;border:1px solid rgba(88,73,212,0.2);border-radius:10px;padding:12px 14px;font-size:12.5px;color:#2A1F4A;display:flex;align-items:center;gap:8px;opacity:0.85;box-shadow:0 6px 20px rgba(15,10,30,0.10);"
+      in:fly={{ y: 16, duration: 240, easing: quintOut }}
+      out:fade={{ duration: 160 }}
+    >
+      {#await task.promise}
+        <svg class="layout-spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="width:16px;height:16px;flex-shrink:0;" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="32" stroke-dashoffset="12" stroke-linecap="round"/>
         </svg>
-        {done.name}
-      </div>
-    {/each}
+        {task.name}
+      {:then _}
+        <!-- task finished -->
+      {:catch _err}
+        <!-- errors handled via popup flows -->
+      {/await}
+    </div>
+  {/each}
 
-    {#if historyForwardNoopToastVisible}
-      <div style="background:#EAE7FB;border:1px solid rgba(88,73,212,0.2);border-radius:10px;padding:12px 14px;font-size:12.5px;color:#2A1F4A;opacity:0.85;">
-        Forward popup history is no longer available.
-      </div>
-    {/if}
-  </div>
-{/if}
+  {#each $completedTasks as done (done.id)}
+    <div
+      style="pointer-events:auto;background:#E6F4EC;border:1px solid rgba(31,138,84,0.25);border-radius:10px;padding:12px 14px;font-size:12.5px;color:#15412B;display:flex;align-items:center;gap:10px;box-shadow:0 6px 20px rgba(15,10,30,0.10);"
+      in:fly={{ y: 16, duration: 240, easing: quintOut }}
+      out:fade={{ duration: 160 }}
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="width:16px;height:16px;flex-shrink:0;color:#1F8A54;" aria-hidden="true">
+        <path stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+      </svg>
+      <span>{formatDoneName(done.name)}</span>
+      <button
+        type="button"
+        class="layout-toast-dismiss"
+        aria-label="Dismiss"
+        onclick={() => dismissCompletedTask(done.id)}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="width:13px;height:13px;" aria-hidden="true">
+          <path stroke="currentColor" stroke-width="2.4" stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/>
+        </svg>
+      </button>
+    </div>
+  {/each}
+
+  {#if historyForwardNoopToastVisible}
+    <div
+      style="background:#EAE7FB;border:1px solid rgba(88,73,212,0.2);border-radius:10px;padding:12px 14px;font-size:12.5px;color:#2A1F4A;opacity:0.85;box-shadow:0 6px 20px rgba(15,10,30,0.10);"
+      in:fly={{ y: 16, duration: 240, easing: quintOut }}
+      out:fade={{ duration: 160 }}
+    >
+      Forward popup history is no longer available.
+    </div>
+  {/if}
+</div>
 
 <style>
   @keyframes layout-spin { to { transform: rotate(360deg); } }
   .layout-spinner { animation: layout-spin 0.8s linear infinite; color: #5849D4; }
+  .layout-toast-dismiss {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    margin-left: 2px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: rgba(21, 65, 43, 0.55);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.12s ease-out, color 0.12s ease-out;
+  }
+  .layout-toast-dismiss:hover {
+    background: rgba(31, 138, 84, 0.14);
+    color: #15412B;
+  }
 </style>
