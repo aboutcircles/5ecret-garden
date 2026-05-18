@@ -21,6 +21,10 @@
     import HelpPopover from '$lib/shared/ui/primitives/HelpPopover.svelte';
     import { getProfilesCoreBatch } from '$lib/shared/model/profile/coreRepo';
     import type { ProfileAddress } from '$lib/shared/model/profile/types';
+    import { circles } from '$lib/shared/state/circles';
+    import { createGroupDataSource } from '$lib/shared/data/circles/groupDataSource';
+    import type { Address } from '@aboutcircles/sdk-types';
+    import { get } from 'svelte/store';
 
     let filterVersion = writable<number | undefined>(undefined);
     let filterRelation = writable<'mutuallyTrusts' | 'trusts' | 'trustedBy' | 'variesByVersion' | undefined>(undefined);
@@ -122,6 +126,29 @@
     $effect(() => {
         const addresses = $searchedAll.slice(0, 100).map((item) => item.address);
         void preloadProfileCores(addresses);
+    });
+
+    // For group avatars, fetch the authoritative memberCount so the count badge
+    // is stable from the first paint and the list canvas can pre-allocate the
+    // full scroll height. Inert for human avatars.
+    let groupMemberCount: number | undefined = $state(undefined);
+    $effect(() => {
+        const isGroup = avatarState.isGroup;
+        const addr = avatarState.avatar?.address;
+        const sdk = get(circles);
+        groupMemberCount = undefined;
+        if (!isGroup || !addr || !sdk) return;
+        const ds = createGroupDataSource(sdk);
+        let cancelled = false;
+        void ds
+            .getGroupMemberCount(addr as Address)
+            .then((n) => {
+                if (!cancelled && typeof n === 'number') groupMemberCount = n;
+            })
+            .catch(() => {});
+        return () => {
+            cancelled = true;
+        };
     });
 
     // When the user types a search query and the underlying store still has
@@ -226,7 +253,7 @@
     {/snippet}
 
     {#snippet meta()}
-        {$filteredAll.length} {countLabel}
+        {avatarState.isGroup && groupMemberCount !== undefined ? groupMemberCount : $filteredAll.length} {countLabel}
     {/snippet}
 
     {#snippet headerActions()}
@@ -236,7 +263,7 @@
     {#snippet collapsedLeft()}
         <div class="truncate flex items-center gap-2">
             <span class="font-medium">{titleText}</span>
-            <span class="text-sm text-base-content/60">{$filteredAll.length} {countLabel}</span>
+            <span class="text-sm text-base-content/60">{avatarState.isGroup && groupMemberCount !== undefined ? groupMemberCount : $filteredAll.length} {countLabel}</span>
         </div>
     {/snippet}
 
@@ -309,6 +336,7 @@
                 maxPlaceholderPages={2}
                 expectedPageSize={25}
                 eagerLoadMultiplier={2}
+                totalKnownCount={avatarState.isGroup ? groupMemberCount : undefined}
                 placeholderRow={AvatarRowPlaceholder}
             />
         </div>

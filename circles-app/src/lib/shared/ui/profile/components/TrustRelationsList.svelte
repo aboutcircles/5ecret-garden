@@ -25,6 +25,7 @@
     let error: string | null = $state(null);
     const rowsStore = writable<Address[]>([]);
     let loadGeneration = 0;
+    let totalKnownCount: number | undefined = $state(undefined);
 
     async function loadRelations(): Promise<void> {
         const generation = ++loadGeneration;
@@ -32,6 +33,7 @@
         error = null;
         rowsStore.set([]);
         count = 0;
+        totalKnownCount = undefined;
 
         try {
             const sdk = get(circles);
@@ -51,6 +53,18 @@
 
             if (relation === 'trusts' && subjectIsGroup) {
                 const groupDataSource = createGroupDataSource(sdk);
+                // Pre-fetch total memberCount so the badge and the list canvas
+                // are stable from the first paint instead of jumping as pages
+                // arrive.
+                const total = await groupDataSource
+                    .getGroupMemberCount(avatarAddress)
+                    .catch(() => null);
+                if (generation !== loadGeneration) return;
+                if (typeof total === 'number') {
+                    totalKnownCount = total;
+                    count = total;
+                }
+
                 const seen = new Set<string>();
                 let cursor: string | null = null;
                 let first = true;
@@ -77,7 +91,12 @@
                         newAddrs.push(addr);
                     }
                     rowsStore.update((prev) => prev.concat(newAddrs));
-                    count = get(rowsStore).length;
+                    // Only update count from the loaded length if we couldn't
+                    // resolve the authoritative total. Otherwise keep the
+                    // stable count from getGroupMemberCount.
+                    if (totalKnownCount === undefined) {
+                        count = get(rowsStore).length;
+                    }
 
                     if (first) {
                         loading = false;
@@ -129,6 +148,7 @@
     addresses={rowsStore}
     loading={loading}
     {error}
+    {totalKnownCount}
     emptyLabel="No connections"
     noMatchesLabel="No matches"
 />

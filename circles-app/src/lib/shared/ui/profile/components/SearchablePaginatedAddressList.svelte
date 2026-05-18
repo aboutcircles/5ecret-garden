@@ -18,6 +18,7 @@
         error?: string | null;
         rowHeight?: number;
         pageSize?: number;
+        totalKnownCount?: number;
         searchPlaceholder?: string;
     }
 
@@ -31,6 +32,7 @@
         error = null,
         rowHeight = 64,
         pageSize = 25,
+        totalKnownCount,
         searchPlaceholder = 'Search by address or name'
     }: Props = $props();
 
@@ -61,6 +63,7 @@
         noMatchesLabel={noMatchesLabel}
         rowHeight={rowHeight}
         pageSize={pageSize}
+        {totalKnownCount}
         searchPlaceholder={searchPlaceholder}
         placeholderRow={AvatarRowPlaceholder}
     />

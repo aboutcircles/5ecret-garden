@@ -1,5 +1,10 @@
 import type { Sdk } from '@aboutcircles/sdk';
-import type { Address, GroupMembershipRow, PagedQueryParams } from '@aboutcircles/sdk-types';
+import type {
+  Address,
+  GroupMembershipRow,
+  GroupRow,
+  PagedQueryParams,
+} from '@aboutcircles/sdk-types';
 import { PagedQuery } from '@aboutcircles/sdk-rpc';
 
 export interface GroupMembersPage {
@@ -18,6 +23,8 @@ export interface GroupDataSource {
   ): Promise<GroupMembersPage>;
   /** Exhaustive fetch — for callers that need the full member set in one shot. */
   getGroupMembers(group: Address, pageSize?: number): Promise<GroupMembershipRow[]>;
+  /** Total member count from V_CrcV2.Groups (lets the UI pre-allocate list height). */
+  getGroupMemberCount(group: Address): Promise<number | null>;
 }
 
 export function createGroupDataSource(sdk: Sdk): GroupDataSource {
@@ -63,6 +70,29 @@ export function createGroupDataSource(sdk: Sdk): GroupDataSource {
         cursor = page.hasMore ? page.nextCursor ?? null : null;
       } while (cursor);
       return all;
+    },
+
+    async getGroupMemberCount(group: Address): Promise<number | null> {
+      const queryDef: PagedQueryParams = {
+        namespace: 'V_CrcV2',
+        table: 'Groups',
+        columns: ['group', 'memberCount'],
+        filter: [
+          {
+            Type: 'FilterPredicate',
+            FilterType: 'Equals',
+            Column: 'group',
+            Value: group.toLowerCase(),
+          },
+        ],
+        sortOrder: 'DESC',
+        limit: 1,
+      };
+      const query = new PagedQuery<GroupRow>(sdk.rpc.client, queryDef);
+      if (!(await query.queryNextPage())) return null;
+      const row = query.currentPage?.results?.[0];
+      const count = row?.memberCount;
+      return typeof count === 'number' ? count : null;
     },
   };
 }

@@ -26,6 +26,7 @@
   let trustedAvatarTypes: Record<string, string | undefined> = $state({});
   let selectedSet: Set<Address> = $state(new Set<Address>());
   let groupName: string | null = $state(null);
+  let totalMemberCount: number | undefined = $state(undefined);
   let searchInputEl: HTMLInputElement | null = $state(null);
   let trustedListEl: HTMLDivElement | null = $state(null);
   const trustedStore = writable<Address[]>([]);
@@ -98,10 +99,23 @@
     trusted = [];
     trustedAvatarTypes = {};
     trustedStore.set([]);
+    totalMemberCount = undefined;
 
     try {
       const groupDataSource = createGroupDataSource(sdk);
       const avatarDataSource = createAvatarDataSource(sdk);
+
+      // Pre-fetch authoritative member count so the header is stable from the
+      // first paint rather than ticking up as pages arrive.
+      void groupDataSource
+        .getGroupMemberCount(group)
+        .then((n) => {
+          if (generation === loadGeneration && typeof n === 'number') {
+            totalMemberCount = n;
+          }
+        })
+        .catch(() => {});
+
       const seen = new Set<string>();
       let cursor: string | null = null;
       let first = true;
@@ -285,7 +299,7 @@
     </div>
   </div>
 
-  <div class="text-xs opacity-70">{trusted.length} trusted avatar{trusted.length === 1 ? '' : 's'}</div>
+  <div class="text-xs opacity-70">{totalMemberCount ?? trusted.length} trusted avatar{(totalMemberCount ?? trusted.length) === 1 ? '' : 's'}</div>
 
   <div role="group" aria-label="Search trusted avatars">
     <ListShell
