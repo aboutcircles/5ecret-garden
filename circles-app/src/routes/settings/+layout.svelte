@@ -689,14 +689,14 @@
       {@render children?.()}
     </div>
 
-    <div style="height:24px;display:flex;align-items:center;justify-content:flex-end;padding:0 4px;">
+    <div style="margin-top:28px;padding:16px 4px 8px;display:flex;align-items:center;justify-content:center;">
       <button
         type="button"
         onclick={() => settings.advancedMode = !settings.advancedMode}
-        style="background:none;border:none;cursor:pointer;padding:4px 8px;font-size:10px;color:{settings.advancedMode ? T.primary : T.hairline};font-family:{T.fontMono};opacity:0.4;"
+        style="background:none;border:none;cursor:default;padding:4px 8px;font-size:11px;letter-spacing:0.02em;color:{settings.advancedMode ? T.primary : T.inkFaint};font-family:{T.fontMono};"
         title=""
-        aria-label="Toggle advanced mode"
-      >{settings.advancedMode ? '● advanced' : '●'}</button>
+        aria-label="App version"
+      >Circles · v0.0.1{settings.advancedMode ? ' · advanced' : ''}</button>
     </div>
   </div>
 </div>
