@@ -9,6 +9,7 @@
   let { homeLink = '/' }: Props = $props();
 
   import { page } from '$app/stores';
+  import { settings } from '$lib/shared/state/settings.svelte';
   import { openFlowPopup, popupControls, popupState } from '$lib/shared/state/popup';
   import { writable, type Unsubscriber } from 'svelte/store';
   import GlobalAvatarSearchPopup from '$lib/shared/ui/avatar-search/GlobalAvatarSearchPopup.svelte';
@@ -129,12 +130,18 @@
   style="background:#F6F5F2;">
 
   <!-- Logo -->
-  <a href={homeLink} class="flex items-center gap-2 flex-1 no-underline">
+  <a href={homeLink} class="flex items-center gap-2 no-underline">
     <img src="/logo.svg" alt="Circles" class="w-[22px] h-[22px]" />
     <span class="font-semibold text-[15px] tracking-tight" style="color:#0F0A1E;">Circles</span>
-    <span class="text-[10px] px-1.5 py-0.5 rounded-full font-[580] tracking-wider lowercase"
-      style="background:#EFEDE7;color:rgba(15,10,30,0.40);">beta</span>
   </a>
+  <button
+    type="button"
+    onclick={() => settings.advancedMode = !settings.advancedMode}
+    title=""
+    aria-label="beta"
+    class="text-[10px] px-1.5 py-0.5 rounded-full font-[580] tracking-wider lowercase mr-auto border-0"
+    style="cursor:default;background:{settings.advancedMode ? 'rgba(88,73,212,0.12)' : '#EFEDE7'};color:{settings.advancedMode ? '#5849D4' : 'rgba(15,10,30,0.40)'};"
+  >beta</button>
 
   <!-- Cart (market page or has items) -->
   {#if isMarketPage || $cartItemCount > 0}

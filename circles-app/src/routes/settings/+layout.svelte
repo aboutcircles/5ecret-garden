@@ -689,14 +689,6 @@
       {@render children?.()}
     </div>
 
-    <div style="margin-top:28px;padding:16px 4px 8px;display:flex;align-items:center;justify-content:center;">
-      <button
-        type="button"
-        onclick={() => settings.advancedMode = !settings.advancedMode}
-        style="background:none;border:none;cursor:default;padding:4px 8px;font-size:11px;letter-spacing:0.02em;color:{settings.advancedMode ? T.primary : T.inkFaint};font-family:{T.fontMono};"
-        title=""
-        aria-label="App version"
-      >Circles · v0.0.1{settings.advancedMode ? ' · advanced' : ''}</button>
-    </div>
+    <div style="height:24px;"></div>
   </div>
 </div>

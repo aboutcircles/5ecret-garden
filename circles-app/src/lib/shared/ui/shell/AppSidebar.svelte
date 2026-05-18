@@ -15,6 +15,7 @@
   } from 'lucide';
   import { popupControls } from '$lib/shared/state/popup';
   import { T } from '$lib/design-system/tokens.js';
+  import { settings } from '$lib/shared/state/settings.svelte';
 
   const NAV_ITEMS = [
     { label: 'Wallet',   href: '/dashboard', icon: LWallet },
@@ -56,7 +57,13 @@
   <!-- Logo row -->
   <div style="padding:4px 10px 0;display:flex;align-items:center;gap:8px;">
     <img src="/logo.svg" alt="Circles" class="w-[26px] h-[26px]" />
-    <span style="font-family:{T.fontSans};font-size:11px;color:{T.inkFaint};padding:2px 7px;border-radius:9999px;background:{T.pageDeep};font-weight:580;letter-spacing:0.04em;text-transform:lowercase;">beta</span>
+    <button
+      type="button"
+      onclick={() => settings.advancedMode = !settings.advancedMode}
+      title=""
+      aria-label="beta"
+      style="font-family:{T.fontSans};font-size:11px;color:{settings.advancedMode ? T.primary : T.inkFaint};padding:2px 7px;border-radius:9999px;border:0;background:{settings.advancedMode ? T.primaryFaint : T.pageDeep};font-weight:580;letter-spacing:0.04em;text-transform:lowercase;cursor:default;"
+    >beta</button>
   </div>
 
   <!-- Account picker -->
