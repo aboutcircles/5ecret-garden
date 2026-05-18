@@ -61,14 +61,21 @@ export async function createContactsQueryStore(
         if (exhausted) {
           return { rows: [], hasMore: false, nextPage: fetchNextGroupPage };
         }
+        const requestedCursor = cursor;
         const page = await groupDataSource.getGroupMembersPage(
           address,
-          cursor,
+          requestedCursor,
           GROUP_MEMBERS_PAGE_SIZE
         );
-        cursor = page.nextCursor;
-        const hasMore = page.hasMore && cursor !== null;
-        exhausted = !hasMore;
+
+        // Treat an empty results page as terminal regardless of hasMore — protects
+        // against a server bug returning `results:[], hasMore:true` which would
+        // otherwise cause VirtualList to spin-loop on prefetch.
+        if (page.results.length === 0) {
+          exhausted = true;
+          cursor = null;
+          return { rows: [], hasMore: false, nextPage: fetchNextGroupPage };
+        }
 
         const relations: AggregatedTrustRelation[] = page.results.map((row) => ({
           subjectAvatar: row.group as Address,
@@ -76,7 +83,13 @@ export async function createContactsQueryStore(
           objectAvatar: row.member as Address,
           timestamp: row.timestamp,
         }));
+        // Enrich BEFORE committing cursor advance so a transient failure can be
+        // retried on the same cursor without skipping the page.
         const enriched = await enrichContactData(relations, address, sdk);
+
+        cursor = page.nextCursor;
+        const hasMore = page.hasMore && cursor !== null;
+        exhausted = !hasMore;
 
         const row: ContactEventRow = {
           blockNumber: Date.now(),

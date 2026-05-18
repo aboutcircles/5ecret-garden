@@ -139,6 +139,8 @@
                 while (!done) {
                     done = await snap.next();
                 }
+            } catch (e) {
+                console.warn('[contacts] search drain failed; results may be incomplete', e);
             } finally {
                 draining = false;
             }

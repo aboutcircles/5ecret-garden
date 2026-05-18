@@ -61,6 +61,10 @@
                     );
                     if (generation !== loadGeneration) return;
 
+                    // Stop if the server returns no progress (defends against a bug
+                    // returning `results:[], hasMore:true` which would loop forever).
+                    if (page.results.length === 0) break;
+
                     const newAddrs: Address[] = [];
                     for (const row of page.results) {
                         const addr = row.member as Address;
