@@ -16,6 +16,7 @@
   import { fly, fade } from 'svelte/transition';
   import { quintOut } from 'svelte/easing';
   import { tasks, completedTasks, dismissCompletedTask } from '$lib/shared/utils/tasks';
+  import { gnosisscanTxUrl } from '$lib/shared/utils/explorer';
   import {
     initPopupHistorySync,
     popupControls,
@@ -378,7 +379,22 @@
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="width:16px;height:16px;flex-shrink:0;color:#1F8A54;" aria-hidden="true">
         <path stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
       </svg>
-      <span>{formatDoneName(done.name)}</span>
+      <div style="display:flex;flex-direction:column;gap:2px;min-width:0;">
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{formatDoneName(done.name)}</span>
+        {#if done.txHash}
+          <a
+            class="layout-toast-link"
+            href={gnosisscanTxUrl(done.txHash)}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            View on explorer
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="width:11px;height:11px;" aria-hidden="true">
+              <path stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M14 5h5v5M19 5l-9 9M10 5H6a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1v-4"/>
+            </svg>
+          </a>
+        {/if}
+      </div>
       <button
         type="button"
         class="layout-toast-dismiss"
@@ -424,5 +440,18 @@
   .layout-toast-dismiss:hover {
     background: rgba(31, 138, 84, 0.14);
     color: #15412B;
+  }
+  .layout-toast-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    align-self: flex-start;
+    font-size: 11.5px;
+    font-weight: 540;
+    color: #1F8A54;
+    text-decoration: none;
+  }
+  .layout-toast-link:hover {
+    text-decoration: underline;
   }
 </style>

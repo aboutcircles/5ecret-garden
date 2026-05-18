@@ -7,9 +7,18 @@ export type Task<T> = {
 
 export const tasks = writable<Task<any>[]>([]);
 
-export type CompletedTask = { id: number; name: string };
+export type CompletedTask = { id: number; name: string; txHash?: string };
 
 export const completedTasks = writable<CompletedTask[]>([]);
+
+const TX_HASH_RE = /^0x[0-9a-fA-F]{64}$/;
+
+function extractTxHash(result: unknown): string | undefined {
+  if (!result || typeof result !== 'object') return undefined;
+  const r = result as Record<string, unknown>;
+  const candidate = r.hash ?? r.transactionHash;
+  return typeof candidate === 'string' && TX_HASH_RE.test(candidate) ? candidate : undefined;
+}
 
 const SUCCESS_TOAST_MS = 5000;
 let completedSeq = 0;
@@ -25,9 +34,10 @@ export function dismissCompletedTask(id: number): void {
   completedTasks.update((current) => current.filter((t) => t.id !== id));
 }
 
-function pushCompleted(name: string): void {
+function pushCompleted(name: string, result: unknown): void {
   const id = ++completedSeq;
-  completedTasks.update((current) => [...current, { id, name }]);
+  const txHash = extractTxHash(result);
+  completedTasks.update((current) => [...current, { id, name, txHash }]);
   const timer = setTimeout(() => {
     dismissTimers.delete(id);
     completedTasks.update((current) => current.filter((t) => t.id !== id));
@@ -56,7 +66,7 @@ export async function runTask<T>(task: Task<T>): Promise<T> {
 
   try {
     const result = await task.promise;
-    pushCompleted(task.name);
+    pushCompleted(task.name, result);
     return result;
   } catch (e) {
     console.error(`Task errored: ${task.name}`, e);
