@@ -31,11 +31,23 @@ export async function createContactsQueryStore(
   if (!sdk) throw new Error('SDK not initialized');
   const trustDataSource = createTrustDataSource(sdk);
   const groupDataSource = createGroupDataSource(sdk);
-  const subjectIsGroup = isGroupType(avatar.avatarInfo?.type);
 
   const createContactsQuery = async (): Promise<
     CirclesQuery<ContactEventRow>
   > => {
+    // Resolve the avatar type lazily so a race during init (avatarInfo not yet
+    // attached) doesn't lock the store onto the wrong path for the lifetime of
+    // the subscription. If avatarInfo is missing, fetch it from the SDK.
+    let avatarType: string | undefined = avatar.avatarInfo?.type;
+    if (!avatarType) {
+      const info = await sdk.data.getAvatar(address).catch((e) => {
+        console.warn('[Contacts] getAvatar lookup failed; defaulting to trust path', e);
+        return null;
+      });
+      avatarType = info?.type;
+    }
+    const subjectIsGroup = isGroupType(avatarType);
+
     // Group members live in V_CrcV2.GroupMemberships, not the trust-relations view.
     // For human/org avatars the trust path is correct; for groups it returns the
     // inverse (counterparties trusting the group) and misses actual members.

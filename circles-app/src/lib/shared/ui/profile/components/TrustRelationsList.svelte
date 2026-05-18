@@ -38,7 +38,10 @@
 
             // For groups the "Trusts" tab is the member list, sourced from V_CrcV2.GroupMemberships.
             // The trust-relations view doesn't include the group→member edges under the new SDK.
-            const avatarInfo = await sdk.data.getAvatar(avatarAddress).catch(() => null);
+            const avatarInfo = await sdk.data.getAvatar(avatarAddress).catch((e) => {
+                console.warn('[TrustRelationsList] getAvatar failed; defaulting to trust path', e);
+                return null;
+            });
             const subjectIsGroup = isGroupType(avatarInfo?.type);
 
             if (relation === 'trusts' && subjectIsGroup) {

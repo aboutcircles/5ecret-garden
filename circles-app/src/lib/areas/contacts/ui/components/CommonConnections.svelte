@@ -43,7 +43,10 @@
         addr: Address,
         isSelf: boolean
       ): Promise<TrustRelationInfo[]> => {
-        const info = await $circles.data.getAvatar(addr).catch(() => null);
+        const info = await $circles.data.getAvatar(addr).catch((e) => {
+          console.warn('[CommonConnections] getAvatar failed; defaulting to trust path', e);
+          return null;
+        });
         if (isGroupType(info?.type)) {
           const members = await groupDataSource.getGroupMembers(addr);
           return members.map((row) => ({
