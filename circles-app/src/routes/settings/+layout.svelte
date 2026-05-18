@@ -84,7 +84,7 @@
     'marketplace', 'payment', 'namespaces', 'keys',
   ];
 
-  const ADVANCED_TABS = new Set<TabId>(['keys', 'namespaces', 'payment']);
+  const ADVANCED_TABS = new Set<TabId>(['bookmarks', 'namespaces', 'keys']);
   const visibleTabs = $derived(
     settings.advancedMode ? TAB_ORDER : TAB_ORDER.filter(id => !ADVANCED_TABS.has(id))
   );
