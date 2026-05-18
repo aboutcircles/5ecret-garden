@@ -135,7 +135,7 @@
 {#if showTransitive}
     <button
         type="button"
-        style="width:100%;text-align:left;background:transparent;border:0;padding:0;"
+        style="width:100%;text-align:left;background:transparent;border:0;padding:0;border-radius:14px;overflow:hidden;display:block;"
         data-send-step-initial-focus
         onclick={() => handleSelect(transitiveTransfer())}
     >
