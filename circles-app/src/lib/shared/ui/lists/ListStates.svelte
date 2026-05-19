@@ -27,7 +27,10 @@
 </script>
 
 {#if loading}
-  <div class="w-full py-6 text-center text-base-content/60">{loadingLabel}</div>
+  <div class="w-full py-6 text-center text-base-content/60" aria-live="polite" aria-busy="true">
+    <span class="loading loading-spinner text-primary"></span>
+    <span class="ml-2">{loadingLabel}</span>
+  </div>
 {:else if error}
   <div class="w-full py-6 text-center text-error">{error}</div>
 {:else if isEmpty}

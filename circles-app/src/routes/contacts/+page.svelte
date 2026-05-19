@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { browser } from '$app/environment';
     import {contacts} from '$lib/shared/state/contacts';
     import Papa from 'papaparse';
     import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
@@ -18,21 +17,14 @@
     import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/shared/ui/shell/actions';
     import { goto } from '$app/navigation';
-    import { createPaginatedList } from '$lib/shared/state/paginatedList';
     import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
     import HelpPopover from '$lib/shared/ui/primitives/HelpPopover.svelte';
     import { getProfilesCoreBatch } from '$lib/shared/model/profile/coreRepo';
     import type { ProfileAddress } from '$lib/shared/model/profile/types';
-
-    const CONTACTS_PAGE_SIZE = 25;
-    const CONTACTS_VISIBLE_COUNT_KEY = 'contacts:list:visible-count';
-
-    function getInitialPageCount(): number {
-        if (!browser) return 1;
-        const raw = Number(window.sessionStorage.getItem(CONTACTS_VISIBLE_COUNT_KEY) ?? '0');
-        if (!Number.isFinite(raw) || raw <= 0) return 1;
-        return Math.max(1, Math.ceil(raw / CONTACTS_PAGE_SIZE));
-    }
+    import { circles } from '$lib/shared/state/circles';
+    import { createGroupDataSource } from '$lib/shared/data/circles/groupDataSource';
+    import type { Address } from '@aboutcircles/sdk-types';
+    import { get } from 'svelte/store';
 
     let filterVersion = writable<number | undefined>(undefined);
     let filterRelation = writable<'mutuallyTrusts' | 'trusts' | 'trustedBy' | 'variesByVersion' | undefined>(undefined);
@@ -76,6 +68,19 @@
         }
     }
 
+    // Per-address memo: keeps the same item object reference across derivations
+    // when neither the underlying contact nor the profile-cache entry changed.
+    // Without this, every page load rebuilds every item object, ContactRow's
+    // `item` prop gets a fresh reference, and Avatar/ContactGroupRow flicker.
+    type ContactItem = {
+        blockNumber: number;
+        transactionIndex: number;
+        logIndex: number;
+        address: string;
+        contact: any;
+    };
+    const itemMemo = new Map<string, { item: ContactItem; contactRef: any; profileRef: any }>();
+
     // Build the full filtered array (not paginated)
     const filteredAll = derived(
         [contacts, filterVersion, filterRelation, profileCoreCache],
@@ -98,16 +103,27 @@
                     if (bRelation === 'trusts' && aRelation === 'trustedBy') return 1;
                     return 0;
                 })
-                .map(([address, contact]) => ({
-                    blockNumber: Date.now(),
-                    transactionIndex: 0,
-                    logIndex: 0,
-                    address,
-                    contact: {
-                        ...contact,
-                        contactProfile: contact?.contactProfile ?? $profileCache.get(address.toLowerCase()),
-                    },
-                }));
+                .map(([address, contact]) => {
+                    const profileRef = $profileCache.get(address.toLowerCase());
+                    const cached = itemMemo.get(address);
+                    if (cached && cached.contactRef === contact && cached.profileRef === profileRef) {
+                        return cached.item;
+                    }
+                    const contactFinal = contact?.contactProfile
+                        ? contact
+                        : profileRef
+                          ? { ...contact, contactProfile: profileRef }
+                          : contact;
+                    const item: ContactItem = {
+                        blockNumber: 0,
+                        transactionIndex: 0,
+                        logIndex: 0,
+                        address,
+                        contact: contactFinal,
+                    };
+                    itemMemo.set(address, { item, contactRef: contact, profileRef });
+                    return item;
+                });
         }
     );
 
@@ -121,33 +137,65 @@
         });
     });
 
-    // Paginate searched results for rendering
-    const contactsPaginated = createPaginatedList(searchedAll, {
-        pageSize: CONTACTS_PAGE_SIZE,
-        initialPageCount: getInitialPageCount(),
-    });
-    const contactsPaginatedWithEnd = derived([contactsPaginated, contacts], ([$paginated, $contacts]) => {
-        const hasData = ($paginated?.data ?? []).length > 0;
-        const showEnded = hasData
-            ? $paginated.ended
-            : ($contacts?.ended ?? false);
-        return {
-            ...$paginated,
-            ended: showEnded,
-        };
-    });
-
-    $effect(() => {
-        if (!browser) return;
-        const loadedCount = $contactsPaginatedWithEnd?.data?.length ?? 0;
-        if (loadedCount > 0) {
-            window.sessionStorage.setItem(CONTACTS_VISIBLE_COUNT_KEY, String(loadedCount));
-        }
-    });
+    // Feed VirtualList the full filtered set plus the underlying store's
+    // next/ended so scrolling near the end triggers a real RPC fetch for the
+    // next page (e.g. for group members). For humans the underlying store ends
+    // after the initial load so this is a no-op.
+    const listStore = derived([searchedAll, contacts], ([$searched, $c]) => ({
+        data: $searched,
+        next: $c.next,
+        ended: $c.ended,
+    }));
 
     $effect(() => {
         const addresses = $searchedAll.slice(0, 100).map((item) => item.address);
         void preloadProfileCores(addresses);
+    });
+
+    // For group avatars, fetch the authoritative memberCount so the count badge
+    // is stable from the first paint and the list canvas can pre-allocate the
+    // full scroll height. Inert for human avatars.
+    let groupMemberCount: number | undefined = $state(undefined);
+    $effect(() => {
+        const isGroup = avatarState.isGroup;
+        const addr = avatarState.avatar?.address;
+        const sdk = get(circles);
+        groupMemberCount = undefined;
+        if (!isGroup || !addr || !sdk) return;
+        const ds = createGroupDataSource(sdk);
+        let cancelled = false;
+        void ds
+            .getGroupMemberCount(addr as Address)
+            .then((n) => {
+                if (!cancelled && typeof n === 'number') groupMemberCount = n;
+            })
+            .catch(() => {});
+        return () => {
+            cancelled = true;
+        };
+    });
+
+    // When the user types a search query and the underlying store still has
+    // more pages, eagerly drain them so the search can match members not yet
+    // visible. Inert for human contacts (ended after one page).
+    let draining = false;
+    $effect(() => {
+        const q = ($searchQuery ?? '').toString().trim();
+        const snap = $contacts;
+        if (!q || snap?.ended || draining) return;
+        draining = true;
+        (async () => {
+            try {
+                let done = false;
+                while (!done) {
+                    done = await snap.next();
+                }
+            } catch (e) {
+                console.warn('[contacts] search drain failed; results may be incomplete', e);
+            } finally {
+                draining = false;
+            }
+        })();
     });
 
     const onSearchInputKeydown = createListInputArrowDownHandler({
@@ -229,7 +277,7 @@
     {/snippet}
 
     {#snippet meta()}
-        {$filteredAll.length} {countLabel}
+        {avatarState.isGroup && groupMemberCount !== undefined ? groupMemberCount : $filteredAll.length} {countLabel}
     {/snippet}
 
     {#snippet headerActions()}
@@ -239,7 +287,7 @@
     {#snippet collapsedLeft()}
         <div class="truncate flex items-center gap-2">
             <span class="font-medium">{titleText}</span>
-            <span class="text-sm text-base-content/60">{$filteredAll.length} {countLabel}</span>
+            <span class="text-sm text-base-content/60">{avatarState.isGroup && groupMemberCount !== undefined ? groupMemberCount : $filteredAll.length} {countLabel}</span>
         </div>
     {/snippet}
 
@@ -306,11 +354,14 @@
     >
         <div data-contacts-list-scope bind:this={contactsListScopeEl}>
             <GenericList
-                store={contactsPaginatedWithEnd}
+                store={listStore}
                 row={ContactRow}
+                getKey={(item) => item.address}
                 rowHeight={64}
                 maxPlaceholderPages={2}
                 expectedPageSize={25}
+                eagerLoadMultiplier={2}
+                totalKnownCount={avatarState.isGroup ? groupMemberCount : undefined}
                 placeholderRow={AvatarRowPlaceholder}
             />
         </div>

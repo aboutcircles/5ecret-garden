@@ -24,8 +24,14 @@
     } from '$lib/shared/pricing/wrappedStaticPricing';
     import { setBalancePricingContext } from '$lib/shared/pricing/balancePricingContext';
 
+    interface Props {
+        initialFilterType?: 'personal' | 'group';
+    }
+
+    let { initialFilterType }: Props = $props();
+
     let filterVersion = writable<number | undefined>(undefined);
-    let filterType = writable<'personal' | 'group' | undefined>(undefined);
+    let filterType = writable<'personal' | 'group' | undefined>(initialFilterType);
     let filterToken = writable<'erc20' | 'erc1155' | undefined>(undefined);
     let sortOrder = writable<'total' | 'price'>('total');
     let searchQuery = writable<string>('');
@@ -33,8 +39,10 @@
     const priceSortValues: Writable<Record<string, number | null>> = writable({});
     const priceSortInFlight: Map<string, Promise<void>> = new Map();
 
-    // Filters panel state — store to ensure reactivity in all modes
-    const showFilters: Writable<boolean> = writable(false);
+    // Filters panel state — store to ensure reactivity in all modes. Open by
+    // default when the caller pre-selected a filter so the active chip is
+    // visible (otherwise the list would silently exclude rows).
+    const showFilters: Writable<boolean> = writable(initialFilterType !== undefined);
     const FILTER_PANEL_ID: string = 'balance-filters';
     const BALANCES_HELP_DISMISSED_KEY = 'balances-help-dismissed-v1';
 

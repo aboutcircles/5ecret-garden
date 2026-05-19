@@ -15,6 +15,8 @@ import type { Address } from '@aboutcircles/sdk-types';
 import type { Avatar, Sdk } from '@aboutcircles/sdk';
 import { createTrustDataSource } from '$lib/shared/data/circles/trustDataSource';
 import { createAvatarDataSource } from '$lib/shared/data/circles/avatarDataSource';
+import { createGroupDataSource } from '$lib/shared/data/circles/groupDataSource';
+import { isGroupType } from '$lib/shared/utils/avatarHelpers';
 
 interface ContactEventRow extends EventRow {
   data: ContactList;
@@ -28,11 +30,81 @@ export async function createContactsQueryStore(
   const sdk = get(circles);
   if (!sdk) throw new Error('SDK not initialized');
   const trustDataSource = createTrustDataSource(sdk);
+  const groupDataSource = createGroupDataSource(sdk);
+
+  // Match the transaction-history page size for a fast first paint; further
+  // pages stream in via VirtualList's scroll-driven prefetch.
+  const GROUP_MEMBERS_PAGE_SIZE = 25;
 
   const createContactsQuery = async (): Promise<
     CirclesQuery<ContactEventRow>
   > => {
-    // Fetch contacts eagerly so the CirclesQuery has data on .rows immediately
+    // Resolve the avatar type lazily so a race during init (avatarInfo not yet
+    // attached) doesn't lock the store onto the wrong path for the lifetime of
+    // the subscription. If avatarInfo is missing, fetch it from the SDK.
+    let avatarType: string | undefined = avatar.avatarInfo?.type;
+    if (!avatarType) {
+      const info = await sdk.data.getAvatar(address).catch((e) => {
+        console.warn('[Contacts] getAvatar lookup failed; defaulting to trust path', e);
+        return null;
+      });
+      avatarType = info?.type;
+    }
+    const subjectIsGroup = isGroupType(avatarType);
+
+    if (subjectIsGroup) {
+      // Progressive cursor pagination. Each call to fetchNextGroupPage produces
+      // one ContactEventRow holding that page's slice of members. The store
+      // accumulates rows across pages and the subscriber merges them.
+      let cursor: string | null = null;
+      let exhausted = false;
+
+      const fetchNextGroupPage = async (): Promise<CirclesQuery<ContactEventRow>> => {
+        if (exhausted) {
+          return { rows: [], hasMore: false, nextPage: fetchNextGroupPage };
+        }
+        const requestedCursor = cursor;
+        const page = await groupDataSource.getGroupMembersPage(
+          address,
+          requestedCursor,
+          GROUP_MEMBERS_PAGE_SIZE
+        );
+
+        // Treat an empty results page as terminal regardless of hasMore — protects
+        // against a server bug returning `results:[], hasMore:true` which would
+        // otherwise cause VirtualList to spin-loop on prefetch.
+        if (page.results.length === 0) {
+          exhausted = true;
+          cursor = null;
+          return { rows: [], hasMore: false, nextPage: fetchNextGroupPage };
+        }
+
+        const relations: AggregatedTrustRelation[] = page.results.map((row) => ({
+          subjectAvatar: row.group as Address,
+          relation: 'trusts' as const,
+          objectAvatar: row.member as Address,
+          timestamp: row.timestamp,
+        }));
+        // Enrich BEFORE committing cursor advance so a transient failure can be
+        // retried on the same cursor without skipping the page.
+        const enriched = await enrichContactData(relations, address, sdk);
+
+        cursor = page.nextCursor;
+        const hasMore = page.hasMore && cursor !== null;
+        exhausted = !hasMore;
+
+        const row: ContactEventRow = {
+          blockNumber: Date.now(),
+          transactionIndex: 0,
+          logIndex: 0,
+          data: enriched,
+        };
+        return { rows: [row], hasMore, nextPage: fetchNextGroupPage };
+      };
+
+      return fetchNextGroupPage();
+    }
+
     const contacts = await trustDataSource.getAggregatedTrustRelations(address);
     const enrichedContacts = await enrichContactData(contacts, address, sdk);
 
@@ -43,19 +115,12 @@ export async function createContactsQueryStore(
       data: enrichedContacts,
     };
 
-    const query: CirclesQuery<ContactEventRow> = {
-      rows: [contactEventRow],
+    const noMore = async (): Promise<CirclesQuery<ContactEventRow>> => ({
+      rows: [],
       hasMore: false,
-      async nextPage(): Promise<CirclesQuery<ContactEventRow>> {
-        // No further pages — return empty result
-        return {
-          rows: [],
-          hasMore: false,
-          nextPage: this.nextPage,
-        };
-      },
-    };
-    return query;
+      nextPage: noMore,
+    });
+    return { rows: [contactEventRow], hasMore: false, nextPage: noMore };
   };
 
   const store = await createCirclesQueryStore<ContactEventRow>(
@@ -73,13 +138,16 @@ export async function createContactsQueryStore(
       }) => void
     ) => {
       return store.subscribe((value) => {
-        const hasLoadedSnapshot = (value.data?.length ?? 0) > 0;
+        // Pages arrive as separate ContactEventRow snapshots. Merge them so the
+        // page sees one ContactList regardless of how many pages have loaded.
+        const merged: ContactList = {};
+        for (const row of value.data ?? []) {
+          Object.assign(merged, row.data);
+        }
         callback({
-          data: value.data[0]?.data ?? {},
+          data: merged,
           next: value.next,
-          // Contacts are delivered as a single aggregated snapshot row.
-          // Once that row is present, the list is effectively loaded/ended.
-          ended: value.ended || hasLoadedSnapshot,
+          ended: value.ended,
         });
       });
     },
@@ -142,3 +210,4 @@ async function enrichContactData(
 
   return profileRecord;
 }
+

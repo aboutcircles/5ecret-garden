@@ -1,5 +1,4 @@
 [build]
-  base = "circles-app"
   command = "cd .. && npm install && npm run build:packages && cd circles-app && npm run build"
   publish = "build"
 

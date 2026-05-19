@@ -4,6 +4,8 @@
     import { circles } from '$lib/shared/state/circles';
     import { get, writable } from 'svelte/store';
     import type { Address } from '@aboutcircles/sdk-types';
+    import { getProfilesCoreBatch } from '$lib/shared/utils/profile';
+    import type { ProfileAddress } from '$lib/shared/model/profile';
 
     interface Props {
         otherAvatarAddress?: Address;
@@ -11,38 +13,68 @@
     }
     let { otherAvatarAddress, commonConnectionsCount = $bindable(0) }: Props = $props();
 
-    let loading = $state(true);
+    let loading = $state(false);
     let error: string | null = $state(null);
-    let rows: Address[] = $state([]);
     const rowsStore = writable<Address[]>([]);
+    let loadGeneration = 0;
 
-    async function loadCommon(): Promise<void> {
-        loading = true; error = null; rows = [];
+    async function loadCommon(me: Address, other: Address): Promise<void> {
+        const generation = ++loadGeneration;
+        loading = true;
+        error = null;
+        rowsStore.set([]);
+
         try {
-            const me = avatarState.avatar?.address as Address | undefined;
-            const other = otherAvatarAddress;
-            if (!$circles || !me || !other) { loading = false; commonConnectionsCount = 0; return; }
-
             const sdk = get(circles);
-            if (!sdk?.rpc) {
-                throw new Error('No circles RPC available');
-            }
+            if (!sdk?.rpc) throw new Error('No circles RPC available');
+
             const resp = await sdk.rpc.trust.getCommonTrust(me, other);
+            if (generation !== loadGeneration) return;
+
+            const meLower = me.toLowerCase();
+            const otherLower = other.toLowerCase();
             const list = (resp ?? [])
                 .map((addr: string) => addr as Address)
-                .filter((addr: Address) => addr !== me && addr !== other)
+                .filter((addr: Address) => {
+                    const a = addr.toLowerCase();
+                    return a !== meLower && a !== otherLower;
+                })
                 .sort((a: string, b: string) => a.localeCompare(b));
 
-            rows = list;
-            rowsStore.set(rows);
-            commonConnectionsCount = rows.length;
+            // Prime the profile cache so each Avatar in the list doesn't
+            // fire its own fetch when mounting.
+            if (list.length > 0) {
+                void getProfilesCoreBatch(list as unknown as ProfileAddress[]).catch(() => {});
+            }
+
+            rowsStore.set(list);
+            commonConnectionsCount = list.length;
         } catch (e) {
+            if (generation !== loadGeneration) return;
+            console.warn('[CommonConnections] load failed', e);
             error = e instanceof Error ? e.message : 'Failed to load connections';
-            rows = []; rowsStore.set([]); commonConnectionsCount = 0;
-        } finally { loading = false; }
+            rowsStore.set([]);
+            commonConnectionsCount = 0;
+        } finally {
+            if (generation === loadGeneration) loading = false;
+        }
     }
 
-    $effect(() => { void loadCommon(); });
+    $effect(() => {
+        const me = avatarState.avatar?.address as Address | undefined;
+        const other = otherAvatarAddress;
+        const sdk = $circles;
+
+        if (!sdk || !me || !other) {
+            loadGeneration++;
+            loading = false;
+            rowsStore.set([]);
+            commonConnectionsCount = 0;
+            return;
+        }
+
+        void loadCommon(me, other);
+    });
 </script>
 
 <SearchablePaginatedAddressList

@@ -18,7 +18,14 @@
         error?: string | null;
         rowHeight?: number;
         pageSize?: number;
+        totalKnownCount?: number;
         searchPlaceholder?: string;
+        /** Optional lazy-load hook. When supplied, VirtualList will call this
+         *  as the user scrolls toward the end of the rendered set. Leave
+         *  undefined for in-memory fixed lists. */
+        next?: () => Promise<boolean>;
+        /** True when no more pages are available. Required when `next` is given. */
+        ended?: boolean;
     }
 
     let {
@@ -31,7 +38,10 @@
         error = null,
         rowHeight = 64,
         pageSize = 25,
-        searchPlaceholder = 'Search by address or name'
+        totalKnownCount,
+        searchPlaceholder = 'Search by address or name',
+        next,
+        ended = false
     }: Props = $props();
 
     let listScopeEl: HTMLDivElement | null = $state(null);
@@ -57,10 +67,13 @@
         inputDataAttribute="data-profile-relations-search-input"
         {loading}
         {error}
+        {next}
+        {ended}
         emptyLabel={emptyLabel}
         noMatchesLabel={noMatchesLabel}
         rowHeight={rowHeight}
         pageSize={pageSize}
+        {totalKnownCount}
         searchPlaceholder={searchPlaceholder}
         placeholderRow={AvatarRowPlaceholder}
     />

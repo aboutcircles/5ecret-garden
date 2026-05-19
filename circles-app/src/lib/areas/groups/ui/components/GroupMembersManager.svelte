@@ -12,8 +12,8 @@
   import { createSearchablePaginatedList } from '$lib/shared/state/searchablePaginatedList';
   import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
   import { openAddTrustFlow } from '$lib/areas/trust/flows/addTrust/openAddTrustFlow';
-  import { createTrustDataSource } from '$lib/shared/data/circles/trustDataSource';
   import { createAvatarDataSource } from '$lib/shared/data/circles/avatarDataSource';
+  import { createGroupDataSource } from '$lib/shared/data/circles/groupDataSource';
 
   interface Props {
     group: Address;
@@ -26,6 +26,7 @@
   let trustedAvatarTypes: Record<string, string | undefined> = $state({});
   let selectedSet: Set<Address> = $state(new Set<Address>());
   let groupName: string | null = $state(null);
+  let totalMemberCount: number | undefined = $state(undefined);
   let searchInputEl: HTMLInputElement | null = $state(null);
   let trustedListEl: HTMLDivElement | null = $state(null);
   const trustedStore = writable<Address[]>([]);
@@ -79,6 +80,11 @@
     };
   });
 
+  // Match the transaction-history page size so the first batch of members
+  // renders quickly; remaining pages fill in the background.
+  const GROUP_MEMBERS_PAGE_SIZE = 25;
+  let loadGeneration = 0;
+
   async function loadTrusted() {
     const sdk = get(circles);
     if (!sdk) {
@@ -87,36 +93,90 @@
       return;
     }
 
+    const generation = ++loadGeneration;
     loading = true;
     error = null;
-    try {
-      const trustDataSource = createTrustDataSource(sdk);
-      const avatarDataSource = createAvatarDataSource(sdk);
-      const relations = await trustDataSource.getAggregatedTrustRelations(group);
-      const trustedAddresses = Array.from(
-        new Set(
-          relations
-            .filter((row) => row.relation === 'trusts' || row.relation === 'mutuallyTrusts')
-            .map((row) => row.objectAvatar as Address)
-            .filter((addr) => addr.toLowerCase() !== group.toLowerCase())
-        )
-      ).sort((a, b) => a.localeCompare(b));
-      trusted = trustedAddresses;
-      trustedStore.set(trusted);
+    trusted = [];
+    trustedAvatarTypes = {};
+    trustedStore.set([]);
+    totalMemberCount = undefined;
 
-      const infos = await avatarDataSource.getAvatarInfoBatch(trustedAddresses);
-      const nextTypes: Record<string, string | undefined> = {};
-      for (const info of infos) {
-        if (info) nextTypes[String(info.avatar).toLowerCase()] = info.type;
-      }
-      trustedAvatarTypes = nextTypes;
+    try {
+      const groupDataSource = createGroupDataSource(sdk);
+      const avatarDataSource = createAvatarDataSource(sdk);
+
+      // Pre-fetch authoritative member count so the header is stable from the
+      // first paint rather than ticking up as pages arrive.
+      void groupDataSource
+        .getGroupMemberCount(group)
+        .then((n) => {
+          if (generation === loadGeneration && typeof n === 'number') {
+            totalMemberCount = n;
+          }
+        })
+        .catch(() => {});
+
+      const seen = new Set<string>();
+      let cursor: string | null = null;
+      let first = true;
+
+      do {
+        const page = await groupDataSource.getGroupMembersPage(
+          group,
+          cursor,
+          GROUP_MEMBERS_PAGE_SIZE
+        );
+        if (generation !== loadGeneration) return;
+
+        // Stop if the server returns no progress (defends against a bug
+        // returning `results:[], hasMore:true` which would loop forever).
+        if (page.results.length === 0) break;
+
+        const newAddrs: Address[] = [];
+        for (const row of page.results) {
+          const addr = row.member as Address;
+          const key = addr.toLowerCase();
+          if (key === group.toLowerCase()) continue;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          newAddrs.push(addr);
+        }
+
+        if (newAddrs.length > 0) {
+          trusted = trusted.concat(newAddrs);
+          trustedStore.set(trusted);
+
+          // Enrich this page's addresses with avatar types in the background;
+          // rows render immediately and the type label fills in when ready.
+          void (async () => {
+            try {
+              const infos = await avatarDataSource.getAvatarInfoBatch(newAddrs);
+              if (generation !== loadGeneration) return;
+              const next: Record<string, string | undefined> = { ...trustedAvatarTypes };
+              for (const info of infos) {
+                if (info) next[String(info.avatar).toLowerCase()] = info.type;
+              }
+              trustedAvatarTypes = next;
+            } catch (e) {
+              console.debug('[GroupMembersManager] avatar info batch failed', e);
+            }
+          })();
+        }
+
+        if (first) {
+          loading = false;
+          first = false;
+        }
+        cursor = page.nextCursor;
+      } while (cursor);
     } catch (e) {
+      if (generation !== loadGeneration) return;
       error = e instanceof Error ? e.message : String(e);
       trusted = [];
       trustedAvatarTypes = {};
       trustedStore.set([]);
     } finally {
-      loading = false;
+      if (generation === loadGeneration) loading = false;
     }
   }
 
@@ -239,7 +299,7 @@
     </div>
   </div>
 
-  <div class="text-xs opacity-70">{trusted.length} trusted avatar{trusted.length === 1 ? '' : 's'}</div>
+  <div class="text-xs opacity-70">{totalMemberCount ?? trusted.length} trusted avatar{(totalMemberCount ?? trusted.length) === 1 ? '' : 's'}</div>
 
   <div role="group" aria-label="Search trusted avatars">
     <ListShell

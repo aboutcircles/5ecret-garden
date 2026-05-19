@@ -25,6 +25,13 @@
         expectedPageSize?: number;
         eagerLoadMultiplier?: number;
         overscan?: number;
+        /**
+         * Reserve list height for this many rows from the start. Used when the
+         * total row count is known up-front (e.g. group memberCount). Pages
+         * stream in and replace placeholders 1:1, so the canvas height stays
+         * stable and the scrollbar doesn't jump as new pages arrive.
+         */
+        totalKnownCount?: number;
     }
 
     let {
@@ -37,6 +44,7 @@
         expectedPageSize,
         eagerLoadMultiplier = 2,
         overscan = 8,
+        totalKnownCount,
     }: Props = $props();
 
     let listEl: HTMLElement | undefined = $state();
@@ -50,8 +58,15 @@
     let stagedPlaceholders = $state(0);
     let placeholderPageSize = $state(0);
 
-    const totalPlaceholders = $derived(stagedPlaceholders);
     const loadedItems = $derived($store?.data ?? []);
+    // If the caller pre-declares the total row count, expand placeholders so
+    // the canvas reserves space for every unloaded row from the start. This
+    // keeps the scrollbar position stable as pages stream in.
+    const totalPlaceholders = $derived(
+        typeof totalKnownCount === 'number'
+            ? Math.max(stagedPlaceholders, Math.max(0, totalKnownCount - loadedItems.length))
+            : stagedPlaceholders
+    );
     const totalCount = $derived(loadedItems.length + totalPlaceholders);
 
     let rangeStart = $state(0);
@@ -418,7 +433,7 @@
         onfocusin={onVirtualSpaceFocusIn}
         onfocusout={onVirtualSpaceFocusOut}
     >
-        {#each virtualRows as vr (vr.kind === 'item' ? `${getKey(vr.item)}::${vr.index}` : `placeholder-${vr.placeholderIndex}`)}
+        {#each virtualRows as vr (vr.kind === 'item' ? getKey(vr.item) : `placeholder-${vr.placeholderIndex}`)}
             <div
                 class="virtual-row"
                 data-virtual-index={vr.index}

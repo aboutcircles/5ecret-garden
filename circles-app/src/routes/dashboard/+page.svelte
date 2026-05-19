@@ -94,11 +94,11 @@
         ).length
     );
 
-    function openBalances() {
+    function openBalances(initialFilterType?: 'personal' | 'group') {
         popupControls.open({
             title: 'Balance breakdown',
             component: Balances,
-            props: {}
+            props: { initialFilterType },
         });
     }
 
@@ -125,7 +125,7 @@
     <!-- Title -->
     {#snippet title()}
         {#if !avatarState.isGroup}
-            <button class="text-left" onclick={openBalances} aria-label="Open balances breakdown">
+            <button class="text-left" onclick={() => openBalances()} aria-label="Open balances breakdown">
                 <h2 class="h2 m-0">
                     {roundToDecimals($totalCirclesBalance)} Circles
                 </h2>
@@ -141,11 +141,11 @@
     {#snippet meta()}
         {#if !avatarState.isGroup}
             <span class="inline-flex items-center flex-wrap gap-y-1">
-                <button type="button" class="hover:underline cursor-pointer text-left" onclick={openBalances}>
+                <button type="button" class="hover:underline cursor-pointer text-left" onclick={() => openBalances('personal')}>
                     From {personalToken} people
                 </button>
                 <span class="mx-1.5" aria-hidden="true">•</span>
-                <button type="button" class="hover:underline cursor-pointer text-left" onclick={openBalances}>
+                <button type="button" class="hover:underline cursor-pointer text-left" onclick={() => openBalances('group')}>
                     {groupToken} groups
                 </button>
                 <HelpPopover
@@ -217,7 +217,7 @@
             <button
                     type="button"
                     class="btn btn-ghost min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] justify-start px-3"
-                    onclick={openBalances}
+                    onclick={() => openBalances()}
             >
                 <Lucide icon={LBarChart3} size={20} class="shrink-0" />
                 See breakdown
