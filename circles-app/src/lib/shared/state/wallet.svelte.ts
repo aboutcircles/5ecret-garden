@@ -275,6 +275,10 @@ export async function restoreSession() {
     }
 
     circles.set(sdk);
+    // Publish the runner so tx-submission utilities (sendRunnerTransactionAndWait,
+    // gateway flows, unwrap, etc.) work after a page reload. The connect-wallet
+    // pages set this on first connect; restoreSession was missing the same call.
+    wallet.set(newRunner as ContractRunner);
 
     let savedGroup = CirclesStorage.getInstance().group;
 

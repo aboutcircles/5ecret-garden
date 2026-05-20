@@ -24,6 +24,40 @@ const _circlesBalances = writable<{
   ended: boolean;
 }>({ data: [], next: async () => false, ended: false });
 
+// Strict fetch: throws on real errors so refresh callers can surface them.
+// Returns [] only when the indexer explicitly reports "No balances found".
+async function _fetchBalancesStrict(avatar: Avatar): Promise<TokenBalance[]> {
+  if (!avatar || typeof avatar !== 'object') {
+    throw new Error('Avatar is not properly initialized');
+  }
+  if (
+    !avatar.balances ||
+    typeof avatar.balances.getTokenBalances !== 'function'
+  ) {
+    throw new Error('Avatar balances API unavailable');
+  }
+  try {
+    return (await avatar.balances.getTokenBalances()) as unknown as TokenBalance[];
+  } catch (e: unknown) {
+    const errorMessage = e instanceof Error ? e.message : String(e);
+    if (errorMessage.includes('No balances found')) return [];
+    throw e;
+  }
+}
+
+// Graceful loader for boot/event paths — never throws, persists to IDB on success only.
+async function _loadBalancesFor(avatar: Avatar): Promise<TokenBalance[]> {
+  try {
+    const balances = await _fetchBalancesStrict(avatar);
+    void writeBalances(makeScopeId(avatar.address), balances as any[]);
+    return balances;
+  } catch (e: unknown) {
+    const errorMessage = e instanceof Error ? e.message : String(e);
+    console.error('[Balances] Error loading balances:', errorMessage);
+    return [];
+  }
+}
+
 export const initBalanceStore = (avatar: Avatar) => {
   // Early return if already initialized for this avatar
   if (currentAvatarAddress === avatar.address) {
@@ -42,65 +76,14 @@ export const initBalanceStore = (avatar: Avatar) => {
     ended: false,
   });
 
-  const scopeId = makeScopeId(avatar.address);
-
-  const _initialLoad = async (): Promise<TokenBalance[]> => {
-    try {
-      // Validate avatar is properly initialized
-      if (!avatar || typeof avatar !== 'object') {
-        console.error('[Balances] Avatar is not properly initialized:', avatar);
-        return [];
-      }
-
-      // Use new SDK balances.getTokenBalances method
-      if (
-        !avatar.balances ||
-        typeof avatar.balances.getTokenBalances !== 'function'
-      ) {
-        console.error(
-          '[Balances] No balances.getTokenBalances method available on avatar'
-        );
-        return [];
-      }
-
-      const balances = await avatar.balances.getTokenBalances() as unknown as TokenBalance[];
-      void writeBalances(scopeId, balances as any[]);
-      return balances;
-    } catch (e: unknown) {
-      const errorMessage = e instanceof Error ? e.message : String(e);
-      if (errorMessage.includes('No balances found')) {
-        return [];
-      }
-      console.error('[Balances] Error loading balances:', errorMessage);
-      return [];
-    }
-  };
+  const _initialLoad = (): Promise<TokenBalance[]> => _loadBalancesFor(avatar);
 
   const _handleEvent = async (
     event: CirclesEvent,
     currentData: TokenBalance[]
   ): Promise<TokenBalance[]> => {
     if (!refreshOnEvents.has(event.$event)) return currentData;
-    try {
-      // Use new SDK balances.getTokenBalances method
-      if (
-        !avatar.balances ||
-        typeof avatar.balances.getTokenBalances !== 'function'
-      ) {
-        throw new Error('No balances.getTokenBalances method available');
-      }
-
-      const balances = await avatar.balances.getTokenBalances() as unknown as TokenBalance[];
-      void writeBalances(scopeId, balances as any[]);
-      return balances;
-    } catch (e: unknown) {
-      const errorMessage = e instanceof Error ? e.message : String(e);
-      if (errorMessage.includes('No balances found')) {
-        return [];
-      }
-      console.error('[Balances] Error refreshing balances:', errorMessage);
-      throw new Error(`Failed to refresh balances: ${errorMessage}`);
-    }
+    return _loadBalancesFor(avatar);
   };
 
   const _handleNextPage = async (currentData: TokenBalance[]) => {
@@ -124,6 +107,17 @@ export const initBalanceStore = (avatar: Avatar) => {
   );
 
   currentStoreUnsubscribe = store.subscribe(_circlesBalances.set);
+};
+
+// Re-fetch balances and patch the store in place. Does not rebuild the event
+// subscription, so no empty-state flash for subscribers (e.g. totalCirclesBalance).
+// Throws on RPC/network failure so the caller can surface an error instead of
+// silently overwriting visible balances with an empty array.
+export const refreshBalanceStore = async (avatar: Avatar): Promise<void> => {
+  if (!avatar) return;
+  const balances = await _fetchBalancesStrict(avatar);
+  void writeBalances(makeScopeId(avatar.address), balances as any[]);
+  _circlesBalances.update((s) => ({ ...s, data: balances }));
 };
 
 export const circlesBalances = _circlesBalances;
