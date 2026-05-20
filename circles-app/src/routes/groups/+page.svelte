@@ -322,8 +322,18 @@
                                 item={item}
                                 showOptOut={true}
                                 onLeft={async () => {
-                                    membershipsLoadedForAvatar = null;
-                                    await loadMemberships();
+                                    // onLeft fires after the opt-out receipt is back (LeaveGroup
+                                    // uses executeTxConfirmFirst). Remove the row immediately so
+                                    // the UI reflects the confirmed on-chain state, then refetch
+                                    // a few seconds later to let the indexer catch up.
+                                    const groupKey = item.group.toLowerCase();
+                                    memberships = memberships.filter(
+                                        (m) => m.group.toLowerCase() !== groupKey
+                                    );
+                                    setTimeout(() => {
+                                        membershipsLoadedForAvatar = null;
+                                        void loadMemberships();
+                                    }, 5000);
                                 }}
                             />
                         {/each}
