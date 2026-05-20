@@ -14,6 +14,7 @@
 
   type RowContext = {
     selectedSet: Readable<Set<string>>;
+    canRemove?: Readable<boolean>;
     onToggleSelected: (address: Address, checked: boolean) => void;
     onUntrust: (address: Address) => void;
     onActivateRow: (address: Address) => void;
@@ -28,10 +29,15 @@
 
   const ctx = getContext<RowContext>('groupMemberRowActions');
   const selectedSet = ctx?.selectedSet;
+  const canRemoveStore = ctx?.canRemove;
   const selectedKey = $derived(item.address.toLowerCase());
   const isSelected = $derived(
     selectedSet ? ($selectedSet?.has(selectedKey) ?? false) : false
   );
+  // Hide trash + checkbox when the contract has no owner-side remove
+  // (simple/ScoreGroup shapes). Defaults to `true` if the context omitted
+  // canRemove so legacy consumers behave unchanged.
+  const canRemove = $derived(canRemoveStore ? ($canRemoveStore ?? false) : true);
 
   function typeLabel(t?: string): string {
     if (t === 'CrcV2_RegisterHuman') return 'Human';
@@ -74,26 +80,28 @@
       />
     </div>
     {#snippet trailing()}
-      <div class="flex items-center gap-2">
-        <button
-          type="button"
-          class="btn btn-ghost btn-xs btn-square text-error/80 hover:text-error"
-          aria-label="Untrust"
-          title="Untrust"
-          onclick={(event) => {
-            event.stopPropagation();
-            ctx?.onUntrust(item.address);
-          }}
-        >
-          <img src="/trash.svg" alt="" class="h-3.5 w-3.5" aria-hidden="true" />
-        </button>
-        <input
-          type="checkbox"
-          class="checkbox checkbox-sm"
-          checked={isSelected}
-          onchange={onCheckboxChange}
-        />
-      </div>
+      {#if canRemove}
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            class="btn btn-ghost btn-xs btn-square text-error/80 hover:text-error"
+            aria-label="Untrust"
+            title="Untrust"
+            onclick={(event) => {
+              event.stopPropagation();
+              ctx?.onUntrust(item.address);
+            }}
+          >
+            <img src="/trash.svg" alt="" class="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
+          <input
+            type="checkbox"
+            class="checkbox checkbox-sm"
+            checked={isSelected}
+            onchange={onCheckboxChange}
+          />
+        </div>
+      {/if}
     {/snippet}
   </RowFrame>
 </div>

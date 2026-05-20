@@ -11,6 +11,8 @@
   import { openAddTrustFlow } from '$lib/areas/trust/flows/addTrust/openAddTrustFlow';
   import { createAvatarDataSource } from '$lib/shared/data/circles/avatarDataSource';
   import { createGroupDataSource } from '$lib/shared/data/circles/groupDataSource';
+  import { removeGroupMembers } from '$lib/shared/utils/trustActions';
+  import { probeGroupCapabilities } from '$lib/areas/groups/utils/groupKind';
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import SearchablePaginatedList from '$lib/shared/ui/lists/SearchablePaginatedList.svelte';
   import AvatarRowPlaceholder from '$lib/shared/ui/lists/placeholders/AvatarRowPlaceholder.svelte';
@@ -34,6 +36,18 @@
   let groupName: string | null = $state(null);
   let totalMemberCount: number | undefined = $state(undefined);
   let listScopeEl: HTMLDivElement | null = $state(null);
+
+  // Whether the on-chain contract for this group supports owner-initiated
+  // member removal. `simple` (ScoreGroup) shapes don't — for those, members
+  // leave via optOut() only and the remove UI must be hidden. Backed by a
+  // store so the row context can subscribe reactively (rows mount before
+  // the probe resolves).
+  const ownerRemoveSupportedStore = writable<boolean>(false);
+  let ownerRemoveSupported: boolean = $state(false);
+  ownerRemoveSupportedStore.subscribe((v) => {
+    ownerRemoveSupported = v;
+  });
+  let capsLoaded: boolean = $state(false);
 
   // Selection state lives outside the virtualized rows so toggling a checkbox
   // doesn't rebuild item identities (which would cost re-render on every row).
@@ -235,6 +249,25 @@
         console.warn('[GroupMembersManager] member-count fetch failed', e);
       });
 
+    // Probe the group contract for trust capabilities. Three on-chain shapes
+    // exist (BaseGroup-with-conditions, CMG-with-expiry, simple ScoreGroup);
+    // the indexer reports them all as CrcV2_RegisterGroup so the SDK can't
+    // tell them apart. `simple` shapes have no owner-side remove — UI hides
+    // remove actions for those.
+    capsLoaded = false;
+    ownerRemoveSupportedStore.set(false);
+    void probeGroupCapabilities(group as string)
+      .then((caps) => {
+        if (generation === loadGeneration) {
+          ownerRemoveSupportedStore.set(caps.ownerRemove);
+          capsLoaded = true;
+        }
+      })
+      .catch((e) => {
+        console.warn('[GroupMembersManager] capabilities probe failed', e);
+        if (generation === loadGeneration) capsLoaded = true;
+      });
+
     void loadNextPage();
   });
 
@@ -272,8 +305,7 @@
   }
 
   async function untrustOne(address: Address): Promise<void> {
-    const sdk = get(circles);
-    if (!sdk) return;
+    if (!ownerRemoveSupported) return;
 
     // Snapshot identity at call time. Group switches can happen mid-tx;
     // without this, the optimistic mutation would land on the new group's
@@ -281,15 +313,11 @@
     const snapGroup = group;
     const snapGeneration = loadGeneration;
 
-    // Run getAvatar inside `runTask` so the wallet/RPC error surfaces through
-    // the standard task popup instead of producing an unhandled rejection.
-    await runTask({
-      name: `${shortenAddress(snapGroup)} untrusts ${shortenAddress(address)} ...`,
-      promise: (async () => {
-        const groupAvatar = await sdk.getAvatar(snapGroup, false);
-        return groupAvatar.trust.remove([address]);
-      })(),
-    });
+    // removeGroupMembers selects the right calldata (trustBatchWithConditions
+    // or trustBatch+expiry) based on the group contract shape, with
+    // expiry=0. The SDK's `trust.remove` builds `trust(address, uint96)`
+    // which doesn't exist on CMG variants — that was the prior revert.
+    await removeGroupMembers(snapGroup, [address]);
 
     if (loadGeneration !== snapGeneration || group !== snapGroup) return;
 
@@ -306,9 +334,9 @@
   }
 
   async function removeSelected(): Promise<void> {
-    const sdk = get(circles);
+    if (!ownerRemoveSupported) return;
     const selectedKeys = Array.from(get(selectedSetStore));
-    if (!sdk || selectedKeys.length === 0) return;
+    if (selectedKeys.length === 0) return;
 
     // Resolve original-cased addresses from the loaded items so we don't pass
     // lowercased keys (with potentially broken checksums) into the SDK call.
@@ -324,13 +352,7 @@
     const snapGroup = group;
     const snapGeneration = loadGeneration;
 
-    await runTask({
-      name: `Removing ${addresses.length} trusted avatar${addresses.length === 1 ? '' : 's'} from ${shortenAddress(snapGroup)} ...`,
-      promise: (async () => {
-        const groupAvatar = await sdk.getAvatar(snapGroup, false);
-        return groupAvatar.trust.remove(addresses);
-      })(),
-    });
+    await removeGroupMembers(snapGroup, addresses);
 
     if (loadGeneration !== snapGeneration || group !== snapGroup) return;
 
@@ -378,6 +400,7 @@
 
   setContext('groupMemberRowActions', {
     selectedSet: { subscribe: selectedSetStore.subscribe } as Readable<Set<string>>,
+    canRemove: { subscribe: ownerRemoveSupportedStore.subscribe } as Readable<boolean>,
     onToggleSelected: toggleSelected,
     onUntrust: (address: Address) => void untrustOne(address),
     onActivateRow: activateRow,
@@ -398,7 +421,7 @@
       <div class="text-xs opacity-70">Manage trusted avatars for this group.</div>
     </div>
     <div class="flex items-center gap-2">
-      {#if selectedCount > 0}
+      {#if ownerRemoveSupported && selectedCount > 0}
         <ActionButton action={removeSelected}>
           Remove {selectedCount} member{selectedCount === 1 ? '' : 's'}
         </ActionButton>
@@ -412,6 +435,12 @@
   <div class="text-xs opacity-70">
     {totalMemberCount ?? $itemsReadable.length} trusted avatar{(totalMemberCount ?? $itemsReadable.length) === 1 ? '' : 's'}
   </div>
+
+  {#if capsLoaded && !ownerRemoveSupported}
+    <div class="text-xs opacity-70 rounded border border-base-300/60 bg-base-200/40 px-2 py-1">
+      This group's contract has no owner-side remove. Members leave via Opt-out from their Memberships page.
+    </div>
+  {/if}
 
   <div role="group" aria-label="Search trusted avatars">
     <SearchablePaginatedList
