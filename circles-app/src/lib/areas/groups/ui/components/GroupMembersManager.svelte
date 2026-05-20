@@ -73,28 +73,42 @@
     if (addrs.length === 0) return;
     const sdk = get(circles);
     if (!sdk) return;
+
+    // Split the two fetches so a failure in one doesn't drop the other half —
+    // rows then still render whatever data we did get instead of stuck on
+    // "Unknown" type and the address fallback.
+    let profiles: Map<ProfileAddress, any> = new Map();
+    let typeMap: Map<string, string> = new Map();
+
     try {
-      const [profiles, infos] = await Promise.all([
-        getProfilesCoreBatch(addrs.map((a) => a.toLowerCase()) as ProfileAddress[]),
-        createAvatarDataSource(sdk).getAvatarInfoBatch(addrs),
-      ]);
-      if (generation !== loadGeneration) return;
-      const typeMap = new Map<string, string>();
+      profiles = await getProfilesCoreBatch(
+        addrs.map((a) => a.toLowerCase()) as ProfileAddress[]
+      );
+    } catch (e) {
+      console.warn('[GroupMembersManager] profile prefetch failed', e);
+    }
+
+    try {
+      const infos = await createAvatarDataSource(sdk).getAvatarInfoBatch(addrs);
       for (const info of infos) {
         if (info) typeMap.set(String(info.avatar).toLowerCase(), info.type);
       }
-      items.update((current) =>
-        current.map((it) => {
-          const key = it.address.toLowerCase();
-          const nextProfile = profiles.get(key as ProfileAddress) ?? it.profile;
-          const nextType = typeMap.get(key) ?? it.avatarType;
-          if (nextProfile === it.profile && nextType === it.avatarType) return it;
-          return { ...it, profile: nextProfile, avatarType: nextType };
-        })
-      );
     } catch (e) {
-      console.debug('[GroupMembersManager] enrich failed', e);
+      console.warn('[GroupMembersManager] avatar-info prefetch failed', e);
     }
+
+    if (generation !== loadGeneration) return;
+    if (profiles.size === 0 && typeMap.size === 0) return;
+
+    items.update((current) =>
+      current.map((it) => {
+        const key = it.address.toLowerCase();
+        const nextProfile = profiles.get(key as ProfileAddress) ?? it.profile;
+        const nextType = typeMap.get(key) ?? it.avatarType;
+        if (nextProfile === it.profile && nextType === it.avatarType) return it;
+        return { ...it, profile: nextProfile, avatarType: nextType };
+      })
+    );
   }
 
   async function loadNextPage(): Promise<boolean> {
@@ -147,11 +161,16 @@
         return ended;
       } finally {
         if (generation === loadGeneration) loading = false;
-        nextInflight = null;
       }
     })();
 
     nextInflight = promise;
+    // Only release the single-flight slot if it still points at our promise.
+    // After a group switch, a newer page-1 fetch may have replaced this slot;
+    // clearing it unconditionally would let the next caller race a duplicate.
+    void promise.finally(() => {
+      if (nextInflight === promise) nextInflight = null;
+    });
     return promise;
   }
 
@@ -187,7 +206,9 @@
           totalMemberCount = n;
         }
       })
-      .catch(() => {});
+      .catch((e) => {
+        console.warn('[GroupMembersManager] member-count fetch failed', e);
+      });
 
     void loadNextPage();
   });
@@ -229,14 +250,24 @@
     const sdk = get(circles);
     if (!sdk) return;
 
-    const groupAvatar = await sdk.getAvatar(group, false);
+    // Snapshot identity at call time. Group switches can happen mid-tx;
+    // without this, the optimistic mutation would land on the new group's
+    // local state.
+    const snapGroup = group;
+    const snapGeneration = loadGeneration;
+
+    // Run getAvatar inside `runTask` so the wallet/RPC error surfaces through
+    // the standard task popup instead of producing an unhandled rejection.
     await runTask({
-      name: `${shortenAddress(group)} untrusts ${shortenAddress(address)} ...`,
-      promise: groupAvatar.trust.remove([address]),
+      name: `${shortenAddress(snapGroup)} untrusts ${shortenAddress(address)} ...`,
+      promise: (async () => {
+        const groupAvatar = await sdk.getAvatar(snapGroup, false);
+        return groupAvatar.trust.remove([address]);
+      })(),
     });
 
-    // Optimistic remove + clear selection; indexer reconciliation happens on
-    // next scroll / refresh.
+    if (loadGeneration !== snapGeneration || group !== snapGroup) return;
+
     const key = address.toLowerCase();
     items.update((arr) => arr.filter((it) => it.address.toLowerCase() !== key));
     selectedSetStore.update((prev) => {
@@ -251,16 +282,34 @@
 
   async function removeSelected(): Promise<void> {
     const sdk = get(circles);
-    const selected = Array.from(get(selectedSetStore));
-    if (!sdk || selected.length === 0) return;
+    const selectedKeys = Array.from(get(selectedSetStore));
+    if (!sdk || selectedKeys.length === 0) return;
 
-    const groupAvatar = await sdk.getAvatar(group, false);
+    // Resolve original-cased addresses from the loaded items so we don't pass
+    // lowercased keys (with potentially broken checksums) into the SDK call.
+    const snapshot = get(items);
+    const addrByKey = new Map(
+      snapshot.map((it) => [it.address.toLowerCase(), it.address as Address])
+    );
+    const addresses = selectedKeys
+      .map((k) => addrByKey.get(k))
+      .filter((a): a is Address => Boolean(a));
+    if (addresses.length === 0) return;
+
+    const snapGroup = group;
+    const snapGeneration = loadGeneration;
+
     await runTask({
-      name: `Removing ${selected.length} trusted avatar${selected.length === 1 ? '' : 's'} from ${shortenAddress(group)} ...`,
-      promise: groupAvatar.trust.remove(selected as Address[]),
+      name: `Removing ${addresses.length} trusted avatar${addresses.length === 1 ? '' : 's'} from ${shortenAddress(snapGroup)} ...`,
+      promise: (async () => {
+        const groupAvatar = await sdk.getAvatar(snapGroup, false);
+        return groupAvatar.trust.remove(addresses);
+      })(),
     });
 
-    const removedSet = new Set(selected.map((a) => a.toLowerCase()));
+    if (loadGeneration !== snapGeneration || group !== snapGroup) return;
+
+    const removedSet = new Set(selectedKeys);
     items.update((arr) => arr.filter((it) => !removedSet.has(it.address.toLowerCase())));
     selectedSetStore.set(new Set());
     if (typeof totalMemberCount === 'number') {
