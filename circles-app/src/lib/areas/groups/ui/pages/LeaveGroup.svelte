@@ -1,6 +1,6 @@
 <script lang="ts">
     import { wallet } from '$lib/shared/state/wallet.svelte';
-    import { executeTxSubmitFirst } from '$lib/shared/utils/txExecution';
+    import { executeTxConfirmFirst } from '$lib/shared/utils/txExecution';
     import { sendRunnerTransactionAndWait } from '$lib/shared/utils/tx';
     import { popupControls } from '$lib/shared/state/popup';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
@@ -8,6 +8,8 @@
 
     interface Props {
         group: `0x${string}`;
+        // Fires only after the opt-out tx receipt is back. The parent typically
+        // removes the group from the visible list here (confirmed-then-update UX).
         onLeft?: () => void | Promise<void>;
     }
 
@@ -20,16 +22,14 @@
         const runner: any = $wallet;
         if (!runner) throw new Error('Wallet is not connected.');
 
-        void executeTxSubmitFirst({
+        await executeTxConfirmFirst({
             name: `Leaving group ${shortenAddress(group)} ...`,
-            submit: async () => {
-                await sendRunnerTransactionAndWait(runner, {
-                    to: group,
-                    value: 0n,
-                    data: OPT_OUT_CALLDATA,
-                }, { label: 'Leave group' });
-            },
-            onSubmitted: async () => {
+            submit: () => sendRunnerTransactionAndWait(runner, {
+                to: group,
+                value: 0n,
+                data: OPT_OUT_CALLDATA,
+            }, { label: 'Leave group' }),
+            onSuccess: async () => {
                 popupControls.close();
                 await onLeft?.();
             },
