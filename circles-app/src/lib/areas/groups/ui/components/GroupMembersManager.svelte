@@ -1,242 +1,231 @@
 <script lang="ts">
   import type { Address } from '@aboutcircles/sdk-types';
   import { circles } from '$lib/shared/state/circles';
-  import { get, writable } from 'svelte/store';
+  import { get, writable, type Readable, derived } from 'svelte/store';
+  import { setContext, onDestroy } from 'svelte';
   import { runTask } from '$lib/shared/utils/tasks';
   import { shortenAddress } from '$lib/shared/utils/shared';
-  import { getProfile } from '$lib/shared/utils/profile';
-  import ListShell from '$lib/shared/ui/lists/ListShell.svelte';
-  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
-  import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-  import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
-  import { createSearchablePaginatedList } from '$lib/shared/state/searchablePaginatedList';
+  import { getProfile, getProfilesCoreBatch } from '$lib/shared/utils/profile';
+  import type { ProfileAddress } from '$lib/shared/model/profile';
   import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
   import { openAddTrustFlow } from '$lib/areas/trust/flows/addTrust/openAddTrustFlow';
   import { createAvatarDataSource } from '$lib/shared/data/circles/avatarDataSource';
   import { createGroupDataSource } from '$lib/shared/data/circles/groupDataSource';
+  import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
+  import SearchablePaginatedList from '$lib/shared/ui/lists/SearchablePaginatedList.svelte';
+  import AvatarRowPlaceholder from '$lib/shared/ui/lists/placeholders/AvatarRowPlaceholder.svelte';
+  import GroupMemberRow, {
+    type GroupMemberItem,
+  } from '$lib/areas/groups/ui/components/GroupMemberRow.svelte';
 
   interface Props {
     group: Address;
   }
 
   let { group }: Props = $props();
+
+  // Match the transaction-history and contacts page sizes so the first batch of
+  // members renders fast; remaining pages are lazy-loaded on scroll instead of
+  // draining the entire member set on mount.
+  const PAGE_SIZE = 25;
+
   let loading: boolean = $state(false);
   let error: string | null = $state(null);
-  let trusted: Address[] = $state([]);
-  let trustedAvatarTypes: Record<string, string | undefined> = $state({});
-  let selectedSet: Set<Address> = $state(new Set<Address>());
   let groupName: string | null = $state(null);
   let totalMemberCount: number | undefined = $state(undefined);
-  let searchInputEl: HTMLInputElement | null = $state(null);
-  let trustedListEl: HTMLDivElement | null = $state(null);
-  const trustedStore = writable<Address[]>([]);
+  let listScopeEl: HTMLDivElement | null = $state(null);
 
-  const searchable = createSearchablePaginatedList(trustedStore, {
-    pageSize: 50,
-    addressOf: (addr) => addr,
+  // Selection state lives outside the virtualized rows so toggling a checkbox
+  // doesn't rebuild item identities (which would cost re-render on every row).
+  const selectedSetStore = writable<Set<string>>(new Set());
+  let selectedCount = $state(0);
+  selectedSetStore.subscribe((s) => {
+    selectedCount = s.size;
   });
-  const { searchQuery, filteredItems } = searchable;
 
-  const selectedMembers = $derived(Array.from(selectedSet));
-  const selectedCount = $derived(selectedMembers.length);
+  // The list backing store. Items always include an `address`; `profile` and
+  // `avatarType` are filled in by the background enrich pass.
+  const items = writable<GroupMemberItem[]>([]);
+
+  // Cursor-based pagination state; reset whenever the group changes.
+  let cursor: string | null = $state(null);
+  let ended: boolean = $state(false);
+  let loadGeneration = 0;
+  let nextInflight: Promise<boolean> | null = null;
+
   const groupDisplayName = $derived(
     ((groupName ?? '') as string).length > 0
       ? ((groupName ?? '') as string)
       : shortenAddress(group)
   );
 
-  function avatarTypeToReadable(type?: string): string {
-    if (type === 'CrcV2_RegisterHuman') return 'Human';
-    if (type === 'CrcV2_RegisterOrganization') return 'Organization';
-    if (type === 'CrcV2_RegisterGroup') return 'Group';
-    return 'Unknown';
+  function resetState(): void {
+    items.set([]);
+    selectedSetStore.set(new Set());
+    cursor = null;
+    ended = false;
+    totalMemberCount = undefined;
+    error = null;
+    nextInflight = null;
+  }
+
+  async function enrich(addrs: Address[], generation: number): Promise<void> {
+    if (addrs.length === 0) return;
+    const sdk = get(circles);
+    if (!sdk) return;
+    try {
+      const [profiles, infos] = await Promise.all([
+        getProfilesCoreBatch(addrs.map((a) => a.toLowerCase()) as ProfileAddress[]),
+        createAvatarDataSource(sdk).getAvatarInfoBatch(addrs),
+      ]);
+      if (generation !== loadGeneration) return;
+      const typeMap = new Map<string, string>();
+      for (const info of infos) {
+        if (info) typeMap.set(String(info.avatar).toLowerCase(), info.type);
+      }
+      items.update((current) =>
+        current.map((it) => {
+          const key = it.address.toLowerCase();
+          const nextProfile = profiles.get(key as ProfileAddress) ?? it.profile;
+          const nextType = typeMap.get(key) ?? it.avatarType;
+          if (nextProfile === it.profile && nextType === it.avatarType) return it;
+          return { ...it, profile: nextProfile, avatarType: nextType };
+        })
+      );
+    } catch (e) {
+      console.debug('[GroupMembersManager] enrich failed', e);
+    }
+  }
+
+  async function loadNextPage(): Promise<boolean> {
+    if (ended) return true;
+    if (nextInflight) return nextInflight;
+    const sdk = get(circles);
+    if (!sdk || !group) return ended;
+
+    const generation = loadGeneration;
+    const promise = (async () => {
+      loading = true;
+      try {
+        const ds = createGroupDataSource(sdk);
+        const page = await ds.getGroupMembersPage(group, cursor, PAGE_SIZE);
+        if (generation !== loadGeneration) return ended;
+
+        if (page.results.length === 0) {
+          ended = true;
+          return true;
+        }
+
+        const groupKey = group.toLowerCase();
+        const current = get(items);
+        const seen = new Set(current.map((it) => it.address.toLowerCase()));
+        const newAddrs: Address[] = [];
+        const newItems: GroupMemberItem[] = [];
+        for (const row of page.results) {
+          const addr = row.member as Address;
+          const key = addr.toLowerCase();
+          if (key === groupKey || seen.has(key)) continue;
+          seen.add(key);
+          newAddrs.push(addr);
+          newItems.push({ address: addr });
+        }
+
+        if (newItems.length > 0) {
+          items.update((arr) => arr.concat(newItems));
+          void enrich(newAddrs, generation);
+        }
+
+        cursor = page.nextCursor;
+        if (!page.hasMore || cursor === null) {
+          ended = true;
+        }
+        return ended;
+      } catch (e) {
+        if (generation === loadGeneration) {
+          error = e instanceof Error ? e.message : String(e);
+        }
+        return ended;
+      } finally {
+        if (generation === loadGeneration) loading = false;
+        nextInflight = null;
+      }
+    })();
+
+    nextInflight = promise;
+    return promise;
   }
 
   $effect(() => {
     const sdk = $circles;
-    let cancelled = false;
-    if (!group) {
+    if (!group || !sdk) {
+      resetState();
       groupName = null;
       return;
     }
 
-    if (!sdk) {
-      // Retry automatically once SDK becomes available.
-      return;
-    }
+    // Bump generation so any in-flight enrich/page callbacks become no-ops.
+    ++loadGeneration;
+    const generation = loadGeneration;
+    resetState();
 
     void getProfile(group as `0x${string}`)
       .then((profile) => {
-        if (cancelled) return;
+        if (generation !== loadGeneration) return;
         groupName = profile?.name ?? null;
       })
       .catch(() => {
-        if (cancelled) return;
-        groupName = null;
+        if (generation === loadGeneration) groupName = null;
       });
 
-    return () => {
-      cancelled = true;
-    };
+    // Pre-fetch authoritative member count so VirtualList can pre-allocate the
+    // full scroll height and the header doesn't tick up as pages arrive.
+    const ds = createGroupDataSource(sdk);
+    void ds
+      .getGroupMemberCount(group)
+      .then((n) => {
+        if (generation === loadGeneration && typeof n === 'number') {
+          totalMemberCount = n;
+        }
+      })
+      .catch(() => {});
+
+    void loadNextPage();
   });
 
-  // Match the transaction-history page size so the first batch of members
-  // renders quickly; remaining pages fill in the background.
-  const GROUP_MEMBERS_PAGE_SIZE = 25;
-  let loadGeneration = 0;
-
-  async function loadTrusted() {
-    const sdk = get(circles);
-    if (!sdk) {
-      trusted = [];
-      trustedAvatarTypes = {};
-      return;
-    }
-
-    const generation = ++loadGeneration;
-    loading = true;
-    error = null;
-    trusted = [];
-    trustedAvatarTypes = {};
-    trustedStore.set([]);
-    totalMemberCount = undefined;
-
-    try {
-      const groupDataSource = createGroupDataSource(sdk);
-      const avatarDataSource = createAvatarDataSource(sdk);
-
-      // Pre-fetch authoritative member count so the header is stable from the
-      // first paint rather than ticking up as pages arrive.
-      void groupDataSource
-        .getGroupMemberCount(group)
-        .then((n) => {
-          if (generation === loadGeneration && typeof n === 'number') {
-            totalMemberCount = n;
-          }
-        })
-        .catch(() => {});
-
-      const seen = new Set<string>();
-      let cursor: string | null = null;
-      let first = true;
-
-      do {
-        const page = await groupDataSource.getGroupMembersPage(
-          group,
-          cursor,
-          GROUP_MEMBERS_PAGE_SIZE
-        );
-        if (generation !== loadGeneration) return;
-
-        // Stop if the server returns no progress (defends against a bug
-        // returning `results:[], hasMore:true` which would loop forever).
-        if (page.results.length === 0) break;
-
-        const newAddrs: Address[] = [];
-        for (const row of page.results) {
-          const addr = row.member as Address;
-          const key = addr.toLowerCase();
-          if (key === group.toLowerCase()) continue;
-          if (seen.has(key)) continue;
-          seen.add(key);
-          newAddrs.push(addr);
-        }
-
-        if (newAddrs.length > 0) {
-          trusted = trusted.concat(newAddrs);
-          trustedStore.set(trusted);
-
-          // Enrich this page's addresses with avatar types in the background;
-          // rows render immediately and the type label fills in when ready.
-          void (async () => {
-            try {
-              const infos = await avatarDataSource.getAvatarInfoBatch(newAddrs);
-              if (generation !== loadGeneration) return;
-              const next: Record<string, string | undefined> = { ...trustedAvatarTypes };
-              for (const info of infos) {
-                if (info) next[String(info.avatar).toLowerCase()] = info.type;
-              }
-              trustedAvatarTypes = next;
-            } catch (e) {
-              console.debug('[GroupMembersManager] avatar info batch failed', e);
-            }
-          })();
-        }
-
-        if (first) {
-          loading = false;
-          first = false;
-        }
-        cursor = page.nextCursor;
-      } while (cursor);
-    } catch (e) {
-      if (generation !== loadGeneration) return;
-      error = e instanceof Error ? e.message : String(e);
-      trusted = [];
-      trustedAvatarTypes = {};
-      trustedStore.set([]);
-    } finally {
-      if (generation === loadGeneration) loading = false;
-    }
+  function focusSearchInput(): void {
+    const scope = listScopeEl ?? document;
+    const input = scope.querySelector<HTMLInputElement>('[data-group-members-search-input]');
+    input?.focus();
   }
 
-  $effect(() => {
-    const sdk = $circles;
-
-    if (!group || !sdk) {
-      trusted = [];
-      trustedAvatarTypes = {};
-      trustedStore.set([]);
-      return;
-    }
-
-    void loadTrusted();
-  });
-
-  function toggleSelected(address: Address, checked: boolean) {
-    const next = new Set(selectedSet);
-    if (checked) {
-      next.add(address);
-    } else {
-      next.delete(address);
-    }
-    selectedSet = next;
-  }
-
-  function onToggleSelectedFromCheckbox(address: Address, event: Event) {
-    const el = event.currentTarget as HTMLInputElement | null;
-    toggleSelected(address, Boolean(el?.checked));
-  }
-
-  function focusSearchInput() {
-    searchInputEl?.focus();
-  }
-
-  const trustedListNavigator = createKeyboardListNavigator({
-    getRows: () => Array.from(trustedListEl?.querySelectorAll<HTMLElement>('[data-trusted-row]') ?? []),
+  const listNavigator = createKeyboardListNavigator({
+    getRows: () =>
+      Array.from(
+        (listScopeEl ?? document).querySelectorAll<HTMLElement>('[data-trusted-row]')
+      ),
     focusInput: focusSearchInput,
     onActivateRow: (row) => {
       const address = row.dataset.trustedAddress as Address | undefined;
       if (!address) return;
-      toggleSelected(address, !selectedSet.has(address));
+      toggleSelected(address, !get(selectedSetStore).has(address.toLowerCase()));
     },
   });
 
-  function onTrustedRowClick(event: MouseEvent) {
-    trustedListNavigator.onRowClick(event);
+  function toggleSelected(address: Address, checked: boolean): void {
+    selectedSetStore.update((prev) => {
+      const next = new Set(prev);
+      const key = address.toLowerCase();
+      if (checked) next.add(key);
+      else next.delete(key);
+      return next;
+    });
   }
 
-  async function getDisplayName(address: Address): Promise<string> {
-    try {
-      const profile = await getProfile(address as `0x${string}`);
-      const name = profile?.name?.trim();
-      return name && name.length > 0 ? name : shortenAddress(address);
-    } catch {
-      return shortenAddress(address);
-    }
+  function activateRow(address: Address): void {
+    toggleSelected(address, !get(selectedSetStore).has(address.toLowerCase()));
   }
 
-  async function untrustOne(address: Address) {
+  async function untrustOne(address: Address): Promise<void> {
     const sdk = get(circles);
     if (!sdk) return;
 
@@ -246,42 +235,72 @@
       promise: groupAvatar.trust.remove([address]),
     });
 
-    const next = new Set(selectedSet);
-    next.delete(address);
-    selectedSet = next;
-    await loadTrusted();
+    // Optimistic remove + clear selection; indexer reconciliation happens on
+    // next scroll / refresh.
+    const key = address.toLowerCase();
+    items.update((arr) => arr.filter((it) => it.address.toLowerCase() !== key));
+    selectedSetStore.update((prev) => {
+      const next = new Set(prev);
+      next.delete(key);
+      return next;
+    });
+    if (typeof totalMemberCount === 'number') {
+      totalMemberCount = Math.max(0, totalMemberCount - 1);
+    }
   }
 
-  function openAddPopup() {
+  async function removeSelected(): Promise<void> {
+    const sdk = get(circles);
+    const selected = Array.from(get(selectedSetStore));
+    if (!sdk || selected.length === 0) return;
+
+    const groupAvatar = await sdk.getAvatar(group, false);
+    await runTask({
+      name: `Removing ${selected.length} trusted avatar${selected.length === 1 ? '' : 's'} from ${shortenAddress(group)} ...`,
+      promise: groupAvatar.trust.remove(selected as Address[]),
+    });
+
+    const removedSet = new Set(selected.map((a) => a.toLowerCase()));
+    items.update((arr) => arr.filter((it) => !removedSet.has(it.address.toLowerCase())));
+    selectedSetStore.set(new Set());
+    if (typeof totalMemberCount === 'number') {
+      totalMemberCount = Math.max(0, totalMemberCount - removedSet.size);
+    }
+  }
+
+  function openAddPopup(): void {
     openAddTrustFlow({
       context: {
         actorType: 'group',
         actorAddress: group,
         selectedTrustees: [],
       },
-      onCompleted: async () => {
-        await loadTrusted();
+      onCompleted: () => {
+        // After a successful add we don't yet know which addresses landed;
+        // reset and reload from page 1 so new members appear at the top.
+        ++loadGeneration;
+        resetState();
+        void loadNextPage();
       },
     });
   }
 
-  async function removeSelected() {
-    const sdk = get(circles);
-    if (!sdk || selectedMembers.length === 0) return;
+  setContext('groupMemberRowActions', {
+    selectedSet: { subscribe: selectedSetStore.subscribe } as Readable<Set<string>>,
+    onToggleSelected: toggleSelected,
+    onUntrust: (address: Address) => void untrustOne(address),
+    onActivateRow: activateRow,
+    onRowKeydown: listNavigator.onRowKeydown,
+  });
 
-    // No event subscription needed for one-off mutating action.
-    const groupAvatar = await sdk.getAvatar(group, false);
-    await runTask({
-      name: `Removing ${selectedMembers.length} trusted avatar${selectedMembers.length === 1 ? '' : 's'} from ${shortenAddress(group)} ...`,
-      promise: groupAvatar.trust.remove(selectedMembers),
-    });
+  const itemsReadable = derived(items, ($it) => $it);
 
-    selectedSet = new Set<Address>();
-    await loadTrusted();
-  }
+  onDestroy(() => {
+    ++loadGeneration;
+  });
 </script>
 
-<div class="space-y-3">
+<div class="space-y-3" bind:this={listScopeEl}>
   <div class="flex items-center justify-between">
     <div>
       <div class="text-sm font-semibold">{groupDisplayName} members</div>
@@ -299,71 +318,27 @@
     </div>
   </div>
 
-  <div class="text-xs opacity-70">{totalMemberCount ?? trusted.length} trusted avatar{(totalMemberCount ?? trusted.length) === 1 ? '' : 's'}</div>
+  <div class="text-xs opacity-70">
+    {totalMemberCount ?? $itemsReadable.length} trusted avatar{(totalMemberCount ?? $itemsReadable.length) === 1 ? '' : 's'}
+  </div>
 
   <div role="group" aria-label="Search trusted avatars">
-    <ListShell
-      query={searchQuery}
-      searchPlaceholder="Search by address or name"
-      bind:inputEl={searchInputEl}
-      onInputKeydown={trustedListNavigator.onInputArrowDown}
+    <SearchablePaginatedList
+      items={itemsReadable}
+      row={GroupMemberRow}
+      getKey={(item: GroupMemberItem) => String(item.address)}
+      addressOf={(item: GroupMemberItem) => String(item.address)}
+      placeholderRow={AvatarRowPlaceholder}
+      inputDataAttribute="data-group-members-search-input"
       {loading}
       {error}
-      isEmpty={trusted.length === 0}
-      isNoMatches={trusted.length > 0 && $filteredItems.length === 0}
+      next={loadNextPage}
+      {ended}
+      rowHeight={64}
+      pageSize={PAGE_SIZE}
+      totalKnownCount={totalMemberCount}
       emptyLabel="No trusted avatars"
       noMatchesLabel="No matches"
-      wrapInListContainer={false}
-    >
-      <div bind:this={trustedListEl} class="w-full flex flex-col gap-y-1.5" role="list">
-        {#each $filteredItems as address (address)}
-          <div
-            tabindex={0}
-            data-trusted-row
-            data-trusted-address={address}
-            onkeydown={trustedListNavigator.onRowKeydown}
-            onclick={onTrustedRowClick}
-            role="button"
-            aria-pressed={selectedSet.has(address) ? 'true' : 'false'}
-            aria-label={`Trusted member ${address}`}
-            class="rounded-[var(--row-radius)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-          >
-            <RowFrame clickable={false} dense={true} noLeading={true}>
-              <div class="min-w-0">
-                <Avatar
-                  address={address}
-                  view="horizontal"
-                  clickable={true}
-                  bottomInfo={`${avatarTypeToReadable(trustedAvatarTypes[address.toLowerCase()])} • ${address}`}
-                />
-              </div>
-              {#snippet trailing()}
-                <div class="flex items-center gap-2">
-                  <button
-                    type="button"
-                    class="btn btn-ghost btn-xs btn-square text-error/80 hover:text-error"
-                    aria-label="Untrust"
-                    title="Untrust"
-                    onclick={(event) => {
-                      event.stopPropagation();
-                      void untrustOne(address);
-                    }}
-                  >
-                    <img src="/trash.svg" alt="" class="h-3.5 w-3.5" aria-hidden="true" />
-                  </button>
-                  <input
-                    type="checkbox"
-                    class="checkbox checkbox-sm"
-                    checked={selectedSet.has(address)}
-                    onchange={(e) => onToggleSelectedFromCheckbox(address, e)}
-                  />
-                </div>
-              {/snippet}
-            </RowFrame>
-          </div>
-        {/each}
-      </div>
-    </ListShell>
+    />
   </div>
 </div>
-
