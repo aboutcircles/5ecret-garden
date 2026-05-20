@@ -5,7 +5,7 @@
     import OnChainNameSection from '$lib/shared/ui/flow/OnChainNameSection.svelte';
     import Tooltip from '$lib/shared/ui/primitives/Tooltip.svelte';
     import { ProfileFormStep } from '$lib/shared/ui/profile';
-    import { isValidSymbol, isValidOnChainName } from '$lib/shared/utils/isValid';
+    import { isValidSymbol, isValidName } from '$lib/shared/utils/isValid';
     import { openStep } from '$lib/shared/flow';
     import { wallet } from '$lib/shared/state/wallet.svelte';
     import Settings from './2_Settings.svelte';
@@ -16,6 +16,9 @@
     import { resetCreateGroupContext } from './context';
     import type { ProfileEditStepProps } from '$lib/shared/flow';
 
+    // Profile name is IPFS metadata only — no on-chain restriction. The
+    // on-chain name lives in `OnChainNameSection` and is capped at 19 bytes
+    // by BaseGroupFactory; truncation of the derived value is surfaced there.
     const PROFILE_NAME_MAX_LENGTH = 36;
 
     type Props = Partial<ProfileEditStepProps<CreateGroupFlowContext>> & {
@@ -62,7 +65,7 @@
     const showSymbolInvalid: boolean = $derived(symbolHasInput && !symbolValidNow);
     const trimmedOnChainName = $derived(onChainName.trim());
     const onChainNameHasInput = $derived(trimmedOnChainName.length > 0);
-    const onChainNameValid = $derived(onChainNameHasInput && isValidOnChainName(trimmedOnChainName));
+    const onChainNameValid = $derived(onChainNameHasInput && isValidName(trimmedOnChainName));
     const canContinue: boolean = $derived(profileNameValid && symbolValidNow && onChainNameValid);
 
     function next() {
@@ -100,6 +103,7 @@
                 class="input input-sm input-bordered w-full"
                 bind:value={ctx.profile.symbol}
                 placeholder="CRC…"
+                maxlength="16"
                 data-popup-initial-input
             />
             <div class="h-5 text-xs text-error pt-1">{#if showSymbolInvalid}Invalid symbol{/if}</div>
@@ -128,6 +132,7 @@
             sourceValue={displayName}
             placeholder="Group on-chain name…"
             invalid={onChainNameHasInput && !onChainNameValid}
+            maxBytes={19}
         />
     </div>
 

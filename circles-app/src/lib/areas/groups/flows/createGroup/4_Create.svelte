@@ -7,7 +7,7 @@
     import { runTask } from '$lib/shared/utils/tasks';
     import { popupControls } from '$lib/shared/state/popup';
     import ProfilePreviewCard from '$lib/shared/ui/profile/ProfilePreviewCard.svelte';
-    import { isValidSymbol, isValidOnChainName } from '$lib/shared/utils/isValid';
+    import { isValidSymbol, isValidName } from '$lib/shared/utils/isValid';
     import {
         createGroupContext,
         type CreateGroupFlowContext,
@@ -41,7 +41,7 @@
         const profileNameLength: number = (ctx.profile.name ?? '').trim().length;
         const profileNameOk: boolean = profileNameLength > 0 && profileNameLength <= PROFILE_NAME_MAX_LENGTH;
         const symbolOk: boolean = isValidSymbol(ctx.profile.symbol);
-        const onChainOk: boolean = isValidOnChainName(onChainName);
+        const onChainOk: boolean = isValidName(onChainName);
         if (!hasSdk) { throw new Error('SDK not initialized'); }
         if (!hasWallet) { throw new Error('Wallet not connected'); }
         if (!profileNameOk || !symbolOk || !onChainOk) {
