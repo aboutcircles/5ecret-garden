@@ -318,7 +318,14 @@
                 >
                     {#snippet children()}
                         {#each memberships as item (item.group)}
-                            <GroupRowView item={item} />
+                            <GroupRowView
+                                item={item}
+                                showOptOut={true}
+                                onLeft={async () => {
+                                    membershipsLoadedForAvatar = null;
+                                    await loadMemberships();
+                                }}
+                            />
                         {/each}
                     {/snippet}
                 </GroupTabPanel>

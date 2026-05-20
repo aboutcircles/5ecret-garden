@@ -3,7 +3,6 @@
     import {circlesBalances} from '$lib/shared/state/circlesBalances';
     import { circles } from '$lib/shared/state/circles';
     import {derived, writable, type Writable} from 'svelte/store';
-    import { onMount } from 'svelte';
     import BalanceRow from '$lib/areas/wallet/ui/components/BalanceRow.svelte';
     import BalanceRowPlaceholder from '$lib/shared/ui/lists/placeholders/BalanceRowPlaceholder.svelte';
     import type {EventRow, TokenBalance} from '@aboutcircles/sdk-types';
@@ -44,7 +43,6 @@
     // visible (otherwise the list would silently exclude rows).
     const showFilters: Writable<boolean> = writable(initialFilterType !== undefined);
     const FILTER_PANEL_ID: string = 'balance-filters';
-    const BALANCES_HELP_DISMISSED_KEY = 'balances-help-dismissed-v1';
 
     let showBalancesHelp: boolean = $state(false);
     const wrappedStaticPrices = writable<WrappedStaticPriceMap>({});
@@ -61,20 +59,11 @@
 
     function dismissBalancesHelp(): void {
         showBalancesHelp = false;
-        if (browser) {
-            localStorage.setItem(BALANCES_HELP_DISMISSED_KEY, '1');
-        }
     }
 
     function openBalancesHelp(): void {
         showBalancesHelp = true;
     }
-
-    onMount(() => {
-        if (!browser) return;
-        const alreadyDismissed = localStorage.getItem(BALANCES_HELP_DISMISSED_KEY) === '1';
-        showBalancesHelp = !alreadyDismissed;
-    });
 
     let lastWrappedStaticPriceRequestKey = '';
 

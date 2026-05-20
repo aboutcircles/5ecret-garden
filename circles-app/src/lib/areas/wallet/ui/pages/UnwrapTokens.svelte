@@ -1,7 +1,6 @@
 <script lang="ts">
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import PopupActionBar from '$lib/shared/ui/shell/PopupActionBar.svelte';
-  import { circles } from '$lib/shared/state/circles';
   import { ethers } from 'ethers';
   import BalanceRow from '$lib/areas/wallet/ui/components/BalanceRow.svelte';
   import type { TokenBalance } from '@aboutcircles/sdk-types';
@@ -38,32 +37,28 @@
   }
 
   async function unwrap() {
-    const tokenInfo = await $circles?.rpc?.token?.getTokenInfo(asset.tokenAddress);
-    if (!tokenInfo) {
-      return;
-    }
     if (!avatarState.avatar) {
       throw new Error('Avatar not loaded');
     }
-    const avatar = avatarState.avatar;
 
     const amountWei = BigInt(ethers.parseEther(amount.toString()));
 
-    if (tokenInfo.type === 'CrcV2_ERC20WrapperDeployed_Inflationary') {
-      void executeTxSubmitFirst({
-        name: `Unwrap ${roundToDecimals(amount)} static tokens ...`,
-        submit: () => unwrapViaRunner(asset.tokenAddress, amountWei),
-        onSubmitted: () => popupControls.close(),
-      });
-    } else if (tokenInfo.type === 'CrcV2_ERC20WrapperDeployed_Demurraged') {
-      void executeTxSubmitFirst({
-        name: `Unwrap ${roundToDecimals(amount)} tokens ...`,
-        submit: () => unwrapViaRunner(asset.tokenAddress, amountWei),
-        onSubmitted: () => popupControls.close(),
-      });
-    } else {
-      throw new Error('Unsupported token type');
+    // asset.tokenType is the same field the row-action button gates on
+    // (BalanceRowActions.svelte) — by the time we're here it must be a wrapper.
+    const isInflationary =
+      asset.tokenType === 'CrcV2_ERC20WrapperDeployed_Inflationary';
+    const isDemurraged =
+      asset.tokenType === 'CrcV2_ERC20WrapperDeployed_Demurraged';
+
+    if (!isInflationary && !isDemurraged) {
+      throw new Error(`Unsupported token type: ${asset.tokenType ?? 'unknown'}`);
     }
+
+    void executeTxSubmitFirst({
+      name: `Unwrap ${roundToDecimals(amount)} ${isInflationary ? 'static ' : ''}tokens ...`,
+      submit: () => unwrapViaRunner(asset.tokenAddress, amountWei),
+      onSubmitted: () => popupControls.close(),
+    });
   }
 </script>
 

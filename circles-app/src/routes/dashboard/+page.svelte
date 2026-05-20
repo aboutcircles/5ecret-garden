@@ -222,6 +222,7 @@
                 <Lucide icon={LBarChart3} size={20} class="shrink-0" />
                 See breakdown
             </button>
+
         </div>
     {/snippet}
 
