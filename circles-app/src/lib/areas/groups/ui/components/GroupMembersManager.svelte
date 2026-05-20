@@ -249,26 +249,31 @@
         console.warn('[GroupMembersManager] member-count fetch failed', e);
       });
 
-    // Probe the group contract for trust capabilities. Three on-chain shapes
-    // exist (BaseGroup-with-conditions, CMG-with-expiry, simple ScoreGroup);
-    // the indexer reports them all as CrcV2_RegisterGroup so the SDK can't
-    // tell them apart. `simple` shapes have no owner-side remove — UI hides
-    // remove actions for those.
+    void loadNextPage();
+  });
+
+  // Capability probe runs independently of SDK / wallet state — it only needs
+  // RPC access. Keeping it out of the SDK-gated effect means the UI banner
+  // for "owner-remove unsupported" appears immediately on page load, before
+  // the user signs in.
+  let probedForGroup: string = '';
+  $effect(() => {
+    const groupKey = group ? String(group).toLowerCase() : '';
+    if (!groupKey || groupKey === probedForGroup) return;
+    probedForGroup = groupKey;
+
     capsLoaded = false;
     ownerRemoveSupportedStore.set(false);
     void probeGroupCapabilities(group as string)
       .then((caps) => {
-        if (generation === loadGeneration) {
-          ownerRemoveSupportedStore.set(caps.ownerRemove);
-          capsLoaded = true;
-        }
+        if (probedForGroup !== groupKey) return;
+        ownerRemoveSupportedStore.set(caps.ownerRemove);
+        capsLoaded = true;
       })
       .catch((e) => {
         console.warn('[GroupMembersManager] capabilities probe failed', e);
-        if (generation === loadGeneration) capsLoaded = true;
+        if (probedForGroup === groupKey) capsLoaded = true;
       });
-
-    void loadNextPage();
   });
 
   function focusSearchInput(): void {
