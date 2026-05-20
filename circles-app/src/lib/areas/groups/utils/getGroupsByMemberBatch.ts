@@ -3,6 +3,33 @@ import type { Sdk } from '@aboutcircles/sdk';
 import type { GroupRow, GroupMembershipRow, PagedQueryParams } from '@aboutcircles/sdk-types';
 import { PagedQuery } from '@aboutcircles/sdk-rpc';
 
+// Keep aligned with GROUP_MEMBERS_PAGE_SIZE (the inverse direction) and the
+// transaction-history page size — all use 25 so paint feels consistent across
+// related lists.
+export const MEMBERSHIPS_PAGE_SIZE = 25;
+
+const GROUP_DETAIL_COLUMNS = [
+  'blockNumber',
+  'timestamp',
+  'transactionIndex',
+  'logIndex',
+  'transactionHash',
+  'group',
+  'type',
+  'owner',
+  'mintPolicy',
+  'mintHandler',
+  'treasury',
+  'service',
+  'feeCollection',
+  'memberCount',
+  'name',
+  'symbol',
+  'cidV0Digest',
+  'erc20WrapperDemurraged',
+  'erc20WrapperStatic',
+] as const;
+
 /**
  * Build an OR conjunction of Equals predicates to simulate an IN filter.
  * The new SDK FilterType does not support 'In'; use Conjunction instead.
@@ -23,18 +50,22 @@ function buildInFilter(column: string, values: string[]): Filter {
   };
 }
 
-function chunk<T>(arr: T[], size: number): T[][] {
-  const out: T[][] = [];
-  for (let i = 0; i < arr.length; i += size) {
-    out.push(arr.slice(i, i + size));
-  }
-  return out;
-}
+/**
+ * Stream group rows the avatar is a member of, page-by-page. The callback is
+ * invoked once per page of detail rows so the UI can render rows as they
+ * arrive instead of waiting for the full set.
+ *
+ * The page size aligns with GROUP_MEMBERS_PAGE_SIZE and the tx-history page
+ * size (25) — keeps the perceived load time consistent across related lists.
+ */
+export async function streamGroupsByMember(
+  sdk: Sdk,
+  member: Address,
+  onBatch: (batch: GroupRow[]) => void,
+  pageSize: number = MEMBERSHIPS_PAGE_SIZE
+): Promise<void> {
+  if (!sdk || !member) return;
 
-export async function getGroupsByMember(sdk: Sdk, member: Address): Promise<GroupRow[]> {
-  if (!sdk || !member) return [];
-
-  // Query GroupMemberships table for this member using PagedQuery
   const membershipsQueryDef: PagedQueryParams = {
     namespace: 'V_CrcV2',
     table: 'GroupMemberships',
@@ -48,72 +79,53 @@ export async function getGroupsByMember(sdk: Sdk, member: Address): Promise<Grou
       },
     ],
     sortOrder: 'DESC',
-    limit: 1000,
+    limit: pageSize,
   };
 
   const membershipsQuery = new PagedQuery<GroupMembershipRow>(sdk.rpc.client, membershipsQueryDef);
-  const memberships: GroupMembershipRow[] = [];
+  const seen = new Set<string>();
 
   while (await membershipsQuery.queryNextPage()) {
     const rows = membershipsQuery.currentPage?.results ?? [];
     if (rows.length === 0) break;
-    memberships.push(...rows);
+
+    const newAddrs = rows
+      .map((m) => (m.group ?? '').toLowerCase())
+      .filter((a) => a.length > 0 && !seen.has(a));
+    newAddrs.forEach((a) => seen.add(a));
+
+    if (newAddrs.length > 0) {
+      const detailQueryDef: PagedQueryParams = {
+        namespace: 'V_CrcV2',
+        table: 'Groups',
+        columns: [...GROUP_DETAIL_COLUMNS],
+        filter: [buildInFilter('group', newAddrs)],
+        sortOrder: 'DESC',
+        limit: pageSize * 2,
+      };
+      const detailQuery = new PagedQuery<GroupRow>(sdk.rpc.client, detailQueryDef);
+
+      const batch: GroupRow[] = [];
+      while (await detailQuery.queryNextPage()) {
+        const detailRows = detailQuery.currentPage?.results ?? [];
+        batch.push(...detailRows);
+        if (!detailQuery.currentPage?.hasMore) break;
+      }
+
+      if (batch.length > 0) onBatch(batch);
+    }
+
     if (!membershipsQuery.currentPage?.hasMore) break;
   }
+}
 
-  const groupAddresses = Array.from(
-    new Set(
-      memberships
-        .map((m) => (m.group ?? '').toLowerCase())
-        .filter((g) => g.length > 0)
-    )
-  ) as Address[];
-
-  if (groupAddresses.length === 0) return [];
-
+/**
+ * Exhaustive collect-all wrapper preserved for callers that need the full
+ * array up front (e.g. the "My groups" tab which merges memberships with
+ * owner-based results).
+ */
+export async function getGroupsByMember(sdk: Sdk, member: Address): Promise<GroupRow[]> {
   const acc: GroupRow[] = [];
-  const groupChunks = chunk(groupAddresses, 200);
-
-  for (const groups of groupChunks) {
-    const queryDef: PagedQueryParams = {
-      namespace: 'V_CrcV2',
-      table: 'Groups',
-      columns: [
-        'blockNumber',
-        'timestamp',
-        'transactionIndex',
-        'logIndex',
-        'transactionHash',
-        'group',
-        'type',
-        'owner',
-        'mintPolicy',
-        'mintHandler',
-        'treasury',
-        'service',
-        'feeCollection',
-        'memberCount',
-        'name',
-        'symbol',
-        'cidV0Digest',
-        'erc20WrapperDemurraged',
-        'erc20WrapperStatic',
-      ],
-      filter: [
-        buildInFilter('group', groups.map((g) => g.toLowerCase())),
-      ],
-      sortOrder: 'DESC',
-      limit: 1000,
-    };
-
-    const query = new PagedQuery<GroupRow>(sdk.rpc.client, queryDef);
-    while (await query.queryNextPage()) {
-      const rows = query.currentPage?.results ?? [];
-      if (rows.length === 0) break;
-      acc.push(...rows);
-      if (!query.currentPage?.hasMore) break;
-    }
-  }
-
+  await streamGroupsByMember(sdk, member, (batch) => acc.push(...batch));
   return acc;
 }

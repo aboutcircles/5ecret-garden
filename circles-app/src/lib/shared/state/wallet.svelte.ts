@@ -23,7 +23,6 @@ import type { GroupType } from '@aboutcircles/sdk-types';
 import { privateKeyToAccount } from 'viem/accounts';
 import { gnosisChainConfig } from '$lib/shared/integrations/chain/chainConfig';
 import { isHumanType, isGroupType, isOrganizationType } from '$lib/shared/utils/avatarHelpers';
-import { handleError } from '$lib/shared/utils/errorHandler';
 import { withRetry, isTransientError } from '$lib/shared/utils/retry';
 import { EoaBrowserRunner } from '$lib/shared/integrations/wallet/EoaBrowserRunner';
 import { clearAll as clearCache } from '$lib/shared/cache';
@@ -217,9 +216,17 @@ export async function initNewEoaBrowserRunner(eoaAddress: Address) {
 }
 
 export async function restoreSession() {
+  const privateKey = CirclesStorage.getInstance().privateKey;
+  const savedAvatar = CirclesStorage.getInstance().avatar;
+
+  // Fresh visit / signed-out state — nothing to restore. Skip silently instead
+  // of throwing, otherwise every first-time landing fires a red "Session Restore
+  // Failed" error toast.
+  if (!privateKey && !savedAvatar) {
+    return;
+  }
+
   try {
-    const privateKey = CirclesStorage.getInstance().privateKey;
-    const savedAvatar = CirclesStorage.getInstance().avatar;
     const rings: boolean = CirclesStorage.getInstance().rings ? true : false;
 
     // Sync settings with stored rings preference
@@ -244,9 +251,11 @@ export async function restoreSession() {
       // Use the new SDK with runner - get config from settings
       const activeConfig = getActiveConfig();
       sdk = new Sdk(activeConfig, newRunner);
-    } else if (savedAvatar) {
-      // Safe + browser provider (EOA != Safe) — reconnect wagmi first so the
-      // connector is available for the browser runner.
+    } else {
+      // savedAvatar present without a private key → Safe + browser provider
+      // path (EOA != Safe). Reconnect wagmi first so the connector is available
+      // for the browser runner. The "neither" case was already short-circuited
+      // at the top of the function.
       signer.privateKey = undefined;
       try {
         signer.address = await getSigner();
@@ -266,8 +275,6 @@ export async function restoreSession() {
       // Use the new SDK with runner - get config from settings
       const activeConfig = getActiveConfig();
       sdk = new Sdk(activeConfig, newRunner);
-    } else {
-      throw new Error('No private key or saved avatar found in localStorage');
     }
 
     if (!sdk) {
@@ -334,11 +341,20 @@ export async function restoreSession() {
       await goto('/register');
     }
   } catch (error) {
-    handleError(error, {
-      context: 'wallet',
-      title: 'Session Restore Failed',
-    });
-    clearSession();
+    // Don't surface a red toast: the landing page + Connect Wallet button
+    // already communicates the un-authenticated state to the user. Log for
+    // debugging.
+    console.error('[Wallet] Session restore failed:', error);
+
+    // Only nuke the saved session on definitively terminal errors. For
+    // transient network / RPC / WS failures, leave localStorage intact so
+    // the next page-load can retry — clearSession() wipes the in-app PK
+    // (Circles-native variant), and we don't want a 5-second RPC blip to
+    // brick a funded avatar.
+    const transient = error instanceof Error && isTransientError(error);
+    if (!transient) {
+      clearSession();
+    }
   }
 }
 
