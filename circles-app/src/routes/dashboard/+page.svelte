@@ -10,10 +10,9 @@
     import { popupControls } from '$lib/shared/state/popup';
     import { ethers } from 'ethers';
     import Balances from '$lib/areas/wallet/ui/pages/Balances.svelte';
-    import { circlesBalances, refreshBalanceStore } from '$lib/shared/state/circlesBalances';
+    import { circlesBalances } from '$lib/shared/state/circlesBalances';
     import { totalCirclesBalance } from '$lib/shared/state/totalCirclesBalance';
     import { refreshTransactionHistory } from '$lib/shared/state/transactionHistory';
-    import { notifyError } from '$lib/shared/state/notifications.svelte';
     import { buildGroupOwnerSet } from '$lib/shared/utils/tokenClassification';
 
     import PageScaffold from '$lib/shared/ui/shell/PageScaffold.svelte';
@@ -21,7 +20,7 @@
     import { HumanAvatar } from '@aboutcircles/sdk';
 
     // lucide (standalone) icon nodes
-    import { Send as LSend, Banknote as LBanknote, BarChart3 as LBarChart3, ArrowLeftRight as LArrowLeftRight, ArrowUpDown as LArrowUpDown, RefreshCw as LRefreshCw } from 'lucide';
+    import { Send as LSend, Banknote as LBanknote, BarChart3 as LBarChart3, ArrowLeftRight as LArrowLeftRight, ArrowUpDown as LArrowUpDown } from 'lucide';
     import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
     import HelpPopover from '$lib/shared/ui/primitives/HelpPopover.svelte';
     import TrustEventsPanel from './TrustEventsPanel.svelte';
@@ -111,24 +110,6 @@
         });
     }
 
-    // In-app refresh — avoids forcing the user to reload the page (which loses session).
-    let refreshing: boolean = $state(false);
-    async function refreshDashboard() {
-        const avatar = avatarState.avatar;
-        if (!avatar || refreshing) return;
-        refreshing = true;
-        try {
-            await Promise.all([
-                refreshBalanceStore(avatar),
-                refreshTransactionHistory(),
-            ]);
-        } catch (error) {
-            console.error('[Dashboard] Refresh failed:', error);
-            notifyError(error, 'Refresh failed');
-        } finally {
-            refreshing = false;
-        }
-    }
 </script>
 
 <PageScaffold
@@ -186,18 +167,6 @@
             </button>
         {/if}
 
-        <button
-            type="button"
-            class="btn btn-ghost btn-sm"
-            onclick={refreshDashboard}
-            disabled={refreshing}
-            title="Refresh"
-            aria-label="Refresh"
-        >
-            <Lucide icon={LRefreshCw} size={16} class={`shrink-0 ${refreshing ? 'animate-spin' : ''}`} />
-            Refresh
-        </button>
-
         {#if mintableAmount >= 0.01}
             <button type="button" class="btn btn-primary btn-sm" onclick={mintPersonalCircles}>
                 <Lucide icon={LBanknote} size={16} class="shrink-0" />
@@ -254,15 +223,6 @@
                 See breakdown
             </button>
 
-            <button
-                    type="button"
-                    class="btn btn-ghost min-h-0 h-[var(--collapsed-h)] md:h-[var(--collapsed-h-md)] justify-start px-3"
-                    onclick={refreshDashboard}
-                    disabled={refreshing}
-            >
-                <Lucide icon={LRefreshCw} size={20} class={`shrink-0 ${refreshing ? 'animate-spin' : ''}`} />
-                Refresh
-            </button>
         </div>
     {/snippet}
 
