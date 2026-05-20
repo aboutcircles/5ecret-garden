@@ -18,7 +18,7 @@
     import {circles} from '$lib/shared/state/circles';
     import {CirclesStorage} from '$lib/shared/utils/storage';
     import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/shared/utils/getGroupsByOwnerBatch';
-    import { getGroupsByMember } from '$lib/areas/groups/utils/getGroupsByMemberBatch';
+    import { getGroupsByMember, streamGroupsByMember } from '$lib/areas/groups/utils/getGroupsByMemberBatch';
     import type { GroupRow } from '@aboutcircles/sdk-types';
     import Tabs from '$lib/shared/ui/primitives/tabs/Tabs.svelte';
     import Tab from '$lib/shared/ui/primitives/tabs/Tab.svelte';
@@ -40,6 +40,11 @@
     let membershipsError: string | null = $state(null);
     let ownedGroupsLoadedForAvatar: string | null = $state(null);
     let membershipsLoadedForAvatar: string | null = $state(null);
+
+    // Generation counter used to cancel stale streamGroupsByMember callbacks
+    // when the user switches avatars (or otherwise triggers a refetch)
+    // before the in-flight stream finishes.
+    let membershipsLoadGeneration = 0;
 
     const TAB_IDS = ['yours', 'memberships', 'all'] as const;
     type TabId = TabIdOf<typeof TAB_IDS>;
@@ -106,16 +111,39 @@
             return;
         }
 
+        const generation = ++membershipsLoadGeneration;
+        const targetOwner = String(ownerAddress).toLowerCase();
+
         membershipsLoading = true;
         membershipsError = null;
+        memberships = [];
         try {
-            memberships = await getGroupsByMember($circles, ownerAddress as Address);
-            membershipsLoadedForAvatar = String(ownerAddress).toLowerCase();
+            // Stream rows in 25-at-a-time batches so the first paint happens
+            // quickly even for avatars with many memberships. Same page size
+            // as the group-members and tx-history lists.
+            await streamGroupsByMember(
+                $circles,
+                ownerAddress as Address,
+                (batch) => {
+                    // Drop stale batches if a newer load started (e.g. avatar
+                    // switched mid-stream) so we don't contaminate the new
+                    // avatar's list with old data.
+                    if (generation !== membershipsLoadGeneration) return;
+                    memberships = [...memberships, ...batch];
+                }
+            );
+            if (generation === membershipsLoadGeneration) {
+                membershipsLoadedForAvatar = targetOwner;
+            }
         } catch (e) {
-            membershipsError = e instanceof Error ? e.message : String(e);
-            memberships = [];
+            if (generation === membershipsLoadGeneration) {
+                membershipsError = e instanceof Error ? e.message : String(e);
+                memberships = [];
+            }
         } finally {
-            membershipsLoading = false;
+            if (generation === membershipsLoadGeneration) {
+                membershipsLoading = false;
+            }
         }
     }
 
@@ -322,8 +350,18 @@
                                 item={item}
                                 showOptOut={true}
                                 onLeft={async () => {
-                                    membershipsLoadedForAvatar = null;
-                                    await loadMemberships();
+                                    // onLeft fires after the opt-out receipt is back (LeaveGroup
+                                    // uses executeTxConfirmFirst). Remove the row immediately so
+                                    // the UI reflects the confirmed on-chain state, then refetch
+                                    // a few seconds later to let the indexer catch up.
+                                    const groupKey = item.group.toLowerCase();
+                                    memberships = memberships.filter(
+                                        (m) => m.group.toLowerCase() !== groupKey
+                                    );
+                                    setTimeout(() => {
+                                        membershipsLoadedForAvatar = null;
+                                        void loadMemberships();
+                                    }, 5000);
                                 }}
                             />
                         {/each}

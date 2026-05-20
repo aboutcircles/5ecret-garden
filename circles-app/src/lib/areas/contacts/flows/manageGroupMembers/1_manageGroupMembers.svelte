@@ -10,8 +10,11 @@
   import { ethers } from 'ethers';
   import type { Address } from '@aboutcircles/sdk-types';
   import Trust from '$lib/areas/trust/ui/Trust.svelte';
-  import type { BaseGroupAvatar } from '@aboutcircles/sdk';
   import { refreshContactStore } from '$lib/shared/state/contacts/contacts';
+  import {
+    addTrustRelations,
+    removeGroupMembers,
+  } from '$lib/shared/utils/trustActions';
 
   let context: AddContactFlowContext = $state({
     selectedAddress: '',
@@ -98,34 +101,29 @@
     });
 
     try {
+      const actor = avatarState.avatar;
+      if (!actor) {
+        throw new Error('No avatar selected');
+      }
+
       if (untrust) {
-        console.log('Removing members/trust');
-        await avatarState.avatar?.trust.remove(addresses);
-      } else {
-        // For groups, use the batch method with conditions for efficient processing
-        if (avatarState.isGroup && avatarState.avatar) {
-          console.log('Adding group members using batch method');
-          // Type guard to check if this is a BaseGroupAvatar
-          const groupAvatar = avatarState.avatar as BaseGroupAvatar;
-          if (
-            groupAvatar.trust &&
-            'addBatchWithConditions' in groupAvatar.trust
-          ) {
-            const result = await groupAvatar.trust.addBatchWithConditions(
-              addresses,
-              BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFF')
-            );
-            console.log('Add members result:', result);
-          } else {
-            console.warn(
-              'addBatchWithConditions not available, falling back to regular add'
-            );
-            await avatarState.avatar.trust.add(addresses);
-          }
+        if (avatarState.isGroup) {
+          // Routes through bytecode-probe dispatch: handles the three live
+          // group shapes (BaseGroup-conditions, CMG-expiry, simple) instead
+          // of always sending the SDK's onlyOwner single-trust selector
+          // which doesn't exist on CMG/simple groups.
+          await removeGroupMembers(actor.address as Address, addresses);
         } else {
-          console.log('Adding members using regular add method');
-          await avatarState.avatar?.trust.add(addresses);
+          await actor.trust.remove(addresses);
         }
+      } else if (avatarState.isGroup) {
+        await addTrustRelations({
+          actorType: 'group',
+          actorAddress: actor.address as Address,
+          trustTargets: addresses,
+        });
+      } else {
+        await actor.trust.add(addresses);
       }
 
       selectedAddresses = '';

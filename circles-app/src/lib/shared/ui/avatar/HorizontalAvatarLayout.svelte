@@ -64,13 +64,13 @@
   </button>
   <div class={`flex flex-col gap-y-0.5 min-w-0 ${reverse ? 'items-end pr-4 text-right' : 'items-start pl-4'}`}>
     {#if topInfo}
-      <p class="text-xs text-base-content/70 truncate w-full">
+      <p class="text-xs text-base-content/70 truncate w-full leading-normal">
         {topInfo}
       </p>
     {/if}
-    <span class="font-semibold text-base-content truncate w-full">{profile?.name ?? ''}</span>
+    <span class="block font-semibold text-base-content truncate w-full leading-normal">{profile?.name ?? ''}</span>
     {#if bottomInfo}
-      <p class="text-xs text-base-content/70 truncate w-full">
+      <p class="text-xs text-base-content/70 truncate w-full leading-normal">
         {bottomInfo}
       </p>
     {/if}
