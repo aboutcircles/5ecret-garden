@@ -53,6 +53,14 @@
   let loadGeneration = 0;
   let nextInflight: Promise<boolean> | null = null;
 
+  // Dedup guard for the init $effect. The `circles` store re-emits on every
+  // SDK lifecycle tick (new event subscriptions, balance updates, etc.) which
+  // would otherwise re-trigger the effect and wipe `totalMemberCount` /
+  // `items` mid-render — surfacing as a "0 ↔ 2820 trusted avatars" flicker.
+  // Only re-init when the group address or the SDK *instance* actually changes.
+  let initializedForGroup: string = '';
+  let initializedForSdkRef: unknown = null;
+
   const groupDisplayName = $derived(
     ((groupName ?? '') as string).length > 0
       ? ((groupName ?? '') as string)
@@ -176,11 +184,28 @@
 
   $effect(() => {
     const sdk = $circles;
-    if (!group || !sdk) {
-      resetState();
-      groupName = null;
+    const groupKey = group ? String(group).toLowerCase() : '';
+
+    if (!groupKey || !sdk) {
+      if (initializedForGroup !== '') {
+        initializedForGroup = '';
+        initializedForSdkRef = null;
+        resetState();
+        groupName = null;
+      }
       return;
     }
+
+    // Bail if we've already initialized for this group + SDK pair. Without
+    // this, every `circles` store re-emit (which fires often during normal
+    // SDK lifecycle) would reset `totalMemberCount` to undefined and clear
+    // `items`, producing a "0 ↔ N trusted avatars" flicker on the count badge
+    // until the count fetch resolves again.
+    if (groupKey === initializedForGroup && sdk === initializedForSdkRef) {
+      return;
+    }
+    initializedForGroup = groupKey;
+    initializedForSdkRef = sdk;
 
     // Bump generation so any in-flight enrich/page callbacks become no-ops.
     ++loadGeneration;
@@ -328,7 +353,24 @@
         // After a successful add we don't yet know which addresses landed;
         // reset and reload from page 1 so new members appear at the top.
         ++loadGeneration;
+        const generation = loadGeneration;
         resetState();
+
+        // Re-fetch authoritative count so the badge doesn't fall back to
+        // a growing $items.length while pages stream in.
+        const sdk = get(circles);
+        if (sdk) {
+          void createGroupDataSource(sdk)
+            .getGroupMemberCount(group)
+            .then((n) => {
+              if (generation === loadGeneration && typeof n === 'number') {
+                totalMemberCount = n;
+              }
+            })
+            .catch((e) => {
+              console.warn('[GroupMembersManager] member-count refetch failed', e);
+            });
+        }
         void loadNextPage();
       },
     });
