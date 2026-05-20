@@ -1,6 +1,7 @@
 import { get } from 'svelte/store';
 import { ethers } from 'ethers';
 import type { Address } from '@aboutcircles/sdk-types';
+import type { BaseGroupAvatar } from '@aboutcircles/sdk';
 
 import { avatarState } from '$lib/shared/state/avatar.svelte';
 import { circles } from '$lib/shared/state/circles';
@@ -38,9 +39,19 @@ export async function addTrustRelations(params: {
 
     // Group trust tx does not require event subscription; avoid websocket subscribe timeout path.
     const groupAvatar = await sdk.getAvatar(params.actorAddress, false);
+    // BaseGroup.trust is onlyOwner and bypasses membership-condition checks;
+    // BaseGroup.trustBatchWithConditions is onlyOwnerOrService and runs the
+    // condition gate — the correct entry point for managing group members.
+    const usesConditions =
+      groupAvatar.trust && 'addBatchWithConditions' in groupAvatar.trust;
     await runTask({
       name: `${shortenAddress(params.actorAddress)} trusts ${trustTargets.length} avatar${trustTargets.length === 1 ? '' : 's'} ...`,
-      promise: groupAvatar.trust.add(trustTargets),
+      promise: usesConditions
+        ? (groupAvatar as BaseGroupAvatar).trust.addBatchWithConditions(
+            trustTargets,
+            BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFF'),
+          )
+        : groupAvatar.trust.add(trustTargets),
     });
     return;
   }
