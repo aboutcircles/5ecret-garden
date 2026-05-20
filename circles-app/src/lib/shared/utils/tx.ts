@@ -1,6 +1,8 @@
 import { ethers } from 'ethers';
+import { get } from 'svelte/store';
 import { uint256ToAddress, CirclesConverter } from '@aboutcircles/sdk-utils';
 import { formatCurrency } from '$lib/shared/utils/money';
+import { circles } from '$lib/shared/state/circles';
 
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 export const isZeroAddress = (addr?: string | null) => (addr ?? '').toLowerCase() === ZERO_ADDRESS;
@@ -115,6 +117,18 @@ export async function waitForReceiptRaw(
   throw new Error(`${label} receipt timeout`);
 }
 
+// Fallback receipt-poller for runners (e.g. the Circles-native PK signer) that
+// broadcast successfully but don't expose a provider.send(). Wraps the SDK's
+// JSON-RPC client so eth_getTransactionReceipt still works.
+function getSdkRpcProvider(): { send: (method: string, params?: any[]) => Promise<any> } | null {
+  const sdk = get(circles) as any;
+  const call = sdk?.rpc?.client?.call;
+  if (typeof call !== 'function') return null;
+  return {
+    send: (method, params) => call.call(sdk.rpc.client, method, params ?? []),
+  };
+}
+
 export async function sendRunnerTransactionAndWait(
   runner: {
     sendTransaction?: (...args: any[]) => Promise<any>;
@@ -134,5 +148,14 @@ export async function sendRunnerTransactionAndWait(
     throw new Error('Transaction hash missing');
   }
 
-  return waitForReceiptRaw(runner.provider, txHash, options);
+  const provider = runner.provider?.send ? runner.provider : getSdkRpcProvider();
+  if (!provider) {
+    // Broadcast succeeded but no provider is available to confirm. Throw so the
+    // caller can surface an error — returning a hash-only object silently lies
+    // to callers that decode receipt.logs (e.g. ConfirmCreateGateway).
+    throw new Error(
+      `Transaction broadcast (hash: ${txHash}) but receipt cannot be verified — no provider available`
+    );
+  }
+  return waitForReceiptRaw(provider, txHash, options);
 }

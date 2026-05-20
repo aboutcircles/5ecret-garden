@@ -24,6 +24,32 @@ const _circlesBalances = writable<{
   ended: boolean;
 }>({ data: [], next: async () => false, ended: false });
 
+async function _loadBalancesFor(avatar: Avatar): Promise<TokenBalance[]> {
+  if (!avatar || typeof avatar !== 'object') {
+    console.error('[Balances] Avatar is not properly initialized:', avatar);
+    return [];
+  }
+  if (
+    !avatar.balances ||
+    typeof avatar.balances.getTokenBalances !== 'function'
+  ) {
+    console.error(
+      '[Balances] No balances.getTokenBalances method available on avatar'
+    );
+    return [];
+  }
+  try {
+    const balances = (await avatar.balances.getTokenBalances()) as unknown as TokenBalance[];
+    void writeBalances(makeScopeId(avatar.address), balances as any[]);
+    return balances;
+  } catch (e: unknown) {
+    const errorMessage = e instanceof Error ? e.message : String(e);
+    if (errorMessage.includes('No balances found')) return [];
+    console.error('[Balances] Error loading balances:', errorMessage);
+    return [];
+  }
+}
+
 export const initBalanceStore = (avatar: Avatar) => {
   // Early return if already initialized for this avatar
   if (currentAvatarAddress === avatar.address) {
@@ -42,65 +68,14 @@ export const initBalanceStore = (avatar: Avatar) => {
     ended: false,
   });
 
-  const scopeId = makeScopeId(avatar.address);
-
-  const _initialLoad = async (): Promise<TokenBalance[]> => {
-    try {
-      // Validate avatar is properly initialized
-      if (!avatar || typeof avatar !== 'object') {
-        console.error('[Balances] Avatar is not properly initialized:', avatar);
-        return [];
-      }
-
-      // Use new SDK balances.getTokenBalances method
-      if (
-        !avatar.balances ||
-        typeof avatar.balances.getTokenBalances !== 'function'
-      ) {
-        console.error(
-          '[Balances] No balances.getTokenBalances method available on avatar'
-        );
-        return [];
-      }
-
-      const balances = await avatar.balances.getTokenBalances() as unknown as TokenBalance[];
-      void writeBalances(scopeId, balances as any[]);
-      return balances;
-    } catch (e: unknown) {
-      const errorMessage = e instanceof Error ? e.message : String(e);
-      if (errorMessage.includes('No balances found')) {
-        return [];
-      }
-      console.error('[Balances] Error loading balances:', errorMessage);
-      return [];
-    }
-  };
+  const _initialLoad = (): Promise<TokenBalance[]> => _loadBalancesFor(avatar);
 
   const _handleEvent = async (
     event: CirclesEvent,
     currentData: TokenBalance[]
   ): Promise<TokenBalance[]> => {
     if (!refreshOnEvents.has(event.$event)) return currentData;
-    try {
-      // Use new SDK balances.getTokenBalances method
-      if (
-        !avatar.balances ||
-        typeof avatar.balances.getTokenBalances !== 'function'
-      ) {
-        throw new Error('No balances.getTokenBalances method available');
-      }
-
-      const balances = await avatar.balances.getTokenBalances() as unknown as TokenBalance[];
-      void writeBalances(scopeId, balances as any[]);
-      return balances;
-    } catch (e: unknown) {
-      const errorMessage = e instanceof Error ? e.message : String(e);
-      if (errorMessage.includes('No balances found')) {
-        return [];
-      }
-      console.error('[Balances] Error refreshing balances:', errorMessage);
-      throw new Error(`Failed to refresh balances: ${errorMessage}`);
-    }
+    return _loadBalancesFor(avatar);
   };
 
   const _handleNextPage = async (currentData: TokenBalance[]) => {
