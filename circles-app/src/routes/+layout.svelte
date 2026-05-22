@@ -209,7 +209,7 @@
   $effect(() => {
     if (avatarState.avatar) {
       menuItems = [
-        { name: 'Wallet', link: '/dashboard' },
+        { name: 'Dashboard', link: '/dashboard' },
         {
           name: avatarState.isGroup ? 'Members' : 'Contacts',
           link: '/contacts',

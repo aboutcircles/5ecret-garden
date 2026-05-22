@@ -1,14 +1,32 @@
 <script lang="ts">
-    import { groupMetrics } from '$lib/areas/groups/state';
+    import { fetchGroupMetrics, groupMetrics } from '$lib/areas/groups/state';
     import GroupMetricsStats from '$lib/areas/groups/ui/components/GroupMetricsStats.svelte';
     import ModernHistoryChart from '$lib/areas/groups/ui/components/ModernHistoryChart.svelte';
     import ModernPieChart from '$lib/areas/groups/ui/components/ModernPieChart.svelte';
+    import { circles } from '$lib/shared/state/circles';
+    import { avatarState } from '$lib/shared/state/avatar.svelte';
+    import type { Address } from '@aboutcircles/sdk-types';
+
+    function retryMetrics() {
+        if (!$circles?.rpc || !avatarState.avatar?.address) return;
+        void fetchGroupMetrics($circles.rpc, avatarState.avatar.address as Address, groupMetrics);
+    }
+
+    const hasData = $derived(
+        !!groupMetrics.memberCountPerHour ||
+        !!groupMetrics.mintRedeemPerHour ||
+        !!groupMetrics.tokenHolderBalance ||
+        !!groupMetrics.collateralInTreasury,
+    );
 </script>
 
-<div class="w-full mb-6">
-</div>
-
-{#if Object.keys(groupMetrics).length > 0}
+{#if groupMetrics.loading === false && groupMetrics.errors?.length && !hasData}
+    <div class="flex flex-col items-center justify-center gap-4 h-[50vh] p-6 text-center">
+        <p class="text-base font-semibold">Couldn't load group metrics</p>
+        <p class="text-sm text-base-content/60 max-w-sm">{groupMetrics.errors[0]}</p>
+        <button type="button" class="btn btn-primary btn-sm" onclick={retryMetrics}>Retry</button>
+    </div>
+{:else if hasData}
     <GroupMetricsStats {groupMetrics} />
 
     <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10 mt-6">

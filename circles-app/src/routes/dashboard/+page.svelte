@@ -228,6 +228,12 @@
 
     <!-- Content -->
     {#if avatarState.isGroup}
+        {#if avatarState.profile?.name}
+            <div class="mb-6">
+                <span class="text-xs font-semibold text-base-content/50 uppercase tracking-widest">Group Overview</span>
+                <h1 class="text-4xl font-medium mt-1">{avatarState.profile.name}</h1>
+            </div>
+        {/if}
         <OverviewPanel/>
     {:else}
         <div role="tablist" class="tabs tabs-bordered mb-4">
