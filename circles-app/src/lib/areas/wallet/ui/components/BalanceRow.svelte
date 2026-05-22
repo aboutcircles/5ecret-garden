@@ -4,7 +4,7 @@
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import { avatarState } from '$lib/shared/state/avatar.svelte';
     import { tokenTypeToString } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
-    import { crcTypes, roundToDecimals, staticTypes } from '$lib/shared/utils/shared';
+    import { crcTypes, roundToDecimals } from '$lib/shared/utils/shared';
     import { formatCompactCurrency } from '$lib/shared/utils/money';
     import type { TokenBalance } from '@aboutcircles/sdk-types';
     import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
@@ -123,7 +123,7 @@
                 <div class="text-right tabular-nums">
                     <div class="font-medium">{formatCompactCurrency(item.circles ?? 0, 'CRC')}</div>
                     <p class="text-xs text-base-content/70">
-                        {#if staticTypes.has(item.tokenType ?? '')}
+                        {#if isWrappedStaticToken(item)}
                             {roundToDecimals(item.staticCircles ?? 0)} Static Circles
                         {/if}
                         {#if crcTypes.has(item.tokenType ?? '')}
