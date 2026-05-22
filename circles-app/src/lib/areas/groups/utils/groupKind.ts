@@ -375,7 +375,11 @@ export function assessManagePermission(
     return { canManage: false, ownerProxyChain: [], reason: 'not-an-owner' };
   }
 
-  // Could not read owner; be conservative but don't block the UI hard — let
-  // the preflight in trustActions surface the actual error on submit.
-  return { canManage: false, ownerProxyChain: [], reason: 'unknown' };
+  // Could not read owner — some group variants (`simple`/ScoreGroup) don't
+  // expose `owner()` at all and use different permission models. Be
+  // OPTIMISTIC here: leave the Add/Remove buttons enabled so the user can
+  // attempt the action. The preflight in `trustActions.ts` runs `eth_call`
+  // from the runner; if the contract rejects the call, the user sees a
+  // decoded error from preflight instead of a button that does nothing.
+  return { canManage: true, ownerProxyChain: [], reason: 'unknown' };
 }
