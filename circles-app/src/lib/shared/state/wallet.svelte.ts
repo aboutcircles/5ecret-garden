@@ -356,16 +356,13 @@ export async function restoreSession() {
       await goto('/register');
     }
   } catch (error) {
-    // Don't surface a red toast: the landing page + Connect Wallet button
-    // already communicates the un-authenticated state to the user. Log for
-    // debugging.
     console.error('[Wallet] Session restore failed:', error);
 
     // Only nuke the saved session on definitively terminal errors. For
     // transient network / RPC / WS failures, leave localStorage intact so
     // the next page-load can retry — clearSession() wipes the in-app PK
     // (Circles-native variant), and we don't want a 5-second RPC blip to
-    // brick a funded avatar.
+    // brick a funded avatar. clearSession() itself navigates to '/'.
     const transient = error instanceof Error && isTransientError(error);
     if (!transient) {
       clearSession();
