@@ -1,5 +1,6 @@
 import { writable } from 'svelte/store';
 import { goto } from '$app/navigation';
+import { browser } from '$app/environment';
 import { avatarState } from '$lib/shared/state/avatar.svelte';
 import { circles } from '$lib/shared/state/circles';
 import { Sdk } from '@aboutcircles/sdk';
@@ -356,9 +357,6 @@ export async function restoreSession() {
       await goto('/register');
     }
   } catch (error) {
-    // Don't surface a red toast: the landing page + Connect Wallet button
-    // already communicates the un-authenticated state to the user. Log for
-    // debugging.
     console.error('[Wallet] Session restore failed:', error);
 
     // Only nuke the saved session on definitively terminal errors. For
@@ -369,6 +367,23 @@ export async function restoreSession() {
     const transient = error instanceof Error && isTransientError(error);
     if (!transient) {
       clearSession();
+      // The catch used to assume the user was on the landing page, where the
+      // Connect Wallet button already prompts re-auth. Deep-links and post-
+      // reload restores happen on /dashboard, /groups/members/*, etc. — in
+      // those locations the UI silently sits with empty stores after
+      // clearSession(). Push back to landing so the Connect Wallet button is
+      // the obvious next action. Don't navigate from /register / /connect-*
+      // pages which already handle their own auth flow.
+      if (browser) {
+        const path = window.location.pathname;
+        const isAuthPage =
+          path === '/' ||
+          path.startsWith('/register') ||
+          path.startsWith('/connect-wallet');
+        if (!isAuthPage) {
+          void goto('/');
+        }
+      }
     }
   }
 }
