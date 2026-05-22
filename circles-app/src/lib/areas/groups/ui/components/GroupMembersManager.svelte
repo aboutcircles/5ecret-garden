@@ -19,6 +19,7 @@
   } from '$lib/areas/groups/utils/groupKind';
   import { signer, wallet } from '$lib/shared/state/wallet.svelte';
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
+  import AddressView from '$lib/shared/ui/primitives/Address.svelte';
   import SearchablePaginatedList from '$lib/shared/ui/lists/SearchablePaginatedList.svelte';
   import AvatarRowPlaceholder from '$lib/shared/ui/lists/placeholders/AvatarRowPlaceholder.svelte';
   import GroupMemberRow, {
@@ -518,19 +519,27 @@
     <div class="text-xs rounded border border-warning/40 bg-warning/10 px-2 py-1">
       Your account can manage this group, but only when connected via the
       Safe that owns it
-      <span class="font-mono">({groupOwner ? shortenAddress(groupOwner) : 'unknown'})</span>.
+      {#if groupOwner}
+        (<AddressView address={groupOwner} full explorer />).
+      {:else}
+        (<span class="opacity-60">unknown</span>).
+      {/if}
       Disconnect and reconnect using that Safe.
     </div>
   {:else if capsLoaded && !canManageEnabled && manageReason === 'not-an-owner'}
     <div class="text-xs rounded border border-warning/40 bg-warning/10 px-2 py-1">
       View-only. This group is owned by
-      <span class="font-mono">{groupOwner ? shortenAddress(groupOwner) : 'another account'}</span>
+      {#if groupOwner}
+        <AddressView address={groupOwner} full explorer />
+      {:else}
+        <span class="opacity-60">another account</span>
+      {/if}
       — sign in with the Safe that owns this group to add or remove members.
     </div>
   {:else if capsLoaded && managingViaOwnerSafe}
     <div class="text-xs opacity-70 rounded border border-base-300/60 bg-base-200/40 px-2 py-1">
       Managing as
-      <span class="font-mono">{shortenAddress(managingViaOwnerSafe)}</span>
+      <AddressView address={managingViaOwnerSafe} full explorer />
       (the Safe that owns this group). Trust changes are routed through it.
     </div>
   {/if}

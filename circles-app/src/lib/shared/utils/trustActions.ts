@@ -214,11 +214,14 @@ async function sendGroupTrustTx(params: {
   // Preflight failed and we can't route. Surface a meaningful, address-bearing
   // error instead of letting the user hit the opaque execTransaction revert.
   if (isOwnerCheckFailure) {
+    // Full addresses, not shortened — error toasts surface to the user when
+    // they need to take action (switch Safe, copy an address, look it up on
+    // an explorer). Shortened addresses force a tedious back-and-forth.
     const ownerHint = params.caps.owner
-      ? ` Manage this group from the Safe that owns it (${shortenAddress(params.caps.owner)}).`
+      ? ` Manage this group from the Safe that owns it (${params.caps.owner}).`
       : '';
     throw new Error(
-      `You don't have permission to update trust on this group from ${shortenAddress(from)}.${ownerHint}`
+      `You don't have permission to update trust on this group from ${from}.${ownerHint}`
     );
   }
   throw new Error(`Group trust call would revert: ${preflight.reason}`);
