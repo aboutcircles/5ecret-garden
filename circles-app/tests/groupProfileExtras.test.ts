@@ -263,6 +263,16 @@ describe('groupProfileExtras: validateGroupExtras', () => {
   it('rejects bad contact website', () => {
     expect(validateGroupExtras({ ...base, contactWebsite: 'foo' }).errors.contactWebsite).toBeDefined();
   });
+
+  it('rejects a website URL longer than 2000 chars (service strip-and-continue guard)', () => {
+    const longUrl = 'https://example.org/' + 'a'.repeat(2001);
+    expect(validateGroupExtras({ ...base, website: longUrl }).errors.website).toBeDefined();
+  });
+
+  it('rejects a contact email longer than 256 chars (service VARCHAR(256) guard)', () => {
+    const longEmail = 'a'.repeat(250) + '@example.org';
+    expect(validateGroupExtras({ ...base, contactEmail: longEmail }).errors.contactEmail).toBeDefined();
+  });
 });
 
 describe('groupProfileExtras: applyGroupProfileExtras (mutate + delete)', () => {

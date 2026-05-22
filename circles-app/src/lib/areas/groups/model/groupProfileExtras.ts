@@ -3,6 +3,8 @@ import { sanitizeUrl } from '$lib/shared/ui/content/markdown/ast';
 export const MAX_LINK_LABEL_LENGTH = 48;
 export const MAX_ADDITIONAL_CRITERIA = 20;
 export const MAX_CRITERION_LENGTH = 256;
+export const MAX_URL_LENGTH = 2000;
+export const MAX_EMAIL_LENGTH = 256;
 
 export interface GroupExtrasForm {
   website: string;
@@ -45,8 +47,10 @@ export function emptyForm(): GroupExtrasForm {
 export function isUrlWithHost(value: string): boolean {
   const raw = String(value ?? '').trim();
   if (!raw) return false;
+  if (raw.length > MAX_URL_LENGTH) return false;
   const sanitized = sanitizeUrl(raw);
   if (!sanitized) return false;
+  if (sanitized.length > MAX_URL_LENGTH) return false;
   try {
     const u = new URL(sanitized);
     return (u.protocol === 'http:' || u.protocol === 'https:') && u.hostname.includes('.');
@@ -56,7 +60,9 @@ export function isUrlWithHost(value: string): boolean {
 }
 
 export function isValidEmail(value: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value ?? '').trim());
+  const trimmed = String(value ?? '').trim();
+  if (trimmed.length > MAX_EMAIL_LENGTH) return false;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
 }
 
 export function parseAdditionalCriteria(text: string): string[] {
