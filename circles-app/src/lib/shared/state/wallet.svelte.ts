@@ -1,6 +1,5 @@
 import { writable } from 'svelte/store';
 import { goto } from '$app/navigation';
-import { browser } from '$app/environment';
 import { avatarState } from '$lib/shared/state/avatar.svelte';
 import { circles } from '$lib/shared/state/circles';
 import { Sdk } from '@aboutcircles/sdk';
@@ -363,27 +362,10 @@ export async function restoreSession() {
     // transient network / RPC / WS failures, leave localStorage intact so
     // the next page-load can retry — clearSession() wipes the in-app PK
     // (Circles-native variant), and we don't want a 5-second RPC blip to
-    // brick a funded avatar.
+    // brick a funded avatar. clearSession() itself navigates to '/'.
     const transient = error instanceof Error && isTransientError(error);
     if (!transient) {
       clearSession();
-      // The catch used to assume the user was on the landing page, where the
-      // Connect Wallet button already prompts re-auth. Deep-links and post-
-      // reload restores happen on /dashboard, /groups/members/*, etc. — in
-      // those locations the UI silently sits with empty stores after
-      // clearSession(). Push back to landing so the Connect Wallet button is
-      // the obvious next action. Don't navigate from /register / /connect-*
-      // pages which already handle their own auth flow.
-      if (browser) {
-        const path = window.location.pathname;
-        const isAuthPage =
-          path === '/' ||
-          path.startsWith('/register') ||
-          path.startsWith('/connect-wallet');
-        if (!isAuthPage) {
-          void goto('/');
-        }
-      }
     }
   }
 }
