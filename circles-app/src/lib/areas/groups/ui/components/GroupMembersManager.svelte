@@ -58,14 +58,17 @@
   // `canManage` is derived from on-chain caps (owner, ownerSafeOwners) + the
   // wallet runner's address. The row context exposes a parallel readable so
   // each row can hide the trash icon without prop drilling.
-  const canManageStore = writable<boolean>(false);
+  // Declaration order matters: the $state mirror must exist BEFORE subscribe,
+  // because subscribe fires synchronously with the current store value and
+  // would otherwise hit a TDZ on the let binding.
+  let canManageEnabled: boolean = $state(false);
   let manageReason: ManagePermission['reason'] = $state('unknown');
   let managingViaOwnerSafe: Address | null = $state(null);
   let groupOwner: Address | null = $state(null);
+  const canManageStore = writable<boolean>(false);
   canManageStore.subscribe((v) => {
     canManageEnabled = v;
   });
-  let canManageEnabled: boolean = $state(false);
 
   // Selection state lives outside the virtualized rows so toggling a checkbox
   // doesn't rebuild item identities (which would cost re-render on every row).
