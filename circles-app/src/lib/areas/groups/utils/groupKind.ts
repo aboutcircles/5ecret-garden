@@ -219,12 +219,10 @@ async function readSafeOwnersIfContract(
   if (!address || address === ZeroAddress.toLowerCase()) {
     return { isContract: false, safeOwners: null };
   }
-  let code: string;
-  try {
-    code = await provider.getCode(address);
-  } catch {
-    return { isContract: false, safeOwners: null };
-  }
+  // RPC failure on getCode is propagated: silently returning isContract=false
+  // would poison the cache and make a Safe-owned group look like an EOA-owned
+  // one, hiding the manage UI forever via the not-an-owner branch.
+  const code = await provider.getCode(address);
   if (!code || code === '0x') {
     return { isContract: false, safeOwners: null };
   }
@@ -286,8 +284,9 @@ export async function probeGroupCapabilities(
       };
       writeCached(key, caps);
       return caps;
-    } catch {
+    } catch (e) {
       // Network or RPC error: do not cache; next call may succeed.
+      console.warn('[groupKind] probeGroupCapabilities failed for', address, e);
       return emptyCaps();
     }
   })();
