@@ -293,26 +293,41 @@ export async function restoreSession() {
       savedAvatar ??
       (newRunner?.address || sdk.contractRunner?.address)) as Address;
 
-    // Get avatar from SDK - returns HumanAvatar, OrganisationAvatar, or BaseGroupAvatar
-    // Enable auto event subscription for reactive updates
-    // Use retry logic for WebSocket subscription resilience
-    let avatar = await withRetry(
-      () => sdk.getAvatar(avatarToRestore, true),
-      {
-        maxAttempts: 5,
-        initialDelayMs: 1000,
-        maxDelayMs: 15000,
-        isRetryable: isTransientError,
-        updateConnectionStatus: true,
-        statusLabel: 'Wallet',
-        onRetry: (attempt, error, delayMs) => {
-          console.warn(
-            `[Wallet] Avatar subscription failed (attempt ${attempt}/5), retrying in ${Math.round(delayMs / 1000)}s:`,
-            error.message
-          );
-        },
-      }
-    );
+    // Restore the avatar with event subscription. If subscribe fails (the
+    // WS-bug captured in memory/sdk_websocket_bug.md occasionally never
+    // resolves), the user must NOT be bounced to /register — that's a UX
+    // regression where a transient WS hiccup looks like a logged-out state
+    // and forces re-login. Fall back to a non-subscribed avatar; the user
+    // keeps a working session in read/sign mode, just without live event
+    // pushes (a refresh later reconnects).
+    let avatar;
+    try {
+      avatar = await withRetry(
+        () => sdk.getAvatar(avatarToRestore, true),
+        {
+          maxAttempts: 5,
+          initialDelayMs: 1000,
+          maxDelayMs: 15000,
+          isRetryable: isTransientError,
+          updateConnectionStatus: true,
+          statusLabel: 'Wallet',
+          onRetry: (attempt, error, delayMs) => {
+            console.warn(
+              `[Wallet] Avatar subscription failed (attempt ${attempt}/5), retrying in ${Math.round(delayMs / 1000)}s:`,
+              error.message
+            );
+          },
+        }
+      );
+    } catch (subscribeError) {
+      console.warn(
+        '[Wallet] Avatar subscription retries exhausted, falling back to non-subscribed restore:',
+        subscribeError
+      );
+      // Non-subscribed restore — pure data read, no WS. If THIS fails, the
+      // outer catch handles it as the original code did.
+      avatar = await sdk.getAvatar(avatarToRestore, false);
+    }
 
     if (avatar) {
       avatarState.avatar = avatar;

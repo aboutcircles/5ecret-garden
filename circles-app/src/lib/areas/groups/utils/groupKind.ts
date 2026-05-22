@@ -1,4 +1,12 @@
-import { JsonRpcProvider, keccak256, toUtf8Bytes } from 'ethers';
+import {
+  Contract,
+  Interface,
+  JsonRpcProvider,
+  ZeroAddress,
+  keccak256,
+  toUtf8Bytes,
+} from 'ethers';
+import type { Address } from '@aboutcircles/sdk-types';
 import { getActiveConfig } from '$lib/shared/state/settings.svelte';
 
 // Three v2 group contract shapes coexist on Gnosis. The on-chain selectors
@@ -26,6 +34,35 @@ export type GroupCapabilities = {
   ownerRemove: boolean;
   // Member can opt out (optOut()).
   optOut: boolean;
+  // owner() of the group contract. Lowercased. `null` if owner() is not callable.
+  owner: Address | null;
+  // service() of the group contract. Lowercased. `null` if not exposed.
+  service: Address | null;
+  // True if owner is a contract (Safe or otherwise).
+  ownerIsContract: boolean;
+  // If owner is a Safe, its owner set (lowercased). `null` if owner is an EOA
+  // or `getOwners()` is not callable.
+  ownerSafeOwners: Address[] | null;
+};
+
+export type ManagePermissionReason =
+  | 'direct'      // runner === group.owner — call group directly
+  | 'nested-safe' // runner is an owner of group.owner Safe — nest via owner Safe
+  | 'service'     // runner === group.service — call group directly (service path)
+  | 'eoa-must-switch-wallet' // the EOA can sign for the owner Safe but the
+                             // currently-connected runner Safe cannot — user
+                             // must disconnect and reconnect via the owner Safe
+  | 'not-an-owner'
+  | 'unknown';
+
+export type ManagePermission = {
+  canManage: boolean;
+  // Empty when canManage is via direct or service path; [ownerSafe] when
+  // call must be routed via Safe-on-Safe through the owner. For
+  // 'eoa-must-switch-wallet' this lists the Safe the user should reconnect
+  // via.
+  ownerProxyChain: Address[];
+  reason: ManagePermissionReason;
 };
 
 const TRUST_BATCH_WITH_CONDITIONS = '4141f954';
@@ -45,11 +82,28 @@ const EIP1967_IMPL_SLOT =
     .padStart(64, '0');
 const ZERO_SLOT = '0x' + '0'.repeat(64);
 
-const CACHE_KEY_PREFIX = 'circles.groupCaps.';
+// v3 cache key — the shape grew (owner / service / ownerSafeOwners). Old v2
+// entries are missing those fields and would be misclassified as
+// "owner unknown", so we ignore them by changing the prefix.
+const CACHE_KEY_PREFIX = 'circles.groupCaps.v3.';
 const inflight = new Map<string, Promise<GroupCapabilities>>();
+
+const groupReadIface = new Interface([
+  'function owner() view returns (address)',
+  'function service() view returns (address)',
+]);
+const safeIface = new Interface([
+  'function getOwners() view returns (address[])',
+]);
 
 function cacheKey(address: string): string {
   return `${CACHE_KEY_PREFIX}${address.toLowerCase()}`;
+}
+
+function asAddress(value: unknown): Address | null {
+  if (typeof value !== 'string') return null;
+  if (!/^0x[0-9a-fA-F]{40}$/.test(value)) return null;
+  return value.toLowerCase() as Address;
 }
 
 function readCached(address: string): GroupCapabilities | null {
@@ -63,7 +117,11 @@ function readCached(address: string): GroupCapabilities | null {
       typeof parsed === 'object' &&
       typeof parsed.optOut === 'boolean' &&
       typeof parsed.ownerRemove === 'boolean' &&
-      typeof parsed.trustKind === 'string'
+      typeof parsed.trustKind === 'string' &&
+      'owner' in parsed &&
+      'service' in parsed &&
+      typeof parsed.ownerIsContract === 'boolean' &&
+      'ownerSafeOwners' in parsed
     ) {
       return parsed;
     }
@@ -107,7 +165,11 @@ async function readEffectiveBytecode(
   return (code + implCode).toLowerCase();
 }
 
-function classify(bytecode: string): GroupCapabilities {
+function classifyBytecode(bytecode: string): {
+  trustKind: GroupTrustKind;
+  ownerRemove: boolean;
+  optOut: boolean;
+} {
   const hasConditions = bytecode.includes(TRUST_BATCH_WITH_CONDITIONS);
   const hasExpiry = bytecode.includes(TRUST_BATCH_WITH_EXPIRY);
   const hasSimple = bytecode.includes(TRUST_BATCH_NO_EXPIRY);
@@ -129,6 +191,56 @@ function classify(bytecode: string): GroupCapabilities {
   return { trustKind, ownerRemove, optOut: hasOptOut };
 }
 
+async function readGroupOwnerAndService(
+  provider: JsonRpcProvider,
+  address: string
+): Promise<{ owner: Address | null; service: Address | null }> {
+  const group = new Contract(address, groupReadIface, provider);
+  const [ownerSettled, serviceSettled] = await Promise.allSettled([
+    group.owner(),
+    group.service(),
+  ]);
+  return {
+    owner:
+      ownerSettled.status === 'fulfilled'
+        ? asAddress(ownerSettled.value)
+        : null,
+    service:
+      serviceSettled.status === 'fulfilled'
+        ? asAddress(serviceSettled.value)
+        : null,
+  };
+}
+
+async function readSafeOwnersIfContract(
+  provider: JsonRpcProvider,
+  address: Address | null
+): Promise<{ isContract: boolean; safeOwners: Address[] | null }> {
+  if (!address || address === ZeroAddress.toLowerCase()) {
+    return { isContract: false, safeOwners: null };
+  }
+  let code: string;
+  try {
+    code = await provider.getCode(address);
+  } catch {
+    return { isContract: false, safeOwners: null };
+  }
+  if (!code || code === '0x') {
+    return { isContract: false, safeOwners: null };
+  }
+  try {
+    const safe = new Contract(address, safeIface, provider);
+    const owners = (await safe.getOwners()) as string[];
+    const normalized = owners
+      .map((o) => asAddress(o))
+      .filter((o): o is Address => o !== null);
+    return { isContract: true, safeOwners: normalized };
+  } catch {
+    // Owner is a contract but not a Safe — still useful to flag isContract.
+    return { isContract: true, safeOwners: null };
+  }
+}
+
 export async function probeGroupCapabilities(
   address: string
 ): Promise<GroupCapabilities> {
@@ -146,20 +258,37 @@ export async function probeGroupCapabilities(
     if (!rpcUrl) {
       // No RPC available — conservative default so the UI doesn't lock up
       // pretending the group has no capabilities at all.
-      return { trustKind: 'unknown', ownerRemove: false, optOut: false };
+      return emptyCaps();
     }
     try {
       const provider = new JsonRpcProvider(rpcUrl);
-      const bytecode = await readEffectiveBytecode(provider, address);
+      const [bytecode, ownerInfo] = await Promise.all([
+        readEffectiveBytecode(provider, address),
+        readGroupOwnerAndService(provider, address),
+      ]);
+
       if (!bytecode) {
-        return { trustKind: 'unknown', ownerRemove: false, optOut: false };
+        return emptyCaps();
       }
-      const caps = classify(bytecode);
+
+      const bytecodeCaps = classifyBytecode(bytecode);
+      const { isContract, safeOwners } = await readSafeOwnersIfContract(
+        provider,
+        ownerInfo.owner
+      );
+
+      const caps: GroupCapabilities = {
+        ...bytecodeCaps,
+        owner: ownerInfo.owner,
+        service: ownerInfo.service,
+        ownerIsContract: isContract,
+        ownerSafeOwners: safeOwners,
+      };
       writeCached(key, caps);
       return caps;
     } catch {
       // Network or RPC error: do not cache; next call may succeed.
-      return { trustKind: 'unknown', ownerRemove: false, optOut: false };
+      return emptyCaps();
     }
   })();
 
@@ -169,4 +298,84 @@ export async function probeGroupCapabilities(
   } finally {
     inflight.delete(key);
   }
+}
+
+function emptyCaps(): GroupCapabilities {
+  return {
+    trustKind: 'unknown',
+    ownerRemove: false,
+    optOut: false,
+    owner: null,
+    service: null,
+    ownerIsContract: false,
+    ownerSafeOwners: null,
+  };
+}
+
+// Pure derivation: given the on-chain shape and the currently-connected
+// runner + EOA addresses, decide whether the user can manage the group and
+// how. Kept separate from `probeGroupCapabilities` so a wallet swap
+// re-evaluates permission without re-probing the (immutable) on-chain shape.
+//
+// `eoaAddress` is the signer EOA (e.g. wallet.svelte's `signer.address`).
+// It matters because some users have a personal-avatar Safe AND a separate
+// group-owner Safe that share an EOA cosigner but where the personal Safe
+// is NOT itself an owner of the group Safe. In that case the user CAN still
+// manage the group — but only by reconnecting via the group's owner Safe.
+// We detect that and surface it as `eoa-must-switch-wallet` so the UI can
+// guide the user instead of letting them hit OnlyOwnerOrService at submit.
+export function assessManagePermission(
+  caps: GroupCapabilities,
+  runnerAddress: Address | string | null | undefined,
+  eoaAddress: Address | string | null | undefined = null
+): ManagePermission {
+  const runner = asAddress(runnerAddress ?? null);
+  const eoa = asAddress(eoaAddress ?? null);
+  if (!runner) {
+    return { canManage: false, ownerProxyChain: [], reason: 'unknown' };
+  }
+  const owner = caps.owner;
+  const service = caps.service;
+
+  // Direct paths: runner IS the owner, OR runner IS the service.
+  if (owner && runner === owner) {
+    return { canManage: true, ownerProxyChain: [], reason: 'direct' };
+  }
+  if (service && runner === service) {
+    return { canManage: true, ownerProxyChain: [], reason: 'service' };
+  }
+
+  // 1-hop Safe-on-Safe: owner is a Safe and runner is one of its owners.
+  if (owner && caps.ownerSafeOwners && caps.ownerSafeOwners.includes(runner)) {
+    return {
+      canManage: true,
+      ownerProxyChain: [owner],
+      reason: 'nested-safe',
+    };
+  }
+
+  // EOA-can-sign-but-runner-cannot. Runner Safe isn't an owner of the group
+  // Safe, but the user's EOA *is*. The user has signing rights — they just
+  // need to reconnect using the group's owner Safe as their wallet.
+  if (
+    owner &&
+    eoa &&
+    caps.ownerSafeOwners &&
+    caps.ownerSafeOwners.includes(eoa)
+  ) {
+    return {
+      canManage: false,
+      ownerProxyChain: [owner],
+      reason: 'eoa-must-switch-wallet',
+    };
+  }
+
+  // We have full data and neither the runner nor the EOA is on any path.
+  if (owner !== null) {
+    return { canManage: false, ownerProxyChain: [], reason: 'not-an-owner' };
+  }
+
+  // Could not read owner; be conservative but don't block the UI hard — let
+  // the preflight in trustActions surface the actual error on submit.
+  return { canManage: false, ownerProxyChain: [], reason: 'unknown' };
 }

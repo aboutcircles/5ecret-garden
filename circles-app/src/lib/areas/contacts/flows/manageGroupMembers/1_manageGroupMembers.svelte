@@ -15,6 +15,51 @@
     addTrustRelations,
     removeGroupMembers,
   } from '$lib/shared/utils/trustActions';
+  import {
+    assessManagePermission,
+    probeGroupCapabilities,
+    type ManagePermission,
+  } from '$lib/areas/groups/utils/groupKind';
+  import { signer, wallet } from '$lib/shared/state/wallet.svelte';
+  import { shortenAddress } from '$lib/shared/utils/shared';
+
+  let manageReason: ManagePermission['reason'] = $state('unknown');
+  let canManageEnabled = $state(false);
+  let managingViaOwnerSafe: Address | null = $state(null);
+  let groupOwnerAddr: Address | null = $state(null);
+  let permLoaded = $state(false);
+
+  // Probe + assess only when this flow is opened for a group avatar.
+  $effect(() => {
+    const isGroup = avatarState.isGroup;
+    const groupAddr = avatarState.avatar?.address as Address | undefined;
+    const runner = $wallet as { address?: string } | null;
+    if (!isGroup || !groupAddr) {
+      canManageEnabled = false;
+      managingViaOwnerSafe = null;
+      groupOwnerAddr = null;
+      permLoaded = false;
+      manageReason = 'unknown';
+      return;
+    }
+    void probeGroupCapabilities(groupAddr)
+      .then((caps) => {
+        const perm = assessManagePermission(
+          caps,
+          runner?.address ?? null,
+          signer.address
+        );
+        canManageEnabled = perm.canManage;
+        manageReason = perm.reason;
+        managingViaOwnerSafe =
+          perm.reason === 'nested-safe' ? perm.ownerProxyChain[0] : null;
+        groupOwnerAddr = caps.owner;
+        permLoaded = true;
+      })
+      .catch(() => {
+        permLoaded = true;
+      });
+  });
 
   let context: AddContactFlowContext = $state({
     selectedAddress: '',
@@ -202,16 +247,39 @@
     oninput={handleAddressesChange}
   ></textarea>
 
+  {#if avatarState.isGroup && permLoaded && !canManageEnabled && manageReason === 'eoa-must-switch-wallet'}
+    <div class="text-xs rounded border border-warning/40 bg-warning/10 px-2 py-1 mb-2">
+      Your account can manage this group, but only when connected via the
+      Safe that owns it
+      <span class="font-mono">({groupOwnerAddr ? shortenAddress(groupOwnerAddr) : 'unknown'})</span>.
+      Disconnect and reconnect using that Safe.
+    </div>
+  {:else if avatarState.isGroup && permLoaded && !canManageEnabled && manageReason === 'not-an-owner'}
+    <div class="text-xs rounded border border-warning/40 bg-warning/10 px-2 py-1 mb-2">
+      View-only — this group is owned by
+      <span class="font-mono">{groupOwnerAddr ? shortenAddress(groupOwnerAddr) : 'another account'}</span>.
+      Sign in with the Safe that owns this group to manage members.
+    </div>
+  {:else if avatarState.isGroup && permLoaded && managingViaOwnerSafe}
+    <div class="text-xs opacity-70 rounded border border-base-300/60 bg-base-200/40 px-2 py-1 mb-2">
+      Trust changes will be routed through
+      <span class="font-mono">{shortenAddress(managingViaOwnerSafe)}</span>
+      (the Safe that owns this group).
+    </div>
+  {/if}
+
   <div class="flex flex-row gap-x-2">
     <div class="flex flex-col gap-x-2">
       <div class="flex flex-row gap-x-2">
-        <ActionButton action={() => handleAddMembers(selectedAddresses, false)}>
-          {avatarState.isGroup ? 'Add' : 'Trust'}
-        </ActionButton>
+        {#if !avatarState.isGroup || canManageEnabled}
+          <ActionButton action={() => handleAddMembers(selectedAddresses, false)}>
+            {avatarState.isGroup ? 'Add' : 'Trust'}
+          </ActionButton>
 
-        <ActionButton action={() => handleAddMembers(selectedAddresses, true)}>
-          {avatarState.isGroup ? 'Remove' : 'Untrust'}
-        </ActionButton>
+          <ActionButton action={() => handleAddMembers(selectedAddresses, true)}>
+            {avatarState.isGroup ? 'Remove' : 'Untrust'}
+          </ActionButton>
+        {/if}
       </div>
 
       <p class="text-sm text-error h-6">{errorMessage}</p>
