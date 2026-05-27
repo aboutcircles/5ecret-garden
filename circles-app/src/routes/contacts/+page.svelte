@@ -239,6 +239,19 @@
     let countLabel: string = $derived(avatarState.isGroup ? 'members' : 'entries');
     let addLabel: string = $derived(avatarState.isGroup ? 'Add Member' : 'Add Contact');
 
+    const trustCounts = derived(contacts, ($c) => {
+        const entries = Object.values($c?.data ?? {}) as any[];
+        const visible = avatarState.isGroup
+            ? entries.filter(e => e.row?.relation === 'trusts')
+            : entries;
+        return {
+            total: visible.length,
+            mutual: entries.filter(e => e.row?.relation === 'mutuallyTrusts').length,
+            trustedBy: entries.filter(e => e.row?.relation === 'trustedBy').length,
+            trusts: entries.filter(e => e.row?.relation === 'trusts').length,
+        };
+    });
+
     // Keep actions lean: filter moved next to the title
     const actions: Action[] = $derived([
         {id: 'add', label: addLabel, iconNode: LPlus, onClick: openAddContact, variant: 'primary'},
