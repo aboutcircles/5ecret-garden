@@ -8,6 +8,7 @@
   import { popToOrOpen } from '$lib/shared/flow';
   import { popupControls } from '$lib/shared/state/popup';
   import { addTrustRelations } from '$lib/shared/utils/trustActions';
+  import { handleError } from '$lib/shared/utils/errorHandler';
   import { ADD_TRUST_FLOW_SCAFFOLD_BASE } from './constants';
   import PickAccounts from './1_PickAccounts.svelte';
   import type { AddTrustFlowContext } from './context';
@@ -21,17 +22,29 @@
 
   const selected = $derived(Array.isArray(context.selectedTrustees) ? context.selectedTrustees : []);
   const canConfirm = $derived(selected.length > 0);
+  let submitting = $state(false);
 
   async function confirm() {
-    if (!canConfirm) return;
-    await addTrustRelations({
-      actorType: context.actorType,
-      actorAddress: context.actorAddress,
-      trustTargets: selected,
-      gatewayExpiry: context.gatewayExpiry,
-    });
-    await onCompleted?.(selected);
-    popupControls.close();
+    if (!canConfirm || submitting) return;
+    submitting = true;
+    try {
+      await addTrustRelations({
+        actorType: context.actorType,
+        actorAddress: context.actorAddress,
+        trustTargets: selected,
+        gatewayExpiry: context.gatewayExpiry,
+      });
+      await onCompleted?.(selected);
+      popupControls.close();
+    } catch (error) {
+      // Preflight in trustActions throws a decoded reason (OnlyOwnerOrService,
+      // OnlyHuman, "Group trust call would revert: ..."). Without this catch
+      // the error was swallowed and the dialog froze on the Confirm button
+      // with no user-facing signal. handleError surfaces a toast.
+      handleError(error, { context: 'transaction', title: 'Could not add trust' });
+    } finally {
+      submitting = false;
+    }
   }
 
   function changeSelection() {
@@ -72,7 +85,7 @@
       {#snippet primary()}
         <ActionButton
           action={confirm}
-          disabled={!canConfirm}
+          disabled={!canConfirm || submitting}
           title="Confirm trust"
           data-popup-default-action
           data-popup-initial-focus
