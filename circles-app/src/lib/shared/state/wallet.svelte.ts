@@ -215,14 +215,37 @@ export async function initNewEoaBrowserRunner(eoaAddress: Address) {
   return runner;
 }
 
+// Mirrors shouldBypassWalletRestore in +layout.svelte; the two lists must
+// stay in sync. Uses raw pathname instead of SvelteKit's parameterized
+// route id so it can run anywhere (incl. outside a SvelteKit context).
+export function isPublicRoute(pathname: string): boolean {
+  return (
+    pathname === '/' ||
+    pathname === '/util' ||
+    pathname.startsWith('/connect-wallet') ||
+    pathname.startsWith('/register') ||
+    pathname.startsWith('/privacy-policy') ||
+    pathname.startsWith('/terms') ||
+    pathname.startsWith('/kitchen-sink')
+  );
+}
+
 export async function restoreSession() {
   const privateKey = CirclesStorage.getInstance().privateKey;
   const savedAvatar = CirclesStorage.getInstance().avatar;
 
   // Fresh visit / signed-out state — nothing to restore. Skip silently instead
   // of throwing, otherwise every first-time landing fires a red "Session Restore
-  // Failed" error toast.
+  // Failed" error toast. If the user is on an auth-gated route (deep-linked
+  // /dashboard, or wagmi lost the connector between sessions), redirect to /
+  // so the landing-page Connect Wallet button is the obvious next step.
+  // Without this redirect the dashboard renders "0 Circles" with no recovery
+  // UI — the mid-session disconnect path is covered by clearSession()'s own
+  // goto('/'), this branch covers the no-storage-on-load path.
   if (!privateKey && !savedAvatar) {
+    if (typeof window !== 'undefined' && !isPublicRoute(window.location.pathname)) {
+      await goto('/');
+    }
     return;
   }
 
