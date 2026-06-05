@@ -58,9 +58,15 @@ async function resync(): Promise<void> {
 
   try {
     await avatar.subscribeToEvents();
+  } catch (e) {
+    // Don't let a subscribe failure block the store rebind below — a stale
+    // observable is still better than empty stores.
+    console.debug('[realtimeSync] subscribeToEvents failed', e);
+  }
+  try {
     initAvatarStores(avatar);
   } catch (e) {
-    console.debug('[realtimeSync] resync failed', e);
+    console.debug('[realtimeSync] initAvatarStores failed', e);
   }
 }
 
