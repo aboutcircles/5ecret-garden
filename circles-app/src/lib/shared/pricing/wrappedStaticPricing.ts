@@ -9,8 +9,16 @@ export type WrappedStaticPriceResult = {
 
 export type WrappedStaticPriceMap = Record<string, WrappedStaticPriceResult>;
 
+// Flag-based detection so group wrappers (gCRC) are recognized too — the
+// indexer reports their tokenType under different strings (group-wrapper
+// variants don't always carry the `_Inflationary` suffix), but the SDK
+// always sets the boolean flags consistently.
 export function isWrappedStaticToken(balance: TokenBalance): boolean {
-  return balance.tokenType === WRAPPED_STATIC_TOKEN_TYPE && balance.isErc20 === true;
+  return (
+    balance.isWrapped === true &&
+    balance.isInflationary === true &&
+    balance.isErc20 === true
+  );
 }
 
 export function normalizeAddress(address: string): string {

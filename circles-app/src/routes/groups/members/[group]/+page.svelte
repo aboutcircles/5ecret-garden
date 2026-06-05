@@ -9,6 +9,7 @@
   import type { Action } from '$lib/shared/ui/shell/actions';
   import { getProfileDisplayName } from '$lib/areas/groups/ui/utils/profileDisplayName';
   import GroupMembersManager from '$lib/areas/groups/ui/components/GroupMembersManager.svelte';
+  import AddressView from '$lib/shared/ui/primitives/Address.svelte';
 
   const group = $derived(($page.params.group ?? '').toLowerCase() as Address | '');
   const shortAddr = (a?: string) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : '');
@@ -87,7 +88,9 @@
 
   {#snippet meta()}
     {#if group}
-      <span class="text-xs opacity-70">{shortAddr(group)}</span>
+      <span class="text-xs opacity-70">
+        <AddressView address={group} full explorer />
+      </span>
     {:else}
       <span class="text-xs opacity-70">Missing group address.</span>
     {/if}

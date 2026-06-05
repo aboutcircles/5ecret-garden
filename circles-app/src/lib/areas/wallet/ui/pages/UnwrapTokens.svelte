@@ -43,15 +43,18 @@
 
     const amountWei = BigInt(ethers.parseEther(amount.toString()));
 
-    // asset.tokenType is the same field the row-action button gates on
-    // (BalanceRowActions.svelte) — by the time we're here it must be a wrapper.
-    const isInflationary =
-      asset.tokenType === 'CrcV2_ERC20WrapperDeployed_Inflationary';
-    const isDemurraged =
-      asset.tokenType === 'CrcV2_ERC20WrapperDeployed_Demurraged';
+    // Flag-based detection beats the brittle tokenType string match: the
+    // indexer reports group-wrapper variants (gCRC) with tokenType strings
+    // that don't carry the `_Inflationary` / `_Demurraged` suffix, but the
+    // SDK always sets `isWrapped` + `isInflationary` consistently. Branching
+    // on flags makes this popup work for personal AND group wrappers.
+    const isInflationary = asset.isWrapped === true && asset.isInflationary === true;
+    const isDemurraged = asset.isWrapped === true && asset.isInflationary === false;
 
     if (!isInflationary && !isDemurraged) {
-      throw new Error(`Unsupported token type: ${asset.tokenType ?? 'unknown'}`);
+      throw new Error(
+        `Unsupported token type: ${asset.tokenType ?? 'unknown'} (isWrapped=${asset.isWrapped}, isInflationary=${asset.isInflationary})`
+      );
     }
 
     void executeTxSubmitFirst({

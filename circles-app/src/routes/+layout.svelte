@@ -127,6 +127,25 @@
   onMount(() => {
     disposePopupHistorySync = initPopupHistorySync();
 
+    // Legacy service-worker / cache cleanup. An old `static/service-worker.js`
+    // shipped in earlier builds; it's a no-op on prod (intercepts a chiado-rpc
+    // URL only) but if a user has it registered + has stale Cache API entries
+    // they can serve stale chunks across deploys. Unregister + drop caches so
+    // subsequent navigations always pull fresh `_app/immutable/*` from origin.
+    // Fire-and-forget; never block first paint.
+    if (browser && 'serviceWorker' in navigator) {
+      void navigator.serviceWorker
+        .getRegistrations()
+        .then((regs) => regs.forEach((r) => void r.unregister()))
+        .catch(() => {});
+    }
+    if (browser && 'caches' in window) {
+      void caches
+        .keys()
+        .then((keys) => Promise.all(keys.map((k) => caches.delete(k))))
+        .catch(() => {});
+    }
+
     // Global handler for uncaught promise rejections (e.g., SDK WebSocket errors)
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       const error = event.reason;
