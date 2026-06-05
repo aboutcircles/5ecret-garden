@@ -12,14 +12,8 @@
   import { createAvatarDataSource } from '$lib/shared/data/circles/avatarDataSource';
   import { createGroupDataSource } from '$lib/shared/data/circles/groupDataSource';
   import { removeGroupMembers } from '$lib/shared/utils/trustActions';
-  import {
-    assessManagePermission,
-    probeGroupCapabilities,
-    type ManagePermission,
-  } from '$lib/areas/groups/utils/groupKind';
-  import { signer, wallet } from '$lib/shared/state/wallet.svelte';
+  import { probeGroupCapabilities } from '$lib/areas/groups/utils/groupKind';
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
-  import AddressView from '$lib/shared/ui/primitives/Address.svelte';
   import SearchablePaginatedList from '$lib/shared/ui/lists/SearchablePaginatedList.svelte';
   import AvatarRowPlaceholder from '$lib/shared/ui/lists/placeholders/AvatarRowPlaceholder.svelte';
   import GroupMemberRow, {
@@ -54,22 +48,6 @@
     ownerRemoveSupported = v;
   });
   let capsLoaded: boolean = $state(false);
-
-  // Does the currently-connected wallet have permission to manage this group?
-  // `canManage` is derived from on-chain caps (owner, ownerSafeOwners) + the
-  // wallet runner's address. The row context exposes a parallel readable so
-  // each row can hide the trash icon without prop drilling.
-  // Declaration order matters: the $state mirror must exist BEFORE subscribe,
-  // because subscribe fires synchronously with the current store value and
-  // would otherwise hit a TDZ on the let binding.
-  let canManageEnabled: boolean = $state(false);
-  let manageReason: ManagePermission['reason'] = $state('unknown');
-  let managingViaOwnerSafe: Address | null = $state(null);
-  let groupOwner: Address | null = $state(null);
-  const canManageStore = writable<boolean>(false);
-  canManageStore.subscribe((v) => {
-    canManageEnabled = v;
-  });
 
   // Selection state lives outside the virtualized rows so toggling a checkbox
   // doesn't rebuild item identities (which would cost re-render on every row).
@@ -286,58 +264,15 @@
 
     capsLoaded = false;
     ownerRemoveSupportedStore.set(false);
-    canManageStore.set(false);
-    manageReason = 'unknown';
-    managingViaOwnerSafe = null;
-    groupOwner = null;
     void probeGroupCapabilities(group as string)
       .then((caps) => {
         if (probedForGroup !== groupKey) return;
         ownerRemoveSupportedStore.set(caps.ownerRemove);
-        groupOwner = caps.owner;
-        // Re-evaluate manage permission whenever caps land OR the wallet
-        // runner address changes. The wallet store is subscribed to in the
-        // separate $effect below, but assess once here using the current
-        // value to avoid a one-tick "no permission" flash before the
-        // subscription kicks in.
-        const runnerAddr =
-          (get(wallet) as { address?: string } | null)?.address ?? null;
-        const perm = assessManagePermission(caps, runnerAddr, signer.address);
-        canManageStore.set(perm.canManage);
-        manageReason = perm.reason;
-        managingViaOwnerSafe =
-          perm.reason === 'nested-safe' ? perm.ownerProxyChain[0] : null;
         capsLoaded = true;
       })
       .catch((e) => {
         console.warn('[GroupMembersManager] capabilities probe failed', e);
         if (probedForGroup === groupKey) capsLoaded = true;
-      });
-  });
-
-  // Re-evaluate canManage whenever the connected wallet changes. The probed
-  // caps are stable per group; only the runner address moves here.
-  $effect(() => {
-    const runner = $wallet as { address?: string } | null;
-    const groupKey = group ? String(group).toLowerCase() : '';
-    if (!groupKey) return;
-
-    void probeGroupCapabilities(group as string)
-      .then((caps) => {
-        // Only update if still on the same group (avoid stale closure write).
-        if (probedForGroup !== groupKey) return;
-        const perm = assessManagePermission(
-          caps,
-          runner?.address ?? null,
-          signer.address
-        );
-        canManageStore.set(perm.canManage);
-        manageReason = perm.reason;
-        managingViaOwnerSafe =
-          perm.reason === 'nested-safe' ? perm.ownerProxyChain[0] : null;
-      })
-      .catch(() => {
-        // Swallow — original probe already logs.
       });
   });
 
@@ -468,16 +403,9 @@
     });
   }
 
-  // Combined readable for rows: trash icon shows only if BOTH the contract
-  // shape supports owner-remove AND the connected wallet has permission.
-  const rowCanRemove = derived(
-    [ownerRemoveSupportedStore, canManageStore],
-    ([$contractSupports, $hasPermission]) => $contractSupports && $hasPermission
-  );
-
   setContext('groupMemberRowActions', {
     selectedSet: { subscribe: selectedSetStore.subscribe } as Readable<Set<string>>,
-    canRemove: { subscribe: rowCanRemove.subscribe } as Readable<boolean>,
+    canRemove: { subscribe: ownerRemoveSupportedStore.subscribe } as Readable<boolean>,
     onToggleSelected: toggleSelected,
     onUntrust: (address: Address) => void untrustOne(address),
     onActivateRow: activateRow,
@@ -498,16 +426,14 @@
       <div class="text-xs opacity-70">Manage trusted avatars for this group.</div>
     </div>
     <div class="flex items-center gap-2">
-      {#if canManageEnabled && ownerRemoveSupported && selectedCount > 0}
+      {#if ownerRemoveSupported && selectedCount > 0}
         <ActionButton action={removeSelected}>
           Remove {selectedCount} member{selectedCount === 1 ? '' : 's'}
         </ActionButton>
       {/if}
-      {#if canManageEnabled}
-        <button class="btn btn-sm btn-primary" onclick={openAddPopup}>
-          Add
-        </button>
-      {/if}
+      <button class="btn btn-sm btn-primary" onclick={openAddPopup}>
+        Add
+      </button>
     </div>
   </div>
 
@@ -515,36 +441,7 @@
     {totalMemberCount ?? $itemsReadable.length} trusted avatar{(totalMemberCount ?? $itemsReadable.length) === 1 ? '' : 's'}
   </div>
 
-  {#if capsLoaded && !canManageEnabled && manageReason === 'eoa-must-switch-wallet'}
-    <div class="text-xs rounded border border-warning/40 bg-warning/10 px-2 py-1">
-      Your account can manage this group, but only when connected via the
-      Safe that owns it
-      {#if groupOwner}
-        (<AddressView address={groupOwner} full explorer />).
-      {:else}
-        (<span class="opacity-60">unknown</span>).
-      {/if}
-      Disconnect and reconnect using that Safe.
-    </div>
-  {:else if capsLoaded && !canManageEnabled && manageReason === 'not-an-owner'}
-    <div class="text-xs rounded border border-warning/40 bg-warning/10 px-2 py-1">
-      View-only. This group is owned by
-      {#if groupOwner}
-        <AddressView address={groupOwner} full explorer />
-      {:else}
-        <span class="opacity-60">another account</span>
-      {/if}
-      — sign in with the Safe that owns this group to add or remove members.
-    </div>
-  {:else if capsLoaded && managingViaOwnerSafe}
-    <div class="text-xs opacity-70 rounded border border-base-300/60 bg-base-200/40 px-2 py-1">
-      Managing as
-      <AddressView address={managingViaOwnerSafe} full explorer />
-      (the Safe that owns this group). Trust changes are routed through it.
-    </div>
-  {/if}
-
-  {#if capsLoaded && canManageEnabled && !ownerRemoveSupported}
+  {#if capsLoaded && !ownerRemoveSupported}
     <div class="text-xs opacity-70 rounded border border-base-300/60 bg-base-200/40 px-2 py-1">
       This group's contract has no owner-side remove. Members leave via Opt-out from their Memberships page.
     </div>

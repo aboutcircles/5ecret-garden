@@ -1,38 +1,92 @@
-// Self-destruct service worker. Replaces an earlier profile-cache SW that
-// could pin stale Cache API entries across deploys for users who had it
-// registered. Activating this SW clears all caches and unregisters itself,
-// so the next page load uses the standard browser network stack only.
-//
-// Bumped name + simple body forces the browser update path to pick this up:
-// previous SW called skipWaiting/clients.claim, so as soon as the browser
-// fetches /service-worker.js (which it does on every navigation by spec),
-// it installs this one, runs the install/activate handlers, and the old SW
-// is gone.
+const CACHE_NAME = 'profile-cache-v1';
+const MAX_CACHE_SIZE = 50; // Max number of items in the cache
 
-const CACHE_NAME = 'circles-sw-killswitch-v1';
-
-self.addEventListener('install', () => {
-  // Take over immediately — don't wait for old tabs to close.
+self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    (async () => {
-      // 1. Drop every Cache API store this origin has accumulated.
-      const keys = await caches.keys();
-      await Promise.all(keys.map((k) => caches.delete(k)));
-
-      // 2. Claim open clients so the unregister below also affects this tab.
-      await self.clients.claim();
-
-      // 3. Unregister this SW. Subsequent navigations have no SW at all
-      //    until/unless the app re-registers (which it doesn't).
-      await self.registration.unregister();
-    })()
-  );
+  event.waitUntil(clients.claim());
 });
 
-// No fetch handler on purpose — anything served from this SW would just be
-// pass-through to the network; while activate is running we don't want to
-// short-circuit any request paths.
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+  if (url.hostname === 'chiado-rpc.aboutcircles.com' && url.port === '3000') {
+    if (url.pathname === '/get') {
+      console.log('Handling single profile request for: ' + event.request.url);
+      event.respondWith(handleProfileRequest(event.request));
+    }
+  }
+});
+
+async function handleProfileRequest(request) {
+  const cache = await caches.open(CACHE_NAME);
+  const now = Date.now();
+
+  const cachedResponse = await cache.match(request);
+  if (cachedResponse) {
+    console.log('Found cached response for: ' + request.url);
+    const cachedData = await cachedResponse.json();
+    // Update usage timestamp
+    await updateCacheTimestamp(cache, request, cachedData.profile, now);
+    return new Response(JSON.stringify(cachedData.profile), {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  console.log('No valid cached response found for: ' + request.url);
+  const networkResponse = await fetch(request);
+  if (networkResponse.ok) {
+    const profile = await networkResponse.clone().json();
+    // Add new data to cache
+    await addToCache(cache, request, profile, now);
+    return networkResponse;
+  }
+
+  return cachedResponse || networkResponse;
+}
+
+async function addToCache(cache, request, profile, timestamp) {
+  const cacheItems = await cache.keys();
+  if (cacheItems.length >= MAX_CACHE_SIZE) {
+    // Clean up least recently used cache items
+    await cleanupCache(cache, cacheItems);
+  }
+  const cacheData = { profile, timestamp };
+  await cache.put(
+    request,
+    new Response(JSON.stringify(cacheData), {
+      headers: { 'Content-Type': 'application/json' },
+    })
+  );
+}
+
+async function updateCacheTimestamp(cache, request, profile, timestamp) {
+  const cacheData = { profile, timestamp };
+  await cache.put(
+    request,
+    new Response(JSON.stringify(cacheData), {
+      headers: { 'Content-Type': 'application/json' },
+    })
+  );
+}
+
+async function cleanupCache(cache, cacheItems) {
+  let oldestRequest = null;
+  let oldestTimestamp = Date.now();
+
+  for (const request of cacheItems) {
+    const response = await cache.match(request);
+    if (response) {
+      const cachedData = await response.json();
+      if (cachedData.timestamp < oldestTimestamp) {
+        oldestTimestamp = cachedData.timestamp;
+        oldestRequest = request;
+      }
+    }
+  }
+
+  if (oldestRequest) {
+    await cache.delete(oldestRequest);
+  }
+}

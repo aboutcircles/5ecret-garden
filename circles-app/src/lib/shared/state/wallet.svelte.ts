@@ -215,37 +215,14 @@ export async function initNewEoaBrowserRunner(eoaAddress: Address) {
   return runner;
 }
 
-// Mirrors shouldBypassWalletRestore in +layout.svelte; the two lists must
-// stay in sync. Uses raw pathname instead of SvelteKit's parameterized
-// route id so it can run anywhere (incl. outside a SvelteKit context).
-export function isPublicRoute(pathname: string): boolean {
-  return (
-    pathname === '/' ||
-    pathname === '/util' ||
-    pathname.startsWith('/connect-wallet') ||
-    pathname.startsWith('/register') ||
-    pathname.startsWith('/privacy-policy') ||
-    pathname.startsWith('/terms') ||
-    pathname.startsWith('/kitchen-sink')
-  );
-}
-
 export async function restoreSession() {
   const privateKey = CirclesStorage.getInstance().privateKey;
   const savedAvatar = CirclesStorage.getInstance().avatar;
 
   // Fresh visit / signed-out state — nothing to restore. Skip silently instead
   // of throwing, otherwise every first-time landing fires a red "Session Restore
-  // Failed" error toast. If the user is on an auth-gated route (deep-linked
-  // /dashboard, or wagmi lost the connector between sessions), redirect to /
-  // so the landing-page Connect Wallet button is the obvious next step.
-  // Without this redirect the dashboard renders "0 Circles" with no recovery
-  // UI — the mid-session disconnect path is covered by clearSession()'s own
-  // goto('/'), this branch covers the no-storage-on-load path.
+  // Failed" error toast.
   if (!privateKey && !savedAvatar) {
-    if (typeof window !== 'undefined' && !isPublicRoute(window.location.pathname)) {
-      await goto('/');
-    }
     return;
   }
 
@@ -316,41 +293,26 @@ export async function restoreSession() {
       savedAvatar ??
       (newRunner?.address || sdk.contractRunner?.address)) as Address;
 
-    // Restore the avatar with event subscription. If subscribe fails (the
-    // WS-bug captured in memory/sdk_websocket_bug.md occasionally never
-    // resolves), the user must NOT be bounced to /register — that's a UX
-    // regression where a transient WS hiccup looks like a logged-out state
-    // and forces re-login. Fall back to a non-subscribed avatar; the user
-    // keeps a working session in read/sign mode, just without live event
-    // pushes (a refresh later reconnects).
-    let avatar;
-    try {
-      avatar = await withRetry(
-        () => sdk.getAvatar(avatarToRestore, true),
-        {
-          maxAttempts: 5,
-          initialDelayMs: 1000,
-          maxDelayMs: 15000,
-          isRetryable: isTransientError,
-          updateConnectionStatus: true,
-          statusLabel: 'Wallet',
-          onRetry: (attempt, error, delayMs) => {
-            console.warn(
-              `[Wallet] Avatar subscription failed (attempt ${attempt}/5), retrying in ${Math.round(delayMs / 1000)}s:`,
-              error.message
-            );
-          },
-        }
-      );
-    } catch (subscribeError) {
-      console.warn(
-        '[Wallet] Avatar subscription retries exhausted, falling back to non-subscribed restore:',
-        subscribeError
-      );
-      // Non-subscribed restore — pure data read, no WS. If THIS fails, the
-      // outer catch handles it as the original code did.
-      avatar = await sdk.getAvatar(avatarToRestore, false);
-    }
+    // Get avatar from SDK - returns HumanAvatar, OrganisationAvatar, or BaseGroupAvatar
+    // Enable auto event subscription for reactive updates
+    // Use retry logic for WebSocket subscription resilience
+    let avatar = await withRetry(
+      () => sdk.getAvatar(avatarToRestore, true),
+      {
+        maxAttempts: 5,
+        initialDelayMs: 1000,
+        maxDelayMs: 15000,
+        isRetryable: isTransientError,
+        updateConnectionStatus: true,
+        statusLabel: 'Wallet',
+        onRetry: (attempt, error, delayMs) => {
+          console.warn(
+            `[Wallet] Avatar subscription failed (attempt ${attempt}/5), retrying in ${Math.round(delayMs / 1000)}s:`,
+            error.message
+          );
+        },
+      }
+    );
 
     if (avatar) {
       avatarState.avatar = avatar;
@@ -379,13 +341,16 @@ export async function restoreSession() {
       await goto('/register');
     }
   } catch (error) {
+    // Don't surface a red toast: the landing page + Connect Wallet button
+    // already communicates the un-authenticated state to the user. Log for
+    // debugging.
     console.error('[Wallet] Session restore failed:', error);
 
     // Only nuke the saved session on definitively terminal errors. For
     // transient network / RPC / WS failures, leave localStorage intact so
     // the next page-load can retry — clearSession() wipes the in-app PK
     // (Circles-native variant), and we don't want a 5-second RPC blip to
-    // brick a funded avatar. clearSession() itself navigates to '/'.
+    // brick a funded avatar.
     const transient = error instanceof Error && isTransientError(error);
     if (!transient) {
       clearSession();

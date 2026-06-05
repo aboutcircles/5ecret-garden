@@ -2,8 +2,7 @@
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import { avatarState } from '$lib/shared/state/avatar.svelte';
     import { tokenTypeToString } from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
-    import { crcTypes, roundToDecimals } from '$lib/shared/utils/shared';
-    import { isWrappedStaticToken } from '$lib/shared/pricing/wrappedStaticPricing';
+    import { crcTypes, roundToDecimals, staticTypes } from '$lib/shared/utils/shared';
     import { formatCompactCurrency } from '$lib/shared/utils/money';
     import WrapTokens from '$lib/areas/wallet/ui/pages/WrapTokens.svelte';
 
@@ -46,16 +45,11 @@
         },
 
         {
-            // Demurraged wrapper. Flag-based detection — group wrappers
-            // (gCRC) report a tokenType string the previous exact-match
-            // missed, but `isWrapped` + `isInflationary` flags are stable
-            // across personal AND group wrappers.
-            condition: (b) => b.isWrapped === true && b.isInflationary === false,
+            condition: (b) => (b.tokenType ?? '') === 'CrcV2_ERC20WrapperDeployed_Demurraged',
             title: 'Unwrap', icon: '/banknotes.svg', component: UnwrapTokens
         },
         {
-            // Inflationary / static wrapper. Same flag-based treatment.
-            condition: (b) => b.isWrapped === true && b.isInflationary === true,
+            condition: (b) => (b.tokenType ?? '') === 'CrcV2_ERC20WrapperDeployed_Inflationary',
             title: 'Unwrap Static Circles', icon: '/banknotes.svg', component: UnwrapTokens
         },
     ];
@@ -187,7 +181,7 @@
     <div class="text-right tabular-nums shrink-0">
         <div class="font-bold">{formatCompactCurrency(item.circles ?? 0, 'CRC')}</div>
         <p class="text-xs text-base-content/70">
-            {#if isWrappedStaticToken(item)}
+            {#if staticTypes.has(item.tokenType ?? '')}
                 {roundToDecimals(item.staticCircles ?? 0)} Static Circles
             {/if}
             {#if crcTypes.has(item.tokenType ?? '')}

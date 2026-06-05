@@ -162,20 +162,6 @@ export async function withRetry<T>(
 export function isTransientError(error: Error): boolean {
   const message = error.message.toLowerCase();
 
-  // Wallet-disconnect errors are NOT transient — they are a definitive state
-  // change that needs user action (reconnect). Treating them as transient
-  // makes restoreSession leave a broken session in localStorage and the user
-  // sits on an empty dashboard with no Connect Wallet path. Match the exact
-  // user-facing strings produced by getSigner() / restoreSession() before
-  // the generic patterns can claim them.
-  if (
-    message.includes('wallet not connected') ||
-    message.includes('please reconnect your wallet') ||
-    message.includes('please unlock metamask')
-  ) {
-    return false;
-  }
-
   const transientPatterns = [
     'connection',
     'timeout',
@@ -185,6 +171,8 @@ export function isTransientError(error: Error): boolean {
     'socket',
     'websocket',
     'subscribe',
+    'not connected',
+    'disconnected',
     'interrupted',
     'etimedout',
     'enotfound',
