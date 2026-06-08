@@ -135,7 +135,7 @@
     </button>
 
     {#if !isV1 && showGroups}
-        <div style="border-top:1px solid {T.hairlineSoft};padding:12px 16px 14px;display:flex;flex-direction:column;gap:8px;">
+        <div style="border-top:1px solid {T.hairlineSoft};padding:14px 16px 20px;display:flex;flex-direction:column;gap:10px;">
             <div style="display:flex;align-items:center;justify-content:space-between;">
                 <span style="font-size:10.5px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">My groups</span>
                 <button
@@ -152,14 +152,14 @@
                 </button>
             </div>
 
-            <div style="display:flex;flex-direction:column;gap:2px;">
+            <div style="display:flex;flex-direction:column;gap:4px;">
                 {#each groups ?? [] as group}
                     <button
                         onclick={() => connectAvatar(group.group)}
                         aria-label={`Connect as group ${group.group}`}
                         style="
                             display:flex;align-items:center;gap:10px;width:100%;
-                            padding:8px 10px;border-radius:10px;
+                            padding:10px 10px;border-radius:10px;
                             background:transparent;border:0;cursor:pointer;text-align:left;
                             transition:background 180ms ease-out,box-shadow 180ms ease-out;
                         "
