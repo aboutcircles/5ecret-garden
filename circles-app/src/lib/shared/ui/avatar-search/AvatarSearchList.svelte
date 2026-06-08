@@ -28,6 +28,7 @@
   import type { AvatarSearchItem } from './avatarSearch.types';
   import AvatarSearchRow from './AvatarSearchRow.svelte';
   import AvatarRowPlaceholder from '$lib/shared/ui/lists/placeholders/AvatarRowPlaceholder.svelte';
+  import { T } from '$lib/design-system/tokens.js';
 
   const ACTIVATE_CTX_KEY = 'avatar-search-row-activate';
 
@@ -345,7 +346,7 @@
 </script>
 
 <div data-avatar-search-list-scope bind:this={listScopeEl}>
-  <p class="menu-title pl-0">{computedTitle}</p>
+  <p style="font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;margin:0 0 6px 2px;">{computedTitle}</p>
 
   <ListShell
     query={query}
@@ -357,14 +358,19 @@
     isEmpty={false}
     wrapInListContainer={false}
   >
-    <div class="-mt-1 mb-3 text-xs text-base-content/60 flex items-center gap-2">
+    <div style="margin-top:-4px;margin-bottom:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:11px;color:{T.inkMuted};">
       <span>{preferredRows.length} result(s)</span>
+      {#if queryTrimmed.length === 0}
+        <span style="color:{T.inkFaint};">·</span>
+        <span>Showing bookmarks and contacts first</span>
+      {/if}
       {#if queryTrimmed.length > 0 && queryTrimmed.length < minRemoteLength}
-        <span>• Type at least {minRemoteLength} chars for remote search</span>
+        <span style="color:{T.inkFaint};">·</span>
+        <span>Type at least {minRemoteLength} chars for remote search</span>
       {/if}
       {#if remoteLoading}
-        <span class="inline-flex items-center gap-1">
-          <span class="loading loading-spinner loading-xs text-primary" aria-hidden="true"></span>
+        <span style="display:inline-flex;align-items:center;gap:4px;">
+          <svg class="avatarsearchlist-spin" style="width:12px;height:12px;color:{T.primary};" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>
           <span>Searching network…</span>
         </span>
       {/if}
@@ -421,15 +427,22 @@
         </div>
       {/if}
     {:else if showEmpty}
-      <div class="text-center py-4">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:24px 8px;">
         {#if canInviteTrust}
-          <button class="btn mt-2" onclick={onInviteClick}>Invite {queryTrimmed}</button>
+          <button
+            type="button"
+            style="height:38px;padding:0 18px;border-radius:9999px;border:0;cursor:pointer;background:{T.primary};color:#fff;font-size:13px;font-weight:580;box-shadow:0 4px 12px rgba(88,73,212,0.25);"
+            onclick={onInviteClick}
+          >Invite {queryTrimmed.slice(0, 8)}…</button>
           {#if ontrust}
-            <br />
-            <button class="btn mt-4" onclick={onTrustClick}>Trust {queryTrimmed}</button>
+            <button
+              type="button"
+              style="height:38px;padding:0 18px;border-radius:9999px;border:1px solid {T.hairline};cursor:pointer;background:{T.surface};color:{T.ink};font-size:13px;font-weight:540;"
+              onclick={onTrustClick}
+            >Trust {queryTrimmed.slice(0, 8)}…</button>
           {/if}
         {:else}
-          <p>No accounts found.</p>
+          <p style="font-size:12.5px;color:{T.inkMuted};">No accounts found.</p>
         {/if}
         {#if showAddToFavoritesCta}
           <div class="mt-3">
@@ -500,3 +513,8 @@
     {/if}
   </ListShell>
 </div>
+
+<style>
+  @keyframes avatarsearchlist-spin { from {} to { transform: rotate(360deg); } }
+  .avatarsearchlist-spin { animation: avatarsearchlist-spin 0.8s linear infinite; }
+</style>

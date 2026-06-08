@@ -1,6 +1,13 @@
 import type { RequestHandler } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async ({ url }) => {
+  const { DB_USER, DB_PW, DB_HOST, DB_PORT, DB_DATABASE } = env;
+  if (!DB_USER || !DB_PW || !DB_HOST || !DB_PORT || !DB_DATABASE) {
+    return new Response(JSON.stringify({ error: 'Price history not configured' }), {
+      status: 503, headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
   const groupToken = url.searchParams.get('group')?.toLowerCase();
   let resolution = url.searchParams.get('resolution') ?? 'hour';
   let period = url.searchParams.get('period') ?? '7 days';

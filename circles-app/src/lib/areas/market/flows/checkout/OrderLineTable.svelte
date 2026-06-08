@@ -1,6 +1,7 @@
 <script lang="ts">
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import { formatCurrency } from '$lib/shared/utils/money';
+  import { T } from '$lib/design-system/tokens.js';
 
   interface UnitPrice {
     amount: number | null;
@@ -73,39 +74,50 @@
   }
 </script>
 
-<div class="flex flex-col gap-4">
+<div style="display:flex;flex-direction:column;gap:12px;">
   {#each reviewGroups as grp, gi (gi)}
-    <div class="border border-base-300/60 rounded-lg">
-      <div class="px-3 py-2 bg-base-200/40 flex items-center justify-between text-xs text-base-content/60">
-        <div class="flex items-center gap-2">
-          <span class="uppercase tracking-wide">Seller</span>
+    <div style="border:1px solid {T.hairlineSoft};border-radius:14px;overflow:hidden;background:{T.surface};">
+      <!-- Seller header -->
+      <div style="
+        padding:8px 14px;background:{T.surfaceAlt};
+        border-bottom:1px solid {T.hairlineSoft};
+        display:flex;align-items:center;justify-content:space-between;gap:10px;
+      ">
+        <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+          <span style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;flex-shrink:0;">Seller</span>
           {#if grp.seller}
             <Avatar view="small" address={grp.seller} clickable={false} />
           {:else}
-            <span class="opacity-60">Unknown seller</span>
+            <span style="font-size:11.5px;color:{T.inkSubtle};">Unknown seller</span>
           {/if}
         </div>
       </div>
 
-      <div class="divide-y divide-base-200">
-        {#each grp.indices as i}
+      <!-- Lines -->
+      <div>
+        {#each grp.indices as i, ri (i)}
           {@const unit = getLineUnitPrice(lines[i])}
           {@const total = getLineTotal(lines[i])}
           {@const qty = getLineQuantity(lines[i])}
 
-          <div
-            class="px-3 py-3 md:px-4 md:py-4 grid gap-2 md:gap-3
-                   grid-cols-[auto,1fr,auto]
-                   grid-rows-[auto,auto]"
-          >
-            <!-- image (mobile + desktop) -->
-            <div class="row-span-2 flex items-start">
-              <div class="w-8 h-8 md:w-10 md:h-10 rounded bg-base-200 overflow-hidden flex items-center justify-center text-[10px] text-base-content/50">
+          <div style="
+            padding:12px 14px;{ri > 0 ? `border-top:1px solid ${T.hairlineSoft};` : ''}
+            display:grid;gap:10px;
+            grid-template-columns:auto 1fr auto;grid-template-rows:auto auto;
+          ">
+            <!-- image -->
+            <div style="grid-row:span 2;display:flex;align-items:flex-start;">
+              <div style="
+                width:44px;height:44px;border-radius:10px;
+                background:{T.surfaceAlt};border:1px solid {T.hairlineSoft};overflow:hidden;
+                display:inline-flex;align-items:center;justify-content:center;
+                font-size:9px;color:{T.inkFaint};flex-shrink:0;
+              ">
                 {#if imageUrlForLine(lines[i])}
                   <img
                     src={imageUrlForLine(lines[i]) || ''}
                     alt={findCatalogItem(lines[i].seller, lines[i].orderedItem?.sku)?.product.name ?? lineTitle(lines[i])}
-                    class="w-full h-full object-cover"
+                    style="width:100%;height:100%;object-fit:cover;"
                   />
                 {:else}
                   <span>No image</span>
@@ -114,67 +126,55 @@
             </div>
 
             <!-- title + subtitle -->
-            <div class="min-w-0">
-              <div class="text-sm md:text-base font-medium truncate md:whitespace-normal">
+            <div style="min-width:0;">
+              <div style="font-size:13.5px;font-weight:540;color:{T.ink};line-height:1.35;">
                 {findCatalogItem(lines[i].seller, lines[i].orderedItem?.sku)?.product.name ?? lineTitle(lines[i])}
               </div>
               {#if lineSubtitle(lines[i])}
-                <div class="text-xs opacity-60 truncate md:whitespace-normal">{lineSubtitle(lines[i])}</div>
+                <div style="font-size:11px;color:{T.inkMuted};margin-top:2px;font-family:{T.fontMono};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{lineSubtitle(lines[i])}</div>
               {/if}
             </div>
 
-            <!-- total (mobile: top-right, desktop: right column) -->
-            <div class="text-right col-start-3">
-              <div class="text-sm font-semibold">
-                {#if total.amount != null}
-                  {formatCurrency(total.amount, total.code)}
-                {:else}
-                  —
-                {/if}
+            <!-- total -->
+            <div style="text-align:right;grid-column-start:3;">
+              <div style="font-size:13.5px;font-weight:580;color:{T.ink};white-space:nowrap;">
+                {#if total.amount != null}{formatCurrency(total.amount, total.code)}{:else}—{/if}
               </div>
-              <div class="text-xs opacity-60 hidden md:block">
-                {unit.amount != null ? `à ${formatCurrency(unit.amount, unit.code)}` : ''}
-              </div>
-              <div class="text-xs opacity-60 md:hidden">
+              <div style="font-size:10.5px;color:{T.inkMuted};margin-top:2px;white-space:nowrap;">
                 {unit.amount != null ? `${qty} × ${formatCurrency(unit.amount, unit.code)}` : ''}
               </div>
             </div>
 
-            <!-- quantity controls + mobile remove -->
-            <div class="col-span-2 flex items-center justify-between gap-2">
+            <!-- quantity controls / display -->
+            <div style="grid-column:span 2;display:flex;align-items:center;justify-content:space-between;gap:8px;">
               {#if editable}
-                <div class="join">
+                <div style="display:inline-flex;align-items:center;border:1px solid {T.hairline};border-radius:9999px;background:{T.surface};overflow:hidden;">
                   <button
                     type="button"
-                    class="btn btn-xs md:btn-sm join-item"
+                    style="width:28px;height:28px;border:0;background:transparent;color:{qty <= 0 ? T.inkFaint : T.ink};cursor:{qty <= 0 ? 'not-allowed' : 'pointer'};font-size:14px;line-height:1;"
                     onclick={() => setQty(i, qty - 1)}
                     disabled={qty <= 0}
-                  >
-                    -
-                  </button>
-                  <div class="btn btn-xs md:btn-sm join-item pointer-events-none min-w-10">{qty}</div>
+                  >−</button>
+                  <span style="min-width:32px;text-align:center;font-size:12.5px;font-weight:540;color:{T.ink};border-left:1px solid {T.hairlineSoft};border-right:1px solid {T.hairlineSoft};padding:4px 0;">{qty}</span>
                   <button
                     type="button"
-                    class="btn btn-xs md:btn-sm join-item"
+                    style="width:28px;height:28px;border:0;background:transparent;color:{T.ink};cursor:pointer;font-size:14px;line-height:1;"
                     onclick={() => setQty(i, qty + 1)}
-                  >
-                    +
-                  </button>
+                  >+</button>
                 </div>
 
                 <button
                   type="button"
-                  class="btn btn-ghost btn-xs md:btn-sm text-error"
+                  style="
+                    height:28px;padding:0 12px;border-radius:9999px;border:0;cursor:pointer;
+                    background:transparent;color:{T.negative};font-size:11.5px;font-weight:540;
+                  "
                   onclick={() => onRemove?.(i)}
-                >
-                  Remove
-                </button>
+                >Remove</button>
               {:else}
-                <div class="text-sm md:text-right">
-                  <span class="font-semibold">{qty}x</span>
-                  <span class="text-xs opacity-60 ml-1">
-                    {unit.amount != null ? formatCurrency(unit.amount, unit.code) : '—'}
-                  </span>
+                <div style="font-size:12px;color:{T.inkBody};">
+                  <span style="font-weight:580;color:{T.ink};">{qty}×</span>
+                  <span style="color:{T.inkMuted};margin-left:4px;">{unit.amount != null ? formatCurrency(unit.amount, unit.code) : '—'}</span>
                 </div>
               {/if}
             </div>

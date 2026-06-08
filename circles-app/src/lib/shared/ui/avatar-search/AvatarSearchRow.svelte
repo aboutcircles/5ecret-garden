@@ -1,7 +1,6 @@
 <script lang="ts">
   import { getContext } from 'svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import { formatTrustRelation } from '$lib/shared/utils/helpers';
   import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
   import {
@@ -10,6 +9,7 @@
     type ProfileBookmark,
   } from '$lib/areas/settings/state/profileBookmarks';
   import type { AvatarSearchItem } from './avatarSearch.types';
+  import { T } from '$lib/design-system/tokens.js';
 
   const ACTIVATE_CTX_KEY = 'avatar-search-row-activate';
   type ActivateRow = (item: AvatarSearchItem) => void;
@@ -220,3 +220,11 @@
     </div>
   {/if}
 </div>
+
+<style>
+  [data-avatar-search-row]:hover,
+  [data-avatar-search-row]:focus-visible {
+    background: #F6F5F2 !important;
+    border-color: rgba(31,17,70,0.12) !important;
+  }
+</style>

@@ -12,12 +12,12 @@
   }: Props = $props();
 </script>
 
-<div class={`avatar-skeleton inline-flex items-center gap-2 ${reverse ? 'flex-row-reverse' : ''}`}>
+<div class="avatar-skeleton" style="display:inline-flex;align-items:center;gap:8px;flex-direction:{reverse ? 'row-reverse' : 'row'};">
   {#if showText}
-    <div class="avatar-skeleton-block h-5 w-20 rounded inline-block align-middle" aria-hidden="true"></div>
+    <div class="avatar-skeleton-block" style="height:20px;width:80px;border-radius:4px;display:inline-block;vertical-align:middle;" aria-hidden="true"></div>
   {/if}
   {#if showAvatar}
-    <div class="avatar-skeleton-block w-6 h-6 rounded-full inline-block align-middle" aria-hidden="true"></div>
+    <div class="avatar-skeleton-block" style="width:24px;height:24px;border-radius:9999px;display:inline-block;vertical-align:middle;" aria-hidden="true"></div>
   {/if}
 </div>
 
@@ -28,7 +28,7 @@
   }
 
   .avatar-skeleton-block {
-    background: hsl(var(--b3) / 0.7);
+    background: rgba(31,17,70,0.08);
   }
 
   @media (prefers-reduced-motion: no-preference) {

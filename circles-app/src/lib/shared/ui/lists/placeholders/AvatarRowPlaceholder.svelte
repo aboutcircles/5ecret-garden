@@ -1,6 +1,4 @@
 <script lang="ts">
-  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
-
   interface Props {
     height?: number;
     showChevron?: boolean;
@@ -9,27 +7,23 @@
 
   let { height, showChevron = true, dense = true }: Props = $props();
 
-  const rowStyle = $derived(height ? `min-height: ${height}px;` : undefined);
+  const rowStyle = $derived(height ? `min-height:${height}px;` : '');
 </script>
 
-<div aria-hidden="true">
-  <RowFrame noLeading={true} dense={dense} style={rowStyle}>
-    <div class="w-full flex items-center justify-between">
-      <div class="inline-flex items-center min-w-0 max-w-full">
-        <div class="relative inline-block">
-          <div class="w-10 h-10 rounded-full bg-base-300/70"></div>
-        </div>
-        <div class="flex flex-col items-start pl-4 gap-y-0.5 min-w-0">
-          <div class="h-4 w-40 max-w-full bg-base-300/70 rounded"></div>
-          <div class="h-3 w-28 max-w-full bg-base-300/60 rounded"></div>
-        </div>
-      </div>
-
-      {#if showChevron}
-        <div class="shrink-0">
-          <div class="w-4 h-4 rounded bg-base-300/60"></div>
-        </div>
-      {/if}
+<div aria-hidden="true" style="display:flex;align-items:center;gap:12px;padding:{dense ? '8px 14px' : '10px 14px'};border-radius:12px;border:1px solid rgba(0,0,0,0.06);background:rgba(255,255,255,0.7);{rowStyle}">
+  <div style="display:inline-flex;align-items:center;min-width:0;max-width:100%;flex:1;">
+    <div style="position:relative;display:inline-block;flex-shrink:0;">
+      <div style="width:40px;height:40px;border-radius:9999px;background:rgba(0,0,0,0.1);"></div>
     </div>
-  </RowFrame>
+    <div style="display:flex;flex-direction:column;align-items:flex-start;padding-left:16px;gap:2px;min-width:0;">
+      <div style="height:16px;width:160px;max-width:100%;background:rgba(0,0,0,0.1);border-radius:4px;"></div>
+      <div style="height:12px;width:112px;max-width:100%;background:rgba(0,0,0,0.08);border-radius:4px;"></div>
+    </div>
+  </div>
+
+  {#if showChevron}
+    <div style="flex-shrink:0;">
+      <div style="width:16px;height:16px;border-radius:4px;background:rgba(0,0,0,0.08);"></div>
+    </div>
+  {/if}
 </div>

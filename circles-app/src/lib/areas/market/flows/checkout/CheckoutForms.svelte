@@ -1,7 +1,7 @@
 <script lang="ts">
   import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
-  import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
   import { CHECKOUT_FLOW_SCAFFOLD_BASE } from './constants';
+  import { T } from '$lib/design-system/tokens.js';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
   import { openStep, useAsyncAction } from '$lib/shared/flow';
   import {
@@ -286,32 +286,31 @@
   subtitle="Provide required checkout information."
 >
 
-    <p>
-        The seller needs some additional information from you. Please fill in the forms below:
+    <p style="font-size:12.5px;color:{T.inkMuted};margin:0;line-height:1.5;">
+      The seller needs some additional information. Please fill in the fields below.
     </p>
-    <div class="space-y-4 text-xs">
+
+    <div style="display:flex;flex-direction:column;gap:16px;">
       {#if customerRequired}
-        <div class="space-y-2">
-          <div class="font-semibold opacity-80">Customer identification</div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <label class="form-control">
-              <span class="label-text text-xs">First name</span>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Customer identification</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <label style="display:flex;flex-direction:column;gap:4px;">
+              <span style="font-size:11px;color:{T.inkMuted};">First name</span>
               <input
-                class="input input-xs input-bordered"
+                style="padding:9px 12px;border:1px solid {fieldHasError('/customer/givenName') ? T.negative : T.hairline};border-radius:10px;font-family:{T.fontSans};font-size:12.5px;color:{T.ink};background:{T.surface};"
                 bind:value={givenName}
-                  data-popup-initial-input
+                data-popup-initial-input
                 onblur={validateOnBlur}
-                class:border-error={fieldHasError('/customer/givenName')}
                 required
               />
             </label>
-            <label class="form-control">
-              <span class="label-text text-xs">Last name</span>
+            <label style="display:flex;flex-direction:column;gap:4px;">
+              <span style="font-size:11px;color:{T.inkMuted};">Last name</span>
               <input
-                class="input input-xs input-bordered"
+                style="padding:9px 12px;border:1px solid {fieldHasError('/customer/familyName') ? T.negative : T.hairline};border-radius:10px;font-family:{T.fontSans};font-size:12.5px;color:{T.ink};background:{T.surface};"
                 bind:value={familyName}
                 onblur={validateOnBlur}
-                class:border-error={fieldHasError('/customer/familyName')}
                 required
               />
             </label>
@@ -320,57 +319,53 @@
       {/if}
 
       {#if shippingRequired}
-        <div class="space-y-2">
-          <div class="font-semibold opacity-80">Shipping address</div>
-          <div class="grid grid-cols-1 gap-2">
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Shipping address</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
             {#if shipStreetRequired}
-              <label class="form-control">
-                <span class="label-text text-xs">Street address</span>
+              <label style="display:flex;flex-direction:column;gap:4px;">
+                <span style="font-size:11px;color:{T.inkMuted};">Street address</span>
                 <input
-                  class="input input-xs input-bordered"
+                  style="padding:9px 12px;border:1px solid {fieldHasError('/shippingAddress/streetAddress') ? T.negative : T.hairline};border-radius:10px;font-family:{T.fontSans};font-size:12.5px;color:{T.ink};background:{T.surface};"
                   bind:value={shippingStreet}
                   data-popup-initial-input
                   onblur={validateOnBlur}
-                  class:border-error={fieldHasError('/shippingAddress/streetAddress')}
                   required
                 />
               </label>
             {/if}
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
               {#if shipLocalityRequired}
-                <label class="form-control">
-                  <span class="label-text text-xs">City / locality</span>
+                <label style="display:flex;flex-direction:column;gap:4px;">
+                  <span style="font-size:11px;color:{T.inkMuted};">City</span>
                   <input
-                    class="input input-xs input-bordered"
+                    style="padding:9px 12px;border:1px solid {fieldHasError('/shippingAddress/addressLocality') ? T.negative : T.hairline};border-radius:10px;font-family:{T.fontSans};font-size:12.5px;color:{T.ink};background:{T.surface};"
                     bind:value={shippingLocality}
                     onblur={validateOnBlur}
-                    class:border-error={fieldHasError('/shippingAddress/addressLocality')}
                     required
                   />
                 </label>
               {/if}
               {#if shipPostalRequired}
-                <label class="form-control">
-                  <span class="label-text text-xs">Postal code</span>
+                <label style="display:flex;flex-direction:column;gap:4px;">
+                  <span style="font-size:11px;color:{T.inkMuted};">Postal code</span>
                   <input
-                    class="input input-xs input-bordered"
+                    style="padding:9px 12px;border:1px solid {fieldHasError('/shippingAddress/postalCode') ? T.negative : T.hairline};border-radius:10px;font-family:{T.fontSans};font-size:12.5px;color:{T.ink};background:{T.surface};"
                     bind:value={shippingPostal}
                     onblur={validateOnBlur}
-                    class:border-error={fieldHasError('/shippingAddress/postalCode')}
                     required
                   />
                 </label>
               {/if}
               {#if shipCountryRequired}
-                <label class="form-control">
-                  <span class="label-text text-xs">Country</span>
+                <label style="display:flex;flex-direction:column;gap:4px;">
+                  <span style="font-size:11px;color:{T.inkMuted};">Country</span>
                   <input
-                    class="input input-xs input-bordered"
+                    style="padding:9px 12px;border:1px solid {fieldHasError('/shippingAddress/addressCountry') ? T.negative : T.hairline};border-radius:10px;font-family:{T.fontSans};font-size:12.5px;color:{T.ink};background:{T.surface};"
                     bind:value={shippingCountry}
                     placeholder="DE, FR, …"
                     onblur={validateOnBlur}
-                    class:border-error={fieldHasError('/shippingAddress/addressCountry')}
                     required
                   />
                 </label>
@@ -381,55 +376,51 @@
       {/if}
 
       {#if billingRequired}
-        <div class="space-y-2">
-          <div class="font-semibold opacity-80">Billing address</div>
-          <div class="grid grid-cols-1 gap-2">
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Billing address</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
             {#if billStreetRequired}
-              <label class="form-control">
-                <span class="label-text text-xs">Street address</span>
+              <label style="display:flex;flex-direction:column;gap:4px;">
+                <span style="font-size:11px;color:{T.inkMuted};">Street address</span>
                 <input
-                  class="input input-xs input-bordered"
+                  style="padding:9px 12px;border:1px solid {fieldHasError('/billingAddress/streetAddress') ? T.negative : T.hairline};border-radius:10px;font-family:{T.fontSans};font-size:12.5px;color:{T.ink};background:{T.surface};"
                   bind:value={billingStreet}
                   onblur={validateOnBlur}
-                  class:border-error={fieldHasError('/billingAddress/streetAddress')}
                   required
                 />
               </label>
             {/if}
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
               {#if billLocalityRequired}
-                <label class="form-control">
-                  <span class="label-text text-xs">City / locality</span>
+                <label style="display:flex;flex-direction:column;gap:4px;">
+                  <span style="font-size:11px;color:{T.inkMuted};">City</span>
                   <input
-                    class="input input-xs input-bordered"
+                    style="padding:9px 12px;border:1px solid {fieldHasError('/billingAddress/addressLocality') ? T.negative : T.hairline};border-radius:10px;font-family:{T.fontSans};font-size:12.5px;color:{T.ink};background:{T.surface};"
                     bind:value={billingLocality}
                     onblur={validateOnBlur}
-                    class:border-error={fieldHasError('/billingAddress/addressLocality')}
                     required
                   />
                 </label>
               {/if}
               {#if billPostalRequired}
-                <label class="form-control">
-                  <span class="label-text text-xs">Postal code</span>
+                <label style="display:flex;flex-direction:column;gap:4px;">
+                  <span style="font-size:11px;color:{T.inkMuted};">Postal code</span>
                   <input
-                    class="input input-xs input-bordered"
+                    style="padding:9px 12px;border:1px solid {fieldHasError('/billingAddress/postalCode') ? T.negative : T.hairline};border-radius:10px;font-family:{T.fontSans};font-size:12.5px;color:{T.ink};background:{T.surface};"
                     bind:value={billingPostal}
                     onblur={validateOnBlur}
-                    class:border-error={fieldHasError('/billingAddress/postalCode')}
                     required
                   />
                 </label>
               {/if}
               {#if billCountryRequired}
-                <label class="form-control">
-                  <span class="label-text text-xs">Country</span>
+                <label style="display:flex;flex-direction:column;gap:4px;">
+                  <span style="font-size:11px;color:{T.inkMuted};">Country</span>
                   <input
-                    class="input input-xs input-bordered"
+                    style="padding:9px 12px;border:1px solid {fieldHasError('/billingAddress/addressCountry') ? T.negative : T.hairline};border-radius:10px;font-family:{T.fontSans};font-size:12.5px;color:{T.ink};background:{T.surface};"
                     bind:value={billingCountry}
                     placeholder="DE, FR, …"
                     onblur={validateOnBlur}
-                    class:border-error={fieldHasError('/billingAddress/addressCountry')}
                     required
                   />
                 </label>
@@ -440,32 +431,30 @@
       {/if}
 
       {#if emailRequired || phoneRequired}
-        <div class="space-y-2">
-          <div class="font-semibold opacity-80">Contact</div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Contact</div>
+          <div style="display:grid;grid-template-columns:{(emailRequired && phoneRequired) ? '1fr 1fr' : '1fr'};gap:8px;">
             {#if emailRequired}
-              <label class="form-control">
-                <span class="label-text text-xs">Email</span>
+              <label style="display:flex;flex-direction:column;gap:4px;">
+                <span style="font-size:11px;color:{T.inkMuted};">Email</span>
                 <input
-                  class="input input-xs input-bordered"
+                  style="padding:9px 12px;border:1px solid {fieldHasError('/contactPoint/email') ? T.negative : T.hairline};border-radius:10px;font-family:{T.fontSans};font-size:12.5px;color:{T.ink};background:{T.surface};"
                   type="email"
                   bind:value={contactEmail}
                   data-popup-initial-input
                   onblur={validateOnBlur}
-                  class:border-error={fieldHasError('/contactPoint/email')}
                   required
                 />
               </label>
             {/if}
             {#if phoneRequired}
-              <label class="form-control">
-                <span class="label-text text-xs">Phone</span>
+              <label style="display:flex;flex-direction:column;gap:4px;">
+                <span style="font-size:11px;color:{T.inkMuted};">Phone</span>
                 <input
-                  class="input input-xs input-bordered"
+                  style="padding:9px 12px;border:1px solid {fieldHasError('/contactPoint/telephone') ? T.negative : T.hairline};border-radius:10px;font-family:{T.fontSans};font-size:12.5px;color:{T.ink};background:{T.surface};"
                   type="tel"
                   bind:value={contactPhone}
                   onblur={validateOnBlur}
-                  class:border-error={fieldHasError('/contactPoint/telephone')}
                   required
                 />
               </label>
@@ -475,22 +464,19 @@
       {/if}
 
       {#if birthDateRequired}
-        <div class="space-y-2">
-          <div class="font-semibold opacity-80">Age verification</div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <label class="form-control">
-              <span class="label-text text-xs">Birth date</span>
-              <input
-                class="input input-xs input-bordered"
-                type="date"
-                bind:value={birthDate}
-                data-popup-initial-input
-                  onblur={validateOnBlur}
-                class:border-error={fieldHasError('/ageProof/birthDate')}
-                required
-              />
-            </label>
-          </div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Age verification</div>
+          <label style="display:flex;flex-direction:column;gap:4px;max-width:240px;">
+            <span style="font-size:11px;color:{T.inkMuted};">Birth date</span>
+            <input
+              style="padding:9px 12px;border:1px solid {fieldHasError('/ageProof/birthDate') ? T.negative : T.hairline};border-radius:10px;font-family:{T.fontSans};font-size:12.5px;color:{T.ink};background:{T.surface};"
+              type="date"
+              bind:value={birthDate}
+              data-popup-initial-input
+              onblur={validateOnBlur}
+              required
+            />
+          </label>
         </div>
       {/if}
 
@@ -498,19 +484,29 @@
         <StepAlert variant="error" className="text-xs mt-2" message={validateAction.error || submitAction.error || undefined} />
       {/if}
 
-      <StepActionBar>
-        {#snippet primary()}
-          <button
-            type="button"
-            class="btn btn-sm btn-primary"
-            onclick={goToReview}
-            onmousedown={markSkipNextBlurValidation}
-            data-skip-blur-validation="true"
-            disabled={submitAction.loading}
-          >
-            {submitAction.loading ? 'Checking…' : 'Continue'}
-          </button>
-        {/snippet}
-      </StepActionBar>
+      <div style="display:flex;justify-content:flex-end;margin-top:4px;">
+        <button
+          type="button"
+          style="
+            height:44px;padding:0 24px;border-radius:9999px;border:0;cursor:{submitAction.loading ? 'wait' : 'pointer'};
+            background:{T.primary};color:#fff;
+            font-family:{T.fontSans};font-size:14px;font-weight:580;
+            box-shadow:0 4px 12px rgba(88,73,212,0.25);
+            display:inline-flex;align-items:center;gap:8px;
+            opacity:{submitAction.loading ? 0.7 : 1};
+          "
+          onclick={goToReview}
+          onmousedown={markSkipNextBlurValidation}
+          data-skip-blur-validation="true"
+          disabled={submitAction.loading}
+        >
+          {#if submitAction.loading}<svg class="checkoutforms-spin" style="width:14px;height:14px;color:#fff;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>{/if}
+          {submitAction.loading ? 'Checking…' : 'Continue'}
+        </button>
+      </div>
     </div>
   </FlowStepScaffold>
+
+<style>
+@keyframes checkoutforms-spin{from{}to{transform:rotate(360deg)}}.checkoutforms-spin{animation:checkoutforms-spin 0.8s linear infinite;}
+</style>

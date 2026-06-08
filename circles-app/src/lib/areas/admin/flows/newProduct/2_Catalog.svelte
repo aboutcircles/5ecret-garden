@@ -4,7 +4,7 @@
   import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
   import { gnosisConfig } from '$lib/shared/config/circles';
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
-  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
+  import { T } from '$lib/design-system/tokens.js';
   import AdminStatusBadge from '$lib/areas/admin/components/AdminStatusBadge.svelte';
   import { adminProductKey } from '$lib/areas/admin/helpers';
   import { normalizeSku } from '$lib/areas/admin/productEditorUtils';
@@ -138,7 +138,7 @@
 
     <StepActionBar className="mt-0" align="between" stackOnMobile={false}>
       {#snippet primary()}
-        <button class="btn btn-outline btn-sm" type="button" onclick={loadCatalog} disabled={catalogLoading}>
+        <button style="height:32px;padding:0 14px;border-radius:9999px;border:1px solid {T.hairlineSoft};background:transparent;color:{T.inkBody};cursor:pointer;font-size:12px;font-family:{T.fontSans};" type="button" onclick={loadCatalog} disabled={catalogLoading}>
           {catalogLoading ? 'Loading…' : 'Reload'}
         </button>
       {/snippet}
@@ -149,49 +149,44 @@
     {/if}
 
     {#if catalogLoading}
-      <div class="flex items-center gap-2 text-base-content/70 py-2">
-        <span class="loading loading-spinner loading-sm"></span>
+      <div style="display:flex;align-items:center;gap:8px;color:{T.inkMuted};padding:8px 0;">
+        <svg class="cat-spin" style="width:18px;height:18px;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>
         <span>Loading catalog…</span>
       </div>
     {:else if catalogItems.length === 0}
-      <p class="text-sm opacity-70">No catalog products found for this seller.</p>
+      <p style="font-size:13px;opacity:0.7;">No catalog products found for this seller.</p>
     {:else}
-      <div class="w-full flex flex-col gap-y-1.5" role="list">
+      <div style="width:100%;display:flex;flex-direction:column;gap:6px;" role="list">
         {#each catalogItems as p (p.productCid ?? p.linkKeccak ?? p.indexInChunk)}
           {@const mapped = isMappedCatalogItem(p)}
           {@const imgUrl = productImageUrl(p)}
-          <RowFrame
-            dense={true}
-            clickable={!mapped}
+          <button
+            type="button"
+            style="display:flex;align-items:center;gap:12px;padding:8px 14px;border-radius:12px;background:{context.catalogItem?.linkKeccak === p.linkKeccak ? T.lilacSoft : T.surface};border:1px solid {T.hairlineSoft};cursor:{mapped ? 'default' : 'pointer'};width:100%;box-sizing:border-box;outline:none;opacity:{mapped ? 0.6 : 1};"
+            onclick={() => { if (mapped) return; goNext(p); }}
             disabled={mapped}
-            selected={context.catalogItem?.linkKeccak === p.linkKeccak}
-            onclick={() => {
-              if (mapped) return;
-              goNext(p);
-            }}
           >
-            {#snippet leading()}
-              {#if imgUrl}
-                <img src={imgUrl} alt="" class="w-10 h-10 rounded-md object-cover bg-base-200" />
-              {:else}
-                <div class="w-10 h-10 rounded-md bg-base-200"></div>
-              {/if}
-            {/snippet}
-            {#snippet title()}
-              {p.product?.name ?? p.product?.sku}
-            {/snippet}
-            {#snippet subtitle()}
-              <span class="font-mono">{normalizeSku(p.product?.sku ?? '') ?? p.product?.sku ?? ''}</span>
-            {/snippet}
-            {#snippet trailing()}
-              {#if mapped}
-                <AdminStatusBadge label="Already configured" variant="neutral" />
-              {:else}
-                <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" />
-              {/if}
-            {/snippet}
-          </RowFrame>
+            {#if imgUrl}
+              <img src={imgUrl} alt="" style="width:40px;height:40px;border-radius:6px;object-fit:cover;background:{T.pageDeep};flex-shrink:0;" />
+            {:else}
+              <div style="width:40px;height:40px;border-radius:6px;background:{T.pageDeep};flex-shrink:0;"></div>
+            {/if}
+            <div style="flex:1;min-width:0;text-align:left;">
+              <div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{p.product?.name ?? p.product?.sku}</div>
+              <div style="font-size:11px;color:{T.inkMuted};font-family:{T.fontMono};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{normalizeSku(p.product?.sku ?? '') ?? p.product?.sku ?? ''}</div>
+            </div>
+            {#if mapped}
+              <AdminStatusBadge label="Already configured" variant="neutral" />
+            {:else}
+              <img src="/chevron-right.svg" alt="" style="width:16px;height:16px;opacity:0.7;flex-shrink:0;" />
+            {/if}
+          </button>
         {/each}
       </div>
     {/if}
   </FlowStepScaffold>
+
+<style>
+  @keyframes cat-spin { from {} to { transform: rotate(360deg); } }
+  .cat-spin { animation: cat-spin 0.8s linear infinite; }
+</style>

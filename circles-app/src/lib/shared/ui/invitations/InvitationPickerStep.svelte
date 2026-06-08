@@ -4,6 +4,7 @@
   import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import type { AvatarRow } from '@aboutcircles/sdk-types';
   import type { Address } from '@aboutcircles/sdk-types';
+  import { T } from '$lib/design-system/tokens.js';
 
   interface Props {
     invitations?: AvatarRow[];
@@ -24,9 +25,9 @@
   }: Props = $props();
 </script>
 
-<div class="flex flex-col gap-y-2 text-sm">
+<div style="display:flex;flex-direction:column;gap:8px;font-size:13px;">
   {#if loading}
-    <p class="text-base-content/70">Loading invitations...</p>
+    <p style="color:{T.inkMuted};margin:0;">Loading invitations...</p>
   {:else if invitations.length > 0}
     {#each invitations as inviter (inviter.address)}
       <RowFrame clickable={true} dense={true} noLeading={true} onclick={() => onSelect(inviter.address)}>

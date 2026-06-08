@@ -12,6 +12,8 @@
     import { openStep } from '$lib/shared/flow';
     import CreateGroup from "$lib/areas/groups/flows/createGroup/1_CreateGroup.svelte";
     import {resetCreateGroupContext} from '$lib/areas/groups/flows/createGroup/context';
+    import { T } from '$lib/design-system/tokens.js';
+    import Icon from '$lib/design-system/Icon.svelte';
 
     /**
      * Map an AvatarInfo.type string to the GroupType enum.
@@ -83,77 +85,110 @@
     async function openCreateGroup() {
         const sdk = await initSdk(address);
         $circles = sdk;
-
-        // Initialize a fresh context with feeCollection defaulted to this safe address
         resetCreateGroupContext(address as `0x${string}`);
-
         openStep({
             title: "Create group",
             component: CreateGroup,
             props: {
-                setGroup: async (address: string) => {
-                    // On success, navigate into the new group#
-                    console.log(`Open the new group avatar dashboard. Address:`, address);
-                    refreshGroupsCallback?.()
+                setGroup: async (_address: string) => {
+                    refreshGroupsCallback?.();
                 }
             },
-            // Ensure state is cleared if the user closes the flow
             onClose: () => resetCreateGroupContext()
         });
     }
+
+    const versionLabel = $derived(
+        !isRegistered ? 'Not registered' : isV1 ? 'v1' : 'v2'
+    );
+    const versionPalette = $derived(
+        !isRegistered
+            ? { bg: T.warningSoft, fg: T.warning }
+            : isV1
+                ? { bg: T.pageDeep, fg: T.inkBody }
+                : { bg: T.primarySoft, fg: T.primaryDeep }
+    );
 </script>
 
-<div class="w-full border rounded-lg flex flex-col p-4 shadow-sm" class:opacity-50={busy} class:pointer-events-none={busy}>
+<div style="
+    width:100%;background:{T.surface};border:1px solid {T.hairlineSoft};
+    border-radius:16px;overflow:hidden;box-shadow:{T.shadow.xs};
+    display:flex;flex-direction:column;
+    opacity:{busy ? 0.5 : 1};pointer-events:{busy ? 'none' : 'auto'};
+">
     <button
-            onclick={() => connectAvatar()}
-            class="flex justify-between items-center hover:bg-base-200 rounded-lg p-2"
+        onclick={() => connectAvatar()}
+        style="
+            display:flex;align-items:center;justify-content:space-between;gap:12px;
+            padding:14px 16px;width:100%;background:transparent;border:0;cursor:pointer;text-align:left;
+            transition:background 180ms ease-out,box-shadow 180ms ease-out;
+        "
+        class="cc-hover"
     >
-        <Avatar
+        <div style="min-width:0;flex:1;">
+            <Avatar
                 topInfo={label ?? (settings.legacy ? 'Connected Wallet' : 'Safe')}
                 {address}
                 clickable={false}
                 view="horizontal"
-        />
-        <div class="btn btn-xs btn-outline btn-primary">
-            {#if connecting}
-                <span class="loading loading-spinner loading-xs"></span>
-            {:else if !isRegistered}
-                register
-            {:else if isV1}
-                V1
-            {:else}
-                V2
-            {/if}
+            />
         </div>
-    </button
-    >
+        <span style="
+            display:inline-flex;align-items:center;flex-shrink:0;
+            padding:3px 9px;border-radius:9999px;
+            background:{versionPalette.bg};color:{versionPalette.fg};
+            font-family:{T.fontSans};font-size:10.5px;font-weight:580;letter-spacing:0.02em;
+        ">{versionLabel}</span>
+    </button>
+
     {#if !isV1 && showGroups}
-        <div class="w-full flex gap-x-2 items-center justify-between mt-6 px-2">
-            <p class="font-bold text-primary">My groups</p>
-            <button
-                    onclick={() => openCreateGroup()}
-                    disabled={busy}
-                    class="btn btn-xs btn-outline btn-primary">Create a group
-            </button
-            >
-        </div>
-        <div class="w-full pl-6 flex flex-col gap-y-2 mt-2">
-            {#each groups ?? [] as group}
+        <div style="border-top:1px solid {T.hairlineSoft};padding:12px 16px 14px;display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:10.5px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">My groups</span>
                 <button
-                        class="flex w-full hover:bg-base-200 rounded-lg p-2"
-                        onclick={() => connectAvatar(group.group)}
+                    onclick={() => openCreateGroup()}
+                    style="
+                        display:inline-flex;align-items:center;gap:4px;
+                        height:24px;padding:0 10px;border-radius:9999px;
+                        background:{T.primarySoft};color:{T.primaryDeep};border:0;cursor:pointer;
+                        font-family:{T.fontSans};font-size:11px;font-weight:580;
+                    "
                 >
-                    <Avatar
+                    <Icon name="plus" size={11} stroke={T.primaryDeep} strokeWidth={2.2} />
+                    Create
+                </button>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:2px;">
+                {#each groups ?? [] as group}
+                    <button
+                        onclick={() => connectAvatar(group.group)}
+                        style="
+                            display:flex;align-items:center;gap:10px;width:100%;
+                            padding:8px 10px;border-radius:10px;
+                            background:transparent;border:0;cursor:pointer;text-align:left;
+                            transition:background 180ms ease-out,box-shadow 180ms ease-out;
+                        "
+                        class="cc-hover"
+                    >
+                        <Avatar
                             address={group.group}
                             clickable={false}
                             view="horizontal"
                             topInfo={group.group}
-                    />
-                </button>
-            {/each}
-            {#if (groups ?? []).length === 0}
-                <p class="text-sm">No groups available.</p>
-            {/if}
+                        />
+                    </button>
+                {/each}
+                {#if (groups ?? []).length === 0}
+                    <span style="font-size:12px;color:{T.inkMuted};padding:6px 10px;">No groups yet.</span>
+                {/if}
+            </div>
         </div>
     {/if}
 </div>
+
+<style>
+  .cc-hover { transition: background 180ms ease-out, box-shadow 180ms ease-out; }
+  .cc-hover:hover { background: #F6F5F2 !important; box-shadow: 0 2px 10px rgba(15,10,30,0.08); }
+  .cc-hover:focus-visible { background: #F6F5F2 !important; }
+</style>

@@ -1,14 +1,15 @@
 <script lang="ts">
   import HelpPopover from '$lib/shared/ui/primitives/HelpPopover.svelte';
+  import { T } from '$lib/design-system/tokens.js';
 </script>
 
-<div class="flex items-center gap-3 min-w-0">
-  <div class="w-10 h-10 rounded-full bg-primary/15 border border-primary/25 flex items-center justify-center shrink-0">
-    <img src="/sparkles.svg" alt="Auto route" class="w-4 h-4 opacity-80" />
+<div style="display:flex;align-items:center;gap:12px;min-width:0;">
+  <div style="width:40px;height:40px;border-radius:9999px;background:rgba(88,73,212,0.1);border:1px solid rgba(88,73,212,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+    <img src="/sparkles.svg" alt="Auto route" style="width:16px;height:16px;opacity:0.8;" />
   </div>
-  <div class="min-w-0">
-    <div class="flex items-center gap-1.5">
-      <span class="font-medium">Auto route</span>
+  <div style="min-width:0;">
+    <div style="display:flex;align-items:center;gap:6px;">
+      <span style="font-weight:500;">Auto route</span>
       <HelpPopover
         title="Auto route"
         lines={[
@@ -18,6 +19,6 @@
         widthClass="w-72"
       />
     </div>
-    <div class="text-xs text-base-content/70">Uses your trust network</div>
+    <div style="font-size:12px;color:{T.inkMuted};">Uses your trust network</div>
   </div>
 </div>

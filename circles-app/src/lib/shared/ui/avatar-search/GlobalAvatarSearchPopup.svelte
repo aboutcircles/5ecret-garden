@@ -3,7 +3,7 @@
   import { openProfilePopup } from '$lib/shared/ui/profile/openProfilePopup';
 </script>
 
-<div class="w-full space-y-2" tabindex="-1" data-popup-initial-focus>
+<div style="width:100%;display:flex;flex-direction:column;gap:8px;" tabindex="-1" data-popup-initial-focus>
   <SearchAvatar
     searchType="global"
     inputDataAttribute="data-popup-initial-input"
