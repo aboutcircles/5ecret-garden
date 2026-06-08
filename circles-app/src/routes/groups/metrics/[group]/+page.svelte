@@ -16,7 +16,6 @@
   import ActionButtonBar from '$lib/shared/ui/shell/ActionButtonBar.svelte';
   import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
   import type { Action } from '$lib/shared/ui/shell/actions';
-  import { T } from '$lib/design-system/tokens.js';
 
   let groupMetrics: GroupMetrics = $state({});
 
@@ -31,18 +30,6 @@
       );
     }
   });
-
-  function retryMetrics() {
-    if (!$circles?.rpc) return;
-    void fetchGroupMetrics($circles.rpc, data.group as Address, groupMetrics);
-  }
-
-  const hasData = $derived(
-    !!groupMetrics.memberCountPerHour ||
-    !!groupMetrics.mintRedeemPerHour ||
-    !!groupMetrics.tokenHolderBalance ||
-    !!groupMetrics.collateralInTreasury,
-  );
 
   function backToDashboard() {
     goto('/dashboard');
@@ -66,10 +53,12 @@
   maxWidthClass="page page--lg"
   contentWidthClass="page page--lg"
   usePagePadding={true}
+  headerTopGapClass="mt-4 md:mt-6"
+  collapsedTopGapClass="mt-3 md:mt-4"
 >
   {#snippet title()}
-    <h1 class="h2" style="font-weight:700;color:{T.ink};">Group Metrics</h1>
-    <p style="font-size:13px;color:{T.inkMuted};">Analytics and insights for your group</p>
+    <h1 class="h2 font-bold text-base-content">Group Metrics</h1>
+    <p class="text-sm text-base-content/70">Analytics and insights for your group</p>
   {/snippet}
   {#snippet meta()}
     <Avatar address={data.group} view="horizontal" />
@@ -80,26 +69,14 @@
   {#snippet collapsedMenu()}
     <ActionButtonDropDown {actions} />
   {/snippet}
-  {#if groupMetrics.loading === false && groupMetrics.errors?.length && !hasData}
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;height:50vh;padding:24px;text-align:center;">
-      <div style="font-size:15px;font-weight:600;color:{T.ink};">Couldn't load group metrics</div>
-      <div style="font-size:12.5px;color:{T.inkMuted};max-width:380px;line-height:1.5;">
-        {groupMetrics.errors[0]}
-      </div>
-      <button
-        type="button"
-        onclick={retryMetrics}
-        style="height:36px;padding:0 16px;border-radius:9999px;background:{T.primary};color:#fff;border:0;cursor:pointer;font-family:{T.fontSans};font-size:13px;font-weight:540;"
-      >Retry</button>
-    </div>
-  {:else if hasData}
+  {#if Object.keys(groupMetrics).length > 0}
     <!-- Stats Overview -->
     <GroupMetricsStats {groupMetrics} />
 
     <!-- Charts Grid -->
-    <div style="width:100%;display:grid;grid-template-columns:repeat(2,1fr);gap:24px;margin-bottom:40px;">
+    <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
       {#if groupMetrics.priceHistoryWeek && groupMetrics.priceHistoryMonth}
-        <div style="background:{T.surface};border:1px solid {T.hairlineSoft};padding:24px;border-radius:14px;box-shadow:{T.shadow.xs};">
+        <div class="bg-base-100 border border-base-300 p-6 rounded-xl shadow-sm">
           <ModernHistoryChart
             dataSet1={groupMetrics.priceHistoryWeek}
             dataSet2={groupMetrics.priceHistoryMonth}
@@ -110,7 +87,7 @@
       {/if}
 
       {#if groupMetrics?.memberCountPerHour && groupMetrics.memberCountPerHour.length > 0 && groupMetrics.memberCountPerDay && groupMetrics.memberCountPerDay.length > 0}
-        <div style="background:{T.surface};border:1px solid {T.hairlineSoft};padding:24px;border-radius:14px;box-shadow:{T.shadow.xs};">
+        <div class="bg-base-100 border border-base-300 p-6 rounded-xl shadow-sm">
           <ModernHistoryChart
             dataSet1={groupMetrics.memberCountPerHour}
             dataSet2={groupMetrics.memberCountPerDay}
@@ -121,7 +98,7 @@
       {/if}
 
       {#if groupMetrics?.mintRedeemPerHour && groupMetrics.mintRedeemPerHour.length > 0 && groupMetrics.mintRedeemPerDay && groupMetrics.mintRedeemPerDay.length > 0}
-        <div style="background:{T.surface};border:1px solid {T.hairlineSoft};padding:24px;border-radius:14px;box-shadow:{T.shadow.xs};">
+        <div class="bg-base-100 border border-base-300 p-6 rounded-xl shadow-sm">
           <ModernHistoryChart
             dataSet1={groupMetrics.mintRedeemPerHour}
             dataSet2={groupMetrics.mintRedeemPerDay}
@@ -132,7 +109,7 @@
       {/if}
 
       {#if groupMetrics?.wrapUnwrapPerHour && groupMetrics.wrapUnwrapPerHour.length > 0 && groupMetrics.wrapUnwrapPerDay && groupMetrics.wrapUnwrapPerDay.length > 0}
-        <div style="background:{T.surface};border:1px solid {T.hairlineSoft};padding:24px;border-radius:14px;box-shadow:{T.shadow.xs};">
+        <div class="bg-base-100 border border-base-300 p-6 rounded-xl shadow-sm">
           <ModernHistoryChart
             dataSet1={groupMetrics.wrapUnwrapPerHour}
             dataSet2={groupMetrics.wrapUnwrapPerDay}
@@ -145,10 +122,10 @@
     </div>
 
     <!-- Distribution Charts -->
-    <div style="width:100%;display:grid;grid-template-columns:repeat(2,1fr);gap:24px;margin-bottom:40px;">
+    <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
       {#if groupMetrics?.collateralInTreasury && groupMetrics.collateralInTreasury.length > 0}
-        <div style="background:{T.surface};border:1px solid {T.hairlineSoft};padding:24px;border-radius:14px;box-shadow:{T.shadow.xs};">
-          <h2 style="font-size:16px;font-weight:600;color:{T.ink};margin:0 0 16px 0;">
+        <div class="bg-base-100 border border-base-300 p-6 rounded-xl shadow-sm">
+          <h2 class="text-lg font-semibold text-base-content mb-4">
             Treasury Collateral
           </h2>
           <ModernPieChart
@@ -161,8 +138,8 @@
       {/if}
 
       {#if groupMetrics?.tokenHolderBalance && groupMetrics.tokenHolderBalance.length > 0}
-        <div style="background:{T.surface};border:1px solid {T.hairlineSoft};padding:24px;border-radius:14px;box-shadow:{T.shadow.xs};">
-          <h2 style="font-size:16px;font-weight:600;color:{T.ink};margin:0 0 16px 0;">
+        <div class="bg-base-100 border border-base-300 p-6 rounded-xl shadow-sm">
+          <h2 class="text-lg font-semibold text-base-content mb-4">
             Token Distribution
           </h2>
           <ModernPieChart
@@ -175,8 +152,8 @@
       {/if}
     </div>
   {:else}
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:50vh;">
-      <div style="font-size:22px;font-weight:700;color:{T.inkFaint};">
+    <div class="flex flex-col items-center justify-center h-[50vh]">
+      <div class="text-2xl font-bold text-base-content/50">
         Loading group metrics...
       </div>
     </div>

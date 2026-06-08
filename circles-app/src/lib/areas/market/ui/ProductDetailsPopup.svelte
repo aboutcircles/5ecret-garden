@@ -11,7 +11,6 @@
   import { fetchAvailabilityFeed, fetchInventoryFeed, type QuantitativeValue } from '$lib/areas/market/services';
   import { createLoadable } from '$lib/areas/market/utils/loadable';
   import {gnosisConfig} from "$lib/shared/config/circles";
-  import { T } from '$lib/design-system/tokens.js';
 
   interface Props {
     seller: string; // EVM address
@@ -93,32 +92,30 @@
   }
 </script>
 
-<div style="width:100%;max-width:min(92vw,40rem);">
+<div class="flex flex-col gap-3 w-full max-w-[min(92vw,56rem)]">
   {#if loading}
-    <div style="display:flex;align-items:center;gap:10px;color:{T.inkMuted};padding:24px 0;">
-      <svg class="pdp-spin" style="width:20px;height:20px;color:{T.primary};" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>
-      <span style="font-size:13px;">Loading product…</span>
+    <div class="flex items-center gap-2 text-base-content/70 py-6">
+      <span class="loading loading-spinner text-primary"></span>
+      <span>Loading product…</span>
     </div>
   {:else if errorMsg}
-    <div style="background:{T.warningSoft};border:1px solid rgba(176,112,20,0.2);border-radius:12px;padding:12px 14px;font-size:12.5px;color:{T.inkBody};">
-      {errorMsg}
+    <div class="alert alert-warning">
+      <span>{errorMsg}</span>
     </div>
   {:else if product && product?.product}
     {#snippet actions()}
       {#if addState.showButton}
-        <button
-          type="button"
-          style="
-            width:100%;height:48px;padding:0 24px;border-radius:9999px;border:0;
-            cursor:{addState.canAdd ? 'pointer' : 'not-allowed'};
-            background:{addState.canAdd ? T.primary : T.pageDeep};color:{addState.canAdd ? '#fff' : T.inkMuted};
-            font-family:{T.fontSans};font-size:14px;font-weight:580;
-            box-shadow:{addState.canAdd ? '0 6px 16px rgba(88,73,212,0.3)' : 'none'};
-          "
-          onclick={(e) => { e.stopPropagation(); void handleAddToBasket(); }}
-          disabled={!addState.canAdd}
-          title={addState.reason}
-        >{addState.label}</button>
+        <div class="flex gap-2 w-full">
+          <button
+            type="button"
+            class="btn btn-outline w-full"
+            onclick={(e) => { e.stopPropagation(); void handleAddToBasket(); }}
+            disabled={!addState.canAdd}
+            title={addState.reason}
+          >
+            {addState.label}
+          </button>
+        </div>
       {/if}
     {/snippet}
 
@@ -134,11 +131,6 @@
       actions={actions}
     />
   {:else}
-    <div style="font-size:12.5px;color:{T.inkMuted};">Product data not available</div>
+    <div class="text-sm opacity-70">Product data not available</div>
   {/if}
 </div>
-
-<style>
-  @keyframes pdp-spin { from {} to { transform: rotate(360deg); } }
-  .pdp-spin { animation: pdp-spin 0.8s linear infinite; }
-</style>

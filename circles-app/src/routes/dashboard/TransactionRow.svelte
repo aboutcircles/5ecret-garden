@@ -3,10 +3,10 @@
     import { getTimeAgo } from '$lib/shared/utils/shared';
     import type { GroupedTransaction } from '$lib/shared/state/transactionHistory';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
-    import { avatarState } from '$lib/shared/state/avatar.svelte';
+    import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
     import { popupControls, type PopupContentDefinition } from '$lib/shared/state/popup';
-    import { T } from '$lib/design-system/tokens.js';
     import TransactionDetailsPopup from './TransactionDetailsPopup.svelte';
+    import { avatarState } from '$lib/shared/state/avatar.svelte';
     import { ZERO_ADDRESS } from '$lib/shared/utils/tx';
     import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
     import {
@@ -136,44 +136,42 @@
         listNavigator.onRowClick(event);
         openDetails();
     }
+
+    
 </script>
 
+<!-- One cohesive horizontal block inside content; collapse RowFrame leading -->
 <div
     data-transaction-row
     data-list-row-focusable
     tabindex={0}
     role="button"
     aria-label={`Open transaction details for ${counterpartyAddress}`}
-    class="tr-row focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-    style="
-        display:flex;align-items:center;gap:12px;padding:12px 20px;
-        min-height:var(--transaction-row-height,84px);cursor:pointer;
-        border-bottom:1px solid {T.hairlineSoft};box-sizing:border-box;
-        transition:background .12s ease-out;
-    "
+    class="rounded-[var(--row-radius)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
     onkeydown={onRowKeydown}
     onclick={onRowClick}
 >
-    <div style="flex:1;min-width:0;">
-        <Avatar
-            address={counterpartyAddress}
-            view="horizontal"
-            clickable={false}
-            pictureOverlayUrl={badgeUrl ?? undefined}
-            topInfo={topInfoText}
-            bottomInfo={getTimeAgo(item.timestamp)}
-        />
-    </div>
-    <div style="text-align:right;flex-shrink:0;">
-        <div style="font-family:{T.fontMono};font-size:14px;font-weight:600;color:{sent ? T.negative : T.positive};font-variant-numeric:tabular-nums;">
-            {displayAmount}
-        </div>
-        <div style="font-size:11px;color:{T.inkMuted};font-weight:500;margin-top:1px;">CRC</div>
-    </div>
-</div>
+    <RowFrame clickable={true} dense={true} noLeading={true} style="min-height: var(--transaction-row-height, 76px);">
+        <div class="w-full flex items-center justify-between cursor-pointer">
+            <div class="min-w-0">
+                <Avatar
+                        address={counterpartyAddress ?? undefined}
+                        view="horizontal"
+                        clickable={true}
+                        pictureOverlayUrl={badgeUrl ?? undefined}
+                        topInfo={topInfoText}
+                        bottomInfo={getTimeAgo(item.timestamp)}
+                />
+            </div>
 
-<style>
-  .tr-row { transition: background 180ms ease-out; }
-  .tr-row:hover { background: #F6F5F2; }
-  .tr-row:focus-visible { background: #F6F5F2; }
-</style>
+            <div class="text-right shrink-0">
+                {#if sent}
+                    <span class="text-error font-bold">{displayAmount}</span>
+                {:else}
+                    <span class="text-success font-bold">{displayAmount}</span>
+                {/if}
+                <span> CRC</span>
+            </div>
+        </div>
+    </RowFrame>
+</div>

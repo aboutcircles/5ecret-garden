@@ -19,10 +19,4 @@ declare global {
 // augmentations of unresolvable modules). Their implicit-any is harmless since
 // they're consumed only by other third-party libraries.
 
-declare module '*.svx' {
-  import type { Component } from 'svelte';
-  const component: Component;
-  export default component;
-}
-
 export {};
