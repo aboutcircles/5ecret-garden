@@ -15,6 +15,7 @@
     import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/shared/ui/shell/actions';
     import {gnosisConfig} from "$lib/shared/config/circles";
+    import { T } from '$lib/design-system/tokens.js';
 
     
     // Derive seller address from SvelteKit's $page store
@@ -98,8 +99,6 @@
         maxWidthClass="page page--lg"
         contentWidthClass="page page--lg"
         usePagePadding={true}
-        headerTopGapClass="mt-4 md:mt-6"
-        collapsedTopGapClass="mt-3 md:mt-4"
 >
     {#snippet title()}
         <h1 class="h2 m-0">Seller Profile</h1>
@@ -119,7 +118,7 @@
 
     <!-- Collapsed summary -->
     {#snippet collapsedLeft()}
-        <span class="text-base md:text-lg font-semibold tracking-tight text-base-content">
+        <span style="font-size:1rem;font-weight:600;letter-spacing:-0.015em;color:#0F0A1E;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
       Seller Profile
     </span>
     {/snippet}
@@ -129,59 +128,70 @@
     {/snippet}
 
     <!-- Seller Profile Section -->
-    <section class="bg-base-100 border border-base-300 rounded-xl p-4 mb-6">
+    <section style="
+        background:linear-gradient(160deg,{T.lilacSoft} 0%,{T.surface} 100%);
+        border:1px solid {T.hairlineSoft};border-radius:18px;
+        box-shadow:{T.shadow.xs};
+        padding:24px 22px;margin-bottom:18px;
+        display:flex;flex-direction:column;align-items:center;gap:12px;
+    ">
         {#if sellerAddress}
-            
-            <div class="mt-4 flex items-center gap-3">
-                <Avatar 
-                    address={params.seller || ''}
-                    view="vertical" 
-                    clickable={false} 
-                />
-            </div>
+            <Avatar
+                address={params.seller || ''}
+                view="vertical"
+                clickable={false}
+            />
         {:else if errorMsg}
-            <div class="alert alert-error">
-                <span>Invalid seller address</span>
+            <div style="background:{T.negativeSoft};border:1px solid rgba(196,68,48,0.2);border-radius:10px;padding:8px 12px;font-size:12px;color:{T.inkBody};">
+                Invalid seller address
             </div>
         {/if}
     </section>
 
     <!-- Listings Section -->
     {#if loading}
-        <div class="flex flex-col items-center justify-center h-[50vh]">
-            <div class="loading loading-spinner loading-lg" aria-label="loading"></div>
-            <div class="mt-3 text-base-content/70">Loading listings…</div>
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:40vh;gap:10px;">
+            <svg class="seller-spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="width:32px;height:32px;color:{T.primary};" aria-label="loading">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="32" stroke-dashoffset="12" stroke-linecap="round"/>
+        </svg>
+            <div style="font-size:12.5px;color:{T.inkMuted};">Loading listings…</div>
         </div>
     {:else if errorMsg}
-        <section class="bg-base-100 border border-base-300 rounded-xl p-4">
-            <div class="alert alert-error">
-                <span class="font-semibold">Failed to load:</span>&nbsp;{errorMsg}
+        <section style="background:{T.surface};border:1px solid rgba(196,68,48,0.2);border-radius:14px;padding:18px 16px;display:flex;flex-direction:column;gap:10px;align-items:flex-start;">
+            <div style="display:flex;flex-direction:column;gap:4px;">
+                <span style="font-size:13.5px;font-weight:580;color:{T.ink};">Couldn't load this seller's listings</span>
+                <span style="font-size:12px;color:{T.inkMuted};">{errorMsg}</span>
             </div>
+            <button type="button" onclick={() => loadSellerCatalog()} style="height:32px;padding:0 14px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.ink};font-size:12.5px;font-weight:540;cursor:pointer;">Retry</button>
         </section>
     {:else}
-        <section class="bg-base-100 border border-base-300 rounded-xl p-4">
-            <div class="flex items-center justify-between mb-3">
-                <div class="text-sm">
-                    <strong>Listings</strong>
-                    <span class="opacity-70">{products.length ? ` (${products.length})` : ''}</span>
+        <section style="background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;padding:14px 16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;">
+                <div>
+                    <h3 style="font-family:{T.fontSans};font-size:13px;font-weight:580;color:{T.ink};margin:0;">Listings</h3>
+                    <p style="font-size:11.5px;color:{T.inkMuted};margin:2px 0 0 0;">
+                        {products.length ? `${products.length} active listing${products.length === 1 ? '' : 's'}` : 'No active listings yet'}
+                    </p>
                 </div>
             </div>
 
             {#if products.length === 0}
-                <div class="text-center py-8 opacity-60">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-2 text-base-content/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                    </svg>
-                    <div>No listings found for this seller</div>
+                <div style="text-align:center;padding:40px 0;display:flex;flex-direction:column;align-items:center;gap:10px;">
+                    <div style="width:56px;height:56px;border-radius:16px;background:{T.surfaceAlt};display:inline-flex;align-items:center;justify-content:center;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke={T.inkFaint}>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        </svg>
+                    </div>
+                    <div style="font-size:12.5px;color:{T.inkMuted};">No listings found for this seller</div>
                 </div>
             {:else}
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;">
                     {#each products as p (p.productCid)}
-                        <ProductCard 
-                          product={p} 
-                          showSellerInfo={false}
-                          ondeleted={() => loadSellerCatalog()}
-                          canTombstone={isSelfSeller}
+                        <ProductCard
+                            product={p}
+                            showSellerInfo={false}
+                            ondeleted={() => loadSellerCatalog()}
+                            canTombstone={isSelfSeller}
                         />
                     {/each}
                 </div>
@@ -189,3 +199,8 @@
         </section>
     {/if}
 </PageScaffold>
+
+<style>
+  @keyframes seller-spin { to { transform: rotate(360deg); } }
+  .seller-spinner { animation: seller-spin 0.8s linear infinite; }
+</style>
