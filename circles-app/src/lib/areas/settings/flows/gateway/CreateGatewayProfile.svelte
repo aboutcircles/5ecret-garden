@@ -12,7 +12,6 @@
   import { isValidOnChainName } from '$lib/shared/utils/isValid';
   import { isAddress } from '$lib/shared/utils/tx';
   import type { ProfileEditStepProps } from '$lib/shared/flow';
-  import { T } from '$lib/design-system/tokens.js';
 
   type Props = Partial<ProfileEditStepProps<CreateGatewayFlowContext>> & {
     onCreated?: (gateway: string) => void;
@@ -73,16 +72,17 @@
   subtitle="Define metadata and on-chain name for the payment gateway."
 >
 
-  <div style="display:flex;flex-direction:column;gap:16px;">
-    <p style="font-size:13px;color:{T.inkMuted};margin:0;">
+  <div class="space-y-4">
+    <p class="text-sm text-base-content/70">
       Define the basic details for your payment gateway.
     </p>
 
-    <div style="display:flex;flex-direction:column;gap:8px;">
-      <div style="font-size:13px;font-weight:600;color:{T.ink};">Gateway profile</div>
+    <div class="space-y-2">
+      <div class="text-sm font-semibold">Gateway profile</div>
       <StepAlert
         variant="warning"
         message="Gateway profile metadata is pinned during creation and can’t be changed later."
+        className="text-xs"
       />
       <ProfileFormStep
         bind:name={ctx.profile.name}

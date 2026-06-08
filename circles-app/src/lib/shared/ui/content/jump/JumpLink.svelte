@@ -7,12 +7,10 @@
   interface Props {
     url: string;
     className?: string;
-    style?: string;
-    ariaLabel?: string;
     children?: Snippet;
   }
 
-  let { url, className = '', style, ariaLabel, children }: Props = $props();
+  let { url, className = '', children }: Props = $props();
 
   function isPlainLeftClick(e: MouseEvent): boolean {
     return (
@@ -26,6 +24,7 @@
 
   function onClick(e: MouseEvent) {
     if (!isPlainLeftClick(e)) return;
+    if (!$popupState.content) return;
 
     e.preventDefault();
     popupControls.open({
@@ -36,6 +35,6 @@
   }
 </script>
 
-<a class={className} {style} href={jumpHref(url)} aria-label={ariaLabel} title={ariaLabel} onclick={onClick}>
+<a class={className} href={jumpHref(url)} onclick={onClick}>
   {@render children?.()}
 </a>

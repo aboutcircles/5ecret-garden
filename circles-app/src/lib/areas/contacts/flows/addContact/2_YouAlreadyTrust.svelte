@@ -10,7 +10,6 @@
   import { popupControls } from '$lib/shared/state/popup';
   import SearchStep from './1_Search.svelte';
   import { openTrustRelationshipFlow } from '$lib/areas/trust/flows/relationship/openTrustRelationshipFlow';
-  import { T } from '$lib/design-system/tokens.js';
 
   interface Props {
     context: AddContactFlowContext;
@@ -46,12 +45,12 @@
 
   <StepActionBar>
     {#snippet secondary()}
-      <button style="height:32px;padding:0 14px;border-radius:9999px;border:0;background:transparent;color:{T.inkMuted};cursor:pointer;font-family:{T.fontSans};font-size:13px;" onclick={editSelection}>
+      <button class="btn btn-ghost btn-sm" onclick={editSelection}>
         Change account
       </button>
 
       <button
-        style="height:32px;padding:0 14px;border-radius:9999px;border:1px solid rgba(196,68,48,0.2);background:{T.negativeSoft};color:{T.negative};cursor:pointer;font-family:{T.fontSans};font-size:13px;"
+        class="btn btn-error btn-outline btn-sm"
         onclick={() => {
           popupControls.close();
           openTrustRelationshipFlow({
@@ -68,7 +67,7 @@
     {/snippet}
 
     {#snippet primary()}
-      <button style="height:32px;padding:0 14px;border-radius:9999px;border:0;background:{T.primary};color:#fff;cursor:pointer;font-family:{T.fontSans};font-size:13px;box-shadow:0 4px 12px rgba(88,73,212,0.25);" onclick={() => popupControls.close()}>
+      <button class="btn btn-primary btn-sm" onclick={() => popupControls.close()}>
         Done
       </button>
     {/snippet}

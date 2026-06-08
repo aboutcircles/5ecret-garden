@@ -25,7 +25,6 @@
   import GroupMemberRow, {
     type GroupMemberItem,
   } from '$lib/areas/groups/ui/components/GroupMemberRow.svelte';
-  import { T } from '$lib/design-system/tokens.js';
 
   interface Props {
     group: Address;
@@ -495,8 +494,8 @@
 <div class="space-y-3" bind:this={listScopeEl}>
   <div class="flex items-center justify-between">
     <div>
-      <div style="font-size:13px;font-weight:580;color:{T.ink};">{groupDisplayName} members</div>
-      <div style="font-size:11.5px;color:{T.inkMuted};margin-top:2px;">Manage trusted avatars for this group.</div>
+      <div class="text-sm font-semibold">{groupDisplayName} members</div>
+      <div class="text-xs opacity-70">Manage trusted avatars for this group.</div>
     </div>
     <div class="flex items-center gap-2">
       {#if canManageEnabled && ownerRemoveSupported && selectedCount > 0}

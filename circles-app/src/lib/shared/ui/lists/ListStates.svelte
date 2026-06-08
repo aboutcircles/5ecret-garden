@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  import { T } from '$lib/design-system/tokens.js';
 
   interface Props {
     loading?: boolean;
@@ -28,13 +27,16 @@
 </script>
 
 {#if loading}
-  <div style="width:100%;padding:24px 0;text-align:center;color:{T.inkMuted};">{loadingLabel}</div>
+  <div class="w-full py-6 text-center text-base-content/60" aria-live="polite" aria-busy="true">
+    <span class="loading loading-spinner text-primary"></span>
+    <span class="ml-2">{loadingLabel}</span>
+  </div>
 {:else if error}
-  <div style="width:100%;padding:24px 0;text-align:center;color:{T.negative};">{error}</div>
+  <div class="w-full py-6 text-center text-error">{error}</div>
 {:else if isEmpty}
-  <div style="width:100%;padding:24px 0;text-align:center;color:{T.inkMuted};">{emptyLabel}</div>
+  <div class="w-full py-6 text-center text-base-content/60">{emptyLabel}</div>
 {:else if isNoMatches}
-  <div style="width:100%;padding:24px 0;text-align:center;color:{T.inkMuted};">{noMatchesLabel}</div>
+  <div class="w-full py-6 text-center text-base-content/60">{noMatchesLabel}</div>
 {:else}
   {@render children?.()}
 {/if}

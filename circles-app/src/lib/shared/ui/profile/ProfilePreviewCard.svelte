@@ -1,7 +1,6 @@
 <script lang="ts">
   import Markdown from '$lib/shared/ui/content/markdown/Markdown.svelte';
   import type { AppProfileCore } from '$lib/shared/model/profile';
-  import { T } from '$lib/design-system/tokens.js';
 
   type Props = {
     profile: AppProfileCore | null | undefined;
@@ -11,39 +10,39 @@
   let { profile, title = 'Profile' }: Props = $props();
 </script>
 
-<div style="display:flex;align-items:flex-start;gap:16px;">
-  <div style="width:96px;height:96px;border-radius:10px;background:{T.pageDeep};overflow:hidden;display:flex;align-items:center;justify-content:center;color:{T.inkSubtle};flex-shrink:0;">
+<div class="flex items-start gap-4">
+  <div class="w-24 h-24 rounded-lg bg-base-200 overflow-hidden flex items-center justify-center text-base-content/50">
     {#if profile?.previewImageUrl}
       <img
         src={profile.previewImageUrl}
         alt={title}
-        style="width:100%;height:100%;object-fit:cover;"
+        class="w-full h-full object-cover"
       />
     {:else if profile?.imageUrl}
       <img
         src={profile.imageUrl}
         alt={title}
-        style="width:100%;height:100%;object-fit:cover;"
+        class="w-full h-full object-cover"
       />
     {:else}
       No image
     {/if}
   </div>
 
-  <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
+  <div class="flex-1 space-y-2">
     <div>
-      <div style="font-size:12px;color:{T.inkMuted};">Name</div>
-      <div style="font-size:14px;font-weight:600;">{profile?.name || '—'}</div>
+      <div class="text-xs text-base-content/60">Name</div>
+      <div class="text-sm font-semibold">{profile?.name || '—'}</div>
     </div>
     {#if profile?.description}
       <div>
-        <div style="font-size:12px;color:{T.inkMuted};margin-bottom:2px;">Description</div>
-        <div style="font-size:13px;line-height:1.6;color:{T.inkBody};max-width:none;"><Markdown content={profile.description} /></div>
+        <div class="text-xs text-base-content/60 mb-0.5">Description</div>
+        <Markdown content={profile.description} class="prose prose-sm max-w-none" />
       </div>
     {:else}
       <div>
-        <div style="font-size:12px;color:{T.inkMuted};margin-bottom:2px;">Description</div>
-        <div style="font-size:14px;color:{T.inkSubtle};">No description provided.</div>
+        <div class="text-xs text-base-content/60 mb-0.5">Description</div>
+        <div class="text-sm text-base-content/50">No description provided.</div>
       </div>
     {/if}
   </div>

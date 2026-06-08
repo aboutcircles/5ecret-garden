@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { T } from '$lib/design-system/tokens';
   import type { Snippet } from 'svelte';
 
   interface Props {
@@ -32,36 +31,31 @@
   }
 </script>
 
-<form onsubmit={handleSubmit} style="display:flex;flex-direction:column;gap:16px;">
+<form onsubmit={handleSubmit} class="space-y-4">
   {#if showHeader}
     <div>
-      <h3 style="font-size:17px;font-weight:580;color:{T.ink};margin:0;">{title}</h3>
+      <h3 class="text-lg font-semibold">{title}</h3>
       {#if subtitle}
-        <p style="font-size:13px;color:{T.inkMuted};margin:4px 0 0;">{subtitle}</p>
+        <p class="text-sm opacity-70 mt-1">{subtitle}</p>
       {/if}
     </div>
   {/if}
 
-  <div style="display:flex;flex-direction:column;gap:12px;">
+  <div class="space-y-3">
     {@render children?.()}
   </div>
 
-  <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;padding-top:8px;">
+  <div class="flex items-center justify-end gap-2 pt-2">
     {#if onCancel}
-      <button type="button" style="height:32px;padding:0 18px;border-radius:9999px;border:1px solid {T.hairline};background:transparent;color:{T.inkBody};font-size:12.5px;font-weight:580;cursor:pointer;" onclick={onCancel} disabled={loading}>
+      <button type="button" class="btn btn-ghost btn-sm" onclick={onCancel} disabled={loading}>
         Cancel
       </button>
     {/if}
-    <button type="submit" style="height:32px;padding:0 18px;border-radius:9999px;border:0;background:{T.primary};color:#fff;font-size:12.5px;font-weight:580;cursor:pointer;box-shadow:0 4px 12px rgba(88,73,212,0.25);display:inline-flex;align-items:center;gap:6px;" disabled={loading || submitDisabled}>
+    <button type="submit" class="btn btn-primary btn-sm" disabled={loading || submitDisabled}>
       {#if loading}
-        <svg class="apfb-spin" style="width:12px;height:12px;color:#fff;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>
+        <span class="loading loading-spinner loading-xs"></span>
       {/if}
       {submitLabel}
     </button>
   </div>
 </form>
-
-<style>
-  @keyframes apfb-spin { from {} to { transform: rotate(360deg); } }
-  .apfb-spin { animation: apfb-spin 0.8s linear infinite; }
-</style>

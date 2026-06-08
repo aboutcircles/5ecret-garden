@@ -1,11 +1,12 @@
 <script lang="ts">
   import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
+  import StepActionBar from '$lib/shared/ui/flow/StepActionBar.svelte';
   import { MIGRATE_FLOW_SCAFFOLD_BASE } from './constants';
   import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
+  import StepSection from '$lib/shared/ui/flow/StepSection.svelte';
+  import StepReviewRow from '$lib/shared/ui/flow/StepReviewRow.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import ProfilePreviewCard from '$lib/shared/ui/profile/ProfilePreviewCard.svelte';
-  import { T } from '$lib/design-system/tokens.js';
-  import Icon from '$lib/design-system/Icon.svelte';
   import type { MigrateToV2Context } from '$lib/areas/wallet/flows/migrateToV2/context';
   import GetInvited from './1_GetInvited.svelte';
   import CreateProfile from './2_CreateProfile.svelte';
@@ -64,97 +65,62 @@
   subtitle="Confirm and run the Circles V2 migration."
 >
 
-  <div style="display:flex;flex-direction:column;gap:10px;">
-    <!-- Invitation card -->
-    <div style="border:1px solid {T.hairlineSoft};border-radius:14px;overflow:hidden;background:{T.surface};">
-      <div style="padding:8px 14px;border-bottom:1px solid {T.hairlineSoft};display:flex;align-items:center;justify-content:space-between;">
-        <span style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Invitation</span>
-        <button
-          type="button"
-          style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.inkMuted};font-size:11px;font-weight:540;cursor:pointer;"
-          onclick={editInvitation}
-        ><Icon name="edit" size={9} stroke={T.inkMuted} /> Edit</button>
+  <StepSection title="Invitation" subtitle="Confirm who invited you before migrating.">
+    {#if hasInviter}
+      <div class="flex items-center justify-between">
+        <Avatar address={context.inviter} view="horizontal" clickable={false} />
+        <button type="button" class="btn btn-ghost btn-xs" onclick={editInvitation}>
+          Edit
+        </button>
       </div>
-      <div style="padding:10px 14px;">
-        {#if hasInviter}
-          <Avatar address={context.inviter} view="horizontal" clickable={false} />
-        {:else}
-          <span style="font-size:12.5px;color:{T.inkMuted};">Self migration — no inviter required.</span>
-        {/if}
-      </div>
-    </div>
+    {:else}
+      <div class="text-sm text-base-content/70">Self migration (no inviter address).</div>
+    {/if}
+  </StepSection>
 
-    <!-- Profile card -->
-    <div style="border:1px solid {T.hairlineSoft};border-radius:14px;overflow:hidden;background:{T.surface};">
-      <div style="padding:8px 14px;border-bottom:1px solid {T.hairlineSoft};display:flex;align-items:center;justify-content:space-between;">
-        <span style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Profile</span>
-        <button
-          type="button"
-          style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.inkMuted};font-size:11px;font-weight:540;cursor:pointer;"
-          onclick={editProfile}
-        ><Icon name="edit" size={9} stroke={T.inkMuted} /> Edit</button>
-      </div>
-      <div style="padding:10px 14px;">
-        <ProfilePreviewCard profile={context.profile} title={profileName} />
-      </div>
-    </div>
+  <StepSection title="Profile" subtitle="Review your migrated profile details.">
+    <StepReviewRow label="Profile" value={profileName} onChange={editProfile} changeLabel="Edit" />
+    <ProfilePreviewCard profile={context.profile} title="Migrated profile" />
+  </StepSection>
 
-    <!-- Contacts card -->
-    <div style="border:1px solid {T.hairlineSoft};border-radius:14px;overflow:hidden;background:{T.surface};">
-      <div style="padding:8px 14px;border-bottom:1px solid {T.hairlineSoft};display:flex;align-items:center;justify-content:space-between;">
-        <span style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Contacts ({selectedContactsCount})</span>
-        <button
-          type="button"
-          style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.inkMuted};font-size:11px;font-weight:540;cursor:pointer;"
-          onclick={editContacts}
-        ><Icon name="edit" size={9} stroke={T.inkMuted} /> Edit</button>
+  <StepSection title="Selected contacts" subtitle="Contacts that will be migrated.">
+    <StepReviewRow
+      label="Contacts"
+      value={`${selectedContactsCount} selected`}
+      onChange={editContacts}
+      changeLabel="Edit"
+    />
+    {#if (context.trustList ?? []).length === 0}
+      <div class="text-sm text-base-content/70 mt-2">No contacts selected.</div>
+    {:else}
+      <div class="space-y-2 mt-2">
+        {#each context.trustList ?? [] as address (address)}
+          <Avatar {address} view="horizontal" clickable={false} bottomInfo={address} showTypeInfo={true} />
+        {/each}
       </div>
-      <div style="padding:10px 14px;">
-        {#if (context.trustList ?? []).length === 0}
-          <span style="font-size:12.5px;color:{T.inkMuted};">No contacts selected.</span>
-        {:else}
-          <div style="display:flex;flex-direction:column;gap:6px;">
-            {#each context.trustList ?? [] as address (address)}
-              <Avatar {address} view="horizontal" clickable={false} showTypeInfo={true} />
-            {/each}
-          </div>
-        {/if}
-      </div>
-    </div>
-  </div>
+    {/if}
+  </StepSection>
 
-  <p style="font-size:12px;color:{T.inkMuted};line-height:1.5;padding:0 2px;">
-    Ready to migrate to Circles V2. This will write your profile and set up trust relations on-chain.
+  <p class="text-base-content/70 mt-2">
+    You're ready to migrate to Circles V2! Click the button below to start the
+    migration process.
   </p>
 
   {#if migrateAction.error}
-    <StepAlert variant="error" message={migrateAction.error} />
+    <StepAlert variant="error" message={migrateAction.error} className="mt-2" />
   {/if}
 
-  <div style="display:flex;justify-content:flex-end;margin-top:4px;">
-    <button
-      type="submit"
-      style="
-        height:44px;padding:0 24px;border-radius:9999px;border:0;cursor:{migrateAction.loading ? 'wait' : 'pointer'};
-        background:{T.primary};color:#fff;
-        font-family:{T.fontSans};font-size:14px;font-weight:580;
-        box-shadow:0 4px 12px rgba(88,73,212,0.25);
-        display:inline-flex;align-items:center;gap:8px;
-        opacity:{migrateAction.loading ? 0.7 : 1};
-      "
-      onclick={() => migrate()}
-      disabled={migrateAction.loading}
-    >
-      {#if migrateAction.loading}
-        <svg class="mg-spin" style="width:12px;height:12px;" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>
-      {/if}
-      {migrateAction.loading ? 'Migrating…' : 'Migrate to V2'}
-    </button>
-  </div>
+  <StepActionBar>
+    {#snippet primary()}
+      <button
+        type="submit"
+        class="btn btn-primary btn-sm"
+        onclick={() => migrate()}
+        disabled={migrateAction.loading}
+      >
+        {migrateAction.loading ? 'Migrating…' : 'Migrate to V2'}
+      </button>
+    {/snippet}
+  </StepActionBar>
   </FlowStepScaffold>
-
-<style>
-  @keyframes mg-spin { from {} to { transform: rotate(360deg); } }
-  .mg-spin { animation: mg-spin 0.8s linear infinite; }
-</style>
 
