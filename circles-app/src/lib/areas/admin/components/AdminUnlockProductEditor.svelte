@@ -8,7 +8,6 @@
     RouteUpsertInput,
   } from '$lib/areas/admin/services/gateway/adminClient';
   import { normalizeAddressInput, normalizeSku } from '../productEditorUtils';
-  import { T } from '$lib/design-system/tokens.js';
 
   interface Props {
     product?: AdminUnifiedProduct | null;
@@ -141,97 +140,97 @@
   submitLabel={product ? 'Save changes' : 'Create product'}
 >
   {#if formError}
-    <p style="color:{T.negative};font-size:13px;">{formError}</p>
+    <p class="text-error text-sm">{formError}</p>
   {/if}
 
-  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
-    <label style="display:flex;flex-direction:column;gap:4px;">
-      <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Seller address *</span>
-      <input type="text" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontMono};outline:none;box-sizing:border-box;width:100%;" bind:value={seller} placeholder="0x..." />
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <label class="form-control">
+      <span class="label-text">Seller address *</span>
+      <input type="text" class="input input-bordered input-sm font-mono" bind:value={seller} placeholder="0x..." />
     </label>
-    <label style="display:flex;flex-direction:column;gap:4px;">
-      <span style="font-size:12px;font-weight:500;color:{T.inkBody};">SKU *</span>
-      <input type="text" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontMono};outline:none;box-sizing:border-box;width:100%;" bind:value={sku} placeholder="ticket-vip" />
+    <label class="form-control">
+      <span class="label-text">SKU *</span>
+      <input type="text" class="input input-bordered input-sm font-mono" bind:value={sku} placeholder="ticket-vip" />
     </label>
-    <label style="display:flex;flex-direction:column;gap:4px;">
-      <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Lock address *</span>
-      <input type="text" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontMono};outline:none;box-sizing:border-box;width:100%;" bind:value={lockAddress} placeholder="0x..." />
+    <label class="form-control">
+      <span class="label-text">Lock address *</span>
+      <input type="text" class="input input-bordered input-sm font-mono" bind:value={lockAddress} placeholder="0x..." />
     </label>
-    <label style="display:flex;flex-direction:column;gap:4px;">
-      <span style="font-size:12px;font-weight:500;color:{T.inkBody};">RPC URL *</span>
-      <input type="text" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" bind:value={rpcUrl} placeholder="https://rpc.gnosischain.com" />
+    <label class="form-control">
+      <span class="label-text">RPC URL *</span>
+      <input type="text" class="input input-bordered input-sm" bind:value={rpcUrl} placeholder="https://rpc.gnosischain.com" />
     </label>
-    <label style="display:flex;flex-direction:column;gap:4px;grid-column:span 2;">
-      <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Service private key *</span>
-      <input type="password" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontMono};outline:none;box-sizing:border-box;width:100%;" bind:value={servicePrivateKey} placeholder="0x..." />
+    <label class="form-control md:col-span-2">
+      <span class="label-text">Service private key *</span>
+      <input type="password" class="input input-bordered input-sm font-mono" bind:value={servicePrivateKey} placeholder="0x..." />
     </label>
   </div>
 
-  <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:{T.inkMuted};"><span style="flex:1;height:1px;background:{T.hairlineSoft};"></span>Ticket settings<span style="flex:1;height:1px;background:{T.hairlineSoft};"></span></div>
-  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
-    <label style="display:flex;flex-direction:column;gap:4px;">
-      <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Timing mode</span>
-      <select style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" bind:value={timingMode}>
+  <div class="divider text-xs">Ticket settings</div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <label class="form-control">
+      <span class="label-text">Timing mode</span>
+      <select class="select select-bordered select-sm" bind:value={timingMode}>
         <option value="duration">Duration seconds</option>
         <option value="expiration">Expiration unix</option>
       </select>
     </label>
     {#if timingMode === 'duration'}
-      <label style="display:flex;flex-direction:column;gap:4px;">
-        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Duration seconds *</span>
-        <input type="number" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" min="0" step="1" bind:value={durationSecondsInput} />
+      <label class="form-control">
+        <span class="label-text">Duration seconds *</span>
+        <input type="number" class="input input-bordered input-sm" min="0" step="1" bind:value={durationSecondsInput} />
       </label>
     {:else}
-      <label style="display:flex;flex-direction:column;gap:4px;">
-        <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Expiration unix *</span>
-        <input type="number" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" min="0" step="1" bind:value={expirationUnixInput} />
+      <label class="form-control">
+        <span class="label-text">Expiration unix *</span>
+        <input type="number" class="input input-bordered input-sm" min="0" step="1" bind:value={expirationUnixInput} />
       </label>
     {/if}
-    <label style="display:flex;flex-direction:column;gap:4px;">
-      <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Key manager mode</span>
-      <select style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" bind:value={keyManagerMode}>
+    <label class="form-control">
+      <span class="label-text">Key manager mode</span>
+      <select class="select select-bordered select-sm" bind:value={keyManagerMode}>
         <option value="buyer">buyer</option>
         <option value="service">service</option>
         <option value="fixed">fixed</option>
       </select>
     </label>
-    <label style="display:flex;flex-direction:column;gap:4px;">
-      <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Fixed key manager</span>
+    <label class="form-control">
+      <span class="label-text">Fixed key manager</span>
       <input
         type="text"
-        style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontMono};outline:none;box-sizing:border-box;width:100%;"
+        class="input input-bordered input-sm font-mono"
         bind:value={fixedKeyManager}
         placeholder="0x..."
         disabled={keyManagerMode !== 'fixed'}
       />
     </label>
-    <label style="display:flex;flex-direction:column;gap:4px;">
-      <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Total inventory *</span>
-      <input type="number" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" min="0" step="1" bind:value={totalInventoryInput} />
+    <label class="form-control">
+      <span class="label-text">Total inventory *</span>
+      <input type="number" class="input input-bordered input-sm" min="0" step="1" bind:value={totalInventoryInput} />
     </label>
-    <label style="display:flex;flex-direction:column;gap:4px;">
-      <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Enabled</span>
-      <input type="checkbox" style="width:14px;height:14px;accent-color:{T.primary};" bind:checked={unlockEnabled} />
+    <label class="form-control">
+      <span class="label-text">Enabled</span>
+      <input type="checkbox" class="checkbox checkbox-sm" bind:checked={unlockEnabled} />
     </label>
   </div>
 
-  <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:{T.inkMuted};"><span style="flex:1;height:1px;background:{T.hairlineSoft};"></span>Optional<span style="flex:1;height:1px;background:{T.hairlineSoft};"></span></div>
-  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
-    <label style="display:flex;flex-direction:column;gap:4px;">
-      <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Locksmith base</span>
-      <input type="text" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" bind:value={locksmithBase} placeholder="https://locksmith.unlock-protocol.com" />
+  <div class="divider text-xs">Optional</div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+    <label class="form-control">
+      <span class="label-text">Locksmith base</span>
+      <input type="text" class="input input-bordered input-sm" bind:value={locksmithBase} placeholder="https://locksmith.unlock-protocol.com" />
     </label>
-    <label style="display:flex;flex-direction:column;gap:4px;">
-      <span style="font-size:12px;font-weight:500;color:{T.inkBody};">Locksmith token</span>
-      <input type="password" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:12.5px;font-family:{T.fontSans};outline:none;box-sizing:border-box;width:100%;" bind:value={locksmithToken} placeholder="optional" />
+    <label class="form-control">
+      <span class="label-text">Locksmith token</span>
+      <input type="password" class="input input-bordered input-sm" bind:value={locksmithToken} placeholder="optional" />
     </label>
   </div>
 
   {#if product && onDisable}
-    <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:{T.inkMuted};"><span style="flex:1;height:1px;background:{T.hairlineSoft};"></span>Danger zone<span style="flex:1;height:1px;background:{T.hairlineSoft};"></span></div>
+    <div class="divider text-xs">Danger zone</div>
     <button
       type="button"
-      style="height:32px;padding:0 14px;border-radius:9999px;border:1px solid rgba(196,68,48,0.3);background:transparent;color:{T.negative};cursor:pointer;font-family:{T.fontSans};font-size:12.5px;"
+      class="btn btn-outline btn-error btn-sm"
       onclick={async () => {
         saving = true;
         try {

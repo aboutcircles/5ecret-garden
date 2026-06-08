@@ -24,5 +24,4 @@
   profile={item.contact?.contactProfile}
   avatarInfo={item.contact?.avatarInfo}
   trustRelation={formatTrustRelation(item.contact.row.relation)}
-  relation={item.contact.row.relation}
 />

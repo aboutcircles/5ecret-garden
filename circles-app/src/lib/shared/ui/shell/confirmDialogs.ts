@@ -22,7 +22,7 @@ export function openConfirmPopup(options: ConfirmOptions): Promise<boolean> {
     title = 'Please confirm',
     confirmLabel = 'Confirm',
     cancelLabel = 'Cancel',
-    confirmClass = 'btn btn-primary w-full sm:w-auto sm:min-w-[120px]',
+    confirmClass = 'btn btn-primary btn-sm',
   } = options;
 
   return new Promise<boolean>((resolve) => {
@@ -50,15 +50,14 @@ export function openConfirmPopup(options: ConfirmOptions): Promise<boolean> {
 
 export function openInfoPopup(options: InfoOptions): Promise<void> {
   const { message, title = 'Notice', okLabel = 'OK', tone = 'info' } = options;
-  const baseBtn = 'btn w-full sm:w-auto sm:min-w-[120px]';
   const toneClass =
     tone === 'success'
-      ? `${baseBtn} btn-success`
+      ? 'btn btn-success btn-sm'
       : tone === 'warning'
-        ? `${baseBtn} btn-warning`
+        ? 'btn btn-warning btn-sm'
         : tone === 'error'
-          ? `${baseBtn} btn-error`
-          : `${baseBtn} btn-primary`;
+          ? 'btn btn-error btn-sm'
+          : 'btn btn-primary btn-sm';
 
   return new Promise<void>((resolve) => {
     const close = () => {

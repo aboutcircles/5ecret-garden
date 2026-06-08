@@ -1,8 +1,6 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
-  import { T } from '$lib/design-system/tokens.js';
-  import Icon from '$lib/design-system/Icon.svelte';
 
   interface Props {
     onOpen: () => void;
@@ -42,33 +40,18 @@
 <button
   type="button"
   data-market-order-row
-  class="market-order-row"
-  style="
-    width:100%;background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;
-    box-shadow:{T.shadow.xs};
-    padding:12px 14px;
-    display:flex;align-items:center;justify-content:space-between;gap:12px;
-    cursor:pointer;text-align:left;
-    transition:transform .08s ease-out,background .15s ease-out,box-shadow .15s ease-out;
-  "
+  class="w-full bg-base-100 border shadow-sm rounded-xl px-3 md:px-4 py-2 md:py-2.5 flex items-center justify-between cursor-pointer hover:bg-base-200/40 transition-colors text-left"
   onkeydown={onRowKeydown}
   onclick={onRowClick}
 >
-  <div style="display:flex;flex-direction:column;min-width:0;flex:1;gap:2px;">
+  <div class="flex flex-col min-w-0 mr-3">
     {@render children?.()}
   </div>
-  <div style="flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:9999px;background:{T.pageDeep};">
-    <Icon name="chevronRight" size={11} stroke={T.inkMuted} />
+  <div class="shrink-0 flex items-center gap-2">
+    <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" aria-hidden="true" />
   </div>
 
   {#if srLabel}
     <div class="sr-only">{srLabel}</div>
   {/if}
 </button>
-
-<style>
-  .market-order-row:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(15,10,30,0.06), 0 1px 3px rgba(15,10,30,0.04);
-  }
-</style>

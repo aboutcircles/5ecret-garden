@@ -43,7 +43,7 @@
   );
 </script>
 
-<div style="width:100%;display:flex;flex-direction:column;gap:16px;">
+<div class="w-full flex flex-col gap-y-4">
   <ProfileHeaderEditor
     bind:name
     bind:description

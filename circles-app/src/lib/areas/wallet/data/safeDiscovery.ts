@@ -210,7 +210,6 @@ export function createSafeDiscoveryStore(
 
     try {
       const fetchedSafes = await getSafesByOwner(sdk, ownerAddress, opts);
-      console.log('[safeDiscovery] fetched', fetchedSafes.length, 'safes');
       const currentState = get(state);
       const mergedSafes = mergeSafes(currentState.safes, fetchedSafes);
       state.update((current) => ({ ...current, safes: mergedSafes }));
@@ -234,8 +233,7 @@ export function createSafeDiscoveryStore(
         ? 'Some profile data could not be loaded. Names and images may be incomplete.'
         : null;
 
-      console.log('[safeDiscovery] refresh complete, isLoading=false');
-      state.update((current: SafeDiscoveryState) => ({
+      state.update((current) => ({
         ...current,
         profileBySafe,
         groupsByOwner,
@@ -244,14 +242,11 @@ export function createSafeDiscoveryStore(
         warning,
       }));
     } catch (e) {
-      console.error('[safeDiscovery] refresh failed:', e);
-      const msg = (e as Error)?.message ?? '';
-      state.update((current: SafeDiscoveryState) => ({
+      console.error('Failed to load safes', e);
+      state.update((current) => ({
         ...current,
         isLoading: false,
-        error: msg.startsWith('Timed out')
-          ? `${msg}. The Circles RPC isn't responding — please try again.`
-          : 'Could not load your Safes. Please try again.',
+        error: 'Could not load your Safes. Please try again.',
       }));
     }
   }

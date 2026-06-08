@@ -1,129 +1,106 @@
 <script lang="ts">
-  import { page } from '$app/stores';
-  import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
-  import { T } from '$lib/design-system/tokens';
-  import {
-    Home as LHome,
-    Users as LUsers,
-    Layers as LLayers,
-    ShoppingBag as LShoppingBag,
-    Settings as LSettings,
-    Circle as LCircle,
-    Send as LSend,
-  } from 'lucide';
+    import { page } from '$app/stores';
+    import { popupState } from '$lib/shared/state/popup';
+    import { headerDropdownOpen } from '$lib/shared/state/headerDropdown';
+    import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
+    import { Home as LHome, Users as LUsers, Layers as LLayers, Settings as LSettings, Circle as LCircle, ShoppingBag as LShoppingBag } from 'lucide';
 
-  type Icon = 'dashboard' | 'contacts' | 'groups' | 'market' | 'settings' | 'default';
-  type Item = { name: string; link: string; icon?: Icon };
+    type Icon = 'dashboard' | 'contacts' | 'groups' | 'market' | 'settings' | 'default';
+    type Item = { name: string; link: string; icon?: Icon };
 
-  interface Props {
-    items: Item[];
-    onSend?: () => void;
-  }
+    interface Props {
+        items: Item[];
+        maxWidthClass?: string; // e.g. 'max-w-4xl' or 'page page--lg'
+    }
 
-  let { items, onSend }: Props = $props();
+    let { items, maxWidthClass = 'max-w-4xl' }: Props = $props();
 
-  const ICONS: Record<Icon, any> = {
-    dashboard: LHome,
-    contacts:  LUsers,
-    groups:    LLayers,
-    market:    LShoppingBag,
-    settings:  LSettings,
-    default:   LCircle,
-  };
+    function isActive(link: string): boolean {
+        return $page.url.pathname === link;
+    }
 
-  function guessIcon(name: string, link: string): Icon {
-    const n = name.toLowerCase();
-    const l = link.toLowerCase();
-    if (n.includes('dashboard') || l.includes('/dashboard')) return 'dashboard';
-    if (n.includes('contact')   || l.includes('/contacts'))  return 'contacts';
-    if (n.includes('group')     || l.includes('/groups'))    return 'groups';
-    if (n.includes('market')    || l.includes('/market'))    return 'market';
-    if (n.includes('setting')   || l.includes('/settings'))  return 'settings';
-    return 'default';
-  }
+    function guessIcon(name: string, link: string): Icon {
+        const n = name.toLowerCase();
+        const l = link.toLowerCase();
 
-  function isActive(link: string): boolean {
-    const p = $page.url.pathname;
-    return p === link || p.startsWith(link + '/');
-  }
+        const isDashboard = n.includes('dashboard') || l.includes('/dashboard');
+        const isContacts  = n.includes('contact')   || l.includes('/contacts');
+        const isGroups    = n.includes('group')     || l.includes('/groups');
+        const isMarket    = n.includes('market')    || l.includes('/market');
+        const isSettings  = n.includes('setting')   || l.includes('/settings');
 
-  // Split items so Send FAB sits in the centre
-  const midpoint  = $derived(Math.ceil(items.length / 2));
-  const leftItems  = $derived(items.slice(0, midpoint));
-  const rightItems = $derived(items.slice(midpoint));
+        if (isDashboard) { return 'dashboard'; }
+        if (isContacts)  { return 'contacts'; }
+        if (isGroups)    { return 'groups'; }
+        if (isMarket)    { return 'market'; }
+        if (isSettings)  { return 'settings'; }
+        return 'default';
+    }
+
+    // Lucide icon map to remove if/else chains.
+    const ICONS: Record<Icon, any> = {
+        dashboard: LHome,
+        contacts: LUsers,
+        groups: LLayers,
+        market: LShoppingBag,
+        settings: LSettings,
+        default: LCircle
+    };
+
+    // runes-friendly
+    let isPopupOpen: boolean = $derived($popupState.content !== null);
+    let isHeaderDropdownOpen: boolean = $derived($headerDropdownOpen === true);
+    let shouldHide: boolean = $derived(isPopupOpen || isHeaderDropdownOpen);
 </script>
 
-<!-- Floating pill bottom tab bar — mobile only; hidden on md+ -->
 <nav
-  class="md:hidden fixed left-3 right-3 z-40 pointer-events-none"
-  style="bottom: max(20px, calc(env(safe-area-inset-bottom) + 14px));"
-  aria-label="Main navigation"
+        class={`fixed inset-x-0 z-20 transition-all duration-200
+            ${shouldHide ? 'translate-y-8 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}
+        style="bottom: calc(env(safe-area-inset-bottom) + 16px);"
+        aria-hidden={shouldHide ? 'true' : 'false'}
 >
-  <div
-    class="pointer-events-auto flex items-center justify-between p-1.5 mx-auto max-w-md"
-    style="
-      height:64px;background:{T.surface};border-radius:9999px;
-      box-shadow:0 6px 18px rgba(15,10,30,0.10), 0 24px 48px rgba(15,10,30,0.12), 0 0 0 1px rgba(15,10,30,0.04);
-    "
-  >
-    <!-- Left nav items -->
-    {#each leftItems as item (item.link)}
-      {@const kind   = item.icon ?? guessIcon(item.name, item.link)}
-      {@const icon   = ICONS[kind] ?? LCircle}
-      {@const active = isActive(item.link)}
-      <a
-        href={item.link}
-        aria-current={active ? 'page' : undefined}
-        class="flex-1 no-underline"
-        style="
-          height:52px;border-radius:9999px;
-          display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-          background:{active ? T.primarySoft : 'transparent'};
-          color:{active ? T.primaryDeep : 'rgba(15,10,30,0.48)'};
-          transition:background .14s ease-out, color .14s ease-out;
-        "
-      >
-        <Lucide {icon} size={19} class="shrink-0" ariaLabel="" />
-        <span class="text-[10px] font-[580] leading-none">{item.name}</span>
-      </a>
-    {/each}
+    <div class={`mx-auto ${maxWidthClass} pointer-events-none flex justify-center`}>
+        <div class="pointer-events-auto max-w-full">
+            <!-- Use DaisyUI's look, but kill its full-width/fixed behavior -->
+            <div class="btm-nav btm-nav--float bg-base-100/90 backdrop-blur-md border shadow-lg rounded-full px-2 py-1 max-w-full overflow-hidden">
+                {#each items as item (item.link)}
+                    {@const iconKind = item.icon ?? guessIcon(item.name, item.link)}
+                    {@const iconDef = ICONS[iconKind] ?? LCircle}
+                    {@const active = isActive(item.link)}
+                    {@const baseClasses = 'inline-flex items-center gap-3 rounded-full px-4 py-2 whitespace-nowrap transition-colors'}
+                    {@const focusClasses = 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/60 focus-visible:outline-offset-2'}
+                    {@const stateClasses = active
+                        ? 'bg-primary text-primary-content'
+                        : 'text-base-content/90 hover:text-base-content hover:bg-base-200'
+                    }
 
-    <!-- Centre Send FAB -->
-    <button
-      onclick={onSend}
-      class="cursor-pointer transition-transform active:scale-95 mx-1"
-      style="
-        width:52px;height:52px;border-radius:9999px;border:0;
-        background:{T.primary};color:{T.surface};
-        display:inline-flex;align-items:center;justify-content:center;
-        box-shadow:0 4px 14px rgba(88,73,212,0.5), inset 0 1px 0 rgba(255,255,255,0.18);
-        flex-shrink:0;
-      "
-      aria-label="Send"
-    >
-      <Lucide icon={LSend} size={22} class="shrink-0" ariaLabel="" />
-    </button>
-
-    <!-- Right nav items -->
-    {#each rightItems as item (item.link)}
-      {@const kind   = item.icon ?? guessIcon(item.name, item.link)}
-      {@const icon   = ICONS[kind] ?? LCircle}
-      {@const active = isActive(item.link)}
-      <a
-        href={item.link}
-        aria-current={active ? 'page' : undefined}
-        class="flex-1 no-underline"
-        style="
-          height:52px;border-radius:9999px;
-          display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
-          background:{active ? T.primarySoft : 'transparent'};
-          color:{active ? T.primaryDeep : 'rgba(15,10,30,0.48)'};
-          transition:background .14s ease-out, color .14s ease-out;
-        "
-      >
-        <Lucide {icon} size={19} class="shrink-0" ariaLabel="" />
-        <span class="text-[10px] font-[580] leading-none">{item.name}</span>
-      </a>
-    {/each}
-  </div>
+                    <a
+                            href={item.link}
+                            aria-current={active ? 'page' : undefined}
+                            aria-label={item.name}
+                            class={`${baseClasses} ${stateClasses} ${focusClasses}`}
+                    >
+                        <Lucide icon={iconDef} size={28} class="shrink-0 stroke-current pt-2" />
+                        <span class="leading-none -mt-2">{item.name}</span>
+                    </a>
+                {/each}
+            </div>
+        </div>
+    </div>
 </nav>
+
+<style>
+    /* Neutralize DaisyUI's fixed, full-width defaults for the floating variant. */
+    :global(.btm-nav.btm-nav--float) {
+        position: static;
+        left: auto; right: auto;
+        bottom: auto;
+        width: max-content;
+        grid-auto-columns: max-content;
+    }
+    :global(.btm-nav.btm-nav--float > *),
+    :global(.btm-nav.btm-nav--float a) {
+        width: auto;
+        min-width: max-content;
+    }
+</style>

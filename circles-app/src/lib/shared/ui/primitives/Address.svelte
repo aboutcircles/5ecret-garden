@@ -1,7 +1,6 @@
 <script lang="ts">
   import { shortenAddress } from '$lib/shared/utils/shared';
   import type { Address } from '@aboutcircles/sdk-types';
-  import { T } from '$lib/design-system/tokens.js';
 
   let copyIcon = $state('/copy.svg');
   interface Props {
@@ -44,19 +43,19 @@
 </script>
 
 {#if full}
-  <span style="display:inline-flex;align-items:center;gap:4px;vertical-align:baseline;">
+  <span class="inline-flex items-center gap-1 align-baseline">
     <button
       type="button"
       onclick={handleCopy}
       title={copyFailed ? 'Copy failed — select and copy manually' : 'Copy address'}
-      style="font-family:monospace;word-break:break-all;text-decoration:underline;text-decoration-style:dotted;cursor:pointer;background:none;border:0;color:{T.ink};padding:0;"
+      class="font-mono break-all underline decoration-dotted hover:opacity-70 cursor-pointer"
     >
       {address}
     </button>
     {#if copyFailed}
-      <span style="color:{T.negative};font-size:11px;flex-shrink:0;" title="Clipboard blocked by browser">!</span>
+      <span class="text-error text-xs shrink-0" title="Clipboard blocked by browser">!</span>
     {:else}
-      <img src={copyIcon} alt="Copy" style="width:12px;height:12px;display:inline;flex-shrink:0;" />
+      <img src={copyIcon} alt="Copy" class="w-3 h-3 inline shrink-0" />
     {/if}
     {#if explorer}
       <a
@@ -64,7 +63,7 @@
         target="_blank"
         rel="noopener noreferrer"
         title="View on Gnosisscan"
-        style="opacity:0.6;flex-shrink:0;"
+        class="opacity-60 hover:opacity-100 shrink-0"
         aria-label="View on Gnosisscan"
       >
         ↗
@@ -74,14 +73,14 @@
 {:else}
   <button
     onclick={handleCopy}
+    class="btn btn-sm"
     title={copyFailed ? 'Copy failed — select and copy manually' : 'Copy address'}
-    style="display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:8px;border:1px solid {T.hairline};background:{T.surface};color:{T.ink};font-size:13px;cursor:pointer;"
   >
     {shortenAddress(address)}
     {#if copyFailed}
-      <span style="color:{T.negative};font-size:11px;">!</span>
+      <span class="text-error text-xs">!</span>
     {:else}
-      <img src={copyIcon} alt="Copy" style="width:16px;height:16px;display:inline;" />
+      <img src={copyIcon} alt="Copy" class="w-4 h-4 inline" />
     {/if}
   </button>
 {/if}

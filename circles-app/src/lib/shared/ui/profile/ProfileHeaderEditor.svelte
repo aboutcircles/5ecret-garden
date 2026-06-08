@@ -11,7 +11,6 @@
         PROFILE_IMAGE_OUTPUT_MIME,
         PROFILE_IMAGE_OUTPUT_QUALITY,
     } from './profileImagePolicy';
-    import { T } from '$lib/design-system/tokens.js';
 
     interface Props {
         name: string;
@@ -116,47 +115,45 @@
     }
 </script>
 
-<div style="display:flex;flex-direction:column;gap:14px;">
-    <div style="display:flex;align-items:flex-start;gap:14px;">
-        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;">
+<div class="space-y-3">
+    <div class="flex items-center gap-3">
+        <div class="flex flex-col items-center gap-1">
             <button
                 type="button"
+                class="avatar placeholder"
+                class:cursor-pointer={!readonly}
                 title={readonly ? 'Avatar' : 'Change avatar'}
                 aria-label={readonly ? 'Avatar' : 'Change avatar'}
                 onclick={handleAvatarClick}
                 ondragover={handleDragOver}
                 ondrop={handleDrop}
                 disabled={readonly}
-                style="
-                    width:64px;height:64px;border-radius:9999px;border:1px solid {T.hairlineSoft};
-                    background:{T.surfaceAlt};color:{T.inkMuted};
-                    display:inline-flex;align-items:center;justify-content:center;overflow:hidden;
-                    cursor:{readonly ? 'default' : 'pointer'};padding:0;
-                    font-family:{T.fontDisplay};font-size:22px;
-                "
             >
-                {#if previewImageUrl}
-                    <img src={previewImageUrl} alt={`${safeName} avatar preview`} />
-                {:else}
-                    {initials}
-                {/if}
+                <div class="w-16 h-16 rounded-full bg-base-200">
+                    {#if previewImageUrl}
+                        <img src={previewImageUrl} alt={`${safeName} avatar preview`} />
+                    {:else}
+                        <span class="text-xl">{initials}</span>
+                    {/if}
+                </div>
             </button>
 
             {#if previewImageUrl}
                 <button
-                    type="button"
-                    style="height:24px;padding:0 10px;border-radius:9999px;border:0;background:transparent;color:{T.inkMuted};font-size:11px;cursor:{readonly ? 'not-allowed' : 'pointer'};"
+                    class="btn btn-ghost btn-xs px-1 min-h-0 h-auto"
                     onclick={clearPicture}
                     disabled={readonly}
-                >Remove</button>
+                >
+                    Remove picture
+                </button>
             {/if}
         </div>
 
-        <div style="flex:1;display:flex;flex-direction:column;gap:8px;min-width:0;">
-            <label style="display:flex;flex-direction:column;gap:4px;">
-                <span style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">{nameLabel}</span>
+        <div class="flex-1 space-y-2 min-w-0">
+            <label class="form-control">
+                <span class="label-text text-xs">{nameLabel}</span>
                 <input
-                    style="width:100%;padding:9px 12px;border:1px solid {T.hairline};border-radius:10px;font-family:{T.fontSans};font-size:13px;color:{T.ink};background:{T.surface};box-sizing:border-box;"
+                    class="input input-sm input-bordered w-full"
                     bind:value={name}
                     placeholder="Your profile name"
                     readonly={readonly}
@@ -165,10 +162,10 @@
                 />
             </label>
             {#if showLocation}
-                <label style="display:flex;flex-direction:column;gap:4px;">
-                    <span style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Location</span>
+                <label class="form-control">
+                    <span class="label-text text-xs">Location</span>
                     <input
-                        style="width:100%;padding:9px 12px;border:1px solid {T.hairline};border-radius:10px;font-family:{T.fontSans};font-size:13px;color:{T.ink};background:{T.surface};box-sizing:border-box;"
+                        class="input input-sm input-bordered w-full"
                         bind:value={location}
                         placeholder="City, Country"
                         readonly={readonly}
@@ -178,14 +175,14 @@
         </div>
     </div>
 
-    <label style="display:flex;flex-direction:column;gap:4px;">
-        <span style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Description</span>
+    <label class="form-control">
+        <span class="label-text text-xs">Description</span>
         <MarkdownEditor
             bind:value={description}
             rows={3}
             placeholder="Short profile description"
             readonly={readonly}
-            editorClass="profile-description-editor"
+            editorClass="textarea textarea-bordered textarea-sm w-full"
         />
     </label>
 
@@ -201,17 +198,4 @@
 
 <style>
     img { object-fit: cover; width: 100%; height: 100%; }
-    :global(.profile-description-editor) {
-        width: 100%;
-        padding: 9px 12px;
-        border: 1px solid rgba(31,17,70,0.08);
-        border-radius: 10px;
-        font-family: "Inter Tight", "Inter", -apple-system, system-ui, sans-serif;
-        font-size: 13px;
-        color: #0F0A1E;
-        background: #FFFFFF;
-        box-sizing: border-box;
-        min-height: 72px;
-        resize: vertical;
-    }
 </style>

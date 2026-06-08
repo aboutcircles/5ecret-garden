@@ -16,7 +16,6 @@
   import type { Address } from '@aboutcircles/sdk-types';
 
   import type { TrustRow } from '$lib/areas/settings/model/gatewayTypes';
-  import { T } from '$lib/design-system/tokens.js';
 
   interface Props {
     gateway: string;
@@ -36,9 +35,13 @@
     }))
   );
 
-  $effect(() => { trustRowsStore.set(trusts); });
+  $effect(() => {
+    trustRowsStore.set(trusts);
+  });
 
   const gatewayValid = $derived(isAddress((gateway ?? '').trim()));
+
+
   const canManageTrust = $derived(gatewayValid && !loadingTrusts);
 
   async function loadTrusts() {
@@ -51,6 +54,7 @@
     try {
       loadingTrusts = true;
       const entries: TrustRow[] = await fetchActiveTrustRowsByGateway($circles, gateway);
+
       trusts = entries;
       trustRowsStore.set(entries);
     } catch (e) {
@@ -94,48 +98,58 @@
 </script>
 
 <FlowDecoration>
-  <div style="width:100%;display:flex;flex-direction:column;gap:20px;" tabindex="-1" data-popup-initial-focus>
-    <!-- Gateway hero -->
-    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+  <div class="w-full space-y-6" tabindex="-1" data-popup-initial-focus>
+    <div class="flex flex-col items-center w-full sm:w-[90%] lg:w-3/5 mx-auto gap-y-3">
       <Avatar address={gateway} view="vertical" clickable={false} />
-      <AddressComponent address={gateway} />
-      <div style="font-size:13px;font-weight:580;color:{T.ink};">Manage trust</div>
-      <div style="font-size:12px;color:{T.inkMuted};text-align:center;line-height:1.5;">
+
+      <div class="w-full flex justify-center">
+        <AddressComponent address={gateway} />
+      </div>
+
+      <div class="text-sm font-medium leading-tight text-base-content/90">Manage trust</div>
+      <div class="text-xs text-base-content/60 text-center">
         View, add, and remove trusted accounts for this gateway.
       </div>
     </div>
 
-    <div style="display:flex;flex-direction:column;gap:12px;">
-      {#if !gatewayValid}
-        <StepAlert variant="warning" message="Gateway address is invalid. Trust management actions are disabled." />
-      {/if}
+    <div class="space-y-4">
 
-      {#if loadError}
-        <StepAlert variant="error" message={loadError} />
-      {/if}
+    {#if !gatewayValid}
+      <StepAlert
+        variant="warning"
+        message="Gateway address is invalid. Trust management actions are disabled."
+      />
+    {/if}
 
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-        <span style="font-size:13px;font-weight:580;color:{T.ink};">Trusted accounts</span>
-        <div style="display:flex;align-items:center;gap:8px;">
+    {#if loadError}
+      <StepAlert variant="error" message={loadError} />
+    {/if}
+
+    <div class="mt-4">
+      <div class="flex items-center justify-between gap-2 mb-2">
+        <div class="text-sm font-semibold">Trusted accounts</div>
+        <div class="flex items-center gap-2">
           <button
             type="button"
-            style="width:28px;height:28px;border-radius:9999px;border:1px solid {T.hairline};background:transparent;color:{T.inkMuted};cursor:{canManageTrust ? 'pointer' : 'not-allowed'};display:inline-flex;align-items:center;justify-content:center;"
+            class="btn btn-xs btn-ghost btn-square"
             onclick={loadTrusts}
             disabled={!canManageTrust}
             aria-label={loadingTrusts ? 'Refreshing…' : 'Refresh'}
           >
-            <Lucide icon={LRefreshCw} size={13} class={loadingTrusts ? 'animate-spin' : ''} />
+            <Lucide icon={LRefreshCw} size={14} class={loadingTrusts ? 'animate-spin' : ''} />
+            <span class="sr-only">{loadingTrusts ? 'Refreshing…' : 'Refresh'}</span>
           </button>
-          <button
-            type="button"
-            style="height:32px;padding:0 16px;border-radius:9999px;border:0;background:{canManageTrust ? T.primary : T.pageDeep};color:{canManageTrust ? '#fff' : T.inkMuted};font-size:12.5px;font-weight:580;cursor:{canManageTrust ? 'pointer' : 'not-allowed'};"
-            onclick={openAddTrust}
-            disabled={!canManageTrust}
-          >Add</button>
+          <button type="button" class="btn btn-sm btn-primary" onclick={openAddTrust} disabled={!canManageTrust}>
+            Add
+          </button>
         </div>
       </div>
 
-      <GatewayTrustedAccountsList rows={trustRowsWithActions} loading={loadingTrusts} />
+      <GatewayTrustedAccountsList
+        rows={trustRowsWithActions}
+        loading={loadingTrusts}
+      />
+    </div>
     </div>
   </div>
 </FlowDecoration>

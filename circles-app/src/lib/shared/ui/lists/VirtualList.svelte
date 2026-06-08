@@ -7,7 +7,6 @@
         VIRTUAL_LIST_CONTEXT_KEY,
         type VirtualListController,
     } from '$lib/shared/ui/lists/utils/virtualListContext';
-    import { T } from '$lib/design-system/tokens.js';
 
     interface ListStoreValue<T = EventRow | TransactionHistoryRow> {
         data: T[];
@@ -427,7 +426,7 @@
     });
 </script>
 
-<div class="generic-list virtual-list" style="width:100%;padding:8px 0;" role="list" bind:this={listEl}>
+<div class="generic-list virtual-list w-full py-2" role="list" bind:this={listEl}>
     <div
         class="virtual-space"
         style={`height: ${totalHeight}px`}
@@ -467,30 +466,27 @@
     </div>
 
     <div
-        style="text-align:center;padding:16px 0;"
+        class="text-center py-4"
         aria-live="polite"
         aria-busy={$store && !$store?.ended && !hasError ? 'true' : 'false'}
     >
         {#if $store?.ended}
             {#if ($store?.data ?? []).length > 0}
-                <span style="color:{T.inkMuted};">No more items</span>
+                <span class="text-base-content/70">No more items</span>
             {:else}
-                <span style="color:{T.inkMuted};">No entries</span>
+                <span class="text-base-content/70">No entries</span>
             {/if}
         {:else if hasError}
-            <span style="color:{T.negative};">{String(displayError ?? 'Error loading items')}</span>
-            <button style="margin-left:8px;color:{T.primary};background:none;border:0;cursor:pointer;text-decoration:underline;" onclick={handleRetry}>Retry</button>
+            <span class="text-error">{String(displayError ?? 'Error loading items')}</span>
+            <button class="ml-2 link link-primary" onclick={handleRetry}>Retry</button>
         {:else}
-            <svg class="virtuallist-spin" style="width:16px;height:16px;color:{T.primary};vertical-align:middle;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>
-            <span style="margin-left:8px;color:{T.inkMuted};">Loading more...</span>
+            <span class="loading loading-spinner text-primary"></span>
+            <span class="ml-2 text-base-content/70">Loading more...</span>
         {/if}
     </div>
 </div>
 
 <style>
-    @keyframes virtuallist-spin { from {} to { transform: rotate(360deg); } }
-    .virtuallist-spin { animation: virtuallist-spin 0.8s linear infinite; }
-
     .virtual-list,
     .virtual-list * {
         overflow-anchor: none;

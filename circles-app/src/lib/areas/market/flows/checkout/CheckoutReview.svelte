@@ -1,9 +1,8 @@
 <!-- lib/flows/checkout/CheckoutReview.svelte -->
 <script lang="ts">
     import FlowStepScaffold from '$lib/shared/ui/flow/FlowStepScaffold.svelte';
+    import StepActionButtons from '$lib/shared/ui/flow/StepActionButtons.svelte';
     import { CHECKOUT_FLOW_SCAFFOLD_BASE } from './constants';
-    import { T } from '$lib/design-system/tokens.js';
-    import Icon from '$lib/design-system/Icon.svelte';
     import StepAlert from '$lib/shared/ui/flow/StepAlert.svelte';
     import { openStep, popToOrOpen, useAsyncAction } from '$lib/shared/flow';
     import { cartState, checkoutCart } from '$lib/areas/market/cart/store';
@@ -101,8 +100,6 @@
         !!ageProof
     );
 
-    const finalizeDisabled = $derived(checkoutAction.loading || $cartState.loading);
-
     function formatShippingAddress(addr: PostalAddress | undefined): string[] {
         if (!addr) return [];
         const parts: string[] = [];
@@ -146,61 +143,57 @@
 
 <FlowStepScaffold
   {...CHECKOUT_FLOW_SCAFFOLD_BASE}
+  className="space-y-4 text-sm"
   step={3}
   title="Review"
   subtitle="Review cart and checkout details before payment."
 >
 
-        <!-- Information section -->
-        <div style="display:flex;flex-direction:column;gap:8px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;">
-                <span style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Information</span>
-                <button
-                    type="button"
-                    style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.inkMuted};font-size:11px;font-weight:540;cursor:pointer;"
-                    onclick={editDetails}
-                ><Icon name="edit" size={9} stroke={T.inkMuted} /> Edit</button>
+        <div class="space-y-2">
+            <div class="flex items-center justify-between mb-2">
+                <div class="text-xs uppercase tracking-wide text-base-content/60">Information</div>
+                <button type="button" class="btn btn-ghost btn-xs" onclick={editDetails}>
+                    Edit
+                </button>
             </div>
             {#if hasShippingInfo}
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {#if shippingAddress}
-                        <div style="background:{T.surfaceAlt};border:1px solid {T.hairlineSoft};border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;">
-                            <div style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.05em;text-transform:uppercase;margin-bottom:3px;">Shipping</div>
+                        <div class="bg-base-100 p-3">
+                            <div class="font-semibold text-xs uppercase tracking-wide mb-1">Shipping address</div>
                             {#each formatShippingAddress(shippingAddress) as line}
-                                <div style="font-size:12px;color:{T.ink};line-height:1.4;">{line}</div>
+                                <div>{line}</div>
                             {/each}
                         </div>
                     {/if}
 
-                    <div style="background:{T.surfaceAlt};border:1px solid {T.hairlineSoft};border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;">
-                        <div style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.05em;text-transform:uppercase;margin-bottom:3px;">Contact</div>
+                    <div class="bg-base-100 p-3">
+                        <div class="font-semibold text-xs uppercase tracking-wide mb-1">Contact</div>
                         {#if formatContactPoint(contactPoint).length > 0}
                             {#each formatContactPoint(contactPoint) as line}
-                                <div style="font-size:12px;color:{T.ink};line-height:1.4;">{line}</div>
+                                <div>{line}</div>
                             {/each}
                         {:else}
-                            <div style="font-size:12px;color:{T.inkMuted};">No contact details.</div>
+                            <div class="opacity-70">No contact details provided.</div>
                         {/if}
                         {#if formatAgeProof(ageProof)}
-                            <div style="font-size:12px;color:{T.ink};line-height:1.4;">{formatAgeProof(ageProof)}</div>
+                            <div class="mt-1">{formatAgeProof(ageProof)}</div>
                         {/if}
                     </div>
                 </div>
             {:else}
-                <div style="font-size:12.5px;color:{T.inkMuted};">No shipping or contact details provided.</div>
+                <div class="text-sm text-base-content/70">No shipping or contact details provided.</div>
             {/if}
         </div>
 
         <!-- Items -->
         {#if hasLines}
-            <div style="display:flex;flex-direction:column;gap:8px;">
-                <div style="display:flex;align-items:center;justify-content:space-between;">
-                    <span style="font-size:10px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Items</span>
-                    <button
-                        type="button"
-                        style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.inkMuted};font-size:11px;font-weight:540;cursor:pointer;"
-                        onclick={editCart}
-                    ><Icon name="edit" size={9} stroke={T.inkMuted} /> Edit</button>
+            <div class="mt-2">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="text-xs uppercase tracking-wide text-base-content/60">Items</div>
+                    <button type="button" class="btn btn-ghost btn-xs" onclick={editCart}>
+                        Edit
+                    </button>
                 </div>
                 <OrderLineTable
                     lines={lines}
@@ -212,57 +205,43 @@
                 />
             </div>
         {:else}
-            <div style="font-size:12.5px;color:{T.inkMuted};">No basket items attached to this order yet.</div>
+            <div class="opacity-70">
+                No basket items attached to this order yet.
+            </div>
         {/if}
 
-        <!-- Totals -->
-        <div style="
-            background:{T.surfaceAlt};border:1px solid {T.hairlineSoft};border-radius:14px;
-            padding:14px 16px;display:flex;flex-direction:column;gap:6px;
-        ">
-            {#if totalsArray.length > 0}
-                {#each totalsArray as [code, total]}
-                    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:24px;">
-                        <span style="font-size:12px;color:{T.inkMuted};">Items subtotal{code ? ` (${code})` : ''}</span>
-                        <span style="font-size:13px;font-weight:540;color:{T.ink};">{formatCurrency(total, code || null)}</span>
+        <!-- Totals per currency (client-side) + grand total at bottom-right -->
+        <div class="mt-2 flex justify-end">
+            <div class="text-right text-sm">
+                {#if totalsArray.length > 0}
+                    <div class="space-y-1">
+                        {#each totalsArray as [code, total]}
+                            <div class="flex items-baseline justify-between gap-6">
+                                <span class="opacity-80">Items subtotal{code ? ` (${code})` : ''}</span>
+                                <span class="font-medium">{formatCurrency(total, code || null)}</span>
+                            </div>
+                        {/each}
                     </div>
-                {/each}
-            {/if}
-            {#if orderTotal.amount != null}
-                <div style="margin-top:6px;padding-top:8px;border-top:1px solid {T.hairlineSoft};display:flex;justify-content:space-between;align-items:baseline;">
-                    <span style="font-size:11px;color:{T.inkMuted};font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">Total</span>
-                    <span style="font-family:{T.fontDisplay};font-size:24px;color:{T.ink};letter-spacing:-0.01em;line-height:1;">
-                        {formatCurrency(orderTotal.amount, orderTotal.code)}
-                    </span>
-                </div>
-            {/if}
+                {/if}
+                {#if orderTotal.amount != null}
+                    <div class="mt-2 border-t border-base-300 pt-2">
+                        <div class="text-[11px] uppercase tracking-wide opacity-60">Total</div>
+                        <div class="text-xl font-semibold">{formatCurrency(orderTotal.amount, orderTotal.code)}</div>
+                    </div>
+                {/if}
+            </div>
         </div>
 
-        <!-- Action -->
-        <div style="display:flex;justify-content:flex-end;margin-top:4px;">
-            <button
-                type="button"
-                style="
-                    height:48px;padding:0 26px;border-radius:9999px;border:0;cursor:{finalizeDisabled ? 'wait' : 'pointer'};
-                    background:{T.primary};color:#fff;
-                    font-family:{T.fontSans};font-size:14.5px;font-weight:580;
-                    box-shadow:0 6px 16px rgba(88,73,212,0.3);
-                    display:inline-flex;align-items:center;gap:8px;
-                    opacity:{finalizeDisabled ? 0.7 : 1};
-                "
-                onclick={finalizeCheckout}
-                disabled={finalizeDisabled}
-            >
-                {#if checkoutAction.loading}<svg class="checkoutreview-spin" style="width:14px;height:14px;color:#fff;" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/></svg>{/if}
-                {checkoutAction.loading ? 'Creating order…' : 'Confirm & pay'}
-            </button>
-        </div>
+        <!-- Action + error -->
+        <StepActionButtons
+            className="mt-3"
+            primaryLabel={checkoutAction.loading ? 'Creating order…' : 'Confirm & pay'}
+            onPrimary={finalizeCheckout}
+            primaryDisabled={checkoutAction.loading || $cartState.loading}
+            primaryClass="btn btn-sm btn-primary"
+        />
 
         {#if checkoutAction.error}
-            <StepAlert variant="error" message={checkoutAction.error} />
+            <StepAlert variant="error" className="mt-2" message={checkoutAction.error} />
         {/if}
     </FlowStepScaffold>
-
-<style>
-@keyframes checkoutreview-spin{from{}to{transform:rotate(360deg)}}.checkoutreview-spin{animation:checkoutreview-spin 0.8s linear infinite;}
-</style>

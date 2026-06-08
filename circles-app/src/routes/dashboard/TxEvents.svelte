@@ -42,9 +42,9 @@
 </script>
 
 {#if events.length}
-  <div style="background:#FFFFFF;border:1px solid rgba(31,17,70,0.05);margin-top:16px;border-radius:12px;overflow:hidden;">
+  <div class="bg-base-100 border mt-4 rounded-xl overflow-hidden">
     <div
-      style="display:flex;align-items:center;justify-content:space-between;padding:12px;border-bottom:1px solid rgba(31,17,70,0.05);cursor:pointer;user-select:none;"
+      class="flex items-center justify-between p-3 border-b cursor-pointer select-none"
       role="button"
       tabindex="0"
       aria-expanded={eventsListOpen}
@@ -56,19 +56,19 @@
       }}
       onclick={toggleEventsList}
     >
-      <div style="font-size:14px;color:rgba(15,10,30,0.62);">
-        Events <span style="opacity:0.6;">({events.length})</span>
+      <div class="text-sm opacity-70">
+        Events <span class="opacity-60">({events.length})</span>
       </div>
-      <div style="transition:transform 0.2s ease-out;color:rgba(15,10,30,0.62);transform:{eventsListOpen ? 'rotate(90deg)' : 'none'};">
+      <div class="transition-transform duration-200 text-base-content/70 {eventsListOpen ? 'rotate-90' : ''}">
         <Lucide icon={LArrowRight} size={14} />
       </div>
     </div>
     {#if eventsListOpen}
-      <div style="display:flex;flex-direction:column;">
+      <div class="divide-y">
         {#each events as ev, i}
-          <div style="padding:12px;{i > 0 ? 'border-top:1px solid rgba(31,17,70,0.05);' : ''}">
+          <div class="p-3">
             <div
-              style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;cursor:pointer;user-select:none;"
+              class="flex items-center justify-between mb-1 cursor-pointer select-none"
               role="button"
               tabindex="0"
               aria-expanded={isOpen(i)}
@@ -80,46 +80,46 @@
               }}
               onclick={() => toggleOpen(i)}
             >
-              <div style="display:flex;align-items:center;gap:8px;min-width:0;">
-                <div style="transition:transform 0.2s ease-out;color:rgba(15,10,30,0.62);transform:{isOpen(i) ? 'rotate(90deg)' : 'none'};">
+              <div class="flex items-center gap-2 min-w-0">
+                <div class="transition-transform duration-200 text-base-content/70 {isOpen(i) ? 'rotate-90' : ''}">
                   <Lucide icon={LArrowRight} size={14} />
                 </div>
-                <div style="font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                  {eventLabel(ev)} <span style="opacity:0.6;">#{i + 1}</span>
+                <div class="text-sm font-medium truncate">
+                  {eventLabel(ev)} <span class="opacity-60">#{i + 1}</span>
                 </div>
               </div>
-              <div style="font-size:11px;opacity:0.6;flex-shrink:0;">
-                {#if eventLogIndex(ev) !== undefined}Log {eventLogIndex(ev)}{:else}{ev.$type ?? ev.eventType ?? ''}{/if}
+              <div class="text-xs opacity-40 shrink-0">
+                {ev.$type ?? ev.eventType ?? ''}
               </div>
             </div>
             {#if isOpen(i)}
-              <div style="margin-top:8px;overflow-x:auto;">
-                <table style="width:100%;border-collapse:collapse;font-size:11px;">
+              <div class="mt-2 overflow-x-auto">
+                <table class="table table-xs text-xs">
                   <thead>
                     <tr>
-                      <th style="width:160px;white-space:nowrap;opacity:0.7;text-align:left;padding:4px 6px;border-bottom:1px solid rgba(31,17,70,0.05);">Field</th>
-                      <th style="text-align:left;padding:4px 6px;border-bottom:1px solid rgba(31,17,70,0.05);">Value</th>
+                      <th class="w-40 whitespace-nowrap opacity-70">Field</th>
+                      <th>Value</th>
                     </tr>
                   </thead>
                   <tbody>
                     {#each eventDisplayEntries(ev) as [k, v]}
                       <tr>
-                        <td style="white-space:nowrap;opacity:0.7;padding:4px 6px;vertical-align:middle;">{niceKey(k)}</td>
-                        <td style="padding:4px 6px;vertical-align:middle;">
+                        <td class="whitespace-nowrap opacity-70">{niceKey(k)}</td>
+                        <td class="align-middle">
                           {#if v == null || v === undefined}
-                            <span style="opacity:0.4;">—</span>
+                            <span class="opacity-40">—</span>
                           {:else if (k === 'Value' || k === 'value' || k === 'Cost' || k === 'cost') && formatAttoCircles(v)}
                             <span>{formatAttoCircles(v)}</span>
                           {:else if isAddress(v) || addressForDisplay(k, v)}
                             {#if addressForDisplay(k, v)}
-                              <div style="display:inline-flex;align-items:center;gap:8px;">
+                              <div class="inline-flex items-center gap-2">
                                 <Avatar address={addressForDisplay(k, v)} view="small" clickable={true} />
                               </div>
                             {:else}
-                              <span style="font-family:monospace;word-break:break-all;">{String(v)}</span>
+                              <span class="font-mono break-all">{String(v)}</span>
                             {/if}
                           {:else}
-                            <span style="font-family:monospace;word-break:break-all;">
+                            <span class="font-mono break-all">
                               {typeof v === 'object' ? safeStringify(v, 0) : String(v)}
                             </span>
                           {/if}

@@ -7,16 +7,17 @@
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import AdminStatusBadge from '$lib/areas/admin/components/AdminStatusBadge.svelte';
   import { adminOdooConnectionKey } from '$lib/areas/admin/helpers';
-  import type { AdminOdooConnection } from '../types';
+  import type { AdminOdooConnection, AdminWcConnection } from '../types';
   import { shortenAddress } from '$lib/shared/utils/shared';
-  import { T } from '$lib/design-system/tokens';
+
+  type AnyConnection = AdminOdooConnection | AdminWcConnection;
 
   interface Props {
     products: AdminUnifiedProduct[];
     onSelect?: (product: AdminUnifiedProduct) => void;
     productTypes?: AdminProductType[];
-    connections?: AdminOdooConnection[];
-    onEditConnection?: (connection: AdminOdooConnection | null) => void;
+    connections?: AnyConnection[];
+    onEditConnection?: (connection: AnyConnection | null) => void;
   }
 
   let {
@@ -53,7 +54,7 @@
   );
 
   const isGroupedView = $derived(
-    selectedType === 'odoo' || selectedType === 'codedispenser' || selectedType === 'unlock'
+    selectedType === 'odoo' || selectedType === 'codedispenser' || selectedType === 'unlock' || selectedType === 'woocommerce'
   );
 
   type SellerGroup = {
@@ -61,7 +62,7 @@
     chainId: number;
     seller: string;
     products: typeof filteredProducts;
-    connection?: AdminOdooConnection;
+    connection?: AnyConnection;
   };
 
   const groupedProducts = $derived(() => {
@@ -84,7 +85,7 @@
         seller: item.product.seller,
         products: [item],
         connection:
-          selectedType === 'odoo'
+          (selectedType === 'odoo' || selectedType === 'woocommerce')
             ? connections.find(
                 (connection) =>
                   adminOdooConnectionKey(connection.chainId, connection.seller) === key
@@ -110,14 +111,18 @@
           ? item.product.odoo?.enabled
           : item.type === 'codedispenser'
             ? item.product.code?.enabled
-            : item.product.unlock?.enabled;
+            : item.type === 'woocommerce'
+              ? item.product.wc?.enabled
+              : item.product.unlock?.enabled;
       if (mappingEnabled === false) disabled += 1;
       const revokedAt =
         item.type === 'odoo'
           ? item.product.odoo?.revokedAt
           : item.type === 'codedispenser'
             ? item.product.code?.revokedAt
-            : item.product.unlock?.revokedAt;
+            : item.type === 'woocommerce'
+              ? item.product.wc?.revokedAt
+              : item.product.unlock?.revokedAt;
       if (revokedAt) revoked += 1;
     }
 
@@ -129,7 +134,7 @@
   }
 
   function resolveGroupMeta(group: SellerGroup): string {
-    if (selectedType === 'odoo' && group.connection) {
+    if (selectedType === 'odoo' && group.connection && 'odooDb' in group.connection) {
       return `Chain ${group.chainId} · DB ${group.connection.odooDb}`;
     }
     return `Chain ${group.chainId}`;
@@ -137,7 +142,10 @@
 
   function resolveGroupSubtitle(group: SellerGroup): string {
     if (selectedType === 'odoo') {
-      return group.connection?.odooUrl ?? 'No Odoo connection configured';
+      return ('odooUrl' in (group.connection ?? {})) ? (group.connection as AdminOdooConnection).odooUrl : 'No Odoo connection configured';
+    }
+    if (selectedType === 'woocommerce') {
+      return ('wcBaseUrl' in (group.connection ?? {})) ? (group.connection as AdminWcConnection).wcBaseUrl : 'No WooCommerce connection configured';
     }
     if (selectedType === 'unlock') {
       return 'Unlock ticket seller';
@@ -169,7 +177,7 @@
   });
 </script>
 
-<div style="display:flex;flex-direction:column;gap:12px;">
+<div class="space-y-3">
   {#if productTypes.length > 1}
     <Tabs bind:selected={selectedType} size="sm" variant="boxed">
       {#each productTypes as type}
@@ -179,74 +187,72 @@
   {/if}
 
   {#if filteredProducts.length === 0}
-    <p style="font-size:13px;color:{T.inkMuted};">
+    <p class="text-sm opacity-70">
       No {adminProductTypeLabels[selectedType ?? 'odoo']} products yet.
     </p>
   {:else if isGroupedView}
-    <div style="display:flex;flex-direction:column;gap:12px;">
+    <div class="space-y-3">
       {#each groupedProducts() as group (group.key)}
         {@const summary = summarizeGroup(group)}
         <details
-          style="border-radius:14px;border:1px solid {T.hairlineSoft};background:{T.surface};"
+          class="group rounded-xl border bg-base-100"
           bind:open={expandedGroups[group.key]}
         >
-          <summary style="list-style:none;cursor:pointer;">
-            <div style="display:flex;flex-direction:column;gap:12px;padding:12px 16px;">
-              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-                <div style="min-width:0;display:flex;flex-direction:column;gap:4px;">
-                  <div style="display:flex;align-items:center;gap:8px;min-width:0;">
-                    <Avatar address={group.seller} view="small" clickable={true} />
-                    <span style="font-weight:580;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{shortenAddress(group.seller)}</span>
-                  </div>
-                  <div style="font-size:11.5px;color:{T.inkMuted};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{resolveGroupSubtitle(group)}</div>
-                  <div style="font-size:11.5px;color:{T.inkSubtle};">{resolveGroupMeta(group)}</div>
+          <summary class="list-none cursor-pointer">
+            <div class="flex flex-col gap-3 p-3 sm:p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div class="min-w-0 space-y-1">
+                <div class="flex items-center gap-2 min-w-0">
+                  <Avatar address={group.seller} view="small" clickable={true} />
+                  <span class="font-semibold truncate">{shortenAddress(group.seller)}</span>
                 </div>
-                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
-                  {#if selectedType === 'odoo'}
-                    <button
-                      type="button"
-                      style="height:26px;padding:0 10px;border-radius:9999px;border:1px solid {T.hairline};background:transparent;color:{T.inkBody};font-size:11.5px;font-weight:580;cursor:pointer;"
-                      onclick={(event) => {
-                        event.preventDefault();
-                        onEditConnection?.(group.connection ?? null);
-                      }}
-                    >
-                      {group.connection ? 'Edit connection' : 'Add connection'}
-                    </button>
-                  {/if}
-                  <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;justify-content:flex-end;">
-                    <AdminStatusBadge
-                      label={`Products ${group.products.length}`}
-                      variant="neutral"
-                    />
-                    <AdminStatusBadge
-                      label={summary.label}
-                      variant={summary.variant}
-                    />
-                    {#if selectedType === 'odoo'}
-                      {#if group.connection}
-                        <AdminStatusBadge
-                          label={group.connection.enabled ? 'Conn on' : 'Conn off'}
-                          variant={group.connection.enabled ? 'success' : 'warning'}
-                        />
-                        {#if group.connection.revokedAt}
-                          <AdminStatusBadge label="Revoked" variant="warning" />
-                        {/if}
-                      {:else}
-                        <AdminStatusBadge label="No connection" variant="warning" />
+                <div class="text-xs opacity-70 truncate">{resolveGroupSubtitle(group)}</div>
+                <div class="text-xs opacity-60">{resolveGroupMeta(group)}</div>
+              </div>
+              <div class="flex flex-col items-start sm:items-end gap-2">
+                {#if selectedType === 'odoo' || selectedType === 'woocommerce'}
+                  <button
+                    type="button"
+                    class="btn btn-xs btn-outline"
+                    onclick={(event) => {
+                      event.preventDefault();
+                      onEditConnection?.(group.connection ?? null);
+                    }}
+                  >
+                    {group.connection ? 'Edit connection' : 'Add connection'}
+                  </button>
+                {/if}
+                <div class="flex flex-wrap items-center gap-1.5 justify-start sm:justify-end">
+                  <AdminStatusBadge
+                    label={`Products ${group.products.length}`}
+                    variant="neutral"
+                  />
+                  <AdminStatusBadge
+                    label={summary.label}
+                    variant={summary.variant}
+                  />
+                  {#if selectedType === 'odoo' || selectedType === 'woocommerce'}
+                    {#if group.connection}
+                      <AdminStatusBadge
+                        label={group.connection.enabled ? 'Conn on' : 'Conn off'}
+                        variant={group.connection.enabled ? 'success' : 'warning'}
+                      />
+                      {#if group.connection.revokedAt}
+                        <AdminStatusBadge label="Revoked" variant="warning" />
                       {/if}
+                    {:else}
+                      <AdminStatusBadge label="No connection" variant="warning" />
                     {/if}
-                  </div>
+                  {/if}
                 </div>
               </div>
             </div>
           </summary>
-          <div style="padding:0 16px 8px;">
-            <div style="font-size:11.5px;color:{T.inkFaint};display:flex;align-items:center;gap:8px;">
-              <span style="text-transform:uppercase;letter-spacing:0.06em;">Seller products</span>
+          <div class="px-3 pb-2 sm:px-4">
+            <div class="text-xs text-base-content/50 flex items-center gap-2">
+              <span class="uppercase tracking-wide">Seller products</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                style="width:14px;height:14px;flex-shrink:0;transition:transform 0.2s ease-out;{expandedGroups[group.key] ? 'transform:rotate(180deg);' : ''}"
+                class={`h-3.5 w-3.5 shrink-0 transition-transform ${expandedGroups[group.key] ? 'rotate-180' : ''}`}
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -256,8 +262,8 @@
               </svg>
             </div>
           </div>
-          <div style="padding:0 16px 16px;">
-            <div style="display:flex;flex-direction:column;gap:8px;">
+          <div class="px-3 pb-3 sm:px-4 sm:pb-4">
+            <div class="space-y-2">
               {#each group.products as item (item.product.key)}
                 <AdminProductRow
                   product={item.product}

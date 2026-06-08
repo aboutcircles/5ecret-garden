@@ -10,7 +10,6 @@
   import { signer as sessionSigner } from '$lib/shared/state/wallet.svelte';
   import { settings } from '$lib/shared/state/settings.svelte';
   import { gnosisConfig } from '$lib/shared/config/circles';
-  import { T } from '$lib/design-system/tokens.js';
 
   let isCreating = $state(false);
   let error: string | null = $state(null);
@@ -123,11 +122,12 @@
 </script>
 
 {#if error}
-  <div style="font-size:13px;color:{T.negative};margin:4px;">{error}</div>
+  <div class="text-red-500 m-1">{error}</div>
 {/if}
 
 <button
-  style="display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 18px;border-radius:9999px;border:1px solid {T.primary};background:transparent;color:{T.primary};cursor:pointer;font-family:{T.fontSans};font-size:13px;font-weight:580;opacity:{isCreating ? 0.7 : 1};"
+  class="btn btm-nav-xs btn-outline btn-primary"
+  class:loading={isCreating}
   disabled={
     isCreating ||
     (safeCreationMode === 'importedKey' ? !hasLocalPrivateKey : !hasProvider)
@@ -135,16 +135,8 @@
   onclick={createSafe}
 >
   {#if isCreating}
-    <svg class="cs-spin" style="width:13px;height:13px;" viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" stroke-dasharray="28.3" stroke-dashoffset="9"/>
-    </svg>
-    Creating Safe…
+    Creating Safe...
   {:else}
     Create New Safe
   {/if}
 </button>
-
-<style>
-  @keyframes cs-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-  .cs-spin { animation: cs-spin 0.9s linear infinite; }
-</style>

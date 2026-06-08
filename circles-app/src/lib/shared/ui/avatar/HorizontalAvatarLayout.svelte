@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { AppProfileCore as Profile } from '$lib/shared/model/profile';
-  import { T } from '$lib/design-system/tokens.js';
 
   interface Props {
     profile: Profile | undefined;
@@ -26,82 +25,54 @@
   // Try previewImageUrl first, fall back to imageUrl (some profiles store image differently)
   const imgUrl = $derived(profile?.previewImageUrl || profile?.imageUrl || '');
   function onImgError() { imgError = true; }
+  // Reset image error when profile/image changes
   $effect(() => { imgUrl; imgError = false; });
 </script>
 
-<div style={`display:inline-flex;align-items:center;min-width:0;max-width:100%;${reverse ? 'flex-direction:row-reverse;' : ''}`}>
-  <button class="avatar-img-btn" style="cursor:pointer;flex-shrink:0;background:none;border:0;padding:0;" {onclick}>
-    <div style="position:relative;display:inline-block;">
-      {#if imgUrl && !imgError}
-        <img
-          class="avatar-photo"
-          src={imgUrl}
-          alt={profile?.name ?? 'Profile avatar'}
-          style="width:40px;height:40px;object-fit:cover;border-radius:9999px;display:block;"
-          onerror={onImgError}
-        />
-      {:else}
-        <img
-          class="avatar-photo"
-          src="/logo.svg"
-          alt="Fallback"
-          style="width:40px;height:40px;object-fit:cover;border-radius:9999px;display:block;"
-        />
-      {/if}
+<div class={`inline-flex items-center min-w-0 max-w-full ${reverse ? 'flex-row-reverse' : ''}`}>
+  <button class="cursor-pointer shrink-0" {onclick}>
+      <div class="relative inline-block">
+        {#if imgUrl && !imgError}
+          <img
+            src={imgUrl}
+            alt={profile?.name ?? 'Profile avatar'}
+            class="w-10 h-10 object-cover rounded-full block"
+            onerror={onImgError}
+          />
+        {:else}
+          <img src="/logo.svg" alt="Fallback" class="w-10 h-10 object-cover rounded-full block" />
+        {/if}
 
-      {#if showBookmarkBadge}
-        <span
-          style="position:absolute;top:-4px;right:-4px;display:inline-flex;width:16px;height:16px;align-items:center;justify-content:center;border-radius:9999px;background:{T.warning};color:{T.surface};font-size:10px;line-height:1;font-weight:700;border:1px solid {T.surface};"
-          aria-label="Bookmarked"
-          title="Bookmarked"
-        >★</span>
-      {/if}
+        {#if showBookmarkBadge}
+          <span
+            class="absolute -top-1 -right-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-warning text-warning-content text-[10px] leading-none font-bold border border-base-100"
+            aria-label="Bookmarked"
+            title="Bookmarked"
+          >
+            ★
+          </span>
+        {/if}
 
-      {#if pictureOverlayUrl}
+        {#if pictureOverlayUrl}
         <img
           src={pictureOverlayUrl}
           alt="Overlay"
-          style="position:absolute;bottom:-4px;right:-4px;width:20px;height:20px;border-radius:9999px;border:1px solid {T.surface};background:{T.surface};display:block;"
+          class="absolute -bottom-1 -right-1 h-5 w-5 rounded-full border border-base-100 bg-base-100 block"
         />
       {/if}
     </div>
   </button>
-  <div style={`display:flex;flex-direction:column;gap:2px;min-width:0;${reverse ? 'align-items:flex-end;padding-right:16px;text-align:right;' : 'align-items:flex-start;padding-left:16px;'}`}>
+  <div class={`flex flex-col gap-y-0.5 min-w-0 ${reverse ? 'items-end pr-4 text-right' : 'items-start pl-4'}`}>
     {#if topInfo}
-      <p style="font-size:12px;color:{T.inkMuted};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%;margin:0;">
+      <p class="text-xs text-base-content/70 truncate w-full leading-normal">
         {topInfo}
       </p>
     {/if}
-    <span style="font-weight:600;color:{T.ink};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%;">{profile?.name ?? ''}</span>
+    <span class="block font-semibold text-base-content truncate w-full leading-normal">{profile?.name ?? ''}</span>
     {#if bottomInfo}
-      <p style="font-size:12px;color:{T.inkMuted};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%;margin:0;">
+      <p class="text-xs text-base-content/70 truncate w-full leading-normal">
         {bottomInfo}
       </p>
     {/if}
   </div>
 </div>
-
-<style>
-  /* No bounce or lift — block the global rule on the wrapper button */
-  .avatar-img-btn { outline: none; }
-  .avatar-img-btn:hover,
-  .avatar-img-btn:focus-visible {
-    transform: none !important;
-    box-shadow: none !important;
-    filter: none !important;
-  }
-
-  /*
-   * Ring applied directly to the circular <img> so it's always a perfect circle.
-   * Pattern: image → 2px white gap → 2px purple ring.
-   * box-shadow respects border-radius:9999px on the img element.
-   */
-  .avatar-photo {
-    transition: box-shadow 200ms ease-out, transform 200ms ease-out;
-  }
-  .avatar-img-btn:hover .avatar-photo,
-  .avatar-img-btn:focus-visible .avatar-photo {
-    box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px rgba(88,73,212,0.65);
-    transform: scale(1.04);
-  }
-</style>

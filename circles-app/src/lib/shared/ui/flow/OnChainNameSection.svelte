@@ -1,7 +1,4 @@
 <script lang="ts">
-  import { T } from '$lib/design-system/tokens.js';
-  import Icon from '$lib/design-system/Icon.svelte';
-
   interface Props {
     value?: string;
     sourceValue?: string;
@@ -69,24 +66,21 @@
   });
 </script>
 
-<div style="border:1px solid {T.hairlineSoft};border-radius:14px;background:{T.surfaceAlt};padding:14px 16px;">
+<div class="border border-base-200 rounded-xl p-3">
   <button
     type="button"
+    class="flex items-center justify-between w-full text-xs font-semibold text-left"
     onclick={() => (open = !open)}
-    style="
-      display:flex;align-items:center;justify-content:space-between;width:100%;
-      background:transparent;border:0;padding:0;cursor:pointer;text-align:left;
-    "
   >
-    <span style="font-size:13px;font-weight:580;color:{T.ink};">On-chain name</span>
-    <span style="display:inline-flex;color:{T.inkMuted};transform:rotate({open ? 180 : 0}deg);transition:transform .15s ease-out;">
-      <Icon name="chevronDown" size={14} stroke={T.inkMuted} />
+    <span>On-chain name</span>
+    <span class={open ? 'rotate-180 transition-transform' : 'transition-transform'}>
+      <img src="/chevron-down.svg" alt="Toggle" class="w-4 h-4" />
     </span>
   </button>
 
-  <div style="margin-top:6px;font-size:12px;color:{T.inkMuted};">
+  <div class="mt-1 text-xs text-base-content/60">
     {#if value}
-      <span style="font-family:{T.fontMono};color:{T.inkBody};">{value}</span>
+      <span>{value}</span>
       {#if derivationTruncated}
         <span class="ml-1 text-warning">· truncated to {maxBytes} chars from profile name</span>
       {/if}
@@ -96,11 +90,11 @@
   </div>
 
   {#if open}
-    <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px;">
-      <label style="display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:{T.inkBody};cursor:pointer;">
+    <div class="mt-3 space-y-2">
+      <label class="flex items-center gap-2 text-xs">
         <input
           type="checkbox"
-          style="width:14px;height:14px;accent-color:{T.primary};"
+          class="checkbox checkbox-xs"
           checked={manual}
           onchange={(e) => {
             manual = (e.currentTarget as HTMLInputElement).checked;
@@ -110,22 +104,21 @@
         Set on-chain name manually
       </label>
 
-      <div>
-        <span style="font-size:11px;font-weight:580;color:{T.inkMuted};letter-spacing:0.04em;text-transform:uppercase;">On-chain name</span>
+      <label class="form-control w-full">
+        <span class="label-text text-xs">On-chain name</span>
         <input
-          style="width:100%;height:32px;padding:0 10px;border:1px solid {T.hairline};border-radius:8px;font-family:{T.fontSans};font-size:13px;color:{T.ink};background:{T.surface};outline:none;margin-top:6px;"
+          class="input input-sm input-bordered w-full"
           bind:value
           {placeholder}
           disabled={!manual}
           maxlength={maxBytes}
         />
-      </div>
-
-      <p style="font-size:11.5px;color:{T.inkMuted};line-height:1.5;margin:0;">
+      </label>
+      <p class="text-xs text-base-content/60">
         On-chain names follow stricter rules (ASCII only, max {maxBytes} characters).
       </p>
       {#if invalid}
-        <p style="font-size:11.5px;color:{T.negative};margin:0;">{effectiveInvalidMessage}</p>
+        <p class="text-xs text-error">{effectiveInvalidMessage}</p>
       {/if}
     </div>
   {/if}

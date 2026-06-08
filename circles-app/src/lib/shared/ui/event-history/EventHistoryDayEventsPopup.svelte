@@ -2,7 +2,6 @@
   import { tick } from 'svelte';
   import type { Readable } from 'svelte/store';
   import { writable } from 'svelte/store';
-  import { T } from '$lib/design-system/tokens.js';
   import GenericList from '$lib/shared/ui/lists/GenericList.svelte';
   import { createPaginatedList, type PaginatedReadable } from '$lib/shared/state/paginatedList';
   import EventHistoryRowPlaceholder from '$lib/shared/ui/lists/placeholders/EventHistoryRowPlaceholder.svelte';
@@ -177,48 +176,53 @@
   }
 </script>
 
-<div style="display:flex;flex-direction:column;gap:12px;">
-  <div style="font-size:13px;opacity:0.8;">
+<div class="space-y-3">
+  <div class="text-sm opacity-80">
     {dayLabel} · {events.length} event{events.length === 1 ? '' : 's'}
   </div>
-  <div style="font-size:12px;opacity:0.6;">Range: {rangeLabel}</div>
+  <div class="text-xs opacity-60">Range: {rangeLabel}</div>
 
   {#if DayPopupHeader}
-    <div style="border-radius:8px;border:1px solid {T.hairlineSoft};padding:8px;">
+    <div class="rounded-lg border border-base-300 p-2">
       <DayPopupHeader {dayStartSec} {dayEndSec} {events} />
     </div>
   {/if}
 
   {#if events.length > 0}
-    <div style="border-radius:8px;border:1px solid {T.hairlineSoft};padding:8px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;">
-        <div style="font-size:12px;opacity:0.6;">
+    <div class="rounded-lg border border-base-300 p-2">
+      <div class="flex items-center justify-between mb-2 gap-2">
+        <div class="text-xs opacity-60">
           {labels.histogramTitle ?? `Events by ${histogramGranularity === 'hour' ? 'hour' : 'minute'}`}
         </div>
-        <div style="display:flex;border-radius:9999px;border:1px solid {T.hairlineSoft};overflow:hidden;">
+        <div class="join">
           <button
             type="button"
-            style="padding:2px 10px;font-size:11px;border:0;cursor:pointer;font-family:{T.fontSans};{histogramGranularity === 'hour' ? `background:${T.primary};color:#fff;` : `background:transparent;color:${T.inkMuted};`}"
+            class="btn btn-xs join-item"
+            class:btn-primary={histogramGranularity === 'hour'}
+            class:btn-ghost={histogramGranularity !== 'hour'}
             onclick={() => (histogramGranularity = 'hour')}
           >
             Hourly
           </button>
           <button
             type="button"
-            style="padding:2px 10px;font-size:11px;border:0;cursor:pointer;font-family:{T.fontSans};{histogramGranularity === 'minute' ? `background:${T.primary};color:#fff;` : `background:transparent;color:${T.inkMuted};`}"
+            class="btn btn-xs join-item"
+            class:btn-primary={histogramGranularity === 'minute'}
+            class:btn-ghost={histogramGranularity !== 'minute'}
             onclick={() => (histogramGranularity = 'minute')}
           >
             Minutely
           </button>
         </div>
       </div>
-      <div style="overflow-x:auto;" bind:this={histogramScrollEl}>
-        <div style={histogramGranularity === 'minute' ? 'min-width:5760px;' : ''}>
-          <div style="height:80px;display:flex;align-items:flex-end;gap:2px;">
+      <div class="overflow-x-auto" bind:this={histogramScrollEl}>
+        <div class={histogramGranularity === 'minute' ? 'min-w-[5760px]' : ''}>
+          <div class="h-20 flex items-end gap-[2px]">
             {#each histogramBuckets as count, index (`h-${index}`)}
               <button
                 type="button"
-                style="background:rgba(88,73,212,0.7);border-radius:2px 2px 0 0;min-height:2px;border:0;padding:0;cursor:pointer;{histogramGranularity === 'hour' ? 'flex:1;' : 'width:2px;flex-shrink:0;'}height:{Math.max(2, Math.round((count / maxHistogramCount) * 100))}%;"
+                class={`bg-primary/70 rounded-t-sm min-h-[2px] ${histogramGranularity === 'hour' ? 'flex-1' : 'w-[2px] shrink-0'}`}
+                style={`height: ${Math.max(2, Math.round((count / maxHistogramCount) * 100))}%`}
                 title={`${bucketLabel(index)} · ${count} event${count === 1 ? '' : 's'}`}
                 aria-label={`${bucketLabel(index)}: ${count} events`}
                 onclick={() => histogramGranularity === 'hour' && drillDownToMinute(index)}
@@ -227,9 +231,9 @@
           </div>
 
           {#if histogramGranularity === 'minute'}
-            <div style="margin-top:4px;display:flex;font-size:10px;opacity:0.6;min-width:5760px;">
+            <div class="mt-1 flex text-[10px] opacity-60 min-w-[5760px]">
               {#each Array.from({ length: 24 }) as _, hour (`hour-label-${hour}`)}
-                <div style="width:240px;flex-shrink:0;text-align:left;">
+                <div class="w-[240px] shrink-0 text-left">
                   {hour.toString().padStart(2, '0')}:00
                 </div>
               {/each}
@@ -238,7 +242,7 @@
         </div>
       </div>
 
-      <div style="display:{histogramGranularity === 'minute' ? 'none' : 'flex'};justify-content:space-between;font-size:10px;opacity:0.6;margin-top:4px;">
+      <div class="flex justify-between text-[10px] opacity-60 mt-1" class:hidden={histogramGranularity === 'minute'}>
         {#if histogramGranularity === 'hour'}
           <span>00</span><span>06</span><span>12</span><span>18</span><span>23</span>
         {/if}
@@ -249,19 +253,19 @@
   <div>
     <input
       type="text"
-      style="width:100%;height:36px;padding:0 12px;border-radius:8px;border:1px solid {T.hairlineSoft};background:{T.surface};font-size:13px;font-family:{T.fontSans};outline:none;box-sizing:border-box;"
+      class="input input-bordered w-full"
       placeholder={labels.searchPlaceholder ?? 'Search by transaction hash or event type'}
       bind:value={searchQuery}
     />
   </div>
 
   {#if events.length === 0}
-    <div style="font-size:13px;opacity:0.7;">{labels.dayEmpty ?? 'No events in this day.'}</div>
+    <div class="text-sm opacity-70">{labels.dayEmpty ?? 'No events in this day.'}</div>
   {:else if filteredEvents.length === 0}
-    <div style="font-size:13px;opacity:0.7;">{labels.dayNoMatches ?? 'No matches.'}</div>
+    <div class="text-sm opacity-70">{labels.dayNoMatches ?? 'No matches.'}</div>
   {:else}
-    <div style="overflow:auto;border-radius:8px;border:1px solid {T.hairlineSoft};max-height:calc(80vh - 14rem);">
-      <div style="padding:0 8px;">
+    <div class="overflow-auto rounded-lg border border-base-300 max-h-[calc(80vh-14rem)]">
+      <div class="px-2">
         <GenericList
           store={paginatedRows}
           row={rowComponent}
