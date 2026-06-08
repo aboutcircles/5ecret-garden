@@ -62,7 +62,7 @@
             view="horizontal"
             clickable={false}
             showTypeInfo={false}
-            bottomInfo={`${item.memberCount} member${item.memberCount === 1 ? '' : 's'}`}
+            bottomInfo={item.memberCount != null ? `${item.memberCount} member${item.memberCount === 1 ? '' : 's'}` : ''}
             placeholderAvatar={false}
             placeholderTop={true}
             placeholderBottom={true}
