@@ -11,7 +11,7 @@ export interface MarketRoute {
   chainId: number;
   seller: string;
   sku: string;
-  offerType: 'odoo' | 'codedispenser' | 'unlock' | null;
+  offerType: 'odoo' | 'codedispenser' | 'unlock' | 'woocommerce' | null;
   isOneOff?: boolean;
   enabled: boolean;
 }
@@ -20,7 +20,7 @@ export interface RouteUpsertInput {
   chainId: number;
   seller: string;
   sku: string;
-  offerType: 'odoo' | 'codedispenser' | 'unlock' | null;
+  offerType: 'odoo' | 'codedispenser' | 'unlock' | 'woocommerce' | null;
   isOneOff: boolean;
   enabled: boolean;
 }
@@ -380,4 +380,140 @@ export async function listUnlockProducts(): Promise<UnlockProductListItem[]> {
 export async function disableUnlockProduct(chainId: number, seller: string, sku: string): Promise<{ ok: true }> {
   const path = `/admin/unlock-products/${chainId}/${encodeURIComponent(seller)}/${encodeURIComponent(sku)}`;
   return adminFetch<{ ok: true }>(path, { method: 'DELETE' });
+}
+
+// ============= WooCommerce Connection Configuration =============
+
+export interface WcConnectionConfig {
+  chainId: number;
+  seller: Address;
+  wcBaseUrl: string;
+  wcConsumerKey: string;
+  wcConsumerSecret: string;
+  defaultCustomerId?: number;
+  orderStatus?: string;
+  timeoutMs?: number;
+  fulfillInheritRequestAbort?: boolean;
+  enabled: boolean;
+}
+
+export interface WcConnectionListItem {
+  chainId: number;
+  seller: Address;
+  wcBaseUrl: string;
+  wcConsumerKey: string;
+  defaultCustomerId: number | null;
+  orderStatus: string;
+  timeoutMs: number;
+  fulfillInheritRequestAbort: boolean;
+  enabled: boolean;
+  revokedAt: string | null;
+}
+
+export async function upsertWcConnection(config: WcConnectionConfig): Promise<WcConnectionListItem> {
+  return adminFetch<WcConnectionListItem>('/admin/wc-connections', {
+    method: 'PUT',
+    body: JSON.stringify(config),
+  });
+}
+
+export async function listWcConnections(): Promise<WcConnectionListItem[]> {
+  return adminFetch<WcConnectionListItem[]>('/admin/wc-connections');
+}
+
+export async function disableWcConnection(chainId: number, seller: string): Promise<{ ok: true }> {
+  const path = `/admin/wc-connections/${chainId}/${encodeURIComponent(seller)}`;
+  return adminFetch<{ ok: true }>(path, { method: 'DELETE' });
+}
+
+// ============= WooCommerce Product Configuration =============
+
+export interface WcProductConfig {
+  chainId: number;
+  seller: Address;
+  sku: string;
+  wcProductSku: string;
+  wcProductId?: number;
+  totalInventory?: number;
+  enabled: boolean;
+}
+
+export interface WcProductListItem {
+  chainId: number;
+  seller: Address;
+  sku: string;
+  wcProductSku: string;
+  wcProductId: number | null;
+  totalInventory: number | null;
+  enabled: boolean;
+  revokedAt: string | null;
+}
+
+export interface WcStockConfig {
+  chainId: number;
+  seller: Address;
+  sku: string;
+  stockQuantity: number;
+}
+
+export interface WcProductCatalogItem {
+  id: number;
+  name: string;
+  sku: string;
+  stock_quantity: number | null;
+  status: string;
+}
+
+export interface WcProductCatalogResponse {
+  items: WcProductCatalogItem[];
+  perPage: number;
+  offset: number;
+}
+
+export async function upsertWcProduct(config: WcProductConfig): Promise<void> {
+  await adminFetch<void>('/admin/wc-products', {
+    method: 'POST',
+    body: JSON.stringify(config),
+  });
+}
+
+export async function listWcProducts(): Promise<WcProductListItem[]> {
+  return adminFetch<WcProductListItem[]>('/admin/wc-products');
+}
+
+export async function disableWcProduct(chainId: number, seller: string, sku: string): Promise<{ ok: true }> {
+  const path = `/admin/wc-products/${chainId}/${encodeURIComponent(seller)}/${encodeURIComponent(sku)}`;
+  return adminFetch<{ ok: true }>(path, { method: 'DELETE' });
+}
+
+export async function upsertWcStock(config: WcStockConfig): Promise<WcStockConfig> {
+  return adminFetch<WcStockConfig>('/admin/wc-stock', {
+    method: 'PUT',
+    body: JSON.stringify(config),
+  });
+}
+
+export async function getWcStock(chainId: number, seller: string, sku: string): Promise<WcStockConfig> {
+  const path = `/admin/wc-stock/${chainId}/${encodeURIComponent(seller)}/${encodeURIComponent(sku)}`;
+  return adminFetch<WcStockConfig>(path);
+}
+
+export async function listWcProductCatalog(params: {
+  chainId: number;
+  seller: string;
+  perPage?: number;
+  offset?: number;
+  sku?: string;
+}): Promise<WcProductCatalogResponse> {
+  const url = new URL(`${getBaseUrl()}/admin/wc-product-catalog/${params.chainId}/${encodeURIComponent(params.seller)}`);
+  if (params.perPage != null) url.searchParams.set('perPage', String(params.perPage));
+  if (params.offset != null) url.searchParams.set('offset', String(params.offset));
+  if (params.sku) url.searchParams.set('sku', params.sku);
+
+  const res = await fetch(url.toString(), { headers: { ...getAdminAuthHeader() } });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new AdminApiError('GET', '/admin/wc-product-catalog', res.status, text);
+  }
+  return res.json() as Promise<WcProductCatalogResponse>;
 }
