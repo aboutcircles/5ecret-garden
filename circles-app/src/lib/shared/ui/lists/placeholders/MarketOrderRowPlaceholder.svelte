@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { T } from '$lib/design-system/tokens.js';
+
   interface Props {
     height?: number;
   }
@@ -10,17 +12,16 @@
 
 <div
   aria-hidden="true"
-  class="w-full bg-base-100 border shadow-sm rounded-xl px-3 md:px-4 py-2 md:py-2.5 flex items-center justify-between text-left"
-  style={rowStyle}
+  style={`width:100%;background:${T.surface};border:1px solid ${T.hairlineSoft};box-shadow:${T.shadow.xs};border-radius:12px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;text-align:left;${rowStyle ?? ''}`}
 >
-  <div class="flex flex-col min-w-0 mr-3 w-full">
-    <div class="h-4 w-32 max-w-full bg-base-300/70 rounded"></div>
-    <div class="text-xs flex items-center gap-2 mt-1">
-      <div class="h-3 w-16 bg-base-300/60 rounded"></div>
-      <div class="h-3 w-20 bg-base-300/60 rounded"></div>
+  <div style="display:flex;flex-direction:column;min-width:0;margin-right:12px;width:100%;">
+    <div style="height:16px;width:128px;max-width:100%;background:rgba(0,0,0,0.07);border-radius:4px;"></div>
+    <div style="font-size:12px;display:flex;align-items:center;gap:8px;margin-top:4px;">
+      <div style="height:12px;width:64px;background:rgba(0,0,0,0.06);border-radius:4px;"></div>
+      <div style="height:12px;width:80px;background:rgba(0,0,0,0.06);border-radius:4px;"></div>
     </div>
   </div>
-  <div class="shrink-0 flex items-center gap-2">
-    <div class="w-4 h-4 rounded bg-base-300/60"></div>
+  <div style="flex-shrink:0;display:flex;align-items:center;gap:8px;">
+    <div style="width:16px;height:16px;border-radius:4px;background:rgba(0,0,0,0.06);"></div>
   </div>
 </div>

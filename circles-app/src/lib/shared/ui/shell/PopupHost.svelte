@@ -8,6 +8,7 @@
     } from '$lib/shared/state/popup';
     import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
     import { ArrowLeft as LArrowLeft, X as LX } from 'lucide';
+    import { T } from '$lib/design-system/tokens.js';
     import { focusElement, shouldAutoFocusTextInput } from '$lib/shared/ui/focus/focusPolicy';
     import CloseConfirmStep from '$lib/shared/ui/shell/CloseConfirmStep.svelte';
 
@@ -458,32 +459,42 @@
 
     <div
         bind:this={popupEl}
-        class="popup rounded-t-lg overflow-y-auto"
+        class="popup overflow-y-auto"
         role="dialog"
         aria-modal="true"
         aria-labelledby={showTitle ? 'popup-title' : undefined}
         aria-label={!showTitle ? ($popupState.content?.title ?? 'Popup') : undefined}
     >
-        <div class="w-full max-w-4xl mx-auto p-6">
+        <!-- Drag handle (mobile bottom-sheet affordance only) -->
+        <div class="popup-handle flex justify-center pt-3 pb-1 shrink-0">
+            <span style="width:36px;height:4px;border-radius:2px;background:rgba(15,10,30,0.15);display:block;"></span>
+        </div>
+        <div class="popup-inner w-full max-w-4xl mx-auto px-5 pb-6">
             <!-- Header -->
-            <div class="flex items-center gap-3 mb-4">
+            <div class="popup-header" style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
                 <button
-                        data-popup-close-control
-                        class="btn btn-ghost btn-circle btn-sm"
-                        onclick={onClose}
-                        aria-label={$popupState.stack.length > 0 ? 'Back' : 'Close'}
-                        title={$popupState.stack.length > 0 ? 'Back' : 'Close'}
+                    data-popup-close-control
+                    onclick={onClose}
+                    aria-label={$popupState.stack.length > 0 ? 'Back' : 'Close'}
+                    title={$popupState.stack.length > 0 ? 'Back' : 'Close'}
+                    style="
+                        width:32px;height:32px;border-radius:9999px;border:0;
+                        background:{T.pageDeep};color:{T.inkBody};
+                        display:inline-flex;align-items:center;justify-content:center;
+                        cursor:pointer;flex-shrink:0;
+                        transition:background .12s ease-out;
+                    "
                 >
                     <Lucide
-                            icon={$popupState.stack.length > 0 ? LArrowLeft : LX}
-                            size={16}
-                            class="shrink-0"
-                            ariaLabel=""
+                        icon={$popupState.stack.length > 0 ? LArrowLeft : LX}
+                        size={15}
+                        class="shrink-0"
+                        ariaLabel=""
                     />
                 </button>
 
                 {#if showTitle}
-                    <h2 id="popup-title" class="text-xl font-bold">
+                    <h2 id="popup-title" style="font-family:{T.fontSans};font-size:16px;font-weight:620;color:{T.ink};letter-spacing:-0.01em;margin:0;">
                         {popupTitleText}
                     </h2>
                 {/if}
@@ -523,7 +534,9 @@
     .popup-backdrop {
         position: absolute;
         inset: 0;
-        background: rgba(0, 0, 0, 0.35);
+        background: rgba(15, 10, 30, 0.55);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
         border: none;
         padding: 0;
         margin: 0;
@@ -543,21 +556,26 @@
         bottom: 0;
         left: 0;
         width: 100%;
-        max-height: 80%;
-        min-height: 80%;
+        max-height: 92%;
+        min-height: 40%;
+        /* iOS home-indicator safe-area: extend padding below content
+           so the action button doesn't sit under the indicator */
+        padding-bottom: env(safe-area-inset-bottom);
         display: flex;
         flex-direction: column;
         align-items: center;
-        background: oklch(var(--b1));
-        border-top: 1px solid oklch(var(--b3) / 0.55);
-        border-top-left-radius: 16px;
-        border-top-right-radius: 16px;
-        box-shadow: 0 -8px 24px oklch(var(--bc) / 0.08);
-        transition: transform .3s ease, opacity .3s ease;
+        background: #FFFFFF;
+        border-top: 1px solid rgba(31, 17, 70, 0.06);
+        border-top-left-radius: 28px;
+        border-top-right-radius: 28px;
+        box-shadow: 0 -4px 24px rgba(15, 10, 30, 0.10), 0 -1px 0 rgba(31, 17, 70, 0.06);
+        transition: transform .32s cubic-bezier(0.32, 0.72, 0, 1), opacity .28s ease;
         transform: translateY(100%);
         opacity: 0;
         z-index: 101;
         pointer-events: auto;
+        /* Prevent rubber-band scroll on the body when popup is open */
+        overscroll-behavior: contain;
     }
 
     .popup-shell.open .popup {
@@ -569,4 +587,44 @@
     .popup-page { position: relative; }
     .popup-page.is-hidden { display: none; }
     .popup-page.is-top { display: block; }
+
+    /* Desktop: right-anchored slide panel */
+    @media (min-width: 768px) {
+        .popup {
+            top: 0;
+            bottom: 0;
+            left: auto;
+            right: 0;
+            width: 100%;
+            max-width: 520px;
+            max-height: 100%;
+            min-height: 100%;
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+            border-top: 0;
+            border-left: 1px solid rgba(31, 17, 70, 0.06);
+            box-shadow: -8px 0 32px rgba(15, 10, 30, 0.12), -1px 0 0 rgba(31, 17, 70, 0.06);
+            transform: translateX(100%);
+        }
+        .popup-shell.open .popup {
+            transform: translateX(0);
+        }
+        .popup-handle {
+            display: none;
+        }
+        .popup-inner {
+            padding-bottom: 32px;
+        }
+        /* Sticky header so the close/back affordance stays reachable in long flows */
+        .popup-header {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: #FFFFFF;
+            padding-top: 20px;
+            padding-bottom: 14px;
+            margin-bottom: 12px !important;
+            border-bottom: 1px solid rgba(31, 17, 70, 0.06);
+        }
+    }
 </style>

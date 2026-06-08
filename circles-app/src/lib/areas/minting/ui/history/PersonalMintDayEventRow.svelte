@@ -1,7 +1,7 @@
 <script lang="ts">
-  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import type { EventHistoryListItem } from '$lib/shared/ui/event-history';
+  import { T } from '$lib/design-system/tokens.js';
 
   type PersonalMintRow = {
     blockNumber: number;
@@ -44,40 +44,38 @@
 </script>
 
 {#if item.kind === 'group'}
-  <div class="px-3 pt-2 pb-1 sticky top-0 z-[1] bg-base-100 border-b border-base-300 flex items-start justify-between gap-2">
-    <div class="min-w-0">
-      <div class="text-xs font-medium truncate" title={item.transactionHash ?? 'Unknown tx'}>
+  <div style="padding:8px 12px 4px;position:sticky;top:0;z-index:1;background:{T.surface};border-bottom:1px solid {T.hairlineSoft};display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+    <div style="min-width:0;">
+      <div style="font-size:11px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:{T.ink};" title={item.transactionHash ?? 'Unknown tx'}>
         {shortHash(item.transactionHash)}
       </div>
-      <div class="text-[10px] opacity-60">
+      <div style="font-size:10px;opacity:0.6;color:{T.inkMuted};">
         Block {item.blockNumber} · Tx #{item.transactionIndex} · {item.count} event{item.count === 1 ? '' : 's'}
       </div>
     </div>
     <a
-      class="inline-flex items-center justify-center w-7 h-7 rounded-md bg-base-200 hover:bg-base-300 border border-base-300 shrink-0"
+      style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:{T.pageDeep};border:1px solid {T.hairlineSoft};flex-shrink:0;text-decoration:none;"
       href={gnosisscanTxUrl(item.transactionHash)}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Open transaction on Gnosisscan"
       title="Open on Gnosisscan"
     >
-      <img src="/external.svg" alt="" class="w-3.5 h-3.5 opacity-80" aria-hidden="true" />
+      <img src="/external.svg" alt="" style="width:14px;height:14px;opacity:0.8;" aria-hidden="true" />
     </a>
   </div>
 {:else}
-  <RowFrame dense={true} noLeading={true}>
-    <div class="min-w-0">
+  <div style="display:flex;align-items:center;gap:12px;padding:8px 14px;border-radius:12px;background:{T.surface};border:1px solid {T.hairlineSoft};">
+    <div style="flex:1;min-width:0;">
       {#if item.row.human}
         <Avatar address={item.row.human} view="horizontal" clickable={true} showTypeInfo={true} />
       {:else}
-        <div class="text-sm opacity-70">Unknown minter</div>
+        <div style="font-size:13px;opacity:0.7;color:{T.inkMuted};">Unknown minter</div>
       {/if}
     </div>
-    {#snippet trailing()}
-      <div class="text-right text-[10px]">
-        <div class="opacity-70">{formatTime(Number(item.row.timestamp ?? 0))}</div>
-        <div class="opacity-60">Minted {formatAmount(item.row.amount)}</div>
-      </div>
-    {/snippet}
-  </RowFrame>
+    <div style="text-align:right;font-size:10px;flex-shrink:0;">
+      <div style="opacity:0.7;color:{T.inkBody};">{formatTime(Number(item.row.timestamp ?? 0))}</div>
+      <div style="opacity:0.6;color:{T.inkMuted};">Minted {formatAmount(item.row.amount)}</div>
+    </div>
+  </div>
 {/if}

@@ -4,16 +4,20 @@
 </script>
 
 <div
-  class="w-full rounded-lg bg-base-200 overflow-hidden pointer-events-none"
-  style={`height:${height}px`}
+  style="width:100%;border-radius:8px;background:rgba(0,0,0,0.06);overflow:hidden;pointer-events:none;height:{height}px;"
   aria-hidden="true"
 >
-  <div class="h-full animate-pulse flex items-center gap-3 px-4">
-    <div class="w-10 h-10 rounded-full bg-base-300"></div>
-    <div class="flex-1 space-y-2">
-      <div class="h-4 w-1/2 bg-base-300 rounded"></div>
-      <div class="h-3 w-1/3 bg-base-300 rounded"></div>
+  <div class="brs-pulse" style="height:100%;display:flex;align-items:center;gap:12px;padding:0 16px;">
+    <div style="width:40px;height:40px;border-radius:9999px;background:rgba(0,0,0,0.1);flex-shrink:0;"></div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
+      <div style="height:16px;width:50%;background:rgba(0,0,0,0.1);border-radius:4px;"></div>
+      <div style="height:12px;width:33%;background:rgba(0,0,0,0.08);border-radius:4px;"></div>
     </div>
-    <div class="w-16 h-4 bg-base-300 rounded"></div>
+    <div style="width:64px;height:16px;background:rgba(0,0,0,0.1);border-radius:4px;flex-shrink:0;"></div>
   </div>
 </div>
+
+<style>
+  @keyframes brs-pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+  .brs-pulse { animation: brs-pulse 1.5s ease-in-out infinite; }
+</style>

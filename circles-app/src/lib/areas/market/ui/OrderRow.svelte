@@ -3,6 +3,7 @@
   import { popupControls } from '$lib/shared/state/popup';
   import MarketOrderListRow from '$lib/areas/market/ui/MarketOrderListRow.svelte';
   import type { MarketOrderSummaryListItem } from '$lib/areas/market/orders/ordersMappers';
+  import { T } from '$lib/design-system/tokens.js';
 
   interface Props {
     item: MarketOrderSummaryListItem;
@@ -30,12 +31,18 @@
 </script>
 
 <MarketOrderListRow onOpen={openPopup}>
-  <div class="font-mono text-sm truncate" title={idText}>{idText}</div>
-  <div class="text-xs text-base-content/70 flex items-center gap-2 mt-0.5">
-    <span class="badge badge-ghost badge-sm whitespace-nowrap">{statusText}</span>
+  <div style="font-family:{T.fontMono};font-size:12.5px;color:{T.ink};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title={idText}>{idText}</div>
+  <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:{T.inkMuted};">
+    <span style="
+      display:inline-flex;align-items:center;
+      padding:2px 8px;border-radius:9999px;
+      background:{T.pageDeep};color:{T.inkBody};
+      font-size:10px;font-weight:540;letter-spacing:0.02em;
+      white-space:nowrap;
+    ">{statusText}</span>
     {#if totalText}
-      <span class="opacity-60">•</span>
-      <span class="truncate" title={totalText}>Total: {totalText}</span>
+      <span style="color:{T.inkFaint};">•</span>
+      <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title={totalText}>{totalText}</span>
     {/if}
   </div>
 </MarketOrderListRow>

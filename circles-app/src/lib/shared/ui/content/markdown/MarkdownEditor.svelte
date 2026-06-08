@@ -430,16 +430,16 @@
   }
 
   .tb-tab[aria-pressed='true'] {
-    background: oklch(var(--b3) / 0.45);
-    border-color: oklch(var(--b3) / 0.8);
+    background: rgba(31,17,70,0.07);
+    border-color: rgba(31,17,70,0.12);
   }
 
   .tb {
     font: inherit;
     font-size: 12px;
     padding: 6px;
-    border: 1px solid oklch(var(--b3) / 0.75);
-    background: oklch(var(--b2) / 0.35);
+    border: 1px solid rgba(31,17,70,0.10);
+    background: rgba(31,17,70,0.04);
     border-radius: 8px;
     opacity: 0.92;
     cursor: pointer;
@@ -453,7 +453,7 @@
 
   .tb:hover {
     opacity: 1;
-    background: oklch(var(--b3) / 0.3);
+    background: rgba(31,17,70,0.06);
   }
 
   .tb:disabled {
@@ -478,8 +478,8 @@
   .preview {
     padding: 10px 12px;
     border-radius: 8px;
-    border: 1px solid oklch(var(--b3) / 0.75);
-    background: oklch(var(--b1) / 0.75);
+    border: 1px solid rgba(31,17,70,0.10);
+    background: rgba(255,255,255,0.75);
   }
 
   .mmw[data-disabled='true'] .tb {

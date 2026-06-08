@@ -1,30 +1,24 @@
 <script lang="ts">
-  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
-
   interface Props {
     height?: number;
   }
 
   let { height }: Props = $props();
 
-  const rowStyle = $derived(height ? `min-height: ${height}px;` : undefined);
+  const rowStyle = $derived(height ? `min-height:${height}px;` : '');
 </script>
 
-<div aria-hidden="true">
-  <RowFrame clickable={false} dense={true} noLeading={true} style={rowStyle}>
-    <div class="w-full flex items-center justify-between">
-      <div class="inline-flex items-center min-w-0">
-        <div class="relative inline-block">
-          <div class="w-10 h-10 rounded-full bg-base-300/70"></div>
-        </div>
-        <div class="flex flex-col items-start pl-4 gap-y-0.5 min-w-0">
-          <div class="h-4 w-36 max-w-full bg-base-300/70 rounded"></div>
-          <div class="h-3 w-24 max-w-full bg-base-300/60 rounded"></div>
-        </div>
-      </div>
-      <div class="text-right shrink-0">
-        <div class="h-4 w-16 bg-base-300/70 rounded"></div>
-      </div>
+<div aria-hidden="true" style="display:flex;align-items:center;gap:12px;padding:8px 14px;border-radius:12px;border:1px solid rgba(0,0,0,0.06);background:rgba(255,255,255,0.7);{rowStyle}">
+  <div style="display:inline-flex;align-items:center;min-width:0;flex:1;">
+    <div style="position:relative;display:inline-block;flex-shrink:0;">
+      <div style="width:40px;height:40px;border-radius:9999px;background:rgba(0,0,0,0.1);"></div>
     </div>
-  </RowFrame>
+    <div style="display:flex;flex-direction:column;align-items:flex-start;padding-left:16px;gap:2px;min-width:0;">
+      <div style="height:16px;width:144px;max-width:100%;background:rgba(0,0,0,0.1);border-radius:4px;"></div>
+      <div style="height:12px;width:96px;max-width:100%;background:rgba(0,0,0,0.08);border-radius:4px;"></div>
+    </div>
+  </div>
+  <div style="text-align:right;flex-shrink:0;">
+    <div style="height:16px;width:64px;background:rgba(0,0,0,0.1);border-radius:4px;"></div>
+  </div>
 </div>

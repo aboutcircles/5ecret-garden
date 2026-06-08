@@ -1,12 +1,13 @@
 <script lang="ts">
     import type { GroupRow } from '@aboutcircles/sdk-types';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
+    import Icon from '$lib/design-system/Icon.svelte';
     import { openProfilePopup } from '$lib/shared/ui/profile/openProfilePopup';
-    import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
     import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
     import { probeOptOutSupport } from '$lib/areas/groups/utils/optOutSupport';
     import { openFlowPopup } from '$lib/shared/state/popup';
     import LeaveGroup from '$lib/areas/groups/ui/pages/LeaveGroup.svelte';
+    import { T } from '$lib/design-system/tokens.js';
 
     interface Props {
         item: GroupRow;
@@ -71,39 +72,41 @@
     tabindex={0}
     role="button"
     aria-label={`Open group ${item.group}`}
-    class="rounded-[var(--row-radius)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+    class="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+    style="
+        display:flex;align-items:center;gap:12px;padding:14px 20px;
+        min-height:64px;cursor:pointer;
+        border-bottom:1px solid {T.hairlineSoft};box-sizing:border-box;
+        transition:background 180ms ease-out;
+    "
     onkeydown={onRowKeydown}
     onclick={onRowClick}
 >
-    <RowFrame clickable={true} dense={true} noLeading={true}>
-        <div class="min-w-0">
-            <Avatar
-                    placeholderBottom={true}
-                    placeholderTop={false}
-                    placeholderAvatar={true}
-                    address={item.group}
-                    view="horizontal"
-                    clickable={true}
-                    bottomInfo={`${item.memberCount} member${item.memberCount === 1 ? '' : 's'}`}
-            />
-        </div>
-
-    {#snippet trailing()}
-            <div class="flex items-center gap-2">
-                {#if showOptOut && optOutSupported}
-                    <button
-                        type="button"
-                        class="btn btn-xs btn-outline btn-error"
-                        onclick={openLeaveGroupFlow}
-                        aria-label={`Opt out of group ${item.group}`}
-                    >
-                        Opt out
-                    </button>
-                {/if}
-                <div aria-hidden="true">
-                    <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" />
-                </div>
-            </div>
-        {/snippet}
-    </RowFrame>
+    <div style="flex:1;min-width:0;">
+        <Avatar
+            placeholderBottom={true}
+            placeholderTop={false}
+            placeholderAvatar={true}
+            address={item.group}
+            view="horizontal"
+            clickable={false}
+            bottomInfo={`${item.memberCount} member${item.memberCount === 1 ? '' : 's'}`}
+        />
+    </div>
+    {#if showOptOut && optOutSupported}
+        <button
+            type="button"
+            class="btn btn-xs btn-outline btn-error"
+            onclick={openLeaveGroupFlow}
+            aria-label={`Opt out of group ${item.group}`}
+        >
+            Opt out
+        </button>
+    {/if}
+    <Icon name="chevronRight" size={14} stroke={T.inkFaint} />
 </div>
+
+<style>
+  [data-group-row]:hover,
+  [data-group-row]:focus-visible { background: #F6F5F2; }
+</style>

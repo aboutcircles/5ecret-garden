@@ -10,6 +10,7 @@
     type ProfileBookmark,
   } from '$lib/areas/settings/state/profileBookmarks';
   import type { AvatarSearchItem } from './avatarSearch.types';
+  import { T } from '$lib/design-system/tokens.js';
 
   const ACTIVATE_CTX_KEY = 'avatar-search-row-activate';
   type ActivateRow = (item: AvatarSearchItem) => void;
@@ -220,3 +221,11 @@
     </div>
   {/if}
 </div>
+
+<style>
+  [data-avatar-search-row]:hover,
+  [data-avatar-search-row]:focus-visible {
+    background: #F6F5F2 !important;
+    border-color: rgba(31,17,70,0.12) !important;
+  }
+</style>

@@ -25,6 +25,7 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import {gnosisConfig} from "$lib/shared/config/circles";
   import { openInfoPopup } from '$lib/shared/ui/shell/confirmDialogs';
+  import { T } from '$lib/design-system/tokens.js';
 
   const OPERATOR = gnosisConfig.production.marketOperator;
 
@@ -165,22 +166,20 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
   {#if isOwner && canTombstone}
     <button
         type="button"
-        class="btn btn-sm btn-outline"
+        style="height:30px;padding:0 12px;border-radius:9999px;border:0;background:transparent;color:{T.inkMuted};font-size:12px;font-weight:540;cursor:pointer;"
         onclick={(e) => { e.stopPropagation(); handleEdit(); }}
         title="Edit listing"
-    >
-      Edit
-    </button>
+    >Edit</button>
     <ActionButton
       action={handleTombstone}
       title="Remove listing"
       theme={{
-        Ready: 'btn-outline btn-error',
-        Working: 'btn-disabled',
-        Error: 'btn-warning',
-        Retry: 'btn-warning',
-        Done: 'btn-success',
-        Disabled: 'btn-disabled'
+        Ready: 'btn-outline btn-error btn-sm',
+        Working: 'btn-disabled btn-sm',
+        Error: 'btn-warning btn-sm',
+        Retry: 'btn-warning btn-sm',
+        Done: 'btn-success btn-sm',
+        Disabled: 'btn-disabled btn-sm'
       }}
     >
       {#snippet children()}Remove{/snippet}
@@ -190,22 +189,27 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
   {#if addState.showButton}
     <button
         type="button"
-        class="btn btn-sm btn-outline"
+        style="height:30px;padding:0 14px;border-radius:9999px;border:0;cursor:{addState.canAdd ? 'pointer' : 'not-allowed'};background:{addState.canAdd ? T.primary : T.pageDeep};color:{addState.canAdd ? '#fff' : T.inkMuted};font-size:12px;font-weight:580;box-shadow:{addState.canAdd ? '0 2px 6px rgba(88,73,212,0.2)' : 'none'};"
         onclick={(e) => { e.stopPropagation(); handleAddToBasket(); }}
         disabled={!addState.canAdd}
-            title={addState.reason}
-          >
-            {addState.label}
-    </button>
+        title={addState.reason}
+    >{addState.label}</button>
   {/if}
 {/snippet}
 
 {#if product}
   <div
-      class="product-card-root bg-base-100 border border-base-300 rounded-xl overflow-hidden flex flex-col hover:shadow-md transition-shadow cursor-pointer"
+      class="product-card-root"
       role="button"
       tabindex="0"
       aria-label={`Open product details: ${prod?.name ?? product?.product?.name ?? 'Product'}`}
+      style="
+        border-radius:18px;overflow:hidden;
+        background:#FFFFFF;border:1px solid rgba(31,17,70,0.05);
+        box-shadow:0 1px 2px rgba(15,10,30,0.04);
+        display:flex;flex-direction:column;cursor:pointer;
+        transition:box-shadow .18s ease-out,transform .18s ease-out;
+      "
       onclick={(e) => handleProductClick(e)}
       onkeydown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {

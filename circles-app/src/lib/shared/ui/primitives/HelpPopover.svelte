@@ -1,13 +1,13 @@
 <script lang="ts">
   import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import { Info as LInfo } from 'lucide';
+  import { T } from '$lib/design-system/tokens.js';
 
   interface Props {
     title: string;
     lines: string[];
     align?: 'start' | 'end';
     widthClass?: string;
-    buttonClass?: string;
   }
 
   let {
@@ -15,7 +15,6 @@
     lines,
     align = 'end',
     widthClass = 'w-72',
-    buttonClass = 'btn btn-ghost btn-xs btn-square',
   }: Props = $props();
 
   let open = $state(false);
@@ -91,33 +90,37 @@
 <button
   bind:this={triggerEl}
   type="button"
-  class={buttonClass}
+  style="width:24px;height:24px;border-radius:9999px;border:0;background:transparent;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;"
   aria-label={title}
   title={open ? undefined : title}
   onclick={toggle}
 >
-  <Lucide icon={LInfo} size={16} class="text-base-content/40 hover:text-base-content/70" ariaLabel="" />
+  <span style="color:{T.inkFaint};display:inline-flex;"><Lucide icon={LInfo} size={15} ariaLabel="" /></span>
 </button>
 
 {#if open}
   <div
     use:teleport
     bind:this={popoverEl}
-    class="fixed z-[9999] {widthClass} bg-base-100 border border-base-300 rounded-xl shadow-lg p-4"
-    {style}
+    style="position:fixed;z-index:9999;width:280px;background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;box-shadow:{T.shadow.xs};padding:12px 14px;{style}"
     role="tooltip"
   >
-    <div class="flex items-center justify-between mb-2">
-      <span class="font-semibold text-sm">{title}</span>
-      <button type="button" class="btn btn-ghost btn-xs btn-square opacity-60 hover:opacity-100" onclick={close} aria-label="Close">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <span style="font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.05em;text-transform:uppercase;">{title}</span>
+      <button
+        type="button"
+        style="width:20px;height:20px;border-radius:6px;border:0;background:transparent;color:{T.inkMuted};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;opacity:0.6;"
+        onclick={close}
+        aria-label="Close"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width:12px;height:12px;">
           <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
         </svg>
       </button>
     </div>
-    <ul class="space-y-1.5 text-sm text-base-content/70 leading-snug">
+    <ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px;">
       {#each lines as line}
-        <li>{line}</li>
+        <li style="font-size:12px;color:{T.inkBody};line-height:1.5;">{line}</li>
       {/each}
     </ul>
   </div>

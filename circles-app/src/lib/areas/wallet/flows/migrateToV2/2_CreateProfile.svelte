@@ -16,6 +16,7 @@
   import { requireAvatar } from '$lib/shared/flow';
   import type { ProfileEditStepProps } from '$lib/shared/flow';
   import { validateProfile } from '$lib/shared/ui/profile/profileValidation';
+  import { T } from '$lib/design-system/tokens.js';
 
   type Props = ProfileEditStepProps<MigrateToV2Context>;
 
@@ -73,8 +74,8 @@
   subtitle="Create your Circles V2 profile details."
 >
 
-  <p class="text-base-content/70 mt-2">
-    Create a profile for your new Circles v2 avatar.
+  <p style="font-size:12.5px;color:{T.inkMuted};margin:0;">
+    Create a profile for your new Circles V2 avatar.
   </p>
 
   {#if errors && errors.length > 0}
