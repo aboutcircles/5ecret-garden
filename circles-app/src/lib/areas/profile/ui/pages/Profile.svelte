@@ -687,7 +687,6 @@
                 <HelpPopover
                     title="Trust & routing"
                     lines={TRUST_ROUTING_HELP_LINES}
-                    buttonClass="btn btn-ghost btn-xs btn-square opacity-50"
                     widthClass="w-80"
                 />
             </div>
@@ -924,7 +923,6 @@
         bind:selected={selectedTab}
         variant="boxed"
         size="sm"
-        style="width:100%;padding:0;margin-top:24px;"
         fitted={false}
         tabOrder={tabOrder}
 >

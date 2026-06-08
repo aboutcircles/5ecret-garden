@@ -95,15 +95,14 @@
   title={open ? undefined : title}
   onclick={toggle}
 >
-  <Lucide icon={LInfo} size={15} style="color:{T.inkFaint};" ariaLabel="" />
+  <span style="color:{T.inkFaint};display:inline-flex;"><Lucide icon={LInfo} size={15} ariaLabel="" /></span>
 </button>
 
 {#if open}
   <div
     use:teleport
     bind:this={popoverEl}
-    style="position:fixed;z-index:9999;width:280px;background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;box-shadow:{T.shadow.xs};padding:12px 14px;"
-    {style}
+    style="position:fixed;z-index:9999;width:280px;background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;box-shadow:{T.shadow.xs};padding:12px 14px;{style}"
     role="tooltip"
   >
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">

@@ -6,6 +6,8 @@
   import { isBenignReceiptDecodeError } from '$lib/shared/utils/tx';
   import { roundToDecimals } from '$lib/shared/utils/shared';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
+  import { isHumanAvatar } from '$lib/shared/utils/avatarHelpers';
+  import { ethers } from 'ethers';
 
   interface Props {
     initialAmount: number;
@@ -19,19 +21,21 @@
   let lastMintedAt: Date | null = $state(null);
 
   async function refreshMintable() {
-    if (!avatarState.avatar) return;
-    const refreshed = await avatarState.avatar.getMintableAmount();
-    mintableAmount = refreshed ?? 0;
+    const avatar = avatarState.avatar;
+    if (!avatar || !isHumanAvatar(avatar)) return;
+    const refreshed = await avatar.personalToken.getMintableAmount();
+    mintableAmount = refreshed?.amount ? parseFloat(ethers.formatEther(refreshed.amount)) : 0;
     onMinted?.(mintableAmount);
   }
 
   async function handleMint() {
-    if (!avatarState.avatar || mintableAmount < 0.01 || isMinting) return;
+    const avatar = avatarState.avatar;
+    if (!avatar || !isHumanAvatar(avatar) || mintableAmount < 0.01 || isMinting) return;
     isMinting = true;
     try {
       await runTask({
         name: `Minting ${roundToDecimals(mintableAmount)} CRC…`,
-        promise: avatarState.avatar.personalMint(),
+        promise: avatar.personalToken.mint(),
       });
       lastMintedAt = new Date();
     } catch (error) {
@@ -48,11 +52,10 @@
   }
 
   const displayAmount = $derived(roundToDecimals(mintableAmount));
-  const lastMintLabel = $derived(
-    lastMintedAt
-      ? `Minted at ${lastMintedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-      : 'Accruing hourly',
-  );
+  const lastMintLabel = $derived.by(() => {
+    if (!lastMintedAt) return 'Accruing hourly';
+    return `Minted at ${lastMintedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  });
 </script>
 
 <div style="display:flex;flex-direction:column;gap:16px;">

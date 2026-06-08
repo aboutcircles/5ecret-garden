@@ -79,7 +79,6 @@
         <Avatar
             address={address}
             {profile}
-            {avatarInfo}
             view="horizontal"
             bottomInfo={trustRelation}
             showTypeInfo={false}

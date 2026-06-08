@@ -65,7 +65,7 @@
         borderWidth: 2,
         pointRadius: 0,
         pointHoverRadius: 6,
-        backgroundColor: colors.background,
+        backgroundColor: colors.bg,
         borderColor: colors.border,
         fill: true,
       };

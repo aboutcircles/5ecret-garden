@@ -33,8 +33,8 @@
   });
 
   function retryMetrics() {
-    if (!$circles?.circlesRpc) return;
-    void fetchGroupMetrics($circles.circlesRpc, data.group as Address, groupMetrics);
+    if (!$circles?.rpc) return;
+    void fetchGroupMetrics($circles.rpc, data.group as Address, groupMetrics);
   }
 
   const hasData = $derived(

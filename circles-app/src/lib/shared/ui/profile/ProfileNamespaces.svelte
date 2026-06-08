@@ -470,7 +470,7 @@
                                     <JumpLink
                                        style="width:24px;height:24px;border-radius:7px;border:0;background:transparent;color:{T.inkMuted};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;"
                                        url={ipfsGatewayUrl(item.chunkCid)}
-                                       title="View on IPFS">
+                                       ariaLabel="View on IPFS">
                                         <Lucide icon={LExternalLink} size={14} />
                                     </JumpLink>
                                     {#if !readonly}

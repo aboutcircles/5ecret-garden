@@ -38,7 +38,7 @@
     {#if profile?.description}
       <div>
         <div style="font-size:12px;color:{T.inkMuted};margin-bottom:2px;">Description</div>
-        <Markdown content={profile.description} style="font-size:13px;line-height:1.6;color:{T.inkBody};max-width:none;" />
+        <div style="font-size:13px;line-height:1.6;color:{T.inkBody};max-width:none;"><Markdown content={profile.description} /></div>
       </div>
     {:else}
       <div>

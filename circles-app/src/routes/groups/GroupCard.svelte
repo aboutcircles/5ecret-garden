@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { GroupRow } from '@circles-sdk/data';
+    import type { GroupRow } from '@aboutcircles/sdk-types';
     import { goto } from '$app/navigation';
     import { openProfilePopup } from '$lib/shared/ui/profile/openProfilePopup';
     import { T } from '$lib/design-system/tokens.js';

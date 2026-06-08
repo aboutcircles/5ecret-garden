@@ -1,6 +1,7 @@
 <script lang="ts">
   import { getContext } from 'svelte';
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
+  import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import { formatTrustRelation } from '$lib/shared/utils/helpers';
   import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
   import {

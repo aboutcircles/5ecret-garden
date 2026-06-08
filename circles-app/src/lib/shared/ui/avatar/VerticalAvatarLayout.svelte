@@ -46,7 +46,7 @@
   <div style="display:flex;flex-direction:column;align-items:center;padding:16px;gap:2px;">
     <span style="font-weight:600;color:{T.ink};">{profile?.name}</span>
     {#if profile?.description}
-      <Markdown content={profile.description} style="font-size:13px;line-height:1.6;color:{T.inkMuted};max-width:none;margin-top:0;" />
+      <div style="font-size:13px;line-height:1.6;color:{T.inkMuted};max-width:none;margin-top:0;"><Markdown content={profile.description} /></div>
     {/if}
   </div>
 </div>

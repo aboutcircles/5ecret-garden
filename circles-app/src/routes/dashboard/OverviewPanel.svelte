@@ -6,11 +6,11 @@
     import { T } from '$lib/design-system/tokens.js';
     import { circles } from '$lib/shared/state/circles';
     import { avatarState } from '$lib/shared/state/avatar.svelte';
-    import type { Address } from '@circles-sdk/utils';
+    import type { Address } from '@aboutcircles/sdk-types';
 
     function retryMetrics() {
-        if (!$circles?.circlesRpc || !avatarState.avatar?.address) return;
-        void fetchGroupMetrics($circles.circlesRpc, avatarState.avatar.address as Address, groupMetrics);
+        if (!$circles?.rpc || !avatarState.avatar?.address) return;
+        void fetchGroupMetrics($circles.rpc, avatarState.avatar.address as Address, groupMetrics);
     }
 
     const hasData = $derived(

@@ -18,6 +18,8 @@
 
   let { transferContext = null, chainWarning = null }: Props = $props();
 
+  let preparePaymentAction = $state<{ loading: boolean; error: string | null }>({ loading: false, error: null });
+
   const paymentReference = $derived($cartState.lastCheckout?.paymentReference ?? null);
   const basketId = $derived($cartState.basket?.basketId ?? null);
   // payDisabled is computed below once preparePaymentAction is in scope
