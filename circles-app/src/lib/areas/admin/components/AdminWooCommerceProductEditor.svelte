@@ -160,8 +160,12 @@
       if (isConnectionMode) {
         const normalizedSeller = normalizeAddressInput(seller);
         if (!normalizedSeller) { formError = 'Please provide a valid seller address.'; return; }
-        if (!wcBaseUrl || !wcConsumerKey || !wcConsumerSecret) {
-          formError = 'WC store URL, consumer key, and consumer secret are required.';
+        if (!wcBaseUrl) {
+          formError = 'WC store URL is required.';
+          return;
+        }
+        if (!connection && (!wcConsumerKey || !wcConsumerSecret)) {
+          formError = 'Consumer key and consumer secret are required when creating a new connection.';
           return;
         }
         await onSubmit({
@@ -251,6 +255,7 @@
           class="input input-bordered input-sm font-mono"
           bind:value={sku}
           placeholder="my-product-001"
+          disabled={!!product}
         />
       </label>
     {/if}
@@ -260,7 +265,7 @@
     <div class="divider text-xs">Connection</div>
     <label class="form-control">
       <span class="label-text">Use existing connection</span>
-      <select class="select select-bordered select-sm" bind:value={selectedConnectionKey}>
+      <select class="select select-bordered select-sm" bind:value={selectedConnectionKey} disabled={!!product}>
         <option value="" disabled={needsConnectionSelection}>Select connection</option>
         {#each connectionOptions as option (option.key)}
           <option value={option.key}>{option.label}</option>
@@ -377,6 +382,7 @@
                             type="button"
                             class="justify-between"
                             onclick={() => {
+                              if (!item.sku) return;
                               wcProductSku = item.sku;
                               catalogSearch = '';
                               catalogOpen = false;
@@ -435,7 +441,13 @@
     <button
       type="button"
       class="btn btn-outline btn-error btn-sm"
-      onclick={async () => { saving = true; try { await onDisable?.(); } finally { saving = false; } }}
+      onclick={async () => {
+        saving = true;
+        formError = null;
+        try { await onDisable?.(); }
+        catch (e) { formError = e instanceof Error ? e.message : String(e); }
+        finally { saving = false; }
+      }}
       disabled={saving}
     >
       Disable product
@@ -447,7 +459,13 @@
     <button
       type="button"
       class="btn btn-outline btn-error btn-sm"
-      onclick={async () => { saving = true; try { await onDisable?.(); } finally { saving = false; } }}
+      onclick={async () => {
+        saving = true;
+        formError = null;
+        try { await onDisable?.(); }
+        catch (e) { formError = e instanceof Error ? e.message : String(e); }
+        finally { saving = false; }
+      }}
       disabled={saving}
     >
       Disable connection

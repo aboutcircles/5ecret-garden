@@ -388,8 +388,8 @@ export interface WcConnectionConfig {
   chainId: number;
   seller: Address;
   wcBaseUrl: string;
-  wcConsumerKey: string;
-  wcConsumerSecret: string;
+  wcConsumerKey?: string;
+  wcConsumerSecret?: string;
   defaultCustomerId?: number;
   orderStatus?: string;
   timeoutMs?: number;

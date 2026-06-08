@@ -393,8 +393,8 @@
       name: 'Saving WooCommerce connection…',
       promise: upsertWcConnection(payload.connection as WcConnectionConfig),
     });
-    await loadAdminData();
     popupControls.close();
+    await loadAdminData();
   }
 
   async function handleDisableWcConnection(connection: AdminWcConnection): Promise<void> {
@@ -404,8 +404,8 @@
       name: 'Disabling WooCommerce connection…',
       promise: disableWcConnection(connection.chainId, connection.seller),
     });
-    await loadAdminData();
     popupControls.close();
+    await loadAdminData();
   }
 
   async function createConnectionInFlow(payload: { connection: OdooConnectionConfig }): Promise<AdminOdooConnection> {
