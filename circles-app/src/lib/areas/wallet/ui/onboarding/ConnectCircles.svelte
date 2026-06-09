@@ -114,7 +114,6 @@
         style="
             display:flex;align-items:center;justify-content:space-between;gap:12px;
             padding:14px 16px;width:100%;background:transparent;border:0;cursor:pointer;text-align:left;
-            transition:background 180ms ease-out,box-shadow 180ms ease-out;
         "
         class="cc-hover"
     >
@@ -161,7 +160,6 @@
                             display:flex;align-items:center;gap:10px;width:100%;
                             padding:10px 10px;border-radius:10px;
                             background:transparent;border:0;cursor:pointer;text-align:left;
-                            transition:background 180ms ease-out,box-shadow 180ms ease-out;
                         "
                         class="cc-hover"
                     >

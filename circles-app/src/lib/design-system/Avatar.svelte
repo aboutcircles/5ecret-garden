@@ -15,13 +15,13 @@
 
   let { seed = 'x', size = 40, image, kind = 'gradient', icon, label, ring, style = '' }: Props = $props();
 
-  const hue = $derived(() => {
+  const hue = $derived.by(() => {
     let h = 0;
     for (const ch of seed) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
     return h % 360;
   });
 
-  const grad = $derived(`linear-gradient(135deg, hsl(${hue()} 70% 72%), hsl(${(hue() + 40) % 360} 65% 58%))`);
+  const grad = $derived(`linear-gradient(135deg, hsl(${hue} 70% 72%), hsl(${(hue + 40) % 360} 65% 58%))`);
 
   const bg = $derived(
     image ? 'transparent'
@@ -31,7 +31,7 @@
   );
 
   const ringStyle = $derived(
-    ring ? `0 0 0 2px ${T.surface}, 0 0 0 ${2 + (ring === true ? 2 : 2)}px ${ring === true ? T.primary : ring}` : 'none'
+    ring ? `0 0 0 2px ${T.surface}, 0 0 0 4px ${ring === true ? T.primary : ring}` : 'none'
   );
 
   const initials = $derived((label || seed)[0]?.toUpperCase() ?? '?');

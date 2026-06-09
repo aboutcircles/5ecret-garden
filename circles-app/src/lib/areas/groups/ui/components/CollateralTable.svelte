@@ -51,7 +51,7 @@
       role="button"
       tabindex={0}
       onclick={() => openProfile(item.avatar)}
-      onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') openProfile(item.avatar); }}
+      onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openProfile(item.avatar); } }}
     >
       <div style="min-width:0;flex:1;">
         <Avatar address={item.avatar} clickable={true} view="horizontal" showTypeInfo={true} />
