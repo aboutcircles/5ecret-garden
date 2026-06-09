@@ -31,6 +31,12 @@
     listUnlockProducts,
     upsertUnlockProduct,
     disableUnlockProduct,
+    listWcConnections,
+    upsertWcConnection,
+    disableWcConnection,
+    listWcProducts,
+    upsertWcProduct,
+    disableWcProduct,
     type MarketRoute,
     type RouteUpsertInput,
     type OdooConnectionConfig,
@@ -41,6 +47,10 @@
     type OdooProductListItem,
     type CodeProductListItem,
     type UnlockProductListItem,
+    type WcConnectionConfig,
+    type WcConnectionListItem,
+    type WcProductConfig,
+    type WcProductListItem,
     AdminApiError,
   } from '$lib/areas/admin/services/gateway/adminClient';
   import { gnosisConfig } from '$lib/shared/config/circles';
@@ -51,11 +61,12 @@
   import AdminOdooProductEditor from '$lib/areas/admin/components/AdminOdooProductEditor.svelte';
   import AdminCodeProductEditor from '$lib/areas/admin/components/AdminCodeProductEditor.svelte';
   import AdminUnlockProductEditor from '$lib/areas/admin/components/AdminUnlockProductEditor.svelte';
+  import AdminWooCommerceProductEditor from '$lib/areas/admin/components/AdminWooCommerceProductEditor.svelte';
   import AdminNewProductSellerStep from '$lib/areas/admin/flows/newProduct/1_Seller.svelte';
   import AdminNewConnectionSellerStep from '$lib/areas/admin/flows/newConnection/1_Seller.svelte';
   import { combineAdminProducts } from '$lib/areas/admin/helpers';
   import { resolveAdminProductType } from '$lib/areas/admin/types';
-  import type { AdminProductType, AdminUnifiedProduct, AdminOdooConnection } from '$lib/areas/admin/types';
+  import type { AdminProductType, AdminUnifiedProduct, AdminOdooConnection, AdminWcConnection } from '$lib/areas/admin/types';
   import { shortenAddress } from '$lib/shared/utils/shared';
   import Tabs from '$lib/shared/ui/primitives/tabs/Tabs.svelte';
   import Tab from '$lib/shared/ui/primitives/tabs/Tab.svelte';
@@ -72,8 +83,9 @@
   let routesLoading: boolean = $state(false);
   let routesError: string | null = $state(null);
 
-  // Odoo connection state
+  // Connection state
   let odooConnections: OdooConnectionListItem[] = $state([]);
+  let wcConnections: WcConnectionListItem[] = $state([]);
   let connectionsLoading: boolean = $state(false);
   let connectionsError: string | null = $state(null);
 
@@ -81,18 +93,20 @@
   let odooProducts: OdooProductListItem[] = $state([]);
   let codeProducts: CodeProductListItem[] = $state([]);
   let unlockProducts: UnlockProductListItem[] = $state([]);
+  let wcProducts: WcProductListItem[] = $state([]);
   let productsLoading: boolean = $state(false);
   let productsError: string | null = $state(null);
 
   let defaultProductType: AdminProductType = $state('odoo');
 
-  const unifiedProducts = $derived(combineAdminProducts(routes, odooProducts, codeProducts, unlockProducts));
-  const hasRouteOnlyProducts = $derived(unifiedProducts.some((item) => !item.odoo && !item.code && !item.unlock));
+  const unifiedProducts = $derived(combineAdminProducts(routes, odooProducts, codeProducts, unlockProducts, wcProducts));
+  const hasRouteOnlyProducts = $derived(unifiedProducts.some((item) => !item.odoo && !item.code && !item.unlock && !item.wc));
   const loadingAny = $derived(productsLoading || routesLoading || connectionsLoading);
 
   const codeProductsUnified = $derived(unifiedProducts.filter((item) => resolveAdminProductType(item) === 'codedispenser'));
   const odooProductsUnified = $derived(unifiedProducts.filter((item) => resolveAdminProductType(item) === 'odoo'));
   const unlockProductsUnified = $derived(unifiedProducts.filter((item) => resolveAdminProductType(item) === 'unlock'));
+  const wcProductsUnified = $derived(unifiedProducts.filter((item) => resolveAdminProductType(item) === 'woocommerce'));
   const routeOnlyProductsUnified = $derived(unifiedProducts.filter((item) => resolveAdminProductType(item) === 'route'));
 
   type SaveProductPayload = {
@@ -107,9 +121,11 @@
     };
     code?: CodeProductConfig;
     unlock?: UnlockProductConfig;
+    wc?: WcProductConfig;
+    connection?: WcConnectionConfig;
   };
 
-  const PRODUCT_TAB_IDS = ['codedispenser', 'unlock', 'odoo', 'route'] as const;
+  const PRODUCT_TAB_IDS = ['codedispenser', 'unlock', 'odoo', 'woocommerce', 'route'] as const;
   type ProductsTabId = TabIdOf<typeof PRODUCT_TAB_IDS>;
   let selectedProductsTab = $state<ProductsTabId>('codedispenser');
 
@@ -148,9 +164,11 @@
     adminUser = null;
     routes = [];
     odooConnections = [];
+    wcConnections = [];
     odooProducts = [];
     codeProducts = [];
     unlockProducts = [];
+    wcProducts = [];
   }
 
   // Each loader stores its own error state for the UI. On auth failure (401/403)
@@ -184,6 +202,10 @@
         name: 'Loading Odoo connections…',
         promise: listOdooConnections(),
       });
+      wcConnections = await runTask({
+        name: 'Loading WooCommerce connections…',
+        promise: listWcConnections(),
+      });
     } catch (e) {
       connectionsError = e instanceof Error ? e.message : String(e);
       if (e instanceof AdminApiError && e.isAuthFailure()) throw e;
@@ -212,9 +234,14 @@
         name: 'Loading Unlock products…',
         promise: listUnlockProducts(),
       });
+      const wc = await runTask({
+        name: 'Loading WooCommerce products…',
+        promise: listWcProducts(),
+      });
       odooProducts = odoo;
       codeProducts = code;
       unlockProducts = unlock;
+      wcProducts = wc;
     } catch (e) {
       productsError = e instanceof Error ? e.message : String(e);
       if (e instanceof AdminApiError && e.isAuthFailure()) throw e;
@@ -245,7 +272,7 @@
   function openProductEditor(
     product: AdminUnifiedProduct | null,
     type?: AdminProductType,
-    connection?: AdminOdooConnection
+    connection?: AdminOdooConnection | AdminWcConnection
   ): void {
     if (type) {
       defaultProductType = type;
@@ -259,13 +286,19 @@
       ? AdminCodeProductEditor
       : resolvedType === 'unlock'
         ? AdminUnlockProductEditor
-        : AdminOdooProductEditor;
+        : resolvedType === 'woocommerce'
+          ? AdminWooCommerceProductEditor
+          : AdminOdooProductEditor;
 
     const typeLabel = resolvedType === 'codedispenser'
       ? 'Code'
       : resolvedType === 'unlock'
         ? 'Unlock'
-        : 'Odoo';
+        : resolvedType === 'woocommerce'
+          ? 'WooCommerce'
+          : 'Odoo';
+
+    const connectionsProp = resolvedType === 'woocommerce' ? wcConnections : odooConnections;
 
     popupControls.open?.({
       title: product ? 'Edit product' : `New ${typeLabel} product`,
@@ -274,7 +307,7 @@
       props: {
         product,
         connection,
-        connections: odooConnections,
+        connections: connectionsProp,
         mode: 'product',
         onCancel: () => popupControls.close(),
         onDisable: product ? async () => handleDisableProduct(product) : undefined,
@@ -335,6 +368,46 @@
     });
   }
 
+  function openWcConnectionEditor(connection?: AdminWcConnection | null): void {
+    popupControls.open?.({
+      title: connection ? 'Edit WooCommerce connection' : 'New WooCommerce connection',
+      hideTitle: true,
+      component: AdminWooCommerceProductEditor,
+      props: {
+        connection: connection ?? null,
+        connections: wcConnections,
+        mode: 'connection',
+        onCancel: () => popupControls.close(),
+        onDisable: connection ? async () => handleDisableWcConnection(connection) : undefined,
+        onSubmit: async (payload: SaveProductPayload) => {
+          await saveWcConnection(payload);
+        },
+      },
+      id: connection ? `wc-connection-${connection.chainId}-${connection.seller}` : 'wc-new-connection',
+    });
+  }
+
+  async function saveWcConnection(payload: SaveProductPayload): Promise<void> {
+    if (!payload.connection) return;
+    await runTask({
+      name: 'Saving WooCommerce connection…',
+      promise: upsertWcConnection(payload.connection as WcConnectionConfig),
+    });
+    popupControls.close();
+    await loadAdminData();
+  }
+
+  async function handleDisableWcConnection(connection: AdminWcConnection): Promise<void> {
+    const msg = `Disable WooCommerce connection for ${shortenAddress(connection.seller)} on chain ${connection.chainId}?`;
+    if (!(await openConfirmPopup({ title: 'Disable WooCommerce connection', message: msg }))) return;
+    await runTask({
+      name: 'Disabling WooCommerce connection…',
+      promise: disableWcConnection(connection.chainId, connection.seller),
+    });
+    popupControls.close();
+    await loadAdminData();
+  }
+
   async function createConnectionInFlow(payload: { connection: OdooConnectionConfig }): Promise<AdminOdooConnection> {
     await runTask({
       name: 'Saving Odoo connection…',
@@ -367,6 +440,18 @@
     payload: SaveProductPayload,
     product: AdminUnifiedProduct | null
   ): Promise<void> {
+    // WooCommerce: POST /admin/wc-products creates both the adapter mapping and the route atomically.
+    // Skip the separate route upsert for woocommerce.
+    if (payload.type === 'woocommerce' && payload.wc) {
+      await runTask({
+        name: product ? 'Saving WooCommerce product…' : 'Creating WooCommerce product…',
+        promise: upsertWcProduct(payload.wc),
+      });
+      await loadAdminData();
+      popupControls.close();
+      return;
+    }
+
     const baseRoute: RouteUpsertInput | null = payload.type !== 'route'
       ? {
         chainId:
@@ -467,6 +552,11 @@
       await runTask({
         name: 'Disabling Unlock product…',
         promise: disableUnlockProduct(product.chainId, product.seller, product.sku),
+      });
+    } else if (product.wc) {
+      await runTask({
+        name: 'Disabling WooCommerce product…',
+        promise: disableWcProduct(product.chainId, product.seller, product.sku),
       });
     } else if (product.route) {
       await runTask({
@@ -613,8 +703,32 @@
                   products={odooProductsUnified}
                   onSelect={(product) => openProductEditor(product, 'odoo')}
                   connections={odooConnections}
-                  onEditConnection={openConnectionEditor}
+                  onEditConnection={(conn) => openConnectionEditor(conn as AdminOdooConnection | null)}
                   productTypes={['odoo']}
+                />
+              {/if}
+            </Tab>
+
+            <Tab id="woocommerce" title="WooCommerce" badge={wcProductsUnified.length} panelClass="pt-4">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                <div class="text-xs opacity-70">
+                  WooCommerce connections are shown per seller. Click a seller group to review products.
+                </div>
+                <div class="flex items-center gap-2">
+                  <button class="btn btn-outline btn-xs" onclick={() => openWcConnectionEditor(null)}>
+                    New connection
+                  </button>
+                </div>
+              </div>
+              {#if wcProductsUnified.length === 0}
+                <p class="text-sm opacity-70">No WooCommerce products configured yet.</p>
+              {:else}
+                <AdminProductList
+                  products={wcProductsUnified}
+                  onSelect={(product) => openProductEditor(product, 'woocommerce')}
+                  connections={wcConnections}
+                  onEditConnection={(conn) => openWcConnectionEditor((conn as AdminWcConnection) ?? null)}
+                  productTypes={['woocommerce']}
                 />
               {/if}
             </Tab>

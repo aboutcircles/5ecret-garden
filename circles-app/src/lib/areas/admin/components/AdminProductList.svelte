@@ -7,15 +7,17 @@
   import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
   import AdminStatusBadge from '$lib/areas/admin/components/AdminStatusBadge.svelte';
   import { adminOdooConnectionKey } from '$lib/areas/admin/helpers';
-  import type { AdminOdooConnection } from '../types';
+  import type { AdminOdooConnection, AdminWcConnection } from '../types';
   import { shortenAddress } from '$lib/shared/utils/shared';
+
+  type AnyConnection = AdminOdooConnection | AdminWcConnection;
 
   interface Props {
     products: AdminUnifiedProduct[];
     onSelect?: (product: AdminUnifiedProduct) => void;
     productTypes?: AdminProductType[];
-    connections?: AdminOdooConnection[];
-    onEditConnection?: (connection: AdminOdooConnection | null) => void;
+    connections?: AnyConnection[];
+    onEditConnection?: (connection: AnyConnection | null) => void;
   }
 
   let {
@@ -52,7 +54,7 @@
   );
 
   const isGroupedView = $derived(
-    selectedType === 'odoo' || selectedType === 'codedispenser' || selectedType === 'unlock'
+    selectedType === 'odoo' || selectedType === 'codedispenser' || selectedType === 'unlock' || selectedType === 'woocommerce'
   );
 
   type SellerGroup = {
@@ -60,7 +62,7 @@
     chainId: number;
     seller: string;
     products: typeof filteredProducts;
-    connection?: AdminOdooConnection;
+    connection?: AnyConnection;
   };
 
   const groupedProducts = $derived(() => {
@@ -83,7 +85,7 @@
         seller: item.product.seller,
         products: [item],
         connection:
-          selectedType === 'odoo'
+          (selectedType === 'odoo' || selectedType === 'woocommerce')
             ? connections.find(
                 (connection) =>
                   adminOdooConnectionKey(connection.chainId, connection.seller) === key
@@ -109,14 +111,18 @@
           ? item.product.odoo?.enabled
           : item.type === 'codedispenser'
             ? item.product.code?.enabled
-            : item.product.unlock?.enabled;
+            : item.type === 'woocommerce'
+              ? item.product.wc?.enabled
+              : item.product.unlock?.enabled;
       if (mappingEnabled === false) disabled += 1;
       const revokedAt =
         item.type === 'odoo'
           ? item.product.odoo?.revokedAt
           : item.type === 'codedispenser'
             ? item.product.code?.revokedAt
-            : item.product.unlock?.revokedAt;
+            : item.type === 'woocommerce'
+              ? item.product.wc?.revokedAt
+              : item.product.unlock?.revokedAt;
       if (revokedAt) revoked += 1;
     }
 
@@ -128,7 +134,7 @@
   }
 
   function resolveGroupMeta(group: SellerGroup): string {
-    if (selectedType === 'odoo' && group.connection) {
+    if (selectedType === 'odoo' && group.connection && 'odooDb' in group.connection) {
       return `Chain ${group.chainId} · DB ${group.connection.odooDb}`;
     }
     return `Chain ${group.chainId}`;
@@ -136,7 +142,10 @@
 
   function resolveGroupSubtitle(group: SellerGroup): string {
     if (selectedType === 'odoo') {
-      return group.connection?.odooUrl ?? 'No Odoo connection configured';
+      return ('odooUrl' in (group.connection ?? {})) ? (group.connection as AdminOdooConnection).odooUrl : 'No Odoo connection configured';
+    }
+    if (selectedType === 'woocommerce') {
+      return ('wcBaseUrl' in (group.connection ?? {})) ? (group.connection as AdminWcConnection).wcBaseUrl : 'No WooCommerce connection configured';
     }
     if (selectedType === 'unlock') {
       return 'Unlock ticket seller';
@@ -200,7 +209,7 @@
                 <div class="text-xs opacity-60">{resolveGroupMeta(group)}</div>
               </div>
               <div class="flex flex-col items-start sm:items-end gap-2">
-                {#if selectedType === 'odoo'}
+                {#if selectedType === 'odoo' || selectedType === 'woocommerce'}
                   <button
                     type="button"
                     class="btn btn-xs btn-outline"
@@ -221,7 +230,7 @@
                     label={summary.label}
                     variant={summary.variant}
                   />
-                  {#if selectedType === 'odoo'}
+                  {#if selectedType === 'odoo' || selectedType === 'woocommerce'}
                     {#if group.connection}
                       <AdminStatusBadge
                         label={group.connection.enabled ? 'Conn on' : 'Conn off'}

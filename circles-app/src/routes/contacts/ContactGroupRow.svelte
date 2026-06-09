@@ -1,8 +1,9 @@
 <script lang="ts">
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
+    import Icon from '$lib/design-system/Icon.svelte';
     import { openProfilePopup } from '$lib/shared/ui/profile/openProfilePopup';
-    import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
     import type { Address } from '@aboutcircles/sdk-types';
+    import { T } from '$lib/design-system/tokens.js';
     import type { AppProfileCore as Profile } from '$lib/shared/model/profile';
     import type { AvatarRow, AvatarInfo } from '@aboutcircles/sdk-types';
     import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
@@ -12,8 +13,9 @@
         profile?: Profile;
         avatarInfo?: AvatarRow | AvatarInfo;
         trustRelation?: string;
+        relation?: string;
     }
-    let { address, profile, avatarInfo, trustRelation = '' }: Props = $props();
+    let { address, profile, avatarInfo, trustRelation = '', relation = '' }: Props = $props();
 
     function openProfile() {
         if (!address) return;
@@ -46,6 +48,16 @@
         listNavigator.onRowClick(event);
         openProfile();
     }
+
+    const pillConfig = $derived.by(() => {
+        switch (relation) {
+            case 'mutuallyTrusts':  return { label: 'Both accept', bg: '#DCEBDF', color: '#2D8A52' };
+            case 'trusts':          return { label: 'You accept',  bg: '#FBEFCB', color: '#B07014' };
+            case 'trustedBy':       return { label: 'Accepts you', bg: '#EEEBFA', color: '#5849D4' };
+            case 'variesByVersion': return { label: 'Varies',      bg: '#F6F5F2', color: 'rgba(15,10,30,0.55)' };
+            default: return null;
+        }
+    });
 </script>
 
 <div
@@ -53,23 +65,35 @@
     tabindex={0}
     role="button"
     aria-label={`Open profile for ${address ?? 'contact'}`}
-    class="rounded-[var(--row-radius)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+    class="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+    style="
+        display:flex;align-items:center;gap:12px;padding:14px 20px;
+        min-height:64px;cursor:pointer;
+        border-bottom:1px solid {T.hairlineSoft};box-sizing:border-box;
+        transition:background 180ms ease-out;
+    "
     onkeydown={onRowKeydown}
     onclick={onRowClick}
 >
-    <RowFrame clickable={true} dense={true} noLeading={true}>
-        <div class="min-w-0">
-            <Avatar
-                address={address}
-                profile={profile}
-                view="horizontal"
-                bottomInfo={trustRelation}
-                showTypeInfo={false}
-                clickable={true}
-            />
-        </div>
-        {#snippet trailing()}<div aria-hidden="true">
-            <img src="/chevron-right.svg" alt="" class="h-4 w-4 opacity-70" aria-hidden="true" />
-        </div>{/snippet}
-    </RowFrame>
+    <div style="flex:1;min-width:0;">
+        <Avatar
+            address={address}
+            {profile}
+            view="horizontal"
+            bottomInfo={trustRelation}
+            showTypeInfo={false}
+            clickable={false}
+        />
+    </div>
+    {#if pillConfig}
+        <span
+            style="flex-shrink:0;display:inline-flex;align-items:center;padding:3px 10px;border-radius:9999px;font-size:10.5px;font-weight:580;white-space:nowrap;background:{pillConfig.bg};color:{pillConfig.color};"
+        >{pillConfig.label}</span>
+    {/if}
+    <Icon name="chevronRight" size={14} stroke={T.inkFaint} />
 </div>
+
+<style>
+  [data-contact-row]:hover,
+  [data-contact-row]:focus-visible { background: #F6F5F2; }
+</style>

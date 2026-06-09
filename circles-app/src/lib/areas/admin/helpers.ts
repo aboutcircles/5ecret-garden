@@ -3,6 +3,7 @@ import type {
   CodeProductListItem,
   OdooProductListItem,
   UnlockProductListItem,
+  WcProductListItem,
   MarketRoute,
 } from '$lib/areas/admin/services/gateway/adminClient';
 import type { AdminUnifiedProduct } from './types';
@@ -22,7 +23,8 @@ export function combineAdminProducts(
   routes: MarketRoute[],
   odooProducts: OdooProductListItem[],
   codeProducts: CodeProductListItem[],
-  unlockProducts: UnlockProductListItem[]
+  unlockProducts: UnlockProductListItem[],
+  wcProducts: WcProductListItem[] = []
 ): AdminUnifiedProduct[] {
   const productMap = new Map<ProductKey, AdminUnifiedProduct>();
 
@@ -59,6 +61,11 @@ export function combineAdminProducts(
   for (const unlock of unlockProducts) {
     const entry = upsertBase(unlock.chainId, unlock.seller, unlock.sku);
     entry.unlock = unlock;
+  }
+
+  for (const wc of wcProducts) {
+    const entry = upsertBase(wc.chainId, wc.seller, wc.sku);
+    entry.wc = wc;
   }
 
   return Array.from(productMap.values()).sort((a, b) => {
