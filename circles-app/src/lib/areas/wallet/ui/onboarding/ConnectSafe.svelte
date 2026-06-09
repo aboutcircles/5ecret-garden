@@ -7,6 +7,7 @@
   import ConnectCircles from '$lib/areas/wallet/ui/onboarding/ConnectCircles.svelte';
   import CreateSafe from '$lib/areas/wallet/ui/components/CreateSafe.svelte';
   import { createSafeDiscoveryStore } from '$lib/areas/wallet/data/safeDiscovery';
+  import { T } from '$lib/design-system/tokens.js';
 
   let searchQuery = $state('');
   let showUnregistered = $state(false);
@@ -116,87 +117,82 @@
   const unregisteredLabel = $derived(unregisteredCount === 1 ? 'Safe' : 'Safes');
 </script>
 
-<!-- Safes section -->
-<section class="section space-y-4">
-  <div class="space-y-1">
-    <h2 class="text-lg md:text-xl font-semibold tracking-tight">Safes</h2>
-    <p class="text-sm text-base-content/70">
+<section style="display:flex;flex-direction:column;gap:16px;">
+  <div style="display:flex;flex-direction:column;gap:4px;">
+    <h2 style="font-family:{T.fontDisplay};font-size:22px;font-weight:500;color:{T.ink};letter-spacing:-0.015em;margin:0;">Safes</h2>
+    <p style="font-size:13px;color:{T.inkMuted};margin:0;">
       Choose which Safe you want to use as your active avatar.
     </p>
   </div>
 
-  <label class="form-control w-full">
-    <div class="input input-bordered w-full flex items-center gap-2">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.8"
-        class="h-4 w-4 opacity-70"
-        aria-hidden="true"
+  <div style="border:1px solid {T.hairline};border-radius:10px;padding:10px 14px;background:{T.surface};display:flex;align-items:center;gap:8px;">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.8"
+      style="width:16px;height:16px;opacity:0.6;flex-shrink:0;"
+      aria-hidden="true"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m1.1-4.4a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z" />
+    </svg>
+    <input
+      type="text"
+      style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-family:{T.fontSans};font-size:13px;color:{T.ink};"
+      placeholder="Search avatar by name or address"
+      bind:value={searchQuery}
+      autocomplete="off"
+      spellcheck="false"
+    />
+    {#if searchQuery.length > 0}
+      <button
+        type="button"
+        style="border:0;background:transparent;color:{T.inkMuted};cursor:pointer;font-size:11px;padding:2px 8px;border-radius:9999px;font-family:{T.fontSans};"
+        aria-label="Clear search"
+        onclick={() => { searchQuery = ''; }}
       >
-        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m1.1-4.4a6.5 6.5 0 11-13 0 6.5 6.5 0 0113 0z" />
-      </svg>
-      <input
-        type="text"
-        class="grow"
-        placeholder="Search avatar by name or address"
-        bind:value={searchQuery}
-        autocomplete="off"
-        spellcheck="false"
-      />
-      {#if searchQuery.length > 0}
-        <button
-          type="button"
-          class="btn btn-ghost btn-xs"
-          aria-label="Clear search"
-          onclick={() => {
-            searchQuery = '';
-          }}
-        >
-          Clear
-        </button>
-      {/if}
-    </div>
-  </label>
+        Clear
+      </button>
+    {/if}
+  </div>
 
   {#if isLoadingSafes}
-    <div class="space-y-2" aria-hidden="true">
+    <div style="display:flex;flex-direction:column;gap:8px;" aria-hidden="true">
       {#each Array.from({ length: 2 }) as _}
-        <div class="h-16 rounded-xl border border-base-300 bg-base-200/60 animate-pulse"></div>
+        <div class="cs-pulse" style="height:64px;border-radius:12px;border:1px solid {T.hairlineSoft};background:{T.pageDeep};"></div>
       {/each}
     </div>
   {:else if loadError}
-    <div class="rounded-xl border border-error/30 bg-error/10 p-4 space-y-3">
-      <p class="text-sm text-error">{loadError}</p>
-      <button class="btn btn-sm btn-outline" type="button" onclick={() => refresh({ forceRefresh: true })}>
+    <div style="border-radius:12px;border:1px solid rgba(196,68,48,0.18);background:{T.negativeSoft};padding:16px;display:flex;flex-direction:column;gap:12px;">
+      <p style="font-size:13px;color:{T.negative};margin:0;">{loadError}</p>
+      <button style="align-self:flex-start;height:28px;padding:0 14px;border-radius:9999px;border:1px solid {T.hairline};background:transparent;color:{T.ink};cursor:pointer;font-family:{T.fontSans};font-size:12px;" type="button" onclick={() => refresh({ forceRefresh: true })}>
         Retry
       </button>
     </div>
   {:else if (safes ?? []).length === 0}
-    <div class="rounded-xl border border-dashed border-base-300 bg-base-200/40 p-4">
-      <p class="text-sm text-base-content/70">
+    <div style="border-radius:12px;border:1.5px dashed {T.hairlineSoft};background:{T.pageDeep};padding:16px;">
+      <p style="font-size:13px;color:{T.inkMuted};margin:0;">
         No Safe found for this wallet yet. Create one below to continue.
       </p>
     </div>
   {:else if filteredSafes.length === 0}
-    <div class="rounded-xl border border-base-300 bg-base-200/40 p-4">
-      <p class="text-sm text-base-content/70">
-        No avatar matches &ldquo;{searchQuery.trim()}&rdquo;.
+    <div style="border-radius:12px;border:1px solid {T.hairlineSoft};background:{T.pageDeep};padding:16px;">
+      <p style="font-size:13px;color:{T.inkMuted};margin:0;">
+        No avatar matches "{searchQuery.trim()}".
       </p>
     </div>
   {:else}
     {#if loadWarning}
-      <div class="rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 flex items-center gap-2">
-        <p class="text-xs text-warning-content flex-1">{loadWarning}</p>
-        <button class="btn btn-ghost btn-xs" type="button" onclick={() => refresh({ forceRefresh: true })}>
+      <div style="border-radius:10px;border:1px solid rgba(196,144,48,0.3);background:rgba(196,144,48,0.08);padding:10px 12px;display:flex;align-items:center;gap:8px;">
+        <p style="font-size:12px;color:{T.warning};flex:1;margin:0;">{loadWarning}</p>
+        <button style="border:0;background:transparent;font-size:12px;color:{T.inkMuted};cursor:pointer;padding:2px 8px;border-radius:6px;font-family:{T.fontSans};" type="button" onclick={() => refresh({ forceRefresh: true })}>
           Retry
         </button>
       </div>
     {/if}
     {#if registeredSafes.length > 0}
-      <div class="space-y-2">
+      <div style="display:flex;flex-direction:column;gap:8px;">
         {#each registeredSafes as item (item)}
           <ConnectCircles
             address={item}
@@ -211,33 +207,27 @@
         {/each}
       </div>
     {:else if !searchQuery.trim()}
-      <div class="rounded-xl border border-dashed border-base-300 bg-base-200/40 p-4">
-        <p class="text-sm text-base-content/70">
+      <div style="border-radius:12px;border:1.5px dashed {T.hairlineSoft};background:{T.pageDeep};padding:16px;">
+        <p style="font-size:13px;color:{T.inkMuted};margin:0;">
           No registered Circles avatars found. Create a Safe below or reveal unregistered Safes.
         </p>
       </div>
     {/if}
 
     {#if unregisteredCount > 0}
-      <div class="pt-2">
+      <div style="padding-top:4px;">
         <button
           type="button"
-          class="btn btn-ghost btn-xs text-base-content/50"
+          style="display:inline-flex;align-items:center;gap:6px;background:transparent;border:0;cursor:pointer;font-size:12px;color:{T.inkMuted};font-family:{T.fontSans};padding:4px 0;"
           onclick={() => (showUnregistered = !showUnregistered)}
         >
           {showUnregistered ? 'Hide' : 'Show'} {unregisteredCount} unregistered {unregisteredLabel}
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            class="h-4 w-4 transition-transform"
-            class:rotate-180={showUnregistered}
-          >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width:14px;height:14px;transition:transform .15s;transform:{showUnregistered ? 'rotate(180deg)' : 'none'}">
             <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
           </svg>
         </button>
         {#if showUnregistered}
-          <div class="space-y-2 mt-2 opacity-60">
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;opacity:0.6;">
             {#each unregisteredSafes as item (item)}
               <ConnectCircles
                 address={item}
@@ -259,10 +249,10 @@
 
 <!-- Connected Wallet (EOA) section — shown below Safes -->
 {#if !isLoadingEoa && eoaIsRegistered && initEoaSdk}
-  <section class="section space-y-4">
-    <div class="space-y-1">
-      <h2 class="text-lg md:text-xl font-semibold tracking-tight">Connected Wallet</h2>
-      <p class="text-sm text-base-content/70">
+  <section style="display:flex;flex-direction:column;gap:16px;">
+    <div style="display:flex;flex-direction:column;gap:4px;">
+      <h2 style="font-family:{T.fontDisplay};font-size:22px;font-weight:500;color:{T.ink};letter-spacing:-0.015em;margin:0;">Connected Wallet</h2>
+      <p style="font-size:13px;color:{T.inkMuted};margin:0;">
         Your wallet address is also registered with Circles.
       </p>
     </div>
@@ -280,15 +270,20 @@
   </section>
 {/if}
 
-<section class="section space-y-3">
-  <div class="space-y-1">
-    <h3 class="text-base md:text-lg font-semibold tracking-tight">Need a new Safe?</h3>
-    <p class="text-sm text-base-content/70">
+<section style="display:flex;flex-direction:column;gap:12px;">
+  <div style="display:flex;flex-direction:column;gap:4px;">
+    <h3 style="font-family:{T.fontSans};font-size:16px;font-weight:600;color:{T.ink};letter-spacing:-0.005em;margin:0;">Need a new Safe?</h3>
+    <p style="font-size:13px;color:{T.inkMuted};margin:0;">
       Create a Safe in-app and it will appear in your list automatically.
     </p>
   </div>
 
-  <div class="w-full">
+  <div>
     <CreateSafe {onsafecreated} {safeCreationMode} />
   </div>
 </section>
+
+<style>
+  @keyframes cs-pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+  .cs-pulse { animation: cs-pulse 1.5s ease-in-out infinite; }
+</style>

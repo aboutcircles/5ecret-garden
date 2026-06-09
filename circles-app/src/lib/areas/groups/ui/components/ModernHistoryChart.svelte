@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import Chart from 'chart.js/auto';
+  import { T } from '$lib/design-system/tokens.js';
 
   interface Props {
     dataSet1: Array<Record<string, any> & { timestamp: Date }>;
@@ -16,50 +17,28 @@
 
   let canvas: HTMLCanvasElement;
   let chart: Chart<'line' | 'bar', { x: number; y: number }[]>;
-  const colorCache = new Map<string, string>();
-
   $effect(() => {
     if (chart) updateChart();
   });
 
-  const themeTokens = ['--p', '--s', '--a', '--in', '--su', '--wa', '--er'];
-  function resolveThemeColor(token: string, alpha: number): string {
-    const key = `${token}:${alpha}`;
-    const cached = colorCache.get(key);
-    if (cached) return cached;
+  const palette = [
+    { bg: 'rgba(88,73,212,0.15)',  border: '#5849D4' },
+    { bg: 'rgba(123,168,135,0.15)', border: '#7BA887' },
+    { bg: 'rgba(232,137,106,0.15)', border: '#E8896A' },
+    { bg: 'rgba(244,210,122,0.15)', border: '#F4D27A' },
+    { bg: 'rgba(184,174,234,0.15)', border: '#B8AEEA' },
+    { bg: 'rgba(212,120,159,0.15)', border: '#D4789F' },
+    { bg: 'rgba(176,112,20,0.15)',  border: '#B07014' },
+  ];
 
-    if (typeof window === 'undefined' || typeof document === 'undefined') {
-      const fallback = `rgba(99, 102, 241, ${alpha})`;
-      colorCache.set(key, fallback);
-      return fallback;
-    }
+  const generateColors = (index: number) => palette[index % palette.length];
 
-    const probe = document.createElement('span');
-    probe.style.color = `oklch(var(${token}) / ${alpha})`;
-    probe.style.position = 'absolute';
-    probe.style.pointerEvents = 'none';
-    probe.style.opacity = '0';
-    document.body.appendChild(probe);
-    const resolved = getComputedStyle(probe).color || `rgba(99, 102, 241, ${alpha})`;
-    probe.remove();
-    colorCache.set(key, resolved);
-    return resolved;
-  }
-
-  const generateColors = (index: number) => {
-    const token = themeTokens[index % themeTokens.length];
-    return {
-      background: resolveThemeColor(token, 0.15),
-      border: resolveThemeColor(token, 1),
-    };
-  };
-
-  const gridColor = $derived(resolveThemeColor('--b3', 0.5));
-  const tickColor = $derived(resolveThemeColor('--bc', 0.7));
-  const legendColor = $derived(resolveThemeColor('--bc', 0.75));
-  const tooltipBg = $derived(resolveThemeColor('--b1', 0.95));
-  const tooltipText = $derived(resolveThemeColor('--bc', 0.9));
-  const tooltipBorder = $derived(resolveThemeColor('--b3', 0.6));
+  const gridColor = 'rgba(31,17,70,0.08)';
+  const tickColor = T.inkMuted;
+  const legendColor = T.inkMuted;
+  const tooltipBg = T.surface;
+  const tooltipText = T.inkBody;
+  const tooltipBorder = T.hairline;
 
   function updateChart() {
     const src = resolution === 'hour' ? dataSet1 : dataSet2;
@@ -86,7 +65,7 @@
         borderWidth: 2,
         pointRadius: 0,
         pointHoverRadius: 6,
-        backgroundColor: colors.background,
+        backgroundColor: colors.bg,
         borderColor: colors.border,
         fill: true,
       };
@@ -196,14 +175,14 @@
   });
 </script>
 
-<div class="relative">
-  <div class="flex items-center justify-between mb-4">
-    <h3 class="text-sm font-medium text-base-content/80">{title}</h3>
-    <div class="flex items-center">
-      <span class="text-xs text-base-content/70 mr-2">Day/Hour</span>
+<div style="position:relative;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    <h3 style="font-size:13px;font-weight:500;color:{T.inkBody};margin:0;">{title}</h3>
+    <div style="display:flex;align-items:center;">
+      <span style="font-size:11px;color:{T.inkMuted};margin-right:8px;">Day/Hour</span>
       <input
         type="checkbox"
-        class="toggle toggle-sm bg-base-300"
+        style="width:32px;height:18px;accent-color:{T.primary};"
         checked={resolution === 'hour'}
         onclick={({ currentTarget }) => {
           resolution = currentTarget.checked ? 'hour' : 'day';
@@ -212,8 +191,8 @@
       />
     </div>
   </div>
-  
-  <div class="rounded-lg overflow-hidden bg-gradient-to-br from-transparent via-base-200/40 to-transparent p-px min-h-[250px]">
-    <canvas bind:this={canvas} class="w-full h-full"></canvas>
+
+  <div style="border-radius:10px;overflow:hidden;background:{T.pageDeep};min-height:250px;">
+    <canvas bind:this={canvas} style="width:100%;height:100%;"></canvas>
   </div>
 </div>
