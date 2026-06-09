@@ -12,6 +12,7 @@
     import { openStep } from '$lib/shared/flow';
     import CreateGroup from "$lib/areas/groups/flows/createGroup/1_CreateGroup.svelte";
     import {resetCreateGroupContext} from '$lib/areas/groups/flows/createGroup/context';
+    import { handleError } from '$lib/shared/utils/errorHandler';
 
     /**
      * Map an AvatarInfo.type string to the GroupType enum.
@@ -74,7 +75,7 @@
 
             goto("/dashboard")
         } catch (e) {
-            console.error('[ConnectCircles] Failed to connect:', e);
+            handleError(e, { context: 'wallet', title: 'Connection failed' });
             connecting = false;
             onConnecting?.(false);
         }

@@ -40,6 +40,7 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
   const isOwner = $derived(isProductOwnedBy(product, currentAvatar));
 
   import { getAddToCartState } from '$lib/areas/market/cart/addToCartUi';
+  import { handleError } from '$lib/shared/utils/errorHandler';
   const effectiveAvailabilityIri = $derived<string | null>(
     product?.availability ?? product?.product?.availability ?? null
   );
@@ -98,7 +99,7 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
     try {
       await addToCart(product, currentAvatar);
     } catch (e) {
-      console.error('[cart] addToCart failed:', e);
+      handleError(e, { context: 'transaction', title: 'Could not add to cart' });
     }
   }
 
