@@ -13,6 +13,7 @@
   import { createLoadable } from '$lib/areas/market/utils/loadable';
   import { getAddToCartState } from '$lib/areas/market/cart/addToCartUi';
   import {gnosisConfig} from "$lib/shared/config/circles";
+  import { handleError } from '$lib/shared/utils/errorHandler';
 
   // Derive seller and SKU from SvelteKit's $page store
     const params = $derived($page.params as { seller: string; sku: string });
@@ -55,7 +56,7 @@
         try {
             await addToCart(product, currentAvatar);
         } catch (e) {
-            console.error('[cart] addToCart failed:', e);
+            handleError(e, { context: 'transaction', title: 'Could not add to cart' });
         }
     }
 
