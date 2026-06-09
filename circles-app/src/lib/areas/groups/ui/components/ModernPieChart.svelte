@@ -18,7 +18,7 @@
   }: Props = $props();
 
   let canvas: HTMLCanvasElement;
-  let chart: Chart<'doughnut', number[], string>;
+  let chart = $state<Chart<'doughnut', number[], string> | undefined>(undefined);
   let chartData: any;
 
   const palette = [
@@ -67,7 +67,7 @@
   });
 
   onMount(() => {
-    chart = new Chart(canvas, {
+    chart = new Chart<'doughnut', number[], string>(canvas, {
       type: 'doughnut',
       data: chartData,
       options: {

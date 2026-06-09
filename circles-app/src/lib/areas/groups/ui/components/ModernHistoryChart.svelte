@@ -16,7 +16,7 @@
   let resolution: 'hour' | 'day' = $state('hour');
 
   let canvas: HTMLCanvasElement;
-  let chart: Chart<'line' | 'bar', { x: number; y: number }[]>;
+  let chart = $state<Chart<'line' | 'bar', { x: number; y: number }[]> | undefined>(undefined);
   $effect(() => {
     if (chart) updateChart();
   });
@@ -41,6 +41,7 @@
   const tooltipBorder = T.hairline;
 
   function updateChart() {
+    if (!chart) return;
     const src = resolution === 'hour' ? dataSet1 : dataSet2;
 
     const keys = src.length
@@ -92,7 +93,7 @@
   }
 
   onMount(() => {
-    chart = new Chart(canvas, {
+    chart = new Chart<'line' | 'bar', { x: number; y: number }[]>(canvas, {
       type: type,
       data: { datasets: [] },
       options: {
@@ -184,9 +185,8 @@
         type="checkbox"
         style="width:32px;height:18px;accent-color:{T.primary};"
         checked={resolution === 'hour'}
-        onclick={({ currentTarget }) => {
+        onchange={({ currentTarget }) => {
           resolution = currentTarget.checked ? 'hour' : 'day';
-          updateChart();
         }}
       />
     </div>
