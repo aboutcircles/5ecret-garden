@@ -473,11 +473,12 @@
     word-break: break-word;
     overflow: auto;
     resize: vertical;
+    border-radius: 10px;
   }
 
   .preview {
     padding: 10px 12px;
-    border-radius: 8px;
+    border-radius: 10px;
     border: 1px solid oklch(var(--b3) / 0.75);
     background: oklch(var(--b1) / 0.75);
   }
