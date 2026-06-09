@@ -42,6 +42,8 @@
       privateKey = privateKeyWallet.privateKey;
     } else {
       privateKey = '';
+      address = '';
+      mnemonicPhrase = '';
     }
   }
 </script>
