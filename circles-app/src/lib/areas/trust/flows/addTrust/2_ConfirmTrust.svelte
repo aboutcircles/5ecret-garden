@@ -23,10 +23,12 @@
   const selected = $derived(Array.isArray(context.selectedTrustees) ? context.selectedTrustees : []);
   const canConfirm = $derived(selected.length > 0);
   let submitting = $state(false);
+  let errorMessage = $state('');
 
   async function confirm() {
     if (!canConfirm || submitting) return;
     submitting = true;
+    errorMessage = '';
     try {
       await addTrustRelations({
         actorType: context.actorType,
@@ -37,10 +39,8 @@
       await onCompleted?.(selected);
       popupControls.close();
     } catch (error) {
-      // Preflight in trustActions throws a decoded reason (OnlyOwnerOrService,
-      // OnlyHuman, "Group trust call would revert: ..."). Without this catch
-      // the error was swallowed and the dialog froze on the Confirm button
-      // with no user-facing signal. handleError surfaces a toast.
+      const msg = error instanceof Error ? error.message : String(error ?? 'Unknown error');
+      errorMessage = msg;
       handleError(error, { context: 'transaction', title: 'Could not add trust' });
     } finally {
       submitting = false;
@@ -74,6 +74,12 @@
         </div>
       {/if}
     </StepSection>
+
+    {#if errorMessage}
+      <div class="rounded-lg px-3 py-2 text-sm bg-error/10 text-error border border-error/20">
+        {errorMessage}
+      </div>
+    {/if}
 
     <StepActionBar>
       {#snippet secondary()}

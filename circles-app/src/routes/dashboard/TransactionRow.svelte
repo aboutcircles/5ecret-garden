@@ -39,6 +39,7 @@
     });
 
     function formatNetCircles(amount: number): string {
+        if (!Number.isFinite(amount)) return '—';
         const abs = Math.abs(amount);
         return abs < 0.01 ? '< 0.01' : abs.toFixed(2);
     }

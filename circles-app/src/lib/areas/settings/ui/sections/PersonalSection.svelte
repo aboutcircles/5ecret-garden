@@ -2,6 +2,7 @@
   import type { Address } from '@aboutcircles/sdk-types';
 import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
   import GroupSetting from '$lib/areas/settings/ui/editors/GroupSetting.svelte';
+  import GroupProfileExtras from '$lib/areas/groups/ui/GroupProfileExtras.svelte';
   import { ipfsGatewayUrl } from '$lib/shared/utils/ipfs';
 
   type Props = {
@@ -55,6 +56,12 @@ import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
 {:else}
   <section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
     <div class="text-sm opacity-70">Connect a Circles avatar first to edit your profile.</div>
+  </section>
+{/if}
+
+{#if avatarAddress && avatarState?.isGroup}
+  <section class="bg-base-100 border border-base-300 rounded-xl p-4 w-full">
+    <GroupProfileExtras avatarAddress={avatarAddress} pinApiBase={pinApiBase} />
   </section>
 {/if}
 

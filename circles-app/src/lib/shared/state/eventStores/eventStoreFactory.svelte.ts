@@ -67,18 +67,22 @@ export function createEventStore<T>(
     ? (a: U, b: U) => number
     : undefined,
   debounceDelay = 50
-): Readable<{ data: T; next: () => Promise<boolean>; ended: boolean }> {
+): Readable<{ data: T; next: () => Promise<boolean>; ended: boolean; initialLoaded: boolean; initialLoadError: boolean }> {
   let timeout: any;
   let lastEvent: CirclesEvent | null = null;
   let finished = false;
+  let initialLoaded = false;
+  let initialLoadError = false;
   let storeData = initialData;
   let unsubscribeFromEvents: (() => void) | undefined;
 
-  return readable<{ data: T; next: () => Promise<boolean>; ended: boolean }>(
+  return readable<{ data: T; next: () => Promise<boolean>; ended: boolean; initialLoaded: boolean; initialLoadError: boolean }>(
     {
       data: storeData,
       next: async () => false,
       ended: finished,
+      initialLoaded,
+      initialLoadError,
     },
     (set) => {
       let resolveInitialLoad: (() => void) | undefined;
@@ -94,7 +98,7 @@ export function createEventStore<T>(
           storeData = storeData.sort(dataComparator);
         }
 
-        set({ data: storeData, next: next, ended: finished });
+        set({ data: storeData, next: next, ended: finished, initialLoaded, initialLoadError });
       }
 
       /**
@@ -153,6 +157,7 @@ export function createEventStore<T>(
       // Load the initial data and subscribe to events
       initialLoad()
         .then((data) => {
+          initialLoaded = true;
           setData(data);
         })
         .then(() => resolveInitialLoad?.())
@@ -161,9 +166,10 @@ export function createEventStore<T>(
         })
         .catch((e) => {
           console.error('[EventStore] Failed to initialize store', e);
-          // Mark as ended so consumers (VirtualList) stop showing skeletons
+          initialLoaded = true;
+          initialLoadError = true;
           finished = true;
-          set({ data: storeData, next: next, ended: true });
+          setData(storeData);
           resolveInitialLoad?.();
         });
 

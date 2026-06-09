@@ -17,6 +17,7 @@
     import type { Address } from '@aboutcircles/sdk-types';
     import AdvancedDetails from '$lib/shared/ui/flow/AdvancedDetails.svelte';
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
+    import { handleError } from '$lib/shared/utils/errorHandler';
 
     const PROFILE_NAME_MAX_LENGTH = 36;
 
@@ -58,7 +59,6 @@
                 // Kept inside runTask so failures open the global dismissable error popup.
                 await assertWalletCanSignForSafe(String($wallet.address));
 
-                console.log($wallet.address, ctx);
                 const ownerAddress: `0x${string}` = $wallet.address as `0x${string}`;
 
                 // sdk.register.asGroup handles profile CID creation, on-chain registration,
@@ -79,7 +79,7 @@
                 try {
                     setGroup?.(groupAddress);
                 } catch (e) {
-                    console.error('setGroup callback failed', e);
+                    handleError(e, { context: 'transaction', title: 'Group created but navigation failed' });
                 }
 
                 // Reset context so a new flow starts clean next time

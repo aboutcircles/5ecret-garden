@@ -1,11 +1,3 @@
-<script lang="ts" module>
-  export type QuickAction = {
-    name: string;
-    icon: string;
-    action?: () => void | undefined;
-  };
-</script>
-
 <script lang="ts">
   import '../app.css';
 
@@ -20,16 +12,12 @@
     popupHistoryForwardNoopTick,
   } from '$lib/shared/state/popup';
   import Popup from '$lib/shared/ui/shell/PopupHost.svelte';
-  import { initTransactionHistoryStore, transactionHistory } from '$lib/shared/state/transactionHistory';
-  import { initContactStore } from '$lib/shared/state/contacts';
-  import { initBalanceStore } from '$lib/shared/state/circlesBalances';
+  import { initAvatarStores, initRealtimeSync } from '$lib/shared/state/realtimeSync';
   import { browser } from '$app/environment';
   import { makeScopeId, writeMeta } from '$lib/shared/cache';
   import { env } from '$env/dynamic/public';
 
   const PUBLIC_PLAUSIBLE_DOMAIN = env.PUBLIC_PLAUSIBLE_DOMAIN ?? '';
-  import { initGroupMetricsStore } from '$lib/areas/groups/state';
-  import { circles } from '$lib/shared/state/circles';
   import type { Address } from '@aboutcircles/sdk-types';
   import BottomNav from '$lib/shared/ui/shell/BottomNav.svelte';
   import DefaultHeader from './DefaultHeader.svelte';
@@ -37,8 +25,6 @@
   import Toast from '$lib/shared/ui/feedback/Toast.svelte';
   import ConnectionRetryIndicator from '$lib/shared/ui/feedback/ConnectionRetryIndicator.svelte';
   import { connectionStatus } from '$lib/shared/state/connectionStatus.svelte';
-  import { openMigrateToV2Flow } from '$lib/areas/wallet/flows/migrateToV2/openMigrateToV2Flow';
-
   let unwatch: (() => void) | null = null;
   let disposePopupHistorySync: (() => void) | null = null;
   let walletModule: typeof import('$lib/shared/state/wallet.svelte') | null = null;
@@ -122,7 +108,6 @@
   let historyForwardNoopToastVisible = $state(false);
   let lastForwardNoopTick = 0;
   let historyForwardNoopToastTimer: ReturnType<typeof setTimeout> | null = null;
-  const avatarInfo = $derived(avatarState.avatar?.avatarInfo ?? null);
 
   onMount(() => {
     disposePopupHistorySync = initPopupHistorySync();
@@ -202,14 +187,10 @@
     });
   }
 
-  async function openMigratePopup(): Promise<void> {
-    await openMigrateToV2Flow();
-  }
-
   $effect(() => {
     if (avatarState.avatar) {
       menuItems = [
-        { name: 'Wallet', link: '/dashboard' },
+        { name: 'Dashboard', link: '/dashboard' },
         {
           name: avatarState.isGroup ? 'Members' : 'Contacts',
           link: '/contacts',
@@ -248,28 +229,22 @@
 
     const scopeId = makeScopeId(avatar.address);
 
-    // NOTE: IDB hydration (stale-while-revalidate) removed — it raced with
-    // the RPC-based init stores below, causing duplicate/stale data.
-    // Balances: IDB resolve after RPC → overwrites fresh with stale
-    // Transactions: IDB + RPC appended same rows → 3x inflated amounts
-    // RPC responses are fast enough; IDB write-through still populates
-    // the cache for offline/future use.
+    initAvatarStores(avatar);
 
-    // Init live stores (fetches from RPC, writes through to IDB)
-    initTransactionHistoryStore(avatar);
-    initContactStore(avatar);
-    initBalanceStore(avatar);
-    if (avatarState.isGroup && $circles) {
-      initGroupMetricsStore($circles.rpc, avatar.address);
-    }
-
-    // 3. Update meta checkpoint
+    // Update meta checkpoint
     void writeMeta({
       scopeId,
       blockNumber: 0,
       dataVersion: 1,
       lastSyncedAt: Date.now(),
     });
+  });
+
+  // Keep the realtime event subscription alive across websocket drops.
+  $effect(() => {
+    if (avatarState.avatar) {
+      return initRealtimeSync();
+    }
   });
 
   $effect(() => {
