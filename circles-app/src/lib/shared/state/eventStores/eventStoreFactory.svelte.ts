@@ -67,20 +67,22 @@ export function createEventStore<T>(
     ? (a: U, b: U) => number
     : undefined,
   debounceDelay = 50
-): Readable<{ data: T; next: () => Promise<boolean>; ended: boolean; initialLoaded: boolean }> {
+): Readable<{ data: T; next: () => Promise<boolean>; ended: boolean; initialLoaded: boolean; initialLoadError: boolean }> {
   let timeout: any;
   let lastEvent: CirclesEvent | null = null;
   let finished = false;
   let initialLoaded = false;
+  let initialLoadError = false;
   let storeData = initialData;
   let unsubscribeFromEvents: (() => void) | undefined;
 
-  return readable<{ data: T; next: () => Promise<boolean>; ended: boolean; initialLoaded: boolean }>(
+  return readable<{ data: T; next: () => Promise<boolean>; ended: boolean; initialLoaded: boolean; initialLoadError: boolean }>(
     {
       data: storeData,
       next: async () => false,
       ended: finished,
       initialLoaded,
+      initialLoadError,
     },
     (set) => {
       let resolveInitialLoad: (() => void) | undefined;
@@ -96,7 +98,7 @@ export function createEventStore<T>(
           storeData = storeData.sort(dataComparator);
         }
 
-        set({ data: storeData, next: next, ended: finished, initialLoaded });
+        set({ data: storeData, next: next, ended: finished, initialLoaded, initialLoadError });
       }
 
       /**
@@ -165,6 +167,7 @@ export function createEventStore<T>(
         .catch((e) => {
           console.error('[EventStore] Failed to initialize store', e);
           initialLoaded = true;
+          initialLoadError = true;
           finished = true;
           setData(storeData);
           resolveInitialLoad?.();
