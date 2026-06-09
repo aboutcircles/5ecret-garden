@@ -14,6 +14,7 @@
     import {resetCreateGroupContext} from '$lib/areas/groups/flows/createGroup/context';
     import { T } from '$lib/design-system/tokens.js';
     import Icon from '$lib/design-system/Icon.svelte';
+    import { handleError } from '$lib/shared/utils/errorHandler';
 
     function toGroupType(avatarType: string | undefined): GroupType | undefined {
         if (!avatarType || !avatarType.includes('Group')) return undefined;
@@ -68,7 +69,7 @@
 
             goto("/dashboard")
         } catch (e) {
-            console.error('[ConnectCircles] Failed to connect:', e);
+            handleError(e, { context: 'wallet', title: 'Connection failed' });
             connecting = false;
             onConnecting?.(false);
         }
