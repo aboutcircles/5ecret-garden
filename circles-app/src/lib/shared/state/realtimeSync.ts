@@ -35,7 +35,7 @@ export function initAvatarStores(avatar: Avatar): void {
  * undefined if the field is absent (e.g. SDK internals changed).
  */
 function isWebsocketConnected(sdk: Sdk | undefined): boolean | undefined {
-  const flag = (sdk?.circlesRpc as unknown as { websocketConnected?: unknown })
+  const flag = ((sdk as any)?.circlesRpc as unknown as { websocketConnected?: unknown })
     ?.websocketConnected;
   return typeof flag === 'boolean' ? flag : undefined;
 }

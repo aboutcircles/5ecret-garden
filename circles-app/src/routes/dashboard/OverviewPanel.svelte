@@ -20,13 +20,7 @@
     );
 </script>
 
-{#if groupMetrics.loading === false && groupMetrics.errors?.length && !hasData}
-    <div class="flex flex-col items-center justify-center gap-4 h-[50vh] p-6 text-center">
-        <p class="text-base font-semibold">Couldn't load group metrics</p>
-        <p class="text-sm text-base-content/60 max-w-sm">{groupMetrics.errors[0]}</p>
-        <button type="button" class="btn btn-primary btn-sm" onclick={retryMetrics}>Retry</button>
-    </div>
-{:else if hasData}
+{#if hasData}
     <GroupMetricsStats {groupMetrics} />
 
     <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10 mt-6">

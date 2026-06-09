@@ -5,7 +5,7 @@
   import type { ProfilesBindings } from '@circles-market/sdk';
   import { getProfilesBindings } from '$lib/areas/market/offers';
   import { removeProfileFromCache } from '$lib/shared/utils/profile';
-  import type { Address } from '@circles-sdk/utils';
+  import type { Address } from '@aboutcircles/sdk-types';
   import { T } from '$lib/design-system/tokens.js';
   import {
     type GroupExtrasForm,
