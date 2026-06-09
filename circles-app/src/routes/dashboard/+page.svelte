@@ -94,6 +94,8 @@
         ).length
     );
 
+    const balanceLoaded = $derived($circlesBalances?.initialLoaded ?? false);
+
     function openBalances(initialFilterType?: 'personal' | 'group') {
         popupControls.open({
             title: 'Balance breakdown',

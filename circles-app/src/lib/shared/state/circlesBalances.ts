@@ -22,7 +22,8 @@ const _circlesBalances = writable<{
   data: TokenBalance[];
   next: () => Promise<boolean>;
   ended: boolean;
-}>({ data: [], next: async () => false, ended: false });
+  initialLoaded: boolean;
+}>({ data: [], next: async () => false, ended: false, initialLoaded: false });
 
 async function _loadBalancesFor(avatar: Avatar): Promise<TokenBalance[]> {
   if (!avatar || typeof avatar !== 'object') {
@@ -66,6 +67,7 @@ export const initBalanceStore = (avatar: Avatar) => {
     data: [],
     next: async () => false,
     ended: false,
+    initialLoaded: false,
   });
 
   const _initialLoad = (): Promise<TokenBalance[]> => _loadBalancesFor(avatar);
