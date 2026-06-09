@@ -5,6 +5,7 @@
   import { BaseGroupAvatar } from '@aboutcircles/sdk';
   import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
   import { Check as LCheck } from 'lucide';
+  import { handleError } from '$lib/shared/utils/errorHandler';
 
   let serviceAddress: Address = $state('0x0' as Address);
   let mintHandlerAddress: Address = $state('0x0' as Address);
@@ -50,7 +51,7 @@
       if (!isBaseGroupAvatar(avatarState.avatar)) return;
       await avatarState.avatar.setProperties.service(serviceAddress);
     } catch (error) {
-      console.error('Failed to set service address:', error);
+      handleError(error, { context: 'transaction', title: 'Failed to update service address' });
     }
   }
 
@@ -64,10 +65,10 @@
       if (setProps.mintHandler) {
         await setProps.mintHandler(mintHandlerAddress);
       } else {
-        console.warn('setMintHandler not available in current SDK');
+        handleError(new Error('setMintHandler not available in current SDK version'), { context: 'transaction', title: 'Not supported' });
       }
     } catch (error) {
-      console.error('Failed to set mint handler address:', error);
+      handleError(error, { context: 'transaction', title: 'Failed to update mint handler' });
     }
   }
 
@@ -81,10 +82,10 @@
       if (setProps.redemptionHandler) {
         await setProps.redemptionHandler(redemptionHandlerAddress);
       } else {
-        console.warn('setRedemptionHandler not available in current SDK');
+        handleError(new Error('setRedemptionHandler not available in current SDK version'), { context: 'transaction', title: 'Not supported' });
       }
     } catch (error) {
-      console.error('Failed to set redemption handler address:', error);
+      handleError(error, { context: 'transaction', title: 'Failed to update redemption handler' });
     }
   }
 </script>
