@@ -2,9 +2,9 @@ import { get } from 'svelte/store';
 import type { Avatar, Sdk } from '@aboutcircles/sdk';
 import { avatarState } from '$lib/shared/state/avatar.svelte';
 import { circles } from '$lib/shared/state/circles';
-import { initTransactionHistoryStore } from '$lib/shared/state/transactionHistory';
-import { initContactStore } from '$lib/shared/state/contacts';
-import { initBalanceStore } from '$lib/shared/state/circlesBalances';
+import { initTransactionHistoryStore, refreshTransactionHistory } from '$lib/shared/state/transactionHistory';
+import { initContactStore, refreshContactStore } from '$lib/shared/state/contacts';
+import { initBalanceStore, refreshBalanceStore } from '$lib/shared/state/circlesBalances';
 import { initGroupMetricsStore } from '$lib/areas/groups/state';
 
 const MIN_RESYNC_INTERVAL_MS = 5_000;
@@ -13,14 +13,29 @@ const LIVENESS_CHECK_INTERVAL_MS = 15_000;
 let lastResyncAt = 0;
 
 /**
- * (Re)binds the event-driven stores to the avatar's current `events` observable
- * and triggers their initial load. Each `init*` call tears down its previous
- * subscription and recreates the store, so this is safe to call repeatedly.
+ * Initialises the event-driven stores for a freshly-loaded avatar (first call).
+ * Uses the dedup-guarded `init*` functions so a cold mount doesn't double-subscribe.
  */
 export function initAvatarStores(avatar: Avatar): void {
-  initTransactionHistoryStore(avatar);
+  void initTransactionHistoryStore(avatar);
   initContactStore(avatar);
   initBalanceStore(avatar);
+  if (avatarState.isGroup) {
+    const sdk = get(circles);
+    if (sdk) {
+      void initGroupMetricsStore(sdk.rpc, avatar.address);
+    }
+  }
+}
+
+/**
+ * Refreshes all stores after a WS reconnect, bypassing the dedup guards so
+ * that stale data is reloaded even though the avatar address hasn't changed.
+ */
+function refreshAvatarStores(avatar: Avatar): void {
+  void refreshTransactionHistory();
+  refreshContactStore(avatar);
+  refreshBalanceStore(avatar);
   if (avatarState.isGroup) {
     const sdk = get(circles);
     if (sdk) {
@@ -35,7 +50,7 @@ export function initAvatarStores(avatar: Avatar): void {
  * undefined if the field is absent (e.g. SDK internals changed).
  */
 function isWebsocketConnected(sdk: Sdk | undefined): boolean | undefined {
-  const flag = ((sdk as any)?.circlesRpc as unknown as { websocketConnected?: unknown })
+  const flag = ((sdk as any)?.rpc?.client as unknown as { websocketConnected?: unknown })
     ?.websocketConnected;
   return typeof flag === 'boolean' ? flag : undefined;
 }
@@ -61,12 +76,12 @@ async function resync(): Promise<void> {
   } catch (e) {
     // Don't let a subscribe failure block the store rebind below — a stale
     // observable is still better than empty stores.
-    console.debug('[realtimeSync] subscribeToEvents failed', e);
+    console.warn('[realtimeSync] subscribeToEvents failed', e);
   }
   try {
-    initAvatarStores(avatar);
+    refreshAvatarStores(avatar);
   } catch (e) {
-    console.debug('[realtimeSync] initAvatarStores failed', e);
+    console.warn('[realtimeSync] refreshAvatarStores failed', e);
   }
 }
 

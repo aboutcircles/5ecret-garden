@@ -1,16 +1,8 @@
 <script lang="ts">
-    import { fetchGroupMetrics, groupMetrics } from '$lib/areas/groups/state';
+    import { groupMetrics } from '$lib/areas/groups/state';
     import GroupMetricsStats from '$lib/areas/groups/ui/components/GroupMetricsStats.svelte';
     import ModernHistoryChart from '$lib/areas/groups/ui/components/ModernHistoryChart.svelte';
     import ModernPieChart from '$lib/areas/groups/ui/components/ModernPieChart.svelte';
-    import { circles } from '$lib/shared/state/circles';
-    import { avatarState } from '$lib/shared/state/avatar.svelte';
-    import type { Address } from '@aboutcircles/sdk-types';
-
-    function retryMetrics() {
-        if (!$circles?.rpc || !avatarState.avatar?.address) return;
-        void fetchGroupMetrics($circles.rpc, avatarState.avatar.address as Address, groupMetrics);
-    }
 
     const hasData = $derived(
         !!groupMetrics.memberCountPerHour ||

@@ -1,11 +1,3 @@
-<script lang="ts" module>
-  export type QuickAction = {
-    name: string;
-    icon: string;
-    action?: () => void | undefined;
-  };
-</script>
-
 <script lang="ts">
   import '../app.css';
 
@@ -33,8 +25,6 @@
   import Toast from '$lib/shared/ui/feedback/Toast.svelte';
   import ConnectionRetryIndicator from '$lib/shared/ui/feedback/ConnectionRetryIndicator.svelte';
   import { connectionStatus } from '$lib/shared/state/connectionStatus.svelte';
-  import { openMigrateToV2Flow } from '$lib/areas/wallet/flows/migrateToV2/openMigrateToV2Flow';
-
   let unwatch: (() => void) | null = null;
   let disposePopupHistorySync: (() => void) | null = null;
   let walletModule: typeof import('$lib/shared/state/wallet.svelte') | null = null;
@@ -118,7 +108,6 @@
   let historyForwardNoopToastVisible = $state(false);
   let lastForwardNoopTick = 0;
   let historyForwardNoopToastTimer: ReturnType<typeof setTimeout> | null = null;
-  const avatarInfo = $derived(avatarState.avatar?.avatarInfo ?? null);
 
   onMount(() => {
     disposePopupHistorySync = initPopupHistorySync();
@@ -196,10 +185,6 @@
       component: WrongNetwork,
       props: {},
     });
-  }
-
-  async function openMigratePopup(): Promise<void> {
-    await openMigrateToV2Flow();
   }
 
   $effect(() => {

@@ -79,7 +79,7 @@ export function groupAccessLabel(gt: string | undefined): string {
   return '';
 }
 
-const LEGACY_LINK_RE = /\n?External link:\s*\[([^\]]*)\]\(([^)]*)\)\s*$/;
+const LEGACY_LINK_RE = /\n?External link:\s*\[([^\]]*)\]\((.*?)\)\s*$/;
 
 export function extractLegacyExternalLink(description: string): { label: string; url: string } | null {
   const m = String(description ?? '').match(LEGACY_LINK_RE);
@@ -165,6 +165,8 @@ export function validateGroupExtras(form: GroupExtrasForm): { ok: boolean; error
   } else {
     const tooLong = lines.find((l) => l.length > MAX_CRITERION_LENGTH);
     if (tooLong) errors.additionalCriteria = `Each criterion must be ${MAX_CRITERION_LENGTH} characters or fewer.`;
+    const hasEmbeddedNewline = lines.some((l) => /\n/.test(l));
+    if (hasEmbeddedNewline) errors.additionalCriteria = 'Criteria must not contain embedded line breaks.';
   }
 
   if (form.contactEmail && !isValidEmail(form.contactEmail))

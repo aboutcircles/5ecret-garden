@@ -104,3 +104,12 @@ export const initBalanceStore = (avatar: Avatar) => {
 };
 
 export const circlesBalances = _circlesBalances;
+
+/**
+ * Force-refresh the balance store, bypassing the dedup guard.
+ * Call this after WS reconnect so stale balances are reloaded.
+ */
+export function refreshBalanceStore(avatar: Avatar): void {
+  currentAvatarAddress = '';
+  initBalanceStore(avatar);
+}

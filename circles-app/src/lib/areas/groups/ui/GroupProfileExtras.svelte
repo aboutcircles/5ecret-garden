@@ -115,6 +115,7 @@
   }
 
   async function save() {
+    if (saving) return;
     if (!resolvedAvatar) return;
     submitAttempted = true;
     const { ok, errors: errs } = validateGroupExtras(form);
