@@ -15,6 +15,7 @@
     addTrustRelations,
     removeGroupMembers,
   } from '$lib/shared/utils/trustActions';
+  import { handleError } from '$lib/shared/utils/errorHandler';
 
   let context: AddContactFlowContext = $state({
     selectedAddress: '',
@@ -54,30 +55,6 @@
     }
   }
 
-  function handleErrors(error: any) {
-    const userRejected =
-      error?.info?.error?.code === 4001 ||
-      error?.message?.includes('user rejected') ||
-      error?.message?.includes('User denied transaction');
-
-    if (userRejected) {
-      errorMessage = 'Transaction was rejected';
-      throw new Error('Transaction was rejected');
-    }
-
-    if (error?.message?.includes('No valid addresses provided')) {
-      errorMessage = 'No valid addresses provided';
-      throw error;
-    }
-
-    if (error?.message?.includes('Contract not initialized')) {
-      errorMessage = 'Contract not initialized';
-      throw error;
-    }
-
-    errorMessage = 'Tx failed, try passing less addresses';
-    throw new Error('Tx failed, try passing less addresses');
-  }
 
   const sanitizeAddresses = (addrStr: string): Address[] => {
     const addresses = addrStr
@@ -92,13 +69,6 @@
     if (addresses.length === 0) {
       throw new Error('No valid addresses provided');
     }
-
-    console.log('handleAddMembers called with:', {
-      addresses,
-      untrust,
-      isGroup: avatarState.isGroup,
-      avatarType: avatarState.avatar?.constructor.name,
-    });
 
     try {
       const actor = avatarState.avatar;
@@ -136,8 +106,9 @@
         refreshContactStore(avatarState.avatar);
       }
     } catch (error: any) {
-      console.error('Error in handleAddMembers:', error);
-      handleErrors(error);
+      const msg = error instanceof Error ? error.message : String(error ?? 'Unknown error');
+      errorMessage = msg;
+      handleError(error, { context: 'transaction', title: 'Could not update group member' });
     }
   }
 

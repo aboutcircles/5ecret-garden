@@ -1,5 +1,6 @@
 <script lang="ts">
     import AvatarRowPlaceholder from '$lib/shared/ui/lists/placeholders/AvatarRowPlaceholder.svelte';
+    import { T } from '$lib/design-system/tokens.js';
 
     import type { Snippet } from 'svelte';
 
@@ -31,15 +32,15 @@
 </script>
 
 {#if !ownerAddress}
-    <div class="text-sm opacity-70">{connectText}</div>
+    <div style="font-size:13px;opacity:0.7;">{connectText}</div>
 {:else if loading}
-    <div class="flex flex-col">
+    <div style="display:flex;flex-direction:column;">
         {#each placeholderItems as index (index)}
             <AvatarRowPlaceholder height={64} />
         {/each}
     </div>
 {:else if error}
-    <div class="text-sm text-error">{error}</div>
+    <div style="font-size:13px;color:{T.negative};">{error}</div>
 {:else if items.length === 0}
     {#if empty}
         {@render empty()}

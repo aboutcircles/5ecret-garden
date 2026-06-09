@@ -11,6 +11,7 @@
   import { fetchAvailabilityFeed, fetchInventoryFeed, type QuantitativeValue } from '$lib/areas/market/services';
   import { createLoadable } from '$lib/areas/market/utils/loadable';
   import {gnosisConfig} from "$lib/shared/config/circles";
+  import { handleError } from '$lib/shared/utils/errorHandler';
 
   interface Props {
     seller: string; // EVM address
@@ -87,7 +88,7 @@
     try {
       await addToCart(product, currentAvatar);
     } catch (e) {
-      console.error('[cart] addToCart failed:', e);
+      handleError(e, { context: 'transaction', title: 'Could not add to cart' });
     }
   }
 </script>
