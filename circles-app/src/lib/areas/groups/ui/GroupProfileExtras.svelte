@@ -134,7 +134,13 @@
           const cid = await rebaseAndSaveProfile(bindings, resolvedAvatar!, (p: any) => {
             applyGroupProfileExtras(p, form);
           });
-          await bindings.updateAvatarProfileDigest(resolvedAvatar!, cid);
+          try {
+            await bindings.updateAvatarProfileDigest(resolvedAvatar!, cid);
+          } catch (e: any) {
+            throw new Error(
+              `Profile uploaded to IPFS but on-chain update failed — retry to publish. (${e?.message ?? e})`
+            );
+          }
           removeProfileFromCache(resolvedAvatar!);
         })(),
       });
@@ -188,9 +194,12 @@
 
   {#if loadError}
     <div role="alert" style="font-size:12px;color:{T.negative};background:{T.negativeSoft};border:1px solid rgba(196,68,48,0.18);border-radius:10px;padding:10px 14px;">{loadError}</div>
-  {/if}
-
-  {#if loading}
+    <button
+      type="button"
+      style="align-self:flex-start;height:30px;padding:0 14px;border-radius:9999px;border:1px solid {T.hairline};background:transparent;color:{T.inkMuted};cursor:pointer;font-family:{T.fontSans};font-size:12px;"
+      onclick={() => void loadProfile()}
+    >Retry</button>
+  {:else if loading}
     <div style="font-size:12.5px;color:{T.inkMuted};">Loading…</div>
   {:else}
     {#if showReadOnly}

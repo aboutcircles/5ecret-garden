@@ -47,6 +47,7 @@ export async function createCirclesQueryStore<T extends EventRow>(
     next: () => Promise<boolean>;
     ended: boolean;
     initialLoaded: boolean;
+    initialLoadError: boolean;
   }>
 > {
   let circlesQuery = await circlesQueryFactory();

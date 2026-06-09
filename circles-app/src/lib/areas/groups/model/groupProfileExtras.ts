@@ -23,8 +23,8 @@ export interface NormalisedGroupExtras {
   linkLabel?: string;
   linkUrl?: string;
   groupType?: string;
-  membershipFee?: number;
-  minRepScore?: number;
+  membershipFee?: string | number;
+  minRepScore?: string | number;
   additionalCriteria?: string[];
   contactEmail?: string;
   contactWebsite?: string;
@@ -108,8 +108,8 @@ export function readGroupProfileFields(p: any): NormalisedGroupExtras {
     linkLabel: legacy?.label,
     linkUrl: legacy?.url,
     groupType: pick<string>(p?.groupType),
-    membershipFee: pick<number>(p?.membershipFee, p?.membershipCriteria?.membershipFee),
-    minRepScore: pick<number>(p?.minRepScore, p?.membershipCriteria?.minRepScore),
+    membershipFee: pick<string | number>(p?.membershipFee, p?.membershipCriteria?.membershipFee),
+    minRepScore: pick<string | number>(p?.minRepScore, p?.membershipCriteria?.minRepScore),
     additionalCriteria: Array.isArray(criteria) && criteria.length ? criteria.map(String) : undefined,
     contactEmail: pick<string>(p?.contactEmail, p?.contactInfo?.email),
     contactWebsite: pick<string>(p?.contactWebsite, p?.contactInfo?.website),
