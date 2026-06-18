@@ -1,8 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { dev } from '$app/environment';
   import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
-  import { Search as LSearch } from 'lucide';
+  import { Search as LSearch, ShoppingBag as LBag } from 'lucide';
   interface Props {
     homeLink?: string;
   }
@@ -10,15 +9,15 @@
   let { homeLink = '/' }: Props = $props();
 
   import { page } from '$app/stores';
+  import { dev } from '$app/environment';
   import { popupControls, popupState } from '$lib/shared/state/popup';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
+  import GlobalAvatarSearchPopup from '$lib/shared/ui/avatar-search/GlobalAvatarSearchPopup.svelte';
   import {
     basketCount,
     ensureBasketCountSubscription,
     openBasketPopup,
   } from '$lib/areas/market/cart/basketEntryPoint';
-  import GlobalAvatarSearchPopup from '$lib/shared/ui/avatar-search/GlobalAvatarSearchPopup.svelte';
-
 
   function openGlobalSearch(): void {
     popupControls.open({
@@ -28,6 +27,8 @@
       component: GlobalAvatarSearchPopup,
     });
   }
+
+  const isMarketPage = $derived($page.url.pathname.startsWith('/market'));
 
   let menuEl: HTMLDetailsElement | null = $state(null);
 
@@ -79,10 +80,8 @@
     onSearchButtonClick();
   }
 
-  // Close on route changes
   $effect(() => {
-    // react to URL changes
-    const _ = $page.url.pathname; // touch dependency
+    const _ = $page.url.pathname;
     closeMenu();
   });
 
@@ -97,71 +96,81 @@
   });
 </script>
 
-<div class="navbar bg-base-100 px-4 sticky top-0 z-10">
-  <div class="flex-1">
-    <a class="flex items-center text-xl font-bold" href={homeLink}>
-      <img src="/logo.svg" alt="Circles" class="w-8 h-8" />
-      <span class="inline-block overflow-hidden text-primary">
-        Circles
-        <span class="ml-1 text-xs font-semibold text-base-content/60">(beta)</span>
-      </span>
-    </a>
-  </div>
-  {#if $basketCount > 0}
+<!-- Mobile-only clean header; desktop uses AppSidebar -->
+<header class="md:hidden sticky top-0 z-20 flex items-center h-14 px-[18px] gap-1.5 shrink-0"
+  style="background:#F6F5F2;">
+
+  <!-- Logo -->
+  <a href={homeLink} class="flex items-center gap-2 flex-1 no-underline">
+    <img src="/logo.svg" alt="Circles" class="w-[22px] h-[22px]" />
+    <span class="font-semibold text-[15px] tracking-tight" style="color:#0F0A1E;">Circles</span>
+    <span class="text-[10px] px-1.5 py-0.5 rounded-full font-[580] tracking-wider lowercase"
+      style="background:#EFEDE7;color:rgba(15,10,30,0.40);">beta</span>
+  </a>
+
+  <!-- Cart (market page or has items) -->
+  {#if isMarketPage || $basketCount > 0}
     <button
       type="button"
-      class="btn btn-sm btn-ghost mr-2"
-      onclick={openBasketPopup}
+      class="relative cursor-pointer flex items-center justify-center"
+      onclick={() => void openBasketPopup()}
+      disabled={$basketCount === 0}
+      aria-label="Open basket"
+      style="width:36px;height:36px;border-radius:9999px;background:#FFFFFF;border:1px solid rgba(31,17,70,0.08);box-shadow:0 1px 2px rgba(15,10,30,0.04);"
     >
-      Basket ({$basketCount})
+      <Lucide icon={LBag} size={16} ariaLabel="" />
+      {#if $basketCount > 0}
+        <span style="position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:9999px;background:#5849D4;color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;">
+          {$basketCount}
+        </span>
+      {/if}
     </button>
   {/if}
+
+  <!-- Search -->
   <button
     type="button"
-    class="btn btn-circle btn-ghost btn-sm mr-1"
-    aria-label="Search"
-    title="Search (Ctrl/Cmd+K)"
+    class="cursor-pointer flex items-center justify-center"
+    aria-label="Search (Ctrl/Cmd+K)"
     onclick={onSearchButtonClick}
     onkeydown={onSearchButtonKeydown}
+    style="width:36px;height:36px;border-radius:9999px;background:#FFFFFF;border:1px solid rgba(31,17,70,0.08);box-shadow:0 1px 2px rgba(15,10,30,0.04);"
   >
     <Lucide icon={LSearch} size={16} ariaLabel="" />
   </button>
-  <details class="dropdown dropdown-end flex-none" bind:this={menuEl}>
-    <summary class="btn btn-circle btn-ghost btn-sm" aria-haspopup="menu" aria-expanded={menuEl?.open ? 'true' : 'false'}
-      ><svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        class="inline-block h-5 w-5 stroke-current"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"
-        ></path>
-      </svg></summary
+
+  <!-- Hamburger menu -->
+  <details class="defaultheader-menu flex-none" bind:this={menuEl}>
+    <summary
+      style="width:36px;height:36px;border-radius:9999px;background:#FFFFFF;border:1px solid rgba(31,17,70,0.08);box-shadow:0 1px 2px rgba(15,10,30,0.04);display:flex;align-items:center;justify-content:center;list-style:none;cursor:pointer;"
+      aria-haspopup="menu"
+      aria-expanded={menuEl?.open ? 'true' : 'false'}
     >
-    <ul
-      class="menu dropdown-content bg-base-100 rounded-box z-[1] w-64 p-2 shadow"
-    >
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+        style="width:16px;height:16px;stroke:currentColor;">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+          d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </summary>
+    <ul style="position:absolute;right:0;top:calc(100% + 6px);z-index:1;width:256px;background:#FFFFFF;border-radius:14px;box-shadow:0 4px 24px rgba(15,10,30,0.12);border:1px solid rgba(31,17,70,0.08);padding:8px;list-style:none;margin:0;">
       <li>
-        <a class="link link-hover" href="/settings">Settings</a>
-        <ul>
-          <li><a class="link link-hover" href="/settings?tab=personal">Profile</a></li>
-          <li><a class="link link-hover" href="/settings?tab=bookmarks">Bookmarks</a></li>
-          <li><a class="link link-hover" href="/settings?tab=orders">Orders</a></li>
-          <li><a class="link link-hover" href="/settings?tab=sales">Sales</a></li>
-          <li><a class="link link-hover" href="/settings?tab=offers">Offers</a></li>
-          <li><a class="link link-hover" href="/settings?tab=payment">Payment gateways</a></li>
-          <li><a class="link link-hover" href="/settings?tab=namespaces">Namespaces</a></li>
-          <li><a class="link link-hover" href="/settings?tab=keys">Signing keys</a></li>
+        <a class="defaultheader-link" href="/settings">Settings</a>
+        <ul style="list-style:none;padding:0;margin:0;">
+          <li><a class="defaultheader-link" href="/settings?tab=personal">Profile</a></li>
+          <li><a class="defaultheader-link" href="/settings?tab=bookmarks">Bookmarks</a></li>
+          <li><a class="defaultheader-link" href="/settings?tab=orders">Orders</a></li>
+          <li><a class="defaultheader-link" href="/settings?tab=sales">Sales</a></li>
+          <li><a class="defaultheader-link" href="/settings?tab=offers">Offers</a></li>
+          <li><a class="defaultheader-link" href="/settings?tab=payment">Payment gateways</a></li>
+          <li><a class="defaultheader-link" href="/settings?tab=namespaces">Namespaces</a></li>
+          <li><a class="defaultheader-link" href="/settings?tab=keys">Signing keys</a></li>
         </ul>
       </li>
       {#if avatarState.avatar}
         <li>
           <button
-            class="link link-hover text-error"
+            class="defaultheader-link"
+            style="width:100%;text-align:left;background:transparent;border:0;cursor:pointer;color:#C44430;"
             onclick={async () => {
               closeMenu();
               const { clearSession } = await import('$lib/shared/state/wallet.svelte');
@@ -172,14 +181,30 @@
           </button>
         </li>
       {/if}
-      <li><a class="link link-hover" href="/terms">Terms of use</a></li>
+      <li><a class="defaultheader-link" href="/terms">Terms of use</a></li>
       <li>
-        <a class="link link-hover" href="/privacy-policy">Privacy policy</a>
+        <a class="defaultheader-link" href="/privacy-policy">Privacy policy</a>
       </li>
       {#if dev}
-        <li><a class="link link-hover" href="/kitchen-sink">Kitchen sink</a></li>
+        <li><a class="defaultheader-link" href="/kitchen-sink">Kitchen sink</a></li>
       {/if}
     </ul>
   </details>
-</div>
+</header>
 
+<style>
+  .defaultheader-menu {
+    position: relative;
+  }
+  .defaultheader-link {
+    display: block;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #2A1F4A;
+    text-decoration: none;
+  }
+  .defaultheader-link:hover {
+    background: rgba(0,0,0,0.04);
+  }
+</style>
