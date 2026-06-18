@@ -8,6 +8,7 @@ import { circles } from '$lib/shared/state/circles';
 import { getProfile } from '$lib/shared/utils/profile';
 import { circlesBalances } from '$lib/shared/state/circlesBalances';
 import { writeTransactions, makeScopeId } from '$lib/shared/cache';
+import { loadTransferAnnotations, resetTransferAnnotations } from '$lib/shared/state/transferAnnotations';
 
 const PAGE_SIZE = 100; // Fetch 100 events - they get grouped by tx hash
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
@@ -688,6 +689,7 @@ export const initTransactionHistoryStore = async (avatar: Avatar) => {
 
   // Clear memoization cache for fresh grouping
   resetGroupedCache();
+  resetTransferAnnotations();
 
   // Validate avatar is properly initialized
   if (!avatar || typeof avatar !== 'object') {
@@ -728,6 +730,10 @@ export const initTransactionHistoryStore = async (avatar: Avatar) => {
 
   // Build ERC20 wrapper cache from user's balance data (no RPC needed)
   refreshErc20WrapperCache();
+
+  // Load transfer-data annotations for this avatar (one RPC call, fire-and-forget —
+  // supplementary to history, must not block or break the listing).
+  void loadTransferAnnotations(avatar);
 
   // Load initial page
   await loadNextPage();
@@ -841,6 +847,10 @@ export async function refreshTransactionHistory(): Promise<void> {
     ended: false,
     isLoading: true,
   });
+
+  // Reload annotations too — refresh runs after sends and WebSocket updates, so a
+  // newly-annotated transaction must pick up its note (force past the per-avatar guard).
+  void loadTransferAnnotations(currentAvatar, true);
 
   // Refetch from page 1
   await loadNextPage();
