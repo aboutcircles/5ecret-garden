@@ -433,7 +433,18 @@
         onfocusin={onVirtualSpaceFocusIn}
         onfocusout={onVirtualSpaceFocusOut}
     >
-        {#each virtualRows as vr (vr.kind === 'item' ? getKey(vr.item) : `placeholder-${vr.placeholderIndex}`)}
+        <!--
+            Key by the absolute virtual index, NOT by item/placeholder identity.
+            Rows are positioned by `transform: translateY(index * rowHeight)` and
+            tracked via `data-virtual-index`, so the DOM slot's identity IS its
+            index. Keying by item id mixed with a placeholder key whose base
+            (`loadedItems.length`) shifts on every page load forced Svelte to
+            remove placeholder blocks and move item blocks in the same flush as
+            range/data mutations — corrupting the keyed-each linked list
+            (`i.nodes` null → "reading 'start'"). Index keys keep each slot
+            stable and swap its content in place, eliminating that thrash.
+        -->
+        {#each virtualRows as vr (vr.index)}
             <div
                 class="virtual-row"
                 data-virtual-index={vr.index}
