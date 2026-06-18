@@ -4,7 +4,7 @@ test.describe('Landing page', () => {
   test('renders hero section with connect button', async ({ page }) => {
     await page.goto('/');
 
-    await expect(page.getByText('Money, Reimagined')).toBeVisible();
+    await expect(page.getByText('Money, reimagined.')).toBeVisible();
     await expect(page.getByText('Connect Wallet')).toBeVisible();
   });
 
@@ -18,9 +18,11 @@ test.describe('Landing page', () => {
     await expect(page.locator('[role="dialog"]')).toBeVisible({ timeout: 10_000 });
   });
 
-  test('header shows app branding', async ({ page }) => {
+  test('landing shows app branding', async ({ page }) => {
     await page.goto('/');
 
-    await expect(page.getByRole('link', { name: /Circles/ })).toBeVisible();
+    // Desktop landing shows branding via the hero logo; the nav header is
+    // mobile-only (md:hidden) since the sidebar provides nav once signed in.
+    await expect(page.getByRole('img', { name: 'Circles', exact: true })).toBeVisible();
   });
 });

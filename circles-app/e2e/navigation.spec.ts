@@ -4,7 +4,7 @@ test.describe('Navigation and routing', () => {
   test('landing page is accessible at /', async ({ page }) => {
     await page.goto('/');
     await expect(page).toHaveURL('/');
-    await expect(page.getByText('Money, Reimagined')).toBeVisible();
+    await expect(page.getByText('Money, reimagined.')).toBeVisible();
   });
 
   test('terms page renders', async ({ page }) => {
@@ -36,7 +36,7 @@ test.describe('Navigation and routing', () => {
     // (exact behavior depends on whether guards do client-side redirect)
     await page.waitForTimeout(2000);
     const url = page.url();
-    const hasHero = await page.getByText('Money, Reimagined').isVisible().catch(() => false);
+    const hasHero = await page.getByText('Money, reimagined.').isVisible().catch(() => false);
     const hasDashboard = await page.getByText('transaction-history').isVisible().catch(() => false);
 
     // Either redirected to landing OR dashboard failed to load (no avatar)

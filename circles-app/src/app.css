@@ -43,6 +43,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  body {
+    font-family: 'Inter Tight', 'Inter', -apple-system, system-ui, sans-serif;
+  }
+}
+
 /* Layout helpers */
 .page {
     @apply w-full mx-auto px-4 sm:px-6;
@@ -53,23 +59,103 @@
 .page--xl { @apply max-w-6xl; }
 
 .page-pt { @apply pt-6; }
+.page-pb { @apply pb-16; }
 .page-stack { @apply flex flex-col gap-y-6; }
 
 /* Sections */
 .section {
-    @apply w-full bg-base-100 border border-base-300 rounded-lg p-4 md:p-6 shadow-sm;
+    @apply w-full;
+    background: #FFFFFF;
+    border: 1px solid rgba(31, 17, 70, 0.05);
+    border-radius: 16px;
+    padding: 16px 18px;
+    box-shadow: 0 1px 2px rgba(15, 10, 30, 0.04);
 }
+@media (min-width: 768px) {
+    .section { padding: 20px 22px; }
+}
+
 
 /* Typography */
 .h2 {
-    @apply text-2xl font-bold md:text-3xl;
+    font-family: 'DM Sans', 'Inter Tight', 'Inter', -apple-system, system-ui, sans-serif;
+    font-size: 32px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
 }
 
-.muted { @apply text-base-content/70; }
+/* Balance / hero number — larger DM Sans */
+.h1-display {
+    font-family: 'DM Sans', 'Inter Tight', 'Inter', -apple-system, system-ui, sans-serif;
+    font-size: clamp(2.75rem, 6vw, 3.75rem);
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    line-height: 1.05;
+}
+
+.muted { color: rgba(15,10,30,0.62); }
 
 /* Icons & buttons */
-.icon { @apply w-4 h-4 shrink-0; }
-.back-btn { @apply btn btn-ghost btn-sm; }
+.icon { width: 1rem; height: 1rem; flex-shrink: 0; }
+.back-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    height: 32px; min-width: 32px; padding: 0 8px;
+    border-radius: 9999px; border: 0; background: transparent;
+    color: rgba(15,10,30,0.62); cursor: pointer;
+}
+
+/*
+ * A11y: Default focus-visible ring on all interactive elements.
+ * Tailwind utilities (focus-visible:ring-*) and inline rules can still
+ * override per-component. This catches the long tail of inline-styled
+ * <button>s across the app that have border:0 and no focus indicator.
+ */
+button:focus-visible,
+a:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible,
+[role="button"]:focus-visible,
+[role="link"]:focus-visible,
+[role="tab"]:focus-visible {
+    outline: 2px solid rgba(88,73,212,0.55);
+    outline-offset: 2px;
+    border-radius: inherit;
+}
+
+/*
+ * Subtle hover glow for all interactive buttons.
+ * No transform/translate — just shadow + brightness so nothing bounces.
+ * :where() keeps specificity at zero so per-component rules always win.
+ */
+:where(button):not([disabled]) {
+  transition: box-shadow 200ms ease-out, background 200ms ease-out, filter 200ms ease-out, border-color 200ms ease-out, opacity 200ms ease-out;
+}
+:where(button):not([disabled]):not(.btn-naked):hover {
+  box-shadow: 0 4px 14px rgba(15,10,30,0.10);
+  filter: brightness(1.04);
+}
+:where(button):not([disabled]):not(.btn-naked):active {
+  filter: brightness(0.96);
+  box-shadow: 0 1px 3px rgba(15,10,30,0.06);
+  transition-duration: 60ms;
+}
+
+/*
+ * A11y: honour prefers-reduced-motion. Disable the popup slide
+ * animation, skeleton pulses, and any decorative transition longer
+ * than ~80ms. Rendering still works; just no motion.
+ */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Ensure native inputs have a sensible border-radius */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), textarea, select { border-radius: 8px; }
 
 /* Row tokens */
 :root {
@@ -85,18 +171,18 @@
     --row-gap: 12px;
     --row-radius: 12px;
 
-    --row-bg: var(--p);
-    --row-bg-hover: var(--p,96);
-    --row-bg-selected: var(--p,96);
+    --row-bg: #FFFFFF;
+    --row-bg-hover: #EFEDE7;
+    --row-bg-selected: #EAE7FB;
 
-    --row-border: color-mix(in oklch, var(--bc) 12%, transparent);
-    --row-border-hover: color-mix(in oklch, var(--bc) 20%, transparent);
-    --row-border-selected: var(--p);
-    --row-focus-ring: color-mix(in oklch, var(--p) 35%, transparent);
+    --row-border: rgba(31,17,70,0.05);
+    --row-border-hover: rgba(31,17,70,0.08);
+    --row-border-selected: #5849D4;
+    --row-focus-ring: rgba(88,73,212,0.35);
 
-    --row-fg-strong: var(--bc);
-    --row-fg-muted: color-mix(in oklch, var(--bc) 70%, transparent);
-    --row-fg-muted-2: color-mix(in oklch, var(--bc) 60%, transparent);
+    --row-fg-strong: #0F0A1E;
+    --row-fg-muted: rgba(15,10,30,0.62);
+    --row-fg-muted-2: rgba(15,10,30,0.40);
 }
 
 /* Don’t force a fixed `height` on table rows; it can clip content when cells wrap or async content appears. */
@@ -104,7 +190,7 @@
     min-height: var(--row-height-md);
 }
 
-/* Fallback */
+/* Fallback (mirrors :root above) */
 html {
     --row-height-sm: 44px;
     --row-height-md: 56px;
@@ -115,16 +201,16 @@ html {
     --row-gap: 12px;
     --row-radius: 12px;
 
-    --row-bg: var(--p);
-    --row-bg-hover: var(--p,96);
-    --row-bg-selected: var(--p,96);
+    --row-bg: #FFFFFF;
+    --row-bg-hover: #EFEDE7;
+    --row-bg-selected: #EAE7FB;
 
-    --row-border: color-mix(in oklch, var(--bc) 12%, transparent);
-    --row-border-hover: color-mix(in oklch, var(--bc) 20%, transparent);
-    --row-border-selected: var(--p);
-    --row-focus-ring: color-mix(in oklch, var(--p) 35%, transparent);
+    --row-border: rgba(31,17,70,0.05);
+    --row-border-hover: rgba(31,17,70,0.08);
+    --row-border-selected: #5849D4;
+    --row-focus-ring: rgba(88,73,212,0.35);
 
-    --row-fg-strong: var(--bc);
-    --row-fg-muted: color-mix(in oklch, var(--bc) 70%, transparent);
-    --row-fg-muted-2: color-mix(in oklch, var(--bc) 60%, transparent);
+    --row-fg-strong: #0F0A1E;
+    --row-fg-muted: rgba(15,10,30,0.62);
+    --row-fg-muted-2: rgba(15,10,30,0.40);
 }
