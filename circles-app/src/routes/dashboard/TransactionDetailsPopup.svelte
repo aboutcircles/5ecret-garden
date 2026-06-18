@@ -8,6 +8,7 @@
     import { CirclesConverter } from '@aboutcircles/sdk-utils';
     import { isAddress, isZeroAddress, toBigIntMaybe, tokenIdToAddressMaybe } from '$lib/shared/utils/tx';
     import TxEvents from './TxEvents.svelte';
+    import { annotationsByTx } from '$lib/shared/state/transferAnnotations';
     import { popupControls } from '$lib/shared/state/popup';
     import JumpPopup from '$lib/shared/ui/content/jump/JumpPopup.svelte';
     import { T } from '$lib/design-system/tokens.js';
@@ -15,6 +16,13 @@
 
     interface Props { item: TransactionHistoryRow }
     let { item }: Props = $props();
+
+    // Transfer-data annotations attached to this transaction (note/message carried on a transfer).
+    // Keyed by transaction hash; only those that decode to readable text are shown.
+    const txAnnotations = $derived(
+        ($annotationsByTx.get(item.transactionHash?.toLowerCase() ?? '') ?? [])
+            .filter((a) => a.text)
+    );
 
     // Tab control removed (JSON view no longer needed)
 
@@ -717,6 +725,22 @@
             />
         </div>
     </div>
+
+    {#if txAnnotations.length}
+        <!-- Transfer note(s) -->
+        <div style="background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;overflow:hidden;">
+            <div style="padding:10px 14px;border-bottom:1px solid {T.hairlineSoft};">
+                <span style="font-size:11px;color:{T.inkMuted};font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">
+                    {txAnnotations.length > 1 ? 'Notes' : 'Note'}
+                </span>
+            </div>
+            {#each txAnnotations as a, i (i)}
+                <div style="padding:10px 14px;{i > 0 ? `border-top:1px solid ${T.hairlineSoft};` : ''}">
+                    <span style="font-size:13px;color:{T.inkBody};white-space:pre-wrap;word-break:break-word;">{a.text}</span>
+                </div>
+            {/each}
+        </div>
+    {/if}
 
     <!-- Details table -->
     <div style="background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;overflow:hidden;">
