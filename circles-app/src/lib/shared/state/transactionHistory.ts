@@ -848,6 +848,10 @@ export async function refreshTransactionHistory(): Promise<void> {
     isLoading: true,
   });
 
+  // Reload annotations too — refresh runs after sends and WebSocket updates, so a
+  // newly-annotated transaction must pick up its note (force past the per-avatar guard).
+  void loadTransferAnnotations(currentAvatar, true);
+
   // Refetch from page 1
   await loadNextPage();
 }

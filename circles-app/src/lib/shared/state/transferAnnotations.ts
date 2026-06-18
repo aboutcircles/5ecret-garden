@@ -51,6 +51,9 @@ const FETCH_LIMIT = 1000;
 export const annotationsByTx = writable<Map<string, TransferAnnotation[]>>(new Map());
 
 let loadedFor: string | null = null;
+// Address of the most recent load request; used to drop a stale response if the
+// active avatar changed while an earlier fetch was still in flight.
+let latestRequest: string | null = null;
 
 /**
  * Reduce a decoded payload to a single display string, or null when there is nothing
@@ -72,7 +75,15 @@ function payloadToText(payload: unknown): string | null {
 function decodeText(data: string): string | null {
   try {
     const decoded = decodeCrcV2TransferData(data);
-    return payloadToText(decoded.payload);
+    // Only treat genuinely human-readable envelope types as a displayable note:
+    //   0x0001 = UTF-8 text, 0x1001 = text + metadata (the message part).
+    // Other types (0x0002 XMTP message id, 0x0003 IPFS CID, 0x0004 ABI calldata) also
+    // decode to a string/object, but they are machine references — not notes — so they
+    // must not render verbatim in the Note card.
+    if (decoded.type === 0x0001 || decoded.type === 0x1001) {
+      return payloadToText(decoded.payload);
+    }
+    return null;
   } catch {
     // Legacy / non-envelope blobs (e.g. raw bytes or an unrecognized version) — not an error,
     // just nothing to display.
@@ -92,11 +103,17 @@ export async function loadTransferAnnotations(avatar: Avatar, force = false): Pr
   const sdk = get(circles);
   if (!sdk?.rpc) return;
 
+  latestRequest = address;
+
   try {
     const response = await sdk.rpc.client.call<unknown[], TransferDataResponse>(
       'circles_getTransferData',
       [address, null, null, null, null, FETCH_LIMIT, null]
     );
+
+    // A newer load (e.g. an avatar switch) superseded this one while awaiting —
+    // drop the stale result rather than overwriting the current avatar's annotations.
+    if (latestRequest !== address) return;
 
     const byTx = new Map<string, TransferAnnotation[]>();
     for (const row of response.results) {
@@ -130,13 +147,9 @@ export async function loadTransferAnnotations(avatar: Avatar, force = false): Pr
   }
 }
 
-/** Annotations for a transaction hash (empty array if none). */
-export function getAnnotationsForTx(transactionHash: string): TransferAnnotation[] {
-  return get(annotationsByTx).get(transactionHash.toLowerCase()) ?? [];
-}
-
 /** Reset cached state (e.g. on avatar switch) so the next load refetches. */
 export function resetTransferAnnotations(): void {
   loadedFor = null;
+  latestRequest = null;
   annotationsByTx.set(new Map());
 }
