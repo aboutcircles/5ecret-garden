@@ -10,7 +10,7 @@
     import { popupControls } from '$lib/shared/state/popup';
     import { ethers } from 'ethers';
     import Balances from '$lib/areas/wallet/ui/pages/Balances.svelte';
-    import { circlesBalances } from '$lib/shared/state/circlesBalances';
+    import { circlesBalances, refreshBalanceStore } from '$lib/shared/state/circlesBalances';
     import { totalCirclesBalance } from '$lib/shared/state/totalCirclesBalance';
     import { refreshTransactionHistory } from '$lib/shared/state/transactionHistory';
     import { buildGroupOwnerSet } from '$lib/shared/utils/tokenClassification';
@@ -69,8 +69,8 @@
 
         mintableAmount = 0;
 
-        // Refresh tx history so the mint appears immediately
-        refreshTransactionHistory();
+        // Refresh balance-backed dashboard state and tx history immediately.
+        await Promise.all([refreshBalanceStore(avatar), refreshTransactionHistory()]);
     }
 
     // Match the dust filter in Balances.svelte so the count matches the breakdown

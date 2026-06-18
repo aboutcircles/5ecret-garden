@@ -13,6 +13,7 @@
   import {avatarState} from '$lib/shared/state/avatar.svelte';
   import {tokenTypeToString, TransitiveTransferTokenAddress} from '$lib/areas/wallet/ui/pages/SelectAsset.svelte';
   import {popupControls} from '$lib/shared/state/popup';
+  import { refreshBalanceStore } from '$lib/shared/state/circlesBalances';
   import {refreshTransactionHistory} from '$lib/shared/state/transactionHistory';
   import {MAX_PATH_STEPS} from "$lib/shared/config/circles";
   import {
@@ -102,8 +103,8 @@
             selectedAsset.tokenAddress,
             dataUInt8Arr.length > 0 ? dataUInt8Arr : undefined
           ),
-      onSuccess: () => {
-        refreshTransactionHistory();
+      onSuccess: async () => {
+        await Promise.all([refreshBalanceStore(avatar), refreshTransactionHistory()]);
         popupControls.close();
       },
     });
