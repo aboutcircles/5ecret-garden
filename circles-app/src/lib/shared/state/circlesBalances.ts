@@ -16,6 +16,7 @@ const refreshOnEvents: Set<CirclesEventType> = new Set<CirclesEventType>([
 ]);
 
 let currentStoreUnsubscribe: (() => void) | undefined;
+let currentAvatar: Avatar | undefined;
 let currentAvatarAddress: string = '';
 
 const _circlesBalances = writable<{
@@ -23,6 +24,12 @@ const _circlesBalances = writable<{
   next: () => Promise<boolean>;
   ended: boolean;
 }>({ data: [], next: async () => false, ended: false });
+
+function compareBalances(a: TokenBalance, b: TokenBalance): number {
+  if (a.circles > b.circles) return -1;
+  if (a.circles < b.circles) return 1;
+  return 0;
+}
 
 async function _loadBalancesFor(avatar: Avatar): Promise<TokenBalance[]> {
   if (!avatar || typeof avatar !== 'object') {
@@ -39,7 +46,8 @@ async function _loadBalancesFor(avatar: Avatar): Promise<TokenBalance[]> {
     return [];
   }
   try {
-    const balances = (await avatar.balances.getTokenBalances()) as unknown as TokenBalance[];
+    const balances =
+      (await avatar.balances.getTokenBalances()) as unknown as TokenBalance[];
     void writeBalances(makeScopeId(avatar.address), balances as any[]);
     return balances;
   } catch (e: unknown) {
@@ -53,8 +61,10 @@ async function _loadBalancesFor(avatar: Avatar): Promise<TokenBalance[]> {
 export const initBalanceStore = (avatar: Avatar) => {
   // Early return if already initialized for this avatar
   if (currentAvatarAddress === avatar.address) {
+    currentAvatar = avatar;
     return;
   }
+  currentAvatar = avatar;
   currentAvatarAddress = avatar.address;
 
   if (currentStoreUnsubscribe) {
@@ -89,16 +99,33 @@ export const initBalanceStore = (avatar: Avatar) => {
     _handleEvent, // Function to handle event-based updates
     _handleNextPage, // Function to handle loading the next page of data
     [], // Initial empty data
-    (a, b) => {
-      // Comparator to sort the data by blockNumber, transactionIndex, and logIndex
-      // Order by balance desc and return 1,0,-1
-      if (a.circles > b.circles) return -1;
-      if (a.circles < b.circles) return 1;
-      return 0;
-    }
+    compareBalances
   );
 
   currentStoreUnsubscribe = store.subscribe(_circlesBalances.set);
 };
+
+/**
+ * Force-refresh balances for the current avatar.
+ * Use this after successful wallet transactions when live events are unavailable.
+ */
+export async function refreshBalanceStore(avatar?: Avatar): Promise<void> {
+  const avatarToRefresh = avatar ?? currentAvatar;
+  if (!avatarToRefresh) {
+    return;
+  }
+
+  const balances = await _loadBalancesFor(avatarToRefresh);
+  const sortedBalances = [...balances].sort(compareBalances);
+
+  if (currentAvatarAddress !== avatarToRefresh.address) {
+    return;
+  }
+
+  _circlesBalances.update((current) => ({
+    ...current,
+    data: sortedBalances,
+  }));
+}
 
 export const circlesBalances = _circlesBalances;
