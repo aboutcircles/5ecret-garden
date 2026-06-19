@@ -9,6 +9,7 @@
     import TransactionDetailsPopup from './TransactionDetailsPopup.svelte';
     import { ZERO_ADDRESS } from '$lib/shared/utils/tx';
     import { getActiveConfig } from '$lib/shared/state/settings.svelte';
+    import { gatewaySpending } from '$lib/shared/state/gatewaySpending.svelte';
     import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
     import {
         VIRTUAL_LIST_CONTEXT_KEY,
@@ -41,10 +42,27 @@
         );
     });
 
-    // For a migration, show the destination score group (a real, named avatar) rather
-    // than the profile-less sink the transfer technically routed through.
+    // A payment-gateway (marketplace) purchase routes CRC me → gateway → seller. In
+    // aggregated history the counterparty surfaces as the faceless gateway/sink contract
+    // (no profile → a generic "shop" placeholder + truncated address). The gateway-spending
+    // store carries the underlying PaymentReceived event keyed by tx hash, so when this row
+    // matches one we can label it "Marketplace" and show the actual SELLER (payee) instead.
+    const gatewayPayment = $derived(
+        item.transactionHash
+            ? $gatewaySpending.byTxHash.get(item.transactionHash.toLowerCase())
+            : undefined
+    );
+    const isMarketplace = $derived(!!gatewayPayment);
+
+    // For a migration, show the destination score group; for a marketplace purchase, the
+    // seller (payee) — both real, named avatars rather than the profile-less contract the
+    // transfer technically routed through.
     const avatarAddress = $derived(
-        isMigration && scoreGroupAddress ? scoreGroupAddress : counterpartyAddress
+        isMigration && scoreGroupAddress
+            ? scoreGroupAddress
+            : isMarketplace && gatewayPayment
+              ? (gatewayPayment.payee.toLowerCase() as typeof counterpartyAddress)
+              : counterpartyAddress
     );
 
     // Small label above the counterparty name. "Minted" is the honest umbrella for any
@@ -54,12 +72,14 @@
     // that merely contain a mint hop.
     const topInfoText = $derived.by(() => {
         if (isMigration) return 'Group migration';
+        if (isMarketplace) return 'Marketplace';
         if (item.type === 'mint') return 'Minted';
         return '';
     });
 
     const badgeUrl = $derived.by(() => {
         if (isMigration) return '/badge-mint.svg'; // migration mints the new group token
+        if (isMarketplace) return '/badge-sent.svg'; // a marketplace purchase is an outflow
         if (item.type === 'mint') return '/badge-mint.svg';
         if (item.type === 'burn') return '/badge-burn.svg';
         if (item.type === 'send') return '/badge-sent.svg';

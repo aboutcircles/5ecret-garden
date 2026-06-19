@@ -5,6 +5,7 @@ import { circles } from '$lib/shared/state/circles';
 import { initTransactionHistoryStore, refreshTransactionHistory } from '$lib/shared/state/transactionHistory';
 import { initContactStore, refreshContactStore } from '$lib/shared/state/contacts';
 import { initBalanceStore, refreshBalanceStore } from '$lib/shared/state/circlesBalances';
+import { initGatewaySpendingStore } from '$lib/shared/state/gatewaySpending.svelte';
 import { initGroupMetricsStore } from '$lib/areas/groups/state';
 
 const MIN_RESYNC_INTERVAL_MS = 5_000;
@@ -20,6 +21,10 @@ export function initAvatarStores(avatar: Avatar): void {
   void initTransactionHistoryStore(avatar);
   initContactStore(avatar);
   initBalanceStore(avatar);
+  // Marketplace/gateway spend is infrequent and not realtime-critical, so it loads once per
+  // avatar (dedup-guarded) and is NOT part of the steady-state liveness refresh — that keeps
+  // the spending card from blanking every tick.
+  initGatewaySpendingStore(avatar);
   if (avatarState.isGroup) {
     const sdk = get(circles);
     if (sdk) {
