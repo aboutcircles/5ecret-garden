@@ -17,6 +17,12 @@
   import { popupControls } from '$lib/shared/state/popup';
   import { canCreateInviteLinks } from '$lib/areas/invites/data/canCreateInviteLinks';
   import { T } from '$lib/design-system/tokens.js';
+  import { get } from 'svelte/store';
+  import { circles } from '$lib/shared/state/circles';
+  import { isWebsocketConnected } from '$lib/shared/state/realtimeSync';
+  import { settings } from '$lib/shared/state/settings.svelte';
+  import Tooltip from '$lib/shared/ui/primitives/Tooltip.svelte';
+  import EnvironmentInfoPopup from '$lib/shared/ui/shell/EnvironmentInfoPopup.svelte';
 
   // "Invite" is only meaningful for human v2 avatars, so it's inserted
   // conditionally rather than living in the static base list.
@@ -53,6 +59,33 @@
     if (!avatar) return;
     const { default: SettingProfile } = await import('$lib/areas/settings/ui/pages/SettingProfile.svelte');
     popupControls.open({ title: '', component: SettingProfile, props: { address: avatar.address } });
+  }
+
+  // Footer network/realtime indicator. The SDK's websocket flag is non-reactive, so poll
+  // it to keep the dot + tooltip current; the (i) row opens a fuller details popup.
+  const networkLabel = $derived(settings.network === 'chiado' ? 'Chiado' : 'Gnosis Chain');
+  let wsConnected = $state<boolean | undefined>(undefined);
+  $effect(() => {
+    const tick = () => {
+      wsConnected = isWebsocketConnected(get(circles));
+    };
+    tick();
+    const id = setInterval(tick, 3000);
+    return () => clearInterval(id);
+  });
+  const wsDotColor = $derived(
+    wsConnected === true ? T.positive : wsConnected === false ? T.negative : T.inkFaint,
+  );
+  const realtimeLabel = $derived(
+    wsConnected === true
+      ? 'Realtime connected'
+      : wsConnected === false
+        ? 'Realtime disconnected'
+        : 'Realtime status unknown',
+  );
+
+  function openEnvInfo(): void {
+    popupControls.open({ title: 'Environment', component: EnvironmentInfoPopup, props: {} });
   }
 </script>
 
@@ -172,12 +205,24 @@
     </div>
   {/if}
 
-  <!-- Footer -->
+  <!-- Footer: network + live realtime status; opens an environment-details popup on click. -->
   <div style="margin-top:auto;padding:8px 8px 0;border-top:1px solid {T.hairlineSoft};">
-    <div style="display:flex;align-items:center;gap:8px;padding-top:10px;">
-      <Lucide icon={LInfo} size={14} class="shrink-0" ariaLabel="" />
-      <span style="font-size:11.5px;color:{T.inkFaint};">Circles v2 · Gnosis Chain</span>
-    </div>
+    <Tooltip content={`${realtimeLabel} · click for details`} class="block w-full">
+      <button
+        type="button"
+        onclick={openEnvInfo}
+        aria-label={`Environment: Circles v2 on ${networkLabel}. ${realtimeLabel}. Click for details.`}
+        class="appsidebar-env-btn"
+        style="display:flex;align-items:center;gap:8px;width:100%;background:transparent;border:0;padding:10px 0 0;cursor:pointer;text-align:left;"
+      >
+        <Lucide icon={LInfo} size={14} class="shrink-0" ariaLabel="" />
+        <span style="font-size:11.5px;color:{T.inkFaint};">Circles v2 · {networkLabel}</span>
+        <span
+          style="margin-left:auto;width:7px;height:7px;border-radius:9999px;background:{wsDotColor};flex-shrink:0;"
+          aria-hidden="true"
+        ></span>
+      </button>
+    </Tooltip>
   </div>
 </aside>
 
