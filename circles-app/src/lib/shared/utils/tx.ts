@@ -159,3 +159,61 @@ export async function sendRunnerTransactionAndWait(
   }
   return waitForReceiptRaw(provider, txHash, options);
 }
+
+/**
+ * Submit a pre-built transaction batch through the runner and wait for the
+ * receipt. Safe runners execute the whole array as a single atomic multisend
+ * (required for sequences whose on-chain invariant only holds atomically, e.g.
+ * snapshot → personalMint → groupMint → wrap); EOA runners send sequentially,
+ * so callers that need atomicity must gate those out before calling this.
+ *
+ * Mirrors {@link sendRunnerTransactionAndWait} but takes the full `txs` array
+ * instead of a single tx.
+ */
+export async function sendRunnerBatchAndWait(
+  runner: {
+    sendTransaction?: (...args: any[]) => Promise<any>;
+    provider?: { send?: (method: string, params?: any[]) => Promise<any> };
+  } | null | undefined,
+  txs: ReadonlyArray<{ to: string; value?: bigint; data?: string }>,
+  options: RawReceiptWaitOptions = {}
+): Promise<any> {
+  if (!runner?.sendTransaction) {
+    throw new Error('Wallet runner is not available');
+  }
+  if (txs.length === 0) {
+    throw new Error('No transactions to send');
+  }
+
+  const txResponse = await runner.sendTransaction(txs);
+
+  // Some runners resolve directly to a mined receipt rather than a tx response
+  // carrying a hash. If so, verify it didn't revert and return it as-is instead
+  // of re-polling. (A reverted EOA send already throws inside the runner; this
+  // guard is defence-in-depth for any runner that returns a status-0 receipt.)
+  if (
+    txResponse &&
+    ((txResponse as any).status !== undefined || (txResponse as any).blockNumber !== undefined) &&
+    !(txResponse as any).hash &&
+    !(txResponse as any).transactionHash
+  ) {
+    const status = (txResponse as any).status;
+    if (status === 'reverted' || parseReceiptStatus(status) === 0) {
+      throw new Error(`${options.label ?? 'Transaction'} reverted on-chain`);
+    }
+    return txResponse;
+  }
+
+  const txHash = txResponse?.hash ?? txResponse?.transactionHash;
+  if (!txHash) {
+    throw new Error('Transaction hash missing');
+  }
+
+  const provider = runner.provider?.send ? runner.provider : getSdkRpcProvider();
+  if (!provider) {
+    throw new Error(
+      `Transaction broadcast (hash: ${txHash}) but receipt cannot be verified — no provider available`
+    );
+  }
+  return waitForReceiptRaw(provider, txHash, options);
+}

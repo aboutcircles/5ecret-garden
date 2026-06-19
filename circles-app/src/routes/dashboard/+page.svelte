@@ -22,6 +22,7 @@
     import { openAddTrustFlow } from '$lib/areas/trust/flows/addTrust/openAddTrustFlow';
     import ReceivePopup from './ReceivePopup.svelte';
     import MintPopup from './MintPopup.svelte';
+    import MigrateLegacyGroupBanner from '$lib/areas/minting/ui/MigrateLegacyGroupBanner.svelte';
 
     import { T } from '$lib/design-system/tokens.js';
     import Icon from '$lib/design-system/Icon.svelte';
@@ -152,6 +153,9 @@
 {:else}
     <!-- Mobile: 18px padding. Desktop: 36px. -->
     <div style="padding:8px 18px 24px;" class="md:!p-9 md:max-w-[1280px] md:mx-auto">
+
+        <!-- Legacy group-CRC migration offer (renders only when migratable). -->
+        <MigrateLegacyGroupBanner />
 
         <!-- ─── HERO CARD ─────────────────────────────────────────────── -->
         <div
