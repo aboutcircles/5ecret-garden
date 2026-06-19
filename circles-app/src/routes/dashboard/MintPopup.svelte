@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import { T } from '$lib/design-system/tokens.js';
   import Icon from '$lib/design-system/Icon.svelte';
   import { popupControls } from '$lib/shared/state/popup';
@@ -20,6 +21,11 @@
   let mintableAmount = $state(initialAmount);
   let isMinting = $state(false);
   let lastMintedAt: Date | null = $state(null);
+
+  // Tracked so it can be cancelled on unmount. An uncancelled timer would fire a
+  // popup mutation after the user has already dismissed this popup and possibly
+  // opened another — popping an unrelated entry or leaving a stale stack behind.
+  let autoCloseTimer: ReturnType<typeof setTimeout> | null = null;
 
   async function refreshMintable() {
     const avatar = avatarState.avatar;
@@ -45,12 +51,23 @@
     } finally {
       await refreshMintable();
       isMinting = false;
-      // Auto-close shortly after a successful mint
+      // Auto-close shortly after a successful mint that drained the mintable
+      // amount. Use close() (not back()): Mint is a terminal leaf opened from the
+      // dashboard root, so a full close returns to the dashboard and can never
+      // leave a stale stack entry behind. The handle is cancelled on unmount.
       if (mintableAmount < 0.01) {
-        setTimeout(() => popupControls.back(), 1200);
+        if (autoCloseTimer) clearTimeout(autoCloseTimer);
+        autoCloseTimer = setTimeout(() => {
+          autoCloseTimer = null;
+          popupControls.close();
+        }, 1200);
       }
     }
   }
+
+  onDestroy(() => {
+    if (autoCloseTimer) clearTimeout(autoCloseTimer);
+  });
 
   const displayAmount = $derived(roundToDecimals(mintableAmount));
   const lastMintLabel = $derived.by(() => {
