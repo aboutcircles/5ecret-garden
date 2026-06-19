@@ -57,6 +57,25 @@ function isSilentError(message: string): boolean {
 }
 
 /**
+ * Detect an intentional wallet/user rejection — EIP-1193 code 4001, ethers v6
+ * `ACTION_REJECTED`, or the common rejection messages. These are cancellations,
+ * not failures, and must never surface an error dialog.
+ */
+export function isUserRejection(error: unknown): boolean {
+  const code = (error as { code?: unknown } | null | undefined)?.code;
+  if (code === 4001 || code === 'ACTION_REJECTED') return true;
+  const message = getErrorMessage(error).toLowerCase();
+  return (
+    message.includes('user rejected') ||
+    message.includes('user denied') ||
+    message.includes('rejected the request') ||
+    message.includes('request rejected') ||
+    message.includes('rejected by user') ||
+    message.includes('denied transaction')
+  );
+}
+
+/**
  * Get a user-friendly title based on error context
  */
 function getContextTitle(context: ErrorContext): string {

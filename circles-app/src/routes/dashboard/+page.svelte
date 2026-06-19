@@ -1,8 +1,6 @@
 <script lang="ts">
     import { avatarState } from '$lib/shared/state/avatar.svelte';
     import { roundToDecimals } from '$lib/shared/utils/shared';
-    import { executeTxConfirmFirst } from '$lib/shared/utils/txExecution';
-    import { isBenignReceiptDecodeError } from '$lib/shared/utils/tx';
 
     import OverviewPanel from './OverviewPanel.svelte';
     import TransactionRow from './TransactionRow.svelte';
@@ -14,7 +12,7 @@
     import Balances from '$lib/areas/wallet/ui/pages/Balances.svelte';
     import { circlesBalances } from '$lib/shared/state/circlesBalances';
     import { totalCirclesBalance } from '$lib/shared/state/totalCirclesBalance';
-    import { refreshTransactionHistory, transactionHistory, groupedTransactionHistory } from '$lib/shared/state/transactionHistory';
+    import { transactionHistory, groupedTransactionHistory } from '$lib/shared/state/transactionHistory';
     import { buildGroupOwnerSet } from '$lib/shared/utils/tokenClassification';
 
     import { openSendFlowPopup } from '$lib/areas/wallet/flows/send/openSendFlowPopup';
@@ -50,33 +48,6 @@
                 onMinted: (next: number) => { mintableAmount = next; },
             },
         });
-    }
-
-    async function mintPersonalCircles() {
-        const avatar = avatarState.avatar;
-        if (!(avatar instanceof HumanAvatar)) {
-            throw new Error('Avatar is not a HumanAvatar');
-        }
-
-        try {
-            await executeTxConfirmFirst({
-                name: 'Collecting CRC ...',
-                submit: () => avatar.personalToken.mint(),
-            });
-        } catch (error) {
-            if (!isBenignReceiptDecodeError(error)) {
-                throw error;
-            }
-            console.warn('Ignoring benign receipt decode error after successful mint transaction', error);
-        } finally {
-            const refreshed = await avatar.personalToken.getMintableAmount();
-            mintableAmount = refreshed?.amount ? parseFloat(ethers.formatEther(refreshed.amount)) : 0;
-        }
-
-        mintableAmount = 0;
-
-        // Refresh tx history so the mint appears immediately
-        refreshTransactionHistory();
     }
 
     // Match the dust filter in Balances.svelte so the count matches the breakdown
@@ -223,7 +194,7 @@
                 </button>
                 {#if mintableAmount >= 0.01}
                     <span style="color:{T.inkFaint};">·</span>
-                    <button onclick={mintPersonalCircles} class="btn-naked" style="background:transparent;border:0;padding:0;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                    <button onclick={() => openMintPopup()} class="btn-naked" style="background:transparent;border:0;padding:0;cursor:pointer;display:flex;align-items:center;gap:6px;">
                         <span style="width:6px;height:6px;border-radius:3px;background:{T.sage};display:inline-block;"></span>
                         <span style="font-size:13px;color:{T.inkBody};">mintable <b style="color:{T.ink};">{roundToDecimals(mintableAmount)}</b></span>
                     </button>
