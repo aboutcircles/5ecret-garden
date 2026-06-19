@@ -39,6 +39,11 @@
   const fmt = (atto: bigint): number =>
     roundToDecimals(parseFloat(ethers.formatEther(atto)));
 
+  // Display rounds to 2 decimals, so a dust amount (e.g. 0.004 CRC) is > 0n yet renders
+  // as "0 CRC". Gate the banner on the ROUNDED value so it only appears when there is a
+  // real, non-dust amount to migrate — never a confusing "migrate 0 CRC" prompt.
+  const migratableCrc = $derived(fmt(migratable));
+
   onMount(() => {
     void check();
   });
@@ -108,7 +113,7 @@
   }
 </script>
 
-{#if checked && migratable > 0n && !done}
+{#if checked && migratableCrc >= 0.01 && !done}
   <div
     style="
       display:flex;align-items:center;gap:14px;flex-wrap:wrap;

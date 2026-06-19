@@ -12,7 +12,7 @@
     import Balances from '$lib/areas/wallet/ui/pages/Balances.svelte';
     import { circlesBalances } from '$lib/shared/state/circlesBalances';
     import { totalCirclesBalance } from '$lib/shared/state/totalCirclesBalance';
-    import { transactionHistory, groupedTransactionHistory } from '$lib/shared/state/transactionHistory';
+    import { groupedTransactionHistory } from '$lib/shared/state/transactionHistory';
     import { buildGroupOwnerSet } from '$lib/shared/utils/tokenClassification';
 
     import { openSendFlowPopup } from '$lib/areas/wallet/flows/send/openSendFlowPopup';
@@ -100,18 +100,22 @@
     }
 
     const todayNet: number = $derived.by(() => {
-        const avatar = avatarState.avatar?.address?.toLowerCase();
-        if (!avatar) return 0;
-        const rows = $transactionHistory?.data ?? [];
+        if (!avatarState.avatar?.address) return 0;
+        // Sum the NET of each GROUPED transaction today — never raw legs. Raw-leg summing
+        // double-counts conversions: a split mint / migration moves personal CRC into group
+        // CRC, which the individual legs record as outflows (collateral → treasury, wrap →
+        // ERC-20) WITHOUT crediting the group CRC received, so a value-neutral conversion
+        // looks like a large loss (the "−57 today" bug). The grouped net already nets each
+        // transaction's own legs and is exactly the per-row amount shown in the list, so the
+        // pill agrees with the rows below it.
+        const groups = $groupedTransactionHistory?.data ?? [];
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
         const startTs = Math.floor(startOfDay.getTime() / 1000);
         let net = 0;
-        for (const item of rows) {
-            if ((item.timestamp ?? 0) < startTs) continue;
-            const isSent = (item.from ?? '').toLowerCase() === avatar;
-            const amount = Math.abs(item.circles ?? 0);
-            net += isSent ? -amount : amount;
+        for (const g of groups) {
+            if ((g.timestamp ?? 0) < startTs) continue;
+            net += g.netCircles ?? 0;
         }
         return net;
     });
