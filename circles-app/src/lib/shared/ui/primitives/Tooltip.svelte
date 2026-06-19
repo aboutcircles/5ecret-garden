@@ -1,13 +1,15 @@
 <script lang="ts">
   interface Props {
     content: string;
+    /** Extra classes for the tooltip wrapper, e.g. "block w-full" to span its container. */
+    class?: string;
     children?: import('svelte').Snippet;
   }
 
-  let { content, children }: Props = $props();
+  let { content, class: klass = '', children }: Props = $props();
 </script>
 
-<div class="tooltip" data-tip={content}>
+<div class="tooltip {klass}" data-tip={content}>
   {#if children}
     {@render children?.()}
   {:else}

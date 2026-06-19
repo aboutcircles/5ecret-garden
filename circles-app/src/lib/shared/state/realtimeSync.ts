@@ -61,7 +61,7 @@ function refreshAvatarStores(avatar: Avatar, opts?: { full?: boolean }): void {
  * public connection-state or reconnect hook, so we read it defensively. Returns
  * undefined if the field is absent (e.g. SDK internals changed).
  */
-function isWebsocketConnected(sdk: Sdk | undefined): boolean | undefined {
+export function isWebsocketConnected(sdk: Sdk | undefined): boolean | undefined {
   const flag = ((sdk as any)?.rpc?.client as unknown as { websocketConnected?: unknown })
     ?.websocketConnected;
   return typeof flag === 'boolean' ? flag : undefined;
