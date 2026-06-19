@@ -20,7 +20,7 @@
   let wsConnected = $state<boolean | undefined>(undefined);
   $effect(() => {
     const tick = () => {
-      wsConnected = isWebsocketConnected(get(circles));
+      wsConnected = isWebsocketConnected();
     };
     tick();
     const id = setInterval(tick, 2000);
