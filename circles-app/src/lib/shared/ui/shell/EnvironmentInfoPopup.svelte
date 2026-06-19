@@ -52,11 +52,15 @@
     }
   }
 
-  const short = (addr?: string) =>
-    addr && addr.length > 12 ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : (addr ?? '—');
+  // The RPC URL the SDK's client is actually pointed at — read from the live client so it
+  // can't drift from a stale config value. The pathfinder URL is deliberately NOT shown:
+  // nothing in the app sends requests to it (pathfinding routes through the Circles RPC), so
+  // displaying it would be misleading.
+  const rpcUrl =
+    (get(circles) as unknown as { rpc?: { client?: { getRpcUrl?: () => string } } })
+      ?.rpc?.client?.getRpcUrl?.() ?? config.circlesRpcUrl;
 
-  // Address rows shown in the popup. Zero-address entries (unset on this network) are
-  // filtered out so the list only shows contracts that actually exist here.
+  // Contract rows. Zero-address entries (unset on this network) are filtered out.
   const ZERO = '0x0000000000000000000000000000000000000000';
   const contracts = $derived(
     (
@@ -67,15 +71,6 @@
         ['Migration', config.migrationAddress],
       ] as [string, string | undefined][]
     ).filter(([, addr]) => addr && addr.toLowerCase() !== ZERO),
-  );
-
-  const endpoints = $derived(
-    (
-      [
-        ['Circles RPC', config.circlesRpcUrl],
-        ['Pathfinder', config.pathfinderUrl],
-      ] as [string, string | undefined][]
-    ).filter(([, url]) => !!url),
   );
 </script>
 
@@ -104,23 +99,20 @@
     </div>
   </div>
 
-  <!-- Endpoints -->
-  {#if endpoints.length}
-    <div style="display:flex;flex-direction:column;gap:8px;border-top:1px solid {T.hairlineSoft};padding-top:14px;">
-      <span style="font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Endpoints</span>
-      {#each endpoints as [label, url]}
-        <button
-          type="button"
-          onclick={() => copy(url, label)}
-          title={url}
-          style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:transparent;border:0;padding:4px 0;cursor:pointer;text-align:left;width:100%;"
-        >
-          <span style="font-size:13px;color:{T.inkBody};">{label}</span>
-          <span style="font-family:{T.fontMono};font-size:11.5px;color:{T.inkMuted};max-width:62%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-            {copied === label ? 'Copied ✓' : url}
-          </span>
-        </button>
-      {/each}
+  <!-- RPC: the endpoint the SDK actually calls (full URL, click to copy) -->
+  {#if rpcUrl}
+    <div style="display:flex;flex-direction:column;gap:6px;border-top:1px solid {T.hairlineSoft};padding-top:14px;">
+      <span style="font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">RPC</span>
+      <button
+        type="button"
+        onclick={() => copy(rpcUrl, 'rpc')}
+        title={rpcUrl}
+        style="display:flex;background:transparent;border:0;padding:2px 0;cursor:pointer;text-align:left;width:100%;"
+      >
+        <span style="font-family:{T.fontMono};font-size:12px;color:{T.inkMuted};word-break:break-all;line-height:1.45;">
+          {copied === 'rpc' ? 'Copied ✓' : rpcUrl}
+        </span>
+      </button>
     </div>
   {/if}
 
@@ -132,21 +124,19 @@
         <button
           type="button"
           onclick={() => copy(addr, label)}
-          title={addr}
-          style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:transparent;border:0;padding:4px 0;cursor:pointer;text-align:left;width:100%;"
+          title={`${label} — click to copy`}
+          style="display:flex;flex-direction:column;align-items:flex-start;gap:2px;background:transparent;border:0;padding:2px 0;cursor:pointer;text-align:left;width:100%;"
         >
-          <span style="font-size:13px;color:{T.inkBody};">{label}</span>
-          <span style="font-family:{T.fontMono};font-size:12px;color:{T.inkMuted};">
-            {copied === label ? 'Copied ✓' : short(addr)}
-          </span>
+          <span style="font-size:12px;color:{T.inkBody};">{label}{copied === label ? ' · copied ✓' : ''}</span>
+          <span style="font-family:{T.fontMono};font-size:12px;color:{T.inkMuted};word-break:break-all;line-height:1.45;">{addr}</span>
         </button>
       {/each}
     </div>
   {/if}
 
-  <!-- Build -->
+  <!-- Build: git short hash of the deployed commit (see svelte.config.js) -->
   <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid {T.hairlineSoft};padding-top:14px;">
-    <span style="font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">App build</span>
+    <span style="font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Build</span>
     <span style="font-family:{T.fontMono};font-size:12px;color:{T.inkMuted};">{version}</span>
   </div>
 </div>
