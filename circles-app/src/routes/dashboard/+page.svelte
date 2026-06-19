@@ -24,7 +24,7 @@
 
     import { T } from '$lib/design-system/tokens.js';
     import Icon from '$lib/design-system/Icon.svelte';
-    import Pill from '$lib/design-system/Pill.svelte';
+    import DashboardFlowStrip from './DashboardFlowStrip.svelte';
 
     let mintableAmount: number = $state(0);
     // Whether the (async) mintable check has resolved. Lets the dashboard RESERVE the
@@ -86,15 +86,6 @@
         ($circlesBalances?.data?.length ?? 0) > 0 || ($circlesBalances?.ended ?? false),
     );
 
-    // History is "settled" once it has rows, has ended (empty wallet), or is no longer
-    // loading. Used to reserve the today-net pill's slot until then, so the pill — which is
-    // derived from history and therefore arrives late — doesn't grow the hero on arrival.
-    const historyLoaded = $derived(
-        ($groupedTransactionHistory?.data?.length ?? 0) > 0 ||
-        ($groupedTransactionHistory?.ended ?? false) ||
-        !($groupedTransactionHistory?.isLoading ?? true),
-    );
-
     function openBalances(initialFilterType?: 'personal' | 'group') {
         popupControls.open({
             title: initialFilterType === 'group' ? 'Group balances' : initialFilterType === 'personal' ? 'Personal balances' : 'Balance breakdown',
@@ -118,27 +109,6 @@
             },
         });
     }
-
-    const todayNet: number = $derived.by(() => {
-        if (!avatarState.avatar?.address) return 0;
-        // Sum the NET of each GROUPED transaction today — never raw legs. Raw-leg summing
-        // double-counts conversions: a split mint / migration moves personal CRC into group
-        // CRC, which the individual legs record as outflows (collateral → treasury, wrap →
-        // ERC-20) WITHOUT crediting the group CRC received, so a value-neutral conversion
-        // looks like a large loss (the "−57 today" bug). The grouped net already nets each
-        // transaction's own legs and is exactly the per-row amount shown in the list, so the
-        // pill agrees with the rows below it.
-        const groups = $groupedTransactionHistory?.data ?? [];
-        const startOfDay = new Date();
-        startOfDay.setHours(0, 0, 0, 0);
-        const startTs = Math.floor(startOfDay.getTime() / 1000);
-        let net = 0;
-        for (const g of groups) {
-            if ((g.timestamp ?? 0) < startTs) continue;
-            net += g.netCircles ?? 0;
-        }
-        return net;
-    });
 
     const TRANSACTION_ROW_HEIGHT = 84;
 </script>
@@ -168,21 +138,13 @@
                 overflow:hidden;
             "
         >
-            <!-- TOP ROW: eyebrow + today's net (when non-zero) -->
+            <!-- TOP ROW: eyebrow + time-horizon flow strip -->
             <div class="hero-top" style="display:flex;align-items:flex-start;justify-content:space-between;gap:24px;">
                 <div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;">
                     <span style="font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Total balance</span>
-                    {#if !historyLoaded}
-                        <!-- Reserve the today-net pill's slot (pill measures 23px) while history
-                             loads, so its late arrival fills this space instead of growing the hero. -->
-                        <div style="margin-top:2px;height:23px;" aria-hidden="true"></div>
-                    {:else if Math.abs(todayNet) >= 0.01}
-                        <div style="margin-top:2px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                            <Pill color={todayNet >= 0 ? 'sage' : 'coral'}>
-                                {todayNet >= 0 ? '+' : '−'} {roundToDecimals(Math.abs(todayNet))} today
-                            </Pill>
-                        </div>
-                    {/if}
+                    <!-- Flow strip has its own skeleton, so it reserves space during load
+                         without a separate placeholder (replaces the old today-net pill). -->
+                    <DashboardFlowStrip />
                 </div>
             </div>
 
