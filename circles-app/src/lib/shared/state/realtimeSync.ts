@@ -29,14 +29,26 @@ export function initAvatarStores(avatar: Avatar): void {
 }
 
 /**
- * Refreshes all stores after a WS reconnect, bypassing the dedup guards so
+ * Refreshes stores after a WS reconnect/liveness tick, bypassing the dedup guards so
  * that stale data is reloaded even though the avatar address hasn't changed.
+ *
+ * Transaction history and balances always refresh *quietly* — they re-subscribe and
+ * refetch page 1 in place without blanking to a skeleton, and no-op when nothing
+ * changed. This is what stops the periodic 15s liveness tick from flickering the UI.
+ *
+ * Contacts also rebind on every tick: re-init is non-destructive (the contact store
+ * keeps its current value until the new query resolves), so it doesn't flicker, and
+ * rebinding keeps live trust updates attached to the fresh event observable after an
+ * interval-detected reconnect.
+ *
+ * Group metrics can blank on re-init, so they only refresh on a `full` resync (tab
+ * refocus / network back online), not on the steady-state liveness interval.
  */
-function refreshAvatarStores(avatar: Avatar): void {
-  void refreshTransactionHistory();
+function refreshAvatarStores(avatar: Avatar, opts?: { full?: boolean }): void {
+  void refreshTransactionHistory({ quiet: true });
+  refreshBalanceStore(avatar, { quiet: true });
   refreshContactStore(avatar);
-  refreshBalanceStore(avatar);
-  if (avatarState.isGroup) {
+  if (opts?.full && avatarState.isGroup) {
     const sdk = get(circles);
     if (sdk) {
       void initGroupMetricsStore(sdk.rpc, avatar.address);
@@ -63,7 +75,7 @@ function isWebsocketConnected(sdk: Sdk | undefined): boolean | undefined {
  * `eth_subscribe` (reconnecting the socket first if needed), then we rebind the
  * stores to it and reload to catch up on anything missed while disconnected.
  */
-async function resync(): Promise<void> {
+async function resync(opts?: { full?: boolean }): Promise<void> {
   const avatar = avatarState.avatar;
   if (!avatar) return;
 
@@ -79,7 +91,7 @@ async function resync(): Promise<void> {
     console.warn('[realtimeSync] subscribeToEvents failed', e);
   }
   try {
-    refreshAvatarStores(avatar);
+    refreshAvatarStores(avatar, opts);
   } catch (e) {
     console.warn('[realtimeSync] refreshAvatarStores failed', e);
   }
@@ -99,20 +111,28 @@ export function initRealtimeSync(): () => void {
   // Start each subscription session unthrottled.
   lastResyncAt = 0;
 
+  // Tab refocus / network back online: do a FULL resync (also rebinds contacts +
+  // group metrics) since the user has just returned and a complete catch-up is wanted.
   const onVisible = () => {
-    if (document.visibilityState === 'visible') void resync();
+    if (document.visibilityState === 'visible') void resync({ full: true });
   };
-  const onOnline = () => void resync();
+  const onOnline = () => void resync({ full: true });
 
   document.addEventListener('visibilitychange', onVisible);
   window.addEventListener('online', onOnline);
 
   // Safety net for a clean idle-close while the tab is foregrounded: only
   // resyncs when the socket actually reports disconnected, so it doesn't leak
-  // subscriptions or reload on every tick.
+  // subscriptions or reload on every tick. This is a QUIET resync — transaction
+  // history and balances refetch in place without blanking, and no-op when nothing
+  // changed — so it never flickers the UI even though it can fire every interval.
   const interval = setInterval(() => {
     if (document.visibilityState !== 'visible') return;
-    if (isWebsocketConnected(get(circles)) === false) void resync();
+    // Fail safe: resync when the socket reports disconnected OR when the connection
+    // state is unknown (the SDK field is private/undocumented and may return undefined
+    // after an SDK change). `!== true` means an SDK shape change degrades to a harmless
+    // quiet resync rather than silently freezing the only background refresh path.
+    if (isWebsocketConnected(get(circles)) !== true) void resync();
   }, LIVENESS_CHECK_INTERVAL_MS);
 
   return () => {

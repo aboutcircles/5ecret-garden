@@ -2,7 +2,7 @@ import type { CirclesEvent, CirclesEventType } from '@aboutcircles/sdk-rpc';
 import type { TokenBalance } from '@aboutcircles/sdk-types';
 import { createEventStore } from '$lib/shared/state/eventStores/eventStoreFactory.svelte';
 import type { Avatar } from '@aboutcircles/sdk';
-import { writable } from 'svelte/store';
+import { writable, get } from 'svelte/store';
 import { writeBalances, makeScopeId } from '$lib/shared/cache';
 
 const refreshOnEvents: Set<CirclesEventType> = new Set<CirclesEventType>([
@@ -51,7 +51,7 @@ async function _loadBalancesFor(avatar: Avatar): Promise<TokenBalance[]> {
   }
 }
 
-export const initBalanceStore = (avatar: Avatar) => {
+export const initBalanceStore = (avatar: Avatar, opts?: { quiet?: boolean }) => {
   // Early return if already initialized for this avatar
   if (currentAvatarAddress === avatar.address) {
     return;
@@ -63,12 +63,18 @@ export const initBalanceStore = (avatar: Avatar) => {
     currentStoreUnsubscribe = undefined;
   }
 
-  _circlesBalances.set({
-    data: [],
-    next: async () => false,
-    ended: false,
-    initialLoaded: false,
-  });
+  // In quiet mode (realtime resync rebind) keep the current balances visible by
+  // seeding the new event store with them, instead of blanking to [] first — this
+  // prevents the hero balance from flickering on every liveness re-subscribe.
+  const seed = opts?.quiet ? get(_circlesBalances).data : [];
+  if (!opts?.quiet) {
+    _circlesBalances.set({
+      data: [],
+      next: async () => false,
+      ended: false,
+      initialLoaded: false,
+    });
+  }
 
   const _initialLoad = (): Promise<TokenBalance[]> => _loadBalancesFor(avatar);
 
@@ -90,7 +96,7 @@ export const initBalanceStore = (avatar: Avatar) => {
     _initialLoad, // Function to load the initial data
     _handleEvent, // Function to handle event-based updates
     _handleNextPage, // Function to handle loading the next page of data
-    [], // Initial empty data
+    seed, // Initial data (current balances in quiet mode, else empty)
     (a, b) => {
       // Comparator to sort the data by blockNumber, transactionIndex, and logIndex
       // Order by balance desc and return 1,0,-1
@@ -109,7 +115,7 @@ export const circlesBalances = _circlesBalances;
  * Force-refresh the balance store, bypassing the dedup guard.
  * Call this after WS reconnect so stale balances are reloaded.
  */
-export function refreshBalanceStore(avatar: Avatar): void {
+export function refreshBalanceStore(avatar: Avatar, opts?: { quiet?: boolean }): void {
   currentAvatarAddress = '';
-  initBalanceStore(avatar);
+  initBalanceStore(avatar, opts);
 }
