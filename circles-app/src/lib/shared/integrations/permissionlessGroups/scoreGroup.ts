@@ -13,8 +13,7 @@ import { getActiveConfig } from '$lib/shared/state/settings.svelte';
  * (chiado, rings).
  *
  * Reads use the standard chain RPC; the migration pathfinder uses the Circles
- * RPC (optionally overridden via `scoreGroupsRpcUrl`, since the path must be
- * routed by an indexer that knows the score-router/sink).
+ * RPC (the same one the rest of the app uses).
  */
 
 /** Whether the active network has score-group minting configured. */
@@ -40,13 +39,9 @@ export function getScoreGroup(): PermissionlessGroup | undefined {
     return undefined;
 
   // Hub/Lift reads need standard eth_call; the runner uses chainRpcUrl for the
-  // same reason, so mirror that here.
+  // same reason, so mirror that here. The migration pathfinder reads from
+  // circlesRpcUrl — the same RPC the rest of the app uses.
   const rpcUrl = cfg.chainRpcUrl ?? cfg.circlesRpcUrl;
-  // The pathfinder (migration) reads from circlesRpcUrl; allow a dedicated
-  // override for the score-group indexer.
-  const circlesConfig = cfg.scoreGroupsRpcUrl
-    ? { ...cfg, circlesRpcUrl: cfg.scoreGroupsRpcUrl }
-    : cfg;
 
   const key = [
     cfg.scoreGatedGroupAddress,
@@ -54,7 +49,7 @@ export function getScoreGroup(): PermissionlessGroup | undefined {
     cfg.liftERC20Address,
     cfg.scoreGroupsBackendUrl,
     rpcUrl,
-    circlesConfig.circlesRpcUrl,
+    cfg.circlesRpcUrl,
   ].join('|');
 
   if (cached?.key === key) return cached.group;
@@ -65,7 +60,7 @@ export function getScoreGroup(): PermissionlessGroup | undefined {
     liftERC20Address: cfg.liftERC20Address,
     backendBaseUrl: cfg.scoreGroupsBackendUrl,
     rpcUrl,
-    circlesConfig,
+    circlesConfig: cfg,
   });
   cached = { key, group };
   return group;

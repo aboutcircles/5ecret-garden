@@ -104,8 +104,12 @@
         ($circlesBalances?.data?.length ?? 0) > 0 || ($circlesBalances?.ended ?? false),
     );
 
-    function openBalances() {
-        popupControls.open({ title: 'Balance breakdown', component: Balances, props: {} });
+    function openBalances(initialFilterType?: 'personal' | 'group') {
+        popupControls.open({
+            title: initialFilterType === 'group' ? 'Group balances' : initialFilterType === 'personal' ? 'Personal balances' : 'Balance breakdown',
+            component: Balances,
+            props: { initialFilterType },
+        });
     }
     function openSend() {
         openSendFlowPopup({ selectedAddress: undefined, amount: undefined, transitiveOnly: true });
@@ -185,7 +189,7 @@
 
             <!-- BIG NUMBER -->
             <button
-                onclick={openBalances}
+                onclick={() => openBalances()}
                 aria-label="Open balance breakdown"
                 class="btn-naked"
                 style="
@@ -208,12 +212,12 @@
                 {#if !balanceLoaded}
                     <span class="balance-skel" style="display:inline-block;width:200px;height:14px;background:rgba(15,10,30,0.06);border-radius:7px;"></span>
                 {:else}
-                <button onclick={openBalances} class="btn-naked" style="background:transparent;border:0;padding:0;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                <button onclick={() => openBalances('personal')} class="btn-naked" style="background:transparent;border:0;padding:0;cursor:pointer;display:flex;align-items:center;gap:6px;">
                     <span style="width:6px;height:6px;border-radius:3px;background:{T.coral};display:inline-block;"></span>
                     <span style="font-size:13px;color:{T.inkBody};"><b style="color:{T.ink};">{personalToken}</b> people</span>
                 </button>
                 <span style="color:{T.inkFaint};">·</span>
-                <button onclick={openBalances} class="btn-naked" style="background:transparent;border:0;padding:0;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                <button onclick={() => openBalances('group')} class="btn-naked" style="background:transparent;border:0;padding:0;cursor:pointer;display:flex;align-items:center;gap:6px;">
                     <span style="width:6px;height:6px;border-radius:3px;background:{T.primary};display:inline-block;"></span>
                     <span style="font-size:13px;color:{T.inkBody};"><b style="color:{T.ink};">{groupToken}</b> groups</span>
                 </button>
