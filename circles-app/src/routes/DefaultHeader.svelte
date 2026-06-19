@@ -12,6 +12,7 @@
   import { dev } from '$app/environment';
   import { popupControls, popupState } from '$lib/shared/state/popup';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
+  import { canCreateInviteLinks } from '$lib/areas/invites/data/canCreateInviteLinks';
   import GlobalAvatarSearchPopup from '$lib/shared/ui/avatar-search/GlobalAvatarSearchPopup.svelte';
   import {
     basketCount,
@@ -153,6 +154,9 @@
       </svg>
     </summary>
     <ul style="position:absolute;right:0;top:calc(100% + 6px);z-index:1;width:256px;background:#FFFFFF;border-radius:14px;box-shadow:0 4px 24px rgba(15,10,30,0.12);border:1px solid rgba(31,17,70,0.08);padding:8px;list-style:none;margin:0;">
+      {#if canCreateInviteLinks(avatarState.avatar)}
+        <li><a class="defaultheader-link" href="/invites">Invite links</a></li>
+      {/if}
       <li>
         <a class="defaultheader-link" href="/settings">Settings</a>
         <ul style="list-style:none;padding:0;margin:0;">
