@@ -1,4 +1,5 @@
 import { writable } from 'svelte/store';
+import { isUserRejection } from '$lib/shared/utils/errorHandler';
 
 export type Task<T> = {
   name: string;
@@ -69,6 +70,14 @@ export async function runTask<T>(task: Task<T>): Promise<T> {
     pushCompleted(task.name, result);
     return result;
   } catch (e) {
+    // A wallet/user rejection is an intentional cancellation, not a failure —
+    // never open the error dialog for it (this was throwing users to a blank
+    // "Error" screen after rejecting a signature). Re-throw so callers can react.
+    if (isUserRejection(e)) {
+      console.info(`Task cancelled by user: ${task.name}`);
+      throw e;
+    }
+
     console.error(`Task errored: ${task.name}`, e);
 
     if (e instanceof Error) {
