@@ -61,19 +61,22 @@ function mergeLeadingPage(
   current.forEach((r, i) => indexByKey.set(keyOf(r), i));
 
   const newRows: ExtendedTransactionRow[] = [];
-  let healed = false;
+  const heals = new Map<number, ExtendedTransactionRow>();
   for (const row of pageOne) {
     const existingIdx = indexByKey.get(keyOf(row));
     if (existingIdx === undefined) {
       newRows.push(row);
     } else if (current[existingIdx].circles !== row.circles) {
-      current[existingIdx] = row; // heal amount correction in place
-      healed = true;
+      heals.set(existingIdx, row); // amount correction to heal
     }
   }
 
-  if (newRows.length === 0 && !healed) return null;
-  return [...newRows, ...current];
+  if (newRows.length === 0 && heals.size === 0) return null;
+
+  // Build a fresh array — never mutate `current` in place, since the caller passes the
+  // live store value and `await`s a profile prefetch before committing the update.
+  const base = heals.size > 0 ? current.map((r, i) => heals.get(i) ?? r) : current;
+  return [...newRows, ...base];
 }
 
 /**
@@ -732,12 +735,17 @@ async function loadNextPage(opts?: { replace?: boolean }): Promise<boolean> {
 
       return true;
     } else {
-      hasMore = false;
-      _transactionHistory.update((state) => ({
-        ...state,
-        ended: true,
-        isLoading: false,
-      }));
+      // An empty page-1 result during a quiet `replace` peek is almost always a transient
+      // RPC hiccup, not a genuinely-empty history — a background liveness/event refresh
+      // must not terminate pagination. Only an initial/append fetch may mark the list ended.
+      if (!replace) {
+        hasMore = false;
+        _transactionHistory.update((state) => ({
+          ...state,
+          ended: true,
+          isLoading: false,
+        }));
+      }
       return false;
     }
   } catch (error) {
@@ -748,11 +756,16 @@ async function loadNextPage(opts?: { replace?: boolean }): Promise<boolean> {
       context: 'transaction',
       notify: false,
     });
-    _transactionHistory.update((state) => ({
-      ...state,
-      ended: true,
-      isLoading: false,
-    }));
+    // A background quiet refresh that errors must NOT terminate pagination or disturb the
+    // list — keep the existing data, `ended` flag and cursor so the next successful poll,
+    // event or append simply recovers. Only a foreground fetch surfaces the ended state.
+    if (!replace) {
+      _transactionHistory.update((state) => ({
+        ...state,
+        ended: true,
+        isLoading: false,
+      }));
+    }
     return false;
   } finally {
     isLoading = false;
@@ -776,6 +789,12 @@ function subscribeToTransactionEvents(avatar: Avatar): void {
     txEventUnsubscribe();
     txEventUnsubscribe = undefined;
   }
+  // Drop any debounce queued against the previous subscription/avatar so it can't fire a
+  // stray refetch after a rebind.
+  if (txEventDebounceTimer) {
+    clearTimeout(txEventDebounceTimer);
+    txEventDebounceTimer = undefined;
+  }
   try {
     txEventUnsubscribe = avatar.events.subscribe((event: CirclesEvent) => {
       if (!refreshOnTxEvents.has(event.$event)) return;
@@ -790,7 +809,9 @@ function subscribeToTransactionEvents(avatar: Avatar): void {
       }, TX_EVENT_DEBOUNCE_MS);
     });
   } catch (e) {
-    console.warn('[TxHistory] failed to subscribe to events', e);
+    // Subscription failed: the list falls back to the realtimeSync liveness/visibility
+    // resync (which also rebinds here), so it degrades to poll-driven rather than frozen.
+    console.error('[TxHistory] failed to subscribe to events', e);
   }
 }
 
