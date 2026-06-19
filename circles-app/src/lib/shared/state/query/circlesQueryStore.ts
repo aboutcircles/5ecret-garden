@@ -53,19 +53,63 @@ export async function createCirclesQueryStore<T extends EventRow>(
   let circlesQuery = await circlesQueryFactory();
 
   /**
-   * Merges two arrays of event rows, ensuring no duplicates based on unique keys.
+   * Compares two rows by value to decide whether a same-key row needs healing. Runs only
+   * on a key collision (a re-fetched row already in the list), which for the current
+   * consumers is the single full-list contacts snapshot — never the paginated group/member
+   * rows, whose keys are distinct. JSON serialisation is the pragmatic deep-compare here;
+   * a non-serialisable row falls back to "changed" so a real correction is never swallowed.
+   */
+  function _rowsEqual(a: T, b: T): boolean {
+    if (a === b) return true;
+    try {
+      // bigint replacer: enriched contact rows can carry bigint fields (avatarInfo), which
+      // a bare JSON.stringify would throw on — handle them so equality (and the no-flicker
+      // path) still works instead of falling through to "changed" on every event. Wrap in
+      // an object (not a string) so a bigint 5n can never serialise equal to a string "5n".
+      const replacer = (_k: string, v: unknown) =>
+        typeof v === 'bigint' ? { __bigint: v.toString() } : v;
+      return JSON.stringify(a, replacer) === JSON.stringify(b, replacer);
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Merges new rows into the current list:
+   *  - a key not yet present is appended (pagination / a newly-trusted contact);
+   *  - a key already present whose content changed heals the existing row in place —
+   *    surfacing a correction, and (for the single-snapshot contacts store) letting an
+   *    untrust shrink the list live instead of leaving the stale row behind;
+   *  - when nothing was appended and nothing healed, the SAME array reference is returned
+   *    so the store re-emit is a no-op for keyed lists (no flicker / needless re-render).
+   * It never drops a key absent from `newData`, so the merge stays additive — a partial
+   * refetch can't blank already-loaded rows.
    *
    * @param {T[]} currentData - The current array of event rows.
    * @param {T[]} newData - The new array of event rows to be merged.
-   * @returns {T[]} - The merged array of event rows.
+   * @returns {T[]} - The merged array (or `currentData` unchanged when nothing changed).
    */
   function _mergeData(currentData: T[], newData: T[]): T[] {
-    const transactionKeys = new Set(
-      currentData.map((tx) => getKeyFromItem(tx))
-    );
-    return currentData.concat(
-      newData.filter((tx) => !transactionKeys.has(getKeyFromItem(tx)))
-    );
+    if (newData.length === 0) return currentData;
+
+    const indexByKey = new Map<string, number>();
+    currentData.forEach((tx, i) => indexByKey.set(getKeyFromItem(tx), i));
+
+    const appended: T[] = [];
+    const heals = new Map<number, T>();
+    for (const tx of newData) {
+      const idx = indexByKey.get(getKeyFromItem(tx));
+      if (idx === undefined) {
+        appended.push(tx);
+      } else if (!_rowsEqual(currentData[idx], tx)) {
+        heals.set(idx, tx);
+      }
+    }
+
+    if (appended.length === 0 && heals.size === 0) return currentData;
+    const base =
+      heals.size > 0 ? currentData.map((row, i) => heals.get(i) ?? row) : currentData;
+    return base.concat(appended);
   }
 
   /**
@@ -115,13 +159,11 @@ export async function createCirclesQueryStore<T extends EventRow>(
   ): Promise<T[]> {
     const refreshedQuery = await circlesQueryFactory();
     const updateQuery = refreshedQuery.rows || [];
-    const merged = _mergeData(currentData, updateQuery);
-    // _mergeData only ever appends new-key rows (it never rewrites an existing row), so an
-    // unchanged length means nothing was added. Return the same reference in that case so
-    // the store re-emit is a no-op for keyed lists — no flicker / needless re-render when
-    // no rows were added. (In-place corrections to an already-listed row are not surfaced
-    // here either way; that is pre-existing additive-merge behaviour, not changed here.)
-    return merged.length === currentData.length ? currentData : merged;
+    // _mergeData appends new-key rows, heals same-key rows whose content changed, and
+    // returns the SAME reference when neither happened — so an unchanged refetch is a
+    // no-op re-emit (no flicker) while a correction (or an untrust shrinking the single
+    // contacts snapshot) now surfaces instead of being silently dropped.
+    return _mergeData(currentData, updateQuery);
   }
 
   /**

@@ -26,6 +26,7 @@ import { isHumanType, isGroupType, isOrganizationType } from '$lib/shared/utils/
 import { withRetry, isTransientError } from '$lib/shared/utils/retry';
 import { EoaBrowserRunner } from '$lib/shared/integrations/wallet/EoaBrowserRunner';
 import { clearAll as clearCache } from '$lib/shared/cache';
+import { teardownTransactionHistoryStore } from '$lib/shared/state/transactionHistory';
 
 export const wallet = writable<ContractRunner | undefined>();
 
@@ -398,7 +399,14 @@ export async function clearSession() {
   const connectorId = connectorState.id || localStorage.getItem('connectorId');
   const connector = getConnectors(config).find((c) => c.id == connectorId);
   if (connector) {
-    await disconnect(config, { connector: connector });
+    // A wallet/connector that rejects on disconnect must not abort the rest of teardown —
+    // otherwise the avatar's event subscription + timers (released below) would leak and a
+    // re-login could hit the dedup guard. Swallow the disconnect error and continue.
+    try {
+      await disconnect(config, { connector: connector });
+    } catch (e) {
+      console.warn('[Wallet] disconnect failed during clearSession; continuing teardown', e);
+    }
     localStorage.removeItem('connectorId');
   }
   // Reset connector state
@@ -431,6 +439,9 @@ export async function clearSession() {
     privateKey: undefined,
   });
   circles.set(undefined);
+  // The transaction-history store holds its event subscription + timers at module scope,
+  // so release them explicitly (the balance/contacts stores self-clean on unmount).
+  teardownTransactionHistoryStore();
   CirclesStorage.getInstance().clear();
   void clearCache();
   await goto('/');

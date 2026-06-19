@@ -35,6 +35,24 @@ function parseNumericValue(raw: unknown): number {
 }
 
 /**
+ * Has any display-relevant field of an already-listed row been corrected by a re-fetch?
+ * `circles` (the amount) is the most common backfill, but a late-arriving event type,
+ * counterparty (from/to), operator, group or timestamp also changes how the row renders
+ * (its label, direction and grouping), so heal on any of them rather than amount alone.
+ */
+function rowChanged(a: ExtendedTransactionRow, b: ExtendedTransactionRow): boolean {
+  return (
+    a.circles !== b.circles ||
+    a.eventType !== b.eventType ||
+    a.from !== b.from ||
+    a.to !== b.to ||
+    a.operator !== b.operator ||
+    a.group !== b.group ||
+    a.timestamp !== b.timestamp
+  );
+}
+
+/**
  * Merge a freshly-fetched page 1 into the currently-displayed rows for a quiet
  * (event-driven or liveness) refresh, WITHOUT tearing the list down to a skeleton:
  *
@@ -66,8 +84,8 @@ function mergeLeadingPage(
     const existingIdx = indexByKey.get(keyOf(row));
     if (existingIdx === undefined) {
       newRows.push(row);
-    } else if (current[existingIdx].circles !== row.circles) {
-      heals.set(existingIdx, row); // amount correction to heal
+    } else if (rowChanged(current[existingIdx], row)) {
+      heals.set(existingIdx, row); // backfilled/corrected fields → heal in place
     }
   }
 
@@ -132,6 +150,15 @@ const refreshOnTxEvents = new Set<CirclesEventType>([
 ]);
 let txEventUnsubscribe: (() => void) | undefined;
 let txEventDebounceTimer: ReturnType<typeof setTimeout> | undefined;
+
+// Self-heal a failed `avatar.events.subscribe()`. A subscribe error while the websocket
+// still reports connected would not trip the disconnect-gated liveness poll, so the list
+// could otherwise stay frozen until a tab refocus. Retry a bounded number of times; if it
+// keeps failing, realtimeSync's visibility/online resync remains the final safety net.
+const TX_SUBSCRIBE_RETRY_MS = 2_000;
+const TX_SUBSCRIBE_MAX_RETRIES = 3;
+let txSubscribeRetries = 0;
+let txSubscribeRetryTimer: ReturnType<typeof setTimeout> | undefined;
 
 // Profile cache for enriched transaction participants
 const enrichedProfileCache = new Map<string, { name?: string; previewImageUrl?: string }>();
@@ -784,7 +811,7 @@ async function loadNextPage(opts?: { replace?: boolean }): Promise<boolean> {
  * reconnect hands out a fresh `avatar.events` observable and the previous one goes
  * silent, so the old subscription would otherwise never fire again.
  */
-function subscribeToTransactionEvents(avatar: Avatar): void {
+function subscribeToTransactionEvents(avatar: Avatar, opts?: { isRetry?: boolean }): void {
   if (txEventUnsubscribe) {
     txEventUnsubscribe();
     txEventUnsubscribe = undefined;
@@ -794,6 +821,17 @@ function subscribeToTransactionEvents(avatar: Avatar): void {
   if (txEventDebounceTimer) {
     clearTimeout(txEventDebounceTimer);
     txEventDebounceTimer = undefined;
+  }
+  // Cancel a pending retry from an earlier failed attempt — this (re)subscribe supersedes it.
+  if (txSubscribeRetryTimer) {
+    clearTimeout(txSubscribeRetryTimer);
+    txSubscribeRetryTimer = undefined;
+  }
+  // An externally-driven (re)subscribe — initial mount or a realtimeSync visibility/online/
+  // liveness rebind — is a fresh attempt, so restore the full fast-retry budget. Only the
+  // internal retry timer (isRetry) preserves the running count, so the burst stays bounded.
+  if (!opts?.isRetry) {
+    txSubscribeRetries = 0;
   }
   try {
     txEventUnsubscribe = avatar.events.subscribe((event: CirclesEvent) => {
@@ -808,10 +846,19 @@ function subscribeToTransactionEvents(avatar: Avatar): void {
         void loadTransferAnnotations(a, true);
       }, TX_EVENT_DEBOUNCE_MS);
     });
+    txSubscribeRetries = 0; // live again — reset the retry budget
   } catch (e) {
-    // Subscription failed: the list falls back to the realtimeSync liveness/visibility
-    // resync (which also rebinds here), so it degrades to poll-driven rather than frozen.
     console.error('[TxHistory] failed to subscribe to events', e);
+    // Don't degrade silently to poll-only: retry a bounded number of times so a connected
+    // socket whose subscribe call threw still recovers without waiting for a tab refocus.
+    if (txSubscribeRetries < TX_SUBSCRIBE_MAX_RETRIES) {
+      txSubscribeRetries++;
+      txSubscribeRetryTimer = setTimeout(() => {
+        txSubscribeRetryTimer = undefined;
+        const a = currentAvatar;
+        if (a) subscribeToTransactionEvents(a, { isRetry: true });
+      }, TX_SUBSCRIBE_RETRY_MS);
+    }
   }
 }
 
@@ -1018,4 +1065,43 @@ export async function refreshTransactionHistory(opts?: { quiet?: boolean }): Pro
 
   // Refetch from page 1
   await loadNextPage();
+}
+
+/**
+ * Tear down the realtime transaction subscription and reset module state on logout.
+ *
+ * The balance and contacts stores self-clean via their Svelte `readable` stop-callback
+ * when their last component subscriber unmounts, but this store holds its event
+ * subscription (and debounce/retry timers) at module scope, so it must be released
+ * explicitly — otherwise the old avatar's subscription and timers outlive the session.
+ * Clearing `currentAvatar`/`currentAvatarAddress` also lets a re-login (even to the same
+ * avatar) re-initialise cleanly past the dedup guard in `initTransactionHistoryStore`.
+ */
+export function teardownTransactionHistoryStore(): void {
+  if (txEventUnsubscribe) {
+    txEventUnsubscribe();
+    txEventUnsubscribe = undefined;
+  }
+  if (txEventDebounceTimer) {
+    clearTimeout(txEventDebounceTimer);
+    txEventDebounceTimer = undefined;
+  }
+  if (txSubscribeRetryTimer) {
+    clearTimeout(txSubscribeRetryTimer);
+    txSubscribeRetryTimer = undefined;
+  }
+  txSubscribeRetries = 0;
+  currentAvatar = null;
+  currentAvatarAddress = '';
+  isLoading = false;
+  nextCursor = null;
+  hasMore = true;
+  resetGroupedCache();
+  resetTransferAnnotations();
+  _transactionHistory.set({
+    data: [],
+    next: async () => false,
+    ended: false,
+    isLoading: false,
+  });
 }
