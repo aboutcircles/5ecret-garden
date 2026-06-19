@@ -467,6 +467,17 @@
         return 'Transaction';
     });
 
+    // Direction text must agree with the signed header amount. Deriving "sent" purely from
+    // `item.from === me` contradicts the headline for self-counterparty / synthesized rows
+    // (e.g. a positive "received" headline while the direction said "You sent this").
+    const directionLabel = $derived(
+        headerNetAmount < 0 ? 'You sent this'
+        : headerNetAmount > 0 ? 'You received this'
+        // Net zero can be a true self-transfer OR a pass-through hop (from ≠ to), so avoid
+        // asserting "Self-transfer"; "No net change" is honest for both.
+        : 'No net change'
+    );
+
     const nonBurnTransfers = $derived.by(() =>
         aggregatedTransfers.filter(t => !isZeroAddress(t.to))
     );
@@ -710,7 +721,7 @@
                 </div>
                 <div style="margin-top:10px;padding-top:10px;border-top:1px solid {T.hairlineSoft};display:flex;justify-content:space-between;align-items:center;">
                     <span style="font-size:11px;color:{T.inkMuted};font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">Direction</span>
-                    <span style="font-size:12.5px;color:{T.inkBody};font-weight:540;">{sent ? 'You sent this' : 'You received this'}</span>
+                    <span style="font-size:12.5px;color:{T.inkBody};font-weight:540;">{directionLabel}</span>
                 </div>
             {/if}
 
@@ -788,7 +799,7 @@
                             <Avatar address={t.from} view="small" clickable={true} />
                         {/if}
                     </div>
-                    <span style="flex-shrink:0;font-size:13px;font-weight:580;color:{T.ink};font-variant-numeric:tabular-nums;">
+                    <span style="flex-shrink:0;min-width:88px;text-align:right;font-size:13px;font-weight:580;color:{T.ink};font-variant-numeric:tabular-nums;white-space:nowrap;">
                         {formatAmount(t.amount)}<span style="color:{T.inkMuted};font-weight:540;margin-left:3px;">CRC</span>
                     </span>
                     <div style="flex-shrink:0;display:inline-flex;align-items:center;gap:6px;color:{T.inkMuted};">
@@ -831,7 +842,7 @@
                                     <Avatar address={t.from} view="small" clickable={true} />
                                 {/if}
                             </div>
-                            <span style="flex-shrink:0;font-size:13px;font-weight:580;color:{T.ink};font-variant-numeric:tabular-nums;">
+                            <span style="flex-shrink:0;min-width:88px;text-align:right;font-size:13px;font-weight:580;color:{T.ink};font-variant-numeric:tabular-nums;white-space:nowrap;">
                                 {formatAmount(t.amount)}<span style="color:{T.inkMuted};font-weight:540;margin-left:3px;">CRC</span>
                             </span>
                             <div style="flex-shrink:0;display:inline-flex;align-items:center;gap:6px;color:{T.inkMuted};">
