@@ -83,35 +83,44 @@ async function resync(opts?: { full?: boolean }): Promise<void> {
   if (now - lastResyncAt < MIN_RESYNC_INTERVAL_MS) return;
   lastResyncAt = now;
 
+  // TEMPORARY DIAGNOSTIC (remove after root-causing the WS reconnect): prod strips
+  // console.*, so record the reconnect lifecycle into globalThis.__rt to read via eval.
+  const _rec: Record<string, unknown> = {};
   try {
-    // WORKAROUND for an SDK bug in @aboutcircles/sdk (confirmed in 0.1.29 and the deployed
-    // 0.1.47): `CommonAvatar.subscribeToEvents()` is guarded by `if (this._hasSubscribed)
-    // return;` and `Sdk.getAvatar()` calls it once on load, setting the flag. When the
-    // realtime websocket later drops, every reconnect attempt here hits that guard and
-    // no-ops — so the socket is never re-opened and the app silently degrades to this 15s
-    // HTTP poll (the websocket status indicator stays red forever).
-    //
-    // The SDK never clears `_hasSubscribed` except on a thrown subscribe, and exposes no
-    // public "is the socket up?" or "force resubscribe" API. So when we detect the socket
-    // is down, clear the private flag ourselves and call subscribeToEvents again: that
-    // routes into `rpc.client.subscribe()`, which re-opens the websocket (it connects when
-    // `!websocketConnected`) and rebinds a fresh `avatar.events` observable. We only force
-    // this while the socket is actually disconnected, so a healthy connection is left alone
-    // (no churn). During an outage it retries each tick; the prior subscription was already
-    // dropped server-side when the socket closed, so re-subscribing is the correct recovery.
-    //
-    // This lives in the app rather than a patch-package patch because the SDK ships a single
-    // bundled `dist/index.js` and the repo's lockfile (0.1.29) disagrees with package.json
-    // (0.1.47), which would make a content-pinned patch unreliable. TODO: fix upstream so the
-    // guard also checks the live socket state, then drop this workaround.
+    const sdk: unknown = get(circles);
+    const a = avatar as unknown as {
+      _hasSubscribed?: boolean;
+      rpc?: { client?: { websocketConnected?: unknown } };
+    };
+    const storeClient = (sdk as { rpc?: { client?: { websocketConnected?: unknown } } })?.rpc
+      ?.client;
+    _rec.wsBefore = isWebsocketConnected(get(circles));
+    _rec.flagBefore = a?._hasSubscribed;
+    _rec.avatarHasRpcClient = !!a?.rpc?.client;
+    _rec.sameClientInstance = !!(storeClient && a?.rpc?.client && storeClient === a.rpc.client);
+    _rec.storeClientWs = storeClient?.websocketConnected;
+    _rec.avatarClientWs = a?.rpc?.client?.websocketConnected;
+
     if (isWebsocketConnected(get(circles)) !== true) {
-      (avatar as unknown as { _hasSubscribed?: boolean })._hasSubscribed = false;
+      a._hasSubscribed = false;
     }
-    await avatar.subscribeToEvents();
+    _rec.flagAfterReset = a?._hasSubscribed;
+    try {
+      await avatar.subscribeToEvents();
+      _rec.subscribeResult = 'ok';
+    } catch (e) {
+      _rec.subscribeResult =
+        'THROW: ' + ((e as Error)?.message || (e as Error)?.name || String(e));
+    }
+    _rec.wsAfter = isWebsocketConnected(get(circles));
+    _rec.avatarClientWsAfter = a?.rpc?.client?.websocketConnected;
   } catch (e) {
-    // Don't let a subscribe failure block the store rebind below — a stale
-    // observable is still better than empty stores.
-    console.warn('[realtimeSync] subscribeToEvents failed', e);
+    _rec.outerError = (e as Error)?.message || String(e);
+  } finally {
+    const g = globalThis as unknown as { __rt?: Array<Record<string, unknown>> };
+    g.__rt = g.__rt || [];
+    g.__rt.push(_rec);
+    if (g.__rt.length > 20) g.__rt.shift();
   }
   try {
     refreshAvatarStores(avatar, opts);
