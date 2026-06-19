@@ -27,13 +27,24 @@
     import Pill from '$lib/design-system/Pill.svelte';
 
     let mintableAmount: number = $state(0);
+    // Whether the (async) mintable check has resolved. Lets the dashboard RESERVE the
+    // nudge's slot while pending instead of letting it pop in and shove the activity list
+    // down once it resolves. Non-human avatars never mint, so they resolve immediately.
+    let mintableChecked: boolean = $state(false);
 
     $effect(() => {
         (async () => {
             const avatar = avatarState.avatar;
             if (avatar instanceof HumanAvatar) {
-                const result = await avatar.personalToken.getMintableAmount();
-                mintableAmount = result?.amount ? parseFloat(ethers.formatEther(result.amount)) : 0;
+                try {
+                    const result = await avatar.personalToken.getMintableAmount();
+                    mintableAmount = result?.amount ? parseFloat(ethers.formatEther(result.amount)) : 0;
+                } finally {
+                    mintableChecked = true;
+                }
+            } else {
+                mintableAmount = 0;
+                mintableChecked = true;
             }
         })();
     });
@@ -73,6 +84,15 @@
 
     const balanceLoaded = $derived(
         ($circlesBalances?.data?.length ?? 0) > 0 || ($circlesBalances?.ended ?? false),
+    );
+
+    // History is "settled" once it has rows, has ended (empty wallet), or is no longer
+    // loading. Used to reserve the today-net pill's slot until then, so the pill — which is
+    // derived from history and therefore arrives late — doesn't grow the hero on arrival.
+    const historyLoaded = $derived(
+        ($groupedTransactionHistory?.data?.length ?? 0) > 0 ||
+        ($groupedTransactionHistory?.ended ?? false) ||
+        !($groupedTransactionHistory?.isLoading ?? true),
     );
 
     function openBalances(initialFilterType?: 'personal' | 'group') {
@@ -152,7 +172,11 @@
             <div class="hero-top" style="display:flex;align-items:flex-start;justify-content:space-between;gap:24px;">
                 <div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;">
                     <span style="font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Total balance</span>
-                    {#if Math.abs(todayNet) >= 0.01}
+                    {#if !historyLoaded}
+                        <!-- Reserve the today-net pill's slot (pill measures 23px) while history
+                             loads, so its late arrival fills this space instead of growing the hero. -->
+                        <div style="margin-top:2px;height:23px;" aria-hidden="true"></div>
+                    {:else if Math.abs(todayNet) >= 0.01}
                         <div style="margin-top:2px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                             <Pill color={todayNet >= 0 ? 'sage' : 'coral'}>
                                 {todayNet >= 0 ? '+' : '−'} {roundToDecimals(Math.abs(todayNet))} today
@@ -182,8 +206,9 @@
                 </span>
             </button>
 
-            <!-- LEGEND DOTS -->
-            <div style="display:flex;align-items:center;gap:14px;margin-top:14px;flex-wrap:wrap;min-height:18px;">
+            <!-- LEGEND DOTS — min-height matches the loaded single-line height (24px) so the
+                 skeleton→content reveal is height-stable and doesn't nudge rows below it. -->
+            <div style="display:flex;align-items:center;gap:14px;margin-top:14px;flex-wrap:wrap;min-height:24px;">
                 {#if !balanceLoaded}
                     <span class="balance-skel" style="display:inline-block;width:200px;height:14px;background:rgba(15,10,30,0.06);border-radius:7px;"></span>
                 {:else}
@@ -233,7 +258,13 @@
         </div>
 
         <!-- ─── MINTABLE NUDGE ────────────────────────────────────────── -->
-        {#if mintableAmount >= 0.01}
+        {#if !mintableChecked}
+            <!-- Reserve the nudge's footprint (72px card + 14px margin) while the mintable
+                 check is pending, so a positive result fills this space rather than shoving
+                 the activity list down. Non-human avatars set mintableChecked immediately, so
+                 they never reserve. -->
+            <div style="margin-top:14px;height:72px;" aria-hidden="true"></div>
+        {:else if mintableAmount >= 0.01}
             <div style="
                 margin-top:14px;padding:14px 16px;border-radius:18px;
                 background:linear-gradient(160deg,{T.coralSoft} 0%,{T.lilacSoft} 100%);
