@@ -5,7 +5,6 @@
     import { T } from '$lib/design-system/tokens.js';
 
     const address = $derived(avatarState.avatar?.address ?? '');
-    const shortAddr = $derived(address ? `${address.slice(0, 6)}…${address.slice(-4)}` : '');
     const displayName = $derived(avatarState.profile?.name ?? 'My Wallet');
 
     let copied = $state(false);
@@ -55,7 +54,7 @@
         ">
             <div style="display:flex;flex-direction:column;gap:1px;flex:1;min-width:0;">
                 <span style="font-size:10.5px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Wallet address</span>
-                <span style="font-family:{T.fontMono};font-size:12.5px;color:{T.ink};font-weight:540;">{shortAddr}</span>
+                <span style="font-family:{T.fontMono};font-size:12.5px;color:{T.ink};font-weight:540;word-break:break-all;line-height:1.4;">{address}</span>
             </div>
             <button
                 type="button"
@@ -95,7 +94,7 @@
     <div style="display:flex;align-items:flex-start;gap:8px;padding:0 2px;">
         <Icon name="info" size={13} stroke={T.inkMuted} style="flex-shrink:0;margin-top:2px;" />
         <span style="font-size:11.5px;color:{T.inkMuted};line-height:1.5;">
-            Receiving CRC requires a trust path. People without trust can still scan to <b style="color:{T.inkBody};">start one</b>.
+            Receiving CRC requires a trust path. Someone who doesn't trust you yet can scan this code to <b style="color:{T.inkBody};">set up a trust connection</b>.
         </span>
     </div>
 </div>
