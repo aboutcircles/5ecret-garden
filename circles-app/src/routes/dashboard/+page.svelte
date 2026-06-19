@@ -25,6 +25,7 @@
     import { T } from '$lib/design-system/tokens.js';
     import Icon from '$lib/design-system/Icon.svelte';
     import DashboardFlowStrip from './DashboardFlowStrip.svelte';
+    import DashboardTrustCard from './DashboardTrustCard.svelte';
 
     let mintableAmount: number = $state(0);
     // Whether the (async) mintable check has resolved. Lets the dashboard RESERVE the
@@ -271,6 +272,9 @@
                 >Mint</button>
             </div>
         {/if}
+
+        <!-- ─── TRUST INSIGHTS ────────────────────────────────────────── -->
+        <DashboardTrustCard />
 
         <!-- ─── ACTIVITY HEADING ──────────────────────────────────────── -->
         <div style="margin-top:22px;margin-bottom:10px;padding:0 4px;">
