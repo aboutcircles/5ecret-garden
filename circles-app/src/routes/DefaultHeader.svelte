@@ -14,6 +14,7 @@
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { canCreateInviteLinks } from '$lib/areas/invites/data/canCreateInviteLinks';
   import GlobalAvatarSearchPopup from '$lib/shared/ui/avatar-search/GlobalAvatarSearchPopup.svelte';
+  import EnvironmentInfoPopup from '$lib/shared/ui/shell/EnvironmentInfoPopup.svelte';
   import {
     basketCount,
     ensureBasketCountSubscription,
@@ -27,6 +28,13 @@
       dismiss: 'backdrop',
       component: GlobalAvatarSearchPopup,
     });
+  }
+
+  // The desktop AppSidebar footer hosts the environment info; on mobile that sidebar is
+  // hidden, so expose the same popup from the header menu.
+  function openEnvInfo(): void {
+    closeMenu();
+    popupControls.open({ title: 'Environment', component: EnvironmentInfoPopup, props: {} });
   }
 
   const isMarketPage = $derived($page.url.pathname.startsWith('/market'));
@@ -188,6 +196,16 @@
       <li><a class="defaultheader-link" href="/terms">Terms of use</a></li>
       <li>
         <a class="defaultheader-link" href="/privacy-policy">Privacy policy</a>
+      </li>
+      <li>
+        <button
+          class="defaultheader-link"
+          type="button"
+          style="width:100%;text-align:left;background:transparent;border:0;cursor:pointer;"
+          onclick={openEnvInfo}
+        >
+          Environment
+        </button>
       </li>
       {#if dev}
         <li><a class="defaultheader-link" href="/kitchen-sink">Kitchen sink</a></li>
