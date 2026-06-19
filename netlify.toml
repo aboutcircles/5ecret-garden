@@ -12,7 +12,14 @@
   [context.deploy-preview.environment]
     NETLIFY_BUILD = "true"
     PUBLIC_ENVIRONMENT = "staging"
-    PUBLIC_CIRCLES_RPC_URL = "https://staging.circlesubi.network"
+    # circles.ts (gnosisConfig) reads these via import.meta.env.VITE_* (Vite env),
+    # NOT the SvelteKit PUBLIC_ namespace — they MUST be VITE_-prefixed to take effect.
+    # Point staging builds at the staging backends so previews exercise staging data
+    # (indexer RPC, chain RPC, and the score-groups backend per circles.ts). Trailing
+    # slash matches the prod defaults' format (SDK resolves endpoints relative to base).
+    VITE_CIRCLES_RPC_URL = "https://rpc.staging.aboutcircles.com/"
+    VITE_CHAIN_RPC_URL = "https://rpc.staging.aboutcircles.com/"
+    VITE_SCORE_GROUPS_BACKEND_URL = "https://rpc.staging.aboutcircles.com/score-groups"
     PUBLIC_PLAUSIBLE_DOMAIN = ""
 
 [context.branch-deploy]
@@ -21,7 +28,14 @@
   [context.branch-deploy.environment]
     NETLIFY_BUILD = "true"
     PUBLIC_ENVIRONMENT = "staging"
-    PUBLIC_CIRCLES_RPC_URL = "https://staging.circlesubi.network"
+    # circles.ts (gnosisConfig) reads these via import.meta.env.VITE_* (Vite env),
+    # NOT the SvelteKit PUBLIC_ namespace — they MUST be VITE_-prefixed to take effect.
+    # Point staging builds at the staging backends so previews exercise staging data
+    # (indexer RPC, chain RPC, and the score-groups backend per circles.ts). Trailing
+    # slash matches the prod defaults' format (SDK resolves endpoints relative to base).
+    VITE_CIRCLES_RPC_URL = "https://rpc.staging.aboutcircles.com/"
+    VITE_CHAIN_RPC_URL = "https://rpc.staging.aboutcircles.com/"
+    VITE_SCORE_GROUPS_BACKEND_URL = "https://rpc.staging.aboutcircles.com/score-groups"
     PUBLIC_PLAUSIBLE_DOMAIN = ""
 
 [context.production]
