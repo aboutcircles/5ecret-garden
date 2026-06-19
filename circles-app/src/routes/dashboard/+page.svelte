@@ -26,6 +26,7 @@
     import Icon from '$lib/design-system/Icon.svelte';
     import DashboardFlowStrip from './DashboardFlowStrip.svelte';
     import DashboardTrustCard from './DashboardTrustCard.svelte';
+    import DashboardSpendingCard from './DashboardSpendingCard.svelte';
 
     let mintableAmount: number = $state(0);
     // Whether the (async) mintable check has resolved. Lets the dashboard RESERVE the
@@ -275,6 +276,9 @@
 
         <!-- ─── TRUST INSIGHTS ────────────────────────────────────────── -->
         <DashboardTrustCard />
+
+        <!-- ─── MARKETPLACE SPENDING (renders only when there's spend) ─── -->
+        <DashboardSpendingCard />
 
         <!-- ─── ACTIVITY HEADING ──────────────────────────────────────── -->
         <div style="margin-top:22px;margin-bottom:10px;padding:0 4px;">

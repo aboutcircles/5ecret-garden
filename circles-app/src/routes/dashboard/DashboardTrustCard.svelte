@@ -101,15 +101,14 @@
         <!-- Empty state -->
         <div style="margin-top:8px;font-size:13px;color:{T.inkMuted};">No trust connections yet</div>
     {:else}
-        <!-- Counts -->
-        <div style="display:flex;align-items:flex-start;gap:18px;margin-top:10px;flex-wrap:wrap;">
+        <!-- Counts — each metric on ONE row (dot · number · label) so the card stays
+             compact and visually matches the balance legend's inline style. -->
+        <div style="display:flex;align-items:center;gap:16px;margin-top:10px;flex-wrap:wrap;">
             {#each metrics as m}
-                <div style="display:flex;flex-direction:column;gap:3px;min-width:0;">
-                    <span style="font-family:{T.fontDisplay};font-size:22px;color:{T.ink};line-height:1;letter-spacing:-0.015em;font-weight:400;">{m.value}</span>
-                    <div style="display:flex;align-items:center;gap:5px;">
-                        <span style="width:6px;height:6px;border-radius:3px;background:{m.dot};display:inline-block;flex-shrink:0;"></span>
-                        <span style="font-size:11.5px;color:{T.inkMuted};white-space:nowrap;">{m.label}</span>
-                    </div>
+                <div style="display:flex;align-items:center;gap:6px;min-width:0;">
+                    <span style="width:6px;height:6px;border-radius:3px;background:{m.dot};display:inline-block;flex-shrink:0;"></span>
+                    <span style="font-family:{T.fontDisplay};font-size:18px;color:{T.ink};line-height:1;letter-spacing:-0.015em;font-weight:400;">{m.value}</span>
+                    <span style="font-size:12px;color:{T.inkMuted};white-space:nowrap;">{m.label}</span>
                 </div>
             {/each}
         </div>

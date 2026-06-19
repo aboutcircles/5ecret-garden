@@ -27,6 +27,7 @@ import { withRetry, isTransientError } from '$lib/shared/utils/retry';
 import { EoaBrowserRunner } from '$lib/shared/integrations/wallet/EoaBrowserRunner';
 import { clearAll as clearCache } from '$lib/shared/cache';
 import { teardownTransactionHistoryStore } from '$lib/shared/state/transactionHistory';
+import { clearGatewaySpendingStore } from '$lib/shared/state/gatewaySpending.svelte';
 
 export const wallet = writable<ContractRunner | undefined>();
 
@@ -442,6 +443,7 @@ export async function clearSession() {
   // The transaction-history store holds its event subscription + timers at module scope,
   // so release them explicitly (the balance/contacts stores self-clean on unmount).
   teardownTransactionHistoryStore();
+  clearGatewaySpendingStore();
   CirclesStorage.getInstance().clear();
   void clearCache();
   await goto('/');

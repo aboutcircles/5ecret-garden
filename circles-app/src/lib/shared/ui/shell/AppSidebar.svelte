@@ -24,14 +24,20 @@
   import Tooltip from '$lib/shared/ui/primitives/Tooltip.svelte';
   import EnvironmentInfoPopup from '$lib/shared/ui/shell/EnvironmentInfoPopup.svelte';
 
-  // "Invite" is only meaningful for human v2 avatars, so it's inserted
-  // conditionally rather than living in the static base list.
+  // "Invite" is only meaningful for human v2 avatars. While the avatar is still
+  // restoring (`avatar` undefined) we OPTIMISTICALLY reserve its slot — the common
+  // case is a human avatar that can invite, so showing it during load eliminates the
+  // pop-in that previously inserted Invite mid-nav and shoved Groups/Market down on
+  // resolve. A non-human avatar (org/group) simply drops the slot once resolved (rare).
+  const showInvite = $derived(
+    !avatarState.avatar || canCreateInviteLinks(avatarState.avatar)
+  );
   const NAV_ITEMS = $derived.by(() => {
     const items = [
       { label: 'Wallet',   href: '/dashboard', icon: LWallet },
       { label: 'Contacts', href: '/contacts',  icon: LUsers },
     ];
-    if (canCreateInviteLinks(avatarState.avatar)) {
+    if (showInvite) {
       items.push({ label: 'Invite', href: '/invites', icon: LUserPlus });
     }
     items.push(

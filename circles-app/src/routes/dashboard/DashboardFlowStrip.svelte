@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { goto } from '$app/navigation';
     import { avatarState } from '$lib/shared/state/avatar.svelte';
     import { roundToDecimals } from '$lib/shared/utils/shared';
     import { T } from '$lib/design-system/tokens.js';
@@ -176,6 +177,21 @@
                 </div>
             {/each}
         </div>
+    {/if}
+
+    <!-- Drill-down entry: the /insights page expands exactly this net + buckets into
+         per-leg detail (plus minting + marketplace spend). Always shown once loaded so the
+         page is reachable even when there's no marketplace spend (the spending card hides). -->
+    {#if !loading && !errored}
+        <button
+            onclick={() => goto('/insights')}
+            class="flow-insights-link"
+            style="
+                align-self:flex-start;margin-top:2px;padding:2px 0;background:transparent;border:0;
+                cursor:pointer;font-family:{T.fontSans};font-size:12px;font-weight:560;
+                color:{T.primaryDeep};display:inline-flex;align-items:center;gap:3px;
+            "
+        >Insights ›</button>
     {/if}
 </div>
 

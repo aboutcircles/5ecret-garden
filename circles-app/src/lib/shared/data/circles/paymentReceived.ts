@@ -57,16 +57,39 @@ export function formatCrcAmount(amountWei: bigint | string): string {
 }
 
 /**
- * Fetch all PaymentReceived events for a given payee address.
- * Public, no auth required. Mirrors marketplaceExplorer.html:1151-1154.
+ * Fetch all PaymentReceived events for a given payee address (the SELLER side — what
+ * this address has been paid). Public, no auth required.
  */
 export async function fetchPaymentsByPayee(
   sdk: Sdk,
   payee: string,
   limit: number = 200
 ): Promise<PaymentRow[]> {
-  if (!sdk?.rpc || !payee) return [];
-  if (!ethers.isAddress(payee)) return [];
+  return fetchPaymentsByColumn(sdk, 'payee', payee, limit);
+}
+
+/**
+ * Fetch all PaymentReceived events for a given payer address (the BUYER side — what this
+ * address has spent through payment gateways / the marketplace). Same table, filtered on
+ * `payer` instead of `payee`. Public, no auth required.
+ */
+export async function fetchPaymentsByPayer(
+  sdk: Sdk,
+  payer: string,
+  limit: number = 200
+): Promise<PaymentRow[]> {
+  return fetchPaymentsByColumn(sdk, 'payer', payer, limit);
+}
+
+/** Shared PaymentReceived fetch, filtered on a single address column (`payer` or `payee`). */
+async function fetchPaymentsByColumn(
+  sdk: Sdk,
+  column: 'payer' | 'payee',
+  address: string,
+  limit: number
+): Promise<PaymentRow[]> {
+  if (!sdk?.rpc || !address) return [];
+  if (!ethers.isAddress(address)) return [];
 
   const resp: RpcQueryResult = await sdk.rpc.client.call('circles_query', [
     {
@@ -77,8 +100,8 @@ export async function fetchPaymentsByPayee(
         {
           Type: 'FilterPredicate',
           FilterType: 'Equals',
-          Column: 'payee',
-          Value: payee.toLowerCase(),
+          Column: column,
+          Value: address.toLowerCase(),
         },
       ],
       Order: [{ Column: 'blockNumber', SortOrder: 'DESC' }],
@@ -108,6 +131,11 @@ export async function fetchPaymentsByPayee(
       const gwRaw = r[idxGw];
       if (!payerRaw || !payeeRaw || !gwRaw) continue;
 
+      // A missing/zero timestamp would render as garbage ("56 years ago") and sort to the
+      // top of any window list — drop it like the flow engine drops timestamp-less legs.
+      const timestamp = Number(r[idxTs] ?? 0);
+      if (!(timestamp > 0)) continue;
+
       const data = String(r[idxData] ?? '');
       let amount: bigint = 0n;
       try {
@@ -123,7 +151,7 @@ export async function fetchPaymentsByPayee(
         amount,
         data,
         dataDecoded: hexToUtf8(data),
-        timestamp: Number(r[idxTs] ?? 0),
+        timestamp,
         tx: String(r[idxTx] ?? ''),
         blockNumber: Number(r[idxBn] ?? 0),
       });
