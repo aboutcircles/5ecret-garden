@@ -8,6 +8,7 @@
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { isHumanAvatar } from '$lib/shared/utils/avatarHelpers';
   import { ethers } from 'ethers';
+  import ScoreGroupMintSection from '$lib/areas/minting/ui/ScoreGroupMintSection.svelte';
 
   interface Props {
     initialAmount: number;
@@ -140,6 +141,11 @@
       Mint {displayAmount} CRC
     {/if}
   </button>
+
+  <!-- Optional: mint group CRC split by reputation score (Safe wallets only).
+       Renders itself only when the active network has score groups configured
+       and the avatar is eligible (score > 0 and has issuance to mint). -->
+  <ScoreGroupMintSection onMinted={refreshMintable} />
 
 </div>
 

@@ -20,6 +20,25 @@ export type CirclesConfig = BaseCirclesConfig & {
   // The metrics-exporter currently only serves from the staging subdomain even in prod use.
   /** CRC→EUR/xDAI pricing endpoint (metrics-exporter) */
   crcPricingApi?: string;
+  /**
+   * Score-groups (reputation-gated mint) backend base URL, e.g.
+   * `https://host/score-groups` (no trailing slash). Serves the score + Merkle
+   * proof consumed by the score-gated mint policy. Undefined → score-group
+   * minting is unavailable on this network.
+   */
+  scoreGroupsBackendUrl?: string;
+  /**
+   * Score-gated group avatar address (the reputation group users mint against).
+   * Undefined → score-group minting is unavailable on this network.
+   */
+  scoreGatedGroupAddress?: string;
+  /**
+   * Optional override for the Circles RPC used by the score-group migration
+   * pathfinder. The migration path must be routed by an indexer that knows the
+   * score-router/sink, or it reverts at the sink. Left `undefined` here; the
+   * integration falls back to `circlesRpcUrl` when this is not set.
+   */
+  scoreGroupsRpcUrl?: string;
 };
 
 export const chiadoConfig: { production: CirclesConfig; rings: CirclesConfig } =
@@ -116,6 +135,17 @@ export const gnosisConfig: { production: CirclesConfig; rings: CirclesConfig } =
       crcPricingApi:
         import.meta.env.VITE_CRC_PRICING_API ||
         'https://rpc.staging.aboutcircles.com/metrics-api/pricing',
+      // Score-groups (reputation-gated mint). Backend + RPC are overridable per
+      // deployment via env vars (dev/staging → staging backend); defaults are
+      // the production Gnosis-mainnet endpoints. The group avatar + its mint
+      // policy/treasury live on the main Gnosis Hub above.
+      scoreGroupsBackendUrl:
+        import.meta.env.VITE_SCORE_GROUPS_BACKEND_URL ||
+        'https://rpc.aboutcircles.com/score-groups',
+      scoreGatedGroupAddress:
+        import.meta.env.VITE_SCORE_GATED_GROUP_ADDRESS ||
+        '0x93eD5A96347927ff6fF6b790F8Cf5258240c321f',
+      scoreGroupsRpcUrl: import.meta.env.VITE_SCORE_GROUPS_RPC_URL || undefined,
     },
     rings: {
       circlesRpcUrl:
