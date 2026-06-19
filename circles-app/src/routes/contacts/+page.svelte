@@ -6,6 +6,7 @@
     import AvatarRowPlaceholder from '$lib/shared/ui/lists/placeholders/AvatarRowPlaceholder.svelte';
     import { derived, writable, type Writable } from 'svelte/store';
     import { avatarState } from '$lib/shared/state/avatar.svelte';
+    import { canCreateInviteLinks } from '$lib/areas/invites/data/canCreateInviteLinks';
     import { openAddTrustFlow } from '$lib/areas/trust/flows/addTrust/openAddTrustFlow';
     import { goto } from '$app/navigation';
     import { createListInputArrowDownHandler } from '$lib/shared/ui/lists/utils/listInputArrowDown';
@@ -232,6 +233,9 @@
     const titleText: string = $derived(avatarState.isGroup ? 'Members' : 'Contacts');
     const countLabel: string = $derived(avatarState.isGroup ? 'members' : 'in your network');
 
+    // Invite links are a human-v2 capability; offer the shortcut only there.
+    const canInviteHuman: boolean = $derived(canCreateInviteLinks(avatarState.avatar));
+
     const chips = $derived([
         { key: 'all',            label: 'All',         count: $trustCounts.total,     bg: T.pageDeep,    color: T.inkBody,     dot: T.inkMuted },
         { key: 'mutuallyTrusts', label: 'Mutual',      count: $trustCounts.mutual,    bg: T.sageSoft,    color: '#1F5E37',     dot: T.sage },
@@ -249,19 +253,35 @@
                 <span style="font-family:{T.fontDisplay};font-size:32px;color:{T.ink};letter-spacing:-0.02em;line-height:1;font-weight:400;">{titleText}</span>
                 <span style="font-size:12.5px;color:{T.inkMuted};">{avatarState.isGroup && groupMemberCount !== undefined ? groupMemberCount : $trustCounts.total} {countLabel}</span>
             </div>
-            <button
-                onclick={openAddContact}
-                style="
-                    height:40px;padding:0 14px;border-radius:9999px;
-                    background:{T.primary};color:#fff;border:0;cursor:pointer;
-                    display:inline-flex;align-items:center;gap:6px;
-                    font-family:{T.fontSans};font-size:13.5px;font-weight:540;
-                    box-shadow:0 1px 0 rgba(255,255,255,0.18) inset, 0 1px 2px rgba(15,10,30,0.12);
-                "
-            >
-                <Icon name="plus" size={15} stroke="#fff" strokeWidth={2.0} />
-                {avatarState.isGroup ? 'Add member' : 'Trust someone'}
-            </button>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                {#if canInviteHuman}
+                    <button
+                        onclick={() => goto('/invites')}
+                        style="
+                            height:40px;padding:0 14px;border-radius:9999px;
+                            background:{T.surface};color:{T.inkBody};border:1px solid {T.hairline};cursor:pointer;
+                            display:inline-flex;align-items:center;gap:6px;
+                            font-family:{T.fontSans};font-size:13.5px;font-weight:540;
+                        "
+                    >
+                        <Icon name="link" size={15} stroke={T.inkBody} />
+                        Invite
+                    </button>
+                {/if}
+                <button
+                    onclick={openAddContact}
+                    style="
+                        height:40px;padding:0 14px;border-radius:9999px;
+                        background:{T.primary};color:#fff;border:0;cursor:pointer;
+                        display:inline-flex;align-items:center;gap:6px;
+                        font-family:{T.fontSans};font-size:13.5px;font-weight:540;
+                        box-shadow:0 1px 0 rgba(255,255,255,0.18) inset, 0 1px 2px rgba(15,10,30,0.12);
+                    "
+                >
+                    <Icon name="plus" size={15} stroke="#fff" strokeWidth={2.0} />
+                    {avatarState.isGroup ? 'Add member' : 'Trust someone'}
+                </button>
+            </div>
         </div>
 
         <!-- Search -->

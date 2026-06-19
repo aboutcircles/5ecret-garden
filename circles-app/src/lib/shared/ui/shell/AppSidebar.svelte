@@ -12,16 +12,28 @@
     Sparkles as LSparkles,
     Info as LInfo,
     UserCircle as LUserCircle,
+    UserPlus as LUserPlus,
   } from 'lucide';
   import { popupControls } from '$lib/shared/state/popup';
+  import { canCreateInviteLinks } from '$lib/areas/invites/data/canCreateInviteLinks';
   import { T } from '$lib/design-system/tokens.js';
 
-  const NAV_ITEMS = [
-    { label: 'Wallet',   href: '/dashboard', icon: LWallet },
-    { label: 'Contacts', href: '/contacts',  icon: LUsers },
-    { label: 'Groups',   href: '/groups',    icon: LLayers },
-    { label: 'Market',   href: '/market',    icon: LShoppingBag },
-  ];
+  // "Invite" is only meaningful for human v2 avatars, so it's inserted
+  // conditionally rather than living in the static base list.
+  const NAV_ITEMS = $derived.by(() => {
+    const items = [
+      { label: 'Wallet',   href: '/dashboard', icon: LWallet },
+      { label: 'Contacts', href: '/contacts',  icon: LUsers },
+    ];
+    if (canCreateInviteLinks(avatarState.avatar)) {
+      items.push({ label: 'Invite', href: '/invites', icon: LUserPlus });
+    }
+    items.push(
+      { label: 'Groups', href: '/groups', icon: LLayers },
+      { label: 'Market', href: '/market', icon: LShoppingBag },
+    );
+    return items;
+  });
 
   function isActive(href: string): boolean {
     const p = $page.url.pathname;
