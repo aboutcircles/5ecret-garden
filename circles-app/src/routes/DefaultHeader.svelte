@@ -161,23 +161,29 @@
           d="M4 6h16M4 12h16M4 18h16" />
       </svg>
     </summary>
-    <ul style="position:absolute;right:0;top:calc(100% + 6px);z-index:1;width:256px;background:#FFFFFF;border-radius:14px;box-shadow:0 4px 24px rgba(15,10,30,0.12);border:1px solid rgba(31,17,70,0.08);padding:8px;list-style:none;margin:0;">
+    <ul style="position:absolute;right:0;top:calc(100% + 6px);z-index:1;width:256px;max-height:calc(100vh - 96px);overflow-y:auto;background:#FFFFFF;border-radius:14px;box-shadow:0 4px 24px rgba(15,10,30,0.12);border:1px solid rgba(31,17,70,0.08);padding:8px;list-style:none;margin:0;">
+      <!-- Primary destination that isn't a bottom tab — mirrors the sidebar, where Invite is
+           the first nav item after the bottom-tab destinations (Wallet/Contacts/Groups/Market). -->
       {#if canCreateInviteLinks(avatarState.avatar)}
         <li><a class="defaultheader-link" href="/invites">Invite links</a></li>
+        <li class="defaultheader-sep" role="separator" aria-hidden="true"></li>
       {/if}
-      <li>
-        <a class="defaultheader-link" href="/settings">Settings</a>
-        <ul style="list-style:none;padding:0;margin:0;">
-          <li><a class="defaultheader-link" href="/settings?tab=personal">Profile</a></li>
-          <li><a class="defaultheader-link" href="/settings?tab=bookmarks">Bookmarks</a></li>
-          <li><a class="defaultheader-link" href="/settings?tab=orders">Orders</a></li>
-          <li><a class="defaultheader-link" href="/settings?tab=sales">Sales</a></li>
-          <li><a class="defaultheader-link" href="/settings?tab=offers">Offers</a></li>
-          <li><a class="defaultheader-link" href="/settings?tab=payment">Payment gateways</a></li>
-          <li><a class="defaultheader-link" href="/settings?tab=namespaces">Namespaces</a></li>
-          <li><a class="defaultheader-link" href="/settings?tab=keys">Signing keys</a></li>
-        </ul>
-      </li>
+
+      <li class="defaultheader-label" role="presentation">Account</li>
+      <li><a class="defaultheader-link" href="/settings?tab=personal">Profile</a></li>
+      <li><a class="defaultheader-link" href="/settings">Settings</a></li>
+      <li><a class="defaultheader-link" href="/settings?tab=bookmarks">Bookmarks</a></li>
+      <li><a class="defaultheader-link" href="/settings?tab=keys">Signing keys</a></li>
+
+      <li class="defaultheader-sep" role="separator" aria-hidden="true"></li>
+      <li class="defaultheader-label" role="presentation">Marketplace</li>
+      <li><a class="defaultheader-link" href="/settings?tab=orders">Orders</a></li>
+      <li><a class="defaultheader-link" href="/settings?tab=sales">Sales</a></li>
+      <li><a class="defaultheader-link" href="/settings?tab=offers">Offers</a></li>
+      <li><a class="defaultheader-link" href="/settings?tab=payment">Payment gateways</a></li>
+      <li><a class="defaultheader-link" href="/settings?tab=namespaces">Namespaces</a></li>
+
+      <li class="defaultheader-sep" role="separator" aria-hidden="true"></li>
       {#if avatarState.avatar}
         <li>
           <button
@@ -193,10 +199,6 @@
           </button>
         </li>
       {/if}
-      <li><a class="defaultheader-link" href="/terms">Terms of use</a></li>
-      <li>
-        <a class="defaultheader-link" href="/privacy-policy">Privacy policy</a>
-      </li>
       <li>
         <button
           class="defaultheader-link"
@@ -207,6 +209,10 @@
           Environment
         </button>
       </li>
+
+      <li class="defaultheader-sep" role="separator" aria-hidden="true"></li>
+      <li><a class="defaultheader-link" href="/terms">Terms of use</a></li>
+      <li><a class="defaultheader-link" href="/privacy-policy">Privacy policy</a></li>
       {#if dev}
         <li><a class="defaultheader-link" href="/kitchen-sink">Kitchen sink</a></li>
       {/if}
@@ -228,5 +234,19 @@
   }
   .defaultheader-link:hover {
     background: rgba(0,0,0,0.04);
+  }
+  .defaultheader-label {
+    padding: 9px 10px 3px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(15,10,30,0.38);
+  }
+  .defaultheader-sep {
+    height: 1px;
+    margin: 6px 6px;
+    padding: 0;
+    background: rgba(31,17,70,0.08);
   }
 </style>
