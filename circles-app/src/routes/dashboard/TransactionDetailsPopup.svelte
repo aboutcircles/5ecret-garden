@@ -126,6 +126,10 @@
     // existing aggregated rendering below.
     let breakdownLegs = $state<BreakdownLeg[]>([]);
     let breakdownLoading = $state(false);
+    // True when this tx routes through the migration sink. Tracked separately from the legs
+    // because migration hops are folded into the "Transfers (N)" summary's children, so the
+    // top-level legs array no longer carries a literal "Group migration" label to scan for.
+    let breakdownIsMigration = $state(false);
     // group address (lowercase) -> resolved display name, for labeling group-mint legs.
     let groupNames = $state<Map<string, string>>(new Map());
 
@@ -134,6 +138,7 @@
         const txHash = item.transactionHash;
         const me = avatarState.avatar?.address;
         breakdownLegs = [];
+        breakdownIsMigration = false;
         groupNames = new Map();
         if (!txHash || !me) {
             return;
@@ -165,6 +170,7 @@
             const worthShowing =
                 result.legs.length > 1 || result.isGroupMint || result.isMigration;
             breakdownLegs = worthShowing ? result.legs : [];
+            breakdownIsMigration = worthShowing && result.isMigration;
             breakdownLoading = false;
 
             // Resolve group names asynchronously, then re-label the affected legs.
@@ -193,9 +199,10 @@
             // Re-build with the now-resolved names so labels pick them up.
             const relabeled = buildTxBreakdown(raw, me, nameLookup, migrationSink);
             if (!cancelled) {
-                breakdownLegs = (relabeled.legs.length > 1 || relabeled.isGroupMint || relabeled.isMigration)
-                    ? relabeled.legs
-                    : [];
+                const relabeledWorth =
+                    relabeled.legs.length > 1 || relabeled.isGroupMint || relabeled.isMigration;
+                breakdownLegs = relabeledWorth ? relabeled.legs : [];
+                breakdownIsMigration = relabeledWorth && relabeled.isMigration;
             }
         })().catch((error) => {
             // fetchTxEvents never throws, so anything reaching here is an unexpected defect in
@@ -211,9 +218,9 @@
         };
     });
 
-    const breakdownTitle = $derived(
-        breakdownLegs.some(l => l.label === 'Group migration') ? 'Group migration' : 'What happened'
-    );
+    // Title off the builder's isMigration flag (computed from the raw legs before folding), not a
+    // label scan — migration hops are now folded into the "Transfers (N)" summary's children.
+    const breakdownTitle = $derived(breakdownIsMigration ? 'Group migration' : 'What happened');
 
     // Event accessors that work with both PascalCase (raw RPC events) and
     // camelCase (rows produced by transactionHistory.ts) shapes.

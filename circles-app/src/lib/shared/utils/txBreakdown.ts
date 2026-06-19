@@ -28,11 +28,17 @@ interface RawCirclesEvent {
 /**
  * One classified leg of the breakdown. `amount` is in CRC (UI units, always positive);
  * `sign` records whether it added to or subtracted from the avatar's holdings (or is neutral).
+ *
+ * A leg is normally an individual hop (`kind` omitted or `'leg'`). A `kind: 'group'` leg is a
+ * synthetic SUMMARY row standing in for a folded tail of minor flow legs: its `children` hold the
+ * folded legs and the UI renders it as an expandable "Transfers (N)" row. The summary sentinel is
+ * emitted inside `legs` (rather than as a separate return field) so the popup's existing
+ * `<TxBreakdown legs={…}>` contract keeps working without any change there.
  */
 export interface BreakdownLeg {
     /** Human label, e.g. "Personal mint", "Group mint", "Wrapped", "Collateral", "Demurrage". */
     label: string;
-    /** Positive CRC amount for the leg. */
+    /** Positive CRC amount for the leg (for a `group` leg this is the absolute net of children). */
     amount: number;
     /** Sign relative to the viewing avatar. */
     sign: 'plus' | 'minus' | 'neutral';
@@ -42,11 +48,25 @@ export interface BreakdownLeg {
     counterparty: string | null;
     /** A stable-enough key for keyed `{#each}`. */
     key: string;
+    /** Discriminator. Absent / `'leg'` = a normal hop; `'group'` = a collapsed summary row. */
+    kind?: 'leg' | 'group';
+    /** For `kind: 'group'`: the individual minor flow legs folded under this summary. */
+    children?: BreakdownLeg[];
 }
 
 /** Result of {@link buildTxBreakdown}. `kind` lets the UI title the section appropriately. */
 export interface TxBreakdown {
+    /**
+     * Ordered prominent legs for display. Semantic legs (mints / wrap / collateral / demurrage)
+     * come first in priority order, followed by prominent flow legs. When the flow tail is folded,
+     * the LAST entry is a synthetic `kind: 'group'` summary leg carrying the folded legs in
+     * `children` — the popup passes this array straight to `<TxBreakdown legs={…}>` unchanged.
+     */
     legs: BreakdownLeg[];
+    /** The folded minor flow legs (same legs as the summary's `children`); empty when nothing folds. */
+    minorLegs: BreakdownLeg[];
+    /** Signed CRC sum of `minorLegs` relative to the viewer (plus adds, minus subtracts). */
+    minorNet: number;
     /** True when any leg routes through the migration SinkWrapper. */
     isMigration: boolean;
     /** True when a group-mint leg is present (score / standard group mint). */
@@ -212,6 +232,7 @@ export function buildTxBreakdown(
     // The migration sink comes from config (single source of truth). When absent (networks
     // without score-group support), migration legs simply fall through to a neutral transfer.
     const sink = migrationSink ? migrationSink.toLowerCase() : null;
+    // Classified in raw chain order first; ordering + collapse happen afterwards.
     const legs: BreakdownLeg[] = [];
     let isMigration = false;
     let isGroupMint = false;
@@ -368,5 +389,102 @@ export function buildTxBreakdown(
         legs.push({ label, amount, sign, tokenAddress, counterparty, key });
     }
 
-    return { legs, isMigration, isGroupMint };
+    const { legs: orderedLegs, minorLegs, minorNet } = prioritizeAndCollapse(legs);
+    return { legs: orderedLegs, minorLegs, minorNet, isMigration, isGroupMint };
+}
+
+// --- Prioritisation + collapse ---------------------------------------------------------------
+// Semantic legs (the meaningful "what happened" steps) are shown first, in this priority order.
+// "Group mint" matches by prefix because the live label is `Group mint (Name)` once resolved.
+const SEMANTIC_ORDER = ['Personal mint', 'Group mint', 'Wrapped', 'Unwrapped', 'Collateral', 'Demurrage'];
+// Flow legs are the noisy multi-hop tail emitted by flow-matrix settlement.
+const FLOW_LABELS = new Set(['Sent', 'Received', 'Transfer', 'Burned', 'Group migration']);
+// Below this leg count everything is shown verbatim (a clean mint must never collapse).
+const COLLAPSE_THRESHOLD = 6;
+// When there are NO semantic legs (a plain multi-hop transfer), keep this many of the largest
+// flow legs prominent before folding the rest, so the headline hops stay visible.
+const MAX_PROMINENT_FLOW = 3;
+
+/** Priority index of a semantic label (prefix match for "Group mint"); -1 if not semantic. */
+function semanticRank(label: string): number {
+    for (let i = 0; i < SEMANTIC_ORDER.length; i++) {
+        const s = SEMANTIC_ORDER[i];
+        if (label === s || label.startsWith(`${s} (`)) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+const isSemantic = (leg: BreakdownLeg): boolean => semanticRank(leg.label) >= 0;
+const isFlow = (leg: BreakdownLeg): boolean => FLOW_LABELS.has(leg.label);
+
+/** Signed contribution of a leg to the viewer's net (plus adds, minus subtracts, neutral 0). */
+function signedAmount(leg: BreakdownLeg): number {
+    if (leg.sign === 'plus') {
+        return leg.amount;
+    }
+    if (leg.sign === 'minus') {
+        return -leg.amount;
+    }
+    return 0;
+}
+
+/**
+ * Order the prominent legs by importance and fold the long flow-matrix tail into one expandable
+ * summary leg. Rules:
+ *   • ≤ COLLAPSE_THRESHOLD legs → return them semantic-first, nothing folded.
+ *   • otherwise prominent = ALL semantic legs (semantic-first), plus — only when there are no
+ *     semantic legs at all — the largest MAX_PROMINENT_FLOW flow legs; everything else flow-typed
+ *     is folded into a trailing `kind: 'group'` summary leg ("Transfers (N)").
+ * Non-flow, non-semantic legs (should be rare) are always kept prominent so nothing meaningful is
+ * hidden behind the toggle.
+ */
+function prioritizeAndCollapse(rawLegs: BreakdownLeg[]): {
+    legs: BreakdownLeg[];
+    minorLegs: BreakdownLeg[];
+    minorNet: number;
+} {
+    const semantic = rawLegs.filter(isSemantic).sort((a, b) => semanticRank(a.label) - semanticRank(b.label));
+    const flow = rawLegs.filter((l) => !isSemantic(l) && isFlow(l));
+    const other = rawLegs.filter((l) => !isSemantic(l) && !isFlow(l));
+
+    // Small transactions stay fully expanded, just reordered semantic-first.
+    if (rawLegs.length <= COLLAPSE_THRESHOLD) {
+        return { legs: [...semantic, ...other, ...flow], minorLegs: [], minorNet: 0 };
+    }
+
+    // Keep some flow legs prominent only when there is nothing semantic to anchor the view.
+    let prominentFlow: BreakdownLeg[] = [];
+    let foldedFlow = flow;
+    if (semantic.length === 0) {
+        const byAmount = [...flow].sort((a, b) => b.amount - a.amount);
+        prominentFlow = byAmount.slice(0, MAX_PROMINENT_FLOW);
+        const keep = new Set(prominentFlow);
+        foldedFlow = flow.filter((l) => !keep.has(l));
+    }
+
+    // Nothing actually folds (e.g. only 1 flow leg over threshold) → behave like the small case.
+    if (foldedFlow.length <= 1) {
+        return { legs: [...semantic, ...other, ...prominentFlow, ...foldedFlow], minorLegs: [], minorNet: 0 };
+    }
+
+    const minorNet = foldedFlow.reduce((acc, l) => acc + signedAmount(l), 0);
+    const sign: BreakdownLeg['sign'] = minorNet > 1e-9 ? 'plus' : minorNet < -1e-9 ? 'minus' : 'neutral';
+    const summary: BreakdownLeg = {
+        label: `Transfers (${foldedFlow.length})`,
+        amount: Math.abs(minorNet),
+        sign,
+        tokenAddress: null,
+        counterparty: null,
+        key: `summary|${foldedFlow.length}`,
+        kind: 'group',
+        children: foldedFlow,
+    };
+
+    return {
+        legs: [...semantic, ...other, ...prominentFlow, summary],
+        minorLegs: foldedFlow,
+        minorNet,
+    };
 }
