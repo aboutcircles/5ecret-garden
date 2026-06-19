@@ -8,6 +8,7 @@
     import { T } from '$lib/design-system/tokens.js';
     import TransactionDetailsPopup from './TransactionDetailsPopup.svelte';
     import { ZERO_ADDRESS } from '$lib/shared/utils/tx';
+    import { getActiveConfig } from '$lib/shared/state/settings.svelte';
     import { createKeyboardListNavigator } from '$lib/shared/ui/lists/utils/keyboardListNavigator';
     import {
         VIRTUAL_LIST_CONTEXT_KEY,
@@ -21,13 +22,44 @@
 
     const counterpartyAddress = $derived(item.counterparty?.toLowerCase() ?? null);
 
-    // "Collected CRC" should only show for an actual mint (you collected your own CRC),
-    // where the counterparty resolves to yourself. Keying it off `hasMint` (ANY mint event
-    // anywhere in the bundle) mislabels received path-transfers that merely contain a mint
-    // hop as "Collected CRC · <sender>", which is nonsensical. Use the semantic group type.
-    const topInfoText = $derived(item.type === 'mint' ? 'Collected CRC' : '');
+    // Score-group config (migration sink + destination group). Read once: the active
+    // network rarely changes within a row's lifetime and virtualized rows rebuild on
+    // data change. Both are undefined on networks without score-group support.
+    const cfg = getActiveConfig();
+    const migrationSink = cfg.scoreGroupMigrationSink?.toLowerCase() ?? null;
+    const scoreGroupAddress = cfg.scoreGatedGroupAddress?.toLowerCase() ?? null;
+
+    // A legacy-group migration routes CRC through the migration sink, which has no
+    // profile and otherwise renders as a faceless "shop" counterparty. Detect it from
+    // the sink appearing as the counterparty or in any leg, so the row can label it and
+    // show the destination group instead.
+    const isMigration = $derived.by(() => {
+        if (!migrationSink) return false;
+        if (counterpartyAddress === migrationSink) return true;
+        return item.events.some(
+            (e) => e.from?.toLowerCase() === migrationSink || e.to?.toLowerCase() === migrationSink
+        );
+    });
+
+    // For a migration, show the destination score group (a real, named avatar) rather
+    // than the profile-less sink the transfer technically routed through.
+    const avatarAddress = $derived(
+        isMigration && scoreGroupAddress ? scoreGroupAddress : counterpartyAddress
+    );
+
+    // Small label above the counterparty name. "Minted" is the honest umbrella for any
+    // mint — the aggregated history can't distinguish personal from group/score mint at
+    // the row level (the detail popup breaks that down via granular events). Keying off
+    // the semantic group `type` (not `hasMint`) avoids mislabeling received path-transfers
+    // that merely contain a mint hop.
+    const topInfoText = $derived.by(() => {
+        if (isMigration) return 'Group migration';
+        if (item.type === 'mint') return 'Minted';
+        return '';
+    });
 
     const badgeUrl = $derived.by(() => {
+        if (isMigration) return '/badge-mint.svg'; // migration mints the new group token
         if (item.type === 'mint') return '/badge-mint.svg';
         if (item.type === 'burn') return '/badge-burn.svg';
         if (item.type === 'send') return '/badge-sent.svg';
@@ -151,7 +183,7 @@
     data-list-row-focusable
     tabindex={0}
     role="button"
-    aria-label={`Open transaction details for ${counterpartyAddress}`}
+    aria-label={`Open transaction details for ${avatarAddress}`}
     class="tr-row focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
     style="
         display:flex;align-items:center;gap:12px;padding:12px 20px;
@@ -164,7 +196,7 @@
 >
     <div style="flex:1;min-width:0;">
         <Avatar
-            address={counterpartyAddress}
+            address={avatarAddress}
             view="horizontal"
             clickable={false}
             pictureOverlayUrl={badgeUrl ?? undefined}

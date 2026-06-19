@@ -8,11 +8,20 @@
     import { CirclesConverter } from '@aboutcircles/sdk-utils';
     import { isAddress, isZeroAddress, toBigIntMaybe, tokenIdToAddressMaybe } from '$lib/shared/utils/tx';
     import TxEvents from './TxEvents.svelte';
+    import TxBreakdown from './TxBreakdown.svelte';
     import { annotationsByTx } from '$lib/shared/state/transferAnnotations';
     import { popupControls } from '$lib/shared/state/popup';
     import JumpPopup from '$lib/shared/ui/content/jump/JumpPopup.svelte';
     import { T } from '$lib/design-system/tokens.js';
     import Icon from '$lib/design-system/Icon.svelte';
+    import {
+        buildTxBreakdown,
+        deriveBlockNumber,
+        fetchTxEvents,
+        type BreakdownLeg,
+    } from '$lib/shared/utils/txBreakdown';
+    import { getProfile } from '$lib/shared/utils/profile';
+    import { getActiveConfig } from '$lib/shared/state/settings.svelte';
 
     interface Props { item: TransactionHistoryRow }
     let { item }: Props = $props();
@@ -109,6 +118,102 @@
             return [];
         }
     });
+
+    // --- Granular "What happened" breakdown (circles_events enhancement) ---
+    // The aggregated history RPC collapses personal mint + group mint + wrap + collateral +
+    // demurrage into one summary. circles_events exposes the granular legs; we fetch them for
+    // this tx's block and classify them. Purely additive: any failure falls back to the
+    // existing aggregated rendering below.
+    let breakdownLegs = $state<BreakdownLeg[]>([]);
+    let breakdownLoading = $state(false);
+    // group address (lowercase) -> resolved display name, for labeling group-mint legs.
+    let groupNames = $state<Map<string, string>>(new Map());
+
+    $effect(() => {
+        // Re-run whenever the viewed tx changes.
+        const txHash = item.transactionHash;
+        const me = avatarState.avatar?.address;
+        breakdownLegs = [];
+        groupNames = new Map();
+        if (!txHash || !me) {
+            return;
+        }
+        const block = deriveBlockNumber((item as ItemWithEvents)?.events);
+        if (block === null) {
+            return;
+        }
+
+        // Single source of truth for the migration sink: the active config (the list row reads
+        // the same field), so the row and this breakdown can never disagree on what's a migration.
+        const migrationSink = getActiveConfig().scoreGroupMigrationSink ?? null;
+
+        let cancelled = false;
+        breakdownLoading = true;
+        (async () => {
+            const raw = await fetchTxEvents(me, block, txHash);
+            if (cancelled) {
+                return;
+            }
+            const nameLookup = (addr: string): string | null =>
+                groupNames.get(addr.toLowerCase()) ?? null;
+            const result = buildTxBreakdown(raw, me, nameLookup, migrationSink);
+            if (cancelled) {
+                return;
+            }
+            // Only show the breakdown when it tells us more than the aggregated view —
+            // i.e. there is more than one leg, or a mint/migration we can label specially.
+            const worthShowing =
+                result.legs.length > 1 || result.isGroupMint || result.isMigration;
+            breakdownLegs = worthShowing ? result.legs : [];
+            breakdownLoading = false;
+
+            // Resolve group names asynchronously, then re-label the affected legs.
+            const groupAddrs = new Set<string>();
+            for (const leg of result.legs) {
+                if (leg.label.startsWith('Group mint') && leg.counterparty) {
+                    groupAddrs.add(leg.counterparty.toLowerCase());
+                }
+            }
+            for (const addr of groupAddrs) {
+                try {
+                    const profile = await getProfile(addr as `0x${string}`);
+                    if (cancelled || !profile?.name) {
+                        continue;
+                    }
+                    const next = new Map(groupNames);
+                    next.set(addr, profile.name);
+                    groupNames = next;
+                } catch {
+                    // Non-fatal: leave the generic "Group mint" label.
+                }
+            }
+            if (cancelled || groupAddrs.size === 0) {
+                return;
+            }
+            // Re-build with the now-resolved names so labels pick them up.
+            const relabeled = buildTxBreakdown(raw, me, nameLookup, migrationSink);
+            if (!cancelled) {
+                breakdownLegs = (relabeled.legs.length > 1 || relabeled.isGroupMint || relabeled.isMigration)
+                    ? relabeled.legs
+                    : [];
+            }
+        })().catch((error) => {
+            // fetchTxEvents never throws, so anything reaching here is an unexpected defect in
+            // the breakdown build / name resolution — surface it rather than dropping it silently.
+            console.error('[txBreakdown] breakdown effect failed', error);
+            if (!cancelled) {
+                breakdownLoading = false;
+            }
+        });
+
+        return () => {
+            cancelled = true;
+        };
+    });
+
+    const breakdownTitle = $derived(
+        breakdownLegs.some(l => l.label === 'Group migration') ? 'Group migration' : 'What happened'
+    );
 
     // Event accessors that work with both PascalCase (raw RPC events) and
     // camelCase (rows produced by transactionHistory.ts) shapes.
@@ -780,6 +885,17 @@
             </div>
         </div>
     </div>
+
+    {#if breakdownLegs.length}
+        <!-- Truthful per-leg breakdown from circles_events (mints, wraps, collateral, demurrage). -->
+        <TxBreakdown legs={breakdownLegs} title={breakdownTitle} />
+    {:else if breakdownLoading}
+        <div style="background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;padding:10px 14px;">
+            <span style="font-size:11px;color:{T.inkFaint};font-weight:600;letter-spacing:0.06em;text-transform:uppercase;">
+                Loading breakdown…
+            </span>
+        </div>
+    {/if}
 
     {#if aggregatedTransfers.length}
         <div style="background:{T.surface};border:1px solid {T.hairlineSoft};border-radius:14px;overflow:hidden;">

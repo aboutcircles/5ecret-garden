@@ -32,6 +32,14 @@ export type CirclesConfig = BaseCirclesConfig & {
    * Undefined → score-group minting is unavailable on this network.
    */
   scoreGatedGroupAddress?: string;
+  /**
+   * Migration sink contract that legacy-group CRC is routed through when
+   * migrating into the score group. Used only for display: a transaction whose
+   * counterparty resolves to this sink is a group migration, so the history row
+   * can label it as such and show the destination group instead of the faceless,
+   * profile-less sink. Undefined → no migration labeling on this network.
+   */
+  scoreGroupMigrationSink?: string;
 };
 
 export const chiadoConfig: { production: CirclesConfig; rings: CirclesConfig } =
@@ -134,6 +142,7 @@ export const gnosisConfig: { production: CirclesConfig; rings: CirclesConfig } =
       // pathfinder uses circlesRpcUrl, so no extra env wiring is needed.
       scoreGroupsBackendUrl: 'https://rpc.aboutcircles.com/score-groups',
       scoreGatedGroupAddress: '0x93eD5A96347927ff6fF6b790F8Cf5258240c321f',
+      scoreGroupMigrationSink: '0xD4cF9afd3aE777C24454b70dd28E32d1bd516F05',
     },
     rings: {
       circlesRpcUrl:
