@@ -1,4 +1,4 @@
-import type { TransactionHistoryRow } from '@aboutcircles/sdk-rpc';
+import type { TransactionHistoryRow, CirclesEvent, CirclesEventType } from '@aboutcircles/sdk-rpc';
 import { writable, derived, get } from 'svelte/store';
 import type { Avatar } from '@aboutcircles/sdk';
 import type { Address } from '@aboutcircles/sdk-types';
@@ -35,26 +35,45 @@ function parseNumericValue(raw: unknown): number {
 }
 
 /**
- * Cheap equality check for the first page of transaction events. Used by the quiet
- * background refresh to decide whether a refetch actually changed anything — if the
- * leading `incoming.length` rows match (same tx hash, log index AND amount), nothing
- * has changed and the refresh is a no-op (so the UI is never disturbed). Comparing the
- * amount as well as the identity means an in-place correction to an existing top row
- * (e.g. an indexer backfilling a previously-missing amount) still heals on resync.
- * A `current` longer than `incoming` (user scrolled past page 1) still counts as
- * unchanged as long as the leading rows match, preserving their loaded pages.
+ * Merge a freshly-fetched page 1 into the currently-displayed rows for a quiet
+ * (event-driven or liveness) refresh, WITHOUT tearing the list down to a skeleton:
+ *
+ *  - Genuinely-new rows (a key not already present) are prepended, so a just-arrived
+ *    transfer/mint/burn shows up at the top immediately — the same way the live
+ *    balance already updates.
+ *  - An existing row whose amount changed (e.g. an indexer backfilling a previously
+ *    missing value) is healed in place.
+ *  - Older pages the user already scrolled back to are preserved untouched.
+ *  - When nothing is new and nothing changed, returns `null` so the caller skips the
+ *    store update entirely — the UI is never disturbed when the data is identical.
+ *
+ * Key = transactionHash + logIndex (unique per event within a transaction). Page 1 is
+ * newest-first, so the collected new rows stay newest-first when prepended.
  */
-function firstPageUnchanged(
+function mergeLeadingPage(
   current: ExtendedTransactionRow[],
-  incoming: ExtendedTransactionRow[]
-): boolean {
-  if (current.length < incoming.length) return false;
-  for (let i = 0; i < incoming.length; i++) {
-    if (current[i]?.transactionHash !== incoming[i]?.transactionHash) return false;
-    if (current[i]?.logIndex !== incoming[i]?.logIndex) return false;
-    if (current[i]?.circles !== incoming[i]?.circles) return false;
+  pageOne: ExtendedTransactionRow[]
+): ExtendedTransactionRow[] | null {
+  if (current.length === 0) return pageOne.length > 0 ? pageOne : null;
+
+  const keyOf = (r: ExtendedTransactionRow) => `${r.transactionHash}:${r.logIndex}`;
+  const indexByKey = new Map<string, number>();
+  current.forEach((r, i) => indexByKey.set(keyOf(r), i));
+
+  const newRows: ExtendedTransactionRow[] = [];
+  let healed = false;
+  for (const row of pageOne) {
+    const existingIdx = indexByKey.get(keyOf(row));
+    if (existingIdx === undefined) {
+      newRows.push(row);
+    } else if (current[existingIdx].circles !== row.circles) {
+      current[existingIdx] = row; // heal amount correction in place
+      healed = true;
+    }
   }
-  return true;
+
+  if (newRows.length === 0 && !healed) return null;
+  return [...newRows, ...current];
 }
 
 /**
@@ -94,6 +113,22 @@ let currentAvatarAddress: string = '';
 let isLoading = false;
 let nextCursor: string | null = null;
 let hasMore = true;
+
+// Realtime event subscription — keeps the transaction list live the same way the
+// balance store already is, instead of only updating on the disconnect-gated poll.
+const TX_EVENT_DEBOUNCE_MS = 400;
+const refreshOnTxEvents = new Set<CirclesEventType>([
+  'CrcV2_Transfer',
+  'CrcV2_TransferSingle',
+  'CrcV2_TransferBatch',
+  'CrcV2_PersonalMint',
+  'CrcV2_GroupMint',
+  'CrcV2_GroupRedeemCollateralReturn',
+  'CrcV2_GroupRedeemCollateralBurn',
+  'CrcV2_StreamCompleted',
+]);
+let txEventUnsubscribe: (() => void) | undefined;
+let txEventDebounceTimer: ReturnType<typeof setTimeout> | undefined;
 
 // Profile cache for enriched transaction participants
 const enrichedProfileCache = new Map<string, { name?: string; previewImageUrl?: string }>();
@@ -523,8 +558,13 @@ async function loadNextPage(opts?: { replace?: boolean }): Promise<boolean> {
     ) as unknown as PagedResponse<EnrichedTransaction>;
 
     if (response.results.length > 0) {
-      nextCursor = response.nextCursor;
-      hasMore = response.hasMore;
+      // In quiet `replace` mode we re-fetch page 1 only as a liveness peek — leave the
+      // older-page pagination cursor untouched so already-loaded pages stay correctly
+      // paginated (and aren't re-fetched and duplicated on the next scroll-load).
+      if (!replace) {
+        nextCursor = response.nextCursor;
+        hasMore = response.hasMore;
+      }
 
       // Cache profiles from enriched transactions
       for (const tx of response.results) {
@@ -653,25 +693,29 @@ async function loadNextPage(opts?: { replace?: boolean }): Promise<boolean> {
         };
       });
 
-      // Quiet replace: if page 1 is unchanged, skip the update entirely so a periodic
-      // resync never disturbs the UI when nothing actually changed. (nextCursor/hasMore
-      // were already updated above.)
-      if (replace && firstPageUnchanged(get(_transactionHistory).data, rows)) {
-        return true;
+      // Quiet refresh (replace): merge the fresh page 1 into the displayed rows without
+      // tearing the list down — prepend new rows, heal amount corrections, keep scrolled
+      // pages. `null` means nothing changed, so skip the update entirely (no flicker).
+      let mergedData: ExtendedTransactionRow[] | null = null;
+      if (replace) {
+        mergedData = mergeLeadingPage(get(_transactionHistory).data, rows);
+        if (mergedData === null) {
+          return true;
+        }
       }
 
       // Pre-fetch profiles for all transaction participants
       // This populates enrichedProfileCache for getDisplayName() to use synchronously
       await prefetchProfilesForTransactions(rows);
 
-      // Replacing page 1 (quiet refresh) changes content without necessarily changing
-      // row count, so invalidate the length-keyed grouping memo to force a regroup.
+      // A merged refresh changes content without necessarily changing row count, so
+      // invalidate the length-keyed grouping memo to force a regroup.
       if (replace) {
         resetGroupedCache();
       }
 
       _transactionHistory.update((state) => {
-        const newData = replace ? rows : [...state.data, ...rows];
+        const newData = replace ? mergedData! : [...state.data, ...rows];
         // Write-through to IDB cache
         if (currentAvatarAddress) {
           void writeTransactions(makeScopeId(currentAvatarAddress), newData);
@@ -679,7 +723,9 @@ async function loadNextPage(opts?: { replace?: boolean }): Promise<boolean> {
         return {
           data: newData,
           next: loadNextPage,
-          ended: !response.hasMore,
+          // In replace mode the older-page cursor is untouched, so keep the prior
+          // `ended` flag; an append/initial fetch sets it from this page's hasMore.
+          ended: replace ? state.ended : !response.hasMore,
           isLoading: false,
         };
       });
@@ -710,6 +756,41 @@ async function loadNextPage(opts?: { replace?: boolean }): Promise<boolean> {
     return false;
   } finally {
     isLoading = false;
+  }
+}
+
+/**
+ * (Re)subscribe the transaction list to the avatar's realtime event stream so an
+ * incoming/outgoing transfer, mint or burn appears immediately — exactly the way the
+ * balance store already updates live — instead of waiting for the disconnect-gated
+ * liveness poll. A path transfer fires a burst of events, so we debounce briefly and
+ * then quietly refetch page 1 and merge it in: new rows are prepended, unchanged data
+ * is left untouched (no flicker), and scrolled-back pages are preserved.
+ *
+ * Must be re-invoked after the SDK re-subscribes the websocket (see realtimeSync): a
+ * reconnect hands out a fresh `avatar.events` observable and the previous one goes
+ * silent, so the old subscription would otherwise never fire again.
+ */
+function subscribeToTransactionEvents(avatar: Avatar): void {
+  if (txEventUnsubscribe) {
+    txEventUnsubscribe();
+    txEventUnsubscribe = undefined;
+  }
+  try {
+    txEventUnsubscribe = avatar.events.subscribe((event: CirclesEvent) => {
+      if (!refreshOnTxEvents.has(event.$event)) return;
+      if (txEventDebounceTimer) clearTimeout(txEventDebounceTimer);
+      txEventDebounceTimer = setTimeout(() => {
+        const a = currentAvatar;
+        if (!a) return;
+        // Quiet page-1 refetch: merges in place, no-ops when nothing changed.
+        void loadNextPage({ replace: true });
+        // A just-arrived transfer may also carry a transfer-data annotation.
+        void loadTransferAnnotations(a, true);
+      }, TX_EVENT_DEBOUNCE_MS);
+    });
+  } catch (e) {
+    console.warn('[TxHistory] failed to subscribe to events', e);
   }
 }
 
@@ -778,6 +859,10 @@ export const initTransactionHistoryStore = async (avatar: Avatar) => {
 
   // Load initial page
   await loadNextPage();
+
+  // Go live: subscribe to the avatar's event stream so subsequent transfers/mints/burns
+  // surface immediately, the same way the balance store does.
+  subscribeToTransactionEvents(avatar);
 };
 
 export const transactionHistory = _transactionHistory;
@@ -873,19 +958,27 @@ export async function refreshTransactionHistory(opts?: { quiet?: boolean }): Pro
     return;
   }
 
-  // Reset pagination state
-  nextCursor = null;
-  hasMore = true;
   isLoading = false;
 
-  // Quiet refresh (e.g. realtime liveness resync): refetch page 1 and swap it in place
-  // without tearing the list down to a skeleton, and skip the update entirely when
-  // page 1 is unchanged. Avoids a periodic flicker when nothing actually changed.
+  // Rebind to the live event stream. realtimeSync calls this right after
+  // avatar.subscribeToEvents(), which replaces avatar.events after a reconnect — so the
+  // tx subscription must re-attach to the fresh observable or it would stay silent.
+  subscribeToTransactionEvents(currentAvatar);
+
+  // Quiet refresh (realtime liveness resync / catch-up after reconnect): refetch page 1
+  // and merge it in place without tearing the list down, and skip the update entirely
+  // when nothing changed. Leaves the older-page cursor untouched so scrolled pages stay
+  // loaded. Avoids any flicker when nothing actually changed.
   if (opts?.quiet) {
     void loadTransferAnnotations(currentAvatar, true);
     await loadNextPage({ replace: true });
     return;
   }
+
+  // Full refresh (explicit / post-send): reset pagination and reload from page 1,
+  // showing the loading skeleton.
+  nextCursor = null;
+  hasMore = true;
 
   // Clear memoization cache for fresh grouping
   resetGroupedCache();

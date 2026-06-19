@@ -115,7 +115,11 @@ export async function createCirclesQueryStore<T extends EventRow>(
   ): Promise<T[]> {
     const refreshedQuery = await circlesQueryFactory();
     const updateQuery = refreshedQuery.rows || [];
-    return _mergeData(currentData, updateQuery);
+    const merged = _mergeData(currentData, updateQuery);
+    // _mergeData only ever adds rows, so an unchanged length means nothing new arrived.
+    // Return the same reference in that case so the store re-emit is a no-op for keyed
+    // lists — no flicker / needless re-render when the data stayed the same.
+    return merged.length === currentData.length ? currentData : merged;
   }
 
   /**
