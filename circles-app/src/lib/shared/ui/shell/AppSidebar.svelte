@@ -84,6 +84,24 @@
       </div>
       <Lucide icon={LUserCircle} size={16} class="shrink-0" ariaLabel="" />
     </button>
+  {:else}
+    <!-- Skeleton placeholder while the avatar restores. Matches the real account card's
+         height (10px padding + 32px avatar) so the nav below doesn't shift when it loads. -->
+    <div
+      aria-hidden="true"
+      style="
+        margin:0 4px;padding:10px 12px;display:flex;align-items:center;gap:10px;
+        background:{T.surfaceAlt};border:1px solid {T.hairline};border-radius:14px;
+      "
+    >
+      <div class="appsidebar-skel" style="width:32px;height:32px;border-radius:9999px;flex-shrink:0;"></div>
+      <!-- Column height matches the real card's two-line text block (name + address) so
+           the card totals the same ~59px and the nav below it doesn't shift on resolve. -->
+      <div class="flex-1 min-w-0" style="display:flex;flex-direction:column;justify-content:center;gap:8px;height:37px;">
+        <div class="appsidebar-skel" style="height:12px;width:58%;border-radius:6px;"></div>
+        <div class="appsidebar-skel" style="height:10px;width:40%;border-radius:6px;"></div>
+      </div>
+    </div>
   {/if}
 
   <!-- Nav -->
@@ -154,6 +172,18 @@
 <style>
   .appsidebar-account-btn:hover {
     background: rgba(0,0,0,0.04);
+  }
+  .appsidebar-skel {
+    background: color-mix(in oklab, currentColor 13%, transparent);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .appsidebar-skel {
+      animation: appsidebar-skel-pulse 1.4s ease-in-out infinite;
+    }
+    @keyframes appsidebar-skel-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.45; }
+    }
   }
   .send-cta {
     transition: box-shadow 200ms ease-out, filter 200ms ease-out;
