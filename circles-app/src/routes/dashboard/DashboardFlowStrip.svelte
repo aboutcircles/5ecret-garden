@@ -97,30 +97,36 @@
     );
 </script>
 
-<div class="flow-strip" style="margin-top:6px;display:flex;flex-direction:column;gap:8px;">
-    <!-- Window switcher -->
-    <div
-        role="tablist"
-        aria-label="Flow time window"
-        style="
-            display:inline-flex;align-self:flex-start;gap:2px;padding:2px;border-radius:9999px;
-            background:{T.surface};border:1px solid {T.hairlineSoft};
-        "
-    >
-        {#each WINDOWS as w}
-            <button
-                role="tab"
-                aria-selected={activeWindow === w.id}
-                onclick={() => (activeWindow = w.id)}
-                style="
-                    padding:3px 10px;border:0;cursor:pointer;border-radius:9999px;
-                    font-family:{T.fontSans};font-size:11px;font-weight:560;line-height:1;
-                    background:{activeWindow === w.id ? T.primary : 'transparent'};
-                    color:{activeWindow === w.id ? '#fff' : T.inkMuted};
-                    transition:background 140ms ease-out,color 140ms ease-out;
-                "
-            >{w.label}</button>
-        {/each}
+<div class="flow-strip" style="display:flex;flex-direction:column;gap:8px;">
+    <!-- Header: "Total balance" eyebrow (left) + window switcher (right). Wraps on very
+         narrow screens so the switcher drops below the eyebrow instead of overflowing. -->
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px 12px;flex-wrap:wrap;">
+        <span style="font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">
+            Total balance
+        </span>
+        <div
+            role="tablist"
+            aria-label="Flow time window"
+            style="
+                display:inline-flex;gap:2px;padding:3px;border-radius:9999px;flex-shrink:0;
+                background:{T.surface};border:1px solid {T.hairlineSoft};
+            "
+        >
+            {#each WINDOWS as w}
+                <button
+                    role="tab"
+                    aria-selected={activeWindow === w.id}
+                    onclick={() => (activeWindow = w.id)}
+                    style="
+                        padding:5px 12px;border:0;cursor:pointer;border-radius:9999px;
+                        font-family:{T.fontSans};font-size:12px;font-weight:560;line-height:1;
+                        background:{activeWindow === w.id ? T.primary : 'transparent'};
+                        color:{activeWindow === w.id ? '#fff' : T.inkMuted};
+                        transition:background 140ms ease-out,color 140ms ease-out;
+                    "
+                >{w.label}</button>
+            {/each}
+        </div>
     </div>
 
     {#if loading}

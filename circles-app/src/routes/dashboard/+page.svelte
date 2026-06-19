@@ -61,26 +61,30 @@
         });
     }
 
-    // Match the dust filter in Balances.svelte so the count matches the breakdown
-    const DUST_THRESHOLD = 10_000_000_000_000_000n; // 0.01 CRC
-
     // Build group owner set from ALL balances (including dust) for accurate classification
     let groupOwners: Set<string> = $derived(
         buildGroupOwnerSet($circlesBalances?.data ?? [])
     );
 
-    let personalToken: number = $derived(
-        $circlesBalances?.data?.filter((balance) =>
-            !groupOwners.has(balance.tokenOwner?.toLowerCase?.() ?? '') &&
-            BigInt(balance.attoCircles) >= DUST_THRESHOLD
-        ).length ?? 0
+    // CRC amounts (not counts) for the personal vs group split shown under the total.
+    // Sum each balance's demurraged `circles` value; personal + group == totalCirclesBalance.
+    let personalCrcAmount: number = $derived(
+        ($circlesBalances?.data ?? []).reduce(
+            (acc, b) =>
+                acc + (groupOwners.has(b.tokenOwner?.toLowerCase?.() ?? '') ? 0 : (b.circles ?? 0)),
+            0,
+        )
     );
-    let groupToken: number = $derived(
-        $circlesBalances?.data?.filter((balance) =>
-            groupOwners.has(balance.tokenOwner?.toLowerCase?.() ?? '') &&
-            BigInt(balance.attoCircles) >= DUST_THRESHOLD
-        ).length ?? 0
+    let groupCrcAmount: number = $derived(
+        ($circlesBalances?.data ?? []).reduce(
+            (acc, b) =>
+                acc + (groupOwners.has(b.tokenOwner?.toLowerCase?.() ?? '') ? (b.circles ?? 0) : 0),
+            0,
+        )
     );
+
+    // Toggles the inline (i) explainer for the personal vs group CRC split (works on mobile).
+    let showBalanceInfo: boolean = $state(false);
 
     const balanceLoaded = $derived(
         ($circlesBalances?.data?.length ?? 0) > 0 || ($circlesBalances?.ended ?? false),
@@ -138,15 +142,9 @@
                 overflow:hidden;
             "
         >
-            <!-- TOP ROW: eyebrow + time-horizon flow strip -->
-            <div class="hero-top" style="display:flex;align-items:flex-start;justify-content:space-between;gap:24px;">
-                <div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;">
-                    <span style="font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Total balance</span>
-                    <!-- Flow strip has its own skeleton, so it reserves space during load
-                         without a separate placeholder (replaces the old today-net pill). -->
-                    <DashboardFlowStrip />
-                </div>
-            </div>
+            <!-- TOP: "Total balance" eyebrow + window switcher (right) + net/buckets — the
+                 flow strip owns its own header row and skeleton (replaced the old today pill). -->
+            <DashboardFlowStrip />
 
             <!-- BIG NUMBER -->
             <button
@@ -176,12 +174,22 @@
                 {:else}
                 <button onclick={() => openBalances('personal')} class="btn-naked" style="background:transparent;border:0;padding:0;cursor:pointer;display:flex;align-items:center;gap:6px;">
                     <span style="width:6px;height:6px;border-radius:3px;background:{T.coral};display:inline-block;"></span>
-                    <span style="font-size:13px;color:{T.inkBody};"><b style="color:{T.ink};">{personalToken}</b> people</span>
+                    <span style="font-size:13px;color:{T.inkBody};"><b style="color:{T.ink};">{roundToDecimals(personalCrcAmount)}</b> personal</span>
                 </button>
                 <span style="color:{T.inkFaint};">·</span>
                 <button onclick={() => openBalances('group')} class="btn-naked" style="background:transparent;border:0;padding:0;cursor:pointer;display:flex;align-items:center;gap:6px;">
                     <span style="width:6px;height:6px;border-radius:3px;background:{T.primary};display:inline-block;"></span>
-                    <span style="font-size:13px;color:{T.inkBody};"><b style="color:{T.ink};">{groupToken}</b> groups</span>
+                    <span style="font-size:13px;color:{T.inkBody};"><b style="color:{T.ink};">{roundToDecimals(groupCrcAmount)}</b> gCRC</span>
+                </button>
+                <button
+                    onclick={() => (showBalanceInfo = !showBalanceInfo)}
+                    class="btn-naked"
+                    aria-label="What is personal vs group CRC?"
+                    title="What is personal vs group CRC?"
+                    aria-expanded={showBalanceInfo}
+                    style="background:transparent;border:0;padding:0;cursor:pointer;display:inline-flex;align-items:center;color:{T.inkMuted};"
+                >
+                    <Icon name="info" size={14} stroke={T.inkMuted} />
                 </button>
                 {#if mintableAmount >= 0.01}
                     <span style="color:{T.inkFaint};">·</span>
@@ -192,6 +200,15 @@
                 {/if}
                 {/if}
             </div>
+
+            {#if showBalanceInfo}
+                <!-- Explainer toggled by the (i) next to the personal/gCRC split. -->
+                <div style="margin-top:10px;padding:11px 13px;border-radius:12px;background:{T.surface};border:1px solid {T.hairlineSoft};font-size:12px;color:{T.inkBody};line-height:1.55;">
+                    <b style="color:{T.ink};">Personal CRC</b> — Circles minted by you and the people you trust.
+                    <br />
+                    <b style="color:{T.ink};">Group CRC (gCRC)</b> — personal CRC you converted into a group's currency. It stays backed by that collateral and holds value, but isn't directly redeemable back to personal CRC; you can transfer or trade it.
+                </div>
+            {/if}
 
             <!-- ACTION ROW -->
             <div style="display:flex;align-items:center;gap:8px;margin-top:18px;">
