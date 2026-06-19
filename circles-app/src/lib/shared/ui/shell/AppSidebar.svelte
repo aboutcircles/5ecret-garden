@@ -17,8 +17,6 @@
   import { popupControls } from '$lib/shared/state/popup';
   import { canCreateInviteLinks } from '$lib/areas/invites/data/canCreateInviteLinks';
   import { T } from '$lib/design-system/tokens.js';
-  import { get } from 'svelte/store';
-  import { circles } from '$lib/shared/state/circles';
   import { isWebsocketConnected } from '$lib/shared/state/realtimeSync';
   import { settings } from '$lib/shared/state/settings.svelte';
   import Tooltip from '$lib/shared/ui/primitives/Tooltip.svelte';
@@ -73,7 +71,7 @@
   let wsConnected = $state<boolean | undefined>(undefined);
   $effect(() => {
     const tick = () => {
-      wsConnected = isWebsocketConnected(get(circles));
+      wsConnected = isWebsocketConnected();
     };
     tick();
     const id = setInterval(tick, 3000);

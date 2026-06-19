@@ -1,5 +1,5 @@
 import { get } from 'svelte/store';
-import type { Avatar, Sdk } from '@aboutcircles/sdk';
+import type { Avatar } from '@aboutcircles/sdk';
 import { avatarState } from '$lib/shared/state/avatar.svelte';
 import { circles } from '$lib/shared/state/circles';
 import { initTransactionHistoryStore, refreshTransactionHistory } from '$lib/shared/state/transactionHistory';
@@ -62,23 +62,37 @@ function refreshAvatarStores(avatar: Avatar, opts?: { full?: boolean }): void {
 }
 
 /**
- * `CirclesRpc.websocketConnected` is private in the SDK's types and there is no
- * public connection-state or reconnect hook, so we read it defensively. Returns
- * undefined if the field is absent (e.g. SDK internals changed).
+ * Whether the realtime events websocket is currently connected.
+ *
+ * CRITICAL: realtime events flow on the AVATAR's rpc client — the one `subscribeToEvents()`
+ * opens — which (confirmed by live instrumentation) is a DIFFERENT SDK instance than the one
+ * held in the `circles` store. The store's client never opens a socket (it's only used for
+ * stateless HTTP calls), so reading IT reports "disconnected" forever. That mismatch is what
+ * made the status indicator show a permanent red dot and made the liveness gate below poll
+ * every 15s even though realtime push was working fine. So read the avatar's client.
+ *
+ * `websocketConnected` is private in the SDK's types and there's no public connection-state
+ * accessor, so we read it defensively; returns undefined when unavailable (no avatar yet, or
+ * SDK internals changed). TODO: the two coexisting SDK instances are a separate smell worth
+ * unifying upstream — once there's one SDK, this can read it directly.
  */
-export function isWebsocketConnected(sdk: Sdk | undefined): boolean | undefined {
-  const flag = ((sdk as any)?.rpc?.client as unknown as { websocketConnected?: unknown })
-    ?.websocketConnected;
+export function isWebsocketConnected(): boolean | undefined {
+  const flag = (
+    avatarState.avatar as unknown as { rpc?: { client?: { websocketConnected?: unknown } } }
+  )?.rpc?.client?.websocketConnected;
   return typeof flag === 'boolean' ? flag : undefined;
 }
 
 /**
- * Re-establishes the realtime event subscription. The SDK reconnects a dropped
- * websocket but never re-issues `eth_subscribe`, and it ignores clean closes
- * entirely — so after any disconnect `avatar.events` is silent for the rest of
- * the session. `subscribeToEvents()` creates a fresh observable via a fresh
- * `eth_subscribe` (reconnecting the socket first if needed), then we rebind the
- * stores to it and reload to catch up on anything missed while disconnected.
+ * Re-establishes the realtime event subscription after a genuine drop, then refetches to
+ * catch up on anything missed. Only meaningful when the avatar's websocket is actually down
+ * (see the gate in `initRealtimeSync`); on a healthy socket this is not called.
+ *
+ * `avatar.subscribeToEvents()` is idempotent in the SDK (a private `_hasSubscribed` flag set
+ * once by `Sdk.getAvatar()`), so a plain call would no-op even after the socket dropped and
+ * never re-open it. When the socket is down we clear that flag so the call genuinely
+ * re-subscribes (`rpc.client.subscribe()` reconnects when `!websocketConnected`) and rebinds
+ * a fresh `avatar.events` observable. TODO: fix the idempotency upstream and drop the reset.
  */
 async function resync(opts?: { full?: boolean }): Promise<void> {
   const avatar = avatarState.avatar;
@@ -88,44 +102,15 @@ async function resync(opts?: { full?: boolean }): Promise<void> {
   if (now - lastResyncAt < MIN_RESYNC_INTERVAL_MS) return;
   lastResyncAt = now;
 
-  // TEMPORARY DIAGNOSTIC (remove after root-causing the WS reconnect): prod strips
-  // console.*, so record the reconnect lifecycle into globalThis.__rt to read via eval.
-  const _rec: Record<string, unknown> = {};
   try {
-    const sdk: unknown = get(circles);
-    const a = avatar as unknown as {
-      _hasSubscribed?: boolean;
-      rpc?: { client?: { websocketConnected?: unknown } };
-    };
-    const storeClient = (sdk as { rpc?: { client?: { websocketConnected?: unknown } } })?.rpc
-      ?.client;
-    _rec.wsBefore = isWebsocketConnected(get(circles));
-    _rec.flagBefore = a?._hasSubscribed;
-    _rec.avatarHasRpcClient = !!a?.rpc?.client;
-    _rec.sameClientInstance = !!(storeClient && a?.rpc?.client && storeClient === a.rpc.client);
-    _rec.storeClientWs = storeClient?.websocketConnected;
-    _rec.avatarClientWs = a?.rpc?.client?.websocketConnected;
-
-    if (isWebsocketConnected(get(circles)) !== true) {
-      a._hasSubscribed = false;
+    if (isWebsocketConnected() !== true) {
+      (avatar as unknown as { _hasSubscribed?: boolean })._hasSubscribed = false;
     }
-    _rec.flagAfterReset = a?._hasSubscribed;
-    try {
-      await avatar.subscribeToEvents();
-      _rec.subscribeResult = 'ok';
-    } catch (e) {
-      _rec.subscribeResult =
-        'THROW: ' + ((e as Error)?.message || (e as Error)?.name || String(e));
-    }
-    _rec.wsAfter = isWebsocketConnected(get(circles));
-    _rec.avatarClientWsAfter = a?.rpc?.client?.websocketConnected;
+    await avatar.subscribeToEvents();
   } catch (e) {
-    _rec.outerError = (e as Error)?.message || String(e);
-  } finally {
-    const g = globalThis as unknown as { __rt?: Array<Record<string, unknown>> };
-    g.__rt = g.__rt || [];
-    g.__rt.push(_rec);
-    if (g.__rt.length > 20) g.__rt.shift();
+    // Don't let a subscribe failure block the store rebind below — a stale
+    // observable is still better than empty stores.
+    console.warn('[realtimeSync] subscribeToEvents failed', e);
   }
   try {
     refreshAvatarStores(avatar, opts);
@@ -169,7 +154,7 @@ export function initRealtimeSync(): () => void {
     // state is unknown (the SDK field is private/undocumented and may return undefined
     // after an SDK change). `!== true` means an SDK shape change degrades to a harmless
     // quiet resync rather than silently freezing the only background refresh path.
-    if (isWebsocketConnected(get(circles)) !== true) void resync();
+    if (isWebsocketConnected() !== true) void resync();
   }, LIVENESS_CHECK_INTERVAL_MS);
 
   return () => {
