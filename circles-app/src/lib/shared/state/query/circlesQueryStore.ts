@@ -51,13 +51,17 @@ export async function createCirclesQueryStore<T extends EventRow>(
   }>
 > {
   let circlesQuery = await circlesQueryFactory();
+  // Number of pages currently materialised in the store (initial load = 1; each
+  // _handleNextPage advance = +1). _handleEvent uses it to refetch the WHOLE loaded
+  // range authoritatively rather than only page 1, so a removal on a scrolled-past
+  // page (e.g. a group member untrusted while viewing page 2+) actually disappears.
+  let loadedPages = 1;
 
   /**
-   * Compares two rows by value to decide whether a same-key row needs healing. Runs only
-   * on a key collision (a re-fetched row already in the list), which for the current
-   * consumers is the single full-list contacts snapshot — never the paginated group/member
-   * rows, whose keys are distinct. JSON serialisation is the pragmatic deep-compare here;
-   * a non-serialisable row falls back to "changed" so a real correction is never swallowed.
+   * Compares two rows by value to decide whether a same-key row changed. JSON
+   * serialisation is the pragmatic deep-compare here; a non-serialisable row falls
+   * back to "changed" so a real correction is never swallowed. Used both by the
+   * paginating merge and the authoritative event reconcile below.
    */
   function _rowsEqual(a: T, b: T): boolean {
     if (a === b) return true;
@@ -75,15 +79,15 @@ export async function createCirclesQueryStore<T extends EventRow>(
   }
 
   /**
-   * Merges new rows into the current list:
-   *  - a key not yet present is appended (pagination / a newly-trusted contact);
-   *  - a key already present whose content changed heals the existing row in place —
-   *    surfacing a correction, and (for the single-snapshot contacts store) letting an
-   *    untrust shrink the list live instead of leaving the stale row behind;
+   * Additive merge used while paginating FORWARD (_handleNextPage):
+   *  - a key not yet present is appended (the next page of results);
+   *  - a key already present whose content changed heals the existing row in place
+   *    (insurance against a backend that overlaps page boundaries);
    *  - when nothing was appended and nothing healed, the SAME array reference is returned
    *    so the store re-emit is a no-op for keyed lists (no flicker / needless re-render).
-   * It never drops a key absent from `newData`, so the merge stays additive — a partial
-   * refetch can't blank already-loaded rows.
+   * It never drops a key absent from `newData`, so the merge stays additive — appending a
+   * page can't blank already-loaded rows. (Event-driven refreshes use _reconcile instead,
+   * which IS authoritative and drops removed rows — see _handleEvent.)
    *
    * @param {T[]} currentData - The current array of event rows.
    * @param {T[]} newData - The new array of event rows to be merged.
@@ -133,6 +137,7 @@ export async function createCirclesQueryStore<T extends EventRow>(
   async function _handleNextPage(currentData: T[]): Promise<NextPageData<T[]>> {
     if (circlesQuery.hasMore) {
       circlesQuery = await circlesQuery.nextPage();
+      loadedPages++;
     }
     const mergedData = _mergeData(
       currentData,
@@ -146,8 +151,64 @@ export async function createCirclesQueryStore<T extends EventRow>(
   }
 
   /**
-   * Handles events and refreshes the data by reloading the current page of the CirclesQuery.
-   * This function ensures the current data is merged with the new data to prevent duplication.
+   * Refetches every page the user has already loaded by walking a FRESH, THROWAWAY query
+   * forward `loadedPages` times, so the result is authoritative for the entire visible
+   * range rather than just page 1.
+   *
+   * Deliberately does NOT touch the live `circlesQuery`: leaving its cursor in place keeps
+   * subsequent scroll-pagination race-free (a concurrent `next()` may already hold it) and
+   * is still correct — cursor pagination resumes "after" the same boundary key regardless
+   * of membership changes before it, and the loaded range is already reconciled here.
+   *
+   * @returns {Promise<T[]>} - All rows across the currently-loaded pages, freshly fetched.
+   */
+  async function _refetchLoadedPages(): Promise<T[]> {
+    let q = await circlesQueryFactory();
+    let rows = q.rows ? [...q.rows] : [];
+    for (let page = 1; page < loadedPages && q.hasMore; page++) {
+      q = await q.nextPage();
+      if (q.rows) rows = rows.concat(q.rows);
+    }
+    return rows;
+  }
+
+  /**
+   * Reconciles the current list against an AUTHORITATIVE refetch of the whole loaded
+   * range (unlike the additive _mergeData used while paginating forward):
+   *  - a key present before but absent from the refetch is DROPPED — an untrusted group
+   *    member on ANY loaded page, or a trailing page emptied by the removal, disappears
+   *    live instead of lingering until a full resync;
+   *  - a same-key row whose content is unchanged keeps its EXISTING object, so a keyed
+   *    list (VirtualList) sees stable row identity — no rebuild / scroll jump;
+   *  - a changed row takes the fresh content; a new key is included;
+   *  - when the refetch matches the current list exactly, the SAME array reference is
+   *    returned so the re-emit is a no-op (no flicker on an unrelated event).
+   *
+   * Replacing (not merging) is safe here precisely because _handleEvent refetches the
+   * FULL loaded range — there is no partial refetch that could blank still-valid rows.
+   *
+   * @param {T[]} currentData - The current array of event rows.
+   * @param {T[]} refreshed - The authoritative rows across all loaded pages.
+   * @returns {T[]} - The reconciled array (or `currentData` unchanged when nothing changed).
+   */
+  function _reconcile(currentData: T[], refreshed: T[]): T[] {
+    const byKey = new Map<string, T>();
+    for (const row of currentData) byKey.set(getKeyFromItem(row), row);
+
+    let changed = refreshed.length !== currentData.length;
+    const result = refreshed.map((row) => {
+      const existing = byKey.get(getKeyFromItem(row));
+      if (existing && _rowsEqual(existing, row)) return existing;
+      changed = true;
+      return row;
+    });
+    return changed ? result : currentData;
+  }
+
+  /**
+   * Handles events by refetching the full loaded range and reconciling authoritatively,
+   * so removals (e.g. an untrusted member on a scrolled-past page) actually disappear,
+   * while an unchanged refetch re-emits the same reference (no flicker).
    *
    * @param {CirclesEvent} _event - The event that triggered the refresh (unused, but required by interface).
    * @param {T[]} currentData - The current array of event rows.
@@ -157,13 +218,8 @@ export async function createCirclesQueryStore<T extends EventRow>(
     _event: CirclesEvent,
     currentData: T[]
   ): Promise<T[]> {
-    const refreshedQuery = await circlesQueryFactory();
-    const updateQuery = refreshedQuery.rows || [];
-    // _mergeData appends new-key rows, heals same-key rows whose content changed, and
-    // returns the SAME reference when neither happened — so an unchanged refetch is a
-    // no-op re-emit (no flicker) while a correction (or an untrust shrinking the single
-    // contacts snapshot) now surfaces instead of being silently dropped.
-    return _mergeData(currentData, updateQuery);
+    const refreshed = await _refetchLoadedPages();
+    return _reconcile(currentData, refreshed);
   }
 
   /**
