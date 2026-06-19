@@ -26,6 +26,7 @@
   import Popup from '$lib/shared/ui/shell/PopupHost.svelte';
   import { initAvatarStores, initRealtimeSync } from '$lib/shared/state/realtimeSync';
   import { browser } from '$app/environment';
+  import { CirclesStorage } from '$lib/shared/utils/storage';
   import { makeScopeId, writeMeta } from '$lib/shared/cache';
   import { env } from '$env/dynamic/public';
 
@@ -124,6 +125,19 @@
   let lastForwardNoopTick = 0;
   let historyForwardNoopToastTimer: ReturnType<typeof setTimeout> | null = null;
   const avatarInfo = $derived(avatarState.avatar?.avatarInfo ?? null);
+
+  // Reserve the sidebar's width as soon as we know a session will restore, not only once
+  // the avatar resolves — otherwise the sidebar mounts late and shoves page content ~248px
+  // to the right (a visible layout jump on load). "Will restore" = a stored avatar exists
+  // (the same signal restoreSession() checks) AND we're not on a bypass route (landing /
+  // connect / kitchen-sink). Gating on the stored session — rather than the route alone —
+  // avoids showing a dead half-sidebar to signed-out visitors on public routes
+  // (/register, /terms, …). AppSidebar renders safely without an avatar (logo + nav show;
+  // account/Send fill in when it resolves), so reserving the column early causes no error.
+  const showSidebar = $derived(
+    !!avatarState.avatar ||
+    (!shouldBypassWalletRestore($page.route.id) && !!CirclesStorage.getInstance().avatar)
+  );
 
   onMount(() => {
     disposePopupHistorySync = initPopupHistorySync();
@@ -324,8 +338,9 @@
 <!-- Full-height responsive shell -->
 <div class="flex h-dvh overflow-hidden" style="background:#EFEDE7;">
 
-  <!-- Desktop sidebar (md+) -->
-  {#if avatarState.avatar}
+  <!-- Desktop sidebar (md+). Rendered as soon as a session restore is expected so the
+       content column doesn't jump right when the avatar resolves. -->
+  {#if showSidebar}
     <AppSidebar />
   {/if}
 

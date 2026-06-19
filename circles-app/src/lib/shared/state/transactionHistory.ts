@@ -35,6 +35,29 @@ function parseNumericValue(raw: unknown): number {
 }
 
 /**
+ * Cheap equality check for the first page of transaction events. Used by the quiet
+ * background refresh to decide whether a refetch actually changed anything — if the
+ * leading `incoming.length` rows match (same tx hash, log index AND amount), nothing
+ * has changed and the refresh is a no-op (so the UI is never disturbed). Comparing the
+ * amount as well as the identity means an in-place correction to an existing top row
+ * (e.g. an indexer backfilling a previously-missing amount) still heals on resync.
+ * A `current` longer than `incoming` (user scrolled past page 1) still counts as
+ * unchanged as long as the leading rows match, preserving their loaded pages.
+ */
+function firstPageUnchanged(
+  current: ExtendedTransactionRow[],
+  incoming: ExtendedTransactionRow[]
+): boolean {
+  if (current.length < incoming.length) return false;
+  for (let i = 0; i < incoming.length; i++) {
+    if (current[i]?.transactionHash !== incoming[i]?.transactionHash) return false;
+    if (current[i]?.logIndex !== incoming[i]?.logIndex) return false;
+    if (current[i]?.circles !== incoming[i]?.circles) return false;
+  }
+  return true;
+}
+
+/**
  * Extended transaction row with event type and operator
  */
 export type ExtendedTransactionRow = TransactionHistoryRow & {
@@ -471,13 +494,18 @@ const _transactionHistory = writable<{
  * Load the next page of transactions using enriched endpoint
  * Profiles are pre-loaded and cached for efficiency
  */
-async function loadNextPage(): Promise<boolean> {
-  if (!currentAvatar || isLoading || !hasMore) {
+async function loadNextPage(opts?: { replace?: boolean }): Promise<boolean> {
+  // `replace` mode = quiet background refresh: refetch page 1 and swap it in place
+  // without first blanking the list to a skeleton (used by the realtime resync).
+  const replace = opts?.replace === true;
+  if (!currentAvatar || isLoading || (!hasMore && !replace)) {
     return false;
   }
 
   isLoading = true;
-  _transactionHistory.update((state) => ({ ...state, isLoading: true }));
+  if (!replace) {
+    _transactionHistory.update((state) => ({ ...state, isLoading: true }));
+  }
 
   try {
     // Use global circles store - more reliable than extracting from avatar
@@ -491,7 +519,7 @@ async function loadNextPage(): Promise<boolean> {
     const response = await sdk.rpc.transaction.getTransactionHistory(
       currentAvatar.address,
       PAGE_SIZE,
-      nextCursor ?? null
+      replace ? null : (nextCursor ?? null)
     ) as unknown as PagedResponse<EnrichedTransaction>;
 
     if (response.results.length > 0) {
@@ -625,12 +653,25 @@ async function loadNextPage(): Promise<boolean> {
         };
       });
 
+      // Quiet replace: if page 1 is unchanged, skip the update entirely so a periodic
+      // resync never disturbs the UI when nothing actually changed. (nextCursor/hasMore
+      // were already updated above.)
+      if (replace && firstPageUnchanged(get(_transactionHistory).data, rows)) {
+        return true;
+      }
+
       // Pre-fetch profiles for all transaction participants
       // This populates enrichedProfileCache for getDisplayName() to use synchronously
       await prefetchProfilesForTransactions(rows);
 
+      // Replacing page 1 (quiet refresh) changes content without necessarily changing
+      // row count, so invalidate the length-keyed grouping memo to force a regroup.
+      if (replace) {
+        resetGroupedCache();
+      }
+
       _transactionHistory.update((state) => {
-        const newData = [...state.data, ...rows];
+        const newData = replace ? rows : [...state.data, ...rows];
         // Write-through to IDB cache
         if (currentAvatarAddress) {
           void writeTransactions(makeScopeId(currentAvatarAddress), newData);
@@ -827,7 +868,7 @@ export const groupedTransactionHistory = derived(
  * Unlike initTransactionHistoryStore(), this bypasses the "already initialized" guard
  * so new transactions (from WebSocket events) actually appear.
  */
-export async function refreshTransactionHistory(): Promise<void> {
+export async function refreshTransactionHistory(opts?: { quiet?: boolean }): Promise<void> {
   if (!currentAvatar || !currentAvatarAddress) {
     return;
   }
@@ -836,6 +877,15 @@ export async function refreshTransactionHistory(): Promise<void> {
   nextCursor = null;
   hasMore = true;
   isLoading = false;
+
+  // Quiet refresh (e.g. realtime liveness resync): refetch page 1 and swap it in place
+  // without tearing the list down to a skeleton, and skip the update entirely when
+  // page 1 is unchanged. Avoids a periodic flicker when nothing actually changed.
+  if (opts?.quiet) {
+    void loadTransferAnnotations(currentAvatar, true);
+    await loadNextPage({ replace: true });
+    return;
+  }
 
   // Clear memoization cache for fresh grouping
   resetGroupedCache();
