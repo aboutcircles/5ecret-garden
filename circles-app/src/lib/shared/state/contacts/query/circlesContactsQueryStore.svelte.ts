@@ -58,6 +58,12 @@ export async function createContactsQueryStore(
       // accumulates rows across pages and the subscriber merges them.
       let cursor: string | null = null;
       let exhausted = false;
+      // 1-based page ordinal, used as a STABLE per-page row key (via blockNumber). A fresh
+      // factory call on a trust event restarts at page 1, so the refreshed page-1 snapshot
+      // heals the existing page-1 row in place rather than appending a duplicate — and,
+      // unlike a wall-clock key, it can never collide when two refetches land in the same
+      // millisecond.
+      let pageIndex = 0;
 
       const fetchNextGroupPage = async (): Promise<CirclesQuery<ContactEventRow>> => {
         if (exhausted) {
@@ -94,7 +100,7 @@ export async function createContactsQueryStore(
         exhausted = !hasMore;
 
         const row: ContactEventRow = {
-          blockNumber: Date.now(),
+          blockNumber: ++pageIndex,
           transactionIndex: 0,
           logIndex: 0,
           data: enriched,
@@ -108,8 +114,13 @@ export async function createContactsQueryStore(
     const contacts = await trustDataSource.getAggregatedTrustRelations(address);
     const enrichedContacts = await enrichContactData(contacts, address, sdk);
 
+    // A single full-contact-list snapshot with a STABLE key (block 0): a fresh factory
+    // call on a trust event re-emits the same key, so _mergeData heals this one row in
+    // place — an added contact appears, an untrusted contact disappears live, and an
+    // unchanged list is a no-op (no flicker). A wall-clock key would instead append a new
+    // snapshot every event (unbounded growth, and an untrust never disappearing).
     const contactEventRow: ContactEventRow = {
-      blockNumber: Date.now(),
+      blockNumber: 0,
       transactionIndex: 0,
       logIndex: 0,
       data: enrichedContacts,
