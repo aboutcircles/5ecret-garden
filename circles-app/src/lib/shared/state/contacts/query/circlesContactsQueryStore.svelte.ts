@@ -146,6 +146,8 @@ export async function createContactsQueryStore(
         data: ContactList;
         next: () => Promise<boolean>;
         ended: boolean;
+        initialLoaded: boolean;
+        initialLoadError: boolean;
       }) => void
     ) => {
       return store.subscribe((value) => {
@@ -159,6 +161,11 @@ export async function createContactsQueryStore(
           data: merged,
           next: value.next,
           ended: value.ended,
+          // Forward the load-completion signals so consumers can distinguish
+          // "still loading" from "loaded, genuinely empty" (and surface errors).
+          // `ended` is a pagination-exhaustion flag and must NOT be used for that.
+          initialLoaded: value.initialLoaded,
+          initialLoadError: value.initialLoadError,
         });
       });
     },

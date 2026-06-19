@@ -34,7 +34,12 @@ export const contacts = writable<{
   data: ContactList;
   next: () => Promise<boolean>;
   ended: boolean;
-}>({ data: {}, next: async () => false, ended: false });
+  // `initialLoaded` flips true once the first page has loaded (success or empty);
+  // `initialLoadError` true when that initial load failed. Consumers use these —
+  // NOT `ended` (a pagination-exhaustion flag) — to tell loading from empty.
+  initialLoaded: boolean;
+  initialLoadError: boolean;
+}>({ data: {}, next: async () => false, ended: false, initialLoaded: false, initialLoadError: false });
 
 export const initContactStore = ($avatar: Avatar) => {
   // Skip re-init if already initialized for this avatar
@@ -57,6 +62,8 @@ export const initContactStore = ($avatar: Avatar) => {
       data: ContactList;
       next: () => Promise<boolean>;
       ended: boolean;
+      initialLoaded: boolean;
+      initialLoadError: boolean;
     }) => {
       contacts.set(value);
 
