@@ -84,6 +84,29 @@ async function resync(opts?: { full?: boolean }): Promise<void> {
   lastResyncAt = now;
 
   try {
+    // WORKAROUND for an SDK bug in @aboutcircles/sdk (confirmed in 0.1.29 and the deployed
+    // 0.1.47): `CommonAvatar.subscribeToEvents()` is guarded by `if (this._hasSubscribed)
+    // return;` and `Sdk.getAvatar()` calls it once on load, setting the flag. When the
+    // realtime websocket later drops, every reconnect attempt here hits that guard and
+    // no-ops — so the socket is never re-opened and the app silently degrades to this 15s
+    // HTTP poll (the websocket status indicator stays red forever).
+    //
+    // The SDK never clears `_hasSubscribed` except on a thrown subscribe, and exposes no
+    // public "is the socket up?" or "force resubscribe" API. So when we detect the socket
+    // is down, clear the private flag ourselves and call subscribeToEvents again: that
+    // routes into `rpc.client.subscribe()`, which re-opens the websocket (it connects when
+    // `!websocketConnected`) and rebinds a fresh `avatar.events` observable. We only force
+    // this while the socket is actually disconnected, so a healthy connection is left alone
+    // (no churn). During an outage it retries each tick; the prior subscription was already
+    // dropped server-side when the socket closed, so re-subscribing is the correct recovery.
+    //
+    // This lives in the app rather than a patch-package patch because the SDK ships a single
+    // bundled `dist/index.js` and the repo's lockfile (0.1.29) disagrees with package.json
+    // (0.1.47), which would make a content-pinned patch unreliable. TODO: fix upstream so the
+    // guard also checks the live socket state, then drop this workaround.
+    if (isWebsocketConnected(get(circles)) !== true) {
+      (avatar as unknown as { _hasSubscribed?: boolean })._hasSubscribed = false;
+    }
     await avatar.subscribeToEvents();
   } catch (e) {
     // Don't let a subscribe failure block the store rebind below — a stale
