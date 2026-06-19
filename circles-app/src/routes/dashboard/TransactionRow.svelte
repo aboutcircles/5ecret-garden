@@ -21,13 +21,20 @@
 
     const counterpartyAddress = $derived(item.counterparty?.toLowerCase() ?? null);
 
-    const topInfoText = $derived(item.hasMint ? 'Collected CRC' : '');
+    // "Collected CRC" should only show for an actual mint (you collected your own CRC),
+    // where the counterparty resolves to yourself. Keying it off `hasMint` (ANY mint event
+    // anywhere in the bundle) mislabels received path-transfers that merely contain a mint
+    // hop as "Collected CRC · <sender>", which is nonsensical. Use the semantic group type.
+    const topInfoText = $derived(item.type === 'mint' ? 'Collected CRC' : '');
 
     const badgeUrl = $derived.by(() => {
-        if (item.hasMint) return '/badge-mint.svg';
-        if (item.hasBurn) return '/badge-burn.svg';
+        if (item.type === 'mint') return '/badge-mint.svg';
+        if (item.type === 'burn') return '/badge-burn.svg';
         if (item.type === 'send') return '/badge-sent.svg';
         if (item.type === 'receive') return '/badge-received.svg';
+        // hop/complex fallback: hint at a mint/burn if one is present in the bundle
+        if (item.hasMint) return '/badge-mint.svg';
+        if (item.hasBurn) return '/badge-burn.svg';
         return null;
     });
 

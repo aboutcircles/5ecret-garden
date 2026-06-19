@@ -14,7 +14,7 @@
     import Balances from '$lib/areas/wallet/ui/pages/Balances.svelte';
     import { circlesBalances } from '$lib/shared/state/circlesBalances';
     import { totalCirclesBalance } from '$lib/shared/state/totalCirclesBalance';
-    import { refreshTransactionHistory, transactionHistory } from '$lib/shared/state/transactionHistory';
+    import { refreshTransactionHistory, transactionHistory, groupedTransactionHistory } from '$lib/shared/state/transactionHistory';
     import { buildGroupOwnerSet } from '$lib/shared/utils/tokenClassification';
 
     import { openSendFlowPopup } from '$lib/areas/wallet/flows/send/openSendFlowPopup';
@@ -295,7 +295,7 @@
         >
             <VirtualList
                 row={TransactionRow}
-                store={transactionHistory}
+                store={groupedTransactionHistory}
                 rowHeight={TRANSACTION_ROW_HEIGHT}
                 maxPlaceholderPages={2}
                 expectedPageSize={25}
