@@ -20,8 +20,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@aboutcircles/sdk": "0.1.29",
-    "@aboutcircles/sdk-types": "0.1.29"
+    "@aboutcircles/sdk": "0.1.47",
+    "@aboutcircles/sdk-types": "0.1.47"
   },
   "devDependencies": {
     "tsup": "8.3.0",
