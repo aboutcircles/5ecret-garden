@@ -4,10 +4,23 @@
   import { T } from '$lib/design-system/tokens.js';
   import { circles } from '$lib/shared/state/circles';
   import { isWebsocketConnected } from '$lib/shared/state/realtimeSync';
-  import { settings, getActiveConfig } from '$lib/shared/state/settings.svelte';
+  import { settings, getActiveConfig, updateSettings } from '$lib/shared/state/settings.svelte';
 
   // The active config the SDK was initialised with (incl. any custom URL overrides).
   const config = getActiveConfig();
+
+  // Server switch (gnosis only). The SDK and its realtime websocket are built once at
+  // wallet init, so persist the choice and reload to re-initialise against the new backend.
+  const serverOptions: { id: 'production' | 'staging'; label: string }[] = [
+    { id: 'production', label: 'Production' },
+    { id: 'staging', label: 'Staging' },
+  ];
+  const activeServer = $derived(settings.server === 'staging' ? 'staging' : 'production');
+  function switchServer(target: 'production' | 'staging') {
+    if (activeServer === target) return;
+    updateSettings({ server: target });
+    if (typeof window !== 'undefined') window.location.reload();
+  }
 
   const network = $derived(
     settings.network === 'chiado'
@@ -95,9 +108,24 @@
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
       <span style="font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Server</span>
-      <span style="font-size:13px;color:{T.ink};font-weight:560;">
-        {serverLabel}
-      </span>
+      {#if settings.network === 'gnosis'}
+        <!-- Toggle the backend deployment. Same Gnosis mainnet; only the data host + realtime ws move. -->
+        <span style="display:inline-flex;gap:2px;border:1px solid {T.hairlineSoft};border-radius:9999px;padding:2px;">
+          {#each serverOptions as opt}
+            <button
+              type="button"
+              onclick={() => switchServer(opt.id)}
+              aria-pressed={activeServer === opt.id}
+              title={opt.id === 'staging' ? 'Use the staging deployment (reloads)' : 'Use the production deployment (reloads)'}
+              style="font-size:12px;font-weight:560;line-height:1;padding:4px 10px;border:0;border-radius:9999px;cursor:pointer;background:{activeServer === opt.id ? T.ink : 'transparent'};color:{activeServer === opt.id ? '#FFFFFF' : T.inkMuted};"
+            >
+              {opt.label}
+            </button>
+          {/each}
+        </span>
+      {:else}
+        <span style="font-size:13px;color:{T.ink};font-weight:560;">{serverLabel}</span>
+      {/if}
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
       <span style="font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Realtime</span>
