@@ -15,6 +15,9 @@
       : { name: 'Gnosis Chain', chainId: 100, testnet: false },
   );
 
+  // Backend deployment the data + realtime are pointed at (independent of chain/contracts).
+  const serverLabel = $derived(settings.server === 'staging' ? 'Staging' : 'Production');
+
   // The websocket flag is a plain (non-reactive) field on the SDK rpc client, so poll it
   // while the popup is open to keep the realtime indicator live.
   let wsConnected = $state<boolean | undefined>(undefined);
@@ -88,6 +91,12 @@
       <span style="font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Mode</span>
       <span style="font-size:13px;color:{T.ink};font-weight:560;">
         {settings.ring ? 'Rings (experimental)' : 'Production'}
+      </span>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <span style="font-size:11px;font-weight:600;color:{T.inkMuted};letter-spacing:0.06em;text-transform:uppercase;">Server</span>
+      <span style="font-size:13px;color:{T.ink};font-weight:560;">
+        {serverLabel}
       </span>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">

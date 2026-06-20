@@ -143,18 +143,20 @@ export function initRealtimeSync(): () => void {
   document.addEventListener('visibilitychange', onVisible);
   window.addEventListener('online', onOnline);
 
-  // Safety net for a clean idle-close while the tab is foregrounded: only
-  // resyncs when the socket actually reports disconnected, so it doesn't leak
-  // subscriptions or reload on every tick. This is a QUIET resync — transaction
-  // history and balances refetch in place without blanking, and no-op when nothing
-  // changed — so it never flickers the UI even though it can fire every interval.
+  // Backstop refresh while the tab is foregrounded. Runs every tick REGARDLESS of socket
+  // state: a "connected" websocket does NOT guarantee events are actually being delivered —
+  // the server's realtime push can be silently broken (e.g. the events producer notifying on
+  // a channel the push endpoint doesn't listen on) while the socket itself stays open. So
+  // connection state can't be used as a proxy for "events are flowing" to gate this poll;
+  // gating it that way froze background refresh whenever the socket looked healthy but was
+  // silent. This is a QUIET resync — transaction history and balances refetch in place without
+  // blanking, and no-op when nothing changed — so it never flickers the UI even firing every
+  // interval, and when the socket is genuinely down resync() also re-subscribes. When push
+  // works this is cheap redundant insurance; when it silently fails it's the only thing
+  // keeping the dashboard fresh.
   const interval = setInterval(() => {
     if (document.visibilityState !== 'visible') return;
-    // Fail safe: resync when the socket reports disconnected OR when the connection
-    // state is unknown (the SDK field is private/undocumented and may return undefined
-    // after an SDK change). `!== true` means an SDK shape change degrades to a harmless
-    // quiet resync rather than silently freezing the only background refresh path.
-    if (isWebsocketConnected() !== true) void resync();
+    void resync();
   }, LIVENESS_CHECK_INTERVAL_MS);
 
   return () => {

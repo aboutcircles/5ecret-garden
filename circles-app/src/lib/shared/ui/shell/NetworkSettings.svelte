@@ -20,6 +20,15 @@
     updateSettings({ ring: target.checked });
   }
 
+  // The SDK (and its realtime websocket) is built once from getActiveConfig() at wallet
+  // init, so switching the backend deployment only takes effect on a fresh load. Persist
+  // then reload so the whole app re-initialises against the chosen server.
+  function handleServerToggle(event: Event) {
+    const target = event.target as HTMLInputElement;
+    updateSettings({ server: target.checked ? 'staging' : 'production' });
+    if (typeof window !== 'undefined') window.location.reload();
+  }
+
   function saveCustomUrls() {
     updateSettings({
       customCirclesRpcUrl: customCirclesRpcUrl || undefined,
@@ -90,6 +99,26 @@
           <span class="label-text">Enable Rings</span>
           <span class="label-text-alt text-base-content/60">
             Experimental contract addresses
+          </span>
+        </div>
+      </label>
+    </div>
+
+    <!-- Server (deployment) Toggle -->
+    <div class="form-control">
+      <label class="label cursor-pointer justify-start gap-3" for="server-toggle">
+        <input
+          id="server-toggle"
+          type="checkbox"
+          class="toggle toggle-primary"
+          checked={settings.server === 'staging'}
+          disabled={settings.network !== 'gnosis'}
+          onchange={handleServerToggle}
+        />
+        <div class="flex flex-col">
+          <span class="label-text">Use staging server</span>
+          <span class="label-text-alt text-base-content/60">
+            Point data + realtime at the staging deployment (same Gnosis mainnet). Reloads to apply.
           </span>
         </div>
       </label>
