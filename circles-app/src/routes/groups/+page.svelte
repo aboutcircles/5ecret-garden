@@ -17,6 +17,7 @@
     import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/shared/utils/getGroupsByOwnerBatch';
     import { getGroupsByMember, streamGroupsByMember } from '$lib/areas/groups/utils/getGroupsByMemberBatch';
     import { loadAvatarCommunities, type AvatarCommunity } from '$lib/areas/groups/utils/getAvatarCommunities';
+    import { communitiesRefresh, invalidateCommunities } from '$lib/areas/groups/state/communitiesSignal.svelte';
 
     import { T } from '$lib/design-system/tokens.js';
     import Icon from '$lib/design-system/Icon.svelte';
@@ -147,24 +148,32 @@
         }
     }
 
+    // Cache key folds in the refresh token so a join/leave (which bumps the token)
+    // forces a reload even for the same avatar.
+    function communitiesCacheKey(): string {
+        return `${String(ownerAddress).toLowerCase()}:${communitiesRefresh.token}`;
+    }
+
     async function loadCommunities(): Promise<void> {
         if (!$circles || !ownerAddress) {
             communities = []; communitiesTotalFee = 0;
             communitiesLoading = false; communitiesError = null; communitiesUnavailable = false;
             return;
         }
-        const targetKey = String(ownerAddress).toLowerCase();
+        const cacheKey = communitiesCacheKey();
         communitiesLoading = true; communitiesError = null;
         try {
             const result = await loadAvatarCommunities($circles, ownerAddress as Address);
             communities = result.communities;
             communitiesTotalFee = result.totalFeePercentage;
             communitiesUnavailable = result.unavailable;
-            communitiesLoadedForAvatar = targetKey;
         } catch (e) {
             communitiesError = e instanceof Error ? e.message : String(e);
             communities = [];
         } finally {
+            // Mark this key attempted (success OR error) so the effect doesn't
+            // auto-retry into a loop; the user retries explicitly, which bumps the token.
+            communitiesLoadedForAvatar = cacheKey;
             communitiesLoading = false;
         }
     }
@@ -181,15 +190,17 @@
 
     // Lazily load communities only when the tab is opened — keeps the staging-only
     // affiliate RPC calls off every Groups visit, and off the production server.
+    // Reading communitiesRefresh.token makes a join/leave invalidate the cache.
     $effect(() => {
+        const token = communitiesRefresh.token;
         if (selectedTab !== 'communities') return;
         if (!$circles || !ownerAddress) {
             communities = []; communitiesTotalFee = 0;
             communitiesError = null; communitiesUnavailable = false; communitiesLoadedForAvatar = null;
             return;
         }
-        const ownerKey = String(ownerAddress).toLowerCase();
-        if (communitiesLoadedForAvatar === ownerKey || communitiesLoading) return;
+        const cacheKey = `${String(ownerAddress).toLowerCase()}:${token}`;
+        if (communitiesLoadedForAvatar === cacheKey || communitiesLoading) return;
         void loadCommunities();
     });
 
@@ -242,7 +253,7 @@
     const tabItems = $derived([
         { id: 'yours' as TabId,       label: 'My groups',   count: ownedGroups.length },
         ...(canShowMembershipsTab ? [{ id: 'memberships' as TabId, label: 'Memberships', count: memberships.length }] : []),
-        ...(canShowCommunitiesTab ? [{ id: 'communities' as TabId, label: 'Communities', count: communitiesLoadedForAvatar ? communities.length : (undefined as number | undefined) }] : []),
+        ...(canShowCommunitiesTab ? [{ id: 'communities' as TabId, label: 'Communities', count: (communitiesLoadedForAvatar && !communitiesUnavailable) ? communities.length : (undefined as number | undefined) }] : []),
         { id: 'all' as TabId,         label: 'Discover',    count: undefined as number | undefined },
     ]);
 </script>
@@ -415,7 +426,7 @@
                             <span style="font-size:13.5px;font-weight:580;color:{T.ink};">Couldn't load communities</span>
                             <span style="font-size:12px;color:{T.inkMuted};">{communitiesError}</span>
                         </div>
-                        <button type="button" onclick={loadCommunities} style="height:32px;padding:0 14px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.ink};font-size:12.5px;font-weight:540;cursor:pointer;">Retry</button>
+                        <button type="button" onclick={() => invalidateCommunities()} style="height:32px;padding:0 14px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.ink};font-size:12.5px;font-weight:540;cursor:pointer;">Retry</button>
                     </div>
                 {:else if communitiesUnavailable}
                     <div style="background:{T.surface};border-radius:18px;border:1px solid {T.hairlineSoft};padding:24px 16px;text-align:center;display:flex;flex-direction:column;gap:6px;">
@@ -423,8 +434,16 @@
                         <span style="font-size:12.5px;color:{T.inkMuted};line-height:1.45;">The multi-affiliate registry is live on the staging server. Switch the server to Staging in network settings to preview it.</span>
                     </div>
                 {:else if communities.length === 0}
-                    <div style="background:{T.surface};border-radius:18px;border:1px solid {T.hairlineSoft};padding:24px 16px;text-align:center;">
+                    <div style="background:{T.surface};border-radius:18px;border:1px solid {T.hairlineSoft};padding:24px 16px;text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center;">
                         <span style="font-size:13.5px;color:{T.inkMuted};">You haven't signalled intent to join any communities yet.</span>
+                        <button
+                            type="button"
+                            onclick={() => selectedTab = 'all'}
+                            style="height:36px;padding:0 14px;border-radius:9999px;background:transparent;color:{T.ink};border:1px solid {T.hairline};cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:{T.fontSans};font-size:13px;font-weight:540;"
+                        >
+                            Browse groups to join
+                            <Icon name="chevronRight" size={14} stroke={T.ink} />
+                        </button>
                     </div>
                 {:else}
                     <!-- Fee commitment summary: communities fees are capped at 100% of daily mint -->
@@ -440,7 +459,7 @@
                     </div>
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
                         {#each communities as item, i (item.groupAddress)}
-                            <CommunityCard {item} gradientIndex={i} />
+                            <CommunityCard {item} gradientIndex={i} onLeave={() => invalidateCommunities()} />
                         {/each}
                     </div>
                 {/if}

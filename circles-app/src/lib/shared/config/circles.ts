@@ -40,6 +40,14 @@ export type CirclesConfig = BaseCirclesConfig & {
    * profile-less sink. Undefined → no migration labeling on this network.
    */
   scoreGroupMigrationSink?: string;
+  /**
+   * MultiAffiliateGroupRegistry (GA 2.0 communities) — the per-avatar registry of
+   * community (affiliate group) join intents, read by the Communities tab and
+   * written by its join/leave actions. Same address on every Gnosis-mainnet
+   * deployment (staging and production read the same chain). Undefined → community
+   * join/leave is unavailable on this network.
+   */
+  multiAffiliateGroupRegistry?: string;
 };
 
 export const chiadoConfig: { production: CirclesConfig; rings: CirclesConfig } =
@@ -143,6 +151,10 @@ export const gnosisConfig: { production: CirclesConfig; rings: CirclesConfig } =
       scoreGroupsBackendUrl: 'https://rpc.aboutcircles.com/score-groups',
       scoreGatedGroupAddress: '0x93eD5A96347927ff6fF6b790F8Cf5258240c321f',
       scoreGroupMigrationSink: '0xD4cF9afd3aE777C24454b70dd28E32d1bd516F05',
+      // MultiAffiliateGroupRegistry (GA 2.0 communities) — Gnosis mainnet. Reads
+      // need the staging indexer until the RPC methods are promoted to prod; the
+      // on-chain join/leave writes work against this address on either server.
+      multiAffiliateGroupRegistry: '0x4a25a7cf216351963f1637ad965d77b3ae277ef3',
     },
     rings: {
       circlesRpcUrl:
