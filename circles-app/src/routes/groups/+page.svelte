@@ -56,6 +56,9 @@
     // when the user switches avatars (or otherwise triggers a refetch)
     // before the in-flight stream finishes.
     let membershipsLoadGeneration = 0;
+    // Same idea for the communities load: drop a stale response if a newer load
+    // (e.g. avatar switch) started before it resolved.
+    let communitiesLoadGeneration = 0;
 
     type TabId = 'yours' | 'memberships' | 'communities' | 'all';
     let selectedTab: TabId = $state('yours');
@@ -160,21 +163,26 @@
             communitiesLoading = false; communitiesError = null; communitiesUnavailable = false;
             return;
         }
+        const generation = ++communitiesLoadGeneration;
         const cacheKey = communitiesCacheKey();
         communitiesLoading = true; communitiesError = null;
         try {
             const result = await loadAvatarCommunities($circles, ownerAddress as Address);
+            if (generation !== communitiesLoadGeneration) return; // a newer load started — drop stale result
             communities = result.communities;
             communitiesTotalFee = result.totalFeePercentage;
             communitiesUnavailable = result.unavailable;
         } catch (e) {
+            if (generation !== communitiesLoadGeneration) return;
             communitiesError = e instanceof Error ? e.message : String(e);
             communities = [];
         } finally {
-            // Mark this key attempted (success OR error) so the effect doesn't
-            // auto-retry into a loop; the user retries explicitly, which bumps the token.
-            communitiesLoadedForAvatar = cacheKey;
-            communitiesLoading = false;
+            if (generation === communitiesLoadGeneration) {
+                // Mark this key attempted (success OR error) so the effect doesn't
+                // auto-retry into a loop; the user retries explicitly, which bumps the token.
+                communitiesLoadedForAvatar = cacheKey;
+                communitiesLoading = false;
+            }
         }
     }
 
