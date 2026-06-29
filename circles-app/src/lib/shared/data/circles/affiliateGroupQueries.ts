@@ -78,3 +78,18 @@ export async function getAffiliateGroups(
   );
   return normalizeListResponse(res);
 }
+
+/**
+ * The avatar's total committed membership-fee percentage across its wishlist —
+ * the number to check against the 100% cap before signalling a new join.
+ */
+export async function getAffiliateGroupFeesPercentage(
+  circlesRpc: CirclesRpc,
+  avatar: Address
+): Promise<number> {
+  const res: { totalFeePercentage?: number } | null = await circlesRpc.client.call(
+    'circles_getAffiliateGroupFeesPercentage',
+    [avatar.toLowerCase()]
+  );
+  return Number(res?.totalFeePercentage ?? 0);
+}

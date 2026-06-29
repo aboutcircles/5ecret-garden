@@ -4,12 +4,18 @@
     import Avatar from '$lib/shared/ui/avatar/Avatar.svelte';
     import { openProfilePopup } from '$lib/shared/ui/profile/openProfilePopup';
     import type { AvatarCommunity } from '$lib/areas/groups/utils/getAvatarCommunities';
+    import { leaveCommunity, isAffiliateRegistryAvailable } from '$lib/areas/groups/utils/affiliateGroupActions';
 
     interface Props {
         item: AvatarCommunity;
         gradientIndex?: number;
+        /** Called after a successful leave so the parent can refresh its list. */
+        onLeave?: () => void | Promise<void>;
     }
-    let { item, gradientIndex = 0 }: Props = $props();
+    let { item, gradientIndex = 0, onLeave }: Props = $props();
+
+    let leaving: boolean = $state(false);
+    const canLeave = $derived(isAffiliateRegistryAvailable());
 
     const gradients = [
         'linear-gradient(120deg,#FBE3D8,#F5DCE6)',
@@ -23,15 +29,43 @@
 
     // Fee shown beneath the group name. `null` means the group declares no fee.
     const feeLabel = $derived(item.membershipFee == null ? 'No fee' : `${item.membershipFee}% fee`);
+
+    function open() {
+        openProfilePopup(item.groupAddress);
+    }
+
+    function onKeydown(event: KeyboardEvent) {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            open();
+        }
+    }
+
+    async function handleLeave(event: MouseEvent) {
+        event.stopPropagation();
+        if (leaving) return;
+        leaving = true;
+        try {
+            await leaveCommunity(item.groupAddress);
+            await onLeave?.();
+        } catch (e) {
+            // The task runner surfaces the failure; keep the card interactive.
+            console.error('Failed to leave community', e);
+        } finally {
+            leaving = false;
+        }
+    }
 </script>
 
-<button
-    type="button"
+<div
+    role="button"
+    tabindex={0}
     class="community-card"
-    onclick={() => openProfilePopup(item.groupAddress)}
+    onclick={open}
+    onkeydown={onKeydown}
     aria-label={`Open community ${item.groupName ?? item.groupAddress}`}
     style="
-        text-align:left;width:100%;padding:0;cursor:pointer;
+        text-align:left;width:100%;cursor:pointer;
         background:{T.surface};
         border:1px solid {T.hairlineSoft};border-radius:18px;
         overflow:hidden;box-shadow:{T.shadow.xs};
@@ -63,10 +97,27 @@
         <div style="display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:10px;border-top:1px solid {T.hairlineSoft};">
             <span style="font-size:11px;font-weight:580;color:{T.inkMuted};letter-spacing:0.04em;text-transform:uppercase;">View</span>
             <div style="flex:1;"></div>
-            <Icon name="chevronRight" size={14} stroke={T.inkMuted} />
+            {#if canLeave}
+                <button
+                    type="button"
+                    onclick={handleLeave}
+                    disabled={leaving}
+                    aria-label={`Leave community ${item.groupName ?? item.groupAddress}`}
+                    style="
+                        height:28px;padding:0 12px;border-radius:9999px;cursor:pointer;
+                        background:transparent;color:#C44430;border:1px solid rgba(196,68,48,0.3);
+                        font-family:{T.fontSans};font-size:11.5px;font-weight:560;
+                        opacity:{leaving ? 0.6 : 1};
+                    "
+                >
+                    {leaving ? 'Leaving…' : 'Leave'}
+                </button>
+            {:else}
+                <Icon name="chevronRight" size={14} stroke={T.inkMuted} />
+            {/if}
         </div>
     </div>
-</button>
+</div>
 
 <style>
     .community-card:hover {

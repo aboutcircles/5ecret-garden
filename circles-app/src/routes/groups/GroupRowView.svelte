@@ -8,6 +8,9 @@
     import { openFlowPopup } from '$lib/shared/state/popup';
     import LeaveGroup from '$lib/areas/groups/ui/pages/LeaveGroup.svelte';
     import { T } from '$lib/design-system/tokens.js';
+    import { avatarState } from '$lib/shared/state/avatar.svelte';
+    import { joinCommunity, isAffiliateRegistryAvailable } from '$lib/areas/groups/utils/affiliateGroupActions';
+    import { invalidateCommunities } from '$lib/areas/groups/state/communitiesSignal.svelte';
 
     interface Props {
         item: GroupRow;
@@ -17,6 +20,26 @@
     let { item, showOptOut = false, onLeft }: Props = $props();
 
     let optOutSupported: boolean = $state(false);
+
+    // "Join as community" = signal on-chain intent in the multi-affiliate registry.
+    // Only humans can signal, and only where the registry is configured (Gnosis).
+    let joining: boolean = $state(false);
+    const canJoin = $derived(isAffiliateRegistryAvailable() && avatarState.isHuman === true);
+
+    async function handleJoin(event: MouseEvent): Promise<void> {
+        event.stopPropagation();
+        if (joining) return;
+        joining = true;
+        try {
+            await joinCommunity(item.group);
+            invalidateCommunities();
+        } catch (e) {
+            // The task runner surfaces the failure; keep the row interactive.
+            console.error('Failed to join community', e);
+        } finally {
+            joining = false;
+        }
+    }
 
     $effect(() => {
         if (!showOptOut) return;
@@ -93,6 +116,17 @@
             bottomInfo={`${item.memberCount} member${item.memberCount === 1 ? '' : 's'}`}
         />
     </div>
+    {#if canJoin}
+        <button
+            type="button"
+            class="btn btn-xs btn-outline"
+            onclick={handleJoin}
+            disabled={joining}
+            aria-label={`Join community ${item.group}`}
+        >
+            {joining ? 'Joining…' : 'Join'}
+        </button>
+    {/if}
     {#if showOptOut && optOutSupported}
         <button
             type="button"
