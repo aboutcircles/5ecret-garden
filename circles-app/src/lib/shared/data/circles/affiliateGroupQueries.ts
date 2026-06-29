@@ -33,8 +33,12 @@ export const RPC_METHOD_NOT_FOUND = -32601;
 export function isMethodNotFound(err: unknown): boolean {
   const code = (err as { code?: number } | null)?.code;
   if (code === RPC_METHOD_NOT_FOUND) return true;
+  // Message fallback only for servers that don't set the JSON-RPC code. Kept
+  // narrow to the canonical "method not found" phrasing — generic substrings like
+  // "not supported" / "does not exist" would misclassify real failures (bad
+  // address, node errors) as "feature unavailable" and hide them.
   const msg = err instanceof Error ? err.message : String(err ?? '');
-  return /method not found|not supported|does not exist|unknown method/i.test(msg);
+  return /method not found|unknown method/i.test(msg);
 }
 
 function normalizeListResponse(

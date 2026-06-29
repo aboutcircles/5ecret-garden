@@ -4,15 +4,11 @@ import type { Address } from '@aboutcircles/sdk-types';
 
 import { circles } from '$lib/shared/state/circles';
 import { wallet } from '$lib/shared/state/wallet.svelte';
-import { avatarState } from '$lib/shared/state/avatar.svelte';
 import { runTask } from '$lib/shared/utils/tasks';
 import { shortenAddress } from '$lib/shared/utils/shared';
 import { sendRunnerTransactionAndWait } from '$lib/shared/utils/tx';
 import { getActiveConfig } from '$lib/shared/state/settings.svelte';
-import {
-  getAffiliateGroupFeesPercentage,
-  isMethodNotFound,
-} from '$lib/shared/data/circles/affiliateGroupQueries';
+import { getAffiliateGroupFeesPercentage } from '$lib/shared/data/circles/affiliateGroupQueries';
 import {
   affiliateRegistryInterface,
   encodeAffiliateGroupCall,
@@ -85,10 +81,25 @@ async function preflight(from: Address, to: Address, data: string): Promise<stri
   }
 }
 
-async function sendRegistryTx(
+// Advisory pre-check: is the avatar already committed to the full 100% fee cap?
+// The cap is NOT enforced on-chain (the registry never reads fees), so this is a
+// courtesy guard only. Reads the fee total for the same account that will send
+// the tx. Any read failure (method absent on this server, transient error) skips
+// the guard and lets the join proceed.
+async function isAtFeeCap(): Promise<boolean> {
+  const sdk = get(circles);
+  const me = runnerAddress();
+  if (!sdk || !me) return false;
+  try {
+    return (await getAffiliateGroupFeesPercentage(sdk.rpc, me)) >= 100;
+  } catch {
+    return false;
+  }
+}
+
+async function submitRegistryTx(
   method: 'addAffiliateGroup' | 'removeAffiliateGroup',
   group: Address,
-  taskName: string,
   label: string
 ): Promise<void> {
   const registry = affiliateRegistryAddress();
@@ -105,54 +116,35 @@ async function sendRegistryTx(
   const reason = await preflight(from, registry, data);
   if (reason) throw new Error(reason);
 
-  await runTask({
-    name: taskName,
-    promise: sendRunnerTransactionAndWait(runner, { to: registry, value: 0n, data }, { label }),
-  });
+  await sendRunnerTransactionAndWait(runner, { to: registry, value: 0n, data }, { label });
 }
 
 /**
  * Signal on-chain intent to join `group` as a community (`addAffiliateGroup`).
- * Idempotent on-chain (a no-op if already joined). Refuses early if the avatar is
- * already at the 100% fee cap — best-effort: the guard is skipped when the read
- * RPC doesn't expose the affiliate methods (e.g. the production server).
+ * Idempotent on-chain (a no-op if already joined). The whole operation runs under
+ * a single task so every failure — the cap message, a decoded preflight revert,
+ * or the broadcast — surfaces to the user once.
  */
 export async function joinCommunity(group: Address): Promise<void> {
   const target = group.toLowerCase() as Address;
-  const me = avatarState.avatar?.address?.toLowerCase() as Address | undefined;
-
-  // Best-effort cap guard: refuse if already committed to the full 100%.
-  const sdk = get(circles);
-  if (sdk && me) {
-    let committed: number | null = null;
-    try {
-      committed = await getAffiliateGroupFeesPercentage(sdk.rpc, me);
-    } catch (e) {
-      if (!isMethodNotFound(e)) throw e;
-      committed = null; // unreadable on this server → skip the guard
-    }
-    if (committed != null && committed >= 100) {
-      throw new Error(
-        'You are already committed to the 100% membership-fee cap. Leave a community before joining another.'
-      );
-    }
-  }
-
-  await sendRegistryTx(
-    'addAffiliateGroup',
-    target,
-    `Joining community ${shortenAddress(target)} …`,
-    'Join community'
-  );
+  await runTask({
+    name: `Joining community ${shortenAddress(target)} …`,
+    promise: (async () => {
+      if (await isAtFeeCap()) {
+        throw new Error(
+          'You are already committed to the 100% membership-fee cap. Leave a community before joining another.'
+        );
+      }
+      await submitRegistryTx('addAffiliateGroup', target, 'Join community');
+    })(),
+  });
 }
 
 /** Withdraw intent to join `group` (`removeAffiliateGroup`). */
 export async function leaveCommunity(group: Address): Promise<void> {
   const target = group.toLowerCase() as Address;
-  await sendRegistryTx(
-    'removeAffiliateGroup',
-    target,
-    `Leaving community ${shortenAddress(target)} …`,
-    'Leave community'
-  );
+  await runTask({
+    name: `Leaving community ${shortenAddress(target)} …`,
+    promise: submitRegistryTx('removeAffiliateGroup', target, 'Leave community'),
+  });
 }
