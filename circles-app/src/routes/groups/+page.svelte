@@ -10,11 +10,13 @@
     import { openFlowPopup } from '$lib/shared/state/popup';
     import CreateGroup from '$lib/areas/groups/flows/createGroup/1_CreateGroup.svelte';
     import GroupCard from './GroupCard.svelte';
+    import CommunityCard from './CommunityCard.svelte';
     import { resetCreateGroupContext } from '$lib/areas/groups/flows/createGroup/context';
     import { circles } from '$lib/shared/state/circles';
     import { CirclesStorage } from '$lib/shared/utils/storage';
     import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/shared/utils/getGroupsByOwnerBatch';
     import { getGroupsByMember, streamGroupsByMember } from '$lib/areas/groups/utils/getGroupsByMemberBatch';
+    import { loadAvatarCommunities, type AvatarCommunity } from '$lib/areas/groups/utils/getAvatarCommunities';
 
     import { T } from '$lib/design-system/tokens.js';
     import Icon from '$lib/design-system/Icon.svelte';
@@ -34,22 +36,34 @@
     let membershipsLoading: boolean = $state(false);
     let membershipsError: string | null = $state(null);
 
+    // Communities = the multi-affiliate registry: groups the avatar has signalled
+    // on-chain intent to join, each flagged confirmed (group also trusts the
+    // avatar) or pending. Loaded lazily when the tab opens, since the backing
+    // RPC methods are staging-only until promotion.
+    let communities: AvatarCommunity[] = $state([]);
+    let communitiesTotalFee: number = $state(0);
+    let communitiesLoading: boolean = $state(false);
+    let communitiesError: string | null = $state(null);
+    let communitiesUnavailable: boolean = $state(false);
+
     let ownedGroupsLoadedForAvatar: string | null = $state(null);
     let membershipsLoadedForAvatar: string | null = $state(null);
     let allGroupsLoadedForAvatar: string | null = $state(null);
+    let communitiesLoadedForAvatar: string | null = $state(null);
 
     // Generation counter used to cancel stale streamGroupsByMember callbacks
     // when the user switches avatars (or otherwise triggers a refetch)
     // before the in-flight stream finishes.
     let membershipsLoadGeneration = 0;
 
-    type TabId = 'yours' | 'memberships' | 'all';
+    type TabId = 'yours' | 'memberships' | 'communities' | 'all';
     let selectedTab: TabId = $state('yours');
 
     const ownerAddress: string | undefined = $derived(
         (CirclesStorage.getInstance().avatar as string | undefined) ?? avatarState.avatar?.address
     );
     const canShowMembershipsTab: boolean = $derived(!!ownerAddress);
+    const canShowCommunitiesTab: boolean = $derived(!!ownerAddress);
     const canCreateGroup: boolean = $derived(!!$circles && !!CirclesStorage.getInstance().avatar);
 
     async function loadGroups(): Promise<void> {
@@ -133,6 +147,28 @@
         }
     }
 
+    async function loadCommunities(): Promise<void> {
+        if (!$circles || !ownerAddress) {
+            communities = []; communitiesTotalFee = 0;
+            communitiesLoading = false; communitiesError = null; communitiesUnavailable = false;
+            return;
+        }
+        const targetKey = String(ownerAddress).toLowerCase();
+        communitiesLoading = true; communitiesError = null;
+        try {
+            const result = await loadAvatarCommunities($circles, ownerAddress as Address);
+            communities = result.communities;
+            communitiesTotalFee = result.totalFeePercentage;
+            communitiesUnavailable = result.unavailable;
+            communitiesLoadedForAvatar = targetKey;
+        } catch (e) {
+            communitiesError = e instanceof Error ? e.message : String(e);
+            communities = [];
+        } finally {
+            communitiesLoading = false;
+        }
+    }
+
     $effect(() => {
         const avatar = avatarState.avatar;
         if (!avatar) { groups = undefined; allGroupsLoadedForAvatar = null; return; }
@@ -141,6 +177,20 @@
         if (allGroupsLoadedForAvatar === avatarKey && groups) return;
         allGroupsLoadedForAvatar = avatarKey;
         void loadGroups();
+    });
+
+    // Lazily load communities only when the tab is opened — keeps the staging-only
+    // affiliate RPC calls off every Groups visit, and off the production server.
+    $effect(() => {
+        if (selectedTab !== 'communities') return;
+        if (!$circles || !ownerAddress) {
+            communities = []; communitiesTotalFee = 0;
+            communitiesError = null; communitiesUnavailable = false; communitiesLoadedForAvatar = null;
+            return;
+        }
+        const ownerKey = String(ownerAddress).toLowerCase();
+        if (communitiesLoadedForAvatar === ownerKey || communitiesLoading) return;
+        void loadCommunities();
     });
 
     $effect(() => {
@@ -166,6 +216,7 @@
     $effect(() => {
         const availableTabs: TabId[] = ['yours'];
         if (canShowMembershipsTab) availableTabs.push('memberships');
+        if (canShowCommunitiesTab) availableTabs.push('communities');
         availableTabs.push('all');
         if (!availableTabs.includes(selectedTab)) selectedTab = availableTabs[0];
     });
@@ -191,6 +242,7 @@
     const tabItems = $derived([
         { id: 'yours' as TabId,       label: 'My groups',   count: ownedGroups.length },
         ...(canShowMembershipsTab ? [{ id: 'memberships' as TabId, label: 'Memberships', count: memberships.length }] : []),
+        ...(canShowCommunitiesTab ? [{ id: 'communities' as TabId, label: 'Communities', count: communitiesLoadedForAvatar ? communities.length : (undefined as number | undefined) }] : []),
         { id: 'all' as TabId,         label: 'Discover',    count: undefined as number | undefined },
     ]);
 </script>
@@ -342,6 +394,53 @@
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
                         {#each memberships as item, i (item.group)}
                             <GroupCard {item} variant="member" gradientIndex={i} />
+                        {/each}
+                    </div>
+                {/if}
+
+            {:else if selectedTab === 'communities'}
+                {#if !ownerAddress}
+                    <div style="background:{T.surface};border-radius:18px;border:1px solid {T.hairlineSoft};padding:24px 16px;text-align:center;">
+                        <span style="font-size:13.5px;color:{T.inkMuted};">Connect an avatar to see the communities you've signalled intent to join.</span>
+                    </div>
+                {:else if communitiesLoading}
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {#each Array(3) as _, i (i)}
+                            <div style="border-radius:18px;background:{T.pageDeep};height:160px;" class="animate-pulse"></div>
+                        {/each}
+                    </div>
+                {:else if communitiesError}
+                    <div style="background:{T.surface};border-radius:18px;border:1px solid rgba(196,68,48,0.2);padding:18px 16px;display:flex;flex-direction:column;gap:10px;align-items:flex-start;">
+                        <div style="display:flex;flex-direction:column;gap:4px;">
+                            <span style="font-size:13.5px;font-weight:580;color:{T.ink};">Couldn't load communities</span>
+                            <span style="font-size:12px;color:{T.inkMuted};">{communitiesError}</span>
+                        </div>
+                        <button type="button" onclick={loadCommunities} style="height:32px;padding:0 14px;border-radius:9999px;border:1px solid {T.hairline};background:{T.surface};color:{T.ink};font-size:12.5px;font-weight:540;cursor:pointer;">Retry</button>
+                    </div>
+                {:else if communitiesUnavailable}
+                    <div style="background:{T.surface};border-radius:18px;border:1px solid {T.hairlineSoft};padding:24px 16px;text-align:center;display:flex;flex-direction:column;gap:6px;">
+                        <span style="font-size:13.5px;font-weight:580;color:{T.ink};">Communities aren't available on this server yet</span>
+                        <span style="font-size:12.5px;color:{T.inkMuted};line-height:1.45;">The multi-affiliate registry is live on the staging server. Switch the server to Staging in network settings to preview it.</span>
+                    </div>
+                {:else if communities.length === 0}
+                    <div style="background:{T.surface};border-radius:18px;border:1px solid {T.hairlineSoft};padding:24px 16px;text-align:center;">
+                        <span style="font-size:13.5px;color:{T.inkMuted};">You haven't signalled intent to join any communities yet.</span>
+                    </div>
+                {:else}
+                    <!-- Fee commitment summary: communities fees are capped at 100% of daily mint -->
+                    {@const feePct = Math.min(100, Math.max(0, communitiesTotalFee))}
+                    <div style="background:{T.surface};border-radius:18px;border:1px solid {T.hairlineSoft};padding:14px 16px;margin-bottom:12px;box-shadow:{T.shadow.xs};">
+                        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;">
+                            <span style="font-size:12.5px;font-weight:580;color:{T.inkBody};">Committed membership fees</span>
+                            <span style="font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;color:{communitiesTotalFee >= 100 ? '#C44430' : T.ink};">{communitiesTotalFee}% <span style="color:{T.inkMuted};font-weight:540;">of 100%</span></span>
+                        </div>
+                        <div style="height:6px;border-radius:9999px;background:{T.pageDeep};margin-top:8px;overflow:hidden;">
+                            <div style="height:100%;width:{feePct}%;border-radius:9999px;background:{communitiesTotalFee >= 100 ? '#C44430' : T.primary};transition:width .2s ease-out;"></div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {#each communities as item, i (item.groupAddress)}
+                            <CommunityCard {item} gradientIndex={i} />
                         {/each}
                     </div>
                 {/if}
