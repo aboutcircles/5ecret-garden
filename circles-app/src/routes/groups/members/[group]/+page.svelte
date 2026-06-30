@@ -9,7 +9,9 @@
   import type { Action } from '$lib/shared/ui/shell/actions';
   import { getProfileDisplayName } from '$lib/areas/groups/ui/utils/profileDisplayName';
   import GroupMembersManager from '$lib/areas/groups/ui/components/GroupMembersManager.svelte';
+  import GroupCommunityMembers from '$lib/areas/groups/ui/components/GroupCommunityMembers.svelte';
   import AddressView from '$lib/shared/ui/primitives/Address.svelte';
+  import { settings } from '$lib/shared/state/settings.svelte';
 
   const group = $derived(($page.params.group ?? '').toLowerCase() as Address | '');
   const shortAddr = (a?: string) => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : '');
@@ -112,6 +114,10 @@
     <section style="background:#FFFFFF;border:1px solid rgba(31,17,70,0.05);border-radius:12px;padding:16px;width:100%;">
       <GroupMembersManager group={group} />
     </section>
+    {#if settings.advancedMode}
+      <div style="height:14px;"></div>
+      <GroupCommunityMembers {group} />
+    {/if}
   {:else}
     <section style="background:#FFFFFF;border:1px solid rgba(31,17,70,0.05);border-radius:12px;padding:16px;width:100%;">
       <div style="font-size:14px;opacity:0.7;">Invalid group route.</div>
