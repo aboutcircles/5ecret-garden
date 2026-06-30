@@ -124,7 +124,7 @@
 </script>
 
 <div style="background:{T.page};min-height:100%;width:100%;font-family:{T.fontSans};color:{T.inkBody};">
-  <div style="padding:8px 18px 24px;" class="md:!p-9 md:max-w-[860px] md:mx-auto">
+  <div style="padding:8px 18px 24px;" class="md:!p-9 md:max-w-[1280px] md:mx-auto">
 
     <!-- Page title + primary action -->
     <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0 14px;gap:12px;">
