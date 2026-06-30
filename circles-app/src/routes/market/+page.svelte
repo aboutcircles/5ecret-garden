@@ -376,9 +376,11 @@
                     <button
                         onclick={loadNextPage}
                         disabled={loading}
+                        aria-busy={loading}
                         style="
                             height:38px;padding:0 18px;border-radius:9999px;
-                            background:{T.surface};color:{T.inkBody};border:1px solid {T.hairline};cursor:pointer;
+                            background:{T.surface};color:{T.inkBody};border:1px solid {T.hairline};
+                            cursor:{loading ? 'not-allowed' : 'pointer'};
                             font-family:{T.fontSans};font-size:13px;font-weight:540;
                             opacity:{loading ? 0.5 : 1};
                         "

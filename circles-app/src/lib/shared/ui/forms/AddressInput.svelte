@@ -86,7 +86,7 @@
   <input
     bind:this={input}
     type="text"
-    class="input input-bordered bg-gray-100 flex-1"
+    class="input input-bordered bg-base-200 flex-1"
     placeholder="Enter or scan Ethereum address"
     oninput={handleInput}
     onpaste={handleInput}
@@ -99,7 +99,7 @@
 </div>
 
 {#if isScanning}
-  <div class="fixed top-0 left-0 w-screen h-screen z-100">
+  <div class="fixed top-0 left-0 w-screen h-screen z-[1000]">
     <div id="qr-scanner" class="w-[300px] my-5 mx-auto"></div>
   </div>
 {/if}
