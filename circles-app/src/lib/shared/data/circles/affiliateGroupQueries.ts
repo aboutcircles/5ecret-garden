@@ -60,10 +60,7 @@ export async function getAffiliateGroupWishlist(
   circlesRpc: CirclesRpc,
   avatar: Address
 ): Promise<AffiliateGroupListResponse> {
-  const res: AffiliateGroupListResponse = await circlesRpc.client.call(
-    'circles_getAffiliateGroupWishlist',
-    [avatar.toLowerCase()]
-  );
+  const res = await circlesRpc.affiliate.getAffiliateGroupWishlist(avatar);
   return normalizeListResponse(res);
 }
 
@@ -76,10 +73,7 @@ export async function getAffiliateGroups(
   circlesRpc: CirclesRpc,
   avatar: Address
 ): Promise<AffiliateGroupListResponse> {
-  const res: AffiliateGroupListResponse = await circlesRpc.client.call(
-    'circles_getAffiliateGroups',
-    [avatar.toLowerCase()]
-  );
+  const res = await circlesRpc.affiliate.getAffiliateGroups(avatar);
   return normalizeListResponse(res);
 }
 
@@ -91,9 +85,5 @@ export async function getAffiliateGroupFeesPercentage(
   circlesRpc: CirclesRpc,
   avatar: Address
 ): Promise<number> {
-  const res: { totalFeePercentage?: number } | null = await circlesRpc.client.call(
-    'circles_getAffiliateGroupFeesPercentage',
-    [avatar.toLowerCase()]
-  );
-  return Number(res?.totalFeePercentage ?? 0);
+  return circlesRpc.affiliate.getAffiliateGroupFeesPercentage(avatar);
 }
