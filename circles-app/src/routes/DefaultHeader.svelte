@@ -15,6 +15,7 @@
   import { canCreateInviteLinks } from '$lib/areas/invites/data/canCreateInviteLinks';
   import GlobalAvatarSearchPopup from '$lib/shared/ui/avatar-search/GlobalAvatarSearchPopup.svelte';
   import EnvironmentInfoPopup from '$lib/shared/ui/shell/EnvironmentInfoPopup.svelte';
+  import ServerSwitcher from '$lib/shared/ui/shell/ServerSwitcher.svelte';
   import {
     basketCount,
     ensureBasketCountSubscription,
@@ -116,6 +117,9 @@
     <span class="text-[10px] px-1.5 py-0.5 rounded-full font-[580] tracking-wider lowercase"
       style="background:#EFEDE7;color:rgba(15,10,30,0.40);">beta</span>
   </a>
+
+  <!-- Backend (Production/Staging) switch — always visible so the active data source is obvious. -->
+  <ServerSwitcher direction="down" />
 
   <!-- Cart (market page or has items) -->
   {#if isMarketPage || $basketCount > 0}

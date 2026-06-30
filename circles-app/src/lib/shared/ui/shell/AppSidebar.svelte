@@ -21,6 +21,7 @@
   import { settings } from '$lib/shared/state/settings.svelte';
   import Tooltip from '$lib/shared/ui/primitives/Tooltip.svelte';
   import EnvironmentInfoPopup from '$lib/shared/ui/shell/EnvironmentInfoPopup.svelte';
+  import ServerSwitcher from '$lib/shared/ui/shell/ServerSwitcher.svelte';
 
   // "Invite" is only meaningful for human v2 avatars. While the avatar is still
   // restoring (`avatar` undefined) we OPTIMISTICALLY reserve its slot — the common
@@ -209,8 +210,9 @@
     </div>
   {/if}
 
-  <!-- Footer: network + live realtime status; opens an environment-details popup on click. -->
-  <div style="margin-top:auto;padding:8px 8px 0;border-top:1px solid {T.hairlineSoft};">
+  <!-- Footer: server switch + network/live realtime status (opens an environment-details popup). -->
+  <div style="margin-top:auto;padding:10px 8px 0;border-top:1px solid {T.hairlineSoft};display:flex;flex-direction:column;gap:4px;">
+    <ServerSwitcher direction="up" />
     <Tooltip content={`${realtimeLabel} · click for details`} class="block w-full">
       <button
         type="button"
