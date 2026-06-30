@@ -12,7 +12,24 @@
   import { T } from '$lib/design-system/tokens.js';
   import Icon from '$lib/design-system/Icon.svelte';
 
-  const connectors = getConnectors(config);
+  // Hide the generic `injected()` connector ("Injected") from the picker whenever a
+  // real wallet is surfaced by EIP-6963 discovery. The generic connector targets the
+  // legacy global `window.ethereum`, which is contested when several wallets are
+  // installed — in Brave it resolves to the built-in Brave Wallet rather than, say, an
+  // unlocked Rabby, so `connect()` fires `eth_requestAccounts` at the wrong (locked)
+  // provider, no approval popup appears, and the picker spinner hangs forever. The
+  // named EIP-6963 connectors (id = the provider's rdns, e.g. `io.rabby`) talk to their
+  // provider directly and don't have this problem. The generic connector is KEPT in the
+  // wagmi config (restoreSession() falls back to `id === 'injected'` — see
+  // wallet.svelte.ts) and is only dropped from this list; if nothing is discovered (a
+  // lone legacy wallet with no EIP-6963 support) it stays visible as the only way in.
+  const allConnectors = getConnectors(config);
+  const hasDiscoveredWallet = allConnectors.some(
+    (c) => c.type === 'injected' && c.id !== 'injected',
+  );
+  const connectors = hasDiscoveredWallet
+    ? allConnectors.filter((c) => c.id !== 'injected')
+    : allConnectors;
   let connectingId: string | null = $state(null);
   let connectError: string | null = $state(null);
 
