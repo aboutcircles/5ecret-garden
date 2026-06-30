@@ -21,6 +21,27 @@ export interface AffiliateGroupListResponse {
   groups: AffiliateGroupRow[];
 }
 
+/**
+ * One member avatar in a group's affiliate wishlist (signalled intent to join) or
+ * confirmed-members list, as returned by the `circles_getAffiliateGroupMembers*`
+ * RPC methods. The group-centric counterpart to {@link AffiliateGroupRow}.
+ */
+export interface AffiliateGroupMemberRow {
+  /** Member avatar's profile name, or `null` when it has no profile/name. */
+  avatarName: string | null;
+  /** The member avatar's address (lowercased by {@link normalizeMembersResponse}). */
+  avatarAddress: Address;
+  /** Unix seconds of the winning `AffiliateGroupAdded` event. */
+  timestamp: number;
+}
+
+/** A page of {@link AffiliateGroupMemberRow}s plus the indexer's pagination cursor. */
+export interface PagedAffiliateMembers {
+  results: AffiliateGroupMemberRow[];
+  hasMore: boolean;
+  nextCursor: string | null;
+}
+
 /** JSON-RPC "method not found" error code (JSON-RPC 2.0 spec). */
 export const RPC_METHOD_NOT_FOUND = -32601;
 
@@ -96,4 +117,55 @@ export async function getAffiliateGroupFeesPercentage(
     [avatar.toLowerCase()]
   );
   return Number(res?.totalFeePercentage ?? 0);
+}
+
+/** Lowercase every member row's address so confirmed/pending set comparisons are case-stable. */
+function normalizeMembersResponse(
+  res: Partial<PagedAffiliateMembers> | null
+): PagedAffiliateMembers {
+  return {
+    results: (res?.results ?? []).map((m) => ({
+      avatarName: m.avatarName ?? null,
+      avatarAddress: String(m.avatarAddress).toLowerCase() as Address,
+      timestamp: Number(m.timestamp ?? 0),
+    })),
+    hasMore: Boolean(res?.hasMore),
+    nextCursor: res?.nextCursor ?? null,
+  };
+}
+
+/**
+ * One page of a group's affiliate **wishlist** — avatars that signalled on-chain
+ * intent to join `group` as a community. A superset of the confirmed members:
+ * an entry stays "pending" until the group also trusts the avatar back.
+ */
+export async function getAffiliateGroupMembersWishlist(
+  circlesRpc: CirclesRpc,
+  group: Address,
+  limit = 100,
+  cursor: string | null = null
+): Promise<PagedAffiliateMembers> {
+  const res: Partial<PagedAffiliateMembers> | null = await circlesRpc.client.call(
+    'circles_getAffiliateGroupMembersWishlist',
+    [group.toLowerCase(), limit, cursor]
+  );
+  return normalizeMembersResponse(res);
+}
+
+/**
+ * One page of a group's **confirmed** affiliate members — the wishlist subset the
+ * group currently trusts back (the bilateral handshake). Lags the wishlist by the
+ * trust-manager delay.
+ */
+export async function getAffiliateGroupMembers(
+  circlesRpc: CirclesRpc,
+  group: Address,
+  limit = 100,
+  cursor: string | null = null
+): Promise<PagedAffiliateMembers> {
+  const res: Partial<PagedAffiliateMembers> | null = await circlesRpc.client.call(
+    'circles_getAffiliateGroupMembers',
+    [group.toLowerCase(), limit, cursor]
+  );
+  return normalizeMembersResponse(res);
 }
