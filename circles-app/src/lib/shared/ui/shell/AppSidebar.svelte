@@ -18,7 +18,7 @@
   import { canCreateInviteLinks } from '$lib/areas/invites/data/canCreateInviteLinks';
   import { T } from '$lib/design-system/tokens.js';
   import { isWebsocketConnected } from '$lib/shared/state/realtimeSync';
-  import { settings } from '$lib/shared/state/settings.svelte';
+  import { settings, toggleAdvancedMode } from '$lib/shared/state/settings.svelte';
   import Tooltip from '$lib/shared/ui/primitives/Tooltip.svelte';
   import EnvironmentInfoPopup from '$lib/shared/ui/shell/EnvironmentInfoPopup.svelte';
   import ServerSwitcher from '$lib/shared/ui/shell/ServerSwitcher.svelte';
@@ -106,7 +106,16 @@
   <!-- Logo row -->
   <div style="padding:4px 10px 0;display:flex;align-items:center;gap:8px;">
     <img src="/logo.svg" alt="Circles" class="w-[26px] h-[26px]" />
-    <span style="font-family:{T.fontSans};font-size:11px;color:{T.inkFaint};padding:2px 7px;border-radius:9999px;background:{T.pageDeep};font-weight:580;letter-spacing:0.04em;text-transform:lowercase;">beta</span>
+    <!-- The "beta" label doubles as the Advanced-mode toggle: click to reveal power-user
+         features (extra Settings tabs, raw profile CID, product IPFS/CID, …). -->
+    <span
+      role="button"
+      tabindex="0"
+      aria-pressed={settings.advancedMode}
+      onclick={toggleAdvancedMode}
+      onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleAdvancedMode(); } }}
+      title={settings.advancedMode ? 'Advanced mode on — click to switch to standard' : 'Toggle advanced mode'}
+      style="font-family:{T.fontSans};font-size:11px;color:{settings.advancedMode ? T.primary : T.inkFaint};padding:2px 7px;border-radius:9999px;background:{settings.advancedMode ? T.primaryFaint : T.pageDeep};font-weight:580;letter-spacing:0.04em;text-transform:lowercase;cursor:pointer;">beta</span>
   </div>
 
   <!-- Account picker -->
