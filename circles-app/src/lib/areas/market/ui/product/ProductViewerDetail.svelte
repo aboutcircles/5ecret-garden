@@ -11,6 +11,7 @@
   import { ipfsGatewayUrl } from '$lib/shared/utils/ipfs';
   import { sanitizeUrl } from '$lib/shared/ui/content/markdown/ast';
   import JumpLink from '$lib/shared/ui/content/jump/JumpLink.svelte';
+  import { settings } from '$lib/shared/state/settings.svelte';
 
   interface Meta {
     publishedAt?: number;
@@ -189,12 +190,12 @@
       <JumpLink className="link link-primary" url={productUrlSafe}>Product URL</JumpLink>
     {/if}
 
-    {#if ipfsUrlSafe}
+    {#if settings.advancedMode && ipfsUrlSafe}
       <JumpLink className="link link-primary" url={ipfsUrlSafe}>IPFS</JumpLink>
     {/if}
   </div>
 
-  {#if showMeta && meta}
+  {#if settings.advancedMode && showMeta && meta}
     <div class="text-xs opacity-60 flex items-center gap-3">
       {#if publishedDateText}
         <div>Published: {publishedDateText}</div>

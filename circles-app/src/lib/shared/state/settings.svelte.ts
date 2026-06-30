@@ -41,6 +41,12 @@ export interface NetworkSettings {
   customPathfinderUrl?: string;
   /** Use legacy EOA mode (no Safe) */
   legacy?: boolean;
+  /**
+   * Show advanced / power-user features (extra Settings tabs, raw profile CID,
+   * product IPFS/CID/SKU, …). When false (the default) the app runs in a
+   * simplified "standard" view that hides these. Toggled via the "beta" label.
+   */
+  advancedMode?: boolean;
 }
 
 /**
@@ -49,6 +55,8 @@ export interface NetworkSettings {
 const defaultSettings: NetworkSettings = {
   ring: false,
   network: 'gnosis',
+  // Default to the simplified standard view; power users opt in via the "beta" label.
+  advancedMode: false,
 };
 
 /**
@@ -97,6 +105,14 @@ export const settings = $state<NetworkSettings>(loadSettings());
 export function updateSettings(updates: Partial<NetworkSettings>): void {
   Object.assign(settings, updates);
   saveSettings(settings);
+}
+
+/**
+ * Toggle the advanced / standard UI mode. Exposed as a shared helper so the "beta"
+ * label in the desktop sidebar and the mobile header drive the exact same write path.
+ */
+export function toggleAdvancedMode(): void {
+  updateSettings({ advancedMode: !settings.advancedMode });
 }
 
 /**
@@ -151,6 +167,9 @@ export function getActiveConfig(): CirclesConfig {
  * Reset settings to defaults
  */
 export function resetSettings(): void {
-  Object.assign(settings, defaultSettings);
+  // advancedMode is a per-device UI preference, not network config — preserve it across a
+  // network-settings reset so clearing RPC overrides doesn't silently flip the UI mode.
+  const { advancedMode } = settings;
+  Object.assign(settings, defaultSettings, { advancedMode });
   saveSettings(settings);
 }

@@ -16,6 +16,7 @@
   import GlobalAvatarSearchPopup from '$lib/shared/ui/avatar-search/GlobalAvatarSearchPopup.svelte';
   import EnvironmentInfoPopup from '$lib/shared/ui/shell/EnvironmentInfoPopup.svelte';
   import ServerSwitcher from '$lib/shared/ui/shell/ServerSwitcher.svelte';
+  import { settings, toggleAdvancedMode } from '$lib/shared/state/settings.svelte';
   import {
     basketCount,
     ensureBasketCountSubscription,
@@ -114,8 +115,17 @@
   <a href={homeLink} class="flex items-center gap-2 flex-1 no-underline">
     <img src="/logo.svg" alt="Circles" class="w-[22px] h-[22px]" />
     <span class="font-semibold text-[15px] tracking-tight" style="color:#0F0A1E;">Circles</span>
-    <span class="text-[10px] px-1.5 py-0.5 rounded-full font-[580] tracking-wider lowercase"
-      style="background:#EFEDE7;color:rgba(15,10,30,0.40);">beta</span>
+    <!-- "beta" doubles as the Advanced-mode toggle (mirrors the desktop sidebar). It sits
+         inside the home link, so the handler stops propagation to avoid navigating home. -->
+    <span
+      role="button"
+      tabindex="0"
+      aria-pressed={settings.advancedMode}
+      onclick={(e) => { e.preventDefault(); e.stopPropagation(); toggleAdvancedMode(); }}
+      onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); toggleAdvancedMode(); } }}
+      title={settings.advancedMode ? 'Advanced mode on — click to switch to standard' : 'Toggle advanced mode'}
+      class="text-[10px] px-1.5 py-0.5 rounded-full font-[580] tracking-wider lowercase"
+      style="cursor:pointer;background:{settings.advancedMode ? 'rgba(88,73,212,0.12)' : '#EFEDE7'};color:{settings.advancedMode ? '#5849D4' : 'rgba(15,10,30,0.40)'};">beta</span>
   </a>
 
   <!-- Backend (Production/Staging) switch — always visible so the active data source is obvious. -->
@@ -176,8 +186,10 @@
       <li class="defaultheader-label" role="presentation">Account</li>
       <li><a class="defaultheader-link" href="/settings?tab=personal">Profile</a></li>
       <li><a class="defaultheader-link" href="/settings">Settings</a></li>
-      <li><a class="defaultheader-link" href="/settings?tab=bookmarks">Bookmarks</a></li>
-      <li><a class="defaultheader-link" href="/settings?tab=keys">Signing keys</a></li>
+      {#if settings.advancedMode}
+        <li><a class="defaultheader-link" href="/settings?tab=bookmarks">Bookmarks</a></li>
+        <li><a class="defaultheader-link" href="/settings?tab=keys">Signing keys</a></li>
+      {/if}
 
       <li class="defaultheader-sep" role="separator" aria-hidden="true"></li>
       <li class="defaultheader-label" role="presentation">Marketplace</li>
@@ -185,7 +197,9 @@
       <li><a class="defaultheader-link" href="/settings?tab=sales">Sales</a></li>
       <li><a class="defaultheader-link" href="/settings?tab=offers">Offers</a></li>
       <li><a class="defaultheader-link" href="/settings?tab=payment">Payment gateways</a></li>
-      <li><a class="defaultheader-link" href="/settings?tab=namespaces">Namespaces</a></li>
+      {#if settings.advancedMode}
+        <li><a class="defaultheader-link" href="/settings?tab=namespaces">Namespaces</a></li>
+      {/if}
 
       <li class="defaultheader-sep" role="separator" aria-hidden="true"></li>
       {#if avatarState.avatar}

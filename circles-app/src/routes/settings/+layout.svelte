@@ -68,6 +68,7 @@
   import type { PaginatedReadable } from '$lib/shared/state/paginatedList';
   import CreateGatewayProfile from '$lib/areas/settings/flows/gateway/CreateGatewayProfile.svelte';
   import { coerceTabId, type TabIdOf } from '$lib/shared/ui/primitives/tabs/tabId';
+  import { settings } from '$lib/shared/state/settings.svelte';
 
   const TAB_IDS = ['personal', 'bookmarks', 'orders', 'sales', 'keys', 'namespaces', 'offers', 'payment'] as const;
   type TabId = TabIdOf<typeof TAB_IDS>;
@@ -93,6 +94,17 @@
   ];
 
   let selectedTab = $state<TabId>('personal');
+
+  // Advanced-only tabs are dropped from the strip in standard mode. The currently-selected
+  // tab is always kept visible, so deep-links (?tab=keys) still resolve, and toggling advanced
+  // mode off while viewing one doesn't yank it out from under you — it just won't reappear in
+  // the strip once you navigate to a standard tab.
+  const ADVANCED_TABS = new Set<TabId>(['bookmarks', 'namespaces', 'keys']);
+  const visibleTabs = $derived(
+    settings.advancedMode
+      ? TAB_ORDER
+      : TAB_ORDER.filter((id) => !ADVANCED_TABS.has(id) || id === selectedTab),
+  );
 
   // URL → tab: read ?tab= on load/navigation
   $effect(() => {
@@ -614,7 +626,7 @@
 
     <!-- Pill tabs -->
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:18px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;">
-      {#each TAB_ORDER as id}
+      {#each visibleTabs as id}
         {@const active = selectedTab === id}
         <button
           type="button"
