@@ -160,6 +160,10 @@ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), textarea, 
    which turns multi-line inputs into capsules. Element-qualified selector
    (specificity 0,1,1) pins textareas to a sane radius regardless of source order. */
 textarea.textarea { border-radius: 12px; }
+/* Same issue for DaisyUI's .select: it inherits --rounded-btn (9999px) and renders
+   dropdowns as full pills. The global `select` rule above (0,0,1) loses to `.select`
+   (0,1,0); the element-qualified selector (0,1,1) wins and restores a sane radius. */
+select.select { border-radius: 12px; }
 
 /* Row tokens */
 :root {
