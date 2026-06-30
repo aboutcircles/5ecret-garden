@@ -13,6 +13,7 @@
     import CommunityCard from './CommunityCard.svelte';
     import { resetCreateGroupContext } from '$lib/areas/groups/flows/createGroup/context';
     import { circles } from '$lib/shared/state/circles';
+    import { settings } from '$lib/shared/state/settings.svelte';
     import { CirclesStorage } from '$lib/shared/utils/storage';
     import { getBaseAndCmgGroupsByOwnerBatch } from '$lib/shared/utils/getGroupsByOwnerBatch';
     import { getGroupsByMember, streamGroupsByMember } from '$lib/areas/groups/utils/getGroupsByMemberBatch';
@@ -67,7 +68,9 @@
         (CirclesStorage.getInstance().avatar as string | undefined) ?? avatarState.avatar?.address
     );
     const canShowMembershipsTab: boolean = $derived(!!ownerAddress);
-    const canShowCommunitiesTab: boolean = $derived(!!ownerAddress);
+    // Communities is a beta surface (multi-affiliate registry, staging-only RPC) —
+    // hidden unless the user has opted into advanced mode.
+    const canShowCommunitiesTab: boolean = $derived(!!ownerAddress && !!settings.advancedMode);
     const canCreateGroup: boolean = $derived(!!$circles && !!CirclesStorage.getInstance().avatar);
 
     async function loadGroups(): Promise<void> {
