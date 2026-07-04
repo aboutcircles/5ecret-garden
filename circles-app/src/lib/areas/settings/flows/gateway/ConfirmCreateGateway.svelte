@@ -14,7 +14,7 @@
   import { popupControls } from '$lib/shared/state/popup';
   import { popToOrOpen } from '$lib/shared/flow';
   import type { CreateGatewayFlowContext } from './context';
-  import { gnosisConfig } from '$lib/shared/config/circles';
+  import { getActiveConfig } from '$lib/shared/state/settings.svelte';
   import { getProfilesBindings } from '$lib/areas/market/offers';
   import { ensureProfileShape, cidV0ToDigest32Strict } from '@circles-profile/core';
   import { isValidOnChainName } from '$lib/shared/utils/isValid';
@@ -44,7 +44,7 @@
   let creatingGateway = $state(false);
 
   function getBindings() {
-    return getProfilesBindings({ pinApiBase: gnosisConfig.production.profilePinningServiceUrl }).bindings;
+    return getProfilesBindings({ pinApiBase: getActiveConfig().profilePinningServiceUrl }).bindings;
   }
 
   async function createGateway() {

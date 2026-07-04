@@ -8,13 +8,14 @@
     import { goto } from '$app/navigation';
     import { avatarState } from '$lib/shared/state/avatar.svelte';
     import {gnosisConfig} from "$lib/shared/config/circles";
+    import { getActiveConfig } from '$lib/shared/state/settings.svelte';
     import { T } from '$lib/design-system/tokens.js';
     import Icon from '$lib/design-system/Icon.svelte';
 
     // Defaults (as requested)
     const OPERATOR: `0x${string}` = gnosisConfig.production.marketOperator as `0x${string}`;
 
-    const API_BASE = gnosisConfig.production.marketApiBase;
+    const API_BASE = getActiveConfig().marketApiBase;
     const MARKET_CHAIN_ID = gnosisConfig.production.marketChainId ?? 100;
     const SELLERS_CACHE_KEY = `market:sellers:${MARKET_CHAIN_ID}`;
     const SELLERS_CACHE_TTL_MS = 5 * 60 * 1000;

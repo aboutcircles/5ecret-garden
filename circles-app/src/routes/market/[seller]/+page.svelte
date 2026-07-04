@@ -15,6 +15,7 @@
     import ActionButtonDropDown from '$lib/shared/ui/shell/ActionButtonDropDown.svelte';
     import type { Action } from '$lib/shared/ui/shell/actions';
     import {gnosisConfig} from "$lib/shared/config/circles";
+    import { getActiveConfig } from '$lib/shared/state/settings.svelte';
     import { T } from '$lib/design-system/tokens.js';
 
     
@@ -81,7 +82,7 @@
       openFlowPopup({
         title: 'Create Offer',
         component: OfferStep1,
-        props: { context: { operator: gnosisConfig.production.marketOperator, pinApiBase: gnosisConfig.production.marketApiBase } },
+        props: { context: { operator: gnosisConfig.production.marketOperator, pinApiBase: getActiveConfig().marketApiBase } },
         onClose: () => { void loadSellerCatalog(); }
       });
     }

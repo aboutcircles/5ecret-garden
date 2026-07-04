@@ -68,7 +68,7 @@
   import type { PaginatedReadable } from '$lib/shared/state/paginatedList';
   import CreateGatewayProfile from '$lib/areas/settings/flows/gateway/CreateGatewayProfile.svelte';
   import { coerceTabId, type TabIdOf } from '$lib/shared/ui/primitives/tabs/tabId';
-  import { settings } from '$lib/shared/state/settings.svelte';
+  import { settings, getActiveConfig } from '$lib/shared/state/settings.svelte';
 
   const TAB_IDS = ['personal', 'bookmarks', 'orders', 'sales', 'keys', 'namespaces', 'offers', 'payment'] as const;
   type TabId = TabIdOf<typeof TAB_IDS>;
@@ -209,7 +209,8 @@
   const headerTitle = $derived(avatarState.profile?.name?.trim() || 'Settings');
 
   // Profile editing is delegated to ProfileExplorer to keep a single flow.
-  const pinApiBase = gnosisConfig.production.profilePinningServiceUrl ?? gnosisConfig.production.marketApiBase ?? '';
+  const cfg = getActiveConfig();
+  const pinApiBase = cfg.profilePinningServiceUrl ?? cfg.marketApiBase ?? '';
 
   // Latest profile CID for the connected avatar (if any)
   let profileCid: string | null = $state(null);
@@ -404,7 +405,7 @@
   function openCreateListing() {
     const flowContext: OfferFlowContext = {
       operator: gnosisConfig.production.marketOperator!,
-      pinApiBase: gnosisConfig.production.marketApiBase,
+      pinApiBase: getActiveConfig().marketApiBase,
       onPublished: (item) => {
         // Optimistic: prepend new listing immediately
         marketProducts = [item, ...marketProducts];

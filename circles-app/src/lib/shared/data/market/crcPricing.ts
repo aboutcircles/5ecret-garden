@@ -1,4 +1,4 @@
-import { gnosisConfig } from '$lib/shared/config/circles';
+import { getActiveConfig } from '$lib/shared/state/settings.svelte';
 
 export type CrcPrice = {
   dcrc_eur: number;
@@ -19,8 +19,9 @@ function dateKey(unixTimestamp: number): string {
 }
 
 function endpoint(): string | undefined {
-  // ring vs production share the same metrics endpoint; production is a safe default here.
-  return gnosisConfig.production.crcPricingApi;
+  // The pricing metrics API has no separate staging deployment (it always serves the
+  // staging subdomain); resolving it via the active config keeps a single source of truth.
+  return getActiveConfig().crcPricingApi;
 }
 
 const MAX_PLAUSIBLE_RATE = 100;
