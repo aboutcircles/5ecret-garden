@@ -133,6 +133,7 @@ export async function patchBasket(basketId: string, patch: BasketPatch): Promise
       billingAddress: patch.billingAddress ?? undefined,
       contactPoint: patch.contactPoint ?? undefined,
       ageProof: patch.ageProof ?? undefined,
+      customer: patch.customer ?? undefined,
     }));
   }
 
