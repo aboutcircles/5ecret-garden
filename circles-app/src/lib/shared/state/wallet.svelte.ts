@@ -15,6 +15,7 @@ import { type ContractRunner } from '@aboutcircles/sdk-types';
 import type { Address } from '@aboutcircles/sdk-types';
 import type { Eip1193Provider } from '@safe-global/protocol-kit';
 import { CirclesStorage } from '$lib/shared/utils/storage';
+import { rememberRedirect } from '$lib/shared/utils/redirectIntent';
 import { groupMetrics } from '$lib/areas/groups/state/groupMetrics.svelte';
 import { disconnect, getAccount, getConnectors, reconnect } from '@wagmi/core';
 import { config } from '../../../config';
@@ -246,6 +247,9 @@ export async function restoreSession() {
   // goto('/'), this branch covers the no-storage-on-load path.
   if (!privateKey && !savedAvatar) {
     if (typeof window !== 'undefined' && !isPublicRoute(window.location.pathname)) {
+      // Remember the deep-linked destination so sign-in returns here instead of
+      // dumping the user on /dashboard (consumed in ConnectCircles.connectAvatar).
+      rememberRedirect(window.location.pathname + window.location.search);
       await goto('/');
     }
     return;

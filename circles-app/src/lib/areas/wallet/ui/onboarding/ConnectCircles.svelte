@@ -7,6 +7,7 @@
     import type {Address} from '@aboutcircles/sdk-types';
     import {GroupType} from '@aboutcircles/sdk-types';
     import {CirclesStorage} from '$lib/shared/utils/storage';
+    import {takeRedirect} from '$lib/shared/utils/redirectIntent';
     import type {GroupRow} from '@aboutcircles/sdk-types';
     import {settings} from '$lib/shared/state/settings.svelte';
     import { openStep } from '$lib/shared/flow';
@@ -67,7 +68,9 @@
                 rings: settings.ring,
             };
 
-            goto("/dashboard")
+            // Return to the deep-linked destination the wallet guard stashed
+            // (e.g. /market), falling back to /dashboard for a plain sign-in.
+            goto(takeRedirect("/dashboard"))
         } catch (e) {
             handleError(e, { context: 'wallet', title: 'Connection failed' });
             connecting = false;
