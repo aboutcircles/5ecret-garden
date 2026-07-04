@@ -414,6 +414,21 @@ export async function clearSession() {
     }
     localStorage.removeItem('connectorId');
   }
+  // The block above only disconnects the app-tracked connector. wagmi's own
+  // autoConnect/reconnect can restore a connector on load (wagmi.recentConnectorId)
+  // WITHOUT the app ever recording it in connectorState/localStorage['connectorId'] —
+  // e.g. a returning visitor whose Circles session didn't restore, so the lookup
+  // above finds nothing and the connector stays live. The next connect() then throws
+  // ConnectorAlreadyConnectedError, surfaced as a red "Connector already connected"
+  // banner in the wallet picker. Disconnect any still-live wagmi connection so
+  // clearSession() always leaves a clean slate for the following connect().
+  if (getAccount(config).isConnected) {
+    try {
+      await disconnect(config);
+    } catch (e) {
+      console.warn('[Wallet] wagmi disconnect (live account) failed during clearSession; continuing teardown', e);
+    }
+  }
   // Reset connector state
   Object.assign(connectorState, {
     id: undefined,
