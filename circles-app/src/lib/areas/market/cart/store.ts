@@ -5,7 +5,6 @@ import { gnosisConfig } from '$lib/shared/config/circles';
 import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
 import type { Basket, CartState, CheckoutResult, SdkCartItem } from './types';
 import type { BasketPatch, OrderItemPreview } from './types';
-import { toLocalBasket } from './types';
 import { readBasketId, writeBasketId } from './basketIdStorage';
 import { normalizeAddr, normalizeSku, toSdkItemsFromBasket, lineQty, normalizeImageUrl } from './basketUtils';
 import { fetchBasketById, patchBasket } from './cartHttp';
@@ -302,14 +301,19 @@ export async function updateBasketDetails(patch: unknown): Promise<void> {
     const billing = stripNulls(patchObj.billingAddress);
     const contact = stripNulls(patchObj.contactPoint);
     const age = stripNulls(patchObj.ageProof);
+    const customer = stripNulls(patchObj.customer);
 
-    const updated = toLocalBasket(await getMarketClient().cart.setCheckoutDetails({
-      basketId,
+    // Route through the cartApi seam (not getMarketClient directly) so the
+    // outbound details patch is test-observable and shares the single cartHttp
+    // patch path. customer was previously dropped here → offers requiring the
+    // buyer name were un-checkoutable (server flagged /customer/givenName missing).
+    const updated = await cartApi.patchBasket(basketId, {
       shippingAddress: shipping,
       billingAddress: billing,
       contactPoint: contact,
       ageProof: age,
-    }));
+      customer,
+    });
 
     cartState.update((s) => ({ ...s, basket: updated }));
   } catch (e) {
