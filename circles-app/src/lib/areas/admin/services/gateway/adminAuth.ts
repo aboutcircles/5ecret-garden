@@ -4,6 +4,7 @@ import {getWalletProvider} from '$lib/shared/integrations/wallet';
 import {ensureGnosisChain} from '$lib/shared/integrations/chain/gnosis';
 import {getMarketClient} from '$lib/shared/data/market/marketClientProxy';
 import {gnosisConfig} from '$lib/shared/config/circles';
+import {getActiveConfig} from '$lib/shared/state/settings.svelte';
 
 export interface AdminChallengeResponse {
   challengeId: string;
@@ -26,7 +27,7 @@ export function getAdminBaseUrl(): string {
     throw new Error('getAdminClient() can only be used in the browser');
   }
 
-  const envBase = gnosisConfig.production.marketApiBase;
+  const envBase = getActiveConfig().marketApiBase;
   if (!envBase) {
     throw new Error('Admin API base URL not configured');
   }

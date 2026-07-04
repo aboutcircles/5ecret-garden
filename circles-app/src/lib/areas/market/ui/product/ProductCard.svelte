@@ -24,6 +24,7 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
   import OfferStep1 from '$lib/areas/market/flows/offer/1_Product.svelte';
   import ActionButton from '$lib/shared/ui/primitives/ActionButton.svelte';
   import {gnosisConfig} from "$lib/shared/config/circles";
+  import { getActiveConfig } from '$lib/shared/state/settings.svelte';
   import { openInfoPopup } from '$lib/shared/ui/shell/confirmDialogs';
 
   const OPERATOR = gnosisConfig.production.marketOperator;
@@ -77,7 +78,7 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
         avatar: seller,
         chainId: gnosisConfig.production.marketChainId ?? 100,
         ethereum: eth,
-        pinApiBase: gnosisConfig.production.marketApiBase,
+        pinApiBase: getActiveConfig().marketApiBase,
       });
 
       await offers.tombstone({
@@ -150,7 +151,7 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
       props: {
         context: {
           operator: OPERATOR,
-          pinApiBase: gnosisConfig.production.marketApiBase,
+          pinApiBase: getActiveConfig().marketApiBase,
           draft,
           editMode: true,
           onPublished: onupdated,

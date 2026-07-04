@@ -16,10 +16,19 @@ const SETTINGS_STORAGE_KEY = 'circles.network.settings';
  */
 export type ServerEnv = 'production' | 'staging';
 
-/** Production indexer RPC host (the default data backend). */
-const PROD_RPC_HOST = 'https://rpc.aboutcircles.com';
-/** Staging indexer RPC host — same Gnosis mainnet, separate deployment. */
-const STAGING_RPC_HOST = 'https://rpc.staging.aboutcircles.com';
+/**
+ * Prod→staging host rewrites for the data plane. Staging indexes the same Gnosis
+ * mainnet — only the data host changes, never the chain, contracts or addresses.
+ * Any config URL whose origin matches a key is repointed at the paired staging
+ * host; URLs on other hosts (pathfinder, referrals, the IPFS gateway, the
+ * always-staging pricing API) are left untouched. Add a host here and every
+ * endpoint served from it shifts with the toggle.
+ */
+const STAGING_HOST_MAP: Readonly<Record<string, string>> = {
+  'https://rpc.aboutcircles.com': 'https://rpc.staging.aboutcircles.com',
+  // Market-api runs on its own host, not co-hosted with the indexer RPC.
+  'https://market-api.aboutcircles.com': 'https://market-api.staging.aboutcircles.com',
+};
 
 /**
  * Network settings interface
@@ -126,21 +135,27 @@ export function getActiveConfig(): CirclesConfig {
 
   const config: CirclesConfig = { ...baseConfig };
 
-  // Staging server: repoint the indexer RPC — and the endpoints co-hosted on it — at the
-  // staging deployment. The SDK derives the realtime websocket URL from `circlesRpcUrl`, so
-  // this also moves live events to staging. Only the data host changes; chain, contracts and
+  // Staging server: repoint every data-plane host — the indexer RPC and the endpoints
+  // co-hosted on it, plus the market-api (which lives on its own host) — at the staging
+  // deployment. The SDK derives the realtime websocket URL from `circlesRpcUrl`, so this
+  // also moves live events to staging. Only the data host changes; chain, contracts and
   // addresses stay identical (staging indexes the same Gnosis mainnet), so this applies to the
   // gnosis network only. Explicit custom* overrides below still win over this rewrite.
   if (settings.server === 'staging' && settings.network === 'gnosis') {
-    const toStaging = (url: string | undefined): string | undefined =>
-      url?.startsWith(PROD_RPC_HOST)
-        ? STAGING_RPC_HOST + url.slice(PROD_RPC_HOST.length)
-        : url;
+    const toStaging = (url: string | undefined): string | undefined => {
+      if (!url) return url;
+      for (const [prod, staging] of Object.entries(STAGING_HOST_MAP)) {
+        if (url.startsWith(prod)) return staging + url.slice(prod.length);
+      }
+      return url;
+    };
     config.circlesRpcUrl = toStaging(config.circlesRpcUrl) ?? config.circlesRpcUrl;
     config.chainRpcUrl = toStaging(config.chainRpcUrl) ?? config.chainRpcUrl;
     config.profileServiceUrl = toStaging(config.profileServiceUrl) ?? config.profileServiceUrl;
     config.profilePinningServiceUrl = toStaging(config.profilePinningServiceUrl);
     config.scoreGroupsBackendUrl = toStaging(config.scoreGroupsBackendUrl);
+    // Cart, checkout, catalog, orders and admin/pin all resolve their base from this.
+    config.marketApiBase = toStaging(config.marketApiBase);
   }
 
   // Apply any custom URL overrides (highest precedence)

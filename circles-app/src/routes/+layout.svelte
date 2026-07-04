@@ -294,7 +294,7 @@
           import('$lib/shared/integrations/market'),
           import('$lib/areas/market/cart/store'),
         ]);
-        new PersistentAuthContext().clear();
+        PersistentAuthContext.clearAll();
         clearCart();
       })();
     }
