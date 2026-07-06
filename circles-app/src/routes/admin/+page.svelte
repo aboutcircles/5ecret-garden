@@ -54,6 +54,7 @@
     AdminApiError,
   } from '$lib/areas/admin/services/gateway/adminClient';
   import { gnosisConfig } from '$lib/shared/config/circles';
+  import { getActiveConfig, settings } from '$lib/shared/state/settings.svelte';
   import type { Address } from '@aboutcircles/sdk-types';
   import { popupControls } from '$lib/shared/state/popup';
   import AdminSectionCard from '$lib/areas/admin/components/AdminSectionCard.svelte';
@@ -576,6 +577,32 @@
     if (token) {
       adminUser = { token, address: '', chainId: 0, expiresIn: 900 };
       void loadAdminData();
+    }
+  });
+
+  // The market-api host the current admin session is bound to. Non-reactive: it
+  // records the last base we reconciled against so the effect below can tell an
+  // actual host change apart from the initial run.
+  let boundMarketApiBase: string | null = null;
+
+  // Reset the admin session when the active market-api host changes — e.g. the
+  // Production/Staging server toggle flips. An admin JWT is minted against one
+  // environment's ADMIN_JWT_SECRET and rejected (401) by the other, so continuing
+  // would fire cross-env requests that bounce the user out of a half-loaded page
+  // mid-edit. Drop cleanly to the login card, scoped to the newly-selected env, with
+  // a note explaining why they need to sign in again.
+  $effect(() => {
+    const base = getActiveConfig().marketApiBase; // tracked → re-runs on toggle flip
+    if (!adminUser || boundMarketApiBase === null) {
+      boundMarketApiBase = base ?? null;
+      return;
+    }
+    if (base && boundMarketApiBase !== base) {
+      boundMarketApiBase = base;
+      disconnectAdmin();
+      authError = `Server switched to ${
+        settings.server === 'staging' ? 'Staging' : 'Production'
+      }. Sign in again to manage this marketplace.`;
     }
   });
 </script>
