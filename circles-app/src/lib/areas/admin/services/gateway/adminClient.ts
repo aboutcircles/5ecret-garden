@@ -190,6 +190,15 @@ export class AdminApiError extends Error {
   isAuthFailure(): boolean {
     return this.status === 401 || this.status === 403;
   }
+
+  /**
+   * 404 — the endpoint isn't registered on this market-api build. Adapters roll out
+   * per environment (e.g. the WooCommerce admin surface is staging-only today), so a
+   * frontend that's ahead of the backend can hit a route the deployment lacks.
+   */
+  isNotFound(): boolean {
+    return this.status === 404;
+  }
 }
 
 /**
@@ -224,6 +233,21 @@ async function adminFetch<T>(
   }
 
   return res.json() as Promise<T>;
+}
+
+/**
+ * List an adapter collection, tolerating a 404 as "endpoint not deployed on this
+ * market-api build" → empty. A missing adapter endpoint must not surface as a fatal
+ * error that collapses the whole admin page; callers that want to gate the feature
+ * up front should also check its capability (see admin/capabilities.ts).
+ */
+async function adminListTolerant<T>(path: string): Promise<T[]> {
+  try {
+    return await adminFetch<T[]>(path);
+  } catch (e) {
+    if (e instanceof AdminApiError && e.isNotFound()) return [];
+    throw e;
+  }
 }
 
 // ============= Route Management =============
@@ -418,7 +442,7 @@ export async function upsertWcConnection(config: WcConnectionConfig): Promise<Wc
 }
 
 export async function listWcConnections(): Promise<WcConnectionListItem[]> {
-  return adminFetch<WcConnectionListItem[]>('/admin/wc-connections');
+  return adminListTolerant<WcConnectionListItem>('/admin/wc-connections');
 }
 
 export async function disableWcConnection(chainId: number, seller: string): Promise<{ ok: true }> {
@@ -478,7 +502,7 @@ export async function upsertWcProduct(config: WcProductConfig): Promise<void> {
 }
 
 export async function listWcProducts(): Promise<WcProductListItem[]> {
-  return adminFetch<WcProductListItem[]>('/admin/wc-products');
+  return adminListTolerant<WcProductListItem>('/admin/wc-products');
 }
 
 export async function disableWcProduct(chainId: number, seller: string, sku: string): Promise<{ ok: true }> {
