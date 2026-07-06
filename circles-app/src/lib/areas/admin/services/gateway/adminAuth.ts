@@ -20,6 +20,17 @@ export interface AdminVerifyResponse {
 }
 
 /**
+ * The active market-api host, normalized (trailing slash stripped), or '' when
+ * unresolved. Follows the Production/Staging server toggle via getActiveConfig().
+ * Browser-independent so admin token host-binding works uniformly in SSR and tests;
+ * the browser-only assumption is enforced separately by getAdminBaseUrl().
+ */
+function activeAdminHost(): string {
+  const base = getActiveConfig().marketApiBase;
+  return base ? String(base).replace(/\/$/, '') : '';
+}
+
+/**
  * Get the admin API base URL from config or environment
  */
 export function getAdminBaseUrl(): string {
@@ -27,11 +38,11 @@ export function getAdminBaseUrl(): string {
     throw new Error('getAdminClient() can only be used in the browser');
   }
 
-  const envBase = getActiveConfig().marketApiBase;
-  if (!envBase) {
+  const base = activeAdminHost();
+  if (!base) {
     throw new Error('Admin API base URL not configured');
   }
-  return String(envBase).replace(/\/$/, '');
+  return base;
 }
 
 /**
@@ -124,20 +135,47 @@ export async function signInAdminWithSafe(options: {
 }
 
 /**
- * Store for admin JWT token
+ * An admin JWT is only valid for the market-api host it was minted against — each
+ * environment signs with its own ADMIN_JWT_SECRET, so a production token is rejected
+ * (401) by staging and vice versa. Returns the token only while the session's host
+ * still matches the active host; once the Production/Staging toggle moves the base it
+ * returns null, so a stale cross-environment token is never put on the wire.
  */
-let _adminToken: string | null = null;
+export function selectValidAdminToken(
+  session: {token: string; host: string} | null,
+  activeHost: string,
+): string | null {
+  if (!session) return null;
+  return session.host === activeHost ? session.token : null;
+}
+
+/**
+ * In-memory admin session, bound to the market-api host it was minted against so a
+ * later server-toggle flip invalidates it instead of leaking it cross-environment.
+ */
+let _adminSession: {token: string; host: string} | null = null;
 
 export function setAdminToken(token: string): void {
-  _adminToken = token;
+  _adminSession = {token, host: activeAdminHost()};
 }
 
 export function clearAdminToken(): void {
-  _adminToken = null;
+  _adminSession = null;
 }
 
 export function getAdminToken(): string | null {
-  return _adminToken;
+  if (!_adminSession) return null;
+
+  const host = activeAdminHost();
+  // Can't resolve the active host (unset config) — don't clobber the session on a
+  // transient gap; leave validation to the next resolvable read.
+  if (!host) return _adminSession.token;
+
+  const valid = selectValidAdminToken(_adminSession, host);
+  // Drop a token that no longer matches the active host: the server toggle moved the
+  // base out from under this session, so the token is now cross-environment.
+  if (!valid) _adminSession = null;
+  return valid;
 }
 
 /**
