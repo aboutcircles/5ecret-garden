@@ -55,6 +55,7 @@
   } from '$lib/areas/admin/services/gateway/adminClient';
   import { gnosisConfig } from '$lib/shared/config/circles';
   import { getActiveConfig, settings } from '$lib/shared/state/settings.svelte';
+  import { isWooCommerceEnabled } from '$lib/areas/admin/capabilities';
   import type { Address } from '@aboutcircles/sdk-types';
   import { popupControls } from '$lib/shared/state/popup';
   import AdminSectionCard from '$lib/areas/admin/components/AdminSectionCard.svelte';
@@ -109,6 +110,12 @@
   const unlockProductsUnified = $derived(unifiedProducts.filter((item) => resolveAdminProductType(item) === 'unlock'));
   const wcProductsUnified = $derived(unifiedProducts.filter((item) => resolveAdminProductType(item) === 'woocommerce'));
   const routeOnlyProductsUnified = $derived(unifiedProducts.filter((item) => resolveAdminProductType(item) === 'route'));
+
+  // WooCommerce's market-api admin surface (/admin/wc-*) is staging-only today (see
+  // capabilities.ts). Gate the WC calls and UI on it so prod — where those endpoints
+  // 404 — shows a clear "staging only" state instead of firing the call and collapsing
+  // the whole admin page on the error.
+  const wcEnabled = $derived(isWooCommerceEnabled(settings.server));
 
   type SaveProductPayload = {
     type: AdminProductType;
@@ -203,10 +210,12 @@
         name: 'Loading Odoo connections…',
         promise: listOdooConnections(),
       });
-      wcConnections = await runTask({
-        name: 'Loading WooCommerce connections…',
-        promise: listWcConnections(),
-      });
+      wcConnections = wcEnabled
+        ? await runTask({
+            name: 'Loading WooCommerce connections…',
+            promise: listWcConnections(),
+          })
+        : [];
     } catch (e) {
       connectionsError = e instanceof Error ? e.message : String(e);
       if (e instanceof AdminApiError && e.isAuthFailure()) throw e;
@@ -235,10 +244,12 @@
         name: 'Loading Unlock products…',
         promise: listUnlockProducts(),
       });
-      const wc = await runTask({
-        name: 'Loading WooCommerce products…',
-        promise: listWcProducts(),
-      });
+      const wc = wcEnabled
+        ? await runTask({
+            name: 'Loading WooCommerce products…',
+            promise: listWcProducts(),
+          })
+        : [];
       odooProducts = odoo;
       codeProducts = code;
       unlockProducts = unlock;
@@ -737,26 +748,36 @@
             </Tab>
 
             <Tab id="woocommerce" title="WooCommerce" badge={wcProductsUnified.length} panelClass="pt-4">
-              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                <div class="text-xs opacity-70">
-                  WooCommerce connections are shown per seller. Click a seller group to review products.
+              {#if !wcEnabled}
+                <div class="rounded-lg border border-info/30 bg-info/10 p-3 text-sm">
+                  <p class="font-medium">WooCommerce is available on the Staging server only</p>
+                  <p class="text-xs opacity-70 mt-1">
+                    The WooCommerce admin isn't deployed on this server yet. Switch the server toggle to
+                    Staging to manage WooCommerce connections and products.
+                  </p>
                 </div>
-                <div class="flex items-center gap-2">
-                  <button class="btn btn-outline btn-xs" onclick={() => openWcConnectionEditor(null)}>
-                    New connection
-                  </button>
-                </div>
-              </div>
-              {#if wcProductsUnified.length === 0}
-                <p class="text-sm opacity-70">No WooCommerce products configured yet.</p>
               {:else}
-                <AdminProductList
-                  products={wcProductsUnified}
-                  onSelect={(product) => openProductEditor(product, 'woocommerce')}
-                  connections={wcConnections}
-                  onEditConnection={(conn) => openWcConnectionEditor((conn as AdminWcConnection) ?? null)}
-                  productTypes={['woocommerce']}
-                />
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                  <div class="text-xs opacity-70">
+                    WooCommerce connections are shown per seller. Click a seller group to review products.
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button class="btn btn-outline btn-xs" onclick={() => openWcConnectionEditor(null)}>
+                      New connection
+                    </button>
+                  </div>
+                </div>
+                {#if wcProductsUnified.length === 0}
+                  <p class="text-sm opacity-70">No WooCommerce products configured yet.</p>
+                {:else}
+                  <AdminProductList
+                    products={wcProductsUnified}
+                    onSelect={(product) => openProductEditor(product, 'woocommerce')}
+                    connections={wcConnections}
+                    onEditConnection={(conn) => openWcConnectionEditor((conn as AdminWcConnection) ?? null)}
+                    productTypes={['woocommerce']}
+                  />
+                {/if}
               {/if}
             </Tab>
 
