@@ -5,6 +5,7 @@
   import { browser } from '$app/environment';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { runTask } from '$lib/shared/utils/tasks';
+  import { isUserRejection } from '$lib/shared/utils/errorHandler';
   import { RefreshCw as LRefreshCw } from 'lucide';
   import {
     getAdminToken,
@@ -52,6 +53,7 @@
     type WcProductConfig,
     type WcProductListItem,
     AdminApiError,
+    describeAdminError,
   } from '$lib/areas/admin/services/gateway/adminClient';
   import { gnosisConfig } from '$lib/shared/config/circles';
   import { getActiveConfig, settings } from '$lib/shared/state/settings.svelte';
@@ -147,19 +149,21 @@
         throw new Error('No avatar connected');
       }
 
-      const verifyResult = await runTask({
-        name: 'Signing in as admin…',
-        promise: signInAdminWithSafe({
-          avatar: avatar.toLowerCase() as Address,
-          chainId: gnosisConfig.production.marketChainId,
-        }),
+      // Not wrapped in runTask: a failure here (bad signature, non-allowlisted
+      // wallet, network) is shown inline on the login card via authError — routing
+      // it through runTask would also pop the global stack-trace error modal.
+      const verifyResult = await signInAdminWithSafe({
+        avatar: avatar.toLowerCase() as Address,
+        chainId: gnosisConfig.production.marketChainId,
       });
 
       setAdminToken(verifyResult.token);
       adminUser = verifyResult;
       void loadAdminData();
     } catch (e) {
-      authError = e instanceof Error ? e.message : String(e);
+      // A rejected signature is an intentional cancellation, not a failure — stay
+      // on the login card quietly instead of flashing an error.
+      authError = isUserRejection(e) ? null : describeAdminError(e);
       clearAdminToken();
       adminUser = null;
     } finally {
@@ -189,12 +193,9 @@
     routesError = null;
 
     try {
-      routes = await runTask({
-        name: 'Loading routes…',
-        promise: listRoutes(),
-      });
+      routes = await listRoutes();
     } catch (e) {
-      routesError = e instanceof Error ? e.message : String(e);
+      routesError = describeAdminError(e);
       if (e instanceof AdminApiError && e.isAuthFailure()) throw e;
     } finally {
       routesLoading = false;
@@ -206,18 +207,10 @@
     connectionsError = null;
 
     try {
-      odooConnections = await runTask({
-        name: 'Loading Odoo connections…',
-        promise: listOdooConnections(),
-      });
-      wcConnections = wcEnabled
-        ? await runTask({
-            name: 'Loading WooCommerce connections…',
-            promise: listWcConnections(),
-          })
-        : [];
+      odooConnections = await listOdooConnections();
+      wcConnections = wcEnabled ? await listWcConnections() : [];
     } catch (e) {
-      connectionsError = e instanceof Error ? e.message : String(e);
+      connectionsError = describeAdminError(e);
       if (e instanceof AdminApiError && e.isAuthFailure()) throw e;
     } finally {
       connectionsLoading = false;
@@ -229,33 +222,19 @@
     productsError = null;
 
     try {
-      // Stage into locals; assign all three atomically on full success.
+      // Stage into locals; assign all four atomically on full success.
       // Avoids mixing fresh + stale arrays in `unifiedProducts` ($derived),
       // which feeds the new-product wizard's duplicate-detection list.
-      const odoo = await runTask({
-        name: 'Loading Odoo products…',
-        promise: listOdooProducts(),
-      });
-      const code = await runTask({
-        name: 'Loading code products…',
-        promise: listCodeProducts(),
-      });
-      const unlock = await runTask({
-        name: 'Loading Unlock products…',
-        promise: listUnlockProducts(),
-      });
-      const wc = wcEnabled
-        ? await runTask({
-            name: 'Loading WooCommerce products…',
-            promise: listWcProducts(),
-          })
-        : [];
+      const odoo = await listOdooProducts();
+      const code = await listCodeProducts();
+      const unlock = await listUnlockProducts();
+      const wc = wcEnabled ? await listWcProducts() : [];
       odooProducts = odoo;
       codeProducts = code;
       unlockProducts = unlock;
       wcProducts = wc;
     } catch (e) {
-      productsError = e instanceof Error ? e.message : String(e);
+      productsError = describeAdminError(e);
       if (e instanceof AdminApiError && e.isAuthFailure()) throw e;
     } finally {
       productsLoading = false;
@@ -277,6 +256,11 @@
       if (e instanceof AdminApiError && e.status === 401) {
         clearAdminToken();
         adminUser = null;
+        // Surface why we dropped to the login card: the loader's inline error
+        // unmounts with the products block when adminUser clears, so without this
+        // the user would land on a bare "Authentication Required" card with no
+        // explanation. describeAdminError(401) → "session has expired…".
+        authError = describeAdminError(e);
       }
     }
   }

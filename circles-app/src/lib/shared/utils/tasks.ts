@@ -1,5 +1,6 @@
 import { writable } from 'svelte/store';
 import { isUserRejection } from '$lib/shared/utils/errorHandler';
+import { getErrorMessage } from '$lib/shared/utils/sdkAdapters';
 
 export type Task<T> = {
   name: string;
@@ -47,7 +48,11 @@ function pushCompleted(name: string, result: unknown): void {
 }
 
 async function showErrorPopup(err: Error): Promise<void> {
-  const errorMessage = err.message;
+  // Expected, handled failures (e.g. admin API 401/403/404) are surfaced inline by
+  // their callers and never reach this popup. What reaches here is an *unexpected*
+  // error, which we can't give a bespoke message — so show its message plus the
+  // full, uncut stack trace (collapsed under "Stack Trace") to keep it debuggable.
+  const errorMessage = getErrorMessage(err);
   const stackTrace = err.stack;
 
   const [{ popupControls }, { default: ErrorPage }] = await Promise.all([
