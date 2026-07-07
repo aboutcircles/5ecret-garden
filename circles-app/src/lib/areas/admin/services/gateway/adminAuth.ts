@@ -5,6 +5,11 @@ import {ensureGnosisChain} from '$lib/shared/integrations/chain/gnosis';
 import {getMarketClient} from '$lib/shared/data/market/marketClientProxy';
 import {gnosisConfig} from '$lib/shared/config/circles';
 import {getActiveConfig} from '$lib/shared/state/settings.svelte';
+// AdminApiError is imported from the sibling client (a benign runtime-only cycle:
+// adminClient imports helpers from here, both reference the other only inside
+// function bodies). Throwing it lets describeAdminError() map challenge/verify
+// 401/403/404 to friendly copy instead of leaking the raw server body.
+import {AdminApiError} from './adminClient';
 
 export interface AdminChallengeResponse {
   challengeId: string;
@@ -62,7 +67,7 @@ export async function createAdminChallenge(
 
   if (!res.ok) {
     const text = await res.text().catch(() => '');
-    throw new Error(`Admin challenge failed (${res.status}): ${text}`);
+    throw new AdminApiError('POST', '/admin/auth/challenge', res.status, text);
   }
 
   return res.json() as Promise<AdminChallengeResponse>;
@@ -85,7 +90,7 @@ export async function verifyAdminChallenge(
 
   if (!res.ok) {
     const text = await res.text().catch(() => '');
-    throw new Error(`Admin verify failed (${res.status}): ${text}`);
+    throw new AdminApiError('POST', '/admin/auth/verify', res.status, text);
   }
 
   return res.json() as Promise<AdminVerifyResponse>;

@@ -202,6 +202,28 @@ export class AdminApiError extends Error {
 }
 
 /**
+ * Map an admin API error to a short, human-readable message for inline display.
+ * Keeps the common, expected failures (not on the allowlist, expired session,
+ * endpoint not deployed) from surfacing as raw "METHOD /path failed (status): body"
+ * strings — or worse, a global stack-trace popup.
+ */
+export function describeAdminError(e: unknown): string {
+  if (e instanceof AdminApiError) {
+    if (e.status === 403) {
+      return "This wallet isn't on the admin allowlist for the selected market API.";
+    }
+    if (e.status === 401) {
+      return 'Your admin session has expired. Please sign in again.';
+    }
+    if (e.status === 404) {
+      return "This admin feature isn't available on the selected server.";
+    }
+    return `Admin request failed (${e.status}).`;
+  }
+  return e instanceof Error ? e.message : String(e);
+}
+
+/**
  * Get the admin API base URL - re-exported for convenience
  */
 function getBaseUrl(): string {

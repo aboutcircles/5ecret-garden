@@ -312,10 +312,10 @@
     loadSuccessAt = null;
 
     try {
-      await runTask({
-        name: 'Loading bookmarks from profile…',
-        promise: profileBookmarksService.syncFromProfile(),
-      });
+      // Not wrapped in runTask: this is a read with its own inline error state
+      // (loadError) + loading flag. runTask would also pop the global stack-trace
+      // modal on failure — double-surfacing an expected error.
+      await profileBookmarksService.syncFromProfile();
       loadSuccessAt = Date.now();
     } catch (e: unknown) {
       loadError = e instanceof Error ? e.message : String(e);
