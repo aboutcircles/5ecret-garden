@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Snippet } from 'svelte';
+  import { untrack, type Snippet } from 'svelte';
   import { readable, writable } from 'svelte/store';
   import { browser } from '$app/environment';
   import { page } from '$app/stores';
@@ -106,25 +106,34 @@
       : TAB_ORDER.filter((id) => !ADVANCED_TABS.has(id) || id === selectedTab),
   );
 
-  // URL → tab: read ?tab= on load/navigation
+  // URL → tab: the URL is the source of truth on deep-link / back-forward.
+  // This is the ONLY reactive writer of `selectedTab`. It depends solely on
+  // `$page.url` (the `selectedTab` read is untracked) and skips redundant
+  // assignments, so it can never feed a tab→URL echo. The reverse direction is
+  // written imperatively in `selectTab()` — never via a second effect. A prior
+  // bidirectional effect pair mirrored URL↔state through async `replaceState`;
+  // rapid tab switching on a data-heavy account queued overlapping navigations,
+  // `$page.url` went transiently stale, and the two effects ping-ponged
+  // `selectedTab` against the URL in an unbounded async loop that Svelte's
+  // synchronous effect-depth guard never caught → the tab pegged a core.
   $effect(() => {
     const raw = $page.url.searchParams.get('tab');
     const resolved = raw && TAB_ALIASES[raw] ? TAB_ALIASES[raw] : raw;
-    selectedTab = coerceTabId(TAB_IDS, resolved, 'personal');
+    const next = coerceTabId(TAB_IDS, resolved, 'personal');
+    if (untrack(() => selectedTab) !== next) selectedTab = next;
   });
 
-  // Tab → URL: keep ?tab= in sync when the user clicks a tab
-  $effect(() => {
+  // Tab → URL: a user clicking a tab writes `?tab=` imperatively. Single writer,
+  // no reactive dependency on `selectedTab`, so there is no loop with the effect
+  // above (which re-reads this URL and no-ops because it already matches).
+  function selectTab(id: TabId): void {
+    selectedTab = id;
     if (!browser) return;
-    if (!$page.url.pathname.startsWith('/settings')) return;
-    const current = selectedTab;
-    const urlTab = $page.url.searchParams.get('tab');
-    if (current && current !== urlTab) {
-      const url = new URL($page.url);
-      url.searchParams.set('tab', current);
-      replaceState(url, {});
-    }
-  });
+    const url = new URL($page.url);
+    if (url.searchParams.get('tab') === id) return;
+    url.searchParams.set('tab', id);
+    replaceState(url, {});
+  }
 
 
   // Canonical orders list item model from market/orders domain.
@@ -631,7 +640,8 @@
         {@const active = selectedTab === id}
         <button
           type="button"
-          onclick={() => selectedTab = id}
+          onclick={() => selectTab(id)}
+          class="settings-tab"
           style="
             padding:8px 14px;border-radius:9999px;flex:0 0 auto;cursor:pointer;
             background:{active ? T.ink : T.surface};
@@ -717,3 +727,15 @@
     <div style="height:24px;"></div>
   </div>
 </div>
+
+<style>
+  /* The global focus-visible outline (app.css) renders as a rounded-rectangle on
+     these fully-rounded pills because the browser caps the outline corner radius —
+     it reads as a mismatched second border. A box-shadow ring follows the pill
+     radius exactly, so keyboard focus shows a clean ring hugging the pill. Uses
+     !important to win over the inline resting box-shadow on each tab. */
+  .settings-tab:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(88, 73, 212, 0.55) !important;
+  }
+</style>
