@@ -5,6 +5,7 @@
   import QrCode from '$lib/shared/ui/primitives/QrCode.svelte';
   import { popupControls } from '$lib/shared/state/popup/popUp.svelte';
   import { signer } from '$lib/shared/state/wallet.svelte';
+  import { rememberRedirect } from '$lib/shared/utils/redirectIntent';
   import { avatarState } from '$lib/shared/state/avatar.svelte';
   import { circles } from '$lib/shared/state/circles';
   import type { Address } from '@aboutcircles/sdk-types';
@@ -17,6 +18,9 @@
 
   function changeWallet() {
     popupControls.close();
+
+    // Return to the current route after the reconnect instead of /dashboard.
+    rememberRedirect(window.location.pathname + window.location.search);
 
     signer.privateKey
       ? goto('/connect-wallet/import-circles-garden')
