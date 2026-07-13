@@ -1,5 +1,4 @@
 <script lang="ts">
-    import {onMount} from 'svelte';
     import { browser } from '$app/environment';
     import ProductCard from '$lib/areas/market/ui/product/ProductCard.svelte';
     import ProductCardPlaceholder from '$lib/shared/ui/lists/placeholders/ProductCardPlaceholder.svelte';
@@ -65,23 +64,31 @@
       }
     }
 
-    // Infinite scroll sentinel and observer
+    // Infinite scroll sentinel
     let sentinel: HTMLDivElement | null = $state(null);
-    let io: IntersectionObserver | null = null;
-    let observed: Element | null = null;
 
-    // Reactively (un)observe the sentinel when it changes or when hasMore toggles
+    // Observe the sentinel whenever there are more pages to load. The observer is
+    // created *inside* this effect so it is wired up as soon as the sentinel is in the
+    // DOM and torn down/recreated when `hasMore` or the sentinel changes. (Previously
+    // the observer lived in a non-reactive `let` assigned in onMount, while a separate
+    // effect tried to observe it — but that effect bailed on `!io` *before* reading its
+    // reactive deps, so it captured none and never re-ran once onMount set `io`. Net:
+    // the sentinel was never observed and scroll-to-load-more silently did nothing; only
+    // the manual "Load more" button worked.)
     $effect(() => {
-      if (!io) return;
       const target = hasMore ? sentinel : null;
-      if (observed && observed !== target) {
-        io.unobserve(observed);
-        observed = null;
-      }
-      if (target && observed !== target) {
-        io.observe(target);
-        observed = target;
-      }
+      if (!target) return;
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            // Guard with `loading`/`hasMore` (current values) to avoid duplicate fetches.
+            if (e.isIntersecting && !loading && hasMore) void loadNextPage();
+          }
+        },
+        { root: null, rootMargin: '600px 0px 600px 0px', threshold: 0 },
+      );
+      observer.observe(target);
+      return () => observer.disconnect();
     });
 
     import { shortenAddress } from '$lib/shared/utils/shared';
@@ -383,35 +390,6 @@
       updateRange();
     });
 
-    onMount(() => {
-      // Initialize IntersectionObserver for infinite scroll
-      io = new IntersectionObserver((entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) {
-            // Guard with `loading` and `hasMore` to avoid duplicate fetches
-            if (!loading && hasMore) {
-              void loadNextPage();
-            }
-          }
-        }
-      }, { root: null, rootMargin: '600px 0px 600px 0px', threshold: 0 });
-
-      // initial load is triggered by selectedOperator effect
-      // void loadFirstPage();
-
-      return () => {
-        if (io) {
-          try {
-            if (observed) io.unobserve(observed);
-          } catch {}
-          try {
-            io.disconnect();
-          } catch {}
-          io = null;
-          observed = null;
-        }
-      };
-    });
 
 
 </script>
