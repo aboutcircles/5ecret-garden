@@ -115,7 +115,7 @@
       onclick={toggleAdvancedMode}
       onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleAdvancedMode(); } }}
       title={settings.advancedMode ? 'Advanced mode on — click to switch to standard' : 'Toggle advanced mode'}
-      style="font-family:{T.fontSans};font-size:11px;color:{settings.advancedMode ? T.primary : T.inkFaint};padding:2px 7px;border-radius:9999px;background:{settings.advancedMode ? T.primaryFaint : T.pageDeep};font-weight:580;letter-spacing:0.04em;text-transform:lowercase;cursor:pointer;">beta</span>
+      style="font-family:{T.fontSans};font-size:11px;color:{settings.advancedMode ? T.primary : T.inkMuted};padding:2px 7px;border-radius:9999px;background:{settings.advancedMode ? T.primaryFaint : T.pageDeep};font-weight:580;letter-spacing:0.04em;text-transform:lowercase;cursor:pointer;">beta</span>
   </div>
 
   <!-- Account picker -->
@@ -231,7 +231,7 @@
         style="display:flex;align-items:center;gap:8px;width:100%;background:transparent;border:0;padding:10px 0 0;cursor:pointer;text-align:left;"
       >
         <Lucide icon={LInfo} size={14} class="shrink-0" ariaLabel="" />
-        <span style="font-size:11.5px;color:{T.inkFaint};">Circles v2 · {networkLabel}</span>
+        <span style="font-size:11.5px;color:{T.inkMuted};">Circles v2 · {networkLabel}</span>
         <span
           style="margin-left:auto;width:7px;height:7px;border-radius:9999px;background:{wsDotColor};flex-shrink:0;"
           aria-hidden="true"

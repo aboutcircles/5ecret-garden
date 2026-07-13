@@ -64,7 +64,7 @@
         font-family:{T.fontSans};font-size:11.5px;font-weight:560;line-height:1;
         padding:4px 8px;border-radius:9999px;white-space:nowrap;
         background:{isStaging ? 'rgba(217,119,6,0.12)' : 'transparent'};
-        color:{isStaging ? '#B45309' : T.inkMuted};
+        color:{isStaging ? '#B45309' : T.inkBody};
         border:1px solid {isStaging ? 'rgba(217,119,6,0.30)' : T.hairline};
       "
     >
@@ -88,7 +88,7 @@
       "
     >
       <div
-        style="font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:{T.inkFaint};padding:5px 8px 4px;"
+        style="font-size:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:{T.inkMuted};padding:5px 8px 4px;"
       >
         Data source
       </div>
@@ -118,7 +118,7 @@
           {/if}
         </button>
       {/each}
-      <div style="font-size:10.5px;color:{T.inkFaint};padding:5px 8px 3px;line-height:1.4;">
+      <div style="font-size:10.5px;color:{T.inkMuted};padding:5px 8px 3px;line-height:1.4;">
         Switching reloads the app.
       </div>
     </div>

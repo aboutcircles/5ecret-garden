@@ -290,12 +290,17 @@
     const currentAddress = avatarState.avatar?.address?.toLowerCase();
     if (lastAvatarAddress && currentAddress && lastAvatarAddress !== currentAddress) {
       void (async () => {
-        const [{ PersistentAuthContext }, { clearCart }] = await Promise.all([
+        const [{ PersistentAuthContext }, { clearCart }, { clearAdminToken }] = await Promise.all([
           import('$lib/shared/integrations/market'),
           import('$lib/areas/market/cart/store'),
+          import('$lib/areas/admin/services/gateway/adminAuth'),
         ]);
         PersistentAuthContext.clearAll();
         clearCart();
+        // The admin SIWE token is bound to the signed-in avatar; switching accounts
+        // must drop it, otherwise the new avatar inherits the prior admin session
+        // (e.g. a non-allowlisted account showing as authorized on stale credentials).
+        clearAdminToken();
       })();
     }
     lastAvatarAddress = currentAddress;
