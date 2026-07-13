@@ -158,7 +158,7 @@
     {#if isAuthHistoryError}
       <div class="alert alert-warning mt-1 text-sm">
         <span>Sign in to view order status history.</span>
-        <a class="btn btn-xs btn-primary" href="/settings?tab=orders">Sign in</a>
+        <a class="btn btn-xs btn-primary" href="/market/orders">Sign in</a>
       </div>
     {:else}
       <div class="text-xs text-error mt-1">Failed to load status history: {historyError}</div>

@@ -193,10 +193,10 @@
 
       <li class="defaultheader-sep" role="separator" aria-hidden="true"></li>
       <li class="defaultheader-label" role="presentation">Marketplace</li>
-      <li><a class="defaultheader-link" href="/settings?tab=orders">Orders</a></li>
-      <li><a class="defaultheader-link" href="/settings?tab=sales">Sales</a></li>
-      <li><a class="defaultheader-link" href="/settings?tab=offers">Offers</a></li>
-      <li><a class="defaultheader-link" href="/settings?tab=payment">Payment gateways</a></li>
+      <li><a class="defaultheader-link" href="/market/orders">Orders</a></li>
+      <li><a class="defaultheader-link" href="/market/sales">Sales</a></li>
+      <li><a class="defaultheader-link" href="/market/offers">Offers</a></li>
+      <li><a class="defaultheader-link" href="/market/gateways">Payment gateways</a></li>
       {#if settings.advancedMode}
         <li><a class="defaultheader-link" href="/settings?tab=namespaces">Namespaces</a></li>
       {/if}
