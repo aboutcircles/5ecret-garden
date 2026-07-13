@@ -6,6 +6,7 @@
     import { openStep } from '$lib/shared/flow';
     import {popupControls} from '$lib/shared/state/popup';
     import {signer} from '$lib/shared/state/wallet.svelte';
+    import { rememberRedirect } from '$lib/shared/utils/redirectIntent';
 import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
     import type {Address as EvmAddress} from '@aboutcircles/sdk-types';
     import { getActiveConfig } from '$lib/shared/state/settings.svelte';
@@ -20,6 +21,10 @@ import ProfileExplorer from '$lib/areas/profile/ui/ProfileExplorer.svelte';
         const target = signer.privateKey
             ? '/connect-wallet/import-circles-garden'
             : '/connect-wallet/connect-safe';
+
+        // Remember the current route so switching accounts returns here (e.g. /admin,
+        // /market) instead of dumping the user on /dashboard after the reconnect.
+        rememberRedirect(window.location.pathname + window.location.search);
 
         popupControls.closeAndThen(() => {
             void goto(target);
