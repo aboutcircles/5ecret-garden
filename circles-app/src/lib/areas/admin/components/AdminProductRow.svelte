@@ -1,3 +1,22 @@
+<script module lang="ts">
+  // Cross-instance thumbnail cache, keyed by `seller|sku`. Declared in `<script module>` so it
+  // is genuinely shared across ALL AdminProductRow instances — surviving tab-switch remounts and
+  // `loadAdminData()` reloads. (An instance-scoped Map would be re-created empty per row and
+  // never serve a hit.) Only *resolved* values are cached (including a legitimate "no image");
+  // thrown fetches are left uncached so a transient failure can retry on a later mount. Bounded
+  // with FIFO eviction so a long admin session browsing many sellers can't grow it unbounded.
+  const IMAGE_CACHE_MAX = 1000;
+  const imageCache = new Map<string, string | null>();
+
+  function cacheImage(key: string, url: string | null): void {
+    if (imageCache.size >= IMAGE_CACHE_MAX) {
+      const oldest = imageCache.keys().next().value;
+      if (oldest !== undefined) imageCache.delete(oldest);
+    }
+    imageCache.set(key, url);
+  }
+</script>
+
 <script lang="ts">
   import RowFrame from '$lib/shared/ui/primitives/RowFrame.svelte';
   import AdminStatusBadge from './AdminStatusBadge.svelte';
@@ -7,7 +26,6 @@
   import { gnosisConfig } from '$lib/shared/config/circles';
   import { getProduct, pickProductImageUrl } from '$lib/areas/market/services';
   import { normalizeEvmAddress as normalizeAddress } from '@circles-market/sdk';
-  import { onMount } from 'svelte';
 
   interface Props {
     product: AdminUnifiedProduct;
@@ -59,36 +77,62 @@
   );
 
   let imageUrl = $state<string | null>(null);
-  let mounted = $state(false);
+  let imageAnchorEl = $state<HTMLElement | null>(null);
+  let resolveStarted = false;
+
+  function imageCacheKey(): { key: string; seller: string; sku: string } | null {
+    const seller = normalizeAddress(String(product.seller));
+    const sku = String(product.sku);
+    if (!seller || !sku) return null;
+    // Carry seller/sku alongside the composite key so the fetch never has to re-split the
+    // string — a sku containing '|' would otherwise be truncated by `key.split('|')`.
+    return { key: `${seller}|${sku}`, seller, sku };
+  }
 
   async function resolveProductImage(): Promise<void> {
+    const keyed = imageCacheKey();
+    if (!keyed) {
+      imageUrl = null;
+      return;
+    }
+    const { key, seller, sku } = keyed;
+    if (imageCache.has(key)) {
+      imageUrl = imageCache.get(key) ?? null;
+      return;
+    }
     try {
-      const seller = normalizeAddress(String(product.seller));
-      const sku = String(product.sku);
-      if (!seller || !sku) {
-        imageUrl = null;
-        return;
-      }
       const catalog = getMarketClient().catalog.forOperator(String(gnosisConfig.production.marketOperator));
-      const item = await catalog.fetchProductForSellerAndSku(String(seller), sku);
-      if (!item) {
-        imageUrl = null;
-        return;
-      }
-      const prod = getProduct(item);
-      imageUrl = pickProductImageUrl(prod);
+      const item = await catalog.fetchProductForSellerAndSku(seller, sku);
+      const url = item ? pickProductImageUrl(getProduct(item)) : null;
+      cacheImage(key, url);
+      imageUrl = url;
     } catch {
+      // Leave uncached so a transient failure can retry on a later mount.
       imageUrl = null;
     }
   }
 
-  onMount(() => {
-    mounted = true;
-  });
-
+  // Resolve the thumbnail lazily — only once the row scrolls near the viewport. This stops every
+  // row across every (hidden) tab panel and every collapsed <details> group from firing a
+  // paginating catalog lookup on mount, which was the storm that froze the admin page. The
+  // observer runs once per row; the module-level cache then covers re-renders and sibling rows.
   $effect(() => {
-    if (!mounted) return;
-    resolveProductImage();
+    if (resolveStarted || !imageAnchorEl) return;
+    resolveStarted = true;
+
+    if (typeof IntersectionObserver === 'undefined') {
+      void resolveProductImage();
+      return;
+    }
+
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        io.disconnect();
+        void resolveProductImage();
+      }
+    }, { rootMargin: '200px' });
+    io.observe(imageAnchorEl);
+    return () => io.disconnect();
   });
 </script>
 
@@ -99,7 +143,7 @@
   onclick={() => onSelect?.(product)}
 >
   {#snippet leading()}
-    <div class="w-10 h-10 rounded-md bg-base-200 overflow-hidden shrink-0 flex items-center justify-center">
+    <div bind:this={imageAnchorEl} class="w-10 h-10 rounded-md bg-base-200 overflow-hidden shrink-0 flex items-center justify-center">
       {#if imageUrl}
         <img src={imageUrl} alt="" class="w-10 h-10 object-cover" />
       {:else}

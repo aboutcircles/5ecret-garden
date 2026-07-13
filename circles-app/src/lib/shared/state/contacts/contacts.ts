@@ -29,6 +29,12 @@ const refreshOnEvents = new Set<string>([
 let currentStoreUnsubscribe: (() => void) | undefined;
 let currentQuery: Promise<any> | undefined;
 let currentAvatarAddress: string = '';
+// Bumped on every (re-)init. The query store resolves asynchronously, so we stamp each init
+// with a generation and, when its promise finally settles, discard the subscription if a newer
+// init has superseded it. Without this a rapid re-init (e.g. a liveness tick firing while the
+// previous query is still in flight) finds `currentStoreUnsubscribe` still undefined, skips the
+// teardown below, and orphans the earlier `avatar.events` subscription forever.
+let initGeneration = 0;
 
 export const contacts = writable<{
   data: ContactList;
@@ -52,12 +58,20 @@ export const initContactStore = ($avatar: Avatar) => {
     currentStoreUnsubscribe = undefined;
   }
 
+  const myGeneration = ++initGeneration;
   currentQuery = undefined;
   currentAvatarAddress = $avatar.address;
 
   const scopeId = makeScopeId($avatar.address);
   currentQuery = createContactsQueryStore($avatar, $avatar.address, refreshOnEvents);
   currentQuery.then((store) => {
+    // If a newer init superseded this query while it was in flight, do NOT subscribe. The
+    // contacts query store is lazy — its `avatar.events` subscription only starts on the first
+    // `.subscribe()` (eventStoreFactory) — so never subscribing means there is nothing to leak.
+    // (Subscribing and then synchronously unsubscribing would race that async event-wiring and
+    // orphan the subscription created after our teardown ran.)
+    if (myGeneration !== initGeneration) return;
+
     currentStoreUnsubscribe = store.subscribe((value: {
       data: ContactList;
       next: () => Promise<boolean>;

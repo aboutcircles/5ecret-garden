@@ -9,7 +9,10 @@ import { initGatewaySpendingStore } from '$lib/shared/state/gatewaySpending.svel
 import { initGroupMetricsStore } from '$lib/areas/groups/state';
 
 const MIN_RESYNC_INTERVAL_MS = 5_000;
-const LIVENESS_CHECK_INTERVAL_MS = 15_000;
+// Backstop cadence for the quiet store refresh. Kept deliberately coarse: realtime push
+// normally keeps the stores fresh, so this only needs to catch the rare silent-push-failure
+// case. A tighter interval multiplies per-tab RPC volume for no benefit when push works.
+const LIVENESS_CHECK_INTERVAL_MS = 30_000;
 
 let lastResyncAt = 0;
 
@@ -39,7 +42,7 @@ export function initAvatarStores(avatar: Avatar): void {
  *
  * Transaction history and balances always refresh *quietly* — they re-subscribe and
  * refetch page 1 in place without blanking to a skeleton, and no-op when nothing
- * changed. This is what stops the periodic 15s liveness tick from flickering the UI.
+ * changed. This is what stops the periodic liveness tick from flickering the UI.
  *
  * Contacts also rebind on every tick: re-init is non-destructive (the contact store
  * keeps its current value until the new query resolves), so it doesn't flicker, and
@@ -84,15 +87,32 @@ export function isWebsocketConnected(): boolean | undefined {
 }
 
 /**
- * Re-establishes the realtime event subscription after a genuine drop, then refetches to
- * catch up on anything missed. Only meaningful when the avatar's websocket is actually down
- * (see the gate in `initRealtimeSync`); on a healthy socket this is not called.
+ * Whether `resync()` should force a genuine websocket re-subscribe, given the connection flag.
+ *
+ * Only a positively-observed drop (`false`) forces it — NOT `!== true`. An `undefined` reading
+ * means "unknown" (SDK internals changed, or the field is momentarily unreadable); treating
+ * unknown as "down" made `resync()` reset the idempotency flag and re-subscribe on EVERY
+ * interval tick, and because each `subscribeToEvents()` permanently registers a new SDK
+ * subscription listener that is never cleaned up, the per-event work grew without bound over a
+ * long session — a primary cause of the tab freezing. On a healthy or unknown socket the plain
+ * idempotent `subscribeToEvents()` no-ops, which is what we want.
+ */
+export function shouldForceResubscribe(connected: boolean | undefined): boolean {
+  return connected === false;
+}
+
+/**
+ * Re-establishes the realtime event subscription and refetches to catch up on anything missed.
+ * Runs on the liveness interval as well as on tab-refocus / network-online, so it is NOT gated
+ * behind a known-down socket — the quiet store refresh below is a cheap backstop even when push
+ * is working.
  *
  * `avatar.subscribeToEvents()` is idempotent in the SDK (a private `_hasSubscribed` flag set
  * once by `Sdk.getAvatar()`), so a plain call would no-op even after the socket dropped and
- * never re-open it. When the socket is down we clear that flag so the call genuinely
- * re-subscribes (`rpc.client.subscribe()` reconnects when `!websocketConnected`) and rebinds
- * a fresh `avatar.events` observable. TODO: fix the idempotency upstream and drop the reset.
+ * never re-open it. When the socket is CONFIRMED down (`shouldForceResubscribe`) we clear that
+ * flag so the call genuinely re-subscribes (`rpc.client.subscribe()` reconnects when
+ * `!websocketConnected`) and rebinds a fresh `avatar.events` observable. TODO: fix the
+ * idempotency upstream and drop the reset.
  */
 async function resync(opts?: { full?: boolean }): Promise<void> {
   const avatar = avatarState.avatar;
@@ -103,7 +123,7 @@ async function resync(opts?: { full?: boolean }): Promise<void> {
   lastResyncAt = now;
 
   try {
-    if (isWebsocketConnected() !== true) {
+    if (shouldForceResubscribe(isWebsocketConnected())) {
       (avatar as unknown as { _hasSubscribed?: boolean })._hasSubscribed = false;
     }
     await avatar.subscribeToEvents();
