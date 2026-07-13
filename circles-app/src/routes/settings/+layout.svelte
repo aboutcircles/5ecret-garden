@@ -1,9 +1,7 @@
 <script lang="ts">
-  import { untrack, type Snippet } from 'svelte';
+  import { onMount, type Snippet } from 'svelte';
   import { readable, writable } from 'svelte/store';
   import { browser } from '$app/environment';
-  import { page } from '$app/stores';
-  import { replaceState } from '$app/navigation';
   import { T } from '$lib/design-system/tokens.js';
   import Lucide from '$lib/shared/ui/icons/Lucide.svelte';
 
@@ -106,33 +104,41 @@
       : TAB_ORDER.filter((id) => !ADVANCED_TABS.has(id) || id === selectedTab),
   );
 
-  // URL → tab: the URL is the source of truth on deep-link / back-forward.
-  // This is the ONLY reactive writer of `selectedTab`. It depends solely on
-  // `$page.url` (the `selectedTab` read is untracked) and skips redundant
-  // assignments, so it can never feed a tab→URL echo. The reverse direction is
-  // written imperatively in `selectTab()` — never via a second effect. A prior
-  // bidirectional effect pair mirrored URL↔state through async `replaceState`;
-  // rapid tab switching on a data-heavy account queued overlapping navigations,
-  // `$page.url` went transiently stale, and the two effects ping-ponged
-  // `selectedTab` against the URL in an unbounded async loop that Svelte's
-  // synchronous effect-depth guard never caught → the tab pegged a core.
-  $effect(() => {
-    const raw = $page.url.searchParams.get('tab');
+  // `selectedTab` is the single source of truth for what renders. The `?tab=` URL
+  // param is only a best-effort mirror for deep-linking, kept deliberately
+  // NON-reactive:
+  //   - read from `location` on mount and on back/forward (popstate) only;
+  //   - written with native history.replaceState on click.
+  // We do NOT use SvelteKit's `$page` store or `$app/navigation` replaceState here.
+  // On this app that replaceState updates the address bar but does NOT update
+  // `$page.url` (it records a stale `sveltekit:pageurl`), so a reactive URL→tab
+  // effect read the stale value and reverted every click — the tab never moved.
+  // An earlier variant used two effects mirroring URL↔state through async
+  // replaceState and hung the tab under rapid switching. Keeping the URL fully
+  // non-reactive removes both failure modes: a click sets `selectedTab` directly
+  // (always moves) and nothing ever reads the URL back to override it.
+  function tabFromLocation(): TabId {
+    const raw = new URLSearchParams(location.search).get('tab');
     const resolved = raw && TAB_ALIASES[raw] ? TAB_ALIASES[raw] : raw;
-    const next = coerceTabId(TAB_IDS, resolved, 'personal');
-    if (untrack(() => selectedTab) !== next) selectedTab = next;
+    return coerceTabId(TAB_IDS, resolved, 'personal');
+  }
+
+  onMount(() => {
+    selectedTab = tabFromLocation();
+    const onPop = () => { selectedTab = tabFromLocation(); };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
   });
 
-  // Tab → URL: a user clicking a tab writes `?tab=` imperatively. Single writer,
-  // no reactive dependency on `selectedTab`, so there is no loop with the effect
-  // above (which re-reads this URL and no-ops because it already matches).
   function selectTab(id: TabId): void {
     selectedTab = id;
     if (!browser) return;
-    const url = new URL($page.url);
+    const url = new URL(location.href);
     if (url.searchParams.get('tab') === id) return;
     url.searchParams.set('tab', id);
-    replaceState(url, {});
+    // Native history API: updates the address bar for deep-linking without a
+    // navigation, preserving SvelteKit's existing history.state keys.
+    history.replaceState(history.state, '', url.href);
   }
 
 
