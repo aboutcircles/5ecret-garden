@@ -117,7 +117,7 @@
 
   function goToPaymentSettings(): void {
     popupControls.closeAndThen(() => {
-      void goto('/settings?tab=payment');
+      void goto('/market/gateways');
     });
   }
 

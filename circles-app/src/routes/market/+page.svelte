@@ -5,12 +5,10 @@
     import ProductCardPlaceholder from '$lib/shared/ui/lists/placeholders/ProductCardPlaceholder.svelte';
     import { getMarketClient } from '$lib/shared/data/market/marketClientProxy';
     import type { AggregatedCatalogItem } from '$lib/areas/market/model';
-    import { goto } from '$app/navigation';
     import { avatarState } from '$lib/shared/state/avatar.svelte';
     import {gnosisConfig} from "$lib/shared/config/circles";
     import { getActiveConfig } from '$lib/shared/state/settings.svelte';
     import { T } from '$lib/design-system/tokens.js';
-    import Icon from '$lib/design-system/Icon.svelte';
 
     // Defaults (as requested)
     const OPERATOR: `0x${string}` = gnosisConfig.production.marketOperator as `0x${string}`;
@@ -418,61 +416,12 @@
 
 </script>
 
-<div style="background:{T.page};min-height:100%;width:100%;font-family:{T.fontSans};color:{T.inkBody};">
-    <div style="padding:8px 18px 24px;" class="md:!p-9 md:max-w-[1280px] md:mx-auto">
+<!-- Shared Market header + sub-nav live in +layout.svelte; this page renders the Browse grid. -->
+<div style="padding:0 18px 24px;" class="md:!px-9 md:!pb-9 md:max-w-[1280px] md:mx-auto">
 
-        <!-- Page title -->
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0 14px;">
-            <div style="display:flex;flex-direction:column;gap:2px;min-width:0;">
-                <span style="font-family:{T.fontDisplay};font-size:32px;color:{T.ink};letter-spacing:-0.02em;line-height:1;font-weight:400;">Market</span>
-                <span style="font-size:12.5px;color:{T.inkMuted};">{products.length}{hasMore ? '+' : ''} offers available</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-                <!-- Discreet market-admin entry. Recessed by default and only brightens on
-                     hover/focus, so it's reachable by operators who know it's there without
-                     inviting casual clicks. Non-admins who follow it land on /admin and get
-                     the friendly "not on the admin allowlist" message. -->
-                <button
-                    onclick={() => goto('/admin')}
-                    aria-label="Market admin"
-                    title="Market admin"
-                    class="market-admin-link"
-                    style="
-                        height:40px;width:34px;border-radius:9999px;cursor:pointer;
-                        background:transparent;border:0;padding:0;
-                        display:inline-flex;align-items:center;justify-content:center;
-                        color:{T.inkMuted};opacity:0.38;
-                    "
-                >
-                    <Icon name="shield" size={16} stroke="currentColor" strokeWidth={1.7} />
-                </button>
-                <button
-                    onclick={() => goto('/settings?tab=marketplace')}
-                    style="
-                        height:40px;padding:0 16px;border-radius:9999px;
-                        background:{T.surface};color:{T.ink};border:1px solid {T.hairline};cursor:pointer;
-                        display:inline-flex;align-items:center;gap:6px;
-                        font-family:{T.fontSans};font-size:13.5px;font-weight:540;
-                        box-shadow:{T.shadow.xs};
-                    "
-                    class="hidden md:inline-flex"
-                >
-                    Manage offers
-                </button>
-                <button
-                    onclick={() => goto('/settings?tab=marketplace')}
-                    style="
-                        height:40px;padding:0 16px;border-radius:9999px;
-                        background:{T.primary};color:#fff;border:0;cursor:pointer;
-                        display:inline-flex;align-items:center;gap:6px;
-                        font-family:{T.fontSans};font-size:13.5px;font-weight:540;
-                        box-shadow:0 4px 12px rgba(88,73,212,0.25),0 1px 0 rgba(255,255,255,0.18) inset;
-                    "
-                >
-                    <Icon name="plus" size={15} stroke="#fff" strokeWidth={2.2} />
-                    Post offer
-                </button>
-            </div>
+        <!-- Browse-specific offers count -->
+        <div style="padding:0 0 14px;">
+            <span style="font-size:12.5px;color:{T.inkMuted};">{products.length}{hasMore ? '+' : ''} offers available</span>
         </div>
 
         <!-- Body -->
@@ -558,15 +507,3 @@
 
         <div style="height:24px;"></div>
     </div>
-</div>
-
-<style>
-    /* Keep the admin shield recessed until intentionally hovered/focused. */
-    .market-admin-link {
-        transition: opacity 0.12s ease-out;
-    }
-    .market-admin-link:hover,
-    .market-admin-link:focus-visible {
-        opacity: 1 !important;
-    }
-</style>

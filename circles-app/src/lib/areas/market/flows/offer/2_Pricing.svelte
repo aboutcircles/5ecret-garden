@@ -175,7 +175,7 @@
       <StepAlert variant="info">
         <span class="text-sm">
           No gateways found.
-          <a class="link ml-1" href="/settings?tab=payment" target="_blank">Create one</a>
+          <a class="link ml-1" href="/market/gateways" target="_blank">Create one</a>
           and come back.
         </span>
       </StepAlert>
