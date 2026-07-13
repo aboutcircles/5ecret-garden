@@ -4,8 +4,30 @@
   import { goto } from '$app/navigation';
   import { T } from '$lib/design-system/tokens.js';
   import Icon from '$lib/design-system/Icon.svelte';
+  import { openFlowPopup } from '$lib/shared/state/popup';
+  import { gnosisConfig } from '$lib/shared/config/circles';
+  import { getActiveConfig } from '$lib/shared/state/settings.svelte';
+  import OfferStep1 from '$lib/areas/market/flows/offer/1_Product.svelte';
+  import type { OfferFlowContext } from '$lib/areas/market/flows/offer/types';
 
   let { children }: { children?: Snippet } = $props();
+
+  // "Post offer" opens the create-listing flow directly (matching the button's
+  // intent) rather than dropping the user on the Offers tab to hunt for a button.
+  // On close we land on the seller's Offers list so the new listing shows once the
+  // indexer catches up (that view refetches its catalog on mount).
+  function openPostOffer(): void {
+    const flowContext: OfferFlowContext = {
+      operator: gnosisConfig.production.marketOperator!,
+      pinApiBase: getActiveConfig().marketApiBase,
+    };
+    openFlowPopup({
+      title: 'Create Offer',
+      component: OfferStep1,
+      props: { context: flowContext },
+      onClose: () => { void goto('/market/offers'); },
+    });
+  }
 
   const navItems = [
     { label: 'Browse', href: '/market' },
@@ -47,10 +69,11 @@
         >
           <Icon name="shield" size={16} stroke="currentColor" strokeWidth={1.7} />
         </button>
-        <a
-          href="/market/offers"
+        <button
+          type="button"
+          onclick={openPostOffer}
           style="
-            height:40px;padding:0 16px;border-radius:9999px;text-decoration:none;
+            height:40px;padding:0 16px;border-radius:9999px;
             background:{T.primary};color:#fff;border:0;cursor:pointer;
             display:inline-flex;align-items:center;gap:6px;
             font-family:{T.fontSans};font-size:13.5px;font-weight:540;
@@ -59,7 +82,7 @@
         >
           <Icon name="plus" size={15} stroke="#fff" strokeWidth={2.2} />
           Post offer
-        </a>
+        </button>
       </div>
     </div>
 
