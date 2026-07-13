@@ -428,6 +428,24 @@
                 <span style="font-size:12.5px;color:{T.inkMuted};">{products.length}{hasMore ? '+' : ''} offers available</span>
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                <!-- Discreet market-admin entry. Recessed by default and only brightens on
+                     hover/focus, so it's reachable by operators who know it's there without
+                     inviting casual clicks. Non-admins who follow it land on /admin and get
+                     the friendly "not on the admin allowlist" message. -->
+                <button
+                    onclick={() => goto('/admin')}
+                    aria-label="Market admin"
+                    title="Market admin"
+                    class="market-admin-link"
+                    style="
+                        height:40px;width:34px;border-radius:9999px;cursor:pointer;
+                        background:transparent;border:0;padding:0;
+                        display:inline-flex;align-items:center;justify-content:center;
+                        color:{T.inkMuted};opacity:0.38;
+                    "
+                >
+                    <Icon name="shield" size={16} stroke="currentColor" strokeWidth={1.7} />
+                </button>
                 <button
                     onclick={() => goto('/settings?tab=marketplace')}
                     style="
@@ -541,3 +559,14 @@
         <div style="height:24px;"></div>
     </div>
 </div>
+
+<style>
+    /* Keep the admin shield recessed until intentionally hovered/focused. */
+    .market-admin-link {
+        transition: opacity 0.12s ease-out;
+    }
+    .market-admin-link:hover,
+    .market-admin-link:focus-visible {
+        opacity: 1 !important;
+    }
+</style>
