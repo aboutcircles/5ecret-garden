@@ -112,14 +112,18 @@
       })
       .catch((err) => {
         if (capturedAddress === lastFetchedAddress) {
-          console.warn('[Avatar] getProfile failed', capturedAddress, err);
+          console.debug('[Avatar] getProfile failed', capturedAddress, err);
+          // Show a graceful fallback (shortened address + logo). Deliberately KEEP
+          // `lastFetchedAddress` pointing at `capturedAddress` (it already does) so this failure
+          // is NOT retried on every reactive tick. The effect already returns early on `!sdk`,
+          // so reaching here means a genuine fetch error, not a missing-SDK case. Resetting the
+          // marker to `undefined` re-armed the effect and — since getProfile retries immediately
+          // — spun a continuous refetch loop for any address whose profile never resolves, one
+          // per card across the whole grid (a major CPU + network sink on dev).
           fetchedProfile = {
             name: capturedAddress.slice(0, 6) + '...' + capturedAddress.slice(-4),
             previewImageUrl: '/logo.svg',
           };
-          // Clear so the next render (e.g. when SDK becomes available)
-          // can retry the fetch for this address.
-          lastFetchedAddress = undefined;
         }
       });
   });

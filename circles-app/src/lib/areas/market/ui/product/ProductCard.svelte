@@ -41,6 +41,7 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
   const isOwner = $derived(isProductOwnedBy(product, currentAvatar));
 
   import { getAddToCartState } from '$lib/areas/market/cart/addToCartUi';
+  import { UI_COPY } from '$lib/shared/ui/copy';
   import { handleError } from '$lib/shared/utils/errorHandler';
   const effectiveAvailabilityIri = $derived<string | null>(
     product?.availability ?? product?.product?.availability ?? null
@@ -48,12 +49,15 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
   const effectiveInventoryValue = $derived<number | null>(
     product?.inventoryLevel?.value ?? product?.product?.inventoryLevel?.value ?? null
   );
+  // Compute add-to-cart state WITHOUT the global cart-loading flag, so this derived (which runs
+  // the non-trivial `resolvePayTo` parse) only recomputes when this card's product/offer change
+  // — not for every mounted card whenever any add-to-cart toggles the global loading flag. The
+  // "cart is busy" disable is applied cheaply at the button via `cartLoading` instead.
   const addState = $derived(
     getAddToCartState({
       product,
       offer,
       currentAvatar,
-      cartLoading,
       availabilityIri: effectiveAvailabilityIri,
       inventoryValue: effectiveInventoryValue,
     })
@@ -194,8 +198,8 @@ import { ProductDetailsPopup } from '$lib/areas/market/ui';
         type="button"
         class="btn btn-sm btn-outline"
         onclick={(e) => { e.stopPropagation(); handleAddToBasket(); }}
-        disabled={!addState.canAdd}
-            title={addState.reason}
+        disabled={!addState.canAdd || cartLoading}
+            title={cartLoading ? UI_COPY.basketUpdating : addState.reason}
           >
             {addState.label}
     </button>

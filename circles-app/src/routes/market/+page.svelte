@@ -251,6 +251,140 @@
       }
     }
 
+    // ————————————————————————————————————————————
+    // Grid virtualization (row windowing)
+    //
+    // Infinite scroll can accumulate hundreds of product cards, and each card mounts a live
+    // reactive subtree (ProductViewer + Avatar). Rendering + laying out all of them pins the
+    // main thread and freezes the tab (Chrome "page unresponsive"), which a reload only clears
+    // temporarily. Cards are uniform height by design (fixed image + line-clamped title +
+    // reserved rows), so we window by fixed-height rows: only the rows near the viewport (plus
+    // an overscan) are mounted; a spacer container reserves the full scroll height so the
+    // scrollbar stays honest. Mirrors the range math in shared/ui/lists/VirtualList.svelte.
+    // ————————————————————————————————————————————
+    const OVERSCAN_ROWS = 3;
+    const DEFAULT_CARD_HEIGHT = 360; // px estimate until the first card is measured
+    const MD_BREAKPOINT = '(min-width: 768px)';
+
+    let gridViewportEl: HTMLDivElement | null = $state(null);
+    let gridInnerEl: HTMLDivElement | null = $state(null);
+    // Seed from matchMedia so the JS column count matches the CSS grid on the first paint
+    // (md:grid-cols-3 at ≥768px), instead of briefly assuming 2 on a desktop viewport.
+    let cols = $state(
+      typeof window !== 'undefined' && window.matchMedia(MD_BREAKPOINT).matches ? 3 : 2
+    );
+    let cardHeight = $state(0);
+    let rangeStartRow = $state(0);
+    let rangeEndRow = $state(6); // seed a first paint so the initial cards can be measured
+
+    const rowGap = $derived(cols >= 3 ? 16 : 12); // gap-3 (12px) / md:gap-4 (16px)
+    const rowHeight = $derived((cardHeight || DEFAULT_CARD_HEIGHT) + rowGap);
+    const totalRows = $derived(Math.ceil(products.length / cols));
+    const totalHeight = $derived(Math.max(0, totalRows * rowHeight - rowGap));
+    const visibleStartIndex = $derived(rangeStartRow * cols);
+    const visibleEndIndex = $derived(Math.min(products.length, rangeEndRow * cols));
+    const visibleProducts = $derived(products.slice(visibleStartIndex, visibleEndIndex));
+    const offsetTop = $derived(rangeStartRow * rowHeight);
+
+    function findScrollRoot(el: HTMLElement | null): HTMLElement | null {
+      if (!el || typeof window === 'undefined') return null;
+      let node: HTMLElement | null = el.parentElement;
+      while (node) {
+        const oy = window.getComputedStyle(node).overflowY;
+        if (oy === 'auto' || oy === 'scroll' || oy === 'overlay') return node;
+        node = node.parentElement;
+      }
+      return null;
+    }
+
+    function measureCardHeight(): void {
+      if (!gridInnerEl) return;
+      const first = gridInnerEl.querySelector('.product-card-root') as HTMLElement | null;
+      const h = first?.getBoundingClientRect().height ?? 0;
+      // Keep rowHeight synced to the REAL card height rather than locking the first reading: the
+      // first measurement can land while the seller avatar is still a taller loading skeleton,
+      // and card height differs slightly across the 2↔3 column breakpoint. Update whenever it
+      // meaningfully changes (≥1px); converges once avatars resolve and layout settles.
+      if (h > 0 && Math.abs(h - cardHeight) >= 1) cardHeight = h;
+    }
+
+    function updateRange(): void {
+      if (!gridViewportEl || typeof window === 'undefined') return;
+      measureCardHeight();
+      const root = findScrollRoot(gridViewportEl);
+      const rootTop = root ? root.getBoundingClientRect().top : 0;
+      const rootHeight = root ? root.clientHeight : window.innerHeight;
+      const gridTop = gridViewportEl.getBoundingClientRect().top;
+      // How far the top of the grid has scrolled above the top of the scroll viewport.
+      const scrolledPast = Math.max(0, rootTop - gridTop);
+      const firstRow = Math.floor(scrolledPast / rowHeight) - OVERSCAN_ROWS;
+      const rowsInView = Math.ceil(rootHeight / rowHeight) + OVERSCAN_ROWS * 2;
+      // Clamp start to totalRows: a breakpoint change (cols shrinking the row count) while
+      // scrolled deep can push the pixel-derived start past the new last row; without this,
+      // rangeEndRow < rangeStartRow yields an empty slice → a transient blank grid until the
+      // next scroll/resize event recomputes.
+      const start = Math.min(Math.max(0, firstRow), totalRows);
+      rangeStartRow = start;
+      rangeEndRow = Math.min(totalRows, start + rowsInView);
+    }
+
+    function syncCols(): void {
+      cols = typeof window !== 'undefined' && window.matchMedia(MD_BREAKPOINT).matches ? 3 : 2;
+    }
+
+    // Attach scroll/resize listeners to the actual scroll root once the grid is mounted.
+    $effect(() => {
+      if (!gridViewportEl || typeof window === 'undefined') return;
+      const root = findScrollRoot(gridViewportEl);
+      const scrollTarget: HTMLElement | Window = root ?? window;
+      const onScroll = () => updateRange();
+      const onResize = () => {
+        syncCols();
+        updateRange();
+      };
+      scrollTarget.addEventListener('scroll', onScroll, { passive: true });
+      window.addEventListener('resize', onResize, { passive: true });
+      updateRange();
+      return () => {
+        scrollTarget.removeEventListener('scroll', onScroll);
+        window.removeEventListener('resize', onResize);
+      };
+    });
+
+    // Track the responsive column count (must match the CSS grid's md:grid-cols-3 breakpoint).
+    $effect(() => {
+      if (typeof window === 'undefined') return;
+      const mql = window.matchMedia(MD_BREAKPOINT);
+      syncCols();
+      const onChange = () => {
+        syncCols();
+        updateRange();
+      };
+      mql.addEventListener('change', onChange);
+      return () => mql.removeEventListener('change', onChange);
+    });
+
+    // Re-measure the card height whenever the rendered cards resize (seller avatars resolving
+    // from skeleton to final height, or the 2↔3 column breakpoint changing card width) so the
+    // fixed row height stays accurate and windowed rows don't drift out of alignment.
+    $effect(() => {
+      if (!gridInnerEl || typeof ResizeObserver === 'undefined') return;
+      const ro = new ResizeObserver(() => measureCardHeight());
+      ro.observe(gridInnerEl);
+      return () => ro.disconnect();
+    });
+
+    // Recompute the visible window when the dataset, column count, or row height changes —
+    // e.g. after each infinite-scroll page load or a card-height re-measure. Deliberately does
+    // NOT read visibleProducts (which it derives via the range it writes) to avoid a
+    // self-triggering effect.
+    $effect(() => {
+      void products.length;
+      void cols;
+      void rowHeight;
+      updateRange();
+    });
+
     onMount(() => {
       // Initialize IntersectionObserver for infinite scroll
       io = new IntersectionObserver((entries) => {
@@ -357,20 +491,32 @@
                 <span style="font-size:13.5px;color:{T.inkMuted};">No offers yet</span>
             </div>
         {:else}
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4" data-sveltekit-preload-data="hover">
-                {#each products as p (p.productCid)}
-                    <ProductCard
-                        product={p}
-                        showSellerInfo={true}
-                        ondeleted={() => loadFirstPage()}
-                    />
-                {/each}
-                {#if nextPagePlaceholders > 0}
+            <!-- Windowed grid: only the rows near the viewport are mounted; the outer container
+                 reserves the full scroll height so the scrollbar and infinite-scroll sentinel
+                 stay correctly positioned. -->
+            <div bind:this={gridViewportEl} style="position:relative;height:{totalHeight}px;">
+                <div
+                    bind:this={gridInnerEl}
+                    class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4"
+                    style="position:absolute;top:{offsetTop}px;left:0;right:0;"
+                    data-sveltekit-preload-data="hover"
+                >
+                    {#each visibleProducts as p (p.productCid)}
+                        <ProductCard
+                            product={p}
+                            showSellerInfo={true}
+                            ondeleted={() => loadFirstPage()}
+                        />
+                    {/each}
+                </div>
+            </div>
+            {#if nextPagePlaceholders > 0}
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 mt-3 md:mt-4">
                     {#each Array.from({ length: nextPagePlaceholders }) as _, i}
                         <ProductCardPlaceholder />
                     {/each}
-                {/if}
-            </div>
+                </div>
+            {/if}
             {#if hasMore}
                 <div bind:this={sentinel} class="h-2 w-full"></div>
                 <div style="display:flex;justify-content:center;margin-top:18px;">
