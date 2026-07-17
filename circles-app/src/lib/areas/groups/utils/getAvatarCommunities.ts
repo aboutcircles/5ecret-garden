@@ -49,10 +49,10 @@ export async function loadAvatarCommunities(
       getAffiliateGroups(sdk.rpc, avatar),
     ]);
 
-    const confirmedSet = new Set(trusted.groups.map((g) => g.groupAddress));
-    const communities: AvatarCommunity[] = wishlist.groups.map((g) => ({
+    const confirmedSet = new Set(trusted.communities.map((g) => g.communityAddress));
+    const communities: AvatarCommunity[] = wishlist.communities.map((g) => ({
       ...g,
-      confirmed: confirmedSet.has(g.groupAddress),
+      confirmed: confirmedSet.has(g.communityAddress),
     }));
 
     return {

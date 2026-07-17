@@ -11,8 +11,8 @@ const M3 = '0x3333333333333333333333333333333333333333';
 const M_UPPER = '0xABCDEF0000000000000000000000000000000002';
 const M_LOWER = '0xabcdef0000000000000000000000000000000002';
 
-const WISHLIST = 'circles_getAffiliateGroupMembersWishlist';
-const MEMBERS = 'circles_getAffiliateGroupMembers';
+const WISHLIST = 'circles_getCommunityMembersWishlist';
+const MEMBERS = 'circles_getCommunityMembers';
 
 /** A single member row in the indexer's wire shape. */
 function row(avatarAddress: string, timestamp: number, avatarName: string | null = null) {

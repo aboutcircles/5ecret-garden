@@ -27,11 +27,11 @@
     ];
     const gradient = $derived(gradients[gradientIndex % gradients.length]);
 
-    // Fee shown beneath the group name. `null` means the group declares no fee.
+    // Fee shown beneath the community name. `null` means the community declares no fee.
     const feeLabel = $derived(item.membershipFee == null ? 'No fee' : `${item.membershipFee}% fee`);
 
     function open() {
-        openProfilePopup(item.groupAddress);
+        openProfilePopup(item.communityAddress);
     }
 
     function onKeydown(event: KeyboardEvent) {
@@ -46,7 +46,7 @@
         if (leaving) return;
         leaving = true;
         try {
-            await leaveCommunity(item.groupAddress);
+            await leaveCommunity(item.communityAddress);
             await onLeave?.();
         } catch (e) {
             // The task runner surfaces the failure; keep the card interactive.
@@ -63,7 +63,7 @@
     class="community-card"
     onclick={open}
     onkeydown={onKeydown}
-    aria-label={`Open community ${item.groupName ?? item.groupAddress}`}
+    aria-label={`Open community ${item.communityName ?? item.communityAddress}`}
     style="
         text-align:left;width:100%;cursor:pointer;
         background:{T.surface};
@@ -85,7 +85,7 @@
     <!-- Body -->
     <div style="padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px;flex:1;">
         <Avatar
-            address={item.groupAddress}
+            address={item.communityAddress}
             view="horizontal"
             clickable={false}
             showTypeInfo={false}
@@ -102,7 +102,7 @@
                     type="button"
                     onclick={handleLeave}
                     disabled={leaving}
-                    aria-label={`Leave community ${item.groupName ?? item.groupAddress}`}
+                    aria-label={`Leave community ${item.communityName ?? item.communityAddress}`}
                     style="
                         height:28px;padding:0 12px;border-radius:9999px;cursor:pointer;
                         background:transparent;color:#C44430;border:1px solid rgba(196,68,48,0.3);
