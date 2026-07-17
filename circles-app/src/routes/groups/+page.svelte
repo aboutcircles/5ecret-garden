@@ -469,7 +469,7 @@
                         </div>
                     </div>
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        {#each communities as item, i (item.groupAddress)}
+                        {#each communities as item, i (item.communityAddress)}
                             <CommunityCard {item} gradientIndex={i} onLeave={() => invalidateCommunities()} />
                         {/each}
                     </div>
