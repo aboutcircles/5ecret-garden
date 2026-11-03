@@ -1,11 +1,13 @@
 import { defineConfig, devices } from '@playwright/test';
 
-// Opt-in for local runs: with PLAYWRIGHT_USE_INSTALLED_CHROME=1, tests drive the
-// installed Google Chrome with its sandbox on instead of Playwright's pinned
-// Chromium, which trails Chrome security releases and starts with --no-sandbox.
-// CI and anyone without the variable keep the bundled browser.
+// SECURITY: local runs drive the installed Google Chrome with its sandbox on,
+// unless PLAYWRIGHT_USE_INSTALLED_CHROME=0. Playwright's pinned Chromium trails
+// Chrome security releases and starts with --no-sandbox, so a hostile page could
+// run code on the developer's machine. On by default so a hand-typed
+// `playwright test` is covered; the npm scripts also set it, to say so. CI keeps
+// the bundled browser, so a CI result never depends on a runner's Chrome.
 const installedChrome =
-	process.env.PLAYWRIGHT_USE_INSTALLED_CHROME === '1' && !process.env.CI
+	process.env.PLAYWRIGHT_USE_INSTALLED_CHROME !== '0' && !process.env.CI
 		? { channel: 'chrome', launchOptions: { chromiumSandbox: true } }
 		: {};
 
@@ -34,8 +36,11 @@ export default defineConfig({
 			testMatch: ['idb-cache.spec.ts', 'idb-e2e.spec.ts'],
 			use: {
 				channel: 'chromium',
+				// Its own launchOptions replace the top-level ones, so the sandbox is
+				// asked for again here.
 				launchOptions: {
 					executablePath: '/Applications/Brave Browser.app/Contents/MacOS/Brave Browser',
+					chromiumSandbox: true,
 				},
 			},
 		},
