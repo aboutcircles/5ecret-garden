@@ -1,5 +1,14 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// Opt-in for local runs: with PLAYWRIGHT_USE_INSTALLED_CHROME=1, tests drive the
+// installed Google Chrome with its sandbox on instead of Playwright's pinned
+// Chromium, which trails Chrome security releases and starts with --no-sandbox.
+// CI and anyone without the variable keep the bundled browser.
+const installedChrome =
+	process.env.PLAYWRIGHT_USE_INSTALLED_CHROME === '1' && !process.env.CI
+		? { channel: 'chrome', launchOptions: { chromiumSandbox: true } }
+		: {};
+
 export default defineConfig({
 	timeout: 60_000,
 	fullyParallel: true,
@@ -8,6 +17,7 @@ export default defineConfig({
 	workers: process.env.CI ? 1 : undefined,
 	reporter: process.env.CI ? 'github' : 'html',
 	use: {
+		...installedChrome,
 		baseURL: 'http://localhost:5173',
 		trace: 'on-first-retry',
 		screenshot: 'only-on-failure',
