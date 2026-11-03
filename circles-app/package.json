@@ -16,7 +16,7 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:ui": "vitest --ui",
-    "//PLAYWRIGHT_USE_INSTALLED_CHROME": "SECURITY, do not remove. Playwright's own Chromium lags Chrome's security fixes and starts without the browser sandbox, so a hostile page can run code on your machine. With this set, Playwright drives your installed Google Chrome with the sandbox on. The config treats a missing value as 1 too, so only =0 brings the old build back. CI keeps the pinned build whatever this says.",
+    "//PLAYWRIGHT_USE_INSTALLED_CHROME": "SECURITY, do not remove. Playwright's own Chromium lags Chrome's security fixes and starts without the browser sandbox, so a hostile page can run code on your machine. Every local run drives your installed Google Chrome with the sandbox on instead, and e2e/chrome-check.ts refuses a Chrome older than its current stable release and refuses =0. CI keeps the pinned build. The idb project needs a current Brave the same way.",
     "test:e2e": "PLAYWRIGHT_USE_INSTALLED_CHROME=1 npx playwright test --project=e2e",
     "test:e2e:ui": "PLAYWRIGHT_USE_INSTALLED_CHROME=1 npx playwright test --project=e2e --ui",
     "k6:burnin": "k6 run ./k6/scenarios/burnin-wallet-first.js"

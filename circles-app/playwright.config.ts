@@ -1,17 +1,17 @@
 import { defineConfig, devices } from '@playwright/test';
 
-// SECURITY: local runs drive the installed Google Chrome with its sandbox on,
-// unless PLAYWRIGHT_USE_INSTALLED_CHROME=0. Playwright's pinned Chromium trails
-// Chrome security releases and starts with --no-sandbox, so a hostile page could
-// run code on the developer's machine. On by default so a hand-typed
-// `playwright test` is covered; the npm scripts also set it, to say so. CI keeps
-// the bundled browser, so a CI result never depends on a runner's Chrome.
-const installedChrome =
-	process.env.PLAYWRIGHT_USE_INSTALLED_CHROME !== '0' && !process.env.CI
-		? { channel: 'chrome', launchOptions: { chromiumSandbox: true } }
-		: {};
+// SECURITY: local runs drive the installed Google Chrome with its sandbox on.
+// Playwright's pinned Chromium trails Chrome security releases and starts with
+// --no-sandbox, so a hostile page could run code on the developer's machine.
+// e2e/chrome-check.ts refuses a Chrome older than its current stable release,
+// and refuses PLAYWRIGHT_USE_INSTALLED_CHROME=0. CI keeps the bundled browser,
+// so a CI result never depends on a runner's Chrome.
+const installedChrome = !process.env.CI
+	? { channel: 'chrome', launchOptions: { chromiumSandbox: true } }
+	: {};
 
 export default defineConfig({
+	globalSetup: './e2e/chrome-check.ts',
 	timeout: 60_000,
 	fullyParallel: true,
 	forbidOnly: !!process.env.CI,
